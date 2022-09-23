@@ -1,11 +1,18 @@
 module.exports = {
   parser: '@typescript-eslint/parser',
   extends: ['eslint:recommended'],
+  plugins: ['prefer-arrow-functions'],
   root: true,
   ignorePatterns: ['dist'],
+  rules: {
+    'prefer-arrow-functions/prefer-arrow-functions': [
+      'error',
+      { classPropertiesAllowed: true },
+    ],
+  },
   overrides: [
     {
-      files: ['.eslintrc.js', 'script/**/*', 'src/client/driver/electron/**/*'],
+      files: ['./*.js', 'script/**/*', 'src/client/driver/electron/**/*'],
       env: { node: true },
     },
     {

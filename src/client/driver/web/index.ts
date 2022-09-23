@@ -1,9 +1,5 @@
-import { Editor, defaultValueCtx } from '@milkdown/core';
-import { gfm } from '@milkdown/preset-gfm';
+import 'reflect-metadata';
+import { createApp } from 'vue';
+import Editor from './Editor.vue';
 
-Editor.make()
-  .config((ctx) => {
-    ctx.set(defaultValueCtx, '# Milkdown Hello world!');
-  })
-  .use(gfm)
-  .create();
+createApp(Editor).mount('#app');

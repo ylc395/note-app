@@ -2,6 +2,7 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "baseUrl": ".",
+    "isolatedModules": true,
     "paths": {
       "model/*": ["domain/model/*"],
       "service/*": ["domain/service/*"],

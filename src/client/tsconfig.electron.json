@@ -1,6 +1,6 @@
 {
   "extends": "./tsconfig.json",
-  "include": ["driver/electron/**/*", "driver/web/**/*"],
+  "include": ["driver/electron/**/*"],
   "compilerOptions": {
     "module": "CommonJS"
   }

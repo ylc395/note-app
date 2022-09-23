@@ -9,9 +9,11 @@
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.38.0",
     "@typescript-eslint/parser": "^5.38.0",
+    "@vitejs/plugin-vue": "^3.1.0",
     "electron": "^20.2.0",
     "electron-reloader": "^1.2.3",
     "eslint": "^8.23.1",
+    "eslint-plugin-prefer-arrow-functions": "^3.1.4",
     "prettier": "^2.7.1",
     "shelljs": "^0.8.5",
     "typescript": "^4.8.3",
@@ -22,8 +24,12 @@
     "@milkdown/preset-commonmark": "^6.4.2",
     "@milkdown/preset-gfm": "^6.4.1",
     "@milkdown/prose": "^6.4.1",
+    "@milkdown/vue": "^6.4.1",
+    "@vue/reactivity": "^3.2.39",
     "class-transformer": "^0.5.1",
     "eventemitter3": "^4.0.7",
-    "tsyringe": "^4.7.0"
+    "reflect-metadata": "^0.1.13",
+    "tsyringe": "^4.7.0",
+    "vue": "^3.2.39"
   }
 }

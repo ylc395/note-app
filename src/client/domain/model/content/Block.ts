@@ -1,4 +1,4 @@
-import type { NodeWithPos } from "@milkdown/prose";
+import type { NodeWithPos } from '@milkdown/prose';
 
 enum BlockType {
   Heading1 = 'Heading1',
@@ -14,8 +14,6 @@ enum BlockType {
   BlockQuote = 'BlockQuote',
   Table = 'Table',
 }
-
-
 
 export default class Block {
   readonly id: string;
