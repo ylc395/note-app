@@ -24,19 +24,28 @@ export default defineComponent({
 });
 </script>
 <template>
-  <div>
+  <div class="flex h-screen">
     <div
       v-for="({ width, rows }, i) of columns"
       :key="i"
+      class="flex flex-col"
+      :class="{ 'flex-grow': width === 'auto' }"
       :style="{ width: typeof width === 'number' ? `${width}px` : width }"
     >
       <div
         v-for="{ id, height } of rows"
         :key="id"
+        :data-component-id="id"
+        :class="{ 'flex-grow': height === 'auto' }"
         :style="{ height: typeof height === 'number' ? `${height}px` : height }"
       >
-        <component :is="id" />
+        <component :is="id" class="only:h-full" />
       </div>
     </div>
   </div>
 </template>
+<style>
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+</style>

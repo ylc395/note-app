@@ -32,7 +32,7 @@ export enum KnowledgeTypes {
 export default class Layout {
   readonly columns = ref<LayoutColumn[]>([
     {
-      width: 40,
+      width: 100,
       rows: [{ id: ComponentNames.KnowledgeSwitcher, height: 'auto' }],
     },
     { width: 200, rows: [{ id: ComponentNames.ItemList, height: 'auto' }] },

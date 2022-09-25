@@ -13,7 +13,7 @@ export default defineComponent({
 });
 </script>
 <template>
-  <div>
+  <div class="flex flex-col">
     <button @click="viewType = KnowledgeTypes.Materials">Materials</button>
     <button @click="viewType = KnowledgeTypes.Notes">Notes</button>
     <button @click="viewType = KnowledgeTypes.Memos">Memos</button>
