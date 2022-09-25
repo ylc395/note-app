@@ -1,15 +1,24 @@
+const path = require('path');
 const { createServer } = require('vite');
 const pluginVue = require('@vitejs/plugin-vue');
 const shell = require('shelljs');
+const { default: tsconfigPaths } = require('vite-tsconfig-paths');
 
 const ELECTRON_TSCONFIG = 'src/client/tsconfig.electron.json';
+const WEB_TSCONFIG = 'src/client/tsconfig.web.json';
 const ELECTRON_OUTPUT = 'dist/electron';
 
 (async () => {
   const server = await createServer({
     configFile: false,
     root: './src/client/driver/web',
-    plugins: [pluginVue()],
+    plugins: [
+      pluginVue(),
+      tsconfigPaths({
+        projects: [path.resolve(process.cwd(), WEB_TSCONFIG)],
+        loose: true,
+      }),
+    ],
   });
 
   await server.listen();

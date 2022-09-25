@@ -1,5 +1,5 @@
 import 'reflect-metadata';
 import { createApp } from 'vue';
-import Editor from './Editor.vue';
+import App from './App.vue';
 
-createApp(Editor).mount('#app');
+createApp(App).mount('#app');

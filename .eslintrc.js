@@ -1,15 +1,10 @@
 module.exports = {
-  parser: '@typescript-eslint/parser',
   extends: ['eslint:recommended'],
-  plugins: ['prefer-arrow-functions'],
+  parserOptions: {
+    ecmaVersion: 'latest',
+  },
   root: true,
   ignorePatterns: ['dist'],
-  rules: {
-    'prefer-arrow-functions/prefer-arrow-functions': [
-      'error',
-      { classPropertiesAllowed: true },
-    ],
-  },
   overrides: [
     {
       files: ['./*.js', 'script/**/*', 'src/client/driver/electron/**/*'],
@@ -21,7 +16,31 @@ module.exports = {
     },
     {
       files: ['*.ts'],
-      extends: ['plugin:@typescript-eslint/recommended', 'eslint:recommended'],
+      parser: '@typescript-eslint/parser',
+      plugins: ['prefer-arrow-functions'],
+      extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended'],
+      rules: {
+        'prefer-arrow-functions/prefer-arrow-functions': [
+          'error',
+          { classPropertiesAllowed: true },
+        ],
+      },
+    },
+    {
+      files: ['*.vue'],
+      parser: 'vue-eslint-parser',
+      parserOptions: {
+        parser: '@typescript-eslint/parser',
+      },
+      extends: [
+        'eslint:recommended',
+        'plugin:@typescript-eslint/recommended',
+        'plugin:vue/vue3-recommended',
+      ],
+      rules: {
+        'vue/singleline-html-element-content-newline': 'off',
+        'vue/multi-word-component-names': 'off',
+      },
     },
   ],
 };
