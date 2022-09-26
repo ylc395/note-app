@@ -4,8 +4,8 @@ const pluginVue = require('@vitejs/plugin-vue');
 const shell = require('shelljs');
 const { default: tsconfigPaths } = require('vite-tsconfig-paths');
 
-const ELECTRON_TSCONFIG = 'src/client/tsconfig.electron.json';
-const WEB_TSCONFIG = 'src/client/tsconfig.web.json';
+const ELECTRON_TSCONFIG = 'src/client/driver/electron/tsconfig.json';
+const WEB_TSCONFIG = 'src/client/driver/web/tsconfig.json';
 const ELECTRON_OUTPUT = 'dist/electron';
 
 (async () => {

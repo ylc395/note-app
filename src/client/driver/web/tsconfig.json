@@ -1,0 +1,13 @@
+{
+  "extends": "../../../../tsconfig.json",
+  "include": ["./**/*", "../../domain/**/*"],
+  "compilerOptions": {
+    "isolatedModules": true,
+    "baseUrl": "../..",
+    "paths": {
+      "model/*": ["domain/model/*"],
+      "service/*": ["domain/service/*"],
+      "component/*": ["driver/web/components/*"]
+    }
+  }
+}
