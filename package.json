@@ -31,6 +31,7 @@
     "@milkdown/prose": "^6.4.1",
     "@milkdown/vue": "^6.4.1",
     "@vue/reactivity": "^3.2.39",
+    "bootstrap-icons-vue": "^1.8.1",
     "class-transformer": "^0.5.1",
     "eventemitter3": "^4.0.7",
     "reflect-metadata": "^0.1.13",

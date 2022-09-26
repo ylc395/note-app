@@ -30,7 +30,9 @@ export default defineComponent({
       :key="i"
       class="flex flex-col"
       :class="{ 'flex-grow': width === 'auto' }"
-      :style="{ width: typeof width === 'number' ? `${width}px` : width }"
+      :style="{
+        'min-width': typeof width === 'number' ? `${width}px` : width,
+      }"
     >
       <div
         v-for="{ id, height } of rows"
