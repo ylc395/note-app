@@ -9,7 +9,8 @@ import {
   BIconPostcardHeart,
 } from 'bootstrap-icons-vue';
 
-import Layout, { KnowledgeTypes } from 'model/gui/Layout';
+import ItemListService from 'service/ItemListService';
+import { KnowledgeTypes } from 'model/content/constants';
 
 export default defineComponent({
   components: {
@@ -20,7 +21,9 @@ export default defineComponent({
     BIconPostcardHeart,
   },
   setup() {
-    const { viewType } = container.resolve(Layout);
+    const { currentListType, setCurrentListType } =
+      container.resolve(ItemListService);
+
     const types = ref([
       { id: KnowledgeTypes.Materials, icon: 'BIconBoxes' },
       { id: KnowledgeTypes.Notes, icon: 'BIconJournalBookmark' },
@@ -29,7 +32,7 @@ export default defineComponent({
       { id: KnowledgeTypes.Cards, icon: 'BIconPostcardHeart' },
     ]);
 
-    return { viewType, types };
+    return { currentListType, setCurrentListType, types };
   },
 });
 </script>
@@ -39,8 +42,8 @@ export default defineComponent({
       v-for="{ id, icon } of types"
       :key="id"
       class="w-full mt-2 flex justify-center text-lg py-2 hover:text-white first:mt-0"
-      :class="{ 'bg-slate-800': id === viewType }"
-      @click="viewType = id"
+      :class="{ 'bg-slate-800': id === currentListType }"
+      @click="setCurrentListType(id)"
     >
       <component :is="icon" />
     </button>

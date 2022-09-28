@@ -20,14 +20,6 @@ export enum ComponentNames {
   Workbench = 'workbench',
 }
 
-export enum KnowledgeTypes {
-  Materials = 'materials',
-  Notes = 'notes',
-  Memos = 'memos',
-  Projects = 'projects',
-  Cards = 'cards',
-}
-
 @singleton()
 export default class Layout {
   readonly columns = ref<LayoutColumn[]>([
@@ -44,6 +36,4 @@ export default class Layout {
       ],
     },
   ]);
-
-  readonly viewType = ref<KnowledgeTypes>(KnowledgeTypes.Notes);
 }

@@ -8,6 +8,7 @@
       "model/*": ["domain/model/*"],
       "service/*": ["domain/service/*"],
       "component/*": ["driver/web/components/*"]
-    }
+    },
+    "types": ["naive-ui/volar"]
   }
 }
