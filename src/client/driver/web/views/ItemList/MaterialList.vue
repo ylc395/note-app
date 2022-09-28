@@ -32,7 +32,7 @@ const VIEW_TYPES = {
 export default defineComponent({
   components: { NDropdown, BIconTriangleFill, BIconPlusLg, BaseList },
   setup() {
-    const { materialList } = container.resolve(ItemListService);
+    const { materialList, addMaterial } = container.resolve(ItemListService);
 
     if (!materialList) {
       throw new Error('no materialList');
@@ -46,11 +46,9 @@ export default defineComponent({
       icon: () => h(VIEW_TYPES[type as ViewTypes].icon),
     }));
 
-    const currentView = computed(() => {
-      return VIEW_TYPES[viewType.value].text;
-    });
+    const currentView = computed(() => VIEW_TYPES[viewType.value].text);
 
-    return { options, materialList, currentView, changeView };
+    return { options, materialList, currentView, changeView, addMaterial };
   },
 });
 </script>
@@ -58,7 +56,7 @@ export default defineComponent({
   <BaseList>
     <template #headerOperation>
       <div class="flex justify-between pl-1">
-        <button>
+        <button @click="addMaterial">
           <BIconPlusLg />
         </button>
         <NDropdown
@@ -70,8 +68,8 @@ export default defineComponent({
           @select="changeView"
         >
           <button class="flex items-center text-gray-400">
-            {{ currentView
-            }}<BIconTriangleFill
+            {{ currentView }}
+            <BIconTriangleFill
               class="rotate-180 ml-1"
               :style="{ 'font-size': '6px' }"
             />

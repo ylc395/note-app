@@ -4,7 +4,8 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "dev:electron": "node script/dev-electron.js"
+    "dev:electron": "node script/dev-electron.js",
+    "clean:vite": "rm -rf node_modules/.vite"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.38.0",
@@ -30,13 +31,13 @@
     "@milkdown/preset-gfm": "^6.4.1",
     "@milkdown/prose": "^6.4.1",
     "@milkdown/vue": "^6.4.1",
-    "@vue/reactivity": "^3.2.39",
+    "@vue/reactivity": "^3.2.40",
     "bootstrap-icons-vue": "^1.8.1",
     "class-transformer": "^0.5.1",
     "eventemitter3": "^4.0.7",
     "naive-ui": "^2.33.3",
     "reflect-metadata": "^0.1.13",
     "tsyringe": "^4.7.0",
-    "vue": "^3.2.39"
+    "vue": "^3.2.40"
   }
 }

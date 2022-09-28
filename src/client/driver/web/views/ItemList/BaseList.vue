@@ -3,21 +3,12 @@ import { container } from 'tsyringe';
 import { computed, defineComponent } from 'vue';
 
 import ItemListService from 'service/ItemListService';
-import { KnowledgeTypes } from 'model/content/constants';
+import { KNOWLEDGE_TYPES_TEXTS } from '../constants';
 
 export default defineComponent({
   setup() {
     const { currentListType } = container.resolve(ItemListService);
-    const title = computed(
-      () =>
-        ({
-          [KnowledgeTypes.Cards]: '卡片',
-          [KnowledgeTypes.Materials]: '素材库',
-          [KnowledgeTypes.Memos]: '备忘',
-          [KnowledgeTypes.Notes]: '笔记本',
-          [KnowledgeTypes.Projects]: '项目',
-        }[currentListType.value]),
-    );
+    const title = computed(() => KNOWLEDGE_TYPES_TEXTS[currentListType.value]);
 
     return { title };
   },
