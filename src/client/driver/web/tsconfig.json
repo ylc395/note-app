@@ -7,7 +7,7 @@
     "paths": {
       "model/*": ["domain/model/*"],
       "service/*": ["domain/service/*"],
-      "component/*": ["driver/web/components/*"]
+      "utils/*": ["driver/web/utils/*"]
     },
     "types": ["naive-ui/volar"]
   }

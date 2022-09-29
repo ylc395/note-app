@@ -16,5 +16,7 @@ export default defineComponent({
 });
 </script>
 <template>
-  <MaterialList v-if="currentListType === KnowledgeTypes.Materials" />
+  <div>
+    <MaterialList v-if="currentListType === KnowledgeTypes.Materials" />
+  </div>
 </template>

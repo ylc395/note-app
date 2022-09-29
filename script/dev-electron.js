@@ -19,6 +19,9 @@ const ELECTRON_OUTPUT = 'dist/electron';
         loose: true,
       }),
     ],
+    define: {
+      __WEB_ENV__: JSON.stringify('electron-renderer'),
+    },
   });
 
   await server.listen();

@@ -1,11 +1,13 @@
 import { ref } from '@vue/reactivity';
-import { singleton } from 'tsyringe';
+import { container, singleton } from 'tsyringe';
 
 import { KnowledgeTypes } from 'model/content/constants';
 import MaterialList from 'model/gui/ItemList/MaterialList';
+import MaterialRepository from './repository/MaterialRepository';
 
 @singleton()
 export default class ItemListService {
+  readonly #materialRepository = container.resolve(MaterialRepository);
   readonly currentListType = ref<KnowledgeTypes>(KnowledgeTypes.Notes);
   materialList = new MaterialList();
 
@@ -24,7 +26,7 @@ export default class ItemListService {
     this.materialList.load([]);
   };
 
-  readonly addMaterial = () => {
-    console.log(111);
+  readonly addMaterials = (files: string[]) => {
+    this.#materialRepository.add(files);
   };
 }

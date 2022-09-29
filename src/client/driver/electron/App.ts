@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, protocol } from 'electron';
 
 export class App {
   readonly #electronApp = app;
@@ -25,9 +25,32 @@ export class App {
       this.#electronApp.quit();
     });
 
-    await this.#electronApp.whenReady();
-    this.#initWindow();
+    await this.#initProtocol();
+    await this.#initWindow();
   }
+
+  #initProtocol = async () => {
+    protocol.registerSchemesAsPrivileged([
+      {
+        scheme: 'electron',
+        privileges: {
+          supportFetchAPI: true,
+          stream: true,
+        },
+      },
+    ]);
+    await this.#electronApp.whenReady();
+    protocol.registerStringProtocol('electron', (reqeust, res) => {
+      console.log(reqeust);
+      res({
+        data: reqeust.url,
+        statusCode: 200,
+        headers: {
+          'content-type': 'text/html',
+        },
+      });
+    });
+  };
 
   async #initWindow() {
     this.#mainWindow = new BrowserWindow({

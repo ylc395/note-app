@@ -13,6 +13,7 @@ import BaseList from './BaseList.vue';
 import { ViewTypes } from 'model/gui/ItemList/MaterialList';
 import { container } from 'tsyringe';
 import ItemListService from 'service/ItemListService';
+import { selectFiles } from 'utils/dom';
 
 const VIEW_TYPES = {
   [ViewTypes.Tag]: {
@@ -29,26 +30,45 @@ const VIEW_TYPES = {
   },
 } as const;
 
+const options = Object.keys(VIEW_TYPES).map((type) => ({
+  key: type,
+  label: VIEW_TYPES[type as ViewTypes].text,
+  icon: () => h(VIEW_TYPES[type as ViewTypes].icon),
+}));
+
 export default defineComponent({
-  components: { NDropdown, BIconTriangleFill, BIconPlusLg, BaseList },
+  components: {
+    NDropdown,
+    BIconTriangleFill,
+    BIconPlusLg,
+    BaseList,
+  },
   setup() {
-    const { materialList, addMaterial } = container.resolve(ItemListService);
-
-    if (!materialList) {
-      throw new Error('no materialList');
-    }
-
-    const { viewType, changeView } = materialList;
-
-    const options = Object.keys(VIEW_TYPES).map((type) => ({
-      key: type,
-      label: VIEW_TYPES[type as ViewTypes].text,
-      icon: () => h(VIEW_TYPES[type as ViewTypes].icon),
-    }));
+    const {
+      materialList: { viewType, changeView },
+      addMaterials,
+    } = container.resolve(ItemListService);
 
     const currentView = computed(() => VIEW_TYPES[viewType.value].text);
+    const uploadMaterials = async () => {
+      const files = await selectFiles();
+      const materialFiles = files.map((file) => {
+        if (!file.path) {
+          throw new Error('no file path');
+        }
 
-    return { options, materialList, currentView, changeView, addMaterial };
+        return file.path;
+      });
+
+      addMaterials(materialFiles);
+    };
+
+    return {
+      options,
+      currentView,
+      changeView,
+      uploadMaterials,
+    };
   },
 });
 </script>
@@ -56,7 +76,7 @@ export default defineComponent({
   <BaseList>
     <template #headerOperation>
       <div class="flex justify-between pl-1">
-        <button @click="addMaterial">
+        <button @click="uploadMaterials">
           <BIconPlusLg />
         </button>
         <NDropdown
