@@ -8,12 +8,13 @@ import {
   BIconPlusLg,
 } from 'bootstrap-icons-vue';
 import { NDropdown } from 'naive-ui';
-import BaseList from './BaseList.vue';
+import { container } from 'tsyringe';
 
 import { ViewTypes } from 'model/gui/ItemList/MaterialList';
-import { container } from 'tsyringe';
 import ItemListService from 'service/ItemListService';
-import { selectFiles } from 'utils/dom';
+import { selectFiles } from 'web/utils/dom';
+
+import BaseList from './BaseList.vue';
 
 const VIEW_TYPES = {
   [ViewTypes.Tag]: {

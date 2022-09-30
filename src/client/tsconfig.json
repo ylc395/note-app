@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "isolatedModules": true,
+    "baseUrl": ".",
+    "paths": {
+      "model/*": ["domain/model/*"],
+      "service/*": ["domain/service/*"],
+      "web/*": ["driver/web/*"]
+    }
+  },
+  "types": ["naive-ui/volar"]
+}
