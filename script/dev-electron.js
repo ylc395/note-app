@@ -1,5 +1,5 @@
 const path = require('path');
-const { createServer } = require('vite');
+const { createServer, build } = require('vite');
 const pluginVue = require('@vitejs/plugin-vue');
 const shell = require('shelljs');
 const { default: tsconfigPaths } = require('vite-tsconfig-paths');
@@ -12,6 +12,20 @@ const PATH_TSCONFIG = 'src/server/tsconfig.json';
 const ELECTRON_TS_FLAG = `--project ${ELECTRON_TSCONFIG} --outDir ${ELECTRON_OUTPUT}`;
 
 (async () => {
+  await build({
+    build: {
+      emptyOutDir: false,
+      outDir: path.resolve(ELECTRON_OUTPUT, 'client/driver/electron'),
+      lib: {
+        entry: 'src/client/driver/electron/preload.ts',
+        fileName: () => 'preload.js',
+        formats: ['cjs'],
+      },
+      rollupOptions: {
+        external: ['electron'],
+      },
+    },
+  });
   const server = await createServer({
     configFile: false,
     root: './src/client/driver/web',

@@ -1,16 +1,13 @@
 import { Server, type CustomTransportStrategy } from '@nestjs/microservices';
 import { ipcMain } from 'electron';
-import type { IpcRequest } from './handler';
 
-export default class ElectronIpcServer
-  extends Server
-  implements CustomTransportStrategy
-{
+import { IPC_CHANNEL, type IpcRequest } from 'client/driver/electron/ipc';
+
+export default class ElectronIpcServer extends Server implements CustomTransportStrategy {
   listen(cb: () => void) {
-    ipcMain.handle('fakeHttp', async (e, req: IpcRequest) => {
+    ipcMain.handle(IPC_CHANNEL, async (e, req: IpcRequest) => {
       const handler = this.messageHandlers.get(req.path);
       console.log(req);
-      console.log(this.messageHandlers);
 
       if (!handler) {
         return {
@@ -31,6 +28,6 @@ export default class ElectronIpcServer
     cb();
   }
   close() {
-    return;
+    ipcMain.removeHandler(IPC_CHANNEL);
   }
 }

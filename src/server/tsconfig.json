@@ -1,6 +1,5 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["./**/*", "../shared/**/*", "../client/driver/electron/**/*"],
   "compilerOptions": {
     "baseUrl": ".",
     "module": "CommonJS",
