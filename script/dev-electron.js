@@ -4,9 +4,12 @@ const pluginVue = require('@vitejs/plugin-vue');
 const shell = require('shelljs');
 const { default: tsconfigPaths } = require('vite-tsconfig-paths');
 
-const CLIENT_TSCONFIG = 'src/client/tsconfig.json';
+const WEB_TSCONFIG = 'src/client/driver/web/tsconfig.json';
+
 const ELECTRON_OUTPUT = 'dist/electron';
-const ELECTRON_FLAG = `--project ${CLIENT_TSCONFIG} --outDir ${ELECTRON_OUTPUT} --module commonjs`;
+const ELECTRON_TSCONFIG = 'src/server/driver/electron/tsconfig.json';
+const PATH_TSCONFIG = 'src/server/tsconfig.json';
+const ELECTRON_TS_FLAG = `--project ${ELECTRON_TSCONFIG} --outDir ${ELECTRON_OUTPUT}`;
 
 (async () => {
   const server = await createServer({
@@ -15,7 +18,7 @@ const ELECTRON_FLAG = `--project ${CLIENT_TSCONFIG} --outDir ${ELECTRON_OUTPUT} 
     plugins: [
       pluginVue(),
       tsconfigPaths({
-        projects: [path.resolve(process.cwd(), CLIENT_TSCONFIG)],
+        projects: [path.resolve(process.cwd(), WEB_TSCONFIG)],
         loose: true,
       }),
     ],
@@ -28,7 +31,9 @@ const ELECTRON_FLAG = `--project ${CLIENT_TSCONFIG} --outDir ${ELECTRON_OUTPUT} 
   server.printUrls();
 
   shell.env['VITE_SERVER_ENTRY_URL'] = server.resolvedUrls.local[0];
-  shell.exec(`tsc ${ELECTRON_FLAG}`);
-  shell.exec(`electron ${ELECTRON_OUTPUT}/index.js`, { async: true });
-  shell.exec(`tsc ${ELECTRON_FLAG} --watch`, { async: true });
+  shell.env['NODE_ENV'] = 'development';
+
+  shell.exec(`tsc ${ELECTRON_TS_FLAG}`);
+  shell.exec(`resolve-tspaths --project ${PATH_TSCONFIG} --out ${ELECTRON_OUTPUT}`);
+  shell.exec(`electron ${ELECTRON_OUTPUT}/server/index.js`, { async: true });
 })();

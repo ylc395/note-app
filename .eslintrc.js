@@ -19,12 +19,6 @@ module.exports = {
       parser: '@typescript-eslint/parser',
       plugins: ['prefer-arrow-functions'],
       extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended'],
-      rules: {
-        'prefer-arrow-functions/prefer-arrow-functions': [
-          'error',
-          { classPropertiesAllowed: true },
-        ],
-      },
     },
     {
       files: ['*.vue'],
@@ -32,11 +26,7 @@ module.exports = {
       parserOptions: {
         parser: '@typescript-eslint/parser',
       },
-      extends: [
-        'eslint:recommended',
-        'plugin:@typescript-eslint/recommended',
-        'plugin:vue/vue3-recommended',
-      ],
+      extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended', 'plugin:vue/vue3-recommended'],
       rules: {
         'vue/singleline-html-element-content-newline': 'off',
         'vue/multi-word-component-names': 'off',

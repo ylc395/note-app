@@ -1,6 +1,7 @@
 import { ref } from '@vue/reactivity';
 import { container, singleton } from 'tsyringe';
 
+import type { MaterialFile } from 'model/Material';
 import { KnowledgeTypes } from 'model/content/constants';
 import MaterialList from 'model/gui/ItemList/MaterialList';
 import MaterialRepository from './repository/MaterialRepository';
@@ -26,7 +27,7 @@ export default class ItemListService {
     this.materialList.load([]);
   };
 
-  readonly addMaterials = (files: string[]) => {
+  readonly addMaterials = (files: MaterialFile[]) => {
     this.#materialRepository.add(files);
   };
 }

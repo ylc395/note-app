@@ -1,7 +1,10 @@
 import { singleton } from 'tsyringe';
-import BaseRepository from './BaseRepository';
+
+import type { MaterialFile } from 'model/Material';
 
 @singleton()
-export default class MaterialRepository extends BaseRepository {
-  readonly add = async (files: string[]) => {};
+export default class MaterialRepository {
+  readonly add = async (files: MaterialFile[]) => {
+    window.electronIpc.request(files);
+  };
 }
