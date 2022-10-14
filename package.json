@@ -5,6 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev:electron": "node script/dev-electron.js",
+    "clean": "rm -rf ./dist",
     "clean:vite": "rm -rf node_modules/.vite",
     "postinstall": "electron-rebuild"
   },

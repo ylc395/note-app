@@ -8,7 +8,8 @@
       "model/*": ["domain/model/*", "../shared/model/*"],
       "service/*": ["domain/service/*"],
       "driver/*": ["driver/*"],
-      "client/*": ["../client/*"]
+      "client/*": ["../client/*"],
+      "controller/*": ["controller/*"]
     }
   }
 }

@@ -39,7 +39,7 @@ export default class App {
   }
 
   readonly getConfigDir = () => {
-    return join(this.#electronApp.getPath('appData'), APP_NAME);
+    return join(this.#electronApp.getPath('appData'), `${APP_NAME}${NODE_ENV === 'development' ? '-dev' : ''}`);
   };
 
   async #initWindow() {

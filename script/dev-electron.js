@@ -19,7 +19,7 @@ function callShell(viteUrl) {
 
   shell.exec(`tsc ${ELECTRON_TS_FLAG}`);
   shell.exec(`resolve-tspaths --project ${PATH_TSCONFIG} --out ${ELECTRON_OUTPUT}`);
-  let electronProcess = shell.exec(`electron ${ELECTRON_OUTPUT}/server/index.js`, { async: true });
+  let electronProcess = shell.exec(`electron ${ELECTRON_OUTPUT}/server/driver/electron/index.js`, { async: true });
 
   return electronProcess;
 }

@@ -7,6 +7,7 @@ import { token } from './remote';
 export default class MaterialRepository {
   #remote = container.resolve(token);
   readonly add = async (files: MaterialFile[]) => {
-    this.#remote.post('materials', files);
+    const res = await this.#remote.post('/materials', files);
+    console.log(res);
   };
 }

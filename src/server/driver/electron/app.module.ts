@@ -1,5 +1,6 @@
 import { Inject, Module, type OnApplicationBootstrap } from '@nestjs/common';
 
+import MaterialsController from 'controller/MaterialsController';
 import { type Database, token as databaseToken } from 'service/infra/Database';
 import { token as fileReaderToken } from 'service/infra/FileReader';
 import SqliteDb from 'driver/sqlite';
@@ -7,6 +8,7 @@ import FileReader from 'driver/fs';
 import ElectronApp from 'client/driver/electron';
 
 @Module({
+  controllers: [MaterialsController],
   providers: [
     { provide: databaseToken, useClass: SqliteDb },
     { provide: fileReaderToken, useClass: FileReader },

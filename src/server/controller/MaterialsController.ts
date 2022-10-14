@@ -1,10 +1,10 @@
 import { Controller } from '@nestjs/common';
 import { Post } from './decorators';
 
-@Controller('materials')
-export class MaterialsController {
-  @Post()
+@Controller()
+export default class MaterialsController {
+  @Post('materials')
   create(data: any) {
-    console.log(data);
+    return 'hello!';
   }
 }
