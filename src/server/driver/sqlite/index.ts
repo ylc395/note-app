@@ -2,6 +2,7 @@ import knex, { type Knex } from 'knex';
 import camelCase from 'lodash/camelCase';
 import snakeCase from 'lodash/snakeCase';
 import mapKeys from 'lodash/mapKeys';
+import partialRight from 'lodash/partialRight';
 import { join } from 'path';
 
 import type { Database } from 'service/infra/Database';
@@ -43,7 +44,7 @@ export default class SqliteDb implements Database {
     await Promise.all(
       schemas.map(async ({ tableName, builder }) => {
         if (!(await this.knex.schema.hasTable(tableName))) {
-          return this.knex.schema.createTable(tableName, builder);
+          return this.knex.schema.createTable(tableName, partialRight(builder, this.knex));
         }
       }),
     );
