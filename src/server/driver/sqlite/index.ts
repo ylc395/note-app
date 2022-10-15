@@ -1,4 +1,5 @@
 import knex, { type Knex } from 'knex';
+import knexStringcase from 'knex-stringcase';
 import { join } from 'path';
 
 import type { Database } from 'service/infra/Database';
@@ -10,13 +11,15 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 export default class SqliteDb implements Database {
   knex: Knex;
   readonly init = async (dir: string) => {
-    this.knex = knex({
-      client: 'sqlite3',
-      connection: join(dir, 'db.sqlite'),
-      debug: isDevelopment,
-      asyncStackTraces: isDevelopment,
-      useNullAsDefault: true,
-    });
+    this.knex = knex(
+      knexStringcase({
+        client: 'sqlite3',
+        connection: join(dir, 'db.sqlite'),
+        debug: isDevelopment,
+        asyncStackTraces: isDevelopment,
+        useNullAsDefault: true,
+      }),
+    );
     await this.#createTables();
   };
 

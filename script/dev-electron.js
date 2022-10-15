@@ -16,6 +16,7 @@ const ELECTRON_RELATED_DIRS = ['src/server', 'src/client/driver/electron', 'src/
 function callShell(viteUrl) {
   shell.env['VITE_SERVER_ENTRY_URL'] = viteUrl;
   shell.env['NODE_ENV'] = 'development';
+  shell.env['DEV_CLEAN'] = process.argv.includes('--clean') ? '1' : '0';
 
   shell.exec(`tsc ${ELECTRON_TS_FLAG}`);
   shell.exec(`resolve-tspaths --project ${PATH_TSCONFIG} --out ${ELECTRON_OUTPUT}`);

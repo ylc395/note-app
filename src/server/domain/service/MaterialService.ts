@@ -10,10 +10,16 @@ export default class MaterialService {
     @Inject(databaseToken) private readonly db: Database,
   ) {}
 
-  async create({ path, mimeType }: MaterialFile) {
-    const { data, name } = await this.fileReader.read(path);
-    const material: Material = { file: data, type: mimeType, name };
+  async create(files: MaterialFile[]) {
+    const materials = await Promise.all(
+      files.map(async ({ path, mimeType }) => {
+        const { data, name } = await this.fileReader.read(path);
+        const material: Material = { data, mimeType, name };
 
-    await this.db.knex.insert(material).into('materials');
+        return material;
+      }),
+    );
+
+    await this.db.knex.insert(materials).into('materials');
   }
 }

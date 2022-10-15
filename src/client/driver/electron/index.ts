@@ -1,9 +1,10 @@
 import { app, BrowserWindow } from 'electron';
 import { join } from 'path';
-import { ensureDirSync } from 'fs-extra';
+import { ensureDirSync, emptyDirSync } from 'fs-extra';
 
 const APP_NAME = 'my-note-app';
 const NODE_ENV = process.env.NODE_ENV || 'development';
+const NEED_CLEAN = process.env.DEV_CLEAN === '1';
 
 export default class App {
   readonly #electronApp = app;
@@ -12,6 +13,11 @@ export default class App {
   constructor() {
     const dir = this.getConfigDir();
     ensureDirSync(dir);
+
+    if (NODE_ENV === 'development' && NEED_CLEAN) {
+      emptyDirSync(dir);
+    }
+
     console.log(`electron: initialized in ${dir}`);
   }
 

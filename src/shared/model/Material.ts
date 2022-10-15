@@ -6,9 +6,9 @@ export interface MaterialFile {
 }
 
 export interface Material {
-  type: string;
+  mimeType: string;
   name: string;
-  file: ArrayBuffer;
+  data: ArrayBuffer;
   tags?: TagId[];
   addedAt?: number;
   size?: number;
