@@ -1714,6 +1714,13 @@ escape-string-regexp@^5.0.0:
   resolved "https://registry.yarnpkg.com/escape-string-regexp/-/escape-string-regexp-5.0.0.tgz#4683126b500b61762f2dbebace1806e8be31b1c8"
   integrity sha512-/veY75JbMK4j1yjvuUxuVsiS/hr/4iHs9FTT6cgTexxdE0Ly/glccBAkloH/DofkjRbZU3bnoj38mOmhkZ0lHw==
 
+eslint-plugin-lodash@^7.4.0:
+  version "7.4.0"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-lodash/-/eslint-plugin-lodash-7.4.0.tgz#14a761547f126c92ff56789662a20a44f8bb6290"
+  integrity sha512-Tl83UwVXqe1OVeBRKUeWcfg6/pCW1GTRObbdnbEJgYwjxp5Q92MEWQaH9+dmzbRt6kvYU1Mp893E79nJiCSM8A==
+  dependencies:
+    lodash "^4.17.21"
+
 eslint-plugin-vue@^9.5.1:
   version "9.5.1"
   resolved "https://registry.yarnpkg.com/eslint-plugin-vue/-/eslint-plugin-vue-9.5.1.tgz#87ce075882cf7d824b95f46c224f91495fafcc54"
@@ -2535,13 +2542,6 @@ kleur@^4.0.3:
   version "4.1.5"
   resolved "https://registry.yarnpkg.com/kleur/-/kleur-4.1.5.tgz#95106101795f7050c6c650f350c683febddb1780"
   integrity sha512-o+NO+8WrRiQEE4/7nwRJhN1HWpVmJm511pBHUxPLtp0BUISzlBplORYSmTclCnJvQq2tKu/sgl3xVpkc7ZWuQQ==
-
-knex-stringcase@^1.4.6:
-  version "1.4.6"
-  resolved "https://registry.yarnpkg.com/knex-stringcase/-/knex-stringcase-1.4.6.tgz#e10f9201bc34de66386cc08525532012ebfd9e44"
-  integrity sha512-8YJafQWJqF0REx6OYKem4UBBY75RD+ZvENcWAufz/afc9MOBGjFyr70EPBy59y6LqoPzSmCdUV+qWO550B3lJg==
-  dependencies:
-    stringcase "^4.3.1"
 
 knex@^2.3.0:
   version "2.3.0"
@@ -4198,11 +4198,6 @@ string_decoder@^1.1.1:
   integrity sha512-hkRX8U1WjJFd8LsDJ2yQ/wWWxaopEsABU1XfkM8A+j0+85JAGppt16cr1Whg6KIbb4okU6Mql6BOj+uup/wKeA==
   dependencies:
     safe-buffer "~5.2.0"
-
-stringcase@^4.3.1:
-  version "4.3.1"
-  resolved "https://registry.yarnpkg.com/stringcase/-/stringcase-4.3.1.tgz#54279c9dd7379ff50f4e47d50d036b2ac888d34b"
-  integrity sha512-Ov7McNX1sFaEX9NWijD1hIOVDDhKdnFzN9tvoa1N8xgrclouhsO4kBPVrTPhjO/zP5mn1Ww03uZ2SThNMXS7zg==
 
 strip-ansi@^6.0.0, strip-ansi@^6.0.1:
   version "6.0.1"

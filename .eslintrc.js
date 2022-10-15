@@ -1,10 +1,15 @@
 module.exports = {
-  extends: ['eslint:recommended'],
+  extends: ['eslint:recommended', 'plugin:lodash/recommended'],
+  plugins: ['lodash'],
   parserOptions: {
     ecmaVersion: 'latest',
   },
   root: true,
   ignorePatterns: ['dist'],
+  rules: {
+    'lodash/prefer-lodash-typecheck': 'off',
+    'lodash/prefer-lodash-method': 'off',
+  },
   overrides: [
     {
       files: ['./*.js', 'script/**/*', 'src/client/driver/electron/**/*'],
@@ -17,7 +22,6 @@ module.exports = {
     {
       files: ['*.ts'],
       parser: '@typescript-eslint/parser',
-      plugins: ['prefer-arrow-functions'],
       extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended'],
     },
     {
