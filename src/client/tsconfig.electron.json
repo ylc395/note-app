@@ -1,9 +1,8 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "module": "CommonJS",
-    "outDir": "../../dist/electron"
+    "module": "CommonJS"
   },
-  "include": ["./driver/electron/**/*", "../shared/infra/LocalClient.ts"],
+  "include": ["./driver/electron/**/*", "../shared/**/*"],
   "exclude": ["./driver/electron/preload.ts"]
 }

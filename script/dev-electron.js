@@ -6,13 +6,12 @@ const chokidar = require('chokidar');
 const { default: tsconfigPaths } = require('vite-tsconfig-paths');
 const { replaceTscAliasPaths } = require('tsc-alias');
 
-const ELECTRON_OUTPUT = 'dist/electron';
-const ELECTRON_SERVER_TSCONFIG = 'src/server/tsconfig.electron.json';
-const ELECTRON_CLIENT_TSCONFIG = 'src/client/tsconfig.electron.json';
 const CLIENT_TSCONFIG = 'src/client/tsconfig.json';
-const ELECTRON_RELATED_DIRS = ['src/server', 'src/client/driver/electron', 'src/shared'];
 
 async function buildElectron(viteUrl) {
+  const ELECTRON_OUTPUT = 'dist/electron';
+  const ELECTRON_SERVER_TSCONFIG = 'src/server/tsconfig.electron.json';
+  const ELECTRON_CLIENT_TSCONFIG = 'src/client/tsconfig.electron.json';
   // preload script must be processed by a bundler, since `require` doesn't work
   // @see https://www.electronjs.org/docs/latest/tutorial/sandbox#preload-scripts
   await build({
@@ -36,8 +35,15 @@ async function buildElectron(viteUrl) {
   shell.env['NODE_ENV'] = 'development';
   shell.env['DEV_CLEAN'] = process.argv.includes('--clean') ? '1' : '0';
 
-  shell.exec(`tsc --build ${ELECTRON_SERVER_TSCONFIG} ${ELECTRON_CLIENT_TSCONFIG}`); // have to use build mode to get a correct dir structure
-  replaceTscAliasPaths({ configFile: ELECTRON_SERVER_TSCONFIG });
+  const serverBuildInfo = path.join(ELECTRON_OUTPUT, 'server.tsbuildinfo');
+  const clientBuildInfo = path.join(ELECTRON_OUTPUT, 'client.tsbuildinfo');
+  shell.exec(
+    `tsc --project ${ELECTRON_CLIENT_TSCONFIG} --outDir ${ELECTRON_OUTPUT} --tsBuildInfoFile ${clientBuildInfo}`,
+  );
+  shell.exec(
+    `tsc --project ${ELECTRON_SERVER_TSCONFIG} --outDir ${ELECTRON_OUTPUT} --tsBuildInfoFile ${serverBuildInfo}`,
+  );
+  await replaceTscAliasPaths({ configFile: ELECTRON_SERVER_TSCONFIG, outDir: ELECTRON_OUTPUT });
   let electronProcess = shell.exec(`electron ${ELECTRON_OUTPUT}/server/driver/electron/index.js`, { async: true });
 
   return electronProcess;
@@ -67,6 +73,7 @@ async function createViteServer() {
 
 (async () => {
   const viteUrl = await createViteServer();
+  const ELECTRON_RELATED_DIRS = ['src/server', 'src/client/driver/electron', 'src/shared'];
   let shellProcess = await buildElectron(viteUrl);
 
   chokidar.watch(ELECTRON_RELATED_DIRS, { ignoreInitial: true }).on('all', async (event, path) => {
