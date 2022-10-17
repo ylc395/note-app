@@ -9,6 +9,7 @@ module.exports = {
   rules: {
     'lodash/prefer-lodash-typecheck': 'off',
     'lodash/prefer-lodash-method': 'off',
+    'lodash/prefer-constant': 'off',
   },
   overrides: [
     {

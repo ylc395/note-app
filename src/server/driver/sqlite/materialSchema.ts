@@ -6,8 +6,9 @@ export default {
     table.increments('id');
     table.binary('data');
     table.text('name');
-    table.text('source');
+    table.text('source_url');
     table.text('mime_type');
+    table.text('device_name');
     table.timestamp('added_at').defaultTo(knex.fn.now());
   },
 };

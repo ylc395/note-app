@@ -5,7 +5,7 @@ import mapKeys from 'lodash/mapKeys';
 import partialRight from 'lodash/partialRight';
 import { join } from 'path';
 
-import type { Database } from 'service/infra/Database';
+import type { Database } from 'domain/infra/Database';
 
 import materialsSchema from './materialSchema';
 

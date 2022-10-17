@@ -1,12 +1,15 @@
 import { app, BrowserWindow } from 'electron';
 import { join } from 'path';
+import { hostname } from 'os';
 import { ensureDirSync, emptyDirSync } from 'fs-extra';
+
+import type { LocalClient } from 'infra/LocalClient';
 
 const APP_NAME = 'my-note-app';
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const NEED_CLEAN = process.env.DEV_CLEAN === '1';
 
-export default class App {
+export default class App implements LocalClient {
   readonly #electronApp = app;
   #mainWindow?: BrowserWindow;
 
@@ -66,5 +69,9 @@ export default class App {
       await this.#mainWindow.loadURL(process.env['VITE_SERVER_ENTRY_URL']!);
       this.#mainWindow.webContents.openDevTools();
     }
+  }
+
+  getDeviceName() {
+    return hostname();
   }
 }

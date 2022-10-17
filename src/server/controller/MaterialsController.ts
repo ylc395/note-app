@@ -1,5 +1,5 @@
 import { Controller, Inject } from '@nestjs/common';
-import type { MaterialFile } from 'model/Material';
+import type { RawMaterial } from 'model/Material';
 import MaterialService from 'service/MaterialService';
 
 import { Post, Body } from './decorators';
@@ -9,7 +9,7 @@ export default class MaterialsController {
   constructor(@Inject(MaterialService) private materialService: MaterialService) {}
 
   @Post('materials')
-  create(@Body() files: MaterialFile[]) {
+  create(@Body() files: RawMaterial[]) {
     this.materialService.create(files);
   }
 }

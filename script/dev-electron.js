@@ -4,30 +4,21 @@ const pluginVue = require('@vitejs/plugin-vue');
 const shell = require('shelljs');
 const chokidar = require('chokidar');
 const { default: tsconfigPaths } = require('vite-tsconfig-paths');
-
-const WEB_TSCONFIG = 'src/client/driver/web/tsconfig.json';
+const { replaceTscAliasPaths } = require('tsc-alias');
 
 const ELECTRON_OUTPUT = 'dist/electron';
-const ELECTRON_TSCONFIG = 'src/server/driver/electron/tsconfig.json';
-const PATH_TSCONFIG = 'src/server/tsconfig.json';
-const ELECTRON_TS_FLAG = `--project ${ELECTRON_TSCONFIG} --outDir ${ELECTRON_OUTPUT}`;
+const ELECTRON_SERVER_TSCONFIG = 'src/server/tsconfig.electron.json';
+const ELECTRON_CLIENT_TSCONFIG = 'src/client/tsconfig.electron.json';
+const CLIENT_TSCONFIG = 'src/client/tsconfig.json';
 const ELECTRON_RELATED_DIRS = ['src/server', 'src/client/driver/electron', 'src/shared'];
 
-function callShell(viteUrl) {
-  shell.env['VITE_SERVER_ENTRY_URL'] = viteUrl;
-  shell.env['NODE_ENV'] = 'development';
-  shell.env['DEV_CLEAN'] = process.argv.includes('--clean') ? '1' : '0';
-
-  shell.exec(`tsc ${ELECTRON_TS_FLAG}`);
-  shell.exec(`resolve-tspaths --project ${PATH_TSCONFIG} --out ${ELECTRON_OUTPUT}`);
-  let electronProcess = shell.exec(`electron ${ELECTRON_OUTPUT}/server/driver/electron/index.js`, { async: true });
-
-  return electronProcess;
-}
-
-(async () => {
+async function buildElectron(viteUrl) {
+  // preload script must be processed by a bundler, since `require` doesn't work
+  // @see https://www.electronjs.org/docs/latest/tutorial/sandbox#preload-scripts
   await build({
     build: {
+      minify: false,
+      sourcemap: true,
       emptyOutDir: false,
       outDir: path.resolve(ELECTRON_OUTPUT, 'client/driver/electron'),
       lib: {
@@ -39,14 +30,27 @@ function callShell(viteUrl) {
         external: ['electron'],
       },
     },
+    plugins: [tsconfigPaths({ projects: [path.resolve(process.cwd(), CLIENT_TSCONFIG)] })],
   });
+  shell.env['VITE_SERVER_ENTRY_URL'] = viteUrl;
+  shell.env['NODE_ENV'] = 'development';
+  shell.env['DEV_CLEAN'] = process.argv.includes('--clean') ? '1' : '0';
+
+  shell.exec(`tsc --build ${ELECTRON_SERVER_TSCONFIG} ${ELECTRON_CLIENT_TSCONFIG}`); // have to use build mode to get a correct dir structure
+  replaceTscAliasPaths({ configFile: ELECTRON_SERVER_TSCONFIG });
+  let electronProcess = shell.exec(`electron ${ELECTRON_OUTPUT}/server/driver/electron/index.js`, { async: true });
+
+  return electronProcess;
+}
+
+async function createViteServer() {
   const server = await createServer({
     configFile: false,
     root: './src/client/driver/web',
     plugins: [
       pluginVue(),
       tsconfigPaths({
-        projects: [path.resolve(process.cwd(), WEB_TSCONFIG)],
+        projects: [path.resolve(process.cwd(), CLIENT_TSCONFIG)],
         loose: true,
       }),
     ],
@@ -58,11 +62,16 @@ function callShell(viteUrl) {
   await server.listen();
   server.printUrls();
 
-  let shellProcess = callShell(server.resolvedUrls.local[0]);
+  return server.resolvedUrls.local[0];
+}
 
-  chokidar.watch(ELECTRON_RELATED_DIRS, { ignoreInitial: true }).on('all', (event, path) => {
+(async () => {
+  const viteUrl = await createViteServer();
+  let shellProcess = await buildElectron(viteUrl);
+
+  chokidar.watch(ELECTRON_RELATED_DIRS, { ignoreInitial: true }).on('all', async (event, path) => {
     console.log(path, event);
     shellProcess.kill();
-    shellProcess = callShell(server.resolvedUrls.local[0]);
+    shellProcess = await buildElectron(viteUrl);
   });
 })();

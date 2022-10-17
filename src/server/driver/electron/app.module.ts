@@ -1,8 +1,10 @@
 import { Inject, Module, type OnApplicationBootstrap } from '@nestjs/common';
 
 import MaterialsController from 'controller/MaterialsController';
-import { type Database, token as databaseToken } from 'service/infra/Database';
-import { token as fileReaderToken } from 'service/infra/FileReader';
+import { type Database, token as databaseToken } from 'infra/Database';
+import { token as fileReaderToken } from 'infra/FileReader';
+import { token as localClientToken, type LocalClient } from 'infra/LocalClient';
+
 import MaterialService from 'service/MaterialService';
 import SqliteDb from 'driver/sqlite';
 import FileReader from 'driver/fs';
@@ -13,14 +15,14 @@ import ElectronApp from 'client/driver/electron';
   providers: [
     { provide: databaseToken, useClass: SqliteDb },
     { provide: fileReaderToken, useClass: FileReader },
-    ElectronApp,
+    { provide: localClientToken, useClass: ElectronApp },
     MaterialService,
   ],
 })
 export default class AppModule implements OnApplicationBootstrap {
   constructor(
     @Inject(databaseToken) private readonly db: Database,
-    @Inject(ElectronApp) private readonly electronApp: ElectronApp,
+    @Inject(localClientToken) private readonly electronApp: LocalClient,
   ) {}
   async onApplicationBootstrap() {
     const configDir = this.electronApp.getConfigDir();

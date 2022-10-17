@@ -2,10 +2,12 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "baseUrl": ".",
+    "rootDir": "../",
     "paths": {
       "model/*": ["domain/model/*", "../shared/model/*"],
       "service/*": ["domain/service/*"],
-      "web/*": ["driver/web/*"]
+      "web/*": ["driver/web/*"],
+      "infra/*": ["../shared/infra/*"]
     }
   }
 }

@@ -2,9 +2,10 @@ type TagId = string;
 
 export const UNKNOWN_MIME_TYPE = 'unknown';
 
-export interface MaterialFile {
-  path: string;
+export interface RawMaterial {
+  url: string;
   mimeType: string;
+  deviceName?: string;
 }
 
 export interface Material {
@@ -14,5 +15,6 @@ export interface Material {
   tags?: TagId[];
   addedAt?: number;
   size?: number;
-  source?: string;
+  sourceUrl: string;
+  deviceName?: string;
 }

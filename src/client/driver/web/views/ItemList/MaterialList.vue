@@ -1,17 +1,10 @@
 <script lang="ts">
 import { computed, defineComponent, h } from 'vue';
-import {
-  BIconTriangleFill,
-  BIconTag,
-  BIconGrid,
-  BIconCloud,
-  BIconPlusLg,
-} from 'bootstrap-icons-vue';
+import { BIconTriangleFill, BIconTag, BIconGrid, BIconCloud, BIconPlusLg } from 'bootstrap-icons-vue';
 import { NDropdown } from 'naive-ui';
 import { container } from 'tsyringe';
 
 import { ViewTypes } from 'model/gui/ItemList/MaterialList';
-import type { MaterialFile } from 'model/Material';
 import ItemListService from 'service/ItemListService';
 import { selectFiles } from 'web/utils/dom';
 
@@ -54,12 +47,12 @@ export default defineComponent({
     const currentView = computed(() => VIEW_TYPES[viewType.value].text);
     const uploadMaterials = async () => {
       const files = await selectFiles();
-      const materialFiles: MaterialFile[] = files.map((file) => {
+      const materialFiles = files.map((file) => {
         if (!file.path) {
           throw new Error('no file path');
         }
 
-        return { path: file.path, mimeType: file.type };
+        return { url: `file://${file.path}`, mimeType: file.type };
       });
 
       addMaterials(materialFiles);
@@ -91,10 +84,7 @@ export default defineComponent({
         >
           <button class="flex items-center text-gray-400">
             {{ currentView }}
-            <BIconTriangleFill
-              class="rotate-180 ml-1"
-              :style="{ 'font-size': '6px' }"
-            />
+            <BIconTriangleFill class="rotate-180 ml-1" :style="{ 'font-size': '6px' }" />
           </button>
         </NDropdown>
       </div>
