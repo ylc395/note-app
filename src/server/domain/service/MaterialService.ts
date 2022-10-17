@@ -15,7 +15,7 @@ export default class MaterialService {
   async create(files: RawMaterial[]) {
     const materials = await Promise.all(
       files.map(async ({ url, mimeType, deviceName }) => {
-        const path = url.match(/^file:\/\/(.+)/)?.[0];
+        const path = url.match(/^file:\/\/(.+)/)?.[1];
 
         if (!path) {
           throw new Error('invalid path');
