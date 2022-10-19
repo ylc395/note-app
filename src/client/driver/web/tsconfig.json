@@ -1,6 +1,6 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["./web/**/*", "domain/**/*", "../shared/**/*"],
+  "include": ["./**/*", "../../domain/**/*", "../shared/**/*"],
   "compilerOptions": {
     "isolatedModules": true
   },
