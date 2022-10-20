@@ -6,7 +6,7 @@
       "model/*": ["domain/model/*", "../shared/model/*"],
       "service/*": ["domain/service/*"],
       "web/*": ["driver/web/*"],
-      "infra/*": ["../shared/infra/*"]
+      "infra/*": ["domain/infra/*", "../shared/infra/*"]
     }
   }
 }

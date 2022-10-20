@@ -5,9 +5,10 @@ import mapKeys from 'lodash/mapKeys';
 import partialRight from 'lodash/partialRight';
 import { join } from 'path';
 
-import type { Database } from 'domain/infra/Database';
+import type { Database } from 'infra/Database';
 
 import materialsSchema from './materialSchema';
+import fileSchema from './fileSchema';
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 
@@ -19,7 +20,6 @@ export default class SqliteDb implements Database {
       connection: join(dir, 'db.sqlite'),
       debug: isDevelopment,
       asyncStackTraces: isDevelopment,
-      useNullAsDefault: true,
       postProcessResponse: this.#transformKeys,
       wrapIdentifier: (value, originImpl) => originImpl(snakeCase(value)),
     });
@@ -35,11 +35,11 @@ export default class SqliteDb implements Database {
       return result.map(this.#transformKeys);
     }
 
-    return mapKeys(result, camelCase);
+    return mapKeys(result, (_, key) => camelCase(key));
   };
 
   #createTables = async () => {
-    const schemas = [materialsSchema];
+    const schemas = [fileSchema, materialsSchema];
 
     await Promise.all(
       schemas.map(async ({ tableName, builder }) => {

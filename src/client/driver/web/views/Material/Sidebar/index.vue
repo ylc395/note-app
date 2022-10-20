@@ -6,6 +6,7 @@ import { container } from 'tsyringe';
 
 import MaterialService from 'service/MaterialService';
 import { selectFiles } from 'web/utils/dom';
+import type { Material } from 'model/Material';
 
 export default defineComponent({
   components: { NTabs, NTabPane, NButton, NDropdown, BIconThreeDots, BIconPlusLg },
@@ -30,14 +31,14 @@ export default defineComponent({
         case 'file':
           {
             const files = await selectFiles();
-            materialService.addMaterials(
-              files.map(({ path, type }) => {
-                if (!path) {
-                  throw new Error('no path for file');
-                }
-                return { url: path, mimeType: type };
-              }),
-            );
+            const materials: Partial<Material>[] = files.map(({ path, type }) => {
+              if (!path) {
+                throw new Error('no path for file');
+              }
+              return { sourceUrl: `file://${path}`, mimeType: type };
+            });
+
+            materialService.addMaterials(materials);
           }
           break;
 

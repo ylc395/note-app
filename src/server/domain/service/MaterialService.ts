@@ -2,7 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { type FileReader, token as fileReaderToken } from 'infra/FileReader';
 import { type Database, token as databaseToken } from 'infra/Database';
 import { type LocalClient, token as localClientToken } from 'infra/LocalClient';
-import { type Material, type RawMaterial, UNKNOWN_MIME_TYPE } from 'model/Material';
+import type { Material } from 'model/Material';
 
 @Injectable()
 export default class MaterialService {
@@ -12,28 +12,26 @@ export default class MaterialService {
     @Inject(localClientToken) private readonly localClient?: LocalClient,
   ) {}
 
-  async create(files: RawMaterial[]) {
-    const materials = await Promise.all(
-      files.map(async ({ url, mimeType, deviceName }) => {
-        const path = url.match(/^file:\/\/(.+)/)?.[1];
+  async create(materials: Partial<Material>[]) {
+    const deviceName = this.localClient?.getDeviceName();
+    const files = await Promise.all(
+      materials.map(async ({ sourceUrl, mimeType }) => {
+        const path = sourceUrl?.match(/^file:\/\/(.+)/)?.[1];
 
         if (!path) {
-          throw new Error('invalid path');
+          throw new Error('invalid sourceUrl');
         }
 
-        const { data, name } = await this.fileReader.read(path);
-        const material: Material = {
-          data,
-          name,
-          mimeType: mimeType || UNKNOWN_MIME_TYPE,
-          sourceUrl: url,
-          deviceName: deviceName || this.localClient?.getDeviceName(),
-        };
+        const { data, name, hash } = await this.fileReader.read(path);
 
-        return material;
+        return { data, name, mimeType, deviceName, sourceUrl, hash };
       }),
     );
 
-    await this.db.knex.insert(materials).into('materials');
+    const fileRecords: { id: number; name: string }[] = await this.db
+      .knex('files')
+      .returning(['id', 'name'])
+      .insert(files);
+    await this.db.knex('materials').insert(fileRecords.map(({ id, name }) => ({ fileId: id, name })));
   }
 }

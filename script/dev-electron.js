@@ -46,6 +46,7 @@ async function buildElectron(viteUrl) {
   shell.exec(
     `tsc --project ${ELECTRON_SERVER_TSCONFIG} --outDir ${ELECTRON_OUTPUT} --tsBuildInfoFile ${serverBuildInfo}`,
   );
+  shell.exec('clear');
   await replaceTscAliasPaths({ configFile: ELECTRON_SERVER_TSCONFIG, outDir: ELECTRON_OUTPUT });
   let electronProcess = shell.exec(`electron ${ELECTRON_OUTPUT}/server/driver/electron/index.js`, { async: true });
 
@@ -76,6 +77,7 @@ async function createViteServer() {
 }
 
 (async () => {
+  shell.exec('clear');
   const viteUrl = await createViteServer();
   const ELECTRON_RELATED_DIRS = ['src/server', 'src/client/driver/electron', 'src/shared'];
   let shellProcess = await buildElectron(viteUrl);

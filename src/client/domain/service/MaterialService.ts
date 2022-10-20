@@ -1,13 +1,13 @@
 import { container, singleton } from 'tsyringe';
 
-import type { RawMaterial } from 'model/Material';
-import MaterialRepository from './repository/MaterialRepository';
+import type { Material } from 'model/Material';
+import { token as remoteToken } from 'infra/Remote';
 
 @singleton()
 export default class MaterialService {
-  readonly #materialRepository = container.resolve(MaterialRepository);
+  readonly #remote = container.resolve(remoteToken);
 
-  readonly addMaterials = (files: RawMaterial[]) => {
-    this.#materialRepository.add(files);
+  readonly addMaterials = async (materials: Partial<Material>[]) => {
+    await this.#remote.post('/materials', materials);
   };
 }

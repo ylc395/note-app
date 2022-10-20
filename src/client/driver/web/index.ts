@@ -2,7 +2,7 @@ import 'reflect-metadata';
 import { createApp } from 'vue';
 import { container } from 'tsyringe';
 
-import { type Remote, token as remoteToken } from 'service/repository/remote';
+import { type Remote, token as remoteToken } from 'infra/Remote';
 import httpClient from './utils/httpClient';
 
 import App from './App.vue';
