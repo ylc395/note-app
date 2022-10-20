@@ -7,13 +7,9 @@ const { default: tsconfigPaths } = require('vite-tsconfig-paths');
 const { replaceTscAliasPaths } = require('tsc-alias');
 
 const CLIENT_TSCONFIG = 'src/client/tsconfig.json';
+const ELECTRON_OUTPUT = 'dist/electron';
 
-async function buildElectron(viteUrl) {
-  const ELECTRON_OUTPUT = 'dist/electron';
-  const ELECTRON_SERVER_TSCONFIG = 'src/server/tsconfig.electron.json';
-  const ELECTRON_CLIENT_TSCONFIG = 'src/client/tsconfig.electron.json';
-  // preload script must be processed by a bundler, since `require` doesn't work
-  // @see https://www.electronjs.org/docs/latest/tutorial/sandbox#preload-scripts
+async function buildPreload() {
   await build({
     build: {
       minify: false,
@@ -31,6 +27,13 @@ async function buildElectron(viteUrl) {
     },
     plugins: [tsconfigPaths({ projects: [path.resolve(process.cwd(), CLIENT_TSCONFIG)] })],
   });
+}
+
+async function buildElectron(viteUrl) {
+  const ELECTRON_SERVER_TSCONFIG = 'src/server/tsconfig.electron.json';
+  const ELECTRON_CLIENT_TSCONFIG = 'src/client/tsconfig.electron.json';
+  // preload script must be processed by a bundler, since `require` doesn't work
+  // @see https://www.electronjs.org/docs/latest/tutorial/sandbox#preload-scripts
   shell.env['VITE_SERVER_ENTRY_URL'] = viteUrl;
   shell.env['NODE_ENV'] = 'development';
   shell.env['DEV_CLEAN'] = process.argv.includes('--clean') ? '1' : '0';
@@ -50,6 +53,7 @@ async function buildElectron(viteUrl) {
 }
 
 async function createViteServer() {
+  await buildPreload();
   const server = await createServer({
     configFile: false,
     root: './src/client/driver/web',
