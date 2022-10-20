@@ -4,7 +4,7 @@ export const UNKNOWN_MIME_TYPE = 'unknown';
 
 export interface RawMaterial {
   url: string;
-  mimeType: string;
+  mimeType?: string;
   deviceName?: string;
 }
 

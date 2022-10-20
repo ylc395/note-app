@@ -2,10 +2,14 @@
 import { container } from 'tsyringe';
 import { computed, defineComponent } from 'vue';
 
-import ItemListService from 'service/ItemListService';
+import ItemListService from 'service/MaterialService';
+
+import ManagerTab from './Sidebar/index.vue';
+import List from './List/index.vue';
 import { KNOWLEDGE_TYPES_TEXTS } from '../constants';
 
 export default defineComponent({
+  components: { ManagerTab, List },
   setup() {
     const { currentListType } = container.resolve(ItemListService);
     const title = computed(() => KNOWLEDGE_TYPES_TEXTS[currentListType.value]);
@@ -15,15 +19,8 @@ export default defineComponent({
 });
 </script>
 <template>
-  <div class="bg-gray-100 h-full">
-    <div class="flex py-1 px-2 border-b border-solid">
-      <span class="text-sm text-gray-600">{{ title }}</span>
-      <div class="flex-grow">
-        <slot name="headerOperation" />
-      </div>
-    </div>
-    <div>
-      <slot name="main" />
-    </div>
+  <div class="bg-gray-100 h-full flex">
+    <ManagerTab />
+    <List class="flex-grow" />
   </div>
 </template>
