@@ -12,8 +12,12 @@ export default class ElectronIpcServer extends Server implements CustomTransport
         return { status: 404 };
       }
 
-      const result = await handler(req);
-      return { status: 200, body: result };
+      try {
+        const result = await handler(req);
+        return { status: 200, body: result };
+      } catch (error) {
+        return { status: 500, body: { error } };
+      }
     });
     cb();
   }
