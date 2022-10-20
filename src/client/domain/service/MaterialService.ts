@@ -8,6 +8,7 @@ export default class MaterialService {
   readonly #remote = container.resolve(remoteToken);
 
   readonly addMaterials = async (materials: Partial<Material>[]) => {
-    await this.#remote.post('/materials', materials);
+    const results = await this.#remote.post('/materials', materials);
+    console.log(results);
   };
 }

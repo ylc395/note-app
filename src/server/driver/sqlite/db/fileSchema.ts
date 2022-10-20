@@ -11,8 +11,10 @@ export interface Row {
   createdAt: number;
 }
 
+export const tableName = 'files';
+
 export default {
-  tableName: 'files',
+  tableName,
   builder: (table: Knex.TableBuilder, knex: Knex) => {
     table.increments('id');
     table.text('name').notNullable();
