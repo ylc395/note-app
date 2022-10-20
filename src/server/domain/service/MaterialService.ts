@@ -1,21 +1,23 @@
 import { Injectable, Inject } from '@nestjs/common';
+import pick from 'lodash/pick';
+
 import { type FileReader, token as fileReaderToken } from 'infra/FileReader';
-import { type Database, token as databaseToken } from 'infra/Database';
 import { type LocalClient, token as localClientToken } from 'infra/LocalClient';
-import type { Material } from 'model/Material';
+import { token as materialRepositoryToken, type MaterialRepository } from 'service/repository/MaterialRepository';
+import type { Material, File } from 'model/Material';
 
 @Injectable()
 export default class MaterialService {
   constructor(
     @Inject(fileReaderToken) private readonly fileReader: FileReader,
-    @Inject(databaseToken) private readonly db: Database,
+    @Inject(materialRepositoryToken) private readonly materialRepository: MaterialRepository,
     @Inject(localClientToken) private readonly localClient?: LocalClient,
   ) {}
 
-  async create(materials: Partial<Material>[]) {
-    const deviceName = this.localClient?.getDeviceName();
-    const files = await Promise.all(
-      materials.map(async ({ sourceUrl, mimeType }) => {
+  async create(materials: Partial<Material>[]): Promise<Required<Material>[]> {
+    const deviceName = this.localClient?.getDeviceName() || '';
+    const files: File[] = await Promise.all(
+      materials.map(async ({ sourceUrl, mimeType = '' }) => {
         const path = sourceUrl?.match(/^file:\/\/(.+)/)?.[1];
 
         if (!path) {
@@ -28,10 +30,12 @@ export default class MaterialService {
       }),
     );
 
-    const fileRecords: { id: number; name: string }[] = await this.db
-      .knex('files')
-      .returning(['id', 'name'])
-      .insert(files);
-    await this.db.knex('materials').insert(fileRecords.map(({ id, name }) => ({ fileId: id, name })));
+    const createdMaterials = await this.materialRepository.createByFiles(files);
+    const result = createdMaterials.map((material, i) => ({
+      ...material,
+      ...pick(files[i], ['sourceUrl', 'mimeType', 'deviceName']),
+    }));
+
+    return result;
   }
 }

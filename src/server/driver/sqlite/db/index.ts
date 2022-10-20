@@ -5,14 +5,12 @@ import mapKeys from 'lodash/mapKeys';
 import partialRight from 'lodash/partialRight';
 import { join } from 'path';
 
-import type { Database } from 'infra/Database';
-
 import materialsSchema from './materialSchema';
 import fileSchema from './fileSchema';
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 
-export default class SqliteDb implements Database {
+class SqliteDb {
   knex: Knex;
   readonly init = async (dir: string) => {
     this.knex = knex({
@@ -50,3 +48,5 @@ export default class SqliteDb implements Database {
     );
   };
 }
+
+export default new SqliteDb();

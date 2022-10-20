@@ -9,7 +9,9 @@ export default class MaterialsController {
   constructor(@Inject(MaterialService) private materialService: MaterialService) {}
 
   @Post('materials')
-  create(@Body() materials: Partial<Material>[]) {
-    this.materialService.create(materials);
+  async create(@Body() materials: Partial<Material>[]): Promise<Material[]> {
+    const newMaterials = await this.materialService.create(materials);
+
+    return newMaterials;
   }
 }
