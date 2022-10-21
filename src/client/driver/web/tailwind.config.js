@@ -1,13 +1,11 @@
 /* eslint-env node */
-/** @type {import('tailwindcss').Config} */
 
 const path = require('path');
 
+/** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: [
-    path.join(__dirname, './index.html'),
-    path.join(__dirname, './**/*.{vue,ts}'),
-  ],
+  content: [path.join(__dirname, './index.html'), path.join(__dirname, './**/*.{vue,ts}')],
+  important: '#app',
   theme: {
     extend: {},
   },

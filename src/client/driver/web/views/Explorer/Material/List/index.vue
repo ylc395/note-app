@@ -1,6 +1,14 @@
+<script lang="ts">
+import { defineComponent } from 'vue';
+import SearchInput from './SearchInput.vue';
+
+export default defineComponent({
+  components: { SearchInput },
+});
+</script>
 <template>
-  <div class="bg-white">
-    <div>过滤器</div>
+  <div class="p-2 bg-white border-r">
+    <SearchInput />
     <div>列表</div>
   </div>
 </template>

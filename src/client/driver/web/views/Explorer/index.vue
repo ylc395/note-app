@@ -20,6 +20,8 @@ export default defineComponent({
 <template>
   <div class="flex">
     <Switcher />
-    <component :is="currentView" />
+    <KeepAlive>
+      <component :is="currentView" />
+    </KeepAlive>
   </div>
 </template>

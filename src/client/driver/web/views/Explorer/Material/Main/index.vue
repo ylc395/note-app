@@ -1,15 +1,18 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import { NButton, NDropdown, type DropdownOption, NCollapse, NCollapseItem } from 'naive-ui';
-import { BIconThreeDots, BIconPlusSquareFill } from 'bootstrap-icons-vue';
+import { BIconPlusSquareFill } from 'bootstrap-icons-vue';
 import { container } from 'tsyringe';
 
 import MaterialService from 'service/MaterialService';
 import { selectFiles } from 'web/utils/dom';
 import type { Material } from 'model/Material';
 
+import TagManager from './TagManager/index.vue';
+import CustomFilter from './CustomFilter/index.vue';
+
 export default defineComponent({
-  components: { NButton, NDropdown, NCollapse, NCollapseItem, BIconThreeDots, BIconPlusSquareFill },
+  components: { NButton, NDropdown, NCollapse, NCollapseItem, BIconPlusSquareFill, TagManager, CustomFilter },
   setup() {
     const addOptions: DropdownOption[] = [
       { label: '选择文件', key: 'file' },
@@ -46,27 +49,20 @@ export default defineComponent({
 });
 </script>
 <template>
-  <div class="px-2 w-60">
-    <header class="flex items-center justify-between h-10 border-b mb-2">
-      <div class="flex items-center">
-        <h1 class="mr-2">素材库</h1>
-        <NDropdown placement="bottom-start" :options="addOptions" trigger="click" @select="handleAdd">
-          <NButton text class="text-lg"><BIconPlusSquareFill /></NButton>
-        </NDropdown>
-      </div>
-      <NDropdown placement="bottom-start">
-        <NButton text class="text-lg mr-2"><BIconThreeDots /></NButton>
+  <div class="p-2 w-60">
+    <header class="flex justify-between border-b mb-2 pb-2">
+      <h1>资料库</h1>
+      <NDropdown placement="bottom-end" :options="addOptions" trigger="click" @select="handleAdd">
+        <NButton text class="text-lg"><BIconPlusSquareFill /></NButton>
       </NDropdown>
     </header>
     <NCollapse>
-      <NCollapseItem title="标签管理器"> aaa </NCollapseItem>
-      <NCollapseItem title="标记管理器"> aaa </NCollapseItem>
-      <NCollapseItem title="类型管理器"> aaa </NCollapseItem>
+      <NCollapseItem title="标签管理器">
+        <TagManager />
+      </NCollapseItem>
+      <NCollapseItem title="固化视图">
+        <CustomFilter />
+      </NCollapseItem>
     </NCollapse>
   </div>
 </template>
-<style scoped>
-:deep(.n-tabs-nav__prefix) {
-  /* padding-right: 0 !important; */
-}
-</style>
