@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
-import type { Remote } from 'service/repository/remote';
+import type { Remote } from 'infra/Remote';
 import { IPC_CHANNEL, type IpcRequest } from './ipc';
 
 const client: Remote = {

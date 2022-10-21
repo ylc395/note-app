@@ -1,3 +1,4 @@
+import type { Response } from 'infra/Remote';
 export const IPC_CHANNEL = 'fakeHttp';
 
 // https://expressjs.com/en/api.html#req
@@ -10,9 +11,4 @@ export interface IpcRequest {
   headers?: Record<string, string>;
 }
 
-// https://github.com/axios/axios#response-schema
-export interface IpcResponse<T = unknown> {
-  status: number;
-  body?: T;
-  headers?: Record<string, string>;
-}
+export type IpcResponse = Response;
