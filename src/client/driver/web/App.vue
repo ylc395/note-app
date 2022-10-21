@@ -1,20 +1,20 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 
-import KnowledgeSwitcher from './views/KnowledgeSwitcher.vue';
-import Material from './views/Material/index.vue';
+import Workbench from './views/Workbench/index.vue';
+import Explorer from './views/Explorer/index.vue';
 
 export default defineComponent({
   components: {
-    KnowledgeSwitcher,
-    Material,
+    Workbench,
+    Explorer,
   },
 });
 </script>
 <template>
   <div class="flex h-screen">
-    <KnowledgeSwitcher />
-    <Material class="flex-grow" />
+    <Explorer />
+    <Workbench class="flex-grow" />
   </div>
 </template>
 <style>

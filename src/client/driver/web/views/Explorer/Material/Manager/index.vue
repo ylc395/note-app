@@ -1,7 +1,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
-import { NTabs, NTabPane, NButton, NDropdown, type DropdownOption } from 'naive-ui';
-import { BIconThreeDots, BIconPlusLg } from 'bootstrap-icons-vue';
+import { NButton, NDropdown, type DropdownOption, NCollapse, NCollapseItem } from 'naive-ui';
+import { BIconThreeDots, BIconPlusSquareFill } from 'bootstrap-icons-vue';
 import { container } from 'tsyringe';
 
 import MaterialService from 'service/MaterialService';
@@ -9,14 +9,8 @@ import { selectFiles } from 'web/utils/dom';
 import type { Material } from 'model/Material';
 
 export default defineComponent({
-  components: { NTabs, NTabPane, NButton, NDropdown, BIconThreeDots, BIconPlusLg },
+  components: { NButton, NDropdown, NCollapse, NCollapseItem, BIconThreeDots, BIconPlusSquareFill },
   setup() {
-    const allTabs = [
-      { key: 'tags', label: '标签' },
-      { key: 'types', label: '类型' },
-      { key: 'labels', label: '标记' },
-    ];
-
     const addOptions: DropdownOption[] = [
       { label: '选择文件', key: 'file' },
       { label: '选择目录', key: 'directory' },
@@ -47,26 +41,29 @@ export default defineComponent({
       }
     };
 
-    return { allTabs, addOptions, handleAdd };
+    return { addOptions, handleAdd };
   },
 });
 </script>
 <template>
-  <aside class="px-2 w-60">
-    <NTabs :default-value="allTabs[0].key" type="segment">
-      <NTabPane v-for="{ key, label } of allTabs" :key="key" :name="key" :tab="label" />
-      <template #prefix>
+  <div class="px-2 w-60">
+    <header class="flex items-center justify-between h-10 border-b mb-2">
+      <div class="flex items-center">
+        <h1 class="mr-2">素材库</h1>
         <NDropdown placement="bottom-start" :options="addOptions" trigger="click" @select="handleAdd">
-          <NButton text class="text-lg"><BIconPlusLg /></NButton>
+          <NButton text class="text-lg"><BIconPlusSquareFill /></NButton>
         </NDropdown>
-      </template>
-      <template #suffix>
-        <NDropdown placement="bottom-start">
-          <NButton text class="text-lg mr-2"><BIconThreeDots /></NButton>
-        </NDropdown>
-      </template>
-    </NTabs>
-  </aside>
+      </div>
+      <NDropdown placement="bottom-start">
+        <NButton text class="text-lg mr-2"><BIconThreeDots /></NButton>
+      </NDropdown>
+    </header>
+    <NCollapse>
+      <NCollapseItem title="标签管理器"> aaa </NCollapseItem>
+      <NCollapseItem title="标记管理器"> aaa </NCollapseItem>
+      <NCollapseItem title="类型管理器"> aaa </NCollapseItem>
+    </NCollapse>
+  </div>
 </template>
 <style scoped>
 :deep(.n-tabs-nav__prefix) {

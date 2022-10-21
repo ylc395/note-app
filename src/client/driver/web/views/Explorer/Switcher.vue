@@ -12,7 +12,15 @@ import {
 
 import ViewService from 'service/ViewService';
 import { KnowledgeTypes } from 'model/content/constants';
-import { KNOWLEDGE_TYPES_TEXTS } from './constants';
+import Material from './Material/index.vue';
+
+const KNOWLEDGE_TYPES_TEXTS: Readonly<Record<KnowledgeTypes, string>> = {
+  [KnowledgeTypes.Materials]: '素材库',
+  [KnowledgeTypes.Notes]: '笔记本',
+  [KnowledgeTypes.Projects]: '项目',
+  [KnowledgeTypes.Memos]: '备忘',
+  [KnowledgeTypes.Cards]: '卡片',
+};
 
 const ICONS = {
   [KnowledgeTypes.Materials]: 'BIconBoxes',
@@ -24,6 +32,7 @@ const ICONS = {
 
 export default defineComponent({
   components: {
+    Material,
     BIconBoxes,
     BIconJournalBookmark,
     BIconStickies,

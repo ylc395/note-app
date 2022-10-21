@@ -5,7 +5,7 @@ import { KnowledgeTypes } from 'model/content/constants';
 
 @singleton()
 export default class ViewService {
-  readonly currentView = ref<KnowledgeTypes>(KnowledgeTypes.Notes);
+  readonly currentView = ref<KnowledgeTypes>(KnowledgeTypes.Materials);
   readonly setCurrentView = (type: KnowledgeTypes) => {
     this.currentView.value = type;
   };
