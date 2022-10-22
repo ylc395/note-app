@@ -1,4 +1,4 @@
-import type { Remote } from 'service/repository/remote';
+import type { Remote } from 'infra/Remote';
 
 const client: Remote = {
   async get<T>() {

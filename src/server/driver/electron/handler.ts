@@ -19,5 +19,9 @@ export const Patch = createDecorator('PATCH');
 export const Put = createDecorator('PUT');
 
 export const Body = createParamDecorator((_, ctx: ExecutionContext) => {
-  return ctx.getArgByIndex(0)?.body;
+  return ctx.getArgByIndex<IpcRequest>(0)?.body;
+});
+
+export const Query = createParamDecorator((_, ctx: ExecutionContext) => {
+  return ctx.getArgByIndex<IpcRequest>(0)?.query;
 });

@@ -6,10 +6,14 @@ import { IPC_CHANNEL, type IpcRequest } from './ipc';
 const client: Remote = {
   get(path, query) {
     const request: IpcRequest = { path, query, method: 'GET' };
+    console.log(request);
+
     return ipcRenderer.invoke(IPC_CHANNEL, request);
   },
   post(path, body) {
     const request: IpcRequest = { path, body, method: 'POST' };
+    console.log(request);
+
     return ipcRenderer.invoke(IPC_CHANNEL, request);
   },
 };

@@ -26,6 +26,5 @@ export default class AppModule implements OnApplicationBootstrap {
     const configDir = this.electronApp.getConfigDir();
 
     await sqliteDb.init(configDir);
-    await this.electronApp.start();
   }
 }
