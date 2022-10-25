@@ -8,5 +8,6 @@
       "web/*": ["driver/web/*"],
       "infra/*": ["domain/infra/*", "../shared/infra/*"]
     }
-  }
+  },
+  "types": ["naive-ui/volar"]
 }
