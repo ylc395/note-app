@@ -1,19 +1,11 @@
-export interface File {
-  data: ArrayBuffer;
-  name: string;
-  sourceUrl: string;
-  hash: string;
-  mimeType: string;
-  deviceName: string;
-}
+import type { File } from './File';
 
-export interface MaterialWithoutFile {
+export interface Material {
   id: number;
   name: string;
   comment: string;
   rating: number;
   createdAt: number;
   updatedAt: number;
+  file?: File;
 }
-
-export type Material = MaterialWithoutFile & Pick<File, 'deviceName' | 'mimeType' | 'sourceUrl'>;

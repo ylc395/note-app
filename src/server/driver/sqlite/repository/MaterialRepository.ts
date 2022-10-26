@@ -1,27 +1,21 @@
-import type { File } from 'model/Material';
+import omit from 'lodash/omit';
+
+import type { Material } from 'model/Material';
 import type { MaterialRepository } from 'service/repository/MaterialRepository';
 
 import db from '../db';
 import { type Row as MaterialRow, tableName as materialsTableName } from '../db/materialSchema';
-import { type Row as FileRow, tableName as filesTableName } from '../db/fileSchema';
 
 export default class SqliteMaterialRepository implements MaterialRepository {
-  async createByFiles(files: File[]) {
-    const transaction = await db.knex.transaction();
-    let createdMaterial: Omit<MaterialRow, 'file_id'>[] = [];
+  async create(materials: Partial<Material>[]) {
+    const materialRows: Partial<MaterialRow>[] = materials.map((m) => {
+      if (!m.file?.id) {
+        throw new Error('no file id');
+      }
 
-    try {
-      const createdFiles = await transaction<FileRow>(filesTableName).insert(files).returning(['id', 'name']);
+      return { ...omit(m, 'file'), fileId: m.file.id };
+    });
 
-      createdMaterial = await transaction<MaterialRow>(materialsTableName)
-        .insert(createdFiles.map(({ id, name }) => ({ fileId: id, name })))
-        .returning(['id', 'name', 'comment', 'rating', 'created_at', 'updated_at']);
-
-      await transaction.commit();
-    } catch (error) {
-      await transaction.rollback(error);
-    }
-
-    return createdMaterial;
+    return await db.knex<MaterialRow>(materialsTableName).insert(materialRows).returning('*');
   }
 }

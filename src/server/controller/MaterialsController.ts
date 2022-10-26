@@ -10,8 +10,6 @@ export default class MaterialsController {
 
   @Post('materials')
   async create(@Body() materials: Partial<Material>[]): Promise<Material[]> {
-    const newMaterials = await this.materialService.create(materials);
-
-    return newMaterials;
+    return await this.materialService.create(materials);
   }
 }
