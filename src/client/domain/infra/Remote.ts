@@ -8,8 +8,8 @@ export interface Response<T = undefined> {
 }
 
 export interface Remote {
-  get: <T = undefined>(path: string, query: Record<string, unknown>) => Promise<Response<T>>;
-  post: <T = undefined>(path: string, body: unknown) => Promise<Response<T>>;
+  get: <T, K = undefined>(path: string, query: T) => Promise<Response<K>>;
+  post: <T, K = undefined>(path: string, body: T) => Promise<Response<K>>;
 }
 
 export const token: InjectionToken<Remote> = Symbol('remoteToken');

@@ -1,18 +1,28 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
-import { NButton, NDropdown, type DropdownOption, NCollapse, NCollapseItem } from 'naive-ui';
+import { NButton, NDropdown, type DropdownOption, NCollapse, NCollapseItem, NModal } from 'naive-ui';
 import { BIconPlusSquareFill } from 'bootstrap-icons-vue';
 import { container } from 'tsyringe';
 
-import MaterialService from 'service/MaterialService';
+import MaterialService, { AddingTypes } from 'service/MaterialService';
 import { selectFiles } from 'web/utils/dom';
-import type { Material } from 'model/Material';
 
 import TagManager from './TagManager/index.vue';
 import CustomFilter from './CustomFilter/index.vue';
+import MaterialsEditor from './MaterialsEditor/index.vue';
 
 export default defineComponent({
-  components: { NButton, NDropdown, NCollapse, NCollapseItem, BIconPlusSquareFill, TagManager, CustomFilter },
+  components: {
+    NButton,
+    NDropdown,
+    NCollapse,
+    NCollapseItem,
+    NModal,
+    BIconPlusSquareFill,
+    TagManager,
+    CustomFilter,
+    MaterialsEditor,
+  },
   setup() {
     const addOptions: DropdownOption[] = [
       { label: '选择文件', key: 'file' },
@@ -21,21 +31,20 @@ export default defineComponent({
       { label: '全盘扫描', key: 'disk' },
     ];
 
-    const materialService = container.resolve(MaterialService);
+    const { addMaterialsByFiles, addingType } = container.resolve(MaterialService);
 
     const handleAdd = async (key: string) => {
       switch (key) {
         case 'file':
           {
-            const files = await selectFiles();
-            const materials: Partial<Material>[] = files.map(({ path, type }) => {
+            const rawFiles = await selectFiles();
+            const files = rawFiles.map(({ path, type }) => {
               if (!path) {
                 throw new Error('no path for file');
               }
               return { sourceUrl: `file://${path}`, mimeType: type };
             });
-
-            materialService.addMaterials(materials);
+            addMaterialsByFiles(files);
           }
           break;
 
@@ -44,7 +53,7 @@ export default defineComponent({
       }
     };
 
-    return { addOptions, handleAdd };
+    return { addOptions, handleAdd, addingType, AddingTypes };
   },
 });
 </script>
@@ -65,4 +74,7 @@ export default defineComponent({
       </NCollapseItem>
     </NCollapse>
   </div>
+  <NModal to="#app" :show="addingType !== AddingTypes.None">
+    <MaterialsEditor />
+  </NModal>
 </template>

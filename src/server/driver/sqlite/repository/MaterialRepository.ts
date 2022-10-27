@@ -16,6 +16,9 @@ export default class SqliteMaterialRepository implements MaterialRepository {
       return { ...omit(m, 'file'), fileId: m.file.id };
     });
 
-    return await db.knex<MaterialRow>(materialsTableName).insert(materialRows).returning('*');
+    return await db
+      .knex<MaterialRow>(materialsTableName)
+      .insert(materialRows)
+      .returning<MaterialRow[]>(db.knex.raw('*'));
   }
 }

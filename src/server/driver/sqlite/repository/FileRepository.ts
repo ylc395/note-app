@@ -6,9 +6,11 @@ import { type Row as FileRow, tableName as filesTableName } from '../db/fileSche
 
 export default class SqliteFileRepository implements FileRepository {
   async create(file: Partial<File>) {
-    return await db
+    const rows = await db
       .knex<FileRow>(filesTableName)
       .insert(file)
-      .returning<Omit<FileRow, 'data'>>(['id', 'name', 'mime_type', 'device_name', 'source_url', 'hash', 'created_at']);
+      .returning<Omit<FileRow, 'data'>[]>(['id', 'mime_type', 'device_name', 'source_url', 'hash', 'created_at']);
+
+    return rows[0];
   }
 }
