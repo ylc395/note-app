@@ -18,7 +18,6 @@ class SqliteDb {
       client: 'sqlite3',
       connection: join(dir, 'db.sqlite'),
       debug: isDevelopment,
-      asyncStackTraces: isDevelopment,
       postProcessResponse: this.#transformKeys,
       wrapIdentifier: (value, originImpl) => originImpl(snakeCase(value)),
     });

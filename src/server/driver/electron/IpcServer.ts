@@ -5,7 +5,7 @@ import { IPC_CHANNEL, type IpcRequest, type IpcResponse } from 'client/driver/el
 
 export default class ElectronIpcServer extends Server implements CustomTransportStrategy {
   listen(cb: () => void) {
-    ipcMain.handle(IPC_CHANNEL, async (e, req: IpcRequest): Promise<IpcResponse> => {
+    ipcMain.handle(IPC_CHANNEL, async (e, req: IpcRequest<unknown>): Promise<IpcResponse<unknown>> => {
       const handler = this.messageHandlers.get(this.normalizePattern({ path: req.path, method: req.method }));
 
       if (!handler) {
@@ -14,11 +14,10 @@ export default class ElectronIpcServer extends Server implements CustomTransport
 
       try {
         const result = await handler(req);
-        console.log(result);
 
         return { status: 200, body: result };
       } catch (error) {
-        return { status: 500, body: { error } };
+        return { status: 500, body: { error: String(error) } };
       }
     });
     cb();
