@@ -1,7 +1,7 @@
 import { container, singleton } from 'tsyringe';
 import { ref, toRaw } from '@vue/reactivity';
 
-import { token as remoteToken } from 'infra/Remote';
+import { type Remote, token as remoteToken } from 'infra/Remote';
 import type { Material } from 'model/Material';
 import type { File } from 'model/File';
 
@@ -17,7 +17,7 @@ type MaterialDto = Pick<Material, 'comment' | 'name' | 'rating'> & { file: { id:
 
 @singleton()
 export default class MaterialService {
-  readonly #remote = container.resolve(remoteToken);
+  readonly #remote: Remote = container.resolve(remoteToken);
   readonly addingType = ref(AddingTypes.None);
   readonly materials = ref<MaterialDto[]>([]);
 

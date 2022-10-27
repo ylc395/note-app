@@ -8,7 +8,7 @@ const { replaceTscAliasPaths } = require('tsc-alias');
 const { checker } = require('vite-plugin-checker');
 const { parse } = require('tsconfck');
 
-const CLIENT_TSCONFIG = 'src/client/tsconfig.json';
+const CLIENT_TSCONFIG = path.resolve(process.cwd(), 'src/client/tsconfig.json');
 const ELECTRON_OUTPUT = 'dist/electron';
 
 async function buildPreload() {
@@ -29,7 +29,10 @@ async function buildPreload() {
         external: ['electron'],
       },
     },
-    plugins: [tsconfigPaths({ projects: [path.resolve(process.cwd(), CLIENT_TSCONFIG)] })],
+    plugins: [
+      checker({ typescript: { tsconfigPath: CLIENT_TSCONFIG }, enableBuild: false }),
+      tsconfigPaths({ projects: [CLIENT_TSCONFIG] }),
+    ],
   });
 }
 
@@ -73,7 +76,7 @@ async function createViteServer() {
       checker({ vueTsc: { tsconfigPath: WEB_TSCONFIG }, overlay: false }),
       pluginVue(),
       tsconfigPaths({
-        projects: [path.resolve(process.cwd(), CLIENT_TSCONFIG)],
+        projects: [CLIENT_TSCONFIG],
         loose: true,
       }),
     ],
@@ -99,6 +102,7 @@ async function createViteServer() {
 
   let shellProcess = await buildElectron(viteUrl);
   chokidar.watch(ELECTRON_RELATED_DIRS, { ignoreInitial: true }).on('all', async (event, path) => {
+    shell.exec('clear');
     console.log(path, event);
     shellProcess?.kill();
     shellProcess = await buildElectron(viteUrl);

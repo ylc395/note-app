@@ -9,7 +9,7 @@ export default class ElectronIpcServer extends Server implements CustomTransport
       const handler = this.messageHandlers.get(this.normalizePattern({ path: req.path, method: req.method }));
 
       if (!handler) {
-        return { status: 404 };
+        return { status: 404, body: { error: req } };
       }
 
       try {
