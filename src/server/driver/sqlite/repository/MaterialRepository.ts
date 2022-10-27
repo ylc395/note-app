@@ -19,6 +19,6 @@ export default class SqliteMaterialRepository implements MaterialRepository {
     return await db
       .knex<MaterialRow>(materialsTableName)
       .insert(materialRows)
-      .returning<MaterialRow[]>(db.knex.raw('*'));
+      .returning<Omit<Material, 'fileId'>[]>(['id', 'name', 'comment', 'rating', 'createdAt', 'updatedAt']);
   }
 }

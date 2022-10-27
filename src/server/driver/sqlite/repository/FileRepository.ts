@@ -9,7 +9,7 @@ export default class SqliteFileRepository implements FileRepository {
     const rows = await db
       .knex<FileRow>(filesTableName)
       .insert(file)
-      .returning<Omit<FileRow, 'data'>[]>(['id', 'mime_type', 'device_name', 'source_url', 'hash', 'created_at']);
+      .returning<Omit<FileRow, 'data'>[]>(['id', 'mimeType', 'deviceName', 'sourceUrl', 'hash', 'createdAt']);
 
     return rows[0];
   }
