@@ -6,7 +6,7 @@ import partialRight from 'lodash/partialRight';
 import { join } from 'path';
 
 import materialsSchema from './materialSchema';
-import fileSchema from './fileSchema';
+import fileSchema, { tableName as filesTableName, type Row as FileRow } from './fileSchema';
 import tagSchema from './tagSchema';
 
 const isDevelopment = process.env.NODE_ENV === 'development';
@@ -21,7 +21,9 @@ class SqliteDb {
       postProcessResponse: this.#transformKeys,
       wrapIdentifier: (value, originImpl) => originImpl(snakeCase(value)),
     });
+
     await this.#createTables();
+    await this.#emptyTempFiles();
   };
 
   #transformKeys = (result: unknown): unknown => {
@@ -36,7 +38,7 @@ class SqliteDb {
     return mapKeys(result, (_, key) => camelCase(key));
   };
 
-  #createTables = async () => {
+  async #createTables() {
     const schemas = [fileSchema, materialsSchema, tagSchema];
 
     await Promise.all(
@@ -46,7 +48,11 @@ class SqliteDb {
         }
       }),
     );
-  };
+  }
+
+  async #emptyTempFiles() {
+    await this.knex<FileRow>(filesTableName).where('isTemp', 1).delete();
+  }
 }
 
 export default new SqliteDb();

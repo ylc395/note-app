@@ -1,24 +1,28 @@
-import omit from 'lodash/omit';
+import map from 'lodash/map';
 
-import type { Material } from 'model/Material';
+import type { MaterialDTO } from 'dto/Material';
 import type { MaterialRepository } from 'service/repository/MaterialRepository';
 
 import db from '../db';
 import { type Row as MaterialRow, tableName as materialsTableName } from '../db/materialSchema';
+import { type Row as FileRow, tableName as filesTableName } from '../db/fileSchema';
 
 export default class SqliteMaterialRepository implements MaterialRepository {
-  async create(materials: Partial<Material>[]) {
-    const materialRows: Partial<MaterialRow>[] = materials.map((m) => {
-      if (!m.file?.id) {
-        throw new Error('no file id');
-      }
+  async create(materials: MaterialDTO[]) {
+    let createdMaterials: MaterialRow[] = [];
+    const trx = await db.knex.transaction();
 
-      return { ...omit(m, 'file'), fileId: m.file.id };
-    });
+    try {
+      createdMaterials = await trx<MaterialRow>(materialsTableName)
+        .insert(materials)
+        .returning<MaterialRow[]>(db.knex.raw('*'));
 
-    return await db
-      .knex<MaterialRow>(materialsTableName)
-      .insert(materialRows)
-      .returning<Omit<Material, 'fileId'>[]>(['id', 'name', 'comment', 'rating', 'createdAt', 'updatedAt']);
+      await trx<FileRow>(filesTableName).where('id', map(materials, 'fileId')).update('isTemp', 0);
+      await trx.commit();
+    } catch (error) {
+      await trx.rollback(error);
+    }
+
+    return createdMaterials;
   }
 }

@@ -1,5 +1,5 @@
 import { Controller, Inject } from '@nestjs/common';
-import type { Material } from 'model/Material';
+import type { MaterialDTO, MaterialVO } from 'dto/Material';
 import MaterialService from 'service/MaterialService';
 
 import { Post, Body } from './decorators';
@@ -9,7 +9,7 @@ export default class MaterialsController {
   constructor(@Inject(MaterialService) private materialService: MaterialService) {}
 
   @Post('materials')
-  async create(@Body() materials: Partial<Material>[]): Promise<Material[]> {
+  async create(@Body() materials: MaterialDTO[]): Promise<MaterialVO[]> {
     return await this.materialService.create(materials);
   }
 }

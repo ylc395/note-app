@@ -8,6 +8,7 @@ export interface Row {
   deviceName: string;
   sourceUrl: string;
   hash: string;
+  isTemp: 0 | 1;
   createdAt: number;
 }
 
@@ -21,6 +22,7 @@ export default {
     table.text('mime_type').notNullable().defaultTo('');
     table.text('device_name').notNullable().defaultTo('');
     table.text('source_url').notNullable().defaultTo('');
+    table.integer('is_temp').notNullable();
     table.text('hash').notNullable();
     table.integer('created_at').notNullable().defaultTo(knex.raw('(unixepoch())'));
   },

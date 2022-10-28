@@ -1,8 +1,9 @@
 export interface File {
-  id: number;
-  data?: ArrayBuffer;
+  id?: number;
   sourceUrl: string;
-  hash: string;
   mimeType: string;
   deviceName: string;
+  hash: string;
+  data: ArrayBuffer;
+  isTemp: boolean;
 }

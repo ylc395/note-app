@@ -4,7 +4,8 @@
     "baseUrl": ".",
     "module": "CommonJS",
     "paths": {
-      "model/*": ["domain/model/*", "../shared/model/*"],
+      "model/*": ["../domain/model/*"],
+      "dto/*": ["../shared/dto/*"],
       "service/*": ["domain/service/*"],
       "infra/*": ["domain/infra/*", "../shared/infra/*"],
       "driver/*": ["driver/*"],
