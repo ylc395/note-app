@@ -3,9 +3,9 @@ import map from 'lodash/map';
 import type { MaterialDTO } from 'dto/Material';
 import type { MaterialRepository } from 'service/repository/MaterialRepository';
 
-import db from '../db';
-import { type Row as MaterialRow, tableName as materialsTableName } from '../db/materialSchema';
-import { type Row as FileRow, tableName as filesTableName } from '../db/fileSchema';
+import db from 'driver/sqlite';
+import { type Row as MaterialRow, tableName as materialsTableName } from 'driver/sqlite/materialSchema';
+import { type Row as FileRow, tableName as filesTableName } from 'driver/sqlite/fileSchema';
 
 export default class SqliteMaterialRepository implements MaterialRepository {
   async create(materials: MaterialDTO[]) {

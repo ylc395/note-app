@@ -9,7 +9,8 @@ export interface FileVO {
   sourceUrl: string;
   mimeType: string;
   deviceName: string;
-  isDuplicated: boolean;
+  isDuplicated?: boolean;
+  createdAt?: number;
 }
 
 export type FileDataDTO = ArrayBuffer;

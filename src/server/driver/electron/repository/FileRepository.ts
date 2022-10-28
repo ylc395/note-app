@@ -1,8 +1,8 @@
 import type { File } from 'model/File';
 import type { FileRepository, FileQuery } from 'service/repository/FileRepository';
 
-import db from '../db';
-import { type Row as FileRow, tableName as filesTableName } from '../db/fileSchema';
+import db from 'driver/sqlite';
+import { type Row as FileRow, tableName as filesTableName } from 'driver/sqlite/fileSchema';
 
 export default class SqliteFileRepository implements FileRepository {
   async create(file: File) {
