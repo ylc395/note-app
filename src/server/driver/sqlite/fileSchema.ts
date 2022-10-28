@@ -1,5 +1,10 @@
 import type { Knex } from 'knex';
 
+export enum TempFlags {
+  No,
+  Yes,
+}
+
 export interface Row {
   id: number;
   name: string;
@@ -8,7 +13,7 @@ export interface Row {
   deviceName: string;
   sourceUrl: string;
   hash: string;
-  isTemp: 0 | 1;
+  isTemp: TempFlags;
   ocrResult: string;
   createdAt: number;
 }

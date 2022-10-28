@@ -1,5 +1,5 @@
 import type { Knex } from 'knex';
-import fileSchema from './fileSchema';
+import { tableName as filesTableName } from './fileSchema';
 
 export interface Row {
   id: number;
@@ -19,7 +19,7 @@ export default {
     table.increments('id');
     table.text('name').notNullable();
     table.integer('file_id').notNullable();
-    table.foreign('file_id').references(`${fileSchema.tableName}.id`);
+    table.foreign('file_id').references(`${filesTableName}.id`);
     table.text('comment').notNullable().defaultTo('');
     table.integer('rating').notNullable().defaultTo(0);
     table.integer('created_at').defaultTo(knex.raw('(unixepoch())')).notNullable();

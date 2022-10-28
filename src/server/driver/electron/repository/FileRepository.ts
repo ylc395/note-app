@@ -2,13 +2,13 @@ import type { File } from 'model/File';
 import type { FileRepository, FileQuery } from 'service/repository/FileRepository';
 
 import db from 'driver/sqlite';
-import { type Row as FileRow, tableName as filesTableName } from 'driver/sqlite/fileSchema';
+import { type Row as FileRow, tableName as filesTableName, TempFlags } from 'driver/sqlite/fileSchema';
 
 export default class SqliteFileRepository implements FileRepository {
   async create(file: File) {
     const rows = await db
       .knex<FileRow>(filesTableName)
-      .insert({ ...file, isTemp: file.isTemp ? 1 : 0 })
+      .insert({ ...file, isTemp: file.isTemp ? TempFlags.Yes : TempFlags.No })
       .returning(['id']);
 
     return rows[0].id;

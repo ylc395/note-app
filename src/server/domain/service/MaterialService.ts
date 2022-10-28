@@ -3,7 +3,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 
 import { token as materialRepositoryToken, type MaterialRepository } from 'service/repository/MaterialRepository';
 import type { MaterialDTO } from 'dto/Material';
-import { Events as FileEvents, FileAddedEvent } from 'model/File';
+import { Events as FileEvents, type FileAddedEvent } from 'model/File';
 
 @Injectable()
 export default class MaterialService {
