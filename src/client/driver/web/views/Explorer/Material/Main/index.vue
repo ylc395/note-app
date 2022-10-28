@@ -31,7 +31,7 @@ export default defineComponent({
       { label: '全盘扫描', key: 'disk' },
     ];
 
-    const { addMaterialsByFiles, addingType } = container.resolve(MaterialService);
+    const { initNewMaterialsByFiles, addingType } = container.resolve(MaterialService);
 
     const handleAdd = async (key: string) => {
       switch (key) {
@@ -42,9 +42,9 @@ export default defineComponent({
               if (!path) {
                 throw new Error('no path for file');
               }
-              return { sourceUrl: `file://${path}`, mimeType: type };
+              return { sourceUrl: `file://${path}`, mimeType: type, isTemp: true };
             });
-            addMaterialsByFiles(files);
+            initNewMaterialsByFiles(files);
           }
           break;
 

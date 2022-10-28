@@ -1,7 +1,7 @@
 export interface FileDTO {
   sourceUrl: string;
   mimeType: string;
-  isTemp?: boolean;
+  isTemp: boolean;
 }
 
 export interface FileVO {
@@ -9,7 +9,7 @@ export interface FileVO {
   sourceUrl: string;
   mimeType: string;
   deviceName: string;
-  createdAt: number;
+  isDuplicated: boolean;
 }
 
 export type FileDataDTO = ArrayBuffer;

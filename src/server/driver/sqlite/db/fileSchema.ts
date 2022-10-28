@@ -9,6 +9,7 @@ export interface Row {
   sourceUrl: string;
   hash: string;
   isTemp: 0 | 1;
+  ocrResult: string;
   createdAt: number;
 }
 
@@ -24,6 +25,7 @@ export default {
     table.text('source_url').notNullable().defaultTo('');
     table.integer('is_temp').notNullable();
     table.text('hash').notNullable();
+    table.text('ocr_result').notNullable().defaultTo('');
     table.integer('created_at').notNullable().defaultTo(knex.raw('(unixepoch())'));
   },
 };

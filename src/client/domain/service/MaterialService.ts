@@ -2,8 +2,8 @@ import { container, singleton } from 'tsyringe';
 import { ref, toRaw } from '@vue/reactivity';
 
 import { type Remote, token as remoteToken } from 'infra/Remote';
-import type { Material } from 'model/Material';
-import type { File } from 'model/File';
+import type { MaterialDTO, MaterialVO } from 'dto/Material';
+import type { FileDTO, FileVO } from 'dto/File';
 
 export enum AddingTypes {
   None,
@@ -12,21 +12,18 @@ export enum AddingTypes {
   Clipboard,
 }
 
-type FileDto = Pick<File, 'sourceUrl' | 'mimeType'>;
-type MaterialDto = Pick<Material, 'comment' | 'name' | 'rating'> & { file: { id: File['id'] } };
-
 @singleton()
 export default class MaterialService {
   readonly #remote: Remote = container.resolve(remoteToken);
   readonly addingType = ref(AddingTypes.None);
-  readonly materials = ref<MaterialDto[]>([]);
+  readonly newMaterials = ref<MaterialDTO[]>([]);
 
-  readonly addMaterialsByFiles = async (files: FileDto[]) => {
+  readonly initNewMaterialsByFiles = async (files: FileDTO[]) => {
     this.addingType.value = AddingTypes.Files;
-    const { body: createdFiles } = await this.#remote.post<FileDto[], File[]>('/files', files);
+    const { body: createdFiles } = await this.#remote.post<FileDTO[], FileVO[]>('/files', files);
 
-    this.materials.value = createdFiles.map(({ id }) => ({
-      file: { id },
+    this.newMaterials.value = createdFiles.map(({ id }) => ({
+      fileId: id,
       comment: '',
       rating: 0,
       name: '',
@@ -34,8 +31,8 @@ export default class MaterialService {
   };
 
   readonly uploadMaterials = async () => {
-    await this.#remote.post<MaterialDto[], Material[]>('/materials', toRaw(this.materials.value));
+    await this.#remote.post<MaterialDTO[], MaterialVO[]>('/materials', toRaw(this.newMaterials.value));
     this.addingType.value = AddingTypes.None;
-    this.materials.value = [];
+    this.newMaterials.value = [];
   };
 }

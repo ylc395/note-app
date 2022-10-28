@@ -13,11 +13,8 @@ export default class SqliteMaterialRepository implements MaterialRepository {
     const trx = await db.knex.transaction();
 
     try {
-      createdMaterials = await trx<MaterialRow>(materialsTableName)
-        .insert(materials)
-        .returning<MaterialRow[]>(db.knex.raw('*'));
-
-      await trx<FileRow>(filesTableName).where('id', map(materials, 'fileId')).update('isTemp', 0);
+      createdMaterials = await trx<MaterialRow>(materialsTableName).insert(materials).returning(db.knex.raw('*'));
+      await trx<FileRow>(filesTableName).whereIn('id', map(materials, 'fileId')).update('isTemp', 0);
       await trx.commit();
     } catch (error) {
       await trx.rollback(error);

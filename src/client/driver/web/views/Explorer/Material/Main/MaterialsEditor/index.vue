@@ -6,16 +6,16 @@ import MaterialService from 'service/MaterialService';
 
 export default defineComponent({
   setup() {
-    const { uploadMaterials, materials } = container.resolve(MaterialService);
+    const { uploadMaterials, newMaterials } = container.resolve(MaterialService);
 
-    return { uploadMaterials, materials };
+    return { uploadMaterials, newMaterials };
   },
 });
 </script>
 <template>
   <div class="bg-white">
-    <div v-for="material of materials" :key="material.file.id">
-      {{ material.file.id }}
+    <div v-for="material of newMaterials" :key="material.fileId">
+      {{ material.fileId }}
     </div>
     <button @click="uploadMaterials">确认</button>
   </div>
