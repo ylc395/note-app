@@ -1,4 +1,5 @@
 import { Server, type CustomTransportStrategy } from '@nestjs/microservices';
+import type { ExceptionFilter } from '@nestjs/common';
 import { ipcMain } from 'electron';
 
 import { IPC_CHANNEL, type IpcRequest, type IpcResponse } from 'client/driver/electron/ipc';
@@ -14,15 +15,21 @@ export default class ElectronIpcServer extends Server implements CustomTransport
 
       try {
         const result = await handler(req);
-
         return { status: 200, body: result };
-      } catch (error) {
-        return { status: 500, body: { error: String(error) } };
+      } catch (e) {
+        console.error(e);
+        return { status: 500, body: { error: String(e) } };
       }
     });
     cb();
   }
   close() {
     ipcMain.removeHandler(IPC_CHANNEL);
+  }
+}
+
+export class RawExceptionFilter implements ExceptionFilter {
+  catch(exception: unknown) {
+    throw exception;
   }
 }
