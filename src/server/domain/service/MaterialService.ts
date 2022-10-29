@@ -16,7 +16,8 @@ export default class MaterialService {
     const createdMaterials = await this.repository.create(materials);
 
     for (const { fileId } of materials) {
-      this.eventEmitter.emit(FileEvents.Added, { fileId: fileId } as FileAddedEvent);
+      const event: FileAddedEvent = { fileId };
+      this.eventEmitter.emit(FileEvents.Added, event);
     }
 
     return createdMaterials;

@@ -37,7 +37,8 @@ export default class FileService {
     });
 
     if (!isTemp) {
-      this.eventEmitter.emit(Events.Added, { fileId } as FileAddedEvent);
+      const event: FileAddedEvent = { fileId };
+      this.eventEmitter.emit(Events.Added, event);
     }
 
     return { id: fileId, mimeType, sourceUrl, deviceName, isDuplicated: Boolean(sameFile) } as FileVO;
