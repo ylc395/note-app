@@ -1,6 +1,6 @@
 import { Controller } from '@nestjs/common';
 
-import type { TagDTO, TagQuery, TagVO } from 'dto/Tag';
+import type { TagDTO, TagQuery, TagVO } from 'interface/Tag';
 import TagService from 'service/TagService';
 
 import { Post, Get, Body, Query } from './decorators';

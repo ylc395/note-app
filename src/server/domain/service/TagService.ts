@@ -1,5 +1,5 @@
 import { Inject } from '@nestjs/common';
-import type { TagDTO, TagTypes } from 'dto/Tag';
+import type { TagDTO, TagTypes } from 'interface/Tag';
 import { type TagRepository, token as tagRepositoryToken } from './repository/TagRepository';
 
 export default class TagService {

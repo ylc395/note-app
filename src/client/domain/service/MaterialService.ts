@@ -2,8 +2,8 @@ import { container, singleton } from 'tsyringe';
 import { ref, toRaw } from '@vue/reactivity';
 
 import { type Remote, token as remoteToken } from 'infra/Remote';
-import type { MaterialDTO, MaterialVO } from 'dto/Material';
-import type { FileDTO, FileVO } from 'dto/File';
+import type { MaterialDTO, MaterialVO } from 'interface/Material';
+import type { FileDTO, FileVO } from 'interface/File';
 
 export enum AddingTypes {
   None,

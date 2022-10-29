@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 
-import type { FileDTO, FileVO } from 'dto/File';
+import type { FileDTO, FileVO } from 'interface/File';
 import { Events, type FileAddedEvent } from 'model/File';
 
 import { token as fileRepositoryToken, type FileRepository } from 'service/repository/FileRepository';

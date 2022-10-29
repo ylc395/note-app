@@ -1,5 +1,5 @@
 import { Controller } from '@nestjs/common';
-import type { MaterialDTO, MaterialVO } from 'dto/Material';
+import type { MaterialDTO, MaterialVO } from 'interface/Material';
 import MaterialService from 'service/MaterialService';
 
 import { Post, Body } from './decorators';

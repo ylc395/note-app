@@ -1,5 +1,5 @@
 import type { InjectionToken } from '@nestjs/common';
-import type { TagDTO, TagVO, TagTypes } from 'dto/Tag';
+import type { TagDTO, TagVO, TagTypes } from 'interface/Tag';
 
 export const token: InjectionToken = Symbol('tagRepository');
 

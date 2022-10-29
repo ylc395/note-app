@@ -1,6 +1,6 @@
 import map from 'lodash/map';
 
-import type { MaterialDTO } from 'dto/Material';
+import type { MaterialDTO } from 'interface/Material';
 import type { MaterialRepository } from 'service/repository/MaterialRepository';
 
 import db from 'driver/sqlite';

@@ -1,6 +1,6 @@
 import { Controller } from '@nestjs/common';
 
-import type { FileDTO, FileVO } from 'dto/File';
+import type { FileDTO, FileVO } from 'interface/File';
 import FileService from 'service/FileService';
 
 import { Post, Body } from './decorators';

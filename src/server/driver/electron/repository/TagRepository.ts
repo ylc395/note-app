@@ -1,4 +1,4 @@
-import type { TagDTO, TagTypes } from 'dto/Tag';
+import type { TagDTO, TagTypes } from 'interface/Tag';
 import type { TagRepository } from 'service/repository/TagRepository';
 import { tableName, Row } from 'driver/sqlite/tagSchema';
 import db from 'driver/sqlite';
