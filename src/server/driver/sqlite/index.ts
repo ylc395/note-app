@@ -6,8 +6,9 @@ import partialRight from 'lodash/partialRight';
 import { join } from 'path';
 
 import materialsSchema from './materialSchema';
-import fileSchema, { tableName as filesTableName, type Row as FileRow } from './fileSchema';
+import fileSchema, { type Row as FileRow } from './fileSchema';
 import tagSchema from './tagSchema';
+import entityToTagSchema from './entityToTagSchema';
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 
@@ -39,7 +40,7 @@ class SqliteDb {
   };
 
   async #createTables() {
-    const schemas = [fileSchema, materialsSchema, tagSchema];
+    const schemas = [fileSchema, materialsSchema, tagSchema, entityToTagSchema];
 
     await Promise.all(
       schemas.map(async ({ tableName, builder }) => {
@@ -51,7 +52,7 @@ class SqliteDb {
   }
 
   async #emptyTempFiles() {
-    await this.knex<FileRow>(filesTableName).where('isTemp', 1).delete();
+    await this.knex<FileRow>(fileSchema.tableName).where('isTemp', 1).delete();
   }
 }
 
