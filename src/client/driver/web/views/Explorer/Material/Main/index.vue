@@ -66,9 +66,7 @@ export default defineComponent({
       </NDropdown>
     </header>
     <NCollapse>
-      <NCollapseItem title="标签管理器">
-        <TagManager />
-      </NCollapseItem>
+      <TagManager />
       <NCollapseItem title="固化视图">
         <CustomFilter />
       </NCollapseItem>

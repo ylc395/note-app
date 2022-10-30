@@ -1,17 +1,25 @@
 import { singleton, container } from 'tsyringe';
-import { shallowRef } from '@vue/reactivity';
+import { toRaw } from '@vue/reactivity';
 
-import type { TagTypes, TagQuery, TagVO } from 'interface/Tag';
-import type { TagTree } from 'model/Tag';
+import { TagTypes, type TagQuery, type TagVO, type TagDTO } from 'interface/Tag';
+import TagTree from 'model/TagTree';
 import { type Remote, token as remoteToken } from 'infra/Remote';
 
 @singleton()
 export default class TagService {
   readonly #remote: Remote = container.resolve(remoteToken);
-  readonly materialTagTree = shallowRef<TagTree>([]);
-  async buildTagTree(type: TagTypes) {
-    const { body: tags } = await this.#remote.get<TagQuery, TagVO[]>('/tags', { type });
-
-    return;
+  readonly materialTagTree = new TagTree();
+  constructor() {
+    this.#init();
   }
+
+  #init = async () => {
+    const { body: tags } = await this.#remote.get<TagQuery, TagVO[]>('/tags', { type: TagTypes.Material });
+    this.materialTagTree.init(tags);
+  };
+
+  createTag = async (newTag: TagDTO) => {
+    const { body: createdTag } = await this.#remote.post<TagDTO, TagVO>('/tags', toRaw(newTag));
+    this.materialTagTree.addNode(createdTag);
+  };
 }

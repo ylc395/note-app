@@ -7,6 +7,7 @@ export interface TagVO {
 export interface TagDTO {
   name: string;
   parentId: TagVO['id'];
+  type: TagTypes;
 }
 
 export enum TagTypes {
