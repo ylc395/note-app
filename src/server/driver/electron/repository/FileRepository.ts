@@ -15,12 +15,10 @@ export default class SqliteFileRepository implements FileRepository {
   }
 
   async findOne(query: FileQuery) {
-    const rows = await db
+    const result = await db
       .knex<FileRow>(filesTableName)
       .where(query)
-      .select('id', 'sourceUrl', 'mimeType', 'deviceName', 'hash', 'isTemp');
-
-    const result = rows[0];
+      .first('id', 'sourceUrl', 'mimeType', 'deviceName', 'hash', 'isTemp');
 
     if (result) {
       return { ...result, isTemp: Boolean(result.isTemp) };
@@ -28,9 +26,9 @@ export default class SqliteFileRepository implements FileRepository {
   }
 
   async findData(query: FileQuery) {
-    const rows = await db.knex<FileRow>(filesTableName).where(query).select('data');
+    const row = await db.knex<FileRow>(filesTableName).where(query).first('data');
 
-    return rows[0]?.data;
+    return row?.data;
   }
 
   async updateOcrResult(id: number, text: string) {
