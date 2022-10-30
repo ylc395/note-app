@@ -5,15 +5,15 @@ import { container } from 'tsyringe';
 import { NTree, NCollapseItem, NButton, NModal } from 'naive-ui';
 import { BIconPlus } from 'bootstrap-icons-vue';
 
-import TagService from 'service/TagService';
+import MaterialService from 'service/MaterialService';
 import TagEditor from './TagEditor.vue';
 
 export default defineComponent({
   components: { NTree, NCollapseItem, NButton, NModal, BIconPlus, TagEditor },
   setup() {
     const {
-      materialTagTree: { roots, selectNode, createTag },
-    } = container.resolve(TagService);
+      tagTree: { roots, selectNode, createTag },
+    } = container.resolve(MaterialService);
     const rootRef = ref();
     const { isOutside } = useMouseInElement(rootRef);
     const { isRevealed, reveal, onConfirm, confirm, cancel } = useConfirmDialog();

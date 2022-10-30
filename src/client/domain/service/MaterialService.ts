@@ -4,6 +4,8 @@ import { ref, toRaw } from '@vue/reactivity';
 import { type Remote, token as remoteToken } from 'infra/Remote';
 import type { MaterialDTO, MaterialVO } from 'interface/Material';
 import type { FileDTO, FileVO } from 'interface/File';
+import { TagTypes } from 'interface/Tag';
+import TagTree from 'model/TagTree';
 
 export enum AddingTypes {
   None,
@@ -17,6 +19,7 @@ export default class MaterialService {
   readonly #remote: Remote = container.resolve(remoteToken);
   readonly addingType = ref(AddingTypes.None);
   readonly newMaterials = ref<MaterialDTO[]>([]);
+  readonly tagTree = new TagTree(TagTypes.Material);
 
   readonly initNewMaterialsByFiles = async (files: FileDTO[]) => {
     this.addingType.value = AddingTypes.Files;

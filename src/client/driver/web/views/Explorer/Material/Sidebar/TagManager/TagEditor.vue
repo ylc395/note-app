@@ -3,7 +3,7 @@ import { defineComponent, type PropType, reactive } from 'vue';
 import { container } from 'tsyringe';
 import { NInput } from 'naive-ui';
 
-import TagService from 'service/TagService';
+import MaterialService from 'service/MaterialService';
 import { TagDTO, TagTypes } from 'interface/Tag';
 
 export default defineComponent({
@@ -13,9 +13,9 @@ export default defineComponent({
     cancel: { required: true, type: Function as PropType<() => void> },
   },
   setup() {
-    const { materialTagTree } = container.resolve(TagService);
+    const { tagTree } = container.resolve(MaterialService);
     const newTag = reactive<TagDTO>({
-      parentId: materialTagTree.selectedNodeId.value,
+      parentId: tagTree.selectedNodeId.value,
       type: TagTypes.Material,
       name: '',
     });
