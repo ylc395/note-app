@@ -11,14 +11,16 @@ import TagEditor from './TagEditor.vue';
 export default defineComponent({
   components: { NTree, NCollapseItem, NButton, NModal, BIconPlus, TagEditor },
   setup() {
-    const { createTag, materialTagTree } = container.resolve(TagService);
+    const {
+      materialTagTree: { roots, selectNode, createTag },
+    } = container.resolve(TagService);
     const rootRef = ref();
     const { isOutside } = useMouseInElement(rootRef);
     const { isRevealed, reveal, onConfirm, confirm, cancel } = useConfirmDialog();
 
     onConfirm(createTag);
 
-    return { createTag, materialTagTree, isOutside, rootRef, isRevealed, reveal, confirm, cancel };
+    return { createTag, roots, selectNode, isOutside, rootRef, isRevealed, reveal, confirm, cancel };
   },
 });
 </script>
@@ -31,10 +33,10 @@ export default defineComponent({
     </template>
     <NTree
       block-line
-      :data="materialTagTree.roots.value"
+      :data="roots"
       key-field="id"
       label-field="name"
-      @update:selected-keys="(keys) => materialTagTree.selectNode(keys[0])"
+      @update:selected-keys="(keys) => selectNode(keys[0])"
     />
   </NCollapseItem>
   <NModal to="#app" :show="isRevealed" preset="card" class="w-80" :closable="false">

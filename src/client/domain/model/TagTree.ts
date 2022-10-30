@@ -1,7 +1,9 @@
-import { ref, reactive } from '@vue/reactivity';
+import { ref, reactive, toRaw } from '@vue/reactivity';
 import pick from 'lodash/pick';
+import { container } from 'tsyringe';
 
-import type { TagVO } from 'interface/Tag';
+import { type Remote, token as remoteToken } from 'infra/Remote';
+import type { TagDTO, TagVO } from 'interface/Tag';
 
 interface TagTreeNode {
   id: TagVO['id'];
@@ -10,6 +12,7 @@ interface TagTreeNode {
 }
 
 export default class TagTree {
+  readonly #remote: Remote = container.resolve(remoteToken);
   readonly roots = ref<TagTreeNode[]>([]);
   #nodesMap: Record<TagTreeNode['id'], TagTreeNode> = {};
 
@@ -39,8 +42,12 @@ export default class TagTree {
     return Object.values(pick(this.#nodesMap, rootIds));
   }
 
-  addNode({ id, name, parentId }: TagVO) {
+  createTag = async (newTag: TagDTO) => {
+    const {
+      body: { id, name, parentId },
+    } = await this.#remote.post<TagDTO, TagVO>('/tags', toRaw(newTag));
     const tagNode = reactive({ id, name, children: [] });
+
     this.#nodesMap[id] = tagNode;
 
     if (this.#nodesMap[parentId]) {
@@ -48,9 +55,9 @@ export default class TagTree {
     } else {
       this.roots.value.push(tagNode);
     }
-  }
+  };
 
-  selectNode(id: TagTreeNode['id']) {
+  selectNode = async (id: TagTreeNode['id']) => {
     this.selectedNodeId.value = id;
-  }
+  };
 }

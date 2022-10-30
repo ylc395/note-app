@@ -1,7 +1,7 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 
-import Manager from './Main/index.vue';
+import Manager from './Sidebar/index.vue';
 import List from './List/index.vue';
 
 export default defineComponent({

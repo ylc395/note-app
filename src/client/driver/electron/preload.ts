@@ -7,10 +7,10 @@ const createMethod = <T, K>(method: IpcRequest<unknown>['method']) => {
   return async (path: string, payload: T) => {
     const fields = method === 'GET' ? { query: payload } : { body: payload };
     const request: IpcRequest<T> = { path, method, ...fields };
-    console.log(request);
+    console.log('request:', request);
 
     const response = await ipcRenderer.invoke(IPC_CHANNEL, request);
-    console.log(response);
+    console.log('response:', response);
 
     return response as IpcResponse<K>;
   };
