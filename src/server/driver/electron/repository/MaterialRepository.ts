@@ -1,6 +1,6 @@
 import map from 'lodash/map';
 
-import type { MaterialDTO } from 'interface/Material';
+import type { MaterialDTO, MaterialQuery } from 'interface/Material';
 import type { MaterialRepository } from 'service/repository/MaterialRepository';
 
 import db from 'driver/sqlite';
@@ -26,10 +26,24 @@ export default class SqliteMaterialRepository implements MaterialRepository {
       await trx<FileRow>(filesTableName).whereIn('id', map(materials, 'fileId')).update('isTemp', 0);
       await trx.commit();
 
-      return createdMaterials;
+      return createdMaterials.map((material, i) => ({ ...material, tags: materials[i].tags || [] }));
     } catch (error) {
       await trx.rollback(error);
       throw error;
     }
+  }
+
+  async findAll(query: MaterialQuery) {
+    const sql = db.knex
+      .select('m.*', 'ett.tagId as tag')
+      .from(`${materialsTableName} as m`)
+      .join(`${filesTableName} as f`, 'f.id', 'm.fileId')
+      .leftJoin(`${entityToTagTableName} as ett`, 'ett.entityId', 'm.id');
+
+    if (query.tag) {
+      sql.andWhere('ett.tagId', query.tag).groupBy();
+    }
+
+    return await sql;
   }
 }

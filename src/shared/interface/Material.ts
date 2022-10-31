@@ -8,9 +8,20 @@ export interface MaterialDTO {
   tags?: TagVO['id'][];
 }
 
-export type MaterialVO = Required<Omit<MaterialDTO, 'tags'>> & {
+export type MaterialVO = Required<MaterialDTO> & {
   id: number;
   createdAt: number;
   updatedAt: number;
-  tags?: TagVO[];
 };
+
+export interface MaterialQuery {
+  type?: MaterialTypes;
+  tag?: TagVO['id'];
+  sourceUrl?: string;
+}
+
+export enum MaterialTypes {
+  HTML = 'html',
+  Text = 'text',
+  PDF = 'pdf',
+}

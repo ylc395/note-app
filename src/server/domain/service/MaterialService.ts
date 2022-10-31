@@ -2,7 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 import { token as materialRepositoryToken, type MaterialRepository } from 'service/repository/MaterialRepository';
-import type { MaterialDTO } from 'interface/Material';
+import type { MaterialDTO, MaterialQuery } from 'interface/Material';
 import { Events as FileEvents, type FileAddedEvent } from 'model/File';
 
 @Injectable()
@@ -21,5 +21,9 @@ export default class MaterialService {
     }
 
     return createdMaterials;
+  }
+
+  async findAll(query: MaterialQuery) {
+    return await this.repository.findAll(query);
   }
 }
