@@ -1,21 +1,29 @@
 <script lang="ts">
-import { defineComponent, type PropType, reactive } from 'vue';
+import { defineComponent, reactive, type PropType } from 'vue';
 import { container } from 'tsyringe';
-import { NInput } from 'naive-ui';
+import { NInput, NModal } from 'naive-ui';
+import type { UseConfirmDialogReturn } from '@vueuse/core';
 
 import MaterialService from 'service/MaterialService';
 import { TagDTO, TagTypes } from 'interface/Tag';
 
 export default defineComponent({
-  components: { NInput },
+  components: { NInput, NModal },
   props: {
-    confirm: { required: true, type: Function as PropType<(tag: TagDTO) => void> },
-    cancel: { required: true, type: Function as PropType<() => void> },
+    dialog: {
+      required: true,
+      type: Object as PropType<UseConfirmDialogReturn<void, TagDTO, void>>,
+    },
   },
-  setup() {
-    const { tagTree } = container.resolve(MaterialService);
+  setup(props) {
+    const {
+      tagTree: { createTag, selectedNodeId },
+    } = container.resolve(MaterialService);
+
+    props.dialog.onConfirm(createTag);
+
     const newTag = reactive<TagDTO>({
-      parentId: tagTree.selectedNodeId.value,
+      parentId: selectedNodeId.value,
       type: TagTypes.Material,
       name: '',
     });
@@ -25,11 +33,11 @@ export default defineComponent({
 });
 </script>
 <template>
-  <div>
+  <NModal to="#app" :show="dialog.isRevealed.value" preset="card" class="w-80" :closable="false">
     <NInput v-model:value="newTag.name" />
     <div>
-      <button @click="confirm(newTag)">确认</button>
-      <button @click="cancel">取消</button>
+      <button @click="dialog.confirm(newTag)">确认</button>
+      <button @click="dialog.cancel">取消</button>
     </div>
-  </div>
+  </NModal>
 </template>

@@ -2,25 +2,24 @@
 import { defineComponent, ref } from 'vue';
 import { useMouseInElement, useConfirmDialog } from '@vueuse/core';
 import { container } from 'tsyringe';
-import { NTree, NCollapseItem, NButton, NModal } from 'naive-ui';
+import { NTree, NCollapseItem, NButton } from 'naive-ui';
 import { BIconPlus } from 'bootstrap-icons-vue';
 
 import MaterialService from 'service/MaterialService';
 import TagEditor from './TagEditor.vue';
 
 export default defineComponent({
-  components: { NTree, NCollapseItem, NButton, NModal, BIconPlus, TagEditor },
+  components: { NTree, NCollapseItem, NButton, BIconPlus, TagEditor },
   setup() {
     const {
-      tagTree: { roots, selectNode, createTag },
+      tagTree: { roots, selectNode },
     } = container.resolve(MaterialService);
+
     const rootRef = ref();
     const { isOutside } = useMouseInElement(rootRef);
-    const { isRevealed, reveal, onConfirm, confirm, cancel } = useConfirmDialog();
+    const dialog = useConfirmDialog();
 
-    onConfirm(createTag);
-
-    return { createTag, roots, selectNode, isOutside, rootRef, isRevealed, reveal, confirm, cancel };
+    return { roots, selectNode, isOutside, rootRef, dialog };
   },
 });
 </script>
@@ -28,7 +27,7 @@ export default defineComponent({
   <NCollapseItem ref="rootRef" title="标签管理器">
     <template #header-extra="{ collapsed }">
       <div v-if="!collapsed && !isOutside" @click.stop>
-        <NButton text @click="reveal"><BIconPlus /></NButton>
+        <NButton text @click="dialog.reveal"><BIconPlus /></NButton>
       </div>
     </template>
     <NTree
@@ -39,7 +38,5 @@ export default defineComponent({
       @update:selected-keys="(keys) => selectNode(keys[0])"
     />
   </NCollapseItem>
-  <NModal to="#app" :show="isRevealed" preset="card" class="w-80" :closable="false">
-    <TagEditor :confirm="confirm" :cancel="cancel" />
-  </NModal>
+  <TagEditor :dialog="dialog" />
 </template>
