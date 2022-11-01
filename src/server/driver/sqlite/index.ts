@@ -13,7 +13,7 @@ import entityToTagSchema from './entityToTagSchema';
 const isDevelopment = process.env.NODE_ENV === 'development';
 
 class SqliteDb {
-  knex: Knex;
+  knex!: Knex;
   readonly init = async (dir: string) => {
     this.knex = knex({
       client: 'sqlite3',
