@@ -55,16 +55,12 @@ export default class TagTree {
 
   createTag = async (newTag: EditingTag) => {
     const {
-      body: { id, name, parentId, error },
+      body: { id, name, parentId },
     } = await this.#remote.post<TagDTO, TagVO>('/tags', {
       ...toRaw(newTag),
       parentId: this.#selectedTagId.value,
       type: this.#tagType,
     });
-
-    if (error) {
-      throw new Error(error);
-    }
 
     const tagNode = reactive({ id, name, children: [] });
 

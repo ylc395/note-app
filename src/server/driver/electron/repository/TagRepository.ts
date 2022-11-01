@@ -1,7 +1,7 @@
 import { TagDTO, TagTypes } from 'interface/Tag';
 import type { TagRepository } from 'service/repository/TagRepository';
 import { tableName, Row, TagTypes as RowTagTypes } from 'driver/sqlite/tagSchema';
-import db, { isQueryError, QueryErrorNos } from 'driver/sqlite';
+import db, { isDbError, DBErrorNos } from 'driver/sqlite';
 
 const TYPES_MAP: Record<TagTypes, RowTagTypes> = {
   [TagTypes.Material]: RowTagTypes.Material,
@@ -16,7 +16,7 @@ export default class SqliteTagRepository implements TagRepository {
         .returning('id');
       return rows[0].id;
     } catch (e) {
-      if (isQueryError(e) && e.errno === QueryErrorNos.CONSTRAINT) {
+      if (isDbError(e) && e.errno === DBErrorNos.CONSTRAINT) {
         throw new Error('标签名已存在');
       }
 

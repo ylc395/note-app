@@ -62,12 +62,12 @@ export interface QueryError extends Error {
   code: string;
 }
 
-export function isQueryError(e: unknown): e is QueryError {
+export function isDbError(e: unknown): e is QueryError {
   return isError(e) && 'errno' in e && 'code' in e;
 }
 
 // @see https://www.sqlite.org/rescode.html
-export enum QueryErrorNos {
+export enum DBErrorNos {
   CONSTRAINT = 19,
 }
 

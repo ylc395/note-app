@@ -9,8 +9,12 @@ const createMethod = <T, K>(method: IpcRequest<unknown>['method']) => {
     const request: IpcRequest<T> = { path, method, ...fields };
     console.log('request:', request);
 
-    const response = await ipcRenderer.invoke(IPC_CHANNEL, request);
+    const response: IpcResponse<K> = await ipcRenderer.invoke(IPC_CHANNEL, request);
     console.log('response:', response);
+
+    if (response.status < 200 || response.status > 299) {
+      throw new Error(response.body.error || 'unknown error');
+    }
 
     return response as IpcResponse<K>;
   };
