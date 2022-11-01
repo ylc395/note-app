@@ -12,14 +12,14 @@ export default defineComponent({
   components: { NTree, NCollapseItem, NButton, BIconPlus, TagEditor },
   setup() {
     const {
-      tagTree: { roots, selectNode },
+      tagTree: { roots, selectTag },
     } = container.resolve(MaterialService);
 
     const rootRef = ref();
     const { isOutside } = useMouseInElement(rootRef);
     const dialog = useConfirmDialog();
 
-    return { roots, selectNode, isOutside, rootRef, dialog };
+    return { roots, selectTag, isOutside, rootRef, dialog };
   },
 });
 </script>
@@ -35,7 +35,7 @@ export default defineComponent({
       :data="roots"
       key-field="id"
       label-field="name"
-      @update:selected-keys="(keys) => selectNode(keys[0])"
+      @update:selected-keys="(keys) => selectTag(keys[0])"
     />
   </NCollapseItem>
   <TagEditor :dialog="dialog" />

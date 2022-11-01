@@ -3,6 +3,7 @@ import camelCase from 'lodash/camelCase';
 import snakeCase from 'lodash/snakeCase';
 import mapKeys from 'lodash/mapKeys';
 import partialRight from 'lodash/partialRight';
+import isError from 'lodash/isError';
 import { join } from 'path';
 
 import materialsSchema from './materialSchema';
@@ -54,6 +55,20 @@ class SqliteDb {
   async #emptyTempFiles() {
     await this.knex<FileRow>(fileSchema.tableName).where('isTemp', 1).delete();
   }
+}
+
+export interface QueryError extends Error {
+  errno: number;
+  code: string;
+}
+
+export function isQueryError(e: unknown): e is QueryError {
+  return isError(e) && 'errno' in e && 'code' in e;
+}
+
+// @see https://www.sqlite.org/rescode.html
+export enum QueryErrorNos {
+  CONSTRAINT = 19,
 }
 
 export default new SqliteDb();

@@ -15,4 +15,8 @@ declare global {
 
 container.registerInstance(remoteToken, window.electronIpc || httpClient);
 
+// @see https://www.naiveui.com/zh-CN/os-theme/docs/style-conflict
+const meta = document.createElement('meta');
+meta.name = 'naive-ui-style';
+document.head.appendChild(meta);
 createApp(App).mount('#app');

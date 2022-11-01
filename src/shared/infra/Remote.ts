@@ -6,8 +6,8 @@ export interface Response<T = undefined> {
 }
 
 export interface Remote {
-  get: <T, K = undefined>(path: string, query?: T) => Promise<Response<K>>;
-  post: <T, K = undefined>(path: string, body: T) => Promise<Response<K>>;
+  get: <T, K = undefined>(path: string, query?: T) => Promise<Response<K & { error?: string }>>;
+  post: <T, K = undefined>(path: string, body: T) => Promise<Response<K & { error?: string }>>;
 }
 
 export const token = Symbol('remoteToken');
