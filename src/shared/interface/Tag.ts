@@ -15,5 +15,9 @@ export enum TagTypes {
 }
 
 export interface TagQuery {
-  type: TagTypes;
+  type?: TagTypes;
+  name?: string;
+  parentId?: TagVO['id'];
 }
+
+export const ROOT_ID = 0;

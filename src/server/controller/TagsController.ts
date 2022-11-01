@@ -15,7 +15,7 @@ export default class TagsController {
   }
 
   @Get('tags')
-  async getAll(@Query() { type }: TagQuery) {
-    return await this.tagService.getAll(type);
+  async findAll(@Query() query: TagQuery) {
+    return await this.tagService.findAll(query);
   }
 }

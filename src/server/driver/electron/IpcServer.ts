@@ -3,6 +3,7 @@ import type { ExceptionFilter } from '@nestjs/common';
 import { ipcMain } from 'electron';
 import isError from 'lodash/isError';
 
+import { InvalidInputError, BusinessError } from 'model/Error';
 import { IPC_CHANNEL, type IpcRequest, type IpcResponse } from 'client/driver/electron/ipc';
 
 export default class ElectronIpcServer extends Server implements CustomTransportStrategy {
@@ -19,13 +20,17 @@ export default class ElectronIpcServer extends Server implements CustomTransport
         const result = await handler(req);
         return { status: 200, body: result };
       } catch (e) {
-        if (isError(e)) {
-          this.logger.error(e.message, e.stack);
-          return { status: 500, body: { error: e.message } };
+        if (!isError(e)) {
+          this.logger.error(e);
+          return { status: 500, body: { error: String(e) } };
         }
 
-        this.logger.error(e);
-        return { status: 500, body: { error: String(e) } };
+        if (!(e instanceof BusinessError)) {
+          this.logger.error(e.message, e.stack);
+        }
+
+        const status = e instanceof InvalidInputError ? 400 : 500;
+        return { status, body: { error: e.message } };
       }
     });
     cb();

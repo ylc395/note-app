@@ -3,7 +3,7 @@ import pick from 'lodash/pick';
 import { container } from 'tsyringe';
 
 import { type Remote, token as remoteToken } from 'infra/Remote';
-import type { TagDTO, TagVO, TagQuery, TagTypes } from 'interface/Tag';
+import { TagDTO, TagVO, TagQuery, TagTypes, ROOT_ID } from 'interface/Tag';
 
 interface TagTreeNode {
   id: TagVO['id'];
@@ -19,7 +19,7 @@ export default class TagTree {
   #nodesMap: Record<TagTreeNode['id'], TagTreeNode> = {};
   readonly #tagType: TagTypes;
 
-  readonly #selectedTagId = ref<TagTreeNode['id']>(0);
+  readonly #selectedTagId = ref<TagTreeNode['id']>(ROOT_ID);
 
   readonly selectedTag = computed<TagTreeNode | undefined>(() => this.#nodesMap[this.#selectedTagId.value]);
 
@@ -73,7 +73,7 @@ export default class TagTree {
     }
   };
 
-  selectTag = async (id: TagTreeNode['id']) => {
-    this.#selectedTagId.value = id;
+  selectTag = async (id: TagTreeNode['id'] | undefined) => {
+    this.#selectedTagId.value = id || ROOT_ID;
   };
 }

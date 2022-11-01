@@ -1,7 +1,7 @@
-import { TagDTO, TagTypes } from 'interface/Tag';
+import { type TagDTO, type TagQuery, TagTypes } from 'interface/Tag';
 import type { TagRepository } from 'service/repository/TagRepository';
 import { tableName, Row, TagTypes as RowTagTypes } from 'driver/sqlite/tagSchema';
-import db, { isDbError, DBErrorNos } from 'driver/sqlite';
+import db from 'driver/sqlite';
 
 const TYPES_MAP: Record<TagTypes, RowTagTypes> = {
   [TagTypes.Material]: RowTagTypes.Material,
@@ -9,22 +9,20 @@ const TYPES_MAP: Record<TagTypes, RowTagTypes> = {
 
 export default class SqliteTagRepository implements TagRepository {
   async create(tag: TagDTO) {
-    try {
-      const rows = await db
-        .knex<Row>(tableName)
-        .insert({ ...tag, type: TYPES_MAP[tag.type] })
-        .returning('id');
-      return rows[0].id;
-    } catch (e) {
-      if (isDbError(e) && e.errno === DBErrorNos.CONSTRAINT) {
-        throw new Error('标签名已存在');
-      }
+    const rows = await db
+      .knex<Row>(tableName)
+      .insert({ ...tag, type: TYPES_MAP[tag.type] })
+      .returning('id');
 
-      throw e;
-    }
+    return rows[0].id;
   }
 
-  async getAll(type: TagTypes) {
-    return await db.knex<Row>(tableName).where('type', TYPES_MAP[type]).select('id', 'name', 'parentId');
+  async findAll(query: TagQuery) {
+    const sqlQuery = db
+      .knex<Row>(tableName)
+      .select('id', 'name', 'parentId')
+      .where({ ...query, ...(query.type ? { type: TYPES_MAP[query.type] } : {}) });
+
+    return await sqlQuery;
   }
 }
