@@ -55,6 +55,7 @@
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.5.7",
     "sqlite3": "^5.1.1",
+    "superstruct": "^0.16.6",
     "tslib": "^2.4.0",
     "tsyringe": "^4.7.0",
     "vue": "^3.2.40"

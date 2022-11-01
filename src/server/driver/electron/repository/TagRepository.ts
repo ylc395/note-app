@@ -14,9 +14,9 @@ export default class SqliteTagRepository implements TagRepository {
     const rows = await db
       .knex<Row>(tableName)
       .insert({ ...tag, type: TYPES_MAP[tag.type] })
-      .returning('id');
+      .returning(['id', 'parentId', 'name']);
 
-    return rows[0].id;
+    return rows[0];
   }
 
   async findAll(query: TagQuery) {

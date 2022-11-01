@@ -1,3 +1,5 @@
+import { object, string, number, nonempty, optional, enums } from 'superstruct';
+
 export interface TagVO {
   id: number;
   name: string;
@@ -6,7 +8,7 @@ export interface TagVO {
 
 export interface TagDTO {
   name: string;
-  parentId: TagVO['id'];
+  parentId?: TagVO['id'];
   type: TagTypes;
 }
 
@@ -21,4 +23,8 @@ export interface TagQuery {
   parentId?: TagVO['id'];
 }
 
-export const ROOT_ID = 0;
+export const tagSchema = object({
+  name: nonempty(string()),
+  parentId: optional(number()),
+  type: enums([TagTypes.Material]),
+});

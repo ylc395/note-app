@@ -3,6 +3,7 @@ import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 
 import type { FileDTO, FileVO } from 'interface/File';
 import { Events, type FileAddedEvent } from 'model/File';
+import { InvalidInputError } from 'model/Error';
 
 import { token as fileRepositoryToken, type FileRepository } from 'service/repository/FileRepository';
 import { type FileReader, token as fileReaderToken } from 'infra/FileReader';
@@ -16,11 +17,11 @@ export default class FileService {
     @Inject(fileReaderToken) private readonly fileReader: FileReader,
     @Inject(localClientToken) private readonly localClient?: LocalClient,
   ) {}
-  async create({ sourceUrl, mimeType, isTemp }: FileDTO) {
+  async create({ sourceUrl, mimeType, isTemp = false }: FileDTO) {
     const path = sourceUrl?.match(/^file:\/\/(.+)/)?.[1];
 
     if (!path) {
-      throw new Error('invalid sourceUrl');
+      throw new InvalidInputError('invalid sourceUrl');
     }
 
     const deviceName = this.localClient?.getDeviceName() || '';
