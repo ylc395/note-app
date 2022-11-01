@@ -1,3 +1,5 @@
+import pick from 'lodash/pick';
+
 import { type TagDTO, type TagQuery, TagTypes } from 'interface/Tag';
 import type { TagRepository } from 'service/repository/TagRepository';
 import { tableName, Row, TagTypes as RowTagTypes } from 'driver/sqlite/tagSchema';
@@ -21,7 +23,15 @@ export default class SqliteTagRepository implements TagRepository {
     const sqlQuery = db
       .knex<Row>(tableName)
       .select('id', 'name', 'parentId')
-      .where({ ...query, ...(query.type ? { type: TYPES_MAP[query.type] } : {}) });
+      .where(pick(query, ['name', 'parentId']));
+
+    if (query.type) {
+      sqlQuery.andWhere('type', TYPES_MAP[query.type]);
+    }
+
+    if (query.id) {
+      sqlQuery.andWhere('id', Array.isArray(query.id) ? 'in' : '=', query.id);
+    }
 
     return await sqlQuery;
   }
