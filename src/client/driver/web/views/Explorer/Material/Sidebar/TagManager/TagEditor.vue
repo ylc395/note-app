@@ -1,7 +1,7 @@
 <script lang="ts">
 import { defineComponent, type PropType, ref, watch } from 'vue';
 import { container } from 'tsyringe';
-import { NInput, NModal, NButton, NSpace, NFormItem } from 'naive-ui';
+import { NInput, NModal, NButton, NSpace, NFormItem, NForm } from 'naive-ui';
 import { type UseConfirmDialogReturn, toReactive } from '@vueuse/core';
 import isError from 'lodash/isError';
 
@@ -10,7 +10,7 @@ import type { EditingTag } from 'model/TagTree';
 import { refResetOn } from 'web/utils/composables';
 
 export default defineComponent({
-  components: { NInput, NModal, NButton, NFormItem, NSpace },
+  components: { NInput, NModal, NButton, NFormItem, NSpace, NForm },
   props: {
     dialog: {
       required: true,
@@ -50,12 +50,14 @@ export default defineComponent({
 </script>
 <template>
   <NModal to="#app" :show="dialog.isRevealed.value" preset="card" class="w-80" :closable="false" title="创建新标签">
-    <NFormItem label="父级标签">
-      <NInput readonly :value="selectedTag?.name || '无'" />
-    </NFormItem>
-    <NFormItem :feedback="feedback" :validation-status="validateStatus" label="标签名">
-      <NInput v-model:value="newTag.name" class="mb-4" placeholder="" />
-    </NFormItem>
+    <NForm label-placement="left" label-width="auto">
+      <NFormItem label="父级标签">
+        <NInput readonly :value="selectedTag?.name || '无'" />
+      </NFormItem>
+      <NFormItem :feedback="feedback" :validation-status="validateStatus" label="标签名">
+        <NInput v-model:value="newTag.name" class="mb-4" placeholder="" />
+      </NFormItem>
+    </NForm>
     <NSpace justify="end">
       <NButton type="primary" :disabled="newTag.name.length === 0" @click="confirm">确认</NButton>
       <NButton @click="dialog.cancel">取消</NButton>
