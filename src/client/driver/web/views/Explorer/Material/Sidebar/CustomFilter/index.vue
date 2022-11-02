@@ -1,12 +1,15 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
+import { NCollapseItem } from 'naive-ui';
 
-export default defineComponent({});
+export default defineComponent({
+  components: { NCollapseItem },
+});
 </script>
 <template>
-  <div>
+  <NCollapseItem title="固化视图">
     <div>全部资料</div>
     <div>今日入库</div>
     <div>最常浏览</div>
-  </div>
+  </NCollapseItem>
 </template>

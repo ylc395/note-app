@@ -37,6 +37,6 @@ export default defineComponent({
       label-field="name"
       @update:selected-keys="(keys) => selectTag(keys[0])"
     />
+    <TagEditor :dialog="dialog" />
   </NCollapseItem>
-  <TagEditor :dialog="dialog" />
 </template>

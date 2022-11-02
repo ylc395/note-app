@@ -1,4 +1,4 @@
-import { object, string, boolean, nonempty, optional, array, type Describe } from 'superstruct';
+import { object, string, boolean, pattern, nonempty, optional, array, type Describe } from 'superstruct';
 
 export interface FileDTO {
   sourceUrl: string;
@@ -19,7 +19,7 @@ export type FileDataDTO = ArrayBuffer;
 
 export const FileDTOSchema: Describe<FileDTO[]> = array(
   object({
-    sourceUrl: nonempty(string()),
+    sourceUrl: pattern(string(), /^file:\/\//),
     mimeType: nonempty(string()),
     isTemp: optional(boolean()),
   }),

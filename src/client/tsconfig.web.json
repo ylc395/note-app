@@ -3,6 +3,6 @@
   "include": ["./driver/web/**/*", "./domain/**/*", "../shared/**/*"],
   "compilerOptions": {
     "isolatedModules": true,
-    "types": ["naive-ui/volar"]
+    "types": ["naive-ui/volar", "electron"]
   }
 }

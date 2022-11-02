@@ -18,14 +18,22 @@ export default class FileService {
     @Inject(localClientToken) private readonly localClient?: LocalClient,
   ) {}
   async create({ sourceUrl, mimeType, isTemp = false }: FileDTO) {
-    const path = sourceUrl?.match(/^file:\/\/(.+)/)?.[1];
+    const path = sourceUrl.match(/^file:\/\/(.+)/)?.[1];
 
     if (!path) {
-      throw new InvalidInputError('invalid sourceUrl');
+      throw new InvalidInputError(`invalid sourceUrl ${sourceUrl}`);
     }
 
     const deviceName = this.localClient?.getDeviceName() || '';
-    const { data, hash } = await this.fileReader.read(path);
+    let fileInfo: Awaited<ReturnType<FileReader['read']>>;
+
+    try {
+      fileInfo = await this.fileReader.read(path);
+    } catch (error) {
+      throw new InvalidInputError(`fail to open file ${path}`);
+    }
+
+    const { data, hash } = fileInfo;
     const sameFile = await this.repository.findOne({ hash });
 
     const fileId = await this.repository.create({
@@ -42,7 +50,13 @@ export default class FileService {
       this.eventEmitter.emit(Events.Added, event);
     }
 
-    return { id: fileId, mimeType, sourceUrl, deviceName, isDuplicated: Boolean(sameFile) } as FileVO;
+    return {
+      id: fileId,
+      mimeType,
+      sourceUrl,
+      deviceName,
+      isDuplicated: Boolean(sameFile && !sameFile.isTemp),
+    } as FileVO;
   }
 
   @OnEvent(Events.Added, { async: true })
