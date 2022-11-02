@@ -19,7 +19,7 @@ export default class TagTree {
   #nodesMap: Record<TagTreeNode['id'], TagTreeNode> = {};
   readonly #tagType: TagTypes;
 
-  readonly #selectedTagId = ref<TagTreeNode['id'] | undefined>();
+  readonly #selectedTagId = ref<TagTreeNode['id']>();
 
   readonly selectedTag = computed<TagTreeNode | undefined>(() => {
     if (this.#selectedTagId.value) {

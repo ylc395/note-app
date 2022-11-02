@@ -4,7 +4,7 @@ import { NButton, NDropdown } from 'naive-ui';
 import { BIconPlusSquareFill } from 'bootstrap-icons-vue';
 
 import { useNewMaterialByFiles } from './useMenu';
-import MaterialEditor from './MaterialEditor.vue';
+import MaterialEditor from './MaterialForm.vue';
 
 export default defineComponent({
   components: {

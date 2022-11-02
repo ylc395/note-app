@@ -6,7 +6,7 @@ import { NTree, NCollapseItem, NButton } from 'naive-ui';
 import { BIconPlus } from 'bootstrap-icons-vue';
 
 import MaterialService from 'service/MaterialService';
-import TagEditor from './TagEditor.vue';
+import TagEditor from './TagForm.vue';
 
 export default defineComponent({
   components: { NTree, NCollapseItem, NButton, BIconPlus, TagEditor },
