@@ -1,5 +1,6 @@
 import { container, singleton } from 'tsyringe';
 import { ref, toRaw } from '@vue/reactivity';
+import { watch } from '@vue-reactivity/watch';
 
 import { type Remote, token as remoteToken } from 'infra/Remote';
 import type { MaterialDTO, MaterialVO } from 'interface/Material';
@@ -21,7 +22,11 @@ export default class MaterialService {
   readonly newMaterials = ref<MaterialDTO[]>([]);
   readonly tagTree = new TagTree(TagTypes.Material);
 
-  readonly initNewMaterialsByFiles = async (files: FileDTO[]) => {
+  constructor() {
+    watch(this.tagTree.selectedTag, this.#queryMaterials);
+  }
+
+  readonly generateNewMaterialsByFiles = async (files: FileDTO[]) => {
     this.addingType.value = AddingTypes.Files;
     const { body: createdFiles } = await this.#remote.post<FileDTO[], FileVO[]>('/files', files);
 
@@ -37,5 +42,11 @@ export default class MaterialService {
     await this.#remote.post<MaterialDTO[], MaterialVO[]>('/materials', toRaw(this.newMaterials.value));
     this.addingType.value = AddingTypes.None;
     this.newMaterials.value = [];
+  };
+
+  readonly #queryMaterials = () => {
+    if (!this.tagTree.selectedTag.value) {
+      return;
+    }
   };
 }

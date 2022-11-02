@@ -10,6 +10,7 @@ import { selectFiles } from 'web/utils/dom';
 import TagManager from './TagManager/index.vue';
 import CustomFilter from './CustomFilter/index.vue';
 import MaterialsEditor from './MaterialsEditor/index.vue';
+import SearchInput from './SearchInput.vue';
 
 export default defineComponent({
   components: {
@@ -22,6 +23,7 @@ export default defineComponent({
     TagManager,
     CustomFilter,
     MaterialsEditor,
+    SearchInput,
   },
   setup() {
     const addOptions: DropdownOption[] = [
@@ -31,7 +33,7 @@ export default defineComponent({
       { label: '全盘扫描', key: 'disk' },
     ];
 
-    const { initNewMaterialsByFiles, addingType } = container.resolve(MaterialService);
+    const { generateNewMaterialsByFiles: initNewMaterialsByFiles, addingType } = container.resolve(MaterialService);
 
     const handleAdd = async (key: string) => {
       switch (key) {
@@ -58,19 +60,24 @@ export default defineComponent({
 });
 </script>
 <template>
-  <div class="p-2 w-60">
-    <header class="flex justify-between border-b mb-2 pb-2">
-      <h1>资料库</h1>
-      <NDropdown placement="bottom-end" :options="addOptions" trigger="click" @select="handleAdd">
-        <NButton text class="text-lg"><BIconPlusSquareFill /></NButton>
-      </NDropdown>
+  <div class="p-2 w-60 flex flex-col">
+    <header class="pb-4 border-b mb-4">
+      <div class="flex justify-between mb-2">
+        <h1>资料库</h1>
+        <NDropdown placement="bottom-end" :options="addOptions" trigger="click" @select="handleAdd">
+          <NButton text class="text-lg"><BIconPlusSquareFill /></NButton>
+        </NDropdown>
+      </div>
+      <SearchInput />
     </header>
-    <NCollapse>
-      <TagManager />
-      <NCollapseItem title="固化视图">
-        <CustomFilter />
-      </NCollapseItem>
-    </NCollapse>
+    <div class="overflow-auto">
+      <NCollapse>
+        <NCollapseItem title="固化视图">
+          <CustomFilter />
+        </NCollapseItem>
+        <TagManager />
+      </NCollapse>
+    </div>
   </div>
   <NModal to="#app" :show="addingType !== AddingTypes.None">
     <MaterialsEditor />

@@ -1,15 +1,18 @@
 <script lang="ts">
 import { defineComponent } from 'vue';
 import { NButton, NInput, NPopover } from 'naive-ui';
-import { BIconFilter } from 'bootstrap-icons-vue';
+import { BIconFilter, BIconSearch } from 'bootstrap-icons-vue';
 
 export default defineComponent({
-  components: { NButton, NInput, NPopover, BIconFilter },
+  components: { NButton, NInput, NPopover, BIconFilter, BIconSearch },
 });
 </script>
 <template>
   <div class="flex">
-    <NInput class="search-input" placeholder="搜索">
+    <NInput class="search-input" placeholder="">
+      <template #prefix>
+        <BIconSearch />
+      </template>
       <template #suffix>
         <NPopover placement="bottom-end" trigger="click">
           <template #trigger>

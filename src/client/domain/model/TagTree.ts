@@ -8,7 +8,7 @@ import type { TagDTO, TagVO, TagQuery, TagTypes } from 'interface/Tag';
 interface TagTreeNode {
   id: TagVO['id'];
   name: TagVO['name'];
-  children: TagTreeNode[];
+  children?: TagTreeNode[];
 }
 
 export type EditingTag = Pick<TagDTO, 'name'>;
@@ -36,11 +36,12 @@ export default class TagTree {
     this.#nodesMap = {};
     const { body: tags } = await this.#remote.get<TagQuery, TagVO[]>('/tags', { type: this.#tagType });
     this.roots.value = this.#build(tags);
+    this.#appendNoTagNode();
   }
 
   #build(allTags: TagVO[]) {
     for (const { id, name } of allTags) {
-      this.#nodesMap[id] = reactive({ id, name, children: [] });
+      this.#nodesMap[id] = reactive({ id, name });
     }
 
     const rootIds: TagTreeNode['id'][] = [];
@@ -48,6 +49,10 @@ export default class TagTree {
     for (const { parentId, id } of allTags) {
       if (this.#nodesMap[parentId]) {
         const node = this.#nodesMap[parentId];
+
+        if (!node.children) {
+          node.children = [];
+        }
         node.children.push(this.#nodesMap[id]);
       } else {
         rootIds.push(id);
@@ -55,6 +60,14 @@ export default class TagTree {
     }
 
     return Object.values(pick(this.#nodesMap, rootIds));
+  }
+
+  #appendNoTagNode() {
+    const noTagNode: TagTreeNode = {
+      id: 0,
+      name: '无标签',
+    };
+    this.roots.value.unshift(noTagNode);
   }
 
   createTag = async (newTag: EditingTag) => {
@@ -70,8 +83,12 @@ export default class TagTree {
 
     this.#nodesMap[id] = tagNode;
 
-    if (this.#nodesMap[parentId]) {
-      this.#nodesMap[parentId].children.push(tagNode);
+    const parentNode = this.#nodesMap[parentId];
+    if (parentNode) {
+      if (!parentNode.children) {
+        parentNode.children = [];
+      }
+      parentNode.children.push(tagNode);
     } else {
       this.roots.value.push(tagNode);
     }

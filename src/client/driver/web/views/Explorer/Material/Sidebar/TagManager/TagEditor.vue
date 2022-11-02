@@ -50,9 +50,11 @@ export default defineComponent({
 </script>
 <template>
   <NModal to="#app" :show="dialog.isRevealed.value" preset="card" class="w-80" :closable="false" title="创建新标签">
-    <p>父标签：{{ selectedTag?.name || '无' }}</p>
-    <NFormItem :feedback="feedback" :validation-status="validateStatus">
-      <NInput v-model:value="newTag.name" class="mb-4" placeholder="输入标签名" />
+    <NFormItem label="父级标签">
+      <NInput readonly :value="selectedTag?.name || '无'" />
+    </NFormItem>
+    <NFormItem :feedback="feedback" :validation-status="validateStatus" label="标签名">
+      <NInput v-model:value="newTag.name" class="mb-4" placeholder="" />
     </NFormItem>
     <NSpace justify="end">
       <NButton type="primary" :disabled="newTag.name.length === 0" @click="confirm">确认</NButton>
