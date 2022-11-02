@@ -30,7 +30,7 @@ export default class FileService {
     try {
       fileInfo = await this.fileReader.read(path);
     } catch (error) {
-      throw new InvalidInputError(`fail to open file ${path}`);
+      throw new InvalidInputError(`fail to open file ${path}`, { cause: error });
     }
 
     const { data, hash } = fileInfo;

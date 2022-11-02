@@ -11,7 +11,7 @@ export function createPipe<T>(struct: Describe<T>) {
       const [err] = struct.validate(value);
 
       if (err) {
-        throw new InvalidInputError(`invalid input ${err.message.toLowerCase()}`);
+        throw new InvalidInputError(`invalid input ${err.message.toLowerCase()}`, { cause: err });
       }
 
       return value;
