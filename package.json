@@ -6,8 +6,7 @@
   "scripts": {
     "dev:electron": "node script/dev-electron.js",
     "dev-clean:electron": "node script/dev-electron.js --clean",
-    "clean": "rm -rf ./dist",
-    "clean:vite": "rm -rf node_modules/.vite",
+    "clean": "rm -rf ./dist && rm -rf node_modules/.vite",
     "postinstall": "electron-rebuild"
   },
   "devDependencies": {
