@@ -22,7 +22,7 @@ export default class MaterialService {
       const file = await this.fileRepository.findOne({ id: fileId });
 
       if (!file) {
-        throw new InvalidInputError('无效的 file id');
+        throw new InvalidInputError(`无效的 file id: ${fileId}`);
       }
 
       if (!tagIds) {

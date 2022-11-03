@@ -3,7 +3,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "model/*": ["domain/model/*"],
+      "model/*": ["domain/model/*", "../shared/model/*"],
       "interface/*": ["../shared/interface/*"],
       "service/*": ["domain/service/*"],
       "web/*": ["driver/web/*"],

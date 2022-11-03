@@ -2,8 +2,9 @@ import { Server, type CustomTransportStrategy } from '@nestjs/microservices';
 import type { ExceptionFilter } from '@nestjs/common';
 import { ipcMain } from 'electron';
 import isError from 'lodash/isError';
+import pick from 'lodash/pick';
 
-import { InvalidInputError, BusinessError } from 'model/Error';
+import { InvalidInputError } from 'model/Error';
 import { IPC_CHANNEL, type IpcRequest, type IpcResponse } from 'client/driver/electron/ipc';
 
 export default class ElectronIpcServer extends Server implements CustomTransportStrategy {
@@ -13,7 +14,7 @@ export default class ElectronIpcServer extends Server implements CustomTransport
       const handler = this.messageHandlers.get(pattern);
 
       if (!handler) {
-        return { status: 404, body: { error: `can not handle request: ${pattern}` } };
+        return { status: 404, body: { error: { message: `can not handle request: ${pattern}`, cause: req } } };
       }
 
       try {
@@ -22,15 +23,13 @@ export default class ElectronIpcServer extends Server implements CustomTransport
       } catch (e) {
         if (!isError(e)) {
           this.logger.error(e);
-          return { status: 500, body: { error: String(e) } };
-        }
-
-        if (!(e instanceof BusinessError)) {
-          this.logger.error(e.message, e.stack);
+          return { status: 500, body: { error: { message: String(e) } } };
         }
 
         const status = e instanceof InvalidInputError ? 400 : 500;
-        return { status, body: { error: e.message } };
+        this.logger.error(e.message, e.stack);
+
+        return { status, body: { error: pick(e, ['message', 'cause']) } };
       }
     });
     cb();

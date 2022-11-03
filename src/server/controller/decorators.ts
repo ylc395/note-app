@@ -11,7 +11,13 @@ export function createPipe<T>(struct: Describe<T>) {
       const [err] = struct.validate(value);
 
       if (err) {
-        throw new InvalidInputError(`invalid input ${err.message.toLowerCase()}`, { cause: err });
+        const failures = err.failures();
+        const cause = failures.reduce((records, { key, refinement, type }) => {
+          records[key] = `应当是一个 ${refinement} ${type}`;
+          return records;
+        }, {} as Record<string, string>);
+
+        throw new InvalidInputError(`invalid input ${err.message.toLowerCase()}`, { cause });
       }
 
       return value;
