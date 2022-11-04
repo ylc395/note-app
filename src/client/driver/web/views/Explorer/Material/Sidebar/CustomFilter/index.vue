@@ -3,6 +3,7 @@ import { defineComponent } from 'vue';
 import { NCollapseItem } from 'naive-ui';
 
 export default defineComponent({
+  name: 'CustomFilter',
   components: { NCollapseItem },
 });
 </script>

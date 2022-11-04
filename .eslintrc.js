@@ -38,5 +38,11 @@ module.exports = {
         'vue/max-attributes-per-line': 'off',
       },
     },
+    {
+      files: ['index.vue'],
+      rules: {
+        'vue/require-name-property': 'error',
+      },
+    },
   ],
 };

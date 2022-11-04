@@ -8,6 +8,7 @@ import SearchInput from './SearchInput.vue';
 import AddMenu from './AddMenu/index.vue';
 
 export default defineComponent({
+  name: 'Sidarbar',
   components: {
     NCollapse,
     TagManager,

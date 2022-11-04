@@ -7,6 +7,7 @@ import { useNewMaterialByFiles } from './useMenu';
 import MaterialEditor from './MaterialForm.vue';
 
 export default defineComponent({
+  name: 'AddMenu',
   components: {
     NButton,
     NDropdown,

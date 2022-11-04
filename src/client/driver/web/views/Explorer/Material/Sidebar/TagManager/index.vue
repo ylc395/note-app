@@ -9,6 +9,7 @@ import MaterialService from 'service/MaterialService';
 import TagEditor from './TagForm.vue';
 
 export default defineComponent({
+  name: 'TagManager',
   components: { NTree, NCollapseItem, NButton, BIconPlus, TagEditor },
   setup() {
     const {

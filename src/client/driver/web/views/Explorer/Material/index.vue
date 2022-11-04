@@ -5,6 +5,7 @@ import Sidebar from './Sidebar/index.vue';
 import List from './List/index.vue';
 
 export default defineComponent({
+  name: 'Material',
   components: { Sidebar, List },
 });
 </script>

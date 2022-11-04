@@ -9,6 +9,7 @@ import Switcher from './Switcher.vue';
 import Material from './Material/index.vue';
 
 export default defineComponent({
+  name: 'Explorer',
   components: { Switcher, [KnowledgeTypes.Materials]: Material },
   setup() {
     const { currentView } = container.resolve(ViewService);
