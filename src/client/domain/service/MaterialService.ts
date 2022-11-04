@@ -1,5 +1,5 @@
 import { container, singleton } from 'tsyringe';
-import { ref, toRaw, shallowRef } from '@vue/reactivity';
+import { shallowRef } from '@vue/reactivity';
 import { watch } from '@vue-reactivity/watch';
 import last from 'lodash/last';
 
@@ -8,38 +8,40 @@ import type { MaterialDTO, MaterialVO } from 'interface/Material';
 import type { FileDTO, FileVO } from 'interface/File';
 import { TagTypes } from 'interface/Tag';
 import TagTree from 'model/TagTree';
+import type { MaterialsFormModel } from 'model/form/MaterialForm';
 
 @singleton()
 export default class MaterialService {
   readonly #remote: Remote = container.resolve(remoteToken);
-  readonly newMaterials = ref<Required<MaterialDTO>[]>([]);
-  readonly newFiles = shallowRef<FileVO[]>([]);
+  readonly files = shallowRef<FileVO[]>([]);
   readonly tagTree = new TagTree(TagTypes.Material);
 
   constructor() {
     watch(this.tagTree.selectedTag, this.#queryMaterials);
   }
 
-  readonly generateNewMaterialsByFiles = async (files: FileDTO[]) => {
+  readonly uploadFiles = async (files: FileDTO[]) => {
     const { body: createdFiles } = await this.#remote.post<FileDTO[], FileVO[]>('/files', files);
 
-    this.newFiles.value = createdFiles.map((file) => ({
+    this.files.value = createdFiles.map((file) => ({
       ...file,
       sourceUrl: last(file.sourceUrl.split('/')) || '',
     }));
-    this.newMaterials.value = createdFiles.map(({ id }, i) => ({
-      fileId: id,
-      comment: '',
-      rating: 0,
-      name: this.newFiles.value[i].sourceUrl.split('.')[0],
-      tags: [],
-    }));
   };
 
-  readonly uploadMaterials = async () => {
-    await this.#remote.post<MaterialDTO[], MaterialVO[]>('/materials', toRaw(this.newMaterials.value));
-    this.newMaterials.value = [];
-    this.newFiles.value = [];
+  readonly clearFiles = () => {
+    this.files.value = [];
+  };
+
+  readonly uploadMaterials = async (materials: MaterialsFormModel) => {
+    await this.#remote.post<MaterialDTO[], MaterialVO[]>(
+      '/materials',
+      materials.map((v, i) => ({
+        ...v,
+        fileId: this.files.value[i].id,
+      })),
+    );
+    this.files.value = [];
   };
 
   readonly #queryMaterials = () => {

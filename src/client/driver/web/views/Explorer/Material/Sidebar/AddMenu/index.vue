@@ -2,9 +2,11 @@
 import { defineComponent } from 'vue';
 import { NButton, NDropdown } from 'naive-ui';
 import { BIconPlusSquareFill } from 'bootstrap-icons-vue';
+import { container } from 'tsyringe';
 
+import MaterialService from 'service/MaterialService';
 import { useNewMaterialByFiles } from './useMenu';
-import MaterialEditor from './MaterialForm.vue';
+import MaterialForm from './MaterialForm.vue';
 
 export default defineComponent({
   name: 'AddMenu',
@@ -12,10 +14,11 @@ export default defineComponent({
     NButton,
     NDropdown,
     BIconPlusSquareFill,
-    MaterialEditor,
+    MaterialForm,
   },
   setup() {
-    const { open: openFileDialog, dialog: fileMaterialDialog } = useNewMaterialByFiles();
+    const openFileDialog = useNewMaterialByFiles();
+    const { files } = container.resolve(MaterialService);
     const handleAdd = (key: string) => {
       switch (key) {
         case 'file':
@@ -25,7 +28,7 @@ export default defineComponent({
       }
     };
 
-    return { handleAdd, fileMaterialDialog };
+    return { handleAdd, files };
   },
 });
 </script>
@@ -43,5 +46,5 @@ export default defineComponent({
   >
     <NButton text class="text-lg"><BIconPlusSquareFill /></NButton>
   </NDropdown>
-  <MaterialEditor :dialog="fileMaterialDialog" />
+  <MaterialForm v-if="files.length > 0" />
 </template>

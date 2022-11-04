@@ -1,4 +1,5 @@
 import map from 'lodash/map';
+import pick from 'lodash/pick';
 
 import type { MaterialDTO, MaterialQuery } from 'interface/Material';
 import type { MaterialRepository } from 'service/repository/MaterialRepository';
@@ -14,7 +15,9 @@ export default class SqliteMaterialRepository implements MaterialRepository {
     const trx = await db.knex.transaction();
 
     try {
-      createdMaterials = await trx<MaterialRow>(materialsTableName).insert(materials).returning(db.knex.raw('*'));
+      createdMaterials = await trx<MaterialRow>(materialsTableName)
+        .insert(materials.map((v) => pick(v, ['name', 'fileId', 'comment', 'rating'])))
+        .returning(db.knex.raw('*'));
 
       const materialToTagRecords = materials.flatMap(({ tags }, i) => {
         return tags ? tags.map((tagId) => ({ entityId: createdMaterials[i].id, tagId })) : [];

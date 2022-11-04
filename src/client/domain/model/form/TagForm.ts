@@ -8,7 +8,7 @@ const initialValues = () => ({ name: '' });
 
 export default class TagForm extends ModelForm<TagFormModel> {
   protected schema = pick(tagSchema, ['name']);
-  constructor(onSubmit: ModelForm<TagFormModel>['onSubmit']) {
-    super(initialValues, onSubmit);
+  constructor() {
+    super(initialValues);
   }
 }

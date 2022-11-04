@@ -74,7 +74,7 @@ export default class TagTree {
       body: { id, name, parentId },
     } = await this.#remote.post<TagDTO, TagVO>('/tags', {
       ...newTag,
-      parentId: this.#selectedTagId.value,
+      ...(this.#selectedTagId.value ? { parentId: this.#selectedTagId.value } : null),
       type: this.#tagType,
     });
 

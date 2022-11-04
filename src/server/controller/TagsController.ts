@@ -10,8 +10,7 @@ export default class TagsController {
   constructor(private tagService: TagService) {}
 
   @Post('tags')
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  @UsePipes(createPipe(tagSchema as any))
+  @UsePipes(createPipe(tagSchema))
   async create(@Body() tag: TagDTO): Promise<TagVO> {
     return await this.tagService.create(tag);
   }

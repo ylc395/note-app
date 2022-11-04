@@ -5,7 +5,7 @@ import { NInput, NModal, NButton, NSpace, NFormItem, NForm } from 'naive-ui';
 import type { UseConfirmDialogReturn } from '@vueuse/core';
 
 import MaterialService from 'service/MaterialService';
-import TagForm, { type TagFormModel } from 'model/form/TagForm';
+import TagForm from 'model/form/TagForm';
 
 export default defineComponent({
   components: { NInput, NModal, NButton, NFormItem, NSpace, NForm },
@@ -20,20 +20,21 @@ export default defineComponent({
       tagTree: { createTag, selectedTag },
     } = container.resolve(MaterialService);
 
-    const confirm = async (newTag: TagFormModel) => {
-      await createTag(newTag);
+    const { errors, handleSubmit, values, reset } = new TagForm();
+    const confirm = handleSubmit(async (values) => {
+      await createTag(values);
       props.dialog.confirm();
-    };
+    });
 
-    const { errors, submit, values } = new TagForm(confirm);
+    props.dialog.onCancel(reset);
 
-    return { errors, selectedTag, submit, values };
+    return { errors, selectedTag, confirm, values };
   },
 });
 </script>
 <template>
   <NModal to="#app" :show="dialog.isRevealed.value" preset="card" class="w-80" :closable="false" title="创建新标签">
-    <NForm label-placement="left" label-width="auto">
+    <NForm v-if="values" label-placement="left" label-width="auto">
       <NFormItem label="父级标签">
         <NInput readonly :value="selectedTag?.name || '无'" />
       </NFormItem>
@@ -46,7 +47,7 @@ export default defineComponent({
       </NFormItem>
     </NForm>
     <NSpace justify="end" class="mt-8">
-      <NButton type="primary" @click="submit">确认</NButton>
+      <NButton type="primary" @click="confirm">确认</NButton>
       <NButton @click="dialog.cancel">取消</NButton>
     </NSpace>
   </NModal>
