@@ -1,17 +1,16 @@
-import { ref, reactive, toRaw, computed } from '@vue/reactivity';
+import { ref, reactive, computed } from '@vue/reactivity';
 import pick from 'lodash/pick';
 import { container } from 'tsyringe';
 
 import { type Remote, token as remoteToken } from 'infra/Remote';
 import type { TagDTO, TagVO, TagQuery, TagTypes } from 'interface/Tag';
+import type { TagFormModel } from './form/TagForm';
 
 interface TagTreeNode {
   id: TagVO['id'];
   name: TagVO['name'];
   children?: TagTreeNode[];
 }
-
-export type EditingTag = Pick<TagDTO, 'name'>;
 
 export default class TagTree {
   readonly #remote: Remote = container.resolve(remoteToken);
@@ -70,16 +69,16 @@ export default class TagTree {
     this.roots.value.unshift(noTagNode);
   }
 
-  createTag = async (newTag: EditingTag) => {
+  createTag = async (newTag: TagFormModel) => {
     const {
       body: { id, name, parentId },
     } = await this.#remote.post<TagDTO, TagVO>('/tags', {
-      ...toRaw(newTag),
+      ...newTag,
       parentId: this.#selectedTagId.value,
       type: this.#tagType,
     });
 
-    const tagNode = reactive({ id, name, children: [] });
+    const tagNode = reactive({ id, name });
 
     this.#nodesMap[id] = tagNode;
 

@@ -27,7 +27,10 @@ export default class ElectronIpcServer extends Server implements CustomTransport
         }
 
         const status = e instanceof InvalidInputError ? 400 : 500;
-        this.logger.error(e.message, e.stack);
+
+        if (!(e instanceof InvalidInputError)) {
+          this.logger.error(e.message, e.stack);
+        }
 
         return { status, body: { error: pick(e, ['message', 'cause']) } };
       }
