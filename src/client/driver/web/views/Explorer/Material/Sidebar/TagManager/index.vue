@@ -31,13 +31,15 @@ export default defineComponent({
         <NButton text @click="dialog.reveal"><BIconPlus /></NButton>
       </div>
     </template>
-    <NTree
-      block-line
-      :data="roots"
-      key-field="id"
-      label-field="name"
-      @update:selected-keys="(keys) => selectTag(keys[0])"
-    />
+    <div class="w-full overflow-x-auto">
+      <NTree
+        block-line
+        :data="roots"
+        key-field="id"
+        label-field="name"
+        @update:selected-keys="(keys) => selectTag(keys[0])"
+      />
+    </div>
     <TagEditor :dialog="dialog" />
   </NCollapseItem>
 </template>

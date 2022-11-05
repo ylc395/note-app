@@ -6,7 +6,6 @@ import { container } from 'tsyringe';
 
 import MaterialService from 'service/MaterialService';
 import MaterialForm from 'model/form/MaterialForm';
-import type { Issues } from 'model/Error';
 
 export default defineComponent({
   components: {
@@ -46,8 +45,8 @@ export default defineComponent({
       <NFormItem
         label="资料名"
         required
-        :feedback="(errors[index] as Issues)?.name as string"
-        :validation-status="(errors[index] as Issues)?.name ? 'error' : undefined"
+        :feedback="errors[index]?.name"
+        :validation-status="errors[index]?.name ? 'error' : undefined"
       >
         <NInput v-model:value="material.name" placeholder="" />
       </NFormItem>

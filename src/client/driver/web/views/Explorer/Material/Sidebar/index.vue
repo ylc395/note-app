@@ -27,8 +27,8 @@ export default defineComponent({
       </div>
       <SearchInput />
     </header>
-    <div class="overflow-auto">
-      <NCollapse>
+    <div class="overflow-auto flex-grow">
+      <NCollapse class="h-full">
         <CustomFilter />
         <TagManager />
       </NCollapse>

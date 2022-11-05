@@ -8,7 +8,7 @@ import unset from 'lodash/unset';
 import { InvalidInputError, type Issues } from 'model/Error';
 
 export default abstract class ModelForm<T> {
-  errors = ref<Issues>({});
+  errors = ref<Issues<T>>({});
   #stopWatchInitialValues: WatchStopHandle;
   #errorFieldValidateStoppers = new Set<WatchStopHandle>();
 
@@ -51,18 +51,17 @@ export default abstract class ModelForm<T> {
     } else {
       const wrongValue = get(this.values.value, path);
       const errorMessage = obj;
-      this.#errorFieldValidateStoppers.add(
-        watch(
-          () => get(this.values.value, path),
-          (value) => {
-            if (wrongValue === value) {
-              set(this.errors.value, path, errorMessage);
-            } else {
-              unset(this.errors.value, path);
-            }
-          },
-        ),
+      const watcher = watch(
+        () => get(this.values.value, path),
+        (value) => {
+          if (wrongValue === value) {
+            set(this.errors.value, path, errorMessage);
+          } else {
+            unset(this.errors.value, path);
+          }
+        },
       );
+      this.#errorFieldValidateStoppers.add(watcher);
     }
   }
 

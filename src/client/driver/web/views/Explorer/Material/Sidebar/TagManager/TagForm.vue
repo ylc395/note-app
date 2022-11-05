@@ -38,11 +38,7 @@ export default defineComponent({
       <NFormItem label="父级标签">
         <NInput readonly :value="selectedTag?.name || '无'" />
       </NFormItem>
-      <NFormItem
-        :feedback="errors.name as (string | undefined)"
-        :validation-status="errors.name ? 'error' : undefined"
-        label="标签名"
-      >
+      <NFormItem :feedback="errors.name" :validation-status="errors.name ? 'error' : undefined" label="标签名">
         <NInput v-model:value="values.name" class="mb-4" placeholder="" />
       </NFormItem>
     </NForm>

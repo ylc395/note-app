@@ -1,28 +1,30 @@
 import type { ZodError } from 'zod';
-import cloneDeepWith from 'lodash/cloneDeepWith';
 import get from 'lodash/get';
+import set from 'lodash/set';
 import isObject from 'lodash/isObject';
 
 enum BusinessErrorTypes {
   InvalidInput,
 }
 
-export interface Issues {
-  [K: string]: string | Issues | undefined;
-}
+export type Issues<T> = {
+  [P in keyof T]?: T[P] extends object ? Issues<T[P]> : string;
+};
 
-export function getIssuesFromZodError(zodError: ZodError) {
-  return cloneDeepWith(zodError.format(), (value) => {
-    if (value._errors && value._errors.length > 0) {
-      return value._errors.join(';');
-    }
-  });
+export function getIssuesFromZodError({ issues }: ZodError) {
+  const messages: Issues<unknown> = {};
+
+  for (const { path, message } of issues) {
+    set(messages, path, message);
+  }
+
+  return messages;
 }
 
 export class InvalidInputError extends Error {
   type = BusinessErrorTypes.InvalidInput;
   name = 'InvalidInputError';
-  constructor(public readonly issues: Issues) {
+  constructor(public readonly issues: Issues<unknown>) {
     super('Invalid Input');
   }
   static fromZodError(zodError: ZodError) {
