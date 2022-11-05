@@ -14,7 +14,7 @@ export enum MaterialTypes {
 }
 
 export const materialDTOSchema = object({
-  name: string().min(1),
+  name: string().min(1, '资料名不能为空'),
   comment: string().optional(),
   rating: number().optional(),
   fileId: number(),

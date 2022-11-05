@@ -13,7 +13,7 @@ export interface Issues {
 
 export function getIssuesFromZodError(zodError: ZodError) {
   return cloneDeepWith(zodError.format(), (value) => {
-    if (value._errors) {
+    if (value._errors && value._errors.length > 0) {
       return value._errors.join(';');
     }
   });

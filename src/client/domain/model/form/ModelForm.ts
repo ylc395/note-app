@@ -1,21 +1,17 @@
 import { ref, toRaw } from '@vue/reactivity';
 import { watch, watchEffect, type WatchStopHandle } from '@vue-reactivity/watch';
-import type { ZodType } from 'zod';
-import debounce from 'lodash/debounce';
 import isObject from 'lodash/isObject';
 import get from 'lodash/get';
 import set from 'lodash/set';
 import unset from 'lodash/unset';
 
-import { InvalidInputError, type Issues, getIssuesFromZodError } from 'model/Error';
+import { InvalidInputError, type Issues } from 'model/Error';
 
 export default abstract class ModelForm<T> {
   errors = ref<Issues>({});
   #stopWatchInitialValues: WatchStopHandle;
-  #stopWatchValidate?: WatchStopHandle;
   #errorFieldValidateStoppers = new Set<WatchStopHandle>();
 
-  protected abstract readonly schema: ZodType<T>;
   readonly values = ref<T>();
 
   constructor(private readonly initialValues: () => T) {
@@ -24,27 +20,10 @@ export default abstract class ModelForm<T> {
     });
   }
 
-  #validate = () => {
-    const result = this.schema.safeParse(this.values.value);
-    this.errors.value = result.success ? {} : getIssuesFromZodError(result.error);
-
-    return result.success;
-  };
-
   readonly handleSubmit = (submit: (values: T) => Promise<void>) => {
     return async () => {
       if (Object.keys(this.errors.value).length > 0 || !this.values.value) {
         return;
-      }
-
-      const isValid = this.#validate();
-
-      if (!isValid) {
-        // when local validation is not passed, start to watch & validate
-        if (!this.#stopWatchValidate) {
-          this.#stopWatchValidate = watch(this.values, debounce(this.#validate, 500), { deep: true });
-        }
-        return false;
       }
 
       // local validation passed. Waiting for remote validation
@@ -91,18 +70,12 @@ export default abstract class ModelForm<T> {
     this.errors.value = {};
     this.values.value = this.initialValues();
 
-    if (this.#stopWatchValidate) {
-      this.#stopWatchValidate();
-      this.#stopWatchValidate = undefined;
-    }
-
     Array.from(this.#errorFieldValidateStoppers).forEach((stop) => stop());
     this.#errorFieldValidateStoppers.clear();
   };
 
   readonly destroy = () => {
     this.#stopWatchInitialValues();
-    this.#stopWatchValidate?.();
     Array.from(this.#errorFieldValidateStoppers).forEach((stop) => stop());
     this.#errorFieldValidateStoppers.clear();
   };
