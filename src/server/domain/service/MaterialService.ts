@@ -18,11 +18,11 @@ export default class MaterialService {
   ) {}
 
   async create(materials: MaterialDTO[]) {
-    for (const { tags: tagIds, fileId } of materials) {
+    for (const [i, { tags: tagIds, fileId }] of materials.entries()) {
       const file = await this.fileRepository.findOne({ id: fileId });
 
       if (!file) {
-        throw new InvalidInputError(`无效的 file id: ${fileId}`);
+        throw new InvalidInputError({ [i]: { fileId: `无效的 file id: ${fileId}` } });
       }
 
       if (!tagIds) {
@@ -32,7 +32,7 @@ export default class MaterialService {
       const tags = await this.tagRepository.findAll({ id: tagIds });
 
       if (tags.length !== tagIds.length) {
-        throw new InvalidInputError('无效的 tag id');
+        throw new InvalidInputError({ [i]: { tags: '无效的 tag id' } });
       }
     }
 

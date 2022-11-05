@@ -2,7 +2,7 @@ import { Server, type CustomTransportStrategy } from '@nestjs/microservices';
 import type { ExceptionFilter } from '@nestjs/common';
 import { ipcMain } from 'electron';
 import isError from 'lodash/isError';
-import pick from 'lodash/pick';
+import toPlainObject from 'lodash/toPlainObject';
 
 import { InvalidInputError } from 'model/Error';
 import { IPC_CHANNEL, type IpcRequest, type IpcResponse } from 'client/driver/electron/ipc';
@@ -23,7 +23,7 @@ export default class ElectronIpcServer extends Server implements CustomTransport
       } catch (e) {
         if (!isError(e)) {
           this.logger.error(e);
-          return { status: 500, body: { error: { message: String(e) } } };
+          return { status: 500, body: { error: toPlainObject(e) } };
         }
 
         const status = e instanceof InvalidInputError ? 400 : 500;
@@ -32,7 +32,7 @@ export default class ElectronIpcServer extends Server implements CustomTransport
           this.logger.error(e.message, e.stack);
         }
 
-        return { status, body: { error: pick(e, ['message', 'cause']) } };
+        return { status, body: { error: toPlainObject(e) } };
       }
     });
     cb();

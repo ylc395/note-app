@@ -1,4 +1,4 @@
-import { omit, array } from 'superstruct';
+import { array } from 'zod';
 import type { Ref } from '@vue/reactivity';
 import ModelForm from './ModelForm';
 import { type MaterialDTO, materialDTOSchema } from 'interface/Material';
@@ -7,7 +7,7 @@ import type { FileVO } from 'interface/File';
 export type MaterialsFormModel = Omit<MaterialDTO, 'fileId'>[];
 
 export default class TagForm extends ModelForm<MaterialsFormModel> {
-  protected schema = array(omit(materialDTOSchema, ['fileId']));
+  protected schema = array(materialDTOSchema.omit({ fileId: true }));
   constructor(files: Ref<FileVO[]>) {
     const initialValues = () =>
       files.value.map(({ sourceUrl }) => ({

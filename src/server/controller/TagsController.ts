@@ -1,6 +1,6 @@
 import { Controller, UsePipes } from '@nestjs/common';
 
-import { type TagDTO, type TagQuery, type TagVO, tagSchema } from 'interface/Tag';
+import { type TagDTO, type TagQuery, type TagVO, tagDTOSchema } from 'interface/Tag';
 import TagService from 'service/TagService';
 
 import { Post, Get, Body, Query, createPipe } from './decorators';
@@ -10,7 +10,7 @@ export default class TagsController {
   constructor(private tagService: TagService) {}
 
   @Post('tags')
-  @UsePipes(createPipe(tagSchema))
+  @UsePipes(createPipe(tagDTOSchema))
   async create(@Body() tag: TagDTO): Promise<TagVO> {
     return await this.tagService.create(tag);
   }

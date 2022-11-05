@@ -1,10 +1,4 @@
-import { object, string, boolean, pattern, nonempty, optional, array, type Describe } from 'superstruct';
-
-export interface FileDTO {
-  sourceUrl: string;
-  mimeType: string;
-  isTemp?: boolean;
-}
+import { object, string, boolean, array, type infer as Infer } from 'zod';
 
 export interface FileVO {
   id: number;
@@ -15,12 +9,13 @@ export interface FileVO {
   createdAt?: number;
 }
 
-export type FileDataDTO = ArrayBuffer;
+export const FileDTOSchema = object({
+  sourceUrl: string().regex(/^file:\/\//),
+  mimeType: string().min(1),
+  isTemp: boolean().optional(),
+});
+export const FilesDTOSchema = array(FileDTOSchema);
 
-export const FileDTOSchema: Describe<FileDTO[]> = array(
-  object({
-    sourceUrl: pattern(string(), /^file:\/\//),
-    mimeType: nonempty(string()),
-    isTemp: optional(boolean()),
-  }),
-);
+export type FileDTO = Infer<typeof FileDTOSchema>;
+
+export type FileDataDTO = ArrayBuffer;

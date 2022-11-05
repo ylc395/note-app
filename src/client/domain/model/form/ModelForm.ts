@@ -1,35 +1,28 @@
 import { ref, toRaw } from '@vue/reactivity';
 import { watch, watchEffect, type WatchStopHandle } from '@vue-reactivity/watch';
-import type { Struct } from 'superstruct';
+import type { ZodType } from 'zod';
 import debounce from 'lodash/debounce';
-import get from 'lodash/get';
 
-import { InvalidInputError, getErrors, type InvalidInputErrorCause } from 'model/Error';
-
-interface Errors {
-  [k: string]: Errors | string;
-}
+import { InvalidInputError, type Issues, getIssuesFromZodError } from 'model/Error';
 
 export default abstract class ModelForm<T> {
-  errors = ref<Errors>({});
-  #stopWatch = new Set<WatchStopHandle>();
-
-  protected abstract readonly schema: Struct<T>;
+  errors = ref<Issues>({});
+  #stopWatchInitialValues: WatchStopHandle;
+  #stopWatchValidate?: WatchStopHandle;
+  protected abstract readonly schema: ZodType<T>;
   readonly values = ref<T>();
 
   constructor(private initialValues: () => T) {
-    this.#stopWatch.add(
-      watchEffect(() => {
-        this.values.value = this.initialValues();
-      }),
-    );
+    this.#stopWatchInitialValues = watchEffect(() => {
+      this.values.value = this.initialValues();
+    });
   }
 
   #validate = () => {
-    const [error] = this.schema.validate(this.values.value);
-    this.errors.value = error ? getErrors(error) : {};
+    const result = this.schema.safeParse(this.values.value);
+    this.errors.value = result.success ? {} : getIssuesFromZodError(result.error);
 
-    return !error;
+    return result.success;
   };
 
   readonly handleSubmit = (submit: (values: T) => Promise<void>) => {
@@ -41,38 +34,25 @@ export default abstract class ModelForm<T> {
       const isValid = this.#validate();
 
       if (!isValid) {
-        this.#stopWatch.add(watch(this.values, debounce(this.#validate, 500), { deep: true }));
+        if (!this.#stopWatchValidate) {
+          this.#stopWatchValidate = watch(this.values, debounce(this.#validate, 500), { deep: true });
+        }
         return false;
       }
 
       // local validation passed. Waiting for remote validation
-      this.#emptyStopWatch();
 
       try {
         await submit(toRaw(this.values.value));
         this.reset();
         return true;
       } catch (e) {
-        if (e instanceof InvalidInputError && e.cause) {
-          this.errors.value = e.cause as InvalidInputErrorCause;
-
-          for (const path of Object.keys(this.errors.value)) {
-            const stop = watch(
-              () => get(this.values.value, path),
-              () => {
-                delete this.errors.value[path];
-                stop();
-                this.#stopWatch.delete(stop);
-              },
-            );
-
-            this.#stopWatch.add(stop);
-          }
-
-          return false;
+        if (!InvalidInputError.is(e)) {
+          throw e;
         }
 
-        throw e;
+        this.errors.value = e.issues;
+        return false;
       }
     };
   };
@@ -81,15 +61,13 @@ export default abstract class ModelForm<T> {
     this.errors.value = {};
     this.values.value = this.initialValues();
 
-    this.#emptyStopWatch();
+    if (this.#stopWatchValidate) {
+      this.#stopWatchValidate();
+      this.#stopWatchValidate = undefined;
+    }
   };
 
   readonly destroy = () => {
-    this.#emptyStopWatch();
+    this.#stopWatchInitialValues();
   };
-
-  #emptyStopWatch() {
-    Array.from(this.#stopWatch).forEach((stop) => stop());
-    this.#stopWatch.clear();
-  }
 }

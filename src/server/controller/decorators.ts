@@ -1,21 +1,20 @@
 import type { PipeTransform } from '@nestjs/common';
-import type { Struct } from 'superstruct';
+import type { ZodType } from 'zod';
 
-import { InvalidInputError, getErrors } from 'model/Error';
+import { InvalidInputError } from 'model/Error';
 
 export * from 'driver/electron/handler';
 
-export function createPipe<T>(struct: Struct<T>) {
-  return class ValidatorPipe implements PipeTransform {
+export function createPipe<T>(schema: ZodType<T>): PipeTransform {
+  return {
     transform(value: unknown) {
-      const [err] = struct.validate(value);
+      const result = schema.safeParse(value);
 
-      if (err) {
-        const cause = getErrors(err);
-        throw new InvalidInputError(`invalid input ${err.message.toLowerCase()}`, { cause });
+      if (!result.success) {
+        throw InvalidInputError.fromZodError(result.error);
       }
 
       return value;
-    }
+    },
   };
 }

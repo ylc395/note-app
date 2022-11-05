@@ -1,28 +1,38 @@
-import type { StructError } from 'superstruct';
+import type { ZodError } from 'zod';
+import cloneDeepWith from 'lodash/cloneDeepWith';
+import get from 'lodash/get';
+import isObject from 'lodash/isObject';
 
-export class BusinessError extends Error {
-  name = 'BusinessError';
+enum BusinessErrorTypes {
+  InvalidInput,
 }
 
-export type InvalidInputErrorCause = Record<string, string>;
-
-interface InvalidInputErrorOptions {
-  cause?: InvalidInputErrorCause;
+export interface Issues {
+  [K: string]: string | Issues | undefined;
 }
 
-export class InvalidInputError extends BusinessError {
-  constructor(message?: string, options?: InvalidInputErrorOptions) {
-    super(message, options);
-  }
+export function getIssuesFromZodError(zodError: ZodError) {
+  return cloneDeepWith(zodError.format(), (value) => {
+    if (value._errors) {
+      return value._errors.join(';');
+    }
+  });
+}
+
+export class InvalidInputError extends Error {
+  type = BusinessErrorTypes.InvalidInput;
   name = 'InvalidInputError';
-}
+  constructor(public readonly issues: Issues) {
+    super('Invalid Input');
+  }
+  static fromZodError(zodError: ZodError) {
+    return new InvalidInputError(getIssuesFromZodError(zodError));
+  }
 
-export function getErrors(err: StructError) {
-  const failures = err.failures();
-  const errors = failures.reduce((records, { key, refinement, type }) => {
-    records[key] = `应当是一个 ${refinement} ${type}`;
-    return records;
-  }, {} as Record<string, string>);
-
-  return errors;
+  static is(v: unknown): v is InvalidInputError {
+    return (
+      v instanceof InvalidInputError ||
+      (get(v, 'type') === BusinessErrorTypes.InvalidInput && isObject(get(v, 'issues')))
+    );
+  }
 }

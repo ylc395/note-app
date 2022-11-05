@@ -1,19 +1,5 @@
 import type { TagVO } from './Tag';
-import { object, string, number, nonempty, optional, array } from 'superstruct';
-
-export interface MaterialDTO {
-  name: string;
-  comment?: string;
-  rating?: number;
-  fileId: number;
-  tags?: TagVO['id'][];
-}
-
-export type MaterialVO = Required<MaterialDTO> & {
-  id: number;
-  createdAt: number;
-  updatedAt: number;
-};
+import { object, string, number, array, type infer as Infer } from 'zod';
 
 export interface MaterialQuery {
   type?: MaterialTypes;
@@ -28,11 +14,19 @@ export enum MaterialTypes {
 }
 
 export const materialDTOSchema = object({
-  name: nonempty(string()),
-  comment: optional(string()),
-  rating: optional(number()),
+  name: string().min(1),
+  comment: string().optional(),
+  rating: number().optional(),
   fileId: number(),
-  tags: optional(array(number())),
+  tags: number().array().optional(),
 });
 
 export const materialsDTOSchema = array(materialDTOSchema);
+
+export type MaterialDTO = Infer<typeof materialDTOSchema>;
+
+export type MaterialVO = Required<MaterialDTO> & {
+  id: number;
+  createdAt: number;
+  updatedAt: number;
+};

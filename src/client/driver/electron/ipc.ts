@@ -11,6 +11,6 @@ export interface IpcRequest<T> {
 
 export interface IpcResponse<T = unknown> {
   status: number;
-  body: T & { error?: { message: string; cause?: unknown } };
+  body: T & { error?: unknown };
   headers?: Record<string, string>;
 }

@@ -39,7 +39,7 @@ export default defineComponent({
         <NInput readonly :value="selectedTag?.name || '无'" />
       </NFormItem>
       <NFormItem
-        :feedback="errors.name as string"
+        :feedback="errors.name as (string | undefined)"
         :validation-status="errors.name ? 'error' : undefined"
         label="标签名"
       >

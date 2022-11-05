@@ -1,15 +1,9 @@
-import { object, string, number, nonempty, optional, enums } from 'superstruct';
+import { object, string, number, nativeEnum, type infer as Infer } from 'zod';
 
 export interface TagVO {
   id: number;
   name: string;
   parentId: TagVO['id'];
-}
-
-export interface TagDTO {
-  name: string;
-  parentId?: TagVO['id'];
-  type: TagTypes;
 }
 
 export enum TagTypes {
@@ -23,8 +17,10 @@ export interface TagQuery {
   parentId?: TagVO['id'];
 }
 
-export const tagSchema = object({
-  name: nonempty(string()),
-  parentId: optional(number()),
-  type: enums([TagTypes.Material]),
+export const tagDTOSchema = object({
+  name: string().min(1, '标签名不应为空'),
+  parentId: number().optional(),
+  type: nativeEnum(TagTypes),
 });
+
+export type TagDTO = Infer<typeof tagDTOSchema>;

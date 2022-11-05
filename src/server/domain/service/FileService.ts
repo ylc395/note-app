@@ -21,7 +21,7 @@ export default class FileService {
     const path = sourceUrl.match(/^file:\/\/(.+)/)?.[1];
 
     if (!path) {
-      throw new InvalidInputError(`invalid sourceUrl ${sourceUrl}`);
+      throw new InvalidInputError({ sourceUrl: `invalid sourceUrl ${sourceUrl}` });
     }
 
     const deviceName = this.localClient?.getDeviceName() || '';

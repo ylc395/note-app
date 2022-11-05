@@ -1,13 +1,12 @@
 import ModelForm from './ModelForm';
-import { type TagDTO, tagSchema } from 'interface/Tag';
-import { pick } from 'superstruct';
+import { type TagDTO, tagDTOSchema } from 'interface/Tag';
 
 export type TagFormModel = Pick<TagDTO, 'name'>;
 
 const initialValues = () => ({ name: '' });
 
 export default class TagForm extends ModelForm<TagFormModel> {
-  protected schema = pick(tagSchema, ['name']);
+  protected schema = tagDTOSchema.pick({ name: true });
   constructor() {
     super(initialValues);
   }
