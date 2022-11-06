@@ -1,5 +1,5 @@
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
+import { defineComponent, ref, onMounted } from 'vue';
 import { useMouseInElement, useConfirmDialog } from '@vueuse/core';
 import { container } from 'tsyringe';
 import { NTree, NCollapseItem, NButton } from 'naive-ui';
@@ -13,12 +13,14 @@ export default defineComponent({
   components: { NTree, NCollapseItem, NButton, BIconPlus, TagEditor },
   setup() {
     const {
-      tagTree: { roots, selectTag },
+      tagTree: { roots, selectTag, load: loadTagTree },
     } = container.resolve(MaterialService);
 
     const rootRef = ref();
     const { isOutside } = useMouseInElement(rootRef);
     const dialog = useConfirmDialog();
+
+    onMounted(loadTagTree);
 
     return { roots, selectTag, isOutside, rootRef, dialog };
   },

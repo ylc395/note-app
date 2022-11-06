@@ -16,6 +16,6 @@ export default class MaterialsController {
 
   @Get('materials')
   async findAll(@Query() query: MaterialQuery) {
-    return this.materialService.findAll(query);
+    return await this.materialService.findAll(query);
   }
 }

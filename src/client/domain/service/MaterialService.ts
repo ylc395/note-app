@@ -1,6 +1,5 @@
 import { container, singleton } from 'tsyringe';
 import { shallowRef } from '@vue/reactivity';
-import { watch } from '@vue-reactivity/watch';
 import last from 'lodash/last';
 
 import { type Remote, token as remoteToken } from 'infra/Remote';
@@ -15,10 +14,7 @@ export default class MaterialService {
   readonly #remote: Remote = container.resolve(remoteToken);
   readonly files = shallowRef<FileVO[]>([]);
   readonly tagTree = new TagTree(TagTypes.Material);
-
-  constructor() {
-    watch(this.tagTree.selectedTag, this.#queryMaterials);
-  }
+  readonly materials = shallowRef<MaterialVO[]>([]);
 
   readonly uploadFiles = async (files: FileDTO[]) => {
     const { body: createdFiles } = await this.#remote.post<FileDTO[], FileVO[]>('/files', files);
@@ -44,9 +40,8 @@ export default class MaterialService {
     this.files.value = [];
   };
 
-  readonly #queryMaterials = () => {
-    if (!this.tagTree.selectedTag.value) {
-      return;
-    }
+  readonly queryMaterials = async () => {
+    const { body } = await this.#remote.get<void, MaterialVO[]>('/materials');
+    this.materials.value = body;
   };
 }

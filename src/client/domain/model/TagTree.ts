@@ -28,15 +28,17 @@ export default class TagTree {
 
   constructor(tagType: TagTypes) {
     this.#tagType = tagType;
-    this.#init();
   }
 
-  async #init() {
+  load = async () => {
     this.#nodesMap = {};
     const { body: tags } = await this.#remote.get<TagQuery, TagVO[]>('/tags', { type: this.#tagType });
     this.roots.value = this.#build(tags);
-    this.#appendNoTagNode();
-  }
+    this.roots.value.unshift({
+      id: 0,
+      name: '无标签',
+    });
+  };
 
   #build(allTags: TagVO[]) {
     for (const { id, name } of allTags) {
@@ -59,14 +61,6 @@ export default class TagTree {
     }
 
     return Object.values(pick(this.#nodesMap, rootIds));
-  }
-
-  #appendNoTagNode() {
-    const noTagNode: TagTreeNode = {
-      id: 0,
-      name: '无标签',
-    };
-    this.roots.value.unshift(noTagNode);
   }
 
   createTag = async (newTag: TagFormModel) => {

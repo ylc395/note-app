@@ -37,16 +37,10 @@ export default class SqliteMaterialRepository implements MaterialRepository {
   }
 
   async findAll(query: MaterialQuery) {
-    const sql = db.knex
-      .select('m.*', 'ett.tagId as tag')
-      .from(`${materialsTableName} as m`)
-      .join(`${filesTableName} as f`, 'f.id', 'm.fileId')
-      .leftJoin(`${entityToTagTableName} as ett`, 'ett.entityId', 'm.id');
-
-    if (query.tag) {
-      sql.andWhere('ett.tagId', query.tag).groupBy();
-    }
-
-    return await sql;
+    return (
+      await db
+        .knex<MaterialRow>(materialsTableName)
+        .select('id', 'fileId', 'comment', 'name', 'rating', 'createdAt', 'updatedAt')
+    ).map((m) => ({ ...m, tags: [] }));
   }
 }
