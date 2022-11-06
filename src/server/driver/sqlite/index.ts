@@ -23,12 +23,6 @@ class SqliteDb {
       wrapIdentifier: (value, originImpl) => originImpl(snakeCase(value)),
     });
 
-    if (isDevelopment) {
-      this.knex.on('start', (builder: Knex['queryBuilder']) => {
-        console.log(builder.toString());
-      });
-    }
-
     await this.#createTables();
     await this.#emptyTempFiles();
   };

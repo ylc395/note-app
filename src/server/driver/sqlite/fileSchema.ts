@@ -7,7 +7,6 @@ export enum TempFlags {
 
 export interface Row {
   id: number;
-  name: string;
   data: ArrayBuffer;
   mimeType: string;
   deviceName: string;
