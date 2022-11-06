@@ -37,9 +37,13 @@ export default defineComponent({
 });
 </script>
 <template>
-  <NModal :show="true" to="#app" preset="card" class="w-96" :closable="false" title="创建新资料">
+  <NModal :show="true" to="#app" preset="card" class="w-1/3" :closable="false" title="创建新资料">
     <NForm v-for="(material, index) in values" :key="index" label-width="auto" label-placement="left">
-      <NFormItem label="源文件">
+      <NFormItem
+        label="源文件"
+        :feedback="files[index].isDuplicated ? '该文件此前已存在于资料库中，继续上传将创建一个副本' : ''"
+        :validation-status="files[index].isDuplicated ? 'warning' : undefined"
+      >
         <NInput readonly :value="files[index].sourceUrl" />
       </NFormItem>
       <NFormItem

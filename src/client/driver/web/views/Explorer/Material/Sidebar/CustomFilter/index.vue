@@ -8,7 +8,7 @@ export default defineComponent({
 });
 </script>
 <template>
-  <NCollapseItem title="固化视图">
+  <NCollapseItem title="固定视图">
     <div>全部资料</div>
     <div>今日入库</div>
     <div>最常浏览</div>
