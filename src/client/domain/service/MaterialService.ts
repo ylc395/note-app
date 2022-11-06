@@ -3,7 +3,7 @@ import { shallowRef } from '@vue/reactivity';
 import last from 'lodash/last';
 
 import { type Remote, token as remoteToken } from 'infra/Remote';
-import type { MaterialDTO, MaterialVO } from 'interface/Material';
+import type { MaterialDTO, MaterialVO, AggregatedMaterialVO } from 'interface/Material';
 import type { FileDTO, FileVO } from 'interface/File';
 import { TagTypes } from 'interface/Tag';
 import TagTree from 'model/TagTree';
@@ -14,7 +14,7 @@ export default class MaterialService {
   readonly #remote: Remote = container.resolve(remoteToken);
   readonly files = shallowRef<FileVO[]>([]);
   readonly tagTree = new TagTree(TagTypes.Material);
-  readonly materials = shallowRef<MaterialVO[]>([]);
+  readonly materials = shallowRef<AggregatedMaterialVO[]>([]);
 
   readonly uploadFiles = async (files: FileDTO[]) => {
     const { body: createdFiles } = await this.#remote.post<FileDTO[], FileVO[]>('/files', files);
@@ -38,10 +38,11 @@ export default class MaterialService {
       })),
     );
     this.files.value = [];
+    this.queryMaterials();
   };
 
   readonly queryMaterials = async () => {
-    const { body } = await this.#remote.get<void, MaterialVO[]>('/materials');
+    const { body } = await this.#remote.get<void, AggregatedMaterialVO[]>('/materials');
     this.materials.value = body;
   };
 }

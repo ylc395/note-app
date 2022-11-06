@@ -1,5 +1,11 @@
 import { Controller, UsePipes } from '@nestjs/common';
-import { type MaterialDTO, type MaterialVO, type MaterialQuery, materialsDTOSchema } from 'interface/Material';
+import {
+  type MaterialDTO,
+  type MaterialVO,
+  type MaterialQuery,
+  materialsDTOSchema,
+  AggregatedMaterialVO,
+} from 'interface/Material';
 import MaterialService from 'service/MaterialService';
 
 import { Post, Get, Body, Query, createPipe } from './decorators';
@@ -15,7 +21,7 @@ export default class MaterialsController {
   }
 
   @Get('materials')
-  async findAll(@Query() query: MaterialQuery) {
+  async findAll(@Query() query: MaterialQuery): Promise<AggregatedMaterialVO[]> {
     return await this.materialService.findAll(query);
   }
 }

@@ -7,6 +7,7 @@ import { token as fileRepositoryToken, type FileRepository } from 'service/repos
 import type { MaterialDTO, MaterialQuery } from 'interface/Material';
 import { Events as FileEvents, type FileAddedEvent } from 'model/File';
 import { InvalidInputError } from 'model/Error';
+import { TagTypes } from 'interface/Tag';
 
 @Injectable()
 export default class MaterialService {
@@ -29,7 +30,7 @@ export default class MaterialService {
         continue;
       }
 
-      const tags = await this.tagRepository.findAll({ id: tagIds });
+      const tags = await this.tagRepository.findAll({ id: tagIds, type: TagTypes.Material });
 
       if (tags.length !== tagIds.length) {
         throw new InvalidInputError({ [i]: { tags: '无效的 tag id' } });

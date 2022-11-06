@@ -32,7 +32,7 @@ export default class TagTree {
 
   load = async () => {
     this.#nodesMap = {};
-    const { body: tags } = await this.#remote.get<TagQuery, TagVO[]>('/tags', { type: this.#tagType });
+    const { body: tags } = await this.#remote.get<TagQuery, Required<TagVO>[]>('/tags', { type: this.#tagType });
     this.roots.value = this.#build(tags);
     this.roots.value.unshift({
       id: 0,
@@ -40,7 +40,7 @@ export default class TagTree {
     });
   };
 
-  #build(allTags: TagVO[]) {
+  #build(allTags: Required<TagVO>[]) {
     for (const { id, name } of allTags) {
       this.#nodesMap[id] = reactive({ id, name });
     }
@@ -66,7 +66,7 @@ export default class TagTree {
   createTag = async (newTag: TagFormModel) => {
     const {
       body: { id, name, parentId },
-    } = await this.#remote.post<TagDTO, TagVO>('/tags', {
+    } = await this.#remote.post<TagDTO, Required<TagVO>>('/tags', {
       ...newTag,
       ...(this.#selectedTagId.value ? { parentId: this.#selectedTagId.value } : null),
       type: this.#tagType,

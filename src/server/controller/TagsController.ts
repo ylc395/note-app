@@ -16,7 +16,7 @@ export default class TagsController {
   }
 
   @Get('tags')
-  async findAll(@Query() query: TagQuery) {
+  async findAll(@Query() query: TagQuery): Promise<TagVO[]> {
     return await this.tagService.findAll(query);
   }
 }

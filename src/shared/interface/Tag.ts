@@ -3,7 +3,7 @@ import { object, string, number, nativeEnum, type infer as Infer } from 'zod';
 export interface TagVO {
   id: number;
   name: string;
-  parentId: TagVO['id'];
+  parentId?: TagVO['id'];
 }
 
 export enum TagTypes {
@@ -18,7 +18,9 @@ export interface TagQuery {
 }
 
 export const tagDTOSchema = object({
-  name: string().min(1, '标签名不应为空'),
+  name: string()
+    .min(1, '标签名不应为空')
+    .regex(/^[^,]*$/, '标签名不能包含,'),
   parentId: number().optional(),
   type: nativeEnum(TagTypes),
 });

@@ -1,5 +1,6 @@
-import type { TagVO } from './Tag';
 import { object, string, number, array, type infer as Infer } from 'zod';
+import type { TagVO } from './Tag';
+import type { FileVO } from './File';
 
 export interface MaterialQuery {
   type?: MaterialTypes;
@@ -29,4 +30,9 @@ export type MaterialVO = Required<MaterialDTO> & {
   id: number;
   createdAt: number;
   updatedAt: number;
+};
+
+export type AggregatedMaterialVO = Omit<MaterialVO, 'fileId'> & {
+  file: FileVO;
+  tags: TagVO[];
 };

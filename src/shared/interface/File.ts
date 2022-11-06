@@ -6,11 +6,10 @@ export interface FileVO {
   mimeType: string;
   deviceName: string;
   isDuplicated?: boolean;
-  createdAt?: number;
 }
 
 export const FileDTOSchema = object({
-  sourceUrl: string().regex(/^file:\/\//),
+  sourceUrl: string().url(),
   mimeType: string().min(1),
   isTemp: boolean().optional(),
 });
