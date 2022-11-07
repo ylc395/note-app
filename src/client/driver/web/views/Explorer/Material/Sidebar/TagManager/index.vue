@@ -6,13 +6,13 @@ import { NTree, NCollapseItem, NButton } from 'naive-ui';
 import { BIconPlus } from 'bootstrap-icons-vue';
 
 import MaterialService from 'service/MaterialService';
-import TagEditor from './TagForm.vue';
+import TagForm from './TagForm.vue';
 import Contextmenu from './Contextmenu.vue';
 import useContextmenu from 'web/components/useContextmenu';
 
 export default defineComponent({
   name: 'TagManager',
-  components: { NTree, NCollapseItem, NButton, BIconPlus, TagEditor, Contextmenu },
+  components: { NTree, NCollapseItem, NButton, BIconPlus, TagForm, Contextmenu },
   setup() {
     const {
       tagTree: { roots, selectTag, selectedTagId, load: loadTagTree },
@@ -53,7 +53,7 @@ export default defineComponent({
         :selected-keys="typeof selectedTagId === 'number' ? [selectedTagId] : []"
         @update:selected-keys="(keys) => selectTag(keys[0])"
       />
-      <TagEditor :dialog="dialog" />
+      <TagForm :dialog="dialog" />
       <Contextmenu :token="contextmenuToken" />
     </div>
   </NCollapseItem>

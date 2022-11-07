@@ -10,8 +10,7 @@ export default defineComponent({
     token: { required: true, type: Symbol as PropType<ReturnType<typeof useContextmenu>['token']> },
     options: { required: true, type: Array as PropType<DropdownOption[]> },
   },
-  emits: ['select'],
-  setup(props, { emit }) {
+  setup(props) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const { isRevealed, cancel, confirm, onReveal } = inject(props.token)!;
     const x = ref<number>();
@@ -23,12 +22,7 @@ export default defineComponent({
       y.value = mouseY.value;
     });
 
-    const handleSelect = (key: string | number, option: DropdownOption) => {
-      emit('select', key, option);
-      confirm();
-    };
-
-    return { isRevealed, handleSelect, cancel, x, y };
+    return { isRevealed, cancel, confirm, x, y };
   },
 });
 </script>
@@ -41,7 +35,7 @@ export default defineComponent({
     :y="y"
     :options="options"
     @clickoutside="cancel"
-    @select="handleSelect"
+    @select="confirm"
   >
     <div />
   </NDropdown>

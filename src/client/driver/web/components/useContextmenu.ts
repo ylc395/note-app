@@ -1,16 +1,15 @@
-import { provide, type InjectionKey, nextTick } from 'vue';
+import { provide, type InjectionKey } from 'vue';
 import { useConfirmDialog } from '@vueuse/core';
 
 export default function useContextmenu() {
-  const { reveal: _reveal, confirm, isRevealed, cancel, onReveal } = useConfirmDialog();
-  const reveal = () => nextTick(_reveal);
+  const { reveal, confirm, isRevealed, cancel, onReveal, onConfirm } = useConfirmDialog();
 
   const composable = {
-    reveal,
     confirm,
     cancel,
     isRevealed,
     onReveal,
+    onConfirm,
   };
 
   const token: InjectionKey<typeof composable> = Symbol('useContextmenu');
