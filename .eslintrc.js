@@ -10,6 +10,7 @@ module.exports = {
     'lodash/prefer-lodash-typecheck': 'off',
     'lodash/prefer-lodash-method': 'off',
     'lodash/prefer-constant': 'off',
+    'lodash/prefer-immutable-method': 'off',
   },
   overrides: [
     {

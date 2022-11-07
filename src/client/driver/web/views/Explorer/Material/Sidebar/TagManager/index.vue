@@ -21,11 +21,11 @@ export default defineComponent({
     const { token: contextmenuToken, reveal } = useContextmenu();
     const rootRef = ref();
     const { isOutside } = useMouseInElement(rootRef);
-    const dialog = useConfirmDialog();
+    const tagFormDialog = useConfirmDialog();
 
     onMounted(loadTagTree);
 
-    return { roots, selectTag, isOutside, rootRef, dialog, contextmenuToken, reveal, selectedTagId, console };
+    return { roots, selectTag, isOutside, rootRef, tagFormDialog, contextmenuToken, reveal, selectedTagId, console };
   },
 });
 </script>
@@ -33,7 +33,7 @@ export default defineComponent({
   <NCollapseItem ref="rootRef" title="标签管理器">
     <template #header-extra="{ collapsed }">
       <div v-if="!collapsed && !isOutside" @click.stop>
-        <NButton text @click="dialog.reveal"><BIconPlus /></NButton>
+        <NButton text @click="tagFormDialog.reveal"><BIconPlus /></NButton>
       </div>
     </template>
     <div class="w-full overflow-x-auto">
@@ -53,7 +53,7 @@ export default defineComponent({
         :selected-keys="typeof selectedTagId === 'number' ? [selectedTagId] : []"
         @update:selected-keys="(keys) => selectTag(keys[0])"
       />
-      <TagForm :dialog="dialog" />
+      <TagForm :dialog="tagFormDialog" />
       <Contextmenu :token="contextmenuToken" />
     </div>
   </NCollapseItem>

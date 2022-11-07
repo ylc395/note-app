@@ -1,5 +1,6 @@
 import { ref, reactive, computed } from '@vue/reactivity';
 import pick from 'lodash/pick';
+import pull from 'lodash/pull';
 import { container } from 'tsyringe';
 
 import { type Remote, token as remoteToken } from 'infra/Remote';
@@ -10,6 +11,7 @@ interface TagTreeNode {
   id: TagVO['id'];
   name: TagVO['name'];
   children?: TagTreeNode[];
+  parentId?: TagVO['id'];
 }
 
 export default class TagTree {
@@ -34,33 +36,35 @@ export default class TagTree {
     this.#nodesMap = {};
     const { body: tags } = await this.#remote.get<TagQuery, Required<TagVO>[]>('/tags', { type: this.#tagType });
     this.roots.value = this.#build(tags);
-    this.roots.value.unshift({
-      id: 0,
-      name: '无标签',
-    });
   };
 
   #build(allTags: Required<TagVO>[]) {
-    for (const { id, name } of allTags) {
-      this.#nodesMap[id] = reactive({ id, name });
+    for (const { id, name, parentId } of allTags) {
+      this.#nodesMap[id] = reactive({ id, name, parentId });
     }
 
     const rootIds: TagTreeNode['id'][] = [];
 
     for (const { parentId, id } of allTags) {
       if (this.#nodesMap[parentId]) {
-        const node = this.#nodesMap[parentId];
+        const parentNode = this.#nodesMap[parentId];
 
-        if (!node.children) {
-          node.children = [];
+        if (!parentNode.children) {
+          parentNode.children = [];
         }
-        node.children.push(this.#nodesMap[id]);
+        parentNode.children.push(this.#nodesMap[id]);
       } else {
         rootIds.push(id);
       }
     }
 
-    return Object.values(pick(this.#nodesMap, rootIds));
+    const roots = Object.values(pick(this.#nodesMap, rootIds));
+    roots.unshift({
+      id: 0,
+      name: '无标签',
+    });
+
+    return roots;
   }
 
   createTag = async (newTag: TagFormModel) => {
@@ -89,5 +93,34 @@ export default class TagTree {
 
   selectTag = async (id: TagTreeNode['id'] | undefined) => {
     this.selectedTagId.value = id;
+  };
+
+  deleteTag = (id: number, children: boolean) => {
+    const target = this.#nodesMap[id];
+
+    if (!target || typeof target.parentId === 'undefined') {
+      throw new Error('invalid tag id');
+    }
+
+    const parent = this.#nodesMap[target.parentId];
+
+    if (!parent.children) {
+      throw new Error('no children in parent');
+    }
+
+    pull(parent.children, target);
+
+    if (!target.children) {
+      return;
+    }
+
+    for (const child of target.children) {
+      if (children) {
+        delete this.#nodesMap[child.id];
+      } else {
+        parent.children.push(child);
+        child.parentId = parent.id;
+      }
+    }
   };
 }

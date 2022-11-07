@@ -5,9 +5,10 @@ import Contextmenu from 'web/components/Contextmenu.vue';
 import type useContextmenu from 'web/components/useContextmenu';
 
 import TagForm from './TagForm.vue';
+import DeleteConfirm from './DeleteConfirm.vue';
 
 export default defineComponent({
-  components: { Contextmenu, TagForm },
+  components: { Contextmenu, TagForm, DeleteConfirm },
   props: {
     token: { required: true, type: Symbol as PropType<ReturnType<typeof useContextmenu>['token']> },
   },
@@ -15,18 +16,20 @@ export default defineComponent({
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const { onConfirm } = inject(props.token)!;
     const tagFormDialog = useConfirmDialog();
+    const deleteDialog = useConfirmDialog();
 
     onConfirm((key: string) => {
       switch (key) {
         case 'create':
           return tagFormDialog.reveal();
-
+        case 'delete':
+          return deleteDialog.reveal();
         default:
           break;
       }
     });
 
-    return { tagFormDialog };
+    return { tagFormDialog, deleteDialog };
   },
 });
 </script>
@@ -40,4 +43,5 @@ export default defineComponent({
     ]"
   />
   <TagForm :dialog="tagFormDialog" />
+  <DeleteConfirm :dialog="deleteDialog" />
 </template>
