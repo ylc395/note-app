@@ -7,22 +7,25 @@ import { BIconPlus } from 'bootstrap-icons-vue';
 
 import MaterialService from 'service/MaterialService';
 import TagEditor from './TagForm.vue';
+import Contextmenu from './Contextmenu.vue';
+import useContextmenu from 'web/components/useContextmenu';
 
 export default defineComponent({
   name: 'TagManager',
-  components: { NTree, NCollapseItem, NButton, BIconPlus, TagEditor },
+  components: { NTree, NCollapseItem, NButton, BIconPlus, TagEditor, Contextmenu },
   setup() {
     const {
-      tagTree: { roots, selectTag, load: loadTagTree },
+      tagTree: { roots, selectTag, selectedTagId, load: loadTagTree },
     } = container.resolve(MaterialService);
 
+    const { token: contextmenuToken, reveal } = useContextmenu();
     const rootRef = ref();
     const { isOutside } = useMouseInElement(rootRef);
     const dialog = useConfirmDialog();
 
     onMounted(loadTagTree);
 
-    return { roots, selectTag, isOutside, rootRef, dialog };
+    return { roots, selectTag, isOutside, rootRef, dialog, contextmenuToken, reveal, selectedTagId, console };
   },
 });
 </script>
@@ -39,9 +42,19 @@ export default defineComponent({
         :data="roots"
         key-field="id"
         label-field="name"
+        :node-props="
+          ({ option }) => ({
+            onContextmenu: (e) => {
+              selectTag(option.id as number);
+              reveal();
+            },
+          })
+        "
+        :selected-keys="typeof selectedTagId === 'number' ? [selectedTagId] : []"
         @update:selected-keys="(keys) => selectTag(keys[0])"
       />
+      <TagEditor :dialog="dialog" />
+      <Contextmenu :token="contextmenuToken" />
     </div>
-    <TagEditor :dialog="dialog" />
   </NCollapseItem>
 </template>

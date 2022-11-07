@@ -18,11 +18,11 @@ export default class TagTree {
   #nodesMap: Record<TagTreeNode['id'], TagTreeNode> = {};
   readonly #tagType: TagTypes;
 
-  readonly #selectedTagId = ref<TagTreeNode['id']>();
+  readonly selectedTagId = ref<TagTreeNode['id']>();
 
   readonly selectedTag = computed<TagTreeNode | undefined>(() => {
-    if (this.#selectedTagId.value) {
-      return this.#nodesMap[this.#selectedTagId.value];
+    if (this.selectedTagId.value) {
+      return this.#nodesMap[this.selectedTagId.value];
     }
   });
 
@@ -68,7 +68,7 @@ export default class TagTree {
       body: { id, name, parentId },
     } = await this.#remote.post<TagDTO, Required<TagVO>>('/tags', {
       ...newTag,
-      ...(this.#selectedTagId.value ? { parentId: this.#selectedTagId.value } : null),
+      ...(this.selectedTagId.value ? { parentId: this.selectedTagId.value } : null),
       type: this.#tagType,
     });
 
@@ -88,6 +88,6 @@ export default class TagTree {
   };
 
   selectTag = async (id: TagTreeNode['id'] | undefined) => {
-    this.#selectedTagId.value = id;
+    this.selectedTagId.value = id;
   };
 }
