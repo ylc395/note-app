@@ -11,7 +11,8 @@ export default class SqliteFileRepository implements FileRepository {
       .insert({ ...file, isTemp: file.isTemp ? TempFlags.Yes : TempFlags.No })
       .returning(['id']);
 
-    return rows[0].id;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return rows[0]!.id;
   }
 
   async findOne(query: FileQuery) {

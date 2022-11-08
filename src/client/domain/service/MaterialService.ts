@@ -20,10 +20,7 @@ export default class MaterialService {
   readonly uploadFiles = async (files: FileDTO[]) => {
     const { body: createdFiles } = await this.#remote.post<FileDTO[], FileVO[]>('/files', files);
 
-    this.files.value = createdFiles.map((file) => ({
-      ...file,
-      sourceUrl: last(file.sourceUrl.split('/')) || '',
-    }));
+    this.files.value = createdFiles;
 
     const form = new MaterialsForm(this.files.value);
     form.handleSubmit(this.#uploadMaterials);
@@ -45,7 +42,8 @@ export default class MaterialService {
       '/materials',
       materials.map((v, i) => ({
         ...v,
-        fileId: this.files.value[i].id,
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        fileId: this.files.value[i]!.id,
       })),
     );
     this.files.value = [];

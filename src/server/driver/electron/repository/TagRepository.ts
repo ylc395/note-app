@@ -16,7 +16,8 @@ export default class SqliteTagRepository implements TagRepository {
       .insert({ ...tag, type: TYPES_MAP[tag.type] })
       .returning(['id', 'parentId', 'name']);
 
-    return rows[0];
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return rows[0]!;
   }
 
   async findAll(query: TagQuery) {

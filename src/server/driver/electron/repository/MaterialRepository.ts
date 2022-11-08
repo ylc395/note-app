@@ -22,7 +22,8 @@ export default class SqliteMaterialRepository implements MaterialRepository {
         .returning(db.knex.raw('*'));
 
       const materialToTagRecords = materials.flatMap(({ tags }, i) => {
-        return tags ? tags.map((tagId) => ({ entityId: createdMaterials[i].id, tagId })) : [];
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        return tags ? tags.map((tagId) => ({ entityId: createdMaterials[i]!.id, tagId })) : [];
       });
 
       if (materialToTagRecords.length > 0) {
@@ -31,7 +32,8 @@ export default class SqliteMaterialRepository implements MaterialRepository {
       await trx<FileRow>(filesTableName).whereIn('id', map(materials, 'fileId')).update('isTemp', 0);
       await trx.commit();
 
-      return createdMaterials.map((material, i) => ({ ...material, tags: materials[i].tags || [] }));
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      return createdMaterials.map((material, i) => ({ ...material, tags: materials[i]!.tags || [] }));
     } catch (error) {
       await trx.rollback(error);
       throw error;

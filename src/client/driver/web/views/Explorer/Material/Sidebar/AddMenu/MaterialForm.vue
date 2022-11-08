@@ -42,10 +42,10 @@ export default defineComponent({
       >
         <NFormItem
           label="源文件"
-          :feedback="files[index].isDuplicated ? '该文件此前已存在于资料库中，继续上传将创建一个副本' : ''"
-          :validation-status="files[index].isDuplicated ? 'warning' : undefined"
+          :feedback="files[index]!.isDuplicated ? '该文件此前已存在于资料库中，继续上传将创建一个副本' : ''"
+          :validation-status="files[index]!.isDuplicated ? 'warning' : undefined"
         >
-          <NInput readonly :value="files[index].sourceUrl" />
+          <NInput readonly :value="files[index]!.sourceUrl" />
         </NFormItem>
         <NFormItem
           label="资料名"

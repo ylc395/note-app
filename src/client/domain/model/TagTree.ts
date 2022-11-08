@@ -47,13 +47,14 @@ export default class TagTree {
     const rootIds: TagTreeNode['id'][] = [];
 
     for (const { parentId, id } of allTags) {
-      if (this.#nodesMap[parentId]) {
-        const parentNode = this.#nodesMap[parentId];
+      const parentNode = this.#nodesMap[parentId];
 
+      if (parentNode) {
         if (!parentNode.children) {
           parentNode.children = [];
         }
-        parentNode.children.push(this.#nodesMap[id]);
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        parentNode.children.push(this.#nodesMap[id]!);
       } else {
         rootIds.push(id);
       }
@@ -127,11 +128,7 @@ export default class TagTree {
 
     const parent = this.#nodesMap[target.parentId];
 
-    if (!parent.children) {
-      throw new Error('no children in parent');
-    }
-
-    pull(parent.children, target);
+    pull(parent?.children || this.roots.value, target);
 
     if (!target.children) {
       return;
@@ -141,8 +138,12 @@ export default class TagTree {
       if (children) {
         delete this.#nodesMap[child.id];
       } else {
-        parent.children.push(child);
-        child.parentId = parent.id;
+        (parent?.children || this.roots.value).push(child);
+        if (parent?.id) {
+          child.parentId = parent.id;
+        } else {
+          delete child.parentId;
+        }
       }
     }
   };
