@@ -1,6 +1,6 @@
 <script lang="ts">
 import { defineComponent, ref, onMounted } from 'vue';
-import { useMouseInElement, useConfirmDialog } from '@vueuse/core';
+import { useMouseInElement } from '@vueuse/core';
 import { container } from 'tsyringe';
 import { NTree, NCollapseItem, NButton } from 'naive-ui';
 import { BIconPlus } from 'bootstrap-icons-vue';
@@ -15,17 +15,16 @@ export default defineComponent({
   components: { NTree, NCollapseItem, NButton, BIconPlus, TagForm, Contextmenu },
   setup() {
     const {
-      tagTree: { roots, selectTag, selectedTagId, load: loadTagTree },
+      tagTree: { roots, selectTag, selectedTagId, load: loadTagTree, startCreatingTag },
     } = container.resolve(MaterialService);
 
     const { token: contextmenuToken, reveal } = useContextmenu();
     const rootRef = ref();
     const { isOutside } = useMouseInElement(rootRef);
-    const tagFormDialog = useConfirmDialog();
 
     onMounted(loadTagTree);
 
-    return { roots, selectTag, isOutside, rootRef, tagFormDialog, contextmenuToken, reveal, selectedTagId, console };
+    return { roots, selectTag, isOutside, rootRef, contextmenuToken, reveal, selectedTagId, startCreatingTag };
   },
 });
 </script>
@@ -33,7 +32,7 @@ export default defineComponent({
   <NCollapseItem ref="rootRef" title="标签管理器">
     <template #header-extra="{ collapsed }">
       <div v-if="!collapsed && !isOutside" @click.stop>
-        <NButton text @click="tagFormDialog.reveal"><BIconPlus /></NButton>
+        <NButton text @click="startCreatingTag"><BIconPlus /></NButton>
       </div>
     </template>
     <div class="w-full overflow-x-auto">
@@ -53,7 +52,7 @@ export default defineComponent({
         :selected-keys="typeof selectedTagId === 'number' ? [selectedTagId] : []"
         @update:selected-keys="(keys) => selectTag(keys[0])"
       />
-      <TagForm :dialog="tagFormDialog" />
+      <TagForm />
       <Contextmenu :token="contextmenuToken" />
     </div>
   </NCollapseItem>

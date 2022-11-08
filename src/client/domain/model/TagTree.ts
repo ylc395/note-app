@@ -1,11 +1,11 @@
-import { ref, reactive, computed } from '@vue/reactivity';
+import { ref, reactive, computed, shallowRef } from '@vue/reactivity';
 import pick from 'lodash/pick';
 import pull from 'lodash/pull';
 import { container } from 'tsyringe';
 
 import { type Remote, token as remoteToken } from 'infra/Remote';
 import type { TagDTO, TagVO, TagQuery, TagTypes } from 'interface/Tag';
-import type { TagFormModel } from './form/TagForm';
+import TagForm, { TagFormModel } from './form/TagForm';
 
 interface TagTreeNode {
   id: TagVO['id'];
@@ -19,6 +19,7 @@ export default class TagTree {
   readonly roots = ref<TagTreeNode[]>([]);
   #nodesMap: Record<TagTreeNode['id'], TagTreeNode> = {};
   readonly #tagType: TagTypes;
+  readonly editingTag = shallowRef<TagForm>();
 
   readonly selectedTagId = ref<TagTreeNode['id']>();
 
@@ -67,7 +68,18 @@ export default class TagTree {
     return roots;
   }
 
-  createTag = async (newTag: TagFormModel) => {
+  startCreatingTag = async () => {
+    if (this.editingTag.value) {
+      throw new Error('tag form existed!');
+    }
+
+    const tag = new TagForm();
+    tag.handleSubmit(this.#createTag);
+
+    this.editingTag.value = tag;
+  };
+
+  readonly #createTag = async (newTag: TagFormModel) => {
     const {
       body: { id, name, parentId },
     } = await this.#remote.post<TagDTO, Required<TagVO>>('/tags', {
@@ -89,6 +101,17 @@ export default class TagTree {
     } else {
       this.roots.value.push(tagNode);
     }
+
+    this.editingTag.value = undefined;
+  };
+
+  stopCreatingTag = () => {
+    if (!this.editingTag.value) {
+      throw new Error('no editing tag');
+    }
+
+    this.editingTag.value.destroy();
+    this.editingTag.value = undefined;
   };
 
   selectTag = async (id: TagTreeNode['id'] | undefined) => {

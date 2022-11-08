@@ -1,5 +1,5 @@
-import { ref, toRaw } from '@vue/reactivity';
-import { watch, watchEffect, type WatchStopHandle } from '@vue-reactivity/watch';
+import { ref, toRaw, type Ref } from '@vue/reactivity';
+import { watch, type WatchStopHandle } from '@vue-reactivity/watch';
 import isObject from 'lodash/isObject';
 import get from 'lodash/get';
 import set from 'lodash/set';
@@ -9,38 +9,38 @@ import { InvalidInputError, type Issues } from 'model/Error';
 
 export default abstract class ModelForm<T> {
   errors = ref<Issues<T>>({});
-  #stopWatchInitialValues: WatchStopHandle;
   #errorFieldValidateStoppers = new Set<WatchStopHandle>();
+  #submitHandler?: (values: T) => Promise<void>;
 
-  readonly values = ref<T>();
+  abstract readonly values: Ref<T>;
 
-  constructor(private readonly initialValues: () => T) {
-    this.#stopWatchInitialValues = watchEffect(() => {
-      this.values.value = this.initialValues();
-    });
-  }
+  readonly handleSubmit = (handler: (values: T) => Promise<void>) => {
+    this.#submitHandler = handler;
+  };
 
-  readonly handleSubmit = (submit: (values: T) => Promise<void>) => {
-    return async () => {
-      if (Object.keys(this.errors.value).length > 0 || !this.values.value) {
-        return;
+  readonly submit = async () => {
+    if (!this.#submitHandler) {
+      throw new Error('no submit handler');
+    }
+
+    if (Object.keys(this.errors.value).length > 0 || !this.values.value) {
+      return;
+    }
+
+    // local validation passed. Waiting for remote validation
+    try {
+      await this.#submitHandler(toRaw(this.values.value));
+      this.destroy();
+      return true;
+    } catch (e) {
+      if (!InvalidInputError.is(e)) {
+        throw e;
       }
 
-      // local validation passed. Waiting for remote validation
-      try {
-        await submit(toRaw(this.values.value));
-        this.reset();
-        return true;
-      } catch (e) {
-        if (!InvalidInputError.is(e)) {
-          throw e;
-        }
-
-        this.errors.value = e.issues;
-        this.#watchErrorFields(this.errors.value);
-        return false;
-      }
-    };
+      this.errors.value = e.issues;
+      this.#watchErrorFields(this.errors.value);
+      return false;
+    }
   };
 
   #watchErrorFields(obj: unknown, path: string[] = []) {
@@ -65,16 +65,7 @@ export default abstract class ModelForm<T> {
     }
   }
 
-  readonly reset = () => {
-    this.errors.value = {};
-    this.values.value = this.initialValues();
-
-    Array.from(this.#errorFieldValidateStoppers).forEach((stop) => stop());
-    this.#errorFieldValidateStoppers.clear();
-  };
-
   readonly destroy = () => {
-    this.#stopWatchInitialValues();
     Array.from(this.#errorFieldValidateStoppers).forEach((stop) => stop());
     this.#errorFieldValidateStoppers.clear();
   };

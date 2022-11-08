@@ -7,7 +7,7 @@ import type { MaterialDTO, MaterialVO, AggregatedMaterialVO } from 'interface/Ma
 import type { FileDTO, FileVO } from 'interface/File';
 import { TagTypes } from 'interface/Tag';
 import TagTree from 'model/TagTree';
-import type { MaterialsFormModel } from 'model/form/MaterialForm';
+import MaterialsForm, { type MaterialsFormModel } from 'model/form/MaterialForm';
 
 @singleton()
 export default class MaterialService {
@@ -15,6 +15,7 @@ export default class MaterialService {
   readonly files = shallowRef<FileVO[]>([]);
   readonly tagTree = new TagTree(TagTypes.Material);
   readonly materials = shallowRef<AggregatedMaterialVO[]>([]);
+  readonly editingMaterials = shallowRef<MaterialsForm>();
 
   readonly uploadFiles = async (files: FileDTO[]) => {
     const { body: createdFiles } = await this.#remote.post<FileDTO[], FileVO[]>('/files', files);
@@ -23,13 +24,23 @@ export default class MaterialService {
       ...file,
       sourceUrl: last(file.sourceUrl.split('/')) || '',
     }));
+
+    const form = new MaterialsForm(this.files.value);
+    form.handleSubmit(this.#uploadMaterials);
+    this.editingMaterials.value = form;
   };
 
   readonly clearFiles = () => {
+    if (!this.editingMaterials.value) {
+      throw new Error('no editingMaterials');
+    }
+
     this.files.value = [];
+    this.editingMaterials.value.destroy();
+    this.editingMaterials.value = undefined;
   };
 
-  readonly uploadMaterials = async (materials: MaterialsFormModel) => {
+  readonly #uploadMaterials = async (materials: MaterialsFormModel) => {
     await this.#remote.post<MaterialDTO[], MaterialVO[]>(
       '/materials',
       materials.map((v, i) => ({
