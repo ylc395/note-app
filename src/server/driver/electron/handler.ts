@@ -31,21 +31,9 @@ export const Query = createParamDecorator((_, ctx: ExecutionContext) => {
 });
 
 export const Headers = createParamDecorator((filed, ctx: ExecutionContext) => {
-  const headerValue = ctx.getArgByIndex<IpcRequest<unknown>>(0)?.headers?.[filed];
-
-  if (typeof headerValue === 'undefined') {
-    throw new Error(`no header ${filed}`);
-  }
-
-  return headerValue;
+  return ctx.getArgByIndex<IpcRequest<unknown>>(0)?.headers?.[filed];
 });
 
 export const Param = createParamDecorator((filed, ctx: ExecutionContext) => {
-  const paramValue = ctx.getArgByIndex<IpcRequest<unknown>>(0)?.params?.[filed];
-
-  if (typeof paramValue === 'undefined') {
-    throw new Error(`no param ${filed}`);
-  }
-
-  return paramValue;
+  return ctx.getArgByIndex<IpcRequest<unknown>>(0)?.params?.[filed];
 });

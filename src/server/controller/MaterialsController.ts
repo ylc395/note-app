@@ -1,4 +1,4 @@
-import { Controller, UsePipes } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import {
   type MaterialDTO,
   type MaterialVO,
@@ -8,15 +8,14 @@ import {
 } from 'interface/Material';
 import MaterialService from 'service/MaterialService';
 
-import { Post, Get, Body, Query, createPipe } from './decorators';
+import { Post, Get, Body, Query, createSchemaPipe } from './decorators';
 
 @Controller()
 export default class MaterialsController {
   constructor(private materialService: MaterialService) {}
 
   @Post('materials')
-  @UsePipes(createPipe(materialsDTOSchema))
-  async create(@Body() materials: MaterialDTO[]): Promise<MaterialVO[]> {
+  async create(@Body(createSchemaPipe(materialsDTOSchema)) materials: MaterialDTO[]): Promise<MaterialVO[]> {
     return await this.materialService.create(materials);
   }
 

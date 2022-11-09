@@ -5,7 +5,7 @@ import { InvalidInputError } from 'model/Error';
 
 export * from 'driver/electron/handler';
 
-export function createPipe<T>(schema: ZodType<T>): PipeTransform {
+export function createSchemaPipe<T>(schema: ZodType<T>): PipeTransform {
   return {
     transform(value: unknown) {
       const result = schema.safeParse(value);
