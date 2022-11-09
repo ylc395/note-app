@@ -1,7 +1,7 @@
 import { Server, type CustomTransportStrategy } from '@nestjs/microservices';
 import type { ExceptionFilter } from '@nestjs/common';
 import { ipcMain } from 'electron';
-import { match } from 'path-to-regexp';
+import { match, type MatchFunction } from 'path-to-regexp';
 import isError from 'lodash/isError';
 import toPlainObject from 'lodash/toPlainObject';
 
@@ -10,28 +10,19 @@ import { IPC_CHANNEL, type IpcRequest, type IpcResponse } from 'client/driver/el
 import { fromPatternToRequest } from './handler';
 
 export default class ElectronIpcServer extends Server implements CustomTransportStrategy {
+  #routeMap = new Map<string, MatchFunction>();
+
   listen(cb: () => void) {
     const allPaths = Array.from(this.getHandlers().keys()).map((pattern) => fromPatternToRequest(pattern).path);
-    const matchers = allPaths.map((path) => match(path));
+
+    for (const path of allPaths) {
+      this.#routeMap.set(path, match(path));
+    }
 
     ipcMain.handle(IPC_CHANNEL, async (e, req: IpcRequest<unknown>): Promise<IpcResponse<unknown>> => {
-      let originPath = '';
+      this.#populateRequest(req);
 
-      for (const [i, matcher] of matchers.entries()) {
-        const result = matcher(req.path);
-
-        if (!result) {
-          continue;
-        }
-
-        const { params } = result;
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        originPath = allPaths[i]!;
-        req.params = params as Record<string, string>;
-        break;
-      }
-
-      const pattern = this.normalizePattern({ path: originPath, method: req.method });
+      const pattern = this.normalizePattern({ path: req.originPath || '', method: req.method });
       const handler = this.messageHandlers.get(pattern);
 
       if (!handler) {
@@ -61,6 +52,22 @@ export default class ElectronIpcServer extends Server implements CustomTransport
     });
     cb();
   }
+
+  #populateRequest(req: IpcRequest<unknown>) {
+    for (const [path, matcher] of this.#routeMap.entries()) {
+      const result = matcher(req.path);
+
+      if (!result) {
+        continue;
+      }
+
+      const { params } = result;
+      req.params = params as Record<string, string>;
+      req.originPath = path;
+      break;
+    }
+  }
+
   close() {
     ipcMain.removeHandler(IPC_CHANNEL);
   }

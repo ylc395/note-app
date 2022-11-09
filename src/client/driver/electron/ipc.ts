@@ -2,6 +2,7 @@ export const IPC_CHANNEL = 'fakeHttp';
 
 export interface IpcRequest<T> {
   path: string;
+  originPath?: string;
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
   query?: T;
   params?: Record<string, string>;
