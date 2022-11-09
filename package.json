@@ -49,6 +49,8 @@
     "@vueuse/core": "^9.4.0",
     "bootstrap-icons-vue": "^1.8.1",
     "class-transformer": "^0.5.1",
+    "dayjs": "^1.11.6",
+    "eventemitter3": "^4.0.7",
     "fs-extra": "^10.1.0",
     "knex": "^2.3.0",
     "lodash": "^4.17.21",

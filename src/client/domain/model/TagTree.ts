@@ -2,6 +2,7 @@ import { ref, reactive, computed, shallowRef } from '@vue/reactivity';
 import pick from 'lodash/pick';
 import pull from 'lodash/pull';
 import { container } from 'tsyringe';
+import EventEmitter from 'eventemitter3';
 
 import { type Remote, token as remoteToken } from 'infra/Remote';
 import type { TagDTO, TagVO, TagQuery, TagTypes } from 'interface/Tag';
@@ -14,7 +15,11 @@ interface TagTreeNode {
   parentId?: TagVO['id'];
 }
 
-export default class TagTree {
+export enum Events {
+  Deleted = 'tag:deleted',
+}
+
+export default class TagTree extends EventEmitter<Events> {
   readonly #remote: Remote = container.resolve(remoteToken);
   readonly roots = ref<TagTreeNode[]>([]);
   #nodesMap: Record<TagTreeNode['id'], TagTreeNode> = {};
@@ -30,6 +35,7 @@ export default class TagTree {
   });
 
   constructor(tagType: TagTypes) {
+    super();
     this.#tagType = tagType;
   }
 
@@ -136,18 +142,19 @@ export default class TagTree {
     if (parent) {
       if (!parent.children) throw new Error('no children');
       pull(parent.children, target);
+
+      if (parent.children.length === 0) {
+        delete parent.children;
+      }
     } else {
       pull(this.roots.value, target);
       isRoot = true;
     }
 
-    if (!target.children) {
-      return;
-    }
-
     if (cascade) {
+      const deletedIds: TagVO['id'][] = [];
       const traverse = (node: TagTreeNode) => {
-        delete this.#nodesMap[node.id];
+        deletedIds.push(node.id);
 
         if (!node.children) {
           return;
@@ -159,10 +166,16 @@ export default class TagTree {
       };
 
       traverse(target);
+
+      for (const deletedId of deletedIds) {
+        delete this.#nodesMap[deletedId];
+      }
+
+      this.emit(Events.Deleted, deletedIds);
       return;
     }
 
-    for (const child of target.children) {
+    for (const child of target.children || []) {
       if (isRoot) {
         this.roots.value.push(child);
         delete child.parentId;
@@ -173,5 +186,7 @@ export default class TagTree {
         /* eslint-enable @typescript-eslint/no-non-null-assertion */
       }
     }
+
+    this.emit(Events.Deleted, [target.id]);
   };
 }

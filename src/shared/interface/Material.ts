@@ -32,7 +32,7 @@ export type MaterialVO = Required<MaterialDTO> & {
   updatedAt: number;
 };
 
-export type AggregatedMaterialVO = Omit<MaterialVO, 'fileId'> & {
+export type AggregatedMaterialVO = Omit<MaterialVO, 'fileId' | 'tags'> & {
   file: FileVO;
   tags: TagVO[];
 };

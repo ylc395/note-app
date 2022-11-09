@@ -47,6 +47,8 @@ export default class SqliteMaterialRepository implements MaterialRepository {
         `${materialsTableName}.name`,
         `${materialsTableName}.rating`,
         `${materialsTableName}.comment`,
+        `${materialsTableName}.updatedAt`,
+        `${materialsTableName}.createdAt`,
         `${filesTableName}.id as fileId`,
         `${filesTableName}.mimeType`,
         `${filesTableName}.sourceUrl`,
@@ -65,12 +67,12 @@ export default class SqliteMaterialRepository implements MaterialRepository {
       .groupBy(`${materialsTableName}.id`);
 
     return rows.map((row) => {
-      const tagIds = row.tagId?.split(',') || [];
+      const tagIds = row.tagId?.split(',').map(Number) || [];
       const tagNames = row.tagName?.split(',') || [];
       return {
         ...omit(row, ['tagId', 'tagName', 'fileId', 'mimeType', 'sourceUrl', 'deviceName']),
         file: { id: row.fileId, ...pick(row, ['sourceUrl', 'mimeType', 'deviceName']) },
-        tags: tagIds.map((id: string, i: string) => ({ id, name: tagNames[i] })),
+        tags: tagIds.map((id: number, i: string) => ({ id, name: tagNames[i] })),
       };
     }) as AggregatedMaterialVO[];
   }

@@ -1,11 +1,11 @@
 import { container, singleton } from 'tsyringe';
-import { shallowRef } from '@vue/reactivity';
+import { shallowRef, ref } from '@vue/reactivity';
 
 import { type Remote, token as remoteToken } from 'infra/Remote';
 import type { MaterialDTO, MaterialVO, AggregatedMaterialVO } from 'interface/Material';
 import type { FileDTO, FileVO } from 'interface/File';
-import { TagTypes } from 'interface/Tag';
-import TagTree from 'model/TagTree';
+import { TagTypes, type TagVO } from 'interface/Tag';
+import TagTree, { Events as TagTreeEvents } from 'model/TagTree';
 import MaterialsForm, { type MaterialsFormModel } from 'model/form/MaterialForm';
 
 @singleton()
@@ -13,8 +13,18 @@ export default class MaterialService {
   readonly #remote: Remote = container.resolve(remoteToken);
   readonly files = shallowRef<FileVO[]>([]);
   readonly tagTree = new TagTree(TagTypes.Material);
-  readonly materials = shallowRef<AggregatedMaterialVO[]>([]);
+  readonly materials = ref<AggregatedMaterialVO[]>([]);
   readonly editingMaterials = shallowRef<MaterialsForm>();
+
+  constructor() {
+    this.tagTree.on(TagTreeEvents.Deleted, this.#handleTagRemoved);
+  }
+
+  readonly #handleTagRemoved = (deletedIds: TagVO['id'][]) => {
+    for (const material of this.materials.value) {
+      material.tags = material.tags.filter(({ id }) => !deletedIds.includes(id));
+    }
+  };
 
   readonly uploadFiles = async (files: FileDTO[]) => {
     const { body: createdFiles } = await this.#remote.post<FileDTO[], FileVO[]>('/files', files);
