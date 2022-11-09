@@ -6,4 +6,5 @@ export const token: InjectionToken = Symbol('tagRepository');
 export interface TagRepository {
   create: (tag: TagDTO) => Promise<TagVO>;
   findAll: (tagQuery: TagQuery) => Promise<TagVO[]>;
+  deleteOne: (tagId: TagVO['id'], cascade: boolean) => Promise<void>;
 }

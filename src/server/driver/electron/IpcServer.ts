@@ -1,20 +1,44 @@
 import { Server, type CustomTransportStrategy } from '@nestjs/microservices';
 import type { ExceptionFilter } from '@nestjs/common';
 import { ipcMain } from 'electron';
+import { match } from 'path-to-regexp';
 import isError from 'lodash/isError';
 import toPlainObject from 'lodash/toPlainObject';
 
 import { InvalidInputError } from 'model/Error';
 import { IPC_CHANNEL, type IpcRequest, type IpcResponse } from 'client/driver/electron/ipc';
+import { fromPatternToRequest } from './handler';
 
 export default class ElectronIpcServer extends Server implements CustomTransportStrategy {
   listen(cb: () => void) {
+    const allPaths = Array.from(this.getHandlers().keys()).map((pattern) => fromPatternToRequest(pattern).path);
+    const matchers = allPaths.map((path) => match(path));
+
     ipcMain.handle(IPC_CHANNEL, async (e, req: IpcRequest<unknown>): Promise<IpcResponse<unknown>> => {
-      const pattern = this.normalizePattern({ path: req.path, method: req.method });
+      let originPath = '';
+
+      for (const [i, matcher] of matchers.entries()) {
+        const result = matcher(req.path);
+
+        if (!result) {
+          continue;
+        }
+
+        const { params } = result;
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        originPath = allPaths[i]!;
+        req.params = params as Record<string, string>;
+        break;
+      }
+
+      const pattern = this.normalizePattern({ path: originPath, method: req.method });
       const handler = this.messageHandlers.get(pattern);
 
       if (!handler) {
-        return { status: 404, body: { error: { message: `can not handle request: ${pattern}`, cause: req } } };
+        return {
+          status: 404,
+          body: { error: { message: `can not handle request: ${req.method} ${req.path}`, cause: req } },
+        };
       }
 
       try {
@@ -32,7 +56,7 @@ export default class ElectronIpcServer extends Server implements CustomTransport
           this.logger.error(e.message, e.stack);
         }
 
-        return { status, body: { error: toPlainObject(e) } };
+        return { status, body: { error: e instanceof InvalidInputError ? toPlainObject(e) : 'Server Error' } };
       }
     });
     cb();

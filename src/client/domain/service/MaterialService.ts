@@ -1,6 +1,5 @@
 import { container, singleton } from 'tsyringe';
 import { shallowRef } from '@vue/reactivity';
-import last from 'lodash/last';
 
 import { type Remote, token as remoteToken } from 'infra/Remote';
 import type { MaterialDTO, MaterialVO, AggregatedMaterialVO } from 'interface/Material';

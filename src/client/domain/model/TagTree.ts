@@ -119,7 +119,8 @@ export default class TagTree {
     this.selectedTagId.value = id;
   };
 
-  deleteTag = (id: number, children: boolean) => {
+  deleteTag = async (id: number, cascade: boolean) => {
+    await this.#remote.delete<void, void, { cascade: boolean }>(`/tags/${id}`, undefined, { cascade });
     const target = this.#nodesMap[id];
 
     if (!target || typeof target.parentId === 'undefined') {
@@ -135,7 +136,8 @@ export default class TagTree {
     }
 
     for (const child of target.children) {
-      if (children) {
+      if (cascade) {
+        // todo: 递归删除
         delete this.#nodesMap[child.id];
       } else {
         (parent?.children || this.roots.value).push(child);

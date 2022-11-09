@@ -1,22 +1,26 @@
 import { createParamDecorator, type ExecutionContext } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
+
 import type { IpcRequest } from 'client/driver/electron/ipc';
 
-function createDecorator(method: IpcRequest<unknown>['method']) {
+function createHttpDecorator(method: IpcRequest<unknown>['method']) {
   return function (path: string) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return function (cls: any, properKey: string, descriptor: PropertyDescriptor) {
+    return function (cls: object, properKey: string, descriptor: PropertyDescriptor) {
       const messagePattern = MessagePattern({ path: path.startsWith('/') ? path : `/${path}`, method });
       messagePattern(cls, properKey, descriptor);
     };
   };
 }
 
-export const Get = createDecorator('GET');
-export const Post = createDecorator('POST');
-export const Delete = createDecorator('DELETE');
-export const Patch = createDecorator('PATCH');
-export const Put = createDecorator('PUT');
+export function fromPatternToRequest(pattern: string) {
+  return JSON.parse(pattern);
+}
+
+export const Get = createHttpDecorator('GET');
+export const Post = createHttpDecorator('POST');
+export const Delete = createHttpDecorator('DELETE');
+export const Patch = createHttpDecorator('PATCH');
+export const Put = createHttpDecorator('PUT');
 
 export const Body = createParamDecorator((_, ctx: ExecutionContext) => {
   return ctx.getArgByIndex<IpcRequest<unknown>>(0)?.body;
@@ -24,4 +28,24 @@ export const Body = createParamDecorator((_, ctx: ExecutionContext) => {
 
 export const Query = createParamDecorator((_, ctx: ExecutionContext) => {
   return ctx.getArgByIndex<IpcRequest<unknown>>(0)?.query;
+});
+
+export const Headers = createParamDecorator((filed, ctx: ExecutionContext) => {
+  const headerValue = ctx.getArgByIndex<IpcRequest<unknown>>(0)?.headers?.[filed];
+
+  if (typeof headerValue === 'undefined') {
+    throw new Error(`no header ${filed}`);
+  }
+
+  return headerValue;
+});
+
+export const Param = createParamDecorator((filed, ctx: ExecutionContext) => {
+  const paramValue = ctx.getArgByIndex<IpcRequest<unknown>>(0)?.params?.[filed];
+
+  if (typeof paramValue === 'undefined') {
+    throw new Error(`no param ${filed}`);
+  }
+
+  return paramValue;
 });

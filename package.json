@@ -53,6 +53,7 @@
     "knex": "^2.3.0",
     "lodash": "^4.17.21",
     "naive-ui": "^2.33.5",
+    "path-to-regexp": "^6.2.1",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.5.7",
     "sqlite3": "^5.1.1",

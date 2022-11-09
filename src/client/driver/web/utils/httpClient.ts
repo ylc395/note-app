@@ -40,4 +40,7 @@ export const httpClient: Remote = {
   async post<T>() {
     return {} as T;
   },
+  async delete<T>() {
+    return {} as T;
+  },
 };

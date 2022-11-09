@@ -1,5 +1,5 @@
 import { Inject } from '@nestjs/common';
-import type { TagDTO, TagQuery } from 'interface/Tag';
+import type { TagDTO, TagQuery, TagVO } from 'interface/Tag';
 import { InvalidInputError } from 'model/Error';
 import { type TagRepository, token as tagRepositoryToken } from './repository/TagRepository';
 
@@ -23,5 +23,9 @@ export default class TagService {
 
   async findAll(query: TagQuery) {
     return await this.repository.findAll(query);
+  }
+
+  async deleteOne(id: TagVO['id'], cascade: boolean) {
+    return await this.repository.deleteOne(id, cascade);
   }
 }

@@ -1,9 +1,8 @@
 import { Controller, UsePipes } from '@nestjs/common';
-
 import { type TagDTO, type TagQuery, type TagVO, tagDTOSchema } from 'interface/Tag';
 import TagService from 'service/TagService';
 
-import { Post, Get, Body, Query, createPipe } from './decorators';
+import { Post, Get, Delete, Body, Query, Headers, Param, createPipe } from './decorators';
 
 @Controller()
 export default class TagsController {
@@ -18,5 +17,10 @@ export default class TagsController {
   @Get('tags')
   async findAll(@Query() query: TagQuery): Promise<TagVO[]> {
     return await this.tagService.findAll(query);
+  }
+
+  @Delete('tags/:id')
+  async delete(@Param('id') tagId: TagVO['id'], @Headers('cascade') cascade: boolean): Promise<void> {
+    return await this.tagService.deleteOne(tagId, cascade);
   }
 }
