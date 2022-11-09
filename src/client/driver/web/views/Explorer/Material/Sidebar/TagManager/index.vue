@@ -44,8 +44,10 @@ export default defineComponent({
         :node-props="
           ({ option }) => ({
             onContextmenu: (e) => {
-              selectTag(option.id as number);
-              reveal();
+              if(option.id) {
+                selectTag(option.id as number);
+                reveal();
+              }
             },
           })
         "

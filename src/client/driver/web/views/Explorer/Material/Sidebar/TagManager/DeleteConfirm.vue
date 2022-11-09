@@ -40,7 +40,7 @@ export default defineComponent({
       v-if="selectedTag!.children"
       v-model:checked="needDeleteChildren"
       size="small"
-      label="同时删除其全部子标签"
+      label="同时删除其全部后代标签"
     />
     <NSpace justify="end" class="mt-8">
       <NButton type="warning" @click="confirm">确认</NButton>

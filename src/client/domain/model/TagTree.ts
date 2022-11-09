@@ -75,8 +75,8 @@ export default class TagTree {
     }
 
     const tag = new TagForm();
-    tag.handleSubmit(this.#createTag);
 
+    tag.handleSubmit(this.#createTag);
     this.editingTag.value = tag;
   };
 
@@ -103,7 +103,8 @@ export default class TagTree {
       this.roots.value.push(tagNode);
     }
 
-    this.editingTag.value = undefined;
+    this.selectedTagId.value = id;
+    this.stopCreatingTag();
   };
 
   stopCreatingTag = () => {
@@ -123,29 +124,53 @@ export default class TagTree {
     await this.#remote.delete<void, void, { cascade: boolean }>(`/tags/${id}`, undefined, { cascade });
     const target = this.#nodesMap[id];
 
-    if (!target || typeof target.parentId === 'undefined') {
+    if (!target) {
       throw new Error('invalid tag id');
     }
 
-    const parent = this.#nodesMap[target.parentId];
+    delete this.#nodesMap[id];
 
-    pull(parent?.children || this.roots.value, target);
+    const parent = target.parentId ? this.#nodesMap[target.parentId] : undefined;
+    let isRoot = false;
+
+    if (parent) {
+      if (!parent.children) throw new Error('no children');
+      pull(parent.children, target);
+    } else {
+      pull(this.roots.value, target);
+      isRoot = true;
+    }
 
     if (!target.children) {
       return;
     }
 
-    for (const child of target.children) {
-      if (cascade) {
-        // todo: 递归删除
-        delete this.#nodesMap[child.id];
-      } else {
-        (parent?.children || this.roots.value).push(child);
-        if (parent?.id) {
-          child.parentId = parent.id;
-        } else {
-          delete child.parentId;
+    if (cascade) {
+      const traverse = (node: TagTreeNode) => {
+        delete this.#nodesMap[node.id];
+
+        if (!node.children) {
+          return;
         }
+
+        for (const child of node.children) {
+          traverse(child);
+        }
+      };
+
+      traverse(target);
+      return;
+    }
+
+    for (const child of target.children) {
+      if (isRoot) {
+        this.roots.value.push(child);
+        delete child.parentId;
+      } else {
+        /* eslint-disable @typescript-eslint/no-non-null-assertion */
+        parent!.children!.push(child);
+        child.parentId = parent!.id;
+        /* eslint-enable @typescript-eslint/no-non-null-assertion */
       }
     }
   };
