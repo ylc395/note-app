@@ -2,7 +2,7 @@ import { Inject, Module, type OnApplicationBootstrap } from '@nestjs/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 
 import ServiceModule from 'service/module';
-import RepositoryModule from 'driver/electron/repository/module';
+import RepositoryModule from 'driver/sqlite/repository/module';
 import DriverModule from './driver.module';
 import { token as localClientToken, type LocalClient } from 'infra/LocalClient';
 import sqliteDb from 'driver/sqlite';
