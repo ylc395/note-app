@@ -1,5 +1,6 @@
 import map from 'lodash/map';
 import pick from 'lodash/pick';
+import compact from 'lodash/compact';
 
 import type { MaterialVO, MaterialDTO, MaterialQuery } from 'interface/Material';
 import type { MaterialRepository } from 'service/repository/MaterialRepository';
@@ -35,7 +36,7 @@ export default class SqliteMaterialRepository implements MaterialRepository {
         await trx<EntityToTagRow>(entityToTagTableName).insert(materialToTagRecords);
       }
 
-      const fileIds = map(materials, 'fileId').filter((id) => typeof id !== 'undefined') as number[];
+      const fileIds = compact(map(materials, 'fileId'));
 
       if (fileIds.length > 0) {
         await trx<FileRow>(filesTableName).whereIn('id', fileIds).update('isTemp', 0);
