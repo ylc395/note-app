@@ -60,7 +60,7 @@ export default defineComponent({
     </div>
     <div class="overflow-auto flex-grow">
       <div v-for="material of materials" :key="material.id" class="border-b py-4 px-2">
-        <div class="flex flex-col">
+        <div v-if="material.file" class="flex flex-col">
           <div class="flex items-center">
             <Icon :mime-type="material.file.mimeType" class="mr-1" />{{ material.name }}
           </div>

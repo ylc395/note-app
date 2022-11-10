@@ -2,18 +2,18 @@ import { container, singleton } from 'tsyringe';
 import { shallowRef, ref } from '@vue/reactivity';
 
 import { type Remote, token as remoteToken } from 'infra/Remote';
-import type { MaterialDTO, MaterialVO, AggregatedMaterialVO } from 'interface/Material';
-import type { FileDTO, FileVO } from 'interface/File';
-import { TagTypes, type TagVO } from 'interface/Tag';
+import type { MaterialDTO, MaterialVO } from 'interface/Material';
+import type { FileDTO, CreatedFileVO } from 'interface/File';
+import type { TagVO } from 'interface/Tag';
 import TagTree, { Events as TagTreeEvents } from 'model/TagTree';
 import MaterialsForm, { type MaterialsFormModel } from 'model/form/MaterialForm';
 
 @singleton()
 export default class MaterialService {
   readonly #remote: Remote = container.resolve(remoteToken);
-  readonly files = shallowRef<FileVO[]>([]);
-  readonly tagTree = new TagTree(TagTypes.Material);
-  readonly materials = ref<AggregatedMaterialVO[]>([]);
+  readonly files = shallowRef<CreatedFileVO[]>([]);
+  readonly tagTree = new TagTree();
+  readonly materials = ref<MaterialVO[]>([]);
   readonly editingMaterials = shallowRef<MaterialsForm>();
 
   constructor() {
@@ -27,7 +27,7 @@ export default class MaterialService {
   };
 
   readonly uploadFiles = async (files: FileDTO[]) => {
-    const { body: createdFiles } = await this.#remote.post<FileDTO[], FileVO[]>('/files', files);
+    const { body: createdFiles } = await this.#remote.post<FileDTO[], CreatedFileVO[]>('/files', files);
 
     this.files.value = createdFiles;
 
@@ -47,7 +47,7 @@ export default class MaterialService {
   };
 
   readonly #uploadMaterials = async (materials: MaterialsFormModel) => {
-    await this.#remote.post<MaterialDTO[], MaterialVO[]>(
+    await this.#remote.post<MaterialDTO[], unknown>(
       '/materials',
       materials.map((v, i) => ({
         ...v,
@@ -60,7 +60,7 @@ export default class MaterialService {
   };
 
   readonly queryMaterials = async () => {
-    const { body } = await this.#remote.get<void, AggregatedMaterialVO[]>('/materials');
+    const { body } = await this.#remote.get<void, MaterialVO[]>('/materials');
     this.materials.value = body;
   };
 }

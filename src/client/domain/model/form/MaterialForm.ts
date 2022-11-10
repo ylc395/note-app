@@ -3,13 +3,13 @@ import last from 'lodash/last';
 
 import ModelForm from './ModelForm';
 import type { MaterialDTO } from 'interface/Material';
-import type { FileVO } from 'interface/File';
+import type { CreatedFileVO } from 'interface/File';
 
 export type MaterialsFormModel = Omit<MaterialDTO, 'fileId'>[];
 
 export default class MaterialForm extends ModelForm<MaterialsFormModel> {
   values: Ref<MaterialsFormModel>;
-  constructor(files: FileVO[]) {
+  constructor(files: CreatedFileVO[]) {
     super();
     this.values = ref(
       files.map(({ sourceUrl }) => ({

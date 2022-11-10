@@ -1,6 +1,6 @@
 import { Controller } from '@nestjs/common';
 
-import { type FileDTO, type FileVO, FilesDTOSchema } from 'interface/File';
+import { type FileDTO, FilesDTOSchema, type CreatedFileVO } from 'interface/File';
 import FileService from 'service/FileService';
 
 import { Post, Body, createSchemaPipe } from './decorators';
@@ -10,7 +10,7 @@ export default class FilesController {
   constructor(private fileService: FileService) {}
 
   @Post('files')
-  async create(@Body(createSchemaPipe(FilesDTOSchema)) files: FileDTO[]): Promise<FileVO[]> {
+  async create(@Body(createSchemaPipe(FilesDTOSchema)) files: FileDTO[]): Promise<CreatedFileVO[]> {
     return await Promise.all(files.map((file) => this.fileService.create(file)));
   }
 }

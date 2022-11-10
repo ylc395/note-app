@@ -5,7 +5,7 @@ import { container } from 'tsyringe';
 import EventEmitter from 'eventemitter3';
 
 import { type Remote, token as remoteToken } from 'infra/Remote';
-import type { TagDTO, TagVO, TagQuery, TagTypes } from 'interface/Tag';
+import type { TagDTO, TagVO, TagQuery } from 'interface/Tag';
 import TagForm, { TagFormModel } from './form/TagForm';
 
 interface TagTreeNode {
@@ -23,7 +23,6 @@ export default class TagTree extends EventEmitter<Events> {
   readonly #remote: Remote = container.resolve(remoteToken);
   readonly roots = ref<TagTreeNode[]>([]);
   #nodesMap: Record<TagTreeNode['id'], TagTreeNode> = {};
-  readonly #tagType: TagTypes;
   readonly editingTag = shallowRef<TagForm>();
 
   readonly selectedTagId = ref<TagTreeNode['id']>();
@@ -34,14 +33,9 @@ export default class TagTree extends EventEmitter<Events> {
     }
   });
 
-  constructor(tagType: TagTypes) {
-    super();
-    this.#tagType = tagType;
-  }
-
   load = async () => {
     this.#nodesMap = {};
-    const { body: tags } = await this.#remote.get<TagQuery, Required<TagVO>[]>('/tags', { type: this.#tagType });
+    const { body: tags } = await this.#remote.get<TagQuery, Required<TagVO>[]>('/tags');
     this.roots.value = this.#build(tags);
   };
 
@@ -92,7 +86,6 @@ export default class TagTree extends EventEmitter<Events> {
     } = await this.#remote.post<TagDTO, Required<TagVO>>('/tags', {
       ...newTag,
       ...(this.selectedTagId.value ? { parentId: this.selectedTagId.value } : null),
-      type: this.#tagType,
     });
 
     const tagNode = reactive({ id, name });

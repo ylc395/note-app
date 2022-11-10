@@ -3,8 +3,8 @@ import {
   type MaterialDTO,
   type MaterialVO,
   type MaterialQuery,
+  type CreatedMaterialVO,
   materialsDTOSchema,
-  AggregatedMaterialVO,
 } from 'interface/Material';
 import MaterialService from 'service/MaterialService';
 
@@ -15,12 +15,12 @@ export default class MaterialsController {
   constructor(private materialService: MaterialService) {}
 
   @Post('materials')
-  async create(@Body(createSchemaPipe(materialsDTOSchema)) materials: MaterialDTO[]): Promise<MaterialVO[]> {
+  async create(@Body(createSchemaPipe(materialsDTOSchema)) materials: MaterialDTO[]): Promise<CreatedMaterialVO[]> {
     return await this.materialService.create(materials);
   }
 
   @Get('materials')
-  async findAll(@Query() query: MaterialQuery): Promise<AggregatedMaterialVO[]> {
+  async findAll(@Query() query: MaterialQuery): Promise<MaterialVO[]> {
     return await this.materialService.findAll(query);
   }
 }

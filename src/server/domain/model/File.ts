@@ -4,7 +4,8 @@ export interface File {
   mimeType: string;
   deviceName: string;
   hash: string;
-  data?: ArrayBuffer;
+  size: number;
+  data: ArrayBuffer;
   isTemp: boolean;
 }
 

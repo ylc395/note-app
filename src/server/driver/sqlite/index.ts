@@ -8,7 +8,7 @@ import { join } from 'path';
 import materialsSchema from './materialSchema';
 import fileSchema, { type Row as FileRow } from './fileSchema';
 import tagSchema from './tagSchema';
-import entityToTagSchema from './entityToTagSchema';
+import materialToTagSchema from './materialToTagSchema';
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 
@@ -40,7 +40,7 @@ class SqliteDb {
   };
 
   async #createTables() {
-    const schemas = [fileSchema, materialsSchema, tagSchema, entityToTagSchema];
+    const schemas = [fileSchema, materialsSchema, tagSchema, materialToTagSchema];
 
     await Promise.all(
       schemas.map(async ({ tableName, builder }) => {

@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 
-import type { FileDTO, FileVO } from 'interface/File';
+import type { FileDTO } from 'interface/File';
 import { Events, type FileAddedEvent } from 'model/File';
 import { InvalidInputError } from 'model/Error';
 
@@ -43,6 +43,7 @@ export default class FileService {
       sourceUrl,
       hash,
       isTemp,
+      size: data.byteLength,
     });
 
     if (!isTemp) {
@@ -52,11 +53,9 @@ export default class FileService {
 
     return {
       id: fileId,
-      mimeType,
       sourceUrl,
-      deviceName,
       isDuplicated: Boolean(sameFile && !sameFile.isTemp),
-    } as FileVO;
+    };
   }
 
   @OnEvent(Events.Added, { async: true })

@@ -11,6 +11,7 @@ export interface Row {
   mimeType: string;
   deviceName: string;
   sourceUrl: string;
+  size: number;
   hash: string;
   isTemp: TempFlags;
   ocrResult: string;
@@ -29,6 +30,7 @@ export default {
     table.text('source_url').notNullable().defaultTo('');
     table.integer('is_temp').notNullable();
     table.text('hash').notNullable();
+    table.integer('size').notNullable();
     table.text('ocr_result').notNullable().defaultTo('');
     table.integer('created_at').notNullable().defaultTo(knex.raw('(unixepoch())'));
   },
