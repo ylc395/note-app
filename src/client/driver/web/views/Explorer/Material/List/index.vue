@@ -2,6 +2,7 @@
 import { defineComponent, onMounted } from 'vue';
 import { container } from 'tsyringe';
 import { NButton, NDropdown, NTag } from 'naive-ui';
+import Resizable from 'vue-resizable';
 import { BIconSortDown, BIconToggles } from 'bootstrap-icons-vue';
 import dayjs from 'dayjs';
 
@@ -10,7 +11,7 @@ import Icon from './Icon.vue';
 
 export default defineComponent({
   name: 'List',
-  components: { Icon, NButton, NDropdown, NTag, BIconSortDown, BIconToggles },
+  components: { Icon, NButton, NDropdown, NTag, Resizable, BIconSortDown, BIconToggles },
   setup() {
     const { materials, queryMaterials } = container.resolve(MaterialService);
     onMounted(queryMaterials);
@@ -20,7 +21,7 @@ export default defineComponent({
 });
 </script>
 <template>
-  <div class="p-2 bg-white border-r flex flex-col">
+  <Resizable class="p-2 bg-white border-r flex flex-col" :active="['r']" :width="220" :min-width="220">
     <div class="flex justify-between">
       <div class="text-xs text-gray-400 mr-4">共找到 {{ materials.length }} 条，选中 2 条</div>
       <div>
@@ -76,5 +77,5 @@ export default defineComponent({
         </div>
       </div>
     </div>
-  </div>
+  </Resizable>
 </template>
