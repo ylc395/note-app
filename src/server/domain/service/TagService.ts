@@ -12,7 +12,7 @@ export default class TagService {
       throw new InvalidInputError({ name: '标签名已存在' });
     }
 
-    const invalidParent = Boolean(tag.parentId && (await this.repository.findOne({ id: tag.parentId })));
+    const invalidParent = Boolean(tag.parentId) && !(await this.repository.findOne({ id: tag.parentId }));
 
     if (invalidParent) {
       throw new InvalidInputError({ parentId: '无效的父标签 ID' });
