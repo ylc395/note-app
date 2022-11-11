@@ -3,7 +3,6 @@
     "target": "ESNext",
     "incremental": true,
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
-    "jsx": "preserve",
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "moduleResolution": "node",

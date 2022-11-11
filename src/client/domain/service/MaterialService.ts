@@ -1,5 +1,5 @@
 import { container, singleton } from 'tsyringe';
-import { shallowRef, ref } from '@vue/reactivity';
+import { observable, makeObservable, action } from 'mobx';
 
 import { type Remote, token as remoteToken } from 'infra/Remote';
 import type { MaterialDTO, MaterialVO } from 'interface/Material';
@@ -11,56 +11,62 @@ import MaterialsForm, { type MaterialsFormModel } from 'model/form/MaterialForm'
 @singleton()
 export default class MaterialService {
   readonly #remote: Remote = container.resolve(remoteToken);
-  readonly files = shallowRef<CreatedFileVO[]>([]);
   readonly tagTree = new TagTree();
-  readonly materials = ref<MaterialVO[]>([]);
-  readonly editingMaterials = shallowRef<MaterialsForm>();
+  @observable materials: MaterialVO[] = [];
+  @observable.ref files: CreatedFileVO[] = [];
+  @observable.ref editingMaterials?: MaterialsForm;
 
   constructor() {
-    this.tagTree.on(TagTreeEvents.Deleted, this.#handleTagRemoved);
+    this.tagTree.on(TagTreeEvents.Deleted, this.handleTagRemoved);
+    makeObservable(this);
   }
 
-  readonly #handleTagRemoved = (deletedIds: TagVO['id'][]) => {
-    for (const material of this.materials.value) {
+  @action.bound
+  private handleTagRemoved(deletedIds: TagVO['id'][]) {
+    for (const material of this.materials) {
       material.tags = material.tags.filter(({ id }) => !deletedIds.includes(id));
     }
-  };
+  }
 
-  readonly uploadFiles = async (files: FileDTO[]) => {
+  @action.bound
+  async uploadFiles(files: FileDTO[]) {
     const { body: createdFiles } = await this.#remote.post<FileDTO[], CreatedFileVO[]>('/files', files);
 
-    this.files.value = createdFiles;
+    this.files = createdFiles;
 
-    const form = new MaterialsForm(this.files.value);
-    form.handleSubmit(this.#uploadMaterials);
-    this.editingMaterials.value = form;
-  };
+    const form = new MaterialsForm(this.files);
+    form.handleSubmit(this.uploadMaterials);
+    this.editingMaterials = form;
+  }
 
-  readonly clearFiles = () => {
-    if (!this.editingMaterials.value) {
+  @action.bound
+  clearFiles() {
+    if (!this.editingMaterials) {
       throw new Error('no editingMaterials');
     }
 
-    this.files.value = [];
-    this.editingMaterials.value.destroy();
-    this.editingMaterials.value = undefined;
-  };
+    this.files = [];
+    this.editingMaterials.destroy();
+    this.editingMaterials = undefined;
+  }
 
-  readonly #uploadMaterials = async (materials: MaterialsFormModel) => {
+  @action.bound
+  private async uploadMaterials(materials: MaterialsFormModel) {
     await this.#remote.post<MaterialDTO[], unknown>(
       '/materials',
       materials.map((v, i) => ({
         ...v,
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        fileId: this.files.value[i]!.id,
+        fileId: this.files[i]!.id,
       })),
     );
-    this.files.value = [];
+    this.files = [];
     this.queryMaterials();
-  };
+  }
 
-  readonly queryMaterials = async () => {
+  @action.bound
+  private async queryMaterials() {
     const { body } = await this.#remote.get<void, MaterialVO[]>('/materials');
-    this.materials.value = body;
-  };
+    this.materials = body;
+  }
 }

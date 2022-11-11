@@ -1,4 +1,4 @@
-import { ref, reactive, computed, shallowRef } from '@vue/reactivity';
+import { observable, makeObservable, computed, action } from 'mobx';
 import pick from 'lodash/pick';
 import pull from 'lodash/pull';
 import { container } from 'tsyringe';
@@ -20,28 +20,33 @@ export enum Events {
 }
 
 export default class TagTree extends EventEmitter<Events> {
+  constructor() {
+    super();
+    makeObservable(this);
+  }
   readonly #remote: Remote = container.resolve(remoteToken);
-  readonly roots = ref<TagTreeNode[]>([]);
+  @observable roots: TagTreeNode[] = [];
   #nodesMap: Record<TagTreeNode['id'], TagTreeNode> = {};
-  readonly editingTag = shallowRef<TagForm>();
+  @observable.ref editingTag?: TagForm;
+  @observable selectedTagId?: TagTreeNode['id'];
 
-  readonly selectedTagId = ref<TagTreeNode['id']>();
-
-  readonly selectedTag = computed<TagTreeNode | undefined>(() => {
-    if (this.selectedTagId.value) {
-      return this.#nodesMap[this.selectedTagId.value];
+  @computed selectedTag(): TagTreeNode | undefined {
+    if (this.selectedTagId) {
+      return this.#nodesMap[this.selectedTagId];
     }
-  });
+  }
 
-  load = async () => {
+  @action.bound
+  async load() {
     this.#nodesMap = {};
     const { body: tags } = await this.#remote.get<TagQuery, Required<TagVO>[]>('/tags');
-    this.roots.value = this.#build(tags);
-  };
+    this.roots = this.build(tags);
+  }
 
-  #build(allTags: Required<TagVO>[]) {
+  @action.bound
+  private build(allTags: Required<TagVO>[]) {
     for (const { id, name, parentId } of allTags) {
-      this.#nodesMap[id] = reactive({ id, name, parentId });
+      this.#nodesMap[id] = observable({ id, name, parentId });
     }
 
     const rootIds: TagTreeNode['id'][] = [];
@@ -69,26 +74,28 @@ export default class TagTree extends EventEmitter<Events> {
     return roots;
   }
 
-  startCreatingTag = async () => {
-    if (this.editingTag.value) {
+  @action.bound
+  async startCreatingTag() {
+    if (this.editingTag) {
       throw new Error('tag form existed!');
     }
 
     const tag = new TagForm();
 
-    tag.handleSubmit(this.#createTag);
-    this.editingTag.value = tag;
-  };
+    tag.handleSubmit(this.createTag);
+    this.editingTag = tag;
+  }
 
-  readonly #createTag = async (newTag: TagFormModel) => {
+  @action.bound
+  private async createTag(newTag: TagFormModel) {
     const {
       body: { id, name, parentId },
     } = await this.#remote.post<TagDTO, Required<TagVO>>('/tags', {
       ...newTag,
-      ...(this.selectedTagId.value ? { parentId: this.selectedTagId.value } : null),
+      ...(this.selectedTagId ? { parentId: this.selectedTagId } : null),
     });
 
-    const tagNode = reactive({ id, name });
+    const tagNode = { id, name };
 
     this.#nodesMap[id] = tagNode;
 
@@ -99,27 +106,30 @@ export default class TagTree extends EventEmitter<Events> {
       }
       parentNode.children.push(tagNode);
     } else {
-      this.roots.value.push(tagNode);
+      this.roots.push(tagNode);
     }
 
-    this.selectedTagId.value = id;
+    this.selectedTagId = id;
     this.stopCreatingTag();
-  };
+  }
 
-  stopCreatingTag = () => {
-    if (!this.editingTag.value) {
+  @action.bound
+  private async stopCreatingTag() {
+    if (!this.editingTag) {
       throw new Error('no editing tag');
     }
 
-    this.editingTag.value.destroy();
-    this.editingTag.value = undefined;
-  };
+    this.editingTag.destroy();
+    this.editingTag = undefined;
+  }
 
-  selectTag = async (id: TagTreeNode['id'] | undefined) => {
-    this.selectedTagId.value = id;
-  };
+  @action.bound
+  selectTag(id: TagTreeNode['id'] | undefined) {
+    this.selectedTagId = id;
+  }
 
-  deleteTag = async (id: number, cascade: boolean) => {
+  @action.bound
+  async deleteTag(id: number, cascade: boolean) {
     await this.#remote.delete<void, void, { cascade: boolean }>(`/tags/${id}`, undefined, { cascade });
     const target = this.#nodesMap[id];
 
@@ -140,7 +150,7 @@ export default class TagTree extends EventEmitter<Events> {
         delete parent.children;
       }
     } else {
-      pull(this.roots.value, target);
+      pull(this.roots, target);
       isRoot = true;
     }
 
@@ -170,7 +180,7 @@ export default class TagTree extends EventEmitter<Events> {
 
     for (const child of target.children || []) {
       if (isRoot) {
-        this.roots.value.push(child);
+        this.roots.push(child);
         delete child.parentId;
       } else {
         /* eslint-disable @typescript-eslint/no-non-null-assertion */
@@ -181,5 +191,5 @@ export default class TagTree extends EventEmitter<Events> {
     }
 
     this.emit(Events.Deleted, [target.id]);
-  };
+  }
 }

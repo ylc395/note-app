@@ -1,5 +1,4 @@
-import { ref, toRaw, type Ref } from '@vue/reactivity';
-import { watch, type WatchStopHandle } from '@vue-reactivity/watch';
+import { observable, makeObservable, toJS, action, reaction, type IReactionDisposer } from 'mobx';
 import isObject from 'lodash/isObject';
 import get from 'lodash/get';
 import set from 'lodash/set';
@@ -8,11 +7,14 @@ import unset from 'lodash/unset';
 import { InvalidInputError, type Issues } from 'model/Error';
 
 export default abstract class ModelForm<T> {
-  errors = ref<Issues<T>>({});
-  #errorFieldValidateStoppers = new Set<WatchStopHandle>();
+  constructor() {
+    makeObservable(this);
+  }
+  @observable.shallow errors: Issues<T> = {};
+  #errorFieldValidateStoppers = new Set<IReactionDisposer>();
   #submitHandler?: (values: T) => Promise<void>;
 
-  abstract readonly values: Ref<T>;
+  abstract values: T;
 
   readonly handleSubmit = (handler: (values: T) => Promise<void>) => {
     this.#submitHandler = handler;
@@ -23,13 +25,13 @@ export default abstract class ModelForm<T> {
       throw new Error('no submit handler');
     }
 
-    if (Object.keys(this.errors.value).length > 0 || !this.values.value) {
+    if (Object.keys(this.errors).length > 0 || !this.values) {
       return;
     }
 
     // local validation passed. Waiting for remote validation
     try {
-      await this.#submitHandler(toRaw(this.values.value));
+      await this.#submitHandler(toJS(this.values));
       this.destroy();
       return true;
     } catch (e) {
@@ -37,27 +39,28 @@ export default abstract class ModelForm<T> {
         throw e;
       }
 
-      this.errors.value = e.issues;
-      this.#watchErrorFields(this.errors.value);
+      this.errors = e.issues;
+      this.watchErrorFields(this.errors);
       return false;
     }
   };
 
-  #watchErrorFields(obj: unknown, path: string[] = []) {
+  @action.bound
+  private watchErrorFields(obj: unknown, path: string[] = []) {
     if (isObject(obj)) {
       for (const key of Object.keys(obj)) {
-        this.#watchErrorFields(obj[key as keyof typeof obj], [...path, key]);
+        this.watchErrorFields(obj[key as keyof typeof obj], [...path, key]);
       }
     } else {
-      const wrongValue = get(this.values.value, path);
+      const wrongValue = get(this.values, path);
       const errorMessage = obj;
-      const watcher = watch(
-        () => get(this.values.value, path),
+      const watcher = reaction(
+        () => get(this.values, path),
         (value) => {
           if (wrongValue === value) {
-            set(this.errors.value, path, errorMessage);
+            set(this.errors, path, errorMessage);
           } else {
-            unset(this.errors.value, path);
+            unset(this.errors, path);
           }
         },
       );

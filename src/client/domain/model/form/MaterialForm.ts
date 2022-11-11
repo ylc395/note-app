@@ -1,4 +1,4 @@
-import { ref, type Ref } from '@vue/reactivity';
+import { observable, makeObservable } from 'mobx';
 import last from 'lodash/last';
 
 import ModelForm from './ModelForm';
@@ -8,16 +8,15 @@ import type { CreatedFileVO } from 'interface/File';
 export type MaterialsFormModel = Omit<MaterialDTO, 'fileId'>[];
 
 export default class MaterialForm extends ModelForm<MaterialsFormModel> {
-  values: Ref<MaterialsFormModel>;
+  @observable values: MaterialsFormModel;
   constructor(files: CreatedFileVO[]) {
     super();
-    this.values = ref(
-      files.map(({ sourceUrl }) => ({
-        name: last(sourceUrl.split('/'))?.split('.')[0] || '',
-        comment: '',
-        rating: 0,
-        tags: [],
-      })),
-    );
+    this.values = files.map(({ sourceUrl }) => ({
+      name: last(sourceUrl.split('/'))?.split('.')[0] || '',
+      comment: '',
+      rating: 0,
+      tags: [],
+    }));
+    makeObservable(this);
   }
 }

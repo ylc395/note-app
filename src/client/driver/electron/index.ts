@@ -2,7 +2,7 @@ import { app, BrowserWindow } from 'electron';
 import { join } from 'path';
 import { hostname } from 'os';
 import { ensureDirSync, emptyDirSync } from 'fs-extra';
-import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer';
+import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 
 import type { LocalClient } from 'infra/LocalClient';
 
@@ -50,7 +50,7 @@ export default class App implements LocalClient {
     if (NODE_ENV === 'development') {
       try {
         console.log('try to install devtool');
-        await installExtension(VUEJS_DEVTOOLS);
+        await installExtension(REACT_DEVELOPER_TOOLS);
         console.log('devtool installed');
       } catch (error) {
         console.error(error);

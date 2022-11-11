@@ -1,8 +1,9 @@
 module.exports = {
-  extends: ['eslint:recommended', 'plugin:lodash/recommended'],
-  plugins: ['lodash'],
+  extends: ['eslint:recommended', 'plugin:lodash/recommended', 'plugin:mobx/recommended'],
+  plugins: ['lodash', 'mobx'],
   parserOptions: {
     ecmaVersion: 'latest',
+    sourceType: 'module',
   },
   root: true,
   ignorePatterns: ['dist'],
@@ -14,36 +15,17 @@ module.exports = {
   },
   overrides: [
     {
+      files: ['*.ts', '*.tsx'],
+      parser: '@typescript-eslint/parser',
+      extends: ['plugin:@typescript-eslint/recommended'],
+    },
+    {
       files: ['./*.js', 'script/**/*', 'src/client/driver/electron/**/*'],
       env: { node: true },
     },
     {
       files: ['src/client/driver/web/**/*'],
       env: { browser: true },
-    },
-    {
-      files: ['*.ts'],
-      parser: '@typescript-eslint/parser',
-      extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended'],
-    },
-    {
-      files: ['*.vue'],
-      parser: 'vue-eslint-parser',
-      parserOptions: {
-        parser: '@typescript-eslint/parser',
-      },
-      extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended', 'plugin:vue/vue3-recommended'],
-      rules: {
-        'vue/singleline-html-element-content-newline': 'off',
-        'vue/multi-word-component-names': 'off',
-        'vue/max-attributes-per-line': 'off',
-      },
-    },
-    {
-      files: ['index.vue'],
-      rules: {
-        'vue/require-name-property': 'error',
-      },
     },
   ],
 };

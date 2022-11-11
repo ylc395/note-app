@@ -1,6 +1,5 @@
 const path = require('path');
 const { createServer, build } = require('vite');
-const pluginVue = require('@vitejs/plugin-vue');
 const shell = require('shelljs');
 const chokidar = require('chokidar');
 const { default: tsconfigPaths } = require('vite-tsconfig-paths');
@@ -73,8 +72,7 @@ async function createViteServer() {
     configFile: false,
     root: './src/client/driver/web',
     plugins: [
-      checker({ vueTsc: { tsconfigPath: WEB_TSCONFIG }, overlay: false }),
-      pluginVue(),
+      checker({ typescript: { tsconfigPath: WEB_TSCONFIG }, overlay: false }),
       tsconfigPaths({
         projects: [CLIENT_TSCONFIG],
         loose: true,
@@ -84,6 +82,7 @@ async function createViteServer() {
       __WEB_ENV__: JSON.stringify('electron-renderer'),
     },
     esbuild: {
+      jsxInject: `import React from 'react'`,
       tsconfigRaw: WEB_RAW_TSCONFIG,
     },
   });

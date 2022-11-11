@@ -2,6 +2,7 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "baseUrl": ".",
+    "jsx": "react-jsx",
     "paths": {
       "model/*": ["domain/model/*", "../shared/model/*"],
       "interface/*": ["../shared/interface/*"],
@@ -9,6 +10,5 @@
       "web/*": ["driver/web/*"],
       "infra/*": ["domain/infra/*", "../shared/infra/*"]
     }
-  },
-  "types": ["naive-ui/volar"]
+  }
 }
