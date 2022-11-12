@@ -30,7 +30,7 @@ export default class TagTree extends EventEmitter<Events> {
   @observable.ref editingTag?: TagForm;
   @observable selectedTagId?: TagTreeNode['id'];
 
-  @computed selectedTag(): TagTreeNode | undefined {
+  @computed get selectedTag(): TagTreeNode | undefined {
     if (this.selectedTagId) {
       return this.#nodesMap[this.selectedTagId];
     }

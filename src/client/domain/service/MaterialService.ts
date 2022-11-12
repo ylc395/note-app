@@ -1,5 +1,5 @@
 import { container, singleton } from 'tsyringe';
-import { observable, makeObservable, action } from 'mobx';
+import { observable, makeObservable, action, flow } from 'mobx';
 
 import { type Remote, token as remoteToken } from 'infra/Remote';
 import type { MaterialDTO, MaterialVO } from 'interface/Material';
@@ -13,7 +13,7 @@ export default class MaterialService {
   readonly #remote: Remote = container.resolve(remoteToken);
   readonly tagTree = new TagTree();
   @observable materials: MaterialVO[] = [];
-  @observable.ref files: CreatedFileVO[] = [];
+  #files: CreatedFileVO[] = [];
   @observable.ref editingMaterials?: MaterialsForm;
 
   constructor() {
@@ -28,14 +28,21 @@ export default class MaterialService {
     }
   }
 
-  @action.bound
-  async uploadFiles(files: FileDTO[]) {
-    const { body: createdFiles } = await this.#remote.post<FileDTO[], CreatedFileVO[]>('/files', files);
+  @flow.bound
+  *uploadFiles(files: File[]) {
+    if (files.length === 0) {
+      return;
+    }
 
-    this.files = createdFiles;
+    const { body: createdFiles } = yield this.#remote.post<FileDTO[], CreatedFileVO[]>(
+      '/files',
+      files.map(({ type: mimeType, path }) => ({ isTemp: true, mimeType, sourceUrl: `file://${path}` })),
+    );
 
-    const form = new MaterialsForm(this.files);
-    form.handleSubmit(this.uploadMaterials);
+    this.#files = createdFiles;
+
+    const form = new MaterialsForm(this.#files);
+    form.handleSubmit(this.#uploadMaterials);
     this.editingMaterials = form;
   }
 
@@ -45,28 +52,20 @@ export default class MaterialService {
       throw new Error('no editingMaterials');
     }
 
-    this.files = [];
+    this.#files = [];
     this.editingMaterials.destroy();
     this.editingMaterials = undefined;
   }
 
-  @action.bound
-  private async uploadMaterials(materials: MaterialsFormModel) {
-    await this.#remote.post<MaterialDTO[], unknown>(
-      '/materials',
-      materials.map((v, i) => ({
-        ...v,
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        fileId: this.files[i]!.id,
-      })),
-    );
-    this.files = [];
+  #uploadMaterials = async (materials: MaterialsFormModel) => {
+    await this.#remote.post<MaterialDTO[], unknown>('/materials', materials);
+    this.clearFiles();
     this.queryMaterials();
-  }
+  };
 
-  @action.bound
-  private async queryMaterials() {
-    const { body } = await this.#remote.get<void, MaterialVO[]>('/materials');
+  @flow
+  private *queryMaterials() {
+    const { body } = yield this.#remote.get<void, MaterialVO[]>('/materials');
     this.materials = body;
   }
 }

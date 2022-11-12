@@ -5,17 +5,18 @@ import ModelForm from './ModelForm';
 import type { MaterialDTO } from 'interface/Material';
 import type { CreatedFileVO } from 'interface/File';
 
-export type MaterialsFormModel = Omit<MaterialDTO, 'fileId'>[];
+export type MaterialsFormModel = MaterialDTO[];
 
 export default class MaterialForm extends ModelForm<MaterialsFormModel> {
   @observable values: MaterialsFormModel;
   constructor(files: CreatedFileVO[]) {
     super();
-    this.values = files.map(({ sourceUrl }) => ({
+    this.values = files.map(({ sourceUrl, id }) => ({
       name: last(sourceUrl.split('/'))?.split('.')[0] || '',
       comment: '',
       rating: 0,
       tags: [],
+      fileId: id,
     }));
     makeObservable(this);
   }
