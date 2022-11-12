@@ -14,7 +14,7 @@ export interface Row {
   size: number;
   hash: string;
   isTemp: TempFlags;
-  ocrResult: string;
+  textContent: string;
   createdAt: number;
 }
 
@@ -31,7 +31,7 @@ export default {
     table.integer('is_temp').notNullable();
     table.text('hash').notNullable();
     table.integer('size').notNullable();
-    table.text('ocr_result').notNullable().defaultTo('');
+    table.text('text_content').notNullable().defaultTo('');
     table.integer('created_at').notNullable().defaultTo(knex.raw('(unixepoch())'));
   },
 };

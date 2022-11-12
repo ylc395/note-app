@@ -60,6 +60,6 @@ export default class FileService {
 
   @OnEvent(Events.Added, { async: true })
   async ocr({ fileId }: FileAddedEvent) {
-    await this.repository.updateOcrResult(fileId, 'aaaaa');
+    await this.repository.updateTextContent(fileId, 'aaaaa');
   }
 }

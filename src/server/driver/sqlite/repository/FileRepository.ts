@@ -37,7 +37,7 @@ export default class SqliteFileRepository implements FileRepository {
     return row?.data;
   }
 
-  async updateOcrResult(id: number, text: string) {
-    await db.knex<FileRow>(filesTableName).where('id', id).update({ ocrResult: text });
+  async updateTextContent(id: number, text: string) {
+    await db.knex<FileRow>(filesTableName).where('id', id).update({ textContent: text });
   }
 }
