@@ -14,6 +14,7 @@ export default observer(function MaterialForm({ index }: { index: number }) {
     <Form>
       <Form.Label text="资料名" required />
       <Input value={model.name} onChange={action((value) => (model.name = value))} />
+      <Form.ErrorMessage error={editingMaterials?.errors[index]?.name} />
       <Form.Label text="备注" />
       <TextArea value={model.comment} onChange={action((value) => (model.comment = value))} />
     </Form>
