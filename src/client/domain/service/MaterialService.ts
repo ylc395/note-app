@@ -63,8 +63,8 @@ export default class MaterialService {
     this.queryMaterials();
   };
 
-  @flow
-  private *queryMaterials() {
+  @flow.bound
+  *queryMaterials() {
     const { body } = yield this.#remote.get<void, MaterialVO[]>('/materials');
     this.materials = body;
   }
