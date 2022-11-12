@@ -1,4 +1,4 @@
-import { observable, makeObservable, toJS, action, reaction, type IReactionDisposer } from 'mobx';
+import { observable, makeObservable, toJS, action, reaction, flowResult, type IReactionDisposer } from 'mobx';
 import isObject from 'lodash/isObject';
 import get from 'lodash/get';
 import set from 'lodash/set';
@@ -16,8 +16,8 @@ export default abstract class ModelForm<T> {
 
   abstract values: T;
 
-  readonly handleSubmit = (handler: (values: T) => Promise<void>) => {
-    this.#submitHandler = handler;
+  readonly handleSubmit = (handler: (values: T) => Promise<void> | Generator) => {
+    this.#submitHandler = (values: T) => flowResult(handler(values));
   };
 
   readonly submit = async () => {

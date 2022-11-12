@@ -1,4 +1,4 @@
-import { observable, makeObservable, computed, action } from 'mobx';
+import { observable, makeObservable, computed, action, flow } from 'mobx';
 import pick from 'lodash/pick';
 import pull from 'lodash/pull';
 import { container } from 'tsyringe';
@@ -36,10 +36,10 @@ export default class TagTree extends EventEmitter<Events> {
     }
   }
 
-  @action.bound
-  async load() {
+  @flow.bound
+  *load() {
     this.#nodesMap = {};
-    const { body: tags } = await this.#remote.get<TagQuery, Required<TagVO>[]>('/tags');
+    const { body: tags } = yield this.#remote.get<TagQuery, Required<TagVO>[]>('/tags');
     this.roots = this.build(tags);
   }
 
@@ -66,16 +66,11 @@ export default class TagTree extends EventEmitter<Events> {
     }
 
     const roots = Object.values(pick(this.#nodesMap, rootIds));
-    roots.unshift({
-      id: 0,
-      name: '无标签',
-    });
-
     return roots;
   }
 
   @action.bound
-  async startCreatingTag() {
+  startCreatingTag() {
     if (this.editingTag) {
       throw new Error('tag form existed!');
     }
@@ -86,16 +81,16 @@ export default class TagTree extends EventEmitter<Events> {
     this.editingTag = tag;
   }
 
-  @action.bound
-  private async createTag(newTag: TagFormModel) {
+  @flow.bound
+  private *createTag(newTag: TagFormModel) {
     const {
       body: { id, name, parentId },
-    } = await this.#remote.post<TagDTO, Required<TagVO>>('/tags', {
+    } = yield this.#remote.post<TagDTO, Required<TagVO>>('/tags', {
       ...newTag,
       ...(this.selectedTagId ? { parentId: this.selectedTagId } : null),
     });
 
-    const tagNode = { id, name };
+    const tagNode = observable({ id, name });
 
     this.#nodesMap[id] = tagNode;
 
@@ -109,12 +104,11 @@ export default class TagTree extends EventEmitter<Events> {
       this.roots.push(tagNode);
     }
 
-    this.selectedTagId = id;
     this.stopCreatingTag();
   }
 
   @action.bound
-  private async stopCreatingTag() {
+  stopCreatingTag() {
     if (!this.editingTag) {
       throw new Error('no editing tag');
     }
@@ -128,9 +122,9 @@ export default class TagTree extends EventEmitter<Events> {
     this.selectedTagId = id;
   }
 
-  @action.bound
-  async deleteTag(id: number, cascade: boolean) {
-    await this.#remote.delete<void, void, { cascade: boolean }>(`/tags/${id}`, undefined, { cascade });
+  @flow.bound
+  *deleteTag(id: number, cascade: boolean) {
+    yield this.#remote.delete<void, void, { cascade: boolean }>(`/tags/${id}`, undefined, { cascade });
     const target = this.#nodesMap[id];
 
     if (!target) {
