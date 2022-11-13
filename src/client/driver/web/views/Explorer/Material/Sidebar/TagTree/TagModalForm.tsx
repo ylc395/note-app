@@ -21,6 +21,7 @@ export default observer(function TagModalForm() {
         <Form.Label text="父级标签" />
         <Input value={selectedTag?.name || '无'} readonly />
         <Form.Label text="标签名" />
+        {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
         <Input value={editingTag?.values.name} onChange={action((value) => (editingTag!.values.name = value))} />
         <Form.ErrorMessage error={editingTag?.errors.name} />
       </Form>

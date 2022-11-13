@@ -22,12 +22,10 @@ export default observer(function AddMenu() {
         trigger="click"
         position="bottomRight"
         clickToHide
-        render={
-          <Dropdown.Menu>
-            <Dropdown.Item onClick={select}>上传文件</Dropdown.Item>
-            <Dropdown.Item>上传目录</Dropdown.Item>
-          </Dropdown.Menu>
-        }
+        menu={[
+          { node: 'item', name: '上传文件', onClick: select },
+          { node: 'item', name: '上传目录' },
+        ]}
       >
         <Button icon={<IconPlusStroked />} />
       </Dropdown>

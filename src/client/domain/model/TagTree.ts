@@ -8,7 +8,7 @@ import { type Remote, token as remoteToken } from 'infra/Remote';
 import type { TagDTO, TagVO, TagQuery } from 'interface/Tag';
 import TagForm, { TagFormModel } from './form/TagForm';
 
-interface TagTreeNode {
+export interface TagTreeNode {
   id: TagVO['id'];
   name: TagVO['name'];
   children?: TagTreeNode[];

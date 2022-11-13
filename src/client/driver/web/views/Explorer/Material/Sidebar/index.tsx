@@ -4,7 +4,6 @@ import { Collapse } from '@douyinfe/semi-ui';
 
 import AddMenu from './AddMenu';
 import TagTree from './TagTree';
-import TagModalForm from './TagTree/TagModalForm';
 
 export default observer(function MaterialSidebar() {
   return (
@@ -16,7 +15,6 @@ export default observer(function MaterialSidebar() {
       <Collapse expandIconPosition="left">
         <TagTree />
       </Collapse>
-      <TagModalForm />
     </Resizable>
   );
 });
