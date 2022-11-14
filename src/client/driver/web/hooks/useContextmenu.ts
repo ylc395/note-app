@@ -1,6 +1,6 @@
 import { useEffect, useCallback } from 'react';
 import { useLocalObservable } from 'mobx-react-lite';
-import { observable } from 'mobx';
+import { observable, action } from 'mobx';
 
 export default function useContextmenu() {
   const state = useLocalObservable(
@@ -22,9 +22,12 @@ export default function useContextmenu() {
     { position: observable.ref },
   );
 
-  const handleMousemove = useCallback((e: MouseEvent) => {
-    state.updatePosition({ x: e.clientX, y: e.clientY });
-  }, []);
+  const handleMousemove = useCallback(
+    action((e: MouseEvent) => {
+      state.updatePosition({ x: e.clientX, y: e.clientY });
+    }),
+    [],
+  );
 
   useEffect(() => {
     document.body.addEventListener('mousemove', handleMousemove);
