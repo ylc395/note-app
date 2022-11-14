@@ -118,7 +118,7 @@ export default class TagTree extends EventEmitter<Events> {
   }
 
   @action.bound
-  selectTag(id: TagTreeNode['id'] | undefined) {
+  selectTag(id?: TagTreeNode['id']) {
     this.selectedTagId = id;
   }
 

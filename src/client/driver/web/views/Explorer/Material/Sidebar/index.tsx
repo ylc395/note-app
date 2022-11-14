@@ -3,7 +3,8 @@ import { Resizable } from 're-resizable';
 import { Collapse } from '@douyinfe/semi-ui';
 
 import AddMenu from './AddMenu';
-import TagTree from './TagTree';
+import TagTree, { panelKey as tagTreePanelKey } from './TagTree';
+import MaterialView, { panelKey as materialViewPanelKey } from './MaterialView';
 
 export default observer(function MaterialSidebar() {
   return (
@@ -12,7 +13,8 @@ export default observer(function MaterialSidebar() {
         <div>资料库</div>
         <AddMenu />
       </div>
-      <Collapse expandIconPosition="left" defaultActiveKey={['tag']}>
+      <Collapse expandIconPosition="left" defaultActiveKey={[tagTreePanelKey, materialViewPanelKey]}>
+        <MaterialView />
         <TagTree />
       </Collapse>
     </Resizable>

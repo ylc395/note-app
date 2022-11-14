@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { useEffect, useCallback, useMemo } from 'react';
+import { useEffect, useCallback, useMemo, type MouseEvent } from 'react';
 import { computed } from 'mobx';
 import { Tree, Collapse, Button } from '@douyinfe/semi-ui';
 import type { TreeNodeData, TreeProps } from '@douyinfe/semi-ui/lib/es/tree';
@@ -11,7 +11,8 @@ import useContextmenu from 'web/hooks/useContextmenu';
 import TagModalForm from './TagModalForm';
 import Contextmenu from './Contextmenu';
 import DeleteConfirm from './DeleteConfirm';
-import type { TagTreeNode } from 'model/TagTree';
+
+export const panelKey = 'tag';
 
 export default observer(function Sidebar() {
   const {
@@ -44,6 +45,12 @@ export default observer(function Sidebar() {
     contextmenu.open();
   }, []);
 
+  const handleAddButtonClick = useCallback((e: MouseEvent) => {
+    e.stopPropagation();
+    selectTag();
+    startCreatingTag();
+  }, []);
+
   useEffect(() => {
     load();
   }, []);
@@ -54,17 +61,10 @@ export default observer(function Sidebar() {
         header={
           <div className="flex justify-between flex-grow items-center">
             <span>标签管理器</span>
-            <Button
-              size="small"
-              onClick={(e) => {
-                e.stopPropagation();
-                startCreatingTag();
-              }}
-              icon={<IconPlusStroked />}
-            />
+            <Button size="small" onClick={handleAddButtonClick} icon={<IconPlusStroked />} />
           </div>
         }
-        itemKey="tag"
+        itemKey={panelKey}
       >
         <Tree
           onChange={selectTag as TreeProps['onChange']}
