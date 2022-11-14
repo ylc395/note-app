@@ -18,4 +18,11 @@ export const tagDTOSchema = object({
   parentId: number().optional(),
 });
 
+export const tagPatchDTOSchema = object({
+  id: number(),
+  ...tagDTOSchema.partial().shape,
+});
+
 export type TagDTO = Infer<typeof tagDTOSchema>;
+
+export type TagPatchDTO = Infer<typeof tagPatchDTOSchema>;

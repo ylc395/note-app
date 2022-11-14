@@ -20,6 +20,10 @@ module.exports = {
       extends: ['plugin:@typescript-eslint/recommended'],
     },
     {
+      files: ['*Controller.ts'],
+      rules: { '@typescript-eslint/explicit-function-return-type': 'error' },
+    },
+    {
       files: ['./*.js', 'script/**/*', 'src/client/driver/electron/**/*'],
       env: { node: true },
     },

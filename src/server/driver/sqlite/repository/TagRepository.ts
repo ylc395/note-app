@@ -1,8 +1,9 @@
 import pick from 'lodash/pick';
+import omit from 'lodash/omit';
 import map from 'lodash/map';
 import isEmpty from 'lodash/isEmpty';
 
-import type { TagDTO, TagQuery, TagVO } from 'interface/Tag';
+import type { TagDTO, TagPatchDTO, TagQuery, TagVO } from 'interface/Tag';
 import type { TagRepository } from 'service/repository/TagRepository';
 import { tableName, type Row } from 'driver/sqlite/tagSchema';
 import { tableName as entityToTagTableName, type Row as EntityToTagRow } from 'driver/sqlite/materialToTagSchema';
@@ -70,5 +71,12 @@ export default class SqliteTagRepository implements TagRepository {
       await trx.rollback(error);
       throw error;
     }
+  }
+
+  async update(tagPatch: TagPatchDTO) {
+    await db
+      .knex<Row>(tableName)
+      .update(omit(tagPatch, ['id']))
+      .where('id', tagPatch.id);
   }
 }

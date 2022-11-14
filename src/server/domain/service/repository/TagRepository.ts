@@ -1,5 +1,5 @@
 import type { InjectionToken } from '@nestjs/common';
-import type { TagDTO, TagVO, TagQuery } from 'interface/Tag';
+import type { TagDTO, TagVO, TagQuery, TagPatchDTO } from 'interface/Tag';
 
 export const token: InjectionToken = Symbol('tagRepository');
 
@@ -8,4 +8,5 @@ export interface TagRepository {
   findAll: (tagQuery: TagQuery) => Promise<TagVO[]>;
   findOne: (tagQuery: TagQuery) => Promise<TagVO | undefined>;
   deleteOne: (tagId: TagVO['id'], cascade: boolean) => Promise<void>;
+  update: (tagPatch: TagPatchDTO) => Promise<void>;
 }
