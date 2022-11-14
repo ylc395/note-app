@@ -1,5 +1,5 @@
 import { container, singleton } from 'tsyringe';
-import { observable, makeObservable, action, flow } from 'mobx';
+import { observable, makeObservable, action, runInAction } from 'mobx';
 
 import { type Remote, token as remoteToken } from 'infra/Remote';
 import type { MaterialDTO, MaterialVO } from 'interface/Material';
@@ -28,23 +28,24 @@ export default class MaterialService {
     }
   };
 
-  @flow.bound
-  *uploadFiles(files: File[]) {
+  readonly uploadFiles = async (files: File[]) => {
     if (files.length === 0) {
       return;
     }
 
-    const { body: createdFiles } = yield this.#remote.post<FileDTO[], CreatedFileVO[]>(
+    const { body: createdFiles } = await this.#remote.post<FileDTO[], CreatedFileVO[]>(
       '/files',
       files.map(({ type: mimeType, path }) => ({ isTemp: true, mimeType, sourceUrl: `file://${path}` })),
     );
 
-    this.#files = createdFiles;
+    runInAction(() => {
+      this.#files = createdFiles;
 
-    const form = new MaterialsForm(this.#files);
-    form.handleSubmit(this.#uploadMaterials);
-    this.editingMaterials = form;
-  }
+      const form = new MaterialsForm(this.#files);
+      form.handleSubmit(this.#uploadMaterials);
+      this.editingMaterials = form;
+    });
+  };
 
   @action.bound
   clearFiles() {
@@ -57,15 +58,16 @@ export default class MaterialService {
     this.editingMaterials = undefined;
   }
 
-  #uploadMaterials = async (materials: MaterialsFormModel) => {
+  readonly #uploadMaterials = async (materials: MaterialsFormModel) => {
     await this.#remote.post<MaterialDTO[], unknown>('/materials', materials);
     this.clearFiles();
     this.queryMaterials();
   };
 
-  @flow.bound
-  *queryMaterials() {
-    const { body } = yield this.#remote.get<void, MaterialVO[]>('/materials');
-    this.materials = body;
-  }
+  readonly queryMaterials = async () => {
+    const { body } = await this.#remote.get<void, MaterialVO[]>('/materials');
+    runInAction(() => {
+      this.materials = body;
+    });
+  };
 }

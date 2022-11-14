@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { action, flowResult } from 'mobx';
+import { action } from 'mobx';
 import { Modal, Form, Input } from '@douyinfe/semi-ui';
 import { container } from 'tsyringe';
 
@@ -11,7 +11,6 @@ export default observer(function TagModalForm() {
     tagTree: { editingTag, stopCreatingTag, selectedTag },
   } = container.resolve(MaterialService);
 
-  const handleOk = useCallback(() => flowResult(editingTag?.submit()), [editingTag]);
   const handleInputChange = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     action((value: string) => (editingTag!.values.name = value)),
@@ -19,7 +18,7 @@ export default observer(function TagModalForm() {
   );
 
   return (
-    <Modal title="创建新标签" visible={Boolean(editingTag)} onCancel={stopCreatingTag} onOk={handleOk}>
+    <Modal title="创建新标签" visible={Boolean(editingTag)} onCancel={stopCreatingTag} onOk={editingTag?.submit}>
       <Form>
         <Form.Label text="父级标签" />
         <Input value={selectedTag?.name || '无'} readonly />

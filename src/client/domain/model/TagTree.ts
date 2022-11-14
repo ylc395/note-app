@@ -1,4 +1,4 @@
-import { observable, makeObservable, computed, action, flow } from 'mobx';
+import { observable, makeObservable, computed, action, runInAction } from 'mobx';
 import pick from 'lodash/pick';
 import pull from 'lodash/pull';
 import { container } from 'tsyringe';
@@ -36,12 +36,13 @@ export default class TagTree extends EventEmitter<Events> {
     }
   }
 
-  @flow.bound
-  *load() {
+  readonly load = async () => {
     this.#nodesMap = {};
-    const { body: tags } = yield this.#remote.get<TagQuery, Required<TagVO>[]>('/tags');
-    this.roots = this.build(tags);
-  }
+    const { body: tags } = await this.#remote.get<TagQuery, Required<TagVO>[]>('/tags');
+    runInAction(() => {
+      this.roots = this.build(tags);
+    });
+  };
 
   @action.bound
   private build(allTags: Required<TagVO>[]) {
@@ -77,35 +78,36 @@ export default class TagTree extends EventEmitter<Events> {
 
     const tag = new TagForm();
 
-    tag.handleSubmit(this.createTag);
+    tag.handleSubmit(this.#createTag);
     this.editingTag = tag;
   }
 
-  @flow.bound
-  private *createTag(newTag: TagFormModel) {
+  readonly #createTag = async (newTag: TagFormModel) => {
     const {
       body: { id, name, parentId },
-    } = yield this.#remote.post<TagDTO, Required<TagVO>>('/tags', {
+    } = await this.#remote.post<TagDTO, Required<TagVO>>('/tags', {
       ...newTag,
       ...(this.selectedTagId ? { parentId: this.selectedTagId } : null),
     });
 
-    const tagNode = observable({ id, name, parentId });
+    runInAction(() => {
+      const tagNode = observable({ id, name, parentId });
 
-    this.#nodesMap[id] = tagNode;
+      this.#nodesMap[id] = tagNode;
 
-    const parentNode = this.#nodesMap[parentId];
-    if (parentNode) {
-      if (!parentNode.children) {
-        parentNode.children = [];
+      const parentNode = this.#nodesMap[parentId];
+      if (parentNode) {
+        if (!parentNode.children) {
+          parentNode.children = [];
+        }
+        parentNode.children.push(tagNode);
+      } else {
+        this.roots.push(tagNode);
       }
-      parentNode.children.push(tagNode);
-    } else {
-      this.roots.push(tagNode);
-    }
+    });
 
     this.stopCreatingTag();
-  }
+  };
 
   @action.bound
   stopCreatingTag() {
@@ -122,75 +124,76 @@ export default class TagTree extends EventEmitter<Events> {
     this.selectedTagId = id;
   }
 
-  @flow.bound
-  *deleteTag(id: number, cascade: boolean) {
-    yield this.#remote.delete<void, void, { cascade: boolean }>(`/tags/${id}`, undefined, { cascade });
+  readonly deleteTag = async (id: number, cascade: boolean) => {
+    await this.#remote.delete<void, void, { cascade: boolean }>(`/tags/${id}`, undefined, { cascade });
     const target = this.#nodesMap[id];
 
     if (!target) {
       throw new Error('invalid tag id');
     }
 
-    if (this.selectedTagId === target.id) {
-      this.selectedTagId = undefined;
-    }
-
-    delete this.#nodesMap[id];
-
-    const parent = target.parentId ? this.#nodesMap[target.parentId] : undefined;
-    let isRoot = false;
-
-    if (parent) {
-      if (!parent.children) throw new Error('no children');
-      pull(parent.children, target);
-
-      if (parent.children.length === 0) {
-        delete parent.children;
-      }
-    } else {
-      pull(this.roots, target);
-      isRoot = true;
-    }
-
-    if (cascade) {
-      const deletedIds: TagVO['id'][] = [];
-      const traverse = (node: TagTreeNode) => {
-        deletedIds.push(node.id);
-
-        if (!node.children) {
-          return;
-        }
-
-        for (const child of node.children) {
-          traverse(child);
-        }
-      };
-
-      traverse(target);
-
-      for (const deletedId of deletedIds) {
-        delete this.#nodesMap[deletedId];
+    runInAction(() => {
+      if (this.selectedTagId === target.id) {
+        this.selectedTagId = undefined;
       }
 
-      this.emit(Events.Deleted, deletedIds);
-      return;
-    }
+      delete this.#nodesMap[id];
 
-    for (const child of target.children || []) {
-      if (isRoot) {
-        this.roots.push(child);
-        delete child.parentId;
-      } else if (parent) {
-        if (!parent.children) {
-          parent.children = [];
+      const parent = target.parentId ? this.#nodesMap[target.parentId] : undefined;
+      let isRoot = false;
+
+      if (parent) {
+        if (!parent.children) throw new Error('no children');
+        pull(parent.children, target);
+
+        if (parent.children.length === 0) {
+          delete parent.children;
         }
-        parent.children.push(child);
-        child.parentId = parent.id;
       } else {
-        throw new Error('no parent');
+        pull(this.roots, target);
+        isRoot = true;
       }
-    }
+
+      if (cascade) {
+        const deletedIds: TagVO['id'][] = [];
+        const traverse = (node: TagTreeNode) => {
+          deletedIds.push(node.id);
+
+          if (!node.children) {
+            return;
+          }
+
+          for (const child of node.children) {
+            traverse(child);
+          }
+        };
+
+        traverse(target);
+
+        for (const deletedId of deletedIds) {
+          delete this.#nodesMap[deletedId];
+        }
+
+        this.emit(Events.Deleted, deletedIds);
+        return;
+      }
+
+      for (const child of target.children || []) {
+        if (isRoot) {
+          this.roots.push(child);
+          delete child.parentId;
+        } else if (parent) {
+          if (!parent.children) {
+            parent.children = [];
+          }
+          parent.children.push(child);
+          child.parentId = parent.id;
+        } else {
+          throw new Error('no parent');
+        }
+      }
+    });
 
     this.emit(Events.Deleted, [target.id]);
-  }
+  };
 }

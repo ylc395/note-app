@@ -1,4 +1,4 @@
-import { observable, makeObservable, toJS, action, reaction, flowResult, flow, type IReactionDisposer } from 'mobx';
+import { observable, makeObservable, toJS, action, reaction, runInAction, type IReactionDisposer } from 'mobx';
 import isObject from 'lodash/isObject';
 import isEmpty from 'lodash/isEmpty';
 import get from 'lodash/get';
@@ -17,12 +17,11 @@ export default abstract class ModelForm<T> {
 
   abstract values: T;
 
-  readonly handleSubmit = (handler: (values: T) => Promise<void> | Generator) => {
-    this.#submitHandler = (values: T) => flowResult(handler(values));
+  readonly handleSubmit = (handler: (values: T) => Promise<void>) => {
+    this.#submitHandler = handler;
   };
 
-  @flow.bound
-  *submit() {
+  submit = async () => {
     if (!this.#submitHandler) {
       throw new Error('no submit handler');
     }
@@ -33,19 +32,20 @@ export default abstract class ModelForm<T> {
 
     // local validation passed. Waiting for remote validation
     try {
-      yield this.#submitHandler(toJS(this.values));
+      await this.#submitHandler(toJS(this.values));
       this.destroy();
       return true;
     } catch (e) {
-      if (!InvalidInputError.is(e)) {
-        throw e;
-      }
-
-      this.errors = e.issues;
+      runInAction(() => {
+        if (!InvalidInputError.is(e)) {
+          throw e;
+        }
+        this.errors = e.issues;
+      });
       this.watchErrorFields(this.errors);
       return false;
     }
-  }
+  };
 
   @action.bound
   private watchErrorFields(obj: unknown, path: string[] = []) {
