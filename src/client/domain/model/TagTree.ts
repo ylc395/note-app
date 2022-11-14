@@ -90,7 +90,7 @@ export default class TagTree extends EventEmitter<Events> {
       ...(this.selectedTagId ? { parentId: this.selectedTagId } : null),
     });
 
-    const tagNode = observable({ id, name });
+    const tagNode = observable({ id, name, parentId });
 
     this.#nodesMap[id] = tagNode;
 
@@ -129,6 +129,10 @@ export default class TagTree extends EventEmitter<Events> {
 
     if (!target) {
       throw new Error('invalid tag id');
+    }
+
+    if (this.selectedTagId === target.id) {
+      this.selectedTagId = undefined;
     }
 
     delete this.#nodesMap[id];
@@ -176,11 +180,14 @@ export default class TagTree extends EventEmitter<Events> {
       if (isRoot) {
         this.roots.push(child);
         delete child.parentId;
+      } else if (parent) {
+        if (!parent.children) {
+          parent.children = [];
+        }
+        parent.children.push(child);
+        child.parentId = parent.id;
       } else {
-        /* eslint-disable @typescript-eslint/no-non-null-assertion */
-        parent!.children!.push(child);
-        child.parentId = parent!.id;
-        /* eslint-enable @typescript-eslint/no-non-null-assertion */
+        throw new Error('no parent');
       }
     }
 

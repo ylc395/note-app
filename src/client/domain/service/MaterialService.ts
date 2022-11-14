@@ -21,12 +21,12 @@ export default class MaterialService {
     makeObservable(this);
   }
 
-  @action.bound
-  private handleTagRemoved(deletedIds: TagVO['id'][]) {
+  @action
+  private readonly handleTagRemoved = (deletedIds: TagVO['id'][]) => {
     for (const material of this.materials) {
       material.tags = material.tags.filter(({ id }) => !deletedIds.includes(id));
     }
-  }
+  };
 
   @flow.bound
   *uploadFiles(files: File[]) {

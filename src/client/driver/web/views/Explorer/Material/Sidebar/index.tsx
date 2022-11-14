@@ -12,7 +12,7 @@ export default observer(function MaterialSidebar() {
         <div>资料库</div>
         <AddMenu />
       </div>
-      <Collapse expandIconPosition="left">
+      <Collapse expandIconPosition="left" defaultActiveKey={['tag']}>
         <TagTree />
       </Collapse>
     </Resizable>

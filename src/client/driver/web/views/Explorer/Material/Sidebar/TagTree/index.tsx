@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useCallback } from 'react';
 import { computed } from 'mobx';
 import { Tree, Collapse, Button } from '@douyinfe/semi-ui';
 import type { TreeNodeData, TreeProps } from '@douyinfe/semi-ui/lib/es/tree';
@@ -8,9 +8,9 @@ import { container } from 'tsyringe';
 
 import MaterialService from 'service/MaterialService';
 import useContextmenu from 'web/hooks/useContextmenu';
-import type { TagTreeNode } from 'model/TagTree';
 import TagModalForm from './TagModalForm';
 import Contextmenu from './Contextmenu';
+import DeleteConfirm from './DeleteConfirm';
 
 export default observer(function Sidebar() {
   const {
@@ -60,11 +60,15 @@ export default observer(function Sidebar() {
         <Tree
           onChange={selectTag as TreeProps['onChange']}
           treeData={treeData.get()}
-          onContextMenu={contextmenu.open}
+          onContextMenu={useCallback((_: unknown, { value }: TreeNodeData) => {
+            selectTag(value as number);
+            contextmenu.open();
+          }, [])}
         />
         <Contextmenu {...contextmenu} />
       </Collapse.Panel>
       <TagModalForm />
+      <DeleteConfirm />
     </>
   );
 });
