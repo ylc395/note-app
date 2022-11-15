@@ -43,4 +43,7 @@ export const httpClient: Remote = {
   async delete<T>() {
     return {} as T;
   },
+  async patch<T>() {
+    return {} as T;
+  },
 };

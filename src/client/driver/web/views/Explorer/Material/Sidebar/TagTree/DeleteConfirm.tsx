@@ -18,14 +18,10 @@ export default observer(function DeleteConfirm() {
 
   const handleDelete = useCallback(async () => {
     const {
-      tagTree: { deleteTag, selectedTagId },
+      tagTree: { deleteTag },
     } = container.resolve(MaterialService);
 
-    if (!selectedTagId) {
-      throw new Error('no selectedTagId');
-    }
-
-    await deleteTag(selectedTagId, cascade);
+    await deleteTag(cascade);
 
     runInAction(() => {
       menus.isDeleting.set(false);

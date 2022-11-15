@@ -2,7 +2,7 @@ import { observer } from 'mobx-react-lite';
 import { useEffect, useCallback, useMemo, type MouseEvent } from 'react';
 import { computed } from 'mobx';
 import { Tree, Collapse, Button } from '@douyinfe/semi-ui';
-import type { TreeNodeData, TreeProps } from '@douyinfe/semi-ui/lib/es/tree';
+import type { DragProps, OnDragProps, TreeNodeData, TreeProps } from '@douyinfe/semi-ui/lib/es/tree';
 import { IconPlusStroked } from '@douyinfe/semi-icons';
 import { container } from 'tsyringe';
 
@@ -11,12 +11,13 @@ import useContextmenu from 'web/hooks/useContextmenu';
 import TagModalForm from './TagModalForm';
 import Contextmenu from './Contextmenu';
 import DeleteConfirm from './DeleteConfirm';
+import type { TagTreeNode } from 'model/TagTree';
 
 export const panelKey = 'tag';
 
 export default observer(function Sidebar() {
   const {
-    tagTree: { load, startCreatingTag, selectTag, roots },
+    tagTree: { load, startCreatingTag, selectTag, updateTag, roots },
   } = container.resolve(MaterialService);
 
   const treeData = useMemo(
@@ -51,6 +52,9 @@ export default observer(function Sidebar() {
     startCreatingTag();
   }, []);
 
+  const handleDragStart = useCallback((e: DragProps) => selectTag(e.node.value as TagTreeNode['id']), []);
+  const handleDrop = useCallback((e: OnDragProps) => updateTag({ parentId: e.node.value as TagTreeNode['id'] }), []);
+
   useEffect(() => {
     load();
   }, []);
@@ -70,6 +74,9 @@ export default observer(function Sidebar() {
           onChange={selectTag as TreeProps['onChange']}
           treeData={treeData.get()}
           onContextMenu={handleContextmenu}
+          draggable
+          onDragStart={handleDragStart}
+          onDrop={handleDrop}
         />
         <Contextmenu {...contextmenu} />
       </Collapse.Panel>

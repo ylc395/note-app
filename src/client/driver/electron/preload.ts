@@ -8,7 +8,7 @@ const createMethod = <T, H>(method: IpcRequest<unknown>['method']) => {
     const request: IpcRequest<T> = { path, method };
 
     if (payload) {
-      request[method === 'POST' ? 'body' : 'query'] = payload;
+      request[['POST', 'PATCH'].includes(method) ? 'body' : 'query'] = payload;
     }
 
     if (headers) {
@@ -28,6 +28,7 @@ const client: Remote = {
   get: createMethod('GET'),
   post: createMethod('POST'),
   delete: createMethod('DELETE'),
+  patch: createMethod('PATCH'),
 };
 
 contextBridge.exposeInMainWorld('electronIpc', client);

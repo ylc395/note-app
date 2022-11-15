@@ -34,8 +34,11 @@ export default class TagsController {
     return await this.tagService.deleteOne(tagId, cascade);
   }
 
-  @Patch('/tag/:id')
-  async update(@Body(createSchemaPipe(tagPatchDTOSchema)) tagPatch: TagPatchDTO): Promise<void> {
-    return await this.tagService.update(tagPatch);
+  @Patch('/tags/:id')
+  async update(
+    @Param('id', ParseIntPipe) id: TagVO['id'],
+    @Body(createSchemaPipe(tagPatchDTOSchema)) tagPatch: TagPatchDTO,
+  ): Promise<void> {
+    return await this.tagService.update(id, tagPatch);
   }
 }

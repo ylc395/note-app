@@ -1,5 +1,4 @@
 import pick from 'lodash/pick';
-import omit from 'lodash/omit';
 import map from 'lodash/map';
 import isEmpty from 'lodash/isEmpty';
 
@@ -73,10 +72,7 @@ export default class SqliteTagRepository implements TagRepository {
     }
   }
 
-  async update(tagPatch: TagPatchDTO) {
-    await db
-      .knex<Row>(tableName)
-      .update(omit(tagPatch, ['id']))
-      .where('id', tagPatch.id);
+  async update(id: TagVO['id'], tagPatch: TagPatchDTO) {
+    await db.knex<Row>(tableName).update(tagPatch).where('id', id);
   }
 }

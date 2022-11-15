@@ -5,7 +5,7 @@ import { container } from 'tsyringe';
 import EventEmitter from 'eventemitter3';
 
 import { type Remote, token as remoteToken } from 'infra/Remote';
-import type { TagDTO, TagVO, TagQuery } from 'interface/Tag';
+import type { TagDTO, TagVO, TagQuery, TagPatchDTO } from 'interface/Tag';
 import TagForm, { TagFormModel } from './form/TagForm';
 
 export interface TagTreeNode {
@@ -124,18 +124,21 @@ export default class TagTree extends EventEmitter<Events> {
     this.selectedTagId = id;
   }
 
-  readonly deleteTag = async (id: number, cascade: boolean) => {
+  readonly deleteTag = async (cascade: boolean) => {
+    if (!this.selectedTagId) {
+      throw new Error('no selectedTag');
+    }
+
+    const id = this.selectedTagId;
     await this.#remote.delete<void, void, { cascade: boolean }>(`/tags/${id}`, undefined, { cascade });
-    const target = this.#nodesMap[id];
+    const target = this.selectedTag;
 
     if (!target) {
       throw new Error('invalid tag id');
     }
 
     runInAction(() => {
-      if (this.selectedTagId === target.id) {
-        this.selectedTagId = undefined;
-      }
+      this.selectedTagId = undefined;
 
       delete this.#nodesMap[id];
 
@@ -195,5 +198,37 @@ export default class TagTree extends EventEmitter<Events> {
     });
 
     this.emit(Events.Deleted, [target.id]);
+  };
+
+  readonly updateTag = async (tagPatch: TagPatchDTO) => {
+    const id = this.selectedTagId;
+    await this.#remote.patch<TagPatchDTO, void>(`/tags/${id}`, tagPatch);
+
+    runInAction(() => {
+      if (!this.selectedTag) {
+        throw new Error('no selectedTag');
+      }
+
+      if (typeof tagPatch.parentId !== 'undefined' && this.selectedTag.parentId !== tagPatch.parentId) {
+        const newParent = this.#nodesMap[tagPatch.parentId];
+
+        if (newParent) {
+          if (!newParent.children) {
+            newParent.children = [];
+          }
+          newParent.children.push(this.selectedTag);
+        } else {
+          this.roots.push(this.selectedTag);
+        }
+
+        const currentParentChildren = this.selectedTag.parentId
+          ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            this.#nodesMap[this.selectedTag.parentId]!.children!
+          : this.roots;
+        pull(currentParentChildren, this.selectedTag);
+      }
+
+      Object.assign(this.selectedTag, tagPatch);
+    });
   };
 }

@@ -35,13 +35,13 @@ export default class TagService {
     return await this.repository.deleteOne(id, cascade);
   }
 
-  async update(tagPatch: TagPatchDTO) {
-    const isExisting = await this.repository.findOne({ id: tagPatch.id });
+  async update(id: TagVO['id'], tagPatch: TagPatchDTO) {
+    const isExisting = await this.repository.findOne({ id });
 
     if (!isExisting) {
       throw new InvalidInputError({ id: 'not existed' });
     }
 
-    return await this.repository.update(tagPatch);
+    return await this.repository.update(id, tagPatch);
   }
 }
