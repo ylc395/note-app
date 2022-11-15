@@ -17,7 +17,7 @@ export const panelKey = 'tag';
 
 export default observer(function Sidebar() {
   const {
-    tagTree: { load, startCreatingTag, selectTag, updateTag, roots },
+    tagTree: { load, startEditingTag, selectTag, updateTag, roots },
   } = container.resolve(MaterialService);
 
   const treeData = useMemo(
@@ -49,7 +49,7 @@ export default observer(function Sidebar() {
   const handleAddButtonClick = useCallback((e: MouseEvent) => {
     e.stopPropagation();
     selectTag();
-    startCreatingTag();
+    startEditingTag('create');
   }, []);
 
   const handleDragStart = useCallback((e: DragProps) => selectTag(e.node.value as TagTreeNode['id']), []);

@@ -29,6 +29,7 @@ export default class TagTree extends EventEmitter<Events> {
   #nodesMap: Record<TagTreeNode['id'], TagTreeNode> = {};
   @observable.ref editingTag?: TagForm;
   @observable selectedTagId?: TagTreeNode['id'];
+  @observable editingMode?: 'create' | 'rename';
 
   @computed get selectedTag(): TagTreeNode | undefined {
     if (this.selectedTagId) {
@@ -71,14 +72,22 @@ export default class TagTree extends EventEmitter<Events> {
   }
 
   @action.bound
-  startCreatingTag() {
-    if (this.editingTag) {
-      throw new Error('tag form existed!');
+  startEditingTag(mode: 'rename' | 'create') {
+    let tag: TagForm;
+
+    if (mode === 'create') {
+      tag = new TagForm();
+      tag.handleSubmit(this.#createTag);
+    } else {
+      if (!this.selectedTag) {
+        throw new Error('no selectedTag');
+      }
+
+      tag = new TagForm({ name: this.selectedTag.name });
+      tag.handleSubmit(this.updateTag);
     }
 
-    const tag = new TagForm();
-
-    tag.handleSubmit(this.#createTag);
+    this.editingMode = mode;
     this.editingTag = tag;
   }
 
@@ -106,11 +115,11 @@ export default class TagTree extends EventEmitter<Events> {
       }
     });
 
-    this.stopCreatingTag();
+    this.stopEditingTag();
   };
 
   @action.bound
-  stopCreatingTag() {
+  stopEditingTag() {
     if (!this.editingTag) {
       throw new Error('no editing tag');
     }
@@ -230,5 +239,6 @@ export default class TagTree extends EventEmitter<Events> {
 
       Object.assign(this.selectedTag, tagPatch);
     });
+    this.stopEditingTag();
   };
 }

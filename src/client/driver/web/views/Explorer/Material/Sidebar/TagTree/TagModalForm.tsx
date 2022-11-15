@@ -8,7 +8,7 @@ import { useCallback } from 'react';
 
 export default observer(function TagModalForm() {
   const {
-    tagTree: { editingTag, stopCreatingTag, selectedTag },
+    tagTree: { editingTag, stopEditingTag, selectedTag, editingMode },
   } = container.resolve(MaterialService);
 
   const handleInputChange = useCallback(
@@ -18,10 +18,19 @@ export default observer(function TagModalForm() {
   );
 
   return (
-    <Modal title="创建新标签" visible={Boolean(editingTag)} onCancel={stopCreatingTag} onOk={editingTag?.submit}>
+    <Modal
+      title={editingMode === 'create' ? '创建新标签' : '重命名'}
+      visible={Boolean(editingTag)}
+      onCancel={stopEditingTag}
+      onOk={editingTag?.submit}
+    >
       <Form>
-        <Form.Label text="父级标签" />
-        <Input value={selectedTag?.name || '无'} readonly />
+        {editingMode === 'create' && (
+          <>
+            <Form.Label text="父级标签" />
+            <Input value={selectedTag?.name || '无'} readonly />
+          </>
+        )}
         <Form.Label text="标签名" />
         <Input value={editingTag?.values.name} onChange={handleInputChange} />
         <Form.ErrorMessage error={editingTag?.errors.name} />

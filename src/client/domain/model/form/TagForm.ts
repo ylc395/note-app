@@ -5,12 +5,11 @@ import type { TagDTO } from 'interface/Tag';
 export type TagFormModel = Pick<TagDTO, 'name'>;
 
 export default class TagForm extends ModelForm<TagFormModel> {
-  constructor() {
+  constructor(initialValues?: TagFormModel) {
     super();
+    this.values = initialValues || { name: '' };
     makeObservable(this);
   }
 
-  @observable values = {
-    name: '',
-  };
+  @observable values: TagFormModel;
 }

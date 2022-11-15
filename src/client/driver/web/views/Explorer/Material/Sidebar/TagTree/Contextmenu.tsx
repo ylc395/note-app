@@ -1,17 +1,16 @@
 import { observer } from 'mobx-react-lite';
-import { action, observable } from 'mobx';
+import { action } from 'mobx';
 import { useMemo } from 'react';
 import { Dropdown } from '@douyinfe/semi-ui';
 import { container } from 'tsyringe';
 
 import type { Contextmenu } from 'web/hooks/useContextmenu';
 import MaterialService from 'service/MaterialService';
-
-export const menus = { isDeleting: observable.box(false) };
+import { isDeleting } from './DeleteConfirm';
 
 export default observer(function Contextmenu(props: Contextmenu) {
   const {
-    tagTree: { startCreatingTag },
+    tagTree: { startEditingTag },
   } = container.resolve(MaterialService);
 
   return (
@@ -29,7 +28,15 @@ export default observer(function Contextmenu(props: Contextmenu) {
             node: 'item',
             onClick: action(() => {
               props.close();
-              startCreatingTag();
+              startEditingTag('create');
+            }),
+          },
+          {
+            name: '重命名',
+            node: 'item',
+            onClick: action(() => {
+              props.close();
+              startEditingTag('rename');
             }),
           },
           {
@@ -37,7 +44,7 @@ export default observer(function Contextmenu(props: Contextmenu) {
             node: 'item',
             onClick: action(() => {
               props.close();
-              menus.isDeleting.set(true);
+              isDeleting.set(true);
             }),
           },
         ],
