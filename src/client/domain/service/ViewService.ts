@@ -1,7 +1,7 @@
 import { observable, makeObservable, action } from 'mobx';
 import { singleton } from 'tsyringe';
 
-import { KnowledgeTypes } from 'model/content/constants';
+import { KnowledgeTypes } from 'model/constants';
 
 @singleton()
 export default class ViewService {

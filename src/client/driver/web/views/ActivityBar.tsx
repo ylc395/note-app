@@ -4,7 +4,7 @@ import { Nav } from '@douyinfe/semi-ui';
 import type { OnSelectedData } from '@douyinfe/semi-ui/lib/es/navigation';
 import { IconBox, IconBookStroked } from '@douyinfe/semi-icons';
 
-import { KnowledgeTypes } from 'model/content/constants';
+import { KnowledgeTypes } from 'model/constants';
 import ViewService from 'service/ViewService';
 import { useCallback } from 'react';
 
