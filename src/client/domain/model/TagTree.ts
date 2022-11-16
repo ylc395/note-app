@@ -126,6 +126,7 @@ export default class TagTree extends EventEmitter<Events> {
 
     this.editingTag.destroy();
     this.editingTag = undefined;
+    this.editingMode = undefined;
   }
 
   @action.bound
@@ -239,6 +240,9 @@ export default class TagTree extends EventEmitter<Events> {
 
       Object.assign(this.selectedTag, tagPatch);
     });
-    this.stopEditingTag();
+
+    if (this.editingMode === 'rename') {
+      this.stopEditingTag();
+    }
   };
 }

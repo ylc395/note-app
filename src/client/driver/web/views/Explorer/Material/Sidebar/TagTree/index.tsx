@@ -17,7 +17,7 @@ export const panelKey = 'tag';
 
 export default observer(function Sidebar() {
   const {
-    tagTree: { load, startEditingTag, selectTag, updateTag, roots },
+    tagTree: { load, startEditingTag, selectTag, updateTag, selectedTagId, roots },
   } = container.resolve(MaterialService);
 
   const treeData = useMemo(
@@ -72,9 +72,13 @@ export default observer(function Sidebar() {
       >
         <Tree
           onChange={selectTag as TreeProps['onChange']}
-          treeData={treeData.get()}
           onContextMenu={handleContextmenu}
+          value={selectedTagId}
+          treeData={treeData.get()}
           draggable
+          filterTreeNode
+          hideDraggingNode
+          searchClassName="p-0"
           onDragStart={handleDragStart}
           onDrop={handleDrop}
         />
