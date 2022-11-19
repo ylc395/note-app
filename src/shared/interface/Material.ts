@@ -5,6 +5,7 @@ import type { TagVO } from './Tag';
 export interface MaterialQuery {
   tag?: TagVO['id'];
   sourceUrl?: string;
+  id?: MaterialVO['id'][];
 }
 
 export const materialDTOSchema = object({
@@ -18,8 +19,6 @@ export const materialDTOSchema = object({
 export const materialsDTOSchema = array(materialDTOSchema);
 
 export type MaterialDTO = Infer<typeof materialDTOSchema>;
-
-export type CreatedMaterialVO = Pick<MaterialVO, 'id' | 'document'>;
 
 export type MaterialVO = {
   id: number;

@@ -3,7 +3,7 @@ import { observable, makeObservable, action, runInAction } from 'mobx';
 
 import { type Remote, token as remoteToken } from 'infra/Remote';
 import type { MaterialDTO, MaterialVO } from 'interface/Material';
-import type { FileDTO, CreatedFileVO } from 'interface/File';
+import type { FileDTO, FileVO } from 'interface/File';
 import type { TagVO } from 'interface/Tag';
 import TagTree, { Events as TagTreeEvents } from 'model/TagTree';
 import MaterialsForm, { type MaterialsFormModel } from 'model/form/MaterialForm';
@@ -13,7 +13,7 @@ export default class MaterialService {
   readonly #remote: Remote = container.resolve(remoteToken);
   readonly tagTree = new TagTree();
   @observable materials: MaterialVO[] = [];
-  #files: CreatedFileVO[] = [];
+  #files: FileVO[] = [];
   @observable.ref editingMaterials?: MaterialsForm;
 
   constructor() {
@@ -33,7 +33,7 @@ export default class MaterialService {
       return;
     }
 
-    const { body: createdFiles } = await this.#remote.post<FileDTO[], CreatedFileVO[]>(
+    const { body: createdFiles } = await this.#remote.post<FileDTO[], Required<FileVO>[]>(
       '/files',
       files.map(({ type: mimeType, path }) => ({ isTemp: true, mimeType, sourceUrl: `file://${path}` })),
     );

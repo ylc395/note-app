@@ -27,7 +27,7 @@ export const Body = createParamDecorator((_, ctx: ExecutionContext) => {
 });
 
 export const Query = createParamDecorator((_, ctx: ExecutionContext) => {
-  return ctx.getArgByIndex<IpcRequest<unknown>>(0)?.query;
+  return ctx.getArgByIndex<IpcRequest<unknown>>(0)?.query || {};
 });
 
 export const Headers = createParamDecorator((filed, ctx: ExecutionContext) => {

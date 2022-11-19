@@ -13,7 +13,7 @@ import { tableName as tagsTableName } from 'driver/sqlite/tagSchema';
 
 export default class SqliteMaterialRepository implements MaterialRepository {
   async create(materials: MaterialDTO[]) {
-    let createdMaterials: MaterialRow[] = [];
+    let createdMaterials: Pick<MaterialRow, 'id'>[] = [];
     const trx = await db.knex.transaction();
 
     try {
@@ -25,7 +25,7 @@ export default class SqliteMaterialRepository implements MaterialRepository {
             entityId: v.fileId,
           })),
         )
-        .returning(db.knex.raw('*'));
+        .returning(['id']);
 
       const materialToTagRecords = materials.flatMap(({ tags }, i) => {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -44,8 +44,7 @@ export default class SqliteMaterialRepository implements MaterialRepository {
 
       await trx.commit();
 
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      return createdMaterials.map((material, i) => ({ ...material, tags: materials[i]!.tags || [] }));
+      return createdMaterials;
     } catch (error) {
       await trx.rollback(error);
       throw error;
@@ -53,7 +52,7 @@ export default class SqliteMaterialRepository implements MaterialRepository {
   }
 
   async findAll(query: MaterialQuery) {
-    const rows = await db.knex
+    const sqlQuery = db.knex
       .select(
         `${materialsTableName}.id`,
         `${materialsTableName}.name`,
@@ -78,6 +77,11 @@ export default class SqliteMaterialRepository implements MaterialRepository {
       .leftJoin(tagsTableName, `${tagsTableName}.id`, '=', `${entityToTagTableName}.tagId`)
       .groupBy(`${materialsTableName}.id`);
 
+    if (query.id) {
+      sqlQuery.andWhere(`${materialsTableName}.id`, 'in', query.id);
+    }
+
+    const rows = await sqlQuery;
     return rows.map((row) => {
       const tagIds = row.tagId?.split(',').map(Number) || [];
       const tagNames = row.tagName?.split(',') || [];

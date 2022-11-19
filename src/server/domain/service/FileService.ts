@@ -54,6 +54,9 @@ export default class FileService {
     return {
       id: fileId,
       sourceUrl,
+      mimeType,
+      deviceName,
+      size: data.byteLength,
       isDuplicated: Boolean(sameFile && !sameFile.isTemp),
     };
   }

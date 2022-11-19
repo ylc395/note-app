@@ -1,5 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import map from 'lodash/map';
 
 import { token as materialRepositoryToken, type MaterialRepository } from 'service/repository/MaterialRepository';
 import { token as tagRepositoryToken, type TagRepository } from 'service/repository/TagRepository';
@@ -36,7 +37,7 @@ export default class MaterialService {
       }
     }
 
-    const createdMaterialIds = await this.repository.create(materials);
+    const createdMaterials = await this.repository.create(materials);
 
     for (const { fileId } of materials) {
       if (typeof fileId !== 'undefined') {
@@ -45,7 +46,7 @@ export default class MaterialService {
       }
     }
 
-    return createdMaterialIds;
+    return await this.repository.findAll({ id: map(createdMaterials, 'id') });
   }
 
   async findAll(query: MaterialQuery) {

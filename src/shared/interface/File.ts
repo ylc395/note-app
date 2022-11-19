@@ -6,13 +6,8 @@ export interface FileVO {
   mimeType: string;
   size: number;
   deviceName: string;
+  isDuplicated?: boolean;
 }
-
-export type CreatedFileVO = {
-  id: FileVO['id'];
-  isDuplicated: boolean;
-  sourceUrl: string;
-};
 
 export const FileDTOSchema = object({
   sourceUrl: string().url(),
