@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 
-import type { FileDTO } from 'interface/File';
+import type { FileDTO, FileVO } from 'interface/File';
 import { Events, type FileAddedEvent } from 'model/File';
 import { InvalidInputError } from 'model/Error';
 
@@ -61,5 +61,15 @@ export default class FileService {
   @OnEvent(Events.Added, { async: true })
   async ocr({ fileId }: FileAddedEvent) {
     await this.repository.updateTextContent(fileId, 'aaaaa');
+  }
+
+  async getBlob(fileId: FileVO['id']) {
+    const blob = await this.repository.findData({ id: fileId });
+
+    if (!blob) {
+      throw new InvalidInputError({ id: `invalid id ${fileId}` });
+    }
+
+    return blob;
   }
 }

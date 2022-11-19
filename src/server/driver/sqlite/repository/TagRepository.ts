@@ -39,16 +39,17 @@ export default class SqliteTagRepository implements TagRepository {
 
   async deleteOne(id: TagVO['id'], cascade: boolean) {
     const trx = await db.knex.transaction();
+    let count = 0;
 
     try {
       const deletedIds: Row['id'][] = [id];
       const row = await trx<Row>(tableName).where({ id }).first();
 
       if (!row) {
-        return;
+        return count;
       }
 
-      await trx<Row>(tableName).where({ id }).del();
+      count += await trx<Row>(tableName).where({ id }).del();
 
       if (cascade) {
         let idsToDelete: Row['id'][];
@@ -56,7 +57,7 @@ export default class SqliteTagRepository implements TagRepository {
 
         do {
           idsToDelete = map(await trx<Row>(tableName).select('id').whereIn('parentId', parentIds), 'id');
-          await trx<Row>(tableName).whereIn('id', idsToDelete).del();
+          count += await trx<Row>(tableName).whereIn('id', idsToDelete).del();
           parentIds = idsToDelete;
           deletedIds.push(...idsToDelete);
         } while (idsToDelete.length > 0);
@@ -70,9 +71,11 @@ export default class SqliteTagRepository implements TagRepository {
       await trx.rollback(error);
       throw error;
     }
+
+    return count;
   }
 
   async update(id: TagVO['id'], tagPatch: TagPatchDTO) {
-    await db.knex<Row>(tableName).update(tagPatch).where('id', id);
+    return await db.knex<Row>(tableName).update(tagPatch).where('id', id);
   }
 }

@@ -11,6 +11,6 @@ export interface FileQuery {
 export interface FileRepository {
   create: (file: File) => Promise<NonNullable<File['id']>>;
   findOne: (query: FileQuery) => Promise<Omit<File, 'data'> | undefined>;
-  updateTextContent: (id: NonNullable<File['id']>, text: string) => Promise<void>;
+  updateTextContent: (id: NonNullable<File['id']>, text: string) => Promise<number>;
   findData: (query: FileQuery) => Promise<ArrayBuffer | undefined>;
 }
