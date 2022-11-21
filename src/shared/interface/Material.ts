@@ -26,7 +26,7 @@ export type MaterialVO = {
   comment: string;
   rating: number;
   file?: FileVO;
-  document?: unknown;
+  note?: unknown;
   tags: TagVO[];
   createdAt: number;
   updatedAt: number;

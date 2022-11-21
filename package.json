@@ -46,6 +46,7 @@
     "fs-extra": "^10.1.0",
     "knex": "^2.3.0",
     "lodash": "^4.17.21",
+    "markerjs2": "^2.28.0",
     "mobx": "^6.6.2",
     "mobx-react-lite": "^3.4.0",
     "path-to-regexp": "^6.2.1",

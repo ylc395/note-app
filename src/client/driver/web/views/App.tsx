@@ -5,15 +5,17 @@ import './index.css';
 
 import ActivityBar from './ActivityBar';
 import MaterialExplorer from './Explorer/Material';
+import Workbench from './Workbench';
 
 export default observer(function App() {
   const getContainer = useCallback(() => document.querySelector('#app') as HTMLElement, []);
 
   return (
     <ConfigProvider getPopupContainer={getContainer}>
-      <main className="flex h-screen">
+      <main className="flex">
         <ActivityBar />
         <MaterialExplorer />
+        <Workbench />
       </main>
     </ConfigProvider>
   );

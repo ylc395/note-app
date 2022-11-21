@@ -11,7 +11,7 @@ export default abstract class ModelForm<T> {
   constructor() {
     makeObservable(this);
   }
-  @observable.shallow errors: Issues<T> = {};
+  @observable.ref errors: Issues<T> = {};
   #errorFieldValidateStoppers = new Set<IReactionDisposer>();
   #submitHandler?: (values: T) => Promise<void>;
 

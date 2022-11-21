@@ -8,7 +8,12 @@ import MaterialView, { panelKey as materialViewPanelKey } from './MaterialView';
 
 export default observer(function MaterialSidebar() {
   return (
-    <Resizable enable={{ right: true }} className="border-r bg-gray-100">
+    <Resizable
+      enable={{ right: true }}
+      minWidth={200}
+      defaultSize={{ width: 200, height: 'auto' }}
+      className="border-r bg-gray-100"
+    >
       <div className="flex items-center justify-between">
         <div>资料库</div>
         <AddMenu />

@@ -2369,6 +2369,11 @@ make-fetch-happen@^9.1.0:
     socks-proxy-agent "^6.0.0"
     ssri "^8.0.0"
 
+markerjs2@^2.28.0:
+  version "2.28.0"
+  resolved "https://registry.yarnpkg.com/markerjs2/-/markerjs2-2.28.0.tgz#df14e61a0c87a5a0a110b6fecacc71ed0e67097f"
+  integrity sha512-vWKE7QvOA5mq7/UoepdMPkDMX0+fUcdnOlpO8veqLSNXDcuoF3HnEcxwd2ZVKybvcJsRm1lbhnlBXazNgZZmmA==
+
 matcher@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/matcher/-/matcher-3.0.0.tgz#bd9060f4c5b70aa8041ccc6f80368760994f30ca"
