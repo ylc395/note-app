@@ -2,13 +2,8 @@ import { observer } from 'mobx-react-lite';
 import { useEffect, useMemo, useRef } from 'react';
 import { MarkerArea } from 'markerjs2';
 
-import type ImageWindow from 'model/window/MaterialWindow';
-
-export default observer(function ImageWindow({ imageWindow }: { imageWindow: ImageWindow }) {
-  const url = useMemo(
-    () => (imageWindow.blob ? window.URL.createObjectURL(new Blob([imageWindow.blob])) : ''),
-    [imageWindow.blob],
-  );
+export default observer(function ImageWindow({ blob }: { blob?: ArrayBuffer }) {
+  const url = useMemo(() => (blob ? window.URL.createObjectURL(new Blob([blob])) : ''), [blob]);
 
   const imgRef = useRef<HTMLImageElement>(null);
   const divRef = useRef<HTMLDivElement>(null);

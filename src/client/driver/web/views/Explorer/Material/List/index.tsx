@@ -4,12 +4,12 @@ import { Resizable } from 're-resizable';
 import { container } from 'tsyringe';
 
 import MaterialService from 'service/MaterialService';
-import PanelService from 'service/PanelService';
+import WorkbenchService from 'service/WorkbenchService';
 import type { MaterialVO } from 'interface/Material';
 
 export default observer(function MaterialSidebar() {
   const { materials, queryMaterials } = container.resolve(MaterialService);
-  const { open } = container.resolve(PanelService);
+  const { open } = container.resolve(WorkbenchService);
 
   useEffect(() => {
     queryMaterials();

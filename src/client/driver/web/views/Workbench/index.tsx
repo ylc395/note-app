@@ -1,16 +1,16 @@
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 
-import PanelService from 'service/PanelService';
-import ImageWindow from './ImageWindow';
+import WorkbenchService from 'service/WorkbenchService';
+import ImageEditor from './ImageEditor';
 
 export default observer(function Workbench() {
-  const { panels } = container.resolve(PanelService);
+  const { windows } = container.resolve(WorkbenchService);
 
   return (
     <div className="flex-grow">
-      {panels.map((panel) => (
-        <div key={panel.id}>{panel.currentTab && <ImageWindow imageWindow={panel.currentTab} />}</div>
+      {windows.map((w) => (
+        <div key={w.id}>{w.currentTab?.type.startsWith('image') && <ImageEditor blob={w.currentTab.blob} />}</div>
       ))}
     </div>
   );
