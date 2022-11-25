@@ -1,14 +1,14 @@
 import { observer } from 'mobx-react-lite';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { MarkerArea } from 'markerjs2';
 
 export default observer(function ImageWindow({ blob }: { blob?: ArrayBuffer }) {
-  const url = useMemo(() => (blob ? window.URL.createObjectURL(new Blob([blob])) : ''), [blob]);
-
   const imgRef = useRef<HTMLImageElement>(null);
   const divRef = useRef<HTMLDivElement>(null);
+  const markerAreaRef = useRef<MarkerArea>();
+  const [blobSrc, setBlobSrc] = useState<string>();
 
-  useEffect(() => {
+  const handleLoad = () => {
     if (!imgRef.current || !divRef.current) {
       throw new Error('no img ');
     }
@@ -24,18 +24,29 @@ export default observer(function ImageWindow({ blob }: { blob?: ArrayBuffer }) {
     markerArea.settings.displayMode = 'popup';
     markerArea.settings.popupMargin = 0;
     markerArea.zoomSteps = [1, 1.5, 2, 4, 6, 8];
+    markerArea.zoomLevel = 1;
+    markerArea.show();
 
-    imgRef.current.addEventListener('load', () => {
-      markerArea.zoomLevel = 1;
-      markerArea.show();
-    });
+    markerAreaRef.current = markerArea;
+  };
 
-    return () => markerArea.close();
-  }, []);
+  useEffect(() => {
+    if (!blob) {
+      return;
+    }
+
+    const blobSrc = window.URL.createObjectURL(new Blob([blob]));
+    setBlobSrc(blobSrc);
+
+    return () => {
+      markerAreaRef.current?.close();
+      window.URL.revokeObjectURL(blobSrc);
+    };
+  }, [blob]);
 
   return (
     <div ref={divRef} className="overflow-y-hidden h-screen relative justify-center items-center flex flex-wrap">
-      <img ref={imgRef} src={url}></img>
+      <img ref={imgRef} src={blobSrc} onLoad={handleLoad}></img>
     </div>
   );
 });

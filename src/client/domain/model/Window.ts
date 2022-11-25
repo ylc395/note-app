@@ -1,26 +1,52 @@
 import type { MaterialVO } from 'interface/Material';
 import { action, makeObservable, observable } from 'mobx';
-import uid from 'lodash/uniqueId';
 
 import MaterialEditor from './editor/MaterialEditor';
 
 type Tab = MaterialEditor;
 export type Openable = MaterialVO;
+export type TabVO = { type: 'material'; id: MaterialVO['id']; focused?: true };
 
 export default class Window {
-  id = uid('window-');
   @observable.ref currentTab?: Tab;
   @observable.shallow tabs: Tab[] = [];
-  constructor() {
+  constructor(tabs?: TabVO[]) {
+    this.loadTabs(tabs);
     makeObservable(this);
   }
 
-  @action.bound
-  createTab(entity: Openable) {
-    const tab = new MaterialEditor(entity);
-    this.tabs.push(tab);
+  @action
+  private createTab(tab: TabVO) {
+    let editor: MaterialEditor;
 
-    return tab;
+    if (tab.type === 'material') {
+      editor = new MaterialEditor(tab.id);
+    } else {
+      throw new Error('unknown type');
+    }
+
+    this.tabs.push(editor);
+
+    return editor;
+  }
+
+  @action
+  private loadTabs(tabs?: TabVO[]) {
+    if (!tabs) {
+      return;
+    }
+
+    if (tabs.length === 0) {
+      throw new Error('empty tabs list');
+    }
+
+    for (const { id, type, focused } of tabs) {
+      const tab = this.createTab({ id, type });
+
+      if (focused) {
+        this.currentTab = tab;
+      }
+    }
   }
 
   @action.bound
@@ -34,10 +60,8 @@ export default class Window {
 
   @action.bound
   open(entity: Openable) {
-    const existedTab = this.tabs
-      .filter((tab) => tab instanceof MaterialEditor)
-      .find((tab) => tab.materialId === entity.id);
+    const existedTab = this.tabs.find((tab) => tab.materialId === entity.id);
 
-    this.currentTab = existedTab || this.createTab(entity);
+    this.currentTab = existedTab || this.createTab({ type: 'material', id: entity.id });
   }
 }

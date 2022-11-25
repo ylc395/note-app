@@ -5,7 +5,7 @@ import map from 'lodash/map';
 import { token as materialRepositoryToken, type MaterialRepository } from 'service/repository/MaterialRepository';
 import { token as tagRepositoryToken, type TagRepository } from 'service/repository/TagRepository';
 import { token as fileRepositoryToken, type FileRepository } from 'service/repository/FileRepository';
-import type { MaterialDTO, MaterialQuery } from 'interface/Material';
+import type { MaterialDTO, MaterialQuery, MaterialVO } from 'interface/Material';
 import { Events as FileEvents, type FileAddedEvent } from 'model/File';
 import { InvalidInputError } from 'model/Error';
 
@@ -51,5 +51,15 @@ export default class MaterialService {
 
   async findAll(query: MaterialQuery) {
     return await this.repository.findAll(query);
+  }
+
+  async findOne(id: MaterialVO['id']) {
+    const rows = await this.repository.findAll({ id: [id] });
+
+    if (!rows[0]) {
+      throw new InvalidInputError({ materialId: `无效的 material id: ${id}` });
+    }
+
+    return rows[0];
   }
 }

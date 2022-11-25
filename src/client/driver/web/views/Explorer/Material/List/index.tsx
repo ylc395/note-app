@@ -17,7 +17,7 @@ export default observer(function MaterialSidebar() {
 
   const handleClick = useCallback((material: MaterialVO) => {
     return () => {
-      open(material);
+      open(material, false);
     };
   }, []);
 
