@@ -4,6 +4,7 @@ import { container } from 'tsyringe';
 
 import WorkbenchService, { type WindowId } from 'service/WorkbenchService';
 import ImageEditor from './ImageEditor';
+import Tabs from './Tabs';
 
 export default observer(function Window({ path, id }: { path: MosaicBranch[]; id: WindowId }) {
   const { windowMap } = container.resolve(WorkbenchService);
@@ -14,7 +15,7 @@ export default observer(function Window({ path, id }: { path: MosaicBranch[]; id
   }
 
   return (
-    <MosaicWindow path={path} title="">
+    <MosaicWindow path={path} title="" renderToolbar={() => <Tabs id={id} />}>
       {w.currentTab?.type === 'image' ? <ImageEditor blob={w.currentTab.blob} /> : null}
     </MosaicWindow>
   );

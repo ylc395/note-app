@@ -1,10 +1,12 @@
 import { computed, makeObservable, observable, runInAction } from 'mobx';
 import { container } from 'tsyringe';
+import uid from 'lodash/uniqueId';
 
 import type { MaterialVO } from 'interface/Material';
 import { type Remote, token as remoteToken } from 'infra/Remote';
 
 export default class MaterialEditor {
+  readonly id = uid('editor-');
   readonly #remote: Remote = container.resolve(remoteToken);
   @observable.ref blob?: ArrayBuffer;
   @observable.ref material?: MaterialVO;

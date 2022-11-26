@@ -64,4 +64,30 @@ export default class Window {
 
     this.currentTab = existedTab || this.createTab({ type: 'material', id: entity.id });
   }
+
+  @action.bound
+  switchToTab(tabId: Tab['id']) {
+    const existedTab = this.tabs.find(({ id }) => id === tabId);
+
+    if (!existedTab) {
+      throw new Error('no target tab');
+    }
+
+    this.currentTab = existedTab;
+  }
+
+  @action.bound
+  closeTab(tabId: Tab['id']) {
+    const existedTabIndex = this.tabs.findIndex(({ id }) => id === tabId);
+
+    if (existedTabIndex === -1) {
+      throw new Error('no target tab');
+    }
+
+    this.tabs.splice(existedTabIndex, 1);
+
+    if (this.currentTab?.id === tabId) {
+      this.currentTab = this.tabs[existedTabIndex] || this.tabs[existedTabIndex - 1];
+    }
+  }
 }
