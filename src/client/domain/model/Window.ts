@@ -1,5 +1,6 @@
+import EventEmitter from 'eventemitter3';
 import type { MaterialVO } from 'interface/Material';
-import { action, makeObservable, observable } from 'mobx';
+import { action, makeObservable, observable, has } from 'mobx';
 
 import MaterialEditor from './editor/MaterialEditor';
 
@@ -7,10 +8,15 @@ type Tab = MaterialEditor;
 export type Openable = MaterialVO;
 export type TabVO = { type: 'material'; id: MaterialVO['id']; focused?: true };
 
-export default class Window {
+export enum Events {
+  Closed = 'window.closed',
+}
+
+export default class Window extends EventEmitter<Events> {
   @observable.ref currentTab?: Tab;
   @observable.shallow tabs: Tab[] = [];
   constructor(tabs?: TabVO[]) {
+    super();
     this.loadTabs(tabs);
     makeObservable(this);
   }
@@ -87,7 +93,19 @@ export default class Window {
     this.tabs.splice(existedTabIndex, 1);
 
     if (this.currentTab?.id === tabId) {
-      this.currentTab = this.tabs[existedTabIndex] || this.tabs[existedTabIndex - 1];
+      this.currentTab =
+        (has(this.tabs, String(existedTabIndex)) && this.tabs[existedTabIndex]) ||
+        (has(this.tabs, String(existedTabIndex)) && this.tabs[existedTabIndex - 1]) ||
+        undefined;
     }
+
+    if (this.tabs.length === 0) {
+      this.destroy();
+    }
+  }
+
+  private destroy() {
+    this.emit(Events.Closed);
+    this.removeAllListeners();
   }
 }

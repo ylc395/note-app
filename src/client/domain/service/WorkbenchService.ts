@@ -4,7 +4,7 @@ import uid from 'lodash/uniqueId';
 import cloneDeepWith from 'lodash/cloneDeepWith';
 import { type MosaicNode, getLeaves } from 'react-mosaic-component';
 
-import Window, { type Openable, type TabVO } from 'model/Window';
+import Window, { type Openable, type TabVO, Events as WindowEvents } from 'model/Window';
 import storage from 'web/utils/storage';
 
 const WORKBENCH_WINDOWS_KEY = 'workbench.windows';
@@ -43,9 +43,8 @@ export default class WorkbenchService {
     const oldIdToNewId: Record<WindowId, WindowId> = {};
 
     for (const id of windowIds) {
-      const newId = getUid();
+      const [newId] = this.createWindow(windows[id]);
       oldIdToNewId[id] = newId;
-      this.windowMap.set(newId, new Window(windows[id]));
     }
 
     this.layout =
@@ -61,6 +60,17 @@ export default class WorkbenchService {
     this.currentWindowId = oldIdToNewId[focused];
   }
 
+  @action
+  private createWindow(tabs?: TabVO[]) {
+    const windowId = getUid();
+    const newWindow = new Window(tabs);
+    this.windowMap.set(windowId, newWindow);
+
+    newWindow.on(WindowEvents.Closed, () => this.closeWindow(windowId));
+
+    return [windowId, newWindow] as const;
+  }
+
   @action.bound
   open(entity: Openable, inNewWindow: boolean) {
     let targetWindow: Window | undefined;
@@ -68,15 +78,15 @@ export default class WorkbenchService {
     if (this.layout && !inNewWindow) {
       targetWindow = this.currentWindowId ? this.windowMap.get(this.currentWindowId) : undefined;
     } else {
-      const windowId = getUid();
-      targetWindow = new Window();
-      this.windowMap.set(windowId, targetWindow);
+      const [windowId, newWindow] = this.createWindow();
+
+      targetWindow = newWindow;
 
       if (!this.layout) {
         this.layout = windowId;
       } else {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        this.splitWindow(this.currentWindowId!);
+        this.splitWindow(this.currentWindowId!, windowId);
       }
 
       this.currentWindowId = windowId;
@@ -90,34 +100,79 @@ export default class WorkbenchService {
   }
 
   @action
-  private splitWindow(windowId: WindowId, node?: MosaicNode<WindowId>): void {
-    if (!this.layout) {
+  private splitWindow(windowId: WindowId, newWindowId: WindowId, node?: MosaicNode<WindowId>): void {
+    const _node = node || this.layout;
+
+    if (!_node) {
       throw new Error('no layout');
     }
-
-    const _node = node || this.layout;
 
     if (typeof _node === 'string') {
       return;
     }
 
     if (_node.first === windowId) {
-      _node.first = { direction: 'row', first: _node.first, second: windowId };
+      _node.first = { direction: 'row', first: _node.first, second: newWindowId };
       return;
     }
 
     if (_node.second === windowId) {
-      _node.second = { direction: 'row', first: _node.second, second: windowId };
+      _node.second = { direction: 'row', first: _node.second, second: newWindowId };
       return;
     }
 
-    this.splitWindow(windowId, _node.first);
-    this.splitWindow(windowId, _node.second);
+    this.splitWindow(windowId, newWindowId, _node.first);
+    this.splitWindow(windowId, newWindowId, _node.second);
   }
 
   @action.bound
   updateLayout(node: MosaicNode<WindowId> | null) {
     this.layout = node || undefined;
+  }
+
+  @action
+  private closeWindow(windowId: WindowId, node?: MosaicNode<WindowId>, parentNode?: MosaicNode<WindowId>) {
+    if (this.currentWindowId === windowId) {
+      this.currentWindowId = undefined;
+    }
+
+    if (this.layout === windowId) {
+      this.layout = undefined;
+      this.windowMap.delete(windowId);
+      return;
+    }
+
+    const _node = node || this.layout;
+
+    if (!_node) {
+      throw new Error('no layout');
+    }
+
+    if (typeof _node === 'string') {
+      return;
+    }
+
+    if (_node.first !== windowId && _node.second !== windowId) {
+      this.closeWindow(windowId, _node.first, _node);
+      this.closeWindow(windowId, _node.second, _node);
+      return;
+    }
+
+    const leftBranch = _node.first === windowId ? 'second' : 'first';
+
+    if (!parentNode || typeof parentNode !== 'object') {
+      throw new Error('no parent');
+    }
+
+    if (parentNode.first === _node) {
+      parentNode.first = _node[leftBranch];
+    }
+
+    if (parentNode.second === _node) {
+      parentNode.second = _node[leftBranch];
+    }
+
+    this.windowMap.delete(windowId);
   }
 
   destroy() {
