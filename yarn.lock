@@ -79,7 +79,7 @@
     memoize-one "^5.2.1"
     scroll-into-view-if-needed "^2.2.24"
 
-"@douyinfe/semi-icons@2.23.1", "@douyinfe/semi-icons@^2.23.1":
+"@douyinfe/semi-icons@2.23.1":
   version "2.23.1"
   resolved "https://registry.yarnpkg.com/@douyinfe/semi-icons/-/semi-icons-2.23.1.tgz#2ec27b6e1c37bbb59bf21ac08740c989416893bd"
   integrity sha512-Q1vBqbZT8RFyj5pW8f4FISppis+GYE1Jf3R4L0fMzwHAf0nh1UqpSyLHRG9PxhsQjKAeqfQ4NoSRpt0Ykxl3zA==
@@ -3092,6 +3092,11 @@ react-draggable@^4.0.3:
   dependencies:
     clsx "^1.1.1"
     prop-types "^15.8.1"
+
+react-icons@^4.6.0:
+  version "4.6.0"
+  resolved "https://registry.yarnpkg.com/react-icons/-/react-icons-4.6.0.tgz#f83eda179af5d02c047449a20b702c858653d397"
+  integrity sha512-rR/L9m9340yO8yv1QT1QurxWQvWpbNHqVX0fzMln2HEb9TEIrQRGsqiNFQfiv9/JEUbyHmHPlNTB2LWm2Ttz0g==
 
 react-is@^16.13.1, react-is@^16.7.0:
   version "16.13.1"

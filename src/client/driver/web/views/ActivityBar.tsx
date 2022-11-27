@@ -2,7 +2,8 @@ import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 import { Nav } from '@douyinfe/semi-ui';
 import type { OnSelectedData } from '@douyinfe/semi-ui/lib/es/navigation';
-import { IconBox, IconBookStroked } from '@douyinfe/semi-icons';
+import { FaBoxes } from 'react-icons/fa';
+import { SlNotebook } from 'react-icons/sl';
 
 import { KnowledgeTypes } from 'model/constants';
 import ViewService from 'service/ViewService';
@@ -23,8 +24,8 @@ export default observer(function ActivityBar() {
       onSelect={handleSelect}
       className="h-screen"
       items={[
-        { itemKey: KnowledgeTypes.Materials, text: '资料库', icon: <IconBox /> },
-        { itemKey: KnowledgeTypes.Notes, text: '笔记本', icon: <IconBookStroked /> },
+        { itemKey: KnowledgeTypes.Materials, text: '资料库', icon: <FaBoxes /> },
+        { itemKey: KnowledgeTypes.Notes, text: '笔记本', icon: <SlNotebook /> },
       ]}
     />
   );

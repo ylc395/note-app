@@ -3,7 +3,7 @@ import { useEffect, useCallback, useMemo, type MouseEvent } from 'react';
 import { computed } from 'mobx';
 import { Tree, Collapse, Button } from '@douyinfe/semi-ui';
 import type { DragProps, OnDragProps, TreeNodeData, TreeProps } from '@douyinfe/semi-ui/lib/es/tree';
-import { IconPlusStroked } from '@douyinfe/semi-icons';
+import { BiPlus } from 'react-icons/bi';
 import { container } from 'tsyringe';
 
 import MaterialService from 'service/MaterialService';
@@ -65,7 +65,7 @@ export default observer(function Sidebar() {
         header={
           <div className="flex justify-between flex-grow items-center">
             <span>标签管理器</span>
-            <Button size="small" onClick={handleAddButtonClick} icon={<IconPlusStroked />} />
+            <Button size="small" onClick={handleAddButtonClick} icon={<BiPlus />} />
           </div>
         }
         itemKey={panelKey}

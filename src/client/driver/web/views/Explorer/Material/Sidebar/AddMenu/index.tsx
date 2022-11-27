@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import { Button, Dropdown } from '@douyinfe/semi-ui';
-import { IconPlusStroked } from '@douyinfe/semi-icons';
+import { BiPlus } from 'react-icons/bi';
 import { container } from 'tsyringe';
 
 import MaterialService from 'service/MaterialService';
@@ -27,7 +27,7 @@ export default observer(function AddMenu() {
           { node: 'item', name: '上传目录' },
         ]}
       >
-        <Button icon={<IconPlusStroked />} />
+        <Button icon={<BiPlus />} />
       </Dropdown>
       <MaterialModalForm />
     </>

@@ -23,6 +23,7 @@ export default observer(function TagModalForm() {
       visible={Boolean(editingTag)}
       onCancel={stopEditingTag}
       onOk={editingTag?.submit}
+      closable={false}
     >
       <Form>
         {editingMode === 'create' && (
