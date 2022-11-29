@@ -22,7 +22,12 @@ export default observer(function MaterialForm({ index }: { index: number }) {
 
   return (
     <Form>
-      <Form.Item label="资料名" requiredMark help={editingMaterials?.errors[index]?.name}>
+      <Form.Item
+        label="资料名"
+        requiredMark
+        help={editingMaterials?.errors[index]?.name}
+        validateStatus={editingMaterials?.errors[index]?.name && 'error'}
+      >
         <Input value={model?.name} onChange={handleNameChange} />
       </Form.Item>
       <Form.Item label="备注">

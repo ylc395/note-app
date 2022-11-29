@@ -24,22 +24,22 @@ export default class TagTree extends EventEmitter<Events> {
     super();
     makeObservable(this);
   }
-  readonly #remote: Remote = container.resolve(remoteToken);
-  @observable roots: TagTreeNode[] = [];
-  #nodesMap: Record<TagTreeNode['id'], TagTreeNode> = {};
+  private readonly remote: Remote = container.resolve(remoteToken);
+  @observable.ref roots: TagTreeNode[] = [];
+  private nodesMap: Record<TagTreeNode['id'], TagTreeNode> = {};
   @observable.ref editingTag?: TagForm;
   @observable selectedTagId?: TagTreeNode['id'];
   @observable editingMode?: 'create' | 'rename';
 
   @computed get selectedTag(): TagTreeNode | undefined {
     if (this.selectedTagId) {
-      return this.#nodesMap[this.selectedTagId];
+      return this.nodesMap[this.selectedTagId];
     }
   }
 
   readonly load = async () => {
-    this.#nodesMap = {};
-    const { body: tags } = await this.#remote.get<TagQuery, Required<TagVO>[]>('/tags');
+    this.nodesMap = {};
+    const { body: tags } = await this.remote.get<TagQuery, Required<TagVO>[]>('/tags');
     runInAction(() => {
       this.roots = this.build(tags);
     });
@@ -48,26 +48,26 @@ export default class TagTree extends EventEmitter<Events> {
   @action.bound
   private build(allTags: Required<TagVO>[]) {
     for (const { id, name, parentId } of allTags) {
-      this.#nodesMap[id] = observable({ id, name, parentId });
+      this.nodesMap[id] = observable({ id, name, parentId });
     }
 
     const rootIds: TagTreeNode['id'][] = [];
 
     for (const { parentId, id } of allTags) {
-      const parentNode = this.#nodesMap[parentId];
+      const parentNode = this.nodesMap[parentId];
 
       if (parentNode) {
         if (!parentNode.children) {
           parentNode.children = [];
         }
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        parentNode.children.push(this.#nodesMap[id]!);
+        parentNode.children.push(this.nodesMap[id]!);
       } else {
         rootIds.push(id);
       }
     }
 
-    const roots = Object.values(pick(this.#nodesMap, rootIds));
+    const roots = Object.values(pick(this.nodesMap, rootIds));
     return roots;
   }
 
@@ -77,7 +77,7 @@ export default class TagTree extends EventEmitter<Events> {
 
     if (mode === 'create') {
       tag = new TagForm();
-      tag.handleSubmit(this.#createTag);
+      tag.handleSubmit(this.createTag);
     } else {
       if (!this.selectedTag) {
         throw new Error('no selectedTag');
@@ -91,10 +91,10 @@ export default class TagTree extends EventEmitter<Events> {
     this.editingTag = tag;
   }
 
-  readonly #createTag = async (newTag: TagFormModel) => {
+  private readonly createTag = async (newTag: TagFormModel) => {
     const {
       body: { id, name, parentId },
-    } = await this.#remote.post<TagDTO, Required<TagVO>>('/tags', {
+    } = await this.remote.post<TagDTO, Required<TagVO>>('/tags', {
       ...newTag,
       ...(this.selectedTagId ? { parentId: this.selectedTagId } : null),
     });
@@ -102,9 +102,9 @@ export default class TagTree extends EventEmitter<Events> {
     runInAction(() => {
       const tagNode = observable({ id, name, parentId });
 
-      this.#nodesMap[id] = tagNode;
+      this.nodesMap[id] = tagNode;
 
-      const parentNode = this.#nodesMap[parentId];
+      const parentNode = this.nodesMap[parentId];
       if (parentNode) {
         if (!parentNode.children) {
           parentNode.children = [];
@@ -113,6 +113,8 @@ export default class TagTree extends EventEmitter<Events> {
       } else {
         this.roots.push(tagNode);
       }
+
+      this.roots = [...this.roots];
     });
 
     this.stopEditingTag();
@@ -140,7 +142,7 @@ export default class TagTree extends EventEmitter<Events> {
     }
 
     const id = this.selectedTagId;
-    await this.#remote.delete<void, void, { cascade: boolean }>(`/tags/${id}`, undefined, { cascade });
+    await this.remote.delete<void, void, { cascade: boolean }>(`/tags/${id}`, undefined, { cascade });
     const target = this.selectedTag;
 
     if (!target) {
@@ -150,9 +152,9 @@ export default class TagTree extends EventEmitter<Events> {
     runInAction(() => {
       this.selectedTagId = undefined;
 
-      delete this.#nodesMap[id];
+      delete this.nodesMap[id];
 
-      const parent = target.parentId ? this.#nodesMap[target.parentId] : undefined;
+      const parent = target.parentId ? this.nodesMap[target.parentId] : undefined;
       let isRoot = false;
 
       if (parent) {
@@ -184,7 +186,7 @@ export default class TagTree extends EventEmitter<Events> {
         traverse(target);
 
         for (const deletedId of deletedIds) {
-          delete this.#nodesMap[deletedId];
+          delete this.nodesMap[deletedId];
         }
 
         this.emit(Events.Deleted, deletedIds);
@@ -205,6 +207,8 @@ export default class TagTree extends EventEmitter<Events> {
           throw new Error('no parent');
         }
       }
+
+      this.roots = [...this.roots];
     });
 
     this.emit(Events.Deleted, [target.id]);
@@ -212,7 +216,7 @@ export default class TagTree extends EventEmitter<Events> {
 
   readonly updateTag = async (tagPatch: TagPatchDTO) => {
     const id = this.selectedTagId;
-    await this.#remote.patch<TagPatchDTO, void>(`/tags/${id}`, tagPatch);
+    await this.remote.patch<TagPatchDTO, void>(`/tags/${id}`, tagPatch);
 
     runInAction(() => {
       if (!this.selectedTag) {
@@ -220,7 +224,7 @@ export default class TagTree extends EventEmitter<Events> {
       }
 
       if (typeof tagPatch.parentId !== 'undefined' && this.selectedTag.parentId !== tagPatch.parentId) {
-        const newParent = this.#nodesMap[tagPatch.parentId];
+        const newParent = this.nodesMap[tagPatch.parentId];
 
         if (newParent) {
           if (!newParent.children) {
@@ -233,12 +237,13 @@ export default class TagTree extends EventEmitter<Events> {
 
         const currentParentChildren = this.selectedTag.parentId
           ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            this.#nodesMap[this.selectedTag.parentId]!.children!
+            this.nodesMap[this.selectedTag.parentId]!.children!
           : this.roots;
         pull(currentParentChildren, this.selectedTag);
       }
 
       Object.assign(this.selectedTag, tagPatch);
+      this.roots = [...this.roots];
     });
 
     if (this.editingMode === 'rename') {

@@ -18,7 +18,7 @@ export default observer(function MaterialSidebar() {
         <div>资料库</div>
         <AddMenu />
       </div>
-      <Collapse expandIconPosition="start" defaultActiveKey={['tagTree', 'view']}>
+      <Collapse ghost expandIconPosition="start" defaultActiveKey={['tagTree', 'view']}>
         <Collapse.Panel header="视图" key="view">
           <MaterialView />
         </Collapse.Panel>

@@ -30,13 +30,13 @@ export default observer(function DeleteConfirm() {
     (e) => setCascade(e.target.checked || false),
     [],
   );
-  const handleOk = useCallback(
+  const cancel = useCallback(
     action(() => isDeleting.set(false)),
     [isDeleting],
   );
 
   return (
-    <Modal closable={false} open={isDeleting.get()} onCancel={handleOk} onOk={handleDelete}>
+    <Modal closable={false} open={isDeleting.get()} onCancel={cancel} onOk={handleDelete}>
       <p>是否删除标签 {selectedTag?.name}？</p>
       <Checkbox onChange={handleCheck}>删除所有后代标签</Checkbox>
     </Modal>

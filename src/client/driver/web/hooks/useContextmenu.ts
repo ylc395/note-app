@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, type ReactNode } from 'react';
 import { useLocalObservable } from 'mobx-react-lite';
 import { observable, action } from 'mobx';
 
@@ -7,9 +7,7 @@ export default function useContextmenu() {
     () => ({
       position: { x: 0, y: 0 },
       visible: false,
-      openId: 0,
       open() {
-        this.openId++;
         this.visible = true;
       },
       close() {
@@ -37,4 +35,4 @@ export default function useContextmenu() {
   return state;
 }
 
-export type Contextmenu = ReturnType<typeof useContextmenu>;
+export type ContextmenuProps = ReturnType<typeof useContextmenu> & { children: ReactNode };

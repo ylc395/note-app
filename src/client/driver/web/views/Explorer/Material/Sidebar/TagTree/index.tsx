@@ -1,14 +1,14 @@
 import { observer } from 'mobx-react-lite';
-import { useEffect, useCallback, type MouseEvent } from 'react';
-import { Tree, Collapse, Button, type TreeProps } from 'antd';
+import { useEffect, useCallback } from 'react';
+import { Tree, Button, type TreeProps, type ButtonProps } from 'antd';
 import { BiPlus } from 'react-icons/bi';
 import { container } from 'tsyringe';
 
 import MaterialService from 'service/MaterialService';
 import useContextmenu from 'web/hooks/useContextmenu';
+import Contextmenu from './Contextmenu';
 
 export { default as TagModalForm } from './TagModalForm';
-import { default as Contextmenu } from './Contextmenu';
 export { default as DeleteConfirm } from './DeleteConfirm';
 
 export const panelKey = 'tag';
@@ -18,7 +18,7 @@ export const TagTreeHeader = observer(() => {
     tagTree: { startEditingTag, selectTag },
   } = container.resolve(MaterialService);
 
-  const handleAddButtonClick = useCallback((e: MouseEvent) => {
+  const handleAddButtonClick = useCallback<NonNullable<ButtonProps['onClick']>>((e) => {
     e.stopPropagation();
     selectTag();
     startEditingTag('create');
@@ -51,13 +51,16 @@ export const TagTree = observer(function TagTree() {
   }, []);
 
   return (
-    <Tree
-      onSelect={(id) => selectTag(Number(id[0]))}
-      onRightClick={handleContextmenu}
-      selectedKeys={selectedTagId ? [selectedTagId] : []}
-      treeData={roots as unknown as TreeProps['treeData']}
-      fieldNames={{ title: 'name', key: 'id' }}
-      blockNode
-    />
+    <Contextmenu {...contextmenu}>
+      <Tree
+        onSelect={(id) => selectTag(Number(id[0]))}
+        onRightClick={handleContextmenu}
+        selectedKeys={selectedTagId ? [selectedTagId] : []}
+        treeData={roots as unknown as TreeProps['treeData']}
+        fieldNames={{ title: 'name', key: 'id' }}
+        blockNode
+        className="bg-transparent"
+      />
+    </Contextmenu>
   );
 });

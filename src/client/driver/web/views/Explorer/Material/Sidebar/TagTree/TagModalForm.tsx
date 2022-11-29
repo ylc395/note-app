@@ -28,10 +28,10 @@ export default observer(function TagModalForm() {
       <Form>
         {editingMode === 'create' && (
           <Form.Item label="父级标签">
-            <Input value={selectedTag?.name || '无'} disabled />
+            <Input value={selectedTag?.name || '无'} readOnly />
           </Form.Item>
         )}
-        <Form.Item label="标签名" help={editingTag?.errors.name}>
+        <Form.Item label="标签名" help={editingTag?.errors.name} validateStatus={editingTag?.errors.name && 'error'}>
           <Input value={editingTag?.values.name} onChange={handleInputChange} />
         </Form.Item>
       </Form>
