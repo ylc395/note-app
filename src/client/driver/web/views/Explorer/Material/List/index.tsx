@@ -16,7 +16,7 @@ export default observer(function MaterialSidebar() {
   return (
     <Resizable
       enable={{ right: true }}
-      defaultSize={{ width: 200, height: 'auto' }}
+      defaultSize={{ width: 200, height: '100vh' }}
       minWidth={200}
       className="border-r overflow-auto"
     >
