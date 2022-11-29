@@ -1,6 +1,7 @@
 import { observer } from 'mobx-react-lite';
 import { action } from 'mobx';
-import { Form, Input, TextArea } from '@douyinfe/semi-ui';
+import { Form, Input, type InputProps } from 'antd';
+import type { TextAreaProps } from 'antd/es/input';
 import { container } from 'tsyringe';
 
 import MaterialService from 'service/MaterialService';
@@ -8,24 +9,25 @@ import { useCallback } from 'react';
 
 export default observer(function MaterialForm({ index }: { index: number }) {
   const { editingMaterials } = container.resolve(MaterialService);
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const model = editingMaterials!.values[index]!;
-  const handleCommentChange = useCallback(
-    action((value: string) => (model.comment = value)),
+  const model = editingMaterials?.values[index];
+
+  const handleCommentChange = useCallback<NonNullable<TextAreaProps['onChange']>>(
+    action((e) => model && (model.comment = e.target.value)),
     [model],
   );
-  const handleNameChange = useCallback(
-    action((value: string) => (model.name = value)),
+  const handleNameChange = useCallback<NonNullable<InputProps['onChange']>>(
+    action((e) => model && (model.name = e.target.value)),
     [model],
   );
 
   return (
     <Form>
-      <Form.Label text="资料名" required />
-      <Input value={model.name} onChange={handleNameChange} />
-      <Form.ErrorMessage error={editingMaterials?.errors[index]?.name} />
-      <Form.Label text="备注" />
-      <TextArea value={model.comment} onChange={handleCommentChange} />
+      <Form.Item label="资料名" requiredMark help={editingMaterials?.errors[index]?.name}>
+        <Input value={model?.name} onChange={handleNameChange} />
+      </Form.Item>
+      <Form.Item label="备注">
+        <Input.TextArea value={model?.comment} onChange={handleCommentChange} />
+      </Form.Item>
     </Form>
   );
 });

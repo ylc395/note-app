@@ -1,10 +1,10 @@
 import { observer } from 'mobx-react-lite';
 import { Resizable } from 're-resizable';
-import { Collapse } from '@douyinfe/semi-ui';
+import { Collapse } from 'antd';
 
 import AddMenu from './AddMenu';
-import TagTree, { panelKey as tagTreePanelKey } from './TagTree';
-import MaterialView, { panelKey as materialViewPanelKey } from './MaterialView';
+import { TagTree, TagTreeHeader, TagModalForm, DeleteConfirm } from './TagTree';
+import MaterialView from './MaterialView';
 
 export default observer(function MaterialSidebar() {
   return (
@@ -18,10 +18,16 @@ export default observer(function MaterialSidebar() {
         <div>资料库</div>
         <AddMenu />
       </div>
-      <Collapse expandIconPosition="left" defaultActiveKey={[tagTreePanelKey, materialViewPanelKey]}>
-        <MaterialView />
-        <TagTree />
+      <Collapse expandIconPosition="start" defaultActiveKey={['tagTree', 'view']}>
+        <Collapse.Panel header="视图" key="view">
+          <MaterialView />
+        </Collapse.Panel>
+        <Collapse.Panel header={<TagTreeHeader />} key="tagTree">
+          <TagTree />
+        </Collapse.Panel>
       </Collapse>
+      <TagModalForm />
+      <DeleteConfirm />
     </Resizable>
   );
 });

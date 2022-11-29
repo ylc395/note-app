@@ -5,7 +5,8 @@ import ModelForm from './ModelForm';
 import type { MaterialDTO } from 'interface/Material';
 import type { FileVO } from 'interface/File';
 
-export type MaterialsFormModel = MaterialDTO[];
+type MaterialFormModel = MaterialDTO;
+export type MaterialsFormModel = MaterialFormModel[];
 
 export default class MaterialForm extends ModelForm<MaterialsFormModel> {
   @observable values: MaterialsFormModel;

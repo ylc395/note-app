@@ -1,10 +1,10 @@
 import { observer } from 'mobx-react-lite';
 import { action } from 'mobx';
-import { Modal, Form, Input } from '@douyinfe/semi-ui';
+import { Modal, Form, Input } from 'antd';
 import { container } from 'tsyringe';
 
 import MaterialService from 'service/MaterialService';
-import { useCallback } from 'react';
+import { ChangeEvent, useCallback } from 'react';
 
 export default observer(function TagModalForm() {
   const {
@@ -13,28 +13,27 @@ export default observer(function TagModalForm() {
 
   const handleInputChange = useCallback(
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    action((value: string) => (editingTag!.values.name = value)),
+    action((e: ChangeEvent<HTMLInputElement>) => (editingTag!.values.name = e.target.value)),
     [editingTag],
   );
 
   return (
     <Modal
       title={editingMode === 'create' ? '创建新标签' : '重命名'}
-      visible={Boolean(editingTag)}
+      open={Boolean(editingTag)}
       onCancel={stopEditingTag}
       onOk={editingTag?.submit}
       closable={false}
     >
       <Form>
         {editingMode === 'create' && (
-          <>
-            <Form.Label text="父级标签" />
-            <Input value={selectedTag?.name || '无'} readonly />
-          </>
+          <Form.Item label="父级标签">
+            <Input value={selectedTag?.name || '无'} disabled />
+          </Form.Item>
         )}
-        <Form.Label text="标签名" />
-        <Input value={editingTag?.values.name} onChange={handleInputChange} />
-        <Form.ErrorMessage error={editingTag?.errors.name} />
+        <Form.Item label="标签名" help={editingTag?.errors.name}>
+          <Input value={editingTag?.values.name} onChange={handleInputChange} />
+        </Form.Item>
       </Form>
     </Modal>
   );

@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { ConfigProvider } from '@douyinfe/semi-ui';
+import { ConfigProvider } from 'antd';
 import { useCallback } from 'react';
 import './index.css';
 

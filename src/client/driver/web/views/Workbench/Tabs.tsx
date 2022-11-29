@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
-import { Tabs as TabContainer, TabPane } from '@douyinfe/semi-ui';
+import { Tabs as AntdTabs } from 'antd';
 
 import WorkbenchService, { type WindowId } from 'service/WorkbenchService';
 
@@ -15,17 +15,14 @@ export default observer(function Tabs({ id }: { id: WindowId }) {
   const { switchToTab, closeTab, currentTab } = w;
 
   return (
-    <TabContainer
-      type="card"
-      collapsible
+    <AntdTabs
+      type="editable-card"
       className="w-full"
+      hideAdd
       onChange={switchToTab}
-      onTabClose={closeTab}
+      onEdit={(key) => typeof key === 'string' && closeTab(key)}
+      items={w.tabs.map((tab) => ({ label: tab.material?.name, key: String(tab.id) }))}
       activeKey={currentTab?.id}
-    >
-      {w.tabs.map((tab) => (
-        <TabPane tab={tab.material?.name} key={tab.materialId} closable itemKey={tab.id} />
-      ))}
-    </TabContainer>
+    />
   );
 });

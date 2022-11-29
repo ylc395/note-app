@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { Modal } from '@douyinfe/semi-ui';
+import { Modal } from 'antd';
 import { container } from 'tsyringe';
 
 import MaterialService from 'service/MaterialService';
@@ -11,10 +11,11 @@ export default observer(function MaterialModalForm() {
   return (
     <Modal
       title="创建新资料"
-      visible={Boolean(editingMaterials)}
+      open={Boolean(editingMaterials)}
       onCancel={clearFiles}
       onOk={editingMaterials?.submit}
       closable={false}
+      destroyOnClose
     >
       {editingMaterials?.values.map(({ fileId }, i) => (
         <Form key={fileId} index={i} />
