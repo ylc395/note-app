@@ -3,7 +3,7 @@ import type { ZodType } from 'zod';
 
 import { InvalidInputError } from 'model/Error';
 
-export * from 'driver/electron/handler';
+export * from 'driver/electron/decorators';
 
 export function createSchemaPipe<T>(schema: ZodType<T>): PipeTransform {
   return {

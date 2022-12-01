@@ -7,13 +7,12 @@ import toPlainObject from 'lodash/toPlainObject';
 
 import { InvalidInputError } from 'model/Error';
 import { IPC_CHANNEL, type IpcRequest, type IpcResponse } from 'client/driver/electron/ipc';
-import { fromPatternToRequest } from './handler';
 
 export default class ElectronIpcServer extends Server implements CustomTransportStrategy {
   #routeMap = new Map<string, MatchFunction>();
 
   listen(cb: () => void) {
-    const allPaths = Array.from(this.getHandlers().keys()).map((pattern) => fromPatternToRequest(pattern).path);
+    const allPaths = Array.from(this.getHandlers().keys()).map((pattern) => JSON.parse(pattern).path);
 
     for (const path of allPaths) {
       this.#routeMap.set(path, match(path));

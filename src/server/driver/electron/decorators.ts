@@ -12,10 +12,6 @@ function createHttpDecorator(method: IpcRequest<unknown>['method']) {
   };
 }
 
-export function fromPatternToRequest(pattern: string) {
-  return JSON.parse(pattern);
-}
-
 export const Get = createHttpDecorator('GET');
 export const Post = createHttpDecorator('POST');
 export const Delete = createHttpDecorator('DELETE');
