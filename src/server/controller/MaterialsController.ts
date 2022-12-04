@@ -2,7 +2,7 @@ import { Controller, ParseIntPipe } from '@nestjs/common';
 import { type MaterialDTO, type MaterialVO, type MaterialQuery, materialsDTOSchema } from 'interface/Material';
 import MaterialService from 'service/MaterialService';
 
-import { Post, Get, Body, Query, Param, createSchemaPipe } from './decorators';
+import { Post, Get, Body, Query, Delete, Param, createSchemaPipe } from './decorators';
 
 @Controller()
 export default class MaterialsController {
@@ -21,5 +21,10 @@ export default class MaterialsController {
   @Get('/materials/:id')
   async findOne(@Param('id', ParseIntPipe) id: MaterialVO['id']): Promise<MaterialVO> {
     return await this.materialService.findOne(id);
+  }
+
+  @Delete('/materials/:id')
+  async delete(@Param('id', ParseIntPipe) id: MaterialVO['id']): Promise<void> {
+    return await this.materialService.delete(id);
   }
 }

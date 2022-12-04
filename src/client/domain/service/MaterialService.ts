@@ -11,7 +11,7 @@ import MaterialsForm, { type MaterialsFormModel } from 'model/form/MaterialForm'
 @singleton()
 export default class MaterialService {
   readonly #remote: Remote = container.resolve(remoteToken);
-  readonly tagTree = new TagTree();
+  readonly tagTree = new TagTree('material');
   @observable materials: MaterialVO[] = [];
   #files: FileVO[] = [];
   @observable.ref editingMaterials?: MaterialsForm;

@@ -6,10 +6,10 @@ import type { MaterialVO, MaterialDTO, MaterialQuery } from 'interface/Material'
 import type { MaterialRepository } from 'service/repository/MaterialRepository';
 
 import db from 'driver/sqlite';
-import { type Row as MaterialRow, tableName as materialsTableName, MaterialTypes } from 'driver/sqlite/materialSchema';
+import { type Row as MaterialRow, tableName as materialsTableName } from 'driver/sqlite/materialSchema';
 import { type Row as FileRow, tableName as filesTableName } from 'driver/sqlite/fileSchema';
-import { type Row as EntityToTagRow, tableName as entityToTagTableName } from 'driver/sqlite/materialToTagSchema';
-import { tableName as tagsTableName } from 'driver/sqlite/tagSchema';
+import { type Row as EntityToTagRow, tableName as entityToTagTableName } from 'driver/sqlite/entityToTagSchema';
+import { tableName as tagsTableName, Types } from 'driver/sqlite/tagSchema';
 
 export default class SqliteMaterialRepository implements MaterialRepository {
   async create(materials: MaterialDTO[]) {
@@ -21,7 +21,6 @@ export default class SqliteMaterialRepository implements MaterialRepository {
         .insert(
           materials.map((v) => ({
             ...pick(v, ['name', 'comment', 'rating']),
-            type: MaterialTypes.File,
             entityId: v.fileId,
           })),
         )
@@ -29,7 +28,7 @@ export default class SqliteMaterialRepository implements MaterialRepository {
 
       const materialToTagRecords = materials.flatMap(({ tags }, i) => {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        return tags ? tags.map((tagId) => ({ entityId: createdMaterials[i]!.id, tagId })) : [];
+        return tags ? tags.map((tagId) => ({ entityId: createdMaterials[i]!.id, tagId, type: Types.Material })) : [];
       });
 
       if (materialToTagRecords.length > 0) {
@@ -45,6 +44,30 @@ export default class SqliteMaterialRepository implements MaterialRepository {
       await trx.commit();
 
       return createdMaterials;
+    } catch (error) {
+      await trx.rollback(error);
+      throw error;
+    }
+  }
+
+  async deleteOne(id: number) {
+    const trx = await db.knex.transaction();
+
+    try {
+      const rows = await trx
+        .select(`${entityToTagTableName}.id as id`)
+        .from(materialsTableName)
+        .join(tagsTableName, `${tagsTableName}.id`, '=', String(Types.Material))
+        .join(entityToTagTableName, function () {
+          this.on(`${entityToTagTableName}.entityId`, '=', `${materialsTableName}.id`);
+          this.on(`${entityToTagTableName}.tagId`, '=', `${tagsTableName}.id`);
+        });
+
+      await trx<EntityToTagRow>(entityToTagTableName).delete().whereIn('id', map(rows, 'id'));
+      const count = await trx<MaterialRow>(materialsTableName).delete().where({ id });
+      await trx.commit();
+
+      return count;
     } catch (error) {
       await trx.rollback(error);
       throw error;
@@ -70,7 +93,6 @@ export default class SqliteMaterialRepository implements MaterialRepository {
       )
       .from(materialsTableName)
       .leftJoin(filesTableName, function () {
-        this.on(`${materialsTableName}.type`, '=', db.knex.raw('?', [MaterialTypes.File]));
         this.on(`${filesTableName}.id`, '=', `${materialsTableName}.entity_id`);
       })
       .leftJoin(entityToTagTableName, `${materialsTableName}.id`, '=', `${entityToTagTableName}.entityId`)

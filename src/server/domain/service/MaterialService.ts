@@ -30,7 +30,7 @@ export default class MaterialService {
         continue;
       }
 
-      const tags = await this.tagRepository.findAll({ id: tagIds });
+      const tags = await this.tagRepository.findAll({ id: tagIds, type: 'material' });
 
       if (tags.length !== tagIds.length) {
         throw new InvalidInputError({ [i]: { tags: '无效的 tag id' } });
@@ -61,5 +61,13 @@ export default class MaterialService {
     }
 
     return rows[0];
+  }
+
+  async delete(id: MaterialVO['id']) {
+    const count = await this.repository.deleteOne(id);
+
+    if (count === 0) {
+      throw new InvalidInputError({ materialId: `无效的 material id: ${id}` });
+    }
   }
 }

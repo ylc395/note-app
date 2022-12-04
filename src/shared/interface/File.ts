@@ -9,7 +9,7 @@ export interface FileVO {
   isDuplicated?: boolean;
 }
 
-export const FileDTOSchema = object({
+const FileDTOSchema = object({
   sourceUrl: string().url(),
   mimeType: string().min(1),
   isTemp: boolean().optional(),

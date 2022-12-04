@@ -20,7 +20,7 @@ export enum Events {
 }
 
 export default class TagTree extends EventEmitter<Events> {
-  constructor() {
+  constructor(private readonly type: 'note' | 'material') {
     super();
     makeObservable(this);
   }
@@ -97,6 +97,7 @@ export default class TagTree extends EventEmitter<Events> {
     } = await this.remote.post<TagDTO, Required<TagVO>>('/tags', {
       ...newTag,
       ...(this.selectedTagId ? { parentId: this.selectedTagId } : null),
+      type: this.type,
     });
 
     runInAction(() => {

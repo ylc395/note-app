@@ -8,7 +8,7 @@ import { join } from 'path';
 import materialsSchema from './materialSchema';
 import fileSchema, { type Row as FileRow } from './fileSchema';
 import tagSchema from './tagSchema';
-import materialToTagSchema from './materialToTagSchema';
+import entityToTagSchema from './entityToTagSchema';
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 
@@ -19,28 +19,28 @@ class SqliteDb {
       client: 'sqlite3',
       connection: join(dir, 'db.sqlite'),
       debug: isDevelopment,
-      postProcessResponse: this.#transformKeys,
+      postProcessResponse: this.transformKeys,
       wrapIdentifier: (value, originImpl) => originImpl(snakeCase(value)),
     });
 
-    await this.#createTables();
-    await this.#emptyTempFiles();
+    await this.createTables();
+    await this.emptyTempFiles();
   };
 
-  #transformKeys = (result: unknown): unknown => {
+  private transformKeys = (result: unknown): unknown => {
     if (typeof result !== 'object' || result instanceof Date || result === null) {
       return result;
     }
 
     if (Array.isArray(result)) {
-      return result.map(this.#transformKeys);
+      return result.map(this.transformKeys);
     }
 
     return mapKeys(result, (_, key) => camelCase(key));
   };
 
-  async #createTables() {
-    const schemas = [fileSchema, materialsSchema, tagSchema, materialToTagSchema];
+  private async createTables() {
+    const schemas = [fileSchema, materialsSchema, tagSchema, entityToTagSchema];
 
     await Promise.all(
       schemas.map(async ({ tableName, builder }) => {
@@ -51,7 +51,7 @@ class SqliteDb {
     );
   }
 
-  async #emptyTempFiles() {
+  private async emptyTempFiles() {
     await this.knex<FileRow>(fileSchema.tableName).where('isTemp', 1).delete();
   }
 }

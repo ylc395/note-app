@@ -1,4 +1,4 @@
-import { object, string, number, type infer as Infer } from 'zod';
+import { object, string, number, type infer as Infer, enum as zodEnum } from 'zod';
 
 export interface TagVO {
   id: number;
@@ -9,6 +9,7 @@ export interface TagVO {
 export interface TagQuery {
   id?: TagVO['id'] | TagVO['id'][];
   name?: string;
+  type?: 'note' | 'material';
 }
 
 export const tagDTOSchema = object({
@@ -16,9 +17,10 @@ export const tagDTOSchema = object({
     .min(1, '标签名不应为空')
     .regex(/^[^,]*$/, '标签名不能包含,'),
   parentId: number().optional(),
+  type: zodEnum(['note', 'material']),
 });
 
-export const tagPatchDTOSchema = tagDTOSchema.partial();
+export const tagPatchDTOSchema = tagDTOSchema.omit({ type: true }).partial();
 
 export type TagDTO = Infer<typeof tagDTOSchema>;
 

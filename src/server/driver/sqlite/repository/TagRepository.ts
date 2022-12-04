@@ -4,13 +4,21 @@ import isEmpty from 'lodash/isEmpty';
 
 import type { TagDTO, TagPatchDTO, TagQuery, TagVO } from 'interface/Tag';
 import type { TagRepository } from 'service/repository/TagRepository';
-import { tableName, type Row } from 'driver/sqlite/tagSchema';
-import { tableName as entityToTagTableName, type Row as EntityToTagRow } from 'driver/sqlite/materialToTagSchema';
+import { tableName, Types, type Row } from 'driver/sqlite/tagSchema';
+import { tableName as entityToTagTableName, type Row as EntityToTagRow } from 'driver/sqlite/entityToTagSchema';
 import db from 'driver/sqlite';
+
+const typesMap = {
+  material: Types.Material,
+  note: Types.Note,
+} as const;
 
 export default class SqliteTagRepository implements TagRepository {
   async create(tag: TagDTO) {
-    const rows = await db.knex<Row>(tableName).insert(tag).returning(['id', 'parentId', 'name']);
+    const rows = await db
+      .knex<Row>(tableName)
+      .insert({ ...tag, type: typesMap[tag.type] })
+      .returning(['id', 'parentId', 'name']);
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     return rows[0]!;
