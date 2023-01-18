@@ -7,7 +7,7 @@ import { InvalidInputError } from 'model/Error';
 
 import { token as fileRepositoryToken, type FileRepository } from 'service/repository/FileRepository';
 import { type FileReader, token as fileReaderToken } from 'infra/FileReader';
-import { type LocalClient, token as localClientToken } from 'infra/LocalClient';
+import { type AppClient, token as appClientToken } from 'infra/AppClient';
 
 @Injectable()
 export default class FileService {
@@ -15,7 +15,7 @@ export default class FileService {
     @Inject(fileRepositoryToken) private readonly repository: FileRepository,
     private readonly eventEmitter: EventEmitter2,
     @Inject(fileReaderToken) private readonly fileReader: FileReader,
-    @Inject(localClientToken) private readonly localClient?: LocalClient,
+    @Inject(appClientToken) private readonly appClient?: AppClient,
   ) {}
   async create({ sourceUrl, mimeType, isTemp = false }: FileDTO) {
     const path = sourceUrl.match(/^file:\/\/(.+)/)?.[1];
@@ -24,7 +24,7 @@ export default class FileService {
       throw new InvalidInputError({ sourceUrl: `invalid sourceUrl ${sourceUrl}` });
     }
 
-    const deviceName = this.localClient?.getDeviceName() || '';
+    const deviceName = this.appClient?.getDeviceName() || '';
     let fileInfo: Awaited<ReturnType<FileReader['read']>>;
 
     try {

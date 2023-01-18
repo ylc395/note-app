@@ -4,7 +4,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import ServiceModule from 'service/module';
 import RepositoryModule from 'driver/sqlite/repository/module';
 import DriverModule from './driver.module';
-import { token as localClientToken, type LocalClient } from 'infra/LocalClient';
+import { token as appClientToken, type AppClient } from 'infra/AppClient';
 import sqliteDb from 'driver/sqlite';
 
 import MaterialsController from 'controller/MaterialsController';
@@ -16,7 +16,7 @@ import TagsController from 'controller/TagsController';
   controllers: [MaterialsController, FilesController, TagsController],
 })
 export default class AppModule implements OnApplicationBootstrap {
-  constructor(@Inject(localClientToken) private readonly electronApp: LocalClient) {}
+  constructor(@Inject(appClientToken) private readonly electronApp: AppClient) {}
   async onApplicationBootstrap() {
     const configDir = this.electronApp.getConfigDir();
 

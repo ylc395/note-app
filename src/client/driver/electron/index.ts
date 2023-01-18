@@ -4,13 +4,13 @@ import { hostname } from 'os';
 import { ensureDirSync, emptyDirSync } from 'fs-extra';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 
-import type { LocalClient } from 'infra/LocalClient';
+import type { AppClient } from 'infra/AppClient';
 
 const APP_NAME = 'my-note-app';
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const NEED_CLEAN = process.env.DEV_CLEAN === '1';
 
-export default class App implements LocalClient {
+export default class ElectronClient implements AppClient {
   readonly #electronApp = app;
   #mainWindow?: BrowserWindow;
 
