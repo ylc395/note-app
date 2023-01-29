@@ -1,17 +1,9 @@
 import { Module, Global } from '@nestjs/common';
-import { token as materialRepositoryToken } from 'service/repository/MaterialRepository';
-import { token as fileRepositoryToken } from 'service/repository/FileRepository';
-import { token as tagRepositoryToken } from 'service/repository/TagRepository';
+import { token as noteRepositoryToken } from 'service/repository/NoteRepository';
 
-import MaterialRepository from './MaterialRepository';
-import FileRepository from './FileRepository';
-import TagRepository from './TagRepository';
+import NoteRepository from './NoteRepository';
 
-const repositories = [
-  [materialRepositoryToken, MaterialRepository],
-  [fileRepositoryToken, FileRepository],
-  [tagRepositoryToken, TagRepository],
-] as const;
+const repositories = [[noteRepositoryToken, NoteRepository]] as const;
 
 @Global()
 @Module({

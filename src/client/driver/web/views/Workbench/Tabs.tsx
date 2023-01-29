@@ -21,8 +21,8 @@ export default observer(function Tabs({ id }: { id: WindowId }) {
       hideAdd
       onChange={switchToTab}
       onEdit={(key) => typeof key === 'string' && closeTab(key)}
-      items={w.tabs.map((tab) => ({ label: tab.material?.name, key: String(tab.id) }))}
-      activeKey={currentTab?.id}
+      items={w.tabs.map((tab) => ({ label: tab.editor?.title, key: String(tab.editor?.id) }))}
+      activeKey={currentTab?.editor?.id}
     />
   );
 });

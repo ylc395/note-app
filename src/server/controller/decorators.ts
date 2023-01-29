@@ -14,7 +14,7 @@ export function createSchemaPipe<T>(schema: ZodType<T>): PipeTransform {
         throw InvalidInputError.fromZodError(result.error);
       }
 
-      return value;
+      return result.data;
     },
   };
 }

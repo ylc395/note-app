@@ -10,7 +10,7 @@ import Icon from './Icon';
 
 export default observer(function Item({ material }: { material: MaterialVO }) {
   const { open } = container.resolve(WorkbenchService);
-  const handleClick = useCallback(() => open(material, false), [material]);
+  const handleClick = useCallback(() => open({ entity: material, type: 'material' }, false), [material]);
 
   return (
     <div className="overflow-x-hidden border-b py-2 px-2" onClick={handleClick}>

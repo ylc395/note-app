@@ -8,7 +8,7 @@ export default class ViewService {
   constructor() {
     makeObservable(this);
   }
-  @observable currentView = KnowledgeTypes.Materials;
+  @observable currentView = KnowledgeTypes.Notes;
 
   @action.bound
   setCurrentView(type: KnowledgeTypes) {

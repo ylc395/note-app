@@ -2,19 +2,16 @@ import knex, { type Knex } from 'knex';
 import camelCase from 'lodash/camelCase';
 import snakeCase from 'lodash/snakeCase';
 import mapKeys from 'lodash/mapKeys';
-import partialRight from 'lodash/partialRight';
 import { join } from 'path';
 
-import materialsSchema from './materialSchema';
-import fileSchema, { type Row as FileRow } from './fileSchema';
-import tagSchema from './tagSchema';
-import entityToTagSchema from './entityToTagSchema';
+import noteSchema from './schema/noteSchema';
+import type { Fields } from './schema/type';
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 
 class SqliteDb {
   knex!: Knex;
-  readonly init = async (dir: string) => {
+  async init(dir: string) {
     this.knex = knex({
       client: 'sqlite3',
       connection: join(dir, 'db.sqlite'),
@@ -24,8 +21,8 @@ class SqliteDb {
     });
 
     await this.createTables();
-    await this.emptyTempFiles();
-  };
+    // await this.emptyTempFiles();
+  }
 
   private transformKeys = (result: unknown): unknown => {
     if (typeof result !== 'object' || result instanceof Date || result === null) {
@@ -40,20 +37,44 @@ class SqliteDb {
   };
 
   private async createTables() {
-    const schemas = [fileSchema, materialsSchema, tagSchema, entityToTagSchema];
+    const schemas = [noteSchema];
 
     await Promise.all(
-      schemas.map(async ({ tableName, builder }) => {
+      schemas.map(async ({ tableName, fields, jsonFields }) => {
         if (!(await this.knex.schema.hasTable(tableName))) {
-          return this.knex.schema.createTable(tableName, partialRight(builder, this.knex));
+          return this.knex.schema.createTable(tableName, (table) => this.builder(table, fields, jsonFields.length > 0));
         }
       }),
     );
   }
 
-  private async emptyTempFiles() {
-    await this.knex<FileRow>(fileSchema.tableName).where('isTemp', 1).delete();
-  }
+  private builder = (table: Knex.CreateTableBuilder, fields: Fields, needJsonField: boolean) => {
+    for (const [fieldName, options] of Object.entries(fields)) {
+      let col =
+        (options.increments && table.increments(snakeCase(fieldName))) ||
+        (options.type && table[options.type](snakeCase(fieldName)));
+
+      if (!col) {
+        throw new Error(`no type for column ${fieldName}`);
+      }
+
+      if (options.notNullable) {
+        col = col.notNullable();
+      }
+
+      if (typeof options.defaultTo !== 'undefined') {
+        col.defaultTo(typeof options.defaultTo === 'function' ? options.defaultTo(this.knex) : options.defaultTo);
+      }
+    }
+
+    if (needJsonField) {
+      table.text('json').notNullable().defaultTo('');
+    }
+  };
+
+  // private async emptyTempFiles() {
+  //   await this.knex<FileRow>(fileSchema.tableName).where('isTemp', 1).delete();
+  // }
 }
 
 export default new SqliteDb();

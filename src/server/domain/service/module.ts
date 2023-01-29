@@ -1,10 +1,8 @@
 import { Module } from '@nestjs/common';
 
-import FileService from './FileService';
-import MaterialService from './MaterialService';
-import TagService from './TagService';
+import NoteService from './NoteService';
 
-const services = [FileService, MaterialService, TagService];
+const services = [NoteService];
 
 @Module({
   providers: services,

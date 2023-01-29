@@ -4,7 +4,7 @@ import uid from 'lodash/uniqueId';
 import cloneDeepWith from 'lodash/cloneDeepWith';
 import { type MosaicNode, getLeaves } from 'react-mosaic-component';
 
-import Window, { type Openable, type TabVO, Events as WindowEvents } from 'model/Window';
+import Window, { type Openable, type Tab, Events as WindowEvents } from 'model/Window';
 import storage from 'web/utils/storage';
 
 const WORKBENCH_WINDOWS_KEY = 'workbench.windows';
@@ -13,9 +13,9 @@ export type WindowId = string;
 
 const getUid = () => uid('window-');
 
-interface LayoutVO {
+interface PersistenceLayout {
   layout: MosaicNode<WindowId>;
-  windows: Record<WindowId, TabVO[]>;
+  windows: Record<WindowId, Tab[]>;
   focused: WindowId;
 }
 
@@ -32,7 +32,7 @@ export default class WorkbenchService {
 
   @action
   private loadWindows() {
-    const layout = storage.get<LayoutVO>(WORKBENCH_WINDOWS_KEY);
+    const layout = storage.get<PersistenceLayout>(WORKBENCH_WINDOWS_KEY);
 
     if (!layout) {
       return;
@@ -61,7 +61,7 @@ export default class WorkbenchService {
   }
 
   @action
-  private createWindow(tabs?: TabVO[]) {
+  private createWindow(tabs?: Tab[]) {
     const windowId = getUid();
     const newWindow = new Window(tabs);
     this.windowMap.set(windowId, newWindow);
@@ -180,17 +180,17 @@ export default class WorkbenchService {
       return;
     }
 
-    const windows: LayoutVO['windows'] = {};
+    const windows: PersistenceLayout['windows'] = {};
 
     for (const [key, value] of this.windowMap.entries()) {
       windows[key] = value.tabs.map((tab) => ({
-        id: tab.materialId,
-        type: 'material',
+        entityId: tab.entityId,
+        type: tab.type,
         ...(tab === value.currentTab ? { focused: true } : null),
       }));
     }
 
-    storage.set<LayoutVO>(WORKBENCH_WINDOWS_KEY, {
+    storage.set<PersistenceLayout>(WORKBENCH_WINDOWS_KEY, {
       focused: this.currentWindowId,
       layout: this.layout,
       windows,

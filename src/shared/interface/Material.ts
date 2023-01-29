@@ -21,7 +21,7 @@ export const materialsDTOSchema = array(materialDTOSchema);
 export type MaterialDTO = Infer<typeof materialDTOSchema>;
 
 export type MaterialVO = {
-  id: number;
+  id: string;
   name: string;
   comment: string;
   rating: number;
