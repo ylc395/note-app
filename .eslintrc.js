@@ -20,6 +20,10 @@ module.exports = {
       extends: ['plugin:@typescript-eslint/recommended'],
     },
     {
+      files: ['*.tsx'],
+      extends: ['plugin:react-hooks/recommended'],
+    },
+    {
       files: ['*Controller.ts'],
       rules: { '@typescript-eslint/explicit-function-return-type': 'error' },
     },

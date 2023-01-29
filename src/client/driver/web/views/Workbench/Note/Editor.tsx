@@ -37,7 +37,7 @@ export default observer(function NoteEditor({ editor }: { editor: NoteEditorMode
         );
       });
     }
-  }, [editor.noteBody, milkdownEditor.editor.current]);
+  }, [editor.noteBody, milkdownEditor.editor]);
 
   return <ReactEditor editor={milkdownEditor} />;
 });
