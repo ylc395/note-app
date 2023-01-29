@@ -21,7 +21,7 @@ module.exports = {
     },
     {
       files: ['*.tsx'],
-      extends: ['plugin:react-hooks/recommended'],
+      extends: ['plugin:react-hooks/recommended', 'plugin:react/recommended', 'plugin:react/jsx-runtime'],
     },
     {
       files: ['*Controller.ts'],
