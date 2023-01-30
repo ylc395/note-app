@@ -1,23 +1,24 @@
 import { observer } from 'mobx-react-lite';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { ReactEditor, useEditor } from '@milkdown/react';
 import { Editor, editorViewCtx, rootCtx, schemaCtx } from '@milkdown/core';
 import { gfm } from '@milkdown/preset-gfm';
 import { listener, listenerCtx } from '@milkdown/plugin-listener';
 import { Slice, Fragment } from 'prosemirror-model';
 
-import type Window from 'model/Window';
+import type NoteEditor from 'model/editor/NoteEditor';
 
-export default observer(function NoteEditor({ window }: { window: Window }) {
-  const noteBody = window.currentTab?.type === 'note' && window.currentTab.editor?.noteBody;
+export default observer(function NoteEditor({ editor }: { editor: NoteEditor }) {
+  const editorRef = useRef<NoteEditor | undefined>();
+
   const { editor: milkdownEditor } = useEditor(
     (root) =>
       Editor.make()
         .config((ctx) => {
           ctx.set(rootCtx, root);
-          ctx.get(listenerCtx).updated((ctx, doc, pre) => {
-            if (pre) {
-              window?.currentTab?.editor?.save(doc.toJSON());
+          ctx.get(listenerCtx).updated((_, doc, pre) => {
+            if (pre && editorRef.current) {
+              editorRef.current.save(doc.toJSON());
             }
           });
         })
@@ -29,21 +30,26 @@ export default observer(function NoteEditor({ window }: { window: Window }) {
   useEffect(() => {
     const e = milkdownEditor.editor.current;
 
-    if (e && typeof noteBody === 'string') {
-      e.action((ctx) => {
-        const view = ctx.get(editorViewCtx);
-        const schema = ctx.get(schemaCtx);
-        const state = view.state;
-        view.dispatch(
-          state.tr.replace(
-            0,
-            state.doc.content.size,
-            new Slice(Fragment.fromJSON(schema, noteBody ? [JSON.parse(noteBody)] : []), 0, 0),
-          ),
-        );
-      });
+    if (!e) {
+      return;
     }
-  }, [noteBody, milkdownEditor]);
+
+    e.action((ctx) => {
+      if (!editor.noteBody) {
+        return;
+      }
+
+      editorRef.current = undefined;
+
+      const view = ctx.get(editorViewCtx);
+      const schema = ctx.get(schemaCtx);
+      const state = view.state;
+      const slice = new Slice(Fragment.fromJSON(schema, [JSON.parse(editor.noteBody)]), 0, 0);
+
+      view.dispatch(state.tr.replace(0, state.doc.content.size, slice));
+      editorRef.current = editor;
+    });
+  }, [editor, editor.noteBody, milkdownEditor.editor]);
 
   return <ReactEditor editor={milkdownEditor} />;
 });
