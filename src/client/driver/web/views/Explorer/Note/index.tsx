@@ -1,5 +1,7 @@
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
+import { Resizable } from 're-resizable';
+
 import NoteService from 'service/NoteService';
 
 import Tree from './Tree';
@@ -8,7 +10,7 @@ export default observer(function NoteExplorer() {
   const { createNote } = container.resolve(NoteService);
 
   return (
-    <div className="flex">
+    <Resizable enable={{ right: true }} minWidth={200} defaultSize={{ width: 200, height: 'auto' }}>
       <div>
         <div>笔记</div>
         <div>
@@ -16,6 +18,6 @@ export default observer(function NoteExplorer() {
         </div>
       </div>
       <Tree />
-    </div>
+    </Resizable>
   );
 });

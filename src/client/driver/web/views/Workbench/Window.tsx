@@ -3,7 +3,7 @@ import { MosaicWindow, type MosaicBranch } from 'react-mosaic-component';
 import { container } from 'tsyringe';
 
 import WorkbenchService, { type WindowId } from 'service/WorkbenchService';
-import NoteEditor from './Note/Editor';
+import NoteWorkbench from './Note';
 import Tabs from './Tabs';
 
 export default observer(function Window({ path, id }: { path: MosaicBranch[]; id: WindowId }) {
@@ -16,7 +16,7 @@ export default observer(function Window({ path, id }: { path: MosaicBranch[]; id
 
   return (
     <MosaicWindow path={path} title="" renderToolbar={() => <Tabs id={id} />}>
-      {w.currentTab?.type === 'note' && w.currentTab.editor && <NoteEditor editor={w.currentTab.editor} />}
+      {w.currentTab?.type === 'note' && w.currentTab.editor && <NoteWorkbench editor={w.currentTab.editor} />}
     </MosaicWindow>
   );
 });

@@ -21,7 +21,7 @@ export default observer(function ActivityBar() {
       inlineCollapsed
       selectedKeys={[currentView]}
       onSelect={handleSelect}
-      className="h-screen w-16"
+      className="h-screen w-14"
       items={[
         { key: KnowledgeTypes.Materials, icon: <FaBoxes />, label: '素材库' },
         { key: KnowledgeTypes.Notes, icon: <SlNotebook />, label: '笔记本' },

@@ -7,7 +7,7 @@ import './index.css';
 import ViewService from 'service/ViewService';
 import { KnowledgeTypes } from 'model/constants';
 
-import ActivityBar from './ActivityBar';
+import ActivityBar from './Explorer/ActivityBar';
 import MaterialExplorer from './Explorer/Material';
 import NoteExplorer from './Explorer/Note';
 import Workbench from './Workbench';

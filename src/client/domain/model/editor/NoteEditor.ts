@@ -4,7 +4,7 @@ import type { NoteVO, NoteBodyVO, NoteBodyDTO } from 'interface/Note';
 import BaseEditor from './BaseEditor';
 
 export default class NoteEditor extends BaseEditor {
-  @observable.ref note?: NoteVO;
+  @observable note?: NoteVO;
   @observable noteBody?: NoteBodyVO;
 
   constructor(readonly entityId: NoteVO['id']) {
@@ -33,5 +33,16 @@ export default class NoteEditor extends BaseEditor {
     runInAction(() => {
       this.noteBody = jsonStr;
     });
+  }
+
+  async saveTitle(title: string) {
+    runInAction(() => {
+      if (!this.note) {
+        throw new Error('no note');
+      }
+      this.note.title = title;
+    });
+
+    await this.remote.patch(`/notes/${this.entityId}`, { title });
   }
 }

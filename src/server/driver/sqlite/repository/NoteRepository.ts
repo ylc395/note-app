@@ -48,7 +48,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
     try {
       note.parentId && (await this.assertExistenceById(note.parentId, trx));
 
-      const row = await this.createOrUpdate(note, id);
+      const row = await this.createOrUpdate(note, id, trx);
       const json = JSON.parse(row.json || '{}');
       const childrenCount = await trx<Row>(this.schema.tableName).where('parentId', row.id).count({ count: 'id' });
 

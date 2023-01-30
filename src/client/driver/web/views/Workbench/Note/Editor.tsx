@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useContext } from 'react';
 import { ReactEditor, useEditor } from '@milkdown/react';
 import { Editor, editorViewCtx, rootCtx, schemaCtx } from '@milkdown/core';
 import { gfm } from '@milkdown/preset-gfm';
@@ -7,9 +7,11 @@ import { listener, listenerCtx } from '@milkdown/plugin-listener';
 import { Slice, Fragment } from 'prosemirror-model';
 
 import type NoteEditor from 'model/editor/NoteEditor';
+import { EditorContext } from './context';
 
-export default observer(function NoteEditor({ editor }: { editor: NoteEditor }) {
+export default observer(function NoteEditor() {
   const editorRef = useRef<NoteEditor | undefined>();
+  const editor = useContext(EditorContext);
 
   const { editor: milkdownEditor } = useEditor(
     (root) =>
@@ -35,7 +37,7 @@ export default observer(function NoteEditor({ editor }: { editor: NoteEditor }) 
     }
 
     e.action((ctx) => {
-      if (typeof editor.noteBody !== 'string') {
+      if (editor === editorRef.current || !editor || typeof editor.noteBody !== 'string') {
         return;
       }
 
@@ -49,7 +51,7 @@ export default observer(function NoteEditor({ editor }: { editor: NoteEditor }) 
       view.dispatch(state.tr.replace(0, state.doc.content.size, slice));
       editorRef.current = editor;
     });
-  }, [editor, editor.noteBody, milkdownEditor.editor]);
+  }, [editor, editor?.noteBody, milkdownEditor.editor]);
 
   return <ReactEditor editor={milkdownEditor} />;
 });
