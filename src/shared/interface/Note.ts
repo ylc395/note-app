@@ -13,7 +13,7 @@ export type NoteDTO = Infer<typeof noteDTOSchema>;
 
 export type NoteVO = Required<NoteDTO> & {
   id: string;
-  hasChildren: boolean;
+  childrenCount: number;
   userUpdatedAt: number;
   userCreatedAt: number;
 };

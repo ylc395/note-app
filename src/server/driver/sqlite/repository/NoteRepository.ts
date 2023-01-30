@@ -1,4 +1,5 @@
 import omit from 'lodash/omit';
+
 import type { NoteRepository } from 'service/repository/NoteRepository';
 import type { NoteDTO, NoteVO, NoteBodyDTO, NoteQuery } from 'interface/Note';
 
@@ -22,7 +23,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
         parentId: note.parentId || null,
         isReadonly: note.isReadonly || false,
         icon: note.icon || null,
-        hasChildren: false,
+        childrenCount: 0,
       };
     } catch (e) {
       await trx.rollback();
@@ -48,7 +49,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
 
       const row = await this.createOrUpdate(note, id);
       const json = JSON.parse(row.json || '{}');
-      const child = await trx<Row>(this.schema.tableName).where('parentId', id).first();
+      const childrenCount = await trx<Row>(this.schema.tableName).where('parentId', row.id).count({ count: 'id' });
 
       await trx.commit();
 
@@ -58,7 +59,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
         parentId: note.parentId || null,
         isReadonly: json.isReadonly || false,
         icon: json.icon || null,
-        hasChildren: Boolean(child),
+        childrenCount: Number(childrenCount[0]?.count),
       };
     } catch (error) {
       trx.rollback(error);
@@ -77,29 +78,27 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
   }
 
   async findAll(query: NoteQuery) {
-    const rows = await this.knex<Row>(this.schema.tableName)
+    const rows = await this.knex
+      .select<(Row & { childrenCount: number; json: string })[]>(
+        this.knex.raw('parent.*'),
+        this.knex.raw('count(child.id) as childrenCount'),
+      )
+      .from(`${this.schema.tableName} as parent`)
+      .leftJoin(this.knex.raw(`${this.schema.tableName} as child`), 'child.parentId', 'parent.id')
       .where(query)
-      .select(...Object.keys(omit(noteSchema.fields, 'body')));
+      .groupBy('parent.id');
 
-    const trx = await this.knex.transaction();
+    const notes = rows.map((row) => {
+      const json = JSON.parse(row.json || '{}');
 
-    const notes = await Promise.all(
-      rows.map(async (row) => {
-        const json = JSON.parse(row.json || '{}');
-        const child = await trx<Row>(this.schema.tableName).where('parentId', row.id).first();
-
-        return {
-          ...row,
-          id: String(row.id),
-          parentId: row.parentId ? String(row.parentId) : null,
-          isReadonly: json.isReadonly || false,
-          icon: json.icon || null,
-          hasChildren: Boolean(child),
-        };
-      }),
-    );
-
-    await trx.commit();
+      return {
+        ...omit(row, ['body', 'json']),
+        id: String(row.id),
+        parentId: row.parentId ? String(row.parentId) : null,
+        isReadonly: json.isReadonly || false,
+        icon: json.icon || null,
+      };
+    });
 
     return notes;
   }
