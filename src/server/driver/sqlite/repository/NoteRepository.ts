@@ -1,4 +1,5 @@
 import omit from 'lodash/omit';
+import mapKeys from 'lodash/mapKeys';
 
 import type { NoteRepository } from 'service/repository/NoteRepository';
 import type { NoteDTO, NoteVO, NoteBodyDTO, NoteQuery } from 'interface/Note';
@@ -85,7 +86,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
       )
       .from(`${this.schema.tableName} as parent`)
       .leftJoin(this.knex.raw(`${this.schema.tableName} as child`), 'child.parentId', 'parent.id')
-      .where(query)
+      .where(mapKeys(query, (_, key) => `parent.${key}`))
       .groupBy('parent.id');
 
     const notes = rows.map((row) => {

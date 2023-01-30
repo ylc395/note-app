@@ -35,7 +35,7 @@ export default observer(function NoteEditor({ editor }: { editor: NoteEditor }) 
     }
 
     e.action((ctx) => {
-      if (!editor.noteBody) {
+      if (typeof editor.noteBody !== 'string') {
         return;
       }
 
@@ -44,7 +44,7 @@ export default observer(function NoteEditor({ editor }: { editor: NoteEditor }) 
       const view = ctx.get(editorViewCtx);
       const schema = ctx.get(schemaCtx);
       const state = view.state;
-      const slice = new Slice(Fragment.fromJSON(schema, [JSON.parse(editor.noteBody)]), 0, 0);
+      const slice = new Slice(Fragment.fromJSON(schema, editor.noteBody ? [JSON.parse(editor.noteBody)] : []), 0, 0);
 
       view.dispatch(state.tr.replace(0, state.doc.content.size, slice));
       editorRef.current = editor;
