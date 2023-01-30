@@ -33,4 +33,8 @@ export default class MaterialEditor extends BaseEditor {
       });
     }
   }
+
+  async save(body: unknown) {
+    return;
+  }
 }

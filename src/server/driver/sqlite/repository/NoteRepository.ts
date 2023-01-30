@@ -1,3 +1,4 @@
+import omit from 'lodash/omit';
 import type { NoteRepository } from 'service/repository/NoteRepository';
 import type { NoteDTO, NoteVO, NoteBodyDTO, NoteQuery } from 'interface/Note';
 
@@ -16,7 +17,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
       await trx.commit();
 
       return {
-        ...row,
+        ...omit(row, 'body'),
         id: String(row.id),
         parentId: note.parentId || null,
         isReadonly: note.isReadonly || false,
@@ -76,7 +77,10 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
   }
 
   async findAll(query: NoteQuery) {
-    const rows = await this.knex<Row>(this.schema.tableName).where(query).select();
+    const rows = await this.knex<Row>(this.schema.tableName)
+      .where(query)
+      .select(...Object.keys(omit(noteSchema.fields, 'body')));
+
     const trx = await this.knex.transaction();
 
     const notes = await Promise.all(

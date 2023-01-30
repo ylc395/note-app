@@ -3,8 +3,8 @@ import { union, boolean, number, object, string, null as zodNull, type infer as 
 export const noteDTOSchema = object({
   title: string().optional(),
   isReadonly: boolean().optional(),
-  updatedAt: number().optional(),
-  createdAt: number().optional(),
+  userUpdatedAt: number().optional(),
+  userCreatedAt: number().optional(),
   parentId: union([zodNull(), string()]).optional(),
   icon: union([string().regex(/^(emoji:|file:).+/), zodNull()]).optional(),
 });

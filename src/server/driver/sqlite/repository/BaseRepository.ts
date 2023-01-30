@@ -1,12 +1,13 @@
 import type { Knex } from 'knex';
 import pick from 'lodash/pick';
 import isEmpty from 'lodash/isEmpty';
+import pull from 'lodash/pull';
+
 import db from 'driver/sqlite';
 
 import type { Schema } from '../schema/type';
 
-// eslint-disable-next-line @typescript-eslint/ban-types
-export default abstract class BaseRepository<Row> {
+export default abstract class BaseRepository<Row extends object> {
   protected get knex() {
     return db.knex;
   }
@@ -39,7 +40,7 @@ export default abstract class BaseRepository<Row> {
         const updatedRows = await _trx(this.schema.tableName)
           .update(fields)
           .where('id', _id)
-          .returning(this.knex.raw('*'));
+          .returning(pull(Object.keys(this.schema.fields), 'json'));
 
         if (updatedRows.length === 0) {
           throw new Error(`invalid id ${_id} in table ${this.schema.tableName} when update`);
@@ -47,7 +48,9 @@ export default abstract class BaseRepository<Row> {
 
         updatedRow = updatedRows[0];
       } else {
-        const createdRows = await _trx(this.schema.tableName).insert(fields).returning(this.knex.raw('*'));
+        const createdRows = await _trx(this.schema.tableName)
+          .insert(fields)
+          .returning(pull(Object.keys(this.schema.fields), 'json'));
         updatedRow = createdRows[0];
         _id = String(createdRows[0].id);
       }

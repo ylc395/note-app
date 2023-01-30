@@ -15,10 +15,10 @@ const createMethod = <T, H>(method: IpcRequest<unknown>['method']) => {
       request.headers = headers;
     }
 
-    console.log('request:', request);
+    console.log('☎️request:', request);
 
     const response = await ipcRenderer.invoke(IPC_CHANNEL, request);
-    console.log('response:', response);
+    console.log('🎺response:', response);
 
     return response;
   };

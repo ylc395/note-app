@@ -1,5 +1,5 @@
 import { singleton } from 'tsyringe';
-import { observable, makeObservable, action } from 'mobx';
+import { observable, makeObservable, action, computed } from 'mobx';
 import uid from 'lodash/uniqueId';
 import cloneDeepWith from 'lodash/cloneDeepWith';
 import { type MosaicNode, getLeaves } from 'react-mosaic-component';
@@ -22,7 +22,12 @@ interface PersistenceLayout {
 @singleton()
 export default class WorkbenchService {
   @observable layout?: MosaicNode<WindowId>;
-  @observable.ref currentWindowId?: WindowId;
+  @observable.ref private currentWindowId?: WindowId;
+
+  @computed get currentWindow() {
+    return this.currentWindowId ? this.windowMap.get(this.currentWindowId) : undefined;
+  }
+
   constructor() {
     this.loadWindows();
     makeObservable(this);

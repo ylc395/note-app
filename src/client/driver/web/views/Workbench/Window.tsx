@@ -16,7 +16,7 @@ export default observer(function Window({ path, id }: { path: MosaicBranch[]; id
 
   return (
     <MosaicWindow path={path} title="" renderToolbar={() => <Tabs id={id} />}>
-      {w.currentTab?.type === 'note' && w.currentTab.editor && <NoteEditor editor={w.currentTab.editor} />}
+      {w.currentTab?.type === 'note' && w.currentTab.editor && <NoteEditor window={w} />}
     </MosaicWindow>
   );
 });

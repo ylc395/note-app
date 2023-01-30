@@ -14,7 +14,7 @@ export default class NoteService {
   }
 
   readonly createNote = async () => {
-    await this.#remote.post<NoteDTO>('/notes', {});
+    await this.#remote.post<NoteDTO>('/notes', { title: 'new note' });
     await this.fetchNotes();
   };
 

@@ -11,12 +11,12 @@ export default observer(function NoteTree() {
 
   useEffect(() => {
     fetchNotes();
-  }, []);
+  }, [fetchNotes]);
 
   return (
     <div>
       {notes.map((note) => (
-        <div key={note.id} onClick={() => open({ type: 'note', entity: note }, true)}>
+        <div key={note.id} onClick={() => open({ type: 'note', entity: note }, false)}>
           {note.id} {note.title}
         </div>
       ))}

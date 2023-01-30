@@ -27,7 +27,11 @@ export default class NoteEditor extends BaseEditor {
     });
   }
 
-  async updateNoteBody(body: unknown) {
-    await this.remote.put<NoteBodyDTO>(`/notes/${this.entityId}/body`, JSON.stringify(body));
+  async save(body: unknown) {
+    const jsonStr = JSON.stringify(body);
+    await this.remote.put<NoteBodyDTO>(`/notes/${this.entityId}/body`, jsonStr);
+    runInAction(() => {
+      this.noteBody = jsonStr;
+    });
   }
 }
