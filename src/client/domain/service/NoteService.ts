@@ -17,7 +17,8 @@ export default class NoteService {
   }
 
   readonly createNote = async () => {
-    const { body: note } = await this.remote.post<NoteDTO, NoteVO>('/notes', {});
+    // fixme: knex 有个 bug，目前必须写一个字段进去 https://github.com/knex/knex/pull/5471
+    const { body: note } = await this.remote.post<NoteDTO, NoteVO>('/notes', { title: '' });
     this.noteTree.updateTreeByNote(note);
   };
 }
