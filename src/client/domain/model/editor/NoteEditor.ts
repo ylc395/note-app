@@ -1,8 +1,9 @@
 import { makeObservable, computed, observable, runInAction } from 'mobx';
+import debounce from 'lodash/debounce';
 
 import type { NoteVO, NoteBodyVO, NoteBodyDTO } from 'interface/Note';
-import BaseEditor from './BaseEditor';
 import type Window from 'model/Window';
+import BaseEditor from './BaseEditor';
 
 export default class NoteEditor extends BaseEditor {
   @observable note?: NoteVO;
@@ -28,16 +29,16 @@ export default class NoteEditor extends BaseEditor {
     });
   }
 
-  async save(body: unknown) {
+  readonly save = debounce(async (body: unknown) => {
     const jsonStr = JSON.stringify(body);
     runInAction(() => {
       this.noteBody = jsonStr;
     });
 
     await this.remote.put<NoteBodyDTO>(`/notes/${this.entityId}/body`, jsonStr);
-  }
+  }, 500);
 
-  async saveTitle(title: string) {
+  saveTitle(title: string) {
     runInAction(() => {
       if (!this.note) {
         throw new Error('no note');
@@ -45,7 +46,11 @@ export default class NoteEditor extends BaseEditor {
       this.note.title = title;
     });
 
-    await this.remote.patch(`/notes/${this.entityId}`, { title });
-    this.window.notifyEntityUpdated(this);
+    this.#syncTitle(title);
   }
+
+  readonly #syncTitle = debounce(async (title: string) => {
+    this.window.notifyEntityUpdated(this);
+    await this.remote.patch(`/notes/${this.entityId}`, { title });
+  }, 500);
 }

@@ -9,5 +9,4 @@ export default abstract class BaseEditor {
   readonly id = uid('editor-');
   protected readonly remote: Remote = container.resolve(remoteToken);
   abstract title: string;
-  abstract save(content: unknown): Promise<void>;
 }
