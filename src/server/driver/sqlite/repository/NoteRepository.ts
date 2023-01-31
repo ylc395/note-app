@@ -1,5 +1,7 @@
 import omit from 'lodash/omit';
+import omitBy from 'lodash/omitBy';
 import mapKeys from 'lodash/mapKeys';
+import isUndefined from 'lodash/isUndefined';
 
 import type { NoteRepository } from 'service/repository/NoteRepository';
 import type { NoteDTO, NoteVO, NoteBodyDTO, NoteQuery } from 'interface/Note';
@@ -79,6 +81,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
   }
 
   async findAll(query: NoteQuery) {
+    const where = mapKeys(omitBy(query, isUndefined), (_, key) => `parent.${key}`);
     const rows = await this.knex
       .select<(Row & { childrenCount: number; json: string })[]>(
         this.knex.raw('parent.*'),
@@ -86,7 +89,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
       )
       .from(`${this.schema.tableName} as parent`)
       .leftJoin(this.knex.raw(`${this.schema.tableName} as child`), 'child.parentId', 'parent.id')
-      .where(mapKeys(query, (_, key) => `parent.${key}`))
+      .where(where)
       .groupBy('parent.id');
 
     const notes = rows.map((row) => {

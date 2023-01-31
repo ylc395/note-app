@@ -18,11 +18,13 @@ export type NoteVO = Required<NoteDTO> & {
   userCreatedAt: number;
 };
 
+export const noteQuerySchema = object({
+  parentId: union([zodNull(), string()]).optional(),
+  id: string().optional(),
+});
+
 export type NoteBodyDTO = string;
 
 export type NoteBodyVO = NoteBodyDTO;
 
-export interface NoteQuery {
-  parentId?: NoteVO['parentId'];
-  id?: NoteVO['id'];
-}
+export type NoteQuery = Infer<typeof noteQuerySchema>;

@@ -8,6 +8,7 @@ import {
   type NoteVO,
   type NoteQuery,
   noteDTOSchema,
+  noteQuerySchema,
 } from 'interface/Note';
 import NoteService from 'service/NoteService';
 
@@ -21,7 +22,7 @@ export default class NotesController {
   }
 
   @Get('/notes')
-  async query(@Query() q: NoteQuery): Promise<NoteVO[]> {
+  async query(@Query(createSchemaPipe(noteQuerySchema)) q: NoteQuery): Promise<NoteVO[]> {
     return await this.noteService.query(q);
   }
 
