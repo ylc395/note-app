@@ -2,16 +2,23 @@ import { singleton } from 'tsyringe';
 import { observable, makeObservable, action, computed } from 'mobx';
 import uid from 'lodash/uniqueId';
 import cloneDeepWith from 'lodash/cloneDeepWith';
+import EventEmitter from 'eventemitter3';
 import { type MosaicNode, getLeaves } from 'react-mosaic-component';
 
 import Window, { type Openable, type Tab, Events as WindowEvents } from 'model/Window';
 import storage from 'web/utils/storage';
+import NoteEditor from 'model/editor/NoteEditor';
 
 const WORKBENCH_WINDOWS_KEY = 'workbench.windows';
 
 export type WindowId = string;
 
 const getUid = () => uid('window-');
+
+export enum WorkbenchEvents {
+  NoteUpdated = 'workbench.noteUpdated',
+  MaterialUpdated = 'workbench.materialUpdated',
+}
 
 interface PersistenceLayout {
   layout: MosaicNode<WindowId>;
@@ -20,7 +27,7 @@ interface PersistenceLayout {
 }
 
 @singleton()
-export default class WorkbenchService {
+export default class WorkbenchService extends EventEmitter {
   @observable layout?: MosaicNode<WindowId>;
   @observable.ref private currentWindowId?: WindowId;
 
@@ -29,6 +36,7 @@ export default class WorkbenchService {
   }
 
   constructor() {
+    super();
     this.loadWindows();
     makeObservable(this);
   }
@@ -69,9 +77,14 @@ export default class WorkbenchService {
   private createWindow(tabs?: Tab[]) {
     const windowId = getUid();
     const newWindow = new Window(tabs);
-    this.windowMap.set(windowId, newWindow);
 
+    this.windowMap.set(windowId, newWindow);
     newWindow.on(WindowEvents.Closed, () => this.closeWindow(windowId));
+    newWindow.on(WindowEvents.EntityUpdated, (editor) => {
+      if (editor instanceof NoteEditor) {
+        this.emit(WorkbenchEvents.NoteUpdated, editor.note);
+      }
+    });
 
     return [windowId, newWindow] as const;
   }
@@ -191,7 +204,7 @@ export default class WorkbenchService {
       windows[key] = value.tabs.map((tab) => ({
         entityId: tab.entityId,
         type: tab.type,
-        ...(tab === value.currentTab ? { focused: true } : null),
+        focused: tab === value.currentTab,
       }));
     }
 

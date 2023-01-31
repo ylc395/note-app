@@ -2,13 +2,14 @@ import { makeObservable, computed, observable, runInAction } from 'mobx';
 
 import type { NoteVO, NoteBodyVO, NoteBodyDTO } from 'interface/Note';
 import BaseEditor from './BaseEditor';
+import type Window from 'model/Window';
 
 export default class NoteEditor extends BaseEditor {
   @observable note?: NoteVO;
   @observable noteBody?: NoteBodyVO;
 
-  constructor(readonly entityId: NoteVO['id']) {
-    super();
+  constructor(protected readonly window: Window, readonly entityId: NoteVO['id']) {
+    super(window, entityId);
     makeObservable(this);
     this.load();
   }
@@ -29,10 +30,11 @@ export default class NoteEditor extends BaseEditor {
 
   async save(body: unknown) {
     const jsonStr = JSON.stringify(body);
-    await this.remote.put<NoteBodyDTO>(`/notes/${this.entityId}/body`, jsonStr);
     runInAction(() => {
       this.noteBody = jsonStr;
     });
+
+    await this.remote.put<NoteBodyDTO>(`/notes/${this.entityId}/body`, jsonStr);
   }
 
   async saveTitle(title: string) {
@@ -44,5 +46,6 @@ export default class NoteEditor extends BaseEditor {
     });
 
     await this.remote.patch(`/notes/${this.entityId}`, { title });
+    this.window.notifyEntityUpdated(this);
   }
 }

@@ -22,7 +22,7 @@ export default observer(function Tabs({ id }: { id: WindowId }) {
       onChange={switchToTab}
       onEdit={(key) => typeof key === 'string' && closeTab(key)}
       items={w.tabs.map((tab) => ({ label: tab.editor?.title, key: String(tab.editor?.id) }))}
-      activeKey={currentTab?.editor?.id}
+      activeKey={currentTab?.editor.id}
     />
   );
 });

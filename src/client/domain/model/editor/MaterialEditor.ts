@@ -2,6 +2,7 @@ import { computed, makeObservable, observable, runInAction } from 'mobx';
 
 import type { MaterialVO } from 'interface/Material';
 import BaseEditor from './BaseEditor';
+import type Window from 'model/Window';
 
 export default class MaterialEditor extends BaseEditor {
   @observable.ref blob?: ArrayBuffer;
@@ -11,8 +12,8 @@ export default class MaterialEditor extends BaseEditor {
     return this.material?.name || '';
   }
 
-  constructor(readonly entityId: MaterialVO['id']) {
-    super();
+  constructor(protected readonly window: Window, readonly entityId: MaterialVO['id']) {
+    super(window, entityId);
     makeObservable(this);
     this.load();
   }

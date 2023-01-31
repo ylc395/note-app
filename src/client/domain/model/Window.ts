@@ -3,6 +3,7 @@ import type { MaterialVO } from 'interface/Material';
 import type { NoteVO } from 'interface/Note';
 import { action, makeObservable, observable, has } from 'mobx';
 
+import type BaseEditor from './editor/BaseEditor';
 import MaterialEditor from './editor/MaterialEditor';
 import NoteEditor from './editor/NoteEditor';
 
@@ -13,7 +14,7 @@ export interface Openable {
 
 export type Tab = {
   entityId: string;
-  focused?: true;
+  focused: boolean;
 } & (
   | {
       type: 'note';
@@ -27,6 +28,7 @@ export type Tab = {
 
 export enum Events {
   Closed = 'window.closed',
+  EntityUpdated = 'window.entityUpdated',
 }
 
 const TabTypeMap = {
@@ -35,8 +37,8 @@ const TabTypeMap = {
 } as const;
 
 export default class Window extends EventEmitter<Events> {
-  @observable.ref currentTab?: Tab;
-  @observable.shallow tabs: Tab[] = [];
+  @observable.ref currentTab?: Required<Tab>;
+  @observable.shallow tabs: Required<Tab>[] = [];
   constructor(tabs?: Tab[]) {
     super();
     this.loadTabs(tabs);
@@ -45,7 +47,7 @@ export default class Window extends EventEmitter<Events> {
 
   @action
   private createTab(tab: Tab) {
-    const newTab = { ...tab, editor: new TabTypeMap[tab.type](tab.entityId) } as Tab;
+    const newTab = { ...tab, editor: new TabTypeMap[tab.type](this, tab.entityId) } as Required<Tab>;
     this.tabs.push(newTab);
 
     return newTab;
@@ -62,7 +64,7 @@ export default class Window extends EventEmitter<Events> {
     }
 
     for (const { entityId, type, focused } of tabs) {
-      const tab = this.createTab({ entityId, type });
+      const tab = this.createTab({ entityId, type, focused });
 
       if (focused) {
         this.currentTab = tab;
@@ -71,7 +73,7 @@ export default class Window extends EventEmitter<Events> {
   }
 
   @action.bound
-  moveTabTo(src: Tab, dest: Tab) {
+  moveTabTo(src: Required<Tab>, dest: Tab) {
     const srcIndex = this.tabs.findIndex((tab) => tab === src);
     this.tabs.splice(srcIndex, 1);
 
@@ -82,7 +84,7 @@ export default class Window extends EventEmitter<Events> {
   @action.bound
   open({ entity, type }: Openable) {
     const existedTab = this.tabs.find((tab) => tab.type === type && tab.entityId === entity.id);
-    this.currentTab = existedTab || this.createTab({ type, entityId: entity.id });
+    this.currentTab = existedTab || this.createTab({ type, entityId: entity.id, focused: true });
   }
 
   @action.bound
@@ -106,7 +108,7 @@ export default class Window extends EventEmitter<Events> {
 
     this.tabs.splice(existedTabIndex, 1);
 
-    if (this.currentTab?.editor?.id === editorId) {
+    if (this.currentTab?.editor.id === editorId) {
       this.currentTab =
         (has(this.tabs, String(existedTabIndex)) && this.tabs[existedTabIndex]) ||
         (has(this.tabs, String(existedTabIndex)) && this.tabs[existedTabIndex - 1]) ||
@@ -121,5 +123,9 @@ export default class Window extends EventEmitter<Events> {
   private destroy() {
     this.emit(Events.Closed);
     this.removeAllListeners();
+  }
+
+  notifyEntityUpdated(editor: BaseEditor) {
+    this.emit(Events.EntityUpdated, editor);
   }
 }
