@@ -14,8 +14,8 @@ export type NoteDTO = Infer<typeof noteDTOSchema>;
 export type NoteVO = Required<NoteDTO> & {
   id: string;
   childrenCount: number;
-  userUpdatedAt: number;
-  userCreatedAt: number;
+  updatedAt: number;
+  createdAt: number;
 };
 
 export const noteQuerySchema = object({

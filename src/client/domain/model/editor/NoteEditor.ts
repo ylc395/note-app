@@ -1,5 +1,6 @@
 import { makeObservable, computed, observable, runInAction } from 'mobx';
 import debounce from 'lodash/debounce';
+import dayjs from 'dayjs';
 
 import type { NoteVO, NoteBodyVO, NoteBodyDTO } from 'interface/Note';
 import type Window from 'model/Window';
@@ -16,7 +17,11 @@ export default class NoteEditor extends EntityEditor {
   }
 
   @computed get title() {
-    return this.note?.title || '';
+    if (!this.note) {
+      return '';
+    }
+
+    return NoteEditor.normalizeTitle(this.note);
   }
 
   private async load() {
@@ -53,4 +58,8 @@ export default class NoteEditor extends EntityEditor {
     this.window.notifyEntityUpdated(this);
     await this.remote.patch(`/notes/${this.entityId}`, { title });
   }, 500);
+
+  static normalizeTitle(note: NoteVO) {
+    return note.title || `未命名笔记-${dayjs.unix(note.createdAt).format('YYYYMMDD-HHmm')}`;
+  }
 }

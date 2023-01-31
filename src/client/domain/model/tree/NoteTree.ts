@@ -4,6 +4,7 @@ import pull from 'lodash/pull';
 
 import { type Remote, token as remoteToken } from 'infra/Remote';
 import type { NoteQuery, NoteVO as Note } from 'interface/Note';
+import NoteEditor from 'model/editor/NoteEditor';
 
 interface NoteTreeNode {
   key: string;
@@ -41,7 +42,7 @@ export default class NoteTree {
 
     const node = observable({
       key: note.id,
-      title: note.title,
+      title: NoteEditor.normalizeTitle(note),
       isLeaf: note.childrenCount === 0,
       children: [],
       parent,
@@ -77,7 +78,7 @@ export default class NoteTree {
     }
 
     node.note = note;
-    node.title = note.title;
+    node.title = NoteEditor.normalizeTitle(note);
 
     const oldParent = node.parent;
 
