@@ -5,7 +5,7 @@ import { type Remote, token as remoteToken } from 'infra/Remote';
 import type { MaterialDTO, MaterialVO } from 'interface/Material';
 import type { FileDTO, FileVO } from 'interface/File';
 import type { TagVO } from 'interface/Tag';
-import TagTree, { Events as TagTreeEvents } from 'model/TagTree';
+import TagTree, { Events as TagTreeEvents } from 'model/tree/TagTree';
 import MaterialsForm, { type MaterialsFormModel } from 'model/form/MaterialForm';
 
 @singleton()

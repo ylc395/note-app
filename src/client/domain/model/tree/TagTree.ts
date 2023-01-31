@@ -6,9 +6,9 @@ import EventEmitter from 'eventemitter3';
 
 import { type Remote, token as remoteToken } from 'infra/Remote';
 import type { TagDTO, TagVO, TagQuery, TagPatchDTO } from 'interface/Tag';
-import TagForm, { TagFormModel } from './form/TagForm';
+import TagForm, { TagFormModel } from '../form/TagForm';
 
-export interface TagTreeNode {
+interface TagTreeNode {
   id: TagVO['id'];
   name: TagVO['name'];
   children?: TagTreeNode[];
@@ -24,7 +24,7 @@ export default class TagTree extends EventEmitter<Events> {
     super();
     makeObservable(this);
   }
-  private readonly remote: Remote = container.resolve(remoteToken);
+  private readonly remote = container.resolve<Remote>(remoteToken);
   @observable.ref roots: TagTreeNode[] = [];
   private nodesMap: Record<TagTreeNode['id'], TagTreeNode> = {};
   @observable.ref editingTag?: TagForm;

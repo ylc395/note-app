@@ -1,10 +1,10 @@
 import { computed, makeObservable, observable, runInAction } from 'mobx';
 
 import type { MaterialVO } from 'interface/Material';
-import BaseEditor from './BaseEditor';
+import EntityEditor from './EntityEditor';
 import type Window from 'model/Window';
 
-export default class MaterialEditor extends BaseEditor {
+export default class MaterialEditor extends EntityEditor {
   @observable.ref blob?: ArrayBuffer;
   @observable.ref material?: MaterialVO;
 
@@ -33,9 +33,5 @@ export default class MaterialEditor extends BaseEditor {
         this.blob = blob;
       });
     }
-  }
-
-  async save(body: unknown) {
-    return;
   }
 }

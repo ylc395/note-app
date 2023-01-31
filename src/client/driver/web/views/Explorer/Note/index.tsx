@@ -17,7 +17,9 @@ export default observer(function NoteExplorer() {
           <button onClick={createNote}>add</button>
         </div>
       </div>
-      <Tree />
+      <div>
+        <Tree />
+      </div>
     </Resizable>
   );
 });

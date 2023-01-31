@@ -3,9 +3,9 @@ import debounce from 'lodash/debounce';
 
 import type { NoteVO, NoteBodyVO, NoteBodyDTO } from 'interface/Note';
 import type Window from 'model/Window';
-import BaseEditor from './BaseEditor';
+import EntityEditor from './EntityEditor';
 
-export default class NoteEditor extends BaseEditor {
+export default class NoteEditor extends EntityEditor {
   @observable note?: NoteVO;
   @observable noteBody?: NoteBodyVO;
 
@@ -46,10 +46,10 @@ export default class NoteEditor extends BaseEditor {
       this.note.title = title;
     });
 
-    this.#syncTitle(title);
+    this.syncTitle(title);
   }
 
-  readonly #syncTitle = debounce(async (title: string) => {
+  private readonly syncTitle = debounce(async (title: string) => {
     this.window.notifyEntityUpdated(this);
     await this.remote.patch(`/notes/${this.entityId}`, { title });
   }, 500);

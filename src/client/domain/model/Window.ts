@@ -3,7 +3,7 @@ import type { MaterialVO } from 'interface/Material';
 import type { NoteVO } from 'interface/Note';
 import { action, makeObservable, observable, has } from 'mobx';
 
-import type BaseEditor from './editor/BaseEditor';
+import type EntityEditor from './editor/EntityEditor';
 import MaterialEditor from './editor/MaterialEditor';
 import NoteEditor from './editor/NoteEditor';
 
@@ -125,7 +125,7 @@ export default class Window extends EventEmitter<Events> {
     this.removeAllListeners();
   }
 
-  notifyEntityUpdated(editor: BaseEditor) {
+  notifyEntityUpdated(editor: EntityEditor) {
     this.emit(Events.EntityUpdated, editor);
   }
 }
