@@ -17,6 +17,7 @@ interface NoteTreeNode {
 
 export default class NoteTree {
   @observable roots: NoteTreeNode[] = [];
+  @observable readonly expandedNodes = new Set<NoteTreeNode['key']>();
   private readonly nodesMap: Record<Note['id'], NoteTreeNode> = {};
   private readonly remote = container.resolve<Remote>(remoteToken);
   constructor() {
@@ -109,5 +110,19 @@ export default class NoteTree {
         newParent.isLeaf = false;
       }
     }
+  }
+
+  @action.bound
+  toggleExpand(nodeId: NoteTreeNode['key']) {
+    if (this.expandedNodes.has(nodeId)) {
+      this.expandedNodes.delete(nodeId);
+    } else {
+      this.expandedNodes.add(nodeId);
+    }
+  }
+
+  @action.bound
+  collapseAll() {
+    this.expandedNodes.clear();
   }
 }

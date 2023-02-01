@@ -4,7 +4,7 @@ import { container } from 'tsyringe';
 import { useEffect, type MutableRefObject } from 'react';
 import { createPortal } from 'react-dom';
 import { Tree, Button, Dropdown, Tooltip, DropDownProps } from 'antd';
-import { SortAscendingOutlined, FileAddOutlined } from '@ant-design/icons';
+import { SortAscendingOutlined, FileAddOutlined, ShrinkOutlined } from '@ant-design/icons';
 
 import NoteService from 'service/NoteService';
 import WorkbenchService from 'service/WorkbenchService';
@@ -24,7 +24,7 @@ export default observer(function NoteTree({
   operationNode: MutableRefObject<HTMLDivElement | null>;
 }) {
   const {
-    noteTree: { roots, loadChildren, getNote },
+    noteTree: { roots, loadChildren, getNote, toggleExpand, expandedNodes, collapseAll },
     createNote,
   } = container.resolve(NoteService);
   const { open } = container.resolve(WorkbenchService);
@@ -39,18 +39,23 @@ export default observer(function NoteTree({
         treeData={toJS(roots)}
         blockNode
         className="bg-transparent"
+        expandedKeys={Array.from(expandedNodes)}
         loadData={(node) => loadChildren(node.key)}
+        onExpand={(_, { node }) => toggleExpand(node.key)}
         onSelect={(keys) => open({ type: 'note', entity: getNote(keys[0] as string) }, false)}
       />
       {operationNode.current &&
         createPortal(
           <>
-            <Tooltip title="新建根笔记" placement="top">
+            <Tooltip title="新建根笔记">
               <Button type="text" icon={<FileAddOutlined />} onClick={createNote} />
             </Tooltip>
-            <Dropdown menu={{ items: sortOptions }}>
+            <Dropdown menu={{ items: sortOptions }} placement="bottom" arrow>
               <Button type="text" icon={<SortAscendingOutlined />} />
             </Dropdown>
+            <Tooltip title="折叠全部节点">
+              <Button disabled={expandedNodes.size === 0} type="text" icon={<ShrinkOutlined />} onClick={collapseAll} />
+            </Tooltip>
           </>,
           operationNode.current,
         )}
