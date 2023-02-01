@@ -1,4 +1,4 @@
-import { observable, makeObservable, action } from 'mobx';
+import { observable, makeObservable, action, runInAction } from 'mobx';
 import { singleton } from 'tsyringe';
 
 export enum ViewTypes {
@@ -12,15 +12,12 @@ export enum ViewTypes {
 export enum NoteExplorerPanel {
   Tree = 'tree',
   Star = 'star',
+  Topic = 'topic',
 }
 
 @singleton()
 export default class ViewService {
   @observable currentView = ViewTypes.Notes;
-  @observable readonly explorerVisible = {
-    [ViewTypes.Notes]: true,
-    [ViewTypes.Materials]: true,
-  };
 
   @observable readonly explorerPanel = {
     [ViewTypes.Notes]: NoteExplorerPanel.Tree,
@@ -33,10 +30,5 @@ export default class ViewService {
   @action.bound
   setCurrentView(type: ViewTypes) {
     this.currentView = type;
-  }
-
-  @action.bound
-  toggleExplorerVisibility(type: ViewTypes) {
-    this.explorerVisible[type] = !this.explorerVisible[type];
   }
 }
