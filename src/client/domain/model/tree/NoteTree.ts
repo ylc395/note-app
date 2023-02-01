@@ -55,12 +55,6 @@ export default class NoteTree {
   }
 
   loadChildren = async (noteId?: Note['id']) => {
-    const children = noteId ? this.nodesMap[noteId]?.children : this.roots;
-
-    if (!children) {
-      throw new Error('no note');
-    }
-
     const { body: notes } = await this.remote.get<NoteQuery, Note[]>('/notes', { parentId: noteId || null });
     const nodes = notes.map(this.noteToNode.bind(this));
 
@@ -84,7 +78,15 @@ export default class NoteTree {
     const node = this.nodesMap[note.id];
 
     if (!node) {
-      return this.noteToNode(note);
+      const newNode = this.noteToNode(note);
+      const children = note.parentId ? this.nodesMap[note.parentId]?.children : this.roots;
+
+      if (!children) {
+        throw new Error('no children');
+      }
+
+      children.push(newNode);
+      return;
     }
 
     node.note = note;
@@ -107,7 +109,5 @@ export default class NoteTree {
         newParent.isLeaf = false;
       }
     }
-
-    return node;
   }
 }
