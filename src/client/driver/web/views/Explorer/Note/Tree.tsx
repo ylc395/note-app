@@ -1,9 +1,10 @@
 import { observer } from 'mobx-react-lite';
 import { toJS } from 'mobx';
 import { container } from 'tsyringe';
-import { useEffect, type MutableRefObject } from 'react';
+import { useCallback, useEffect, type MutableRefObject } from 'react';
 import { createPortal } from 'react-dom';
-import { Tree, Button, Dropdown, Tooltip, DropDownProps, ConfigProvider, theme } from 'antd';
+import { Tree, Button, Dropdown, Tooltip, DropDownProps, ConfigProvider, theme, type TreeProps } from 'antd';
+import type { AntdTreeNodeAttribute } from 'antd/es/tree';
 import { SortAscendingOutlined, FileAddOutlined, ShrinkOutlined } from '@ant-design/icons';
 
 import NoteService from 'service/NoteService';
@@ -24,12 +25,23 @@ export default observer(function NoteTree({
 }: {
   operationNode: MutableRefObject<HTMLDivElement | null>;
 }) {
+  const { open } = container.resolve(WorkbenchService);
+  const { token } = useToken();
   const {
     noteTree: { roots, loadChildren, getNote, toggleExpand, expandedNodes, collapseAll },
     createNote,
   } = container.resolve(NoteService);
-  const { open } = container.resolve(WorkbenchService);
-  const { token } = useToken();
+
+  // todo: move to useIcon
+  const getIcon: TreeProps['icon'] = useCallback(
+    (props: AntdTreeNodeAttribute) => {
+      const id = props.eventKey;
+      const note = getNote(id);
+
+      return note.icon ? <ShrinkOutlined /> : null;
+    },
+    [getNote],
+  );
 
   useEffect(() => {
     loadChildren();
@@ -44,8 +56,8 @@ export default observer(function NoteTree({
       >
         <Tree.DirectoryTree
           multiple
+          icon={getIcon}
           treeData={toJS(roots)}
-          blockNode
           expandedKeys={Array.from(expandedNodes)}
           expandAction={false}
           loadData={(node) => loadChildren(node.key)}
