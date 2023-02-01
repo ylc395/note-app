@@ -16,7 +16,7 @@ interface NoteTreeNode {
 }
 
 export default class NoteTree {
-  @observable readonly roots: NoteTreeNode[] = [];
+  @observable roots: NoteTreeNode[] = [];
   private readonly nodesMap: Record<Note['id'], NoteTreeNode> = {};
   private readonly remote = container.resolve<Remote>(remoteToken);
   constructor() {
@@ -65,7 +65,17 @@ export default class NoteTree {
     const nodes = notes.map(this.noteToNode.bind(this));
 
     runInAction(() => {
-      children.push(...nodes);
+      if (noteId) {
+        const targetNode = this.nodesMap[noteId];
+
+        if (!targetNode) {
+          throw new Error('no node');
+        }
+
+        targetNode.children = nodes;
+      } else {
+        this.roots = nodes;
+      }
     });
   };
 

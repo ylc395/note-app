@@ -4,8 +4,7 @@ import { ConfigProvider } from 'antd';
 import { useCallback } from 'react';
 import './index.css';
 
-import ViewService from 'service/ViewService';
-import { KnowledgeTypes } from 'model/constants';
+import ViewService, { ViewTypes } from 'service/ViewService';
 
 import ActivityBar from './Explorer/ActivityBar';
 import MaterialExplorer from './Explorer/Material';
@@ -13,8 +12,8 @@ import NoteExplorer from './Explorer/Note';
 import Workbench from './Workbench';
 
 const explorerMap = {
-  [KnowledgeTypes.Notes]: () => <NoteExplorer />,
-  [KnowledgeTypes.Materials]: () => <MaterialExplorer />,
+  [ViewTypes.Notes]: () => <NoteExplorer />,
+  [ViewTypes.Materials]: () => <MaterialExplorer />,
 } as const;
 
 export default observer(function App() {

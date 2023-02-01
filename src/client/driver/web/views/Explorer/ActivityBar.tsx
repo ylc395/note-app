@@ -1,17 +1,15 @@
 import { observer } from 'mobx-react-lite';
+import { useCallback } from 'react';
 import { container } from 'tsyringe';
 import { Menu, type MenuProps } from 'antd';
-import { FaBoxes } from 'react-icons/fa';
-import { SlNotebook } from 'react-icons/sl';
+import { BuildOutlined, BookOutlined } from '@ant-design/icons';
 
-import { KnowledgeTypes } from 'model/constants';
-import ViewService from 'service/ViewService';
-import { useCallback } from 'react';
+import ViewService, { ViewTypes } from 'service/ViewService';
 
 export default observer(function ActivityBar() {
   const { currentView, setCurrentView } = container.resolve(ViewService);
   const handleSelect: NonNullable<MenuProps['onSelect']> = useCallback(
-    ({ key }) => setCurrentView(key as KnowledgeTypes),
+    ({ key }) => setCurrentView(key as ViewTypes),
     [setCurrentView],
   );
 
@@ -21,10 +19,10 @@ export default observer(function ActivityBar() {
       inlineCollapsed
       selectedKeys={[currentView]}
       onSelect={handleSelect}
-      className="h-screen w-14"
+      className="h-screen w-14 bg-gray-50"
       items={[
-        { key: KnowledgeTypes.Materials, icon: <FaBoxes />, label: '素材库' },
-        { key: KnowledgeTypes.Notes, icon: <SlNotebook />, label: '笔记本' },
+        { key: ViewTypes.Materials, icon: <BuildOutlined />, label: '素材库' },
+        { key: ViewTypes.Notes, icon: <BookOutlined />, label: '笔记本' },
       ]}
     />
   );

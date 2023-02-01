@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import { Button, Dropdown, type MenuProps } from 'antd';
-import { BiPlus } from 'react-icons/bi';
+// import { BiPlus } from 'react-icons/bi';
 import { container } from 'tsyringe';
 
 import MaterialService from 'service/MaterialService';
@@ -28,7 +28,7 @@ export default observer(function AddMenu() {
         placement="bottomRight"
         menu={{ items, onClick: ({ key }) => select(key as Action) }}
       >
-        <Button icon={<BiPlus />} />
+        {/* <Button icon={<BiPlus />} /> */}
       </Dropdown>
       <MaterialModalForm />
     </>

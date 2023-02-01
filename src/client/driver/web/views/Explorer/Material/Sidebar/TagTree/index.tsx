@@ -1,7 +1,7 @@
 import { observer } from 'mobx-react-lite';
 import { useEffect, useCallback } from 'react';
 import { Tree, Button, type TreeProps, type ButtonProps } from 'antd';
-import { BiPlus } from 'react-icons/bi';
+// import { BiPlus } from 'react-icons/bi';
 import { container } from 'tsyringe';
 
 import MaterialService from 'service/MaterialService';
@@ -27,7 +27,7 @@ export const TagTreeHeader = observer(() => {
   return (
     <div className="flex justify-between flex-grow items-center">
       <span>标签管理器</span>
-      <Button size="small" onClick={handleAddButtonClick} icon={<BiPlus />} />
+      {/* <Button size="small" onClick={handleAddButtonClick} icon={<BiPlus />} /> */}
     </div>
   );
 });
