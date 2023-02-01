@@ -1,18 +1,17 @@
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 import { Resizable } from 're-resizable';
-import { Button, Tooltip, Input, Space } from 'antd';
-import { PlusOutlined, SortAscendingOutlined } from '@ant-design/icons';
+import { Input } from 'antd';
+import { useRef } from 'react';
 
 import ViewService, { NoteExplorerPanel, ViewTypes } from 'service/ViewService';
-import NoteService from 'service/NoteService';
 
 import PanelSwitcher from './PanelSwitcher';
 import Tree from './Tree';
 
 export default observer(function NoteExplorer() {
-  const { createNote } = container.resolve(NoteService);
   const { explorerPanel } = container.resolve(ViewService);
+  const operationNode = useRef<HTMLDivElement>(null);
 
   return (
     <Resizable enable={{ right: true }} minWidth={200} defaultSize={{ width: 300, height: 'auto' }}>
@@ -22,16 +21,9 @@ export default observer(function NoteExplorer() {
             <Input className="mr-4" placeholder="搜索笔记" />
             <PanelSwitcher />
           </div>
-          {explorerPanel[ViewTypes.Notes] === NoteExplorerPanel.Tree && (
-            <Space className="flex items-center">
-              <Tooltip title="新建根笔记">
-                <Button size="small" icon={<PlusOutlined />} onClick={createNote} />
-              </Tooltip>
-              <Button size="small" icon={<SortAscendingOutlined />} onClick={createNote} />
-            </Space>
-          )}
+          <div ref={operationNode}></div>
         </div>
-        {explorerPanel[ViewTypes.Notes] === NoteExplorerPanel.Tree && <Tree />}
+        {explorerPanel[ViewTypes.Notes] === NoteExplorerPanel.Tree && <Tree operationNode={operationNode} />}
       </div>
     </Resizable>
   );
