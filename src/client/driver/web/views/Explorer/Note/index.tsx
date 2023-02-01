@@ -2,7 +2,7 @@ import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 import { Resizable } from 're-resizable';
 import { Input } from 'antd';
-import { useCallback, useRef, useState } from 'react';
+import { useState } from 'react';
 
 import ViewService, { NoteExplorerPanel, ViewTypes } from 'service/ViewService';
 

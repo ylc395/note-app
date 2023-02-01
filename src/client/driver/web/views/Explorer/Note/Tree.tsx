@@ -1,28 +1,23 @@
 import { observer } from 'mobx-react-lite';
 import { toJS } from 'mobx';
 import { container } from 'tsyringe';
-import { useCallback, useEffect, useMemo, type MutableRefObject } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Tree, Button, Dropdown, Tooltip, DropDownProps, ConfigProvider, theme, type TreeProps } from 'antd';
+import { Tree, Button, Dropdown, Tooltip, ConfigProvider, theme, type TreeProps } from 'antd';
 import type { AntdTreeNodeAttribute } from 'antd/es/tree';
 import { SortAscendingOutlined, FileAddOutlined, ShrinkOutlined, SettingOutlined } from '@ant-design/icons';
 
 import NoteService from 'service/NoteService';
 import WorkbenchService from 'service/WorkbenchService';
 
+import useNoteSort from './useNoteSort';
+
 const { useToken } = theme;
-const sortOptions: NonNullable<DropDownProps['menu']>['items'] = [
-  { key: '1', label: '根据名字排序' },
-  { key: '2', label: '根据修改时间排序' },
-  { key: '3', label: '根据创建时间排序' },
-  { type: 'divider' },
-  { key: '4', label: '升序' },
-  { key: '5', label: '降序' },
-];
 
 export default observer(function NoteTree({ operationEl: operationNode }: { operationEl: HTMLElement | null }) {
   const { open } = container.resolve(WorkbenchService);
   const { token } = useToken();
+  const { menuOptions, handleClick } = useNoteSort();
   const {
     noteTree: { roots, loadChildren, getNote, toggleExpand, expandedNodes, collapseAll },
     createNote,
@@ -47,7 +42,7 @@ export default observer(function NoteTree({ operationEl: operationNode }: { oper
           <Tooltip title="新建根笔记">
             <Button type="text" icon={<FileAddOutlined />} onClick={createNote} />
           </Tooltip>
-          <Dropdown menu={{ items: sortOptions }} placement="bottom" arrow>
+          <Dropdown menu={{ items: menuOptions.get(), onClick: handleClick }} placement="bottom" arrow>
             <Button type="text" icon={<SortAscendingOutlined />} />
           </Dropdown>
           <Tooltip title="折叠全部节点">
@@ -60,7 +55,7 @@ export default observer(function NoteTree({ operationEl: operationNode }: { oper
         operationNode,
       )
     );
-  }, [operationNode, createNote, expandedNodes.size, collapseAll]);
+  }, [operationNode, createNote, expandedNodes.size, collapseAll, menuOptions, handleClick]);
 
   useEffect(() => {
     loadChildren();

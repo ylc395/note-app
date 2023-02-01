@@ -15,9 +15,24 @@ interface NoteTreeNode {
   isLeaf: boolean;
 }
 
+export enum SortBy {
+  Title = 'title',
+  UpdatedAt = 'updatedAt',
+  CreatedAt = 'createdAt',
+}
+
+export enum SortOrder {
+  Asc = 'asc',
+  Desc = 'desc',
+}
+
 export default class NoteTree {
   @observable roots: NoteTreeNode[] = [];
   @observable readonly expandedNodes = new Set<NoteTreeNode['key']>();
+  @observable readonly sortOptions = {
+    by: SortBy.Title,
+    order: SortOrder.Asc,
+  };
   private readonly nodesMap: Record<Note['id'], NoteTreeNode> = {};
   private readonly remote = container.resolve<Remote>(remoteToken);
   constructor() {
@@ -60,6 +75,8 @@ export default class NoteTree {
     const nodes = notes.map(this.noteToNode.bind(this));
 
     runInAction(() => {
+      this.sort(nodes, false);
+
       if (noteId) {
         const targetNode = this.nodesMap[noteId];
 
@@ -87,6 +104,7 @@ export default class NoteTree {
       }
 
       children.push(newNode);
+      this.sort(children, false);
       return;
     }
 
@@ -108,6 +126,7 @@ export default class NoteTree {
         node.parent = newParent;
         newParent.children.push(node);
         newParent.isLeaf = false;
+        this.sort(newParent.children, false);
       }
     }
   }
@@ -124,5 +143,58 @@ export default class NoteTree {
   @action.bound
   collapseAll() {
     this.expandedNodes.clear();
+  }
+
+  @action.bound
+  setSortOptions(key: SortBy | SortOrder) {
+    let needResort = false;
+
+    if (key === SortOrder.Asc || key === SortOrder.Desc) {
+      needResort = this.sortOptions.order !== key;
+      this.sortOptions.order = key;
+    } else {
+      needResort = this.sortOptions.by !== key;
+      this.sortOptions.by = key;
+    }
+
+    if (needResort) {
+      this.sort(this.roots, true);
+    }
+
+    console.log(this.roots);
+  }
+
+  @action
+  sort(children: NoteTreeNode[], recursive: boolean) {
+    const flip = (result: number) => (result === 0 ? 0 : result > 0 ? -1 : 1);
+    const compare = (v1: number | string, v2: number | string) => (v1 === v2 ? 0 : v1 > v2 ? 1 : -1);
+
+    children.sort((node1, node2) => {
+      let result: number;
+
+      switch (this.sortOptions.by) {
+        case SortBy.Title:
+          result = compare(NoteEditor.normalizeTitle(node1.note), NoteEditor.normalizeTitle(node2.note));
+          break;
+        case SortBy.CreatedAt:
+          result = compare(node1.note.userCreatedAt, node2.note.userCreatedAt);
+          break;
+        case SortBy.UpdatedAt:
+          result = compare(node1.note.userUpdatedAt, node2.note.userUpdatedAt);
+          break;
+        default:
+          throw new Error('');
+      }
+
+      return this.sortOptions.order === SortOrder.Asc ? result : flip(result);
+    });
+
+    if (recursive) {
+      for (const child of children) {
+        if (child.children.length > 0) {
+          this.sort(child.children, true);
+        }
+      }
+    }
   }
 }
