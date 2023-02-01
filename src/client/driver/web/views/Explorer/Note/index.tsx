@@ -2,7 +2,7 @@ import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 import { Resizable } from 're-resizable';
 import { Input } from 'antd';
-import { useRef } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 import ViewService, { NoteExplorerPanel, ViewTypes } from 'service/ViewService';
 
@@ -11,7 +11,7 @@ import Tree from './Tree';
 
 export default observer(function NoteExplorer() {
   const { explorerPanel } = container.resolve(ViewService);
-  const operationNode = useRef<HTMLDivElement>(null);
+  const [operationEl, setOperationEl] = useState<HTMLElement | null>(null);
 
   return (
     <Resizable enable={{ right: true }} minWidth={200} defaultSize={{ width: 300, height: 'auto' }}>
@@ -21,9 +21,9 @@ export default observer(function NoteExplorer() {
             <Input className="mr-4" placeholder="搜索笔记" />
             <PanelSwitcher />
           </div>
-          <div className="text-center" ref={operationNode}></div>
+          <div className="text-center" ref={setOperationEl}></div>
         </div>
-        {explorerPanel[ViewTypes.Notes] === NoteExplorerPanel.Tree && <Tree operationNode={operationNode} />}
+        {explorerPanel[ViewTypes.Notes] === NoteExplorerPanel.Tree && <Tree operationEl={operationEl} />}
       </div>
     </Resizable>
   );
