@@ -3,12 +3,13 @@ import { toJS } from 'mobx';
 import { container } from 'tsyringe';
 import { useEffect, type MutableRefObject } from 'react';
 import { createPortal } from 'react-dom';
-import { Tree, Button, Dropdown, Tooltip, DropDownProps } from 'antd';
+import { Tree, Button, Dropdown, Tooltip, DropDownProps, ConfigProvider, theme } from 'antd';
 import { SortAscendingOutlined, FileAddOutlined, ShrinkOutlined } from '@ant-design/icons';
 
 import NoteService from 'service/NoteService';
 import WorkbenchService from 'service/WorkbenchService';
 
+const { useToken } = theme;
 const sortOptions: NonNullable<DropDownProps['menu']>['items'] = [
   { key: '1', label: '根据名字排序' },
   { key: '2', label: '根据修改时间排序' },
@@ -28,6 +29,7 @@ export default observer(function NoteTree({
     createNote,
   } = container.resolve(NoteService);
   const { open } = container.resolve(WorkbenchService);
+  const { token } = useToken();
 
   useEffect(() => {
     loadChildren();
@@ -35,15 +37,24 @@ export default observer(function NoteTree({
 
   return (
     <>
-      <Tree
-        treeData={toJS(roots)}
-        blockNode
-        className="bg-transparent"
-        expandedKeys={Array.from(expandedNodes)}
-        loadData={(node) => loadChildren(node.key)}
-        onExpand={(_, { node }) => toggleExpand(node.key)}
-        onSelect={(keys) => open({ type: 'note', entity: getNote(keys[0] as string) }, false)}
-      />
+      <ConfigProvider
+        theme={{
+          components: { Tree: { colorPrimary: token.colorPrimaryBg, colorTextLightSolid: token.colorText } },
+        }}
+      >
+        <Tree.DirectoryTree
+          multiple
+          treeData={toJS(roots)}
+          blockNode
+          expandedKeys={Array.from(expandedNodes)}
+          expandAction={false}
+          loadData={(node) => loadChildren(node.key)}
+          onExpand={(_, { node }) => toggleExpand(node.key)}
+          onSelect={(_, { selected, node, selectedNodes }) =>
+            selected && selectedNodes.length === 1 && open({ type: 'note', entity: getNote(node.key) }, false)
+          }
+        />
+      </ConfigProvider>
       {operationNode.current &&
         createPortal(
           <>
