@@ -112,23 +112,22 @@ export default class NoteTree {
     node.title = NoteEditor.normalizeTitle(note);
 
     const oldParent = node.parent;
+    const newParent = note.parentId && this.nodesMap[note.parentId];
 
     if (oldParent && oldParent.key !== note.parentId) {
       pull(oldParent.children, node);
 
-      if (note.parentId) {
-        const newParent = this.nodesMap[note.parentId];
-
-        if (!newParent) {
-          throw new Error('can not find new parent');
-        }
-
+      if (newParent) {
         node.parent = newParent;
         newParent.children.push(node);
         newParent.isLeaf = false;
-        this.sort(newParent.children, false);
+      } else {
+        node.parent = undefined;
+        this.roots.push(node);
       }
     }
+
+    this.sort(newParent ? newParent.children : this.roots, false);
   }
 
   @action.bound
@@ -165,7 +164,7 @@ export default class NoteTree {
   }
 
   @action
-  sort(children: NoteTreeNode[], recursive: boolean) {
+  private sort(children: NoteTreeNode[], recursive: boolean) {
     const flip = (result: number) => (result === 0 ? 0 : result > 0 ? -1 : 1);
     const compare = (v1: number | string, v2: number | string) => (v1 === v2 ? 0 : v1 > v2 ? 1 : -1);
 
@@ -191,9 +190,7 @@ export default class NoteTree {
 
     if (recursive) {
       for (const child of children) {
-        if (child.children.length > 0) {
-          this.sort(child.children, true);
-        }
+        this.sort(child.children, true);
       }
     }
   }
