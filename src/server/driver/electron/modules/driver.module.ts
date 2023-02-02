@@ -1,8 +1,9 @@
 import { Global, Module } from '@nestjs/common';
 
-import ElectronClient from 'client/driver/electron';
-import { token as appClientToken } from 'infra/AppClient';
 import FileReader from 'driver/fs';
+import ElectronClient from 'client/driver/electron';
+
+import { token as appClientToken } from 'infra/AppClient';
 import { token as fileReaderToken } from 'infra/FileReader';
 
 const drivers = [

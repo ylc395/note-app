@@ -37,26 +37,17 @@ async function buildPreload() {
 
 async function buildElectron(viteUrl) {
   const ELECTRON_SERVER_TSCONFIG = 'src/server/tsconfig.electron.json';
-  const ELECTRON_CLIENT_TSCONFIG = 'src/client/tsconfig.electron.json';
 
   shell.env['VITE_SERVER_ENTRY_URL'] = viteUrl;
   shell.env['NODE_ENV'] = 'development';
   shell.env['DEV_CLEAN'] = process.argv.includes('--clean') ? '1' : '0';
 
   const serverBuildInfo = path.join(ELECTRON_OUTPUT, 'server.tsbuildinfo');
-  const clientBuildInfo = path.join(ELECTRON_OUTPUT, 'client.tsbuildinfo');
+  const command = `tsc --project ${ELECTRON_SERVER_TSCONFIG} --outDir ${ELECTRON_OUTPUT} --tsBuildInfoFile ${serverBuildInfo}`;
+  const result = shell.exec(command);
 
-  const commands = [
-    `tsc --project ${ELECTRON_CLIENT_TSCONFIG} --outDir ${ELECTRON_OUTPUT} --tsBuildInfoFile ${clientBuildInfo}`,
-    `tsc --project ${ELECTRON_SERVER_TSCONFIG} --outDir ${ELECTRON_OUTPUT} --tsBuildInfoFile ${serverBuildInfo}`,
-  ];
-
-  for (const command of commands) {
-    const result = shell.exec(command);
-
-    if (result.code > 0) {
-      return;
-    }
+  if (result.code > 0) {
+    return;
   }
 
   await replaceTscAliasPaths({ configFile: ELECTRON_SERVER_TSCONFIG, outDir: ELECTRON_OUTPUT });

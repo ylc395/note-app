@@ -1,11 +1,4 @@
 {
   "extends": "./tsconfig.json",
-  "include": [
-    "./controller/**/*",
-    "./domain/**/*",
-    "./driver/electron/**/*",
-    "./driver/sqlite/**/*",
-    "./driver/fs/**/*",
-    "../shared/**/*"
-  ]
+  "files": ["./driver/electron/index"]
 }
