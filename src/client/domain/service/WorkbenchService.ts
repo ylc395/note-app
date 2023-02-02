@@ -6,7 +6,7 @@ import EventEmitter from 'eventemitter3';
 import { type MosaicNode, getLeaves } from 'react-mosaic-component';
 
 import Window, { type Openable, type Tab, Events as WindowEvents } from 'model/Window';
-import storage from 'web/utils/storage';
+import storage from 'web/infra/storage';
 import NoteEditor from 'model/editor/NoteEditor';
 
 const WORKBENCH_WINDOWS_KEY = 'workbench.windows';

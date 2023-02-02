@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { app as electronApp, BrowserWindow, ipcMain } from 'electron';
 import { join } from 'path';
 import { hostname } from 'os';
 import { ensureDirSync, emptyDirSync } from 'fs-extra';
@@ -6,13 +6,14 @@ import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-insta
 
 import type { AppClient } from 'infra/AppClient';
 
+import { CONTEXTMENU_CHANNEL, createContextmenu } from './contextmenu';
+
 const APP_NAME = 'my-note-app';
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const NEED_CLEAN = process.env.DEV_CLEAN === '1';
 
 export default class ElectronClient implements AppClient {
-  readonly #electronApp = app;
-  #mainWindow?: BrowserWindow;
+  private mainWindow?: BrowserWindow;
 
   constructor() {
     const dir = this.getConfigDir();
@@ -30,22 +31,24 @@ export default class ElectronClient implements AppClient {
       if (process.platform === 'win32') {
         process.on('message', (data) => {
           if (data === 'graceful-exit') {
-            this.#electronApp.quit();
+            electronApp.quit();
           }
         });
       } else {
         process.on('SIGTERM', () => {
-          this.#electronApp.quit();
+          electronApp.quit();
         });
       }
     }
 
     // https://www.electronjs.org/docs/latest/api/app#event-window-all-closed
-    this.#electronApp.on('window-all-closed', () => {
-      this.#electronApp.quit();
+    electronApp.on('window-all-closed', () => {
+      electronApp.quit();
     });
 
-    await this.#electronApp.whenReady();
+    ipcMain.handle(CONTEXTMENU_CHANNEL, createContextmenu);
+
+    await electronApp.whenReady();
 
     if (NODE_ENV === 'development') {
       try {
@@ -56,15 +59,15 @@ export default class ElectronClient implements AppClient {
         console.error(error);
       }
     }
-    await this.#initWindow();
+    await this.initWindow();
   }
 
   readonly getConfigDir = () => {
-    return join(this.#electronApp.getPath('appData'), `${APP_NAME}${NODE_ENV === 'development' ? '-dev' : ''}`);
+    return join(electronApp.getPath('appData'), `${APP_NAME}${NODE_ENV === 'development' ? '-dev' : ''}`);
   };
 
-  async #initWindow() {
-    this.#mainWindow = new BrowserWindow({
+  private async initWindow() {
+    this.mainWindow = new BrowserWindow({
       width: 800,
       height: 600,
       webPreferences: {
@@ -72,14 +75,14 @@ export default class ElectronClient implements AppClient {
       },
     });
 
-    this.#mainWindow.on('closed', () => {
-      this.#mainWindow = undefined;
+    this.mainWindow.on('closed', () => {
+      this.mainWindow = undefined;
     });
 
     if (NODE_ENV === 'development') {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      await this.#mainWindow.loadURL(process.env['VITE_SERVER_ENTRY_URL']!);
-      this.#mainWindow.webContents.openDevTools();
+      await this.mainWindow.loadURL(process.env['VITE_SERVER_ENTRY_URL']!);
+      this.mainWindow.webContents.openDevTools();
     }
   }
 

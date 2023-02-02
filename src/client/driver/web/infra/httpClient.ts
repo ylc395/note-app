@@ -8,15 +8,15 @@ import type { IpcResponse } from 'driver/electron/ipc';
 
 declare global {
   interface Window {
-    electronIpc?: Remote;
+    electronIpcHttpClient?: Remote;
   }
 }
 
-export const ipcClient = window.electronIpc
-  ? (mapValues(window.electronIpc, (method) =>
+export const ipcClient = window.electronIpcHttpClient
+  ? (mapValues(window.electronIpcHttpClient, (method) =>
       wrap(method, async (func, ...args: unknown[]) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { status, body } = (await func.apply(window.electronIpc, args as any)) as IpcResponse;
+        const { status, body } = (await func.apply(window.electronIpcHttpClient, args as any)) as IpcResponse;
 
         if (status < 200 || status > 299) {
           const { error } = body;

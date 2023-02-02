@@ -1,3 +1,5 @@
+import type { InjectionToken } from 'tsyringe';
+
 // https://github.com/axios/axios#response-schema
 export interface Response<T = undefined> {
   status: number;
@@ -13,4 +15,4 @@ export interface Remote {
   put: <T, K = undefined, H = undefined>(path: string, body: T, headers?: H) => Promise<Response<K>>;
 }
 
-export const token = Symbol('remoteToken');
+export const token: InjectionToken<Remote> = Symbol('remoteToken');

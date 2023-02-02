@@ -1,7 +1,7 @@
 import { container, singleton } from 'tsyringe';
 import { observable, makeObservable, action, runInAction } from 'mobx';
 
-import { type Remote, token as remoteToken } from 'infra/Remote';
+import { token as remoteToken } from 'infra/Remote';
 import type { MaterialDTO, MaterialVO } from 'interface/Material';
 import type { FileDTO, FileVO } from 'interface/File';
 import type { TagVO } from 'interface/Tag';
@@ -10,7 +10,7 @@ import MaterialsForm, { type MaterialsFormModel } from 'model/form/MaterialForm'
 
 @singleton()
 export default class MaterialService {
-  readonly #remote: Remote = container.resolve(remoteToken);
+  readonly #remote = container.resolve(remoteToken);
   readonly tagTree = new TagTree('material');
   @observable materials: MaterialVO[] = [];
   #files: FileVO[] = [];

@@ -1,7 +1,10 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
 import type { Remote } from 'infra/Remote';
+import type { Contextmenu } from 'infra/Contextmenu';
+
 import { IPC_CHANNEL, type IpcRequest } from './ipc';
+import { CONTEXTMENU_CHANNEL } from './contextmenu';
 
 const createMethod = <T, H>(method: IpcRequest<unknown>['method']) => {
   return async (path: string, payload: T, headers: H) => {
@@ -32,4 +35,11 @@ const client: Remote = {
   put: createMethod('PUT'),
 };
 
-contextBridge.exposeInMainWorld('electronIpc', client);
+const contextmenu: Contextmenu = {
+  popup: (menuItems) => {
+    return ipcRenderer.invoke(CONTEXTMENU_CHANNEL, menuItems);
+  },
+};
+
+contextBridge.exposeInMainWorld('electronIpcHttpClient', client);
+contextBridge.exposeInMainWorld('electronIpcContextmenu', contextmenu);

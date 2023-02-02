@@ -1,14 +1,14 @@
 import { container, singleton } from 'tsyringe';
 
 import NoteTree from 'model/tree/NoteTree';
-import { type Remote, token as remoteToken } from 'infra/Remote';
+import { token as remoteToken } from 'infra/Remote';
 import type { NoteDTO, NoteVO } from 'interface/Note';
 
 import WorkbenchService, { WorkbenchEvents } from './WorkbenchService';
 
 @singleton()
 export default class NoteService {
-  private readonly remote: Remote = container.resolve(remoteToken);
+  private readonly remote = container.resolve(remoteToken);
   private readonly workbench = container.resolve(WorkbenchService);
   readonly noteTree = new NoteTree();
 
