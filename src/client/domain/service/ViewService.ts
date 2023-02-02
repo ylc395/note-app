@@ -11,7 +11,7 @@ export enum ViewTypes {
 
 export enum NoteExplorerPanel {
   Tree = 'tree',
-  Star = 'star',
+  Ranking = 'ranking',
   Topic = 'topic',
 }
 
