@@ -8,19 +8,18 @@ import type { AntdTreeNodeAttribute } from 'antd/es/tree';
 import { SortAscendingOutlined, FileAddOutlined, ShrinkOutlined, SettingOutlined } from '@ant-design/icons';
 
 import NoteService from 'service/NoteService';
-import WorkbenchService from 'service/WorkbenchService';
 
 import useNoteSort from './useNoteSort';
 
 const { useToken } = theme;
 
 export default observer(function NoteTree({ operationEl: operationNode }: { operationEl: HTMLElement | null }) {
-  const { open } = container.resolve(WorkbenchService);
   const { token } = useToken();
   const { menuOptions, handleClick } = useNoteSort();
   const {
-    noteTree: { roots, loadChildren, getNote, toggleExpand, expandedNodes, collapseAll },
+    noteTree: { roots, loadChildren, getNote, toggleExpand, expandedNodes, collapseAll, selectedNodes },
     createNote,
+    selectNote,
   } = container.resolve(NoteService);
 
   // todo: move to useIcon
@@ -75,12 +74,11 @@ export default observer(function NoteTree({ operationEl: operationNode }: { oper
           icon={getIcon}
           treeData={toJS(roots)}
           expandedKeys={Array.from(expandedNodes)}
+          selectedKeys={Array.from(selectedNodes)}
           expandAction={false}
           loadData={(node) => loadChildren(node.key)}
           onExpand={(_, { node }) => toggleExpand(node.key)}
-          onSelect={(_, { selected, node, selectedNodes }) =>
-            selected && selectedNodes.length === 1 && open({ type: 'note', entity: getNote(node.key) }, false)
-          }
+          onSelect={(_, { node, selectedNodes }) => selectNote(node.key, selectedNodes.length > 1)}
         />
       </ConfigProvider>
       {operations}

@@ -19,6 +19,18 @@ export default class NoteService {
   readonly createNote = async () => {
     // fixme: knex 有个 bug，目前必须写一个字段进去 https://github.com/knex/knex/pull/5471
     const { body: note } = await this.remote.post<NoteDTO, NoteVO>('/notes', { title: '' });
+
     this.noteTree.updateTreeByNote(note);
+    this.noteTree.toggleSelect(note.id, true);
+    this.workbench.open({ type: 'note', entity: note }, false);
+  };
+
+  readonly selectNote = (id: string, multiple: boolean) => {
+    const selected = this.noteTree.toggleSelect(id, !multiple);
+
+    if (selected && !multiple) {
+      const note = this.noteTree.getNote(id);
+      this.workbench.open({ type: 'note', entity: note }, false);
+    }
   };
 }

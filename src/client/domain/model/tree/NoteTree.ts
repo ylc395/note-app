@@ -29,6 +29,7 @@ export enum SortOrder {
 export default class NoteTree {
   @observable roots: NoteTreeNode[] = [];
   @observable readonly expandedNodes = new Set<NoteTreeNode['key']>();
+  @observable readonly selectedNodes = new Set<NoteTreeNode['key']>();
   @observable readonly sortOptions = {
     by: SortBy.Title,
     order: SortOrder.Asc,
@@ -192,6 +193,25 @@ export default class NoteTree {
       for (const child of children) {
         this.sort(child.children, true);
       }
+    }
+  }
+
+  @action.bound
+  toggleSelect(nodeId: NoteTreeNode['key'], reset: boolean) {
+    if (reset) {
+      this.selectedNodes.clear();
+      this.selectedNodes.add(nodeId);
+
+      return true;
+    }
+
+    if (this.selectedNodes.has(nodeId)) {
+      this.selectedNodes.delete(nodeId);
+
+      return false;
+    } else {
+      this.selectedNodes.add(nodeId);
+      return true;
     }
   }
 }
