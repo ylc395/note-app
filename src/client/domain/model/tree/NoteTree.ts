@@ -40,16 +40,6 @@ export default class NoteTree {
     makeObservable(this);
   }
 
-  getNote = (id: Note['id']) => {
-    const node = this.nodesMap[id];
-
-    if (!node) {
-      throw new Error('no such node');
-    }
-
-    return node.note;
-  };
-
   private noteToNode(note: Note) {
     const parent = note.parentId ? this.nodesMap[note.parentId] : undefined;
 
@@ -71,7 +61,8 @@ export default class NoteTree {
     return node;
   }
 
-  loadChildren = async (noteId?: Note['id']) => {
+  loadChildren = async (note?: Note) => {
+    const noteId = note?.id;
     const { body: notes } = await this.remote.get<NoteQuery, Note[]>('/notes', { parentId: noteId || null });
     const nodes = notes.map(this.noteToNode.bind(this));
 
@@ -132,11 +123,13 @@ export default class NoteTree {
   }
 
   @action.bound
-  toggleExpand(nodeId: NoteTreeNode['key']) {
-    if (this.expandedNodes.has(nodeId)) {
-      this.expandedNodes.delete(nodeId);
+  toggleExpand(note: Note) {
+    const noteId = note.id;
+
+    if (this.expandedNodes.has(noteId)) {
+      this.expandedNodes.delete(noteId);
     } else {
-      this.expandedNodes.add(nodeId);
+      this.expandedNodes.add(noteId);
     }
   }
 
@@ -197,7 +190,9 @@ export default class NoteTree {
   }
 
   @action.bound
-  toggleSelect(nodeId: NoteTreeNode['key'], reset: boolean) {
+  toggleSelect(note: Note, reset: boolean) {
+    const nodeId = note.id;
+
     if (reset) {
       this.selectedNodes.clear();
       this.selectedNodes.add(nodeId);

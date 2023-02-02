@@ -1,12 +1,14 @@
 import type { InjectionToken } from 'tsyringe';
 
-export interface MenuItem {
-  label: string;
-  key: string;
-}
+export type MenuItem =
+  | {
+      label: string;
+      key: string;
+    }
+  | { type: 'separator' };
 
 export interface Contextmenu {
-  popup: (items: MenuItem[]) => Promise<MenuItem['key'] | null>;
+  popup: (items: MenuItem[]) => Promise<string | null>;
 }
 
 export const token: InjectionToken<Contextmenu> = Symbol('contextmenu');

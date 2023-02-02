@@ -2,7 +2,7 @@ import { container, singleton } from 'tsyringe';
 
 import NoteTree from 'model/tree/NoteTree';
 import { token as remoteToken } from 'infra/Remote';
-import type { NoteDTO, NoteVO } from 'interface/Note';
+import type { NoteDTO, NoteVO as Note } from 'interface/Note';
 
 import WorkbenchService, { WorkbenchEvents } from './WorkbenchService';
 
@@ -18,18 +18,17 @@ export default class NoteService {
 
   readonly createNote = async () => {
     // fixme: knex 有个 bug，目前必须写一个字段进去 https://github.com/knex/knex/pull/5471
-    const { body: note } = await this.remote.post<NoteDTO, NoteVO>('/notes', { title: '' });
+    const { body: note } = await this.remote.post<NoteDTO, Note>('/notes', { title: '' });
 
     this.noteTree.updateTreeByNote(note);
-    this.noteTree.toggleSelect(note.id, true);
+    this.noteTree.toggleSelect(note, true);
     this.workbench.open({ type: 'note', entity: note }, false);
   };
 
-  readonly selectNote = (id: string, multiple: boolean) => {
-    const selected = this.noteTree.toggleSelect(id, !multiple);
+  readonly selectNote = (note: Note, multiple: boolean) => {
+    const selected = this.noteTree.toggleSelect(note, !multiple);
 
     if (selected && !multiple) {
-      const note = this.noteTree.getNote(id);
       this.workbench.open({ type: 'note', entity: note }, false);
     }
   };

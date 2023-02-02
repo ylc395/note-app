@@ -11,18 +11,16 @@ export function createContextmenu(e: IpcMainInvokeEvent, menuItems: MenuItem[]) 
   }
 
   return new Promise((resolve) => {
-    let key: MenuItem['key'];
+    let key: string;
     const menu = Menu.buildFromTemplate(
       menuItems.map((item) => ({
         ...item,
-        click: () => {
-          key = item.key;
-        },
+        click: 'key' in item ? () => (key = item.key) : undefined,
       })),
     );
 
     menu.popup({ window: w });
-    menu.on('menu-will-close', () => {
+    menu.once('menu-will-close', () => {
       setTimeout(() => resolve(key || null), 100);
     });
   });
