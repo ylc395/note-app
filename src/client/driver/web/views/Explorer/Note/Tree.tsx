@@ -39,16 +39,18 @@ export default observer(function NoteTree({ operationEl: operationNode }: { oper
       operationNode &&
       createPortal(
         <>
-          <Tooltip title="新建根笔记">
-            <Button type="text" icon={<FileAddOutlined />} onClick={createNote} />
-          </Tooltip>
-          <Dropdown menu={{ items: menuOptions.get(), onClick: handleClick }} placement="bottom" arrow>
-            <Button type="text" icon={<SortAscendingOutlined />} />
-          </Dropdown>
-          <Tooltip title="折叠全部节点">
-            <Button disabled={expandedNodes.size === 0} type="text" icon={<ShrinkOutlined />} onClick={collapseAll} />
-          </Tooltip>
-          <Tooltip title="笔记树配置">
+          <div>
+            <Tooltip title="新建根笔记">
+              <Button type="text" icon={<FileAddOutlined />} onClick={createNote} />
+            </Tooltip>
+            <Dropdown menu={{ items: menuOptions.get(), onClick: handleClick }} placement="bottom" arrow>
+              <Button type="text" icon={<SortAscendingOutlined />} />
+            </Dropdown>
+            <Tooltip title="折叠全部节点">
+              <Button disabled={expandedNodes.size === 0} type="text" icon={<ShrinkOutlined />} onClick={collapseAll} />
+            </Tooltip>
+          </div>
+          <Tooltip title="笔记树配置" className="ml-auto">
             <Button type="text" icon={<SettingOutlined />} />
           </Tooltip>
         </>,

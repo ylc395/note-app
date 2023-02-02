@@ -21,7 +21,7 @@ export default observer(function NoteExplorer() {
             <Input className="mr-4" placeholder="搜索笔记" />
             <PanelSwitcher />
           </div>
-          <div className="text-center" ref={setOperationEl}></div>
+          <div className="flex" ref={setOperationEl}></div>
         </div>
         {explorerPanel[ViewTypes.Notes] === NoteExplorerPanel.Tree && <Tree operationEl={operationEl} />}
       </div>
