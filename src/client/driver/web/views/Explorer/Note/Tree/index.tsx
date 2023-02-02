@@ -3,22 +3,20 @@ import { toJS } from 'mobx';
 import { container } from 'tsyringe';
 import { useCallback, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Tree, Button, Dropdown, Tooltip, ConfigProvider, theme, type TreeProps } from 'antd';
+import { Tree, ConfigProvider, theme, type TreeProps } from 'antd';
 import type { AntdTreeNodeAttribute } from 'antd/es/tree';
-import { SortAscendingOutlined, FileAddOutlined, ShrinkOutlined, SettingOutlined } from '@ant-design/icons';
+import { ShrinkOutlined } from '@ant-design/icons';
 
 import NoteService from 'service/NoteService';
 
-import useNoteSort from './useNoteSort';
+import Operations from './Operations';
 
 const { useToken } = theme;
 
 export default observer(function NoteTree({ operationEl: operationNode }: { operationEl: HTMLElement | null }) {
   const { token } = useToken();
-  const { menuOptions, handleClick } = useNoteSort();
   const {
-    noteTree: { roots, loadChildren, getNote, toggleExpand, expandedNodes, collapseAll, selectedNodes },
-    createNote,
+    noteTree: { roots, loadChildren, getNote, toggleExpand, expandedNodes, selectedNodes },
     selectNote,
   } = container.resolve(NoteService);
 
@@ -34,29 +32,8 @@ export default observer(function NoteTree({ operationEl: operationNode }: { oper
   );
 
   const operations = useMemo(() => {
-    return (
-      operationNode &&
-      createPortal(
-        <>
-          <div>
-            <Tooltip title="新建根笔记">
-              <Button type="text" icon={<FileAddOutlined />} onClick={createNote} />
-            </Tooltip>
-            <Dropdown menu={{ items: menuOptions.get(), onClick: handleClick }} placement="bottom" arrow>
-              <Button type="text" icon={<SortAscendingOutlined />} />
-            </Dropdown>
-            <Tooltip title="折叠全部节点">
-              <Button disabled={expandedNodes.size === 0} type="text" icon={<ShrinkOutlined />} onClick={collapseAll} />
-            </Tooltip>
-          </div>
-          <Tooltip title="笔记树配置" className="ml-auto">
-            <Button type="text" icon={<SettingOutlined />} />
-          </Tooltip>
-        </>,
-        operationNode,
-      )
-    );
-  }, [operationNode, createNote, expandedNodes.size, collapseAll, menuOptions, handleClick]);
+    return operationNode && createPortal(<Operations />, operationNode);
+  }, [operationNode]);
 
   useEffect(() => {
     loadChildren();
