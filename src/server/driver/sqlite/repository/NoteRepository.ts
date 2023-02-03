@@ -51,17 +51,15 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
       note.parentId && (await this.assertExistenceById(note.parentId, trx));
 
       const row = await this.createOrUpdate(note, id, trx);
-      const json = JSON.parse(row.json || '{}');
       const childrenCount = await trx<Row>(this.schema.tableName).where('parentId', row.id).count({ count: 'id' });
 
       await trx.commit();
 
       return {
-        ...row,
+        ...omit(row, ['body']),
         id: String(row.id),
-        parentId: note.parentId || null,
-        isReadonly: json.isReadonly || false,
-        icon: json.icon || null,
+        parentId: row.parentId ? String(row.parentId) : null,
+        isReadonly: Boolean(row.isReadonly),
         childrenCount: Number(childrenCount[0]?.count),
       };
     } catch (error) {
@@ -83,7 +81,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
   async findAll(query: NoteQuery) {
     const where = mapKeys(omitBy(query, isUndefined), (_, key) => `parent.${key}`);
     const rows = await this.knex
-      .select<(Row & { childrenCount: number; json: string })[]>(
+      .select<(Row & { childrenCount: number })[]>(
         this.knex.raw('parent.*'),
         this.knex.raw('count(child.id) as childrenCount'),
       )
@@ -93,14 +91,11 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
       .groupBy('parent.id');
 
     const notes = rows.map((row) => {
-      const json = JSON.parse(row.json || '{}');
-
       return {
-        ...omit(row, ['body', 'json']),
+        ...omit(row, ['body']),
         id: String(row.id),
         parentId: row.parentId ? String(row.parentId) : null,
-        isReadonly: json.isReadonly || false,
-        icon: json.icon || null,
+        isReadonly: Boolean(row.isReadonly),
       };
     });
 

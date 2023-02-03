@@ -1,6 +1,5 @@
 import type { Knex } from 'knex';
 import pick from 'lodash/pick';
-import isEmpty from 'lodash/isEmpty';
 
 import db from 'driver/sqlite';
 
@@ -26,49 +25,26 @@ export default abstract class BaseRepository<Row extends object> {
   }
 
   protected async createOrUpdate(row: unknown, id?: string | Knex.Transaction, trx?: Knex.Transaction): Promise<Row> {
-    const jsonFields = pick(row, this.schema.jsonFields);
-    const fields = pick(row, this.fields) as Row;
-    const isNewTrx = !isEmpty(jsonFields) && !trx && typeof id !== 'object';
-    const _trx = typeof id === 'function' ? id : trx || (isNewTrx ? await this.knex.transaction() : this.knex);
-    let _id: string;
+    const fields = pick(row, this.fields) as Partial<Row>;
+    const _trx = typeof id === 'function' ? id : trx || this.knex;
     let updatedRow: Row;
 
-    try {
-      if (typeof id === 'string') {
-        _id = id;
-        const updatedRows = await _trx(this.schema.tableName)
-          .update(fields)
-          .where('id', _id)
-          .returning(Object.keys(this.schema.fields));
+    if (typeof id === 'string') {
+      const updatedRows = await _trx(this.schema.tableName)
+        .update(fields)
+        .where('id', id)
+        .returning(this.knex.raw('*'));
 
-        if (updatedRows.length === 0) {
-          throw new Error(`invalid id ${_id} in table ${this.schema.tableName} when update`);
-        }
-
-        updatedRow = updatedRows[0];
-      } else {
-        const createdRows = await _trx(this.schema.tableName).insert(fields).returning(Object.keys(this.schema.fields));
-        updatedRow = createdRows[0];
-        _id = String(createdRows[0].id);
+      if (updatedRows.length === 0) {
+        throw new Error(`invalid id ${id} in table ${this.schema.tableName} when update`);
       }
 
-      if (jsonFields) {
-        for (const [key, value] of Object.entries(jsonFields)) {
-          await _trx(this.schema.tableName).jsonSet('json', `$.${key}`, value).where('id', _id);
-        }
-      }
-
-      if (isNewTrx) {
-        await (_trx as Knex.Transaction).commit();
-      }
-
-      return updatedRow;
-    } catch (error) {
-      if (isNewTrx) {
-        await (_trx as Knex.Transaction).rollback();
-      }
-
-      throw error;
+      updatedRow = updatedRows[0];
+    } else {
+      const createdRows = await _trx(this.schema.tableName).insert(fields).returning(this.knex.raw('*'));
+      updatedRow = createdRows[0];
     }
+
+    return updatedRow;
   }
 }

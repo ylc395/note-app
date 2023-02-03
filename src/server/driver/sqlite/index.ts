@@ -40,15 +40,15 @@ class SqliteDb {
     const schemas = [noteSchema];
 
     await Promise.all(
-      schemas.map(async ({ tableName, fields, jsonFields }) => {
+      schemas.map(async ({ tableName, fields }) => {
         if (!(await this.knex.schema.hasTable(tableName))) {
-          return this.knex.schema.createTable(tableName, (table) => this.builder(table, fields, jsonFields.length > 0));
+          return this.knex.schema.createTable(tableName, (table) => this.builder(table, fields));
         }
       }),
     );
   }
 
-  private builder = (table: Knex.CreateTableBuilder, fields: Fields, needJsonField: boolean) => {
+  private builder = (table: Knex.CreateTableBuilder, fields: Fields) => {
     for (const [fieldName, options] of Object.entries(fields)) {
       let col =
         (options.increments && table.increments(snakeCase(fieldName))) ||
@@ -65,10 +65,6 @@ class SqliteDb {
       if (typeof options.defaultTo !== 'undefined') {
         col.defaultTo(typeof options.defaultTo === 'function' ? options.defaultTo(this.knex) : options.defaultTo);
       }
-    }
-
-    if (needJsonField) {
-      table.text('json').notNullable().defaultTo('');
     }
   };
 
