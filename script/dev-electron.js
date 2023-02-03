@@ -8,10 +8,11 @@ const { checker } = require('vite-plugin-checker');
 const { parse } = require('tsconfck');
 
 const CLIENT_TSCONFIG = path.resolve(process.cwd(), 'src/client/tsconfig.json');
-const ELECTRON_OUTPUT = 'dist/electron';
+const ELECTRON_OUTPUT = 'dist';
+const BUILD_ELECTRON_COMMAND = 'tsc --build ./tsconfig.electron.json';
 
 async function buildPreload() {
-  // preload script must be processed by a bundler, since `require` doesn't work
+  // preload script must be processed by a bundler(`vite build` here), since `require` doesn't work
   // @see https://www.electronjs.org/docs/latest/tutorial/sandbox#preload-scripts
   await build({
     build: {
@@ -35,23 +36,19 @@ async function buildPreload() {
   });
 }
 
-async function buildElectron(viteUrl) {
-  const ELECTRON_SERVER_TSCONFIG = 'src/server/tsconfig.electron.json';
+async function buildElectron(skipTs) {
+  if (!skipTs) {
+    const result = shell.exec(BUILD_ELECTRON_COMMAND);
 
-  shell.env['VITE_SERVER_ENTRY_URL'] = viteUrl;
-  shell.env['NODE_ENV'] = 'development';
-  shell.env['DEV_CLEAN'] = process.argv.includes('--clean') ? '1' : '0';
-
-  const serverBuildInfo = path.join(ELECTRON_OUTPUT, 'server.tsbuildinfo');
-  const command = `tsc --project ${ELECTRON_SERVER_TSCONFIG} --outDir ${ELECTRON_OUTPUT} --tsBuildInfoFile ${serverBuildInfo}`;
-  const result = shell.exec(command);
-
-  if (result.code > 0) {
-    return;
+    if (result.code > 0) {
+      return;
+    }
   }
 
-  await replaceTscAliasPaths({ configFile: ELECTRON_SERVER_TSCONFIG, outDir: ELECTRON_OUTPUT });
-  let electronProcess = shell.exec(`electron ${ELECTRON_OUTPUT}/server/driver/electron/index.js`, { async: true });
+  // warning: alias replacer 只认得 server/tsconfig.json 里的 path mapping
+  // 因此 client electron 里不能依赖任何具体的东西，而只能依赖类型
+  await replaceTscAliasPaths({ configFile: 'src/server/tsconfig.json', outDir: ELECTRON_OUTPUT });
+  const electronProcess = shell.exec(`electron ${ELECTRON_OUTPUT}/server/driver/electron/index.js`, { async: true });
 
   return electronProcess;
 }
@@ -81,20 +78,33 @@ async function createViteServer() {
   await server.listen();
   server.printUrls();
 
-  return server.resolvedUrls.local[0];
+  return server;
 }
 
 (async () => {
   shell.exec('clear');
   await buildPreload();
-  const viteUrl = await createViteServer();
-  const ELECTRON_RELATED_DIRS = ['src/server', 'src/client/driver/electron', 'src/shared'];
+  const viteServer = await createViteServer();
+  const viteUrl = viteServer.resolvedUrls.local[0];
 
-  let shellProcess = await buildElectron(viteUrl);
-  chokidar.watch(ELECTRON_RELATED_DIRS, { ignoreInitial: true }).on('all', async (event, path) => {
-    shell.exec('clear');
-    console.log(path, event);
-    shellProcess?.kill();
-    shellProcess = await buildElectron(viteUrl);
-  });
+  shell.env['VITE_SERVER_ENTRY_URL'] = viteUrl;
+  shell.env['NODE_ENV'] = 'development';
+  shell.env['DEV_CLEAN'] = process.argv.includes('--clean') ? '1' : '0';
+
+  let electronProcess = await buildElectron();
+
+  if (electronProcess) {
+    shell.exec(`${BUILD_ELECTRON_COMMAND} --watch`, { async: true });
+
+    chokidar
+      .watch(ELECTRON_OUTPUT, { ignoreInitial: true, ignored: [/\.tsbuildinfo$/, /\.map$/] })
+      .on('all', async (event, path) => {
+        shell.exec('clear');
+        console.log(path, event);
+        electronProcess.kill();
+        electronProcess = await buildElectron(true);
+      });
+  } else {
+    await viteServer.close();
+  }
 })();

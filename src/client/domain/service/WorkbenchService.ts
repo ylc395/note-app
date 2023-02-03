@@ -1,15 +1,15 @@
 import { singleton } from 'tsyringe';
 import { observable, makeObservable, action, computed } from 'mobx';
 import uid from 'lodash/uniqueId';
-import cloneDeepWith from 'lodash/cloneDeepWith';
+// import cloneDeepWith from 'lodash/cloneDeepWith';
 import EventEmitter from 'eventemitter3';
-import { type MosaicNode, getLeaves } from 'react-mosaic-component';
+// import { type MosaicNode, getLeaves } from 'react-mosaic-component';
+import type { MosaicNode } from 'react-mosaic-component';
 
 import Window, { type Openable, type Tab, Events as WindowEvents } from 'model/Window';
-import storage from 'web/infra/storage';
 import NoteEditor from 'model/editor/NoteEditor';
 
-const WORKBENCH_WINDOWS_KEY = 'workbench.windows';
+// const WORKBENCH_WINDOWS_KEY = 'workbench.windows';
 
 export type WindowId = string;
 
@@ -37,41 +37,41 @@ export default class WorkbenchService extends EventEmitter {
 
   constructor() {
     super();
-    this.loadWindows();
+    // this.loadWindows();
     makeObservable(this);
   }
 
   readonly windowMap = new Map<string, Window>();
 
-  @action
-  private loadWindows() {
-    const layout = storage.get<PersistenceLayout>(WORKBENCH_WINDOWS_KEY);
+  // @action
+  // private loadWindows() {
+  //   const layout = storage.get<PersistenceLayout>(WORKBENCH_WINDOWS_KEY);
 
-    if (!layout) {
-      return;
-    }
+  //   if (!layout) {
+  //     return;
+  //   }
 
-    const { layout: oldLayout, windows, focused } = layout;
-    const windowIds = getLeaves(oldLayout);
-    const oldIdToNewId: Record<WindowId, WindowId> = {};
+  //   const { layout: oldLayout, windows, focused } = layout;
+  //   const windowIds = getLeaves(oldLayout);
+  //   const oldIdToNewId: Record<WindowId, WindowId> = {};
 
-    for (const id of windowIds) {
-      const [newId] = this.createWindow(windows[id]);
-      oldIdToNewId[id] = newId;
-    }
+  //   for (const id of windowIds) {
+  //     const [newId] = this.createWindow(windows[id]);
+  //     oldIdToNewId[id] = newId;
+  //   }
 
-    this.layout =
-      typeof oldLayout === 'string'
-        ? oldIdToNewId[oldLayout]
-        : cloneDeepWith(oldLayout, (key, value) => {
-            if ((key === 'first' || key === 'second') && typeof value === 'string') {
-              // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-              return oldIdToNewId[value]!;
-            }
-          });
+  //   this.layout =
+  //     typeof oldLayout === 'string'
+  //       ? oldIdToNewId[oldLayout]
+  //       : cloneDeepWith(oldLayout, (key, value) => {
+  //           if ((key === 'first' || key === 'second') && typeof value === 'string') {
+  //             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  //             return oldIdToNewId[value]!;
+  //           }
+  //         });
 
-    this.currentWindowId = oldIdToNewId[focused];
-  }
+  //   this.currentWindowId = oldIdToNewId[focused];
+  // }
 
   @action
   private createWindow(tabs?: Tab[]) {
@@ -207,11 +207,5 @@ export default class WorkbenchService extends EventEmitter {
         focused: tab === value.currentTab,
       }));
     }
-
-    storage.set<PersistenceLayout>(WORKBENCH_WINDOWS_KEY, {
-      focused: this.currentWindowId,
-      layout: this.layout,
-      windows,
-    });
   }
 }

@@ -1,11 +1,11 @@
 {
   "extends": "./tsconfig.json",
   "include": ["./**/*", "../shared/**/*"],
+  "exclude": ["./driver/web/**/*"],
   "compilerOptions": {
     "composite": true,
     "module": "CommonJS",
     "rootDir": "../",
     "outDir": "../../dist"
-  },
-  "references": [{ "path": "../client/tsconfig.electron.json" }]
+  }
 }
