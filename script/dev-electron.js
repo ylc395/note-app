@@ -97,11 +97,12 @@ async function createViteServer() {
     shell.exec(`${BUILD_ELECTRON_COMMAND} --watch`, { async: true });
 
     chokidar
-      .watch(ELECTRON_OUTPUT, { ignoreInitial: true, ignored: [/\.tsbuildinfo$/, /\.map$/] })
+      .watch(ELECTRON_OUTPUT, { ignoreInitial: true, ignored: [/\.tsbuildinfo$/, /\.map$/, /\.d\.ts$/] })
       .on('all', async (event, path) => {
         shell.exec('clear');
         console.log(path, event);
         electronProcess.kill();
+        shell.env['DEV_CLEAN'] = '0';
         electronProcess = await buildElectron(true);
       });
   } else {
