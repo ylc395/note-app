@@ -1,8 +1,7 @@
 import { makeObservable, computed, observable, runInAction } from 'mobx';
 import debounce from 'lodash/debounce';
-import dayjs from 'dayjs';
 
-import type { NoteVO, NoteBodyVO, NoteBodyDTO } from 'interface/Note';
+import { type NoteVO, type NoteBodyVO, type NoteBodyDTO, normalizeTitle } from 'interface/Note';
 import type Window from 'model/Window';
 import EntityEditor from './EntityEditor';
 
@@ -21,7 +20,7 @@ export default class NoteEditor extends EntityEditor {
       return '';
     }
 
-    return NoteEditor.normalizeTitle(this.note);
+    return normalizeTitle(this.note);
   }
 
   private async load() {
@@ -58,8 +57,4 @@ export default class NoteEditor extends EntityEditor {
     this.window.notifyEntityUpdated(this);
     await this.remote.patch(`/notes/${this.entityId}`, { title });
   }, 500);
-
-  static normalizeTitle(note: NoteVO) {
-    return note.title || `未命名笔记-${dayjs.unix(note.createdAt).format('YYYYMMDD-HHmm')}`;
-  }
 }

@@ -18,7 +18,10 @@ export default class NoteService {
 
   readonly createNote = async (parent?: Note) => {
     // fixme: knex 有个 bug，目前必须写一个字段进去 https://github.com/knex/knex/pull/5471
-    let { body: note } = await this.remote.post<NoteDTO, Note>('/notes', { parentId: parent?.id || null });
+    let { body: note } = await this.remote.post<NoteDTO, Note>('/notes', {
+      parentId: parent?.id || null,
+      isReadonly: true,
+    });
 
     if (parent && !this.noteTree.loadedNodes.has(parent.id)) {
       await this.noteTree.loadChildren(parent);
@@ -30,6 +33,13 @@ export default class NoteService {
     this.noteTree.toggleSelect(note, true);
     parent && this.noteTree.toggleExpand(parent, true);
     this.workbench.open({ type: 'note', entity: note }, false);
+  };
+
+  readonly duplicateNote = async (target: Note) => {
+    const { body: note } = await this.remote.post<NoteDTO, Note>('/notes', { duplicateFrom: target.id });
+
+    this.noteTree.updateTreeByNote(note);
+    this.noteTree.toggleSelect(note, true);
   };
 
   readonly selectNote = (note: Note, multiple: boolean) => {

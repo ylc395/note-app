@@ -10,6 +10,7 @@ export default function useContextmenu() {
   const { contextmenu } = container.resolve(ViewService);
   const {
     noteTree: { selectedNodes },
+    duplicateNote,
   } = container.resolve(NoteService);
 
   return useCallback(
@@ -30,7 +31,6 @@ export default function useContextmenu() {
             { label: '在新标签页打开', key: 'delete' },
             { label: '在新窗口打开', key: 'delete' },
             { type: 'separator' },
-            { label: '重命名', key: 'rename' },
             { label: '移动至...', key: 'move' },
             { label: '收藏', key: 'export' },
             { label: '制作副本', key: 'duplicate' },
@@ -48,7 +48,8 @@ export default function useContextmenu() {
       }
 
       switch (key) {
-        case 'rename':
+        case 'duplicate':
+          duplicateNote(note);
           break;
 
         default:

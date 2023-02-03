@@ -4,7 +4,7 @@ import pull from 'lodash/pull';
 
 import { type Remote, token as remoteToken } from 'infra/Remote';
 import type { NoteQuery, NoteVO as Note } from 'interface/Note';
-import NoteEditor from 'model/editor/NoteEditor';
+import { normalizeTitle } from 'interface/Note';
 
 interface NoteTreeNode {
   key: string;
@@ -50,7 +50,7 @@ export default class NoteTree {
 
     const node = observable({
       key: note.id,
-      title: NoteEditor.normalizeTitle(note),
+      title: normalizeTitle(note),
       isLeaf: note.childrenCount === 0,
       children: [],
       parent,
@@ -115,7 +115,7 @@ export default class NoteTree {
     }
 
     Object.assign(node.note, note);
-    node.title = NoteEditor.normalizeTitle(note);
+    node.title = normalizeTitle(note);
 
     const oldParent = node.parent;
     const newParent = note.parentId && this.nodesMap[note.parentId];
@@ -181,7 +181,7 @@ export default class NoteTree {
 
       switch (this.sortOptions.by) {
         case SortBy.Title:
-          result = compare(NoteEditor.normalizeTitle(node1.note), NoteEditor.normalizeTitle(node2.note));
+          result = compare(normalizeTitle(node1.note), normalizeTitle(node2.note));
           break;
         case SortBy.CreatedAt:
           result = compare(node1.note.userCreatedAt, node2.note.userCreatedAt);
