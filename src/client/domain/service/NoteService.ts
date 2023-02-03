@@ -16,12 +16,19 @@ export default class NoteService {
     this.workbench.on(WorkbenchEvents.NoteUpdated, this.noteTree.updateTreeByNote);
   }
 
-  readonly createNote = async () => {
+  readonly createNote = async (parent?: Note) => {
     // fixme: knex 有个 bug，目前必须写一个字段进去 https://github.com/knex/knex/pull/5471
-    const { body: note } = await this.remote.post<NoteDTO, Note>('/notes', { title: '' });
+    let { body: note } = await this.remote.post<NoteDTO, Note>('/notes', { parentId: parent?.id || null });
 
-    this.noteTree.updateTreeByNote(note);
+    if (parent && !this.noteTree.loadedNodes.has(parent.id)) {
+      await this.noteTree.loadChildren(parent);
+      note = this.noteTree.getNote(note.id);
+    } else {
+      this.noteTree.updateTreeByNote(note);
+    }
+
     this.noteTree.toggleSelect(note, true);
+    parent && this.noteTree.toggleExpand(parent, true);
     this.workbench.open({ type: 'note', entity: note }, false);
   };
 

@@ -30,6 +30,7 @@ export default class NoteTree {
   @observable roots: NoteTreeNode[] = [];
   @observable readonly expandedNodes = new Set<NoteTreeNode['key']>();
   @observable readonly selectedNodes = new Set<NoteTreeNode['key']>();
+  @observable readonly loadedNodes = new Set<NoteTreeNode['key']>();
   @observable readonly sortOptions = {
     by: SortBy.Title,
     order: SortOrder.Asc,
@@ -61,6 +62,16 @@ export default class NoteTree {
     return node;
   }
 
+  getNote(id: string) {
+    const node = this.nodesMap[id];
+
+    if (!node) {
+      throw new Error('can not find node');
+    }
+
+    return node.note;
+  }
+
   loadChildren = async (note?: Note) => {
     const noteId = note?.id;
     const { body: notes } = await this.remote.get<NoteQuery, Note[]>('/notes', { parentId: noteId || null });
@@ -68,6 +79,7 @@ export default class NoteTree {
 
     runInAction(() => {
       this.sort(nodes, false);
+      noteId && this.loadedNodes.add(noteId);
 
       if (noteId) {
         const targetNode = this.nodesMap[noteId];
@@ -77,6 +89,7 @@ export default class NoteTree {
         }
 
         targetNode.children = nodes;
+        targetNode.isLeaf = nodes.length === 0;
       } else {
         this.roots = nodes;
       }
@@ -89,10 +102,11 @@ export default class NoteTree {
 
     if (!node) {
       const newNode = this.noteToNode(note);
-      const children = note.parentId ? this.nodesMap[note.parentId]?.children : this.roots;
+      const parent = note.parentId && this.nodesMap[note.parentId];
+      const children = parent ? parent.children : this.roots;
 
-      if (!children) {
-        throw new Error('no children');
+      if (parent) {
+        parent.isLeaf = false;
       }
 
       children.push(newNode);
@@ -100,7 +114,7 @@ export default class NoteTree {
       return;
     }
 
-    node.note = note;
+    Object.assign(node.note, note);
     node.title = NoteEditor.normalizeTitle(note);
 
     const oldParent = node.parent;
@@ -123,13 +137,13 @@ export default class NoteTree {
   }
 
   @action.bound
-  toggleExpand(note: Note) {
+  toggleExpand(note: Note, flag?: boolean) {
     const noteId = note.id;
 
-    if (this.expandedNodes.has(noteId)) {
-      this.expandedNodes.delete(noteId);
-    } else {
+    if (flag || !this.expandedNodes.has(noteId)) {
       this.expandedNodes.add(noteId);
+    } else {
+      this.expandedNodes.delete(noteId);
     }
   }
 

@@ -17,7 +17,7 @@ export default abstract class BaseRepository<Row extends object> {
 
   protected async assertExistenceById(id: string, tableName?: string | Knex.Transaction, trx?: Knex.Transaction) {
     const _tableName = typeof tableName === 'string' ? tableName : this.schema.tableName;
-    const _trx = trx || (typeof tableName === 'object' ? tableName : this.knex);
+    const _trx = trx || (typeof tableName === 'function' ? tableName : this.knex);
     const row = await _trx(_tableName).where('id', Number(id)).first();
 
     if (!row) {

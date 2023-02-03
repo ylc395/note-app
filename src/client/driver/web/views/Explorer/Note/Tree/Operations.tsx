@@ -18,7 +18,7 @@ export default observer(function Operations() {
     <>
       <div>
         <Tooltip title="新建根笔记">
-          <Button type="text" icon={<FileAddOutlined />} onClick={createNote} />
+          <Button type="text" icon={<FileAddOutlined />} onClick={() => createNote()} />
         </Tooltip>
         <Dropdown menu={{ items: menuOptions.get(), onClick: handleClick }} placement="bottom" arrow>
           <Button type="text" icon={<SortAscendingOutlined />} />
