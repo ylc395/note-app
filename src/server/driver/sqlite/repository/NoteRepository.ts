@@ -36,17 +36,13 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
   }
 
   async update(id: NoteVO['id'], note: NoteDTO) {
-    const trx = await this.knex.transaction();
-    const row = await this.createOrUpdate(note, id, trx);
+    const row = await this.createOrUpdate(note, id);
 
     if (!row) {
-      await trx.commit();
       return null;
     }
 
-    const childrenCount = await trx<Row>(this.schema.tableName).where('parentId', row.id).count({ count: 'id' });
-
-    await trx.commit();
+    const childrenCount = await this.knex<Row>(this.schema.tableName).where('parentId', row.id).count({ count: 'id' });
 
     return {
       ...omit(row, ['body']),

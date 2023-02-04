@@ -3,6 +3,9 @@ import camelCase from 'lodash/camelCase';
 import snakeCase from 'lodash/snakeCase';
 import mapKeys from 'lodash/mapKeys';
 import { join } from 'path';
+import { container } from 'tsyringe';
+import { token as transactionManagerToken } from 'infra/TransactionManager';
+import transactionManager from './transactionManager';
 
 import type { Schema } from './schema/type';
 import noteSchema from './schema/noteSchema';
@@ -12,6 +15,7 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 
 class SqliteDb {
   knex!: Knex;
+  transactionManager!: ReturnType<typeof transactionManager>;
   async init(dir: string) {
     this.knex = knex({
       client: 'sqlite3',
@@ -21,7 +25,9 @@ class SqliteDb {
       useNullAsDefault: true,
       wrapIdentifier: (value, originImpl) => originImpl(snakeCase(value)),
     });
+    this.transactionManager = transactionManager(this.knex);
 
+    container.registerInstance(transactionManagerToken, this.transactionManager);
     await this.createTables();
     // await this.emptyTempFiles();
   }

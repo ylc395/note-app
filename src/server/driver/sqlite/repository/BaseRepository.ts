@@ -1,4 +1,3 @@
-import type { Knex } from 'knex';
 import pick from 'lodash/pick';
 
 import db from 'driver/sqlite';
@@ -7,26 +6,22 @@ import type { Schema } from '../schema/type';
 
 export default abstract class BaseRepository<Row extends object> {
   protected get knex() {
-    return db.knex;
+    return db.transactionManager.getTrx();
   }
+
   protected abstract readonly schema: Schema;
   private get fields() {
     return Object.keys(this.schema.fields);
   }
 
-  protected async createOrUpdate(row: unknown, trx?: Knex.Transaction): Promise<Row>;
-  protected async createOrUpdate(row: unknown, id?: string | Knex.Transaction, trx?: Knex.Transaction): Promise<Row>;
-  protected async createOrUpdate(
-    row: unknown,
-    id?: string | Knex.Transaction,
-    trx?: Knex.Transaction,
-  ): Promise<Row | null> {
+  protected async createOrUpdate(row: unknown): Promise<Row>;
+  protected async createOrUpdate(row: unknown, id: string): Promise<Row | null>;
+  protected async createOrUpdate(row: unknown, id?: string): Promise<Row | null> {
     const fields = pick(row, this.fields) as Partial<Row>;
-    const _trx = typeof id === 'function' ? id : trx || this.knex;
     let updatedRow: Row;
 
     if (typeof id === 'string') {
-      const updatedRows = await _trx(this.schema.tableName)
+      const updatedRows = await this.knex(this.schema.tableName)
         .update(fields)
         .where('id', id)
         .returning(this.knex.raw('*'));
@@ -37,7 +32,7 @@ export default abstract class BaseRepository<Row extends object> {
 
       updatedRow = updatedRows[0];
     } else {
-      const createdRows = await _trx(this.schema.tableName).insert(fields).returning(this.knex.raw('*'));
+      const createdRows = await this.knex(this.schema.tableName).insert(fields).returning(this.knex.raw('*'));
       updatedRow = createdRows[0];
     }
 

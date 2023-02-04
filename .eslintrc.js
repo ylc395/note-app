@@ -1,5 +1,5 @@
 module.exports = {
-  extends: ['eslint:recommended', 'plugin:lodash/recommended', 'plugin:mobx/recommended'],
+  extends: ['eslint:recommended', 'plugin:lodash/recommended'],
   plugins: ['lodash', 'mobx'],
   parserOptions: {
     ecmaVersion: 'latest',
@@ -14,6 +14,10 @@ module.exports = {
     'lodash/prefer-immutable-method': 'off',
   },
   overrides: [
+    {
+      files: ['src/client/**/*'],
+      extends: ['plugin:mobx/recommended'],
+    },
     {
       files: ['*.ts', '*.tsx'],
       parser: '@typescript-eslint/parser',

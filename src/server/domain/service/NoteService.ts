@@ -1,6 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import omit from 'lodash/omit';
 
+import { Transaction } from 'infra/TransactionManager';
 import { NoteVO, NoteBodyDTO, NoteDTO, NoteQuery, normalizeTitle } from 'interface/Note';
 import { token as noteRepositoryToken, type NoteRepository } from 'service/repository/NoteRepository';
 
@@ -8,6 +9,7 @@ import { token as noteRepositoryToken, type NoteRepository } from 'service/repos
 export default class NoteService {
   constructor(@Inject(noteRepositoryToken) private readonly repository: NoteRepository) {}
 
+  @Transaction
   async create(note: NoteDTO) {
     if (note.parentId && !(await this.repository.isAvailable(note.parentId))) {
       throw new Error('invalid parentId');
@@ -37,11 +39,12 @@ export default class NoteService {
     const newNote = await this.repository.create(
       omit(targetNote, ['id', 'userCreatedAt', 'userUpdatedAt', 'createdAt', 'updatedAt']),
     );
-    await this.updateBody(newNote.id, targetNoteBody);
 
+    await this.repository.updateBody(noteId, targetNoteBody);
     return newNote;
   }
 
+  @Transaction
   async update(noteId: NoteVO['id'], note: NoteDTO) {
     if (!(await this.repository.isAvailable(noteId))) {
       throw new Error('invalid id');
@@ -60,6 +63,7 @@ export default class NoteService {
     return result;
   }
 
+  @Transaction
   async updateBody(noteId: NoteVO['id'], body: NoteBodyDTO) {
     if (!(await this.repository.isWritable(noteId))) {
       throw new Error('note unavailable');
@@ -68,6 +72,7 @@ export default class NoteService {
     return await this.repository.updateBody(noteId, body);
   }
 
+  @Transaction
   async getBody(noteId: NoteVO['id']) {
     if (!(await this.repository.isAvailable(noteId))) {
       throw new Error('note unavailable');
