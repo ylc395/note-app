@@ -4,8 +4,9 @@ import snakeCase from 'lodash/snakeCase';
 import mapKeys from 'lodash/mapKeys';
 import { join } from 'path';
 
+import type { Schema } from './schema/type';
 import noteSchema from './schema/noteSchema';
-import type { Fields } from './schema/type';
+import recyclableSchema from './schema/recyclableSchema';
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 
@@ -17,6 +18,7 @@ class SqliteDb {
       connection: join(dir, 'db.sqlite'),
       debug: isDevelopment,
       postProcessResponse: this.transformKeys,
+      useNullAsDefault: true,
       wrapIdentifier: (value, originImpl) => originImpl(snakeCase(value)),
     });
 
@@ -37,18 +39,22 @@ class SqliteDb {
   };
 
   private async createTables() {
-    const schemas = [noteSchema];
+    const schemas: Schema[] = [noteSchema, recyclableSchema];
 
     await Promise.all(
-      schemas.map(async ({ tableName, fields }) => {
+      schemas.map(async ({ tableName, fields, restrictions }) => {
         if (!(await this.knex.schema.hasTable(tableName))) {
-          return this.knex.schema.createTable(tableName, (table) => this.builder(table, fields));
+          return this.knex.schema.createTable(tableName, (table) => this.builder(table, fields, restrictions));
         }
       }),
     );
   }
 
-  private builder = (table: Knex.CreateTableBuilder, fields: Fields) => {
+  private builder = (
+    table: Knex.CreateTableBuilder,
+    fields: Schema['fields'],
+    restrictions: Schema['restrictions'],
+  ) => {
     for (const [fieldName, options] of Object.entries(fields)) {
       let col =
         (options.increments && table.increments(snakeCase(fieldName))) ||
@@ -64,6 +70,12 @@ class SqliteDb {
 
       if (typeof options.defaultTo !== 'undefined') {
         col.defaultTo(typeof options.defaultTo === 'function' ? options.defaultTo(this.knex) : options.defaultTo);
+      }
+    }
+
+    if (restrictions) {
+      if (restrictions.unique) {
+        table.unique(restrictions.unique);
       }
     }
   };

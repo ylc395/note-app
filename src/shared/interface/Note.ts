@@ -13,12 +13,18 @@ export const noteDTOSchema = object({
 
 export type NoteDTO = Infer<typeof noteDTOSchema>;
 
-export type NoteVO = Omit<Required<NoteDTO>, 'duplicateFrom'> & {
+export interface NoteVO {
+  title: string;
+  isReadonly: boolean;
   id: string;
+  parentId: string | null;
+  icon: string | null;
   childrenCount: number;
   updatedAt: number;
+  userUpdatedAt: number;
   createdAt: number;
-};
+  userCreatedAt: number;
+}
 
 export const noteQuerySchema = object({
   parentId: union([zodNull(), string()]).optional(),

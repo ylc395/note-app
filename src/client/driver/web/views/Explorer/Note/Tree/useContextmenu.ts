@@ -11,6 +11,7 @@ export default function useContextmenu() {
   const {
     noteTree: { selectedNodes },
     duplicateNote,
+    deleteNotes,
   } = container.resolve(NoteService);
 
   return useCallback(
@@ -49,9 +50,10 @@ export default function useContextmenu() {
 
       switch (key) {
         case 'duplicate':
-          duplicateNote(note);
-          break;
-
+          return duplicateNote(note);
+        case 'delete':
+          return deleteNotes(isMultiple ? Array.from(selectedNodes) : [note.id]);
+          return;
         default:
           break;
       }

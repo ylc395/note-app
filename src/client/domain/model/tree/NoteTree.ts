@@ -1,9 +1,7 @@
-import { container } from 'tsyringe';
-import { action, makeObservable, observable, runInAction } from 'mobx';
+import { action, makeObservable, observable } from 'mobx';
 import pull from 'lodash/pull';
 
-import { type Remote, token as remoteToken } from 'infra/Remote';
-import type { NoteQuery, NoteVO as Note } from 'interface/Note';
+import type { NoteVO as Note } from 'interface/Note';
 import { normalizeTitle } from 'interface/Note';
 
 interface NoteTreeNode {
@@ -36,7 +34,6 @@ export default class NoteTree {
     order: SortOrder.Asc,
   };
   private readonly nodesMap: Record<Note['id'], NoteTreeNode> = {};
-  private readonly remote = container.resolve<Remote>(remoteToken);
   constructor() {
     makeObservable(this);
   }
@@ -62,39 +59,37 @@ export default class NoteTree {
     return node;
   }
 
-  getNote(id: string) {
+  getNode(id: string) {
     const node = this.nodesMap[id];
 
     if (!node) {
       throw new Error('can not find node');
     }
 
-    return node.note;
+    return node;
   }
 
-  loadChildren = async (note?: Note) => {
+  @action
+  loadChildren(children: Note[], note?: Note) {
     const noteId = note?.id;
-    const { body: notes } = await this.remote.get<NoteQuery, Note[]>('/notes', { parentId: noteId || null });
-    const nodes = notes.map(this.noteToNode.bind(this));
+    const nodes = children.map(this.noteToNode.bind(this));
 
-    runInAction(() => {
-      this.sort(nodes, false);
-      noteId && this.loadedNodes.add(noteId);
+    this.sort(nodes, false);
+    noteId && this.loadedNodes.add(noteId);
 
-      if (noteId) {
-        const targetNode = this.nodesMap[noteId];
+    if (noteId) {
+      const targetNode = this.nodesMap[noteId];
 
-        if (!targetNode) {
-          throw new Error('no node');
-        }
-
-        targetNode.children = nodes;
-        targetNode.isLeaf = nodes.length === 0;
-      } else {
-        this.roots = nodes;
+      if (!targetNode) {
+        throw new Error('no node');
       }
-    });
-  };
+
+      targetNode.children = nodes;
+      targetNode.isLeaf = nodes.length === 0;
+    } else {
+      this.roots = nodes;
+    }
+  }
 
   @action.bound
   updateTreeByNote(note: Note) {
@@ -221,6 +216,26 @@ export default class NoteTree {
     } else {
       this.selectedNodes.add(nodeId);
       return true;
+    }
+  }
+
+  @action
+  removeNodes(ids: NoteTreeNode['key'][]) {
+    for (const id of ids) {
+      const node = this.getNode(id);
+      const parentNode = node.parent;
+
+      if (parentNode) {
+        pull(parentNode.children, node);
+
+        if (parentNode.children.length === 0) {
+          parentNode.isLeaf = true;
+        }
+
+        node.parent = undefined;
+      } else {
+        pull(this.roots, node);
+      }
     }
   }
 }

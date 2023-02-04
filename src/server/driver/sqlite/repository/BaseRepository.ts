@@ -4,6 +4,12 @@ import pick from 'lodash/pick';
 import db from 'driver/sqlite';
 
 import type { Schema } from '../schema/type';
+import noteSchema from '../schema/noteSchema';
+import recyclableSchema, { RecyclablesTypes } from '../schema/recyclableSchema';
+
+const DELETABLE_ENTITY_TABLES: Record<Schema['tableName'], RecyclablesTypes> = {
+  [noteSchema.tableName]: RecyclablesTypes.Note,
+};
 
 export default abstract class BaseRepository<Row extends object> {
   protected get knex() {
@@ -14,13 +20,28 @@ export default abstract class BaseRepository<Row extends object> {
     return Object.keys(this.schema.fields);
   }
 
-  protected async assertExistenceById(id: string, tableName?: string | Knex.Transaction, trx?: Knex.Transaction) {
-    const _tableName = typeof tableName === 'string' ? tableName : this.schema.tableName;
-    const _trx = trx || (typeof tableName === 'function' ? tableName : this.knex);
-    const row = await _trx(_tableName).where('id', Number(id)).first();
+  private get recyclableTypes() {
+    return DELETABLE_ENTITY_TABLES[this.schema.tableName];
+  }
+
+  protected async assertExistenceById(id: string, trx?: Knex.Transaction) {
+    const _trx = trx || this.knex;
+    const sql = _trx<Row>(this.schema.tableName).where('id', Number(id));
+
+    if (this.recyclableTypes) {
+      const { recyclableTypes, knex } = this;
+      sql
+        .leftJoin(recyclableSchema.tableName, function () {
+          this.on(`${recyclableSchema.tableName}.type`, '=', knex.raw(recyclableTypes));
+          this.on(`${recyclableSchema.tableName}.entityId`, knex.raw(Number(id)));
+        })
+        .andWhere(`${recyclableSchema.tableName}.entityId`, null);
+    }
+
+    const row = await sql.first();
 
     if (!row) {
-      throw new Error(`invalid id ${id} in ${_tableName} table`);
+      throw new Error(`invalid id ${id} in ${this.schema.tableName} table`);
     }
   }
 
@@ -46,5 +67,33 @@ export default abstract class BaseRepository<Row extends object> {
     }
 
     return updatedRow;
+  }
+
+  async batchUpdate(payloads: Record<string, unknown>, trx?: Knex.Transaction): Promise<Row[]> {
+    const _trx = trx || (await this.knex.transaction());
+
+    try {
+      const rows = [];
+      for (const [id, payload] of Object.entries(payloads)) {
+        const fields = pick(payload, this.fields) as Partial<Row>;
+        const updatedRows = await _trx(this.schema.tableName)
+          .update(fields)
+          .where('id', id)
+          .returning(this.knex.raw('*'));
+
+        rows.push(...updatedRows);
+      }
+
+      if (rows.length !== Object.keys(payloads).length) {
+        throw new Error('invalid ids');
+      }
+
+      await _trx.commit();
+
+      return rows;
+    } catch (error) {
+      _trx.rollback();
+      throw error;
+    }
   }
 }

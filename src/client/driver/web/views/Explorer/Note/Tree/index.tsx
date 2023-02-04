@@ -16,9 +16,10 @@ const { useToken } = theme;
 export default observer(function NoteTree({ operationEl: operationNode }: { operationEl: HTMLElement | null }) {
   const { token } = useToken();
   const {
-    noteTree: { roots, loadChildren, toggleExpand, expandedNodes, selectedNodes, loadedNodes },
+    noteTree: { roots, toggleExpand, expandedNodes, selectedNodes, loadedNodes },
     selectNote,
     createNote,
+    loadChildren,
   } = container.resolve(NoteService);
 
   const operations = useMemo(() => {
