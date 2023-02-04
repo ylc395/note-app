@@ -7,11 +7,11 @@ import { token as noteRepositoryToken, type NoteRepository } from 'service/repos
 
 @Injectable()
 export default class NoteService {
-  constructor(@Inject(noteRepositoryToken) private readonly repository: NoteRepository) {}
+  constructor(@Inject(noteRepositoryToken) private readonly notes: NoteRepository) {}
 
   @Transaction
   async create(note: NoteDTO) {
-    if (note.parentId && !(await this.repository.isAvailable(note.parentId))) {
+    if (note.parentId && !(await this.notes.isAvailable(note.parentId))) {
       throw new Error('invalid parentId');
     }
 
@@ -19,16 +19,16 @@ export default class NoteService {
       return await this.duplicate(note.duplicateFrom);
     }
 
-    return await this.repository.create(note);
+    return await this.notes.create(note);
   }
 
   private async duplicate(noteId: NoteVO['id']) {
-    if (!(await this.repository.isAvailable(noteId))) {
+    if (!(await this.notes.isAvailable(noteId))) {
       throw new Error('note unavailable');
     }
 
-    const targetNote = (await this.repository.findAll({ id: noteId }))[0];
-    const targetNoteBody = await this.repository.findBody(noteId);
+    const targetNote = (await this.notes.findAll({ id: noteId }))[0];
+    const targetNoteBody = await this.notes.findBody(noteId);
 
     if (!targetNote || targetNoteBody === null) {
       throw new Error('invalid duplicate target');
@@ -36,25 +36,25 @@ export default class NoteService {
 
     targetNote.title = `${normalizeTitle(targetNote)} - 副本`;
 
-    const newNote = await this.repository.create(
+    const newNote = await this.notes.create(
       omit(targetNote, ['id', 'userCreatedAt', 'userUpdatedAt', 'createdAt', 'updatedAt']),
     );
 
-    await this.repository.updateBody(noteId, targetNoteBody);
+    await this.notes.updateBody(noteId, targetNoteBody);
     return newNote;
   }
 
   @Transaction
   async update(noteId: NoteVO['id'], note: NoteDTO) {
-    if (!(await this.repository.isAvailable(noteId))) {
+    if (!(await this.notes.isAvailable(noteId))) {
       throw new Error('invalid id');
     }
 
-    if (note.parentId && !(await this.repository.isAvailable(note.parentId))) {
+    if (note.parentId && !(await this.notes.isAvailable(note.parentId))) {
       throw new Error('invalid parentId');
     }
 
-    const result = await this.repository.update(noteId, note);
+    const result = await this.notes.update(noteId, note);
 
     if (!result) {
       throw new Error('invalid id');
@@ -65,23 +65,23 @@ export default class NoteService {
 
   @Transaction
   async updateBody(noteId: NoteVO['id'], body: NoteBodyDTO) {
-    if (!(await this.repository.isWritable(noteId))) {
+    if (!(await this.notes.isWritable(noteId))) {
       throw new Error('note unavailable');
     }
 
-    return await this.repository.updateBody(noteId, body);
+    return await this.notes.updateBody(noteId, body);
   }
 
   @Transaction
   async getBody(noteId: NoteVO['id']) {
-    if (!(await this.repository.isAvailable(noteId))) {
+    if (!(await this.notes.isAvailable(noteId))) {
       throw new Error('note unavailable');
     }
 
-    return await this.repository.findBody(noteId);
+    return await this.notes.findBody(noteId);
   }
 
   async query(q: NoteQuery) {
-    return await this.repository.findAll(q);
+    return await this.notes.findAll(q);
   }
 }
