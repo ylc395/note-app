@@ -59,6 +59,7 @@ async function createViteServer() {
   const { tsconfig: WEB_RAW_TSCONFIG } = await parse(WEB_TSCONFIG);
   const server = await createServer({
     configFile: false,
+    clearScreen: false,
     root: './src/client/driver/web',
     plugins: [
       checker({ typescript: { tsconfigPath: WEB_TSCONFIG }, overlay: false }),
