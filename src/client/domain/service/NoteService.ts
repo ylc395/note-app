@@ -4,7 +4,7 @@ import NoteTree from 'model/tree/NoteTree';
 import { token as remoteToken } from 'infra/Remote';
 import { token as feedbackToken } from 'infra/Feedback';
 import type { NoteDTO, NoteVO as Note, NoteQuery } from 'interface/Note';
-import type { EntitiesDTO } from 'interface/Recyclables';
+import type { RecyclableEntitiesDTO } from 'interface/Recyclables';
 
 import WorkbenchService, { WorkbenchEvents } from './WorkbenchService';
 
@@ -59,7 +59,7 @@ export default class NoteService {
   };
 
   readonly deleteNotes = async (ids: Note['id'][]) => {
-    await this.remote.put<EntitiesDTO>(`/recyclables/notes`, { ids });
+    await this.remote.put<RecyclableEntitiesDTO>(`/recyclables/notes`, { ids });
     this.noteTree.removeNodes(ids);
     this.feedback.message.success({ content: '已移至回收站' });
   };

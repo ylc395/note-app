@@ -236,6 +236,10 @@ export default class NoteTree {
       } else {
         pull(this.roots, node);
       }
+
+      this.selectedNodes.delete(id);
+      this.expandedNodes.delete(id);
+      this.loadedNodes.delete(id);
     }
   }
 }
