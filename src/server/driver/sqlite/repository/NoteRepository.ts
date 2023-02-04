@@ -8,30 +8,21 @@ import type { NoteDTO, NoteVO, NoteBodyDTO, NoteQuery } from 'interface/Note';
 
 import BaseRepository from './BaseRepository';
 import noteSchema, { type Row } from '../schema/noteSchema';
+import recyclableSchema, { RecyclablesTypes } from '../schema/recyclableSchema';
 
 export default class SqliteNoteRepository extends BaseRepository<Row> implements NoteRepository {
   protected readonly schema = noteSchema;
   async create(note: NoteDTO): Promise<NoteVO> {
-    const trx = await this.knex.transaction();
+    const row = await this.createOrUpdate(note);
 
-    try {
-      note.parentId && (await this.assertExistenceById(note.parentId, trx));
-      const row = await this.createOrUpdate(note, trx);
-
-      await trx.commit();
-
-      return {
-        ...omit(row, 'body'),
-        id: String(row.id),
-        parentId: note.parentId || null,
-        isReadonly: note.isReadonly || false,
-        icon: note.icon || null,
-        childrenCount: 0,
-      };
-    } catch (e) {
-      await trx.rollback();
-      throw e;
-    }
+    return {
+      ...omit(row, 'body'),
+      id: String(row.id),
+      parentId: note.parentId || null,
+      isReadonly: note.isReadonly || false,
+      icon: note.icon || null,
+      childrenCount: 0,
+    };
   }
 
   async findBody(noteId: string): Promise<NoteBodyDTO | null> {
@@ -46,26 +37,24 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
 
   async update(id: NoteVO['id'], note: NoteDTO) {
     const trx = await this.knex.transaction();
+    const row = await this.createOrUpdate(note, id, trx);
 
-    try {
-      note.parentId && (await this.assertExistenceById(note.parentId, trx));
-
-      const row = await this.createOrUpdate(note, id, trx);
-      const childrenCount = await trx<Row>(this.schema.tableName).where('parentId', row.id).count({ count: 'id' });
-
+    if (!row) {
       await trx.commit();
-
-      return {
-        ...omit(row, ['body']),
-        id: String(row.id),
-        parentId: row.parentId ? String(row.parentId) : null,
-        isReadonly: Boolean(row.isReadonly),
-        childrenCount: Number(childrenCount[0]?.count),
-      };
-    } catch (error) {
-      trx.rollback(error);
-      throw error;
+      return null;
     }
+
+    const childrenCount = await trx<Row>(this.schema.tableName).where('parentId', row.id).count({ count: 'id' });
+
+    await trx.commit();
+
+    return {
+      ...omit(row, ['body']),
+      id: String(row.id),
+      parentId: row.parentId ? String(row.parentId) : null,
+      isReadonly: Boolean(row.isReadonly),
+      childrenCount: Number(childrenCount[0]?.count),
+    };
   }
 
   async updateBody(id: NoteVO['id'], noteBody: NoteBodyDTO) {
@@ -79,15 +68,21 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
   }
 
   async findAll(query: NoteQuery) {
+    const {
+      knex,
+      schema: { tableName: noteTable },
+    } = this;
+    const recyclableTable = recyclableSchema.tableName;
     const where = mapKeys(omitBy(query, isUndefined), (_, key) => `parent.${key}`);
-    const rows = await this.knex
-      .select<(Row & { childrenCount: number })[]>(
-        this.knex.raw('parent.*'),
-        this.knex.raw('count(child.id) as childrenCount'),
-      )
-      .from(`${this.schema.tableName} as parent`)
-      .leftJoin(this.knex.raw(`${this.schema.tableName} as child`), 'child.parentId', 'parent.id')
-      .where(where)
+    const rows = await knex
+      .select<(Row & { childrenCount: number })[]>(knex.raw('parent.*'), knex.raw('count(child.id) as childrenCount'))
+      .from(`${noteTable} as parent`)
+      .leftJoin(knex.raw(`${noteTable} as child`), 'child.parentId', 'parent.id')
+      .leftJoin(this.knex.raw(`${recyclableTable}`), function () {
+        this.on(`${recyclableTable}.type`, '=', knex.raw(RecyclablesTypes.Note));
+        this.on(`${recyclableTable}.entityId`, `parent.id`);
+      })
+      .where({ ...where, [`${recyclableTable}.entityId`]: null })
       .groupBy('parent.id');
 
     const notes = rows.map((row) => {
@@ -100,5 +95,34 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
     });
 
     return notes;
+  }
+
+  private isAvailableSql(noteId: string) {
+    const recyclableTable = recyclableSchema.tableName;
+    const {
+      knex,
+      schema: { tableName: noteTable },
+    } = this;
+    const sql = this.knex<Row>(this.schema.tableName)
+      .leftJoin(recyclableTable, function () {
+        this.on(`${recyclableTable}.type`, knex.raw(RecyclablesTypes.Note));
+        this.on(`${recyclableTable}.entityId`, `${noteTable}.id`);
+      })
+      .where({ [`${recyclableTable}.entityId`]: null, [`${noteTable}.id`]: Number(noteId) })
+      .first();
+
+    return sql;
+  }
+
+  async isAvailable(noteId: string) {
+    const row = await this.isAvailableSql(noteId);
+
+    return Boolean(row);
+  }
+
+  async isWritable(noteId: string) {
+    const row = await this.isAvailableSql(noteId).andWhere(`${this.schema.tableName}.isReadonly`, 0);
+
+    return Boolean(row);
   }
 }

@@ -28,7 +28,6 @@ export default class NoteService {
     // fixme: knex 有个 bug，目前必须写一个字段进去 https://github.com/knex/knex/pull/5471
     let { body: note } = await this.remote.post<NoteDTO, Note>('/notes', {
       parentId: parent?.id || null,
-      isReadonly: true,
     });
 
     if (parent && !this.noteTree.loadedNodes.has(parent.id)) {

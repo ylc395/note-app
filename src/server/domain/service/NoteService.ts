@@ -9,16 +9,24 @@ export default class NoteService {
   constructor(@Inject(noteRepositoryToken) private readonly repository: NoteRepository) {}
 
   async create(note: NoteDTO) {
+    if (note.parentId && !(await this.repository.isAvailable(note.parentId))) {
+      throw new Error('invalid parentId');
+    }
+
     if (note.duplicateFrom) {
-      return this.duplicate(note.duplicateFrom);
+      return await this.duplicate(note.duplicateFrom);
     }
 
     return await this.repository.create(note);
   }
 
-  private async duplicate(id: NoteVO['id']) {
-    const targetNote = (await this.repository.findAll({ id }))[0];
-    const targetNoteBody = await this.repository.findBody(id);
+  private async duplicate(noteId: NoteVO['id']) {
+    if (!(await this.repository.isAvailable(noteId))) {
+      throw new Error('note unavailable');
+    }
+
+    const targetNote = (await this.repository.findAll({ id: noteId }))[0];
+    const targetNoteBody = await this.repository.findBody(noteId);
 
     if (!targetNote || targetNoteBody === null) {
       throw new Error('invalid duplicate target');
@@ -35,14 +43,36 @@ export default class NoteService {
   }
 
   async update(noteId: NoteVO['id'], note: NoteDTO) {
-    return await this.repository.update(noteId, note);
+    if (!(await this.repository.isAvailable(noteId))) {
+      throw new Error('invalid id');
+    }
+
+    if (note.parentId && !(await this.repository.isAvailable(note.parentId))) {
+      throw new Error('invalid parentId');
+    }
+
+    const result = await this.repository.update(noteId, note);
+
+    if (!result) {
+      throw new Error('invalid id');
+    }
+
+    return result;
   }
 
   async updateBody(noteId: NoteVO['id'], body: NoteBodyDTO) {
+    if (!(await this.repository.isWritable(noteId))) {
+      throw new Error('note unavailable');
+    }
+
     return await this.repository.updateBody(noteId, body);
   }
 
   async getBody(noteId: NoteVO['id']) {
+    if (!(await this.repository.isAvailable(noteId))) {
+      throw new Error('note unavailable');
+    }
+
     return await this.repository.findBody(noteId);
   }
 
