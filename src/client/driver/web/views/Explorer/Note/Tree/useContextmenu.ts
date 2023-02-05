@@ -12,12 +12,13 @@ export default function useContextmenu() {
     noteTree: { selectedNodes },
     duplicateNote,
     deleteNotes,
+    moveNotes,
   } = container.resolve(NoteService);
 
   return useCallback(
-    async (note: Note) => {
-      const isMultiple = selectedNodes.size > 1 && selectedNodes.has(note.id);
-      const noteIds = isMultiple ? Array.from(selectedNodes) : [note.id];
+    async (noteId: Note['id']) => {
+      const isMultiple = selectedNodes.size > 1 && selectedNodes.has(noteId);
+      const noteIds = isMultiple ? Array.from(selectedNodes) : [noteId];
       const description = noteIds.length + '项';
       const items: MenuItem[] = isMultiple
         ? [
@@ -48,12 +49,15 @@ export default function useContextmenu() {
         return;
       }
 
+      const targets = isMultiple ? Array.from(selectedNodes) : [noteId];
+
       switch (key) {
         case 'duplicate':
-          return duplicateNote(note);
+          return duplicateNote(noteId);
         case 'delete':
-          return deleteNotes(isMultiple ? Array.from(selectedNodes) : [note.id]);
-          return;
+          return deleteNotes(targets);
+        case 'move':
+          return moveNotes(targets);
         default:
           break;
       }

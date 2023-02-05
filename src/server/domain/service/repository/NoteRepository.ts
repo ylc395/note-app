@@ -1,14 +1,16 @@
-import type { NoteBodyDTO, NoteDTO, NoteVO, NoteQuery as NoteClientQuery } from 'interface/Note';
+import type { NoteBodyDTO, NoteDTO, NoteVO, NotesDTO } from 'interface/Note';
 
 export const token = Symbol('NoteRepository');
 
-export type NoteQuery = Omit<NoteClientQuery, 'parentId'> & {
+export type NoteQuery = {
   parentId?: string | string[] | null;
+  id?: string | string[];
 };
 
 export interface NoteRepository {
   create: (note: NoteDTO) => Promise<NoteVO>;
   update: (noteId: NoteVO['id'], note: NoteDTO) => Promise<NoteVO | null>;
+  batchUpdate: (notes: NotesDTO) => Promise<NoteVO[]>;
   updateBody: (noteId: NoteVO['id'], noteBody: NoteBodyDTO) => Promise<NoteBodyDTO>;
   findAll: (query: NoteQuery) => Promise<NoteVO[]>;
   findBody: (noteId: NoteVO['id']) => Promise<NoteBodyDTO | null>;

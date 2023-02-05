@@ -2,7 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import omit from 'lodash/omit';
 
 import { Transaction } from 'infra/TransactionManager';
-import { NoteVO, NoteBodyDTO, NoteDTO, NoteQuery, normalizeTitle } from 'interface/Note';
+import { NoteVO, NoteBodyDTO, NoteDTO, NoteQuery, normalizeTitle, NotesDTO } from 'interface/Note';
 import { token as noteRepositoryToken, type NoteRepository } from 'service/repository/NoteRepository';
 
 @Injectable()
@@ -79,6 +79,17 @@ export default class NoteService {
     }
 
     return await this.notes.findBody(noteId);
+  }
+
+  @Transaction
+  async batchUpdate(notes: NotesDTO) {
+    const ids = notes.map(({ id }) => id);
+
+    if (!(await this.notes.isAvailable(ids))) {
+      throw new Error('notes unavailable');
+    }
+
+    return await this.notes.batchUpdate(notes);
   }
 
   async query(q: NoteQuery) {

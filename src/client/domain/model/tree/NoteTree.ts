@@ -1,10 +1,12 @@
-import { action, makeObservable, observable } from 'mobx';
+import { action, makeObservable, observable, runInAction } from 'mobx';
 import pull from 'lodash/pull';
+import { container } from 'tsyringe';
 
-import type { NoteVO as Note } from 'interface/Note';
+import { token as remoteToken } from 'infra/Remote';
+import type { NoteQuery, NoteVO as Note } from 'interface/Note';
 import { normalizeTitle } from 'interface/Note';
 
-interface NoteTreeNode {
+export interface NoteTreeNode {
   key: string;
   title: string;
   note: Note;
@@ -24,7 +26,10 @@ export enum SortOrder {
   Desc = 'desc',
 }
 
+export const VIRTUAL_ROOT_NODE_KEY = 'root';
+
 export default class NoteTree {
+  private readonly remote = container.resolve(remoteToken);
   @observable roots: NoteTreeNode[] = [];
   @observable readonly expandedNodes = new Set<NoteTreeNode['key']>();
   @observable readonly selectedNodes = new Set<NoteTreeNode['key']>();
@@ -33,9 +38,51 @@ export default class NoteTree {
     by: SortBy.Title,
     order: SortOrder.Asc,
   };
+
   private readonly nodesMap: Record<Note['id'], NoteTreeNode> = {};
-  constructor() {
+
+  private get _roots() {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return this.virtualRoot ? this.roots[0]!.children : this.roots;
+  }
+
+  private set _roots(nodes: NoteTreeNode[]) {
+    if (this.virtualRoot) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      this.roots[0]!.children = nodes;
+    } else {
+      this.roots = nodes;
+    }
+  }
+
+  constructor(private readonly virtualRoot: boolean = false) {
     makeObservable(this);
+
+    if (virtualRoot) {
+      this.initVirtualRoot();
+    }
+  }
+
+  @action
+  private initVirtualRoot() {
+    this.roots.push({
+      key: VIRTUAL_ROOT_NODE_KEY,
+      title: '根',
+      children: [],
+      isLeaf: false,
+      note: {
+        id: '',
+        title: '',
+        isReadonly: true,
+        parentId: null,
+        icon: null,
+        childrenCount: 0,
+        updatedAt: 0,
+        userCreatedAt: 0,
+        createdAt: 0,
+        userUpdatedAt: 0,
+      },
+    });
   }
 
   private noteToNode(note: Note) {
@@ -69,27 +116,29 @@ export default class NoteTree {
     return node;
   }
 
-  @action
-  loadChildren(children: Note[], note?: Note) {
-    const noteId = note?.id;
-    const nodes = children.map(this.noteToNode.bind(this));
+  readonly loadChildren = async (parentId?: Note['id']) => {
+    const { body: notes } = await this.remote.get<NoteQuery, Note[]>('/notes', { parentId: parentId || null });
 
-    this.sort(nodes, false);
-    noteId && this.loadedNodes.add(noteId);
+    runInAction(() => {
+      const nodes = notes.map(this.noteToNode.bind(this));
 
-    if (noteId) {
-      const targetNode = this.nodesMap[noteId];
+      this.sort(nodes, false);
+      parentId && this.loadedNodes.add(parentId);
 
-      if (!targetNode) {
-        throw new Error('no node');
+      if (parentId) {
+        const targetNode = this.nodesMap[parentId];
+
+        if (!targetNode) {
+          throw new Error('no node');
+        }
+
+        targetNode.children = nodes;
+        targetNode.isLeaf = nodes.length === 0;
+      } else {
+        this._roots = nodes;
       }
-
-      targetNode.children = nodes;
-      targetNode.isLeaf = nodes.length === 0;
-    } else {
-      this.roots = nodes;
-    }
-  }
+    });
+  };
 
   @action.bound
   updateTreeByNote(note: Note) {
@@ -98,7 +147,7 @@ export default class NoteTree {
     if (!node) {
       const newNode = this.noteToNode(note);
       const parent = note.parentId && this.nodesMap[note.parentId];
-      const children = parent ? parent.children : this.roots;
+      const children = parent ? parent.children : this._roots;
 
       if (parent) {
         parent.isLeaf = false;
@@ -115,8 +164,8 @@ export default class NoteTree {
     const oldParent = node.parent;
     const newParent = note.parentId && this.nodesMap[note.parentId];
 
-    if (oldParent && oldParent.key !== note.parentId) {
-      pull(oldParent.children, node);
+    if (oldParent?.key !== note.parentId) {
+      pull(oldParent ? oldParent.children : this._roots, node);
 
       if (newParent) {
         node.parent = newParent;
@@ -124,17 +173,15 @@ export default class NoteTree {
         newParent.isLeaf = false;
       } else {
         node.parent = undefined;
-        this.roots.push(node);
+        this._roots.push(node);
       }
     }
 
-    this.sort(newParent ? newParent.children : this.roots, false);
+    this.sort(newParent ? newParent.children : this._roots, false);
   }
 
   @action.bound
-  toggleExpand(note: Note, flag?: boolean) {
-    const noteId = note.id;
-
+  toggleExpand(noteId: Note['id'], flag?: boolean) {
     if (flag || !this.expandedNodes.has(noteId)) {
       this.expandedNodes.add(noteId);
     } else {
@@ -160,10 +207,8 @@ export default class NoteTree {
     }
 
     if (needResort) {
-      this.sort(this.roots, true);
+      this.sort(this._roots, true);
     }
-
-    console.log(this.roots);
   }
 
   @action
@@ -199,22 +244,20 @@ export default class NoteTree {
   }
 
   @action.bound
-  toggleSelect(note: Note, reset: boolean) {
-    const nodeId = note.id;
-
+  toggleSelect(noteId: Note['id'], reset: boolean) {
     if (reset) {
       this.selectedNodes.clear();
-      this.selectedNodes.add(nodeId);
+      this.selectedNodes.add(noteId);
 
       return true;
     }
 
-    if (this.selectedNodes.has(nodeId)) {
-      this.selectedNodes.delete(nodeId);
+    if (this.selectedNodes.has(noteId)) {
+      this.selectedNodes.delete(noteId);
 
       return false;
     } else {
-      this.selectedNodes.add(nodeId);
+      this.selectedNodes.add(noteId);
       return true;
     }
   }
@@ -234,7 +277,7 @@ export default class NoteTree {
 
         node.parent = undefined;
       } else {
-        pull(this.roots, node);
+        pull(this._roots, node);
       }
 
       this.selectedNodes.delete(id);

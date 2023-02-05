@@ -4,7 +4,7 @@ import mapKeys from 'lodash/mapKeys';
 import isUndefined from 'lodash/isUndefined';
 
 import type { NoteRepository, NoteQuery } from 'service/repository/NoteRepository';
-import type { NoteDTO, NoteVO, NoteBodyDTO } from 'interface/Note';
+import type { NoteDTO, NoteVO, NoteBodyDTO, NotesDTO } from 'interface/Note';
 import { RecyclablesTypes } from 'service/RecyclableService';
 
 import BaseRepository from './BaseRepository';
@@ -21,7 +21,6 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
       id: String(row.id),
       parentId: note.parentId || null,
       isReadonly: note.isReadonly || false,
-      icon: note.icon || null,
       childrenCount: 0,
     };
   }
@@ -136,5 +135,23 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
     const row = await this.isAvailableSql(noteId).andWhere(`${this.schema.tableName}.isReadonly`, 0);
 
     return Boolean(row);
+  }
+
+  async batchUpdate(notes: NotesDTO) {
+    const ids: string[] = [];
+
+    for (const note of notes) {
+      const row = await this.createOrUpdate(note, note.id);
+
+      if (!row) {
+        throw new Error('no such row');
+      }
+
+      ids.push(String(row.id));
+    }
+
+    const rows = await this.findAll({ id: ids });
+
+    return rows;
   }
 }

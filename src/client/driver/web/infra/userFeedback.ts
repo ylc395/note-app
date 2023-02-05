@@ -1,8 +1,8 @@
 import { Modal as antdModal, message as antdMessage } from 'antd';
 
-import type Feedback from 'infra/Feedback';
+import type UserFeedback from 'infra/UserFeedback';
 
-const modal: Feedback['modal'] = {
+const modal: UserFeedback['modal'] = {
   confirm: (options) => {
     return new Promise((resolve) => {
       antdModal.confirm({
@@ -17,7 +17,7 @@ const modal: Feedback['modal'] = {
   },
 };
 
-const message: Feedback['message'] = {
+const message: UserFeedback['message'] = {
   success: (options) => {
     return new Promise((resolve) => antdMessage.success(options.content).then(() => resolve()));
   },

@@ -17,9 +17,9 @@ interface Message {
   success: (option: MessageOptions) => Promise<void>;
 }
 
-export default interface Feedback {
+export default interface UserFeedback {
   modal: Modal;
   message: Message;
 }
 
-export const token: InjectionToken<Feedback> = Symbol('feedback');
+export const token: InjectionToken<UserFeedback> = Symbol('feedback');

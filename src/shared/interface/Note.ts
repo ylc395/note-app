@@ -1,4 +1,4 @@
-import { union, boolean, number, object, string, null as zodNull, type infer as Infer } from 'zod';
+import { union, boolean, number, object, string, null as zodNull, type infer as Infer, array } from 'zod';
 import dayjs from 'dayjs';
 
 export const noteDTOSchema = object({
@@ -10,6 +10,10 @@ export const noteDTOSchema = object({
   icon: union([string().regex(/^(emoji:|file:).+/), zodNull()]).optional(),
   duplicateFrom: string().optional(),
 });
+
+export const notesDTOSchema = array(noteDTOSchema.extend({ id: string() }).omit({ duplicateFrom: true }));
+
+export type NotesDTO = Infer<typeof notesDTOSchema>;
 
 export type NoteDTO = Infer<typeof noteDTOSchema>;
 
