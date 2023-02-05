@@ -127,7 +127,7 @@ export default class NoteTree {
   }
 
   readonly loadChildren = async (parentId?: Note['id']) => {
-    if (parentId && this.loadedNodes.has(parentId)) {
+    if (parentId ? this.loadedNodes.has(parentId) : this._roots.length > 0) {
       return;
     }
 
