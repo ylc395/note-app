@@ -70,7 +70,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
     } = this;
     const recyclableTable = recyclableSchema.tableName;
     const where = mapKeys(omitBy(query, isUndefined), (_, key) => `parent.${key}`);
-    const rows = await knex
+    const sql = knex
       .select<(Row & { childrenCount: number })[]>(knex.raw('parent.*'), knex.raw('count(child.id) as childrenCount'))
       .from(`${noteTable} as parent`)
       .leftJoin(
@@ -88,9 +88,14 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
         this.on(`${recyclableTable}.entityType`, '=', knex.raw(RecyclablesTypes.Note));
         this.on(`${recyclableTable}.entityId`, 'parent.id');
       })
-      .where({ ...where, [`${recyclableTable}.entityId`]: null })
+      .whereNull(`${recyclableTable}.entityId`)
       .groupBy('parent.id');
 
+    for (const [k, v] of Object.entries(where)) {
+      Array.isArray(v) ? sql.andWhere(k, 'in', v) : sql.andWhere(k, v);
+    }
+
+    const rows = await sql;
     const notes = rows.map((row) => {
       return {
         ...omit(row, ['body']),
