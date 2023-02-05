@@ -27,16 +27,12 @@ export default class NoteService {
       parentId: parentId || null,
     });
 
-    if (parentId && !this.noteTree.loadedNodes.has(parentId)) {
-      await this.noteTree.loadChildren(parentId);
-      note = this.noteTree.getNode(note.id).note;
-    } else {
-      this.noteTree.updateTreeByNote(note);
+    if (parentId) {
+      await this.noteTree.toggleExpand(parentId, true, true);
     }
 
+    note = this.noteTree.updateTreeByNote(note)?.note;
     this.noteTree.toggleSelect(note.id, true);
-    parentId && this.noteTree.toggleExpand(parentId, true);
-
     this.workbench.open({ type: 'note', entity: note }, false);
   };
 
@@ -63,7 +59,7 @@ export default class NoteService {
   };
 
   readonly moveNotes = async (ids: Note['id'][]) => {
-    const targetId = await this.userInput.note.getNoteIdByTree();
+    const targetId = await this.userInput.note.getNoteIdByTree(ids.map((id) => this.noteTree.getNode(id)));
 
     if (typeof targetId === 'undefined') {
       return;
@@ -71,6 +67,11 @@ export default class NoteService {
 
     const notes = ids.map((id) => ({ ...this.noteTree.getNode(id).note, parentId: targetId }));
     const { body: updatedNotes } = await this.remote.patch<NotesDTO, NoteVO[]>('/notes', notes);
+
+    if (targetId && !this.noteTree.getNode(targetId, true)) {
+      this.noteTree.removeNodes(ids);
+      return;
+    }
 
     for (const note of updatedNotes) {
       this.noteTree.updateTreeByNote(note);

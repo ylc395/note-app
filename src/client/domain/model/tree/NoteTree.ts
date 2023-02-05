@@ -13,6 +13,7 @@ export interface NoteTreeNode {
   parent?: NoteTreeNode;
   children: NoteTreeNode[];
   isLeaf: boolean;
+  disabled?: boolean;
 }
 
 export enum SortBy {
@@ -43,11 +44,11 @@ export default class NoteTree {
 
   private get _roots() {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return this.virtualRoot ? this.roots[0]!.children : this.roots;
+    return this.options?.virtualRoot ? this.roots[0]!.children : this.roots;
   }
 
   private set _roots(nodes: NoteTreeNode[]) {
-    if (this.virtualRoot) {
+    if (this.options?.virtualRoot) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       this.roots[0]!.children = nodes;
     } else {
@@ -55,17 +56,17 @@ export default class NoteTree {
     }
   }
 
-  constructor(private readonly virtualRoot: boolean = false) {
+  constructor(private readonly options?: { virtualRoot?: boolean; isDisabled?: (node: NoteTreeNode) => boolean }) {
     makeObservable(this);
 
-    if (virtualRoot) {
+    if (options?.virtualRoot) {
       this.initVirtualRoot();
     }
   }
 
   @action
   private initVirtualRoot() {
-    this.roots.push({
+    const virtualRoot: NoteTreeNode = {
       key: VIRTUAL_ROOT_NODE_KEY,
       title: '根',
       children: [],
@@ -82,16 +83,18 @@ export default class NoteTree {
         createdAt: 0,
         userUpdatedAt: 0,
       },
-    });
+    };
+
+    if (this.options?.isDisabled) {
+      virtualRoot.disabled = this.options.isDisabled(virtualRoot);
+    }
+
+    this.roots.push(virtualRoot);
+    this.expandedNodes.add(VIRTUAL_ROOT_NODE_KEY);
   }
 
   private noteToNode(note: Note) {
-    const parent = note.parentId ? this.nodesMap[note.parentId] : undefined;
-
-    if (note.parentId && !parent) {
-      throw new Error('fail to find parent');
-    }
-
+    const parent = note.parentId ? this.getNode(note.parentId) : undefined;
     const node = observable({
       key: note.id,
       title: normalizeTitle(note),
@@ -99,17 +102,24 @@ export default class NoteTree {
       children: [],
       parent,
       note,
+      disabled: false,
     });
+
+    if (this.options?.isDisabled) {
+      node.disabled = this.options.isDisabled(node);
+    }
 
     this.nodesMap[note.id] = node;
 
     return node;
   }
 
-  getNode(id: string) {
+  getNode(id: string, noThrow: true): NoteTreeNode | undefined;
+  getNode(id: string): NoteTreeNode;
+  getNode(id: string, noThrow?: true) {
     const node = this.nodesMap[id];
 
-    if (!node) {
+    if (!node && !noThrow) {
       throw new Error('can not find node');
     }
 
@@ -117,6 +127,10 @@ export default class NoteTree {
   }
 
   readonly loadChildren = async (parentId?: Note['id']) => {
+    if (parentId && this.loadedNodes.has(parentId)) {
+      return;
+    }
+
     const { body: notes } = await this.remote.get<NoteQuery, Note[]>('/notes', { parentId: parentId || null });
 
     runInAction(() => {
@@ -128,6 +142,7 @@ export default class NoteTree {
       if (parentId) {
         const targetNode = this.nodesMap[parentId];
 
+        // todo: 需要支持读取任意 node，哪怕它并不在树上
         if (!targetNode) {
           throw new Error('no node');
         }
@@ -155,7 +170,8 @@ export default class NoteTree {
 
       children.push(newNode);
       this.sort(children, false);
-      return;
+
+      return newNode;
     }
 
     Object.assign(node.note, note);
@@ -178,16 +194,27 @@ export default class NoteTree {
     }
 
     this.sort(newParent ? newParent.children : this._roots, false);
+    return node;
   }
 
-  @action.bound
-  toggleExpand(noteId: Note['id'], flag?: boolean) {
-    if (flag || !this.expandedNodes.has(noteId)) {
-      this.expandedNodes.add(noteId);
-    } else {
-      this.expandedNodes.delete(noteId);
+  readonly toggleExpand = async (noteId: Note['id'], load: boolean, flag?: boolean) => {
+    if (noteId === VIRTUAL_ROOT_NODE_KEY) {
+      return;
     }
-  }
+
+    if (flag || !this.expandedNodes.has(noteId)) {
+      let node: NoteTreeNode | undefined = this.getNode(noteId);
+      load && (await this.loadChildren(noteId));
+      runInAction(() => {
+        while (node) {
+          this.expandedNodes.add(noteId);
+          node = node.parent;
+        }
+      });
+    } else {
+      runInAction(() => this.expandedNodes.delete(noteId));
+    }
+  };
 
   @action.bound
   collapseAll() {

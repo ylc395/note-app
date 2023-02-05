@@ -1,12 +1,12 @@
 import type { InjectionToken } from 'tsyringe';
 
-interface ModalOptions {
+export interface ModalOptions {
   title: string;
   content: string;
 }
 
 interface Modal {
-  confirm: (option: ModalOptions) => Promise<'ok' | 'cancel'>;
+  success: (option: ModalOptions) => Promise<void>;
 }
 
 interface MessageOptions {

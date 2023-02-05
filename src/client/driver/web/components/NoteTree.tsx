@@ -47,7 +47,7 @@ export default observer(function NoteTree({
         selectedKeys={Array.from(selectedNodes)}
         expandAction={false}
         loadData={(node) => loadChildren(node.key as string)}
-        onExpand={(_, { node }) => toggleExpand(node.key as string)}
+        onExpand={(_, { node }) => toggleExpand(node.key as string, false)}
         onSelect={handleSelect}
         onRightClick={handleContextmenu && (({ node }) => handleContextmenu(node.key as string))}
       />
