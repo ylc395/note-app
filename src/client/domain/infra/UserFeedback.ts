@@ -11,6 +11,7 @@ interface Modal {
 
 interface MessageOptions {
   content: string;
+  onClick?: () => void;
 }
 
 interface Message {

@@ -68,6 +68,11 @@ export default class NoteService {
     const notes = ids.map((id) => ({ ...this.noteTree.getNode(id).note, parentId: targetId }));
     const { body: updatedNotes } = await this.remote.patch<NotesDTO, NoteVO[]>('/notes', notes);
 
+    this.userFeedback.message.success({
+      content: '移动成功。点击定位到新位置',
+      // onClick: () => this.noteTree.toggleExpand(targetId, true),
+    });
+
     if (targetId && !this.noteTree.getNode(targetId, true)) {
       this.noteTree.removeNodes(ids);
       return;

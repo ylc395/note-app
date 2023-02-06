@@ -197,8 +197,8 @@ export default class NoteTree {
     return node;
   }
 
-  readonly toggleExpand = async (noteId: Note['id'], load: boolean, flag?: boolean) => {
-    if (noteId === VIRTUAL_ROOT_NODE_KEY) {
+  readonly toggleExpand = async (noteId: Note['parentId'], load: boolean, flag?: boolean) => {
+    if (noteId === VIRTUAL_ROOT_NODE_KEY || noteId === null) {
       return;
     }
 

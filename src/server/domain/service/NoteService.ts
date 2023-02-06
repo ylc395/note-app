@@ -50,6 +50,7 @@ export default class NoteService {
       throw new Error('invalid id');
     }
 
+    // todo: 确保 parentId 合法（参考 client 逻辑）
     if (note.parentId && !(await this.notes.isAvailable(note.parentId))) {
       throw new Error('invalid parentId');
     }
@@ -83,6 +84,7 @@ export default class NoteService {
 
   @Transaction
   async batchUpdate(notes: NotesDTO) {
+    // todo: 确保 parentId 合法（参考 client 逻辑）
     const ids = notes.map(({ id }) => id);
 
     if (!(await this.notes.isAvailable(ids))) {

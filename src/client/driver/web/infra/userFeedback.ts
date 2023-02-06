@@ -17,7 +17,7 @@ const modal: UserFeedback['modal'] = {
 
 const message: UserFeedback['message'] = {
   success: (options) => {
-    return new Promise((resolve) => antdMessage.success(options.content).then(() => resolve()));
+    return new Promise((resolve) => antdMessage.success(options).then(() => resolve()));
   },
 };
 
