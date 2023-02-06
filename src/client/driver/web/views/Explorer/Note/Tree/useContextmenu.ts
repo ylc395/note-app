@@ -9,7 +9,7 @@ import NoteService from 'service/NoteService';
 export default function useContextmenu() {
   const { contextmenu } = container.resolve(ViewService);
   const {
-    noteTree: { selectedNodes },
+    noteTree: { selectedNodes, toggleSelect },
     duplicateNote,
     deleteNotes,
     moveNotes,
@@ -17,8 +17,13 @@ export default function useContextmenu() {
 
   return useCallback(
     async (noteId: Note['id']) => {
+      if (!selectedNodes.has(noteId)) {
+        toggleSelect(noteId, true);
+      }
+
       const isMultiple = selectedNodes.size > 1 && selectedNodes.has(noteId);
       const noteIds = isMultiple ? Array.from(selectedNodes) : [noteId];
+
       const description = noteIds.length + '项';
       const items: MenuItem[] = isMultiple
         ? [

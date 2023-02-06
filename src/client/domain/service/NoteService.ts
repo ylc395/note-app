@@ -69,7 +69,7 @@ export default class NoteService {
     const { body: updatedNotes } = await this.remote.patch<NotesDTO, NoteVO[]>('/notes', notes);
 
     this.userFeedback.message.success({
-      content: '移动成功。点击定位到新位置',
+      content: `移动成功${!targetId || this.noteTree.expandedNodes.has(targetId) ? '' : '。点击定位到新位置'}`,
       // onClick: () => this.noteTree.toggleExpand(targetId, true),
     });
 
