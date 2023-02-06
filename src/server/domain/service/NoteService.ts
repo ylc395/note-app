@@ -1,5 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 import omit from 'lodash/omit';
+import intersection from 'lodash/intersection';
 
 import { Transaction } from 'infra/TransactionManager';
 import { NoteVO, NoteBodyDTO, NoteDTO, NoteQuery, normalizeTitle, NotesDTO } from 'interface/Note';
@@ -11,7 +12,7 @@ export default class NoteService {
 
   @Transaction
   async create(note: NoteDTO) {
-    if (note.parentId && !(await this.notes.isAvailable(note.parentId))) {
+    if (note.parentId && !(await this.notes.areAvailable([note.parentId]))) {
       throw new Error('invalid parentId');
     }
 
@@ -23,7 +24,7 @@ export default class NoteService {
   }
 
   private async duplicate(noteId: NoteVO['id']) {
-    if (!(await this.notes.isAvailable(noteId))) {
+    if (!(await this.notes.areAvailable([noteId]))) {
       throw new Error('note unavailable');
     }
 
@@ -74,7 +75,7 @@ export default class NoteService {
 
   @Transaction
   async getBody(noteId: NoteVO['id']) {
-    if (!(await this.notes.isAvailable(noteId))) {
+    if (!(await this.notes.areAvailable([noteId]))) {
       throw new Error('note unavailable');
     }
 
@@ -106,10 +107,24 @@ export default class NoteService {
   private async assertValidChanges(notes: NotesDTO) {
     const ids = notes.map(({ id }) => id);
 
-    if (!(await this.notes.isAvailable(ids))) {
+    if (!(await this.notes.areAvailable(ids))) {
       throw new Error('invalid ids');
     }
 
-    // const parentChangedNotes = notes.filter(parent => typeof parent !== undefined);
+    const parentChangedNotes = notes.filter((parent) => typeof parent !== undefined);
+
+    for (const { parentId, id } of parentChangedNotes) {
+      if (parentId === id) {
+        throw new Error(`invalid parent id: ${parentId}`);
+      }
+    }
+
+    const parentChangedNoteIds = parentChangedNotes.map(({ id }) => id);
+    const descendantIds = await this.notes.findAllDescendantIds(parentChangedNoteIds);
+    const invalidParentIds = intersection(descendantIds, parentChangedNoteIds);
+
+    if (invalidParentIds.length > 0) {
+      throw new Error(`invalid parent id: ${invalidParentIds.join()}`);
+    }
   }
 }

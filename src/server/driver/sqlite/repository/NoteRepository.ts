@@ -63,6 +63,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
     return noteBody;
   }
 
+  // problem: 是否需要像这样，在 sql 里体现业务逻辑（例如“回收站”的概念）？
   async findAll(query: NoteQuery) {
     const {
       knex,
@@ -121,23 +122,23 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
       })
       .whereNull(`${recyclableTable}.entityId`);
 
-    if (Array.isArray(noteId)) {
+    if (Array.isArray(noteId) && noteId.length > 1) {
       sql.whereIn(`${noteTable}.id`, noteId.map(Number));
     } else {
-      sql.where(`${noteTable}.id`, Number(noteId)).first();
+      sql.where(`${noteTable}.id`, Number(Array.isArray(noteId) ? noteId[0] : noteId));
     }
 
     return sql;
   }
 
-  async isAvailable(noteId: NoteVO['id'] | NoteVO['id'][]) {
-    const rows = await this.isAvailableSql(noteId);
+  async areAvailable(noteIds: NoteVO['id'][]) {
+    const rows = await this.isAvailableSql(noteIds);
 
-    return Array.isArray(noteId) ? rows.length === noteId.length : Boolean(rows);
+    return rows.length === noteIds.length;
   }
 
   async isWritable(noteId: NoteVO['id']) {
-    const row = await this.isAvailableSql(noteId).andWhere(`${this.schema.tableName}.isReadonly`, 0);
+    const row = await this.isAvailableSql(noteId).andWhere(`${this.schema.tableName}.isReadonly`, 0).first();
 
     return Boolean(row);
   }
@@ -158,5 +159,38 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
     const rows = await this.findAll({ id: ids });
 
     return rows;
+  }
+
+  async findAllDescendantIds(noteIds: NoteVO['id'][]) {
+    if (noteIds.length === 0) {
+      return [];
+    }
+
+    const noteTable = this.schema.tableName;
+    const recyclableTable = recyclableSchema.tableName;
+    const { knex } = this;
+    const rows = await this.knex()
+      .withRecursive('descendants', (qb) => {
+        qb.select('id', 'parentId')
+          .from(noteTable)
+          .whereIn('parentId', noteIds)
+          .union((qb) =>
+            qb
+              .select(`${noteTable}.id`, `${noteTable}.parentId`)
+              .from('descendants')
+              .join(knex.raw(noteTable))
+              .where(`${noteTable}.parentId`, 'descendants.id'),
+          );
+        // todo: add a limit statement to stop infinite recursive
+      })
+      .select(knex.raw('descendants.*'))
+      .from('descendants')
+      .leftJoin(recyclableTable, function () {
+        this.on(`${recyclableTable}.entityType`, '=', knex.raw(RecyclablesTypes.Note));
+        this.on(`${recyclableTable}.entityId`, 'descendants.id');
+      })
+      .whereNull(`${recyclableTable}.entityId`);
+
+    return rows.map(({ id }) => String(id));
   }
 }

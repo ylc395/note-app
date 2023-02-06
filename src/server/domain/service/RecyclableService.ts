@@ -1,6 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { Transaction } from 'infra/TransactionManager';
-import type { NoteVO } from 'interface/Note';
 
 import { token as noteRepositoryToken, type NoteRepository } from 'service/repository/NoteRepository';
 import {
@@ -19,20 +18,6 @@ export default class RecyclableService {
     @Inject(noteRepositoryToken) private readonly notes: NoteRepository,
   ) {}
 
-  private async getDescendantsOfNotes(noteIds: NoteVO['id'][]) {
-    const ids = [...noteIds];
-    let notesToFind = noteIds;
-
-    while (notesToFind.length > 0) {
-      const rows = await this.notes.findAll({ parentId: notesToFind });
-
-      notesToFind = rows.map(({ id }) => id);
-      ids.push(...notesToFind);
-    }
-
-    return ids;
-  }
-
   @Transaction
   async put(type: RecyclablesTypes, ids: string[]) {
     if (ids.length === 0) {
@@ -40,12 +25,12 @@ export default class RecyclableService {
     }
 
     let isAvailable: boolean;
-    let allIds = ids;
+    let allIds: string[];
 
     switch (type) {
       case RecyclablesTypes.Note:
-        allIds = await this.getDescendantsOfNotes(ids);
-        isAvailable = await this.notes.isAvailable(allIds);
+        allIds = [...ids, ...(await this.notes.findAllDescendantIds(ids))];
+        isAvailable = await this.notes.areAvailable(allIds);
         break;
       default:
         throw new Error('unknown type');

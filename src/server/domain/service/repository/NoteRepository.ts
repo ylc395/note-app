@@ -14,6 +14,7 @@ export interface NoteRepository {
   updateBody: (noteId: NoteVO['id'], noteBody: NoteBodyDTO) => Promise<NoteBodyDTO | null>;
   findAll: (query: NoteQuery) => Promise<NoteVO[]>;
   findBody: (noteId: NoteVO['id']) => Promise<NoteBodyDTO | null>;
-  isAvailable: (noteId: NoteVO['id'] | NoteVO['id'][]) => Promise<boolean>;
+  areAvailable: (noteIds: NoteVO['id'][]) => Promise<boolean>;
   isWritable: (noteId: NoteVO['id']) => Promise<boolean>;
+  findAllDescendantIds: (noteIds: NoteVO['id'][]) => Promise<NoteVO['id'][]>;
 }
