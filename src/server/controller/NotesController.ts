@@ -53,7 +53,7 @@ export default class NotesController {
   }
 
   @Get('/notes/:id/body')
-  async getBody(@Param('id') noteId: NoteVO['id']): Promise<NoteBodyVO | null> {
+  async getBody(@Param('id') noteId: NoteVO['id']): Promise<NoteBodyVO> {
     return await this.noteService.getBody(noteId);
   }
 

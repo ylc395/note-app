@@ -46,14 +46,7 @@ export default class NoteService {
 
   @Transaction
   async update(noteId: NoteVO['id'], note: NoteDTO) {
-    if (!(await this.notes.isAvailable(noteId))) {
-      throw new Error('invalid id');
-    }
-
-    // todo: 确保 parentId 合法（参考 client 逻辑）
-    if (note.parentId && !(await this.notes.isAvailable(note.parentId))) {
-      throw new Error('invalid parentId');
-    }
+    await this.assertValidChanges([{ ...note, id: noteId }]);
 
     const result = await this.notes.update(noteId, note);
 
@@ -70,7 +63,13 @@ export default class NoteService {
       throw new Error('note unavailable');
     }
 
-    return await this.notes.updateBody(noteId, body);
+    const result = await this.notes.updateBody(noteId, body);
+
+    if (!result) {
+      throw new Error('update note body failed');
+    }
+
+    return result;
   }
 
   @Transaction
@@ -79,22 +78,38 @@ export default class NoteService {
       throw new Error('note unavailable');
     }
 
-    return await this.notes.findBody(noteId);
+    const result = await this.notes.findBody(noteId);
+
+    if (result === null) {
+      throw new Error('note unavailable');
+    }
+
+    return result;
   }
 
   @Transaction
   async batchUpdate(notes: NotesDTO) {
-    // todo: 确保 parentId 合法（参考 client 逻辑）
-    const ids = notes.map(({ id }) => id);
+    await this.assertValidChanges(notes);
+    const result = await this.notes.batchUpdate(notes);
 
-    if (!(await this.notes.isAvailable(ids))) {
-      throw new Error('notes unavailable');
+    if (result.length !== notes.length) {
+      throw new Error('invalid notes');
     }
 
-    return await this.notes.batchUpdate(notes);
+    return result;
   }
 
   async query(q: NoteQuery) {
     return await this.notes.findAll(q);
+  }
+
+  private async assertValidChanges(notes: NotesDTO) {
+    const ids = notes.map(({ id }) => id);
+
+    if (!(await this.notes.isAvailable(ids))) {
+      throw new Error('invalid ids');
+    }
+
+    // const parentChangedNotes = notes.filter(parent => typeof parent !== undefined);
   }
 }

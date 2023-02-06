@@ -57,7 +57,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
     const count = await this.knex<Row>(this.schema.tableName).where('id', id).update({ body: noteBody });
 
     if (count === 0) {
-      throw new Error('invalid id');
+      return null;
     }
 
     return noteBody;
@@ -149,7 +149,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
       const row = await this.createOrUpdate(note, note.id);
 
       if (!row) {
-        throw new Error('no such row');
+        continue;
       }
 
       ids.push(String(row.id));

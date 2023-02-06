@@ -40,8 +40,10 @@ const userInput: UserInput = {
             return true;
           }
 
+          const ids = selectedNodes.map(({ key }) => key);
+
           while (currentNode) {
-            result = selectedNodes.map(({ key }) => key).includes(currentNode.key);
+            result = ids.includes(currentNode.key);
 
             if (result) {
               return result;

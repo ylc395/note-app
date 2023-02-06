@@ -11,7 +11,7 @@ export interface NoteRepository {
   create: (note: NoteDTO) => Promise<NoteVO>;
   update: (noteId: NoteVO['id'], note: NoteDTO) => Promise<NoteVO | null>;
   batchUpdate: (notes: NotesDTO) => Promise<NoteVO[]>;
-  updateBody: (noteId: NoteVO['id'], noteBody: NoteBodyDTO) => Promise<NoteBodyDTO>;
+  updateBody: (noteId: NoteVO['id'], noteBody: NoteBodyDTO) => Promise<NoteBodyDTO | null>;
   findAll: (query: NoteQuery) => Promise<NoteVO[]>;
   findBody: (noteId: NoteVO['id']) => Promise<NoteBodyDTO | null>;
   isAvailable: (noteId: NoteVO['id'] | NoteVO['id'][]) => Promise<boolean>;
