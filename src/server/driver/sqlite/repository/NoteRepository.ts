@@ -16,13 +16,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
   async create(note: NoteDTO): Promise<NoteVO> {
     const row = await this.createOrUpdate(note);
 
-    return {
-      ...omit(row, 'body'),
-      id: String(row.id),
-      parentId: note.parentId || null,
-      isReadonly: note.isReadonly || false,
-      childrenCount: 0,
-    };
+    return this.rowToVO(row);
   }
 
   async findBody(noteId: string): Promise<NoteBodyDTO | null> {
@@ -43,14 +37,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
     }
 
     const childrenCount = await this.knex<Row>(this.schema.tableName).where('parentId', row.id).count({ count: 'id' });
-
-    return {
-      ...omit(row, ['body']),
-      id: String(row.id),
-      parentId: row.parentId ? String(row.parentId) : null,
-      isReadonly: Boolean(row.isReadonly),
-      childrenCount: Number(childrenCount[0]?.count),
-    };
+    return this.rowToVO(row, Number(childrenCount[0]?.count));
   }
 
   async updateBody(id: NoteVO['id'], noteBody: NoteBodyDTO) {
@@ -97,14 +84,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
     }
 
     const rows = await sql;
-    const notes = rows.map((row) => {
-      return {
-        ...omit(row, ['body']),
-        id: String(row.id),
-        parentId: row.parentId ? String(row.parentId) : null,
-        isReadonly: Boolean(row.isReadonly),
-      };
-    });
+    const notes = rows.map((row) => this.rowToVO(row));
 
     return notes;
   }
@@ -207,8 +187,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
             qb
               .select(knex.raw(`${noteTable}.*`))
               .from('ancestors')
-              .join(knex.raw(noteTable))
-              .where(`${noteTable}.id`, 'ancestors.parentId'),
+              .join(knex.raw(noteTable), `${noteTable}.id`, 'ancestors.parentId'),
           ),
       )
       .from('ancestors')
@@ -218,8 +197,16 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
       })
       .whereNull(`${recyclableTable}.entityId`);
 
-    rows.shift();
+    return rows.reverse().map((row) => this.rowToVO(row));
+  }
 
-    return rows.reverse();
+  private rowToVO(row: Row & { childrenCount?: number }, childrenCount?: number): NoteVO {
+    return {
+      ...omit(row, 'body'),
+      id: String(row.id),
+      parentId: row.parentId ? String(row.parentId) : null,
+      isReadonly: Boolean(row.isReadonly),
+      childrenCount: childrenCount || row.childrenCount || 0,
+    };
   }
 }

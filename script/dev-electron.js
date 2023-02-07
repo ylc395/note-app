@@ -85,7 +85,6 @@ async function createViteServer() {
 
 (async () => {
   shell.exec('clear');
-  await buildPreload();
   const viteServer = await createViteServer();
   const viteUrl = viteServer.resolvedUrls.local[0];
 
@@ -93,6 +92,7 @@ async function createViteServer() {
   shell.env['NODE_ENV'] = 'development';
   shell.env['DEV_CLEAN'] = process.argv.includes('--clean') ? '1' : '0';
 
+  await buildPreload();
   let electronProcess = await buildElectron();
 
   if (electronProcess) {

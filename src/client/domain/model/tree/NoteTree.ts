@@ -121,7 +121,7 @@ export default class NoteTree {
     const node = this.nodesMap[id];
 
     if (!node && !noThrow) {
-      throw new Error('can not find node');
+      throw new Error(`can not find node ${id}`);
     }
 
     return node;
@@ -130,11 +130,14 @@ export default class NoteTree {
   private readonly loadTreePath = async (id: Note['id']) => {
     const { body: ancestors } = await this.remote.get<void, Note[]>(`/notes/${id}/ancestors`);
 
-    for (const note of ancestors) {
-      if (!this.getNode(note.id, true)) {
-        this.updateTreeByNote(note);
+    runInAction(() => {
+      for (const note of ancestors) {
+        if (!this.getNode(note.id, true)) {
+          this.updateTreeByNote(note);
+        }
+        this.loadedNodes.add(note.id);
       }
-    }
+    });
   };
 
   readonly loadChildren = async (parentId?: Note['id']) => {
@@ -142,12 +145,7 @@ export default class NoteTree {
       return;
     }
 
-    const targetNode = parentId ? this.getNode(parentId, true) : undefined;
-
-    if (parentId && !targetNode) {
-      return this.loadTreePath(parentId);
-    }
-
+    const targetNode = parentId ? this.getNode(parentId) : undefined;
     const { body: notes } = await this.remote.get<NoteQuery, Note[]>('/notes', { parentId: parentId || null });
 
     runInAction(() => {
@@ -213,12 +211,18 @@ export default class NoteTree {
     }
 
     if (flag || !this.expandedNodes.has(noteId)) {
-      load && (await this.loadChildren(noteId));
+      if (load) {
+        if (this.getNode(noteId, true)) {
+          await this.loadChildren(noteId);
+        } else {
+          await this.loadTreePath(noteId);
+        }
+      }
 
       let node: NoteTreeNode | undefined = this.getNode(noteId);
       runInAction(() => {
         while (node) {
-          this.expandedNodes.add(noteId);
+          this.expandedNodes.add(node.key);
           node = node.parent;
         }
       });
