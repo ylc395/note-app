@@ -33,16 +33,18 @@ export default class NotesController {
     return await this.noteService.query(q);
   }
 
+  @Get('/notes/:id/ancestors')
+  async queryAncestors(@Param('id') noteId: string): Promise<NoteVO[]> {
+    return await this.noteService.getAncestors(noteId);
+  }
+
   @Patch('/notes/:id')
-  async update(
-    @Param('id') noteId: NoteVO['id'],
-    @Body(createSchemaPipe(noteDTOSchema)) note: NoteDTO,
-  ): Promise<NoteVO> {
+  async update(@Param('id') noteId: string, @Body(createSchemaPipe(noteDTOSchema)) note: NoteDTO): Promise<NoteVO> {
     return await this.noteService.update(noteId, note);
   }
 
   @Get('/notes/:id')
-  async queryOne(@Param('id') noteId: NoteVO['id']): Promise<NoteVO> {
+  async queryOne(@Param('id') noteId: string): Promise<NoteVO> {
     const note = (await this.noteService.query({ id: noteId }))[0];
 
     if (!note) {
@@ -53,12 +55,12 @@ export default class NotesController {
   }
 
   @Get('/notes/:id/body')
-  async getBody(@Param('id') noteId: NoteVO['id']): Promise<NoteBodyVO> {
+  async getBody(@Param('id') noteId: string): Promise<NoteBodyVO> {
     return await this.noteService.getBody(noteId);
   }
 
   @Put('/notes/:id/body')
-  async updateBody(@Param('id') noteId: NoteVO['id'], @Body() body: NoteBodyDTO): Promise<NoteBodyVO> {
+  async updateBody(@Param('id') noteId: string, @Body() body: NoteBodyDTO): Promise<NoteBodyVO> {
     return await this.noteService.updateBody(noteId, body);
   }
 }

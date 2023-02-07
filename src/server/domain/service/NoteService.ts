@@ -1,14 +1,18 @@
 import { Injectable, Inject } from '@nestjs/common';
 import omit from 'lodash/omit';
 import intersection from 'lodash/intersection';
+import type Repository from './repository';
 
-import { Transaction } from 'infra/TransactionManager';
+import { Transaction, token as databaseToken, Database } from 'infra/Database';
 import { NoteVO, NoteBodyDTO, NoteDTO, NoteQuery, normalizeTitle, NotesDTO } from 'interface/Note';
-import { token as noteRepositoryToken, type NoteRepository } from 'service/repository/NoteRepository';
 
 @Injectable()
 export default class NoteService {
-  constructor(@Inject(noteRepositoryToken) private readonly notes: NoteRepository) {}
+  private readonly notes: Repository['notes'];
+
+  constructor(@Inject(databaseToken) db: Database) {
+    this.notes = db.getRepository('notes');
+  }
 
   @Transaction
   async create(note: NoteDTO) {
@@ -100,8 +104,18 @@ export default class NoteService {
     return result;
   }
 
+  @Transaction
   async query(q: NoteQuery) {
     return await this.notes.findAll(q);
+  }
+
+  @Transaction
+  async getAncestors(noteId: NoteVO['id']) {
+    if (!(await this.notes.areAvailable([noteId]))) {
+      throw new Error('invalid id');
+    }
+
+    return await this.notes.findAncestors(noteId);
   }
 
   private async assertValidChanges(notes: NotesDTO) {

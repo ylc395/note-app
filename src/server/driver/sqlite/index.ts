@@ -3,19 +3,33 @@ import camelCase from 'lodash/camelCase';
 import snakeCase from 'lodash/snakeCase';
 import mapKeys from 'lodash/mapKeys';
 import { join } from 'path';
-import { container } from 'tsyringe';
-import { token as transactionManagerToken } from 'infra/TransactionManager';
-import transactionManager from './transactionManager';
+
+import type { Database, Transaction } from 'infra/Database';
+import type Repository from 'service/repository';
 
 import type { Schema } from './schema/type';
 import noteSchema from './schema/noteSchema';
 import recyclableSchema from './schema/recyclableSchema';
 
+import * as repositories from './repository';
+
 const isDevelopment = process.env.NODE_ENV === 'development';
 
-class SqliteDb {
+export default class SqliteDb implements Database {
   knex!: Knex;
-  transactionManager!: ReturnType<typeof transactionManager>;
+
+  async createTransaction() {
+    return await this.knex.transaction();
+  }
+
+  getRepository<T extends keyof Repository>(name: T) {
+    return new repositories[name](this.knex) as unknown as Repository[T];
+  }
+
+  getRepositoryWithTransaction<T extends keyof Repository>(trx: Transaction, name: T) {
+    return new repositories[name](trx as Knex.Transaction) as unknown as Repository[T];
+  }
+
   async init(dir: string) {
     this.knex = knex({
       client: 'sqlite3',
@@ -25,9 +39,7 @@ class SqliteDb {
       useNullAsDefault: true,
       wrapIdentifier: (value, originImpl) => originImpl(snakeCase(value)),
     });
-    this.transactionManager = transactionManager(this.knex);
 
-    container.registerInstance(transactionManagerToken, this.transactionManager);
     await this.createTables();
     // await this.emptyTempFiles();
   }
@@ -90,5 +102,3 @@ class SqliteDb {
   //   await this.knex<FileRow>(fileSchema.tableName).where('isTemp', 1).delete();
   // }
 }
-
-export default new SqliteDb();

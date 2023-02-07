@@ -1,7 +1,5 @@
 import type { NoteBodyDTO, NoteDTO, NoteVO, NotesDTO } from 'interface/Note';
 
-export const token = Symbol('NoteRepository');
-
 export type NoteQuery = {
   parentId?: string | string[] | null;
   id?: string | string[];
@@ -17,4 +15,5 @@ export interface NoteRepository {
   areAvailable: (noteIds: NoteVO['id'][]) => Promise<boolean>;
   isWritable: (noteId: NoteVO['id']) => Promise<boolean>;
   findAllDescendantIds: (noteIds: NoteVO['id'][]) => Promise<NoteVO['id'][]>;
+  findAncestors: (noteId: NoteVO['id']) => Promise<NoteVO[]>;
 }

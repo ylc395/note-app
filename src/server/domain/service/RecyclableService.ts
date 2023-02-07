@@ -1,11 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { Transaction } from 'infra/TransactionManager';
+import { Transaction, token as databaseToken, type Database } from 'infra/Database';
 
-import { token as noteRepositoryToken, type NoteRepository } from 'service/repository/NoteRepository';
-import {
-  token as recyclablesRepositoryToken,
-  type RecyclablesRepository,
-} from 'service/repository/RecyclableRepository';
+import type Repository from './repository';
 
 export enum RecyclablesTypes {
   Note = 1,
@@ -13,10 +9,13 @@ export enum RecyclablesTypes {
 
 @Injectable()
 export default class RecyclableService {
-  constructor(
-    @Inject(recyclablesRepositoryToken) private readonly recyclables: RecyclablesRepository,
-    @Inject(noteRepositoryToken) private readonly notes: NoteRepository,
-  ) {}
+  private readonly recyclables: Repository['recyclables'];
+  private readonly notes: Repository['notes'];
+
+  constructor(@Inject(databaseToken) db: Database) {
+    this.recyclables = db.getRepository('recyclables');
+    this.notes = db.getRepository('notes');
+  }
 
   @Transaction
   async put(type: RecyclablesTypes, ids: string[]) {

@@ -193,4 +193,33 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
 
     return rows.map(({ id }) => String(id));
   }
+
+  async findAncestors(noteId: NoteVO['id']) {
+    const { knex } = this;
+    const noteTable = this.schema.tableName;
+    const recyclableTable = recyclableSchema.tableName;
+    const rows = await knex()
+      .withRecursive('ancestors', (qb) =>
+        qb
+          .from(noteTable)
+          .where(`${noteTable}.id`, noteId)
+          .union((qb) =>
+            qb
+              .select(knex.raw(`${noteTable}.*`))
+              .from('ancestors')
+              .join(knex.raw(noteTable))
+              .where(`${noteTable}.id`, 'ancestors.parentId'),
+          ),
+      )
+      .from('ancestors')
+      .leftJoin(recyclableTable, function () {
+        this.on(`${recyclableTable}.entityType`, '=', knex.raw(RecyclablesTypes.Note));
+        this.on(`${recyclableTable}.entityId`, 'ancestors.id');
+      })
+      .whereNull(`${recyclableTable}.entityId`);
+
+    rows.shift();
+
+    return rows.reverse();
+  }
 }

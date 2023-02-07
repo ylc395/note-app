@@ -1,15 +1,11 @@
 import pick from 'lodash/pick';
 import omit from 'lodash/omit';
 
-import db from 'driver/sqlite';
-
 import type { Schema } from '../schema/type';
+import type { Knex } from 'knex';
 
 export default abstract class BaseRepository<Row extends object> {
-  protected get knex() {
-    return db.transactionManager.getTrx();
-  }
-
+  constructor(protected readonly knex: Knex) {}
   protected abstract readonly schema: Schema;
   private get fields() {
     return Object.keys(this.schema.fields);
