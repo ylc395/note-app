@@ -110,12 +110,12 @@ export default class NoteService {
   }
 
   @Transaction
-  async getAncestors(noteId: NoteVO['id']) {
+  async getTreeFragment(noteId: NoteVO['id']) {
     if (!(await this.notes.areAvailable([noteId]))) {
       throw new Error('invalid id');
     }
 
-    return await this.notes.findAncestors(noteId);
+    return await this.notes.findTreeFragment(noteId);
   }
 
   private async assertValidChanges(notes: NotesDTO) {

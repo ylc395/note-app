@@ -3,6 +3,7 @@ import type { NoteBodyDTO, NoteDTO, NoteVO, NotesDTO } from 'interface/Note';
 export type NoteQuery = {
   parentId?: string | string[] | null;
   id?: string | string[];
+  isReadonly?: boolean;
 };
 
 export interface NoteRepository {
@@ -15,5 +16,5 @@ export interface NoteRepository {
   areAvailable: (noteIds: NoteVO['id'][]) => Promise<boolean>;
   isWritable: (noteId: NoteVO['id']) => Promise<boolean>;
   findAllDescendantIds: (noteIds: NoteVO['id'][]) => Promise<NoteVO['id'][]>;
-  findAncestors: (noteId: NoteVO['id']) => Promise<NoteVO[]>;
+  findTreeFragment: (noteId: NoteVO['id']) => Promise<NoteVO[]>;
 }

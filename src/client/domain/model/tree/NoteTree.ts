@@ -127,11 +127,11 @@ export default class NoteTree {
     return node;
   }
 
-  private readonly loadTreePath = async (id: Note['id']) => {
-    const { body: ancestors } = await this.remote.get<void, Note[]>(`/notes/${id}/ancestors`);
+  private readonly loadTreeFragment = async (id: Note['id']) => {
+    const { body: fragment } = await this.remote.get<void, Note[]>(`/notes/${id}/tree-fragment`);
 
     runInAction(() => {
-      for (const note of ancestors) {
+      for (const note of fragment) {
         if (!this.getNode(note.id, true)) {
           this.updateTreeByNote(note);
         }
@@ -189,7 +189,12 @@ export default class NoteTree {
     const newParent = note.parentId && this.getNode(note.parentId);
 
     if (oldParent?.key !== note.parentId) {
-      pull(oldParent ? oldParent.children : this._roots, node);
+      if (oldParent) {
+        pull(oldParent.children, node);
+        oldParent.isLeaf = oldParent.children.length === 0;
+      } else {
+        pull(this._roots, node);
+      }
 
       if (newParent) {
         node.parent = newParent;
@@ -215,7 +220,7 @@ export default class NoteTree {
         if (this.getNode(noteId, true)) {
           await this.loadChildren(noteId);
         } else {
-          await this.loadTreePath(noteId);
+          await this.loadTreeFragment(noteId);
         }
       }
 
@@ -286,22 +291,31 @@ export default class NoteTree {
   }
 
   @action.bound
-  toggleSelect(noteId: Note['id'], reset: boolean) {
+  toggleSelect(noteId: Note['id'] | Note['id'][], reset: boolean) {
+    const ids = Array.isArray(noteId) ? noteId : [noteId];
+
     if (reset) {
       this.selectedNodes.clear();
-      this.selectedNodes.add(noteId);
+      for (const id of ids) {
+        this.selectedNodes.add(id);
+      }
 
       return true;
     }
 
-    if (this.selectedNodes.has(noteId)) {
-      this.selectedNodes.delete(noteId);
+    let result = true;
 
-      return false;
-    } else {
-      this.selectedNodes.add(noteId);
-      return true;
+    for (const id of ids) {
+      if (this.selectedNodes.has(id)) {
+        this.selectedNodes.delete(id);
+
+        result = false;
+      } else {
+        this.selectedNodes.add(id);
+      }
     }
+
+    return result;
   }
 
   @action
@@ -316,12 +330,11 @@ export default class NoteTree {
         if (parentNode.children.length === 0) {
           parentNode.isLeaf = true;
         }
-
-        node.parent = undefined;
       } else {
         pull(this._roots, node);
       }
 
+      delete this.nodesMap[id];
       this.selectedNodes.delete(id);
       this.expandedNodes.delete(id);
       this.loadedNodes.delete(id);

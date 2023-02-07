@@ -1,6 +1,7 @@
 import omit from 'lodash/omit';
 import omitBy from 'lodash/omitBy';
 import mapKeys from 'lodash/mapKeys';
+import groupBy from 'lodash/groupBy';
 import isUndefined from 'lodash/isUndefined';
 
 import type { NoteRepository, NoteQuery } from 'service/repository/NoteRepository';
@@ -57,7 +58,6 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
       schema: { tableName: noteTable },
     } = this;
     const recyclableTable = recyclableSchema.tableName;
-    const where = mapKeys(omitBy(query, isUndefined), (_, key) => `parent.${key}`);
     const sql = knex
       .select<(Row & { childrenCount: number })[]>(knex.raw('parent.*'), knex.raw('count(child.id) as childrenCount'))
       .from(`${noteTable} as parent`)
@@ -79,8 +79,14 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
       .whereNull(`${recyclableTable}.entityId`)
       .groupBy('parent.id');
 
+    const where = mapKeys(omitBy(query, isUndefined), (_, key) => `parent.${key}`);
+
     for (const [k, v] of Object.entries(where)) {
-      Array.isArray(v) ? sql.andWhere(k, 'in', v) : sql.andWhere(k, v);
+      Array.isArray(v)
+        ? sql.andWhere(k, 'in', v)
+        : typeof v === 'boolean'
+        ? sql.andWhere(k, Number(v))
+        : sql.andWhere(k, v);
     }
 
     const rows = await sql;
@@ -89,38 +95,16 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
     return notes;
   }
 
-  private isAvailableSql(noteId: NoteVO['id'] | NoteVO['id'][]) {
-    const recyclableTable = recyclableSchema.tableName;
-    const {
-      knex,
-      schema: { tableName: noteTable },
-    } = this;
-    const sql = this.knex<Row>(this.schema.tableName)
-      .leftJoin(recyclableTable, function () {
-        this.on(`${recyclableTable}.entityType`, knex.raw(RecyclablesTypes.Note));
-        this.on(`${recyclableTable}.entityId`, `${noteTable}.id`);
-      })
-      .whereNull(`${recyclableTable}.entityId`);
-
-    if (Array.isArray(noteId) && noteId.length > 1) {
-      sql.whereIn(`${noteTable}.id`, noteId.map(Number));
-    } else {
-      sql.where(`${noteTable}.id`, Number(Array.isArray(noteId) ? noteId[0] : noteId));
-    }
-
-    return sql;
-  }
-
   async areAvailable(noteIds: NoteVO['id'][]) {
-    const rows = await this.isAvailableSql(noteIds);
+    const rows = await this.findAll({ id: noteIds });
 
     return rows.length === noteIds.length;
   }
 
   async isWritable(noteId: NoteVO['id']) {
-    const row = await this.isAvailableSql(noteId).andWhere(`${this.schema.tableName}.isReadonly`, 0).first();
+    const row = await this.findAll({ id: noteId, isReadonly: true });
 
-    return Boolean(row);
+    return row.length === 1;
   }
 
   async batchUpdate(notes: NotesDTO) {
@@ -174,30 +158,32 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
     return rows.map(({ id }) => String(id));
   }
 
-  async findAncestors(noteId: NoteVO['id']) {
+  async findTreeFragment(noteId: NoteVO['id']) {
     const { knex } = this;
     const noteTable = this.schema.tableName;
-    const recyclableTable = recyclableSchema.tableName;
-    const rows = await knex()
+    const ids = await knex()
       .withRecursive('ancestors', (qb) =>
         qb
           .from(noteTable)
-          .where(`${noteTable}.id`, noteId)
+          .where('id', noteId)
+          .orWhere('parentId', noteId)
+          .orWhereNull('parentId')
           .union((qb) =>
             qb
               .select(knex.raw(`${noteTable}.*`))
               .from('ancestors')
-              .join(knex.raw(noteTable), `${noteTable}.id`, 'ancestors.parentId'),
+              .join(knex.raw(noteTable), function () {
+                this.on(`${noteTable}.id`, 'ancestors.parentId');
+                this.orOn('ancestors.id', `${noteTable}.parentId`);
+              }),
           ),
       )
-      .from('ancestors')
-      .leftJoin(recyclableTable, function () {
-        this.on(`${recyclableTable}.entityType`, '=', knex.raw(RecyclablesTypes.Note));
-        this.on(`${recyclableTable}.entityId`, 'ancestors.id');
-      })
-      .whereNull(`${recyclableTable}.entityId`);
+      .select('ancestors.id', 'ancestors.parentId')
+      .from('ancestors');
 
-    return rows.reverse().map((row) => this.rowToVO(row));
+    const rows = await this.findAll({ id: ids.map(({ id }) => id) });
+
+    return this.topoSort(rows);
   }
 
   private rowToVO(row: Row & { childrenCount?: number }, childrenCount?: number): NoteVO {
@@ -208,5 +194,32 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
       isReadonly: Boolean(row.isReadonly),
       childrenCount: childrenCount || row.childrenCount || 0,
     };
+  }
+
+  private topoSort(rows: NoteVO[]) {
+    const result: NoteVO[] = [];
+    const rowsToCheck: NoteVO[] = [];
+
+    for (const row of rows) {
+      if (row.parentId === null) {
+        result.push(row);
+      } else {
+        rowsToCheck.push(row);
+      }
+    }
+
+    const parents = groupBy(rowsToCheck, 'parentId');
+
+    for (let i = 0; result[i]; i++) {
+      const node = result[i];
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const children = parents[node!.id];
+
+      if (children) {
+        result.push(...children);
+      }
+    }
+
+    return result;
   }
 }

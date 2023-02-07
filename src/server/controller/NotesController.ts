@@ -33,9 +33,9 @@ export default class NotesController {
     return await this.noteService.query(q);
   }
 
-  @Get('/notes/:id/ancestors')
-  async queryAncestors(@Param('id') noteId: string): Promise<NoteVO[]> {
-    return await this.noteService.getAncestors(noteId);
+  @Get('/notes/:id/tree-fragment')
+  async queryTreeFragment(@Param('id') noteId: string): Promise<NoteVO[]> {
+    return await this.noteService.getTreeFragment(noteId);
   }
 
   @Patch('/notes/:id')
