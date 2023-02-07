@@ -76,13 +76,12 @@ export default class NoteService {
       },
     });
 
-    if (targetId && !this.noteTree.getNode(targetId, true)) {
+    if (targetId && !this.noteTree.hasNode(targetId)) {
       this.noteTree.removeNodes(ids);
-      return;
-    }
-
-    for (const note of updatedNotes) {
-      this.noteTree.updateTreeByNote(note);
+    } else {
+      for (const note of updatedNotes) {
+        this.noteTree.updateTreeByNote(note);
+      }
     }
   };
 }

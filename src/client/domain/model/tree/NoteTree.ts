@@ -1,5 +1,6 @@
 import { action, makeObservable, observable, runInAction } from 'mobx';
 import pull from 'lodash/pull';
+import uniq from 'lodash/uniq';
 import { container } from 'tsyringe';
 
 import { token as remoteToken } from 'infra/Remote';
@@ -94,7 +95,7 @@ export default class NoteTree {
     this.loadedNodes.add(VIRTUAL_ROOT_NODE_KEY);
   }
 
-  private noteToNode(note: Note) {
+  private createNode(note: Note, noSort?: boolean) {
     const parent = note.parentId ? this.getNode(note.parentId) : undefined;
     const node = observable({
       key: note.id,
@@ -108,6 +109,18 @@ export default class NoteTree {
 
     if (this.options?.isDisabled) {
       node.disabled = this.options.isDisabled(node);
+    }
+
+    if (parent) {
+      parent.isLeaf = false;
+    }
+
+    const children = this.getChildren(note.parentId);
+
+    children.push(node);
+
+    if (!noSort) {
+      this.sort(children, false);
     }
 
     this.nodesMap[note.id] = node;
@@ -127,15 +140,23 @@ export default class NoteTree {
     return node;
   }
 
+  hasNode(id: string) {
+    return Boolean(this.nodesMap[id]);
+  }
+
   private readonly loadTreeFragment = async (id: Note['id']) => {
     const { body: fragment } = await this.remote.get<void, Note[]>(`/notes/${id}/tree-fragment`);
 
     runInAction(() => {
       for (const note of fragment) {
-        if (!this.getNode(note.id, true)) {
-          this.updateTreeByNote(note);
-        }
+        this.updateTreeByNote(note, true);
         this.loadedNodes.add(note.id);
+      }
+
+      const childrenGroups = uniq(fragment.map(({ parentId }) => this.getChildren(parentId)));
+
+      for (const children of childrenGroups) {
+        this.sort(children, false);
       }
     });
   };
@@ -145,68 +166,50 @@ export default class NoteTree {
       return;
     }
 
-    const targetNode = parentId ? this.getNode(parentId) : undefined;
     const { body: notes } = await this.remote.get<NoteQuery, Note[]>('/notes', { parentId: parentId || null });
 
     runInAction(() => {
-      const nodes = notes.map(this.noteToNode.bind(this));
-
-      this.sort(nodes, false);
-      parentId && this.loadedNodes.add(parentId);
-
-      if (targetNode) {
-        targetNode.children = nodes;
-        targetNode.isLeaf = nodes.length === 0;
-      } else {
-        this._roots = nodes;
+      for (const note of notes) {
+        this.updateTreeByNote(note, true);
       }
+
+      this.sort(this.getChildren(parentId), false);
+      parentId && this.loadedNodes.add(parentId);
     });
   };
 
   @action.bound
-  updateTreeByNote(note: Note) {
+  updateTreeByNote(note: Note, noSort?: boolean) {
     const node = this.getNode(note.id, true);
 
     if (!node) {
-      const newNode = this.noteToNode(note);
-      const parent = note.parentId && this.getNode(note.parentId);
-      const children = parent ? parent.children : this._roots;
-
-      if (parent) {
-        parent.isLeaf = false;
-      }
-
-      children.push(newNode);
-      this.sort(children, false);
-
-      return newNode;
+      return this.createNode(note, noSort);
     }
 
     Object.assign(node.note, note);
     node.title = normalizeTitle(note);
 
-    const oldParent = node.parent;
-    const newParent = note.parentId && this.getNode(note.parentId);
-
-    if (oldParent?.key !== note.parentId) {
-      if (oldParent) {
-        pull(oldParent.children, node);
-        oldParent.isLeaf = oldParent.children.length === 0;
-      } else {
-        pull(this._roots, node);
-      }
-
-      if (newParent) {
-        node.parent = newParent;
-        newParent.children.push(node);
-        newParent.isLeaf = false;
-      } else {
-        node.parent = undefined;
-        this._roots.push(node);
-      }
+    if (node.parent?.key === note.parentId) {
+      return node;
     }
 
-    this.sort(newParent ? newParent.children : this._roots, false);
+    this.removeChild(node);
+
+    const newParent = note.parentId ? this.getNode(note.parentId) : undefined;
+
+    node.parent = newParent;
+
+    if (newParent) {
+      newParent.children.push(node);
+      newParent.isLeaf = false;
+    } else {
+      this._roots.push(node);
+    }
+
+    if (!noSort) {
+      this.sort(newParent ? newParent.children : this._roots, false);
+    }
+
     return node;
   }
 
@@ -217,7 +220,7 @@ export default class NoteTree {
 
     if (flag || !this.expandedNodes.has(noteId)) {
       if (load) {
-        if (this.getNode(noteId, true)) {
+        if (this.hasNode(noteId)) {
           await this.loadChildren(noteId);
         } else {
           await this.loadTreeFragment(noteId);
@@ -322,22 +325,29 @@ export default class NoteTree {
   removeNodes(ids: NoteTreeNode['key'][]) {
     for (const id of ids) {
       const node = this.getNode(id);
-      const parentNode = node.parent;
 
-      if (parentNode) {
-        pull(parentNode.children, node);
-
-        if (parentNode.children.length === 0) {
-          parentNode.isLeaf = true;
-        }
-      } else {
-        pull(this._roots, node);
-      }
+      this.removeChild(node);
 
       delete this.nodesMap[id];
       this.selectedNodes.delete(id);
       this.expandedNodes.delete(id);
       this.loadedNodes.delete(id);
     }
+  }
+
+  @action
+  private removeChild(child: NoteTreeNode) {
+    const { parent } = child;
+
+    if (parent) {
+      pull(parent.children, child);
+      parent.isLeaf = parent.children.length === 0;
+    } else {
+      pull(this._roots, child);
+    }
+  }
+
+  private getChildren(parentId: Note['parentId'] | undefined) {
+    return parentId ? this.getNode(parentId).children : this._roots;
   }
 }
