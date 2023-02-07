@@ -70,7 +70,7 @@ export default class NoteService {
 
     this.userFeedback.message.success({
       content: `移动成功${!targetId || this.noteTree.expandedNodes.has(targetId) ? '' : '。点击定位到新位置'}`,
-      // onClick: () => this.noteTree.toggleExpand(targetId, true),
+      onClick: () => this.noteTree.toggleExpand(targetId, true),
     });
 
     if (targetId && !this.noteTree.getNode(targetId, true)) {

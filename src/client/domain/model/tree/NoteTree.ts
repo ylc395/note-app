@@ -91,6 +91,7 @@ export default class NoteTree {
 
     this.roots.push(virtualRoot);
     this.expandedNodes.add(VIRTUAL_ROOT_NODE_KEY);
+    this.loadedNodes.add(VIRTUAL_ROOT_NODE_KEY);
   }
 
   private noteToNode(note: Note) {
@@ -126,9 +127,25 @@ export default class NoteTree {
     return node;
   }
 
+  private readonly loadTreePath = async (id: Note['id']) => {
+    const { body: ancestors } = await this.remote.get<void, Note[]>(`/notes/${id}/ancestors`);
+
+    for (const note of ancestors) {
+      if (!this.getNode(note.id, true)) {
+        this.updateTreeByNote(note);
+      }
+    }
+  };
+
   readonly loadChildren = async (parentId?: Note['id']) => {
     if (parentId ? this.loadedNodes.has(parentId) : this._roots.length > 0) {
       return;
+    }
+
+    const targetNode = parentId ? this.getNode(parentId, true) : undefined;
+
+    if (parentId && !targetNode) {
+      return this.loadTreePath(parentId);
     }
 
     const { body: notes } = await this.remote.get<NoteQuery, Note[]>('/notes', { parentId: parentId || null });
@@ -139,14 +156,7 @@ export default class NoteTree {
       this.sort(nodes, false);
       parentId && this.loadedNodes.add(parentId);
 
-      if (parentId) {
-        const targetNode = this.nodesMap[parentId];
-
-        // todo: 需要支持读取任意 node，哪怕它并不在树上
-        if (!targetNode) {
-          throw new Error('no node');
-        }
-
+      if (targetNode) {
         targetNode.children = nodes;
         targetNode.isLeaf = nodes.length === 0;
       } else {
@@ -157,11 +167,11 @@ export default class NoteTree {
 
   @action.bound
   updateTreeByNote(note: Note) {
-    const node = this.nodesMap[note.id];
+    const node = this.getNode(note.id, true);
 
     if (!node) {
       const newNode = this.noteToNode(note);
-      const parent = note.parentId && this.nodesMap[note.parentId];
+      const parent = note.parentId && this.getNode(note.parentId);
       const children = parent ? parent.children : this._roots;
 
       if (parent) {
@@ -178,7 +188,7 @@ export default class NoteTree {
     node.title = normalizeTitle(note);
 
     const oldParent = node.parent;
-    const newParent = note.parentId && this.nodesMap[note.parentId];
+    const newParent = note.parentId && this.getNode(note.parentId);
 
     if (oldParent?.key !== note.parentId) {
       pull(oldParent ? oldParent.children : this._roots, node);
@@ -203,8 +213,9 @@ export default class NoteTree {
     }
 
     if (flag || !this.expandedNodes.has(noteId)) {
-      let node: NoteTreeNode | undefined = this.getNode(noteId);
       load && (await this.loadChildren(noteId));
+
+      let node: NoteTreeNode | undefined = this.getNode(noteId);
       runInAction(() => {
         while (node) {
           this.expandedNodes.add(noteId);
