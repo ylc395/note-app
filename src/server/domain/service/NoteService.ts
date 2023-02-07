@@ -1,14 +1,14 @@
 import { Injectable, Inject } from '@nestjs/common';
 import omit from 'lodash/omit';
 import intersection from 'lodash/intersection';
-import type Repository from './repository';
+import type Repositories from './repository';
 
 import { Transaction, token as databaseToken, Database } from 'infra/Database';
 import { NoteVO, NoteBodyDTO, NoteDTO, NoteQuery, normalizeTitle, NotesDTO } from 'interface/Note';
 
 @Injectable()
 export default class NoteService {
-  private readonly notes: Repository['notes'];
+  private readonly notes: Repositories['notes'];
 
   constructor(@Inject(databaseToken) db: Database) {
     this.notes = db.getRepository('notes');

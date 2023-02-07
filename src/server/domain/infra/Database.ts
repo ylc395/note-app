@@ -2,6 +2,7 @@ import isError from 'lodash/isError';
 import { container } from 'tsyringe';
 
 import type Repositories from 'service/repository';
+import { isRepositoryName } from 'service/repository';
 
 export interface Transaction {
   commit: () => Promise<unknown>;
@@ -16,12 +17,6 @@ export interface Database {
 }
 
 export const token = Symbol('database');
-
-const REPOSITORY_NAMES: (keyof Repositories)[] = ['notes', 'recyclables'];
-
-const isRepositoryName = function (key: string | symbol): key is keyof Repositories {
-  return (REPOSITORY_NAMES as (string | symbol)[]).includes(key);
-};
 
 export function Transaction(target: unknown, propertyKey: string, descriptor: PropertyDescriptor) {
   const originFunction = descriptor.value;

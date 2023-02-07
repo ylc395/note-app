@@ -8,9 +8,8 @@ import type { Database, Transaction } from 'infra/Database';
 import type Repository from 'service/repository';
 
 import type { Schema } from './schema/type';
-import noteSchema from './schema/noteSchema';
-import recyclableSchema from './schema/recyclableSchema';
 
+import * as schemas from './schema';
 import * as repositories from './repository';
 
 const isDevelopment = process.env.NODE_ENV === 'development';
@@ -57,10 +56,9 @@ export default class SqliteDb implements Database {
   };
 
   private async createTables() {
-    const schemas: Schema[] = [noteSchema, recyclableSchema];
-
+    const _schemas: Schema[] = Object.values(schemas);
     await Promise.all(
-      schemas.map(async ({ tableName, fields, restrictions }) => {
+      _schemas.map(async ({ tableName, fields, restrictions }) => {
         if (!(await this.knex.schema.hasTable(tableName))) {
           return this.knex.schema.createTable(tableName, (table) => this.builder(table, fields, restrictions));
         }

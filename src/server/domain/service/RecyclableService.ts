@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { Transaction, token as databaseToken, type Database } from 'infra/Database';
 
-import type Repository from './repository';
+import type Repositories from './repository';
 
 export enum RecyclablesTypes {
   Note = 1,
@@ -9,8 +9,8 @@ export enum RecyclablesTypes {
 
 @Injectable()
 export default class RecyclableService {
-  private readonly recyclables: Repository['recyclables'];
-  private readonly notes: Repository['notes'];
+  private readonly recyclables: Repositories['recyclables'];
+  private readonly notes: Repositories['notes'];
 
   constructor(@Inject(databaseToken) db: Database) {
     this.recyclables = db.getRepository('recyclables');
