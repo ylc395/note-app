@@ -262,7 +262,7 @@ export default class NoteTree {
   }
 
   @action
-  private sort(children: NoteTreeNode[], recursive: boolean) {
+  sort(children: NoteTreeNode[], recursive: boolean) {
     const flip = (result: number) => (result === 0 ? 0 : result > 0 ? -1 : 1);
     const compare = (v1: number | string, v2: number | string) => (v1 === v2 ? 0 : v1 > v2 ? 1 : -1);
 

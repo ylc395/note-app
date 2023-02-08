@@ -76,12 +76,16 @@ export default class NoteService {
       },
     });
 
-    if (targetId && !this.noteTree.hasNode(targetId)) {
+    const targetNode = targetId && this.noteTree.getNode(targetId, true);
+
+    if (targetId && !targetNode) {
       this.noteTree.removeNodes(ids);
     } else {
       for (const note of updatedNotes) {
-        this.noteTree.updateTreeByNote(note);
+        this.noteTree.updateTreeByNote(note, true);
       }
+
+      this.noteTree.sort(targetNode ? targetNode.children : this.noteTree.roots, false);
     }
   };
 }
