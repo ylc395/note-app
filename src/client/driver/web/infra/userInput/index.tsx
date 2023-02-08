@@ -6,6 +6,8 @@ import { webContextmenu, ipcContextmenu } from './contextmenu';
 import getNoteIdByTree from './note/getNoteIdByTree';
 import editNotes from './note/editNotes';
 
+const getContainer = () => document.querySelector('#app') as HTMLElement;
+
 const userInput: UserInput = {
   common: {
     getContextmenuAction: ipcContextmenu || webContextmenu,
@@ -13,6 +15,7 @@ const userInput: UserInput = {
       return new Promise((resolve) => {
         Modal.confirm({
           ...options,
+          getContainer,
           autoFocusButton: null,
           okText: '确认',
           cancelText: '取消',

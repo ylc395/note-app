@@ -1,6 +1,6 @@
 {
   "extends": "./tsconfig.json",
-  "include": ["./driver/electron/**/*", "../shared/**/*", "./domain/infra/**/*", "./domain/model/**/*/type.ts"],
+  "include": ["./driver/electron/**/*", "./domain/infra/**/*", "./domain/model/**/*/type.ts"],
   "exclude": ["./driver/electron/preload.ts", "./domain/infra/Remote.ts"],
   "compilerOptions": {
     "types": ["electron"],
@@ -8,5 +8,6 @@
     "module": "CommonJS",
     "rootDir": "../",
     "outDir": "../../dist"
-  }
+  },
+  "references": [{ "path": "../shared/tsconfig.json" }]
 }
