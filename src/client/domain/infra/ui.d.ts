@@ -12,5 +12,5 @@ export type ContextmenuItem =
 
 export interface MessageOptions {
   content: string;
-  onClick?: () => void;
+  onClick?: (close: () => void) => void;
 }
