@@ -1,8 +1,9 @@
 {
   "extends": "./tsconfig.json",
-  "include": ["./driver/electron/**/*", "./domain/infra/Contextmenu.ts", "../shared/infra/AppClient.ts"],
-  "exclude": ["./driver/electron/preload.ts"],
+  "include": ["./driver/electron/**/*", "../shared/infra/**/*", "./domain/infra/**/*"],
+  "exclude": ["./driver/electron/preload.ts", "./domain/infra/Remote.ts"],
   "compilerOptions": {
+    "types": ["electron"],
     "composite": true,
     "module": "CommonJS",
     "rootDir": "../",

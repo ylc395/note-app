@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
 import type { Remote } from 'infra/Remote';
-import type { Contextmenu } from 'infra/Contextmenu';
+import type UserInput from 'infra/UserInput';
 
 import { IPC_CHANNEL, type IpcRequest } from './ipc';
 import { CONTEXTMENU_CHANNEL } from './contextmenu';
@@ -35,11 +35,9 @@ const client: Remote = {
   put: createMethod('PUT'),
 };
 
-const contextmenu: Contextmenu = {
-  popup: (menuItems) => {
-    return ipcRenderer.invoke(CONTEXTMENU_CHANNEL, menuItems);
-  },
+const getActionFromContextmenu: UserInput['common']['getContextmenuAction'] = (menuItems) => {
+  return ipcRenderer.invoke(CONTEXTMENU_CHANNEL, menuItems);
 };
 
 contextBridge.exposeInMainWorld('electronIpcHttpClient', client);
-contextBridge.exposeInMainWorld('electronIpcContextmenu', contextmenu);
+contextBridge.exposeInMainWorld('electronIpcContextmenu', getActionFromContextmenu);

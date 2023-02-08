@@ -1,17 +1,8 @@
 import type { InjectionToken } from 'tsyringe';
-
-export interface ModalOptions {
-  title: string;
-  content: string;
-}
+import type { ModalOptions, MessageOptions } from './ui';
 
 interface Modal {
   success: (option: ModalOptions) => Promise<void>;
-}
-
-interface MessageOptions {
-  content: string;
-  onClick?: () => void;
 }
 
 interface Message {

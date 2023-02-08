@@ -1,7 +1,7 @@
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
-import { ConfigProvider } from 'antd';
-import { useCallback } from 'react';
+import { ConfigProvider, message as antdMessage } from 'antd';
+import { useCallback, useEffect } from 'react';
 import './index.css';
 
 import ViewService, { ViewTypes } from 'service/ViewService';
@@ -18,6 +18,11 @@ const explorerMap = {
 
 export default observer(function App() {
   const getContainer = useCallback(() => document.querySelector('#app') as HTMLElement, []);
+
+  useEffect(() => {
+    antdMessage.config({ getContainer });
+  });
+
   const { currentView } = container.resolve(ViewService);
 
   return (

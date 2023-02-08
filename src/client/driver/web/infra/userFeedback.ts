@@ -4,8 +4,6 @@ import type UserFeedback from 'infra/UserFeedback';
 
 const getContainer = () => document.querySelector('#app') as HTMLElement;
 
-antdMessage.config({ getContainer });
-
 const modal: UserFeedback['modal'] = {
   success: (options) => {
     return new Promise((resolve) => {
@@ -30,4 +28,6 @@ const message: UserFeedback['message'] = {
   },
 };
 
-export default { modal, message };
+const userFeedback: UserFeedback = { modal, message };
+
+export default userFeedback;

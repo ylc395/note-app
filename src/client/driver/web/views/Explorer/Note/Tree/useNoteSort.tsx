@@ -19,7 +19,10 @@ const sortOrder = [
   { key: SortOrder.Desc, label: '降序' },
 ] as const;
 
-export default function useNoteSort() {
+export default function useNoteSort(): {
+  handleClick: MenuProps['onClick'];
+  menuOptions: { get: () => MenuItems };
+} {
   const {
     noteTree: { sortOptions, setSortOptions },
   } = container.resolve(NoteService);

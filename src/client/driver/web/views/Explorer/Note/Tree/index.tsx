@@ -10,16 +10,14 @@ import NoteService from 'service/NoteService';
 import NoteTree from 'driver/web/components/NoteTree';
 
 import Operations from './Operations';
-import useContextmenu from './useContextmenu';
 
 export default observer(function ExplorerNoteTree({ operationEl }: { operationEl: HTMLElement | null }) {
-  const { createNote, noteTree, selectNote } = container.resolve(NoteService);
+  const { createNote, noteTree, selectNote, actByContextmenu } = container.resolve(NoteService);
 
   const operations = useMemo(() => {
     return operationEl && createPortal(<Operations />, operationEl);
   }, [operationEl]);
 
-  const handleContextmenu = useContextmenu();
   const titleRender = useCallback(
     (node: DataNode) => (
       <span className="flex group">
@@ -46,7 +44,7 @@ export default observer(function ExplorerNoteTree({ operationEl }: { operationEl
       <NoteTree
         multiple
         tree={noteTree}
-        handleContextmenu={handleContextmenu}
+        handleContextmenu={actByContextmenu}
         titleRender={titleRender}
         handleSelect={(_, { node, selectedNodes }) => selectNote(node.key as string, selectedNodes.length > 1)}
       />

@@ -4,6 +4,7 @@ import NoteTree from 'model/tree/NoteTree';
 import { token as remoteToken } from 'infra/Remote';
 import { token as userFeedbackToken } from 'infra/UserFeedback';
 import { token as userInputToken } from 'infra/UserInput';
+import type { ContextmenuItem } from 'infra/ui';
 import type { NoteDTO, NoteVO as Note, NotesDTO, NoteVO } from 'interface/Note';
 import type { RecyclableEntitiesDTO } from 'interface/Recyclables';
 
@@ -36,12 +37,12 @@ export default class NoteService {
     this.workbench.open({ type: 'note', entity: note }, false);
   };
 
-  readonly duplicateNote = async (targetId: Note['id']) => {
+  private async duplicateNote(targetId: Note['id']) {
     const { body: note } = await this.remote.post<NoteDTO, Note>('/notes', { duplicateFrom: targetId });
 
     this.noteTree.updateTreeByNote(note);
     this.noteTree.toggleSelect(note.id, true);
-  };
+  }
 
   readonly selectNote = (noteId: Note['id'], multiple: boolean) => {
     const selected = this.noteTree.toggleSelect(noteId, !multiple);
@@ -52,13 +53,13 @@ export default class NoteService {
     }
   };
 
-  readonly deleteNotes = async (ids: Note['id'][]) => {
+  private async deleteNotes(ids: Note['id'][]) {
     await this.remote.put<RecyclableEntitiesDTO>(`/recyclables/notes`, { ids });
     this.noteTree.removeNodes(ids);
     this.userFeedback.message.success({ content: '已移至回收站' });
-  };
+  }
 
-  readonly moveNotes = async (ids: Note['id'][]) => {
+  private async moveNotes(ids: Note['id'][]) {
     const targetId = await this.userInput.note.getNoteIdByTree(ids.map((id) => this.noteTree.getNode(id)));
 
     if (typeof targetId === 'undefined') {
@@ -86,6 +87,60 @@ export default class NoteService {
       }
 
       this.noteTree.sort(targetNode ? targetNode.children : this.noteTree.roots, false);
+    }
+  }
+
+  readonly actByContextmenu = async (targetId: Note['id']) => {
+    const { selectedNodes } = this.noteTree;
+
+    if (!selectedNodes.has(targetId)) {
+      this.noteTree.toggleSelect(targetId, true);
+    }
+
+    const isMultiple = selectedNodes.size > 1 && selectedNodes.has(targetId);
+    const noteIds = isMultiple ? Array.from(selectedNodes) : [targetId];
+
+    const description = noteIds.length + '项';
+    const items: ContextmenuItem[] = isMultiple
+      ? [
+          { label: `移动${description}至...`, key: 'move' },
+          { label: `收藏${description}`, key: 'star' },
+          { type: 'separator' },
+          { label: `导出${description}`, key: 'export' },
+          { type: 'separator' },
+          { label: `删除${description}`, key: 'delete' },
+        ]
+      : [
+          { label: '在新标签页打开', key: 'delete' },
+          { label: '在新窗口打开', key: 'delete' },
+          { type: 'separator' },
+          { label: '移动至...', key: 'move' },
+          { label: '收藏', key: 'star' },
+          { label: '制作副本', key: 'duplicate' },
+          { type: 'separator' },
+          { label: '使用外部应用打开', key: 'external' },
+          { label: '导出', key: 'export' },
+          { type: 'separator' },
+          { label: '删除', key: 'delete' },
+        ];
+
+    const key = await this.userInput.common.getContextmenuAction(items);
+
+    if (!key) {
+      return;
+    }
+
+    const targets = isMultiple ? Array.from(selectedNodes) : [targetId];
+
+    switch (key) {
+      case 'duplicate':
+        return this.duplicateNote(targetId);
+      case 'delete':
+        return this.deleteNotes(targets);
+      case 'move':
+        return this.moveNotes(targets);
+      default:
+        break;
     }
   };
 }

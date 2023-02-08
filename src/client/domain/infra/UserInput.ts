@@ -1,15 +1,19 @@
-import type { NoteVO } from 'interface/Note';
-import type { NoteTreeNode } from 'model/tree/NoteTree';
 import type { InjectionToken } from 'tsyringe';
+import type { ModalOptions, ContextmenuItem } from './ui';
 
-import type { ModalOptions } from './UserFeedback';
+interface NoteTreeNode {
+  key: string;
+  title: string;
+  parent?: NoteTreeNode;
+}
 
 export default interface UserInput {
   common: {
     confirm: (options: ModalOptions) => Promise<boolean>;
+    getContextmenuAction: (items: ContextmenuItem[]) => Promise<string | null>;
   };
   note: {
-    getNoteIdByTree: (selectedNodes: NoteTreeNode[]) => Promise<NoteVO['parentId'] | undefined>;
+    getNoteIdByTree: (selectedNodes: NoteTreeNode[]) => Promise<string | null | undefined>;
   };
 }
 

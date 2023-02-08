@@ -1,7 +1,5 @@
 import { observable, makeObservable, action } from 'mobx';
-import { container, singleton } from 'tsyringe';
-
-import { token as contextmenuToken } from 'infra/Contextmenu';
+import { singleton } from 'tsyringe';
 
 export enum ViewTypes {
   Materials = 'materials',
@@ -23,8 +21,6 @@ export default class ViewService {
   @observable readonly explorerPanel = {
     [ViewTypes.Notes]: NoteExplorerPanel.Tree,
   };
-
-  readonly contextmenu = container.resolve(contextmenuToken);
 
   constructor() {
     makeObservable(this);
