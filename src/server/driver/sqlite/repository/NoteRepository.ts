@@ -57,26 +57,11 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
       knex,
       schema: { tableName: noteTable },
     } = this;
-    const recyclableTable = recyclableSchema.tableName;
-    const sql = knex
+
+    const sql = this.withoutRecyclables('parent')
       .select<(Row & { childrenCount: number })[]>(knex.raw('parent.*'), knex.raw('count(child.id) as childrenCount'))
       .from(`${noteTable} as parent`)
-      .leftJoin(
-        this.knex(noteTable)
-          .leftJoin(recyclableTable, function () {
-            this.on(`${recyclableTable}.entityType`, '=', knex.raw(RecyclablesTypes.Note));
-            this.on(`${recyclableTable}.entityId`, `${noteTable}.id`);
-          })
-          .whereNull(`${recyclableTable}.entityId`)
-          .as('child'),
-        'child.parentId',
-        'parent.id',
-      )
-      .leftJoin(recyclableTable, function () {
-        this.on(`${recyclableTable}.entityType`, '=', knex.raw(RecyclablesTypes.Note));
-        this.on(`${recyclableTable}.entityId`, 'parent.id');
-      })
-      .whereNull(`${recyclableTable}.entityId`)
+      .leftJoin(this.withoutRecyclables(noteTable).from(noteTable).as('child'), 'child.parentId', 'parent.id')
       .groupBy('parent.id');
 
     const where = mapKeys(omitBy(query, isUndefined), (_, key) => `parent.${key}`);
@@ -130,10 +115,11 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
       return [];
     }
 
-    const noteTable = this.schema.tableName;
-    const recyclableTable = recyclableSchema.tableName;
-    const { knex } = this;
-    const rows = await this.knex()
+    const {
+      knex,
+      schema: { tableName: noteTable },
+    } = this;
+    const rows = await this.withoutRecyclables('descendants')
       .withRecursive('descendants', (qb) => {
         qb.select('id', 'parentId')
           .from(noteTable)
@@ -148,19 +134,16 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
         // todo: add a limit statement to stop infinite recursive
       })
       .select(knex.raw('descendants.*'))
-      .from('descendants')
-      .leftJoin(recyclableTable, function () {
-        this.on(`${recyclableTable}.entityType`, '=', knex.raw(RecyclablesTypes.Note));
-        this.on(`${recyclableTable}.entityId`, 'descendants.id');
-      })
-      .whereNull(`${recyclableTable}.entityId`);
+      .from('descendants');
 
     return rows.map(({ id }) => String(id));
   }
 
   async findTreeFragment(noteId: NoteVO['id']) {
-    const { knex } = this;
-    const noteTable = this.schema.tableName;
+    const {
+      knex,
+      schema: { tableName: noteTable },
+    } = this;
     const ids = await knex()
       .withRecursive('ancestors', (qb) =>
         qb
@@ -221,5 +204,18 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
     }
 
     return result;
+  }
+
+  private withoutRecyclables(joinTable: string) {
+    const recyclableTable = recyclableSchema.tableName;
+    const { knex } = this;
+
+    return this.knex
+      .queryBuilder()
+      .leftJoin(recyclableTable, function () {
+        this.on(`${recyclableTable}.entityType`, '=', knex.raw(RecyclablesTypes.Note));
+        this.on(`${recyclableTable}.entityId`, `${joinTable}.id`);
+      })
+      .whereNull(`${recyclableTable}.entityId`);
   }
 }

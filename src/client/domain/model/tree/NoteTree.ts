@@ -162,7 +162,7 @@ export default class NoteTree {
   };
 
   readonly loadChildren = async (parentId?: Note['id']) => {
-    if (parentId ? this.loadedNodes.has(parentId) : this._roots.length > 0) {
+    if (parentId ? this.loadedNodes.has(parentId) || !this.hasNode(parentId) : this._roots.length > 0) {
       return;
     }
 
@@ -341,7 +341,11 @@ export default class NoteTree {
 
     if (parent) {
       pull(parent.children, child);
-      parent.isLeaf = parent.children.length === 0;
+
+      if (parent.children.length === 0) {
+        parent.isLeaf = true;
+        this.toggleExpand(parent.key, false, false);
+      }
     } else {
       pull(this._roots, child);
     }
