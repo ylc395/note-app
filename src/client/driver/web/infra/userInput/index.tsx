@@ -3,7 +3,8 @@ import { Modal } from 'antd';
 import type UserInput from 'infra/UserInput';
 
 import { webContextmenu, ipcContextmenu } from './contextmenu';
-import getNoteIdByTree from './getNoteIdByTree';
+import getNoteIdByTree from './note/getNoteIdByTree';
+import editNotes from './note/editNotes';
 
 const userInput: UserInput = {
   common: {
@@ -21,7 +22,7 @@ const userInput: UserInput = {
       });
     },
   },
-  note: { getNoteIdByTree },
+  note: { getNoteIdByTree, editNotes },
 };
 
 export default userInput;

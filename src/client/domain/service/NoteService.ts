@@ -90,6 +90,15 @@ export default class NoteService {
     }
   }
 
+  private async editNotes(ids: Note['id'][]) {
+    const updatedNotes = await this.userInput.note.editNotes(ids);
+    const { body: notes } = await this.remote.patch<NotesDTO, NoteVO[]>('/notes', updatedNotes);
+
+    for (const note of notes) {
+      this.noteTree.updateTreeByNote(note);
+    }
+  }
+
   readonly actByContextmenu = async (targetId: Note['id']) => {
     const { selectedNodes } = this.noteTree;
 
@@ -106,6 +115,8 @@ export default class NoteService {
           { label: `移动${description}至...`, key: 'move' },
           { label: `收藏${description}`, key: 'star' },
           { type: 'separator' },
+          { label: `批量编辑${description}`, key: 'edit' },
+          { type: 'separator' },
           { label: `导出${description}`, key: 'export' },
           { type: 'separator' },
           { label: `删除${description}`, key: 'delete' },
@@ -117,6 +128,7 @@ export default class NoteService {
           { label: '移动至...', key: 'move' },
           { label: '收藏', key: 'star' },
           { label: '制作副本', key: 'duplicate' },
+          { label: '编辑', key: 'edit' },
           { type: 'separator' },
           { label: '使用外部应用打开', key: 'external' },
           { label: '导出', key: 'export' },
@@ -139,6 +151,8 @@ export default class NoteService {
         return this.deleteNotes(targets);
       case 'move':
         return this.moveNotes(targets);
+      case 'edit':
+        return this.editNotes(targets);
       default:
         break;
     }

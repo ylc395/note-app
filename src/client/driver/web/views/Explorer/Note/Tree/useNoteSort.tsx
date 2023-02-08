@@ -3,7 +3,7 @@ import type { DropDownProps, MenuProps } from 'antd';
 import { CheckOutlined } from '@ant-design/icons';
 
 import NoteService from 'service/NoteService';
-import { SortBy, SortOrder } from 'model/tree/NoteTree';
+import { SortBy, SortOrder } from 'model/tree/type';
 import { computed } from 'mobx';
 
 type MenuItems = NonNullable<DropDownProps['menu']>['items'];

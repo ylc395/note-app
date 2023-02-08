@@ -7,26 +7,7 @@ import { token as remoteToken } from 'infra/Remote';
 import type { NoteQuery, NoteVO as Note } from 'interface/Note';
 import { normalizeTitle } from 'interface/Note';
 
-export interface NoteTreeNode {
-  key: string;
-  title: string;
-  note: Note;
-  parent?: NoteTreeNode;
-  children: NoteTreeNode[];
-  isLeaf: boolean;
-  disabled?: boolean;
-}
-
-export enum SortBy {
-  Title = 'title',
-  UpdatedAt = 'updatedAt',
-  CreatedAt = 'createdAt',
-}
-
-export enum SortOrder {
-  Asc = 'asc',
-  Desc = 'desc',
-}
+import { type NoteTreeNode, SortBy, SortOrder } from './type';
 
 export const VIRTUAL_ROOT_NODE_KEY = 'root';
 
