@@ -6,7 +6,8 @@ import { useCallback, useEffect } from 'react';
 
 import type NoteTree from 'model/tree/NoteTree';
 import type { NoteVO } from 'interface/Note';
-import { Emoji } from 'driver/web/components/Emoji';
+import { Emoji } from 'web/components/Emoji';
+import { VIRTUAL_ROOT_NODE_KEY } from 'model/tree/NoteTree';
 
 const { useToken } = theme;
 
@@ -16,6 +17,7 @@ interface NoteTreeProps {
   handleSelect: TreeProps['onSelect'];
   titleRender?: TreeProps['titleRender'];
   multiple?: TreeProps['multiple'];
+  noIcon?: true;
 }
 
 export default observer(function NoteTree({
@@ -24,13 +26,18 @@ export default observer(function NoteTree({
   handleSelect,
   titleRender,
   multiple,
+  noIcon,
 }: NoteTreeProps) {
   const { token } = useToken();
   const { roots, toggleExpand, expandedNodes, selectedNodes, loadedNodes, loadChildren, getNode } = tree;
   const getIcon = useCallback(
     ({ eventKey }: AntdTreeNodeAttribute) => {
+      if (eventKey === VIRTUAL_ROOT_NODE_KEY) {
+        return null;
+      }
+
       const { icon } = getNode(eventKey).note;
-      return <Emoji id={icon} />;
+      return <Emoji className="mr-2" id={icon} />;
     },
     [getNode],
   );
@@ -48,7 +55,7 @@ export default observer(function NoteTree({
       <Tree.DirectoryTree
         multiple={multiple}
         titleRender={titleRender}
-        icon={getIcon}
+        icon={noIcon ? undefined : getIcon}
         treeData={toJS(roots)}
         expandedKeys={Array.from(expandedNodes)}
         loadedKeys={Array.from(loadedNodes)}

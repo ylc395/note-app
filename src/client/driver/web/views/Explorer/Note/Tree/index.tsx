@@ -6,8 +6,9 @@ import { Button, Tooltip } from 'antd';
 import type { DataNode } from 'antd/es/tree';
 import { PlusOutlined } from '@ant-design/icons';
 
+import NoteTree from 'web/components/NoteTree';
+import { Emoji } from 'web/components/Emoji';
 import NoteService from 'service/NoteService';
-import NoteTree from 'driver/web/components/NoteTree';
 
 import Operations from './Operations';
 
@@ -20,14 +21,12 @@ export default observer(function ExplorerNoteTree({ operationEl }: { operationEl
 
   const titleRender = useCallback(
     (node: DataNode) => (
-      <span className="inline-flex group">
+      <span className="flex group">
+        <Emoji id={noteTree.getNode(node.key as string, true)?.note.icon || null} className="mr-2" />
         <span className="whitespace-nowrap">{node.title as string}</span>
         <Tooltip title="新建子笔记" placement="right">
           <Button
-            onClick={(e) => {
-              e.stopPropagation();
-              createNote(node.key as string);
-            }}
+            onClick={() => createNote(node.key as string)}
             className="invisible ml-auto mr-2 group-hover:visible"
             size="small"
             type="text"
@@ -36,12 +35,13 @@ export default observer(function ExplorerNoteTree({ operationEl }: { operationEl
         </Tooltip>
       </span>
     ),
-    [createNote],
+    [createNote, noteTree],
   );
 
   return (
     <>
       <NoteTree
+        noIcon
         multiple
         tree={noteTree}
         handleContextmenu={actByContextmenu}
