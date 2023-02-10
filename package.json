@@ -38,6 +38,8 @@
   },
   "dependencies": {
     "@ant-design/icons": "^5.0.1",
+    "@emoji-mart/data": "^1.1.2",
+    "@emoji-mart/react": "^1.1.1",
     "@milkdown/core": "^6.5.4",
     "@milkdown/plugin-listener": "^6.5.4",
     "@milkdown/preset-commonmark": "^6.5.4",
@@ -50,6 +52,7 @@
     "@nestjs/microservices": "^9.3.2",
     "antd": "^5.1.7",
     "dayjs": "^1.11.6",
+    "emoji-mart": "^5.5.2",
     "eventemitter3": "^5.0.0",
     "fs-extra": "^10.1.0",
     "knex": "^2.4.2",

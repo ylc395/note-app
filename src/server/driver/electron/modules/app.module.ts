@@ -5,11 +5,12 @@ import ServiceModule from 'service/module';
 
 import NotesController from 'controller/NotesController';
 import RecyclablesController from 'controller/RecyclablesController';
+import IconsController from 'controller/IconsController';
 
 import DriverModule from './driver.module';
 
 @Module({
   imports: [EventEmitterModule.forRoot(), ServiceModule, DriverModule],
-  controllers: [NotesController, RecyclablesController],
+  controllers: [NotesController, RecyclablesController, IconsController],
 })
 export default class AppModule {}

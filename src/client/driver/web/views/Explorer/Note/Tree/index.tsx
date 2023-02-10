@@ -20,7 +20,7 @@ export default observer(function ExplorerNoteTree({ operationEl }: { operationEl
 
   const titleRender = useCallback(
     (node: DataNode) => (
-      <span className="flex group">
+      <span className="inline-flex group">
         <span className="whitespace-nowrap">{node.title as string}</span>
         <Tooltip title="新建子笔记" placement="right">
           <Button

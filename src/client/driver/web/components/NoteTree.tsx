@@ -1,10 +1,12 @@
 import { observer } from 'mobx-react-lite';
 import { toJS } from 'mobx';
 import { Tree, ConfigProvider, theme, TreeProps } from 'antd';
+import type { AntdTreeNodeAttribute } from 'antd/es/tree';
 import { useCallback, useEffect } from 'react';
 
 import type NoteTree from 'model/tree/NoteTree';
 import type { NoteVO } from 'interface/Note';
+import { Emoji } from 'driver/web/components/Emoji';
 
 const { useToken } = theme;
 
@@ -24,8 +26,14 @@ export default observer(function NoteTree({
   multiple,
 }: NoteTreeProps) {
   const { token } = useToken();
-  const { roots, toggleExpand, expandedNodes, selectedNodes, loadedNodes, loadChildren } = tree;
-  const getIcon = useCallback(() => null, []);
+  const { roots, toggleExpand, expandedNodes, selectedNodes, loadedNodes, loadChildren, getNode } = tree;
+  const getIcon = useCallback(
+    ({ eventKey }: AntdTreeNodeAttribute) => {
+      const { icon } = getNode(eventKey).note;
+      return <Emoji id={icon} />;
+    },
+    [getNode],
+  );
 
   useEffect(() => {
     loadChildren();

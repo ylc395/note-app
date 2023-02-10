@@ -1,13 +1,14 @@
 import { observer } from 'mobx-react-lite';
-import { useCallback, useState } from 'react';
-import { Input, Form, DatePicker, Button, Checkbox } from 'antd';
+import { useCallback, useState, MouseEvent } from 'react';
+import { Form, DatePicker, Button, Checkbox, Popover } from 'antd';
+import type { CheckboxChangeEvent } from 'antd/es/checkbox';
 import dayjs from 'dayjs';
 
 import NoteMetadata from 'model/form/NoteMetadata';
 import type { NoteMetadata as NoteMetadataValues } from 'model/form/type';
 
 import { useUpdateTimeField, FORM_ITEM_LAYOUT } from './utils';
-import type { CheckboxChangeEvent } from 'antd/es/checkbox';
+import { EmojiPicker, Emoji } from './Emoji';
 
 interface Props {
   onSubmit: (metadata: NoteMetadataValues) => void;
@@ -20,18 +21,50 @@ export default observer(function NoteMetadataEditor({ onSubmit, onCancel, metada
     return new NoteMetadata(metadata);
   });
 
+  const [isPickingEmoji, setIsPickingEmoji] = useState(false);
+
   const handleUserCreatedAt = useUpdateTimeField(noteMetadata, 'userCreatedAt');
   const handleUserUpdatedAt = useUpdateTimeField(noteMetadata, 'userUpdatedAt');
   const handleIsReadonly = useCallback(
     (e: CheckboxChangeEvent) => noteMetadata.updateValue('isReadonly', e.target.checked),
     [noteMetadata],
   );
+  const handleEmojiSelect = useCallback(
+    (id: string) => {
+      noteMetadata.updateValue('icon', `emoji:${id}`);
+      setIsPickingEmoji(false);
+    },
+    [noteMetadata],
+  );
+
+  const handleClick = (e: MouseEvent) => {
+    e.stopPropagation();
+    setIsPickingEmoji(!isPickingEmoji);
+  };
 
   return (
     <div className="mt-4">
       <Form {...FORM_ITEM_LAYOUT}>
         <Form.Item label="图标">
-          <Input />
+          <div className="flex items-center">
+            <Emoji id={noteMetadata.values.icon} className="mr-4" />
+            <Popover
+              trigger="click"
+              open={isPickingEmoji}
+              content={() => (
+                <EmojiPicker onSelect={handleEmojiSelect} onClickOutside={() => setIsPickingEmoji(false)} />
+              )}
+            >
+              <Button size="small" onClick={handleClick}>
+                选择 emoji
+              </Button>
+            </Popover>
+            {noteMetadata.values.icon && (
+              <Button size="small" className="ml-2" onClick={() => noteMetadata.updateValue('icon', null)}>
+                清除
+              </Button>
+            )}
+          </div>
         </Form.Item>
         <Form.Item label="只读">
           <Checkbox

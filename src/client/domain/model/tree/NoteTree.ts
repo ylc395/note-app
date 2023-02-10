@@ -111,7 +111,7 @@ export default class NoteTree {
 
   getNode(id: string, noThrow: true): NoteTreeNode | undefined;
   getNode(id: string): NoteTreeNode;
-  getNode(id: string, noThrow?: true) {
+  @action.bound getNode(id: string, noThrow?: true) {
     const node = this.nodesMap[id];
 
     if (!node && !noThrow) {

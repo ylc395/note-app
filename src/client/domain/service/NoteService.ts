@@ -1,4 +1,5 @@
 import { container, singleton } from 'tsyringe';
+import pick from 'lodash/pick';
 
 import NoteTree from 'model/tree/NoteTree';
 import { token as remoteToken } from 'infra/Remote';
@@ -112,12 +113,7 @@ export default class NoteService {
               return result;
             }, firstNote.isReadonly),
           }
-        : {
-            icon: null,
-            isReadonly: firstNote.isReadonly,
-            userCreatedAt: firstNote.userCreatedAt,
-            userUpdatedAt: firstNote.userUpdatedAt,
-          };
+        : pick(firstNote, ['icon', 'isReadonly', 'userCreatedAt', 'userUpdatedAt']);
 
     const updatedNoteMetadata = await this.userInput.note.editNoteMetadata(noteMetadata, {
       length: notesToEdit.length,
