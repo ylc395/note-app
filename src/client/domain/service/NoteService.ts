@@ -5,7 +5,7 @@ import { token as remoteToken } from 'infra/Remote';
 import { token as userFeedbackToken } from 'infra/UserFeedback';
 import { token as userInputToken } from 'infra/UserInput';
 import type { ContextmenuItem } from 'infra/ui';
-import type { NoteDTO, NoteVO as Note, NotesDTO, NoteVO } from 'interface/Note';
+import { NoteDTO, NoteVO as Note, NotesDTO, NoteVO, normalizeTitle } from 'interface/Note';
 import type { RecyclableEntitiesDTO } from 'interface/Recyclables';
 
 import WorkbenchService, { WorkbenchEvents } from './WorkbenchService';
@@ -60,7 +60,8 @@ export default class NoteService {
   }
 
   private async moveNotes(ids: Note['id'][]) {
-    const targetId = await this.userInput.note.getNoteIdByTree(ids.map((id) => this.noteTree.getNode(id)));
+    const nodesToMove = ids.map((id) => this.noteTree.getNode(id));
+    const targetId = await this.userInput.note.getNoteIdByTree(nodesToMove);
 
     if (typeof targetId === 'undefined') {
       return;
@@ -92,8 +93,38 @@ export default class NoteService {
   }
 
   private async editNotes(ids: Note['id'][]) {
-    const updatedNotes = await this.userInput.note.editNotes(ids);
-    const { body: notes } = await this.remote.patch<NotesDTO, NoteVO[]>('/notes', updatedNotes);
+    const notesToEdit = ids.map((id) => this.noteTree.getNode(id).note);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const firstNote = notesToEdit[0]!;
+    const noteMetadata =
+      notesToEdit.length > 1
+        ? {
+            icon: null,
+            isReadonly: notesToEdit.reduce((result: boolean | undefined, { isReadonly }) => {
+              if (result === undefined) {
+                return result;
+              }
+
+              if (result !== isReadonly) {
+                return undefined;
+              }
+
+              return result;
+            }, firstNote.isReadonly),
+          }
+        : {
+            icon: null,
+            isReadonly: firstNote.isReadonly,
+            userCreatedAt: firstNote.userCreatedAt,
+            userUpdatedAt: firstNote.userUpdatedAt,
+          };
+
+    const updatedNoteMetadata = await this.userInput.note.editNoteMetadata(noteMetadata, {
+      length: notesToEdit.length,
+      title: notesToEdit.length === 1 ? normalizeTitle(firstNote) : '',
+    });
+    const result: NotesDTO = notesToEdit.map(({ id }) => ({ id, ...updatedNoteMetadata }));
+    const { body: notes } = await this.remote.patch<NotesDTO, NoteVO[]>('/notes', result);
 
     for (const note of notes) {
       this.noteTree.updateTreeByNote(note);

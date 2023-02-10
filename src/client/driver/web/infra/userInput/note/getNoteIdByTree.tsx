@@ -4,7 +4,7 @@ import type UserInput from 'infra/UserInput';
 import NoteTreeModel, { VIRTUAL_ROOT_NODE_KEY } from 'model/tree/NoteTree';
 import NoteTree from 'driver/web/components/NoteTree';
 
-const getContainer = () => document.querySelector('#app') as HTMLElement;
+import { COMMON_MODAL_OPTIONS } from '../utils';
 
 const getNoteIdByTree: UserInput['note']['getNoteIdByTree'] = async (selectedNodes) => {
   if (selectedNodes.length === 0) {
@@ -39,31 +39,24 @@ const getNoteIdByTree: UserInput['note']['getNoteIdByTree'] = async (selectedNod
     },
   });
 
+  const title = selectedNodes.length > 1 ? ` ${selectedNodes.length} 项笔记` : `《${selectedNodes[0]?.title}》`;
+
   return new Promise((resolve) => {
+    const submit = () => {
+      const id = Array.from(tree.selectedNodes)[0];
+      resolve(id === VIRTUAL_ROOT_NODE_KEY ? null : id);
+    };
+
     Modal.confirm({
-      autoFocusButton: null,
-      okText: '确认',
-      cancelText: '取消',
-      getContainer,
-      icon: null,
-      title: `移动${
-        selectedNodes.length > 1 ? ` ${selectedNodes.length} 项笔记` : `《${selectedNodes[0]?.title}》`
-      }至...`,
+      ...COMMON_MODAL_OPTIONS,
+      title: `移动${title}至...`,
       width: 600,
       content: (
         <div className="mt-4 h-72 overflow-auto">
           <NoteTree tree={tree} handleSelect={(_, { node }) => tree.toggleSelect(node.key as string, true)} />
         </div>
       ),
-      onOk: () => {
-        const id = Array.from(tree.selectedNodes)[0];
-
-        if (id === undefined) {
-          return true;
-        }
-
-        resolve(id === VIRTUAL_ROOT_NODE_KEY ? null : id);
-      },
+      onOk: submit,
       onCancel: () => resolve(undefined),
     });
   });

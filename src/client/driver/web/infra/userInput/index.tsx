@@ -4,9 +4,8 @@ import type UserInput from 'infra/UserInput';
 
 import { webContextmenu, ipcContextmenu } from './contextmenu';
 import getNoteIdByTree from './note/getNoteIdByTree';
-import editNotes from './note/editNotes';
-
-const getContainer = () => document.querySelector('#app') as HTMLElement;
+import editNoteMetadata from './note/editNoteMetadata';
+import { COMMON_MODAL_OPTIONS } from './utils';
 
 const userInput: UserInput = {
   common: {
@@ -14,18 +13,15 @@ const userInput: UserInput = {
     confirm: (options) => {
       return new Promise((resolve) => {
         Modal.confirm({
+          ...COMMON_MODAL_OPTIONS,
           ...options,
-          getContainer,
-          autoFocusButton: null,
-          okText: '确认',
-          cancelText: '取消',
           onOk: () => resolve(true),
           onCancel: () => resolve(false),
         });
       });
     },
   },
-  note: { getNoteIdByTree, editNotes },
+  note: { getNoteIdByTree, editNoteMetadata },
 };
 
 export default userInput;
