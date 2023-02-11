@@ -1,11 +1,11 @@
 import { Modal } from 'antd';
 
-import type UserInput from 'infra/UserInput';
+import type { NoteInputs } from 'infra/UserInput';
 import NoteMetadataForm from 'web/components/NoteMetadataForm';
 
 import { COMMON_MODAL_OPTIONS } from '../utils';
 
-const editNotes: UserInput['note']['editNoteMetadata'] = async (metadata, notesInfo) => {
+const editNotes: NoteInputs['editNoteMetadata'] = async (metadata, notesInfo) => {
   return new Promise((resolve) => {
     const modal = Modal.confirm({
       ...COMMON_MODAL_OPTIONS,

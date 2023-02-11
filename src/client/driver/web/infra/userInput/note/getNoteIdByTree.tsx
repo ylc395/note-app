@@ -1,12 +1,12 @@
 import { Modal } from 'antd';
 
-import type UserInput from 'infra/UserInput';
+import type { NoteInputs } from 'infra/UserInput';
 import NoteTreeModel, { VIRTUAL_ROOT_NODE_KEY } from 'model/tree/NoteTree';
 import NoteTree from 'web/components/NoteTree';
 
 import { COMMON_MODAL_OPTIONS } from '../utils';
 
-const getNoteIdByTree: UserInput['note']['getNoteIdByTree'] = async (selectedNodes) => {
+const getNoteIdByTree: NoteInputs['getNoteIdByTree'] = async (selectedNodes) => {
   if (selectedNodes.length === 0) {
     return Promise.resolve(undefined);
   }
