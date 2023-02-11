@@ -5,14 +5,14 @@ import { SortAscendingOutlined, FileAddOutlined, ShrinkOutlined, SettingOutlined
 
 import NoteService from 'service/NoteService';
 
-import useNoteSort from './useNoteSort';
+import useSort from './useSort';
 
 export default observer(function Operations() {
   const {
     noteTree: { expandedNodes, collapseAll },
     createNote,
   } = container.resolve(NoteService);
-  const { menuOptions, handleClick } = useNoteSort();
+  const { menuOptions, onClick } = useSort();
 
   return (
     <>
@@ -20,7 +20,7 @@ export default observer(function Operations() {
         <Tooltip title="新建根笔记">
           <Button type="text" icon={<FileAddOutlined />} onClick={() => createNote()} />
         </Tooltip>
-        <Dropdown menu={{ items: menuOptions.get(), onClick: handleClick }} placement="bottom" arrow>
+        <Dropdown menu={{ items: menuOptions.get(), onClick }} placement="bottom" arrow>
           <Button type="text" icon={<SortAscendingOutlined />} />
         </Dropdown>
         <Tooltip title="折叠全部节点">

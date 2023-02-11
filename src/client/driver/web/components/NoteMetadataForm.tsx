@@ -75,12 +75,22 @@ export default observer(function NoteMetadataEditor({ onSubmit, onCancel, metada
         </Form.Item>
         {noteMetadata.values.userCreatedAt && (
           <Form.Item label="创建日期">
-            <DatePicker value={dayjs.unix(noteMetadata.values.userCreatedAt)} showTime onChange={handleUserCreatedAt} />
+            <DatePicker
+              allowClear={false}
+              value={dayjs.unix(noteMetadata.values.userCreatedAt)}
+              showTime
+              onChange={handleUserCreatedAt}
+            />
           </Form.Item>
         )}
         {noteMetadata.values.userUpdatedAt && (
           <Form.Item label="更新日期">
-            <DatePicker value={dayjs.unix(noteMetadata.values.userUpdatedAt)} showTime onChange={handleUserUpdatedAt} />
+            <DatePicker
+              allowClear={false}
+              value={dayjs.unix(noteMetadata.values.userUpdatedAt)}
+              showTime
+              onChange={handleUserUpdatedAt}
+            />
           </Form.Item>
         )}
       </Form>

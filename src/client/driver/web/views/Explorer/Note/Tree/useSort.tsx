@@ -20,7 +20,7 @@ const sortOrder = [
 ] as const;
 
 export default function useNoteSort(): {
-  handleClick: MenuProps['onClick'];
+  onClick: MenuProps['onClick'];
   menuOptions: { get: () => MenuItems };
 } {
   const {
@@ -45,5 +45,5 @@ export default function useNoteSort(): {
 
   const handleClick: MenuProps['onClick'] = (e) => setSortOptions(e.key as SortBy | SortOrder);
 
-  return { menuOptions, handleClick };
+  return { menuOptions, onClick: handleClick };
 }
