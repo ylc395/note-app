@@ -22,6 +22,7 @@ interface Props {
 export function EmojiPicker({ onSelect, onClickOutside }: Props) {
   return (
     <EmojiMart
+      maxFrequentRows={2}
       previewPosition="none"
       data={data}
       onClickOutside={onClickOutside}
