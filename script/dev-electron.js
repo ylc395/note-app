@@ -69,7 +69,7 @@ async function createViteServer() {
       }),
     ],
     define: {
-      __WEB_ENV__: JSON.stringify('electron-renderer'),
+      __ENV__: JSON.stringify('dev'),
     },
     esbuild: {
       jsxInject: `import React from 'react'`,

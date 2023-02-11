@@ -11,23 +11,25 @@ import { VIRTUAL_ROOT_NODE_KEY } from 'model/tree/NoteTree';
 
 const { useToken } = theme;
 
-interface NoteTreeProps {
+export interface NoteTreeProps {
   tree: NoteTree;
-  handleContextmenu?: (noteId: NoteVO['id']) => Promise<void>;
-  handleSelect: TreeProps['onSelect'];
+  onContextmenu?: (noteId: NoteVO['id']) => Promise<void>;
+  onSelect: TreeProps['onSelect'];
   titleRender?: TreeProps['titleRender'];
   multiple?: TreeProps['multiple'];
   noIcon?: true;
+  draggable?: TreeProps['draggable'];
+  onDragEnd?: TreeProps['onDragEnd'];
+  onDragEnter?: TreeProps['onDragEnter'];
+  onDragLeave?: TreeProps['onDragLeave'];
+  onDragOver?: TreeProps['onDragOver'];
+  onDragStart?: TreeProps['onDragStart'];
+  onDrop?: TreeProps['onDrop'];
+  onExpand?: TreeProps['onExpand'];
+  allowDrop?: TreeProps['allowDrop'];
 }
 
-export default observer(function NoteTree({
-  tree,
-  handleContextmenu,
-  handleSelect,
-  titleRender,
-  multiple,
-  noIcon,
-}: NoteTreeProps) {
+export default observer(function NoteTree({ tree, noIcon, onContextmenu, onExpand, ...options }: NoteTreeProps) {
   const { token } = useToken();
   const { roots, toggleExpand, expandedNodes, selectedNodes, loadedNodes, loadChildren, getNode } = tree;
   const getIcon = useCallback(
@@ -53,8 +55,6 @@ export default observer(function NoteTree({
       }}
     >
       <Tree.DirectoryTree
-        multiple={multiple}
-        titleRender={titleRender}
         icon={noIcon ? undefined : getIcon}
         treeData={toJS(roots)}
         expandedKeys={Array.from(expandedNodes)}
@@ -62,9 +62,9 @@ export default observer(function NoteTree({
         selectedKeys={Array.from(selectedNodes)}
         expandAction={false}
         loadData={(node) => loadChildren(node.key as string)}
-        onExpand={(_, { node }) => toggleExpand(node.key as string, false)}
-        onSelect={handleSelect}
-        onRightClick={handleContextmenu && (({ node }) => handleContextmenu(node.key as string))}
+        onExpand={onExpand || ((_, { node }) => toggleExpand(node.key as string, false))}
+        onRightClick={onContextmenu && (({ node }) => onContextmenu(node.key as string))}
+        {...options}
       />
     </ConfigProvider>
   );

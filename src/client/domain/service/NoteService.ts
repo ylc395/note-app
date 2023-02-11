@@ -60,25 +60,21 @@ export default class NoteService {
     this.userFeedback.message.success({ content: '已移至回收站' });
   }
 
-  private async moveNotes(ids: Note['id'][]) {
-    const nodesToMove = ids.map((id) => this.noteTree.getNode(id));
-    const targetId = await this.userInput.note.getNoteIdByTree(nodesToMove);
+  readonly moveNotes = async (ids: Note['id'][], targetId?: Note['id'] | null) => {
+    if (ids.length === 0) {
+      throw new Error('no notes to move');
+    }
 
-    if (typeof targetId === 'undefined') {
+    const nodesToMove = ids.map((id) => this.noteTree.getNode(id));
+
+    targetId = targetId === undefined ? await this.userInput.note.getNoteIdByTree(nodesToMove) : targetId;
+
+    if (targetId === undefined) {
       return;
     }
 
     const notes = ids.map((id) => ({ ...this.noteTree.getNode(id).note, parentId: targetId }));
     const { body: updatedNotes } = await this.remote.patch<NotesDTO, NoteVO[]>('/notes', notes);
-
-    this.userFeedback.message.success({
-      content: `移动成功${!targetId || this.noteTree.expandedNodes.has(targetId) ? '' : '。点击定位到新位置'}`,
-      onClick: async (close) => {
-        await this.noteTree.toggleExpand(targetId, true, true);
-        this.noteTree.toggleSelect(ids, true);
-        close();
-      },
-    });
 
     const targetNode = targetId && this.noteTree.getNode(targetId, true);
 
@@ -89,9 +85,24 @@ export default class NoteService {
         this.noteTree.updateTreeByNote(note, true);
       }
 
+      const targetNode = targetId && this.noteTree.getNode(targetId, true);
       this.noteTree.sort(targetNode ? targetNode.children : this.noteTree.roots, false);
     }
-  }
+
+    this.userFeedback.message.success({
+      content: `移动成功${!targetId || this.noteTree.expandedNodes.has(targetId) ? '' : '。点击定位到新位置'}`,
+      onClick: async (close) => {
+        close();
+
+        if (targetId === undefined) {
+          return;
+        }
+
+        await this.noteTree.toggleExpand(targetId, true, true);
+        this.noteTree.toggleSelect(ids, true);
+      },
+    });
+  };
 
   private async editNotes(ids: Note['id'][]) {
     const notesToEdit = ids.map((id) => this.noteTree.getNode(id).note);

@@ -6,10 +6,11 @@ import { Button, Tooltip } from 'antd';
 import type { DataNode } from 'antd/es/tree';
 import { PlusOutlined } from '@ant-design/icons';
 
-import NoteTree from 'web/components/NoteTree';
+import NoteTree, { NoteTreeProps } from 'web/components/NoteTree';
 import { Emoji } from 'web/components/Emoji';
 import NoteService from 'service/NoteService';
 
+import useDrag, { TITLE_CONTENT_CLASS } from './useDrag';
 import Operations from './Operations';
 
 export default observer(function ExplorerNoteTree({ operationEl }: { operationEl: HTMLElement | null }) {
@@ -19,11 +20,29 @@ export default observer(function ExplorerNoteTree({ operationEl }: { operationEl
     return operationEl && createPortal(<Operations />, operationEl);
   }, [operationEl]);
 
+  const { draggingKeys, ...dragHandlers } = useDrag();
+
+  const handleExpand = useCallback<NonNullable<NoteTreeProps['onExpand']>>(
+    (_, { node }) => {
+      if (draggingKeys.length > 0) {
+        return;
+      }
+
+      noteTree.toggleExpand(node.key as string, false);
+    },
+    [draggingKeys, noteTree],
+  );
+
   const titleRender = useCallback(
     (node: DataNode) => (
       <span className="flex group">
-        <Emoji id={noteTree.getNode(node.key as string, true)?.note.icon || null} className="mr-2" />
-        <span className="whitespace-nowrap">{node.title as string}</span>
+        <span className={`flex ${TITLE_CONTENT_CLASS}`}>
+          <Emoji id={noteTree.getNode(node.key as string, true)?.note.icon || null} className="mr-2" />
+          <span className="whitespace-nowrap">
+            {__ENV__ === 'dev' ? `${node.key} ` : null}
+            {node.title as string}
+          </span>
+        </span>
         <Tooltip title="新建子笔记" placement="right">
           <Button
             onClick={() => createNote(node.key as string)}
@@ -44,9 +63,12 @@ export default observer(function ExplorerNoteTree({ operationEl }: { operationEl
         noIcon
         multiple
         tree={noteTree}
-        handleContextmenu={actByContextmenu}
+        onContextmenu={actByContextmenu}
         titleRender={titleRender}
-        handleSelect={(_, { node, selectedNodes }) => selectNote(node.key as string, selectedNodes.length > 1)}
+        onSelect={(_, { node, selectedNodes }) => selectNote(node.key as string, selectedNodes.length > 1)}
+        draggable={{ icon: false }}
+        onExpand={handleExpand}
+        {...dragHandlers}
       />
       {operations}
     </>

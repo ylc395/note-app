@@ -53,7 +53,7 @@ const getNoteIdByTree: UserInput['note']['getNoteIdByTree'] = async (selectedNod
       width: 600,
       content: (
         <div className="mt-4 h-72 overflow-auto">
-          <NoteTree tree={tree} handleSelect={(_, { node }) => tree.toggleSelect(node.key as string, true)} />
+          <NoteTree tree={tree} onSelect={(_, { node }) => tree.toggleSelect(node.key as string, true)} />
         </div>
       ),
       onOk: submit,

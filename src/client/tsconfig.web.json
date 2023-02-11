@@ -1,6 +1,6 @@
 {
   "extends": "./tsconfig.json",
-  "files": ["./driver/web/index"],
+  "files": ["./driver/web/index", "./driver/web/vite-env.d.ts"],
   "compilerOptions": {
     "types": ["electron"]
   }
