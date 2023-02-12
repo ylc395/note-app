@@ -1,5 +1,4 @@
 import { Global, Module, Inject, type OnApplicationBootstrap } from '@nestjs/common';
-import { container } from 'tsyringe';
 
 import FileReader from 'driver/fs';
 import ElectronClient from 'client/driver/electron';
@@ -26,7 +25,6 @@ export default class DriverModule implements OnApplicationBootstrap {
     @Inject(databaseToken) private readonly sqliteDb: Database,
   ) {}
   async onApplicationBootstrap() {
-    container.registerInstance(databaseToken, this.sqliteDb);
     const configDir = this.electronApp.getConfigDir();
     await this.sqliteDb.init(configDir);
   }

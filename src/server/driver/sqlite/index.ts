@@ -15,7 +15,7 @@ import * as repositories from './repository';
 const isDevelopment = process.env.NODE_ENV === 'development';
 
 export default class SqliteDb implements Database {
-  knex!: Knex;
+  private knex!: Knex;
 
   async createTransaction() {
     return await this.knex.transaction();

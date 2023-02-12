@@ -1,6 +1,6 @@
 import isError from 'lodash/isError';
-import { container } from 'tsyringe';
 
+import BaseService from 'service/BaseService';
 import type Repositories from 'service/repository';
 import { isRepositoryName } from 'service/repository';
 
@@ -18,31 +18,56 @@ export interface Database {
 
 export const token = Symbol('database');
 
+const transactionOriginSymbol = Symbol('transactionOrigin');
+
+const repositoriesCache = new WeakMap<Transaction, Map<keyof Repositories, Repositories[keyof Repositories]>>();
+
+const getProxy = function (context: BaseService, trx: Transaction) {
+  const _repositories = repositoriesCache.get(trx) || new Map();
+
+  if (!repositoriesCache.has(trx)) {
+    repositoriesCache.set(trx, _repositories);
+  }
+
+  return new Proxy(context, {
+    get(target, p, receiver): unknown {
+      if (isRepositoryName(p)) {
+        if (!_repositories.has(p)) {
+          _repositories.set(p, context.db.getRepositoryWithTransaction(trx, p));
+        }
+
+        return _repositories.get(p);
+      }
+
+      const originResult = Reflect.get(target, p);
+
+      if (originResult instanceof BaseService) {
+        return getProxy(originResult, trx);
+      }
+
+      if (typeof originResult === 'function') {
+        if (originResult[transactionOriginSymbol]) {
+          return originResult[transactionOriginSymbol];
+        }
+
+        return originResult.bind(receiver);
+      }
+
+      return originResult;
+    },
+  });
+};
+
 export function Transaction(target: unknown, propertyKey: string, descriptor: PropertyDescriptor) {
   const originFunction = descriptor.value;
 
   descriptor.value = async function (...args: unknown[]) {
-    const db: Database = container.resolve(token);
-    const trx = await db.createTransaction();
-    const _repositories = new Map<keyof Repositories, Repositories[keyof Repositories]>();
-    const proxy = new Proxy(this, {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      get(target: any, p, receiver) {
-        if (typeof target[p] === 'function') {
-          return target[p].bind(receiver);
-        }
+    if (!(this instanceof BaseService)) {
+      throw new Error('must be used in Service');
+    }
 
-        if (isRepositoryName(p)) {
-          if (!_repositories.has(p)) {
-            _repositories.set(p, db.getRepositoryWithTransaction(trx, p));
-          }
-
-          return _repositories.get(p);
-        }
-
-        return target[p];
-      },
-    });
+    const trx = await this.db.createTransaction();
+    const proxy = getProxy(this, trx);
 
     let result;
 
@@ -57,4 +82,6 @@ export function Transaction(target: unknown, propertyKey: string, descriptor: Pr
 
     return result;
   };
+
+  descriptor.value[transactionOriginSymbol] = originFunction;
 }
