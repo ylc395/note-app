@@ -132,9 +132,15 @@ export default class NoteService {
     });
     const result: NotesDTO = notesToEdit.map(({ id }) => ({ id, ...updatedNoteMetadata }));
     const { body: notes } = await this.remote.patch<NotesDTO, NoteVO[]>('/notes', result);
+    const parentIds = new Set<Note['parentId']>();
 
     for (const note of notes) {
-      this.noteTree.updateTreeByNote(note);
+      this.noteTree.updateTreeByNote(note, true);
+      parentIds.add(note.parentId);
+    }
+
+    for (const parentId of parentIds) {
+      this.noteTree.sort(this.noteTree.getChildren(parentId), false);
     }
   }
 

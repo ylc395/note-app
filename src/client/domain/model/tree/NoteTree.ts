@@ -170,7 +170,7 @@ export default class NoteTree {
     Object.assign(node.note, note);
     node.title = normalizeTitle(note);
 
-    if (node.parent?.key === note.parentId) {
+    if ((node.parent?.key || null) === note.parentId) {
       return node;
     }
 
@@ -332,7 +332,7 @@ export default class NoteTree {
     }
   }
 
-  private getChildren(parentId: Note['parentId'] | undefined) {
+  getChildren(parentId: Note['parentId'] | undefined) {
     return parentId ? this.getNode(parentId).children : this._roots;
   }
 }
