@@ -87,7 +87,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
   }
 
   async isWritable(noteId: NoteVO['id']) {
-    const row = await this.findAll({ id: noteId, isReadonly: true });
+    const row = await this.findAll({ id: noteId, isReadonly: false });
 
     return row.length === 1;
   }
