@@ -1,4 +1,5 @@
 import { object, string, array } from 'zod';
+import type { EntityTypes } from './Entity';
 
 export const RecyclablesDTOSchema = object({
   ids: array(string()).nonempty(),
@@ -6,7 +7,8 @@ export const RecyclablesDTOSchema = object({
 
 export type RecyclablesDTO = { ids: string[] };
 
-export interface RecyclablesRecord {
+export interface RecyclableRecord {
   deletedAt: number;
-  count: number;
+  type: EntityTypes;
+  id: string;
 }

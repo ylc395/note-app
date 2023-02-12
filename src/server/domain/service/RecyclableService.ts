@@ -1,20 +1,11 @@
-import { Injectable, Inject } from '@nestjs/common';
-import { EntityTypes } from 'model/Entity';
+import { Injectable } from '@nestjs/common';
 
-import { Transaction, token as databaseToken, type Database } from 'infra/Database';
-
-import type Repositories from './repository';
+import { EntityTypes } from 'interface/Entity';
+import { Transaction } from 'infra/Database';
+import BaseService from './BaseService';
 
 @Injectable()
-export default class RecyclableService {
-  private readonly recyclables: Repositories['recyclables'];
-  private readonly notes: Repositories['notes'];
-
-  constructor(@Inject(databaseToken) db: Database) {
-    this.recyclables = db.getRepository('recyclables');
-    this.notes = db.getRepository('notes');
-  }
-
+export default class RecyclableService extends BaseService {
   @Transaction
   async put(type: EntityTypes, ids: string[]) {
     let isAvailable: boolean;

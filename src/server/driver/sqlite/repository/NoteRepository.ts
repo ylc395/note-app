@@ -4,8 +4,8 @@ import mapKeys from 'lodash/mapKeys';
 import groupBy from 'lodash/groupBy';
 import isUndefined from 'lodash/isUndefined';
 
-import { EntityTypes } from 'model/Entity';
 import type { NoteRepository, NoteQuery } from 'service/repository/NoteRepository';
+import { EntityTypes } from 'interface/Entity';
 import type { NoteDTO, NoteVO, NoteBodyDTO, NotesDTO } from 'interface/Note';
 
 import BaseRepository from './BaseRepository';
