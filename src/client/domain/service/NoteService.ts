@@ -7,7 +7,7 @@ import { token as userFeedbackToken } from 'infra/UserFeedback';
 import { token as userInputToken } from 'infra/UserInput';
 import type { ContextmenuItem } from 'infra/ui';
 import { NoteDTO, NoteVO as Note, NotesDTO, NoteVO, normalizeTitle } from 'interface/Note';
-import type { RecyclableEntitiesDTO } from 'interface/Recyclables';
+import type { RecyclablesDTO } from 'interface/Recyclables';
 
 import WorkbenchService, { WorkbenchEvents } from './WorkbenchService';
 
@@ -55,7 +55,7 @@ export default class NoteService {
   };
 
   private async deleteNotes(ids: Note['id'][]) {
-    await this.remote.put<RecyclableEntitiesDTO>(`/recyclables/notes`, { ids });
+    await this.remote.put<RecyclablesDTO>(`/recyclables/notes`, { ids });
     this.noteTree.removeNodes(ids);
     this.userFeedback.message.success({ content: '已移至回收站' });
   }

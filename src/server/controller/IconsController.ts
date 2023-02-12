@@ -5,7 +5,7 @@ import type { EmojiMartData } from '@emoji-mart/data';
 import { Get } from './decorators';
 
 @Controller()
-export default class RecyclablesController {
+export default class IconsController {
   @Get('/icons/data')
   async getIconData(): Promise<EmojiMartData> {
     return data as EmojiMartData;

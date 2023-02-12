@@ -4,9 +4,9 @@ import mapKeys from 'lodash/mapKeys';
 import groupBy from 'lodash/groupBy';
 import isUndefined from 'lodash/isUndefined';
 
+import { EntityTypes } from 'model/Entity';
 import type { NoteRepository, NoteQuery } from 'service/repository/NoteRepository';
 import type { NoteDTO, NoteVO, NoteBodyDTO, NotesDTO } from 'interface/Note';
-import { RecyclablesTypes } from 'service/RecyclableService';
 
 import BaseRepository from './BaseRepository';
 import noteSchema, { type Row } from '../schema/noteSchema';
@@ -213,7 +213,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
     return this.knex
       .queryBuilder()
       .leftJoin(recyclableTable, function () {
-        this.on(`${recyclableTable}.entityType`, '=', knex.raw(RecyclablesTypes.Note));
+        this.on(`${recyclableTable}.entityType`, '=', knex.raw(EntityTypes.Note));
         this.on(`${recyclableTable}.entityId`, `${joinTable}.id`);
       })
       .whereNull(`${recyclableTable}.entityId`);

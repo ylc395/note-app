@@ -1,14 +1,12 @@
-import { object, string, infer as ZodInfer, array } from 'zod';
+import { object, string, array } from 'zod';
 
-export const entitiesDTOSchema = object({
-  ids: array(string()),
+export const RecyclablesDTOSchema = object({
+  ids: array(string()).nonempty(),
 });
 
-export type RecyclableEntitiesDTO = ZodInfer<typeof entitiesDTOSchema>;
+export type RecyclablesDTO = { ids: string[] };
 
-export interface RecycleRecord {
-  deletedAt?: number;
+export interface RecyclablesRecord {
+  deletedAt: number;
   count: number;
 }
-
-export type RecyclableEntityVO<T> = T & { deletedAt: number };

@@ -1,11 +1,9 @@
 import { Injectable, Inject } from '@nestjs/common';
+import { EntityTypes } from 'model/Entity';
+
 import { Transaction, token as databaseToken, type Database } from 'infra/Database';
 
 import type Repositories from './repository';
-
-export enum RecyclablesTypes {
-  Note = 1,
-}
 
 @Injectable()
 export default class RecyclableService {
@@ -18,16 +16,12 @@ export default class RecyclableService {
   }
 
   @Transaction
-  async put(type: RecyclablesTypes, ids: string[]) {
-    if (ids.length === 0) {
-      return { count: 0 };
-    }
-
+  async put(type: EntityTypes, ids: string[]) {
     let isAvailable: boolean;
     let allIds: string[];
 
     switch (type) {
-      case RecyclablesTypes.Note:
+      case EntityTypes.Note:
         allIds = [...ids, ...(await this.notes.findAllDescendantIds(ids))];
         isAvailable = await this.notes.areAvailable(allIds);
         break;
