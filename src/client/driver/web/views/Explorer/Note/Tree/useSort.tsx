@@ -5,6 +5,7 @@ import { CheckOutlined } from '@ant-design/icons';
 import NoteService from 'service/NoteService';
 import { SortBy, SortOrder } from 'model/tree/type';
 import { computed } from 'mobx';
+import { useState } from 'react';
 
 type MenuItems = NonNullable<DropDownProps['menu']>['items'];
 
@@ -26,21 +27,23 @@ export default function useNoteSort(): {
   const {
     noteTree: { sortOptions, setSortOptions },
   } = container.resolve(NoteService);
-  const menuOptions = computed(
-    () =>
-      [
-        ...sortBy.map(({ key, label }) => ({
-          key,
-          label,
-          icon: <CheckOutlined className={sortOptions.by === key ? '' : 'invisible'} />,
-        })),
-        { type: 'divider' },
-        ...sortOrder.map(({ key, label }) => ({
-          key: String(key),
-          label,
-          icon: <CheckOutlined className={sortOptions.order === key ? '' : 'invisible'} />,
-        })),
-      ] as MenuItems,
+  const [menuOptions] = useState(() =>
+    computed(
+      () =>
+        [
+          ...sortBy.map(({ key, label }) => ({
+            key,
+            label,
+            icon: <CheckOutlined className={sortOptions.by === key ? '' : 'invisible'} />,
+          })),
+          { type: 'divider' },
+          ...sortOrder.map(({ key, label }) => ({
+            key: String(key),
+            label,
+            icon: <CheckOutlined className={sortOptions.order === key ? '' : 'invisible'} />,
+          })),
+        ] as MenuItems,
+    ),
   );
 
   const handleClick: MenuProps['onClick'] = (e) => setSortOptions(e.key as SortBy | SortOrder);

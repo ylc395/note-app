@@ -106,7 +106,7 @@ async function createViteServer() {
         electronProcess.kill();
         shell.env['DEV_CLEAN'] = '0';
         electronProcess = await buildElectron(true);
-      }, 2000),
+      }, 8000),
     );
   } else {
     await viteServer.close();

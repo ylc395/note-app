@@ -1,5 +1,6 @@
 import { container, singleton } from 'tsyringe';
-import { observable, makeObservable } from 'mobx';
+import { observable, makeObservable, runInAction } from 'mobx';
+import remove from 'lodash/remove';
 
 import { token as remoteToken } from 'infra/Remote';
 import { token as userFeedbackToken } from 'infra/UserFeedback';
@@ -30,6 +31,16 @@ export default class StarService {
 
   async loadStars() {
     const { body: stars } = await this.remote.get<void, Required<StarRecord>[]>('/stars');
-    this.stars = stars;
+    runInAction(() => (this.stars = stars));
+  }
+
+  async removeStar(starId: StarRecord['id']) {
+    runInAction(() => {
+      if (!this.stars) {
+        throw new Error('no stars');
+      }
+
+      remove(this.stars, ({ id }) => starId === id);
+    });
   }
 }

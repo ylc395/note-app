@@ -44,4 +44,14 @@ export default class BaseService implements Repositories {
   get stars() {
     return this.db.getRepository('stars');
   }
+
+  buildIndex<T extends { id: string }>(list: T[]) {
+    const index: Record<string, T> = {};
+
+    for (const item of list) {
+      index[item.id] = item;
+    }
+
+    return index;
+  }
 }

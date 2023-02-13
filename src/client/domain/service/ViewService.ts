@@ -9,6 +9,10 @@ export enum ViewTypes {
   // Cards = 'cards',
 }
 
+export function isViewTypes(key: string): key is ViewTypes {
+  return (Object.values(ViewTypes) as string[]).includes(key);
+}
+
 export enum NoteExplorerPanel {
   Tree = 'tree',
   Ranking = 'ranking',

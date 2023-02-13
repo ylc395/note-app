@@ -57,11 +57,13 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
       schema: { tableName: noteTable },
     } = this;
 
-    const sql = RecyclableRepository.withoutRecyclables(this.knex, 'parent', EntityTypes.Note)
+    const sql = RecyclableRepository.withoutRecyclables(this.knex.queryBuilder(), 'parent', knex.raw(EntityTypes.Note))
       .select<(Row & { childrenCount: number })[]>(knex.raw('parent.*'), knex.raw('count(child.id) as childrenCount'))
       .from(`${noteTable} as parent`)
       .leftJoin(
-        RecyclableRepository.withoutRecyclables(this.knex, noteTable, EntityTypes.Note).from(noteTable).as('child'),
+        RecyclableRepository.withoutRecyclables(this.knex.queryBuilder(), noteTable, knex.raw(EntityTypes.Note))
+          .from(noteTable)
+          .as('child'),
         'child.parentId',
         'parent.id',
       )
@@ -122,7 +124,11 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
       knex,
       schema: { tableName: noteTable },
     } = this;
-    const rows = await RecyclableRepository.withoutRecyclables(this.knex, 'descendants', EntityTypes.Note)
+    const rows: { id: string }[] = await RecyclableRepository.withoutRecyclables(
+      this.knex.queryBuilder(),
+      'descendants',
+      knex.raw(EntityTypes.Note),
+    )
       .withRecursive('descendants', (qb) => {
         qb.select('id', 'parentId')
           .from(noteTable)
@@ -136,7 +142,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
           );
         // todo: add a limit statement to stop infinite recursive
       })
-      .select(knex.raw('descendants.*'))
+      .select('descendants.id')
       .from('descendants');
 
     return rows.map(({ id }) => String(id));
