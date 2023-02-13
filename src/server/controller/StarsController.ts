@@ -15,7 +15,7 @@ export default class StarsController {
   }
 
   @Get('/stars')
-  async queryAll(): Promise<StarRecord[]> {
+  async queryAll(): Promise<Required<StarRecord>[]> {
     return this.starService.query();
   }
 }

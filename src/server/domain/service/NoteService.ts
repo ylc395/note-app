@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import omit from 'lodash/omit';
+import groupBy from 'lodash/groupBy';
 import intersection from 'lodash/intersection';
 
 import { Transaction } from 'infra/Database';
@@ -108,7 +109,21 @@ export default class NoteService extends BaseService {
       throw new Error('invalid id');
     }
 
-    return await this.notes.findTreeFragment(noteId);
+    const notes = await this.notes.findTreeFragment(noteId);
+    const parents = groupBy(notes, 'parentId');
+    const result: NoteVO[] = notes.filter(({ parentId }) => parentId === null);
+
+    for (let i = 0; result[i]; i++) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const { id } = result[i]!;
+      const children = parents[id];
+
+      if (children) {
+        result.push(...children);
+      }
+    }
+
+    return result;
   }
 
   private async assertValidChanges(notes: NotesDTO) {
@@ -119,6 +134,10 @@ export default class NoteService extends BaseService {
     }
 
     const parentChangedNotes = notes.filter((parent) => typeof parent !== undefined);
+
+    if (parentChangedNotes.length === 0) {
+      return;
+    }
 
     for (const { parentId, id } of parentChangedNotes) {
       if (parentId === id) {

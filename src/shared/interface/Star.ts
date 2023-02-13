@@ -10,4 +10,5 @@ export type StarsDTO = { ids: string[] };
 export interface StarRecord {
   id: string;
   type: EntityTypes;
+  title?: string;
 }

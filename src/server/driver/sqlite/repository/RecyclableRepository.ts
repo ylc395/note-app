@@ -1,3 +1,5 @@
+import type { Knex } from 'knex';
+
 import type { EntityTypes } from 'interface/Entity';
 import type { RecyclablesRepository } from 'service/repository/RecyclableRepository';
 
@@ -14,5 +16,17 @@ export default class SqliteRecyclableRepository extends BaseRepository<Row> impl
       .returning(this.knex.raw('*'));
 
     return recyclablesRows.map((row) => ({ deletedAt: row.deletedAt, id: String(row.entityId), type: row.entityType }));
+  }
+
+  static withoutRecyclables(knex: Knex, joinTable: string, entityType: EntityTypes) {
+    const recyclableTable = schema.tableName;
+
+    return knex
+      .queryBuilder()
+      .leftJoin(recyclableTable, function () {
+        this.on(`${recyclableTable}.entityType`, '=', knex.raw(entityType));
+        this.on(`${recyclableTable}.entityId`, `${joinTable}.id`);
+      })
+      .whereNull(`${recyclableTable}.entityId`);
   }
 }

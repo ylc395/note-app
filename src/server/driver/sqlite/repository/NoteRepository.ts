@@ -1,16 +1,15 @@
 import omit from 'lodash/omit';
 import omitBy from 'lodash/omitBy';
 import mapKeys from 'lodash/mapKeys';
-import groupBy from 'lodash/groupBy';
 import isUndefined from 'lodash/isUndefined';
 
-import type { NoteRepository, NoteQuery } from 'service/repository/NoteRepository';
 import { EntityTypes } from 'interface/Entity';
+import type { NoteRepository, NoteQuery } from 'service/repository/NoteRepository';
 import type { NoteDTO, NoteVO, NoteBodyDTO, NotesDTO } from 'interface/Note';
 
 import BaseRepository from './BaseRepository';
+import RecyclableRepository from './RecyclableRepository';
 import noteSchema, { type Row } from '../schema/noteSchema';
-import recyclableSchema from '../schema/recyclableSchema';
 
 export default class SqliteNoteRepository extends BaseRepository<Row> implements NoteRepository {
   protected readonly schema = noteSchema;
@@ -58,10 +57,14 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
       schema: { tableName: noteTable },
     } = this;
 
-    const sql = this.withoutRecyclables('parent')
+    const sql = RecyclableRepository.withoutRecyclables(this.knex, 'parent', EntityTypes.Note)
       .select<(Row & { childrenCount: number })[]>(knex.raw('parent.*'), knex.raw('count(child.id) as childrenCount'))
       .from(`${noteTable} as parent`)
-      .leftJoin(this.withoutRecyclables(noteTable).from(noteTable).as('child'), 'child.parentId', 'parent.id')
+      .leftJoin(
+        RecyclableRepository.withoutRecyclables(this.knex, noteTable, EntityTypes.Note).from(noteTable).as('child'),
+        'child.parentId',
+        'parent.id',
+      )
       .groupBy('parent.id');
 
     const where = mapKeys(omitBy(query, isUndefined), (_, key) => `parent.${key}`);
@@ -119,7 +122,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
       knex,
       schema: { tableName: noteTable },
     } = this;
-    const rows = await this.withoutRecyclables('descendants')
+    const rows = await RecyclableRepository.withoutRecyclables(this.knex, 'descendants', EntityTypes.Note)
       .withRecursive('descendants', (qb) => {
         qb.select('id', 'parentId')
           .from(noteTable)
@@ -144,29 +147,28 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
       knex,
       schema: { tableName: noteTable },
     } = this;
-    const ids = await knex()
+    const ancestorIds = await knex
+      .queryBuilder()
       .withRecursive('ancestors', (qb) =>
         qb
           .from(noteTable)
           .where('id', noteId)
-          .orWhere('parentId', noteId)
-          .orWhereNull('parentId')
           .union((qb) =>
             qb
               .select(knex.raw(`${noteTable}.*`))
               .from('ancestors')
-              .join(knex.raw(noteTable), function () {
-                this.on(`${noteTable}.id`, 'ancestors.parentId');
-                this.orOn('ancestors.id', `${noteTable}.parentId`);
-              }),
+              .join(knex.raw(noteTable), `${noteTable}.id`, 'ancestors.parentId'),
           ),
       )
-      .select('ancestors.id', 'ancestors.parentId')
+      .select('ancestors.id')
       .from('ancestors');
 
-    const rows = await this.findAll({ id: ids.map(({ id }) => id) });
+    const children = [
+      ...(await this.findAll({ parentId: null })),
+      ...(await this.findAll({ parentId: ancestorIds.map(({ id }) => id) })),
+    ];
 
-    return this.topoSort(rows);
+    return children;
   }
 
   private rowToVO(row: Row & { childrenCount?: number }, childrenCount?: number): NoteVO {
@@ -177,45 +179,5 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
       isReadonly: Boolean(row.isReadonly),
       childrenCount: childrenCount || row.childrenCount || 0,
     };
-  }
-
-  private topoSort(rows: NoteVO[]) {
-    const result: NoteVO[] = [];
-    const rowsToCheck: NoteVO[] = [];
-
-    for (const row of rows) {
-      if (row.parentId === null) {
-        result.push(row);
-      } else {
-        rowsToCheck.push(row);
-      }
-    }
-
-    const parents = groupBy(rowsToCheck, 'parentId');
-
-    for (let i = 0; result[i]; i++) {
-      const node = result[i];
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const children = parents[node!.id];
-
-      if (children) {
-        result.push(...children);
-      }
-    }
-
-    return result;
-  }
-
-  private withoutRecyclables(joinTable: string) {
-    const recyclableTable = recyclableSchema.tableName;
-    const { knex } = this;
-
-    return this.knex
-      .queryBuilder()
-      .leftJoin(recyclableTable, function () {
-        this.on(`${recyclableTable}.entityType`, '=', knex.raw(EntityTypes.Note));
-        this.on(`${recyclableTable}.entityId`, `${joinTable}.id`);
-      })
-      .whereNull(`${recyclableTable}.entityId`);
   }
 }
