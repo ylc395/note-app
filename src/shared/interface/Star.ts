@@ -8,7 +8,7 @@ export const starsDTOSchema = object({
 export type StarsDTO = { ids: string[] };
 
 export interface StarRecord {
-  id: string;
-  type: EntityTypes;
+  entityId: string;
+  entityType: EntityTypes;
   title?: string;
 }

@@ -13,7 +13,7 @@ export default class SqliteStarRepository extends BaseRepository<Row> implements
     const rows = ids.map((id) => ({ entityId: Number(id), entityType: type }));
     const starRows: Row[] = await this.knex<Row>(this.schema.tableName).insert(rows).returning(this.knex.raw('*'));
 
-    return starRows.map((row) => ({ id: String(row.entityId), type: row.entityType }));
+    return starRows.map((row) => ({ ...row, entityId: String(row.entityId) }));
   }
 
   async findAll() {
@@ -31,6 +31,6 @@ export default class SqliteStarRepository extends BaseRepository<Row> implements
         this.on(`${starTableName}.entityId`, `${noteTableName}.id`);
       });
 
-    return starRows.map((row) => ({ id: String(row.entityId), type: row.entityType, title: row.title }));
+    return starRows.map((row) => ({ ...row, entityId: String(row.entityId) }));
   }
 }

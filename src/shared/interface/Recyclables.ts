@@ -9,6 +9,6 @@ export type RecyclablesDTO = { ids: string[] };
 
 export interface RecyclableRecord {
   deletedAt: number;
-  type: EntityTypes;
-  id: string;
+  entityType: EntityTypes;
+  entityId: string;
 }

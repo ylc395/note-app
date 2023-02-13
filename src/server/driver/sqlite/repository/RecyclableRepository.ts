@@ -15,7 +15,7 @@ export default class SqliteRecyclableRepository extends BaseRepository<Row> impl
       .insert(rows)
       .returning(this.knex.raw('*'));
 
-    return recyclablesRows.map((row) => ({ deletedAt: row.deletedAt, id: String(row.entityId), type: row.entityType }));
+    return recyclablesRows.map((row) => ({ ...row, entityId: String(row.entityId) }));
   }
 
   static withoutRecyclables(knex: Knex, joinTable: string, entityType: EntityTypes) {
