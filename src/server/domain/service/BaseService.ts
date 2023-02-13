@@ -7,7 +7,7 @@ interface CachePropertyDescriptor<T, R> extends PropertyDescriptor {
   get?: (this: T) => R;
 }
 
-export function cache<T, R>(target: BaseService, name: PropertyKey, descriptor: CachePropertyDescriptor<T, R>) {
+function cache<T, R>(target: BaseService, name: PropertyKey, descriptor: CachePropertyDescriptor<T, R>) {
   const getter = descriptor.get;
 
   if (!getter) throw new TypeError('Getter property descriptor expected');
@@ -38,5 +38,10 @@ export default class BaseService implements Repositories {
   @cache
   get recyclables() {
     return this.db.getRepository('recyclables');
+  }
+
+  @cache
+  get stars() {
+    return this.db.getRepository('stars');
   }
 }

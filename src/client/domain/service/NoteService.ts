@@ -10,11 +10,13 @@ import { NoteDTO, NoteVO as Note, NotesDTO, NoteVO, normalizeTitle } from 'inter
 import type { RecyclablesDTO } from 'interface/Recyclables';
 
 import WorkbenchService, { WorkbenchEvents } from './WorkbenchService';
+import StarService from './StarService';
 
 @singleton()
 export default class NoteService {
   private readonly remote = container.resolve(remoteToken);
   private readonly workbench = container.resolve(WorkbenchService);
+  private readonly star = container.resolve(StarService);
   private readonly userFeedback = container.resolve(userFeedbackToken);
   private readonly userInput = container.resolve(userInputToken);
   readonly noteTree = new NoteTree();
@@ -198,6 +200,8 @@ export default class NoteService {
         return this.moveNotes(targets);
       case 'edit':
         return this.editNotes(targets);
+      case 'star':
+        return this.star.starNotes(targets);
       default:
         break;
     }
