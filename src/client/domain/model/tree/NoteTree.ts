@@ -64,6 +64,7 @@ export default class NoteTree {
         userCreatedAt: 0,
         createdAt: 0,
         userUpdatedAt: 0,
+        isStar: false,
       },
     };
 

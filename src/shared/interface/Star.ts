@@ -13,3 +13,7 @@ export interface StarRecord {
   id: string;
   title?: string;
 }
+
+export interface Starable {
+  isStar: boolean;
+}

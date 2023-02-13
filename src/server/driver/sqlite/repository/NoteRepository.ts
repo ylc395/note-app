@@ -10,6 +10,12 @@ import type { NoteDTO, NoteVO, NoteBodyDTO, NotesDTO } from 'interface/Note';
 import BaseRepository from './BaseRepository';
 import RecyclableRepository from './RecyclableRepository';
 import noteSchema, { type Row } from '../schema/noteSchema';
+import starSchema, { type Row as StarRow } from '../schema/starSchema';
+
+interface NoteVOPatch {
+  childrenCount?: NoteVO['childrenCount'];
+  starId?: StarRow['id'] | null;
+}
 
 export default class SqliteNoteRepository extends BaseRepository<Row> implements NoteRepository {
   protected readonly schema = noteSchema;
@@ -37,7 +43,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
     }
 
     const childrenCount = await this.knex<Row>(this.schema.tableName).where('parentId', row.id).count({ count: 'id' });
-    return this.rowToVO(row, Number(childrenCount[0]?.count));
+    return this.rowToVO(row, { childrenCount: Number(childrenCount[0]?.count) });
   }
 
   async updateBody(id: NoteVO['id'], noteBody: NoteBodyDTO) {
@@ -58,7 +64,11 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
     } = this;
 
     const sql = RecyclableRepository.withoutRecyclables(this.knex.queryBuilder(), 'parent', knex.raw(EntityTypes.Note))
-      .select<(Row & { childrenCount: number })[]>(knex.raw('parent.*'), knex.raw('count(child.id) as childrenCount'))
+      .select<(Row & { childrenCount: number; starId: number | null })[]>(
+        knex.raw('parent.*'),
+        knex.raw('count(child.id) as childrenCount'),
+        knex.raw(`${starSchema.tableName}.id as starId`),
+      )
       .from(`${noteTable} as parent`)
       .leftJoin(
         RecyclableRepository.withoutRecyclables(this.knex.queryBuilder(), noteTable, knex.raw(EntityTypes.Note))
@@ -67,6 +77,10 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
         'child.parentId',
         'parent.id',
       )
+      .leftJoin(starSchema.tableName, function () {
+        this.on(`${starSchema.tableName}.entityType`, knex.raw(EntityTypes.Note));
+        this.on(`${starSchema.tableName}.entityId`, 'parent.id');
+      })
       .groupBy('parent.id');
 
     const where = mapKeys(omitBy(query, isUndefined), (_, key) => `parent.${key}`);
@@ -177,13 +191,14 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
     return children;
   }
 
-  private rowToVO(row: Row & { childrenCount?: number }, childrenCount?: number): NoteVO {
+  private rowToVO(row: Row & NoteVOPatch, patch?: NoteVOPatch): NoteVO {
     return {
       ...omit(row, 'body'),
       id: String(row.id),
       parentId: row.parentId ? String(row.parentId) : null,
       isReadonly: Boolean(row.isReadonly),
-      childrenCount: childrenCount || row.childrenCount || 0,
+      childrenCount: patch?.childrenCount || row.childrenCount || 0,
+      isStar: Boolean(patch?.starId || row.starId || false),
     };
   }
 }

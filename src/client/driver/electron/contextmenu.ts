@@ -16,6 +16,7 @@ export function createContextmenu(e: IpcMainInvokeEvent, menuItems: ContextmenuI
       menuItems.map((item) => ({
         ...item,
         click: 'key' in item ? () => (key = item.key) : undefined,
+        enabled: 'disabled' in item ? !item.disabled : true,
       })),
     );
 

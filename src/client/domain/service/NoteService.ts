@@ -155,6 +155,7 @@ export default class NoteService {
 
     const isMultiple = selectedNodes.size > 1 && selectedNodes.has(targetId);
     const noteIds = isMultiple ? Array.from(selectedNodes) : [targetId];
+    const note = this.noteTree.getNode(targetId).note;
 
     const description = noteIds.length + '项';
     const items: ContextmenuItem[] = isMultiple
@@ -173,7 +174,7 @@ export default class NoteService {
           { label: '在新窗口打开', key: 'delete' },
           { type: 'separator' },
           { label: '移动至...', key: 'move' },
-          { label: '收藏', key: 'star' },
+          { label: note.isStar ? '已收藏' : '收藏', key: 'star', disabled: note.isStar },
           { label: '制作副本', key: 'duplicate' },
           { label: '编辑', key: 'edit' },
           { type: 'separator' },

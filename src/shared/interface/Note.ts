@@ -1,6 +1,8 @@
 import { union, boolean, number, object, string, null as zodNull, type infer as Infer, array } from 'zod';
 import dayjs from 'dayjs';
 
+import type { Starable } from './Star';
+
 export const noteDTOSchema = object({
   title: string().optional(),
   isReadonly: boolean().optional(),
@@ -17,7 +19,7 @@ export type NotesDTO = Infer<typeof notesDTOSchema>;
 
 export type NoteDTO = Infer<typeof noteDTOSchema>;
 
-export interface NoteVO {
+export interface NoteVO extends Starable {
   title: string;
   isReadonly: boolean;
   id: string;
