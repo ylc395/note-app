@@ -1,11 +1,11 @@
 import { EntityTypes } from 'interface/Entity';
-import type { StarRepository } from 'service/repository/StarRepository';
+import type { StarRecord } from 'interface/Star';
+import type { StarRepository, StarQuery } from 'service/repository/StarRepository';
 
 import BaseRepository from './BaseRepository';
 import RecyclableRepository from './RecyclableRepository';
 import schema, { type Row } from '../schema/starSchema';
 import noteSchema from '../schema/noteSchema';
-import type { StarRecord } from 'interface/Star';
 
 export default class SqliteStarRepository extends BaseRepository<Row> implements StarRepository {
   protected readonly schema = schema;
@@ -17,21 +17,28 @@ export default class SqliteStarRepository extends BaseRepository<Row> implements
     return starRows.map((row) => ({ ...row, entityId: String(row.entityId), id: String(row.id) }));
   }
 
-  async findAll() {
+  async findAll(query?: StarQuery) {
     const noteTableName = noteSchema.tableName;
     const {
       knex,
       schema: { tableName: starTableName },
     } = this;
 
-    const query = this.knex(this.schema.tableName)
+    const qb = this.knex(this.schema.tableName)
       .select(knex.raw(`${starTableName}.*`))
       .join(noteTableName, function () {
         this.on(`${starTableName}.entityType`, knex.raw(EntityTypes.Note));
         this.on(`${starTableName}.entityId`, `${noteTableName}.id`);
       });
+
+    if (query) {
+      for (const [k, v] of Object.entries(query)) {
+        qb.andWhere(`${starTableName}.${k}`, Array.isArray(v) ? 'in' : '=', v);
+      }
+    }
+
     const starRows: Row[] = await RecyclableRepository.withoutRecyclables(
-      query,
+      qb,
       noteTableName,
       knex.raw(EntityTypes.Note),
     );

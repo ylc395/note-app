@@ -1,7 +1,4 @@
 import omit from 'lodash/omit';
-import omitBy from 'lodash/omitBy';
-import mapKeys from 'lodash/mapKeys';
-import isUndefined from 'lodash/isUndefined';
 
 import { EntityTypes } from 'interface/Entity';
 import type { NoteRepository, NoteQuery } from 'service/repository/NoteRepository';
@@ -83,14 +80,17 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
       })
       .groupBy('parent.id');
 
-    const where = mapKeys(omitBy(query, isUndefined), (_, key) => `parent.${key}`);
+    for (const [k, v] of Object.entries(query)) {
+      if (v === undefined) {
+        continue;
+      }
 
-    for (const [k, v] of Object.entries(where)) {
+      const newKey = `parent.${k}`;
       Array.isArray(v)
-        ? sql.andWhere(k, 'in', v)
+        ? sql.andWhere(newKey, 'in', v)
         : typeof v === 'boolean'
-        ? sql.andWhere(k, Number(v))
-        : sql.andWhere(k, v);
+        ? sql.andWhere(newKey, Number(v))
+        : sql.andWhere(newKey, v);
     }
 
     const rows = await sql;

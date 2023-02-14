@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { EntityTypes } from 'interface/Entity';
+import differenceWith from 'lodash/differenceWith';
 
 import { Transaction } from 'infra/Database';
+import { EntityTypes } from 'interface/Entity';
 import { normalizeTitle } from 'interface/Note';
+import type { StarRecord } from 'interface/Star';
 
 import BaseService from './BaseService';
-import type { StarRecord } from 'interface/Star';
 
 @Injectable()
 export default class StarService extends BaseService {
@@ -29,7 +30,10 @@ export default class StarService extends BaseService {
       throw new Error('entities not available');
     }
 
-    return await this.stars.put(type, ids);
+    const existedStars = await this.stars.findAll({ entityType: type, entityId: ids });
+    const newIds = differenceWith(ids, existedStars, (id, star) => id === star.entityId);
+
+    return [...existedStars, ...(newIds.length > 0 ? await this.stars.put(type, newIds) : [])];
   }
 
   async query() {
