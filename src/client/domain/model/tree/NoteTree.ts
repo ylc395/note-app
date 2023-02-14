@@ -110,9 +110,9 @@ export default class NoteTree {
     return node;
   }
 
-  getNode(id: string, noThrow: true): NoteTreeNode | undefined;
-  getNode(id: string): NoteTreeNode;
-  @action.bound getNode(id: string, noThrow?: true) {
+  getNode(id: NoteTreeNode['key'] | Note['id'], noThrow: true): NoteTreeNode | undefined;
+  getNode(id: NoteTreeNode['key'] | Note['id']): NoteTreeNode;
+  @action.bound getNode(id: NoteTreeNode['key'] | Note['id'], noThrow?: true) {
     const node = this.nodesMap[id];
 
     if (!node && !noThrow) {
@@ -122,11 +122,11 @@ export default class NoteTree {
     return node;
   }
 
-  hasNode(id: string) {
+  hasNode(id: NoteTreeNode['key'] | Note['id']) {
     return Boolean(this.nodesMap[id]);
   }
 
-  private readonly loadTreeFragment = async (id: Note['id']) => {
+  private readonly loadTreeFragment = async (id: Note['id'] | NoteTreeNode['key']) => {
     const { body: fragment } = await this.remote.get<void, Note[]>(`/notes/${id}/tree-fragment`);
 
     runInAction(() => {

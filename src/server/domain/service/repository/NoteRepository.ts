@@ -1,9 +1,9 @@
 import type { NoteBodyDTO, NoteDTO, NoteVO, NotesDTO } from 'interface/Note';
 
 export type NoteQuery = {
-  parentId?: string | string[] | null;
-  id?: string | string[];
-  isReadonly?: boolean;
+  parentId?: NoteVO['parentId'] | NonNullable<NoteVO['id']>[];
+  id?: NoteVO['id'] | NoteVO['id'][];
+  isReadonly?: NoteVO['isReadonly'];
 };
 
 export interface NoteRepository {

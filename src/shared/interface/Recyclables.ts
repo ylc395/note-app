@@ -1,8 +1,8 @@
-import { object, string, array } from 'zod';
-import type { EntityTypes } from './Entity';
+import { object, array } from 'zod';
+import { type EntityTypes, type EntityId, entityId } from './Entity';
 
 export const RecyclablesDTOSchema = object({
-  ids: array(string()).nonempty(),
+  ids: array(entityId()).nonempty(),
 });
 
 export type RecyclablesDTO = { ids: string[] };
@@ -10,5 +10,5 @@ export type RecyclablesDTO = { ids: string[] };
 export interface RecyclableRecord {
   deletedAt: number;
   entityType: EntityTypes;
-  entityId: string;
+  entityId: EntityId;
 }

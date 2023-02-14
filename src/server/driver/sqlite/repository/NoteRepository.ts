@@ -1,6 +1,6 @@
 import omit from 'lodash/omit';
 
-import { EntityTypes } from 'interface/Entity';
+import { type EntityId, EntityTypes } from 'interface/Entity';
 import type { NoteRepository, NoteQuery } from 'service/repository/NoteRepository';
 import type { NoteDTO, NoteVO, NoteBodyDTO, NotesDTO } from 'interface/Note';
 
@@ -112,7 +112,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
   }
 
   async batchUpdate(notes: NotesDTO) {
-    const ids: string[] = [];
+    const ids: EntityId[] = [];
 
     for (const note of notes) {
       const row = await this.createOrUpdate(note, note.id);

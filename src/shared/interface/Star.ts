@@ -1,16 +1,16 @@
-import { object, array, string } from 'zod';
-import type { EntityTypes } from './Entity';
+import { object, array } from 'zod';
+import { type EntityTypes, type EntityId, entityId } from './Entity';
 
 export const starsDTOSchema = object({
-  ids: array(string()).nonempty(),
+  ids: array(entityId()).nonempty(),
 });
 
 export type StarsDTO = { ids: string[] };
 
 export interface StarRecord {
-  entityId: string;
+  entityId: EntityId;
   entityType: EntityTypes;
-  id: string;
+  id: EntityId;
   title?: string;
 }
 

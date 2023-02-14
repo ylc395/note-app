@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import differenceWith from 'lodash/differenceWith';
 
 import { Transaction } from 'infra/Database';
-import { EntityTypes } from 'interface/Entity';
+import { type EntityId, EntityTypes } from 'interface/Entity';
 import { normalizeTitle } from 'interface/Note';
 import type { StarRecord } from 'interface/Star';
 
@@ -11,7 +11,7 @@ import BaseService from './BaseService';
 @Injectable()
 export default class StarService extends BaseService {
   @Transaction
-  async put(type: EntityTypes, ids: string[]) {
+  async put(type: EntityTypes, ids: EntityId[]) {
     if (ids.length === 0) {
       throw new Error('no ids');
     }

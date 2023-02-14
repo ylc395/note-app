@@ -1,4 +1,4 @@
-import { EntityTypes } from 'interface/Entity';
+import { EntityTypes, type EntityId } from 'interface/Entity';
 import type { StarRecord } from 'interface/Star';
 import type { StarRepository, StarQuery } from 'service/repository/StarRepository';
 
@@ -10,7 +10,7 @@ import noteSchema from '../schema/noteSchema';
 export default class SqliteStarRepository extends BaseRepository<Row> implements StarRepository {
   protected readonly schema = schema;
 
-  async put(type: EntityTypes, ids: string[]) {
+  async put(type: EntityTypes, ids: EntityId[]) {
     const rows = ids.map((id) => ({ entityId: Number(id), entityType: type }));
     const starRows: Row[] = await this.knex<Row>(this.schema.tableName).insert(rows).returning(this.knex.raw('*'));
 

@@ -5,7 +5,7 @@ import pull from 'lodash/pull';
 
 import { token as remoteToken } from 'infra/Remote';
 import { token as userFeedbackToken } from 'infra/UserFeedback';
-import { EntityTypes } from 'interface/Entity';
+import { EntityId, EntityTypes } from 'interface/Entity';
 import type { StarRecord, StarsDTO } from 'interface/Star';
 
 const paths = {
@@ -35,7 +35,7 @@ export default class StarService extends EventEmitter<StarEvents> {
   private readonly userFeedback = container.resolve(userFeedbackToken);
   private readonly remote = container.resolve(remoteToken);
   @observable stars?: Required<StarRecord>[];
-  private async star(type: EntityTypes, ids: string[]) {
+  private async star(type: EntityTypes, ids: EntityId[]) {
     const { body: stars } = await this.remote.put<StarsDTO, StarRecord[]>(`/stars/${paths[type]}`, { ids });
     this.userFeedback.message.success({ content: '已收藏' });
 
@@ -44,7 +44,7 @@ export default class StarService extends EventEmitter<StarEvents> {
     }
   }
 
-  starNotes(ids: string[]) {
+  starNotes(ids: EntityId[]) {
     return this.star(EntityTypes.Note, ids);
   }
 

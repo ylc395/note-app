@@ -2,6 +2,7 @@ import { union, boolean, number, object, string, null as zodNull, type infer as 
 import dayjs from 'dayjs';
 
 import type { Starable } from './Star';
+import { type EntityId, entityId } from './Entity';
 
 export const noteDTOSchema = object({
   title: string().optional(),
@@ -22,8 +23,8 @@ export type NoteDTO = Infer<typeof noteDTOSchema>;
 export interface NoteVO extends Starable {
   title: string;
   isReadonly: boolean;
-  id: string;
-  parentId: string | null;
+  id: EntityId;
+  parentId: NoteVO['id'] | null;
   icon: string | null;
   childrenCount: number;
   updatedAt: number;
@@ -34,7 +35,7 @@ export interface NoteVO extends Starable {
 
 export const noteQuerySchema = object({
   parentId: union([zodNull(), string()]).optional(),
-  id: string().optional(),
+  id: entityId().optional(),
 });
 
 export type NoteBodyDTO = string;

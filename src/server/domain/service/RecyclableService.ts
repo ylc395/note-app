@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
 
-import { EntityTypes } from 'interface/Entity';
+import { EntityId, EntityTypes } from 'interface/Entity';
 import { Transaction } from 'infra/Database';
 import BaseService from './BaseService';
 
 @Injectable()
 export default class RecyclableService extends BaseService {
   @Transaction
-  async put(type: EntityTypes, ids: string[]) {
+  async put(type: EntityTypes, ids: EntityId[]) {
     let isAvailable: boolean;
-    let allIds: string[];
+    let allIds: EntityId[];
 
     switch (type) {
       case EntityTypes.Note:
