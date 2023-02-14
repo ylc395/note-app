@@ -3,7 +3,7 @@ import { Controller } from '@nestjs/common';
 import { EntityTypes } from 'interface/Entity';
 import { type StarsDTO, starsDTOSchema, StarRecord } from 'interface/Star';
 import StarService from 'service/StarService';
-import { Get, Put, Body, createSchemaPipe } from './decorators';
+import { Get, Put, Body, createSchemaPipe, Delete, Param } from './decorators';
 
 @Controller()
 export default class StarsController {
@@ -17,5 +17,10 @@ export default class StarsController {
   @Get('/stars')
   async queryAll(): Promise<Required<StarRecord>[]> {
     return this.starService.query();
+  }
+
+  @Delete('/stars/:id')
+  async deleteStar(@Param('id') id: string): Promise<void> {
+    return this.starService.remove(id);
   }
 }

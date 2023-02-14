@@ -35,6 +35,7 @@ export default class StarService {
   }
 
   async removeStar(starId: StarRecord['id']) {
+    await this.remote.delete(`/stars/${starId}`);
     runInAction(() => {
       if (!this.stars) {
         throw new Error('no stars');

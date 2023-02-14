@@ -5,6 +5,7 @@ import BaseRepository from './BaseRepository';
 import RecyclableRepository from './RecyclableRepository';
 import schema, { type Row } from '../schema/starSchema';
 import noteSchema from '../schema/noteSchema';
+import type { StarRecord } from 'interface/Star';
 
 export default class SqliteStarRepository extends BaseRepository<Row> implements StarRepository {
   protected readonly schema = schema;
@@ -36,5 +37,9 @@ export default class SqliteStarRepository extends BaseRepository<Row> implements
     );
 
     return starRows.map((row) => ({ ...row, entityId: String(row.entityId), id: String(row.id) }));
+  }
+
+  async remove(id: StarRecord['id']) {
+    await this.knex(this.schema.tableName).delete().where('id', id);
   }
 }

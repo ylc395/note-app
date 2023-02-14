@@ -5,6 +5,7 @@ import { Transaction } from 'infra/Database';
 import { normalizeTitle } from 'interface/Note';
 
 import BaseService from './BaseService';
+import type { StarRecord } from 'interface/Star';
 
 @Injectable()
 export default class StarService extends BaseService {
@@ -47,5 +48,9 @@ export default class StarService extends BaseService {
 
       throw new Error('unknown type');
     });
+  }
+
+  async remove(id: StarRecord['id']) {
+    await this.stars.remove(id);
   }
 }
