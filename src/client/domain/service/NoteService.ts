@@ -10,7 +10,7 @@ import { NoteDTO, NoteVO as Note, NotesDTO, NoteVO, normalizeTitle } from 'inter
 import type { RecyclablesDTO } from 'interface/Recyclables';
 
 import WorkbenchService, { WorkbenchEvents } from './WorkbenchService';
-import StarService from './StarService';
+import StarService, { StarEvents } from './StarService';
 
 @singleton()
 export default class NoteService {
@@ -23,6 +23,8 @@ export default class NoteService {
 
   constructor() {
     this.workbench.on(WorkbenchEvents.NoteUpdated, this.noteTree.updateTreeByNote);
+    this.star.on(StarEvents.NoteAdded, (noteId) => this.noteTree.toggleStar(noteId, true));
+    this.star.on(StarEvents.NoteRemoved, (noteId) => this.noteTree.toggleStar(noteId, false));
   }
 
   readonly createNote = async (parentId?: Note['parentId']) => {

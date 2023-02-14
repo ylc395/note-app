@@ -1,6 +1,7 @@
+import EventEmitter from 'eventemitter3';
 import { container, singleton } from 'tsyringe';
 import { observable, makeObservable, runInAction } from 'mobx';
-import remove from 'lodash/remove';
+import pull from 'lodash/pull';
 
 import { token as remoteToken } from 'infra/Remote';
 import { token as userFeedbackToken } from 'infra/UserFeedback';
@@ -11,9 +12,23 @@ const paths = {
   [EntityTypes.Note]: 'notes',
 } as const;
 
+export enum StarEvents {
+  NoteAdded = 'star.note.added',
+  NoteRemoved = 'star.note.removed',
+}
+
+const removeEventsMap: Record<EntityTypes, StarEvents> = {
+  [EntityTypes.Note]: StarEvents.NoteRemoved,
+};
+
+const addEventsMap: Record<EntityTypes, StarEvents> = {
+  [EntityTypes.Note]: StarEvents.NoteAdded,
+};
+
 @singleton()
-export default class StarService {
+export default class StarService extends EventEmitter<StarEvents> {
   constructor() {
+    super();
     makeObservable(this);
   }
 
@@ -21,8 +36,12 @@ export default class StarService {
   private readonly remote = container.resolve(remoteToken);
   @observable stars?: Required<StarRecord>[];
   private async star(type: EntityTypes, ids: string[]) {
-    await this.remote.put<StarsDTO>(`/stars/${paths[type]}`, { ids });
+    const { body: stars } = await this.remote.put<StarsDTO, StarRecord[]>(`/stars/${paths[type]}`, { ids });
     this.userFeedback.message.success({ content: '已收藏' });
+
+    for (const star of stars) {
+      this.emit(addEventsMap[type], star.entityId);
+    }
   }
 
   starNotes(ids: string[]) {
@@ -35,13 +54,26 @@ export default class StarService {
   }
 
   async removeStar(starId: StarRecord['id']) {
+    if (!this.stars) {
+      throw new Error('no stars');
+    }
+
+    const starToRemove = this.stars.find(({ id }) => id === starId);
+
+    if (!starToRemove) {
+      throw new Error('no star to remove');
+    }
+
     await this.remote.delete(`/stars/${starId}`);
+
     runInAction(() => {
       if (!this.stars) {
         throw new Error('no stars');
       }
 
-      remove(this.stars, ({ id }) => starId === id);
+      pull(this.stars, starToRemove);
     });
+
+    this.emit(removeEventsMap[starToRemove.entityType], starToRemove.entityId);
   }
 }
