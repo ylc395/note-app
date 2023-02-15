@@ -1,11 +1,14 @@
 import { observer } from 'mobx-react-lite';
 import { useCallback, useState, MouseEvent } from 'react';
 import { Form, DatePicker, Button, Checkbox, Popover } from 'antd';
+import { EllipsisOutlined } from '@ant-design/icons';
 import type { CheckboxChangeEvent } from 'antd/es/checkbox';
 import dayjs from 'dayjs';
+import uniq from 'lodash/uniq';
 
 import NoteMetadata from 'model/form/NoteMetadata';
 import type { NoteMetadata as NoteMetadataValues } from 'model/form/type';
+import type { NoteVO } from 'interface/Note';
 
 import { useUpdateTimeField, FORM_ITEM_LAYOUT } from './utils';
 import { EmojiPicker, Emoji } from './Emoji';
@@ -14,9 +17,10 @@ interface Props {
   onSubmit: (metadata: NoteMetadataValues) => void;
   onCancel: () => void;
   metadata: NoteMetadataValues;
+  icons: NoteVO['icon'][];
 }
 
-export default observer(function NoteMetadataEditor({ onSubmit, onCancel, metadata }: Props) {
+export default observer(function NoteMetadataEditor({ onSubmit, onCancel, metadata, icons }: Props) {
   const [noteMetadata] = useState(() => {
     return new NoteMetadata(metadata);
   });
@@ -42,12 +46,24 @@ export default observer(function NoteMetadataEditor({ onSubmit, onCancel, metada
     setIsPickingEmoji(!isPickingEmoji);
   };
 
+  const uniqIcons = uniq(icons).filter((icon) => icon);
+  const showClear = noteMetadata.values.icon || uniqIcons.length > 0;
+
   return (
     <div className="mt-4">
       <Form {...FORM_ITEM_LAYOUT}>
         <Form.Item label="图标">
           <div className="flex items-center">
-            <Emoji id={noteMetadata.values.icon} className="mr-4" />
+            {noteMetadata.values.icon !== undefined ? (
+              <Emoji id={noteMetadata.values.icon} className="mr-4" />
+            ) : (
+              <span className="mr-4 flex items-end">
+                {uniqIcons.slice(0, 2).map((icon, index) => (
+                  <Emoji key={index} id={icon} />
+                ))}
+                {uniqIcons.length > 2 && <EllipsisOutlined />}
+              </span>
+            )}
             <Popover
               trigger="click"
               open={isPickingEmoji}
@@ -59,7 +75,7 @@ export default observer(function NoteMetadataEditor({ onSubmit, onCancel, metada
                 选择 emoji
               </Button>
             </Popover>
-            {noteMetadata.values.icon && (
+            {showClear && (
               <Button size="small" className="ml-2" onClick={() => noteMetadata.updateValue('icon', null)}>
                 清除
               </Button>

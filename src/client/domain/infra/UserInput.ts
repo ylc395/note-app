@@ -1,6 +1,9 @@
 import type { InjectionToken } from 'tsyringe';
+
 import type { NoteTreeNode } from 'model/tree/type';
 import type { NoteMetadata } from 'model/form/type';
+import type { NoteVO } from 'interface/Note';
+
 import type { ModalOptions, ContextmenuItem } from './ui';
 
 export interface CommonInputs {
@@ -10,8 +13,11 @@ export interface CommonInputs {
 }
 
 export interface NoteInputs {
-  getNoteIdByTree: (selectedNodes: NoteTreeNode[]) => Promise<string | null | undefined>;
-  editNoteMetadata: (metadata: NoteMetadata, note: { length: number; title: string }) => Promise<NoteMetadata>;
+  getNoteIdByTree: (selectedNodes: NoteTreeNode[]) => Promise<NoteVO['parentId'] | undefined>;
+  editNoteMetadata: (
+    metadata: NoteMetadata,
+    note: { length: number; title: string; icons: NoteVO['icon'][] },
+  ) => Promise<NoteMetadata>;
 }
 
 export default interface UserInput {

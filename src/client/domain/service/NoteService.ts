@@ -125,7 +125,7 @@ export default class NoteService extends EventEmitter<NoteEvents> {
     const noteMetadata =
       notesToEdit.length > 1
         ? {
-            icon: null,
+            icon: undefined,
             isReadonly: notesToEdit.reduce((result: boolean | undefined, { isReadonly }) => {
               if (result === undefined || result !== isReadonly) {
                 return undefined;
@@ -139,6 +139,7 @@ export default class NoteService extends EventEmitter<NoteEvents> {
     const updatedNoteMetadata = await this.userInput.note.editNoteMetadata(noteMetadata, {
       length: notesToEdit.length,
       title: notesToEdit.length === 1 ? normalizeTitle(firstNote) : '',
+      icons: notesToEdit.map(({ icon }) => icon),
     });
     const result: NotesDTO = notesToEdit.map(({ id }) => ({ id, ...updatedNoteMetadata }));
     const { body: notes } = await this.remote.patch<NotesDTO, NoteVO[]>('/notes', result);

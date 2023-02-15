@@ -33,7 +33,7 @@ export function EmojiPicker({ onSelect, onClickOutside }: Props) {
 
 let inited = false;
 // eslint-disable-next-line mobx/missing-observer
-export function Emoji({ id, className }: { id: string | null; className?: string }) {
+export function Emoji({ id, className }: { id?: string | null; className?: string }) {
   useEffect(() => {
     if (inited) {
       return;

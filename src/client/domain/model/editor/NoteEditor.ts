@@ -45,7 +45,7 @@ export default class NoteEditor extends EntityEditor {
           return;
         }
 
-        if (typeof note.icon !== 'undefined' || typeof note.parentId !== 'undefined') {
+        if (note.icon !== undefined || note.parentId !== undefined || note.title !== undefined) {
           this.loadBreadcrumb();
           return true;
         }

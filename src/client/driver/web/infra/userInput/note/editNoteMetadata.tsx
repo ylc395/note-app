@@ -14,6 +14,7 @@ const editNotes: NoteInputs['editNoteMetadata'] = async (metadata, notesInfo) =>
         <NoteMetadataForm
           metadata={metadata}
           onCancel={() => modal.destroy()}
+          icons={notesInfo.icons}
           onSubmit={(data) => {
             resolve(data);
             modal.destroy();
