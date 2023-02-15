@@ -2,6 +2,10 @@ body {
   margin: 0;
 }
 
+:focus-visible {
+  outline: none;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

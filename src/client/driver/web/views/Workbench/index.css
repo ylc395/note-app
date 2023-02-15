@@ -1,0 +1,14 @@
+#app .mosaic-window-toolbar {
+  height: auto;
+}
+
+#app .mosaic-root {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+#app .mosaic-tile {
+  margin: 0;
+}

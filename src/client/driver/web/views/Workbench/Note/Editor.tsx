@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { useEffect, useRef, useContext } from 'react';
+import { useEffect, useRef } from 'react';
 import { ReactEditor, useEditor } from '@milkdown/react';
 import { Editor, editorViewCtx, rootCtx, schemaCtx } from '@milkdown/core';
 import { gfm } from '@milkdown/preset-gfm';
@@ -7,11 +7,9 @@ import { listener, listenerCtx } from '@milkdown/plugin-listener';
 import { Slice, Fragment } from 'prosemirror-model';
 
 import type NoteEditor from 'model/editor/NoteEditor';
-import { EditorContext } from './context';
 
-export default observer(function NoteEditor() {
+export default observer(function NoteEditor({ editor }: { editor: NoteEditor }) {
   const editorRef = useRef<NoteEditor | undefined>();
-  const editor = useContext(EditorContext);
 
   const { editor: milkdownEditor } = useEditor(
     (root) =>

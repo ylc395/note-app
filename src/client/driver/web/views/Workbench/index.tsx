@@ -2,6 +2,7 @@ import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 import { Mosaic } from 'react-mosaic-component';
 import 'react-mosaic-component/react-mosaic-component.css';
+import './index.css';
 
 import WorkbenchService from 'service/WorkbenchService';
 import Window from './Window';
@@ -12,6 +13,7 @@ export default observer(function Workbench() {
   return (
     <div className="flex-grow">
       <Mosaic
+        className="bg-transparent"
         renderTile={(id, path) => <Window id={id} path={path} />}
         value={layout || null}
         onChange={updateLayout}
