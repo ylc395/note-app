@@ -9,6 +9,7 @@
       "infra/*": ["domain/infra/*", "../shared/infra/*"],
       "driver/*": ["driver/*"],
       "client/*": ["../client/*"],
+      "utils/*": ["../shared/utils/*"],
       "controller/*": ["controller/*"]
     }
   }

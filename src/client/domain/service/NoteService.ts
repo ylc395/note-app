@@ -1,19 +1,25 @@
 import { container, singleton } from 'tsyringe';
 import pick from 'lodash/pick';
+import EventEmitter from 'eventemitter3';
 
 import NoteTree from 'model/tree/NoteTree';
 import { token as remoteToken } from 'infra/Remote';
 import { token as userFeedbackToken } from 'infra/UserFeedback';
 import { token as userInputToken } from 'infra/UserInput';
 import type { ContextmenuItem } from 'infra/ui';
-import { NoteDTO, NoteVO as Note, NotesDTO, NoteVO, normalizeTitle } from 'interface/Note';
+import { type NoteDTO, type NoteVO as Note, type NotesDTO, type NoteVO, normalizeTitle } from 'interface/Note';
 import type { RecyclablesDTO } from 'interface/Recyclables';
 
 import WorkbenchService, { WorkbenchEvents } from './WorkbenchService';
 import StarService, { StarEvents } from './StarService';
 
+export enum NoteEvents {
+  'Deleted' = 'note.deleted',
+  'Updated' = 'note.updated',
+}
+
 @singleton()
-export default class NoteService {
+export default class NoteService extends EventEmitter<NoteEvents> {
   private readonly remote = container.resolve(remoteToken);
   private readonly workbench = container.resolve(WorkbenchService);
   private readonly star = container.resolve(StarService);
@@ -22,6 +28,7 @@ export default class NoteService {
   readonly noteTree = new NoteTree();
 
   constructor() {
+    super();
     this.workbench.on(WorkbenchEvents.NoteUpdated, this.noteTree.updateTreeByNote);
     this.star.on(StarEvents.NoteAdded, (noteId) => this.noteTree.toggleStar(noteId, true));
     this.star.on(StarEvents.NoteRemoved, (noteId) => this.noteTree.toggleStar(noteId, false));
@@ -62,6 +69,7 @@ export default class NoteService {
     await this.remote.put<RecyclablesDTO>(`/recyclables/notes`, { ids });
     this.noteTree.removeNodes(ids);
     this.userFeedback.message.success({ content: '已移至回收站' });
+    this.emit(NoteEvents.Deleted, ids);
   }
 
   readonly moveNotes = async (ids: Note['id'][], targetId?: Note['id'] | null) => {
@@ -77,7 +85,7 @@ export default class NoteService {
       return;
     }
 
-    const notes = ids.map((id) => ({ ...this.noteTree.getNode(id).note, parentId: targetId }));
+    const notes = ids.map((id) => ({ id, parentId: targetId }));
     const { body: updatedNotes } = await this.remote.patch<NotesDTO, NoteVO[]>('/notes', notes);
 
     const targetNode = targetId && this.noteTree.getNode(targetId, true);
@@ -106,6 +114,8 @@ export default class NoteService {
         this.noteTree.toggleSelect(ids, true);
       },
     });
+
+    this.emit(NoteEvents.Updated, notes);
   };
 
   private async editNotes(ids: Note['id'][]) {
@@ -117,11 +127,7 @@ export default class NoteService {
         ? {
             icon: null,
             isReadonly: notesToEdit.reduce((result: boolean | undefined, { isReadonly }) => {
-              if (result === undefined) {
-                return result;
-              }
-
-              if (result !== isReadonly) {
+              if (result === undefined || result !== isReadonly) {
                 return undefined;
               }
 
@@ -146,6 +152,8 @@ export default class NoteService {
     for (const parentId of parentIds) {
       this.noteTree.sort(this.noteTree.getChildren(parentId), false);
     }
+
+    this.emit(NoteEvents.Updated, result);
   }
 
   readonly actByContextmenu = async (targetId: Note['id']) => {

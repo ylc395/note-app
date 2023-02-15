@@ -4,7 +4,16 @@ import groupBy from 'lodash/groupBy';
 import intersection from 'lodash/intersection';
 
 import { Transaction } from 'infra/Database';
-import { NoteVO, NoteBodyDTO, NoteDTO, NoteQuery, normalizeTitle, NotesDTO } from 'interface/Note';
+import { buildIndex } from 'utils/collection';
+import {
+  type NoteVO,
+  type NoteBodyDTO,
+  type NoteDTO,
+  type NoteQuery,
+  type NotesDTO,
+  type NotePath,
+  normalizeTitle,
+} from 'interface/Note';
 import BaseService from './BaseService';
 
 @Injectable()
@@ -124,6 +133,34 @@ export default class NoteService extends BaseService {
     }
 
     return result;
+  }
+
+  async getTreePath(noteId: NoteVO['id']) {
+    if (!(await this.notes.areAvailable([noteId]))) {
+      throw new Error('invalid id');
+    }
+
+    const notes = await this.notes.findTreeFragment(noteId);
+    const notesIndex = buildIndex(notes);
+
+    let currentNote: NoteVO | undefined = notesIndex[noteId];
+    const path: NotePath = [];
+
+    while (currentNote) {
+      path.unshift({
+        id: currentNote.id,
+        title: normalizeTitle(currentNote),
+        icon: currentNote.icon,
+        siblings: notes
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          .filter(({ parentId, id }) => id !== currentNote!.id && parentId === currentNote!.parentId)
+          .map((note) => ({ ...note, title: normalizeTitle(note) })),
+      });
+
+      currentNote = currentNote.parentId ? notesIndex[currentNote.parentId] : undefined;
+    }
+
+    return path;
   }
 
   private async assertValidChanges(notes: NotesDTO) {

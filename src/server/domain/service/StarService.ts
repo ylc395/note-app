@@ -5,6 +5,7 @@ import { Transaction } from 'infra/Database';
 import { type EntityId, EntityTypes } from 'interface/Entity';
 import { normalizeTitle } from 'interface/Note';
 import type { StarRecord } from 'interface/Star';
+import { buildIndex } from 'utils/collection';
 
 import BaseService from './BaseService';
 
@@ -38,7 +39,7 @@ export default class StarService extends BaseService {
 
   async query() {
     const stars = await this.stars.findAll();
-    const notes = this.buildIndex(
+    const notes = buildIndex(
       await this.notes.findAll({
         id: stars.filter(({ entityType }) => entityType === EntityTypes.Note).map(({ entityId }) => entityId),
       }),

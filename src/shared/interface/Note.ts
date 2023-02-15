@@ -47,3 +47,6 @@ export type NoteQuery = Infer<typeof noteQuerySchema>;
 export function normalizeTitle(note: NoteVO) {
   return note.title || `未命名笔记-${dayjs.unix(note.createdAt).format('YYYYMMDD-HHmm')}`;
 }
+
+type NotePathNode = Pick<NoteVO, 'title' | 'icon' | 'id'>;
+export type NotePath = Array<NotePathNode & { siblings: NotePathNode[] }>;

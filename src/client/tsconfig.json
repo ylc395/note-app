@@ -9,6 +9,7 @@
       "interface/*": ["../shared/interface/*"],
       "service/*": ["domain/service/*"],
       "web/*": ["driver/web/*"],
+      "utils/*": ["../shared/utils/*"],
       "infra/*": ["domain/infra/*", "../shared/infra/*"]
     }
   }
