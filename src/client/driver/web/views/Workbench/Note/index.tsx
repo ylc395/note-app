@@ -8,7 +8,7 @@ import Breadcrumb from './Breadcrumb';
 
 export default observer(function NoteWorkbench({ editor }: { editor: NoteEditor }) {
   return (
-    <div className="bg-white h-full">
+    <div className="h-full flex flex-col">
       <Title editor={editor} />
       <Breadcrumb editor={editor} />
       <Editor editor={editor} />
