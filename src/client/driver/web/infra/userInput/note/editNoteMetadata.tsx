@@ -1,7 +1,7 @@
 import { Modal } from 'antd';
 
 import type { NoteInputs } from 'infra/UserInput';
-import NoteMetadataForm from 'web/components/NoteMetadataForm';
+import NoteMetadataForm from 'web/components/note/MetadataForm';
 
 import { COMMON_MODAL_OPTIONS } from '../utils';
 

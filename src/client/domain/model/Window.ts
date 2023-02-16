@@ -106,7 +106,10 @@ export default class Window extends EventEmitter<Events> {
       throw new Error('no target tab');
     }
 
-    this.tabs.splice(existedTabIndex, 1);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const closedTab = this.tabs.splice(existedTabIndex, 1)[0]!;
+
+    closedTab.editor.destroy();
 
     if (this.currentTab?.editor.id === editorId) {
       this.currentTab =

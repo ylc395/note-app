@@ -34,4 +34,8 @@ export default class MaterialEditor extends EntityEditor {
       });
     }
   }
+
+  destroy() {
+    return;
+  }
 }

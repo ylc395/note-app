@@ -3,7 +3,7 @@ import { container } from 'tsyringe';
 import uniqueId from 'lodash/uniqueId';
 
 import NoteService from 'service/NoteService';
-import type { NoteTreeProps } from 'web/components/NoteTree';
+import type { NoteTreeProps } from 'web/components/note/Tree';
 import type { NoteVO } from 'interface/Note';
 
 export const TITLE_CONTENT_CLASS = uniqueId('my-note-app-');

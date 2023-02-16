@@ -1,16 +1,8 @@
-import { makeObservable, computed, observable, runInAction } from 'mobx';
+import { makeObservable, computed, observable, runInAction, reaction } from 'mobx';
 import debounce from 'lodash/debounce';
 import { container } from 'tsyringe';
 
-import { buildIndex } from 'utils/collection';
-import {
-  normalizeTitle,
-  type NoteVO,
-  type NoteBodyVO,
-  type NoteBodyDTO,
-  type NotePath,
-  type NotesDTO,
-} from 'interface/Note';
+import { normalizeTitle, type NoteVO, type NoteBodyVO, type NoteBodyDTO, type NotePath } from 'interface/Note';
 import type Window from 'model/Window';
 
 import EntityEditor from './EntityEditor';
@@ -21,43 +13,17 @@ export default class NoteEditor extends EntityEditor {
   @observable noteBody?: NoteBodyVO;
   @observable breadcrumb?: NotePath;
   private readonly noteService = container.resolve(NoteService);
+  private readonly disposeReaction: ReturnType<typeof reaction>;
 
   constructor(protected readonly window: Window, readonly entityId: NoteVO['id']) {
     super(window, entityId);
     makeObservable(this);
-    this.loadBreadcrumb();
-    this.loadNote();
-    this.noteService.on(NoteEvents.Updated, this.handleNotesUpdate);
+    this.loadNoteMetadata();
+    this.loadNoteBody();
+
+    this.noteService.on(NoteEvents.Updated, this.reloadMetadata);
+    this.disposeReaction = reaction(() => this.isVisible, this.reloadMetadata);
   }
-
-  private readonly handleNotesUpdate = (notes: NotesDTO) => {
-    const notesIndex = buildIndex(notes);
-
-    if (this.note && notesIndex[this.entityId]) {
-      Object.assign(this.note, notesIndex[this.entityId]);
-    }
-
-    if (this.breadcrumb) {
-      const tryLoadBreadcrumb = (id: NoteVO['id']) => {
-        const note = notesIndex[id];
-
-        if (!note) {
-          return;
-        }
-
-        if (note.icon !== undefined || note.parentId !== undefined || note.title !== undefined) {
-          this.loadBreadcrumb();
-          return true;
-        }
-      };
-
-      for (const { id, siblings } of this.breadcrumb) {
-        if (tryLoadBreadcrumb(id) || siblings.some(({ id }) => tryLoadBreadcrumb(id))) {
-          return;
-        }
-      }
-    }
-  };
 
   @computed get title() {
     if (!this.note) {
@@ -67,20 +33,20 @@ export default class NoteEditor extends EntityEditor {
     return normalizeTitle(this.note);
   }
 
-  private async loadBreadcrumb() {
+  private async loadNoteMetadata() {
+    const { body: note } = await this.remote.get<void, NoteVO>(`/notes/${this.entityId}`);
     const { body: notePath } = await this.remote.get<void, NotePath>(`/notes/${this.entityId}/tree-path`);
 
     runInAction(() => {
+      this.note = note;
       this.breadcrumb = notePath;
     });
   }
 
-  private async loadNote() {
-    const { body: note } = await this.remote.get<void, NoteVO>(`/notes/${this.entityId}`);
+  private async loadNoteBody() {
     const { body: noteBody } = await this.remote.get<void, NoteBodyVO>(`/notes/${this.entityId}/body`);
 
     runInAction(() => {
-      this.note = note;
       this.noteBody = noteBody;
     });
   }
@@ -109,4 +75,15 @@ export default class NoteEditor extends EntityEditor {
     this.window.notifyEntityUpdated(this);
     await this.remote.patch(`/notes/${this.entityId}`, { title });
   }, 500);
+
+  private readonly reloadMetadata = () => {
+    if (this.isVisible) {
+      this.loadNoteMetadata();
+    }
+  };
+
+  destroy() {
+    this.noteService.off(NoteEvents.Updated, this.reloadMetadata);
+    this.disposeReaction();
+  }
 }

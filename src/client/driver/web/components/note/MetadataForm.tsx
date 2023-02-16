@@ -10,8 +10,8 @@ import NoteMetadata from 'model/form/NoteMetadata';
 import type { NoteMetadata as NoteMetadataValues } from 'model/form/type';
 import type { NoteVO } from 'interface/Note';
 
-import { useUpdateTimeField, FORM_ITEM_LAYOUT } from './utils';
-import { EmojiPicker, Emoji } from './Emoji';
+import { useUpdateTimeField, FORM_ITEM_LAYOUT } from '../utils';
+import { EmojiPicker, Emoji } from '../Emoji';
 
 interface Props {
   onSubmit: (metadata: NoteMetadataValues) => void;
@@ -20,7 +20,7 @@ interface Props {
   icons: NoteVO['icon'][];
 }
 
-export default observer(function NoteMetadataEditor({ onSubmit, onCancel, metadata, icons }: Props) {
+export default observer(function MetadataForm({ onSubmit, onCancel, metadata, icons }: Props) {
   const [noteMetadata] = useState(() => {
     return new NoteMetadata(metadata);
   });

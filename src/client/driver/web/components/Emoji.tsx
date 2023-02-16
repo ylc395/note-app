@@ -31,9 +31,15 @@ export function EmojiPicker({ onSelect, onClickOutside }: Props) {
   );
 }
 
+export interface EmojiProps {
+  id?: string | null;
+  className?: string;
+  size?: string;
+}
+
 let inited = false;
 // eslint-disable-next-line mobx/missing-observer
-export function Emoji({ id, className }: { id?: string | null; className?: string }) {
+export function Emoji({ id, className, size }: EmojiProps) {
   useEffect(() => {
     if (inited) {
       return;
@@ -45,7 +51,7 @@ export function Emoji({ id, className }: { id?: string | null; className?: strin
 
   return id ? (
     <span className={className}>
-      <em-emoji size="1.5em" shortcodes={id.replace(/^emoji:/, '')}></em-emoji>
+      <em-emoji size={size || '1.5em'} shortcodes={id.replace(/^emoji:/, '')}></em-emoji>
     </span>
   ) : null;
 }

@@ -6,8 +6,9 @@ import { Button, Tooltip } from 'antd';
 import type { DataNode } from 'antd/es/tree';
 import { PlusOutlined } from '@ant-design/icons';
 
-import NoteTree, { NoteTreeProps } from 'web/components/NoteTree';
-import { Emoji } from 'web/components/Emoji';
+import type { NoteVO } from 'interface/Note';
+import NoteTree, { NoteTreeProps } from 'web/components/note/Tree';
+import NoteIconTitle from 'web/components/note/IconTitle';
 import NoteService from 'service/NoteService';
 
 import useDrag, { TITLE_CONTENT_CLASS } from './useDrag';
@@ -36,13 +37,7 @@ export default observer(function ExplorerNoteTree({ operationEl }: { operationEl
   const titleRender = useCallback(
     (node: DataNode) => (
       <span className="flex group">
-        <span className={`flex ${TITLE_CONTENT_CLASS}`}>
-          <Emoji id={noteTree.getNode(node.key as string, true)?.note.icon || null} className="mr-2" />
-          <span className="whitespace-nowrap">
-            {__ENV__ === 'dev' ? `${node.key} ` : null}
-            {node.title as string}
-          </span>
-        </span>
+        <NoteIconTitle className={TITLE_CONTENT_CLASS} note={(node as DataNode & { note: NoteVO }).note} />
         <Tooltip title="新建子笔记" placement="right">
           <Button
             onClick={() => createNote(node.key as string)}
@@ -54,7 +49,7 @@ export default observer(function ExplorerNoteTree({ operationEl }: { operationEl
         </Tooltip>
       </span>
     ),
-    [createNote, noteTree],
+    [createNote],
   );
 
   return (
