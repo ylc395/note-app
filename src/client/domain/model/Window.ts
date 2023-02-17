@@ -1,43 +1,42 @@
-import EventEmitter from 'eventemitter3';
-import type { MaterialVO } from 'interface/Material';
-import type { NoteVO } from 'interface/Note';
 import { action, makeObservable, observable, has } from 'mobx';
+import { container } from 'tsyringe';
+import EventEmitter from 'eventemitter2';
 
-import type EntityEditor from './editor/EntityEditor';
-import MaterialEditor from './editor/MaterialEditor';
-import NoteEditor from './editor/NoteEditor';
+import type { EntityTypes } from 'interface/Entity';
+// import type { MaterialVO } from 'interface/Material';
+import type { NoteVO } from 'interface/Note';
+import type NoteEditor from 'model/editor/NoteEditor';
+import EditorService from 'service/EditorService';
 
-export interface Openable {
-  type: 'note' | 'material';
-  entity: MaterialVO | NoteVO;
-}
+export type Openable =
+  // | {
+  //     type: 'material';
+  //     entity: MaterialVO;
+  //   }
+  {
+    type: EntityTypes.Note;
+    entity: NoteVO;
+  };
 
 export type Tab = {
   entityId: string;
   focused: boolean;
-} & (
-  | {
-      type: 'note';
-      editor?: NoteEditor;
-    }
-  | {
-      type: 'material';
-      editor?: MaterialEditor;
-    }
-);
+} & {
+  type: EntityTypes.Note;
+  editor?: NoteEditor;
+};
+// | {
+//     type: 'material';
+//     editor?: MaterialEditor;
+//   }
 
 export enum Events {
   Closed = 'window.closed',
-  EntityUpdated = 'window.entityUpdated',
 }
 
-const TabTypeMap = {
-  note: NoteEditor,
-  material: MaterialEditor,
-} as const;
-
-export default class Window extends EventEmitter<Events> {
+export default class Window extends EventEmitter {
   @observable.ref currentTab?: Required<Tab>;
+  private readonly editorService = container.resolve(EditorService);
   @observable.shallow tabs: Required<Tab>[] = [];
   constructor(tabs?: Tab[]) {
     super();
@@ -47,7 +46,7 @@ export default class Window extends EventEmitter<Events> {
 
   @action
   private createTab(tab: Tab) {
-    const newTab = { ...tab, editor: new TabTypeMap[tab.type](this, tab.entityId) } as Required<Tab>;
+    const newTab = { ...tab, editor: this.editorService.createEditor(this, tab.type, tab.entityId) } as Required<Tab>;
     this.tabs.push(newTab);
 
     return newTab;
@@ -126,9 +125,5 @@ export default class Window extends EventEmitter<Events> {
   private destroy() {
     this.emit(Events.Closed);
     this.removeAllListeners();
-  }
-
-  notifyEntityUpdated(editor: EntityEditor) {
-    this.emit(Events.EntityUpdated, editor);
   }
 }

@@ -1,27 +1,33 @@
 import { container, singleton } from 'tsyringe';
 import pick from 'lodash/pick';
-import EventEmitter from 'eventemitter3';
+import EventEmitter from 'eventemitter2';
 
 import NoteTree from 'model/tree/NoteTree';
+import { Events as NoteEditorEvents } from 'model/editor/NoteEditor';
+
 import { token as remoteToken } from 'infra/Remote';
 import { token as userFeedbackToken } from 'infra/UserFeedback';
 import { token as userInputToken } from 'infra/UserInput';
 import type { ContextmenuItem } from 'infra/ui';
+
 import { type NoteDTO, type NoteVO as Note, type NotesDTO, type NoteVO, normalizeTitle } from 'interface/Note';
 import type { RecyclablesDTO } from 'interface/Recyclables';
+import { EntityTypes } from 'interface/Entity';
 
-import WorkbenchService, { WorkbenchEvents } from './WorkbenchService';
+import WorkbenchService from './WorkbenchService';
+import EditorService from './EditorService';
 import StarService, { StarEvents } from './StarService';
 
 export enum NoteEvents {
-  'Deleted' = 'note.deleted',
-  'Updated' = 'note.updated',
+  'Deleted' = 'noteTree.deleted',
+  'Updated' = 'noteTree.updated',
 }
 
 @singleton()
-export default class NoteService extends EventEmitter<NoteEvents> {
+export default class NoteService extends EventEmitter {
   private readonly remote = container.resolve(remoteToken);
   private readonly workbench = container.resolve(WorkbenchService);
+  private readonly editor = container.resolve(EditorService);
   private readonly star = container.resolve(StarService);
   private readonly userFeedback = container.resolve(userFeedbackToken);
   private readonly userInput = container.resolve(userInputToken);
@@ -29,7 +35,7 @@ export default class NoteService extends EventEmitter<NoteEvents> {
 
   constructor() {
     super();
-    this.workbench.on(WorkbenchEvents.NoteUpdated, this.noteTree.updateTreeByNote);
+    this.editor.on(NoteEditorEvents.Updated, this.noteTree.updateTreeByNote);
     this.star.on(StarEvents.NoteAdded, (noteId) => this.noteTree.toggleStar(noteId, true));
     this.star.on(StarEvents.NoteRemoved, (noteId) => this.noteTree.toggleStar(noteId, false));
   }
@@ -46,7 +52,7 @@ export default class NoteService extends EventEmitter<NoteEvents> {
 
     note = this.noteTree.updateTreeByNote(note)?.note;
     this.noteTree.toggleSelect(note.id, true);
-    this.workbench.open({ type: 'note', entity: note }, false);
+    this.workbench.open({ type: EntityTypes.Note, entity: note }, false);
   };
 
   private async duplicateNote(targetId: Note['id']) {
@@ -61,7 +67,7 @@ export default class NoteService extends EventEmitter<NoteEvents> {
 
     if (selected && !multiple) {
       const { note } = this.noteTree.getNode(noteId);
-      this.workbench.open({ type: 'note', entity: note }, false);
+      this.workbench.open({ type: EntityTypes.Note, entity: note }, false);
     }
   };
 
@@ -115,7 +121,7 @@ export default class NoteService extends EventEmitter<NoteEvents> {
       },
     });
 
-    this.emit(NoteEvents.Updated, notes);
+    this.emit(NoteEvents.Updated, updatedNotes);
   };
 
   private async editNotes(ids: Note['id'][]) {
@@ -154,7 +160,7 @@ export default class NoteService extends EventEmitter<NoteEvents> {
       this.noteTree.sort(this.noteTree.getChildren(parentId), false);
     }
 
-    this.emit(NoteEvents.Updated, result);
+    this.emit(NoteEvents.Updated, notes);
   }
 
   readonly actByContextmenu = async (targetId: Note['id']) => {

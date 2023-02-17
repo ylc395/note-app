@@ -1,21 +1,25 @@
 import { container } from 'tsyringe';
 import uid from 'lodash/uniqueId';
+import { computed, makeObservable } from 'mobx';
+import EventEmitter from 'eventemitter2';
 
 import { token as remoteToken } from 'infra/Remote';
 import type Window from 'model/Window';
-import { computed, makeObservable } from 'mobx';
 
-export default abstract class EntityEditor {
+export default abstract class EntityEditor extends EventEmitter {
   constructor(protected readonly window: Window, readonly entityId: string) {
+    super();
     makeObservable(this);
   }
   readonly id = uid('editor-');
   protected readonly remote = container.resolve(remoteToken);
   abstract title: string;
-  abstract destroy(): void;
+  destroy() {
+    this.removeAllListeners();
+  }
 
   @computed
-  get isVisible() {
+  get isCurrent() {
     return this.window.currentTab?.editor.id === this.id;
   }
 }

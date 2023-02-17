@@ -1,4 +1,4 @@
-import EventEmitter from 'eventemitter3';
+import EventEmitter from 'eventemitter2';
 import { container, singleton } from 'tsyringe';
 import { observable, makeObservable, runInAction } from 'mobx';
 import pull from 'lodash/pull';
@@ -26,7 +26,7 @@ const addEventsMap: Record<EntityTypes, StarEvents> = {
 };
 
 @singleton()
-export default class StarService extends EventEmitter<StarEvents> {
+export default class StarService extends EventEmitter {
   constructor() {
     super();
     makeObservable(this);

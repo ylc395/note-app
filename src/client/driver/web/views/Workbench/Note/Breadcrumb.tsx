@@ -11,7 +11,7 @@ export default observer(function Breadcrumb({ editor }: { editor: NoteEditor }) 
       <AntdBreadcrumb.Item>
         <BookOutlined />
       </AntdBreadcrumb.Item>
-      {editor.breadcrumb?.map((pathNode) => (
+      {editor.metadata?.breadcrumb.map((pathNode) => (
         <AntdBreadcrumb.Item
           key={pathNode.id}
           menu={

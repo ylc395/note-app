@@ -2,16 +2,19 @@ import { makeObservable, computed, observable, runInAction, reaction } from 'mob
 import debounce from 'lodash/debounce';
 import { container } from 'tsyringe';
 
-import { normalizeTitle, type NoteVO, type NoteBodyVO, type NoteBodyDTO, type NotePath } from 'interface/Note';
+import { normalizeTitle, type NoteVO, type NoteBodyVO, type NoteBodyDTO, type NotePath, NoteDTO } from 'interface/Note';
 import type Window from 'model/Window';
-
-import EntityEditor from './EntityEditor';
 import NoteService, { NoteEvents } from 'service/NoteService';
 
+import EntityEditor from './EntityEditor';
+
+export enum Events {
+  Updated = 'noteEditor.updated',
+}
+
 export default class NoteEditor extends EntityEditor {
-  @observable note?: NoteVO;
   @observable noteBody?: NoteBodyVO;
-  @observable breadcrumb?: NotePath;
+  @observable metadata?: { note: NoteVO; breadcrumb: NotePath };
   private readonly noteService = container.resolve(NoteService);
   private readonly disposeReaction: ReturnType<typeof reaction>;
 
@@ -22,24 +25,19 @@ export default class NoteEditor extends EntityEditor {
     this.loadNoteBody();
 
     this.noteService.on(NoteEvents.Updated, this.reloadMetadata);
-    this.disposeReaction = reaction(() => this.isVisible, this.reloadMetadata);
+    this.disposeReaction = reaction(() => this.isCurrent, this.reloadMetadata);
   }
 
   @computed get title() {
-    if (!this.note) {
-      return '';
-    }
-
-    return normalizeTitle(this.note);
+    return this.metadata?.note ? normalizeTitle(this.metadata.note) : '';
   }
 
   private async loadNoteMetadata() {
     const { body: note } = await this.remote.get<void, NoteVO>(`/notes/${this.entityId}`);
-    const { body: notePath } = await this.remote.get<void, NotePath>(`/notes/${this.entityId}/tree-path`);
+    const { body: breadcrumb } = await this.remote.get<void, NotePath>(`/notes/${this.entityId}/tree-path`);
 
     runInAction(() => {
-      this.note = note;
-      this.breadcrumb = notePath;
+      this.metadata = { note, breadcrumb };
     });
   }
 
@@ -62,27 +60,41 @@ export default class NoteEditor extends EntityEditor {
 
   saveTitle(title: string) {
     runInAction(() => {
-      if (!this.note) {
-        throw new Error('no note');
+      if (!this.metadata) {
+        throw new Error('not ready');
       }
-      this.note.title = title;
+
+      this.metadata.note.title = title;
+
+      const breadcrumb = this.metadata.breadcrumb.find(({ id }) => id === this.entityId);
+
+      if (!breadcrumb) {
+        throw new Error('no breadcrumb');
+      }
+
+      breadcrumb.title = title;
     });
 
     this.syncTitle(title);
   }
 
   private readonly syncTitle = debounce(async (title: string) => {
-    this.window.notifyEntityUpdated(this);
-    await this.remote.patch(`/notes/${this.entityId}`, { title });
+    if (!this.metadata) {
+      throw new Error('no ready');
+    }
+
+    const { body: note } = await this.remote.patch<NoteDTO, NoteVO>(`/notes/${this.entityId}`, { title });
+    this.emit(Events.Updated, note);
   }, 500);
 
   private readonly reloadMetadata = () => {
-    if (this.isVisible) {
+    if (this.isCurrent) {
       this.loadNoteMetadata();
     }
   };
 
   destroy() {
+    super.destroy();
     this.noteService.off(NoteEvents.Updated, this.reloadMetadata);
     this.disposeReaction();
   }
