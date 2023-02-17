@@ -7,13 +7,12 @@ import './index.css';
 import ViewService, { ViewTypes } from 'service/ViewService';
 
 import ActivityBar from './Explorer/ActivityBar';
-import MaterialExplorer from './Explorer/Material';
 import NoteExplorer from './Explorer/Note';
 import Workbench from './Workbench';
 
 const explorerMap = {
   [ViewTypes.Notes]: () => <NoteExplorer />,
-  [ViewTypes.Materials]: () => <MaterialExplorer />,
+  [ViewTypes.Materials]: () => null,
 } as const;
 
 export default observer(function App() {

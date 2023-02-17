@@ -4,6 +4,7 @@ import { ReactEditor, useEditor } from '@milkdown/react';
 import { Editor, editorViewCtx, rootCtx, schemaCtx } from '@milkdown/core';
 import { gfm } from '@milkdown/preset-gfm';
 import { listener, listenerCtx } from '@milkdown/plugin-listener';
+import { clipboard } from '@milkdown/plugin-clipboard';
 import { Slice, Fragment } from 'prosemirror-model';
 
 import type NoteEditor from 'model/editor/NoteEditor';
@@ -23,6 +24,7 @@ export default observer(function NoteEditor({ editor }: { editor: NoteEditor }) 
           });
         })
         .use(gfm)
+        .use(clipboard)
         .use(listener),
     [],
   );

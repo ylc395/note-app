@@ -454,6 +454,14 @@
   dependencies:
     tslib "^2.4.0"
 
+"@milkdown/plugin-clipboard@^6.5.4":
+  version "6.5.4"
+  resolved "https://registry.yarnpkg.com/@milkdown/plugin-clipboard/-/plugin-clipboard-6.5.4.tgz#91fed314a2bec1737d67f2b57b87927c0fe484a9"
+  integrity sha512-87ONhWULGzBC46HnlfNEw6hZJkmtZ5xdPvHrXhh3/Fgk3LFlYGuziQFYbYq3ywjv/uudwYA2a6git7lffK/lDw==
+  dependencies:
+    "@milkdown/utils" "6.5.4"
+    tslib "^2.4.0"
+
 "@milkdown/plugin-listener@^6.5.4":
   version "6.5.4"
   resolved "https://registry.yarnpkg.com/@milkdown/plugin-listener/-/plugin-listener-6.5.4.tgz#8b480ef6296a2b2d51eb98c5c41f3b43d5307d78"
@@ -3184,11 +3192,6 @@ markdown-table@^3.0.0:
   version "3.0.3"
   resolved "https://registry.yarnpkg.com/markdown-table/-/markdown-table-3.0.3.tgz#e6331d30e493127e031dd385488b5bd326e4a6bd"
   integrity sha512-Z1NL3Tb1M9wH4XESsCDEksWoKTdlUafKc4pt0GRwjUyXaCFZ+dc3g2erqB6zm3szA2IUSi7VnPI+o/9jnxh9hw==
-
-markerjs2@^2.28.1:
-  version "2.28.1"
-  resolved "https://registry.yarnpkg.com/markerjs2/-/markerjs2-2.28.1.tgz#0e2ee897ff3bfefa49dcf22424080495cf5e4b8b"
-  integrity sha512-Hx1JixKfkP0hCKhl1qfNuP90Z9MVjHKAjMRo2xyU3fZVQuwaHO2qx1u8NqCeRqA/QuZqBlsU+FLdNkoazgsiSQ==
 
 matcher@^3.0.0:
   version "3.0.0"
