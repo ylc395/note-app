@@ -10,7 +10,7 @@ const { useToken } = theme;
 const switcher = [
   { key: NoteExplorerPanel.Tree, title: '笔记树面板', icon: () => <ApartmentOutlined /> },
   { key: NoteExplorerPanel.Topic, title: '话题面板', icon: () => <NumberOutlined /> },
-  { key: NoteExplorerPanel.Ranking, title: '排行榜面板', icon: () => <ProfileOutlined /> },
+  { key: NoteExplorerPanel.CustomView, title: '自定义视图', icon: () => <ProfileOutlined /> },
 ] as const;
 
 export default observer(function PanelSwitcher() {

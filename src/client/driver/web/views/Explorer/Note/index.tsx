@@ -8,6 +8,7 @@ import ViewService, { NoteExplorerPanel, ViewTypes } from 'service/ViewService';
 
 import PanelSwitcher from './PanelSwitcher';
 import Tree from './Tree';
+import CustomView from './CustomView';
 
 export default observer(function NoteExplorer() {
   const { explorerPanel } = container.resolve(ViewService);
@@ -24,6 +25,7 @@ export default observer(function NoteExplorer() {
           <div className="flex mt-4" ref={setOperationEl}></div>
         </div>
         {explorerPanel[ViewTypes.Notes] === NoteExplorerPanel.Tree && <Tree operationEl={operationEl} />}
+        {explorerPanel[ViewTypes.Notes] === NoteExplorerPanel.CustomView && <CustomView />}
       </div>
     </Resizable>
   );

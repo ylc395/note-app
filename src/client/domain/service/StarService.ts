@@ -25,6 +25,7 @@ const addEventsMap: Record<EntityTypes, StarEvents> = {
   [EntityTypes.Note]: StarEvents.NoteAdded,
 };
 
+// todo: 能够收藏具体段落
 @singleton()
 export default class StarService extends EventEmitter {
   constructor() {

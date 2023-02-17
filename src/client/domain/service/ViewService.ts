@@ -15,7 +15,7 @@ export function isViewTypes(key: string): key is ViewTypes {
 
 export enum NoteExplorerPanel {
   Tree = 'tree',
-  Ranking = 'ranking',
+  CustomView = 'customView',
   Topic = 'topic',
 }
 
