@@ -1,15 +1,17 @@
 import omit from 'lodash/omit';
+import mapValues from 'lodash/mapValues';
+import uniq from 'lodash/uniq';
 
 import { type EntityId, EntityTypes } from 'interface/Entity';
 import type { NoteRepository, NoteQuery } from 'service/repository/NoteRepository';
-import type { NoteDTO, NoteVO, NoteBodyDTO, NotesDTO } from 'interface/Note';
+import type { NoteDTO, NoteVO, NoteBodyDTO, NotesDTO, NoteAttributesVO } from 'interface/Note';
 
 import BaseRepository from './BaseRepository';
 import RecyclableRepository from './RecyclableRepository';
 import noteSchema, { type Row } from '../schema/noteSchema';
 import starSchema, { type Row as StarRow } from '../schema/starSchema';
 
-interface NoteVOPatch {
+interface RowPatch {
   childrenCount?: NoteVO['childrenCount'];
   starId?: StarRow['id'] | null;
 }
@@ -191,7 +193,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
     return children;
   }
 
-  private rowToVO(row: Row & NoteVOPatch, patch?: NoteVOPatch): NoteVO {
+  private rowToVO(row: Row & RowPatch, patch?: RowPatch): NoteVO {
     return {
       ...omit(row, 'body'),
       id: String(row.id),
@@ -199,6 +201,27 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
       isReadonly: Boolean(row.isReadonly),
       childrenCount: patch?.childrenCount || row.childrenCount || 0,
       isStar: Boolean(patch?.starId || row.starId || false),
+      attributes: JSON.parse(row.attributes),
     };
+  }
+
+  async findAttributes() {
+    const result: NoteAttributesVO = {};
+    const notes = await this.knex<Row>(this.schema.tableName)
+      .select('json_extract(attributes, "$") as parsed')
+      .where('attributes', '<>', '{}');
+
+    for (const { parsed } of notes) {
+      for (const [k, v] of Object.entries(parsed)) {
+        if (!result[k]) {
+          result[k] = [];
+        }
+
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        result[k]!.push(v as string);
+      }
+    }
+
+    return mapValues(result, uniq);
   }
 }

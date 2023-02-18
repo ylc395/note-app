@@ -1,5 +1,6 @@
 import pick from 'lodash/pick';
 import omit from 'lodash/omit';
+import mapValues from 'lodash/mapValues';
 
 import type { Schema } from '../schema/type';
 import type { Knex } from 'knex';
@@ -14,7 +15,9 @@ export default abstract class BaseRepository<Row extends object> {
   protected async createOrUpdate(row: unknown): Promise<Row>;
   protected async createOrUpdate(row: unknown, id: string): Promise<Row | null>;
   protected async createOrUpdate(row: unknown, id?: string): Promise<Row | null> {
-    const fields = omit(pick(row, this.fields), ['id']) as Partial<Row>;
+    const fields = mapValues(omit(pick(row, this.fields), ['id']), (v) =>
+      typeof v === 'object' ? JSON.stringify(v) : v,
+    ) as Partial<Row>;
     let updatedRow: Row;
 
     if (typeof id === 'string') {
