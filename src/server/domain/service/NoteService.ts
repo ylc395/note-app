@@ -190,4 +190,8 @@ export default class NoteService extends BaseService {
       throw new Error(`invalid parent id: ${invalidParentIds.join()}`);
     }
   }
+
+  async getAttributes() {
+    return this.notes.findAttributes();
+  }
 }

@@ -1,4 +1,4 @@
-import type { NoteBodyDTO, NoteDTO, NoteVO, NotesDTO } from 'interface/Note';
+import type { NoteBodyDTO, NoteDTO, NoteVO, NotesDTO, NoteAttributesVO } from 'interface/Note';
 
 export type NoteQuery = {
   parentId?: NoteVO['parentId'] | NonNullable<NoteVO['id']>[];
@@ -17,4 +17,5 @@ export interface NoteRepository {
   isWritable: (noteId: NoteVO['id']) => Promise<boolean>;
   findAllDescendantIds: (noteIds: NoteVO['id'][]) => Promise<NoteVO['id'][]>;
   findTreeFragment: (noteId: NoteVO['id']) => Promise<NoteVO[]>;
+  findAttributes: () => Promise<NoteAttributesVO>;
 }

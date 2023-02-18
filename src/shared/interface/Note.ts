@@ -1,4 +1,4 @@
-import { union, boolean, number, object, string, null as zodNull, type infer as Infer, array } from 'zod';
+import { union, boolean, number, object, string, null as zodNull, type infer as Infer, array, record } from 'zod';
 import dayjs from 'dayjs';
 
 import type { Starable } from './Star';
@@ -12,6 +12,7 @@ export const noteDTOSchema = object({
   parentId: union([zodNull(), string()]).optional(),
   icon: union([string().regex(/^(emoji:|file:).+/), zodNull()]).optional(),
   duplicateFrom: string().optional(),
+  attributes: record(string().min(1), string().min(1)).optional(),
 });
 
 export const notesDTOSchema = array(noteDTOSchema.extend({ id: string() }).omit({ duplicateFrom: true }));
@@ -31,7 +32,10 @@ export interface NoteVO extends Starable {
   userUpdatedAt: number;
   createdAt: number;
   userCreatedAt: number;
+  attributes: Record<string, string>;
 }
+
+export type NoteAttributesVO = Record<string, string[]>;
 
 export const noteQuerySchema = object({
   parentId: union([zodNull(), string()]).optional(),
@@ -44,9 +48,9 @@ export type NoteBodyVO = NoteBodyDTO;
 
 export type NoteQuery = Infer<typeof noteQuerySchema>;
 
+type NotePathNode = Pick<NoteVO, 'title' | 'icon' | 'id'>;
+export type NotePath = Array<NotePathNode & { siblings: NotePathNode[] }>;
+
 export function normalizeTitle(note: NoteVO) {
   return note.title || `未命名笔记-${dayjs.unix(note.createdAt).format('YYYYMMDD-HHmm')}`;
 }
-
-type NotePathNode = Pick<NoteVO, 'title' | 'icon' | 'id'>;
-export type NotePath = Array<NotePathNode & { siblings: NotePathNode[] }>;

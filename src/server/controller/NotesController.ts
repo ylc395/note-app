@@ -9,6 +9,7 @@ import {
   type NoteQuery,
   type NotesDTO,
   type NotePath,
+  type NoteAttributesVO,
   noteDTOSchema,
   notesDTOSchema,
   noteQuerySchema,
@@ -61,12 +62,17 @@ export default class NotesController {
   }
 
   @Get('/notes/:id/body')
-  async getBody(@Param('id') noteId: string): Promise<NoteBodyVO> {
+  async queryBody(@Param('id') noteId: string): Promise<NoteBodyVO> {
     return await this.noteService.getBody(noteId);
   }
 
   @Put('/notes/:id/body')
   async updateBody(@Param('id') noteId: string, @Body() body: NoteBodyDTO): Promise<NoteBodyVO> {
     return await this.noteService.updateBody(noteId, body);
+  }
+
+  @Get('/notes/attributes')
+  async queryAttributes(): Promise<NoteAttributesVO> {
+    return await this.noteService.getAttributes();
   }
 }

@@ -14,9 +14,10 @@ const schema = defineSchema({
     userUpdatedAt: { type: 'integer', notNullable: true, defaultTo: (knex: Knex) => knex.raw('(unixepoch())') },
     isReadonly: { type: 'integer', notNullable: true, defaultTo: 0 },
     icon: { type: 'text' },
+    attributes: { type: 'text', notNullable: true, defaultTo: '{}' },
   },
 });
 
-export type Row = InferRow<typeof schema['fields']>;
+export type Row = InferRow<(typeof schema)['fields']>;
 
 export default schema;
