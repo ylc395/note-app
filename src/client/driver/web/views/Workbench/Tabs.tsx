@@ -1,17 +1,14 @@
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
-import { Tabs as AntdTabs, ConfigProvider } from 'antd';
+import { Tabs as AntdTabs, ConfigProvider, Button, Tooltip } from 'antd';
+import { SplitCellsOutlined } from '@ant-design/icons';
 
 import WorkbenchService, { type WindowId } from 'service/WorkbenchService';
+import { EntityTypes } from 'interface/Entity';
 
 export default observer(function Tabs({ id }: { id: WindowId }) {
-  const { windowMap } = container.resolve(WorkbenchService);
-  const w = windowMap.get(id);
-
-  if (!w) {
-    throw new Error(`invalid window id: ${id}`);
-  }
-
+  const { windowManager, openEntity } = container.resolve(WorkbenchService);
+  const w = windowManager.get(id);
   const { switchToTab, closeTab, currentTab } = w;
 
   return (
@@ -24,6 +21,13 @@ export default observer(function Tabs({ id }: { id: WindowId }) {
         onEdit={(key) => typeof key === 'string' && closeTab(key)}
         items={w.tabs.map((tab) => ({ label: tab.editor?.title, key: String(tab.editor?.id) }))}
         activeKey={currentTab?.editor.id}
+        tabBarExtraContent={
+          w.currentTab && (
+            <Tooltip title="开辟新窗口">
+              <Button className="mr-2" type="text" icon={<SplitCellsOutlined />} />
+            </Tooltip>
+          )
+        }
       />
     </ConfigProvider>
   );

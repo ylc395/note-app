@@ -1,22 +1,18 @@
 import { action, makeObservable, observable, has } from 'mobx';
 import { container } from 'tsyringe';
+import uniqueId from 'lodash/uniqueId';
 import EventEmitter from 'eventemitter2';
 
 import type { EntityTypes } from 'interface/Entity';
-// import type { MaterialVO } from 'interface/Material';
 import type { NoteVO } from 'interface/Note';
 import type NoteEditor from 'model/editor/NoteEditor';
 import EditorService from 'service/EditorService';
+import type Manager from './Manger';
 
-export type Openable =
-  // | {
-  //     type: 'material';
-  //     entity: MaterialVO;
-  //   }
-  {
-    type: EntityTypes.Note;
-    entity: NoteVO;
-  };
+export type OpenableEntity = {
+  type: EntityTypes.Note;
+  entity: NoteVO;
+};
 
 export type Tab = {
   entityId: string;
@@ -25,23 +21,24 @@ export type Tab = {
   type: EntityTypes.Note;
   editor?: NoteEditor;
 };
-// | {
-//     type: 'material';
-//     editor?: MaterialEditor;
-//   }
 
 export enum Events {
-  Closed = 'window.closed',
+  destroyed = 'window.destroyed',
 }
 
 export default class Window extends EventEmitter {
+  readonly id = uniqueId('window-');
   @observable.ref currentTab?: Required<Tab>;
-  private readonly editorService = container.resolve(EditorService);
   @observable.shallow tabs: Required<Tab>[] = [];
-  constructor(tabs?: Tab[]) {
+  private readonly editorService = container.resolve(EditorService);
+  constructor(private readonly manager: Manager, tabs?: Tab[]) {
     super();
     this.loadTabs(tabs);
     makeObservable(this);
+  }
+
+  get isRoot() {
+    return this.manager.root === this.id;
   }
 
   @action
@@ -56,10 +53,6 @@ export default class Window extends EventEmitter {
   private loadTabs(tabs?: Tab[]) {
     if (!tabs) {
       return;
-    }
-
-    if (tabs.length === 0) {
-      throw new Error('empty tabs list');
     }
 
     for (const { entityId, type, focused } of tabs) {
@@ -81,8 +74,11 @@ export default class Window extends EventEmitter {
   }
 
   @action.bound
-  open({ entity, type }: Openable) {
-    const existedTab = this.tabs.find((tab) => tab.type === type && tab.entityId === entity.id);
+  open({ entity, type }: OpenableEntity, alwaysNewTab?: boolean) {
+    const existedTab = alwaysNewTab
+      ? undefined
+      : this.tabs.find((tab) => tab.type === type && tab.entityId === entity.id);
+
     this.currentTab = existedTab || this.createTab({ type, entityId: entity.id, focused: true });
   }
 
@@ -123,7 +119,11 @@ export default class Window extends EventEmitter {
   }
 
   private destroy() {
-    this.emit(Events.Closed);
+    if (this.isRoot) {
+      return;
+    }
+
+    this.emit(Events.destroyed);
     this.removeAllListeners();
   }
 }

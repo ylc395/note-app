@@ -3,7 +3,7 @@ import { singleton } from 'tsyringe';
 
 import { EntityId, EntityTypes } from 'interface/Entity';
 import NoteEditor from 'model/editor/NoteEditor';
-import type Window from 'model/Window';
+import type Window from 'model/windowManager/Window';
 
 export enum Events {
   NoteUpdated = 'editor.note.updated',

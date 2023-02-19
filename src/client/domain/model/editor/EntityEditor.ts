@@ -4,7 +4,7 @@ import { computed, makeObservable } from 'mobx';
 import EventEmitter from 'eventemitter2';
 
 import { token as remoteToken } from 'infra/Remote';
-import type Window from 'model/Window';
+import type Window from 'model/windowManager/Window';
 
 export default abstract class EntityEditor extends EventEmitter {
   constructor(protected readonly window: Window, readonly entityId: string) {

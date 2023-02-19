@@ -3,7 +3,7 @@ import debounce from 'lodash/debounce';
 import { container } from 'tsyringe';
 
 import { normalizeTitle, type NoteVO, type NoteBodyVO, type NoteBodyDTO, type NotePath, NoteDTO } from 'interface/Note';
-import type Window from 'model/Window';
+import type Window from 'model/windowManager/Window';
 import NoteService, { NoteEvents } from 'service/NoteService';
 
 import EntityEditor from './EntityEditor';

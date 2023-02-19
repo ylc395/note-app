@@ -8,15 +8,24 @@ import NoteWorkbench from './Note';
 import Tabs from './Tabs';
 
 export default observer(function Window({ path, id }: { path: MosaicBranch[]; id: WindowId }) {
-  const { windowMap } = container.resolve(WorkbenchService);
-  const w = windowMap.get(id);
+  const { windowManager } = container.resolve(WorkbenchService);
+  const w = windowManager.get(id, true);
 
   if (!w) {
-    throw new Error(`invalid window id: ${id}`);
+    return null;
   }
 
   return (
-    <MosaicWindow path={path} title="" renderToolbar={() => <Tabs id={id} />}>
+    <MosaicWindow
+      path={path}
+      title=""
+      renderToolbar={() => (
+        // mosaic lib require a native element instead of a custom component
+        <div className="w-full">
+          <Tabs id={id} />
+        </div>
+      )}
+    >
       {w.currentTab?.type === EntityTypes.Note && w.currentTab.editor && <NoteWorkbench editor={w.currentTab.editor} />}
     </MosaicWindow>
   );

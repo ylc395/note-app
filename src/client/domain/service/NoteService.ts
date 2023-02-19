@@ -53,7 +53,7 @@ export default class NoteService extends EventEmitter {
 
     note = this.noteTree.updateTreeByNote(note)?.note;
     this.noteTree.toggleSelect(note.id, true);
-    this.workbench.open({ type: EntityTypes.Note, entity: note }, false);
+    this.workbench.openEntity({ type: EntityTypes.Note, entity: note });
   };
 
   private async duplicateNote(targetId: Note['id']) {
@@ -68,7 +68,7 @@ export default class NoteService extends EventEmitter {
 
     if (selected && !multiple) {
       const { note } = this.noteTree.getNode(noteId);
-      this.workbench.open({ type: EntityTypes.Note, entity: note }, false);
+      this.workbench.openEntity({ type: EntityTypes.Note, entity: note });
     }
   };
 
@@ -198,8 +198,8 @@ export default class NoteService extends EventEmitter {
           { label: `删除${description}`, key: 'delete' },
         ]
       : [
-          { label: '在新标签页打开', key: 'delete' },
-          { label: '在新窗口打开', key: 'delete' },
+          { label: '在新标签页打开', key: 'openInNewTab' },
+          { label: '在新窗口打开', key: 'openInNewWindow' },
           { type: 'separator' },
           { label: '移动至...', key: 'move' },
           { label: note.isStar ? '已收藏' : '收藏', key: 'star', disabled: note.isStar },
@@ -231,6 +231,10 @@ export default class NoteService extends EventEmitter {
         return this.editNotes(targets);
       case 'star':
         return this.star.starNotes(targets);
+      case 'openInNewTab':
+        return this.workbench.openEntity({ type: EntityTypes.Note, entity: note }, 'newTab');
+      case 'openInNewWindow':
+        return this.workbench.openEntity({ type: EntityTypes.Note, entity: note }, 'newWindow');
       default:
         break;
     }
