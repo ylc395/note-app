@@ -1,5 +1,6 @@
 import set from 'lodash/set';
-import { observable, makeObservable, computed, action, runInAction } from 'mobx';
+import cloneDeep from 'lodash/cloneDeep';
+import { observable, makeObservable, computed, action, runInAction, toJS } from 'mobx';
 
 type ValuePath = string;
 type ErrorMessage = string;
@@ -21,7 +22,7 @@ export default abstract class Base<T extends object> {
   @observable readonly values: T;
   @observable readonly errors: Errors = {};
   constructor(initValues: T) {
-    this.values = initValues;
+    this.values = cloneDeep(initValues);
     makeObservable(this);
   }
 
@@ -35,7 +36,7 @@ export default abstract class Base<T extends object> {
     }
 
     if (this.isValid && onSuccess) {
-      onSuccess(this.values);
+      onSuccess(toJS(this.values));
     }
   }
 

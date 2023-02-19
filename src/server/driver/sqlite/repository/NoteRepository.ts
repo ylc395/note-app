@@ -207,12 +207,10 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
 
   async findAttributes() {
     const result: NoteAttributesVO = {};
-    const notes = await this.knex<Row>(this.schema.tableName)
-      .select('json_extract(attributes, "$") as parsed')
-      .where('attributes', '<>', '{}');
+    const notes = await this.knex<Row>(this.schema.tableName).select('attributes').where('attributes', '<>', '{}');
 
-    for (const { parsed } of notes) {
-      for (const [k, v] of Object.entries(parsed)) {
+    for (const { attributes } of notes) {
+      for (const [k, v] of Object.entries(JSON.parse(attributes))) {
         if (!result[k]) {
           result[k] = [];
         }

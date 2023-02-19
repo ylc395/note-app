@@ -13,6 +13,7 @@ import type { ContextmenuItem } from 'infra/ui';
 import { type NoteDTO, type NoteVO as Note, type NotesDTO, type NoteVO, normalizeTitle } from 'interface/Note';
 import type { RecyclablesDTO } from 'interface/Recyclables';
 import { EntityTypes } from 'interface/Entity';
+import { MULTIPLE_ICON_FLAG, NoteMetadata } from 'model/form/type';
 
 import WorkbenchService from './WorkbenchService';
 import EditorService from './EditorService';
@@ -128,26 +129,36 @@ export default class NoteService extends EventEmitter {
     const notesToEdit = ids.map((id) => this.noteTree.getNode(id).note);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const firstNote = notesToEdit[0]!;
-    const noteMetadata =
+    const noteMetadata: NoteMetadata =
       notesToEdit.length > 1
         ? {
-            icon: undefined,
-            isReadonly: notesToEdit.reduce((result: boolean | undefined, { isReadonly }) => {
-              if (result === undefined || result !== isReadonly) {
-                return undefined;
+            icon: MULTIPLE_ICON_FLAG,
+            isReadonly: notesToEdit.reduce((result, { isReadonly }) => {
+              if (result === 2) {
+                return result;
               }
 
-              return result;
-            }, firstNote.isReadonly),
+              return result !== Number(isReadonly) ? 2 : (Number(isReadonly) as 0 | 1);
+            }, Number(firstNote.isReadonly) as NoteMetadata['isReadonly']),
           }
-        : pick(firstNote, ['icon', 'isReadonly', 'userCreatedAt', 'userUpdatedAt']);
+        : {
+            ...pick(firstNote, ['icon', 'userCreatedAt', 'userUpdatedAt', 'attributes']),
+            isReadonly: Number(firstNote.isReadonly) as NoteMetadata['isReadonly'],
+          };
 
     const updatedNoteMetadata = await this.userInput.note.editNoteMetadata(noteMetadata, {
       length: notesToEdit.length,
       title: notesToEdit.length === 1 ? normalizeTitle(firstNote) : '',
       icons: notesToEdit.map(({ icon }) => icon),
     });
-    const result: NotesDTO = notesToEdit.map(({ id }) => ({ id, ...updatedNoteMetadata }));
+
+    const result: NotesDTO = notesToEdit.map(({ id }) => ({
+      id,
+      ...updatedNoteMetadata,
+      isReadonly: updatedNoteMetadata.isReadonly === 2 ? undefined : Boolean(updatedNoteMetadata.isReadonly),
+      icon: updatedNoteMetadata.icon === MULTIPLE_ICON_FLAG ? undefined : updatedNoteMetadata.icon,
+    }));
+
     const { body: notes } = await this.remote.patch<NotesDTO, NoteVO[]>('/notes', result);
     const parentIds = new Set<Note['parentId']>();
 

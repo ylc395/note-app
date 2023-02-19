@@ -16,7 +16,7 @@ interface Props {
 export default observer(function NoteIconTitle({ className, note, icon, title, id, size }: Props) {
   return (
     <span className={`flex items-center ${className || ''}`}>
-      <Emoji id={icon || note?.icon} className="mr-1" size={size} />
+      <Emoji id={icon || note?.icon || null} className="mr-1" size={size} />
       <span className="whitespace-nowrap">
         {__ENV__ === 'dev' ? `${id || note?.id} ` : null}
         {title || (note && normalizeTitle(note))}

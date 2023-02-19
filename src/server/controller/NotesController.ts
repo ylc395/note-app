@@ -35,6 +35,11 @@ export default class NotesController {
     return await this.noteService.query(q);
   }
 
+  @Get('/notes/attributes')
+  async queryAttributes(): Promise<NoteAttributesVO> {
+    return await this.noteService.getAttributes();
+  }
+
   @Get('/notes/:id/tree-fragment')
   async queryTreeFragment(@Param('id') noteId: string): Promise<NoteVO[]> {
     return await this.noteService.getTreeFragment(noteId);
@@ -69,10 +74,5 @@ export default class NotesController {
   @Put('/notes/:id/body')
   async updateBody(@Param('id') noteId: string, @Body() body: NoteBodyDTO): Promise<NoteBodyVO> {
     return await this.noteService.updateBody(noteId, body);
-  }
-
-  @Get('/notes/attributes')
-  async queryAttributes(): Promise<NoteAttributesVO> {
-    return await this.noteService.getAttributes();
   }
 }

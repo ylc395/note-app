@@ -32,7 +32,7 @@ export function EmojiPicker({ onSelect, onClickOutside }: Props) {
 }
 
 export interface EmojiProps {
-  id?: string | null;
+  id: string | null;
   className?: string;
   size?: string;
 }

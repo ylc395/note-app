@@ -19,6 +19,6 @@ export const FORM_ITEM_LAYOUT: FormProps = {
   },
   wrapperCol: {
     xs: { span: 24 },
-    sm: { span: 14 },
+    sm: { span: 18 },
   },
 };
