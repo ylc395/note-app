@@ -1,5 +1,6 @@
 import { observer, useLocalObservable } from 'mobx-react-lite';
 import { container } from 'tsyringe';
+import { computed, observable } from 'mobx';
 import { useCallback, useState, useEffect, type MouseEvent } from 'react';
 import { Form, DatePicker, Button, Checkbox, Popover, AutoComplete } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
@@ -14,8 +15,7 @@ import { type NoteMetadata as NoteMetadataValues, MULTIPLE_ICON_FLAG } from 'mod
 import type { NoteAttributesVO, NoteDTO, NoteVO } from 'interface/Note';
 
 import { useUpdateTimeField, FORM_ITEM_LAYOUT } from '../utils';
-import { EmojiPicker, Emoji } from '../Emoji';
-import { computed, observable } from 'mobx';
+import { EmojiPicker, Emoji } from './Emoji';
 
 interface Props {
   onSubmit: (metadata: NoteMetadataValues) => void;

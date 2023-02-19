@@ -2,7 +2,7 @@ import { observer } from 'mobx-react-lite';
 
 import { normalizeTitle, NoteVO } from 'interface/Note';
 
-import { Emoji, type EmojiProps } from '../Emoji';
+import { Emoji, type EmojiProps } from './Emoji';
 
 interface Props {
   className?: string;

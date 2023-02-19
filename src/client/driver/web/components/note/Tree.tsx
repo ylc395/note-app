@@ -6,7 +6,7 @@ import { useCallback, useEffect } from 'react';
 
 import type NoteTree from 'model/tree/NoteTree';
 import type { NoteVO } from 'interface/Note';
-import { Emoji } from 'web/components/Emoji';
+import { Emoji } from 'web/components/note/Emoji';
 import { VIRTUAL_ROOT_NODE_KEY } from 'model/tree/NoteTree';
 
 const { useToken } = theme;
