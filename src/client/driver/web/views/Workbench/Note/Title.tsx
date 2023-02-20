@@ -6,11 +6,11 @@ import { SettingOutlined, InfoCircleOutlined, SearchOutlined } from '@ant-design
 import type NoteEditor from 'model/editor/NoteEditor';
 
 export default observer(function NoteTitle({ editor }: { editor: NoteEditor }) {
-  const handleChange = useCallback((e: ChangeEvent<HTMLInputElement>) => editor?.saveTitle(e.target.value), [editor]);
+  const handleChange = useCallback((e: ChangeEvent<HTMLInputElement>) => editor?.updateTitle(e.target.value), [editor]);
 
   return (
     <div className="flex items-center border-0 border-gray-200 border-b border-solid">
-      {editor.entity.metadata && (
+      {editor.entity && (
         <Input
           className="font-semibold text-lg border-none py-2"
           placeholder={editor.title}

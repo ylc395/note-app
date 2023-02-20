@@ -4,7 +4,7 @@ import uniqueId from 'lodash/uniqueId';
 import EventEmitter from 'eventemitter2';
 
 import type { EntityId, EntityTypes } from 'interface/Entity';
-import type NoteEditor from 'model/editor/NoteEditor';
+import type EntityEditor from 'model/editor/EntityEditor';
 import EditorService from 'service/EditorService';
 import type Manager from './Manger';
 
@@ -15,9 +15,8 @@ export type OpenableEntity = {
 
 export type Tab = {
   entityId: string;
-} & {
-  type: EntityTypes.Note;
-  editor?: NoteEditor;
+  type: EntityTypes;
+  editor?: EntityEditor;
 };
 
 export enum Events {

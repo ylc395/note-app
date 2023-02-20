@@ -2,8 +2,9 @@ import { observer } from 'mobx-react-lite';
 import { MosaicWindow, type MosaicBranch } from 'react-mosaic-component';
 import { container } from 'tsyringe';
 
-import { EntityTypes } from 'interface/Entity';
 import WorkbenchService, { type WindowId } from 'service/WorkbenchService';
+import NoteEditor from 'model/editor/NoteEditor';
+
 import NoteWorkbench from './Note';
 import Tabs from './Tabs';
 
@@ -26,7 +27,7 @@ export default observer(function Window({ path, id }: { path: MosaicBranch[]; id
         </div>
       )}
     >
-      {w.currentTab?.type === EntityTypes.Note && w.currentTab.editor && <NoteWorkbench editor={w.currentTab.editor} />}
+      {w.currentTab?.editor instanceof NoteEditor && <NoteWorkbench editor={w.currentTab.editor} />}
     </MosaicWindow>
   );
 });

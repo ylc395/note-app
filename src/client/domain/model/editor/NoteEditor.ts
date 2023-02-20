@@ -1,109 +1,72 @@
-import { makeObservable, computed, observable, runInAction, reaction } from 'mobx';
-import debounce from 'lodash/debounce';
-import { container } from 'tsyringe';
+import { makeObservable, computed, reaction, action, observable } from 'mobx';
+import last from 'lodash/last';
 
-import { normalizeTitle, type NoteVO, type NoteBodyVO, type NoteBodyDTO, type NotePath, NoteDTO } from 'interface/Note';
+import { normalizeTitle, type NoteVO, type NoteBodyVO, type NotePath } from 'interface/Note';
 import type Window from 'model/windowManager/Window';
-import NoteService, { NoteEvents } from 'service/NoteService';
 
 import EntityEditor from './EntityEditor';
 
 export enum Events {
-  Updated = 'noteEditor.updated',
+  TitleUpdated = 'noteEditor.updated.title',
+  BodyUpdated = 'noteEditor.updated.body',
+  Activated = 'noteEditor.activated',
 }
 
-interface NoteEditorEntity {
-  body?: NoteBodyVO;
-  metadata?: NoteVO;
-  breadcrumb?: NotePath;
+export interface Entity {
+  body: NoteBodyVO;
+  metadata: NoteVO;
 }
 
-export default class NoteEditor extends EntityEditor<NoteEditorEntity> {
-  private readonly noteService = container.resolve(NoteService);
+export default class NoteEditor extends EntityEditor<Entity> {
   private readonly disposeReaction: ReturnType<typeof reaction>;
+  @observable breadcrumb?: NotePath;
 
-  @observable entity: NoteEditorEntity = {};
-
-  constructor(protected readonly window: Window, readonly entityId: NoteVO['id']) {
-    super(window, entityId);
+  constructor(window: Window, noteId: NoteVO['id']) {
+    super(window, noteId);
     makeObservable(this);
 
-    this.loadEntity();
-    this.noteService.on(NoteEvents.Updated, this.reloadMetadata);
-    this.disposeReaction = reaction(() => this.isActive, this.reloadMetadata);
+    this.disposeReaction = reaction(
+      () => this.isActive,
+      (isActive) => isActive && this.emit(Events.Activated),
+      { fireImmediately: true },
+    );
   }
 
-  @computed get title() {
-    return this.entity.metadata ? normalizeTitle(this.entity.metadata) : '';
+  @computed
+  get title() {
+    return this.entity ? normalizeTitle(this.entity.metadata) : '';
   }
 
-  protected async loadEntity() {
-    await Promise.all([this.loadNoteBody(), this.loadNoteMetadata()]);
-  }
+  @action
+  async updateBody(body: unknown) {
+    if (!this.entity) {
+      throw new Error('not ready');
+    }
 
-  private async loadNoteMetadata() {
-    const { body: note } = await this.remote.get<void, NoteVO>(`/notes/${this.entityId}`);
-    const { body: breadcrumb } = await this.remote.get<void, NotePath>(`/notes/${this.entityId}/tree-path`);
-
-    runInAction(() => {
-      this.entity.metadata = note;
-      this.entity.breadcrumb = breadcrumb;
-    });
-  }
-
-  private async loadNoteBody() {
-    const { body: noteBody } = await this.remote.get<void, NoteBodyVO>(`/notes/${this.entityId}/body`);
-
-    runInAction(() => {
-      this.entity.body = noteBody;
-    });
-  }
-
-  readonly save = debounce(async (body: unknown) => {
     const jsonStr = JSON.stringify(body);
-    runInAction(() => {
-      this.entity.body = jsonStr;
-    });
-
-    await this.remote.put<NoteBodyDTO>(`/notes/${this.entityId}/body`, jsonStr);
-  }, 500);
-
-  saveTitle(title: string) {
-    runInAction(() => {
-      if (!this.entity.metadata) {
-        throw new Error('not ready');
-      }
-
-      this.entity.metadata.title = title;
-
-      const breadcrumb = this.entity.breadcrumb?.find(({ id }) => id === this.entityId);
-
-      if (breadcrumb) {
-        breadcrumb.title = title;
-      }
-    });
-
-    this.syncTitle(title);
+    this.entity.body = jsonStr;
+    this.emit(Events.BodyUpdated, this.entity.body);
   }
 
-  private readonly syncTitle = debounce(async (title: string) => {
-    if (!this.entity.metadata) {
-      throw new Error('no ready');
+  @action
+  updateTitle(title: string) {
+    if (!this.entity) {
+      throw new Error('not ready');
     }
 
-    const { body: note } = await this.remote.patch<NoteDTO, NoteVO>(`/notes/${this.entityId}`, { title });
-    this.emit(Events.Updated, note);
-  }, 500);
+    this.entity.metadata.title = title;
 
-  private readonly reloadMetadata = () => {
-    if (this.isActive) {
-      this.loadNoteMetadata();
+    const breadcrumb = last(this.breadcrumb);
+
+    if (breadcrumb) {
+      breadcrumb.title = title;
     }
-  };
+
+    this.emit(Events.TitleUpdated, this.entity.metadata);
+  }
 
   destroy() {
     super.destroy();
-    this.noteService.off(NoteEvents.Updated, this.reloadMetadata);
     this.disposeReaction();
   }
 }

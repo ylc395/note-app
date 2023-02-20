@@ -19,7 +19,7 @@ export default observer(function NoteEditor({ editor }: { editor: NoteEditor }) 
           ctx.set(rootCtx, root);
           ctx.get(listenerCtx).updated((_, doc, pre) => {
             if (pre && editorRef.current) {
-              editorRef.current.save(doc.toJSON());
+              editorRef.current.updateBody(doc.toJSON());
             }
           });
         })
@@ -37,7 +37,7 @@ export default observer(function NoteEditor({ editor }: { editor: NoteEditor }) 
     }
 
     e.action((ctx) => {
-      if (editor === editorRef.current || !editor || typeof editor.entity.body !== 'string') {
+      if (editor === editorRef.current || !editor || typeof editor.entity?.body !== 'string') {
         return;
       }
 
@@ -55,7 +55,7 @@ export default observer(function NoteEditor({ editor }: { editor: NoteEditor }) 
       view.dispatch(state.tr.replace(0, state.doc.content.size, slice));
       editorRef.current = editor;
     });
-  }, [editor, editor?.entity.body, milkdownEditor.editor]);
+  }, [editor, editor.entity?.body, milkdownEditor.editor]);
 
   return (
     <div className="px-4 overflow-auto">

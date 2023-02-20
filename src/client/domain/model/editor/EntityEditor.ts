@@ -1,25 +1,26 @@
 import uniqueId from 'lodash/uniqueId';
-import { container } from 'tsyringe';
-import { computed, makeObservable } from 'mobx';
+import { computed, makeObservable, observable } from 'mobx';
 import EventEmitter from 'eventemitter2';
 
-import { token as remoteToken } from 'infra/Remote';
 import type Window from 'model/windowManager/Window';
+import type { EntityId } from 'interface/Entity';
 
-export default abstract class EntityEditor<T> extends EventEmitter {
-  protected readonly remote = container.resolve(remoteToken);
+export enum Events {
+  Destroyed = 'entityEditor.destroyed',
+}
+
+export default abstract class EntityEditor<T = unknown> extends EventEmitter {
   readonly id = uniqueId('editor-');
   abstract title: string;
-  abstract entity?: T;
+  @observable entity?: T;
 
-  constructor(protected readonly window: Window, readonly entityId: string) {
+  constructor(protected readonly window: Window, readonly entityId: EntityId) {
     super();
     makeObservable(this);
   }
 
-  protected abstract loadEntity(): Promise<void>;
-
   destroy() {
+    this.emit(Events.Destroyed);
     this.removeAllListeners();
   }
 

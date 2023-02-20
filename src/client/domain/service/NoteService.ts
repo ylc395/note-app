@@ -36,7 +36,7 @@ export default class NoteService extends EventEmitter {
 
   constructor() {
     super();
-    this.editor.on(NoteEditorEvents.Updated, this.noteTree.updateTreeByNote);
+    this.editor.on(NoteEditorEvents.TitleUpdated, this.noteTree.updateTreeByNote);
     this.star.on(StarEvents.NoteAdded, (noteId) => this.noteTree.toggleStar(noteId, true));
     this.star.on(StarEvents.NoteRemoved, (noteId) => this.noteTree.toggleStar(noteId, false));
   }
