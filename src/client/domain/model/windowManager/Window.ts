@@ -1,4 +1,4 @@
-import { action, makeObservable, observable, has } from 'mobx';
+import { action, makeObservable, observable, has, computed } from 'mobx';
 import uniqueId from 'lodash/uniqueId';
 import EventEmitter from 'eventemitter2';
 
@@ -23,6 +23,11 @@ export default class Window extends EventEmitter {
 
   get isRoot() {
     return this.manager.root === this.id;
+  }
+
+  @computed
+  get isFocused() {
+    return this.manager.focusedWindow?.id === this.id;
   }
 
   @action.bound

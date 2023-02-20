@@ -17,12 +17,12 @@ export enum Events {
 export interface Entity {
   body: NoteBodyVO;
   metadata: NoteVO;
+  breadcrumb: NotePath;
 }
 
 export default class NoteEditor extends EntityEditor<Entity> {
   private disposeReaction?: ReturnType<typeof reaction>;
   readonly entityType: EntityTypes = EntityTypes.Note;
-  @observable breadcrumb?: NotePath;
   constructor(window: Window, noteId: NoteVO['id']) {
     super(window, noteId);
     makeObservable(this);
@@ -30,7 +30,6 @@ export default class NoteEditor extends EntityEditor<Entity> {
   }
 
   protected async init() {
-    this.on(Events.Activated, this.loadBreadcrumb.bind(this));
     this.disposeReaction = reaction(
       () => this.isActive,
       (isActive) => isActive && this.emit(Events.Activated),
@@ -64,12 +63,13 @@ export default class NoteEditor extends EntityEditor<Entity> {
 
     this.entity.metadata.title = title;
 
-    const breadcrumb = last(this.breadcrumb);
+    const breadcrumb = last(this.entity.breadcrumb);
 
-    if (breadcrumb) {
-      breadcrumb.title = title;
+    if (!breadcrumb) {
+      throw new Error('no breadcrumb');
     }
 
+    breadcrumb.title = title;
     this.emit(Events.TitleUpdated, this.entity.metadata);
     this.uploadTitle(title);
   }
@@ -80,18 +80,13 @@ export default class NoteEditor extends EntityEditor<Entity> {
   }
 
   protected async fetchEntity() {
-    const [{ body: metadata }, { body }] = await Promise.all([
+    const [{ body: metadata }, { body }, { body: breadcrumb }] = await Promise.all([
       this.remote.get<void, NoteVO>(`/notes/${this.entityId}`),
       this.remote.get<void, NoteBodyVO>(`/notes/${this.entityId}/body`),
+      this.remote.get<void, NotePath>(`/notes/${this.entityId}/tree-path`),
     ]);
 
-    return { metadata, body };
-  }
-
-  private async loadBreadcrumb() {
-    const { body: breadcrumb } = await this.remote.get<void, NotePath>(`/notes/${this.entityId}/tree-path`);
-
-    runInAction(() => (this.breadcrumb = breadcrumb));
+    return { metadata, body, breadcrumb };
   }
 
   private readonly uploadBody = debounce((body: NoteBodyDTO) => {

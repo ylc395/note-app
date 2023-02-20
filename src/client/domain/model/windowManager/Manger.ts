@@ -1,4 +1,4 @@
-import { observable, makeObservable, action, computed } from 'mobx';
+import { observable, makeObservable, action } from 'mobx';
 import { type MosaicNode, type MosaicParent, getOtherBranch } from 'react-mosaic-component';
 
 import Window, { Events as WindowEvents } from './Window';

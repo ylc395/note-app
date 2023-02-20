@@ -47,7 +47,7 @@ export default abstract class EntityEditor<T extends EditableEntity> extends Eve
 
   @computed
   get isActive() {
-    return this.window.currentTab?.id === this.id;
+    return this.window.isFocused && this.window.currentTab?.id === this.id;
   }
 
   private get entityKey() {
