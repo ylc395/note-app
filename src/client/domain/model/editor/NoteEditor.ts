@@ -1,7 +1,9 @@
-import { makeObservable, computed, reaction, action, observable } from 'mobx';
+import { makeObservable, computed, reaction, action, observable, runInAction } from 'mobx';
 import last from 'lodash/last';
+import debounce from 'lodash/debounce';
 
-import { normalizeTitle, type NoteVO, type NoteBodyVO, type NotePath } from 'interface/Note';
+import { EntityTypes } from 'interface/Entity';
+import { normalizeTitle, type NoteVO, type NoteBodyVO, type NotePath, NoteBodyDTO, NoteDTO } from 'interface/Note';
 import type Window from 'model/windowManager/Window';
 
 import EntityEditor from './EntityEditor';
@@ -19,12 +21,13 @@ export interface Entity {
 
 export default class NoteEditor extends EntityEditor<Entity> {
   private readonly disposeReaction: ReturnType<typeof reaction>;
+  protected readonly entityType: EntityTypes = EntityTypes.Note;
   @observable breadcrumb?: NotePath;
-
   constructor(window: Window, noteId: NoteVO['id']) {
     super(window, noteId);
     makeObservable(this);
 
+    this.on(Events.Activated, this.loadBreadcrumb.bind(this));
     this.disposeReaction = reaction(
       () => this.isActive,
       (isActive) => isActive && this.emit(Events.Activated),
@@ -46,6 +49,7 @@ export default class NoteEditor extends EntityEditor<Entity> {
     const jsonStr = JSON.stringify(body);
     this.entity.body = jsonStr;
     this.emit(Events.BodyUpdated, this.entity.body);
+    this.uploadBody(jsonStr);
   }
 
   @action
@@ -63,10 +67,34 @@ export default class NoteEditor extends EntityEditor<Entity> {
     }
 
     this.emit(Events.TitleUpdated, this.entity.metadata);
+    this.uploadTitle(title);
   }
 
   destroy() {
     super.destroy();
     this.disposeReaction();
   }
+
+  protected async fetchEntity() {
+    const [{ body: metadata }, { body }] = await Promise.all([
+      this.remote.get<void, NoteVO>(`/notes/${this.entityId}`),
+      this.remote.get<void, NoteBodyVO>(`/notes/${this.entityId}/body`),
+    ]);
+
+    return { metadata, body };
+  }
+
+  private async loadBreadcrumb() {
+    const { body: breadcrumb } = await this.remote.get<void, NotePath>(`/notes/${this.entityId}/tree-path`);
+
+    runInAction(() => (this.breadcrumb = breadcrumb));
+  }
+
+  private readonly uploadBody = debounce((body: NoteBodyDTO) => {
+    this.remote.put<NoteBodyDTO>(`/notes/${this.entityId}/body`, body);
+  }, 1000);
+
+  private readonly uploadTitle = debounce((title: NonNullable<NoteDTO['title']>) => {
+    this.remote.patch<NoteDTO>(`/notes/${this.entityId}`, { title });
+  }, 1000);
 }
