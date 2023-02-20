@@ -3,20 +3,18 @@ import { container } from 'tsyringe';
 import uniqueId from 'lodash/uniqueId';
 import EventEmitter from 'eventemitter2';
 
-import type { EntityTypes } from 'interface/Entity';
-import type { NoteVO } from 'interface/Note';
+import type { EntityId, EntityTypes } from 'interface/Entity';
 import type NoteEditor from 'model/editor/NoteEditor';
 import EditorService from 'service/EditorService';
 import type Manager from './Manger';
 
 export type OpenableEntity = {
-  type: EntityTypes.Note;
-  entity: NoteVO;
+  type: EntityTypes;
+  entityId: EntityId;
 };
 
 export type Tab = {
   entityId: string;
-  focused: boolean;
 } & {
   type: EntityTypes.Note;
   editor?: NoteEditor;
@@ -31,9 +29,8 @@ export default class Window extends EventEmitter {
   @observable.ref currentTab?: Required<Tab>;
   @observable.shallow tabs: Required<Tab>[] = [];
   private readonly editorService = container.resolve(EditorService);
-  constructor(private readonly manager: Manager, tabs?: Tab[]) {
+  constructor(private readonly manager: Manager) {
     super();
-    this.loadTabs(tabs);
     makeObservable(this);
   }
 
@@ -49,21 +46,6 @@ export default class Window extends EventEmitter {
     return newTab;
   }
 
-  @action
-  private loadTabs(tabs?: Tab[]) {
-    if (!tabs) {
-      return;
-    }
-
-    for (const { entityId, type, focused } of tabs) {
-      const tab = this.createTab({ entityId, type, focused });
-
-      if (focused) {
-        this.currentTab = tab;
-      }
-    }
-  }
-
   @action.bound
   moveTabTo(src: Required<Tab>, dest: Tab) {
     const srcIndex = this.tabs.findIndex((tab) => tab === src);
@@ -74,12 +56,12 @@ export default class Window extends EventEmitter {
   }
 
   @action.bound
-  open({ entity, type }: OpenableEntity, alwaysNewTab?: boolean) {
+  open({ entityId, type }: OpenableEntity, alwaysNewTab?: boolean) {
     const existedTab = alwaysNewTab
       ? undefined
-      : this.tabs.find((tab) => tab.type === type && tab.entityId === entity.id);
+      : this.tabs.find((tab) => tab.type === type && tab.entityId === entityId);
 
-    this.currentTab = existedTab || this.createTab({ type, entityId: entity.id, focused: true });
+    this.currentTab = existedTab || this.createTab({ type, entityId });
   }
 
   @action.bound

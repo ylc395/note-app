@@ -3,7 +3,6 @@ import { observer } from 'mobx-react-lite';
 import { type ChangeEvent, useCallback } from 'react';
 import { SettingOutlined, InfoCircleOutlined, SearchOutlined } from '@ant-design/icons';
 
-import { normalizeTitle } from 'interface/Note';
 import type NoteEditor from 'model/editor/NoteEditor';
 
 export default observer(function NoteTitle({ editor }: { editor: NoteEditor }) {
@@ -11,11 +10,11 @@ export default observer(function NoteTitle({ editor }: { editor: NoteEditor }) {
 
   return (
     <div className="flex items-center border-0 border-gray-200 border-b border-solid">
-      {editor.metadata && (
+      {editor.entity.metadata && (
         <Input
           className="font-semibold text-lg border-none py-2"
-          placeholder={editor.metadata.note ? normalizeTitle(editor.metadata.note) : ''}
-          value={editor.metadata.note.title}
+          placeholder={editor.title}
+          value={editor.entity.metadata.title}
           onChange={handleChange}
         />
       )}

@@ -12,24 +12,33 @@ export enum Events {
   Updated = 'noteEditor.updated',
 }
 
-export default class NoteEditor extends EntityEditor {
-  @observable noteBody?: NoteBodyVO;
-  @observable metadata?: { note: NoteVO; breadcrumb: NotePath };
+interface NoteEditorEntity {
+  body?: NoteBodyVO;
+  metadata?: NoteVO;
+  breadcrumb?: NotePath;
+}
+
+export default class NoteEditor extends EntityEditor<NoteEditorEntity> {
   private readonly noteService = container.resolve(NoteService);
   private readonly disposeReaction: ReturnType<typeof reaction>;
+
+  @observable entity: NoteEditorEntity = {};
 
   constructor(protected readonly window: Window, readonly entityId: NoteVO['id']) {
     super(window, entityId);
     makeObservable(this);
-    this.loadNoteMetadata();
-    this.loadNoteBody();
 
+    this.loadEntity();
     this.noteService.on(NoteEvents.Updated, this.reloadMetadata);
-    this.disposeReaction = reaction(() => this.isCurrent, this.reloadMetadata);
+    this.disposeReaction = reaction(() => this.isActive, this.reloadMetadata);
   }
 
   @computed get title() {
-    return this.metadata?.note ? normalizeTitle(this.metadata.note) : '';
+    return this.entity.metadata ? normalizeTitle(this.entity.metadata) : '';
+  }
+
+  protected async loadEntity() {
+    await Promise.all([this.loadNoteBody(), this.loadNoteMetadata()]);
   }
 
   private async loadNoteMetadata() {
@@ -37,7 +46,8 @@ export default class NoteEditor extends EntityEditor {
     const { body: breadcrumb } = await this.remote.get<void, NotePath>(`/notes/${this.entityId}/tree-path`);
 
     runInAction(() => {
-      this.metadata = { note, breadcrumb };
+      this.entity.metadata = note;
+      this.entity.breadcrumb = breadcrumb;
     });
   }
 
@@ -45,14 +55,14 @@ export default class NoteEditor extends EntityEditor {
     const { body: noteBody } = await this.remote.get<void, NoteBodyVO>(`/notes/${this.entityId}/body`);
 
     runInAction(() => {
-      this.noteBody = noteBody;
+      this.entity.body = noteBody;
     });
   }
 
   readonly save = debounce(async (body: unknown) => {
     const jsonStr = JSON.stringify(body);
     runInAction(() => {
-      this.noteBody = jsonStr;
+      this.entity.body = jsonStr;
     });
 
     await this.remote.put<NoteBodyDTO>(`/notes/${this.entityId}/body`, jsonStr);
@@ -60,26 +70,24 @@ export default class NoteEditor extends EntityEditor {
 
   saveTitle(title: string) {
     runInAction(() => {
-      if (!this.metadata) {
+      if (!this.entity.metadata) {
         throw new Error('not ready');
       }
 
-      this.metadata.note.title = title;
+      this.entity.metadata.title = title;
 
-      const breadcrumb = this.metadata.breadcrumb.find(({ id }) => id === this.entityId);
+      const breadcrumb = this.entity.breadcrumb?.find(({ id }) => id === this.entityId);
 
-      if (!breadcrumb) {
-        throw new Error('no breadcrumb');
+      if (breadcrumb) {
+        breadcrumb.title = title;
       }
-
-      breadcrumb.title = title;
     });
 
     this.syncTitle(title);
   }
 
   private readonly syncTitle = debounce(async (title: string) => {
-    if (!this.metadata) {
+    if (!this.entity.metadata) {
       throw new Error('no ready');
     }
 
@@ -88,7 +96,7 @@ export default class NoteEditor extends EntityEditor {
   }, 500);
 
   private readonly reloadMetadata = () => {
-    if (this.isCurrent) {
+    if (this.isActive) {
       this.loadNoteMetadata();
     }
   };
