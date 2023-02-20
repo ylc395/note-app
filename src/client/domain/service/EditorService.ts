@@ -10,7 +10,7 @@ import type Window from 'model/windowManager/Window';
 import WindowManager from 'model/windowManager/Manger';
 
 type OpenableEntity = {
-  type: EntityTypes;
+  entityType: EntityTypes;
   entityId: EntityId;
 };
 
@@ -27,7 +27,7 @@ export default class EditorService extends EventEmitter {
   readonly windowManager = new WindowManager();
   private readonly editors = new Set<NoteEditor>();
 
-  private createEditor(window: Window, { entityId, type }: OpenableEntity) {
+  private createEditor(window: Window, { entityId, entityType: type }: OpenableEntity) {
     const editor = new editorConstructorsMap[type](window, entityId);
 
     this.editors.add(editor);
@@ -43,7 +43,7 @@ export default class EditorService extends EventEmitter {
 
     if (!type) {
       const existedTab = targetWindow.tabs.find(
-        (editor) => editor.entityType === entity.type && editor.entityId === entity.entityId,
+        (editor) => editor.entityType === entity.entityType && editor.entityId === entity.entityId,
       );
 
       if (existedTab) {
@@ -69,5 +69,25 @@ export default class EditorService extends EventEmitter {
     } else if (type === 'newTab') {
       targetWindow.createTab(editor);
     }
+  }
+
+  @action.bound
+  duplicateOnNewWindow() {
+    const { focusedWindow } = this.windowManager;
+
+    if (!focusedWindow) {
+      throw new Error('no focusedWindow');
+    }
+
+    const currentTab = focusedWindow.currentTab;
+
+    if (!currentTab) {
+      throw new Error('no tab');
+    }
+
+    const newWindow = this.windowManager.splitWindow(focusedWindow.id);
+    const editor = this.createEditor(newWindow, { entityId: currentTab.entityId, entityType: currentTab.entityType });
+
+    newWindow.createTab(editor);
   }
 }

@@ -7,7 +7,7 @@ import EditorService from 'service/EditorService';
 import type { WindowId } from 'model/windowManager/Manger';
 
 export default observer(function Tabs({ id }: { id: WindowId }) {
-  const { windowManager, openEntity } = container.resolve(EditorService);
+  const { windowManager, duplicateOnNewWindow } = container.resolve(EditorService);
   const w = windowManager.get(id);
   const { switchToTab, closeTab, currentTab } = w;
 
@@ -24,7 +24,7 @@ export default observer(function Tabs({ id }: { id: WindowId }) {
         tabBarExtraContent={
           w.currentTab && (
             <Tooltip title="开辟新窗口">
-              <Button className="mr-2" type="text" icon={<SplitCellsOutlined />} />
+              <Button onClick={duplicateOnNewWindow} className="mr-2" type="text" icon={<SplitCellsOutlined />} />
             </Tooltip>
           )
         }

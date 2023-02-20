@@ -51,7 +51,7 @@ export default class NoteService extends EventEmitter {
 
     note = this.noteTree.updateTreeByNote(note).note;
     this.noteTree.toggleSelect(note.id, true);
-    this.editor.openEntity({ type: EntityTypes.Note, entityId: note.id });
+    this.editor.openEntity({ entityType: EntityTypes.Note, entityId: note.id });
   };
 
   private async duplicateNote(targetId: Note['id']) {
@@ -65,7 +65,7 @@ export default class NoteService extends EventEmitter {
     const selected = this.noteTree.toggleSelect(noteId, !multiple);
 
     if (selected && !multiple) {
-      this.editor.openEntity({ type: EntityTypes.Note, entityId: noteId });
+      this.editor.openEntity({ entityType: EntityTypes.Note, entityId: noteId });
     }
   };
 
@@ -229,9 +229,9 @@ export default class NoteService extends EventEmitter {
       case 'star':
         return this.star.starNotes(targets);
       case 'openInNewTab':
-        return this.editor.openEntity({ type: EntityTypes.Note, entityId: targetId }, 'newTab');
+        return this.editor.openEntity({ entityType: EntityTypes.Note, entityId: targetId }, 'newTab');
       case 'openInNewWindow':
-        return this.editor.openEntity({ type: EntityTypes.Note, entityId: targetId }, 'newWindow');
+        return this.editor.openEntity({ entityType: EntityTypes.Note, entityId: targetId }, 'newWindow');
       default:
         break;
     }

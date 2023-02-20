@@ -8,15 +8,10 @@ export type WindowId = Window['id'];
 export default class Manager {
   private readonly windowsMap = new Map<WindowId, Window>();
   @observable root?: MosaicNode<WindowId>; // a binary tree
-  @observable.ref private focusedWindow?: Window;
+  @observable.ref focusedWindow?: Window;
 
   constructor() {
     makeObservable(this);
-  }
-
-  @computed
-  get focusedWindowId() {
-    return this.focusedWindow?.id;
   }
 
   private createWindow(focus?: true) {
