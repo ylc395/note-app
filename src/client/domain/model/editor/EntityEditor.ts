@@ -21,7 +21,7 @@ export default abstract class EntityEditor<T extends EditableEntity> extends Eve
   protected remote = container.resolve(remoteToken);
   readonly id = uniqueId('editor-');
   abstract readonly title: string;
-  protected abstract readonly entityType: EntityTypes;
+  abstract readonly entityType: EntityTypes;
   protected abstract fetchEntity(): Promise<T>;
   @observable.ref entity?: T;
 
@@ -47,7 +47,7 @@ export default abstract class EntityEditor<T extends EditableEntity> extends Eve
 
   @computed
   get isActive() {
-    return this.window.currentTab?.editor.id === this.id;
+    return this.window.currentTab?.id === this.id;
   }
 
   private get entityKey() {

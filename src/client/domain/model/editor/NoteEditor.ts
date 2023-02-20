@@ -21,7 +21,7 @@ export interface Entity {
 
 export default class NoteEditor extends EntityEditor<Entity> {
   private disposeReaction?: ReturnType<typeof reaction>;
-  protected readonly entityType: EntityTypes = EntityTypes.Note;
+  readonly entityType: EntityTypes = EntityTypes.Note;
   @observable breadcrumb?: NotePath;
   constructor(window: Window, noteId: NoteVO['id']) {
     super(window, noteId);

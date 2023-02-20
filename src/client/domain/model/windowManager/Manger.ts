@@ -3,7 +3,7 @@ import { type MosaicNode, type MosaicParent, getOtherBranch } from 'react-mosaic
 
 import Window, { Events as WindowEvents } from './Window';
 
-type WindowId = Window['id'];
+export type WindowId = Window['id'];
 
 export default class Manager {
   private readonly windowsMap = new Map<WindowId, Window>();

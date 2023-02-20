@@ -4,12 +4,12 @@ import { Mosaic } from 'react-mosaic-component';
 import { toJS } from 'mobx';
 import 'react-mosaic-component/react-mosaic-component.css';
 
-import WorkbenchService from 'service/WorkbenchService';
+import EditorService from 'service/EditorService';
 import Window from './Window';
 import './index.css';
 
 export default observer(function Workbench() {
-  const { windowManager } = container.resolve(WorkbenchService);
+  const { windowManager } = container.resolve(EditorService);
 
   return (
     <div className="flex-grow">

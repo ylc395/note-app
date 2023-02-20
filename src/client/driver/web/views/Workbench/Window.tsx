@@ -2,14 +2,15 @@ import { observer } from 'mobx-react-lite';
 import { MosaicWindow, type MosaicBranch } from 'react-mosaic-component';
 import { container } from 'tsyringe';
 
-import WorkbenchService, { type WindowId } from 'service/WorkbenchService';
+import EditorService from 'service/EditorService';
 import NoteEditor from 'model/editor/NoteEditor';
+import type { WindowId } from 'model/windowManager/Manger';
 
 import NoteWorkbench from './Note';
 import Tabs from './Tabs';
 
 export default observer(function Window({ path, id }: { path: MosaicBranch[]; id: WindowId }) {
-  const { windowManager } = container.resolve(WorkbenchService);
+  const { windowManager } = container.resolve(EditorService);
   const w = windowManager.get(id, true);
 
   if (!w) {
@@ -27,7 +28,7 @@ export default observer(function Window({ path, id }: { path: MosaicBranch[]; id
         </div>
       )}
     >
-      {w.currentTab?.editor instanceof NoteEditor && <NoteWorkbench editor={w.currentTab.editor} />}
+      {w.currentTab instanceof NoteEditor && <NoteWorkbench editor={w.currentTab} />}
     </MosaicWindow>
   );
 });

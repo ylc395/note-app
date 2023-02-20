@@ -15,7 +15,6 @@ import type { RecyclablesDTO } from 'interface/Recyclables';
 import { EntityTypes } from 'interface/Entity';
 import { MULTIPLE_ICON_FLAG, NoteMetadata } from 'model/form/type';
 
-import WorkbenchService from './WorkbenchService';
 import EditorService from './EditorService';
 import StarService, { StarEvents } from './StarService';
 
@@ -27,7 +26,6 @@ export enum NoteEvents {
 @singleton()
 export default class NoteService extends EventEmitter {
   private readonly remote = container.resolve(remoteToken);
-  private readonly workbench = container.resolve(WorkbenchService);
   private readonly editor = container.resolve(EditorService);
   private readonly star = container.resolve(StarService);
   private readonly userFeedback = container.resolve(userFeedbackToken);
@@ -53,7 +51,7 @@ export default class NoteService extends EventEmitter {
 
     note = this.noteTree.updateTreeByNote(note).note;
     this.noteTree.toggleSelect(note.id, true);
-    this.workbench.openEntity({ type: EntityTypes.Note, entityId: note.id });
+    this.editor.openEntity({ type: EntityTypes.Note, entityId: note.id });
   };
 
   private async duplicateNote(targetId: Note['id']) {
@@ -67,7 +65,7 @@ export default class NoteService extends EventEmitter {
     const selected = this.noteTree.toggleSelect(noteId, !multiple);
 
     if (selected && !multiple) {
-      this.workbench.openEntity({ type: EntityTypes.Note, entityId: noteId });
+      this.editor.openEntity({ type: EntityTypes.Note, entityId: noteId });
     }
   };
 
@@ -231,9 +229,9 @@ export default class NoteService extends EventEmitter {
       case 'star':
         return this.star.starNotes(targets);
       case 'openInNewTab':
-        return this.workbench.openEntity({ type: EntityTypes.Note, entityId: targetId }, 'newTab');
+        return this.editor.openEntity({ type: EntityTypes.Note, entityId: targetId }, 'newTab');
       case 'openInNewWindow':
-        return this.workbench.openEntity({ type: EntityTypes.Note, entityId: targetId }, 'newWindow');
+        return this.editor.openEntity({ type: EntityTypes.Note, entityId: targetId }, 'newWindow');
       default:
         break;
     }
