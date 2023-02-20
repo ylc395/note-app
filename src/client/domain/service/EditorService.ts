@@ -5,11 +5,11 @@ import { EntityId, EntityTypes } from 'interface/Entity';
 
 import NoteEditor from 'model/editor/NoteEditor';
 import type Window from 'model/windowManager/Window';
-import EntityEditor, { Events as EditorEvents } from 'model/editor/EntityEditor';
+import { Events as EditorEvents } from 'model/editor/EntityEditor';
 
 @singleton()
 export default class EditorService extends EventEmitter {
-  private readonly editors = new Set<EntityEditor>();
+  private readonly editors = new Set<NoteEditor>();
 
   createEditor(window: Window, entityType: EntityTypes, entityId: EntityId) {
     const editorConstructorsMap = {

@@ -20,19 +20,23 @@ export interface Entity {
 }
 
 export default class NoteEditor extends EntityEditor<Entity> {
-  private readonly disposeReaction: ReturnType<typeof reaction>;
+  private disposeReaction?: ReturnType<typeof reaction>;
   protected readonly entityType: EntityTypes = EntityTypes.Note;
   @observable breadcrumb?: NotePath;
   constructor(window: Window, noteId: NoteVO['id']) {
     super(window, noteId);
     makeObservable(this);
+    this.init();
+  }
 
+  protected async init() {
     this.on(Events.Activated, this.loadBreadcrumb.bind(this));
     this.disposeReaction = reaction(
       () => this.isActive,
       (isActive) => isActive && this.emit(Events.Activated),
       { fireImmediately: true },
     );
+    super.init();
   }
 
   @computed
@@ -72,7 +76,7 @@ export default class NoteEditor extends EntityEditor<Entity> {
 
   destroy() {
     super.destroy();
-    this.disposeReaction();
+    this.disposeReaction && this.disposeReaction();
   }
 
   protected async fetchEntity() {

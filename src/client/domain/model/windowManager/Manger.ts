@@ -40,6 +40,11 @@ export default class Manager {
       throw new Error('no window');
     }
 
+    if (this.root === windowId) {
+      this.root = undefined;
+      return;
+    }
+
     const searchAndRemove = (node: MosaicNode<WindowId>, parentNode?: MosaicParent<WindowId>): boolean => {
       if (typeof node === 'string') {
         return false;

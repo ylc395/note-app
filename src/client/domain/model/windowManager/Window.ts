@@ -4,7 +4,7 @@ import uniqueId from 'lodash/uniqueId';
 import EventEmitter from 'eventemitter2';
 
 import type { EntityId, EntityTypes } from 'interface/Entity';
-import type EntityEditor from 'model/editor/EntityEditor';
+import type NoteEditor from 'model/editor/NoteEditor';
 import EditorService from 'service/EditorService';
 import type Manager from './Manger';
 
@@ -15,8 +15,8 @@ export type OpenableEntity = {
 
 export type Tab = {
   entityId: string;
-  type: EntityTypes;
-  editor?: EntityEditor;
+  type: EntityTypes.Note;
+  editor?: NoteEditor;
 };
 
 export enum Events {
@@ -100,10 +100,6 @@ export default class Window extends EventEmitter {
   }
 
   private destroy() {
-    if (this.isRoot) {
-      return;
-    }
-
     this.emit(Events.destroyed);
     this.removeAllListeners();
   }
