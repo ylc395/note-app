@@ -1,6 +1,6 @@
 import EventEmitter from 'eventemitter2';
 import { container, singleton } from 'tsyringe';
-import { observable, makeObservable, runInAction } from 'mobx';
+import { observable, makeObservable, runInAction, action } from 'mobx';
 import pull from 'lodash/pull';
 
 import { token as remoteToken } from 'infra/Remote';
@@ -47,6 +47,11 @@ export default class StarService extends EventEmitter {
 
   starNotes(ids: EntityId[]) {
     return this.star(EntityTypes.Note, ids);
+  }
+
+  @action
+  clear() {
+    this.stars = undefined;
   }
 
   async loadStars() {
