@@ -4,12 +4,12 @@ import { Tabs as AntdTabs, ConfigProvider, Button, Tooltip } from 'antd';
 import { SplitCellsOutlined } from '@ant-design/icons';
 
 import EditorService from 'service/EditorService';
-import type { WindowId } from 'model/windowManager/Manger';
+import type { TileId } from 'model/mosaic/Manger';
 
-export default observer(function Tabs({ id }: { id: WindowId }) {
-  const { windowManager, duplicateOnNewWindow } = container.resolve(EditorService);
-  const w = windowManager.get(id);
-  const { switchToTab, closeTab, currentTab } = w;
+export default observer(function Tabs({ id }: { id: TileId }) {
+  const { tileManager, duplicateOnNewTile: duplicateOnNewWindow } = container.resolve(EditorService);
+  const tile = tileManager.get(id);
+  const { switchToTab, closeTab, currentTab } = tile;
 
   return (
     <ConfigProvider theme={{ components: { Tabs: { margin: 0 } } }}>
@@ -19,10 +19,10 @@ export default observer(function Tabs({ id }: { id: WindowId }) {
         hideAdd
         onChange={switchToTab}
         onEdit={(key) => typeof key === 'string' && closeTab(key)}
-        items={w.tabs.map((tab) => ({ label: tab.title, key: tab.id }))}
+        items={tile.tabs.map((tab) => ({ label: tab.title, key: tab.id }))}
         activeKey={currentTab?.id}
         tabBarExtraContent={
-          w.currentTab && (
+          tile.currentTab && (
             <Tooltip title="开辟新窗口">
               <Button onClick={duplicateOnNewWindow} className="mr-2" type="text" icon={<SplitCellsOutlined />} />
             </Tooltip>

@@ -4,7 +4,7 @@ import { computed, makeObservable, observable, runInAction, reaction } from 'mob
 import EventEmitter from 'eventemitter2';
 
 import { token as remoteToken } from 'infra/Remote';
-import type Window from 'model/windowManager/Window';
+import type Tile from 'model/mosaic/Tile';
 import type { EntityId, EntityTypes } from 'interface/Entity';
 
 import type { Entity as NoteEditorEntity } from './NoteEditor';
@@ -37,7 +37,7 @@ export default abstract class EntityEditor<T extends EditableEntity = any> exten
   protected abstract fetchEntity(): Promise<T>;
   @observable.ref entity?: T;
 
-  constructor(protected readonly window: Window, readonly entityId: EntityId) {
+  constructor(protected readonly tile: Tile, readonly entityId: EntityId) {
     super();
     makeObservable(this);
   }
@@ -60,7 +60,7 @@ export default abstract class EntityEditor<T extends EditableEntity = any> exten
 
   @computed
   get isActive() {
-    return this.window.isFocused && this.window.currentTab?.id === this.id;
+    return this.tile.isFocused && this.tile.currentTab?.id === this.id;
   }
 
   private get entityKey() {

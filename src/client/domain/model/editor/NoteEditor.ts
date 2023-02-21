@@ -4,7 +4,7 @@ import { container } from 'tsyringe';
 
 import { EntityTypes } from 'interface/Entity';
 import { normalizeTitle, type NoteVO, type NoteBodyVO, type NoteBodyDTO, type NoteDTO } from 'interface/Note';
-import type Window from 'model/windowManager/Window';
+import type Tile from 'model/mosaic/Tile';
 import NoteService from 'service/NoteService';
 
 import EntityEditor, { type Breadcrumbs } from './EntityEditor';
@@ -22,8 +22,8 @@ export interface Entity {
 export default class NoteEditor extends EntityEditor<Entity> {
   readonly entityType: EntityTypes = EntityTypes.Note;
   private readonly noteTree = container.resolve(NoteService).noteTree;
-  constructor(window: Window, noteId: NoteVO['id']) {
-    super(window, noteId);
+  constructor(tile: Tile, noteId: NoteVO['id']) {
+    super(tile, noteId);
     makeObservable(this);
     this.init();
   }

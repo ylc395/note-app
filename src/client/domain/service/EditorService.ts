@@ -6,8 +6,8 @@ import { EntityTypes, type EntityId } from 'interface/Entity';
 
 import NoteEditor from 'model/editor/NoteEditor';
 import EntityEditor, { Events as EditorEvents } from 'model/editor/EntityEditor';
-import type Window from 'model/windowManager/Window';
-import WindowManager from 'model/windowManager/Manger';
+import type Tile from 'model/mosaic/Tile';
+import TileManager from 'model/mosaic/Manger';
 
 type OpenableEntity = {
   entityType: EntityTypes;
@@ -24,11 +24,11 @@ export default class EditorService extends EventEmitter {
     super();
     makeObservable(this);
   }
-  readonly windowManager = new WindowManager();
+  readonly tileManager = new TileManager();
   private readonly editors = new Set<EntityEditor>();
 
-  private createEditor(window: Window, { entityId, entityType }: OpenableEntity) {
-    const editor = new editorConstructorsMap[entityType](window, entityId);
+  private createEditor(tile: Tile, { entityId, entityType }: OpenableEntity) {
+    const editor = new editorConstructorsMap[entityType](tile, entityId);
 
     this.editors.add(editor);
     editor.onAny(this.emit.bind(this));
@@ -39,7 +39,7 @@ export default class EditorService extends EventEmitter {
 
   @action.bound
   openEntity(entity: OpenableEntity, type?: 'newTab' | 'newWindow') {
-    const targetWindow = this.windowManager.getTargetWindow();
+    const targetWindow = this.tileManager.getTargetTile();
 
     if (!type) {
       const existedTab = targetWindow.tabs.find(
@@ -64,7 +64,7 @@ export default class EditorService extends EventEmitter {
         return;
       }
 
-      const newWindow = this.windowManager.splitWindow(targetWindow.id);
+      const newWindow = this.tileManager.splitTile(targetWindow.id);
       newWindow.createTab(editor);
     } else if (type === 'newTab') {
       targetWindow.createTab(editor);
@@ -72,22 +72,22 @@ export default class EditorService extends EventEmitter {
   }
 
   @action.bound
-  duplicateOnNewWindow() {
-    const { focusedWindow } = this.windowManager;
+  duplicateOnNewTile() {
+    const { focusedTile } = this.tileManager;
 
-    if (!focusedWindow) {
-      throw new Error('no focusedWindow');
+    if (!focusedTile) {
+      throw new Error('no focusedTile');
     }
 
-    const currentTab = focusedWindow.currentTab;
+    const currentTab = focusedTile.currentTab;
 
     if (!currentTab) {
       throw new Error('no tab');
     }
 
-    const newWindow = this.windowManager.splitWindow(focusedWindow.id);
-    const editor = this.createEditor(newWindow, { entityId: currentTab.entityId, entityType: currentTab.entityType });
+    const newTile = this.tileManager.splitTile(focusedTile.id);
+    const editor = this.createEditor(newTile, { entityId: currentTab.entityId, entityType: currentTab.entityType });
 
-    newWindow.createTab(editor);
+    newTile.createTab(editor);
   }
 }

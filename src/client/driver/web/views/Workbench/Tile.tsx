@@ -4,14 +4,14 @@ import { container } from 'tsyringe';
 
 import EditorService from 'service/EditorService';
 import NoteEditor from 'model/editor/NoteEditor';
-import type { WindowId } from 'model/windowManager/Manger';
+import type { TileId } from 'model/mosaic/Manger';
 
 import NoteWorkbench from './Note';
 import Tabs from './Tabs';
 
-export default observer(function Window({ path, id }: { path: MosaicBranch[]; id: WindowId }) {
-  const { windowManager } = container.resolve(EditorService);
-  const w = windowManager.get(id, true);
+export default observer(function Window({ path, id }: { path: MosaicBranch[]; id: TileId }) {
+  const { tileManager } = container.resolve(EditorService);
+  const w = tileManager.get(id, true);
 
   if (!w) {
     return null;

@@ -8,11 +8,11 @@ import type Manager from './Manger';
 export type Tab = EntityEditor;
 
 export enum Events {
-  destroyed = 'window.destroyed',
+  destroyed = 'tile.destroyed',
 }
 
-export default class Window extends EventEmitter {
-  readonly id = uniqueId('window-');
+export default class Tile extends EventEmitter {
+  readonly id = uniqueId('tile-');
   @observable.ref currentTab?: Tab;
   @observable.shallow tabs: Tab[] = [];
   constructor(private readonly manager: Manager) {
@@ -26,7 +26,7 @@ export default class Window extends EventEmitter {
 
   @computed
   get isFocused() {
-    return this.manager.focusedWindow?.id === this.id;
+    return this.manager.focusedTile?.id === this.id;
   }
 
   @action.bound
