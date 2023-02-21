@@ -94,7 +94,7 @@ export default class Manager {
         const parentBranch = parentNode.first === node ? 'first' : 'second';
         parentNode[parentBranch] = {
           direction: 'row',
-          first: parentNode[getOtherBranch(parentBranch)],
+          first: parentNode[parentBranch],
           second: newWindow.id,
         };
 

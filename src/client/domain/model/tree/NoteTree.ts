@@ -341,7 +341,7 @@ export default class NoteTree {
   getSiblings(noteId: Note['id']) {
     const { parentId } = this.getNode(noteId).note;
 
-    return parentId ? this.getNode(parentId).children : this.roots;
+    return (parentId ? this.getNode(parentId).children : this.roots).filter(({ key }) => key !== noteId);
   }
 
   @action
