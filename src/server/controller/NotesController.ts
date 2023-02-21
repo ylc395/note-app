@@ -8,7 +8,6 @@ import {
   type NoteVO,
   type NoteQuery,
   type NotesDTO,
-  type NotePath,
   type NoteAttributesVO,
   noteDTOSchema,
   notesDTOSchema,
@@ -43,11 +42,6 @@ export default class NotesController {
   @Get('/notes/:id/tree-fragment')
   async queryTreeFragment(@Param('id') noteId: string): Promise<NoteVO[]> {
     return await this.noteService.getTreeFragment(noteId);
-  }
-
-  @Get('/notes/:id/tree-path')
-  async queryTreePath(@Param('id') noteId: string): Promise<NotePath> {
-    return await this.noteService.getTreePath(noteId);
   }
 
   @Patch('/notes/:id')

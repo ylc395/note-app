@@ -338,6 +338,12 @@ export default class NoteTree {
     return parentId ? this.getNode(parentId).children : this._roots;
   }
 
+  getSiblings(noteId: Note['id']) {
+    const { parentId } = this.getNode(noteId).note;
+
+    return parentId ? this.getNode(parentId).children : this.roots;
+  }
+
   @action
   toggleStar(noteId: Note['id'], isStar: boolean) {
     const { note } = this.getNode(noteId);

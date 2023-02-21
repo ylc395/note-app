@@ -1,46 +1,58 @@
-import { makeObservable, computed, reaction, action, observable, runInAction } from 'mobx';
-import last from 'lodash/last';
+import { makeObservable, computed, action } from 'mobx';
 import debounce from 'lodash/debounce';
+import { container } from 'tsyringe';
 
 import { EntityTypes } from 'interface/Entity';
-import { normalizeTitle, type NoteVO, type NoteBodyVO, type NotePath, NoteBodyDTO, NoteDTO } from 'interface/Note';
+import { normalizeTitle, type NoteVO, type NoteBodyVO, type NoteBodyDTO, type NoteDTO } from 'interface/Note';
 import type Window from 'model/windowManager/Window';
+import NoteService from 'service/NoteService';
 
-import EntityEditor from './EntityEditor';
+import EntityEditor, { type Breadcrumbs } from './EntityEditor';
 
 export enum Events {
   TitleUpdated = 'noteEditor.updated.title',
   BodyUpdated = 'noteEditor.updated.body',
-  Activated = 'noteEditor.activated',
 }
 
 export interface Entity {
   body: NoteBodyVO;
   metadata: NoteVO;
-  breadcrumb: NotePath;
 }
 
 export default class NoteEditor extends EntityEditor<Entity> {
-  private disposeReaction?: ReturnType<typeof reaction>;
   readonly entityType: EntityTypes = EntityTypes.Note;
+  private readonly noteTree = container.resolve(NoteService).noteTree;
   constructor(window: Window, noteId: NoteVO['id']) {
     super(window, noteId);
     makeObservable(this);
     this.init();
   }
 
-  protected async init() {
-    this.disposeReaction = reaction(
-      () => this.isActive,
-      (isActive) => isActive && this.emit(Events.Activated),
-      { fireImmediately: true },
-    );
-    super.init();
-  }
-
   @computed
   get title() {
     return this.entity ? normalizeTitle(this.entity.metadata) : '';
+  }
+
+  @computed
+  get breadcrumbs(): Breadcrumbs {
+    const result: Breadcrumbs = [];
+    let note: NoteVO | undefined = this.noteTree.getNode(this.entityId).note;
+    const noteToBreadcrumb = (note: NoteVO) => ({
+      id: note.id,
+      title: normalizeTitle(note),
+      icon: note.icon || undefined,
+    });
+
+    while (note) {
+      result.unshift({
+        ...noteToBreadcrumb(note),
+        siblings: this.noteTree.getSiblings(note.id).map(({ note }) => noteToBreadcrumb(note)),
+      });
+
+      note = note.parentId ? this.noteTree.getNode(note.parentId).note : undefined;
+    }
+
+    return result;
   }
 
   @action
@@ -62,31 +74,17 @@ export default class NoteEditor extends EntityEditor<Entity> {
     }
 
     this.entity.metadata.title = title;
-
-    const breadcrumb = last(this.entity.breadcrumb);
-
-    if (!breadcrumb) {
-      throw new Error('no breadcrumb');
-    }
-
-    breadcrumb.title = title;
     this.emit(Events.TitleUpdated, this.entity.metadata);
     this.uploadTitle(title);
   }
 
-  destroy() {
-    super.destroy();
-    this.disposeReaction && this.disposeReaction();
-  }
-
   protected async fetchEntity() {
-    const [{ body: metadata }, { body }, { body: breadcrumb }] = await Promise.all([
+    const [{ body: metadata }, { body }] = await Promise.all([
       this.remote.get<void, NoteVO>(`/notes/${this.entityId}`),
       this.remote.get<void, NoteBodyVO>(`/notes/${this.entityId}/body`),
-      this.remote.get<void, NotePath>(`/notes/${this.entityId}/tree-path`),
     ]);
 
-    return { metadata, body, breadcrumb };
+    return { metadata, body };
   }
 
   private readonly uploadBody = debounce((body: NoteBodyDTO) => {

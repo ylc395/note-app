@@ -5,7 +5,7 @@ import { action, makeObservable } from 'mobx';
 import { EntityTypes, type EntityId } from 'interface/Entity';
 
 import NoteEditor from 'model/editor/NoteEditor';
-import { Events as EditorEvents } from 'model/editor/EntityEditor';
+import EntityEditor, { Events as EditorEvents } from 'model/editor/EntityEditor';
 import type Window from 'model/windowManager/Window';
 import WindowManager from 'model/windowManager/Manger';
 
@@ -25,10 +25,10 @@ export default class EditorService extends EventEmitter {
     makeObservable(this);
   }
   readonly windowManager = new WindowManager();
-  private readonly editors = new Set<NoteEditor>();
+  private readonly editors = new Set<EntityEditor>();
 
-  private createEditor(window: Window, { entityId, entityType: type }: OpenableEntity) {
-    const editor = new editorConstructorsMap[type](window, entityId);
+  private createEditor(window: Window, { entityId, entityType }: OpenableEntity) {
+    const editor = new editorConstructorsMap[entityType](window, entityId);
 
     this.editors.add(editor);
     editor.onAny(this.emit.bind(this));

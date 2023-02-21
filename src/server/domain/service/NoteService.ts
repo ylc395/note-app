@@ -135,6 +135,7 @@ export default class NoteService extends BaseService {
     return result;
   }
 
+  // todo: unused, maybe remove
   async getTreePath(noteId: NoteVO['id']) {
     if (!(await this.notes.areAvailable([noteId]))) {
       throw new Error('invalid id');

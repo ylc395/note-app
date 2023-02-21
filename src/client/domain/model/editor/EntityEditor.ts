@@ -1,6 +1,6 @@
 import uniqueId from 'lodash/uniqueId';
 import { container } from 'tsyringe';
-import { computed, makeObservable, observable, runInAction } from 'mobx';
+import { computed, makeObservable, observable, runInAction, reaction } from 'mobx';
 import EventEmitter from 'eventemitter2';
 
 import { token as remoteToken } from 'infra/Remote';
@@ -11,17 +11,29 @@ import type { Entity as NoteEditorEntity } from './NoteEditor';
 
 type EditableEntity = NoteEditorEntity;
 
-const entitiesMap: Record<string, { entity?: EditableEntity | Promise<EditableEntity>; count: number }> = {};
+interface Breadcrumb {
+  title: string;
+  id: string;
+  icon?: string;
+}
+
+export type Breadcrumbs = Array<Breadcrumb & { siblings: Breadcrumb[] }>;
 
 export enum Events {
   Destroyed = 'entityEditor.destroyed',
+  Activated = 'entityEditor.activated',
 }
 
-export default abstract class EntityEditor<T extends EditableEntity> extends EventEmitter {
+const entitiesMap: Record<string, { entity?: EditableEntity | Promise<EditableEntity>; count: number }> = {};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export default abstract class EntityEditor<T extends EditableEntity = any> extends EventEmitter {
   protected remote = container.resolve(remoteToken);
   readonly id = uniqueId('editor-');
   abstract readonly title: string;
   abstract readonly entityType: EntityTypes;
+  abstract readonly breadcrumbs: Breadcrumbs;
+  private disposeReaction?: ReturnType<typeof reaction>;
   protected abstract fetchEntity(): Promise<T>;
   @observable.ref entity?: T;
 
@@ -42,6 +54,7 @@ export default abstract class EntityEditor<T extends EditableEntity> extends Eve
     }
 
     this.emit(Events.Destroyed);
+    this.disposeReaction && this.disposeReaction();
     this.removeAllListeners();
   }
 
@@ -79,5 +92,11 @@ export default abstract class EntityEditor<T extends EditableEntity> extends Eve
         });
       });
     }
+
+    this.disposeReaction = reaction(
+      () => this.isActive,
+      (isActive) => isActive && this.emit(Events.Activated),
+      { fireImmediately: true },
+    );
   }
 }

@@ -5,8 +5,7 @@ import EventEmitter from 'eventemitter2';
 import type EntityEditor from 'model/editor/EntityEditor';
 import type Manager from './Manger';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type Tab = EntityEditor<any>;
+export type Tab = EntityEditor;
 
 export enum Events {
   destroyed = 'window.destroyed',
