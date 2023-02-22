@@ -4,7 +4,7 @@ import { computed, makeObservable, observable, reaction, runInAction } from 'mob
 import EventEmitter from 'eventemitter2';
 
 import { token as remoteToken } from 'infra/Remote';
-import type Tile from 'model/mosaic/Tile';
+import type Tile from 'model/workbench/Tile';
 import type { EntityId, EntityTypes } from 'interface/Entity';
 import EntityManager, { EditableEntity } from './EntityManager';
 

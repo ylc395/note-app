@@ -16,7 +16,7 @@ import {
 } from '@ant-design/icons';
 import { useToggle, useMemoizedFn } from 'ahooks';
 
-import ViewService, { ExplorerTypes } from 'service/ViewService';
+import Layout, { ExplorerTypes } from 'model/Layout';
 import StarList from './StarList';
 
 interface ExplorerButton {
@@ -40,7 +40,7 @@ const BUTTON_PROPS: ButtonProps = {
 };
 
 export default observer(function ActivityBar() {
-  const { currentExplorer, setExplorer } = container.resolve(ViewService);
+  const { currentExplorer, setExplorer } = container.resolve(Layout);
   const [isStarVisible, { set: setStarVisible }] = useToggle(false);
   const [isStarTooltipVisible, { set: setStarTooltipVisible }] = useToggle(false);
   const handleStarClick = useMemoizedFn(() => {

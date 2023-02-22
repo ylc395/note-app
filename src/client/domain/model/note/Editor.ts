@@ -4,7 +4,7 @@ import { container } from 'tsyringe';
 
 import { EntityTypes } from 'interface/Entity';
 import { normalizeTitle, type NoteVO, type NoteBodyVO, type NoteBodyDTO, type NoteDTO } from 'interface/Note';
-import type Tile from 'model/mosaic/Tile';
+import type Tile from 'model/workbench/Tile';
 import NoteService from 'service/NoteService';
 
 import EntityEditor, { type Breadcrumbs } from 'model/abstract/editor';

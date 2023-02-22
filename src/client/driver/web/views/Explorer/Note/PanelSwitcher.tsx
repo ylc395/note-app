@@ -3,7 +3,7 @@ import { container } from 'tsyringe';
 import { Space, Button, Tooltip, theme } from 'antd';
 import { ApartmentOutlined, ProfileOutlined } from '@ant-design/icons';
 
-import ViewService, { ExplorerTypes, NoteExplorerPanel } from 'service/ViewService';
+import Layout, { ExplorerTypes, NoteExplorerPanel } from 'model/Layout';
 import { action } from 'mobx';
 
 const { useToken } = theme;
@@ -13,7 +13,7 @@ const switcher = [
 ] as const;
 
 export default observer(function PanelSwitcher() {
-  const { explorerPanel } = container.resolve(ViewService);
+  const { explorerPanel } = container.resolve(Layout);
   const { token } = useToken();
   const activeStyle = {
     color: token.colorPrimary,

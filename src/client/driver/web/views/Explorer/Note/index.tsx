@@ -4,14 +4,14 @@ import { Resizable } from 're-resizable';
 import { Input } from 'antd';
 import { useState } from 'react';
 
-import ViewService, { NoteExplorerPanel, ExplorerTypes } from 'service/ViewService';
+import Layout, { NoteExplorerPanel, ExplorerTypes } from 'model/Layout';
 
 import PanelSwitcher from './PanelSwitcher';
 import Tree from './Tree';
 import CustomView from './CustomView';
 
 export default observer(function NoteExplorer() {
-  const { explorerPanel } = container.resolve(ViewService);
+  const { explorerPanel } = container.resolve(Layout);
   const [operationEl, setOperationEl] = useState<HTMLElement | null>(null);
 
   return (

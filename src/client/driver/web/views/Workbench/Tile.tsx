@@ -4,7 +4,7 @@ import { container } from 'tsyringe';
 
 import EditorService from 'service/EditorService';
 import NoteEditor from 'model/note/Editor';
-import type { TileId } from 'model/mosaic/TileManger';
+import type { TileId } from 'model/workbench/TileManger';
 
 import NoteWorkbench from './Note';
 import Tabs from './Tabs';

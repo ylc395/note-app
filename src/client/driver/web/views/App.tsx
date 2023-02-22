@@ -4,7 +4,7 @@ import { ConfigProvider, message as antdMessage } from 'antd';
 import { type ReactNode, useCallback, useEffect } from 'react';
 import './index.css';
 
-import ViewService, { ExplorerTypes } from 'service/ViewService';
+import Layout, { ExplorerTypes } from 'model/Layout';
 
 import ActivityBar from './Explorer/ActivityBar';
 import NoteExplorer from './Explorer/Note';
@@ -28,7 +28,7 @@ export default observer(function App() {
     antdMessage.config({ getContainer });
   });
 
-  const { currentExplorer: currentView } = container.resolve(ViewService);
+  const { currentExplorer: currentView } = container.resolve(Layout);
 
   return (
     <ConfigProvider getPopupContainer={getContainer}>

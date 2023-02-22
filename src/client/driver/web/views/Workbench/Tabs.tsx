@@ -4,7 +4,7 @@ import { Tabs as AntdTabs, ConfigProvider, Button, Tooltip } from 'antd';
 import { SplitCellsOutlined } from '@ant-design/icons';
 
 import EditorService from 'service/EditorService';
-import type { TileId } from 'model/mosaic/TileManger';
+import type { TileId } from 'model/workbench/TileManger';
 
 export default observer(function Tabs({ id }: { id: TileId }) {
   const { tileManager, duplicateOnNewTile: duplicateOnNewWindow } = container.resolve(EditorService);

@@ -6,8 +6,8 @@ import { EntityTypes, type EntityId } from 'interface/Entity';
 
 import NoteEditor from 'model/note/Editor';
 import EntityEditor, { Events as EditorEvents } from 'model/abstract/editor';
-import type Tile from 'model/mosaic/Tile';
-import TileManager from 'model/mosaic/TileManger';
+import type Tile from 'model/workbench/Tile';
+import TileManager from 'model/workbench/TileManger';
 
 type OpenableEntity = {
   entityType: EntityTypes;

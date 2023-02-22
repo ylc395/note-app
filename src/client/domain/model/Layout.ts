@@ -15,11 +15,10 @@ export enum ExplorerTypes {
 export enum NoteExplorerPanel {
   Tree = 'tree',
   CustomView = 'customView',
-  Topic = 'topic',
 }
 
 @singleton()
-export default class ViewService {
+export default class Layout {
   @observable currentExplorer = ExplorerTypes.Notes;
   @observable readonly explorerPanel = {
     [ExplorerTypes.Notes]: NoteExplorerPanel.Tree,
