@@ -7,7 +7,7 @@ import { listener, listenerCtx } from '@milkdown/plugin-listener';
 import { clipboard } from '@milkdown/plugin-clipboard';
 import { Slice, Fragment } from 'prosemirror-model';
 
-import type NoteEditor from 'model/editor/NoteEditor';
+import type NoteEditor from 'model/note/Editor';
 
 export default observer(function NoteEditor({ editor }: { editor: NoteEditor }) {
   const editorRef = useRef<NoteEditor | undefined>();

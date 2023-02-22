@@ -1,7 +1,7 @@
 import { Modal } from 'antd';
 
 import type { NoteInputs } from 'infra/UserInput';
-import NoteTreeModel, { VIRTUAL_ROOT_NODE_KEY } from 'model/tree/NoteTree';
+import NoteTreeModel, { VIRTUAL_ROOT_NODE_KEY } from 'model/note/Tree';
 import NoteTree from 'web/components/note/Tree';
 
 import { COMMON_MODAL_OPTIONS } from '../utils';

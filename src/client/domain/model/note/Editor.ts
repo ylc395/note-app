@@ -7,7 +7,7 @@ import { normalizeTitle, type NoteVO, type NoteBodyVO, type NoteBodyDTO, type No
 import type Tile from 'model/mosaic/Tile';
 import NoteService from 'service/NoteService';
 
-import EntityEditor, { type Breadcrumbs } from './EntityEditor';
+import EntityEditor, { type Breadcrumbs } from 'model/abstract/editor';
 
 export enum Events {
   TitleUpdated = 'noteEditor.updated.title',

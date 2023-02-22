@@ -3,7 +3,7 @@ import { observer } from 'mobx-react-lite';
 import { type ChangeEvent, useCallback } from 'react';
 import { SettingOutlined, InfoCircleOutlined, SearchOutlined } from '@ant-design/icons';
 
-import type NoteEditor from 'model/editor/NoteEditor';
+import type NoteEditor from 'model/note/Editor';
 
 export default observer(function NoteTitle({ editor }: { editor: NoteEditor }) {
   const handleChange = useCallback((e: ChangeEvent<HTMLInputElement>) => editor?.updateTitle(e.target.value), [editor]);

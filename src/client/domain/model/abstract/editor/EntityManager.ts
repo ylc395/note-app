@@ -2,7 +2,7 @@ import { singleton } from 'tsyringe';
 import { observable } from 'mobx';
 
 import type { EntityId, EntityTypes } from 'interface/Entity';
-import type { Entity as NoteEditorEntity } from './NoteEditor';
+import type { Entity as NoteEditorEntity } from '../../note/Editor';
 
 export type EditableEntity = NoteEditorEntity;
 

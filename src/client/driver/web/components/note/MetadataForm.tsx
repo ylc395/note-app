@@ -10,8 +10,8 @@ import uniq from 'lodash/uniq';
 import uniqueId from 'lodash/uniqueId';
 
 import { token as remoteToken } from 'infra/Remote';
-import NoteMetadata from 'model/form/NoteMetadata';
-import { type NoteMetadata as NoteMetadataValues, MULTIPLE_ICON_FLAG } from 'model/form/type';
+import NoteMetadata from 'model/note/MetadataForm';
+import { type NoteMetadata as NoteMetadataValues, MULTIPLE_ICON_FLAG } from 'model/note/MetadataForm/type';
 import type { NoteAttributesVO, NoteDTO, NoteVO } from 'interface/Note';
 
 import { useUpdateTimeField, FORM_ITEM_LAYOUT } from '../utils';

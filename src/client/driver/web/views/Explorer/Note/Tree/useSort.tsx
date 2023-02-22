@@ -1,11 +1,11 @@
 import { container } from 'tsyringe';
 import type { DropDownProps, MenuProps } from 'antd';
 import { CheckOutlined } from '@ant-design/icons';
-
-import NoteService from 'service/NoteService';
-import { SortBy, SortOrder } from 'model/tree/type';
 import { computed } from 'mobx';
 import { useState } from 'react';
+
+import { SortBy, SortOrder } from 'model/note/Tree/type';
+import NoteService from 'service/NoteService';
 
 type MenuItems = NonNullable<DropDownProps['menu']>['items'];
 

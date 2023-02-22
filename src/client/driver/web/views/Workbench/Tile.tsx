@@ -3,8 +3,8 @@ import { MosaicWindow, type MosaicBranch } from 'react-mosaic-component';
 import { container } from 'tsyringe';
 
 import EditorService from 'service/EditorService';
-import NoteEditor from 'model/editor/NoteEditor';
-import type { TileId } from 'model/mosaic/Manger';
+import NoteEditor from 'model/note/Editor';
+import type { TileId } from 'model/mosaic/TileManger';
 
 import NoteWorkbench from './Note';
 import Tabs from './Tabs';

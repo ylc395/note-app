@@ -1,7 +1,7 @@
 import type { InjectionToken } from 'tsyringe';
 
-import type { NoteTreeNode } from 'model/tree/type';
-import type { NoteMetadata } from 'model/form/type';
+import type { NoteTreeNode } from 'model/note/Tree/type';
+import type { NoteMetadata } from 'model/note/MetadataForm/type';
 import type { NoteVO } from 'interface/Note';
 
 import type { ModalOptions, ContextmenuItem } from './ui';

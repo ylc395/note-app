@@ -4,7 +4,7 @@ import { Mosaic } from 'react-mosaic-component';
 import { toJS } from 'mobx';
 import 'react-mosaic-component/react-mosaic-component.css';
 
-import type { TileId } from 'model/mosaic/Manger';
+import type { TileId } from 'model/mosaic/TileManger';
 import EditorService from 'service/EditorService';
 import Tile from './Tile';
 import './index.css';

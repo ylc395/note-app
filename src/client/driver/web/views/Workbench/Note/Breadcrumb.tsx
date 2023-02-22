@@ -2,7 +2,7 @@ import { observer } from 'mobx-react-lite';
 import { Breadcrumb as AntdBreadcrumb } from 'antd';
 import { BookOutlined } from '@ant-design/icons';
 
-import type NoteEditor from 'model/editor/NoteEditor';
+import type NoteEditor from 'model/note/Editor';
 import NoteIconTitle from 'web/components/note/IconTitle';
 
 export default observer(function Breadcrumb({ editor }: { editor: NoteEditor }) {

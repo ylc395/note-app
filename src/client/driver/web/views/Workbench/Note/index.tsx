@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite';
 
-import type NoteEditor from 'model/editor/NoteEditor';
+import type NoteEditor from 'model/note/Editor';
 
 import Editor from './Editor';
 import Title from './Title';

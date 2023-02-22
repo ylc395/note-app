@@ -3,9 +3,6 @@ import pick from 'lodash/pick';
 import debounce from 'lodash/debounce';
 import EventEmitter from 'eventemitter2';
 
-import NoteTree from 'model/tree/NoteTree';
-import { Events as NoteEditorEvents } from 'model/editor/NoteEditor';
-
 import { token as remoteToken } from 'infra/Remote';
 import { token as userFeedbackToken } from 'infra/UserFeedback';
 import { token as userInputToken } from 'infra/UserInput';
@@ -14,7 +11,10 @@ import type { ContextmenuItem } from 'infra/ui';
 import { type NoteDTO, type NoteVO as Note, type NotesDTO, type NoteVO, normalizeTitle } from 'interface/Note';
 import type { RecyclablesDTO } from 'interface/Recyclables';
 import { EntityTypes } from 'interface/Entity';
-import { MULTIPLE_ICON_FLAG, NoteMetadata } from 'model/form/type';
+
+import { MULTIPLE_ICON_FLAG, NoteMetadata } from 'model/note/MetadataForm/type';
+import NoteTree from 'model/note/Tree';
+import { Events as NoteEditorEvents } from 'model/note/Editor';
 
 import EditorService from './EditorService';
 import StarService, { StarEvents } from './StarService';

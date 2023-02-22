@@ -4,10 +4,10 @@ import { action, makeObservable } from 'mobx';
 
 import { EntityTypes, type EntityId } from 'interface/Entity';
 
-import NoteEditor from 'model/editor/NoteEditor';
-import EntityEditor, { Events as EditorEvents } from 'model/editor/EntityEditor';
+import NoteEditor from 'model/note/Editor';
+import EntityEditor, { Events as EditorEvents } from 'model/abstract/editor';
 import type Tile from 'model/mosaic/Tile';
-import TileManager from 'model/mosaic/Manger';
+import TileManager from 'model/mosaic/TileManger';
 
 type OpenableEntity = {
   entityType: EntityTypes;

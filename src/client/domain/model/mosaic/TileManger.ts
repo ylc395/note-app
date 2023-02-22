@@ -5,7 +5,7 @@ import Tile, { Events as TileEvents } from './Tile';
 
 export type TileId = Tile['id'];
 
-export default class Manager {
+export default class TileManager {
   private readonly tilesMap = new Map<TileId, Tile>();
   @observable root?: MosaicNode<TileId>; // a binary tree
   @observable.ref focusedTile?: Tile;

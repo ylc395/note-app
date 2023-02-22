@@ -4,10 +4,10 @@ import { Tree, ConfigProvider, theme, TreeProps } from 'antd';
 import type { AntdTreeNodeAttribute } from 'antd/es/tree';
 import { useCallback, useEffect } from 'react';
 
-import type NoteTree from 'model/tree/NoteTree';
 import type { NoteVO } from 'interface/Note';
+import type NoteTree from 'model/note/Tree';
+import { VIRTUAL_ROOT_NODE_KEY } from 'model/note/Tree';
 import { Emoji } from 'web/components/note/Emoji';
-import { VIRTUAL_ROOT_NODE_KEY } from 'model/tree/NoteTree';
 
 const { useToken } = theme;
 

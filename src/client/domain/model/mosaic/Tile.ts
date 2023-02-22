@@ -2,8 +2,8 @@ import { action, makeObservable, observable, has, computed } from 'mobx';
 import uniqueId from 'lodash/uniqueId';
 import EventEmitter from 'eventemitter2';
 
-import type EntityEditor from 'model/editor/EntityEditor';
-import type Manager from './Manger';
+import type EntityEditor from 'model/abstract/editor';
+import type Manager from './TileManger';
 
 export type Tab = EntityEditor;
 
