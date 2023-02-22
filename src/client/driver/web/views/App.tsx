@@ -33,8 +33,10 @@ export default observer(function App() {
   return (
     <ConfigProvider getPopupContainer={getContainer}>
       <main className="flex">
-        <ActivityBar />
-        {explorerMap[currentView]()}
+        <div className="border-r border-solid border-0 border-gray-200 flex">
+          <ActivityBar />
+          {explorerMap[currentView]()}
+        </div>
         <Workbench />
       </main>
     </ConfigProvider>
