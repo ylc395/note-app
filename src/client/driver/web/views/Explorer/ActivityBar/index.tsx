@@ -1,15 +1,36 @@
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
+import type { ReactNode } from 'react';
 import { Tooltip, Button, Popover, type ButtonProps } from 'antd';
-import { BuildOutlined, BookOutlined, StarOutlined, StarFilled } from '@ant-design/icons';
+import {
+  BuildOutlined,
+  BookOutlined,
+  StarOutlined,
+  StarFilled,
+  NumberOutlined,
+  DatabaseOutlined,
+  DeleteOutlined,
+  CodeOutlined,
+  ClusterOutlined,
+  CheckSquareOutlined,
+} from '@ant-design/icons';
 import { useToggle, useMemoizedFn } from 'ahooks';
 
-import ViewService, { ViewTypes } from 'service/ViewService';
+import ViewService, { ExplorerTypes } from 'service/ViewService';
 import StarList from './StarList';
 
-const VIEW_ITEMS = [
-  { key: ViewTypes.Materials, icon: <BuildOutlined />, label: '素材库' },
-  { key: ViewTypes.Notes, icon: <BookOutlined />, label: '笔记本' },
+interface ExplorerButton {
+  key: ExplorerTypes;
+  icon: ReactNode;
+  label: string;
+}
+
+const FIRST_CLASS_EXPLORER_ITEMS: ExplorerButton[] = [
+  { key: ExplorerTypes.Materials, icon: <DatabaseOutlined />, label: '素材库' },
+  { key: ExplorerTypes.Notes, icon: <BookOutlined />, label: '笔记本' },
+  { key: ExplorerTypes.Timeline, icon: <BuildOutlined />, label: '随想' },
+  { key: ExplorerTypes.Code, icon: <CodeOutlined />, label: '代码片段' },
+  { key: ExplorerTypes.Todo, icon: <CheckSquareOutlined />, label: '任务' },
 ];
 
 const BUTTON_PROPS: ButtonProps = {
@@ -19,7 +40,7 @@ const BUTTON_PROPS: ButtonProps = {
 };
 
 export default observer(function ActivityBar() {
-  const { currentView, setCurrentView } = container.resolve(ViewService);
+  const { currentExplorer, setExplorer } = container.resolve(ViewService);
   const [isStarVisible, { set: setStarVisible }] = useToggle(false);
   const [isStarTooltipVisible, { set: setStarTooltipVisible }] = useToggle(false);
   const handleStarClick = useMemoizedFn(() => {
@@ -32,37 +53,53 @@ export default observer(function ActivityBar() {
     setStarVisible(false);
   });
 
+  const getExplorerButton = useMemoizedFn((button: ExplorerButton) => (
+    <Tooltip placement="right" title={button.label}>
+      <Button
+        {...BUTTON_PROPS}
+        onClick={() => setExplorer(button.key)}
+        className={currentExplorer === button.key ? 'text-blue-600' : ''}
+        icon={button.icon}
+      />
+    </Tooltip>
+  ));
+
   return (
-    <nav className="w-14 h-screen bg-gray-50">
-      <ul className="list-none p-0 text-center">
-        {VIEW_ITEMS.map(({ key, icon, label }) => (
-          <li key={key}>
-            <Tooltip title={label} placement="right">
-              <Button
-                {...BUTTON_PROPS}
-                className={currentView === key ? 'text-blue-600' : ''}
-                onClick={() => setCurrentView(key)}
-                icon={icon}
-              />
-            </Tooltip>
-          </li>
-        ))}
-        <li>
-          <Popover destroyTooltipOnHide placement="right" open={isStarVisible} content={<StarList close={closeStar} />}>
-            <Tooltip
-              title="收藏夹"
+    <nav className="w-14 h-screen bg-gray-50 flex flex-col justify-between">
+      <div>
+        <ul className="list-none p-0 text-center m-0">
+          {FIRST_CLASS_EXPLORER_ITEMS.map((item) => (
+            <li key={item.key}>{getExplorerButton(item)}</li>
+          ))}
+        </ul>
+        <ul className="list-none p-0 m-0 mt-3 pt-3 text-center border-t border-gray-300 border-solid border-0">
+          <li>{getExplorerButton({ icon: <NumberOutlined />, label: '话题', key: ExplorerTypes.Topic })} </li>
+          <li>{getExplorerButton({ icon: <ClusterOutlined />, label: '关系图', key: ExplorerTypes.Graph })} </li>
+          <li>
+            <Popover
+              destroyTooltipOnHide
               placement="right"
-              open={!isStarVisible && isStarTooltipVisible}
-              onOpenChange={setStarTooltipVisible}
+              open={isStarVisible}
+              content={<StarList close={closeStar} />}
             >
-              <Button
-                {...BUTTON_PROPS}
-                onClick={handleStarClick}
-                icon={isStarVisible ? <StarFilled className="text-yellow-500" /> : <StarOutlined />}
-              />
-            </Tooltip>
-          </Popover>
-        </li>
+              <Tooltip
+                title="收藏夹"
+                placement="right"
+                open={!isStarVisible && isStarTooltipVisible}
+                onOpenChange={setStarTooltipVisible}
+              >
+                <Button
+                  {...BUTTON_PROPS}
+                  onClick={handleStarClick}
+                  icon={isStarVisible ? <StarFilled className="text-yellow-500" /> : <StarOutlined />}
+                />
+              </Tooltip>
+            </Popover>
+          </li>
+        </ul>
+      </div>
+      <ul className="list-none p-0 text-center pb-2">
+        <li>{getExplorerButton({ label: '回收站', key: ExplorerTypes.Dustbin, icon: <DeleteOutlined /> })} </li>
       </ul>
     </nav>
   );

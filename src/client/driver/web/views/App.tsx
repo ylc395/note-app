@@ -1,19 +1,25 @@
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 import { ConfigProvider, message as antdMessage } from 'antd';
-import { useCallback, useEffect } from 'react';
+import { type ReactNode, useCallback, useEffect } from 'react';
 import './index.css';
 
-import ViewService, { ViewTypes } from 'service/ViewService';
+import ViewService, { ExplorerTypes } from 'service/ViewService';
 
 import ActivityBar from './Explorer/ActivityBar';
 import NoteExplorer from './Explorer/Note';
 import Workbench from './Workbench';
 
-const explorerMap = {
-  [ViewTypes.Notes]: () => <NoteExplorer />,
-  [ViewTypes.Materials]: () => null,
-} as const;
+const explorerMap: Record<ExplorerTypes, () => ReactNode> = {
+  [ExplorerTypes.Notes]: () => <NoteExplorer />,
+  [ExplorerTypes.Materials]: () => null,
+  [ExplorerTypes.Timeline]: () => null,
+  [ExplorerTypes.Topic]: () => null,
+  [ExplorerTypes.Code]: () => null,
+  [ExplorerTypes.Dustbin]: () => null,
+  [ExplorerTypes.Graph]: () => null,
+  [ExplorerTypes.Todo]: () => null,
+};
 
 export default observer(function App() {
   const getContainer = useCallback(() => document.querySelector('#app') as HTMLElement, []);
@@ -22,7 +28,7 @@ export default observer(function App() {
     antdMessage.config({ getContainer });
   });
 
-  const { currentView } = container.resolve(ViewService);
+  const { currentExplorer: currentView } = container.resolve(ViewService);
 
   return (
     <ConfigProvider getPopupContainer={getContainer}>

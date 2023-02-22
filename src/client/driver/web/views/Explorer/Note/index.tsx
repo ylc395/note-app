@@ -4,7 +4,7 @@ import { Resizable } from 're-resizable';
 import { Input } from 'antd';
 import { useState } from 'react';
 
-import ViewService, { NoteExplorerPanel, ViewTypes } from 'service/ViewService';
+import ViewService, { NoteExplorerPanel, ExplorerTypes } from 'service/ViewService';
 
 import PanelSwitcher from './PanelSwitcher';
 import Tree from './Tree';
@@ -24,8 +24,8 @@ export default observer(function NoteExplorer() {
           </div>
           <div className="flex mt-4" ref={setOperationEl}></div>
         </div>
-        {explorerPanel[ViewTypes.Notes] === NoteExplorerPanel.Tree && <Tree operationEl={operationEl} />}
-        {explorerPanel[ViewTypes.Notes] === NoteExplorerPanel.CustomView && <CustomView />}
+        {explorerPanel[ExplorerTypes.Notes] === NoteExplorerPanel.Tree && <Tree operationEl={operationEl} />}
+        {explorerPanel[ExplorerTypes.Notes] === NoteExplorerPanel.CustomView && <CustomView />}
       </div>
     </Resizable>
   );

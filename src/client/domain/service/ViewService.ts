@@ -1,12 +1,15 @@
 import { observable, makeObservable, action } from 'mobx';
 import { singleton } from 'tsyringe';
 
-export enum ViewTypes {
+export enum ExplorerTypes {
   Materials = 'materials',
   Notes = 'notes',
-  // Memos = 'memos',
-  // Projects = 'projects',
-  // Cards = 'cards',
+  Timeline = 'timeline',
+  Topic = 'topic',
+  Code = 'code',
+  Dustbin = 'dustbin',
+  Graph = 'graph',
+  Todo = 'todo',
 }
 
 export enum NoteExplorerPanel {
@@ -17,9 +20,9 @@ export enum NoteExplorerPanel {
 
 @singleton()
 export default class ViewService {
-  @observable currentView = ViewTypes.Notes;
+  @observable currentExplorer = ExplorerTypes.Notes;
   @observable readonly explorerPanel = {
-    [ViewTypes.Notes]: NoteExplorerPanel.Tree,
+    [ExplorerTypes.Notes]: NoteExplorerPanel.Tree,
   };
 
   constructor() {
@@ -27,7 +30,7 @@ export default class ViewService {
   }
 
   @action.bound
-  setCurrentView(type: ViewTypes) {
-    this.currentView = type;
+  setExplorer(type: ExplorerTypes) {
+    this.currentExplorer = type;
   }
 }

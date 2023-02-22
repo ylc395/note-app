@@ -1,15 +1,14 @@
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 import { Space, Button, Tooltip, theme } from 'antd';
-import { ApartmentOutlined, NumberOutlined, ProfileOutlined } from '@ant-design/icons';
+import { ApartmentOutlined, ProfileOutlined } from '@ant-design/icons';
 
-import ViewService, { ViewTypes, NoteExplorerPanel } from 'service/ViewService';
+import ViewService, { ExplorerTypes, NoteExplorerPanel } from 'service/ViewService';
 import { action } from 'mobx';
 
 const { useToken } = theme;
 const switcher = [
   { key: NoteExplorerPanel.Tree, title: '笔记树面板', icon: () => <ApartmentOutlined /> },
-  { key: NoteExplorerPanel.Topic, title: '话题面板', icon: () => <NumberOutlined /> },
   { key: NoteExplorerPanel.CustomView, title: '自定义视图', icon: () => <ProfileOutlined /> },
 ] as const;
 
@@ -27,9 +26,9 @@ export default observer(function PanelSwitcher() {
       {switcher.map(({ key, title, icon }) => (
         <Tooltip title={title} key={key}>
           <Button
-            style={explorerPanel[ViewTypes.Notes] === key ? activeStyle : undefined}
+            style={explorerPanel[ExplorerTypes.Notes] === key ? activeStyle : undefined}
             icon={icon()}
-            onClick={action(() => (explorerPanel[ViewTypes.Notes] = key))}
+            onClick={action(() => (explorerPanel[ExplorerTypes.Notes] = key))}
           />
         </Tooltip>
       ))}
