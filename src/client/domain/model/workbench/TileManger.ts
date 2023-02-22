@@ -88,15 +88,15 @@ export default class TileManager {
       throw new Error('no root');
     }
 
-    const newWindow = this.createTile(true);
+    const newTile = this.createTile(true);
 
     if (this.root === from) {
       this.root = {
         direction,
         first: this.root,
-        second: newWindow.id,
+        second: newTile.id,
       };
-      return newWindow;
+      return newTile;
     }
 
     const split = (node: TileNode, parentNode?: TileParent): boolean => {
@@ -109,7 +109,7 @@ export default class TileManager {
         parentNode[parentBranch] = {
           direction,
           first: parentNode[parentBranch],
-          second: newWindow.id,
+          second: newTile.id,
         };
 
         return true;
@@ -124,7 +124,7 @@ export default class TileManager {
       throw new Error('can not find tile');
     }
 
-    return newWindow;
+    return newTile;
   }
 
   get(id: Tile['id'], silent: true): Tile | undefined;

@@ -32,7 +32,7 @@ export default observer(function TabBar({ id }: { id: Tile['id'] }) {
             <>
               <Tooltip title="向下开辟新窗口">
                 <Button
-                  onClick={() => duplicateOnNewWindow(TileDirections.Vertical)}
+                  onClick={() => duplicateOnNewWindow(id, TileDirections.Vertical)}
                   className="mr-2"
                   type="text"
                   icon={<SplitCellsOutlined />}
@@ -40,7 +40,7 @@ export default observer(function TabBar({ id }: { id: Tile['id'] }) {
               </Tooltip>
               <Tooltip title="向右开辟新窗口">
                 <Button
-                  onClick={() => duplicateOnNewWindow(TileDirections.Horizontal)}
+                  onClick={() => duplicateOnNewWindow(id, TileDirections.Horizontal)}
                   className="mr-2"
                   type="text"
                   icon={<SplitCellsOutlined />}

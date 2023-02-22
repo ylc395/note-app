@@ -39,54 +39,49 @@ export default class EditorService extends EventEmitter {
 
   @action.bound
   openEntity(entity: OpenableEntity, type?: 'newTab' | 'newWindow') {
-    const targetWindow = this.tileManager.getTargetTile();
+    const targetTile = this.tileManager.getTargetTile();
 
     if (!type) {
-      const existedTab = targetWindow.tabs.find(
+      const existedTab = targetTile.tabs.find(
         (editor) => editor.entityType === entity.entityType && editor.entityId === entity.entityId,
       );
 
       if (existedTab) {
-        targetWindow.currentTab = existedTab;
+        targetTile.currentTab = existedTab;
       } else {
-        const editor = this.createEditor(targetWindow, entity);
-        targetWindow.createTab(editor);
+        const editor = this.createEditor(targetTile, entity);
+        targetTile.createTab(editor);
       }
 
       return;
     }
 
-    const editor = this.createEditor(targetWindow, entity);
+    const editor = this.createEditor(targetTile, entity);
 
     if (type === 'newWindow') {
-      if (targetWindow.isRoot && targetWindow.tabs.length === 0) {
-        targetWindow.createTab(editor);
+      if (targetTile.isRoot && targetTile.tabs.length === 0) {
+        targetTile.createTab(editor);
         return;
       }
 
-      const newWindow = this.tileManager.splitTile(targetWindow.id, TileDirections.Horizontal);
+      const newWindow = this.tileManager.splitTile(targetTile.id, TileDirections.Horizontal);
       newWindow.createTab(editor);
     } else if (type === 'newTab') {
-      targetWindow.createTab(editor);
+      targetTile.createTab(editor);
     }
   }
 
   @action.bound
-  duplicateOnNewTile(direction: TileDirections) {
-    const { focusedTile } = this.tileManager;
+  duplicateOnNewTile(tileId: Tile['id'], direction: TileDirections) {
+    const fromTile = this.tileManager.get(tileId);
 
-    if (!focusedTile) {
-      throw new Error('no focusedTile');
+    if (!fromTile.currentTab) {
+      throw new Error('no current tab');
     }
 
-    const currentTab = focusedTile.currentTab;
-
-    if (!currentTab) {
-      throw new Error('no tab');
-    }
-
-    const newTile = this.tileManager.splitTile(focusedTile.id, direction);
-    const editor = this.createEditor(newTile, { entityId: currentTab.entityId, entityType: currentTab.entityType });
+    const { entityId, entityType } = fromTile.currentTab;
+    const newTile = this.tileManager.splitTile(tileId, direction);
+    const editor = this.createEditor(newTile, { entityId, entityType });
 
     newTile.createTab(editor);
   }
