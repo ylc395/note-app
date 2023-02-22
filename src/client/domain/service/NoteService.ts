@@ -17,7 +17,7 @@ import NoteTree from 'model/note/Tree';
 import { Events as NoteEditorEvents } from 'model/note/Editor';
 
 import EditorService from './EditorService';
-import StarService, { StarEvents } from './StarService';
+import StarManager, { StarEvents } from '../model/StarManager';
 
 export enum NoteEvents {
   'Deleted' = 'noteTree.deleted',
@@ -28,7 +28,7 @@ export enum NoteEvents {
 export default class NoteService extends EventEmitter {
   private readonly remote = container.resolve(remoteToken);
   private readonly editor = container.resolve(EditorService);
-  private readonly star = container.resolve(StarService);
+  private readonly star = container.resolve(StarManager);
   private readonly userFeedback = container.resolve(userFeedbackToken);
   private readonly userInput = container.resolve(userInputToken);
   readonly noteTree = new NoteTree();

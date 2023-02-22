@@ -27,7 +27,7 @@ const addEventsMap: Record<EntityTypes, StarEvents> = {
 
 // todo: 能够收藏具体段落
 @singleton()
-export default class StarService extends EventEmitter {
+export default class StarManager extends EventEmitter {
   constructor() {
     super();
     makeObservable(this);

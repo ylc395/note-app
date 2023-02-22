@@ -6,14 +6,14 @@ import { CloseOutlined, FileOutlined, LoadingOutlined } from '@ant-design/icons'
 import { useClickAway } from 'ahooks';
 
 import { EntityTypes } from 'interface/Entity';
-import StarService from 'service/StarService';
+import StarManager from 'model/StarManager';
 
 const iconMap = {
   [EntityTypes.Note]: () => <FileOutlined />,
 };
 
 export default observer(function StarList({ close }: { close: () => void }) {
-  const starService = container.resolve(StarService);
+  const starService = container.resolve(StarManager);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
