@@ -7,7 +7,7 @@ import { EntityTypes, type EntityId } from 'interface/Entity';
 import NoteEditor from 'model/note/Editor';
 import EntityEditor, { Events as EditorEvents } from 'model/abstract/editor';
 import type Tile from 'model/workbench/Tile';
-import TileManager from 'model/workbench/TileManger';
+import TileManager, { TileDirections } from 'model/workbench/TileManger';
 
 type OpenableEntity = {
   entityType: EntityTypes;
@@ -64,7 +64,7 @@ export default class EditorService extends EventEmitter {
         return;
       }
 
-      const newWindow = this.tileManager.splitTile(targetWindow.id);
+      const newWindow = this.tileManager.splitTile(targetWindow.id, TileDirections.Horizontal);
       newWindow.createTab(editor);
     } else if (type === 'newTab') {
       targetWindow.createTab(editor);
@@ -72,7 +72,7 @@ export default class EditorService extends EventEmitter {
   }
 
   @action.bound
-  duplicateOnNewTile() {
+  duplicateOnNewTile(direction: TileDirections) {
     const { focusedTile } = this.tileManager;
 
     if (!focusedTile) {
@@ -85,7 +85,7 @@ export default class EditorService extends EventEmitter {
       throw new Error('no tab');
     }
 
-    const newTile = this.tileManager.splitTile(focusedTile.id);
+    const newTile = this.tileManager.splitTile(focusedTile.id, direction);
     const editor = this.createEditor(newTile, { entityId: currentTab.entityId, entityType: currentTab.entityType });
 
     newTile.createTab(editor);

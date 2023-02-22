@@ -5,7 +5,7 @@ import { DndContext } from '@dnd-kit/core';
 
 import EditorService from 'service/EditorService';
 import Tile from './Tile';
-import { type TileNode, isTileId } from 'model/workbench/TileManger';
+import { type TileNode, isTileId, TileDirections } from 'model/workbench/TileManger';
 
 const renderTiles = (tile?: TileNode) => {
   if (!tile) {
@@ -17,7 +17,7 @@ const renderTiles = (tile?: TileNode) => {
   }
 
   return (
-    <div className={`w-full h-full flex ${tile.direction === 'column' ? 'flex-col' : ''}`}>
+    <div className={`w-full h-full flex ${tile.direction === TileDirections.Vertical ? 'flex-col' : ''}`}>
       {renderTiles(tile.first)}
       {renderTiles(tile.second)}
     </div>

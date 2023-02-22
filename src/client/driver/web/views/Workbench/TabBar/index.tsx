@@ -5,6 +5,7 @@ import { SplitCellsOutlined } from '@ant-design/icons';
 
 import EditorService from 'service/EditorService';
 import type Tile from 'model/workbench/Tile';
+import { TileDirections } from 'model/workbench/TileManger';
 
 import TabItem from './TabItem';
 
@@ -28,9 +29,24 @@ export default observer(function TabBar({ id }: { id: Tile['id'] }) {
         )}
         tabBarExtraContent={
           tile.currentTab && (
-            <Tooltip title="开辟新窗口">
-              <Button onClick={duplicateOnNewWindow} className="mr-2" type="text" icon={<SplitCellsOutlined />} />
-            </Tooltip>
+            <>
+              <Tooltip title="向下开辟新窗口">
+                <Button
+                  onClick={() => duplicateOnNewWindow(TileDirections.Vertical)}
+                  className="mr-2"
+                  type="text"
+                  icon={<SplitCellsOutlined />}
+                />
+              </Tooltip>
+              <Tooltip title="向右开辟新窗口">
+                <Button
+                  onClick={() => duplicateOnNewWindow(TileDirections.Horizontal)}
+                  className="mr-2"
+                  type="text"
+                  icon={<SplitCellsOutlined />}
+                />
+              </Tooltip>
+            </>
           )
         }
       />

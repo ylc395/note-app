@@ -3,9 +3,13 @@ import { observable, makeObservable, action } from 'mobx';
 import Tile, { Events as TileEvents } from './Tile';
 
 export type TileNode = TileParent | Tile['id'];
+export enum TileDirections {
+  Horizontal,
+  Vertical,
+}
 
 interface TileParent {
-  direction: 'row' | 'column';
+  direction: TileDirections;
   first: TileNode;
   second: TileNode;
   splitPercentage?: number;
@@ -79,7 +83,7 @@ export default class TileManager {
   }
 
   @action.bound
-  splitTile(from: Tile['id']) {
+  splitTile(from: Tile['id'], direction: TileDirections) {
     if (!this.root) {
       throw new Error('no root');
     }
@@ -88,7 +92,7 @@ export default class TileManager {
 
     if (this.root === from) {
       this.root = {
-        direction: 'row',
+        direction,
         first: this.root,
         second: newWindow.id,
       };
@@ -103,7 +107,7 @@ export default class TileManager {
 
         const parentBranch = parentNode.first === node ? 'first' : 'second';
         parentNode[parentBranch] = {
-          direction: 'row',
+          direction,
           first: parentNode[parentBranch],
           second: newWindow.id,
         };
