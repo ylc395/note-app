@@ -4,9 +4,11 @@ import { Tabs as AntdTabs, ConfigProvider, Button, Tooltip } from 'antd';
 import { SplitCellsOutlined } from '@ant-design/icons';
 
 import EditorService from 'service/EditorService';
-import type { TileId } from 'model/workbench/TileManger';
+import type Tile from 'model/workbench/Tile';
 
-export default observer(function Tabs({ id }: { id: TileId }) {
+import TabItem from './TabItem';
+
+export default observer(function TabBar({ id }: { id: Tile['id'] }) {
   const { tileManager, duplicateOnNewTile: duplicateOnNewWindow } = container.resolve(EditorService);
   const tile = tileManager.get(id);
   const { switchToTab, closeTab, currentTab } = tile;
@@ -21,6 +23,9 @@ export default observer(function Tabs({ id }: { id: TileId }) {
         onEdit={(key) => typeof key === 'string' && closeTab(key)}
         items={tile.tabs.map((tab) => ({ label: tab.title, key: tab.id }))}
         activeKey={currentTab?.id}
+        renderTabBar={(tabBarProps, DefaultTabBar) => (
+          <DefaultTabBar {...tabBarProps}>{(node) => <TabItem>{node}</TabItem>}</DefaultTabBar>
+        )}
         tabBarExtraContent={
           tile.currentTab && (
             <Tooltip title="开辟新窗口">

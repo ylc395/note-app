@@ -1,34 +1,27 @@
 import { observer } from 'mobx-react-lite';
-import { MosaicWindow, type MosaicBranch } from 'react-mosaic-component';
 import { container } from 'tsyringe';
+import { useDroppable } from '@dnd-kit/core';
 
 import EditorService from 'service/EditorService';
 import NoteEditor from 'model/note/Editor';
-import type { TileId } from 'model/workbench/TileManger';
+import type Tile from 'model/workbench/Tile';
 
-import NoteWorkbench from './Note';
-import Tabs from './Tabs';
+import NoteEditorView from './NoteEditor';
+import TabBar from './TabBar';
 
-export default observer(function Window({ path, id }: { path: MosaicBranch[]; id: TileId }) {
+export default observer(function Tile({ id }: { id: Tile['id'] }) {
   const { tileManager } = container.resolve(EditorService);
-  const w = tileManager.get(id, true);
+  const tile = tileManager.get(id, true);
+  const { setNodeRef: editorRef } = useDroppable({ id: `${id}-editor` });
 
-  if (!w) {
+  if (!tile) {
     return null;
   }
 
   return (
-    <MosaicWindow
-      path={path}
-      title=""
-      renderToolbar={() => (
-        // mosaic lib require a native element instead of a custom component
-        <div className="w-full">
-          <Tabs id={id} />
-        </div>
-      )}
-    >
-      {w.currentTab instanceof NoteEditor && <NoteWorkbench editor={w.currentTab} />}
-    </MosaicWindow>
+    <div className="h-full w-full">
+      <TabBar id={id} />
+      <div ref={editorRef}>{tile.currentTab instanceof NoteEditor && <NoteEditorView editor={tile.currentTab} />}</div>
+    </div>
   );
 });

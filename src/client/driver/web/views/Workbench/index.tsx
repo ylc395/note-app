@@ -1,25 +1,35 @@
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
-import { Mosaic } from 'react-mosaic-component';
 import { toJS } from 'mobx';
-import 'react-mosaic-component/react-mosaic-component.css';
+import { DndContext } from '@dnd-kit/core';
 
-import type { TileId } from 'model/workbench/TileManger';
 import EditorService from 'service/EditorService';
 import Tile from './Tile';
-import './index.css';
+import { type TileNode, isTileId } from 'model/workbench/TileManger';
+
+const renderTiles = (tile?: TileNode) => {
+  if (!tile) {
+    return <div>无窗口</div>;
+  }
+
+  if (isTileId(tile)) {
+    return <Tile id={tile} />;
+  }
+
+  return (
+    <div className={`w-full h-full flex ${tile.direction === 'column' ? 'flex-col' : ''}`}>
+      {renderTiles(tile.first)}
+      {renderTiles(tile.second)}
+    </div>
+  );
+};
 
 export default observer(function Workbench() {
   const { tileManager } = container.resolve(EditorService);
 
   return (
-    <div className="flex-grow">
-      <Mosaic<TileId>
-        className="bg-transparent"
-        renderTile={(id, path) => <Tile id={id} path={path} />}
-        value={toJS(tileManager.root || null)}
-        onChange={tileManager.update}
-      />
-    </div>
+    <DndContext onDragOver={console.log}>
+      <div className="flex-grow">{renderTiles(toJS(tileManager.root))}</div>
+    </DndContext>
   );
 });

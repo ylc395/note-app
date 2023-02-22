@@ -1,13 +1,23 @@
 import { observable, makeObservable, action } from 'mobx';
-import { type MosaicNode, type MosaicParent, getOtherBranch } from 'react-mosaic-component';
 
 import Tile, { Events as TileEvents } from './Tile';
 
-export type TileId = Tile['id'];
+export type TileNode = TileParent | Tile['id'];
+
+interface TileParent {
+  direction: 'row' | 'column';
+  first: TileNode;
+  second: TileNode;
+  splitPercentage?: number;
+}
+
+const getOtherBranch = (branch: 'first' | 'second') => (branch === 'first' ? 'second' : 'first');
+
+export const isTileId = (v: unknown): v is Tile['id'] => typeof v === 'string';
 
 export default class TileManager {
-  private readonly tilesMap = new Map<TileId, Tile>();
-  @observable root?: MosaicNode<TileId>; // a binary tree
+  private readonly tilesMap = new Map<Tile['id'], Tile>();
+  @observable root?: TileNode; // a binary tree
   @observable.ref focusedTile?: Tile;
 
   constructor() {
@@ -28,7 +38,7 @@ export default class TileManager {
   }
 
   @action.bound
-  private removeTile(tileId: TileId) {
+  private removeTile(tileId: Tile['id']) {
     this.tilesMap.delete(tileId);
 
     if (!this.root) {
@@ -40,7 +50,7 @@ export default class TileManager {
       return;
     }
 
-    const searchAndRemove = (node: MosaicNode<TileId>, parentNode?: MosaicParent<TileId>): boolean => {
+    const searchAndRemove = (node: TileNode, parentNode?: TileParent): boolean => {
       if (typeof node === 'string') {
         return false;
       }
@@ -69,7 +79,7 @@ export default class TileManager {
   }
 
   @action.bound
-  splitTile(from: TileId) {
+  splitTile(from: Tile['id']) {
     if (!this.root) {
       throw new Error('no root');
     }
@@ -85,7 +95,7 @@ export default class TileManager {
       return newWindow;
     }
 
-    const split = (node: MosaicNode<TileId>, parentNode?: MosaicParent<TileId>): boolean => {
+    const split = (node: TileNode, parentNode?: TileParent): boolean => {
       if (node === from) {
         if (!parentNode) {
           throw new Error('no parent');
@@ -113,9 +123,9 @@ export default class TileManager {
     return newWindow;
   }
 
-  get(id: TileId, silent: true): Tile | undefined;
-  get(id: TileId): Tile;
-  get(id: TileId, silent?: true) {
+  get(id: Tile['id'], silent: true): Tile | undefined;
+  get(id: Tile['id']): Tile;
+  get(id: Tile['id'], silent?: true) {
     const tile = this.tilesMap.get(id);
 
     if (!tile && !silent) {
@@ -126,7 +136,7 @@ export default class TileManager {
   }
 
   @action.bound
-  update(root: MosaicNode<TileId> | null) {
+  update(root: TileNode | null) {
     this.root = root || undefined;
   }
 
