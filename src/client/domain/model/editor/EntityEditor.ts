@@ -1,15 +1,12 @@
 import uniqueId from 'lodash/uniqueId';
 import { container } from 'tsyringe';
-import { computed, makeObservable, observable, runInAction, reaction } from 'mobx';
+import { computed, makeObservable, observable, reaction, runInAction } from 'mobx';
 import EventEmitter from 'eventemitter2';
 
 import { token as remoteToken } from 'infra/Remote';
 import type Tile from 'model/mosaic/Tile';
 import type { EntityId, EntityTypes } from 'interface/Entity';
-
-import type { Entity as NoteEditorEntity } from './NoteEditor';
-
-type EditableEntity = NoteEditorEntity;
+import EntityManager, { EditableEntity } from './EntityManager';
 
 interface Breadcrumb {
   title: string;
@@ -24,10 +21,9 @@ export enum Events {
   Activated = 'entityEditor.activated',
 }
 
-const entitiesMap: Record<string, { entity?: EditableEntity | Promise<EditableEntity>; count: number }> = {};
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default abstract class EntityEditor<T extends EditableEntity = any> extends EventEmitter {
+  private readonly entityManager = container.resolve(EntityManager);
   protected remote = container.resolve(remoteToken);
   readonly id = uniqueId('editor-');
   abstract readonly title: string;
@@ -43,16 +39,7 @@ export default abstract class EntityEditor<T extends EditableEntity = any> exten
   }
 
   destroy() {
-    const key = this.entityKey;
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const record = entitiesMap[key]!;
-
-    record.count -= 1;
-
-    if (record.count === 0) {
-      delete entitiesMap[key];
-    }
-
+    this.entityManager.reduce(this.entityType, this.entityId);
     this.emit(Events.Destroyed);
     this.disposeReaction && this.disposeReaction();
     this.removeAllListeners();
@@ -63,36 +50,10 @@ export default abstract class EntityEditor<T extends EditableEntity = any> exten
     return this.tile.isFocused && this.tile.currentTab?.id === this.id;
   }
 
-  private get entityKey() {
-    return `${this.entityType}-${this.entityId}`;
-  }
-
   protected async init() {
-    const key = this.entityKey;
+    const entity = (await this.entityManager.get(this.entityType, this.entityId, this.fetchEntity.bind(this))) as T;
 
-    if (!entitiesMap[key]) {
-      entitiesMap[key] = { count: 0 };
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const record = entitiesMap[key]!;
-
-    record.count += 1;
-
-    if (record.entity) {
-      this.entity = (record.entity instanceof Promise ? await record.entity : record.entity) as T;
-    } else {
-      record.entity = new Promise((resolve) => {
-        this.fetchEntity().then((entity) => {
-          const result = observable(entity);
-
-          runInAction(() => (this.entity = result));
-          record.entity = result;
-          resolve(result);
-        });
-      });
-    }
-
+    runInAction(() => (this.entity = entity));
     this.disposeReaction = reaction(
       () => this.isActive,
       (isActive) => isActive && this.emit(Events.Activated),
