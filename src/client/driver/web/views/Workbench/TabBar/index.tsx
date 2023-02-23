@@ -41,7 +41,6 @@ export default observer(function TabBar({ id }: { id: Tile['id'] }) {
               <Tooltip title="向右开辟新窗口">
                 <Button
                   onClick={() => duplicateOnNewWindow(id, TileDirections.Horizontal)}
-                  className="mr-2"
                   type="text"
                   icon={<SplitCellsOutlined />}
                 />

@@ -64,8 +64,8 @@ export default class EditorService extends EventEmitter {
         return;
       }
 
-      const newWindow = this.tileManager.splitTile(targetTile.id, TileDirections.Horizontal);
-      newWindow.createTab(editor);
+      const newTile = this.tileManager.splitTile(targetTile.id, TileDirections.Horizontal);
+      newTile.createTab(editor);
     } else if (type === 'newTab') {
       targetTile.createTab(editor);
     }

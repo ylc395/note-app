@@ -1,4 +1,4 @@
-import { action, makeObservable, observable, has, computed } from 'mobx';
+import { action, makeObservable, observable, computed } from 'mobx';
 import uniqueId from 'lodash/uniqueId';
 import EventEmitter from 'eventemitter2';
 
@@ -69,10 +69,7 @@ export default class Tile extends EventEmitter {
     closedTab.destroy();
 
     if (this.currentTab?.id === editorId) {
-      this.currentTab =
-        (has(this.tabs, String(existedTabIndex)) && this.tabs[existedTabIndex]) ||
-        (has(this.tabs, String(existedTabIndex)) && this.tabs[existedTabIndex - 1]) ||
-        undefined;
+      this.currentTab = this.tabs[existedTabIndex] || this.tabs[existedTabIndex - 1];
     }
 
     if (this.tabs.length === 0) {

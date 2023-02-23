@@ -10,9 +10,9 @@ export default observer(function TabItem({ children }: { children: ReactNode }) 
 
   return (
     <div ref={droppableRef}>
-      <div ref={draggableRef} {...listeners}>
-        {children}
-      </div>
+      {/* <div ref={draggableRef} {...listeners}> */}
+      {children}
+      {/* </div> */}
     </div>
   );
 });

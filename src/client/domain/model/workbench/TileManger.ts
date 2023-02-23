@@ -8,14 +8,12 @@ export enum TileDirections {
   Vertical,
 }
 
-interface TileParent {
+export interface TileParent {
   direction: TileDirections;
   first: TileNode;
   second: TileNode;
   splitPercentage?: number;
 }
-
-const getOtherBranch = (branch: 'first' | 'second') => (branch === 'first' ? 'second' : 'first');
 
 export const isTileId = (v: unknown): v is Tile['id'] => typeof v === 'string';
 
@@ -64,10 +62,10 @@ export default class TileManager {
       }
 
       const branchToKeep = node.first === tileId ? 'second' : 'first';
-      const branchToRemove = getOtherBranch(branchToKeep);
 
       if (parentNode) {
-        parentNode[branchToRemove] = node[branchToKeep];
+        const branchOfParent = parentNode.first === node ? 'first' : 'second';
+        parentNode[branchOfParent] = node[branchToKeep];
       } else {
         // if parentNode is undefined, node must be root
         this.root = node[branchToKeep];
@@ -127,12 +125,10 @@ export default class TileManager {
     return newTile;
   }
 
-  get(id: Tile['id'], silent: true): Tile | undefined;
-  get(id: Tile['id']): Tile;
-  get(id: Tile['id'], silent?: true) {
+  get(id: Tile['id']) {
     const tile = this.tilesMap.get(id);
 
-    if (!tile && !silent) {
+    if (!tile) {
       throw new Error('wrong id');
     }
 

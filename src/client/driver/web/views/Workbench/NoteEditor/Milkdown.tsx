@@ -58,7 +58,7 @@ export default observer(function NoteEditor({ editor }: { editor: NoteEditor }) 
   }, [editor, editor.entity?.body, milkdownEditor.editor]);
 
   return (
-    <div className="px-4 overflow-auto">
+    <div className="px-4 overflow-auto min-h-0 flex-grow flex-shrink">
       <ReactEditor editor={milkdownEditor} />
     </div>
   );
