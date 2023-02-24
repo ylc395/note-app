@@ -12,7 +12,7 @@ export interface TileParent {
   direction: TileDirections;
   first: TileNode;
   second: TileNode;
-  splitPercentage?: number;
+  splitPercentage?: number; // first tile's width
 }
 
 export const isTileId = (v: unknown): v is Tile['id'] => typeof v === 'string';
