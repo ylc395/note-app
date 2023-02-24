@@ -135,11 +135,6 @@ export default class TileManager {
     return tile;
   }
 
-  @action.bound
-  update(root: TileNode | null) {
-    this.root = root || undefined;
-  }
-
   getTargetTile() {
     if (!this.root) {
       this.root = this.createTile(true).id;

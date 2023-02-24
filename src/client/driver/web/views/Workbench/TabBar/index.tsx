@@ -9,9 +9,9 @@ import { TileDirections } from 'model/workbench/TileManger';
 
 import TabItem from './TabItem';
 
-export default observer(function TabBar({ id }: { id: Tile['id'] }) {
+export default observer(function TabBar({ tileId }: { tileId: Tile['id'] }) {
   const { tileManager, duplicateOnNewTile: duplicateOnNewWindow } = container.resolve(EditorService);
-  const tile = tileManager.get(id);
+  const tile = tileManager.get(tileId);
   const { switchToTab, closeTab, currentTab } = tile;
 
   return (
@@ -32,7 +32,7 @@ export default observer(function TabBar({ id }: { id: Tile['id'] }) {
             <>
               <Tooltip title="向下开辟新窗口">
                 <Button
-                  onClick={() => duplicateOnNewWindow(id, TileDirections.Vertical)}
+                  onClick={() => duplicateOnNewWindow(tileId, TileDirections.Vertical)}
                   className="mr-2"
                   type="text"
                   icon={<SplitCellsOutlined />}
@@ -40,7 +40,7 @@ export default observer(function TabBar({ id }: { id: Tile['id'] }) {
               </Tooltip>
               <Tooltip title="向右开辟新窗口">
                 <Button
-                  onClick={() => duplicateOnNewWindow(id, TileDirections.Horizontal)}
+                  onClick={() => duplicateOnNewWindow(tileId, TileDirections.Horizontal)}
                   type="text"
                   icon={<SplitCellsOutlined />}
                 />
