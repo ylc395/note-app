@@ -21,11 +21,21 @@ module.exports = {
     {
       files: ['*.ts', '*.tsx'],
       parser: '@typescript-eslint/parser',
-      extends: ['plugin:@typescript-eslint/recommended'],
+      extends: [
+        'plugin:@typescript-eslint/recommended',
+        'plugin:react-hooks/recommended',
+        'plugin:react/recommended',
+        'plugin:tailwindcss/recommended',
+      ],
+      settings: {
+        react: {
+          version: 'detect',
+        },
+      },
     },
     {
       files: ['*.tsx'],
-      extends: ['plugin:react-hooks/recommended', 'plugin:react/recommended', 'plugin:react/jsx-runtime'],
+      extends: ['plugin:react/jsx-runtime'],
     },
     {
       files: ['*Controller.ts'],
