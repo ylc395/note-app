@@ -1,7 +1,7 @@
 import { Input, Space, Button, Tooltip } from 'antd';
 import { observer } from 'mobx-react-lite';
 import { type ChangeEvent, useCallback } from 'react';
-import { SettingOutlined, InfoCircleOutlined, SearchOutlined } from '@ant-design/icons';
+import { InfoCircleOutlined, SearchOutlined } from '@ant-design/icons';
 
 import type NoteEditor from 'model/note/Editor';
 
@@ -24,9 +24,6 @@ export default observer(function NoteTitle({ editor }: { editor: NoteEditor }) {
         </Tooltip>
         <Tooltip title="信息与统计">
           <Button type="text" icon={<InfoCircleOutlined />} />
-        </Tooltip>
-        <Tooltip title="设置笔记工作台">
-          <Button type="text" icon={<SettingOutlined />} />
         </Tooltip>
       </Space.Compact>
     </div>
