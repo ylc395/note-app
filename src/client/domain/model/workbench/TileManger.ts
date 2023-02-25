@@ -1,4 +1,6 @@
-import { observable, makeObservable, action } from 'mobx';
+import remove from 'lodash/remove';
+import uniqueId from 'lodash/uniqueId';
+import { observable, makeObservable, action, computed } from 'mobx';
 
 import Tile, { Events as TileEvents } from './Tile';
 
@@ -9,18 +11,27 @@ export enum TileDirections {
 }
 
 export interface TileParent {
+  id: string;
   direction: TileDirections;
   first: TileNode;
   second: TileNode;
   splitPercentage?: number; // first tile's width
 }
 
-export const isTileId = (v: unknown): v is Tile['id'] => typeof v === 'string';
+export const isTileLeaf = (v: unknown): v is Tile['id'] => typeof v === 'string';
+
+export const MAX_TILE_WIDTH = 100;
+export const MIN_TILE_WIDTH = 20;
 
 export default class TileManager {
   private readonly tilesMap = new Map<Tile['id'], Tile>();
+  @observable.shallow private readonly focusedTileHistory: Tile[] = [];
   @observable root?: TileNode; // a binary tree
-  @observable.ref focusedTile?: Tile;
+
+  @computed
+  get focusedTile() {
+    return this.focusedTileHistory[this.focusedTileHistory.length - 1];
+  }
 
   constructor() {
     makeObservable(this);
@@ -33,7 +44,7 @@ export default class TileManager {
     this.tilesMap.set(tile.id, tile);
 
     if (focus) {
-      this.focusedTile = tile;
+      this.focusedTileHistory.push(tile);
     }
 
     return tile;
@@ -70,7 +81,6 @@ export default class TileManager {
         // if parentNode is undefined, node must be root
         this.root = node[branchToKeep];
       }
-      this.focusedTile = this.get(node[branchToKeep] as string);
 
       return true;
     };
@@ -78,6 +88,8 @@ export default class TileManager {
     if (!searchAndRemove(this.root)) {
       throw new Error('can not find tile');
     }
+
+    remove(this.focusedTileHistory, ({ id }) => id === tileId);
   }
 
   @action.bound
@@ -90,6 +102,7 @@ export default class TileManager {
 
     if (this.root === from) {
       this.root = {
+        id: uniqueId('tileParent-'),
         direction,
         first: this.root,
         second: newTile.id,
@@ -105,6 +118,7 @@ export default class TileManager {
 
         const parentBranch = parentNode.first === node ? 'first' : 'second';
         parentNode[parentBranch] = {
+          id: uniqueId('tileParent-'),
           direction,
           first: parentNode[parentBranch],
           second: newTile.id,
@@ -129,13 +143,13 @@ export default class TileManager {
     const tile = this.tilesMap.get(id);
 
     if (!tile) {
-      throw new Error('wrong id');
+      throw new Error(`wrong id ${id}`);
     }
 
     return tile;
   }
 
-  getTargetTile() {
+  getTileAsTarget() {
     if (!this.root) {
       this.root = this.createTile(true).id;
     }

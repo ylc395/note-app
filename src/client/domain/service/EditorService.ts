@@ -39,7 +39,7 @@ export default class EditorService extends EventEmitter {
 
   @action.bound
   openEntity(entity: OpenableEntity, type?: 'newTab' | 'newWindow') {
-    const targetTile = this.tileManager.getTargetTile();
+    const targetTile = this.tileManager.getTileAsTarget();
 
     if (!type) {
       const existedTab = targetTile.tabs.find(

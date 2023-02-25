@@ -1,6 +1,5 @@
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
-import { toJS } from 'mobx';
 
 import EditorService from 'service/EditorService';
 
@@ -14,7 +13,7 @@ export default observer(function Workbench() {
   return (
     <div className="flex-grow min-w-0 h-screen">
       <Mosaic
-        root={toJS(tileManager.root)}
+        root={tileManager.root}
         renderTile={(id) => (
           <div className="flex flex-col h-full">
             <TabBar tileId={id} />
