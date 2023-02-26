@@ -42,6 +42,8 @@ export const noteQuerySchema = object({
   id: entityId().optional(),
 });
 
+export const noteBodySchema = string();
+
 export type NoteBodyDTO = string;
 
 export type NoteBodyVO = NoteBodyDTO;

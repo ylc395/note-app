@@ -10,7 +10,7 @@ const createMethod = <T, H>(method: IpcRequest<unknown>['method']) => {
   return async (path: string, payload: T, headers: H) => {
     const request: IpcRequest<T> = { path, method };
 
-    if (payload) {
+    if (payload !== undefined) {
       request[['POST', 'PATCH', 'PUT'].includes(method) ? 'body' : 'query'] = payload;
     }
 
