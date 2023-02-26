@@ -55,16 +55,17 @@ export default class NoteEditor extends EntityEditor<Entity> {
     return result;
   }
 
-  @action
-  async updateBody(body: unknown) {
+  @action.bound
+  async updateBody(body: string) {
     if (!this.entity) {
       throw new Error('not ready');
     }
 
-    const jsonStr = JSON.stringify(body);
-    this.entity.body = jsonStr;
+    // const jsonStr = JSON.stringify(body);
+    this.entity.body = body;
     this.emit(Events.BodyUpdated, this.entity.body);
-    this.uploadBody(jsonStr);
+    // this.uploadBody(jsonStr);
+    this.uploadBody(body);
   }
 
   @action
