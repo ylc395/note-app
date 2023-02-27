@@ -47,7 +47,7 @@ export default abstract class EntityEditor<T extends EditableEntity = any> exten
 
   @computed
   get isActive() {
-    return this.tile.isFocused && this.tile.currentTab?.id === this.id;
+    return this.tile.isFocused && this.tile.currentEditor?.id === this.id;
   }
 
   protected async init() {

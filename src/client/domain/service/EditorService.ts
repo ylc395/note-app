@@ -42,15 +42,13 @@ export default class EditorService extends EventEmitter {
     const targetTile = this.tileManager.getTileAsTarget();
 
     if (!type) {
-      const existedTab = targetTile.tabs.find(
-        (editor) => editor.entityType === entity.entityType && editor.entityId === entity.entityId,
-      );
-
-      if (existedTab) {
-        targetTile.currentTab = existedTab;
-      } else {
+      if (
+        !targetTile.switchToEditor(
+          ({ entityId, entityType }) => entityType === entity.entityType && entityId === entity.entityId,
+        )
+      ) {
         const editor = this.createEditor(targetTile, entity);
-        targetTile.createTab(editor);
+        targetTile.addEditor(editor);
       }
 
       return;
@@ -59,15 +57,15 @@ export default class EditorService extends EventEmitter {
     const editor = this.createEditor(targetTile, entity);
 
     if (type === 'newWindow') {
-      if (targetTile.isRoot && targetTile.tabs.length === 0) {
-        targetTile.createTab(editor);
+      if (targetTile.isRoot && targetTile.editors.length === 0) {
+        targetTile.addEditor(editor);
         return;
       }
 
       const newTile = this.tileManager.splitTile(targetTile.id, TileDirections.Horizontal);
-      newTile.createTab(editor);
+      newTile.addEditor(editor);
     } else if (type === 'newTab') {
-      targetTile.createTab(editor);
+      targetTile.addEditor(editor);
     }
   }
 
@@ -75,14 +73,14 @@ export default class EditorService extends EventEmitter {
   duplicateOnNewTile(tileId: Tile['id'], direction: TileDirections) {
     const fromTile = this.tileManager.get(tileId);
 
-    if (!fromTile.currentTab) {
+    if (!fromTile.currentEditor) {
       throw new Error('no current tab');
     }
 
-    const { entityId, entityType } = fromTile.currentTab;
+    const { entityId, entityType } = fromTile.currentEditor;
     const newTile = this.tileManager.splitTile(tileId, direction);
     const editor = this.createEditor(newTile, { entityId, entityType });
 
-    newTile.createTab(editor);
+    newTile.addEditor(editor);
   }
 }

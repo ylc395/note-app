@@ -5,16 +5,14 @@ import EventEmitter from 'eventemitter2';
 import type EntityEditor from 'model/abstract/editor';
 import type Manager from './TileManger';
 
-export type Tab = EntityEditor;
-
 export enum Events {
   destroyed = 'tile.destroyed',
 }
 
 export default class Tile extends EventEmitter {
   readonly id = uniqueId('tile-');
-  @observable.ref currentTab?: Tab;
-  @observable.shallow tabs: Tab[] = [];
+  @observable.ref currentEditor?: EntityEditor;
+  @observable.shallow editors: EntityEditor[] = [];
   constructor(private readonly manager: Manager) {
     super();
     makeObservable(this);
@@ -30,49 +28,56 @@ export default class Tile extends EventEmitter {
   }
 
   @action.bound
-  moveTabTo(src: Tab, dest: Tab) {
-    const srcIndex = this.tabs.findIndex((tab) => tab === src);
-    this.tabs.splice(srcIndex, 1);
+  moveEditorTo(src: EntityEditor, dest: EntityEditor) {
+    const srcIndex = this.editors.findIndex((tab) => tab === src);
+    this.editors.splice(srcIndex, 1);
 
-    const targetIndex = this.tabs.findIndex((tab) => tab === dest);
-    this.tabs.splice(targetIndex + 1, 0, src);
+    const targetIndex = this.editors.findIndex((tab) => tab === dest);
+    this.editors.splice(targetIndex + 1, 0, src);
   }
 
   @action.bound
-  createTab(tab: Tab) {
-    this.tabs.push(tab);
-    this.currentTab = tab;
+  addEditor(editor: EntityEditor) {
+    this.editors.push(editor);
+    this.currentEditor = editor;
   }
 
   @action.bound
-  switchToTab(editorId: Tab['id']) {
-    const existedTab = this.tabs.find((editor) => editor.id === editorId);
+  switchToEditor(editorId: EntityEditor['id'] | ((tab: EntityEditor) => boolean)) {
+    const existedTab = this.editors.find(
+      typeof editorId === 'function' ? editorId : (editor) => editor.id === editorId,
+    );
 
     if (!existedTab) {
-      throw new Error('no target tab');
+      if (typeof editorId !== 'function') {
+        throw new Error('no target tab');
+      }
+
+      return false;
     }
 
-    this.currentTab = existedTab;
+    this.currentEditor = existedTab;
+    return true;
   }
 
   @action.bound
-  closeTab(editorId: Tab['id']) {
-    const existedTabIndex = this.tabs.findIndex((editor) => editor.id === editorId);
+  closeEditor(editorId: EntityEditor['id']) {
+    const existedTabIndex = this.editors.findIndex((editor) => editor.id === editorId);
 
     if (existedTabIndex === -1) {
       throw new Error('no target tab');
     }
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const closedTab = this.tabs.splice(existedTabIndex, 1)[0]!;
+    const closedTab = this.editors.splice(existedTabIndex, 1)[0]!;
 
     closedTab.destroy();
 
-    if (this.currentTab?.id === editorId) {
-      this.currentTab = this.tabs[existedTabIndex] || this.tabs[existedTabIndex - 1];
+    if (this.currentEditor?.id === editorId) {
+      this.currentEditor = this.editors[existedTabIndex] || this.editors[existedTabIndex - 1];
     }
 
-    if (this.tabs.length === 0) {
+    if (this.editors.length === 0) {
       this.destroy();
     }
   }

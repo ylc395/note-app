@@ -12,7 +12,7 @@ import TabItem from './TabItem';
 export default observer(function TabBar({ tileId }: { tileId: Tile['id'] }) {
   const { tileManager, duplicateOnNewTile: duplicateOnNewWindow } = container.resolve(EditorService);
   const tile = tileManager.get(tileId);
-  const { switchToTab, closeTab, currentTab } = tile;
+  const { switchToEditor: switchToTab, closeEditor: closeTab, currentEditor: currentTab } = tile;
 
   return (
     <ConfigProvider theme={{ components: { Tabs: { margin: 0 } } }}>
@@ -22,13 +22,13 @@ export default observer(function TabBar({ tileId }: { tileId: Tile['id'] }) {
         hideAdd
         onChange={switchToTab}
         onEdit={(key) => typeof key === 'string' && closeTab(key)}
-        items={tile.tabs.map((tab) => ({ label: tab.title, key: tab.id }))}
+        items={tile.editors.map((tab) => ({ label: tab.title, key: tab.id }))}
         activeKey={currentTab?.id}
         renderTabBar={(tabBarProps, DefaultTabBar) => (
           <DefaultTabBar {...tabBarProps}>{(node) => <TabItem>{node}</TabItem>}</DefaultTabBar>
         )}
         tabBarExtraContent={
-          tile.currentTab && (
+          tile.currentEditor && (
             <>
               <Tooltip title="向下开辟新窗口">
                 <Button

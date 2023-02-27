@@ -12,8 +12,8 @@ export default observer(function Editor({ tileId }: { tileId: Tile['id'] }) {
   const { tileManager } = container.resolve(EditorService);
   const tile = tileManager.get(tileId);
 
-  if (tile.currentTab instanceof NoteEditor) {
-    return <NoteEditorView editor={tile.currentTab} />;
+  if (tile.currentEditor instanceof NoteEditor) {
+    return <NoteEditorView editor={tile.currentEditor} />;
   }
 
   return null;
