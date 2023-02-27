@@ -9,10 +9,10 @@ export default observer(function NoteTitle({ editor }: { editor: NoteEditor }) {
   const handleChange = useCallback((e: ChangeEvent<HTMLInputElement>) => editor?.updateTitle(e.target.value), [editor]);
 
   return (
-    <div className="flex items-center border-0 border-gray-200 border-b border-solid">
+    <div className="flex items-center border-0 border-b border-solid border-gray-200">
       {editor.entity && (
         <Input
-          className="font-semibold text-lg border-none py-2"
+          className="border-none py-2 text-lg font-semibold"
           placeholder={editor.title}
           value={editor.entity.metadata.title}
           onChange={handleChange}

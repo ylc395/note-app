@@ -2,7 +2,7 @@ import { action, makeObservable, observable, computed } from 'mobx';
 import uniqueId from 'lodash/uniqueId';
 import EventEmitter from 'eventemitter2';
 
-import type EntityEditor from 'model/abstract/editor';
+import type EntityEditor from 'model/abstract/Editor';
 import type Manager from './TileManger';
 
 export enum Events {

@@ -15,9 +15,9 @@ import { EntityTypes } from 'interface/Entity';
 import { MULTIPLE_ICON_FLAG, NoteMetadata } from 'model/note/MetadataForm/type';
 import NoteTree from 'model/note/Tree';
 import { Events as NoteEditorEvents } from 'model/note/Editor';
+import StarManager, { StarEvents } from 'model/StarManager';
 
 import EditorService from './EditorService';
-import StarManager, { StarEvents } from '../model/StarManager';
 
 export enum NoteEvents {
   'Deleted' = 'noteTree.deleted',
@@ -35,7 +35,6 @@ export default class NoteService extends EventEmitter {
 
   constructor() {
     super();
-    this.editor.on(NoteEditorEvents.TitleUpdated, debounce(this.noteTree.updateTreeByNote, 1000));
     this.star.on(StarEvents.NoteAdded, (noteId) => this.noteTree.toggleStar(noteId, true));
     this.star.on(StarEvents.NoteRemoved, (noteId) => this.noteTree.toggleStar(noteId, false));
   }

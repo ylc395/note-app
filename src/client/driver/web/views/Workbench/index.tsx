@@ -11,11 +11,11 @@ export default observer(function Workbench() {
   const { tileManager } = container.resolve(EditorService);
 
   return (
-    <div className="flex-grow min-w-0 h-screen">
+    <div className="h-screen min-w-0 grow">
       <Mosaic
         root={tileManager.root}
         renderTile={(id) => (
-          <div className="flex flex-col h-full">
+          <div className="flex h-full flex-col">
             <TabBar tileId={id} />
             <Editor tileId={id} />
           </div>

@@ -1,21 +1,24 @@
-import { singleton } from 'tsyringe';
 import { observable } from 'mobx';
 
 import type { EntityId, EntityTypes } from 'interface/Entity';
-import type { Entity as NoteEditorEntity } from '../../note/Editor';
+import type { Entity as NoteEditorEntity } from 'model/note/Editor';
 
 export type EditableEntity = NoteEditorEntity;
 
-@singleton()
+export type EntityLocator = {
+  entityType: EntityTypes;
+  entityId: EntityId;
+};
+
 export default class EntityManager {
   readonly entitiesMap: Record<string, { entity?: EditableEntity | Promise<EditableEntity>; count: number }> = {};
 
-  private getEntityKey(entityType: EntityTypes, entityId: EntityId) {
+  private getEntityKey({ entityType, entityId }: EntityLocator) {
     return `${entityType}-${entityId}`;
   }
 
-  reduce(entityType: EntityTypes, entityId: EntityId) {
-    const key = this.getEntityKey(entityType, entityId);
+  reduceReference(locator: EntityLocator) {
+    const key = this.getEntityKey(locator);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const record = this.entitiesMap[key]!;
 
@@ -26,8 +29,8 @@ export default class EntityManager {
     }
   }
 
-  async get(entityType: EntityTypes, entityId: EntityId, fetch: () => Promise<EditableEntity>) {
-    const key = this.getEntityKey(entityType, entityId);
+  async get(locator: EntityLocator, fetch: () => Promise<EditableEntity>) {
+    const key = this.getEntityKey(locator);
 
     if (!this.entitiesMap[key]) {
       this.entitiesMap[key] = { count: 0 };

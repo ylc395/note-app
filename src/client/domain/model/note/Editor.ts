@@ -1,16 +1,15 @@
-import { makeObservable, computed, action } from 'mobx';
+import { makeObservable, computed, action, toJS } from 'mobx';
 import debounce from 'lodash/debounce';
-import { container } from 'tsyringe';
 
 import { EntityTypes } from 'interface/Entity';
-import { normalizeTitle, type NoteVO, type NoteBodyVO, type NoteBodyDTO, type NoteDTO } from 'interface/Note';
+import { normalizeTitle, type NoteVO, type NoteBodyVO } from 'interface/Note';
 import type Tile from 'model/workbench/Tile';
-import NoteService from 'service/NoteService';
+import EntityEditor, { type Breadcrumbs } from 'model/abstract/Editor';
 
-import EntityEditor, { type Breadcrumbs } from 'model/abstract/editor';
+import type NoteTree from './Tree';
 
 export enum Events {
-  TitleUpdated = 'noteEditor.updated.title',
+  MetadataUpdated = 'noteEditor.updated.metadata',
   BodyUpdated = 'noteEditor.updated.body',
 }
 
@@ -21,11 +20,9 @@ export interface Entity {
 
 export default class NoteEditor extends EntityEditor<Entity> {
   readonly entityType: EntityTypes = EntityTypes.Note;
-  private readonly noteTree = container.resolve(NoteService).noteTree;
-  constructor(tile: Tile, noteId: NoteVO['id']) {
+  constructor(tile: Tile, noteId: NoteVO['id'], private readonly noteTree: NoteTree) {
     super(tile, noteId);
     makeObservable(this);
-    this.init();
   }
 
   @computed
@@ -58,41 +55,29 @@ export default class NoteEditor extends EntityEditor<Entity> {
   @action.bound
   async updateBody(body: string) {
     if (!this.entity) {
-      throw new Error('not ready');
+      throw new Error('no load note');
     }
 
-    // const jsonStr = JSON.stringify(body);
     this.entity.body = body;
-    this.emit(Events.BodyUpdated, this.entity.body);
-    // this.uploadBody(jsonStr);
-    this.uploadBody(body);
+    this.emit(Events.BodyUpdated, body);
   }
 
   @action
   updateTitle(title: string) {
     if (!this.entity) {
-      throw new Error('not ready');
+      throw new Error('no load note');
     }
 
     this.entity.metadata.title = title;
-    this.emit(Events.TitleUpdated, this.entity.metadata);
-    this.uploadTitle(title);
+    this.emit(Events.MetadataUpdated, toJS(this.entity.metadata));
+    this.updateTree();
   }
 
-  protected async fetchEntity() {
-    const [{ body: metadata }, { body }] = await Promise.all([
-      this.remote.get<void, NoteVO>(`/notes/${this.entityId}`),
-      this.remote.get<void, NoteBodyVO>(`/notes/${this.entityId}/body`),
-    ]);
+  private updateTree = debounce(() => {
+    if (!this.entity) {
+      throw new Error('no load note');
+    }
 
-    return { metadata, body };
-  }
-
-  private readonly uploadBody = debounce((body: NoteBodyDTO) => {
-    this.remote.put<NoteBodyDTO>(`/notes/${this.entityId}/body`, body);
-  }, 1000);
-
-  private readonly uploadTitle = debounce((title: NonNullable<NoteDTO['title']>) => {
-    this.remote.patch<NoteDTO>(`/notes/${this.entityId}`, { title });
-  }, 1000);
+    this.noteTree.updateTreeByNote(this.entity.metadata);
+  }, 500);
 }
