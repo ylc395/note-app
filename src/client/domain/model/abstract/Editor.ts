@@ -16,6 +16,7 @@ export type Breadcrumbs = Array<Breadcrumb & { siblings: Breadcrumb[] }>;
 export enum Events {
   Destroyed = 'entityEditor.destroyed',
   Activated = 'entityEditor.activated',
+  Loaded = 'entityEditor.loaded',
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -48,5 +49,6 @@ export default abstract class EntityEditor<T = unknown> extends EventEmitter {
     }
 
     this.entity = entity;
+    this.emit(Events.Loaded, entity);
   }
 }

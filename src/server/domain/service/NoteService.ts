@@ -74,7 +74,7 @@ export default class NoteService extends BaseService {
 
     const result = await this.notes.updateBody(noteId, body);
 
-    if (!result) {
+    if (result === null) {
       throw new Error('update note body failed');
     }
 

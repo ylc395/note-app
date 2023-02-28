@@ -2,6 +2,7 @@ import EventEmitter from 'eventemitter3';
 import { container, singleton } from 'tsyringe';
 import { action, makeObservable } from 'mobx';
 import debounce from 'lodash/debounce';
+import cloneDeep from 'lodash/cloneDeep';
 
 import { token as remoteToken } from 'infra/Remote';
 import { EntityTypes, type EntityId } from 'interface/Entity';
@@ -47,16 +48,25 @@ export default class EditorService extends EventEmitter {
     return editor;
   }
 
+  private fetchEntity<T>({ entityId, entityType }: EntityLocator, fetch: () => Promise<T>): Promise<T> {
+    const existedEditor = Array.from(this.editors[entityType]).find((editor) => editor.entityId === entityId);
+
+    return new Promise((resolve) => {
+      if (existedEditor) {
+        if (existedEditor.entity) {
+          resolve(cloneDeep(existedEditor.entity as T));
+        } else {
+          existedEditor.once(EditorEvents.Loaded, (entity: T) => resolve(cloneDeep(entity)));
+        }
+      } else {
+        fetch().then(resolve);
+      }
+    });
+  }
+
   private createNoteEditor(tile: Tile, noteId: NoteEditor['entityId']) {
     const noteService = container.resolve(NoteService);
     const noteEditor = new NoteEditor(tile, noteId, noteService.noteTree);
-
-    Promise.all([
-      this.remote.get<void, NoteVO>(`/notes/${noteId}`),
-      this.remote.get<void, NoteBodyVO>(`/notes/${noteId}/body`),
-    ]).then(([{ body: metadata }, { body }]) => {
-      noteEditor.loadEntity({ body, metadata });
-    });
 
     noteEditor
       .on(
@@ -81,6 +91,13 @@ export default class EditorService extends EventEmitter {
           }
         }
       });
+
+    this.fetchEntity({ entityType: EntityTypes.Note, entityId: noteId }, () =>
+      Promise.all([
+        this.remote.get<void, NoteVO>(`/notes/${noteId}`),
+        this.remote.get<void, NoteBodyVO>(`/notes/${noteId}/body`),
+      ]).then(([{ body: metadata }, { body }]) => ({ metadata, body })),
+    ).then(noteEditor.loadEntity);
 
     return noteEditor;
   }
