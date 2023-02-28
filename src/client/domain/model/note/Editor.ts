@@ -1,4 +1,4 @@
-import { makeObservable, computed, action, toJS } from 'mobx';
+import { makeObservable, computed, action } from 'mobx';
 import debounce from 'lodash/debounce';
 
 import { EntityTypes } from 'interface/Entity';
@@ -9,9 +9,14 @@ import EntityEditor, { type Breadcrumbs } from 'model/abstract/Editor';
 import type NoteTree from './Tree';
 
 export enum Events {
-  MetadataUpdated = 'noteEditor.updated.metadata',
-  BodyUpdated = 'noteEditor.updated.body',
+  MetadataUpdated = 'noteEditor.updated.metadata', // not included synced by other editor
+  BodyUpdated = 'noteEditor.updated.body', // not included synced by other editors
+  BodySynced = 'noteEditor.synced.body',
 }
+
+export type MetadataPatch = Omit<Partial<NoteVO>, 'id'>;
+export type BodyEvent = string;
+export type MetadataEvent = MetadataPatch;
 
 export interface Entity {
   body: NoteBodyVO;
@@ -53,24 +58,27 @@ export default class NoteEditor extends EntityEditor<Entity> {
   }
 
   @action.bound
-  async updateBody(body: string) {
+  async updateBody(body: string, syncFlag = false) {
     if (!this.entity) {
       throw new Error('no load note');
     }
 
     this.entity.body = body;
-    this.emit(Events.BodyUpdated, body);
+    this.emit(syncFlag ? Events.BodySynced : Events.BodyUpdated, body);
   }
 
   @action
-  updateTitle(title: string) {
+  updateMetadata(metadata: MetadataEvent, syncFlag?: true) {
     if (!this.entity) {
       throw new Error('no load note');
     }
 
-    this.entity.metadata.title = title;
-    this.emit(Events.MetadataUpdated, toJS(this.entity.metadata));
-    this.updateTree();
+    Object.assign(this.entity.metadata, metadata);
+
+    if (!syncFlag) {
+      this.emit(Events.MetadataUpdated, metadata);
+      this.updateTree();
+    }
   }
 
   private updateTree = debounce(() => {

@@ -1,6 +1,5 @@
 import { container, singleton } from 'tsyringe';
 import pick from 'lodash/pick';
-import debounce from 'lodash/debounce';
 import EventEmitter from 'eventemitter2';
 
 import { token as remoteToken } from 'infra/Remote';
@@ -14,7 +13,6 @@ import { EntityTypes } from 'interface/Entity';
 
 import { MULTIPLE_ICON_FLAG, NoteMetadata } from 'model/note/MetadataForm/type';
 import NoteTree from 'model/note/Tree';
-import { Events as NoteEditorEvents } from 'model/note/Editor';
 import StarManager, { StarEvents } from 'model/StarManager';
 
 import EditorService from './EditorService';
@@ -195,7 +193,6 @@ export default class NoteService extends EventEmitter {
           { label: `删除${description}`, key: 'delete' },
         ]
       : [
-          { label: '在新标签页打开', key: 'openInNewTab' },
           { label: '在新窗口打开', key: 'openInNewWindow' },
           { type: 'separator' },
           { label: '移动至...', key: 'move' },
@@ -228,10 +225,8 @@ export default class NoteService extends EventEmitter {
         return this.editNotes(targets);
       case 'star':
         return this.star.starNotes(targets);
-      case 'openInNewTab':
-        return this.editor.openEntity({ entityType: EntityTypes.Note, entityId: targetId }, 'newTab');
       case 'openInNewWindow':
-        return this.editor.openEntity({ entityType: EntityTypes.Note, entityId: targetId }, 'newWindow');
+        return this.editor.openEntity({ entityType: EntityTypes.Note, entityId: targetId }, true);
       default:
         break;
     }

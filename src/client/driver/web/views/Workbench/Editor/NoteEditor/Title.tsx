@@ -6,7 +6,10 @@ import { InfoCircleOutlined, SearchOutlined } from '@ant-design/icons';
 import type NoteEditor from 'model/note/Editor';
 
 export default observer(function NoteTitle({ editor }: { editor: NoteEditor }) {
-  const handleChange = useCallback((e: ChangeEvent<HTMLInputElement>) => editor?.updateTitle(e.target.value), [editor]);
+  const handleChange = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => editor?.updateMetadata({ title: e.target.value }),
+    [editor],
+  );
 
   return (
     <div className="flex items-center border-0 border-b border-solid border-gray-200">

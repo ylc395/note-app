@@ -1,23 +1,23 @@
 import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react';
 import { gfm } from '@milkdown/preset-gfm';
 import { commonmark } from '@milkdown/preset-commonmark';
-import { Editor, rootCtx, editorViewCtx, parserCtx } from '@milkdown/core';
+import { Editor, rootCtx, editorViewCtx, parserCtx, EditorStatus } from '@milkdown/core';
 import { nord } from '@milkdown/theme-nord';
 import '@milkdown/theme-nord/style.css';
 import { Slice } from '@milkdown/prose/model';
 import { listenerCtx, listener } from '@milkdown/plugin-listener';
 
 interface Props {
-  onChange: (content: string) => void;
+  onChange: (content: string) => void; // only fire for user input
 }
 
 export interface EditorRef {
   updateContent: (content: string) => void;
 }
 
-export default forwardRef<EditorRef, Props>(function MarkdownEditor({ onChange }, ref) {
+export default forwardRef<EditorRef | undefined, Props>(function MarkdownEditor({ onChange }, ref) {
   const rootRef = useRef<HTMLDivElement>(null);
-  const [editor, setEditor] = useState<Editor>();
+  const editorRef = useRef<Editor>();
   const isUpdating = useRef(false);
 
   useEffect(() => {
@@ -37,7 +37,8 @@ export default forwardRef<EditorRef, Props>(function MarkdownEditor({ onChange }
         });
       });
 
-    editor.create().then(setEditor);
+    editor.create();
+    editorRef.current = editor;
 
     return () => {
       editor.destroy();
@@ -45,25 +46,37 @@ export default forwardRef<EditorRef, Props>(function MarkdownEditor({ onChange }
   }, [onChange]);
 
   useImperativeHandle(ref, () => ({
-    updateContent: (content: string) => {
+    updateContent: async (content: string) => {
+      const editor = editorRef.current;
+
       if (!editor) {
-        throw new Error('editor not ready');
+        throw new Error('not init');
       }
+      const update = () =>
+        editor.action((ctx) => {
+          const view = ctx.get(editorViewCtx);
+          const parser = ctx.get(parserCtx);
+          const doc = parser(content);
+          const state = view.state;
 
-      editor.action((ctx) => {
-        const view = ctx.get(editorViewCtx);
-        const parser = ctx.get(parserCtx);
-        const doc = parser(content);
-        const state = view.state;
+          if (!doc) {
+            return;
+          }
 
-        if (!doc) {
-          return;
-        }
+          isUpdating.current = true;
+          view.dispatch(state.tr.replace(0, state.doc.content.size, new Slice(doc.content, 0, 0)));
+          isUpdating.current = false;
+        });
 
-        isUpdating.current = true;
-        view.dispatch(state.tr.replace(0, state.doc.content.size, new Slice(doc.content, 0, 0)));
-        isUpdating.current = false;
-      });
+      if (editor.status === EditorStatus.Created) {
+        update();
+      } else {
+        editor.onStatusChange((status) => {
+          if (status === EditorStatus.Created) {
+            update();
+          }
+        });
+      }
     },
   }));
 

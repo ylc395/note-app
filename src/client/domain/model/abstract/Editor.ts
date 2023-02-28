@@ -24,7 +24,7 @@ export default abstract class EntityEditor<T = unknown> extends EventEmitter {
   abstract readonly title: string;
   abstract readonly entityType: EntityTypes;
   abstract readonly breadcrumbs: Breadcrumbs;
-  @observable.ref entity?: T;
+  @observable entity?: T;
 
   constructor(protected readonly tile: Tile, readonly entityId: EntityId) {
     super();
