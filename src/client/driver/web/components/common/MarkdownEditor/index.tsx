@@ -1,18 +1,21 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react';
 import { gfm } from '@milkdown/preset-gfm';
 import { commonmark } from '@milkdown/preset-commonmark';
-import { Editor, rootCtx, editorViewCtx, parserCtx, EditorStatus } from '@milkdown/core';
+import { Editor, rootCtx, editorViewCtx, parserCtx } from '@milkdown/core';
 import { nord } from '@milkdown/theme-nord';
 import '@milkdown/theme-nord/style.css';
 import { Slice } from '@milkdown/prose/model';
 import { listenerCtx, listener } from '@milkdown/plugin-listener';
 
 interface Props {
-  content?: string;
   onChange: (content: string) => void;
 }
 
-export default function MarkdownEditor({ content, onChange }: Props) {
+export interface EditorRef {
+  updateContent: (content: string) => void;
+}
+
+export default forwardRef<EditorRef, Props>(function MarkdownEditor({ onChange }, ref) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [editor, setEditor] = useState<Editor>();
   const isUpdating = useRef(false);
@@ -41,26 +44,28 @@ export default function MarkdownEditor({ content, onChange }: Props) {
     };
   }, [onChange]);
 
-  useEffect(() => {
-    if (!editor || content === undefined || editor.status !== EditorStatus.Created) {
-      return;
-    }
-
-    editor.action((ctx) => {
-      const view = ctx.get(editorViewCtx);
-      const parser = ctx.get(parserCtx);
-      const doc = parser(content);
-      const state = view.state;
-
-      if (!doc || view.state.doc.eq(doc)) {
-        return;
+  useImperativeHandle(ref, () => ({
+    updateContent: (content: string) => {
+      if (!editor) {
+        throw new Error('editor not ready');
       }
 
-      isUpdating.current = true;
-      view.dispatch(state.tr.replace(0, state.doc.content.size, new Slice(doc.content, 0, 0)));
-      isUpdating.current = false;
-    });
-  }, [content, editor]);
+      editor.action((ctx) => {
+        const view = ctx.get(editorViewCtx);
+        const parser = ctx.get(parserCtx);
+        const doc = parser(content);
+        const state = view.state;
+
+        if (!doc) {
+          return;
+        }
+
+        isUpdating.current = true;
+        view.dispatch(state.tr.replace(0, state.doc.content.size, new Slice(doc.content, 0, 0)));
+        isUpdating.current = false;
+      });
+    },
+  }));
 
   return <div ref={rootRef}></div>;
-}
+});
