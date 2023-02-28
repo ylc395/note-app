@@ -14,6 +14,7 @@ import { EntityTypes } from 'interface/Entity';
 import { MULTIPLE_ICON_FLAG, NoteMetadata } from 'model/note/MetadataForm/type';
 import NoteTree from 'model/note/Tree';
 import StarManager, { StarEvents } from 'model/StarManager';
+import { TileDirections } from 'model/workbench/TileManger';
 
 import EditorService from './EditorService';
 
@@ -179,6 +180,7 @@ export default class NoteService extends EventEmitter {
     const isMultiple = selectedNodes.size > 1 && selectedNodes.has(targetId);
     const noteIds = isMultiple ? Array.from(selectedNodes) : [targetId];
     const note = this.noteTree.getNode(targetId).note;
+    const { focusedTile } = this.editor.tileManager;
 
     const description = noteIds.length + '项';
     const items: ContextmenuItem[] = isMultiple
@@ -193,7 +195,7 @@ export default class NoteService extends EventEmitter {
           { label: `删除${description}`, key: 'delete' },
         ]
       : [
-          { label: '在新窗口打开', key: 'openInNewWindow' },
+          { label: '在新窗口打开', key: 'openInNewWindow', visible: Boolean(focusedTile) },
           { type: 'separator' },
           { label: '移动至...', key: 'move' },
           { label: note.isStar ? '已收藏' : '收藏', key: 'star', disabled: note.isStar },
@@ -226,7 +228,14 @@ export default class NoteService extends EventEmitter {
       case 'star':
         return this.star.starNotes(targets);
       case 'openInNewWindow':
-        return this.editor.openEntity({ entityType: EntityTypes.Note, entityId: targetId }, true);
+        if (!focusedTile) {
+          throw new Error('no focusedTile');
+        }
+
+        return this.editor.openEntity(
+          { entityType: EntityTypes.Note, entityId: targetId },
+          { from: focusedTile.id, direction: TileDirections.Horizontal },
+        );
       default:
         break;
     }

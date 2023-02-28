@@ -86,19 +86,16 @@ export default class EditorService extends EventEmitter {
   }
 
   @action.bound
-  openEntity(entity: EntityLocator, newWindow?: true) {
-    const targetTile = this.tileManager.getTileAsTarget();
-
-    if (newWindow) {
+  openEntity(entity: EntityLocator, newTileOptions?: { direction: TileDirections; from: Tile['id'] }) {
+    if (newTileOptions) {
+      const targetTile = this.tileManager.get(newTileOptions.from);
       const editor = this.createEditor(targetTile, entity);
+      const newTile = this.tileManager.splitTile(targetTile.id, newTileOptions.direction);
 
-      if (targetTile.isRoot && targetTile.editors.length === 0) {
-        targetTile.addEditor(editor);
-      } else {
-        const newTile = this.tileManager.splitTile(targetTile.id, TileDirections.Horizontal);
-        newTile.addEditor(editor);
-      }
+      newTile.addEditor(editor);
     } else {
+      const targetTile = this.tileManager.getTileAsTarget();
+
       if (
         !targetTile.switchToEditor(
           ({ entityId, entityType }) => entityType === entity.entityType && entityId === entity.entityId,
@@ -108,20 +105,5 @@ export default class EditorService extends EventEmitter {
         targetTile.addEditor(editor);
       }
     }
-  }
-
-  @action.bound
-  duplicateOnNewTile(tileId: Tile['id'], direction: TileDirections) {
-    const fromTile = this.tileManager.get(tileId);
-
-    if (!fromTile.currentEditor) {
-      throw new Error('no current tab');
-    }
-
-    const { entityId, entityType } = fromTile.currentEditor;
-    const newTile = this.tileManager.splitTile(tileId, direction);
-    const editor = this.createEditor(newTile, { entityId, entityType });
-
-    newTile.addEditor(editor);
   }
 }
