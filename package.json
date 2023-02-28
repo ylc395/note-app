@@ -58,7 +58,7 @@
     "antd": "^5.1.7",
     "dayjs": "^1.11.6",
     "emoji-mart": "^5.5.2",
-    "eventemitter2": "^6.4.9",
+    "eventemitter3": "^5.0.0",
     "fs-extra": "^10.1.0",
     "knex": "^2.4.2",
     "lodash": "^4.17.21",

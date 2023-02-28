@@ -1,4 +1,4 @@
-import EventEmitter from 'eventemitter2';
+import EventEmitter from 'eventemitter3';
 import { container, singleton } from 'tsyringe';
 import { observable, makeObservable, runInAction, action } from 'mobx';
 import pull from 'lodash/pull';

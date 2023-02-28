@@ -1,6 +1,6 @@
 import { container, singleton } from 'tsyringe';
 import pick from 'lodash/pick';
-import EventEmitter from 'eventemitter2';
+import EventEmitter from 'eventemitter3';
 
 import { token as remoteToken } from 'infra/Remote';
 import { token as userFeedbackToken } from 'infra/UserFeedback';

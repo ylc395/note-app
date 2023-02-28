@@ -1,6 +1,6 @@
 import uniqueId from 'lodash/uniqueId';
 import { computed, makeObservable, action, observable } from 'mobx';
-import EventEmitter from 'eventemitter2';
+import EventEmitter from 'eventemitter3';
 
 import type Tile from 'model/workbench/Tile';
 import type { EntityId, EntityTypes } from 'interface/Entity';

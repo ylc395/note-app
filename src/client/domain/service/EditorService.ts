@@ -1,4 +1,4 @@
-import EventEmitter from 'eventemitter2';
+import EventEmitter from 'eventemitter3';
 import { container, singleton } from 'tsyringe';
 import { action, makeObservable } from 'mobx';
 import debounce from 'lodash/debounce';
@@ -58,31 +58,29 @@ export default class EditorService extends EventEmitter {
       noteEditor.loadEntity({ body, metadata });
     });
 
-    noteEditor.on(
-      NoteEditorEvents.BodyUpdated,
-      debounce((body: BodyEvent) => this.remote.put<NoteBodyDTO>(`/notes/${noteId}/body`, body), 1000),
-    );
-
-    noteEditor.on(
-      NoteEditorEvents.MetadataUpdated,
-      debounce((note: MetadataEvent) => this.remote.patch<NoteDTO>(`/notes/${noteId}`, note), 1000),
-    );
-
-    noteEditor.on(NoteEditorEvents.BodyUpdated, (body: BodyEvent) => {
-      for (const editor of this.editors[EntityTypes.Note]) {
-        if (editor.entityId === noteId && editor !== noteEditor) {
-          editor.updateBody(body, true);
+    noteEditor
+      .on(
+        NoteEditorEvents.BodyUpdated,
+        debounce((body: BodyEvent) => this.remote.put<NoteBodyDTO>(`/notes/${noteId}/body`, body), 1000),
+      )
+      .on(
+        NoteEditorEvents.MetadataUpdated,
+        debounce((note: MetadataEvent) => this.remote.patch<NoteDTO>(`/notes/${noteId}`, note), 1000),
+      )
+      .on(NoteEditorEvents.BodyUpdated, (body: BodyEvent) => {
+        for (const editor of this.editors[EntityTypes.Note]) {
+          if (editor.entityId === noteId && editor !== noteEditor) {
+            editor.updateBody(body, true);
+          }
         }
-      }
-    });
-
-    noteEditor.on(NoteEditorEvents.MetadataUpdated, (note: MetadataEvent) => {
-      for (const editor of this.editors[EntityTypes.Note]) {
-        if (editor.entityId === noteId && editor !== noteEditor) {
-          editor.updateMetadata(note, true);
+      })
+      .on(NoteEditorEvents.MetadataUpdated, (note: MetadataEvent) => {
+        for (const editor of this.editors[EntityTypes.Note]) {
+          if (editor.entityId === noteId && editor !== noteEditor) {
+            editor.updateMetadata(note, true);
+          }
         }
-      }
-    });
+      });
 
     return noteEditor;
   }

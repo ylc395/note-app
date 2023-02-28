@@ -3,21 +3,16 @@ import { useEffect, useRef } from 'react';
 import { when } from 'mobx';
 
 import type NoteEditor from 'model/note/Editor';
-import { Events } from 'model/note/Editor';
+import { type BodyEvent, Events } from 'model/note/Editor';
 import MarkdownEditor, { type EditorRef } from 'web/components/common/MarkdownEditor';
-import type { Listener } from 'eventemitter2';
 
 export default observer(function NoteEditor({ editor }: { editor: NoteEditor }) {
   const editorRef = useRef<EditorRef>(null);
 
   useEffect(() => {
-    const listener = editor.on(
-      Events.BodySynced,
-      (body: string) => {
-        editorRef.current?.updateContent(body);
-      },
-      { objectify: true },
-    ) as Listener;
+    const onBodySynced = (body: BodyEvent) => {
+      editorRef.current?.updateContent(body);
+    };
 
     const stopInit = when(
       () => Boolean(editor.entity),
@@ -25,8 +20,10 @@ export default observer(function NoteEditor({ editor }: { editor: NoteEditor }) 
       () => editorRef.current!.updateContent(editor.entity!.body),
     );
 
+    editor.on(Events.BodySynced, onBodySynced);
+
     return () => {
-      listener.off();
+      editor.off(Events.BodySynced, onBodySynced);
       stopInit();
     };
   }, [editor]);
