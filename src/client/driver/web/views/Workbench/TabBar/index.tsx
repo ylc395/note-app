@@ -31,12 +31,15 @@ export default observer(function TabBar({ tileId }: { tileId: Tile['id'] }) {
         {editors.map(({ id, title }) => (
           <div
             data-editor-id={id}
-            className={`flex cursor-pointer items-center whitespace-nowrap border-0 border-r border-solid border-gray-200 bg-gray-100 p-2 ${
+            className={`flex cursor-pointer flex-nowrap items-center border-0 border-r border-solid border-gray-200 bg-gray-100 p-2 ${
               currentEditor.id === id ? 'bg-white' : ''
             }`}
             key={id}
           >
-            <span className="max-w-[200px] overflow-hidden text-ellipsis text-sm" onClick={() => switchToEditor(id)}>
+            <span
+              className="mr-1 max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap text-sm"
+              onClick={() => switchToEditor(id)}
+            >
               {title}
             </span>
             <Button size="small" onClick={() => closeEditor(id)} type="text" icon={<CloseOutlined />} />

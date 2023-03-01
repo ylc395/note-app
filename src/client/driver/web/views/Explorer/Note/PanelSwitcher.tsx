@@ -8,7 +8,7 @@ import { action } from 'mobx';
 
 const { useToken } = theme;
 const switcher = [
-  { key: NoteExplorerPanel.Tree, title: '笔记树面板', icon: () => <ApartmentOutlined /> },
+  { key: NoteExplorerPanel.Tree, title: '笔记树视图', icon: () => <ApartmentOutlined /> },
   { key: NoteExplorerPanel.CustomView, title: '自定义视图', icon: () => <ProfileOutlined /> },
 ] as const;
 

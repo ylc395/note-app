@@ -6,7 +6,6 @@ const { default: tsconfigPaths } = require('vite-tsconfig-paths');
 const { replaceTscAliasPaths } = require('tsc-alias');
 const { checker } = require('vite-plugin-checker');
 const { parse } = require('tsconfck');
-const debounce = require('lodash/debounce');
 
 const CLIENT_TSCONFIG = path.resolve(process.cwd(), 'src/client/tsconfig.json');
 const ELECTRON_OUTPUT = 'dist';
@@ -62,7 +61,7 @@ async function createViteServer() {
     clearScreen: false,
     root: './src/client/driver/web',
     plugins: [
-      checker({ typescript: { tsconfigPath: WEB_TSCONFIG }, overlay: false }),
+      checker({ typescript: { tsconfigPath: WEB_TSCONFIG } }),
       tsconfigPaths({
         projects: [CLIENT_TSCONFIG],
         loose: true,
@@ -98,16 +97,15 @@ async function createViteServer() {
   if (electronProcess) {
     shell.exec(`${BUILD_ELECTRON_COMMAND} --watch`, { async: true });
 
-    chokidar.watch(ELECTRON_OUTPUT, { ignoreInitial: true, ignored: [/\.tsbuildinfo$/, /\.map$/, /\.d\.ts$/] }).on(
-      'all',
-      debounce(async (event, path) => {
+    chokidar
+      .watch(ELECTRON_OUTPUT, { ignoreInitial: true, ignored: [/\.tsbuildinfo$/, /\.map$/, /\.d\.ts$/] })
+      .on('all', async (event, path) => {
         shell.exec('clear');
         console.log(path, event);
         electronProcess.kill();
         shell.env['DEV_CLEAN'] = '0';
         electronProcess = await buildElectron(true);
-      }, 8000),
-    );
+      });
   } else {
     await viteServer.close();
   }
