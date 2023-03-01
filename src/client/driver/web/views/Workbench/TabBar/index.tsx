@@ -47,7 +47,7 @@ export default observer(function TabBar({ tileId }: { tileId: Tile['id'] }) {
             </Tooltip>
             <Tooltip title="向右开辟新窗口">
               <Button
-                onClick={() => openEntity(entity, { from: tileId, direction: TileDirections.Vertical })}
+                onClick={() => openEntity(entity, { from: tileId, direction: TileDirections.Horizontal })}
                 type="text"
                 icon={<SplitCellsOutlined />}
               />

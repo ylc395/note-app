@@ -13,14 +13,13 @@ export default observer(function NoteTitle({ editor }: { editor: NoteEditor }) {
 
   return (
     <div className="flex items-center border-0 border-b border-solid border-gray-200">
-      {editor.entity && (
-        <Input
-          className="border-none py-2 text-lg font-semibold"
-          placeholder={editor.title}
-          value={editor.entity.metadata.title}
-          onChange={handleChange}
-        />
-      )}
+      <Input
+        className="border-none py-2 text-lg font-semibold"
+        placeholder={editor.title}
+        value={editor.entity?.metadata.title}
+        onChange={handleChange}
+        disabled={!editor.entity}
+      />
       <Space.Compact>
         <Tooltip title="搜索">
           <Button type="text" icon={<SearchOutlined />} />
