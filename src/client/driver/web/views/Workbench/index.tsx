@@ -63,7 +63,7 @@ export default observer(function Workbench() {
         <Mosaic
           root={tileManager.root}
           renderTile={(id) => (
-            <div className="flex h-full flex-col">
+            <div onFocus={() => tileManager.setFocusedTile(id)} className="flex h-full flex-col">
               <TabBar tileId={id} />
               <Editor tileId={id} />
             </div>

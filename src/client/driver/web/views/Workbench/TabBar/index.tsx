@@ -35,7 +35,7 @@ export default observer(function TabBar({ tileId }: { tileId: Tile['id'] }) {
       <div className="flex items-center">
         {__ENV__ === 'dev' ? tileId : null}
         <Tooltip title="关闭全部">
-          <Button onClick={closeAllEditors} type="text" icon={<CloseOutlined />} />
+          <Button onFocus={(e) => e.stopPropagation()} onClick={closeAllEditors} type="text" icon={<CloseOutlined />} />
         </Tooltip>
       </div>
     </div>

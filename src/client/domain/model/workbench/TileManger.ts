@@ -37,6 +37,12 @@ export default class TileManager {
     makeObservable(this);
   }
 
+  @action.bound
+  setFocusedTile(id: Tile['id'] | Tile) {
+    const tile = typeof id === 'string' ? this.getTile(id) : id;
+    this.focusedTileHistory.push(tile);
+  }
+
   private createTile(focus?: true) {
     const tile = new Tile(this);
 
@@ -44,7 +50,7 @@ export default class TileManager {
     this.tilesMap.set(tile.id, tile);
 
     if (focus) {
-      this.focusedTileHistory.push(tile);
+      this.setFocusedTile(tile);
     }
 
     return tile;

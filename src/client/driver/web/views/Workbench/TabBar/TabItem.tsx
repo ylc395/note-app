@@ -54,6 +54,7 @@ export default observer(function TabItem({ editor }: Props) {
           e.stopPropagation();
           closeEditor(editor.id);
         }}
+        onFocus={(e) => e.stopPropagation()}
         type="text"
         icon={<CloseOutlined />}
       />
