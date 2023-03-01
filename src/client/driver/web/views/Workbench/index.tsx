@@ -12,29 +12,37 @@ import {
 } from '@dnd-kit/core';
 
 import EditorService from 'service/EditorService';
-import type EntityEditor from 'model/abstract/Editor';
+import EntityEditor from 'model/abstract/Editor';
 
 import TabBar from './TabBar';
 import Editor from './Editor';
 import Mosaic from './Mosaic';
 import TabItem from './TabBar/TabItem';
+import Tile from 'model/workbench/Tile';
 
 export default observer(function Workbench() {
   const { tileManager, moveEditor } = container.resolve(EditorService);
   const [draggingEditor, setDraggingEditor] = useState<EntityEditor | undefined>();
   const handleDragStart = useCallback(({ active }: DragStartEvent) => {
-    const { editor } = active.data.current as { editor: EntityEditor };
+    const editor = active.data.current?.instance;
 
-    setDraggingEditor(editor);
-    editor.tile.switchToEditor(active.id as string);
+    if (editor instanceof EntityEditor) {
+      setDraggingEditor(editor);
+      editor.tile.switchToEditor(editor.id);
+    }
   }, []);
 
   const handleDragEnd = useCallback(
     ({ active, over }: DragEndEvent) => {
-      if (over) {
-        const { editor: srcEditor } = active.data.current as { editor: EntityEditor };
-        const { editor: destEditor } = over.data.current as { editor: EntityEditor };
-        moveEditor(srcEditor, destEditor);
+      if (!over) {
+        return;
+      }
+
+      const src = active.data.current?.instance;
+      const dest = over.data.current?.instance;
+
+      if (src instanceof EntityEditor && (dest instanceof EntityEditor || dest instanceof Tile)) {
+        moveEditor(src, dest);
       }
     },
     [moveEditor],

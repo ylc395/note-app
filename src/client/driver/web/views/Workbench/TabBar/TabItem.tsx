@@ -15,7 +15,7 @@ export default observer(function TabItem({ editor }: Props) {
   const { switchToEditor, closeEditor, currentEditor } = tile;
   const { setNodeRef, attributes, listeners, over } = useSortable({
     id: editor.id,
-    data: { editor },
+    data: { instance: editor },
   });
   const buttonRef = useRef<HTMLElement>(null);
 

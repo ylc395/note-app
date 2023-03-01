@@ -28,15 +28,27 @@ export default class Tile extends EventEmitter {
   }
 
   @action.bound
-  moveEditor(src: EntityEditor, dest: EntityEditor) {
+  moveEditor(src: EntityEditor, dest: EntityEditor | 'end') {
     if (src === dest) {
       return;
     }
 
     const srcIndex = this.editors.findIndex((editor) => editor === src);
+
+    if (srcIndex < 0) {
+      throw new Error('can not find index');
+    }
+
+    if (dest === 'end') {
+      const [item] = this.editors.splice(srcIndex, 1);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      this.editors.push(item!);
+      return;
+    }
+
     const destIndex = this.editors.findIndex((editor) => editor === dest);
 
-    if (srcIndex < 0 || destIndex < 0) {
+    if (destIndex < 0) {
       throw new Error('can not find index');
     }
 
