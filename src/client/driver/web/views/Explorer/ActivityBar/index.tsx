@@ -65,14 +65,14 @@ export default observer(function ActivityBar() {
   ));
 
   return (
-    <nav className="w-14 h-screen bg-gray-50 flex flex-col justify-between">
+    <nav className="flex h-screen w-14 flex-col justify-between bg-gray-50">
       <div>
-        <ul className="list-none p-0 text-center m-0">
+        <ul className="m-0 list-none p-0 text-center">
           {FIRST_CLASS_EXPLORER_ITEMS.map((item) => (
             <li key={item.key}>{getExplorerButton(item)}</li>
           ))}
         </ul>
-        <ul className="list-none p-0 m-0 mt-3 pt-3 text-center border-t border-gray-300 border-solid border-0">
+        <ul className="m-0 mt-3 list-none border-0 border-t border-solid border-gray-300 p-0 pt-3 text-center">
           <li>{getExplorerButton({ icon: <NumberOutlined />, label: '话题', key: ExplorerTypes.Topic })} </li>
           <li>{getExplorerButton({ icon: <ClusterOutlined />, label: '关系图', key: ExplorerTypes.Graph })} </li>
           <li>
@@ -98,7 +98,7 @@ export default observer(function ActivityBar() {
           </li>
         </ul>
       </div>
-      <ul className="list-none p-0 text-center pb-2">
+      <ul className="list-none p-0 pb-2 text-center">
         <li>{getExplorerButton({ label: '回收站', key: ExplorerTypes.Dustbin, icon: <DeleteOutlined /> })} </li>
       </ul>
     </nav>
