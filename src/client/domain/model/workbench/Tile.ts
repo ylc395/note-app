@@ -82,6 +82,15 @@ export default class Tile extends EventEmitter {
     }
   }
 
+  @action.bound
+  closeAllEditors() {
+    const editorIds = this.editors.map(({ id }) => id);
+
+    for (const id of editorIds) {
+      this.closeEditor(id);
+    }
+  }
+
   private destroy() {
     this.emit(Events.destroyed);
     this.removeAllListeners();
