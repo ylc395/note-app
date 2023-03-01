@@ -105,9 +105,9 @@ export default class EditorService extends EventEmitter {
   @action.bound
   openEntity(entity: EntityLocator, newTileOptions?: { direction: TileDirections; from: Tile['id'] }) {
     if (newTileOptions) {
-      const targetTile = this.tileManager.get(newTileOptions.from);
-      const editor = this.createEditor(targetTile, entity);
+      const targetTile = this.tileManager.getTile(newTileOptions.from);
       const newTile = this.tileManager.splitTile(targetTile.id, newTileOptions.direction);
+      const editor = this.createEditor(newTile, entity);
 
       newTile.addEditor(editor);
     } else {
@@ -121,6 +121,16 @@ export default class EditorService extends EventEmitter {
         const editor = this.createEditor(targetTile, entity);
         targetTile.addEditor(editor);
       }
+    }
+  }
+
+  @action.bound
+  moveEditor(srcEditor: EntityEditor, destEditor: EntityEditor) {
+    if (srcEditor.tile === destEditor.tile) {
+      destEditor.tile.moveEditor(srcEditor, destEditor);
+    } else {
+      srcEditor.tile.closeEditor(srcEditor.id, false);
+      destEditor.tile.addEditor(srcEditor, destEditor);
     }
   }
 }

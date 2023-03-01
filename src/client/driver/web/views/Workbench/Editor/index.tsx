@@ -10,7 +10,7 @@ import NoteEditorView from './NoteEditor';
 
 export default observer(function Editor({ tileId }: { tileId: Tile['id'] }) {
   const { tileManager } = container.resolve(EditorService);
-  const tile = tileManager.get(tileId);
+  const tile = tileManager.getTile(tileId);
 
   if (tile.currentEditor instanceof NoteEditor) {
     return <NoteEditorView editor={tile.currentEditor} />;

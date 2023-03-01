@@ -30,7 +30,7 @@ export default abstract class EntityEditor<T = unknown> extends EventEmitter {
   abstract readonly breadcrumbs: Breadcrumbs;
   @observable entity?: T;
 
-  constructor(protected readonly tile: Tile, readonly entityId: EntityId) {
+  constructor(public tile: Tile, readonly entityId: EntityId) {
     super();
     makeObservable(this);
   }

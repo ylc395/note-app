@@ -139,7 +139,7 @@ export default class TileManager {
     return newTile;
   }
 
-  get(id: Tile['id']) {
+  getTile(id: Tile['id']) {
     const tile = this.tilesMap.get(id);
 
     if (!tile) {

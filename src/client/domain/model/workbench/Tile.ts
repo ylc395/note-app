@@ -28,17 +28,39 @@ export default class Tile extends EventEmitter {
   }
 
   @action.bound
-  moveEditorTo(src: EntityEditor, dest: EntityEditor) {
-    const srcIndex = this.editors.findIndex((tab) => tab === src);
-    this.editors.splice(srcIndex, 1);
+  moveEditor(src: EntityEditor, dest: EntityEditor) {
+    if (src === dest) {
+      return;
+    }
 
-    const targetIndex = this.editors.findIndex((tab) => tab === dest);
-    this.editors.splice(targetIndex + 1, 0, src);
+    const srcIndex = this.editors.findIndex((editor) => editor === src);
+    const destIndex = this.editors.findIndex((editor) => editor === dest);
+
+    if (srcIndex < 0 || destIndex < 0) {
+      throw new Error('can not find index');
+    }
+
+    const [item] = this.editors.splice(srcIndex, 1);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    this.editors.splice(destIndex, 0, item!);
   }
 
   @action.bound
-  addEditor(editor: EntityEditor) {
-    this.editors.push(editor);
+  addEditor(editor: EntityEditor, destEditor?: EntityEditor) {
+    editor.tile = this;
+
+    if (destEditor) {
+      const index = this.editors.findIndex((editor) => editor === destEditor);
+
+      if (index < 0) {
+        throw new Error('wrong dest');
+      }
+
+      this.editors.splice(index, 0, editor);
+    } else {
+      this.editors.push(editor);
+    }
+
     this.currentEditor = editor;
   }
 
@@ -61,17 +83,19 @@ export default class Tile extends EventEmitter {
   }
 
   @action.bound
-  closeEditor(editorId: EntityEditor['id']) {
+  closeEditor(editorId: EntityEditor['id'], destroy = true) {
     const existedTabIndex = this.editors.findIndex((editor) => editor.id === editorId);
 
     if (existedTabIndex === -1) {
       throw new Error('no target tab');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const closedTab = this.editors.splice(existedTabIndex, 1)[0]!;
+    const [closedTab] = this.editors.splice(existedTabIndex, 1);
 
-    closedTab.destroy();
+    if (destroy) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      closedTab!.destroy();
+    }
 
     if (this.currentEditor?.id === editorId) {
       this.currentEditor = this.editors[existedTabIndex] || this.editors[existedTabIndex - 1];
