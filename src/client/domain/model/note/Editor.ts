@@ -31,8 +31,11 @@ export default class NoteEditor extends EntityEditor<Entity> {
   }
 
   @computed
-  get title() {
-    return this.entity ? normalizeTitle(this.entity.metadata) : '';
+  get tabView() {
+    return {
+      title: (__ENV__ === 'dev' ? `${this.entityId} ` : '') + (this.entity ? normalizeTitle(this.entity.metadata) : ''),
+      icon: this.entity?.metadata.icon || null,
+    };
   }
 
   @computed

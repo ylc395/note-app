@@ -22,7 +22,10 @@ export enum Events {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default abstract class EntityEditor<T = unknown> extends EventEmitter {
   readonly id = uniqueId('editor-');
-  abstract readonly title: string;
+  abstract readonly tabView: {
+    title: string;
+    icon: string | null;
+  };
   abstract readonly entityType: EntityTypes;
   abstract readonly breadcrumbs: Breadcrumbs;
   @observable entity?: T;

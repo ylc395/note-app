@@ -15,7 +15,7 @@ export default observer(function NoteTitle({ editor }: { editor: NoteEditor }) {
     <div className="flex items-center border-0 border-b border-solid border-gray-200">
       <Input
         className="border-none py-2 text-lg font-semibold"
-        placeholder={editor.title}
+        placeholder={editor.tabView.title}
         value={editor.entity?.metadata.title}
         onChange={handleChange}
         disabled={!editor.entity}

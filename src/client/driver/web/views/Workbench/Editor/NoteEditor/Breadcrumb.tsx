@@ -3,7 +3,7 @@ import { Breadcrumb as AntdBreadcrumb } from 'antd';
 import { BookOutlined } from '@ant-design/icons';
 
 import type NoteEditor from 'model/note/Editor';
-import NoteIconTitle from 'web/components/note/IconTitle';
+import IconTitle from 'web/components/common/IconTitle';
 
 export default observer(function Breadcrumb({ editor }: { editor: NoteEditor }) {
   const breadcrumbs = editor.breadcrumbs;
@@ -19,17 +19,18 @@ export default observer(function Breadcrumb({ editor }: { editor: NoteEditor }) 
           menu={
             pathNode.siblings.length
               ? {
-                  items: pathNode.siblings.map((sibling) => ({
-                    label: <NoteIconTitle {...sibling} size="1em" />,
-                    key: sibling.id,
+                  items: pathNode.siblings.map(({ id, icon, title }) => ({
+                    label: <IconTitle icon={icon} title={`${__ENV__ === 'dev' ? `${id} ` : ''}${title}`} size="1em" />,
+                    key: id,
                   })),
                 }
               : undefined
           }
         >
-          <NoteIconTitle
-            title={i === breadcrumbs.length - 1 ? '当前笔记' : pathNode.title}
-            id={pathNode.id}
+          <IconTitle
+            title={`${__ENV__ === 'dev' ? `${pathNode.id} ` : ''}${
+              i === breadcrumbs.length - 1 ? '当前笔记' : pathNode.title
+            }`}
             icon={pathNode.icon}
             className="inline-flex"
             size="1em"
