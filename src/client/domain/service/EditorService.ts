@@ -11,7 +11,7 @@ import type { NoteBodyDTO, NoteBodyVO, NoteDTO, NoteVO } from 'interface/Note';
 import NoteEditor, { Events as NoteEditorEvents, type BodyEvent, type MetadataEvent } from 'model/note/Editor';
 import EntityEditor, { Events as EditorEvents } from 'model/abstract/Editor';
 import Tile from 'model/workbench/Tile';
-import TileManager, { TileDirections } from 'model/workbench/TileManger';
+import TileManager, { type TileSplitDirections } from 'model/workbench/TileManger';
 import NoteService from 'service/NoteService';
 
 export type EntityLocator = {
@@ -103,7 +103,7 @@ export default class EditorService extends EventEmitter {
   }
 
   @action.bound
-  openEntity(entity: EntityLocator, newTileOptions?: { direction: TileDirections; from: Tile['id'] }) {
+  openEntity(entity: EntityLocator, newTileOptions?: { direction: TileSplitDirections; from: Tile['id'] }) {
     if (newTileOptions) {
       const targetTile = this.tileManager.getTile(newTileOptions.from);
       const newTile = this.tileManager.splitTile(targetTile.id, newTileOptions.direction);
@@ -125,22 +125,27 @@ export default class EditorService extends EventEmitter {
   }
 
   @action.bound
-  moveEditor(srcEditor: EntityEditor, dest: EntityEditor | Tile) {
+  moveEditor(srcEditor: EntityEditor, dest: EntityEditor | Tile | { from: Tile; splitDirection: TileSplitDirections }) {
     if (dest instanceof Tile) {
       if (srcEditor.tile === dest) {
         srcEditor.tile.moveEditor(srcEditor, 'end');
       } else {
-        srcEditor.tile.closeEditor(srcEditor.id, false);
+        srcEditor.tile.removeEditor(srcEditor.id, false);
         dest.addEditor(srcEditor);
       }
       return;
-    }
-
-    if (srcEditor.tile === dest.tile) {
-      dest.tile.moveEditor(srcEditor, dest);
+    } else if (dest instanceof EntityEditor) {
+      if (srcEditor.tile === dest.tile) {
+        dest.tile.moveEditor(srcEditor, dest);
+      } else {
+        srcEditor.tile.removeEditor(srcEditor.id, false);
+        dest.tile.addEditor(srcEditor, dest);
+      }
     } else {
-      srcEditor.tile.closeEditor(srcEditor.id, false);
-      dest.tile.addEditor(srcEditor, dest);
+      const { from, splitDirection } = dest;
+      const newTile = this.tileManager.splitTile(from.id, splitDirection);
+      from.removeEditor(srcEditor.id, false);
+      newTile.addEditor(srcEditor);
     }
   }
 }

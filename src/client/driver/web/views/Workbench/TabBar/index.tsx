@@ -15,7 +15,7 @@ export default observer(function TabBar({ tileId }: { tileId: Tile['id'] }) {
   const tile = tileManager.getTile(tileId);
   const { currentEditor, editors, closeAllEditors } = tile;
   const { setNodeRef, isOver } = useDroppable({
-    id: tileId,
+    id: `${tileId}-tab`,
     data: { instance: tile },
   });
 
@@ -33,7 +33,7 @@ export default observer(function TabBar({ tileId }: { tileId: Tile['id'] }) {
         </SortableContext>
       </div>
       <div className="flex items-center">
-        {__ENV__ === 'dev' ? tileId : null}
+        {__ENV__ === 'dev' ? <span className="text-xs">{tileId}</span> : null}
         <Tooltip title="关闭全部">
           <Button onFocus={(e) => e.stopPropagation()} onClick={closeAllEditors} type="text" icon={<CloseOutlined />} />
         </Tooltip>

@@ -12,7 +12,7 @@ interface Props {
 }
 export default observer(function TabItem({ editor }: Props) {
   const { tile } = editor;
-  const { switchToEditor, closeEditor, currentEditor } = tile;
+  const { switchToEditor, removeEditor: closeEditor, currentEditor } = tile;
   const { setNodeRef, attributes, listeners, over } = useSortable({
     id: editor.id,
     data: { instance: editor },

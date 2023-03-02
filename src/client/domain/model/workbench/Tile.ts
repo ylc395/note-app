@@ -22,6 +22,10 @@ export default class Tile extends EventEmitter {
     return this.manager.root === this.id;
   }
 
+  get isOnlyOne() {
+    return this.manager.root === this.id;
+  }
+
   @computed
   get isFocused() {
     return this.manager.focusedTile?.id === this.id;
@@ -95,7 +99,7 @@ export default class Tile extends EventEmitter {
   }
 
   @action.bound
-  closeEditor(editorId: EntityEditor['id'], destroy = true) {
+  removeEditor(editorId: EntityEditor['id'], destroy = true) {
     const existedTabIndex = this.editors.findIndex((editor) => editor.id === editorId);
 
     if (existedTabIndex === -1) {
@@ -123,7 +127,7 @@ export default class Tile extends EventEmitter {
     const editorIds = this.editors.map(({ id }) => id);
 
     for (const id of editorIds) {
-      this.closeEditor(id);
+      this.removeEditor(id);
     }
   }
 

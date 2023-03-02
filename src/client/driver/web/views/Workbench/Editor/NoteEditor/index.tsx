@@ -11,7 +11,7 @@ export default observer(
   // eslint-disable-next-line mobx/missing-observer
   forwardRef(function NoteEditor({ editor }: { editor: NoteEditor }, ref: ForwardedRef<HTMLDivElement>) {
     return (
-      <div className="flex min-h-0 shrink grow flex-col" ref={ref}>
+      <div className="flex h-full flex-col" ref={ref}>
         <Title editor={editor} />
         <Breadcrumb editor={editor} />
         <Body editor={editor} />

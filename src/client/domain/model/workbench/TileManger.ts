@@ -10,6 +10,19 @@ export enum TileDirections {
   Vertical,
 }
 
+export enum TileSplitDirections {
+  Up,
+  Down,
+  Left,
+  Right,
+}
+
+const splitDirectionToDirection = (direction: TileSplitDirections) => {
+  return direction === TileSplitDirections.Down || direction === TileSplitDirections.Up
+    ? TileDirections.Vertical
+    : TileDirections.Horizontal;
+};
+
 export interface TileParent {
   id: string;
   direction: TileDirections;
@@ -99,7 +112,7 @@ export default class TileManager {
   }
 
   @action.bound
-  splitTile(from: Tile['id'], direction: TileDirections) {
+  splitTile(from: Tile['id'], direction: TileSplitDirections) {
     if (!this.root) {
       throw new Error('no root');
     }
@@ -109,9 +122,16 @@ export default class TileManager {
     if (this.root === from) {
       this.root = {
         id: uniqueId('tileParent-'),
-        direction,
-        first: this.root,
-        second: newTile.id,
+        direction: splitDirectionToDirection(direction),
+        ...(direction === TileSplitDirections.Down || direction === TileSplitDirections.Right
+          ? {
+              first: this.root,
+              second: newTile.id,
+            }
+          : {
+              second: this.root,
+              first: newTile.id,
+            }),
       };
       return newTile;
     }
@@ -125,9 +145,16 @@ export default class TileManager {
         const parentBranch = parentNode.first === node ? 'first' : 'second';
         parentNode[parentBranch] = {
           id: uniqueId('tileParent-'),
-          direction,
-          first: parentNode[parentBranch],
-          second: newTile.id,
+          direction: splitDirectionToDirection(direction),
+          ...(direction === TileSplitDirections.Down || direction === TileSplitDirections.Right
+            ? {
+                first: parentNode[parentBranch],
+                second: newTile.id,
+              }
+            : {
+                second: parentNode[parentBranch],
+                first: newTile.id,
+              }),
         };
 
         return true;

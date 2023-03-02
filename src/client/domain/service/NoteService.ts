@@ -14,7 +14,7 @@ import { EntityTypes } from 'interface/Entity';
 import { MULTIPLE_ICON_FLAG, NoteMetadata } from 'model/note/MetadataForm/type';
 import NoteTree from 'model/note/Tree';
 import StarManager, { StarEvents } from 'model/StarManager';
-import { TileDirections } from 'model/workbench/TileManger';
+import { TileSplitDirections } from 'model/workbench/TileManger';
 
 import EditorService from './EditorService';
 
@@ -234,7 +234,7 @@ export default class NoteService extends EventEmitter {
 
         return this.editor.openEntity(
           { entityType: EntityTypes.Note, entityId: targetId },
-          { from: focusedTile.id, direction: TileDirections.Horizontal },
+          { from: focusedTile.id, direction: TileSplitDirections.Right },
         );
       default:
         break;

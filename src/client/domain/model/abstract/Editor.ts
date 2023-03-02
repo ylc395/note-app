@@ -45,6 +45,10 @@ export default abstract class EntityEditor<T = unknown> extends EventEmitter {
     return this.tile.isFocused && this.tile.currentEditor?.id === this.id;
   }
 
+  get isOnlyOne(): boolean {
+    return this.tile.editors.length === 1 && this.tile.editors[0] === this;
+  }
+
   @action.bound
   loadEntity(entity: T) {
     if (this.entity) {
