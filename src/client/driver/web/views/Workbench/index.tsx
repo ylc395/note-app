@@ -1,15 +1,7 @@
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 import { useCallback, useState } from 'react';
-import {
-  type DragEndEvent,
-  type DragStartEvent,
-  DndContext,
-  MouseSensor,
-  useSensor,
-  useSensors,
-  DragOverlay,
-} from '@dnd-kit/core';
+import { type DragStartEvent, DndContext, MouseSensor, useSensor, useSensors, DragOverlay } from '@dnd-kit/core';
 
 import EditorService from 'service/EditorService';
 import EntityEditor from 'model/abstract/Editor';
@@ -18,10 +10,9 @@ import TabBar from './TabBar';
 import Editor from './Editor';
 import Mosaic from './Mosaic';
 import TabItem from './TabBar/TabItem';
-import Tile from 'model/workbench/Tile';
 
 export default observer(function Workbench() {
-  const { tileManager, moveEditor } = container.resolve(EditorService);
+  const { tileManager } = container.resolve(EditorService);
   const [draggingEditor, setDraggingEditor] = useState<EntityEditor | undefined>();
   const handleDragStart = useCallback(({ active }: DragStartEvent) => {
     const editor = active.data.current?.instance;
@@ -31,22 +22,6 @@ export default observer(function Workbench() {
       editor.tile.switchToEditor(editor.id);
     }
   }, []);
-
-  const handleDragEnd = useCallback(
-    ({ active, over }: DragEndEvent) => {
-      if (!over) {
-        return;
-      }
-
-      const src = active.data.current?.instance;
-      const dest = over.data.current?.instance;
-
-      if (src instanceof EntityEditor && (dest instanceof EntityEditor || dest instanceof Tile)) {
-        moveEditor(src, dest);
-      }
-    },
-    [moveEditor],
-  );
 
   const sensors = useSensors(
     useSensor(MouseSensor, {
@@ -59,7 +34,7 @@ export default observer(function Workbench() {
 
   return (
     <div className="h-screen min-w-0 grow">
-      <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} sensors={sensors}>
+      <DndContext onDragStart={handleDragStart} sensors={sensors}>
         <Mosaic
           root={tileManager.root}
           renderTile={(id) => (

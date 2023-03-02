@@ -2,21 +2,37 @@ import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 import { Button, Tooltip } from 'antd';
 import { CloseOutlined } from '@ant-design/icons';
-import { useDroppable } from '@dnd-kit/core';
+import { useDroppable, useDndMonitor } from '@dnd-kit/core';
 import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 
 import EditorService from 'service/EditorService';
-import type Tile from 'model/workbench/Tile';
+import Tile from 'model/workbench/Tile';
+import EntityEditor from 'model/abstract/Editor';
 
 import TabItem from './TabItem';
 
 export default observer(function TabBar({ tileId }: { tileId: Tile['id'] }) {
-  const { tileManager } = container.resolve(EditorService);
+  const { tileManager, moveEditor } = container.resolve(EditorService);
   const tile = tileManager.getTile(tileId);
   const { currentEditor, editors, closeAllEditors } = tile;
   const { setNodeRef, isOver } = useDroppable({
     id: `${tileId}-tab`,
     data: { instance: tile },
+  });
+
+  useDndMonitor({
+    onDragEnd({ active, over }) {
+      if (!over) {
+        return;
+      }
+
+      const src = active.data.current?.instance;
+      const dest = over.data.current?.instance;
+
+      if (src instanceof EntityEditor && (dest instanceof EntityEditor || dest instanceof Tile)) {
+        moveEditor(src, dest);
+      }
+    },
   });
 
   if (!currentEditor) {

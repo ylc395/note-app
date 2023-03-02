@@ -83,7 +83,7 @@ export default observer(function Editor({ tileId }: { tileId: Tile['id'] }) {
       }
 
       const portion = 6;
-      const position: Position = { top: '0px', left: '0px', bottom: '0px', right: '0px' };
+      let position: Position | undefined = { top: '0px', left: '0px', bottom: '0px', right: '0px' };
       const isInLeftBoundary = rect.left - editorRect.current.left < editorRect.current.width / portion;
       const isInRightBoundary = editorRect.current.right - rect.right < editorRect.current.width / portion;
       const isInTopBoundary = rect.top - editorRect.current.top < editorRect.current.height / portion;
@@ -91,18 +91,14 @@ export default observer(function Editor({ tileId }: { tileId: Tile['id'] }) {
 
       if (isInLeftBoundary && !isInTopBoundary && !isInBottomBoundary) {
         position.right = `${editorRect.current.width / 2}px`;
-      }
-
-      if (isInRightBoundary && !isInTopBoundary && !isInBottomBoundary) {
+      } else if (isInRightBoundary && !isInTopBoundary && !isInBottomBoundary) {
         position.left = `${editorRect.current.width / 2}px`;
-      }
-
-      if (isInTopBoundary && !isInLeftBoundary && !isInRightBoundary) {
+      } else if (isInTopBoundary && !isInLeftBoundary && !isInRightBoundary) {
         position.bottom = `${editorRect.current.height / 2}px`;
-      }
-
-      if (isInBottomBoundary && !isInLeftBoundary && !isInRightBoundary) {
+      } else if (isInBottomBoundary && !isInLeftBoundary && !isInRightBoundary) {
         position.top = `${editorRect.current.height / 2}px`;
+      } else if (instance.tile === tile) {
+        position = undefined;
       }
 
       setDropPosition(position);
