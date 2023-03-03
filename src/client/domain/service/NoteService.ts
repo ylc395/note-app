@@ -82,7 +82,7 @@ export default class NoteService extends EventEmitter {
 
     const nodesToMove = ids.map((id) => this.noteTree.getNode(id));
 
-    targetId = targetId === undefined ? await this.userInput.note.getNoteIdByTree(nodesToMove) : targetId;
+    targetId = targetId === undefined ? await this.userInput.note.getMoveTargetNoteId(nodesToMove) : targetId;
 
     if (targetId === undefined) {
       return;

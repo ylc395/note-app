@@ -11,6 +11,8 @@ import { type NoteTreeNode, SortBy, SortOrder } from './type';
 
 export const VIRTUAL_ROOT_NODE_KEY = 'root';
 
+export type { NoteTreeNode } from './type';
+
 export default class NoteTree {
   private readonly remote = container.resolve(remoteToken);
   @observable roots: NoteTreeNode[] = [];

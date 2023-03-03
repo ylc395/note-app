@@ -1,47 +1,48 @@
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
+import { toJS } from 'mobx';
 import { Button, Tooltip } from 'antd';
-import type { DataNode } from 'antd/es/tree';
 import { PlusOutlined } from '@ant-design/icons';
 
-import { normalizeTitle, NoteVO } from 'interface/Note';
+import { normalizeTitle } from 'interface/Note';
 import NoteService from 'service/NoteService';
+import type { NoteTreeNode } from 'model/note/Tree';
 
-import NoteTree, { NoteTreeProps } from 'web/components/note/Tree';
+import Tree, { type Props as TreeProps } from 'web/components/common/Tree';
 import IconTitle from 'web/components/common/IconTitle';
-
-import useDrag, { TITLE_CONTENT_CLASS } from './useDrag';
 
 export default observer(function ExplorerNoteTree() {
   const { createNote, noteTree, selectNote, actByContextmenu } = container.resolve(NoteService);
-
-  const { draggingKeys, ...dragHandlers } = useDrag();
-
-  const handleExpand = useCallback<NonNullable<NoteTreeProps['onExpand']>>(
-    (_, { node }) => {
-      if (draggingKeys.length > 0) {
-        return;
-      }
-
-      noteTree.toggleExpand(node.key as string, false);
-    },
-    [draggingKeys, noteTree],
+  const handleExpand = useCallback<TreeProps<NoteTreeNode>['onExpand']>(
+    ({ key }) => noteTree.toggleExpand(key, false),
+    [noteTree],
   );
 
-  const titleRender = useCallback(
-    (node: DataNode) => (
+  const handleContextmenu = useCallback<NonNullable<TreeProps<NoteTreeNode>['onContextmenu']>>(
+    (node) => actByContextmenu(node.key),
+    [actByContextmenu],
+  );
+
+  const loadChildren = useCallback<TreeProps<NoteTreeNode>['loadChildren']>(
+    ({ key }) => noteTree.loadChildren(key),
+    [noteTree],
+  );
+
+  const titleRender = useCallback<NonNullable<TreeProps<NoteTreeNode>['titleRender']>>(
+    (node) => (
       <span className="group flex">
         <IconTitle
-          className={TITLE_CONTENT_CLASS}
-          icon={(node as DataNode & { note: NoteVO }).note.icon}
-          title={`${__ENV__ === 'dev' ? `${node.key} ` : ''}${normalizeTitle(
-            (node as DataNode & { note: NoteVO }).note,
-          )}`}
+          className="cursor-pointer"
+          icon={node.note.icon}
+          title={`${__ENV__ === 'dev' ? `${node.key} ` : ''}${normalizeTitle(node.note)}`}
         />
         <Tooltip title="新建子笔记" placement="right">
           <Button
-            onClick={() => createNote(node.key as string)}
+            onClick={(e) => {
+              e.preventDefault();
+              createNote(node.key as string);
+            }}
             className="invisible ml-auto mr-2 group-hover:visible"
             size="small"
             type="text"
@@ -53,17 +54,27 @@ export default observer(function ExplorerNoteTree() {
     [createNote],
   );
 
+  const handleSelect = useCallback<TreeProps<NoteTreeNode>['onSelect']>(
+    (node, isMultiple) => selectNote(node.key, isMultiple),
+    [selectNote],
+  );
+
+  useEffect(() => {
+    noteTree.loadChildren();
+  }, [noteTree]);
+
   return (
-    <NoteTree
-      noIcon
+    <Tree<NoteTreeNode>
       multiple
-      tree={noteTree}
-      onContextmenu={actByContextmenu}
+      loadedKeys={Array.from(noteTree.loadedNodes)}
+      treeData={toJS(noteTree.roots)}
+      expandedKeys={Array.from(noteTree.expandedNodes)}
+      selectedKeys={Array.from(noteTree.selectedNodes)}
+      loadChildren={loadChildren}
+      onContextmenu={handleContextmenu}
       titleRender={titleRender}
-      onSelect={(_, { node, selectedNodes }) => selectNote(node.key as string, selectedNodes.length > 1)}
-      draggable={{ icon: false }}
+      onSelect={handleSelect}
       onExpand={handleExpand}
-      {...dragHandlers}
     />
   );
 });

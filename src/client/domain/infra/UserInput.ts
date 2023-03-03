@@ -13,7 +13,7 @@ export interface CommonInputs {
 }
 
 export interface NoteInputs {
-  getNoteIdByTree: (selectedNodes: NoteTreeNode[]) => Promise<NoteVO['parentId'] | undefined>;
+  getMoveTargetNoteId: (selectedNodes: NoteTreeNode[]) => Promise<NoteVO['parentId'] | undefined>;
   editNoteMetadata: (
     metadata: NoteMetadata,
     note: { length: number; title: string; icons: NoteVO['icon'][] },
