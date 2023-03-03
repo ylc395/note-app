@@ -1,16 +1,19 @@
 import { observer } from 'mobx-react-lite';
 import { CloseOutlined } from '@ant-design/icons';
+import { container } from 'tsyringe';
 import { Button } from 'antd';
 import { useSortable } from '@dnd-kit/sortable';
 import { useRef, useEffect } from 'react';
 
 import IconTitle from 'web/components/common/IconTitle';
 import type EntityEditor from 'model/abstract/Editor';
+import EditorService from 'service/EditorService';
 
 interface Props {
   editor: EntityEditor;
 }
 export default observer(function TabItem({ editor }: Props) {
+  const editorService = container.resolve(EditorService);
   const { tile } = editor;
   const { switchToEditor, removeEditor: closeEditor, currentEditor } = tile;
   const { setNodeRef, attributes, listeners, over } = useSortable({
@@ -40,6 +43,7 @@ export default observer(function TabItem({ editor }: Props) {
         currentEditor === editor ? 'bg-white' : ''
       } ${over?.id === editor.id ? 'bg-gray-200' : ''}`}
       onClick={() => switchToEditor(editor.id)}
+      onContextMenu={() => editorService.actByContextmenu(editor)}
     >
       <IconTitle
         className="mr-1 max-w-[200px] text-sm"

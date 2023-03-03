@@ -5,6 +5,8 @@ import debounce from 'lodash/debounce';
 import cloneDeep from 'lodash/cloneDeep';
 
 import { token as remoteToken } from 'infra/Remote';
+import { token as userInputToken } from 'infra/UserInput';
+import type { ContextmenuItem } from 'infra/ui';
 import { EntityTypes, type EntityId } from 'interface/Entity';
 import type { NoteBodyDTO, NoteBodyVO, NoteDTO, NoteVO } from 'interface/Note';
 
@@ -22,6 +24,7 @@ export type EntityLocator = {
 @singleton()
 export default class EditorService extends EventEmitter {
   private readonly remote = container.resolve(remoteToken);
+  private readonly userInput = container.resolve(userInputToken);
   readonly tileManager = new TileManager();
   private editors = {
     [EntityTypes.Note]: new Set<NoteEditor>(),
@@ -146,6 +149,23 @@ export default class EditorService extends EventEmitter {
       const newTile = this.tileManager.splitTile(from.id, splitDirection);
       from.removeEditor(srcEditor.id, false);
       newTile.addEditor(srcEditor);
+    }
+  }
+
+  async actByContextmenu(editor: EntityEditor) {
+    const items: ContextmenuItem[] = [
+      { label: '关闭其他标签', key: 'closeOthers' },
+      { label: '关闭右侧所有标签', key: 'closeRight' },
+      { label: '关闭左侧所有标签', key: 'closeLeft' },
+      { type: 'separator' },
+      { label: '在笔记树中定位', key: 'revealOnTree' },
+      { label: '复制链接', key: 'copyLink' },
+      { label: '钉住', key: 'pin' },
+    ];
+    const key = await this.userInput.common.getContextmenuAction(items);
+
+    if (!key) {
+      return;
     }
   }
 }
