@@ -1,6 +1,6 @@
 import { observer, useLocalObservable } from 'mobx-react-lite';
 import { container } from 'tsyringe';
-import { computed, observable } from 'mobx';
+import { computed, observable, runInAction } from 'mobx';
 import { useCallback, useState, useEffect, type MouseEvent } from 'react';
 import { Form, DatePicker, Button, Checkbox, Popover, AutoComplete } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
@@ -148,10 +148,12 @@ export default observer(function MetadataForm({ onSubmit, onCancel, metadata, ic
       return;
     }
 
-    noteMetadata.values.attributes = attributes.fields.reduce((result, { key, value }) => {
-      result[key] = value;
-      return result;
-    }, {} as NonNullable<NoteDTO['attributes']>);
+    runInAction(() => {
+      noteMetadata.values.attributes = attributes.fields.reduce((result, { key, value }) => {
+        result[key] = value;
+        return result;
+      }, {} as NonNullable<NoteDTO['attributes']>);
+    });
 
     noteMetadata.validate(onSubmit);
   }, [attributes, noteMetadata, onSubmit]);
@@ -220,8 +222,8 @@ export default observer(function MetadataForm({ onSubmit, onCancel, metadata, ic
           <Form.Item label="自定义属性">
             {attributes.fields.map(({ key, value, id, keyError, valueError }, i) => {
               return (
-                <div key={id} className="flex mb-4">
-                  <div className="flex flex-col w-2/5 mr-2">
+                <div key={id} className="mb-4 flex">
+                  <div className="mr-2 flex w-2/5 flex-col">
                     <AutoComplete
                       onChange={(e) => attributes.rename(i, e)}
                       value={key}
@@ -230,7 +232,7 @@ export default observer(function MetadataForm({ onSubmit, onCancel, metadata, ic
                     />
                     <span className="text-red-500">{keyError}</span>
                   </div>
-                  <div className="flex flex-col w-2/5">
+                  <div className="flex w-2/5 flex-col">
                     <AutoComplete
                       placeholder="输入或选择"
                       onChange={(e) => attributes.updateValue(i, e)}
@@ -247,7 +249,7 @@ export default observer(function MetadataForm({ onSubmit, onCancel, metadata, ic
           </Form.Item>
         )}
       </Form>
-      <div className="text-right mt-8">
+      <div className="mt-8 text-right">
         <Button onClick={onCancel} className="mr-4">
           取消
         </Button>
