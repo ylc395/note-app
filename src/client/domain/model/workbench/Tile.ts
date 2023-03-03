@@ -18,14 +18,6 @@ export default class Tile extends EventEmitter {
     makeObservable(this);
   }
 
-  get isRoot() {
-    return this.manager.root === this.id;
-  }
-
-  get isOnlyOne() {
-    return this.manager.root === this.id;
-  }
-
   @computed
   get isFocused() {
     return this.manager.focusedTile?.id === this.id;

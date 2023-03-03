@@ -10,6 +10,7 @@ import TabBar from './TabBar';
 import Editor from './Editor';
 import Mosaic from './Mosaic';
 import TabItem from './TabBar/TabItem';
+import BottomBar from './BottomBar';
 
 export default observer(function Workbench() {
   const { tileManager } = container.resolve(EditorService);
@@ -33,21 +34,24 @@ export default observer(function Workbench() {
   );
 
   return (
-    <div className="h-screen min-w-0 grow">
-      <DndContext onDragStart={handleDragStart} sensors={sensors}>
-        <Mosaic
-          root={tileManager.root}
-          renderTile={(id) => (
-            <div onFocus={() => tileManager.setFocusedTile(id)} className="flex h-full flex-col">
-              <TabBar tileId={id} />
-              <Editor tileId={id} />
-            </div>
-          )}
-        >
-          空空如也
-        </Mosaic>
-        <DragOverlay>{draggingEditor && <TabItem editor={draggingEditor}></TabItem>}</DragOverlay>
-      </DndContext>
+    <div className="flex h-screen min-w-0 grow flex-col">
+      <div className="grow">
+        <DndContext onDragStart={handleDragStart} sensors={sensors}>
+          <Mosaic
+            root={tileManager.root}
+            renderTile={(id) => (
+              <div onFocus={() => tileManager.setFocusedTile(id)} className="flex h-full flex-col">
+                <TabBar tileId={id} />
+                <Editor tileId={id} />
+              </div>
+            )}
+          >
+            空空如也
+          </Mosaic>
+          <DragOverlay>{draggingEditor && <TabItem editor={draggingEditor}></TabItem>}</DragOverlay>
+        </DndContext>
+      </div>
+      <BottomBar />
     </div>
   );
 });

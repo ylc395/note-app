@@ -1,9 +1,9 @@
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 import { Button, Tooltip } from 'antd';
-import { CloseOutlined } from '@ant-design/icons';
 import { useDroppable, useDndMonitor } from '@dnd-kit/core';
 import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
+import { CloseOutlined } from '@ant-design/icons';
 
 import EditorService from 'service/EditorService';
 import Tile from 'model/workbench/Tile';

@@ -13,6 +13,7 @@ import {
   CodeOutlined,
   ClusterOutlined,
   CheckSquareOutlined,
+  SearchOutlined,
 } from '@ant-design/icons';
 import { useToggle, useMemoizedFn } from 'ahooks';
 
@@ -95,6 +96,11 @@ export default observer(function ActivityBar() {
                 />
               </Tooltip>
             </Popover>
+          </li>
+          <li>
+            <Tooltip title="搜索" placement="right">
+              <Button {...BUTTON_PROPS} icon={<SearchOutlined />} />
+            </Tooltip>
           </li>
         </ul>
       </div>

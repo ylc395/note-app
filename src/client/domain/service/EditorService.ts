@@ -160,7 +160,6 @@ export default class EditorService extends EventEmitter {
       { type: 'separator' },
       { label: '在笔记树中定位', key: 'revealOnTree' },
       { label: '复制链接', key: 'copyLink' },
-      { label: '钉住', key: 'pin' },
     ];
     const key = await this.userInput.common.getContextmenuAction(items);
 
