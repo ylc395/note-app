@@ -1,9 +1,11 @@
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
+import { useState } from 'react';
 import { Button, Tooltip } from 'antd';
 import { useDroppable, useDndMonitor } from '@dnd-kit/core';
 import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import { CloseOutlined } from '@ant-design/icons';
+import { DragOverlay } from '@dnd-kit/core';
 
 import EditorService from 'service/EditorService';
 import Tile from 'model/workbench/Tile';
@@ -19,6 +21,7 @@ export default observer(function TabBar({ tileId }: { tileId: Tile['id'] }) {
     id: `${tileId}-tab`,
     data: { instance: tile },
   });
+  const [draggingEditor, setDraggingEditor] = useState<EntityEditor | undefined>();
 
   useDndMonitor({
     onDragEnd({ active, over }) {
@@ -31,6 +34,14 @@ export default observer(function TabBar({ tileId }: { tileId: Tile['id'] }) {
 
       if (src instanceof EntityEditor && (dest instanceof EntityEditor || dest instanceof Tile)) {
         moveEditor(src, dest);
+      }
+    },
+    onDragStart({ active }) {
+      const editor = active.data.current?.instance;
+
+      if (editor instanceof EntityEditor) {
+        setDraggingEditor(editor);
+        editor.tile.switchToEditor(editor.id);
       }
     },
   });
@@ -54,6 +65,7 @@ export default observer(function TabBar({ tileId }: { tileId: Tile['id'] }) {
           <Button onFocus={(e) => e.stopPropagation()} onClick={closeAllEditors} type="text" icon={<CloseOutlined />} />
         </Tooltip>
       </div>
+      <DragOverlay>{draggingEditor && <TabItem editor={draggingEditor}></TabItem>}</DragOverlay>
     </div>
   );
 });
