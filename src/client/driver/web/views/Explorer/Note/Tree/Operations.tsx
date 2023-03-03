@@ -19,7 +19,7 @@ export default observer(function Operations() {
   const { menuOptions, onClick } = useSort();
 
   return (
-    <>
+    <div className="mt-2 flex justify-between">
       <div>
         <Tooltip title="新建根笔记" {...tooltipProps}>
           <Button type="text" icon={<FileAddOutlined />} onClick={() => createNote()} />
@@ -36,6 +36,6 @@ export default observer(function Operations() {
       <Tooltip title="笔记树配置" className="ml-auto" {...tooltipProps}>
         <Button type="text" icon={<SettingOutlined />} />
       </Tooltip>
-    </>
+    </div>
   );
 });

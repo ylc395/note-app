@@ -26,7 +26,7 @@ export default observer(function Workbench() {
   const sensors = useSensors(
     useSensor(MouseSensor, {
       activationConstraint: {
-        delay: 100,
+        delay: 200,
         tolerance: 5,
       },
     }),

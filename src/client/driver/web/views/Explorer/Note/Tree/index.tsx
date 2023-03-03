@@ -1,7 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
-import { useMemo, useCallback } from 'react';
-import { createPortal } from 'react-dom';
+import { useCallback } from 'react';
 import { Button, Tooltip } from 'antd';
 import type { DataNode } from 'antd/es/tree';
 import { PlusOutlined } from '@ant-design/icons';
@@ -13,14 +12,9 @@ import NoteTree, { NoteTreeProps } from 'web/components/note/Tree';
 import IconTitle from 'web/components/common/IconTitle';
 
 import useDrag, { TITLE_CONTENT_CLASS } from './useDrag';
-import Operations from './Operations';
 
-export default observer(function ExplorerNoteTree({ operationEl }: { operationEl: HTMLElement | null }) {
+export default observer(function ExplorerNoteTree() {
   const { createNote, noteTree, selectNote, actByContextmenu } = container.resolve(NoteService);
-
-  const operations = useMemo(() => {
-    return operationEl && createPortal(<Operations />, operationEl);
-  }, [operationEl]);
 
   const { draggingKeys, ...dragHandlers } = useDrag();
 
@@ -60,19 +54,16 @@ export default observer(function ExplorerNoteTree({ operationEl }: { operationEl
   );
 
   return (
-    <>
-      <NoteTree
-        noIcon
-        multiple
-        tree={noteTree}
-        onContextmenu={actByContextmenu}
-        titleRender={titleRender}
-        onSelect={(_, { node, selectedNodes }) => selectNote(node.key as string, selectedNodes.length > 1)}
-        draggable={{ icon: false }}
-        onExpand={handleExpand}
-        {...dragHandlers}
-      />
-      {operations}
-    </>
+    <NoteTree
+      noIcon
+      multiple
+      tree={noteTree}
+      onContextmenu={actByContextmenu}
+      titleRender={titleRender}
+      onSelect={(_, { node, selectedNodes }) => selectNote(node.key as string, selectedNodes.length > 1)}
+      draggable={{ icon: false }}
+      onExpand={handleExpand}
+      {...dragHandlers}
+    />
   );
 });
