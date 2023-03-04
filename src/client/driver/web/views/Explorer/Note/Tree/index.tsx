@@ -12,30 +12,24 @@ import type { NoteTreeNode } from 'model/note/Tree';
 import Tree, { type TreeProps } from 'web/components/common/Tree';
 import IconTitle from 'web/components/common/IconTitle';
 
-export default observer(function ExplorerNoteTree() {
+export default observer(function ExplorerNoteTree({ node }: { node?: NoteTreeNode }) {
   const { createNote, noteTree, selectNote, actByContextmenu } = container.resolve(NoteService);
-  const handleExpand = useCallback<TreeProps<NoteTreeNode>['onExpand']>(
-    ({ key }) => noteTree.toggleExpand(key, false),
-    [noteTree],
-  );
+  const handleExpand = useCallback<TreeProps['onExpand']>(({ key }) => noteTree.toggleExpand(key, false), [noteTree]);
 
-  const handleContextmenu = useCallback<NonNullable<TreeProps<NoteTreeNode>['onContextmenu']>>(
-    (node) => actByContextmenu(node.key),
+  const handleContextmenu = useCallback<NonNullable<TreeProps['onContextmenu']>>(
+    ({ key }) => actByContextmenu(key),
     [actByContextmenu],
   );
 
-  const loadChildren = useCallback<TreeProps<NoteTreeNode>['loadChildren']>(
-    ({ key }) => noteTree.loadChildren(key),
-    [noteTree],
-  );
+  const loadChildren = useCallback<TreeProps['loadChildren']>(({ key }) => noteTree.loadChildren(key), [noteTree]);
 
-  const titleRender = useCallback<NonNullable<TreeProps<NoteTreeNode>['titleRender']>>(
+  const titleRender = useCallback<NonNullable<TreeProps['titleRender']>>(
     (node) => (
       <span className="group flex">
         <IconTitle
           className="cursor-pointer"
-          icon={node.note.icon}
-          title={`${__ENV__ === 'dev' ? `${node.key} ` : ''}${normalizeTitle(node.note)}`}
+          icon={(node as NoteTreeNode).note.icon}
+          title={`${__ENV__ === 'dev' ? `${node.key} ` : ''}${normalizeTitle((node as NoteTreeNode).note)}`}
         />
         <Tooltip title="新建子笔记" placement="right">
           <Button
@@ -54,7 +48,7 @@ export default observer(function ExplorerNoteTree() {
     [createNote],
   );
 
-  const handleSelect = useCallback<TreeProps<NoteTreeNode>['onSelect']>(
+  const handleSelect = useCallback<TreeProps['onSelect']>(
     (node, isMultiple) => selectNote(node.key, isMultiple),
     [selectNote],
   );
@@ -66,8 +60,9 @@ export default observer(function ExplorerNoteTree() {
   return (
     <Tree
       multiple
+      draggable
       loadedKeys={Array.from(noteTree.loadedNodes)}
-      treeData={toJS(noteTree.roots)}
+      treeData={node ? [node] : toJS(noteTree.roots)}
       expandedKeys={Array.from(noteTree.expandedNodes)}
       selectedKeys={Array.from(noteTree.selectedNodes)}
       loadChildren={loadChildren}

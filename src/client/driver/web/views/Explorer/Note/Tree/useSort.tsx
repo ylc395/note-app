@@ -4,7 +4,7 @@ import { CheckOutlined } from '@ant-design/icons';
 import { computed } from 'mobx';
 import { useState } from 'react';
 
-import { SortBy, SortOrder } from 'model/note/Tree/type';
+import { SortBy, SortOrder } from 'model/note/Tree';
 import NoteService from 'service/NoteService';
 
 type MenuItems = NonNullable<DropDownProps['menu']>['items'];

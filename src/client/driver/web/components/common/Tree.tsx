@@ -1,55 +1,53 @@
-import { type ReactNode, type MouseEventHandler, useCallback, useContext, createContext } from 'react';
+import { type ReactNode, type MouseEventHandler, useCallback, useContext, createContext, useState } from 'react';
 import { CaretRightFilled, CaretDownOutlined } from '@ant-design/icons';
+import { useDraggable, useDroppable } from '@dnd-kit/core';
+import uniqueId from 'lodash/uniqueId';
 
-type TreeNode<T = unknown> = T & {
-  key: string;
-  title: string;
-  children: TreeNode<T>[];
-  isLeaf: boolean;
-  disabled?: boolean;
-};
+import type { TreeNode } from 'model/abstract/Tree';
 
-interface TreeNodeProps<T extends TreeNode> {
-  node: T;
+interface TreeNodeProps {
+  node: TreeNode;
   level: number;
 }
 
-interface ITreeContext<T extends TreeNode> {
-  titleRender?: (node: T) => ReactNode;
-  loadChildren: (node: T) => void;
-  onContextmenu?: (node: T) => void;
-  onExpand: (node: T) => void;
-  onSelect: (node: T, isMultiple: boolean) => void;
+interface ITreeContext {
+  titleRender?: (node: TreeNode) => ReactNode;
+  loadChildren: (node: TreeNode) => void;
+  onContextmenu?: (node: TreeNode) => void;
+  onExpand: (node: TreeNode) => void;
+  onSelect: (node: TreeNode, isMultiple: boolean) => void;
   draggable?: boolean;
   multiple?: boolean;
-  selectedKeys: T['key'][];
-  expandedKeys: T['key'][];
-  loadedKeys: T['key'][];
+  selectedKeys: TreeNode['key'][];
+  expandedKeys: TreeNode['key'][];
+  loadedKeys: TreeNode['key'][];
+  id: string;
 }
 
-export interface TreeProps<T extends TreeNode> extends ITreeContext<T> {
-  treeData: T[];
+export interface TreeProps extends Omit<ITreeContext, 'id'> {
+  treeData: TreeNode[];
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const TreeContext = createContext<ITreeContext<any>>(undefined as any);
+const TreeContext = createContext<ITreeContext>(undefined as any);
 
-function TreeNode<T extends TreeNode>({ node, level }: TreeNodeProps<T>) {
-  const context = useContext(TreeContext);
+function TreeNode({ node, level }: TreeNodeProps) {
   const {
+    id,
     multiple,
     loadedKeys,
     expandedKeys,
     selectedKeys,
+    draggable,
     loadChildren,
     onExpand,
     onContextmenu,
     onSelect,
     titleRender,
-  } = context;
+  } = useContext(TreeContext);
 
   const triggerExpand = useCallback(
-    (node: T, isExpanded: boolean) => {
+    (node: TreeNode, isExpanded: boolean) => {
       if (!isExpanded && !loadedKeys.includes(node.key)) {
         loadChildren(node);
       }
@@ -65,26 +63,40 @@ function TreeNode<T extends TreeNode>({ node, level }: TreeNodeProps<T>) {
     triggerExpand(node, isExpanded);
   };
 
+  const dragOptions = {
+    id: `${id}-${node.key}`,
+    disabled: !draggable,
+    data: { instance: node },
+  };
+
+  const { setNodeRef: setDraggableRef, listeners, attributes } = useDraggable(dragOptions);
+  const { setNodeRef: setDroppableRef } = useDroppable(dragOptions);
+
   return (
     <>
       <div
+        ref={setDroppableRef}
         onClick={node.disabled ? undefined : (e) => onSelect(node, Boolean(multiple) && e.metaKey)}
         onContextMenu={!node.disabled && onContextmenu ? () => onContextmenu(node) : undefined}
-        key={node.key}
         style={{ paddingLeft: `${level * 30}px` }}
         className={`flex ${selectedKeys.includes(node.key) ? 'bg-blue-300' : ''} ${node.disabled ? 'bg-gray-100' : ''}`}
       >
-        {!node.isLeaf && (isExpanded ? <CaretDownOutlined onClick={expand} /> : <CaretRightFilled onClick={expand} />)}
-        {titleRender ? titleRender(node) : node.title}
+        <div className="flex" ref={setDraggableRef} {...listeners} {...attributes}>
+          {!node.isLeaf &&
+            (isExpanded ? <CaretDownOutlined onClick={expand} /> : <CaretRightFilled onClick={expand} />)}
+          {titleRender ? titleRender(node) : node.title}
+        </div>
       </div>
-      {isExpanded && node.children.map((child) => <TreeNode key={node.key} node={child} level={level + 1} />)}
+      {isExpanded && node.children.map((child) => <TreeNode key={child.key} node={child} level={level + 1} />)}
     </>
   );
 }
 
-export default function Tree<T extends TreeNode>({ treeData, ...props }: TreeProps<T>) {
+export default function Tree({ treeData, ...props }: TreeProps) {
+  const [id] = useState(uniqueId('tree-view-'));
+
   return (
-    <TreeContext.Provider value={props}>
+    <TreeContext.Provider value={{ ...props, id }}>
       <div>
         {treeData.map((node) => (
           <TreeNode key={node.key} node={node} level={0} />

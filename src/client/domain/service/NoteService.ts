@@ -11,7 +11,7 @@ import { type NoteDTO, type NoteVO as Note, type NotesDTO, type NoteVO, normaliz
 import type { RecyclablesDTO } from 'interface/Recyclables';
 import { EntityTypes } from 'interface/Entity';
 
-import { MULTIPLE_ICON_FLAG, NoteMetadata } from 'model/note/MetadataForm/type';
+import { MULTIPLE_ICON_FLAG, type NoteMetadata } from 'model/note/MetadataForm';
 import NoteTree from 'model/note/Tree';
 import StarManager, { StarEvents } from 'model/StarManager';
 import { TileSplitDirections } from 'model/workbench/TileManger';
@@ -152,7 +152,10 @@ export default class NoteService extends EventEmitter {
       id,
       ...updatedNoteMetadata,
       isReadonly: updatedNoteMetadata.isReadonly === 2 ? undefined : Boolean(updatedNoteMetadata.isReadonly),
-      icon: updatedNoteMetadata.icon === MULTIPLE_ICON_FLAG ? undefined : updatedNoteMetadata.icon,
+      icon:
+        updatedNoteMetadata.icon === MULTIPLE_ICON_FLAG
+          ? undefined
+          : (updatedNoteMetadata.icon as string | null | undefined),
     }));
 
     const { body: notes } = await this.remote.patch<NotesDTO, NoteVO[]>('/notes', result);
@@ -179,7 +182,7 @@ export default class NoteService extends EventEmitter {
 
     const isMultiple = selectedNodes.size > 1 && selectedNodes.has(targetId);
     const noteIds = isMultiple ? Array.from(selectedNodes) : [targetId];
-    const note = this.noteTree.getNode(targetId).note;
+    const { note } = this.noteTree.getNode(targetId);
     const { focusedTile } = this.editor.tileManager;
 
     const description = noteIds.length + '项';

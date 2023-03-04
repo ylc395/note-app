@@ -1,6 +1,6 @@
 {
   "extends": "./tsconfig.json",
-  "include": ["./driver/electron/**/*", "./domain/infra/**/*", "./domain/model/**/*/type.ts"],
+  "include": ["./driver/electron/**/*", "./domain/infra/**/*", "./domain/model/**/*/*.d.ts"],
   "exclude": ["./driver/electron/preload.ts", "./domain/infra/Remote.ts"],
   "compilerOptions": {
     "types": ["electron"],

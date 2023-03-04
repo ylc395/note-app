@@ -7,14 +7,26 @@ import { token as remoteToken } from 'infra/Remote';
 import type { NoteQuery, NoteVO as Note } from 'interface/Note';
 import { normalizeTitle } from 'interface/Note';
 
-import { type NoteTreeNode, SortBy, SortOrder } from './type';
+import type { NoteTreeNode } from './type';
 
 export const VIRTUAL_ROOT_NODE_KEY = 'root';
+
+export enum SortBy {
+  Title = 'title',
+  UpdatedAt = 'updatedAt',
+  CreatedAt = 'createdAt',
+}
+
+export enum SortOrder {
+  Asc = 'asc',
+  Desc = 'desc',
+}
 
 export type { NoteTreeNode } from './type';
 
 export default class NoteTree {
   private readonly remote = container.resolve(remoteToken);
+  private readonly id = Symbol();
   @observable roots: NoteTreeNode[] = [];
   @observable readonly expandedNodes = new Set<NoteTreeNode['key']>();
   @observable readonly selectedNodes = new Set<NoteTreeNode['key']>();
@@ -55,6 +67,7 @@ export default class NoteTree {
       title: '根',
       children: [],
       isLeaf: false,
+      treeId: this.id,
       note: {
         id: '',
         title: '',
@@ -82,13 +95,14 @@ export default class NoteTree {
 
   private createNode(note: Note, noSort?: boolean) {
     const parent = note.parentId ? this.getNode(note.parentId) : undefined;
-    const node = observable({
+    const node: NoteTreeNode = observable({
       key: note.id,
       title: normalizeTitle(note),
       isLeaf: note.childrenCount === 0,
       children: [],
       parent,
       note,
+      treeId: this.id,
       disabled: false,
     });
 
@@ -127,6 +141,11 @@ export default class NoteTree {
 
   hasNode(id: NoteTreeNode['key'] | Note['id']) {
     return Boolean(this.nodesMap[id]);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  has(node: any): node is NoteTreeNode {
+    return node && 'treeId' in node && node.treeId === this.id;
   }
 
   private readonly loadTreeFragment = async (id: Note['id'] | NoteTreeNode['key']) => {

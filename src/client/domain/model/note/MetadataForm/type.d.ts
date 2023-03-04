@@ -1,9 +1,7 @@
 import type { NoteDTO } from 'interface/Note';
 
-export const MULTIPLE_ICON_FLAG = Symbol();
-
 export interface NoteMetadata {
-  icon: NonNullable<NoteDTO['icon']> | null | typeof MULTIPLE_ICON_FLAG;
+  icon: NonNullable<NoteDTO['icon']> | null | symbol;
   userCreatedAt?: NonNullable<NoteDTO['userCreatedAt']>;
   userUpdatedAt?: NonNullable<NoteDTO['userUpdatedAt']>;
   isReadonly: 0 | 1 | 2;

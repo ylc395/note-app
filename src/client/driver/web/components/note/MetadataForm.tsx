@@ -10,8 +10,7 @@ import uniq from 'lodash/uniq';
 import uniqueId from 'lodash/uniqueId';
 
 import { token as remoteToken } from 'infra/Remote';
-import NoteMetadata from 'model/note/MetadataForm';
-import { type NoteMetadata as NoteMetadataValues, MULTIPLE_ICON_FLAG } from 'model/note/MetadataForm/type';
+import NoteMetadata, { type NoteMetadata as NoteMetadataValues, MULTIPLE_ICON_FLAG } from 'model/note/MetadataForm';
 import type { NoteAttributesVO, NoteDTO, NoteVO } from 'interface/Note';
 
 import { useUpdateTimeField, FORM_ITEM_LAYOUT } from '../utils';
@@ -171,7 +170,7 @@ export default observer(function MetadataForm({ onSubmit, onCancel, metadata, ic
               <Emoji id={uniqIcons[0]!} className="mr-4" />
             )}
             {noteMetadata.values.icon !== MULTIPLE_ICON_FLAG && (
-              <Emoji id={noteMetadata.values.icon} className="mr-4" />
+              <Emoji id={noteMetadata.values.icon as string | null} className="mr-4" />
             )}
             <Popover
               trigger="click"

@@ -7,19 +7,19 @@ import { normalizeTitle } from 'interface/Note';
 import type { NoteInputs } from 'infra/UserInput';
 import NoteTree, { VIRTUAL_ROOT_NODE_KEY, type NoteTreeNode } from 'model/note/Tree';
 
-import Tree, { type TreeProps } from 'web/components/common/Tree';
+import Tree, { TreeProps } from 'web/components/common/Tree';
 import IconTitle from 'web/components/common/IconTitle';
 import { COMMON_MODAL_OPTIONS } from '../utils';
 
 const NoteTreeView = observer(function NoteTreeView({ noteTree }: { noteTree: NoteTree }) {
-  const titleRender = useCallback<NonNullable<TreeProps<NoteTreeNode>['titleRender']>>(
+  const titleRender = useCallback<NonNullable<TreeProps['titleRender']>>(
     (node) => (
       <span className="group flex">
         <IconTitle
           className="cursor-pointer"
-          icon={node.note.icon}
+          icon={(node as NoteTreeNode).note.icon}
           size="1em"
-          title={`${__ENV__ === 'dev' ? `${node.key} ` : ''}${normalizeTitle(node.note)}`}
+          title={`${__ENV__ === 'dev' ? `${node.key} ` : ''}${normalizeTitle((node as NoteTreeNode).note)}`}
         />
       </span>
     ),
