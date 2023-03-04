@@ -15,10 +15,10 @@ const explorerMap: Record<ExplorerTypes, () => ReactNode> = {
   [ExplorerTypes.Notes]: () => <NoteExplorer />,
   [ExplorerTypes.Materials]: () => null,
   [ExplorerTypes.Timeline]: () => null,
+  [ExplorerTypes.Memo]: () => null,
   [ExplorerTypes.Topic]: () => null,
   [ExplorerTypes.Code]: () => null,
   [ExplorerTypes.Dustbin]: () => null,
-  [ExplorerTypes.Graph]: () => null,
   [ExplorerTypes.Todo]: () => null,
 };
 

@@ -11,9 +11,9 @@ import {
   DatabaseOutlined,
   DeleteOutlined,
   CodeOutlined,
-  ClusterOutlined,
   CheckSquareOutlined,
   SearchOutlined,
+  FieldTimeOutlined,
 } from '@ant-design/icons';
 import { useToggle, useMemoizedFn } from 'ahooks';
 
@@ -29,7 +29,7 @@ interface ExplorerButton {
 const FIRST_CLASS_EXPLORER_ITEMS: ExplorerButton[] = [
   { key: ExplorerTypes.Materials, icon: <DatabaseOutlined />, label: '素材库' },
   { key: ExplorerTypes.Notes, icon: <BookOutlined />, label: '笔记本' },
-  { key: ExplorerTypes.Timeline, icon: <BuildOutlined />, label: '随想' },
+  { key: ExplorerTypes.Memo, icon: <BuildOutlined />, label: '随想' },
   { key: ExplorerTypes.Code, icon: <CodeOutlined />, label: '代码片段' },
   { key: ExplorerTypes.Todo, icon: <CheckSquareOutlined />, label: '任务' },
 ];
@@ -75,7 +75,7 @@ export default observer(function ActivityBar() {
         </ul>
         <ul className="m-0 mt-3 list-none border-0 border-t border-solid border-gray-300 p-0 pt-3 text-center">
           <li>{getExplorerButton({ icon: <NumberOutlined />, label: '话题', key: ExplorerTypes.Topic })} </li>
-          <li>{getExplorerButton({ icon: <ClusterOutlined />, label: '关系图', key: ExplorerTypes.Graph })} </li>
+          <li>{getExplorerButton({ icon: <FieldTimeOutlined />, label: '时间线', key: ExplorerTypes.Timeline })} </li>
           <li>
             <Popover
               destroyTooltipOnHide
