@@ -7,7 +7,7 @@ import { normalizeTitle } from 'interface/Note';
 import type { NoteInputs } from 'infra/UserInput';
 import NoteTree, { VIRTUAL_ROOT_NODE_KEY, type NoteTreeNode } from 'model/note/Tree';
 
-import Tree, { type Props as TreeProps } from 'web/components/common/Tree';
+import Tree, { type TreeProps } from 'web/components/common/Tree';
 import IconTitle from 'web/components/common/IconTitle';
 import { COMMON_MODAL_OPTIONS } from '../utils';
 
@@ -27,7 +27,7 @@ const NoteTreeView = observer(function NoteTreeView({ noteTree }: { noteTree: No
   );
   return (
     <div className="mt-4 h-72 overflow-auto">
-      <Tree<NoteTreeNode>
+      <Tree
         titleRender={titleRender}
         loadedKeys={Array.from(noteTree.loadedNodes)}
         treeData={toJS(noteTree.roots)}

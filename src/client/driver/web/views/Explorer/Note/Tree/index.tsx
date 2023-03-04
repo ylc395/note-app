@@ -9,7 +9,7 @@ import { normalizeTitle } from 'interface/Note';
 import NoteService from 'service/NoteService';
 import type { NoteTreeNode } from 'model/note/Tree';
 
-import Tree, { type Props as TreeProps } from 'web/components/common/Tree';
+import Tree, { type TreeProps } from 'web/components/common/Tree';
 import IconTitle from 'web/components/common/IconTitle';
 
 export default observer(function ExplorerNoteTree() {
@@ -41,7 +41,7 @@ export default observer(function ExplorerNoteTree() {
           <Button
             onClick={(e) => {
               e.preventDefault();
-              createNote(node.key as string);
+              createNote(node.key);
             }}
             className="invisible ml-auto mr-2 group-hover:visible"
             size="small"
@@ -64,7 +64,7 @@ export default observer(function ExplorerNoteTree() {
   }, [noteTree]);
 
   return (
-    <Tree<NoteTreeNode>
+    <Tree
       multiple
       loadedKeys={Array.from(noteTree.loadedNodes)}
       treeData={toJS(noteTree.roots)}
