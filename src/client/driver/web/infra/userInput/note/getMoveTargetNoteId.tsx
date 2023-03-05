@@ -1,6 +1,7 @@
 import { Modal } from 'antd';
 import { observer } from 'mobx-react-lite';
 import { useCallback } from 'react';
+import uniq from 'lodash/uniq';
 
 import { normalizeTitle } from 'interface/Note';
 import type { NoteInputs } from 'infra/UserInput';
@@ -40,24 +41,26 @@ const NoteTreeView = observer(function NoteTreeView({ noteTree }: { noteTree: No
   );
 });
 
-const isDisabled = (selectedNodes: NoteTreeNode[]) => (node: NoteTreeNode) => {
+const isDisabled = (selectedNodes: NoteTreeNode[]) => {
   const ids = selectedNodes.map(({ key }) => key);
-  const parentIds = selectedNodes.map(({ note }) => note.parentId || VIRTUAL_ROOT_NODE_KEY);
+  const parentIds = uniq(selectedNodes.map(({ note }) => note.parentId || VIRTUAL_ROOT_NODE_KEY));
 
-  if (parentIds.includes(node.key)) {
-    return true;
-  }
-
-  let currentNode: typeof node | undefined = node;
-  while (currentNode) {
-    if (ids.includes(currentNode.key)) {
+  return (node: NoteTreeNode) => {
+    if (parentIds.length === 1 && parentIds.includes(node.key)) {
       return true;
     }
 
-    currentNode = currentNode.parent;
-  }
+    let currentNode: typeof node | undefined = node;
+    while (currentNode) {
+      if (ids.includes(currentNode.key)) {
+        return true;
+      }
 
-  return false;
+      currentNode = currentNode.parent;
+    }
+
+    return false;
+  };
 };
 
 const getMoveTargetNoteId: NoteInputs['getMoveTargetNoteId'] = async (selectedNodes) => {
