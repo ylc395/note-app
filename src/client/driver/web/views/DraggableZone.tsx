@@ -1,4 +1,4 @@
-import { DndContext, MouseSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, MouseSensor, useSensor, useSensors, pointerWithin } from '@dnd-kit/core';
 import type { ReactNode } from 'react';
 
 // eslint-disable-next-line mobx/missing-observer
@@ -12,5 +12,11 @@ export default (function DraggableZone({ children }: { children: ReactNode }) {
     }),
   );
 
-  return <DndContext sensors={sensors}>{children}</DndContext>;
+  return (
+    // todo: compose detection algorithms
+    // https://docs.dndkit.com/api-documentation/context-provider/collision-detection-algorithms#pointer-within
+    <DndContext sensors={sensors} collisionDetection={pointerWithin}>
+      {children}
+    </DndContext>
+  );
 });
