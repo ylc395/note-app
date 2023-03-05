@@ -2,6 +2,7 @@ import { type ReactNode, type MouseEventHandler, useCallback, useContext, create
 import { CaretRightFilled, CaretDownOutlined } from '@ant-design/icons';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import uniqueId from 'lodash/uniqueId';
+import clsx from 'clsx';
 
 import type { TreeNode } from 'model/abstract/Tree';
 import { observer } from 'mobx-react-lite';
@@ -90,11 +91,11 @@ const TreeNode = observer(function TreeNode({ node, level }: TreeNodeProps) {
         onClick={node.disabled ? undefined : (e) => onSelect(node, Boolean(multiple) && e.metaKey)}
         onContextMenu={!node.disabled && onContextmenu ? () => onContextmenu(node) : undefined}
         style={{ paddingLeft: `${level * 30}px` }}
-        className={`flex ${selectedKeys.includes(node.key) ? 'bg-blue-300' : ''} ${
-          node.disabled ? 'bg-gray-100' : ''
-        } ${isOver ? 'bg-gray-100' : ''} ${
-          active && undroppableKeys?.includes(node.key) ? 'cursor-not-allowed bg-red-50' : 'cursor-pointer'
-        }`}
+        className={clsx(
+          'flex',
+          active && undroppableKeys?.includes(node.key) ? 'cursor-not-allowed' : 'cursor-pointer',
+          { 'bg-blue-300': selectedKeys.includes(node.key), 'bg-gray-100': node.disabled, 'bg-gray-200': isOver },
+        )}
       >
         <div className="flex" ref={setDraggableRef} {...listeners} {...attributes}>
           {!node.isLeaf &&

@@ -8,6 +8,7 @@ import { useRef, useEffect } from 'react';
 import IconTitle from 'web/components/common/IconTitle';
 import type EntityEditor from 'model/abstract/Editor';
 import EditorService from 'service/EditorService';
+import clsx from 'clsx';
 
 interface Props {
   editor: EntityEditor;
@@ -39,9 +40,13 @@ export default observer(function TabItem({ editor }: Props) {
       {...attributes}
       {...listeners}
       ref={setNodeRef}
-      className={`flex cursor-pointer flex-nowrap items-center border-0 border-r border-solid border-gray-200 bg-gray-100 p-2 ${
-        currentEditor === editor ? 'bg-white' : ''
-      } ${over?.id === editor.id ? 'bg-gray-200' : ''}`}
+      className={clsx(
+        'flex cursor-pointer flex-nowrap items-center border-0 border-r border-solid border-gray-200 bg-gray-100 p-2',
+        {
+          'bg-white': currentEditor === editor,
+          'bg-gray-200': over?.id === editor.id,
+        },
+      )}
       onClick={() => switchToEditor(editor.id)}
       onContextMenu={() => editorService.actByContextmenu(editor)}
     >
