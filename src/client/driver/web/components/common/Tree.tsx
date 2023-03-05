@@ -91,11 +91,11 @@ const TreeNode = observer(function TreeNode({ node, level }: TreeNodeProps) {
         onClick={node.disabled ? undefined : (e) => onSelect(node, Boolean(multiple) && e.metaKey)}
         onContextMenu={!node.disabled && onContextmenu ? () => onContextmenu(node) : undefined}
         style={{ paddingLeft: `${level * 30}px` }}
-        className={clsx(
-          'flex',
-          active && undroppableKeys?.includes(node.key) ? 'cursor-not-allowed' : 'cursor-pointer',
-          { 'bg-blue-300': selectedKeys.includes(node.key), 'bg-gray-100': node.disabled, 'bg-gray-200': isOver },
-        )}
+        className={clsx('flex', active && undroppableKeys?.includes(node.key) ? 'cursor-no-drop' : 'cursor-pointer', {
+          'bg-blue-300': selectedKeys.includes(node.key),
+          'bg-gray-100': node.disabled,
+          'bg-gray-200': isOver,
+        })}
       >
         <div className="flex" ref={setDraggableRef} {...listeners} {...attributes}>
           {!node.isLeaf &&

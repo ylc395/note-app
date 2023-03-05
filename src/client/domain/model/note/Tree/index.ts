@@ -1,4 +1,4 @@
-import { action, computed, makeObservable, observable, runInAction } from 'mobx';
+import { action, makeObservable, observable, runInAction } from 'mobx';
 import pull from 'lodash/pull';
 import uniq from 'lodash/uniq';
 import { container } from 'tsyringe';
@@ -352,8 +352,12 @@ export default class NoteTree {
   }
 
   getInvalidParents(id: Note['id']) {
-    const node = this.getNode(id);
-    return [id, ...this.getDescendants(id).map(({ key }) => key), ...[node.parent ? node.parent.key : []]];
+    const node = this.getNode(id, true);
+
+    if (!node) {
+      return [id];
+    }
+    return [id, ...this.getDescendants(id).map(({ key }) => key), ...(node.parent ? [node.parent.key] : [])];
   }
 
   getSiblings(noteId: Note['id']) {

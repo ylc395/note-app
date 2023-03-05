@@ -14,7 +14,7 @@ export default observer(function ExplorerNoteTree({ node }: { node?: NoteTreeNod
   const { noteTree, selectNote, moveNotes, actByContextmenu } = container.resolve(NoteService);
   const [draggingNode, setDraggingNode] = useState<NoteTreeNode['key']>();
   const invalidParentKeys = useMemo(
-    () => draggingNode && noteTree.getInvalidParents(draggingNode),
+    () => (draggingNode ? noteTree.getInvalidParents(draggingNode) : undefined),
     [draggingNode, noteTree],
   );
   const handleExpand = useCallback<TreeProps['onExpand']>(({ key }) => noteTree.toggleExpand(key, false), [noteTree]);
@@ -46,6 +46,10 @@ export default observer(function ExplorerNoteTree({ node }: { node?: NoteTreeNod
       : {
           onDragStart: ({ active }) => {
             const draggingItem = active.data.current?.instance;
+
+            if (draggingItem instanceof NoteEditor) {
+              setDraggingNode(draggingItem.entityId);
+            }
 
             if (noteTree.has(draggingItem)) {
               noteTree.toggleSelect(draggingItem.key, true);
@@ -79,7 +83,7 @@ export default observer(function ExplorerNoteTree({ node }: { node?: NoteTreeNod
       titleRender={titleRender}
       onSelect={handleSelect}
       onExpand={handleExpand}
-      undroppableKeys={invalidParentKeys as string[] | undefined}
+      undroppableKeys={invalidParentKeys}
     />
   );
 });

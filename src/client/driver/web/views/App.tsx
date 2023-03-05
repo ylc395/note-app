@@ -33,7 +33,6 @@ export default observer(function App() {
   const { currentExplorer } = container.resolve(Layout);
   const { noteTree } = container.resolve(NoteService);
   const { active } = useDndContext();
-
   const draggingItem = active?.data.current?.instance;
 
   useEffect(() => {
@@ -50,7 +49,7 @@ export default observer(function App() {
           </Resizable>
         </div>
         <Workbench />
-        <DragOverlay className="pointer-events-none">
+        <DragOverlay className="pointer-events-none" dropAnimation={null}>
           {draggingItem instanceof EntityEditor && <TabItem editor={draggingItem}></TabItem>}
           {noteTree.has(draggingItem) && <NoteTree node={draggingItem} />}
         </DragOverlay>
