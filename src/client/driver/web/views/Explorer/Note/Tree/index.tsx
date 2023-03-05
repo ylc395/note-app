@@ -1,19 +1,22 @@
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
-import { useCallback, useEffect } from 'react';
-import { toJS } from 'mobx';
-import { Button, Tooltip } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useDndMonitor } from '@dnd-kit/core';
 
-import { normalizeTitle } from 'interface/Note';
 import NoteService from 'service/NoteService';
 import type { NoteTreeNode } from 'model/note/Tree';
 
 import Tree, { type TreeProps } from 'web/components/common/Tree';
-import IconTitle from 'web/components/common/IconTitle';
+import NodeTitle from './NodeTitle';
+import NoteEditor from 'model/note/Editor';
 
 export default observer(function ExplorerNoteTree({ node }: { node?: NoteTreeNode }) {
-  const { createNote, noteTree, selectNote, actByContextmenu } = container.resolve(NoteService);
+  const { noteTree, selectNote, moveNotes, actByContextmenu } = container.resolve(NoteService);
+  const [draggingNode, setDraggingNode] = useState<NoteTreeNode['key']>();
+  const invalidParentKeys = useMemo(
+    () => draggingNode && noteTree.getInvalidParents(draggingNode),
+    [draggingNode, noteTree],
+  );
   const handleExpand = useCallback<TreeProps['onExpand']>(({ key }) => noteTree.toggleExpand(key, false), [noteTree]);
 
   const handleContextmenu = useCallback<NonNullable<TreeProps['onContextmenu']>>(
@@ -24,28 +27,8 @@ export default observer(function ExplorerNoteTree({ node }: { node?: NoteTreeNod
   const loadChildren = useCallback<TreeProps['loadChildren']>(({ key }) => noteTree.loadChildren(key), [noteTree]);
 
   const titleRender = useCallback<NonNullable<TreeProps['titleRender']>>(
-    (node) => (
-      <span className="group flex">
-        <IconTitle
-          className="cursor-pointer"
-          icon={(node as NoteTreeNode).note.icon}
-          title={`${__ENV__ === 'dev' ? `${node.key} ` : ''}${normalizeTitle((node as NoteTreeNode).note)}`}
-        />
-        <Tooltip title="新建子笔记" placement="right">
-          <Button
-            onClick={(e) => {
-              e.preventDefault();
-              createNote(node.key);
-            }}
-            className="invisible ml-auto mr-2 group-hover:visible"
-            size="small"
-            type="text"
-            icon={<PlusOutlined />}
-          />
-        </Tooltip>
-      </span>
-    ),
-    [createNote],
+    (node) => <NodeTitle node={node as NoteTreeNode} />,
+    [],
   );
 
   const handleSelect = useCallback<TreeProps['onSelect']>(
@@ -57,12 +40,38 @@ export default observer(function ExplorerNoteTree({ node }: { node?: NoteTreeNod
     noteTree.loadChildren();
   }, [noteTree]);
 
+  useDndMonitor(
+    node
+      ? {}
+      : {
+          onDragStart: ({ active }) => {
+            const draggingItem = active.data.current?.instance;
+
+            if (noteTree.has(draggingItem)) {
+              noteTree.toggleSelect(draggingItem.key, true);
+              setDraggingNode(Array.from(noteTree.selectedNodes)[0]);
+            }
+          },
+          onDragEnd: ({ over, active }) => {
+            const dropNode = over?.data.current?.instance;
+            const draggingItem = active.data.current?.instance;
+
+            if (noteTree.has(dropNode) && (noteTree.has(draggingItem) || draggingItem instanceof NoteEditor)) {
+              moveNotes(
+                draggingItem instanceof NoteEditor ? [draggingItem.entityId] : [draggingItem.key],
+                dropNode.key,
+              );
+            }
+          },
+        },
+  );
+
   return (
     <Tree
       multiple
       draggable
       loadedKeys={Array.from(noteTree.loadedNodes)}
-      treeData={node ? [node] : toJS(noteTree.roots)}
+      treeData={node ? [node] : noteTree.roots}
       expandedKeys={Array.from(noteTree.expandedNodes)}
       selectedKeys={Array.from(noteTree.selectedNodes)}
       loadChildren={loadChildren}
@@ -70,6 +79,7 @@ export default observer(function ExplorerNoteTree({ node }: { node?: NoteTreeNod
       titleRender={titleRender}
       onSelect={handleSelect}
       onExpand={handleExpand}
+      undroppableKeys={invalidParentKeys as string[] | undefined}
     />
   );
 });

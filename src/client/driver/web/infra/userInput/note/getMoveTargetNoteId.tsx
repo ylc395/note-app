@@ -1,5 +1,4 @@
 import { Modal } from 'antd';
-import { toJS } from 'mobx';
 import { observer } from 'mobx-react-lite';
 import { useCallback } from 'react';
 
@@ -30,7 +29,7 @@ const NoteTreeView = observer(function NoteTreeView({ noteTree }: { noteTree: No
       <Tree
         titleRender={titleRender}
         loadedKeys={Array.from(noteTree.loadedNodes)}
-        treeData={toJS(noteTree.roots)}
+        treeData={noteTree.roots}
         expandedKeys={Array.from(noteTree.expandedNodes)}
         selectedKeys={Array.from(noteTree.selectedNodes)}
         loadChildren={({ key }) => noteTree.loadChildren(key)}
@@ -42,22 +41,17 @@ const NoteTreeView = observer(function NoteTreeView({ noteTree }: { noteTree: No
 });
 
 const isDisabled = (selectedNodes: NoteTreeNode[]) => (node: NoteTreeNode) => {
-  let currentNode: typeof node | undefined = node;
-  let result =
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    selectedNodes.length === 1 ? (selectedNodes[0]!.parent?.key || VIRTUAL_ROOT_NODE_KEY) === node.key : false;
+  const ids = selectedNodes.map(({ key }) => key);
+  const parentIds = selectedNodes.map(({ note }) => note.parentId || VIRTUAL_ROOT_NODE_KEY);
 
-  if (result) {
+  if (parentIds.includes(node.key)) {
     return true;
   }
 
-  const ids = selectedNodes.map(({ key }) => key);
-
+  let currentNode: typeof node | undefined = node;
   while (currentNode) {
-    result = ids.includes(currentNode.key);
-
-    if (result) {
-      return result;
+    if (ids.includes(currentNode.key)) {
+      return true;
     }
 
     currentNode = currentNode.parent;

@@ -1,10 +1,10 @@
-import { action, makeObservable, observable, runInAction } from 'mobx';
+import { action, computed, makeObservable, observable, runInAction } from 'mobx';
 import pull from 'lodash/pull';
 import uniq from 'lodash/uniq';
 import { container } from 'tsyringe';
 
 import { token as remoteToken } from 'infra/Remote';
-import type { NoteQuery, NoteVO as Note } from 'interface/Note';
+import { getEmptyNote, NoteQuery, NoteVO as Note } from 'interface/Note';
 import { normalizeTitle } from 'interface/Note';
 
 import type { NoteTreeNode } from './type';
@@ -68,20 +68,7 @@ export default class NoteTree {
       children: [],
       isLeaf: false,
       treeId: this.id,
-      note: {
-        id: '',
-        title: '',
-        isReadonly: true,
-        parentId: null,
-        icon: null,
-        childrenCount: 0,
-        updatedAt: 0,
-        userCreatedAt: 0,
-        createdAt: 0,
-        userUpdatedAt: 0,
-        isStar: false,
-        attributes: {},
-      },
+      note: getEmptyNote(),
     };
 
     if (this.options?.isDisabled) {
@@ -357,6 +344,16 @@ export default class NoteTree {
 
   getChildren(parentId: Note['parentId'] | undefined) {
     return parentId ? this.getNode(parentId).children : this._roots;
+  }
+
+  private getDescendants(id: Note['parentId']): NoteTreeNode[] {
+    const children = this.getChildren(id);
+    return [...children, ...children.flatMap((child) => this.getDescendants(child.key))];
+  }
+
+  getInvalidParents(id: Note['id']) {
+    const node = this.getNode(id);
+    return [id, ...this.getDescendants(id).map(({ key }) => key), ...[node.parent ? node.parent.key : []]];
   }
 
   getSiblings(noteId: Note['id']) {

@@ -185,7 +185,10 @@ export default class NoteService extends BaseService {
 
     const parentChangedNoteIds = parentChangedNotes.map(({ id }) => id);
     const descendantIds = await this.notes.findAllDescendantIds(parentChangedNoteIds);
-    const invalidParentIds = intersection(descendantIds, parentChangedNoteIds);
+    const invalidParentIds = intersection(
+      descendantIds,
+      parentChangedNotes.map(({ parentId }) => parentId).filter((id) => id),
+    );
 
     if (invalidParentIds.length > 0) {
       throw new Error(`invalid parent id: ${invalidParentIds.join()}`);

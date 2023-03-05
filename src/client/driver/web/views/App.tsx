@@ -50,7 +50,7 @@ export default observer(function App() {
           </Resizable>
         </div>
         <Workbench />
-        <DragOverlay>
+        <DragOverlay className="pointer-events-none">
           {draggingItem instanceof EntityEditor && <TabItem editor={draggingItem}></TabItem>}
           {noteTree.has(draggingItem) && <NoteTree node={draggingItem} />}
         </DragOverlay>

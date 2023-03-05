@@ -4,6 +4,7 @@ import { useDraggable, useDroppable } from '@dnd-kit/core';
 import uniqueId from 'lodash/uniqueId';
 
 import type { TreeNode } from 'model/abstract/Tree';
+import { observer } from 'mobx-react-lite';
 
 interface TreeNodeProps {
   node: TreeNode;
@@ -21,6 +22,7 @@ interface ITreeContext {
   selectedKeys: TreeNode['key'][];
   expandedKeys: TreeNode['key'][];
   loadedKeys: TreeNode['key'][];
+  undroppableKeys?: TreeNode['key'][];
   id: string;
 }
 
@@ -31,13 +33,14 @@ export interface TreeProps extends Omit<ITreeContext, 'id'> {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const TreeContext = createContext<ITreeContext>(undefined as any);
 
-function TreeNode({ node, level }: TreeNodeProps) {
+const TreeNode = observer(function TreeNode({ node, level }: TreeNodeProps) {
   const {
     id,
     multiple,
     loadedKeys,
     expandedKeys,
     selectedKeys,
+    undroppableKeys,
     draggable,
     loadChildren,
     onExpand,
@@ -63,14 +66,22 @@ function TreeNode({ node, level }: TreeNodeProps) {
     triggerExpand(node, isExpanded);
   };
 
-  const dragOptions = {
-    id: `${id}-${node.key}`,
-    disabled: !draggable,
-    data: { instance: node },
-  };
+  const dragId = `${id}-${node.key}`;
+  const {
+    setNodeRef: setDraggableRef,
+    listeners,
+    attributes,
+  } = useDraggable({ id: dragId, data: { instance: node }, disabled: !draggable });
 
-  const { setNodeRef: setDraggableRef, listeners, attributes } = useDraggable(dragOptions);
-  const { setNodeRef: setDroppableRef } = useDroppable(dragOptions);
+  const {
+    setNodeRef: setDroppableRef,
+    isOver,
+    active,
+  } = useDroppable({
+    id: dragId,
+    data: { instance: node, noDrop: true },
+    disabled: node.disabled || !multiple || undroppableKeys?.includes(node.key),
+  });
 
   return (
     <>
@@ -79,7 +90,11 @@ function TreeNode({ node, level }: TreeNodeProps) {
         onClick={node.disabled ? undefined : (e) => onSelect(node, Boolean(multiple) && e.metaKey)}
         onContextMenu={!node.disabled && onContextmenu ? () => onContextmenu(node) : undefined}
         style={{ paddingLeft: `${level * 30}px` }}
-        className={`flex ${selectedKeys.includes(node.key) ? 'bg-blue-300' : ''} ${node.disabled ? 'bg-gray-100' : ''}`}
+        className={`flex ${selectedKeys.includes(node.key) ? 'bg-blue-300' : ''} ${
+          node.disabled ? 'bg-gray-100' : ''
+        } ${isOver ? 'bg-gray-100' : ''} ${
+          active && undroppableKeys?.includes(node.key) ? 'cursor-not-allowed bg-red-50' : 'cursor-pointer'
+        }`}
       >
         <div className="flex" ref={setDraggableRef} {...listeners} {...attributes}>
           {!node.isLeaf &&
@@ -90,9 +105,9 @@ function TreeNode({ node, level }: TreeNodeProps) {
       {isExpanded && node.children.map((child) => <TreeNode key={child.key} node={child} level={level + 1} />)}
     </>
   );
-}
+});
 
-export default function Tree({ treeData, ...props }: TreeProps) {
+export default observer(function Tree({ treeData, ...props }: TreeProps) {
   const [id] = useState(uniqueId('tree-view-'));
 
   return (
@@ -104,4 +119,4 @@ export default function Tree({ treeData, ...props }: TreeProps) {
       </div>
     </TreeContext.Provider>
   );
-}
+});
