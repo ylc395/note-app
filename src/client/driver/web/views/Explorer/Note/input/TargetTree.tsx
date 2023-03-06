@@ -3,7 +3,6 @@ import { useCallback, useEffect, useState } from 'react';
 import uniq from 'lodash/uniq';
 import { Button } from 'antd';
 
-import { normalizeTitle } from 'interface/Note';
 import NoteTree, { type NoteTreeNode, VIRTUAL_ROOT_NODE_KEY } from 'model/note/Tree';
 
 import Tree, { type TreeProps } from 'web/components/Tree';
@@ -48,11 +47,7 @@ export default observer(function NoteTreeView({ selectedNodes, onCancel, onSubmi
   const titleRender = useCallback<NonNullable<TreeProps<NoteTreeNode>['titleRender']>>(
     (node) => (
       <span className="group flex">
-        <IconTitle
-          icon={node.note.icon}
-          size="1em"
-          title={`${__ENV__ === 'dev' ? `${node.key} ` : ''}${normalizeTitle(node.note)}`}
-        />
+        <IconTitle icon={node.note.icon} size="1em" title={`${__ENV__ === 'dev' ? `${node.key} ` : ''}${node.title}`} />
       </span>
     ),
     [],

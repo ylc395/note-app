@@ -4,7 +4,6 @@ import { PlusOutlined } from '@ant-design/icons';
 import { container } from 'tsyringe';
 
 import type { NoteTreeNode } from 'model/note/Tree';
-import { normalizeTitle } from 'interface/Note';
 import NoteService from 'service/NoteService';
 
 import IconTitle from 'web/components/IconTitle';
@@ -16,7 +15,7 @@ export default observer(function Title({ node }: { node: NoteTreeNode }) {
     <span className="group flex">
       <IconTitle
         icon={(node as NoteTreeNode).note.icon}
-        title={`${__ENV__ === 'dev' ? `${node.key} ` : ''}${normalizeTitle((node as NoteTreeNode).note)}`}
+        title={`${__ENV__ === 'dev' ? `${node.key} ` : ''}${node.title}`}
       />
       <Tooltip title="新建子笔记" placement="right">
         <Button
