@@ -1,22 +1,59 @@
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
-import { Tooltip, Button, Dropdown, type TooltipProps } from 'antd';
-import { SortAscendingOutlined, FileAddOutlined, ShrinkOutlined, SettingOutlined } from '@ant-design/icons';
+import { Tooltip, Button, Dropdown, type TooltipProps, MenuProps } from 'antd';
+import {
+  SortAscendingOutlined,
+  FileAddOutlined,
+  ShrinkOutlined,
+  SettingOutlined,
+  CheckOutlined,
+} from '@ant-design/icons';
+import { useCallback, useMemo } from 'react';
 
+import { SortBy, SortOrder } from 'model/note/Tree';
 import NoteService from 'service/NoteService';
-
-import useSort from './useSort';
 
 const tooltipProps: TooltipProps = {
   placement: 'top',
 };
 
+const sortBy = [
+  { key: SortBy.Title, label: '根据名称排序' },
+  { key: SortBy.UpdatedAt, label: '根据修改时间排序' },
+  { key: SortBy.CreatedAt, label: '根据创建时间排序' },
+] as const;
+
+const sortOrder = [
+  { key: SortOrder.Asc, label: '升序' },
+  { key: SortOrder.Desc, label: '降序' },
+] as const;
+
 export default observer(function Operations() {
   const {
-    noteTree: { expandedNodes, collapseAll },
+    noteTree: { expandedNodes, collapseAll, sortOptions, setSortOptions },
     createNote,
   } = container.resolve(NoteService);
-  const { menuOptions, onClick } = useSort();
+
+  const sortMenuItems = useMemo<NonNullable<MenuProps['items']>>(() => {
+    return [
+      ...sortBy.map(({ key, label }) => ({
+        key,
+        label,
+        icon: sortOptions.by === key && <CheckOutlined />,
+      })),
+      { type: 'divider' },
+      ...sortOrder.map(({ key, label }) => ({
+        key,
+        label,
+        icon: sortOptions.order === key && <CheckOutlined />,
+      })),
+    ];
+  }, [sortOptions.by, sortOptions.order]);
+
+  const handleSortClick = useCallback<NonNullable<MenuProps['onClick']>>(
+    (e) => setSortOptions(e.key as SortBy | SortOrder),
+    [setSortOptions],
+  );
 
   return (
     <div className="mt-2 flex justify-between">
@@ -24,7 +61,12 @@ export default observer(function Operations() {
         <Tooltip title="新建根笔记" {...tooltipProps}>
           <Button type="text" icon={<FileAddOutlined />} onClick={() => createNote()} />
         </Tooltip>
-        <Dropdown trigger={['click']} menu={{ items: menuOptions.get(), onClick }} placement="bottom" arrow>
+        <Dropdown
+          trigger={['click']}
+          menu={{ items: sortMenuItems, onClick: handleSortClick }}
+          placement="bottom"
+          arrow
+        >
           <Tooltip title="设置排序方式" {...tooltipProps}>
             <Button type="text" icon={<SortAscendingOutlined />} />
           </Tooltip>
