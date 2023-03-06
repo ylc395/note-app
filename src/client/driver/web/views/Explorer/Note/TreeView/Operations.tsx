@@ -13,7 +13,7 @@ const tooltipProps: TooltipProps = {
 
 export default observer(function Operations() {
   const {
-    noteTree: { expandedNodes, collapseAll },
+    noteTree: { expandedKeys: expandedNodes, collapseAll },
     createNote,
   } = container.resolve(NoteService);
   const { menuOptions, onClick } = useSort();

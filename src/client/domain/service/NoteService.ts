@@ -105,7 +105,7 @@ export default class NoteService extends EventEmitter {
     }
 
     this.userFeedback.message.success({
-      content: `移动成功${!targetId || this.noteTree.expandedNodes.has(targetId) ? '' : '。点击定位到新位置'}`,
+      content: `移动成功${!targetId || this.noteTree.expandedKeys.has(targetId) ? '' : '。点击定位到新位置'}`,
       onClick: async (close) => {
         close();
 
@@ -178,7 +178,7 @@ export default class NoteService extends EventEmitter {
   }
 
   readonly actByContextmenu = async (targetId: Note['id']) => {
-    const { selectedNodes } = this.noteTree;
+    const { selectedKeys: selectedNodes } = this.noteTree;
 
     if (!selectedNodes.has(targetId)) {
       this.noteTree.toggleSelect(targetId, true);

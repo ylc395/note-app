@@ -4,7 +4,7 @@ import { useDraggable, useDroppable } from '@dnd-kit/core';
 import uniqueId from 'lodash/uniqueId';
 import clsx from 'clsx';
 
-import type { TreeNode } from 'model/abstract/Tree';
+import type { Tree, TreeNode } from 'model/abstract/Tree';
 import { observer } from 'mobx-react-lite';
 
 interface TreeNodeProps {
@@ -14,54 +14,37 @@ interface TreeNodeProps {
 
 interface ITreeContext {
   titleRender?: (node: TreeNode) => ReactNode;
-  loadChildren: (node: TreeNode) => void;
   onContextmenu?: (node: TreeNode) => void;
   onExpand: (node: TreeNode) => void;
   onSelect: (node: TreeNode, isMultiple: boolean) => void;
   draggable?: boolean;
   multiple?: boolean;
-  selectedKeys: TreeNode['key'][];
-  expandedKeys: TreeNode['key'][];
-  loadedKeys: TreeNode['key'][];
   undroppableKeys?: (TreeNode['key'] | null)[];
+  tree: Tree;
   id: string;
 }
 
-export interface TreeProps extends Omit<ITreeContext, 'id'> {
-  treeData: TreeNode[];
-}
+export type TreeProps = Omit<ITreeContext, 'id'>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const TreeContext = createContext<ITreeContext>(undefined as any);
 
-const TreeNode = observer(function TreeNode({ node, level }: TreeNodeProps) {
-  const {
-    id,
-    multiple,
-    loadedKeys,
-    expandedKeys,
-    selectedKeys,
-    undroppableKeys,
-    draggable,
-    loadChildren,
-    onExpand,
-    onContextmenu,
-    onSelect,
-    titleRender,
-  } = useContext(TreeContext);
+const TreeNode = observer(function ({ node, level }: TreeNodeProps) {
+  const { id, multiple, undroppableKeys, draggable, onExpand, onContextmenu, onSelect, titleRender, tree } =
+    useContext(TreeContext);
 
   const triggerExpand = useCallback(
     (node: TreeNode, isExpanded: boolean) => {
-      if (!isExpanded && !loadedKeys.includes(node.key)) {
-        loadChildren(node);
+      if (!isExpanded && !tree.loadedKeys.has(node.key)) {
+        tree.loadChildren(node.key);
       }
 
       onExpand(node);
     },
-    [loadChildren, loadedKeys, onExpand],
+    [onExpand, tree],
   );
 
-  const isExpanded = expandedKeys.includes(node.key);
+  const isExpanded = tree.expandedKeys.has(node.key);
   const expand: MouseEventHandler = (e) => {
     e.stopPropagation();
     triggerExpand(node, isExpanded);
@@ -92,7 +75,7 @@ const TreeNode = observer(function TreeNode({ node, level }: TreeNodeProps) {
         onContextMenu={!node.disabled && onContextmenu ? () => onContextmenu(node) : undefined}
         style={{ paddingLeft: `${level * 30}px` }}
         className={clsx('flex', active && undroppableKeys?.includes(node.key) ? 'cursor-no-drop' : 'cursor-pointer', {
-          'bg-blue-300': selectedKeys.includes(node.key),
+          'bg-blue-300': tree.selectedKeys.has(node.key),
           'bg-gray-100': node.disabled,
           'bg-gray-200': isOver,
         })}
@@ -108,13 +91,15 @@ const TreeNode = observer(function TreeNode({ node, level }: TreeNodeProps) {
   );
 });
 
-export default observer(function Tree({ treeData, ...props }: TreeProps) {
+TreeNode.displayName = 'TreeNode';
+
+export default observer(function Tree({ tree, ...props }: TreeProps) {
   const [id] = useState(() => uniqueId('tree-view-'));
 
   return (
-    <TreeContext.Provider value={{ ...props, id }}>
+    <TreeContext.Provider value={{ ...props, id, tree }}>
       <div>
-        {treeData.map((node) => (
+        {tree.roots.map((node) => (
           <TreeNode key={node.key} node={node} level={0} />
         ))}
       </div>

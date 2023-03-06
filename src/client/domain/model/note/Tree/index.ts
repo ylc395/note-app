@@ -1,4 +1,4 @@
-import { action, makeObservable, observable, runInAction } from 'mobx';
+import { action, getObserverTree, makeObservable, observable, runInAction } from 'mobx';
 import pull from 'lodash/pull';
 import uniq from 'lodash/uniq';
 import { container } from 'tsyringe';
@@ -6,6 +6,7 @@ import { container } from 'tsyringe';
 import { token as remoteToken } from 'infra/Remote';
 import { getEmptyNote, NoteQuery, NoteVO as Note } from 'interface/Note';
 import { normalizeTitle } from 'interface/Note';
+import type { Tree } from 'model/abstract/Tree';
 
 import type { NoteTreeNode } from './type';
 
@@ -24,13 +25,13 @@ export enum SortOrder {
 
 export type { NoteTreeNode } from './type';
 
-export default class NoteTree {
+export default class NoteTree implements Tree {
   private readonly remote = container.resolve(remoteToken);
   private readonly id = Symbol();
   @observable roots: NoteTreeNode[] = [];
-  @observable readonly expandedNodes = new Set<NoteTreeNode['key']>();
-  @observable readonly selectedNodes = new Set<NoteTreeNode['key']>();
-  @observable readonly loadedNodes = new Set<NoteTreeNode['key']>();
+  @observable expandedKeys = new Set<NoteTreeNode['key']>();
+  @observable readonly selectedKeys = new Set<NoteTreeNode['key']>();
+  @observable readonly loadedKeys = new Set<NoteTreeNode['key']>();
   @observable readonly sortOptions = {
     by: SortBy.Title,
     order: SortOrder.Asc,
@@ -52,11 +53,21 @@ export default class NoteTree {
     }
   }
 
-  constructor(private readonly options?: { virtualRoot?: boolean; isDisabled?: (node: NoteTreeNode) => boolean }) {
+  constructor(
+    private readonly options?: {
+      roots?: NoteTreeNode[];
+      virtualRoot?: boolean;
+      isDisabled?: (node: NoteTreeNode) => boolean;
+    },
+  ) {
     makeObservable(this);
 
     if (options?.virtualRoot) {
       this.initVirtualRoot();
+    }
+
+    if (options?.roots) {
+      this._roots = options.roots;
     }
   }
 
@@ -76,10 +87,11 @@ export default class NoteTree {
     }
 
     this.roots.push(virtualRoot);
-    this.expandedNodes.add(VIRTUAL_ROOT_NODE_KEY);
-    this.loadedNodes.add(VIRTUAL_ROOT_NODE_KEY);
+    this.expandedKeys.add(VIRTUAL_ROOT_NODE_KEY);
+    this.loadedKeys.add(VIRTUAL_ROOT_NODE_KEY);
   }
 
+  @action
   private createNode(note: Note, noSort?: boolean) {
     const parent = note.parentId ? this.getNode(note.parentId) : undefined;
     const node: NoteTreeNode = observable({
@@ -104,12 +116,13 @@ export default class NoteTree {
     const children = this.getChildren(note.parentId);
 
     children.push(node);
+    console.log(getObserverTree(children));
+
+    this.nodesMap[note.id] = node;
 
     if (!noSort) {
       this.sort(children, false);
     }
-
-    this.nodesMap[note.id] = node;
 
     return node;
   }
@@ -141,7 +154,7 @@ export default class NoteTree {
     runInAction(() => {
       for (const note of fragment) {
         this.updateTreeByNote(note, true);
-        this.loadedNodes.add(note.id);
+        this.loadedKeys.add(note.id);
       }
 
       const childrenGroups = uniq(fragment.map(({ parentId }) => this.getChildren(parentId)));
@@ -153,7 +166,7 @@ export default class NoteTree {
   };
 
   readonly loadChildren = async (parentId?: Note['id']) => {
-    if (parentId ? this.loadedNodes.has(parentId) || !this.hasNode(parentId) : this._roots.length > 0) {
+    if (parentId ? this.loadedKeys.has(parentId) || !this.hasNode(parentId) : this._roots.length > 0) {
       return;
     }
 
@@ -165,7 +178,7 @@ export default class NoteTree {
       }
 
       this.sort(this.getChildren(parentId), false);
-      parentId && this.loadedNodes.add(parentId);
+      parentId && this.loadedKeys.add(parentId);
     });
   };
 
@@ -209,7 +222,7 @@ export default class NoteTree {
       return;
     }
 
-    if (flag || !this.expandedNodes.has(noteId)) {
+    if (flag || !this.expandedKeys.has(noteId)) {
       if (load) {
         if (this.hasNode(noteId)) {
           await this.loadChildren(noteId);
@@ -218,21 +231,21 @@ export default class NoteTree {
         }
       }
 
-      let node: NoteTreeNode | undefined = this.getNode(noteId);
       runInAction(() => {
+        let node: NoteTreeNode | undefined = this.getNode(noteId);
         while (node) {
-          this.expandedNodes.add(node.key);
+          this.expandedKeys.add(node.key);
           node = node.parent;
         }
       });
     } else {
-      runInAction(() => this.expandedNodes.delete(noteId));
+      runInAction(() => this.expandedKeys.delete(noteId));
     }
   };
 
   @action.bound
   collapseAll() {
-    this.expandedNodes.clear();
+    this.expandedKeys.clear();
   }
 
   @action.bound
@@ -289,9 +302,9 @@ export default class NoteTree {
     const ids = Array.isArray(noteId) ? noteId : [noteId];
 
     if (reset) {
-      this.selectedNodes.clear();
+      this.selectedKeys.clear();
       for (const id of ids) {
-        this.selectedNodes.add(id);
+        this.selectedKeys.add(id);
       }
 
       return true;
@@ -300,12 +313,12 @@ export default class NoteTree {
     let result = true;
 
     for (const id of ids) {
-      if (this.selectedNodes.has(id)) {
-        this.selectedNodes.delete(id);
+      if (this.selectedKeys.has(id)) {
+        this.selectedKeys.delete(id);
 
         result = false;
       } else {
-        this.selectedNodes.add(id);
+        this.selectedKeys.add(id);
       }
     }
 
@@ -320,9 +333,9 @@ export default class NoteTree {
       this.removeChild(node);
 
       delete this.nodesMap[id];
-      this.selectedNodes.delete(id);
-      this.expandedNodes.delete(id);
-      this.loadedNodes.delete(id);
+      this.selectedKeys.delete(id);
+      this.expandedKeys.delete(id);
+      this.loadedKeys.delete(id);
     }
   }
 

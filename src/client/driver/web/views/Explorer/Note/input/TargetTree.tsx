@@ -67,11 +67,7 @@ export default observer(function NoteTreeView({ selectedNodes, onCancel, onSubmi
       <div className=" h-72 overflow-auto">
         <Tree
           titleRender={titleRender}
-          loadedKeys={Array.from(noteTree.loadedNodes)}
-          treeData={noteTree.roots}
-          expandedKeys={Array.from(noteTree.expandedNodes)}
-          selectedKeys={Array.from(noteTree.selectedNodes)}
-          loadChildren={({ key }) => noteTree.loadChildren(key)}
+          tree={noteTree}
           onSelect={({ key }) => noteTree.toggleSelect(key, true)}
           onExpand={({ key }) => noteTree.toggleExpand(key, false)}
         />
@@ -82,9 +78,9 @@ export default observer(function NoteTreeView({ selectedNodes, onCancel, onSubmi
         </Button>
         <Button
           type="primary"
-          disabled={noteTree.selectedNodes.size === 0}
+          disabled={noteTree.selectedKeys.size === 0}
           onClick={() => {
-            const id = Array.from(noteTree.selectedNodes)[0];
+            const id = Array.from(noteTree.selectedKeys)[0];
 
             if (id === undefined) {
               throw new Error('no id');

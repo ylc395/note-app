@@ -7,14 +7,23 @@ import uniqueId from 'lodash/uniqueId';
 
 import NoteService from 'service/NoteService';
 import NoteEditor from 'model/note/Editor';
-import type { NoteTreeNode } from 'model/note/Tree';
+import NoteTree, { type NoteTreeNode } from 'model/note/Tree';
 
 import Tree, { type TreeProps } from 'web/components/Tree';
 import NodeTitle from './NodeTitle';
 
 export default observer(function ExplorerNoteTree({ node }: { node?: NoteTreeNode }) {
-  const { noteTree, selectNote, moveNotes, actByContextmenu } = container.resolve(NoteService);
+  const { noteTree: _noteTree, selectNote, moveNotes, actByContextmenu } = container.resolve(NoteService);
   const [draggingNode, setDraggingNode] = useState<NoteTreeNode['key']>();
+  const [noteTree] = useState(() => {
+    if (node) {
+      const tree = new NoteTree({ roots: [node] });
+      tree.expandedKeys = _noteTree.expandedKeys;
+      return tree;
+    }
+
+    return _noteTree;
+  });
   const invalidParentKeys = useMemo(
     () => (draggingNode ? noteTree.getInvalidParents(draggingNode) : undefined),
     [draggingNode, noteTree],
@@ -25,8 +34,6 @@ export default observer(function ExplorerNoteTree({ node }: { node?: NoteTreeNod
     ({ key }) => actByContextmenu(key),
     [actByContextmenu],
   );
-
-  const loadChildren = useCallback<TreeProps['loadChildren']>(({ key }) => noteTree.loadChildren(key), [noteTree]);
 
   const titleRender = useCallback<NonNullable<TreeProps['titleRender']>>(
     (node) => <NodeTitle node={node as NoteTreeNode} />,
@@ -58,7 +65,7 @@ export default observer(function ExplorerNoteTree({ node }: { node?: NoteTreeNod
 
             if (noteTree.has(draggingItem)) {
               noteTree.toggleSelect(draggingItem.key, true);
-              setDraggingNode(Array.from(noteTree.selectedNodes)[0]);
+              setDraggingNode(Array.from(noteTree.selectedKeys)[0]);
             }
           },
           onDragEnd: ({ over, active }) => {
@@ -91,11 +98,7 @@ export default observer(function ExplorerNoteTree({ node }: { node?: NoteTreeNod
       <Tree
         multiple
         draggable
-        loadedKeys={Array.from(noteTree.loadedNodes)}
-        treeData={node ? [node] : noteTree.roots}
-        expandedKeys={Array.from(noteTree.expandedNodes)}
-        selectedKeys={Array.from(noteTree.selectedNodes)}
-        loadChildren={loadChildren}
+        tree={noteTree}
         onContextmenu={handleContextmenu}
         titleRender={titleRender}
         onSelect={handleSelect}
