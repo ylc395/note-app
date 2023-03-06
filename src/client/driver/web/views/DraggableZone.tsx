@@ -1,8 +1,30 @@
 import { DndContext, MouseSensor, useSensor, useSensors, pointerWithin } from '@dnd-kit/core';
+import { container } from 'tsyringe';
+import { DragOverlay, useDndContext } from '@dnd-kit/core';
 import type { ReactNode } from 'react';
 
+import EntityEditor from 'model/abstract/Editor';
+import NoteService from 'service/NoteService';
+
+import TabItem from './Workbench/TabBar/TabItem';
+import NoteTree from './Explorer/Note/TreeView';
+
 // eslint-disable-next-line mobx/missing-observer
-export default (function DraggableZone({ children }: { children: ReactNode }) {
+export function DragPreview() {
+  const { active } = useDndContext();
+  const { noteTree } = container.resolve(NoteService);
+  const draggingItem = active?.data.current?.instance;
+
+  return (
+    <DragOverlay className="pointer-events-none" dropAnimation={null}>
+      {draggingItem instanceof EntityEditor && <TabItem editor={draggingItem}></TabItem>}
+      {noteTree.has(draggingItem) && <NoteTree node={draggingItem} />}
+    </DragOverlay>
+  );
+}
+
+// eslint-disable-next-line mobx/missing-observer
+export function DraggableZone({ children }: { children: ReactNode }) {
   const sensors = useSensors(
     useSensor(MouseSensor, {
       activationConstraint: {
@@ -19,4 +41,4 @@ export default (function DraggableZone({ children }: { children: ReactNode }) {
       {children}
     </DndContext>
   );
-});
+}
