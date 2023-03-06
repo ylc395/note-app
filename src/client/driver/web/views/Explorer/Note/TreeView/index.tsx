@@ -1,14 +1,16 @@
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useDndMonitor } from '@dnd-kit/core';
+import { useDndMonitor, useDroppable } from '@dnd-kit/core';
+import clsx from 'clsx';
+import uniqueId from 'lodash/uniqueId';
 
 import NoteService from 'service/NoteService';
+import NoteEditor from 'model/note/Editor';
 import type { NoteTreeNode } from 'model/note/Tree';
 
 import Tree, { type TreeProps } from 'web/components/Tree';
 import NodeTitle from './NodeTitle';
-import NoteEditor from 'model/note/Editor';
 
 export default observer(function ExplorerNoteTree({ node }: { node?: NoteTreeNode }) {
   const { noteTree, selectNote, moveNotes, actByContextmenu } = container.resolve(NoteService);
@@ -36,6 +38,9 @@ export default observer(function ExplorerNoteTree({ node }: { node?: NoteTreeNod
     [selectNote],
   );
 
+  const [id] = useState(() => uniqueId('note-tree-view-'));
+  const { setNodeRef, isOver } = useDroppable({ id });
+
   useEffect(() => {
     noteTree.loadChildren();
   }, [noteTree]);
@@ -60,30 +65,43 @@ export default observer(function ExplorerNoteTree({ node }: { node?: NoteTreeNod
             const dropNode = over?.data.current?.instance;
             const draggingItem = active.data.current?.instance;
 
-            if (noteTree.has(dropNode) && (noteTree.has(draggingItem) || draggingItem instanceof NoteEditor)) {
-              moveNotes(
-                draggingItem instanceof NoteEditor ? [draggingItem.entityId] : [draggingItem.key],
-                dropNode.key,
-              );
+            if (
+              (noteTree.has(dropNode) || over?.id === id) &&
+              (noteTree.has(draggingItem) || draggingItem instanceof NoteEditor)
+            ) {
+              const dropId = noteTree.has(dropNode) ? dropNode.key : null;
+
+              if (!invalidParentKeys?.includes(dropId)) {
+                const draggingId = draggingItem instanceof NoteEditor ? draggingItem.entityId : draggingItem.key;
+                moveNotes([draggingId], noteTree.has(dropNode) ? dropNode.key : null);
+              }
             }
           },
         },
   );
 
   return (
-    <Tree
-      multiple
-      draggable
-      loadedKeys={Array.from(noteTree.loadedNodes)}
-      treeData={node ? [node] : noteTree.roots}
-      expandedKeys={Array.from(noteTree.expandedNodes)}
-      selectedKeys={Array.from(noteTree.selectedNodes)}
-      loadChildren={loadChildren}
-      onContextmenu={handleContextmenu}
-      titleRender={titleRender}
-      onSelect={handleSelect}
-      onExpand={handleExpand}
-      undroppableKeys={invalidParentKeys}
-    />
+    <div
+      className={clsx('h-full', {
+        'bg-blue-50': isOver,
+        'cursor-no-drop': isOver && invalidParentKeys?.includes(null),
+      })}
+      ref={setNodeRef}
+    >
+      <Tree
+        multiple
+        draggable
+        loadedKeys={Array.from(noteTree.loadedNodes)}
+        treeData={node ? [node] : noteTree.roots}
+        expandedKeys={Array.from(noteTree.expandedNodes)}
+        selectedKeys={Array.from(noteTree.selectedNodes)}
+        loadChildren={loadChildren}
+        onContextmenu={handleContextmenu}
+        titleRender={titleRender}
+        onSelect={handleSelect}
+        onExpand={handleExpand}
+        undroppableKeys={invalidParentKeys}
+      />
+    </div>
   );
 });

@@ -6,7 +6,7 @@ import { Button } from 'antd';
 import { normalizeTitle } from 'interface/Note';
 import NoteTree, { type NoteTreeNode, VIRTUAL_ROOT_NODE_KEY } from 'model/note/Tree';
 
-import Tree, { TreeProps } from 'web/components/Tree';
+import Tree, { type TreeProps } from 'web/components/Tree';
 import IconTitle from 'web/components/IconTitle';
 
 const isDisabled = (selectedNodes: NoteTreeNode[]) => {
@@ -84,8 +84,12 @@ export default observer(function NoteTreeView({ selectedNodes, onCancel, onSubmi
           type="primary"
           disabled={noteTree.selectedNodes.size === 0}
           onClick={() => {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            const id = Array.from(noteTree.selectedNodes)[0]!;
+            const id = Array.from(noteTree.selectedNodes)[0];
+
+            if (id === undefined) {
+              throw new Error('no id');
+            }
+
             onSubmit(id === VIRTUAL_ROOT_NODE_KEY ? null : id);
           }}
         >

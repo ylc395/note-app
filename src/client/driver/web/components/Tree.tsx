@@ -23,7 +23,7 @@ interface ITreeContext {
   selectedKeys: TreeNode['key'][];
   expandedKeys: TreeNode['key'][];
   loadedKeys: TreeNode['key'][];
-  undroppableKeys?: TreeNode['key'][];
+  undroppableKeys?: (TreeNode['key'] | null)[];
   id: string;
 }
 
@@ -81,7 +81,7 @@ const TreeNode = observer(function TreeNode({ node, level }: TreeNodeProps) {
   } = useDroppable({
     id: dragId,
     data: { instance: node, noDrop: true },
-    disabled: node.disabled || !multiple || undroppableKeys?.includes(node.key),
+    disabled: node.disabled || !multiple,
   });
 
   return (
@@ -109,7 +109,7 @@ const TreeNode = observer(function TreeNode({ node, level }: TreeNodeProps) {
 });
 
 export default observer(function Tree({ treeData, ...props }: TreeProps) {
-  const [id] = useState(uniqueId('tree-view-'));
+  const [id] = useState(() => uniqueId('tree-view-'));
 
   return (
     <TreeContext.Provider value={{ ...props, id }}>

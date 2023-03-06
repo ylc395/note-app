@@ -20,7 +20,7 @@ export default observer(function NoteExplorer() {
         </div>
         {explorerPanel[ExplorerTypes.Notes] === NoteExplorerPanel.Tree && <TreeOperations />}
       </div>
-      <div className="min-h-0 overflow-y-auto overflow-x-hidden">
+      <div className="min-h-0 grow overflow-y-auto overflow-x-hidden">
         {explorerPanel[ExplorerTypes.Notes] === NoteExplorerPanel.Tree && <Tree />}
         {explorerPanel[ExplorerTypes.Notes] === NoteExplorerPanel.CustomView && <CustomView />}
       </div>

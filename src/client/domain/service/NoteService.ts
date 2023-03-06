@@ -75,7 +75,7 @@ export default class NoteService extends EventEmitter {
     this.emit(NoteEvents.Deleted, ids);
   }
 
-  readonly moveNotes = async (ids: Note['id'][], targetId?: Note['id'] | null) => {
+  readonly moveNotes = async (ids: Note['id'][], targetId?: Note['parentId']) => {
     if (ids.length === 0) {
       throw new Error('no notes to move');
     }

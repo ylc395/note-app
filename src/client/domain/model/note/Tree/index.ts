@@ -357,7 +357,13 @@ export default class NoteTree {
     if (!node) {
       return [id];
     }
-    return [id, ...this.getDescendants(id).map(({ key }) => key), ...(node.parent ? [node.parent.key] : [])];
+
+    return [
+      id,
+      node.parent?.key || null,
+      ...this.getDescendants(id).map(({ key }) => key),
+      ...(node.parent ? [node.parent.key] : []),
+    ];
   }
 
   getSiblings(noteId: Note['id']) {
