@@ -14,7 +14,7 @@ import ActivityBar from './Explorer/ActivityBar';
 import NoteExplorer from './Explorer/Note';
 import Workbench from './Workbench';
 import TabItem from './Workbench/TabBar/TabItem';
-import NoteTree from './Explorer/Note/Tree';
+import NoteTree from './Explorer/Note/TreeView';
 
 const explorerMap: Record<ExplorerTypes, () => ReactNode> = {
   [ExplorerTypes.Notes]: () => <NoteExplorer />,

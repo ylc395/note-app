@@ -4,8 +4,8 @@ import { container } from 'tsyringe';
 import Layout, { NoteExplorerPanel, ExplorerTypes } from 'model/Layout';
 
 import PanelSwitcher from './PanelSwitcher';
-import Tree from './Tree';
-import TreeOperations from './Tree/Operations';
+import Tree from './TreeView';
+import TreeOperations from './TreeView/Operations';
 import CustomView from './CustomView';
 
 export default observer(function NoteExplorer() {
