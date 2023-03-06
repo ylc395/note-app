@@ -1,4 +1,4 @@
-import { action, getObserverTree, makeObservable, observable, runInAction } from 'mobx';
+import { action, makeObservable, observable, runInAction } from 'mobx';
 import pull from 'lodash/pull';
 import uniq from 'lodash/uniq';
 import { container } from 'tsyringe';
@@ -25,13 +25,13 @@ export enum SortOrder {
 
 export type { NoteTreeNode } from './type';
 
-export default class NoteTree implements Tree {
+export default class NoteTree implements Tree<NoteTreeNode> {
   private readonly remote = container.resolve(remoteToken);
   private readonly id = Symbol();
+  readonly selectedNodes = new Set<NoteTreeNode>();
+  @observable expandedNodes = new Set<NoteTreeNode>();
+  @observable readonly invalidParentKeys = new Set<NoteTreeNode['key'] | null>();
   @observable roots: NoteTreeNode[] = [];
-  @observable expandedKeys = new Set<NoteTreeNode['key']>();
-  @observable readonly selectedKeys = new Set<NoteTreeNode['key']>();
-  @observable readonly loadedKeys = new Set<NoteTreeNode['key']>();
   @observable readonly sortOptions = {
     by: SortBy.Title,
     order: SortOrder.Asc,
@@ -80,15 +80,15 @@ export default class NoteTree implements Tree {
       isLeaf: false,
       treeId: this.id,
       note: getEmptyNote(),
+      isExpanded: true,
+      isLoaded: true,
     };
 
     if (this.options?.isDisabled) {
-      virtualRoot.disabled = this.options.isDisabled(virtualRoot);
+      virtualRoot.isDisabled = this.options.isDisabled(virtualRoot);
     }
 
     this.roots.push(virtualRoot);
-    this.expandedKeys.add(VIRTUAL_ROOT_NODE_KEY);
-    this.loadedKeys.add(VIRTUAL_ROOT_NODE_KEY);
   }
 
   @action
@@ -106,7 +106,7 @@ export default class NoteTree implements Tree {
     });
 
     if (this.options?.isDisabled) {
-      node.disabled = this.options.isDisabled(node);
+      node.isDisabled = this.options.isDisabled(node);
     }
 
     if (parent) {
@@ -116,8 +116,6 @@ export default class NoteTree implements Tree {
     const children = this.getChildren(note.parentId);
 
     children.push(node);
-    console.log(getObserverTree(children));
-
     this.nodesMap[note.id] = node;
 
     if (!noSort) {
@@ -153,8 +151,8 @@ export default class NoteTree implements Tree {
 
     runInAction(() => {
       for (const note of fragment) {
-        this.updateTreeByNote(note, true);
-        this.loadedKeys.add(note.id);
+        const node = this.updateTreeByNote(note, true);
+        node.isLoaded = true;
       }
 
       const childrenGroups = uniq(fragment.map(({ parentId }) => this.getChildren(parentId)));
@@ -165,12 +163,13 @@ export default class NoteTree implements Tree {
     });
   };
 
-  readonly loadChildren = async (parentId?: Note['id']) => {
-    if (parentId ? this.loadedKeys.has(parentId) || !this.hasNode(parentId) : this._roots.length > 0) {
+  readonly loadChildren = async (parentNode?: NoteTreeNode) => {
+    if (!parentNode && this.options?.roots) {
       return;
     }
 
-    const { body: notes } = await this.remote.get<NoteQuery, Note[]>('/notes', { parentId: parentId || null });
+    const parentId = parentNode?.key || null;
+    const { body: notes } = await this.remote.get<NoteQuery, Note[]>('/notes', { parentId });
 
     runInAction(() => {
       for (const note of notes) {
@@ -178,7 +177,7 @@ export default class NoteTree implements Tree {
       }
 
       this.sort(this.getChildren(parentId), false);
-      parentId && this.loadedKeys.add(parentId);
+      parentNode && (parentNode.isLoaded = true);
     });
   };
 
@@ -222,10 +221,12 @@ export default class NoteTree implements Tree {
       return;
     }
 
-    if (flag || !this.expandedKeys.has(noteId)) {
+    const node = this.getNode(noteId, true);
+
+    if (flag || !node?.isExpanded) {
       if (load) {
-        if (this.hasNode(noteId)) {
-          await this.loadChildren(noteId);
+        if (node) {
+          await this.loadChildren(node);
         } else {
           await this.loadTreeFragment(noteId);
         }
@@ -234,18 +235,25 @@ export default class NoteTree implements Tree {
       runInAction(() => {
         let node: NoteTreeNode | undefined = this.getNode(noteId);
         while (node) {
-          this.expandedKeys.add(node.key);
+          node.isExpanded = true;
+          this.expandedNodes.add(node);
           node = node.parent;
         }
       });
     } else {
-      runInAction(() => this.expandedKeys.delete(noteId));
+      runInAction(() => {
+        node.isExpanded = false;
+        this.expandedNodes.delete(node);
+      });
     }
   };
 
   @action.bound
   collapseAll() {
-    this.expandedKeys.clear();
+    for (const node of Object.values(this.nodesMap)) {
+      node.isExpanded = false;
+    }
+    this.expandedNodes.clear();
   }
 
   @action.bound
@@ -302,27 +310,32 @@ export default class NoteTree implements Tree {
     const ids = Array.isArray(noteId) ? noteId : [noteId];
 
     if (reset) {
-      this.selectedKeys.clear();
+      for (const node of this.selectedNodes) {
+        node.isSelected = false;
+      }
+
+      this.selectedNodes.clear();
+
       for (const id of ids) {
-        this.selectedKeys.add(id);
+        const node = this.getNode(id);
+
+        this.selectedNodes.add(node);
+        node.isSelected = true;
       }
 
       return true;
     }
 
-    let result = true;
-
     for (const id of ids) {
-      if (this.selectedKeys.has(id)) {
-        this.selectedKeys.delete(id);
+      const node = this.getNode(id);
+      node.isSelected = !node.isSelected;
 
-        result = false;
+      if (node.isSelected) {
+        this.selectedNodes.add(node);
       } else {
-        this.selectedKeys.add(id);
+        this.selectedNodes.delete(node);
       }
     }
-
-    return result;
   }
 
   @action
@@ -333,9 +346,6 @@ export default class NoteTree implements Tree {
       this.removeChild(node);
 
       delete this.nodesMap[id];
-      this.selectedKeys.delete(id);
-      this.expandedKeys.delete(id);
-      this.loadedKeys.delete(id);
     }
   }
 
@@ -364,19 +374,33 @@ export default class NoteTree implements Tree {
     return [...children, ...children.flatMap((child) => this.getDescendants(child.key))];
   }
 
-  getInvalidParents(id: Note['id']) {
-    const node = this.getNode(id, true);
+  getInvalidParentNodes(noteId: Note['id']) {
+    const node = this.getNode(noteId, true);
 
     if (!node) {
-      return [id];
+      return [];
     }
 
-    return [
-      id,
-      node.parent?.key || null,
-      ...this.getDescendants(id).map(({ key }) => key),
-      ...(node.parent ? [node.parent.key] : []),
-    ];
+    return [node, node.parent || null, ...this.getDescendants(noteId)];
+  }
+
+  @action.bound
+  updateInvalidParentNodes(id: Note['id']) {
+    for (const key of this.invalidParentKeys) {
+      if (key) {
+        delete this.getNode(key).isUndroppable;
+      }
+    }
+
+    const invalidParentNodes = this.getInvalidParentNodes(id);
+
+    this.invalidParentKeys.clear();
+    for (const node of invalidParentNodes) {
+      if (node) {
+        node.isUndroppable = true;
+      }
+      this.invalidParentKeys.add(node?.key || null);
+    }
   }
 
   getSiblings(noteId: Note['id']) {

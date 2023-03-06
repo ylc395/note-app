@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useDndMonitor, useDroppable } from '@dnd-kit/core';
 import clsx from 'clsx';
 import uniqueId from 'lodash/uniqueId';
@@ -13,36 +13,27 @@ import Tree, { type TreeProps } from 'web/components/Tree';
 import NodeTitle from './NodeTitle';
 
 export default observer(function ExplorerNoteTree({ node }: { node?: NoteTreeNode }) {
-  const { noteTree: _noteTree, selectNote, moveNotes, actByContextmenu } = container.resolve(NoteService);
-  const [draggingNode, setDraggingNode] = useState<NoteTreeNode['key']>();
+  const { selectNote, moveNotes, actByContextmenu } = container.resolve(NoteService);
   const [noteTree] = useState(() => {
+    const { noteTree: _noteTree } = container.resolve(NoteService);
+
     if (node) {
       const tree = new NoteTree({ roots: [node] });
-      tree.expandedKeys = _noteTree.expandedKeys;
+
+      tree.expandedNodes = _noteTree.expandedNodes;
       return tree;
     }
 
     return _noteTree;
   });
-  const invalidParentKeys = useMemo(
-    () => (draggingNode ? noteTree.getInvalidParents(draggingNode) : undefined),
-    [draggingNode, noteTree],
-  );
-  const handleExpand = useCallback<TreeProps['onExpand']>(({ key }) => noteTree.toggleExpand(key, false), [noteTree]);
 
-  const handleContextmenu = useCallback<NonNullable<TreeProps['onContextmenu']>>(
-    ({ key }) => actByContextmenu(key),
-    [actByContextmenu],
+  const handleExpand = useCallback<TreeProps<NoteTreeNode>['onExpand']>(
+    ({ key }) => noteTree.toggleExpand(key, false),
+    [noteTree],
   );
-
-  const titleRender = useCallback<NonNullable<TreeProps['titleRender']>>(
-    (node) => <NodeTitle node={node as NoteTreeNode} />,
+  const titleRender = useCallback<NonNullable<TreeProps<NoteTreeNode>['titleRender']>>(
+    (node) => <NodeTitle node={node} />,
     [],
-  );
-
-  const handleSelect = useCallback<TreeProps['onSelect']>(
-    (node, isMultiple) => selectNote(node.key, isMultiple),
-    [selectNote],
   );
 
   const [id] = useState(() => uniqueId('note-tree-view-'));
@@ -50,7 +41,7 @@ export default observer(function ExplorerNoteTree({ node }: { node?: NoteTreeNod
 
   useEffect(() => {
     noteTree.loadChildren();
-  }, [noteTree]);
+  }, [node, noteTree]);
 
   useDndMonitor(
     node
@@ -60,12 +51,12 @@ export default observer(function ExplorerNoteTree({ node }: { node?: NoteTreeNod
             const draggingItem = active.data.current?.instance;
 
             if (draggingItem instanceof NoteEditor) {
-              setDraggingNode(draggingItem.entityId);
+              noteTree.updateInvalidParentNodes(draggingItem.entityId);
             }
 
             if (noteTree.has(draggingItem)) {
               noteTree.toggleSelect(draggingItem.key, true);
-              setDraggingNode(Array.from(noteTree.selectedKeys)[0]);
+              noteTree.updateInvalidParentNodes(draggingItem.key);
             }
           },
           onDragEnd: ({ over, active }) => {
@@ -76,35 +67,42 @@ export default observer(function ExplorerNoteTree({ node }: { node?: NoteTreeNod
               (noteTree.has(dropNode) || over?.id === id) &&
               (noteTree.has(draggingItem) || draggingItem instanceof NoteEditor)
             ) {
-              const dropId = noteTree.has(dropNode) ? dropNode.key : null;
+              const draggingId = draggingItem instanceof NoteEditor ? draggingItem.entityId : draggingItem.key;
+              const dropNodeKey = noteTree.has(dropNode) ? dropNode.key : null;
 
-              if (!invalidParentKeys?.includes(dropId)) {
-                const draggingId = draggingItem instanceof NoteEditor ? draggingItem.entityId : draggingItem.key;
-                moveNotes([draggingId], noteTree.has(dropNode) ? dropNode.key : null);
+              if (!noteTree.invalidParentKeys.has(dropNodeKey)) {
+                moveNotes([draggingId], dropNodeKey);
               }
             }
           },
         },
   );
 
+  const treeView = (
+    <Tree
+      multiple
+      draggable
+      tree={noteTree}
+      onContextmenu={actByContextmenu}
+      titleRender={titleRender}
+      onSelect={selectNote}
+      onExpand={handleExpand}
+    />
+  );
+
+  if (node) {
+    return treeView;
+  }
+
   return (
     <div
       className={clsx('h-full', {
-        'bg-blue-50': isOver,
-        'cursor-no-drop': isOver && invalidParentKeys?.includes(null),
+        'cursor-pointer bg-blue-50': isOver && !noteTree.invalidParentKeys.has(null),
+        'cursor-no-drop': isOver && noteTree.invalidParentKeys.has(null),
       })}
       ref={setNodeRef}
     >
-      <Tree
-        multiple
-        draggable
-        tree={noteTree}
-        onContextmenu={handleContextmenu}
-        titleRender={titleRender}
-        onSelect={handleSelect}
-        onExpand={handleExpand}
-        undroppableKeys={invalidParentKeys}
-      />
+      {treeView}
     </div>
   );
 });

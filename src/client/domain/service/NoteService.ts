@@ -12,7 +12,7 @@ import type { RecyclablesDTO } from 'interface/Recyclables';
 import { EntityTypes } from 'interface/Entity';
 
 import { MULTIPLE_ICON_FLAG, type NoteMetadata } from 'model/note/MetadataForm';
-import NoteTree from 'model/note/Tree';
+import NoteTree, { NoteTreeNode } from 'model/note/Tree';
 import StarManager, { StarEvents } from 'model/StarManager';
 import { TileSplitDirections } from 'model/workbench/TileManger';
 
@@ -60,11 +60,11 @@ export default class NoteService extends EventEmitter {
     this.noteTree.toggleSelect(note.id, true);
   }
 
-  readonly selectNote = (noteId: Note['id'], multiple: boolean) => {
-    const selected = this.noteTree.toggleSelect(noteId, !multiple);
+  readonly selectNote = (node: NoteTreeNode, multiple: boolean) => {
+    const selected = this.noteTree.toggleSelect(node.key, !multiple);
 
     if (selected && !multiple) {
-      this.editor.openEntity({ entityType: EntityTypes.Note, entityId: noteId });
+      this.editor.openEntity({ entityType: EntityTypes.Note, entityId: node.key });
     }
   };
 
@@ -76,10 +76,6 @@ export default class NoteService extends EventEmitter {
   }
 
   readonly moveNotes = async (ids: Note['id'][], targetId?: Note['parentId']) => {
-    if (ids.length === 0) {
-      throw new Error('no notes to move');
-    }
-
     const nodesToMove = ids.map((id) => this.noteTree.getNode(id));
 
     targetId = targetId === undefined ? await this.userInput.note.getMoveTargetNoteId(nodesToMove) : targetId;
@@ -91,7 +87,7 @@ export default class NoteService extends EventEmitter {
     const notes = ids.map((id) => ({ id, parentId: targetId }));
     const { body: updatedNotes } = await this.remote.patch<NotesDTO, NoteVO[]>('/notes', notes);
 
-    const targetNode = targetId && this.noteTree.getNode(targetId, true);
+    const targetNode = targetId ? this.noteTree.getNode(targetId, true) : undefined;
 
     if (targetId && !targetNode) {
       this.noteTree.removeNodes(ids);
@@ -100,12 +96,11 @@ export default class NoteService extends EventEmitter {
         this.noteTree.updateTreeByNote(note, true);
       }
 
-      const targetNode = targetId && this.noteTree.getNode(targetId, true);
       this.noteTree.sort(targetNode ? targetNode.children : this.noteTree.roots, false);
     }
 
     this.userFeedback.message.success({
-      content: `移动成功${!targetId || this.noteTree.expandedKeys.has(targetId) ? '' : '。点击定位到新位置'}`,
+      content: `移动成功${targetId === null || targetNode?.isExpanded ? '' : '。点击定位到新位置'}`,
       onClick: async (close) => {
         close();
 
@@ -177,16 +172,16 @@ export default class NoteService extends EventEmitter {
     this.emit(NoteEvents.Updated, notes);
   }
 
-  readonly actByContextmenu = async (targetId: Note['id']) => {
-    const { selectedKeys: selectedNodes } = this.noteTree;
+  readonly actByContextmenu = async (targetNode: NoteTreeNode) => {
+    const { selectedNodes } = this.noteTree;
+    const targetId = targetNode.key;
 
-    if (!selectedNodes.has(targetId)) {
+    if (!targetNode.isSelected) {
       this.noteTree.toggleSelect(targetId, true);
     }
 
-    const isMultiple = selectedNodes.size > 1 && selectedNodes.has(targetId);
+    const isMultiple = selectedNodes.size > 1 && selectedNodes.has(targetNode);
     const noteIds = isMultiple ? Array.from(selectedNodes) : [targetId];
-    const { note } = this.noteTree.getNode(targetId);
     const { focusedTile } = this.editor.tileManager;
 
     const description = noteIds.length + '项';
@@ -205,7 +200,7 @@ export default class NoteService extends EventEmitter {
           { label: '在新窗口打开', key: 'openInNewWindow', visible: Boolean(focusedTile) },
           { type: 'separator' },
           { label: '移动至...', key: 'move' },
-          { label: note.isStar ? '已收藏' : '收藏', key: 'star', disabled: note.isStar },
+          { label: targetNode.note.isStar ? '已收藏' : '收藏', key: 'star', disabled: targetNode.note.isStar },
           { label: '制作副本', key: 'duplicate' },
           { label: '编辑属性', key: 'edit' },
           { type: 'separator' },
@@ -221,19 +216,19 @@ export default class NoteService extends EventEmitter {
       return;
     }
 
-    const targets = isMultiple ? Array.from(selectedNodes) : [targetId];
+    const targetIds = isMultiple ? Array.from(selectedNodes).map(({ key }) => key) : [targetId];
 
     switch (key) {
       case 'duplicate':
         return this.duplicateNote(targetId);
       case 'delete':
-        return this.deleteNotes(targets);
+        return this.deleteNotes(targetIds);
       case 'move':
-        return this.moveNotes(targets);
+        return this.moveNotes(targetIds);
       case 'edit':
-        return this.editNotes(targets);
+        return this.editNotes(targetIds);
       case 'star':
-        return this.star.starNotes(targets);
+        return this.star.starNotes(targetIds);
       case 'openInNewWindow':
         if (!focusedTile) {
           throw new Error('no focusedTile');

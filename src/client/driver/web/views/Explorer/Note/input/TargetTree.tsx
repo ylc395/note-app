@@ -45,13 +45,13 @@ export default observer(function NoteTreeView({ selectedNodes, onCancel, onSubmi
     });
   });
 
-  const titleRender = useCallback<NonNullable<TreeProps['titleRender']>>(
+  const titleRender = useCallback<NonNullable<TreeProps<NoteTreeNode>['titleRender']>>(
     (node) => (
       <span className="group flex">
         <IconTitle
-          icon={(node as NoteTreeNode).note.icon}
+          icon={node.note.icon}
           size="1em"
-          title={`${__ENV__ === 'dev' ? `${node.key} ` : ''}${normalizeTitle((node as NoteTreeNode).note)}`}
+          title={`${__ENV__ === 'dev' ? `${node.key} ` : ''}${normalizeTitle(node.note)}`}
         />
       </span>
     ),
@@ -78,9 +78,9 @@ export default observer(function NoteTreeView({ selectedNodes, onCancel, onSubmi
         </Button>
         <Button
           type="primary"
-          disabled={noteTree.selectedKeys.size === 0}
+          disabled={noteTree.selectedNodes.size === 0}
           onClick={() => {
-            const id = Array.from(noteTree.selectedKeys)[0];
+            const id = Array.from(noteTree.selectedNodes)[0]?.key;
 
             if (id === undefined) {
               throw new Error('no id');

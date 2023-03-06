@@ -4,13 +4,14 @@ export interface TreeNode {
   parent?: this;
   children: this[];
   isLeaf: boolean;
-  disabled?: boolean;
+  isDisabled?: boolean;
+  isExpanded?: boolean;
+  isSelected?: boolean;
+  isLoaded?: boolean;
+  isUndroppable?: boolean;
 }
 
-export interface Tree {
-  expandedKeys: Set<TreeNode['key']>;
-  selectedKeys: Set<TreeNode['key']>;
-  loadedKeys: Set<TreeNode['key']>;
-  roots: TreeNode[];
-  loadChildren(key?: TreeNode['key']): Promise<void>;
+export interface Tree<T extends TreeNode> {
+  roots: T[];
+  loadChildren(node?: T): Promise<void>;
 }
