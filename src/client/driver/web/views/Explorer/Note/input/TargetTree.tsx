@@ -1,6 +1,5 @@
 import { observer } from 'mobx-react-lite';
 import { useCallback, useEffect, useState } from 'react';
-import uniq from 'lodash/uniq';
 import { Button } from 'antd';
 
 import NoteTree, { type NoteTreeNode, VIRTUAL_ROOT_NODE_KEY } from 'model/note/Tree';
@@ -10,10 +9,10 @@ import IconTitle from 'web/components/IconTitle';
 
 const isDisabled = (selectedNodes: NoteTreeNode[]) => {
   const ids = selectedNodes.map(({ key }) => key);
-  const parentIds = uniq(selectedNodes.map(({ note }) => note.parentId || VIRTUAL_ROOT_NODE_KEY));
+  const parentIds = new Set(selectedNodes.map(({ note }) => note.parentId || VIRTUAL_ROOT_NODE_KEY));
 
   return (node: NoteTreeNode) => {
-    if (parentIds.length === 1 && parentIds.includes(node.key)) {
+    if (parentIds.size === 1 && parentIds.has(node.key)) {
       return true;
     }
 

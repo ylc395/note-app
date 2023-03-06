@@ -18,7 +18,7 @@ export function DragPreview() {
   return (
     <DragOverlay className="pointer-events-none" dropAnimation={null}>
       {draggingItem instanceof EntityEditor && <TabItem editor={draggingItem}></TabItem>}
-      {noteTree.has(draggingItem) && <NoteTree node={draggingItem} />}
+      {noteTree.has(draggingItem) && <NoteTree nodes={Array.from(noteTree.selectedNodes)} />}
     </DragOverlay>
   );
 }

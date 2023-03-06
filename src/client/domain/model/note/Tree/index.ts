@@ -67,7 +67,13 @@ export default class NoteTree implements Tree<NoteTreeNode> {
     }
 
     if (options?.roots) {
-      this._roots = options.roots;
+      this._roots = options.roots.map((node) => ({
+        ...node,
+        treeId: this.id,
+        children: [],
+        isSelected: false,
+        isLeaf: true,
+      }));
     }
   }
 
@@ -155,7 +161,7 @@ export default class NoteTree implements Tree<NoteTreeNode> {
         node.isLoaded = true;
       }
 
-      const childrenGroups = uniq(fragment.map(({ parentId }) => this.getChildren(parentId)));
+      const childrenGroups = uniq(fragment.map(({ parentId }) => parentId)).map(this.getChildren.bind(this));
 
       for (const children of childrenGroups) {
         this.sort(children, false);
@@ -374,32 +380,44 @@ export default class NoteTree implements Tree<NoteTreeNode> {
     return [...children, ...children.flatMap((child) => this.getDescendants(child.key))];
   }
 
-  getInvalidParentNodes(noteId: Note['id']) {
-    const node = this.getNode(noteId, true);
-
-    if (!node) {
-      return [];
-    }
-
-    return [node, node.parent || null, ...this.getDescendants(noteId)];
-  }
-
   @action.bound
-  updateInvalidParentNodes(id: Note['id']) {
+  updateInvalidParentNodes(id?: Note['id']) {
     for (const key of this.invalidParentKeys) {
       if (key) {
         delete this.getNode(key).isUndroppable;
       }
     }
-
-    const invalidParentNodes = this.getInvalidParentNodes(id);
-
     this.invalidParentKeys.clear();
-    for (const node of invalidParentNodes) {
-      if (node) {
-        node.isUndroppable = true;
+
+    const selectedKeys = id ? [id] : Array.from(this.selectedNodes).map(({ key }) => key);
+    const invalidParentNodes: Set<NoteTreeNode | null> = new Set();
+    const invalidDescendantNodes: Set<NoteTreeNode> = new Set();
+
+    for (const key of selectedKeys) {
+      const node = this.getNode(key);
+
+      invalidParentNodes.add(node.parent || null);
+      invalidDescendantNodes.add(node);
+
+      for (const descendant of this.getDescendants(key)) {
+        invalidDescendantNodes.add(descendant);
       }
-      this.invalidParentKeys.add(node?.key || null);
+    }
+
+    if (invalidParentNodes.size === 1) {
+      for (const parentNode of invalidParentNodes) {
+        if (parentNode) {
+          parentNode.isUndroppable = true;
+          this.invalidParentKeys.add(parentNode.key);
+        } else {
+          this.invalidParentKeys.add(null);
+        }
+      }
+    }
+
+    for (const descendantNode of invalidDescendantNodes) {
+      descendantNode.isUndroppable = true;
+      this.invalidParentKeys.add(descendantNode.key);
     }
   }
 

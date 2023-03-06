@@ -12,13 +12,13 @@ import NoteTree, { type NoteTreeNode } from 'model/note/Tree';
 import Tree, { type TreeProps } from 'web/components/Tree';
 import NodeTitle from './NodeTitle';
 
-export default observer(function ExplorerNoteTree({ node }: { node?: NoteTreeNode }) {
+export default observer(function ExplorerNoteTree({ nodes }: { nodes?: NoteTreeNode[] }) {
   const { selectNote, moveNotes, actByContextmenu } = container.resolve(NoteService);
   const [noteTree] = useState(() => {
     const { noteTree: _noteTree } = container.resolve(NoteService);
 
-    if (node) {
-      const tree = new NoteTree({ roots: [node] });
+    if (nodes) {
+      const tree = new NoteTree({ roots: nodes });
 
       tree.expandedNodes = _noteTree.expandedNodes;
       return tree;
@@ -41,10 +41,10 @@ export default observer(function ExplorerNoteTree({ node }: { node?: NoteTreeNod
 
   useEffect(() => {
     noteTree.loadChildren();
-  }, [node, noteTree]);
+  }, [nodes, noteTree]);
 
   useDndMonitor(
-    node
+    nodes
       ? {}
       : {
           onDragStart: ({ active }) => {
@@ -55,8 +55,11 @@ export default observer(function ExplorerNoteTree({ node }: { node?: NoteTreeNod
             }
 
             if (noteTree.has(draggingItem)) {
-              noteTree.toggleSelect(draggingItem.key, true);
-              noteTree.updateInvalidParentNodes(draggingItem.key);
+              if (!draggingItem.isSelected) {
+                noteTree.toggleSelect(draggingItem.key, true);
+              }
+
+              noteTree.updateInvalidParentNodes();
             }
           },
           onDragEnd: ({ over, active }) => {
@@ -67,11 +70,14 @@ export default observer(function ExplorerNoteTree({ node }: { node?: NoteTreeNod
               (noteTree.has(dropNode) || over?.id === id) &&
               (noteTree.has(draggingItem) || draggingItem instanceof NoteEditor)
             ) {
-              const draggingId = draggingItem instanceof NoteEditor ? draggingItem.entityId : draggingItem.key;
+              const draggingItems =
+                draggingItem instanceof NoteEditor
+                  ? [draggingItem.entityId]
+                  : Array.from(noteTree.selectedNodes).map(({ key }) => key);
               const dropNodeKey = noteTree.has(dropNode) ? dropNode.key : null;
 
               if (!noteTree.invalidParentKeys.has(dropNodeKey)) {
-                moveNotes([draggingId], dropNodeKey);
+                moveNotes(draggingItems, dropNodeKey);
               }
             }
           },
@@ -90,7 +96,7 @@ export default observer(function ExplorerNoteTree({ node }: { node?: NoteTreeNod
     />
   );
 
-  if (node) {
+  if (nodes) {
     return treeView;
   }
 
