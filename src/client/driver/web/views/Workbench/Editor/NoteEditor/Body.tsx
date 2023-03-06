@@ -4,7 +4,7 @@ import { when } from 'mobx';
 
 import type NoteEditor from 'model/note/Editor';
 import { type BodyEvent, Events } from 'model/note/Editor';
-import MarkdownEditor, { type EditorRef } from 'web/components/common/MarkdownEditor';
+import MarkdownEditor, { type EditorRef } from 'web/components/MarkdownEditor';
 
 export default observer(function NoteEditor({ editor }: { editor: NoteEditor }) {
   const editorRef = useRef<EditorRef>(null);

@@ -1,7 +1,7 @@
 import { Modal } from 'antd';
 
 import type { NoteInputs } from 'infra/UserInput';
-import NoteMetadataForm from 'web/components/note/MetadataForm';
+import NoteMetadataForm from 'web/views/Explorer/Note/input/MetadataForm';
 
 import { COMMON_MODAL_OPTIONS } from '../utils';
 
@@ -9,11 +9,13 @@ const editNotes: NoteInputs['editNoteMetadata'] = async (metadata, notesInfo) =>
   return new Promise((resolve) => {
     const modal = Modal.confirm({
       ...COMMON_MODAL_OPTIONS,
-      footer: null,
       content: (
         <NoteMetadataForm
           metadata={metadata}
-          onCancel={() => modal.destroy()}
+          onCancel={() => {
+            modal.destroy();
+            resolve(undefined);
+          }}
           icons={notesInfo.icons}
           onSubmit={(data) => {
             resolve(data);

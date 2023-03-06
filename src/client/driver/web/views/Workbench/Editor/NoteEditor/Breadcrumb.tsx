@@ -3,7 +3,7 @@ import { Breadcrumb as AntdBreadcrumb } from 'antd';
 import { BookOutlined } from '@ant-design/icons';
 
 import type NoteEditor from 'model/note/Editor';
-import IconTitle from 'web/components/common/IconTitle';
+import IconTitle from 'web/components/IconTitle';
 
 export default observer(function Breadcrumb({ editor }: { editor: NoteEditor }) {
   const breadcrumbs = editor.breadcrumbs;

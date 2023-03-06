@@ -13,8 +13,8 @@ import { token as remoteToken } from 'infra/Remote';
 import NoteMetadata, { type NoteMetadata as NoteMetadataValues, MULTIPLE_ICON_FLAG } from 'model/note/MetadataForm';
 import type { NoteAttributesVO, NoteDTO, NoteVO } from 'interface/Note';
 
-import { useUpdateTimeField, FORM_ITEM_LAYOUT } from '../utils';
-import { EmojiPicker, Emoji } from './Emoji';
+import { useUpdateTimeField, FORM_ITEM_LAYOUT } from 'web/components/utils';
+import { EmojiPicker, Emoji } from 'web/components/Emoji';
 
 interface Props {
   onSubmit: (metadata: NoteMetadataValues) => void;

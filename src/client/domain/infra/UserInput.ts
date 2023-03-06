@@ -17,7 +17,7 @@ export interface NoteInputs {
   editNoteMetadata: (
     metadata: NoteMetadata,
     note: { length: number; title: string; icons: NoteVO['icon'][] },
-  ) => Promise<NoteMetadata>;
+  ) => Promise<NoteMetadata | undefined>;
 }
 
 export default interface UserInput {

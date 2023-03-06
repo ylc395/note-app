@@ -1,4 +1,4 @@
-import { Emoji, type EmojiProps } from '../note/Emoji';
+import { Emoji, type EmojiProps } from './Emoji';
 
 interface Props {
   className?: string;

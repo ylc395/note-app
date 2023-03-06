@@ -9,7 +9,7 @@ export function useUpdateTimeField<T extends object>(
   form: Form<T>,
   field: string | keyof T,
 ): (day: Dayjs | null) => void {
-  return useCallback((day) => day && form.updateValue(field as string, day.unix()), [form]);
+  return useCallback((day) => day && form.updateValue(field as string, day.unix()), [field, form]);
 }
 
 export const FORM_ITEM_LAYOUT: FormProps = {

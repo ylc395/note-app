@@ -148,6 +148,10 @@ export default class NoteService extends EventEmitter {
       icons: notesToEdit.map(({ icon }) => icon),
     });
 
+    if (!updatedNoteMetadata) {
+      return;
+    }
+
     const result: NotesDTO = notesToEdit.map(({ id }) => ({
       id,
       ...updatedNoteMetadata,

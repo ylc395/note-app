@@ -5,7 +5,7 @@ import { Button } from 'antd';
 import { useSortable } from '@dnd-kit/sortable';
 import { useRef, useEffect } from 'react';
 
-import IconTitle from 'web/components/common/IconTitle';
+import IconTitle from 'web/components/IconTitle';
 import type EntityEditor from 'model/abstract/Editor';
 import EditorService from 'service/EditorService';
 import clsx from 'clsx';

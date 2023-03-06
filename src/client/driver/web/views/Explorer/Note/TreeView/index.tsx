@@ -6,7 +6,7 @@ import { useDndMonitor } from '@dnd-kit/core';
 import NoteService from 'service/NoteService';
 import type { NoteTreeNode } from 'model/note/Tree';
 
-import Tree, { type TreeProps } from 'web/components/common/Tree';
+import Tree, { type TreeProps } from 'web/components/Tree';
 import NodeTitle from './NodeTitle';
 import NoteEditor from 'model/note/Editor';
 

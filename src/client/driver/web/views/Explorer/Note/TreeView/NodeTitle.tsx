@@ -7,7 +7,7 @@ import type { NoteTreeNode } from 'model/note/Tree';
 import { normalizeTitle } from 'interface/Note';
 import NoteService from 'service/NoteService';
 
-import IconTitle from 'web/components/common/IconTitle';
+import IconTitle from 'web/components/IconTitle';
 
 export default observer(function Title({ node }: { node: NoteTreeNode }) {
   const { createNote } = container.resolve(NoteService);
