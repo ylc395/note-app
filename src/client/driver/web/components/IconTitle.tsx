@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import { Emoji, type EmojiProps } from './Emoji';
 
 interface Props {
@@ -12,7 +13,7 @@ export default function IconTitle({ titleClassName, className, icon = null, titl
   return (
     <span className={`flex items-center ${className || ''}`}>
       <Emoji id={icon} className="mr-1" size={size} />
-      <span className={`whitespace-nowrap ${titleClassName}`}>{title}</span>
+      <span className={clsx('whitespace-nowrap', titleClassName)}>{title}</span>
     </span>
   );
 }

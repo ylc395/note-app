@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { container } from 'tsyringe';
 
 import { token as remoteToken } from 'infra/Remote';
+import clsx from 'clsx';
 
 const data = async () => {
   const remote = container.resolve(remoteToken);
@@ -50,7 +51,7 @@ export function Emoji({ id, className, size }: EmojiProps) {
   }, []);
 
   return id ? (
-    <span className={className}>
+    <span className={clsx(className)}>
       <em-emoji size={size || '1.5em'} shortcodes={id.replace(/^emoji:/, '')}></em-emoji>
     </span>
   ) : null;

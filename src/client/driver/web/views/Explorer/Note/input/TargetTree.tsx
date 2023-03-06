@@ -49,7 +49,6 @@ export default observer(function NoteTreeView({ selectedNodes, onCancel, onSubmi
     (node) => (
       <span className="group flex">
         <IconTitle
-          className="cursor-pointer"
           icon={(node as NoteTreeNode).note.icon}
           size="1em"
           title={`${__ENV__ === 'dev' ? `${node.key} ` : ''}${normalizeTitle((node as NoteTreeNode).note)}`}
