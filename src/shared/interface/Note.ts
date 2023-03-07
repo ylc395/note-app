@@ -56,20 +56,3 @@ export type NotePath = Array<NotePathNode & { siblings: NotePathNode[] }>;
 export function normalizeTitle(note: NoteVO) {
   return note.title || `未命名笔记-${dayjs.unix(note.createdAt).format('YYYYMMDD-HHmm')}`;
 }
-
-export function getEmptyNote(): NoteVO {
-  return {
-    id: '',
-    title: '',
-    isReadonly: true,
-    parentId: null,
-    icon: null,
-    childrenCount: 0,
-    updatedAt: 0,
-    userCreatedAt: 0,
-    createdAt: 0,
-    userUpdatedAt: 0,
-    isStar: false,
-    attributes: {},
-  };
-}

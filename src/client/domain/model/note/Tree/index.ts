@@ -4,7 +4,7 @@ import uniq from 'lodash/uniq';
 import { container } from 'tsyringe';
 
 import { token as remoteToken } from 'infra/Remote';
-import { getEmptyNote, NoteQuery, NoteVO as Note } from 'interface/Note';
+import type { NoteQuery, NoteVO as Note } from 'interface/Note';
 import { normalizeTitle } from 'interface/Note';
 import type { Tree } from 'model/abstract/Tree';
 
@@ -24,6 +24,23 @@ export enum SortOrder {
 }
 
 export type { NoteTreeNode } from './type';
+
+function getEmptyNote(): Note {
+  return {
+    id: '',
+    title: '',
+    isReadonly: true,
+    parentId: null,
+    icon: null,
+    childrenCount: 0,
+    updatedAt: 0,
+    userCreatedAt: 0,
+    createdAt: 0,
+    userUpdatedAt: 0,
+    isStar: false,
+    attributes: {},
+  };
+}
 
 export default class NoteTree implements Tree<NoteTreeNode> {
   private readonly remote = container.resolve(remoteToken);
