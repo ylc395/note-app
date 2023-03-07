@@ -14,6 +14,7 @@ export interface Database {
   getRepositoryWithTransaction: <T extends keyof Repositories>(trx: Transaction, name: T) => Repositories[T];
   getRepository: <T extends keyof Repositories>(name: T) => Repositories[T];
   init: (dir: string) => Promise<void>;
+  getDbId: () => Promise<string>;
 }
 
 export const token = Symbol('database');

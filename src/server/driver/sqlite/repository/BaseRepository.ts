@@ -2,12 +2,13 @@ import pick from 'lodash/pick';
 import omit from 'lodash/omit';
 import mapValues from 'lodash/mapValues';
 import isObject from 'lodash/isObject';
+import type { Database as Sqlite3 } from 'sqlite3';
 
 import type { Schema } from '../schema/type';
 import type { Knex } from 'knex';
 
 export default abstract class BaseRepository<Row extends object> {
-  constructor(protected readonly knex: Knex) {}
+  constructor(protected readonly knex: Knex, protected readonly sqlite3: Sqlite3) {}
   protected abstract readonly schema: Schema;
   private get fields() {
     return Object.keys(this.schema.fields);
