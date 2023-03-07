@@ -45,9 +45,8 @@ async function buildElectron(skipTs) {
     }
   }
 
-  // warning: alias replacer 只认得 server/tsconfig.json 里的 path mapping
-  // 因此 client electron 里不能依赖任何具体的东西，而只能依赖类型
-  await replaceTscAliasPaths({ configFile: 'src/server/tsconfig.json', outDir: ELECTRON_OUTPUT });
+  await replaceTscAliasPaths({ configFile: 'src/server/tsconfig.json', outDir: path.join(ELECTRON_OUTPUT, 'server') });
+  await replaceTscAliasPaths({ configFile: CLIENT_TSCONFIG, outDir: path.join(ELECTRON_OUTPUT, 'client') });
   const electronProcess = shell.exec(`electron ${ELECTRON_OUTPUT}/server/driver/electron/index.js`, { async: true });
 
   return electronProcess;
