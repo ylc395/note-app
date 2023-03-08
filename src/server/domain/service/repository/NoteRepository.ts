@@ -1,9 +1,15 @@
 import type { NoteBodyDTO, NoteDTO, NoteVO, NotesDTO, NoteAttributesVO } from 'interface/Note';
+import type { Observable } from 'rxjs';
 
 export type NoteQuery = {
   parentId?: NoteVO['parentId'] | NonNullable<NoteVO['id']>[];
   id?: NoteVO['id'] | NoteVO['id'][];
   isReadonly?: NoteVO['isReadonly'];
+};
+
+export type DumpedNote = Omit<NoteVO, 'childrenCount'> & {
+  body: string;
+  isRecyclable: boolean;
 };
 
 export interface NoteRepository {
@@ -18,4 +24,5 @@ export interface NoteRepository {
   findAllDescendantIds: (noteIds: NoteVO['id'][]) => Promise<NoteVO['id'][]>;
   findTreeFragment: (noteId: NoteVO['id']) => Promise<NoteVO[]>;
   findAttributes: () => Promise<NoteAttributesVO>;
+  // dump: () => Observable<DumpedNote>;
 }

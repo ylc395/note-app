@@ -1,9 +1,10 @@
 import omit from 'lodash/omit';
 import mapValues from 'lodash/mapValues';
 import uniq from 'lodash/uniq';
+// import { Observable } from 'rxjs';
 
 import { type EntityId, EntityTypes } from 'interface/Entity';
-import type { NoteRepository, NoteQuery } from 'service/repository/NoteRepository';
+import type { NoteRepository, NoteQuery, DumpedNote } from 'service/repository/NoteRepository';
 import type { NoteDTO, NoteVO, NoteBodyDTO, NotesDTO, NoteAttributesVO } from 'interface/Note';
 
 import BaseRepository from './BaseRepository';
@@ -222,4 +223,17 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
 
     return mapValues(result, uniq);
   }
+
+  // dump() {
+  //   return new Observable<DumpedNote>((subscriber) => {
+  //     const { sql, bindings } = this.knex(this.schema.tableName).select().toSQL().toNative();
+
+  //     this.sqlite3.each(
+  //       sql,
+  //       bindings,
+  //       (err: unknown, row: DumpedNote) => (err ? subscriber.error(err) : subscriber.next(row)),
+  //       subscriber.complete,
+  //     );
+  //   });
+  // }
 }
