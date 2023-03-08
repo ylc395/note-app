@@ -3,7 +3,11 @@ import { gfm } from '@milkdown/preset-gfm';
 import { commonmark } from '@milkdown/preset-commonmark';
 import { Editor, rootCtx, editorViewCtx, parserCtx, EditorStatus } from '@milkdown/core';
 import { Slice } from '@milkdown/prose/model';
+import '@milkdown/prose/view/style/prosemirror.css';
+import '@milkdown/prose/tables/style/tables.css';
 import { listenerCtx, listener } from '@milkdown/plugin-listener';
+import { history } from '@milkdown/plugin-history';
+import { clipboard } from '@milkdown/plugin-clipboard';
 
 interface Props {
   onChange: (content: string) => void; // only fire for user input
@@ -28,6 +32,8 @@ export default forwardRef<EditorRef, Props>(function MarkdownEditor({ onChange }
       .use(commonmark)
       .use(gfm)
       .use(listener)
+      .use(history)
+      .use(clipboard)
       .config((ctx) => {
         ctx.set(rootCtx, rootRef.current);
         ctx.get(listenerCtx).markdownUpdated((_, markdown, pre) => {

@@ -10,18 +10,17 @@ export default observer(function NoteEditor({ editor }: { editor: NoteEditor }) 
   const editorRef = useRef<EditorRef>(null);
 
   useEffect(() => {
-    const onBodySynced = (body: BodyEvent) => {
-      editorRef.current?.updateContent(body);
-    };
-
     const stopInit = when(
       () => Boolean(editor.entity),
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       () => editorRef.current!.updateContent(editor.entity!.body),
     );
 
-    editor.on(Events.BodySynced, onBodySynced);
+    const onBodySynced = (body: BodyEvent) => {
+      editorRef.current?.updateContent(body);
+    };
 
+    editor.on(Events.BodySynced, onBodySynced);
     return () => {
       editor.off(Events.BodySynced, onBodySynced);
       stopInit();
