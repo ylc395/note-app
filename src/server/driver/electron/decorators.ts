@@ -18,8 +18,10 @@ export const Delete = createHttpDecorator('DELETE');
 export const Patch = createHttpDecorator('PATCH');
 export const Put = createHttpDecorator('PUT');
 
-export const Body = createParamDecorator((_, ctx: ExecutionContext) => {
-  return ctx.getArgByIndex<IpcRequest<unknown>>(0)?.body;
+export const Body = createParamDecorator((field, ctx: ExecutionContext) => {
+  return typeof field === 'string'
+    ? ctx.getArgByIndex<IpcRequest<Record<string, unknown>>>(0)?.body?.[field]
+    : ctx.getArgByIndex<IpcRequest<unknown>>(0)?.body;
 });
 
 export const Query = createParamDecorator((_, ctx: ExecutionContext) => {

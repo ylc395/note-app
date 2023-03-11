@@ -2,6 +2,7 @@
   "extends": "./tsconfig.json",
   "include": ["./**/*"],
   "compilerOptions": {
+    "types": ["electron"],
     "composite": true,
     "module": "CommonJS",
     "rootDir": "../",

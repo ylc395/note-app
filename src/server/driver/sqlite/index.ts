@@ -4,7 +4,6 @@ import snakeCase from 'lodash/snakeCase';
 import mapKeys from 'lodash/mapKeys';
 import { join } from 'path';
 import { randomUUID } from 'crypto';
-import type { Database as Sqlite3 } from 'sqlite3';
 
 import type { Database, Transaction } from 'infra/Database';
 import type Repository from 'service/repository';
@@ -18,7 +17,6 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 
 export default class SqliteDb implements Database {
   private knex!: Knex;
-  private sqlite3!: Sqlite3;
 
   async createTransaction() {
     return await this.knex.transaction();
@@ -38,11 +36,11 @@ export default class SqliteDb implements Database {
   }
 
   getRepository<T extends keyof Repository>(name: T) {
-    return new repositories[name](this.knex, this.sqlite3) as unknown as Repository[T];
+    return new repositories[name](this.knex) as unknown as Repository[T];
   }
 
   getRepositoryWithTransaction<T extends keyof Repository>(trx: Transaction, name: T) {
-    return new repositories[name](trx as Knex.Transaction, this.sqlite3) as unknown as Repository[T];
+    return new repositories[name](trx as Knex.Transaction) as unknown as Repository[T];
   }
 
   async init(dir: string) {
@@ -53,12 +51,6 @@ export default class SqliteDb implements Database {
       postProcessResponse: this.transformKeys,
       useNullAsDefault: true,
       wrapIdentifier: (value, originImpl) => originImpl(snakeCase(value)),
-      pool: {
-        afterCreate: (sqlite3: Sqlite3, done: () => void) => {
-          this.sqlite3 = sqlite3;
-          done();
-        },
-      },
     });
 
     await this.createTables();
@@ -106,6 +98,10 @@ export default class SqliteDb implements Database {
         col = col.notNullable();
       }
 
+      if (options.unique) {
+        col = col.unique();
+      }
+
       if (typeof options.defaultTo !== 'undefined') {
         col.defaultTo(typeof options.defaultTo === 'function' ? options.defaultTo(this.knex) : options.defaultTo);
       }
@@ -114,6 +110,12 @@ export default class SqliteDb implements Database {
     if (restrictions) {
       if (restrictions.unique) {
         table.unique(restrictions.unique);
+      }
+
+      if (restrictions.foreign) {
+        for (const [col, foreignCol] of Object.entries(restrictions.foreign)) {
+          table.foreign(col).references(foreignCol);
+        }
       }
     }
   };

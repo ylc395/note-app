@@ -8,6 +8,10 @@ import '@milkdown/prose/tables/style/tables.css';
 import { listenerCtx, listener } from '@milkdown/plugin-listener';
 import { history } from '@milkdown/plugin-history';
 import { clipboard } from '@milkdown/plugin-clipboard';
+import { upload, uploadConfig } from '@milkdown/plugin-upload';
+import { cursor } from '@milkdown/plugin-cursor';
+
+import uploadConfigValue from './upload';
 
 interface Props {
   onChange: (content: string) => void; // only fire for user input
@@ -33,9 +37,12 @@ export default forwardRef<EditorRef, Props>(function MarkdownEditor({ onChange }
       .use(gfm)
       .use(listener)
       .use(history)
+      .use(upload) // upload 插件在前
       .use(clipboard)
+      .use(cursor)
       .config((ctx) => {
         ctx.set(rootCtx, rootRef.current);
+        ctx.set(uploadConfig.key, uploadConfigValue);
         ctx.get(listenerCtx).markdownUpdated((_, markdown, pre) => {
           !isUpdating.current && typeof pre === 'string' && onChange(markdown);
         });

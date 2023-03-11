@@ -34,7 +34,7 @@ export const getFile: CommonInputs['getFile'] = () => {
         return;
       }
 
-      resolve(files[0].path || files[0]);
+      resolve(files[0]);
     };
 
     const inputEl = document.createElement('input');

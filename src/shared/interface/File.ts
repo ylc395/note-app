@@ -1,20 +1,32 @@
-import { object, string, boolean, array, type infer as Infer } from 'zod';
+import { object, string, array, type infer as Infer, instanceof as zodInstanceof, union } from 'zod';
+import type { EntityId } from './Entity';
 
 export interface FileVO {
-  id: number;
-  sourceUrl: string;
+  id: EntityId;
+  sourceUrl: string | null;
   mimeType: string;
   size: number;
-  deviceName: string;
-  isDuplicated?: boolean;
+  name: string;
+  createdAt: number;
 }
 
-const FileDTOSchema = object({
-  sourceUrl: string().url(),
-  mimeType: string().min(1),
-  isTemp: boolean().optional(),
+export type FileUrl = string;
+
+export type FileUploadResponse = (FileVO | FileUrl)[];
+
+export const filesDTOSchema = object({
+  files: union([
+    array(string()),
+    array(
+      object({
+        name: string(),
+        data: zodInstanceof(ArrayBuffer),
+        mimeType: string(),
+      }),
+    ),
+  ]),
 });
 
-export const FilesDTOSchema = array(FileDTOSchema);
+export type FilesDTO = Infer<typeof filesDTOSchema>;
 
-export type FileDTO = Infer<typeof FileDTOSchema>;
+export const isUrls = (v: unknown): v is FileUrl[] => Array.isArray(v) && v.every((_v) => typeof _v === 'string');

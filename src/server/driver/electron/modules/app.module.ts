@@ -7,11 +7,12 @@ import NotesController from 'controller/NotesController';
 import RecyclablesController from 'controller/RecyclablesController';
 import IconsController from 'controller/IconsController';
 import StarsController from 'controller/StarsController';
+import FilesController from 'controller/FilesController';
 
 import DriverModule from './driver.module';
 
 @Module({
   imports: [EventEmitterModule.forRoot(), ServiceModule, DriverModule],
-  controllers: [NotesController, RecyclablesController, IconsController, StarsController],
+  controllers: [NotesController, RecyclablesController, IconsController, StarsController, FilesController],
 })
 export default class AppModule {}

@@ -180,11 +180,10 @@ export default class NoteService extends EventEmitter {
       this.noteTree.toggleSelect(targetId, true);
     }
 
-    const isMultiple = selectedNodes.size > 1 && selectedNodes.has(targetNode);
-    const noteIds = isMultiple ? Array.from(selectedNodes) : [targetId];
+    const isMultiple = selectedNodes.size > 1;
     const { focusedTile } = this.editor.tileManager;
 
-    const description = noteIds.length + '项';
+    const description = selectedNodes.size + '项';
     const items: ContextmenuItem[] = isMultiple
       ? [
           { label: `移动${description}至...`, key: 'move' },

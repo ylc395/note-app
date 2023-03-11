@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 
-import { token as databaseToken, Database } from 'infra/Database';
+import { token as databaseToken, type Database } from 'infra/Database';
 import type Repositories from './repository';
 
 interface CachePropertyDescriptor<T, R> extends PropertyDescriptor {
@@ -43,5 +43,10 @@ export default class BaseService implements Repositories {
   @cache
   get stars() {
     return this.db.getRepository('stars');
+  }
+
+  @cache
+  get files() {
+    return this.db.getRepository('files');
   }
 }
