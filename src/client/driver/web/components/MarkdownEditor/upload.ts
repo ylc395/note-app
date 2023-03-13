@@ -2,25 +2,34 @@ import { container } from 'tsyringe';
 import type { UploadOptions } from '@milkdown/plugin-upload';
 import { Decoration } from '@milkdown/prose/view';
 
-import { fileProtocol } from 'infra/protocol';
+import { appFileProtocol } from 'infra/protocol';
 import MarkdownService from 'service/MarkdownService';
+
+import { NODE_NAME as MULTIMEDIA_NODE_NAME } from './multimedia';
 
 const uploadOptions: UploadOptions = {
   enableHtmlFileUploader: true,
   async uploader(files, schema) {
     const markdownService = container.resolve(MarkdownService);
     const updatedFiles = await markdownService.uploadFiles(Array.from(files));
-    const { image } = schema.nodes;
+    const multimediaNode = schema.nodes[MULTIMEDIA_NODE_NAME];
 
-    if (!image) {
-      throw new Error('schema no image');
+    if (!multimediaNode) {
+      throw new Error('schema no multimediaNode');
     }
 
     return updatedFiles.map((file) => {
-      // if (file.mimeType.startsWith('image')) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      return image.createAndFill({ src: `${fileProtocol}:///${file.id}`, alt: file.name })!;
-      // }
+      const node = multimediaNode.createAndFill({
+        src: `${appFileProtocol}:///${file.id}`,
+        alt: file.name,
+        mimeType: file.mimeType,
+      });
+
+      if (!node) {
+        throw new Error('create node failed');
+      }
+
+      return node;
     });
   },
   uploadWidgetFactory: (pos, spec) => {

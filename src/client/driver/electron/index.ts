@@ -1,10 +1,11 @@
 import { app as electronApp, BrowserWindow, ipcMain } from 'electron';
 import { join } from 'path';
 import { hostname } from 'os';
+import EventEmitter from 'eventemitter3';
 import { ensureDirSync, emptyDirSync } from 'fs-extra';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 
-import type { AppClient } from 'infra/AppClient';
+import { type AppClient, Events as AppClientEvents } from 'infra/AppClient';
 
 import { CONTEXTMENU_CHANNEL, createContextmenu } from './contextmenu';
 
@@ -12,10 +13,11 @@ const APP_NAME = 'my-note-app';
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const NEED_CLEAN = process.env.DEV_CLEAN === '1';
 
-export default class ElectronClient implements AppClient {
+export default class ElectronClient extends EventEmitter implements AppClient {
   private mainWindow?: BrowserWindow;
 
   constructor() {
+    super();
     const dir = this.getConfigDir();
     ensureDirSync(dir);
 
@@ -27,6 +29,8 @@ export default class ElectronClient implements AppClient {
   }
 
   async start() {
+    this.emit(AppClientEvents.BeforeStart);
+
     if (NODE_ENV === 'development') {
       if (process.platform === 'win32') {
         process.on('message', (data) => {
@@ -59,6 +63,8 @@ export default class ElectronClient implements AppClient {
         console.error(error);
       }
     }
+
+    this.emit(AppClientEvents.Ready);
     await this.initWindow();
   }
 

@@ -363,7 +363,7 @@
     "@milkdown/exception" "7.1.0"
     tslib "^2.4.0"
 
-"@milkdown/exception@7.1.0":
+"@milkdown/exception@7.1.0", "@milkdown/exception@^7.1.0":
   version "7.1.0"
   resolved "https://registry.yarnpkg.com/@milkdown/exception/-/exception-7.1.0.tgz#462a7852e668d13f912c8fbfbd04ec3517903c0b"
   integrity sha512-495C8KDHPuwPp+dE/fy1c8Lfm7eQwxslDXkEvmt1OMrpQ2G2Q4PRmyBnWT8+/ItlEybFtzKd3P3hmgPj82hbLw==
@@ -467,7 +467,7 @@
     tslib "^2.4.0"
     unified "^10.1.0"
 
-"@milkdown/utils@7.1.0":
+"@milkdown/utils@7.1.0", "@milkdown/utils@^7.1.0":
   version "7.1.0"
   resolved "https://registry.yarnpkg.com/@milkdown/utils/-/utils-7.1.0.tgz#5c4dd3cd3555f408b9142a7fc75f3bb1cb501f5c"
   integrity sha512-oHwvLVZVzJGrWMy1eYhpHhglEsXz+n24Xyzsf/9iuavLqMAF+BDjwrwWmwW9PVVx476ahyQK0wnIqwfyKAf1YA==

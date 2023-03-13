@@ -1,6 +1,7 @@
 import { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+import without from 'lodash/without';
 import { gfm } from '@milkdown/preset-gfm';
-import { commonmark } from '@milkdown/preset-commonmark';
+import { commonmark, imageSchema } from '@milkdown/preset-commonmark';
 import { Editor, rootCtx, editorViewCtx, parserCtx, EditorStatus } from '@milkdown/core';
 import { Slice } from '@milkdown/prose/model';
 import '@milkdown/prose/view/style/prosemirror.css';
@@ -11,7 +12,8 @@ import { clipboard } from '@milkdown/plugin-clipboard';
 import { upload, uploadConfig } from '@milkdown/plugin-upload';
 import { cursor } from '@milkdown/plugin-cursor';
 
-import uploadConfigValue from './upload';
+import uploadOptions from './upload';
+import multimedia from './multimedia';
 
 interface Props {
   onChange: (content: string) => void; // only fire for user input
@@ -33,8 +35,9 @@ export default forwardRef<EditorRef, Props>(function MarkdownEditor({ onChange }
     }
 
     const editor = Editor.make()
-      .use(commonmark)
+      .use(without(commonmark, ...imageSchema))
       .use(gfm)
+      .use(multimedia)
       .use(listener)
       .use(history)
       .use(upload) // upload 插件在前
@@ -42,7 +45,7 @@ export default forwardRef<EditorRef, Props>(function MarkdownEditor({ onChange }
       .use(cursor)
       .config((ctx) => {
         ctx.set(rootCtx, rootRef.current);
-        ctx.set(uploadConfig.key, uploadConfigValue);
+        ctx.set(uploadConfig.key, uploadOptions);
         ctx.get(listenerCtx).markdownUpdated((_, markdown, pre) => {
           !isUpdating.current && typeof pre === 'string' && onChange(markdown);
         });
