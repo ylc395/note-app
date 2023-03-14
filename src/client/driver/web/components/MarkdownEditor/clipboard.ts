@@ -76,7 +76,9 @@ export const clipboard = $prose((ctx) => {
           const slice = parser(text);
           if (!slice || typeof slice === 'string') return false;
 
+          // https://github.com/Milkdown/milkdown/pull/936#issuecomment-1468084298
           dom = DOMSerializer.fromSchema(schema).serializeFragment(slice.content);
+          view.dispatch(view.state.tr.replaceSelection(domParser.parseSlice(dom)));
         } else {
           const template = document.createElement('template');
           template.innerHTML = html;
@@ -112,6 +114,8 @@ export const clipboard = $prose((ctx) => {
               // todo: what if uploading lasts too long? use placeholder ?
               view.dispatch(view.state.tr.replaceSelection(domParser.parseSlice(dom)));
             });
+          } else {
+            view.dispatch(view.state.tr.replaceSelection(domParser.parseSlice(dom)));
           }
         }
 

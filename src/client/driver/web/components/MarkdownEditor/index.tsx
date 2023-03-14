@@ -16,18 +16,18 @@ import multimedia from './multimedia';
 import { clipboard } from './clipboard';
 
 interface Props {
-  onChange: (content: string) => void; // only fire for user input
+  onChange: (content: string) => void;
 }
 
 export interface EditorRef {
   focus: () => void;
-  updateContent: (content: string) => void;
+  updateContent: (content: string, emitEvent?: boolean) => void;
 }
 
 export default forwardRef<EditorRef, Props>(function MarkdownEditor({ onChange }, ref) {
   const rootRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<Editor>();
-  const isUpdating = useRef(false);
+  const emitEventRef = useRef(true);
 
   useEffect(() => {
     if (!rootRef.current) {
@@ -47,7 +47,7 @@ export default forwardRef<EditorRef, Props>(function MarkdownEditor({ onChange }
         ctx.set(rootCtx, rootRef.current);
         ctx.set(uploadConfig.key, uploadOptions);
         ctx.get(listenerCtx).markdownUpdated((_, markdown, pre) => {
-          !isUpdating.current && typeof pre === 'string' && onChange(markdown);
+          emitEventRef.current && typeof pre === 'string' && onChange(markdown);
         });
       });
 
@@ -75,7 +75,7 @@ export default forwardRef<EditorRef, Props>(function MarkdownEditor({ onChange }
         }
       });
     },
-    updateContent: async (content: string) => {
+    updateContent: async (content: string, emitEvent = true) => {
       const editor = editorRef.current;
 
       if (!editor) {
@@ -92,9 +92,9 @@ export default forwardRef<EditorRef, Props>(function MarkdownEditor({ onChange }
             return;
           }
 
-          isUpdating.current = true;
+          emitEventRef.current = emitEvent;
           view.dispatch(state.tr.replace(0, state.doc.content.size, new Slice(doc.content, 0, 0)));
-          isUpdating.current = false;
+          emitEventRef.current = true;
         });
 
       if (editor.status === EditorStatus.Created) {
