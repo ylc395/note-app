@@ -363,19 +363,11 @@
     "@milkdown/exception" "7.1.0"
     tslib "^2.4.0"
 
-"@milkdown/exception@7.1.0", "@milkdown/exception@^7.1.0":
+"@milkdown/exception@7.1.0":
   version "7.1.0"
   resolved "https://registry.yarnpkg.com/@milkdown/exception/-/exception-7.1.0.tgz#462a7852e668d13f912c8fbfbd04ec3517903c0b"
   integrity sha512-495C8KDHPuwPp+dE/fy1c8Lfm7eQwxslDXkEvmt1OMrpQ2G2Q4PRmyBnWT8+/ItlEybFtzKd3P3hmgPj82hbLw==
   dependencies:
-    tslib "^2.4.0"
-
-"@milkdown/plugin-clipboard@^7.1.0":
-  version "7.1.0"
-  resolved "https://registry.yarnpkg.com/@milkdown/plugin-clipboard/-/plugin-clipboard-7.1.0.tgz#9290ecd68e56b38f6b26eac2cbc6731d4af6c064"
-  integrity sha512-ipUofAkPa9/JYTyZw7XEffUX4uZ5/Sl0hCgGPo/iKG77lYw2BZLFrROqpXI2vRoaxeF8wPgspPm8+vKffVj2/w==
-  dependencies:
-    "@milkdown/utils" "7.1.0"
     tslib "^2.4.0"
 
 "@milkdown/plugin-cursor@^7.1.0":

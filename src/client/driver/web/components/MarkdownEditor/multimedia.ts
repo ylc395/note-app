@@ -1,4 +1,3 @@
-/* Copyright 2021, Milkdown by Mirone. */
 import { $nodeSchema, $view } from '@milkdown/utils';
 
 export const NODE_NAME = 'multimedia';
@@ -16,8 +15,19 @@ export const multimediaSchema = $nodeSchema(NODE_NAME, () => {
       src: { default: '' },
       alt: { default: '' },
       title: { default: '' },
-      mimeType: { default: '' },
     },
+    parseDOM: [
+      {
+        tag: 'img[src], video[src], audio[src]',
+        getAttrs: (node) => {
+          return {
+            src: (node as HTMLElement).getAttribute('src'),
+            alt: node instanceof HTMLImageElement ? node.alt : '',
+            title: node instanceof HTMLElement ? node.title : '',
+          };
+        },
+      },
+    ],
     // toDOM is still required even when NodeView is defined.
     // see https://discuss.prosemirror.net/t/custom-nodeview-and-nodespec-todom/650
     toDOM: () => document.createElement('span'),
@@ -68,19 +78,9 @@ export const multimediaNodeView = $view(multimediaSchema.node, () => {
   return (node) => {
     const dom = document.createElement('span');
     const url = node.attrs.src;
-    const mimeType = node.attrs.mimeType;
+
     if (typeof url !== 'string') {
-      throw new Error('no url in node');
-    }
-
-    if (mimeType) {
-      const mediaEl = createMediaElement(mimeType);
-
-      if (mediaEl) {
-        mediaEl.src = url;
-        dom.appendChild(mediaEl);
-      }
-
+      // todo: visible and friendly non-url resource element
       return { dom };
     }
 
@@ -88,16 +88,16 @@ export const multimediaNodeView = $view(multimediaSchema.node, () => {
     fetch(url).then((response) => {
       const mimeType = response.headers.get('content-type');
 
-      if (mimeType) {
-        const mediaEl = createMediaElement(mimeType);
+      const mediaEl = createMediaElement(mimeType || 'image/*');
 
-        if (mediaEl) {
-          response.blob().then((blob) => {
-            mediaEl.src = URL.createObjectURL(blob);
-            blobUrl = url;
-            dom.appendChild(mediaEl);
-          });
-        }
+      if (mediaEl) {
+        response.blob().then((blob) => {
+          blobUrl = URL.createObjectURL(blob);
+          mediaEl.src = blobUrl;
+          dom.appendChild(mediaEl);
+        });
+      } else {
+        dom.append(`unsupported resource type: ${mimeType}`);
       }
     });
 

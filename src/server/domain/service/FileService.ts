@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import axios from 'axios';
 import { parse as parseUrl } from 'node:url';
 import path from 'node:path';
+import { TextEncoder } from 'node:util';
 
 import { type FilesDTO, type FileUrl, isUrls } from 'interface/File';
 import { Transaction } from 'infra/Database';
@@ -36,6 +37,12 @@ export default class FileService extends BaseService {
   }
 
   private async downloadFile(sourceUrl: FileUrl) {
+    if (sourceUrl.startsWith('data:')) {
+      const dataUrlResult = this.downloadDataUrl(sourceUrl);
+
+      return typeof dataUrlResult === 'string' ? dataUrlResult : { name: '', sourceUrl, ...dataUrlResult };
+    }
+
     const { pathname } = parseUrl(sourceUrl);
 
     if (!pathname) {
@@ -45,11 +52,34 @@ export default class FileService extends BaseService {
     try {
       const name = path.basename(pathname);
       const { headers, data } = await axios.get<ArrayBuffer>(sourceUrl, { responseType: 'arraybuffer' });
-      const mimeType = String(headers['Content-Type'] || '');
+      const mimeType = String(headers['content-type'] || '');
 
       return { name, mimeType, sourceUrl, data };
     } catch {
       return sourceUrl;
     }
+  }
+
+  private downloadDataUrl(dataUrl: string) {
+    const dataUrlPattern = /^data:(.+?)?(;base64)?,(.+)/;
+    const matchResult = dataUrl.match(dataUrlPattern);
+
+    if (!matchResult) {
+      return dataUrl;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [_, mimeType, base64Flag, content] = matchResult;
+
+    if (!content) {
+      return dataUrl;
+    }
+
+    return {
+      mimeType: mimeType || 'text/plain',
+      data: base64Flag
+        ? Buffer.from(content, 'base64').buffer
+        : new TextEncoder().encode(decodeURIComponent(content)).buffer,
+    };
   }
 }

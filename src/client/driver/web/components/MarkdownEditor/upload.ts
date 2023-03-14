@@ -22,7 +22,6 @@ const uploadOptions: UploadOptions = {
       const node = multimediaNode.createAndFill({
         src: `${appFileProtocol}:///${file.id}`,
         alt: file.name,
-        mimeType: file.mimeType,
       });
 
       if (!node) {

@@ -8,12 +8,12 @@ import '@milkdown/prose/view/style/prosemirror.css';
 import '@milkdown/prose/tables/style/tables.css';
 import { listenerCtx, listener } from '@milkdown/plugin-listener';
 import { history } from '@milkdown/plugin-history';
-import { clipboard } from '@milkdown/plugin-clipboard';
 import { upload, uploadConfig } from '@milkdown/plugin-upload';
 import { cursor } from '@milkdown/plugin-cursor';
 
 import uploadOptions from './upload';
 import multimedia from './multimedia';
+import { clipboard } from './clipboard';
 
 interface Props {
   onChange: (content: string) => void; // only fire for user input
@@ -40,7 +40,7 @@ export default forwardRef<EditorRef, Props>(function MarkdownEditor({ onChange }
       .use(multimedia)
       .use(listener)
       .use(history)
-      .use(upload) // upload 插件在前
+      .use(upload) // upload 插件在前, 先处理粘贴文件的情况
       .use(clipboard)
       .use(cursor)
       .config((ctx) => {
