@@ -1,4 +1,4 @@
-import { object, string, array, type infer as Infer, instanceof as zodInstanceof, union } from 'zod';
+import { object, string, array, type infer as Infer, instanceof as zodInstanceof, union, enum as zodEnum } from 'zod';
 import type { EntityId } from './Entity';
 
 export interface FileVO {
@@ -30,3 +30,16 @@ export const filesDTOSchema = object({
 export type FilesDTO = Infer<typeof filesDTOSchema>;
 
 export const isUrls = (v: unknown): v is FileUrl[] => Array.isArray(v) && v.every((_v) => typeof _v === 'string');
+
+export const httpFileRequestSchema = object({
+  url: string().url(),
+  type: zodEnum(['arraybuffer', 'text']),
+});
+
+export type HttpFileRequest = Infer<typeof httpFileRequestSchema>;
+
+export interface HttpFile<T = unknown> {
+  status: number;
+  headers: Record<string, string>;
+  body: T | null;
+}

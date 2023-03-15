@@ -3,6 +3,7 @@ import axios from 'axios';
 import { parse as parseUrl } from 'node:url';
 import path from 'node:path';
 import { TextEncoder } from 'node:util';
+import mapValues from 'lodash/mapValues';
 
 import { type FilesDTO, type FileUrl, isUrls } from 'interface/File';
 import { Transaction } from 'infra/Database';
@@ -80,6 +81,16 @@ export default class FileService extends BaseService {
       data: base64Flag
         ? Buffer.from(content, 'base64').buffer
         : new TextEncoder().encode(decodeURIComponent(content)).buffer,
+    };
+  }
+
+  async request(url: string, type: 'arraybuffer' | 'text') {
+    const res = await axios.get(url, { validateStatus: () => true, responseType: type, maxRedirects: 1 });
+
+    return {
+      body: res.data,
+      headers: mapValues(res.headers, String),
+      status: res.status,
     };
   }
 }
