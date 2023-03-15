@@ -1,59 +1,39 @@
-import { $nodeSchema, $view } from '@milkdown/utils';
+import { $view } from '@milkdown/utils';
+import { imageSchema } from '@milkdown/preset-commonmark';
 
-export const NODE_NAME = 'multimedia';
+export const NODE_NAME = 'image';
 
-export const multimediaSchema = $nodeSchema(NODE_NAME, () => {
-  return {
-    inline: true,
-    group: 'inline',
-    selectable: true,
-    draggable: true,
-    atom: true,
-    marks: '',
-    isolating: true,
-    attrs: {
-      src: { default: '' },
-      alt: { default: '' },
-      title: { default: '' },
-    },
-    parseDOM: [
-      {
-        tag: 'img[src], video[src], audio[src]',
-        getAttrs: (node) => {
-          return {
-            src: (node as HTMLElement).getAttribute('src'),
-            alt: node instanceof HTMLImageElement ? node.alt : '',
-            title: node instanceof HTMLElement ? node.title : '',
-          };
+export const multimediaSchema = imageSchema.extendSchema((prev) => {
+  return (ctx) => {
+    const originSchema = prev(ctx);
+    return {
+      ...originSchema,
+      parseDOM: [
+        {
+          tag: 'img[src], video[src], audio[src]',
+          getAttrs: (node) => {
+            return {
+              src: (node as HTMLElement).getAttribute('src'),
+              alt: node instanceof HTMLImageElement ? node.alt : '',
+              title: node instanceof HTMLElement ? node.title : '',
+            };
+          },
+        },
+      ],
+      // toDOM is still required even when NodeView is defined.
+      // see https://discuss.prosemirror.net/t/custom-nodeview-and-nodespec-todom/650
+      toDOM: () => document.createElement('span'),
+      toMarkdown: {
+        match: (node) => node.type.name === NODE_NAME,
+        runner: (state, node) => {
+          state.addNode('image', undefined, undefined, {
+            title: node.attrs.title,
+            url: node.attrs.src,
+            alt: node.attrs.alt,
+          });
         },
       },
-    ],
-    // toDOM is still required even when NodeView is defined.
-    // see https://discuss.prosemirror.net/t/custom-nodeview-and-nodespec-todom/650
-    toDOM: () => document.createElement('span'),
-    parseMarkdown: {
-      match: ({ type }) => type === 'image',
-      runner: (state, node, type) => {
-        const src = node.url as string;
-        const alt = node.alt as string;
-        const title = node.title as string;
-        state.addNode(type, {
-          src,
-          alt,
-          title,
-        });
-      },
-    },
-    toMarkdown: {
-      match: (node) => node.type.name === NODE_NAME,
-      runner: (state, node) => {
-        state.addNode('image', undefined, undefined, {
-          title: node.attrs.title,
-          url: node.attrs.src,
-          alt: node.attrs.alt,
-        });
-      },
-    },
+    };
   };
 });
 
@@ -74,7 +54,7 @@ function createMediaElement(mimeType: string) {
   return mediaEl;
 }
 
-export const multimediaNodeView = $view(multimediaSchema.node, () => {
+export const multimediaNodeView = $view(imageSchema.node, () => {
   return (node) => {
     const dom = document.createElement('span');
     const url = node.attrs.src;

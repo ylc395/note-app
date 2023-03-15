@@ -1,7 +1,6 @@
 import { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
-import without from 'lodash/without';
 import { gfm } from '@milkdown/preset-gfm';
-import { commonmark, imageSchema } from '@milkdown/preset-commonmark';
+import { commonmark } from '@milkdown/preset-commonmark';
 import { Editor, rootCtx, editorViewCtx, parserCtx, EditorStatus } from '@milkdown/core';
 import { Slice } from '@milkdown/prose/model';
 import '@milkdown/prose/view/style/prosemirror.css';
@@ -35,7 +34,7 @@ export default forwardRef<EditorRef, Props>(function MarkdownEditor({ onChange }
     }
 
     const editor = Editor.make()
-      .use(without(commonmark, ...imageSchema))
+      .use(commonmark)
       .use(gfm)
       .use(multimedia)
       .use(listener)
