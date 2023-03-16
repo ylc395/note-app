@@ -1,15 +1,21 @@
 import { Injectable } from '@nestjs/common';
-import axios from 'axios';
 import { parse as parseUrl } from 'node:url';
 import path from 'node:path';
 import { TextEncoder } from 'node:util';
-import mapValues from 'lodash/mapValues';
+import fromParis from 'lodash/fromPairs';
 
 import { type FilesDTO, type FileUrl, isUrls } from 'interface/File';
 import { Transaction } from 'infra/Database';
+import { appFileProtocol } from 'infra/electronProtocol';
 import { buildIndex } from 'utils/collection';
 
 import BaseService from './BaseService';
+
+// remove this once native fetch type is launched in @types/node
+// see https://github.com/DefinitelyTyped/DefinitelyTyped/issues/60924#issuecomment-1358424866
+declare global {
+  export const { fetch, FormData, Headers, Request, Response }: typeof import('undici');
+}
 
 @Injectable()
 export default class FileService extends BaseService {
@@ -52,10 +58,9 @@ export default class FileService extends BaseService {
 
     try {
       const name = path.basename(pathname);
-      const { headers, data } = await axios.get<ArrayBuffer>(sourceUrl, { responseType: 'arraybuffer' });
-      const mimeType = String(headers['content-type'] || '');
+      const res = await fetch(sourceUrl);
 
-      return { name, mimeType, sourceUrl, data };
+      return { name, sourceUrl, mimeType: res.headers.get('content-type') || '', data: await res.arrayBuffer() };
     } catch {
       return sourceUrl;
     }
@@ -84,13 +89,53 @@ export default class FileService extends BaseService {
     };
   }
 
-  async request(url: string, type: 'arraybuffer' | 'text') {
-    const res = await axios.get(url, { validateStatus: () => true, responseType: type, maxRedirects: 1 });
+  async request(url: string, type: 'arrayBuffer' | 'text') {
+    const res = await fetch(url);
 
     return {
-      body: res.data,
-      headers: mapValues(res.headers, String),
+      body: await res[type](),
+      headers: fromParis(Array.from(res.headers.entries())),
       status: res.status,
     };
+  }
+
+  async requestMetadata(url: string) {
+    const fileId = FileService.getFileIdFromUrl(url);
+
+    if (fileId) {
+      const file = await this.files.findOneById(fileId);
+      return file ? { mimeType: file.mimeType } : null;
+    }
+
+    const abortController = new AbortController();
+    const res = await fetch(url, { signal: abortController.signal });
+
+    abortController.abort();
+
+    if (!res.ok) {
+      return null;
+    }
+
+    return {
+      mimeType: res.headers.get('content-type') || '',
+    };
+  }
+
+  static getFileIdFromUrl(url: string) {
+    if (process.env.APP_PLATFORM === 'electron') {
+      if (!url.startsWith(appFileProtocol)) {
+        return null;
+      }
+
+      const { pathname } = parseUrl(url);
+
+      if (!pathname) {
+        throw new Error(`invalid url ${url}`);
+      }
+
+      return path.basename(pathname);
+    }
+
+    return null;
   }
 }

@@ -140,6 +140,10 @@ export default class SqliteFileRepository extends BaseRepository<Row> implements
     return this.findAll({ id: createdRows.map(({ id }) => id) });
   }
 
+  async findOneById(id: FileVO['id']) {
+    return (await this.getFindSql().where(`${this.schema.tableName}.id`, id).first()) || null;
+  }
+
   async findFileDataById(id: FileVO['id']) {
     const row = (await this.getFindSql(['mimeType', 'data']).where(`${this.schema.tableName}.id`, id).first()) || null;
 

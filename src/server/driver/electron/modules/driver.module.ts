@@ -1,17 +1,16 @@
 import { Global, Module, Inject, type OnApplicationBootstrap } from '@nestjs/common';
 import { protocol } from 'electron';
-import { parse as parseUrl } from 'node:url';
-import { basename } from 'node:path';
 
 import FileReader from 'driver/fs';
 import Sqlite from 'driver/sqlite';
 import ElectronClient from 'client/driver/electron';
 
 import { token as appClientToken, type AppClient, Events as AppClientEvents } from 'infra/AppClient';
-import { appFileProtocol } from 'infra/protocol';
+import { appFileProtocol } from 'infra/electronProtocol';
 import { token as fileReaderToken } from 'infra/FileReader';
 import { token as databaseToken, type Database } from 'infra/Database';
 import type Repositories from 'service/repository';
+import FileService from 'service/FileService';
 
 const drivers = [
   [fileReaderToken, FileReader],
@@ -37,6 +36,7 @@ export default class DriverModule implements OnApplicationBootstrap {
           scheme: appFileProtocol,
           privileges: {
             supportFetchAPI: true,
+            stream: true,
           },
         },
       ]);
@@ -52,13 +52,13 @@ export default class DriverModule implements OnApplicationBootstrap {
           fileRepository = this.sqliteDb.getRepository('files');
         }
 
-        const { pathname } = parseUrl(req.url);
+        const fileId = FileService.getFileIdFromUrl(req.url);
 
-        if (!pathname) {
-          throw new Error('invalid url');
+        if (!fileId) {
+          res({ statusCode: 404 });
+          return;
         }
 
-        const fileId = basename(pathname);
         const file = await fileRepository.findFileDataById(fileId);
 
         if (!file) {

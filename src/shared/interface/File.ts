@@ -33,8 +33,16 @@ export const isUrls = (v: unknown): v is FileUrl[] => Array.isArray(v) && v.ever
 
 export const httpFileRequestSchema = object({
   url: string().url(),
-  type: zodEnum(['arraybuffer', 'text']),
+  type: zodEnum(['arrayBuffer', 'text']),
 });
+
+export const httpFileMetadataRequestSchema = httpFileRequestSchema.pick({ url: true });
+
+export type HttpFileMetadataRequest = Infer<typeof httpFileMetadataRequestSchema>;
+
+export interface HttpFileMetadata {
+  mimeType: string;
+}
 
 export type HttpFileRequest = Infer<typeof httpFileRequestSchema>;
 

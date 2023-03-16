@@ -5,7 +5,7 @@ const chokidar = require('chokidar');
 const { default: tsconfigPaths } = require('vite-tsconfig-paths');
 const { replaceTscAliasPaths } = require('tsc-alias');
 const { checker } = require('vite-plugin-checker');
-const { parse } = require('tsconfck');
+const { parse: parseTsconfig } = require('tsconfck');
 
 const CLIENT_TSCONFIG = path.resolve(process.cwd(), 'src/client/tsconfig.json');
 const ELECTRON_OUTPUT = 'dist';
@@ -15,13 +15,14 @@ async function buildPreload() {
   // preload script must be processed by a bundler(`vite build` here), since `require` doesn't work
   // @see https://www.electronjs.org/docs/latest/tutorial/sandbox#preload-scripts
   await build({
+    root: 'src/client',
     build: {
       minify: false,
       sourcemap: true,
       emptyOutDir: false,
       outDir: path.resolve(ELECTRON_OUTPUT, 'client/driver/electron'),
       lib: {
-        entry: 'src/client/driver/electron/preload.ts',
+        entry: 'driver/electron/preload.ts',
         fileName: () => 'preload.js',
         formats: ['cjs'],
       },
@@ -54,7 +55,6 @@ async function buildElectron(skipTs) {
 
 async function createViteServer() {
   const WEB_TSCONFIG = path.resolve(process.cwd(), 'src/client/tsconfig.web.json');
-  const { tsconfig: WEB_RAW_TSCONFIG } = await parse(WEB_TSCONFIG);
   const server = await createServer({
     configFile: false,
     clearScreen: false,
@@ -68,10 +68,11 @@ async function createViteServer() {
     ],
     define: {
       __ENV__: JSON.stringify('dev'),
+      __PLATFORM__: JSON.stringify('electron'),
     },
     esbuild: {
       jsxInject: `import React from 'react'`,
-      tsconfigRaw: WEB_RAW_TSCONFIG,
+      tsconfigRaw: (await parseTsconfig(WEB_TSCONFIG)).tsconfig,
     },
   });
 
@@ -88,6 +89,7 @@ async function createViteServer() {
 
   shell.env['VITE_SERVER_ENTRY_URL'] = viteUrl;
   shell.env['NODE_ENV'] = 'development';
+  shell.env['APP_PLATFORM'] = 'electron';
   shell.env['DEV_CLEAN'] = process.argv.includes('--clean') ? '1' : '0';
 
   await buildPreload();

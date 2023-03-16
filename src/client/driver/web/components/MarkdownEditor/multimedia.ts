@@ -1,5 +1,8 @@
 import { $view } from '@milkdown/utils';
 import { imageSchema } from '@milkdown/preset-commonmark';
+import { container } from 'tsyringe';
+
+import FileMetadataLoader from './helper/FileMetadataLoader';
 
 export const NODE_NAME = 'image';
 
@@ -37,20 +40,22 @@ export const multimediaSchema = imageSchema.extendSchema((prev) => {
   };
 });
 
-function createMediaElement(mimeType: string) {
+function createMediaElement(mimeType: string, url: string) {
   let mediaEl: HTMLImageElement | HTMLAudioElement | HTMLVideoElement;
 
-  if (mimeType.startsWith('image')) {
-    return document.createElement('img');
-  } else if (mimeType.startsWith('audio')) {
+  if (mimeType.startsWith('audio')) {
     mediaEl = document.createElement('audio');
   } else if (mimeType.startsWith('video')) {
     mediaEl = document.createElement('video');
   } else {
-    return;
+    mediaEl = document.createElement('img');
   }
 
-  mediaEl.controls = true;
+  if (!(mediaEl instanceof HTMLImageElement)) {
+    mediaEl.controls = true;
+  }
+  mediaEl.src = url;
+
   return mediaEl;
 }
 
@@ -64,27 +69,13 @@ export const multimediaNodeView = $view(imageSchema.node, () => {
       return { dom };
     }
 
-    let blobUrl: string | undefined;
-    fetch(url).then((response) => {
-      const mimeType = response.headers.get('content-type');
-
-      const mediaEl = createMediaElement(mimeType || 'image/*');
-
-      if (mediaEl) {
-        response.blob().then((blob) => {
-          blobUrl = URL.createObjectURL(blob);
-          mediaEl.src = blobUrl;
-          dom.appendChild(mediaEl);
-        });
-      } else {
-        dom.append(`unsupported resource type: ${mimeType}`);
-      }
+    const fileMetadataLoader = container.resolve(FileMetadataLoader);
+    fileMetadataLoader.load(url).then((metadata) => {
+      const mediaEl = createMediaElement(metadata?.mimeType || '', url);
+      dom.append(mediaEl);
     });
 
-    return {
-      dom,
-      destroy: () => blobUrl && URL.revokeObjectURL(blobUrl),
-    };
+    return { dom };
   };
 });
 

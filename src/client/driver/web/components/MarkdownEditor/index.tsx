@@ -11,8 +11,9 @@ import { upload, uploadConfig } from '@milkdown/plugin-upload';
 import { cursor } from '@milkdown/plugin-cursor';
 
 import uploadOptions from './upload';
-import multimedia from './multimedia';
 import { clipboard } from './clipboard';
+import multimedia from './multimedia';
+import richLink from './richLink';
 
 interface Props {
   onChange: (content: string) => void;
@@ -41,6 +42,7 @@ export default forwardRef<EditorRef, Props>(function MarkdownEditor({ onChange }
       .use(history)
       .use(upload) // upload 插件在前, 先处理粘贴文件的情况
       .use(clipboard)
+      .use(richLink)
       .use(cursor)
       .config((ctx) => {
         ctx.set(rootCtx, rootRef.current);

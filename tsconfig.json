@@ -3,6 +3,7 @@
     "target": "ESNext",
     "incremental": true,
     "types": [],
+    "lib": [],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "moduleResolution": "node",

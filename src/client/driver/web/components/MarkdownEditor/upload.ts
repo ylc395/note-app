@@ -2,10 +2,10 @@ import { container } from 'tsyringe';
 import type { UploadOptions } from '@milkdown/plugin-upload';
 import { Decoration } from '@milkdown/prose/view';
 
-import { appFileProtocol } from 'infra/protocol';
 import MarkdownService from 'service/MarkdownService';
 
 import { NODE_NAME as MULTIMEDIA_NODE_NAME } from './multimedia';
+import { getFileUrlById } from './helper/fileUrl';
 
 const uploadOptions: UploadOptions = {
   enableHtmlFileUploader: true,
@@ -20,7 +20,7 @@ const uploadOptions: UploadOptions = {
 
     return updatedFiles.map((file) => {
       const node = multimediaNode.createAndFill({
-        src: `${appFileProtocol}:///${file.id}`,
+        src: getFileUrlById(file.id),
         alt: file.name,
       });
 

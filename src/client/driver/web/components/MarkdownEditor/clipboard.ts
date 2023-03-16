@@ -8,7 +8,7 @@ import { $prose } from '@milkdown/utils';
 import { container } from 'tsyringe';
 
 import MarkdownService from 'service/MarkdownService';
-import { appFileProtocol } from 'infra/protocol';
+import { getFileUrlById, isInternalFileUrl } from './helper/fileUrl';
 
 type UnknownRecord = Record<string, unknown>;
 const isPureText = (content: UnknownRecord | UnknownRecord[] | undefined | null): boolean => {
@@ -91,9 +91,10 @@ export const clipboard = $prose((ctx) => {
 
           while (node) {
             if (
-              node instanceof HTMLImageElement ||
-              node instanceof HTMLVideoElement ||
-              node instanceof HTMLAudioElement
+              (node instanceof HTMLImageElement ||
+                node instanceof HTMLVideoElement ||
+                node instanceof HTMLAudioElement) &&
+              isInternalFileUrl(node.src)
             ) {
               mediaElements.push(node);
             }
@@ -109,7 +110,7 @@ export const clipboard = $prose((ctx) => {
                   continue;
                 }
                 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                mediaElements[index]!.src = `${appFileProtocol}:///${result.id}`;
+                mediaElements[index]!.src = getFileUrlById(result.id);
               }
               // todo: what if uploading lasts too long? use placeholder ?
               view.dispatch(view.state.tr.replaceSelection(domParser.parseSlice(dom)));

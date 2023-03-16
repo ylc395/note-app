@@ -3,10 +3,13 @@ import { Controller } from '@nestjs/common';
 import {
   type FilesDTO,
   type FileUploadResponse,
-  filesDTOSchema,
   type HttpFileRequest,
+  type HttpFile,
+  filesDTOSchema,
   httpFileRequestSchema,
-  HttpFile,
+  HttpFileMetadataRequest,
+  httpFileMetadataRequestSchema,
+  HttpFileMetadata,
 } from 'interface/File';
 import FileService from 'service/FileService';
 
@@ -19,6 +22,19 @@ export default class FilesController {
   @Get('/files/external')
   async proxyGet(@Query(createSchemaPipe(httpFileRequestSchema)) { url, type }: HttpFileRequest): Promise<HttpFile> {
     return await this.fileService.request(url, type);
+  }
+
+  @Get('/files/metadata')
+  async fetchFileMetadata(
+    @Query(createSchemaPipe(httpFileMetadataRequestSchema)) { url }: HttpFileMetadataRequest,
+  ): Promise<HttpFileMetadata> {
+    const fileMetadata = await this.fileService.requestMetadata(url);
+
+    if (!fileMetadata) {
+      throw new Error('invalid url');
+    }
+
+    return fileMetadata;
   }
 
   @Post('/files')
