@@ -1,9 +1,10 @@
 import debounce from 'lodash/debounce';
 import { linkSchema, textSchema } from '@milkdown/preset-commonmark';
 import { $prose } from '@milkdown/utils';
-import { Plugin, PluginKey, Transaction } from '@milkdown/prose/state';
+import { Plugin, Transaction } from '@milkdown/prose/state';
 import { Decoration, DecorationSet } from '@milkdown/prose/view';
 import { editorViewCtx } from '@milkdown/core';
+import uniqueId from 'lodash/uniqueId';
 
 import IconLoader from './IconLoader';
 import './style.css';
@@ -14,8 +15,9 @@ interface IconLinkMetadata {
   iconUrl: string | undefined;
 }
 
+const pluginKey = uniqueId('milkdown-iconLink');
+
 export default $prose((ctx) => {
-  const pluginKey = new PluginKey();
   const iconLoader = new IconLoader();
   const iconLinkMarkType = linkSchema.type();
   const textNodeType = textSchema.type();
@@ -52,7 +54,6 @@ export default $prose((ctx) => {
   }, 2000);
 
   return new Plugin({
-    key: pluginKey,
     props: {
       decorations(this: Plugin, state) {
         return this.getState(state);
@@ -76,7 +77,6 @@ export default $prose((ctx) => {
               .filter(({ iconUrl }) => iconUrl)
               .map(({ from, to, iconUrl }) =>
                 Decoration.inline(from, to, {
-                  nodeName: 'span',
                   class: 'with-icon',
                   style: `background-image: url(${iconUrl})`,
                 }),

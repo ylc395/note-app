@@ -9,3 +9,7 @@
 mark.match-highlight {
   background-color: yellow;
 }
+
+mark.active-match-highlight {
+  background-color: orange;
+}
