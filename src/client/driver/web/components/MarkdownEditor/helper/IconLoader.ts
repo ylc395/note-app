@@ -1,12 +1,38 @@
 import { container, singleton } from 'tsyringe';
 import memoize from 'lodash/memoize';
+import { GlobalOutlined } from '@ant-design/icons-svg';
+import { renderIconDefinitionToSVGElement } from '@ant-design/icons-svg/es/helpers';
 
 import { token as remoteToken } from 'infra/Remote';
 import type { HttpFile, HttpFileRequest } from 'interface/File';
 
+const DEFAULT_LINK_ICON_KEY = 'DEFAULT_LINK_ICON';
+const DEFAULT_LINK_ICON = `data:image/svg+xml,${encodeURIComponent(
+  renderIconDefinitionToSVGElement(GlobalOutlined, { extraSVGAttrs: { xmlns: 'http://www.w3.org/2000/svg' } }),
+)}`;
+
+const cache = new Map();
+
 @singleton()
 export default class IconLoader {
   private readonly remote = container.resolve(remoteToken);
+  private readonly _load: ReturnType<typeof memoize<(url: string, origin: string) => Promise<string>>>;
+
+  constructor() {
+    this._load = memoize(async (origin: string, url: string) => {
+      const storageKey = `icon-link-${origin}`;
+      const dataUrl =
+        localStorage.getItem(storageKey) ||
+        (await this.loadFavicon(origin)) ||
+        (await this.loadHtml(url)) ||
+        DEFAULT_LINK_ICON_KEY;
+
+      localStorage.setItem(storageKey, dataUrl);
+      return dataUrl;
+    });
+
+    this._load.cache = cache;
+  }
 
   async load(url: string) {
     if (url.startsWith('#')) {
@@ -14,29 +40,23 @@ export default class IconLoader {
     }
 
     const validUrl = !url.startsWith('https://') && !url.startsWith('http://') ? `https://${url}` : url;
+    let origin: string;
 
     try {
-      const { origin } = new URL(validUrl);
+      origin = new URL(validUrl).origin;
+    } catch {
+      return;
+    }
 
-      await this._load(origin, validUrl);
-      this._load.cache.delete(origin);
+    try {
+      const result = await this._load(origin, validUrl);
+      return result === DEFAULT_LINK_ICON_KEY ? DEFAULT_LINK_ICON : result;
     } catch (e) {
-      console.error(e);
-      return undefined;
+      return DEFAULT_LINK_ICON;
+    } finally {
+      this._load.cache.delete(origin);
     }
   }
-
-  private readonly _load = memoize(async (origin: string, url: string) => {
-    const storageKey = `icon-link-${origin}`;
-    const dataUrl =
-      localStorage.getItem(storageKey) ||
-      (await this.loadFavicon(origin)) ||
-      (await this.loadHtml(url)) ||
-      'DEFAULT_LINK_ICON';
-
-    localStorage.setItem(storageKey, dataUrl);
-    this._load.cache.delete(origin);
-  });
 
   private async loadFavicon(origin: string) {
     const { body } = await this.remote.get<HttpFileRequest, HttpFile<ArrayBuffer>>('/files/external', {
