@@ -9,9 +9,9 @@ import { listenerCtx, listener } from '@milkdown/plugin-listener';
 import { history } from '@milkdown/plugin-history';
 import { upload, uploadConfig } from '@milkdown/plugin-upload';
 import { cursor } from '@milkdown/plugin-cursor';
+import { clipboard } from '@milkdown/plugin-clipboard';
 
-import uploadOptions from './upload';
-import { clipboard } from './clipboard';
+import { uploadOptions, htmlUpload } from './uploadFile';
 import multimedia from './multimedia';
 import iconLink from './iconLink';
 import search from './search';
@@ -41,6 +41,7 @@ export default forwardRef<EditorRef, Props>(function MarkdownEditor({ onChange }
       .use(listener)
       .use(history)
       .use(upload) // upload 插件在前, 先处理粘贴文件的情况
+      .use(htmlUpload)
       .use(clipboard)
       .use(iconLink)
       .use(cursor)

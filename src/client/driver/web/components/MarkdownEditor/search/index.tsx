@@ -9,7 +9,7 @@ import { observable } from 'mobx';
 import { observer } from 'mobx-react-lite';
 import { createRoot } from 'react-dom/client';
 
-import './search.css';
+import './style.css';
 
 interface Range {
   from: number;

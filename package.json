@@ -48,6 +48,7 @@
     "@emoji-mart/react": "^1.1.1",
     "@milkdown/core": "^7.1.0",
     "@milkdown/ctx": "^7.1.0",
+    "@milkdown/plugin-clipboard": "^7.1.0",
     "@milkdown/plugin-cursor": "^7.1.0",
     "@milkdown/plugin-history": "^7.1.0",
     "@milkdown/plugin-listener": "^7.1.0",
