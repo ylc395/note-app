@@ -2,7 +2,7 @@ import { $view } from '@milkdown/utils';
 import { imageSchema } from '@milkdown/preset-commonmark';
 import { container } from 'tsyringe';
 
-import FileMetadataLoader from './helper/FileMetadataLoader';
+import FileMetadataLoader from './FileMetadataLoader';
 
 export const NODE_NAME = 'image';
 

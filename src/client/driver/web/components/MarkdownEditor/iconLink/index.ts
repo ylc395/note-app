@@ -5,7 +5,8 @@ import { Plugin, PluginKey, Transaction } from '@milkdown/prose/state';
 import { Decoration, DecorationSet } from '@milkdown/prose/view';
 import { editorViewCtx } from '@milkdown/core';
 
-import IconLoader from './helper/IconLoader';
+import IconLoader from './IconLoader';
+import './style.css';
 
 interface IconLinkMetadata {
   from: number;
@@ -43,8 +44,6 @@ export default $prose((ctx) => {
             if (latestTransaction && tr !== latestTransaction) {
               return;
             }
-            console.log(icons);
-
             view.dispatch(view.state.tr.setMeta(pluginKey, icons));
           }
         });
@@ -76,7 +75,11 @@ export default $prose((ctx) => {
             icons
               .filter(({ iconUrl }) => iconUrl)
               .map(({ from, to, iconUrl }) =>
-                Decoration.inline(from, to, { class: 'with-icon', style: `background-image: url(${iconUrl})` }),
+                Decoration.inline(from, to, {
+                  nodeName: 'span',
+                  class: 'with-icon',
+                  style: `background-image: url(${iconUrl})`,
+                }),
               ),
           );
         }

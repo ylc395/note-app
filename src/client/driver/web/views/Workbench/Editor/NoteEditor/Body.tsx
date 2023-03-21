@@ -29,7 +29,7 @@ export default observer(function NoteEditor({ editor }: { editor: NoteEditor }) 
   }, [editor]);
 
   return (
-    <div className="min-h-0 grow overflow-auto px-4" onClick={() => editorRef.current?.focus()}>
+    <div className="min-h-0 grow px-4">
       <MarkdownEditor ref={editorRef} onChange={editor.updateBody} />
     </div>
   );

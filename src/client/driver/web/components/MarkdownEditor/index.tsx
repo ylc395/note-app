@@ -1,4 +1,4 @@
-import { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
+import { useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from 'react';
 import { gfm } from '@milkdown/preset-gfm';
 import { commonmark } from '@milkdown/preset-commonmark';
 import { Editor, rootCtx, editorViewCtx, parserCtx, EditorStatus } from '@milkdown/core';
@@ -14,15 +14,13 @@ import uploadOptions from './upload';
 import { clipboard } from './clipboard';
 import multimedia from './multimedia';
 import iconLink from './iconLink';
-
-import './markdown.css';
+import search from './search';
 
 interface Props {
   onChange: (content: string) => void;
 }
 
 export interface EditorRef {
-  focus: () => void;
   updateContent: (content: string, emitEvent?: boolean) => void;
 }
 
@@ -52,8 +50,8 @@ export default forwardRef<EditorRef, Props>(function MarkdownEditor({ onChange }
         ctx.get(listenerCtx).markdownUpdated((_, markdown, pre) => {
           emitEventRef.current && typeof pre === 'string' && onChange(markdown);
         });
-      });
-
+      })
+      .use(search);
     editor.create();
     editorRef.current = editor;
 
@@ -62,22 +60,23 @@ export default forwardRef<EditorRef, Props>(function MarkdownEditor({ onChange }
     };
   }, [onChange]);
 
-  useImperativeHandle(ref, () => ({
-    focus: () => {
-      const editor = editorRef.current;
+  const focus = useCallback(() => {
+    const editor = editorRef.current;
 
-      if (!editor) {
-        throw new Error('not init');
+    if (!editor) {
+      throw new Error('not init');
+    }
+
+    editor.action((ctx) => {
+      const view = ctx.get(editorViewCtx);
+
+      if (!view.hasFocus()) {
+        view.focus();
       }
+    });
+  }, []);
 
-      editor.action((ctx) => {
-        const view = ctx.get(editorViewCtx);
-
-        if (!view.hasFocus()) {
-          view.focus();
-        }
-      });
-    },
+  useImperativeHandle(ref, () => ({
     updateContent: async (content: string, emitEvent = true) => {
       const editor = editorRef.current;
 
@@ -112,5 +111,5 @@ export default forwardRef<EditorRef, Props>(function MarkdownEditor({ onChange }
     },
   }));
 
-  return <div ref={rootRef} spellCheck={false} className="markdown"></div>;
+  return <div className="relative h-full overflow-auto" onClick={focus} ref={rootRef} spellCheck={false}></div>;
 });
