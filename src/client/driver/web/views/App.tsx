@@ -9,6 +9,7 @@ import Layout, { ExplorerTypes } from 'model/Layout';
 
 import ActivityBar from './Explorer/ActivityBar';
 import NoteExplorer from './Explorer/Note';
+import Memo from './Explorer/Memo';
 import Workbench from './Workbench';
 import { DraggableZone, DragPreview } from './DraggableZone';
 
@@ -16,7 +17,7 @@ const explorerMap: Record<ExplorerTypes, () => ReactNode> = {
   [ExplorerTypes.Notes]: () => <NoteExplorer />,
   [ExplorerTypes.Materials]: () => null,
   [ExplorerTypes.Timeline]: () => null,
-  [ExplorerTypes.Memo]: () => null,
+  [ExplorerTypes.Memo]: () => <Memo />,
   [ExplorerTypes.Topic]: () => null,
   [ExplorerTypes.Code]: () => null,
   [ExplorerTypes.Dustbin]: () => null,
