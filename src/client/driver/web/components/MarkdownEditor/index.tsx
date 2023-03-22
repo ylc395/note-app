@@ -45,14 +45,15 @@ export default forwardRef<EditorRef, Props>(function MarkdownEditor({ onChange }
       .use(clipboard)
       .use(iconLink)
       .use(cursor)
+      .use(search)
       .config((ctx) => {
         ctx.set(rootCtx, rootRef.current);
         ctx.set(uploadConfig.key, uploadOptions);
         ctx.get(listenerCtx).markdownUpdated((_, markdown, pre) => {
           emitEventRef.current && typeof pre === 'string' && onChange(markdown);
         });
-      })
-      .use(search);
+      });
+
     editor.create();
     editorRef.current = editor;
 

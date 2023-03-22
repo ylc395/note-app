@@ -21,9 +21,6 @@ export default observer(function NoteTitle({ editor }: { editor: NoteEditor }) {
         disabled={!editor.entity}
       />
       <Space.Compact>
-        <Tooltip title="搜索">
-          <Button type="text" icon={<SearchOutlined />} />
-        </Tooltip>
         <Tooltip title="信息与统计">
           <Button type="text" icon={<InfoCircleOutlined />} />
         </Tooltip>
