@@ -1,10 +1,7 @@
 import { commandsCtx } from '@milkdown/core';
 import { Plugin } from '@milkdown/prose/state';
-import { Decoration, DecorationSet } from '@milkdown/prose/view';
 import { $command, $prose, $useKeymap } from '@milkdown/utils';
 import { createSlice } from '@milkdown/ctx';
-import clsx from 'clsx';
-import noop from 'lodash/noop';
 
 import './style.css';
 import SearchView from './SearchView';
@@ -18,31 +15,8 @@ const searchPlugin = $prose((ctx) => {
 
   return new Plugin({
     props: {
-      decorations(state) {
-        const { ranges, activeIndex } = searchView.getSearchState();
-
-        return DecorationSet.create(
-          state.doc,
-          ranges.map((range, i) =>
-            Decoration.inline(range.from, range.to, {
-              // eslint-disable-next-line tailwindcss/no-custom-classname
-              class: clsx('match-highlight', i === activeIndex ? 'active-match-highlight' : ''),
-              nodeName: 'mark',
-            }),
-          ),
-        );
-      },
+      decorations: searchView.getDecorations.bind(searchView),
     },
-
-    state: {
-      init: noop,
-      apply(tr) {
-        if (tr.docChanged) {
-          searchView.search();
-        }
-      },
-    },
-    view: () => searchView,
   });
 });
 

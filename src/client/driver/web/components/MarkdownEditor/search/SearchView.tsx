@@ -1,9 +1,12 @@
 import { editorViewCtx, rootDOMCtx } from '@milkdown/core';
 import type { Ctx } from '@milkdown/ctx';
-import { PluginKey, PluginView } from '@milkdown/prose/state';
-import { observable, reaction, action, makeObservable, runInAction } from 'mobx';
+import { EditorState, PluginKey, PluginView } from '@milkdown/prose/state';
+import { Decoration, DecorationSet } from '@milkdown/prose/view';
+import { listenerCtx } from '@milkdown/plugin-listener';
+import { observable, reaction, action, makeObservable } from 'mobx';
 import debounce from 'lodash/debounce';
 import { type Root, createRoot } from 'react-dom/client';
+import clsx from 'clsx';
 
 import SearchBox from './SearchBox';
 import type { SearchState, Range } from './type';
@@ -12,8 +15,8 @@ export default class SearchView implements PluginView {
   private resources?: { react: Root; el: HTMLElement; autoDispatchDisposer: ReturnType<typeof reaction> };
   private readonly key = new PluginKey();
 
-  @observable.ref
-  private searchState: SearchState = {
+  @observable.shallow
+  private readonly searchState: SearchState = {
     ranges: [],
     activeIndex: 0,
   };
@@ -22,24 +25,24 @@ export default class SearchView implements PluginView {
 
   constructor(private readonly ctx: Ctx) {
     makeObservable(this);
-  }
 
-  getSearchState() {
-    return this.searchState;
+    const listeners = ctx.get(listenerCtx);
+
+    listeners.markdownUpdated(this.search);
+    listeners.destroy(this.destroy);
   }
 
   private autoDispatch() {
     return reaction(
-      () => this.searchState,
+      () => ({ ...this.searchState }),
       () => {
         const editorView = this.ctx.get(editorViewCtx);
         editorView.dispatch(editorView.state.tr.setMeta(this.key, null));
-        this.render();
       },
     );
   }
 
-  readonly search = debounce(
+  private readonly search = debounce(
     action(() => {
       const editorView = this.ctx.get(editorViewCtx);
       const re = new RegExp(this.keyword, 'gui');
@@ -63,10 +66,8 @@ export default class SearchView implements PluginView {
         });
       }
 
-      this.searchState = {
-        ranges,
-        activeIndex: 0,
-      };
+      this.searchState.ranges = ranges;
+      this.searchState.activeIndex = 0;
     }),
     300,
   );
@@ -81,7 +82,7 @@ export default class SearchView implements PluginView {
         return;
       }
 
-      this.searchState = { ...this.searchState, activeIndex: this.searchState.activeIndex + (dir === 'down' ? 1 : -1) };
+      this.searchState.activeIndex += dir === 'down' ? 1 : -1;
     });
   }
 
@@ -97,26 +98,19 @@ export default class SearchView implements PluginView {
 
     const rootEl = this.ctx.get(rootDOMCtx);
     rootEl.parentElement?.prepend(searchBoxRootEl);
+
     this.resources = {
       el: searchBoxRootEl,
       react: createRoot(searchBoxRootEl),
       autoDispatchDisposer: this.autoDispatch(),
     };
 
-    this.render();
-  }
-
-  private render() {
-    if (!this.resources) {
-      return;
-    }
-
     this.resources.react.render(
       <SearchBox
         searchState={this.searchState}
         onPrevious={this.nextMatch('up')}
         onNext={this.nextMatch('down')}
-        onClose={() => this.destroy()}
+        onClose={this.destroy}
         onChange={(v) => {
           this.keyword = v;
           this.search();
@@ -125,21 +119,34 @@ export default class SearchView implements PluginView {
     );
   }
 
+  @action.bound
   destroy() {
     if (!this.resources) {
       return;
     }
 
-    runInAction(() => {
-      this.searchState = {
-        activeIndex: 0,
-        ranges: [],
-      };
-    });
+    this.searchState.ranges = [];
+    this.searchState.activeIndex = 0;
+    this.search.cancel();
 
     this.resources.react.unmount();
     this.resources.el.remove();
     this.resources.autoDispatchDisposer();
     this.resources = undefined;
+  }
+
+  getDecorations(state: EditorState) {
+    const { ranges, activeIndex } = this.searchState;
+
+    return DecorationSet.create(
+      state.doc,
+      ranges.map((range, i) =>
+        Decoration.inline(range.from, range.to, {
+          // eslint-disable-next-line tailwindcss/no-custom-classname
+          class: clsx('match-highlight', i === activeIndex ? 'active-match-highlight' : ''),
+          nodeName: 'mark',
+        }),
+      ),
+    );
   }
 }
