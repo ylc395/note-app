@@ -87,6 +87,7 @@ export default class SearchView implements PluginView {
 
   enable() {
     if (this.resources) {
+      this.resources.el.querySelector('input')?.select();
       return;
     }
 
