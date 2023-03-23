@@ -1,21 +1,70 @@
-import { commandsCtx } from '@milkdown/core';
-import { Plugin } from '@milkdown/prose/state';
+import { commandsCtx, editorViewCtx, rootDOMCtx } from '@milkdown/core';
+import { Plugin, PluginKey } from '@milkdown/prose/state';
 import { $command, $prose, $useKeymap } from '@milkdown/utils';
+import { listenerCtx } from '@milkdown/plugin-listener';
 import { createSlice } from '@milkdown/ctx';
+import { Decoration, DecorationSet } from '@milkdown/prose/view';
+import clsx from 'clsx';
 
 import './style.css';
-import SearchView from './SearchView';
+import SearchViewModel from './SearchViewModel';
+import type { SearchState } from './type';
 
-const searchViewCtx = createSlice<SearchView | null>(null, 'searchView');
+const searchViewCtx = createSlice<SearchViewModel | null>(null, 'searchView');
+const pluginKey = new PluginKey();
 
 const searchPlugin = $prose((ctx) => {
-  const searchView = new SearchView(ctx);
+  const rootEl = ctx.get(rootDOMCtx);
+  const listeners = ctx.get(listenerCtx);
+  const searchView = new SearchViewModel({
+    rootEl,
+    traverseText(cb) {
+      const editorView = ctx.get(editorViewCtx);
+      editorView.state.doc.descendants((node, pos) => {
+        if (!node.isTextblock) {
+          return;
+        }
+
+        cb(node.textContent, pos);
+        return false;
+      });
+    },
+    onUpdate(e) {
+      const editorView = ctx.get(editorViewCtx);
+      editorView.dispatch(editorView.state.tr.setMeta(pluginKey, e));
+    },
+  });
+
+  listeners.markdownUpdated(searchView.search).destroy(searchView.destroy);
 
   ctx.inject(searchViewCtx, searchView);
 
   return new Plugin({
     props: {
-      decorations: searchView.getDecorations.bind(searchView),
+      decorations(state) {
+        return this.getState(state);
+      },
+    },
+    state: {
+      init: () => DecorationSet.empty,
+      apply(tr, decorations) {
+        const searchState = tr.getMeta(pluginKey) as SearchState | undefined;
+
+        if (!searchState) {
+          return decorations.map(tr.mapping, tr.doc);
+        }
+
+        return DecorationSet.create(
+          tr.doc,
+          searchState.ranges.map((range, i) =>
+            Decoration.inline(range.from, range.to, {
+              // eslint-disable-next-line tailwindcss/no-custom-classname
+              class: clsx('match-highlight', i === searchState.activeIndex ? 'active-match-highlight' : ''),
+              nodeName: 'mark',
+            }),
+          ),
+        );
+      },
     },
   });
 });
