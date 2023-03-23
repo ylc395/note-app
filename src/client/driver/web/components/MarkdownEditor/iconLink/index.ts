@@ -1,57 +1,46 @@
-import debounce from 'lodash/debounce';
 import { linkSchema, textSchema } from '@milkdown/preset-commonmark';
 import { $prose } from '@milkdown/utils';
-import { Plugin, Transaction } from '@milkdown/prose/state';
+import { listenerCtx } from '@milkdown/plugin-listener';
+import { Plugin, PluginKey } from '@milkdown/prose/state';
 import { Decoration, DecorationSet } from '@milkdown/prose/view';
-import { editorViewCtx } from '@milkdown/core';
-import uniqueId from 'lodash/uniqueId';
+import { editorStateCtx, editorViewCtx } from '@milkdown/core';
 
-import IconLoader from './IconLoader';
+import { type Icon, IconManager } from './IconManager';
 import './style.css';
 
-interface IconLinkMetadata {
-  from: number;
-  to: number;
-  iconUrl: string | undefined;
-}
-
-const pluginKey = uniqueId('milkdown-iconLink');
+const pluginKey = new PluginKey();
 
 export default $prose((ctx) => {
-  const iconLoader = new IconLoader();
-  const iconLinkMarkType = linkSchema.type();
   const textNodeType = textSchema.type();
-  let latestTransaction: Transaction | undefined;
+  const linkMarkType = linkSchema.type();
+  const iconManager = new IconManager({
+    traverseLink(cb) {
+      const state = ctx.get(editorStateCtx);
 
-  const updateDecorations = debounce((tr: Transaction) => {
-    const view = ctx.get(editorViewCtx);
-    const icons: IconLinkMetadata[] = [];
-    let iconsCount = 0;
-
-    view.state.doc.descendants((node, pos) => {
-      if (node.type !== textNodeType || !node.text) {
-        return;
-      }
-
-      for (const mark of node.marks) {
-        if (mark.type !== iconLinkMarkType) {
+      state.doc.descendants((node, pos) => {
+        if (node.type !== textNodeType || !node.text) {
           return;
         }
 
-        iconsCount += 1;
-        iconLoader.load(mark.attrs.href).then((iconUrl) => {
-          icons.push({ from: pos, to: pos + node.textContent.length, iconUrl });
-
-          if (icons.length === iconsCount) {
-            if (latestTransaction && tr !== latestTransaction) {
-              return;
-            }
-            view.dispatch(view.state.tr.setMeta(pluginKey, icons));
+        for (const mark of node.marks) {
+          if (mark.type !== linkMarkType) {
+            continue;
           }
-        });
-      }
-    });
-  }, 2000);
+
+          const { textContent } = node;
+          cb(mark.attrs.href, pos, textContent);
+        }
+      });
+    },
+    onUpdate(icons) {
+      const view = ctx.get(editorViewCtx);
+      view.dispatch(view.state.tr.setMeta(pluginKey, icons));
+    },
+  });
+
+  const listeners = ctx.get(listenerCtx);
+
+  listeners.markdownUpdated(iconManager.collectIcons).destroy(iconManager.destroy);
 
   return new Plugin({
     props: {
@@ -59,37 +48,26 @@ export default $prose((ctx) => {
         return this.getState(state);
       },
     },
-    view: () => ({
-      destroy: updateDecorations.cancel,
-    }),
     state: {
       init() {
         return DecorationSet.empty;
       },
       apply(tr, decorationSet) {
-        const newDecorationSet = decorationSet.map(tr.mapping, tr.doc);
-        const icons = tr.getMeta(pluginKey) as IconLinkMetadata[] | undefined;
+        const newIcons = tr.getMeta(pluginKey) as Icon[] | undefined;
 
-        if (icons) {
-          return newDecorationSet.add(
-            tr.doc,
-            icons
-              .filter(({ iconUrl }) => iconUrl)
-              .map(({ from, to, iconUrl }) =>
-                Decoration.inline(from, to, {
-                  class: 'with-icon',
-                  style: `background-image: url(${iconUrl})`,
-                }),
-              ),
-          );
+        if (!newIcons) {
+          return decorationSet.map(tr.mapping, tr.doc);
         }
 
-        if (tr.docChanged) {
-          latestTransaction = tr;
-          updateDecorations(tr);
-        }
-
-        return newDecorationSet;
+        return DecorationSet.create(
+          tr.doc,
+          newIcons.map((icon) =>
+            Decoration.inline(icon.from, icon.to, {
+              class: 'with-icon',
+              style: `background-image: url(${icon.dataUrl})`,
+            }),
+          ),
+        );
       },
     },
   });

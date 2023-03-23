@@ -34,22 +34,9 @@ export default class IconLoader {
     this._load.cache = cache;
   }
 
-  async load(url: string) {
-    if (url.startsWith('#')) {
-      return;
-    }
-
-    const validUrl = !url.startsWith('https://') && !url.startsWith('http://') ? `https://${url}` : url;
-    let origin: string;
-
+  async load(origin: string, url: string) {
     try {
-      origin = new URL(validUrl).origin;
-    } catch {
-      return;
-    }
-
-    try {
-      const result = await this._load(origin, validUrl);
+      const result = await this._load(origin, url);
       return result === DEFAULT_LINK_ICON_KEY ? DEFAULT_LINK_ICON : result;
     } catch (e) {
       return DEFAULT_LINK_ICON;
@@ -103,7 +90,7 @@ export default class IconLoader {
     return await IconLoader.getDataUrl(iconBody.body, iconBody.headers['content-type']);
   }
 
-  static async getDataUrl(file: ArrayBuffer, type: string) {
+  private static async getDataUrl(file: ArrayBuffer, type: string) {
     const dataUrl = await new Promise<string>((resolve) => {
       const fileReader = new FileReader();
       fileReader.addEventListener('load', () => resolve(fileReader.result as string));

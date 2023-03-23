@@ -14,30 +14,33 @@ const searchViewCtx = createSlice<SearchViewModel | null>(null, 'searchView');
 const pluginKey = new PluginKey();
 
 const searchPlugin = $prose((ctx) => {
-  const rootEl = ctx.get(rootDOMCtx);
   const listeners = ctx.get(listenerCtx);
-  const searchView = new SearchViewModel({
-    rootEl,
-    traverseText(cb) {
-      const editorView = ctx.get(editorViewCtx);
-      editorView.state.doc.descendants((node, pos) => {
-        if (!node.isTextblock) {
-          return;
-        }
 
-        cb(node.textContent, pos);
-        return false;
-      });
-    },
-    onUpdate(e) {
-      const editorView = ctx.get(editorViewCtx);
-      editorView.dispatch(editorView.state.tr.setMeta(pluginKey, e));
-    },
+  listeners.mounted(() => {
+    const rootEl = ctx.get(rootDOMCtx);
+    const searchView = new SearchViewModel({
+      rootEl,
+      traverseText(cb) {
+        const editorView = ctx.get(editorViewCtx);
+        editorView.state.doc.descendants((node, pos) => {
+          if (!node.isTextblock) {
+            return;
+          }
+
+          cb(node.textContent, pos);
+          return false;
+        });
+      },
+      onUpdate(e) {
+        const editorView = ctx.get(editorViewCtx);
+        editorView.dispatch(editorView.state.tr.setMeta(pluginKey, e));
+      },
+    });
+
+    listeners.markdownUpdated(searchView.search).destroy(searchView.destroy);
+
+    ctx.inject(searchViewCtx, searchView);
   });
-
-  listeners.markdownUpdated(searchView.search).destroy(searchView.destroy);
-
-  ctx.inject(searchViewCtx, searchView);
 
   return new Plugin({
     props: {

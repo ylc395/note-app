@@ -79,7 +79,7 @@ export default class SearchViewModel {
     const searchBoxRootEl = document.createElement('div');
     searchBoxRootEl.className = 'search-box';
     searchBoxRootEl.addEventListener('click', (e) => e.stopPropagation());
-    this.options.rootEl.parentElement?.prepend(searchBoxRootEl);
+    this.options.rootEl.before(searchBoxRootEl);
 
     this.resources = {
       el: searchBoxRootEl,
