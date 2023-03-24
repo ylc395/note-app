@@ -13,9 +13,9 @@ import { EntityTypes } from 'interface/Entity';
 
 import { MULTIPLE_ICON_FLAG, type NoteMetadata } from 'model/note/MetadataForm';
 import NoteTree, { NoteTreeNode } from 'model/note/Tree';
-import StarManager, { StarEvents } from 'model/StarManager';
 import { TileSplitDirections } from 'model/workbench/TileManger';
 
+import StarService, { StarEvents } from './StarService';
 import EditorService from './EditorService';
 
 export enum NoteEvents {
@@ -27,7 +27,7 @@ export enum NoteEvents {
 export default class NoteService extends EventEmitter {
   private readonly remote = container.resolve(remoteToken);
   private readonly editor = container.resolve(EditorService);
-  private readonly star = container.resolve(StarManager);
+  private readonly star = container.resolve(StarService);
   private readonly userFeedback = container.resolve(userFeedbackToken);
   private readonly userInput = container.resolve(userInputToken);
   readonly noteTree = new NoteTree();
