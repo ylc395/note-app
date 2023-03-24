@@ -1,6 +1,6 @@
 import { Controller } from '@nestjs/common';
 
-import { EntityTypes } from 'interface/Entity';
+import { stringToEntityTypes } from 'interface/Entity';
 import { type StarsDTO, starsDTOSchema, StarRecord } from 'interface/Star';
 import StarService from 'service/StarService';
 import { Get, Put, Body, createSchemaPipe, Delete, Param } from './decorators';
@@ -9,9 +9,18 @@ import { Get, Put, Body, createSchemaPipe, Delete, Param } from './decorators';
 export default class StarsController {
   constructor(private starService: StarService) {}
 
-  @Put('/stars/notes')
-  async create(@Body(createSchemaPipe(starsDTOSchema)) { ids }: StarsDTO): Promise<StarRecord[]> {
-    return this.starService.put(EntityTypes.Note, ids);
+  @Put('/stars/:entityType')
+  async create(
+    @Body(createSchemaPipe(starsDTOSchema)) { ids }: StarsDTO,
+    @Param('entityType') entityType: string,
+  ): Promise<StarRecord[]> {
+    const type = stringToEntityTypes[entityType];
+
+    if (!type) {
+      throw new Error('wrong type');
+    }
+
+    return this.starService.create(type, ids);
   }
 
   @Get('/stars')

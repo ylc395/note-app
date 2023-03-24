@@ -12,7 +12,7 @@ import BaseService from './BaseService';
 @Injectable()
 export default class StarService extends BaseService {
   @Transaction
-  async put(type: EntityTypes, ids: EntityId[]) {
+  async create(type: EntityTypes, ids: EntityId[]) {
     if (ids.length === 0) {
       throw new Error('no ids');
     }
