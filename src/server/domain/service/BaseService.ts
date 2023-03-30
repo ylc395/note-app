@@ -1,4 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 import { token as databaseToken, type Database } from 'infra/Database';
 import type Repositories from './repository';
@@ -28,7 +29,7 @@ function cache<T, R>(target: BaseService, name: PropertyKey, descriptor: CachePr
 
 @Injectable()
 export default class BaseService implements Repositories {
-  constructor(@Inject(databaseToken) readonly db: Database) {}
+  constructor(@Inject(databaseToken) readonly db: Database, protected readonly eventEmitter: EventEmitter2) {}
 
   @cache
   get notes() {

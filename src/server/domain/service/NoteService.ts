@@ -12,9 +12,19 @@ import {
   type NoteQuery,
   type NotesDTO,
   type NotePath,
+  type NoteBodyVO,
   normalizeTitle,
 } from 'interface/Note';
 import BaseService from './BaseService';
+
+export const events = {
+  noteUpdated: Symbol(),
+};
+
+export interface NoteUpdatedEvent {
+  id: NoteVO['id'];
+  content: NoteBodyVO;
+}
 
 @Injectable()
 export default class NoteService extends BaseService {
@@ -77,6 +87,8 @@ export default class NoteService extends BaseService {
     if (result === null) {
       throw new Error('update note body failed');
     }
+
+    await this.eventEmitter.emitAsync(events.noteUpdated, { id: noteId, content: result });
 
     return result;
   }

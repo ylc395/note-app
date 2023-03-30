@@ -11,6 +11,7 @@
       "driver/*": ["driver/*"],
       "client/*": ["../client/*"],
       "utils/*": ["../shared/utils/*"],
+      "markdown/*": ["../shared/markdown/*"],
       "controller/*": ["controller/*"]
     }
   }
