@@ -1,5 +1,5 @@
 import { object, array } from 'zod';
-import { type EntityTypes, type EntityId, entityId } from './Entity';
+import { type EntityTypes, type EntityId, entityId } from './entity';
 
 export const starsDTOSchema = object({
   ids: array(entityId()).nonempty(),

@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 
-import { stringToEntityTypes } from 'interface/Entity';
-import { type StarsDTO, starsDTOSchema, StarRecord } from 'interface/Star';
+import { stringToEntityTypes } from 'interface/entity';
+import { type StarsDTO, starsDTOSchema, StarRecord } from 'interface/star';
 import StarService from 'service/StarService';
 import { Get, Put, Body, createSchemaPipe, Delete, Param } from './decorators';
 

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { EntityId, EntityTypes } from 'interface/Entity';
+import { EntityId, EntityTypes } from 'interface/entity';
 import { Transaction } from 'infra/Database';
 import BaseService from './BaseService';
 

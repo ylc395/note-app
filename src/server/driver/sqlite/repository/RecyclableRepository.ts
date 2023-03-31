@@ -1,9 +1,9 @@
 import type { Knex } from 'knex';
-import type { EntityTypes } from 'interface/Entity';
+import type { EntityTypes } from 'interface/entity';
 import type { RecyclablesRepository } from 'service/repository/RecyclableRepository';
 
 import BaseRepository from './BaseRepository';
-import schema, { type Row } from '../schema/recyclableSchema';
+import schema, { type Row } from '../schema/recyclable';
 
 export default class SqliteRecyclableRepository extends BaseRepository<Row> implements RecyclablesRepository {
   protected readonly schema = schema;

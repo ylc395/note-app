@@ -1,7 +1,7 @@
 import { boolean, infer as Infer, object, string } from 'zod';
-import { entityId, type EntityId } from './Entity';
-import { type PaginationEntity, type PaginationQuery, paginationQuerySchema } from './Pagination';
-import type { Starable } from './Star';
+import { entityId, type EntityId } from './entity';
+import { type PaginationEntity, type PaginationQuery, paginationQuerySchema } from './pagination';
+import type { Starable } from './star';
 
 interface ChildMemoVO {
   id: EntityId;

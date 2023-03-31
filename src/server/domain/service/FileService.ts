@@ -4,7 +4,7 @@ import path from 'node:path';
 import { TextEncoder } from 'node:util';
 import fromParis from 'lodash/fromPairs';
 
-import { type FilesDTO, type FileUrl, isUrls } from 'interface/File';
+import { type FilesDTO, type FileUrl, isUrls } from 'interface/file';
 import { Transaction } from 'infra/Database';
 import { appFileProtocol } from 'infra/electronProtocol';
 import { buildIndex } from 'utils/collection';

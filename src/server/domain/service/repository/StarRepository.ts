@@ -1,5 +1,5 @@
-import type { StarRecord } from 'interface/Star';
-import type { EntityTypes, EntityId } from 'interface/Entity';
+import type { StarRecord } from 'interface/star';
+import type { EntityTypes, EntityId } from 'interface/entity';
 
 export interface StarQuery {
   entityType: EntityTypes;

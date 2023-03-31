@@ -1,8 +1,8 @@
 import { union, boolean, number, object, string, null as zodNull, type infer as Infer, array, record } from 'zod';
 import dayjs from 'dayjs';
 
-import type { Starable } from './Star';
-import { type EntityId, entityId } from './Entity';
+import type { Starable } from './star';
+import { type EntityId, entityId } from './entity';
 
 export const noteDTOSchema = object({
   title: string().optional(),

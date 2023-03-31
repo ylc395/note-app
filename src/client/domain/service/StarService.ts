@@ -5,8 +5,8 @@ import pull from 'lodash/pull';
 
 import { token as remoteToken } from 'infra/Remote';
 import { token as userFeedbackToken } from 'infra/UserFeedback';
-import { type EntityId, EntityTypes, entityTypesToString } from 'interface/Entity';
-import type { StarRecord, StarsDTO } from 'interface/Star';
+import { type EntityId, EntityTypes, entityTypesToString } from 'interface/entity';
+import type { StarRecord, StarsDTO } from 'interface/star';
 
 export enum StarEvents {
   NoteAdded = 'star.note.added',

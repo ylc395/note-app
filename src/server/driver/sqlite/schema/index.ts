@@ -1,7 +1,7 @@
-export { default as noteSchema } from './noteSchema';
-export { default as recyclableSchema } from './recyclableSchema';
-export { default as starSchema } from './starSchema';
-export { default as kvSchema } from './kvSchema';
-export { default as fileSchema } from './fileSchema';
-export { default as fileDataSchema } from './fileDataSchema';
-export { default as memoSchema } from './memoSchema';
+export { default as noteSchema } from './note';
+export { default as recyclableSchema } from './recyclable';
+export { default as starSchema } from './star';
+export { default as kvSchema } from './kv';
+export { default as fileSchema } from './file';
+export { default as fileDataSchema } from './fileData';
+export { default as memoSchema } from './memo';

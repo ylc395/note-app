@@ -7,7 +7,7 @@ import cloneDeep from 'lodash/cloneDeep';
 import { token as remoteToken } from 'infra/Remote';
 import { token as userInputToken } from 'infra/UserInput';
 import type { ContextmenuItem } from 'infra/ui';
-import { EntityTypes, type EntityId } from 'interface/Entity';
+import { EntityTypes, type EntityId } from 'interface/entity';
 import type { NoteBodyDTO, NoteBodyVO, NoteDTO, NoteVO } from 'interface/Note';
 
 import NoteEditor, { Events as NoteEditorEvents, type BodyEvent, type MetadataEvent } from 'model/note/Editor';

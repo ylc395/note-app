@@ -10,7 +10,7 @@ import {
   HttpFileMetadataRequest,
   httpFileMetadataRequestSchema,
   HttpFileMetadata,
-} from 'interface/File';
+} from 'interface/file';
 import FileService from 'service/FileService';
 
 import { Get, Post, Body, Query, createSchemaPipe } from './decorators';

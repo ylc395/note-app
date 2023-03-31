@@ -1,4 +1,4 @@
-import type { FileVO } from 'interface/File';
+import type { FileVO } from 'interface/file';
 
 export type FileQuery = {
   sourceUrl: NonNullable<FileVO['sourceUrl']>[];

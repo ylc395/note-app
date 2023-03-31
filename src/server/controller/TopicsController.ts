@@ -1,6 +1,6 @@
 import { Controller } from '@nestjs/common';
 
-import { TopicQuerySchema, type TopicQuery, type TopicVO } from 'interface/Topic';
+import { TopicQuerySchema, type TopicQuery, type TopicVO } from 'interface/topic';
 import StarService from 'service/StarService';
 import { Get, createSchemaPipe, Query } from './decorators';
 

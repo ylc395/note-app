@@ -10,7 +10,7 @@ import type Repository from 'service/repository';
 
 import * as schemas from './schema';
 import type { Schema } from './schema/type';
-import type { Row as KvRow } from './schema/kvSchema';
+import type { Row as KvRow } from './schema/kv';
 import * as repositories from './repository';
 
 const isDevelopment = process.env.NODE_ENV === 'development';

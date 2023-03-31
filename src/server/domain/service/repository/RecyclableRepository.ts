@@ -1,5 +1,5 @@
-import type { RecyclableRecord } from 'interface/Recyclables';
-import type { EntityTypes, EntityId } from 'interface/Entity';
+import type { RecyclableRecord } from 'interface/recyclables';
+import type { EntityTypes, EntityId } from 'interface/entity';
 
 export interface RecyclablesRepository {
   put: (type: EntityTypes, ids: EntityId[]) => Promise<RecyclableRecord[]>;

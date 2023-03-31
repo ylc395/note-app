@@ -1,5 +1,5 @@
 import { object, string, array, type infer as Infer, instanceof as zodInstanceof, union, enum as zodEnum } from 'zod';
-import type { EntityId } from './Entity';
+import type { EntityId } from './entity';
 
 export interface FileVO {
   id: EntityId;

@@ -1,8 +1,8 @@
 import { Controller } from '@nestjs/common';
 
-import { EntityTypes } from 'interface/Entity';
+import { EntityTypes } from 'interface/entity';
 import RecyclableService from 'service/RecyclableService';
-import { RecyclablesDTOSchema, RecyclableRecord, type RecyclablesDTO } from 'interface/Recyclables';
+import { RecyclablesDTOSchema, RecyclableRecord, type RecyclablesDTO } from 'interface/recyclables';
 
 import { Body, createSchemaPipe, Put } from './decorators';
 

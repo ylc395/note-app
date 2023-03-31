@@ -1,4 +1,4 @@
-import type { NoteBodyDTO, NoteDTO, NoteVO, NotesDTO, NoteAttributesVO } from 'interface/Note';
+import type { NoteBodyDTO, NoteDTO, NoteVO, NotesDTO, NoteAttributesVO } from 'interface/note';
 
 export type NoteQuery = {
   parentId?: NoteVO['parentId'] | NonNullable<NoteVO['id']>[];

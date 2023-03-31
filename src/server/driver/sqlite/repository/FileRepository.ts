@@ -4,10 +4,10 @@ import compact from 'lodash/compact';
 import type { FileRepository, RawFile, FileQuery } from 'service/repository/FileRepository';
 
 import BaseRepository from './BaseRepository';
-import schema, { type Row } from '../schema/fileSchema';
-import fileDataSchema, { type Row as FileDataRow } from '../schema/fileDataSchema';
+import schema, { type Row } from '../schema/file';
+import fileDataSchema, { type Row as FileDataRow } from '../schema/fileData';
 import { buildIndex } from 'utils/collection';
-import type { FileVO } from 'interface/File';
+import type { FileVO } from 'interface/file';
 
 export default class SqliteFileRepository extends BaseRepository<Row> implements FileRepository {
   protected schema = schema;

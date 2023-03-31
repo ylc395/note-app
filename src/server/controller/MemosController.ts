@@ -10,7 +10,7 @@ import {
   type MemoQuery,
   type PaginationMemeVO,
   type MemoPatchDTO,
-} from 'interface/Memo';
+} from 'interface/memo';
 import MemoService from 'service/MemoService';
 
 @Controller()

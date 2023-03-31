@@ -9,7 +9,7 @@ import type { ContextmenuItem } from 'infra/ui';
 
 import { type NoteDTO, type NoteVO as Note, type NotesDTO, type NoteVO, normalizeTitle } from 'interface/Note';
 import type { RecyclablesDTO } from 'interface/Recyclables';
-import { EntityTypes } from 'interface/Entity';
+import { EntityTypes } from 'interface/entity';
 
 import { MULTIPLE_ICON_FLAG, type NoteMetadata } from 'model/note/MetadataForm';
 import NoteTree, { NoteTreeNode } from 'model/note/Tree';

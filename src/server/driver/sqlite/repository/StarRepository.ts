@@ -1,11 +1,11 @@
-import { EntityTypes, type EntityId } from 'interface/Entity';
-import type { StarRecord } from 'interface/Star';
+import { EntityTypes, type EntityId } from 'interface/entity';
+import type { StarRecord } from 'interface/star';
 import type { StarRepository, StarQuery } from 'service/repository/StarRepository';
 
 import BaseRepository from './BaseRepository';
 import RecyclableRepository from './RecyclableRepository';
-import schema, { type Row } from '../schema/starSchema';
-import noteSchema from '../schema/noteSchema';
+import schema, { type Row } from '../schema/star';
+import noteSchema from '../schema/note';
 
 export default class SqliteStarRepository extends BaseRepository<Row> implements StarRepository {
   protected readonly schema = schema;

@@ -1,7 +1,7 @@
 import { makeObservable, computed, action } from 'mobx';
 import debounce from 'lodash/debounce';
 
-import { EntityTypes } from 'interface/Entity';
+import { EntityTypes } from 'interface/entity';
 import { normalizeTitle, type NoteVO, type NoteBodyVO } from 'interface/Note';
 import type Tile from 'model/workbench/Tile';
 import EntityEditor, { type Breadcrumbs } from 'model/abstract/Editor';

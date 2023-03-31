@@ -2,9 +2,9 @@ import { Injectable } from '@nestjs/common';
 import differenceWith from 'lodash/differenceWith';
 
 import { Transaction } from 'infra/Database';
-import { type EntityId, EntityTypes } from 'interface/Entity';
-import { normalizeTitle } from 'interface/Note';
-import type { StarRecord } from 'interface/Star';
+import { type EntityId, EntityTypes } from 'interface/entity';
+import { normalizeTitle } from 'interface/note';
+import type { StarRecord } from 'interface/star';
 import { buildIndex } from 'utils/collection';
 
 import BaseService from './BaseService';

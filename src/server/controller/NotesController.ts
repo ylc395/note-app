@@ -13,7 +13,7 @@ import {
   notesDTOSchema,
   noteQuerySchema,
   noteBodySchema,
-} from 'interface/Note';
+} from 'interface/note';
 import NoteService from 'service/NoteService';
 
 @Controller()

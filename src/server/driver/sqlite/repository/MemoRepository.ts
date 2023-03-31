@@ -1,11 +1,11 @@
 import omit from 'lodash/omit';
 import groupBy from 'lodash/groupBy';
 
-import type { MemoDTO, MemoPatchDTO, MemoQuery, MemoVO } from 'interface/Memo';
+import type { MemoDTO, MemoPatchDTO, MemoQuery, MemoVO } from 'interface/memo';
 import type { MemoRepository } from 'service/repository/MemoRepository';
 
 import BaseRepository from './BaseRepository';
-import schema, { type Row } from '../schema/memoSchema';
+import schema, { type Row } from '../schema/memo';
 
 export default class SqliteMemoRepository extends BaseRepository<Row> implements MemoRepository {
   protected readonly schema = schema;
@@ -48,7 +48,19 @@ export default class SqliteMemoRepository extends BaseRepository<Row> implements
     return { list, total: Number(total[0].count) };
   }
 
-  static rowToVO(row: Row, threads?: Row[]): MemoVO {
+  async findParent(id: MemoVO['id']) {
+    const target = await this.knex<Row>(this.schema.tableName).where('id', id).first();
+
+    if (!target || !target.parentId) {
+      return null;
+    }
+
+    const parent = await this.knex<Row>(this.schema.tableName).where('id', target.parentId).first();
+
+    return parent ? SqliteMemoRepository.rowToVO(parent) : null;
+  }
+
+  private static rowToVO(row: Row, threads?: Row[]): MemoVO {
     return {
       ...omit(row, 'parentId'),
       id: String(row.id),

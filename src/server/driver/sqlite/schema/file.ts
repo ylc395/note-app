@@ -1,5 +1,5 @@
 import { type InferRow, defineSchema } from './type';
-import fileDataSchema from './fileDataSchema';
+import fileDataSchema from './fileData';
 
 const schema = defineSchema({
   tableName: 'files',

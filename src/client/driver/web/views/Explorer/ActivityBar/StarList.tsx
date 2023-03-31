@@ -5,7 +5,7 @@ import { Button, Empty } from 'antd';
 import { CloseOutlined, FileOutlined, LoadingOutlined } from '@ant-design/icons';
 import { useClickAway } from 'ahooks';
 
-import { EntityTypes } from 'interface/Entity';
+import { EntityTypes } from 'interface/entity';
 import StarService from 'service/StarService';
 
 const iconMap = {

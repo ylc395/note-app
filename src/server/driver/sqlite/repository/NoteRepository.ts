@@ -2,14 +2,14 @@ import omit from 'lodash/omit';
 import mapValues from 'lodash/mapValues';
 import uniq from 'lodash/uniq';
 
-import { type EntityId, EntityTypes } from 'interface/Entity';
+import { type EntityId, EntityTypes } from 'interface/entity';
 import type { NoteRepository, NoteQuery } from 'service/repository/NoteRepository';
-import type { NoteDTO, NoteVO, NoteBodyDTO, NotesDTO, NoteAttributesVO } from 'interface/Note';
+import type { NoteDTO, NoteVO, NoteBodyDTO, NotesDTO, NoteAttributesVO } from 'interface/note';
 
 import BaseRepository from './BaseRepository';
 import RecyclableRepository from './RecyclableRepository';
-import noteSchema, { type Row } from '../schema/noteSchema';
-import starSchema, { type Row as StarRow } from '../schema/starSchema';
+import noteSchema, { type Row } from '../schema/note';
+import starSchema, { type Row as StarRow } from '../schema/star';
 
 interface RowPatch {
   childrenCount?: NoteVO['childrenCount'];

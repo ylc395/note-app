@@ -14,7 +14,7 @@ import {
   type NotePath,
   type NoteBodyVO,
   normalizeTitle,
-} from 'interface/Note';
+} from 'interface/note';
 import BaseService from './BaseService';
 
 export const events = {

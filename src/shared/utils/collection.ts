@@ -1,4 +1,4 @@
-import type { EntityId } from 'interface/Entity';
+import type { EntityId } from 'interface/entity';
 
 export function buildIndex<T extends { id: EntityId | number }>(list: T[], key?: keyof T) {
   const index: Record<string | number, T> = {};

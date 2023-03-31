@@ -3,7 +3,7 @@ import { makeObservable, action, observable } from 'mobx';
 import EventEmitter from 'eventemitter3';
 
 import type Tile from 'model/workbench/Tile';
-import type { EntityId, EntityTypes } from 'interface/Entity';
+import type { EntityId, EntityTypes } from 'interface/entity';
 
 interface Breadcrumb {
   title: string;
