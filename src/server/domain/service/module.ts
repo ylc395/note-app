@@ -6,8 +6,9 @@ import RecyclableService from './RecyclableService';
 import StarService from './StarService';
 import FileService from './FileService';
 import TopicService from './TopicService';
+import MemoService from './MemoService';
 
-const services = [NoteService, RecyclableService, StarService, FileService, TopicService];
+const services = [NoteService, RecyclableService, StarService, FileService, TopicService, MemoService];
 
 @Module({
   providers: [BaseService, ...services],

@@ -1,9 +1,22 @@
 import { observer } from 'mobx-react-lite';
 import { Button } from 'antd';
+import { container } from 'tsyringe';
+import { useEffect, useRef } from 'react';
 
 import MarkdownEditor from 'web/components/MarkdownEditor';
+import MemoService from 'service/MemoService';
 
 export default observer(() => {
+  const memoService = container.resolve(MemoService);
+  const contentRef = useRef('');
+  const create = () => {
+    memoService.createMemo({ content: contentRef.current });
+  };
+
+  useEffect(() => {
+    memoService.load();
+  }, [memoService]);
+
   return (
     <div className="box-border flex h-screen flex-col pt-1">
       <div className="border-0 border-b  border-solid border-gray-200 bg-white p-2">
@@ -13,11 +26,18 @@ export default observer(() => {
       </div>
       <div>
         <div className="h-60 cursor-text border border-solid border-gray-300">
-          <MarkdownEditor onChange={() => void 0} />
+          <MarkdownEditor onChange={(content) => (contentRef.current = content)} />
         </div>
         <div>
-          <Button type="primary">创建</Button>
+          <Button onClick={create} type="primary">
+            创建
+          </Button>
         </div>
+      </div>
+      <div>
+        {memoService.memos.map((memo) => (
+          <div key={memo.id}>{memo.content}</div>
+        ))}
       </div>
     </div>
   );

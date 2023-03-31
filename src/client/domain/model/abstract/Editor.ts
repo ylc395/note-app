@@ -1,5 +1,5 @@
 import uniqueId from 'lodash/uniqueId';
-import { computed, makeObservable, action, observable } from 'mobx';
+import { makeObservable, action, observable } from 'mobx';
 import EventEmitter from 'eventemitter3';
 
 import type Tile from 'model/workbench/Tile';
@@ -38,11 +38,6 @@ export default abstract class EntityEditor<T = unknown> extends EventEmitter {
   destroy() {
     this.emit(Events.Destroyed);
     this.removeAllListeners();
-  }
-
-  @computed
-  get isActive() {
-    return this.tile.isFocused && this.tile.currentEditor?.id === this.id;
   }
 
   get isOnlyOne(): boolean {

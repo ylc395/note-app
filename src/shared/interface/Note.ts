@@ -21,7 +21,7 @@ export type NotesDTO = Infer<typeof notesDTOSchema>;
 
 export type NoteDTO = Infer<typeof noteDTOSchema>;
 
-export interface NoteVO extends Starable {
+export type NoteVO = {
   title: string;
   isReadonly: boolean;
   id: EntityId;
@@ -33,7 +33,7 @@ export interface NoteVO extends Starable {
   createdAt: number;
   userCreatedAt: number;
   attributes: Record<string, string>;
-}
+} & Starable;
 
 export type NoteAttributesVO = Record<string, string[]>;
 
