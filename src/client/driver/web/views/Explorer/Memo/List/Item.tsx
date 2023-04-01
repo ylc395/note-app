@@ -10,12 +10,12 @@ import {
   PushpinOutlined,
   PlusOutlined,
 } from '@ant-design/icons';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useRef } from 'react';
 import { useBoolean } from 'ahooks';
 
-import type { MemoVO } from 'interface/Memo';
+import type { ParentMemoVO } from 'interface/Memo';
 import MemoService from 'service/MemoService';
-import MarkdownEditor, { type EditorRef } from 'web/components/MarkdownEditor';
+import MarkdownEditor from 'web/components/MarkdownEditor';
 import ChildItem from './ChildItem';
 import ChildEditor from './ChildEditor';
 
@@ -27,16 +27,11 @@ const menuItems: NonNullable<MenuProps['items']> = [
   { label: '删除', key: 'remove', icon: <DeleteOutlined /> },
 ];
 
-export default observer(function ({ memo }: { memo: MemoVO }) {
+export default observer(function ({ memo }: { memo: ParentMemoVO }) {
   const memoService = container.resolve(MemoService);
-  const editorRef = useRef<EditorRef>(null);
   const [isCreatingChild, { setTrue: startCreatingChild, setFalse: stopCreatingChild }] = useBoolean(false);
   const [isEditing, { setTrue: startEditing, setFalse: stopEditing }] = useBoolean(false);
-
-  useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    editorRef.current!.updateContent(memo.content);
-  }, [memo]);
+  const contentRef = useRef('');
 
   const onClickMenu = useCallback<NonNullable<MenuProps['onClick']>>(
     ({ key }) => {
@@ -46,8 +41,6 @@ export default observer(function ({ memo }: { memo: MemoVO }) {
           break;
         case 'edit':
           startEditing();
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          editorRef.current!.updateContent(memo.content, false);
           break;
         default:
           break;
@@ -56,9 +49,15 @@ export default observer(function ({ memo }: { memo: MemoVO }) {
     [memo, memoService, startEditing],
   );
 
+  const submit = useCallback(async () => {
+    await memoService.updateContent(memo, contentRef.current);
+    contentRef.current = '';
+    stopEditing();
+  }, [memo, memoService, stopEditing]);
+
   const submitChild = useCallback(
     async (content: string) => {
-      await memoService.createMemo({ parentId: memo.id, content });
+      await memoService.createMemo(content, memo);
       stopCreatingChild();
     },
     [memo, memoService, stopCreatingChild],
@@ -87,8 +86,19 @@ export default observer(function ({ memo }: { memo: MemoVO }) {
         </div>
       </div>
       <div className="select-text">
-        <MarkdownEditor readonly={!isEditing} ref={editorRef} />
+        <MarkdownEditor
+          autoFocus
+          readonly={!isEditing}
+          defaultValue={memo.content}
+          onChange={(e) => (contentRef.current = e)}
+        />
       </div>
+      {isEditing && (
+        <div>
+          <Button onClick={stopEditing}>取消</Button>
+          <Button onClick={submit}>保存</Button>
+        </div>
+      )}
       {isCreatingChild && <ChildEditor onSubmit={submitChild} onCancel={stopCreatingChild} />}
       {memo.threads.length > 0 && (
         <div className="pl-4">

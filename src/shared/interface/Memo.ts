@@ -10,12 +10,14 @@ export type ChildMemoVO = Starable & {
   createdAt: number;
 };
 
-export type MemoVO = ChildMemoVO & {
+export type ParentMemoVO = ChildMemoVO & {
   threads: ChildMemoVO[];
   isPinned: boolean;
 };
 
-export type PaginationMemeVO = PaginationEntity<MemoVO>;
+export type MemoVO = ChildMemoVO | ParentMemoVO;
+
+export type PaginationMemeVO = PaginationEntity<ParentMemoVO>;
 
 export type MemoQuery = PaginationQuery;
 

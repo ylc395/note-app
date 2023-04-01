@@ -1,7 +1,7 @@
 import omit from 'lodash/omit';
 import groupBy from 'lodash/groupBy';
 
-import type { MemoDTO, MemoPatchDTO, MemoQuery, MemoVO, ChildMemoVO } from 'interface/memo';
+import type { MemoDTO, MemoPatchDTO, MemoQuery, ParentMemoVO, ChildMemoVO } from 'interface/memo';
 import type { MemoRepository } from 'service/repository/MemoRepository';
 
 import BaseRepository from './BaseRepository';
@@ -12,18 +12,26 @@ export default class SqliteMemoRepository extends BaseRepository<Row> implements
   async create(memo: MemoDTO) {
     const createdRow = await this.createOrUpdate(memo);
 
-    return SqliteMemoRepository.rowToVO(createdRow, []);
+    if (createdRow.id) {
+      return SqliteMemoRepository.rowToVO(createdRow, []);
+    }
+
+    return SqliteMemoRepository.rowToVO(createdRow);
   }
 
-  async update(id: MemoVO['id'], patch: MemoPatchDTO) {
+  async update(id: ParentMemoVO['id'], patch: MemoPatchDTO) {
     const updatedRow = await this.createOrUpdate(patch, id);
 
     if (!updatedRow) {
       return null;
     }
 
-    const children = await this.findChildren(String(updatedRow.id));
-    return SqliteMemoRepository.rowToVO(updatedRow, children);
+    if (updatedRow.parentId) {
+      const children = await this.findChildren(String(updatedRow.id));
+      return SqliteMemoRepository.rowToVO(updatedRow, children);
+    } else {
+      return SqliteMemoRepository.rowToVO(updatedRow);
+    }
   }
 
   async list(query: MemoQuery) {
@@ -46,14 +54,14 @@ export default class SqliteMemoRepository extends BaseRepository<Row> implements
     return { list, total: Number(total[0].count) };
   }
 
-  private async findChildren(parentId: MemoVO['id'] | MemoVO['id'][]) {
+  private async findChildren(parentId: ParentMemoVO['id'] | ParentMemoVO['id'][]) {
     const children = await this.knex<Row>(this.schema.tableName)
       .where('parentId', typeof parentId === 'string' ? '=' : 'in', parentId)
       .orderBy([{ column: 'id', order: 'desc' }]);
     return children;
   }
 
-  async findParent(id: MemoVO['id']) {
+  async findParent(id: ParentMemoVO['id']) {
     const target = await this.knex<Row>(this.schema.tableName).where('id', id).first();
 
     if (!target || !target.parentId) {
@@ -71,8 +79,8 @@ export default class SqliteMemoRepository extends BaseRepository<Row> implements
   }
 
   private static rowToVO(row: Row): ChildMemoVO;
-  private static rowToVO(row: Row, threads: Row[]): MemoVO;
-  private static rowToVO(row: Row, threads?: Row[]): MemoVO | ChildMemoVO {
+  private static rowToVO(row: Row, threads: Row[]): ParentMemoVO;
+  private static rowToVO(row: Row, threads?: Row[]): ParentMemoVO | ChildMemoVO {
     return {
       ...omit(row, ['parentId', 'isPinned']),
       id: String(row.id),

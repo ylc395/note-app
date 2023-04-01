@@ -13,7 +13,7 @@ export default observer(() => {
   const editorRef = useRef<EditorRef>(null);
 
   const create = async () => {
-    await memoService.createMemo({ content: contentRef.current });
+    await memoService.createMemo(contentRef.current);
     contentRef.current = '';
     editorRef.current?.updateContent('');
   };

@@ -6,10 +6,11 @@ import {
   memoQuerySchema,
   memoPatchDTOSchema,
   type MemoDTO,
-  type MemoVO,
+  type ParentMemoVO,
   type MemoQuery,
   type PaginationMemeVO,
   type MemoPatchDTO,
+  type MemoVO,
 } from 'interface/memo';
 import MemoService from 'service/MemoService';
 
@@ -24,7 +25,7 @@ export default class MemosController {
 
   @Patch('/memos/:id')
   async update(
-    @Param('id') id: MemoVO['id'],
+    @Param('id') id: ParentMemoVO['id'],
     @Body(createSchemaPipe(memoPatchDTOSchema)) memoVO: MemoPatchDTO,
   ): Promise<MemoVO> {
     return await this.memoService.update(id, memoVO);

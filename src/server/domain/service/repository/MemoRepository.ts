@@ -1,8 +1,8 @@
-import type { MemoDTO, MemoPatchDTO, MemoQuery, MemoVO, PaginationMemeVO } from 'interface/memo';
+import type { MemoDTO, MemoPatchDTO, MemoQuery, ParentMemoVO, PaginationMemeVO, MemoVO } from 'interface/memo';
 
 export interface MemoRepository {
   create: (memo: MemoDTO) => Promise<MemoVO>;
-  update: (id: MemoVO['id'], patch: MemoPatchDTO) => Promise<MemoVO | null>;
+  update: (id: ParentMemoVO['id'], patch: MemoPatchDTO) => Promise<MemoVO | null>;
   list: (query: MemoQuery) => Promise<PaginationMemeVO>;
-  findParent: (id: MemoVO['id']) => Promise<MemoVO | null>;
+  findParent: (id: ParentMemoVO['id']) => Promise<ParentMemoVO | null>;
 }
