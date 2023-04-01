@@ -1,21 +1,22 @@
 import { observer } from 'mobx-react-lite';
 import { Button } from 'antd';
 import { container } from 'tsyringe';
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 
-import MarkdownEditor from 'web/components/MarkdownEditor';
+import MarkdownEditor, { type EditorRef } from 'web/components/MarkdownEditor';
 import MemoService from 'service/MemoService';
+import List from './List';
 
 export default observer(() => {
   const memoService = container.resolve(MemoService);
   const contentRef = useRef('');
-  const create = () => {
-    memoService.createMemo({ content: contentRef.current });
-  };
+  const editorRef = useRef<EditorRef>(null);
 
-  useEffect(() => {
-    memoService.load();
-  }, [memoService]);
+  const create = async () => {
+    await memoService.createMemo({ content: contentRef.current });
+    contentRef.current = '';
+    editorRef.current?.updateContent('', true);
+  };
 
   return (
     <div className="box-border flex h-screen flex-col pt-1">
@@ -24,21 +25,18 @@ export default observer(() => {
           <h1 className="m-0 text-base">思考碎片</h1>
         </div>
       </div>
-      <div>
-        <div className="h-60 cursor-text border border-solid border-gray-300">
-          <MarkdownEditor onChange={(content) => (contentRef.current = content)} />
+      <div className="bg-white px-2 pb-2">
+        <div className="h-20 cursor-text border border-solid border-gray-300 p-1 text-sm">
+          <MarkdownEditor ref={editorRef} onChange={(content) => (contentRef.current = content)} />
         </div>
-        <div>
-          <Button onClick={create} type="primary">
+        <div className="mt-2 text-right">
+          <span className="mr-2 text-xs text-gray-400">Ctrl + Enter 或点击右侧按钮提交</span>
+          <Button size="small" onClick={create} type="primary">
             创建
           </Button>
         </div>
       </div>
-      <div>
-        {memoService.memos.map((memo) => (
-          <div key={memo.id}>{memo.content}</div>
-        ))}
-      </div>
+      <List />
     </div>
   );
 });

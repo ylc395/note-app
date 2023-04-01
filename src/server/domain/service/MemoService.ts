@@ -32,6 +32,6 @@ export default class MemoService extends BaseService {
   }
 
   async query(q: MemoQuery) {
-    return await this.memos.findAll(q);
+    return await this.memos.list(q);
   }
 }

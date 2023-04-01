@@ -40,6 +40,7 @@ export const uploadOptions: UploadOptions = {
   },
 };
 
+// paste html & upload html image
 export const htmlUpload = $prose(() => {
   return new Plugin({
     props: {

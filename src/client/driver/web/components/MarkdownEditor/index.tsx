@@ -1,7 +1,7 @@
 import { useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from 'react';
 import { gfm } from '@milkdown/preset-gfm';
 import { commonmark } from '@milkdown/preset-commonmark';
-import { Editor, rootCtx, editorViewCtx, parserCtx, EditorStatus } from '@milkdown/core';
+import { Editor, rootCtx, editorViewCtx, parserCtx, EditorStatus, editorViewOptionsCtx } from '@milkdown/core';
 import { Slice } from '@milkdown/prose/model';
 import '@milkdown/prose/view/style/prosemirror.css';
 import '@milkdown/prose/tables/style/tables.css';
@@ -17,50 +17,19 @@ import iconLink from './iconLink';
 import search from './search';
 
 interface Props {
-  onChange: (content: string) => void;
+  onChange?: (content: string) => void;
+  readonly?: boolean;
+  autoFocus?: boolean;
 }
 
 export interface EditorRef {
   updateContent: (content: string, emitEvent?: boolean) => void;
 }
 
-export default forwardRef<EditorRef, Props>(function MarkdownEditor({ onChange }, ref) {
+export default forwardRef<EditorRef, Props>(function MarkdownEditor({ onChange, readonly, autoFocus }, ref) {
   const rootRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<Editor>();
   const emitEventRef = useRef(true);
-
-  useEffect(() => {
-    if (!rootRef.current) {
-      throw new Error('no root');
-    }
-
-    const editor = Editor.make()
-      .use(commonmark)
-      .use(gfm)
-      .use(multimedia)
-      .use(listener)
-      .use(history)
-      .use(upload) // upload 插件在前, 先处理粘贴文件的情况
-      .use(htmlUpload)
-      .use(clipboard)
-      .use(iconLink)
-      .use(cursor)
-      .use(search)
-      .config((ctx) => {
-        ctx.set(rootCtx, rootRef.current);
-        ctx.set(uploadConfig.key, uploadOptions);
-        ctx.get(listenerCtx).markdownUpdated((_, markdown, pre) => {
-          emitEventRef.current && typeof pre === 'string' && onChange(markdown);
-        });
-      });
-
-    editor.create();
-    editorRef.current = editor;
-
-    return () => {
-      editor.destroy();
-    };
-  }, [onChange]);
 
   const focus = useCallback(() => {
     const editor = editorRef.current;
@@ -77,6 +46,59 @@ export default forwardRef<EditorRef, Props>(function MarkdownEditor({ onChange }
       }
     });
   }, []);
+
+  useEffect(() => {
+    if (!rootRef.current) {
+      throw new Error('no root');
+    }
+
+    const editor = Editor.make()
+      .use(commonmark)
+      .use(gfm)
+      .use(multimedia)
+      .use(iconLink)
+      .use(listener)
+      .use(search)
+      .config((ctx) => {
+        ctx.set(rootCtx, rootRef.current);
+
+        if (readonly) {
+          ctx.update(editorViewOptionsCtx, (prev) => ({
+            ...prev,
+            editable: () => false,
+          }));
+        }
+      });
+
+    if (!readonly) {
+      editor
+        .use(history)
+        .use(upload) // upload 插件在前, 先处理粘贴文件的情况
+        .use(htmlUpload)
+        .use(clipboard)
+        .use(cursor)
+        .config((ctx) => {
+          ctx.set(uploadConfig.key, uploadOptions);
+
+          if (onChange) {
+            ctx.get(listenerCtx).markdownUpdated((_, markdown, pre) => {
+              emitEventRef.current && typeof pre === 'string' && onChange(markdown);
+            });
+          }
+        });
+    }
+
+    const created = editor.create();
+    editorRef.current = editor;
+
+    if (autoFocus) {
+      created.then(focus);
+    }
+
+    return () => {
+      editor.destroy();
+    };
+  }, [autoFocus, focus, onChange, readonly]);
 
   useImperativeHandle(ref, () => ({
     updateContent: async (content: string, emitEvent = true) => {

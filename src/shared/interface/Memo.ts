@@ -3,18 +3,17 @@ import { entityId, type EntityId } from './entity';
 import { type PaginationEntity, type PaginationQuery, paginationQuerySchema } from './pagination';
 import type { Starable } from './star';
 
-interface ChildMemoVO {
+export type ChildMemoVO = Starable & {
   id: EntityId;
   content: string;
   updatedAt: number;
   createdAt: number;
-}
+};
 
-export type MemoVO = ChildMemoVO &
-  Starable & {
-    threads: ChildMemoVO[];
-    isPinned: boolean;
-  };
+export type MemoVO = ChildMemoVO & {
+  threads: ChildMemoVO[];
+  isPinned: boolean;
+};
 
 export type PaginationMemeVO = PaginationEntity<MemoVO>;
 
