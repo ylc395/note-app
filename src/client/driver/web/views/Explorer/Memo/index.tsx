@@ -15,7 +15,7 @@ export default observer(() => {
   const create = async () => {
     await memoService.createMemo({ content: contentRef.current });
     contentRef.current = '';
-    editorRef.current?.updateContent('', true);
+    editorRef.current?.updateContent('');
   };
 
   return (

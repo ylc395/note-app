@@ -47,7 +47,7 @@ export default observer(function ({ memo }: { memo: MemoVO }) {
         case 'edit':
           startEditing();
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          editorRef.current!.updateContent(memo.content);
+          editorRef.current!.updateContent(memo.content, false);
           break;
         default:
           break;

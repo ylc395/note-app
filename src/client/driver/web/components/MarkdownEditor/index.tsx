@@ -2,7 +2,7 @@ import { useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from 
 import { gfm } from '@milkdown/preset-gfm';
 import { commonmark } from '@milkdown/preset-commonmark';
 import { Editor, rootCtx, editorViewCtx, parserCtx, EditorStatus, editorViewOptionsCtx } from '@milkdown/core';
-import { Slice } from '@milkdown/prose/model';
+import { Node, Slice } from '@milkdown/prose/model';
 import '@milkdown/prose/view/style/prosemirror.css';
 import '@milkdown/prose/tables/style/tables.css';
 import { listenerCtx, listener } from '@milkdown/plugin-listener';
@@ -29,7 +29,7 @@ export interface EditorRef {
 export default forwardRef<EditorRef, Props>(function MarkdownEditor({ onChange, readonly, autoFocus }, ref) {
   const rootRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<Editor>();
-  const emitEventRef = useRef(true);
+  const isInitialRef = useRef(false);
 
   const focus = useCallback(() => {
     const editor = editorRef.current;
@@ -82,18 +82,28 @@ export default forwardRef<EditorRef, Props>(function MarkdownEditor({ onChange, 
 
           if (onChange) {
             ctx.get(listenerCtx).markdownUpdated((_, markdown, pre) => {
-              emitEventRef.current && typeof pre === 'string' && onChange(markdown);
+              if (isInitialRef.current) {
+                isInitialRef.current = false;
+                return;
+              }
+
+              if (typeof pre === 'string') {
+                console.log('emit');
+
+                onChange(markdown);
+              }
             });
           }
         });
     }
 
-    const created = editor.create();
-    editorRef.current = editor;
+    editor.create().then(() => {
+      if (autoFocus) {
+        focus();
+      }
+    });
 
-    if (autoFocus) {
-      created.then(focus);
-    }
+    editorRef.current = editor;
 
     return () => {
       editor.destroy();
@@ -101,13 +111,15 @@ export default forwardRef<EditorRef, Props>(function MarkdownEditor({ onChange, 
   }, [autoFocus, focus, onChange, readonly]);
 
   useImperativeHandle(ref, () => ({
-    updateContent: async (content: string, emitEvent = true) => {
+    updateContent: async (content: string, isInitial = true) => {
       const editor = editorRef.current;
 
       if (!editor) {
         throw new Error('not init');
       }
-      const update = () =>
+
+      const update = () => {
+        isInitialRef.current = isInitial;
         editor.action((ctx) => {
           const view = ctx.get(editorViewCtx);
           const parser = ctx.get(parserCtx);
@@ -117,11 +129,9 @@ export default forwardRef<EditorRef, Props>(function MarkdownEditor({ onChange, 
           if (!doc) {
             return;
           }
-
-          emitEventRef.current = emitEvent;
           view.dispatch(state.tr.replace(0, state.doc.content.size, new Slice(doc.content, 0, 0)));
-          emitEventRef.current = true;
         });
+      };
 
       if (editor.status === EditorStatus.Created) {
         update();

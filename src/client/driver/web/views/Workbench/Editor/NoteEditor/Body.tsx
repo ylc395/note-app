@@ -17,7 +17,7 @@ export default observer(function NoteEditor({ editor }: { editor: NoteEditor }) 
       () => Boolean(editor.entity),
       () => {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        editorRef.current!.updateContent(editor.entity!.body, false);
+        editorRef.current!.updateContent(editor.entity!.body);
         editor.on(Events.BodySynced, onBodySynced);
       },
     );
