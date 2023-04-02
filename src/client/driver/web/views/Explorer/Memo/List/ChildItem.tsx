@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { useCallback, useRef } from 'react';
+import { useCallback } from 'react';
 import { container } from 'tsyringe';
 import dayjs from 'dayjs';
 import { Dropdown, Button, type MenuProps } from 'antd';
@@ -8,7 +8,7 @@ import { useBoolean } from 'ahooks';
 
 import type { ChildMemoVO } from 'interface/Memo';
 import MemoService from 'service/MemoService';
-import MarkdownEditor from 'web/components/MarkdownEditor';
+import Editable from './Editable';
 
 const menuItems: NonNullable<MenuProps['items']> = [
   { label: '编辑', key: 'edit', icon: <EditOutlined /> },
@@ -21,13 +21,14 @@ const menuItems: NonNullable<MenuProps['items']> = [
 export default observer(function ChildItem({ memo }: { memo: ChildMemoVO }) {
   const [isEditing, { setTrue: startEditing, setFalse: stopEditing }] = useBoolean(false);
   const memoService = container.resolve(MemoService);
-  const contentRef = useRef('');
 
-  const submit = useCallback(async () => {
-    await memoService.updateContent(memo, contentRef.current);
-    contentRef.current = '';
-    stopEditing();
-  }, [memo, memoService, stopEditing]);
+  const submit = useCallback(
+    async (content: string) => {
+      await memoService.updateContent(memo, content);
+      stopEditing();
+    },
+    [memo, memoService, stopEditing],
+  );
 
   const onClickMenu = useCallback<NonNullable<MenuProps['onClick']>>(
     ({ key }) => {
@@ -49,20 +50,7 @@ export default observer(function ChildItem({ memo }: { memo: ChildMemoVO }) {
           <Button size="small" type="text" icon={<MoreOutlined />} />
         </Dropdown>
       </div>
-      <div className="select-text">
-        <MarkdownEditor
-          autoFocus
-          readonly={!isEditing}
-          defaultValue={memo.content}
-          onChange={(e) => (contentRef.current = e)}
-        />
-      </div>
-      {isEditing && (
-        <div>
-          <Button onClick={stopEditing}>取消</Button>
-          <Button onClick={submit}>保存</Button>
-        </div>
-      )}
+      <Editable isEditing={isEditing} content={memo.content} onCancel={stopEditing} onSubmit={submit} />
     </div>
   );
 });

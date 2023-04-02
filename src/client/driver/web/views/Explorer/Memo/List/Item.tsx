@@ -10,14 +10,13 @@ import {
   PushpinOutlined,
   PlusOutlined,
 } from '@ant-design/icons';
-import { useCallback, useRef } from 'react';
+import { useCallback } from 'react';
 import { useBoolean } from 'ahooks';
 
 import type { ParentMemoVO } from 'interface/Memo';
 import MemoService from 'service/MemoService';
-import MarkdownEditor from 'web/components/MarkdownEditor';
 import ChildItem from './ChildItem';
-import ChildEditor from './ChildEditor';
+import Editable from './Editable';
 
 const menuItems: NonNullable<MenuProps['items']> = [
   { label: '编辑', key: 'edit', icon: <EditOutlined /> },
@@ -31,7 +30,6 @@ export default observer(function ({ memo }: { memo: ParentMemoVO }) {
   const memoService = container.resolve(MemoService);
   const [isCreatingChild, { setTrue: startCreatingChild, setFalse: stopCreatingChild }] = useBoolean(false);
   const [isEditing, { setTrue: startEditing, setFalse: stopEditing }] = useBoolean(false);
-  const contentRef = useRef('');
 
   const onClickMenu = useCallback<NonNullable<MenuProps['onClick']>>(
     ({ key }) => {
@@ -49,11 +47,13 @@ export default observer(function ({ memo }: { memo: ParentMemoVO }) {
     [memo, memoService, startEditing],
   );
 
-  const submit = useCallback(async () => {
-    await memoService.updateContent(memo, contentRef.current);
-    contentRef.current = '';
-    stopEditing();
-  }, [memo, memoService, stopEditing]);
+  const submit = useCallback(
+    async (content: string) => {
+      await memoService.updateContent(memo, content);
+      stopEditing();
+    },
+    [memo, memoService, stopEditing],
+  );
 
   const submitChild = useCallback(
     async (content: string) => {
@@ -85,21 +85,8 @@ export default observer(function ({ memo }: { memo: ParentMemoVO }) {
           </Dropdown>
         </div>
       </div>
-      <div className="select-text">
-        <MarkdownEditor
-          autoFocus
-          readonly={!isEditing}
-          defaultValue={memo.content}
-          onChange={(e) => (contentRef.current = e)}
-        />
-      </div>
-      {isEditing && (
-        <div>
-          <Button onClick={stopEditing}>取消</Button>
-          <Button onClick={submit}>保存</Button>
-        </div>
-      )}
-      {isCreatingChild && <ChildEditor onSubmit={submitChild} onCancel={stopCreatingChild} />}
+      <Editable content={memo.content} onSubmit={submit} onCancel={stopEditing} isEditing={isEditing} />
+      {isCreatingChild && <Editable onSubmit={submitChild} onCancel={stopCreatingChild} isEditing />}
       {memo.threads.length > 0 && (
         <div className="pl-4">
           {memo.threads.map((child) => (
