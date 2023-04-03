@@ -10,6 +10,7 @@ export default observer(() => {
 
   useEffect(() => {
     memoService.load();
+    return () => memoService.reset();
   }, [memoService]);
 
   return (

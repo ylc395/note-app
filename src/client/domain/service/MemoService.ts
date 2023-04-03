@@ -1,4 +1,4 @@
-import { observable, makeObservable, computed, runInAction } from 'mobx';
+import { observable, makeObservable, computed, runInAction, action } from 'mobx';
 import { container, singleton } from 'tsyringe';
 
 import { token as remoteToken } from 'infra/Remote';
@@ -70,5 +70,11 @@ export default class MemoService {
     runInAction(() => {
       memo.content = updated.content;
     });
+  }
+
+  @action
+  reset() {
+    this.memos = [];
+    this.totalCount = 0;
   }
 }
