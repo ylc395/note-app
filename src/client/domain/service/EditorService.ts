@@ -14,7 +14,7 @@ import NoteEditor, { Events as NoteEditorEvents, type BodyEvent, type MetadataEv
 import EntityEditor, { Events as EditorEvents } from 'model/abstract/Editor';
 import Tile from 'model/workbench/Tile';
 import TileManager, { type TileSplitDirections } from 'model/workbench/TileManger';
-import NoteService from 'service/NoteService';
+import NoteService, { NoteEvents } from 'service/NoteService';
 
 export type EntityLocator = {
   entityType: EntityTypes;
@@ -70,6 +70,14 @@ export default class EditorService extends EventEmitter {
   private createNoteEditor(tile: Tile, noteId: NoteEditor['entityId']) {
     const noteService = container.resolve(NoteService);
     const noteEditor = new NoteEditor(tile, noteId, noteService.noteTree);
+
+    noteService.on(NoteEvents.Updated, (notes: NoteVO[]) => {
+      for (const { id, ...metadata } of notes) {
+        if (id === noteId) {
+          noteEditor.updateMetadata(metadata, true);
+        }
+      }
+    });
 
     noteEditor
       .on(

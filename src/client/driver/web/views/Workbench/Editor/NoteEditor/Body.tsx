@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { observer } from 'mobx-react-lite';
 import { useEffect, useRef } from 'react';
-import { when } from 'mobx';
+import { reaction, when } from 'mobx';
 
 import type NoteEditor from 'model/note/Editor';
 import { type BodyEvent, Events } from 'model/note/Editor';
@@ -11,9 +12,24 @@ export default observer(function NoteEditor({ editor }: { editor: NoteEditor }) 
 
   useEffect(() => {
     const onBodySynced = (body: BodyEvent) => {
-      editorRef.current?.updateContent(body, false);
+      editorRef.current!.updateContent(body, false);
     };
-    const stopInit = when(
+
+    const stopWatchReadonly = reaction(
+      () => editor.entity?.metadata.isReadonly,
+      (isReadonly) => {
+        if (typeof isReadonly === 'boolean') {
+          editorRef.current!.setReadonly(isReadonly);
+
+          if (!isReadonly) {
+            editorRef.current!.focus();
+          }
+        }
+      },
+      { fireImmediately: true },
+    );
+
+    const stopUpdateContent = when(
       () => Boolean(editor.entity),
       () => {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -24,7 +40,8 @@ export default observer(function NoteEditor({ editor }: { editor: NoteEditor }) 
 
     return () => {
       editor.off(Events.BodySynced, onBodySynced);
-      stopInit();
+      stopWatchReadonly();
+      stopUpdateContent();
     };
   }, [editor]);
 

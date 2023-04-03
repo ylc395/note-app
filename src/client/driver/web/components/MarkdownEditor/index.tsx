@@ -1,15 +1,15 @@
 import { useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from 'react';
 import { gfm } from '@milkdown/preset-gfm';
 import { commonmark } from '@milkdown/preset-commonmark';
-import { Editor, rootCtx, editorViewCtx, parserCtx, EditorStatus, editorViewOptionsCtx } from '@milkdown/core';
+import { Editor, rootCtx, editorViewCtx, parserCtx, editorViewOptionsCtx, editorStateCtx } from '@milkdown/core';
 import { Slice } from '@milkdown/prose/model';
-import '@milkdown/prose/view/style/prosemirror.css';
-import '@milkdown/prose/tables/style/tables.css';
 import { listenerCtx, listener } from '@milkdown/plugin-listener';
 import { history } from '@milkdown/plugin-history';
 import { upload, uploadConfig } from '@milkdown/plugin-upload';
 import { cursor } from '@milkdown/plugin-cursor';
 import { clipboard } from '@milkdown/plugin-clipboard';
+import '@milkdown/prose/view/style/prosemirror.css';
+import '@milkdown/prose/tables/style/tables.css';
 
 import { uploadOptions, htmlUpload } from './uploadFile';
 import multimedia from './multimedia';
@@ -24,7 +24,9 @@ interface Props {
 }
 
 export interface EditorRef {
-  updateContent: (content: string, emitEvent?: boolean) => void;
+  updateContent: (content: string, isInitial?: boolean) => void;
+  setReadonly: (isReadonly: boolean) => void;
+  focus: () => void;
 }
 
 export default forwardRef<EditorRef, Props>(function MarkdownEditor(
@@ -34,6 +36,7 @@ export default forwardRef<EditorRef, Props>(function MarkdownEditor(
   const rootRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<Editor>();
   const isInitialRef = useRef(false);
+  const creatingRef = useRef<Promise<void>>();
 
   const focus = useCallback(() => {
     const editor = editorRef.current;
@@ -51,7 +54,7 @@ export default forwardRef<EditorRef, Props>(function MarkdownEditor(
     });
   }, [readonly]);
 
-  const update = useCallback((content: string) => {
+  const updateContent = useCallback((content: string, isInitial = true) => {
     const editor = editorRef.current;
 
     if (!editor) {
@@ -67,9 +70,29 @@ export default forwardRef<EditorRef, Props>(function MarkdownEditor(
       if (!doc) {
         return;
       }
+      isInitialRef.current = isInitial;
       view.dispatch(state.tr.replace(0, state.doc.content.size, new Slice(doc.content, 0, 0)));
     });
   }, []);
+
+  const setReadonly = useCallback(
+    (isReadonly: boolean) => {
+      const editor = editorRef.current;
+
+      if (!editor) {
+        throw new Error('not init');
+      }
+
+      if (typeof readonly === 'boolean') {
+        throw new Error('can not set `readonly` prop if using setReadonly');
+      }
+
+      const editorView = editor.ctx.get(editorViewCtx);
+      const editorState = editor.ctx.get(editorStateCtx);
+      editorView.update({ state: editorState, editable: () => !isReadonly });
+    },
+    [readonly],
+  );
 
   useEffect(() => {
     if (!rootRef.current) {
@@ -119,13 +142,13 @@ export default forwardRef<EditorRef, Props>(function MarkdownEditor(
         });
     }
 
-    editor.create().then(() => {
+    creatingRef.current = editor.create().then(() => {
       if (autoFocus) {
         focus();
       }
 
       if (typeof defaultValue === 'string') {
-        update(defaultValue);
+        updateContent(defaultValue);
       }
     });
 
@@ -134,29 +157,30 @@ export default forwardRef<EditorRef, Props>(function MarkdownEditor(
     return () => {
       editor.destroy();
     };
-  }, [autoFocus, defaultValue, focus, onChange, readonly, update]);
+  }, [autoFocus, defaultValue, focus, onChange, readonly, updateContent]);
 
-  useImperativeHandle(ref, () => ({
-    updateContent: async (content: string, isInitial = true) => {
-      const editor = editorRef.current;
-
-      if (!editor) {
-        throw new Error('not init');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const wrapHandle = (method: (...args: any[]) => void) => {
+    return (...args: unknown[]) => {
+      if (!creatingRef.current) {
+        throw new Error('no creatingRef');
       }
 
-      isInitialRef.current = isInitial;
+      creatingRef.current.then(() => method(...args));
+    };
+  };
 
-      if (editor.status === EditorStatus.Created) {
-        update(content);
-      } else {
-        editor.onStatusChange((status) => {
-          if (status === EditorStatus.Created) {
-            update(content);
-          }
-        });
-      }
-    },
-  }));
+  useImperativeHandle(
+    ref,
+    () => ({
+      setReadonly: wrapHandle(setReadonly),
+      updateContent: wrapHandle(updateContent),
+      focus: wrapHandle(focus),
+    }),
+    [setReadonly, updateContent, focus],
+  );
 
-  return <div className="relative h-full overflow-auto" onClick={focus} ref={rootRef} spellCheck={false}></div>;
+  return (
+    <div className="relative h-full select-text overflow-auto" onClick={focus} ref={rootRef} spellCheck={false}></div>
+  );
 });

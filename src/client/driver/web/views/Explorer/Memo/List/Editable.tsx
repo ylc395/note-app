@@ -20,7 +20,7 @@ export default observer(function ChildEditor({ onCancel, onSubmit, content, isEd
 
   return (
     <div>
-      <div className="h-16 select-text text-sm">
+      <div className="h-16 text-sm">
         <MarkdownEditor
           readonly={!isEditing}
           defaultValue={content}
