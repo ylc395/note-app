@@ -14,6 +14,7 @@ import {
   CheckSquareOutlined,
   SearchOutlined,
   FieldTimeOutlined,
+  SettingOutlined,
 } from '@ant-design/icons';
 import { useToggle, useMemoizedFn } from 'ahooks';
 
@@ -30,8 +31,8 @@ const FIRST_CLASS_EXPLORER_ITEMS: ExplorerButton[] = [
   { key: ExplorerTypes.Materials, icon: <DatabaseOutlined />, label: '素材库' },
   { key: ExplorerTypes.Notes, icon: <BookOutlined />, label: '笔记本' },
   { key: ExplorerTypes.Memo, icon: <BuildOutlined />, label: '随想' },
-  { key: ExplorerTypes.Code, icon: <CodeOutlined />, label: '代码片段' },
-  { key: ExplorerTypes.Todo, icon: <CheckSquareOutlined />, label: '任务' },
+  // { key: ExplorerTypes.Code, icon: <CodeOutlined />, label: '代码片段' },
+  // { key: ExplorerTypes.Todo, icon: <CheckSquareOutlined />, label: '任务' },
 ];
 
 const BUTTON_PROPS: ButtonProps = {
@@ -66,16 +67,18 @@ export default observer(function ActivityBar() {
   ));
 
   return (
-    <nav className="flex h-screen w-14 flex-col justify-between border-0 border-r border-solid border-gray-200 bg-gray-50">
+    <nav className="flex h-screen w-14 flex-col justify-between border-0 border-r border-solid border-gray-200 bg-gray-50 text-center">
       <div>
-        <ul className="m-0 list-none p-0 text-center">
+        <ul className="m-0 p-0">
           {FIRST_CLASS_EXPLORER_ITEMS.map((item) => (
             <li key={item.key}>{getExplorerButton(item)}</li>
           ))}
         </ul>
-        <ul className="m-0 mt-3 list-none border-0 border-t border-solid border-gray-300 p-0 pt-3 text-center">
+        <ul className="m-0 my-3 border-0 border-y border-solid border-gray-300 p-0">
           <li>{getExplorerButton({ icon: <NumberOutlined />, label: '话题', key: ExplorerTypes.Topic })} </li>
           <li>{getExplorerButton({ icon: <FieldTimeOutlined />, label: '时间线', key: ExplorerTypes.Timeline })} </li>
+        </ul>
+        <ul className="m-0 p-0">
           <li>
             <Popover
               destroyTooltipOnHide
@@ -104,8 +107,13 @@ export default observer(function ActivityBar() {
           </li>
         </ul>
       </div>
-      <ul className="list-none p-0 pb-2 text-center">
+      <ul className="m-0 mb-1 p-0">
         <li>{getExplorerButton({ label: '回收站', key: ExplorerTypes.Dustbin, icon: <DeleteOutlined /> })} </li>
+        <li>
+          <Tooltip placement="right" title="设置">
+            <Button {...BUTTON_PROPS} icon={<SettingOutlined />} />
+          </Tooltip>
+        </li>
       </ul>
     </nav>
   );
