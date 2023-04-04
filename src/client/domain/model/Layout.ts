@@ -12,16 +12,22 @@ export enum ExplorerTypes {
   Todo = 'todo',
 }
 
-export enum NoteExplorerPanel {
+export enum NoteExplorerViews {
   Tree = 'tree',
-  CustomView = 'customView',
+  Custom = 'custom',
+}
+
+export enum MaterialExplorerViews {
+  Directory = 'directory',
+  Custom = 'custom',
 }
 
 @singleton()
 export default class Layout {
   @observable currentExplorer = ExplorerTypes.Notes;
   @observable readonly explorerPanel = {
-    [ExplorerTypes.Notes]: NoteExplorerPanel.Tree,
+    [ExplorerTypes.Notes]: NoteExplorerViews.Tree,
+    [ExplorerTypes.Materials]: MaterialExplorerViews.Directory,
   };
 
   constructor() {
