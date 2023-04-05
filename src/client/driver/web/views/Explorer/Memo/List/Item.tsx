@@ -57,7 +57,7 @@ export default observer(function ({ memo }: { memo: ParentMemoVO }) {
 
   const submitChild = useCallback(
     async (content: string) => {
-      await memoService.createMemo(content, memo);
+      await memoService.createMemo({ content, parent: memo });
       stopCreatingChild();
     },
     [memo, memoService, stopCreatingChild],

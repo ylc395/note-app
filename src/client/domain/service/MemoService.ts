@@ -13,7 +13,8 @@ export default class MemoService {
   @observable memos: ParentMemoVO[] = [];
   @observable totalCount = 0;
   @observable currentPage = 1;
-  @observable pageSize = 20;
+  @observable pageSize = 10;
+  @observable newContent = '';
 
   @computed
   get maxPage() {
@@ -33,19 +34,23 @@ export default class MemoService {
     });
   }
 
-  async createMemo(content: NonNullable<MemoDTO['content']>, parent?: ParentMemoVO) {
-    if (!content) {
+  async createMemo(childMemo?: { parent: ParentMemoVO; content: string }) {
+    if (!this.newContent && !childMemo?.content) {
       throw new Error('can not be empty');
     }
 
-    const { body: created } = await this.remote.post<MemoDTO, ParentMemoVO>('/memos', {
-      content,
-      ...(parent ? { parentId: parent.id } : null),
-    });
+    const { body: created } = await this.remote.post<MemoDTO, ParentMemoVO>(
+      '/memos',
+      childMemo ? { content: childMemo.content, parentId: childMemo.parent.id } : { content: this.newContent },
+    );
 
-    if (parent) {
+    if (!childMemo) {
+      this.newContent = '';
+    }
+
+    if (childMemo) {
       runInAction(() => {
-        parent.threads.unshift(created);
+        childMemo.parent.threads.unshift(created);
       });
     } else {
       await this.load();
