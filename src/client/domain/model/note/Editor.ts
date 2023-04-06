@@ -43,7 +43,7 @@ export default class NoteEditor extends EntityEditor<Entity> {
   @computed
   get breadcrumbs(): Breadcrumbs {
     const result: Breadcrumbs = [];
-    let note: NoteVO | undefined = this.noteTree.getNode(this.entityId).note;
+    let note = this.noteTree.getNode(this.entityId, true)?.entity;
     const noteToBreadcrumb = (note: NoteVO) => ({
       id: note.id,
       title: normalizeTitle(note),
@@ -53,10 +53,10 @@ export default class NoteEditor extends EntityEditor<Entity> {
     while (note) {
       result.unshift({
         ...noteToBreadcrumb(note),
-        siblings: this.noteTree.getSiblings(note.id).map(({ note }) => noteToBreadcrumb(note)),
+        siblings: this.noteTree.getSiblings(note.id).map(({ entity: note }) => noteToBreadcrumb(note)),
       });
 
-      note = note.parentId ? this.noteTree.getNode(note.parentId).note : undefined;
+      note = note.parentId ? this.noteTree.getNode(note.parentId).entity : undefined;
     }
 
     return result;
@@ -91,6 +91,6 @@ export default class NoteEditor extends EntityEditor<Entity> {
       throw new Error('no load note');
     }
 
-    this.noteTree.updateTreeByNote(this.entity.metadata);
+    this.noteTree.updateTreeByEntity(this.entity.metadata);
   }, 500);
 }

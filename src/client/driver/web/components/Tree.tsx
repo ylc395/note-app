@@ -7,27 +7,27 @@ import clsx from 'clsx';
 import type { Tree, TreeNode } from 'model/abstract/Tree';
 import { observer } from 'mobx-react-lite';
 
-interface ITreeContext<T extends TreeNode = TreeNode> {
+interface ITreeContext<T extends TreeNode<any> = TreeNode<any>> {
   titleRender?: (node: T) => ReactNode;
   onContextmenu?: (node: T) => Promise<void> | void;
   onExpand: (node: T) => void;
   onSelect: (node: T, isMultiple: boolean) => void;
   draggable?: boolean;
   multiple?: boolean;
-  tree: Tree<T>;
+  tree: Tree<any>;
   id: string;
 }
 
-export type TreeProps<T extends TreeNode> = Omit<ITreeContext<T>, 'id'>;
+export type TreeProps<T extends TreeNode<any>> = Omit<ITreeContext<T>, 'id'>;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const TreeContext = createContext<ITreeContext>(undefined as any);
 
-const TreeNode = observer(function ({ node, level }: { node: TreeNode; level: number }) {
+const TreeNode = observer(function ({ node, level }: { node: TreeNode<any>; level: number }) {
   const { id, multiple, draggable, onExpand, onContextmenu, onSelect, titleRender, tree } = useContext(TreeContext);
 
   const triggerExpand = useCallback(
-    (node: TreeNode) => {
+    (node: TreeNode<any>) => {
       if (!node.isExpanded && !node.isLoaded) {
         tree.loadChildren(node);
       }
@@ -85,7 +85,7 @@ const TreeNode = observer(function ({ node, level }: { node: TreeNode; level: nu
 
 TreeNode.displayName = 'TreeNode';
 
-export default observer(function Tree<T extends TreeNode>({ tree, ...props }: TreeProps<T>) {
+export default observer(function Tree<T extends TreeNode<any>>({ tree, ...props }: TreeProps<T>) {
   const [id] = useState(() => uniqueId('tree-view-'));
 
   return (

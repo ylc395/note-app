@@ -3,7 +3,8 @@ import { container } from 'tsyringe';
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from 'antd';
 
-import NoteTree, { type NoteTreeNode, VIRTUAL_ROOT_NODE_KEY } from 'model/note/Tree';
+import NoteTree, { VIRTUAL_ROOT_NODE_KEY } from 'model/note/Tree';
+import type { NoteTreeNode } from 'model/note/Tree/type';
 import NoteService from 'service/NoteService';
 
 import Tree, { type TreeProps } from 'web/components/Tree';
@@ -11,7 +12,7 @@ import IconTitle from 'web/components/IconTitle';
 
 const isDisabled = (selectedNodes: NoteTreeNode[]) => {
   const ids = selectedNodes.map(({ key }) => key);
-  const parentIds = new Set(selectedNodes.map(({ note }) => note.parentId || VIRTUAL_ROOT_NODE_KEY));
+  const parentIds = new Set(selectedNodes.map(({ entity: note }) => note.parentId || VIRTUAL_ROOT_NODE_KEY));
 
   return (node: NoteTreeNode) => {
     if (parentIds.size === 1 && parentIds.has(node.key)) {
@@ -51,7 +52,11 @@ export default observer(function NoteTreeView({ selectedNodes, onCancel, onSubmi
   const titleRender = useCallback<NonNullable<TreeProps<NoteTreeNode>['titleRender']>>(
     (node) => (
       <span className="group flex">
-        <IconTitle icon={node.note.icon} size="1em" title={`${__ENV__ === 'dev' ? `${node.key} ` : ''}${node.title}`} />
+        <IconTitle
+          icon={node.entity.icon}
+          size="1em"
+          title={`${__ENV__ === 'dev' ? `${node.key} ` : ''}${node.title}`}
+        />
       </span>
     ),
     [],

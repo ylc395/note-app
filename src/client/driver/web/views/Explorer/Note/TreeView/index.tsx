@@ -8,7 +8,7 @@ import { useCreation } from 'ahooks';
 
 import NoteService from 'service/NoteService';
 import NoteEditor from 'model/note/Editor';
-import type { NoteTreeNode } from 'model/note/Tree';
+import type { NoteTreeNode } from 'model/note/Tree/type';
 import type NoteTree from 'model/note/Tree';
 
 import Tree, { type TreeProps } from 'web/components/Tree';

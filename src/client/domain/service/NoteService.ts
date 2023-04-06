@@ -12,7 +12,8 @@ import type { RecyclablesDTO } from 'interface/Recyclables';
 import { EntityTypes } from 'interface/entity';
 
 import { MULTIPLE_ICON_FLAG, type NoteMetadata } from 'model/note/MetadataForm';
-import NoteTree, { NoteTreeNode } from 'model/note/Tree';
+import NoteTree from 'model/note/Tree';
+import type { NoteTreeNode } from 'model/note/Tree/type';
 import { TileSplitDirections } from 'model/workbench/TileManger';
 
 import StarService, { StarEvents } from './StarService';
@@ -62,7 +63,7 @@ export default class NoteService extends EventEmitter {
       await this.noteTree.toggleExpand(parentId, true, true);
     }
 
-    note = this.noteTree.updateTreeByNote(note).note;
+    note = this.noteTree.updateTreeByEntity(note).entity;
     this.noteTree.toggleSelect(note.id, true);
     this.editor.openEntity({ entityType: EntityTypes.Note, entityId: note.id });
   };
@@ -70,7 +71,7 @@ export default class NoteService extends EventEmitter {
   private async duplicateNote(targetId: Note['id']) {
     const { body: note } = await this.remote.post<NoteDTO, Note>('/notes', { duplicateFrom: targetId });
 
-    this.noteTree.updateTreeByNote(note);
+    this.noteTree.updateTreeByEntity(note);
     this.noteTree.toggleSelect(note.id, true);
   }
 
@@ -107,7 +108,7 @@ export default class NoteService extends EventEmitter {
       this.noteTree.removeNodes(ids);
     } else {
       for (const note of updatedNotes) {
-        this.noteTree.updateTreeByNote(note, true);
+        this.noteTree.updateTreeByEntity(note, true);
       }
 
       this.noteTree.sort(targetNode ? targetNode.children : this.noteTree.roots, false);
@@ -131,7 +132,7 @@ export default class NoteService extends EventEmitter {
   };
 
   private async editNotes(ids: Note['id'][]) {
-    const notesToEdit = ids.map((id) => this.noteTree.getNode(id).note);
+    const notesToEdit = ids.map((id) => this.noteTree.getNode(id).entity);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const firstNote = notesToEdit[0]!;
     const noteMetadata: NoteMetadata =
@@ -175,7 +176,7 @@ export default class NoteService extends EventEmitter {
     const parentIds = new Set<Note['parentId']>();
 
     for (const note of notes) {
-      this.noteTree.updateTreeByNote(note, true);
+      this.noteTree.updateTreeByEntity(note, true);
       parentIds.add(note.parentId);
     }
 
@@ -213,7 +214,7 @@ export default class NoteService extends EventEmitter {
           { label: '在新窗口打开', key: 'openInNewWindow', visible: Boolean(focusedTile) },
           { type: 'separator' },
           { label: '移动至...', key: 'move' },
-          { label: targetNode.note.isStar ? '已收藏' : '收藏', key: 'star', disabled: targetNode.note.isStar },
+          { label: targetNode.entity.isStar ? '已收藏' : '收藏', key: 'star', disabled: targetNode.entity.isStar },
           { label: '制作副本', key: 'duplicate' },
           { label: '编辑属性', key: 'edit' },
           { type: 'separator' },
