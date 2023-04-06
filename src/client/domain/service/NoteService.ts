@@ -7,7 +7,7 @@ import { token as userFeedbackToken } from 'infra/UserFeedback';
 import { token as userInputToken } from 'infra/UserInput';
 import type { ContextmenuItem } from 'infra/ui';
 
-import { type NoteDTO, type NoteVO as Note, type NotesDTO, type NoteVO, normalizeTitle } from 'interface/Note';
+import { type NoteDTO, type NoteVO as Note, type NotesDTO, normalizeTitle, NoteQuery } from 'interface/Note';
 import type { RecyclablesDTO } from 'interface/Recyclables';
 import { EntityTypes } from 'interface/entity';
 
@@ -30,13 +30,27 @@ export default class NoteService extends EventEmitter {
   private readonly star = container.resolve(StarService);
   private readonly userFeedback = container.resolve(userFeedbackToken);
   private readonly userInput = container.resolve(userInputToken);
-  readonly noteTree = new NoteTree();
 
   constructor() {
     super();
     this.star.on(StarEvents.NoteAdded, (noteId) => this.noteTree.toggleStar(noteId, true));
     this.star.on(StarEvents.NoteRemoved, (noteId) => this.noteTree.toggleStar(noteId, false));
   }
+
+  readonly fetchChildren = async (parentId: Note['parentId']) => {
+    const { body: notes } = await this.remote.get<NoteQuery, Note[]>('/notes', { parentId });
+    return notes;
+  };
+
+  readonly fetchTreeFragment = async (id: Note['id']) => {
+    const { body: fragment } = await this.remote.get<void, Note[]>(`/notes/${id}/tree-fragment`);
+    return fragment;
+  };
+
+  readonly noteTree = new NoteTree({
+    fetchChildren: this.fetchChildren,
+    fetchTreeFragment: this.fetchTreeFragment,
+  });
 
   readonly createNote = async (parentId?: Note['parentId']) => {
     // fixme: knex 有个 bug，目前必须写一个字段进去 https://github.com/knex/knex/pull/5471
@@ -85,7 +99,7 @@ export default class NoteService extends EventEmitter {
     }
 
     const notes = ids.map((id) => ({ id, parentId: targetId }));
-    const { body: updatedNotes } = await this.remote.patch<NotesDTO, NoteVO[]>('/notes', notes);
+    const { body: updatedNotes } = await this.remote.patch<NotesDTO, Note[]>('/notes', notes);
 
     const targetNode = targetId ? this.noteTree.getNode(targetId, true) : undefined;
 
@@ -157,7 +171,7 @@ export default class NoteService extends EventEmitter {
           : (updatedNoteMetadata.icon as string | null | undefined),
     }));
 
-    const { body: notes } = await this.remote.patch<NotesDTO, NoteVO[]>('/notes', result);
+    const { body: notes } = await this.remote.patch<NotesDTO, Note[]>('/notes', result);
     const parentIds = new Set<Note['parentId']>();
 
     for (const note of notes) {

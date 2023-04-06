@@ -1,8 +1,10 @@
 import { observer } from 'mobx-react-lite';
+import { container } from 'tsyringe';
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from 'antd';
 
 import NoteTree, { type NoteTreeNode, VIRTUAL_ROOT_NODE_KEY } from 'model/note/Tree';
+import NoteService from 'service/NoteService';
 
 import Tree, { type TreeProps } from 'web/components/Tree';
 import IconTitle from 'web/components/IconTitle';
@@ -36,10 +38,13 @@ interface Props {
 }
 
 export default observer(function NoteTreeView({ selectedNodes, onCancel, onSubmit }: Props) {
+  const noteService = container.resolve(NoteService);
   const [noteTree] = useState(() => {
     return new NoteTree({
       virtualRoot: true,
       isDisabled: isDisabled(selectedNodes),
+      fetchChildren: noteService.fetchChildren,
+      fetchTreeFragment: noteService.fetchTreeFragment,
     });
   });
 

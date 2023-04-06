@@ -1,31 +1,22 @@
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useDndMonitor, useDroppable } from '@dnd-kit/core';
 import clsx from 'clsx';
 import uniqueId from 'lodash/uniqueId';
+import { useCreation } from 'ahooks';
 
 import NoteService from 'service/NoteService';
 import NoteEditor from 'model/note/Editor';
-import NoteTree, { type NoteTreeNode } from 'model/note/Tree';
+import type { NoteTreeNode } from 'model/note/Tree';
+import type NoteTree from 'model/note/Tree';
 
 import Tree, { type TreeProps } from 'web/components/Tree';
 import NodeTitle from './NodeTitle';
 
-export default observer(function ExplorerNoteTree({ nodes }: { nodes?: NoteTreeNode[] }) {
-  const { selectNote, moveNotes, actByContextmenu } = container.resolve(NoteService);
-  const [noteTree] = useState(() => {
-    const { noteTree: _noteTree } = container.resolve(NoteService);
-
-    if (nodes) {
-      const tree = new NoteTree({ roots: nodes });
-
-      tree.expandedNodes = _noteTree.expandedNodes;
-      return tree;
-    }
-
-    return _noteTree;
-  });
+export default observer(function ExplorerNoteTree({ tree }: { tree?: NoteTree }) {
+  const { selectNote, moveNotes, actByContextmenu, noteTree: _noteTree } = container.resolve(NoteService);
+  const noteTree = useMemo(() => tree || _noteTree, [_noteTree, tree]);
 
   const handleExpand = useCallback<TreeProps<NoteTreeNode>['onExpand']>(
     ({ key }) => noteTree.toggleExpand(key, false),
@@ -36,15 +27,17 @@ export default observer(function ExplorerNoteTree({ nodes }: { nodes?: NoteTreeN
     [],
   );
 
-  const [id] = useState(() => uniqueId('note-tree-view-'));
+  const id = useCreation(() => uniqueId('note-tree-view-'), []);
   const { setNodeRef, isOver } = useDroppable({ id });
 
   useEffect(() => {
-    noteTree.loadChildren();
-  }, [nodes, noteTree]);
+    if (!tree) {
+      noteTree.loadChildren();
+    }
+  }, [noteTree, tree]);
 
   useDndMonitor(
-    nodes
+    tree
       ? {}
       : {
           onDragStart: ({ active }) => {
@@ -84,23 +77,24 @@ export default observer(function ExplorerNoteTree({ nodes }: { nodes?: NoteTreeN
         },
   );
 
-  const treeView = (
-    <Tree
-      multiple
-      draggable
-      tree={noteTree}
-      onContextmenu={actByContextmenu}
-      titleRender={titleRender}
-      onSelect={selectNote}
-      onExpand={handleExpand}
-    />
+  const treeView = useMemo(
+    () => (
+      <Tree
+        multiple
+        draggable
+        tree={noteTree}
+        onContextmenu={actByContextmenu}
+        titleRender={titleRender}
+        onSelect={selectNote}
+        onExpand={handleExpand}
+      />
+    ),
+    [actByContextmenu, handleExpand, noteTree, selectNote, titleRender],
   );
 
-  if (nodes) {
-    return treeView;
-  }
-
-  return (
+  return tree ? (
+    treeView
+  ) : (
     <div
       className={clsx('h-full', {
         'cursor-pointer bg-blue-50': isOver && !noteTree.invalidParentKeys.has(null),

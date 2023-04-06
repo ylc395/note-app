@@ -1,7 +1,7 @@
 import { DndContext, MouseSensor, useSensor, useSensors, pointerWithin } from '@dnd-kit/core';
 import { container } from 'tsyringe';
 import { DragOverlay, useDndContext } from '@dnd-kit/core';
-import type { ReactNode } from 'react';
+import { ReactNode, useMemo } from 'react';
 
 import EntityEditor from 'model/abstract/Editor';
 import NoteService from 'service/NoteService';
@@ -15,10 +15,15 @@ export function DragPreview() {
   const { noteTree } = container.resolve(NoteService);
   const draggingItem = active?.data.current?.instance;
 
+  const previewTree = useMemo(
+    () => (noteTree.has(draggingItem) ? noteTree.getFragmentFromSelected() : undefined),
+    [draggingItem, noteTree],
+  );
+
   return (
     <DragOverlay className="pointer-events-none" dropAnimation={null}>
       {draggingItem instanceof EntityEditor && <TabItem editor={draggingItem}></TabItem>}
-      {noteTree.has(draggingItem) && <NoteTree nodes={Array.from(noteTree.selectedNodes)} />}
+      {previewTree && <NoteTree tree={previewTree} />}
     </DragOverlay>
   );
 }

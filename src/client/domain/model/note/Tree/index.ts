@@ -1,52 +1,21 @@
 import { action, makeObservable, observable, runInAction } from 'mobx';
 import pull from 'lodash/pull';
 import uniq from 'lodash/uniq';
-import { container } from 'tsyringe';
 
-import { token as remoteToken } from 'infra/Remote';
-import type { NoteQuery, NoteVO as Note } from 'interface/Note';
+import type { NoteVO as Note } from 'interface/Note';
 import { normalizeTitle } from 'interface/Note';
 import type { Tree } from 'model/abstract/Tree';
 
 import type { NoteTreeNode } from './type';
+import { SortBy, SortOrder, VIRTUAL_ROOT_NODE_KEY, getVirtualRoot } from './constants';
 
-export const VIRTUAL_ROOT_NODE_KEY = 'root';
-
-export enum SortBy {
-  Title = 'title',
-  UpdatedAt = 'updatedAt',
-  CreatedAt = 'createdAt',
-}
-
-export enum SortOrder {
-  Asc = 'asc',
-  Desc = 'desc',
-}
-
+export { SortBy, SortOrder, VIRTUAL_ROOT_NODE_KEY } from './constants';
 export type { NoteTreeNode } from './type';
 
-function getEmptyNote(): Note {
-  return {
-    id: '',
-    title: '',
-    isReadonly: true,
-    parentId: null,
-    icon: null,
-    childrenCount: 0,
-    updatedAt: 0,
-    userCreatedAt: 0,
-    createdAt: 0,
-    userUpdatedAt: 0,
-    isStar: false,
-    attributes: {},
-  };
-}
-
 export default class NoteTree implements Tree<NoteTreeNode> {
-  private readonly remote = container.resolve(remoteToken);
   private readonly id = Symbol();
   readonly selectedNodes = new Set<NoteTreeNode>();
-  @observable expandedNodes = new Set<NoteTreeNode>();
+  @observable readonly expandedNodes = new Set<NoteTreeNode>();
   @observable readonly invalidParentKeys = new Set<NoteTreeNode['key'] | null>();
   @observable roots: NoteTreeNode[] = [];
   @observable readonly sortOptions = {
@@ -58,11 +27,11 @@ export default class NoteTree implements Tree<NoteTreeNode> {
 
   private get _roots() {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return this.options?.virtualRoot ? this.roots[0]!.children : this.roots;
+    return this.options.virtualRoot ? this.roots[0]!.children : this.roots;
   }
 
   private set _roots(nodes: NoteTreeNode[]) {
-    if (this.options?.virtualRoot) {
+    if (this.options.virtualRoot) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       this.roots[0]!.children = nodes;
     } else {
@@ -71,19 +40,21 @@ export default class NoteTree implements Tree<NoteTreeNode> {
   }
 
   constructor(
-    private readonly options?: {
+    private readonly options: {
       roots?: NoteTreeNode[];
       virtualRoot?: boolean;
       isDisabled?: (node: NoteTreeNode) => boolean;
+      fetchTreeFragment?: (noteId: Note['id']) => Promise<Note[]>;
+      fetchChildren?: (noteId: Note['parentId']) => Promise<Note[]>;
     },
   ) {
     makeObservable(this);
 
-    if (options?.virtualRoot) {
+    if (options.virtualRoot) {
       this.initVirtualRoot();
     }
 
-    if (options?.roots) {
+    if (options.roots) {
       this._roots = options.roots.map((node) => ({
         ...node,
         treeId: this.id,
@@ -96,18 +67,9 @@ export default class NoteTree implements Tree<NoteTreeNode> {
 
   @action
   private initVirtualRoot() {
-    const virtualRoot: NoteTreeNode = {
-      key: VIRTUAL_ROOT_NODE_KEY,
-      title: '根',
-      children: [],
-      isLeaf: false,
-      treeId: this.id,
-      note: getEmptyNote(),
-      isExpanded: true,
-      isLoaded: true,
-    };
+    const virtualRoot = getVirtualRoot(this.id);
 
-    if (this.options?.isDisabled) {
+    if (this.options.isDisabled) {
       virtualRoot.isDisabled = this.options.isDisabled(virtualRoot);
     }
 
@@ -128,7 +90,7 @@ export default class NoteTree implements Tree<NoteTreeNode> {
       disabled: false,
     });
 
-    if (this.options?.isDisabled) {
+    if (this.options.isDisabled) {
       node.isDisabled = this.options.isDisabled(node);
     }
 
@@ -170,7 +132,11 @@ export default class NoteTree implements Tree<NoteTreeNode> {
   }
 
   private readonly loadTreeFragment = async (id: Note['id'] | NoteTreeNode['key']) => {
-    const { body: fragment } = await this.remote.get<void, Note[]>(`/notes/${id}/tree-fragment`);
+    if (!this.options.fetchTreeFragment) {
+      throw new Error('can not fetch fragment');
+    }
+
+    const fragment = await this.options.fetchTreeFragment(id);
 
     runInAction(() => {
       for (const note of fragment) {
@@ -187,12 +153,12 @@ export default class NoteTree implements Tree<NoteTreeNode> {
   };
 
   readonly loadChildren = async (parentNode?: NoteTreeNode) => {
-    if (!parentNode && this.options?.roots) {
-      return;
+    if (!this.options.fetchChildren) {
+      throw new Error('can not fetch fragment');
     }
 
     const parentId = parentNode?.key || null;
-    const { body: notes } = await this.remote.get<NoteQuery, Note[]>('/notes', { parentId });
+    const notes = await this.options.fetchChildren(parentId);
 
     runInAction(() => {
       for (const note of notes) {
@@ -448,5 +414,9 @@ export default class NoteTree implements Tree<NoteTreeNode> {
   toggleStar(noteId: Note['id'], isStar: boolean) {
     const { note } = this.getNode(noteId);
     note.isStar = isStar;
+  }
+
+  getFragmentFromSelected() {
+    return new NoteTree({ roots: Array.from(this.selectedNodes) });
   }
 }
