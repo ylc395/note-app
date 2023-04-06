@@ -5,3 +5,4 @@ export { default as kvSchema } from './kv';
 export { default as fileSchema } from './file';
 export { default as fileDataSchema } from './fileData';
 export { default as memoSchema } from './memo';
+export { default as materialSchema } from './material';
