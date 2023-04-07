@@ -20,7 +20,7 @@ export default observer(function Title({ node }: { node: NoteTreeNode }) {
       <Tooltip title="新建子笔记" placement="right">
         <Button
           onClick={(e) => {
-            e.preventDefault();
+            e.stopPropagation();
             createNote(node.key);
           }}
           className="invisible ml-auto mr-2 group-hover:visible"

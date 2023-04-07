@@ -3,29 +3,32 @@ import { container } from 'tsyringe';
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from 'antd';
 
+import type { NoteVO } from 'interface/Note';
 import NoteTree, { VIRTUAL_ROOT_NODE_KEY } from 'model/note/Tree';
 import type { NoteTreeNode } from 'model/note/Tree/type';
 import NoteService from 'service/NoteService';
 
 import Tree, { type TreeProps } from 'web/components/Tree';
 import IconTitle from 'web/components/IconTitle';
+import type { Tree as TreeModel } from 'model/abstract/Tree';
 
 const isDisabled = (selectedNodes: NoteTreeNode[]) => {
   const ids = selectedNodes.map(({ key }) => key);
   const parentIds = new Set(selectedNodes.map(({ entity: note }) => note.parentId || VIRTUAL_ROOT_NODE_KEY));
 
-  return (node: NoteTreeNode) => {
-    if (parentIds.size === 1 && parentIds.has(node.key)) {
+  return (note: NoteVO, tree: TreeModel<NoteVO>) => {
+    if (parentIds.size === 1 && parentIds.has(note.id)) {
       return true;
     }
 
-    let currentNode: typeof node | undefined = node;
+    let currentNode: NoteTreeNode | NoteVO | undefined = note;
+
     while (currentNode) {
-      if (ids.includes(currentNode.key)) {
+      if (ids.includes(tree.hasNode(currentNode) ? currentNode.key : currentNode.id)) {
         return true;
       }
 
-      currentNode = currentNode.parent;
+      currentNode = tree.getParentNode(currentNode);
     }
 
     return false;

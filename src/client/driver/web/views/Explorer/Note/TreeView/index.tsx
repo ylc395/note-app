@@ -47,7 +47,7 @@ export default observer(function ExplorerNoteTree({ tree }: { tree?: NoteTree })
               noteTree.updateInvalidParentNodes(draggingItem.entityId);
             }
 
-            if (noteTree.has(draggingItem)) {
+            if (noteTree.hasNode(draggingItem)) {
               if (!draggingItem.isSelected) {
                 noteTree.toggleSelect(draggingItem.key, true);
               }
@@ -60,14 +60,14 @@ export default observer(function ExplorerNoteTree({ tree }: { tree?: NoteTree })
             const draggingItem = active.data.current?.instance;
 
             if (
-              (noteTree.has(dropNode) || over?.id === id) &&
-              (noteTree.has(draggingItem) || draggingItem instanceof NoteEditor)
+              (noteTree.hasNode(dropNode) || over?.id === id) &&
+              (noteTree.hasNode(draggingItem) || draggingItem instanceof NoteEditor)
             ) {
               const draggingItems =
                 draggingItem instanceof NoteEditor
                   ? [draggingItem.entityId]
                   : Array.from(noteTree.selectedNodes).map(({ key }) => key);
-              const dropNodeKey = noteTree.has(dropNode) ? dropNode.key : null;
+              const dropNodeKey = noteTree.hasNode(dropNode) ? dropNode.key : null;
 
               if (!noteTree.invalidParentKeys.has(dropNodeKey)) {
                 moveNotes(draggingItems, dropNodeKey);

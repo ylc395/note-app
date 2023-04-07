@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { type ReactNode, type MouseEventHandler, useCallback, useContext, createContext, useState } from 'react';
 import { CaretRightFilled, CaretDownOutlined } from '@ant-design/icons';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
@@ -23,7 +24,7 @@ export type TreeProps<T extends TreeNode<any>> = Omit<ITreeContext<T>, 'id'>;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const TreeContext = createContext<ITreeContext>(undefined as any);
 
-const TreeNode = observer(function ({ node, level }: { node: TreeNode<any>; level: number }) {
+const TreeNodeView = observer(function ({ node, level }: { node: TreeNode<any>; level: number }) {
   const { id, multiple, draggable, onExpand, onContextmenu, onSelect, titleRender, tree } = useContext(TreeContext);
 
   const triggerExpand = useCallback(
@@ -78,12 +79,12 @@ const TreeNode = observer(function ({ node, level }: { node: TreeNode<any>; leve
           {titleRender ? titleRender(node) : node.title}
         </div>
       </div>
-      {node.isExpanded && node.children.map((child) => <TreeNode key={child.key} node={child} level={level + 1} />)}
+      {node.isExpanded && node.children.map((child) => <TreeNodeView key={child.key} node={child} level={level + 1} />)}
     </>
   );
 });
 
-TreeNode.displayName = 'TreeNode';
+TreeNodeView.displayName = 'TreeNode';
 
 export default observer(function Tree<T extends TreeNode<any>>({ tree, ...props }: TreeProps<T>) {
   const [id] = useState(() => uniqueId('tree-view-'));
@@ -92,7 +93,7 @@ export default observer(function Tree<T extends TreeNode<any>>({ tree, ...props 
     <TreeContext.Provider value={{ ...props, id, tree } as unknown as ITreeContext}>
       <div>
         {tree.roots.map((node) => (
-          <TreeNode key={node.key} node={node} level={0} />
+          <TreeNodeView key={node.key} node={node} level={0} />
         ))}
       </div>
     </TreeContext.Provider>

@@ -1,6 +1,6 @@
 import type { MaterialRepository } from 'service/repository/MaterialRepository';
 import { DIRECTORY_MIME_TYPE } from 'service/MaterialService';
-import type { MaterialMetadata } from 'interface/material';
+import type { MaterialVO } from 'interface/material';
 
 import schema, { type Row, MaterialTypes } from '../schema/material';
 import BaseRepository from './BaseRepository';
@@ -16,7 +16,7 @@ export default class SqliteMaterialRepository extends BaseRepository<Row> implem
     return SqliteMaterialRepository.rowToVO(createdRow);
   }
 
-  private static rowToVO(row: Row): MaterialMetadata {
+  private static rowToVO(row: Row): MaterialVO {
     return {
       ...row,
       parentId: row.parentId ? String(row.parentId) : null,

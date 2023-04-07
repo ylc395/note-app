@@ -1,4 +1,4 @@
-import type { MaterialMetadata, DirectoryVO } from 'interface/material';
+import type { MaterialVO, DirectoryVO } from 'interface/material';
 
 export interface MaterialRepository {
   create: (
@@ -10,5 +10,5 @@ export interface MaterialRepository {
       icon: string;
       content: string | ArrayBuffer;
     }>,
-  ) => Promise<MaterialMetadata>;
+  ) => Promise<MaterialVO>;
 }

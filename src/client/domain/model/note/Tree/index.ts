@@ -2,7 +2,7 @@ import { action, makeObservable, observable } from 'mobx';
 
 import type { NoteVO as Note } from 'interface/Note';
 import { normalizeTitle } from 'interface/Note';
-import { Tree } from 'model/abstract/Tree';
+import { Tree, VIRTUAL_ROOT_NODE_KEY, type TreeOptions } from 'model/abstract/Tree';
 
 import { SortBy, SortOrder } from './constants';
 import type { NoteTreeNode } from './type';
@@ -38,13 +38,7 @@ export default class NoteTree extends Tree<Note> {
     }
   }
 
-  constructor(options: {
-    roots?: NoteTreeNode[];
-    virtualRoot?: boolean;
-    isDisabled?: (node: NoteTreeNode) => boolean;
-    fetchTreeFragment?: (noteId: Note['id']) => Promise<Note[]>;
-    fetchChildren?: (noteId: Note['parentId']) => Promise<Note[]>;
-  }) {
+  constructor(options: TreeOptions<Note>) {
     super(options);
     makeObservable(this);
   }
@@ -58,7 +52,7 @@ export default class NoteTree extends Tree<Note> {
 
   protected getEmptyEntity() {
     return {
-      id: '',
+      id: VIRTUAL_ROOT_NODE_KEY,
       title: '',
       isReadonly: true,
       parentId: null,
@@ -126,7 +120,7 @@ export default class NoteTree extends Tree<Note> {
     for (const key of selectedKeys) {
       const node = this.getNode(key);
 
-      invalidParentNodes.add(node.parent || null);
+      invalidParentNodes.add(this.getParentNode(node) || null);
       invalidDescendantNodes.add(node);
 
       for (const descendant of this.getDescendants(key)) {

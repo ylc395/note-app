@@ -12,7 +12,6 @@ interface TreeNodeEntity {
 export interface TreeNode<T extends TreeNodeEntity> {
   key: string;
   title: string;
-  parent?: this;
   children: this[];
   isLeaf: boolean;
   isDisabled?: boolean;
@@ -26,10 +25,18 @@ export interface TreeNode<T extends TreeNodeEntity> {
 
 export const VIRTUAL_ROOT_NODE_KEY = 'root';
 
+export interface TreeOptions<T extends TreeNodeEntity> {
+  roots?: TreeNode<T>[];
+  virtualRoot?: boolean;
+  isDisabled?: (entity: T, tree: Tree<T>) => boolean;
+  fetchTreeFragment?: (noteId: TreeNode<T>['key']) => Promise<T[]>;
+  fetchChildren?: (noteId: TreeNode<T>['key'] | null) => Promise<T[]>;
+}
+
 export abstract class Tree<T extends TreeNodeEntity> {
   @observable readonly expandedNodes = new Set<TreeNode<T>>();
   @observable roots: TreeNode<T>[] = [];
-  readonly selectedNodes = new Set<TreeNode<T>>();
+  @observable readonly selectedNodes = new Set<TreeNode<T>>();
   protected readonly id = Symbol();
   protected readonly nodesMap: Record<TreeNode<T>['key'], TreeNode<T>> = {};
 
@@ -46,15 +53,7 @@ export abstract class Tree<T extends TreeNodeEntity> {
       this.roots = nodes;
     }
   }
-  constructor(
-    private readonly options: {
-      roots?: TreeNode<T>[];
-      virtualRoot?: boolean;
-      isDisabled?: (node: TreeNode<T>) => boolean;
-      fetchTreeFragment?: (noteId: TreeNode<T>['key']) => Promise<T[]>;
-      fetchChildren?: (noteId: TreeNode<T>['key'] | null) => Promise<T[]>;
-    },
-  ) {
+  constructor(private readonly options: TreeOptions<T>) {
     makeObservable(this);
 
     if (options.virtualRoot) {
@@ -75,7 +74,7 @@ export abstract class Tree<T extends TreeNodeEntity> {
   protected abstract getEmptyEntity(): T;
 
   protected getVirtualRoot(): TreeNode<T> {
-    return {
+    return observable({
       key: VIRTUAL_ROOT_NODE_KEY,
       title: '根',
       children: [],
@@ -84,7 +83,7 @@ export abstract class Tree<T extends TreeNodeEntity> {
       isExpanded: true,
       isLoaded: true,
       entity: this.getEmptyEntity(),
-    };
+    });
   }
 
   @action
@@ -92,9 +91,10 @@ export abstract class Tree<T extends TreeNodeEntity> {
     const virtualRoot = this.getVirtualRoot();
 
     if (this.options.isDisabled) {
-      virtualRoot.isDisabled = this.options.isDisabled(virtualRoot);
+      virtualRoot.isDisabled = this.options.isDisabled(virtualRoot.entity, this);
     }
 
+    this.nodesMap[virtualRoot.key] = virtualRoot;
     this.roots.push(virtualRoot);
   }
 
@@ -111,7 +111,7 @@ export abstract class Tree<T extends TreeNodeEntity> {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  has(node: any): node is TreeNode<T> {
+  hasNode(node: any): node is TreeNode<T> {
     return node && 'treeId' in node && node.treeId === this.id;
   }
 
@@ -134,9 +134,17 @@ export abstract class Tree<T extends TreeNodeEntity> {
     }
   }
 
+  getParentNode(node: TreeNode<T> | T) {
+    if ('parentId' in node) {
+      return node.parentId ? this.getNode(node.parentId) : undefined;
+    }
+
+    return node.entity.parentId ? this.getNode(node.entity.parentId) : undefined;
+  }
+
   @action
   private removeChild(child: TreeNode<T>) {
-    const { parent } = child;
+    const parent = this.getParentNode(child);
 
     if (parent) {
       pull(parent.children, child);
@@ -212,7 +220,7 @@ export abstract class Tree<T extends TreeNodeEntity> {
         while (node) {
           node.isExpanded = true;
           this.expandedNodes.add(node);
-          node = node.parent;
+          node = this.getParentNode(node);
         }
       });
     } else {
@@ -231,35 +239,30 @@ export abstract class Tree<T extends TreeNodeEntity> {
 
   @action
   private createNode(entity: T, noSort?: boolean) {
-    const parent = entity.parentId ? this.getNode(entity.parentId) : undefined;
-
     const node: TreeNode<T> = observable({
       key: entity.id,
       title: '',
       isLeaf: true,
       children: [],
-      parent,
       entity,
       treeId: this.id,
-      isDisabled: false,
+      isDisabled: this.options.isDisabled?.(entity, this) ?? false,
       ...this.entityToNode(entity),
     });
 
-    if (this.options.isDisabled) {
-      node.isDisabled = this.options.isDisabled(node);
-    }
+    const parent = this.getParentNode(node);
 
     if (parent) {
       parent.isLeaf = false;
     }
 
-    const children = this.getChildren(entity.parentId);
+    const siblings = this.getChildren(entity.parentId);
 
-    children.push(node);
+    siblings.push(node);
     this.nodesMap[entity.id] = node;
 
     if (!noSort) {
-      this.sort(children, false);
+      this.sort(siblings, false);
     }
 
     return node;
@@ -278,28 +281,25 @@ export abstract class Tree<T extends TreeNodeEntity> {
       return this.createNode(entity, noSort);
     }
 
+    const parent = this.getParentNode(node);
+
+    if ((parent?.key || null) !== entity.parentId) {
+      this.removeChild(node);
+      const newParent = entity.parentId ? this.getNode(entity.parentId) : undefined;
+
+      if (newParent) {
+        newParent.children.push(node);
+        newParent.isLeaf = false;
+      } else {
+        this._roots.push(node);
+      }
+
+      if (!noSort) {
+        this.sort(newParent ? newParent.children : this._roots, false);
+      }
+    }
+
     this.updateNodeByEntity(entity, node);
-
-    if ((node.parent?.key || null) === entity.parentId) {
-      return node;
-    }
-
-    this.removeChild(node);
-
-    const newParent = entity.parentId ? this.getNode(entity.parentId) : undefined;
-
-    node.parent = newParent;
-
-    if (newParent) {
-      newParent.children.push(node);
-      newParent.isLeaf = false;
-    } else {
-      this._roots.push(node);
-    }
-
-    if (!noSort) {
-      this.sort(newParent ? newParent.children : this._roots, false);
-    }
 
     return node;
   }

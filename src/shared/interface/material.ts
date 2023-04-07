@@ -9,18 +9,24 @@ export const directoryDTOSchema = object({
 
 export type DirectoryDTO = Infer<typeof directoryDTOSchema>;
 
-export interface MaterialMetadata {
+export interface DirectoryVO {
   id: EntityId;
   name: string;
+  icon: string | null;
+  parentId: DirectoryVO['id'] | null;
+  childrenCount: number;
+}
+
+export type MaterialVO = Omit<DirectoryVO, 'childrenCount'> & {
   mimeType: string;
   sourceUrl: string | null;
   createdAt: number;
   updatedAt: number;
-  icon: string | null;
-  parentId: DirectoryVO['id'] | null;
-}
+};
 
-export type DirectoryVO = Omit<MaterialMetadata, 'mimeType' | 'sourceUrl' | 'updatedAt' | 'createdAt'>;
+export const isDirectory = (entity: MaterialVO | DirectoryVO): entity is DirectoryVO => {
+  return 'childrenCount' in entity;
+};
 
 export type TextMaterialBodyVO = string;
 
