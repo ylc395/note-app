@@ -82,4 +82,9 @@ export default class MemoService {
     this.memos = [];
     this.totalCount = 0;
   }
+
+  @action.bound
+  updateNewContent(content: string) {
+    return (this.newContent = content);
+  }
 }

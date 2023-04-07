@@ -1,15 +1,14 @@
 import { observer } from 'mobx-react-lite';
 import { Button } from 'antd';
 import { container } from 'tsyringe';
-import { useCallback, useRef, useMemo } from 'react';
-import { useBoolean } from 'ahooks';
+import { useCallback, useEffect, useRef } from 'react';
+import { useBoolean, useCreation } from 'ahooks';
 
 import MarkdownEditor, { type EditorRef } from 'web/components/MarkdownEditor';
 import MemoService from 'service/MemoService';
 import List from './List';
 import Search from './Search';
 import Operations from './Operations';
-import { action, runInAction } from 'mobx';
 
 export default observer(() => {
   const memoService = container.resolve(MemoService);
@@ -23,22 +22,27 @@ export default observer(() => {
   }, [memoService]);
 
   const clear = useCallback(() => {
-    runInAction(() => {
-      memoService.newContent = '';
-    });
+    memoService.updateNewContent('');
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     editorRef.current!.updateContent('', false);
   }, [memoService]);
 
-  const markdownEditor = useMemo(() => {
-    return (
-      <MarkdownEditor
-        defaultValue={memoService.newContent}
-        ref={editorRef}
-        onChange={action((content) => (memoService.newContent = content))}
-      />
-    );
-  }, [memoService]);
+  useEffect(() => {
+    if (isExpanded) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      editorRef.current!.updateContent(memoService.newContent, true);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      editorRef.current!.focus();
+    }
+  }, [isExpanded, memoService]);
+
+  const markdownEditor = useCreation(
+    () => (
+      <MarkdownEditor defaultValue={memoService.newContent} ref={editorRef} onChange={memoService.updateNewContent} />
+    ),
+
+    [memoService],
+  );
 
   return (
     <div className="box-border flex h-screen flex-col pt-1">

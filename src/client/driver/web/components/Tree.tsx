@@ -1,12 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { type ReactNode, type MouseEventHandler, useCallback, useContext, createContext, useState } from 'react';
+import { type ReactNode, type MouseEventHandler, useCallback, useContext, createContext } from 'react';
+import { observer } from 'mobx-react-lite';
 import { CaretRightFilled, CaretDownOutlined } from '@ant-design/icons';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import uniqueId from 'lodash/uniqueId';
 import clsx from 'clsx';
+import { useCreation } from 'ahooks';
 
 import type { Tree, TreeNode } from 'model/abstract/Tree';
-import { observer } from 'mobx-react-lite';
 
 interface ITreeContext<T extends TreeNode<any> = TreeNode<any>> {
   titleRender?: (node: T) => ReactNode;
@@ -87,7 +88,7 @@ const TreeNodeView = observer(function ({ node, level }: { node: TreeNode<any>; 
 TreeNodeView.displayName = 'TreeNode';
 
 export default observer(function Tree<T extends TreeNode<any>>({ tree, ...props }: TreeProps<T>) {
-  const [id] = useState(() => uniqueId('tree-view-'));
+  const id = useCreation(() => uniqueId('tree-view-'), []);
 
   return (
     <TreeContext.Provider value={{ ...props, id, tree } as unknown as ITreeContext}>
