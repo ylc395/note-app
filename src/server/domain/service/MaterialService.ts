@@ -1,13 +1,16 @@
-import type { DirectoryDTO } from 'interface/material';
+import type { MaterialDTO } from 'interface/material';
 
 import BaseService from './BaseService';
 
 export const DIRECTORY_MIME_TYPE = 'directory';
 
 export default class MaterialService extends BaseService {
-  async createDirectory(directory: DirectoryDTO) {
-    const { id, name, icon, parentId } = await this.materials.create({ ...directory, mimeType: DIRECTORY_MIME_TYPE });
+  async create({ content, ...info }: MaterialDTO) {
+    const newMaterial = await this.materials.create({
+      ...info,
+      ...(content ? { mimeType: content.mimeType, content: content.data } : { mimeType: DIRECTORY_MIME_TYPE }),
+    });
 
-    return { id, name, icon, parentId, childrenCount: 0 };
+    return newMaterial;
   }
 }

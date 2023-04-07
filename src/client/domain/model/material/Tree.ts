@@ -1,10 +1,8 @@
 import { action, makeObservable, observable } from 'mobx';
-import { type DirectoryVO, type MaterialVO, isDirectory } from 'interface/material';
-import { Tree, VIRTUAL_ROOT_NODE_KEY, type TreeNode, type TreeOptions } from 'model/abstract/Tree';
+import { type DirectoryVO, type EntityMaterialVO, isDirectory } from 'interface/material';
+import { Tree, VIRTUAL_ROOT_NODE_KEY, type TreeOptions } from 'model/abstract/Tree';
 
-type Material = DirectoryVO | MaterialVO;
-
-type MaterialTreeNode = TreeNode<Material>;
+type Material = DirectoryVO | EntityMaterialVO;
 
 export enum SortBy {
   Title = 'title',

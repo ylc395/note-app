@@ -1,6 +1,6 @@
 import type { MaterialRepository } from 'service/repository/MaterialRepository';
 import { DIRECTORY_MIME_TYPE } from 'service/MaterialService';
-import type { MaterialVO } from 'interface/material';
+import type { EntityMaterialVO } from 'interface/material';
 
 import schema, { type Row, MaterialTypes } from '../schema/material';
 import BaseRepository from './BaseRepository';
@@ -16,12 +16,12 @@ export default class SqliteMaterialRepository extends BaseRepository<Row> implem
     return SqliteMaterialRepository.rowToVO(createdRow);
   }
 
-  private static rowToVO(row: Row): MaterialVO {
+  private static rowToVO(row: Row): EntityMaterialVO {
     return {
       ...row,
       parentId: row.parentId ? String(row.parentId) : null,
       id: String(row.id),
-      mimeType: row.type === MaterialTypes.Directory ? 'directory' : '',
+      mimeType: row.type === MaterialTypes.Directory ? DIRECTORY_MIME_TYPE : '',
     };
   }
 }

@@ -14,9 +14,9 @@ import type NoteTree from 'model/note/Tree';
 import Tree, { type TreeProps } from 'web/components/Tree';
 import NodeTitle from './NodeTitle';
 
-export default observer(function ExplorerNoteTree({ tree }: { tree?: NoteTree }) {
+export default observer(function NoteTreeView({ tree }: { tree?: NoteTree }) {
   const { selectNote, moveNotes, actByContextmenu, noteTree: _noteTree } = container.resolve(NoteService);
-  const noteTree = useMemo(() => tree || _noteTree, [_noteTree, tree]);
+  const noteTree = useCreation(() => tree || _noteTree, [_noteTree, tree]);
 
   const handleExpand = useCallback<TreeProps<NoteTreeNode>['onExpand']>(
     ({ key }) => noteTree.toggleExpand(key, false),

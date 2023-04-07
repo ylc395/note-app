@@ -1,13 +1,17 @@
-import { object, string, infer as Infer } from 'zod';
+import { object, string, infer as Infer, union, instanceof as zodInstanceof } from 'zod';
 import type { EntityId } from './entity';
 
-export const directoryDTOSchema = object({
+export const materialDTOSchema = object({
   name: string().optional(),
   parentId: string().optional(),
   icon: string().optional(),
+  content: object({
+    data: union([string(), zodInstanceof(ArrayBuffer)]),
+    mimeType: string().min(1),
+  }).optional(),
 });
 
-export type DirectoryDTO = Infer<typeof directoryDTOSchema>;
+export type MaterialDTO = Infer<typeof materialDTOSchema>;
 
 export interface DirectoryVO {
   id: EntityId;
@@ -17,14 +21,20 @@ export interface DirectoryVO {
   childrenCount: number;
 }
 
-export type MaterialVO = Omit<DirectoryVO, 'childrenCount'> & {
+export type EntityMaterialVO = Omit<DirectoryVO, 'childrenCount'> & {
   mimeType: string;
   sourceUrl: string | null;
   createdAt: number;
   updatedAt: number;
 };
 
-export const isDirectory = (entity: MaterialVO | DirectoryVO): entity is DirectoryVO => {
+export type MaterialVO = DirectoryVO | EntityMaterialVO;
+
+export interface MaterialQuery {
+  parentId?: NonNullable<MaterialVO['parentId']>;
+}
+
+export const isDirectory = (entity: MaterialVO): entity is DirectoryVO => {
   return 'childrenCount' in entity;
 };
 
