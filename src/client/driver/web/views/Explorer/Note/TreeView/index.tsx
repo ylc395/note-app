@@ -1,23 +1,20 @@
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 import { useCallback, useEffect, useMemo } from 'react';
-import { useDndMonitor, useDroppable } from '@dnd-kit/core';
 import clsx from 'clsx';
-import uniqueId from 'lodash/uniqueId';
 import { useCreation } from 'ahooks';
 
 import NoteService from 'service/NoteService';
-import NoteEditor from 'model/note/Editor';
 import type { NoteTreeNode } from 'model/note/Tree/type';
 import type NoteTree from 'model/note/Tree';
-
 import Tree, { type TreeProps } from 'web/components/Tree';
+
 import NodeTitle from './NodeTitle';
+import useDrag from './useDrag';
 
 export default observer(function NoteTreeView({ tree }: { tree?: NoteTree }) {
-  const { selectNote, moveNotes, actByContextmenu, noteTree: _noteTree } = container.resolve(NoteService);
+  const { selectNote, actByContextmenu, noteTree: _noteTree } = container.resolve(NoteService);
   const noteTree = useCreation(() => tree || _noteTree, [_noteTree, tree]);
-
   const handleExpand = useCallback<TreeProps<NoteTreeNode>['onExpand']>(
     ({ key }) => noteTree.toggleExpand(key, false),
     [noteTree],
@@ -26,56 +23,13 @@ export default observer(function NoteTreeView({ tree }: { tree?: NoteTree }) {
     (node) => <NodeTitle node={node} />,
     [],
   );
-
-  const id = useCreation(() => uniqueId('note-tree-view-'), []);
-  const { setNodeRef, isOver } = useDroppable({ id });
+  const { isOver, setNodeRef } = useDrag(noteTree);
 
   useEffect(() => {
     if (!tree) {
       noteTree.loadChildren();
     }
   }, [noteTree, tree]);
-
-  useDndMonitor(
-    tree
-      ? {}
-      : {
-          onDragStart: ({ active }) => {
-            const draggingItem = active.data.current?.instance;
-
-            if (draggingItem instanceof NoteEditor) {
-              noteTree.updateInvalidParentNodes(draggingItem.entityId);
-            }
-
-            if (noteTree.hasNode(draggingItem)) {
-              if (!draggingItem.isSelected) {
-                noteTree.toggleSelect(draggingItem.key, true);
-              }
-
-              noteTree.updateInvalidParentNodes();
-            }
-          },
-          onDragEnd: ({ over, active }) => {
-            const dropNode = over?.data.current?.instance;
-            const draggingItem = active.data.current?.instance;
-
-            if (
-              (noteTree.hasNode(dropNode) || over?.id === id) &&
-              (noteTree.hasNode(draggingItem) || draggingItem instanceof NoteEditor)
-            ) {
-              const draggingItems =
-                draggingItem instanceof NoteEditor
-                  ? [draggingItem.entityId]
-                  : Array.from(noteTree.selectedNodes).map(({ key }) => key);
-              const dropNodeKey = noteTree.hasNode(dropNode) ? dropNode.key : null;
-
-              if (!noteTree.invalidParentKeys.has(dropNodeKey)) {
-                moveNotes(draggingItems, dropNodeKey);
-              }
-            }
-          },
-        },
-  );
 
   const treeView = useMemo(
     () => (
