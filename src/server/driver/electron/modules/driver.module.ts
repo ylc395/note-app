@@ -10,7 +10,7 @@ import { appFileProtocol } from 'infra/electronProtocol';
 import { token as fileReaderToken } from 'infra/FileReader';
 import { token as databaseToken, type Database } from 'infra/Database';
 import type Repositories from 'service/repository';
-import FileService from 'service/FileService';
+import ResourceService from 'service/ResourceService';
 
 const drivers = [
   [fileReaderToken, FileReader],
@@ -45,21 +45,21 @@ export default class DriverModule implements OnApplicationBootstrap {
     this.electronApp.once(AppClientEvents.Ready, async () => {
       const configDir = this.electronApp.getConfigDir();
       await this.sqliteDb.init(configDir);
-      let fileRepository: Repositories['files'];
+      let resourceRepository: Repositories['resources'];
 
       protocol.registerBufferProtocol(appFileProtocol, async (req, res) => {
-        if (!fileRepository) {
-          fileRepository = this.sqliteDb.getRepository('files');
+        if (!resourceRepository) {
+          resourceRepository = this.sqliteDb.getRepository('resources');
         }
 
-        const fileId = FileService.getFileIdFromUrl(req.url);
+        const resourceId = ResourceService.getResourceIdFromUrl(req.url);
 
-        if (!fileId) {
+        if (!resourceId) {
           res({ statusCode: 404 });
           return;
         }
 
-        const file = await fileRepository.findFileDataById(fileId);
+        const file = await resourceRepository.findFileById(resourceId);
 
         if (!file) {
           res({ statusCode: 404 });

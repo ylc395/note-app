@@ -1,29 +1,29 @@
 import { createHash } from 'node:crypto';
 import compact from 'lodash/compact';
 
-import type { FileRepository, RawFile, FileQuery } from 'service/repository/FileRepository';
+import type { ResourceRepository, RawFile, FileQuery } from 'service/repository/ResourceRepository';
+import type { ResourceVO } from 'interface/resource';
+import { buildIndex } from 'utils/collection';
 
 import BaseRepository from './BaseRepository';
-import schema, { type Row } from '../schema/file';
-import fileDataSchema, { type Row as FileDataRow } from '../schema/fileData';
-import { buildIndex } from 'utils/collection';
-import type { FileVO } from 'interface/file';
+import schema, { type Row } from '../schema/resource';
+import fileSchema, { type Row as FileRow } from '../schema/file';
 
-export default class SqliteFileRepository extends BaseRepository<Row> implements FileRepository {
+export default class SqliteFileRepository extends BaseRepository<Row> implements ResourceRepository {
   protected schema = schema;
-  private fileDataSchema = fileDataSchema;
+  private fileSchema = fileSchema;
 
   async create(file: RawFile) {
     const hash = createHash('md5').update(new Uint8Array(file.data)).digest('base64');
-    const existedFileData = await this.knex<FileDataRow>(this.fileDataSchema.tableName).where({ hash }).first('id');
+    const existedFileData = await this.knex<FileRow>(this.fileSchema.tableName).where({ hash }).first('id');
 
-    let fileDataId: FileDataRow['id'];
+    let fileDataId: FileRow['id'];
 
     if (existedFileData) {
       fileDataId = existedFileData.id;
     } else {
       const createdFileDataId = (
-        await this.knex<FileDataRow>(this.fileDataSchema.tableName)
+        await this.knex<FileRow>(this.fileSchema.tableName)
           .insert({
             hash,
             data: Buffer.from(file.data),
@@ -60,11 +60,7 @@ export default class SqliteFileRepository extends BaseRepository<Row> implements
   private getFindSql(fields?: string[]) {
     return this.knex(this.schema.tableName)
       .select(fields || [`${this.schema.tableName}.id`, 'name', 'sourceUrl', 'mimeType', 'createdAt', 'size'])
-      .join(
-        this.fileDataSchema.tableName,
-        `${this.schema.tableName}.fileDataId`,
-        `${this.fileDataSchema.tableName}.id`,
-      );
+      .join(this.fileSchema.tableName, `${this.schema.tableName}.fileDataId`, `${this.fileSchema.tableName}.id`);
   }
 
   async findAll(query: FileQuery | { id: Row['id'][] }) {
@@ -85,7 +81,7 @@ export default class SqliteFileRepository extends BaseRepository<Row> implements
   async batchCreate(files: RawFile[]) {
     const hashes = files.map((file) => createHash('md5').update(new Uint8Array(file.data)).digest('base64'));
     const existedFileDataRows = buildIndex(
-      await this.knex<FileDataRow>(this.fileDataSchema.tableName).whereIn('hash', hashes).select('id', 'hash'),
+      await this.knex<FileRow>(this.fileSchema.tableName).whereIn('hash', hashes).select('id', 'hash'),
       'hash',
     );
 
@@ -110,9 +106,7 @@ export default class SqliteFileRepository extends BaseRepository<Row> implements
     const createdFileDataRows =
       fileDataRowsToInsert.length > 0
         ? buildIndex(
-            await this.knex<FileDataRow>(this.fileDataSchema.tableName)
-              .insert(fileDataRowsToInsert)
-              .returning(['id', 'hash']),
+            await this.knex<FileRow>(this.fileSchema.tableName).insert(fileDataRowsToInsert).returning(['id', 'hash']),
             'hash',
           )
         : {};
@@ -140,11 +134,11 @@ export default class SqliteFileRepository extends BaseRepository<Row> implements
     return this.findAll({ id: createdRows.map(({ id }) => id) });
   }
 
-  async findOneById(id: FileVO['id']) {
+  async findOneById(id: ResourceVO['id']) {
     return (await this.getFindSql().where(`${this.schema.tableName}.id`, id).first()) || null;
   }
 
-  async findFileDataById(id: FileVO['id']) {
+  async findFileById(id: ResourceVO['id']) {
     const row = (await this.getFindSql(['mimeType', 'data']).where(`${this.schema.tableName}.id`, id).first()) || null;
 
     if (row) {

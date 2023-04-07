@@ -1,1 +1,1 @@
-export const appFileProtocol = 'app-file';
+export const appFileProtocol = 'app-resource';

@@ -47,8 +47,8 @@ export default class BaseService implements Repositories {
   }
 
   @cache
-  get files() {
-    return this.db.getRepository('files');
+  get resources() {
+    return this.db.getRepository('resources');
   }
 
   @cache

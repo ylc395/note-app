@@ -1,15 +1,21 @@
 import { container, singleton } from 'tsyringe';
 
-import { type FileUrl, type FilesDTO, isUrls, type FileUploadResponse, FileVO } from 'interface/File';
+import {
+  type ResourceUrl,
+  type ResourcesDTO,
+  isUrls,
+  type ResourceUploadResponse,
+  ResourceVO,
+} from 'interface/resource';
 import { token as remoteToken } from 'infra/Remote';
 
 @singleton()
 export default class MarkdownService {
   private readonly remote = container.resolve(remoteToken);
 
-  uploadFiles(files: File[]): Promise<FileVO[]>;
-  uploadFiles(files: FileUrl[]): Promise<FileUploadResponse>;
-  async uploadFiles(files: File[] | FileUrl[]) {
+  uploadFiles(files: File[]): Promise<ResourceVO[]>;
+  uploadFiles(files: ResourceUrl[]): Promise<ResourceUploadResponse>;
+  async uploadFiles(files: File[] | ResourceUrl[]) {
     const _files = isUrls(files)
       ? files
       : await Promise.all(
@@ -18,7 +24,7 @@ export default class MarkdownService {
           }),
         );
 
-    const { body: fileVOs } = await this.remote.post<FilesDTO, FileUploadResponse>('/files', {
+    const { body: fileVOs } = await this.remote.post<ResourcesDTO, ResourceUploadResponse>('/resources', {
       files: _files,
     });
 

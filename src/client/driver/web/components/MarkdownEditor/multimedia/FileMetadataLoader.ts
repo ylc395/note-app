@@ -1,4 +1,4 @@
-import type { HttpFileMetadata, HttpFileMetadataRequest } from 'interface/File';
+import type { WebResourceMetadata, WebResourceMetadataRequest } from 'interface/resource';
 import { singleton, container } from 'tsyringe';
 import memoize from 'lodash/memoize';
 
@@ -13,12 +13,15 @@ export default class FileMetadataLoader {
     const metadataJson = localStorage.getItem(storageKey);
 
     if (metadataJson) {
-      return JSON.parse(metadataJson) as HttpFileMetadata;
+      return JSON.parse(metadataJson) as WebResourceMetadata;
     }
 
-    const { body, status } = await this.remote.get<HttpFileMetadataRequest, HttpFileMetadata>('/files/metadata', {
-      url,
-    });
+    const { body, status } = await this.remote.get<WebResourceMetadataRequest, WebResourceMetadata>(
+      '/resources/metadata',
+      {
+        url,
+      },
+    );
 
     if (status === 200) {
       localStorage.setItem(storageKey, JSON.stringify(body));

@@ -4,7 +4,7 @@ import path from 'node:path';
 import { TextEncoder } from 'node:util';
 import fromParis from 'lodash/fromPairs';
 
-import { type FilesDTO, type FileUrl, isUrls } from 'interface/file';
+import { type ResourcesDTO, type ResourceUrl, isUrls } from 'interface/resource';
 import { Transaction } from 'infra/Database';
 import { appFileProtocol } from 'infra/electronProtocol';
 import { buildIndex } from 'utils/collection';
@@ -20,9 +20,9 @@ declare global {
 @Injectable()
 export default class FileService extends BaseService {
   @Transaction
-  async handleUpload(files: FilesDTO['files']) {
+  async handleUpload(files: ResourcesDTO['files']) {
     if (isUrls(files)) {
-      const existedFiles = buildIndex(await this.files.findAll({ sourceUrl: files }), 'sourceUrl');
+      const existedFiles = buildIndex(await this.resources.findAll({ sourceUrl: files }), 'sourceUrl');
       const rawFiles = await Promise.all(
         files.map(async (url) => {
           const existedFile = existedFiles[url];
@@ -33,17 +33,17 @@ export default class FileService extends BaseService {
 
           const rawFile = await this.downloadFile(url);
 
-          return typeof rawFile === 'string' ? rawFile : this.files.create(rawFile);
+          return typeof rawFile === 'string' ? rawFile : this.resources.create(rawFile);
         }),
       );
 
       return rawFiles;
     } else {
-      return this.files.batchCreate(files);
+      return this.resources.batchCreate(files);
     }
   }
 
-  private async downloadFile(sourceUrl: FileUrl) {
+  private async downloadFile(sourceUrl: ResourceUrl) {
     if (sourceUrl.startsWith('data:')) {
       const dataUrlResult = this.downloadDataUrl(sourceUrl);
 
@@ -100,10 +100,10 @@ export default class FileService extends BaseService {
   }
 
   async requestMetadata(url: string) {
-    const fileId = FileService.getFileIdFromUrl(url);
+    const fileId = FileService.getResourceIdFromUrl(url);
 
     if (fileId) {
-      const file = await this.files.findOneById(fileId);
+      const file = await this.resources.findOneById(fileId);
       return file ? { mimeType: file.mimeType } : null;
     }
 
@@ -121,7 +121,7 @@ export default class FileService extends BaseService {
     };
   }
 
-  static getFileIdFromUrl(url: string) {
+  static getResourceIdFromUrl(url: string) {
     if (process.env.APP_PLATFORM === 'electron') {
       if (!url.startsWith(appFileProtocol)) {
         return null;

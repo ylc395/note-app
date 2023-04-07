@@ -1,19 +1,13 @@
 import { type InferRow, defineSchema } from './type';
-import fileDataSchema from './fileData';
 
 const schema = defineSchema({
   tableName: 'files',
   fields: {
     id: { increments: true },
-    name: { type: 'text', notNullable: true },
-    sourceUrl: { type: 'text' },
-    createdAt: { type: 'integer', notNullable: true, defaultTo: (knex) => knex.raw('(unixepoch())') },
-    fileDataId: { type: 'integer', notNullable: true },
-  },
-  restrictions: {
-    foreign: {
-      fileDataId: `${fileDataSchema.tableName}.id`,
-    },
+    data: { type: 'binary', notNullable: true },
+    mimeType: { type: 'text', notNullable: true },
+    size: { type: 'integer', notNullable: true },
+    hash: { type: 'text', notNullable: true },
   },
 });
 

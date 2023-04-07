@@ -4,7 +4,7 @@ import { GlobalOutlined } from '@ant-design/icons-svg';
 import { renderIconDefinitionToSVGElement } from '@ant-design/icons-svg/es/helpers';
 
 import { token as remoteToken } from 'infra/Remote';
-import type { HttpFile, HttpFileRequest } from 'interface/File';
+import type { WebResource, WebResourceRequest } from 'interface/resource';
 
 const DEFAULT_LINK_ICON_KEY = 'DEFAULT_LINK_ICON';
 const DEFAULT_LINK_ICON = `data:image/svg+xml,${encodeURIComponent(
@@ -46,7 +46,7 @@ export default class IconLoader {
   }
 
   private async loadFavicon(origin: string) {
-    const { body } = await this.remote.get<HttpFileRequest, HttpFile<ArrayBuffer>>('/files/external', {
+    const { body } = await this.remote.get<WebResourceRequest, WebResource<ArrayBuffer>>('/resources/web', {
       url: `${origin}/favicon.ico`,
       type: 'arrayBuffer',
     });
@@ -59,7 +59,7 @@ export default class IconLoader {
   }
 
   private async loadHtml(pageUrl: string) {
-    const { body: htmlBody } = await this.remote.get<HttpFileRequest, HttpFile<string>>('/files/external', {
+    const { body: htmlBody } = await this.remote.get<WebResourceRequest, WebResource<string>>('/resources/web', {
       url: pageUrl,
       type: 'text',
     });
@@ -78,7 +78,7 @@ export default class IconLoader {
 
     iconUrl = new URL(iconUrl, pageUrl).toString();
 
-    const { body: iconBody } = await this.remote.get<HttpFileRequest, HttpFile<ArrayBuffer>>('/files/external', {
+    const { body: iconBody } = await this.remote.get<WebResourceRequest, WebResource<ArrayBuffer>>('/resources/web', {
       url: iconUrl,
       type: 'arrayBuffer',
     });
