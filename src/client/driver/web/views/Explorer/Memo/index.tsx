@@ -1,48 +1,13 @@
 import { observer } from 'mobx-react-lite';
-import { Button } from 'antd';
-import { container } from 'tsyringe';
-import { useCallback, useEffect, useRef } from 'react';
-import { useBoolean, useCreation } from 'ahooks';
+import { useBoolean } from 'ahooks';
 
-import MarkdownEditor, { type EditorRef } from 'web/components/MarkdownEditor';
-import MemoService from 'service/MemoService';
 import List from './List';
 import Search from './Search';
 import Operations from './Operations';
+import NewMemo from './NewMemo';
 
 export default observer(() => {
-  const memoService = container.resolve(MemoService);
-  const editorRef = useRef<EditorRef>(null);
   const [isExpanded, { toggle }] = useBoolean(false);
-
-  const create = useCallback(async () => {
-    await memoService.createMemo();
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    editorRef.current!.updateContent('');
-  }, [memoService]);
-
-  const clear = useCallback(() => {
-    memoService.updateNewContent('');
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    editorRef.current!.updateContent('', false);
-  }, [memoService]);
-
-  useEffect(() => {
-    if (isExpanded) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      editorRef.current!.updateContent(memoService.newContent, true);
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      editorRef.current!.focus();
-    }
-  }, [isExpanded, memoService]);
-
-  const markdownEditor = useCreation(
-    () => (
-      <MarkdownEditor defaultValue={memoService.newContent} ref={editorRef} onChange={memoService.updateNewContent} />
-    ),
-
-    [memoService],
-  );
 
   return (
     <div className="box-border flex h-screen flex-col pt-1">
@@ -53,19 +18,7 @@ export default observer(() => {
         </div>
       </div>
       <Operations toggle={toggle} isExpanded={isExpanded} />
-      {isExpanded && (
-        <div className="mt-2 bg-white px-2 pb-2">
-          <div className="h-20 cursor-text border border-solid border-gray-300 p-1 text-sm">{markdownEditor}</div>
-          <div className="mt-2 text-right">
-            <Button disabled={!memoService.newContent} onClick={clear} size="small" className="mr-2">
-              清除
-            </Button>
-            <Button disabled={!memoService.newContent} size="small" onClick={create} type="primary">
-              创建
-            </Button>
-          </div>
-        </div>
-      )}
+      {isExpanded && <NewMemo />}
       <List />
     </div>
   );
