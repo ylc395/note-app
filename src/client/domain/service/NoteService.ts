@@ -250,7 +250,7 @@ export default class NoteService extends EventEmitter {
 
         return this.editor.openEntity(
           { entityType: EntityTypes.Note, entityId: targetId },
-          { from: focusedTile.id, direction: TileSplitDirections.Right },
+          { from: focusedTile, direction: TileSplitDirections.Right },
         );
       default:
         break;

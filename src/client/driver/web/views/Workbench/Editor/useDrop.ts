@@ -3,10 +3,12 @@ import { useDroppable, useDndMonitor, type DragMoveEvent } from '@dnd-kit/core';
 import { container } from 'tsyringe';
 import throttle from 'lodash/throttle';
 
+import { EntityTypes } from 'interface/entity';
 import { TileSplitDirections } from 'model/workbench/TileManger';
 import type Tile from 'model/workbench/Tile';
 import EntityEditor from 'model/abstract/Editor';
 import EditorService from 'service/EditorService';
+import NoteService from 'service/NoteService';
 
 interface Position {
   top: string;
@@ -23,7 +25,8 @@ const directionMap = {
 };
 
 export default function useDrop(tile: Tile) {
-  const { moveEditor } = container.resolve(EditorService);
+  const { moveEditor, openEntity } = container.resolve(EditorService);
+  const { noteTree } = container.resolve(NoteService);
   const [dropPosition, setDropPosition] = useState<Position>();
   const {
     setNodeRef,
@@ -42,10 +45,13 @@ export default function useDrop(tile: Tile) {
 
   useDndMonitor({
     onDragEnd({ over, active }) {
+      const draggingItem = active.data.current?.instance;
+      const overItem = over?.data.current?.instance;
+
       if (
         !dropPosition ||
-        over?.data.current?.instance !== tile ||
-        !(active.data.current?.instance instanceof EntityEditor)
+        overItem !== tile ||
+        !(draggingItem instanceof EntityEditor || noteTree.hasNode(draggingItem))
       ) {
         return;
       }
@@ -53,12 +59,37 @@ export default function useDrop(tile: Tile) {
       const direction = Object.keys(dropPosition).find((key) => dropPosition[key as keyof Position] !== '0px');
 
       if (!direction) {
-        moveEditor(active.data.current.instance, tile);
+        if (draggingItem instanceof EntityEditor) {
+          moveEditor(draggingItem, tile);
+        } else {
+          openEntity({
+            entityId: draggingItem.entity.id,
+            entityType: EntityTypes.Note,
+          });
+        }
+        return;
+      }
+
+      const d = directionMap[direction as keyof Position];
+
+      if (draggingItem === (overItem as Tile).currentEditor) {
+        openEntity(
+          {
+            entityId: draggingItem.entityId,
+            entityType: draggingItem.entityType,
+          },
+          { direction: d, from: overItem },
+        );
+      } else if (draggingItem instanceof EntityEditor) {
+        moveEditor(draggingItem, { from: tile, splitDirection: d });
       } else {
-        moveEditor(active.data.current.instance, {
-          from: tile,
-          splitDirection: directionMap[direction as keyof Position],
-        });
+        openEntity(
+          {
+            entityId: draggingItem.entity.id,
+            entityType: EntityTypes.Note,
+          },
+          { direction: d, from: overItem },
+        );
       }
     },
     onDragMove: throttle(({ active }: DragMoveEvent) => {
@@ -69,14 +100,13 @@ export default function useDrop(tile: Tile) {
         !isOver ||
         !rect ||
         !editorRect.current ||
-        !(instance instanceof EntityEditor) ||
-        (instance.isOnlyOne && instance.tile === tile)
+        !(instance instanceof EntityEditor || noteTree.hasNode(instance))
       ) {
         return;
       }
 
       const portion = 6;
-      let position: Position | undefined = { top: '0px', left: '0px', bottom: '0px', right: '0px' };
+      const position: Position | undefined = { top: '0px', left: '0px', bottom: '0px', right: '0px' };
       const isInLeftBoundary = rect.left - editorRect.current.left < editorRect.current.width / portion;
       const isInRightBoundary = editorRect.current.right - rect.right < editorRect.current.width / portion;
       const isInTopBoundary = rect.top - editorRect.current.top < editorRect.current.height / portion;
@@ -90,8 +120,6 @@ export default function useDrop(tile: Tile) {
         position.bottom = `${editorRect.current.height / 2}px`;
       } else if (isInBottomBoundary && !isInLeftBoundary && !isInRightBoundary) {
         position.top = `${editorRect.current.height / 2}px`;
-      } else if (instance.tile === tile) {
-        position = undefined;
       }
 
       setDropPosition(position);

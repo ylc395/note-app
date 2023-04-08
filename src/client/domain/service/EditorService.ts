@@ -114,10 +114,9 @@ export default class EditorService extends EventEmitter {
   }
 
   @action.bound
-  openEntity(entity: EntityLocator, newTileOptions?: { direction: TileSplitDirections; from: Tile['id'] }) {
+  openEntity(entity: EntityLocator, newTileOptions?: { direction: TileSplitDirections; from: Tile }) {
     if (newTileOptions) {
-      const targetTile = this.tileManager.getTile(newTileOptions.from);
-      const newTile = this.tileManager.splitTile(targetTile.id, newTileOptions.direction);
+      const newTile = this.tileManager.splitTile(newTileOptions.from.id, newTileOptions.direction);
       const editor = this.createEditor(newTile, entity);
 
       newTile.addEditor(editor);
