@@ -1,20 +1,18 @@
 import { observer } from 'mobx-react-lite';
 import { CloseOutlined } from '@ant-design/icons';
-import { container } from 'tsyringe';
 import { Button } from 'antd';
 import { useSortable } from '@dnd-kit/sortable';
 import { useRef, useEffect } from 'react';
+import clsx from 'clsx';
 
 import IconTitle from 'web/components/IconTitle';
 import type EntityEditor from 'model/abstract/Editor';
-import EditorService from 'service/EditorService';
-import clsx from 'clsx';
+import useContextmenu from './useContextmenu';
 
 interface Props {
   editor: EntityEditor;
 }
 export default observer(function TabItem({ editor }: Props) {
-  const editorService = container.resolve(EditorService);
   const { tile } = editor;
   const { switchToEditor, removeEditor: closeEditor, currentEditor } = tile;
   const { setNodeRef, attributes, listeners, over } = useSortable({
@@ -30,6 +28,8 @@ export default observer(function TabItem({ editor }: Props) {
 
     currentEditor === editor && buttonRef.current.scrollIntoView();
   }, [currentEditor, editor]);
+
+  const onContextMenu = useContextmenu();
 
   if (!currentEditor) {
     throw new Error('no current editor');
@@ -48,7 +48,7 @@ export default observer(function TabItem({ editor }: Props) {
         },
       )}
       onClick={() => switchToEditor(editor.id)}
-      onContextMenu={() => editorService.actByContextmenu(editor)}
+      onContextMenu={onContextMenu}
     >
       <IconTitle
         className="mr-1 max-w-[200px] text-sm"

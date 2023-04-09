@@ -3,6 +3,11 @@ export interface ModalOptions {
   content: string;
 }
 
+export interface MessageOptions {
+  content: string;
+  onClick?: (close: () => void) => void;
+}
+
 export type ContextmenuItem =
   | {
       label: string;
@@ -11,8 +16,3 @@ export type ContextmenuItem =
       visible?: boolean;
     }
   | { type: 'separator' };
-
-export interface MessageOptions {
-  content: string;
-  onClick?: (close: () => void) => void;
-}

@@ -1,10 +1,10 @@
 import { Modal } from 'antd';
 
-import type { NoteInputs } from 'infra/UserInput';
+import type { NoteDomain } from 'infra/UI';
 import TargetTree from 'web/views/Explorer/Note/input/TargetTree';
-import { COMMON_MODAL_OPTIONS } from '../utils';
+import { COMMON_MODAL_OPTIONS } from '../../../userInput/utils';
 
-const getMoveTargetNoteId: NoteInputs['getMoveTargetNoteId'] = async (selectedNodes) => {
+const getMoveTargetNoteId: NoteDomain['getMoveTargetNoteId'] = async (selectedNodes) => {
   if (selectedNodes.length === 0) {
     throw new Error('no selectedNodes');
   }

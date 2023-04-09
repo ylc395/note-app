@@ -1,11 +1,11 @@
 import uniqueId from 'lodash/uniqueId';
 import { Modal as antdModal, message as antdMessage } from 'antd';
 
-import type UserFeedback from 'infra/UserFeedback';
+import type { CommonOutput } from 'infra/UI';
 
 const getContainer = () => document.querySelector('#app') as HTMLElement;
 
-const modal: UserFeedback['modal'] = {
+const modal: CommonOutput['modal'] = {
   success: (options) => {
     return new Promise((resolve) => {
       antdModal.success({
@@ -19,7 +19,7 @@ const modal: UserFeedback['modal'] = {
   },
 };
 
-const message: UserFeedback['message'] = {
+const message: CommonOutput['message'] = {
   success: (options) => {
     return new Promise((resolve) => {
       const key = uniqueId('messageBox-');
@@ -39,6 +39,6 @@ const message: UserFeedback['message'] = {
   },
 };
 
-const userFeedback: UserFeedback = { modal, message };
+const commonOutput: CommonOutput = { modal, message };
 
-export default userFeedback;
+export default commonOutput;

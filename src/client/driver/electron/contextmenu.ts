@@ -1,5 +1,5 @@
 import { type IpcMainInvokeEvent, Menu, BrowserWindow } from 'electron';
-import type { ContextmenuItem } from 'infra/ui';
+import type { ContextmenuItem } from 'infra/UI';
 
 export const CONTEXTMENU_CHANNEL = 'showContextmenu';
 

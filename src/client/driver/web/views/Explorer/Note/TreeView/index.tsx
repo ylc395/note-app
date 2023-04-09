@@ -11,9 +11,10 @@ import Tree, { type TreeProps } from 'web/components/Tree';
 
 import NodeTitle from './NodeTitle';
 import useDrag from './useDrag';
+import useContextmenu from './useContextmenu';
 
 export default observer(function NoteTreeView({ tree }: { tree?: NoteTree }) {
-  const { selectNote, actByContextmenu, noteTree: _noteTree } = container.resolve(NoteService);
+  const { selectNote, noteTree: _noteTree } = container.resolve(NoteService);
   const noteTree = useCreation(() => tree || _noteTree, [_noteTree, tree]);
   const handleExpand = useCallback<TreeProps<NoteTreeNode>['onExpand']>(
     ({ key }) => noteTree.toggleExpand(key, false),
@@ -24,6 +25,7 @@ export default observer(function NoteTreeView({ tree }: { tree?: NoteTree }) {
     [],
   );
   const { isOver, setNodeRef } = useDrag(noteTree);
+  const onContextmenu = useContextmenu();
 
   useEffect(() => {
     if (!tree) {
@@ -37,13 +39,13 @@ export default observer(function NoteTreeView({ tree }: { tree?: NoteTree }) {
         multiple
         draggable
         tree={noteTree}
-        onContextmenu={actByContextmenu}
+        onContextmenu={onContextmenu}
         titleRender={titleRender}
         onSelect={selectNote}
         onExpand={handleExpand}
       />
     ),
-    [actByContextmenu, handleExpand, noteTree, selectNote, titleRender],
+    [handleExpand, noteTree, onContextmenu, selectNote, titleRender],
   );
 
   return tree ? (
