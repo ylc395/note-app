@@ -13,13 +13,13 @@ export default observer(function NewMemo() {
   const create = useCallback(async () => {
     await memoService.createMemo();
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    editorRef.current!.updateContent('');
+    editorRef.current!.updateContent('', true);
   }, [memoService]);
 
   const clear = useCallback(() => {
     memoService.updateNewContent('');
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    editorRef.current!.updateContent('', false);
+    editorRef.current!.updateContent('', true);
   }, [memoService]);
 
   useEffect(() => {

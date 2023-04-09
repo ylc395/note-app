@@ -74,7 +74,7 @@ export default class EditorService extends EventEmitter {
     noteService.on(NoteEvents.Updated, (notes: NoteVO[]) => {
       for (const { id, ...metadata } of notes) {
         if (id === noteId) {
-          noteEditor.updateMetadata(metadata, true);
+          noteEditor.updateMetadata(metadata, false);
         }
       }
     });
@@ -84,22 +84,18 @@ export default class EditorService extends EventEmitter {
         NoteEditorEvents.BodyUpdated,
         debounce((body: BodyEvent) => this.remote.put<NoteBodyDTO>(`/notes/${noteId}/body`, body), 1000),
       )
+      .on(NoteEditorEvents.BodyUpdated, (body: BodyEvent) => {
+        for (const editor of this.getSameEntityEditors(noteEditor)) {
+          editor.updateBody(body, false);
+        }
+      })
       .on(
         NoteEditorEvents.MetadataUpdated,
         debounce((note: MetadataEvent) => this.remote.patch<NoteDTO>(`/notes/${noteId}`, note), 1000),
       )
-      .on(NoteEditorEvents.BodyUpdated, (body: BodyEvent) => {
-        for (const editor of this.editors[EntityTypes.Note]) {
-          if (editor.entityId === noteId && editor !== noteEditor) {
-            editor.updateBody(body, true);
-          }
-        }
-      })
-      .on(NoteEditorEvents.MetadataUpdated, (note: MetadataEvent) => {
-        for (const editor of this.editors[EntityTypes.Note]) {
-          if (editor.entityId === noteId && editor !== noteEditor) {
-            editor.updateMetadata(note, true);
-          }
+      .on(NoteEditorEvents.MetadataUpdated, (metadata: MetadataEvent) => {
+        for (const editor of this.getSameEntityEditors(noteEditor)) {
+          editor.updateMetadata(metadata, false);
         }
       });
 
@@ -111,6 +107,10 @@ export default class EditorService extends EventEmitter {
     ).then(noteEditor.loadEntity);
 
     return noteEditor;
+  }
+
+  private getSameEntityEditors(editor: EntityEditor) {
+    return Array.from(this.editors[editor.entityType]).filter((e) => e !== editor && e.entityId === editor.entityId);
   }
 
   @action.bound

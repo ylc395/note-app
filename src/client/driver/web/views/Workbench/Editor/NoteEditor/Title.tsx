@@ -7,7 +7,7 @@ import type NoteEditor from 'model/note/Editor';
 
 export default observer(function NoteTitle({ editor }: { editor: NoteEditor }) {
   const handleChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => editor?.updateMetadata({ title: e.target.value }),
+    (e: ChangeEvent<HTMLInputElement>) => editor?.updateMetadata({ title: e.target.value }, true),
     [editor],
   );
 

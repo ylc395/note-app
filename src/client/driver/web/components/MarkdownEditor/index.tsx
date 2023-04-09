@@ -24,7 +24,7 @@ interface Props {
 }
 
 export interface EditorRef {
-  updateContent: (content: string, isInitial?: boolean) => void;
+  updateContent: (content: string, isReset: boolean) => void;
   setReadonly: (isReadonly: boolean) => void;
   focus: () => void;
 }
@@ -35,7 +35,7 @@ export default forwardRef<EditorRef, Props>(function MarkdownEditor(
 ) {
   const rootRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<Editor>();
-  const isInitialRef = useRef(false);
+  const isRestRef = useRef(false);
   const creatingRef = useRef<Promise<void>>();
 
   const focus = useCallback(() => {
@@ -54,7 +54,7 @@ export default forwardRef<EditorRef, Props>(function MarkdownEditor(
     });
   }, [readonly]);
 
-  const updateContent = useCallback((content: string, isInitial = true) => {
+  const updateContent = useCallback((content: string, isReset: boolean) => {
     const editor = editorRef.current;
 
     if (!editor) {
@@ -70,7 +70,7 @@ export default forwardRef<EditorRef, Props>(function MarkdownEditor(
       if (!doc) {
         return;
       }
-      isInitialRef.current = isInitial;
+      isRestRef.current = isReset;
       view.dispatch(state.tr.replace(0, state.doc.content.size, new Slice(doc.content, 0, 0)));
     });
   }, []);
@@ -129,8 +129,8 @@ export default forwardRef<EditorRef, Props>(function MarkdownEditor(
 
           if (onChange) {
             ctx.get(listenerCtx).markdownUpdated((_, markdown, pre) => {
-              if (isInitialRef.current) {
-                isInitialRef.current = false;
+              if (isRestRef.current) {
+                isRestRef.current = false;
                 return;
               }
 
@@ -148,7 +148,7 @@ export default forwardRef<EditorRef, Props>(function MarkdownEditor(
       }
 
       if (typeof defaultValue === 'string') {
-        updateContent(defaultValue);
+        updateContent(defaultValue, true);
       }
     });
 

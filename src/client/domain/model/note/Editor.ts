@@ -11,7 +11,7 @@ import type NoteTree from './Tree';
 export enum Events {
   MetadataUpdated = 'noteEditor.updated.metadata', // not included synced by other editor
   BodyUpdated = 'noteEditor.updated.body', // not included synced by other editors
-  BodySynced = 'noteEditor.synced.body',
+  BodyUpdatedNotOriginally = 'noteEditor.updated.body.notOriginally',
 }
 
 export type MetadataPatch = Omit<Partial<NoteVO>, 'id'>;
@@ -62,25 +62,25 @@ export default class NoteEditor extends EntityEditor<Entity> {
     return result;
   }
 
-  @action.bound
-  async updateBody(body: string, syncFlag = false) {
+  @action
+  async updateBody(body: string, isOrigin: boolean) {
     if (!this.entity) {
       throw new Error('no load note');
     }
 
     this.entity.body = body;
-    this.emit(syncFlag ? Events.BodySynced : Events.BodyUpdated, body);
+    this.emit(isOrigin ? Events.BodyUpdated : Events.BodyUpdatedNotOriginally, body);
   }
 
   @action
-  updateMetadata(metadata: MetadataEvent, syncFlag?: true) {
+  updateMetadata(metadata: MetadataEvent, isOrigin: boolean) {
     if (!this.entity) {
       throw new Error('no load note');
     }
 
     Object.assign(this.entity.metadata, metadata);
 
-    if (!syncFlag) {
+    if (isOrigin) {
       this.emit(Events.MetadataUpdated, metadata);
       this.updateTree();
     }
