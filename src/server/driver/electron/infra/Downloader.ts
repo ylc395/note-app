@@ -18,15 +18,19 @@ export default class Downloader {
       throw new Error(`invalid url ${url}`);
     }
 
-    if (protocol === 'files:') {
+    if (protocol === 'file:') {
       return this.readLocalFile(pathname);
+    }
+
+    if (protocol === 'data') {
+      return this.downloadDataUrl(url);
     }
 
     try {
       const name = path.basename(pathname);
       const res = await fetch(url);
 
-      return { name, mimeType: res.headers.get('content-type') || '', data: await res.arrayBuffer() };
+      return { sourceUrl: url, name, mimeType: res.headers.get('content-type') || '', data: await res.arrayBuffer() };
     } catch {
       return null;
     }
@@ -37,5 +41,29 @@ export default class Downloader {
     const data = await readFile(filePath);
 
     return { data, name, mimeType: '' };
+  }
+
+  private downloadDataUrl(dataUrl: string) {
+    const dataUrlPattern = /^data:(.+?)?(;base64)?,(.+)/;
+    const matchResult = dataUrl.match(dataUrlPattern);
+
+    if (!matchResult) {
+      return null;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [_, mimeType, base64Flag, content] = matchResult;
+
+    if (!content) {
+      return dataUrl;
+    }
+
+    return {
+      name: '',
+      mimeType: mimeType || 'text/plain',
+      data: base64Flag
+        ? Buffer.from(content, 'base64').buffer
+        : new TextEncoder().encode(decodeURIComponent(content)).buffer,
+    };
   }
 }

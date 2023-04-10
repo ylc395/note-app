@@ -1,5 +1,5 @@
 import { type InferRow, defineSchema } from './type';
-import fileDataSchema from './file';
+import fileSchema from './file';
 
 const schema = defineSchema({
   tableName: 'resources',
@@ -12,7 +12,7 @@ const schema = defineSchema({
   },
   restrictions: {
     foreign: {
-      fileId: `${fileDataSchema.tableName}.id`,
+      fileId: `${fileSchema.tableName}.id`,
     },
   },
 });

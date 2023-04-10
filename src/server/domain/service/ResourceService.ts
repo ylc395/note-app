@@ -26,9 +26,9 @@ export default class ResourceService extends BaseService {
             return existedFile;
           }
 
-          const rawFile = await this.downloadFile(url);
+          const rawFile = await this.downloader.downloadFile(url);
 
-          return !rawFile || typeof rawFile === 'string' ? url : this.resources.create(rawFile);
+          return !rawFile ? url : this.resources.create(rawFile);
         }),
       );
 
@@ -36,39 +36,6 @@ export default class ResourceService extends BaseService {
     } else {
       return this.resources.batchCreate(files);
     }
-  }
-
-  private async downloadFile(sourceUrl: ResourceUrl) {
-    if (sourceUrl.startsWith('data:')) {
-      const dataUrlResult = this.downloadDataUrl(sourceUrl);
-
-      return typeof dataUrlResult === 'string' ? dataUrlResult : { name: '', sourceUrl, ...dataUrlResult };
-    }
-
-    return this.downloader.downloadFile(sourceUrl);
-  }
-
-  private downloadDataUrl(dataUrl: string) {
-    const dataUrlPattern = /^data:(.+?)?(;base64)?,(.+)/;
-    const matchResult = dataUrl.match(dataUrlPattern);
-
-    if (!matchResult) {
-      return dataUrl;
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [_, mimeType, base64Flag, content] = matchResult;
-
-    if (!content) {
-      return dataUrl;
-    }
-
-    return {
-      mimeType: mimeType || 'text/plain',
-      data: base64Flag
-        ? Buffer.from(content, 'base64').buffer
-        : new TextEncoder().encode(decodeURIComponent(content)).buffer,
-    };
   }
 
   async request(url: string, type: 'arrayBuffer' | 'text') {

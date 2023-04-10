@@ -1,60 +1,27 @@
 import { createHash } from 'node:crypto';
 import compact from 'lodash/compact';
 
-import type { ResourceRepository, RawFile, FileQuery } from 'service/repository/ResourceRepository';
+import type { File } from 'model/file';
+import type { ResourceRepository, FileQuery } from 'service/repository/ResourceRepository';
 import type { ResourceVO } from 'interface/resource';
 import { buildIndex } from 'utils/collection';
 
 import BaseRepository from './BaseRepository';
+import FileRepository from './FileRepository';
 import schema, { type Row } from '../schema/resource';
 import fileSchema, { type Row as FileRow } from '../schema/file';
 
 export default class SqliteFileRepository extends BaseRepository<Row> implements ResourceRepository {
-  protected schema = schema;
-  private fileSchema = fileSchema;
+  protected readonly schema = schema;
+  private readonly fileSchema = fileSchema;
 
-  async create(file: RawFile) {
-    const hash = createHash('md5').update(new Uint8Array(file.data)).digest('base64');
-    const existedFileData = await this.knex<FileRow>(this.fileSchema.tableName).where({ hash }).first('id');
+  private readonly files = new FileRepository(this.knex);
 
-    let fileId: FileRow['id'];
+  async create(file: File) {
+    const existedFileData = await this.files.findOrCreate(file);
+    const fileId = existedFileData.id;
 
-    if (existedFileData) {
-      fileId = existedFileData.id;
-    } else {
-      const createdFileId = (
-        await this.knex<FileRow>(this.fileSchema.tableName)
-          .insert({
-            hash,
-            data: Buffer.from(file.data),
-            size: file.data.byteLength,
-            mimeType: file.mimeType,
-          })
-          .returning('id')
-      )[0]?.id;
-
-      if (!createdFileId) {
-        throw new Error('create file data failed');
-      }
-
-      fileId = createdFileId;
-    }
-
-    const createdFileId = (
-      await this.knex<Row>(this.schema.tableName)
-        .insert({
-          name: file.name,
-          sourceUrl: file.sourceUrl,
-          fileId,
-        })
-        .returning('id')
-    )[0]?.id;
-
-    if (!createdFileId) {
-      throw new Error('fail to create file');
-    }
-
-    return (await this.findAll({ id: [createdFileId] }))[0];
+    return (await this.findAll({ id: [fileId] }))[0];
   }
 
   private getFindSql(fields?: string[]) {
@@ -78,7 +45,7 @@ export default class SqliteFileRepository extends BaseRepository<Row> implements
     return (await sql).map((row: any) => ({ ...row, id: String(row.id) }));
   }
 
-  async batchCreate(files: RawFile[]) {
+  async batchCreate(files: File[]) {
     const hashes = files.map((file) => createHash('md5').update(new Uint8Array(file.data)).digest('base64'));
     const existedFileDataRows = buildIndex(
       await this.knex<FileRow>(this.fileSchema.tableName).whereIn('hash', hashes).select('id', 'hash'),
