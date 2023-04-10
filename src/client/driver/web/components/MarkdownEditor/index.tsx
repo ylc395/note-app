@@ -100,9 +100,9 @@ export default forwardRef<EditorRef, Props>(function MarkdownEditor(
     }
 
     const editor = Editor.make()
+      .use(multimedia) // order attention!
       .use(commonmark)
       .use(gfm)
-      .use(multimedia)
       .use(iconLink)
       .use(listener)
       .use(search)

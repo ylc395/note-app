@@ -7,18 +7,13 @@ import fromParis from 'lodash/fromPairs';
 import { type ResourcesDTO, type ResourceUrl, isUrls } from 'interface/resource';
 import { Transaction } from 'infra/Database';
 import { appFileProtocol } from 'infra/electronProtocol';
+
 import { buildIndex } from 'utils/collection';
 
 import BaseService from './BaseService';
 
-// remove this once native fetch type is launched in @types/node
-// see https://github.com/DefinitelyTyped/DefinitelyTyped/issues/60924#issuecomment-1358424866
-declare global {
-  export const { fetch, FormData, Headers, Request, Response }: typeof import('undici');
-}
-
 @Injectable()
-export default class FileService extends BaseService {
+export default class ResourceService extends BaseService {
   @Transaction
   async handleUpload(files: ResourcesDTO['files']) {
     if (isUrls(files)) {
@@ -33,7 +28,7 @@ export default class FileService extends BaseService {
 
           const rawFile = await this.downloadFile(url);
 
-          return typeof rawFile === 'string' ? rawFile : this.resources.create(rawFile);
+          return !rawFile || typeof rawFile === 'string' ? url : this.resources.create(rawFile);
         }),
       );
 
@@ -50,20 +45,7 @@ export default class FileService extends BaseService {
       return typeof dataUrlResult === 'string' ? dataUrlResult : { name: '', sourceUrl, ...dataUrlResult };
     }
 
-    const { pathname } = parseUrl(sourceUrl);
-
-    if (!pathname) {
-      throw new Error(`invalid url ${sourceUrl}`);
-    }
-
-    try {
-      const name = path.basename(pathname);
-      const res = await fetch(sourceUrl);
-
-      return { name, sourceUrl, mimeType: res.headers.get('content-type') || '', data: await res.arrayBuffer() };
-    } catch {
-      return sourceUrl;
-    }
+    return this.downloader.downloadFile(sourceUrl);
   }
 
   private downloadDataUrl(dataUrl: string) {
@@ -100,7 +82,7 @@ export default class FileService extends BaseService {
   }
 
   async requestMetadata(url: string) {
-    const fileId = FileService.getResourceIdFromUrl(url);
+    const fileId = ResourceService.getResourceIdFromUrl(url);
 
     if (fileId) {
       const file = await this.resources.findOneById(fileId);

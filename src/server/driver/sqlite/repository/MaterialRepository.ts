@@ -1,27 +1,36 @@
-import type { MaterialRepository } from 'service/repository/MaterialRepository';
-import { DIRECTORY_MIME_TYPE } from 'service/MaterialService';
-import type { EntityMaterialVO } from 'interface/material';
+import type { MaterialRepository, Directory } from 'service/repository/MaterialRepository';
+import type { MaterialDTO } from 'interface/material';
 
 import schema, { type Row, MaterialTypes } from '../schema/material';
 import BaseRepository from './BaseRepository';
 
 export default class SqliteMaterialRepository extends BaseRepository<Row> implements MaterialRepository {
   protected readonly schema = schema;
-  async create(material: Parameters<MaterialRepository['create']>[0]) {
+  async createDirectory(directory: Directory) {
     const createdRow = await this.createOrUpdate({
-      ...material,
-      type: material.mimeType === DIRECTORY_MIME_TYPE ? MaterialTypes.Directory : MaterialTypes.Text,
+      ...directory,
+      type: MaterialTypes.Directory,
     });
 
-    return SqliteMaterialRepository.rowToVO(createdRow);
+    return {
+      id: String(createdRow.id),
+      name: createdRow.name,
+      icon: createdRow.icon,
+      parentId: createdRow.parentId ? String(createdRow.parentId) : null,
+      childrenCount: 0,
+    };
   }
 
-  private static rowToVO(row: Row): EntityMaterialVO {
+  async createEntity(material: MaterialDTO) {
     return {
-      ...row,
-      parentId: row.parentId ? String(row.parentId) : null,
-      id: String(row.id),
-      mimeType: row.type === MaterialTypes.Directory ? DIRECTORY_MIME_TYPE : '',
+      id: '',
+      name: '',
+      icon: null,
+      parentId: null,
+      mimeType: '',
+      sourceUrl: null,
+      createdAt: 0,
+      updatedAt: 0,
     };
   }
 }

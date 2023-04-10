@@ -17,12 +17,12 @@ export default class SqliteFileRepository extends BaseRepository<Row> implements
     const hash = createHash('md5').update(new Uint8Array(file.data)).digest('base64');
     const existedFileData = await this.knex<FileRow>(this.fileSchema.tableName).where({ hash }).first('id');
 
-    let fileDataId: FileRow['id'];
+    let fileId: FileRow['id'];
 
     if (existedFileData) {
-      fileDataId = existedFileData.id;
+      fileId = existedFileData.id;
     } else {
-      const createdFileDataId = (
+      const createdFileId = (
         await this.knex<FileRow>(this.fileSchema.tableName)
           .insert({
             hash,
@@ -33,11 +33,11 @@ export default class SqliteFileRepository extends BaseRepository<Row> implements
           .returning('id')
       )[0]?.id;
 
-      if (!createdFileDataId) {
+      if (!createdFileId) {
         throw new Error('create file data failed');
       }
 
-      fileDataId = createdFileDataId;
+      fileId = createdFileId;
     }
 
     const createdFileId = (
@@ -45,7 +45,7 @@ export default class SqliteFileRepository extends BaseRepository<Row> implements
         .insert({
           name: file.name,
           sourceUrl: file.sourceUrl,
-          fileDataId,
+          fileId,
         })
         .returning('id')
     )[0]?.id;
@@ -60,7 +60,7 @@ export default class SqliteFileRepository extends BaseRepository<Row> implements
   private getFindSql(fields?: string[]) {
     return this.knex(this.schema.tableName)
       .select(fields || [`${this.schema.tableName}.id`, 'name', 'sourceUrl', 'mimeType', 'createdAt', 'size'])
-      .join(this.fileSchema.tableName, `${this.schema.tableName}.fileDataId`, `${this.fileSchema.tableName}.id`);
+      .join(this.fileSchema.tableName, `${this.schema.tableName}.fileId`, `${this.fileSchema.tableName}.id`);
   }
 
   async findAll(query: FileQuery | { id: Row['id'][] }) {
@@ -116,16 +116,16 @@ export default class SqliteFileRepository extends BaseRepository<Row> implements
         files.map((file, index) => {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           const hash = hashes[index]!;
-          const fileDataId = (existedFileDataRows[hash] || createdFileDataRows[hash])?.id;
+          const fileId = (existedFileDataRows[hash] || createdFileDataRows[hash])?.id;
 
-          if (!fileDataId) {
+          if (!fileId) {
             throw new Error('no file data id');
           }
 
           return {
             name: file.name,
             sourceUrl: file.sourceUrl,
-            fileDataId,
+            fileId,
           };
         }),
       )

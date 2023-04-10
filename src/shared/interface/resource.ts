@@ -21,7 +21,7 @@ export const resourcesDTOSchema = object({
       object({
         name: string(),
         data: zodInstanceof(ArrayBuffer),
-        mimeType: string(),
+        mimeType: string().min(1),
       }),
     ),
   ]),

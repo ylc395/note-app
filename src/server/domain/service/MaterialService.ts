@@ -2,15 +2,26 @@ import type { MaterialDTO } from 'interface/material';
 
 import BaseService from './BaseService';
 
-export const DIRECTORY_MIME_TYPE = 'directory';
-
 export default class MaterialService extends BaseService {
-  async create({ content, ...info }: MaterialDTO) {
-    const newMaterial = await this.materials.create({
-      ...info,
-      ...(content ? { mimeType: content.mimeType, content: content.data } : { mimeType: DIRECTORY_MIME_TYPE }),
-    });
+  async create({ text, sourceUrl, file, ...info }: MaterialDTO) {
+    if (text) {
+      return this.materials.createEntity({ text, sourceUrl, ...info });
+    }
 
-    return newMaterial;
+    if (file) {
+      return this.materials.createEntity({ file, sourceUrl, ...info });
+    }
+
+    if (sourceUrl) {
+      const file = await this.downloader.downloadFile(sourceUrl);
+
+      if (file) {
+        return this.materials.createEntity({ ...info, sourceUrl, file });
+      }
+
+      throw new Error('can not download');
+    }
+
+    return this.materials.createDirectory(info);
   }
 }

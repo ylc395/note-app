@@ -1,14 +1,8 @@
-import type { MaterialVO, DirectoryVO } from 'interface/material';
+import type { DirectoryVO, EntityMaterialVO, MaterialDTO } from 'interface/material';
+
+export type Directory = Pick<MaterialDTO, 'name' | 'parentId' | 'icon'>;
 
 export interface MaterialRepository {
-  create: (
-    material: Partial<{
-      name: string;
-      mimeType: string;
-      sourceUrl: string;
-      parentId: DirectoryVO['id'];
-      icon: string;
-      content: string | ArrayBuffer;
-    }>,
-  ) => Promise<MaterialVO>;
+  createDirectory: (directory: Directory) => Promise<DirectoryVO>;
+  createEntity: (material: MaterialDTO) => Promise<EntityMaterialVO>;
 }

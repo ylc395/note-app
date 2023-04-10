@@ -8,11 +8,11 @@ const schema = defineSchema({
     name: { type: 'text', notNullable: true },
     sourceUrl: { type: 'text' },
     createdAt: { type: 'integer', notNullable: true, defaultTo: (knex) => knex.raw('(unixepoch())') },
-    fileDataId: { type: 'integer', notNullable: true },
+    fileId: { type: 'integer', notNullable: true },
   },
   restrictions: {
     foreign: {
-      fileDataId: `${fileDataSchema.tableName}.id`,
+      fileId: `${fileDataSchema.tableName}.id`,
     },
   },
 });

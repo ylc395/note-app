@@ -1,21 +1,22 @@
 import { Global, Module, Inject, type OnApplicationBootstrap } from '@nestjs/common';
 import { protocol } from 'electron';
 
-import FileReader from 'driver/fs';
 import Sqlite from 'driver/sqlite';
 import ElectronClient from 'client/driver/electron';
 
 import { token as appClientToken, type AppClient, Events as AppClientEvents } from 'infra/AppClient';
 import { appFileProtocol } from 'infra/electronProtocol';
-import { token as fileReaderToken } from 'infra/FileReader';
 import { token as databaseToken, type Database } from 'infra/Database';
+import { token as downloaderToken } from 'infra/Downloader';
 import type Repositories from 'service/repository';
 import ResourceService from 'service/ResourceService';
 
+import Downloader from '../infra/Downloader';
+
 const drivers = [
-  [fileReaderToken, FileReader],
   [appClientToken, ElectronClient],
   [databaseToken, Sqlite],
+  [downloaderToken, Downloader],
 ] as const;
 
 @Global()
