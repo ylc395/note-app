@@ -22,6 +22,11 @@ export default function useContextmenu() {
     const starService = container.resolve(StarService);
 
     const { selectedNodes } = noteService.noteTree;
+
+    if (!selectedNodes.has(targetNode)) {
+      noteService.noteTree.toggleSelect(targetNode.key, true);
+    }
+
     const targetId = targetNode.key;
     const isMultiple = selectedNodes.size > 1;
     const description = selectedNodes.size + '项';
@@ -50,6 +55,7 @@ export default function useContextmenu() {
           { type: 'separator' },
           { label: '删除', key: 'delete' },
         ];
+
     const action = await getContextmenuAction(items);
 
     if (!action) {
