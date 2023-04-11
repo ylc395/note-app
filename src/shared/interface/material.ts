@@ -3,7 +3,7 @@ import type { EntityId } from './entity';
 
 export const materialDTOSchema = object({
   name: string().optional(),
-  parentId: string().optional(),
+  parentId: string().nullable().optional(),
   icon: string().optional(),
   file: object({
     name: string(),

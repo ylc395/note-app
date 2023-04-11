@@ -13,10 +13,7 @@ export default observer(function Title({ node }: { node: NoteTreeNode }) {
 
   return (
     <span className="group flex">
-      <IconTitle
-        icon={(node as NoteTreeNode).entity.icon}
-        title={`${__ENV__ === 'dev' ? `${node.key} ` : ''}${node.title}`}
-      />
+      <IconTitle icon={node.entity.icon} title={`${__ENV__ === 'dev' ? `${node.key} ` : ''}${node.title}`} />
       <Tooltip title="新建子笔记" placement="right">
         <Button
           onClick={(e) => {

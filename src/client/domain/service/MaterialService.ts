@@ -1,8 +1,8 @@
 import { singleton, container } from 'tsyringe';
 
-import type { MaterialDTO, DirectoryVO, MaterialVO, MaterialQuery } from 'interface/material';
+import { MaterialDTO, DirectoryVO, MaterialVO, MaterialQuery, isDirectory } from 'interface/material';
 import { token as remoteToken } from 'infra/Remote';
-import MaterialTree from 'model/material/Tree';
+import MaterialTree, { MaterialTreeNode } from 'model/material/Tree';
 
 @singleton()
 export default class MaterialService {
@@ -26,10 +26,23 @@ export default class MaterialService {
     fetchTreeFragment: this.fetchTreeFragment,
   });
 
-  async createDirectory(parent?: DirectoryVO) {
-    const { body: directory } = await this.remote.post<MaterialDTO, DirectoryVO>(
-      '/materials',
-      parent ? { parentId: parent.id } : {},
-    );
-  }
+  readonly createDirectory = async (parentId?: DirectoryVO['parentId']) => {
+    const { body: directory } = await this.remote.post<MaterialDTO, DirectoryVO>('/materials', {
+      parentId: parentId || null,
+    });
+
+    if (parentId) {
+      await this.materialTree.toggleExpand(parentId, true, true);
+    }
+
+    this.materialTree.updateTreeByEntity(directory);
+  };
+
+  readonly selectMaterial = (node: MaterialTreeNode, multiple: boolean) => {
+    const selected = this.materialTree.toggleSelect(node.key, !multiple);
+
+    if (selected && !multiple && !isDirectory(node.entity)) {
+      // this.editor.openEntity({ entityType: EntityTypes.Note, entityId: node.key });
+    }
+  };
 }

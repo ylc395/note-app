@@ -52,7 +52,7 @@ export default class NoteService extends EventEmitter {
 
   readonly createNote = async (parentId?: Note['parentId']) => {
     // fixme: knex 有个 bug，目前必须写一个字段进去 https://github.com/knex/knex/pull/5471
-    let { body: note } = await this.remote.post<NoteDTO, Note>('/notes', {
+    const { body: note } = await this.remote.post<NoteDTO, Note>('/notes', {
       parentId: parentId || null,
     });
 
@@ -60,7 +60,7 @@ export default class NoteService extends EventEmitter {
       await this.noteTree.toggleExpand(parentId, true, true);
     }
 
-    note = this.noteTree.updateTreeByEntity(note).entity;
+    this.noteTree.updateTreeByEntity(note);
     this.noteTree.toggleSelect(note.id, true);
     this.editor.openEntity({ entityType: EntityTypes.Note, entityId: note.id });
   };
