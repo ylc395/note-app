@@ -1,7 +1,7 @@
 import { observer, useLocalObservable } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 import { computed, observable, runInAction } from 'mobx';
-import { useCallback, useState, useEffect, type MouseEvent } from 'react';
+import { useCallback, useState, useEffect, type MouseEvent, useContext } from 'react';
 import { Form, DatePicker, Button, Checkbox, Popover, AutoComplete } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
 import type { CheckboxChangeEvent } from 'antd/es/checkbox';
@@ -10,18 +10,14 @@ import uniq from 'lodash/uniq';
 import uniqueId from 'lodash/uniqueId';
 
 import { token as remoteToken } from 'infra/Remote';
-import NoteMetadata, { type NoteMetadata as NoteMetadataValues, MULTIPLE_ICON_FLAG } from 'model/note/MetadataForm';
-import type { NoteAttributesVO, NoteDTO, NoteVO } from 'interface/Note';
+import NoteMetadata, { MULTIPLE_ICON_FLAG } from 'model/note/MetadataForm';
+import type { NoteAttributesVO, NoteDTO } from 'interface/Note';
 
 import { useUpdateTimeField, FORM_ITEM_LAYOUT } from 'web/components/utils';
 import { EmojiPicker, Emoji } from 'web/components/Emoji';
-
-interface Props {
-  onSubmit: (metadata: NoteMetadataValues) => void;
-  onCancel: () => void;
-  metadata: NoteMetadataValues;
-  icons: NoteVO['icon'][];
-}
+import { useCreation } from 'ahooks';
+import NoteService from 'service/NoteService';
+import { ModalContext } from '../useModals';
 
 function useAttributes(noteMetadata: NoteMetadata) {
   const remote = container.resolve(remoteToken);
@@ -115,11 +111,9 @@ function useAttributes(noteMetadata: NoteMetadata) {
   return { allAttributes, attributes, availableKeys };
 }
 
-export default observer(function MetadataForm({ onSubmit, onCancel, metadata, icons }: Props) {
-  const [noteMetadata] = useState(() => {
-    return new NoteMetadata(metadata);
-  });
-
+export default observer(function MetadataForm() {
+  const { getSelectedMetadata, editNotes, noteTree } = container.resolve(NoteService);
+  const noteMetadata = useCreation(() => new NoteMetadata(getSelectedMetadata()), []);
   const [isPickingEmoji, setIsPickingEmoji] = useState(false);
   const { allAttributes, attributes, availableKeys } = useAttributes(noteMetadata);
 
@@ -142,7 +136,8 @@ export default observer(function MetadataForm({ onSubmit, onCancel, metadata, ic
     setIsPickingEmoji(!isPickingEmoji);
   };
 
-  const handleSubmit = useCallback(() => {
+  const { editing } = useContext(ModalContext);
+  const handleSubmit = useCallback(async () => {
     if (!attributes.areValid) {
       return;
     }
@@ -154,10 +149,13 @@ export default observer(function MetadataForm({ onSubmit, onCancel, metadata, ic
       }, {} as NonNullable<NoteDTO['attributes']>);
     });
 
-    noteMetadata.validate(onSubmit);
-  }, [attributes, noteMetadata, onSubmit]);
+    noteMetadata.validate(async () => {
+      await editNotes(noteMetadata.values);
+      editing.close();
+    });
+  }, [attributes.areValid, attributes.fields, editNotes, editing, noteMetadata]);
 
-  const uniqIcons = uniq(icons);
+  const uniqIcons = uniq(Array.from(noteTree.selectedNodes).map(({ entity: { icon } }) => icon));
   const showClear = noteMetadata.values.icon || uniqIcons.length > 0;
 
   return (
@@ -249,7 +247,7 @@ export default observer(function MetadataForm({ onSubmit, onCancel, metadata, ic
         )}
       </Form>
       <div className="mt-8 text-right">
-        <Button onClick={onCancel} className="mr-4">
+        <Button onClick={editing.close} className="mr-4">
           取消
         </Button>
         <Button type="primary" disabled={!noteMetadata.isValid || !attributes.areValid} onClick={handleSubmit}>

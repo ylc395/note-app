@@ -1,7 +1,8 @@
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useContext } from 'react';
 import { Button } from 'antd';
+import { useCreation } from 'ahooks';
 
 import type { NoteVO } from 'interface/Note';
 import NoteTree, { VIRTUAL_ROOT_NODE_KEY } from 'model/note/Tree';
@@ -11,6 +12,8 @@ import NoteService from 'service/NoteService';
 import Tree, { type TreeProps } from 'web/components/Tree';
 import IconTitle from 'web/components/IconTitle';
 import type { Tree as TreeModel } from 'model/abstract/Tree';
+
+import { ModalContext } from '../useModals';
 
 const isDisabled = (selectedNodes: NoteTreeNode[]) => {
   const ids = selectedNodes.map(({ key }) => key);
@@ -35,23 +38,19 @@ const isDisabled = (selectedNodes: NoteTreeNode[]) => {
   };
 };
 
-interface Props {
-  selectedNodes: NoteTreeNode[];
-  onSubmit: (id: NoteTreeNode['key'] | null) => void;
-  onCancel: () => void;
-}
-
-export default observer(function NoteTreeView({ selectedNodes, onCancel, onSubmit }: Props) {
-  const noteService = container.resolve(NoteService);
-  const [noteTree] = useState(() => {
-    return new NoteTree({
-      virtualRoot: true,
-      isDisabled: isDisabled(selectedNodes),
-      fetchChildren: noteService.fetchChildren,
-      fetchTreeFragment: noteService.fetchTreeFragment,
-    });
-  });
-
+export default observer(function NoteTreeView() {
+  const { moveNotes, fetchChildren, fetchTreeFragment, noteTree: originalNoteTree } = container.resolve(NoteService);
+  const { moving } = useContext(ModalContext);
+  const noteTree = useCreation(
+    () =>
+      new NoteTree({
+        virtualRoot: true,
+        isDisabled: isDisabled(Array.from(originalNoteTree.selectedNodes)),
+        fetchChildren,
+        fetchTreeFragment,
+      }),
+    [],
+  );
   const titleRender = useCallback<NonNullable<TreeProps<NoteTreeNode>['titleRender']>>(
     (node) => (
       <span className="group flex">
@@ -64,6 +63,17 @@ export default observer(function NoteTreeView({ selectedNodes, onCancel, onSubmi
     ),
     [],
   );
+
+  const submit = useCallback(async () => {
+    const id = Array.from(noteTree.selectedNodes)[0]?.key;
+
+    if (id === undefined) {
+      throw new Error('no id');
+    }
+
+    await moveNotes(id === VIRTUAL_ROOT_NODE_KEY ? null : id);
+    moving.close();
+  }, [moveNotes, moving, noteTree.selectedNodes]);
 
   useEffect(() => {
     noteTree.loadChildren();
@@ -80,22 +90,10 @@ export default observer(function NoteTreeView({ selectedNodes, onCancel, onSubmi
         />
       </div>
       <div className="mt-8 text-right">
-        <Button onClick={onCancel} className="mr-4">
+        <Button onClick={moving.close} className="mr-4">
           取消
         </Button>
-        <Button
-          type="primary"
-          disabled={noteTree.selectedNodes.size === 0}
-          onClick={() => {
-            const id = Array.from(noteTree.selectedNodes)[0]?.key;
-
-            if (id === undefined) {
-              throw new Error('no id');
-            }
-
-            onSubmit(id === VIRTUAL_ROOT_NODE_KEY ? null : id);
-          }}
-        >
+        <Button type="primary" disabled={noteTree.selectedNodes.size === 0} onClick={submit}>
           保存
         </Button>
       </div>

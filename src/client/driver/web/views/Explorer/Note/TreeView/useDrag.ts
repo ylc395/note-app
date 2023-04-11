@@ -45,7 +45,7 @@ export default function useDrag(tree: NoteTree) {
               const dropNodeKey = noteTree.hasNode(dropNode) ? dropNode.key : null;
 
               if (!noteTree.invalidParentKeys.has(dropNodeKey)) {
-                moveNotes(draggingItems, dropNodeKey);
+                moveNotes(dropNodeKey, draggingItems);
               }
             }
           },

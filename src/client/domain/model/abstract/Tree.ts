@@ -337,4 +337,8 @@ export abstract class Tree<T extends TreeNodeEntity> {
       }
     }
   }
+
+  getSelectedIds() {
+    return Array.from(this.selectedNodes).map(({ key }) => key);
+  }
 }

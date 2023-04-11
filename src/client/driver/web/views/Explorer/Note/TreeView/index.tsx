@@ -11,7 +11,7 @@ import Tree, { type TreeProps } from 'web/components/Tree';
 
 import NodeTitle from './NodeTitle';
 import useDrag from './useDrag';
-import useContextmenu from './useContextmenu';
+import useContextmenu from '../useContextmenu';
 
 export default observer(function NoteTreeView({ tree }: { tree?: NoteTree }) {
   const { selectNote, noteTree: _noteTree } = container.resolve(NoteService);
