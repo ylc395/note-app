@@ -5,6 +5,7 @@ import Layout, { MaterialExplorerViews, ExplorerTypes } from 'model/Layout';
 import ViewSwitcher from './ViewSwitcher';
 import Search from './Search';
 import DirectoryOperations from './DirectoryView/Operations';
+import DirectoryView from './DirectoryView';
 
 export default observer(() => {
   const { explorerPanel } = container.resolve(Layout);
@@ -21,6 +22,7 @@ export default observer(() => {
         </div>
         {explorerPanel[ExplorerTypes.Materials] === MaterialExplorerViews.Directory && <DirectoryOperations />}
       </div>
+      <DirectoryView />
     </div>
   );
 });

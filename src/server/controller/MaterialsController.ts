@@ -3,9 +3,9 @@ import { Controller } from '@nestjs/common';
 import {
   type MaterialDTO,
   type MaterialVO,
+  type MaterialQuery,
   materialDTOSchema,
-  // materialQuerySchema,
-  // MaterialQuery,
+  materialQuerySchema,
 } from 'interface/material';
 import MaterialService from 'service/MaterialService';
 
@@ -20,8 +20,8 @@ export default class MaterialsController {
     return await this.materialService.create(material);
   }
 
-  // @Get('/materials')
-  // async query(@Query(createSchemaPipe(materialQuerySchema)) query: MaterialQuery): Promise<MaterialVO[]> {
-  // return await this.materialService.query(query);
-  // }
+  @Get('/materials')
+  async query(@Query(createSchemaPipe(materialQuerySchema)) query: MaterialQuery): Promise<MaterialVO[]> {
+    return await this.materialService.query(query);
+  }
 }

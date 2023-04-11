@@ -1,5 +1,5 @@
 import type { MaterialRepository, Directory } from 'service/repository/MaterialRepository';
-import type { MaterialDTO } from 'interface/material';
+import type { DirectoryVO, EntityMaterialVO, MaterialDTO, MaterialQuery } from 'interface/material';
 import pick from 'lodash/pick';
 
 import schema, { type Row } from '../schema/material';
@@ -11,14 +11,7 @@ export default class SqliteMaterialRepository extends BaseRepository<Row> implem
   private readonly files = new FileRepository(this.knex);
   async createDirectory(directory: Directory) {
     const createdRow = await this.createOrUpdate(directory);
-
-    return {
-      id: String(createdRow.id),
-      name: createdRow.name,
-      icon: createdRow.icon,
-      parentId: createdRow.parentId ? String(createdRow.parentId) : null,
-      childrenCount: 0,
-    };
+    return SqliteMaterialRepository.rowToDirectory(createdRow);
   }
 
   async createEntity(material: MaterialDTO) {
@@ -37,11 +30,67 @@ export default class SqliteMaterialRepository extends BaseRepository<Row> implem
       fileId: file.id,
     });
 
+    return SqliteMaterialRepository.rowToMaterial(createdMaterial, file.mimeType);
+  }
+
+  private static rowToDirectory(row: Row): DirectoryVO {
     return {
-      ...pick(createdMaterial, ['name', 'icon', 'sourceUrl', 'createdAt', 'updatedAt']),
-      id: String(createdMaterial.id),
-      parentId: createdMaterial.parentId ? String(createdMaterial.parentId) : null,
-      mimeType: file.mimeType,
+      id: String(row.id),
+      name: row.name,
+      icon: row.icon,
+      parentId: row.parentId ? String(row.parentId) : null,
+      childrenCount: 0,
     };
+  }
+
+  private static rowToMaterial(row: Row, mimeType: string): EntityMaterialVO {
+    return {
+      ...pick(row, ['name', 'icon', 'sourceUrl', 'createdAt', 'updatedAt']),
+      id: String(row.id),
+      parentId: row.parentId ? String(row.parentId) : null,
+      mimeType: mimeType,
+    };
+  }
+
+  private async getChildrenCounts(ids: Row['id'][]) {
+    const childrenCount = await this.knex(this.schema.tableName)
+      .whereIn('parentId', ids)
+      .groupBy('parentId')
+      .select(this.knex.raw('count(*) as childrenCount'), 'parentId');
+
+    return childrenCount.reduce((result, { parentId, childrenCount }) => {
+      result[parentId] = childrenCount;
+      return result;
+    }, {} as Record<string, number>);
+  }
+
+  async findAll(query: MaterialQuery) {
+    const sql = query.parentId
+      ? this.knex<Row>(this.schema.tableName).where('parentId', query.parentId)
+      : this.knex<Row>(this.schema.tableName).whereNull('parentId');
+
+    const rows = await sql
+      .leftJoin(this.files.tableName, `${this.schema.tableName}.fileId`, `${this.files.tableName}.id`)
+      .select(`${this.files.tableName}.mimeType`, this.knex.raw(`${this.schema.tableName}.*`));
+
+    const directories: DirectoryVO[] = [];
+    const materials: EntityMaterialVO[] = [];
+
+    for (const row of rows) {
+      if (!row.fileId) {
+        directories.push(SqliteMaterialRepository.rowToDirectory(row));
+      } else {
+        materials.push(SqliteMaterialRepository.rowToMaterial(row, row.mimeType));
+      }
+    }
+
+    const childrenCounts = await this.getChildrenCounts(directories.map(({ id }) => Number(id)));
+    console.log(childrenCounts);
+
+    for (const directory of directories) {
+      directory.childrenCount = childrenCounts[directory.id] || 0;
+    }
+
+    return [...directories, ...materials];
   }
 }

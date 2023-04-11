@@ -33,9 +33,11 @@ export type EntityMaterialVO = Omit<DirectoryVO, 'childrenCount'> & {
 
 export type MaterialVO = DirectoryVO | EntityMaterialVO;
 
-export interface MaterialQuery {
-  parentId?: NonNullable<MaterialVO['parentId']>;
-}
+export const materialQuerySchema = object({
+  parentId: string().optional(),
+});
+
+export type MaterialQuery = Infer<typeof materialQuerySchema>;
 
 export const isDirectory = (entity: MaterialVO): entity is DirectoryVO => {
   return 'childrenCount' in entity;

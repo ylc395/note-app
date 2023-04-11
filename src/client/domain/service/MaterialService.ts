@@ -8,7 +8,7 @@ import MaterialTree from 'model/material/Tree';
 export default class MaterialService {
   private readonly remote = container.resolve(remoteToken);
 
-  readonly fetchChildren = async (parentId: MaterialVO['parentId']) => {
+  private readonly fetchChildren = async (parentId: MaterialVO['parentId']) => {
     const { body: materials } = await this.remote.get<MaterialQuery, MaterialVO[]>(
       '/materials',
       parentId ? { parentId } : {},
@@ -16,7 +16,7 @@ export default class MaterialService {
     return materials;
   };
 
-  readonly fetchTreeFragment = async (id: MaterialVO['id']) => {
+  private readonly fetchTreeFragment = async (id: MaterialVO['id']) => {
     const { body: fragment } = await this.remote.get<void, MaterialVO[]>(`/materials/${id}/tree-fragment`);
     return fragment;
   };

@@ -1,4 +1,4 @@
-import type { MaterialDTO } from 'interface/material';
+import type { MaterialDTO, MaterialQuery } from 'interface/material';
 
 import BaseService from './BaseService';
 
@@ -27,5 +27,9 @@ export default class MaterialService extends BaseService {
     }
 
     return this.materials.createDirectory(info);
+  }
+
+  query(q: MaterialQuery) {
+    return this.materials.findAll(q);
   }
 }

@@ -16,11 +16,6 @@ export default class NoteTree extends Tree<Note> {
     order: SortOrder.Asc,
   };
 
-  protected updateNodeByEntity(note: Note, node: NoteTreeNode) {
-    super.updateNodeByEntity(note, node);
-    node.title = normalizeTitle(note);
-  }
-
   @action.bound
   setSortOptions(key: SortOrder | SortBy) {
     let needResort = false;

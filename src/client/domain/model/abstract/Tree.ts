@@ -268,11 +268,6 @@ export abstract class Tree<T extends TreeNodeEntity> {
     return node;
   }
 
-  @action
-  protected updateNodeByEntity(entity: T, node: TreeNode<T>) {
-    Object.assign(node.entity, entity);
-  }
-
   @action.bound
   updateTreeByEntity(entity: T, noSort?: boolean) {
     const node = this.getNode(entity.id, true);
@@ -299,7 +294,7 @@ export abstract class Tree<T extends TreeNodeEntity> {
       }
     }
 
-    this.updateNodeByEntity(entity, node);
+    Object.assign(node, this.entityToNode(entity));
 
     return node;
   }
