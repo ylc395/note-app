@@ -1,6 +1,6 @@
 import { Modal } from 'antd';
 import type { ContextmenuItem, CommonInput } from 'infra/UI';
-import { COMMON_MODAL_OPTIONS } from '../../userInput/utils';
+import { COMMON_MODAL_OPTIONS } from '../utils';
 
 export const confirm: CommonInput['confirm'] = function (options) {
   return new Promise((resolve) => {

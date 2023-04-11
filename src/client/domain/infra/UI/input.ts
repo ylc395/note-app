@@ -1,8 +1,9 @@
 import type { InjectionToken } from 'tsyringe';
 
+import type { NoteVO } from 'interface/Note';
+import type { MaterialDTO } from 'interface/material';
 import type { NoteTreeNode } from 'model/note/Tree/type';
 import type { NoteMetadata } from 'model/note/MetadataForm/type';
-import type { NoteVO } from 'interface/Note';
 
 import type { ModalOptions } from './type';
 
@@ -20,4 +21,9 @@ export interface NoteDomain {
   ) => Promise<NoteMetadata | undefined>;
 }
 
+export interface MaterialDomain {
+  getNewMaterial: () => Promise<Pick<MaterialDTO, 'file' | 'sourceUrl' | 'text'> | undefined>;
+}
+
 export const noteDomainInputToken: InjectionToken<NoteDomain> = Symbol();
+export const materialDomainInputToken: InjectionToken<MaterialDomain> = Symbol();

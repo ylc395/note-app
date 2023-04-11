@@ -1,12 +1,14 @@
 import { singleton, container } from 'tsyringe';
 
-import { MaterialDTO, DirectoryVO, MaterialVO, MaterialQuery, isDirectory } from 'interface/material';
+import { MaterialDTO, DirectoryVO, MaterialVO, MaterialQuery, isDirectory, EntityMaterialVO } from 'interface/material';
+import MaterialTree, { type MaterialTreeNode } from 'model/material/Tree';
 import { token as remoteToken } from 'infra/Remote';
-import MaterialTree, { MaterialTreeNode } from 'model/material/Tree';
+import { materialDomainInputToken } from 'infra/UI';
 
 @singleton()
 export default class MaterialService {
   private readonly remote = container.resolve(remoteToken);
+  private readonly userInput = container.resolve(materialDomainInputToken);
 
   private readonly fetchChildren = async (parentId: MaterialVO['parentId']) => {
     const { body: materials } = await this.remote.get<MaterialQuery, MaterialVO[]>(
@@ -36,6 +38,27 @@ export default class MaterialService {
     }
 
     this.materialTree.updateTreeByEntity(directory);
+    this.materialTree.toggleSelect(directory.id, true);
+  };
+
+  readonly createMaterial = async (parentId: MaterialVO['id']) => {
+    const newMaterial = await this.userInput.getNewMaterial();
+
+    if (!newMaterial) {
+      return;
+    }
+
+    const { body: material } = await this.remote.post<MaterialDTO, EntityMaterialVO>('/materials', {
+      parentId,
+      ...newMaterial,
+    });
+
+    if (parentId) {
+      await this.materialTree.toggleExpand(parentId, true, true);
+    }
+
+    this.materialTree.updateTreeByEntity(material);
+    this.materialTree.toggleSelect(material.id, true);
   };
 
   readonly selectMaterial = (node: MaterialTreeNode, multiple: boolean) => {

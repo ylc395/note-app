@@ -2,7 +2,8 @@ import { Modal } from 'antd';
 
 import type { NoteDomain } from 'infra/UI';
 import TargetTree from 'web/views/Explorer/Note/input/TargetTree';
-import { COMMON_MODAL_OPTIONS } from '../../../userInput/utils';
+
+import { COMMON_MODAL_OPTIONS } from '../../utils';
 
 const getMoveTargetNoteId: NoteDomain['getMoveTargetNoteId'] = async (selectedNodes) => {
   if (selectedNodes.length === 0) {
