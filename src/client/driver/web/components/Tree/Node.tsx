@@ -1,34 +1,18 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { type ReactNode, type MouseEventHandler, useCallback, useContext, createContext } from 'react';
-import { observer } from 'mobx-react-lite';
 import { CaretRightFilled, CaretDownOutlined } from '@ant-design/icons';
+import { observer } from 'mobx-react-lite';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
-import uniqueId from 'lodash/uniqueId';
+import { type MouseEventHandler, useCallback, useContext } from 'react';
 import clsx from 'clsx';
-import { useCreation } from 'ahooks';
 
-import type { Tree, TreeNode } from 'model/abstract/Tree';
-
-interface ITreeContext<T extends TreeNode<any> = TreeNode<any>> {
-  titleRender?: (node: T) => ReactNode;
-  onContextmenu?: (node: T) => Promise<void> | void;
-  onExpand?: (node: T) => void;
-  onSelect?: (node: T, isMultiple: boolean) => void;
-  draggable?: boolean;
-  multiple?: boolean;
-  tree: Tree<any>;
-  id: string;
-}
-
-export type TreeProps<T extends TreeNode<any>> = Omit<ITreeContext<T>, 'id'>;
+import type { TreeNode } from 'model/abstract/Tree';
+import { TreeContext } from './treeContext';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const TreeContext = createContext<ITreeContext>(undefined as any);
-
 const TreeNodeView = observer(function ({ node, level }: { node: TreeNode<any>; level: number }) {
   const { id, multiple, draggable, onExpand, onContextmenu, onSelect, titleRender, tree } = useContext(TreeContext);
 
   const triggerExpand = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (node: TreeNode<any>) => {
       if (!node.isExpanded && !node.isLoaded) {
         tree.loadChildren(node);
@@ -87,16 +71,4 @@ const TreeNodeView = observer(function ({ node, level }: { node: TreeNode<any>; 
 
 TreeNodeView.displayName = 'TreeNode';
 
-export default observer(function Tree<T extends TreeNode<any>>({ tree, ...props }: TreeProps<T>) {
-  const id = useCreation(() => uniqueId('tree-view-'), []);
-
-  return (
-    <TreeContext.Provider value={{ ...props, id, tree } as unknown as ITreeContext}>
-      <div>
-        {tree.roots.map((node) => (
-          <TreeNodeView key={node.key} node={node} level={0} />
-        ))}
-      </div>
-    </TreeContext.Provider>
-  );
-});
+export default TreeNodeView;

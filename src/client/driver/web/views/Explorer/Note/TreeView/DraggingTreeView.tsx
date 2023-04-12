@@ -13,5 +13,5 @@ export default observer(function NoteTreeView({ tree }: { tree: NoteTree }) {
     [],
   );
 
-  return <Tree multiple draggable tree={tree} titleRender={titleRender} />;
+  return <Tree multiple tree={tree} titleRender={titleRender} />;
 });
