@@ -3,15 +3,13 @@ import pick from 'lodash/pick';
 import EventEmitter from 'eventemitter3';
 
 import { token as remoteToken } from 'infra/Remote';
-import { UIOutputToken } from 'infra/UI';
 
 import type { NoteDTO, NoteVO as Note, NotesDTO, NoteQuery } from 'interface/Note';
 import type { RecyclablesDTO } from 'interface/Recyclables';
 import { EntityTypes } from 'interface/entity';
 
 import { MULTIPLE_ICON_FLAG, type NoteMetadata } from 'model/note/MetadataForm';
-import NoteTree from 'model/note/Tree';
-import type { NoteTreeNode } from 'model/note/Tree/type';
+import NoteTree, { type NoteTreeNode } from 'model/note/Tree';
 
 import StarService, { StarEvents } from './StarService';
 import EditorService from './EditorService';
@@ -26,7 +24,6 @@ export default class NoteService extends EventEmitter {
   private readonly remote = container.resolve(remoteToken);
   private readonly editor = container.resolve(EditorService);
   private readonly star = container.resolve(StarService);
-  private readonly userFeedback = container.resolve(UIOutputToken);
 
   constructor() {
     super();
@@ -82,7 +79,6 @@ export default class NoteService extends EventEmitter {
   async deleteNotes(ids: Note['id'][]) {
     await this.remote.put<RecyclablesDTO>(`/recyclables/notes`, { ids });
     this.noteTree.removeNodes(ids);
-    this.userFeedback.message.success({ content: '已移至回收站' });
     this.emit(NoteEvents.Deleted, ids);
   }
 
@@ -105,20 +101,6 @@ export default class NoteService extends EventEmitter {
 
       this.noteTree.sort(targetNode ? targetNode.children : this.noteTree.roots, false);
     }
-
-    this.userFeedback.message.success({
-      content: `移动成功${targetId === null || targetNode?.isExpanded ? '' : '。点击定位到新位置'}`,
-      onClick: async (close) => {
-        close();
-
-        if (targetId === undefined) {
-          return;
-        }
-
-        await this.noteTree.toggleExpand(targetId, true, true);
-        this.noteTree.toggleSelect(_ids, true);
-      },
-    });
 
     this.emit(NoteEvents.Updated, updatedNotes);
   };

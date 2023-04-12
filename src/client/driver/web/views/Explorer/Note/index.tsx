@@ -9,13 +9,13 @@ import Tree from './TreeView';
 import TreeOperations from './TreeView/Operations';
 import Search from './Search';
 import CustomView from './CustomView';
-import TargetTree from './input/TargetTree';
-import MetadataForm from './input/MetadataForm';
-import { useModals, ModalContext, COMMON_MODAL_OPTIONS } from './useModals';
+import TargetTree from './TargetTree';
+import MetadataForm from './MetadataForm';
+import { useModals, ModalContext } from './useModals';
 
 export default observer(function NoteExplorer() {
   const { explorerPanel } = container.resolve(Layout);
-  const modals = useModals();
+  const { modals, modalOptions } = useModals();
 
   return (
     <ModalContext.Provider value={modals}>
@@ -34,10 +34,10 @@ export default observer(function NoteExplorer() {
           {explorerPanel[ExplorerTypes.Notes] === NoteExplorerViews.Tree && <Tree />}
           {explorerPanel[ExplorerTypes.Notes] === NoteExplorerViews.Custom && <CustomView />}
         </div>
-        <Modal {...COMMON_MODAL_OPTIONS} open={modals.moving.isOpen}>
+        <Modal {...modalOptions} open={modals.moving.isOpen}>
           <TargetTree />
         </Modal>
-        <Modal {...COMMON_MODAL_OPTIONS} open={modals.editing.isOpen}>
+        <Modal {...modalOptions} open={modals.editing.isOpen}>
           <MetadataForm />
         </Modal>
       </div>

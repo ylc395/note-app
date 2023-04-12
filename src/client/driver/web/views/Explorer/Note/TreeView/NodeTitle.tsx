@@ -3,7 +3,7 @@ import { Button, Tooltip } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { container } from 'tsyringe';
 
-import type { NoteTreeNode } from 'model/note/Tree/type';
+import type { NoteTreeNode } from 'model/note/Tree';
 import NoteService from 'service/NoteService';
 
 import IconTitle from 'web/components/IconTitle';

@@ -17,7 +17,7 @@ import { useUpdateTimeField, FORM_ITEM_LAYOUT } from 'web/components/utils';
 import { EmojiPicker, Emoji } from 'web/components/Emoji';
 import { useCreation } from 'ahooks';
 import NoteService from 'service/NoteService';
-import { ModalContext } from '../useModals';
+import { ModalContext } from './useModals';
 
 function useAttributes(noteMetadata: NoteMetadata) {
   const remote = container.resolve(remoteToken);

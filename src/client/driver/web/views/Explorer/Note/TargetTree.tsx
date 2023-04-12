@@ -5,15 +5,14 @@ import { Button } from 'antd';
 import { useCreation } from 'ahooks';
 
 import type { NoteVO } from 'interface/Note';
-import NoteTree, { VIRTUAL_ROOT_NODE_KEY } from 'model/note/Tree';
-import type { NoteTreeNode } from 'model/note/Tree/type';
+import NoteTree, { VIRTUAL_ROOT_NODE_KEY, type NoteTreeNode } from 'model/note/Tree';
 import NoteService from 'service/NoteService';
 
 import Tree, { type TreeProps } from 'web/components/Tree';
 import IconTitle from 'web/components/IconTitle';
 import type { Tree as TreeModel } from 'model/abstract/Tree';
 
-import { ModalContext } from '../useModals';
+import { ModalContext } from './useModals';
 
 const isDisabled = (selectedNodes: NoteTreeNode[]) => {
   const ids = selectedNodes.map(({ key }) => key);

@@ -2,12 +2,13 @@ import { action, makeObservable, observable } from 'mobx';
 
 import type { NoteVO as Note } from 'interface/Note';
 import { normalizeTitle } from 'interface/Note';
-import { Tree, VIRTUAL_ROOT_NODE_KEY, type TreeOptions } from 'model/abstract/Tree';
+import { Tree, VIRTUAL_ROOT_NODE_KEY, type TreeOptions, type TreeNode } from 'model/abstract/Tree';
 
 import { SortBy, SortOrder } from './constants';
-import type { NoteTreeNode } from './type';
 
 export * from './constants';
+
+export type NoteTreeNode = TreeNode<Note>;
 
 export default class NoteTree extends Tree<Note> {
   @observable readonly invalidParentKeys = new Set<NoteTreeNode['key'] | null>();
