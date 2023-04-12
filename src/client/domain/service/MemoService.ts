@@ -46,14 +46,11 @@ export default class MemoService {
 
     if (!childMemo) {
       this.newContent = '';
-    }
-
-    if (childMemo) {
+      await this.load();
+    } else {
       runInAction(() => {
         childMemo.parent.threads.unshift(created);
       });
-    } else {
-      await this.load();
     }
   }
 

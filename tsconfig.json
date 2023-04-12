@@ -10,6 +10,7 @@
     "sourceMap": true,
     "importHelpers": true,
     "importsNotUsedAsValues": "error",
+    "ignoreDeprecations": "5.0",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
