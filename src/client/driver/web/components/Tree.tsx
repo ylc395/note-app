@@ -12,8 +12,8 @@ import type { Tree, TreeNode } from 'model/abstract/Tree';
 interface ITreeContext<T extends TreeNode<any> = TreeNode<any>> {
   titleRender?: (node: T) => ReactNode;
   onContextmenu?: (node: T) => Promise<void> | void;
-  onExpand: (node: T) => void;
-  onSelect: (node: T, isMultiple: boolean) => void;
+  onExpand?: (node: T) => void;
+  onSelect?: (node: T, isMultiple: boolean) => void;
   draggable?: boolean;
   multiple?: boolean;
   tree: Tree<any>;
@@ -34,7 +34,7 @@ const TreeNodeView = observer(function ({ node, level }: { node: TreeNode<any>; 
         tree.loadChildren(node);
       }
 
-      onExpand(node);
+      onExpand?.(node);
     },
     [onExpand, tree],
   );
@@ -65,7 +65,7 @@ const TreeNodeView = observer(function ({ node, level }: { node: TreeNode<any>; 
     <>
       <div
         ref={setDroppableRef}
-        onClick={node.isDisabled ? undefined : (e) => onSelect(node, Boolean(multiple) && e.metaKey)}
+        onClick={node.isDisabled ? undefined : (e) => onSelect?.(node, Boolean(multiple) && e.metaKey)}
         onContextMenu={!node.isDisabled && onContextmenu ? () => onContextmenu(node) : undefined}
         style={{ paddingLeft: `${level * 30}px` }}
         className={clsx('flex', active && node.isUndroppable ? 'cursor-no-drop' : 'cursor-pointer', {

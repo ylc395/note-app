@@ -10,7 +10,7 @@ import NodeTitle from './NodeTitle';
 
 export default observer(function MaterialTreeView() {
   const { materialTree, selectMaterial } = container.resolve(MaterialService);
-  const handleExpand = useCallback<TreeProps<MaterialTreeNode>['onExpand']>(
+  const handleExpand = useCallback<NonNullable<TreeProps<MaterialTreeNode>['onExpand']>>(
     ({ key }) => materialTree.toggleExpand(key, false),
     [materialTree],
   );

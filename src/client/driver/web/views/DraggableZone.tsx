@@ -7,7 +7,7 @@ import EntityEditor from 'model/abstract/Editor';
 import NoteService from 'service/NoteService';
 
 import TabItem from './Workbench/TabBar/TabItem';
-import NoteTree from './Explorer/Note/TreeView';
+import NoteTree from './Explorer/Note/TreeView/DraggingTreeView';
 
 // eslint-disable-next-line mobx/missing-observer
 export function DragPreview() {
