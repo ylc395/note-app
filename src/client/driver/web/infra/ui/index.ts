@@ -1,4 +1,5 @@
-import type { ContextmenuItem } from 'infra/UI';
+import type { ContextmenuItem, UI } from 'infra/UI';
+import messageFeedback from './messageFeedback';
 
 declare global {
   interface Window {
@@ -6,9 +7,11 @@ declare global {
   }
 }
 
-const webContextmenu = () => Promise.resolve(null);
-
-export const getContextmenuAction = window.electronIpcContextmenu || webContextmenu;
 export const getRootElement = () => document.querySelector('#app') as HTMLElement;
 
 export * from './useModal';
+
+export const ui: UI = {
+  feedback: messageFeedback,
+  getActionFromContextmenu: window.electronIpcContextmenu || (() => Promise.resolve(null)),
+};

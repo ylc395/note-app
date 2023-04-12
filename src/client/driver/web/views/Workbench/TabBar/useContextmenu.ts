@@ -1,6 +1,6 @@
 import type { ContextmenuItem } from 'infra/UI';
 import { useCallback } from 'react';
-import { getContextmenuAction } from 'web/infra/ui';
+import { ui } from 'web/infra/ui';
 
 export default function useContextmenu() {
   return useCallback(async () => {
@@ -17,7 +17,7 @@ export default function useContextmenu() {
       { label: '在笔记树中定位', key: 'revealOnTree' },
       { label: '复制链接', key: 'copyLink' },
     ];
-    const key = await getContextmenuAction(items);
+    const key = await ui.getActionFromContextmenu(items);
 
     if (!key) {
       return;

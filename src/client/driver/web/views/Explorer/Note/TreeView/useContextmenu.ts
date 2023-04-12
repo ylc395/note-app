@@ -10,7 +10,7 @@ import EditorService from 'service/EditorService';
 import StarService from 'service/StarService';
 
 import type { ContextmenuItem } from 'infra/UI';
-import { getContextmenuAction } from 'web/infra/ui';
+import { ui } from 'web/infra/ui';
 
 import { ModalContext } from '../useModals';
 
@@ -61,7 +61,7 @@ export default function useContextmenu() {
             { label: '删除', key: 'delete' },
           ];
 
-      const action = await getContextmenuAction(items);
+      const action = await ui.getActionFromContextmenu(items);
 
       if (!action) {
         return;
