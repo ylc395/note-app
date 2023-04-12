@@ -15,3 +15,8 @@ export const stringToEntityTypes: Record<string, EntityTypes> = mapValues(invert
 export type EntityId = string;
 
 export const entityId = string;
+
+export type EntityLocator = {
+  type: EntityTypes;
+  id: EntityId;
+};

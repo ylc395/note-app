@@ -5,7 +5,7 @@ import debounce from 'lodash/debounce';
 import cloneDeep from 'lodash/cloneDeep';
 
 import { token as remoteToken } from 'infra/Remote';
-import { EntityTypes, type EntityId } from 'interface/entity';
+import { EntityTypes, type EntityLocator } from 'interface/entity';
 import type { NoteBodyDTO, NoteBodyVO, NoteDTO, NoteVO } from 'interface/Note';
 
 import NoteEditor, { Events as NoteEditorEvents, type BodyEvent, type MetadataEvent } from 'model/note/Editor';
@@ -13,11 +13,7 @@ import EntityEditor, { Events as EditorEvents } from 'model/abstract/Editor';
 import Tile from 'model/workbench/Tile';
 import TileManager, { type TileSplitDirections } from 'model/workbench/TileManger';
 import NoteService, { NoteEvents } from 'service/NoteService';
-
-export type EntityLocator = {
-  entityType: EntityTypes;
-  entityId: EntityId;
-};
+import type { LintProblem } from 'interface/lint';
 
 @singleton()
 export default class EditorService extends EventEmitter {
@@ -31,25 +27,25 @@ export default class EditorService extends EventEmitter {
     makeObservable(this);
   }
 
-  private createEditor(tile: Tile, { entityId, entityType }: EntityLocator) {
+  private createEditor(tile: Tile, { id, type }: EntityLocator) {
     let editor: EntityEditor;
 
-    switch (entityType) {
+    switch (type) {
       case EntityTypes.Note:
-        editor = this.createNoteEditor(tile, entityId);
+        editor = this.createNoteEditor(tile, id);
         break;
       default:
         throw new Error('invalid type');
     }
 
-    this.editors[entityType].add(editor as NoteEditor);
-    editor.on(EditorEvents.Destroyed, () => this.editors[entityType].delete(editor as NoteEditor));
+    this.editors[type].add(editor as NoteEditor);
+    editor.on(EditorEvents.Destroyed, () => this.editors[type].delete(editor as NoteEditor));
 
     return editor;
   }
 
-  private fetchEntity<T>({ entityId, entityType }: EntityLocator, fetch: () => Promise<T>): Promise<T> {
-    const existedEditor = Array.from(this.editors[entityType]).find((editor) => editor.entityId === entityId);
+  private fetchEntity<T>({ id, type }: EntityLocator, fetch: () => Promise<T>): Promise<T> {
+    const existedEditor = Array.from(this.editors[type]).find((editor) => editor.entityId === id);
 
     return new Promise((resolve) => {
       if (existedEditor) {
@@ -96,7 +92,7 @@ export default class EditorService extends EventEmitter {
         }
       });
 
-    this.fetchEntity({ entityType: EntityTypes.Note, entityId: noteId }, () =>
+    this.fetchEntity({ type: EntityTypes.Note, id: noteId }, () =>
       Promise.all([
         this.remote.get<void, NoteVO>(`/notes/${noteId}`),
         this.remote.get<void, NoteBodyVO>(`/notes/${noteId}/body`),
@@ -121,9 +117,7 @@ export default class EditorService extends EventEmitter {
       const targetTile = this.tileManager.getTileAsTarget();
 
       if (
-        !targetTile.switchToEditor(
-          ({ entityId, entityType }) => entityType === entity.entityType && entityId === entity.entityId,
-        )
+        !targetTile.switchToEditor(({ entityId, entityType }) => entityType === entity.type && entityId === entity.id)
       ) {
         const editor = this.createEditor(targetTile, entity);
         targetTile.addEditor(editor);
@@ -155,4 +149,9 @@ export default class EditorService extends EventEmitter {
       newTile.addEditor(srcEditor);
     }
   }
+
+  readonly lint = debounce(async (editor: NoteEditor) => {
+    const { body: problems } = await this.remote.get<void, LintProblem[]>(`/lint/problems/notes/${editor.entityId}`);
+    editor.loadLintProblems(problems);
+  }, 2000);
 }

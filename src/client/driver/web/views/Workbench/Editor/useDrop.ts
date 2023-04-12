@@ -62,10 +62,7 @@ export default function useDrop(tile: Tile) {
         if (draggingItem instanceof EntityEditor) {
           moveEditor(draggingItem, tile);
         } else {
-          openEntity({
-            entityId: draggingItem.entity.id,
-            entityType: EntityTypes.Note,
-          });
+          openEntity({ id: draggingItem.entity.id, type: EntityTypes.Note });
         }
         return;
       }
@@ -73,23 +70,11 @@ export default function useDrop(tile: Tile) {
       const d = directionMap[direction as keyof Position];
 
       if (draggingItem === (overItem as Tile).currentEditor) {
-        openEntity(
-          {
-            entityId: draggingItem.entityId,
-            entityType: draggingItem.entityType,
-          },
-          { direction: d, from: overItem },
-        );
+        openEntity({ id: draggingItem.entityId, type: draggingItem.entityType }, { direction: d, from: overItem });
       } else if (draggingItem instanceof EntityEditor) {
         moveEditor(draggingItem, { from: tile, splitDirection: d });
       } else {
-        openEntity(
-          {
-            entityId: draggingItem.entity.id,
-            entityType: EntityTypes.Note,
-          },
-          { direction: d, from: overItem },
-        );
+        openEntity({ id: draggingItem.entity.id, type: EntityTypes.Note }, { direction: d, from: overItem });
       }
     },
     onDragMove: throttle(({ active }: DragMoveEvent) => {

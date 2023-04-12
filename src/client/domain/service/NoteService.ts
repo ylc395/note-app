@@ -60,7 +60,7 @@ export default class NoteService extends EventEmitter {
 
     this.noteTree.updateTreeByEntity(note);
     this.noteTree.toggleSelect(note.id, true);
-    this.editor.openEntity({ entityType: EntityTypes.Note, entityId: note.id });
+    this.editor.openEntity({ type: EntityTypes.Note, id: note.id });
   };
 
   async duplicateNote(targetId: Note['id']) {
@@ -74,7 +74,7 @@ export default class NoteService extends EventEmitter {
     const selected = this.noteTree.toggleSelect(node.key, !multiple);
 
     if (selected && !multiple) {
-      this.editor.openEntity({ entityType: EntityTypes.Note, entityId: node.key });
+      this.editor.openEntity({ type: EntityTypes.Note, id: node.key });
     }
   };
 

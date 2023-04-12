@@ -86,7 +86,7 @@ export default function useContextmenu() {
           }
 
           return openEntity(
-            { entityType: EntityTypes.Note, entityId: targetId },
+            { type: EntityTypes.Note, id: targetId },
             { from: focusedTile, direction: TileSplitDirections.Right },
           );
         default:

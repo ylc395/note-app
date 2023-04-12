@@ -8,6 +8,7 @@ import ResourceService from './ResourceService';
 import TopicService from './TopicService';
 import MemoService from './MemoService';
 import MaterialService from './MaterialService';
+import LintService from './LintService';
 
 const services = [
   NoteService,
@@ -17,6 +18,7 @@ const services = [
   TopicService,
   MemoService,
   MaterialService,
+  LintService,
 ];
 
 @Module({
