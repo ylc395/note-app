@@ -3,7 +3,7 @@ import pick from 'lodash/pick';
 import EventEmitter from 'eventemitter3';
 
 import { token as remoteToken } from 'infra/Remote';
-import { commonOutputToken } from 'infra/UI';
+import { UIOutputToken } from 'infra/UI';
 
 import type { NoteDTO, NoteVO as Note, NotesDTO, NoteQuery } from 'interface/Note';
 import type { RecyclablesDTO } from 'interface/Recyclables';
@@ -26,7 +26,7 @@ export default class NoteService extends EventEmitter {
   private readonly remote = container.resolve(remoteToken);
   private readonly editor = container.resolve(EditorService);
   private readonly star = container.resolve(StarService);
-  private readonly userFeedback = container.resolve(commonOutputToken);
+  private readonly userFeedback = container.resolve(UIOutputToken);
 
   constructor() {
     super();

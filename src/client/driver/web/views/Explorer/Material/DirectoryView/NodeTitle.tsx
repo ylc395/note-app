@@ -18,7 +18,6 @@ export default observer(function Title({ node }: { node: MaterialTreeNode }) {
         <Button
           onClick={(e) => {
             e.stopPropagation();
-            createMaterial(node.key);
           }}
           className="invisible ml-auto mr-2 group-hover:visible"
           size="small"

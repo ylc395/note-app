@@ -10,9 +10,9 @@ import EditorService from 'service/EditorService';
 import StarService from 'service/StarService';
 
 import type { ContextmenuItem } from 'infra/UI';
-import { getContextmenuAction } from 'web/infra/UI/input';
+import { getContextmenuAction } from 'web/infra/ui';
 
-import { ModalContext } from './useModals';
+import { ModalContext } from '../useModals';
 
 export default function useContextmenu() {
   const modals = useContext(ModalContext);

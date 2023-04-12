@@ -4,7 +4,7 @@ import { observable, makeObservable, runInAction, action } from 'mobx';
 import pull from 'lodash/pull';
 
 import { token as remoteToken } from 'infra/Remote';
-import { commonOutputToken } from 'infra/UI';
+import { UIOutputToken } from 'infra/UI';
 import { type EntityId, EntityTypes, entityTypesToString } from 'interface/entity';
 import type { StarRecord, StarsDTO } from 'interface/star';
 
@@ -29,7 +29,7 @@ export default class StarService extends EventEmitter {
     makeObservable(this);
   }
 
-  private readonly userFeedback = container.resolve(commonOutputToken);
+  private readonly userFeedback = container.resolve(UIOutputToken);
   private readonly remote = container.resolve(remoteToken);
   @observable stars?: Required<StarRecord>[];
   private async star(type: EntityTypes, ids: EntityId[]) {
