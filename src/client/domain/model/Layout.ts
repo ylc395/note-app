@@ -4,12 +4,8 @@ import { singleton } from 'tsyringe';
 export enum ExplorerTypes {
   Materials = 'materials',
   Notes = 'notes',
-  Timeline = 'timeline',
   Memo = 'memo',
-  Topic = 'topic',
-  Code = 'code',
   Dustbin = 'dustbin',
-  Todo = 'todo',
 }
 
 export enum NoteExplorerViews {

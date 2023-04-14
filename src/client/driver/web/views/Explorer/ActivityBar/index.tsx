@@ -70,11 +70,7 @@ export default observer(function ActivityBar() {
             <li key={item.key}>{getExplorerButton(item)}</li>
           ))}
         </ul>
-        <ul className="m-0 my-3 border-0 border-y border-solid border-gray-300 p-0">
-          <li>{getExplorerButton({ icon: <NumberOutlined />, label: '话题', key: ExplorerTypes.Topic })} </li>
-          <li>{getExplorerButton({ icon: <FieldTimeOutlined />, label: '时间线', key: ExplorerTypes.Timeline })} </li>
-        </ul>
-        <ul className="m-0 p-0">
+        <ul className="m-0 my-3 border-0 border-t border-solid border-gray-300 p-0">
           <li>
             <Popover
               destroyTooltipOnHide
@@ -95,6 +91,16 @@ export default observer(function ActivityBar() {
                 />
               </Tooltip>
             </Popover>
+          </li>
+          <li>
+            <Tooltip title="话题" placement="right">
+              <Button {...BUTTON_PROPS} icon={<NumberOutlined />} />
+            </Tooltip>
+          </li>
+          <li>
+            <Tooltip title="时间线" placement="right">
+              <Button {...BUTTON_PROPS} icon={<FieldTimeOutlined />} />
+            </Tooltip>
           </li>
           <li>
             <Tooltip title="搜索" placement="right">

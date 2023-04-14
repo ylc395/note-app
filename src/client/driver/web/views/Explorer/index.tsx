@@ -12,12 +12,8 @@ import Material from './Material';
 const explorerMap: Record<ExplorerTypes, () => ReactNode> = {
   [ExplorerTypes.Notes]: () => <NoteExplorer />,
   [ExplorerTypes.Materials]: () => <Material />,
-  [ExplorerTypes.Timeline]: () => null,
   [ExplorerTypes.Memo]: () => <Memo />,
-  [ExplorerTypes.Topic]: () => null,
-  [ExplorerTypes.Code]: () => null,
   [ExplorerTypes.Dustbin]: () => null,
-  [ExplorerTypes.Todo]: () => null,
 };
 
 export default observer(function Explorer() {
