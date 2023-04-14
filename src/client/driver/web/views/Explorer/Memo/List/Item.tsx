@@ -9,6 +9,8 @@ import {
   DeleteOutlined,
   PushpinOutlined,
   PlusOutlined,
+  BookOutlined,
+  DatabaseOutlined,
 } from '@ant-design/icons';
 import { useCallback } from 'react';
 import { useBoolean } from 'ahooks';
@@ -23,8 +25,8 @@ const menuItems: NonNullable<MenuProps['items']> = [
   { label: '收藏', key: 'star', icon: <StarOutlined /> },
   { label: '置顶', key: 'pin', icon: <PushpinOutlined /> },
   { type: 'divider' },
-  { label: '转为笔记', key: 'toNote', icon: <PushpinOutlined /> },
-  { label: '转为素材', key: 'toMaterial', icon: <PushpinOutlined /> },
+  { label: '转为笔记', key: 'toNote', icon: <BookOutlined /> },
+  { label: '转为素材', key: 'toMaterial', icon: <DatabaseOutlined /> },
   { type: 'divider' },
   { label: '删除', key: 'remove', icon: <DeleteOutlined /> },
 ];

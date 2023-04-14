@@ -13,7 +13,6 @@ import EntityEditor, { Events as EditorEvents } from 'model/abstract/Editor';
 import Tile from 'model/workbench/Tile';
 import TileManager, { type TileSplitDirections } from 'model/workbench/TileManger';
 import NoteService, { NoteEvents } from 'service/NoteService';
-import type { LintProblem } from 'interface/lint';
 
 @singleton()
 export default class EditorService extends EventEmitter {
@@ -149,9 +148,4 @@ export default class EditorService extends EventEmitter {
       newTile.addEditor(srcEditor);
     }
   }
-
-  readonly lint = debounce(async (editor: NoteEditor) => {
-    const { body: problems } = await this.remote.get<void, LintProblem[]>(`/lint/problems/notes/${editor.entityId}`);
-    editor.loadLintProblems(problems);
-  }, 2000);
 }

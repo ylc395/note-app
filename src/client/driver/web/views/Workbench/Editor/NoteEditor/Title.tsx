@@ -1,23 +1,16 @@
 import { Input, Space, Button, Tooltip, Badge } from 'antd';
 import { observer } from 'mobx-react-lite';
-import { container } from 'tsyringe';
-import { type ChangeEvent, useCallback, useEffect } from 'react';
+import { type ChangeEvent, useCallback } from 'react';
 import { InfoCircleOutlined, BugOutlined, FileSearchOutlined } from '@ant-design/icons';
 
 import type NoteEditor from 'model/note/Editor';
-import EditorService from 'service/EditorService';
 import type { EditorRef } from 'web/components/MarkdownEditor';
 
 export default observer(function NoteTitle({ editor, editorRef }: { editor: NoteEditor; editorRef: EditorRef | null }) {
-  const { lint } = container.resolve(EditorService);
   const handleChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => editor?.updateMetadata({ title: e.target.value }, true),
     [editor],
   );
-
-  useEffect(() => {
-    lint(editor);
-  }, [editor, lint]);
 
   return (
     <div className="flex items-center border-0 border-b border-solid border-gray-200">

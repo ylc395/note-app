@@ -10,8 +10,6 @@ import {
   NumberOutlined,
   DatabaseOutlined,
   DeleteOutlined,
-  CodeOutlined,
-  CheckSquareOutlined,
   SearchOutlined,
   FieldTimeOutlined,
   SettingOutlined,
@@ -31,8 +29,6 @@ const FIRST_CLASS_EXPLORER_ITEMS: ExplorerButton[] = [
   { key: ExplorerTypes.Materials, icon: <DatabaseOutlined />, label: '素材库' },
   { key: ExplorerTypes.Notes, icon: <BookOutlined />, label: '笔记本' },
   { key: ExplorerTypes.Memo, icon: <BuildOutlined />, label: '随想' },
-  // { key: ExplorerTypes.Code, icon: <CodeOutlined />, label: '代码片段' },
-  // { key: ExplorerTypes.Todo, icon: <CheckSquareOutlined />, label: '任务' },
 ];
 
 const BUTTON_PROPS: ButtonProps = {

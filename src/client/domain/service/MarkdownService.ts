@@ -1,13 +1,15 @@
 import { container, singleton } from 'tsyringe';
 
+import { token as remoteToken } from 'infra/Remote';
 import {
   type ResourceUrl,
   type ResourcesDTO,
-  isUrls,
   type ResourceUploadResponse,
+  isUrls,
   ResourceVO,
 } from 'interface/resource';
-import { token as remoteToken } from 'infra/Remote';
+import type { LintProblem } from 'interface/lint';
+import type NoteEditor from 'model/note/Editor';
 
 @singleton()
 export default class MarkdownService {
@@ -30,4 +32,9 @@ export default class MarkdownService {
 
     return fileVOs;
   }
+
+  readonly lint = async (editor: NoteEditor) => {
+    const { body: problems } = await this.remote.get<void, LintProblem[]>(`/lint/problems/notes/${editor.entityId}`);
+    editor.loadLintProblems(problems);
+  };
 }
