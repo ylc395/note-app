@@ -63,6 +63,8 @@
     "@nestjs/core": "^9.3.2",
     "@nestjs/event-emitter": "^1.4.1",
     "@nestjs/microservices": "^9.3.2",
+    "@textlint/kernel": "^13.3.2",
+    "@textlint/textlint-plugin-markdown": "^13.3.2",
     "ahooks": "^3.7.4",
     "antd": "^5.1.7",
     "clsx": "^1.2.1",
