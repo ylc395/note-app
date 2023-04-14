@@ -1,35 +1,39 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { observer } from 'mobx-react-lite';
-import { useCallback, useEffect, useRef } from 'react';
+import { type ReactNode, useEffect } from 'react';
 import { reaction, when } from 'mobx';
 import debounce from 'lodash/debounce';
 
 import { Events, type BodyEvent } from 'model/note/Editor';
 import type NoteEditor from 'model/note/Editor';
-import MarkdownEditor, { type EditorRef } from 'web/components/MarkdownEditor';
+import type { EditorRef } from 'web/components/MarkdownEditor';
 
-export default observer(function NoteEditor({ editor }: { editor: NoteEditor }) {
-  const editorRef = useRef<EditorRef>(null);
-  const onChange = useCallback(
-    (content: string) => {
-      editor.updateBody(content, true);
-    },
-    [editor],
-  );
-
+export default observer(function NoteEditor({
+  editor,
+  children,
+  editorRef,
+}: {
+  editor: NoteEditor;
+  children: ReactNode;
+  editorRef: EditorRef | null;
+}) {
   useEffect(() => {
+    if (!editorRef) {
+      return;
+    }
+
     const updateContent = debounce((body: BodyEvent) => {
-      editorRef.current!.updateContent(body, true);
+      editorRef.updateContent(body, true);
     }, 300);
 
     const stopWatchReadonly = reaction(
       () => editor.entity?.metadata.isReadonly,
       (isReadonly) => {
         if (typeof isReadonly === 'boolean') {
-          editorRef.current!.setReadonly(isReadonly);
+          editorRef.setReadonly(isReadonly);
 
           if (!isReadonly) {
-            editorRef.current!.focus();
+            editorRef.focus();
           }
         }
       },
@@ -40,7 +44,7 @@ export default observer(function NoteEditor({ editor }: { editor: NoteEditor }) 
       () => Boolean(editor.entity),
       () => {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        editorRef.current!.updateContent(editor.entity!.body, true);
+        editorRef.updateContent(editor.entity!.body, true);
       },
     );
 
@@ -51,11 +55,7 @@ export default observer(function NoteEditor({ editor }: { editor: NoteEditor }) 
       stopWatchReadonly();
       stopUpdateContent();
     };
-  }, [editor]);
+  }, [editor, editorRef]);
 
-  return (
-    <div className="min-h-0 grow px-4">
-      <MarkdownEditor ref={editorRef} onChange={onChange} />
-    </div>
-  );
+  return <div className="min-h-0 grow px-4">{children}</div>;
 });

@@ -23,6 +23,9 @@ const menuItems: NonNullable<MenuProps['items']> = [
   { label: '收藏', key: 'star', icon: <StarOutlined /> },
   { label: '置顶', key: 'pin', icon: <PushpinOutlined /> },
   { type: 'divider' },
+  { label: '转为笔记', key: 'toNote', icon: <PushpinOutlined /> },
+  { label: '转为素材', key: 'toMaterial', icon: <PushpinOutlined /> },
+  { type: 'divider' },
   { label: '删除', key: 'remove', icon: <DeleteOutlined /> },
 ];
 

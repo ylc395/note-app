@@ -1,7 +1,15 @@
 import { useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from 'react';
 import { gfm } from '@milkdown/preset-gfm';
 import { commonmark } from '@milkdown/preset-commonmark';
-import { Editor, rootCtx, editorViewCtx, parserCtx, editorViewOptionsCtx, editorStateCtx } from '@milkdown/core';
+import {
+  Editor,
+  rootCtx,
+  editorViewCtx,
+  parserCtx,
+  editorViewOptionsCtx,
+  editorStateCtx,
+  commandsCtx,
+} from '@milkdown/core';
 import { Slice } from '@milkdown/prose/model';
 import { listenerCtx, listener } from '@milkdown/plugin-listener';
 import { history } from '@milkdown/plugin-history';
@@ -14,7 +22,7 @@ import '@milkdown/prose/tables/style/tables.css';
 import { uploadOptions, htmlUpload } from './uploadFile';
 import multimedia from './multimedia';
 import iconLink from './iconLink';
-import search from './search';
+import search, { enableSearchCommand } from './search';
 
 interface Props {
   onChange?: (content: string) => void;
@@ -27,6 +35,7 @@ export interface EditorRef {
   updateContent: (content: string, isReset: boolean) => void;
   setReadonly: (isReadonly: boolean) => void;
   focus: () => void;
+  enableSearch: () => void;
 }
 
 export default forwardRef<EditorRef, Props>(function MarkdownEditor(
@@ -170,12 +179,26 @@ export default forwardRef<EditorRef, Props>(function MarkdownEditor(
     };
   };
 
+  const enableSearch = () => {
+    const editor = editorRef.current;
+
+    if (!editor) {
+      throw new Error('not init');
+    }
+
+    editor.action((ctx) => {
+      const commandManager = ctx.get(commandsCtx);
+      commandManager.call(enableSearchCommand.key);
+    });
+  };
+
   useImperativeHandle(
     ref,
     () => ({
       setReadonly: wrapHandle(setReadonly),
       updateContent: wrapHandle(updateContent),
       focus: wrapHandle(focus),
+      enableSearch,
     }),
     [setReadonly, updateContent, focus],
   );

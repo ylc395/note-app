@@ -72,7 +72,7 @@ const searchPlugin = $prose((ctx) => {
   });
 });
 
-const enableSearchCommand = $command('search', (ctx) => () => () => {
+export const enableSearchCommand = $command('search', (ctx) => () => () => {
   const searchView = ctx.get(searchViewCtx);
 
   if (!searchView) {
@@ -80,17 +80,6 @@ const enableSearchCommand = $command('search', (ctx) => () => () => {
   }
 
   searchView.enable();
-  return true;
-});
-
-const exitSearchCommand = $command('stopSearch', (ctx) => () => () => {
-  const searchView = ctx.get(searchViewCtx);
-
-  if (!searchView) {
-    throw new Error('no searchView');
-  }
-
-  searchView.destroy();
   return true;
 });
 
@@ -104,4 +93,4 @@ const searchKeyMap = $useKeymap('search', {
   },
 });
 
-export default [enableSearchCommand, exitSearchCommand, searchKeyMap, searchPlugin].flat();
+export default [enableSearchCommand, searchKeyMap, searchPlugin].flat();
