@@ -12,10 +12,10 @@ import StarService from 'service/StarService';
 import type { ContextmenuItem } from 'infra/UI';
 import { ui } from 'web/infra/ui';
 
-import { ModalContext } from '../useModals';
+import Context from '../Context';
 
 export default function useContextmenu() {
-  const modals = useContext(ModalContext);
+  const { movingModal, editingModal } = useContext(Context);
 
   return useCallback(
     async (targetNode: NoteTreeNode) => {
@@ -75,9 +75,9 @@ export default function useContextmenu() {
         case 'delete':
           return noteService.deleteNotes(targetIds);
         case 'move':
-          return modals.moving.open();
+          return movingModal.open();
         case 'edit':
-          return modals.editing.open();
+          return editingModal.open();
         case 'star':
           return starService.starNotes(targetIds);
         case 'openInNewWindow':
@@ -93,6 +93,6 @@ export default function useContextmenu() {
           break;
       }
     },
-    [modals.editing, modals.moving],
+    [editingModal, movingModal],
   );
 }

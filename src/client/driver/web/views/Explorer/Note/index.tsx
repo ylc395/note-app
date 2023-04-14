@@ -3,6 +3,7 @@ import { container } from 'tsyringe';
 import { Modal } from 'antd';
 
 import Layout, { NoteExplorerViews, ExplorerTypes } from 'model/Layout';
+import { useModal, COMMON_MODAL_OPTIONS } from 'web/infra/ui';
 
 import ViewSwitcher from './ViewSwitcher';
 import Tree from './TreeView';
@@ -11,14 +12,15 @@ import Search from './Search';
 import CustomView from './CustomView';
 import TargetTree from './TargetTree';
 import MetadataForm from './MetadataForm';
-import { useModals, ModalContext } from './useModals';
+import Context from './Context';
 
 export default observer(function NoteExplorer() {
   const { explorerPanel } = container.resolve(Layout);
-  const { modals, modalOptions } = useModals();
+  const editingModal = useModal();
+  const movingModal = useModal();
 
   return (
-    <ModalContext.Provider value={modals}>
+    <Context.Provider value={{ editingModal, movingModal }}>
       <div className="box-border flex h-screen flex-col pt-1">
         <div className="border-0 border-b  border-solid border-gray-200 bg-white p-2">
           <div className="flex items-center justify-between">
@@ -34,13 +36,13 @@ export default observer(function NoteExplorer() {
           {explorerPanel[ExplorerTypes.Notes] === NoteExplorerViews.Tree && <Tree />}
           {explorerPanel[ExplorerTypes.Notes] === NoteExplorerViews.Custom && <CustomView />}
         </div>
-        <Modal {...modalOptions} open={modals.moving.isOpen}>
+        <Modal {...COMMON_MODAL_OPTIONS} open={movingModal.isOpen}>
           <TargetTree />
         </Modal>
-        <Modal {...modalOptions} open={modals.editing.isOpen}>
+        <Modal {...COMMON_MODAL_OPTIONS} open={editingModal.isOpen}>
           <MetadataForm />
         </Modal>
       </div>
-    </ModalContext.Provider>
+    </Context.Provider>
   );
 });

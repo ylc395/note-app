@@ -12,7 +12,7 @@ import Tree, { type TreeProps } from 'web/components/Tree';
 import IconTitle from 'web/components/IconTitle';
 import type { Tree as TreeModel } from 'model/abstract/Tree';
 
-import { ModalContext } from './useModals';
+import Context from './Context';
 
 const isDisabled = (selectedNodes: NoteTreeNode[]) => {
   const ids = selectedNodes.map(({ key }) => key);
@@ -39,7 +39,7 @@ const isDisabled = (selectedNodes: NoteTreeNode[]) => {
 
 export default observer(function NoteTreeView() {
   const { moveNotes, fetchChildren, fetchTreeFragment, noteTree: originalNoteTree } = container.resolve(NoteService);
-  const { moving } = useContext(ModalContext);
+  const { movingModal } = useContext(Context);
   const noteTree = useCreation(
     () =>
       new NoteTree({
@@ -71,8 +71,8 @@ export default observer(function NoteTreeView() {
     }
 
     await moveNotes(id === VIRTUAL_ROOT_NODE_KEY ? null : id);
-    moving.close();
-  }, [moveNotes, moving, noteTree.selectedNodes]);
+    movingModal.close();
+  }, [moveNotes, movingModal, noteTree.selectedNodes]);
 
   useEffect(() => {
     noteTree.loadChildren();
@@ -89,7 +89,7 @@ export default observer(function NoteTreeView() {
         />
       </div>
       <div className="mt-8 text-right">
-        <Button onClick={moving.close} className="mr-4">
+        <Button onClick={movingModal.close} className="mr-4">
           取消
         </Button>
         <Button type="primary" disabled={noteTree.selectedNodes.size === 0} onClick={submit}>

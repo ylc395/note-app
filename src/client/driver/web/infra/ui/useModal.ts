@@ -16,7 +16,6 @@ export function useModal<T = void>() {
   const [data, setData, getData] = useGetState<T>();
   const open = useCallback(
     (data: T) => {
-      console.log(data);
       setData(data);
       setTrue();
     },
@@ -37,3 +36,5 @@ export function useModal<T = void>() {
     [close, getData, isOpen, open],
   );
 }
+
+export type Modal<T = void> = ReturnType<typeof useModal<T>>;

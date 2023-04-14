@@ -1,22 +1,15 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { observer } from 'mobx-react-lite';
-import { type ReactNode, useEffect } from 'react';
+import { type ReactNode, useEffect, useContext } from 'react';
 import { reaction, when } from 'mobx';
 import debounce from 'lodash/debounce';
 
 import { Events, type BodyEvent } from 'model/note/Editor';
-import type NoteEditor from 'model/note/Editor';
-import type { EditorRef } from 'web/components/MarkdownEditor';
 
-export default observer(function NoteEditor({
-  editor,
-  children,
-  editorRef,
-}: {
-  editor: NoteEditor;
-  children: ReactNode;
-  editorRef: EditorRef | null;
-}) {
+import EditorContext from './Context';
+
+export default observer(function NoteEditor({ children }: { children: ReactNode }) {
+  const { editor, editorRef } = useContext(EditorContext);
   useEffect(() => {
     if (!editorRef) {
       return;

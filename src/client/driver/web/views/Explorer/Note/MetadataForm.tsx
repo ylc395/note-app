@@ -17,7 +17,7 @@ import { useUpdateTimeField, FORM_ITEM_LAYOUT } from 'web/components/utils';
 import { EmojiPicker, Emoji } from 'web/components/Emoji';
 import { useCreation } from 'ahooks';
 import NoteService from 'service/NoteService';
-import { ModalContext } from './useModals';
+import Context from './Context';
 
 function useAttributes(noteMetadata: NoteMetadata) {
   const remote = container.resolve(remoteToken);
@@ -136,7 +136,7 @@ export default observer(function MetadataForm() {
     setIsPickingEmoji(!isPickingEmoji);
   };
 
-  const { editing } = useContext(ModalContext);
+  const { editingModal } = useContext(Context);
   const handleSubmit = useCallback(async () => {
     if (!attributes.areValid) {
       return;
@@ -151,9 +151,9 @@ export default observer(function MetadataForm() {
 
     noteMetadata.validate(async () => {
       await editNotes(noteMetadata.values);
-      editing.close();
+      editingModal.close();
     });
-  }, [attributes.areValid, attributes.fields, editNotes, editing, noteMetadata]);
+  }, [attributes.areValid, attributes.fields, editNotes, editingModal, noteMetadata]);
 
   const uniqIcons = uniq(Array.from(noteTree.selectedNodes).map(({ entity: { icon } }) => icon));
   const showClear = noteMetadata.values.icon || uniqIcons.length > 0;
@@ -247,7 +247,7 @@ export default observer(function MetadataForm() {
         )}
       </Form>
       <div className="mt-8 text-right">
-        <Button onClick={editing.close} className="mr-4">
+        <Button onClick={editingModal.close} className="mr-4">
           取消
         </Button>
         <Button type="primary" disabled={!noteMetadata.isValid || !attributes.areValid} onClick={handleSubmit}>
