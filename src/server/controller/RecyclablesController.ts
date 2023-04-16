@@ -1,6 +1,5 @@
 import { Controller } from '@nestjs/common';
 
-import { EntityTypes } from 'interface/entity';
 import RecyclableService from 'service/RecyclableService';
 import { RecyclablesDTOSchema, RecyclableRecord, type RecyclablesDTO } from 'interface/recyclables';
 
@@ -12,6 +11,6 @@ export default class RecyclablesController {
 
   @Put('/recyclables/notes')
   async create(@Body(createSchemaPipe(RecyclablesDTOSchema)) { ids }: RecyclablesDTO): Promise<RecyclableRecord[]> {
-    return await this.recyclableService.put(EntityTypes.Note, ids);
+    return await this.recyclableService.putNotes(ids);
   }
 }

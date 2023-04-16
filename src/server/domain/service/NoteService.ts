@@ -16,6 +16,7 @@ import {
   normalizeTitle,
 } from 'interface/note';
 import BaseService from './BaseService';
+import { EntityTypes } from 'interface/entity';
 
 export const events = {
   noteUpdated: Symbol(),
@@ -121,7 +122,13 @@ export default class NoteService extends BaseService {
   }
 
   async query(q: NoteQuery) {
-    return await this.notes.findAll(q);
+    const notes = await this.notes.findAll(q);
+    const areRecyclables = await this.recyclables.areRecyclable(
+      EntityTypes.Note,
+      notes.map((note) => note.id),
+    );
+
+    return notes.filter((note) => !areRecyclables[note.id]);
   }
 
   @Transaction
@@ -213,16 +220,38 @@ export default class NoteService extends BaseService {
 
   async areAvailable(noteIds: NoteVO['id'][] | NoteVO['id']) {
     if (Array.isArray(noteIds)) {
-      const rows = await this.notes.findAll({ ids: noteIds });
-      return rows.length === noteIds.length;
+      const rows = await this.notes.findAll({ id: noteIds });
+
+      if (rows.length !== noteIds.length) {
+        return false;
+      }
+
+      const areRecyclables = Object.values(await this.recyclables.areRecyclable(EntityTypes.Note, noteIds));
+      return areRecyclables.every((v) => v === false);
     }
 
-    return Boolean(await this.notes.findOneById(noteIds));
+    return (
+      Boolean(await this.notes.findOneById(noteIds)) &&
+      !(await this.recyclables.isRecyclable({ type: EntityTypes.Note, id: noteIds }))
+    );
   }
 
   async isWritable(noteId: NoteVO['id']) {
     const row = await this.notes.findOneById(noteId);
 
-    return Boolean(row && row.isReadonly);
+    if (!row) {
+      return false;
+    }
+
+    return !(await this.recyclables.isRecyclable({ type: EntityTypes.Note, id: noteId }));
+  }
+
+  async putIntoRecyclable(ids: NoteVO['id'][]) {
+    if (!this.areAvailable(ids)) {
+      throw new Error('not available');
+    }
+
+    const allIds = [...ids, ...(await this.notes.findAllDescendantIds(ids))];
+    return await this.recyclables.put(EntityTypes.Note, allIds);
   }
 }

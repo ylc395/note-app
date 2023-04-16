@@ -2,7 +2,7 @@ import type { NoteBodyDTO, NoteDTO, NoteVO, NotesDTO, NoteAttributesVO } from 'i
 
 export type NoteQuery = {
   parentId?: NoteVO['parentId'] | NoteVO['id'][];
-  ids?: NoteVO['id'][];
+  id?: NoteVO['id'][];
 };
 
 export interface NoteRepository {

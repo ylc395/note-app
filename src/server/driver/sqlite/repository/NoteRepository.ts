@@ -7,7 +7,6 @@ import type { NoteRepository, NoteQuery } from 'service/repository/NoteRepositor
 import type { NoteDTO, NoteVO, NoteBodyDTO, NotesDTO, NoteAttributesVO } from 'interface/note';
 
 import BaseRepository from './BaseRepository';
-import RecyclableRepository from './RecyclableRepository';
 import noteSchema, { type Row } from '../schema/note';
 import starSchema, { type Row as StarRow } from '../schema/star';
 
@@ -62,20 +61,14 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
       schema: { tableName: noteTable },
     } = this;
 
-    const sql = RecyclableRepository.withoutRecyclables(this.knex.queryBuilder(), 'parent', knex.raw(EntityTypes.Note))
+    const sql = knex
       .select<(Row & { childrenCount: number; starId: number | null })[]>(
         knex.raw('parent.*'),
         knex.raw('count(child.id) as childrenCount'),
         knex.raw(`${starSchema.tableName}.id as starId`),
       )
       .from(`${noteTable} as parent`)
-      .leftJoin(
-        RecyclableRepository.withoutRecyclables(this.knex.queryBuilder(), noteTable, knex.raw(EntityTypes.Note))
-          .from(noteTable)
-          .as('child'),
-        'child.parentId',
-        'parent.id',
-      )
+      .leftJoin({ child: noteTable }, 'child.parentId', 'parent.id')
       .leftJoin(starSchema.tableName, function () {
         this.on(`${starSchema.tableName}.entityType`, knex.raw(EntityTypes.Note));
         this.on(`${starSchema.tableName}.entityId`, 'parent.id');
@@ -114,7 +107,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
       ids.push(String(row.id));
     }
 
-    const rows = await this.findAll({ ids });
+    const rows = await this.findAll({ id: ids });
 
     return rows;
   }
@@ -128,11 +121,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
       knex,
       schema: { tableName: noteTable },
     } = this;
-    const rows: { id: string }[] = await RecyclableRepository.withoutRecyclables(
-      this.knex.queryBuilder(),
-      'descendants',
-      knex.raw(EntityTypes.Note),
-    )
+    const rows: { id: string }[] = await this.knex
       .withRecursive('descendants', (qb) => {
         qb.select('id', 'parentId')
           .from(noteTable)
@@ -158,7 +147,6 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
       schema: { tableName: noteTable },
     } = this;
     const ancestorIds = await knex
-      .queryBuilder()
       .withRecursive('ancestors', (qb) =>
         qb
           .from(noteTable)
@@ -212,7 +200,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
   }
 
   async findOneById(id: NoteVO['id']) {
-    const note = await this.findAll({ ids: [id] });
+    const note = await this.findAll({ id: [id] });
 
     return note[0] || null;
   }

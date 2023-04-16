@@ -3,7 +3,6 @@ import type { StarRecord } from 'interface/star';
 import type { StarRepository, StarQuery } from 'service/repository/StarRepository';
 
 import BaseRepository from './BaseRepository';
-import RecyclableRepository from './RecyclableRepository';
 import schema, { type Row } from '../schema/star';
 import noteSchema from '../schema/note';
 
@@ -37,12 +36,7 @@ export default class SqliteStarRepository extends BaseRepository<Row> implements
       }
     }
 
-    const starRows: Row[] = await RecyclableRepository.withoutRecyclables(
-      qb,
-      noteTableName,
-      knex.raw(EntityTypes.Note),
-    );
-
+    const starRows: Row[] = await qb;
     return starRows.map((row) => ({ ...row, entityId: String(row.entityId), id: String(row.id) }));
   }
 

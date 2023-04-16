@@ -1,29 +1,23 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 
 import { EntityId, EntityTypes } from 'interface/entity';
 import { Transaction } from 'infra/Database';
 import BaseService from './BaseService';
+import NoteService from './NoteService';
 
 @Injectable()
 export default class RecyclableService extends BaseService {
+  @Inject() private readonly noteService!: NoteService;
+
   @Transaction
-  async put(type: EntityTypes, ids: EntityId[]) {
-    let isAvailable: boolean;
-    let allIds: EntityId[];
+  async putNotes(ids: EntityId[]) {
+    const allIds = [...ids, ...(await this.notes.findAllDescendantIds(ids))];
+    const areAvailable = await this.noteService.areAvailable(allIds);
 
-    switch (type) {
-      case EntityTypes.Note:
-        allIds = [...ids, ...(await this.notes.findAllDescendantIds(ids))];
-        isAvailable = await this.notes.areAvailable(allIds);
-        break;
-      default:
-        throw new Error('unknown type');
-    }
-
-    if (!isAvailable) {
+    if (!areAvailable) {
       throw new Error('entities not available');
     }
 
-    return await this.recyclables.put(type, allIds);
+    return await this.recyclables.put(EntityTypes.Note, allIds);
   }
 }

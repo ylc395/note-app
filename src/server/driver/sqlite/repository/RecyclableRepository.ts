@@ -1,6 +1,10 @@
-import type { Knex } from 'knex';
-import type { EntityTypes } from 'interface/entity';
+import zipObject from 'lodash/zipObject';
+import differenceWith from 'lodash/differenceWith';
+import isEqual from 'lodash/isEqual';
+
+import type { EntityLocator, EntityTypes } from 'interface/entity';
 import type { RecyclablesRepository } from 'service/repository/RecyclableRepository';
+import { buildIndex } from 'utils/collection';
 
 import BaseRepository from './BaseRepository';
 import schema, { type Row } from '../schema/recyclable';
@@ -9,22 +13,37 @@ export default class SqliteRecyclableRepository extends BaseRepository<Row> impl
   protected readonly schema = schema;
 
   async put(type: EntityTypes, ids: string[]) {
-    const rows = ids.map((id) => ({ entityId: Number(id), entityType: type }));
+    const newRows = ids.map((id) => ({ entityId: Number(id), entityType: type }));
+    const rows = await this.knex<Row>(this.schema.tableName)
+      .whereIn('entityId', ids)
+      .andWhere('entityType', type)
+      .select('entityId', 'entityType');
+
     const recyclablesRows: Row[] = await this.knex<Row>(this.schema.tableName)
-      .insert(rows)
+      .insert(differenceWith(newRows, rows, isEqual))
       .returning(this.knex.raw('*'));
 
     return recyclablesRows.map((row) => ({ ...row, entityId: String(row.entityId) }));
   }
 
-  static withoutRecyclables(qb: Knex.QueryBuilder, joinTable: string, entityType: Knex.Raw<EntityTypes>) {
-    const recyclableTable = schema.tableName;
+  async isRecyclable({ id: entityId, type: entityType }: EntityLocator) {
+    const row = await this.knex<Row>(this.schema.tableName)
+      .where({ entityId: Number(entityId), entityType })
+      .first();
+    return Boolean(row);
+  }
 
-    return qb
-      .leftJoin(recyclableTable, function () {
-        this.on(`${recyclableTable}.entityType`, '=', entityType);
-        this.on(`${recyclableTable}.entityId`, `${joinTable}.id`);
-      })
-      .whereNull(`${recyclableTable}.entityId`);
+  async areRecyclable(type: EntityTypes, ids: EntityLocator['id'][]) {
+    if (ids.length === 0) {
+      return {};
+    }
+
+    const rows = await this.knex<Row>(this.schema.tableName).whereIn('entityId', ids).andWhere('entityType', type);
+    const index = buildIndex(rows, 'entityId');
+
+    return zipObject(
+      ids,
+      ids.map((id) => Boolean(index[id])),
+    );
   }
 }
