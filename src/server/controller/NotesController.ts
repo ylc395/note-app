@@ -52,7 +52,7 @@ export default class NotesController {
 
   @Get('/notes/:id')
   async queryOne(@Param('id') noteId: string): Promise<NoteVO> {
-    const note = (await this.noteService.query({ id: noteId }))[0];
+    const note = await this.noteService.notes.findOneById(noteId);
 
     if (!note) {
       throw new Error('not found');

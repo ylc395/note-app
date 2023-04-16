@@ -30,7 +30,7 @@ export interface NoteUpdatedEvent {
 export default class NoteService extends BaseService {
   @Transaction
   async create(note: NoteDTO) {
-    if (note.parentId && !(await this.notes.areAvailable([note.parentId]))) {
+    if (note.parentId && !(await this.areAvailable(note.parentId))) {
       throw new Error('invalid parentId');
     }
 
@@ -42,11 +42,11 @@ export default class NoteService extends BaseService {
   }
 
   private async duplicate(noteId: NoteVO['id']) {
-    if (!(await this.notes.areAvailable([noteId]))) {
+    if (!(await this.areAvailable(noteId))) {
       throw new Error('note unavailable');
     }
 
-    const targetNote = (await this.notes.findAll({ id: noteId }))[0];
+    const targetNote = await this.notes.findOneById(noteId);
     const targetNoteBody = await this.notes.findBody(noteId);
 
     if (!targetNote || targetNoteBody === null) {
@@ -78,7 +78,7 @@ export default class NoteService extends BaseService {
 
   @Transaction
   async updateBody(noteId: NoteVO['id'], body: NoteBodyDTO) {
-    if (!(await this.notes.isWritable(noteId))) {
+    if (!(await this.isWritable(noteId))) {
       throw new Error('note unavailable');
     }
 
@@ -95,7 +95,7 @@ export default class NoteService extends BaseService {
 
   @Transaction
   async getBody(noteId: NoteVO['id']) {
-    if (!(await this.notes.areAvailable([noteId]))) {
+    if (!(await this.areAvailable(noteId))) {
       throw new Error('note unavailable');
     }
 
@@ -126,7 +126,7 @@ export default class NoteService extends BaseService {
 
   @Transaction
   async getTreeFragment(noteId: NoteVO['id']) {
-    if (!(await this.notes.areAvailable([noteId]))) {
+    if (!(await this.areAvailable(noteId))) {
       throw new Error('invalid id');
     }
 
@@ -149,7 +149,7 @@ export default class NoteService extends BaseService {
 
   // todo: unused, maybe remove
   async getTreePath(noteId: NoteVO['id']) {
-    if (!(await this.notes.areAvailable([noteId]))) {
+    if (!(await this.areAvailable(noteId))) {
       throw new Error('invalid id');
     }
 
@@ -179,7 +179,7 @@ export default class NoteService extends BaseService {
   private async assertValidChanges(notes: NotesDTO) {
     const ids = notes.map(({ id }) => id);
 
-    if (!(await this.notes.areAvailable(ids))) {
+    if (!(await this.areAvailable(ids))) {
       throw new Error('invalid ids');
     }
 
@@ -209,5 +209,20 @@ export default class NoteService extends BaseService {
 
   async getAttributes() {
     return this.notes.findAttributes();
+  }
+
+  async areAvailable(noteIds: NoteVO['id'][] | NoteVO['id']) {
+    if (Array.isArray(noteIds)) {
+      const rows = await this.notes.findAll({ ids: noteIds });
+      return rows.length === noteIds.length;
+    }
+
+    return Boolean(await this.notes.findOneById(noteIds));
+  }
+
+  async isWritable(noteId: NoteVO['id']) {
+    const row = await this.notes.findOneById(noteId);
+
+    return Boolean(row && row.isReadonly);
   }
 }

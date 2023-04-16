@@ -2,7 +2,7 @@ import { union, boolean, number, object, string, null as zodNull, type infer as 
 import dayjs from 'dayjs';
 
 import type { Starable } from './star';
-import { type EntityId, entityId } from './entity';
+import type { EntityId } from './entity';
 
 export const noteDTOSchema = object({
   title: string().optional(),
@@ -39,7 +39,6 @@ export type NoteAttributesVO = Record<string, string[]>;
 
 export const noteQuerySchema = object({
   parentId: union([zodNull(), string()]).optional(),
-  id: entityId().optional(),
 });
 
 export const noteBodySchema = string();

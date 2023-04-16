@@ -41,7 +41,7 @@ export default class StarService extends BaseService {
     const stars = await this.stars.findAll();
     const notes = buildIndex(
       await this.notes.findAll({
-        id: stars.filter(({ entityType }) => entityType === EntityTypes.Note).map(({ entityId }) => entityId),
+        ids: stars.filter(({ entityType }) => entityType === EntityTypes.Note).map(({ entityId }) => entityId),
       }),
     );
 

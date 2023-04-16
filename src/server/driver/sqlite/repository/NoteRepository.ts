@@ -101,18 +101,6 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
     return notes;
   }
 
-  async areAvailable(noteIds: NoteVO['id'][]) {
-    const rows = await this.findAll({ id: noteIds });
-
-    return rows.length === noteIds.length;
-  }
-
-  async isWritable(noteId: NoteVO['id']) {
-    const row = await this.findAll({ id: noteId, isReadonly: false });
-
-    return row.length === 1;
-  }
-
   async batchUpdate(notes: NotesDTO) {
     const ids: EntityId[] = [];
 
@@ -126,7 +114,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
       ids.push(String(row.id));
     }
 
-    const rows = await this.findAll({ id: ids });
+    const rows = await this.findAll({ ids });
 
     return rows;
   }
@@ -221,5 +209,11 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
     }
 
     return mapValues(result, uniq);
+  }
+
+  async findOneById(id: NoteVO['id']) {
+    const note = await this.findAll({ ids: [id] });
+
+    return note[0] || null;
   }
 }
