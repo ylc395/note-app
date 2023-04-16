@@ -12,6 +12,7 @@ module.exports = {
     'lodash/prefer-lodash-method': 'off',
     'lodash/prefer-constant': 'off',
     'lodash/prefer-immutable-method': 'off',
+    'lodash/path-style': 'off',
   },
   overrides: [
     {

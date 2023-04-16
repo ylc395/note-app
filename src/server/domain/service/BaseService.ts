@@ -65,4 +65,9 @@ export default class BaseService implements Repositories {
   get materials() {
     return this.db.getRepository('materials');
   }
+
+  @cache
+  get revisions() {
+    return this.db.getRepository('revisions');
+  }
 }
