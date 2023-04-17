@@ -4,7 +4,7 @@ import uniq from 'lodash/uniq';
 
 import { type EntityId, EntityTypes } from 'interface/entity';
 import type { NoteRepository, NoteQuery } from 'service/repository/NoteRepository';
-import type { NoteDTO, NoteVO, NoteBodyDTO, NotesDTO, NoteAttributesVO } from 'interface/note';
+import type { NoteDTO, NoteVO, NotesDTO, NoteAttributesVO } from 'interface/note';
 
 import BaseRepository from './BaseRepository';
 import noteSchema, { type Row } from '../schema/note';
@@ -23,7 +23,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
     return this.rowToVO(row);
   }
 
-  async findBody(noteId: string): Promise<NoteBodyDTO | null> {
+  async findBody(noteId: string): Promise<string | null> {
     const row = await this.knex<Row>(noteSchema.tableName).where('id', noteId).first();
 
     if (!row) {
@@ -44,7 +44,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
     return this.rowToVO(row, { childrenCount: Number(childrenCount[0]?.count) });
   }
 
-  async updateBody(id: NoteVO['id'], noteBody: NoteBodyDTO) {
+  async updateBody(id: NoteVO['id'], noteBody: string) {
     const count = await this.knex<Row>(this.schema.tableName).where('id', id).update({ body: noteBody });
 
     if (count === 0) {

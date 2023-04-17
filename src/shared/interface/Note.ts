@@ -41,11 +41,14 @@ export const noteQuerySchema = object({
   parentId: union([zodNull(), string()]).optional(),
 });
 
-export const noteBodySchema = string();
+export const noteBodySchema = object({
+  content: string(),
+  isImportant: boolean().optional(),
+});
 
-export type NoteBodyDTO = string;
+export type NoteBodyDTO = Infer<typeof noteBodySchema>;
 
-export type NoteBodyVO = NoteBodyDTO;
+export type NoteBodyVO = NoteBodyDTO['content'];
 
 export type NoteQuery = Infer<typeof noteQuerySchema>;
 

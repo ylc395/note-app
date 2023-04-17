@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import omit from 'lodash/omit';
 import groupBy from 'lodash/groupBy';
 import intersection from 'lodash/intersection';
@@ -15,8 +15,9 @@ import {
   type NoteBodyVO,
   normalizeTitle,
 } from 'interface/note';
-import BaseService from './BaseService';
 import { EntityTypes } from 'interface/entity';
+import BaseService from './BaseService';
+import RevisionService from './RevisionService';
 
 export const events = {
   bodyUpdated: 'updated.content.note',
@@ -30,6 +31,8 @@ export interface NoteBodyUpdatedEvent {
 
 @Injectable()
 export default class NoteService extends BaseService {
+  @Inject() private readonly revisionService!: RevisionService;
+
   @Transaction
   async create(note: NoteDTO) {
     if (note.parentId && !(await this.areAvailable(note.parentId))) {
@@ -78,22 +81,27 @@ export default class NoteService extends BaseService {
     return result;
   }
 
-  async updateBody(noteId: NoteVO['id'], body: NoteBodyDTO) {
+  @Transaction
+  async updateBody(noteId: NoteVO['id'], { content, isImportant }: NoteBodyDTO) {
     if (!(await this.isWritable(noteId))) {
       throw new Error('note unavailable');
     }
 
-    const result = await this.notes.updateBody(noteId, body);
+    const result = await this.notes.updateBody(noteId, content);
 
     if (result === null) {
       throw new Error('update note body failed');
     }
 
-    await this.eventEmitter.emitAsync(events.bodyUpdated, {
+    if (isImportant) {
+      this.revisionService.createRevision({ content, type: EntityTypes.Note, id: noteId }, true);
+    }
+
+    this.eventEmitter.emit(events.bodyUpdated, {
       id: noteId,
       type: EntityTypes.Note,
-      content: result,
-    } satisfies NoteBodyUpdatedEvent);
+      content,
+    } as NoteBodyUpdatedEvent);
 
     return result;
   }

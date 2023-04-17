@@ -59,6 +59,11 @@ export default class EditorService extends EventEmitter {
     });
   }
 
+  //todo: bind ctrl+S
+  readonly saveNote = (noteId: NoteVO['id'], body: BodyEvent, isImportant?: true) => {
+    return this.remote.put<NoteBodyDTO>(`/notes/${noteId}/body`, { content: body, isImportant });
+  };
+
   private createNoteEditor(tile: Tile, noteId: NoteEditor['entityId']) {
     const noteService = container.resolve(NoteService);
     const noteEditor = new NoteEditor(tile, noteId, noteService.noteTree);
@@ -72,10 +77,7 @@ export default class EditorService extends EventEmitter {
     });
 
     noteEditor
-      .on(
-        NoteEditorEvents.BodyUpdated,
-        debounce((body: BodyEvent) => this.remote.put<NoteBodyDTO>(`/notes/${noteId}/body`, body), 1000),
-      )
+      .on(NoteEditorEvents.BodyUpdated, debounce(this.saveNote.bind(null, noteId), 1000))
       .on(NoteEditorEvents.BodyUpdated, (body: BodyEvent) => {
         for (const editor of this.getSameEntityEditors(noteEditor)) {
           editor.updateBody(body, false);

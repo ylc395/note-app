@@ -17,20 +17,24 @@ export interface MemoContentUpdatedEvent {
 }
 @Injectable()
 export default class MemoService extends BaseService {
+  @Transaction
   async create(memo: MemoDTO) {
     if (memo.parentId && memo.isPinned) {
       throw new Error('can not pin child memo');
     }
 
     const newMemo = await this.memos.create(memo);
-    await this.eventEmitter.emitAsync(events.contentUpdated, {
+
+    this.eventEmitter.emit(events.contentUpdated, {
       id: newMemo.id,
       type: EntityTypes.Memo,
       content: newMemo.content,
-    });
+    } as MemoContentUpdatedEvent);
+
     return newMemo;
   }
 
+  @Transaction
   async update(id: ParentMemoVO['id'], patch: MemoPatchDTO) {
     if ((await this.memos.findParent(id)) && patch.isPinned) {
       throw new Error('can not pin child memo');
@@ -43,11 +47,11 @@ export default class MemoService extends BaseService {
     }
 
     if (patch.content) {
-      await this.eventEmitter.emitAsync(events.contentUpdated, {
+      this.eventEmitter.emit(events.contentUpdated, {
         id,
         type: EntityTypes.Memo,
         content: patch.content,
-      } satisfies MemoContentUpdatedEvent);
+      } as MemoContentUpdatedEvent);
     }
 
     return updated;
