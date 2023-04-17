@@ -3,7 +3,7 @@ import { type InferRow, defineSchema } from './type';
 const schema = defineSchema({
   tableName: 'files',
   fields: {
-    id: { increments: true },
+    id: { type: 'text', primary: true, notNullable: true },
     data: { type: 'binary', notNullable: true },
     mimeType: { type: 'text', notNullable: true },
     size: { type: 'integer', notNullable: true },

@@ -4,7 +4,7 @@ const schema = defineSchema({
   tableName: 'recyclables',
   fields: {
     entityType: { type: 'integer', notNullable: true },
-    entityId: { type: 'integer', notNullable: true },
+    entityId: { type: 'text', notNullable: true },
     deletedAt: { type: 'integer', notNullable: true, defaultTo: (knex) => knex.raw('(unixepoch())') },
   },
   restrictions: {
@@ -12,6 +12,6 @@ const schema = defineSchema({
   },
 });
 
-export type Row = InferRow<typeof schema['fields']>;
+export type Row = InferRow<(typeof schema)['fields']>;
 
 export default schema;

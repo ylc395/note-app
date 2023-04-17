@@ -17,16 +17,13 @@ export default class FileRepository extends BaseRepository<Row> {
       return existedFile;
     }
 
-    const createdFile = (await this.knex<Row>(this.schema.tableName)
-      .insert({
-        hash,
-        data: Buffer.from(data),
-        size: data.byteLength,
-        mimeType,
-      })
-      .returning(this.knex.raw('*'))) as Row[];
+    const createdFile = await this._createOrUpdate({
+      hash,
+      data: Buffer.from(data),
+      size: data.byteLength,
+      mimeType,
+    });
 
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    return createdFile[0]!;
+    return createdFile;
   }
 }

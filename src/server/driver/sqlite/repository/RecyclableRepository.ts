@@ -12,24 +12,19 @@ import schema, { type Row } from '../schema/recyclable';
 export default class SqliteRecyclableRepository extends BaseRepository<Row> implements RecyclablesRepository {
   protected readonly schema = schema;
 
-  async put(type: EntityTypes, ids: string[]) {
-    const newRows = ids.map((id) => ({ entityId: Number(id), entityType: type }));
+  async put(entityType: EntityTypes, ids: string[]) {
+    const newRows = ids.map((entityId) => ({ entityId, entityType }));
     const rows = await this.knex<Row>(this.schema.tableName)
       .whereIn('entityId', ids)
-      .andWhere('entityType', type)
+      .andWhere('entityType', entityType)
       .select('entityId', 'entityType');
 
-    const recyclablesRows: Row[] = await this.knex<Row>(this.schema.tableName)
-      .insert(differenceWith(newRows, rows, isEqual))
-      .returning(this.knex.raw('*'));
-
+    const recyclablesRows = await this._batchCreate(differenceWith(newRows, rows, isEqual));
     return recyclablesRows.map((row) => ({ ...row, entityId: String(row.entityId) }));
   }
 
   async isRecyclable({ id: entityId, type: entityType }: EntityLocator) {
-    const row = await this.knex<Row>(this.schema.tableName)
-      .where({ entityId: Number(entityId), entityType })
-      .first();
+    const row = await this.knex<Row>(this.schema.tableName).where({ entityId, entityType }).first();
     return Boolean(row);
   }
 

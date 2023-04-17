@@ -10,7 +10,7 @@ export default class SqliteMaterialRepository extends BaseRepository<Row> implem
   protected readonly schema = schema;
   private readonly files = new FileRepository(this.knex);
   async createDirectory(directory: Directory) {
-    const createdRow = await this.createOrUpdate(directory);
+    const createdRow = await this._createOrUpdate(directory);
     return SqliteMaterialRepository.rowToDirectory(createdRow);
   }
 
@@ -25,7 +25,7 @@ export default class SqliteMaterialRepository extends BaseRepository<Row> implem
       throw new Error('invalid material');
     }
 
-    const createdMaterial = await this.createOrUpdate({
+    const createdMaterial = await this._createOrUpdate({
       ...material,
       fileId: file.id,
     });
@@ -35,10 +35,7 @@ export default class SqliteMaterialRepository extends BaseRepository<Row> implem
 
   private static rowToDirectory(row: Row): DirectoryVO {
     return {
-      id: String(row.id),
-      name: row.name,
-      icon: row.icon,
-      parentId: row.parentId ? String(row.parentId) : null,
+      ...pick(row, ['id', 'name', 'icon', 'parentId']),
       childrenCount: 0,
     };
   }
@@ -84,8 +81,7 @@ export default class SqliteMaterialRepository extends BaseRepository<Row> implem
       }
     }
 
-    const childrenCounts = await this.getChildrenCounts(directories.map(({ id }) => Number(id)));
-    console.log(childrenCounts);
+    const childrenCounts = await this.getChildrenCounts(directories.map(({ id }) => id));
 
     for (const directory of directories) {
       directory.childrenCount = childrenCounts[directory.id] || 0;

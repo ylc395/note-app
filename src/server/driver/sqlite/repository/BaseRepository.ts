@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import type { Knex } from 'knex';
 import pick from 'lodash/pick';
 import omit from 'lodash/omit';
@@ -13,9 +14,23 @@ export default abstract class BaseRepository<Row extends object> {
     return Object.keys(this.schema.fields);
   }
 
-  protected async createOrUpdate(row: unknown): Promise<Row>;
-  protected async createOrUpdate(row: unknown, id: string): Promise<Row | null>;
-  protected async createOrUpdate(row: unknown, id?: string): Promise<Row | null> {
+  protected async _batchCreate<T = void>(
+    rows: Partial<T extends void ? Row : T>[],
+    tableName?: string,
+  ): Promise<(T extends void ? Row : T)[]> {
+    const createdRows = await this.knex(tableName || this.schema.tableName)
+      .insert(rows.map((row) => ({ ...row, id: this.generateId() })))
+      .returning(this.knex.raw('*'));
+
+    return createdRows;
+  }
+
+  private generateId() {
+    return randomUUID().replaceAll('-', '');
+  }
+  protected async _createOrUpdate(row: unknown): Promise<Row>;
+  protected async _createOrUpdate(row: unknown, id: string): Promise<Row | null>;
+  protected async _createOrUpdate(row: unknown, id?: string): Promise<Row | null> {
     const fields = mapValues(omit(pick(row, this.fields), ['id']), (v) =>
       isObject(v) ? JSON.stringify(v) : v,
     ) as Partial<Row>;
@@ -33,7 +48,9 @@ export default abstract class BaseRepository<Row extends object> {
 
       updatedRow = updatedRows[0];
     } else {
-      const createdRows = await this.knex(this.schema.tableName).insert(fields).returning(this.knex.raw('*'));
+      const createdRows = await this.knex(this.schema.tableName)
+        .insert({ ...fields, id: this.generateId() })
+        .returning(this.knex.raw('*'));
       updatedRow = createdRows[0];
     }
 

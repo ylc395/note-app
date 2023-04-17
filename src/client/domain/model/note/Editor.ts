@@ -37,7 +37,7 @@ export default class NoteEditor extends EntityEditor<Entity> {
   get tabView() {
     return {
       title:
-        (__ENV__ === 'dev' ? `${this.id} ${this.entityId} ` : '') +
+        (__ENV__ === 'dev' ? `${this.id} ${this.entityId.slice(0, 3)} ` : '') +
         (this.entity ? normalizeTitle(this.entity.metadata) : ''),
       icon: this.entity?.metadata.icon || null,
     };

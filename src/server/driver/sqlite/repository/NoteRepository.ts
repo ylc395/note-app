@@ -18,7 +18,7 @@ interface RowPatch {
 export default class SqliteNoteRepository extends BaseRepository<Row> implements NoteRepository {
   protected readonly schema = noteSchema;
   async create(note: NoteDTO): Promise<NoteVO> {
-    const row = await this.createOrUpdate(note);
+    const row = await this._createOrUpdate(note);
 
     return this.rowToVO(row);
   }
@@ -34,7 +34,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
   }
 
   async update(id: NoteVO['id'], note: NoteDTO) {
-    const row = await this.createOrUpdate(note, id);
+    const row = await this._createOrUpdate(note, id);
 
     if (!row) {
       return null;
@@ -54,7 +54,6 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
     return noteBody;
   }
 
-  // problem: 是否需要像这样，在 sql 里体现业务逻辑（例如“回收站”的概念）？
   async findAll(query: NoteQuery) {
     const {
       knex,
@@ -62,7 +61,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
     } = this;
 
     const sql = knex
-      .select<(Row & { childrenCount: number; starId: number | null })[]>(
+      .select<(Row & { childrenCount: number; starId: StarRow['id'] | null })[]>(
         knex.raw('parent.*'),
         knex.raw('count(child.id) as childrenCount'),
         knex.raw(`${starSchema.tableName}.id as starId`),
@@ -98,7 +97,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
     const ids: EntityId[] = [];
 
     for (const note of notes) {
-      const row = await this.createOrUpdate(note, note.id);
+      const row = await this._createOrUpdate(note, note.id);
 
       if (!row) {
         continue;
@@ -172,8 +171,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
   private rowToVO(row: Row & RowPatch, patch?: RowPatch): NoteVO {
     return {
       ...omit(row, 'body'),
-      id: String(row.id),
-      parentId: row.parentId ? String(row.parentId) : null,
+      parentId: row.parentId || null,
       isReadonly: Boolean(row.isReadonly),
       childrenCount: patch?.childrenCount || row.childrenCount || 0,
       isStar: Boolean(patch?.starId || row.starId || false),

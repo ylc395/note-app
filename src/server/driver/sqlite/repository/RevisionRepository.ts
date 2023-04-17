@@ -8,23 +8,13 @@ import type { RevisionVO } from 'interface/revision';
 export default class SqliteRevisionRepository extends BaseRepository<Row> implements RevisionRepository {
   protected readonly schema = schema;
   async create(revision: RevisionDTO) {
-    const rows = (await this.knex<Row>(this.schema.tableName)
-      .insert({ ...revision, entityId: Number(revision.entityId) })
-      .returning(this.knex.raw('*'))) as Row[];
-
-    return {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      id: String(rows[0]!.id),
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      createdAt: rows[0]!.createdAt,
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      diff: rows[0]!.diff,
-    };
+    const { id, createdAt, diff } = await this._createOrUpdate(revision);
+    return { id, createdAt, diff };
   }
 
   async findLatest({ type: entityType, id: entityId }: EntityLocator) {
     const latest = await this.knex<Row>(this.schema.tableName)
-      .where({ entityType, entityId: Number(entityId) })
+      .where({ entityType, entityId })
       .orderBy([{ column: 'createdAt', order: 'desc' }])
       .first();
 
@@ -52,6 +42,6 @@ export default class SqliteRevisionRepository extends BaseRepository<Row> implem
       .select(['id', 'createdAt', 'diff'])
       .orderBy([{ column: 'createdAt', order: 'asc' }]);
 
-    return rows.map((row) => ({ ...row, id: String(row.id) }));
+    return rows;
   }
 }

@@ -86,13 +86,7 @@ export default class SqliteDb implements Database {
     restrictions: Schema['restrictions'],
   ) => {
     for (const [fieldName, options] of Object.entries(fields)) {
-      let col =
-        (options.increments && table.increments(snakeCase(fieldName))) ||
-        (options.type && table[options.type](snakeCase(fieldName)));
-
-      if (!col) {
-        throw new Error(`no type for column ${fieldName}`);
-      }
+      let col = table[options.type](snakeCase(fieldName));
 
       if (options.notNullable) {
         col = col.notNullable();
@@ -100,6 +94,10 @@ export default class SqliteDb implements Database {
 
       if (options.unique) {
         col = col.unique();
+      }
+
+      if (options.primary) {
+        col.primary();
       }
 
       if (typeof options.defaultTo !== 'undefined') {

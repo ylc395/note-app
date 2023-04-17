@@ -41,8 +41,7 @@ export default class SqliteFileRepository extends BaseRepository<Row> implements
       sql.whereIn(`${this.schema.tableName}.sourceUrl`, query.sourceUrl);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (await sql).map((row: any) => ({ ...row, id: String(row.id) }));
+    return await sql;
   }
 
   async batchCreate(files: File[]) {
@@ -72,31 +71,26 @@ export default class SqliteFileRepository extends BaseRepository<Row> implements
 
     const createdFileDataRows =
       fileDataRowsToInsert.length > 0
-        ? buildIndex(
-            await this.knex<FileRow>(this.fileSchema.tableName).insert(fileDataRowsToInsert).returning(['id', 'hash']),
-            'hash',
-          )
+        ? buildIndex(await this._batchCreate<FileRow>(fileDataRowsToInsert, this.fileSchema.tableName), 'hash')
         : {};
 
-    const createdRows = await this.knex(this.schema.tableName)
-      .insert(
-        files.map((file, index) => {
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          const hash = hashes[index]!;
-          const fileId = (existedFileDataRows[hash] || createdFileDataRows[hash])?.id;
+    const createdRows = await this._batchCreate(
+      files.map((file, index) => {
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const hash = hashes[index]!;
+        const fileId = (existedFileDataRows[hash] || createdFileDataRows[hash])?.id;
 
-          if (!fileId) {
-            throw new Error('no file data id');
-          }
+        if (!fileId) {
+          throw new Error('no file data id');
+        }
 
-          return {
-            name: file.name,
-            sourceUrl: file.sourceUrl,
-            fileId,
-          };
-        }),
-      )
-      .returning('id');
+        return {
+          name: file.name,
+          sourceUrl: file.sourceUrl,
+          fileId,
+        };
+      }),
+    );
 
     return this.findAll({ id: createdRows.map(({ id }) => id) });
   }

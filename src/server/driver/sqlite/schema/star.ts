@@ -3,9 +3,9 @@ import { type InferRow, defineSchema } from './type';
 const schema = defineSchema({
   tableName: 'stars',
   fields: {
-    id: { increments: true },
+    id: { type: 'text', primary: true, notNullable: true },
     entityType: { type: 'integer', notNullable: true },
-    entityId: { type: 'integer', notNullable: true },
+    entityId: { type: 'text', notNullable: true },
   },
   restrictions: {
     unique: ['entityType', 'entityId'],

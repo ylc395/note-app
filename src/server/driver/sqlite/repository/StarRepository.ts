@@ -9,9 +9,9 @@ import noteSchema from '../schema/note';
 export default class SqliteStarRepository extends BaseRepository<Row> implements StarRepository {
   protected readonly schema = schema;
 
-  async put(type: EntityTypes, ids: EntityId[]) {
-    const rows = ids.map((id) => ({ entityId: Number(id), entityType: type }));
-    const starRows: Row[] = await this.knex<Row>(this.schema.tableName).insert(rows).returning(this.knex.raw('*'));
+  async put(entityType: EntityTypes, ids: EntityId[]) {
+    const rows = ids.map((entityId) => ({ entityId, entityType }));
+    const starRows = await this._batchCreate(rows);
 
     return starRows.map((row) => ({ ...row, entityId: String(row.entityId), id: String(row.id) }));
   }
@@ -36,8 +36,7 @@ export default class SqliteStarRepository extends BaseRepository<Row> implements
       }
     }
 
-    const starRows: Row[] = await qb;
-    return starRows.map((row) => ({ ...row, entityId: String(row.entityId), id: String(row.id) }));
+    return await qb;
   }
 
   async remove(id: StarRecord['id']) {

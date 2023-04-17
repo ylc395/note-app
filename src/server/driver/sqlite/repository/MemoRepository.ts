@@ -10,7 +10,7 @@ import schema, { type Row } from '../schema/memo';
 export default class SqliteMemoRepository extends BaseRepository<Row> implements MemoRepository {
   protected readonly schema = schema;
   async create(memo: MemoDTO) {
-    const createdRow = await this.createOrUpdate(memo);
+    const createdRow = await this._createOrUpdate(memo);
 
     if (createdRow.id) {
       return SqliteMemoRepository.rowToVO(createdRow, []);
@@ -20,14 +20,14 @@ export default class SqliteMemoRepository extends BaseRepository<Row> implements
   }
 
   async update(id: ParentMemoVO['id'], patch: MemoPatchDTO) {
-    const updatedRow = await this.createOrUpdate(patch, id);
+    const updatedRow = await this._createOrUpdate(patch, id);
 
     if (!updatedRow) {
       return null;
     }
 
     if (updatedRow.parentId) {
-      const children = await this.findChildren(String(updatedRow.id));
+      const children = await this.findChildren(updatedRow.id);
       return SqliteMemoRepository.rowToVO(updatedRow, children);
     } else {
       return SqliteMemoRepository.rowToVO(updatedRow);
@@ -83,7 +83,6 @@ export default class SqliteMemoRepository extends BaseRepository<Row> implements
   private static rowToVO(row: Row, threads?: Row[]): ParentMemoVO | ChildMemoVO {
     return {
       ...omit(row, ['parentId', 'isPinned']),
-      id: String(row.id),
       isStar: false,
       ...(threads
         ? {
