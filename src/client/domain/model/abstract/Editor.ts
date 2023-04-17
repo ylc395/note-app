@@ -3,7 +3,7 @@ import { makeObservable, action, observable } from 'mobx';
 import EventEmitter from 'eventemitter3';
 
 import type Tile from 'model/workbench/Tile';
-import type { EntityId, EntityTypes } from 'interface/entity';
+import type { EntityId, EntityLocator, EntityTypes } from 'interface/entity';
 
 interface Breadcrumb {
   title: string;
@@ -19,6 +19,10 @@ export enum Events {
   Loaded = 'entityEditor.loaded',
 }
 
+export interface EditableEntityLocator extends EntityLocator {
+  type: EntityTypes.Note;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default abstract class EntityEditor<T = unknown> extends EventEmitter {
   readonly id = uniqueId('editor-');
@@ -26,7 +30,7 @@ export default abstract class EntityEditor<T = unknown> extends EventEmitter {
     title: string;
     icon: string | null;
   };
-  abstract readonly entityType: EntityTypes;
+  abstract readonly entityType: EditableEntityLocator['type'];
   abstract readonly breadcrumbs: Breadcrumbs;
   @observable entity?: T;
 

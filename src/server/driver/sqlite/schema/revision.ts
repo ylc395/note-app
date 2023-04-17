@@ -7,6 +7,7 @@ const schema = defineSchema({
     entityType: { type: 'integer', notNullable: true },
     entityId: { type: 'integer', notNullable: true },
     diff: { type: 'text', notNullable: true },
+    createdAt: { type: 'integer', notNullable: true, defaultTo: (knex) => knex.raw('(unixepoch())') },
   },
 });
 

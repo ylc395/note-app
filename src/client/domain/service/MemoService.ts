@@ -45,7 +45,9 @@ export default class MemoService {
     );
 
     if (!childMemo) {
-      this.newContent = '';
+      runInAction(() => {
+        this.newContent = '';
+      });
       await this.load();
     } else {
       runInAction(() => {

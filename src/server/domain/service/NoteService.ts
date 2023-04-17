@@ -19,11 +19,12 @@ import BaseService from './BaseService';
 import { EntityTypes } from 'interface/entity';
 
 export const events = {
-  noteUpdated: Symbol(),
+  bodyUpdated: 'updated.content.note',
 };
 
-export interface NoteUpdatedEvent {
+export interface NoteBodyUpdatedEvent {
   id: NoteVO['id'];
+  type: EntityTypes.Note;
   content: NoteBodyVO;
 }
 
@@ -77,7 +78,6 @@ export default class NoteService extends BaseService {
     return result;
   }
 
-  @Transaction
   async updateBody(noteId: NoteVO['id'], body: NoteBodyDTO) {
     if (!(await this.isWritable(noteId))) {
       throw new Error('note unavailable');
@@ -89,7 +89,11 @@ export default class NoteService extends BaseService {
       throw new Error('update note body failed');
     }
 
-    await this.eventEmitter.emitAsync(events.noteUpdated, { id: noteId, content: result });
+    await this.eventEmitter.emitAsync(events.bodyUpdated, {
+      id: noteId,
+      type: EntityTypes.Note,
+      content: result,
+    } satisfies NoteBodyUpdatedEvent);
 
     return result;
   }

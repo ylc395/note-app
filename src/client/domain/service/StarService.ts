@@ -10,14 +10,18 @@ import type { StarRecord, StarsDTO } from 'interface/star';
 export enum StarEvents {
   NoteAdded = 'star.note.added',
   NoteRemoved = 'star.note.removed',
+  MemoAdded = 'star.memo.added',
+  MemoRemoved = 'star.memo.removed',
 }
 
 const removeEventsMap: Record<EntityTypes, StarEvents> = {
   [EntityTypes.Note]: StarEvents.NoteRemoved,
+  [EntityTypes.Memo]: StarEvents.MemoRemoved,
 };
 
 const addEventsMap: Record<EntityTypes, StarEvents> = {
   [EntityTypes.Note]: StarEvents.NoteAdded,
+  [EntityTypes.Memo]: StarEvents.MemoAdded,
 };
 
 // todo: 能够收藏具体段落

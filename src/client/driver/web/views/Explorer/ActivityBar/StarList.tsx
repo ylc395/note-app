@@ -2,7 +2,7 @@ import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 import { useEffect, useRef } from 'react';
 import { Button, Empty } from 'antd';
-import { CloseOutlined, FileOutlined, LoadingOutlined } from '@ant-design/icons';
+import { CloseOutlined, FileOutlined, LoadingOutlined, BuildOutlined } from '@ant-design/icons';
 import { useClickAway } from 'ahooks';
 
 import { EntityTypes } from 'interface/entity';
@@ -10,6 +10,7 @@ import StarService from 'service/StarService';
 
 const iconMap = {
   [EntityTypes.Note]: () => <FileOutlined />,
+  [EntityTypes.Memo]: () => <BuildOutlined />,
 };
 
 export default observer(function StarList({ close }: { close: () => void }) {

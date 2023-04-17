@@ -6,7 +6,7 @@ import * as controllers from 'controller';
 import DriverModule from './driver.module';
 
 @Module({
-  imports: [EventEmitterModule.forRoot(), ServiceModule, DriverModule],
+  imports: [EventEmitterModule.forRoot({ wildcard: true }), ServiceModule, DriverModule],
   controllers: Object.values(controllers),
 })
 export default class AppModule {}

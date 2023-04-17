@@ -1,100 +1,64 @@
-import memoize from 'lodash/memoize';
-import debounce from 'lodash/debounce';
+import { OnEvent } from '@nestjs/event-emitter';
+import { createPatch, applyPatch } from 'diff';
 
-import { type EntityLocator, EntityTypes, EntityId } from 'interface/entity';
+import { type EntityLocator, EntityTypes } from 'interface/entity';
 import type { NoteVO } from 'interface/note';
-import { RevisionTypes, RevisionVO } from 'interface/revision';
+import type { RevisionVO } from 'interface/revision';
 
 import BaseService from './BaseService';
+import type { NoteBodyUpdatedEvent } from 'service/NoteService';
+import type { MemoContentUpdatedEvent } from 'service/MemoService';
 
-const entityToKey = ({ id, type }: EntityLocator) => `${type}-${id}`;
-const MAX_INTERVAL_MINUTES = 20;
-const NEW_ENTITY_DEBOUNCE_MINUTES = 5;
-const BIG_CHANGE_DEBOUNCE_MINUTES = 0.5;
+const MAX_INTERVAL_MINUTES = 1;
 
 export default class RevisionService extends BaseService {
-  private readonly tasks = {} as Record<EntityTypes, Record<EntityId, string>>;
-  private async submit(entity: EntityLocator, newContent: string, type: RevisionTypes) {
-    await this.revisions.create({ entityId: entity.id, entityType: entity.type, type, diff: '{}' });
-
-    if (this.tasks[entity.type][entity.id]) {
-      delete this.tasks[entity.type][entity.id];
-    }
+  private async submit(entity: EntityLocator, { newContent, oldContent }: { newContent: string; oldContent?: string }) {
+    const diff = createPatch(`${entity.type}-${entity.id}`, oldContent || '', newContent);
+    await this.revisions.create({ entityId: entity.id, entityType: entity.type, diff });
   }
 
-  async createRevision(entityLocator: EntityLocator, newContent: string) {
+  @OnEvent('updated.content.*')
+  async createRevision({ content, ...entityLocator }: NoteBodyUpdatedEvent | MemoContentUpdatedEvent, force?: true) {
     const latestRevision = await this.revisions.findLatest(entityLocator);
+    let shouldSubmit = force || entityLocator.type !== EntityTypes.Note;
 
-    if (latestRevision) {
-      const timeDiff = Date.now() - latestRevision.createdAt * 1000;
+    if (!shouldSubmit) {
+      const createdAt = latestRevision?.createdAt || (await this.getCreatedAt(entityLocator));
+      shouldSubmit ||= Date.now() - createdAt * 1000 >= MAX_INTERVAL_MINUTES * 60 * 1000;
+    }
 
-      if (timeDiff >= MAX_INTERVAL_MINUTES * 60 * 1000) {
-        this.submit(entityLocator, newContent, RevisionTypes.Regular);
-        const bigChangeDebounced = this.createBigChangeRevision.cache.get(entityToKey(entityLocator));
-
-        if (bigChangeDebounced) {
-          bigChangeDebounced.cancel();
-        }
-      } else if (this.isBigChange(newContent, latestRevision)) {
-        this.createBigChangeRevision(entityLocator)(newContent);
-      }
-
-      this.createInitialRevision.cache.delete(entityToKey(entityLocator));
-    } else {
-      this.createInitialRevision(entityLocator)(newContent);
+    if (shouldSubmit) {
+      const oldContent = latestRevision ? await this.getContentByRevision(latestRevision) : undefined;
+      await this.submit(entityLocator, { newContent: content, oldContent });
     }
   }
 
-  private readonly createInitialRevision = memoize((entityLocator: EntityLocator) => {
-    let timer: ReturnType<typeof setTimeout>;
+  private async getCreatedAt(entityLocator: EntityLocator) {
+    let entity: NoteVO | null;
 
-    return async (content: string) => {
-      clearTimeout(timer);
-
-      let entity: NoteVO | null;
-
-      switch (entityLocator.type) {
-        case EntityTypes.Note:
-          entity = await this.notes.findOneById(entityLocator.id);
-          break;
-        default:
-          throw new Error('unsupported type');
-      }
-
-      if (!entity) {
-        throw new Error('invalid entity');
-      }
-
-      if (Date.now() - entity.createdAt * 100 >= MAX_INTERVAL_MINUTES * 60 * 1000) {
-        this.submit(entityLocator, content, RevisionTypes.Regular);
-      } else {
-        this.addTask(entityLocator, content);
-        timer = setTimeout(async () => {
-          const latestRevision = await this.revisions.findLatest(entityLocator);
-
-          if (!latestRevision) {
-            this.submit(entityLocator, content, RevisionTypes.Regular);
-          }
-        }, NEW_ENTITY_DEBOUNCE_MINUTES * 60 * 1000);
-      }
-    };
-  }, entityToKey);
-
-  private readonly createBigChangeRevision = memoize((entity: EntityLocator) => {
-    return debounce((content: string) => {
-      this.submit(entity, content, RevisionTypes.BigChange);
-    }, BIG_CHANGE_DEBOUNCE_MINUTES * 60 * 1000);
-  }, entityToKey);
-
-  private isBigChange(newContent: string, latestRevision: RevisionVO) {
-    return true;
-  }
-
-  private addTask({ type, id }: EntityLocator, content: string) {
-    if (!this.tasks[type]) {
-      this.tasks[type] = {};
+    switch (entityLocator.type) {
+      case EntityTypes.Note:
+        entity = await this.notes.findOneById(entityLocator.id);
+        break;
+      default:
+        throw new Error('unsupported type');
     }
 
-    this.tasks[type][id] = content;
+    if (!entity) {
+      throw new Error('invalid entity');
+    }
+
+    return entity.createdAt;
+  }
+
+  private async getContentByRevision(revision: RevisionVO) {
+    const revisions = await this.revisions.findUtil(revision.id);
+
+    let result = '';
+    for (const { diff } of revisions) {
+      result = applyPatch(result, diff);
+    }
+
+    return result;
   }
 }

@@ -26,7 +26,7 @@ export interface Entity {
 }
 
 export default class NoteEditor extends EntityEditor<Entity> {
-  readonly entityType: EntityTypes = EntityTypes.Note;
+  readonly entityType = EntityTypes.Note;
   @observable.ref lintProblems: LintProblem[] = [];
   constructor(tile: Tile, noteId: NoteVO['id'], private readonly noteTree: NoteTree) {
     super(tile, noteId);

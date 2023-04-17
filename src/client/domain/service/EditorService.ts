@@ -9,7 +9,7 @@ import { EntityTypes, type EntityLocator } from 'interface/entity';
 import type { NoteBodyDTO, NoteBodyVO, NoteDTO, NoteVO } from 'interface/Note';
 
 import NoteEditor, { Events as NoteEditorEvents, type BodyEvent, type MetadataEvent } from 'model/note/Editor';
-import EntityEditor, { Events as EditorEvents } from 'model/abstract/Editor';
+import EntityEditor, { type EditableEntityLocator, Events as EditorEvents } from 'model/abstract/Editor';
 import Tile from 'model/workbench/Tile';
 import TileManager, { type TileSplitDirections } from 'model/workbench/TileManger';
 import NoteService, { NoteEvents } from 'service/NoteService';
@@ -43,7 +43,7 @@ export default class EditorService extends EventEmitter {
     return editor;
   }
 
-  private fetchEntity<T>({ id, type }: EntityLocator, fetch: () => Promise<T>): Promise<T> {
+  private fetchEntity<T>({ id, type }: EditableEntityLocator, fetch: () => Promise<T>): Promise<T> {
     const existedEditor = Array.from(this.editors[type]).find((editor) => editor.entityId === id);
 
     return new Promise((resolve) => {
