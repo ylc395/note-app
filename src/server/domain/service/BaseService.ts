@@ -70,4 +70,9 @@ export default class BaseService implements Repositories {
   get revisions() {
     return this.db.getRepository('revisions');
   }
+
+  @cache
+  get synchronization() {
+    return this.db.getRepository('synchronization');
+  }
 }

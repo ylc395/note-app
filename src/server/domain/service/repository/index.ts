@@ -5,6 +5,7 @@ import type { ResourceRepository } from './ResourceRepository';
 import type { MemoRepository } from './MemoRepository';
 import type { MaterialRepository } from './MaterialRepository';
 import type { RevisionRepository } from './RevisionRepository';
+import type { SynchronizationRepository } from './SynchronizationRepository';
 
 export default interface Repositories {
   notes: NoteRepository;
@@ -14,6 +15,7 @@ export default interface Repositories {
   memos: MemoRepository;
   materials: MaterialRepository;
   revisions: RevisionRepository;
+  synchronization: SynchronizationRepository;
 }
 
 const REPOSITORY_NAMES = [
@@ -24,6 +26,7 @@ const REPOSITORY_NAMES = [
   'memos',
   'materials',
   'revisions',
+  'synchronization',
 ] satisfies (keyof Repositories)[];
 
 export const isRepositoryName = function (key: string | symbol): key is keyof Repositories {

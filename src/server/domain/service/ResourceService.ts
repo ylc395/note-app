@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { parse as parseUrl } from 'node:url';
 import path from 'node:path';
-import { TextEncoder } from 'node:util';
 import fromParis from 'lodash/fromPairs';
 
-import { type ResourcesDTO, type ResourceUrl, isUrls } from 'interface/resource';
+import { type ResourcesDTO, isUrls } from 'interface/resource';
 import { Transaction } from 'infra/Database';
 import { appFileProtocol } from 'infra/electronProtocol';
 
