@@ -5,6 +5,7 @@ const schema = defineSchema({
   fields: {
     entityType: { type: 'integer', notNullable: true },
     entityId: { type: 'text', notNullable: true },
+    isHard: { type: 'integer', notNullable: true, defaultTo: 0 },
     deletedAt: { type: 'integer', notNullable: true, defaultTo: (knex) => knex.raw('(unixepoch())') },
   },
   restrictions: {

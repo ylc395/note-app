@@ -24,7 +24,7 @@ export default class SqliteRecyclableRepository extends BaseRepository<Row> impl
   }
 
   async isRecyclable({ id: entityId, type: entityType }: EntityLocator) {
-    const row = await this.knex<Row>(this.schema.tableName).where({ entityId, entityType }).first();
+    const row = await this.knex<Row>(this.schema.tableName).where({ entityId, entityType, isHard: 0 }).first();
     return Boolean(row);
   }
 
@@ -33,12 +33,19 @@ export default class SqliteRecyclableRepository extends BaseRepository<Row> impl
       return {};
     }
 
-    const rows = await this.knex<Row>(this.schema.tableName).whereIn('entityId', ids).andWhere('entityType', type);
+    const rows = await this.knex<Row>(this.schema.tableName)
+      .whereIn('entityId', ids)
+      .andWhere({ entityType: type, isHard: 0 });
     const index = buildIndex(rows, 'entityId');
 
     return zipObject(
       ids,
       ids.map((id) => Boolean(index[id])),
     );
+  }
+
+  async getHardDeletedRecordsSince(since: number) {
+    const rows = await this.knex<Row>(this.schema.tableName).where({ isHard: 1 }).andWhere('deletedAt', '>', since);
+    return rows.map((row) => ({ id: row.entityId, type: row.entityType, deletedAt: row.deletedAt }));
   }
 }
