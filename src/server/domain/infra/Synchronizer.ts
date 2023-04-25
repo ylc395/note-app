@@ -1,51 +1,14 @@
-// import { Inject } from '@nestjs/common';
-// import { token as dbToken, type Database } from './Database';
+import type { EntityLocator } from 'interface/entity';
 
-// interface File {
-//   path: string;
-// }
+export type Conflict = {
+  type: 'diff' | 'local-deleted' | 'remote-deleted';
+  entity: EntityLocator;
+};
 
-// enum Steps {
-//   FetchingRemote,
-//   UpdatingLocal,
-//   UpdatingRemote,
-// }
-
-// const LOCK_FILENAME = '.lock';
-
-// export default abstract class Synchronizer {
-//   readonly logs: string[] = [];
-//   protected abstract readonly basePath: string[];
-//   protected remoteFiles: File[] = [];
-//   protected abstract fetchRemote(): Promise<File[]>;
-//   protected abstract putFile(path: string, content: string): Promise<File>;
-//   protected abstract removeFile(path: string): Promise<void>;
-
-//   private isLocked() {
-//     return this.remoteFiles.some((file) => file.path === `/${LOCK_FILENAME}`);
-//   }
-
-//   private async putLock() {
-//     await this.putFile(
-//       `/${LOCK_FILENAME}`,
-//       JSON.stringify({ clientId: this.client.getClientId(), deviceName: this.client.getDeviceName() }),
-//     );
-//   }
-
-//   private async releaseLock() {
-//     await this.removeFile(`/${LOCK_FILENAME}`);
-//   }
-
-//   async start() {
-//     this.remoteFiles = await this.fetchRemote();
-
-//     if (this.isLocked()) {
-//       this.logs.push('其他客户端正在同步中，请在稍后点击重试');
-//       return;
-//     }
-
-//     await this.putLock();
-
-//     await this.releaseLock();
-//   }
-// }
+export interface Synchronizer {
+  putFile: (name: string, content: string) => Promise<void>;
+  getFile: (name: string) => Promise<string | null>;
+  removeFile: (name: string) => Promise<void>;
+  list: () => AsyncGenerator<string>;
+  empty: () => Promise<void>;
+}

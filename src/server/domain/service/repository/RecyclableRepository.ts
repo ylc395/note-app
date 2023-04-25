@@ -7,5 +7,5 @@ export interface RecyclablesRepository {
   put: (type: EntityTypes, ids: EntityId[]) => Promise<RecyclableRecord[]>;
   isRecyclable: (entity: EntityLocator) => Promise<boolean>;
   areRecyclable: (type: EntityTypes, ids: EntityLocator['id'][]) => Promise<Record<EntityLocator['id'], boolean>>;
-  getHardDeletedRecordsSince: (since: number) => Promise<DeletedRecord[]>;
+  getHardDeletedRecord: (entity: EntityLocator) => Promise<DeletedRecord | null>;
 }

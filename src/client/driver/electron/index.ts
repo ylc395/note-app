@@ -95,4 +95,8 @@ export default class ElectronClient extends EventEmitter implements AppClient {
   getDeviceName() {
     return hostname();
   }
+
+  getAppName() {
+    return APP_NAME;
+  }
 }

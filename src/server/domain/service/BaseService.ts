@@ -3,6 +3,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 
 import { token as databaseToken, type Database } from 'infra/Database';
 import { token as downloaderToken, type Downloader } from 'infra/Downloader';
+import { token as appClientToken, type AppClient } from 'infra/AppClient';
 import type Repositories from './repository';
 
 interface CachePropertyDescriptor<T, R> extends PropertyDescriptor {
@@ -33,6 +34,7 @@ export default class BaseService implements Repositories {
   constructor(
     @Inject(databaseToken) readonly db: Database,
     @Inject(downloaderToken) protected readonly downloader: Downloader,
+    @Inject(appClientToken) protected readonly appClient: AppClient,
     protected readonly eventEmitter: EventEmitter2,
   ) {}
 

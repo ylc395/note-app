@@ -1,221 +1,212 @@
 import { Injectable } from '@nestjs/common';
-import { object, string, type infer as Infer, number } from 'zod';
+import { object, type infer as Infer, number, string } from 'zod';
 import differenceWith from 'lodash/differenceWith';
 
-import { EntityTypes } from 'interface/entity';
+import { type EntityLocator, EntityTypes } from 'interface/entity';
+import type { Synchronizer, Conflict } from 'infra/Synchronizer';
 import BaseService from './BaseService';
-import type { EntityLocator } from 'interface/entity';
 
-export interface Synchronizer {
-  putFile: (name: string, content: string) => Promise<void>;
-  getFile: (name: string) => Promise<string | null>;
-  removeFile: (name: string) => Promise<void>;
-  list: () => AsyncGenerator<Entity>;
+const metaSchema = object({
+  startAt: number(),
+  finishAt: number().optional(),
+  machineName: string(),
+  appName: string(),
+});
+
+type Meta = Infer<typeof metaSchema>;
+
+interface Log {
+  type: 'error' | 'warning' | 'info';
+  msg: string;
+  timestamp: number;
 }
 
-interface Entity {
+export interface Entity {
   name: string;
   id: string;
-  syncId: string;
   type: EntityTypes;
   updatedAt: number;
   content: string;
 }
 
-type Conflict =
-  | {
-      type: 'diff';
-      remote: Entity;
-    }
-  | {
-      type: 'local-deleted';
-      remote: Entity;
-    }
-  | {
-      type: 'remote-deleted';
-      local: EntityLocator;
-    };
-
-const lockSchema = object({
-  appName: string(),
-  machineName: string(),
-});
-
-const metaSchema = object({
-  id: string(),
-  finishedAt: number(),
-});
-
 @Injectable()
 export default class SynchronizationService extends BaseService {
-  private synchronizer?: Synchronizer;
-  private status: 'idle' | 'conflict' | 'busy' = 'idle';
-  private readonly logs: { timestamp: number; message: string }[] = [];
-  private appendLog(message: string) {
-    this.logs.push({ message, timestamp: Date.now() });
+  private remote?: Synchronizer;
+  private isBusy = false;
+  private logs: Log[] = [];
+  private startAt?: number;
+  private conflicts: Conflict[] = [];
+  private deserialize(file: string) {
+    return {} as Entity;
   }
 
-  private conflicts: Conflict[] = [];
+  private serialize(entity: any) {
+    return '';
+  }
+
+  private createRemote() {
+    return {} as Synchronizer;
+  }
+
+  private addLog(type: Log['type'], msg: Log['msg']) {
+    this.logs.push({ type, msg, timestamp: Date.now() });
+  }
 
   async sync() {
-    if (!this.synchronizer) {
-      throw new Error('can not start');
-    }
-
-    if (this.status !== 'idle') {
+    if (this.isBusy) {
+      this.addLog('info', '正在同步中');
       return;
     }
 
-    this.status = 'busy';
+    this.isBusy = true;
+    this.remote = this.createRemote();
 
-    const lock = await this.getLock();
+    const remoteMeta = await this.getRemoteMeta();
 
-    if (lock) {
-      this.appendLog(`一次同步正在进行中（发生于${lock.machineName}上的${lock.appName}）`);
-      this.status = 'idle';
+    if (remoteMeta && !remoteMeta.finishAt) {
+      this.isBusy = false;
+      this.addLog('info', `${remoteMeta.machineName}上的${remoteMeta.appName}正在同步中`);
       return;
     }
 
-    await this.setLock();
-    const meta = await this.getMeta();
+    this.startAt = Date.now();
+    await this.putRemoteMeta(true);
 
-    if (meta !== null) {
-      await this.pull(meta);
-    }
+    if (!remoteMeta) {
+      await this.remote.empty();
+      await this.pushAll();
+    } else {
+      const lastSyncTime = await this.synchronization.getLastFinishedSyncTimestamp();
 
-    if (this.conflicts.length > 0) {
-      this.status = 'conflict';
-      return;
-    }
-
-    const syncId = await this.push();
-    await this.updateMeta(syncId);
-    await this.synchronization.updateLastFinishedSyncId(syncId);
-  }
-
-  private async pull(meta: Infer<typeof metaSchema>) {
-    if (!this.synchronizer) {
-      throw new Error('can not start');
-    }
-
-    if (meta.id === (await this.synchronization.getLastFinishedSyncId())) {
-      return;
-    }
-
-    const allRemoteEntities: Pick<Entity, 'id' | 'type'>[] = [];
-
-    for await (const entity of this.synchronizer.list()) {
-      allRemoteEntities.push({ id: entity.id, type: entity.type });
-      const has = await this.synchronization.hasEntitySyncRecord(entity.id, entity.syncId);
-
-      if (has) {
-        continue;
-      }
-
-      await this.patch(entity);
-    }
-
-    const allLocalEntities = await this.synchronization.getLocalEntities();
-    const deletedRemoteEntities = differenceWith(allLocalEntities, allRemoteEntities, (local, remote) => {
-      return local.id === remote.id && local.type === remote.type;
-    });
-
-    for (const entity of deletedRemoteEntities) {
-      this.conflicts.push({ local: entity, type: 'remote-deleted' });
-    }
-  }
-
-  private async patch(entity: Entity) {
-    const localEntity = await this.getLocalEntity(entity);
-
-    if (!localEntity) {
-      const deletedRecord = await this.recyclables.getHardDeletedRecord(entity);
-
-      if (deletedRecord && deletedRecord.deletedAt < entity.updatedAt) {
-        this.conflicts.push({ remote: entity, type: 'local-deleted' });
-      }
-
-      return await this.createLocalEntity(entity);
-    }
-
-    if (localEntity.updatedAt === entity.updatedAt) {
-      return;
-    }
-
-    if (localEntity.updatedAt > entity.updatedAt) {
-      this.conflicts.push({ remote: entity, type: 'diff' });
-    }
-
-    await this.updateLocalEntity(entity);
-  }
-
-  private createLocalEntity(entity: Entity) {}
-  private updateLocalEntity(entity: Entity) {}
-
-  private async getLocalEntity({ type, id }: Entity) {
-    if (type === EntityTypes.Note) {
-      const note = await this.notes.findOneById(id);
-      const noteBody = await this.notes.findBody(id);
-
-      if (note && typeof noteBody === 'string') {
-        return { ...note, body: noteBody };
+      if (remoteMeta.finishAt === lastSyncTime) {
+        await this.pushUpdatedSinceLastSync();
+      } else {
+        await this.process(remoteMeta as Required<Meta>);
       }
     }
 
-    if (type === EntityTypes.Memo) {
-      return await this.memos.findById(id);
-    }
-
-    return null;
+    this.isBusy = false;
   }
 
-  private async push() {
-    const syncId = '11111';
+  private async process(remoteMeta: Required<Meta>) {
+    if (!this.remote) {
+      throw new Error('no remote');
+    }
 
-    return syncId;
+    const remoteEntities: EntityLocator[] = [];
+
+    for await (const fileContent of this.remote.list()) {
+      const entity = this.deserialize(fileContent);
+      const entityLocator: EntityLocator = { type: entity.type, id: entity.id };
+      const localEntity = await this.getLocalEntity(entityLocator);
+
+      remoteEntities.push(entityLocator);
+
+      if (localEntity) {
+        const localSyncAt = (await this.synchronization.getEntitySyncAt(entityLocator)) || 0;
+
+        if (localEntity.updatedAt > localSyncAt) {
+          // 本地需要推送到远程了
+          if (entity.updatedAt > localSyncAt) {
+            // 若远程的版本更新于本机的上次同步之后，说明本地和远程存在冲突
+            this.conflicts.push({ type: 'diff', entity: entityLocator });
+          } else {
+            await this.uploadEntity(entityLocator);
+          }
+        } else {
+          await this.downloadEntity(entityLocator);
+        }
+      } else {
+        const deletedRecord = await this.recyclables.getHardDeletedRecord(entityLocator);
+
+        if (!deletedRecord) {
+          await this.createLocalEntity(entityLocator);
+        } else if (deletedRecord.deletedAt > entity.updatedAt) {
+          await this.remote.removeFile(entity.id);
+        } else {
+          this.conflicts.push({ type: 'local-deleted', entity: entityLocator });
+        }
+      }
+    }
+
+    // 处理本地存在，远程却不存在的情况：
+    const localEntities = await this.synchronization.getLocalEntities();
+    const localOnlyEntities = differenceWith(
+      localEntities,
+      remoteEntities,
+      (localEntity, remoteEntity) => localEntity.type === remoteEntity.type && localEntity.id === remoteEntity.id,
+    );
+
+    for (const entity of localOnlyEntities) {
+      if (entity.createdAt > remoteMeta.finishAt) {
+        const localEntity = await this.getLocalEntity(entity);
+        await this.remote.putFile(entity.id, this.serialize(localEntity));
+      } else if (entity.updatedAt < remoteMeta.finishAt) {
+        await this.removeEntity(entity);
+      } else {
+        this.conflicts.push({ type: 'remote-deleted', entity });
+      }
+    }
   }
 
-  private updateMeta(syncId: string) {}
-  private async getMeta() {
-    if (!this.synchronizer) {
-      throw new Error('can not start');
-    }
-
-    const content = (await this.synchronizer.getFile('.meta')) || '{}';
-    const lock = JSON.parse(content);
-
-    if (lockSchema.safeParse(metaSchema).success) {
-      return lock as Infer<typeof metaSchema>;
-    }
-
-    return null;
+  private uploadEntity(entity: EntityLocator) {
+    return;
   }
 
-  private async getLock() {
-    if (!this.synchronizer) {
-      throw new Error('can not start');
-    }
-
-    const content = (await this.synchronizer.getFile('.lock')) || '{}';
-    const lock = JSON.parse(content);
-
-    if (lockSchema.safeParse(lock).success) {
-      return lock as Infer<typeof lockSchema>;
-    }
-
-    return null;
+  private removeEntity(entity: EntityLocator) {
+    return;
   }
 
-  private async setLock() {
-    if (!this.synchronizer) {
-      throw new Error('can not start');
+  private downloadEntity(entity: EntityLocator) {
+    return;
+  }
+
+  private async createLocalEntity(locator: EntityLocator) {
+    return;
+  }
+
+  private getLocalEntity({ type, id }: EntityLocator) {
+    switch (type) {
+      case EntityTypes.Note:
+        return this.notes.findOneById(id);
+      case EntityTypes.Memo:
+        return this.memos.findById(id);
+      default:
+        throw new Error('unsupported type');
+    }
+  }
+
+  private pushAll() {
+    return;
+  }
+
+  private pushUpdatedSinceLastSync() {
+    return;
+  }
+
+  private async getRemoteMeta() {
+    if (!this.remote) {
+      throw new Error('no remote');
     }
 
-    const lock: Infer<typeof lockSchema> = {
-      appName: 'desktop',
-      machineName: 'test',
+    const file = await this.remote.getFile('.meta');
+    const meta = file ? JSON.parse(file) : {};
+
+    return metaSchema.safeParse(meta).success ? (meta as Meta) : null;
+  }
+
+  private putRemoteMeta(isLock: boolean) {
+    if (!this.remote || !this.startAt) {
+      throw new Error('no remote');
+    }
+
+    const meta: Meta = {
+      startAt: this.startAt,
+      machineName: this.appClient.getDeviceName(),
+      appName: this.appClient.getAppName(),
+      finishAt: isLock ? undefined : Date.now(),
     };
 
-    await this.synchronizer.putFile('.lock', JSON.stringify(lock));
+    this.remote.putFile('.meta', JSON.stringify(meta));
   }
 }

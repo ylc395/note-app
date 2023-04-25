@@ -4,6 +4,7 @@ export interface AppClient extends EventEmitter {
   start: () => Promise<void>;
   getConfigDir: () => string;
   getDeviceName: () => string;
+  getAppName: () => string;
 }
 
 export enum Events {

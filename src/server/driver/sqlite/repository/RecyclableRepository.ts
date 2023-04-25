@@ -44,8 +44,8 @@ export default class SqliteRecyclableRepository extends BaseRepository<Row> impl
     );
   }
 
-  async getHardDeletedRecordsSince(since: number) {
-    const rows = await this.knex<Row>(this.schema.tableName).where({ isHard: 1 }).andWhere('deletedAt', '>', since);
-    return rows.map((row) => ({ id: row.entityId, type: row.entityType, deletedAt: row.deletedAt }));
+  async getHardDeletedRecord({ id: entityId, type: entityType }: EntityLocator) {
+    const row = await this.knex<Row>(this.schema.tableName).where({ isHard: 1, entityType, entityId }).first();
+    return row ? { id: row.entityId, type: row.entityType, deletedAt: row.deletedAt } : null;
   }
 }
