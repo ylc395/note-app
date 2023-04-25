@@ -3,15 +3,13 @@ import camelCase from 'lodash/camelCase';
 import snakeCase from 'lodash/snakeCase';
 import mapKeys from 'lodash/mapKeys';
 import { join } from 'path';
-import { randomUUID } from 'crypto';
 
 import type { Database, Transaction } from 'infra/Database';
 import type Repository from 'service/repository';
 
 import * as schemas from './schema';
-import type { Schema } from './schema/type';
-import type { Row as KvRow } from './schema/kv';
 import * as repositories from './repository';
+import type { Schema } from './schema/type';
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 
@@ -20,19 +18,6 @@ export default class SqliteDb implements Database {
 
   async createTransaction() {
     return await this.knex.transaction();
-  }
-
-  async getDbId() {
-    const KEY = 'db_id';
-    const row = await this.knex(schemas.kvSchema.tableName).first<KvRow>().where('key', KEY);
-
-    if (row) {
-      return row.value;
-    }
-
-    const id = randomUUID();
-    await this.knex(schemas.kvSchema.tableName).insert({ key: KEY, value: id });
-    return id;
   }
 
   getRepository<T extends keyof Repository>(name: T) {

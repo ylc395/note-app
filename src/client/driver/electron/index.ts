@@ -99,4 +99,16 @@ export default class ElectronClient extends EventEmitter implements AppClient {
   getAppName() {
     return APP_NAME;
   }
+
+  pushMessage<T>(channel: string, payload: T) {
+    if (!this.mainWindow) {
+      throw new Error('no window');
+    }
+
+    this.mainWindow.webContents.send(channel, payload);
+  }
+
+  getDeviceId() {
+    return '';
+  }
 }

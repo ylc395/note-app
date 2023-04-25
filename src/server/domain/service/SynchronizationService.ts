@@ -3,23 +3,20 @@ import { object, type infer as Infer, number, string } from 'zod';
 import differenceWith from 'lodash/differenceWith';
 
 import { type EntityLocator, EntityTypes } from 'interface/entity';
-import type { Synchronizer, Conflict } from 'infra/Synchronizer';
+import type { Synchronizer, Conflict, Log } from 'infra/Synchronizer';
+import FsSynchronizer from 'service/synchronizer/fs';
+
 import BaseService from './BaseService';
 
 const metaSchema = object({
   startAt: number(),
   finishAt: number().optional(),
-  machineName: string(),
+  deviceId: string(),
+  deviceName: string(),
   appName: string(),
 });
 
 type Meta = Infer<typeof metaSchema>;
-
-interface Log {
-  type: 'error' | 'warning' | 'info';
-  msg: string;
-  timestamp: number;
-}
 
 export interface Entity {
   name: string;
@@ -45,7 +42,7 @@ export default class SynchronizationService extends BaseService {
   }
 
   private createRemote() {
-    return {} as Synchronizer;
+    return new FsSynchronizer('');
   }
 
   private addLog(type: Log['type'], msg: Log['msg']) {
@@ -63,14 +60,18 @@ export default class SynchronizationService extends BaseService {
 
     const remoteMeta = await this.getRemoteMeta();
 
-    if (remoteMeta && !remoteMeta.finishAt) {
+    if (
+      remoteMeta &&
+      !remoteMeta.finishAt &&
+      (remoteMeta.deviceId !== this.appClient.getDeviceName() || remoteMeta.appName !== this.appClient.getAppName())
+    ) {
       this.isBusy = false;
-      this.addLog('info', `${remoteMeta.machineName}上的${remoteMeta.appName}正在同步中`);
+      this.addLog('info', `${remoteMeta.deviceId}上的${remoteMeta.appName}正在同步中`);
       return;
     }
 
     this.startAt = Date.now();
-    await this.putRemoteMeta(true);
+    await this.putRemoteMeta();
 
     if (!remoteMeta) {
       await this.remote.empty();
@@ -81,14 +82,16 @@ export default class SynchronizationService extends BaseService {
       if (remoteMeta.finishAt === lastSyncTime) {
         await this.pushUpdatedSinceLastSync();
       } else {
-        await this.process(remoteMeta as Required<Meta>);
+        await this.process(remoteMeta);
       }
     }
 
+    const finishAt = await this.synchronization.updateLastFinishedSyncTimestamp();
+    await this.putRemoteMeta(finishAt);
     this.isBusy = false;
   }
 
-  private async process(remoteMeta: Required<Meta>) {
+  private async process(remoteMeta: Meta) {
     if (!this.remote) {
       throw new Error('no remote');
     }
@@ -138,7 +141,7 @@ export default class SynchronizationService extends BaseService {
     );
 
     for (const entity of localOnlyEntities) {
-      if (entity.createdAt > remoteMeta.finishAt) {
+      if (!remoteMeta.finishAt || entity.createdAt > remoteMeta.startAt) {
         const localEntity = await this.getLocalEntity(entity);
         await this.remote.putFile(entity.id, this.serialize(localEntity));
       } else if (entity.updatedAt < remoteMeta.finishAt) {
@@ -176,8 +179,12 @@ export default class SynchronizationService extends BaseService {
     }
   }
 
-  private pushAll() {
-    return;
+  private async pushAll() {
+    const localEntities = await this.synchronization.getLocalEntities();
+
+    for (const entity of localEntities) {
+      await this.uploadEntity(entity);
+    }
   }
 
   private pushUpdatedSinceLastSync() {
@@ -195,18 +202,19 @@ export default class SynchronizationService extends BaseService {
     return metaSchema.safeParse(meta).success ? (meta as Meta) : null;
   }
 
-  private putRemoteMeta(isLock: boolean) {
+  private async putRemoteMeta(finishAt?: number) {
     if (!this.remote || !this.startAt) {
       throw new Error('no remote');
     }
 
     const meta: Meta = {
       startAt: this.startAt,
-      machineName: this.appClient.getDeviceName(),
+      deviceName: this.appClient.getDeviceName(),
+      deviceId: this.appClient.getDeviceId(),
       appName: this.appClient.getAppName(),
-      finishAt: isLock ? undefined : Date.now(),
+      finishAt,
     };
 
-    this.remote.putFile('.meta', JSON.stringify(meta));
+    await this.remote.putFile('.meta', JSON.stringify(meta));
   }
 }

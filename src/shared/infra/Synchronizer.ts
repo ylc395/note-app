@@ -12,3 +12,11 @@ export interface Synchronizer {
   list: () => AsyncGenerator<string>;
   empty: () => Promise<void>;
 }
+
+export const CHANNEL = 'synchronizer-log-update';
+
+export interface Log {
+  type: 'error' | 'warning' | 'info';
+  msg: string;
+  timestamp: number;
+}
