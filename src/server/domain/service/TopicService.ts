@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 
-import { extension, mdastExtension } from 'markdown/topic';
+import { extension, mdastExtension } from 'infra/markdown/topic';
 import { events as noteEvents, type NoteBodyUpdatedEvent } from './NoteService';
 
 @Injectable()
