@@ -1,10 +1,10 @@
-import type { EventEmitter } from 'eventemitter3';
+import type { EventEmitter } from 'node:events';
 
 export interface AppClient extends EventEmitter {
   start: () => Promise<void>;
   getConfigDir: () => string;
   getDeviceName: () => string;
-  getDeviceId: () => string;
+  getAppId: () => string;
   getAppName: () => string;
   pushMessage: <T>(channel: string, payload: T) => void;
 }

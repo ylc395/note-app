@@ -1,7 +1,7 @@
 import omit from 'lodash/omit';
 import groupBy from 'lodash/groupBy';
 
-import type { MemoDTO, MemoPatchDTO, MemoQuery, ParentMemoVO, ChildMemoVO } from 'interface/memo';
+import type { MemoDTO, MemoPatchDTO, MemoQuery, ParentMemoVO, ChildMemoVO, MemoVO } from 'interface/memo';
 import type { MemoRepository } from 'service/repository/MemoRepository';
 
 import BaseRepository from './BaseRepository';
@@ -26,12 +26,7 @@ export default class SqliteMemoRepository extends BaseRepository<Row> implements
       return null;
     }
 
-    if (updatedRow.parentId) {
-      const children = await this.findChildren(updatedRow.id);
-      return SqliteMemoRepository.rowToVO(updatedRow, children);
-    } else {
-      return SqliteMemoRepository.rowToVO(updatedRow);
-    }
+    return await this.findOneById(updatedRow.id);
   }
 
   async list(query: MemoQuery) {
@@ -76,6 +71,21 @@ export default class SqliteMemoRepository extends BaseRepository<Row> implements
 
     const children = await this.findChildren(String(parent.id));
     return SqliteMemoRepository.rowToVO(parent, children);
+  }
+
+  async findOneById(id: MemoVO['id']) {
+    const row = await this.knex<Row>(this.schema.tableName).where('id', id).first();
+
+    if (!row) {
+      return null;
+    }
+
+    if (row.parentId) {
+      const children = await this.findChildren(row.id);
+      return SqliteMemoRepository.rowToVO(row, children);
+    } else {
+      return SqliteMemoRepository.rowToVO(row);
+    }
   }
 
   private static rowToVO(row: Row): ChildMemoVO;

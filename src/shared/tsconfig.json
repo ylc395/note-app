@@ -3,6 +3,7 @@
   "include": ["./**/*"],
   "compilerOptions": {
     "lib": ["ESNext"],
+    "types": ["node"],
     "composite": true,
     "module": "CommonJS",
     "baseUrl": ".",

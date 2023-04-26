@@ -5,5 +5,5 @@ export interface MemoRepository {
   update: (id: ParentMemoVO['id'], patch: MemoPatchDTO) => Promise<MemoVO | null>;
   list: (query: MemoQuery) => Promise<PaginationMemeVO>;
   findParent: (id: ParentMemoVO['id']) => Promise<ParentMemoVO | null>;
-  findById: (id: MemoVO['id']) => Promise<MemoVO | null>;
+  findOneById: (id: MemoVO['id']) => Promise<MemoVO | null>;
 }

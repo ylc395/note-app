@@ -1,11 +1,13 @@
 import { app as electronApp, BrowserWindow, ipcMain } from 'electron';
-import { join } from 'path';
-import { hostname } from 'os';
-import EventEmitter from 'eventemitter3';
+import { randomUUID } from 'node:crypto';
+import { join } from 'node:path';
+import { hostname } from 'node:os';
+import EventEmitter from 'node:events';
 import { ensureDirSync, emptyDirSync } from 'fs-extra';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 
 import { type AppClient, Events as AppClientEvents } from 'infra/AppClient';
+import { load } from 'shared/driver/sqlite/kv';
 
 import { CONTEXTMENU_CHANNEL, createContextmenu } from './contextmenu';
 
@@ -15,6 +17,7 @@ const NEED_CLEAN = process.env.DEV_CLEAN === '1';
 
 export default class ElectronClient extends EventEmitter implements AppClient {
   private mainWindow?: BrowserWindow;
+  private appId?: string;
 
   constructor() {
     super();
@@ -65,7 +68,9 @@ export default class ElectronClient extends EventEmitter implements AppClient {
     }
 
     this.emit(AppClientEvents.Ready);
+
     await this.initWindow();
+    await this.initAppId();
   }
 
   readonly getConfigDir = () => {
@@ -92,6 +97,11 @@ export default class ElectronClient extends EventEmitter implements AppClient {
     }
   }
 
+  private async initAppId() {
+    const key = 'app.desktop.id';
+    this.appId = await load(key, randomUUID);
+  }
+
   getDeviceName() {
     return hostname();
   }
@@ -108,7 +118,11 @@ export default class ElectronClient extends EventEmitter implements AppClient {
     this.mainWindow.webContents.send(channel, payload);
   }
 
-  getDeviceId() {
-    return '';
+  getAppId() {
+    if (!this.appId) {
+      throw new Error('no app id');
+    }
+
+    return this.appId;
   }
 }

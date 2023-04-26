@@ -173,7 +173,7 @@ export default class SynchronizationService extends BaseService {
       case EntityTypes.Note:
         return this.notes.findOneById(id);
       case EntityTypes.Memo:
-        return this.memos.findById(id);
+        return this.memos.findOneById(id);
       default:
         throw new Error('unsupported type');
     }
@@ -210,7 +210,7 @@ export default class SynchronizationService extends BaseService {
     const meta: Meta = {
       startAt: this.startAt,
       deviceName: this.appClient.getDeviceName(),
-      deviceId: this.appClient.getDeviceId(),
+      deviceId: this.appClient.getAppId(),
       appName: this.appClient.getAppName(),
       finishAt,
     };

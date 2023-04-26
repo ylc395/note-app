@@ -1,8 +1,5 @@
-import knex, { type Knex } from 'knex';
-import camelCase from 'lodash/camelCase';
+import type { Knex } from 'knex';
 import snakeCase from 'lodash/snakeCase';
-import mapKeys from 'lodash/mapKeys';
-import { join } from 'path';
 
 import type { Database, Transaction } from 'infra/Database';
 import type Repository from 'service/repository';
@@ -10,8 +7,7 @@ import type Repository from 'service/repository';
 import * as schemas from './schema';
 import * as repositories from './repository';
 import type { Schema } from './schema/type';
-
-const isDevelopment = process.env.NODE_ENV === 'development';
+import { createDb } from 'shared/driver/sqlite';
 
 export default class SqliteDb implements Database {
   private knex!: Knex;
@@ -29,30 +25,9 @@ export default class SqliteDb implements Database {
   }
 
   async init(dir: string) {
-    this.knex = knex({
-      client: 'sqlite3',
-      connection: join(dir, 'db.sqlite'),
-      debug: isDevelopment,
-      postProcessResponse: this.transformKeys,
-      useNullAsDefault: true,
-      wrapIdentifier: (value, originImpl) => originImpl(snakeCase(value)),
-    });
-
+    this.knex = createDb(dir);
     await this.createTables();
-    // await this.emptyTempFiles();
   }
-
-  private transformKeys = (result: unknown): unknown => {
-    if (typeof result !== 'object' || result instanceof Date || result === null) {
-      return result;
-    }
-
-    if (Array.isArray(result)) {
-      return result.map(this.transformKeys);
-    }
-
-    return mapKeys(result, (_, key) => camelCase(key));
-  };
 
   private async createTables() {
     const _schemas: Schema[] = Object.values(schemas);
