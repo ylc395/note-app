@@ -54,7 +54,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
     return noteBody;
   }
 
-  async findAll(query: NoteQuery) {
+  async findAll(query?: NoteQuery) {
     const {
       knex,
       schema: { tableName: noteTable },
@@ -74,7 +74,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
       })
       .groupBy('parent.id');
 
-    for (const [k, v] of Object.entries(query)) {
+    for (const [k, v] of Object.entries(query || {})) {
       if (v === undefined) {
         continue;
       }
@@ -201,5 +201,11 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
     const note = await this.findAll({ id: [id] });
 
     return note[0] || null;
+  }
+
+  async removeById(noteId: NoteVO['id'] | NoteVO['id'][]) {
+    await this.knex<Row>(this.schema.tableName)
+      .delete()
+      .where('id', typeof noteId === 'string' ? '=' : 'in', noteId);
   }
 }

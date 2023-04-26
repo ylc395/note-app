@@ -25,8 +25,4 @@ export default class SqliteSynchronizationRepository extends BaseRepository<Row>
 
     return syncTime;
   }
-
-  async getLocalEntities() {
-    return [];
-  }
 }

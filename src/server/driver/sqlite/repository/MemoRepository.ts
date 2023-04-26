@@ -102,4 +102,16 @@ export default class SqliteMemoRepository extends BaseRepository<Row> implements
         : null),
     };
   }
+
+  async findAll() {
+    const rows = await this.knex<Row>(this.schema.tableName).select();
+
+    return rows.map((row) =>
+      row.parentId ? SqliteMemoRepository.rowToVO(row, []) : SqliteMemoRepository.rowToVO(row),
+    );
+  }
+
+  async removeById(id: MemoVO['id']) {
+    await this.knex<Row>(this.schema.tableName).delete().where('id', id);
+  }
 }

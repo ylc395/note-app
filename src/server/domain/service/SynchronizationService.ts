@@ -133,7 +133,7 @@ export default class SynchronizationService extends BaseService {
     }
 
     // 处理本地存在，远程却不存在的情况：
-    const localEntities = await this.synchronization.getLocalEntities();
+    const localEntities = await this.getLocalEntities();
     const localOnlyEntities = differenceWith(
       localEntities,
       remoteEntities,
@@ -145,7 +145,7 @@ export default class SynchronizationService extends BaseService {
         const localEntity = await this.getLocalEntity(entity);
         await this.remote.putFile(entity.id, this.serialize(localEntity));
       } else if (entity.updatedAt < remoteMeta.finishAt) {
-        await this.removeEntity(entity);
+        await this.removeLocalEntity(entity);
       } else {
         this.conflicts.push({ type: 'remote-deleted', entity });
       }
@@ -156,7 +156,15 @@ export default class SynchronizationService extends BaseService {
     return;
   }
 
-  private removeEntity(entity: EntityLocator) {
+  private async removeLocalEntity({ id, type }: EntityLocator) {
+    switch (type) {
+      case EntityTypes.Note:
+        return await this.notes.removeById(id);
+      case EntityTypes.Memo:
+        return await this.memos.removeById(id);
+      default:
+        break;
+    }
     return;
   }
 
@@ -180,7 +188,7 @@ export default class SynchronizationService extends BaseService {
   }
 
   private async pushAll() {
-    const localEntities = await this.synchronization.getLocalEntities();
+    const localEntities = await this.getLocalEntities();
 
     for (const entity of localEntities) {
       await this.uploadEntity(entity);
@@ -216,5 +224,15 @@ export default class SynchronizationService extends BaseService {
     };
 
     await this.remote.putFile('.meta', JSON.stringify(meta));
+  }
+
+  private async getLocalEntities() {
+    const notes = await this.notes.findAll();
+    const memos = await this.memos.findAll();
+
+    return [
+      ...notes.map(({ id, createdAt, updatedAt }) => ({ id, type: EntityTypes.Note, createdAt, updatedAt })),
+      ...memos.map(({ id, createdAt, updatedAt }) => ({ id, createdAt, updatedAt, type: EntityTypes.Memo })),
+    ];
   }
 }

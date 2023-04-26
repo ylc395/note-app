@@ -10,10 +10,11 @@ export interface NoteRepository {
   update: (noteId: NoteVO['id'], note: NoteDTO) => Promise<NoteVO | null>;
   batchUpdate: (notes: NotesDTO) => Promise<NoteVO[]>;
   updateBody: (noteId: NoteVO['id'], noteBody: NoteBodyDTO['content']) => Promise<NoteBodyVO | null>;
-  findAll: (query: NoteQuery) => Promise<NoteVO[]>;
+  findAll: (query?: NoteQuery) => Promise<NoteVO[]>;
   findBody: (noteId: NoteVO['id']) => Promise<NoteBodyVO | null>;
   findAllDescendantIds: (noteIds: NoteVO['id'][]) => Promise<NoteVO['id'][]>;
   findTreeFragment: (noteId: NoteVO['id']) => Promise<NoteVO[]>;
   findAttributes: () => Promise<NoteAttributesVO>;
   findOneById: (id: NoteVO['id']) => Promise<NoteVO | null>;
+  removeById: (noteId: NoteVO['id'] | NoteVO['id'][]) => Promise<void>;
 }

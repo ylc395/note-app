@@ -6,4 +6,6 @@ export interface MemoRepository {
   list: (query: MemoQuery) => Promise<PaginationMemeVO>;
   findParent: (id: ParentMemoVO['id']) => Promise<ParentMemoVO | null>;
   findOneById: (id: MemoVO['id']) => Promise<MemoVO | null>;
+  findAll: () => Promise<MemoVO[]>;
+  removeById: (id: MemoVO['id']) => Promise<void>;
 }
