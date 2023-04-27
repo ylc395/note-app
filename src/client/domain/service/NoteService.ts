@@ -95,7 +95,7 @@ export default class NoteService extends EventEmitter {
 
     const targetNode = targetId ? this.noteTree.getNode(targetId, true) : undefined;
 
-    if (targetId && !targetNode) {
+    if (targetId && (!targetNode || !targetNode.isLoaded)) {
       this.noteTree.removeNodes(_ids);
     } else {
       for (const note of updatedNotes) {

@@ -295,6 +295,7 @@ export abstract class Tree<T extends TreeNodeEntity> {
     }
 
     Object.assign(node, this.entityToNode(entity));
+    node.entity = entity;
 
     return node;
   }
