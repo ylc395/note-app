@@ -13,7 +13,7 @@ import BaseService from './BaseService';
 const metaSchema = object({
   startAt: number(),
   finishAt: number().optional(),
-  deviceId: string(),
+  appId: string(),
   deviceName: string(),
   appName: string(),
 });
@@ -59,18 +59,14 @@ export default class SynchronizationService extends BaseService {
 
     const remoteMeta = await this.getRemoteMeta();
 
-    if (
-      remoteMeta &&
-      !remoteMeta.finishAt &&
-      (remoteMeta.deviceId !== this.appClient.getDeviceName() || remoteMeta.appName !== this.appClient.getAppName())
-    ) {
+    if (remoteMeta && !remoteMeta.finishAt && remoteMeta.appId !== this.appClient.getAppId()) {
       this.isBusy = false;
-      this.addLog('info', `${remoteMeta.deviceId}上的${remoteMeta.appName}正在同步中`);
+      this.addLog('info', `${remoteMeta.appId}上的${remoteMeta.appName}正在同步中`);
       return;
     }
 
     this.startAt = Date.now();
-    await this.putRemoteMeta();
+    await this.updateRemoteMeta();
 
     if (!remoteMeta) {
       await this.syncTarget.empty();
@@ -86,7 +82,7 @@ export default class SynchronizationService extends BaseService {
     }
 
     const finishAt = await this.synchronization.updateLastFinishedSyncTimestamp();
-    await this.putRemoteMeta(finishAt);
+    await this.updateRemoteMeta(finishAt);
     this.isBusy = false;
   }
 
@@ -229,7 +225,7 @@ export default class SynchronizationService extends BaseService {
     return metaSchema.safeParse(meta).success ? (meta as Meta) : null;
   }
 
-  private async putRemoteMeta(finishAt?: number) {
+  private async updateRemoteMeta(finishAt?: number) {
     if (!this.syncTarget || !this.startAt) {
       throw new Error('no remote');
     }
@@ -237,7 +233,7 @@ export default class SynchronizationService extends BaseService {
     const meta: Meta = {
       startAt: this.startAt,
       deviceName: this.appClient.getDeviceName(),
-      deviceId: this.appClient.getAppId(),
+      appId: this.appClient.getAppId(),
       appName: this.appClient.getAppName(),
       finishAt,
     };
