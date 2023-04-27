@@ -60,6 +60,7 @@
     "@milkdown/prose": "^7.2.1",
     "@milkdown/transformer": "^7.2.1",
     "@milkdown/utils": "^7.2.1",
+    "@mokuteki/propagated-transactions": "^1.0.6",
     "@nestjs/common": "^9.3.2",
     "@nestjs/core": "^9.3.2",
     "@nestjs/event-emitter": "^1.4.1",

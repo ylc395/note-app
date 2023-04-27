@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { Transaction } from 'infra/Database';
 
 import type { MemoDTO, MemoPatchDTO, MemoQuery, MemoVO, ParentMemoVO } from 'interface/memo';
 
@@ -17,7 +16,6 @@ export interface MemoContentUpdatedEvent {
 }
 @Injectable()
 export default class MemoService extends BaseService {
-  @Transaction
   async create(memo: MemoDTO) {
     if (memo.parentId && memo.isPinned) {
       throw new Error('can not pin child memo');
@@ -34,7 +32,6 @@ export default class MemoService extends BaseService {
     return newMemo;
   }
 
-  @Transaction
   async update(id: ParentMemoVO['id'], patch: MemoPatchDTO) {
     if ((await this.memos.findParent(id)) && patch.isPinned) {
       throw new Error('can not pin child memo');

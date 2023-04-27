@@ -1,7 +1,8 @@
 import type { Knex } from 'knex';
 import snakeCase from 'lodash/snakeCase';
+import { PropagatedTransaction } from '@mokuteki/propagated-transactions';
 
-import type { Database, Transaction } from 'infra/Database';
+import type { Database } from 'infra/Database';
 import type Repository from 'service/repository';
 
 import * as schemas from './schema';
@@ -12,16 +13,23 @@ import { createDb } from 'shared/driver/sqlite';
 export default class SqliteDb implements Database {
   private knex!: Knex;
 
-  async createTransaction() {
-    return await this.knex.transaction();
-  }
+  transactionManager = new PropagatedTransaction({
+    start: async () => {
+      const trx = await this.knex.transaction();
+      return trx;
+    },
+    commit: async (trx) => {
+      await trx.commit();
+    },
+
+    rollback: async (trx) => {
+      await trx.rollback();
+    },
+  });
 
   getRepository<T extends keyof Repository>(name: T) {
-    return new repositories[name](this.knex) as unknown as Repository[T];
-  }
-
-  getRepositoryWithTransaction<T extends keyof Repository>(trx: Transaction, name: T) {
-    return new repositories[name](trx as Knex.Transaction) as unknown as Repository[T];
+    const knex = this.transactionManager.connection || this.knex;
+    return new repositories[name](knex) as unknown as Repository[T];
   }
 
   async init(dir: string) {
@@ -77,8 +85,4 @@ export default class SqliteDb implements Database {
       }
     }
   };
-
-  // private async emptyTempFiles() {
-  //   await this.knex<FileRow>(fileSchema.tableName).where('isTemp', 1).delete();
-  // }
 }

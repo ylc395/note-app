@@ -1,7 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common';
 
 import { EntityId, EntityTypes } from 'interface/entity';
-import { Transaction } from 'infra/Database';
 import BaseService from './BaseService';
 import NoteService from './NoteService';
 
@@ -9,7 +8,6 @@ import NoteService from './NoteService';
 export default class RecyclableService extends BaseService {
   @Inject() private readonly noteService!: NoteService;
 
-  @Transaction
   async putNotes(ids: EntityId[]) {
     const allIds = [...ids, ...(await this.notes.findAllDescendantIds(ids))];
     const areAvailable = await this.noteService.areAvailable(allIds);

@@ -4,7 +4,6 @@ import path from 'node:path';
 import fromParis from 'lodash/fromPairs';
 
 import { type ResourcesDTO, isUrls } from 'interface/resource';
-import { Transaction } from 'infra/Database';
 import { appFileProtocol } from 'infra/electronProtocol';
 
 import { buildIndex } from 'utils/collection';
@@ -13,7 +12,6 @@ import BaseService from './BaseService';
 
 @Injectable()
 export default class ResourceService extends BaseService {
-  @Transaction
   async handleUpload(files: ResourcesDTO['files']) {
     if (isUrls(files)) {
       const existedFiles = buildIndex(await this.resources.findAll({ sourceUrl: files }), 'sourceUrl');

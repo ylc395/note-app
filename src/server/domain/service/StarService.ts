@@ -3,7 +3,6 @@ import differenceWith from 'lodash/differenceWith';
 import groupBy from 'lodash/groupBy';
 import mapValues from 'lodash/mapValues';
 
-import { Transaction } from 'infra/Database';
 import { type EntityId, EntityTypes } from 'interface/entity';
 import { normalizeTitle } from 'interface/note';
 import type { StarRecord } from 'interface/star';
@@ -16,7 +15,6 @@ import NoteService from './NoteService';
 export default class StarService extends BaseService {
   @Inject() private readonly noteService!: NoteService;
 
-  @Transaction
   async create(type: EntityTypes, ids: EntityId[]) {
     if (ids.length === 0) {
       throw new Error('no ids');

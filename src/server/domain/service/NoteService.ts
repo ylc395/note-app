@@ -3,7 +3,6 @@ import omit from 'lodash/omit';
 import groupBy from 'lodash/groupBy';
 import intersection from 'lodash/intersection';
 
-import { Transaction } from 'infra/Database';
 import { buildIndex } from 'utils/collection';
 import {
   type NoteVO,
@@ -33,17 +32,18 @@ export interface NoteBodyUpdatedEvent {
 export default class NoteService extends BaseService {
   @Inject() private readonly revisionService!: RevisionService;
 
-  @Transaction
   async create(note: NoteDTO) {
-    if (note.parentId && !(await this.areAvailable(note.parentId))) {
-      throw new Error('invalid parentId');
-    }
+    return await this.transaction(async () => {
+      if (note.parentId && !(await this.areAvailable(note.parentId))) {
+        throw new Error('invalid parentId');
+      }
 
-    if (note.duplicateFrom) {
-      return await this.duplicate(note.duplicateFrom);
-    }
+      if (note.duplicateFrom) {
+        return await this.duplicate(note.duplicateFrom);
+      }
 
-    return await this.notes.create(note);
+      return await this.notes.create(note);
+    });
   }
 
   private async duplicate(noteId: NoteVO['id']) {
@@ -68,7 +68,6 @@ export default class NoteService extends BaseService {
     return newNote;
   }
 
-  @Transaction
   async update(noteId: NoteVO['id'], note: NoteDTO) {
     await this.assertValidChanges([{ ...note, id: noteId }]);
 
@@ -81,21 +80,24 @@ export default class NoteService extends BaseService {
     return result;
   }
 
-  @Transaction
   async updateBody(noteId: NoteVO['id'], { content, isImportant }: NoteBodyDTO) {
-    if (!(await this.isWritable(noteId))) {
-      throw new Error('note unavailable');
-    }
+    const result = await this.transaction(async () => {
+      if (!(await this.isWritable(noteId))) {
+        throw new Error('note unavailable');
+      }
 
-    const result = await this.notes.updateBody(noteId, content);
+      const result = await this.notes.updateBody(noteId, content);
 
-    if (result === null) {
-      throw new Error('update note body failed');
-    }
+      if (result === null) {
+        throw new Error('update note body failed');
+      }
 
-    if (isImportant) {
-      this.revisionService.createRevision({ content, type: EntityTypes.Note, id: noteId }, true);
-    }
+      if (isImportant) {
+        await this.revisionService.createRevision({ content, type: EntityTypes.Note, id: noteId }, true);
+      }
+
+      return result;
+    });
 
     this.eventEmitter.emit(events.bodyUpdated, {
       id: noteId,
@@ -106,7 +108,6 @@ export default class NoteService extends BaseService {
     return result;
   }
 
-  @Transaction
   async getBody(noteId: NoteVO['id']) {
     if (!(await this.areAvailable(noteId))) {
       throw new Error('note unavailable');
@@ -121,7 +122,6 @@ export default class NoteService extends BaseService {
     return result;
   }
 
-  @Transaction
   async batchUpdate(notes: NotesDTO) {
     await this.assertValidChanges(notes);
     const result = await this.notes.batchUpdate(notes);
@@ -143,7 +143,6 @@ export default class NoteService extends BaseService {
     return notes.filter((note) => !areRecyclables[note.id]);
   }
 
-  @Transaction
   async getTreeFragment(noteId: NoteVO['id']) {
     if (!(await this.areAvailable(noteId))) {
       throw new Error('invalid id');
