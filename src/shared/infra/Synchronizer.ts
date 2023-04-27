@@ -5,14 +5,6 @@ export type Conflict = {
   entity: EntityLocator;
 };
 
-export interface Synchronizer {
-  putFile: (name: string, content: string) => Promise<void>;
-  getFile: (name: string) => Promise<string | null>;
-  removeFile: (name: string) => Promise<void>;
-  list: () => AsyncGenerator<string>;
-  empty: () => Promise<void>;
-}
-
 export const CHANNEL = 'synchronizer-log-update';
 
 export interface Log {

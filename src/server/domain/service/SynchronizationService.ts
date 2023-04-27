@@ -1,10 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { object, type infer as Infer, number, string } from 'zod';
 import differenceWith from 'lodash/differenceWith';
 
 import { type EntityLocator, EntityTypes } from 'interface/entity';
-import type { Synchronizer, Conflict, Log } from 'infra/Synchronizer';
-import FsSynchronizer from 'service/synchronizer/fs';
+import type { Conflict, Log } from 'infra/Synchronizer';
+import type { NoteVO } from 'interface/note';
+import type { MemoVO } from 'interface/memo';
+import { type SyncTargetFactory, type SyncTarget, token as syncTargetFactoryToken } from 'infra/SyncTargetFactory';
 
 import BaseService from './BaseService';
 
@@ -28,7 +30,8 @@ export interface Entity {
 
 @Injectable()
 export default class SynchronizationService extends BaseService {
-  private remote?: Synchronizer;
+  @Inject(syncTargetFactoryToken) private readonly syncTargetFactory!: SyncTargetFactory;
+  private syncTarget?: SyncTarget;
   private isBusy = false;
   private logs: Log[] = [];
   private startAt?: number;
@@ -39,10 +42,6 @@ export default class SynchronizationService extends BaseService {
 
   private serialize(entity: any) {
     return '';
-  }
-
-  private createRemote() {
-    return new FsSynchronizer('');
   }
 
   private addLog(type: Log['type'], msg: Log['msg']) {
@@ -56,7 +55,7 @@ export default class SynchronizationService extends BaseService {
     }
 
     this.isBusy = true;
-    this.remote = this.createRemote();
+    this.syncTarget = this.syncTargetFactory('fs');
 
     const remoteMeta = await this.getRemoteMeta();
 
@@ -74,7 +73,7 @@ export default class SynchronizationService extends BaseService {
     await this.putRemoteMeta();
 
     if (!remoteMeta) {
-      await this.remote.empty();
+      await this.syncTarget.empty();
       await this.pushAll();
     } else {
       const lastSyncTime = await this.synchronization.getLastFinishedSyncTimestamp();
@@ -92,13 +91,13 @@ export default class SynchronizationService extends BaseService {
   }
 
   private async process(remoteMeta: Meta) {
-    if (!this.remote) {
+    if (!this.syncTarget) {
       throw new Error('no remote');
     }
 
     const remoteEntities: EntityLocator[] = [];
 
-    for await (const fileContent of this.remote.list()) {
+    for await (const fileContent of this.syncTarget.list()) {
       const entity = this.deserialize(fileContent);
       const entityLocator: EntityLocator = { type: entity.type, id: entity.id };
       const localEntity = await this.getLocalEntity(entityLocator);
@@ -125,7 +124,7 @@ export default class SynchronizationService extends BaseService {
         if (!deletedRecord) {
           await this.createLocalEntity(entityLocator);
         } else if (deletedRecord.deletedAt > entity.updatedAt) {
-          await this.remote.removeFile(entity.id);
+          await this.syncTarget.removeFile(entity.id);
         } else {
           this.conflicts.push({ type: 'local-deleted', entity: entityLocator });
         }
@@ -143,7 +142,7 @@ export default class SynchronizationService extends BaseService {
     for (const entity of localOnlyEntities) {
       if (!remoteMeta.finishAt || entity.createdAt > remoteMeta.startAt) {
         const localEntity = await this.getLocalEntity(entity);
-        await this.remote.putFile(entity.id, this.serialize(localEntity));
+        await this.syncTarget.putFile(entity.id, this.serialize(localEntity));
       } else if (entity.updatedAt < remoteMeta.finishAt) {
         await this.removeLocalEntity(entity);
       } else {
@@ -152,8 +151,28 @@ export default class SynchronizationService extends BaseService {
     }
   }
 
-  private uploadEntity(entity: EntityLocator) {
-    return;
+  private async uploadEntity({ type, id }: EntityLocator) {
+    let entity: NoteVO | MemoVO | null = null;
+    if (!this.syncTarget) {
+      throw new Error('no remote');
+    }
+
+    switch (type) {
+      case EntityTypes.Note:
+        entity = await this.notes.findOneById(id);
+        break;
+      case EntityTypes.Memo:
+        entity = await this.memos.findOneById(id);
+        break;
+      default:
+        break;
+    }
+
+    if (!entity) {
+      throw new Error('invalid entity');
+    }
+
+    await this.syncTarget.putFile(id, this.serialize(entity));
   }
 
   private async removeLocalEntity({ id, type }: EntityLocator) {
@@ -200,18 +219,18 @@ export default class SynchronizationService extends BaseService {
   }
 
   private async getRemoteMeta() {
-    if (!this.remote) {
+    if (!this.syncTarget) {
       throw new Error('no remote');
     }
 
-    const file = await this.remote.getFile('.meta');
+    const file = await this.syncTarget.getFile('.meta');
     const meta = file ? JSON.parse(file) : {};
 
     return metaSchema.safeParse(meta).success ? (meta as Meta) : null;
   }
 
   private async putRemoteMeta(finishAt?: number) {
-    if (!this.remote || !this.startAt) {
+    if (!this.syncTarget || !this.startAt) {
       throw new Error('no remote');
     }
 
@@ -223,7 +242,7 @@ export default class SynchronizationService extends BaseService {
       finishAt,
     };
 
-    await this.remote.putFile('.meta', JSON.stringify(meta));
+    await this.syncTarget.putFile('.meta', JSON.stringify(meta));
   }
 
   private async getLocalEntities() {

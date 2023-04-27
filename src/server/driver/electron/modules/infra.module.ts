@@ -8,23 +8,24 @@ import { token as appClientToken, type AppClient, Events as AppClientEvents } fr
 import { appFileProtocol } from 'infra/electronProtocol';
 import { token as databaseToken, type Database } from 'infra/Database';
 import { token as downloaderToken } from 'infra/Downloader';
+import { token as syncTargetFactoryToken } from 'infra/SyncTargetFactory';
 import type Repositories from 'service/repository';
 import ResourceService from 'service/ResourceService';
 
 import Downloader from '../infra/Downloader';
-
-const drivers = [
-  [appClientToken, ElectronClient],
-  [databaseToken, Sqlite],
-  [downloaderToken, Downloader],
-] as const;
+import syncTargetFactory from '../infra/syncTarget/factory';
 
 @Global()
 @Module({
-  providers: drivers.map(([token, driverClass]) => ({ provide: token, useClass: driverClass })),
-  exports: drivers.map(([token]) => token),
+  providers: [
+    { provide: appClientToken, useClass: ElectronClient },
+    { provide: databaseToken, useClass: Sqlite },
+    { provide: downloaderToken, useClass: Downloader },
+    { provide: syncTargetFactoryToken, useValue: syncTargetFactory },
+  ],
+  exports: [appClientToken, databaseToken, downloaderToken, syncTargetFactoryToken],
 })
-export default class DriverModule implements OnApplicationBootstrap {
+export default class InfraModule implements OnApplicationBootstrap {
   constructor(
     @Inject(appClientToken) private readonly electronApp: AppClient,
     @Inject(databaseToken) private readonly sqliteDb: Database,

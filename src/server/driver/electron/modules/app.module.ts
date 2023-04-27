@@ -3,10 +3,10 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 
 import ServiceModule from 'service/module';
 import * as controllers from 'controller';
-import DriverModule from './driver.module';
+import InfraModule from './infra.module';
 
 @Module({
-  imports: [EventEmitterModule.forRoot({ wildcard: true }), ServiceModule, DriverModule],
+  imports: [EventEmitterModule.forRoot({ wildcard: true }), ServiceModule, InfraModule],
   controllers: Object.values(controllers),
 })
 export default class AppModule {}

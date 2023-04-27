@@ -1,7 +1,8 @@
-import type { Synchronizer } from 'infra/Synchronizer';
 import { pathExists, readFile, writeFile, remove, emptyDir, readdir } from 'fs-extra';
 
-export default class FsSynchronizer implements Synchronizer {
+import type { SyncTarget } from 'infra/SyncTargetFactory';
+
+export default class FsSyncTarget implements SyncTarget {
   constructor(private readonly dir: string) {}
 
   async getFile(name: string) {

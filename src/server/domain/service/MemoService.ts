@@ -14,6 +14,7 @@ export interface MemoContentUpdatedEvent {
   type: EntityTypes.Memo;
   content: MemoVO['content'];
 }
+
 @Injectable()
 export default class MemoService extends BaseService {
   async create(memo: MemoDTO) {
