@@ -149,10 +149,14 @@ export default observer(function MetadataForm() {
       }, {} as NonNullable<NoteDTO['attributes']>);
     });
 
-    noteMetadata.validate(async () => {
-      await editNotes(noteMetadata.values);
-      editingModal.close();
-    });
+    const data = await noteMetadata.validate();
+
+    if (!data) {
+      return;
+    }
+
+    await editNotes(data);
+    editingModal.close();
   }, [attributes.areValid, attributes.fields, editNotes, editingModal, noteMetadata]);
 
   const uniqIcons = uniq(Array.from(noteTree.selectedNodes).map(({ entity: { icon } }) => icon));

@@ -1,11 +1,15 @@
 import { observer } from 'mobx-react-lite';
 
-export default observer(function NewMaterial() {
+export enum FormTypes {
+  File,
+  Text,
+}
+
+export default observer(function NewMaterial({ onSelect }: { onSelect: (type: FormTypes) => void }) {
   return (
-    <ul>
-      <li>本机文件</li>
-      <li>URL 下载</li>
-      <li>手动编辑文本</li>
+    <ul className="mr-2 list-none p-0">
+      <li onClick={() => onSelect(FormTypes.File)}>选择文件</li>
+      <li onClick={() => onSelect(FormTypes.Text)}>编辑文本</li>
     </ul>
   );
 });

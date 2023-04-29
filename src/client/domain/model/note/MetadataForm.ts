@@ -1,3 +1,4 @@
+import Form from 'model/abstract/Form';
 import type { NoteDTO } from 'interface/Note';
 
 export interface NoteMetadata {
@@ -7,3 +8,7 @@ export interface NoteMetadata {
   isReadonly: 0 | 1 | 2;
   attributes?: NonNullable<NoteDTO['attributes']>;
 }
+
+export default class NoteMetadataForm extends Form<NoteMetadata> {}
+
+export const MULTIPLE_ICON_FLAG = Symbol();

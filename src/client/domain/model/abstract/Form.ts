@@ -30,13 +30,13 @@ export default abstract class Base<T extends object> {
     return Object.keys(this.errors).length === 0;
   }
 
-  async validate(onSuccess?: (values: T) => void) {
+  async validate() {
     for (const key of Object.keys(this.values)) {
       await this.validateField(key as keyof T);
     }
 
-    if (this.isValid && onSuccess) {
-      onSuccess(toJS(this.values));
+    if (this.isValid) {
+      return toJS(this.values);
     }
   }
 

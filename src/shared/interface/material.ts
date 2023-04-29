@@ -2,11 +2,11 @@ import { object, string, infer as Infer, instanceof as zodInstanceof } from 'zod
 import type { EntityId } from './entity';
 
 export const materialDTOSchema = object({
-  name: string().optional(),
+  name: string().min(1).optional(),
   parentId: string().nullable().optional(),
-  icon: string().optional(),
+  icon: string().min(1).optional(),
   file: object({
-    name: string(),
+    name: string().min(1),
     data: zodInstanceof(ArrayBuffer),
     mimeType: string().min(1),
   }).optional(),

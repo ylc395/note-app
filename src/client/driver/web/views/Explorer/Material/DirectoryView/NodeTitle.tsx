@@ -11,17 +11,20 @@ import IconTitle from 'web/components/IconTitle';
 import { ModalContext } from '../useModals';
 
 export default observer(function Title({ node }: { node: MaterialTreeNode }) {
-  const { createDirectory, createMaterial } = container.resolve(MaterialService);
-  const { creating } = useContext(ModalContext);
+  const { createDirectory } = container.resolve(MaterialService);
+  const { creatingModal } = useContext(ModalContext);
 
   return (
     <span className="group flex">
-      <IconTitle icon={node.entity.icon} title={`${__ENV__ === 'dev' ? `${node.key} ` : ''}${node.title}`} />
+      <IconTitle
+        icon={node.entity.icon}
+        title={`${__ENV__ === 'dev' ? `${node.key.slice(0, 3)} ` : ''}${node.title}`}
+      />
       <Tooltip title="新建素材" placement="right">
         <Button
           onClick={(e) => {
             e.stopPropagation();
-            creating.open({ parentId: node.entity.parentId });
+            creatingModal.open({ parentId: node.entity.id });
           }}
           className="invisible ml-auto mr-2 group-hover:visible"
           size="small"

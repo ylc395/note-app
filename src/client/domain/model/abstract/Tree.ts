@@ -53,6 +53,7 @@ export abstract class Tree<T extends TreeNodeEntity> {
       this.roots = nodes;
     }
   }
+
   constructor(private readonly options: TreeOptions<T>) {
     makeObservable(this);
 

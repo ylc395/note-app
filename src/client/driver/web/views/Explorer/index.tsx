@@ -20,7 +20,7 @@ export default observer(function Explorer() {
   const { currentExplorer } = container.resolve(Layout);
 
   return (
-    <div className="flex border-0 border-r border-solid border-gray-200">
+    <div className="flex overflow-x-hidden border-0 border-r border-solid  border-gray-200">
       <ActivityBar />
       <Resizable enable={{ right: true }} minWidth={220} defaultSize={{ width: 300, height: 'auto' }}>
         {explorerMap[currentExplorer]()}
