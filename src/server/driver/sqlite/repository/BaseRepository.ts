@@ -2,8 +2,6 @@ import { randomUUID } from 'node:crypto';
 import type { Knex } from 'knex';
 import pick from 'lodash/pick';
 import omit from 'lodash/omit';
-import mapValues from 'lodash/mapValues';
-import isObject from 'lodash/isObject';
 
 import type { Schema } from '../schema/type';
 
@@ -31,9 +29,7 @@ export default abstract class BaseRepository<Row extends object> {
   protected async _createOrUpdate(row: unknown): Promise<Row>;
   protected async _createOrUpdate(row: unknown, id: string): Promise<Row | null>;
   protected async _createOrUpdate(row: unknown, id?: string): Promise<Row | null> {
-    const fields = mapValues(omit(pick(row, this.fields), ['id']), (v) =>
-      isObject(v) ? JSON.stringify(v) : v,
-    ) as Partial<Row>;
+    const fields = omit(pick(row, this.fields), ['id']) as Partial<Row>;
     let updatedRow: Row;
 
     if (typeof id === 'string') {

@@ -1,6 +1,7 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "types": ["electron"],
     "lib": ["DOM", "ESNext"],
     "baseUrl": ".",
     "jsx": "react-jsx",

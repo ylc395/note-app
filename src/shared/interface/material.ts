@@ -7,7 +7,8 @@ export const materialDTOSchema = object({
   icon: string().min(1).optional(),
   file: object({
     name: string().min(1),
-    data: zodInstanceof(ArrayBuffer),
+    data: zodInstanceof(ArrayBuffer).optional(),
+    path: string().optional(),
     mimeType: string().min(1),
   }).optional(),
   sourceUrl: string().url().optional(),

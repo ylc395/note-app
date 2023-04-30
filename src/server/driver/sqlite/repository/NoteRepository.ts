@@ -18,7 +18,7 @@ interface RowPatch {
 export default class SqliteNoteRepository extends BaseRepository<Row> implements NoteRepository {
   protected readonly schema = noteSchema;
   async create(note: NoteDTO): Promise<NoteVO> {
-    const row = await this._createOrUpdate(note);
+    const row = await this._createOrUpdate(SqliteNoteRepository.dtoToRow(note));
 
     return this.rowToVO(row);
   }
@@ -34,7 +34,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
   }
 
   async update(id: NoteVO['id'], note: NoteDTO) {
-    const row = await this._createOrUpdate(note, id);
+    const row = await this._createOrUpdate(SqliteNoteRepository.dtoToRow(note), id);
 
     if (!row) {
       return null;
@@ -177,6 +177,10 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
       isStar: Boolean(patch?.starId || row.starId || false),
       attributes: JSON.parse(row.attributes),
     };
+  }
+
+  private static dtoToRow(note: NoteDTO) {
+    return note.attributes ? { ...note, attributes: JSON.stringify(note.attributes) } : note;
   }
 
   async findAttributes() {

@@ -1,8 +1,11 @@
+import pick from 'lodash/pick';
+import { readFile } from 'fs-extra';
+
 import type { MaterialRepository, Directory } from 'service/repository/MaterialRepository';
 import type { DirectoryVO, EntityMaterialVO, MaterialDTO, MaterialQuery } from 'interface/material';
-import pick from 'lodash/pick';
 
 import schema, { type Row } from '../schema/material';
+import type { Row as FileRow } from '../schema/file';
 import BaseRepository from './BaseRepository';
 import FileRepository from './FileRepository';
 
@@ -15,11 +18,16 @@ export default class SqliteMaterialRepository extends BaseRepository<Row> implem
   }
 
   async createEntity(material: MaterialDTO) {
-    const file = await (material.text
-      ? this.files.findOrCreate({ data: Buffer.from(material.text), mimeType: 'text/markdown' })
-      : material.file
-      ? this.files.findOrCreate({ data: material.file.data, mimeType: material.file.mimeType })
-      : null);
+    let file: FileRow | undefined;
+
+    if (material.text) {
+      file = await this.files.findOrCreate({ data: Buffer.from(material.text), mimeType: 'text/markdown' });
+    }
+
+    if (material.file && material.file.path) {
+      const data = await readFile(material.file.path);
+      file = await this.files.findOrCreate({ data, mimeType: material.file.mimeType });
+    }
 
     if (!file) {
       throw new Error('invalid material');

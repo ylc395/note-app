@@ -8,6 +8,10 @@ export default class MaterialService extends BaseService {
       throw new Error('empty parentId');
     }
 
+    if (file && !file.data && !file.path) {
+      throw new Error('invalid file');
+    }
+
     if (text) {
       return this.materials.createEntity({ text, sourceUrl, ...info });
     }
