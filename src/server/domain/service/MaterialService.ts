@@ -12,6 +12,14 @@ export default class MaterialService extends BaseService {
       throw new Error('invalid file');
     }
 
+    if (info.parentId) {
+      const parent = await this.materials.findOneDirectoryById(info.parentId);
+
+      if (!parent) {
+        throw new Error('invalid parentId');
+      }
+    }
+
     if (text) {
       return this.materials.createEntity({ text, sourceUrl, ...info });
     }

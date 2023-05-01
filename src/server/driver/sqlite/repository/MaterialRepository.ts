@@ -2,7 +2,7 @@ import pick from 'lodash/pick';
 import { readFile } from 'fs-extra';
 
 import type { MaterialRepository, Directory } from 'service/repository/MaterialRepository';
-import type { DirectoryVO, EntityMaterialVO, MaterialDTO, MaterialQuery } from 'interface/material';
+import type { DirectoryVO, EntityMaterialVO, MaterialDTO, MaterialQuery, MaterialVO } from 'interface/material';
 
 import schema, { type Row } from '../schema/material';
 import type { Row as FileRow } from '../schema/file';
@@ -41,10 +41,10 @@ export default class SqliteMaterialRepository extends BaseRepository<Row> implem
     return SqliteMaterialRepository.rowToMaterial(createdMaterial, file.mimeType);
   }
 
-  private static rowToDirectory(row: Row): DirectoryVO {
+  private static rowToDirectory(row: Row, childrenCount = 0): DirectoryVO {
     return {
       ...pick(row, ['id', 'name', 'icon', 'parentId']),
-      childrenCount: 0,
+      childrenCount,
     };
   }
 
@@ -82,7 +82,7 @@ export default class SqliteMaterialRepository extends BaseRepository<Row> implem
     const materials: EntityMaterialVO[] = [];
 
     for (const row of rows) {
-      if (!row.fileId) {
+      if (!SqliteMaterialRepository.isFileRow(row)) {
         directories.push(SqliteMaterialRepository.rowToDirectory(row));
       } else {
         materials.push(SqliteMaterialRepository.rowToMaterial(row, row.mimeType));
@@ -96,5 +96,20 @@ export default class SqliteMaterialRepository extends BaseRepository<Row> implem
     }
 
     return [...directories, ...materials];
+  }
+
+  async findOneDirectoryById(id: MaterialVO['id']) {
+    const row = await this.knex<Row>(this.schema.tableName).whereNull('fileId').andWhere('id', id).first();
+
+    if (!row) {
+      return null;
+    }
+
+    const childrenCounts = await this.getChildrenCounts([id]);
+    return SqliteMaterialRepository.rowToDirectory(row, childrenCounts[id]);
+  }
+
+  private static isFileRow(row: Row) {
+    return Boolean(row.fileId);
   }
 }

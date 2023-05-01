@@ -36,6 +36,7 @@ export type MaterialVO = DirectoryVO | EntityMaterialVO;
 
 export const materialQuerySchema = object({
   parentId: string().optional(),
+  id: string().optional(),
 });
 
 export type MaterialQuery = Infer<typeof materialQuerySchema>;

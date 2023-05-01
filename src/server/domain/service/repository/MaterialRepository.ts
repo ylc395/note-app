@@ -6,4 +6,5 @@ export interface MaterialRepository {
   createDirectory: (directory: Directory) => Promise<DirectoryVO>;
   createEntity: (material: MaterialDTO) => Promise<EntityMaterialVO>;
   findAll: (query: MaterialQuery) => Promise<MaterialVO[]>;
+  findOneDirectoryById: (id: MaterialVO['id']) => Promise<DirectoryVO | null>;
 }
