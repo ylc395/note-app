@@ -1,12 +1,14 @@
-import { app as electronApp, BrowserWindow, ipcMain } from 'electron';
+import { app as electronApp, BrowserWindow, ipcMain, protocol } from 'electron';
 import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import { hostname } from 'node:os';
 import EventEmitter from 'node:events';
 import { ensureDirSync, emptyDirSync } from 'fs-extra';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
+import memoize from 'lodash/memoize';
 
 import { type AppClient, Events as AppClientEvents } from 'infra/AppClient';
+import { appFileProtocol } from 'infra/electronProtocol';
 import { load } from 'shared/driver/sqlite/kv';
 
 import { CONTEXTMENU_CHANNEL, createContextmenu } from './contextmenu';
@@ -15,7 +17,7 @@ const APP_NAME = 'my-note-app';
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const NEED_CLEAN = process.env.DEV_CLEAN === '1';
 
-export default class ElectronClient extends EventEmitter implements AppClient {
+class ElectronClient extends EventEmitter implements AppClient {
   private mainWindow?: BrowserWindow;
   private appId?: string;
 
@@ -29,11 +31,19 @@ export default class ElectronClient extends EventEmitter implements AppClient {
     }
 
     console.log(`electron: initialized in ${dir}`);
+
+    protocol.registerSchemesAsPrivileged([
+      {
+        scheme: appFileProtocol,
+        privileges: {
+          supportFetchAPI: true,
+          stream: true,
+        },
+      },
+    ]);
   }
 
   async start() {
-    this.emit(AppClientEvents.BeforeStart);
-
     if (NODE_ENV === 'development') {
       if (process.platform === 'win32') {
         process.on('message', (data) => {
@@ -126,3 +136,7 @@ export default class ElectronClient extends EventEmitter implements AppClient {
     return this.appId;
   }
 }
+
+const factory = memoize(() => new ElectronClient());
+
+export default factory;

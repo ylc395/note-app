@@ -1,8 +1,8 @@
 import { Global, Module, Inject, type OnApplicationBootstrap } from '@nestjs/common';
 import { protocol } from 'electron';
 
-import Sqlite from 'driver/sqlite';
-import ElectronClient from 'client/driver/electron';
+import sqliteFactory from 'driver/sqlite';
+import electronClientFactory from 'client/driver/electron';
 
 import { token as appClientToken, type AppClient, Events as AppClientEvents } from 'infra/AppClient';
 import { appFileProtocol } from 'infra/electronProtocol';
@@ -18,8 +18,8 @@ import syncTargetFactory from '../infra/syncTarget/factory';
 @Global()
 @Module({
   providers: [
-    { provide: appClientToken, useClass: ElectronClient },
-    { provide: databaseToken, useClass: Sqlite },
+    { provide: appClientToken, useFactory: electronClientFactory },
+    { provide: databaseToken, useFactory: sqliteFactory },
     { provide: downloaderToken, useClass: Downloader },
     { provide: syncTargetFactoryToken, useValue: syncTargetFactory },
   ],
@@ -31,44 +31,34 @@ export default class InfraModule implements OnApplicationBootstrap {
     @Inject(databaseToken) private readonly sqliteDb: Database,
   ) {}
 
-  onApplicationBootstrap() {
-    this.electronApp.once(AppClientEvents.BeforeStart, () => {
-      protocol.registerSchemesAsPrivileged([
-        {
-          scheme: appFileProtocol,
-          privileges: {
-            supportFetchAPI: true,
-            stream: true,
-          },
-        },
-      ]);
-    });
+  async onApplicationBootstrap() {
+    this.electronApp.once(AppClientEvents.Ready, this.registerProtocol.bind(this));
+    const configDir = this.electronApp.getConfigDir();
+    await this.sqliteDb.init(configDir);
+  }
 
-    this.electronApp.once(AppClientEvents.Ready, async () => {
-      const configDir = this.electronApp.getConfigDir();
-      await this.sqliteDb.init(configDir);
-      let resourceRepository: Repositories['resources'];
+  private registerProtocol() {
+    let resourceRepository: Repositories['resources'];
 
-      protocol.registerBufferProtocol(appFileProtocol, async (req, res) => {
-        if (!resourceRepository) {
-          resourceRepository = this.sqliteDb.getRepository('resources');
-        }
+    protocol.registerBufferProtocol(appFileProtocol, async (req, res) => {
+      if (!resourceRepository) {
+        resourceRepository = this.sqliteDb.getRepository('resources');
+      }
 
-        const resourceId = ResourceService.getResourceIdFromUrl(req.url);
+      const resourceId = ResourceService.getResourceIdFromUrl(req.url);
 
-        if (!resourceId) {
-          res({ statusCode: 404 });
-          return;
-        }
+      if (!resourceId) {
+        res({ statusCode: 404 });
+        return;
+      }
 
-        const file = await resourceRepository.findFileById(resourceId);
+      const file = await resourceRepository.findFileById(resourceId);
 
-        if (!file) {
-          res({ statusCode: 404 });
-        } else {
-          res({ data: Buffer.from(file.data), headers: { 'Content-Type': file.mimeType } });
-        }
-      });
+      if (!file) {
+        res({ statusCode: 404 });
+      } else {
+        res({ data: Buffer.from(file.data), headers: { 'Content-Type': file.mimeType } });
+      }
     });
   }
 }

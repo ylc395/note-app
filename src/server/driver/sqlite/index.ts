@@ -1,5 +1,6 @@
 import type { Knex } from 'knex';
 import snakeCase from 'lodash/snakeCase';
+import memoize from 'lodash/memoize';
 import { PropagatedTransaction } from '@mokuteki/propagated-transactions';
 
 import type { Database } from 'infra/Database';
@@ -10,7 +11,7 @@ import * as repositories from './repository';
 import type { Schema } from './schema/type';
 import { createDb } from 'shared/driver/sqlite';
 
-export default class SqliteDb implements Database {
+class SqliteDb implements Database {
   private knex!: Knex;
 
   transactionManager = new PropagatedTransaction({
@@ -86,3 +87,7 @@ export default class SqliteDb implements Database {
     }
   };
 }
+
+const factory = memoize(() => new SqliteDb());
+
+export default factory;

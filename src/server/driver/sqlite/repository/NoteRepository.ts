@@ -170,7 +170,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
 
   private rowToVO(row: Row & RowPatch, patch?: RowPatch): NoteVO {
     return {
-      ...omit(row, 'body'),
+      ...omit(row, ['body', 'starId']),
       parentId: row.parentId || null,
       isReadonly: Boolean(row.isReadonly),
       childrenCount: patch?.childrenCount || row.childrenCount || 0,
