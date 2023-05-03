@@ -11,7 +11,6 @@ import {
   DatabaseOutlined,
   DeleteOutlined,
   SearchOutlined,
-  FieldTimeOutlined,
   SettingOutlined,
 } from '@ant-design/icons';
 import { useToggle, useMemoizedFn } from 'ahooks';
@@ -95,11 +94,6 @@ export default observer(function ActivityBar() {
           <li>
             <Tooltip title="话题" placement="right">
               <Button {...BUTTON_PROPS} icon={<NumberOutlined />} />
-            </Tooltip>
-          </li>
-          <li>
-            <Tooltip title="时间线" placement="right">
-              <Button {...BUTTON_PROPS} icon={<FieldTimeOutlined />} />
             </Tooltip>
           </li>
           <li>

@@ -2,7 +2,6 @@ import { makeObservable, computed, action, observable } from 'mobx';
 import debounce from 'lodash/debounce';
 
 import { EntityTypes } from 'interface/entity';
-import type { LintProblem } from 'interface/lint';
 import { normalizeTitle, type NoteVO, type NoteBodyVO } from 'interface/Note';
 
 import type Tile from 'model/workbench/Tile';
@@ -27,7 +26,6 @@ export interface Entity {
 
 export default class NoteEditor extends EntityEditor<Entity> {
   readonly entityType = EntityTypes.Note;
-  @observable.ref lintProblems: LintProblem[] = [];
   constructor(tile: Tile, noteId: NoteVO['id'], private readonly noteTree: NoteTree) {
     super(tile, noteId);
     makeObservable(this);
@@ -96,9 +94,4 @@ export default class NoteEditor extends EntityEditor<Entity> {
 
     this.noteTree.updateTreeByEntity(this.entity.metadata);
   }, 500);
-
-  @action
-  loadLintProblems(problems: LintProblem[]) {
-    this.lintProblems = problems;
-  }
 }

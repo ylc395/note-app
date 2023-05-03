@@ -1,7 +1,7 @@
-import { Input, Space, Button, Tooltip, Badge } from 'antd';
+import { Input, Space, Button, Tooltip } from 'antd';
 import { observer } from 'mobx-react-lite';
 import { type ChangeEvent, useCallback, useContext } from 'react';
-import { InfoCircleOutlined, BugOutlined, FileSearchOutlined } from '@ant-design/icons';
+import { InfoCircleOutlined, FileSearchOutlined } from '@ant-design/icons';
 
 import EditorContext from './Context';
 
@@ -27,11 +27,6 @@ export default observer(function NoteTitle() {
         </Tooltip>
         <Tooltip title="信息与统计">
           <Button onClick={() => infoModal.open()} type="text" icon={<InfoCircleOutlined />} />
-        </Tooltip>
-        <Tooltip title="拼写与格式">
-          <Badge showZero size="small" count={editor.lintProblems.length}>
-            <Button type="text" icon={<BugOutlined />} />
-          </Badge>
         </Tooltip>
       </Space.Compact>
     </div>

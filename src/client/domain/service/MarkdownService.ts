@@ -5,11 +5,9 @@ import {
   type ResourceUrl,
   type ResourcesDTO,
   type ResourceUploadResponse,
+  type ResourceVO,
   isUrls,
-  ResourceVO,
 } from 'interface/resource';
-import type { LintProblem } from 'interface/lint';
-import type NoteEditor from 'model/note/Editor';
 
 @singleton()
 export default class MarkdownService {
@@ -32,9 +30,4 @@ export default class MarkdownService {
 
     return fileVOs;
   }
-
-  readonly lint = async (editor: NoteEditor) => {
-    const { body: problems } = await this.remote.get<void, LintProblem[]>(`/lint/problems/notes/${editor.entityId}`);
-    editor.loadLintProblems(problems);
-  };
 }

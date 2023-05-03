@@ -183,7 +183,7 @@ export default class SynchronizationService extends BaseService {
     return;
   }
 
-  private downloadEntity(entity: EntityLocator) {
+  private downloadEntity({ id, type }: EntityLocator) {
     return;
   }
 
