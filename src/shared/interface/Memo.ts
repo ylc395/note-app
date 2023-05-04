@@ -19,20 +19,17 @@ export type MemoVO = ChildMemoVO | ParentMemoVO;
 
 export type PaginationMemeVO = PaginationEntity<ParentMemoVO>;
 
-export type MemoQuery = PaginationQuery;
+export type MemoPaginationQuery = PaginationQuery;
 
 export const memoQuerySchema = paginationQuerySchema;
 
 export const memoDTOSchema = object({
-  content: string().min(1),
+  content: string().min(1).optional(),
   isPinned: boolean().optional(),
   parentId: entityId().optional(),
 });
 
-export const memoPatchDTOSchema = object({
-  isPinned: boolean().optional(),
-  content: string().optional(),
-});
+export const memoPatchDTOSchema = memoDTOSchema.omit({ parentId: true });
 
 export type MemoDTO = Infer<typeof memoDTOSchema>;
 export type MemoPatchDTO = Infer<typeof memoPatchDTOSchema>;

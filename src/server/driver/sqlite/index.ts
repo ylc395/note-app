@@ -3,13 +3,13 @@ import snakeCase from 'lodash/snakeCase';
 import memoize from 'lodash/memoize';
 import { PropagatedTransaction } from '@mokuteki/propagated-transactions';
 
+import { createDb } from 'shared/driver/sqlite';
 import type { Database } from 'infra/Database';
 import type Repository from 'service/repository';
 
 import * as schemas from './schema';
 import * as repositories from './repository';
 import type { Schema } from './schema/type';
-import { createDb } from 'shared/driver/sqlite';
 
 class SqliteDb implements Database {
   private knex!: Knex;

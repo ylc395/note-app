@@ -1,4 +1,4 @@
-import { pathExists, readFile, writeFile, remove, emptyDir, readdir } from 'fs-extra';
+import { pathExists, readFile, writeFile, remove, readdir, emptyDir } from 'fs-extra';
 
 import type { SyncTarget } from 'infra/SyncTargetFactory';
 
@@ -27,8 +27,8 @@ export default class FsSyncTarget implements SyncTarget {
     return remove(path);
   }
 
-  empty() {
-    return emptyDir(this.dir);
+  async empty() {
+    await emptyDir(this.dir);
   }
 
   async *list() {

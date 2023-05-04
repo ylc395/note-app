@@ -29,12 +29,12 @@ export default abstract class BaseRepository<Row extends object> {
   protected async _createOrUpdate(row: unknown): Promise<Row>;
   protected async _createOrUpdate(row: unknown, id: string): Promise<Row | null>;
   protected async _createOrUpdate(row: unknown, id?: string): Promise<Row | null> {
-    const fields = omit(pick(row, this.fields), ['id']) as Partial<Row>;
+    const fields = pick(row, this.fields) as Partial<Row>;
     let updatedRow: Row;
 
     if (typeof id === 'string') {
       const updatedRows = await this.knex(this.schema.tableName)
-        .update(fields)
+        .update(omit(fields, 'id'))
         .where('id', id)
         .returning(this.knex.raw('*'));
 
@@ -45,7 +45,7 @@ export default abstract class BaseRepository<Row extends object> {
       updatedRow = updatedRows[0];
     } else {
       const createdRows = await this.knex(this.schema.tableName)
-        .insert({ ...fields, id: this.generateId() })
+        .insert({ ...fields, id: 'id' in fields ? fields.id : this.generateId() })
         .returning(this.knex.raw('*'));
       updatedRow = createdRows[0];
     }

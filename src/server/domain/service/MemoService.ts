@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import dayjs from 'dayjs';
 
-import type { MemoDTO, MemoPatchDTO, MemoQuery, MemoVO, ParentMemoVO } from 'interface/memo';
+import type { MemoDTO, MemoPatchDTO, MemoPaginationQuery, MemoVO, ParentMemoVO } from 'interface/memo';
 
 import BaseService from './BaseService';
 import { EntityTypes } from 'interface/entity';
@@ -38,7 +39,7 @@ export default class MemoService extends BaseService {
       throw new Error('can not pin child memo');
     }
 
-    const updated = await this.memos.update(id, patch);
+    const updated = await this.memos.update(id, { ...patch, updatedAt: dayjs().unix() });
 
     if (!updated) {
       throw new Error('wrong id');
@@ -55,7 +56,7 @@ export default class MemoService extends BaseService {
     return updated;
   }
 
-  async query(q: MemoQuery) {
+  async query(q: MemoPaginationQuery) {
     return await this.memos.list(q);
   }
 }

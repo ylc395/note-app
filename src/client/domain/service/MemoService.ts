@@ -2,7 +2,14 @@ import { observable, makeObservable, computed, runInAction, action } from 'mobx'
 import { container, singleton } from 'tsyringe';
 
 import { token as remoteToken } from 'infra/Remote';
-import type { ChildMemoVO, MemoDTO, MemoPatchDTO, MemoQuery, ParentMemoVO, PaginationMemeVO } from 'interface/Memo';
+import type {
+  ChildMemoVO,
+  MemoDTO,
+  MemoPatchDTO,
+  MemoPaginationQuery,
+  ParentMemoVO,
+  PaginationMemeVO,
+} from 'interface/Memo';
 
 @singleton()
 export default class MemoService {
@@ -25,7 +32,10 @@ export default class MemoService {
     const _page = page ?? this.currentPage;
     const {
       body: { total, list },
-    } = await this.remote.get<MemoQuery, PaginationMemeVO>('/memos', { pageSize: this.pageSize, page: _page });
+    } = await this.remote.get<MemoPaginationQuery, PaginationMemeVO>('/memos', {
+      pageSize: this.pageSize,
+      page: _page,
+    });
 
     runInAction(() => {
       this.totalCount = total;

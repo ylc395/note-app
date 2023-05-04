@@ -13,7 +13,7 @@ import type Repositories from 'service/repository';
 import ResourceService from 'service/ResourceService';
 
 import Downloader from '../infra/Downloader';
-import syncTargetFactory from '../infra/syncTarget/factory';
+import syncTargetFactory from '../infra/syncTargetFactory';
 
 @Global()
 @Module({

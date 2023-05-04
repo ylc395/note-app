@@ -7,7 +7,7 @@ import {
   memoPatchDTOSchema,
   type MemoDTO,
   type ParentMemoVO,
-  type MemoQuery,
+  type MemoPaginationQuery,
   type PaginationMemeVO,
   type MemoPatchDTO,
   type MemoVO,
@@ -32,7 +32,7 @@ export default class MemosController {
   }
 
   @Get('/memos')
-  async list(@Query(createSchemaPipe(memoQuerySchema)) q: MemoQuery): Promise<PaginationMemeVO> {
+  async list(@Query(createSchemaPipe(memoQuerySchema)) q: MemoPaginationQuery): Promise<PaginationMemeVO> {
     return await this.memoService.query(q);
   }
 }

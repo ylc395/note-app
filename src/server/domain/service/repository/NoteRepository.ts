@@ -3,11 +3,14 @@ import type { NoteBodyDTO, NoteDTO, NoteVO, NotesDTO, NoteAttributesVO, NoteBody
 export type NoteQuery = {
   parentId?: NoteVO['parentId'] | NoteVO['id'][];
   id?: NoteVO['id'][];
+  updatedAt?: number;
 };
 
+export type Note = NoteDTO & Partial<Pick<NoteVO, 'updatedAt' | 'createdAt' | 'id'>>;
+
 export interface NoteRepository {
-  create: (note: NoteDTO) => Promise<NoteVO>;
-  update: (noteId: NoteVO['id'], note: NoteDTO) => Promise<NoteVO | null>;
+  create: (note: Note) => Promise<NoteVO>;
+  update: (noteId: NoteVO['id'], note: Note) => Promise<NoteVO | null>;
   batchUpdate: (notes: NotesDTO) => Promise<NoteVO[]>;
   updateBody: (noteId: NoteVO['id'], noteBody: NoteBodyDTO['content']) => Promise<NoteBodyVO | null>;
   findAll: (query?: NoteQuery) => Promise<NoteVO[]>;

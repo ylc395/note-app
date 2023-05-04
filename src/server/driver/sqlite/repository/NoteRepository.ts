@@ -3,7 +3,7 @@ import mapValues from 'lodash/mapValues';
 import uniq from 'lodash/uniq';
 
 import { type EntityId, EntityTypes } from 'interface/entity';
-import type { NoteRepository, NoteQuery } from 'service/repository/NoteRepository';
+import type { NoteRepository, NoteQuery, Note } from 'service/repository/NoteRepository';
 import type { NoteDTO, NoteVO, NotesDTO, NoteAttributesVO } from 'interface/note';
 
 import BaseRepository from './BaseRepository';
@@ -17,7 +17,7 @@ interface RowPatch {
 
 export default class SqliteNoteRepository extends BaseRepository<Row> implements NoteRepository {
   protected readonly schema = noteSchema;
-  async create(note: NoteDTO): Promise<NoteVO> {
+  async create(note: Note): Promise<NoteVO> {
     const row = await this._createOrUpdate(SqliteNoteRepository.dtoToRow(note));
 
     return this.rowToVO(row);
@@ -33,7 +33,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
     return row.body;
   }
 
-  async update(id: NoteVO['id'], note: NoteDTO) {
+  async update(id: NoteVO['id'], note: Note) {
     const row = await this._createOrUpdate(SqliteNoteRepository.dtoToRow(note), id);
 
     if (!row) {

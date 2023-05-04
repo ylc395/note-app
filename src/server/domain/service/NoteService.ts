@@ -2,6 +2,7 @@ import { Injectable, Inject } from '@nestjs/common';
 import omit from 'lodash/omit';
 import groupBy from 'lodash/groupBy';
 import intersection from 'lodash/intersection';
+import dayjs from 'dayjs';
 
 import { buildIndex } from 'utils/collection';
 import {
@@ -71,7 +72,7 @@ export default class NoteService extends BaseService {
   async update(noteId: NoteVO['id'], note: NoteDTO) {
     await this.assertValidChanges([{ ...note, id: noteId }]);
 
-    const result = await this.notes.update(noteId, note);
+    const result = await this.notes.update(noteId, { ...note, updatedAt: dayjs().unix() });
 
     if (!result) {
       throw new Error('invalid id');
@@ -91,6 +92,8 @@ export default class NoteService extends BaseService {
       if (result === null) {
         throw new Error('update note body failed');
       }
+
+      await this.notes.update(noteId, { updatedAt: dayjs().unix() });
 
       if (isImportant) {
         await this.revisionService.createRevision({ content, type: EntityTypes.Note, id: noteId }, true);

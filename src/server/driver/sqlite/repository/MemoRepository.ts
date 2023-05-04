@@ -1,15 +1,15 @@
 import omit from 'lodash/omit';
 import groupBy from 'lodash/groupBy';
 
-import type { MemoDTO, MemoPatchDTO, MemoQuery, ParentMemoVO, ChildMemoVO, MemoVO } from 'interface/memo';
-import type { MemoRepository } from 'service/repository/MemoRepository';
+import type { MemoPaginationQuery, ParentMemoVO, ChildMemoVO, MemoVO } from 'interface/memo';
+import type { MemoRepository, Memo, MemoQuery } from 'service/repository/MemoRepository';
 
 import BaseRepository from './BaseRepository';
 import schema, { type Row } from '../schema/memo';
 
 export default class SqliteMemoRepository extends BaseRepository<Row> implements MemoRepository {
   protected readonly schema = schema;
-  async create(memo: MemoDTO) {
+  async create(memo: Memo) {
     const createdRow = await this._createOrUpdate(memo);
 
     if (createdRow.id) {
@@ -19,7 +19,7 @@ export default class SqliteMemoRepository extends BaseRepository<Row> implements
     return SqliteMemoRepository.rowToVO(createdRow);
   }
 
-  async update(id: ParentMemoVO['id'], patch: MemoPatchDTO) {
+  async update(id: ParentMemoVO['id'], patch: Memo) {
     const updatedRow = await this._createOrUpdate(patch, id);
 
     if (!updatedRow) {
@@ -29,7 +29,7 @@ export default class SqliteMemoRepository extends BaseRepository<Row> implements
     return await this.findOneById(updatedRow.id);
   }
 
-  async list(query: MemoQuery) {
+  async list(query: MemoPaginationQuery) {
     const pageSize = query.pageSize || 50;
     const page = query.page || 1;
     const rows = await this.knex<Row>(this.schema.tableName)
@@ -103,8 +103,14 @@ export default class SqliteMemoRepository extends BaseRepository<Row> implements
     };
   }
 
-  async findAll() {
-    const rows = await this.knex<Row>(this.schema.tableName).select();
+  async findAll(q?: MemoQuery) {
+    let sql = this.knex<Row>(this.schema.tableName).select();
+
+    if (q) {
+      sql = sql.andWhere('updatedAt', '>', q.updatedAt);
+    }
+
+    const rows = await sql;
 
     return rows.map((row) =>
       row.parentId ? SqliteMemoRepository.rowToVO(row, []) : SqliteMemoRepository.rowToVO(row),

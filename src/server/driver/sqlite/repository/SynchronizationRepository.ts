@@ -19,10 +19,17 @@ export default class SqliteSynchronizationRepository extends BaseRepository<Row>
     return value ? Number(value) : null;
   }
 
-  async updateLastFinishedSyncTimestamp() {
-    const syncTime = Date.now();
-    await set(LAST_SYNC_TIME_KEY, String(syncTime));
+  async updateLastFinishedSyncTimestamp(time: number) {
+    await set(LAST_SYNC_TIME_KEY, String(time));
+  }
 
-    return syncTime;
+  async updateEntitySyncAt({ id: entityId, type: entityType }: EntityLocator, syncAt: number) {
+    const row = await this.getEntitySyncAt({ id: entityId, type: entityType });
+
+    if (row) {
+      await this.knex<Row>(this.schema.tableName).update({ syncAt }).where({ entityId, entityType });
+    } else {
+      await this.knex<Row>(this.schema.tableName).insert({ syncAt, entityId, entityType });
+    }
   }
 }
