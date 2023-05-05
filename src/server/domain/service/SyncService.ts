@@ -3,6 +3,7 @@ import { object, type infer as Infer, number, string } from 'zod';
 import differenceWith from 'lodash/differenceWith';
 import fm from 'front-matter';
 
+import { token as appClientToken, type AppClient } from 'infra/AppClient';
 import { type EntityLocator, EntityTypes } from 'interface/entity';
 import type { Conflict, Log } from 'infra/Synchronizer';
 import type { NoteVO } from 'interface/note';
@@ -32,6 +33,7 @@ type EntityMetadata = { id: string; updatedAt: number } & (
 @Injectable()
 export default class SyncService extends BaseService {
   @Inject(syncTargetFactoryToken) private readonly syncTargetFactory!: SyncTargetFactory;
+  @Inject(appClientToken) protected readonly appClient!: AppClient;
   private syncTarget?: SyncTarget;
   private isBusy = false;
   private logs: Log[] = [];
