@@ -5,11 +5,13 @@ import mapValues from 'lodash/mapValues';
 export enum EntityTypes {
   Note = 1,
   Memo,
+  Material,
 }
 
 export const entityTypesToString: Record<EntityTypes, string> = {
   [EntityTypes.Note]: 'notes',
   [EntityTypes.Memo]: 'memos',
+  [EntityTypes.Material]: 'materials',
 };
 
 export const stringToEntityTypes: Record<string, EntityTypes> = mapValues(invert(entityTypesToString), Number);

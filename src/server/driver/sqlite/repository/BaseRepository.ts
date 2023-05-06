@@ -16,8 +16,10 @@ export default abstract class BaseRepository<Row extends object> {
     rows: Partial<T extends void ? Row : T>[],
     tableName?: string,
   ): Promise<(T extends void ? Row : T)[]> {
+    const fields = this.fields;
+
     const createdRows = await this.knex(tableName || this.schema.tableName)
-      .insert(rows.map((row) => ({ ...row, id: this.generateId() })))
+      .insert(rows.map((row) => ('id' in fields ? { ...row, id: this.generateId() } : row)))
       .returning(this.knex.raw('*'));
 
     return createdRows;
@@ -26,6 +28,7 @@ export default abstract class BaseRepository<Row extends object> {
   private generateId() {
     return randomUUID().replaceAll('-', '');
   }
+
   protected async _createOrUpdate(row: unknown): Promise<Row>;
   protected async _createOrUpdate(row: unknown, id: string): Promise<Row | null>;
   protected async _createOrUpdate(row: unknown, id?: string): Promise<Row | null> {

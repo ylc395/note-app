@@ -4,6 +4,9 @@ import { MaterialDTO, DirectoryVO, MaterialVO, MaterialQuery, isDirectory, Entit
 import MaterialTree from 'model/material/Tree';
 import { token as remoteToken } from 'infra/Remote';
 
+import EditorService from './EditorService';
+import { EntityTypes } from 'interface/entity';
+
 @singleton()
 export default class MaterialService {
   private readonly remote = container.resolve(remoteToken);
@@ -54,7 +57,8 @@ export default class MaterialService {
     this.materialTree.toggleSelect(material.id, !isMultiple);
 
     if (!isMultiple && !isDirectory(material)) {
-      // this.editor.openEntity({ entityType: EntityTypes., entityId: material.id });
+      const { openEntity } = container.resolve(EditorService);
+      openEntity({ type: EntityTypes.Material, id: material.id });
     }
   };
 }

@@ -8,21 +8,9 @@ import { type EntityId, EntityTypes, entityTypesToString } from 'interface/entit
 import type { StarRecord, StarsDTO } from 'interface/star';
 
 export enum StarEvents {
-  NoteAdded = 'star.note.added',
-  NoteRemoved = 'star.note.removed',
-  MemoAdded = 'star.memo.added',
-  MemoRemoved = 'star.memo.removed',
+  Added = 'star.added',
+  Removed = 'star.removed',
 }
-
-const removeEventsMap: Record<EntityTypes, StarEvents> = {
-  [EntityTypes.Note]: StarEvents.NoteRemoved,
-  [EntityTypes.Memo]: StarEvents.MemoRemoved,
-};
-
-const addEventsMap: Record<EntityTypes, StarEvents> = {
-  [EntityTypes.Note]: StarEvents.NoteAdded,
-  [EntityTypes.Memo]: StarEvents.MemoAdded,
-};
 
 // todo: 能够收藏具体段落
 @singleton()
@@ -35,13 +23,8 @@ export default class StarService extends EventEmitter {
   private readonly remote = container.resolve(remoteToken);
   @observable stars?: Required<StarRecord>[];
   private async star(type: EntityTypes, ids: EntityId[]) {
-    const { body: stars } = await this.remote.put<StarsDTO, StarRecord[]>(`/stars/${entityTypesToString[type]}`, {
-      ids,
-    });
-
-    for (const star of stars) {
-      this.emit(addEventsMap[type], star.entityId);
-    }
+    await this.remote.put<StarsDTO, StarRecord[]>(`/stars/${entityTypesToString[type]}`, { ids });
+    this.emit(StarEvents.Added, { ids, type });
   }
 
   starNotes(ids: EntityId[]) {
@@ -79,6 +62,6 @@ export default class StarService extends EventEmitter {
       pull(this.stars, starToRemove);
     });
 
-    this.emit(removeEventsMap[starToRemove.entityType], starToRemove.entityId);
+    this.emit(StarEvents.Removed, { id: starToRemove.entityId, type: starToRemove.entityType });
   }
 }

@@ -7,7 +7,7 @@ import { token as UIToken } from 'infra/UI';
 
 import type { NoteDTO, NoteVO as Note, NotesDTO, NoteQuery } from 'interface/Note';
 import type { RecyclablesDTO } from 'interface/Recyclables';
-import { EntityTypes } from 'interface/entity';
+import { EntityId, EntityLocator, EntityTypes } from 'interface/entity';
 
 import { MULTIPLE_ICON_FLAG, type NoteMetadata } from 'model/note/MetadataForm';
 import NoteTree from 'model/note/Tree';
@@ -32,8 +32,15 @@ export default class NoteService extends EventEmitter {
 
   private init() {
     const starService = container.resolve(StarService);
-    starService.on(StarEvents.NoteAdded, (noteId) => this.noteTree.toggleStar(noteId, true));
-    starService.on(StarEvents.NoteRemoved, (noteId) => this.noteTree.toggleStar(noteId, false));
+    starService.on(StarEvents.Added, ({ type, ids }: { type: EntityTypes; ids: EntityId[] }) => {
+      if (type === EntityTypes.Note) {
+        ids.forEach((noteId) => this.noteTree.toggleStar(noteId, true));
+      }
+    });
+    starService.on(
+      StarEvents.Removed,
+      ({ id, type }: EntityLocator) => type === EntityTypes.Note && this.noteTree.toggleStar(id, false),
+    );
   }
 
   readonly fetchChildren = async (parentId: Note['parentId']) => {

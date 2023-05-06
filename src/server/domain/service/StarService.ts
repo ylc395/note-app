@@ -45,6 +45,7 @@ export default class StarService extends BaseService {
     const starGroups: Record<EntityTypes, StarRecord[]> = {
       [EntityTypes.Note]: [],
       [EntityTypes.Memo]: [],
+      [EntityTypes.Material]: [],
       ...groupBy(stars, 'entityType'),
     };
     const idGroups: Record<EntityTypes, StarRecord['entityId'][]> = mapValues(starGroups, (records) =>
@@ -54,6 +55,10 @@ export default class StarService extends BaseService {
     const recyclableGroups: Record<EntityTypes, Record<string, boolean>> = {
       [EntityTypes.Note]: await this.recyclables.areRecyclable(EntityTypes.Note, idGroups[EntityTypes.Note]),
       [EntityTypes.Memo]: await this.recyclables.areRecyclable(EntityTypes.Memo, idGroups[EntityTypes.Memo]),
+      [EntityTypes.Material]: await this.recyclables.areRecyclable(
+        EntityTypes.Material,
+        idGroups[EntityTypes.Material],
+      ),
     };
 
     const notes = buildIndex(await this.notes.findAll({ id: idGroups[EntityTypes.Note] }));
