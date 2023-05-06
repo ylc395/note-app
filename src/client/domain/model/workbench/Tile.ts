@@ -1,6 +1,6 @@
 import { action, makeObservable, observable, computed } from 'mobx';
 import uniqueId from 'lodash/uniqueId';
-import EventEmitter from 'eventemitter3';
+import { Emitter } from 'strict-event-emitter';
 
 import type EntityEditor from 'model/abstract/Editor';
 import type Manager from './TileManger';
@@ -9,7 +9,7 @@ export enum Events {
   destroyed = 'tile.destroyed',
 }
 
-export default class Tile extends EventEmitter {
+export default class Tile extends Emitter<{ [Events.destroyed]: [void] }> {
   readonly id = uniqueId('tile-');
   @observable.ref currentEditor?: EntityEditor;
   @observable.shallow editors: EntityEditor[] = [];

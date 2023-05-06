@@ -1,17 +1,22 @@
-import type { EventEmitter } from 'node:events';
+import type { Emitter, EventMap } from 'strict-event-emitter';
 
-export interface AppClient extends EventEmitter {
+export enum EventNames {
+  BeforeStart = 'appClient.created',
+  Ready = 'appClient.ready',
+}
+
+export interface Events extends EventMap {
+  [EventNames.BeforeStart]: [];
+  [EventNames.Ready]: [];
+}
+
+export interface AppClient extends Emitter<Events> {
   start: () => Promise<void>;
   getConfigDir: () => string;
   getDeviceName: () => string;
   getAppId: () => string;
   getAppName: () => string;
   pushMessage: <T>(channel: string, payload: T) => void;
-}
-
-export enum Events {
-  BeforeStart = 'appClient.created',
-  Ready = 'appClient.ready',
 }
 
 export const token = Symbol('appClient');

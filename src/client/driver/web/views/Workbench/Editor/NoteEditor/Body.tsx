@@ -4,7 +4,7 @@ import { type ReactNode, useEffect, useContext } from 'react';
 import { reaction, when } from 'mobx';
 import debounce from 'lodash/debounce';
 
-import { Events, type BodyEvent } from 'model/note/Editor';
+import { Events } from 'model/note/Editor';
 
 import EditorContext from './Context';
 
@@ -15,7 +15,7 @@ export default observer(function NoteEditor({ children }: { children: ReactNode 
       return;
     }
 
-    const updateContent = debounce((body: BodyEvent) => {
+    const updateContent = debounce((body: string) => {
       editorRef.updateContent(body, true);
     }, 300);
 

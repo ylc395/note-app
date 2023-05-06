@@ -1,9 +1,9 @@
 import uniqueId from 'lodash/uniqueId';
 import { makeObservable, action, observable } from 'mobx';
-import EventEmitter from 'eventemitter3';
+import { Emitter, type EventMap } from 'strict-event-emitter';
 
 import type Tile from 'model/workbench/Tile';
-import type { EntityId, EntityLocator, EntityTypes } from 'interface/entity';
+import type { EntityId, EntityTypes } from 'interface/entity';
 
 interface Breadcrumb {
   title: string;
@@ -15,22 +15,22 @@ export type Breadcrumbs = Array<Breadcrumb & { siblings: Breadcrumb[] }>;
 
 export enum Events {
   Destroyed = 'entityEditor.destroyed',
-  Activated = 'entityEditor.activated',
   Loaded = 'entityEditor.loaded',
 }
 
-export interface EditableEntityLocator extends EntityLocator {
-  type: EntityTypes.Note;
+export interface CommonEditorEvents<T> extends EventMap {
+  [Events.Destroyed]: [];
+  [Events.Loaded]: [T];
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export default abstract class EntityEditor<T = unknown> extends EventEmitter {
+export default abstract class EntityEditor<T = any, E extends CommonEditorEvents<T> = any> extends Emitter<E> {
   readonly id = uniqueId('editor-');
   abstract readonly tabView: {
     title: string;
     icon: string | null;
   };
-  abstract readonly entityType: EditableEntityLocator['type'];
+  abstract readonly entityType: EntityTypes;
   abstract readonly breadcrumbs: Breadcrumbs;
   @observable entity?: T;
 

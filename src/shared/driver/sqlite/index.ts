@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import EventEmitter from 'node:events';
+import { Emitter } from 'strict-event-emitter';
 import knex, { type Knex } from 'knex';
 import camelCase from 'lodash/camelCase';
 import mapKeys from 'lodash/mapKeys';
@@ -19,13 +19,12 @@ function transformKeys(result: unknown): unknown {
 
 let db: Knex | undefined;
 
-const eventemitter = new EventEmitter();
-const event = 'init';
+const eventemitter = new Emitter<{ init: [Knex] }>();
 
 export function getDb() {
   if (!db) {
     return new Promise<Knex>((resolve) => {
-      eventemitter.once(event, (e: Knex) => resolve(e));
+      eventemitter.once('init', (e: Knex) => resolve(e));
     });
   }
 
@@ -48,7 +47,7 @@ export function createDb(dir: string) {
     wrapIdentifier: (value, originImpl) => originImpl(snakeCase(value)),
   });
 
-  eventemitter.emit(event, db);
+  eventemitter.emit('init', db);
 
   return db;
 }

@@ -4,7 +4,7 @@ import { protocol } from 'electron';
 import sqliteFactory from 'driver/sqlite';
 import electronClientFactory from 'client/driver/electron';
 
-import { token as appClientToken, type AppClient, Events as AppClientEvents } from 'infra/AppClient';
+import { token as appClientToken, type AppClient, EventNames as AppClientEventNames } from 'infra/AppClient';
 import { appFileProtocol } from 'infra/electronProtocol';
 import { token as databaseToken, type Database } from 'infra/Database';
 import { token as downloaderToken } from 'infra/Downloader';
@@ -32,7 +32,7 @@ export default class InfraModule implements OnApplicationBootstrap {
   ) {}
 
   async onApplicationBootstrap() {
-    this.electronApp.once(AppClientEvents.Ready, this.registerProtocol.bind(this));
+    this.electronApp.once(AppClientEventNames.Ready, this.registerProtocol.bind(this));
     const configDir = this.electronApp.getConfigDir();
     await this.sqliteDb.init(configDir);
   }

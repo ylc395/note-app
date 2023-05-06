@@ -1,13 +1,13 @@
 import { container, singleton } from 'tsyringe';
 import pick from 'lodash/pick';
-import EventEmitter from 'eventemitter3';
+import { Emitter } from 'strict-event-emitter';
 
 import { token as remoteToken } from 'infra/Remote';
 import { token as UIToken } from 'infra/UI';
 
 import type { NoteDTO, NoteVO as Note, NotesDTO, NoteQuery } from 'interface/Note';
 import type { RecyclablesDTO } from 'interface/Recyclables';
-import { EntityId, EntityLocator, EntityTypes } from 'interface/entity';
+import { EntityTypes } from 'interface/entity';
 
 import { MULTIPLE_ICON_FLAG, type NoteMetadata } from 'model/note/MetadataForm';
 import NoteTree from 'model/note/Tree';
@@ -21,7 +21,10 @@ export enum NoteEvents {
 }
 
 @singleton()
-export default class NoteService extends EventEmitter {
+export default class NoteService extends Emitter<{
+  [NoteEvents.Deleted]: [Note['id'][]];
+  [NoteEvents.Updated]: [Note[]];
+}> {
   private readonly remote = container.resolve(remoteToken);
   private readonly ui = container.resolve(UIToken);
 
@@ -32,15 +35,16 @@ export default class NoteService extends EventEmitter {
 
   private init() {
     const starService = container.resolve(StarService);
-    starService.on(StarEvents.Added, ({ type, ids }: { type: EntityTypes; ids: EntityId[] }) => {
+    starService.on(StarEvents.Added, ({ ids, type }) => {
       if (type === EntityTypes.Note) {
         ids.forEach((noteId) => this.noteTree.toggleStar(noteId, true));
       }
     });
-    starService.on(
-      StarEvents.Removed,
-      ({ id, type }: EntityLocator) => type === EntityTypes.Note && this.noteTree.toggleStar(id, false),
-    );
+    starService.on(StarEvents.Removed, ({ id, type }) => {
+      if (type === EntityTypes.Note) {
+        this.noteTree.toggleStar(id, false);
+      }
+    });
   }
 
   readonly fetchChildren = async (parentId: Note['parentId']) => {

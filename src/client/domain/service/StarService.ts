@@ -1,10 +1,10 @@
-import EventEmitter from 'eventemitter3';
+import { Emitter } from 'strict-event-emitter';
 import { container, singleton } from 'tsyringe';
 import { observable, makeObservable, runInAction, action } from 'mobx';
 import pull from 'lodash/pull';
 
 import { token as remoteToken } from 'infra/Remote';
-import { type EntityId, EntityTypes, entityTypesToString } from 'interface/entity';
+import { type EntityId, EntityTypes, entityTypesToString, EntityLocator } from 'interface/entity';
 import type { StarRecord, StarsDTO } from 'interface/star';
 
 export enum StarEvents {
@@ -14,7 +14,10 @@ export enum StarEvents {
 
 // todo: 能够收藏具体段落
 @singleton()
-export default class StarService extends EventEmitter {
+export default class StarService extends Emitter<{
+  [StarEvents.Added]: [{ type: EntityTypes; ids: EntityId[] }];
+  [StarEvents.Removed]: [EntityLocator];
+}> {
   constructor() {
     super();
     makeObservable(this);

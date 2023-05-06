@@ -2,12 +2,12 @@ import { app as electronApp, BrowserWindow, ipcMain, protocol } from 'electron';
 import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import { hostname } from 'node:os';
-import EventEmitter from 'node:events';
 import { ensureDirSync, emptyDirSync } from 'fs-extra';
+import { Emitter } from 'strict-event-emitter';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import memoize from 'lodash/memoize';
 
-import { type AppClient, Events as AppClientEvents } from 'infra/AppClient';
+import { type AppClient, EventNames as AppClientEventNames, type Events as AppClientEvents } from 'infra/AppClient';
 import { appFileProtocol } from 'infra/electronProtocol';
 import { load } from 'shared/driver/sqlite/kv';
 
@@ -17,7 +17,7 @@ const APP_NAME = 'my-note-app';
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const NEED_CLEAN = process.env.DEV_CLEAN === '1';
 
-class ElectronClient extends EventEmitter implements AppClient {
+class ElectronClient extends Emitter<AppClientEvents> implements AppClient {
   private mainWindow?: BrowserWindow;
   private appId?: string;
 
@@ -77,7 +77,7 @@ class ElectronClient extends EventEmitter implements AppClient {
       }
     }
 
-    this.emit(AppClientEvents.Ready);
+    this.emit(AppClientEventNames.Ready);
 
     await this.initWindow();
     await this.initAppId();

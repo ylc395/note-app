@@ -1,30 +1,32 @@
-import { makeObservable, computed, action, observable } from 'mobx';
+import { makeObservable, computed, action, toJS } from 'mobx';
 import debounce from 'lodash/debounce';
 
 import { EntityTypes } from 'interface/entity';
 import { normalizeTitle, type NoteVO, type NoteBodyVO } from 'interface/Note';
 
 import type Tile from 'model/workbench/Tile';
-import EntityEditor, { type Breadcrumbs } from 'model/abstract/Editor';
+import EntityEditor, { CommonEditorEvents, type Breadcrumbs } from 'model/abstract/Editor';
 
 import type NoteTree from './Tree';
 
 export enum Events {
-  MetadataUpdated = 'noteEditor.updated.metadata', // not included synced by other editor
+  Updated = 'noteEditor.updated.metadata', // not included synced by other editor
   BodyUpdated = 'noteEditor.updated.body', // not included synced by other editors
   BodyUpdatedNotOriginally = 'noteEditor.updated.body.notOriginally',
 }
-
-export type MetadataPatch = Omit<Partial<NoteVO>, 'id'>;
-export type BodyEvent = string;
-export type MetadataEvent = MetadataPatch;
 
 export interface Entity {
   body: NoteBodyVO;
   metadata: NoteVO;
 }
 
-export default class NoteEditor extends EntityEditor<Entity> {
+interface NoteEditorEvents extends CommonEditorEvents<Entity> {
+  [Events.BodyUpdated]: [string];
+  [Events.BodyUpdatedNotOriginally]: [string];
+  [Events.Updated]: [NoteVO];
+}
+
+export default class NoteEditor extends EntityEditor<Entity, NoteEditorEvents> {
   readonly entityType = EntityTypes.Note;
   constructor(tile: Tile, noteId: NoteVO['id'], private readonly noteTree: NoteTree) {
     super(tile, noteId);
@@ -74,15 +76,15 @@ export default class NoteEditor extends EntityEditor<Entity> {
   }
 
   @action
-  updateMetadata(metadata: MetadataEvent, isOrigin: boolean) {
+  updateMetadata(note: Partial<NoteVO>, isOrigin: boolean) {
     if (!this.entity) {
       throw new Error('no load note');
     }
 
-    Object.assign(this.entity.metadata, metadata);
+    Object.assign(this.entity.metadata, note);
 
     if (isOrigin) {
-      this.emit(Events.MetadataUpdated, metadata);
+      this.emit(Events.Updated, toJS(this.entity.metadata));
       this.updateTree();
     }
   }

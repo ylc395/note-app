@@ -8,7 +8,7 @@ import EditorContext from './Context';
 export default observer(function NoteTitle() {
   const { editor, editorRef, infoModal } = useContext(EditorContext);
   const handleChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => editor?.updateMetadata({ title: e.target.value }, true),
+    (e: ChangeEvent<HTMLInputElement>) => editor.updateMetadata({ title: e.target.value }, true),
     [editor],
   );
 

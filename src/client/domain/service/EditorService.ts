@@ -1,4 +1,3 @@
-import EventEmitter from 'eventemitter3';
 import { container, singleton } from 'tsyringe';
 import { action, makeObservable } from 'mobx';
 import debounce from 'lodash/debounce';
@@ -8,14 +7,14 @@ import { token as remoteToken } from 'infra/Remote';
 import { EntityTypes, type EntityLocator } from 'interface/entity';
 import type { NoteBodyDTO, NoteBodyVO, NoteDTO, NoteVO } from 'interface/Note';
 
-import NoteEditor, { Events as NoteEditorEvents, type BodyEvent, type MetadataEvent } from 'model/note/Editor';
-import EntityEditor, { type EditableEntityLocator, Events as EditorEvents } from 'model/abstract/Editor';
+import NoteEditor, { Events as NoteEditorEvents } from 'model/note/Editor';
+import EntityEditor, { Events as EditorEvents } from 'model/abstract/Editor';
 import Tile from 'model/workbench/Tile';
 import TileManager, { type TileSplitDirections } from 'model/workbench/TileManger';
 import NoteService, { NoteEvents } from 'service/NoteService';
 
 @singleton()
-export default class EditorService extends EventEmitter {
+export default class EditorService {
   private readonly remote = container.resolve(remoteToken);
   readonly tileManager = new TileManager();
   private editors: { [key in EntityTypes]?: Set<EntityEditor> } = {
@@ -23,7 +22,6 @@ export default class EditorService extends EventEmitter {
   };
 
   constructor() {
-    super();
     makeObservable(this);
     this.init();
   }
@@ -31,12 +29,12 @@ export default class EditorService extends EventEmitter {
   private init() {
     const noteService = container.resolve(NoteService);
 
-    noteService.on(NoteEvents.Updated, (notes: NoteVO[]) => {
-      for (const { id, ...metadata } of notes) {
-        const editors = this.getEditorsByEntity<NoteEditor>({ type: EntityTypes.Note, id });
+    noteService.on(NoteEvents.Updated, (notes) => {
+      for (const note of notes) {
+        const editors = this.getEditorsByEntity<NoteEditor>({ type: EntityTypes.Note, id: note.id });
 
         for (const editor of editors) {
-          editor.updateMetadata(metadata, false);
+          editor.updateMetadata(note, false);
         }
       }
     });
@@ -65,7 +63,7 @@ export default class EditorService extends EventEmitter {
     return editor;
   }
 
-  private fetchEntity<T>(entity: EditableEntityLocator, fetch: () => Promise<T>): Promise<T> {
+  private fetchEntity<T>(entity: EntityLocator, fetch: () => Promise<T>): Promise<T> {
     const existedEditor = this.getEditorsByEntity(entity)[0];
 
     return new Promise((resolve) => {
@@ -82,7 +80,7 @@ export default class EditorService extends EventEmitter {
   }
 
   //todo: bind ctrl+S
-  saveNote(noteId: NoteVO['id'], body: BodyEvent, isImportant?: true) {
+  saveNote(noteId: NoteVO['id'], body: string, isImportant?: true) {
     return this.remote.put<NoteBodyDTO>(`/notes/${noteId}/body`, { content: body, isImportant });
   }
 
@@ -93,16 +91,16 @@ export default class EditorService extends EventEmitter {
 
     noteEditor
       .on(NoteEditorEvents.BodyUpdated, debounce(this.saveNote.bind(this, noteId), 1000))
-      .on(NoteEditorEvents.BodyUpdated, (body: BodyEvent) => {
+      .on(NoteEditorEvents.BodyUpdated, (body) => {
         for (const editor of this.getEditorsByEntity<NoteEditor>(entity, noteEditor.id)) {
           editor.updateBody(body, false);
         }
       })
       .on(
-        NoteEditorEvents.MetadataUpdated,
-        debounce((note: MetadataEvent) => this.remote.patch<NoteDTO>(`/notes/${noteId}`, note), 1000),
+        NoteEditorEvents.Updated,
+        debounce((note) => this.remote.patch<NoteDTO>(`/notes/${noteId}`, note), 1000),
       )
-      .on(NoteEditorEvents.MetadataUpdated, (metadata: MetadataEvent) => {
+      .on(NoteEditorEvents.Updated, (metadata) => {
         for (const editor of this.getEditorsByEntity<NoteEditor>(entity, noteEditor.id)) {
           editor.updateMetadata(metadata, false);
         }
@@ -125,7 +123,7 @@ export default class EditorService extends EventEmitter {
       throw new Error('unsupported type');
     }
 
-    return Array.from(editorSet).filter((e) => e.entityId === id && (excludeId ? excludeId === e.id : true)) as T[];
+    return Array.from(editorSet).filter((e) => e.entityId === id && (excludeId ? excludeId !== e.id : true)) as T[];
   }
 
   @action.bound
