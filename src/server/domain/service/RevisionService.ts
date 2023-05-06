@@ -3,6 +3,7 @@ import { createPatch, applyPatch } from 'diff';
 
 import { type EntityLocator, EntityTypes } from 'interface/entity';
 import type { NoteVO } from 'interface/note';
+import type { MemoVO } from 'interface/memo';
 import type { RevisionVO } from 'interface/revision';
 
 import BaseService from './BaseService';
@@ -34,11 +35,14 @@ export default class RevisionService extends BaseService {
   }
 
   private async getCreatedAt(entityLocator: EntityLocator) {
-    let entity: NoteVO | null;
+    let entity: NoteVO | MemoVO | null;
 
     switch (entityLocator.type) {
       case EntityTypes.Note:
         entity = await this.notes.findOneById(entityLocator.id);
+        break;
+      case EntityTypes.Memo:
+        entity = await this.memos.findOneById(entityLocator.id);
         break;
       default:
         throw new Error('unsupported type');

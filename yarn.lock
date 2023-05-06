@@ -3500,6 +3500,11 @@ methods@~1.1.2:
   resolved "https://registry.yarnpkg.com/methods/-/methods-1.1.2.tgz#5529a4d67654134edcc5266656835b0f851afcee"
   integrity sha512-iclAHeNqNm68zFtnZ0e+1L2yUIdvzNoauKU4WBA3VvH/vPFieF7qfRlwUZU+DA9P9bPXIS90ulxoUoCH23sV2w==
 
+micro-result@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/micro-result/-/micro-result-1.0.3.tgz#e248089c97df977a1bb093c60dd74d18c341ef6b"
+  integrity sha512-t9hUprX76WXIAYWYbmaBkMxffCi+0Yu4ChRkAUUHAyWpj0qyonnLp7dbR8TGNZt+nND8/kugn5GnnZl3Nmb9DQ==
+
 micromark-core-commonmark@^1.0.0, micromark-core-commonmark@^1.0.1:
   version "1.0.6"
   resolved "https://registry.yarnpkg.com/micromark-core-commonmark/-/micromark-core-commonmark-1.0.6.tgz#edff4c72e5993d93724a3c206970f5a15b0585ad"
@@ -4182,6 +4187,11 @@ object.values@^1.1.6:
     call-bind "^1.0.2"
     define-properties "^1.1.4"
     es-abstract "^1.20.4"
+
+ohm-js@^17.0.4:
+  version "17.1.0"
+  resolved "https://registry.yarnpkg.com/ohm-js/-/ohm-js-17.1.0.tgz#50d8e08f69d7909931998d75202d35e2a90c8885"
+  integrity sha512-xc3B5dgAjTBQGHaH7B58M2Pmv6WvzrJ/3/7LeUzXNg0/sY3jQPdSd/S2SstppaleO77rifR1tyhdfFGNIwxf2Q==
 
 on-finished@2.4.1:
   version "2.4.1"
@@ -5328,6 +5338,14 @@ scroll-into-view-if-needed@^3.0.3:
   integrity sha512-x+CW0kOzlFNOnseF0DBr0AJ5m+TgGmSOdEZwyiZW0gV87XBvxQKw5A8DvFFgabznA68XqLgVX+PwPX8OzsFvRA==
   dependencies:
     compute-scroll-into-view "^3.0.0"
+
+search-expression-parser@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/search-expression-parser/-/search-expression-parser-1.0.2.tgz#48073bad31cd39c1a6fda88b7c853c7f9f6eb451"
+  integrity sha512-V+6o0k8fnDxfO/4uniuHY92DszJ8BZeHrgOrBTFfgnJDi9ieAfUsONDS2BuSiJ2ipT8cQMFozyvbWNy+RGaZuA==
+  dependencies:
+    micro-result "^1.0.3"
+    ohm-js "^17.0.4"
 
 semver-compare@^1.0.0:
   version "1.0.0"
