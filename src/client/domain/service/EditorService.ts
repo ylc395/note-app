@@ -18,12 +18,28 @@ import NoteService, { NoteEvents } from 'service/NoteService';
 export default class EditorService extends EventEmitter {
   private readonly remote = container.resolve(remoteToken);
   readonly tileManager = new TileManager();
-  private editors = {
+  private editors: { [key in EntityTypes]?: Set<EntityEditor> } = {
     [EntityTypes.Note]: new Set<NoteEditor>(),
   };
+
   constructor() {
     super();
     makeObservable(this);
+    this.init();
+  }
+
+  private init() {
+    const noteService = container.resolve(NoteService);
+
+    noteService.on(NoteEvents.Updated, (notes: NoteVO[]) => {
+      for (const { id, ...metadata } of notes) {
+        const editors = this.getEditorsByEntity<NoteEditor>({ type: EntityTypes.Note, id });
+
+        for (const editor of editors) {
+          editor.updateMetadata(metadata, false);
+        }
+      }
+    });
   }
 
   private createEditor(tile: Tile, { id, type }: EntityLocator) {
@@ -37,14 +53,20 @@ export default class EditorService extends EventEmitter {
         throw new Error('invalid type');
     }
 
-    this.editors[type].add(editor as NoteEditor);
-    editor.on(EditorEvents.Destroyed, () => this.editors[type].delete(editor as NoteEditor));
+    const editorSet = this.editors[type];
+
+    if (!editorSet) {
+      throw new Error('invalid type');
+    }
+
+    editorSet.add(editor);
+    editor.once(EditorEvents.Destroyed, () => editorSet.delete(editor as NoteEditor));
 
     return editor;
   }
 
-  private fetchEntity<T>({ id, type }: EditableEntityLocator, fetch: () => Promise<T>): Promise<T> {
-    const existedEditor = Array.from(this.editors[type]).find((editor) => editor.entityId === id);
+  private fetchEntity<T>(entity: EditableEntityLocator, fetch: () => Promise<T>): Promise<T> {
+    const existedEditor = this.getEditorsByEntity(entity)[0];
 
     return new Promise((resolve) => {
       if (existedEditor) {
@@ -60,26 +82,19 @@ export default class EditorService extends EventEmitter {
   }
 
   //todo: bind ctrl+S
-  readonly saveNote = (noteId: NoteVO['id'], body: BodyEvent, isImportant?: true) => {
+  saveNote(noteId: NoteVO['id'], body: BodyEvent, isImportant?: true) {
     return this.remote.put<NoteBodyDTO>(`/notes/${noteId}/body`, { content: body, isImportant });
-  };
+  }
 
   private createNoteEditor(tile: Tile, noteId: NoteEditor['entityId']) {
     const noteService = container.resolve(NoteService);
     const noteEditor = new NoteEditor(tile, noteId, noteService.noteTree);
-
-    noteService.on(NoteEvents.Updated, (notes: NoteVO[]) => {
-      for (const { id, ...metadata } of notes) {
-        if (id === noteId) {
-          noteEditor.updateMetadata(metadata, false);
-        }
-      }
-    });
+    const entity = { type: EntityTypes.Note, id: noteId };
 
     noteEditor
-      .on(NoteEditorEvents.BodyUpdated, debounce(this.saveNote.bind(null, noteId), 1000))
+      .on(NoteEditorEvents.BodyUpdated, debounce(this.saveNote.bind(this, noteId), 1000))
       .on(NoteEditorEvents.BodyUpdated, (body: BodyEvent) => {
-        for (const editor of this.getSameEntityEditors(noteEditor)) {
+        for (const editor of this.getEditorsByEntity<NoteEditor>(entity, noteEditor.id)) {
           editor.updateBody(body, false);
         }
       })
@@ -88,7 +103,7 @@ export default class EditorService extends EventEmitter {
         debounce((note: MetadataEvent) => this.remote.patch<NoteDTO>(`/notes/${noteId}`, note), 1000),
       )
       .on(NoteEditorEvents.MetadataUpdated, (metadata: MetadataEvent) => {
-        for (const editor of this.getSameEntityEditors(noteEditor)) {
+        for (const editor of this.getEditorsByEntity<NoteEditor>(entity, noteEditor.id)) {
           editor.updateMetadata(metadata, false);
         }
       });
@@ -103,8 +118,14 @@ export default class EditorService extends EventEmitter {
     return noteEditor;
   }
 
-  private getSameEntityEditors(editor: EntityEditor) {
-    return Array.from(this.editors[editor.entityType]).filter((e) => e !== editor && e.entityId === editor.entityId);
+  private getEditorsByEntity<T extends EntityEditor>({ id, type }: EntityLocator, excludeId?: EntityEditor['id']) {
+    const editorSet = this.editors[type];
+
+    if (!editorSet) {
+      throw new Error('unsupported type');
+    }
+
+    return Array.from(editorSet).filter((e) => e.entityId === id && (excludeId ? excludeId === e.id : true)) as T[];
   }
 
   @action.bound

@@ -17,6 +17,10 @@ export default observer(function NoteTreeView() {
     ({ key }) => noteTree.toggleExpand(key, false),
     [noteTree],
   );
+  const handleSelect = useCallback<NonNullable<TreeProps<NoteTreeNode>['onSelect']>>(
+    ({ entity }, isMultiple) => selectNote(entity, isMultiple),
+    [selectNote],
+  );
   const titleRender = useCallback<NonNullable<TreeProps<NoteTreeNode>['titleRender']>>(
     (node) => <NodeTitle node={node} />,
     [],
@@ -42,7 +46,7 @@ export default observer(function NoteTreeView() {
         tree={noteTree}
         onContextmenu={onContextmenu}
         titleRender={titleRender}
-        onSelect={selectNote}
+        onSelect={handleSelect}
         onExpand={handleExpand}
       />
     </div>

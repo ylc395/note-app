@@ -1,7 +1,7 @@
 import { singleton, container } from 'tsyringe';
 
 import { MaterialDTO, DirectoryVO, MaterialVO, MaterialQuery, isDirectory, EntityMaterialVO } from 'interface/material';
-import MaterialTree, { type MaterialTreeNode } from 'model/material/Tree';
+import MaterialTree from 'model/material/Tree';
 import { token as remoteToken } from 'infra/Remote';
 
 @singleton()
@@ -50,11 +50,11 @@ export default class MaterialService {
     this.materialTree.toggleSelect(material.id, true);
   };
 
-  readonly selectMaterial = (node: MaterialTreeNode, multiple: boolean) => {
-    const selected = this.materialTree.toggleSelect(node.key, !multiple);
+  readonly selectMaterial = (material: MaterialVO, isMultiple: boolean) => {
+    this.materialTree.toggleSelect(material.id, !isMultiple);
 
-    if (selected && !multiple && !isDirectory(node.entity)) {
-      // this.editor.openEntity({ entityType: EntityTypes.Note, entityId: node.key });
+    if (!isMultiple && !isDirectory(material)) {
+      // this.editor.openEntity({ entityType: EntityTypes., entityId: material.id });
     }
   };
 }

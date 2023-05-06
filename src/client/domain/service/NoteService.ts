@@ -10,7 +10,7 @@ import type { RecyclablesDTO } from 'interface/Recyclables';
 import { EntityTypes } from 'interface/entity';
 
 import { MULTIPLE_ICON_FLAG, type NoteMetadata } from 'model/note/MetadataForm';
-import NoteTree, { type NoteTreeNode } from 'model/note/Tree';
+import NoteTree from 'model/note/Tree';
 
 import StarService, { StarEvents } from './StarService';
 import EditorService from './EditorService';
@@ -23,14 +23,17 @@ export enum NoteEvents {
 @singleton()
 export default class NoteService extends EventEmitter {
   private readonly remote = container.resolve(remoteToken);
-  private readonly editor = container.resolve(EditorService);
-  private readonly star = container.resolve(StarService);
   private readonly ui = container.resolve(UIToken);
 
   constructor() {
     super();
-    this.star.on(StarEvents.NoteAdded, (noteId) => this.noteTree.toggleStar(noteId, true));
-    this.star.on(StarEvents.NoteRemoved, (noteId) => this.noteTree.toggleStar(noteId, false));
+    this.init();
+  }
+
+  private init() {
+    const starService = container.resolve(StarService);
+    starService.on(StarEvents.NoteAdded, (noteId) => this.noteTree.toggleStar(noteId, true));
+    starService.on(StarEvents.NoteRemoved, (noteId) => this.noteTree.toggleStar(noteId, false));
   }
 
   readonly fetchChildren = async (parentId: Note['parentId']) => {
@@ -60,7 +63,9 @@ export default class NoteService extends EventEmitter {
 
     this.noteTree.updateTreeByEntity(note);
     this.noteTree.toggleSelect(note.id, true);
-    this.editor.openEntity({ type: EntityTypes.Note, id: note.id });
+
+    const { openEntity } = container.resolve(EditorService);
+    openEntity({ type: EntityTypes.Note, id: note.id });
   };
 
   async duplicateNote(targetId: Note['id']) {
@@ -70,11 +75,12 @@ export default class NoteService extends EventEmitter {
     this.noteTree.toggleSelect(note.id, true);
   }
 
-  readonly selectNote = (node: NoteTreeNode, multiple: boolean) => {
-    const selected = this.noteTree.toggleSelect(node.key, !multiple);
+  readonly selectNote = (note: Note, multiple: boolean) => {
+    this.noteTree.toggleSelect(note.id, !multiple);
 
-    if (selected && !multiple) {
-      this.editor.openEntity({ type: EntityTypes.Note, id: node.key });
+    if (!multiple) {
+      const { openEntity } = container.resolve(EditorService);
+      openEntity({ type: EntityTypes.Note, id: note.id });
     }
   };
 

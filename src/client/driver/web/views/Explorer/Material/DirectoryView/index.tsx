@@ -14,6 +14,10 @@ export default observer(function MaterialTreeView() {
     ({ key }) => materialTree.toggleExpand(key, false),
     [materialTree],
   );
+  const handleSelect = useCallback<NonNullable<TreeProps<MaterialTreeNode>['onSelect']>>(
+    ({ entity }, isMultiple) => selectMaterial(entity, isMultiple),
+    [selectMaterial],
+  );
 
   const titleRender = useCallback<NonNullable<TreeProps<MaterialTreeNode>['titleRender']>>(
     (node) => <NodeTitle node={node} />,
@@ -30,7 +34,7 @@ export default observer(function MaterialTreeView() {
         multiple
         draggable
         tree={materialTree}
-        onSelect={selectMaterial}
+        onSelect={handleSelect}
         onExpand={handleExpand}
         titleRender={titleRender}
       />

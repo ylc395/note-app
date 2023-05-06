@@ -325,7 +325,7 @@ export abstract class Tree<T extends TreeNodeEntity> {
         node.isSelected = true;
       }
 
-      return true;
+      return;
     }
 
     for (const id of ids) {
