@@ -1,12 +1,9 @@
 import { makeObservable, computed, action, toJS } from 'mobx';
-import debounce from 'lodash/debounce';
 
 import { EntityTypes } from 'interface/entity';
 import { normalizeTitle, type NoteVO, type NoteBodyVO } from 'interface/Note';
-
 import type Tile from 'model/workbench/Tile';
-import EntityEditor, { CommonEditorEvents, type Breadcrumbs } from 'model/abstract/Editor';
-
+import EntityEditor, { type CommonEditorEvents, type Breadcrumbs } from 'model/abstract/Editor';
 import type NoteTree from './Tree';
 
 export enum Events {
@@ -20,7 +17,7 @@ export interface Entity {
   metadata: NoteVO;
 }
 
-interface NoteEditorEvents extends CommonEditorEvents<Entity> {
+interface NoteEditorEvents extends CommonEditorEvents {
   [Events.BodyUpdated]: [string];
   [Events.BodyUpdatedNotOriginally]: [string];
   [Events.Updated]: [NoteVO];
@@ -44,7 +41,7 @@ export default class NoteEditor extends EntityEditor<Entity, NoteEditorEvents> {
   }
 
   @computed
-  get breadcrumbs(): Breadcrumbs {
+  get breadcrumbs() {
     const result: Breadcrumbs = [];
     let note = this.noteTree.getNode(this.entityId, true)?.entity;
     const noteToBreadcrumb = (note: NoteVO) => ({
@@ -76,24 +73,19 @@ export default class NoteEditor extends EntityEditor<Entity, NoteEditorEvents> {
   }
 
   @action
-  updateMetadata(note: Partial<NoteVO>, isOrigin: boolean) {
+  updateNote(note: Partial<NoteVO>, isOrigin: boolean) {
     if (!this.entity) {
       throw new Error('no load note');
+    }
+
+    if (note.id && note.id !== this.entity.metadata.id) {
+      throw new Error('wrong id');
     }
 
     Object.assign(this.entity.metadata, note);
 
     if (isOrigin) {
       this.emit(Events.Updated, toJS(this.entity.metadata));
-      this.updateTree();
     }
   }
-
-  private updateTree = debounce(() => {
-    if (!this.entity) {
-      throw new Error('no load note');
-    }
-
-    this.noteTree.updateTreeByEntity(this.entity.metadata);
-  }, 500);
 }

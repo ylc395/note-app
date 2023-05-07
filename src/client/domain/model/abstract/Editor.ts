@@ -15,16 +15,14 @@ export type Breadcrumbs = Array<Breadcrumb & { siblings: Breadcrumb[] }>;
 
 export enum Events {
   Destroyed = 'entityEditor.destroyed',
-  Loaded = 'entityEditor.loaded',
 }
 
-export interface CommonEditorEvents<T> extends EventMap {
+export interface CommonEditorEvents extends EventMap {
   [Events.Destroyed]: [];
-  [Events.Loaded]: [T];
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export default abstract class EntityEditor<T = any, E extends CommonEditorEvents<T> = any> extends Emitter<E> {
+export default abstract class EntityEditor<T = any, E extends CommonEditorEvents = any> extends Emitter<E> {
   readonly id = uniqueId('editor-');
   abstract readonly tabView: {
     title: string;
@@ -55,6 +53,5 @@ export default abstract class EntityEditor<T = any, E extends CommonEditorEvents
     }
 
     this.entity = entity;
-    this.emit(Events.Loaded, entity);
   }
 }
