@@ -1,9 +1,9 @@
 import type { ResourceVO } from 'interface/resource';
-import { appFileProtocol } from 'infra/electronProtocol';
+import { APP_FILE_PROTOCOL } from 'infra/constants';
 
 export function getFileUrlById(fileId: ResourceVO['id']) {
   if (__PLATFORM__ === 'electron') {
-    return `${appFileProtocol}:///${fileId}`;
+    return `${APP_FILE_PROTOCOL}:///${fileId}`;
   }
 
   throw new Error('undefined url');
@@ -11,7 +11,7 @@ export function getFileUrlById(fileId: ResourceVO['id']) {
 
 export function isInternalFileUrl(url: string) {
   if (__PLATFORM__ === 'electron') {
-    return url.startsWith(appFileProtocol);
+    return url.startsWith(APP_FILE_PROTOCOL);
   }
 
   return false;

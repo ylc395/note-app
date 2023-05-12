@@ -7,7 +7,7 @@ import {
   ExpressionNodeType,
 } from 'search-expression-parser';
 
-import { type SearchEngine, token as searchEngineToken, type SearchQuery } from 'infra/SearchEngine';
+import { type SearchEngine, token as searchEngineToken, type SearchQuery } from 'infra/searchEngine';
 import { EntityTypes } from 'interface/entity';
 import BaseService from './BaseService';
 

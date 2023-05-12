@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { ensureDirSync, emptyDirSync } from 'fs-extra';
 import { Emitter } from 'strict-event-emitter';
 import knex, { type Knex } from 'knex';
 import camelCase from 'lodash/camelCase';
@@ -36,7 +37,14 @@ export function createDb(dir: string) {
     throw new Error('db existed');
   }
 
+  ensureDirSync(dir);
+
   const isDevelopment = process.env.NODE_ENV === 'development';
+  const needClean = process.env.DEV_CLEAN === '1';
+
+  if (isDevelopment && needClean) {
+    emptyDirSync(dir);
+  }
 
   db = knex({
     client: 'sqlite3',
@@ -47,6 +55,7 @@ export function createDb(dir: string) {
     wrapIdentifier: (value, originImpl) => originImpl(snakeCase(value)),
   });
 
+  console.log(`sqlite: initialized in ${dir}`);
   eventemitter.emit('init', db);
 
   return db;

@@ -2,7 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 
 import type { Remote } from 'infra/Remote';
 import type { ContextmenuItem } from 'infra/UI';
-import { CHANNEL as SYNC_CHANNEL, type Log } from 'infra/Synchronizer';
+// import { SYNC_LOG_CHANNEL } from 'infra/constants';
 
 import { IPC_CHANNEL, type IpcRequest } from './ipc';
 import { CONTEXTMENU_CHANNEL } from './contextmenu';
@@ -44,9 +44,9 @@ const getActionFromContextmenu = (menuItems: ContextmenuItem[]) => {
   return ipcRenderer.invoke(CONTEXTMENU_CHANNEL, menuItems);
 };
 
-const onSynchronizationLogUpdated = (cb: (log: Log) => void) =>
-  ipcRenderer.on(SYNC_CHANNEL, (_, payload) => cb(payload));
+// const onSynchronizationLogUpdated = (cb: (log: Log) => void) =>
+//   ipcRenderer.on(SYNC_LOG_CHANNEL, (_, payload) => cb(payload));
 
 contextBridge.exposeInMainWorld('electronIpcHttpClient', client);
 contextBridge.exposeInMainWorld('electronIpcContextmenu', getActionFromContextmenu);
-contextBridge.exposeInMainWorld('electronOnSynchronizationLogUpdated', onSynchronizationLogUpdated);
+// contextBridge.exposeInMainWorld('electronOnSynchronizationLogUpdated', onSynchronizationLogUpdated);

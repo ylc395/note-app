@@ -2,39 +2,33 @@ import { app as electronApp, BrowserWindow, ipcMain, protocol } from 'electron';
 import { randomUUID } from 'node:crypto';
 import { join } from 'node:path';
 import { hostname } from 'node:os';
-import { ensureDirSync, emptyDirSync } from 'fs-extra';
 import { Emitter } from 'strict-event-emitter';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import memoize from 'lodash/memoize';
 
-import { type AppClient, EventNames as AppClientEventNames, type Events as AppClientEvents } from 'infra/AppClient';
-import { appFileProtocol } from 'infra/electronProtocol';
+import {
+  type AppClient,
+  EventNames as AppClientEventNames,
+  type Events as AppClientEvents,
+  ClientInfo,
+} from 'infra/AppClient';
+import { APP_FILE_PROTOCOL } from 'infra/constants';
 import { load } from 'shared/driver/sqlite/kv';
 
 import { CONTEXTMENU_CHANNEL, createContextmenu } from './contextmenu';
 
 const APP_NAME = 'my-note-app';
 const NODE_ENV = process.env.NODE_ENV || 'development';
-const NEED_CLEAN = process.env.DEV_CLEAN === '1';
 
 class ElectronClient extends Emitter<AppClientEvents> implements AppClient {
   private mainWindow?: BrowserWindow;
-  private appId?: string;
+  private clientInfo?: ClientInfo;
 
   constructor() {
     super();
-    const dir = this.getConfigDir();
-    ensureDirSync(dir);
-
-    if (NODE_ENV === 'development' && NEED_CLEAN) {
-      emptyDirSync(dir);
-    }
-
-    console.log(`electron: initialized in ${dir}`);
-
     protocol.registerSchemesAsPrivileged([
       {
-        scheme: appFileProtocol,
+        scheme: APP_FILE_PROTOCOL,
         privileges: {
           supportFetchAPI: true,
           stream: true,
@@ -77,13 +71,13 @@ class ElectronClient extends Emitter<AppClientEvents> implements AppClient {
       }
     }
 
+    await this.initClientInfo();
     this.emit(AppClientEventNames.Ready);
 
     await this.initWindow();
-    await this.initAppId();
   }
 
-  readonly getConfigDir = () => {
+  readonly getDataDir = () => {
     return join(electronApp.getPath('appData'), `${APP_NAME}${NODE_ENV === 'development' ? '-dev' : ''}`);
   };
 
@@ -107,17 +101,20 @@ class ElectronClient extends Emitter<AppClientEvents> implements AppClient {
     }
   }
 
-  private async initAppId() {
-    const key = 'app.desktop.id';
-    this.appId = await load(key, randomUUID);
+  private async initClientInfo() {
+    this.clientInfo = {
+      clientId: await load('app.desktop.id', randomUUID),
+      appName: APP_NAME,
+      deviceName: hostname(),
+    };
   }
 
-  getDeviceName() {
-    return hostname();
-  }
+  getClientInfo() {
+    if (!this.clientInfo) {
+      throw new Error('no client info');
+    }
 
-  getAppName() {
-    return APP_NAME;
+    return this.clientInfo;
   }
 
   pushMessage<T>(channel: string, payload: T) {
@@ -126,14 +123,6 @@ class ElectronClient extends Emitter<AppClientEvents> implements AppClient {
     }
 
     this.mainWindow.webContents.send(channel, payload);
-  }
-
-  getAppId() {
-    if (!this.appId) {
-      throw new Error('no app id');
-    }
-
-    return this.appId;
   }
 }
 

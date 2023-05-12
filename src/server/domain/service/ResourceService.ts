@@ -4,8 +4,8 @@ import path from 'node:path';
 import fromParis from 'lodash/fromPairs';
 
 import { type ResourcesDTO, isUrls } from 'interface/resource';
-import { appFileProtocol } from 'infra/electronProtocol';
-import { token as downloaderToken, type Downloader } from 'infra/Downloader';
+import { APP_FILE_PROTOCOL } from 'infra/constants';
+import { token as downloaderToken, type Downloader } from 'infra/downloader';
 
 import { buildIndex } from 'utils/collection';
 
@@ -71,7 +71,7 @@ export default class ResourceService extends BaseService {
 
   static getResourceIdFromUrl(url: string) {
     if (process.env.APP_PLATFORM === 'electron') {
-      if (!url.startsWith(appFileProtocol)) {
+      if (!url.startsWith(APP_FILE_PROTOCOL)) {
         return null;
       }
 

@@ -4,7 +4,7 @@ import memoize from 'lodash/memoize';
 import { PropagatedTransaction } from '@mokuteki/propagated-transactions';
 
 import { createDb } from 'shared/driver/sqlite';
-import type { Database } from 'infra/Database';
+import type { Database } from 'infra/database';
 import type Repository from 'service/repository';
 
 import * as schemas from './schema';

@@ -1,5 +1,5 @@
 import type { Knex } from 'knex';
-import type { SearchEngine, SearchQuery } from 'infra/SearchEngine';
+import type { SearchEngine, SearchQuery } from 'infra/searchEngine';
 import { getDb } from 'shared/driver/sqlite';
 import { EntityTypes } from 'interface/entity';
 

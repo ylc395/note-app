@@ -5,17 +5,17 @@ import fm from 'front-matter';
 
 import { token as appClientToken, type AppClient } from 'infra/AppClient';
 import { type EntityLocator, EntityTypes } from 'interface/entity';
-import type { Conflict, Log } from 'infra/Synchronizer';
+import type { Conflict, Log } from 'infra/synchronizer';
 import type { NoteVO } from 'interface/note';
 import type { MemoVO } from 'interface/memo';
-import { type SyncTargetFactory, type SyncTarget, token as syncTargetFactoryToken } from 'infra/SyncTargetFactory';
+import { type SyncTargetFactory, type SyncTarget, token as syncTargetFactoryToken } from 'infra/synchronizer';
 
 import BaseService from './BaseService';
 
 const metaSchema = object({
   startAt: number(),
   finishAt: number().optional(),
-  appId: string(),
+  clientId: string(),
   deviceName: string(),
   appName: string(),
 });
@@ -77,10 +77,11 @@ export default class SyncService extends BaseService {
     this.syncTarget = this.syncTargetFactory('fs');
 
     const remoteMeta = await this.getRemoteMeta();
+    const { clientId } = this.appClient.getClientInfo();
 
-    if (remoteMeta && !remoteMeta.finishAt && remoteMeta.appId !== this.appClient.getAppId()) {
+    if (remoteMeta && !remoteMeta.finishAt && remoteMeta.clientId !== clientId) {
       this.isBusy = false;
-      this.addLog('info', `${remoteMeta.appId}上的${remoteMeta.appName}正在同步中`);
+      this.addLog('info', `${remoteMeta.clientId}上的${remoteMeta.appName}正在同步中`);
       return;
     }
 
@@ -299,11 +300,13 @@ export default class SyncService extends BaseService {
       throw new Error('no remote');
     }
 
+    const { deviceName, clientId, appName } = this.appClient.getClientInfo();
+
     const meta: Meta = {
       startAt,
-      deviceName: this.appClient.getDeviceName(),
-      appId: this.appClient.getAppId(),
-      appName: this.appClient.getAppName(),
+      deviceName,
+      clientId,
+      appName,
       finishAt,
     };
 

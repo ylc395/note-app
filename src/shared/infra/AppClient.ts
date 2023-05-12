@@ -10,12 +10,16 @@ export interface Events extends EventMap {
   [EventNames.Ready]: [];
 }
 
+export interface ClientInfo {
+  clientId: string;
+  appName: string;
+  deviceName: string;
+}
+
 export interface AppClient extends Emitter<Events> {
   start: () => Promise<void>;
-  getConfigDir: () => string;
-  getDeviceName: () => string;
-  getAppId: () => string;
-  getAppName: () => string;
+  getDataDir: () => string;
+  getClientInfo: () => ClientInfo;
   pushMessage: <T>(channel: string, payload: T) => void;
 }
 

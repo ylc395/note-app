@@ -1,4 +1,5 @@
-import type { SyncTargetFactory } from 'infra/SyncTargetFactory';
+import type { SyncTargetFactory } from 'infra/synchronizer';
+
 import FsSyncTarget from './FsSyncTarget';
 
 const syncTargetFactory: SyncTargetFactory = function (target) {
