@@ -33,7 +33,7 @@ export function getDb() {
 
 export function createDb(dir: string) {
   if (db) {
-    return db;
+    throw new Error('db existed');
   }
 
   const isDevelopment = process.env.NODE_ENV === 'development';

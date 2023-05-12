@@ -1,7 +1,7 @@
 import { Global, Module, Inject, type OnApplicationBootstrap } from '@nestjs/common';
 import { protocol } from 'electron';
 
-import sqliteFactory from 'driver/sqlite';
+import { searchEngineFactory, dbFactory } from 'driver/sqlite';
 import electronClientFactory from 'client/driver/electron';
 
 import { token as appClientToken, type AppClient, EventNames as AppClientEventNames } from 'infra/AppClient';
@@ -9,6 +9,8 @@ import { appFileProtocol } from 'infra/electronProtocol';
 import { token as databaseToken, type Database } from 'infra/Database';
 import { token as downloaderToken } from 'infra/Downloader';
 import { token as syncTargetFactoryToken } from 'infra/SyncTargetFactory';
+import { token as searchEngineToken } from 'infra/SearchEngine';
+
 import type Repositories from 'service/repository';
 import ResourceService from 'service/ResourceService';
 
@@ -19,11 +21,12 @@ import syncTargetFactory from '../infra/syncTargetFactory';
 @Module({
   providers: [
     { provide: appClientToken, useFactory: electronClientFactory },
-    { provide: databaseToken, useFactory: sqliteFactory },
+    { provide: databaseToken, useFactory: dbFactory },
     { provide: downloaderToken, useClass: Downloader },
+    { provide: searchEngineToken, useFactory: searchEngineFactory },
     { provide: syncTargetFactoryToken, useValue: syncTargetFactory },
   ],
-  exports: [appClientToken, databaseToken, downloaderToken, syncTargetFactoryToken],
+  exports: [appClientToken, databaseToken, downloaderToken, syncTargetFactoryToken, searchEngineToken],
 })
 export default class InfraModule implements OnApplicationBootstrap {
   constructor(

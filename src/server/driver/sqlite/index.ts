@@ -10,13 +10,15 @@ import type Repository from 'service/repository';
 import * as schemas from './schema';
 import * as repositories from './repository';
 import type { Schema } from './schema/type';
+import SqliteSearchEngine from './SearchEngine';
 
 class SqliteDb implements Database {
-  private knex!: Knex;
+  private knex?: Knex;
 
   transactionManager = new PropagatedTransaction({
     start: async () => {
-      const trx = await this.knex.transaction();
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const trx = await this.knex!.transaction();
       return trx;
     },
     commit: async (trx) => {
@@ -34,6 +36,10 @@ class SqliteDb implements Database {
   }
 
   async init(dir: string) {
+    if (this.knex) {
+      return;
+    }
+
     this.knex = createDb(dir);
     await this.createTables();
   }
@@ -42,8 +48,11 @@ class SqliteDb implements Database {
     const _schemas: Schema[] = Object.values(schemas);
     await Promise.all(
       _schemas.map(async ({ tableName, fields, restrictions }) => {
-        if (!(await this.knex.schema.hasTable(tableName))) {
-          return this.knex.schema.createTable(tableName, (table) => this.builder(table, fields, restrictions));
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const { schema } = this.knex!;
+
+        if (!(await schema.hasTable(tableName))) {
+          return schema.createTable(tableName, (table) => this.builder(table, fields, restrictions));
         }
       }),
     );
@@ -70,7 +79,8 @@ class SqliteDb implements Database {
       }
 
       if (typeof options.defaultTo !== 'undefined') {
-        col.defaultTo(typeof options.defaultTo === 'function' ? options.defaultTo(this.knex) : options.defaultTo);
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        col.defaultTo(typeof options.defaultTo === 'function' ? options.defaultTo(this.knex!) : options.defaultTo);
       }
     }
 
@@ -88,6 +98,5 @@ class SqliteDb implements Database {
   };
 }
 
-const factory = memoize(() => new SqliteDb());
-
-export default factory;
+export const dbFactory = memoize(() => new SqliteDb());
+export const searchEngineFactory = memoize(() => new SqliteSearchEngine());
