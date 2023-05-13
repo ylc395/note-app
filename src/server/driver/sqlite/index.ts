@@ -1,19 +1,26 @@
-import type { Knex } from 'knex';
+import knex, { type Knex } from 'knex';
 import snakeCase from 'lodash/snakeCase';
 import memoize from 'lodash/memoize';
+import camelCase from 'lodash/camelCase';
+import mapKeys from 'lodash/mapKeys';
+import once from 'lodash/once';
 import { PropagatedTransaction } from '@mokuteki/propagated-transactions';
+import { Emitter } from 'strict-event-emitter';
+import { ensureDirSync, emptyDirSync } from 'fs-extra';
+import { join } from 'node:path';
 
-import { createDb } from 'shared/driver/sqlite';
-import type { Database } from 'infra/database';
+import type { Database, DbConfig } from 'infra/database';
 import type Repository from 'service/repository';
 
 import * as schemas from './schema';
 import * as repositories from './repository';
 import type { Schema } from './schema/type';
 import SqliteSearchEngine from './SearchEngine';
+import SqliteKvDb from './KvDatabase';
 
-class SqliteDb implements Database {
+export default class SqliteDb implements Database {
   private knex?: Knex;
+  private readonly emitter = new Emitter<{ ready: [] }>();
 
   transactionManager = new PropagatedTransaction({
     start: async () => {
@@ -35,13 +42,49 @@ class SqliteDb implements Database {
     return new repositories[name](knex) as unknown as Repository[T];
   }
 
-  async init(dir: string) {
-    if (this.knex) {
-      return;
+  readonly init = once(async ({ dir }: DbConfig) => {
+    if (!dir) {
+      throw new Error('no dir');
     }
 
-    this.knex = createDb(dir);
+    this.knex = await this.createDb(dir);
+    this.emitter.emit('ready');
     await this.createTables();
+  });
+
+  getKnex() {
+    if (this.knex) {
+      return Promise.resolve(this.knex);
+    }
+
+    return new Promise<Knex>((resolve) => {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      this.emitter.on('ready', () => resolve(this.knex!));
+    });
+  }
+
+  private async createDb(dir: string) {
+    if (this.knex) {
+      throw new Error('db existed');
+    }
+
+    ensureDirSync(dir);
+
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    const needClean = process.env.DEV_CLEAN === '1';
+
+    if (isDevelopment && needClean) {
+      emptyDirSync(dir);
+    }
+
+    return knex({
+      client: 'sqlite3',
+      connection: join(dir, 'db.sqlite'),
+      debug: isDevelopment,
+      postProcessResponse: SqliteDb.transformKeys,
+      useNullAsDefault: true,
+      wrapIdentifier: (value, originImpl) => originImpl(snakeCase(value)),
+    });
   }
 
   private async createTables() {
@@ -96,7 +139,20 @@ class SqliteDb implements Database {
       }
     }
   };
+
+  private static transformKeys(result: unknown): unknown {
+    if (typeof result !== 'object' || result instanceof Date || result === null) {
+      return result;
+    }
+
+    if (Array.isArray(result)) {
+      return result.map(SqliteDb.transformKeys);
+    }
+
+    return mapKeys(result, (_, key) => camelCase(key));
+  }
 }
 
 export const dbFactory = memoize(() => new SqliteDb());
-export const searchEngineFactory = memoize(() => new SqliteSearchEngine());
+export const searchEngineFactory = memoize(() => new SqliteSearchEngine(dbFactory()));
+export const kvDbFactory = memoize(() => new SqliteKvDb(dbFactory()));

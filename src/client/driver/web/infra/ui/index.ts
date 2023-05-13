@@ -1,4 +1,4 @@
-import type { ContextmenuItem, UI } from 'infra/UI';
+import type { ContextmenuItem, UI } from 'infra/ui';
 import messageFeedback from './messageFeedback';
 
 declare global {

@@ -1,7 +1,6 @@
 export { default as noteSchema } from './note';
 export { default as recyclableSchema } from './recyclable';
 export { default as starSchema } from './star';
-export { kvSchema } from 'shared/driver/sqlite/kv';
 export { default as resourceSchema } from './resource';
 export { default as fileSchema } from './file';
 export { default as memoSchema } from './memo';

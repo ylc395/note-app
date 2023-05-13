@@ -4,7 +4,7 @@ import { init } from 'emoji-mart';
 import { useEffect } from 'react';
 import { container } from 'tsyringe';
 
-import { token as remoteToken } from 'infra/Remote';
+import { token as remoteToken } from 'infra/remote';
 import clsx from 'clsx';
 
 const data = async () => {

@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
-import type { Remote } from 'infra/Remote';
-import type { ContextmenuItem } from 'infra/UI';
+import type { Remote } from 'infra/remote';
+import type { ContextmenuItem } from 'infra/ui';
 // import { SYNC_LOG_CHANNEL } from 'infra/constants';
 
 import { IPC_CHANNEL, type IpcRequest } from './ipc';

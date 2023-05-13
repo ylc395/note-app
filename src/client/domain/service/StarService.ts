@@ -3,7 +3,7 @@ import { container, singleton } from 'tsyringe';
 import { observable, makeObservable, runInAction, action } from 'mobx';
 import pull from 'lodash/pull';
 
-import { token as remoteToken } from 'infra/Remote';
+import { token as remoteToken } from 'infra/remote';
 import { type EntityId, EntityTypes, entityTypesToString, EntityLocator } from 'interface/entity';
 import type { StarRecord, StarsDTO } from 'interface/star';
 

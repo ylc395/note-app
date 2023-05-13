@@ -2,7 +2,7 @@ import mapValues from 'lodash/mapValues';
 import wrap from 'lodash/wrap';
 import isObject from 'lodash/isObject';
 
-import type { Remote } from 'infra/Remote';
+import type { Remote } from 'infra/remote';
 import { InvalidInputError } from 'model/Error';
 import type { IpcResponse } from 'driver/electron/ipc';
 

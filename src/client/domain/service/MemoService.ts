@@ -1,7 +1,7 @@
 import { observable, makeObservable, computed, runInAction, action } from 'mobx';
 import { container, singleton } from 'tsyringe';
 
-import { token as remoteToken } from 'infra/Remote';
+import { token as remoteToken } from 'infra/remote';
 import type {
   ChildMemoVO,
   MemoDTO,

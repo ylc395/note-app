@@ -2,7 +2,7 @@ import { singleton, container } from 'tsyringe';
 
 import { MaterialDTO, DirectoryVO, MaterialVO, MaterialQuery, isDirectory, EntityMaterialVO } from 'interface/material';
 import MaterialTree from 'model/material/Tree';
-import { token as remoteToken } from 'infra/Remote';
+import { token as remoteToken } from 'infra/remote';
 
 import EditorService from './EditorService';
 import { EntityTypes } from 'interface/entity';

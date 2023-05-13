@@ -9,7 +9,7 @@ import dayjs from 'dayjs';
 import uniq from 'lodash/uniq';
 import uniqueId from 'lodash/uniqueId';
 
-import { token as remoteToken } from 'infra/Remote';
+import { token as remoteToken } from 'infra/remote';
 import NoteMetadata, { MULTIPLE_ICON_FLAG } from 'model/note/MetadataForm';
 import type { NoteAttributesVO, NoteDTO } from 'interface/Note';
 

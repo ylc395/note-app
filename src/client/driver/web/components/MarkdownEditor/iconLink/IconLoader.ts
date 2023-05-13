@@ -3,7 +3,7 @@ import memoize from 'lodash/memoize';
 import { GlobalOutlined } from '@ant-design/icons-svg';
 import { renderIconDefinitionToSVGElement } from '@ant-design/icons-svg/es/helpers';
 
-import { token as remoteToken } from 'infra/Remote';
+import { token as remoteToken } from 'infra/remote';
 import type { WebResource, WebResourceRequest } from 'interface/resource';
 
 const DEFAULT_LINK_ICON_KEY = 'DEFAULT_LINK_ICON';

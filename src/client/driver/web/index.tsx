@@ -2,8 +2,8 @@ import 'reflect-metadata';
 import { container } from 'tsyringe';
 import { createRoot } from 'react-dom/client';
 
-import { token as remoteToken } from 'infra/Remote';
-import { token as UIToken } from 'infra/UI';
+import { token as remoteToken } from 'infra/remote';
+import { token as UIToken } from 'infra/ui';
 
 import { httpClient, ipcClient } from './infra/httpClient';
 import { getRootElement, ui } from './infra/ui';

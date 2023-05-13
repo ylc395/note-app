@@ -3,7 +3,7 @@ import debounce from 'lodash/debounce';
 
 import type { NoteVO, NoteBodyVO, NoteDTO, NoteBodyDTO } from 'interface/Note';
 import { EntityTypes } from 'interface/entity';
-import { token as remoteToken } from 'infra/Remote';
+import { token as remoteToken } from 'infra/remote';
 import type Tile from 'model/workbench/Tile';
 import NoteEditor, { Events as NoteEditorEvents } from 'model/note/Editor';
 import NoteService from 'service/NoteService';

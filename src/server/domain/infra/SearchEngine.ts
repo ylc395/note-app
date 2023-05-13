@@ -9,6 +9,7 @@ export interface SearchQuery {
 }
 
 export interface SearchEngine {
+  init: () => Promise<void>;
   search: (q: SearchQuery) => Promise<SearchResultVO[]>;
 }
 

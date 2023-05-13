@@ -6,7 +6,7 @@ import { NestFactory } from '@nestjs/core';
 import type { MicroserviceOptions } from '@nestjs/microservices';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 
-import { type AppClient, token as appClientToken } from 'infra/AppClient';
+import { type AppClient, token as appClientToken } from 'infra/appClient';
 
 import AppModule from './modules/app.module';
 import ElectronTransporter, { RawExceptionFilter } from './infra/IpcServer';

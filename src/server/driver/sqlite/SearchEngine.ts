@@ -1,23 +1,29 @@
 import type { Knex } from 'knex';
+import once from 'lodash/once';
+
 import type { SearchEngine, SearchQuery } from 'infra/searchEngine';
-import { getDb } from 'shared/driver/sqlite';
 import { EntityTypes } from 'interface/entity';
+import type SqliteDb from './index';
 
 const NOTE_FTS_TABLE = 'notes_fts';
 
 export default class SqliteSearchEngine implements SearchEngine {
-  constructor() {
+  private knex?: Knex;
+
+  constructor(private readonly db: SqliteDb) {
     this.init();
   }
 
-  private knex!: Knex;
-
-  private async init() {
-    this.knex = await getDb();
+  readonly init = once(async () => {
+    this.knex = await this.db.getKnex();
     await Promise.all([this.createNoteFtsTable()]);
-  }
+  });
 
   private async createNoteFtsTable() {
+    if (!this.knex) {
+      throw new Error('search engine not ready');
+    }
+
     if (!(await this.knex.schema.hasTable(NOTE_FTS_TABLE))) {
       await this.knex.raw(
         `CREATE VIRTUAL TABLE ${NOTE_FTS_TABLE} USING fts5(id UNINDEXED, title, body, content="notes");`,

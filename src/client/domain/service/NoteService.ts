@@ -2,8 +2,8 @@ import { container, singleton } from 'tsyringe';
 import pick from 'lodash/pick';
 import { Emitter } from 'strict-event-emitter';
 
-import { token as remoteToken } from 'infra/Remote';
-import { token as UIToken } from 'infra/UI';
+import { token as remoteToken } from 'infra/remote';
+import { token as UIToken } from 'infra/ui';
 
 import type { NoteDTO, NoteVO as Note, NotesDTO, NoteQuery } from 'interface/Note';
 import type { RecyclablesDTO } from 'interface/Recyclables';

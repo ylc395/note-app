@@ -4,27 +4,26 @@ import { join } from 'node:path';
 import { hostname } from 'node:os';
 import { Emitter } from 'strict-event-emitter';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
-import memoize from 'lodash/memoize';
 
 import {
   type AppClient,
-  EventNames as AppClientEventNames,
+  type ClientInfo,
   type Events as AppClientEvents,
-  ClientInfo,
-} from 'infra/AppClient';
+  EventNames as AppClientEventNames,
+} from 'infra/appClient';
+import type { KvDatabase } from 'infra/kvDatabase';
 import { APP_FILE_PROTOCOL } from 'infra/constants';
-import { load } from 'shared/driver/sqlite/kv';
 
 import { CONTEXTMENU_CHANNEL, createContextmenu } from './contextmenu';
 
 const APP_NAME = 'my-note-app';
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
-class ElectronClient extends Emitter<AppClientEvents> implements AppClient {
+export default class ElectronClient extends Emitter<AppClientEvents> implements AppClient {
   private mainWindow?: BrowserWindow;
   private clientInfo?: ClientInfo;
 
-  constructor() {
+  constructor(private readonly kvDb: KvDatabase) {
     super();
     protocol.registerSchemesAsPrivileged([
       {
@@ -103,7 +102,7 @@ class ElectronClient extends Emitter<AppClientEvents> implements AppClient {
 
   private async initClientInfo() {
     this.clientInfo = {
-      clientId: await load('app.desktop.id', randomUUID),
+      clientId: await this.kvDb.get('app.desktop.id', randomUUID),
       appName: APP_NAME,
       deviceName: hostname(),
     };
@@ -125,7 +124,3 @@ class ElectronClient extends Emitter<AppClientEvents> implements AppClient {
     this.mainWindow.webContents.send(channel, payload);
   }
 }
-
-const factory = memoize(() => new ElectronClient());
-
-export default factory;

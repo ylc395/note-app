@@ -7,10 +7,14 @@ export interface TransactionManager<T> {
   run: <R>(connection: T, cb: () => R) => R;
 }
 
+export interface DbConfig {
+  dir?: string;
+}
+
 export interface Database {
   transactionManager: TransactionManager<unknown>;
   getRepository: <T extends keyof Repositories>(name: T) => Repositories[T];
-  init: (dir: string) => Promise<void>;
+  init: (config: DbConfig) => Promise<void>;
 }
 
 export const token = Symbol('database');

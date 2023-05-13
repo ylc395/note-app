@@ -9,7 +9,7 @@ import NoteService from 'service/NoteService';
 import EditorService from 'service/EditorService';
 import StarService from 'service/StarService';
 
-import type { ContextmenuItem } from 'infra/UI';
+import type { ContextmenuItem } from 'infra/ui';
 import { ui } from 'web/infra/ui';
 
 import Context from '../Context';

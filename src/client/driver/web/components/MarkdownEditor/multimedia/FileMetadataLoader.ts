@@ -2,7 +2,7 @@ import type { WebResourceMetadata, WebResourceMetadataRequest } from 'interface/
 import { singleton, container } from 'tsyringe';
 import memoize from 'lodash/memoize';
 
-import { token as remoteToken } from 'infra/Remote';
+import { token as remoteToken } from 'infra/remote';
 
 @singleton()
 export default class FileMetadataLoader {

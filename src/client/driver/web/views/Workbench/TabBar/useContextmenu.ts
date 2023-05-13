@@ -1,4 +1,4 @@
-import type { ContextmenuItem } from 'infra/UI';
+import type { ContextmenuItem } from 'infra/ui';
 import { useCallback } from 'react';
 import { ui } from 'web/infra/ui';
 
