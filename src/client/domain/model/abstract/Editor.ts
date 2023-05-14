@@ -42,10 +42,6 @@ export default abstract class EntityEditor<T = any, E extends CommonEditorEvents
     this.removeAllListeners();
   }
 
-  get isOnlyOne(): boolean {
-    return this.tile.editors.length === 1 && this.tile.editors[0] === this;
-  }
-
   @action.bound
   loadEntity(entity: T) {
     if (this.entity) {

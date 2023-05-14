@@ -23,4 +23,5 @@ export const entityId = string;
 export type EntityLocator = {
   type: EntityTypes;
   id: EntityId;
+  mimeType?: string;
 };

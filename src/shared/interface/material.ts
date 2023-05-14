@@ -44,3 +44,19 @@ export type MaterialQuery = Infer<typeof materialQuerySchema>;
 export const isDirectory = (entity: MaterialVO): entity is DirectoryVO => {
   return 'childrenCount' in entity;
 };
+
+export function normalizeTitle(material: MaterialVO) {
+  if (material.name) {
+    return material.name;
+  }
+
+  if (isDirectory(material)) {
+    return '未命名目录';
+  }
+
+  if (material.mimeType.startsWith('image')) {
+    return '未命名图片';
+  }
+
+  return '未命名文件';
+}

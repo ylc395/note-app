@@ -3,7 +3,7 @@ import { makeObservable, computed, action, toJS } from 'mobx';
 import { EntityTypes } from 'interface/entity';
 import { normalizeTitle, type NoteVO, type NoteBodyVO } from 'interface/Note';
 import type Tile from 'model/workbench/Tile';
-import EntityEditor, { type CommonEditorEvents, type Breadcrumbs } from 'model/abstract/Editor';
+import Editor, { type CommonEditorEvents, type Breadcrumbs } from 'model/abstract/Editor';
 import type NoteTree from './Tree';
 
 export enum Events {
@@ -23,7 +23,7 @@ interface NoteEditorEvents extends CommonEditorEvents {
   [Events.Updated]: [NoteVO];
 }
 
-export default class NoteEditor extends EntityEditor<Entity, NoteEditorEvents> {
+export default class NoteEditor extends Editor<Entity, NoteEditorEvents> {
   readonly entityType = EntityTypes.Note;
   constructor(tile: Tile, noteId: NoteVO['id'], private readonly noteTree: NoteTree) {
     super(tile, noteId);

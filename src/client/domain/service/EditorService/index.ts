@@ -3,18 +3,22 @@ import { action, makeObservable } from 'mobx';
 
 import { EntityTypes, type EntityLocator } from 'interface/entity';
 import type NoteEditor from 'model/note/Editor';
+import type ImageEditor from 'model/material/ImageEditor';
+import type PdfEditor from 'model/material/PdfEditor';
 import EntityEditor, { Events as EditorEvents } from 'model/abstract/Editor';
 import Tile from 'model/workbench/Tile';
 import TileManager, { type TileSplitDirections } from 'model/workbench/TileManger';
 import NoteService, { NoteEvents } from 'service/NoteService';
 
 import noteEditorFactory from './noteEditorFactory';
+import materialEditorFactory from './materialEditorFactory';
 
 @singleton()
 export default class EditorService {
   readonly tileManager = new TileManager();
   private editors: { [key in EntityTypes]?: Set<EntityEditor> } = {
     [EntityTypes.Note]: new Set<NoteEditor>(),
+    [EntityTypes.Material]: new Set<ImageEditor | PdfEditor>(),
   };
 
   constructor() {
@@ -34,17 +38,23 @@ export default class EditorService {
     });
   }
 
-  private createEditor(tile: Tile, { id, type }: EntityLocator) {
-    const editorSet = this.editors[type];
+  private createEditor(tile: Tile, entity: EntityLocator) {
+    const editorSet = this.editors[entity.type];
     let editor: EntityEditor;
 
     if (!editorSet) {
       throw new Error('invalid type');
     }
 
-    switch (type) {
+    switch (entity.type) {
       case EntityTypes.Note:
-        editor = noteEditorFactory(this, tile, id);
+        editor = noteEditorFactory(tile, entity.id);
+        break;
+      case EntityTypes.Material:
+        if (!entity.mimeType) {
+          throw new Error('no mimeType');
+        }
+        editor = materialEditorFactory(tile, entity.id, entity.mimeType);
         break;
       default:
         throw new Error('invalid type');
@@ -56,7 +66,10 @@ export default class EditorService {
     return editor;
   }
 
-  getEditorsByEntity<T extends EntityEditor>({ id, type }: EntityLocator, excludeId?: EntityEditor['id']) {
+  readonly getEditorsByEntity = <T extends EntityEditor>(
+    { id, type }: EntityLocator,
+    excludeId?: EntityEditor['id'],
+  ) => {
     const editorSet = this.editors[type];
 
     if (!editorSet) {
@@ -64,7 +77,7 @@ export default class EditorService {
     }
 
     return Array.from(editorSet).filter((e) => e.entityId === id && (excludeId ? excludeId !== e.id : true)) as T[];
-  }
+  };
 
   @action.bound
   openEntity(entity: EntityLocator, newTileOptions?: { direction: TileSplitDirections; from: Tile }) {
