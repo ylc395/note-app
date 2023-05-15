@@ -54,7 +54,7 @@ export default function noteEditorFactory(tile: Tile, noteId: NoteVO['id']) {
       }
     });
 
-  load(noteId).then(noteEditor.loadEntity);
+  load(noteId).then(noteEditor.load);
 
   return noteEditor;
 }

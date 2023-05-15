@@ -1,4 +1,4 @@
-import type { MaterialDTO, MaterialQuery } from 'interface/material';
+import { MaterialDTO, MaterialQuery, MaterialVO, isDirectory } from 'interface/material';
 
 import BaseService from './BaseService';
 
@@ -13,9 +13,9 @@ export default class MaterialService extends BaseService {
     }
 
     if (info.parentId) {
-      const parent = await this.materials.findOneDirectoryById(info.parentId);
+      const parent = await this.materials.findOneById(info.parentId);
 
-      if (!parent) {
+      if (!parent || !isDirectory(parent)) {
         throw new Error('invalid parentId');
       }
     }
@@ -33,5 +33,25 @@ export default class MaterialService extends BaseService {
 
   query(q: MaterialQuery) {
     return this.materials.findAll(q);
+  }
+
+  async queryById(materialId: MaterialVO['id']) {
+    const material = await this.materials.findOneById(materialId);
+
+    if (!material) {
+      throw new Error('no material');
+    }
+
+    return material;
+  }
+
+  async getBlob(materialId: MaterialVO['id']) {
+    const blob = await this.materials.findBlobById(materialId);
+
+    if (!blob) {
+      throw new Error('no file');
+    }
+
+    return blob;
   }
 }

@@ -51,9 +51,9 @@ export default class SqliteMaterialRepository extends BaseRepository<Row> implem
   private static rowToMaterial(row: Row, mimeType: string): EntityMaterialVO {
     return {
       ...pick(row, ['name', 'icon', 'sourceUrl', 'createdAt', 'updatedAt']),
-      id: String(row.id),
-      parentId: row.parentId ? String(row.parentId) : null,
-      mimeType: mimeType,
+      mimeType,
+      id: row.id,
+      parentId: row.parentId,
     };
   }
 
@@ -98,15 +98,36 @@ export default class SqliteMaterialRepository extends BaseRepository<Row> implem
     return [...directories, ...materials];
   }
 
-  async findOneDirectoryById(id: MaterialVO['id']) {
-    const row = await this.knex<Row>(this.schema.tableName).whereNull('fileId').andWhere('id', id).first();
+  async findOneById(id: MaterialVO['id']) {
+    const row = await this.knex<Row>(this.schema.tableName)
+      .leftJoin(this.files.tableName, `${this.schema.tableName}.fileId`, `${this.files.tableName}.id`)
+      .select(`${this.files.tableName}.mimeType`, this.knex.raw(`${this.schema.tableName}.*`))
+      .where(`${this.schema.tableName}.id`, id)
+      .first();
 
     if (!row) {
       return null;
     }
 
+    if (SqliteMaterialRepository.isFileRow(row)) {
+      return SqliteMaterialRepository.rowToMaterial(row, row.mimeType);
+    }
+
     const childrenCounts = await this.getChildrenCounts([id]);
     return SqliteMaterialRepository.rowToDirectory(row, childrenCounts[id]);
+  }
+
+  async findBlobById(id: MaterialVO['id']) {
+    const row = await this.knex(this.schema.tableName)
+      .join(this.files.tableName, `${this.schema.tableName}.fileId`, `${this.files.tableName}.id`)
+      .where(`${this.schema.tableName}.id`, id)
+      .first();
+
+    if (row) {
+      return (row.data as Uint8Array).buffer;
+    }
+
+    return null;
   }
 
   private static isFileRow(row: Row) {

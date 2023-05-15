@@ -7,7 +7,7 @@ import type Tile from 'model/workbench/Tile';
 
 interface Entity {
   metadata: EntityMaterialVO;
-  image: ArrayBuffer;
+  blob: ArrayBuffer;
 }
 
 export default class ImageEditor extends Editor<Entity> {

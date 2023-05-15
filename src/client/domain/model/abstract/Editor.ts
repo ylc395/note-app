@@ -43,7 +43,7 @@ export default abstract class EntityEditor<T = any, E extends CommonEditorEvents
   }
 
   @action.bound
-  loadEntity(entity: T) {
+  load(entity: T) {
     if (this.entity) {
       throw new Error('can not reload entity');
     }

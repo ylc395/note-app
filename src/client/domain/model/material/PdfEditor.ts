@@ -7,7 +7,7 @@ import type Tile from 'model/workbench/Tile';
 
 interface Entity {
   metadata: EntityMaterialVO;
-  pdf: ArrayBuffer;
+  blob: ArrayBuffer;
 }
 
 export default class PdfEditor extends Editor<Entity> {
