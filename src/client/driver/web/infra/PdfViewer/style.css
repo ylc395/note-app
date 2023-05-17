@@ -1,0 +1,9 @@
+@import 'pdfjs-dist/web/pdf_viewer.css';
+
+.page {
+  margin: 0 auto;
+}
+
+.page > * {
+  margin: 0 auto;
+}

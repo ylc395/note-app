@@ -20,7 +20,7 @@ export enum MaterialExplorerViews {
 
 @singleton()
 export default class Layout {
-  @observable currentExplorer = ExplorerTypes.Notes;
+  @observable currentExplorer = ExplorerTypes.Materials;
   @observable readonly explorerPanel = {
     [ExplorerTypes.Notes]: NoteExplorerViews.Tree,
     [ExplorerTypes.Materials]: MaterialExplorerViews.Directory,
