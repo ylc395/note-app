@@ -1,4 +1,4 @@
-import { object, string, infer as Infer, instanceof as zodInstanceof } from 'zod';
+import { object, string, infer as Infer, instanceof as zodInstanceof, array, number } from 'zod';
 import type { EntityId } from './entity';
 
 export const materialDTOSchema = object({
@@ -59,3 +59,21 @@ export function normalizeTitle(material: MaterialVO) {
 
   return '未命名文件';
 }
+
+export const HighlightDTOSchema = object({
+  content: string(),
+  color: string(),
+  ranges: array(
+    object({
+      page: number(),
+      rect: object({
+        x: number(),
+        y: number(),
+        height: number(),
+        width: number(),
+      }),
+    }),
+  ),
+});
+
+export type HighlightDTO = Infer<typeof HighlightDTOSchema>;

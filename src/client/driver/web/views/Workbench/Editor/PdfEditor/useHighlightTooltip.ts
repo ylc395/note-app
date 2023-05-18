@@ -3,6 +3,8 @@ import { useDebounceFn, useLatest } from 'ahooks';
 import { usePopper } from 'react-popper';
 import type { OffsetsFunction } from '@popperjs/core/lib/modifiers/offset';
 
+import type PdfViewer from './PdfViewer';
+
 const isTextNode = (node: Node): node is Text => node.nodeType === document.TEXT_NODE;
 
 const isElement = (node: Node): node is HTMLElement => node.nodeType === document.ELEMENT_NODE;
@@ -26,22 +28,18 @@ function getPageFromEndElement(el: HTMLElement | null) {
   return null;
 }
 
-function getSelectionEndElement(selection: Selection) {
-  const range = selection.getRangeAt(0).cloneRange();
-  let collapseToStart = (() => {
-    const { focusNode, focusOffset, anchorNode, anchorOffset } = selection;
+function getSelectionEnd(pdfViewer: PdfViewer) {
+  const result = pdfViewer.getValidRange();
 
-    if (focusNode === anchorNode) {
-      return focusOffset < anchorOffset;
-    }
+  if (!result) {
+    throw new Error('no range');
+  }
 
-    if (!anchorNode || !focusNode) {
-      throw new Error('no anchorNode / focusNode');
-    }
+  const range = result.range.cloneRange();
+  let collapseToStart = result.isEndAtStart;
 
-    return Boolean(anchorNode.compareDocumentPosition(focusNode) & Node.DOCUMENT_POSITION_PRECEDING);
-  })();
-
+  // when double click an element to select text, `endOffset` often comes with 0 and `endContainer` is not correct
+  // we should find the right endContainer
   if (range.endOffset === 0) {
     const walker = document.createTreeWalker(range.commonAncestorContainer);
     let currentNode: Node | null = walker.currentNode;
@@ -95,18 +93,29 @@ function getSelectionEndElement(selection: Selection) {
   range.insertNode(tmpEl);
   tmpEl.style.height = '1em';
 
+  if (__ENV__ === 'dev') {
+    tmpEl.className = 'selection-end-mark';
+  }
+
   return { el: tmpEl, collapseToStart };
 }
 
-export default function () {
-  const [referenceElement, setReferenceElement] = useState<HTMLElement | null>(null);
+export default function (pdfViewer: PdfViewer | null) {
   const [popperElement, setPopperElement] = useState<HTMLDivElement | null>(null);
-  const [collapseToStart, setCollapseToStart] = useState<boolean>(false);
+  const [selectionEnd, setSelectionEnd] = useState<{ el: HTMLElement; collapseToStart: boolean } | null>(null);
+
   const offsetFn = useCallback<OffsetsFunction>(
     ({ popper, reference }) => {
-      return [popper.x, popper.y + (collapseToStart ? -reference.height - popper.height * 2 : reference.height / 2)];
+      if (!selectionEnd) {
+        throw new Error('no selectionEnd');
+      }
+
+      return [
+        popper.x,
+        popper.y + (selectionEnd.collapseToStart ? -reference.height - popper.height * 2 : reference.height / 2),
+      ];
     },
-    [collapseToStart],
+    [selectionEnd],
   );
 
   const popperOptions = useMemo(
@@ -118,20 +127,16 @@ export default function () {
     [offsetFn],
   );
 
-  const { styles, attributes } = usePopper(referenceElement, popperElement, popperOptions);
+  const { styles, attributes } = usePopper(selectionEnd?.el, popperElement, popperOptions);
 
   const show = useDebounceFn(
     () => {
-      const selection = window.getSelection();
-
-      if (!selection) {
-        return;
+      if (!pdfViewer) {
+        throw new Error('no pdfViewer');
       }
 
-      const { el, collapseToStart } = getSelectionEndElement(selection);
-
-      setReferenceElement(el);
-      setCollapseToStart(collapseToStart);
+      const selectionEnd = getSelectionEnd(pdfViewer);
+      setSelectionEnd(selectionEnd);
 
       if (popperElement) {
         popperElement.hidden = false;
@@ -145,13 +150,13 @@ export default function () {
       popperElement.hidden = true;
     }
 
-    if (referenceElement) {
-      referenceElement.remove();
-      setReferenceElement(null);
+    if (selectionEnd) {
+      selectionEnd.el.remove();
+      setSelectionEnd(null);
     }
   });
 
-  const page = useMemo(() => getPageFromEndElement(referenceElement), [referenceElement]);
+  const page = useMemo(() => getPageFromEndElement(selectionEnd?.el || null), [selectionEnd]);
 
   return { setPopperElement, page, hide, styles, attributes, show };
 }

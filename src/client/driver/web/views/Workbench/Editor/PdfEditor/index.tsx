@@ -12,7 +12,14 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
   const containerElRef = useRef<HTMLDivElement | null>(null);
   const viewerElRef = useRef<HTMLDivElement | null>(null);
   const [pdfViewer, setPdfViewer] = useState<PdfViewer | null>(null);
-  const { setPopperElement, page, show: showPopper, hide: hidePopper, styles, attributes } = useHighlightTooltip();
+  const {
+    setPopperElement,
+    page,
+    show: showPopper,
+    hide: hidePopper,
+    styles,
+    attributes,
+  } = useHighlightTooltip(pdfViewer);
 
   useEffect(() => {
     if (!editor.entity || !containerElRef.current || !viewerElRef.current) {
@@ -43,7 +50,13 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
         <Toolbar pdfViewer={pdfViewer} />
         <div className="absolute inset-x-0 top-11 bottom-0 overflow-auto" ref={containerElRef}>
           <div className="select-text" ref={viewerElRef}></div>
-          <div className="z-10" ref={setPopperElement} hidden style={styles.popper} {...attributes.popper}>
+          <div
+            className="pdf-editor-tooltip z-10"
+            ref={setPopperElement}
+            hidden
+            style={styles.popper}
+            {...attributes.popper}
+          >
             <HighlightTooltip pdfViewer={pdfViewer} page={page} />
           </div>
         </div>

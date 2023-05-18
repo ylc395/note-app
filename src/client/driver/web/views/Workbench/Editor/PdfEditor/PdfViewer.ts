@@ -3,7 +3,7 @@ import { type PDFDocumentLoadingTask, getDocument, PDFWorker } from 'pdfjs-dist'
 import { EventBus, ScrollMode, PDFViewer } from 'pdfjs-dist/web/pdf_viewer';
 import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.min.js?worker';
 
-import type { MaterialVO } from 'interface/material';
+import type { HighlightDTO, MaterialVO } from 'interface/material';
 import { token as remoteToken } from 'infra/remote';
 
 import './style.css';
@@ -47,19 +47,10 @@ export default class PdfViewer {
   }
 
   private readonly handleSelection = () => {
-    const selection = window.getSelection();
-    const viewerEl = this.pdfViewer.viewer;
-
-    if (
-      !selection ||
-      selection.isCollapsed ||
-      !viewerEl ||
-      !viewerEl.contains(selection.anchorNode) ||
-      !viewerEl.contains(selection.focusNode)
-    ) {
-      this.options.onTextSelectCancel();
-    } else {
+    if (this.getValidRange()) {
       this.options.onTextSelected();
+    } else {
+      this.options.onTextSelectCancel();
     }
   };
 
@@ -92,21 +83,65 @@ export default class PdfViewer {
   }
 
   async createMark({ color, page }: { color: string; page: number }) {
-    const selection = window.getSelection();
+    const result = this.getValidRange();
 
-    if (!selection) {
-      return;
+    if (!result) {
+      throw new Error('no valid range');
     }
 
-    await this.remote.post(`/materials/${this.options.materialId}/marks`, {
+    const { range } = result;
+
+    await this.remote.post<HighlightDTO, never>(`/materials/${this.options.materialId}/highlights`, {
       color,
-      page,
+      content: PdfViewer.getTextFromRange(range),
+      ranges: [],
     });
 
-    selection.removeAllRanges();
+    window.getSelection()?.removeAllRanges();
   }
 
   createComment() {
     return;
+  }
+
+  getValidRange() {
+    const selection = window.getSelection();
+    const viewerEl = this.pdfViewer.viewer;
+
+    if (
+      !selection ||
+      selection.isCollapsed ||
+      selection.rangeCount > 1 ||
+      !viewerEl ||
+      !viewerEl.contains(selection.anchorNode) ||
+      !viewerEl.contains(selection.focusNode)
+    ) {
+      return null;
+    }
+
+    return {
+      range: selection.getRangeAt(0),
+      isEndAtStart: PdfViewer.isEndAtStart(selection),
+    };
+  }
+
+  private static isEndAtStart(selection: Selection) {
+    const { focusNode, focusOffset, anchorNode, anchorOffset } = selection;
+
+    if (focusNode === anchorNode) {
+      return focusOffset < anchorOffset;
+    }
+
+    if (!anchorNode || !focusNode) {
+      throw new Error('no anchorNode / focusNode');
+    }
+
+    return Boolean(anchorNode.compareDocumentPosition(focusNode) & Node.DOCUMENT_POSITION_PRECEDING);
+  }
+
+  private static getTextFromRange(range: Range) {
+    return Array.from(range.cloneContents().childNodes)
+      .map((el) => el.textContent)
+      .join('');
   }
 }
