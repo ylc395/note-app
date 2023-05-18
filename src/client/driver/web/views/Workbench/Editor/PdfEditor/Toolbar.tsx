@@ -1,4 +1,4 @@
-import type PdfViewer from 'web/infra/PdfViewer';
+import type PdfViewer from 'web/views/Workbench/Editor/PdfEditor/PdfViewer';
 
 const SCALE_VALUES = ['auto', 'page-width', 'page-fit', 'page-actual'];
 // eslint-disable-next-line mobx/missing-observer

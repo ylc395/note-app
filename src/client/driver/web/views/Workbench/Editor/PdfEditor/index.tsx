@@ -2,17 +2,17 @@ import { observer } from 'mobx-react-lite';
 import { useEffect, useRef, useState } from 'react';
 
 import type PdfEditor from 'model/material/PdfEditor';
-import PdfViewer from 'web/infra/PdfViewer';
+import PdfViewer from 'web/views/Workbench/Editor/PdfEditor/PdfViewer';
 
-import usePopper from './usePopper';
+import useHighlightTooltip from './useHighlightTooltip';
 import Toolbar from './Toolbar';
-import MarkTooltip from './MarkTooltip';
+import HighlightTooltip from './HighlightTooltip';
 
 export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }) {
   const containerElRef = useRef<HTMLDivElement | null>(null);
   const viewerElRef = useRef<HTMLDivElement | null>(null);
   const [pdfViewer, setPdfViewer] = useState<PdfViewer | null>(null);
-  const { setPopperElement, update: updatePopper, hide: hidePopper, styles, attributes } = usePopper();
+  const { setPopperElement, page, show: showPopper, hide: hidePopper, styles, attributes } = useHighlightTooltip();
 
   useEffect(() => {
     if (!editor.entity || !containerElRef.current || !viewerElRef.current) {
@@ -20,10 +20,11 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
     }
 
     const core = new PdfViewer({
+      materialId: editor.entityId,
       container: containerElRef.current,
       viewer: viewerElRef.current,
-      onTextSelected: updatePopper,
-      onTextSelectCancel: hidePopper,
+      onTextSelected: showPopper.run,
+      onTextSelectCancel: () => hidePopper.current(),
     });
 
     core.load(editor.entity.blob.slice(0));
@@ -31,9 +32,10 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
 
     return () => {
       core.destroy();
-      hidePopper();
+      showPopper.cancel();
     };
-  }, [editor.entity, hidePopper, updatePopper]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editor.entity, hidePopper, showPopper.run, showPopper.cancel]);
 
   return (
     <div className="flex h-full w-full">
@@ -42,7 +44,7 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
         <div className="absolute inset-x-0 top-11 bottom-0 overflow-auto" ref={containerElRef}>
           <div className="select-text" ref={viewerElRef}></div>
           <div className="z-10" ref={setPopperElement} hidden style={styles.popper} {...attributes.popper}>
-            <MarkTooltip pdfViewer={pdfViewer} />
+            <HighlightTooltip pdfViewer={pdfViewer} page={page} />
           </div>
         </div>
       </div>

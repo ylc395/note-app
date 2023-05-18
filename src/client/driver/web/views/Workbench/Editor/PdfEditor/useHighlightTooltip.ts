@@ -1,7 +1,7 @@
-import type { VirtualElement } from '@popperjs/core';
-import noop from 'lodash/noop';
-import { useState, useCallback } from 'react';
+import { useCallback, useMemo, useState } from 'react';
+import { useDebounceFn, useLatest } from 'ahooks';
 import { usePopper } from 'react-popper';
+import type { OffsetsFunction } from '@popperjs/core/lib/modifiers/offset';
 
 const isTextNode = (node: Node): node is Text => node.nodeType === document.TEXT_NODE;
 
@@ -12,7 +12,21 @@ const isVisible = (node: Node) =>
 
 const SUSPICIOUS_EMPTY_STRING_REGEX = /^\s{5,}$/;
 
-function getSelectionEndPosition(selection: Selection) {
+function getPageFromEndElement(el: HTMLElement | null) {
+  let currentEl: HTMLElement | null = el;
+
+  while (currentEl) {
+    if (currentEl.dataset.pageNumber) {
+      return Number(currentEl.dataset.pageNumber);
+    }
+
+    currentEl = currentEl.parentElement;
+  }
+
+  return null;
+}
+
+function getSelectionEndElement(selection: Selection) {
   const range = selection.getRangeAt(0).cloneRange();
   let collapseToStart = (() => {
     const { focusNode, focusOffset, anchorNode, anchorOffset } = selection;
@@ -79,55 +93,65 @@ function getSelectionEndPosition(selection: Selection) {
 
   range.collapse(collapseToStart);
   range.insertNode(tmpEl);
+  tmpEl.style.height = '1em';
 
-  const rect = tmpEl.getBoundingClientRect();
-  const x = rect.left;
-  const y = rect.top;
-
-  tmpEl.remove();
-
-  return { x, y } as const;
+  return { el: tmpEl, collapseToStart };
 }
 
 export default function () {
-  const [referenceElement, setReferenceElement] = useState<VirtualElement | null>(null);
+  const [referenceElement, setReferenceElement] = useState<HTMLElement | null>(null);
   const [popperElement, setPopperElement] = useState<HTMLDivElement | null>(null);
-  const { styles, attributes } = usePopper(referenceElement, popperElement, {});
+  const [collapseToStart, setCollapseToStart] = useState<boolean>(false);
+  const offsetFn = useCallback<OffsetsFunction>(
+    ({ popper, reference }) => {
+      return [popper.x, popper.y + (collapseToStart ? -reference.height - popper.height * 2 : reference.height / 2)];
+    },
+    [collapseToStart],
+  );
 
-  const update = useCallback(() => {
-    const selection = window.getSelection();
+  const popperOptions = useMemo(
+    () =>
+      ({
+        placement: 'bottom',
+        modifiers: [{ name: 'offset', options: { offset: offsetFn } }],
+      } as const),
+    [offsetFn],
+  );
 
-    if (!selection) {
-      return;
-    }
+  const { styles, attributes } = usePopper(referenceElement, popperElement, popperOptions);
 
-    const { x, y } = getSelectionEndPosition(selection);
+  const show = useDebounceFn(
+    () => {
+      const selection = window.getSelection();
 
-    setReferenceElement({
-      getBoundingClientRect: () => ({
-        width: 0,
-        height: 0,
-        top: y,
-        right: x,
-        bottom: y,
-        left: x,
-        x,
-        y,
-        toJSON: noop,
-      }),
-    });
+      if (!selection) {
+        return;
+      }
 
-    if (popperElement) {
-      popperElement.hidden = false;
-    }
-  }, [popperElement]);
+      const { el, collapseToStart } = getSelectionEndElement(selection);
 
-  const hide = useCallback(() => {
+      setReferenceElement(el);
+      setCollapseToStart(collapseToStart);
+
+      if (popperElement) {
+        popperElement.hidden = false;
+      }
+    },
+    { wait: 300 },
+  );
+
+  const hide = useLatest(() => {
     if (popperElement) {
       popperElement.hidden = true;
     }
-    setReferenceElement(null);
-  }, [popperElement]);
 
-  return { setPopperElement, hide, styles, attributes, update };
+    if (referenceElement) {
+      referenceElement.remove();
+      setReferenceElement(null);
+    }
+  });
+
+  const page = useMemo(() => getPageFromEndElement(referenceElement), [referenceElement]);
+
+  return { setPopperElement, page, hide, styles, attributes, show };
 }
