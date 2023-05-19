@@ -63,7 +63,7 @@ export function normalizeTitle(material: MaterialVO) {
 export const HighlightDTOSchema = object({
   content: string(),
   color: string(),
-  ranges: array(
+  fragments: array(
     object({
       page: number(),
       rect: object({

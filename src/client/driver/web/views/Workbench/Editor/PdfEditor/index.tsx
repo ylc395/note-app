@@ -12,14 +12,7 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
   const containerElRef = useRef<HTMLDivElement | null>(null);
   const viewerElRef = useRef<HTMLDivElement | null>(null);
   const [pdfViewer, setPdfViewer] = useState<PdfViewer | null>(null);
-  const {
-    setPopperElement,
-    page,
-    show: showPopper,
-    hide: hidePopper,
-    styles,
-    attributes,
-  } = useHighlightTooltip(pdfViewer);
+  const { setPopperElement, show: showPopper, hide: hidePopper, styles, attributes } = useHighlightTooltip(pdfViewer);
 
   useEffect(() => {
     if (!editor.entity || !containerElRef.current || !viewerElRef.current) {
@@ -57,7 +50,7 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
             style={styles.popper}
             {...attributes.popper}
           >
-            <HighlightTooltip pdfViewer={pdfViewer} page={page} />
+            <HighlightTooltip pdfViewer={pdfViewer} />
           </div>
         </div>
       </div>

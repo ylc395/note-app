@@ -2,6 +2,7 @@
 
 .page {
   margin: 0 auto;
+  position: relative;
 }
 
 .page > * {
