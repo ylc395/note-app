@@ -8,10 +8,12 @@ import schema, { type Row } from '../schema/material';
 import type { Row as FileRow } from '../schema/file';
 import BaseRepository from './BaseRepository';
 import FileRepository from './FileRepository';
+import MaterialAnnotationRepository from './MaterialAnnotationRepository';
 
 export default class SqliteMaterialRepository extends BaseRepository<Row> implements MaterialRepository {
   protected readonly schema = schema;
   private readonly files = new FileRepository(this.knex);
+  private readonly annotations = new MaterialAnnotationRepository(this.knex);
   async createDirectory(directory: Directory) {
     const createdRow = await this._createOrUpdate(directory);
     return SqliteMaterialRepository.rowToDirectory(createdRow);
@@ -129,6 +131,8 @@ export default class SqliteMaterialRepository extends BaseRepository<Row> implem
 
     return null;
   }
+
+  readonly createHighlight = this.annotations.createHighlight.bind(this.annotations);
 
   private static isFileRow(row: Row) {
     return Boolean(row.fileId);

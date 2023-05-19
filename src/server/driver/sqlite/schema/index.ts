@@ -6,3 +6,4 @@ export { default as fileSchema } from './file';
 export { default as memoSchema } from './memo';
 export { default as materialSchema } from './material';
 export { default as revisionSchema } from './revision';
+export { default as materialAnnotationSchema } from './materialAnnotation';

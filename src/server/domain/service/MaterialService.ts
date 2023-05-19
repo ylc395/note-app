@@ -1,4 +1,4 @@
-import { MaterialDTO, MaterialQuery, MaterialVO, isDirectory } from 'interface/material';
+import { HighlightDTO, MaterialDTO, MaterialQuery, MaterialVO, isDirectory } from 'interface/material';
 
 import BaseService from './BaseService';
 
@@ -53,5 +53,15 @@ export default class MaterialService extends BaseService {
     }
 
     return blob;
+  }
+
+  async createHighlight(materialId: MaterialVO['id'], highlight: HighlightDTO) {
+    const material = await this.materials.findOneById(materialId);
+
+    if (!material || isDirectory(material) || material.mimeType !== 'application/pdf') {
+      throw new Error('invalid material id');
+    }
+
+    return await this.materials.createHighlight(materialId, highlight);
   }
 }

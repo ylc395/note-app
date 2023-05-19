@@ -4,12 +4,15 @@ import {
   type MaterialDTO,
   type MaterialVO,
   type MaterialQuery,
+  type HighlightDTO,
+  type HighlightVO,
   materialDTOSchema,
   materialQuerySchema,
 } from 'interface/material';
 import MaterialService from 'service/MaterialService';
 
 import { createSchemaPipe, Post, Body, Get, Query, Param } from './decorators';
+import { HighlightDTOSchema } from 'interface/material';
 
 @Controller()
 export default class MaterialsController {
@@ -18,6 +21,14 @@ export default class MaterialsController {
   @Get('/materials/:id/blob')
   async getBlob(@Param('id') materialId: MaterialVO['id']): Promise<ArrayBuffer> {
     return await this.materialService.getBlob(materialId);
+  }
+
+  @Post('/materials/:id/highlights')
+  async createHighlight(
+    @Param('id') materialId: MaterialVO['id'],
+    @Body(createSchemaPipe(HighlightDTOSchema)) highlight: HighlightDTO,
+  ): Promise<HighlightVO> {
+    return await this.materialService.createHighlight(materialId, highlight);
   }
 
   @Get('/materials/:id')

@@ -1,6 +1,13 @@
 import { singleton, container } from 'tsyringe';
 
-import { MaterialDTO, DirectoryVO, MaterialVO, MaterialQuery, isDirectory, EntityMaterialVO } from 'interface/material';
+import {
+  type MaterialDTO,
+  type DirectoryVO,
+  type MaterialVO,
+  type MaterialQuery,
+  type EntityMaterialVO,
+  isDirectory,
+} from 'interface/material';
 import MaterialTree from 'model/material/Tree';
 import { token as remoteToken } from 'infra/remote';
 

@@ -41,7 +41,7 @@ export const materialQuerySchema = object({
 export type MaterialQuery = Infer<typeof materialQuerySchema>;
 
 export const isDirectory = (entity: MaterialVO): entity is DirectoryVO => {
-  return 'childrenCount' in entity;
+  return !('mimeType' in entity);
 };
 
 export function normalizeTitle(material: MaterialVO) {
@@ -77,3 +77,11 @@ export const HighlightDTOSchema = object({
 });
 
 export type HighlightDTO = Infer<typeof HighlightDTOSchema>;
+
+export interface HighlightVO extends HighlightDTO {
+  id: EntityId;
+  comment: string | null;
+  icon: string | null;
+  updatedAt: number;
+  createdAt: number;
+}
