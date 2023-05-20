@@ -56,12 +56,20 @@ export default class MaterialService extends BaseService {
   }
 
   async createHighlight(materialId: MaterialVO['id'], highlight: HighlightDTO) {
+    await this.assertPdfMaterial(materialId);
+    return await this.materials.createHighlight(materialId, highlight);
+  }
+
+  async queryHighlights(materialId: MaterialVO['id']) {
+    await this.assertPdfMaterial(materialId);
+    return await this.materials.findAllHighlights(materialId);
+  }
+
+  private async assertPdfMaterial(materialId: MaterialVO['id']) {
     const material = await this.materials.findOneById(materialId);
 
     if (!material || isDirectory(material) || material.mimeType !== 'application/pdf') {
       throw new Error('invalid material id');
     }
-
-    return await this.materials.createHighlight(materialId, highlight);
   }
 }

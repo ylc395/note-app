@@ -17,4 +17,5 @@ export interface MaterialRepository {
   findOneById: (id: MaterialVO['id']) => Promise<MaterialVO | null>;
   findBlobById: (id: MaterialVO['id']) => Promise<ArrayBuffer | null>;
   createHighlight: (materialId: MaterialVO['id'], highlight: HighlightDTO) => Promise<HighlightVO>;
+  findAllHighlights: (materialId: MaterialVO['id']) => Promise<HighlightVO[]>;
 }

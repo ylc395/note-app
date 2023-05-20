@@ -133,6 +133,7 @@ export default class SqliteMaterialRepository extends BaseRepository<Row> implem
   }
 
   readonly createHighlight = this.annotations.createHighlight.bind(this.annotations);
+  readonly findAllHighlights = this.annotations.findAllHighlights.bind(this.annotations);
 
   private static isFileRow(row: Row) {
     return Boolean(row.fileId);

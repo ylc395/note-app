@@ -19,20 +19,25 @@ export default class MaterialsController {
   constructor(private readonly materialService: MaterialService) {}
 
   @Get('/materials/:id/blob')
-  async getBlob(@Param('id') materialId: MaterialVO['id']): Promise<ArrayBuffer> {
+  async getBlob(@Param('id') materialId: string): Promise<ArrayBuffer> {
     return await this.materialService.getBlob(materialId);
   }
 
   @Post('/materials/:id/highlights')
   async createHighlight(
-    @Param('id') materialId: MaterialVO['id'],
+    @Param('id') materialId: string,
     @Body(createSchemaPipe(HighlightDTOSchema)) highlight: HighlightDTO,
   ): Promise<HighlightVO> {
     return await this.materialService.createHighlight(materialId, highlight);
   }
 
+  @Get('/materials/:id/highlights')
+  async queryHighlights(@Param('id') materialId: string): Promise<HighlightVO[]> {
+    return await this.materialService.queryHighlights(materialId);
+  }
+
   @Get('/materials/:id')
-  async queryOne(@Param('id') materialId: MaterialVO['id']): Promise<MaterialVO> {
+  async queryOne(@Param('id') materialId: string): Promise<MaterialVO> {
     return await this.materialService.queryById(materialId);
   }
 
