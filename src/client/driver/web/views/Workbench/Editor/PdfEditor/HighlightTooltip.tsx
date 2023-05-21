@@ -10,7 +10,7 @@ export default (function MarkTooltip({ pdfViewer }: { pdfViewer: PdfViewer | nul
         <button
           className="h-4 w-4"
           key={color}
-          onClick={() => pdfViewer?.createMark(color)}
+          onClick={() => pdfViewer?.createHighlight(color)}
           style={{ backgroundColor: color }}
         ></button>
       ))}

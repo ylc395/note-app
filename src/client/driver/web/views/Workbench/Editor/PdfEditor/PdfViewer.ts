@@ -1,11 +1,11 @@
-import { container } from 'tsyringe';
 import { type PDFDocumentLoadingTask, getDocument, PDFWorker } from 'pdfjs-dist';
-import { EventBus, ScrollMode, PDFViewer } from 'pdfjs-dist/web/pdf_viewer';
+import { EventBus, ScrollMode, PDFViewer, PDFPageView } from 'pdfjs-dist/web/pdf_viewer';
 import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.min.js?worker';
 import numberRange from 'lodash/range';
+import { when } from 'mobx';
 
-import type { HighlightDTO, MaterialVO } from 'interface/material';
-import { token as remoteToken } from 'infra/remote';
+import type { HighlightDTO } from 'interface/material';
+import type PdfEditor from 'model/material/PdfEditor';
 
 import './style.css';
 import { getValidEndContainer, isElement } from './domUtils';
@@ -13,18 +13,25 @@ import { getValidEndContainer, isElement } from './domUtils';
 interface Options {
   container: HTMLDivElement;
   viewer: HTMLDivElement;
-  materialId: MaterialVO['id'];
+  editor: PdfEditor;
   onTextSelected: () => void;
   onTextSelectCancel: () => void;
 }
 
 export default class PdfViewer {
   private readonly pdfViewer: PDFViewer;
-  private readonly remote = container.resolve(remoteToken);
+  readonly editor: PdfEditor;
   private loadingTask?: PDFDocumentLoadingTask;
+  private readonly cancelLoadingBlob: ReturnType<typeof when>;
 
   constructor(private readonly options: Options) {
     this.pdfViewer = PdfViewer.createPDFViewer(options);
+    this.editor = options.editor;
+    this.cancelLoadingBlob = when(
+      () => Boolean(options.editor.entity),
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      () => this.load(options.editor.entity!.blob),
+    );
   }
 
   private static createPDFViewer(options: Options) {
@@ -34,13 +41,13 @@ export default class PdfViewer {
     return pdfViewer;
   }
 
-  async load(blob: ArrayBuffer) {
+  private async load(blob: ArrayBuffer) {
     if (this.loadingTask) {
       throw new Error('loaded');
     }
 
     const pdfWorker = new PDFWorker({ port: new PdfJsWorker() });
-    this.loadingTask = getDocument({ data: blob, worker: pdfWorker });
+    this.loadingTask = getDocument({ data: blob.slice(0), worker: pdfWorker });
 
     const doc = await this.loadingTask.promise;
     this.pdfViewer.setDocument(doc);
@@ -55,6 +62,19 @@ export default class PdfViewer {
       this.options.onTextSelectCancel();
     }
   };
+
+  get pagesReady() {
+    return (
+      this.pdfViewer.pagesPromise ||
+      new Promise((resolve) => {
+        this.pdfViewer.eventBus.on('pagesloaded', resolve);
+      })
+    );
+  }
+
+  get viewEl() {
+    return this.pdfViewer.viewer;
+  }
 
   goToPage(page: number) {
     this.pdfViewer.currentPageNumber = page;
@@ -71,6 +91,7 @@ export default class PdfViewer {
   destroy() {
     this.pdfViewer.cleanup();
     this.loadingTask?.destroy();
+    this.cancelLoadingBlob();
     document.removeEventListener('selectionchange', this.handleSelection);
   }
 
@@ -84,7 +105,7 @@ export default class PdfViewer {
     this.pdfViewer.currentScaleValue = value;
   }
 
-  async createMark(color: string) {
+  async createHighlight(color: string) {
     const result = this.getSelectionRange();
 
     if (!result) {
@@ -93,7 +114,7 @@ export default class PdfViewer {
 
     const { range } = result;
 
-    await this.remote.post<HighlightDTO, unknown>(`/materials/${this.options.materialId}/highlights`, {
+    this.editor.createHighlight({
       color,
       content: PdfViewer.getTextFromRange(range),
       fragments: this.getFragments(range),
@@ -225,5 +246,9 @@ export default class PdfViewer {
     return (
       rect.top >= elRect.top && rect.bottom <= elRect.bottom && rect.left >= elRect.left && rect.right <= rect.right
     );
+  }
+
+  getTextLayerElement(page: number) {
+    return (this.pdfViewer.getPageView(page - 1) as PDFPageView)?.textLayer?.div;
   }
 }

@@ -1,5 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import type PdfEditor from 'model/material/PdfEditor';
 import PdfViewer from 'web/views/Workbench/Editor/PdfEditor/PdfViewer';
@@ -7,6 +8,7 @@ import PdfViewer from 'web/views/Workbench/Editor/PdfEditor/PdfViewer';
 import useHighlightTooltip from './useHighlightTooltip';
 import Toolbar from './Toolbar';
 import HighlightTooltip from './HighlightTooltip';
+import Highlights from './Highlights';
 
 export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }) {
   const containerElRef = useRef<HTMLDivElement | null>(null);
@@ -20,14 +22,13 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
     }
 
     const core = new PdfViewer({
-      materialId: editor.entityId,
+      editor,
       container: containerElRef.current,
       viewer: viewerElRef.current,
       onTextSelected: showPopper.run,
       onTextSelectCancel: () => hidePopper.current(),
     });
 
-    core.load(editor.entity.blob.slice(0));
     setPdfViewer(core);
 
     return () => {
@@ -35,7 +36,7 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
       showPopper.cancel();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editor.entity, hidePopper, showPopper.run, showPopper.cancel]);
+  }, [showPopper.run, showPopper.cancel, editor.entity]);
 
   return (
     <div className="flex h-full w-full">
@@ -43,6 +44,7 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
         <Toolbar pdfViewer={pdfViewer} />
         <div className="absolute inset-x-0 top-11 bottom-0 overflow-auto" ref={containerElRef}>
           <div className="select-text" ref={viewerElRef}></div>
+          {pdfViewer && <Highlights pdfViewer={pdfViewer} />}
           <div
             className="pdf-editor-tooltip z-10"
             ref={setPopperElement}

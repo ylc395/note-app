@@ -1,10 +1,10 @@
 import { container } from 'tsyringe';
 
 import { token as remoteToken } from 'infra/remote';
-import type { EntityMaterialVO } from 'interface/material';
+import type { EntityMaterialVO, HighlightDTO, HighlightVO, MaterialVO } from 'interface/material';
 import type Tile from 'model/workbench/Tile';
 import ImageEditor from 'model/material/ImageEditor';
-import PdfEditor from 'model/material/PdfEditor';
+import PdfEditor, { Events as PdfEditorEvents } from 'model/material/PdfEditor';
 
 function load(materialId: EntityMaterialVO['id']) {
   const remote = container.resolve(remoteToken);
@@ -15,13 +15,38 @@ function load(materialId: EntityMaterialVO['id']) {
   ]).then(([{ body: metadata }, { body: blob }]) => ({ metadata, blob }));
 }
 
+async function loadHighlight(materialId: EntityMaterialVO['id']) {
+  const remote = container.resolve(remoteToken);
+  const { body: highlights } = await remote.get<unknown, HighlightVO[]>(`/materials/${materialId}/highlights`);
+
+  return highlights;
+}
+
+function createPdfEditor(tile: Tile, materialId: MaterialVO['id']) {
+  const editor = new PdfEditor(tile, materialId);
+
+  editor.on(PdfEditorEvents.HighlightCreated, async (highlight) => {
+    const remote = container.resolve(remoteToken);
+    const { body: createdHighlight } = await remote.post<HighlightDTO, HighlightVO>(
+      `/materials/${materialId}/highlights`,
+      highlight,
+    );
+
+    editor.highlights.push(createdHighlight);
+  });
+
+  loadHighlight(materialId).then((highlights) => editor.highlights.push(...highlights));
+
+  return editor;
+}
+
 export default function materialEditorFactory(tile: Tile, materialId: EntityMaterialVO['id'], mimeType: string) {
   let editor: ImageEditor | PdfEditor | null = null;
 
   if (mimeType.startsWith('image')) {
     editor = new ImageEditor(tile, materialId);
   } else if (mimeType === 'application/pdf') {
-    editor = new PdfEditor(tile, materialId);
+    editor = createPdfEditor(tile, materialId);
   }
 
   if (!editor) {
