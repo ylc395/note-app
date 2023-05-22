@@ -2,7 +2,7 @@ import { useEffect, useRef, forwardRef, useImperativeHandle, useCallback } from 
 import { gfm } from '@milkdown/preset-gfm';
 import { commonmark } from '@milkdown/preset-commonmark';
 import {
-  Editor,
+  Editor as MilkdownEditor,
   rootCtx,
   editorViewCtx,
   parserCtx,
@@ -31,19 +31,19 @@ interface Props {
   defaultValue?: string;
 }
 
-export interface EditorRef {
+export interface EditorView {
   updateContent: (content: string, isReset: boolean) => void;
   setReadonly: (isReadonly: boolean) => void;
   focus: () => void;
   enableSearch: () => void;
 }
 
-export default forwardRef<EditorRef, Props>(function MarkdownEditor(
+export default forwardRef<EditorView, Props>(function MarkdownEditor(
   { onChange, readonly, autoFocus, defaultValue },
   ref,
 ) {
   const rootRef = useRef<HTMLDivElement>(null);
-  const editorRef = useRef<Editor>();
+  const editorRef = useRef<MilkdownEditor>();
   const isRestRef = useRef(false);
   const creatingRef = useRef<Promise<void>>();
 
@@ -108,7 +108,7 @@ export default forwardRef<EditorRef, Props>(function MarkdownEditor(
       throw new Error('no root');
     }
 
-    const editor = Editor.make()
+    const editor = MilkdownEditor.make()
       .use(multimedia) // order attention!
       .use(commonmark)
       .use(gfm)

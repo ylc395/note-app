@@ -4,7 +4,7 @@ import { useCreation } from 'ahooks';
 import { Modal } from 'antd';
 
 import type NoteEditor from 'model/note/Editor';
-import MarkdownEditor, { type EditorRef } from 'web/components/MarkdownEditor';
+import MarkdownEditor, { type EditorView } from 'web/components/MarkdownEditor';
 import { useModal, COMMON_MODAL_OPTIONS } from 'web/infra/ui';
 
 import Body from './Body';
@@ -25,16 +25,16 @@ export default observer(function NoteEditor({ editor }: { editor: NoteEditor }) 
   // );
 
   const onChange = useCallback((content: string) => editor.updateBody(content, true), [editor]);
-  const [editorRef, setEditorRef] = useState<EditorRef | null>(null);
+  const [editorView, setEditorView] = useState<EditorView | null>(null);
   const infoModal = useModal();
-  const editorView = useCreation(() => <MarkdownEditor ref={setEditorRef} onChange={onChange} />, [onChange]);
+  const editorViewNode = useCreation(() => <MarkdownEditor ref={setEditorView} onChange={onChange} />, [onChange]);
 
   return (
-    <Context.Provider value={{ editor, editorRef, infoModal }}>
+    <Context.Provider value={{ editor, editorView: editorView, infoModal }}>
       <div className="flex h-full flex-col">
         <Title />
         <Breadcrumb />
-        <Body>{editorView}</Body>
+        <Body>{editorViewNode}</Body>
         <Modal {...COMMON_MODAL_OPTIONS} title="详情" closable open={infoModal.isOpen} onCancel={infoModal.close}>
           <Info />
         </Modal>

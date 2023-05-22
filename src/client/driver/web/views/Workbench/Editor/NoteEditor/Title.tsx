@@ -6,7 +6,7 @@ import { InfoCircleOutlined, FileSearchOutlined } from '@ant-design/icons';
 import EditorContext from './Context';
 
 export default observer(function NoteTitle() {
-  const { editor, editorRef, infoModal } = useContext(EditorContext);
+  const { editor, editorView, infoModal } = useContext(EditorContext);
   const handleChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => editor.updateNote({ title: e.target.value }, true),
     [editor],
@@ -23,7 +23,7 @@ export default observer(function NoteTitle() {
       />
       <Space.Compact className="mr-4">
         <Tooltip title="搜索">
-          <Button onClick={() => editorRef && editorRef.enableSearch()} type="text" icon={<FileSearchOutlined />} />
+          <Button onClick={() => editorView && editorView.enableSearch()} type="text" icon={<FileSearchOutlined />} />
         </Tooltip>
         <Tooltip title="信息与统计">
           <Button onClick={() => infoModal.open()} type="text" icon={<InfoCircleOutlined />} />

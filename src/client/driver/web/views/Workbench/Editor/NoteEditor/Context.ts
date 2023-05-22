@@ -1,12 +1,12 @@
 import { createContext } from 'react';
 
 import type NoteEditor from 'model/note/Editor';
-import type { EditorRef } from 'web/components/MarkdownEditor';
+import type { EditorView } from 'web/components/MarkdownEditor';
 import type { Modal } from 'web/infra/ui';
 
 interface EditorContext {
   editor: NoteEditor;
-  editorRef: EditorRef | null;
+  editorView: EditorView | null;
   infoModal: Modal;
 }
 

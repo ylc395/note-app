@@ -8,15 +8,15 @@ import { Events } from 'model/note/Editor';
 import EditorContext from './Context';
 
 export default observer(function NoteEditor({ children }: { children: ReactNode }) {
-  const { editor, editorRef } = useContext(EditorContext);
+  const { editor, editorView } = useContext(EditorContext);
   useEffect(() => {
-    if (!editorRef) {
+    if (!editorView) {
       return;
     }
 
     const updateContent = debounce(({ content, isOriginal }: { content: string; isOriginal: boolean }) => {
       if (!isOriginal) {
-        editorRef.updateContent(content, true);
+        editorView.updateContent(content, true);
       }
     }, 300);
 
@@ -24,10 +24,10 @@ export default observer(function NoteEditor({ children }: { children: ReactNode 
       () => editor.entity?.metadata.isReadonly,
       (isReadonly) => {
         if (typeof isReadonly === 'boolean') {
-          editorRef.setReadonly(isReadonly);
+          editorView.setReadonly(isReadonly);
 
           if (!isReadonly) {
-            editorRef.focus();
+            editorView.focus();
           }
         }
       },
@@ -38,7 +38,7 @@ export default observer(function NoteEditor({ children }: { children: ReactNode 
       () => Boolean(editor.entity),
       () => {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        editorRef.updateContent(editor.entity!.body, true);
+        editorView.updateContent(editor.entity!.body, true);
       },
     );
 
@@ -49,7 +49,7 @@ export default observer(function NoteEditor({ children }: { children: ReactNode 
       stopWatchReadonly();
       stopUpdateContent();
     };
-  }, [editor, editorRef]);
+  }, [editor, editorView]);
 
   return <div className="min-h-0 grow px-4">{children}</div>;
 });

@@ -9,10 +9,7 @@ import IconTitle from 'web/components/IconTitle';
 import type EntityEditor from 'model/abstract/Editor';
 import useContextmenu from './useContextmenu';
 
-interface Props {
-  editor: EntityEditor;
-}
-export default observer(function TabItem({ editor }: Props) {
+export default observer(function TabItem({ editor }: { editor: EntityEditor }) {
   const { tile } = editor;
   const { switchToEditor, removeEditor: closeEditor, currentEditor } = tile;
   const { setNodeRef, attributes, listeners, over } = useSortable({

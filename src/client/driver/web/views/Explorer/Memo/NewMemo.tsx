@@ -5,33 +5,37 @@ import { observer } from 'mobx-react-lite';
 import { useCreation } from 'ahooks';
 
 import MemoService from 'service/MemoService';
-import MarkdownEditor, { type EditorRef } from 'web/components/MarkdownEditor';
+import MarkdownEditor, { type EditorView } from 'web/components/MarkdownEditor';
 
 export default observer(function NewMemo() {
   const memoService = container.resolve(MemoService);
-  const editorRef = useRef<EditorRef>(null);
+  const editorViewRef = useRef<EditorView>(null);
   const create = useCallback(async () => {
     await memoService.createMemo();
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    editorRef.current!.updateContent('', true);
+    editorViewRef.current!.updateContent('', true);
   }, [memoService]);
 
   const clear = useCallback(() => {
     memoService.updateNewContent('');
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    editorRef.current!.updateContent('', true);
+    editorViewRef.current!.updateContent('', true);
   }, [memoService]);
 
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    editorRef.current!.updateContent(memoService.newContent, true);
+    editorViewRef.current!.updateContent(memoService.newContent, true);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    editorRef.current!.focus();
+    editorViewRef.current!.focus();
   }, [memoService]);
 
   const markdownEditor = useCreation(
     () => (
-      <MarkdownEditor defaultValue={memoService.newContent} ref={editorRef} onChange={memoService.updateNewContent} />
+      <MarkdownEditor
+        defaultValue={memoService.newContent}
+        ref={editorViewRef}
+        onChange={memoService.updateNewContent}
+      />
     ),
     [],
   );
