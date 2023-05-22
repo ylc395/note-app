@@ -16,7 +16,7 @@ export default observer(function NoteEditor({ children }: { children: ReactNode 
 
     const updateContent = debounce(({ content, isOriginal }: { content: string; isOriginal: boolean }) => {
       if (!isOriginal) {
-        editorView.updateContent(content, true);
+        editorView.updateContent(content);
       }
     }, 300);
 
@@ -36,10 +36,8 @@ export default observer(function NoteEditor({ children }: { children: ReactNode 
 
     const stopUpdateContent = when(
       () => Boolean(editor.entity),
-      () => {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        editorView.updateContent(editor.entity!.body, true);
-      },
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      () => editorView.updateContent(editor.entity!.body),
     );
 
     editor.on(Events.BodyUpdated, updateContent);

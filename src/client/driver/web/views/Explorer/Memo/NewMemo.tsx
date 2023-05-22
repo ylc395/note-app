@@ -13,18 +13,18 @@ export default observer(function NewMemo() {
   const create = useCallback(async () => {
     await memoService.createMemo();
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    editorViewRef.current!.updateContent('', true);
+    editorViewRef.current!.updateContent('');
   }, [memoService]);
 
   const clear = useCallback(() => {
     memoService.updateNewContent('');
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    editorViewRef.current!.updateContent('', true);
+    editorViewRef.current!.updateContent('');
   }, [memoService]);
 
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    editorViewRef.current!.updateContent(memoService.newContent, true);
+    editorViewRef.current!.updateContent(memoService.newContent);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     editorViewRef.current!.focus();
   }, [memoService]);

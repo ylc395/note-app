@@ -25,14 +25,14 @@ import iconLink from './iconLink';
 import search, { enableSearchCommand } from './search';
 
 interface Props {
-  onChange?: (content: string) => void;
+  onChange?: (content: string) => void; // won't fire when calling updateContent
   readonly?: boolean;
   autoFocus?: boolean;
   defaultValue?: string;
 }
 
 export interface EditorView {
-  updateContent: (content: string, isReset: boolean) => void;
+  updateContent: (content: string) => void;
   setReadonly: (isReadonly: boolean) => void;
   focus: () => void;
   enableSearch: () => void;
@@ -44,7 +44,7 @@ export default forwardRef<EditorView, Props>(function MarkdownEditor(
 ) {
   const rootRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<MilkdownEditor>();
-  const isRestRef = useRef(false);
+  const isUpdatingContentRef = useRef(false);
   const creatingRef = useRef<Promise<void>>();
 
   const focus = useCallback(() => {
@@ -63,7 +63,7 @@ export default forwardRef<EditorView, Props>(function MarkdownEditor(
     });
   }, [readonly]);
 
-  const updateContent = useCallback((content: string, isReset: boolean) => {
+  const updateContent = useCallback((content: string) => {
     const editor = editorRef.current;
 
     if (!editor) {
@@ -79,7 +79,7 @@ export default forwardRef<EditorView, Props>(function MarkdownEditor(
       if (!doc) {
         return;
       }
-      isRestRef.current = isReset;
+      isUpdatingContentRef.current = true;
       view.dispatch(state.tr.replace(0, state.doc.content.size, new Slice(doc.content, 0, 0)));
     });
   }, []);
@@ -138,8 +138,8 @@ export default forwardRef<EditorView, Props>(function MarkdownEditor(
 
           if (onChange) {
             ctx.get(listenerCtx).markdownUpdated((_, markdown, pre) => {
-              if (isRestRef.current) {
-                isRestRef.current = false;
+              if (isUpdatingContentRef.current) {
+                isUpdatingContentRef.current = false;
                 return;
               }
 
@@ -157,7 +157,7 @@ export default forwardRef<EditorView, Props>(function MarkdownEditor(
       }
 
       if (typeof defaultValue === 'string') {
-        updateContent(defaultValue, true);
+        updateContent(defaultValue);
       }
     });
 
