@@ -14,8 +14,10 @@ export default observer(function NoteEditor({ children }: { children: ReactNode 
       return;
     }
 
-    const updateContent = debounce((body: string) => {
-      editorRef.updateContent(body, true);
+    const updateContent = debounce(({ content, isOriginal }: { content: string; isOriginal: boolean }) => {
+      if (!isOriginal) {
+        editorRef.updateContent(content, true);
+      }
     }, 300);
 
     const stopWatchReadonly = reaction(
@@ -40,10 +42,10 @@ export default observer(function NoteEditor({ children }: { children: ReactNode 
       },
     );
 
-    editor.on(Events.BodyUpdatedNotOriginally, updateContent);
+    editor.on(Events.BodyUpdated, updateContent);
 
     return () => {
-      editor.off(Events.BodyUpdatedNotOriginally, updateContent);
+      editor.off(Events.BodyUpdated, updateContent);
       stopWatchReadonly();
       stopUpdateContent();
     };

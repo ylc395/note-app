@@ -2,19 +2,17 @@ import { container, singleton } from 'tsyringe';
 import { action, makeObservable } from 'mobx';
 
 import { EntityTypes, type EntityLocator } from 'interface/entity';
-import type NoteEditor from 'model/note/Editor';
-import type ImageEditor from 'model/material/ImageEditor';
-import type PdfEditor from 'model/material/PdfEditor';
+import NoteEditor from 'model/note/Editor';
+import PdfEditor from 'model/material/PdfEditor';
+import ImageEditor from 'model/material/ImageEditor';
 import EntityEditor, { Events as EditorEvents } from 'model/abstract/Editor';
 import Tile from 'model/workbench/Tile';
 import TileManager, { type TileSplitDirections } from 'model/workbench/TileManger';
 import NoteService, { NoteEvents } from 'service/NoteService';
-
-import noteEditorFactory from './noteEditorFactory';
-import materialEditorFactory from './materialEditorFactory';
+import { type EditorManager, token as editorManagerToken } from 'model/abstract/EditorManager';
 
 @singleton()
-export default class EditorService {
+export default class EditorService implements EditorManager {
   readonly tileManager = new TileManager();
   private editors: { [key in EntityTypes]?: Set<EntityEditor> } = {
     [EntityTypes.Note]: new Set<NoteEditor>(),
@@ -22,6 +20,7 @@ export default class EditorService {
   };
 
   constructor() {
+    container.registerInstance(editorManagerToken, this);
     makeObservable(this);
     this.init();
   }
@@ -48,13 +47,10 @@ export default class EditorService {
 
     switch (entity.type) {
       case EntityTypes.Note:
-        editor = noteEditorFactory(tile, entity.id);
+        editor = new NoteEditor(tile, entity.id, container.resolve(NoteService).noteTree);
         break;
       case EntityTypes.Material:
-        if (!entity.mimeType) {
-          throw new Error('no mimeType');
-        }
-        editor = materialEditorFactory(tile, entity.id, entity.mimeType);
+        editor = this.createMaterialEditor(tile, entity);
         break;
       default:
         throw new Error('invalid type');
@@ -66,10 +62,27 @@ export default class EditorService {
     return editor;
   }
 
-  readonly getEditorsByEntity = <T extends EntityEditor>(
-    { id, type }: EntityLocator,
-    excludeId?: EntityEditor['id'],
-  ) => {
+  private createMaterialEditor(tile: Tile, entity: EntityLocator) {
+    if (!entity.mimeType) {
+      throw new Error('no mimeType');
+    }
+
+    let editor: ImageEditor | PdfEditor | null = null;
+
+    if (entity.mimeType.startsWith('image')) {
+      editor = new ImageEditor(tile, entity.id);
+    } else if (entity.mimeType === 'application/pdf') {
+      editor = new PdfEditor(tile, entity.id);
+    }
+
+    if (!editor) {
+      throw new Error('can not create editor');
+    }
+
+    return editor;
+  }
+
+  getEditorsByEntity<T extends EntityEditor>({ id, type }: EntityLocator, excludeId?: EntityEditor['id']) {
     const editorSet = this.editors[type];
 
     if (!editorSet) {
@@ -77,7 +90,7 @@ export default class EditorService {
     }
 
     return Array.from(editorSet).filter((e) => e.entityId === id && (excludeId ? excludeId !== e.id : true)) as T[];
-  };
+  }
 
   @action.bound
   openEntity(entity: EntityLocator, newTileOptions?: { direction: TileSplitDirections; from: Tile }) {

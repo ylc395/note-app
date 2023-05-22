@@ -1,4 +1,4 @@
-import { computed, makeObservable, observable } from 'mobx';
+import { computed, makeObservable, observable, runInAction } from 'mobx';
 import uniq from 'lodash/uniq';
 import groupBy from 'lodash/groupBy';
 
@@ -25,13 +25,14 @@ export enum HighlightColors {
 }
 
 interface PdfEditorEvents extends CommonEditorEvents {
-  [Events.HighlightCreated]: [HighlightDTO];
+  [Events.HighlightCreated]: [HighlightVO];
 }
 
 export default class PdfEditor extends Editor<Entity, PdfEditorEvents> {
   constructor(tile: Tile, materialId: EntityMaterialVO['id']) {
     super(tile, materialId);
     makeObservable(this);
+    this.init();
   }
 
   readonly entityType = EntityTypes.Material;
@@ -44,6 +45,23 @@ export default class PdfEditor extends Editor<Entity, PdfEditorEvents> {
     return [];
   }
 
+  private async init() {
+    const [{ body: metadata }, { body: blob }] = await Promise.all([
+      this.remote.get<void, EntityMaterialVO>(`/materials/${this.entityId}`),
+      this.remote.get<void, ArrayBuffer>(`/materials/${this.entityId}/blob`),
+    ]);
+
+    this.load({ metadata, blob });
+
+    const { body: highlights } = await this.remote.get<unknown, HighlightVO[]>(
+      `/materials/${this.entityId}/highlights`,
+    );
+
+    runInAction(() => {
+      this.highlights.push(...highlights);
+    });
+  }
+
   @computed
   get tabView() {
     return {
@@ -52,8 +70,14 @@ export default class PdfEditor extends Editor<Entity, PdfEditorEvents> {
     };
   }
 
-  createHighlight(highlight: HighlightDTO) {
-    this.emit(Events.HighlightCreated, highlight);
+  async createHighlight(highlight: HighlightDTO) {
+    const { body: createdHighlight } = await this.remote.post<HighlightDTO, HighlightVO>(
+      `/materials/${this.entityId}/highlights`,
+      highlight,
+    );
+
+    this.highlights.push(createdHighlight);
+    this.emit(Events.HighlightCreated, createdHighlight);
   }
 
   @computed

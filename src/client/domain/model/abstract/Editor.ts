@@ -1,9 +1,13 @@
 import uniqueId from 'lodash/uniqueId';
+import { container } from 'tsyringe';
 import { makeObservable, action, observable } from 'mobx';
 import { Emitter, type EventMap } from 'strict-event-emitter';
 
 import type Tile from 'model/workbench/Tile';
 import type { EntityId, EntityTypes } from 'interface/entity';
+import { token as remoteToken } from 'infra/remote';
+
+import { token as editorManagerToken } from './EditorManager';
 
 interface Breadcrumb {
   title: string;
@@ -23,6 +27,8 @@ export interface CommonEditorEvents extends EventMap {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default abstract class EntityEditor<T = any, E extends CommonEditorEvents = any> extends Emitter<E> {
+  protected remote = container.resolve(remoteToken);
+  protected editorManager = container.resolve(editorManagerToken);
   readonly id = uniqueId('editor-');
   abstract readonly tabView: {
     title: string;
@@ -42,8 +48,8 @@ export default abstract class EntityEditor<T = any, E extends CommonEditorEvents
     this.removeAllListeners();
   }
 
-  @action.bound
-  load(entity: T) {
+  @action
+  protected load(entity: T) {
     if (this.entity) {
       throw new Error('can not reload entity');
     }
