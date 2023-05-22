@@ -1,6 +1,5 @@
 import { observer } from 'mobx-react-lite';
 import { useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
 
 import type PdfEditor from 'model/material/PdfEditor';
 import PdfViewer from 'web/views/Workbench/Editor/PdfEditor/PdfViewer';

@@ -1,4 +1,5 @@
 import { container } from 'tsyringe';
+import { action, runInAction } from 'mobx';
 
 import { token as remoteToken } from 'infra/remote';
 import type { EntityMaterialVO, HighlightDTO, HighlightVO, MaterialVO } from 'interface/material';
@@ -32,10 +33,12 @@ function createPdfEditor(tile: Tile, materialId: MaterialVO['id']) {
       highlight,
     );
 
-    editor.highlights.push(createdHighlight);
+    runInAction(() => {
+      editor.highlights.push(createdHighlight);
+    });
   });
 
-  loadHighlight(materialId).then((highlights) => editor.highlights.push(...highlights));
+  loadHighlight(materialId).then(action((highlights) => editor.highlights.push(...highlights)));
 
   return editor;
 }

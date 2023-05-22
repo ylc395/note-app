@@ -16,6 +16,14 @@ export enum Events {
   HighlightCreated = 'pdfEditor.highlight.created',
 }
 
+export enum HighlightColors {
+  Yellow = '#2596be',
+  Red = '#ef0005',
+  Blue = '#0008ef',
+  Purple = '#b000ef',
+  Gray = '#a2a2a2',
+}
+
 interface PdfEditorEvents extends CommonEditorEvents {
   [Events.HighlightCreated]: [HighlightDTO];
 }

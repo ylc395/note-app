@@ -10,6 +10,7 @@ export default observer(function Highlights({ pdfViewer }: { pdfViewer: PdfViewe
 
   useEffect(() => {
     pdfViewer.pagesReady.then(() => setIsReady(true));
+    return () => setIsReady(false);
   }, [pdfViewer]);
 
   return isReady ? (
