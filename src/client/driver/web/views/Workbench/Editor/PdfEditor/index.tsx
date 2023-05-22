@@ -7,7 +7,8 @@ import PdfViewer from 'web/views/Workbench/Editor/PdfEditor/PdfViewer';
 import useHighlightTooltip from './useHighlightTooltip';
 import Toolbar from './Toolbar';
 import HighlightTooltip from './HighlightTooltip';
-import Highlights from './Highlights';
+import HighlightLayers from './HighlightLayers';
+import HighlightList from './HighlightList';
 
 export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }) {
   const containerElRef = useRef<HTMLDivElement | null>(null);
@@ -43,7 +44,7 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
         <Toolbar pdfViewer={pdfViewer} />
         <div className="absolute inset-x-0 top-11 bottom-0 overflow-auto" ref={containerElRef}>
           <div className="select-text" ref={viewerElRef}></div>
-          {pdfViewer && <Highlights pdfViewer={pdfViewer} />}
+          {pdfViewer && <HighlightLayers pdfViewer={pdfViewer} />}
           <div
             className="pdf-editor-tooltip z-10"
             ref={setPopperElement}
@@ -55,7 +56,7 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
           </div>
         </div>
       </div>
-      <div>批注列表</div>
+      <HighlightList editor={editor} />
     </div>
   );
 });
