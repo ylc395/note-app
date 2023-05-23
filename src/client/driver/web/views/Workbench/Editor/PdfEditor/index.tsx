@@ -7,7 +7,7 @@ import PdfViewer from 'web/views/Workbench/Editor/PdfEditor/PdfViewer';
 import useHighlightTooltip from './useHighlightTooltip';
 import Toolbar from './Toolbar';
 import HighlightTooltip from './HighlightTooltip';
-import AnnotationLayers from './AnnotationLayers';
+import AnnotationLayer from './AnnotationLayer';
 import HighlightList from './HighlightList';
 
 export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }) {
@@ -44,7 +44,8 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
         <Toolbar pdfViewer={pdfViewer} />
         <div className="absolute inset-x-0 top-11 bottom-0 overflow-auto" ref={containerElRef}>
           <div className="select-text" ref={viewerElRef}></div>
-          {pdfViewer && <AnnotationLayers pdfViewer={pdfViewer} />}
+          {pdfViewer &&
+            pdfViewer.annotationPages.map((page) => <AnnotationLayer key={page} page={page} pdfViewer={pdfViewer} />)}
           <div
             className="pdf-editor-tooltip z-10"
             ref={setPopperElement}

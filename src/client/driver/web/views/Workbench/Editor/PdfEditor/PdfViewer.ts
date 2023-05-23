@@ -4,7 +4,7 @@ import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.min.js?worker';
 import numberRange from 'lodash/range';
 import intersection from 'lodash/intersection';
 
-import { computed, makeObservable, observable, when } from 'mobx';
+import { computed, makeObservable, observable, when, action } from 'mobx';
 
 import { AnnotationTypes, type HighlightDTO } from 'interface/material';
 import type PdfEditor from 'model/material/PdfEditor';
@@ -39,9 +39,12 @@ export default class PdfViewer {
       () => this.load(options.editor.entity!.blob),
     );
 
-    this.pdfViewer.eventBus.on('pagerender', ({ pageNumber }: { pageNumber: number }) => {
-      this.renderedPages.push(pageNumber);
-    });
+    this.pdfViewer.eventBus.on(
+      'pagerender',
+      action(({ pageNumber }: { pageNumber: number }) => {
+        this.renderedPages.push(pageNumber);
+      }),
+    );
   }
 
   @computed
