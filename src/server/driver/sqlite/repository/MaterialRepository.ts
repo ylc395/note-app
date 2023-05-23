@@ -132,10 +132,20 @@ export default class SqliteMaterialRepository extends BaseRepository<Row> implem
     return null;
   }
 
-  readonly createHighlight = this.annotations.createHighlight.bind(this.annotations);
-  readonly findAllHighlights = this.annotations.findAllHighlights.bind(this.annotations);
+  readonly createAnnotation = this.annotations.create.bind(this.annotations);
+  readonly findAllAnnotations = this.annotations.findAll.bind(this.annotations);
 
   private static isFileRow(row: Row) {
     return Boolean(row.fileId);
+  }
+
+  async updateText<T>(materialId: MaterialVO['id'], payload: T) {
+    const row = await this.knex<Row>(this.schema.tableName).where('id', materialId).first();
+
+    if (!row?.fileId) {
+      return null;
+    }
+
+    return (await this.files.updateText(row.fileId, JSON.stringify(payload))) ? payload : null;
   }
 }

@@ -1,4 +1,13 @@
-import { object, string, infer as Infer, instanceof as zodInstanceof, array, number } from 'zod';
+import {
+  object,
+  string,
+  instanceof as zodInstanceof,
+  array,
+  number,
+  discriminatedUnion,
+  literal,
+  type infer as Infer,
+} from 'zod';
 import type { EntityId } from './entity';
 
 export const materialDTOSchema = object({
@@ -60,28 +69,37 @@ export function normalizeTitle(material: MaterialVO) {
   return '未命名文件';
 }
 
-export const HighlightDTOSchema = object({
+export enum AnnotationTypes {
+  Highlight = 1,
+}
+
+const highlightDTOSchema = object({
+  icon: string().optional(),
   content: string(),
   color: string(),
   fragments: array(
     object({
       page: number(),
-      rect: object({
-        x: number(),
-        y: number(),
-        height: number(),
-        width: number(),
-      }),
+      rect: object({ x: number(), y: number(), height: number(), width: number() }),
     }),
   ),
 });
 
-export type HighlightDTO = Infer<typeof HighlightDTOSchema>;
+export type HighlightDTO = Infer<typeof highlightDTOSchema>;
 
-export interface HighlightVO extends HighlightDTO {
+export type HighlightVO = HighlightDTO;
+
+export const annotationDTOSchema = discriminatedUnion('type', [
+  object({ type: literal(AnnotationTypes.Highlight), annotation: highlightDTOSchema }),
+]);
+
+export type AnnotationDTO = Infer<typeof annotationDTOSchema>;
+
+export type AnnotationVO = {
   id: EntityId;
+  type: AnnotationTypes.Highlight;
+  annotation: HighlightVO;
   comment: string | null;
-  icon: string | null;
   updatedAt: number;
   createdAt: number;
-}
+};

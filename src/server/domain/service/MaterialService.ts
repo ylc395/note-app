@@ -1,4 +1,11 @@
-import { HighlightDTO, MaterialDTO, MaterialQuery, MaterialVO, isDirectory } from 'interface/material';
+import {
+  type AnnotationDTO,
+  type MaterialDTO,
+  type MaterialQuery,
+  type MaterialVO,
+  AnnotationTypes,
+  isDirectory,
+} from 'interface/material';
 
 import BaseService from './BaseService';
 
@@ -55,20 +62,23 @@ export default class MaterialService extends BaseService {
     return blob;
   }
 
-  async createHighlight(materialId: MaterialVO['id'], highlight: HighlightDTO) {
-    await this.assertPdfMaterial(materialId);
-    return await this.materials.createHighlight(materialId, highlight);
+  async createAnnotations(materialId: MaterialVO['id'], annotation: AnnotationDTO) {
+    if (annotation.type === AnnotationTypes.Highlight) {
+      await this.assertMaterial(materialId, 'application/pdf');
+    }
+
+    return await this.materials.createAnnotation(materialId, annotation);
   }
 
-  async queryHighlights(materialId: MaterialVO['id']) {
-    await this.assertPdfMaterial(materialId);
-    return await this.materials.findAllHighlights(materialId);
+  async queryAnnotations(materialId: MaterialVO['id']) {
+    await this.assertMaterial(materialId);
+    return await this.materials.findAllAnnotations(materialId);
   }
 
-  private async assertPdfMaterial(materialId: MaterialVO['id']) {
+  private async assertMaterial(materialId: MaterialVO['id'], mimeType?: string) {
     const material = await this.materials.findOneById(materialId);
 
-    if (!material || isDirectory(material) || material.mimeType !== 'application/pdf') {
+    if (!material || isDirectory(material) || (mimeType && material.mimeType !== mimeType)) {
       throw new Error('invalid material id');
     }
   }

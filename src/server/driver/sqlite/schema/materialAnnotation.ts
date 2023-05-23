@@ -6,8 +6,8 @@ const schema = defineSchema({
   fields: {
     id: { type: 'text', primary: true, notNullable: true },
     materialId: { type: 'text', notNullable: true },
-    icon: { type: 'text' },
     comment: { type: 'text' },
+    type: { type: 'integer', notNullable: true },
     meta: { type: 'text', notNullable: true },
     createdAt: { type: 'integer', notNullable: true, defaultTo: (knex) => knex.raw('(unixepoch())') },
     updatedAt: { type: 'integer', notNullable: true, defaultTo: (knex) => knex.raw('(unixepoch())') },

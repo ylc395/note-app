@@ -4,15 +4,15 @@ import {
   type MaterialDTO,
   type MaterialVO,
   type MaterialQuery,
-  type HighlightDTO,
-  type HighlightVO,
+  type AnnotationDTO,
+  type AnnotationVO,
   materialDTOSchema,
   materialQuerySchema,
+  annotationDTOSchema,
 } from 'interface/material';
 import MaterialService from 'service/MaterialService';
 
 import { createSchemaPipe, Post, Body, Get, Query, Param } from './decorators';
-import { HighlightDTOSchema } from 'interface/material';
 
 @Controller()
 export default class MaterialsController {
@@ -23,17 +23,17 @@ export default class MaterialsController {
     return await this.materialService.getBlob(materialId);
   }
 
-  @Post('/materials/:id/highlights')
-  async createHighlight(
+  @Post('/materials/:id/annotations')
+  async createAnnotations(
     @Param('id') materialId: string,
-    @Body(createSchemaPipe(HighlightDTOSchema)) highlight: HighlightDTO,
-  ): Promise<HighlightVO> {
-    return await this.materialService.createHighlight(materialId, highlight);
+    @Body(createSchemaPipe(annotationDTOSchema)) highlight: AnnotationDTO,
+  ): Promise<AnnotationVO> {
+    return await this.materialService.createAnnotations(materialId, highlight);
   }
 
-  @Get('/materials/:id/highlights')
-  async queryHighlights(@Param('id') materialId: string): Promise<HighlightVO[]> {
-    return await this.materialService.queryHighlights(materialId);
+  @Get('/materials/:id/annotations')
+  async queryAnnotations(@Param('id') materialId: string): Promise<AnnotationVO[]> {
+    return await this.materialService.queryAnnotations(materialId);
   }
 
   @Get('/materials/:id')

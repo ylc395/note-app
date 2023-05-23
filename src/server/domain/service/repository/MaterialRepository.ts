@@ -1,8 +1,8 @@
 import type {
+  AnnotationDTO,
+  AnnotationVO,
   DirectoryVO,
   EntityMaterialVO,
-  HighlightDTO,
-  HighlightVO,
   MaterialDTO,
   MaterialQuery,
   MaterialVO,
@@ -16,6 +16,7 @@ export interface MaterialRepository {
   findAll: (query: MaterialQuery) => Promise<MaterialVO[]>;
   findOneById: (id: MaterialVO['id']) => Promise<MaterialVO | null>;
   findBlobById: (id: MaterialVO['id']) => Promise<ArrayBuffer | null>;
-  createHighlight: (materialId: MaterialVO['id'], highlight: HighlightDTO) => Promise<HighlightVO>;
-  findAllHighlights: (materialId: MaterialVO['id']) => Promise<HighlightVO[]>;
+  createAnnotation: (materialId: MaterialVO['id'], annotation: AnnotationDTO) => Promise<AnnotationVO>;
+  findAllAnnotations: (materialId: MaterialVO['id']) => Promise<AnnotationVO[]>;
+  updateText: <T>(materialId: MaterialVO['id'], payload: T) => Promise<T | null>;
 }

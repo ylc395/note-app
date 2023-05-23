@@ -26,4 +26,8 @@ export default class FileRepository extends BaseRepository<Row> {
 
     return createdFile;
   }
+
+  async updateText(fileId: Row['id'], text: string) {
+    return await this._createOrUpdate({ text }, fileId);
+  }
 }

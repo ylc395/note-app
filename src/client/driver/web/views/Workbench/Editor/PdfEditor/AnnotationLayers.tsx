@@ -1,35 +1,27 @@
-import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { observer } from 'mobx-react-lite';
 
 import type PdfViewer from './PdfViewer';
 import HighlightFragment from './HighlightFragment';
 
-export default observer(function Highlights({ pdfViewer }: { pdfViewer: PdfViewer }) {
-  const [isReady, setIsReady] = useState(false);
-
-  useEffect(() => {
-    pdfViewer.pagesReady.then(() => setIsReady(true));
-    return () => setIsReady(false);
-  }, [pdfViewer]);
-
-  return isReady ? (
+export default observer(function AnnotationLayers({ pdfViewer }: { pdfViewer: PdfViewer }) {
+  return (
     <>
-      {pdfViewer.editor.highlightedPages.map((page) => {
+      {pdfViewer.annotationPages.map((page) => {
         const targetEl = pdfViewer.getTextLayerElement(page);
 
         if (!targetEl) {
           return null;
         }
 
-        const fragments = pdfViewer.editor.getHighlightFragmentsOfPage(page);
+        const fragments = pdfViewer.editor.highlightFragmentsByPage[page];
 
         if (!fragments) {
           return null;
         }
 
         return createPortal(
-          <div>
+          <div key={page}>
             {fragments.map((fragment) => (
               <HighlightFragment key={fragment.highlightId} fragment={fragment} />
             ))}
@@ -38,5 +30,5 @@ export default observer(function Highlights({ pdfViewer }: { pdfViewer: PdfViewe
         );
       })}
     </>
-  ) : null;
+  );
 });

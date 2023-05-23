@@ -2,9 +2,11 @@ import { type PDFDocumentLoadingTask, getDocument, PDFWorker } from 'pdfjs-dist'
 import { EventBus, ScrollMode, PDFViewer, PDFPageView } from 'pdfjs-dist/web/pdf_viewer';
 import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.min.js?worker';
 import numberRange from 'lodash/range';
-import { when } from 'mobx';
+import intersection from 'lodash/intersection';
 
-import type { HighlightDTO } from 'interface/material';
+import { computed, makeObservable, observable, when } from 'mobx';
+
+import { AnnotationTypes, type HighlightDTO } from 'interface/material';
 import type PdfEditor from 'model/material/PdfEditor';
 
 import './style.css';
@@ -24,7 +26,11 @@ export default class PdfViewer {
   private loadingTask?: PDFDocumentLoadingTask;
   private readonly cancelLoadingBlob: ReturnType<typeof when>;
 
+  @observable
+  private renderedPages: number[] = [];
+
   constructor(private readonly options: Options) {
+    makeObservable(this);
     this.pdfViewer = PdfViewer.createPDFViewer(options);
     this.editor = options.editor;
     this.cancelLoadingBlob = when(
@@ -32,6 +38,15 @@ export default class PdfViewer {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       () => this.load(options.editor.entity!.blob),
     );
+
+    this.pdfViewer.eventBus.on('pagerender', ({ pageNumber }: { pageNumber: number }) => {
+      this.renderedPages.push(pageNumber);
+    });
+  }
+
+  @computed
+  get annotationPages() {
+    return intersection(this.renderedPages, this.editor.annotationPages);
   }
 
   private static createPDFViewer(options: Options) {
@@ -62,19 +77,6 @@ export default class PdfViewer {
       this.options.onTextSelectCancel();
     }
   };
-
-  get pagesReady() {
-    return (
-      this.pdfViewer.pagesPromise ||
-      new Promise((resolve) => {
-        this.pdfViewer.eventBus.on('pagesloaded', resolve);
-      })
-    );
-  }
-
-  get viewEl() {
-    return this.pdfViewer.viewer;
-  }
 
   goToPage(page: number) {
     this.pdfViewer.currentPageNumber = page;
@@ -114,7 +116,7 @@ export default class PdfViewer {
 
     const { range } = result;
 
-    this.editor.createHighlight({
+    this.editor.createAnnotation(AnnotationTypes.Highlight, {
       color,
       content: PdfViewer.getTextFromRange(range),
       fragments: this.getFragments(range),

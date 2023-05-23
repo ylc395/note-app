@@ -26,7 +26,10 @@ export interface CommonEditorEvents extends EventMap {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export default abstract class EntityEditor<T = unknown, E extends CommonEditorEvents = any> extends Emitter<E> {
+export default abstract class EntityEditor<
+  T = unknown,
+  E extends CommonEditorEvents = CommonEditorEvents,
+> extends Emitter<E> {
   protected remote = container.resolve(remoteToken);
   protected editorManager = container.resolve(editorManagerToken);
   readonly id = uniqueId('editor-');

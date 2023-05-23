@@ -1,19 +1,21 @@
 import { computed, makeObservable, observable, runInAction } from 'mobx';
-import uniq from 'lodash/uniq';
 import groupBy from 'lodash/groupBy';
 
 import { EntityTypes } from 'interface/entity';
-import { type EntityMaterialVO, type HighlightDTO, type HighlightVO, normalizeTitle } from 'interface/material';
-import Editor, { type CommonEditorEvents } from 'model/abstract/Editor';
+import {
+  type EntityMaterialVO,
+  type HighlightDTO,
+  type AnnotationVO,
+  type AnnotationDTO,
+  normalizeTitle,
+  AnnotationTypes,
+} from 'interface/material';
+import Editor from 'model/abstract/Editor';
 import type Tile from 'model/workbench/Tile';
 
 interface Entity {
   metadata: EntityMaterialVO;
   blob: ArrayBuffer;
-}
-
-export enum Events {
-  HighlightCreated = 'pdfEditor.highlight.created',
 }
 
 export enum HighlightColors {
@@ -24,11 +26,7 @@ export enum HighlightColors {
   Gray = '#a2a2a2',
 }
 
-interface PdfEditorEvents extends CommonEditorEvents {
-  [Events.HighlightCreated]: [HighlightVO];
-}
-
-export default class PdfEditor extends Editor<Entity, PdfEditorEvents> {
+export default class PdfEditor extends Editor<Entity> {
   constructor(tile: Tile, materialId: EntityMaterialVO['id']) {
     super(tile, materialId);
     makeObservable(this);
@@ -38,7 +36,24 @@ export default class PdfEditor extends Editor<Entity, PdfEditorEvents> {
   readonly entityType = EntityTypes.Material;
 
   @observable
-  readonly highlights: HighlightVO[] = [];
+  private readonly annotations: AnnotationVO[] = [];
+
+  @computed
+  get highlights() {
+    return this.annotations
+      .filter(({ type }) => type === AnnotationTypes.Highlight)
+      .map(({ annotation, id }) => {
+        const pages = annotation.fragments.map(({ page }) => page);
+
+        return {
+          id,
+          ...annotation,
+          startPage: Math.min(...pages),
+          endPage: Math.max(...pages),
+        };
+      })
+      .sort(({ startPage: startPage1 }, { startPage: startPage2 }) => startPage1 - startPage2);
+  }
 
   @computed
   get breadcrumbs() {
@@ -53,12 +68,12 @@ export default class PdfEditor extends Editor<Entity, PdfEditorEvents> {
 
     this.load({ metadata, blob });
 
-    const { body: highlights } = await this.remote.get<unknown, HighlightVO[]>(
-      `/materials/${this.entityId}/highlights`,
+    const { body: annotations } = await this.remote.get<unknown, AnnotationVO[]>(
+      `/materials/${this.entityId}/annotations`,
     );
 
     runInAction(() => {
-      this.highlights.push(...highlights);
+      this.annotations.push(...annotations);
     });
   }
 
@@ -70,23 +85,19 @@ export default class PdfEditor extends Editor<Entity, PdfEditorEvents> {
     };
   }
 
-  async createHighlight(highlight: HighlightDTO) {
-    const { body: createdHighlight } = await this.remote.post<HighlightDTO, HighlightVO>(
-      `/materials/${this.entityId}/highlights`,
-      highlight,
+  async createAnnotation(type: AnnotationTypes, annotation: HighlightDTO) {
+    const { body: createdAnnotation } = await this.remote.post<AnnotationDTO, AnnotationVO>(
+      `/materials/${this.entityId}/annotations`,
+      { type, annotation },
     );
 
-    this.highlights.push(createdHighlight);
-    this.emit(Events.HighlightCreated, createdHighlight);
+    runInAction(() => {
+      this.annotations.push(createdAnnotation);
+    });
   }
 
   @computed
-  get highlightedPages() {
-    return uniq(this.highlights.flatMap(({ fragments }) => fragments.map(({ page }) => page)));
-  }
-
-  @computed
-  private get highlightFragmentsByGroup() {
+  get highlightFragmentsByPage() {
     const fragments = this.highlights.flatMap(({ fragments, color }) => {
       return fragments.map(({ page, rect }) => ({ page, rect, color, highlightId: JSON.stringify(rect) }));
     });
@@ -94,7 +105,8 @@ export default class PdfEditor extends Editor<Entity, PdfEditorEvents> {
     return groupBy(fragments, 'page');
   }
 
-  getHighlightFragmentsOfPage(page: number) {
-    return this.highlightFragmentsByGroup[page];
+  @computed
+  get annotationPages() {
+    return Object.keys(this.highlightFragmentsByPage).map(Number);
   }
 }
