@@ -10,7 +10,7 @@ export default observer(function HighlightFragment({
 }) {
   return (
     <mark
-      className="absolute"
+      className="absolute z-10"
       style={{ backgroundColor: color, width: rect.width, height: rect.height, left: rect.x, top: rect.y }}
     ></mark>
   );

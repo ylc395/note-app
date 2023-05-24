@@ -1,10 +1,9 @@
 import { type PDFDocumentLoadingTask, getDocument, PDFWorker } from 'pdfjs-dist';
-import { EventBus, ScrollMode, PDFViewer, PDFPageView } from 'pdfjs-dist/web/pdf_viewer';
+import { EventBus, PDFViewer, type PDFPageView } from 'pdfjs-dist/web/pdf_viewer';
 import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.min.js?worker';
 import numberRange from 'lodash/range';
-import intersection from 'lodash/intersection';
 
-import { computed, makeObservable, observable, when, action } from 'mobx';
+import { makeObservable, observable, when, action } from 'mobx';
 
 import { AnnotationTypes, type HighlightDTO } from 'interface/material';
 import type PdfEditor from 'model/material/PdfEditor';
@@ -26,8 +25,10 @@ export default class PdfViewer {
   private loadingTask?: PDFDocumentLoadingTask;
   private readonly cancelLoadingBlob: ReturnType<typeof when>;
 
+  private readonly renderedPages: number[] = [];
+
   @observable
-  private renderedPages: number[] = [];
+  visiblePages: number[] = [];
 
   constructor(private readonly options: Options) {
     makeObservable(this);
@@ -40,16 +41,21 @@ export default class PdfViewer {
     );
 
     this.pdfViewer.eventBus.on(
-      'pagerender',
+      'pagerender', // maybe should use `textlayerrendered` event
       action(({ pageNumber }: { pageNumber: number }) => {
         this.renderedPages.push(pageNumber);
+        this.visiblePages.push(pageNumber);
       }),
     );
-  }
 
-  @computed
-  get annotationPages() {
-    return intersection(this.renderedPages, this.editor.annotationPages);
+    this.pdfViewer.eventBus.on(
+      'pagechanging',
+      action(() => {
+        this.visiblePages = this.renderedPages.filter((page) => {
+          return this.pdfViewer.isPageVisible(page);
+        });
+      }),
+    );
   }
 
   private static createPDFViewer(options: Options) {
@@ -126,10 +132,6 @@ export default class PdfViewer {
     });
 
     window.getSelection()?.removeAllRanges();
-  }
-
-  createComment() {
-    return;
   }
 
   getSelectionRange() {
@@ -253,7 +255,11 @@ export default class PdfViewer {
     );
   }
 
-  getTextLayerElement(page: number) {
+  getTextLayerEl(page: number) {
     return (this.pdfViewer.getPageView(page - 1) as PDFPageView)?.textLayer?.div;
+  }
+
+  getPageEl(page: number) {
+    return (this.pdfViewer.getPageView(page - 1) as PDFPageView | undefined)?.div;
   }
 }

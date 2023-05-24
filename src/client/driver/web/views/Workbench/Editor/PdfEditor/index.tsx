@@ -45,7 +45,7 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
         <div className="absolute inset-x-0 top-11 bottom-0 overflow-auto" ref={containerElRef}>
           <div className="select-text" ref={viewerElRef}></div>
           {pdfViewer &&
-            pdfViewer.annotationPages.map((page) => <AnnotationLayer key={page} page={page} pdfViewer={pdfViewer} />)}
+            pdfViewer.visiblePages.map((page) => <AnnotationLayer key={page} page={page} pdfViewer={pdfViewer} />)}
           <div
             className="pdf-editor-tooltip z-10"
             ref={setPopperElement}

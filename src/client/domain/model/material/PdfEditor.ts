@@ -104,9 +104,4 @@ export default class PdfEditor extends Editor<Entity> {
 
     return groupBy(fragments, 'page');
   }
-
-  @computed
-  get annotationPages() {
-    return Object.keys(this.highlightFragmentsByPage).map(Number);
-  }
 }
