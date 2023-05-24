@@ -4,9 +4,10 @@ import groupBy from 'lodash/groupBy';
 import { EntityTypes } from 'interface/entity';
 import {
   type EntityMaterialVO,
-  type HighlightDTO,
   type AnnotationVO,
+  type HighlightVO,
   type AnnotationDTO,
+  type HighlightAreaVO,
   normalizeTitle,
   AnnotationTypes,
 } from 'interface/material';
@@ -41,16 +42,18 @@ export default class PdfEditor extends Editor<Entity> {
   @computed
   get highlights() {
     return this.annotations
-      .filter(({ type }) => type === AnnotationTypes.Highlight)
-      .map(({ annotation, id }) => {
-        const pages = annotation.fragments.map(({ page }) => page);
+      .map(({ annotation, id, type }) => {
+        if (type === AnnotationTypes.Highlight) {
+          const pages = annotation.fragments.map(({ page }) => page);
 
-        return {
-          id,
-          ...annotation,
-          startPage: Math.min(...pages),
-          endPage: Math.max(...pages),
-        };
+          return { id, annotation, type, startPage: Math.min(...pages), endPage: Math.max(...pages) };
+        }
+
+        if (type === AnnotationTypes.HighlightArea) {
+          return { id, annotation, type, startPage: annotation.page, endPage: annotation.page };
+        }
+
+        throw new Error('invalid type');
       })
       .sort(({ startPage: startPage1 }, { startPage: startPage2 }) => startPage1 - startPage2);
   }
@@ -85,10 +88,10 @@ export default class PdfEditor extends Editor<Entity> {
     };
   }
 
-  async createAnnotation(type: AnnotationTypes, annotation: HighlightDTO) {
+  async createAnnotation(annotation: AnnotationDTO) {
     const { body: createdAnnotation } = await this.remote.post<AnnotationDTO, AnnotationVO>(
       `/materials/${this.entityId}/annotations`,
-      { type, annotation },
+      annotation,
     );
 
     runInAction(() => {
@@ -98,10 +101,23 @@ export default class PdfEditor extends Editor<Entity> {
 
   @computed
   get highlightFragmentsByPage() {
-    const fragments = this.highlights.flatMap(({ fragments, color }) => {
+    const highlights = this.annotations
+      .filter(({ type }) => type === AnnotationTypes.Highlight)
+      .map(({ annotation }) => annotation as HighlightVO);
+
+    const fragments = highlights.flatMap(({ fragments, color }) => {
       return fragments.map(({ page, rect }) => ({ page, rect, color, highlightId: JSON.stringify(rect) }));
     });
 
     return groupBy(fragments, 'page');
+  }
+
+  @computed
+  get highlightAreasByPage() {
+    const highlightAreas = this.annotations
+      .filter(({ type }) => type === AnnotationTypes.HighlightArea)
+      .map(({ annotation }) => annotation as HighlightAreaVO);
+
+    return groupBy(highlightAreas, 'page');
   }
 }

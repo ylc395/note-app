@@ -10,7 +10,7 @@ function getSelectionEnd(pdfViewer: PdfViewer) {
   const result = pdfViewer.getSelectionRange();
 
   if (!result) {
-    throw new Error('no range');
+    return;
   }
 
   const range = result.range.cloneRange();
@@ -71,9 +71,13 @@ export default function (pdfViewer: PdfViewer | null) {
       }
 
       const selectionEnd = getSelectionEnd(pdfViewer);
-      setSelectionEnd(selectionEnd);
+
+      if (!selectionEnd) {
+        return;
+      }
 
       if (popperElement) {
+        setSelectionEnd(selectionEnd);
         popperElement.hidden = false;
       }
     },

@@ -5,7 +5,7 @@ import numberRange from 'lodash/range';
 
 import { makeObservable, observable, when, action } from 'mobx';
 
-import { AnnotationTypes, type HighlightDTO } from 'interface/material';
+import { AnnotationTypes, type HighlightAreaDTO, type HighlightDTO } from 'interface/material';
 import type PdfEditor from 'model/material/PdfEditor';
 
 import './style.css';
@@ -125,13 +125,61 @@ export default class PdfViewer {
 
     const { range } = result;
 
-    this.editor.createAnnotation(AnnotationTypes.Highlight, {
-      color,
-      content: PdfViewer.getTextFromRange(range),
-      fragments: this.getFragments(range),
+    await this.editor.createAnnotation({
+      type: AnnotationTypes.Highlight,
+      annotation: {
+        color,
+        content: PdfViewer.getTextFromRange(range),
+        fragments: this.getFragments(range),
+      },
     });
 
     window.getSelection()?.removeAllRanges();
+  }
+
+  async createHighlightArea(page: number, rect: HighlightAreaDTO['rect']) {
+    const pageView = this.pdfViewer.getPageView(page - 1) as PDFPageView;
+
+    if (!pageView?.canvas) {
+      throw new Error('no source canvas');
+    }
+
+    const canvasWidth = pageView.canvas.width;
+    const canvasHeight = pageView.canvas.height;
+    const { width: displayWith, height: displayHeight } = pageView.canvas.getBoundingClientRect();
+    const canvas = document.createElement('canvas');
+    const horizonRatio = canvasWidth / displayWith;
+    const verticalRatio = canvasHeight / displayHeight;
+
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+
+    /* eslint-disable @typescript-eslint/no-non-null-assertion */
+    const ctx = canvas.getContext('2d')!;
+
+    ctx.drawImage(
+      pageView.canvas,
+      typeof rect.left === 'number'
+        ? rect.left * horizonRatio
+        : canvasWidth - rect.width * horizonRatio - rect.right! * horizonRatio,
+      typeof rect.top === 'number'
+        ? rect.top * verticalRatio
+        : canvasHeight - rect.height * verticalRatio - rect.bottom! * verticalRatio,
+      rect.width * horizonRatio,
+      rect.height * verticalRatio,
+      0,
+      0,
+      rect.width,
+      rect.height,
+    );
+    /* eslint-enable @typescript-eslint/no-non-null-assertion */
+
+    const snapshot = canvas.toDataURL('image/png');
+
+    await this.editor.createAnnotation({
+      type: AnnotationTypes.HighlightArea,
+      annotation: { rect, page, snapshot },
+    });
   }
 
   getSelectionRange() {

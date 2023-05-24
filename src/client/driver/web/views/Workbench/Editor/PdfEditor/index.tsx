@@ -46,16 +46,13 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
           <div className="select-text" ref={viewerElRef}></div>
           {pdfViewer &&
             pdfViewer.visiblePages.map((page) => <AnnotationLayer key={page} page={page} pdfViewer={pdfViewer} />)}
-          <div
-            className="pdf-editor-tooltip z-10"
-            ref={setPopperElement}
-            hidden
-            style={styles.popper}
-            {...attributes.popper}
-          >
-            <HighlightTooltip pdfViewer={pdfViewer} />
-          </div>
         </div>
+        <HighlightTooltip
+          ref={setPopperElement}
+          pdfViewer={pdfViewer}
+          style={styles.popper}
+          attributes={attributes.popper}
+        />
       </div>
       <HighlightList editor={editor} />
     </div>

@@ -63,7 +63,7 @@ export default class MaterialService extends BaseService {
   }
 
   async createAnnotations(materialId: MaterialVO['id'], annotation: AnnotationDTO) {
-    if (annotation.type === AnnotationTypes.Highlight) {
+    if (annotation.type === AnnotationTypes.Highlight || annotation.type === AnnotationTypes.HighlightArea) {
       await this.assertMaterial(materialId, 'application/pdf');
     }
 

@@ -71,6 +71,7 @@ export function normalizeTitle(material: MaterialVO) {
 
 export enum AnnotationTypes {
   Highlight = 1,
+  HighlightArea,
 }
 
 const highlightDTOSchema = object({
@@ -85,21 +86,43 @@ const highlightDTOSchema = object({
   ),
 });
 
+const highlightAreaDTOSchema = object({
+  snapshot: string(),
+  rect: object({
+    top: number().optional(),
+    bottom: number().optional(),
+    left: number().optional(),
+    right: number().optional(),
+    height: number(),
+    width: number(),
+  }),
+  page: number(),
+});
+
 export type HighlightDTO = Infer<typeof highlightDTOSchema>;
 
 export type HighlightVO = HighlightDTO;
 
+export type HighlightAreaDTO = Infer<typeof highlightAreaDTOSchema>;
+export type HighlightAreaVO = HighlightAreaDTO;
+
 export const annotationDTOSchema = discriminatedUnion('type', [
   object({ type: literal(AnnotationTypes.Highlight), annotation: highlightDTOSchema }),
-]);
+  object({ type: literal(AnnotationTypes.HighlightArea), annotation: highlightAreaDTOSchema }),
+]).and(
+  object({
+    comment: string().optional(),
+  }),
+);
 
 export type AnnotationDTO = Infer<typeof annotationDTOSchema>;
 
 export type AnnotationVO = {
   id: EntityId;
-  type: AnnotationTypes.Highlight;
-  annotation: HighlightVO;
   comment: string | null;
   updatedAt: number;
   createdAt: number;
-};
+} & (
+  | { type: AnnotationTypes.Highlight; annotation: HighlightVO }
+  | { type: AnnotationTypes.HighlightArea; annotation: HighlightAreaVO }
+);

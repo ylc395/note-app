@@ -19,7 +19,7 @@ export default observer(function AnnotationLayer({ pdfViewer, page }: { pdfViewe
       {fragments.map((fragment) => (
         <HighlightFragment key={fragment.highlightId} fragment={fragment} />
       ))}
-      <DraggingHighlightArea textLayerEl={textLayerEl} />
+      <DraggingHighlightArea page={page} pdfViewer={pdfViewer} />
     </div>,
     textLayerEl,
   );

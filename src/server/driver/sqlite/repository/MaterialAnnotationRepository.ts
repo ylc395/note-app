@@ -11,16 +11,16 @@ export default class MaterialAnnotationRepository extends BaseRepository<Row> {
     return this.schema.tableName;
   }
 
-  async create(materialId: MaterialVO['id'], { type, annotation }: AnnotationDTO) {
+  async create(materialId: MaterialVO['id'], { type, annotation, comment }: AnnotationDTO) {
     const created = await this._createOrUpdate({
       materialId,
       type,
+      comment,
       meta: JSON.stringify(annotation),
     });
 
     return {
-      ...pick(created, ['id', 'createdAt', 'updatedAt', 'type']),
-      comment: null,
+      ...pick(created, ['id', 'createdAt', 'updatedAt', 'type', 'comment']),
       annotation,
     } as AnnotationVO;
   }
