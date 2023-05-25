@@ -74,6 +74,13 @@ export enum AnnotationTypes {
   HighlightArea,
 }
 
+const rectSchema = object({
+  x: number(),
+  y: number(),
+  width: number(),
+  height: number(),
+});
+
 const highlightDTOSchema = object({
   icon: string().optional(),
   content: string(),
@@ -81,21 +88,16 @@ const highlightDTOSchema = object({
   fragments: array(
     object({
       page: number(),
-      rect: object({ x: number(), y: number(), height: number(), width: number() }),
+      rect: rectSchema,
     }),
   ),
 });
 
 const highlightAreaDTOSchema = object({
+  color: string().optional(),
+  icon: string().optional(),
   snapshot: string(),
-  rect: object({
-    top: number().optional(),
-    bottom: number().optional(),
-    left: number().optional(),
-    right: number().optional(),
-    height: number(),
-    width: number(),
-  }),
+  rect: rectSchema,
   page: number(),
 });
 

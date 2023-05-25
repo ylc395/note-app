@@ -2,15 +2,31 @@ import { useState, useRef, useCallback } from 'react';
 import { useEventListener, useMouse, useRafState, useKeyPress, useClickAway } from 'ahooks';
 import { usePopper } from 'react-popper';
 import type PdfViewer from './PdfViewer';
-import type { HighlightAreaDTO } from 'interface/material';
+
+interface Position {
+  left?: number;
+  top?: number;
+  right?: number;
+  bottom?: number;
+  width: number;
+  height: number;
+}
 
 // eslint-disable-next-line mobx/missing-observer
-export default function HighlightArea({ page, pdfViewer }: { page: number; pdfViewer: PdfViewer }) {
+export default function HighlightArea({
+  page,
+  pdfViewer,
+  ratios,
+}: {
+  page: number;
+  pdfViewer: PdfViewer;
+  ratios: { vertical: number; horizontal: number };
+}) {
   const textLayerEl = pdfViewer.getTextLayerEl(page);
   const { elementX, elementY, elementW, elementH } = useMouse(textLayerEl);
   const [startPos, setStartPos] = useState<{ x: number; y: number } | null>(null);
   const [isKeyPressed, setIsKeyPressed] = useState(false);
-  const [finalPos, setFinalPos] = useRafState<HighlightAreaDTO['rect'] | null>(null);
+  const [finalPos, setFinalPos] = useRafState<Position | null>(null);
   const areaRef = useRef<HTMLDivElement | null>(null);
   const buttonRef = useRef<HTMLDivElement | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -58,6 +74,29 @@ export default function HighlightArea({ page, pdfViewer }: { page: number; pdfVi
       }
     : null;
 
+  const create = () => {
+    if (!finalPos) {
+      throw new Error('no canvas');
+    }
+
+    const { height: displayHeight, width: displayWith } = pdfViewer.getSize(page);
+
+    pdfViewer.createHighlightArea(page, {
+      width: finalPos.width * ratios.horizontal,
+      height: finalPos.height * ratios.vertical,
+      x:
+        typeof finalPos.left === 'number'
+          ? finalPos.left * ratios.horizontal
+          : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            (displayWith - finalPos.width - finalPos.right!) * ratios.horizontal,
+      y:
+        typeof finalPos.top === 'number'
+          ? finalPos.top * ratios.vertical
+          : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            (displayHeight - finalPos.height - finalPos.bottom!) * ratios.vertical,
+    });
+  };
+
   if (pos) {
     setFinalPos(pos);
   }
@@ -66,12 +105,7 @@ export default function HighlightArea({ page, pdfViewer }: { page: number; pdfVi
     <div ref={rootRef}>
       <div ref={areaRef} className="absolute bg-yellow-400" style={finalPos}></div>
       {finalPos && !startPos && (
-        <div
-          onClick={() => pdfViewer.createHighlightArea(page, finalPos)}
-          ref={buttonRef}
-          style={styles.popper}
-          {...attributes.popper}
-        >
+        <div onClick={create} ref={buttonRef} style={styles.popper} {...attributes.popper}>
           Add Highlight
         </div>
       )}

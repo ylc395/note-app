@@ -2,7 +2,6 @@ import { type PDFDocumentLoadingTask, getDocument, PDFWorker } from 'pdfjs-dist'
 import { EventBus, PDFViewer, type PDFPageView } from 'pdfjs-dist/web/pdf_viewer';
 import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.min.js?worker';
 import numberRange from 'lodash/range';
-
 import { makeObservable, observable, when, action } from 'mobx';
 
 import { AnnotationTypes, type HighlightAreaDTO, type HighlightDTO } from 'interface/material';
@@ -144,35 +143,14 @@ export default class PdfViewer {
       throw new Error('no source canvas');
     }
 
-    const canvasWidth = pageView.canvas.width;
-    const canvasHeight = pageView.canvas.height;
-    const { width: displayWith, height: displayHeight } = pageView.canvas.getBoundingClientRect();
     const canvas = document.createElement('canvas');
-    const horizonRatio = canvasWidth / displayWith;
-    const verticalRatio = canvasHeight / displayHeight;
 
     canvas.width = rect.width;
     canvas.height = rect.height;
 
-    /* eslint-disable @typescript-eslint/no-non-null-assertion */
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const ctx = canvas.getContext('2d')!;
-
-    ctx.drawImage(
-      pageView.canvas,
-      typeof rect.left === 'number'
-        ? rect.left * horizonRatio
-        : canvasWidth - rect.width * horizonRatio - rect.right! * horizonRatio,
-      typeof rect.top === 'number'
-        ? rect.top * verticalRatio
-        : canvasHeight - rect.height * verticalRatio - rect.bottom! * verticalRatio,
-      rect.width * horizonRatio,
-      rect.height * verticalRatio,
-      0,
-      0,
-      rect.width,
-      rect.height,
-    );
-    /* eslint-enable @typescript-eslint/no-non-null-assertion */
+    ctx.drawImage(pageView.canvas, rect.x, rect.y, rect.width, rect.height, 0, 0, rect.width, rect.height);
 
     const snapshot = canvas.toDataURL('image/png');
 
@@ -207,16 +185,13 @@ export default class PdfViewer {
     const startPage = PdfViewer.getPageFromNode(range.startContainer);
     const endPage = PdfViewer.getPageFromNode(getValidEndContainer(range));
     const pages = numberRange(startPage, endPage + 1).map((i) => {
-      const pageEl = this.pdfViewer.viewer?.querySelector(`.page[data-page-number="${i}"]`);
+      const pageEl = this.getTextLayerEl(i);
 
       if (!pageEl) {
         throw new Error('no pageEl');
       }
 
-      return {
-        el: pageEl as HTMLElement,
-        number: i,
-      };
+      return { el: pageEl, number: i };
     });
 
     let i = 0;
@@ -243,14 +218,26 @@ export default class PdfViewer {
       if (PdfViewer.isIn(rects[i]!, page.el)) {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const { x, y, width, height } = rects[i]!;
-        const { x: pageX, y: pageY } = page.el.getBoundingClientRect();
+        const canvas = this.getCanvasEl(page.number);
+
+        if (!canvas) {
+          throw new Error('no canvas');
+        }
+
+        const { x: pageX, y: pageY, width: displayWith, height: displayHeight } = canvas.getBoundingClientRect();
+        const horizonRatio = canvas.width / displayWith;
+        const verticalRatio = canvas.height / displayHeight;
 
         // todo: optimize
         // see https://github.com/agentcooper/react-pdf-highlighter/blob/c87474eb7dc61900a6cd1db5f82a1f7f35b7922c/src/lib/optimize-client-rects.ts
-        // todo: handle scale
         fragments.push({
           page: page.number,
-          rect: { x: x - pageX, y: y - pageY, width, height },
+          rect: {
+            x: (x - pageX) * horizonRatio,
+            y: (y - pageY) * verticalRatio,
+            width: width * horizonRatio,
+            height: height * verticalRatio,
+          },
         });
         i++;
       } else {
@@ -307,7 +294,13 @@ export default class PdfViewer {
     return (this.pdfViewer.getPageView(page - 1) as PDFPageView)?.textLayer?.div;
   }
 
-  getPageEl(page: number) {
-    return (this.pdfViewer.getPageView(page - 1) as PDFPageView | undefined)?.div;
+  getCanvasEl(page: number) {
+    return (this.pdfViewer.getPageView(page - 1) as PDFPageView | undefined)?.canvas;
+  }
+
+  getSize(page: number) {
+    const { height, width } = this.pdfViewer.getPageView(page - 1) as PDFPageView;
+
+    return { height, width };
   }
 }

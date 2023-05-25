@@ -116,7 +116,7 @@ export default class PdfEditor extends Editor<Entity> {
   get highlightAreasByPage() {
     const highlightAreas = this.annotations
       .filter(({ type }) => type === AnnotationTypes.HighlightArea)
-      .map(({ annotation }) => annotation as HighlightAreaVO);
+      .map(({ annotation, id }) => ({ ...(annotation as HighlightAreaVO), id }));
 
     return groupBy(highlightAreas, 'page');
   }
