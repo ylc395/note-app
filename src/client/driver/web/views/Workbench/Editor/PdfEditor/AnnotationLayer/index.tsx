@@ -1,7 +1,7 @@
 import { createPortal } from 'react-dom';
 import { observer } from 'mobx-react-lite';
 
-import type PdfViewer from './PdfViewer';
+import type PdfViewer from '../PdfViewer';
 import HighlightFragment from './HighlightFragment';
 import HighlightArea from './HighlightArea';
 import DraggingHighlightArea from './DraggingHighlightArea';

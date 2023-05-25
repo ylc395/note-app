@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { useEventListener, useMouse, useRafState, useKeyPress, useClickAway } from 'ahooks';
 import { usePopper } from 'react-popper';
-import type PdfViewer from './PdfViewer';
+import type PdfViewer from '../PdfViewer';
 
 interface Position {
   left?: number;

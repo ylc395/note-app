@@ -2,7 +2,8 @@ import { type PDFDocumentLoadingTask, getDocument, PDFWorker } from 'pdfjs-dist'
 import { EventBus, PDFViewer, type PDFPageView } from 'pdfjs-dist/web/pdf_viewer';
 import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.min.js?worker';
 import numberRange from 'lodash/range';
-import { makeObservable, observable, when, action } from 'mobx';
+import intersection from 'lodash/intersection';
+import { makeObservable, observable, when, action, runInAction, computed } from 'mobx';
 
 import { AnnotationTypes, type HighlightAreaDTO, type HighlightDTO } from 'interface/material';
 import type PdfEditor from 'model/material/PdfEditor';
@@ -24,10 +25,14 @@ export default class PdfViewer {
   private loadingTask?: PDFDocumentLoadingTask;
   private readonly cancelLoadingBlob: ReturnType<typeof when>;
 
-  private readonly renderedPages: number[] = [];
+  @observable
+  private renderedPages = new Set<number>();
 
   @observable
-  visiblePages: number[] = [];
+  readonly page = {
+    current: 1,
+    total: 1,
+  };
 
   constructor(private readonly options: Options) {
     makeObservable(this);
@@ -39,21 +44,28 @@ export default class PdfViewer {
       () => this.load(options.editor.entity!.blob),
     );
 
-    this.pdfViewer.eventBus.on(
-      'pagerender', // maybe should use `textlayerrendered` event
-      action(({ pageNumber }: { pageNumber: number }) => {
-        this.renderedPages.push(pageNumber);
-        this.visiblePages.push(pageNumber);
-      }),
-    );
+    this.pdfViewer.eventBus.on('pagerender', ({ pageNumber }: { pageNumber: number }) => {
+      this.renderedPages.add(pageNumber);
+    });
 
     this.pdfViewer.eventBus.on(
       'pagechanging',
-      action(() => {
-        this.visiblePages = this.renderedPages.filter((page) => {
-          return this.pdfViewer.isPageVisible(page);
-        });
+      action(({ pageNumber }: { pageNumber: number }) => {
+        this.page.current = pageNumber;
       }),
+    );
+  }
+
+  @computed
+  get visiblePages() {
+    const redundancy = 2;
+
+    return intersection(
+      numberRange(
+        Math.max(0, this.page.current - redundancy),
+        Math.min(this.page.total, this.page.current + redundancy) + 1,
+      ),
+      Array.from(this.renderedPages),
     );
   }
 
@@ -74,6 +86,10 @@ export default class PdfViewer {
 
     const doc = await this.loadingTask.promise;
     this.pdfViewer.setDocument(doc);
+
+    runInAction(() => {
+      this.page.total = doc.numPages;
+    });
 
     document.addEventListener('selectionchange', this.handleSelection);
   }

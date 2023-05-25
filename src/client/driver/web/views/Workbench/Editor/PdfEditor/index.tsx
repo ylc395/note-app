@@ -40,19 +40,21 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
 
   return (
     <div className="flex h-full w-full">
-      <div className="relative h-full grow">
+      <div className="flex h-full grow flex-col">
         <Toolbar pdfViewer={pdfViewer} />
-        <div className="absolute inset-x-0 top-11 bottom-0 overflow-auto" ref={containerElRef}>
-          <div className="select-text" ref={viewerElRef}></div>
-          {pdfViewer &&
-            pdfViewer.visiblePages.map((page) => <AnnotationLayer key={page} page={page} pdfViewer={pdfViewer} />)}
+        <div className="relative grow">
+          <div className="absolute inset-0 overflow-auto" ref={containerElRef}>
+            <div className="select-text" ref={viewerElRef}></div>
+            {pdfViewer &&
+              pdfViewer.visiblePages.map((page) => <AnnotationLayer key={page} page={page} pdfViewer={pdfViewer} />)}
+          </div>
+          <HighlightTooltip
+            ref={setPopperElement}
+            pdfViewer={pdfViewer}
+            style={styles.popper}
+            attributes={attributes.popper}
+          />
         </div>
-        <HighlightTooltip
-          ref={setPopperElement}
-          pdfViewer={pdfViewer}
-          style={styles.popper}
-          attributes={attributes.popper}
-        />
       </div>
       <HighlightList editor={editor} />
     </div>
