@@ -1,20 +1,40 @@
-import { Button, InputNumber } from 'antd';
+import { Button, InputNumber, Select } from 'antd';
 import { observer } from 'mobx-react-lite';
-import { ArrowLeftOutlined, ArrowRightOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, ArrowRightOutlined, PlusOutlined, MinusOutlined } from '@ant-design/icons';
 
-import type PdfViewer from 'web/views/Workbench/Editor/PdfEditor/PdfViewer';
+import { ScaleValues } from './PdfViewer';
+import type PdfViewer from './PdfViewer';
 
-const SCALE_VALUES = ['auto', 'page-width', 'page-fit', 'page-actual'];
+const scaleOptions = [
+  { label: 'auto', value: ScaleValues.Auto },
+  { label: 'page-width', value: ScaleValues.PageWidth },
+  { label: 'page-fit', value: ScaleValues.PageFit },
+  { label: 'page-actual', value: ScaleValues.PageActual },
+  { label: '50%', value: 0.5 },
+  { label: '75%', value: 0.75 },
+  { label: '100%', value: 1 },
+  { label: '125%', value: 1.25 },
+  { label: '150%', value: 1.5 },
+  { label: '200%', value: 2 },
+];
+
+const scaleValues = scaleOptions.map(({ value }) => value) as Array<string | number>;
 
 export default observer(function Toolbar({ pdfViewer }: { pdfViewer: PdfViewer | null }) {
   return (
     <div className="relative">
-      <div className="absolute left-0 top-1/2 -translate-y-1/2">
-        <button>+</button>
-        <select>
-          <option></option>
-        </select>
-        <button>-</button>
+      <div className="absolute left-0 top-1/2 ml-2 -translate-y-1/2">
+        <Button type="text" size="small" icon={<MinusOutlined />} onClick={() => pdfViewer?.setScale('down')} />
+        {pdfViewer && (
+          <Select
+            onChange={pdfViewer.setScale}
+            className="w-28"
+            size="small"
+            value={scaleValues.includes(pdfViewer.scale) ? pdfViewer.scale : `${(pdfViewer.scale as number) * 100}%`}
+            options={scaleOptions}
+          />
+        )}
+        <Button type="text" size="small" icon={<PlusOutlined />} onClick={() => pdfViewer?.setScale('up')} />
       </div>
       <div className="mx-auto flex w-60 justify-center py-2">
         <Button

@@ -19,6 +19,15 @@ interface Options {
   onTextSelectCancel: () => void;
 }
 
+export enum ScaleValues {
+  Auto = 'auto',
+  PageWidth = 'page-width',
+  PageFit = 'page-fit',
+  PageActual = 'page-actual',
+}
+
+const SCALE_STEPS = [...numberRange(0, 11).map((i) => i / 10), ...numberRange(12, 30, 2).map((i) => i / 10)] as const;
+
 export default class PdfViewer {
   private readonly pdfViewer: PDFViewer;
   readonly editor: PdfEditor;
@@ -34,6 +43,9 @@ export default class PdfViewer {
     total: 1,
   };
 
+  @observable
+  scale: number | string = 'auto';
+
   constructor(private readonly options: Options) {
     makeObservable(this);
     this.pdfViewer = PdfViewer.createPDFViewer(options);
@@ -44,9 +56,12 @@ export default class PdfViewer {
       () => this.load(options.editor.entity!.blob),
     );
 
-    this.pdfViewer.eventBus.on('pagerender', ({ pageNumber }: { pageNumber: number }) => {
-      this.renderedPages.add(pageNumber);
-    });
+    this.pdfViewer.eventBus.on(
+      'pagerender',
+      action(({ pageNumber }: { pageNumber: number }) => {
+        this.renderedPages.add(pageNumber);
+      }),
+    );
 
     this.pdfViewer.eventBus.on(
       'pagechanging',
@@ -127,8 +142,19 @@ export default class PdfViewer {
     };
   }
 
-  setScale(value: string) {
-    this.pdfViewer.currentScaleValue = value;
+  @action.bound
+  setScale(value: string | number) {
+    const _value = value;
+    const { currentScale } = this.pdfViewer;
+
+    if (value === 'up') {
+      this.scale = this.pdfViewer.currentScale = SCALE_STEPS.find((step) => step > currentScale) || currentScale;
+    } else if (value === 'down') {
+      this.scale = this.pdfViewer.currentScale = SCALE_STEPS.findLast((step) => step < currentScale) || currentScale;
+    } else {
+      this.scale = _value;
+      this.pdfViewer.currentScaleValue = String(_value);
+    }
   }
 
   async createHighlight(color: string) {

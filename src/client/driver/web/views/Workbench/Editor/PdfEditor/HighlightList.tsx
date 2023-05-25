@@ -4,7 +4,7 @@ import type PdfEditor from 'model/material/PdfEditor';
 
 export default observer(function HighlightList({ editor }: { editor: PdfEditor }) {
   return (
-    <div className="w-60">
+    <div className="w-60 overflow-auto">
       {editor.highlights.map(({ type, annotation, id }) => {
         if (type === AnnotationTypes.Highlight) {
           return (
