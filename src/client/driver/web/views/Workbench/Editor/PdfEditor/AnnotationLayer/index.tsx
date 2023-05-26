@@ -8,30 +8,23 @@ import DraggingHighlightArea from './DraggingHighlightArea';
 
 export default observer(function AnnotationLayer({ pdfViewer, page }: { pdfViewer: PdfViewer; page: number }) {
   const textLayerEl = pdfViewer.getTextLayerEl(page);
-  const canvas = pdfViewer.getCanvasEl(page);
 
-  if (!textLayerEl || !canvas) {
+  if (!textLayerEl) {
     return null;
   }
 
   const fragments = pdfViewer.editor.highlightFragmentsByPage[page] || [];
   const areas = pdfViewer.editor.highlightAreasByPage[page] || [];
-  const { width: displayWith, height: displayHeight } = pdfViewer.getSize(page);
-
-  const ratios = {
-    horizontal: canvas.width / displayWith,
-    vertical: canvas.height / displayHeight,
-  };
 
   return createPortal(
     <div>
       {fragments.map((fragment) => (
-        <HighlightFragment key={fragment.highlightId} fragment={fragment} ratios={ratios} />
+        <HighlightFragment key={fragment.highlightId} fragment={fragment} pdfViewer={pdfViewer} page={page} />
       ))}
       {areas.map((area) => (
-        <HighlightArea key={area.id} area={area} ratios={ratios} />
+        <HighlightArea key={area.id} area={area} page={page} pdfViewer={pdfViewer} />
       ))}
-      <DraggingHighlightArea page={page} pdfViewer={pdfViewer} ratios={ratios} />
+      <DraggingHighlightArea page={page} pdfViewer={pdfViewer} />
     </div>,
     textLayerEl,
   );

@@ -2,7 +2,7 @@ import { Button, InputNumber, Select } from 'antd';
 import { observer } from 'mobx-react-lite';
 import { ArrowLeftOutlined, ArrowRightOutlined, PlusOutlined, MinusOutlined } from '@ant-design/icons';
 
-import { ScaleValues } from './PdfViewer';
+import { ScaleValues, SCALE_STEPS } from './PdfViewer';
 import type PdfViewer from './PdfViewer';
 
 const scaleOptions = [
@@ -24,7 +24,13 @@ export default observer(function Toolbar({ pdfViewer }: { pdfViewer: PdfViewer |
   return (
     <div className="relative">
       <div className="absolute left-0 top-1/2 ml-2 -translate-y-1/2">
-        <Button type="text" size="small" icon={<MinusOutlined />} onClick={() => pdfViewer?.setScale('down')} />
+        <Button
+          disabled={!pdfViewer || pdfViewer.scale === SCALE_STEPS[0]}
+          type="text"
+          size="small"
+          icon={<MinusOutlined />}
+          onClick={() => pdfViewer?.setScale('down')}
+        />
         {pdfViewer && (
           <Select
             onChange={pdfViewer.setScale}
@@ -34,7 +40,13 @@ export default observer(function Toolbar({ pdfViewer }: { pdfViewer: PdfViewer |
             options={scaleOptions}
           />
         )}
-        <Button type="text" size="small" icon={<PlusOutlined />} onClick={() => pdfViewer?.setScale('up')} />
+        <Button
+          disabled={!pdfViewer || pdfViewer.scale === SCALE_STEPS[SCALE_STEPS.length - 1]}
+          type="text"
+          size="small"
+          icon={<PlusOutlined />}
+          onClick={() => pdfViewer?.setScale('up')}
+        />
       </div>
       <div className="mx-auto flex w-60 justify-center py-2">
         <Button

@@ -13,15 +13,7 @@ interface Position {
 }
 
 // eslint-disable-next-line mobx/missing-observer
-export default function HighlightArea({
-  page,
-  pdfViewer,
-  ratios,
-}: {
-  page: number;
-  pdfViewer: PdfViewer;
-  ratios: { vertical: number; horizontal: number };
-}) {
+export default function HighlightArea({ page, pdfViewer }: { page: number; pdfViewer: PdfViewer }) {
   const textLayerEl = pdfViewer.getTextLayerEl(page);
   const { elementX, elementY, elementW, elementH } = useMouse(textLayerEl);
   const [startPos, setStartPos] = useState<{ x: number; y: number } | null>(null);
@@ -82,18 +74,18 @@ export default function HighlightArea({
     const { height: displayHeight, width: displayWith } = pdfViewer.getSize(page);
 
     pdfViewer.createHighlightArea(page, {
-      width: finalPos.width * ratios.horizontal,
-      height: finalPos.height * ratios.vertical,
+      width: finalPos.width,
+      height: finalPos.height,
       x:
         typeof finalPos.left === 'number'
-          ? finalPos.left * ratios.horizontal
+          ? finalPos.left
           : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            (displayWith - finalPos.width - finalPos.right!) * ratios.horizontal,
+            displayWith - finalPos.width - finalPos.right!,
       y:
         typeof finalPos.top === 'number'
-          ? finalPos.top * ratios.vertical
+          ? finalPos.top
           : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            (displayHeight - finalPos.height - finalPos.bottom!) * ratios.vertical,
+            displayHeight - finalPos.height - finalPos.bottom!,
     });
   };
 

@@ -26,7 +26,10 @@ export enum ScaleValues {
   PageActual = 'page-actual',
 }
 
-const SCALE_STEPS = [...numberRange(0, 11).map((i) => i / 10), ...numberRange(12, 30, 2).map((i) => i / 10)] as const;
+export const SCALE_STEPS = [
+  ...numberRange(0, 11).map((i) => i / 10),
+  ...numberRange(12, 30, 2).map((i) => i / 10),
+] as const;
 
 export default class PdfViewer {
   private readonly pdfViewer: PDFViewer;
@@ -179,26 +182,46 @@ export default class PdfViewer {
   }
 
   async createHighlightArea(page: number, rect: HighlightAreaDTO['rect']) {
-    const pageView = this.pdfViewer.getPageView(page - 1) as PDFPageView;
+    const sourceCanvas = this.getCanvasEl(page);
+    const { width: canvasDisplayWidth, height: canvasDisplayHeight } = sourceCanvas.getBoundingClientRect();
 
-    if (!pageView?.canvas) {
-      throw new Error('no source canvas');
-    }
+    const canvasVerticalRatio = canvasDisplayHeight / sourceCanvas.height;
+    const canvasHorizontalRatio = canvasDisplayWidth / sourceCanvas.width;
 
     const canvas = document.createElement('canvas');
+    const { verticalRatio, horizontalRatio } = this.getPageRatio(page);
 
-    canvas.width = rect.width;
-    canvas.height = rect.height;
+    canvas.width = rect.width / canvasHorizontalRatio;
+    canvas.height = rect.height / canvasVerticalRatio;
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const ctx = canvas.getContext('2d')!;
-    ctx.drawImage(pageView.canvas, rect.x, rect.y, rect.width, rect.height, 0, 0, rect.width, rect.height);
+    ctx.drawImage(
+      sourceCanvas,
+      rect.x / canvasHorizontalRatio,
+      rect.y / canvasVerticalRatio,
+      canvas.width,
+      canvas.height,
+      0,
+      0,
+      canvas.width,
+      canvas.height,
+    );
 
     const snapshot = canvas.toDataURL('image/png');
 
     await this.editor.createAnnotation({
       type: AnnotationTypes.HighlightArea,
-      annotation: { rect, page, snapshot },
+      annotation: {
+        rect: {
+          x: rect.x / horizontalRatio,
+          y: rect.y / verticalRatio,
+          width: rect.width / horizontalRatio,
+          height: rect.height / verticalRatio,
+        },
+        page,
+        snapshot,
+      },
     });
   }
 
@@ -221,6 +244,20 @@ export default class PdfViewer {
       range: selection.getRangeAt(0),
       isEndAtStart: PdfViewer.isEndAtStart(selection),
     };
+  }
+
+  getPageRatio(page: number) {
+    const { width: displayWith, height: displayHeight } = this.getSize(page);
+
+    this.scale; // reade reactive scale to make this function depends on scale
+
+    const {
+      viewport: { rawDims },
+    } = this.pdfViewer.getPageView(page - 1) as PDFPageView;
+    const horizontalRatio = displayWith / (rawDims as { pageWidth: number }).pageWidth;
+    const verticalRatio = displayHeight / (rawDims as { pageHeight: number }).pageHeight;
+
+    return { horizontalRatio, verticalRatio };
   }
 
   private getFragments(range: Range) {
@@ -261,24 +298,18 @@ export default class PdfViewer {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const { x, y, width, height } = rects[i]!;
         const canvas = this.getCanvasEl(page.number);
-
-        if (!canvas) {
-          throw new Error('no canvas');
-        }
-
-        const { x: pageX, y: pageY, width: displayWith, height: displayHeight } = canvas.getBoundingClientRect();
-        const horizonRatio = canvas.width / displayWith;
-        const verticalRatio = canvas.height / displayHeight;
+        const { x: pageX, y: pageY } = canvas.getBoundingClientRect();
+        const { horizontalRatio, verticalRatio } = this.getPageRatio(page.number);
 
         // todo: optimize
         // see https://github.com/agentcooper/react-pdf-highlighter/blob/c87474eb7dc61900a6cd1db5f82a1f7f35b7922c/src/lib/optimize-client-rects.ts
         fragments.push({
           page: page.number,
           rect: {
-            x: (x - pageX) * horizonRatio,
-            y: (y - pageY) * verticalRatio,
-            width: width * horizonRatio,
-            height: height * verticalRatio,
+            x: (x - pageX) / horizontalRatio,
+            y: (y - pageY) / verticalRatio,
+            width: width / horizontalRatio,
+            height: height / verticalRatio,
           },
         });
         i++;
@@ -333,11 +364,17 @@ export default class PdfViewer {
   }
 
   getTextLayerEl(page: number) {
-    return (this.pdfViewer.getPageView(page - 1) as PDFPageView)?.textLayer?.div;
+    return (this.pdfViewer.getPageView(page - 1) as PDFPageView | undefined)?.textLayer?.div;
   }
 
-  getCanvasEl(page: number) {
-    return (this.pdfViewer.getPageView(page - 1) as PDFPageView | undefined)?.canvas;
+  private getCanvasEl(page: number) {
+    const el = (this.pdfViewer.getPageView(page - 1) as PDFPageView | undefined)?.canvas;
+
+    if (!el) {
+      throw new Error('no canvas el');
+    }
+
+    return el;
   }
 
   getSize(page: number) {
