@@ -1,7 +1,7 @@
-import { type CSSProperties, forwardRef } from 'react';
+import { type CSSProperties, forwardRef, useContext } from 'react';
 
 import { HighlightColors } from 'model/material/PdfEditor';
-import type PdfViewer from 'web/views/Workbench/Editor/PdfEditor/PdfViewer';
+import context from './Context';
 
 const colors = [
   HighlightColors.Blue,
@@ -12,19 +12,20 @@ const colors = [
 ];
 
 interface Props {
-  pdfViewer: PdfViewer | null;
   style?: CSSProperties;
   attributes?: Record<string, string>;
 }
 
 // eslint-disable-next-line mobx/missing-observer
-export default forwardRef<HTMLDivElement | null, Props>(function MarkTooltip({ pdfViewer, style, attributes }, ref) {
+export default forwardRef<HTMLDivElement | null, Props>(function MarkTooltip({ style, attributes }, ref) {
+  const { pdfViewer } = useContext(context);
+
   return (
     <div className="pdf-editor-tooltip z-10" ref={ref} hidden style={style} {...attributes}>
-      <div className="flex">
+      <div className="flex items-center rounded bg-gray-300 py-1">
         {colors.map((color) => (
           <button
-            className="h-4 w-4"
+            className="mx-1 h-5 w-5 cursor-pointer rounded-full border-none "
             key={color}
             onClick={() => pdfViewer?.createHighlight(color)}
             style={{ backgroundColor: color }}

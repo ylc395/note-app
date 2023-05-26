@@ -1,11 +1,15 @@
-import { AnnotationTypes } from 'interface/material';
 import { observer } from 'mobx-react-lite';
-import type PdfEditor from 'model/material/PdfEditor';
+import { useContext } from 'react';
 
-export default observer(function HighlightList({ editor }: { editor: PdfEditor }) {
+import { AnnotationTypes } from 'interface/material';
+import context from './Context';
+
+export default observer(function HighlightList() {
+  const { pdfViewer } = useContext(context);
+
   return (
     <div className="w-60 overflow-auto">
-      {editor.highlights.map(({ type, annotation, id }) => {
+      {pdfViewer?.editor.highlights.map(({ type, annotation, id }) => {
         if (type === AnnotationTypes.Highlight) {
           return (
             <div key={id} className="mb-2 text-sm" style={{ color: annotation.color }}>

@@ -1,5 +1,6 @@
-import { observer } from 'mobx-react-lite';
-import { useEffect, useRef, useState } from 'react';
+import { observer, useLocalObservable } from 'mobx-react-lite';
+import { useEffect, useRef } from 'react';
+import { observable, runInAction } from 'mobx';
 
 import type PdfEditor from 'model/material/PdfEditor';
 import PdfViewer from 'web/views/Workbench/Editor/PdfEditor/PdfViewer';
@@ -9,12 +10,27 @@ import Toolbar from './Toolbar';
 import HighlightTooltip from './HighlightTooltip';
 import AnnotationLayer from './AnnotationLayer';
 import HighlightList from './HighlightList';
+import Context, { type EditorContext } from './Context';
 
 export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }) {
   const containerElRef = useRef<HTMLDivElement | null>(null);
   const viewerElRef = useRef<HTMLDivElement | null>(null);
-  const [pdfViewer, setPdfViewer] = useState<PdfViewer | null>(null);
-  const { setPopperElement, show: showPopper, hide: hidePopper, styles, attributes } = useHighlightTooltip(pdfViewer);
+
+  const context = useLocalObservable<EditorContext>(
+    () => ({
+      pdfViewer: null,
+      hoveringAnnotationId: null,
+    }),
+    { pdfViewer: observable.ref },
+  );
+
+  const {
+    setPopperElement,
+    show: showPopper,
+    hide: hidePopper,
+    styles,
+    attributes,
+  } = useHighlightTooltip(context.pdfViewer);
 
   useEffect(() => {
     if (!editor.entity || !containerElRef.current || !viewerElRef.current) {
@@ -29,7 +45,9 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
       onTextSelectCancel: () => hidePopper.current(),
     });
 
-    setPdfViewer(core);
+    runInAction(() => {
+      context.pdfViewer = core;
+    });
 
     return () => {
       core.destroy();
@@ -39,24 +57,21 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
   }, [showPopper.run, showPopper.cancel, editor.entity]);
 
   return (
-    <div className="flex h-full w-full">
-      <div className="flex h-full grow flex-col">
-        <Toolbar pdfViewer={pdfViewer} />
-        <div className="relative grow">
-          <div className="absolute inset-0 overflow-auto" ref={containerElRef}>
-            <div className="select-text" ref={viewerElRef}></div>
-            {pdfViewer &&
-              pdfViewer.visiblePages.map((page) => <AnnotationLayer key={page} page={page} pdfViewer={pdfViewer} />)}
+    <Context.Provider value={context}>
+      <div className="flex h-full w-full">
+        <div className="flex h-full grow flex-col">
+          <Toolbar />
+          <div className="relative grow">
+            <div className="absolute inset-0 overflow-auto" ref={containerElRef}>
+              <div className="select-text" ref={viewerElRef}></div>
+              {context.pdfViewer &&
+                context.pdfViewer.visiblePages.map((page) => <AnnotationLayer key={page} page={page} />)}
+            </div>
+            <HighlightTooltip ref={setPopperElement} style={styles.popper} attributes={attributes.popper} />
           </div>
-          <HighlightTooltip
-            ref={setPopperElement}
-            pdfViewer={pdfViewer}
-            style={styles.popper}
-            attributes={attributes.popper}
-          />
         </div>
+        <HighlightList />
       </div>
-      <HighlightList editor={editor} />
-    </div>
+    </Context.Provider>
   );
 });

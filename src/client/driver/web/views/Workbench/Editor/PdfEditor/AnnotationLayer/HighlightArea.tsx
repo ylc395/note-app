@@ -1,18 +1,13 @@
 import { observer } from 'mobx-react-lite';
+import { useContext } from 'react';
 
 import type { HighlightAreaVO } from 'interface/material';
-import type PdfViewer from '../PdfViewer';
+import ctx from '../Context';
 
-export default observer(function HighlightArea({
-  area,
-  pdfViewer,
-  page,
-}: {
-  area: HighlightAreaVO;
-  pdfViewer: PdfViewer;
-  page: number;
-}) {
-  const { horizontalRatio, verticalRatio } = pdfViewer.getPageRatio(page);
+export default observer(function HighlightArea({ area, page }: { area: HighlightAreaVO; page: number }) {
+  const { pdfViewer } = useContext(ctx);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const { horizontalRatio, verticalRatio } = pdfViewer!.getPageRatio(page);
 
   return (
     <mark

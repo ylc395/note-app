@@ -1,7 +1,9 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useContext } from 'react';
 import { useEventListener, useMouse, useRafState, useKeyPress, useClickAway } from 'ahooks';
+import { observer } from 'mobx-react-lite';
 import { usePopper } from 'react-popper';
-import type PdfViewer from '../PdfViewer';
+
+import context from '../Context';
 
 interface Position {
   left?: number;
@@ -12,9 +14,10 @@ interface Position {
   height: number;
 }
 
-// eslint-disable-next-line mobx/missing-observer
-export default function HighlightArea({ page, pdfViewer }: { page: number; pdfViewer: PdfViewer }) {
-  const textLayerEl = pdfViewer.getTextLayerEl(page);
+export default observer(function HighlightArea({ page }: { page: number }) {
+  const { pdfViewer } = useContext(context);
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  const textLayerEl = pdfViewer!.getTextLayerEl(page);
   const { elementX, elementY, elementW, elementH } = useMouse(textLayerEl);
   const [startPos, setStartPos] = useState<{ x: number; y: number } | null>(null);
   const [isKeyPressed, setIsKeyPressed] = useState(false);
@@ -71,9 +74,11 @@ export default function HighlightArea({ page, pdfViewer }: { page: number; pdfVi
       throw new Error('no canvas');
     }
 
-    const { height: displayHeight, width: displayWith } = pdfViewer.getSize(page);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const { height: displayHeight, width: displayWith } = pdfViewer!.getSize(page);
 
-    pdfViewer.createHighlightArea(page, {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    pdfViewer!.createHighlightArea(page, {
       width: finalPos.width,
       height: finalPos.height,
       x:
@@ -103,4 +108,4 @@ export default function HighlightArea({ page, pdfViewer }: { page: number; pdfVi
       )}
     </div>
   ) : null;
-}
+});

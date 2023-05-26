@@ -1,9 +1,10 @@
 import { Button, InputNumber, Select } from 'antd';
+import { useContext } from 'react';
 import { observer } from 'mobx-react-lite';
 import { ArrowLeftOutlined, ArrowRightOutlined, PlusOutlined, MinusOutlined } from '@ant-design/icons';
 
 import { ScaleValues, SCALE_STEPS } from './PdfViewer';
-import type PdfViewer from './PdfViewer';
+import context from './Context';
 
 const scaleOptions = [
   { label: 'auto', value: ScaleValues.Auto },
@@ -20,7 +21,9 @@ const scaleOptions = [
 
 const scaleValues = scaleOptions.map(({ value }) => value) as Array<string | number>;
 
-export default observer(function Toolbar({ pdfViewer }: { pdfViewer: PdfViewer | null }) {
+export default observer(function Toolbar() {
+  const { pdfViewer } = useContext(context);
+
   return (
     <div className="relative">
       <div className="absolute left-0 top-1/2 ml-2 -translate-y-1/2">

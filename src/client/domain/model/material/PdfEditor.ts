@@ -103,10 +103,16 @@ export default class PdfEditor extends Editor<Entity> {
   get highlightFragmentsByPage() {
     const highlights = this.annotations
       .filter(({ type }) => type === AnnotationTypes.Highlight)
-      .map(({ annotation }) => annotation as HighlightVO);
+      .map(({ annotation, id }) => ({ ...(annotation as HighlightVO), annotationId: id }));
 
-    const fragments = highlights.flatMap(({ fragments, color }) => {
-      return fragments.map(({ page, rect }) => ({ page, rect, color, highlightId: JSON.stringify(rect) }));
+    const fragments = highlights.flatMap(({ fragments, color, annotationId }) => {
+      return fragments.map(({ page, rect }) => ({
+        annotationId,
+        page,
+        rect,
+        color,
+        highlightId: `${annotationId}-${JSON.stringify(rect)}`,
+      }));
     });
 
     return groupBy(fragments, 'page');
