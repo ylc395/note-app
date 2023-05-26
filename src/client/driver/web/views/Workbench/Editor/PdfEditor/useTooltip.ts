@@ -5,6 +5,7 @@ import type { OffsetsFunction } from '@popperjs/core/lib/modifiers/offset';
 
 import type PdfViewer from './PdfViewer';
 import { isTextNode, getValidEndContainer } from './domUtils';
+import type { AnnotationVO } from 'interface/material';
 
 function getSelectionEnd(pdfViewer: PdfViewer) {
   const result = pdfViewer.getSelectionRange();
@@ -35,9 +36,15 @@ function getSelectionEnd(pdfViewer: PdfViewer) {
   return { el: tmpEl, collapseToStart };
 }
 
-export default function (pdfViewer: PdfViewer | null) {
+export function useSelectionTooltip(pdfViewer: PdfViewer | null) {
   const [popperElement, setPopperElement] = useState<HTMLDivElement | null>(null);
   const [selectionEnd, setSelectionEnd] = useState<{ el: HTMLElement; collapseToStart: boolean } | null>(null);
+  const [showing, setShowing] = useState(false);
+
+  // hide popper before init
+  if (!selectionEnd && popperElement) {
+    popperElement.style.visibility = 'hidden';
+  }
 
   const offsetFn = useCallback<OffsetsFunction>(
     ({ popper, reference }) => {
@@ -64,7 +71,7 @@ export default function (pdfViewer: PdfViewer | null) {
 
   const { styles, attributes } = usePopper(selectionEnd?.el, popperElement, popperOptions);
 
-  const show = useDebounceFn(
+  const init = useDebounceFn(
     () => {
       if (!pdfViewer) {
         throw new Error('no pdfViewer');
@@ -76,24 +83,35 @@ export default function (pdfViewer: PdfViewer | null) {
         return;
       }
 
-      if (popperElement) {
-        setSelectionEnd(selectionEnd);
-        popperElement.hidden = false;
-      }
+      setSelectionEnd(selectionEnd);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      popperElement!.style.visibility = 'visible';
     },
     { wait: 300 },
   );
 
-  const hide = useLatest(() => {
-    if (popperElement) {
-      popperElement.hidden = true;
-    }
+  const create = useCallback(() => {
+    setShowing(true);
+    init.run();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [init.run]);
 
-    if (selectionEnd) {
-      selectionEnd.el.remove();
-      setSelectionEnd(null);
-    }
+  const destroy = useLatest(() => {
+    setShowing(false);
+    selectionEnd?.el.remove();
+    setSelectionEnd(null);
+    init.cancel();
   });
 
-  return { setPopperElement, hide, styles, attributes, show };
+  return { setPopperElement, styles, attributes, create, destroy: destroy.current, showing };
+}
+
+export function useHighlightTooltip(
+  pdfViewer: PdfViewer | null,
+  annotation: { id: AnnotationVO['id']; el: HTMLElement } | null,
+) {
+  const [popperElement, setPopperElement] = useState<HTMLDivElement | null>(null);
+  const { styles, attributes } = usePopper(annotation?.el, popperElement);
+
+  return { setPopperElement, showing: Boolean(annotation), styles, attributes };
 }

@@ -5,7 +5,7 @@ import numberRange from 'lodash/range';
 import intersection from 'lodash/intersection';
 import { makeObservable, observable, when, action, runInAction, computed } from 'mobx';
 
-import { AnnotationTypes, type HighlightAreaDTO, type HighlightDTO } from 'interface/material';
+import { AnnotationTypes, AnnotationVO, type HighlightAreaDTO, type HighlightDTO } from 'interface/material';
 import type PdfEditor from 'model/material/PdfEditor';
 
 import './style.css';

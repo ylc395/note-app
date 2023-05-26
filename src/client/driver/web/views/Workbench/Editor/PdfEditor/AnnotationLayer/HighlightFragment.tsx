@@ -25,8 +25,14 @@ export default observer(function HighlightFragment({
   const { horizontalRatio, verticalRatio } = ctx.pdfViewer!.getPageRatio(page);
 
   useHover(markRef, {
-    onEnter: action(() => (ctx.hoveringAnnotationId = annotationId)),
-    onLeave: action(() => (ctx.hoveringAnnotationId = null)),
+    onEnter: action(() => {
+      ctx.hoveringAnnotation = {
+        id: annotationId,
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        el: markRef.current!,
+      };
+    }),
+    onLeave: action(() => (ctx.hoveringAnnotation = null)),
   });
 
   return (
@@ -34,7 +40,7 @@ export default observer(function HighlightFragment({
       ref={markRef}
       className={clsx(
         'absolute z-10 cursor-pointer',
-        annotationId === ctx.hoveringAnnotationId ? 'brightness-150' : null,
+        annotationId === ctx.hoveringAnnotation?.id ? 'brightness-150' : null,
       )}
       style={{
         backgroundColor: color,

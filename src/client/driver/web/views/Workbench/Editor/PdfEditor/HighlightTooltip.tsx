@@ -1,15 +1,8 @@
-import { type CSSProperties, forwardRef, useContext } from 'react';
+import { Button } from 'antd';
+import { useContext, forwardRef, type CSSProperties } from 'react';
+import { BgColorsOutlined, CommentOutlined, DeleteOutlined } from '@ant-design/icons';
 
-import { HighlightColors } from 'model/material/PdfEditor';
 import context from './Context';
-
-const colors = [
-  HighlightColors.Blue,
-  HighlightColors.Gray,
-  HighlightColors.Purple,
-  HighlightColors.Red,
-  HighlightColors.Yellow,
-];
 
 interface Props {
   style?: CSSProperties;
@@ -17,21 +10,14 @@ interface Props {
 }
 
 // eslint-disable-next-line mobx/missing-observer
-export default forwardRef<HTMLDivElement | null, Props>(function MarkTooltip({ style, attributes }, ref) {
+export default forwardRef<HTMLDivElement | null, Props>(function HighlightTooltip({ style, attributes }, ref) {
   const { pdfViewer } = useContext(context);
 
   return (
-    <div className="pdf-editor-tooltip z-10" ref={ref} hidden style={style} {...attributes}>
-      <div className="flex items-center rounded bg-gray-300 py-1">
-        {colors.map((color) => (
-          <button
-            className="mx-1 h-5 w-5 cursor-pointer rounded-full border-none "
-            key={color}
-            onClick={() => pdfViewer?.createHighlight(color)}
-            style={{ backgroundColor: color }}
-          ></button>
-        ))}
-      </div>
+    <div ref={ref} style={style} {...attributes}>
+      <Button type="text" size="small" icon={<BgColorsOutlined />}></Button>
+      <Button type="text" size="small" icon={<CommentOutlined />}></Button>
+      <Button type="text" size="small" icon={<DeleteOutlined />}></Button>
     </div>
   );
 });

@@ -3,13 +3,14 @@ import { useEffect, useRef } from 'react';
 import { observable, runInAction } from 'mobx';
 
 import type PdfEditor from 'model/material/PdfEditor';
-import PdfViewer from 'web/views/Workbench/Editor/PdfEditor/PdfViewer';
 
-import useHighlightTooltip from './useHighlightTooltip';
+import { useHighlightTooltip, useSelectionTooltip } from './useTooltip';
 import Toolbar from './Toolbar';
+import SelectionTooltip from './SelectionTooltip';
 import HighlightTooltip from './HighlightTooltip';
 import AnnotationLayer from './AnnotationLayer';
 import HighlightList from './HighlightList';
+import PdfViewer from './PdfViewer';
 import Context, { type EditorContext } from './Context';
 
 export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }) {
@@ -19,18 +20,26 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
   const context = useLocalObservable<EditorContext>(
     () => ({
       pdfViewer: null,
-      hoveringAnnotationId: null,
+      hoveringAnnotation: null,
     }),
     { pdfViewer: observable.ref },
   );
 
   const {
-    setPopperElement,
-    show: showPopper,
-    hide: hidePopper,
-    styles,
-    attributes,
-  } = useHighlightTooltip(context.pdfViewer);
+    setPopperElement: setSelectionTooltipPopper,
+    styles: selectionTooltipStyles,
+    attributes: selectionTooltipAttrs,
+    create: createSelectionTooltip,
+    destroy: destroySelectionTooltip,
+    showing: selectionTooltipShowing,
+  } = useSelectionTooltip(context.pdfViewer);
+
+  const {
+    setPopperElement: setHighlightTooltipPopper,
+    styles: highlightTooltipStyles,
+    attributes: highlightTooltipAttrs,
+    showing: highlightTooltipShowing,
+  } = useHighlightTooltip(context.pdfViewer, context.hoveringAnnotation);
 
   useEffect(() => {
     if (!editor.entity || !containerElRef.current || !viewerElRef.current) {
@@ -41,8 +50,8 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
       editor,
       container: containerElRef.current,
       viewer: viewerElRef.current,
-      onTextSelected: showPopper.run,
-      onTextSelectCancel: () => hidePopper.current(),
+      onTextSelected: createSelectionTooltip,
+      onTextSelectCancel: destroySelectionTooltip,
     });
 
     runInAction(() => {
@@ -51,10 +60,10 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
 
     return () => {
       core.destroy();
-      showPopper.cancel();
+      destroySelectionTooltip();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showPopper.run, showPopper.cancel, editor.entity]);
+  }, [editor.entity, context]);
 
   return (
     <Context.Provider value={context}>
@@ -67,7 +76,20 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
               {context.pdfViewer &&
                 context.pdfViewer.visiblePages.map((page) => <AnnotationLayer key={page} page={page} />)}
             </div>
-            <HighlightTooltip ref={setPopperElement} style={styles.popper} attributes={attributes.popper} />
+            {selectionTooltipShowing && (
+              <SelectionTooltip
+                ref={setSelectionTooltipPopper}
+                style={selectionTooltipStyles.popper}
+                attributes={selectionTooltipAttrs.popper}
+              />
+            )}
+            {highlightTooltipShowing && (
+              <HighlightTooltip
+                ref={setHighlightTooltipPopper}
+                style={highlightTooltipStyles.popper}
+                attributes={highlightTooltipAttrs.popper}
+              />
+            )}
           </div>
         </div>
         <HighlightList />

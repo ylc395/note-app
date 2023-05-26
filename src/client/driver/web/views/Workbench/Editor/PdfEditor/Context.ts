@@ -4,7 +4,7 @@ import type { AnnotationVO } from 'interface/material';
 
 export interface EditorContext {
   pdfViewer: PdfViewer | null;
-  hoveringAnnotationId: AnnotationVO['id'] | null;
+  hoveringAnnotation: { id: AnnotationVO['id']; el: HTMLElement } | null;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
