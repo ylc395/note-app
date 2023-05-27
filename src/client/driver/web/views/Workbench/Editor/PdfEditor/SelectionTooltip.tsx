@@ -14,11 +14,12 @@ const colors = [
 
 interface Props {
   style?: CSSProperties;
+  onSelect?: (color: HighlightColors) => void;
 }
 
 export default observer(
   // eslint-disable-next-line mobx/missing-observer
-  forwardRef<HTMLDivElement | null, Props>(function SelectionTooltip({ style }, ref) {
+  forwardRef<HTMLDivElement | null, Props>(function SelectionTooltip({ style, onSelect }, ref) {
     const { pdfViewer } = useContext(context);
 
     return (
@@ -28,7 +29,7 @@ export default observer(
             <button
               className="mx-1 h-5 w-5 cursor-pointer rounded-full border-none "
               key={color}
-              onClick={() => pdfViewer?.createHighlight(color)}
+              onClick={() => (onSelect ? onSelect(color) : pdfViewer?.createHighlight(color))}
               style={{ backgroundColor: color }}
             ></button>
           ))}

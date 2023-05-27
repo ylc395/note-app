@@ -1,10 +1,9 @@
 import { useCallback, useState } from 'react';
 import { useDebounceFn, useLatest } from 'ahooks';
-import { useFloating, offset } from '@floating-ui/react';
+import { useFloating, offset, autoUpdate } from '@floating-ui/react';
 
 import type PdfViewer from './PdfViewer';
 import { isTextNode, getValidEndContainer } from './domUtils';
-import type { AnnotationVO } from 'interface/material';
 
 function getSelectionEnd(pdfViewer: PdfViewer) {
   const result = pdfViewer.getSelectionRange();
@@ -37,64 +36,52 @@ function getSelectionEnd(pdfViewer: PdfViewer) {
 
 export function useSelectionTooltip(pdfViewer: PdfViewer | null) {
   const [selectionEnd, setSelectionEnd] = useState<{ el: HTMLElement; collapseToStart: boolean } | null>(null);
-  const [showing, setShowing] = useState(false);
 
   const {
     floatingStyles: styles,
-    refs: { setFloating, floating },
+    refs: { setFloating },
   } = useFloating({
     elements: { reference: selectionEnd?.el },
     placement: selectionEnd?.collapseToStart ? 'top' : 'bottom',
     middleware: [offset(10)],
+    whileElementsMounted: autoUpdate,
   });
 
-  // hide popper before init
-  if (!selectionEnd && floating.current) {
-    floating.current.style.visibility = 'hidden';
-  }
-
-  const init = useDebounceFn(
+  const { run: create, cancel: stopCreating } = useDebounceFn(
     () => {
       if (!pdfViewer) {
-        throw new Error('no pdfViewer');
+        return;
       }
 
       const selectionEnd = getSelectionEnd(pdfViewer);
 
-      if (!selectionEnd) {
-        return;
+      if (selectionEnd) {
+        setSelectionEnd(selectionEnd);
       }
-
-      setSelectionEnd(selectionEnd);
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      floating.current!.style.visibility = 'visible';
     },
     { wait: 300 },
   );
 
-  const create = useCallback(() => {
-    setShowing(true);
-    init.run();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [init.run]);
-
   const _destroy = useLatest(() => {
-    setShowing(false);
     selectionEnd?.el.remove();
     setSelectionEnd(null);
-    init.cancel();
+    stopCreating();
   });
 
   const destroy = useCallback(() => _destroy.current(), [_destroy]);
 
-  return { setFloating, styles, create, destroy, showing };
+  return { setFloating, styles, create, destroy, showing: Boolean(selectionEnd) };
 }
 
 export function useHighlightTooltip(pdfViewer: PdfViewer | null, annotationEl: HTMLElement | null) {
   const {
     floatingStyles: styles,
     refs: { setFloating },
-  } = useFloating({ elements: { reference: annotationEl } });
+  } = useFloating({
+    elements: { reference: annotationEl },
+    middleware: [offset(10)],
+    whileElementsMounted: autoUpdate,
+  });
 
   return { setFloating, showing: Boolean(annotationEl), styles };
 }

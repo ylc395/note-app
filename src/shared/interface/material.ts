@@ -81,7 +81,7 @@ const rectSchema = object({
   height: number(),
 });
 
-const highlightDTOSchema = object({
+export const highlightDTOSchema = object({
   icon: string().optional(),
   content: string(),
   color: string(),
@@ -93,7 +93,7 @@ const highlightDTOSchema = object({
   ),
 });
 
-const highlightAreaDTOSchema = object({
+export const highlightAreaDTOSchema = object({
   color: string().optional(),
   icon: string().optional(),
   snapshot: string(),
@@ -108,14 +108,12 @@ export type HighlightVO = HighlightDTO;
 export type HighlightAreaDTO = Infer<typeof highlightAreaDTOSchema>;
 export type HighlightAreaVO = HighlightAreaDTO;
 
+export const commonAnnotationSchema = object({ comment: string().optional() });
+
 export const annotationDTOSchema = discriminatedUnion('type', [
   object({ type: literal(AnnotationTypes.Highlight), annotation: highlightDTOSchema }),
   object({ type: literal(AnnotationTypes.HighlightArea), annotation: highlightAreaDTOSchema }),
-]).and(
-  object({
-    comment: string().optional(),
-  }),
-);
+]).and(commonAnnotationSchema);
 
 export type AnnotationDTO = Infer<typeof annotationDTOSchema>;
 

@@ -1,6 +1,7 @@
 import { computed, makeObservable, observable, runInAction } from 'mobx';
 import groupBy from 'lodash/groupBy';
 import remove from 'lodash/remove';
+import merge from 'lodash/merge';
 
 import { EntityTypes } from 'interface/entity';
 import {
@@ -129,10 +130,30 @@ export default class PdfEditor extends Editor<Entity> {
   }
 
   async removeAnnotation(id: AnnotationVO['id']) {
-    await this.remote.delete(`/materials/${this.entityId}/annotations/${id}`);
-
+    await this.remote.delete(`/materials/annotations/${id}`);
     runInAction(() => {
       remove(this.annotations, ({ id: _id }) => _id === id);
     });
+  }
+
+  async updateAnnotation(id: AnnotationVO['id'], patch: Record<string, unknown>) {
+    const { body: annotation } = await this.remote.patch<Record<string, unknown>, AnnotationVO>(
+      `/materials/annotations/${id}`,
+      patch,
+    );
+
+    runInAction(() => {
+      const index = this.annotations.findIndex(({ id: _id }) => _id === id);
+
+      if (index < 0) {
+        throw new Error('no annotation');
+      }
+
+      this.annotations[index] = annotation;
+    });
+  }
+
+  getAnnotationById(id: AnnotationVO['id']) {
+    return this.annotations.find(({ id: _id }) => _id === id);
   }
 }

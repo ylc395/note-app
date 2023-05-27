@@ -135,6 +135,8 @@ export default class SqliteMaterialRepository extends BaseRepository<Row> implem
   readonly createAnnotation = this.annotations.create.bind(this.annotations);
   readonly findAllAnnotations = this.annotations.findAll.bind(this.annotations);
   readonly removeAnnotation = this.annotations.remove.bind(this.annotations);
+  readonly updateAnnotation = this.annotations.update.bind(this.annotations);
+  readonly findAnnotationById = this.annotations.findOneById.bind(this.annotations);
 
   private static isFileRow(row: Row) {
     return Boolean(row.fileId);

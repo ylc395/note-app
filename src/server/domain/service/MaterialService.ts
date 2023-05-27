@@ -6,6 +6,9 @@ import {
   AnnotationTypes,
   isDirectory,
   AnnotationVO,
+  highlightAreaDTOSchema,
+  highlightDTOSchema,
+  commonAnnotationSchema,
 } from 'interface/material';
 
 import BaseService from './BaseService';
@@ -84,11 +87,46 @@ export default class MaterialService extends BaseService {
     }
   }
 
-  async removeAnnotation(materialId: MaterialVO['id'], annotationId: AnnotationVO['id']) {
-    const result = await this.materials.removeAnnotation(materialId, annotationId);
+  async removeAnnotation(annotationId: AnnotationVO['id']) {
+    const result = await this.materials.removeAnnotation(annotationId);
 
     if (!result) {
       throw new Error('invalid annotation');
     }
+  }
+
+  async updateAnnotation(annotationId: AnnotationVO['id'], patch: Record<string, unknown>) {
+    const annotation = await this.materials.findAnnotationById(annotationId);
+
+    if (!annotation) {
+      throw new Error('invalid annotation id');
+    }
+
+    let annotationSchema;
+    switch (annotation.type) {
+      case AnnotationTypes.Highlight:
+        annotationSchema = highlightDTOSchema.pick({ icon: true, content: true }).partial();
+        break;
+      case AnnotationTypes.HighlightArea:
+        annotationSchema = highlightAreaDTOSchema.partial();
+        break;
+      default:
+        throw new Error('invalid type');
+    }
+
+    const schema = commonAnnotationSchema.extend({ annotation: annotationSchema }).partial().strict();
+    const result = schema.safeParse(patch);
+
+    if (!result.success) {
+      throw new Error(`invalid patch: ${result.error}`);
+    }
+
+    const updated = await this.materials.updateAnnotation(annotationId, patch);
+
+    if (!updated) {
+      throw new Error('invalid id');
+    }
+
+    return updated;
   }
 }
