@@ -78,24 +78,23 @@ export function useSelectionTooltip(pdfViewer: PdfViewer | null) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [init.run]);
 
-  const destroy = useLatest(() => {
+  const _destroy = useLatest(() => {
     setShowing(false);
     selectionEnd?.el.remove();
     setSelectionEnd(null);
     init.cancel();
   });
 
-  return { setFloating, styles, create, destroy: destroy.current, showing };
+  const destroy = useCallback(() => _destroy.current(), [_destroy]);
+
+  return { setFloating, styles, create, destroy, showing };
 }
 
-export function useHighlightTooltip(
-  pdfViewer: PdfViewer | null,
-  annotation: { id: AnnotationVO['id']; el: HTMLElement } | null,
-) {
+export function useHighlightTooltip(pdfViewer: PdfViewer | null, annotationEl: HTMLElement | null) {
   const {
     floatingStyles: styles,
     refs: { setFloating },
-  } = useFloating({ elements: { reference: annotation?.el } });
+  } = useFloating({ elements: { reference: annotationEl } });
 
-  return { setFloating, showing: Boolean(annotation), styles };
+  return { setFloating, showing: Boolean(annotationEl), styles };
 }

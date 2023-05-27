@@ -1,6 +1,8 @@
 import { createPortal } from 'react-dom';
 import { observer } from 'mobx-react-lite';
-import { useContext } from 'react';
+import { useContext, useRef } from 'react';
+import { useEventListener } from 'ahooks';
+import { action } from 'mobx';
 
 import HighlightFragment from './HighlightFragment';
 import HighlightArea from './HighlightArea';
@@ -9,21 +11,34 @@ import DraggingHighlightArea from './DraggingHighlightArea';
 import context from '../Context';
 
 export default observer(function AnnotationLayer({ page }: { page: number }) {
-  const { pdfViewer } = useContext(context);
+  const ctx = useContext(context);
+  const rootRef = useRef<HTMLDivElement | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const textLayerEl = pdfViewer!.getTextLayerEl(page);
+  const textLayerEl = ctx.pdfViewer!.getTextLayerEl(page);
+
+  useEventListener(
+    'mouseover',
+    action((e: MouseEvent) => {
+      if (!(e.target as HTMLElement).dataset.annotationId) {
+        return;
+      }
+
+      ctx.hoveringAnnotationEl = e.target as HTMLElement;
+    }),
+    { target: rootRef },
+  );
 
   if (!textLayerEl) {
     return null;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const fragments = pdfViewer!.editor.highlightFragmentsByPage[page] || [];
+  const fragments = ctx.pdfViewer!.editor.highlightFragmentsByPage[page] || [];
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const areas = pdfViewer!.editor.highlightAreasByPage[page] || [];
+  const areas = ctx.pdfViewer!.editor.highlightAreasByPage[page] || [];
 
   return createPortal(
-    <div>
+    <div ref={rootRef}>
       {fragments.map((fragment) => (
         <HighlightFragment
           key={fragment.highlightId}

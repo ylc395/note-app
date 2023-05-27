@@ -5,6 +5,7 @@ import {
   type MaterialVO,
   AnnotationTypes,
   isDirectory,
+  AnnotationVO,
 } from 'interface/material';
 
 import BaseService from './BaseService';
@@ -80,6 +81,14 @@ export default class MaterialService extends BaseService {
 
     if (!material || isDirectory(material) || (mimeType && material.mimeType !== mimeType)) {
       throw new Error('invalid material id');
+    }
+  }
+
+  async removeAnnotation(materialId: MaterialVO['id'], annotationId: AnnotationVO['id']) {
+    const result = await this.materials.removeAnnotation(materialId, annotationId);
+
+    if (!result) {
+      throw new Error('invalid annotation');
     }
   }
 }

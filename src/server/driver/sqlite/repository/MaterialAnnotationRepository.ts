@@ -36,4 +36,9 @@ export default class MaterialAnnotationRepository extends BaseRepository<Row> {
         } as AnnotationVO),
     );
   }
+
+  async remove(materialId: MaterialVO['id'], annotationId: AnnotationVO['id']) {
+    const count = await this.knex<Row>(this.tableName).delete().where({ id: annotationId, materialId });
+    return count === 1;
+  }
 }

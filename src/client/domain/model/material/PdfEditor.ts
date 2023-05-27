@@ -1,5 +1,6 @@
 import { computed, makeObservable, observable, runInAction } from 'mobx';
 import groupBy from 'lodash/groupBy';
+import remove from 'lodash/remove';
 
 import { EntityTypes } from 'interface/entity';
 import {
@@ -125,5 +126,13 @@ export default class PdfEditor extends Editor<Entity> {
       .map(({ annotation, id }) => ({ ...(annotation as HighlightAreaVO), id }));
 
     return groupBy(highlightAreas, 'page');
+  }
+
+  async removeAnnotation(id: AnnotationVO['id']) {
+    await this.remote.delete(`/materials/${this.entityId}/annotations/${id}`);
+
+    runInAction(() => {
+      remove(this.annotations, ({ id: _id }) => _id === id);
+    });
   }
 }

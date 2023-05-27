@@ -19,4 +19,5 @@ export interface MaterialRepository {
   createAnnotation: (materialId: MaterialVO['id'], annotation: AnnotationDTO) => Promise<AnnotationVO>;
   findAllAnnotations: (materialId: MaterialVO['id']) => Promise<AnnotationVO[]>;
   updateText: <T>(materialId: MaterialVO['id'], payload: T) => Promise<T | null>;
+  removeAnnotation: (materialId: MaterialVO['id'], annotationId: AnnotationVO['id']) => Promise<boolean>;
 }

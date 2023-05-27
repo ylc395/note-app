@@ -1,7 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { action } from 'mobx';
 import { useContext, useRef } from 'react';
-import { useHover } from 'ahooks';
 import clsx from 'clsx';
 
 import type { AnnotationVO } from 'interface/material';
@@ -24,24 +22,14 @@ export default observer(function HighlightFragment({
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const { horizontalRatio, verticalRatio } = ctx.pdfViewer!.getPageRatio(page);
 
-  useHover(markRef, {
-    onEnter: action(() => {
-      ctx.hoveringAnnotation = {
-        id: annotationId,
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        el: markRef.current!,
-      };
-    }),
-    onLeave: action(() => (ctx.hoveringAnnotation = null)),
-  });
-
   return (
     <mark
       ref={markRef}
       className={clsx(
         'absolute z-10 cursor-pointer',
-        annotationId === ctx.hoveringAnnotation?.id ? 'brightness-150' : null,
+        annotationId === ctx.hoveringAnnotationEl?.dataset.annotationId ? 'brightness-150' : null,
       )}
+      data-annotation-id={annotationId}
       style={{
         backgroundColor: color,
         width: rect.width * horizontalRatio,

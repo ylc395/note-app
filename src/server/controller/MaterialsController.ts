@@ -12,7 +12,7 @@ import {
 } from 'interface/material';
 import MaterialService from 'service/MaterialService';
 
-import { createSchemaPipe, Post, Body, Get, Query, Param } from './decorators';
+import { createSchemaPipe, Post, Body, Get, Query, Param, Delete } from './decorators';
 
 @Controller()
 export default class MaterialsController {
@@ -34,6 +34,11 @@ export default class MaterialsController {
   @Get('/materials/:id/annotations')
   async queryAnnotations(@Param('id') materialId: string): Promise<AnnotationVO[]> {
     return await this.materialService.queryAnnotations(materialId);
+  }
+
+  @Delete('/materials/:id/annotations/:annotationId')
+  async removeAnnotation(@Param('id') materialId: string, @Param('annotationId') annotationId: string): Promise<void> {
+    return await this.materialService.removeAnnotation(materialId, annotationId);
   }
 
   @Get('/materials/:id')

@@ -20,9 +20,9 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
   const context = useLocalObservable<EditorContext>(
     () => ({
       pdfViewer: null,
-      hoveringAnnotation: null,
+      hoveringAnnotationEl: null,
     }),
-    { pdfViewer: observable.ref },
+    { pdfViewer: observable.ref, hoveringAnnotationEl: observable.ref },
   );
 
   const {
@@ -37,7 +37,7 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
     setFloating: setHighlightTooltipPopper,
     styles: highlightTooltipStyles,
     showing: highlightTooltipShowing,
-  } = useHighlightTooltip(context.pdfViewer, context.hoveringAnnotation);
+  } = useHighlightTooltip(context.pdfViewer, context.hoveringAnnotationEl);
 
   useEffect(() => {
     if (!editor.entity || !containerElRef.current || !viewerElRef.current) {
