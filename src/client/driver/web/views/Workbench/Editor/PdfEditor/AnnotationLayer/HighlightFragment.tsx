@@ -5,6 +5,8 @@ import clsx from 'clsx';
 import type { AnnotationVO } from 'interface/material';
 import context from '../Context';
 
+export const BUFFER = 20;
+
 export default observer(function HighlightFragment({
   page,
   fragment: { rect, color },
@@ -31,7 +33,7 @@ export default observer(function HighlightFragment({
       )}
       data-annotation-id={annotationId}
       style={{
-        borderBottom: annotationId === ctx.hoveringAnnotationId ? 'solid transparent 20px' : 0,
+        borderBottom: annotationId === ctx.hoveringAnnotationId ? `solid transparent ${BUFFER}px` : 0,
         backgroundColor: color,
         width: rect.width * horizontalRatio,
         height: rect.height * verticalRatio,

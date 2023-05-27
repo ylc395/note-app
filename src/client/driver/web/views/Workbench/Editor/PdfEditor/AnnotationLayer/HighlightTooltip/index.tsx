@@ -5,9 +5,9 @@ import { BgColorsOutlined, CommentOutlined, DeleteOutlined } from '@ant-design/i
 import { runInAction } from 'mobx';
 
 import type { HighlightColors } from 'model/material/PdfEditor';
-import context from '../Context';
-import SelectionTooltip from '../SelectionTooltip';
-import CommentTextArea from '../CommentTextArea';
+import context from '../../Context';
+import Palette from './Palette';
+import CommentTextArea from './CommentTextArea';
 
 interface Props {
   style?: CSSProperties;
@@ -70,7 +70,7 @@ export default observer(
             />
             <Button className="text-white" type="text" icon={<DeleteOutlined />} onClick={handleRemove} />
           </div>
-          {visibleMenu === 'colors' && <SelectionTooltip onSelect={handleColorSelect} />}
+          {visibleMenu === 'colors' && <Palette onSelect={handleColorSelect} />}
           {visibleMenu === 'comment' && <CommentTextArea defaultValue={annotation.comment} onConfirm={handleComment} />}
         </div>
       );

@@ -7,6 +7,7 @@ import { AnnotationTypes } from 'interface/material';
 import type PdfViewer from './PdfViewer';
 import { isTextNode, getValidEndContainer } from './domUtils';
 import context from './Context';
+import { BUFFER } from './AnnotationLayer/HighlightFragment';
 
 function getSelectionEnd(pdfViewer: PdfViewer) {
   const result = pdfViewer.getSelectionRange();
@@ -92,13 +93,14 @@ export function useHighlightTooltip(page: number) {
     }
   }, [annotationId, page, pdfViewer]);
 
+  const OFFSET = 10;
   const {
     floatingStyles: styles,
     refs: { setFloating },
   } = useFloating({
     elements: { reference: markEl },
     whileElementsMounted: autoUpdate,
-    middleware: [offset(-10)],
+    middleware: [offset(OFFSET - BUFFER)],
   });
 
   return { setFloating, showing: Boolean(markEl), styles };
