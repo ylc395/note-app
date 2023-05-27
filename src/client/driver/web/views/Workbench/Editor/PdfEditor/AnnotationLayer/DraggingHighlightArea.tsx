@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useContext } from 'react';
 import { useEventListener, useMouse, useRafState, useKeyPress, useClickAway } from 'ahooks';
 import { observer } from 'mobx-react-lite';
-import { usePopper } from 'react-popper';
+import { useFloating } from '@floating-ui/react';
 
 import context from '../Context';
 
@@ -22,10 +22,8 @@ export default observer(function HighlightArea({ page }: { page: number }) {
   const [startPos, setStartPos] = useState<{ x: number; y: number } | null>(null);
   const [isKeyPressed, setIsKeyPressed] = useState(false);
   const [finalPos, setFinalPos] = useRafState<Position | null>(null);
-  const areaRef = useRef<HTMLDivElement | null>(null);
-  const buttonRef = useRef<HTMLDivElement | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
-  const { styles, attributes } = usePopper(areaRef.current, buttonRef.current);
+  const { refs, floatingStyles } = useFloating();
 
   const stopDragging = useCallback(() => {
     setStartPos(null);
@@ -100,9 +98,9 @@ export default observer(function HighlightArea({ page }: { page: number }) {
 
   return finalPos ? (
     <div ref={rootRef}>
-      <div ref={areaRef} className="absolute bg-yellow-400" style={finalPos}></div>
+      <div ref={refs.setReference} className="absolute bg-yellow-400" style={finalPos}></div>
       {finalPos && !startPos && (
-        <div onClick={create} ref={buttonRef} style={styles.popper} {...attributes.popper}>
+        <div onClick={create} ref={refs.setFloating} style={floatingStyles}>
           Add Highlight
         </div>
       )}

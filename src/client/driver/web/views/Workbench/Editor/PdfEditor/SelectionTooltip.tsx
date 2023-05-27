@@ -13,15 +13,14 @@ const colors = [
 
 interface Props {
   style?: CSSProperties;
-  attributes?: Record<string, string>;
 }
 
 // eslint-disable-next-line mobx/missing-observer
-export default forwardRef<HTMLDivElement | null, Props>(function SelectionTooltip({ style, attributes }, ref) {
+export default forwardRef<HTMLDivElement | null, Props>(function SelectionTooltip({ style }, ref) {
   const { pdfViewer } = useContext(context);
 
   return (
-    <div className="pdf-editor-tooltip z-10" ref={ref} style={style} {...attributes}>
+    <div className="pdf-editor-tooltip z-10" ref={ref} style={style}>
       <div className="flex items-center rounded bg-gray-300 py-1">
         {colors.map((color) => (
           <button

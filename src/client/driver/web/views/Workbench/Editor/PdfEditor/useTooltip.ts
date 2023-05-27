@@ -1,7 +1,6 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useDebounceFn, useLatest } from 'ahooks';
-import { usePopper } from 'react-popper';
-import type { OffsetsFunction } from '@popperjs/core/lib/modifiers/offset';
+import { useFloating, offset } from '@floating-ui/react';
 
 import type PdfViewer from './PdfViewer';
 import { isTextNode, getValidEndContainer } from './domUtils';
@@ -37,39 +36,22 @@ function getSelectionEnd(pdfViewer: PdfViewer) {
 }
 
 export function useSelectionTooltip(pdfViewer: PdfViewer | null) {
-  const [popperElement, setPopperElement] = useState<HTMLDivElement | null>(null);
   const [selectionEnd, setSelectionEnd] = useState<{ el: HTMLElement; collapseToStart: boolean } | null>(null);
   const [showing, setShowing] = useState(false);
 
+  const {
+    floatingStyles: styles,
+    refs: { setFloating, floating },
+  } = useFloating({
+    elements: { reference: selectionEnd?.el },
+    placement: selectionEnd?.collapseToStart ? 'top' : 'bottom',
+    middleware: [offset(10)],
+  });
+
   // hide popper before init
-  if (!selectionEnd && popperElement) {
-    popperElement.style.visibility = 'hidden';
+  if (!selectionEnd && floating.current) {
+    floating.current.style.visibility = 'hidden';
   }
-
-  const offsetFn = useCallback<OffsetsFunction>(
-    ({ popper, reference }) => {
-      if (!selectionEnd) {
-        throw new Error('no selectionEnd');
-      }
-
-      return [
-        popper.x,
-        popper.y + (selectionEnd.collapseToStart ? -reference.height - popper.height * 2 : reference.height / 2),
-      ];
-    },
-    [selectionEnd],
-  );
-
-  const popperOptions = useMemo(
-    () =>
-      ({
-        placement: 'bottom',
-        modifiers: [{ name: 'offset', options: { offset: offsetFn } }],
-      } as const),
-    [offsetFn],
-  );
-
-  const { styles, attributes } = usePopper(selectionEnd?.el, popperElement, popperOptions);
 
   const init = useDebounceFn(
     () => {
@@ -85,7 +67,7 @@ export function useSelectionTooltip(pdfViewer: PdfViewer | null) {
 
       setSelectionEnd(selectionEnd);
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      popperElement!.style.visibility = 'visible';
+      floating.current!.style.visibility = 'visible';
     },
     { wait: 300 },
   );
@@ -103,15 +85,17 @@ export function useSelectionTooltip(pdfViewer: PdfViewer | null) {
     init.cancel();
   });
 
-  return { setPopperElement, styles, attributes, create, destroy: destroy.current, showing };
+  return { setFloating, styles, create, destroy: destroy.current, showing };
 }
 
 export function useHighlightTooltip(
   pdfViewer: PdfViewer | null,
   annotation: { id: AnnotationVO['id']; el: HTMLElement } | null,
 ) {
-  const [popperElement, setPopperElement] = useState<HTMLDivElement | null>(null);
-  const { styles, attributes } = usePopper(annotation?.el, popperElement);
+  const {
+    floatingStyles: styles,
+    refs: { setFloating },
+  } = useFloating({ elements: { reference: annotation?.el } });
 
-  return { setPopperElement, showing: Boolean(annotation), styles, attributes };
+  return { setFloating, showing: Boolean(annotation), styles };
 }

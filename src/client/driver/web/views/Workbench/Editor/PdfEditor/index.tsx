@@ -26,18 +26,16 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
   );
 
   const {
-    setPopperElement: setSelectionTooltipPopper,
+    setFloating: setSelectionTooltipPopper,
     styles: selectionTooltipStyles,
-    attributes: selectionTooltipAttrs,
     create: createSelectionTooltip,
     destroy: destroySelectionTooltip,
     showing: selectionTooltipShowing,
   } = useSelectionTooltip(context.pdfViewer);
 
   const {
-    setPopperElement: setHighlightTooltipPopper,
+    setFloating: setHighlightTooltipPopper,
     styles: highlightTooltipStyles,
-    attributes: highlightTooltipAttrs,
     showing: highlightTooltipShowing,
   } = useHighlightTooltip(context.pdfViewer, context.hoveringAnnotation);
 
@@ -77,18 +75,10 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
                 context.pdfViewer.visiblePages.map((page) => <AnnotationLayer key={page} page={page} />)}
             </div>
             {selectionTooltipShowing && (
-              <SelectionTooltip
-                ref={setSelectionTooltipPopper}
-                style={selectionTooltipStyles.popper}
-                attributes={selectionTooltipAttrs.popper}
-              />
+              <SelectionTooltip ref={setSelectionTooltipPopper} style={selectionTooltipStyles} />
             )}
             {highlightTooltipShowing && (
-              <HighlightTooltip
-                ref={setHighlightTooltipPopper}
-                style={highlightTooltipStyles.popper}
-                attributes={highlightTooltipAttrs.popper}
-              />
+              <HighlightTooltip ref={setHighlightTooltipPopper} style={highlightTooltipStyles} />
             )}
           </div>
         </div>
