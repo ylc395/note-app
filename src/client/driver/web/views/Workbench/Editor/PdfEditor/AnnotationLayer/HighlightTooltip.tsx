@@ -5,9 +5,9 @@ import { BgColorsOutlined, CommentOutlined, DeleteOutlined } from '@ant-design/i
 import { runInAction } from 'mobx';
 
 import type { HighlightColors } from 'model/material/PdfEditor';
-import context from './Context';
-import SelectionTooltip from './SelectionTooltip';
-import CommentTextArea from './CommentTextArea';
+import context from '../Context';
+import SelectionTooltip from '../SelectionTooltip';
+import CommentTextArea from '../CommentTextArea';
 
 interface Props {
   style?: CSSProperties;
@@ -17,28 +17,26 @@ export default observer(
   forwardRef<HTMLDivElement | null, Props>(
     // eslint-disable-next-line mobx/missing-observer
     function HighlightTooltip({ style }, ref) {
+      /* eslint-disable @typescript-eslint/no-non-null-assertion */
       const ctx = useContext(context);
-      const { pdfViewer, hoveringAnnotationEl } = ctx;
+      const { pdfViewer, hoveringAnnotationId: annotationId } = ctx;
       const [visibleMenu, setVisibleMenu] = useState<string | undefined>();
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const editor = pdfViewer!.editor;
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const annotationId = hoveringAnnotationEl!.dataset.annotationId!;
-      const annotation = editor.getAnnotationById(annotationId);
+      const annotation = editor.getAnnotationById(annotationId!);
 
       const handleRemove = useCallback(() => {
-        editor.removeAnnotation(annotationId);
+        editor.removeAnnotation(annotationId!);
 
         runInAction(() => {
-          ctx.hoveringAnnotationEl = null;
+          ctx.hoveringAnnotationId = null;
         });
       }, [annotationId, ctx, editor]);
 
       const handleColorSelect = useCallback(
         (color: HighlightColors) => {
-          editor.updateAnnotation(annotationId, { annotation: { color } });
+          editor.updateAnnotation(annotationId!, { annotation: { color } });
           runInAction(() => {
-            ctx.hoveringAnnotationEl = null;
+            ctx.hoveringAnnotationId = null;
           });
         },
         [annotationId, ctx, editor],
@@ -46,16 +44,17 @@ export default observer(
 
       const handleComment = useCallback(
         (v: string) => {
-          editor.updateAnnotation(annotationId, { comment: v });
+          editor.updateAnnotation(annotationId!, { comment: v });
           runInAction(() => {
-            ctx.hoveringAnnotationEl = null;
+            ctx.hoveringAnnotationId = null;
           });
         },
         [annotationId, ctx, editor],
       );
+      /* eslint-enable @typescript-eslint/no-non-null-assertion */
 
       return (
-        <div ref={ref} style={style} className="z-10 rounded ">
+        <div ref={ref} style={style} className="z-20 rounded">
           <div className="w-fit bg-gray-600 ">
             <Button
               className="text-white"
@@ -72,9 +71,7 @@ export default observer(
             <Button className="text-white" type="text" icon={<DeleteOutlined />} onClick={handleRemove} />
           </div>
           {visibleMenu === 'colors' && <SelectionTooltip onSelect={handleColorSelect} />}
-          {visibleMenu === 'comment' && (
-            <CommentTextArea defaultValue={annotation?.comment} onConfirm={handleComment} />
-          )}
+          {visibleMenu === 'comment' && <CommentTextArea defaultValue={annotation.comment} onConfirm={handleComment} />}
         </div>
       );
     },

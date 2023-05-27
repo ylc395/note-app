@@ -154,6 +154,12 @@ export default class PdfEditor extends Editor<Entity> {
   }
 
   getAnnotationById(id: AnnotationVO['id']) {
-    return this.annotations.find(({ id: _id }) => _id === id);
+    const annotation = this.annotations.find(({ id: _id }) => _id === id);
+
+    if (!annotation) {
+      throw new Error('invalid id');
+    }
+
+    return annotation;
   }
 }

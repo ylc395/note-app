@@ -7,28 +7,44 @@ import { action } from 'mobx';
 import HighlightFragment from './HighlightFragment';
 import HighlightArea from './HighlightArea';
 import DraggingHighlightArea from './DraggingHighlightArea';
+import HighlightTooltip from './HighlightTooltip';
 
 import context from '../Context';
+import { useHighlightTooltip } from '../useTooltip';
 
 export default observer(function AnnotationLayer({ page }: { page: number }) {
   const ctx = useContext(context);
   const rootRef = useRef<HTMLDivElement | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const textLayerEl = ctx.pdfViewer!.getTextLayerEl(page);
+  const pageEl = ctx.pdfViewer!.getPageEl(page);
+
+  const {
+    setFloating: setHighlightTooltipPopper,
+    styles: highlightTooltipStyles,
+    showing: highlightTooltipShowing,
+  } = useHighlightTooltip(page);
 
   useEventListener(
     'mouseover',
     action((e: MouseEvent) => {
-      if (!(e.target as HTMLElement).dataset.annotationId) {
-        return;
-      }
+      const annotationId = (e.target as HTMLElement).dataset.annotationId;
 
-      ctx.hoveringAnnotationEl = e.target as HTMLElement;
+      if (annotationId) {
+        ctx.hoveringAnnotationId = annotationId;
+      }
     }),
     { target: rootRef },
   );
 
-  if (!textLayerEl) {
+  useEventListener(
+    'mouseleave',
+    action(() => {
+      ctx.hoveringAnnotationId = null;
+    }),
+    { target: rootRef },
+  );
+
+  if (!pageEl) {
     return null;
   }
 
@@ -51,7 +67,8 @@ export default observer(function AnnotationLayer({ page }: { page: number }) {
         <HighlightArea key={area.id} area={area} page={page} />
       ))}
       <DraggingHighlightArea page={page} />
+      {highlightTooltipShowing && <HighlightTooltip ref={setHighlightTooltipPopper} style={highlightTooltipStyles} />}
     </div>,
-    textLayerEl,
+    pageEl,
   );
 });

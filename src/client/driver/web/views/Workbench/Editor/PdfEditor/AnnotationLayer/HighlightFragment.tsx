@@ -26,11 +26,12 @@ export default observer(function HighlightFragment({
     <mark
       ref={markRef}
       className={clsx(
-        'absolute z-10 cursor-pointer',
-        annotationId === ctx.hoveringAnnotationEl?.dataset.annotationId ? 'brightness-150' : null,
+        'absolute z-10 cursor-pointer bg-clip-content opacity-30',
+        annotationId === ctx.hoveringAnnotationId ? 'brightness-150' : null,
       )}
       data-annotation-id={annotationId}
       style={{
+        borderBottom: annotationId === ctx.hoveringAnnotationId ? 'solid transparent 20px' : 0,
         backgroundColor: color,
         width: rect.width * horizontalRatio,
         height: rect.height * verticalRatio,

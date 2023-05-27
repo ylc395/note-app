@@ -11,7 +11,7 @@ export default observer(function HighlightArea({ area, page }: { area: Highlight
 
   return (
     <mark
-      className="absolute z-10"
+      className="absolute z-10 opacity-30"
       style={{
         backgroundColor: area.color || 'yellow',
         width: area.rect.width * horizontalRatio,

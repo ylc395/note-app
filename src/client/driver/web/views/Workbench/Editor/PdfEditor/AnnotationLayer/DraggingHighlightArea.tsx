@@ -17,8 +17,8 @@ interface Position {
 export default observer(function HighlightArea({ page }: { page: number }) {
   const { pdfViewer } = useContext(context);
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const textLayerEl = pdfViewer!.getTextLayerEl(page);
-  const { elementX, elementY, elementW, elementH } = useMouse(textLayerEl);
+  const pageEl = pdfViewer!.getPageEl(page);
+  const { elementX, elementY, elementW, elementH } = useMouse(pageEl);
   const [startPos, setStartPos] = useState<{ x: number; y: number } | null>(null);
   const [isKeyPressed, setIsKeyPressed] = useState(false);
   const [finalPos, setFinalPos] = useRafState<Position | null>(null);
@@ -27,8 +27,8 @@ export default observer(function HighlightArea({ page }: { page: number }) {
 
   const stopDragging = useCallback(() => {
     setStartPos(null);
-    textLayerEl?.classList.remove('select-none');
-  }, [textLayerEl]);
+    pageEl?.classList.remove('select-none');
+  }, [pageEl]);
 
   const startDragging = () => {
     if (!isKeyPressed) {
@@ -37,7 +37,7 @@ export default observer(function HighlightArea({ page }: { page: number }) {
 
     setFinalPos(null);
     setStartPos({ x: elementX, y: elementY });
-    textLayerEl?.classList.add('select-none');
+    pageEl?.classList.add('select-none');
   };
 
   useKeyPress('shift', () => setIsKeyPressed(true), { events: ['keydown'] });
@@ -50,7 +50,7 @@ export default observer(function HighlightArea({ page }: { page: number }) {
     { events: ['keyup'] },
   );
 
-  useEventListener('mousedown', startDragging, { target: textLayerEl });
+  useEventListener('mousedown', startDragging, { target: pageEl });
   useEventListener('mouseup', stopDragging);
   useClickAway(() => {
     if (!startPos && finalPos && !isKeyPressed) {

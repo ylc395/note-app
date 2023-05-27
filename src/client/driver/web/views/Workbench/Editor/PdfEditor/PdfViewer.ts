@@ -264,7 +264,7 @@ export default class PdfViewer {
     const startPage = PdfViewer.getPageFromNode(range.startContainer);
     const endPage = PdfViewer.getPageFromNode(getValidEndContainer(range));
     const pages = numberRange(startPage, endPage + 1).map((i) => {
-      const pageEl = this.getTextLayerEl(i);
+      const pageEl = this.getPageEl(i);
 
       if (!pageEl) {
         throw new Error('no pageEl');
@@ -363,8 +363,8 @@ export default class PdfViewer {
     );
   }
 
-  getTextLayerEl(page: number) {
-    return (this.pdfViewer.getPageView(page - 1) as PDFPageView | undefined)?.textLayer?.div;
+  getPageEl(page: number) {
+    return (this.pdfViewer.getPageView(page - 1) as PDFPageView | undefined)?.div;
   }
 
   private getCanvasEl(page: number) {
@@ -381,5 +381,9 @@ export default class PdfViewer {
     const { height, width } = this.pdfViewer.getPageView(page - 1) as PDFPageView;
 
     return { height, width };
+  }
+
+  get container() {
+    return this.pdfViewer.container;
   }
 }

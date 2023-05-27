@@ -4,10 +4,9 @@ import { observable, runInAction } from 'mobx';
 
 import type PdfEditor from 'model/material/PdfEditor';
 
-import { useHighlightTooltip, useSelectionTooltip } from './useTooltip';
+import { useSelectionTooltip } from './useTooltip';
 import Toolbar from './Toolbar';
 import SelectionTooltip from './SelectionTooltip';
-import HighlightTooltip from './HighlightTooltip';
 import AnnotationLayer from './AnnotationLayer';
 import HighlightList from './HighlightList';
 import PdfViewer from './PdfViewer';
@@ -20,9 +19,9 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
   const context = useLocalObservable<EditorContext>(
     () => ({
       pdfViewer: null,
-      hoveringAnnotationEl: null,
+      hoveringAnnotationId: null,
     }),
-    { pdfViewer: observable.ref, hoveringAnnotationEl: observable.ref },
+    { pdfViewer: observable.ref },
   );
 
   const {
@@ -32,12 +31,6 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
     destroy: destroySelectionTooltip,
     showing: selectionTooltipShowing,
   } = useSelectionTooltip(context.pdfViewer);
-
-  const {
-    setFloating: setHighlightTooltipPopper,
-    styles: highlightTooltipStyles,
-    showing: highlightTooltipShowing,
-  } = useHighlightTooltip(context.pdfViewer, context.hoveringAnnotationEl);
 
   useEffect(() => {
     if (!editor.entity || !containerElRef.current || !viewerElRef.current) {
@@ -68,7 +61,7 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
       <div className="flex h-full w-full">
         <div className="flex h-full grow flex-col">
           <Toolbar />
-          <div className="relative grow">
+          <div className="relative grow overflow-hidden">
             <div className="absolute inset-0 overflow-auto" ref={containerElRef}>
               <div className="select-text" ref={viewerElRef}></div>
               {context.pdfViewer &&
@@ -76,9 +69,6 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
             </div>
             {selectionTooltipShowing && (
               <SelectionTooltip ref={setSelectionTooltipPopper} style={selectionTooltipStyles} />
-            )}
-            {highlightTooltipShowing && (
-              <HighlightTooltip ref={setHighlightTooltipPopper} style={highlightTooltipStyles} />
             )}
           </div>
         </div>

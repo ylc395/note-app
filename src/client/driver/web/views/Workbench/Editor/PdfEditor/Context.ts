@@ -1,9 +1,11 @@
 import { createContext } from 'react';
+
+import type { AnnotationVO } from 'interface/material';
 import type PdfViewer from './PdfViewer';
 
 export interface EditorContext {
   pdfViewer: PdfViewer | null;
-  hoveringAnnotationEl: HTMLElement | null;
+  hoveringAnnotationId: AnnotationVO['id'] | null;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
