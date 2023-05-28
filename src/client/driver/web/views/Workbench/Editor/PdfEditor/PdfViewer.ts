@@ -383,7 +383,7 @@ export default class PdfViewer {
     return { height, width };
   }
 
-  get container() {
-    return this.pdfViewer.container;
+  jumpToPage(page: number) {
+    this.pdfViewer.currentPageNumber = page;
   }
 }

@@ -117,12 +117,18 @@ export const annotationDTOSchema = discriminatedUnion('type', [
 
 export type AnnotationDTO = Infer<typeof annotationDTOSchema>;
 
-export type AnnotationVO = {
+interface CommonAnnotationVO {
   id: EntityId;
   comment: string | null;
   updatedAt: number;
   createdAt: number;
-} & (
-  | { type: AnnotationTypes.Highlight; annotation: HighlightVO }
-  | { type: AnnotationTypes.HighlightArea; annotation: HighlightAreaVO }
-);
+}
+
+export type HighlightAnnotationVO = CommonAnnotationVO & { type: AnnotationTypes.Highlight; annotation: HighlightVO };
+
+export type HighlightAreaAnnotationVO = CommonAnnotationVO & {
+  type: AnnotationTypes.HighlightArea;
+  annotation: HighlightAreaVO;
+};
+
+export type AnnotationVO = HighlightAnnotationVO | HighlightAreaAnnotationVO;

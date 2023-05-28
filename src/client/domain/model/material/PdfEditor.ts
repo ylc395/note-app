@@ -1,7 +1,6 @@
 import { computed, makeObservable, observable, runInAction } from 'mobx';
 import groupBy from 'lodash/groupBy';
 import remove from 'lodash/remove';
-import merge from 'lodash/merge';
 
 import { EntityTypes } from 'interface/entity';
 import {
@@ -44,15 +43,15 @@ export default class PdfEditor extends Editor<Entity> {
   @computed
   get highlights() {
     return this.annotations
-      .map(({ annotation, id, type }) => {
+      .map(({ annotation, type, ...attr }) => {
         if (type === AnnotationTypes.Highlight) {
           const pages = annotation.fragments.map(({ page }) => page);
 
-          return { id, annotation, type, startPage: Math.min(...pages), endPage: Math.max(...pages) };
+          return { ...attr, annotation, type, startPage: Math.min(...pages), endPage: Math.max(...pages) };
         }
 
         if (type === AnnotationTypes.HighlightArea) {
-          return { id, annotation, type, startPage: annotation.page, endPage: annotation.page };
+          return { ...attr, annotation, type, startPage: annotation.page, endPage: annotation.page };
         }
 
         throw new Error('invalid type');

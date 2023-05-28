@@ -98,9 +98,9 @@ export default observer(function HighlightArea({ page }: { page: number }) {
 
   return finalPos ? (
     <div ref={rootRef}>
-      <div ref={refs.setReference} className="absolute bg-yellow-400" style={finalPos}></div>
+      <div ref={refs.setReference} className="absolute bg-yellow-400 opacity-30" style={finalPos}></div>
       {finalPos && !startPos && (
-        <div onClick={create} ref={refs.setFloating} style={floatingStyles}>
+        <div className="z-20" onClick={create} ref={refs.setFloating} style={floatingStyles}>
           Add Highlight
         </div>
       )}

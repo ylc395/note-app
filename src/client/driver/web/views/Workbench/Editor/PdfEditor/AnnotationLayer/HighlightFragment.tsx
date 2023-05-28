@@ -1,34 +1,30 @@
 import { observer } from 'mobx-react-lite';
-import { useContext, useRef } from 'react';
+import { useContext } from 'react';
 import clsx from 'clsx';
 
 import type { AnnotationVO } from 'interface/material';
+import { BUFFER } from './constants';
 import context from '../Context';
-
-export const BUFFER = 20;
 
 export default observer(function HighlightFragment({
   page,
-  fragment: { rect, color },
-  annotationId,
+  fragment: { rect, color, annotationId },
 }: {
   fragment: {
     rect: { x: number; y: number; height: number; width: number };
     color: string;
+    annotationId: AnnotationVO['id'];
   };
   page: number;
-  annotationId: AnnotationVO['id'];
 }) {
   const ctx = useContext(context);
-  const markRef = useRef<HTMLElement | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const { horizontalRatio, verticalRatio } = ctx.pdfViewer!.getPageRatio(page);
 
   return (
     <mark
-      ref={markRef}
       className={clsx(
-        'absolute z-10 cursor-pointer bg-clip-content opacity-30',
+        'absolute z-30 cursor-pointer bg-clip-content opacity-30',
         annotationId === ctx.hoveringAnnotationId ? 'brightness-150' : null,
       )}
       data-annotation-id={annotationId}

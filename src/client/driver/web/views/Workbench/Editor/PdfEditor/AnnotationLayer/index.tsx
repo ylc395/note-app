@@ -44,6 +44,14 @@ export default observer(function AnnotationLayer({ page }: { page: number }) {
     { target: rootRef },
   );
 
+  useEventListener(
+    'mouseleave',
+    action(() => {
+      ctx.hoveringAnnotationId = null;
+    }),
+    { target: rootRef },
+  );
+
   if (!pageEl) {
     return null;
   }
@@ -56,12 +64,7 @@ export default observer(function AnnotationLayer({ page }: { page: number }) {
   return createPortal(
     <div ref={rootRef}>
       {fragments.map((fragment) => (
-        <HighlightFragment
-          key={fragment.highlightId}
-          annotationId={fragment.annotationId}
-          fragment={fragment}
-          page={page}
-        />
+        <HighlightFragment key={fragment.highlightId} fragment={fragment} page={page} />
       ))}
       {areas.map((area) => (
         <HighlightArea key={area.id} area={area} page={page} />

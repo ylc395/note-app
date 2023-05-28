@@ -7,7 +7,7 @@ import { AnnotationTypes } from 'interface/material';
 import type PdfViewer from './PdfViewer';
 import { isTextNode, getValidEndContainer } from './domUtils';
 import context from './Context';
-import { BUFFER } from './AnnotationLayer/HighlightFragment';
+import { BUFFER } from './AnnotationLayer/constants';
 
 function getSelectionEnd(pdfViewer: PdfViewer) {
   const result = pdfViewer.getSelectionRange();
@@ -89,6 +89,10 @@ export function useHighlightTooltip(page: number) {
         return endPage === page
           ? last(pdfViewer.getPageEl(page)?.querySelectorAll(`[data-annotation-id="${annotationId}"]`))
           : undefined;
+      }
+
+      if (type === AnnotationTypes.HighlightArea) {
+        return pdfViewer.getPageEl(page)?.querySelector(`[data-annotation-id="${annotationId}"]`);
       }
     }
   }, [annotationId, page, pdfViewer]);
