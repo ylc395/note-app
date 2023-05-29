@@ -1,7 +1,8 @@
 import { Button, InputNumber, Select } from 'antd';
-import { useContext } from 'react';
+import { useContext, useRef } from 'react';
 import { observer } from 'mobx-react-lite';
 import { ArrowLeftOutlined, ArrowRightOutlined, PlusOutlined, MinusOutlined } from '@ant-design/icons';
+import { useKeyPress } from 'ahooks';
 
 import { ScaleValues, SCALE_STEPS } from './PdfViewer';
 import context from './Context';
@@ -23,6 +24,19 @@ const scaleValues = scaleOptions.map(({ value }) => value) as Array<string | num
 
 export default observer(function Toolbar() {
   const { pdfViewer } = useContext(context);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  useKeyPress(
+    'enter',
+    (e) => {
+      if (!e.target) {
+        return null;
+      }
+
+      pdfViewer?.jumpToPage(Number((e.target as HTMLInputElement).value));
+    },
+    { target: inputRef },
+  );
 
   return (
     <div className="relative">
@@ -60,8 +74,10 @@ export default observer(function Toolbar() {
           onClick={() => pdfViewer?.goToPreviousPage()}
         ></Button>
         <span className="px-2 text-sm">
-          {pdfViewer && <InputNumber size="small" className="w-12" controls={false} value={pdfViewer.page.current} />} /
-          {pdfViewer?.page.total || 0}
+          {pdfViewer && (
+            <InputNumber size="small" className="w-12" controls={false} value={pdfViewer.page.current} ref={inputRef} />
+          )}{' '}
+          /{pdfViewer?.page.total || 0}
         </span>
         <Button
           icon={<ArrowRightOutlined />}

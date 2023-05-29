@@ -3,6 +3,7 @@ import { EventBus, PDFViewer, type PDFPageView } from 'pdfjs-dist/web/pdf_viewer
 import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.min.js?worker';
 import numberRange from 'lodash/range';
 import intersection from 'lodash/intersection';
+import union from 'lodash/union';
 import { makeObservable, observable, when, action, runInAction, computed } from 'mobx';
 
 import { AnnotationTypes, type HighlightAreaDTO, type HighlightDTO } from 'interface/material';
@@ -80,10 +81,14 @@ export default class PdfViewer {
 
     return intersection(
       numberRange(
-        Math.max(0, this.page.current - redundancy),
+        Math.max(1, this.page.current - redundancy),
         Math.min(this.page.total, this.page.current + redundancy) + 1,
       ),
       Array.from(this.renderedPages),
+      union(
+        Object.keys(this.editor.highlightAreasByPage).map(Number),
+        Object.keys(this.editor.highlightFragmentsByPage).map(Number),
+      ),
     );
   }
 
@@ -120,7 +125,8 @@ export default class PdfViewer {
     }
   };
 
-  goToPage(page: number) {
+  @action
+  jumpToPage(page: number) {
     this.pdfViewer.currentPageNumber = page;
   }
 
@@ -137,12 +143,6 @@ export default class PdfViewer {
     this.loadingTask?.destroy();
     this.cancelLoadingBlob();
     document.removeEventListener('selectionchange', this.handleSelection);
-  }
-
-  getState() {
-    return {
-      page: this.pdfViewer.currentPageNumber,
-    };
   }
 
   @action.bound
@@ -381,9 +381,5 @@ export default class PdfViewer {
     const { height, width } = this.pdfViewer.getPageView(page - 1) as PDFPageView;
 
     return { height, width };
-  }
-
-  jumpToPage(page: number) {
-    this.pdfViewer.currentPageNumber = page;
   }
 }
