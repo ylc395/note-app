@@ -65,7 +65,7 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
             <div className="absolute inset-0 overflow-auto" ref={containerElRef}>
               <div className="select-text" ref={viewerElRef}></div>
               {context.pdfViewer &&
-                context.pdfViewer.visiblePages.map((page) => <AnnotationLayer key={page} page={page} />)}
+                context.pdfViewer.annotationPages.map((page) => <AnnotationLayer key={page} page={page} />)}
             </div>
             {selectionTooltipShowing && (
               <SelectionTooltip ref={setSelectionTooltipPopper} style={selectionTooltipStyles} />

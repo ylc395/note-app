@@ -39,7 +39,7 @@ export default class PdfViewer {
   private readonly cancelLoadingBlob: ReturnType<typeof when>;
 
   @observable
-  private renderedPages = new Set<number>();
+  private visiblePages: number[] = [];
 
   @observable
   readonly page = {
@@ -61,30 +61,25 @@ export default class PdfViewer {
     );
 
     this.pdfViewer.eventBus.on(
-      'pagerender',
-      action(({ pageNumber }: { pageNumber: number }) => {
-        this.renderedPages.add(pageNumber);
-      }),
-    );
-
-    this.pdfViewer.eventBus.on(
       'pagechanging',
       action(({ pageNumber }: { pageNumber: number }) => {
         this.page.current = pageNumber;
       }),
     );
+
+    this.pdfViewer.eventBus.on(
+      'updateviewarea', // frequent event but we don't debounce this to ensure UE
+      action(() => {
+        const { ids } = this.pdfViewer._getVisiblePages() as { ids: Set<number> };
+        this.visiblePages = Array.from(ids);
+      }),
+    );
   }
 
   @computed
-  get visiblePages() {
-    const redundancy = 2;
-
+  get annotationPages() {
     return intersection(
-      numberRange(
-        Math.max(1, this.page.current - redundancy),
-        Math.min(this.page.total, this.page.current + redundancy) + 1,
-      ),
-      Array.from(this.renderedPages),
+      this.visiblePages,
       union(
         Object.keys(this.editor.highlightAreasByPage).map(Number),
         Object.keys(this.editor.highlightFragmentsByPage).map(Number),
