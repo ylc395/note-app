@@ -1,6 +1,6 @@
 import { type CSSProperties, forwardRef } from 'react';
 
-import Palette from './AnnotationLayer/HighlightTooltip/Palette';
+import Palette from '../AnnotationLayer/HighlightTooltip/Palette';
 
 interface Props {
   style?: CSSProperties;

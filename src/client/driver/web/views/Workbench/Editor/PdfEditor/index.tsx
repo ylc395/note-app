@@ -4,9 +4,9 @@ import { observable, runInAction } from 'mobx';
 
 import type PdfEditor from 'model/material/PdfEditor';
 
-import { useSelectionTooltip } from './useTooltip';
 import Toolbar from './Toolbar';
 import SelectionTooltip from './SelectionTooltip';
+import useSelectionTooltip from './SelectionTooltip/useTooltip';
 import AnnotationLayer from './AnnotationLayer';
 import HighlightList from './HighlightList';
 import PdfViewer from './PdfViewer';

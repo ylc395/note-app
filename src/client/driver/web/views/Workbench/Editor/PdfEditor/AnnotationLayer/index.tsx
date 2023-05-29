@@ -10,7 +10,7 @@ import DraggingHighlightArea from './DraggingHighlightArea';
 import HighlightTooltip from './HighlightTooltip';
 
 import context from '../Context';
-import { useHighlightTooltip } from '../useTooltip';
+import useHighlightTooltip from './HighlightTooltip/useHighlightTooltip';
 
 export default observer(function AnnotationLayer({ page }: { page: number }) {
   const ctx = useContext(context);

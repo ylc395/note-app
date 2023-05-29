@@ -1,5 +1,5 @@
 import { Button } from 'antd';
-import { useState, useContext, forwardRef, type CSSProperties, useCallback } from 'react';
+import { useState, useContext, forwardRef, type CSSProperties, useCallback, useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 import { BgColorsOutlined, CommentOutlined, DeleteOutlined } from '@ant-design/icons';
 import { runInAction } from 'mobx';
@@ -23,6 +23,10 @@ export default observer(
       const [visibleMenu, setVisibleMenu] = useState<string | undefined>();
       const editor = pdfViewer!.editor;
       const annotation = editor.getAnnotationById(annotationId!);
+
+      useEffect(() => {
+        setVisibleMenu(undefined);
+      }, [annotationId]);
 
       const handleRemove = useCallback(() => {
         editor.removeAnnotation(annotationId!);
