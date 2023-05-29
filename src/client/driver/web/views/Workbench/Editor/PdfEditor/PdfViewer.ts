@@ -145,14 +145,20 @@ export default class PdfViewer {
     const _value = value;
     const { currentScale } = this.pdfViewer;
 
-    if (value === 'up') {
-      this.scale = this.pdfViewer.currentScale = SCALE_STEPS.find((step) => step > currentScale) || currentScale;
-    } else if (value === 'down') {
-      this.scale = this.pdfViewer.currentScale = SCALE_STEPS.findLast((step) => step < currentScale) || currentScale;
-    } else {
-      this.scale = _value;
-      this.pdfViewer.currentScaleValue = String(_value);
-    }
+    this.visiblePages = [];
+
+    // wait annotationLayers to be cleared by react
+    // or react will process un-existing annotationLayers (emptied by pdf.js) and throw error finally
+    setTimeout(() => {
+      if (value === 'up') {
+        this.scale = this.pdfViewer.currentScale = SCALE_STEPS.find((step) => step > currentScale) || currentScale;
+      } else if (value === 'down') {
+        this.scale = this.pdfViewer.currentScale = SCALE_STEPS.findLast((step) => step < currentScale) || currentScale;
+      } else {
+        this.scale = _value;
+        this.pdfViewer.currentScaleValue = String(_value);
+      }
+    }, 200);
   }
 
   async createHighlight(color: string) {
