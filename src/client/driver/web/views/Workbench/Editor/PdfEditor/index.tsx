@@ -9,8 +9,9 @@ import SelectionTooltip from './SelectionTooltip';
 import useSelectionTooltip from './SelectionTooltip/useTooltip';
 import AnnotationLayer from './AnnotationLayer';
 import HighlightList from './HighlightList';
-import PdfViewer from './PdfViewer';
+import PdfViewer, { Panels } from './PdfViewer';
 import Context, { type EditorContext } from './Context';
+import Outline from './Outline';
 
 export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }) {
   const containerElRef = useRef<HTMLDivElement | null>(null);
@@ -61,15 +62,18 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
       <div className="flex h-full w-full">
         <div className="flex h-full grow flex-col">
           <Toolbar />
-          <div className="relative grow overflow-hidden">
-            <div className="absolute inset-0 overflow-auto" ref={containerElRef}>
-              <div className="select-text" ref={viewerElRef}></div>
-              {context.pdfViewer &&
-                context.pdfViewer.annotationPages.map((page) => <AnnotationLayer key={page} page={page} />)}
+          <div className="relative flex min-h-0 grow">
+            {context.pdfViewer?.panelsVisibility[Panels.Outline] && <Outline />}
+            <div className="relative grow overflow-hidden">
+              <div className="absolute inset-0 overflow-auto" ref={containerElRef}>
+                <div className="select-text" ref={viewerElRef}></div>
+                {context.pdfViewer &&
+                  context.pdfViewer.annotationPages.map((page) => <AnnotationLayer key={page} page={page} />)}
+              </div>
+              {selectionTooltipShowing && (
+                <SelectionTooltip ref={setSelectionTooltipPopper} style={selectionTooltipStyles} />
+              )}
             </div>
-            {selectionTooltipShowing && (
-              <SelectionTooltip ref={setSelectionTooltipPopper} style={selectionTooltipStyles} />
-            )}
           </div>
         </div>
         <HighlightList />

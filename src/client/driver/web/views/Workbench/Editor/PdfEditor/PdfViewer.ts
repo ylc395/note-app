@@ -1,4 +1,4 @@
-import { type PDFDocumentLoadingTask, getDocument, PDFWorker } from 'pdfjs-dist';
+import { type PDFDocumentLoadingTask, type PDFDocumentProxy, PDFWorker, getDocument } from 'pdfjs-dist';
 import { EventBus, PDFViewer, type PDFPageView } from 'pdfjs-dist/web/pdf_viewer';
 import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.min.js?worker';
 import numberRange from 'lodash/range';
@@ -32,11 +32,30 @@ export const SCALE_STEPS = [
   ...numberRange(12, 30, 2).map((i) => i / 10),
 ] as const;
 
+export interface OutlineItem {
+  title: string;
+  children: OutlineItem[];
+}
+
+export enum Panels {
+  Outline,
+  HighlightList,
+}
+
 export default class PdfViewer {
   private readonly pdfViewer: PDFViewer;
   readonly editor: PdfEditor;
   private loadingTask?: PDFDocumentLoadingTask;
   private readonly cancelLoadingBlob: ReturnType<typeof when>;
+
+  @observable
+  outline?: OutlineItem[];
+
+  @observable
+  readonly panelsVisibility: Record<Panels, boolean> = {
+    [Panels.Outline]: false,
+    [Panels.HighlightList]: true,
+  };
 
   @observable
   private visiblePages: number[] = [];
@@ -109,7 +128,22 @@ export default class PdfViewer {
       this.page.total = doc.numPages;
     });
 
+    this.initOutline(doc);
     document.addEventListener('selectionchange', this.handleSelection);
+  }
+
+  private async initOutline(doc: PDFDocumentProxy) {
+    const outline = await doc.getOutline();
+    type RawOutlineItem = { title: string; items: RawOutlineItem[] };
+    const toOutlineItem = ({ title, items }: RawOutlineItem): OutlineItem => ({
+      title,
+      children: items.map(toOutlineItem),
+    });
+    const items = outline.map(toOutlineItem);
+
+    runInAction(() => {
+      this.outline = items;
+    });
   }
 
   private readonly handleSelection = () => {
@@ -382,5 +416,10 @@ export default class PdfViewer {
     const { height, width } = this.pdfViewer.getPageView(page - 1) as PDFPageView;
 
     return { height, width };
+  }
+
+  @action
+  togglePanel(key: Panels) {
+    this.panelsVisibility[key] = !this.panelsVisibility[key];
   }
 }
