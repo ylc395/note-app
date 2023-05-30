@@ -76,7 +76,7 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
             </div>
           </div>
         </div>
-        <HighlightList />
+        {context.pdfViewer?.panelsVisibility[Panels.HighlightList] && <HighlightList />}
       </div>
     </Context.Provider>
   );

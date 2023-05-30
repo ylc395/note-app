@@ -139,7 +139,7 @@ export default class PdfViewer {
       title,
       children: items.map(toOutlineItem),
     });
-    const items = outline.map(toOutlineItem);
+    const items = outline?.map(toOutlineItem) || [];
 
     runInAction(() => {
       this.outline = items;
