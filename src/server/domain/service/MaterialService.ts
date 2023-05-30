@@ -105,10 +105,10 @@ export default class MaterialService extends BaseService {
     let annotationSchema;
     switch (annotation.type) {
       case AnnotationTypes.Highlight:
-        annotationSchema = highlightDTOSchema.pick({ icon: true, content: true }).partial();
+        annotationSchema = highlightDTOSchema.pick({ color: true }).partial().strict();
         break;
       case AnnotationTypes.HighlightArea:
-        annotationSchema = highlightAreaDTOSchema.partial();
+        annotationSchema = highlightAreaDTOSchema.pick({ color: true }).partial().strict();
         break;
       default:
         throw new Error('invalid type');

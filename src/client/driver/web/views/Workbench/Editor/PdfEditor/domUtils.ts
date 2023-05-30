@@ -2,7 +2,7 @@ export const isTextNode = (node: Node): node is Text => node.nodeType === docume
 
 export const isElement = (node: Node): node is HTMLElement => node.nodeType === document.ELEMENT_NODE;
 
-export const isVisible = (node: Node) =>
+const isVisible = (node: Node) =>
   isElement(node) ? node === document.body || Boolean(node.offsetParent) : Boolean(node.parentElement?.offsetParent);
 
 // when double click an element to select text, `endOffset` often comes with 0 and `endContainer` is not correct

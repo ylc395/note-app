@@ -82,7 +82,6 @@ const rectSchema = object({
 });
 
 export const highlightDTOSchema = object({
-  icon: string().optional(),
   content: string(),
   color: string(),
   fragments: array(
@@ -95,7 +94,6 @@ export const highlightDTOSchema = object({
 
 export const highlightAreaDTOSchema = object({
   color: string().optional(),
-  icon: string().optional(),
   snapshot: string(),
   rect: rectSchema,
   page: number(),
