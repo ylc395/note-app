@@ -1,6 +1,8 @@
 import { computed, makeObservable, observable, runInAction } from 'mobx';
 import groupBy from 'lodash/groupBy';
 import remove from 'lodash/remove';
+import { type PDFDocumentLoadingTask, type PDFDocumentProxy, PDFWorker, getDocument } from 'pdfjs-dist';
+import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.min.js?worker';
 
 import { EntityTypes } from 'interface/entity';
 import {
@@ -17,7 +19,14 @@ import type Tile from 'model/workbench/Tile';
 
 interface Entity {
   metadata: EntityMaterialVO;
-  blob: ArrayBuffer;
+  doc: PDFDocumentProxy;
+}
+
+export interface OutlineItem {
+  title: string;
+  children: OutlineItem[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  dest: any;
 }
 
 export enum HighlightColors {
@@ -34,6 +43,11 @@ export default class PdfEditor extends Editor<Entity> {
     makeObservable(this);
     this.init();
   }
+
+  @observable.ref
+  outline?: OutlineItem[];
+
+  private loadingTask?: PDFDocumentLoadingTask;
 
   readonly entityType = EntityTypes.Material;
 
@@ -70,7 +84,11 @@ export default class PdfEditor extends Editor<Entity> {
       this.remote.get<void, ArrayBuffer>(`/materials/${this.entityId}/blob`),
     ]);
 
-    this.load({ metadata, blob });
+    this.loadingTask = getDocument({ data: blob.slice(0), worker: new PDFWorker({ port: new PdfJsWorker() }) });
+    const doc = await this.loadingTask.promise;
+
+    this.load({ metadata, doc });
+    this.initOutline(doc);
 
     const { body: annotations } = await this.remote.get<unknown, AnnotationVO[]>(
       `/materials/${this.entityId}/annotations`,
@@ -160,5 +178,25 @@ export default class PdfEditor extends Editor<Entity> {
     }
 
     return annotation;
+  }
+
+  destroy() {
+    super.destroy();
+    this.loadingTask?.destroy();
+  }
+
+  private async initOutline(doc: PDFDocumentProxy) {
+    const outline = await doc.getOutline();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    type RawOutlineItem = { title: string; items: RawOutlineItem[]; dest: any };
+    const toOutlineItem = ({ items, ...attrs }: RawOutlineItem): OutlineItem => ({
+      children: items.map(toOutlineItem),
+      ...attrs,
+    });
+    const items = outline?.map(toOutlineItem) || [];
+
+    runInAction(() => {
+      this.outline = items;
+    });
   }
 }

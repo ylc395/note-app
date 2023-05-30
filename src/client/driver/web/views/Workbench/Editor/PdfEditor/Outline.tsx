@@ -1,10 +1,10 @@
 import { observer } from 'mobx-react-lite';
 import { useContext } from 'react';
 import { Resizable } from 're-resizable';
-
-import context from './Context';
-import type { OutlineItem } from './PdfViewer';
 import clsx from 'clsx';
+
+import type { OutlineItem } from 'model/material/PdfEditor';
+import context from './Context';
 
 const OutlineItemView = observer(function OutlineItemView({
   item: { title, children, dest },
@@ -30,13 +30,13 @@ const OutlineItemView = observer(function OutlineItemView({
 export default observer(function Outline() {
   const { pdfViewer } = useContext(context);
 
-  if (!pdfViewer?.outline) {
+  if (!pdfViewer?.editor.outline) {
     return null;
   }
 
   return (
     <Resizable enable={{ right: true }} defaultSize={{ width: 300, height: 'auto' }} className="h-full overflow-auto">
-      {pdfViewer.outline.map((item, i) => (
+      {pdfViewer.editor.outline.map((item, i) => (
         <OutlineItemView level={1} item={item} key={i} />
       ))}
     </Resizable>

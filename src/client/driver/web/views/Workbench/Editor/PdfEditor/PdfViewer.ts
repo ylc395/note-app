@@ -1,6 +1,4 @@
-import { type PDFDocumentLoadingTask, type PDFDocumentProxy, PDFWorker, getDocument } from 'pdfjs-dist';
 import { EventBus, PDFViewer, PDFLinkService, type PDFPageView } from 'pdfjs-dist/web/pdf_viewer';
-import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.min.js?worker';
 import numberRange from 'lodash/range';
 import intersection from 'lodash/intersection';
 import union from 'lodash/union';
@@ -32,13 +30,6 @@ export const SCALE_STEPS = [
   ...numberRange(12, 30, 2).map((i) => i / 10),
 ] as const;
 
-export interface OutlineItem {
-  title: string;
-  children: OutlineItem[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  dest: any;
-}
-
 export enum Panels {
   Outline,
   HighlightList,
@@ -47,11 +38,7 @@ export enum Panels {
 export default class PdfViewer {
   private readonly pdfViewer: PDFViewer;
   readonly editor: PdfEditor;
-  private loadingTask?: PDFDocumentLoadingTask;
-  private readonly cancelLoadingBlob: ReturnType<typeof when>;
-
-  @observable.ref
-  outline?: OutlineItem[];
+  private readonly cancelLoadingDoc: ReturnType<typeof when>;
 
   @observable
   readonly panelsVisibility: Record<Panels, boolean> = {
@@ -75,10 +62,9 @@ export default class PdfViewer {
     makeObservable(this);
     this.pdfViewer = PdfViewer.createPDFViewer(options);
     this.editor = options.editor;
-    this.cancelLoadingBlob = when(
+    this.cancelLoadingDoc = when(
       () => Boolean(options.editor.entity),
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      () => this.load(options.editor.entity!.blob),
+      () => this.init(),
     );
 
     this.pdfViewer.eventBus.on(
@@ -111,21 +97,19 @@ export default class PdfViewer {
   private static createPDFViewer(options: Options) {
     const eventBus = new EventBus();
     const pdfViewer = new PDFViewer({ ...options, eventBus, linkService: new PDFLinkService({ eventBus }) });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (pdfViewer.linkService as any).setViewer(pdfViewer);
     // pdfViewer.scrollMode = ScrollMode.PAGE;
 
     return pdfViewer;
   }
 
-  private async load(blob: ArrayBuffer) {
-    if (this.loadingTask) {
-      throw new Error('loaded');
+  private async init() {
+    if (!this.editor.entity) {
+      throw new Error('not ready');
     }
 
-    const pdfWorker = new PDFWorker({ port: new PdfJsWorker() });
-    this.loadingTask = getDocument({ data: blob.slice(0), worker: pdfWorker });
-
-    const doc = await this.loadingTask.promise;
+    const { doc } = this.editor.entity;
     this.pdfViewer.setDocument(doc);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (this.pdfViewer.linkService as any).setDocument(doc);
@@ -134,23 +118,7 @@ export default class PdfViewer {
       this.page.total = doc.numPages;
     });
 
-    this.initOutline(doc);
     document.addEventListener('selectionchange', this.handleSelection);
-  }
-
-  private async initOutline(doc: PDFDocumentProxy) {
-    const outline = await doc.getOutline();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    type RawOutlineItem = { title: string; items: RawOutlineItem[]; dest: any };
-    const toOutlineItem = ({ items, ...attrs }: RawOutlineItem): OutlineItem => ({
-      children: items.map(toOutlineItem),
-      ...attrs,
-    });
-    const items = outline?.map(toOutlineItem) || [];
-
-    runInAction(() => {
-      this.outline = items;
-    });
   }
 
   private readonly handleSelection = () => {
@@ -183,8 +151,7 @@ export default class PdfViewer {
 
   destroy() {
     this.pdfViewer.cleanup();
-    this.loadingTask?.destroy();
-    this.cancelLoadingBlob();
+    this.cancelLoadingDoc();
     document.removeEventListener('selectionchange', this.handleSelection);
   }
 
