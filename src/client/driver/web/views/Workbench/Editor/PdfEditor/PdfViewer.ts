@@ -1,4 +1,4 @@
-import { EventBus, PDFViewer, PDFLinkService, type PDFPageView } from 'pdfjs-dist/web/pdf_viewer';
+import { EventBus, PDFViewer, type PDFPageView } from 'pdfjs-dist/web/pdf_viewer';
 import numberRange from 'lodash/range';
 import intersection from 'lodash/intersection';
 import union from 'lodash/union';
@@ -96,9 +96,7 @@ export default class PdfViewer {
 
   private static createPDFViewer(options: Options) {
     const eventBus = new EventBus();
-    const pdfViewer = new PDFViewer({ ...options, eventBus, linkService: new PDFLinkService({ eventBus }) });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (pdfViewer.linkService as any).setViewer(pdfViewer);
+    const pdfViewer = new PDFViewer({ ...options, eventBus });
     // pdfViewer.scrollMode = ScrollMode.PAGE;
 
     return pdfViewer;
@@ -111,8 +109,6 @@ export default class PdfViewer {
 
     const { doc } = this.editor.entity;
     this.pdfViewer.setDocument(doc);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (this.pdfViewer.linkService as any).setDocument(doc);
 
     runInAction(() => {
       this.page.total = doc.numPages;
@@ -130,15 +126,8 @@ export default class PdfViewer {
   };
 
   @action
-  jumpToPage(page: unknown) {
-    if (typeof page === 'number') {
-      this.pdfViewer.currentPageNumber = page;
-    } else {
-      this.doAfterCleaning(() => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        this.pdfViewer.linkService.goToDestination(page as any);
-      });
-    }
+  jumpToPage(page: number) {
+    this.pdfViewer.currentPageNumber = page;
   }
 
   goToNextPage() {

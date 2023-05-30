@@ -25,8 +25,7 @@ interface Entity {
 export interface OutlineItem {
   title: string;
   children: OutlineItem[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  dest: any;
+  key: string;
 }
 
 export enum HighlightColors {
@@ -48,6 +47,9 @@ export default class PdfEditor extends Editor<Entity> {
   outline?: OutlineItem[];
 
   private loadingTask?: PDFDocumentLoadingTask;
+
+  @observable
+  readonly outlinePageNumberMap: Record<string, number> = {};
 
   readonly entityType = EntityTypes.Material;
 
@@ -189,14 +191,32 @@ export default class PdfEditor extends Editor<Entity> {
     const outline = await doc.getOutline();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     type RawOutlineItem = { title: string; items: RawOutlineItem[]; dest: any };
-    const toOutlineItem = ({ items, ...attrs }: RawOutlineItem): OutlineItem => ({
-      children: items.map(toOutlineItem),
-      ...attrs,
-    });
-    const items = outline?.map(toOutlineItem) || [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const outlineDestsMap: Record<string, any> = {};
+    const toOutlineItem = ({ items, dest, title }: RawOutlineItem, keys: number[]): OutlineItem => {
+      const key = keys.join('-');
+      outlineDestsMap[key] = dest;
+
+      return {
+        children: items.map((item, i) => toOutlineItem(item, [...keys, i])),
+        title,
+        key,
+      };
+    };
+
+    const items = outline?.map((item, i) => toOutlineItem(item, [i])) || [];
 
     runInAction(() => {
       this.outline = items;
     });
+
+    for (const [key, dest] of Object.entries(outlineDestsMap)) {
+      if (dest?.[0]) {
+        const index = await doc.getPageIndex(dest[0]);
+        runInAction(() => {
+          this.outlinePageNumberMap[key] = index + 1;
+        });
+      }
+    }
   }
 }
