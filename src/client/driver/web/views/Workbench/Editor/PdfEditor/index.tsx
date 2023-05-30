@@ -74,9 +74,9 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
                 <SelectionTooltip ref={setSelectionTooltipPopper} style={selectionTooltipStyles} />
               )}
             </div>
+            {context.pdfViewer?.panelsVisibility[Panels.HighlightList] && <HighlightList />}
           </div>
         </div>
-        {context.pdfViewer?.panelsVisibility[Panels.HighlightList] && <HighlightList />}
       </div>
     </Context.Provider>
   );

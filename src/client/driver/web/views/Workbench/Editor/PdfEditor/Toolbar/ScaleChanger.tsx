@@ -34,7 +34,7 @@ export default observer(function ScaleChanger() {
       />
       {pdfViewer && (
         <Select
-          onChange={pdfViewer.setScale}
+          onChange={(v) => pdfViewer.setScale(v)}
           className="w-28"
           size="small"
           value={scaleValues.includes(pdfViewer.scale) ? pdfViewer.scale : `${(pdfViewer.scale as number) * 100}%`}

@@ -1,5 +1,5 @@
 import { type PDFDocumentLoadingTask, type PDFDocumentProxy, PDFWorker, getDocument } from 'pdfjs-dist';
-import { EventBus, PDFViewer, type PDFPageView } from 'pdfjs-dist/web/pdf_viewer';
+import { EventBus, PDFViewer, PDFLinkService, type PDFPageView } from 'pdfjs-dist/web/pdf_viewer';
 import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.min.js?worker';
 import numberRange from 'lodash/range';
 import intersection from 'lodash/intersection';
@@ -35,6 +35,8 @@ export const SCALE_STEPS = [
 export interface OutlineItem {
   title: string;
   children: OutlineItem[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  dest: any;
 }
 
 export enum Panels {
@@ -48,7 +50,7 @@ export default class PdfViewer {
   private loadingTask?: PDFDocumentLoadingTask;
   private readonly cancelLoadingBlob: ReturnType<typeof when>;
 
-  @observable
+  @observable.ref
   outline?: OutlineItem[];
 
   @observable
@@ -57,7 +59,7 @@ export default class PdfViewer {
     [Panels.HighlightList]: true,
   };
 
-  @observable
+  @observable.ref
   private visiblePages: number[] = [];
 
   @observable
@@ -107,7 +109,9 @@ export default class PdfViewer {
   }
 
   private static createPDFViewer(options: Options) {
-    const pdfViewer = new PDFViewer({ ...options, eventBus: new EventBus() });
+    const eventBus = new EventBus();
+    const pdfViewer = new PDFViewer({ ...options, eventBus, linkService: new PDFLinkService({ eventBus }) });
+    (pdfViewer.linkService as any).setViewer(pdfViewer);
     // pdfViewer.scrollMode = ScrollMode.PAGE;
 
     return pdfViewer;
@@ -123,6 +127,8 @@ export default class PdfViewer {
 
     const doc = await this.loadingTask.promise;
     this.pdfViewer.setDocument(doc);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (this.pdfViewer.linkService as any).setDocument(doc);
 
     runInAction(() => {
       this.page.total = doc.numPages;
@@ -134,10 +140,11 @@ export default class PdfViewer {
 
   private async initOutline(doc: PDFDocumentProxy) {
     const outline = await doc.getOutline();
-    type RawOutlineItem = { title: string; items: RawOutlineItem[] };
-    const toOutlineItem = ({ title, items }: RawOutlineItem): OutlineItem => ({
-      title,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    type RawOutlineItem = { title: string; items: RawOutlineItem[]; dest: any };
+    const toOutlineItem = ({ items, ...attrs }: RawOutlineItem): OutlineItem => ({
       children: items.map(toOutlineItem),
+      ...attrs,
     });
     const items = outline?.map(toOutlineItem) || [];
 
@@ -155,8 +162,15 @@ export default class PdfViewer {
   };
 
   @action
-  jumpToPage(page: number) {
-    this.pdfViewer.currentPageNumber = page;
+  jumpToPage(page: unknown) {
+    if (typeof page === 'number') {
+      this.pdfViewer.currentPageNumber = page;
+    } else {
+      this.doAfterCleaning(() => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        this.pdfViewer.linkService.goToDestination(page as any);
+      });
+    }
   }
 
   goToNextPage() {
@@ -174,25 +188,31 @@ export default class PdfViewer {
     document.removeEventListener('selectionchange', this.handleSelection);
   }
 
-  @action.bound
+  private doAfterCleaning(cb: () => void) {
+    // wait annotationLayers to be cleared by react
+    // or react will process un-existing annotationLayers (emptied by pdf.js) and throw error finally
+    this.visiblePages = [];
+
+    setTimeout(cb, 200);
+  }
+
   setScale(value: string | number) {
     const _value = value;
     const { currentScale } = this.pdfViewer;
 
-    this.visiblePages = [];
-
-    // wait annotationLayers to be cleared by react
-    // or react will process un-existing annotationLayers (emptied by pdf.js) and throw error finally
-    setTimeout(() => {
-      if (value === 'up') {
-        this.scale = this.pdfViewer.currentScale = SCALE_STEPS.find((step) => step > currentScale) || currentScale;
-      } else if (value === 'down') {
-        this.scale = this.pdfViewer.currentScale = SCALE_STEPS.findLast((step) => step < currentScale) || currentScale;
-      } else {
-        this.scale = _value;
-        this.pdfViewer.currentScaleValue = String(_value);
-      }
-    }, 200);
+    this.doAfterCleaning(
+      action(() => {
+        if (value === 'up') {
+          this.scale = this.pdfViewer.currentScale = SCALE_STEPS.find((step) => step > currentScale) || currentScale;
+        } else if (value === 'down') {
+          this.scale = this.pdfViewer.currentScale =
+            SCALE_STEPS.findLast((step) => step < currentScale) || currentScale;
+        } else {
+          this.scale = _value;
+          this.pdfViewer.currentScaleValue = String(_value);
+        }
+      }),
+    );
   }
 
   async createHighlight(color: string) {

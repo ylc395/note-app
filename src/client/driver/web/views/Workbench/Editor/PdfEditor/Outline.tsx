@@ -4,17 +4,22 @@ import { Resizable } from 're-resizable';
 
 import context from './Context';
 import type { OutlineItem } from './PdfViewer';
+import clsx from 'clsx';
 
 const OutlineItemView = observer(function OutlineItemView({
-  item: { title, children },
+  item: { title, children, dest },
   level,
 }: {
   item: OutlineItem;
   level: number;
 }) {
+  const { pdfViewer } = useContext(context);
+
   return (
     <div style={{ paddingLeft: level * 5 }} className="mb-2">
-      <div className="mb-2">{title}</div>
+      <div onClick={() => pdfViewer?.jumpToPage(dest)} className={clsx('mb-2 text-sm', dest ? 'cursor-pointer' : '')}>
+        {title}
+      </div>
       {children.map((item, i) => (
         <OutlineItemView key={`${level}-${i}`} item={item} level={level + 1} />
       ))}
