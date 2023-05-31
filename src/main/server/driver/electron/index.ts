@@ -21,7 +21,7 @@ async function bootstrap() {
   const electronClient = electronApp.get<AppClient>(appClientToken);
   await electronClient.start();
 
-  const httpApp = await NestFactory.create<NestExpressApplication>(AppModule);
+  const httpApp = await NestFactory.create<NestExpressApplication>(AppModule, { cors: true });
   httpApp.useGlobalGuards(new HttpGuard());
   await httpApp.listen(3001);
 }

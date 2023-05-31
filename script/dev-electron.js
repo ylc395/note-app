@@ -1,4 +1,4 @@
-const path = require('path');
+const path = require('node:path');
 const { createServer, build } = require('vite');
 const shell = require('shelljs');
 const chokidar = require('chokidar');
@@ -7,7 +7,7 @@ const { replaceTscAliasPaths } = require('tsc-alias');
 const { checker } = require('vite-plugin-checker');
 const { parse: parseTsconfig } = require('tsconfck');
 
-const CLIENT_TSCONFIG = path.resolve(process.cwd(), 'src/main/client/tsconfig.json');
+const CLIENT_TSCONFIG = path.resolve('src/main/client/tsconfig.json');
 const ELECTRON_OUTPUT = 'dist/main';
 const BUILD_ELECTRON_COMMAND = 'tsc --build ./src/main/tsconfig.electron.json';
 

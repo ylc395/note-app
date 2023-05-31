@@ -10,14 +10,5 @@
       "run_at": "document_idle",
       "all_frames": true
     }
-  ],
-  "action": {
-    "default_popup": "./popup.html"
-  },
-  "background": {
-    "service_worker": "background.js",
-    "type": "module"
-  },
-  "permissions": ["storage", "tabs", "webNavigation", "notifications"],
-  "host_permissions": ["<all_urls>"]
+  ]
 }
