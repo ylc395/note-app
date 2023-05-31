@@ -8,6 +8,6 @@
     "module": "CommonJS",
     "baseUrl": ".",
     "rootDir": "../",
-    "outDir": "../../dist"
+    "outDir": "../../../dist/main"
   }
 }

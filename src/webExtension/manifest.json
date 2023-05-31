@@ -1,0 +1,23 @@
+{
+  "name": "Star Clipper",
+  "description": "Build an Extension!",
+  "version": "1.0",
+  "manifest_version": 3,
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["./content-script.js"],
+      "run_at": "document_idle",
+      "all_frames": true
+    }
+  ],
+  "action": {
+    "default_popup": "./popup.html"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "permissions": ["storage", "tabs", "webNavigation", "notifications"],
+  "host_permissions": ["<all_urls>"]
+}

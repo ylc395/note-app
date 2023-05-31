@@ -6,7 +6,7 @@
     "composite": true,
     "module": "CommonJS",
     "rootDir": "../",
-    "outDir": "../../dist"
+    "outDir": "../../../dist/main"
   },
   "references": [{ "path": "../client/tsconfig.electron.json" }, { "path": "../shared/tsconfig.json" }]
 }
