@@ -14,20 +14,19 @@ export default observer(function FileForm({ model }: { model: FileFormModel }) {
     }
 
     model.updateValue('file', {
-      name: file.name,
       mimeType: file.type,
       ...(__PLATFORM__ === 'electron' ? { path: file.path } : { data: await file.arrayBuffer() }),
     });
+    model.updateValue('name', file.name);
   }, [model]);
 
   return (
     <Form>
-      <Form.Item label="文件名">
-        <Input onChange={(e) => model.updateValue('name', e.target.value)} />
+      <Form.Item label="素材名">
+        <Input value={model.values.name} onChange={(e) => model.updateValue('name', e.target.value)} />
       </Form.Item>
       <Form.Item label="选择文件">
         <Button onClick={handleSelectFile}>点击选择</Button>
-        {model.values.file?.name}
       </Form.Item>
     </Form>
   );
