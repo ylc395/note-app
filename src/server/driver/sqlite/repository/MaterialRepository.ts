@@ -26,9 +26,14 @@ export default class SqliteMaterialRepository extends BaseRepository<Row> implem
       file = await this.files.findOrCreate({ data: Buffer.from(material.text), mimeType: 'text/markdown' });
     }
 
-    if (material.file && material.file.path) {
+    if (material.file?.path) {
       const data = await readFile(material.file.path);
       file = await this.files.findOrCreate({ data, mimeType: material.file.mimeType });
+    } else if (material.file?.data) {
+      file = await this.files.findOrCreate({
+        data: typeof material.file.data === 'string' ? Buffer.from(material.file.data) : material.file.data,
+        mimeType: material.file.mimeType,
+      });
     }
 
     if (!file) {

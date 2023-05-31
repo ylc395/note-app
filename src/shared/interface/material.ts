@@ -15,8 +15,7 @@ export const materialDTOSchema = object({
   parentId: string().nullable().optional(),
   icon: string().min(1).optional(),
   file: object({
-    name: string().min(1),
-    data: zodInstanceof(ArrayBuffer).optional(),
+    data: zodInstanceof(ArrayBuffer).or(string()).optional(),
     path: string().optional(),
     mimeType: string().min(1),
   }).optional(),
