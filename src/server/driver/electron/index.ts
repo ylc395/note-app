@@ -10,6 +10,7 @@ import { type AppClient, token as appClientToken } from 'infra/appClient';
 
 import AppModule from './modules/app.module';
 import ElectronTransporter, { RawExceptionFilter } from './infra/IpcServer';
+import HttpGuard from './HttpGuard';
 
 async function bootstrap() {
   const electronApp = await NestFactory.createMicroservice<MicroserviceOptions>(AppModule, {
@@ -21,6 +22,7 @@ async function bootstrap() {
   await electronClient.start();
 
   const httpApp = await NestFactory.create<NestExpressApplication>(AppModule);
+  httpApp.useGlobalGuards(new HttpGuard());
   await httpApp.listen(3001);
 }
 

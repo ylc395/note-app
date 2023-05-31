@@ -1,6 +1,7 @@
 import type { Knex } from 'knex';
 import once from 'lodash/once';
 
+import type { KvDatabase } from 'infra/kvDatabase';
 import type SqliteDb from './index';
 
 type Row = {
@@ -10,7 +11,7 @@ type Row = {
 
 const tableName = 'kv';
 
-export default class SqliteKvDatabase {
+export default class SqliteKvDatabase implements KvDatabase {
   private knex?: Knex;
 
   constructor(private readonly sqliteDb: SqliteDb) {
