@@ -3,8 +3,8 @@ import wrap from 'lodash/wrap';
 import isObject from 'lodash/isObject';
 
 import type { Remote } from 'infra/remote';
+import type { FakeHttpResponse } from 'infra/fakeHttp';
 import { InvalidInputError } from 'model/Error';
-import type { FakeHttpResponse } from 'driver/electron/fakeHttp';
 
 declare global {
   interface Window {

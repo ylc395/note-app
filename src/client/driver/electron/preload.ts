@@ -4,7 +4,7 @@ import type { Remote } from 'infra/remote';
 import type { ContextmenuItem } from 'infra/ui';
 // import { SYNC_LOG_CHANNEL } from 'infra/constants';
 
-import { FAKE_HTTP_CHANNEL, type FakeHttpRequest } from './fakeHttp';
+import { FAKE_HTTP_CHANNEL, type FakeHttpRequest } from 'infra/fakeHttp';
 import { CONTEXTMENU_CHANNEL } from './contextmenu';
 
 const createMethod = <T, H>(method: FakeHttpRequest<unknown>['method']) => {

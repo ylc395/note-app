@@ -11,7 +11,7 @@ import {
 import { MessagePattern } from '@nestjs/microservices';
 import type { Request } from 'express';
 
-import type { FakeHttpRequest } from 'client/driver/electron/fakeHttp';
+import type { FakeHttpRequest } from 'infra/fakeHttp';
 
 type Method = FakeHttpRequest<unknown>['method'];
 
@@ -31,6 +31,7 @@ function createHttpDecorator(method: Method) {
       messagePattern(cls, properKey, descriptor);
     };
 
+    // listen to both fakeHTTP(ipc) and real HTTP
     return applyDecorators(fakeHttpDecorator, REAL_HTTP[method](path));
   };
 }
@@ -41,7 +42,7 @@ export const Delete = createHttpDecorator('DELETE');
 export const Patch = createHttpDecorator('PATCH');
 export const Put = createHttpDecorator('PUT');
 
-// todo: don't know how to reuse decorators below from @nestjs/common package. So just DIY some simple impl
+// todo: don't know how to reuse decorators below from @nestjs/common package. So just DIY some simple impl for both fakeHTTP and real HTTP
 
 export const Body = createParamDecorator((field, ctx: ExecutionContext) => {
   if (ctx.getType() === 'http') {

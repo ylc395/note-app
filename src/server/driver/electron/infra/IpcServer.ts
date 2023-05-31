@@ -6,7 +6,7 @@ import isError from 'lodash/isError';
 import toPlainObject from 'lodash/toPlainObject';
 
 import { InvalidInputError } from 'model/Error';
-import { FAKE_HTTP_CHANNEL, type FakeHttpRequest, type FakeHttpResponse } from 'client/driver/electron/fakeHttp';
+import { FAKE_HTTP_CHANNEL, type FakeHttpRequest, type FakeHttpResponse } from 'infra/fakeHttp';
 
 export default class ElectronIpcServer extends Server implements CustomTransportStrategy {
   #routeMap = new Map<string, MatchFunction>();
