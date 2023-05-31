@@ -7,7 +7,6 @@ const outDir = path.resolve('dist/webExtension');
 
 build({
   root: 'src/webExtension',
-  mode: 'dev',
   build: {
     minify: false,
     emptyOutDir: true,
@@ -23,7 +22,6 @@ build({
   plugins: [
     checker({
       typescript: { tsconfigPath: path.resolve('src/webExtension/tsconfig.json') },
-      enableBuild: false,
     }),
     viteStaticCopy({
       targets: [

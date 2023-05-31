@@ -31,7 +31,7 @@ async function buildPreload() {
       },
     },
     plugins: [
-      checker({ typescript: { tsconfigPath: CLIENT_TSCONFIG }, enableBuild: false }),
+      checker({ typescript: { tsconfigPath: CLIENT_TSCONFIG } }),
       tsconfigPaths({ projects: [CLIENT_TSCONFIG] }),
     ],
   });
@@ -86,7 +86,6 @@ async function createViteServer() {
 }
 
 (async () => {
-  shell.exec('clear');
   const viteServer = await createViteServer();
   const viteUrl = viteServer.resolvedUrls.local[0];
 
