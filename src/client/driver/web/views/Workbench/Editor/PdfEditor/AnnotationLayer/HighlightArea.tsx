@@ -10,7 +10,7 @@ export default observer(function HighlightArea({
   area,
   page,
 }: {
-  area: HighlightAreaVO & { id: string };
+  area: HighlightAreaVO & { annotationId: string };
   page: number;
 }) {
   const { pdfViewer, hoveringAnnotationId } = useContext(ctx);
@@ -19,13 +19,13 @@ export default observer(function HighlightArea({
 
   return (
     <mark
-      data-annotation-id={area.id}
+      data-annotation-id={area.annotationId}
       className={clsx(
         'absolute z-20 cursor-pointer bg-clip-content opacity-30',
-        area.id === hoveringAnnotationId ? 'brightness-150' : null,
+        area.annotationId === hoveringAnnotationId ? 'brightness-150' : null,
       )}
       style={{
-        borderBottom: area.id === hoveringAnnotationId ? `solid transparent ${BUFFER}px` : 0,
+        borderBottom: area.annotationId === hoveringAnnotationId ? `solid transparent ${BUFFER}px` : 0,
         backgroundColor: area.color || 'yellow',
         width: area.rect.width * horizontalRatio,
         height: area.rect.height * verticalRatio,

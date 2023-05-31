@@ -3,6 +3,7 @@ import groupBy from 'lodash/groupBy';
 import remove from 'lodash/remove';
 import { type PDFDocumentLoadingTask, type PDFDocumentProxy, PDFWorker, getDocument } from 'pdfjs-dist';
 import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.min.js?worker';
+import type { RefProxy } from 'pdfjs-dist/types/src/display/api';
 
 import { EntityTypes } from 'interface/entity';
 import {
@@ -48,7 +49,6 @@ export default class PdfEditor extends Editor<Entity> {
 
   private loadingTask?: PDFDocumentLoadingTask;
 
-  @observable
   readonly outlinePageNumberMap: Record<string, number> = {};
 
   readonly entityType = EntityTypes.Material;
@@ -143,7 +143,7 @@ export default class PdfEditor extends Editor<Entity> {
   get highlightAreasByPage() {
     const highlightAreas = this.annotations
       .filter(({ type }) => type === AnnotationTypes.HighlightArea)
-      .map(({ annotation, id }) => ({ ...(annotation as HighlightAreaVO), id }));
+      .map(({ annotation, id }) => ({ ...(annotation as HighlightAreaVO), annotationId: id }));
 
     return groupBy(highlightAreas, 'page');
   }
@@ -191,11 +191,13 @@ export default class PdfEditor extends Editor<Entity> {
     const outline = await doc.getOutline();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     type RawOutlineItem = { title: string; items: RawOutlineItem[]; dest: any };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const outlineDestsMap: Record<string, any> = {};
+    const pageRefsMap: Record<string, RefProxy> = {};
     const toOutlineItem = ({ items, dest, title }: RawOutlineItem, keys: number[]): OutlineItem => {
       const key = keys.join('-');
-      outlineDestsMap[key] = dest;
+
+      if (dest?.[0]) {
+        pageRefsMap[key] = dest[0];
+      }
 
       return {
         children: items.map((item, i) => toOutlineItem(item, [...keys, i])),
@@ -206,17 +208,13 @@ export default class PdfEditor extends Editor<Entity> {
 
     const items = outline?.map((item, i) => toOutlineItem(item, [i])) || [];
 
+    for (const [key, ref] of Object.entries(pageRefsMap)) {
+      const index = await doc.getPageIndex(ref);
+      this.outlinePageNumberMap[key] = index + 1;
+    }
+
     runInAction(() => {
       this.outline = items;
     });
-
-    for (const [key, dest] of Object.entries(outlineDestsMap)) {
-      if (dest?.[0]) {
-        const index = await doc.getPageIndex(dest[0]);
-        runInAction(() => {
-          this.outlinePageNumberMap[key] = index + 1;
-        });
-      }
-    }
   }
 }
