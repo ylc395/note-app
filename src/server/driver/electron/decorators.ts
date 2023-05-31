@@ -11,24 +11,27 @@ import {
 import { MessagePattern } from '@nestjs/microservices';
 import type { Request } from 'express';
 
-import type { IpcRequest } from 'client/driver/electron/ipc';
+import type { FakeHttpRequest } from 'client/driver/electron/fakeHttp';
 
-function createHttpDecorator(method: IpcRequest<unknown>['method']) {
+type Method = FakeHttpRequest<unknown>['method'];
+
+const REAL_HTTP: Record<Method, (path: string) => MethodDecorator> = {
+  GET: HttpGet,
+  POST: HttpPost,
+  PUT: HttpPut,
+  DELETE: HttpDelete,
+  PATCH: HttpPatch,
+};
+
+function createHttpDecorator(method: Method) {
   return function (path: string) {
+    // attach message to ipc request for IpcServer
     const fakeHttpDecorator: MethodDecorator = function (cls, properKey, descriptor) {
       const messagePattern = MessagePattern({ path: path.startsWith('/') ? path : `/${path}`, method });
       messagePattern(cls, properKey, descriptor);
     };
 
-    const map: Record<typeof method, (path: string) => MethodDecorator> = {
-      GET: HttpGet,
-      POST: HttpPost,
-      PUT: HttpPut,
-      DELETE: HttpDelete,
-      PATCH: HttpPatch,
-    };
-
-    return applyDecorators(fakeHttpDecorator, map[method](path));
+    return applyDecorators(fakeHttpDecorator, REAL_HTTP[method](path));
   };
 }
 
@@ -47,8 +50,8 @@ export const Body = createParamDecorator((field, ctx: ExecutionContext) => {
   }
 
   return typeof field === 'string'
-    ? ctx.getArgByIndex<IpcRequest<Record<string, unknown>>>(0)?.body?.[field]
-    : ctx.getArgByIndex<IpcRequest<unknown>>(0)?.body;
+    ? ctx.getArgByIndex<FakeHttpRequest<Record<string, unknown>>>(0)?.body?.[field]
+    : ctx.getArgByIndex<FakeHttpRequest<unknown>>(0)?.body;
 });
 
 export const Query = createParamDecorator((_, ctx: ExecutionContext) => {
@@ -56,7 +59,7 @@ export const Query = createParamDecorator((_, ctx: ExecutionContext) => {
     return ctx.switchToHttp().getRequest<Request>().query;
   }
 
-  return ctx.getArgByIndex<IpcRequest<unknown>>(0)?.query || {};
+  return ctx.getArgByIndex<FakeHttpRequest<unknown>>(0)?.query || {};
 });
 
 export const Headers = createParamDecorator((filed, ctx: ExecutionContext) => {
@@ -64,7 +67,7 @@ export const Headers = createParamDecorator((filed, ctx: ExecutionContext) => {
     return ctx.switchToHttp().getRequest<Request>().headers[filed];
   }
 
-  return ctx.getArgByIndex<IpcRequest<unknown>>(0)?.headers?.[filed];
+  return ctx.getArgByIndex<FakeHttpRequest<unknown>>(0)?.headers?.[filed];
 });
 
 export const Param = createParamDecorator((field, ctx: ExecutionContext) => {
@@ -72,5 +75,5 @@ export const Param = createParamDecorator((field, ctx: ExecutionContext) => {
     return ctx.switchToHttp().getRequest<Request>().params[field];
   }
 
-  return ctx.getArgByIndex<IpcRequest<unknown>>(0)?.params?.[field];
+  return ctx.getArgByIndex<FakeHttpRequest<unknown>>(0)?.params?.[field];
 });

@@ -1,6 +1,6 @@
-export const IPC_CHANNEL = 'fakeHttp';
+export const FAKE_HTTP_CHANNEL = 'fakeHttp';
 
-export interface IpcRequest<T> {
+export interface FakeHttpRequest<T> {
   path: string;
   originPath?: string;
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
@@ -10,7 +10,7 @@ export interface IpcRequest<T> {
   headers?: Record<string, string>;
 }
 
-export interface IpcResponse<T = unknown> {
+export interface FakeHttpResponse<T = unknown> {
   status: number;
   body: T & { error?: unknown };
   headers?: Record<string, string>;

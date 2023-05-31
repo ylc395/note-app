@@ -4,12 +4,12 @@ import type { Remote } from 'infra/remote';
 import type { ContextmenuItem } from 'infra/ui';
 // import { SYNC_LOG_CHANNEL } from 'infra/constants';
 
-import { IPC_CHANNEL, type IpcRequest } from './ipc';
+import { FAKE_HTTP_CHANNEL, type FakeHttpRequest } from './fakeHttp';
 import { CONTEXTMENU_CHANNEL } from './contextmenu';
 
-const createMethod = <T, H>(method: IpcRequest<unknown>['method']) => {
+const createMethod = <T, H>(method: FakeHttpRequest<unknown>['method']) => {
   return async (path: string, payload: T, headers: H) => {
-    const request: IpcRequest<T> = { path, method };
+    const request: FakeHttpRequest<T> = { path, method };
 
     if (payload !== undefined) {
       request[['POST', 'PATCH', 'PUT'].includes(method) ? 'body' : 'query'] = payload;
@@ -21,7 +21,7 @@ const createMethod = <T, H>(method: IpcRequest<unknown>['method']) => {
 
     console.log('☎️request:', request);
 
-    const response = await ipcRenderer.invoke(IPC_CHANNEL, request);
+    const response = await ipcRenderer.invoke(FAKE_HTTP_CHANNEL, request);
     console.log('🎺response:', response);
 
     return response;

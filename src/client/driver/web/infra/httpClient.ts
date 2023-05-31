@@ -4,7 +4,7 @@ import isObject from 'lodash/isObject';
 
 import type { Remote } from 'infra/remote';
 import { InvalidInputError } from 'model/Error';
-import type { IpcResponse } from 'driver/electron/ipc';
+import type { FakeHttpResponse } from 'driver/electron/fakeHttp';
 
 declare global {
   interface Window {
@@ -16,7 +16,7 @@ export const ipcClient = window.electronIpcHttpClient
   ? (mapValues(window.electronIpcHttpClient, (method) =>
       wrap(method, async (func, ...args: unknown[]) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { status, body } = (await func.apply(window.electronIpcHttpClient, args as any)) as IpcResponse;
+        const { status, body } = (await func.apply(window.electronIpcHttpClient, args as any)) as FakeHttpResponse;
 
         if (status < 200 || status > 299) {
           const { error } = body;
