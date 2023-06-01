@@ -2,8 +2,10 @@ const path = require('node:path');
 const { build } = require('vite');
 const { checker } = require('vite-plugin-checker');
 const { viteStaticCopy } = require('vite-plugin-static-copy');
+const { default: tsconfigPaths } = require('vite-tsconfig-paths');
 
 const outDir = path.resolve('dist/webExtension');
+const tsconfigPath = path.resolve('src/webExtension/tsconfig.json');
 
 build({
   root: 'src/webExtension',
@@ -20,9 +22,8 @@ build({
     watch: { clearScreen: true },
   },
   plugins: [
-    checker({
-      typescript: { tsconfigPath: path.resolve('src/webExtension/tsconfig.json') },
-    }),
+    checker({ typescript: { tsconfigPath } }),
+    tsconfigPaths({ projects: [tsconfigPath] }),
     viteStaticCopy({
       targets: [
         {

@@ -1,6 +1,9 @@
 {
-  "extends": "../tsconfig.json",
+  "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "lib": ["DOM", "ESNext"]
+    "lib": ["DOM", "ESNext"],
+    "paths": {
+      "interface/*": ["../shared/interface/*"]
+    }
   }
 }

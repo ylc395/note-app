@@ -1,6 +1,8 @@
 import { offset, computePosition, autoUpdate, size } from '@floating-ui/dom';
 import debounce from 'lodash/debounce';
 
+import type { MaterialDTO } from 'interface/material';
+
 export default class AreaSelector {
   private overlayEl = document.createElement('div');
   private cancelAutoUpdate?: ReturnType<typeof autoUpdate>;
@@ -47,7 +49,7 @@ export default class AreaSelector {
       body: JSON.stringify({
         parentId: 'b71a9626df5d47829005a7ac4acde150',
         file: { mimeType: 'text/html', data: this.targetToHtml() },
-      }),
+      } satisfies MaterialDTO),
     });
   }
 

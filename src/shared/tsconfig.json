@@ -8,6 +8,6 @@
     "module": "CommonJS",
     "baseUrl": ".",
     "rootDir": "../",
-    "outDir": "../../../dist/main"
+    "outDir": "../../dist/electron"
   }
 }
