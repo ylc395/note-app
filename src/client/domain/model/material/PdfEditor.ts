@@ -5,18 +5,16 @@ import { type PDFDocumentLoadingTask, type PDFDocumentProxy, PDFWorker, getDocum
 import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.min.js?worker';
 import type { RefProxy } from 'pdfjs-dist/types/src/display/api';
 
-import { EntityTypes } from 'interface/entity';
 import {
   type EntityMaterialVO,
   type AnnotationVO,
   type HighlightVO,
   type AnnotationDTO,
   type HighlightAreaVO,
-  normalizeTitle,
   AnnotationTypes,
 } from 'interface/material';
-import Editor from 'model/abstract/Editor';
 import type Tile from 'model/workbench/Tile';
+import Editor from './Editor';
 
 interface Pdf {
   metadata: EntityMaterialVO;
@@ -50,11 +48,6 @@ export default class PdfEditor extends Editor<Pdf> {
 
   readonly outlinePageNumberMap: Record<string, number> = {};
 
-  readonly entityType = EntityTypes.Material;
-
-  @observable
-  private readonly annotations: AnnotationVO[] = [];
-
   @computed
   get highlights() {
     return this.annotations
@@ -72,11 +65,6 @@ export default class PdfEditor extends Editor<Pdf> {
         throw new Error('invalid type');
       })
       .sort(({ startPage: startPage1 }, { startPage: startPage2 }) => startPage1 - startPage2);
-  }
-
-  @computed
-  get breadcrumbs() {
-    return [];
   }
 
   protected async init() {
@@ -98,14 +86,6 @@ export default class PdfEditor extends Editor<Pdf> {
     runInAction(() => {
       this.annotations.push(...annotations);
     });
-  }
-
-  @computed
-  get tabView() {
-    return {
-      title: this.entity ? normalizeTitle(this.entity.metadata) : '',
-      icon: this.entity?.metadata.icon || null,
-    };
   }
 
   async createAnnotation(annotation: AnnotationDTO) {

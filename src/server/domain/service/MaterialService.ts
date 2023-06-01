@@ -3,9 +3,9 @@ import {
   type MaterialDTO,
   type MaterialQuery,
   type MaterialVO,
+  type AnnotationVO,
   AnnotationTypes,
   isDirectory,
-  AnnotationVO,
   highlightAreaDTOSchema,
   highlightDTOSchema,
   commonAnnotationSchema,
@@ -36,6 +36,10 @@ export default class MaterialService extends BaseService {
     }
 
     if (file) {
+      if (file.mimeType.startsWith('text') && typeof file.data !== 'string') {
+        throw new Error('invalid text');
+      }
+
       return this.materials.createEntity({ file, sourceUrl, ...info });
     }
 

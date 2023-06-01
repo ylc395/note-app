@@ -2,6 +2,7 @@ import { container, singleton } from 'tsyringe';
 import { action, makeObservable } from 'mobx';
 
 import { EntityTypes, type EntityLocator } from 'interface/entity';
+import type MaterialEditor from 'model/material/Editor';
 import NoteEditor from 'model/note/Editor';
 import PdfEditor from 'model/material/PdfEditor';
 import ImageEditor from 'model/material/ImageEditor';
@@ -17,7 +18,7 @@ export default class EditorService implements EditorManager {
   readonly tileManager = new TileManager();
   private editors: { [key in EntityTypes]?: Set<EntityEditor> } = {
     [EntityTypes.Note]: new Set<NoteEditor>(),
-    [EntityTypes.Material]: new Set<ImageEditor | PdfEditor | HtmlEditor>(),
+    [EntityTypes.Material]: new Set<MaterialEditor>(),
   };
 
   constructor() {
@@ -68,7 +69,7 @@ export default class EditorService implements EditorManager {
       throw new Error('no mimeType');
     }
 
-    let editor: ImageEditor | HtmlEditor | PdfEditor | null = null;
+    let editor: MaterialEditor | null = null;
 
     if (entity.mimeType.startsWith('image')) {
       editor = new ImageEditor(tile, entity.id);

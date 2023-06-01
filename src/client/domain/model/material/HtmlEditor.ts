@@ -1,9 +1,8 @@
-import { computed, makeObservable, observable, runInAction } from 'mobx';
+import { runInAction } from 'mobx';
 
-import Editor from 'model/abstract/Editor';
-import { EntityTypes } from 'interface/entity';
-import { type EntityMaterialVO, type AnnotationVO, normalizeTitle } from 'interface/material';
+import type { EntityMaterialVO, AnnotationVO } from 'interface/material';
 import type Tile from 'model/workbench/Tile';
+import Editor from './Editor';
 
 interface WebPage {
   metadata: EntityMaterialVO;
@@ -13,25 +12,6 @@ interface WebPage {
 export default class HtmlEditor extends Editor<WebPage> {
   constructor(tile: Tile, materialId: EntityMaterialVO['id']) {
     super(tile, materialId);
-    makeObservable(this);
-  }
-
-  readonly entityType = EntityTypes.Material;
-
-  @computed
-  get breadcrumbs() {
-    return [];
-  }
-
-  @observable
-  private readonly annotations: AnnotationVO[] = [];
-
-  @computed
-  get tabView() {
-    return {
-      title: this.entity ? normalizeTitle(this.entity.metadata) : '',
-      icon: this.entity?.metadata.icon || null,
-    };
   }
 
   protected async init() {
