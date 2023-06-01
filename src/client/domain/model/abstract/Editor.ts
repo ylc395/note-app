@@ -39,11 +39,13 @@ export default abstract class EntityEditor<
   };
   abstract readonly entityType: EntityTypes;
   abstract readonly breadcrumbs: Breadcrumbs;
+  protected abstract init(): void;
   @observable entity?: T;
 
   constructor(public tile: Tile, readonly entityId: EntityId) {
     super();
     makeObservable(this);
+    this.init();
   }
 
   destroy() {

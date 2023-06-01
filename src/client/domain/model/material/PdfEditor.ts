@@ -18,7 +18,7 @@ import {
 import Editor from 'model/abstract/Editor';
 import type Tile from 'model/workbench/Tile';
 
-interface Entity {
+interface Pdf {
   metadata: EntityMaterialVO;
   doc: PDFDocumentProxy;
 }
@@ -37,11 +37,10 @@ export enum HighlightColors {
   Gray = '#a2a2a2',
 }
 
-export default class PdfEditor extends Editor<Entity> {
+export default class PdfEditor extends Editor<Pdf> {
   constructor(tile: Tile, materialId: EntityMaterialVO['id']) {
     super(tile, materialId);
     makeObservable(this);
-    this.init();
   }
 
   @observable.ref
@@ -80,7 +79,7 @@ export default class PdfEditor extends Editor<Entity> {
     return [];
   }
 
-  private async init() {
+  protected async init() {
     const [{ body: metadata }, { body: blob }] = await Promise.all([
       this.remote.get<void, EntityMaterialVO>(`/materials/${this.entityId}`),
       this.remote.get<void, ArrayBuffer>(`/materials/${this.entityId}/blob`),

@@ -131,6 +131,9 @@ export default class SqliteMaterialRepository extends BaseRepository<Row> implem
       .first();
 
     if (row) {
+      if (row.mimeType.startsWith('text')) {
+        return (row.data as Uint8Array).toString();
+      }
       return (row.data as Uint8Array).buffer;
     }
 

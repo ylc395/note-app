@@ -16,6 +16,10 @@ export default class ImageEditor extends Editor<Entity> {
     makeObservable(this);
   }
 
+  protected async init() {
+    return;
+  }
+
   readonly entityType = EntityTypes.Material;
 
   @computed

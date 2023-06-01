@@ -5,6 +5,7 @@ import { EntityTypes, type EntityLocator } from 'interface/entity';
 import NoteEditor from 'model/note/Editor';
 import PdfEditor from 'model/material/PdfEditor';
 import ImageEditor from 'model/material/ImageEditor';
+import HtmlEditor from 'model/material/HtmlEditor';
 import EntityEditor, { Events as EditorEvents } from 'model/abstract/Editor';
 import Tile from 'model/workbench/Tile';
 import TileManager, { type TileSplitDirections } from 'model/workbench/TileManger';
@@ -16,7 +17,7 @@ export default class EditorService implements EditorManager {
   readonly tileManager = new TileManager();
   private editors: { [key in EntityTypes]?: Set<EntityEditor> } = {
     [EntityTypes.Note]: new Set<NoteEditor>(),
-    [EntityTypes.Material]: new Set<ImageEditor | PdfEditor>(),
+    [EntityTypes.Material]: new Set<ImageEditor | PdfEditor | HtmlEditor>(),
   };
 
   constructor() {
@@ -67,12 +68,14 @@ export default class EditorService implements EditorManager {
       throw new Error('no mimeType');
     }
 
-    let editor: ImageEditor | PdfEditor | null = null;
+    let editor: ImageEditor | HtmlEditor | PdfEditor | null = null;
 
     if (entity.mimeType.startsWith('image')) {
       editor = new ImageEditor(tile, entity.id);
     } else if (entity.mimeType === 'application/pdf') {
       editor = new PdfEditor(tile, entity.id);
+    } else if (entity.mimeType === 'text/html') {
+      editor = new HtmlEditor(tile, entity.id);
     }
 
     if (!editor) {

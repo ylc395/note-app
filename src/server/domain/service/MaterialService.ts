@@ -59,7 +59,7 @@ export default class MaterialService extends BaseService {
   async getBlob(materialId: MaterialVO['id']) {
     const blob = await this.materials.findBlobById(materialId);
 
-    if (!blob) {
+    if (blob === null) {
       throw new Error('no file');
     }
 

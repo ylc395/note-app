@@ -25,10 +25,9 @@ export default class NoteEditor extends Editor<Entity, NoteEditorEvents> {
   constructor(tile: Tile, noteId: NoteVO['id'], private readonly noteTree: NoteTree) {
     super(tile, noteId);
     makeObservable(this);
-    this.init();
   }
 
-  private async init() {
+  protected async init() {
     const [{ body: metadata }, { body }] = await Promise.all([
       this.remote.get<void, NoteVO>(`/notes/${this.entityId}`),
       this.remote.get<void, NoteBodyVO>(`/notes/${this.entityId}/body`),
