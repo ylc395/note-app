@@ -17,7 +17,8 @@ build({
     lib: {
       entry: 'content/index.ts',
       fileName: () => 'content-script.js',
-      formats: ['es'],
+      name: 'clipper',
+      formats: ['iife'],
     },
     watch: { clearScreen: true },
   },

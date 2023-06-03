@@ -23,6 +23,7 @@ async function bootstrap() {
 
   const httpApp = await NestFactory.create<NestExpressApplication>(AppModule, { cors: true });
   httpApp.useGlobalGuards(new HttpGuard());
+  httpApp.useBodyParser('json', { limit: Infinity });
   await httpApp.listen(3001);
 }
 

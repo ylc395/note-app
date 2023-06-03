@@ -1,14 +1,12 @@
 import { offset, computePosition, autoUpdate, size } from '@floating-ui/dom';
 import debounce from 'lodash/debounce';
 
-import type { MaterialDTO } from 'interface/material';
-
 export default class AreaSelector {
   private overlayEl = document.createElement('div');
   private cancelAutoUpdate?: ReturnType<typeof autoUpdate>;
   private currentTarget?: HTMLElement;
 
-  constructor() {
+  constructor(private readonly options: { onSelect: (el: HTMLElement) => void }) {
     this.initOverlay();
     document.body.addEventListener('mouseover', this.handleHover);
     document.body.addEventListener('click', this.handleClick);
@@ -34,32 +32,9 @@ export default class AreaSelector {
     if (e.target === this.currentTarget) {
       e.preventDefault();
       e.stopImmediatePropagation();
-      this.disable();
-      this.submit();
+      this.options.onSelect(this.currentTarget);
     }
   };
-
-  private submit() {
-    fetch('http://localhost:3001/materials', {
-      method: 'POST',
-      headers: {
-        authorization: '47929996-9af9-4786-8589-3e57fc6119c6',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        parentId: 'b71a9626df5d47829005a7ac4acde150',
-        file: { mimeType: 'text/html', data: this.targetToHtml() },
-      } satisfies MaterialDTO),
-    });
-  }
-
-  private targetToHtml() {
-    if (!this.currentTarget) {
-      throw new Error('no currentTarget');
-    }
-
-    return `<h1>hello world</h1>`;
-  }
 
   private readonly handleContextmenu = (e: MouseEvent) => {
     if (e.target === this.currentTarget) {
