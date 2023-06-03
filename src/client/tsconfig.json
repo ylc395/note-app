@@ -2,7 +2,7 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "types": ["electron"],
-    "lib": ["DOM", "ESNext"],
+    "lib": ["dom", "dom.iterable", "ESNext"],
     "baseUrl": ".",
     "jsx": "react-jsx",
     "paths": {

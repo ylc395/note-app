@@ -1,4 +1,5 @@
 import { runInAction } from 'mobx';
+// import sanitizeHtml from 'sanitize-html';
 
 import type { EntityMaterialVO, AnnotationVO } from 'interface/material';
 import type Tile from 'model/workbench/Tile';
@@ -14,13 +15,15 @@ export default class HtmlEditor extends Editor<WebPage> {
     super(tile, materialId);
   }
 
+  doc?: unknown;
+
   protected async init() {
     const [{ body: metadata }, { body: html }] = await Promise.all([
       this.remote.get<void, EntityMaterialVO>(`/materials/${this.entityId}`),
       this.remote.get<void, string>(`/materials/${this.entityId}/blob`),
     ]);
 
-    this.load({ metadata, html });
+    this.load({ metadata, html: HtmlEditor.filterHtml(html) });
 
     const { body: annotations } = await this.remote.get<unknown, AnnotationVO[]>(
       `/materials/${this.entityId}/annotations`,
@@ -29,5 +32,14 @@ export default class HtmlEditor extends Editor<WebPage> {
     runInAction(() => {
       this.annotations.push(...annotations);
     });
+  }
+
+  private static filterHtml(html: string) {
+    return html;
+    //   return sanitizeHtml(html, {
+    //     allowedTags: [],
+    //     allowedAttributes: {},
+    //     parseStyleAttributes: false,
+    //   });
   }
 }

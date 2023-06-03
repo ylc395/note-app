@@ -2,6 +2,7 @@ import { container, singleton } from 'tsyringe';
 import { action, makeObservable } from 'mobx';
 
 import { EntityTypes, type EntityLocator } from 'interface/entity';
+import type Editor from 'model/abstract/Editor';
 import type MaterialEditor from 'model/material/Editor';
 import NoteEditor from 'model/note/Editor';
 import PdfEditor from 'model/material/PdfEditor';
@@ -21,10 +22,16 @@ export default class EditorService implements EditorManager {
     [EntityTypes.Material]: new Set<MaterialEditor>(),
   };
 
+  private editorsMap: Map<Editor['id'], Editor> = new Map();
+
   constructor() {
     container.registerInstance(editorManagerToken, this);
     makeObservable(this);
     this.init();
+  }
+
+  getEditorById<T extends Editor>(id: Editor['id']) {
+    return this.editorsMap.get(id) as T | undefined;
   }
 
   private init() {
@@ -59,9 +66,17 @@ export default class EditorService implements EditorManager {
     }
 
     editorSet.add(editor);
-    editor.once(EditorEvents.Destroyed, () => editorSet.delete(editor as NoteEditor));
+    this.editorsMap.set(editor.id, editor);
+    editor.once(EditorEvents.Destroyed, () => this.handleDestroy(editor));
 
     return editor;
+  }
+
+  private handleDestroy(editor: Editor) {
+    const editorSet = this.editors[editor.entityType];
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    editorSet!.delete(editor as NoteEditor);
+    this.editorsMap.delete(editor.id);
   }
 
   private createMaterialEditor(tile: Tile, entity: EntityLocator) {
