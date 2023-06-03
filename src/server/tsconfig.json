@@ -8,11 +8,9 @@
       "interface/*": ["../shared/interface/*"],
       "service/*": ["domain/service/*"],
       "infra/*": ["domain/infra/*", "../shared/infra/*"],
-      "driver/*": ["driver/*"],
       "client/*": ["../client/*"],
       "utils/*": ["../shared/utils/*"],
-      "shared/*": ["../shared/*"],
-      "controller/*": ["controller/*"]
+      "shared/*": ["../shared/*"]
     }
   }
 }

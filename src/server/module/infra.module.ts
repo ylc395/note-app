@@ -8,10 +8,10 @@ import { token as syncTargetFactoryToken } from 'infra/synchronizer';
 import { type SearchEngine, token as searchEngineToken } from 'infra/searchEngine';
 import { type KvDatabase, token as kvDatabaseToken } from 'infra/kvDatabase';
 
-import Downloader from '../infra/Downloader';
-import syncTargetFactory from '../infra/syncTargetFactory';
-import { registerProtocol } from '../infra/urlProtocol';
-import electronClientFactory from '../infra/electronClientFactory';
+import Downloader from '../driver/electron/infra/Downloader';
+import syncTargetFactory from '../driver/electron/infra/syncTargetFactory';
+import { registerProtocol } from '../driver/electron/infra/urlProtocol';
+import electronClientFactory from '../driver/electron/infra/electronClientFactory';
 
 @Global()
 @Module({
