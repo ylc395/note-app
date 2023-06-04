@@ -9,7 +9,3 @@
 .page > * {
   margin: 0 auto;
 }
-
-.pdf-editor-tooltip[data-popper-reference-hidden='true'] {
-  visibility: hidden;
-}

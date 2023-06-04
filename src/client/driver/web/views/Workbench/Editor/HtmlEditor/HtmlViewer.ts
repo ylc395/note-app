@@ -63,6 +63,7 @@ export default class HtmlViewer extends HTMLElement {
       docElement = html;
     }
 
+    docElement.style.userSelect = 'text';
     this.shadowRoot.replaceChildren(docElement);
 
     return docElement;
@@ -71,6 +72,9 @@ export default class HtmlViewer extends HTMLElement {
   connectedCallback() {
     if (this.isConnected) {
       this.init();
+      // shadow dom will inherit styles from outside
+      // reset all to stop inheriting
+      this.className = 'all-initial';
     } else {
       this.cancelLoad?.();
     }
@@ -105,10 +109,6 @@ export default class HtmlViewer extends HTMLElement {
         style.innerHTML = style.innerHTML.replaceAll(selector, selector.replaceAll(':root', 'html'));
       }
     }
-
-    // shadow dom will inherit styles from outside
-    // reset all to stop inheriting
-    doc.documentElement.style.all = 'initial';
   }
 
   static get observedAttributes() {

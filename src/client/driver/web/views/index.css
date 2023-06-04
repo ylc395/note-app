@@ -23,4 +23,8 @@ body {
   .scrollbar-hidden::-webkit-scrollbar {
     display: none;
   }
+
+  .all-initial {
+    all: initial;
+  }
 }
