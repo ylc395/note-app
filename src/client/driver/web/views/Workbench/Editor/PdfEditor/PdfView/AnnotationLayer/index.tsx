@@ -9,7 +9,7 @@ import HighlightArea from './HighlightArea';
 import DraggingHighlightArea from './DraggingHighlightArea';
 import HighlightTooltip from './HighlightTooltip';
 
-import context from '../Context';
+import context from '../../Context';
 import useHighlightTooltip from './HighlightTooltip/useHighlightTooltip';
 
 export default observer(function AnnotationLayer({ page }: { page: number }) {

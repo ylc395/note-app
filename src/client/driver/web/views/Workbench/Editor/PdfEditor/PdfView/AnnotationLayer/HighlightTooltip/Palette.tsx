@@ -2,7 +2,7 @@ import { useContext } from 'react';
 import { observer } from 'mobx-react-lite';
 
 import { HighlightColors } from 'model/material/PdfEditor';
-import context from '../../Context';
+import context from '../../../Context';
 
 const colors = [
   HighlightColors.Blue,

@@ -3,7 +3,7 @@ import { useContext } from 'react';
 import clsx from 'clsx';
 
 import type { HighlightAreaVO } from 'interface/material';
-import ctx from '../Context';
+import ctx from '../../Context';
 import { BUFFER } from './constants';
 
 export default observer(function HighlightArea({

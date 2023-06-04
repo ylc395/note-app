@@ -5,7 +5,7 @@ import { BgColorsOutlined, CommentOutlined, DeleteOutlined } from '@ant-design/i
 import { runInAction } from 'mobx';
 
 import type { HighlightColors } from 'model/material/PdfEditor';
-import context from '../../Context';
+import context from '../../../Context';
 import Palette from './Palette';
 import CommentTextArea from './CommentTextArea';
 

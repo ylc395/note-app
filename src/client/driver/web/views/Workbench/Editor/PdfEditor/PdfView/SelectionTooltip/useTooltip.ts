@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react';
 import { useDebounceFn, useLatest } from 'ahooks';
 import { useFloating, offset, autoUpdate } from '@floating-ui/react';
-import type PdfViewer from '../PdfViewer';
-import { isTextNode, getValidEndContainer } from '../domUtils';
+import type PdfViewer from '../../PdfViewer';
+import { isTextNode, getValidEndContainer } from '../../domUtils';
 
 function getSelectionEnd(pdfViewer: PdfViewer) {
   const result = pdfViewer.getSelectionRange();

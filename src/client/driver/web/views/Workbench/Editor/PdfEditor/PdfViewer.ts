@@ -7,7 +7,6 @@ import { makeObservable, observable, when, action, runInAction, computed } from 
 import { AnnotationTypes, type HighlightAreaDTO, type HighlightDTO } from 'interface/material';
 import type PdfEditor from 'model/material/PdfEditor';
 
-import './style.css';
 import { getValidEndContainer, isElement } from './domUtils';
 
 interface Options {
@@ -30,21 +29,10 @@ export const SCALE_STEPS = [
   ...numberRange(12, 30, 2).map((i) => i / 10),
 ] as const;
 
-export enum Panels {
-  Outline,
-  HighlightList,
-}
-
 export default class PdfViewer {
   private readonly pdfViewer: PDFViewer;
   readonly editor: PdfEditor;
   private readonly cancelLoadingDoc: ReturnType<typeof when>;
-
-  @observable
-  readonly panelsVisibility: Record<Panels, boolean> = {
-    [Panels.Outline]: false,
-    [Panels.HighlightList]: true,
-  };
 
   @observable.ref
   private visiblePages: number[] = [];
@@ -392,10 +380,5 @@ export default class PdfViewer {
     const { height, width } = this.pdfViewer.getPageView(page - 1) as PDFPageView;
 
     return { height, width };
-  }
-
-  @action
-  togglePanel(key: Panels) {
-    this.panelsVisibility[key] = !this.panelsVisibility[key];
   }
 }

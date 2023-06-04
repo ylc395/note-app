@@ -4,7 +4,7 @@ import { useFloating, offset, autoUpdate } from '@floating-ui/react';
 
 import { AnnotationTypes } from 'interface/material';
 
-import context from '../../Context';
+import context from '../../../Context';
 import { BUFFER } from '../constants';
 
 export default function useHighlightTooltip(page: number) {

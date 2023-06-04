@@ -3,7 +3,7 @@ import { useEventListener, useMouse, useRafState, useKeyPress, useClickAway } fr
 import { observer } from 'mobx-react-lite';
 import { useFloating } from '@floating-ui/react';
 
-import context from '../Context';
+import context from '../../Context';
 
 interface Position {
   left?: number;

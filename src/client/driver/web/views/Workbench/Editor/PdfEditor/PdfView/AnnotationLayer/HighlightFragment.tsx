@@ -4,7 +4,7 @@ import clsx from 'clsx';
 
 import type { AnnotationVO } from 'interface/material';
 import { BUFFER } from './constants';
-import context from '../Context';
+import context from '../../Context';
 
 export default observer(function HighlightFragment({
   page,
