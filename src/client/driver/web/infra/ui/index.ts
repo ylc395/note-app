@@ -1,9 +1,12 @@
-import type { ContextmenuItem, UI } from 'infra/ui';
+import type { UI } from 'infra/ui';
 import messageFeedback from './messageFeedback';
 
 declare global {
   interface Window {
-    electronIpcContextmenu?: (items: ContextmenuItem[]) => Promise<string | null>;
+    electronUI?: {
+      electronIpcContextmenu: UI['getActionFromContextmenu'];
+      openNewWindow: UI['openNewWindow'];
+    };
   }
 }
 
@@ -13,5 +16,6 @@ export * from './useModal';
 
 export const ui: UI = {
   feedback: messageFeedback,
-  getActionFromContextmenu: window.electronIpcContextmenu || (() => Promise.resolve(null)),
+  getActionFromContextmenu: window.electronUI?.electronIpcContextmenu || (() => Promise.resolve(null)),
+  openNewWindow: window.electronUI?.openNewWindow || window.open,
 };

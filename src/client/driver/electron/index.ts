@@ -14,7 +14,7 @@ import {
 import type { KvDatabase } from 'infra/kvDatabase';
 import { APP_FILE_PROTOCOL } from 'infra/constants';
 
-import { CONTEXTMENU_CHANNEL, createContextmenu } from './contextmenu';
+import { UI_CHANNELS, createContextmenu, openNewWindow } from './ui';
 
 const APP_NAME = 'my-note-app';
 const NODE_ENV = process.env.NODE_ENV || 'development';
@@ -56,7 +56,8 @@ export default class ElectronClient extends Emitter<AppClientEvents> implements 
       electronApp.quit();
     });
 
-    ipcMain.handle(CONTEXTMENU_CHANNEL, createContextmenu);
+    ipcMain.handle(UI_CHANNELS.CONTEXTMENU, createContextmenu);
+    ipcMain.handle(UI_CHANNELS.NEW_WINDOW, openNewWindow);
 
     await electronApp.whenReady();
 

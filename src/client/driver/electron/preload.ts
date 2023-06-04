@@ -1,11 +1,11 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
 import type { Remote } from 'infra/remote';
-import type { ContextmenuItem } from 'infra/ui';
+import type { ContextmenuItem, UI } from 'infra/ui';
 // import { SYNC_LOG_CHANNEL } from 'infra/constants';
 
 import { FAKE_HTTP_CHANNEL, type FakeHttpRequest } from 'infra/fakeHttp';
-import { CONTEXTMENU_CHANNEL } from './contextmenu';
+import { UI_CHANNELS } from './ui';
 
 const createMethod = <T, H>(method: FakeHttpRequest<unknown>['method']) => {
   return async (path: string, payload: T, headers: H) => {
@@ -36,17 +36,22 @@ const client: Remote = {
   put: createMethod('PUT'),
 };
 
-const getActionFromContextmenu = (menuItems: ContextmenuItem[]) => {
-  if (menuItems.length === 0) {
-    return null;
-  }
+const electronUI: Pick<UI, 'getActionFromContextmenu' | 'openNewWindow'> = {
+  getActionFromContextmenu: (menuItems: ContextmenuItem[]) => {
+    if (menuItems.length === 0) {
+      return Promise.resolve(null);
+    }
 
-  return ipcRenderer.invoke(CONTEXTMENU_CHANNEL, menuItems);
+    return ipcRenderer.invoke(UI_CHANNELS.CONTEXTMENU, menuItems);
+  },
+  openNewWindow: (url: string) => {
+    ipcRenderer.invoke(UI_CHANNELS.NEW_WINDOW, url);
+  },
 };
 
 // const onSynchronizationLogUpdated = (cb: (log: Log) => void) =>
 //   ipcRenderer.on(SYNC_LOG_CHANNEL, (_, payload) => cb(payload));
 
 contextBridge.exposeInMainWorld('electronIpcHttpClient', client);
-contextBridge.exposeInMainWorld('electronIpcContextmenu', getActionFromContextmenu);
+contextBridge.exposeInMainWorld('electronUI', electronUI);
 // contextBridge.exposeInMainWorld('electronOnSynchronizationLogUpdated', onSynchronizationLogUpdated);
