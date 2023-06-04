@@ -1,5 +1,6 @@
 import { when } from 'mobx';
 import { container } from 'tsyringe';
+import DOMPurify from 'dompurify';
 
 import type HtmlEditor from 'model/material/HtmlEditor';
 import EditorService from 'service/EditorService';
@@ -15,10 +16,15 @@ declare global {
 
 export default class HtmlViewer extends HTMLElement {
   private cancelLoad?: ReturnType<typeof when>;
+  private readonly wrapper: HTMLElement;
 
   constructor() {
     super();
-    this.attachShadow({ mode: 'open' });
+    this.wrapper = document.createElement('div');
+    this.wrapper.attachShadow({ mode: 'open' });
+    // shadow dom will inherit styles from outside
+    // reset all to stop inheriting
+    this.wrapper.className = 'select-text';
   }
 
   private init() {
@@ -32,8 +38,8 @@ export default class HtmlViewer extends HTMLElement {
       throw new Error('invalid editorId');
     }
 
-    if (editor.doc instanceof HTMLElement) {
-      this.loadHtml(editor.doc);
+    if (editor.documentElement instanceof HTMLHtmlElement) {
+      this.loadHtml(editor.documentElement);
       return;
     }
 
@@ -41,40 +47,37 @@ export default class HtmlViewer extends HTMLElement {
       () => typeof editor.entity?.html === 'string',
       () => {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        editor.doc = this.loadHtml(editor.entity!.html);
+        editor.documentElement = this.loadHtml(editor.entity!.html);
       },
     );
   }
 
-  private loadHtml(html: string | HTMLElement) {
-    if (!this.shadowRoot) {
+  private loadHtml(html: string | HTMLHtmlElement) {
+    const shadowRoot = this.wrapper.shadowRoot;
+
+    if (!shadowRoot) {
       throw new Error('no shadowRoot');
     }
 
-    let docElement: HTMLElement;
+    let documentElement: HTMLHtmlElement;
 
     if (typeof html === 'string') {
-      const domParser = new DOMParser();
-      const doc = domParser.parseFromString(html, 'text/html');
-
-      HtmlViewer.processStyles(doc);
-      docElement = doc.documentElement;
+      documentElement = HtmlViewer.filterHtml(html);
+      HtmlViewer.processStyles(documentElement);
     } else {
-      docElement = html;
+      documentElement = html;
     }
 
-    docElement.style.userSelect = 'text';
-    this.shadowRoot.replaceChildren(docElement);
+    shadowRoot.replaceChildren(documentElement);
 
-    return docElement;
+    return documentElement;
   }
 
   connectedCallback() {
     if (this.isConnected) {
       this.init();
-      // shadow dom will inherit styles from outside
-      // reset all to stop inheriting
-      this.className = 'all-initial';
+      this.append(this.wrapper);
+      this.classList.add('all-initial');
     } else {
       this.cancelLoad?.();
     }
@@ -86,8 +89,8 @@ export default class HtmlViewer extends HTMLElement {
     }
   }
 
-  private static processStyles(doc: Document) {
-    const styles = doc.querySelectorAll('style');
+  private static processStyles(root: HTMLHtmlElement) {
+    const styles = root.querySelectorAll('style');
 
     for (const style of styles) {
       if (!style.sheet) {
@@ -113,5 +116,21 @@ export default class HtmlViewer extends HTMLElement {
 
   static get observedAttributes() {
     return ['editor-id'];
+  }
+
+  private static filterHtml(html: string) {
+    const fragment = DOMPurify.sanitize(html, {
+      FORBID_CONTENTS: ['script'], // override default forbid contents. Only <script> is dangerous for us
+      ADD_TAGS: ['style'],
+      CUSTOM_ELEMENT_HANDLING: {
+        tagNameCheck: () => true,
+        attributeNameCheck: () => true,
+        allowCustomizedBuiltInElements: true,
+      },
+      WHOLE_DOCUMENT: true, // wrap content with <html> or preserve original <html>
+      RETURN_DOM: true,
+    });
+
+    return fragment as HTMLHtmlElement;
   }
 }
