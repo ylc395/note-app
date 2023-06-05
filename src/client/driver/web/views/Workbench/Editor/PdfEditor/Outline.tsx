@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { useContext } from 'react';
+import { ReactNode, useContext } from 'react';
 import { Resizable } from 're-resizable';
 import clsx from 'clsx';
 
@@ -34,15 +34,20 @@ const OutlineItemView = observer(function OutlineItemView({
 export default observer(function Outline() {
   const { pdfViewer } = useContext(context);
 
+  let content: ReactNode = null;
+
   if (!pdfViewer?.editor.outline) {
-    return null;
+    content = '加载中...';
+  } else {
+    content =
+      pdfViewer.editor.outline.length > 0
+        ? pdfViewer.editor.outline.map((item) => <OutlineItemView level={1} item={item} key={item.key} />)
+        : '无提纲';
   }
 
   return (
     <Resizable enable={{ right: true }} defaultSize={{ width: 300, height: 'auto' }} className="h-full overflow-auto">
-      {pdfViewer.editor.outline.map((item) => (
-        <OutlineItemView level={1} item={item} key={item.key} />
-      ))}
+      {content}
     </Resizable>
   );
 });

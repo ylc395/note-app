@@ -1,5 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import { Button } from 'antd';
+import { action } from 'mobx';
 import { useContext } from 'react';
 import { OrderedListOutlined, HighlightOutlined } from '@ant-design/icons';
 
@@ -14,7 +15,7 @@ export default observer(function Toolbar() {
     <div className="relative flex items-center justify-between p-2">
       <div className="flex">
         <Button
-          onClick={() => (panelsVisibility[Panels.Outline] = !panelsVisibility[Panels.Outline])}
+          onClick={action(() => (panelsVisibility[Panels.Outline] = !panelsVisibility[Panels.Outline]))}
           className="mr-4"
           type="text"
           size="small"
@@ -24,7 +25,7 @@ export default observer(function Toolbar() {
       </div>
       <PageSwitcher />
       <Button
-        onClick={() => (panelsVisibility[Panels.HighlightList] = !panelsVisibility[Panels.HighlightList])}
+        onClick={action(() => (panelsVisibility[Panels.HighlightList] = !panelsVisibility[Panels.HighlightList]))}
         type="text"
         size="small"
         icon={<HighlightOutlined />}

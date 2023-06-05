@@ -5,7 +5,7 @@ import HtmlViewer from './HtmlView';
 
 export default observer(function HtmlEditor({ editor }: { editor: HtmlEditor }) {
   return (
-    <div>
+    <div className="h-full">
       <HtmlViewer editor={editor} />
     </div>
   );

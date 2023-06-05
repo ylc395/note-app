@@ -28,11 +28,10 @@ export default observer(function HtmlEditor({ editor }: { editor: HtmlEditor }) 
   }, []);
 
   useHtml(editor, shadowRoot);
-
   useEventListener('click', handleClick, { target: shadowWrapperRef });
 
   return (
-    <div>
+    <div className="h-full overflow-auto">
       <div className="all-initial">
         <div className="select-text" ref={shadowWrapperRef}></div>
       </div>
