@@ -6,7 +6,7 @@ import type PdfEditor from 'model/material/PdfEditor';
 import SelectionTooltip from './SelectionTooltip';
 import useSelectionTooltip from './SelectionTooltip/useTooltip';
 import AnnotationLayer from './AnnotationLayer';
-import PdfViewerVM from '../PdfViewer';
+import PdfViewerVM from './PdfViewer';
 import context from '../Context';
 import './style.css';
 

@@ -2,7 +2,7 @@ import { createContext } from 'react';
 import { observable } from 'mobx';
 
 import type { AnnotationVO } from 'interface/material';
-import type PdfViewer from './PdfViewer';
+import type PdfViewer from './PdfView/PdfViewer';
 
 export enum Panels {
   Outline,

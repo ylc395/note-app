@@ -3,7 +3,7 @@ import { useContext } from 'react';
 import { PlusOutlined, MinusOutlined } from '@ant-design/icons';
 import { Button, Select } from 'antd';
 
-import { ScaleValues, SCALE_STEPS } from '../PdfViewer';
+import { ScaleValues, SCALE_STEPS } from '../PdfView/PdfViewer';
 import context from '../Context';
 
 const scaleOptions = [

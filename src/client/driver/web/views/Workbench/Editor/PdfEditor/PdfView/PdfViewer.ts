@@ -7,7 +7,7 @@ import { makeObservable, observable, when, action, runInAction, computed } from 
 import { AnnotationTypes, type HighlightAreaDTO, type HighlightDTO } from 'interface/material';
 import type PdfEditor from 'model/material/PdfEditor';
 
-import { getValidEndContainer, isElement } from './domUtils';
+import { getValidEndContainer, isElement } from '../domUtils';
 
 interface Options {
   container: HTMLDivElement;
