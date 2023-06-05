@@ -6,11 +6,11 @@ import type PdfEditor from 'model/material/PdfEditor';
 import SelectionTooltip from './SelectionTooltip';
 import useSelectionTooltip from './SelectionTooltip/useTooltip';
 import AnnotationLayer from './AnnotationLayer';
-import PdfViewerVM from './PdfViewer';
+import PdfViewer from './PdfViewer';
 import context from '../Context';
 import './style.css';
 
-export default observer(function PdfViewer({ editor }: { editor: PdfEditor }) {
+export default observer(function PdfView({ editor }: { editor: PdfEditor }) {
   const containerElRef = useRef<HTMLDivElement | null>(null);
   const viewerElRef = useRef<HTMLDivElement | null>(null);
   const ctx = useContext(context);
@@ -24,28 +24,25 @@ export default observer(function PdfViewer({ editor }: { editor: PdfEditor }) {
   } = useSelectionTooltip(ctx.pdfViewer);
 
   useEffect(() => {
-    if (!editor.entity || !containerElRef.current || !viewerElRef.current) {
-      return;
-    }
-
-    const core = new PdfViewerVM({
+    const pdfViewer = new PdfViewer({
       editor,
-      container: containerElRef.current,
-      viewer: viewerElRef.current,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      container: containerElRef.current!,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      viewer: viewerElRef.current!,
       onTextSelected: createSelectionTooltip,
       onTextSelectCancel: destroySelectionTooltip,
     });
 
     runInAction(() => {
-      ctx.pdfViewer = core;
+      ctx.pdfViewer = pdfViewer;
     });
 
     return () => {
-      core.destroy();
+      pdfViewer.destroy();
       destroySelectionTooltip();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editor.entity, ctx]);
+  }, [ctx, editor, createSelectionTooltip, destroySelectionTooltip]);
 
   return (
     <div className="relative grow overflow-hidden">

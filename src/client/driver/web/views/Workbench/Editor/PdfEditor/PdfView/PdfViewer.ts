@@ -7,14 +7,13 @@ import { makeObservable, observable, when, action, runInAction, computed } from 
 import { AnnotationTypes, type HighlightAreaDTO, type HighlightDTO } from 'interface/material';
 import type PdfEditor from 'model/material/PdfEditor';
 
-import { getValidEndContainer, isElement } from '../domUtils';
+import { isElement } from '../../common/domUtils';
+import RangeSelectable, { type Options as CommonOptions } from '../../common/RangeSelectable';
 
-interface Options {
+interface Options extends CommonOptions {
   container: HTMLDivElement;
   viewer: HTMLDivElement;
   editor: PdfEditor;
-  onTextSelected: () => void;
-  onTextSelectCancel: () => void;
 }
 
 export enum ScaleValues {
@@ -29,7 +28,7 @@ export const SCALE_STEPS = [
   ...numberRange(12, 30, 2).map((i) => i / 10),
 ] as const;
 
-export default class PdfViewer {
+export default class PdfViewer extends RangeSelectable {
   private readonly pdfViewer: PDFViewer;
   readonly editor: PdfEditor;
   private readonly cancelLoadingDoc: ReturnType<typeof when>;
@@ -46,7 +45,12 @@ export default class PdfViewer {
   @observable
   scale: number | string = 'auto';
 
-  constructor(private readonly options: Options) {
+  protected get rootEl() {
+    return this.pdfViewer.viewer as HTMLElement | null;
+  }
+
+  constructor(protected readonly options: Options) {
+    super(options);
     makeObservable(this);
     this.pdfViewer = PdfViewer.createPDFViewer(options);
     this.editor = options.editor;
@@ -101,17 +105,7 @@ export default class PdfViewer {
     runInAction(() => {
       this.page.total = doc.numPages;
     });
-
-    document.addEventListener('selectionchange', this.handleSelection);
   }
-
-  private readonly handleSelection = () => {
-    if (this.getSelectionRange()) {
-      this.options.onTextSelected();
-    } else {
-      this.options.onTextSelectCancel();
-    }
-  };
 
   @action
   jumpToPage(page: number) {
@@ -129,7 +123,7 @@ export default class PdfViewer {
   destroy() {
     this.pdfViewer.cleanup();
     this.cancelLoadingDoc();
-    document.removeEventListener('selectionchange', this.handleSelection);
+    super.destroy();
   }
 
   private doAfterCleaning(cb: () => void) {
@@ -224,27 +218,6 @@ export default class PdfViewer {
     });
   }
 
-  getSelectionRange() {
-    const selection = window.getSelection();
-    const viewerEl = this.pdfViewer.viewer;
-
-    if (
-      !selection ||
-      selection.isCollapsed ||
-      selection.rangeCount > 1 ||
-      !viewerEl ||
-      !viewerEl.contains(selection.anchorNode) ||
-      !viewerEl.contains(selection.focusNode)
-    ) {
-      return null;
-    }
-
-    return {
-      range: selection.getRangeAt(0),
-      isEndAtStart: PdfViewer.isEndAtStart(selection),
-    };
-  }
-
   getPageRatio(page: number) {
     const { width: displayWith, height: displayHeight } = this.getSize(page);
 
@@ -260,8 +233,8 @@ export default class PdfViewer {
   }
 
   private getFragments(range: Range) {
-    const startPage = PdfViewer.getPageFromNode(range.startContainer);
-    const endPage = PdfViewer.getPageFromNode(getValidEndContainer(range));
+    const startPage = this.getPageFromNode(range.startContainer);
+    const endPage = this.getPageFromNode(RangeSelectable.getValidEndContainer(range));
     const pages = numberRange(startPage, endPage + 1).map((i) => {
       const pageEl = this.getPageEl(i);
 
@@ -320,30 +293,10 @@ export default class PdfViewer {
     return fragments;
   }
 
-  private static isEndAtStart(selection: Selection) {
-    const { focusNode, focusOffset, anchorNode, anchorOffset } = selection;
-
-    if (focusNode === anchorNode) {
-      return focusOffset < anchorOffset;
-    }
-
-    if (!anchorNode || !focusNode) {
-      throw new Error('no anchorNode / focusNode');
-    }
-
-    return Boolean(anchorNode.compareDocumentPosition(focusNode) & Node.DOCUMENT_POSITION_PRECEDING);
-  }
-
-  private static getTextFromRange(range: Range) {
-    return Array.from(range.cloneContents().childNodes)
-      .map((el) => el.textContent)
-      .join('');
-  }
-
-  private static getPageFromNode(node: Node | null) {
+  private getPageFromNode(node: Node | null) {
     let currentNode: Node | null = node;
 
-    while (currentNode) {
+    while (currentNode && currentNode !== this.rootEl) {
       if (isElement(currentNode) && currentNode.dataset.pageNumber) {
         return Number(currentNode.dataset.pageNumber);
       }
