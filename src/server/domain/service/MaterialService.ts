@@ -8,6 +8,7 @@ import {
   isDirectory,
   highlightAreaDTOSchema,
   highlightDTOSchema,
+  highlightElementDTOSchema,
   commonAnnotationSchema,
 } from 'interface/material';
 
@@ -70,9 +71,13 @@ export default class MaterialService extends BaseService {
     return blob;
   }
 
-  async createAnnotations(materialId: MaterialVO['id'], annotation: AnnotationDTO) {
+  async createAnnotation(materialId: MaterialVO['id'], annotation: AnnotationDTO) {
     if (annotation.type === AnnotationTypes.Highlight || annotation.type === AnnotationTypes.HighlightArea) {
       await this.assertMaterial(materialId, 'application/pdf');
+    }
+
+    if (annotation.type === AnnotationTypes.HighlightElement) {
+      await this.assertMaterial(materialId, 'text/html');
     }
 
     return await this.materials.createAnnotation(materialId, annotation);
@@ -113,6 +118,9 @@ export default class MaterialService extends BaseService {
         break;
       case AnnotationTypes.HighlightArea:
         annotationSchema = highlightAreaDTOSchema.pick({ color: true }).partial().strict();
+        break;
+      case AnnotationTypes.HighlightElement:
+        annotationSchema = highlightElementDTOSchema.pick({ color: true }).strict();
         break;
       default:
         throw new Error('invalid type');

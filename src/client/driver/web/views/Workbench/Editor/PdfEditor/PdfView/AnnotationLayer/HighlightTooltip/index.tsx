@@ -4,7 +4,6 @@ import { observer } from 'mobx-react-lite';
 import { BgColorsOutlined, CommentOutlined, DeleteOutlined } from '@ant-design/icons';
 import { runInAction } from 'mobx';
 
-import type { HighlightColors } from 'model/material/PdfEditor';
 import context from '../../../Context';
 import Palette from './Palette';
 import CommentTextArea from './CommentTextArea';
@@ -37,7 +36,7 @@ export default observer(
       }, [annotationId, ctx, editor]);
 
       const handleColorSelect = useCallback(
-        (color: HighlightColors) => {
+        (color: string) => {
           editor.updateAnnotation(annotationId!, { annotation: { color } });
           runInAction(() => {
             ctx.hoveringAnnotationId = null;

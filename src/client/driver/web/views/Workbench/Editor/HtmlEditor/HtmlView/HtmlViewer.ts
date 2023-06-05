@@ -1,7 +1,9 @@
 import { when } from 'mobx';
 import DOMPurify from 'dompurify';
+import getCssSelector from 'css-selector-generator';
 
 import { ui } from 'web/infra/ui';
+import { AnnotationTypes } from 'interface/material';
 import type HtmlEditor from 'model/material/HtmlEditor';
 
 import RangeSelectable, { Options as CommonOptions } from '../../common/RangeSelectable';
@@ -104,5 +106,21 @@ export default class HtmlViewer extends RangeSelectable {
     });
 
     return fragment as HTMLHtmlElement;
+  }
+
+  async createHighlightElement(el: HTMLElement, color: string) {
+    if (!this.shadowRoot.contains(el)) {
+      throw new Error('invalid el');
+    }
+
+    const uniqueSelector = getCssSelector(el, { root: this.shadowRoot });
+
+    await this.options.editor.createAnnotation({
+      type: AnnotationTypes.HighlightElement,
+      annotation: {
+        color,
+        selector: uniqueSelector,
+      },
+    });
   }
 }

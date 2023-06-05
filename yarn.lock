@@ -1796,6 +1796,11 @@ cross-spawn@^7.0.1, cross-spawn@^7.0.2:
     shebang-command "^2.0.0"
     which "^2.0.1"
 
+css-selector-generator@^3.6.4:
+  version "3.6.4"
+  resolved "https://registry.yarnpkg.com/css-selector-generator/-/css-selector-generator-3.6.4.tgz#92966f14447cb900950777e2f919daa23bcb8a86"
+  integrity sha512-/VDUW5KAoxGXJPNcn+5Y0DLJMQumLk9zNMWl2NChuTwGLEFeqfnddCpRhY6uZ77ar0uyM7W7ilvIWsk7DpjKxQ==
+
 cssesc@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/cssesc/-/cssesc-3.0.0.tgz#37741919903b868565e1c09ea747445cd18983ee"

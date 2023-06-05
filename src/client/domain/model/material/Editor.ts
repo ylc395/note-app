@@ -1,6 +1,6 @@
-import { computed, makeObservable, observable } from 'mobx';
+import { computed, makeObservable, observable, runInAction } from 'mobx';
 import { EntityTypes } from 'interface/entity';
-import { type EntityMaterialVO, type AnnotationVO, normalizeTitle } from 'interface/material';
+import { type EntityMaterialVO, type AnnotationVO, type AnnotationDTO, normalizeTitle } from 'interface/material';
 import EntityEditor from 'model/abstract/Editor';
 import type Tile from 'model/workbench/Tile';
 
@@ -16,6 +16,17 @@ export default abstract class Editor<T extends { metadata: EntityMaterialVO } = 
   @observable
   protected readonly annotations: AnnotationVO[] = [];
 
+  async createAnnotation(annotation: AnnotationDTO) {
+    const { body: createdAnnotation } = await this.remote.post<AnnotationDTO, AnnotationVO>(
+      `/materials/${this.entityId}/annotations`,
+      annotation,
+    );
+
+    runInAction(() => {
+      this.annotations.push(createdAnnotation);
+    });
+  }
+
   @computed
   get breadcrumbs() {
     return [];
@@ -29,3 +40,11 @@ export default abstract class Editor<T extends { metadata: EntityMaterialVO } = 
     };
   }
 }
+
+export const ANNOTATION_COLORS = [
+  /* Yellow */ '#2596be',
+  /* Red */ '#ef0005',
+  /* Blue */ '#0008ef',
+  /* Purple */ '#b000ef',
+  /* Gray */ '#a2a2a2',
+];

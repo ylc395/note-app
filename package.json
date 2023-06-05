@@ -75,6 +75,7 @@
     "ahooks": "^3.7.4",
     "antd": "^5.4.2",
     "clsx": "^1.2.1",
+    "css-selector-generator": "^3.6.4",
     "dayjs": "^1.11.6",
     "diff": "^5.1.0",
     "dompurify": "^3.0.3",

@@ -9,7 +9,6 @@ import {
   type EntityMaterialVO,
   type AnnotationVO,
   type HighlightVO,
-  type AnnotationDTO,
   type HighlightAreaVO,
   AnnotationTypes,
 } from 'interface/material';
@@ -25,14 +24,6 @@ export interface OutlineItem {
   title: string;
   children: OutlineItem[];
   key: string;
-}
-
-export enum HighlightColors {
-  Yellow = '#2596be',
-  Red = '#ef0005',
-  Blue = '#0008ef',
-  Purple = '#b000ef',
-  Gray = '#a2a2a2',
 }
 
 export default class PdfEditor extends Editor<Pdf> {
@@ -85,17 +76,6 @@ export default class PdfEditor extends Editor<Pdf> {
 
     runInAction(() => {
       this.annotations.push(...annotations);
-    });
-  }
-
-  async createAnnotation(annotation: AnnotationDTO) {
-    const { body: createdAnnotation } = await this.remote.post<AnnotationDTO, AnnotationVO>(
-      `/materials/${this.entityId}/annotations`,
-      annotation,
-    );
-
-    runInAction(() => {
-      this.annotations.push(createdAnnotation);
     });
   }
 

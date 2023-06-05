@@ -25,11 +25,11 @@ export default class MaterialsController {
   }
 
   @Post('/materials/:id/annotations')
-  async createAnnotations(
+  async createAnnotation(
     @Param('id') materialId: string,
     @Body(createSchemaPipe(annotationDTOSchema)) highlight: AnnotationDTO,
   ): Promise<AnnotationVO> {
-    return await this.materialService.createAnnotations(materialId, highlight);
+    return await this.materialService.createAnnotation(materialId, highlight);
   }
 
   @Get('/materials/:id/annotations')
