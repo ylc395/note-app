@@ -1,7 +1,8 @@
+import debounce from 'lodash/debounce';
 import { isTextNode, isElement, isVisible } from './domUtils';
 
 export interface Options {
-  onTextSelected?: () => void;
+  onTextSelected?: (e: { el: HTMLSpanElement; collapseToStart: boolean }) => void;
   onTextSelectCancel?: () => void;
 }
 
@@ -11,6 +12,7 @@ export default abstract class RangeSelectable {
   }
 
   protected abstract rootEl: HTMLElement | null | undefined;
+  private markEl?: HTMLElement;
 
   private static isEndAtStart(selection: Selection) {
     const { focusNode, focusOffset, anchorNode, anchorOffset } = selection;
@@ -53,24 +55,35 @@ export default abstract class RangeSelectable {
   }
 
   private readonly handleSelection = () => {
-    if (this.getSelectionRange()) {
-      this.options.onTextSelected?.();
+    const range = this.getSelectionRange();
+    this.removeMarkEl();
+
+    if (range) {
+      this.updateRangeEnd(range);
     } else {
+      this.updateRangeEnd.cancel();
       this.options.onTextSelectCancel?.();
     }
   };
 
+  private readonly updateRangeEnd = debounce((range: { range: Range; isEndAtStart: boolean }) => {
+    const rangeEnd = RangeSelectable.getRangeEnd(range);
+    this.options.onTextSelected?.(rangeEnd);
+    this.markEl = rangeEnd.el;
+  }, 300);
+
+  private removeMarkEl() {
+    this.markEl?.remove();
+    this.markEl = undefined;
+  }
+
   protected destroy() {
+    this.removeMarkEl();
+    this.updateRangeEnd.cancel();
     document.removeEventListener('selectionchange', this.handleSelection);
   }
 
-  getSelectionEnd() {
-    const result = this.getSelectionRange();
-
-    if (!result) {
-      return;
-    }
-
+  private static getRangeEnd(result: { range: Range; isEndAtStart: boolean }) {
     const range = result.range.cloneRange();
     let collapseToStart = result.isEndAtStart;
     const endContainer = RangeSelectable.getValidEndContainer(range);
