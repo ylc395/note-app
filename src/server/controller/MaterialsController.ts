@@ -6,14 +6,15 @@ import {
   type MaterialQuery,
   type AnnotationDTO,
   type AnnotationVO,
+  type AnnotationPatchDTO,
   materialDTOSchema,
   materialQuerySchema,
   annotationDTOSchema,
+  annotationPatchSchema,
 } from 'interface/material';
 import MaterialService from 'service/MaterialService';
 
 import { createSchemaPipe, Post, Body, Get, Query, Param, Delete, Patch } from './decorators';
-import { unknown, record } from 'zod';
 
 @Controller()
 export default class MaterialsController {
@@ -45,7 +46,7 @@ export default class MaterialsController {
   @Patch('/materials/annotations/:annotationId')
   async updateAnnotation(
     @Param('annotationId') annotationId: string,
-    @Body(createSchemaPipe(record(unknown()))) patch: Record<string, unknown>,
+    @Body(createSchemaPipe(annotationPatchSchema)) patch: AnnotationPatchDTO,
   ): Promise<AnnotationVO> {
     return await this.materialService.updateAnnotation(annotationId, patch);
   }

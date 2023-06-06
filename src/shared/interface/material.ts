@@ -81,7 +81,9 @@ const rectSchema = object({
   height: number(),
 });
 
-export const highlightDTOSchema = object({
+export type Rect = Infer<typeof rectSchema>;
+
+const highlightSchema = object({
   content: string(),
   color: string(),
   fragments: array(
@@ -92,33 +94,34 @@ export const highlightDTOSchema = object({
   ),
 });
 
-export const highlightAreaDTOSchema = object({
+const highlightAreaSchema = object({
   color: string().optional(),
   snapshot: string(),
   rect: rectSchema,
   page: number(),
 });
 
-export const highlightElementDTOSchema = object({
+const highlightElementSchema = object({
   color: string().optional(),
   selector: string(),
 });
 
-export type HighlightDTO = Infer<typeof highlightDTOSchema>;
-
-export type HighlightVO = HighlightDTO;
-
-export type HighlightAreaDTO = Infer<typeof highlightAreaDTOSchema>;
-export type HighlightAreaVO = HighlightAreaDTO;
-export type HighlightElementDTO = Infer<typeof highlightElementDTOSchema>;
-
-export const commonAnnotationSchema = object({ comment: string().optional() });
-
 export const annotationDTOSchema = discriminatedUnion('type', [
-  object({ type: literal(AnnotationTypes.Highlight), annotation: highlightDTOSchema }),
-  object({ type: literal(AnnotationTypes.HighlightArea), annotation: highlightAreaDTOSchema }),
-  object({ type: literal(AnnotationTypes.HighlightElement), annotation: highlightElementDTOSchema }),
-]).and(commonAnnotationSchema);
+  highlightSchema.extend({ type: literal(AnnotationTypes.Highlight) }),
+  highlightAreaSchema.extend({ type: literal(AnnotationTypes.HighlightArea) }),
+  highlightElementSchema.extend({ type: literal(AnnotationTypes.HighlightElement) }),
+]).and(
+  object({
+    comment: string().optional(),
+  }),
+);
+
+export const annotationPatchSchema = object({
+  comment: string().optional(),
+  color: string().optional(),
+});
+
+export type AnnotationPatchDTO = Infer<typeof annotationPatchSchema>;
 
 export type AnnotationDTO = Infer<typeof annotationDTOSchema>;
 
@@ -129,16 +132,16 @@ interface CommonAnnotationVO {
   createdAt: number;
 }
 
-export type HighlightAnnotationVO = CommonAnnotationVO & { type: AnnotationTypes.Highlight; annotation: HighlightVO };
+export interface HighlightAnnotationVO extends CommonAnnotationVO, Infer<typeof highlightSchema> {
+  type: AnnotationTypes.Highlight;
+}
 
-export type HighlightAreaAnnotationVO = CommonAnnotationVO & {
+export interface HighlightAreaAnnotationVO extends CommonAnnotationVO, Infer<typeof highlightAreaSchema> {
   type: AnnotationTypes.HighlightArea;
-  annotation: HighlightAreaVO;
-};
+}
 
-export type HighlightElementAnnotationVO = CommonAnnotationVO & {
+export interface HighlightElementAnnotationVO extends CommonAnnotationVO, Infer<typeof highlightElementSchema> {
   type: AnnotationTypes.HighlightElement;
-  annotation: HighlightAreaVO;
-};
+}
 
 export type AnnotationVO = HighlightAnnotationVO | HighlightAreaAnnotationVO | HighlightElementAnnotationVO;

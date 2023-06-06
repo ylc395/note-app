@@ -4,7 +4,7 @@ import intersection from 'lodash/intersection';
 import union from 'lodash/union';
 import { makeObservable, observable, when, action, runInAction, computed } from 'mobx';
 
-import { AnnotationTypes, type HighlightAreaDTO, type HighlightDTO } from 'interface/material';
+import { AnnotationTypes, type Rect } from 'interface/material';
 import type PdfEditor from 'model/material/PdfEditor';
 
 import { isElement } from '../../common/domUtils';
@@ -165,17 +165,15 @@ export default class PdfViewer extends RangeSelectable {
 
     await this.editor.createAnnotation({
       type: AnnotationTypes.Highlight,
-      annotation: {
-        color,
-        content: PdfViewer.getTextFromRange(range),
-        fragments: this.getFragments(range),
-      },
+      color,
+      content: PdfViewer.getTextFromRange(range),
+      fragments: this.getFragments(range),
     });
 
     window.getSelection()?.removeAllRanges();
   }
 
-  async createHighlightArea(page: number, rect: HighlightAreaDTO['rect']) {
+  async createHighlightArea(page: number, rect: Rect) {
     const sourceCanvas = this.getCanvasEl(page);
     const { width: canvasDisplayWidth, height: canvasDisplayHeight } = sourceCanvas.getBoundingClientRect();
 
@@ -206,16 +204,14 @@ export default class PdfViewer extends RangeSelectable {
 
     await this.editor.createAnnotation({
       type: AnnotationTypes.HighlightArea,
-      annotation: {
-        rect: {
-          x: rect.x / horizontalRatio,
-          y: rect.y / verticalRatio,
-          width: rect.width / horizontalRatio,
-          height: rect.height / verticalRatio,
-        },
-        page,
-        snapshot,
+      rect: {
+        x: rect.x / horizontalRatio,
+        y: rect.y / verticalRatio,
+        width: rect.width / horizontalRatio,
+        height: rect.height / verticalRatio,
       },
+      page,
+      snapshot,
     });
   }
 
@@ -248,7 +244,7 @@ export default class PdfViewer extends RangeSelectable {
 
     let i = 0;
     let j = 0;
-    const fragments: HighlightDTO['fragments'] = [];
+    const fragments: { page: number; rect: Rect }[] = [];
     const pageWidth = pages[0]?.el.clientWidth;
 
     if (!pageWidth) {

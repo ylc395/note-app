@@ -149,10 +149,8 @@ export default class HtmlViewer extends RangeSelectable {
 
     await this.options.editor.createAnnotation({
       type: AnnotationTypes.HighlightElement,
-      annotation: {
-        color,
-        selector: uniqueSelector,
-      },
+      color,
+      selector: uniqueSelector,
     });
   }
 }

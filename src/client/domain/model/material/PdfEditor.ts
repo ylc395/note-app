@@ -8,9 +8,9 @@ import type { RefProxy } from 'pdfjs-dist/types/src/display/api';
 import {
   type EntityMaterialVO,
   type AnnotationVO,
-  type HighlightVO,
-  type HighlightAreaVO,
   AnnotationTypes,
+  HighlightAnnotationVO,
+  HighlightAreaAnnotationVO,
 } from 'interface/material';
 import type Tile from 'model/workbench/Tile';
 import Editor from './Editor';
@@ -42,15 +42,15 @@ export default class PdfEditor extends Editor<Pdf> {
   @computed
   get highlights() {
     return this.annotations
-      .map(({ annotation, type, ...attr }) => {
-        if (type === AnnotationTypes.Highlight) {
+      .map((annotation) => {
+        if (annotation.type === AnnotationTypes.Highlight) {
           const pages = annotation.fragments.map(({ page }) => page);
 
-          return { ...attr, annotation, type, startPage: Math.min(...pages), endPage: Math.max(...pages) };
+          return { ...annotation, startPage: Math.min(...pages), endPage: Math.max(...pages) };
         }
 
-        if (type === AnnotationTypes.HighlightArea) {
-          return { ...attr, annotation, type, startPage: annotation.page, endPage: annotation.page };
+        if (annotation.type === AnnotationTypes.HighlightArea) {
+          return { ...annotation, startPage: annotation.page, endPage: annotation.page };
         }
 
         throw new Error('invalid type');
@@ -81,17 +81,17 @@ export default class PdfEditor extends Editor<Pdf> {
 
   @computed
   get highlightFragmentsByPage() {
-    const highlights = this.annotations
-      .filter(({ type }) => type === AnnotationTypes.Highlight)
-      .map(({ annotation, id }) => ({ ...(annotation as HighlightVO), annotationId: id }));
+    const highlights = this.annotations.filter(
+      ({ type }) => type === AnnotationTypes.Highlight,
+    ) as HighlightAnnotationVO[];
 
-    const fragments = highlights.flatMap(({ fragments, color, annotationId }) => {
+    const fragments = highlights.flatMap(({ fragments, color, id }) => {
       return fragments.map(({ page, rect }) => ({
-        annotationId,
+        annotationId: id,
         page,
         rect,
         color,
-        highlightId: `${annotationId}-${JSON.stringify(rect)}`,
+        highlightId: `${id}-${JSON.stringify(rect)}`,
       }));
     });
 
@@ -100,9 +100,9 @@ export default class PdfEditor extends Editor<Pdf> {
 
   @computed
   get highlightAreasByPage() {
-    const highlightAreas = this.annotations
-      .filter(({ type }) => type === AnnotationTypes.HighlightArea)
-      .map(({ annotation, id }) => ({ ...(annotation as HighlightAreaVO), annotationId: id }));
+    const highlightAreas = this.annotations.filter(
+      ({ type }) => type === AnnotationTypes.HighlightArea,
+    ) as HighlightAreaAnnotationVO[];
 
     return groupBy(highlightAreas, 'page');
   }

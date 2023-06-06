@@ -4,12 +4,9 @@ import {
   type MaterialQuery,
   type MaterialVO,
   type AnnotationVO,
+  type AnnotationPatchDTO,
   AnnotationTypes,
   isDirectory,
-  highlightAreaDTOSchema,
-  highlightDTOSchema,
-  highlightElementDTOSchema,
-  commonAnnotationSchema,
 } from 'interface/material';
 
 import BaseService from './BaseService';
@@ -104,33 +101,11 @@ export default class MaterialService extends BaseService {
     }
   }
 
-  async updateAnnotation(annotationId: AnnotationVO['id'], patch: Record<string, unknown>) {
+  async updateAnnotation(annotationId: AnnotationVO['id'], patch: AnnotationPatchDTO) {
     const annotation = await this.materials.findAnnotationById(annotationId);
 
     if (!annotation) {
       throw new Error('invalid annotation id');
-    }
-
-    let annotationSchema;
-    switch (annotation.type) {
-      case AnnotationTypes.Highlight:
-        annotationSchema = highlightDTOSchema.pick({ color: true }).partial().strict();
-        break;
-      case AnnotationTypes.HighlightArea:
-        annotationSchema = highlightAreaDTOSchema.pick({ color: true }).partial().strict();
-        break;
-      case AnnotationTypes.HighlightElement:
-        annotationSchema = highlightElementDTOSchema.pick({ color: true }).strict();
-        break;
-      default:
-        throw new Error('invalid type');
-    }
-
-    const schema = commonAnnotationSchema.extend({ annotation: annotationSchema }).partial().strict();
-    const result = schema.safeParse(patch);
-
-    if (!result.success) {
-      throw new Error(`invalid patch: ${result.error}`);
     }
 
     const updated = await this.materials.updateAnnotation(annotationId, patch);

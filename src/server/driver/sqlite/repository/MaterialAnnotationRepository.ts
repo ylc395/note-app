@@ -1,6 +1,7 @@
 import pick from 'lodash/pick';
-import isObject from 'lodash/isObject';
-import type { AnnotationDTO, AnnotationVO, MaterialVO } from 'interface/material';
+import isEmpty from 'lodash/isEmpty';
+
+import type { AnnotationDTO, AnnotationPatchDTO, AnnotationVO, MaterialVO } from 'interface/material';
 
 import BaseRepository from './BaseRepository';
 import materialAnnotationSchema, { type Row } from '../schema/materialAnnotation';
@@ -12,7 +13,7 @@ export default class MaterialAnnotationRepository extends BaseRepository<Row> {
     return this.schema.tableName;
   }
 
-  async create(materialId: MaterialVO['id'], { type, annotation, comment }: AnnotationDTO) {
+  async create(materialId: MaterialVO['id'], { type, comment, ...annotation }: AnnotationDTO) {
     const created = await this._createOrUpdate({
       materialId,
       type,
@@ -22,7 +23,7 @@ export default class MaterialAnnotationRepository extends BaseRepository<Row> {
 
     return {
       ...pick(created, ['id', 'createdAt', 'updatedAt', 'type', 'comment']),
-      annotation,
+      ...annotation,
     } as AnnotationVO;
   }
 
@@ -41,7 +42,7 @@ export default class MaterialAnnotationRepository extends BaseRepository<Row> {
   private static rowToVO(row: Row) {
     return {
       ...pick(row, ['id', 'createdAt', 'updatedAt', 'comment', 'type']),
-      annotation: JSON.parse(row.meta),
+      ...JSON.parse(row.meta),
     } as AnnotationVO;
   }
 
@@ -50,20 +51,20 @@ export default class MaterialAnnotationRepository extends BaseRepository<Row> {
     return count === 1;
   }
 
-  async update(annotationId: AnnotationVO['id'], patch: Record<string, unknown>) {
+  async update(annotationId: AnnotationVO['id'], { comment, ...attr }: AnnotationPatchDTO) {
     let newMeta;
 
-    if ('annotation' in patch && isObject(patch.annotation)) {
+    if (!isEmpty(attr)) {
       const row = await this.knex<Row>(this.tableName).where('id', annotationId).first();
 
       if (!row) {
         return null;
       }
 
-      newMeta = JSON.stringify({ ...JSON.parse(row.meta), ...patch.annotation });
+      newMeta = JSON.stringify({ ...JSON.parse(row.meta), ...attr });
     }
 
-    const updated = await this._createOrUpdate({ ...patch, ...(newMeta ? { meta: newMeta } : null) }, annotationId);
+    const updated = await this._createOrUpdate({ comment, meta: newMeta }, annotationId);
     return updated ? MaterialAnnotationRepository.rowToVO(updated) : null;
   }
 }

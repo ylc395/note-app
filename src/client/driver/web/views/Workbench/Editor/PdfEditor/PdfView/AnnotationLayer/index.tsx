@@ -67,7 +67,7 @@ export default observer(function AnnotationLayer({ page }: { page: number }) {
         <HighlightFragment key={fragment.highlightId} fragment={fragment} page={page} />
       ))}
       {areas.map((area) => (
-        <HighlightArea key={area.annotationId} area={area} page={page} />
+        <HighlightArea key={area.id} area={area} page={page} />
       ))}
       <DraggingHighlightArea page={page} />
       {highlightTooltipShowing && <HighlightTooltip ref={setHighlightTooltipPopper} style={highlightTooltipStyles} />}

@@ -12,16 +12,16 @@ export default function useHighlightTooltip(page: number) {
 
   const markEl = useMemo(() => {
     if (annotationId && pdfViewer) {
-      const { type, annotation } = pdfViewer.editor.getAnnotationById(annotationId);
+      const annotation = pdfViewer.editor.getAnnotationById(annotationId);
 
-      if (type === AnnotationTypes.Highlight) {
+      if (annotation.type === AnnotationTypes.Highlight) {
         const endPage = Math.max(...annotation.fragments.map(({ page }) => page));
         return endPage === page
           ? last(pdfViewer.getPageEl(page)?.querySelectorAll(`[data-annotation-id="${annotationId}"]`))
           : undefined;
       }
 
-      if (type === AnnotationTypes.HighlightArea) {
+      if (annotation.type === AnnotationTypes.HighlightArea) {
         return pdfViewer.getPageEl(page)?.querySelector(`[data-annotation-id="${annotationId}"]`);
       }
     }

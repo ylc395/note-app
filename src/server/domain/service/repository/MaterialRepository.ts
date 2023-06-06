@@ -1,5 +1,6 @@
 import type {
   AnnotationDTO,
+  AnnotationPatchDTO,
   AnnotationVO,
   DirectoryVO,
   EntityMaterialVO,
@@ -21,5 +22,5 @@ export interface MaterialRepository {
   updateText: <T>(materialId: MaterialVO['id'], payload: T) => Promise<T | null>;
   removeAnnotation: (annotationId: AnnotationVO['id']) => Promise<boolean>;
   findAnnotationById: (annotationId: AnnotationVO['id']) => Promise<AnnotationVO | null>;
-  updateAnnotation: (annotationId: AnnotationVO['id'], patch: Record<string, unknown>) => Promise<AnnotationVO | null>;
+  updateAnnotation: (annotationId: AnnotationVO['id'], patch: AnnotationPatchDTO) => Promise<AnnotationVO | null>;
 }
