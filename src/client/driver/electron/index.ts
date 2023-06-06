@@ -94,6 +94,10 @@ export default class ElectronClient extends Emitter<AppClientEvents> implements 
       this.mainWindow = undefined;
     });
 
+    this.mainWindow.webContents.on('will-navigate', (e) => {
+      e.preventDefault();
+    });
+
     if (NODE_ENV === 'development') {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       await this.mainWindow.loadURL(process.env['VITE_SERVER_ENTRY_URL']!);

@@ -50,7 +50,7 @@ export default class HtmlViewer extends RangeSelectable {
     makeObservable(this);
 
     this.rootEl = options.rootEl.shadowRoot || options.rootEl.attachShadow({ mode: 'open' });
-    this.rootEl.addEventListener('click', this.handleClick);
+    this.rootEl.addEventListener('click', HtmlViewer.hijackClick);
     this.elementSelector = new ElementSelector({
       root: this.rootEl,
       onSelect: (el) => this.createHighlightElement(el, 'yellow'),
@@ -58,18 +58,28 @@ export default class HtmlViewer extends RangeSelectable {
     this.initContent();
   }
 
-  private readonly handleClick = (e: Event) => {
-    const target = e.target as HTMLElement;
+  private static hijackClick(e: Event) {
+    for (const el of e.composedPath() as HTMLElement[]) {
+      if (el.tagName === 'A') {
+        const href = el.getAttribute('href');
 
-    if (target.tagName === 'A') {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      ui.openNewWindow(target.getAttribute('href')!);
-      e.preventDefault();
+        if (href) {
+          ui.openNewWindow(href);
+        }
+
+        e.preventDefault();
+        return;
+      }
+
+      if (el.tagName === 'BUTTON' && el.getAttribute('type') === 'submit') {
+        e.preventDefault();
+        return;
+      }
     }
-  };
+  }
 
   destroy(): void {
-    this.rootEl.removeEventListener('click', this.handleClick);
+    this.rootEl.removeEventListener('click', HtmlViewer.hijackClick);
     this.stopLoadingHtml?.();
     this.elementSelector.destroy();
     super.destroy();
@@ -121,6 +131,7 @@ export default class HtmlViewer extends RangeSelectable {
     const fragment = DOMPurify.sanitize(html, {
       FORBID_CONTENTS: ['script'], // override default forbid contents. Only <script> is dangerous for us
       ADD_TAGS: ['style'],
+      FORBID_ATTR: ['action'],
       CUSTOM_ELEMENT_HANDLING: {
         tagNameCheck: () => true,
         attributeNameCheck: () => true,
