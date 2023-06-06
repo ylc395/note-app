@@ -11,7 +11,7 @@ export default abstract class RangeSelectable {
     document.addEventListener('selectionchange', this.handleSelection);
   }
 
-  protected abstract rootEl: HTMLElement | null | undefined;
+  protected abstract rootEl: HTMLElement | DocumentFragment | null | undefined;
   private markEl?: HTMLElement;
 
   private static isEndAtStart(selection: Selection) {

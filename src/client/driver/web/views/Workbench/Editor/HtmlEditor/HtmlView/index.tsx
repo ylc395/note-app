@@ -1,11 +1,14 @@
 import { observer } from 'mobx-react-lite';
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useContext } from 'react';
 
 import type HtmlEditor from 'model/material/HtmlEditor';
 import HtmlViewer from './HtmlViewer';
+import context from '../Context';
+import { runInAction } from 'mobx';
 
 export default observer(function HtmlView({ editor }: { editor: HtmlEditor }) {
   const shadowWrapperRef = useRef<HTMLDivElement | null>(null);
+  const ctx = useContext(context);
 
   useEffect(() => {
     const htmlViewer = new HtmlViewer({
@@ -14,8 +17,12 @@ export default observer(function HtmlView({ editor }: { editor: HtmlEditor }) {
       editor,
     });
 
+    runInAction(() => {
+      ctx.htmlViewer = htmlViewer;
+    });
+
     return () => htmlViewer.destroy();
-  }, [editor]);
+  }, [editor, ctx]);
 
   return (
     <div className="h-full overflow-auto">

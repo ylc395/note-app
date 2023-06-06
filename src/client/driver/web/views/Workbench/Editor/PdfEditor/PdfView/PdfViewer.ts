@@ -49,13 +49,14 @@ export default class PdfViewer extends RangeSelectable {
     return this.pdfViewer.viewer as HTMLElement | null;
   }
 
-  constructor(protected readonly options: Options) {
+  constructor(options: Options) {
     super(options);
     makeObservable(this);
+
     this.pdfViewer = PdfViewer.createPDFViewer(options);
     this.editor = options.editor;
     this.cancelLoadingDoc = when(
-      () => Boolean(options.editor.entity),
+      () => Boolean(this.editor.entity),
       () => this.init(),
     );
 

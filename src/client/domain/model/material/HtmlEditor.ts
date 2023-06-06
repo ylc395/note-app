@@ -1,4 +1,4 @@
-import { runInAction } from 'mobx';
+import { makeObservable, observable, runInAction } from 'mobx';
 
 import type { EntityMaterialVO, AnnotationVO } from 'interface/material';
 import type Tile from 'model/workbench/Tile';
@@ -12,8 +12,10 @@ interface WebPage {
 export default class HtmlEditor extends Editor<WebPage> {
   constructor(tile: Tile, materialId: EntityMaterialVO['id']) {
     super(tile, materialId);
+    makeObservable(this);
   }
 
+  @observable.ref
   documentElement?: unknown;
 
   protected async init() {

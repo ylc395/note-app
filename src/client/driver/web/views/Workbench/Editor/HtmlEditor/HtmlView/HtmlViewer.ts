@@ -1,4 +1,4 @@
-import { when } from 'mobx';
+import { when, computed, makeObservable } from 'mobx';
 import DOMPurify from 'dompurify';
 import getCssSelector from 'css-selector-generator';
 
@@ -7,6 +7,7 @@ import { AnnotationTypes } from 'interface/material';
 import type HtmlEditor from 'model/material/HtmlEditor';
 
 import RangeSelectable, { Options as CommonOptions } from '../../common/RangeSelectable';
+import ElementSelector from './ElementSelector';
 
 interface Options extends CommonOptions {
   editor: HtmlEditor;
@@ -14,29 +15,55 @@ interface Options extends CommonOptions {
 }
 
 export default class HtmlViewer extends RangeSelectable {
-  private readonly shadowRoot: ShadowRoot;
+  protected readonly rootEl: ShadowRoot;
   private stopLoadingHtml?: ReturnType<typeof when>;
+  readonly elementSelector: ElementSelector;
+
+  get editor() {
+    return this.options.editor;
+  }
+
+  @computed
+  get title() {
+    let text = this.editor.entity?.metadata.sourceUrl || '未命名 HTML 文档';
+    let icon = this.editor.entity?.metadata.icon || '';
+
+    if (this.editor.documentElement instanceof HTMLHtmlElement) {
+      const titleContent = this.editor.documentElement.querySelector('title')?.innerText;
+
+      if (titleContent) {
+        text = titleContent;
+      }
+
+      const iconContent = this.editor.documentElement.querySelector('link[rel="icon"]')?.getAttribute('href');
+
+      if (iconContent) {
+        icon = iconContent;
+      }
+    }
+
+    return { text, icon };
+  }
 
   constructor(protected readonly options: Options) {
     super(options);
-    this.shadowRoot = options.rootEl.shadowRoot || options.rootEl.attachShadow({ mode: 'open' });
-    this.initContent();
+    makeObservable(this);
+
+    this.rootEl = options.rootEl.shadowRoot || options.rootEl.attachShadow({ mode: 'open' });
     this.rootEl.addEventListener('click', this.handleClick);
+    this.elementSelector = new ElementSelector({
+      root: this.rootEl,
+      onSelect: (el) => this.createHighlightElement(el, 'yellow'),
+    });
+    this.initContent();
   }
 
-  protected get rootEl() {
-    return this.options.rootEl;
-  }
+  private readonly handleClick = (e: Event) => {
+    const target = e.target as HTMLElement;
 
-  private readonly handleClick = (e: MouseEvent) => {
-    // can not get event target by `e.target` when bubbling along the shadow dom
-    // so we use event path
-    const eventPath = e.composedPath() as HTMLElement[];
-    const anchorEl = eventPath.find((el) => el.tagName.toLowerCase() === 'a' && el.getAttribute('href'));
-
-    if (anchorEl) {
+    if (target.tagName === 'A') {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      ui.openNewWindow(anchorEl.getAttribute('href')!);
+      ui.openNewWindow(target.getAttribute('href')!);
       e.preventDefault();
     }
   };
@@ -44,24 +71,22 @@ export default class HtmlViewer extends RangeSelectable {
   destroy(): void {
     this.rootEl.removeEventListener('click', this.handleClick);
     this.stopLoadingHtml?.();
+    this.elementSelector.destroy();
     super.destroy();
   }
 
   private initContent() {
-    const { editor } = this.options;
-
-    if (editor.documentElement instanceof HTMLHtmlElement) {
-      this.shadowRoot.replaceChildren(editor.documentElement);
+    if (this.editor.documentElement instanceof HTMLHtmlElement) {
+      this.rootEl.replaceChildren(this.editor.documentElement);
     } else {
-      const { editor } = this.options;
       this.stopLoadingHtml = when(
-        () => Boolean(editor.entity),
+        () => Boolean(this.editor.entity),
         () => {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          const documentElement = HtmlViewer.filterHtml(editor.entity!.html);
+          const documentElement = HtmlViewer.filterHtml(this.editor.entity!.html);
           HtmlViewer.processStyles(documentElement);
-          editor.documentElement = documentElement;
-          this.shadowRoot.replaceChildren(documentElement);
+          this.editor.documentElement = documentElement;
+          this.rootEl.replaceChildren(documentElement);
         },
       );
     }
@@ -109,11 +134,7 @@ export default class HtmlViewer extends RangeSelectable {
   }
 
   async createHighlightElement(el: HTMLElement, color: string) {
-    if (!this.shadowRoot.contains(el)) {
-      throw new Error('invalid el');
-    }
-
-    const uniqueSelector = getCssSelector(el, { root: this.shadowRoot });
+    const uniqueSelector = getCssSelector(el, { root: this.rootEl });
 
     await this.options.editor.createAnnotation({
       type: AnnotationTypes.HighlightElement,
