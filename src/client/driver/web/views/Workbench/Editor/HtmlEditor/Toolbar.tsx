@@ -14,6 +14,7 @@ export default observer(function Toolbar() {
       <div className="absolute right-2 top-1/2 -translate-y-1/2">
         <Button
           icon={<SelectOutlined />}
+          disabled={htmlViewer?.elementSelector.isEnabled}
           onClick={() => htmlViewer?.elementSelector.enable()}
           size="small"
           type="text"

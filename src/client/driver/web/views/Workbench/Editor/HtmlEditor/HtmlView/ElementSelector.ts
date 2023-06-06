@@ -1,20 +1,34 @@
+import { makeObservable, computed, observable, action } from 'mobx';
 import { offset, computePosition, autoUpdate, size } from '@floating-ui/dom';
 
 export default class ElementSelector {
   private readonly root: HTMLElement | ShadowRoot;
+
+  @observable.ref
   private overlayEl?: HTMLElement;
   private cancelAutoUpdate?: ReturnType<typeof autoUpdate>;
   private currentTarget?: HTMLElement;
 
   constructor(private readonly options: { onSelect: (el: HTMLElement) => void; root?: HTMLElement | ShadowRoot }) {
     this.root = options.root || document.body;
+    makeObservable(this);
+  }
+
+  @computed
+  get isEnabled() {
+    return Boolean(this.overlayEl);
   }
 
   enable() {
+    if (this.isEnabled) {
+      throw new Error('enabled');
+    }
+
     this.initOverlay();
     this.root.addEventListener('mouseover', this.handleHover);
     this.root.addEventListener('click', this.handleClick);
     this.root.addEventListener('contextmenu', this.handleContextmenu);
+    document.body.addEventListener('keyup', this.handleKeyup);
   }
 
   private disable() {
@@ -22,13 +36,16 @@ export default class ElementSelector {
     this.root.removeEventListener('mouseover', this.handleHover);
     this.root.removeEventListener('click', this.handleClick);
     this.root.removeEventListener('contextmenu', this.handleContextmenu);
+    document.body.removeEventListener('keyup', this.handleKeyup);
   }
 
+  @action
   private clearOverlay() {
     this.overlayEl?.remove();
     this.overlayEl = undefined;
   }
 
+  @action
   private initOverlay() {
     this.overlayEl = document.createElement('div');
     this.overlayEl.style.backgroundColor = 'blue';
@@ -52,6 +69,12 @@ export default class ElementSelector {
     if (e.target === this.currentTarget) {
       e.preventDefault();
       e.stopImmediatePropagation();
+      this.disable();
+    }
+  };
+
+  private readonly handleKeyup = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
       this.disable();
     }
   };

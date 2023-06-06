@@ -17,7 +17,8 @@ import { APP_FILE_PROTOCOL } from 'infra/constants';
 import { UI_CHANNELS, createContextmenu, openNewWindow } from './ui';
 
 const APP_NAME = 'my-note-app';
-const NODE_ENV = process.env.NODE_ENV || 'development';
+const NODE_ENV = process.env.NODE_ENV;
+const ENTRY_URL = process.env.VITE_SERVER_ENTRY_URL;
 
 export default class ElectronClient extends Emitter<AppClientEvents> implements AppClient {
   private mainWindow?: BrowserWindow;
@@ -94,13 +95,15 @@ export default class ElectronClient extends Emitter<AppClientEvents> implements 
       this.mainWindow = undefined;
     });
 
-    this.mainWindow.webContents.on('will-navigate', (e) => {
-      e.preventDefault();
+    this.mainWindow.webContents.on('will-navigate', (e, url) => {
+      if (NODE_ENV !== 'development' || url !== ENTRY_URL) {
+        e.preventDefault();
+      }
     });
 
     if (NODE_ENV === 'development') {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      await this.mainWindow.loadURL(process.env['VITE_SERVER_ENTRY_URL']!);
+      await this.mainWindow.loadURL(ENTRY_URL!);
       this.mainWindow.webContents.openDevTools();
     }
   }
