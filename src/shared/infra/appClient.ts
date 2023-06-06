@@ -20,7 +20,7 @@ export interface AppClient extends Emitter<Events> {
   start: () => Promise<void>;
   getDataDir: () => string;
   getClientInfo: () => ClientInfo;
-  pushMessage: <T>(channel: string, payload: T) => void;
+  pushMessage?: <T>(channel: string, payload: T) => void;
 }
 
 export const token = Symbol('appClient');

@@ -51,7 +51,7 @@ async function buildElectron(skipTs) {
     outDir: path.join(ELECTRON_OUTPUT, 'server'),
   });
   await replaceTscAliasPaths({ configFile: CLIENT_TSCONFIG, outDir: path.join(ELECTRON_OUTPUT, 'client') });
-  const electronProcess = shell.exec(`electron ${ELECTRON_OUTPUT}/server/driver/electron/index.js`, { async: true });
+  const electronProcess = shell.exec(`electron ${ELECTRON_OUTPUT}/server/bootstrap.desktop.js`, { async: true });
 
   return electronProcess;
 }

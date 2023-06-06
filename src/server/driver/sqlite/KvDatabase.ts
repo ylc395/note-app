@@ -1,8 +1,8 @@
 import type { Knex } from 'knex';
-import once from 'lodash/once';
+import { Injectable } from '@nestjs/common';
 
 import type { KvDatabase } from 'infra/kvDatabase';
-import type SqliteDb from './index';
+import SqliteDb from './Database';
 
 type Row = {
   key: string;
@@ -11,17 +11,18 @@ type Row = {
 
 const tableName = 'kv';
 
+@Injectable()
 export default class SqliteKvDatabase implements KvDatabase {
   private knex?: Knex;
-
+  readonly ready: Promise<void>;
   constructor(private readonly sqliteDb: SqliteDb) {
-    this.init();
+    this.ready = this.init();
   }
 
-  readonly init = once(async () => {
+  private async init() {
     this.knex = await this.sqliteDb.getKnex();
     await this.createTable();
-  });
+  }
 
   private async createTable() {
     if (!this.knex) {
@@ -52,7 +53,7 @@ export default class SqliteKvDatabase implements KvDatabase {
   async get(key: string, value: () => string): Promise<string>;
   async get(key: string, value?: () => string) {
     if (!this.knex) {
-      throw new Error('kv db not ready');
+      throw new Error('no knex');
     }
 
     const row = await this.knex<Row>(tableName).where('key', key).first();

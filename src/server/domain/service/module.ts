@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 import BaseService from './BaseService';
 import NoteService from './NoteService';
@@ -26,6 +27,7 @@ const services = [
 ];
 
 @Module({
+  imports: [EventEmitterModule.forRoot({ wildcard: true })],
   providers: [BaseService, ...services],
   exports: services,
 })

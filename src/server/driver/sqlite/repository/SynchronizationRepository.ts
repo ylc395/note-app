@@ -1,14 +1,16 @@
-import BaseRepository from './BaseRepository';
+import { Inject } from '@nestjs/common';
 import type { SynchronizationRepository } from 'service/repository/SynchronizationRepository';
-import syncEntitySchema, { type Row } from '../schema/syncEntity';
-import { kvDbFactory } from '../index';
 import type { EntityLocator } from 'interface/entity';
+import { token as kvDatabaseToken, type KvDatabase } from 'infra/kvDatabase';
+
+import BaseRepository from './BaseRepository';
+import syncEntitySchema, { type Row } from '../schema/syncEntity';
 
 const LAST_SYNC_TIME_KEY = 'sync.lastSyncTime';
 
 export default class SqliteSynchronizationRepository extends BaseRepository<Row> implements SynchronizationRepository {
   protected readonly schema = syncEntitySchema;
-  private readonly kvDb = kvDbFactory();
+  @Inject(kvDatabaseToken) private readonly kvDb!: KvDatabase;
   async getEntitySyncAt({ id: entityId, type: entityType }: EntityLocator) {
     const row = await this.knex<Row>(this.schema.tableName).where({ entityId, entityType }).first();
 

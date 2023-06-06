@@ -1,23 +1,25 @@
 import type { Knex } from 'knex';
-import once from 'lodash/once';
+import { Injectable } from '@nestjs/common';
 
 import type { SearchEngine, SearchQuery } from 'infra/searchEngine';
 import { EntityTypes } from 'interface/entity';
-import type SqliteDb from './index';
+import SqliteDb from './Database';
 
 const NOTE_FTS_TABLE = 'notes_fts';
 
+@Injectable()
 export default class SqliteSearchEngine implements SearchEngine {
   private knex?: Knex;
+  readonly ready: Promise<void>;
 
   constructor(private readonly db: SqliteDb) {
-    this.init();
+    this.ready = this.init();
   }
 
-  readonly init = once(async () => {
+  private async init() {
     this.knex = await this.db.getKnex();
     await Promise.all([this.createNoteFtsTable()]);
-  });
+  }
 
   private async createNoteFtsTable() {
     if (!this.knex) {

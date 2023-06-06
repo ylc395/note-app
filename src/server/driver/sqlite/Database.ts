@@ -1,26 +1,30 @@
 import knex, { type Knex } from 'knex';
 import snakeCase from 'lodash/snakeCase';
-import memoize from 'lodash/memoize';
 import camelCase from 'lodash/camelCase';
 import mapKeys from 'lodash/mapKeys';
-import once from 'lodash/once';
 import { PropagatedTransaction } from '@mokuteki/propagated-transactions';
 import { Emitter } from 'strict-event-emitter';
 import { ensureDirSync, emptyDirSync } from 'fs-extra';
 import { join } from 'node:path';
+import { Inject, Injectable } from '@nestjs/common';
 
-import type { Database, DbConfig } from 'infra/database';
+import { token as appClientToken, AppClient } from 'infra/appClient';
+import type { Database } from 'infra/database';
 import type Repository from 'service/repository';
 
 import * as schemas from './schema';
 import * as repositories from './repository';
 import type { Schema } from './schema/type';
-import SqliteSearchEngine from './SearchEngine';
-import SqliteKvDb from './KvDatabase';
 
+@Injectable()
 export default class SqliteDb implements Database {
+  constructor(@Inject(appClientToken) private readonly appClient: AppClient) {
+    this.ready = this.init();
+  }
+
   private knex?: Knex;
   private readonly emitter = new Emitter<{ ready: [] }>();
+  readonly ready: Promise<void>;
 
   transactionManager = new PropagatedTransaction({
     start: async () => {
@@ -42,15 +46,12 @@ export default class SqliteDb implements Database {
     return new repositories[name](knex) as unknown as Repository[T];
   }
 
-  readonly init = once(async ({ dir }: DbConfig) => {
-    if (!dir) {
-      throw new Error('no dir');
-    }
-
+  private async init() {
+    const dir = this.appClient.getDataDir();
     this.knex = await this.createDb(dir);
     this.emitter.emit('ready');
     await this.createTables();
-  });
+  }
 
   getKnex() {
     if (this.knex) {
@@ -152,7 +153,3 @@ export default class SqliteDb implements Database {
     return mapKeys(result, (_, key) => camelCase(key));
   }
 }
-
-export const dbFactory = memoize(() => new SqliteDb());
-export const searchEngineFactory = memoize(() => new SqliteSearchEngine(dbFactory()));
-export const kvDbFactory = memoize(() => new SqliteKvDb(dbFactory()));

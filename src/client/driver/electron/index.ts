@@ -1,41 +1,31 @@
 import { app as electronApp, BrowserWindow, ipcMain, protocol } from 'electron';
-import { randomUUID } from 'node:crypto';
+import { Injectable } from '@nestjs/common';
 import { join } from 'node:path';
-import { hostname } from 'node:os';
-import { Emitter } from 'strict-event-emitter';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 
-import {
-  type AppClient,
-  type ClientInfo,
-  type Events as AppClientEvents,
-  EventNames as AppClientEventNames,
-} from 'infra/appClient';
-import type { KvDatabase } from 'infra/kvDatabase';
+import { type AppClient, EventNames as AppClientEventNames } from 'infra/appClient';
 import { APP_FILE_PROTOCOL } from 'infra/constants';
 
 import { UI_CHANNELS, createContextmenu, openNewWindow } from './ui';
+import BaseClient from './BaseClient';
 
 const APP_NAME = 'my-note-app';
 const NODE_ENV = process.env.NODE_ENV;
 const ENTRY_URL = process.env.VITE_SERVER_ENTRY_URL;
 
-export default class ElectronClient extends Emitter<AppClientEvents> implements AppClient {
-  private mainWindow?: BrowserWindow;
-  private clientInfo?: ClientInfo;
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: APP_FILE_PROTOCOL,
+    privileges: {
+      supportFetchAPI: true,
+      stream: true,
+    },
+  },
+]);
 
-  constructor(private readonly kvDb: KvDatabase) {
-    super();
-    protocol.registerSchemesAsPrivileged([
-      {
-        scheme: APP_FILE_PROTOCOL,
-        privileges: {
-          supportFetchAPI: true,
-          stream: true,
-        },
-      },
-    ]);
-  }
+@Injectable()
+export default class ElectronClient extends BaseClient implements AppClient {
+  private mainWindow?: BrowserWindow;
 
   async start() {
     if (NODE_ENV === 'development') {
@@ -72,7 +62,7 @@ export default class ElectronClient extends Emitter<AppClientEvents> implements 
       }
     }
 
-    await this.initClientInfo();
+    await super.start();
     this.emit(AppClientEventNames.Ready);
 
     await this.initWindow();
@@ -106,22 +96,6 @@ export default class ElectronClient extends Emitter<AppClientEvents> implements 
       await this.mainWindow.loadURL(ENTRY_URL!);
       this.mainWindow.webContents.openDevTools();
     }
-  }
-
-  private async initClientInfo() {
-    this.clientInfo = {
-      clientId: await this.kvDb.get('app.desktop.id', randomUUID),
-      appName: APP_NAME,
-      deviceName: hostname(),
-    };
-  }
-
-  getClientInfo() {
-    if (!this.clientInfo) {
-      throw new Error('no client info');
-    }
-
-    return this.clientInfo;
   }
 
   pushMessage<T>(channel: string, payload: T) {
