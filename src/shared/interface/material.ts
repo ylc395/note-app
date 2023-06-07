@@ -6,6 +6,7 @@ import {
   number,
   discriminatedUnion,
   literal,
+  tuple,
   type infer as Infer,
 } from 'zod';
 import type { EntityId } from './entity';
@@ -69,9 +70,10 @@ export function normalizeTitle(material: MaterialVO) {
 }
 
 export enum AnnotationTypes {
-  Highlight = 1,
-  HighlightArea,
-  HighlightElement,
+  PdfRange = 1,
+  PdfArea = 2,
+  HtmlElement = 3,
+  HtmlRange = 4,
 }
 
 const rectSchema = object({
@@ -83,44 +85,53 @@ const rectSchema = object({
 
 export type Rect = Infer<typeof rectSchema>;
 
-const highlightSchema = object({
-  content: string(),
+const commonAnnotationSchema = object({
   color: string(),
+  comment: string().nullish(),
+});
+
+const PdfRangeAnnotationSchema = object({
+  type: literal(AnnotationTypes.PdfRange),
+  content: string(),
   fragments: array(
     object({
       page: number(),
       rect: rectSchema,
     }),
   ),
-});
+}).merge(commonAnnotationSchema);
 
-const highlightAreaSchema = object({
-  color: string().optional(),
+const PdfAreaAnnotationSchema = object({
+  type: literal(AnnotationTypes.PdfArea),
   snapshot: string(),
   rect: rectSchema,
   page: number(),
-});
+}).merge(commonAnnotationSchema);
 
-const highlightElementSchema = object({
-  color: string(),
+const htmlElementAnnotationSchema = object({
+  type: literal(AnnotationTypes.HtmlElement),
   selector: string(),
   snapshot: string(),
+}).merge(commonAnnotationSchema);
+
+const htmlRangeSchema = object({
+  selector: string(),
+  offset: number(),
 });
+
+const htmlRangeAnnotationSchema = object({
+  type: literal(AnnotationTypes.HtmlRange),
+  range: tuple([htmlRangeSchema, htmlRangeSchema]),
+}).merge(commonAnnotationSchema);
 
 export const annotationDTOSchema = discriminatedUnion('type', [
-  highlightSchema.extend({ type: literal(AnnotationTypes.Highlight) }),
-  highlightAreaSchema.extend({ type: literal(AnnotationTypes.HighlightArea) }),
-  highlightElementSchema.extend({ type: literal(AnnotationTypes.HighlightElement) }),
-]).and(
-  object({
-    comment: string().optional(),
-  }),
-);
+  PdfAreaAnnotationSchema,
+  PdfRangeAnnotationSchema,
+  htmlElementAnnotationSchema,
+  htmlRangeAnnotationSchema,
+]);
 
-export const annotationPatchSchema = object({
-  comment: string().optional(),
-  color: string().optional(),
-});
+export const annotationPatchSchema = commonAnnotationSchema.partial();
 
 export type AnnotationPatchDTO = Infer<typeof annotationPatchSchema>;
 
@@ -128,21 +139,12 @@ export type AnnotationDTO = Infer<typeof annotationDTOSchema>;
 
 interface CommonAnnotationVO {
   id: EntityId;
-  comment: string | null;
   updatedAt: number;
   createdAt: number;
 }
 
-export interface HighlightAnnotationVO extends CommonAnnotationVO, Infer<typeof highlightSchema> {
-  type: AnnotationTypes.Highlight;
-}
-
-export interface HighlightAreaAnnotationVO extends CommonAnnotationVO, Infer<typeof highlightAreaSchema> {
-  type: AnnotationTypes.HighlightArea;
-}
-
-export interface HighlightElementAnnotationVO extends CommonAnnotationVO, Infer<typeof highlightElementSchema> {
-  type: AnnotationTypes.HighlightElement;
-}
-
-export type AnnotationVO = HighlightAnnotationVO | HighlightAreaAnnotationVO | HighlightElementAnnotationVO;
+export type PdfRangeAnnotationVO = CommonAnnotationVO & Infer<typeof PdfRangeAnnotationSchema>;
+export type PdfAreaAnnotationVO = CommonAnnotationVO & Infer<typeof PdfAreaAnnotationSchema>;
+export type HtmlElementAnnotationVO = CommonAnnotationVO & Infer<typeof htmlElementAnnotationSchema>;
+export type HtmlRangeAnnotationVO = CommonAnnotationVO & Infer<typeof htmlRangeAnnotationSchema>;
+export type AnnotationVO = PdfRangeAnnotationVO | PdfAreaAnnotationVO | HtmlElementAnnotationVO | HtmlRangeAnnotationVO;

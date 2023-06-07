@@ -57,9 +57,9 @@ export default observer(function AnnotationLayer({ page }: { page: number }) {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const fragments = ctx.pdfViewer!.editor.highlightFragmentsByPage[page] || [];
+  const fragments = ctx.pdfViewer!.editor.fragmentsByPage[page] || [];
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const areas = ctx.pdfViewer!.editor.highlightAreasByPage[page] || [];
+  const areas = ctx.pdfViewer!.editor.areaAnnotationsByPage[page] || [];
 
   return createPortal(
     <div ref={rootRef}>

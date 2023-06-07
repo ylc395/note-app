@@ -71,7 +71,7 @@ export default class HtmlViewer {
   }
 
   private readonly handleElementSelect = async (e: HTMLElement) => {
-    const result = await this.createHighlightElement(e, 'yellow');
+    const result = await this.createElementAnnotation(e, 'yellow');
 
     if (result) {
       this.elementSelector.disable();
@@ -171,15 +171,18 @@ export default class HtmlViewer {
     return fragment as HTMLHtmlElement;
   }
 
-  private async createHighlightElement(el: HTMLElement, color: string) {
+  private async createElementAnnotation(el: HTMLElement, color: string) {
     const uniqueSelector = getCssSelector(el, { root: this.rootEl });
+    const existed = this.editor.annotations.find(
+      (annotation) => annotation.type === AnnotationTypes.HtmlElement && annotation.selector === uniqueSelector,
+    );
 
-    if (this.editor.highlightElements.find(({ selector }) => selector === uniqueSelector)) {
+    if (existed) {
       return false;
     }
 
     await this.options.editor.createAnnotation({
-      type: AnnotationTypes.HighlightElement,
+      type: AnnotationTypes.HtmlElement,
       color,
       selector: uniqueSelector,
       snapshot: await toPng(el),
@@ -188,9 +191,20 @@ export default class HtmlViewer {
     return true;
   }
 
-  createHighlightRange() {
+  createRangeAnnotation(color: string) {
     if (!this.selection) {
       throw new Error('no selection');
     }
+
+    const { range } = this.selection;
+
+    this.editor.createAnnotation({
+      type: AnnotationTypes.HtmlRange,
+      color,
+      range: [
+        { selector: getCssSelector(range.startContainer, { root: this.rootEl }), offset: range.startOffset },
+        { selector: getCssSelector(range.endContainer, { root: this.rootEl }), offset: range.endOffset },
+      ],
+    });
   }
 }

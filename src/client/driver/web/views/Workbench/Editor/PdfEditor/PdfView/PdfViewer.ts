@@ -86,12 +86,12 @@ export default class PdfViewer {
   }
 
   @computed
-  get annotationPages() {
+  get pagesWithAnnotation() {
     return intersection(
       this.visiblePages,
       union(
-        Object.keys(this.editor.highlightAreasByPage).map(Number),
-        Object.keys(this.editor.highlightFragmentsByPage).map(Number),
+        Object.keys(this.editor.areaAnnotationsByPage).map(Number),
+        Object.keys(this.editor.fragmentsByPage).map(Number),
       ),
     );
   }
@@ -163,7 +163,7 @@ export default class PdfViewer {
     );
   }
 
-  async createHighlight(color: string) {
+  async createRangeAnnotation(color: string) {
     const range = this.selection?.range;
 
     if (!range) {
@@ -171,7 +171,7 @@ export default class PdfViewer {
     }
 
     await this.editor.createAnnotation({
-      type: AnnotationTypes.Highlight,
+      type: AnnotationTypes.PdfRange,
       color,
       content: RangeSelector.getTextFromRange(range),
       fragments: this.getFragments(range),
@@ -180,7 +180,7 @@ export default class PdfViewer {
     window.getSelection()?.removeAllRanges();
   }
 
-  async createHighlightArea(page: number, rect: Rect) {
+  async createAreaAnnotation(page: number, rect: Rect) {
     const sourceCanvas = this.getCanvasEl(page);
     const { width: canvasDisplayWidth, height: canvasDisplayHeight } = sourceCanvas.getBoundingClientRect();
 
@@ -210,7 +210,8 @@ export default class PdfViewer {
     const snapshot = canvas.toDataURL('image/png');
 
     await this.editor.createAnnotation({
-      type: AnnotationTypes.HighlightArea,
+      color: 'yellow',
+      type: AnnotationTypes.PdfArea,
       rect: {
         x: rect.x / horizontalRatio,
         y: rect.y / verticalRatio,

@@ -1,16 +1,14 @@
 import { computed, makeObservable, observable, runInAction } from 'mobx';
 import groupBy from 'lodash/groupBy';
-import remove from 'lodash/remove';
 import { type PDFDocumentLoadingTask, type PDFDocumentProxy, PDFWorker, getDocument } from 'pdfjs-dist';
 import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.min.js?worker';
 import type { RefProxy } from 'pdfjs-dist/types/src/display/api';
 
 import {
   type EntityMaterialVO,
-  type AnnotationVO,
+  type PdfRangeAnnotationVO,
+  type PdfAreaAnnotationVO,
   AnnotationTypes,
-  HighlightAnnotationVO,
-  HighlightAreaAnnotationVO,
 } from 'interface/material';
 import type Tile from 'model/workbench/Tile';
 import Editor from './Editor';
@@ -43,13 +41,13 @@ export default class PdfEditor extends Editor<Pdf> {
   get highlights() {
     return this.annotations
       .map((annotation) => {
-        if (annotation.type === AnnotationTypes.Highlight) {
+        if (annotation.type === AnnotationTypes.PdfRange) {
           const pages = annotation.fragments.map(({ page }) => page);
 
           return { ...annotation, startPage: Math.min(...pages), endPage: Math.max(...pages) };
         }
 
-        if (annotation.type === AnnotationTypes.HighlightArea) {
+        if (annotation.type === AnnotationTypes.PdfArea) {
           return { ...annotation, startPage: annotation.page, endPage: annotation.page };
         }
 
@@ -72,10 +70,10 @@ export default class PdfEditor extends Editor<Pdf> {
   }
 
   @computed
-  get highlightFragmentsByPage() {
+  get fragmentsByPage() {
     const highlights = this.annotations.filter(
-      ({ type }) => type === AnnotationTypes.Highlight,
-    ) as HighlightAnnotationVO[];
+      ({ type }) => type === AnnotationTypes.PdfRange,
+    ) as PdfRangeAnnotationVO[];
 
     const fragments = highlights.flatMap(({ fragments, color, id }) => {
       return fragments.map(({ page, rect }) => ({
@@ -91,46 +89,12 @@ export default class PdfEditor extends Editor<Pdf> {
   }
 
   @computed
-  get highlightAreasByPage() {
+  get areaAnnotationsByPage() {
     const highlightAreas = this.annotations.filter(
-      ({ type }) => type === AnnotationTypes.HighlightArea,
-    ) as HighlightAreaAnnotationVO[];
+      ({ type }) => type === AnnotationTypes.PdfArea,
+    ) as PdfAreaAnnotationVO[];
 
     return groupBy(highlightAreas, 'page');
-  }
-
-  async removeAnnotation(id: AnnotationVO['id']) {
-    await this.remote.delete(`/materials/annotations/${id}`);
-    runInAction(() => {
-      remove(this.annotations, ({ id: _id }) => _id === id);
-    });
-  }
-
-  async updateAnnotation(id: AnnotationVO['id'], patch: Record<string, unknown>) {
-    const { body: annotation } = await this.remote.patch<Record<string, unknown>, AnnotationVO>(
-      `/materials/annotations/${id}`,
-      patch,
-    );
-
-    runInAction(() => {
-      const index = this.annotations.findIndex(({ id: _id }) => _id === id);
-
-      if (index < 0) {
-        throw new Error('no annotation');
-      }
-
-      this.annotations[index] = annotation;
-    });
-  }
-
-  getAnnotationById(id: AnnotationVO['id']) {
-    const annotation = this.annotations.find(({ id: _id }) => _id === id);
-
-    if (!annotation) {
-      throw new Error('invalid id');
-    }
-
-    return annotation;
   }
 
   destroy() {
@@ -138,6 +102,7 @@ export default class PdfEditor extends Editor<Pdf> {
     this.loadingTask?.destroy();
   }
 
+  // todo: move this into a plugin
   private async initOutline(doc: PDFDocumentProxy) {
     const outline = await doc.getOutline();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

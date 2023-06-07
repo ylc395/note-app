@@ -37,7 +37,7 @@ export default observer(
 
       const handleColorSelect = useCallback(
         (color: string) => {
-          editor.updateAnnotation(annotationId!, { annotation: { color } });
+          editor.updateAnnotation(annotationId!, { color });
           runInAction(() => {
             ctx.hoveringAnnotationId = null;
           });

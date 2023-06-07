@@ -13,7 +13,7 @@ export default forwardRef<HTMLDivElement | null, Props>(function SelectionToolti
 
   return (
     <div className="z-10" ref={ref} style={style}>
-      <Palette onSelect={(color) => pdfViewer?.createHighlight(color)} />
+      <Palette onSelect={(color) => pdfViewer?.createRangeAnnotation(color)} />
     </div>
   );
 });

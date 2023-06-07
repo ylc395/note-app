@@ -1,6 +1,6 @@
-import { computed, makeObservable, observable, runInAction } from 'mobx';
+import { makeObservable, observable } from 'mobx';
 
-import { EntityMaterialVO, AnnotationVO, AnnotationTypes, HighlightElementAnnotationVO } from 'interface/material';
+import type { EntityMaterialVO } from 'interface/material';
 import type Tile from 'model/workbench/Tile';
 import Editor from './Editor';
 
@@ -17,13 +17,6 @@ export default class HtmlEditor extends Editor<WebPage> {
 
   @observable.ref
   documentElement?: unknown;
-
-  @computed
-  get highlightElements() {
-    return this.annotations.filter(
-      ({ type }) => type === AnnotationTypes.HighlightElement,
-    ) as HighlightElementAnnotationVO[];
-  }
 
   protected async init() {
     const [{ body: metadata }, { body: html }] = await Promise.all([

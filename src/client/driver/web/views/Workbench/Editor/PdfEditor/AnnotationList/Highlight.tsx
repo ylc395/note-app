@@ -1,13 +1,13 @@
 import { observer } from 'mobx-react-lite';
 import { useContext } from 'react';
 
-import { AnnotationTypes, type HighlightAnnotationVO, type HighlightAreaAnnotationVO } from 'interface/material';
+import { AnnotationTypes, type PdfRangeAnnotationVO, type PdfAreaAnnotationVO } from 'interface/material';
 import context from '../Context';
 
 export default observer(function HighlightItem({
   highlight,
 }: {
-  highlight: (HighlightAnnotationVO | HighlightAreaAnnotationVO) & { startPage: number; endPage: number };
+  highlight: (PdfRangeAnnotationVO | PdfAreaAnnotationVO) & { startPage: number; endPage: number };
 }) {
   const { pdfViewer } = useContext(context);
   const { startPage, endPage, comment } = highlight;
@@ -19,8 +19,8 @@ export default observer(function HighlightItem({
         style={{ borderColor: highlight.color }}
         onClick={() => pdfViewer?.jumpToPage(highlight.startPage)}
       >
-        {highlight.type === AnnotationTypes.Highlight && <blockquote className="m-0">{highlight.content}</blockquote>}
-        {highlight.type === AnnotationTypes.HighlightArea && (
+        {highlight.type === AnnotationTypes.PdfRange && <blockquote className="m-0">{highlight.content}</blockquote>}
+        {highlight.type === AnnotationTypes.PdfArea && (
           <img className="max-w-full opacity-70" src={highlight.snapshot} />
         )}
         <div className="mt-2 pr-2 text-right italic">

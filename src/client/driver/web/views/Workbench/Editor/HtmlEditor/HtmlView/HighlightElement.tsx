@@ -2,11 +2,11 @@ import { observer } from 'mobx-react-lite';
 import { useContext } from 'react';
 import { useFloating, autoUpdate } from '@floating-ui/react';
 
-import type { HighlightElementAnnotationVO } from 'interface/material';
+import type { HtmlElementAnnotationVO } from 'interface/material';
 import { floatingOptions } from './ElementSelector';
 import ctx from '../Context';
 
-export default observer(function HighlightElement({ el }: { el: HighlightElementAnnotationVO }) {
+export default observer(function HighlightElement({ el }: { el: HtmlElementAnnotationVO }) {
   const { htmlViewer } = useContext(ctx);
   const targetEl = htmlViewer?.rootEl.querySelector(el.selector);
 

@@ -6,6 +6,7 @@ import type HtmlEditor from 'model/material/HtmlEditor';
 import HtmlViewer from './HtmlViewer';
 import context from '../Context';
 import HighlightElement from './HighlightElement';
+import { AnnotationTypes } from 'interface/material';
 
 export default observer(function HtmlView({ editor }: { editor: HtmlEditor }) {
   const shadowWrapperRef = useRef<HTMLDivElement | null>(null);
@@ -36,9 +37,11 @@ export default observer(function HtmlView({ editor }: { editor: HtmlEditor }) {
         <div className="select-text" ref={shadowWrapperRef}></div>
       </div>
       <div>
-        {editor.highlightElements.map((el) => (
-          <HighlightElement key={el.id} el={el} />
-        ))}
+        {editor.annotations.map((el) => {
+          if (el.type === AnnotationTypes.HtmlElement) {
+            return <HighlightElement key={el.id} el={el} />;
+          }
+        })}
       </div>
       {/* {selectionTooltipShowing && <SelectionTooltip ref={setSelectionTooltipPopper} style={selectionTooltipStyles} />} */}
     </div>

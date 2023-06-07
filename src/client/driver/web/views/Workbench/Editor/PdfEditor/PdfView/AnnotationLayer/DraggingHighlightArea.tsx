@@ -76,7 +76,7 @@ export default observer(function HighlightArea({ page }: { page: number }) {
     const { height: displayHeight, width: displayWith } = pdfViewer!.getSize(page);
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    pdfViewer!.createHighlightArea(page, {
+    pdfViewer!.createAreaAnnotation(page, {
       width: finalPos.width,
       height: finalPos.height,
       x:

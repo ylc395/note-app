@@ -14,14 +14,14 @@ export default function useHighlightTooltip(page: number) {
     if (annotationId && pdfViewer) {
       const annotation = pdfViewer.editor.getAnnotationById(annotationId);
 
-      if (annotation.type === AnnotationTypes.Highlight) {
+      if (annotation.type === AnnotationTypes.PdfRange) {
         const endPage = Math.max(...annotation.fragments.map(({ page }) => page));
         return endPage === page
           ? last(pdfViewer.getPageEl(page)?.querySelectorAll(`[data-annotation-id="${annotationId}"]`))
           : undefined;
       }
 
-      if (annotation.type === AnnotationTypes.HighlightArea) {
+      if (annotation.type === AnnotationTypes.PdfArea) {
         return pdfViewer.getPageEl(page)?.querySelector(`[data-annotation-id="${annotationId}"]`);
       }
     }

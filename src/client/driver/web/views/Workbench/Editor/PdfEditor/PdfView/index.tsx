@@ -41,7 +41,7 @@ export default observer(function PdfView({ editor }: { editor: PdfEditor }) {
     <div className="relative grow overflow-hidden">
       <div className="absolute inset-0 overflow-auto" ref={containerElRef}>
         <div className="select-text" ref={viewerElRef}></div>
-        {ctx.pdfViewer && ctx.pdfViewer.annotationPages.map((page) => <AnnotationLayer key={page} page={page} />)}
+        {ctx.pdfViewer && ctx.pdfViewer.pagesWithAnnotation.map((page) => <AnnotationLayer key={page} page={page} />)}
       </div>
       {selectionTooltipShowing && <SelectionTooltip ref={setSelectionTooltipPopper} style={selectionTooltipStyles} />}
     </div>

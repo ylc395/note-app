@@ -1,6 +1,14 @@
 import { computed, makeObservable, observable, runInAction } from 'mobx';
+import remove from 'lodash/remove';
+
 import { EntityTypes } from 'interface/entity';
-import { type EntityMaterialVO, type AnnotationVO, type AnnotationDTO, normalizeTitle } from 'interface/material';
+import {
+  type EntityMaterialVO,
+  type AnnotationVO,
+  type AnnotationDTO,
+  type AnnotationPatchDTO,
+  normalizeTitle,
+} from 'interface/material';
 import EntityEditor from 'model/abstract/Editor';
 import type Tile from 'model/workbench/Tile';
 
@@ -15,7 +23,7 @@ export default abstract class Editor<T extends { metadata: EntityMaterialVO } = 
   readonly entityType = EntityTypes.Material;
 
   @observable
-  protected readonly annotations: AnnotationVO[] = [];
+  readonly annotations: AnnotationVO[] = [];
 
   async createAnnotation(annotation: AnnotationDTO) {
     const { body: createdAnnotation } = await this.remote.post<AnnotationDTO, AnnotationVO>(
@@ -49,6 +57,39 @@ export default abstract class Editor<T extends { metadata: EntityMaterialVO } = 
     runInAction(() => {
       this.annotations.push(...annotations);
     });
+  }
+  async removeAnnotation(id: AnnotationVO['id']) {
+    await this.remote.delete(`/materials/annotations/${id}`);
+    runInAction(() => {
+      remove(this.annotations, ({ id: _id }) => _id === id);
+    });
+  }
+
+  async updateAnnotation(id: AnnotationVO['id'], patch: AnnotationPatchDTO) {
+    const { body: annotation } = await this.remote.patch<Record<string, unknown>, AnnotationVO>(
+      `/materials/annotations/${id}`,
+      patch,
+    );
+
+    runInAction(() => {
+      const index = this.annotations.findIndex(({ id: _id }) => _id === id);
+
+      if (index < 0) {
+        throw new Error('no annotation');
+      }
+
+      this.annotations[index] = annotation;
+    });
+  }
+
+  getAnnotationById(id: AnnotationVO['id']) {
+    const annotation = this.annotations.find(({ id: _id }) => _id === id);
+
+    if (!annotation) {
+      throw new Error('invalid id');
+    }
+
+    return annotation;
   }
 }
 
