@@ -1,6 +1,6 @@
-import { makeObservable, observable, runInAction } from 'mobx';
+import { computed, makeObservable, observable, runInAction } from 'mobx';
 
-import type { EntityMaterialVO, AnnotationVO } from 'interface/material';
+import { EntityMaterialVO, AnnotationVO, AnnotationTypes, HighlightElementAnnotationVO } from 'interface/material';
 import type Tile from 'model/workbench/Tile';
 import Editor from './Editor';
 
@@ -18,6 +18,13 @@ export default class HtmlEditor extends Editor<WebPage> {
   @observable.ref
   documentElement?: unknown;
 
+  @computed
+  get highlightElements() {
+    return this.annotations.filter(
+      ({ type }) => type === AnnotationTypes.HighlightElement,
+    ) as HighlightElementAnnotationVO[];
+  }
+
   protected async init() {
     const [{ body: metadata }, { body: html }] = await Promise.all([
       this.remote.get<void, EntityMaterialVO>(`/materials/${this.entityId}`),
@@ -25,13 +32,5 @@ export default class HtmlEditor extends Editor<WebPage> {
     ]);
 
     this.load({ metadata, html });
-
-    const { body: annotations } = await this.remote.get<unknown, AnnotationVO[]>(
-      `/materials/${this.entityId}/annotations`,
-    );
-
-    runInAction(() => {
-      this.annotations.push(...annotations);
-    });
   }
 }

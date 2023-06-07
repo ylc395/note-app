@@ -69,14 +69,6 @@ export default class PdfEditor extends Editor<Pdf> {
 
     this.load({ metadata, doc });
     this.initOutline(doc);
-
-    const { body: annotations } = await this.remote.get<unknown, AnnotationVO[]>(
-      `/materials/${this.entityId}/annotations`,
-    );
-
-    runInAction(() => {
-      this.annotations.push(...annotations);
-    });
   }
 
   @computed

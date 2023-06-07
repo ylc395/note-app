@@ -1,6 +1,23 @@
 import { makeObservable, computed, observable, action } from 'mobx';
 import { offset, computePosition, autoUpdate, size } from '@floating-ui/dom';
 
+export const floatingOptions = {
+  strategy: 'fixed' as const,
+  middleware: [
+    offset(({ rects }) => {
+      return -rects.reference.height / 2 - rects.floating.height / 2;
+    }),
+    size({
+      apply: ({ rects, elements: { floating } }) => {
+        Object.assign(floating.style, {
+          width: `${rects.reference.width}px`,
+          height: `${rects.reference.height}px`,
+        });
+      },
+    }),
+  ],
+};
+
 export default class ElementSelector {
   private readonly root: HTMLElement | ShadowRoot;
 
@@ -92,22 +109,7 @@ export default class ElementSelector {
     }
 
     this.cancelAutoUpdate = autoUpdate(target, overlayEl, async () => {
-      const { x, y } = await computePosition(target, overlayEl, {
-        strategy: 'fixed',
-        middleware: [
-          offset(({ rects }) => {
-            return -rects.reference.height / 2 - rects.floating.height / 2;
-          }),
-          size({
-            apply: ({ rects }) => {
-              Object.assign(overlayEl.style, {
-                width: `${rects.reference.width}px`,
-                height: `${rects.reference.height}px`,
-              });
-            },
-          }),
-        ],
-      });
+      const { x, y } = await computePosition(target, overlayEl, floatingOptions);
 
       overlayEl.style.left = `${x}px`;
       overlayEl.style.top = `${y}px`;

@@ -9,6 +9,7 @@ export default abstract class Editor<T extends { metadata: EntityMaterialVO } = 
   constructor(tile: Tile, materialId: EntityMaterialVO['id']) {
     super(tile, materialId);
     makeObservable(this);
+    this.loadAnnotations();
   }
 
   readonly entityType = EntityTypes.Material;
@@ -38,6 +39,16 @@ export default abstract class Editor<T extends { metadata: EntityMaterialVO } = 
       title: this.entity ? normalizeTitle(this.entity.metadata) : '',
       icon: this.entity?.metadata.icon || null,
     };
+  }
+
+  private async loadAnnotations() {
+    const { body: annotations } = await this.remote.get<unknown, AnnotationVO[]>(
+      `/materials/${this.entityId}/annotations`,
+    );
+
+    runInAction(() => {
+      this.annotations.push(...annotations);
+    });
   }
 }
 

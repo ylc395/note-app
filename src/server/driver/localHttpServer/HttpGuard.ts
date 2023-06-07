@@ -1,8 +1,9 @@
 import { CanActivate, ExecutionContext, Injectable, Inject } from '@nestjs/common';
 import once from 'lodash/once';
 import type { Request } from 'express';
-import { type KvDatabase, token as kvDatabaseToken } from 'infra/kvDatabase';
 import { randomUUID } from 'node:crypto';
+
+import { type KvDatabase, token as kvDatabaseToken } from 'infra/kvDatabase';
 
 @Injectable()
 export default class HttpGuard implements CanActivate {

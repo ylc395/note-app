@@ -102,7 +102,7 @@ const highlightAreaSchema = object({
 });
 
 const highlightElementSchema = object({
-  color: string().optional(),
+  color: string(),
   selector: string(),
 });
 

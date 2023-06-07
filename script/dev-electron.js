@@ -6,6 +6,7 @@ const { default: tsconfigPaths } = require('vite-tsconfig-paths');
 const { replaceTscAliasPaths } = require('tsc-alias');
 const { checker } = require('vite-plugin-checker');
 const { parse: parseTsconfig } = require('tsconfck');
+const debounce = require('lodash/debounce');
 
 const CLIENT_TSCONFIG = path.resolve('src/client/tsconfig.json');
 const ELECTRON_OUTPUT = 'dist/electron';
@@ -100,15 +101,16 @@ async function createViteServer() {
   if (electronProcess) {
     shell.exec(`${BUILD_ELECTRON_COMMAND} --watch`, { async: true });
 
-    chokidar
-      .watch(ELECTRON_OUTPUT, { ignoreInitial: true, ignored: [/\.tsbuildinfo$/, /\.map$/, /\.d\.ts$/] })
-      .on('all', async (event, path) => {
+    chokidar.watch(ELECTRON_OUTPUT, { ignoreInitial: true, ignored: [/\.tsbuildinfo$/, /\.map$/, /\.d\.ts$/] }).on(
+      'all',
+      debounce(async (event, path) => {
         shell.exec('clear');
         console.log(path, event);
         electronProcess.kill();
         shell.env['DEV_CLEAN'] = '0';
         electronProcess = await buildElectron(true);
-      });
+      }, 500),
+    );
   } else {
     await viteServer.close();
   }

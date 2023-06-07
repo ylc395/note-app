@@ -15,7 +15,7 @@ interface Options extends CommonOptions {
 }
 
 export default class HtmlViewer extends RangeSelectable {
-  protected readonly rootEl: ShadowRoot;
+  readonly rootEl: ShadowRoot;
   private stopLoadingHtml?: ReturnType<typeof when>;
   readonly elementSelector: ElementSelector;
 
@@ -80,8 +80,8 @@ export default class HtmlViewer extends RangeSelectable {
 
   destroy(): void {
     this.rootEl.removeEventListener('click', HtmlViewer.hijackClick);
-    this.stopLoadingHtml?.();
     this.elementSelector.destroy();
+    this.stopLoadingHtml?.();
     super.destroy();
   }
 
