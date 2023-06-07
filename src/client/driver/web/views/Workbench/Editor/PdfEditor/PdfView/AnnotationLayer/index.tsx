@@ -4,13 +4,13 @@ import { useContext, useRef } from 'react';
 import { useEventListener } from 'ahooks';
 import { action } from 'mobx';
 
-import HighlightFragment from './HighlightFragment';
-import HighlightArea from './HighlightArea';
-import DraggingHighlightArea from './DraggingHighlightArea';
-import HighlightTooltip from './HighlightTooltip';
+import FragmentAnnotation from './FragmentAnnotation';
+import AreaAnnotation from './AreaAnnotation';
+import DraggingArea from './DraggingArea';
+import AnnotationTooltip from './AnnotationTooltip';
 
 import context from '../../Context';
-import useHighlightTooltip from './HighlightTooltip/useHighlightTooltip';
+import useTooltip from './AnnotationTooltip/useTooltip';
 
 export default observer(function AnnotationLayer({ page }: { page: number }) {
   const ctx = useContext(context);
@@ -18,11 +18,7 @@ export default observer(function AnnotationLayer({ page }: { page: number }) {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const pageEl = ctx.pdfViewer!.getPageEl(page);
 
-  const {
-    setFloating: setHighlightTooltipPopper,
-    styles: highlightTooltipStyles,
-    showing: highlightTooltipShowing,
-  } = useHighlightTooltip(page);
+  const { setFloating: setTooltipPopper, styles: tooltipStyles, showing: tooltipShowing } = useTooltip(page);
 
   useEventListener(
     'mouseover',
@@ -32,14 +28,6 @@ export default observer(function AnnotationLayer({ page }: { page: number }) {
       if (annotationId) {
         ctx.hoveringAnnotationId = annotationId;
       }
-    }),
-    { target: rootRef },
-  );
-
-  useEventListener(
-    'mouseleave',
-    action(() => {
-      ctx.hoveringAnnotationId = null;
     }),
     { target: rootRef },
   );
@@ -64,13 +52,13 @@ export default observer(function AnnotationLayer({ page }: { page: number }) {
   return createPortal(
     <div ref={rootRef}>
       {fragments.map((fragment) => (
-        <HighlightFragment key={fragment.highlightId} fragment={fragment} page={page} />
+        <FragmentAnnotation key={fragment.fragmentId} fragment={fragment} page={page} />
       ))}
       {areas.map((area) => (
-        <HighlightArea key={area.id} area={area} page={page} />
+        <AreaAnnotation key={area.id} area={area} page={page} />
       ))}
-      <DraggingHighlightArea page={page} />
-      {highlightTooltipShowing && <HighlightTooltip ref={setHighlightTooltipPopper} style={highlightTooltipStyles} />}
+      <DraggingArea page={page} />
+      {tooltipShowing && <AnnotationTooltip ref={setTooltipPopper} style={tooltipStyles} />}
     </div>,
     pageEl,
   );

@@ -38,7 +38,7 @@ export default class PdfEditor extends Editor<Pdf> {
   readonly outlinePageNumberMap: Record<string, number> = {};
 
   @computed
-  get highlights() {
+  get pdfAnnotations() {
     return this.annotations
       .map((annotation) => {
         if (annotation.type === AnnotationTypes.PdfRange) {
@@ -71,17 +71,17 @@ export default class PdfEditor extends Editor<Pdf> {
 
   @computed
   get fragmentsByPage() {
-    const highlights = this.annotations.filter(
+    const annotations = this.annotations.filter(
       ({ type }) => type === AnnotationTypes.PdfRange,
     ) as PdfRangeAnnotationVO[];
 
-    const fragments = highlights.flatMap(({ fragments, color, id }) => {
+    const fragments = annotations.flatMap(({ fragments, color, id }) => {
       return fragments.map(({ page, rect }) => ({
         annotationId: id,
         page,
         rect,
         color,
-        highlightId: `${id}-${JSON.stringify(rect)}`,
+        fragmentId: `${id}-${JSON.stringify(rect)}`,
       }));
     });
 
@@ -90,11 +90,9 @@ export default class PdfEditor extends Editor<Pdf> {
 
   @computed
   get areaAnnotationsByPage() {
-    const highlightAreas = this.annotations.filter(
-      ({ type }) => type === AnnotationTypes.PdfArea,
-    ) as PdfAreaAnnotationVO[];
+    const areas = this.annotations.filter(({ type }) => type === AnnotationTypes.PdfArea) as PdfAreaAnnotationVO[];
 
-    return groupBy(highlightAreas, 'page');
+    return groupBy(areas, 'page');
   }
 
   destroy() {

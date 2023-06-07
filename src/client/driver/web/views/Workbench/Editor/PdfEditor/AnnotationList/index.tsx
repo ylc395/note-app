@@ -3,11 +3,11 @@ import { useContext } from 'react';
 import { Resizable } from 're-resizable';
 
 import context from '../Context';
-import Highlight from './Highlight';
+import Annotation from './Annotation';
 
 export default observer(function AnnotationList() {
   const { pdfViewer } = useContext(context);
-  const highlights = pdfViewer?.editor.highlights;
+  const annotations = pdfViewer?.editor.pdfAnnotations;
 
   return (
     <Resizable
@@ -16,9 +16,9 @@ export default observer(function AnnotationList() {
       defaultSize={{ width: 300, height: 'auto' }}
       className="overflow-auto"
     >
-      {highlights && highlights.length > 0
-        ? highlights.map((highlight) => {
-            return <Highlight key={highlight.id} highlight={highlight} />;
+      {annotations && annotations.length > 0
+        ? annotations.map((annotation) => {
+            return <Annotation key={annotation.id} annotation={annotation} />;
           })
         : '无'}
     </Resizable>

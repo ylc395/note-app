@@ -20,7 +20,7 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
           <div className="relative flex min-h-0 grow">
             {context.panelsVisibility[Panels.Outline] && <Outline />}
             <PdfViewer editor={editor} />
-            {context.panelsVisibility[Panels.HighlightList] && <AnnotationList />}
+            {context.panelsVisibility[Panels.AnnotationList] && <AnnotationList />}
           </div>
         </div>
       </Context.Provider>

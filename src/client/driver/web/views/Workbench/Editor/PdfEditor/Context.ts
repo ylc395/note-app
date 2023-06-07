@@ -6,7 +6,7 @@ import type PdfViewer from './PdfView/PdfViewer';
 
 export enum Panels {
   Outline,
-  HighlightList,
+  AnnotationList,
 }
 
 interface EditorContext {
@@ -22,7 +22,7 @@ export function getContext() {
       hoveringAnnotationId: null,
       panelsVisibility: {
         [Panels.Outline]: false,
-        [Panels.HighlightList]: true,
+        [Panels.AnnotationList]: true,
       },
     },
     {

@@ -4,24 +4,24 @@ import { useContext } from 'react';
 import { AnnotationTypes, type PdfRangeAnnotationVO, type PdfAreaAnnotationVO } from 'interface/material';
 import context from '../Context';
 
-export default observer(function HighlightItem({
-  highlight,
+export default observer(function Annotation({
+  annotation,
 }: {
-  highlight: (PdfRangeAnnotationVO | PdfAreaAnnotationVO) & { startPage: number; endPage: number };
+  annotation: (PdfRangeAnnotationVO | PdfAreaAnnotationVO) & { startPage: number; endPage: number };
 }) {
   const { pdfViewer } = useContext(context);
-  const { startPage, endPage, comment } = highlight;
+  const { startPage, endPage, comment } = annotation;
 
   return (
     <div className="border-0 border-b border-dashed border-gray-400 py-8">
       <div
         className="cursor-pointer border-0 border-l-2 border-solid pl-2 text-sm text-gray-400"
-        style={{ borderColor: highlight.color }}
-        onClick={() => pdfViewer?.jumpToPage(highlight.startPage)}
+        style={{ borderColor: annotation.color }}
+        onClick={() => pdfViewer?.jumpToPage(annotation.startPage)}
       >
-        {highlight.type === AnnotationTypes.PdfRange && <blockquote className="m-0">{highlight.content}</blockquote>}
-        {highlight.type === AnnotationTypes.PdfArea && (
-          <img className="max-w-full opacity-70" src={highlight.snapshot} />
+        {annotation.type === AnnotationTypes.PdfRange && <blockquote className="m-0">{annotation.content}</blockquote>}
+        {annotation.type === AnnotationTypes.PdfArea && (
+          <img className="max-w-full opacity-70" src={annotation.snapshot} />
         )}
         <div className="mt-2 pr-2 text-right italic">
           {startPage === endPage ? `第${startPage}页` : `第${startPage}页-第${endPage}页`}

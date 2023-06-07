@@ -5,7 +5,7 @@ import { runInAction } from 'mobx';
 import type HtmlEditor from 'model/material/HtmlEditor';
 import HtmlViewer from './HtmlViewer';
 import context from '../Context';
-import HighlightElement from './HighlightElement';
+import ElementAnnotation from './ElementAnnotation';
 import { AnnotationTypes } from 'interface/material';
 
 export default observer(function HtmlView({ editor }: { editor: HtmlEditor }) {
@@ -39,7 +39,7 @@ export default observer(function HtmlView({ editor }: { editor: HtmlEditor }) {
       <div>
         {editor.annotations.map((el) => {
           if (el.type === AnnotationTypes.HtmlElement) {
-            return <HighlightElement key={el.id} el={el} />;
+            return <ElementAnnotation key={el.id} el={el} />;
           }
         })}
       </div>

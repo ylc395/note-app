@@ -5,7 +5,7 @@ import type HtmlViewer from './HtmlView/HtmlViewer';
 
 export enum Panels {
   Outline,
-  HighlightList,
+  AnnotationList,
 }
 
 interface EditorContext {
@@ -19,7 +19,7 @@ export function getContext() {
       htmlViewer: null,
       panelsVisibility: {
         [Panels.Outline]: false,
-        [Panels.HighlightList]: true,
+        [Panels.AnnotationList]: true,
       },
     },
     {

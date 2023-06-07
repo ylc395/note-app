@@ -25,7 +25,7 @@ export default observer(function Toolbar() {
       </div>
       <PageSwitcher />
       <Button
-        onClick={action(() => (panelsVisibility[Panels.HighlightList] = !panelsVisibility[Panels.HighlightList]))}
+        onClick={action(() => (panelsVisibility[Panels.AnnotationList] = !panelsVisibility[Panels.AnnotationList]))}
         type="text"
         size="small"
         icon={<HighlightOutlined />}

@@ -6,7 +6,7 @@ import type { AnnotationVO } from 'interface/material';
 import { BUFFER } from './constants';
 import context from '../../Context';
 
-export default observer(function HighlightFragment({
+export default observer(function FragmentAnnotation({
   page,
   fragment: { rect, color, annotationId },
 }: {

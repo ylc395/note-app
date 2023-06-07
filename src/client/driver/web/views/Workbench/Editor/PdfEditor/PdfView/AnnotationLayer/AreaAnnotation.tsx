@@ -6,7 +6,7 @@ import type { PdfAreaAnnotationVO } from 'interface/material';
 import ctx from '../../Context';
 import { BUFFER } from './constants';
 
-export default observer(function HighlightArea({ area, page }: { area: PdfAreaAnnotationVO; page: number }) {
+export default observer(function AreaAnnotation({ area, page }: { area: PdfAreaAnnotationVO; page: number }) {
   const { pdfViewer, hoveringAnnotationId } = useContext(ctx);
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const { horizontalRatio, verticalRatio } = pdfViewer!.getPageRatio(page);

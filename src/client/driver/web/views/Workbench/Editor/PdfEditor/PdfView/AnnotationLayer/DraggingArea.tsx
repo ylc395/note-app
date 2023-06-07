@@ -14,7 +14,7 @@ interface Position {
   height: number;
 }
 
-export default observer(function HighlightArea({ page }: { page: number }) {
+export default observer(function DraggingArea({ page }: { page: number }) {
   const { pdfViewer } = useContext(context);
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const pageEl = pdfViewer!.getPageEl(page);

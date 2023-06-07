@@ -8,7 +8,7 @@ import { AnnotationTypes } from 'interface/material';
 import type HtmlEditor from 'model/material/HtmlEditor';
 
 import RangeSelector, { type RangeSelectEvent } from '../../common/RangeSelector';
-import ElementSelector from './ElementSelector';
+import ElementSelector from '../../common/ElementSelector';
 
 interface Options {
   editor: HtmlEditor;
