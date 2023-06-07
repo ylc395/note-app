@@ -1,20 +1,29 @@
-import { useCallback, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { useFloating, offset, autoUpdate } from '@floating-ui/react';
 
+import Context from '../../Context';
+
 export default function useSelectionTooltip() {
-  const [selectionEnd, setSelectionEnd] = useState<{ el: HTMLElement; collapseToStart: boolean } | null>(null);
+  const { pdfViewer } = useContext(Context);
+  const [open, setOpen] = useState(false);
 
   const {
     floatingStyles: styles,
     refs: { setFloating },
   } = useFloating({
-    elements: { reference: selectionEnd?.el },
-    placement: selectionEnd?.collapseToStart ? 'top' : 'bottom',
+    elements: { reference: pdfViewer?.selection?.el },
+    placement: pdfViewer?.selection?.collapseToStart ? 'top' : 'bottom',
     middleware: [offset(10)],
     whileElementsMounted: autoUpdate,
   });
 
-  const hide = useCallback(() => setSelectionEnd(null), []);
+  useEffect(() => {
+    setOpen(Boolean(pdfViewer?.selection));
+  }, [pdfViewer?.selection]);
 
-  return { setFloating, styles, show: setSelectionEnd, hide, showing: Boolean(selectionEnd) };
+  return {
+    setFloating,
+    styles,
+    open,
+  };
 }

@@ -8,9 +8,9 @@ import { AnnotationTypes, type Rect } from 'interface/material';
 import type PdfEditor from 'model/material/PdfEditor';
 
 import { isElement } from '../../common/domUtils';
-import RangeSelectable, { type Options as CommonOptions } from '../../common/RangeSelectable';
+import RangeSelector, { type RangeSelectEvent } from '../../common/RangeSelector';
 
-interface Options extends CommonOptions {
+interface Options {
   container: HTMLDivElement;
   viewer: HTMLDivElement;
   editor: PdfEditor;
@@ -28,12 +28,16 @@ export const SCALE_STEPS = [
   ...numberRange(12, 30, 2).map((i) => i / 10),
 ] as const;
 
-export default class PdfViewer extends RangeSelectable {
+export default class PdfViewer {
   private readonly pdfViewer: PDFViewer;
   readonly editor: PdfEditor;
   private readonly cancelLoadingDoc: ReturnType<typeof when>;
+  private readonly rangeSelector: RangeSelector;
 
   @observable.ref
+  selection: RangeSelectEvent | null = null;
+
+  @observable.struct
   private visiblePages: number[] = [];
 
   @observable
@@ -50,16 +54,16 @@ export default class PdfViewer extends RangeSelectable {
   }
 
   constructor(options: Options) {
-    super(options);
     makeObservable(this);
 
-    this.pdfViewer = PdfViewer.createPDFViewer(options);
-    this.editor = options.editor;
-    this.cancelLoadingDoc = when(
-      () => Boolean(this.editor.entity),
-      () => this.init(),
-    );
+    this.rangeSelector = new RangeSelector({
+      rootEl: options.viewer,
+      onTextSelectionChanged: action((e) => (this.selection = e)),
+    });
 
+    this.editor = options.editor;
+
+    this.pdfViewer = PdfViewer.createPDFViewer(options);
     this.pdfViewer.eventBus.on(
       'pagechanging',
       action(({ pageNumber }: { pageNumber: number }) => {
@@ -73,6 +77,11 @@ export default class PdfViewer extends RangeSelectable {
         const { ids } = this.pdfViewer._getVisiblePages() as { ids: Set<number> };
         this.visiblePages = Array.from(ids);
       }),
+    );
+
+    this.cancelLoadingDoc = when(
+      () => Boolean(this.editor.entity),
+      () => this.init(),
     );
   }
 
@@ -124,7 +133,7 @@ export default class PdfViewer extends RangeSelectable {
   destroy() {
     this.pdfViewer.cleanup();
     this.cancelLoadingDoc();
-    super.destroy();
+    this.rangeSelector.destroy();
   }
 
   private doAfterCleaning(cb: () => void) {
@@ -155,18 +164,16 @@ export default class PdfViewer extends RangeSelectable {
   }
 
   async createHighlight(color: string) {
-    const result = this.getSelectionRange();
+    const range = this.selection?.range;
 
-    if (!result) {
-      throw new Error('no valid range');
+    if (!range) {
+      throw new Error('no range');
     }
-
-    const { range } = result;
 
     await this.editor.createAnnotation({
       type: AnnotationTypes.Highlight,
       color,
-      content: PdfViewer.getTextFromRange(range),
+      content: RangeSelector.getTextFromRange(range),
       fragments: this.getFragments(range),
     });
 
@@ -231,7 +238,7 @@ export default class PdfViewer extends RangeSelectable {
 
   private getFragments(range: Range) {
     const startPage = this.getPageFromNode(range.startContainer);
-    const endPage = this.getPageFromNode(RangeSelectable.getValidEndContainer(range));
+    const endPage = this.getPageFromNode(RangeSelector.getValidEndContainer(range));
     const pages = numberRange(startPage, endPage + 1).map((i) => {
       const pageEl = this.getPageEl(i);
 

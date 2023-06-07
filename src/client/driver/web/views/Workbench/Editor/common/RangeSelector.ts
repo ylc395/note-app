@@ -1,17 +1,22 @@
 import debounce from 'lodash/debounce';
 import { isTextNode, isElement, isVisible } from './domUtils';
 
-export interface Options {
-  onTextSelected?: (e: { el: HTMLSpanElement; collapseToStart: boolean }) => void;
-  onTextSelectCancel?: () => void;
+export interface RangeSelectEvent {
+  el: HTMLSpanElement;
+  collapseToStart: boolean;
+  range: Range;
 }
 
-export default abstract class RangeSelectable {
+interface Options {
+  onTextSelectionChanged: (e: RangeSelectEvent | null) => void;
+  rootEl: HTMLElement | DocumentFragment;
+}
+
+export default class RangeSelector {
   constructor(protected readonly options: Options) {
     document.addEventListener('selectionchange', this.handleSelection);
   }
 
-  protected abstract rootEl: HTMLElement | DocumentFragment | null | undefined;
   private markEl?: HTMLElement;
 
   private static isEndAtStart(selection: Selection) {
@@ -28,29 +33,32 @@ export default abstract class RangeSelectable {
     return Boolean(anchorNode.compareDocumentPosition(focusNode) & Node.DOCUMENT_POSITION_PRECEDING);
   }
 
-  protected static getTextFromRange(range: Range) {
+  static getTextFromRange(range: Range) {
     return Array.from(range.cloneContents().childNodes)
       .map((el) => el.textContent)
       .join('');
   }
 
-  protected getSelectionRange() {
-    const selection = window.getSelection();
+  private getSelectionRange() {
+    // fixme: `shadowRoot.getSelection()` is not a standard API. But standard API `selection.getComposedRange()` is not shipped yet.
+    const selection = (
+      this.options.rootEl instanceof ShadowRoot ? (this.options.rootEl as unknown as Window) : window
+    ).getSelection?.();
 
     if (
       !selection ||
-      selection.isCollapsed ||
       selection.rangeCount > 1 ||
-      !this.rootEl ||
-      !this.rootEl.contains(selection.anchorNode) ||
-      !this.rootEl.contains(selection.focusNode)
+      // we don't use `selection.isCollapsed` here because there is chrome bug in shadowRoot's `selection.isCollapsed`(always true)
+      (selection.anchorNode === selection.focusNode && selection.anchorOffset === selection.focusOffset) ||
+      !this.options.rootEl.contains(selection.anchorNode) ||
+      !this.options.rootEl.contains(selection.focusNode)
     ) {
       return null;
     }
 
     return {
       range: selection.getRangeAt(0),
-      isEndAtStart: RangeSelectable.isEndAtStart(selection),
+      isEndAtStart: RangeSelector.isEndAtStart(selection),
     };
   }
 
@@ -62,13 +70,13 @@ export default abstract class RangeSelectable {
       this.updateRangeEnd(range);
     } else {
       this.updateRangeEnd.cancel();
-      this.options.onTextSelectCancel?.();
+      this.options.onTextSelectionChanged?.(null);
     }
   };
 
   private readonly updateRangeEnd = debounce((range: { range: Range; isEndAtStart: boolean }) => {
-    const rangeEnd = RangeSelectable.getRangeEnd(range);
-    this.options.onTextSelected?.(rangeEnd);
+    const rangeEnd = RangeSelector.getRangeEnd(range);
+    this.options.onTextSelectionChanged?.({ ...rangeEnd, range: range.range });
     this.markEl = rangeEnd.el;
   }, 300);
 
@@ -77,7 +85,7 @@ export default abstract class RangeSelectable {
     this.markEl = undefined;
   }
 
-  protected destroy() {
+  destroy() {
     this.removeMarkEl();
     this.updateRangeEnd.cancel();
     document.removeEventListener('selectionchange', this.handleSelection);
@@ -86,7 +94,7 @@ export default abstract class RangeSelectable {
   private static getRangeEnd(result: { range: Range; isEndAtStart: boolean }) {
     const range = result.range.cloneRange();
     let collapseToStart = result.isEndAtStart;
-    const endContainer = RangeSelectable.getValidEndContainer(range);
+    const endContainer = RangeSelector.getValidEndContainer(range);
 
     if (isTextNode(endContainer) && range.endContainer !== endContainer) {
       range.setEndAfter(endContainer);
@@ -108,7 +116,7 @@ export default abstract class RangeSelectable {
 
   // when double click an element to select text, `endOffset` often comes with 0 and `endContainer` is not correct
   // we should find the right endContainer
-  protected static getValidEndContainer = (range: Range) => {
+  static getValidEndContainer = (range: Range) => {
     const SUSPICIOUS_EMPTY_STRING_REGEX = /^\s{5,}$/;
 
     if (range.endOffset !== 0) {

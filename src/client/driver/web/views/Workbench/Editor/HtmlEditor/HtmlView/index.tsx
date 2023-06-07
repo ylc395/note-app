@@ -19,6 +19,8 @@ export default observer(function HtmlView({ editor }: { editor: HtmlEditor }) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       editorRootEl: editorRootRef.current!,
       editor,
+      // onTextSelected: showSelectionTooltip,
+      // onTextSelectCancel: hideSelectionTooltip,
     });
 
     runInAction(() => {
@@ -38,6 +40,7 @@ export default observer(function HtmlView({ editor }: { editor: HtmlEditor }) {
           <HighlightElement key={el.id} el={el} />
         ))}
       </div>
+      {/* {selectionTooltipShowing && <SelectionTooltip ref={setSelectionTooltipPopper} style={selectionTooltipStyles} />} */}
     </div>
   );
 });

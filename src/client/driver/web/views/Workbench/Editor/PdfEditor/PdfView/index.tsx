@@ -18,9 +18,7 @@ export default observer(function PdfView({ editor }: { editor: PdfEditor }) {
   const {
     setFloating: setSelectionTooltipPopper,
     styles: selectionTooltipStyles,
-    show: showSelectionTooltip,
-    hide: hideSelectionTooltip,
-    showing: selectionTooltipShowing,
+    open: selectionTooltipShowing,
   } = useSelectionTooltip();
 
   useEffect(() => {
@@ -30,8 +28,6 @@ export default observer(function PdfView({ editor }: { editor: PdfEditor }) {
       container: containerElRef.current!,
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       viewer: viewerElRef.current!,
-      onTextSelected: showSelectionTooltip,
-      onTextSelectCancel: hideSelectionTooltip,
     });
 
     runInAction(() => {
@@ -39,7 +35,7 @@ export default observer(function PdfView({ editor }: { editor: PdfEditor }) {
     });
 
     return () => pdfViewer.destroy();
-  }, [ctx, editor, showSelectionTooltip, hideSelectionTooltip]);
+  }, [ctx, editor]);
 
   return (
     <div className="relative grow overflow-hidden">

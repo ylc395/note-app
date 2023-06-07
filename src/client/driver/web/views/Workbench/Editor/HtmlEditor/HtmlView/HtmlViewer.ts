@@ -1,4 +1,4 @@
-import { when, computed, makeObservable } from 'mobx';
+import { when, computed, makeObservable, observable, action } from 'mobx';
 import DOMPurify from 'dompurify';
 import getCssSelector from 'css-selector-generator';
 import { toPng } from 'html-to-image';
@@ -7,19 +7,23 @@ import { ui } from 'web/infra/ui';
 import { AnnotationTypes } from 'interface/material';
 import type HtmlEditor from 'model/material/HtmlEditor';
 
-import RangeSelectable, { Options as CommonOptions } from '../../common/RangeSelectable';
+import RangeSelector, { type RangeSelectEvent } from '../../common/RangeSelector';
 import ElementSelector from './ElementSelector';
 
-interface Options extends CommonOptions {
+interface Options {
   editor: HtmlEditor;
   rootEl: HTMLElement;
   editorRootEl: HTMLElement;
 }
 
-export default class HtmlViewer extends RangeSelectable {
+export default class HtmlViewer {
   readonly rootEl: ShadowRoot;
   private stopLoadingHtml?: ReturnType<typeof when>;
   readonly elementSelector: ElementSelector;
+  private readonly rangeSelector: RangeSelector;
+
+  @observable.ref
+  selection: RangeSelectEvent | null = null;
 
   get editor() {
     return this.options.editor;
@@ -48,15 +52,20 @@ export default class HtmlViewer extends RangeSelectable {
   }
 
   constructor(protected readonly options: Options) {
-    super(options);
     makeObservable(this);
 
     this.rootEl = options.rootEl.shadowRoot || options.rootEl.attachShadow({ mode: 'open' });
     this.rootEl.addEventListener('click', this.hijackClick);
+
     this.elementSelector = new ElementSelector({
       selectableRoot: this.rootEl,
       onSelect: this.handleElementSelect,
       cancelableRoot: options.editorRootEl,
+    });
+
+    this.rangeSelector = new RangeSelector({
+      rootEl: this.rootEl,
+      onTextSelectionChanged: action((e) => (this.selection = e)),
     });
     this.initContent();
   }
@@ -99,8 +108,8 @@ export default class HtmlViewer extends RangeSelectable {
   destroy(): void {
     this.rootEl.removeEventListener('click', this.hijackClick);
     this.elementSelector.disable();
+    this.rangeSelector.destroy();
     this.stopLoadingHtml?.();
-    super.destroy();
   }
 
   private initContent() {
@@ -177,5 +186,11 @@ export default class HtmlViewer extends RangeSelectable {
     });
 
     return true;
+  }
+
+  createHighlightRange() {
+    if (!this.selection) {
+      throw new Error('no selection');
+    }
   }
 }
