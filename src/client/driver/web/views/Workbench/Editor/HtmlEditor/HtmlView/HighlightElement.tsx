@@ -23,5 +23,11 @@ export default observer(function HighlightElement({ el }: { el: HighlightElement
     return null;
   }
 
-  return <div ref={setFloating} style={{ ...styles, backgroundColor: el.color }} className="opacity-10"></div>;
+  return (
+    <div
+      ref={setFloating}
+      style={{ ...styles, backgroundColor: el.color }}
+      className="pointer-events-none opacity-10"
+    ></div>
+  );
 });

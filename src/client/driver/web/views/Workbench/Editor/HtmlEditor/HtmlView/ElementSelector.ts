@@ -19,16 +19,24 @@ export const floatingOptions = {
 };
 
 export default class ElementSelector {
-  private readonly root: HTMLElement | ShadowRoot;
-
   @observable.ref
   private overlayEl?: HTMLElement;
+  private styleEl?: HTMLStyleElement;
   private cancelAutoUpdate?: ReturnType<typeof autoUpdate>;
   private currentTarget?: HTMLElement;
 
-  constructor(private readonly options: { onSelect: (el: HTMLElement) => void; root?: HTMLElement | ShadowRoot }) {
-    this.root = options.root || document.body;
+  constructor(
+    private readonly options: {
+      onSelect: (el: HTMLElement) => void;
+      selectableRoot?: HTMLElement | ShadowRoot;
+      cancelableRoot?: HTMLElement;
+    },
+  ) {
     makeObservable(this);
+  }
+
+  private get selectableRoot() {
+    return this.options.selectableRoot || document.body;
   }
 
   @computed
@@ -42,24 +50,25 @@ export default class ElementSelector {
     }
 
     this.initOverlay();
-    this.root.addEventListener('mouseover', this.handleHover);
-    this.root.addEventListener('click', this.handleClick);
-    this.root.addEventListener('contextmenu', this.handleContextmenu);
+    this.initStyle();
+    this.selectableRoot.addEventListener('mouseover', this.handleHover);
+    this.selectableRoot.addEventListener('click', this.handleClick);
+    document.body.addEventListener('contextmenu', this.handleContextmenu);
     document.body.addEventListener('keyup', this.handleKeyup);
   }
 
-  private disable() {
-    this.clearOverlay();
-    this.root.removeEventListener('mouseover', this.handleHover);
-    this.root.removeEventListener('click', this.handleClick);
-    this.root.removeEventListener('contextmenu', this.handleContextmenu);
-    document.body.removeEventListener('keyup', this.handleKeyup);
-  }
-
   @action
-  private clearOverlay() {
+  disable() {
+    this.selectableRoot.removeEventListener('mouseover', this.handleHover);
+    this.selectableRoot.removeEventListener('click', this.handleClick);
+    document.body.removeEventListener('contextmenu', this.handleContextmenu);
+    document.body.removeEventListener('keyup', this.handleKeyup);
+    this.cancelAutoUpdate?.();
     this.overlayEl?.remove();
+    this.styleEl?.remove();
     this.overlayEl = undefined;
+    this.styleEl = undefined;
+    this.currentTarget = undefined;
   }
 
   @action
@@ -70,20 +79,40 @@ export default class ElementSelector {
     this.overlayEl.style.position = 'fixed';
     this.overlayEl.style.pointerEvents = 'none';
     this.overlayEl.style.zIndex = '999';
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    (this.root instanceof ShadowRoot ? this.root.host.parentElement! : this.root).appendChild(this.overlayEl);
+    document.body.appendChild(this.overlayEl);
+  }
+
+  private initStyle() {
+    const style = document.createElement('style');
+    style.innerHTML = '* {cursor: default !important}';
+
+    if (this.selectableRoot instanceof ShadowRoot) {
+      const el =
+        this.selectableRoot.querySelector('head') || this.selectableRoot.querySelector('body') || this.selectableRoot;
+      el.append(style);
+    } else {
+      document.head.append(style);
+    }
+
+    this.styleEl = style;
   }
 
   private readonly handleClick = (e: Event) => {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+
     if (e.target === this.currentTarget) {
-      e.preventDefault();
-      e.stopImmediatePropagation();
       this.options.onSelect(this.currentTarget);
     }
   };
 
   private readonly handleContextmenu = (e: Event) => {
-    if (e.target === this.currentTarget) {
+    const isValid =
+      (this.selectableRoot instanceof ShadowRoot ? this.selectableRoot.host : this.selectableRoot).contains(
+        e.target as HTMLElement,
+      ) || !!this.options.cancelableRoot?.contains(e.target as HTMLElement);
+
+    if (isValid) {
       e.preventDefault();
       e.stopImmediatePropagation();
       this.disable();
@@ -115,11 +144,4 @@ export default class ElementSelector {
       overlayEl.style.top = `${y}px`;
     });
   };
-
-  destroy() {
-    this.disable();
-    this.cancelAutoUpdate?.();
-    this.clearOverlay();
-    this.currentTarget = undefined;
-  }
 }

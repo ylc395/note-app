@@ -12,6 +12,7 @@ import ElementSelector from './ElementSelector';
 interface Options extends CommonOptions {
   editor: HtmlEditor;
   rootEl: HTMLElement;
+  editorRootEl: HTMLElement;
 }
 
 export default class HtmlViewer extends RangeSelectable {
@@ -50,15 +51,31 @@ export default class HtmlViewer extends RangeSelectable {
     makeObservable(this);
 
     this.rootEl = options.rootEl.shadowRoot || options.rootEl.attachShadow({ mode: 'open' });
-    this.rootEl.addEventListener('click', HtmlViewer.hijackClick);
+    this.rootEl.addEventListener('click', this.hijackClick);
     this.elementSelector = new ElementSelector({
-      root: this.rootEl,
-      onSelect: (el) => this.createHighlightElement(el, 'yellow'),
+      selectableRoot: this.rootEl,
+      onSelect: this.handleElementSelect,
+      cancelableRoot: options.editorRootEl,
     });
     this.initContent();
   }
 
-  private static hijackClick(e: Event) {
+  private readonly handleElementSelect = async (e: HTMLElement) => {
+    const result = await this.createHighlightElement(e, 'yellow');
+
+    if (result) {
+      this.elementSelector.disable();
+    } else {
+      ui.feedback({ type: 'fail', content: '该位置已有标记' });
+    }
+  };
+
+  private readonly hijackClick = (e: Event) => {
+    if (this.elementSelector.isEnabled) {
+      e.preventDefault();
+      return;
+    }
+
     for (const el of e.composedPath() as HTMLElement[]) {
       if (el.tagName === 'A') {
         const href = el.getAttribute('href');
@@ -76,11 +93,11 @@ export default class HtmlViewer extends RangeSelectable {
         return;
       }
     }
-  }
+  };
 
   destroy(): void {
-    this.rootEl.removeEventListener('click', HtmlViewer.hijackClick);
-    this.elementSelector.destroy();
+    this.rootEl.removeEventListener('click', this.hijackClick);
+    this.elementSelector.disable();
     this.stopLoadingHtml?.();
     super.destroy();
   }
@@ -144,13 +161,19 @@ export default class HtmlViewer extends RangeSelectable {
     return fragment as HTMLHtmlElement;
   }
 
-  async createHighlightElement(el: HTMLElement, color: string) {
+  private async createHighlightElement(el: HTMLElement, color: string) {
     const uniqueSelector = getCssSelector(el, { root: this.rootEl });
+
+    if (this.editor.highlightElements.find(({ selector }) => selector === uniqueSelector)) {
+      return false;
+    }
 
     await this.options.editor.createAnnotation({
       type: AnnotationTypes.HighlightElement,
       color,
       selector: uniqueSelector,
     });
+
+    return true;
   }
 }
