@@ -3,9 +3,9 @@ import { useContext } from 'react';
 import { Resizable } from 're-resizable';
 
 import context from '../Context';
-import HighlightItem from './HighlightItem';
+import Highlight from './Highlight';
 
-export default observer(function HighlightList() {
+export default observer(function AnnotationList() {
   const { pdfViewer } = useContext(context);
   const highlights = pdfViewer?.editor.highlights;
 
@@ -17,8 +17,8 @@ export default observer(function HighlightList() {
       className="overflow-auto"
     >
       {highlights && highlights.length > 0
-        ? pdfViewer?.editor.highlights.map((highlight) => {
-            return <HighlightItem key={highlight.id} highlight={highlight} />;
+        ? highlights.map((highlight) => {
+            return <Highlight key={highlight.id} highlight={highlight} />;
           })
         : '无'}
     </Resizable>

@@ -104,6 +104,7 @@ const highlightAreaSchema = object({
 const highlightElementSchema = object({
   color: string(),
   selector: string(),
+  snapshot: string(),
 });
 
 export const annotationDTOSchema = discriminatedUnion('type', [

@@ -6,7 +6,6 @@ import type HtmlEditor from 'model/material/HtmlEditor';
 import HtmlViewer from './HtmlViewer';
 import context from '../Context';
 import HighlightElement from './HighlightElement';
-import clsx from 'clsx';
 
 export default observer(function HtmlView({ editor }: { editor: HtmlEditor }) {
   const shadowWrapperRef = useRef<HTMLDivElement | null>(null);
@@ -30,7 +29,7 @@ export default observer(function HtmlView({ editor }: { editor: HtmlEditor }) {
   }, [editor, ctx]);
 
   return (
-    <div className="h-full overflow-auto" ref={editorRootRef}>
+    <div className="h-full grow overflow-auto" ref={editorRootRef}>
       <div className="all-initial">
         <div className="select-text" ref={shadowWrapperRef}></div>
       </div>

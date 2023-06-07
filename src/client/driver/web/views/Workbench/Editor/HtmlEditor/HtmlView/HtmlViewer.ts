@@ -1,6 +1,7 @@
 import { when, computed, makeObservable } from 'mobx';
 import DOMPurify from 'dompurify';
 import getCssSelector from 'css-selector-generator';
+import { toPng } from 'html-to-image';
 
 import { ui } from 'web/infra/ui';
 import { AnnotationTypes } from 'interface/material';
@@ -172,6 +173,7 @@ export default class HtmlViewer extends RangeSelectable {
       type: AnnotationTypes.HighlightElement,
       color,
       selector: uniqueSelector,
+      snapshot: await toPng(el),
     });
 
     return true;

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import type PdfEditor from 'model/material/PdfEditor';
 
 import Toolbar from './Toolbar';
-import HighlightList from './HighlightList';
+import AnnotationList from './AnnotationList';
 import Context, { Panels, getContext } from './Context';
 import Outline from './Outline';
 import PdfViewer from './PdfView';
@@ -20,7 +20,7 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
           <div className="relative flex min-h-0 grow">
             {context.panelsVisibility[Panels.Outline] && <Outline />}
             <PdfViewer editor={editor} />
-            {context.panelsVisibility[Panels.HighlightList] && <HighlightList />}
+            {context.panelsVisibility[Panels.HighlightList] && <AnnotationList />}
           </div>
         </div>
       </Context.Provider>
