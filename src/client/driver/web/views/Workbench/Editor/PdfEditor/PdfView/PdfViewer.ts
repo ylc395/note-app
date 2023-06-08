@@ -2,7 +2,7 @@ import { EventBus, PDFViewer, type PDFPageView } from 'pdfjs-dist/web/pdf_viewer
 import numberRange from 'lodash/range';
 import intersection from 'lodash/intersection';
 import union from 'lodash/union';
-import { makeObservable, observable, when, action, runInAction, computed } from 'mobx';
+import { makeObservable, observable, when, action, runInAction, computed, autorun } from 'mobx';
 
 import { AnnotationTypes, type Rect } from 'interface/material';
 import type PdfEditor from 'model/material/PdfEditor';
@@ -34,20 +34,15 @@ export default class PdfViewer {
   private readonly cancelLoadingDoc: ReturnType<typeof when>;
   private readonly rangeSelector: RangeSelector;
 
-  @observable.ref
-  selection: RangeSelectEvent | null = null;
+  private autoSaveState?: ReturnType<typeof autorun>;
 
-  @observable.struct
-  private visiblePages: number[] = [];
+  @observable.ref selection: RangeSelectEvent | null = null;
 
-  @observable
-  readonly page = {
-    current: 1,
-    total: 1,
-  };
+  @observable.struct private visiblePages: number[] = [];
 
   @observable
-  scale: number | string = 'auto';
+  readonly page = { current: 1, total: 1 };
+  @observable scale: number | string = 'auto';
 
   protected get rootEl() {
     return this.pdfViewer.viewer as HTMLElement | null;
@@ -115,6 +110,22 @@ export default class PdfViewer {
     runInAction(() => {
       this.page.total = doc.numPages;
     });
+
+    this.initFromState();
+  }
+
+  private initFromState() {
+    const { pageNumber } = this.editor.state;
+
+    if (pageNumber > 1) {
+      this.pdfViewer.eventBus.on('pagesinit', () => {
+        this.jumpToPage(pageNumber);
+      });
+    }
+
+    this.autoSaveState = autorun(() => {
+      this.editor.state.pageNumber = this.page.current;
+    });
   }
 
   @action
@@ -134,6 +145,7 @@ export default class PdfViewer {
     this.pdfViewer.cleanup();
     this.cancelLoadingDoc();
     this.rangeSelector.destroy();
+    this.autoSaveState?.();
   }
 
   private doAfterCleaning(cb: () => void) {

@@ -9,9 +9,15 @@ interface WebPage {
   html: string;
 }
 
-export default class HtmlEditor extends Editor<WebPage> {
+function getDefaultState() {
+  return { scrollOffset: 0 };
+}
+
+type State = ReturnType<typeof getDefaultState>;
+
+export default class HtmlEditor extends Editor<WebPage, State> {
   constructor(tile: Tile, materialId: EntityMaterialVO['id']) {
-    super(tile, materialId);
+    super(tile, materialId, getDefaultState());
     makeObservable(this);
   }
 

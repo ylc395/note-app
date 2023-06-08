@@ -24,9 +24,15 @@ export interface OutlineItem {
   key: string;
 }
 
-export default class PdfEditor extends Editor<Pdf> {
+function getDefaultState() {
+  return { pageNumber: 0 };
+}
+
+type State = ReturnType<typeof getDefaultState>;
+
+export default class PdfEditor extends Editor<Pdf, State> {
   constructor(tile: Tile, materialId: EntityMaterialVO['id']) {
-    super(tile, materialId);
+    super(tile, materialId, getDefaultState());
     makeObservable(this);
   }
 
@@ -34,7 +40,6 @@ export default class PdfEditor extends Editor<Pdf> {
   outline?: OutlineItem[];
 
   private loadingTask?: PDFDocumentLoadingTask;
-
   readonly outlinePageNumberMap: Record<string, number> = {};
 
   @computed
@@ -100,7 +105,6 @@ export default class PdfEditor extends Editor<Pdf> {
     this.loadingTask?.destroy();
   }
 
-  // todo: move this into a plugin
   private async initOutline(doc: PDFDocumentProxy) {
     const outline = await doc.getOutline();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -20,10 +20,16 @@ interface NoteEditorEvents extends CommonEditorEvents {
   [Events.BodyUpdated]: [{ content: string; isOriginal: boolean }];
 }
 
-export default class NoteEditor extends Editor<Entity, NoteEditorEvents> {
+function getDefaultState() {
+  return { scrollOffset: 0, cursor: null };
+}
+
+type State = ReturnType<typeof getDefaultState>;
+
+export default class NoteEditor extends Editor<Entity, State, NoteEditorEvents> {
   readonly entityType = EntityTypes.Note;
   constructor(tile: Tile, noteId: NoteVO['id'], private readonly noteTree: NoteTree) {
-    super(tile, noteId);
+    super(tile, noteId, getDefaultState());
     makeObservable(this);
   }
 

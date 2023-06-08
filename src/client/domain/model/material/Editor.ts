@@ -13,9 +13,12 @@ import EntityEditor from 'model/abstract/Editor';
 import type Tile from 'model/workbench/Tile';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export default abstract class Editor<T extends { metadata: EntityMaterialVO } = any> extends EntityEditor<T> {
-  constructor(tile: Tile, materialId: EntityMaterialVO['id']) {
-    super(tile, materialId);
+export default abstract class Editor<T extends { metadata: EntityMaterialVO } = any, S = unknown> extends EntityEditor<
+  T,
+  S
+> {
+  constructor(tile: Tile, materialId: EntityMaterialVO['id'], initialState: S) {
+    super(tile, materialId, initialState);
     makeObservable(this);
     this.loadAnnotations();
   }
