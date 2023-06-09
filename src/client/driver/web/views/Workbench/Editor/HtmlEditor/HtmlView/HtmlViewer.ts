@@ -2,6 +2,7 @@ import { when, computed, makeObservable, observable, action } from 'mobx';
 import DOMPurify from 'dompurify';
 import getCssSelector from 'css-selector-generator';
 import { toPng } from 'html-to-image';
+import debounce from 'lodash/debounce';
 
 import { ui } from 'web/infra/ui';
 import { AnnotationTypes } from 'interface/material';
@@ -56,6 +57,7 @@ export default class HtmlViewer {
 
     this.rootEl = options.rootEl.shadowRoot || options.rootEl.attachShadow({ mode: 'open' });
     this.rootEl.addEventListener('click', this.hijackClick);
+    options.editorRootEl.addEventListener('scroll', this.updateScrollState);
 
     this.elementSelector = new ElementSelector({
       selectableRoot: this.rootEl,
@@ -69,6 +71,15 @@ export default class HtmlViewer {
     });
     this.initContent();
   }
+
+  private readonly updateScrollState = debounce(
+    action((e: Event) => {
+      const { scrollTop } = e.target as HTMLElement;
+
+      this.editor.state.scrollOffset = scrollTop;
+    }),
+    300,
+  );
 
   private readonly handleElementSelect = async (e: HTMLElement) => {
     const result = await this.createElementAnnotation(e, 'yellow');
@@ -110,11 +121,13 @@ export default class HtmlViewer {
     this.elementSelector.disable();
     this.rangeSelector.destroy();
     this.stopLoadingHtml?.();
+    this.updateScrollState.cancel();
+    this.options.editorRootEl.removeEventListener('scroll', this.updateScrollState);
   }
 
   private initContent() {
     if (this.editor.documentElement instanceof HTMLHtmlElement) {
-      this.rootEl.replaceChildren(this.editor.documentElement);
+      this.updateContent(this.editor.documentElement);
     } else {
       this.stopLoadingHtml = when(
         () => Boolean(this.editor.entity),
@@ -123,10 +136,15 @@ export default class HtmlViewer {
           const documentElement = HtmlViewer.filterHtml(this.editor.entity!.html);
           HtmlViewer.processStyles(documentElement);
           this.editor.documentElement = documentElement;
-          this.rootEl.replaceChildren(documentElement);
+          this.updateContent(documentElement);
         },
       );
     }
+  }
+
+  private updateContent(html: HTMLElement) {
+    this.rootEl.replaceChildren(html);
+    this.options.editorRootEl.scrollTop = this.editor.state.scrollOffset;
   }
 
   private static processStyles(root: HTMLHtmlElement) {
