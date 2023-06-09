@@ -36,7 +36,7 @@ export default observer(function HtmlView({ editor }: { editor: HtmlEditor }) {
       <div className="all-initial">
         <div className="select-text" ref={shadowWrapperRef}></div>
       </div>
-      <div>
+      <div className="relative">
         {editor.annotations.map((el) => {
           if (el.type === AnnotationTypes.HtmlElement) {
             return <ElementAnnotation key={el.id} el={el} />;

@@ -1,22 +1,19 @@
 import { makeObservable, computed, observable, action } from 'mobx';
 import { offset, computePosition, autoUpdate, size } from '@floating-ui/dom';
 
-export const floatingOptions = {
-  strategy: 'fixed' as const,
-  middleware: [
-    offset(({ rects }) => {
-      return -rects.reference.height / 2 - rects.floating.height / 2;
-    }),
-    size({
-      apply: ({ rects, elements: { floating } }) => {
-        Object.assign(floating.style, {
-          width: `${rects.reference.width}px`,
-          height: `${rects.reference.height}px`,
-        });
-      },
-    }),
-  ],
-};
+export const middleware = [
+  offset(({ rects }) => {
+    return -rects.reference.height / 2 - rects.floating.height / 2;
+  }),
+  size({
+    apply: ({ rects, elements: { floating } }) => {
+      Object.assign(floating.style, {
+        width: `${rects.reference.width}px`,
+        height: `${rects.reference.height}px`,
+      });
+    },
+  }),
+];
 
 export default class ElementSelector {
   @observable.ref
@@ -79,7 +76,7 @@ export default class ElementSelector {
     this.overlayEl.style.position = 'fixed';
     this.overlayEl.style.pointerEvents = 'none';
     this.overlayEl.style.zIndex = '999';
-    document.body.appendChild(this.overlayEl);
+    this.selectableRoot.appendChild(this.overlayEl);
   }
 
   private initStyle() {
@@ -110,7 +107,7 @@ export default class ElementSelector {
     const isValid =
       (this.selectableRoot instanceof ShadowRoot ? this.selectableRoot.host : this.selectableRoot).contains(
         e.target as HTMLElement,
-      ) || !!this.options.cancelableRoot?.contains(e.target as HTMLElement);
+      ) || this.options.cancelableRoot?.contains(e.target as HTMLElement);
 
     if (isValid) {
       e.preventDefault();
@@ -138,7 +135,7 @@ export default class ElementSelector {
     }
 
     this.cancelAutoUpdate = autoUpdate(target, overlayEl, async () => {
-      const { x, y } = await computePosition(target, overlayEl, floatingOptions);
+      const { x, y } = await computePosition(target, overlayEl, { middleware });
 
       overlayEl.style.left = `${x}px`;
       overlayEl.style.top = `${y}px`;
