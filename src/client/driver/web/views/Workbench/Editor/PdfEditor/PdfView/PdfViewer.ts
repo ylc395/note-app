@@ -1,4 +1,4 @@
-import { EventBus, PDFViewer, type PDFPageView } from 'pdfjs-dist/web/pdf_viewer';
+import { EventBus, PDFViewer, type PDFPageView, PDFLinkService } from 'pdfjs-dist/web/pdf_viewer';
 import numberRange from 'lodash/range';
 import intersection from 'lodash/intersection';
 import union from 'lodash/union';
@@ -58,22 +58,7 @@ export default class PdfViewer {
 
     this.editor = options.editor;
 
-    this.pdfViewer = PdfViewer.createPDFViewer(options);
-    this.pdfViewer.eventBus.on(
-      'pagechanging',
-      action(({ pageNumber }: { pageNumber: number }) => {
-        this.page.current = pageNumber;
-      }),
-    );
-
-    this.pdfViewer.eventBus.on(
-      'updateviewarea', // frequent event but we don't debounce this to ensure UE
-      action(() => {
-        const { ids } = this.pdfViewer._getVisiblePages() as { ids: Set<number> };
-        this.visiblePages = Array.from(ids);
-      }),
-    );
-
+    this.pdfViewer = this.createPDFViewer(options);
     this.cancelLoadingDoc = when(
       () => Boolean(this.editor.entity),
       () => this.init(),
@@ -91,10 +76,27 @@ export default class PdfViewer {
     );
   }
 
-  private static createPDFViewer(options: Options) {
+  private createPDFViewer(options: Options) {
     const eventBus = new EventBus();
-    const pdfViewer = new PDFViewer({ ...options, eventBus });
+    const linkService = new PDFLinkService({ eventBus });
+    const pdfViewer = new PDFViewer({ ...options, eventBus, linkService });
     // pdfViewer.scrollMode = ScrollMode.PAGE;
+
+    linkService.setViewer(pdfViewer);
+
+    pdfViewer.eventBus.on(
+      'pagechanging',
+      action(({ pageNumber }: { pageNumber: number }) => {
+        this.page.current = pageNumber;
+      }),
+    );
+
+    pdfViewer.eventBus.on(
+      'scalechanging',
+      action(({ scale }: { scale: number }) => {
+        this.scale = scale;
+      }),
+    );
 
     return pdfViewer;
   }
@@ -106,31 +108,61 @@ export default class PdfViewer {
 
     const { doc } = this.editor.entity;
     this.pdfViewer.setDocument(doc);
+    (this.pdfViewer.linkService as PDFLinkService).setDocument(doc);
 
     runInAction(() => {
       this.page.total = doc.numPages;
     });
 
-    this.initFromState();
-  }
+    const isFromState = await this.initFromState();
 
-  private initFromState() {
-    const { pageNumber } = this.editor.state;
+    let isFirstTime = true;
+    this.pdfViewer.eventBus.on(
+      'updateviewarea',
+      action(({ location }: { location: { pdfOpenParams: string } }) => {
+        this.editor.state.hash = location.pdfOpenParams;
+        isFirstTime ? setTimeout(this.updateVisiblePages, 500) : this.updateVisiblePages(); // we must wait until viewarea is updated. There is no such event so just wait 500ms
+        isFirstTime = false;
+      }),
+    );
 
-    if (pageNumber > 1) {
-      this.pdfViewer.eventBus.on('pagesinit', () => {
-        this.jumpToPage(pageNumber);
-      });
+    if (!isFromState) {
+      this.updateVisiblePages();
     }
-
-    this.autoSaveState = autorun(() => {
-      this.editor.state.pageNumber = this.page.current;
-    });
   }
 
   @action
-  jumpToPage(page: number) {
-    this.pdfViewer.currentPageNumber = page;
+  private readonly updateVisiblePages = () => {
+    const { ids } = this.pdfViewer._getVisiblePages() as { ids: Set<number> };
+    this.visiblePages = Array.from(ids);
+  };
+
+  private async initFromState() {
+    const { hash } = this.editor.state;
+
+    await this.pdfViewer.firstPagePromise;
+
+    if (hash) {
+      const normalizedScaleValue =
+        parseFloat(this.pdfViewer.currentScaleValue) === this.pdfViewer.currentScale
+          ? Math.round(this.pdfViewer.currentScale * 10000) / 100
+          : this.pdfViewer.currentScaleValue || 100;
+
+      this.pdfViewer.linkService.setHash(hash.replace('zoom=null', `zoom=${normalizedScaleValue}`).replace(/^#/, ''));
+      return true;
+    }
+
+    return false;
+  }
+
+  @action
+  jumpTo(page: number | unknown) {
+    if (typeof page === 'number') {
+      this.pdfViewer.currentPageNumber = page;
+    } else {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      this.pdfViewer.linkService.goToDestination(page as any);
+    }
   }
 
   goToNextPage() {
@@ -148,11 +180,11 @@ export default class PdfViewer {
     this.autoSaveState?.();
   }
 
+  @action
   private doAfterCleaning(cb: () => void) {
     // wait annotationLayers to be cleared by react
     // or react will process un-existing annotationLayers (emptied by pdf.js) and throw error finally
     this.visiblePages = [];
-
     setTimeout(cb, 200);
   }
 
@@ -160,19 +192,15 @@ export default class PdfViewer {
     const _value = value;
     const { currentScale } = this.pdfViewer;
 
-    this.doAfterCleaning(
-      action(() => {
-        if (value === 'up') {
-          this.scale = this.pdfViewer.currentScale = SCALE_STEPS.find((step) => step > currentScale) || currentScale;
-        } else if (value === 'down') {
-          this.scale = this.pdfViewer.currentScale =
-            SCALE_STEPS.findLast((step) => step < currentScale) || currentScale;
-        } else {
-          this.scale = _value;
-          this.pdfViewer.currentScaleValue = String(_value);
-        }
-      }),
-    );
+    this.doAfterCleaning(() => {
+      if (value === 'up') {
+        this.pdfViewer.currentScale = SCALE_STEPS.find((step) => step > currentScale) || currentScale;
+      } else if (value === 'down') {
+        this.pdfViewer.currentScale = SCALE_STEPS.findLast((step) => step < currentScale) || currentScale;
+      } else {
+        this.pdfViewer.currentScaleValue = String(_value);
+      }
+    });
   }
 
   async createRangeAnnotation(color: string) {

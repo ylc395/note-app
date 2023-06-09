@@ -17,7 +17,7 @@ export default observer(function Annotation({
       <div
         className="cursor-pointer border-0 border-l-2 border-solid pl-2 text-sm text-gray-400"
         style={{ borderColor: annotation.color }}
-        onClick={() => pdfViewer?.jumpToPage(annotation.startPage)}
+        onClick={() => pdfViewer?.jumpTo(annotation.startPage)}
       >
         {annotation.type === AnnotationTypes.PdfRange && <blockquote className="m-0">{annotation.content}</blockquote>}
         {annotation.type === AnnotationTypes.PdfArea && (

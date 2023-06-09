@@ -17,7 +17,7 @@ export default observer(function PageSwitcher() {
         return null;
       }
 
-      pdfViewer?.jumpToPage(Number((e.target as HTMLInputElement).value));
+      pdfViewer?.jumpTo(Number((e.target as HTMLInputElement).value));
     },
     { target: inputRef },
   );

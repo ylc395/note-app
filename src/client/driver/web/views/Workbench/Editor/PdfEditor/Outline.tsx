@@ -14,13 +14,13 @@ const OutlineItemView = observer(function OutlineItemView({
   level: number;
 }) {
   const { pdfViewer } = useContext(context);
-  const page = pdfViewer?.editor.outlinePageNumberMap[key];
+  const dest = pdfViewer?.editor.outlineDestMap[key];
 
   return (
     <div style={{ paddingLeft: level * 5 }} className="mb-2">
       <div
-        onClick={() => page && pdfViewer?.jumpToPage(page)}
-        className={clsx('mb-2 text-sm', page ? 'cursor-pointer' : '')}
+        onClick={() => dest && pdfViewer?.jumpTo(dest)}
+        className={clsx('mb-2 text-sm', dest ? 'cursor-pointer' : '')}
       >
         {title}
       </div>

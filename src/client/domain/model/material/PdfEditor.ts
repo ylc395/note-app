@@ -2,7 +2,6 @@ import { computed, makeObservable, observable, runInAction } from 'mobx';
 import groupBy from 'lodash/groupBy';
 import { type PDFDocumentLoadingTask, type PDFDocumentProxy, PDFWorker, getDocument } from 'pdfjs-dist';
 import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.min.js?worker';
-import type { RefProxy } from 'pdfjs-dist/types/src/display/api';
 
 import {
   type EntityMaterialVO,
@@ -25,7 +24,7 @@ export interface OutlineItem {
 }
 
 function getDefaultState() {
-  return { pageNumber: 0 };
+  return { hash: '' }; // pdfjs's hash, including page, scroll position, zoom etc;
 }
 
 type State = ReturnType<typeof getDefaultState>;
@@ -40,7 +39,7 @@ export default class PdfEditor extends Editor<Pdf, State> {
   outline?: OutlineItem[];
 
   private loadingTask?: PDFDocumentLoadingTask;
-  readonly outlinePageNumberMap: Record<string, number> = {};
+  readonly outlineDestMap: Record<string, unknown> = {};
 
   @computed
   get pdfAnnotations() {
@@ -109,12 +108,11 @@ export default class PdfEditor extends Editor<Pdf, State> {
     const outline = await doc.getOutline();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     type RawOutlineItem = { title: string; items: RawOutlineItem[]; dest: any };
-    const pageRefsMap: Record<string, RefProxy> = {};
     const toOutlineItem = ({ items, dest, title }: RawOutlineItem, keys: number[]): OutlineItem => {
       const key = keys.join('-');
 
-      if (dest?.[0]) {
-        pageRefsMap[key] = dest[0];
+      if (dest) {
+        this.outlineDestMap[key] = dest;
       }
 
       return {
@@ -125,11 +123,6 @@ export default class PdfEditor extends Editor<Pdf, State> {
     };
 
     const items = outline?.map((item, i) => toOutlineItem(item, [i])) || [];
-
-    for (const [key, ref] of Object.entries(pageRefsMap)) {
-      const index = await doc.getPageIndex(ref);
-      this.outlinePageNumberMap[key] = index + 1;
-    }
 
     runInAction(() => {
       this.outline = items;
