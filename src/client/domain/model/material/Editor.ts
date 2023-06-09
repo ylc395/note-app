@@ -94,6 +94,9 @@ export default abstract class Editor<T extends { metadata: EntityMaterialVO } = 
 
     return annotation;
   }
+  toEntityLocator() {
+    return { ...super.toEntityLocator(), mimeType: this.entity?.metadata.mimeType };
+  }
 }
 
 export const ANNOTATION_COLORS = [

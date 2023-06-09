@@ -4,7 +4,7 @@ import { makeObservable, action, observable, autorun } from 'mobx';
 import { Emitter, type EventMap } from 'strict-event-emitter';
 
 import type Tile from 'model/workbench/Tile';
-import type { EntityId, EntityTypes } from 'interface/entity';
+import type { EntityId, EntityLocator, EntityTypes } from 'interface/entity';
 import { token as remoteToken } from 'infra/remote';
 import { token as localStorageToken } from 'infra/localStorage';
 
@@ -74,4 +74,7 @@ export default abstract class EntityEditor<
   abstract readonly entityType: EntityTypes;
   abstract readonly breadcrumbs: Breadcrumbs;
   protected abstract init(): void;
+  toEntityLocator(): EntityLocator {
+    return { type: this.entityType, id: this.entityId };
+  }
 }

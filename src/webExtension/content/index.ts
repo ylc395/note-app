@@ -24,6 +24,7 @@ const areaSelector = new AreaSelector({
       removeHiddenElements: true,
       removeDiscardedResources: true,
       compressHTML: true,
+      saveFavicon: true,
     });
 
     fetch('http://localhost:3001/materials', {

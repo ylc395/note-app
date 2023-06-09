@@ -70,7 +70,7 @@ export default function useDrop(tile: Tile) {
       const d = directionMap[direction as keyof Position];
 
       if (draggingItem === (overItem as Tile).currentEditor) {
-        openEntity({ id: draggingItem.entityId, type: draggingItem.entityType }, { direction: d, from: overItem });
+        openEntity(draggingItem.toEntityLocator(), { direction: d, from: overItem });
       } else if (draggingItem instanceof EntityEditor) {
         moveEditor(draggingItem, { from: tile, splitDirection: d });
       } else {
