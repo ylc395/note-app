@@ -8,7 +8,7 @@ import ctx from '../Context';
 
 export default observer(function ElementAnnotation({ el }: { el: HtmlElementAnnotationVO }) {
   const { htmlViewer } = useContext(ctx);
-  const targetEl = htmlViewer?.rootEl.querySelector(el.selector);
+  const targetEl = htmlViewer?.shadowRoot.querySelector(el.selector);
 
   const {
     floatingStyles: styles,

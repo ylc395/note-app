@@ -5,7 +5,7 @@ import { toPng } from 'html-to-image';
 import debounce from 'lodash/debounce';
 
 import { ui } from 'web/infra/ui';
-import { AnnotationTypes } from 'interface/material';
+import { AnnotationTypes, AnnotationVO } from 'interface/material';
 import type HtmlEditor from 'model/material/HtmlEditor';
 
 import RangeSelector, { type RangeSelectEvent } from '../../common/RangeSelector';
@@ -18,7 +18,7 @@ interface Options {
 }
 
 export default class HtmlViewer {
-  readonly rootEl: ShadowRoot;
+  readonly shadowRoot: ShadowRoot;
   private stopLoadingHtml?: ReturnType<typeof when>;
   readonly elementSelector: ElementSelector;
   private readonly rangeSelector: RangeSelector;
@@ -55,18 +55,18 @@ export default class HtmlViewer {
   constructor(protected readonly options: Options) {
     makeObservable(this);
 
-    this.rootEl = options.rootEl.shadowRoot || options.rootEl.attachShadow({ mode: 'open' });
-    this.rootEl.addEventListener('click', this.hijackClick);
+    this.shadowRoot = options.rootEl.shadowRoot || options.rootEl.attachShadow({ mode: 'open' });
+    this.shadowRoot.addEventListener('click', this.hijackClick);
     options.editorRootEl.addEventListener('scroll', this.updateScrollState);
 
     this.elementSelector = new ElementSelector({
-      selectableRoot: this.rootEl,
+      selectableRoot: this.shadowRoot,
       onSelect: this.handleElementSelect,
       cancelableRoot: options.editorRootEl,
     });
 
     this.rangeSelector = new RangeSelector({
-      rootEl: this.rootEl,
+      rootEl: this.shadowRoot,
       onTextSelectionChanged: action((e) => (this.selection = e)),
     });
     this.initContent();
@@ -80,6 +80,10 @@ export default class HtmlViewer {
     }),
     300,
   );
+
+  private getUniqueSelector(el: HTMLElement) {
+    return getCssSelector(el, { root: this.shadowRoot }).replace(':root > :nth-child(1)', 'html');
+  }
 
   private readonly handleElementSelect = async (e: HTMLElement) => {
     const result = await this.createElementAnnotation(e, 'yellow');
@@ -117,7 +121,7 @@ export default class HtmlViewer {
   };
 
   destroy(): void {
-    this.rootEl.removeEventListener('click', this.hijackClick);
+    this.shadowRoot.removeEventListener('click', this.hijackClick);
     this.elementSelector.disable();
     this.rangeSelector.destroy();
     this.stopLoadingHtml?.();
@@ -142,8 +146,8 @@ export default class HtmlViewer {
     }
   }
 
-  private updateContent(html: HTMLElement) {
-    this.rootEl.replaceChildren(html);
+  private updateContent(html: HTMLHtmlElement) {
+    this.shadowRoot.replaceChildren(html);
     this.options.editorRootEl.scrollTop = this.editor.state.scrollOffset;
   }
 
@@ -190,7 +194,7 @@ export default class HtmlViewer {
   }
 
   private async createElementAnnotation(el: HTMLElement, color: string) {
-    const uniqueSelector = getCssSelector(el, { root: this.rootEl });
+    const uniqueSelector = this.getUniqueSelector(el);
     const existed = this.editor.annotations.find(
       (annotation) => annotation.type === AnnotationTypes.HtmlElement && annotation.selector === uniqueSelector,
     );
@@ -220,9 +224,30 @@ export default class HtmlViewer {
       type: AnnotationTypes.HtmlRange,
       color,
       range: [
-        { selector: getCssSelector(range.startContainer, { root: this.rootEl }), offset: range.startOffset },
-        { selector: getCssSelector(range.endContainer, { root: this.rootEl }), offset: range.endOffset },
+        { selector: this.getUniqueSelector(range.startContainer as HTMLElement), offset: range.startOffset },
+        { selector: this.getUniqueSelector(range.endContainer as HTMLElement), offset: range.endOffset },
       ],
     });
+  }
+
+  jumpToAnnotation(annotation: AnnotationVO) {
+    let el: HTMLElement | null = null;
+
+    switch (annotation.type) {
+      case AnnotationTypes.HtmlElement:
+        el = this.shadowRoot.querySelector(annotation.selector);
+        break;
+      case AnnotationTypes.HtmlRange:
+        el = this.shadowRoot.querySelector(annotation.range[0].selector);
+        break;
+      default:
+        throw new Error('unknown annotation type');
+    }
+
+    if (!el) {
+      return;
+    }
+
+    el.scrollIntoView();
   }
 }
