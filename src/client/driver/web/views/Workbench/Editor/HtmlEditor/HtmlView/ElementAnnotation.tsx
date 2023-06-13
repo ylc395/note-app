@@ -16,7 +16,6 @@ export default observer(function ElementAnnotation({ el }: { el: HtmlElementAnno
   } = useFloating({
     elements: { reference: targetEl },
     whileElementsMounted: autoUpdate,
-    strategy: 'absolute',
     middleware,
   });
 

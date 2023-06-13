@@ -80,12 +80,13 @@ export default class PdfEditor extends Editor<Pdf, State> {
     ) as PdfRangeAnnotationVO[];
 
     const fragments = annotations.flatMap(({ fragments, color, id }) => {
-      return fragments.map(({ page, rect }) => ({
+      return fragments.map(({ page, rect }, i) => ({
         annotationId: id,
         page,
         rect,
         color,
         fragmentId: `${id}-${JSON.stringify(rect)}`,
+        isLast: i === fragments.length - 1,
       }));
     });
 

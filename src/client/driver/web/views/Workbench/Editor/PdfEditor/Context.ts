@@ -11,15 +11,19 @@ export enum Panels {
 
 interface EditorContext {
   pdfViewer: PdfViewer | null;
-  hoveringAnnotationId: AnnotationVO['id'] | null;
+  targetAnnotationId: AnnotationVO['id'] | null;
+  referenceElMap: Record<AnnotationVO['id'], HTMLElement>;
+  annotationTooltipRoot: HTMLElement | null;
   panelsVisibility: Record<Panels, boolean>;
 }
 
-export function getContext() {
+export function getContext(): EditorContext {
   return observable(
     {
       pdfViewer: null,
-      hoveringAnnotationId: null,
+      targetAnnotationId: null,
+      annotationTooltipRoot: null,
+      referenceElMap: {},
       panelsVisibility: {
         [Panels.Outline]: false,
         [Panels.AnnotationList]: true,

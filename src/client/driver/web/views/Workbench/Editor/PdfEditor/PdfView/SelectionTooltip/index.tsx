@@ -1,19 +1,17 @@
-import { type CSSProperties, forwardRef, useContext } from 'react';
+import { useContext } from 'react';
+import { observer } from 'mobx-react-lite';
 
-import Palette from '../AnnotationLayer/AnnotationTooltip/Palette';
+import Palette from '../AnnotationTooltip/Palette';
 import Context from '../../Context';
+import useTooltip from './useTooltip';
 
-interface Props {
-  style?: CSSProperties;
-}
-
-// eslint-disable-next-line mobx/missing-observer
-export default forwardRef<HTMLDivElement | null, Props>(function SelectionTooltip({ style }, ref) {
+export default observer(function SelectionTooltip() {
   const { pdfViewer } = useContext(Context);
+  const { setFloating, styles, open } = useTooltip();
 
-  return (
-    <div className="z-10" ref={ref} style={style}>
+  return open ? (
+    <div className="z-10" ref={setFloating} style={styles}>
       <Palette onSelect={(color) => pdfViewer?.createRangeAnnotation(color)} />
     </div>
-  );
+  ) : null;
 });
