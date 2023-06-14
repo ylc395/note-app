@@ -1,7 +1,7 @@
 import { observer, useLocalObservable } from 'mobx-react-lite';
 import { observable } from 'mobx';
 
-import type PdfEditor from 'model/material/PdfEditor';
+import type PdfEditorView from 'model/material/PdfEditorView';
 
 import Toolbar from './Toolbar';
 import AnnotationList from './AnnotationList';
@@ -9,7 +9,7 @@ import Context, { Panels, getContext } from './Context';
 import Outline from './Outline';
 import PdfViewer from './PdfView';
 
-export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }) {
+export default observer(function PdfEditorView({ editorView }: { editorView: PdfEditorView }) {
   const context = useLocalObservable(getContext, { pdfViewer: observable.ref });
 
   return (
@@ -19,7 +19,7 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
           <Toolbar />
           <div className="relative flex min-h-0 grow">
             {context.panelsVisibility[Panels.Outline] && <Outline />}
-            <PdfViewer editor={editor} />
+            <PdfViewer editorView={editorView} />
             {context.panelsVisibility[Panels.AnnotationList] && <AnnotationList />}
           </div>
         </div>

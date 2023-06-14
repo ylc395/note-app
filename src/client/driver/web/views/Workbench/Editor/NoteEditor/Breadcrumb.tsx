@@ -8,8 +8,8 @@ import IconTitle from 'web/components/IconTitle';
 import EditorContext from './Context';
 
 export default observer(function Breadcrumb() {
-  const { editor } = useContext(EditorContext);
-  const breadcrumbs = editor.breadcrumbs;
+  const { editorView } = useContext(EditorContext);
+  const breadcrumbs = editorView.editor.breadcrumbs;
 
   return (
     <AntdBreadcrumb

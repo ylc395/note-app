@@ -26,9 +26,9 @@ export default observer(function AnnotationLayer({ page }: { page: number }) {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const fragments = ctx.pdfViewer!.editor.fragmentsByPage[page] || [];
+  const fragments = ctx.pdfViewer!.editorView.editor.fragmentsByPage[page] || [];
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const areas = ctx.pdfViewer!.editor.areaAnnotationsByPage[page] || [];
+  const areas = ctx.pdfViewer!.editorView.editor.areaAnnotationsByPage[page] || [];
 
   return (
     <div ref={setFloating} style={styles} className="pointer-events-none z-10">

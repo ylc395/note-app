@@ -1,5 +1,3 @@
-import { makeObservable, observable } from 'mobx';
-
 import type { EntityMaterialVO } from 'interface/material';
 import type Tile from 'model/workbench/Tile';
 import Editor from './Editor';
@@ -9,20 +7,10 @@ interface WebPage {
   html: string;
 }
 
-function getDefaultState() {
-  return { scrollOffset: 0 };
-}
-
-type State = ReturnType<typeof getDefaultState>;
-
-export default class HtmlEditor extends Editor<WebPage, State> {
+export default class HtmlEditor extends Editor<WebPage> {
   constructor(tile: Tile, materialId: EntityMaterialVO['id']) {
-    super(tile, materialId, getDefaultState());
-    makeObservable(this);
+    super(tile, materialId);
   }
-
-  @observable.ref
-  documentElement?: unknown;
 
   protected async init() {
     const [{ body: metadata }, { body: html }] = await Promise.all([

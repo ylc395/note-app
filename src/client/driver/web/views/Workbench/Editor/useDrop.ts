@@ -6,9 +6,9 @@ import throttle from 'lodash/throttle';
 import { EntityTypes } from 'interface/entity';
 import { TileSplitDirections } from 'model/workbench/TileManger';
 import type Tile from 'model/workbench/Tile';
-import EntityEditor from 'model/abstract/Editor';
 import EditorService from 'service/EditorService';
 import NoteService from 'service/NoteService';
+import EditorView from 'model/abstract/EditorView';
 
 interface Position {
   top: string;
@@ -25,7 +25,7 @@ const directionMap = {
 };
 
 export default function useDrop(tile: Tile) {
-  const { moveEditor, openEntity } = container.resolve(EditorService);
+  const { moveEditorView: moveEditor, openEntity } = container.resolve(EditorService);
   const { noteTree } = container.resolve(NoteService);
   const [dropPosition, setDropPosition] = useState<Position>();
   const {
@@ -51,7 +51,7 @@ export default function useDrop(tile: Tile) {
       if (
         !dropPosition ||
         overItem !== tile ||
-        !(draggingItem instanceof EntityEditor || noteTree.hasNode(draggingItem))
+        !(draggingItem instanceof EditorView || noteTree.hasNode(draggingItem))
       ) {
         return;
       }
@@ -59,7 +59,7 @@ export default function useDrop(tile: Tile) {
       const direction = Object.keys(dropPosition).find((key) => dropPosition[key as keyof Position] !== '0px');
 
       if (!direction) {
-        if (draggingItem instanceof EntityEditor) {
+        if (draggingItem instanceof EditorView) {
           moveEditor(draggingItem, tile);
         } else {
           openEntity({ id: draggingItem.entity.id, type: EntityTypes.Note });
@@ -69,9 +69,9 @@ export default function useDrop(tile: Tile) {
 
       const d = directionMap[direction as keyof Position];
 
-      if (draggingItem === (overItem as Tile).currentEditor) {
-        openEntity(draggingItem.toEntityLocator(), { direction: d, from: overItem });
-      } else if (draggingItem instanceof EntityEditor) {
+      if (draggingItem === (overItem as Tile).currentEditorView) {
+        openEntity(draggingItem.editor.toEntityLocator(), { direction: d, from: overItem });
+      } else if (draggingItem instanceof EditorView) {
         moveEditor(draggingItem, { from: tile, splitDirection: d });
       } else {
         openEntity({ id: draggingItem.entity.id, type: EntityTypes.Note }, { direction: d, from: overItem });
@@ -81,12 +81,7 @@ export default function useDrop(tile: Tile) {
       const rect = active.rect.current.translated;
       const instance = active.data.current?.instance;
 
-      if (
-        !isOver ||
-        !rect ||
-        !editorRect.current ||
-        !(instance instanceof EntityEditor || noteTree.hasNode(instance))
-      ) {
+      if (!isOver || !rect || !editorRect.current || !(instance instanceof EditorView || noteTree.hasNode(instance))) {
         return;
       }
 

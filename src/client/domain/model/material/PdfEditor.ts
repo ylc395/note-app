@@ -23,15 +23,9 @@ export interface OutlineItem {
   key: string;
 }
 
-function getDefaultState() {
-  return { hash: '' }; // pdfjs's hash, including page, scroll position, zoom etc;
-}
-
-type State = ReturnType<typeof getDefaultState>;
-
-export default class PdfEditor extends Editor<Pdf, State> {
+export default class PdfEditor extends Editor<Pdf> {
   constructor(tile: Tile, materialId: EntityMaterialVO['id']) {
-    super(tile, materialId, getDefaultState());
+    super(tile, materialId);
     makeObservable(this);
   }
 
@@ -99,7 +93,6 @@ export default class PdfEditor extends Editor<Pdf, State> {
   }
 
   destroy() {
-    super.destroy();
     this.loadingTask?.destroy();
   }
 

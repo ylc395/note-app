@@ -14,7 +14,7 @@ const OutlineItemView = observer(function OutlineItemView({
   level: number;
 }) {
   const { pdfViewer } = useContext(context);
-  const dest = pdfViewer?.editor.outlineDestMap[key];
+  const dest = pdfViewer?.editorView.editor.outlineDestMap[key];
 
   return (
     <div style={{ paddingLeft: level * 5 }} className="mb-2">
@@ -35,14 +35,13 @@ export default observer(function Outline() {
   const { pdfViewer } = useContext(context);
 
   let content: ReactNode = null;
+  const outline = pdfViewer?.editorView.editor.outline;
 
-  if (!pdfViewer?.editor.outline) {
+  if (!outline) {
     content = '加载中...';
   } else {
     content =
-      pdfViewer.editor.outline.length > 0
-        ? pdfViewer.editor.outline.map((item) => <OutlineItemView level={1} item={item} key={item.key} />)
-        : '无提纲';
+      outline.length > 0 ? outline.map((item) => <OutlineItemView level={1} item={item} key={item.key} />) : '无提纲';
   }
 
   return (

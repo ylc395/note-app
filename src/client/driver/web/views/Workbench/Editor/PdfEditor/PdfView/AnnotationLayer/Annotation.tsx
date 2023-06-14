@@ -27,12 +27,12 @@ export default observer(function Annotation({
   const rootRef = useRef<HTMLElement | null>(null);
   const { horizontalRatio, verticalRatio } = pdfViewer.getPageRatio(page);
   const handleMouseOver = () => {
-    pdfViewer.editor.setCurrentAnnotationId(annotationId);
+    pdfViewer.editorView.setCurrentAnnotationId(annotationId);
   };
 
   const handleMouseLeave = (e: MouseEvent) => {
     if (!e.relatedTarget || !pdfViewer.annotationTooltipRoot?.contains(e.relatedTarget as HTMLElement)) {
-      pdfViewer.editor.setCurrentAnnotationId(annotationId);
+      pdfViewer.editorView.setCurrentAnnotationId(annotationId);
     }
   };
 
@@ -53,11 +53,11 @@ export default observer(function Annotation({
       onMouseLeave={handleMouseLeave}
       className={clsx(
         'pointer-events-auto absolute z-30 cursor-pointer bg-clip-content opacity-30',
-        annotationId === pdfViewer.editor.currentAnnotationId ? 'brightness-150' : null,
+        annotationId === pdfViewer.editorView.currentAnnotationId ? 'brightness-150' : null,
       )}
       style={{
         backgroundColor: color,
-        borderBottom: annotationId === pdfViewer.editor.currentAnnotationId ? '10px solid transparent' : undefined,
+        borderBottom: annotationId === pdfViewer.editorView.currentAnnotationId ? '10px solid transparent' : undefined,
         width: rect.width * horizontalRatio,
         height: rect.height * verticalRatio,
         left: rect.x * horizontalRatio,

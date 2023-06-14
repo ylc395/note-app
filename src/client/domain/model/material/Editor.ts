@@ -13,19 +13,14 @@ import EntityEditor from 'model/abstract/Editor';
 import type Tile from 'model/workbench/Tile';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export default abstract class Editor<T extends { metadata: EntityMaterialVO } = any, S = unknown> extends EntityEditor<
-  T,
-  S
-> {
-  constructor(tile: Tile, materialId: EntityMaterialVO['id'], initialState: S) {
-    super(tile, materialId, initialState);
+export default abstract class Editor<T extends { metadata: EntityMaterialVO } = any> extends EntityEditor<T> {
+  constructor(tile: Tile, materialId: EntityMaterialVO['id']) {
+    super(tile, materialId);
     makeObservable(this);
     this.loadAnnotations();
   }
 
   readonly entityType = EntityTypes.Material;
-
-  @observable currentAnnotationId: AnnotationVO['id'] | null = null;
 
   @observable readonly annotations: AnnotationVO[] = [];
 
@@ -62,27 +57,14 @@ export default abstract class Editor<T extends { metadata: EntityMaterialVO } = 
       this.annotations.push(...annotations);
     });
   }
-  async removeCurrentAnnotation() {
-    const id = this.currentAnnotationId;
-
-    if (!id) {
-      throw new Error('no current annotation');
-    }
-
+  async removeAnnotation(id: AnnotationVO['id']) {
     await this.remote.delete(`/materials/annotations/${id}`);
     runInAction(() => {
       remove(this.annotations, ({ id: _id }) => _id === id);
-      this.currentAnnotationId = null;
     });
   }
 
-  async updateCurrentAnnotation(patch: AnnotationPatchDTO) {
-    const id = this.currentAnnotationId;
-
-    if (!id) {
-      throw new Error('no current annotation');
-    }
-
+  async updateCurrentAnnotation(id: AnnotationVO['id'], patch: AnnotationPatchDTO) {
     const { body: annotation } = await this.remote.patch<Record<string, unknown>, AnnotationVO>(
       `/materials/annotations/${id}`,
       patch,
@@ -96,19 +78,7 @@ export default abstract class Editor<T extends { metadata: EntityMaterialVO } = 
       }
 
       this.annotations[index] = annotation;
-      this.currentAnnotationId = null;
     });
-  }
-
-  @computed
-  get currentAnnotation() {
-    const annotation = this.annotations.find(({ id }) => this.currentAnnotationId === id);
-    return annotation;
-  }
-
-  @action
-  setCurrentAnnotationId(id: AnnotationVO['id'] | null) {
-    this.currentAnnotationId = id;
   }
 
   toEntityLocator() {

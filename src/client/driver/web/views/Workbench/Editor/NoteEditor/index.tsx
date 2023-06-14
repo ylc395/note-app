@@ -3,8 +3,8 @@ import { useCallback, useState } from 'react';
 import { useCreation } from 'ahooks';
 import { Modal } from 'antd';
 
-import type NoteEditor from 'model/note/Editor';
-import MarkdownEditor, { type EditorView } from 'web/components/MarkdownEditor';
+import type NoteEditor from 'model/note/EditorView';
+import MarkdownEditor, { type EditorView as MarkdownEditorView } from 'web/components/MarkdownEditor';
 import { useModal, COMMON_MODAL_OPTIONS } from 'web/infra/ui';
 
 import Body from './Body';
@@ -13,7 +13,7 @@ import Breadcrumb from './Breadcrumb';
 import Info from './Info';
 import Context from './Context';
 
-export default observer(function NoteEditor({ editor }: { editor: NoteEditor }) {
+export default observer(function NoteEditor({ editorView }: { editorView: NoteEditor }) {
   // const { lint } = container.resolve(MarkdownService);
 
   // useDebounceEffect(
@@ -24,13 +24,16 @@ export default observer(function NoteEditor({ editor }: { editor: NoteEditor }) 
   //   { wait: 1000 },
   // );
 
-  const onChange = useCallback((content: string) => editor.updateBody(content, true), [editor]);
-  const [editorView, setEditorView] = useState<EditorView | null>(null);
+  const [markdownEditorView, setMarkdownEditorView] = useState<MarkdownEditorView | null>(null);
+  const onChange = useCallback((content: string) => editorView.editor.updateBody(content), [editorView]);
   const infoModal = useModal();
-  const editorViewNode = useCreation(() => <MarkdownEditor ref={setEditorView} onChange={onChange} />, [onChange]);
+  const editorViewNode = useCreation(
+    () => <MarkdownEditor ref={setMarkdownEditorView} onChange={onChange} />,
+    [onChange],
+  );
 
   return (
-    <Context.Provider value={{ editor, editorView: editorView, infoModal }}>
+    <Context.Provider value={{ editorView, markdownEditorView, infoModal }}>
       <div className="flex h-full flex-col">
         <Title />
         <Breadcrumb />

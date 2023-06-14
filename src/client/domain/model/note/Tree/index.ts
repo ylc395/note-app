@@ -5,10 +5,11 @@ import { normalizeTitle } from 'interface/Note';
 import { Tree, VIRTUAL_ROOT_NODE_KEY, type TreeOptions, type TreeNode } from 'model/abstract/Tree';
 
 import { SortBy, SortOrder } from './constants';
+import type { InjectionToken } from 'tsyringe';
 
 export * from './constants';
-
 export type NoteTreeNode = TreeNode<Note>;
+export const token: InjectionToken<NoteTree> = Symbol();
 
 export default class NoteTree extends Tree<Note> {
   @observable readonly invalidParentKeys = new Set<NoteTreeNode['key'] | null>();

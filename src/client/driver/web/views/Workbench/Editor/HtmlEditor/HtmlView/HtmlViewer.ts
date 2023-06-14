@@ -6,13 +6,13 @@ import debounce from 'lodash/debounce';
 
 import { ui } from 'web/infra/ui';
 import { AnnotationTypes, AnnotationVO } from 'interface/material';
-import type HtmlEditor from 'model/material/HtmlEditor';
+import type HtmlEditorView from 'model/material/HtmlEditorView';
 
 import RangeSelector, { type RangeSelectEvent } from '../../common/RangeSelector';
 import ElementSelector from '../../common/ElementSelector';
 
 interface Options {
-  editor: HtmlEditor;
+  editorView: HtmlEditorView;
   rootEl: HTMLElement;
   editorRootEl: HTMLElement;
 }
@@ -27,7 +27,11 @@ export default class HtmlViewer {
   selection: RangeSelectEvent | null = null;
 
   get editor() {
-    return this.options.editor;
+    return this.options.editorView.editor;
+  }
+
+  get editorView() {
+    return this.options.editorView;
   }
 
   @computed
@@ -35,14 +39,14 @@ export default class HtmlViewer {
     let text = this.editor.entity?.metadata.sourceUrl || '未命名 HTML 文档';
     let icon = this.editor.entity?.metadata.icon || '';
 
-    if (this.editor.documentElement instanceof HTMLHtmlElement) {
-      const titleContent = this.editor.documentElement.querySelector('title')?.innerText;
+    if (this.editorView.documentElement instanceof HTMLHtmlElement) {
+      const titleContent = this.editorView.documentElement.querySelector('title')?.innerText;
 
       if (titleContent) {
         text = titleContent;
       }
 
-      const iconContent = this.editor.documentElement.querySelector('link[rel="icon"]')?.getAttribute('href');
+      const iconContent = this.editorView.documentElement.querySelector('link[rel="icon"]')?.getAttribute('href');
 
       if (iconContent) {
         icon = iconContent;
@@ -76,7 +80,7 @@ export default class HtmlViewer {
     action((e: Event) => {
       const { scrollTop } = e.target as HTMLElement;
 
-      this.editor.state.scrollOffset = scrollTop;
+      this.editorView.state.scrollOffset = scrollTop;
     }),
     300,
   );
@@ -130,8 +134,8 @@ export default class HtmlViewer {
   }
 
   private initContent() {
-    if (this.editor.documentElement instanceof HTMLHtmlElement) {
-      this.updateContent(this.editor.documentElement);
+    if (this.editorView.documentElement instanceof HTMLHtmlElement) {
+      this.updateContent(this.editorView.documentElement);
     } else {
       this.stopLoadingHtml = when(
         () => Boolean(this.editor.entity),
@@ -139,7 +143,7 @@ export default class HtmlViewer {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           const documentElement = HtmlViewer.filterHtml(this.editor.entity!.html);
           HtmlViewer.processStyles(documentElement);
-          this.editor.documentElement = documentElement;
+          this.editorView.documentElement = documentElement;
           this.updateContent(documentElement);
         },
       );
@@ -148,7 +152,7 @@ export default class HtmlViewer {
 
   private updateContent(html: HTMLHtmlElement) {
     this.shadowRoot.replaceChildren(html);
-    this.options.editorRootEl.scrollTop = this.editor.state.scrollOffset;
+    this.options.editorRootEl.scrollTop = this.editorView.state.scrollOffset;
   }
 
   private static processStyles(root: HTMLHtmlElement) {
@@ -203,7 +207,7 @@ export default class HtmlViewer {
       return false;
     }
 
-    await this.options.editor.createAnnotation({
+    await this.editor.createAnnotation({
       type: AnnotationTypes.HtmlElement,
       color,
       selector: uniqueSelector,

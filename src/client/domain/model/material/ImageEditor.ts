@@ -7,15 +7,10 @@ interface Entity {
   blob: ArrayBuffer;
 }
 
-function getDefaultState() {
-  return { scrollOffset: 0 };
-}
 
-type State = ReturnType<typeof getDefaultState>;
-
-export default class ImageEditor extends Editor<Entity, State> {
+export default class ImageEditor extends Editor<Entity> {
   constructor(tile: Tile, materialId: EntityMaterialVO['id']) {
-    super(tile, materialId, getDefaultState());
+    super(tile, materialId);
   }
 
   protected async init() {

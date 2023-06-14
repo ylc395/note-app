@@ -4,6 +4,7 @@ import { Emitter } from 'strict-event-emitter';
 
 import type EntityEditor from 'model/abstract/Editor';
 import type Manager from './TileManger';
+import type EditorView from 'model/abstract/EditorView';
 
 export enum Events {
   destroyed = 'tile.destroyed',
@@ -11,8 +12,8 @@ export enum Events {
 
 export default class Tile extends Emitter<{ [Events.destroyed]: [void] }> {
   readonly id = uniqueId('tile-');
-  @observable.ref currentEditor?: EntityEditor;
-  @observable.shallow editors: EntityEditor[] = [];
+  @observable.ref currentEditorView?: EditorView;
+  @observable.shallow editorViews: EditorView[] = [];
   constructor(private readonly manager: Manager) {
     super();
     makeObservable(this);
@@ -24,102 +25,102 @@ export default class Tile extends Emitter<{ [Events.destroyed]: [void] }> {
   }
 
   @action.bound
-  moveEditor(src: EntityEditor, dest: EntityEditor | 'end') {
+  moveEditorView(src: EditorView, dest: EditorView | 'end') {
     if (src === dest) {
       return;
     }
 
-    const srcIndex = this.editors.findIndex((editor) => editor === src);
+    const srcIndex = this.editorViews.findIndex((editor) => editor === src);
 
     if (srcIndex < 0) {
       throw new Error('can not find index');
     }
 
     if (dest === 'end') {
-      const [item] = this.editors.splice(srcIndex, 1);
+      const [item] = this.editorViews.splice(srcIndex, 1);
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      this.editors.push(item!);
+      this.editorViews.push(item!);
       return;
     }
 
-    const destIndex = this.editors.findIndex((editor) => editor === dest);
+    const destIndex = this.editorViews.findIndex((editor) => editor === dest);
 
     if (destIndex < 0) {
       throw new Error('can not find index');
     }
 
-    const [item] = this.editors.splice(srcIndex, 1);
+    const [item] = this.editorViews.splice(srcIndex, 1);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    this.editors.splice(destIndex, 0, item!);
+    this.editorViews.splice(destIndex, 0, item!);
   }
 
   @action.bound
-  addEditor(editor: EntityEditor, destEditor?: EntityEditor) {
-    editor.tile = this;
+  addEditorView(editorView: EditorView, destEditorView?: EditorView) {
+    editorView.tile = this;
 
-    if (destEditor) {
-      const index = this.editors.findIndex((editor) => editor === destEditor);
+    if (destEditorView) {
+      const index = this.editorViews.findIndex((editor) => editor === destEditorView);
 
       if (index < 0) {
         throw new Error('wrong dest');
       }
 
-      this.editors.splice(index, 0, editor);
+      this.editorViews.splice(index, 0, editorView);
     } else {
-      this.editors.push(editor);
+      this.editorViews.push(editorView);
     }
 
-    this.currentEditor = editor;
+    this.currentEditorView = editorView;
   }
 
   @action.bound
-  switchToEditor(editorId: EntityEditor['id'] | ((tab: EntityEditor) => boolean)) {
-    const existedTab = this.editors.find(
-      typeof editorId === 'function' ? editorId : (editor) => editor.id === editorId,
+  switchToEditorView(editorViewId: EditorView['id'] | ((tab: EditorView) => boolean)) {
+    const existedTab = this.editorViews.find(
+      typeof editorViewId === 'function' ? editorViewId : (editorView) => editorView.id === editorViewId,
     );
 
     if (!existedTab) {
-      if (typeof editorId !== 'function') {
+      if (typeof editorViewId !== 'function') {
         throw new Error('no target tab');
       }
 
       return false;
     }
 
-    this.currentEditor = existedTab;
+    this.currentEditorView = existedTab;
     return true;
   }
 
   @action.bound
-  removeEditor(editorId: EntityEditor['id'], destroy = true) {
-    const existedTabIndex = this.editors.findIndex((editor) => editor.id === editorId);
+  removeEditorView(editorViewId: EditorView['id'], destroy = true) {
+    const existedTabIndex = this.editorViews.findIndex((editor) => editor.id === editorViewId);
 
     if (existedTabIndex === -1) {
       throw new Error('no target tab');
     }
 
-    const [closedTab] = this.editors.splice(existedTabIndex, 1);
+    const [closedView] = this.editorViews.splice(existedTabIndex, 1);
 
     if (destroy) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      closedTab!.destroy();
+      closedView!.destroy();
     }
 
-    if (this.currentEditor?.id === editorId) {
-      this.currentEditor = this.editors[existedTabIndex] || this.editors[existedTabIndex - 1];
+    if (this.currentEditorView?.id === editorViewId) {
+      this.currentEditorView = this.editorViews[existedTabIndex] || this.editorViews[existedTabIndex - 1];
     }
 
-    if (this.editors.length === 0) {
+    if (this.editorViews.length === 0) {
       this.destroy();
     }
   }
 
   @action.bound
-  closeAllEditors() {
-    const editorIds = this.editors.map(({ id }) => id);
+  closeAllEditorViews() {
+    const editorIds = this.editorViews.map(({ id }) => id);
 
     for (const id of editorIds) {
-      this.removeEditor(id);
+      this.removeEditorView(id);
     }
   }
 

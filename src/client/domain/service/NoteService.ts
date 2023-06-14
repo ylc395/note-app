@@ -10,7 +10,7 @@ import type { RecyclablesDTO } from 'interface/Recyclables';
 import { EntityTypes } from 'interface/entity';
 
 import { MULTIPLE_ICON_FLAG, type NoteMetadata } from 'model/note/MetadataForm';
-import NoteTree from 'model/note/Tree';
+import NoteTree, { token as treeToken } from 'model/note/Tree';
 
 import StarService, { StarEvents } from './StarService';
 import EditorService from './EditorService';
@@ -45,6 +45,8 @@ export default class NoteService extends Emitter<{
         this.noteTree.toggleStar(id, false);
       }
     });
+
+    container.registerInstance(treeToken, this.noteTree);
   }
 
   readonly fetchChildren = async (parentId: Note['parentId']) => {

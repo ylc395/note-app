@@ -21,7 +21,7 @@ export default function useAnnotationTooltip() {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  useEventListener('mouseleave', () => pdfViewer!.editor.setCurrentAnnotationId(null), { target: floating });
+  useEventListener('mouseleave', () => pdfViewer!.editorView.setCurrentAnnotationId(null), { target: floating });
 
-  return { setFloating, showing: Boolean(pdfViewer?.editor.currentAnnotationId), styles };
+  return { setFloating, showing: Boolean(pdfViewer?.editorView.currentAnnotationId), styles };
 }

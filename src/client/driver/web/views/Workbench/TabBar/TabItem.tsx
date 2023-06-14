@@ -6,29 +6,29 @@ import { useRef, useEffect } from 'react';
 import clsx from 'clsx';
 
 import IconTitle from 'web/components/IconTitle';
-import type EntityEditor from 'model/abstract/Editor';
+import type EditorView from 'model/abstract/EditorView';
 import useContextmenu from './useContextmenu';
 
-export default observer(function TabItem({ editor }: { editor: EntityEditor }) {
-  const { tile } = editor;
-  const { switchToEditor, removeEditor: closeEditor, currentEditor } = tile;
+export default observer(function TabItem({ editorView }: { editorView: EditorView }) {
+  const { tile } = editorView;
+  const { switchToEditorView, removeEditorView, currentEditorView } = tile;
   const { setNodeRef, attributes, listeners, over } = useSortable({
-    id: editor.id,
-    data: { instance: editor },
+    id: editorView.id,
+    data: { instance: editorView },
   });
   const buttonRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    if (!buttonRef.current || !currentEditor) {
+    if (!buttonRef.current || !currentEditorView) {
       throw new Error('unexpected');
     }
 
-    currentEditor === editor && buttonRef.current.scrollIntoView();
-  }, [currentEditor, editor]);
+    currentEditorView === editorView && buttonRef.current.scrollIntoView();
+  }, [currentEditorView, editorView]);
 
   const onContextMenu = useContextmenu();
 
-  if (!currentEditor) {
+  if (!currentEditorView) {
     throw new Error('no current editor');
   }
 
@@ -40,25 +40,25 @@ export default observer(function TabItem({ editor }: { editor: EntityEditor }) {
       className={clsx(
         'flex cursor-pointer flex-nowrap items-center border-0 border-r border-solid border-gray-200 bg-gray-100 p-2',
         {
-          'bg-white': currentEditor === editor,
-          'bg-gray-200': over?.id === editor.id,
+          'bg-white': currentEditorView === editorView,
+          'bg-gray-200': over?.id === editorView.id,
         },
       )}
-      onClick={() => switchToEditor(editor.id)}
+      onClick={() => switchToEditorView(editorView.id)}
       onContextMenu={onContextMenu}
     >
       <IconTitle
         className="mr-1 max-w-[200px] text-sm"
         titleClassName=" overflow-hidden text-ellipsis"
         size="1em"
-        {...editor.tabView}
+        {...editorView.editor.tabView}
       />
       <Button
         ref={buttonRef}
         size="small"
         onClick={(e) => {
           e.stopPropagation();
-          closeEditor(editor.id);
+          removeEditorView(editorView.id);
         }}
         onFocus={(e) => e.stopPropagation()}
         type="text"

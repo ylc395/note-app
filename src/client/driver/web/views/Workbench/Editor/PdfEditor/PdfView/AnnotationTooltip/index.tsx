@@ -10,7 +10,7 @@ import useTooltip from './useTooltip';
 
 export default observer(function AnnotationTooltip() {
   const { pdfViewer } = useContext(context);
-  const editor = pdfViewer?.editor;
+  const editor = pdfViewer?.editorView;
   const annotation = editor?.currentAnnotation;
   const [visibleMenu, setVisibleMenu] = useState<string | undefined>();
 

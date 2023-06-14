@@ -1,53 +1,51 @@
 import { observer } from 'mobx-react-lite';
 import { type ReactNode, useEffect, useContext } from 'react';
-import { reaction, when } from 'mobx';
+import { reaction } from 'mobx';
 import debounce from 'lodash/debounce';
-
-import { Events } from 'model/note/Editor';
 
 import EditorContext from './Context';
 
 export default observer(function NoteEditor({ children }: { children: ReactNode }) {
-  const { editor, editorView } = useContext(EditorContext);
+  const { editorView, markdownEditorView } = useContext(EditorContext);
   useEffect(() => {
-    if (!editorView) {
+    if (!markdownEditorView) {
       return;
     }
 
-    const updateContent = debounce(({ content, isOriginal }: { content: string; isOriginal: boolean }) => {
-      if (!isOriginal) {
-        editorView.updateContent(content);
-      }
+    const updateContent = debounce((content: string) => {
+      markdownEditorView.updateContent(content);
     }, 300);
 
     const stopWatchReadonly = reaction(
-      () => editor.entity?.metadata.isReadonly,
+      () => editorView.editor.entity?.metadata.isReadonly,
       (isReadonly) => {
         if (typeof isReadonly === 'boolean') {
-          editorView.setReadonly(isReadonly);
+          markdownEditorView.setReadonly(isReadonly);
 
           if (!isReadonly) {
-            editorView.focus();
+            markdownEditorView.focus();
           }
         }
       },
       { fireImmediately: true },
     );
 
-    const stopUpdateContent = when(
-      () => Boolean(editor.entity),
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      () => editorView.updateContent(editor.entity!.body),
+    const stopUpdateContent = reaction(
+      () => editorView.editor.entity?.body,
+      (body) => {
+        if (typeof body === 'string' && !editorView.isActive) {
+          updateContent(body);
+        }
+      },
+      { fireImmediately: true },
     );
 
-    editor.on(Events.BodyUpdated, updateContent);
-
     return () => {
-      editor.off(Events.BodyUpdated, updateContent);
       stopWatchReadonly();
       stopUpdateContent();
+      updateContent.cancel();
     };
-  }, [editor, editorView]);
+  }, [editorView, markdownEditorView]);
 
   return <div className="min-h-0 grow px-4">{children}</div>;
 });

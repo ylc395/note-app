@@ -3,11 +3,11 @@ import { container } from 'tsyringe';
 import { DragOverlay, useDndContext } from '@dnd-kit/core';
 import { ReactNode, useMemo } from 'react';
 
-import EntityEditor from 'model/abstract/Editor';
 import NoteService from 'service/NoteService';
 
 import TabItem from './Workbench/TabBar/TabItem';
 import NoteTree from './Explorer/Note/TreeView/DraggingTreeView';
+import EditorView from 'model/abstract/EditorView';
 
 // eslint-disable-next-line mobx/missing-observer
 export function DragPreview() {
@@ -22,7 +22,7 @@ export function DragPreview() {
 
   return (
     <DragOverlay className="pointer-events-none" dropAnimation={null}>
-      {draggingItem instanceof EntityEditor && <TabItem editor={draggingItem}></TabItem>}
+      {draggingItem instanceof EditorView && <TabItem editorView={draggingItem}></TabItem>}
       {previewTree && <NoteTree tree={previewTree} />}
     </DragOverlay>
   );
