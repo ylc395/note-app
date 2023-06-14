@@ -1,4 +1,4 @@
-import { computed, makeObservable, observable, runInAction } from 'mobx';
+import { action, computed, makeObservable, observable, runInAction } from 'mobx';
 import remove from 'lodash/remove';
 
 import { EntityTypes } from 'interface/entity';
@@ -25,8 +25,9 @@ export default abstract class Editor<T extends { metadata: EntityMaterialVO } = 
 
   readonly entityType = EntityTypes.Material;
 
-  @observable
-  readonly annotations: AnnotationVO[] = [];
+  @observable currentAnnotationId: AnnotationVO['id'] | null = null;
+
+  @observable readonly annotations: AnnotationVO[] = [];
 
   async createAnnotation(annotation: AnnotationDTO) {
     const { body: createdAnnotation } = await this.remote.post<AnnotationDTO, AnnotationVO>(
@@ -61,14 +62,27 @@ export default abstract class Editor<T extends { metadata: EntityMaterialVO } = 
       this.annotations.push(...annotations);
     });
   }
-  async removeAnnotation(id: AnnotationVO['id']) {
+  async removeCurrentAnnotation() {
+    const id = this.currentAnnotationId;
+
+    if (!id) {
+      throw new Error('no current annotation');
+    }
+
     await this.remote.delete(`/materials/annotations/${id}`);
     runInAction(() => {
       remove(this.annotations, ({ id: _id }) => _id === id);
+      this.currentAnnotationId = null;
     });
   }
 
-  async updateAnnotation(id: AnnotationVO['id'], patch: AnnotationPatchDTO) {
+  async updateCurrentAnnotation(patch: AnnotationPatchDTO) {
+    const id = this.currentAnnotationId;
+
+    if (!id) {
+      throw new Error('no current annotation');
+    }
+
     const { body: annotation } = await this.remote.patch<Record<string, unknown>, AnnotationVO>(
       `/materials/annotations/${id}`,
       patch,
@@ -82,18 +96,21 @@ export default abstract class Editor<T extends { metadata: EntityMaterialVO } = 
       }
 
       this.annotations[index] = annotation;
+      this.currentAnnotationId = null;
     });
   }
 
-  getAnnotationById(id: AnnotationVO['id']) {
-    const annotation = this.annotations.find(({ id: _id }) => _id === id);
-
-    if (!annotation) {
-      throw new Error('invalid id');
-    }
-
+  @computed
+  get currentAnnotation() {
+    const annotation = this.annotations.find(({ id }) => this.currentAnnotationId === id);
     return annotation;
   }
+
+  @action
+  setCurrentAnnotationId(id: AnnotationVO['id'] | null) {
+    this.currentAnnotationId = id;
+  }
+
   toEntityLocator() {
     return { ...super.toEntityLocator(), mimeType: this.entity?.metadata.mimeType };
   }

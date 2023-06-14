@@ -35,9 +35,7 @@ export default class PdfEditor extends Editor<Pdf, State> {
     makeObservable(this);
   }
 
-  @observable.ref
-  outline?: OutlineItem[];
-
+  @observable.ref outline?: OutlineItem[];
   private loadingTask?: PDFDocumentLoadingTask;
   readonly outlineDestMap: Record<string, unknown> = {};
 

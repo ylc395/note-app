@@ -1,5 +1,4 @@
 import { observer } from 'mobx-react-lite';
-import { action } from 'mobx';
 import { MouseEvent, useContext, useEffect, useRef } from 'react';
 import clsx from 'clsx';
 
@@ -19,29 +18,33 @@ export default observer(function Annotation({
   page: number;
   isLast: boolean;
 }) {
-  const ctx = useContext(context);
-  const rootRef = useRef<HTMLElement | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const { horizontalRatio, verticalRatio } = ctx.pdfViewer!.getPageRatio(page);
-  const handleMouseOver = action(() => {
-    ctx.targetAnnotationId = annotationId;
-  });
+  const { pdfViewer } = useContext(context);
 
-  const handleMouseLeave = action((e: MouseEvent) => {
-    if (!e.relatedTarget || !ctx.annotationTooltipRoot?.contains(e.relatedTarget as HTMLElement)) {
-      ctx.targetAnnotationId = null;
+  if (!pdfViewer) {
+    throw new Error('no pdfViewer');
+  }
+
+  const rootRef = useRef<HTMLElement | null>(null);
+  const { horizontalRatio, verticalRatio } = pdfViewer.getPageRatio(page);
+  const handleMouseOver = () => {
+    pdfViewer.editor.setCurrentAnnotationId(annotationId);
+  };
+
+  const handleMouseLeave = (e: MouseEvent) => {
+    if (!e.relatedTarget || !pdfViewer.annotationTooltipRoot?.contains(e.relatedTarget as HTMLElement)) {
+      pdfViewer.editor.setCurrentAnnotationId(annotationId);
     }
-  });
+  };
 
   useEffect(() => {
     if (isLast) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      ctx.referenceElMap[annotationId] = rootRef.current!;
+      pdfViewer.referenceElMap[annotationId] = rootRef.current!;
       return () => {
-        delete ctx.referenceElMap[annotationId];
+        delete pdfViewer.referenceElMap[annotationId];
       };
     }
-  }, [annotationId, ctx.referenceElMap, isLast]);
+  }, [annotationId, pdfViewer, isLast]);
 
   return (
     <mark
@@ -50,11 +53,11 @@ export default observer(function Annotation({
       onMouseLeave={handleMouseLeave}
       className={clsx(
         'pointer-events-auto absolute z-30 cursor-pointer bg-clip-content opacity-30',
-        annotationId === ctx.targetAnnotationId ? 'brightness-150' : null,
+        annotationId === pdfViewer.editor.currentAnnotationId ? 'brightness-150' : null,
       )}
       style={{
         backgroundColor: color,
-        borderBottom: annotationId === ctx.targetAnnotationId ? '10px solid transparent' : undefined,
+        borderBottom: annotationId === pdfViewer.editor.currentAnnotationId ? '10px solid transparent' : undefined,
         width: rect.width * horizontalRatio,
         height: rect.height * verticalRatio,
         left: rect.x * horizontalRatio,

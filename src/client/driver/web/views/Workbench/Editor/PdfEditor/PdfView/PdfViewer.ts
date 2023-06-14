@@ -4,7 +4,7 @@ import intersection from 'lodash/intersection';
 import union from 'lodash/union';
 import { makeObservable, observable, when, action, runInAction, computed, autorun } from 'mobx';
 
-import { AnnotationTypes, type Rect } from 'interface/material';
+import { AnnotationTypes, type AnnotationVO, type Rect } from 'interface/material';
 import type PdfEditor from 'model/material/PdfEditor';
 
 import { isElement } from '../../common/domUtils';
@@ -378,5 +378,13 @@ export default class PdfViewer {
     const { height, width } = this.pdfViewer.getPageView(page - 1) as PDFPageView;
 
     return { height, width };
+  }
+
+  annotationTooltipRoot?: HTMLElement;
+  readonly referenceElMap: Record<AnnotationVO['id'], HTMLElement> = {};
+
+  @computed
+  get currentAnnotationElement() {
+    return this.editor.currentAnnotationId ? this.referenceElMap[this.editor.currentAnnotationId] : null;
   }
 }

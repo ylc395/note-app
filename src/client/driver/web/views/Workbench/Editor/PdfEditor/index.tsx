@@ -1,5 +1,5 @@
-import { observer } from 'mobx-react-lite';
-import { useState } from 'react';
+import { observer, useLocalObservable } from 'mobx-react-lite';
+import { observable } from 'mobx';
 
 import type PdfEditor from 'model/material/PdfEditor';
 
@@ -10,7 +10,7 @@ import Outline from './Outline';
 import PdfViewer from './PdfView';
 
 export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }) {
-  const [context] = useState(getContext);
+  const context = useLocalObservable(getContext, { pdfViewer: observable.ref });
 
   return (
     <div className="flex h-full w-full">

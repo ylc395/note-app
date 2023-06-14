@@ -5,22 +5,23 @@ import { useEventListener } from 'ahooks';
 import context from '../../Context';
 
 export default function useAnnotationTooltip() {
-  const ctx = useContext(context);
-  const { referenceElMap, targetAnnotationId } = ctx;
+  const { pdfViewer } = useContext(context);
 
   const {
     floatingStyles: styles,
     refs: { setFloating, floating },
   } = useFloating({
-    elements: { reference: targetAnnotationId ? referenceElMap[targetAnnotationId] : null },
+    elements: { reference: pdfViewer?.currentAnnotationElement },
     whileElementsMounted: autoUpdate,
   });
 
   if (floating.current) {
-    ctx.annotationTooltipRoot = floating.current;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    pdfViewer!.annotationTooltipRoot = floating.current;
   }
 
-  useEventListener('mouseleave', () => (ctx.targetAnnotationId = null), { target: floating });
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  useEventListener('mouseleave', () => pdfViewer!.editor.setCurrentAnnotationId(null), { target: floating });
 
-  return { setFloating, showing: Boolean(targetAnnotationId), styles };
+  return { setFloating, showing: Boolean(pdfViewer?.editor.currentAnnotationId), styles };
 }

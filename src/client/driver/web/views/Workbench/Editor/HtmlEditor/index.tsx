@@ -1,5 +1,5 @@
-import { observer } from 'mobx-react-lite';
-import { useState } from 'react';
+import { observer, useLocalObservable } from 'mobx-react-lite';
+import { observable } from 'mobx';
 
 import type HtmlEditor from 'model/material/HtmlEditor';
 import HtmlViewer from './HtmlView';
@@ -8,7 +8,7 @@ import Context, { getContext } from './Context';
 import AnnotationList from './AnnotationList';
 
 export default observer(function HtmlEditor({ editor }: { editor: HtmlEditor }) {
-  const [ctx] = useState(getContext);
+  const ctx = useLocalObservable(getContext, { htmlViewer: observable.ref });
 
   return (
     <div className="h-full">
