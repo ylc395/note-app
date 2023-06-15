@@ -10,11 +10,15 @@ export enum Panels {
 interface EditorContext {
   htmlViewer: HtmlViewer | null;
   panelsVisibility: Record<Panels, boolean>;
+  setHtmlViewer: (v: HtmlViewer) => void;
 }
 
 export function getContext(): EditorContext {
   return {
     htmlViewer: null,
+    setHtmlViewer: function (v: HtmlViewer) {
+      this.htmlViewer = v;
+    },
     panelsVisibility: {
       [Panels.Outline]: false,
       [Panels.AnnotationList]: true,

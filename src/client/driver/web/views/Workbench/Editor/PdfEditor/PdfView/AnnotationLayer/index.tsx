@@ -9,9 +9,9 @@ import { middleware } from '../../../common/ElementSelector';
 import context from '../../Context';
 
 export default observer(function AnnotationLayer({ page }: { page: number }) {
-  const ctx = useContext(context);
+  const { pdfViewer } = useContext(context);
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const pageEl = ctx.pdfViewer!.getPageEl(page);
+  const pageEl = pdfViewer!.getPageEl(page);
   const {
     floatingStyles: styles,
     refs: { setFloating },
@@ -26,9 +26,9 @@ export default observer(function AnnotationLayer({ page }: { page: number }) {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const fragments = ctx.pdfViewer!.editorView.editor.fragmentsByPage[page] || [];
+  const fragments = pdfViewer!.editorView.editor.fragmentsByPage[page] || [];
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const areas = ctx.pdfViewer!.editorView.editor.areaAnnotationsByPage[page] || [];
+  const areas = pdfViewer!.editorView.editor.areaAnnotationsByPage[page] || [];
 
   return (
     <div ref={setFloating} style={styles} className="pointer-events-none z-10">

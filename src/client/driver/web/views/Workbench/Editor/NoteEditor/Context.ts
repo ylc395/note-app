@@ -2,12 +2,13 @@ import { createContext } from 'react';
 
 import type NoteEditorView from 'model/note/EditorView';
 import type { EditorView } from 'web/components/MarkdownEditor';
-import type { Modal } from 'web/infra/ui';
+import type useModal from 'web/components/Modal/useModal';
 
-interface EditorContext {
+export interface EditorContext {
   editorView: NoteEditorView;
   markdownEditorView: EditorView | null;
-  infoModal: Modal;
+  infoModal: ReturnType<typeof useModal>;
+  setMarkdownEditorView: (v: EditorView | null) => void;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

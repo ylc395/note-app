@@ -1,12 +1,17 @@
 import { observer } from 'mobx-react-lite';
-import { type ReactNode, useEffect, useContext } from 'react';
+import { useEffect, useContext, useCallback } from 'react';
 import { reaction, when } from 'mobx';
 import debounce from 'lodash/debounce';
+import { useCreation } from 'ahooks';
 
+import MarkdownEditor from 'web/components/MarkdownEditor';
 import EditorContext from './Context';
 
-export default observer(function NoteEditor({ children }: { children: ReactNode }) {
-  const { editorView, markdownEditorView } = useContext(EditorContext);
+export default observer(function NoteEditor() {
+  const { editorView, markdownEditorView, setMarkdownEditorView } = useContext(EditorContext);
+  const onChange = useCallback((content: string) => editorView.editor.updateBody(content), [editorView]);
+  const node = useCreation(() => <MarkdownEditor ref={setMarkdownEditorView} onChange={onChange} />, [onChange]);
+
   useEffect(() => {
     if (!markdownEditorView) {
       return;
@@ -51,5 +56,5 @@ export default observer(function NoteEditor({ children }: { children: ReactNode 
     };
   }, [editorView, markdownEditorView]);
 
-  return <div className="min-h-0 grow px-4">{children}</div>;
+  return <div className="min-h-0 grow px-4">{node}</div>;
 });

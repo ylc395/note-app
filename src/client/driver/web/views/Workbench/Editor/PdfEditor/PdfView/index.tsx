@@ -1,5 +1,4 @@
 import { observer } from 'mobx-react-lite';
-import { runInAction } from 'mobx';
 import { useEffect, useRef, useContext } from 'react';
 
 import type PdfEditorView from 'model/material/PdfEditorView';
@@ -13,7 +12,7 @@ import './style.css';
 export default observer(function PdfView({ editorView }: { editorView: PdfEditorView }) {
   const containerElRef = useRef<HTMLDivElement | null>(null);
   const viewerElRef = useRef<HTMLDivElement | null>(null);
-  const ctx = useContext(context);
+  const { setPdfViewer, pdfViewer } = useContext(context);
 
   useEffect(() => {
     const pdfViewer = new PdfViewer({
@@ -24,19 +23,19 @@ export default observer(function PdfView({ editorView }: { editorView: PdfEditor
       viewer: viewerElRef.current!,
     });
 
-    runInAction(() => {
-      ctx.pdfViewer = pdfViewer;
-    });
+    setPdfViewer(pdfViewer);
 
     return () => pdfViewer.destroy();
-  }, [ctx, editorView]);
+  }, [editorView, setPdfViewer]);
 
   return (
     <div className="relative grow overflow-hidden">
       <div className="absolute inset-0 overflow-auto" ref={containerElRef}>
         <div className="select-text" ref={viewerElRef}></div>
         <div>
-          {ctx.pdfViewer && ctx.pdfViewer.pagesWithAnnotation.map((page) => <AnnotationLayer key={page} page={page} />)}
+          {pdfViewer?.pagesWithAnnotation.map((page) => (
+            <AnnotationLayer key={page} page={page} />
+          ))}
         </div>
       </div>
       <SelectionTooltip />

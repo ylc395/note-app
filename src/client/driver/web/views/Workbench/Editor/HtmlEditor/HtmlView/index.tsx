@@ -1,6 +1,5 @@
 import { observer } from 'mobx-react-lite';
 import { useRef, useEffect, useContext } from 'react';
-import { runInAction } from 'mobx';
 
 import type HtmlEditorView from 'model/material/HtmlEditorView';
 import HtmlViewer from './HtmlViewer';
@@ -11,7 +10,7 @@ import { AnnotationTypes } from 'interface/material';
 export default observer(function HtmlView({ editorView }: { editorView: HtmlEditorView }) {
   const shadowWrapperRef = useRef<HTMLDivElement | null>(null);
   const editorRootRef = useRef<HTMLDivElement | null>(null);
-  const ctx = useContext(context);
+  const { setHtmlViewer } = useContext(context);
 
   useEffect(() => {
     const htmlViewer = new HtmlViewer({
@@ -24,12 +23,10 @@ export default observer(function HtmlView({ editorView }: { editorView: HtmlEdit
       // onTextSelectCancel: hideSelectionTooltip,
     });
 
-    runInAction(() => {
-      ctx.htmlViewer = htmlViewer;
-    });
+    setHtmlViewer(htmlViewer);
 
     return () => htmlViewer.destroy();
-  }, [editorView, ctx]);
+  }, [editorView, setHtmlViewer]);
 
   return (
     <div className="h-full grow overflow-auto" ref={editorRootRef}>

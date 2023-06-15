@@ -1,34 +1,40 @@
-import { observer } from 'mobx-react-lite';
-import { useCallback, useState } from 'react';
-import { useCreation } from 'ahooks';
-import { Modal } from 'antd';
+import { observer, useLocalObservable } from 'mobx-react-lite';
 
 import type NoteEditor from 'model/note/EditorView';
-import MarkdownEditor, { type EditorView as MarkdownEditorView } from 'web/components/MarkdownEditor';
-import { useModal, COMMON_MODAL_OPTIONS } from 'web/infra/ui';
+import Modal from 'web/components/Modal';
 
 import Body from './Body';
 import Title from './Title';
 import Breadcrumb from './Breadcrumb';
 import Info from './Info';
-import Context from './Context';
+import Context, { type EditorContext } from './Context';
+import { observable } from 'mobx';
+import useModal from 'web/components/Modal/useModal';
 
 export default observer(function NoteEditor({ editorView }: { editorView: NoteEditor }) {
-  const [markdownEditorView, setMarkdownEditorView] = useState<MarkdownEditorView | null>(null);
-  const onChange = useCallback((content: string) => editorView.editor.updateBody(content), [editorView]);
   const infoModal = useModal();
-  const editorViewNode = useCreation(
-    () => <MarkdownEditor ref={setMarkdownEditorView} onChange={onChange} />,
-    [onChange],
+  const context = useLocalObservable<EditorContext>(
+    () => ({
+      editorView,
+      markdownEditorView: null,
+      infoModal,
+      setMarkdownEditorView: function (v) {
+        this.markdownEditorView = v;
+      },
+    }),
+    {
+      editorView: observable.ref,
+      markdownEditorView: observable.ref,
+    },
   );
 
   return (
-    <Context.Provider value={{ editorView, markdownEditorView, infoModal }}>
+    <Context.Provider value={context}>
       <div className="flex h-full flex-col">
         <Title />
         <Breadcrumb />
-        <Body>{editorViewNode}</Body>
-        <Modal {...COMMON_MODAL_OPTIONS} title="详情" closable open={infoModal.isOpen} onCancel={infoModal.close}>
+        <Body />
+        <Modal title="详情" closable open={infoModal.isOpen}>
           <Info />
         </Modal>
       </div>

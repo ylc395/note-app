@@ -9,12 +9,16 @@ export enum Panels {
 
 interface EditorContext {
   pdfViewer: PdfViewer | null;
+  setPdfViewer: (v: PdfViewer) => void;
   panelsVisibility: Record<Panels, boolean>;
 }
 
 export function getContext(): EditorContext {
   return {
     pdfViewer: null,
+    setPdfViewer: function (v) {
+      this.pdfViewer = v;
+    },
     panelsVisibility: {
       [Panels.Outline]: false,
       [Panels.AnnotationList]: true,
