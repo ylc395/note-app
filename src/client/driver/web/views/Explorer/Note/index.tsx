@@ -1,9 +1,9 @@
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
-import { Modal } from 'antd';
 
 import Layout, { NoteExplorerViews, ExplorerTypes } from 'model/Layout';
-import { useModal, COMMON_MODAL_OPTIONS } from 'web/infra/ui';
+import Modal from 'web/components/Modal';
+import useModal from 'web/components/Modal/useModal';
 
 import Tree from './TreeView';
 import TreeOperations from './TreeView/Operations';
@@ -32,10 +32,10 @@ export default observer(function NoteExplorer() {
           {explorerPanel[ExplorerTypes.Notes] === NoteExplorerViews.Tree && <Tree />}
           {explorerPanel[ExplorerTypes.Notes] === NoteExplorerViews.Custom && <CustomView />}
         </div>
-        <Modal {...COMMON_MODAL_OPTIONS} open={movingModal.isOpen}>
+        <Modal open={movingModal.isOpen}>
           <TargetTree />
         </Modal>
-        <Modal {...COMMON_MODAL_OPTIONS} open={editingModal.isOpen}>
+        <Modal open={editingModal.isOpen}>
           <MetadataForm />
         </Modal>
       </div>

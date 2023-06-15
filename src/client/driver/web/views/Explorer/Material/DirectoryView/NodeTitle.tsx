@@ -8,12 +8,12 @@ import type { MaterialTreeNode } from 'model/material/Tree';
 import MaterialService from 'service/MaterialService';
 
 import IconTitle from 'web/components/IconTitle';
-import { ModalContext } from '../useModals';
+import ctx from '../Context';
 import { isDirectory } from 'interface/material';
 
 export default observer(function Title({ node }: { node: MaterialTreeNode }) {
   const { createDirectory } = container.resolve(MaterialService);
-  const { creatingModal } = useContext(ModalContext);
+  const { newMaterialModal, setCurrentMaterialId } = useContext(ctx);
 
   return (
     <span className="group flex">
@@ -27,7 +27,8 @@ export default observer(function Title({ node }: { node: MaterialTreeNode }) {
             <Button
               onClick={(e) => {
                 e.stopPropagation();
-                creatingModal.open({ parentId: node.entity.id });
+                setCurrentMaterialId(node.entity.id);
+                newMaterialModal.open();
               }}
               className="invisible ml-auto mr-2 group-hover:visible"
               size="small"

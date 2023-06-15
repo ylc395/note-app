@@ -1,21 +1,29 @@
-import { observer } from 'mobx-react-lite';
-import { Modal } from 'antd';
+import { observer, useLocalObservable } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 
 import Layout, { MaterialExplorerViews, ExplorerTypes } from 'model/Layout';
+import Modal from 'web/components/Modal';
+import useModal from 'web/components/Modal/useModal';
 
 import Search from './Search';
 import DirectoryOperations from './DirectoryView/Operations';
 import DirectoryView from './DirectoryView';
 import NewMaterial from './NewMaterial';
-import { useModals, ModalContext } from './useModals';
+import Context, { type Context as IContext } from './Context';
 
 export default observer(() => {
   const { explorerPanel } = container.resolve(Layout);
-  const { modalOptions, modals } = useModals();
+  const newMaterialModal = useModal();
+  const context = useLocalObservable<IContext>(() => ({
+    newMaterialModal,
+    currentMaterialId: null,
+    setCurrentMaterialId: function (id) {
+      this.currentMaterialId = id;
+    },
+  }));
 
   return (
-    <ModalContext.Provider value={modals}>
+    <Context.Provider value={context}>
       <div className="box-border flex h-screen flex-col pt-1">
         <div className="border-0 border-b  border-solid border-gray-200 bg-white p-2">
           <div className="flex items-center justify-between">
@@ -25,10 +33,10 @@ export default observer(() => {
           {explorerPanel[ExplorerTypes.Materials] === MaterialExplorerViews.Directory && <DirectoryOperations />}
         </div>
         <DirectoryView />
-        <Modal {...modalOptions} open={modals.creatingModal.isOpen}>
+        <Modal open={newMaterialModal.isOpen}>
           <NewMaterial />
         </Modal>
       </div>
-    </ModalContext.Provider>
+    </Context.Provider>
   );
 });

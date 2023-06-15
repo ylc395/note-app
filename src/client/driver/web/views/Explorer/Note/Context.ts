@@ -1,11 +1,10 @@
 import { createContext } from 'react';
 
-import type { Modal } from 'web/infra/ui';
+import type useModal from 'web/components/Modal/useModal';
 
 interface Context {
-  editingModal: Modal;
-  movingModal: Modal;
+  editingModal: ReturnType<typeof useModal>;
+  movingModal: ReturnType<typeof useModal>;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export default createContext<Context>(null as any);
+export default createContext<Context>(null as never);

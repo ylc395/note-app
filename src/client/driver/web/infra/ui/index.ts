@@ -4,7 +4,7 @@ import messageFeedback from './messageFeedback';
 declare global {
   interface Window {
     electronUI?: {
-      electronIpcContextmenu: UI['getActionFromContextmenu'];
+      getActionFromContextmenu: UI['getActionFromContextmenu'];
       openNewWindow: UI['openNewWindow'];
     };
   }
@@ -12,10 +12,8 @@ declare global {
 
 export const getRootElement = () => document.querySelector('#app') as HTMLElement;
 
-export * from './useModal';
-
 export const ui: UI = {
   feedback: messageFeedback,
-  getActionFromContextmenu: window.electronUI?.electronIpcContextmenu || (() => Promise.resolve(null)),
+  getActionFromContextmenu: window.electronUI?.getActionFromContextmenu || (() => Promise.resolve(null)),
   openNewWindow: window.electronUI?.openNewWindow || window.open,
 };

@@ -10,10 +10,10 @@ import MaterialService from 'service/MaterialService';
 import Menu, { FormTypes } from './Menu';
 import FileForm from './FileForm';
 import TextForm from './TextForm';
-import { ModalContext } from '../useModals';
+import ctx from '../Context';
 
 export default observer(function NewMaterial() {
-  const { creatingModal } = useContext(ModalContext);
+  const { newMaterialModal, currentMaterialId } = useContext(ctx);
   const [formModel, setFormModel] = useState(() => new FileFormModel({}));
   const { createMaterial } = container.resolve(MaterialService);
   const handleTypeSelect = useCallback((type: FormTypes) => {
@@ -27,15 +27,13 @@ export default observer(function NewMaterial() {
       return;
     }
 
-    const parentId = creatingModal.getData()?.parentId;
-
-    if (!parentId) {
+    if (!currentMaterialId) {
       throw new Error('no data');
     }
 
-    await createMaterial({ ...data, parentId });
-    creatingModal.close();
-  }, [createMaterial, creatingModal, formModel]);
+    await createMaterial({ ...data, parentId: currentMaterialId });
+    newMaterialModal.close();
+  }, [createMaterial, currentMaterialId, formModel, newMaterialModal]);
 
   return (
     <div className="flex">
@@ -45,7 +43,7 @@ export default observer(function NewMaterial() {
         {formModel instanceof TextFormModel && <TextForm model={formModel} />}
         <div>
           <Button onClick={submit}>保存</Button>
-          <Button onClick={creatingModal.close}>取消</Button>
+          <Button onClick={newMaterialModal.close}>取消</Button>
         </div>
       </div>
     </div>
