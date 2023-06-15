@@ -53,7 +53,11 @@ export const isDirectory = (entity: MaterialVO): entity is DirectoryVO => {
   return !('mimeType' in entity);
 };
 
-export function normalizeTitle(material: MaterialVO) {
+export function normalizeTitle(material?: MaterialVO) {
+  if (!material) {
+    return '';
+  }
+
   if (material.name) {
     return material.name;
   }

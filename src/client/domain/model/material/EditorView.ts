@@ -19,7 +19,7 @@ export default abstract class MaterialEditorView<T extends MaterialEditor, S = u
   @computed
   get tabView() {
     return {
-      title: this.editor.entity ? normalizeTitle(this.editor.entity.metadata) : '',
+      title: normalizeTitle(this.editor.entity?.metadata),
       icon: this.editor.entity?.metadata.icon || null,
     };
   }

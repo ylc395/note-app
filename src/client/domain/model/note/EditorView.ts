@@ -21,7 +21,7 @@ export default class NoteEditorView extends EditorView<NoteEditor, State> {
     return {
       title:
         (__ENV__ === 'dev' ? `${this.id} ${this.editor.id} ${this.editor.entityId.slice(0, 3)} ` : '') +
-        (this.editor.entity ? normalizeTitle(this.editor.entity.metadata) : ''),
+        normalizeTitle(this.editor.entity?.metadata),
       icon: this.editor.entity?.metadata.icon || null,
     };
   }

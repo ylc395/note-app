@@ -2,15 +2,9 @@ import { createContext } from 'react';
 
 import type PdfViewer from './PdfView/PdfViewer';
 
-export enum Panels {
-  Outline,
-  AnnotationList,
-}
-
 interface EditorContext {
   pdfViewer: PdfViewer | null;
   setPdfViewer: (v: PdfViewer) => void;
-  panelsVisibility: Record<Panels, boolean>;
 }
 
 export function getContext(): EditorContext {
@@ -18,10 +12,6 @@ export function getContext(): EditorContext {
     pdfViewer: null,
     setPdfViewer: function (v) {
       this.pdfViewer = v;
-    },
-    panelsVisibility: {
-      [Panels.Outline]: false,
-      [Panels.AnnotationList]: true,
     },
   };
 }

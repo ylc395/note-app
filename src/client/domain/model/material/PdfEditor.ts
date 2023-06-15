@@ -94,6 +94,7 @@ export default class PdfEditor extends Editor<Pdf> {
 
   destroy() {
     this.loadingTask?.destroy();
+    super.destroy();
   }
 
   private async initOutline(doc: PDFDocumentProxy) {

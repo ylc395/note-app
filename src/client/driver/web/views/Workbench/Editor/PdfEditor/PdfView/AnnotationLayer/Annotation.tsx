@@ -32,7 +32,7 @@ export default observer(function Annotation({
 
   const handleMouseLeave = (e: MouseEvent) => {
     if (!e.relatedTarget || !pdfViewer.annotationTooltipRoot?.contains(e.relatedTarget as HTMLElement)) {
-      pdfViewer.editorView.setCurrentAnnotationId(annotationId);
+      pdfViewer.editorView.setCurrentAnnotationId(null);
     }
   };
 
