@@ -7,7 +7,7 @@ import EditorContext from './Context';
 import { normalizeTitle } from 'interface/Note';
 
 export default observer(function NoteTitle() {
-  const { markdownEditorView, editorView, infoModal } = useContext(EditorContext);
+  const { markdownEditor, editorView, infoModal } = useContext(EditorContext);
   const handleChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => editorView.editor.updateNote({ title: e.target.value }),
     [editorView],
@@ -24,7 +24,7 @@ export default observer(function NoteTitle() {
       />
       <Space.Compact className="mr-4">
         <Tooltip title="搜索">
-          <Button onClick={() => markdownEditorView?.enableSearch()} type="text" icon={<FileSearchOutlined />} />
+          <Button onClick={() => markdownEditor?.enableSearch()} type="text" icon={<FileSearchOutlined />} />
         </Tooltip>
         <Tooltip title="信息与统计">
           <Button onClick={() => infoModal.open()} type="text" icon={<InfoCircleOutlined />} />

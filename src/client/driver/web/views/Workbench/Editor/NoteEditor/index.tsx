@@ -17,15 +17,15 @@ export default observer(function NoteEditor({ editorView }: { editorView: NoteEd
   const context = useLocalObservable<EditorContext>(
     () => ({
       editorView,
-      markdownEditorView: null,
+      markdownEditor: null,
       infoModal,
-      setMarkdownEditorView(v) {
-        this.markdownEditorView = v;
+      setMarkdownEditor(v) {
+        this.markdownEditor = v;
       },
     }),
     {
       editorView: observable.ref,
-      markdownEditorView: observable.ref,
+      markdownEditor: observable.ref,
     },
   );
 

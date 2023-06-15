@@ -48,8 +48,4 @@ export default class NoteEditorView extends EditorView<NoteEditor, State> {
 
     return result;
   }
-
-  destroy() {
-    super.destroy();
-  }
 }
