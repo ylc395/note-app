@@ -15,7 +15,7 @@ import Context from './Context';
 
 export default observer(function NoteEditor({ editorView }: { editorView: NoteEditor }) {
   const [markdownEditorView, setMarkdownEditorView] = useState<MarkdownEditorView | null>(null);
-  const onChange = useCallback((content: string) => editorView.editor.updateBody(content, editorView), [editorView]);
+  const onChange = useCallback((content: string) => editorView.editor.updateBody(content), [editorView]);
   const infoModal = useModal();
   const editorViewNode = useCreation(
     () => <MarkdownEditor ref={setMarkdownEditorView} onChange={onChange} />,

@@ -49,15 +49,7 @@ export default class NoteEditorView extends EditorView<NoteEditor, State> {
     return result;
   }
 
-  get isEditing() {
-    return this.editor.editingView === this;
-  }
-
   destroy() {
     super.destroy();
-
-    if (this.isEditing) {
-      this.editor.editingView = undefined;
-    }
   }
 }

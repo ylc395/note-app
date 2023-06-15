@@ -15,7 +15,6 @@ export interface Entity {
 
 export default class NoteEditor extends Editor<Entity> {
   readonly entityType = EntityTypes.Note;
-  editingView?: NoteEditorView;
   constructor(tile: Tile, noteId: NoteVO['id'], readonly noteTree: NoteTree) {
     super(tile, noteId);
     makeObservable(this);
@@ -31,12 +30,11 @@ export default class NoteEditor extends Editor<Entity> {
   }
 
   @action
-  updateBody(body: string, from: NoteEditorView) {
+  updateBody(body: string) {
     if (!this.entity) {
       throw new Error('no load note');
     }
 
-    this.editingView = from;
     this.entity.body = body;
     this.uploadBody(body);
   }
