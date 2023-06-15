@@ -11,5 +11,4 @@ export interface EditorContext {
   setMarkdownEditorView: (v: EditorView | null) => void;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export default createContext<EditorContext>(null as any);
+export default createContext<EditorContext>(null as never);

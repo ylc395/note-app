@@ -1,4 +1,6 @@
 import { observer, useLocalObservable } from 'mobx-react-lite';
+import { observable, runInAction } from 'mobx';
+import { useEffect } from 'react';
 
 import type NoteEditor from 'model/note/EditorView';
 import Modal from 'web/components/Modal';
@@ -8,7 +10,6 @@ import Title from './Title';
 import Breadcrumb from './Breadcrumb';
 import Info from './Info';
 import Context, { type EditorContext } from './Context';
-import { observable } from 'mobx';
 import useModal from 'web/components/Modal/useModal';
 
 export default observer(function NoteEditor({ editorView }: { editorView: NoteEditor }) {
@@ -18,7 +19,7 @@ export default observer(function NoteEditor({ editorView }: { editorView: NoteEd
       editorView,
       markdownEditorView: null,
       infoModal,
-      setMarkdownEditorView: function (v) {
+      setMarkdownEditorView(v) {
         this.markdownEditorView = v;
       },
     }),
@@ -27,6 +28,12 @@ export default observer(function NoteEditor({ editorView }: { editorView: NoteEd
       markdownEditorView: observable.ref,
     },
   );
+
+  useEffect(() => {
+    runInAction(() => {
+      context.editorView = editorView;
+    });
+  }, [context, editorView]);
 
   return (
     <Context.Provider value={context}>
