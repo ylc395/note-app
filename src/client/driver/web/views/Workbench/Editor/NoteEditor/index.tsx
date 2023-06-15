@@ -14,18 +14,8 @@ import Info from './Info';
 import Context from './Context';
 
 export default observer(function NoteEditor({ editorView }: { editorView: NoteEditor }) {
-  // const { lint } = container.resolve(MarkdownService);
-
-  // useDebounceEffect(
-  //   () => {
-  //     lint(editor);
-  //   },
-  //   [editor, lint],
-  //   { wait: 1000 },
-  // );
-
   const [markdownEditorView, setMarkdownEditorView] = useState<MarkdownEditorView | null>(null);
-  const onChange = useCallback((content: string) => editorView.editor.updateBody(content), [editorView]);
+  const onChange = useCallback((content: string) => editorView.editor.updateBody(content, editorView), [editorView]);
   const infoModal = useModal();
   const editorViewNode = useCreation(
     () => <MarkdownEditor ref={setMarkdownEditorView} onChange={onChange} />,

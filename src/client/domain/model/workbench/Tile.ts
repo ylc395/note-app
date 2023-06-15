@@ -2,9 +2,8 @@ import { action, makeObservable, observable, computed } from 'mobx';
 import uniqueId from 'lodash/uniqueId';
 import { Emitter } from 'strict-event-emitter';
 
-import type EntityEditor from 'model/abstract/Editor';
-import type Manager from './TileManger';
 import type EditorView from 'model/abstract/EditorView';
+import type Manager from './TileManger';
 
 export enum Events {
   destroyed = 'tile.destroyed',

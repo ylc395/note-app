@@ -1,11 +1,12 @@
-import { makeObservable, computed, action, toJS } from 'mobx';
+import { makeObservable, action, toJS } from 'mobx';
 import debounce from 'lodash/debounce';
 
 import { EntityTypes } from 'interface/entity';
-import { normalizeTitle, type NoteVO, type NoteBodyVO, NoteBodyDTO, NoteDTO } from 'interface/Note';
+import type { NoteVO, NoteBodyVO, NoteBodyDTO, NoteDTO } from 'interface/Note';
 import type Tile from 'model/workbench/Tile';
-import Editor, { type Breadcrumbs } from 'model/abstract/Editor';
+import Editor from 'model/abstract/Editor';
 import type NoteTree from './Tree';
+import type NoteEditorView from './EditorView';
 
 export interface Entity {
   body: NoteBodyVO;
@@ -14,7 +15,8 @@ export interface Entity {
 
 export default class NoteEditor extends Editor<Entity> {
   readonly entityType = EntityTypes.Note;
-  constructor(tile: Tile, noteId: NoteVO['id'], private readonly noteTree: NoteTree) {
+  editingView?: NoteEditorView;
+  constructor(tile: Tile, noteId: NoteVO['id'], readonly noteTree: NoteTree) {
     super(tile, noteId);
     makeObservable(this);
   }
@@ -28,44 +30,13 @@ export default class NoteEditor extends Editor<Entity> {
     this.load({ metadata, body });
   }
 
-  @computed
-  get tabView() {
-    return {
-      title:
-        (__ENV__ === 'dev' ? `${this.id} ${this.entityId.slice(0, 3)} ` : '') +
-        (this.entity ? normalizeTitle(this.entity.metadata) : ''),
-      icon: this.entity?.metadata.icon || null,
-    };
-  }
-
-  @computed
-  get breadcrumbs() {
-    const result: Breadcrumbs = [];
-    let note = this.noteTree.getNode(this.entityId, true)?.entity;
-    const noteToBreadcrumb = (note: NoteVO) => ({
-      id: note.id,
-      title: normalizeTitle(note),
-      icon: note.icon || undefined,
-    });
-
-    while (note) {
-      result.unshift({
-        ...noteToBreadcrumb(note),
-        siblings: this.noteTree.getSiblings(note.id).map(({ entity: note }) => noteToBreadcrumb(note)),
-      });
-
-      note = note.parentId ? this.noteTree.getNode(note.parentId).entity : undefined;
-    }
-
-    return result;
-  }
-
   @action
-  async updateBody(body: string) {
+  updateBody(body: string, from: NoteEditorView) {
     if (!this.entity) {
       throw new Error('no load note');
     }
 
+    this.editingView = from;
     this.entity.body = body;
     this.uploadBody(body);
   }

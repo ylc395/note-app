@@ -1,14 +1,8 @@
-import { action, computed, makeObservable, observable, runInAction } from 'mobx';
+import { makeObservable, observable, runInAction } from 'mobx';
 import remove from 'lodash/remove';
 
 import { EntityTypes } from 'interface/entity';
-import {
-  type EntityMaterialVO,
-  type AnnotationVO,
-  type AnnotationDTO,
-  type AnnotationPatchDTO,
-  normalizeTitle,
-} from 'interface/material';
+import type { EntityMaterialVO, AnnotationVO, AnnotationDTO, AnnotationPatchDTO } from 'interface/material';
 import EntityEditor from 'model/abstract/Editor';
 import type Tile from 'model/workbench/Tile';
 
@@ -33,19 +27,6 @@ export default abstract class Editor<T extends { metadata: EntityMaterialVO } = 
     runInAction(() => {
       this.annotations.push(createdAnnotation);
     });
-  }
-
-  @computed
-  get breadcrumbs() {
-    return [];
-  }
-
-  @computed
-  get tabView() {
-    return {
-      title: this.entity ? normalizeTitle(this.entity.metadata) : '',
-      icon: this.entity?.metadata.icon || null,
-    };
   }
 
   private async loadAnnotations() {

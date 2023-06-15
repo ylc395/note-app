@@ -51,6 +51,8 @@ export default class EditorManager {
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     editor.once(EditorEvents.Destroyed, () => delete this.editors[entity.type]![entity.id]);
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    this.editors[entity.type]![entity.id] = editor;
     return editor;
   }
 

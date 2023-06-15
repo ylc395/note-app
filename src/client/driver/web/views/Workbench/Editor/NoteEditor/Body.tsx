@@ -16,6 +16,16 @@ export default observer(function NoteEditor({ children }: { children: ReactNode 
       markdownEditorView.updateContent(content);
     }, 300);
 
+    const stopUpdateContent = reaction(
+      () => editorView.editor.entity?.body,
+      (body) => {
+        if (typeof body === 'string' && !editorView.isEditing) {
+          updateContent(body);
+        }
+      },
+      { fireImmediately: true },
+    );
+
     const stopWatchReadonly = reaction(
       () => editorView.editor.entity?.metadata.isReadonly,
       (isReadonly) => {
@@ -25,16 +35,6 @@ export default observer(function NoteEditor({ children }: { children: ReactNode 
           if (!isReadonly) {
             markdownEditorView.focus();
           }
-        }
-      },
-      { fireImmediately: true },
-    );
-
-    const stopUpdateContent = reaction(
-      () => editorView.editor.entity?.body,
-      (body) => {
-        if (typeof body === 'string' && !editorView.isActive) {
-          updateContent(body);
         }
       },
       { fireImmediately: true },

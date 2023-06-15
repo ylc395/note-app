@@ -51,7 +51,7 @@ export default observer(function TabItem({ editorView }: { editorView: EditorVie
         className="mr-1 max-w-[200px] text-sm"
         titleClassName=" overflow-hidden text-ellipsis"
         size="1em"
-        {...editorView.editor.tabView}
+        {...editorView.tabView}
       />
       <Button
         ref={buttonRef}

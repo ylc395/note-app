@@ -7,6 +7,14 @@ import { token as localStorageToken } from 'infra/localStorage';
 import type EntityEditor from 'model/abstract/Editor';
 import type Tile from 'model/workbench/Tile';
 
+interface Breadcrumb {
+  title: string;
+  id: string;
+  icon?: string;
+}
+
+export type Breadcrumbs = Array<Breadcrumb & { siblings: Breadcrumb[] }>;
+
 export enum Events {
   Destroyed = 'entityEditorView.destroyed',
 }
@@ -20,9 +28,12 @@ export default abstract class EditorView<
   S = unknown,
 > extends Emitter<CommonEditorViewEvents> {
   readonly id = uniqueId('editorView-');
+  abstract readonly tabView: { title: string; icon: string | null };
+  abstract readonly breadcrumbs: Breadcrumbs;
   protected localStorage = container.resolve(localStorageToken);
   @observable readonly state: S;
   private readonly cancelAutoStateStorage: ReturnType<typeof autorun>;
+  // todo: add observable
   constructor(public tile: Tile, public editor: T, initialState: S) {
     super();
     this.state = this.localStorage.get<S>(this.localStorageKey) || initialState;
@@ -37,10 +48,6 @@ export default abstract class EditorView<
   private readonly saveState = () => {
     this.localStorage.set(this.localStorageKey, this.state);
   };
-
-  get isActive(): boolean {
-    return this.editor.activeView === this;
-  }
 
   destroy() {
     this.cancelAutoStateStorage();

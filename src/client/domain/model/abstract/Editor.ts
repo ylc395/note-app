@@ -6,15 +6,6 @@ import { Emitter, type EventMap } from 'strict-event-emitter';
 import type Tile from 'model/workbench/Tile';
 import type { EntityId, EntityLocator, EntityTypes } from 'interface/entity';
 import { token as remoteToken } from 'infra/remote';
-import type EditorView from './EditorView';
-
-interface Breadcrumb {
-  title: string;
-  id: string;
-  icon?: string;
-}
-
-export type Breadcrumbs = Array<Breadcrumb & { siblings: Breadcrumb[] }>;
 
 export enum Events {
   Destroyed = 'entityEditor.destroyed',
@@ -49,13 +40,9 @@ export default abstract class EntityEditor<T = unknown> extends Emitter<CommonEd
     this.entity = entity;
   }
 
-  abstract readonly tabView: { title: string; icon: string | null };
   abstract readonly entityType: EntityTypes;
-  abstract readonly breadcrumbs: Breadcrumbs;
   protected abstract init(): void;
   toEntityLocator(): EntityLocator {
     return { type: this.entityType, id: this.entityId };
   }
-
-  activeView: EditorView | null = null;
 }
