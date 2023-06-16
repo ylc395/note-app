@@ -6,6 +6,7 @@ import SelectionTooltip from './SelectionTooltip';
 import AnnotationLayer from './AnnotationLayer';
 import AnnotationTooltip from './AnnotationTooltip';
 import PdfViewer from './PdfViewer';
+import Loading from './Loading';
 import context from '../Context';
 import './style.css';
 
@@ -13,14 +14,17 @@ export default observer(function PdfView({ editorView }: { editorView: PdfEditor
   const containerElRef = useRef<HTMLDivElement | null>(null);
   const viewerElRef = useRef<HTMLDivElement | null>(null);
   const { setPdfViewer, pdfViewer } = useContext(context);
+  const isLoading = pdfViewer?.status !== 'loaded';
 
   useEffect(() => {
+    if (!containerElRef.current || !viewerElRef.current) {
+      return;
+    }
+
     const pdfViewer = new PdfViewer({
       editorView,
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      container: containerElRef.current!,
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      viewer: viewerElRef.current!,
+      container: containerElRef.current,
+      viewer: viewerElRef.current,
     });
 
     setPdfViewer(pdfViewer);
@@ -40,6 +44,7 @@ export default observer(function PdfView({ editorView }: { editorView: PdfEditor
       </div>
       <SelectionTooltip />
       <AnnotationTooltip />
+      {isLoading && <Loading />}
     </div>
   );
 });

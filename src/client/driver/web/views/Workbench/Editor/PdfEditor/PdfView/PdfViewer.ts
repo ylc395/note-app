@@ -44,6 +44,8 @@ export default class PdfViewer {
   readonly page = { current: 1, total: 1 };
   @observable scale: number | string = 'auto';
 
+  @observable status: 'loading' | 'loaded' = 'loading';
+
   protected get rootEl() {
     return this.pdfViewer.viewer as HTMLElement | null;
   }
@@ -110,19 +112,23 @@ export default class PdfViewer {
     this.pdfViewer.setDocument(doc);
     (this.pdfViewer.linkService as PDFLinkService).setDocument(doc);
 
+    this.pdfViewer.onePageRendered.then(
+      action(() => {
+        this.status = 'loaded';
+      }),
+    );
+
     runInAction(() => {
       this.page.total = doc.numPages;
     });
 
     const isFromState = await this.initFromState();
 
-    let isFirstTime = true;
     this.pdfViewer.eventBus.on(
       'updateviewarea',
       action(({ location }: { location: { pdfOpenParams: string } }) => {
         this.editorView.updateState({ hash: location.pdfOpenParams });
-        isFirstTime ? setTimeout(this.updateVisiblePages, 500) : this.updateVisiblePages(); // we must wait until viewarea is updated. There is no such event so just wait 500ms
-        isFirstTime = false;
+        this.updateVisiblePages();
       }),
     );
 
@@ -180,27 +186,17 @@ export default class PdfViewer {
     this.autoSaveState?.();
   }
 
-  @action
-  private doAfterCleaning(cb: () => void) {
-    // wait annotationLayers to be cleared by react
-    // or react will process un-existing annotationLayers (emptied by pdf.js) and throw error finally
-    this.visiblePages = [];
-    setTimeout(cb, 200);
-  }
-
   setScale(value: string | number) {
     const _value = value;
     const { currentScale } = this.pdfViewer;
 
-    this.doAfterCleaning(() => {
-      if (value === 'up') {
-        this.pdfViewer.currentScale = SCALE_STEPS.find((step) => step > currentScale) || currentScale;
-      } else if (value === 'down') {
-        this.pdfViewer.currentScale = SCALE_STEPS.findLast((step) => step < currentScale) || currentScale;
-      } else {
-        this.pdfViewer.currentScaleValue = String(_value);
-      }
-    });
+    if (value === 'up') {
+      this.pdfViewer.currentScale = SCALE_STEPS.find((step) => step > currentScale) || currentScale;
+    } else if (value === 'down') {
+      this.pdfViewer.currentScale = SCALE_STEPS.findLast((step) => step < currentScale) || currentScale;
+    } else {
+      this.pdfViewer.currentScaleValue = String(_value);
+    }
   }
 
   async createRangeAnnotation(color: string) {
