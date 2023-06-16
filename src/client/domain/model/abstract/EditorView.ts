@@ -1,6 +1,6 @@
 import { container } from 'tsyringe';
-import { makeObservable, observable, autorun } from 'mobx';
 import uniqueId from 'lodash/uniqueId';
+import debounce from 'lodash/debounce';
 import { Emitter, type EventMap } from 'strict-event-emitter';
 
 import { token as localStorageToken } from 'infra/localStorage';
@@ -31,27 +31,23 @@ export default abstract class EditorView<
   abstract readonly tabView: { title: string; icon: string | null };
   abstract readonly breadcrumbs: Breadcrumbs;
   protected localStorage = container.resolve(localStorageToken);
-  @observable readonly state: S;
-  private readonly cancelAutoStateStorage: ReturnType<typeof autorun>;
-  // todo: add observable
+  state: S;
   constructor(public tile: Tile, public editor: T, initialState: S) {
     super();
     this.state = this.localStorage.get<S>(this.localStorageKey) || initialState;
-    this.cancelAutoStateStorage = autorun(this.saveState);
-    makeObservable(this);
   }
 
   private get localStorageKey() {
     return `ui.state.editor.${this.editor.entityType}.${this.editor.entityId}`;
   }
 
-  private readonly saveState = () => {
-    this.localStorage.set(this.localStorageKey, this.state);
-  };
-
   destroy() {
-    this.cancelAutoStateStorage();
     this.emit(Events.Destroyed);
     this.removeAllListeners();
   }
+
+  updateState = debounce((state: Partial<S>) => {
+    this.state = { ...this.state, ...state };
+    this.localStorage.set(this.localStorageKey, this.state);
+  }, 200);
 }

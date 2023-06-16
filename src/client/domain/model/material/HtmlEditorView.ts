@@ -5,7 +5,7 @@ import type HtmlEditor from './HtmlEditor';
 import type Tile from 'model/workbench/Tile';
 
 interface State {
-  scrollOffset: number;
+  scrollTop: number;
 }
 
 export enum Panels {
@@ -15,7 +15,7 @@ export enum Panels {
 
 export default class HtmlEditorView extends EditorView<HtmlEditor, State> {
   constructor(tile: Tile, editor: HtmlEditor) {
-    super(tile, editor, { scrollOffset: 0 });
+    super(tile, editor, { scrollTop: 0 });
     makeObservable(this);
   }
 

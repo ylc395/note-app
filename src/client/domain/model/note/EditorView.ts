@@ -6,13 +6,13 @@ import { normalizeTitle, type NoteVO } from 'interface/Note';
 import type NoteEditor from './Editor';
 
 interface State {
-  scrollOffset: 0;
+  scrollTop: number;
   cursor: number;
 }
 
 export default class NoteEditorView extends EditorView<NoteEditor, State> {
   constructor(tile: Tile, editor: NoteEditor) {
-    super(tile, editor, { cursor: 0, scrollOffset: 0 });
+    super(tile, editor, { cursor: 0, scrollTop: 0 });
     makeObservable(this);
   }
 

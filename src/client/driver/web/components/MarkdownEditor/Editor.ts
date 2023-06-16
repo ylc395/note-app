@@ -24,6 +24,11 @@ import multimedia from './multimedia';
 import iconLink from './iconLink';
 import search, { enableSearchCommand } from './search';
 
+interface State {
+  scrollTop?: number;
+  cursor?: number;
+}
+
 export interface Options {
   onChange?: (content: string) => void; // won't fire when calling updateContent
   readonly?: boolean;
@@ -31,6 +36,7 @@ export interface Options {
   defaultValue?: string;
   onInitialized?: (editor: Editor) => void;
   onDestroy?: () => void;
+  onUIStateChange?: (state: State) => void;
   root: HTMLElement;
 }
 
@@ -93,10 +99,20 @@ export default class Editor {
       }
 
       this.options.onInitialized?.(this);
+
+      if (this.options.onUIStateChange) {
+        this.options.root.addEventListener('scroll', this.handleScroll);
+      }
     });
 
     return editor;
   }
+
+  private readonly handleScroll = (e: Event) => {
+    const { scrollTop } = e.target as HTMLElement;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    this.options.onUIStateChange!({ scrollTop });
+  };
 
   enableSearch() {
     this.editor.action((ctx) => {
@@ -145,9 +161,28 @@ export default class Editor {
   destroy() {
     this.editor.destroy();
     this.options.onDestroy?.();
+
+    if (this.options.onUIStateChange) {
+      this.options.root.removeEventListener('scroll', this.handleScroll);
+    }
   }
 
   get isReady() {
     return this.editor.status === EditorStatus.Created;
+  }
+
+  applyState(state: State) {
+    if (state.scrollTop) {
+      this.options.root.scrollTop = state.scrollTop;
+    }
+
+    if (state.cursor) {
+      this.editor.action((ctx) => {
+        const view = ctx.get(editorViewCtx);
+        const viewState = view.state;
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        view.dispatch(viewState.tr.replace(state.cursor!));
+      });
+    }
   }
 }

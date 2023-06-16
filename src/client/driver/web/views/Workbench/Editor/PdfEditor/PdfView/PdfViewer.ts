@@ -120,7 +120,7 @@ export default class PdfViewer {
     this.pdfViewer.eventBus.on(
       'updateviewarea',
       action(({ location }: { location: { pdfOpenParams: string } }) => {
-        this.editorView.state.hash = location.pdfOpenParams;
+        this.editorView.updateState({ hash: location.pdfOpenParams });
         isFirstTime ? setTimeout(this.updateVisiblePages, 500) : this.updateVisiblePages(); // we must wait until viewarea is updated. There is no such event so just wait 500ms
         isFirstTime = false;
       }),

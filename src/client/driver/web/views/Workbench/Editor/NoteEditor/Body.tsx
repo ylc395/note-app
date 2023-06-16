@@ -30,8 +30,11 @@ export default observer(function NoteEditor() {
       ),
       when(
         () => Boolean(editorView.editor.entity?.body),
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        () => markdownEditor.updateContent(editorView.editor.entity!.body),
+        () => {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          markdownEditor.updateContent(editorView.editor.entity!.body);
+          markdownEditor.applyState(editorView.state);
+        },
       ),
       reaction(
         () => editorView.editor.entity?.metadata.isReadonly,
@@ -56,7 +59,7 @@ export default observer(function NoteEditor() {
 
   return (
     <div className="min-h-0 grow px-4">
-      <MarkdownEditor onInitialized={setMarkdownEditor} onChange={onChange} />
+      <MarkdownEditor onInitialized={setMarkdownEditor} onChange={onChange} onUIStateChange={editorView.updateState} />
     </div>
   );
 });

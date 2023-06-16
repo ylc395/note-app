@@ -76,14 +76,10 @@ export default class HtmlViewer {
     this.initContent();
   }
 
-  private readonly updateScrollState = debounce(
-    action((e: Event) => {
-      const { scrollTop } = e.target as HTMLElement;
-
-      this.editorView.state.scrollOffset = scrollTop;
-    }),
-    300,
-  );
+  private readonly updateScrollState = action((e: Event) => {
+    const { scrollTop } = e.target as HTMLElement;
+    this.editorView.updateState({ scrollTop });
+  });
 
   private getUniqueSelector(el: HTMLElement) {
     return getCssSelector(el, { root: this.shadowRoot }).replace(':root > :nth-child(1)', 'html');
@@ -129,7 +125,6 @@ export default class HtmlViewer {
     this.elementSelector.disable();
     this.rangeSelector.destroy();
     this.stopLoadingHtml?.();
-    this.updateScrollState.cancel();
     this.options.editorRootEl.removeEventListener('scroll', this.updateScrollState);
   }
 
@@ -152,7 +147,7 @@ export default class HtmlViewer {
 
   private updateContent(html: HTMLHtmlElement) {
     this.shadowRoot.replaceChildren(html);
-    this.options.editorRootEl.scrollTop = this.editorView.state.scrollOffset;
+    this.options.editorRootEl.scrollTop = this.editorView.state.scrollTop;
   }
 
   private static processStyles(root: HTMLHtmlElement) {
