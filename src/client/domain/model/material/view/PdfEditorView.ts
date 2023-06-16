@@ -1,8 +1,8 @@
 import { action, makeObservable, observable } from 'mobx';
 
 import EditorView from './EditorView';
-import type PdfEditor from './PdfEditor';
 import type Tile from 'model/workbench/Tile';
+import type PdfEditor from '../editor/PdfEditor';
 
 interface State {
   hash: string | null; // pdfjs's hash, including page, scroll position, zoom etc;

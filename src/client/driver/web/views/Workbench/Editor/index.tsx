@@ -3,9 +3,9 @@ import { observer } from 'mobx-react-lite';
 
 import type Tile from 'model/workbench/Tile';
 import NoteEditor from 'model/note/EditorView';
-import ImageEditor from 'model/material/ImageEditorView';
-import PdfEditor from 'model/material/PdfEditorView';
-import HtmlEditor from 'model/material/HtmlEditorView';
+import ImageEditor from 'model/material/view/ImageEditorView';
+import PdfEditor from 'model/material/view/PdfEditorView';
+import HtmlEditor from 'model/material/view/HtmlEditorView';
 import EditorService from 'service/EditorService';
 
 import NoteEditorView from './NoteEditor';

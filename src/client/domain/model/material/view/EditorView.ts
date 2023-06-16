@@ -3,7 +3,7 @@ import { type AnnotationPatchDTO, type AnnotationVO, normalizeTitle } from 'inte
 
 import EditorView from 'model/abstract/EditorView';
 import type Tile from 'model/workbench/Tile';
-import type MaterialEditor from 'model/material/Editor';
+import type MaterialEditor from 'model/material/editor/Editor';
 
 export default abstract class MaterialEditorView<T extends MaterialEditor, S = unknown> extends EditorView<T, S> {
   constructor(tile: Tile, editor: T, state: S) {

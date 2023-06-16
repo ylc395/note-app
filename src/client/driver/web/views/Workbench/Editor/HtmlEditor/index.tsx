@@ -1,7 +1,7 @@
 import { observer, useLocalObservable } from 'mobx-react-lite';
 import { observable } from 'mobx';
 
-import type HtmlEditor from 'model/material/HtmlEditorView';
+import type HtmlEditor from 'model/material/view/HtmlEditorView';
 import HtmlViewer from './HtmlView';
 import Toolbar from './Toolbar';
 import Context, { getContext } from './Context';

@@ -1,6 +1,6 @@
-import EditorView from 'model/material/EditorView';
-import type ImageEditor from './ImageEditor';
+import EditorView from 'model/material/view/EditorView';
 import type Tile from 'model/workbench/Tile';
+import type ImageEditor from '../editor/ImageEditor';
 
 interface State {
   scrollOffset: 0;

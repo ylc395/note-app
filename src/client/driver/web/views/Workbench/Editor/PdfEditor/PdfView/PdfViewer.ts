@@ -5,7 +5,7 @@ import union from 'lodash/union';
 import { makeObservable, observable, when, action, runInAction, computed, autorun } from 'mobx';
 
 import { AnnotationTypes, type AnnotationVO, type Rect } from 'interface/material';
-import type PdfEditorView from 'model/material/PdfEditorView';
+import type PdfEditorView from 'model/material/view/PdfEditorView';
 
 import { isElement } from '../../common/domUtils';
 import RangeSelector, { type RangeSelectEvent } from '../../common/RangeSelector';

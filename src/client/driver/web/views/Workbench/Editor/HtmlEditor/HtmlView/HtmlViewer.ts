@@ -2,11 +2,10 @@ import { when, computed, makeObservable, observable, action } from 'mobx';
 import DOMPurify from 'dompurify';
 import getCssSelector from 'css-selector-generator';
 import { toPng } from 'html-to-image';
-import debounce from 'lodash/debounce';
 
 import { ui } from 'web/infra/ui';
 import { AnnotationTypes, AnnotationVO } from 'interface/material';
-import type HtmlEditorView from 'model/material/HtmlEditorView';
+import type HtmlEditorView from 'model/material/view/HtmlEditorView';
 
 import RangeSelector, { type RangeSelectEvent } from '../../common/RangeSelector';
 import ElementSelector from '../../common/ElementSelector';

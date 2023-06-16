@@ -1,7 +1,7 @@
 import { observer } from 'mobx-react-lite';
 import { useRef, useEffect, useContext } from 'react';
 
-import type HtmlEditorView from 'model/material/HtmlEditorView';
+import type HtmlEditorView from 'model/material/view/HtmlEditorView';
 import HtmlViewer from './HtmlViewer';
 import context from '../Context';
 import ElementAnnotation from './ElementAnnotation';

@@ -1,8 +1,8 @@
 import { observer, useLocalObservable } from 'mobx-react-lite';
 import { observable } from 'mobx';
 
-import type PdfEditorView from 'model/material/PdfEditorView';
-import { Panels } from 'model/material/PdfEditorView';
+import type PdfEditorView from 'model/material/view/PdfEditorView';
+import { Panels } from 'model/material/view/PdfEditorView';
 
 import Toolbar from './Toolbar';
 import AnnotationList from './AnnotationList';

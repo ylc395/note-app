@@ -3,7 +3,7 @@ import { ReactNode, useContext } from 'react';
 import { Resizable } from 're-resizable';
 import clsx from 'clsx';
 
-import type { OutlineItem } from 'model/material/PdfEditor';
+import type { OutlineItem } from 'model/material/editor/PdfEditor';
 import context from './Context';
 
 const OutlineItemView = observer(function OutlineItemView({

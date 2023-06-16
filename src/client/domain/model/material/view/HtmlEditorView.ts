@@ -1,8 +1,8 @@
 import { makeObservable, observable, action } from 'mobx';
 
-import EditorView from 'model/material/EditorView';
-import type HtmlEditor from './HtmlEditor';
+import EditorView from 'model/material/view/EditorView';
 import type Tile from 'model/workbench/Tile';
+import type HtmlEditor from '../editor/HtmlEditor';
 
 interface State {
   scrollTop: number;
