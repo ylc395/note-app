@@ -1,16 +1,10 @@
-import type { EntityTypes } from 'interface/entity';
-import type { SearchResultVO } from 'interface/search';
-
-export interface SearchQuery {
-  all: string[];
-  content: string[];
-  title: string[];
-  type: EntityTypes[];
-}
+import type { SearchQuery, SearchResult } from 'interface/search';
 
 export interface SearchEngine {
   ready: Promise<void>;
-  search: (q: SearchQuery) => Promise<SearchResultVO[]>;
+  search: (q: SearchQuery) => Promise<SearchResult[]>;
 }
 
 export const token = Symbol();
+
+export { type SearchQuery, type SearchResult, Types, Scopes } from 'interface/search';

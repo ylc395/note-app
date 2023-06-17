@@ -1,15 +1,15 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Inject } from '@nestjs/common';
 
-import SearchService from 'service/SearchService';
-import { Get, Query, createSchemaPipe } from './decorators';
-import { type SearchQuery, searchQuerySchema } from 'interface/search';
+import { type SearchResult, type SearchQuery, searchQuerySchema } from 'interface/search';
+import { token as searchEngineToken, type SearchEngine } from 'infra/searchEngine';
+import { Post, Body, createSchemaPipe } from './decorators';
 
 @Controller()
 export default class SyncController {
-  constructor(private searchService: SearchService) {}
+  constructor(@Inject(searchEngineToken) private searchEngine: SearchEngine) {}
 
-  @Get('/search')
-  async search(@Query(createSchemaPipe(searchQuerySchema)) { q }: SearchQuery): Promise<unknown> {
-    return this.searchService.search(q);
+  @Post('/search')
+  async search(@Body(createSchemaPipe(searchQuerySchema)) q: SearchQuery): Promise<SearchResult[]> {
+    return this.searchEngine.search(q);
   }
 }
