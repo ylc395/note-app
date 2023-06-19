@@ -19,7 +19,7 @@ export default abstract class BaseRepository<Row extends object> {
     const fields = this.fields;
 
     const createdRows = await this.knex(tableName || this.schema.tableName)
-      .insert(rows.map((row) => ('id' in fields ? { ...row, id: this.generateId() } : row)))
+      .insert(rows.map((row) => ('id' in fields ? row : { ...row, id: this.generateId() })))
       .returning(this.knex.raw('*'));
 
     return createdRows;

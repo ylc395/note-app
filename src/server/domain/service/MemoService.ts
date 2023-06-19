@@ -18,6 +18,10 @@ export interface MemoContentUpdatedEvent {
 
 @Injectable()
 export default class MemoService extends BaseService {
+  private get memos() {
+    return this.db.getRepository('memos');
+  }
+
   async create(memo: MemoDTO) {
     if (memo.parentId && memo.isPinned) {
       throw new Error('can not pin child memo');

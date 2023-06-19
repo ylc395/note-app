@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import omit from 'lodash/omit';
 import groupBy from 'lodash/groupBy';
 import intersection from 'lodash/intersection';
@@ -6,7 +6,7 @@ import dayjs from 'dayjs';
 
 import { buildIndex } from 'utils/collection';
 import {
-  type NoteVO,
+  type RawNoteVO,
   type NoteBodyDTO,
   type NoteDTO,
   type NoteQuery,
@@ -18,13 +18,15 @@ import {
 import { EntityTypes } from 'interface/entity';
 import BaseService from './BaseService';
 import RevisionService from './RevisionService';
+import RecyclableService from './RecyclableService';
+import StarService from './StarService';
 
 export const events = {
   bodyUpdated: 'updated.content.note',
 };
 
 export interface NoteBodyUpdatedEvent {
-  id: NoteVO['id'];
+  id: RawNoteVO['id'];
   type: EntityTypes.Note;
   content: NoteBodyVO;
 }
@@ -32,6 +34,12 @@ export interface NoteBodyUpdatedEvent {
 @Injectable()
 export default class NoteService extends BaseService {
   @Inject() private readonly revisionService!: RevisionService;
+  @Inject(forwardRef(() => RecyclableService)) private readonly recyclableService!: RecyclableService;
+  @Inject(forwardRef(() => StarService)) private readonly starService!: StarService;
+
+  private get notes() {
+    return this.db.getRepository('notes');
+  }
 
   async create(note: NoteDTO) {
     return await this.transaction(async () => {
@@ -40,14 +48,14 @@ export default class NoteService extends BaseService {
       }
 
       if (note.duplicateFrom) {
-        return await this.duplicate(note.duplicateFrom);
+        return { ...(await this.duplicate(note.duplicateFrom)), isStar: false };
       }
 
-      return await this.notes.create(note);
+      return { ...(await this.notes.create(note)), isStar: false };
     });
   }
 
-  private async duplicate(noteId: NoteVO['id']) {
+  private async duplicate(noteId: RawNoteVO['id']) {
     if (!(await this.areAvailable(noteId))) {
       throw new Error('note unavailable');
     }
@@ -69,7 +77,7 @@ export default class NoteService extends BaseService {
     return newNote;
   }
 
-  async update(noteId: NoteVO['id'], note: NoteDTO) {
+  async update(noteId: RawNoteVO['id'], note: NoteDTO) {
     await this.assertValidChanges([{ ...note, id: noteId }]);
 
     const result = await this.notes.update(noteId, { ...note, updatedAt: dayjs().unix() });
@@ -78,10 +86,12 @@ export default class NoteService extends BaseService {
       throw new Error('invalid id');
     }
 
-    return result;
+    const isStar = await this.starService.isStar({ type: EntityTypes.Note, id: noteId });
+
+    return { ...result, isStar };
   }
 
-  async updateBody(noteId: NoteVO['id'], { content, isImportant }: NoteBodyDTO) {
+  async updateBody(noteId: RawNoteVO['id'], { content, isImportant }: NoteBodyDTO) {
     const result = await this.transaction(async () => {
       if (!(await this.isWritable(noteId))) {
         throw new Error('note unavailable');
@@ -111,7 +121,7 @@ export default class NoteService extends BaseService {
     return result;
   }
 
-  async getBody(noteId: NoteVO['id']) {
+  async getBody(noteId: RawNoteVO['id']) {
     if (!(await this.areAvailable(noteId))) {
       throw new Error('note unavailable');
     }
@@ -133,27 +143,60 @@ export default class NoteService extends BaseService {
       throw new Error('invalid notes');
     }
 
-    return result;
+    const areStars = await this.starService.areStars(
+      EntityTypes.Note,
+      notes.map(({ id }) => id),
+    );
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return result.map((note) => ({ ...note, isStar: areStars[note.id]! }));
   }
 
   async query(q: NoteQuery) {
     const notes = await this.notes.findAll(q);
-    const areRecyclables = await this.recyclables.areRecyclable(
+    const areRecyclables = await this.recyclableService.areRecyclables(
       EntityTypes.Note,
       notes.map((note) => note.id),
     );
+    const areStars = await this.starService.areStars(
+      EntityTypes.Note,
+      notes.map(({ id }) => id),
+    );
 
-    return notes.filter((note) => !areRecyclables[note.id]);
+    return notes
+      .filter((note) => !areRecyclables[note.id])
+      .map((note) => ({ ...note, isStar: Boolean(areStars[note.id]) }));
   }
 
-  async getTreeFragment(noteId: NoteVO['id']) {
+  async queryOne(noteId: RawNoteVO['id']) {
+    const note = await this.notes.findOneById(noteId);
+
+    if (!note) {
+      throw new Error('not found');
+    }
+
+    const locator = { type: EntityTypes.Note, id: noteId };
+    const isRecyclable = await this.recyclableService.isRecyclable(locator);
+
+    if (!isRecyclable) {
+      throw new Error('not found');
+    }
+
+    return { ...note, isStar: await this.starService.isStar(locator) };
+  }
+
+  async getTreeFragment(noteId: RawNoteVO['id']) {
     if (!(await this.areAvailable(noteId))) {
       throw new Error('invalid id');
     }
 
     const notes = await this.notes.findTreeFragment(noteId);
+    const areStars = await this.starService.areStars(
+      EntityTypes.Note,
+      notes.map(({ id }) => id),
+    );
     const parents = groupBy(notes, 'parentId');
-    const result: NoteVO[] = notes.filter(({ parentId }) => parentId === null);
+    const result: RawNoteVO[] = notes.filter(({ parentId }) => parentId === null);
 
     for (let i = 0; result[i]; i++) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -165,11 +208,12 @@ export default class NoteService extends BaseService {
       }
     }
 
-    return result;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return result.map((note) => ({ ...note, isStar: areStars[note.id]! }));
   }
 
   // todo: unused, maybe remove
-  async getTreePath(noteId: NoteVO['id']) {
+  async getTreePath(noteId: RawNoteVO['id']) {
     if (!(await this.areAvailable(noteId))) {
       throw new Error('invalid id');
     }
@@ -177,7 +221,7 @@ export default class NoteService extends BaseService {
     const notes = await this.notes.findTreeFragment(noteId);
     const notesIndex = buildIndex(notes);
 
-    let currentNote: NoteVO | undefined = notesIndex[noteId];
+    let currentNote: RawNoteVO | undefined = notesIndex[noteId];
     const path: NotePath = [];
 
     while (currentNote) {
@@ -232,7 +276,7 @@ export default class NoteService extends BaseService {
     return this.notes.findAttributes();
   }
 
-  async areAvailable(noteIds: NoteVO['id'][] | NoteVO['id']) {
+  async areAvailable(noteIds: RawNoteVO['id'][] | RawNoteVO['id']) {
     if (Array.isArray(noteIds)) {
       const rows = await this.notes.findAll({ id: noteIds });
 
@@ -240,32 +284,23 @@ export default class NoteService extends BaseService {
         return false;
       }
 
-      const areRecyclables = Object.values(await this.recyclables.areRecyclable(EntityTypes.Note, noteIds));
+      const areRecyclables = Object.values(await this.recyclableService.areRecyclables(EntityTypes.Note, noteIds));
       return areRecyclables.every((v) => v === false);
     }
 
     return (
       Boolean(await this.notes.findOneById(noteIds)) &&
-      !(await this.recyclables.isRecyclable({ type: EntityTypes.Note, id: noteIds }))
+      !(await this.recyclableService.isRecyclable({ type: EntityTypes.Note, id: noteIds }))
     );
   }
 
-  async isWritable(noteId: NoteVO['id']) {
+  async isWritable(noteId: RawNoteVO['id']) {
     const row = await this.notes.findOneById(noteId);
 
     if (!row) {
       return false;
     }
 
-    return !(await this.recyclables.isRecyclable({ type: EntityTypes.Note, id: noteId }));
-  }
-
-  async putIntoRecyclable(ids: NoteVO['id'][]) {
-    if (!this.areAvailable(ids)) {
-      throw new Error('not available');
-    }
-
-    const allIds = [...ids, ...(await this.notes.findAllDescendantIds(ids))];
-    return await this.recyclables.put(EntityTypes.Note, allIds);
+    return !(await this.recyclableService.isRecyclable({ type: EntityTypes.Note, id: noteId }));
   }
 }

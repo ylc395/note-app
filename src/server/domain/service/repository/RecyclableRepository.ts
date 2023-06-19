@@ -5,7 +5,9 @@ export type DeletedRecord = EntityLocator & { deletedAt: number };
 
 export interface RecyclablesRepository {
   put: (type: EntityTypes, ids: EntityId[]) => Promise<RecyclableRecord[]>;
-  isRecyclable: (entity: EntityLocator) => Promise<boolean>;
-  areRecyclable: (type: EntityTypes, ids: EntityLocator['id'][]) => Promise<Record<EntityLocator['id'], boolean>>;
+  // not including hard deleted record
+  findOneByLocator: (entity: EntityLocator) => Promise<RecyclableRecord | null>;
+  // not including hard deleted record
+  findAllByLocator: (type: EntityTypes, ids: EntityId[]) => Promise<RecyclableRecord[]>;
   getHardDeletedRecord: (entity: EntityLocator) => Promise<DeletedRecord | null>;
 }

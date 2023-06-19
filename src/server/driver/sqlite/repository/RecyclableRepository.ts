@@ -1,10 +1,8 @@
-import zipObject from 'lodash/zipObject';
 import differenceWith from 'lodash/differenceWith';
 import isEqual from 'lodash/isEqual';
 
 import type { EntityLocator, EntityTypes } from 'interface/entity';
 import type { RecyclablesRepository } from 'service/repository/RecyclableRepository';
-import { buildIndex } from 'utils/collection';
 
 import BaseRepository from './BaseRepository';
 import schema, { type Row } from '../schema/recyclable';
@@ -23,25 +21,26 @@ export default class SqliteRecyclableRepository extends BaseRepository<Row> impl
     return recyclablesRows.map((row) => ({ ...row, entityId: String(row.entityId) }));
   }
 
-  async isRecyclable({ id: entityId, type: entityType }: EntityLocator) {
-    const row = await this.knex<Row>(this.schema.tableName).where({ entityId, entityType, isHard: 0 }).first();
-    return Boolean(row);
+  async findOneByLocator({ id: entityId, type: entityType }: EntityLocator) {
+    const row = await this.knex<Row>(this.schema.tableName)
+      .select('entityId', 'entityType', 'deletedAt')
+      .where({ entityId, entityType, isHard: 0 })
+      .first();
+
+    return row || null;
   }
 
-  async areRecyclable(type: EntityTypes, ids: EntityLocator['id'][]) {
+  async findAllByLocator(type: EntityTypes, ids: EntityLocator['id'][]) {
     if (ids.length === 0) {
-      return {};
+      return [];
     }
 
     const rows = await this.knex<Row>(this.schema.tableName)
+      .select('entityId', 'entityType', 'deletedAt')
       .whereIn('entityId', ids)
-      .andWhere({ entityType: type, isHard: 0 });
-    const index = buildIndex(rows, 'entityId');
+      .andWhere({ entityType: type });
 
-    return zipObject(
-      ids,
-      ids.map((id) => Boolean(index[id])),
-    );
+    return rows;
   }
 
   async getHardDeletedRecord({ id: entityId, type: entityType }: EntityLocator) {

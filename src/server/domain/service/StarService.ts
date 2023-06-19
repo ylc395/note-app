@@ -1,19 +1,30 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import differenceWith from 'lodash/differenceWith';
 import groupBy from 'lodash/groupBy';
 import mapValues from 'lodash/mapValues';
+import zipObject from 'lodash/zipObject';
 
-import { type EntityId, EntityTypes } from 'interface/entity';
+import { type EntityId, EntityTypes, EntityLocator } from 'interface/entity';
 import { normalizeTitle } from 'interface/note';
 import type { StarRecord } from 'interface/star';
 import { buildIndex } from 'utils/collection';
 
 import BaseService from './BaseService';
 import NoteService from './NoteService';
+import RecyclableService from './RecyclableService';
 
 @Injectable()
 export default class StarService extends BaseService {
-  @Inject() private readonly noteService!: NoteService;
+  @Inject(forwardRef(() => NoteService)) private readonly noteService!: NoteService;
+  @Inject() private readonly recyclableService!: RecyclableService;
+
+  private get stars() {
+    return this.db.getRepository('stars');
+  }
+
+  private get notes() {
+    return this.db.getRepository('notes');
+  }
 
   async create(type: EntityTypes, ids: EntityId[]) {
     if (ids.length === 0) {
@@ -53,9 +64,9 @@ export default class StarService extends BaseService {
     );
 
     const recyclableGroups: Record<EntityTypes, Record<string, boolean>> = {
-      [EntityTypes.Note]: await this.recyclables.areRecyclable(EntityTypes.Note, idGroups[EntityTypes.Note]),
-      [EntityTypes.Memo]: await this.recyclables.areRecyclable(EntityTypes.Memo, idGroups[EntityTypes.Memo]),
-      [EntityTypes.Material]: await this.recyclables.areRecyclable(
+      [EntityTypes.Note]: await this.recyclableService.areRecyclables(EntityTypes.Note, idGroups[EntityTypes.Note]),
+      [EntityTypes.Memo]: await this.recyclableService.areRecyclables(EntityTypes.Memo, idGroups[EntityTypes.Memo]),
+      [EntityTypes.Material]: await this.recyclableService.areRecyclables(
         EntityTypes.Material,
         idGroups[EntityTypes.Material],
       ),
@@ -78,5 +89,20 @@ export default class StarService extends BaseService {
 
   async remove(id: StarRecord['id']) {
     await this.stars.remove(id);
+  }
+
+  async areStars(type: EntityTypes, ids: EntityId[]) {
+    const stars = await this.stars.findAll({ entityType: type, entityId: ids });
+    const index = buildIndex(stars, 'entityId');
+
+    return zipObject(
+      ids,
+      ids.map((id) => Boolean(index[id])),
+    );
+  }
+
+  async isStar(entity: EntityLocator) {
+    const stars = await this.stars.findAll({ entityId: entity.id, entityType: entity.type });
+    return stars.length > 0;
   }
 }

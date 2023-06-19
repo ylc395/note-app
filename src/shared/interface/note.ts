@@ -5,15 +5,15 @@ import type { Starable } from './star';
 import type { EntityId } from './entity';
 
 export const noteDTOSchema = object({
-  title: string().optional(),
-  isReadonly: boolean().optional(),
-  userUpdatedAt: number().optional(),
-  userCreatedAt: number().optional(),
-  parentId: union([zodNull(), string()]).optional(),
-  icon: union([string().regex(/^(emoji:|file:).+/), zodNull()]).optional(),
-  duplicateFrom: string().optional(),
-  attributes: record(string().min(1), string().min(1)).optional(),
-});
+  title: string(),
+  isReadonly: boolean(),
+  userUpdatedAt: number(),
+  userCreatedAt: number(),
+  parentId: union([zodNull(), string()]),
+  icon: union([string().regex(/^(emoji:|file:).+/), zodNull()]),
+  attributes: record(string().min(1), string().min(1)),
+  duplicateFrom: string(),
+}).partial();
 
 export const notesDTOSchema = array(noteDTOSchema.extend({ id: string() }).omit({ duplicateFrom: true }));
 
@@ -21,7 +21,7 @@ export type NotesDTO = Infer<typeof notesDTOSchema>;
 
 export type NoteDTO = Infer<typeof noteDTOSchema>;
 
-export type NoteVO = {
+export interface RawNoteVO {
   title: string;
   isReadonly: boolean;
   id: EntityId;
@@ -33,7 +33,9 @@ export type NoteVO = {
   createdAt: number;
   userCreatedAt: number;
   attributes: Record<string, string>;
-} & Starable;
+}
+
+export type NoteVO = RawNoteVO & Starable;
 
 export type NoteAttributesVO = Record<string, string[]>;
 
@@ -55,7 +57,7 @@ export type NoteQuery = Infer<typeof noteQuerySchema>;
 type NotePathNode = Pick<NoteVO, 'title' | 'icon' | 'id'>;
 export type NotePath = Array<NotePathNode & { siblings: NotePathNode[] }>;
 
-export function normalizeTitle(note?: NoteVO) {
+export function normalizeTitle(note?: RawNoteVO) {
   if (!note) {
     return '';
   }

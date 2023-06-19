@@ -1,23 +1,23 @@
-import type { NoteBodyDTO, NoteDTO, NoteVO, NotesDTO, NoteAttributesVO, NoteBodyVO } from 'interface/note';
+import type { NoteBodyDTO, NoteDTO, RawNoteVO, NotesDTO, NoteAttributesVO, NoteBodyVO } from 'interface/note';
 
 export type NoteQuery = {
-  parentId?: NoteVO['parentId'] | NoteVO['id'][];
-  id?: NoteVO['id'][];
+  parentId?: RawNoteVO['parentId'] | RawNoteVO['id'][];
+  id?: RawNoteVO['id'][];
   updatedAt?: number;
 };
 
-export type Note = NoteDTO & Partial<Pick<NoteVO, 'updatedAt' | 'createdAt' | 'id'>>;
+export type InternalNoteDTO = NoteDTO & Partial<Pick<RawNoteVO, 'updatedAt' | 'createdAt' | 'id'>>;
 
 export interface NoteRepository {
-  create: (note: Note) => Promise<NoteVO>;
-  update: (noteId: NoteVO['id'], note: Note) => Promise<NoteVO | null>;
-  batchUpdate: (notes: NotesDTO) => Promise<NoteVO[]>;
-  updateBody: (noteId: NoteVO['id'], noteBody: NoteBodyDTO['content']) => Promise<NoteBodyVO | null>;
-  findAll: (query?: NoteQuery) => Promise<NoteVO[]>;
-  findBody: (noteId: NoteVO['id']) => Promise<NoteBodyVO | null>;
-  findAllDescendantIds: (noteIds: NoteVO['id'][]) => Promise<NoteVO['id'][]>;
-  findTreeFragment: (noteId: NoteVO['id']) => Promise<NoteVO[]>;
+  create: (note: InternalNoteDTO) => Promise<RawNoteVO>;
+  update: (noteId: RawNoteVO['id'], note: InternalNoteDTO) => Promise<RawNoteVO | null>;
+  batchUpdate: (notes: NotesDTO) => Promise<RawNoteVO[]>;
+  updateBody: (noteId: RawNoteVO['id'], noteBody: NoteBodyDTO['content']) => Promise<NoteBodyVO | null>;
+  findAll: (query?: NoteQuery) => Promise<RawNoteVO[]>;
+  findBody: (noteId: RawNoteVO['id']) => Promise<NoteBodyVO | null>;
+  findAllDescendantIds: (noteIds: RawNoteVO['id'][]) => Promise<RawNoteVO['id'][]>;
+  findTreeFragment: (noteId: RawNoteVO['id']) => Promise<RawNoteVO[]>;
   findAttributes: () => Promise<NoteAttributesVO>;
-  findOneById: (id: NoteVO['id']) => Promise<NoteVO | null>;
-  removeById: (noteId: NoteVO['id'] | NoteVO['id'][]) => Promise<void>;
+  findOneById: (id: RawNoteVO['id']) => Promise<RawNoteVO | null>;
+  removeById: (noteId: RawNoteVO['id'] | RawNoteVO['id'][]) => Promise<void>;
 }

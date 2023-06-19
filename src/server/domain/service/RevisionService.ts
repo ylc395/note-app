@@ -2,7 +2,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { createPatch, applyPatch } from 'diff';
 
 import { type EntityLocator, EntityTypes } from 'interface/entity';
-import type { NoteVO } from 'interface/note';
+import type { RawNoteVO } from 'interface/note';
 import type { MemoVO } from 'interface/memo';
 import type { RevisionVO } from 'interface/revision';
 
@@ -16,6 +16,18 @@ export default class RevisionService extends BaseService {
   private async submit(entity: EntityLocator, { newContent, oldContent }: { newContent: string; oldContent?: string }) {
     const diff = createPatch(`${entity.type}-${entity.id}`, oldContent || '', newContent);
     await this.revisions.create({ entityId: entity.id, entityType: entity.type, diff });
+  }
+
+  private get memos() {
+    return this.db.getRepository('memos');
+  }
+
+  private get notes() {
+    return this.db.getRepository('notes');
+  }
+
+  private get revisions() {
+    return this.db.getRepository('revisions');
   }
 
   @OnEvent('updated.content.*')
@@ -35,7 +47,7 @@ export default class RevisionService extends BaseService {
   }
 
   private async getCreatedAt(entityLocator: EntityLocator) {
-    let entity: NoteVO | MemoVO | null;
+    let entity: RawNoteVO | MemoVO | null;
 
     switch (entityLocator.type) {
       case EntityTypes.Note:

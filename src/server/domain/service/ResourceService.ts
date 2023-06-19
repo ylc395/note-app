@@ -14,6 +14,11 @@ import BaseService from './BaseService';
 @Injectable()
 export default class ResourceService extends BaseService {
   @Inject(downloaderToken) private readonly downloader!: Downloader;
+
+  private get resources() {
+    return this.db.getRepository('resources');
+  }
+
   async handleUpload(files: ResourcesDTO['files']) {
     if (isUrls(files)) {
       const existedFiles = buildIndex(await this.resources.findAll({ sourceUrl: files }), 'sourceUrl');

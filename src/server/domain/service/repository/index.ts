@@ -17,18 +17,3 @@ export default interface Repositories {
   revisions: RevisionRepository;
   synchronization: SynchronizationRepository;
 }
-
-const REPOSITORY_NAMES = [
-  'notes',
-  'recyclables',
-  'stars',
-  'resources',
-  'memos',
-  'materials',
-  'revisions',
-  'synchronization',
-] satisfies (keyof Repositories)[];
-
-export const isRepositoryName = function (key: string | symbol): key is keyof Repositories {
-  return (REPOSITORY_NAMES as (string | symbol)[]).includes(key);
-};

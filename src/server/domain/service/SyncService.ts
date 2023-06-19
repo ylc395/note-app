@@ -6,7 +6,7 @@ import fm from 'front-matter';
 import { token as appClientToken, type AppClient } from 'infra/appClient';
 import { type EntityLocator, EntityTypes } from 'interface/entity';
 import type { Conflict, Log } from 'infra/synchronizer';
-import type { NoteVO } from 'interface/note';
+import type { RawNoteVO } from 'interface/note';
 import type { MemoVO } from 'interface/memo';
 import { type SyncTargetFactory, type SyncTarget, token as syncTargetFactoryToken } from 'infra/synchronizer';
 
@@ -44,14 +44,30 @@ export default class SyncService extends BaseService {
     return { metadata: attributes, content: body };
   }
 
-  private static serialize(entity: NoteVO | MemoVO, { content, type }: { type: EntityTypes; content: string }) {
+  private get memos() {
+    return this.db.getRepository('memos');
+  }
+
+  private get synchronization() {
+    return this.db.getRepository('synchronization');
+  }
+
+  private get notes() {
+    return this.db.getRepository('notes');
+  }
+
+  private get recyclables() {
+    return this.db.getRepository('recyclables');
+  }
+
+  private static serialize(entity: RawNoteVO | MemoVO, { content, type }: { type: EntityTypes; content: string }) {
     const attributes: EntityMetadata = {
       id: entity.id,
       updatedAt: entity.updatedAt,
       ...(type === EntityTypes.Note
         ? {
             type: EntityTypes.Note,
-            title: (entity as NoteVO).title,
+            title: (entity as RawNoteVO).title,
           }
         : {
             type: EntityTypes.Memo,
@@ -253,7 +269,7 @@ export default class SyncService extends BaseService {
   }
 
   private async getLocalEntity({ type, id }: EntityLocator) {
-    let metadata: NoteVO | MemoVO | null = null;
+    let metadata: RawNoteVO | MemoVO | null = null;
     let content: string | null = null;
 
     switch (type) {

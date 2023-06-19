@@ -2,22 +2,20 @@ import omit from 'lodash/omit';
 import mapValues from 'lodash/mapValues';
 import uniq from 'lodash/uniq';
 
-import { type EntityId, EntityTypes } from 'interface/entity';
-import type { NoteRepository, NoteQuery, Note } from 'service/repository/NoteRepository';
-import type { NoteDTO, NoteVO, NotesDTO, NoteAttributesVO } from 'interface/note';
+import type { EntityId } from 'interface/entity';
+import type { NoteRepository, NoteQuery, InternalNoteDTO } from 'service/repository/NoteRepository';
+import type { NoteDTO, NoteVO, NotesDTO, NoteAttributesVO, RawNoteVO } from 'interface/note';
 
 import BaseRepository from './BaseRepository';
 import noteSchema, { type Row } from '../schema/note';
-import starSchema, { type Row as StarRow } from '../schema/star';
 
 interface RowPatch {
   childrenCount?: NoteVO['childrenCount'];
-  starId?: StarRow['id'] | null;
 }
 
 export default class SqliteNoteRepository extends BaseRepository<Row> implements NoteRepository {
   protected readonly schema = noteSchema;
-  async create(note: Note): Promise<NoteVO> {
+  async create(note: InternalNoteDTO): Promise<RawNoteVO> {
     const row = await this._createOrUpdate(SqliteNoteRepository.dtoToRow(note));
 
     return this.rowToVO(row);
@@ -33,7 +31,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
     return row.body;
   }
 
-  async update(id: NoteVO['id'], note: Note) {
+  async update(id: NoteVO['id'], note: InternalNoteDTO) {
     const row = await this._createOrUpdate(SqliteNoteRepository.dtoToRow(note), id);
 
     if (!row) {
@@ -61,17 +59,9 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
     } = this;
 
     const sql = knex
-      .select<(Row & { childrenCount: number; starId: StarRow['id'] | null })[]>(
-        knex.raw('parent.*'),
-        knex.raw('count(child.id) as childrenCount'),
-        knex.raw(`${starSchema.tableName}.id as starId`),
-      )
+      .select<(Row & { childrenCount: number })[]>(knex.raw('parent.*'), knex.raw('count(child.id) as childrenCount'))
       .from(`${noteTable} as parent`)
       .leftJoin({ child: noteTable }, 'child.parentId', 'parent.id')
-      .leftJoin(starSchema.tableName, function () {
-        this.on(`${starSchema.tableName}.entityType`, knex.raw(EntityTypes.Note));
-        this.on(`${starSchema.tableName}.entityId`, 'parent.id');
-      })
       .groupBy('parent.id');
 
     for (const [k, v] of Object.entries(query || {})) {
@@ -168,13 +158,12 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
     return children;
   }
 
-  private rowToVO(row: Row & RowPatch, patch?: RowPatch): NoteVO {
+  private rowToVO(row: Row & RowPatch, patch?: RowPatch): RawNoteVO {
     return {
-      ...omit(row, ['body', 'starId']),
+      ...omit(row, ['body']),
       parentId: row.parentId || null,
       isReadonly: Boolean(row.isReadonly),
       childrenCount: patch?.childrenCount || row.childrenCount || 0,
-      isStar: Boolean(patch?.starId || row.starId || false),
       attributes: JSON.parse(row.attributes),
     };
   }
