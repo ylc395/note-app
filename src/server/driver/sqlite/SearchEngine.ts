@@ -1,5 +1,5 @@
-import type { Knex } from 'knex';
 import { Injectable } from '@nestjs/common';
+import { type Kysely, sql } from 'kysely';
 
 import { type SearchEngine, type SearchQuery, Types, Scopes, SearchResult } from 'infra/searchEngine';
 import SqliteDb from './Database';
@@ -7,49 +7,54 @@ import noteTable from './schema/note';
 
 const NOTE_FTS_TABLE = 'notes_fts';
 
+interface SearchEngineDb {
+  [NOTE_FTS_TABLE]: { id: string; title: string; body: string };
+}
 @Injectable()
 export default class SqliteSearchEngine implements SearchEngine {
-  private knex?: Knex;
+  private db?: Kysely<SearchEngineDb>;
   readonly ready: Promise<void>;
 
-  constructor(private readonly db: SqliteDb) {
+  constructor(private sqliteDb: SqliteDb) {
     this.ready = this.init();
   }
 
   private async init() {
-    this.knex = await this.db.getKnex();
+    this.db = (await this.sqliteDb.getDb()) as unknown as Kysely<SearchEngineDb>;
     await Promise.all([this.createNoteFtsTable()]);
   }
 
   private async createNoteFtsTable() {
-    if (!this.knex) {
+    if (!this.db) {
       throw new Error('search engine not ready');
     }
 
-    if (!(await this.knex.schema.hasTable(NOTE_FTS_TABLE))) {
-      await this.knex.raw(
-        `CREATE VIRTUAL TABLE ${NOTE_FTS_TABLE} USING fts5(id UNINDEXED, title, body, content="${noteTable.tableName}");`,
-      );
-      await this.knex.raw(`
+    if (this.sqliteDb.hasTable(NOTE_FTS_TABLE)) {
+      return;
+    }
+
+    await sql`CREATE VIRTUAL TABLE IF NOT EXISTS ${NOTE_FTS_TABLE} USING fts5(id UNINDEXED, title, body, content="${noteTable.tableName}");`.execute(
+      this.db,
+    );
+    await sql`
         CREATE TRIGGER ${NOTE_FTS_TABLE}_ai AFTER INSERT ON ${noteTable.tableName}
           BEGIN 
             INSERT INTO ${NOTE_FTS_TABLE} (title, body) VALUES (new.title, new.body);
           END;
-      `);
-      await this.knex.raw(`
+      `.execute(this.db);
+    await sql`
         CREATE TRIGGER ${NOTE_FTS_TABLE}_ad AFTER DELETE on ${noteTable.tableName}
           BEGIN
             INSERT INTO ${NOTE_FTS_TABLE} (${NOTE_FTS_TABLE}, rowid, title, body) VALUES ('delete', old.rowid, old.title, old.body);
           END;
-      `);
-      await this.knex.raw(`
+      `.execute(this.db);
+    await sql`
         CREATE TRIGGER ${NOTE_FTS_TABLE}_au AFTER UPDATE on ${noteTable.tableName}
           BEGIN
             INSERT INTO ${NOTE_FTS_TABLE} (${NOTE_FTS_TABLE}, rowid, title, body) VALUES ('delete', old.rowid, old.title, old.body);
             INSERT INTO ${NOTE_FTS_TABLE} (rowid, title, body) VALUES (new.rowid, new.title, new.body);
           END;
-      `);
-    }
+      `.execute(this.db);
   }
 
   async search(q: SearchQuery) {
@@ -68,30 +73,32 @@ export default class SqliteSearchEngine implements SearchEngine {
   }
 
   private async searchNotes(q: SearchQuery): Promise<SearchResult[]> {
-    if (!this.knex) {
+    if (!this.db) {
       throw new Error('no knex');
     }
 
     const term = q.terms.join(' ');
-    const query = this.knex(NOTE_FTS_TABLE).select(
-      this.knex.raw(`snippet(${NOTE_FTS_TABLE}, 1, "[", "]", "...",  10) as title`),
-      this.knex.raw(`snippet(${NOTE_FTS_TABLE}, 2, "[", "]", "...",  10) as content`),
-      'id as entityId',
-    );
+    const query = this.db
+      .selectFrom(NOTE_FTS_TABLE)
+      .select([
+        sql<string>`snippet(${NOTE_FTS_TABLE}, 1, "[", "]", "...",  10)`.as('title'),
+        sql<string>`snippet(${NOTE_FTS_TABLE}, 2, "[", "]", "...",  10)`.as('content'),
+        'id as entityId',
+      ]);
 
     if (!q.scopes) {
-      query.where(NOTE_FTS_TABLE, term);
+      query.where(sql`NOTE_FTS_TABLE`, '=', term);
     } else {
       if (q.scopes.includes(Scopes.Body)) {
-        query.andWhereRaw('body MATCH ?', [term]);
+        query.where('body', 'match', term);
       }
 
       if (q.scopes.includes(Scopes.Title)) {
-        query.andWhereRaw('title MATCH ?', [term]);
+        query.where('title', 'match', term);
       }
     }
 
-    const result = await query;
+    const result = await query.execute();
 
     return result.map((row) => ({ ...row, type: Types.Note }));
   }

@@ -18,18 +18,6 @@ export default class RevisionService extends BaseService {
     await this.revisions.create({ entityId: entity.id, entityType: entity.type, diff });
   }
 
-  private get memos() {
-    return this.db.getRepository('memos');
-  }
-
-  private get notes() {
-    return this.db.getRepository('notes');
-  }
-
-  private get revisions() {
-    return this.db.getRepository('revisions');
-  }
-
   @OnEvent('updated.content.*')
   async createRevision({ content, ...entityLocator }: NoteBodyUpdatedEvent | MemoContentUpdatedEvent, force?: true) {
     const latestRevision = await this.revisions.findLatest(entityLocator);

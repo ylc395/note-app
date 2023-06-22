@@ -37,12 +37,8 @@ export default class NoteService extends BaseService {
   @Inject(forwardRef(() => RecyclableService)) private readonly recyclableService!: RecyclableService;
   @Inject(forwardRef(() => StarService)) private readonly starService!: StarService;
 
-  private get notes() {
-    return this.db.getRepository('notes');
-  }
-
   async create(note: NoteDTO) {
-    return await this.transaction(async () => {
+    return await this.db.transaction(async () => {
       if (note.parentId && !(await this.areAvailable(note.parentId))) {
         throw new Error('invalid parentId');
       }
@@ -69,9 +65,7 @@ export default class NoteService extends BaseService {
 
     targetNote.title = `${normalizeTitle(targetNote)} - 副本`;
 
-    const newNote = await this.notes.create(
-      omit(targetNote, ['id', 'userCreatedAt', 'userUpdatedAt', 'createdAt', 'updatedAt']),
-    );
+    const newNote = await this.notes.create(omit(targetNote, ['id', 'createdAt', 'updatedAt']));
 
     await this.notes.updateBody(noteId, targetNoteBody);
     return newNote;
@@ -92,7 +86,7 @@ export default class NoteService extends BaseService {
   }
 
   async updateBody(noteId: RawNoteVO['id'], { content, isImportant }: NoteBodyDTO) {
-    const result = await this.transaction(async () => {
+    const result = await this.db.transaction(async () => {
       if (!(await this.isWritable(noteId))) {
         throw new Error('note unavailable');
       }

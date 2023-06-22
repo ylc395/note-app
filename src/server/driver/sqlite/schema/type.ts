@@ -1,11 +1,11 @@
-import type { Knex } from 'knex';
+import type { DefaultValueExpression } from 'kysely/dist/cjs/parser/default-value-parser';
 
 interface Fields {
   [k: string]: {
     primary?: true;
     type: 'text' | 'integer' | 'binary';
     notNullable?: true;
-    defaultTo?: number | string | ((knex: Knex) => Knex.Value);
+    defaultTo?: DefaultValueExpression;
     unique?: true;
   };
 }
@@ -15,8 +15,8 @@ interface Restrictions {
   foreign?: Record<string, string>;
 }
 
-export interface Schema {
-  tableName: string;
+export interface Schema<T extends string = string> {
+  tableName: T;
   fields: Fields;
   restrictions?: Restrictions;
 }

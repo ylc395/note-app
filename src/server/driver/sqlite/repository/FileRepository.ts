@@ -11,7 +11,11 @@ export default class FileRepository extends BaseRepository<Row> {
   }
   async findOrCreate({ data, mimeType }: { data: ArrayBuffer; mimeType: string }) {
     const hash = createHash('md5').update(new Uint8Array(data)).digest('base64');
-    const existedFile = await this.knex<Row>(this.schema.tableName).where({ hash }).first();
+    const existedFile = await this.db
+      .selectFrom(this.tableName)
+      .selectAll()
+      .where('hash', '=', hash)
+      .executeTakeFirst();
 
     if (existedFile) {
       return existedFile;

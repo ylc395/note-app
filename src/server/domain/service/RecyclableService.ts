@@ -10,14 +10,6 @@ import NoteService from './NoteService';
 export default class RecyclableService extends BaseService {
   @Inject(forwardRef(() => NoteService)) private readonly noteService!: NoteService;
 
-  private get recyclables() {
-    return this.db.getRepository('recyclables');
-  }
-
-  private get notes() {
-    return this.db.getRepository('notes');
-  }
-
   async putNotes(ids: EntityId[]) {
     const allIds = [...ids, ...(await this.notes.findAllDescendantIds(ids))];
     const areAvailable = await this.noteService.areAvailable(allIds);

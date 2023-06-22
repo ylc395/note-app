@@ -15,39 +15,41 @@ export default class SqliteFileRepository extends BaseRepository<Row> implements
   protected readonly schema = schema;
   private readonly fileSchema = fileSchema;
 
-  private readonly files = new FileRepository(this.knex);
+  private readonly files = new FileRepository(this.db);
 
   async create(file: File) {
     const existedFileData = await this.files.findOrCreate(file);
     const fileId = existedFileData.id;
 
-    return (await this.findAll({ id: [fileId] }))[0];
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return (await this.findAll({ id: [fileId] }))[0]!;
   }
 
-  private getFindSql(fields?: string[]) {
-    return this.knex(this.schema.tableName)
-      .select(fields || [`${this.schema.tableName}.id`, 'name', 'sourceUrl', 'mimeType', 'createdAt', 'size'])
-      .join(this.fileSchema.tableName, `${this.schema.tableName}.fileId`, `${this.fileSchema.tableName}.id`);
+  private getFindSql() {
+    return this.db
+      .selectFrom(this.schema.tableName)
+      .innerJoin(this.fileSchema.tableName, `${this.schema.tableName}.fileId`, `${this.fileSchema.tableName}.id`)
+      .select([`${this.schema.tableName}.id`, 'name', 'sourceUrl', 'mimeType', 'createdAt', 'size']);
   }
 
   async findAll(query: FileQuery | { id: Row['id'][] }) {
     const sql = this.getFindSql();
 
     if ('id' in query) {
-      sql.whereIn(`${this.schema.tableName}.id`, query.id);
+      sql.where(`${this.schema.tableName}.id`, 'in', query.id);
     }
 
     if ('sourceUrl' in query) {
-      sql.whereIn(`${this.schema.tableName}.sourceUrl`, query.sourceUrl);
+      sql.where(`${this.schema.tableName}.sourceUrl`, 'in', query.sourceUrl);
     }
 
-    return await sql;
+    return await sql.execute();
   }
 
   async batchCreate(files: File[]) {
     const hashes = files.map((file) => createHash('md5').update(new Uint8Array(file.data)).digest('base64'));
     const existedFileDataRows = buildIndex(
-      await this.knex<FileRow>(this.fileSchema.tableName).whereIn('hash', hashes).select('id', 'hash'),
+      await this.db.selectFrom(this.fileSchema.tableName).where('hash', 'in', hashes).select(['id', 'hash']).execute(),
       'hash',
     );
 
@@ -96,16 +98,20 @@ export default class SqliteFileRepository extends BaseRepository<Row> implements
   }
 
   async findOneById(id: ResourceVO['id']) {
-    return (await this.getFindSql().where(`${this.schema.tableName}.id`, id).first()) || null;
+    return (await this.getFindSql().where(`${this.schema.tableName}.id`, '=', id).executeTakeFirst()) || null;
   }
 
   async findFileById(id: ResourceVO['id']) {
-    const row = (await this.getFindSql(['mimeType', 'data']).where(`${this.schema.tableName}.id`, id).first()) || null;
+    const row =
+      (await this.getFindSql()
+        .select(['mimeType', 'data'])
+        .where(`${this.schema.tableName}.id`, '=', id)
+        .executeTakeFirst()) || null;
 
     if (row) {
-      row.data = row.data.buffer;
+      return { ...row, data: (row.data as Uint16Array).buffer };
     }
 
-    return row;
+    return null;
   }
 }

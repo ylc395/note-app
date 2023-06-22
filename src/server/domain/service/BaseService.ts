@@ -7,17 +7,35 @@ import { token as databaseToken, type Database } from 'infra/database';
 export default class BaseService {
   constructor(@Inject(databaseToken) protected readonly db: Database, protected readonly eventEmitter: EventEmitter2) {}
 
-  protected async transaction<T>(cb: () => Promise<T>): Promise<T> {
-    const trx = await this.db.transactionManager.start();
-    return await this.db.transactionManager.run(trx, async () => {
-      try {
-        const result = await cb();
-        await this.db.transactionManager.commit();
-        return result;
-      } catch (error) {
-        await this.db.transactionManager.rollback();
-        throw error;
-      }
-    });
+  protected get materials() {
+    return this.db.getRepository('materials');
+  }
+
+  protected get memos() {
+    return this.db.getRepository('memos');
+  }
+
+  protected get notes() {
+    return this.db.getRepository('notes');
+  }
+
+  protected get recyclables() {
+    return this.db.getRepository('recyclables');
+  }
+
+  protected get resources() {
+    return this.db.getRepository('resources');
+  }
+
+  protected get revisions() {
+    return this.db.getRepository('revisions');
+  }
+
+  protected get stars() {
+    return this.db.getRepository('stars');
+  }
+
+  protected get synchronization() {
+    return this.db.getRepository('synchronization');
   }
 }

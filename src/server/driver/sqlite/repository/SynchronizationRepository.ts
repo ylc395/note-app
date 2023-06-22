@@ -12,7 +12,12 @@ export default class SqliteSynchronizationRepository extends BaseRepository<Row>
   protected readonly schema = syncEntitySchema;
   @Inject(kvDatabaseToken) private readonly kvDb!: KvDatabase;
   async getEntitySyncAt({ id: entityId, type: entityType }: EntityLocator) {
-    const row = await this.knex<Row>(this.schema.tableName).where({ entityId, entityType }).first();
+    const row = await this.db
+      .selectFrom(this.schema.tableName)
+      .selectAll()
+      .where('entityId', '=', entityId)
+      .where('entityType', '=', entityType)
+      .executeTakeFirst();
 
     return row ? row.syncAt : null;
   }
@@ -30,9 +35,13 @@ export default class SqliteSynchronizationRepository extends BaseRepository<Row>
     const row = await this.getEntitySyncAt({ id: entityId, type: entityType });
 
     if (row) {
-      await this.knex<Row>(this.schema.tableName).update({ syncAt }).where({ entityId, entityType });
+      await this.db
+        .updateTable(this.schema.tableName)
+        .set({ syncAt })
+        .where('entityId', '=', entityId)
+        .where('entityType', '=', entityType);
     } else {
-      await this.knex<Row>(this.schema.tableName).insert({ syncAt, entityId, entityType });
+      await this.db.insertInto(this.schema.tableName).values({ syncAt, entityId, entityType });
     }
   }
 }

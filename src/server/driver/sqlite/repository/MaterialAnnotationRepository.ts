@@ -28,13 +28,17 @@ export default class MaterialAnnotationRepository extends BaseRepository<Row> {
   }
 
   async findAll(materialId: MaterialVO['id']) {
-    const rows = await this.knex<Row>(this.schema.tableName).where('materialId', materialId);
+    const rows = await this.db
+      .selectFrom(this.schema.tableName)
+      .where('materialId', '=', materialId)
+      .selectAll()
+      .execute();
 
     return rows.map(MaterialAnnotationRepository.rowToVO);
   }
 
   async findOneById(id: AnnotationVO['id']) {
-    const row = await this.knex<Row>(this.schema.tableName).where('id', id).first();
+    const row = await this.db.selectFrom(this.schema.tableName).where('id', '=', id).selectAll().executeTakeFirst();
 
     return row ? MaterialAnnotationRepository.rowToVO(row) : null;
   }
@@ -47,15 +51,23 @@ export default class MaterialAnnotationRepository extends BaseRepository<Row> {
   }
 
   async remove(annotationId: AnnotationVO['id']) {
-    const count = await this.knex<Row>(this.tableName).delete().where({ id: annotationId });
-    return count === 1;
+    const { numDeletedRows } = await this.db
+      .deleteFrom(this.tableName)
+      .where('id', '=', annotationId)
+      .executeTakeFirst();
+
+    return numDeletedRows === 1n;
   }
 
   async update(annotationId: AnnotationVO['id'], { comment, ...attr }: AnnotationPatchDTO) {
     let newMeta;
 
     if (!isEmpty(attr)) {
-      const row = await this.knex<Row>(this.tableName).where('id', annotationId).first();
+      const row = await this.db
+        .selectFrom(this.tableName)
+        .where('id', '=', annotationId)
+        .select('meta')
+        .executeTakeFirst();
 
       if (!row) {
         return null;

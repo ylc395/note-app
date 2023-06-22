@@ -1,4 +1,4 @@
-import { union, boolean, number, object, string, null as zodNull, type infer as Infer, array, record } from 'zod';
+import { union, boolean, object, string, null as zodNull, type infer as Infer, array, record } from 'zod';
 import dayjs from 'dayjs';
 
 import type { Starable } from './star';
@@ -7,8 +7,6 @@ import type { EntityId } from './entity';
 export const noteDTOSchema = object({
   title: string(),
   isReadonly: boolean(),
-  userUpdatedAt: number(),
-  userCreatedAt: number(),
   parentId: union([zodNull(), string()]),
   icon: union([string().regex(/^(emoji:|file:).+/), zodNull()]),
   attributes: record(string().min(1), string().min(1)),
@@ -29,9 +27,7 @@ export interface RawNoteVO {
   icon: string | null;
   childrenCount: number;
   updatedAt: number;
-  userUpdatedAt: number;
   createdAt: number;
-  userCreatedAt: number;
   attributes: Record<string, string>;
 }
 

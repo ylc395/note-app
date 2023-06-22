@@ -157,7 +157,7 @@ export default class NoteService extends Emitter<{
             }, Number(firstNote.isReadonly) as NoteMetadata['isReadonly']),
           }
         : {
-            ...pick(firstNote, ['icon', 'userCreatedAt', 'userUpdatedAt', 'attributes']),
+            ...pick(firstNote, ['icon', 'attributes']),
             isReadonly: Number(firstNote.isReadonly) as NoteMetadata['isReadonly'],
           };
 

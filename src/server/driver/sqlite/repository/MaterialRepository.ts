@@ -12,8 +12,8 @@ import MaterialAnnotationRepository from './MaterialAnnotationRepository';
 
 export default class SqliteMaterialRepository extends BaseRepository<Row> implements MaterialRepository {
   protected readonly schema = schema;
-  private readonly files = new FileRepository(this.knex);
-  private readonly annotations = new MaterialAnnotationRepository(this.knex);
+  private readonly files = new FileRepository(this.db);
+  private readonly annotations = new MaterialAnnotationRepository(this.db);
   async createDirectory(directory: Directory) {
     const createdRow = await this._createOrUpdate(directory);
     return SqliteMaterialRepository.rowToDirectory(createdRow);
@@ -65,25 +65,31 @@ export default class SqliteMaterialRepository extends BaseRepository<Row> implem
   }
 
   private async getChildrenCounts(ids: Row['id'][]) {
-    const childrenCount = await this.knex(this.schema.tableName)
-      .whereIn('parentId', ids)
+    const childrenCount = await this.db
+      .selectFrom(this.schema.tableName)
+      .where('parentId', 'in', ids)
       .groupBy('parentId')
-      .select(this.knex.raw('count(*) as childrenCount'), 'parentId');
+      .select([this.db.fn.countAll().as('childrenCount'), 'parentId'])
+      .execute();
 
     return childrenCount.reduce((result, { parentId, childrenCount }) => {
-      result[parentId] = childrenCount;
+      if (parentId) {
+        result[parentId] = childrenCount as number;
+      }
       return result;
     }, {} as Record<string, number>);
   }
 
   async findAll(query: MaterialQuery) {
-    const sql = query.parentId
-      ? this.knex<Row>(this.schema.tableName).where('parentId', query.parentId)
-      : this.knex<Row>(this.schema.tableName).whereNull('parentId');
+    const qb = query.parentId
+      ? this.db.selectFrom(this.schema.tableName).where('parentId', '=', query.parentId)
+      : this.db.selectFrom(this.schema.tableName).where('parentId', 'is', null);
 
-    const rows = await sql
+    const rows = await qb
       .leftJoin(this.files.tableName, `${this.schema.tableName}.fileId`, `${this.files.tableName}.id`)
-      .select(`${this.files.tableName}.mimeType`, this.knex.raw(`${this.schema.tableName}.*`));
+      .selectAll(this.schema.tableName)
+      .select([`${this.files.tableName}.mimeType`])
+      .execute();
 
     const directories: DirectoryVO[] = [];
     const materials: EntityMaterialVO[] = [];
@@ -92,7 +98,8 @@ export default class SqliteMaterialRepository extends BaseRepository<Row> implem
       if (!SqliteMaterialRepository.isFileRow(row)) {
         directories.push(SqliteMaterialRepository.rowToDirectory(row));
       } else {
-        materials.push(SqliteMaterialRepository.rowToMaterial(row, row.mimeType));
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        materials.push(SqliteMaterialRepository.rowToMaterial(row, row.mimeType!));
       }
     }
 
@@ -106,18 +113,21 @@ export default class SqliteMaterialRepository extends BaseRepository<Row> implem
   }
 
   async findOneById(id: MaterialVO['id']) {
-    const row = await this.knex<Row>(this.schema.tableName)
+    const row = await this.db
+      .selectFrom(this.schema.tableName)
       .leftJoin(this.files.tableName, `${this.schema.tableName}.fileId`, `${this.files.tableName}.id`)
-      .select(`${this.files.tableName}.mimeType`, this.knex.raw(`${this.schema.tableName}.*`))
-      .where(`${this.schema.tableName}.id`, id)
-      .first();
+      .selectAll(this.schema.tableName)
+      .select(`${this.files.tableName}.mimeType`)
+      .where(`${this.schema.tableName}.id`, '=', id)
+      .executeTakeFirst();
 
     if (!row) {
       return null;
     }
 
     if (SqliteMaterialRepository.isFileRow(row)) {
-      return SqliteMaterialRepository.rowToMaterial(row, row.mimeType);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      return SqliteMaterialRepository.rowToMaterial(row, row.mimeType!);
     }
 
     const childrenCounts = await this.getChildrenCounts([id]);
@@ -125,10 +135,12 @@ export default class SqliteMaterialRepository extends BaseRepository<Row> implem
   }
 
   async findBlobById(id: MaterialVO['id']) {
-    const row = await this.knex(this.schema.tableName)
-      .join(this.files.tableName, `${this.schema.tableName}.fileId`, `${this.files.tableName}.id`)
-      .where(`${this.schema.tableName}.id`, id)
-      .first();
+    const row = await this.db
+      .selectFrom(this.schema.tableName)
+      .innerJoin(this.files.tableName, `${this.schema.tableName}.fileId`, `${this.files.tableName}.id`)
+      .selectAll()
+      .where(`${this.schema.tableName}.id`, '=', id)
+      .executeTakeFirst();
 
     if (row) {
       if (row.mimeType.startsWith('text')) {
@@ -151,7 +163,11 @@ export default class SqliteMaterialRepository extends BaseRepository<Row> implem
   }
 
   async updateText<T>(materialId: MaterialVO['id'], payload: T) {
-    const row = await this.knex<Row>(this.schema.tableName).where('id', materialId).first();
+    const row = await this.db
+      .selectFrom(this.schema.tableName)
+      .selectAll()
+      .where('id', '=', materialId)
+      .executeTakeFirst();
 
     if (!row?.fileId) {
       return null;

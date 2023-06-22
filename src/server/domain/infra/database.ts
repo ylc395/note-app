@@ -1,14 +1,7 @@
 import type Repositories from 'service/repository';
 
-export interface TransactionManager<T> {
-  commit: () => Promise<void>;
-  rollback: () => Promise<void>;
-  start: () => Promise<T>; // create or reuse a transaction
-  run: <R>(connection: T, cb: () => R) => R;
-}
-
 export interface Database {
-  transactionManager: TransactionManager<unknown>;
+  transaction: <T>(cb: () => Promise<T>) => Promise<T>;
   getRepository: <T extends keyof Repositories>(name: T) => Repositories[T];
   ready: Promise<void>;
 }

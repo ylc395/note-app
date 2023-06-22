@@ -19,27 +19,27 @@ export default class SqliteStarRepository extends BaseRepository<Row> implements
   async findAll(query?: StarQuery) {
     const noteTableName = noteSchema.tableName;
     const {
-      knex,
       schema: { tableName: starTableName },
     } = this;
 
-    const qb = this.knex(this.schema.tableName)
-      .select(knex.raw(`${starTableName}.*`))
-      .join(noteTableName, function () {
-        this.on(`${starTableName}.entityType`, knex.raw(EntityTypes.Note));
-        this.on(`${starTableName}.entityId`, `${noteTableName}.id`);
-      });
+    const qb = this.db
+      .selectFrom(this.schema.tableName)
+      .innerJoin(noteTableName, (join) =>
+        join
+          .on(`${starTableName}.entityType`, '=', EntityTypes.Note)
+          .onRef(`${starTableName}.entityId`, '=', `${noteTableName}.id`),
+      );
 
     if (query) {
       for (const [k, v] of Object.entries(query)) {
-        qb.andWhere(`${starTableName}.${k}`, Array.isArray(v) ? 'in' : '=', v);
+        qb.where(`${starTableName}.${k as keyof StarQuery}`, Array.isArray(v) ? 'in' : '=', v);
       }
     }
 
-    return await qb;
+    return await qb.selectAll().execute();
   }
 
   async remove(id: StarRecord['id']) {
-    await this.knex(this.schema.tableName).delete().where('id', id);
+    await this.db.deleteFrom(this.schema.tableName).where('id', '=', id).execute();
   }
 }

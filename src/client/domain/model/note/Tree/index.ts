@@ -56,9 +56,7 @@ export default class NoteTree extends Tree<Note> {
       icon: null,
       childrenCount: 0,
       updatedAt: 0,
-      userCreatedAt: 0,
       createdAt: 0,
-      userUpdatedAt: 0,
       isStar: false,
       attributes: {},
     };
@@ -77,10 +75,10 @@ export default class NoteTree extends Tree<Note> {
           result = compare(normalizeTitle(node1.entity), normalizeTitle(node2.entity));
           break;
         case SortBy.CreatedAt:
-          result = compare(node1.entity.userCreatedAt, node2.entity.userCreatedAt);
+          result = compare(node1.entity.createdAt, node2.entity.createdAt);
           break;
         case SortBy.UpdatedAt:
-          result = compare(node1.entity.userUpdatedAt, node2.entity.userUpdatedAt);
+          result = compare(node1.entity.updatedAt, node2.entity.updatedAt);
           break;
         default:
           throw new Error('');

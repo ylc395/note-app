@@ -11,7 +11,7 @@ export interface SearchResult {
   type: Types;
   entityId: EntityId;
   mainEntityId?: EntityId;
-  path: string;
+  // path: string;
 }
 
 export enum Types {

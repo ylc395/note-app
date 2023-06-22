@@ -7,3 +7,4 @@ export { default as memoSchema } from './memo';
 export { default as materialSchema } from './material';
 export { default as revisionSchema } from './revision';
 export { default as materialAnnotationSchema } from './materialAnnotation';
+export { default as syncEntitySchema } from './syncEntity';

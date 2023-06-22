@@ -1,4 +1,4 @@
-import type { Knex } from 'knex';
+import type { Kysely } from 'kysely';
 import { Injectable } from '@nestjs/common';
 
 import type { KvDatabase } from 'infra/kvDatabase';
@@ -11,52 +11,61 @@ type Row = {
 
 const tableName = 'kv';
 
+export interface KvDb {
+  [tableName]: Row;
+}
+
 @Injectable()
 export default class SqliteKvDatabase implements KvDatabase {
-  private knex?: Knex;
+  private db?: Kysely<KvDb>;
   readonly ready: Promise<void>;
   constructor(private readonly sqliteDb: SqliteDb) {
     this.ready = this.init();
   }
 
   private async init() {
-    this.knex = await this.sqliteDb.getKnex();
+    this.db = (await this.sqliteDb.getDb()) as unknown as Kysely<KvDb>;
     await this.createTable();
   }
 
   private async createTable() {
-    if (!this.knex) {
+    if (!this.db) {
       throw new Error('kv db not ready');
     }
 
-    if (!(await this.knex.schema.hasTable(tableName))) {
-      await this.knex.schema.createTable(tableName, (t) => {
-        t.text('key').notNullable().primary();
-        t.text('value').notNullable();
-      });
+    if (!this.sqliteDb.hasTable(tableName)) {
+      await this.db.schema
+        .createTable(tableName)
+        .addColumn('key', 'text', (col) => col.notNull().primaryKey())
+        .addColumn('value', 'text', (col) => col.notNull())
+        .execute();
     }
   }
 
   async set(key: string, value: string) {
-    if (!this.knex) {
+    if (!this.db) {
       throw new Error('kv db not ready');
     }
 
-    const count = await this.knex<Row>(tableName).update({ value }).where('key', key);
+    const { numUpdatedRows } = await this.db
+      .updateTable(tableName)
+      .set({ value })
+      .where('key', '=', key)
+      .executeTakeFirst();
 
-    if (count === 0) {
-      await this.knex<Row>(tableName).insert({ key, value });
+    if (numUpdatedRows === 0n) {
+      await this.db.insertInto(tableName).values({ key, value }).execute();
     }
   }
 
   async get(key: string): Promise<string | null>;
   async get(key: string, value: () => string): Promise<string>;
   async get(key: string, value?: () => string) {
-    if (!this.knex) {
+    if (!this.db) {
       throw new Error('no knex');
     }
 
-    const row = await this.knex<Row>(tableName).where('key', key).first();
+    const row = await this.db.selectFrom(tableName).selectAll().where('key', '=', key).executeTakeFirst();
 
     if (row) {
       return row.value;
@@ -65,7 +74,7 @@ export default class SqliteKvDatabase implements KvDatabase {
     }
 
     const v = value();
-    await this.knex<Row>(tableName).insert({ value: v, key });
+    await this.db.insertInto(tableName).values({ value: v, key });
     return v;
   }
 }

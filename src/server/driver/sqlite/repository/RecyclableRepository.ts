@@ -12,20 +12,25 @@ export default class SqliteRecyclableRepository extends BaseRepository<Row> impl
 
   async put(entityType: EntityTypes, ids: string[]) {
     const newRows = ids.map((entityId) => ({ entityId, entityType }));
-    const rows = await this.knex<Row>(this.schema.tableName)
-      .whereIn('entityId', ids)
-      .andWhere('entityType', entityType)
-      .select('entityId', 'entityType');
+    const rows = await this.db
+      .selectFrom(this.schema.tableName)
+      .where('entityId', 'in', ids)
+      .where('entityType', '=', entityType)
+      .select(['entityId', 'entityType'])
+      .execute();
 
     const recyclablesRows = await this._batchCreate(differenceWith(newRows, rows, isEqual));
     return recyclablesRows.map((row) => ({ ...row, entityId: String(row.entityId) }));
   }
 
   async findOneByLocator({ id: entityId, type: entityType }: EntityLocator) {
-    const row = await this.knex<Row>(this.schema.tableName)
-      .select('entityId', 'entityType', 'deletedAt')
-      .where({ entityId, entityType, isHard: 0 })
-      .first();
+    const row = await this.db
+      .selectFrom(this.schema.tableName)
+      .select(['entityId', 'entityType', 'deletedAt'])
+      .where('entityId', '=', entityId)
+      .where('entityType', '=', entityType)
+      .where('isHard', '=', 0)
+      .executeTakeFirst();
 
     return row || null;
   }
@@ -35,16 +40,25 @@ export default class SqliteRecyclableRepository extends BaseRepository<Row> impl
       return [];
     }
 
-    const rows = await this.knex<Row>(this.schema.tableName)
-      .select('entityId', 'entityType', 'deletedAt')
-      .whereIn('entityId', ids)
-      .andWhere({ entityType: type });
+    const rows = await this.db
+      .selectFrom(this.schema.tableName)
+      .select(['entityId', 'entityType', 'deletedAt'])
+      .where('entityId', 'in', ids)
+      .where('entityType', '=', type)
+      .execute();
 
     return rows;
   }
 
   async getHardDeletedRecord({ id: entityId, type: entityType }: EntityLocator) {
-    const row = await this.knex<Row>(this.schema.tableName).where({ isHard: 1, entityType, entityId }).first();
+    const row = await this.db
+      .selectFrom(this.schema.tableName)
+      .selectAll()
+      .where('entityId', '=', entityId)
+      .where('entityType', '=', entityType)
+      .where('isHard', '=', 0)
+      .executeTakeFirst();
+
     return row ? { id: row.entityId, type: row.entityType, deletedAt: row.deletedAt } : null;
   }
 }

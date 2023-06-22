@@ -1,7 +1,7 @@
 import { type InferRow, defineSchema } from './type';
 
 const schema = defineSchema({
-  tableName: 'stars',
+  tableName: 'stars' as const,
   fields: {
     id: { type: 'text', primary: true, notNullable: true },
     entityType: { type: 'integer', notNullable: true },

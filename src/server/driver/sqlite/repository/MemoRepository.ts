@@ -32,38 +32,51 @@ export default class SqliteMemoRepository extends BaseRepository<Row> implements
   async list(query: MemoPaginationQuery) {
     const pageSize = query.pageSize || 50;
     const page = query.page || 1;
-    const rows = await this.knex<Row>(this.schema.tableName)
-      .whereNull('parentId')
-      .orderBy([
-        { column: 'isPinned', order: 'desc' },
-        { column: 'id', order: 'desc' },
-      ])
+    const rows = await this.db
+      .selectFrom(this.schema.tableName)
+      .where('parentId', 'is', null)
+      .orderBy('isPinned', 'desc')
+      .orderBy('id', 'desc')
+      .selectAll()
       .limit(pageSize)
-      .offset((page - 1) * pageSize);
+      .offset((page - 1) * pageSize)
+      .execute();
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const total = (await this.knex(this.schema.tableName).whereNull('parentId').count(this.knex.raw('*'))) as any;
-    const childrenMap = groupBy(await this.findChildren(rows.map(({ id }) => String(id))), 'parentId');
+    const total = await this.db
+      .selectFrom(this.schema.tableName)
+      .where('parentId', 'is', null)
+      .select(this.db.fn.countAll<number>().as('count'))
+      .executeTakeFirst();
+
+    const childrenMap = groupBy(await this.findChildren(rows.map(({ id }) => id)), 'parentId');
     const list = rows.map((row) => SqliteMemoRepository.rowToVO(row, childrenMap[row.id] || []));
 
-    return { list, total: Number(total[0].count) };
+    return { list, total: Number(total?.count) };
   }
 
   private async findChildren(parentId: ParentMemoVO['id'] | ParentMemoVO['id'][]) {
-    const children = await this.knex<Row>(this.schema.tableName)
+    const children = await this.db
+      .selectFrom(this.schema.tableName)
       .where('parentId', typeof parentId === 'string' ? '=' : 'in', parentId)
-      .orderBy([{ column: 'id', order: 'desc' }]);
+      .selectAll()
+      .orderBy('id', 'desc')
+      .execute();
+
     return children;
   }
 
   async findParent(id: ParentMemoVO['id']) {
-    const target = await this.knex<Row>(this.schema.tableName).where('id', id).first();
+    const target = await this.db.selectFrom(this.schema.tableName).where('id', '=', id).selectAll().executeTakeFirst();
 
-    if (!target || !target.parentId) {
+    if (!target?.parentId) {
       return null;
     }
 
-    const parent = await this.knex<Row>(this.schema.tableName).where('id', target.parentId).first();
+    const parent = await this.db
+      .selectFrom(this.schema.tableName)
+      .where('id', '=', target.parentId)
+      .selectAll()
+      .executeTakeFirst();
 
     if (!parent) {
       return null;
@@ -74,7 +87,7 @@ export default class SqliteMemoRepository extends BaseRepository<Row> implements
   }
 
   async findOneById(id: MemoVO['id']) {
-    const row = await this.knex<Row>(this.schema.tableName).where('id', id).first();
+    const row = await this.db.selectFrom(this.schema.tableName).where('id', '=', id).selectAll().executeTakeFirst();
 
     if (!row) {
       return null;
@@ -104,13 +117,13 @@ export default class SqliteMemoRepository extends BaseRepository<Row> implements
   }
 
   async findAll(q?: MemoQuery) {
-    let sql = this.knex<Row>(this.schema.tableName).select();
+    let sql = this.db.selectFrom(this.schema.tableName).selectAll();
 
     if (q) {
-      sql = sql.andWhere('updatedAt', '>', q.updatedAt);
+      sql = sql.where('updatedAt', '>', q.updatedAt);
     }
 
-    const rows = await sql;
+    const rows = await sql.execute();
 
     return rows.map((row) =>
       row.parentId ? SqliteMemoRepository.rowToVO(row, []) : SqliteMemoRepository.rowToVO(row),
@@ -118,6 +131,6 @@ export default class SqliteMemoRepository extends BaseRepository<Row> implements
   }
 
   async removeById(id: MemoVO['id']) {
-    await this.knex<Row>(this.schema.tableName).delete().where('id', id);
+    await this.db.deleteFrom(this.schema.tableName).where('id', '=', id).execute();
   }
 }

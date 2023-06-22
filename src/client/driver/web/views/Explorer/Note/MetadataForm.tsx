@@ -2,10 +2,9 @@ import { observer, useLocalObservable } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 import { computed, observable, runInAction } from 'mobx';
 import { useCallback, useState, useEffect, type MouseEvent, useContext } from 'react';
-import { Form, DatePicker, Button, Checkbox, Popover, AutoComplete } from 'antd';
+import { Form, Button, Checkbox, Popover, AutoComplete } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
 import type { CheckboxChangeEvent } from 'antd/es/checkbox';
-import dayjs from 'dayjs';
 import uniq from 'lodash/uniq';
 import uniqueId from 'lodash/uniqueId';
 
@@ -117,8 +116,6 @@ export default observer(function MetadataForm() {
   const [isPickingEmoji, setIsPickingEmoji] = useState(false);
   const { allAttributes, attributes, availableKeys } = useAttributes(noteMetadata);
 
-  const handleUserCreatedAt = useUpdateTimeField(noteMetadata, 'userCreatedAt');
-  const handleUserUpdatedAt = useUpdateTimeField(noteMetadata, 'userUpdatedAt');
   const handleIsReadonly = useCallback(
     (e: CheckboxChangeEvent) => noteMetadata.updateValue('isReadonly', e.target.checked),
     [noteMetadata],
@@ -199,26 +196,6 @@ export default observer(function MetadataForm() {
             onChange={handleIsReadonly}
           />
         </Form.Item>
-        {noteMetadata.values.userCreatedAt && (
-          <Form.Item label="创建日期">
-            <DatePicker
-              allowClear={false}
-              value={dayjs.unix(noteMetadata.values.userCreatedAt)}
-              showTime
-              onChange={handleUserCreatedAt}
-            />
-          </Form.Item>
-        )}
-        {noteMetadata.values.userUpdatedAt && (
-          <Form.Item label="更新日期">
-            <DatePicker
-              allowClear={false}
-              value={dayjs.unix(noteMetadata.values.userUpdatedAt)}
-              showTime
-              onChange={handleUserUpdatedAt}
-            />
-          </Form.Item>
-        )}
         {noteMetadata.values.attributes && (
           <Form.Item label="自定义属性">
             {attributes.fields.map(({ key, value, id, keyError, valueError }, i) => {

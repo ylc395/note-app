@@ -13,34 +13,36 @@ export default class SqliteRevisionRepository extends BaseRepository<Row> implem
   }
 
   async findLatest({ type: entityType, id: entityId }: EntityLocator) {
-    const latest = await this.knex<Row>(this.schema.tableName)
-      .where({ entityType, entityId })
-      .orderBy([{ column: 'createdAt', order: 'desc' }])
-      .first();
+    const result = await this.db
+      .selectFrom(this.schema.tableName)
+      .where('entityType', '=', entityType)
+      .where('entityId', '=', entityId)
+      .orderBy('createdAt', 'desc')
+      .select(['id', 'createdAt', 'diff'])
+      .executeTakeFirst();
 
-    if (!latest) {
-      return null;
-    }
-
-    return {
-      id: String(latest.id),
-      createdAt: latest.createdAt,
-      diff: latest.diff,
-    };
+    return result || null;
   }
 
   async findUtil(revisionId: RevisionVO['id']) {
-    const row = await this.knex<Row>(this.schema.tableName).where('id', revisionId).first();
+    const row = await this.db
+      .selectFrom(this.schema.tableName)
+      .where('id', '=', revisionId)
+      .selectAll()
+      .executeTakeFirst();
 
     if (!row) {
       return [];
     }
 
-    const rows = await this.knex<Row>(this.schema.tableName)
-      .where({ entityId: row.entityId, entityType: row.entityType })
-      .andWhere('createdAt', '<=', row.createdAt)
+    const rows = await this.db
+      .selectFrom(this.schema.tableName)
+      .where('entityType', '=', row.entityType)
+      .where('entityId', '=', row.entityId)
+      .where('createdAt', '<=', row.createdAt)
       .select(['id', 'createdAt', 'diff'])
-      .orderBy([{ column: 'createdAt', order: 'asc' }]);
+      .orderBy('createdAt', 'asc')
+      .execute();
 
     return rows;
   }

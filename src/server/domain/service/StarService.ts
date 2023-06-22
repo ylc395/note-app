@@ -18,14 +18,6 @@ export default class StarService extends BaseService {
   @Inject(forwardRef(() => NoteService)) private readonly noteService!: NoteService;
   @Inject() private readonly recyclableService!: RecyclableService;
 
-  private get stars() {
-    return this.db.getRepository('stars');
-  }
-
-  private get notes() {
-    return this.db.getRepository('notes');
-  }
-
   async create(type: EntityTypes, ids: EntityId[]) {
     if (ids.length === 0) {
       throw new Error('no ids');

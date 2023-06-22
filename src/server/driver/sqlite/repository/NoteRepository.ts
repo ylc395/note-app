@@ -22,7 +22,11 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
   }
 
   async findBody(noteId: string): Promise<string | null> {
-    const row = await this.knex<Row>(noteSchema.tableName).where('id', noteId).first();
+    const row = await this.db
+      .selectFrom(noteSchema.tableName)
+      .select('body')
+      .where('id', '=', noteId)
+      .executeTakeFirst();
 
     if (!row) {
       return null;
@@ -38,14 +42,23 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
       return null;
     }
 
-    const childrenCount = await this.knex<Row>(this.schema.tableName).where('parentId', row.id).count({ count: 'id' });
-    return this.rowToVO(row, { childrenCount: Number(childrenCount[0]?.count) });
+    const childrenCount = await this.db
+      .selectFrom(this.schema.tableName)
+      .where('parentId', '=', row.id)
+      .select(this.db.fn.count('id').as('count'))
+      .executeTakeFirst();
+
+    return this.rowToVO(row, { childrenCount: Number(childrenCount?.count) });
   }
 
   async updateBody(id: NoteVO['id'], noteBody: string) {
-    const count = await this.knex<Row>(this.schema.tableName).where('id', id).update({ body: noteBody });
+    const { numUpdatedRows } = await this.db
+      .updateTable(this.schema.tableName)
+      .where('id', '=', id)
+      .set({ body: noteBody })
+      .executeTakeFirst();
 
-    if (count === 0) {
+    if (numUpdatedRows === 0n) {
       return null;
     }
 
@@ -54,14 +67,14 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
 
   async findAll(query?: NoteQuery) {
     const {
-      knex,
       schema: { tableName: noteTable },
     } = this;
 
-    const sql = knex
-      .select<(Row & { childrenCount: number })[]>(knex.raw('parent.*'), knex.raw('count(child.id) as childrenCount'))
-      .from(`${noteTable} as parent`)
-      .leftJoin({ child: noteTable }, 'child.parentId', 'parent.id')
+    let sql = this.db
+      .selectFrom(`${noteTable} as parent`)
+      .leftJoin(`${noteTable} as child`, 'child.parentId', 'parent.id')
+      .select((eb) => eb.fn.count('child.id').as('childrenCount'))
+      .selectAll('parent')
       .groupBy('parent.id');
 
     for (const [k, v] of Object.entries(query || {})) {
@@ -69,15 +82,14 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
         continue;
       }
 
-      const newKey = `parent.${k}`;
-      Array.isArray(v)
-        ? sql.andWhere(newKey, 'in', v)
+      sql = Array.isArray(v)
+        ? sql.where(`parent.${k as keyof NoteQuery}`, 'in', v)
         : typeof v === 'boolean'
-        ? sql.andWhere(newKey, Number(v))
-        : sql.andWhere(newKey, v);
+        ? sql.where(`parent.${k as keyof NoteQuery}`, '=', Number(v))
+        : sql.where(`parent.${k as keyof NoteQuery}`, v === null ? 'is' : '=', v);
     }
 
-    const rows = await sql;
+    const rows = await sql.execute();
     const notes = rows.map((row) => this.rowToVO(row));
 
     return notes;
@@ -107,48 +119,53 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
     }
 
     const {
-      knex,
       schema: { tableName: noteTable },
     } = this;
-    const rows: { id: string }[] = await this.knex
-      .withRecursive('descendants', (qb) => {
-        qb.select('id', 'parentId')
-          .from(noteTable)
-          .whereIn('parentId', noteIds)
-          .union((qb) =>
-            qb
-              .select(`${noteTable}.id`, `${noteTable}.parentId`)
-              .from('descendants')
-              .join(knex.raw(noteTable))
-              .where(`${noteTable}.parentId`, 'descendants.id'),
-          );
-        // todo: add a limit statement to stop infinite recursive
-      })
-      .select('descendants.id')
-      .from('descendants');
 
-    return rows.map(({ id }) => String(id));
+    const rows = await this.db
+      .withRecursive(
+        'descendants',
+        (qb) =>
+          qb
+            .selectFrom(noteTable)
+            .select(['id', 'parentId'])
+            .where('parentId', 'in', noteIds)
+            .union(
+              qb
+                .selectFrom('descendants')
+                .innerJoin(noteTable, `${noteTable}.id`, 'descendants.id')
+                .select([`${noteTable}.id`, `${noteTable}.parentId`])
+                .where(`${noteTable}.parentId`, '=', 'descendants.id'),
+            ),
+        // todo: add a limit statement to stop infinite recursive
+      )
+      .selectFrom('descendants')
+      .select('descendants.id')
+      .execute();
+
+    return rows.map(({ id }) => id);
   }
 
   async findTreeFragment(noteId: NoteVO['id']) {
     const {
-      knex,
       schema: { tableName: noteTable },
     } = this;
-    const ancestorIds = await knex
+    const ancestorIds = await this.db
       .withRecursive('ancestors', (qb) =>
         qb
-          .from(noteTable)
-          .where('id', noteId)
-          .union((qb) =>
+          .selectFrom(noteTable)
+          .selectAll()
+          .where('id', '=', noteId)
+          .union(
             qb
-              .select(knex.raw(`${noteTable}.*`))
-              .from('ancestors')
-              .join(knex.raw(noteTable), `${noteTable}.id`, 'ancestors.parentId'),
+              .selectFrom('ancestors')
+              .innerJoin(noteTable, `${noteTable}.id`, 'ancestors.parentId')
+              .selectAll(noteTable),
           ),
       )
+      .selectFrom('ancestors')
       .select('ancestors.id')
-      .from('ancestors');
+      .execute();
 
     const children = [
       ...(await this.findAll({ parentId: null })),
@@ -174,7 +191,11 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
 
   async findAttributes() {
     const result: NoteAttributesVO = {};
-    const notes = await this.knex<Row>(this.schema.tableName).select('attributes').where('attributes', '<>', '{}');
+    const notes = await this.db
+      .selectFrom(this.schema.tableName)
+      .select('attributes')
+      .where('attributes', '<>', '{}')
+      .execute();
 
     for (const { attributes } of notes) {
       for (const [k, v] of Object.entries(JSON.parse(attributes))) {
@@ -197,8 +218,9 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
   }
 
   async removeById(noteId: NoteVO['id'] | NoteVO['id'][]) {
-    await this.knex<Row>(this.schema.tableName)
-      .delete()
-      .where('id', typeof noteId === 'string' ? '=' : 'in', noteId);
+    await this.db
+      .deleteFrom(this.schema.tableName)
+      .where('id', typeof noteId === 'string' ? '=' : 'in', noteId)
+      .execute();
   }
 }

@@ -44,22 +44,6 @@ export default class SyncService extends BaseService {
     return { metadata: attributes, content: body };
   }
 
-  private get memos() {
-    return this.db.getRepository('memos');
-  }
-
-  private get synchronization() {
-    return this.db.getRepository('synchronization');
-  }
-
-  private get notes() {
-    return this.db.getRepository('notes');
-  }
-
-  private get recyclables() {
-    return this.db.getRepository('recyclables');
-  }
-
   private static serialize(entity: RawNoteVO | MemoVO, { content, type }: { type: EntityTypes; content: string }) {
     const attributes: EntityMetadata = {
       id: entity.id,

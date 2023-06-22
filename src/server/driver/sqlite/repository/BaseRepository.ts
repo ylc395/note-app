@@ -1,26 +1,29 @@
 import { randomUUID } from 'node:crypto';
-import type { Knex } from 'knex';
+import type { Kysely } from 'kysely';
 import pick from 'lodash/pick';
 import omit from 'lodash/omit';
 
 import type { Schema } from '../schema/type';
+import type { Db } from '../Database';
 
 export default abstract class BaseRepository<Row extends object> {
-  constructor(protected readonly knex: Knex) {}
-  protected abstract readonly schema: Schema;
+  constructor(protected readonly db: Kysely<Db>) {}
+  protected abstract readonly schema: Schema<keyof Db>;
   private get fields() {
     return Object.keys(this.schema.fields);
   }
 
   protected async _batchCreate<T = void>(
     rows: Partial<T extends void ? Row : T>[],
-    tableName?: string,
+    tableName?: keyof Db,
   ): Promise<(T extends void ? Row : T)[]> {
     const fields = this.fields;
 
-    const createdRows = await this.knex(tableName || this.schema.tableName)
-      .insert(rows.map((row) => ('id' in fields ? row : { ...row, id: this.generateId() })))
-      .returning(this.knex.raw('*'));
+    const createdRows = (await this.db
+      .insertInto(tableName || this.schema.tableName)
+      .values(rows.map((row) => ('id' in fields ? row : { ...row, id: this.generateId() })))
+      .returningAll()
+      .execute()) as unknown as (T extends void ? Row : T)[];
 
     return createdRows;
   }
@@ -33,26 +36,28 @@ export default abstract class BaseRepository<Row extends object> {
   protected async _createOrUpdate(row: unknown, id: string): Promise<Row | null>;
   protected async _createOrUpdate(row: unknown, id?: string): Promise<Row | null> {
     const fields = pick(row, this.fields) as Partial<Row>;
-    let updatedRow: Row;
+    let updatedRow: Row | undefined;
 
     if (typeof id === 'string') {
-      const updatedRows = await this.knex(this.schema.tableName)
-        .update(omit(fields, 'id'))
-        .where('id', id)
-        .returning(this.knex.raw('*'));
+      updatedRow = (await this.db
+        .updateTable(this.schema.tableName)
+        .set(omit(fields, 'id'))
+        .where('id', '=', id)
+        .returningAll()
+        .executeTakeFirst()) as unknown as Row | undefined;
 
-      if (updatedRows.length === 0) {
+      if (updatedRow) {
         return null;
       }
-
-      updatedRow = updatedRows[0];
     } else {
-      const createdRows = await this.knex(this.schema.tableName)
-        .insert({ ...fields, id: 'id' in fields ? fields.id : this.generateId() })
-        .returning(this.knex.raw('*'));
-      updatedRow = createdRows[0];
+      updatedRow = (await this.db
+        .insertInto(this.schema.tableName)
+        .values({ ...fields, id: 'id' in fields ? fields.id : this.generateId() })
+        .returningAll()
+        .executeTakeFirst()) as unknown as Row;
     }
 
-    return updatedRow;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return updatedRow!;
   }
 }

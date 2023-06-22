@@ -12,10 +12,6 @@ import {
 import BaseService from './BaseService';
 
 export default class MaterialService extends BaseService {
-  private get materials() {
-    return this.db.getRepository('materials');
-  }
-
   async create({ text, sourceUrl, file, ...info }: MaterialDTO) {
     if ((text || sourceUrl || file) && !info.parentId) {
       throw new Error('empty parentId');
