@@ -7,7 +7,7 @@ const schema = defineSchema({
     entityType: { type: 'integer', notNullable: true },
     entityId: { type: 'text', notNullable: true },
     isHard: { type: 'integer', notNullable: true, defaultTo: 0 },
-    deletedAt: { type: 'integer', notNullable: true, defaultTo: sql`unixepoch()` },
+    deletedAt: { type: 'integer', notNullable: true, defaultTo: sql`(unixepoch())` },
   },
   restrictions: {
     unique: ['entityType', 'entityId'],

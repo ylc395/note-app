@@ -172,7 +172,7 @@ export default class NoteService extends BaseService {
     const locator = { type: EntityTypes.Note, id: noteId };
     const isRecyclable = await this.recyclableService.isRecyclable(locator);
 
-    if (!isRecyclable) {
+    if (isRecyclable) {
       throw new Error('not found');
     }
 

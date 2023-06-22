@@ -10,51 +10,56 @@ const NOTE_FTS_TABLE = 'notes_fts';
 interface SearchEngineDb {
   [NOTE_FTS_TABLE]: { id: string; title: string; body: string };
 }
+
 @Injectable()
 export default class SqliteSearchEngine implements SearchEngine {
-  private db?: Kysely<SearchEngineDb>;
   readonly ready: Promise<void>;
 
   constructor(private sqliteDb: SqliteDb) {
     this.ready = this.init();
   }
 
+  private get db() {
+    return this.sqliteDb.getDb() as unknown as Kysely<SearchEngineDb>;
+  }
+
   private async init() {
-    this.db = (await this.sqliteDb.getDb()) as unknown as Kysely<SearchEngineDb>;
+    await this.sqliteDb.ready;
     await Promise.all([this.createNoteFtsTable()]);
   }
 
   private async createNoteFtsTable() {
-    if (!this.db) {
-      throw new Error('search engine not ready');
-    }
-
     if (this.sqliteDb.hasTable(NOTE_FTS_TABLE)) {
       return;
     }
 
-    await sql`CREATE VIRTUAL TABLE IF NOT EXISTS ${NOTE_FTS_TABLE} USING fts5(id UNINDEXED, title, body, content="${noteTable.tableName}");`.execute(
-      this.db,
-    );
     await sql`
-        CREATE TRIGGER ${NOTE_FTS_TABLE}_ai AFTER INSERT ON ${noteTable.tableName}
-          BEGIN 
-            INSERT INTO ${NOTE_FTS_TABLE} (title, body) VALUES (new.title, new.body);
-          END;
-      `.execute(this.db);
+      CREATE VIRTUAL TABLE ${sql.table(NOTE_FTS_TABLE)} USING fts5(id UNINDEXED, title, body, content=${sql.table(
+      noteTable.tableName,
+    )});`.execute(this.db);
+
     await sql`
-        CREATE TRIGGER ${NOTE_FTS_TABLE}_ad AFTER DELETE on ${noteTable.tableName}
-          BEGIN
-            INSERT INTO ${NOTE_FTS_TABLE} (${NOTE_FTS_TABLE}, rowid, title, body) VALUES ('delete', old.rowid, old.title, old.body);
-          END;
-      `.execute(this.db);
+      CREATE TRIGGER ${sql.raw(NOTE_FTS_TABLE)}_ai AFTER INSERT ON ${sql.table(noteTable.tableName)}
+      BEGIN 
+        INSERT INTO ${sql.table(NOTE_FTS_TABLE)} (title, body) VALUES (new.title, new.body);
+      END;`.execute(this.db);
+
     await sql`
-        CREATE TRIGGER ${NOTE_FTS_TABLE}_au AFTER UPDATE on ${noteTable.tableName}
-          BEGIN
-            INSERT INTO ${NOTE_FTS_TABLE} (${NOTE_FTS_TABLE}, rowid, title, body) VALUES ('delete', old.rowid, old.title, old.body);
-            INSERT INTO ${NOTE_FTS_TABLE} (rowid, title, body) VALUES (new.rowid, new.title, new.body);
-          END;
-      `.execute(this.db);
+      CREATE TRIGGER ${sql.raw(NOTE_FTS_TABLE)}_ad AFTER DELETE on ${sql.table(noteTable.tableName)}
+      BEGIN
+        INSERT INTO ${sql.table(NOTE_FTS_TABLE)} (${sql.raw(
+      NOTE_FTS_TABLE,
+    )}, rowid, title, body) VALUES ('delete', old.rowid, old.title, old.body);
+      END;`.execute(this.db);
+
+    await sql`
+      CREATE TRIGGER ${sql.raw(NOTE_FTS_TABLE)}_au AFTER UPDATE on ${sql.table(noteTable.tableName)}
+      BEGIN
+        INSERT INTO ${sql.table(NOTE_FTS_TABLE)} (${sql.raw(
+      NOTE_FTS_TABLE,
+    )}, rowid, title, body) VALUES ('delete', old.rowid, old.title, old.body);
+        INSERT INTO ${sql.table(NOTE_FTS_TABLE)} (rowid, title, body) VALUES (new.rowid, new.title, new.body);
+      END;`.execute(this.db);
   }
 
   async search(q: SearchQuery) {
