@@ -1,23 +1,28 @@
-import { sql } from 'kysely';
-import { type InferRow, defineSchema } from './type';
-import fileSchema from './file';
+import { type SchemaModule, type Generated, sql } from 'kysely';
+import { tableName as filesTableName } from './file';
 
-const schema = defineSchema({
-  tableName: 'resources' as const,
-  fields: {
-    id: { type: 'text', primary: true, notNullable: true },
-    name: { type: 'text', notNullable: true },
-    sourceUrl: { type: 'text' },
-    createdAt: { type: 'integer', notNullable: true, defaultTo: sql`(unixepoch())` },
-    fileId: { type: 'text', notNullable: true },
+export const tableName = 'resources';
+
+export interface Row {
+  id: string;
+  name: string;
+  sourceUrl: string | null;
+  fileId: string;
+  createdAt: Generated<number>;
+  updatedAt: Generated<number>;
+}
+
+export default {
+  tableName,
+  builder: (schema: SchemaModule) => {
+    return schema
+      .createTable(tableName)
+      .addColumn('id', 'text', (col) => col.primaryKey().notNull())
+      .addColumn('name', 'text', (col) => col.notNull())
+      .addColumn('sourceUrl', 'text')
+      .addColumn('fileId', 'text', (col) => col.notNull())
+      .addColumn('createdAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch())`))
+      .addColumn('updatedAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch())`))
+      .addForeignKeyConstraint('fileId-foreign', ['fileId'], filesTableName, ['id']);
   },
-  restrictions: {
-    foreign: {
-      fileId: `${fileSchema.tableName}.id`,
-    },
-  },
-});
-
-export type Row = InferRow<(typeof schema)['fields']>;
-
-export default schema;
+} as const;

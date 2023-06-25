@@ -8,7 +8,6 @@ import {
   type NoteVO,
   type NoteQuery,
   type NotesDTO,
-  type NoteAttributesVO,
   noteDTOSchema,
   notesDTOSchema,
   noteQuerySchema,
@@ -33,11 +32,6 @@ export default class NotesController {
   @Get('/notes')
   async query(@Query(createSchemaPipe(noteQuerySchema)) q: NoteQuery): Promise<NoteVO[]> {
     return await this.noteService.query(q);
-  }
-
-  @Get('/notes/attributes')
-  async queryAttributes(): Promise<NoteAttributesVO> {
-    return await this.noteService.getAttributes();
   }
 
   @Get('/notes/:id/tree-fragment')

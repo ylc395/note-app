@@ -39,7 +39,7 @@ export default class MemoService extends BaseService {
       throw new Error('can not pin child memo');
     }
 
-    const updated = await this.memos.update(id, { ...patch, updatedAt: dayjs().unix() });
+    const updated = await this.memos.update(id, patch);
 
     if (!updated) {
       throw new Error('wrong id');

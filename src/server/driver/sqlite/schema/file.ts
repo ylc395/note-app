@@ -1,17 +1,26 @@
-import { type InferRow, defineSchema } from './type';
+import type { SchemaModule } from 'kysely';
 
-const schema = defineSchema({
-  tableName: 'files' as const,
-  fields: {
-    id: { type: 'text', primary: true, notNullable: true },
-    data: { type: 'binary', notNullable: true },
-    text: { type: 'text' },
-    mimeType: { type: 'text', notNullable: true },
-    size: { type: 'integer', notNullable: true },
-    hash: { type: 'text', notNullable: true },
+export interface Row {
+  id: string;
+  data: ArrayBuffer | string;
+  text: string | null;
+  mimeType: string;
+  size: number;
+  hash: string;
+}
+
+export const tableName = 'files';
+
+export default {
+  tableName,
+  builder: (schema: SchemaModule) => {
+    return schema
+      .createTable(tableName)
+      .addColumn('id', 'text', (col) => col.primaryKey().notNull())
+      .addColumn('data', 'binary', (col) => col.notNull())
+      .addColumn('text', 'text')
+      .addColumn('mimeType', 'text', (col) => col.notNull())
+      .addColumn('size', 'integer', (col) => col.notNull())
+      .addColumn('hash', 'text', (col) => col.notNull());
   },
-});
-
-export type Row = InferRow<(typeof schema)['fields']>;
-
-export default schema;
+} as const;

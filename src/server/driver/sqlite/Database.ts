@@ -12,19 +12,18 @@ import type Repository from 'service/repository';
 import * as schemas from './schema';
 import type * as RowTypes from './schema';
 import * as repositories from './repository';
-import type { Schema } from './schema/type';
 
 export interface Db {
-  [schemas.noteSchema.tableName]: RowTypes.NoteRow;
-  [schemas.recyclableSchema.tableName]: RowTypes.RecyclableRow;
-  [schemas.starSchema.tableName]: RowTypes.StarRow;
-  [schemas.resourceSchema.tableName]: RowTypes.ResourceRow;
-  [schemas.fileSchema.tableName]: RowTypes.FileRow;
-  [schemas.materialAnnotationSchema.tableName]: RowTypes.MaterialAnnotationRow;
-  [schemas.revisionSchema.tableName]: RowTypes.RevisionRow;
-  [schemas.materialSchema.tableName]: RowTypes.MaterialRow;
-  [schemas.memoSchema.tableName]: RowTypes.MemoRow;
-  [schemas.syncEntitySchema.tableName]: RowTypes.SyncEntityRow;
+  [schemas.note.tableName]: RowTypes.NoteRow;
+  [schemas.recyclable.tableName]: RowTypes.RecyclableRow;
+  [schemas.star.tableName]: RowTypes.StarRow;
+  [schemas.resource.tableName]: RowTypes.ResourceRow;
+  [schemas.file.tableName]: RowTypes.FileRow;
+  [schemas.materialAnnotation.tableName]: RowTypes.MaterialAnnotationRow;
+  [schemas.revision.tableName]: RowTypes.RevisionRow;
+  [schemas.material.tableName]: RowTypes.MaterialRow;
+  [schemas.memo.tableName]: RowTypes.MemoRow;
+  [schemas.syncEntity.tableName]: RowTypes.SyncEntityRow;
   sqlite_master: { name: string; type: string };
 }
 
@@ -91,54 +90,12 @@ export default class SqliteDb implements Database {
   }
 
   private async createTables() {
-    for (const { tableName, fields, restrictions } of Object.values(schemas) as Schema[]) {
-      if (this.hasTable(tableName)) {
+    for (const schema of Object.values(schemas)) {
+      if (this.hasTable(schema.tableName)) {
         continue;
       }
 
-      let table = this.db.schema.createTable(tableName);
-
-      for (const [fieldName, options] of Object.entries(fields)) {
-        table = table.addColumn(fieldName, options.type, (col) => {
-          let _col = col;
-          if (options.primary) {
-            _col = _col.primaryKey();
-          }
-
-          if (options.notNullable) {
-            _col = _col.notNull();
-          }
-
-          if (options.unique) {
-            _col = _col.unique();
-          }
-
-          if (typeof options.defaultTo !== 'undefined') {
-            _col = _col.defaultTo(options.defaultTo);
-          }
-
-          return _col;
-        });
-      }
-
-      if (restrictions) {
-        if (restrictions.unique) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          table = table.addUniqueConstraint(restrictions.unique.join('-'), restrictions.unique as any);
-        }
-
-        if (restrictions.foreign) {
-          for (const [col, foreignCol] of Object.entries(restrictions.foreign)) {
-            const [foreignTableName, foreignColName] = foreignCol.split('.');
-            if (!foreignTableName || !foreignColName) {
-              throw new Error('invalid foreign key');
-            }
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            table = table.addForeignKeyConstraint(`${col}_foreign`, [col] as any, foreignTableName, [foreignColName]);
-          }
-        }
-      }
-      await table.execute();
+      await schema.builder(this.db.schema).execute();
     }
   }
 }

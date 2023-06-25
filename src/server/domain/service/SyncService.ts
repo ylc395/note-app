@@ -245,7 +245,7 @@ export default class SyncService extends BaseService {
         await this.notes.updateBody(metadata.id, content);
         return;
       case EntityTypes.Memo:
-        await this.memos.create({ id: metadata.id, content, updatedAt: metadata.updatedAt });
+        // await this.memos.create({ id: metadata.id, content, updatedAt: metadata.updatedAt });
         return;
       default:
         break;

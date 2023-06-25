@@ -1,16 +1,21 @@
 import omit from 'lodash/omit';
 import groupBy from 'lodash/groupBy';
 
-import type { MemoPaginationQuery, ParentMemoVO, ChildMemoVO, MemoVO } from 'interface/memo';
-import type { MemoRepository, Memo, MemoQuery } from 'service/repository/MemoRepository';
+import type { MemoPaginationQuery, ParentMemoVO, ChildMemoVO, MemoVO, MemoDTO, MemoPatchDTO } from 'interface/memo';
+import type { MemoRepository, MemoQuery } from 'service/repository/MemoRepository';
 
 import BaseRepository from './BaseRepository';
 import schema, { type Row } from '../schema/memo';
+import type { Selectable } from 'kysely';
 
-export default class SqliteMemoRepository extends BaseRepository<Row> implements MemoRepository {
+export default class SqliteMemoRepository extends BaseRepository implements MemoRepository {
   protected readonly schema = schema;
-  async create(memo: Memo) {
-    const createdRow = await this._createOrUpdate(memo);
+  async create(memo: MemoDTO) {
+    const createdRow = await this.createOne(this.schema.tableName, {
+      ...memo,
+      id: this.generateId(),
+      isPinned: memo.isPinned ? 1 : 0,
+    });
 
     if (createdRow.id) {
       return SqliteMemoRepository.rowToVO(createdRow, []);
@@ -19,8 +24,8 @@ export default class SqliteMemoRepository extends BaseRepository<Row> implements
     return SqliteMemoRepository.rowToVO(createdRow);
   }
 
-  async update(id: ParentMemoVO['id'], patch: Memo) {
-    const updatedRow = await this._createOrUpdate(patch, id);
+  async update(id: ParentMemoVO['id'], patch: MemoPatchDTO) {
+    const updatedRow = await this.updateOne(this.schema.tableName, id, { ...patch, isPinned: patch.isPinned ? 1 : 0 });
 
     if (!updatedRow) {
       return null;
@@ -101,9 +106,9 @@ export default class SqliteMemoRepository extends BaseRepository<Row> implements
     }
   }
 
-  private static rowToVO(row: Row): ChildMemoVO;
-  private static rowToVO(row: Row, threads: Row[]): ParentMemoVO;
-  private static rowToVO(row: Row, threads?: Row[]): ParentMemoVO | ChildMemoVO {
+  private static rowToVO(row: Selectable<Row>): ChildMemoVO;
+  private static rowToVO(row: Selectable<Row>, threads: Selectable<Row>[]): ParentMemoVO;
+  private static rowToVO(row: Selectable<Row>, threads?: Selectable<Row>[]): ParentMemoVO | ChildMemoVO {
     return {
       ...omit(row, ['parentId', 'isPinned']),
       isStar: false,

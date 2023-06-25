@@ -4,7 +4,6 @@ import type { NoteDTO } from 'interface/Note';
 export interface NoteMetadata {
   icon: NonNullable<NoteDTO['icon']> | null | symbol;
   isReadonly: 0 | 1 | 2;
-  attributes?: NonNullable<NoteDTO['attributes']>;
 }
 
 export default class NoteMetadataForm extends Form<NoteMetadata> {}

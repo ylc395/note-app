@@ -5,9 +5,9 @@ import type { EntityLocator, EntityTypes } from 'interface/entity';
 import type { RecyclablesRepository } from 'service/repository/RecyclableRepository';
 
 import BaseRepository from './BaseRepository';
-import schema, { type Row } from '../schema/recyclable';
+import schema from '../schema/recyclable';
 
-export default class SqliteRecyclableRepository extends BaseRepository<Row> implements RecyclablesRepository {
+export default class SqliteRecyclableRepository extends BaseRepository implements RecyclablesRepository {
   protected readonly schema = schema;
 
   async put(entityType: EntityTypes, ids: string[]) {
@@ -19,8 +19,8 @@ export default class SqliteRecyclableRepository extends BaseRepository<Row> impl
       .select(['entityId', 'entityType'])
       .execute();
 
-    const recyclablesRows = await this._batchCreate(differenceWith(newRows, rows, isEqual));
-    return recyclablesRows.map((row) => ({ ...row, entityId: String(row.entityId) }));
+    const recyclablesRows = await this.batchCreate(this.schema.tableName, differenceWith(newRows, rows, isEqual));
+    return recyclablesRows.map((row) => ({ ...row, entityId: row.entityId }));
   }
 
   async findOneByLocator({ id: entityId, type: entityType }: EntityLocator) {

@@ -1,5 +1,6 @@
 import pick from 'lodash/pick';
 import { readFile } from 'fs-extra';
+import type { Selectable } from 'kysely';
 
 import type { MaterialRepository, Directory } from 'service/repository/MaterialRepository';
 import type { DirectoryVO, EntityMaterialVO, MaterialDTO, MaterialQuery, MaterialVO } from 'interface/material';
@@ -10,12 +11,12 @@ import BaseRepository from './BaseRepository';
 import FileRepository from './FileRepository';
 import MaterialAnnotationRepository from './MaterialAnnotationRepository';
 
-export default class SqliteMaterialRepository extends BaseRepository<Row> implements MaterialRepository {
+export default class SqliteMaterialRepository extends BaseRepository implements MaterialRepository {
   protected readonly schema = schema;
   private readonly files = new FileRepository(this.db);
   private readonly annotations = new MaterialAnnotationRepository(this.db);
   async createDirectory(directory: Directory) {
-    const createdRow = await this._createOrUpdate(directory);
+    const createdRow = await this.createOne(this.schema.tableName, { ...directory, id: this.generateId() });
     return SqliteMaterialRepository.rowToDirectory(createdRow);
   }
 
@@ -40,22 +41,23 @@ export default class SqliteMaterialRepository extends BaseRepository<Row> implem
       throw new Error('invalid material');
     }
 
-    const createdMaterial = await this._createOrUpdate({
+    const createdMaterial = await this.createOne(this.schema.tableName, {
       ...material,
+      id: this.generateId(),
       fileId: file.id,
     });
 
     return SqliteMaterialRepository.rowToMaterial(createdMaterial, file.mimeType);
   }
 
-  private static rowToDirectory(row: Row, childrenCount = 0): DirectoryVO {
+  private static rowToDirectory(row: Selectable<Row>, childrenCount = 0): DirectoryVO {
     return {
       ...pick(row, ['id', 'name', 'icon', 'parentId']),
       childrenCount,
     };
   }
 
-  private static rowToMaterial(row: Row, mimeType: string): EntityMaterialVO {
+  private static rowToMaterial(row: Selectable<Row>, mimeType: string): EntityMaterialVO {
     return {
       ...pick(row, ['name', 'icon', 'sourceUrl', 'createdAt', 'updatedAt']),
       mimeType,
@@ -158,7 +160,7 @@ export default class SqliteMaterialRepository extends BaseRepository<Row> implem
   readonly updateAnnotation = this.annotations.update.bind(this.annotations);
   readonly findAnnotationById = this.annotations.findOneById.bind(this.annotations);
 
-  private static isFileRow(row: Row) {
+  private static isFileRow(row: Selectable<Row>) {
     return Boolean(row.fileId);
   }
 

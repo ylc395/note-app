@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import BaseRepository from './BaseRepository';
 import fileSchema, { type Row } from '../schema/file';
 
-export default class FileRepository extends BaseRepository<Row> {
+export default class FileRepository extends BaseRepository {
   protected readonly schema = fileSchema;
 
   get tableName() {
@@ -21,7 +21,8 @@ export default class FileRepository extends BaseRepository<Row> {
       return existedFile;
     }
 
-    const createdFile = await this._createOrUpdate({
+    const createdFile = await this.createOne(this.tableName, {
+      id: this.generateId(),
       hash,
       data: Buffer.from(data),
       size: data.byteLength,
@@ -32,6 +33,6 @@ export default class FileRepository extends BaseRepository<Row> {
   }
 
   async updateText(fileId: Row['id'], text: string) {
-    return await this._createOrUpdate({ text }, fileId);
+    return await this.updateOne(this.schema.tableName, fileId, { text });
   }
 }

@@ -266,10 +266,6 @@ export default class NoteService extends BaseService {
     }
   }
 
-  async getAttributes() {
-    return this.notes.findAttributes();
-  }
-
   async areAvailable(noteIds: RawNoteVO['id'][] | RawNoteVO['id']) {
     if (Array.isArray(noteIds)) {
       const rows = await this.notes.findAll({ id: noteIds });

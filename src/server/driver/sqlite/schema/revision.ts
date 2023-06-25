@@ -1,17 +1,25 @@
-import { sql } from 'kysely';
-import { type InferRow, defineSchema } from './type';
+import { type SchemaModule, type Generated, sql } from 'kysely';
+import type { EntityTypes } from 'interface/entity';
 
-const schema = defineSchema({
-  tableName: 'revisions' as const,
-  fields: {
-    id: { type: 'text', primary: true, notNullable: true },
-    entityType: { type: 'integer', notNullable: true },
-    entityId: { type: 'text', notNullable: true },
-    diff: { type: 'text', notNullable: true },
-    createdAt: { type: 'integer', notNullable: true, defaultTo: sql`(unixepoch())` },
+export const tableName = 'revisions';
+
+export interface Row {
+  id: string;
+  entityType: EntityTypes;
+  entityId: string;
+  diff: string;
+  createdAt: Generated<number>;
+}
+
+export default {
+  tableName,
+  builder: (schema: SchemaModule) => {
+    return schema
+      .createTable(tableName)
+      .addColumn('id', 'text', (col) => col.primaryKey().notNull())
+      .addColumn('entityType', 'integer', (col) => col.notNull())
+      .addColumn('entityId', 'text', (col) => col.notNull())
+      .addColumn('diff', 'text', (col) => col.notNull())
+      .addColumn('createdAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch())`));
   },
-});
-
-export type Row = InferRow<(typeof schema)['fields']>;
-
-export default schema;
+} as const;

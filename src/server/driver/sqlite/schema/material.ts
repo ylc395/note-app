@@ -1,26 +1,32 @@
-import { sql } from 'kysely';
-import { type InferRow, defineSchema } from './type';
-import fileSchema from './file';
+import { type Generated, type SchemaModule, sql } from 'kysely';
+import { tableName as filesTableName } from './file';
 
-const schema = defineSchema({
-  tableName: 'materials' as const,
-  fields: {
-    id: { type: 'text', primary: true, notNullable: true },
-    name: { type: 'text', notNullable: true, defaultTo: '' },
-    fileId: { type: 'text' },
-    parentId: { type: 'text' },
-    sourceUrl: { type: 'text' },
-    icon: { type: 'text' },
-    createdAt: { type: 'integer', notNullable: true, defaultTo: sql`(unixepoch())` },
-    updatedAt: { type: 'integer', notNullable: true, defaultTo: sql`(unixepoch())` },
+export const tableName = 'materials';
+
+export interface Row {
+  id: string;
+  name: Generated<string>;
+  fileId: string | null;
+  parentId: string | null;
+  sourceUrl: string | null;
+  icon: string | null;
+  createdAt: Generated<number>;
+  updatedAt: Generated<number>;
+}
+
+export default {
+  tableName,
+  builder: (schema: SchemaModule) => {
+    return schema
+      .createTable(tableName)
+      .addColumn('id', 'text', (col) => col.primaryKey().notNull())
+      .addColumn('name', 'text', (col) => col.notNull().defaultTo(''))
+      .addColumn('fileId', 'text')
+      .addColumn('parentId', 'text')
+      .addColumn('sourceUrl', 'text')
+      .addColumn('icon', 'text')
+      .addColumn('createdAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch())`))
+      .addColumn('updatedAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch())`))
+      .addForeignKeyConstraint('fileId-foreign', ['fileId'], filesTableName, ['id']);
   },
-  restrictions: {
-    foreign: {
-      fileId: `${fileSchema.tableName}.id`,
-    },
-  },
-});
-
-export type Row = InferRow<(typeof schema)['fields']>;
-
-export default schema;
+} as const;

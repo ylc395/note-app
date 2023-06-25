@@ -9,9 +9,9 @@ import { buildIndex } from 'utils/collection';
 import BaseRepository from './BaseRepository';
 import FileRepository from './FileRepository';
 import schema, { type Row } from '../schema/resource';
-import fileSchema, { type Row as FileRow } from '../schema/file';
+import fileSchema from '../schema/file';
 
-export default class SqliteFileRepository extends BaseRepository<Row> implements ResourceRepository {
+export default class SqliteFileRepository extends BaseRepository implements ResourceRepository {
   protected readonly schema = schema;
   private readonly fileSchema = fileSchema;
 
@@ -46,7 +46,7 @@ export default class SqliteFileRepository extends BaseRepository<Row> implements
     return await sql.execute();
   }
 
-  async batchCreate(files: File[]) {
+  async createFromFiles(files: File[]) {
     const hashes = files.map((file) => createHash('md5').update(new Uint8Array(file.data)).digest('base64'));
     const existedFileDataRows = buildIndex(
       await this.db.selectFrom(this.fileSchema.tableName).where('hash', 'in', hashes).select(['id', 'hash']).execute(),
@@ -63,6 +63,7 @@ export default class SqliteFileRepository extends BaseRepository<Row> implements
         }
 
         return {
+          id: this.generateId(),
           data: Buffer.from(file.data),
           mimeType: file.mimeType,
           size: file.data.byteLength,
@@ -73,10 +74,11 @@ export default class SqliteFileRepository extends BaseRepository<Row> implements
 
     const createdFileDataRows =
       fileDataRowsToInsert.length > 0
-        ? buildIndex(await this._batchCreate<FileRow>(fileDataRowsToInsert, this.fileSchema.tableName), 'hash')
+        ? buildIndex(await super.batchCreate(this.fileSchema.tableName, fileDataRowsToInsert), 'hash')
         : {};
 
-    const createdRows = await this._batchCreate(
+    const createdRows = await super.batchCreate(
+      this.schema.tableName,
       files.map((file, index) => {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const hash = hashes[index]!;
@@ -87,6 +89,7 @@ export default class SqliteFileRepository extends BaseRepository<Row> implements
         }
 
         return {
+          id: this.generateId(),
           name: file.name,
           sourceUrl: file.sourceUrl,
           fileId,

@@ -9,7 +9,6 @@ export const noteDTOSchema = object({
   isReadonly: boolean(),
   parentId: union([zodNull(), string()]),
   icon: union([string().regex(/^(emoji:|file:).+/), zodNull()]),
-  attributes: record(string().min(1), string().min(1)),
   duplicateFrom: string(),
 }).partial();
 
@@ -28,12 +27,9 @@ export interface RawNoteVO {
   childrenCount: number;
   updatedAt: number;
   createdAt: number;
-  attributes: Record<string, string>;
 }
 
 export type NoteVO = RawNoteVO & Starable;
-
-export type NoteAttributesVO = Record<string, string[]>;
 
 export const noteQuerySchema = object({
   parentId: union([zodNull(), string()]).optional(),

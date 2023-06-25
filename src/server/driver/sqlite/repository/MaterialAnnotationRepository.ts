@@ -1,12 +1,13 @@
 import pick from 'lodash/pick';
 import isEmpty from 'lodash/isEmpty';
+import type { Selectable } from 'kysely';
 
 import type { AnnotationDTO, AnnotationPatchDTO, AnnotationVO, MaterialVO } from 'interface/material';
 
 import BaseRepository from './BaseRepository';
 import materialAnnotationSchema, { type Row } from '../schema/materialAnnotation';
 
-export default class MaterialAnnotationRepository extends BaseRepository<Row> {
+export default class MaterialAnnotationRepository extends BaseRepository {
   protected readonly schema = materialAnnotationSchema;
 
   get tableName() {
@@ -14,7 +15,8 @@ export default class MaterialAnnotationRepository extends BaseRepository<Row> {
   }
 
   async create(materialId: MaterialVO['id'], { type, comment, ...annotation }: AnnotationDTO) {
-    const created = await this._createOrUpdate({
+    const created = await this.createOne(this.schema.tableName, {
+      id: this.generateId(),
       materialId,
       type,
       comment,
@@ -43,7 +45,7 @@ export default class MaterialAnnotationRepository extends BaseRepository<Row> {
     return row ? MaterialAnnotationRepository.rowToVO(row) : null;
   }
 
-  private static rowToVO(row: Row) {
+  private static rowToVO(row: Selectable<Row>) {
     return {
       ...pick(row, ['id', 'createdAt', 'updatedAt', 'comment', 'type']),
       ...JSON.parse(row.meta),
@@ -76,7 +78,7 @@ export default class MaterialAnnotationRepository extends BaseRepository<Row> {
       newMeta = JSON.stringify({ ...JSON.parse(row.meta), ...attr });
     }
 
-    const updated = await this._createOrUpdate({ comment, meta: newMeta }, annotationId);
+    const updated = await this.updateOne(this.schema.tableName, annotationId, { comment, meta: newMeta });
     return updated ? MaterialAnnotationRepository.rowToVO(updated) : null;
   }
 }

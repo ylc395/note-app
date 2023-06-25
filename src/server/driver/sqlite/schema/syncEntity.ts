@@ -1,17 +1,22 @@
-import { type InferRow, defineSchema } from './type';
+import type { SchemaModule } from 'kysely';
+import type { EntityTypes } from 'interface/entity';
 
-const schema = defineSchema({
-  tableName: 'sync_entities' as const,
-  fields: {
-    entityType: { type: 'integer', notNullable: true },
-    entityId: { type: 'text', notNullable: true },
-    syncAt: { type: 'integer', notNullable: true },
+export const tableName = 'sync_entities';
+
+export interface Row {
+  entityType: EntityTypes;
+  entityId: string;
+  syncAt: number;
+}
+
+export default {
+  tableName,
+  builder: (schema: SchemaModule) => {
+    return schema
+      .createTable(tableName)
+      .addColumn('entityType', 'integer', (col) => col.notNull())
+      .addColumn('entityId', 'text', (col) => col.notNull())
+      .addColumn('syncAt', 'integer', (col) => col.notNull())
+      .addUniqueConstraint('type-id-unique', ['entityId', 'entityType']);
   },
-  restrictions: {
-    unique: ['entityType', 'entityId'],
-  },
-});
-
-export type Row = InferRow<(typeof schema)['fields']>;
-
-export default schema;
+} as const;

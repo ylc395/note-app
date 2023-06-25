@@ -4,11 +4,11 @@ import type { EntityLocator } from 'interface/entity';
 import { token as kvDatabaseToken, type KvDatabase } from 'infra/kvDatabase';
 
 import BaseRepository from './BaseRepository';
-import syncEntitySchema, { type Row } from '../schema/syncEntity';
+import syncEntitySchema from '../schema/syncEntity';
 
 const LAST_SYNC_TIME_KEY = 'sync.lastSyncTime';
 
-export default class SqliteSynchronizationRepository extends BaseRepository<Row> implements SynchronizationRepository {
+export default class SqliteSynchronizationRepository extends BaseRepository implements SynchronizationRepository {
   protected readonly schema = syncEntitySchema;
   @Inject(kvDatabaseToken) private readonly kvDb!: KvDatabase;
   async getEntitySyncAt({ id: entityId, type: entityType }: EntityLocator) {

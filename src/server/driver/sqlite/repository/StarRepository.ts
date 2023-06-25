@@ -3,17 +3,17 @@ import type { StarRecord } from 'interface/star';
 import type { StarRepository, StarQuery } from 'service/repository/StarRepository';
 
 import BaseRepository from './BaseRepository';
-import schema, { type Row } from '../schema/star';
+import schema from '../schema/star';
 import noteSchema from '../schema/note';
 
-export default class SqliteStarRepository extends BaseRepository<Row> implements StarRepository {
+export default class SqliteStarRepository extends BaseRepository implements StarRepository {
   protected readonly schema = schema;
 
   async put(entityType: EntityTypes, ids: EntityId[]) {
-    const rows = ids.map((entityId) => ({ entityId, entityType }));
-    const starRows = await this._batchCreate(rows);
+    const rows = ids.map((entityId) => ({ entityId, entityType, id: this.generateId() }));
+    const starRows = await this.batchCreate(this.schema.tableName, rows);
 
-    return starRows.map((row) => ({ ...row, entityId: String(row.entityId), id: String(row.id) }));
+    return starRows;
   }
 
   async findAll(query?: StarQuery) {

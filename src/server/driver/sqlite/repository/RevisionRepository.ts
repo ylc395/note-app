@@ -2,13 +2,13 @@ import type { RevisionDTO, RevisionRepository } from 'service/repository/Revisio
 
 import type { EntityLocator } from 'interface/entity';
 import BaseRepository from './BaseRepository';
-import schema, { type Row } from '../schema/revision';
+import schema from '../schema/revision';
 import type { RevisionVO } from 'interface/revision';
 
-export default class SqliteRevisionRepository extends BaseRepository<Row> implements RevisionRepository {
+export default class SqliteRevisionRepository extends BaseRepository implements RevisionRepository {
   protected readonly schema = schema;
   async create(revision: RevisionDTO) {
-    const { id, createdAt, diff } = await this._createOrUpdate(revision);
+    const { id, createdAt, diff } = await this.createOne(this.schema.tableName, { ...revision, id: this.generateId() });
     return { id, createdAt, diff };
   }
 

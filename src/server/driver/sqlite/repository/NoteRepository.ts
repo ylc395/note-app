@@ -1,22 +1,24 @@
 import omit from 'lodash/omit';
-import mapValues from 'lodash/mapValues';
-import uniq from 'lodash/uniq';
 
 import type { EntityId } from 'interface/entity';
 import type { NoteRepository, NoteQuery, InternalNoteDTO } from 'service/repository/NoteRepository';
-import type { NoteDTO, NoteVO, NotesDTO, NoteAttributesVO, RawNoteVO } from 'interface/note';
+import type { NoteDTO, NoteVO, NotesDTO, RawNoteVO } from 'interface/note';
 
 import BaseRepository from './BaseRepository';
 import noteSchema, { type Row } from '../schema/note';
+import type { Selectable } from 'kysely';
 
 interface RowPatch {
   childrenCount?: NoteVO['childrenCount'];
 }
 
-export default class SqliteNoteRepository extends BaseRepository<Row> implements NoteRepository {
+export default class SqliteNoteRepository extends BaseRepository implements NoteRepository {
   protected readonly schema = noteSchema;
   async create(note: InternalNoteDTO): Promise<RawNoteVO> {
-    const row = await this._createOrUpdate(SqliteNoteRepository.dtoToRow(note));
+    const row = await this.createOne(this.schema.tableName, {
+      ...SqliteNoteRepository.dtoToRow(note),
+      id: this.generateId(),
+    });
 
     return this.rowToVO(row);
   }
@@ -36,7 +38,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
   }
 
   async update(id: NoteVO['id'], note: InternalNoteDTO) {
-    const row = await this._createOrUpdate(SqliteNoteRepository.dtoToRow(note), id);
+    const row = await this.updateOne(this.schema.tableName, id, SqliteNoteRepository.dtoToRow(note));
 
     if (!row) {
       return null;
@@ -99,7 +101,7 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
     const ids: EntityId[] = [];
 
     for (const note of notes) {
-      const row = await this._createOrUpdate(note, note.id);
+      const row = await this.updateOne(this.schema.tableName, note.id, SqliteNoteRepository.dtoToRow(note));
 
       if (!row) {
         continue;
@@ -175,40 +177,20 @@ export default class SqliteNoteRepository extends BaseRepository<Row> implements
     return children;
   }
 
-  private rowToVO(row: Row & RowPatch, patch?: RowPatch): RawNoteVO {
+  private rowToVO(row: Selectable<Row> & RowPatch, patch?: RowPatch): RawNoteVO {
     return {
       ...omit(row, ['body']),
       parentId: row.parentId || null,
       isReadonly: Boolean(row.isReadonly),
       childrenCount: patch?.childrenCount || row.childrenCount || 0,
-      attributes: JSON.parse(row.attributes),
     };
   }
 
   private static dtoToRow(note: NoteDTO) {
-    return note.attributes ? { ...note, attributes: JSON.stringify(note.attributes) } : note;
-  }
-
-  async findAttributes() {
-    const result: NoteAttributesVO = {};
-    const notes = await this.db
-      .selectFrom(this.schema.tableName)
-      .select('attributes')
-      .where('attributes', '<>', '{}')
-      .execute();
-
-    for (const { attributes } of notes) {
-      for (const [k, v] of Object.entries(JSON.parse(attributes))) {
-        if (!result[k]) {
-          result[k] = [];
-        }
-
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        result[k]!.push(v as string);
-      }
-    }
-
-    return mapValues(result, uniq);
+    return {
+      ...note,
+      ...('isReadonly' in note ? { isReadonly: note.isReadonly ? (1 as const) : (0 as const) } : null),
+    } as Omit<Selectable<Row>, 'id'>;
   }
 
   async findOneById(id: NoteVO['id']) {

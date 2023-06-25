@@ -1,4 +1,4 @@
-import { boolean, infer as Infer, object, string } from 'zod';
+import { boolean, infer as Infer, number, object, string } from 'zod';
 import { entityId, type EntityId } from './entity';
 import { type PaginationEntity, type PaginationQuery, paginationQuerySchema } from './pagination';
 import type { Starable } from './star';
@@ -24,12 +24,12 @@ export type MemoPaginationQuery = PaginationQuery;
 export const memoQuerySchema = paginationQuerySchema;
 
 export const memoDTOSchema = object({
-  content: string().min(1).optional(),
+  content: string().min(1),
   isPinned: boolean().optional(),
   parentId: entityId().optional(),
 });
 
-export const memoPatchDTOSchema = memoDTOSchema.omit({ parentId: true });
+export const memoPatchDTOSchema = memoDTOSchema.omit({ parentId: true }).partial();
 
 export type MemoDTO = Infer<typeof memoDTOSchema>;
 export type MemoPatchDTO = Infer<typeof memoPatchDTOSchema>;

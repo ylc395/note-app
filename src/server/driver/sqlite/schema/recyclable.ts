@@ -1,19 +1,23 @@
-import { sql } from 'kysely';
-import { type InferRow, defineSchema } from './type';
+import type { EntityTypes } from 'interface/entity';
+import { type SchemaModule, type Generated, sql } from 'kysely';
 
-const schema = defineSchema({
-  tableName: 'recyclables' as const,
-  fields: {
-    entityType: { type: 'integer', notNullable: true },
-    entityId: { type: 'text', notNullable: true },
-    isHard: { type: 'integer', notNullable: true, defaultTo: 0 },
-    deletedAt: { type: 'integer', notNullable: true, defaultTo: sql`(unixepoch())` },
+export const tableName = 'recyclables';
+
+export interface Row {
+  entityId: string;
+  entityType: EntityTypes;
+  isHard: Generated<0 | 1>;
+  deletedAt: Generated<number>;
+}
+
+export default {
+  tableName,
+  builder: (schema: SchemaModule) => {
+    return schema
+      .createTable(tableName)
+      .addColumn('entityId', 'text', (col) => col.notNull())
+      .addColumn('entityType', 'integer', (col) => col.notNull())
+      .addColumn('isHard', 'integer', (col) => col.notNull().defaultTo(0))
+      .addColumn('deletedAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch())`));
   },
-  restrictions: {
-    unique: ['entityType', 'entityId'],
-  },
-});
-
-export type Row = InferRow<(typeof schema)['fields']>;
-
-export default schema;
+} as const;

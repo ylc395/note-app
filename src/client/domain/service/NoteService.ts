@@ -1,5 +1,4 @@
 import { container, singleton } from 'tsyringe';
-import pick from 'lodash/pick';
 import { Emitter } from 'strict-event-emitter';
 
 import { token as remoteToken } from 'infra/remote';
@@ -157,7 +156,7 @@ export default class NoteService extends Emitter<{
             }, Number(firstNote.isReadonly) as NoteMetadata['isReadonly']),
           }
         : {
-            ...pick(firstNote, ['icon', 'attributes']),
+            icon: firstNote.icon,
             isReadonly: Number(firstNote.isReadonly) as NoteMetadata['isReadonly'],
           };
 

@@ -34,7 +34,7 @@ export default class ResourceService extends BaseService {
 
       return rawFiles;
     } else {
-      return this.resources.batchCreate(files);
+      return this.resources.createFromFiles(files);
     }
   }
 
