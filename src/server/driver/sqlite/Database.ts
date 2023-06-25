@@ -3,7 +3,7 @@ import { AsyncLocalStorage } from 'node:async_hooks';
 import BetterSqlite3 from 'better-sqlite3';
 import { ensureDirSync, emptyDirSync } from 'fs-extra';
 import { join } from 'node:path';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 
 import { token as appClientToken, AppClient } from 'infra/appClient';
 import type { Database } from 'infra/database';
@@ -29,6 +29,7 @@ export interface Db {
 
 @Injectable()
 export default class SqliteDb implements Database {
+  private readonly logger = new Logger(SqliteDb.name);
   constructor(@Inject(appClientToken) private readonly appClient: AppClient) {
     this.db = this.createDb();
     this.ready = this.init();
@@ -77,13 +78,18 @@ export default class SqliteDb implements Database {
     const isDevelopment = process.env.NODE_ENV === 'development';
     const needClean = process.env.DEV_CLEAN === '1';
 
-    if (isDevelopment && needClean) {
+    if (isDevelopment && needClean && !this.appClient.headless) {
       emptyDirSync(dir);
     }
 
+    const dbPath = join(dir, 'db.sqlite');
+    this.logger.verbose(dbPath);
+
     return new Kysely<Db>({
       dialect: new SqliteDialect({
-        database: new BetterSqlite3(join(dir, 'db.sqlite'), { verbose: isDevelopment ? console.log : undefined }),
+        database: new BetterSqlite3(dbPath, {
+          verbose: isDevelopment ? this.logger.verbose.bind(this.logger) : undefined,
+        }),
       }),
       plugins: [new CamelCasePlugin()],
     });

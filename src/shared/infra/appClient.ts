@@ -17,6 +17,7 @@ export interface ClientInfo {
 }
 
 export interface AppClient extends Emitter<Events> {
+  headless: boolean;
   start: () => Promise<void>;
   getDataDir: () => string;
   getClientInfo: () => ClientInfo;

@@ -19,8 +19,8 @@ import ServiceModule from 'service/module';
 export default class ElectronModule implements OnModuleInit {
   constructor(private readonly appClient: ElectronAppClient, private readonly protocolRegister: ProtocolRegister) {}
 
-  onModuleInit() {
+  async onModuleInit() {
     this.appClient.once(AppClientEventNames.Ready, () => this.protocolRegister.register());
-    this.appClient.start();
+    await this.appClient.start();
   }
 }

@@ -1,6 +1,3 @@
-/** used in development env */
-import '../enableEsm';
-/*******/
 import { NestFactory } from '@nestjs/core';
 import type { MicroserviceOptions } from '@nestjs/microservices';
 

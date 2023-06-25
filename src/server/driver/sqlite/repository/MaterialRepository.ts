@@ -42,7 +42,7 @@ export default class SqliteMaterialRepository extends BaseRepository implements 
     }
 
     const createdMaterial = await this.createOne(this.schema.tableName, {
-      ...material,
+      ...pick(material, ['name', 'icon', 'parentId']),
       id: this.generateId(),
       fileId: file.id,
     });
