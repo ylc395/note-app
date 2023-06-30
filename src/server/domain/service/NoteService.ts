@@ -284,7 +284,7 @@ export default class NoteService extends BaseService {
     );
   }
 
-  async isWritable(noteId: RawNoteVO['id']) {
+  private async isWritable(noteId: RawNoteVO['id']) {
     const row = await this.notes.findOneById(noteId);
 
     if (!row) {

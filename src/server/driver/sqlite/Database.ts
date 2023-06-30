@@ -55,8 +55,7 @@ export default class SqliteDb implements Database {
   }
 
   getRepository<T extends keyof Repository>(name: T) {
-    const db = this.als.getStore() || this.db;
-    return new repositories[name](db) as unknown as Repository[T];
+    return new repositories[name](this.getDb()) as unknown as Repository[T];
   }
 
   private async init() {
@@ -68,7 +67,7 @@ export default class SqliteDb implements Database {
   }
 
   getDb() {
-    return this.db;
+    return this.als.getStore() || this.db;
   }
 
   private createDb() {
