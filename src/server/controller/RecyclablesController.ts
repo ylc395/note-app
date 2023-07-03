@@ -1,16 +1,16 @@
 import { Controller } from '@nestjs/common';
 
 import RecyclableService from 'service/RecyclableService';
-import { RecyclablesDTOSchema, RecyclableRecord, type RecyclablesDTO } from 'interface/recyclables';
+import { RecyclablesDTOSchema, type RecyclableRecord, type RecyclablesDTO } from 'interface/recyclables';
 
-import { Body, createSchemaPipe, Put } from './decorators';
+import { Body, createSchemaPipe, Patch } from './decorators';
 
 @Controller()
 export default class RecyclablesController {
   constructor(private recyclableService: RecyclableService) {}
 
-  @Put('/recyclables/notes')
-  async create(@Body(createSchemaPipe(RecyclablesDTOSchema)) { ids }: RecyclablesDTO): Promise<RecyclableRecord[]> {
-    return await this.recyclableService.putNotes(ids);
+  @Patch('/recyclables')
+  async create(@Body(createSchemaPipe(RecyclablesDTOSchema)) entities: RecyclablesDTO): Promise<RecyclableRecord[]> {
+    return await this.recyclableService.create(entities);
   }
 }

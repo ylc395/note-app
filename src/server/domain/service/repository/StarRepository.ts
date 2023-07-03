@@ -1,13 +1,9 @@
 import type { StarRecord } from 'interface/star';
-import type { EntityTypes, EntityId } from 'interface/entity';
-
-export interface StarQuery {
-  entityType: EntityTypes;
-  entityId: EntityId | EntityId[];
-}
+import type { EntityLocator } from 'interface/entity';
 
 export interface StarRepository {
-  put: (type: EntityTypes, ids: EntityId[]) => Promise<StarRecord[]>;
-  findAll: (query?: StarQuery) => Promise<StarRecord[]>;
+  create: (entities: EntityLocator[]) => Promise<StarRecord[]>;
+  findAllByLocators: (entities?: EntityLocator[]) => Promise<StarRecord[]>;
   remove: (id: StarRecord['id']) => Promise<void>;
+  findOneById: (id: StarRecord['id']) => Promise<StarRecord | null>;
 }

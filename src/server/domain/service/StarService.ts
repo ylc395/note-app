@@ -1,100 +1,83 @@
 import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import differenceWith from 'lodash/differenceWith';
 import groupBy from 'lodash/groupBy';
-import mapValues from 'lodash/mapValues';
-import zipObject from 'lodash/zipObject';
 
-import { type EntityId, EntityTypes, EntityLocator } from 'interface/entity';
+import { EntityTypes, EntityLocator } from 'interface/entity';
 import { normalizeTitle } from 'interface/note';
 import type { StarRecord } from 'interface/star';
 import { buildIndex } from 'utils/collection';
 
 import BaseService from './BaseService';
 import NoteService from './NoteService';
-import RecyclableService from './RecyclableService';
 
 @Injectable()
 export default class StarService extends BaseService {
   @Inject(forwardRef(() => NoteService)) private readonly noteService!: NoteService;
-  @Inject() private readonly recyclableService!: RecyclableService;
 
-  async create(type: EntityTypes, ids: EntityId[]) {
-    if (ids.length === 0) {
-      throw new Error('no ids');
+  async create(entities: EntityLocator[]) {
+    const existedStars = await this.stars.findAllByLocators(entities);
+
+    if (existedStars.length > 0) {
+      throw new Error('already exist');
     }
 
-    let isAvailable: boolean;
+    const groups = groupBy(entities, 'type');
 
-    switch (type) {
-      case EntityTypes.Note:
-        isAvailable = await this.noteService.areAvailable(ids);
-        break;
-      default:
-        throw new Error('unknown type');
+    for (const [type, entitiesOfType] of Object.entries(groups)) {
+      let isAvailable: boolean;
+      const ids = entitiesOfType.map(({ id }) => id);
+
+      switch (Number(type)) {
+        case EntityTypes.Note:
+          isAvailable = await this.noteService.areAvailable(ids);
+          break;
+        default:
+          throw new Error('unknown type');
+      }
+
+      if (!isAvailable) {
+        throw new Error('entities not available');
+      }
     }
 
-    if (!isAvailable) {
-      throw new Error('entities not available');
-    }
-
-    const existedStars = await this.stars.findAll({ entityType: type, entityId: ids });
-    const newIds = differenceWith(ids, existedStars, (id, star) => id === star.entityId);
-
-    return [...existedStars, ...(newIds.length > 0 ? await this.stars.put(type, newIds) : [])];
+    return await this.stars.create(entities);
   }
 
   async query() {
-    const stars = await this.stars.findAll();
-    const starGroups: Record<EntityTypes, StarRecord[]> = {
-      [EntityTypes.Note]: [],
-      [EntityTypes.Memo]: [],
-      [EntityTypes.Material]: [],
-      ...groupBy(stars, 'entityType'),
-    };
-    const idGroups: Record<EntityTypes, StarRecord['entityId'][]> = mapValues(starGroups, (records) =>
-      records.map((record) => record.entityId),
+    const stars = await this.stars.findAllByLocators();
+    const recyclables = await this.recyclables.findAllByLocators(
+      stars.map(({ entityId: id, entityType: type }) => ({ id, type })),
     );
+    const availableStars = differenceWith(stars, recyclables, (starRecord, recyclableRecord) => {
+      return starRecord.entityType === recyclableRecord.entityType && starRecord.entityId === recyclableRecord.entityId;
+    });
 
-    const recyclableGroups: Record<EntityTypes, Record<string, boolean>> = {
-      [EntityTypes.Note]: await this.recyclableService.areRecyclables(EntityTypes.Note, idGroups[EntityTypes.Note]),
-      [EntityTypes.Memo]: await this.recyclableService.areRecyclables(EntityTypes.Memo, idGroups[EntityTypes.Memo]),
-      [EntityTypes.Material]: await this.recyclableService.areRecyclables(
-        EntityTypes.Material,
-        idGroups[EntityTypes.Material],
-      ),
-    };
+    const starGroups = groupBy(availableStars, 'entityType');
+    const notes = starGroups[EntityTypes.Note]
+      ? buildIndex(await this.notes.findAll({ id: starGroups[EntityTypes.Note].map(({ entityId }) => entityId) }))
+      : {};
 
-    const notes = buildIndex(await this.notes.findAll({ id: idGroups[EntityTypes.Note] }));
-
-    return stars
-      .filter(({ entityType, entityId }) => !recyclableGroups[entityType][entityId])
-      .map((star) => {
-        switch (star.entityType) {
-          case EntityTypes.Note:
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            return { ...star, title: normalizeTitle(notes[star.entityId]!) };
-          default:
-            throw new Error('unknown type');
-        }
-      });
+    return availableStars.map((star) => {
+      switch (star.entityType) {
+        case EntityTypes.Note:
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          return { ...star, title: normalizeTitle(notes[star.entityId]!) };
+        default:
+          throw new Error('unknown type');
+      }
+    });
   }
 
   async remove(id: StarRecord['id']) {
+    if (!(await this.stars.findOneById(id))) {
+      throw new Error('invalid id');
+    }
+
     await this.stars.remove(id);
   }
 
-  async areStars(type: EntityTypes, ids: EntityId[]) {
-    const stars = await this.stars.findAll({ entityType: type, entityId: ids });
-    const index = buildIndex(stars, 'entityId');
-
-    return zipObject(
-      ids,
-      ids.map((id) => Boolean(index[id])),
-    );
-  }
-
   async isStar(entity: EntityLocator) {
-    const stars = await this.stars.findAll({ entityId: entity.id, entityType: entity.type });
+    const stars = await this.stars.findAllByLocators([entity]);
     return stars.length > 0;
   }
 }

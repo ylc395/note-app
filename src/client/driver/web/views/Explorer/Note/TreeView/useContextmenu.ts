@@ -79,7 +79,7 @@ export default function useContextmenu() {
         case 'edit':
           return editingModal.open();
         case 'star':
-          return starService.starNotes(targetIds);
+          return starService.star(EntityTypes.Note, targetIds);
         case 'openInNewWindow':
           if (!focusedTile) {
             throw new Error('no focusedTile');

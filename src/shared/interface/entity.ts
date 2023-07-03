@@ -1,6 +1,4 @@
-import { string } from 'zod';
-import invert from 'lodash/invert';
-import mapValues from 'lodash/mapValues';
+import { nativeEnum, object, string } from 'zod';
 
 export enum EntityTypes {
   Note = 1,
@@ -8,17 +6,14 @@ export enum EntityTypes {
   Material,
 }
 
-export const entityTypesToString: Record<EntityTypes, string> = {
-  [EntityTypes.Note]: 'notes',
-  [EntityTypes.Memo]: 'memos',
-  [EntityTypes.Material]: 'materials',
-};
-
-export const stringToEntityTypes: Record<string, EntityTypes> = mapValues(invert(entityTypesToString), Number);
-
 export type EntityId = string;
 
 export const entityId = string;
+
+export const entityLocatorSchema = object({
+  id: entityId(),
+  type: nativeEnum(EntityTypes),
+});
 
 export type EntityLocator = {
   type: EntityTypes;

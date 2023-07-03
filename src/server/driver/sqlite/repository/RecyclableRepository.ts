@@ -1,7 +1,4 @@
-import differenceWith from 'lodash/differenceWith';
-import isEqual from 'lodash/isEqual';
-
-import type { EntityLocator, EntityTypes } from 'interface/entity';
+import type { EntityLocator } from 'interface/entity';
 import type { RecyclablesRepository } from 'service/repository/RecyclableRepository';
 
 import BaseRepository from './BaseRepository';
@@ -10,17 +7,14 @@ import schema from '../schema/recyclable';
 export default class SqliteRecyclableRepository extends BaseRepository implements RecyclablesRepository {
   protected readonly schema = schema;
 
-  async put(entityType: EntityTypes, ids: string[]) {
-    const newRows = ids.map((entityId) => ({ entityId, entityType }));
+  async create(entities: EntityLocator[]) {
     const rows = await this.db
-      .selectFrom(this.schema.tableName)
-      .where('entityId', 'in', ids)
-      .where('entityType', '=', entityType)
-      .select(['entityId', 'entityType'])
+      .insertInto(this.schema.tableName)
+      .values(entities.map(({ id, type }) => ({ entityId: id, entityType: type })))
+      .returning(['entityId', 'entityType', 'deletedAt'])
       .execute();
 
-    const recyclablesRows = await this.batchCreate(this.schema.tableName, differenceWith(newRows, rows, isEqual));
-    return recyclablesRows.map((row) => ({ ...row, entityId: row.entityId }));
+    return rows;
   }
 
   async findOneByLocator({ id: entityId, type: entityType }: EntityLocator) {
@@ -35,16 +29,17 @@ export default class SqliteRecyclableRepository extends BaseRepository implement
     return row || null;
   }
 
-  async findAllByLocator(type: EntityTypes, ids: EntityLocator['id'][]) {
-    if (ids.length === 0) {
+  async findAllByLocators(entities: EntityLocator[]) {
+    if (entities.length === 0) {
       return [];
     }
 
+    const ids = entities.map(({ id }) => id);
     const rows = await this.db
       .selectFrom(this.schema.tableName)
       .select(['entityId', 'entityType', 'deletedAt'])
       .where('entityId', 'in', ids)
-      .where('entityType', '=', type)
+      .where('isHard', '=', 0)
       .execute();
 
     return rows;

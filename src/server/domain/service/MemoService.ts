@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import dayjs from 'dayjs';
 
 import type { MemoDTO, MemoPatchDTO, MemoPaginationQuery, MemoVO, ParentMemoVO } from 'interface/memo';
 

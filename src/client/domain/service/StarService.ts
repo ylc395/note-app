@@ -4,7 +4,7 @@ import { observable, makeObservable, runInAction, action } from 'mobx';
 import pull from 'lodash/pull';
 
 import { token as remoteToken } from 'infra/remote';
-import { type EntityId, EntityTypes, entityTypesToString, EntityLocator } from 'interface/entity';
+import type { EntityId, EntityLocator, EntityTypes } from 'interface/entity';
 import type { StarRecord, StarsDTO } from 'interface/star';
 
 export enum StarEvents {
@@ -25,13 +25,13 @@ export default class StarService extends Emitter<{
 
   private readonly remote = container.resolve(remoteToken);
   @observable stars?: Required<StarRecord>[];
-  private async star(type: EntityTypes, ids: EntityId[]) {
-    await this.remote.put<StarsDTO, StarRecord[]>(`/stars/${entityTypesToString[type]}`, { ids });
-    this.emit(StarEvents.Added, { ids, type });
-  }
 
-  starNotes(ids: EntityId[]) {
-    return this.star(EntityTypes.Note, ids);
+  async star(type: EntityTypes, ids: EntityId[]) {
+    await this.remote.patch<StarsDTO, StarRecord[]>(
+      '/stars',
+      ids.map((id) => ({ id, type })),
+    );
+    this.emit(StarEvents.Added, { ids, type });
   }
 
   @action

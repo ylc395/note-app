@@ -1,3 +1,4 @@
+import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import {
   type AnnotationDTO,
   type MaterialDTO,
@@ -10,8 +11,12 @@ import {
 } from 'interface/material';
 
 import BaseService from './BaseService';
+import RecyclableService from './RecyclableService';
+import { EntityTypes } from 'interface/entity';
 
+@Injectable()
 export default class MaterialService extends BaseService {
+  @Inject(forwardRef(() => RecyclableService)) private readonly recyclableService!: RecyclableService;
   async create({ text, sourceUrl, file, ...info }: MaterialDTO) {
     if ((text || sourceUrl || file) && !info.parentId) {
       throw new Error('empty parentId');
@@ -115,5 +120,17 @@ export default class MaterialService extends BaseService {
     }
 
     return updated;
+  }
+
+  async areAvailable(ids: MaterialVO['id'][]) {
+    const rows = await this.materials.findAll({ ids });
+
+    if (rows.length !== ids.length) {
+      return false;
+    }
+
+    const entities = ids.map((id) => ({ id, type: EntityTypes.Material }));
+
+    return !(await this.recyclableService.areRecyclables(entities));
   }
 }

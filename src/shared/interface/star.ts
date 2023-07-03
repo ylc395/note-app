@@ -1,11 +1,9 @@
-import { object, array } from 'zod';
-import { type EntityTypes, type EntityId, entityId } from './entity';
+import { array, infer as Infer } from 'zod';
+import { EntityTypes, type EntityId, entityLocatorSchema } from './entity';
 
-export const starsDTOSchema = object({
-  ids: array(entityId()).nonempty(),
-});
+export const starsDTOSchema = array(entityLocatorSchema);
 
-export type StarsDTO = { ids: string[] };
+export type StarsDTO = Infer<typeof starsDTOSchema>;
 
 export interface StarRecord {
   entityId: EntityId;

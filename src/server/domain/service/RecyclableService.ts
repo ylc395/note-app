@@ -1,18 +1,38 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
-import zipObject from 'lodash/zipObject';
+import groupBy from 'lodash/groupBy';
 
-import { EntityId, EntityLocator, EntityTypes } from 'interface/entity';
+import { type EntityLocator, EntityTypes, EntityId } from 'interface/entity';
 import { token as searchEngineToken, type SearchEngine } from 'infra/searchEngine';
-import { buildIndex } from 'utils/collection';
 import BaseService from './BaseService';
 import NoteService from './NoteService';
+import MaterialService from './MaterialService';
 
 @Injectable()
 export default class RecyclableService extends BaseService {
   @Inject(forwardRef(() => NoteService)) private readonly noteService!: NoteService;
+  @Inject(forwardRef(() => MaterialService)) private readonly materialService!: MaterialService;
   @Inject(searchEngineToken) private readonly searchEngine!: SearchEngine;
 
-  async putNotes(ids: EntityId[]) {
+  async create(entities: EntityLocator[]) {
+    const groups = groupBy(entities, 'type');
+
+    for (const [type, entitiesOfType] of Object.entries(groups)) {
+      const ids = entitiesOfType.map(({ id }) => id);
+
+      switch (Number(type)) {
+        case EntityTypes.Note:
+          await this.prepareNotes(ids);
+          break;
+
+        default:
+          break;
+      }
+    }
+
+    return await this.recyclables.create(entities);
+  }
+
+  private async prepareNotes(ids: EntityId[]) {
     const allIds = [...ids, ...(await this.notes.findAllDescendantIds(ids))];
     const areAvailable = await this.noteService.areAvailable(allIds);
 
@@ -21,20 +41,9 @@ export default class RecyclableService extends BaseService {
     }
 
     await this.searchEngine.remove(ids.map((id) => ({ id, type: EntityTypes.Note })));
-    return await this.recyclables.put(EntityTypes.Note, allIds);
   }
 
-  async isRecyclable(entity: EntityLocator) {
-    return Boolean(await this.recyclables.findOneByLocator(entity));
-  }
-
-  async areRecyclables(type: EntityTypes, ids: EntityId[]) {
-    const rows = await this.recyclables.findAllByLocator(type, ids);
-    const index = buildIndex(rows, 'entityId');
-
-    return zipObject(
-      ids,
-      ids.map((id) => Boolean(index[id])),
-    );
+  async areRecyclables(entities: EntityLocator[]) {
+    return (await this.recyclables.findAllByLocators(entities)).length > 0;
   }
 }
