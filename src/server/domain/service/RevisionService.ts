@@ -1,14 +1,13 @@
-import { OnEvent } from '@nestjs/event-emitter';
 import { createPatch, applyPatch } from 'diff';
+import { OnEvent } from '@nestjs/event-emitter';
 
 import { type EntityLocator, EntityTypes } from 'interface/entity';
 import type { RawNoteVO } from 'interface/note';
 import type { MemoVO } from 'interface/memo';
 import type { RevisionVO } from 'interface/revision';
+import { type ContentUpdatedEvent, Events } from 'model/events';
 
 import BaseService from './BaseService';
-import type { NoteBodyUpdatedEvent } from 'service/NoteService';
-import type { MemoContentUpdatedEvent } from 'service/MemoService';
 
 const MAX_INTERVAL_MINUTES = 1;
 
@@ -18,10 +17,10 @@ export default class RevisionService extends BaseService {
     await this.revisions.create({ entityId: entity.id, entityType: entity.type, diff });
   }
 
-  @OnEvent('updated.content.*')
-  async createRevision({ content, ...entityLocator }: NoteBodyUpdatedEvent | MemoContentUpdatedEvent, force?: true) {
+  @OnEvent(Events.ContentUpdated)
+  async createRevision({ content, isImportant, ...entityLocator }: ContentUpdatedEvent) {
     const latestRevision = await this.revisions.findLatest(entityLocator);
-    let shouldSubmit = force || entityLocator.type !== EntityTypes.Note;
+    let shouldSubmit = isImportant || entityLocator.type !== EntityTypes.Note;
 
     if (!shouldSubmit) {
       const createdAt = latestRevision?.createdAt || (await this.getCreatedAt(entityLocator));

@@ -1,19 +1,10 @@
 import { Injectable } from '@nestjs/common';
 
-import type { MemoDTO, MemoPatchDTO, MemoPaginationQuery, MemoVO, ParentMemoVO } from 'interface/memo';
+import type { MemoDTO, MemoPatchDTO, MemoPaginationQuery, ParentMemoVO } from 'interface/memo';
+import { Events } from 'model/events';
 
 import BaseService from './BaseService';
 import { EntityTypes } from 'interface/entity';
-
-export const events = {
-  contentUpdated: 'updated.content.memo',
-};
-
-export interface MemoContentUpdatedEvent {
-  id: MemoVO['id'];
-  type: EntityTypes.Memo;
-  content: MemoVO['content'];
-}
 
 @Injectable()
 export default class MemoService extends BaseService {
@@ -24,11 +15,11 @@ export default class MemoService extends BaseService {
 
     const newMemo = await this.memos.create(memo);
 
-    this.eventEmitter.emit(events.contentUpdated, {
+    await this.eventEmitter.emitAsync(Events.ContentUpdated, {
       id: newMemo.id,
       type: EntityTypes.Memo,
       content: newMemo.content,
-    } as MemoContentUpdatedEvent);
+    });
 
     return newMemo;
   }
@@ -45,11 +36,11 @@ export default class MemoService extends BaseService {
     }
 
     if (patch.content) {
-      this.eventEmitter.emit(events.contentUpdated, {
+      await this.eventEmitter.emitAsync(Events.ContentUpdated, {
         id,
         type: EntityTypes.Memo,
         content: patch.content,
-      } as MemoContentUpdatedEvent);
+      });
     }
 
     return updated;

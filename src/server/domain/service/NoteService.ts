@@ -12,28 +12,17 @@ import {
   type NoteQuery,
   type NotesDTO,
   type NotePath,
-  type NoteBodyVO,
   normalizeTitle,
 } from 'interface/note';
 import { EntityTypes } from 'interface/entity';
+import { Events } from 'model/events';
+
 import BaseService from './BaseService';
-import RevisionService from './RevisionService';
 import RecyclableService from './RecyclableService';
 import StarService from './StarService';
 
-export const events = {
-  bodyUpdated: 'updated.content.note',
-};
-
-export interface NoteBodyUpdatedEvent {
-  id: RawNoteVO['id'];
-  type: EntityTypes.Note;
-  content: NoteBodyVO;
-}
-
 @Injectable()
 export default class NoteService extends BaseService {
-  @Inject() private readonly revisionService!: RevisionService;
   @Inject(forwardRef(() => RecyclableService)) private readonly recyclableService!: RecyclableService;
   @Inject(forwardRef(() => StarService)) private readonly starService!: StarService;
 
@@ -86,7 +75,7 @@ export default class NoteService extends BaseService {
   }
 
   async updateBody(noteId: RawNoteVO['id'], { content, isImportant }: NoteBodyDTO) {
-    const result = await this.db.transaction(async () => {
+    return await this.db.transaction(async () => {
       if (!(await this.isWritable(noteId))) {
         throw new Error('note unavailable');
       }
@@ -99,20 +88,15 @@ export default class NoteService extends BaseService {
 
       await this.notes.update(noteId, { updatedAt: dayjs().unix() });
 
-      if (isImportant) {
-        await this.revisionService.createRevision({ content, type: EntityTypes.Note, id: noteId }, true);
-      }
+      await this.eventEmitter.emitAsync(Events.ContentUpdated, {
+        id: noteId,
+        type: EntityTypes.Note,
+        content,
+        isImportant,
+      });
 
       return result;
     });
-
-    this.eventEmitter.emit(events.bodyUpdated, {
-      id: noteId,
-      type: EntityTypes.Note,
-      content,
-    } as NoteBodyUpdatedEvent);
-
-    return result;
   }
 
   async getBody(noteId: RawNoteVO['id']) {
@@ -265,7 +249,7 @@ export default class NoteService extends BaseService {
   async isAvailable(id: RawNoteVO['id']) {
     return (
       Boolean(await this.notes.findOneById(id)) &&
-      (await this.recyclableService.areRecyclables([{ type: EntityTypes.Note, id }]))
+      !(await this.recyclableService.areRecyclables([{ type: EntityTypes.Note, id }]))
     );
   }
 

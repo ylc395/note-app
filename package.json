@@ -10,6 +10,9 @@
     "clean": "rm -rf ./dist && rm -rf node_modules/.vite",
     "postinstall": "electron-rebuild"
   },
+  "resolutions": {
+    "eventemitter2": "6.4.8"
+  },
   "devDependencies": {
     "@electron/rebuild": "^3.2.10",
     "@types/better-sqlite3": "^7.6.4",

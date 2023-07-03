@@ -1,14 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { OnEvent } from '@nestjs/event-emitter';
 import { fromMarkdown } from 'mdast-util-from-markdown';
+import { OnEvent } from '@nestjs/event-emitter';
 
 import { extension, mdastExtension } from 'infra/markdown/topic';
-import { events as noteEvents, type NoteBodyUpdatedEvent } from './NoteService';
+import { type ContentUpdatedEvent, Events } from 'model/events';
+
+import BaseService from './BaseService';
 
 @Injectable()
-export default class TopicService {
-  @OnEvent(noteEvents.bodyUpdated)
-  async extractTopics({ id, content }: NoteBodyUpdatedEvent) {
+export default class TopicService extends BaseService {
+  @OnEvent(Events.ContentUpdated)
+  async extractTopics({ id, content }: ContentUpdatedEvent) {
     const mdAst = fromMarkdown(content, {
       extensions: [extension],
       mdastExtensions: [mdastExtension],

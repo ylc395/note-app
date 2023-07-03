@@ -25,7 +25,7 @@ const services = [
 ];
 
 @Module({
-  imports: [EventEmitterModule.forRoot({ wildcard: true })],
+  imports: [EventEmitterModule.forRoot()],
   providers: [BaseService, ...services],
   exports: services,
 })
