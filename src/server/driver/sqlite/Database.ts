@@ -29,8 +29,9 @@ export interface Db {
 
 @Injectable()
 export default class SqliteDb implements Database {
-  private readonly logger = new Logger(SqliteDb.name);
+  private readonly logger: Logger;
   constructor(@Inject(appClientToken) private readonly appClient: AppClient) {
+    this.logger = new Logger(`${appClient.mode} ${SqliteDb.name}`);
     this.db = this.createDb();
     this.ready = this.init();
   }
@@ -77,7 +78,7 @@ export default class SqliteDb implements Database {
     const isDevelopment = process.env.NODE_ENV === 'development';
     const needClean = process.env.DEV_CLEAN === '1';
 
-    if (isDevelopment && needClean && !this.appClient.headless) {
+    if (isDevelopment && needClean && this.appClient.mode === 'ui') {
       emptyDirSync(dir);
     }
 

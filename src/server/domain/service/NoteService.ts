@@ -75,7 +75,7 @@ export default class NoteService extends BaseService {
   }
 
   async updateBody(noteId: RawNoteVO['id'], { content, isImportant }: NoteBodyDTO) {
-    return await this.db.transaction(async () => {
+    const result = await this.db.transaction(async () => {
       if (!(await this.isWritable(noteId))) {
         throw new Error('note unavailable');
       }
@@ -87,16 +87,16 @@ export default class NoteService extends BaseService {
       }
 
       await this.notes.update(noteId, { updatedAt: dayjs().unix() });
-
-      await this.eventEmitter.emitAsync(Events.ContentUpdated, {
-        id: noteId,
-        type: EntityTypes.Note,
-        content,
-        isImportant,
-      });
-
-      return result;
     });
+
+    this.eventEmitter.emitAsync(Events.ContentUpdated, {
+      id: noteId,
+      type: EntityTypes.Note,
+      content,
+      isImportant,
+    });
+
+    return result;
   }
 
   async getBody(noteId: RawNoteVO['id']) {

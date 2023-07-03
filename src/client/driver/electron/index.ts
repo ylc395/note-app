@@ -26,7 +26,7 @@ protocol.registerSchemesAsPrivileged([
 @Injectable()
 export default class ElectronClient extends BaseClient implements AppClient {
   private mainWindow?: BrowserWindow;
-  readonly headless = true;
+  readonly mode = 'ui';
 
   async start() {
     if (NODE_ENV === 'development') {

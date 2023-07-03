@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 
 import BaseService from './BaseService';
@@ -25,7 +25,7 @@ const services = [
 ];
 
 @Module({
-  imports: [EventEmitterModule.forRoot()],
+  imports: [forwardRef(() => EventEmitterModule.forRoot({ verboseMemoryLeak: true }))], // use forwardRef to prevent one emitter shared by different env
   providers: [BaseService, ...services],
   exports: services,
 })

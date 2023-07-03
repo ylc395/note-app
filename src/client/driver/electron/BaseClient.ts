@@ -14,7 +14,7 @@ const NODE_ENV = process.env.NODE_ENV;
 
 @Injectable()
 export default class BaseClient extends Emitter<AppClientEvents> implements AppClient {
-  readonly headless = true;
+  readonly mode: string = 'http';
   private clientInfo?: ClientInfo;
 
   constructor(private readonly moduleRef: ModuleRef) {
