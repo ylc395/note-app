@@ -11,6 +11,7 @@ import MemoService from './MemoService';
 import MaterialService from './MaterialService';
 import RevisionService from './RevisionService';
 import SyncService from './SyncService';
+import EntityService from './EntityService';
 
 const services = [
   NoteService,
@@ -22,6 +23,7 @@ const services = [
   MaterialService,
   RevisionService,
   SyncService,
+  EntityService,
 ];
 
 @Module({

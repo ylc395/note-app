@@ -8,11 +8,11 @@ import type { StarRecord } from 'interface/star';
 import { buildIndex } from 'utils/collection';
 
 import BaseService from './BaseService';
-import NoteService from './NoteService';
+import EntityService from './EntityService';
 
 @Injectable()
 export default class StarService extends BaseService {
-  @Inject(forwardRef(() => NoteService)) private readonly noteService!: NoteService;
+  @Inject(forwardRef(() => EntityService)) private readonly entityService!: EntityService;
 
   async create(entities: EntityLocator[]) {
     const existedStars = await this.stars.findAllByLocators(entities);
@@ -21,25 +21,7 @@ export default class StarService extends BaseService {
       throw new Error('already exist');
     }
 
-    const groups = groupBy(entities, 'type');
-
-    for (const [type, entitiesOfType] of Object.entries(groups)) {
-      let isAvailable: boolean;
-      const ids = entitiesOfType.map(({ id }) => id);
-
-      switch (Number(type)) {
-        case EntityTypes.Note:
-          isAvailable = await this.noteService.areAvailable(ids);
-          break;
-        default:
-          throw new Error('unknown type');
-      }
-
-      if (!isAvailable) {
-        throw new Error('entities not available');
-      }
-    }
-
+    await this.entityService.assertAvailableEntities(entities);
     return await this.stars.create(entities);
   }
 
