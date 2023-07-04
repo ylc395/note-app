@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { fromMarkdown } from 'mdast-util-from-markdown';
-import { OnEvent } from '@nestjs/event-emitter';
 
 import { extension, mdastExtension } from 'infra/markdown/topic';
-import { type ContentUpdatedEvent, Events } from 'model/events';
+import { type ContentUpdatedEvent, Events, OnEvent } from 'model/events';
 
 import BaseService from './BaseService';
 

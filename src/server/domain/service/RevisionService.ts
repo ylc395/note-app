@@ -1,11 +1,10 @@
 import { createPatch, applyPatch } from 'diff';
-import { OnEvent } from '@nestjs/event-emitter';
 
 import { type EntityLocator, EntityTypes } from 'interface/entity';
 import type { RawNoteVO } from 'interface/note';
 import type { MemoVO } from 'interface/memo';
 import type { RevisionVO } from 'interface/revision';
-import { type ContentUpdatedEvent, Events } from 'model/events';
+import { type ContentUpdatedEvent, Events, OnEvent } from 'model/events';
 
 import BaseService from './BaseService';
 

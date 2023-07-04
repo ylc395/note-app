@@ -1,3 +1,4 @@
+import { createTypedListener } from 'nest-typed-event-emitter';
 import type { EntityLocator } from 'interface/entity';
 
 export enum Events {
@@ -6,6 +7,8 @@ export enum Events {
 
 export type ContentUpdatedEvent = EntityLocator & { isImportant?: boolean; content: string };
 
-export type EventMap = {
-  [Events.ContentUpdated]: (e: ContentUpdatedEvent) => void;
-};
+export interface EventMaps {
+  [Events.ContentUpdated]: ContentUpdatedEvent;
+}
+
+export const OnEvent = createTypedListener<EventMaps, true>();

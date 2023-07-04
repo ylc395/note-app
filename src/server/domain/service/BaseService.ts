@@ -1,14 +1,15 @@
 import { Inject, Injectable } from '@nestjs/common';
+import type { IEventEmitter } from 'nest-typed-event-emitter';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import type { EventMap } from 'model/events';
 
+import type { EventMaps } from 'model/events';
 import { token as databaseToken, type Database } from 'infra/database';
 
 @Injectable()
 export default class BaseService {
   constructor(
     @Inject(databaseToken) protected readonly db: Database,
-    protected readonly eventEmitter: EventEmitter2<EventMap>,
+    @Inject(EventEmitter2) protected readonly eventEmitter: IEventEmitter<EventMaps, true>,
   ) {}
 
   protected get materials() {

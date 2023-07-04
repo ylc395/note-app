@@ -15,7 +15,7 @@ export default class MemoService extends BaseService {
 
     const newMemo = await this.memos.create(memo);
 
-    await this.eventEmitter.emitAsync(Events.ContentUpdated, {
+    this.eventEmitter.emit(Events.ContentUpdated, {
       id: newMemo.id,
       type: EntityTypes.Memo,
       content: newMemo.content,
@@ -36,7 +36,7 @@ export default class MemoService extends BaseService {
     }
 
     if (patch.content) {
-      await this.eventEmitter.emitAsync(Events.ContentUpdated, {
+      this.eventEmitter.emit(Events.ContentUpdated, {
         id,
         type: EntityTypes.Memo,
         content: patch.content,

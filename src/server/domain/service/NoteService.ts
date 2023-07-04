@@ -87,9 +87,11 @@ export default class NoteService extends BaseService {
       }
 
       await this.notes.update(noteId, { updatedAt: dayjs().unix() });
+
+      return result;
     });
 
-    this.eventEmitter.emitAsync(Events.ContentUpdated, {
+    this.eventEmitter.emit(Events.ContentUpdated, {
       id: noteId,
       type: EntityTypes.Note,
       content,
