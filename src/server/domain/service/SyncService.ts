@@ -6,7 +6,7 @@ import fm from 'front-matter';
 import { token as appClientToken, type AppClient } from 'infra/appClient';
 import { type EntityLocator, EntityTypes } from 'interface/entity';
 import type { Conflict, Log } from 'infra/synchronizer';
-import type { RawNoteVO } from 'interface/note';
+import type { RawNoteVO } from 'model/note';
 import type { MemoVO } from 'interface/memo';
 import { type SyncTargetFactory, type SyncTarget, token as syncTargetFactoryToken } from 'infra/synchronizer';
 

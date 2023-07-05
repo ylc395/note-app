@@ -1,10 +1,11 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import groupBy from 'lodash/groupBy';
-import { type EntityLocator, EntityTypes } from 'interface/entity';
+import { type EntityLocator, EntityTypes, EntityId } from 'interface/entity';
 
 import BaseService from './BaseService';
 import NoteService from './NoteService';
 import MaterialService from './MaterialService';
+import { buildIndex } from 'utils/collection';
 
 @Injectable()
 export default class EntityService extends BaseService {
@@ -30,5 +31,24 @@ export default class EntityService extends BaseService {
     if (!isValid.every((result) => result)) {
       throw new Error('invalid entities');
     }
+  }
+
+  static getAncestorsMap<T extends { parentId: EntityId | null; id: EntityId }>(ids: EntityId[], entities: T[]) {
+    const entitiesMap = buildIndex(entities, 'id');
+    const ancestorsMap: Record<EntityId, T[]> = {};
+
+    for (const id of ids) {
+      const ancestors: T[] = [];
+      let entity = entitiesMap[id];
+
+      while (entity) {
+        ancestors.push(entity);
+        entity = entity.parentId ? entitiesMap[entity.parentId] : undefined;
+      }
+
+      ancestorsMap[id] = ancestors;
+    }
+
+    return ancestorsMap;
   }
 }

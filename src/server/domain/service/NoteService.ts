@@ -2,46 +2,56 @@ import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import omit from 'lodash/omit';
 import groupBy from 'lodash/groupBy';
 import intersection from 'lodash/intersection';
+import intersectionWith from 'lodash/intersectionWith';
+import zipObject from 'lodash/zipObject';
 import dayjs from 'dayjs';
 
-import { buildIndex } from 'utils/collection';
+import { buildIndex, getIds, getLocators } from 'utils/collection';
 import {
-  type RawNoteVO,
+  type NoteVO,
   type NoteBodyDTO,
   type NoteDTO,
   type NoteQuery,
   type NotesDTO,
-  type NotePath,
   normalizeTitle,
 } from 'interface/note';
 import { EntityTypes } from 'interface/entity';
 import { Events } from 'model/events';
+import type { RawNoteVO } from 'model/note';
 
 import BaseService from './BaseService';
 import RecyclableService from './RecyclableService';
 import StarService from './StarService';
+import EntityService from './EntityService';
 
 @Injectable()
 export default class NoteService extends BaseService {
   @Inject(forwardRef(() => RecyclableService)) private readonly recyclableService!: RecyclableService;
   @Inject(forwardRef(() => StarService)) private readonly starService!: StarService;
 
+  // not check the note ids' availability
+  private async getChildren(noteIds: NoteVO['id'][]) {
+    const children = await this.notes.findAllChildren(noteIds);
+
+    return groupBy(await this.recyclableService.filterNotRecyclables(EntityTypes.Note, children), 'parentId');
+  }
+
   async create(note: NoteDTO) {
     return await this.db.transaction(async () => {
-      if (note.parentId && !(await this.isAvailable(note.parentId))) {
+      if (note.parentId && !(await this.areAvailable([note.parentId]))) {
         throw new Error('invalid parentId');
       }
 
       if (note.duplicateFrom) {
-        return { ...(await this.duplicate(note.duplicateFrom)), isStar: false };
+        return { ...(await this.duplicate(note.duplicateFrom)), isStar: false, childrenCount: 0 };
       }
 
-      return { ...(await this.notes.create(note)), isStar: false };
+      return { ...(await this.notes.create(note)), isStar: false, childrenCount: 0 };
     });
   }
 
-  private async duplicate(noteId: RawNoteVO['id']) {
-    if (!(await this.isAvailable(noteId))) {
+  private async duplicate(noteId: NoteVO['id']) {
+    if (!(await this.areAvailable([noteId]))) {
       throw new Error('note unavailable');
     }
 
@@ -60,7 +70,7 @@ export default class NoteService extends BaseService {
     return newNote;
   }
 
-  async update(noteId: RawNoteVO['id'], note: NoteDTO) {
+  async update(noteId: NoteVO['id'], note: NoteDTO) {
     await this.assertValidChanges([{ ...note, id: noteId }]);
 
     const result = await this.notes.update(noteId, { ...note, updatedAt: dayjs().unix() });
@@ -70,11 +80,12 @@ export default class NoteService extends BaseService {
     }
 
     const isStar = await this.starService.isStar({ type: EntityTypes.Note, id: noteId });
+    const children = await this.getChildren([noteId]);
 
-    return { ...result, isStar };
+    return { ...result, isStar, childrenCount: children[noteId]?.length || 0 };
   }
 
-  async updateBody(noteId: RawNoteVO['id'], { content, isImportant }: NoteBodyDTO) {
+  async updateBody(noteId: NoteVO['id'], { content, isImportant }: NoteBodyDTO) {
     const result = await this.db.transaction(async () => {
       if (!(await this.isWritable(noteId))) {
         throw new Error('note unavailable');
@@ -101,8 +112,8 @@ export default class NoteService extends BaseService {
     return result;
   }
 
-  async getBody(noteId: RawNoteVO['id']) {
-    if (!(await this.isAvailable(noteId))) {
+  async getBody(noteId: NoteVO['id']) {
+    if (!(await this.areAvailable([noteId]))) {
       throw new Error('note unavailable');
     }
 
@@ -123,104 +134,88 @@ export default class NoteService extends BaseService {
       throw new Error('invalid notes');
     }
 
-    const stars = buildIndex(
-      await this.stars.findAllByLocators(notes.map(({ id }) => ({ id, type: EntityTypes.Note }))),
-      'entityId',
-    );
+    const stars = buildIndex(await this.stars.findAllByLocators(getLocators(notes, EntityTypes.Note)), 'entityId');
+    const children = await this.getChildren(getIds(notes));
 
-    return result.map((note) => ({ ...note, isStar: Boolean(stars[note.id]) }));
+    return result.map((note) => ({
+      ...note,
+      childrenCount: children[note.id]?.length || 0,
+      isStar: Boolean(stars[note.id]),
+    }));
   }
 
   async query(q: NoteQuery) {
     const notes = await this.notes.findAll(q);
-    const recyclables = buildIndex(
-      await this.recyclables.findAllByLocators(notes.map((note) => ({ id: note.id, type: EntityTypes.Note }))),
-      'entityId',
-    );
+    const recyclables = await this.getNoteRecyclables(getIds(notes));
+    const validNotes = notes.filter((note) => !recyclables[note.id]);
 
-    const stars = buildIndex(
-      await this.stars.findAllByLocators(notes.map(({ id }) => ({ id, type: EntityTypes.Note }))),
-      'entityId',
-    );
+    const locators = getLocators(validNotes, EntityTypes.Note);
+    const stars = buildIndex(await this.stars.findAllByLocators(locators), 'entityId');
+    const children = await this.getChildren(getIds(validNotes));
 
-    return notes.filter((note) => !recyclables[note.id]).map((note) => ({ ...note, isStar: Boolean(stars[note.id]) }));
+    return validNotes.map((note) => ({
+      ...note,
+      childrenCount: children[note.id]?.length || 0,
+      isStar: Boolean(stars[note.id]),
+    }));
   }
 
-  async queryOne(noteId: RawNoteVO['id']) {
+  async queryOne(noteId: NoteVO['id']) {
     const note = await this.notes.findOneById(noteId);
 
     if (!note) {
       throw new Error('not found');
     }
 
-    const locator = { type: EntityTypes.Note, id: noteId };
-
-    if (await this.recyclableService.areRecyclables([locator])) {
+    if (await this.areNoteRecyclables([noteId])) {
       throw new Error('not found');
     }
 
-    return { ...note, isStar: await this.starService.isStar(locator) };
+    const children = await this.getChildren([noteId]);
+
+    return {
+      ...note,
+      childrenCount: children[noteId]?.length || 0,
+      isStar: await this.starService.isStar({ type: EntityTypes.Note, id: noteId }),
+    };
   }
 
-  async getTreeFragment(noteId: RawNoteVO['id']) {
-    if (!(await this.isAvailable(noteId))) {
+  async getTreeFragment(noteId: NoteVO['id']) {
+    if (!(await this.areAvailable([noteId]))) {
       throw new Error('invalid id');
     }
 
     const notes = await this.notes.findTreeFragment(noteId);
+    const availableNotes = await this.recyclableService.filterNotRecyclables(EntityTypes.Note, notes);
     const stars = buildIndex(
-      await this.stars.findAllByLocators(notes.map(({ id }) => ({ id, type: EntityTypes.Note }))),
+      await this.stars.findAllByLocators(getLocators(availableNotes, EntityTypes.Note)),
       'entityId',
     );
-    const parents = groupBy(notes, 'parentId');
-    const result: RawNoteVO[] = notes.filter(({ parentId }) => parentId === null);
+    const children = await this.getChildren(getIds(availableNotes));
+
+    /* topo sort */
+    const parents = groupBy(availableNotes, 'parentId');
+    const result: RawNoteVO[] = availableNotes.filter(({ parentId }) => parentId === null);
 
     for (let i = 0; result[i]; i++) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const { id } = result[i]!;
-      const children = parents[id];
+      const children = parents[result[i]!.id];
 
       if (children) {
         result.push(...children);
       }
     }
+    /* topo sort end */
 
-    return result.map((note) => ({ ...note, isStar: Boolean(stars[note.id]) }));
-  }
-
-  // todo: unused, maybe remove
-  async getTreePath(noteId: RawNoteVO['id']) {
-    if (!(await this.isAvailable(noteId))) {
-      throw new Error('invalid id');
-    }
-
-    const notes = await this.notes.findTreeFragment(noteId);
-    const notesIndex = buildIndex(notes);
-
-    let currentNote: RawNoteVO | undefined = notesIndex[noteId];
-    const path: NotePath = [];
-
-    while (currentNote) {
-      path.unshift({
-        id: currentNote.id,
-        title: normalizeTitle(currentNote),
-        icon: currentNote.icon,
-        siblings: notes
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          .filter(({ parentId, id }) => id !== currentNote!.id && parentId === currentNote!.parentId)
-          .map((note) => ({ ...note, title: normalizeTitle(note) })),
-      });
-
-      currentNote = currentNote.parentId ? notesIndex[currentNote.parentId] : undefined;
-    }
-
-    return path;
+    return result.map((note) => ({
+      ...note,
+      childrenCount: children[note.id]?.length || 0,
+      isStar: Boolean(stars[note.id]),
+    }));
   }
 
   private async assertValidChanges(notes: NotesDTO) {
-    const ids = notes.map(({ id }) => id);
-
-    if (!(await this.areAvailable(ids))) {
+    if (!(await this.areAvailable(getIds(notes)))) {
       throw new Error('invalid ids');
     }
 
@@ -230,16 +225,9 @@ export default class NoteService extends BaseService {
       return;
     }
 
-    for (const { parentId, id } of parentChangedNotes) {
-      if (parentId === id) {
-        throw new Error(`invalid parent id: ${parentId}`);
-      }
-    }
-
-    const parentChangedNoteIds = parentChangedNotes.map(({ id }) => id);
-    const descendantIds = await this.notes.findAllDescendantIds(parentChangedNoteIds);
+    const descendants = await this.notes.findAllDescendants(getIds(parentChangedNotes));
     const invalidParentIds = intersection(
-      descendantIds,
+      getIds(descendants),
       parentChangedNotes.map(({ parentId }) => parentId).filter((id) => id),
     );
 
@@ -248,36 +236,45 @@ export default class NoteService extends BaseService {
     }
   }
 
-  async isAvailable(id: RawNoteVO['id']) {
-    return (
-      Boolean(await this.notes.findOneById(id)) &&
-      !(await this.recyclableService.areRecyclables([{ type: EntityTypes.Note, id }]))
-    );
-  }
-
-  async areAvailable(noteIds: RawNoteVO['id'][]) {
+  async areAvailable(noteIds: NoteVO['id'][]) {
     const rows = await this.notes.findAll({ id: noteIds });
 
     if (rows.length !== noteIds.length) {
       return false;
     }
 
-    const entities = noteIds.map((id) => ({ id, type: EntityTypes.Note }));
-
-    return !(await this.recyclableService.areRecyclables(entities));
+    return !(await this.areNoteRecyclables(noteIds));
   }
 
-  private async isWritable(noteId: RawNoteVO['id']) {
+  private async isWritable(noteId: NoteVO['id']) {
     const row = await this.notes.findOneById(noteId);
 
     if (!row) {
       return false;
     }
 
-    if (await this.recyclableService.areRecyclables([{ type: EntityTypes.Note, id: noteId }])) {
+    if (await this.areNoteRecyclables([noteId])) {
       return false;
     }
 
     return !row.isReadonly;
+  }
+
+  private async areNoteRecyclables(noteIds: NoteVO['id'][]) {
+    const recyclables = await this.getNoteRecyclables(noteIds);
+    return Object.values(recyclables).some((v) => v);
+  }
+
+  private async getNoteRecyclables(noteIds: NoteVO['id'][]) {
+    const ancestors = await this.notes.findAllAncestors(noteIds);
+    const ancestorsMap = EntityService.getAncestorsMap(noteIds, ancestors);
+    const recyclables = await this.recyclables.findAllByLocators(getLocators(ancestors, EntityTypes.Note));
+
+    return zipObject(
+      noteIds,
+      noteIds.map(
+        (id) => intersectionWith(ancestorsMap[id], recyclables, ({ id }, { entityId }) => entityId === id).length > 0,
+      ),
+    );
   }
 }

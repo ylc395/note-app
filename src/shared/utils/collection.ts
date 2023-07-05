@@ -1,3 +1,5 @@
+import type { EntityTypes } from 'interface/entity';
+
 export function buildIndex<T>(list: T[], key?: keyof T) {
   const index: Record<string | number, T> = {};
   const indexBy = key || 'id';
@@ -14,4 +16,12 @@ export function buildIndex<T>(list: T[], key?: keyof T) {
   }
 
   return index;
+}
+
+export function getIds<T extends { id: string }>(entities: T[]) {
+  return entities.map(({ id }) => id);
+}
+
+export function getLocators<T extends { id: string }>(entities: T[], type: EntityTypes) {
+  return entities.map(({ id }) => ({ id, type }));
 }

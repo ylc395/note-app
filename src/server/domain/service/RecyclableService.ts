@@ -1,10 +1,12 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
+import differenceWith from 'lodash/differenceWith';
 
-import type { EntityLocator } from 'interface/entity';
+import type { EntityLocator, EntityId, EntityTypes } from 'interface/entity';
 import { Events } from 'model/events';
 
 import BaseService from './BaseService';
 import EntityService from './EntityService';
+import { getLocators } from 'utils/collection';
 
 @Injectable()
 export default class RecyclableService extends BaseService {
@@ -19,7 +21,8 @@ export default class RecyclableService extends BaseService {
     return result;
   }
 
-  async areRecyclables(entities: EntityLocator[]) {
-    return (await this.recyclables.findAllByLocators(entities)).length > 0;
+  async filterNotRecyclables<T extends { id: EntityId }>(type: EntityTypes, entities: T[]) {
+    const recyclables = await this.recyclables.findAllByLocators(getLocators(entities, type));
+    return differenceWith(entities, recyclables, ({ id }, { entityId }) => id === entityId);
   }
 }

@@ -1,20 +1,16 @@
+import type { Selectable } from 'kysely';
 import omit from 'lodash/omit';
 
 import type { EntityId } from 'interface/entity';
 import type { NoteRepository, NoteQuery, InternalNoteDTO } from 'service/repository/NoteRepository';
-import type { NoteDTO, NoteVO, NotesDTO, RawNoteVO } from 'interface/note';
+import type { NoteDTO, NoteVO, NotesDTO } from 'interface/note';
 
 import BaseRepository from './BaseRepository';
 import noteSchema, { type Row } from '../schema/note';
-import type { Selectable } from 'kysely';
-
-interface RowPatch {
-  childrenCount?: NoteVO['childrenCount'];
-}
 
 export default class SqliteNoteRepository extends BaseRepository implements NoteRepository {
   protected readonly schema = noteSchema;
-  async create(note: InternalNoteDTO): Promise<RawNoteVO> {
+  async create(note: InternalNoteDTO) {
     const row = await this.createOne(this.schema.tableName, {
       ...SqliteNoteRepository.dtoToRow(note),
       id: this.generateId(),
@@ -23,7 +19,7 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
     return this.rowToVO(row);
   }
 
-  async findBody(noteId: string): Promise<string | null> {
+  async findBody(noteId: string) {
     const row = await this.db
       .selectFrom(noteSchema.tableName)
       .select('body')
@@ -44,13 +40,7 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
       return null;
     }
 
-    const childrenCount = await this.db
-      .selectFrom(this.schema.tableName)
-      .where('parentId', '=', row.id)
-      .select(this.db.fn.count('id').as('count'))
-      .executeTakeFirst();
-
-    return this.rowToVO(row, { childrenCount: Number(childrenCount?.count) });
+    return this.rowToVO(row);
   }
 
   async updateBody(id: NoteVO['id'], noteBody: string) {
@@ -67,17 +57,8 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
     return noteBody;
   }
 
-  async findAll(query?: NoteQuery) {
-    const {
-      schema: { tableName: noteTable },
-    } = this;
-
-    let sql = this.db
-      .selectFrom(`${noteTable} as parent`)
-      .leftJoin(`${noteTable} as child`, 'child.parentId', 'parent.id')
-      .select((eb) => eb.fn.count('child.id').as('childrenCount'))
-      .selectAll('parent')
-      .groupBy('parent.id');
+  async findAll(query?: NoteQuery | { parentId: NoteVO['id'][] }) {
+    let sql = this.db.selectFrom(this.schema.tableName).selectAll();
 
     for (const [k, v] of Object.entries(query || {})) {
       if (v === undefined) {
@@ -85,10 +66,10 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
       }
 
       sql = Array.isArray(v)
-        ? sql.where(`parent.${k as keyof NoteQuery}`, 'in', v)
+        ? sql.where(k as keyof NoteQuery, 'in', v)
         : typeof v === 'boolean'
-        ? sql.where(`parent.${k as keyof NoteQuery}`, '=', Number(v))
-        : sql.where(`parent.${k as keyof NoteQuery}`, v === null ? 'is' : '=', v);
+        ? sql.where(k as keyof NoteQuery, '=', Number(v))
+        : sql.where(k as keyof NoteQuery, v === null ? 'is' : '=', v);
     }
 
     const rows = await sql.execute();
@@ -115,15 +96,47 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
     return rows;
   }
 
-  async findAllDescendantIds(noteIds: NoteVO['id'][]) {
+  async findAllChildren(noteIds: NoteVO['id'][]) {
+    const rows = await this.db.selectFrom(this.schema.tableName).where('parentId', 'in', noteIds).selectAll().execute();
+    return rows.map(this.rowToVO);
+  }
+
+  async findAllAncestors(noteIds: NoteVO['id'][]) {
     if (noteIds.length === 0) {
       return [];
     }
 
-    const {
-      schema: { tableName: noteTable },
-    } = this;
+    const noteTable = this.schema.tableName;
+    const rows = await this.db
+      .withRecursive(
+        'ancestors',
+        (qb) =>
+          qb
+            .selectFrom(noteTable)
+            .select(['id', 'parentId'])
+            .where('id', 'in', noteIds)
+            .union(
+              qb
+                .selectFrom('ancestors')
+                .innerJoin(noteTable, `${noteTable}.id`, 'ancestors.id')
+                .select([`${noteTable}.id`, `${noteTable}.parentId`])
+                .where(`${noteTable}.id`, '=', 'ancestors.parentId'),
+            ),
+        // todo: add a limit statement to stop infinite recursive
+      )
+      .selectFrom('ancestors')
+      .select('ancestors.id')
+      .execute();
 
+    return await this.findAll({ id: rows.map(({ id }) => id) });
+  }
+
+  async findAllDescendants(noteIds: NoteVO['id'][]) {
+    if (noteIds.length === 0) {
+      return [];
+    }
+
+    const noteTable = this.schema.tableName;
     const rows = await this.db
       .withRecursive(
         'descendants',
@@ -131,7 +144,7 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
           qb
             .selectFrom(noteTable)
             .select(['id', 'parentId'])
-            .where('parentId', 'in', noteIds)
+            .where('id', 'in', noteIds)
             .union(
               qb
                 .selectFrom('descendants')
@@ -145,7 +158,7 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
       .select('descendants.id')
       .execute();
 
-    return rows.map(({ id }) => id);
+    return await this.findAll({ id: rows.map(({ id }) => id) });
   }
 
   async findTreeFragment(noteId: NoteVO['id']) {
@@ -177,12 +190,10 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
     return children;
   }
 
-  private rowToVO(row: Selectable<Row> & RowPatch, patch?: RowPatch): RawNoteVO {
+  private rowToVO(row: Selectable<Row>) {
     return {
       ...omit(row, ['body']),
-      parentId: row.parentId || null,
       isReadonly: Boolean(row.isReadonly),
-      childrenCount: patch?.childrenCount || row.childrenCount || 0,
     };
   }
 

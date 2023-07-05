@@ -129,8 +129,6 @@ export default class MaterialService extends BaseService {
       return false;
     }
 
-    const entities = ids.map((id) => ({ id, type: EntityTypes.Material }));
-
-    return !(await this.recyclableService.areRecyclables(entities));
+    return true;
   }
 }

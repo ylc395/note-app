@@ -1,4 +1,4 @@
-import { union, boolean, object, string, null as zodNull, type infer as Infer, array, record } from 'zod';
+import { union, boolean, object, string, null as zodNull, type infer as Infer, array } from 'zod';
 import dayjs from 'dayjs';
 
 import type { Starable } from './star';
@@ -18,18 +18,16 @@ export type NotesDTO = Infer<typeof notesDTOSchema>;
 
 export type NoteDTO = Infer<typeof noteDTOSchema>;
 
-export interface RawNoteVO {
+export interface NoteVO extends Starable {
   title: string;
   isReadonly: boolean;
   id: EntityId;
   parentId: NoteVO['id'] | null;
   icon: string | null;
-  childrenCount: number;
   updatedAt: number;
   createdAt: number;
+  childrenCount: number;
 }
-
-export type NoteVO = RawNoteVO & Starable;
 
 export const noteQuerySchema = object({
   parentId: union([zodNull(), string()]).optional(),
@@ -49,7 +47,7 @@ export type NoteQuery = Infer<typeof noteQuerySchema>;
 type NotePathNode = Pick<NoteVO, 'title' | 'icon' | 'id'>;
 export type NotePath = Array<NotePathNode & { siblings: NotePathNode[] }>;
 
-export function normalizeTitle(note?: RawNoteVO) {
+export function normalizeTitle(note?: Pick<NoteVO, 'title' | 'createdAt'>) {
   if (!note) {
     return '';
   }

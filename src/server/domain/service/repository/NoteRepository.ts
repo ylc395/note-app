@@ -1,7 +1,8 @@
-import type { NoteBodyDTO, NoteDTO, RawNoteVO, NotesDTO, NoteBodyVO } from 'interface/note';
+import type { NoteBodyDTO, NoteDTO, NotesDTO, NoteBodyVO } from 'interface/note';
+import type { RawNoteVO } from 'model/note';
 
 export type NoteQuery = {
-  parentId?: RawNoteVO['parentId'] | RawNoteVO['id'][];
+  parentId?: RawNoteVO['parentId'];
   id?: RawNoteVO['id'][];
   updatedAt?: number;
 };
@@ -14,9 +15,11 @@ export interface NoteRepository {
   batchUpdate: (notes: NotesDTO) => Promise<RawNoteVO[]>;
   updateBody: (noteId: RawNoteVO['id'], noteBody: NoteBodyDTO['content']) => Promise<NoteBodyVO | null>;
   findAll: (query?: NoteQuery) => Promise<RawNoteVO[]>;
+  findAllChildren: (noteIds: RawNoteVO['id'][]) => Promise<RawNoteVO[]>;
   findBody: (noteId: RawNoteVO['id']) => Promise<NoteBodyVO | null>;
-  findAllDescendantIds: (noteIds: RawNoteVO['id'][]) => Promise<RawNoteVO['id'][]>;
-  findTreeFragment: (noteId: RawNoteVO['id']) => Promise<RawNoteVO[]>;
+  findAllDescendants: (noteIds: RawNoteVO['id'][]) => Promise<RawNoteVO[]>; // including self
+  findAllAncestors: (noteIds: RawNoteVO['id'][]) => Promise<RawNoteVO[]>; // including self
+  findTreeFragment: (noteId: RawNoteVO['id']) => Promise<RawNoteVO[]>; // including self
   findOneById: (id: RawNoteVO['id']) => Promise<RawNoteVO | null>;
   removeById: (noteId: RawNoteVO['id'] | RawNoteVO['id'][]) => Promise<void>;
 }
