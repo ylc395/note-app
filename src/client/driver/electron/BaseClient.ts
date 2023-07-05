@@ -22,6 +22,10 @@ export default class BaseClient extends Emitter<AppClientEvents> implements AppC
   }
 
   readonly getDataDir = () => {
+    if (NODE_ENV === 'test') {
+      return join(process.cwd(), 'test', '.data');
+    }
+
     return join(electronApp.getPath('appData'), `${APP_NAME}${NODE_ENV === 'development' ? '-dev' : ''}`);
   };
 

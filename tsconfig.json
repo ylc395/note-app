@@ -16,5 +16,10 @@
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "skipLibCheck": true
+  },
+  "ts-node": {
+    "compilerOptions": {
+      "types": ["node"]
+    }
   }
 }

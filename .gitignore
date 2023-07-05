@@ -3,3 +3,4 @@ dist
 .vscode
 *.log
 *.tsbuildinfo
+test/.data
