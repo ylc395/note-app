@@ -6,7 +6,8 @@ import { token as remoteToken } from 'infra/remote';
 import { token as uiToken } from 'infra/ui';
 import { token as localStorageToken } from 'infra/localStorage';
 
-import { httpClient, ipcClient } from './infra/httpClient';
+import httpClient from './infra/httpClient';
+import ipcClient from './infra/fakeHttpClient';
 import { getRootElement, ui } from './infra/ui';
 import webLocalStorage from './infra/localStorage';
 import App from './views/App';
