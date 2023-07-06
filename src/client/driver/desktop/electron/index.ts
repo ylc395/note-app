@@ -3,14 +3,11 @@ import { Injectable } from '@nestjs/common';
 import { join } from 'node:path';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 
-import { type AppClient, EventNames as AppClientEventNames } from 'infra/appClient';
-import { APP_FILE_PROTOCOL } from 'infra/constants';
+import AppClient, { EventNames as AppClientEventNames } from 'infra/AppClient';
+import { APP_FILE_PROTOCOL, NODE_ENV } from 'infra/constants';
 
 import { UI_CHANNELS, createContextmenu, openNewWindow } from './ui';
-import BaseClient from './BaseClient';
 
-const APP_NAME = 'my-note-app';
-const NODE_ENV = process.env.NODE_ENV;
 const ENTRY_URL = process.env.VITE_SERVER_ENTRY_URL;
 
 protocol.registerSchemesAsPrivileged([
@@ -24,9 +21,9 @@ protocol.registerSchemesAsPrivileged([
 ]);
 
 @Injectable()
-export default class ElectronClient extends BaseClient implements AppClient {
+export default class ElectronClient extends AppClient {
   private mainWindow?: BrowserWindow;
-  readonly mode = 'ui';
+  readonly type = 'electron';
 
   async start() {
     if (NODE_ENV === 'development') {
@@ -68,10 +65,6 @@ export default class ElectronClient extends BaseClient implements AppClient {
 
     await this.initWindow();
   }
-
-  readonly getDataDir = () => {
-    return join(electronApp.getPath('appData'), `${APP_NAME}${NODE_ENV === 'development' ? '-dev' : ''}`);
-  };
 
   private async initWindow() {
     this.mainWindow = new BrowserWindow({

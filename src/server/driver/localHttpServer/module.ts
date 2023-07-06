@@ -2,8 +2,8 @@ import { Global, Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 
 import * as controllers from 'controller';
-import { token as appClientToken } from 'infra/appClient';
-import BaseAppClient from 'client/driver/electron/BaseClient';
+import { token as appClientToken } from 'infra/AppClient';
+import BaseAppClient from 'client/driver/desktop/DesktopClient';
 import ElectronInfraModule from 'driver/electron/infra/module';
 import SqliteModule from 'driver/sqlite/module';
 import ServiceModule from 'service/module';

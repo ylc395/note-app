@@ -2,8 +2,8 @@ import { Global, Module, type OnModuleInit } from '@nestjs/common';
 
 import * as controllers from 'controller';
 
-import { token as appClientToken, EventNames as AppClientEventNames } from 'infra/appClient';
-import ElectronAppClient from 'client/driver/electron';
+import { token as appClientToken, EventNames as AppClientEventNames } from 'infra/AppClient';
+import ElectronAppClient from 'client/driver/desktop/electron';
 import ProtocolRegister from './infra/ProtocolRegister';
 import ElectronInfraModule from './infra/module';
 import SqliteModule from 'driver/sqlite/module';

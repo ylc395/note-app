@@ -44,7 +44,7 @@ module.exports = {
       rules: { '@typescript-eslint/explicit-function-return-type': 'error' },
     },
     {
-      files: ['./*.js', 'test/**/*', 'script/**/*', 'src/client/driver/electron/**/*'],
+      files: ['./*.js', 'test/**/*', 'script/**/*', 'src/client/driver/desktop/**/*'],
       env: { node: true },
     },
     {

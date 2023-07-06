@@ -3,7 +3,8 @@ import { object, type infer as Infer, number, string } from 'zod';
 import differenceWith from 'lodash/differenceWith';
 import fm from 'front-matter';
 
-import { token as appClientToken, type AppClient } from 'infra/appClient';
+import { token as appClientToken } from 'infra/AppClient';
+import type AppClient from 'infra/AppClient';
 import { type EntityLocator, EntityTypes } from 'interface/entity';
 import type { Conflict, Log } from 'infra/synchronizer';
 import type { RawNoteVO } from 'model/note';
