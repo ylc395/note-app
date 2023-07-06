@@ -38,8 +38,8 @@ async function buildPreload() {
   });
 }
 
-async function buildElectron(skipTs) {
-  if (!skipTs) {
+async function buildElectron(options) {
+  if (!options?.skipBuildTs) {
     const result = shell.exec(BUILD_ELECTRON_COMMAND);
 
     if (result.code > 0) {
@@ -52,9 +52,11 @@ async function buildElectron(skipTs) {
     outDir: path.join(ELECTRON_OUTPUT, 'server'),
   });
   await replaceTscAliasPaths({ configFile: CLIENT_TSCONFIG, outDir: path.join(ELECTRON_OUTPUT, 'client') });
-  const electronProcess = shell.exec(`electron ${ELECTRON_OUTPUT}/server/bootstrap.desktop.js`, { async: true });
 
-  return electronProcess;
+  if (options?.bootstrap !== false) {
+    const electronProcess = shell.exec(`electron ${ELECTRON_OUTPUT}/server/bootstrap.desktop.js`, { async: true });
+    return electronProcess;
+  }
 }
 
 async function createViteServer() {
@@ -86,32 +88,38 @@ async function createViteServer() {
   return server;
 }
 
-(async () => {
-  const viteServer = await createViteServer();
-  const viteUrl = viteServer.resolvedUrls.local[0];
+if (process.argv[1] === __filename) {
+  (async () => {
+    const viteServer = await createViteServer();
+    const viteUrl = viteServer.resolvedUrls.local[0];
 
-  shell.env['VITE_SERVER_ENTRY_URL'] = viteUrl;
-  shell.env['NODE_ENV'] = 'development';
-  shell.env['APP_PLATFORM'] = 'electron';
-  shell.env['DEV_CLEAN'] = process.argv.includes('--clean') ? '1' : '0';
+    shell.env['VITE_SERVER_ENTRY_URL'] = viteUrl;
+    shell.env['NODE_ENV'] = 'development';
+    shell.env['APP_PLATFORM'] = 'electron';
+    shell.env['DEV_CLEAN'] = process.argv.includes('--clean') ? '1' : '0';
 
-  await buildPreload();
-  let electronProcess = await buildElectron();
+    await buildPreload();
+    let electronProcess = await buildElectron();
 
-  if (electronProcess) {
-    shell.exec(`${BUILD_ELECTRON_COMMAND} --watch`, { async: true });
+    if (electronProcess) {
+      shell.exec(`${BUILD_ELECTRON_COMMAND} --watch`, { async: true });
 
-    chokidar.watch(ELECTRON_OUTPUT, { ignoreInitial: true, ignored: [/\.tsbuildinfo$/, /\.map$/, /\.d\.ts$/] }).on(
-      'all',
-      debounce(async (event, path) => {
-        shell.exec('clear');
-        console.log(path, event);
-        electronProcess.kill();
-        shell.env['DEV_CLEAN'] = '0';
-        electronProcess = await buildElectron(true);
-      }, 500),
-    );
-  } else {
-    await viteServer.close();
-  }
-})();
+      chokidar.watch(ELECTRON_OUTPUT, { ignoreInitial: true, ignored: [/\.tsbuildinfo$/, /\.map$/, /\.d\.ts$/] }).on(
+        'all',
+        debounce(async (event, path) => {
+          shell.exec('clear');
+          console.log(path, event);
+          electronProcess.kill();
+          shell.env['DEV_CLEAN'] = '0';
+          electronProcess = await buildElectron(true);
+        }, 500),
+      );
+    } else {
+      await viteServer.close();
+    }
+  })();
+}
+
+module.exports = {
+  buildElectron,
+};

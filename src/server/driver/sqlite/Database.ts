@@ -81,7 +81,7 @@ export default class SqliteDb implements Database {
     const isTest = NODE_ENV === 'test';
     const needClean = process.env.DEV_CLEAN === '1';
 
-    if (((isDevelopment && needClean) || isTest) && this.appClient.type === 'electron') {
+    if ((isDevelopment && needClean && this.appClient.type === 'electron') || isTest) {
       emptyDirSync(dir);
     }
 

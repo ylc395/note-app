@@ -8,7 +8,7 @@
     "dev:extension": "node script/dev-extension.js",
     "dev-clean:electron": "node script/dev-electron.js --clean",
     "clean": "rm -rf ./dist && rm -rf node_modules/.vite",
-    "test:server": "NODE_ENV=test mocha -r test/server/hook.ts --file test/server/*.test.ts -n loader=ts-node/esm",
+    "test:server": "node script/server-test",
     "postinstall": "electron-rebuild"
   },
   "devDependencies": {
