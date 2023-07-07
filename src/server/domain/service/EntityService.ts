@@ -1,11 +1,16 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import groupBy from 'lodash/groupBy';
-import { type EntityLocator, EntityTypes, EntityId } from 'interface/entity';
+import { type EntityLocator, type EntityId, EntityTypes } from 'interface/entity';
 
 import BaseService from './BaseService';
 import NoteService from './NoteService';
 import MaterialService from './MaterialService';
 import { buildIndex } from 'utils/collection';
+
+interface HierarchyEntity {
+  id: EntityId;
+  parentId: EntityId | null;
+}
 
 @Injectable()
 export default class EntityService extends BaseService {
@@ -33,7 +38,35 @@ export default class EntityService extends BaseService {
     }
   }
 
-  static getAncestorsMap<T extends { parentId: EntityId | null; id: EntityId }>(ids: EntityId[], entities: T[]) {
+  static groupDescants<T extends HierarchyEntity>(ids: EntityId[], entities: T[]) {
+    const groups = groupBy(entities, 'parentId');
+    const result: Record<EntityId, T[]> = {};
+
+    for (const id of ids) {
+      const entity = entities.find((entity) => id === entity.id);
+      const descendants: T[] = entity ? [entity] : [];
+
+      const findChildren = (parentId: EntityId) => {
+        const children = groups[parentId];
+
+        if (children) {
+          descendants.push(...children);
+
+          for (const child of children) {
+            findChildren(child.id);
+          }
+        }
+      };
+
+      findChildren(id);
+
+      result[id] = descendants;
+    }
+
+    return result;
+  }
+
+  static getAncestorsMap<T extends HierarchyEntity>(ids: EntityId[], entities: T[]) {
     const entitiesMap = buildIndex(entities, 'id');
     const ancestorsMap: Record<EntityId, T[]> = {};
 

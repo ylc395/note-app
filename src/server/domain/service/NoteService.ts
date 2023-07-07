@@ -1,9 +1,9 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import omit from 'lodash/omit';
 import groupBy from 'lodash/groupBy';
-import intersection from 'lodash/intersection';
 import intersectionWith from 'lodash/intersectionWith';
 import zipObject from 'lodash/zipObject';
+import uniq from 'lodash/uniq';
 import dayjs from 'dayjs';
 
 import { buildIndex, getIds, getLocators } from 'utils/collection';
@@ -19,15 +19,13 @@ import { EntityTypes } from 'interface/entity';
 import { Events } from 'model/events';
 import type { RawNoteVO } from 'model/note';
 
-import BaseService from './BaseService';
+import BaseService, { Transaction } from './BaseService';
 import RecyclableService from './RecyclableService';
-import StarService from './StarService';
 import EntityService from './EntityService';
 
 @Injectable()
 export default class NoteService extends BaseService {
   @Inject(forwardRef(() => RecyclableService)) private readonly recyclableService!: RecyclableService;
-  @Inject(forwardRef(() => StarService)) private readonly starService!: StarService;
 
   // not check the note ids' availability
   private async getChildren(noteIds: NoteVO['id'][]) {
@@ -36,18 +34,17 @@ export default class NoteService extends BaseService {
     return groupBy(await this.recyclableService.filterNotRecyclables(EntityTypes.Note, children), 'parentId');
   }
 
+  @Transaction
   async create(note: NoteDTO) {
-    return await this.db.transaction(async () => {
-      if (note.parentId && !(await this.areAvailable([note.parentId]))) {
-        throw new Error('invalid parentId');
-      }
+    if (note.parentId && !(await this.areAvailable([note.parentId]))) {
+      throw new Error('invalid parentId');
+    }
 
-      if (note.duplicateFrom) {
-        return { ...(await this.duplicate(note.duplicateFrom)), isStar: false, childrenCount: 0 };
-      }
+    if (note.duplicateFrom) {
+      return { ...(await this.duplicate(note.duplicateFrom)), isStar: false, childrenCount: 0 };
+    }
 
-      return { ...(await this.notes.create(note)), isStar: false, childrenCount: 0 };
-    });
+    return { ...(await this.notes.create(note)), isStar: false, childrenCount: 0 };
   }
 
   private async duplicate(noteId: NoteVO['id']) {
@@ -66,29 +63,24 @@ export default class NoteService extends BaseService {
 
     const newNote = await this.notes.create(omit(targetNote, ['id', 'createdAt', 'updatedAt']));
 
-    await this.notes.updateBody(noteId, targetNoteBody);
+    await this.notes.updateBody(newNote.id, targetNoteBody);
     return newNote;
   }
 
   async update(noteId: NoteVO['id'], note: NoteDTO) {
-    await this.assertValidChanges([{ ...note, id: noteId }]);
+    const updated = (await this.batchUpdate([{ ...note, id: noteId }]))[0];
 
-    const result = await this.notes.update(noteId, { ...note, updatedAt: dayjs().unix() });
-
-    if (!result) {
-      throw new Error('invalid id');
+    if (!updated) {
+      throw new Error('invalid update');
     }
 
-    const isStar = await this.starService.isStar({ type: EntityTypes.Note, id: noteId });
-    const children = await this.getChildren([noteId]);
-
-    return { ...result, isStar, childrenCount: children[noteId]?.length || 0 };
+    return updated;
   }
 
   async updateBody(noteId: NoteVO['id'], { content, isImportant }: NoteBodyDTO) {
     const result = await this.db.transaction(async () => {
       if (!(await this.isWritable(noteId))) {
-        throw new Error('note unavailable');
+        throw new Error('note is readonly');
       }
 
       const result = await this.notes.updateBody(noteId, content);
@@ -126,6 +118,7 @@ export default class NoteService extends BaseService {
     return result;
   }
 
+  @Transaction
   async batchUpdate(notes: NotesDTO) {
     await this.assertValidChanges(notes);
     const result = await this.notes.batchUpdate(notes);
@@ -144,8 +137,8 @@ export default class NoteService extends BaseService {
     }));
   }
 
-  async query(q: NoteQuery) {
-    const notes = await this.notes.findAll(q);
+  async query(q: NoteQuery | { id: NoteVO['id'] }) {
+    const notes = await this.notes.findAll('id' in q ? { id: [q.id] } : q);
     const recyclables = await this.getNoteRecyclables(getIds(notes));
     const validNotes = notes.filter((note) => !recyclables[note.id]);
 
@@ -161,23 +154,13 @@ export default class NoteService extends BaseService {
   }
 
   async queryOne(noteId: NoteVO['id']) {
-    const note = await this.notes.findOneById(noteId);
+    const note = (await this.query({ id: noteId }))[0];
 
     if (!note) {
-      throw new Error('not found');
+      throw new Error('invalid note id');
     }
 
-    if (await this.areNoteRecyclables([noteId])) {
-      throw new Error('not found');
-    }
-
-    const children = await this.getChildren([noteId]);
-
-    return {
-      ...note,
-      childrenCount: children[noteId]?.length || 0,
-      isStar: await this.starService.isStar({ type: EntityTypes.Note, id: noteId }),
-    };
+    return note;
   }
 
   async getTreeFragment(noteId: NoteVO['id']) {
@@ -219,31 +202,42 @@ export default class NoteService extends BaseService {
       throw new Error('invalid ids');
     }
 
-    const parentChangedNotes = notes.filter((parent) => typeof parent !== undefined);
+    const parentChangedNotes = notes.filter(({ parentId }) => typeof parentId !== 'undefined');
 
     if (parentChangedNotes.length === 0) {
       return;
     }
 
-    const descendants = await this.notes.findAllDescendants(getIds(parentChangedNotes));
-    const invalidParentIds = intersection(
-      getIds(descendants),
-      parentChangedNotes.map(({ parentId }) => parentId).filter((id) => id),
-    );
+    const newParentIds = parentChangedNotes.map(({ parentId }) => parentId).filter((id) => id) as NoteVO['id'][];
 
-    if (invalidParentIds.length > 0) {
-      throw new Error(`invalid parent id: ${invalidParentIds.join()}`);
+    if (!(await this.areAvailable(newParentIds))) {
+      throw new Error('invalid ids');
+    }
+
+    const ids = getIds(parentChangedNotes);
+    const allDescendants = await this.notes.findAllDescendants(ids);
+    const descendantGroup = EntityService.groupDescants(ids, allDescendants);
+
+    for (const { parentId, id } of parentChangedNotes) {
+      if (!parentId) {
+        continue;
+      }
+
+      if (descendantGroup[id]?.find((descants) => descants.id === parentId)) {
+        throw new Error(`can not move ${id} to ${parentId}`);
+      }
     }
   }
 
   async areAvailable(noteIds: NoteVO['id'][]) {
-    const rows = await this.notes.findAll({ id: noteIds });
+    const uniqueIds = uniq(noteIds);
+    const rows = await this.notes.findAll({ id: uniqueIds });
 
-    if (rows.length !== noteIds.length) {
+    if (rows.length !== uniqueIds.length) {
       return false;
     }
 
-    return !(await this.areNoteRecyclables(noteIds));
+    return !(await this.areNoteRecyclables(uniqueIds));
   }
 
   private async isWritable(noteId: NoteVO['id']) {

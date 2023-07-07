@@ -24,7 +24,7 @@ export default {
       .addColumn('parentId', 'text')
       .addColumn('createdAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch())`))
       .addColumn('updatedAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch())`))
-      .addColumn('isReadyOnly', 'integer', (col) => col.notNull().defaultTo(0))
+      .addColumn('isReadonly', 'integer', (col) => col.notNull().defaultTo(0))
       .addColumn('icon', 'text');
   },
 } as const;

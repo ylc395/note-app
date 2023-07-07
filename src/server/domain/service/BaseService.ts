@@ -8,7 +8,7 @@ import { token as databaseToken, type Database } from 'infra/database';
 @Injectable()
 export default class BaseService {
   constructor(
-    @Inject(databaseToken) protected readonly db: Database,
+    @Inject(databaseToken) readonly db: Database,
     @Inject(EventEmitter2) protected readonly eventEmitter: IEventEmitter<EventMaps, true>,
   ) {}
 
@@ -44,3 +44,19 @@ export default class BaseService {
     return this.db.getRepository('synchronization');
   }
 }
+
+export const Transaction: MethodDecorator = function (target, properKey, descriptor) {
+  const originFunc = descriptor.value;
+
+  if (typeof originFunc !== 'function') {
+    throw new Error('not a function');
+  }
+
+  descriptor.value = function (this: unknown, ...args: unknown[]) {
+    if (!(this instanceof BaseService)) {
+      throw new Error('not a service');
+    }
+
+    return this.db.transaction(originFunc.bind(this, ...args));
+  } as any;
+};

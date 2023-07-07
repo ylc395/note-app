@@ -144,13 +144,12 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
           qb
             .selectFrom(noteTable)
             .select(['id', 'parentId'])
-            .where('id', 'in', noteIds)
+            .where((eb) => eb.or([eb.cmpr('id', 'in', noteIds), eb.cmpr('parentId', 'in', noteIds)]))
             .union(
               qb
                 .selectFrom('descendants')
-                .innerJoin(noteTable, `${noteTable}.id`, 'descendants.id')
-                .select([`${noteTable}.id`, `${noteTable}.parentId`])
-                .where(`${noteTable}.parentId`, '=', 'descendants.id'),
+                .innerJoin(noteTable, `${noteTable}.parentId`, 'descendants.id')
+                .select([`${noteTable}.id`, `${noteTable}.parentId`]),
             ),
         // todo: add a limit statement to stop infinite recursive
       )
