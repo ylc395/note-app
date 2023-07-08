@@ -79,9 +79,13 @@ export default class SqliteMaterialRepository extends BaseRepository implements 
   }
 
   async findAll(query: MaterialQuery) {
-    const qb = query.parentId
+    let qb = query.parentId
       ? this.db.selectFrom(this.schema.tableName).where('parentId', '=', query.parentId)
       : this.db.selectFrom(this.schema.tableName).where('parentId', 'is', null);
+
+    if (query.ids) {
+      qb = qb.where(`${this.schema.tableName}.id`, 'in', query.ids);
+    }
 
     const rows = await qb
       .leftJoin(this.files.tableName, `${this.schema.tableName}.fileId`, `${this.files.tableName}.id`)

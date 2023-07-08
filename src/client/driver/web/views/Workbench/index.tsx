@@ -3,29 +3,18 @@ import { container } from 'tsyringe';
 
 import EditorService from 'service/EditorService';
 
-import TabBar from './TabBar';
-import Editor from './Editor';
 import Mosaic from './Mosaic';
+import Main from './Main';
 import BottomBar from './BottomBar';
 
 export default observer(function Workbench() {
   const { tileManager } = container.resolve(EditorService);
 
   return (
-    <div className="flex h-screen min-w-0 grow flex-col">
-      <div className="grow">
-        <Mosaic
-          root={tileManager.root}
-          renderTile={(id) => (
-            <div onFocus={() => tileManager.setFocusedTile(id)} className="flex h-full flex-col">
-              <TabBar tileId={id} />
-              <Editor tileId={id} />
-            </div>
-          )}
-        >
-          空空如也
-        </Mosaic>
-      </div>
+    <div className="flex h-screen min-w-0 grow flex-col overflow-hidden">
+      <Mosaic root={tileManager.root} renderTile={(id) => <Main tileId={id} />}>
+        <div className="h-full">空空如也</div>
+      </Mosaic>
       <BottomBar />
     </div>
   );

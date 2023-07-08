@@ -17,7 +17,7 @@ export default observer(function Mosaic({ root, renderTile, children }: Props) {
   }
 
   return (
-    <div className="relative h-full w-full">
+    <div className="relative h-full w-full grow">
       <TileView boundingBox={{ top: 0, right: 0, bottom: 0, left: 0 }} node={root} renderTile={renderTile} />
     </div>
   );
