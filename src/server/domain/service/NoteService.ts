@@ -30,8 +30,9 @@ export default class NoteService extends BaseService {
   // not check the note ids' availability
   private async getChildren(noteIds: NoteVO['id'][]) {
     const children = await this.notes.findAllChildren(noteIds);
+    const availableNotes = await this.recyclableService.filterAvailable(EntityTypes.Note, children);
 
-    return groupBy(await this.recyclableService.filterNotRecyclables(EntityTypes.Note, children), 'parentId');
+    return groupBy(availableNotes, 'parentId');
   }
 
   @Transaction
@@ -139,14 +140,13 @@ export default class NoteService extends BaseService {
 
   async query(q: NoteQuery | { id: NoteVO['id'] }) {
     const notes = await this.notes.findAll('id' in q ? { id: [q.id] } : q);
-    const recyclables = await this.getNoteRecyclables(getIds(notes));
-    const validNotes = notes.filter((note) => !recyclables[note.id]);
+    const availableNotes = await this.recyclableService.filterAvailable(EntityTypes.Note, notes);
 
-    const locators = getLocators(validNotes, EntityTypes.Note);
+    const locators = getLocators(availableNotes, EntityTypes.Note);
     const stars = buildIndex(await this.stars.findAllByLocators(locators), 'entityId');
-    const children = await this.getChildren(getIds(validNotes));
+    const children = await this.getChildren(getIds(availableNotes));
 
-    return validNotes.map((note) => ({
+    return availableNotes.map((note) => ({
       ...note,
       childrenCount: children[note.id]?.length || 0,
       isStar: Boolean(stars[note.id]),
@@ -169,7 +169,7 @@ export default class NoteService extends BaseService {
     }
 
     const notes = await this.notes.findTreeFragment(noteId);
-    const availableNotes = await this.recyclableService.filterNotRecyclables(EntityTypes.Note, notes);
+    const availableNotes = await this.recyclableService.filterAvailable(EntityTypes.Note, notes);
     const stars = buildIndex(
       await this.stars.findAllByLocators(getLocators(availableNotes, EntityTypes.Note)),
       'entityId',

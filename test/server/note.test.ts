@@ -3,31 +3,49 @@ import { describe, it, before } from 'mocha';
 import { strictEqual, deepStrictEqual, ok, rejects } from 'node:assert';
 
 import NotesController from '../../dist/electron/server/controller/NotesController';
+import RecyclablesController from '../../dist/electron/server/controller/RecyclablesController';
+import { EntityTypes } from '../../dist/electron/shared/interface/entity';
 import type { NoteVO } from '../../dist/electron/shared/interface/note';
 
 describe('notes', async function () {
   let noteController: NotesController;
-  let rootNotes: NoteVO[] = [];
-  let parentNoteId: NoteVO['id'];
-  let grandChildNoteId: NoteVO['id'];
-  let children: NoteVO[] = [];
-  const CHILDREN_COUNT = 4;
+  let recyclablesController: RecyclablesController;
 
   before(function () {
     noteController = this.nestModule.get(NotesController);
+    recyclablesController = this.nestModule.get(RecyclablesController);
   });
 
-  it('should create some notes', async function () {
-    for (let i = 0; i < 4; i++) {
-      rootNotes.push(await noteController.create({ title: `test title${i}`, isReadonly: i < 2 }));
+  let rootNotes: NoteVO[];
+  let parentNoteId: NoteVO['id'];
+  let grandChildNoteId: NoteVO['id'];
+
+  it('should create some root notes', async function () {
+    rootNotes = [
+      await noteController.create({ title: 'test title' }),
+      await noteController.create({ title: '' }),
+      await noteController.create({ title: 'test title', isReadonly: true }),
+    ];
+  });
+
+  it('should query root notes', async function () {
+    const notes = await noteController.query({ parentId: null });
+    strictEqual(rootNotes.length, 3);
+
+    for (const note of notes) {
+      deepStrictEqual(
+        note,
+        rootNotes.find(({ id }) => id === note.id),
+      );
+    }
+  });
+
+  it('should query specified note', async function () {
+    for (const note of rootNotes) {
+      deepStrictEqual(await noteController.queryOne(note.id), note);
     }
 
-    for (const [i, note] of rootNotes.entries()) {
-      strictEqual(note.title, `test title${i}`);
-      strictEqual(note.parentId, null);
-      strictEqual(note.childrenCount, 0);
-      strictEqual(note.isReadonly, i < 2);
-    }
+    await rejects(noteController.queryOne('a invalid id'));
   });
 
   it('should get empty body for new note', async function () {
@@ -38,8 +56,8 @@ describe('notes', async function () {
   });
 
   it('should write body, respecting isReadonly', async function () {
-    for (const [i, note] of rootNotes.entries()) {
-      if (i < 2) {
+    for (const note of rootNotes) {
+      if (note.isReadonly) {
         await rejects(noteController.updateBody(note.id, { content: 'test body' }));
       } else {
         const body = await noteController.updateBody(note.id, { content: 'test body' });
@@ -58,48 +76,25 @@ describe('notes', async function () {
   });
 
   it('should create some children notes', async function () {
-    parentNoteId = rootNotes[0]!.id;
+    const parentNote = await noteController.create({});
+    parentNoteId = parentNote.id;
 
-    for (let i = 0; i < CHILDREN_COUNT; i++) {
-      const child = await noteController.create({ title: `test title${i}`, parentId: parentNoteId });
-      strictEqual(child.parentId, parentNoteId);
-      children.push(child);
-    }
-
+    await noteController.create({ parentId: parentNoteId });
+    await noteController.create({ parentId: parentNoteId, title: 'child note1' });
+    await noteController.create({ parentId: parentNoteId, title: 'child 2' });
     await rejects(noteController.create({ parentId: 'some invalid id' }));
   });
 
-  it('should query root notes', async function () {
-    const targetNoteId = rootNotes[0]!.id;
-    const notesFounded = await noteController.query({ parentId: null });
+  it('should query children notes, and right childrenCount', async function () {
+    const parentNote = await noteController.queryOne(parentNoteId);
+    const children = await noteController.query({ parentId: parentNote.id });
 
-    strictEqual(notesFounded.length, rootNotes.length);
+    strictEqual(children.length, 3);
+    strictEqual(parentNote.childrenCount, children.length);
 
-    for (const note of notesFounded) {
-      ok(rootNotes.find(({ id }) => note.id === id));
-      strictEqual(note.childrenCount, note.id === targetNoteId ? children.length : 0);
+    for (const child of children) {
+      strictEqual(child.parentId, parentNote.id);
     }
-
-    rootNotes = notesFounded;
-  });
-
-  it('should query some children notes', async function () {
-    const targetNoteId = rootNotes[0]!.id;
-    const notesFounded = await noteController.query({ parentId: targetNoteId });
-
-    strictEqual(notesFounded.length, children.length);
-
-    for (const note of notesFounded) {
-      ok(children.find(({ id }) => note.id === id));
-    }
-  });
-
-  it('should query specified note', async function () {
-    for (const note of rootNotes) {
-      deepStrictEqual(await noteController.queryOne(note.id), note);
-    }
-
-    await rejects(noteController.queryOne('a invalid id'));
   });
 
   it('should update one note', async function () {
@@ -113,28 +108,29 @@ describe('notes', async function () {
   });
 
   it("update one's parentId correctly", async function () {
-    const childNoteId = children[0]!.id;
-    const targetNoteId = rootNotes[1]!.id;
-    const childNoteId2 = children[1]!.id;
+    const oldChildren = await noteController.query({ parentId: parentNoteId });
+    const oldRoots = await noteController.query({ parentId: null });
 
-    grandChildNoteId = (await noteController.update(targetNoteId, { parentId: childNoteId })).id;
+    const newRootNote = await noteController.create({});
+    const childNoteId = oldChildren[0]!.id;
+    const childNoteId2 = oldChildren[1]!.id;
+
+    grandChildNoteId = (await noteController.update(newRootNote.id, { parentId: childNoteId })).id;
     await noteController.update(childNoteId2, { parentId: null });
 
-    const newRootNotes = await noteController.query({ parentId: null });
+    const newRoots = await noteController.query({ parentId: null });
     const newChildren = await noteController.query({ parentId: parentNoteId });
 
-    strictEqual(newRootNotes.length, rootNotes.length);
-    strictEqual(newChildren.length, children.length - 1);
-    ok(!newRootNotes.find((note) => note.id === targetNoteId));
+    strictEqual(newRoots.length, oldRoots.length + 1);
+    strictEqual(newChildren.length, oldChildren.length - 1);
+    ok(!newRoots.find((note) => note.id === newRootNote.id));
     ok(!newChildren.find((note) => note.id === childNoteId2));
-    ok(newRootNotes.find((note) => note.id === childNoteId2));
-
-    rootNotes = newRootNotes;
-    children = newChildren;
+    ok(newRoots.find((note) => note.id === childNoteId2));
   });
 
   it('should reject invalid updates', async function () {
-    const childNote = children[0];
+    const children = await noteController.query({ parentId: parentNoteId });
+    const childNote = children[0]!;
 
     await rejects(noteController.update(parentNoteId, { parentId: 'invalid id' }));
     await rejects(noteController.update(parentNoteId, { parentId: parentNoteId }));
@@ -146,13 +142,20 @@ describe('notes', async function () {
   });
 
   it('should batch update notes', async function () {
-    await noteController.batchUpdate([
+    let rootNotes = await noteController.query({ parentId: null });
+    let children = await noteController.query({ parentId: rootNotes[0]!.id });
+
+    const updatedNotes = await noteController.batchUpdate([
       ...rootNotes.map(({ id }) => ({ id, title: 'batch updated title' })),
       ...children.map(({ id }) => ({ id, title: 'batch updated title' })),
     ]);
 
-    children = await noteController.query({ parentId: rootNotes[0]!.id });
+    for (const note of updatedNotes) {
+      strictEqual(note.title, 'batch updated title');
+    }
+
     rootNotes = await noteController.query({ parentId: null });
+    children = await noteController.query({ parentId: rootNotes[0]!.id });
 
     for (const note of [...rootNotes, ...children]) {
       strictEqual(note.title, 'batch updated title');
@@ -160,6 +163,9 @@ describe('notes', async function () {
   });
 
   it('should batch update parent ids', async () => {
+    const rootNotes = await noteController.query({ parentId: null });
+    let children = await noteController.query({ parentId: parentNoteId });
+
     const rootNote = rootNotes[rootNotes.length - 1]!;
     const toBeGrandChildren = [
       { id: rootNote.id, parentId: grandChildNoteId },
@@ -174,7 +180,6 @@ describe('notes', async function () {
 
     const newRootNotes = await noteController.query({ parentId: null });
     strictEqual(newRootNotes.length, rootNotes.length - 1 + toBeNewRoot.length);
-    rootNotes = newRootNotes;
     parentNoteId = grandChildNoteId;
     grandChildNoteId = toBeGrandChildren[0]!.id;
   });
@@ -197,5 +202,32 @@ describe('notes', async function () {
     deepStrictEqual(duplicatedNote, await noteController.queryOne(duplicatedNote.id));
     strictEqual(await noteController.queryBody(duplicatedNote.id), 'new body');
     strictEqual(duplicatedNote.isReadonly, true);
+  });
+
+  it('should get correct childrenCount and children after some children become recyclables', async function () {
+    const parent = await noteController.create({ parentId: null });
+    const child1 = await noteController.create({ parentId: parent.id });
+    const child2 = await noteController.create({ parentId: parent.id });
+    const child3 = await noteController.create({ parentId: parent.id });
+
+    recyclablesController.create([
+      { type: EntityTypes.Note, id: child1.id },
+      { type: EntityTypes.Note, id: child2.id },
+    ]);
+
+    const parentNote = await noteController.queryOne(parent.id);
+    strictEqual(parentNote.childrenCount, 1);
+
+    const rootNotes = await noteController.query({ parentId: null });
+
+    for (const { id, childrenCount } of rootNotes) {
+      if (id === parent.id) {
+        strictEqual(childrenCount, 1);
+      }
+    }
+
+    const children = await noteController.query({ parentId: parent.id });
+    strictEqual(children.length, 1);
+    deepStrictEqual(children[0], child3);
   });
 });

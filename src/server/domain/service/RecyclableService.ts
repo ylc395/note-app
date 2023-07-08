@@ -21,7 +21,7 @@ export default class RecyclableService extends BaseService {
     return result;
   }
 
-  async filterNotRecyclables<T extends { id: EntityId }>(type: EntityTypes, entities: T[]) {
+  async filterAvailable<T extends { id: EntityId }>(type: EntityTypes, entities: T[]) {
     const recyclables = await this.recyclables.findAllByLocators(getLocators(entities, type));
     return differenceWith(entities, recyclables, ({ id }, { entityId }) => id === entityId);
   }
