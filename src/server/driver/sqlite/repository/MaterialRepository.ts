@@ -2,8 +2,8 @@ import pick from 'lodash/pick';
 import { readFile } from 'fs-extra';
 import type { Selectable } from 'kysely';
 
-import type { MaterialRepository, Directory } from 'service/repository/MaterialRepository';
-import type { DirectoryVO, EntityMaterialVO, MaterialDTO, MaterialQuery, MaterialVO } from 'interface/material';
+import type { MaterialRepository, Directory, MaterialQuery } from 'service/repository/MaterialRepository';
+import type { DirectoryVO, EntityMaterialVO, MaterialDTO, MaterialVO } from 'interface/material';
 
 import schema, { type Row } from '../schema/material';
 import type { Row as FileRow } from '../schema/file';
@@ -22,10 +22,6 @@ export default class SqliteMaterialRepository extends BaseRepository implements 
 
   async createEntity(material: MaterialDTO) {
     let file: FileRow | undefined;
-
-    if (material.text) {
-      file = await this.files.findOrCreate({ data: Buffer.from(material.text), mimeType: 'text/markdown' });
-    }
 
     if (material.file?.path) {
       const data = await readFile(material.file.path);

@@ -5,11 +5,15 @@ import type {
   DirectoryVO,
   EntityMaterialVO,
   MaterialDTO,
-  MaterialQuery,
   MaterialVO,
 } from 'interface/material';
 
 export type Directory = Pick<MaterialDTO, 'name' | 'parentId' | 'icon'>;
+
+export interface MaterialQuery {
+  parentId?: MaterialVO['parentId'];
+  ids?: MaterialVO['id'][];
+}
 
 export interface MaterialRepository {
   createDirectory: (directory: Directory) => Promise<DirectoryVO>;

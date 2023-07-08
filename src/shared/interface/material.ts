@@ -21,7 +21,6 @@ export const materialDTOSchema = object({
     mimeType: string().min(1),
   }).optional(),
   sourceUrl: string().url().optional(),
-  text: string().min(1).optional(),
 });
 
 export type MaterialDTO = Infer<typeof materialDTOSchema>;
@@ -45,7 +44,6 @@ export type MaterialVO = DirectoryVO | EntityMaterialVO;
 
 export const materialQuerySchema = object({
   parentId: string().optional(),
-  ids: array(string()).optional(),
 });
 
 export type MaterialQuery = Infer<typeof materialQuerySchema>;

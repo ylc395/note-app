@@ -14,10 +14,10 @@ import ctx from '../Context';
 
 export default observer(function NewMaterial() {
   const { newMaterialModal, currentMaterialId } = useContext(ctx);
-  const [formModel, setFormModel] = useState(() => new FileFormModel({}));
+  const [formModel, setFormModel] = useState<FileFormModel | TextFormModel>(() => new FileFormModel({}));
   const { createMaterial } = container.resolve(MaterialService);
   const handleTypeSelect = useCallback((type: FormTypes) => {
-    setFormModel(type === FormTypes.File ? new FileFormModel({}) : new TextFormModel({}));
+    setFormModel(type === FormTypes.File ? new FileFormModel({}) : new TextFormModel({ text: '' }));
   }, []);
 
   const submit = useCallback(async () => {

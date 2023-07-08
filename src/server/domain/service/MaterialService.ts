@@ -1,3 +1,4 @@
+import uniq from 'lodash/uniq';
 import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import {
   type AnnotationDTO,
@@ -12,13 +13,12 @@ import {
 
 import BaseService from './BaseService';
 import RecyclableService from './RecyclableService';
-import { EntityTypes } from 'interface/entity';
 
 @Injectable()
 export default class MaterialService extends BaseService {
   @Inject(forwardRef(() => RecyclableService)) private readonly recyclableService!: RecyclableService;
-  async create({ text, sourceUrl, file, ...info }: MaterialDTO) {
-    if ((text || sourceUrl || file) && !info.parentId) {
+  async create({ file, ...info }: MaterialDTO) {
+    if (file && !info.parentId) {
       throw new Error('empty parentId');
     }
 
@@ -26,27 +26,26 @@ export default class MaterialService extends BaseService {
       throw new Error('invalid file');
     }
 
-    if (info.parentId) {
-      const parent = await this.materials.findOneById(info.parentId);
-
-      if (!parent || !isDirectory(parent)) {
-        throw new Error('invalid parentId');
-      }
-    }
-
-    if (text) {
-      return this.materials.createEntity({ text, sourceUrl, ...info });
+    if (info.parentId && !(await this.areAvailableDirectory([info.parentId]))) {
+      throw new Error('invalid parent id');
     }
 
     if (file) {
-      if (file.mimeType.startsWith('text') && typeof file.data !== 'string') {
-        throw new Error('invalid text');
-      }
-
-      return this.materials.createEntity({ file, sourceUrl, ...info });
+      return this.materials.createEntity({ file, ...info });
     }
 
     return this.materials.createDirectory(info);
+  }
+
+  private async areAvailableDirectory(parentIds: MaterialVO['id'][]) {
+    const uniqueIds = uniq(parentIds);
+    const materials = await this.materials.findAll({ ids: uniqueIds });
+
+    if (materials.length !== uniqueIds.length) {
+      return false;
+    }
+
+    return materials.every(isDirectory);
   }
 
   query(q: MaterialQuery) {
