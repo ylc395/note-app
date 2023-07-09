@@ -104,7 +104,7 @@ export default class HtmlViewer {
       if (el.tagName === 'A') {
         const href = el.getAttribute('href');
 
-        if (href) {
+        if (href && !href.startsWith('#')) {
           ui.openNewWindow(href);
         }
 
@@ -135,7 +135,7 @@ export default class HtmlViewer {
         () => Boolean(this.editor.entity),
         () => {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          const documentElement = HtmlViewer.filterHtml(this.editor.entity!.html);
+          const documentElement = HtmlViewer.sanitizeHtml(this.editor.entity!.html);
           HtmlViewer.processStyles(documentElement);
           this.editorView.documentElement = documentElement;
           this.updateContent(documentElement);
@@ -157,36 +157,56 @@ export default class HtmlViewer {
         continue;
       }
 
-      const selectors = new Set<string>();
+      const rootSelectors = new Set<string>();
 
       for (const rule of style.sheet.cssRules) {
         if (rule instanceof CSSStyleRule) {
           if (rule.selectorText.includes(':root')) {
-            selectors.add(rule.selectorText);
+            rootSelectors.add(rule.selectorText);
           }
         }
       }
 
       // maybe we should use css parser to do this
-      for (const selector of selectors) {
+      for (const selector of rootSelectors) {
         style.innerHTML = style.innerHTML.replaceAll(selector, selector.replaceAll(':root', 'html'));
       }
     }
   }
 
-  private static filterHtml(html: string) {
+  private static sanitizeHtml(html: string) {
     const fragment = DOMPurify.sanitize(html, {
       FORBID_CONTENTS: ['script'], // override default forbid contents. Only <script> is dangerous for us
       ADD_TAGS: ['style'],
       FORBID_ATTR: ['action'],
       CUSTOM_ELEMENT_HANDLING: {
-        tagNameCheck: () => true,
-        attributeNameCheck: () => true,
+        tagNameCheck: () => true, // allow all custom tag name
+        attributeNameCheck: () => true, // allow all attributes of custom tag
         allowCustomizedBuiltInElements: true,
       },
       WHOLE_DOCUMENT: true, // wrap content with <html> or preserve original <html>
       RETURN_DOM: true,
     });
+
+    // disable all input elements
+    const inputs: (HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement)[] = Array.from(
+      fragment.querySelectorAll('input, textarea, select'),
+    );
+
+    for (const input of inputs) {
+      input.disabled = true;
+    }
+
+    // remove all invalid href of <a>
+    const links = fragment.querySelectorAll('a');
+
+    for (const link of links) {
+      const href = link.getAttribute('href');
+
+      if (href?.startsWith('#') && !fragment.querySelector(href)) {
+        link.removeAttribute('href');
+      }
+    }
 
     return fragment as HTMLHtmlElement;
   }

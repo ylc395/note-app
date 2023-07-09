@@ -62,7 +62,7 @@ export default observer(function ActivityBar() {
   ));
 
   return (
-    <nav className="flex h-screen w-14 flex-col justify-between border-0 border-r border-solid border-gray-200 bg-gray-50 text-center">
+    <nav className="flex h-full w-14 flex-col justify-between border-0 border-r border-solid border-gray-200 bg-gray-50 text-center">
       <div>
         <ul className="m-0 p-0">
           {FIRST_CLASS_EXPLORER_ITEMS.map((item) => (

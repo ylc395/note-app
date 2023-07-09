@@ -17,7 +17,7 @@ export default observer(function App() {
   return (
     <DraggableZone>
       <ConfigProvider getPopupContainer={getContainer}>
-        <main className="flex">
+        <main className="flex h-screen">
           <Explorer />
           <Workbench />
           <DragPreview />
