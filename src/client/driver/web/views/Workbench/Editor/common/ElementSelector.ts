@@ -16,8 +16,7 @@ export const middleware = [
 ];
 
 export default class ElementSelector {
-  @observable.ref
-  private overlayEl?: HTMLElement;
+  @observable.ref private overlayEl?: HTMLElement;
   private styleEl?: HTMLStyleElement;
   private cancelAutoUpdate?: ReturnType<typeof autoUpdate>;
   private currentTarget?: HTMLElement;
@@ -73,7 +72,7 @@ export default class ElementSelector {
     this.overlayEl = document.createElement('div');
     this.overlayEl.style.backgroundColor = 'blue';
     this.overlayEl.style.opacity = '0.2';
-    this.overlayEl.style.position = 'fixed';
+    this.overlayEl.style.position = 'absolute';
     this.overlayEl.style.pointerEvents = 'none';
     this.overlayEl.style.zIndex = '999';
     this.selectableRoot.appendChild(this.overlayEl);

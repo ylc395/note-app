@@ -539,26 +539,26 @@
     nanoid "^4.0.0"
     tslib "^2.5.0"
 
-"@nestjs/common@^9.4.2":
-  version "9.4.2"
-  resolved "https://registry.npmjs.org/@nestjs/common/-/common-9.4.2.tgz"
-  integrity sha512-sea+qZnbD5x3YWZDVQT/wbVJ2NiABaM1tyZTLuW9hpkcM2KFA96xKtK3VaCxyz49zoXIgSOefsyK7HuUMCe27Q==
+"@nestjs/common@^10.0.5":
+  version "10.0.5"
+  resolved "https://registry.yarnpkg.com/@nestjs/common/-/common-10.0.5.tgz#2d834f1713b16d66f514c969b915fd6e020de391"
+  integrity sha512-0E+SBI+SKswXbFG+Nwtnctrei5dvdFJ7b9/fQDL6KzDBtZwsglJpD86S3ooxnc7ek4vRG57oN2iLmMTjrcesMg==
   dependencies:
     uid "2.0.2"
     iterare "1.2.1"
-    tslib "2.5.2"
+    tslib "2.6.0"
 
-"@nestjs/core@^9.4.2":
-  version "9.4.2"
-  resolved "https://registry.npmjs.org/@nestjs/core/-/core-9.4.2.tgz"
-  integrity sha512-S5K9GTpjBqEJtu5VxRsVaaGEBZ1bkY+Ht4+2hqZSKsI+rzcEB5hcvR+5KiMsMY1VGYvlZ99lxYz72p4h8B0mKw==
+"@nestjs/core@^10.0.5":
+  version "10.0.5"
+  resolved "https://registry.yarnpkg.com/@nestjs/core/-/core-10.0.5.tgz#d9f0c1ccdab0aafda8d810d11538b727f01557e2"
+  integrity sha512-9A8nixBfE33TWAmmWvNoxdmHrRmHJY0oO3O4Iue0FVkawWJc0YOhSqdNs87McwvKE4InJMI7GVv01NYMEROdPA==
   dependencies:
     uid "2.0.2"
     "@nuxtjs/opencollective" "0.3.2"
     fast-safe-stringify "2.1.1"
     iterare "1.2.1"
     path-to-regexp "3.2.0"
-    tslib "2.5.2"
+    tslib "2.6.0"
 
 "@nestjs/event-emitter@^2.0.0":
   version "2.0.0"
@@ -567,24 +567,24 @@
   dependencies:
     eventemitter2 "6.4.9"
 
-"@nestjs/microservices@^9.4.2":
-  version "9.4.2"
-  resolved "https://registry.npmjs.org/@nestjs/microservices/-/microservices-9.4.2.tgz"
-  integrity sha512-06VlJJS+QyyF5rS6WnMi6POdlGoEHEyvaOuySUm7QKfRILVUOqxcB6ANsKNNv2VPmRSLab/pYTpaQiEGazzRYA==
+"@nestjs/microservices@^10.0.5":
+  version "10.0.5"
+  resolved "https://registry.yarnpkg.com/@nestjs/microservices/-/microservices-10.0.5.tgz#fe9a4ce7014f0d09c89943d0b83b4e74ddd193c0"
+  integrity sha512-hWzyU9Hrv/v58BRRfxtVFza7k7WQ55HY6R/6hQR1Lju7mMWqByE8ddAyDl3K4uCKGshTL90ixKCoEpLi0suMjA==
   dependencies:
     iterare "1.2.1"
-    tslib "2.5.2"
+    tslib "2.6.0"
 
-"@nestjs/platform-express@^9.4.2":
-  version "9.4.2"
-  resolved "https://registry.npmjs.org/@nestjs/platform-express/-/platform-express-9.4.2.tgz"
-  integrity sha512-FVSJmVH+kndcDjvUK7xUzE3AmtQwlcXKN2hwJolyyIS7WXs6Awyb78cJGr0w27ESKoVQeSKPVbom0sLJFG153A==
+"@nestjs/platform-express@^10.0.5":
+  version "10.0.5"
+  resolved "https://registry.yarnpkg.com/@nestjs/platform-express/-/platform-express-10.0.5.tgz#3c875dd72e0bd8f9d8866a86d04d162379a6808a"
+  integrity sha512-mNHXiVsfJsknjfgC1kEUM82ynvkCxod5tNOEAnEcZ7UpPWy5dsxspq+ynt6RF6bd/3AD6sZoxApwqAKbcQnzxw==
   dependencies:
     body-parser "1.20.2"
     cors "2.8.5"
     express "4.18.2"
     multer "1.4.4-lts.1"
-    tslib "2.5.2"
+    tslib "2.6.0"
 
 "@nestjs/testing@^10.0.5":
   version "10.0.5"
@@ -989,6 +989,11 @@
   version "2.0.6"
   resolved "https://registry.npmjs.org/@types/unist/-/unist-2.0.6.tgz"
   integrity sha512-PBjIUxZHOuj0R15/xuwJYjFi+KZdNFrehocChv4g5hu6aFroHue8m0lBP0POdK2nKzbw0cgV1mws8+V/JAcEkQ==
+
+"@types/webextension-polyfill@^0.10.1":
+  version "0.10.1"
+  resolved "https://registry.yarnpkg.com/@types/webextension-polyfill/-/webextension-polyfill-0.10.1.tgz#63698f0ef78a069d2d307be3caaee5e70c12e09d"
+  integrity sha512-Sdg+E2F5JUbhkE1qX15QUxpyhfMFKRGJqND9nb1C0gNN4NR7kCV31/1GvNbg6Xe+m/JElJ9/lG5kepMzjGPuQw==
 
 "@types/yauzl@^2.9.1":
   version "2.10.0"
@@ -6068,11 +6073,6 @@ tsconfck@^2.0.1, tsconfck@^2.0.2:
   resolved "https://registry.npmjs.org/tsconfck/-/tsconfck-2.0.3.tgz"
   integrity sha512-o3DsPZO1+C98KqHMdAbWs30zpxD30kj8r9OLA4ML1yghx4khNDzaaShNalfluh8ZPPhzKe3qyVCP1HiZszSAsw==
 
-tslib@2.5.2:
-  version "2.5.2"
-  resolved "https://registry.npmjs.org/tslib/-/tslib-2.5.2.tgz"
-  integrity sha512-5svOrSA2w3iGFDs1HibEVBGbDrAY82bFQ3HZ3ixB+88nsbsWQoKqDRb5UBYAUPEzbBn6dAp5gRNXglySbx1MlA==
-
 tslib@2.6.0:
   version "2.6.0"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.6.0.tgz#b295854684dbda164e181d259a22cd779dcd7bc3"
@@ -6427,6 +6427,11 @@ web-streams-polyfill@^3.2.1:
   version "3.2.1"
   resolved "https://registry.npmjs.org/web-streams-polyfill/-/web-streams-polyfill-3.2.1.tgz"
   integrity sha512-e0MO3wdXWKrLbL0DgGnUV7WHVuw9OUvL4hjgnPkIeEvESk74gAITi5G606JtZPp39cd8HA9VQzCIvA49LpPN5Q==
+
+webextension-polyfill@^0.10.0:
+  version "0.10.0"
+  resolved "https://registry.yarnpkg.com/webextension-polyfill/-/webextension-polyfill-0.10.0.tgz#ccb28101c910ba8cf955f7e6a263e662d744dbb8"
+  integrity sha512-c5s35LgVa5tFaHhrZDnr3FpQpjj1BB+RXhLTYUxGqBVN460HkbM8TBtEqdXWbpTKfzwCcjAZVF7zXCYSKtcp9g==
 
 webidl-conversions@^3.0.0:
   version "3.0.1"

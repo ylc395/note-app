@@ -37,6 +37,9 @@ build({
     ...COMMON_BUILD_OPTIONS,
   },
   plugins,
+  define: {
+    'process.env.NODE_ENV': JSON.stringify('development'),
+  },
 });
 
 build({

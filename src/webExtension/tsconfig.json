@@ -2,8 +2,10 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "lib": ["DOM", "ESNext"],
+    "jsx": "react-jsx",
+    "baseUrl": ".",
     "paths": {
-      "interface/*": ["../shared/interface/*"]
+      "shared/*": ["../shared/*"]
     }
   }
 }
