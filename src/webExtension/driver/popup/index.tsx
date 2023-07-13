@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { createRoot } from 'react-dom/client';
 import App from './view/App';
 

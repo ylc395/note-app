@@ -24,12 +24,29 @@ chokidar.watch(manifest).on('all', () => {
 });
 
 build({
-  root: 'src/webExtension/content',
+  root: 'src/webExtension',
+  mode: 'development',
   build: {
     outDir,
     emptyOutDir: false,
     lib: {
-      entry: 'index.ts',
+      entry: 'driver/background.ts',
+      fileName: () => 'background.js',
+      formats: ['es'],
+    },
+    ...COMMON_BUILD_OPTIONS,
+  },
+  plugins,
+});
+
+build({
+  root: 'src/webExtension',
+  mode: 'development',
+  build: {
+    outDir,
+    emptyOutDir: false,
+    lib: {
+      entry: 'driver/contentScript.ts',
       fileName: () => 'content-script.js',
       name: 'clipper', // meaningless but required
       formats: ['iife'],
@@ -43,7 +60,8 @@ build({
 });
 
 build({
-  root: 'src/webExtension/popup',
+  root: 'src/webExtension/driver/popup',
+  mode: 'development',
   base: './', // use relative path to load script
   build: {
     emptyOutDir: true,

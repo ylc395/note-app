@@ -1,19 +1,7 @@
 import { makeObservable, computed, observable, action } from 'mobx';
-import { offset, computePosition, autoUpdate, size } from '@floating-ui/dom';
+import { computePosition, autoUpdate } from '@floating-ui/dom';
 
-export const middleware = [
-  offset(({ rects }) => {
-    return -rects.reference.height / 2 - rects.floating.height / 2;
-  }),
-  size({
-    apply: ({ rects, elements: { floating } }) => {
-      Object.assign(floating.style, {
-        width: `${rects.reference.width}px`,
-        height: `${rects.reference.height}px`,
-      });
-    },
-  }),
-];
+import { coverElementMiddleware } from './floatingMiddleware';
 
 export default class ElementSelector {
   @observable.ref private overlayEl?: HTMLElement;
@@ -24,6 +12,7 @@ export default class ElementSelector {
   constructor(
     private readonly options: {
       onSelect: (el: HTMLElement) => void;
+      onCancel?: () => void;
       selectableRoot?: HTMLElement | ShadowRoot;
       cancelableRoot?: HTMLElement;
     },
@@ -112,11 +101,13 @@ export default class ElementSelector {
       e.preventDefault();
       e.stopImmediatePropagation();
       this.disable();
+      this.options.onCancel?.();
     }
   };
 
   private readonly handleKeyup = (e: KeyboardEvent) => {
     if (e.key === 'Escape') {
+      this.options.onCancel?.();
       this.disable();
     }
   };
@@ -134,7 +125,7 @@ export default class ElementSelector {
     }
 
     this.cancelAutoUpdate = autoUpdate(target, overlayEl, async () => {
-      const { x, y } = await computePosition(target, overlayEl, { middleware });
+      const { x, y } = await computePosition(target, overlayEl, { middleware: coverElementMiddleware });
 
       overlayEl.style.left = `${x}px`;
       overlayEl.style.top = `${y}px`;

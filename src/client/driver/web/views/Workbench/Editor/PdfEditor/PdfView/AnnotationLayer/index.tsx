@@ -4,7 +4,7 @@ import { useFloating, autoUpdate } from '@floating-ui/react';
 
 import Annotation from './Annotation';
 import DraggingArea from './DraggingArea';
-import { middleware } from '../../../common/ElementSelector';
+import { coverElementMiddleware } from '../../../common/floatingMiddleware';
 
 import context from '../../Context';
 
@@ -18,7 +18,7 @@ export default observer(function AnnotationLayer({ page }: { page: number }) {
   } = useFloating({
     elements: { reference: pageEl },
     whileElementsMounted: autoUpdate,
-    middleware,
+    middleware: coverElementMiddleware,
   });
 
   if (!pageEl) {

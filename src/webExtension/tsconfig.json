@@ -5,7 +5,8 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "shared/*": ["../shared/*"]
+      "shared/*": ["../shared/*"],
+      "web/*": ["../client/driver/web/*"]
     }
   }
 }

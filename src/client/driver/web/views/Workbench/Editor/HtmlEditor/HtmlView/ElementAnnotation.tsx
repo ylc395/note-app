@@ -3,7 +3,7 @@ import { useContext } from 'react';
 import { useFloating, autoUpdate } from '@floating-ui/react';
 
 import type { HtmlElementAnnotationVO } from 'interface/material';
-import { middleware } from '../../common/ElementSelector';
+import { coverElementMiddleware } from '../../common/floatingMiddleware';
 import ctx from '../Context';
 
 export default observer(function ElementAnnotation({ el }: { el: HtmlElementAnnotationVO }) {
@@ -16,7 +16,7 @@ export default observer(function ElementAnnotation({ el }: { el: HtmlElementAnno
   } = useFloating({
     elements: { reference: targetEl },
     whileElementsMounted: autoUpdate,
-    middleware,
+    middleware: coverElementMiddleware,
   });
 
   if (!targetEl) {

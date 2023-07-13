@@ -7,6 +7,11 @@
     "default_title": "Open Star Note Clipper",
     "default_popup": "popup/index.html"
   },
+  "permissions": ["tabs", "storage"],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],

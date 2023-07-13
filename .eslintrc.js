@@ -16,7 +16,7 @@ module.exports = {
   },
   overrides: [
     {
-      files: ['src/client/**'],
+      files: ['src/client/**', 'src/webExtension/**'],
       excludedFiles: ['**/components/**'],
       extends: ['plugin:mobx/recommended'],
     },
