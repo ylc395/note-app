@@ -3,7 +3,7 @@ import browser from 'webextension-polyfill';
 
 import ElementSelector from 'web/views/Workbench/Editor/common/ElementSelector';
 import { TaskTypes } from 'domain/model/Task';
-import { type CancelTaskRequest, RequestTypes, FinishTaskRequest } from 'domain/model/Request';
+import { type CancelTaskRequest, type SubmitRequest, type StartTaskRequest, RequestTypes } from 'domain/model/Request';
 
 const COMMON_GET_PAGE_OPTIONS = {
   blockScripts: true,
@@ -18,8 +18,28 @@ const COMMON_GET_PAGE_OPTIONS = {
 export default class ClipService {
   private activeAction?: TaskTypes;
 
+  constructor() {
+    browser.runtime.onMessage.addListener((message: StartTaskRequest | CancelTaskRequest) => {
+      switch (message.type) {
+        case RequestTypes.StartTask:
+          return this.handleAction(message.action);
+        case RequestTypes.CancelTask:
+          return message.error ? this.alert(message.error) : undefined;
+        default:
+          break;
+      }
+    });
+    window.addEventListener('pagehide', this.cancel.bind(this));
+  }
+
   private readonly clipWholePage = async () => {
     const res = await getPageData(COMMON_GET_PAGE_OPTIONS);
+
+    this.submit({
+      title: res.title,
+      content: res.content,
+      type: 'html',
+    });
   };
 
   private readonly clipElement = async (el: HTMLElement) => {
@@ -47,7 +67,11 @@ export default class ClipService {
       el.removeAttribute(helper.SELECTED_CONTENT_ATTRIBUTE_NAME);
     }
 
-    this.finish();
+    this.submit({
+      title: res.title,
+      content: res.content,
+      type: 'html',
+    });
   };
 
   private readonly elementSelector = new ElementSelector({
@@ -56,7 +80,7 @@ export default class ClipService {
     onCancel: this.cancel.bind(this),
   });
 
-  async handleAction(action: TaskTypes) {
+  private async handleAction(action: TaskTypes) {
     if (this.activeAction) {
       throw new Error('can not clip now');
     }
@@ -80,10 +104,14 @@ export default class ClipService {
     }
   }
 
-  private finish() {
+  private submit(result: SubmitRequest['payload']) {
     if (this.activeAction) {
       this.activeAction = undefined;
-      browser.runtime.sendMessage({ type: RequestTypes.FinishTask } satisfies FinishTaskRequest);
+      browser.runtime.sendMessage({ type: RequestTypes.Submit, payload: result } satisfies SubmitRequest);
     }
+  }
+
+  private alert(msg: string) {
+    window.alert(msg);
   }
 }

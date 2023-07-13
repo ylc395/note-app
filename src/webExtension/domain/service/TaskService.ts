@@ -2,7 +2,7 @@ import browser, { type Tabs } from 'webextension-polyfill';
 import { singleton } from 'tsyringe';
 import { computed, makeObservable, observable, runInAction } from 'mobx';
 
-import { AddTaskRequest, CancelTaskRequest, FinishTaskRequest, RequestTypes } from 'domain/model/Request';
+import { AddTaskRequest, CancelTaskRequest, RequestTypes, FinishTaskRequest } from 'domain/model/Request';
 import { Task, TaskTypes } from 'domain/model/Task';
 
 @singleton()
@@ -29,9 +29,11 @@ export default class TaskService {
     browser.runtime.onMessage.addListener((request: CancelTaskRequest | FinishTaskRequest, sender) => {
       switch (request.type) {
         case RequestTypes.CancelTask:
-        case RequestTypes.FinishTask:
+          // todo: add error message
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          return this.remove(sender.tab!.id!);
+          return this.remove(request.tabId || sender.tab!.id!);
+        case RequestTypes.FinishTask:
+          return this.remove(request.tabId);
         default:
           break;
       }
