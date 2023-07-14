@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { container } from 'tsyringe';
 import { createRoot } from 'react-dom/client';
-import HttpClient from 'domain/service/HttpClient';
+import HttpClient from 'domain/infra/HttpClient';
 
 import App from './view/App';
 

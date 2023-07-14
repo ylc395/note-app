@@ -2,8 +2,8 @@ import { container } from 'tsyringe';
 import { observer } from 'mobx-react-lite';
 
 import TaskService from 'domain/service/TaskService';
-import Client, { Statuses } from 'domain/service/HttpClient';
-import { TaskTypes } from 'domain/model/Task';
+import Client, { Statuses } from 'domain/infra/HttpClient';
+import { TaskTypes } from 'domain/model/task';
 
 const ACTIONS = [
   TaskTypes.SelectElement,
@@ -14,11 +14,11 @@ const ACTIONS = [
 ] as const;
 
 const ACTION_TEXT_MAP = {
-  [TaskTypes.SelectElement]: '手动选取页面元素',
-  [TaskTypes.SelectPage]: '选取整个页面',
-  [TaskTypes.ExtractText]: '提取正文',
-  [TaskTypes.ExtractSelection]: '提取选中部分',
-  [TaskTypes.ScreenShot]: '截屏',
+  [TaskTypes.SelectElement]: '手动选取页面元素（HTML）',
+  [TaskTypes.SelectPage]: '选取整个页面（HTML）',
+  [TaskTypes.ExtractText]: '提取正文（Markdown）',
+  [TaskTypes.ExtractSelection]: '提取选中部分（Markdown）',
+  [TaskTypes.ScreenShot]: '截屏（图片）',
 } as const;
 
 export default observer(function Menu() {

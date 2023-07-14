@@ -16,7 +16,7 @@ export default observer(function PdfEditorView({ editorView }: { editorView: Pdf
   return (
     <div className="flex h-full w-full">
       <Context.Provider value={context}>
-        <div className="flex h-full grow flex-col">
+        <div className="flex grow flex-col">
           <Toolbar />
           <div className="relative flex min-h-0 grow">
             {editorView.panelsVisibility[Panels.Outline] && <Outline />}

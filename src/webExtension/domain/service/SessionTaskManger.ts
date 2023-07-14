@@ -1,47 +1,44 @@
 import browser, { type Tabs } from 'webextension-polyfill';
 import omit from 'lodash/omit';
 
-import { type Task, type TaskTypes, TASK_ID_PREFIX } from 'domain/model/Task';
 import {
-  RequestTypes,
-  type SubmitRequest,
-  type StartTaskRequest,
-  type CancelTaskRequest,
-  type FinishTaskRequest,
+  type Task,
+  type TaskTypes,
   type QueryTaskRequest,
+  type SubmitEvent,
   type AddTaskRequest,
-} from 'domain/model/Request';
-import MainAppClient from './HttpClient';
+  TASK_ID_PREFIX,
+  EventNames,
+  RequestTypes,
+} from 'domain/model/task';
+import EventBus from '../infra/EventBus';
+import MainAppClient from '../infra/HttpClient';
 
 export default class SessionTaskManager {
+  private readonly eventBus = new EventBus();
   constructor() {
-    browser.runtime.onMessage.addListener(
-      (request: QueryTaskRequest | AddTaskRequest | SubmitRequest | CancelTaskRequest, sender) => {
-        switch (request.type) {
-          case RequestTypes.QuerySessionTasks:
-            return Promise.resolve(this.tasks);
-          case RequestTypes.AddTask:
-            return this.add(request.task.tabId, request.task.type);
-          case RequestTypes.Submit:
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            return this.submit(sender.tab!.id!, request.payload);
-          case RequestTypes.CancelTask:
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            return this.cancel(sender.tab!.id!);
-          default:
-            break;
-        }
-      },
-    );
+    this.eventBus.on(EventNames.Submit, this.submit.bind(this));
+    this.eventBus.on(EventNames.CancelTask, ({ taskId }) => taskId && this.cancel(taskId));
+
+    browser.runtime.onMessage.addListener((request: QueryTaskRequest | AddTaskRequest) => {
+      switch (request.type) {
+        case RequestTypes.QuerySessionTask:
+          return Promise.resolve(this.tasks);
+        case RequestTypes.AddTask:
+          return this.add(request.tabId, request.action);
+        default:
+          break;
+      }
+    });
   }
 
-  private tasks: Task[] = [];
+  private tasks: Required<Task>[] = [];
   private client = new MainAppClient();
   private async add(tabId: NonNullable<Tabs.Tab['id']>, type: TaskTypes) {
     const tab = await browser.tabs.get(tabId);
     const timestamp = Date.now();
     const id = `${TASK_ID_PREFIX}${timestamp}`;
-    const task: Task = {
+    const task: Required<Task> = {
       time: Date.now(),
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       url: tab.url!,
@@ -53,37 +50,32 @@ export default class SessionTaskManager {
     };
 
     this.tasks.push(task);
-    browser.tabs.sendMessage(tabId, { type: RequestTypes.StartTask, action: type } satisfies StartTaskRequest);
+    this.eventBus.emit(EventNames.StartTask, { task }, tabId);
 
     return task;
   }
 
-  private async submit(tabId: NonNullable<Tabs.Tab['id']>, result: SubmitRequest['payload']) {
-    const task: Task | undefined = this.tasks.find((task) => task.tabId === tabId);
-    const tab = await browser.tabs.get(tabId);
+  private async submit({ taskId, ...result }: SubmitEvent) {
+    const task = this.tasks.find((task) => task.id === taskId);
 
-    if (!task || !tab) {
-      throw new Error(`invalid tab id: ${tabId}`);
+    if (!task) {
+      throw new Error(`invalid task id: ${taskId}`);
     }
+
+    const tab = await browser.tabs.get(task.tabId);
 
     try {
       await this.client.save({ ...result, sourceUrl: tab.url || '' });
       browser.storage.local.set({ [task.id]: omit(task, 'tabId') });
-      browser.runtime.sendMessage({ type: RequestTypes.FinishTask, tabId } satisfies FinishTaskRequest);
+      this.eventBus.emit(EventNames.FinishTask, { taskId });
     } catch {
-      const message: CancelTaskRequest = {
-        type: RequestTypes.CancelTask,
-        tabId,
-        error: 'Can not save',
-      };
-      browser.tabs.sendMessage(tabId, message);
-      browser.runtime.sendMessage(message);
+      this.eventBus.emit(EventNames.CancelTask, { taskId, error: 'Can not save' });
     }
 
     this.tasks = this.tasks.filter((t) => t !== task);
   }
 
-  private cancel(tabId: NonNullable<Tabs.Tab['id']>) {
-    this.tasks = this.tasks.filter((task) => task.tabId !== tabId);
+  private cancel(taskId: Task['id']) {
+    this.tasks = this.tasks.filter((task) => task.id !== taskId);
   }
 }

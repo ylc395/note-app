@@ -2,48 +2,34 @@ import browser, { type Tabs } from 'webextension-polyfill';
 import { singleton } from 'tsyringe';
 import { computed, makeObservable, observable, runInAction } from 'mobx';
 
-import { AddTaskRequest, CancelTaskRequest, RequestTypes, FinishTaskRequest } from 'domain/model/Request';
-import { Task, TaskTypes } from 'domain/model/Task';
+import { type Task, TaskTypes, RequestTypes, EventNames, AddTaskRequest } from 'domain/model/task';
+import EventBus from 'domain/infra/EventBus';
 
 @singleton()
 export default class TaskService {
+  @observable private tasks: Task[] = [];
+  @observable targetTabId?: NonNullable<Tabs.Tab['id']>;
+  private readonly eventBus = new EventBus();
   constructor() {
     makeObservable(this);
     this.init();
-    this.listen();
+    this.eventBus.on(EventNames.CancelTask, ({ taskId }) => this.remove(taskId));
+    this.eventBus.on(EventNames.FinishTask, ({ taskId }) => this.remove(taskId));
   }
-  @observable private tasks: Task[] = [];
-
-  @observable targetTabId?: NonNullable<Tabs.Tab['id']>;
 
   private async init() {
-    this.tasks = await browser.runtime.sendMessage({ type: RequestTypes.QuerySessionTasks });
-
+    this.tasks = await browser.runtime.sendMessage({ type: RequestTypes.QuerySessionTask });
     const targetTabId = await TaskService.getTargetTabId();
+
     runInAction(() => {
       this.targetTabId = targetTabId;
-    });
-  }
-
-  private listen() {
-    browser.runtime.onMessage.addListener((request: CancelTaskRequest | FinishTaskRequest, sender) => {
-      switch (request.type) {
-        case RequestTypes.CancelTask:
-          // todo: add error message
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          return this.remove(request.tabId || sender.tab!.id!);
-        case RequestTypes.FinishTask:
-          return this.remove(request.tabId);
-        default:
-          break;
-      }
     });
   }
 
   @computed
   get currentAction() {
     if (typeof this.targetTabId === 'undefined') {
-      return null;
+      return undefined;
     }
 
     return this.tasks.find((task) => task.tabId === this.targetTabId)?.type;
@@ -64,8 +50,8 @@ export default class TaskService {
     return targetTabId;
   }
 
-  private remove(tabId: NonNullable<Tabs.Tab['id']>) {
-    this.tasks = this.tasks.filter((task) => task.tabId !== tabId);
+  private remove(taskId: Task['id']) {
+    this.tasks = this.tasks.filter((task) => task.id !== taskId);
   }
 
   async dispatch(action: TaskTypes) {
@@ -73,9 +59,10 @@ export default class TaskService {
       throw new Error('not ready');
     }
 
-    const task: Task = await browser.runtime.sendMessage({
+    const task = await browser.runtime.sendMessage({
       type: RequestTypes.AddTask,
-      task: { tabId: this.targetTabId, type: action },
+      action,
+      tabId: this.targetTabId,
     } satisfies AddTaskRequest);
 
     if (action === TaskTypes.ScreenShot || action === TaskTypes.SelectElement) {

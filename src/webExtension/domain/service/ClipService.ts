@@ -1,9 +1,8 @@
 import { getPageData, helper } from 'single-file-core/single-file';
-import browser from 'webextension-polyfill';
 
 import ElementSelector from 'web/views/Workbench/Editor/common/ElementSelector';
-import { TaskTypes } from 'domain/model/Task';
-import { type CancelTaskRequest, type SubmitRequest, type StartTaskRequest, RequestTypes } from 'domain/model/Request';
+import { type Task, EventNames, TaskTypes } from 'domain/model/task';
+import EventBus from 'domain/infra/EventBus';
 
 const COMMON_GET_PAGE_OPTIONS = {
   blockScripts: true,
@@ -16,19 +15,12 @@ const COMMON_GET_PAGE_OPTIONS = {
 };
 
 export default class ClipService {
-  private activeAction?: TaskTypes;
+  private activeTask?: Task;
+  private readonly eventBus = new EventBus();
 
   constructor() {
-    browser.runtime.onMessage.addListener((message: StartTaskRequest | CancelTaskRequest) => {
-      switch (message.type) {
-        case RequestTypes.StartTask:
-          return this.handleAction(message.action);
-        case RequestTypes.CancelTask:
-          return message.error ? this.alert(message.error) : undefined;
-        default:
-          break;
-      }
-    });
+    this.eventBus.on(EventNames.StartTask, ({ task }) => this.startTask(task));
+    this.eventBus.on(EventNames.CancelTask, ({ error }) => error && this.alert(error));
     window.addEventListener('pagehide', this.cancel.bind(this));
   }
 
@@ -80,14 +72,14 @@ export default class ClipService {
     onCancel: this.cancel.bind(this),
   });
 
-  private async handleAction(action: TaskTypes) {
-    if (this.activeAction) {
+  private async startTask(task: Task) {
+    if (this.activeTask) {
       throw new Error('can not clip now');
     }
 
-    this.activeAction = action;
+    this.activeTask = task;
 
-    switch (action) {
+    switch (task.type) {
       case TaskTypes.SelectElement:
         return this.elementSelector.enable();
       case TaskTypes.SelectPage:
@@ -98,17 +90,21 @@ export default class ClipService {
   }
 
   cancel() {
-    if (this.activeAction) {
-      browser.runtime.sendMessage({ type: RequestTypes.CancelTask } satisfies CancelTaskRequest);
-      this.activeAction = undefined;
+    if (!this.activeTask) {
+      throw new Error('no activeTask');
     }
+
+    this.eventBus.emit(EventNames.CancelTask, { taskId: this.activeTask.id });
+    this.activeTask = undefined;
   }
 
-  private submit(result: SubmitRequest['payload']) {
-    if (this.activeAction) {
-      this.activeAction = undefined;
-      browser.runtime.sendMessage({ type: RequestTypes.Submit, payload: result } satisfies SubmitRequest);
+  private submit(result: { title: string; content: string; type: 'md' | 'html' }) {
+    if (!this.activeTask) {
+      throw new Error('no activeTask');
     }
+
+    this.eventBus.emit(EventNames.Submit, { ...result, taskId: this.activeTask.id });
+    this.activeTask = undefined;
   }
 
   private alert(msg: string) {

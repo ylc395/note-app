@@ -29,17 +29,19 @@ export default observer(function HtmlView({ editorView }: { editorView: HtmlEdit
   }, [editorView, setHtmlViewer]);
 
   return (
-    <div className="h-full grow overflow-auto" ref={editorRootRef}>
+    <div className="grow overflow-auto" ref={editorRootRef}>
       <div className="all-initial">
-        <div className="select-text" ref={shadowWrapperRef}></div>
+        <div className="h-full select-text" ref={shadowWrapperRef}></div>
       </div>
-      <div className="relative">
-        {editorView.editor.annotations.map((el) => {
-          if (el.type === AnnotationTypes.HtmlElement) {
-            return <ElementAnnotation key={el.id} el={el} />;
-          }
-        })}
-      </div>
+      {editorView.editor.annotations.length > 0 && (
+        <div className="relative">
+          {editorView.editor.annotations.map((el) => {
+            if (el.type === AnnotationTypes.HtmlElement) {
+              return <ElementAnnotation key={el.id} el={el} />;
+            }
+          })}
+        </div>
+      )}
       {/* {selectionTooltipShowing && <SelectionTooltip ref={setSelectionTooltipPopper} style={selectionTooltipStyles} />} */}
     </div>
   );

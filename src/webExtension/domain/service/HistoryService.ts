@@ -2,7 +2,7 @@ import { observable, runInAction, makeObservable, action } from 'mobx';
 import browser from 'webextension-polyfill';
 import { singleton } from 'tsyringe';
 
-import { type Task, TASK_ID_PREFIX } from 'domain/model/Task';
+import { type Task, TASK_ID_PREFIX } from 'domain/model/task';
 
 @singleton()
 export default class HistoryService {
