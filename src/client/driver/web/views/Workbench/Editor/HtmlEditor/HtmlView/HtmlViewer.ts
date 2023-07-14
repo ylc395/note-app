@@ -188,6 +188,9 @@ export default class HtmlViewer {
       RETURN_DOM: true,
     });
 
+    // to make <html> as viewport root for `position: fixed` elements
+    fragment.style.transform = 'scale(1)';
+
     // disable all input elements
     const inputs: (HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement)[] = Array.from(
       fragment.querySelectorAll('input, textarea, select'),

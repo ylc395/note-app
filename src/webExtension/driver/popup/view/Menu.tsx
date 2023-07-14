@@ -2,6 +2,7 @@ import { container } from 'tsyringe';
 import { observer } from 'mobx-react-lite';
 
 import TaskService from 'domain/service/TaskService';
+import Client, { Statuses } from 'domain/service/HttpClient';
 import { TaskTypes } from 'domain/model/Task';
 
 const ACTIONS = [
@@ -22,6 +23,7 @@ const ACTION_TEXT_MAP = {
 
 export default observer(function Menu() {
   const taskService = container.resolve(TaskService);
+  const client = container.resolve(Client);
 
   return (
     <div>
@@ -30,7 +32,7 @@ export default observer(function Menu() {
           <li key={action}>
             <button
               className={action === taskService.currentAction ? 'bg-red-300' : ''}
-              disabled={Boolean(taskService.currentAction)}
+              disabled={client.status !== Statuses.Online || Boolean(taskService.currentAction)}
               onClick={() => taskService.dispatch(action)}
             >
               {ACTION_TEXT_MAP[action]}

@@ -10,6 +10,10 @@ const tsconfigPath = path.resolve('src/webExtension/tsconfig.json');
 const manifest = './src/webExtension/manifest.json';
 const plugins = [checker({ typescript: { tsconfigPath } }), tsconfigPaths({ projects: [tsconfigPath] })];
 
+const define = {
+  'process.env.NODE_ENV': JSON.stringify('development'),
+};
+
 const COMMON_BUILD_OPTIONS = {
   minify: false,
   sourcemap: true,
@@ -37,6 +41,7 @@ build({
     ...COMMON_BUILD_OPTIONS,
   },
   plugins,
+  define,
 });
 
 build({
@@ -54,9 +59,7 @@ build({
     ...COMMON_BUILD_OPTIONS,
   },
   plugins,
-  define: {
-    'process.env.NODE_ENV': JSON.stringify('development'),
-  },
+  define,
 });
 
 build({
@@ -69,4 +72,5 @@ build({
     ...COMMON_BUILD_OPTIONS,
   },
   plugins,
+  define,
 });

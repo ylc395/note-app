@@ -11,7 +11,7 @@ import {
   type QueryTaskRequest,
   type AddTaskRequest,
 } from 'domain/model/Request';
-import MainAppClient from './MainAppClient';
+import MainAppClient from './HttpClient';
 
 export default class SessionTaskManager {
   constructor() {
