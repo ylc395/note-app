@@ -1,5 +1,5 @@
 import browser, { type Tabs } from 'webextension-polyfill';
-import omit from 'lodash/omit';
+import uniqueId from 'lodash/uniqueId';
 
 import {
   type Task,
@@ -7,12 +7,14 @@ import {
   type QueryTaskRequest,
   type SubmitEvent,
   type AddTaskRequest,
-  TASK_ID_PREFIX,
   EventNames,
   RequestTypes,
 } from 'domain/model/task';
-import EventBus from '../infra/EventBus';
-import MainAppClient from '../infra/HttpClient';
+import EventBus from 'domain/infra/EventBus';
+import MainAppClient from 'domain/infra/HttpClient';
+
+import ConfigService from './ConfigService';
+import HistoryService from './HistoryService';
 
 export default class SessionTaskManager {
   private readonly eventBus = new EventBus();
@@ -36,8 +38,7 @@ export default class SessionTaskManager {
   private client = new MainAppClient();
   private async add(tabId: NonNullable<Tabs.Tab['id']>, type: TaskTypes) {
     const tab = await browser.tabs.get(tabId);
-    const timestamp = Date.now();
-    const id = `${TASK_ID_PREFIX}${timestamp}`;
+    const id = uniqueId('task-');
     const task: Required<Task> = {
       time: Date.now(),
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -63,10 +64,20 @@ export default class SessionTaskManager {
     }
 
     const tab = await browser.tabs.get(task.tabId);
+    const config = await ConfigService.load();
 
     try {
-      await this.client.save({ ...result, sourceUrl: tab.url || '' });
-      browser.storage.local.set({ [task.id]: omit(task, 'tabId') });
+      if (!config) {
+        throw new Error('no config');
+      }
+
+      await this.client.save(config.targetEntityType, {
+        ...result,
+        sourceUrl: tab.url || '',
+        parentId: config.targetEntityId,
+      });
+
+      HistoryService.add(task);
       this.eventBus.emit(EventNames.FinishTask, { taskId });
     } catch {
       this.eventBus.emit(EventNames.CancelTask, { taskId, error: 'Can not save' });

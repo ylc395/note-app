@@ -91,7 +91,7 @@ export default class ClipService {
 
   cancel() {
     if (!this.activeTask) {
-      throw new Error('no activeTask');
+      return;
     }
 
     this.eventBus.emit(EventNames.CancelTask, { taskId: this.activeTask.id });

@@ -2,6 +2,9 @@ import { observable, makeObservable, runInAction } from 'mobx';
 import browser from 'webextension-polyfill';
 
 import type { MaterialDTO } from 'shared/interface/material';
+import type { NoteBodyDTO, NoteDTO, NoteVO } from 'shared/interface/note';
+import type { MemoDTO } from 'shared/interface/memo';
+import { EntityTypes } from 'shared/interface/entity';
 
 const HOST = 'http://localhost:3001';
 const TOKEN_KEY = 'token';
@@ -16,7 +19,7 @@ export enum Statuses {
 
 export default class HttpClient {
   @observable status: Statuses | string = Statuses.NotReady;
-  @observable token?: string;
+  private token?: string;
 
   constructor(checkOnline?: true) {
     makeObservable(this);
@@ -66,23 +69,50 @@ export default class HttpClient {
     this.checkOnline();
   }
 
-  async save(payload: { title: string; content: string; type: 'html' | 'md'; sourceUrl: string }) {
+  async save(
+    saveAs: EntityTypes,
+    payload: { title: string; content: string; type: 'html' | 'md'; sourceUrl: string; parentId: string | null },
+  ) {
     if (!this.token) {
       throw new Error('no token');
     }
 
-    const res = await fetch(`${HOST}/materials`, {
+    const options: RequestInit = {
       method: 'POST',
-      body: JSON.stringify({
-        name: payload.title,
-        sourceUrl: payload.sourceUrl,
-        file: {
-          mimeType: payload.type === 'html' ? 'text/html' : 'text/markdown',
-          data: payload.content,
-        },
-        parentId: '8919e8a897094aebbbda0df7f58ef3ec',
-      } satisfies MaterialDTO),
       headers: { 'Content-Type': 'application/json', Authorization: this.token },
-    });
+    };
+
+    if (saveAs === EntityTypes.Material) {
+      await fetch(`${HOST}/materials`, {
+        ...options,
+        body: JSON.stringify({
+          name: payload.title,
+          sourceUrl: payload.sourceUrl,
+          file: { mimeType: payload.type === 'html' ? 'text/html' : 'text/markdown', data: payload.content },
+          parentId: payload.parentId,
+        } satisfies MaterialDTO),
+      });
+    }
+
+    if (saveAs === EntityTypes.Note) {
+      const res = await fetch(`${HOST}/notes`, {
+        ...options,
+        body: JSON.stringify({ title: payload.title, parentId: payload.parentId } satisfies NoteDTO),
+      });
+
+      const note: NoteVO = await res.json();
+
+      await fetch(`${HOST}/notes/${note.id}/body`, {
+        ...options,
+        body: JSON.stringify({ content: payload.content } satisfies NoteBodyDTO),
+      });
+    }
+
+    if (saveAs === EntityTypes.Memo) {
+      await fetch(`${HOST}/memos`, {
+        ...options,
+        body: JSON.stringify({ content: payload.content, parentId: payload.parentId || undefined } satisfies MemoDTO),
+      });
+    }
   }
 }

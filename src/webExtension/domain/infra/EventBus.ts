@@ -1,6 +1,7 @@
 import browser, { type Tabs } from 'webextension-polyfill';
 import { Emitter } from 'strict-event-emitter';
 import isObject from 'lodash/isObject';
+
 import {
   EventNames,
   type StartTaskEvent,

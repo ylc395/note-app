@@ -1,20 +1,24 @@
 import browser, { type Tabs } from 'webextension-polyfill';
-import { singleton } from 'tsyringe';
+import { singleton, container } from 'tsyringe';
 import { computed, makeObservable, observable, runInAction } from 'mobx';
 
 import { type Task, TaskTypes, RequestTypes, EventNames, AddTaskRequest } from 'domain/model/task';
 import EventBus from 'domain/infra/EventBus';
+import ConfigService from './ConfigService';
+import HistoryService from './HistoryService';
 
 @singleton()
 export default class TaskService {
-  @observable private tasks: Task[] = [];
+  @observable private tasks: Required<Task>[] = [];
   @observable targetTabId?: NonNullable<Tabs.Tab['id']>;
+  readonly config = new ConfigService();
   private readonly eventBus = new EventBus();
+
   constructor() {
     makeObservable(this);
     this.init();
     this.eventBus.on(EventNames.CancelTask, ({ taskId }) => this.remove(taskId));
-    this.eventBus.on(EventNames.FinishTask, ({ taskId }) => this.remove(taskId));
+    this.eventBus.on(EventNames.FinishTask, ({ taskId }) => this.handleFinish(taskId));
   }
 
   private async init() {
@@ -50,11 +54,23 @@ export default class TaskService {
     return targetTabId;
   }
 
+  private handleFinish(taskId: Task['id']) {
+    const task = this.tasks.find(({ id }) => id === taskId);
+
+    if (!task) {
+      throw new Error('invalid taskId');
+    }
+    this.remove(taskId);
+
+    const history = container.resolve(HistoryService);
+    history.add(task);
+  }
+
   private remove(taskId: Task['id']) {
     this.tasks = this.tasks.filter((task) => task.id !== taskId);
   }
 
-  async dispatch(action: TaskTypes) {
+  async addTask(action: TaskTypes) {
     if (typeof this.targetTabId === 'undefined') {
       throw new Error('not ready');
     }

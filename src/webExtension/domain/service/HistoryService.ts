@@ -1,8 +1,11 @@
 import { observable, runInAction, makeObservable, action } from 'mobx';
 import browser from 'webextension-polyfill';
 import { singleton } from 'tsyringe';
+import omit from 'lodash/omit';
 
-import { type Task, TASK_ID_PREFIX } from 'domain/model/task';
+import type { Task } from 'domain/model/task';
+
+const HISTORY_KEY = 'history';
 
 @singleton()
 export default class HistoryService {
@@ -14,28 +17,34 @@ export default class HistoryService {
   }
 
   private async init() {
-    browser.storage.onChanged.addListener((changes) => {
-      for (const [key, { oldValue, newValue }] of Object.entries(changes)) {
-        if (key.startsWith(TASK_ID_PREFIX) && !oldValue && newValue) {
-          this.historyRecords.push(newValue);
-        }
-      }
-    });
+    const data = await HistoryService.load();
 
-    const data = await browser.storage.local.get(null);
+    if (data) {
+      runInAction(() => {
+        this.historyRecords = data;
+      });
+    }
+  }
 
-    runInAction(() => {
-      for (const [key, value] of Object.entries(data)) {
-        if (key.startsWith(TASK_ID_PREFIX)) {
-          this.historyRecords.push(value);
-        }
-      }
-    });
+  static async load() {
+    return (await browser.storage.local.get(HISTORY_KEY))[HISTORY_KEY] as Task[] | undefined;
+  }
+
+  static async add(task: Task) {
+    const history = (await browser.storage.local.get('history')).history || [];
+    history.push(omit(task, ['tabId', 'id']));
+
+    await browser.storage.local.set({ history });
+  }
+
+  @action
+  add(task: Task) {
+    this.historyRecords.push(task);
   }
 
   @action.bound
   clear() {
-    browser.storage.local.remove(this.historyRecords.map((task) => task.id));
+    browser.storage.local.remove(HISTORY_KEY);
     this.historyRecords = [];
   }
 }

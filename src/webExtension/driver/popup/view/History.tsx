@@ -10,7 +10,7 @@ export default observer(function History() {
     <div>
       <ul className="list-none">
         {historyRecords.map((task) => (
-          <li key={task.id}>{task.title}</li>
+          <li key={task.time}>{task.title}</li>
         ))}
       </ul>
       <button onClick={clear}>清空</button>

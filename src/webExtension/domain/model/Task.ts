@@ -1,9 +1,7 @@
 import type { Tabs } from 'webextension-polyfill';
 
-export const TASK_ID_PREFIX = 'task-id-';
-
 export interface Task {
-  id: string;
+  id?: string;
   title: string;
   url: string;
   tabId?: NonNullable<Tabs.Tab['id']>;
