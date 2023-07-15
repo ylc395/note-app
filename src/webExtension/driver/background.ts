@@ -1,4 +1,5 @@
 import 'reflect-metadata';
 import SessionTaskManager from 'domain/service/SessionTaskManger';
+import { exposeApi } from 'domain/infra/remoteApi';
 
-new SessionTaskManager();
+exposeApi(new SessionTaskManager());

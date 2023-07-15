@@ -2,11 +2,17 @@ import browser, { type Tabs } from 'webextension-polyfill';
 import { singleton, container } from 'tsyringe';
 import { computed, action, makeObservable, observable, runInAction } from 'mobx';
 
-import { type Task, TaskTypes, RequestTypes, EventNames, AddTaskRequest } from 'domain/model/task';
+import { type Task, TaskTypes, EventNames } from 'domain/model/task';
 import EventBus from 'domain/infra/EventBus';
+import HttpClient, { Statuses } from 'domain/infra/HttpClient';
+import { getRemoteApi } from 'domain/infra/remoteApi';
+
 import ConfigService from './ConfigService';
 import HistoryService from './HistoryService';
-import HttpClient, { Statuses } from 'domain/infra/HttpClient';
+import type SessionTaskManager from './SessionTaskManger';
+import type ClipService from './ClipService';
+
+const sessionTaskManager = getRemoteApi<SessionTaskManager>();
 
 @singleton()
 export default class TaskService {
@@ -25,9 +31,9 @@ export default class TaskService {
   }
 
   private async init() {
-    const tasks = await browser.runtime.sendMessage({ type: RequestTypes.QuerySessionTask });
+    const tasks = await sessionTaskManager.getTasks();
     const targetTabId = await TaskService.getTargetTabId();
-    const hasSelection = await browser.tabs.sendMessage(targetTabId, { type: RequestTypes.HasSelection });
+    const hasSelection = await getRemoteApi<typeof ClipService>(targetTabId).hasSelection();
 
     runInAction(() => {
       this.targetTabId = targetTabId;
@@ -87,11 +93,7 @@ export default class TaskService {
       throw new Error('not ready');
     }
 
-    const task = await browser.runtime.sendMessage({
-      type: RequestTypes.AddTask,
-      action,
-      tabId: this.targetTabId,
-    } satisfies AddTaskRequest);
+    const task = await sessionTaskManager.add(this.targetTabId, action);
 
     if ([TaskTypes.ScreenShot, TaskTypes.SelectElement, TaskTypes.SelectElementText].includes(action)) {
       window.close();

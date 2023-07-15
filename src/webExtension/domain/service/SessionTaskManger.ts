@@ -1,15 +1,7 @@
 import browser, { type Tabs } from 'webextension-polyfill';
 import uniqueId from 'lodash/uniqueId';
 
-import {
-  type Task,
-  type TaskTypes,
-  type QueryTaskRequest,
-  type SubmitEvent,
-  type AddTaskRequest,
-  EventNames,
-  RequestTypes,
-} from 'domain/model/task';
+import { type Task, type TaskTypes, type SubmitEvent, EventNames } from 'domain/model/task';
 import EventBus from 'domain/infra/EventBus';
 import HttpClient from 'domain/infra/HttpClient';
 
@@ -20,23 +12,17 @@ export default class SessionTaskManager {
   private readonly eventBus = new EventBus();
   private client = new HttpClient();
   private tasks: Required<Task>[] = [];
+
+  getTasks() {
+    return Promise.resolve(this.tasks);
+  }
+
   constructor() {
     this.eventBus.on(EventNames.Submit, this.submit.bind(this));
     this.eventBus.on(EventNames.CancelTask, ({ taskId }) => taskId && this.cancel(taskId));
-
-    browser.runtime.onMessage.addListener((request: QueryTaskRequest | AddTaskRequest) => {
-      switch (request.type) {
-        case RequestTypes.QuerySessionTask:
-          return Promise.resolve(this.tasks);
-        case RequestTypes.AddTask:
-          return this.add(request.tabId, request.action);
-        default:
-          break;
-      }
-    });
   }
 
-  private async add(tabId: NonNullable<Tabs.Tab['id']>, type: TaskTypes) {
+  async add(tabId: NonNullable<Tabs.Tab['id']>, type: TaskTypes) {
     const tab = await browser.tabs.get(tabId);
     const config = await ConfigService.load();
     const id = uniqueId('task-');

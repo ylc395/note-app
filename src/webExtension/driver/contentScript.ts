@@ -1,15 +1,5 @@
-import browser from 'webextension-polyfill';
-
-import { RequestTypes, type HasSelectionRequest } from 'domain/model/task';
+import { exposeApi } from 'domain/infra/remoteApi';
 import ClipService from 'domain/service/ClipService';
 
+exposeApi(ClipService);
 new ClipService();
-
-browser.runtime.onMessage.addListener((request: HasSelectionRequest) => {
-  switch (request.type) {
-    case RequestTypes.HasSelection:
-      return Promise.resolve(ClipService.hasSelection());
-    default:
-      break;
-  }
-});

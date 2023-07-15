@@ -17,6 +17,8 @@ interface TaskEventMap {
   [EventNames.Submit]: SubmitEvent;
 }
 
+const MESSAGE_TYPE = '__MOCK_EVENT';
+
 export default class EventBus {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private emitter = new Emitter<any>();
@@ -26,17 +28,20 @@ export default class EventBus {
   }
 
   private readonly handleMessage = (message: unknown) => {
-    if (isObject(message) && 'type' in message && typeof message.type === 'string') {
-      if ('payload' in message) {
-        this.emitter.emit(message.type, message.payload);
-      } else {
-        this.emitter.emit(message.type);
+    if (isObject(message) && 'type' in message && message.type === MESSAGE_TYPE) {
+      if ('event' in message && typeof message.event === 'string') {
+        if ('payload' in message) {
+          this.emitter.emit(message.event, message.payload);
+        } else {
+          this.emitter.emit(message.event);
+        }
       }
+      throw new Error('invalid mock event');
     }
   };
 
   emit<E extends keyof TaskEventMap>(eventName: E, e: TaskEventMap[E], tabId?: NonNullable<Tabs.Tab['id']>) {
-    const message = { type: eventName, payload: e };
+    const message = { type: MESSAGE_TYPE, event: eventName, payload: e };
     browser.runtime.sendMessage(message);
 
     if (tabId) {

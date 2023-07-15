@@ -28,12 +28,6 @@ export enum EventNames {
   FinishTask = 'Finish_TASK',
 }
 
-export enum RequestTypes {
-  QuerySessionTask = 'QUERY_SESSION_TASK',
-  AddTask = 'ADD_TASK',
-  HasSelection = 'HAS_SELECTION',
-}
-
 export interface StartTaskEvent {
   task: Task;
 }
@@ -52,18 +46,4 @@ export interface FinishEvent {
 export interface CancelEvent {
   taskId: Task['id'];
   error?: string;
-}
-
-export interface QueryTaskRequest {
-  type: RequestTypes.QuerySessionTask;
-}
-
-export interface HasSelectionRequest {
-  type: RequestTypes.HasSelection;
-}
-
-export interface AddTaskRequest {
-  type: RequestTypes.AddTask;
-  tabId: NonNullable<Tabs.Tab['id']>;
-  action: TaskTypes;
 }
