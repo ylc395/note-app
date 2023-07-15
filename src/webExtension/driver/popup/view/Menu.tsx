@@ -2,12 +2,12 @@ import { container } from 'tsyringe';
 import { observer } from 'mobx-react-lite';
 
 import TaskService from 'domain/service/TaskService';
-import Client, { Statuses } from 'domain/infra/HttpClient';
 import { TaskTypes } from 'domain/model/task';
 import { EntityTypes } from 'shared/interface/entity';
 
 const ACTIONS = [
   TaskTypes.SelectElement,
+  TaskTypes.SelectElementText,
   TaskTypes.SelectPage,
   TaskTypes.ScreenShot,
   TaskTypes.ExtractText,
@@ -16,6 +16,7 @@ const ACTIONS = [
 
 const ACTION_TEXT_MAP = {
   [TaskTypes.SelectElement]: { text: '手动选取页面元素（HTML）', visible: EntityTypes.Material },
+  [TaskTypes.SelectElementText]: { text: '手动选取页面元素（Markdown）', visible: 'all' },
   [TaskTypes.SelectPage]: { text: '选取整个页面（HTML）', visible: EntityTypes.Material },
   [TaskTypes.ScreenShot]: { text: '截屏（图片）', visible: EntityTypes.Material },
   [TaskTypes.ExtractText]: { text: '提取正文（Markdown）', visible: 'all' },
@@ -24,8 +25,7 @@ const ACTION_TEXT_MAP = {
 
 export default observer(function Menu() {
   const taskService = container.resolve(TaskService);
-  const { config } = taskService;
-  const client = container.resolve(Client);
+  const { config, hasSelection } = taskService;
 
   return (
     <div>
@@ -33,11 +33,11 @@ export default observer(function Menu() {
         {ACTIONS.map((action) => {
           const { visible, text } = ACTION_TEXT_MAP[action];
 
-          return visible === 'all' || visible === config.config.targetEntityType ? (
+          return visible === 'all' || visible === config.config?.targetEntityType ? (
             <li key={action}>
               <button
                 className={action === taskService.currentAction ? 'bg-red-300' : ''}
-                disabled={client.status !== Statuses.Online || Boolean(taskService.currentAction)}
+                disabled={taskService.isUnavailable || (action === TaskTypes.ExtractSelection && !hasSelection)}
                 onClick={() => taskService.addTask(action)}
               >
                 {text}

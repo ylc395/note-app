@@ -17,7 +17,12 @@ export default observer(function Network() {
     <div>
       {client.status === Statuses.Online && <div>通信正常</div>}
       {client.status === Statuses.NotReady && <div>正在连接中</div>}
-      {client.status === Statuses.ConnectionFailure && <div>无法连接至 App</div>}
+      {client.status === Statuses.ConnectionFailure && (
+        <div>
+          无法连接至 App<button onClick={() => client.checkOnline()}>重试</button>
+        </div>
+      )}
+      {typeof client.status === 'string' && <div>{client.status}</div>}
       {(client.status === Statuses.EmptyToken || client.status === Statuses.InvalidToken) && (
         <div>
           <span>{errorMessages[client.status]}</span>
@@ -27,7 +32,6 @@ export default observer(function Network() {
           </button>
         </div>
       )}
-      {typeof client.status === 'string' && <div>{client.status}</div>}
     </div>
   );
 });

@@ -1,7 +1,7 @@
 import { getPageData, helper } from 'single-file-core/single-file';
 
 import ElementSelector from 'web/views/Workbench/Editor/common/ElementSelector';
-import { type Task, EventNames, TaskTypes } from 'domain/model/task';
+import { type Task, EventNames, TaskTypes, CancelEvent } from 'domain/model/task';
 import EventBus from 'domain/infra/EventBus';
 
 const COMMON_GET_PAGE_OPTIONS = {
@@ -20,8 +20,9 @@ export default class ClipService {
 
   constructor() {
     this.eventBus.on(EventNames.StartTask, ({ task }) => this.startTask(task));
-    this.eventBus.on(EventNames.CancelTask, ({ error }) => error && this.alert(error));
-    window.addEventListener('pagehide', this.cancel.bind(this));
+    this.eventBus.on(EventNames.CancelTask, this.cancelByError.bind(this));
+    this.eventBus.on(EventNames.FinishTask, this.reset.bind(this));
+    window.addEventListener('pagehide', this.cancelByUser.bind(this));
   }
 
   private readonly clipWholePage = async () => {
@@ -30,7 +31,7 @@ export default class ClipService {
     this.submit({
       title: res.title,
       content: res.content,
-      type: 'html',
+      contentType: 'html',
     });
   };
 
@@ -62,14 +63,14 @@ export default class ClipService {
     this.submit({
       title: res.title,
       content: res.content,
-      type: 'html',
+      contentType: 'html',
     });
   };
 
   private readonly elementSelector = new ElementSelector({
     selectableRoot: document.body,
     onSelect: this.clipElement,
-    onCancel: this.cancel.bind(this),
+    onCancel: this.cancelByUser.bind(this),
   });
 
   private async startTask(task: Task) {
@@ -89,25 +90,42 @@ export default class ClipService {
     }
   }
 
-  cancel() {
+  private cancelByUser() {
     if (!this.activeTask) {
       return;
     }
 
     this.eventBus.emit(EventNames.CancelTask, { taskId: this.activeTask.id });
-    this.activeTask = undefined;
+    this.reset();
   }
 
-  private submit(result: { title: string; content: string; type: 'md' | 'html' }) {
+  private cancelByError({ error, taskId }: CancelEvent) {
+    if (this.activeTask?.id !== taskId || !error) {
+      throw new Error('invalid cancel event');
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    if ([TaskTypes.SelectElement, TaskTypes.SelectElementText, TaskTypes.ScreenShot].includes(this.activeTask!.type)) {
+      window.alert(error);
+    }
+
+    this.reset();
+  }
+
+  private submit(result: { title: string; content: string; contentType: 'md' | 'html' }) {
     if (!this.activeTask) {
       throw new Error('no activeTask');
     }
 
-    this.eventBus.emit(EventNames.Submit, { ...result, taskId: this.activeTask.id });
+    this.eventBus.emit(EventNames.Submit, { taskId: this.activeTask.id, ...result });
+  }
+
+  private reset() {
     this.activeTask = undefined;
   }
 
-  private alert(msg: string) {
-    window.alert(msg);
+  static hasSelection() {
+    const selection = window.getSelection();
+    return Boolean(selection && !selection.isCollapsed);
   }
 }

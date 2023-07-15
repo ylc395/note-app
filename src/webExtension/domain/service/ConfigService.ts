@@ -5,7 +5,11 @@ import { EntityTypes } from 'shared/interface/entity';
 
 const defaultConfig: Config = {
   targetEntityType: EntityTypes.Material,
-  targetEntityId: null,
+  targetEntityId: {
+    [EntityTypes.Material]: null,
+    [EntityTypes.Note]: null,
+    [EntityTypes.Memo]: null,
+  },
 };
 
 export default class ConfigService {
@@ -14,28 +18,34 @@ export default class ConfigService {
     this.init();
   }
 
-  @observable config: Config = defaultConfig;
+  @observable config?: Config;
 
   private async init() {
     const config = await ConfigService.load();
-
-    if (config) {
-      runInAction(() => (this.config = config));
-    }
+    runInAction(() => (this.config = config));
   }
 
   static async load() {
-    return (await browser.storage.local.get(CONFIG_KEY))[CONFIG_KEY] as Config | undefined;
+    return ((await browser.storage.local.get(CONFIG_KEY))[CONFIG_KEY] as Config | undefined) || defaultConfig;
+  }
+
+  @action
+  setTargetId(id: string) {
+    if (!this.config) {
+      throw new Error('no config');
+    }
+
+    this.config.targetEntityId[this.config.targetEntityType] = id;
+    browser.storage.local.set({ [CONFIG_KEY]: this.config });
   }
 
   @action
   set<T extends keyof Config>(key: T, value: Config[T]) {
-    this.config[key] = value;
-
-    if (key === 'targetEntityType') {
-      this.config.targetEntityId = null;
+    if (!this.config) {
+      throw new Error('no config');
     }
 
+    this.config[key] = value;
     browser.storage.local.set({ [CONFIG_KEY]: this.config });
   }
 }

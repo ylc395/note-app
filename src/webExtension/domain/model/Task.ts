@@ -1,3 +1,4 @@
+import type { EntityId, EntityTypes } from 'shared/interface/entity';
 import type { Tabs } from 'webextension-polyfill';
 
 export interface Task {
@@ -7,10 +8,13 @@ export interface Task {
   tabId?: NonNullable<Tabs.Tab['id']>;
   type: TaskTypes;
   time: number;
+  targetType: EntityTypes;
+  targetId: EntityId | null;
 }
 
 export enum TaskTypes {
   SelectElement = 'SELECT_ELEMENT',
+  SelectElementText = 'SELECT_ELEMENT_TEXT',
   SelectPage = 'SELECT_PAGE',
   ExtractText = 'EXTRACT_TEXT',
   ExtractSelection = 'EXTRACT_SELECTION',
@@ -27,6 +31,7 @@ export enum EventNames {
 export enum RequestTypes {
   QuerySessionTask = 'QUERY_SESSION_TASK',
   AddTask = 'ADD_TASK',
+  HasSelection = 'HAS_SELECTION',
 }
 
 export interface StartTaskEvent {
@@ -37,7 +42,7 @@ export interface SubmitEvent {
   title: string;
   taskId: Task['id'];
   content: string;
-  type: 'md' | 'html';
+  contentType: 'md' | 'html';
 }
 
 export interface FinishEvent {
@@ -51,6 +56,10 @@ export interface CancelEvent {
 
 export interface QueryTaskRequest {
   type: RequestTypes.QuerySessionTask;
+}
+
+export interface HasSelectionRequest {
+  type: RequestTypes.HasSelection;
 }
 
 export interface AddTaskRequest {

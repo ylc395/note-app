@@ -30,18 +30,16 @@ export default class HttpClient {
     this.token = (await browser.storage.local.get(TOKEN_KEY))[TOKEN_KEY];
 
     if (checkOnline) {
-      if (!this.token) {
-        this.status = Statuses.EmptyToken;
-        return;
-      }
-
       this.checkOnline();
     }
   }
 
-  private async checkOnline() {
+  async checkOnline() {
     if (!this.token) {
-      throw new Error('no token');
+      runInAction(() => {
+        this.status = Statuses.EmptyToken;
+      });
+      return;
     }
 
     try {
@@ -69,49 +67,54 @@ export default class HttpClient {
     this.checkOnline();
   }
 
-  async save(
-    saveAs: EntityTypes,
-    payload: { title: string; content: string; type: 'html' | 'md'; sourceUrl: string; parentId: string | null },
-  ) {
+  private async fetch<T, K>(method: 'GET' | 'POST', url: string, body?: K) {
     if (!this.token) {
       throw new Error('no token');
     }
 
-    const options: RequestInit = {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: this.token },
-    };
+    // there is no `window` in background env. so use `globalThis`
+    const res = await globalThis.fetch(`${HOST}${url}`, {
+      method,
+      body: body ? JSON.stringify(body) : undefined,
+      headers: {
+        Authorization: this.token,
+        ...(body ? { 'Content-Type': 'application/json' } : null),
+      },
+    });
 
+    if (!res.ok) {
+      throw new Error('http error');
+    }
+
+    return (await res.json()) as T;
+  }
+
+  async save(
+    saveAs: EntityTypes,
+    payload: { title: string; content: string; contentType: 'html' | 'md'; sourceUrl: string; parentId: string | null },
+  ) {
     if (saveAs === EntityTypes.Material) {
-      await fetch(`${HOST}/materials`, {
-        ...options,
-        body: JSON.stringify({
-          name: payload.title,
-          sourceUrl: payload.sourceUrl,
-          file: { mimeType: payload.type === 'html' ? 'text/html' : 'text/markdown', data: payload.content },
-          parentId: payload.parentId,
-        } satisfies MaterialDTO),
+      await this.fetch<void, MaterialDTO>('POST', '/materials', {
+        name: payload.title,
+        sourceUrl: payload.sourceUrl,
+        file: { mimeType: payload.contentType === 'html' ? 'text/html' : 'text/markdown', data: payload.content },
+        parentId: payload.parentId,
       });
     }
 
     if (saveAs === EntityTypes.Note) {
-      const res = await fetch(`${HOST}/notes`, {
-        ...options,
-        body: JSON.stringify({ title: payload.title, parentId: payload.parentId } satisfies NoteDTO),
+      const note = await this.fetch<NoteVO, NoteDTO>('POST', '/notes', {
+        title: payload.title,
+        parentId: payload.parentId,
       });
 
-      const note: NoteVO = await res.json();
-
-      await fetch(`${HOST}/notes/${note.id}/body`, {
-        ...options,
-        body: JSON.stringify({ content: payload.content } satisfies NoteBodyDTO),
-      });
+      await this.fetch<void, NoteBodyDTO>('POST', `/notes/${note.id}/body`, { content: payload.content });
     }
 
     if (saveAs === EntityTypes.Memo) {
-      await fetch(`${HOST}/memos`, {
-        ...options,
-        body: JSON.stringify({ content: payload.content, parentId: payload.parentId || undefined } satisfies MemoDTO),
+      await this.fetch<void, MemoDTO>('POST', '/memos', {
+        content: payload.content,
+        parentId: payload.parentId || undefined,
       });
     }
   }

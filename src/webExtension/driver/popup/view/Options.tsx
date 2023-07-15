@@ -5,9 +5,9 @@ import TaskService from 'domain/service/TaskService';
 import { EntityTypes } from 'shared/interface/entity';
 
 export default observer(function Options() {
-  const { config } = container.resolve(TaskService);
+  const { config, isUnavailable } = container.resolve(TaskService);
 
-  return (
+  return isUnavailable || !config.config ? null : (
     <div>
       <select
         value={config.config.targetEntityType}

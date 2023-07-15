@@ -11,13 +11,15 @@ import {
   RequestTypes,
 } from 'domain/model/task';
 import EventBus from 'domain/infra/EventBus';
-import MainAppClient from 'domain/infra/HttpClient';
+import HttpClient from 'domain/infra/HttpClient';
 
 import ConfigService from './ConfigService';
 import HistoryService from './HistoryService';
 
 export default class SessionTaskManager {
   private readonly eventBus = new EventBus();
+  private client = new HttpClient();
+  private tasks: Required<Task>[] = [];
   constructor() {
     this.eventBus.on(EventNames.Submit, this.submit.bind(this));
     this.eventBus.on(EventNames.CancelTask, ({ taskId }) => taskId && this.cancel(taskId));
@@ -34,10 +36,9 @@ export default class SessionTaskManager {
     });
   }
 
-  private tasks: Required<Task>[] = [];
-  private client = new MainAppClient();
   private async add(tabId: NonNullable<Tabs.Tab['id']>, type: TaskTypes) {
     const tab = await browser.tabs.get(tabId);
+    const config = await ConfigService.load();
     const id = uniqueId('task-');
     const task: Required<Task> = {
       time: Date.now(),
@@ -48,6 +49,8 @@ export default class SessionTaskManager {
       type,
       tabId,
       id,
+      targetType: config.targetEntityType,
+      targetId: config.targetEntityId[config.targetEntityType],
     };
 
     this.tasks.push(task);
@@ -64,23 +67,18 @@ export default class SessionTaskManager {
     }
 
     const tab = await browser.tabs.get(task.tabId);
-    const config = await ConfigService.load();
 
     try {
-      if (!config) {
-        throw new Error('no config');
-      }
-
-      await this.client.save(config.targetEntityType, {
+      await this.client.save(task.targetType, {
         ...result,
         sourceUrl: tab.url || '',
-        parentId: config.targetEntityId,
+        parentId: task.targetId,
       });
 
       HistoryService.add(task);
       this.eventBus.emit(EventNames.FinishTask, { taskId });
     } catch {
-      this.eventBus.emit(EventNames.CancelTask, { taskId, error: 'Can not save' });
+      this.eventBus.emit(EventNames.CancelTask, { taskId, error: 'Can not save' }, task.tabId);
     }
 
     this.tasks = this.tasks.filter((t) => t !== task);

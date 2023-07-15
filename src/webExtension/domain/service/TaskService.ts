@@ -1,18 +1,21 @@
 import browser, { type Tabs } from 'webextension-polyfill';
 import { singleton, container } from 'tsyringe';
-import { computed, makeObservable, observable, runInAction } from 'mobx';
+import { computed, action, makeObservable, observable, runInAction } from 'mobx';
 
 import { type Task, TaskTypes, RequestTypes, EventNames, AddTaskRequest } from 'domain/model/task';
 import EventBus from 'domain/infra/EventBus';
 import ConfigService from './ConfigService';
 import HistoryService from './HistoryService';
+import HttpClient, { Statuses } from 'domain/infra/HttpClient';
 
 @singleton()
 export default class TaskService {
-  @observable private tasks: Required<Task>[] = [];
+  @observable tasks: Required<Task>[] = [];
   @observable targetTabId?: NonNullable<Tabs.Tab['id']>;
+  @observable hasSelection = false;
   readonly config = new ConfigService();
   private readonly eventBus = new EventBus();
+  private readonly httpClient = container.resolve(HttpClient);
 
   constructor() {
     makeObservable(this);
@@ -22,11 +25,14 @@ export default class TaskService {
   }
 
   private async init() {
-    this.tasks = await browser.runtime.sendMessage({ type: RequestTypes.QuerySessionTask });
+    const tasks = await browser.runtime.sendMessage({ type: RequestTypes.QuerySessionTask });
     const targetTabId = await TaskService.getTargetTabId();
+    const hasSelection = await browser.tabs.sendMessage(targetTabId, { type: RequestTypes.HasSelection });
 
     runInAction(() => {
       this.targetTabId = targetTabId;
+      this.tasks = tasks;
+      this.hasSelection = hasSelection;
     });
   }
 
@@ -37,6 +43,11 @@ export default class TaskService {
     }
 
     return this.tasks.find((task) => task.tabId === this.targetTabId)?.type;
+  }
+
+  @computed
+  get isUnavailable() {
+    return this.httpClient.status !== Statuses.Online || Boolean(this.currentAction);
   }
 
   private static async getTargetTabId() {
@@ -66,6 +77,7 @@ export default class TaskService {
     history.add(task);
   }
 
+  @action
   private remove(taskId: Task['id']) {
     this.tasks = this.tasks.filter((task) => task.id !== taskId);
   }
@@ -81,7 +93,7 @@ export default class TaskService {
       tabId: this.targetTabId,
     } satisfies AddTaskRequest);
 
-    if (action === TaskTypes.ScreenShot || action === TaskTypes.SelectElement) {
+    if ([TaskTypes.ScreenShot, TaskTypes.SelectElement, TaskTypes.SelectElementText].includes(action)) {
       window.close();
       return;
     }
