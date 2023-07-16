@@ -539,6 +539,11 @@
     nanoid "^4.0.0"
     tslib "^2.5.0"
 
+"@mozilla/readability@^0.4.4":
+  version "0.4.4"
+  resolved "https://registry.yarnpkg.com/@mozilla/readability/-/readability-0.4.4.tgz#5d258b3436eba1d5fe31c4386e50a848d5cb5811"
+  integrity sha512-MCgZyANpJ6msfvVMi6+A0UAsvZj//4OHREYUB9f2087uXHVoU+H+SWhuihvb1beKpM323bReQPRio0WNk2+V6g==
+
 "@nestjs/common@^10.0.5":
   version "10.0.5"
   resolved "https://registry.yarnpkg.com/@nestjs/common/-/common-10.0.5.tgz#2d834f1713b16d66f514c969b915fd6e020de391"
@@ -984,6 +989,11 @@
   version "2.0.3"
   resolved "https://registry.npmjs.org/@types/trusted-types/-/trusted-types-2.0.3.tgz"
   integrity sha512-NfQ4gyz38SL8sDNrSixxU2Os1a5xcdFxipAFxYEuLUlvU2uDwS4NUpsImcf1//SlWItCVMMLiylsxbmNMToV/g==
+
+"@types/turndown@^5.0.1":
+  version "5.0.1"
+  resolved "https://registry.yarnpkg.com/@types/turndown/-/turndown-5.0.1.tgz#fcda7b02cda4c9d445be1440036df20f335b9387"
+  integrity sha512-N8Ad4e3oJxh9n9BiZx9cbe/0M3kqDpOTm2wzj13wdDUxDPjfjloWIJaquZzWE1cYTAHpjOH3rcTnXQdpEfS/SQ==
 
 "@types/unist@*", "@types/unist@^2.0.0", "@types/unist@^2.0.6":
   version "2.0.6"
@@ -2063,6 +2073,11 @@ dom-align@^1.7.0:
   version "1.12.4"
   resolved "https://registry.npmjs.org/dom-align/-/dom-align-1.12.4.tgz"
   integrity sha512-R8LUSEay/68zE5c8/3BDxiTEvgb4xZTF0RKmAHfiEVN3klfIpXfi2/QCoiWPccVQ0J/ZGdz9OjzL4uJEP/MRAw==
+
+domino@^2.1.6:
+  version "2.1.6"
+  resolved "https://registry.yarnpkg.com/domino/-/domino-2.1.6.tgz#fe4ace4310526e5e7b9d12c7de01b7f485a57ffe"
+  integrity sha512-3VdM/SXBZX2omc9JF9nOPCtDaYQ67BGp5CoLpIQlO2KCAPETs8TcDHacF26jXadGbvUteZzRTeos2fhID5+ucQ==
 
 dompurify@^3.0.3:
   version "3.0.3"
@@ -6108,6 +6123,13 @@ tunnel-agent@^0.6.0:
   integrity sha512-McnNiV1l8RYeY8tBgEpuodCC1mLUdbSN+CYBL7kJsJNInOP8UjDDEwdk6Mw60vdLLrr5NHKZhMAOSrR2NZuQ+w==
   dependencies:
     safe-buffer "^5.0.1"
+
+turndown@^7.1.2:
+  version "7.1.2"
+  resolved "https://registry.yarnpkg.com/turndown/-/turndown-7.1.2.tgz#7feb838c78f14241e79ed92a416e0d213e044a29"
+  integrity sha512-ntI9R7fcUKjqBP6QU8rBK2Ehyt8LAzt3UBT9JR9tgo6GtuKvyUzpayWmeMKJw1DPdXzktvtIT8m2mVXz+bL/Qg==
+  dependencies:
+    domino "^2.1.6"
 
 type-check@^0.4.0, type-check@~0.4.0:
   version "0.4.0"

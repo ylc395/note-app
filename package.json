@@ -23,6 +23,7 @@
     "@types/mocha": "^10.0.1",
     "@types/node": "^18.15.0",
     "@types/react-dom": "^18.0.8",
+    "@types/turndown": "^5.0.1",
     "@types/webextension-polyfill": "^0.10.1",
     "@typescript-eslint/eslint-plugin": "^5.50.0",
     "@typescript-eslint/parser": "^5.50.0",
@@ -72,6 +73,7 @@
     "@milkdown/prose": "^7.2.1",
     "@milkdown/transformer": "^7.2.1",
     "@milkdown/utils": "^7.2.1",
+    "@mozilla/readability": "^0.4.4",
     "@nestjs/common": "^10.0.5",
     "@nestjs/core": "^10.0.5",
     "@nestjs/event-emitter": "^2.0.0",
@@ -109,6 +111,7 @@
     "strict-event-emitter": "^0.5.0",
     "tslib": "^2.5.0",
     "tsyringe": "^4.7.0",
+    "turndown": "^7.1.2",
     "unist-util-visit": "^4.1.2",
     "webextension-polyfill": "^0.10.0",
     "zod": "^3.20.2"

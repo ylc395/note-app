@@ -67,7 +67,7 @@ export default class HttpClient {
     this.checkOnline();
   }
 
-  private async fetch<T, K>(method: 'GET' | 'POST', url: string, body?: K) {
+  private async fetch<T, K>(method: 'GET' | 'POST' | 'PUT', url: string, body?: K) {
     if (!this.token) {
       throw new Error('no token');
     }
@@ -86,7 +86,13 @@ export default class HttpClient {
       throw new Error('http error');
     }
 
-    return (await res.json()) as T;
+    const responseType = res.headers.get('Content-Type');
+
+    if (responseType?.startsWith('application/json')) {
+      return (await res.json()) as T;
+    }
+
+    return null;
   }
 
   async save(
@@ -108,7 +114,11 @@ export default class HttpClient {
         parentId: payload.parentId,
       });
 
-      await this.fetch<void, NoteBodyDTO>('POST', `/notes/${note.id}/body`, { content: payload.content });
+      if (!note) {
+        throw new Error('create note failed');
+      }
+
+      await this.fetch<void, NoteBodyDTO>('PUT', `/notes/${note.id}/body`, { content: payload.content });
     }
 
     if (saveAs === EntityTypes.Memo) {

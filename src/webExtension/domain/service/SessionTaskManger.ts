@@ -63,8 +63,8 @@ export default class SessionTaskManager {
 
       HistoryService.add(task);
       this.eventBus.emit(EventNames.FinishTask, { taskId });
-    } catch {
-      this.eventBus.emit(EventNames.CancelTask, { taskId, error: 'Can not save' }, task.tabId);
+    } catch (e) {
+      this.eventBus.emit(EventNames.CancelTask, { taskId, error: `Can not save: ${e}` }, task.tabId);
     }
 
     this.tasks = this.tasks.filter((t) => t !== task);
