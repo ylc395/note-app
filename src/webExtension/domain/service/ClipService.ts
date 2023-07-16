@@ -152,9 +152,4 @@ export default class ClipService {
   private reset() {
     this.activeTask = undefined;
   }
-
-  static hasSelection() {
-    const selection = window.getSelection();
-    return Boolean(selection && !selection.isCollapsed);
-  }
 }

@@ -10,18 +10,18 @@ import { getRemoteApi } from 'domain/infra/remoteApi';
 import ConfigService from './ConfigService';
 import HistoryService from './HistoryService';
 import type SessionTaskManager from './SessionTaskManger';
-import type ClipService from './ClipService';
+import type WebPageService from './WebPageService';
 
 const sessionTaskManager = getRemoteApi<SessionTaskManager>();
 
 @singleton()
 export default class TaskService {
   @observable tasks: Required<Task>[] = [];
-  @observable targetTabId?: NonNullable<Tabs.Tab['id']>;
-  @observable hasSelection = false;
+  @observable private targetTabId?: NonNullable<Tabs.Tab['id']>;
   readonly config = new ConfigService();
   private readonly eventBus = new EventBus();
   private readonly httpClient = container.resolve(HttpClient);
+  @observable private isPageReady = false;
 
   constructor() {
     makeObservable(this);
@@ -33,12 +33,17 @@ export default class TaskService {
   private async init() {
     const tasks = await sessionTaskManager.getTasks();
     const targetTabId = await TaskService.getTargetTabId();
-    const hasSelection = await getRemoteApi<typeof ClipService>(targetTabId).hasSelection();
+    const pageApi = getRemoteApi<typeof WebPageService>(targetTabId);
+
+    pageApi.pageReady().then(
+      action(() => {
+        this.isPageReady = true;
+      }),
+    );
 
     runInAction(() => {
       this.targetTabId = targetTabId;
       this.tasks = tasks;
-      this.hasSelection = hasSelection;
     });
   }
 
@@ -61,7 +66,7 @@ export default class TaskService {
 
   @computed
   get isUnavailable() {
-    return this.httpClient.status !== Statuses.Online || Boolean(this.currentAction);
+    return !this.isPageReady || this.httpClient.status !== Statuses.Online || Boolean(this.currentAction);
   }
 
   private static async getTargetTabId() {

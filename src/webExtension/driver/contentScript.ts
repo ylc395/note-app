@@ -1,5 +1,6 @@
 import { exposeApi } from 'domain/infra/remoteApi';
 import ClipService from 'domain/service/ClipService';
+import WebPageService from 'domain/service/WebPageService';
 
-exposeApi(ClipService);
 new ClipService();
+exposeApi(WebPageService);

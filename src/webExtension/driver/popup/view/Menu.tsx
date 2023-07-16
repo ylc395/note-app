@@ -11,7 +11,6 @@ const ACTIONS = [
   TaskTypes.SelectPage,
   TaskTypes.ScreenShot,
   TaskTypes.ExtractText,
-  TaskTypes.ExtractSelection,
 ] as const;
 
 const ACTION_TEXT_MAP = {
@@ -20,12 +19,11 @@ const ACTION_TEXT_MAP = {
   [TaskTypes.SelectPage]: { text: '选取整个页面（HTML）', visible: EntityTypes.Material },
   [TaskTypes.ScreenShot]: { text: '截屏（图片）', visible: EntityTypes.Material },
   [TaskTypes.ExtractText]: { text: '提取正文（Markdown）', visible: 'all' },
-  [TaskTypes.ExtractSelection]: { text: '提取选中部分（Markdown）', visible: 'all' },
 } as const;
 
 export default observer(function Menu() {
   const taskService = container.resolve(TaskService);
-  const { config, hasSelection } = taskService;
+  const { config } = taskService;
 
   return (
     <div>
@@ -37,7 +35,7 @@ export default observer(function Menu() {
             <li key={action}>
               <button
                 className={action === taskService.currentAction ? 'bg-red-300' : ''}
-                disabled={taskService.isUnavailable || (action === TaskTypes.ExtractSelection && !hasSelection)}
+                disabled={taskService.isUnavailable}
                 onClick={() => taskService.addTask(action)}
               >
                 {text}

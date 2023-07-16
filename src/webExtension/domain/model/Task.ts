@@ -17,7 +17,6 @@ export enum TaskTypes {
   SelectElementText = 'SELECT_ELEMENT_TEXT',
   SelectPage = 'SELECT_PAGE',
   ExtractText = 'EXTRACT_TEXT',
-  ExtractSelection = 'EXTRACT_SELECTION',
   ScreenShot = 'SCREENSHOT',
 }
 
