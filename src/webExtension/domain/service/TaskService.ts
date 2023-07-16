@@ -2,7 +2,7 @@ import browser, { type Tabs } from 'webextension-polyfill';
 import { singleton, container } from 'tsyringe';
 import { computed, action, makeObservable, observable, runInAction } from 'mobx';
 
-import { type Task, TaskTypes, EventNames } from 'domain/model/task';
+import { type Task, type CancelEvent, TaskTypes, EventNames } from 'domain/model/task';
 import EventBus from 'domain/infra/EventBus';
 import HttpClient, { Statuses } from 'domain/infra/HttpClient';
 import { getRemoteApi } from 'domain/infra/remoteApi';
@@ -26,7 +26,7 @@ export default class TaskService {
   constructor() {
     makeObservable(this);
     this.init();
-    this.eventBus.on(EventNames.CancelTask, ({ taskId }) => this.remove(taskId));
+    this.eventBus.on(EventNames.CancelTask, this.handleCancel.bind(this));
     this.eventBus.on(EventNames.FinishTask, ({ taskId }) => this.handleFinish(taskId));
   }
 
@@ -40,6 +40,14 @@ export default class TaskService {
       this.tasks = tasks;
       this.hasSelection = hasSelection;
     });
+  }
+
+  private handleCancel(e: CancelEvent) {
+    if (e.error) {
+      window.alert(e.error);
+    }
+
+    this.remove(e.taskId);
   }
 
   @computed

@@ -10,7 +10,7 @@ export default observer(function TaskList() {
     <div>
       <ul className="list-none">
         {tasks.map((task) => (
-          <li key={task.id}>{task.title}</li>
+          <li key={task.id}>{task.title} 保存中...</li>
         ))}
       </ul>
     </div>

@@ -35,8 +35,9 @@ export default class EventBus {
         } else {
           this.emitter.emit(message.event);
         }
+      } else {
+        throw new Error('invalid mock event');
       }
-      throw new Error('invalid mock event');
     }
   };
 
