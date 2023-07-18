@@ -45,13 +45,13 @@ build({
 });
 
 build({
-  root: 'src/webExtension',
+  root: 'src/webExtension/driver/contentScript',
   mode: 'development',
   build: {
     outDir,
     emptyOutDir: false,
     lib: {
-      entry: 'driver/contentScript.ts',
+      entry: 'index.ts',
       fileName: () => 'content-script.js',
       name: 'clipper', // meaningless but required
       formats: ['iife'],

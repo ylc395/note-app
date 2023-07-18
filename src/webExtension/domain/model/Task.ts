@@ -12,6 +12,12 @@ export interface Task {
   targetId: EntityId | null;
 }
 
+export interface TaskResult {
+  title: string;
+  content: string;
+  contentType: 'md' | 'html';
+}
+
 export enum TaskTypes {
   SelectElement = 'SELECT_ELEMENT',
   SelectElementText = 'SELECT_ELEMENT_TEXT',
@@ -31,11 +37,8 @@ export interface StartTaskEvent {
   task: Task;
 }
 
-export interface SubmitEvent {
-  title: string;
+export interface SubmitEvent extends TaskResult {
   taskId: Task['id'];
-  content: string;
-  contentType: 'md' | 'html';
 }
 
 export interface FinishEvent {

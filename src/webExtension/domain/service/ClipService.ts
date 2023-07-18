@@ -1,12 +1,14 @@
 import { getPageData, helper } from 'single-file-core/single-file';
 import Turndown from 'turndown';
 import { Readability } from '@mozilla/readability';
+import { Emitter } from 'strict-event-emitter';
 
 import ElementSelector from 'web/views/Workbench/Editor/common/ElementSelector';
-import { type Task, EventNames, TaskTypes } from 'domain/model/task';
+import { type Task, type TaskResult, EventNames, TaskTypes } from 'domain/model/task';
 import EventBus from 'domain/infra/EventBus';
 
-const COMMON_GET_PAGE_OPTIONS = {
+// single-file lib will modify the options. so use a option factory to always get a new option object
+const getCommonPageOptions = () => ({
   blockScripts: true,
   removeUnusedFonts: true,
   removeUnusedStyles: true,
@@ -14,15 +16,17 @@ const COMMON_GET_PAGE_OPTIONS = {
   removeDiscardedResources: true,
   compressHTML: true,
   saveFavicon: true,
-};
+  saveOriginalURLs: true,
+});
 
 const turndownService = new Turndown();
 
-export default class ClipService {
+export default class ClipService extends Emitter<{ preview: [TaskResult]; done: [] }> {
   private activeTask?: Task;
   private readonly eventBus = new EventBus();
 
   constructor() {
+    super();
     this.eventBus.on(EventNames.StartTask, ({ task }) => this.startTask(task));
     this.eventBus.on(EventNames.CancelTask, ({ error }) => error && this.cancelByError(error));
     this.eventBus.on(EventNames.FinishTask, this.reset.bind(this));
@@ -30,7 +34,7 @@ export default class ClipService {
   }
 
   private readonly clipWholePage = async () => {
-    const res = await getPageData(COMMON_GET_PAGE_OPTIONS);
+    const res = await getPageData(getCommonPageOptions());
 
     this.submit({
       title: res.title,
@@ -87,7 +91,7 @@ export default class ClipService {
 
     const { content, title } = await getPageData({
       selected: true,
-      ...COMMON_GET_PAGE_OPTIONS,
+      ...getCommonPageOptions(),
     });
 
     for (const el of markedEls) {
@@ -123,7 +127,7 @@ export default class ClipService {
     }
   }
 
-  private cancelByUser() {
+  cancelByUser() {
     if (!this.activeTask) {
       return;
     }
@@ -141,15 +145,21 @@ export default class ClipService {
     this.reset();
   }
 
-  private submit(result: { title: string; content: string; contentType: 'md' | 'html' }) {
+  submit(result: TaskResult, afterPreview?: true) {
     if (!this.activeTask) {
       throw new Error('no activeTask');
     }
 
-    this.eventBus.emit(EventNames.Submit, { taskId: this.activeTask.id, ...result });
+    if (this.activeTask.type !== TaskTypes.ScreenShot && !afterPreview) {
+      this.emit('preview', result);
+    } else {
+      this.eventBus.emit(EventNames.Submit, { taskId: this.activeTask.id, ...result });
+      this.emit('preview', result);
+    }
   }
 
   private reset() {
     this.activeTask = undefined;
+    this.emit('done');
   }
 }

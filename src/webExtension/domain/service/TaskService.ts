@@ -106,15 +106,7 @@ export default class TaskService {
       throw new Error('not ready');
     }
 
-    const task = await sessionTaskManager.add(this.targetTabId, action);
-
-    if ([TaskTypes.ScreenShot, TaskTypes.SelectElement, TaskTypes.SelectElementText].includes(action)) {
-      window.close();
-      return;
-    }
-
-    runInAction(() => {
-      this.tasks.push(task);
-    });
+    await sessionTaskManager.add(this.targetTabId, action);
+    window.close();
   }
 }

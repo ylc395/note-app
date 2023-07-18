@@ -2,5 +2,11 @@ import { exposeApi } from 'domain/infra/remoteApi';
 import ClipService from 'domain/service/ClipService';
 import WebPageService from 'domain/service/WebPageService';
 
-new ClipService();
+import Previewer from './Previewer';
+import 'tailwindcss/tailwind.css';
+
+const clipService = new ClipService();
+
+new Previewer(clipService);
+
 exposeApi(WebPageService);

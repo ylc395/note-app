@@ -16,24 +16,24 @@ module.exports = {
   },
   overrides: [
     {
-      files: ['src/client/**', 'src/webExtension/**'],
+      files: ['src/client/**', 'src/webExtension/popup/**'],
       excludedFiles: ['**/components/**'],
       extends: ['plugin:mobx/recommended'],
     },
     {
       files: ['*.ts', '*.tsx'],
       parser: '@typescript-eslint/parser',
-      extends: [
-        'plugin:@typescript-eslint/recommended',
-        'plugin:react-hooks/recommended',
-        'plugin:react/recommended',
-        'plugin:tailwindcss/recommended',
-      ],
+      extends: ['plugin:@typescript-eslint/recommended', 'plugin:react-hooks/recommended', 'plugin:react/recommended'],
       settings: {
         react: {
           version: 'detect',
         },
       },
+    },
+    {
+      files: ['*.ts', '*.tsx'],
+      extends: ['plugin:tailwindcss/recommended'],
+      excludedFiles: ['./src/webExtension/driver/contentScript/**'],
     },
     {
       files: ['*.tsx'],
