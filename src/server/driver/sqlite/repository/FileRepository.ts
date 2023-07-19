@@ -9,6 +9,12 @@ export default class FileRepository extends BaseRepository {
   get tableName() {
     return this.schema.tableName;
   }
+
+  async findOneById(id: string) {
+    const existedFile = await this.db.selectFrom(this.tableName).selectAll().where('id', '=', id).executeTakeFirst();
+    return existedFile || null;
+  }
+
   async findOrCreate({ data, mimeType }: { data: ArrayBuffer; mimeType: string }) {
     const hash = createHash('md5').update(new Uint8Array(data)).digest('base64');
     const existedFile = await this.db

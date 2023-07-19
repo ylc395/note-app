@@ -21,9 +21,11 @@ export default class SqliteMaterialRepository extends BaseRepository implements 
   }
 
   async createEntity(material: MaterialDTO) {
-    let file: FileRow | undefined;
+    let file: FileRow | null | undefined;
 
-    if (material.file?.path) {
+    if (material.fileId) {
+      file = await this.files.findOneById(material.fileId);
+    } else if (material.file?.path) {
       const data = await readFile(material.file.path);
       file = await this.files.findOrCreate({ data, mimeType: material.file.mimeType });
     } else if (material.file?.data) {
