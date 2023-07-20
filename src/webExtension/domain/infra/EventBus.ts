@@ -2,13 +2,7 @@ import browser, { type Tabs } from 'webextension-polyfill';
 import { Emitter } from 'strict-event-emitter';
 import isObject from 'lodash/isObject';
 
-import {
-  EventNames,
-  type StartTaskEvent,
-  type SubmitEvent,
-  type FinishEvent,
-  type CancelEvent,
-} from 'domain/model/task';
+import { EventNames, type StartTaskEvent, type SubmitEvent, type FinishEvent, type CancelEvent } from 'model/task';
 
 interface TaskEventMap {
   [EventNames.CancelTask]: CancelEvent;

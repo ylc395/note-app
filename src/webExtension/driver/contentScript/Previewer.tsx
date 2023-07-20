@@ -1,7 +1,7 @@
 import { type Root, createRoot } from 'react-dom/client';
 
-import type { TaskResult } from 'domain/model/task';
-import type ClipService from 'domain/service/ClipService';
+import type { TaskResult } from 'model/task';
+import type ClipService from 'service/ClipService';
 import Modal from './Modal';
 
 const MODAL_OPEN_CLASSNAME = 'star-clipper-modal-open';

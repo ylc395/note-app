@@ -82,7 +82,7 @@ export default class MaterialService extends BaseService {
       await this.assertMaterial(materialId, 'application/pdf');
     }
 
-    if (annotation.type === AnnotationTypes.HtmlElement) {
+    if (annotation.type === AnnotationTypes.HtmlRange) {
       await this.assertMaterial(materialId, 'text/html');
     }
 

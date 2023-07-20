@@ -1,10 +1,10 @@
 import { observable, makeObservable, runInAction } from 'mobx';
 import browser from 'webextension-polyfill';
 
-import type { MaterialDTO } from 'shared/interface/material';
-import type { NoteBodyDTO, NoteDTO, NoteVO } from 'shared/interface/note';
-import type { MemoDTO } from 'shared/interface/memo';
-import { EntityTypes } from 'shared/interface/entity';
+import type { MaterialDTO } from 'interface/material';
+import type { NoteBodyDTO, NoteDTO, NoteVO } from 'interface/note';
+import type { MemoDTO } from 'interface/memo';
+import { EntityTypes } from 'interface/entity';
 
 const HOST = 'http://localhost:3001';
 const TOKEN_KEY = 'token';

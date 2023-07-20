@@ -2,9 +2,9 @@ import { observer } from 'mobx-react-lite';
 import { useContext } from 'react';
 import { useFloating, autoUpdate } from '@floating-ui/react';
 
+import { coverElementMiddleware } from 'components/floatingMiddleware';
 import Annotation from './Annotation';
 import DraggingArea from './DraggingArea';
-import { coverElementMiddleware } from '../../../common/floatingMiddleware';
 
 import context from '../../Context';
 

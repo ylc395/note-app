@@ -2,10 +2,10 @@ import browser, { type Tabs } from 'webextension-polyfill';
 import { singleton, container } from 'tsyringe';
 import { computed, action, makeObservable, observable, runInAction } from 'mobx';
 
-import { type Task, type CancelEvent, TaskTypes, EventNames } from 'domain/model/task';
-import EventBus from 'domain/infra/EventBus';
-import HttpClient, { Statuses } from 'domain/infra/HttpClient';
-import { getRemoteApi } from 'domain/infra/remoteApi';
+import { type Task, type CancelEvent, TaskTypes, EventNames } from 'model/task';
+import EventBus from 'infra/EventBus';
+import HttpClient, { Statuses } from 'infra/HttpClient';
+import { getRemoteApi } from 'infra/remoteApi';
 
 import ConfigService from './ConfigService';
 import HistoryService from './HistoryService';

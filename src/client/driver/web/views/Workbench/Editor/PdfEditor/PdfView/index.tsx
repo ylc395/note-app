@@ -37,7 +37,7 @@ export default observer(function PdfView({ editorView }: { editorView: PdfEditor
       <div className="absolute inset-0 overflow-auto" ref={containerElRef}>
         <div className="select-text" ref={viewerElRef}></div>
         <div>
-          {pdfViewer?.pagesWithAnnotation.map((page) => (
+          {pdfViewer?.visiblePages.map((page) => (
             <AnnotationLayer key={page} page={page} />
           ))}
         </div>

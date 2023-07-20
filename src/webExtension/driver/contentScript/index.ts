@@ -1,6 +1,6 @@
-import { exposeApi } from 'domain/infra/remoteApi';
-import ClipService from 'domain/service/ClipService';
-import WebPageService from 'domain/service/WebPageService';
+import { exposeApi } from 'infra/remoteApi';
+import ClipService from 'service/ClipService';
+import WebPageService from 'service/WebPageService';
 
 import Previewer from './Previewer';
 import 'tailwindcss/tailwind.css';

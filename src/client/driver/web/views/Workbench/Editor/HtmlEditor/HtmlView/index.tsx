@@ -4,8 +4,6 @@ import { useRef, useEffect, useContext } from 'react';
 import type HtmlEditorView from 'model/material/view/HtmlEditorView';
 import HtmlViewer from './HtmlViewer';
 import context from '../Context';
-import ElementAnnotation from './ElementAnnotation';
-import { AnnotationTypes } from 'interface/material';
 
 export default observer(function HtmlView({ editorView }: { editorView: HtmlEditorView }) {
   const shadowWrapperRef = useRef<HTMLDivElement | null>(null);
@@ -33,15 +31,7 @@ export default observer(function HtmlView({ editorView }: { editorView: HtmlEdit
       <div className="all-initial">
         <div className="h-full select-text" ref={shadowWrapperRef}></div>
       </div>
-      {editorView.editor.annotations.length > 0 && (
-        <div className="relative">
-          {editorView.editor.annotations.map((el) => {
-            if (el.type === AnnotationTypes.HtmlElement) {
-              return <ElementAnnotation key={el.id} el={el} />;
-            }
-          })}
-        </div>
-      )}
+      {editorView.editor.annotations.length > 0 && <div className="relative"></div>}
       {/* {selectionTooltipShowing && <SelectionTooltip ref={setSelectionTooltipPopper} style={selectionTooltipStyles} />} */}
     </div>
   );

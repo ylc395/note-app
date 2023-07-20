@@ -3,9 +3,10 @@ import Turndown from 'turndown';
 import { Readability } from '@mozilla/readability';
 import { Emitter } from 'strict-event-emitter';
 
-import ElementSelector from 'web/views/Workbench/Editor/common/ElementSelector';
-import { type Task, type TaskResult, EventNames, TaskTypes } from 'domain/model/task';
-import EventBus from 'domain/infra/EventBus';
+import { type Task, type TaskResult, EventNames, TaskTypes } from 'model/task';
+import EventBus from 'infra/EventBus';
+
+import ElementSelector from './ElementSelector';
 
 // single-file lib will modify the options. so use a option factory to always get a new option object
 const getCommonPageOptions = () => ({
@@ -24,6 +25,7 @@ const turndownService = new Turndown();
 export default class ClipService extends Emitter<{ preview: [TaskResult]; done: [] }> {
   private activeTask?: Task;
   private readonly eventBus = new EventBus();
+  private readonly elementSelector: ElementSelector;
 
   constructor() {
     super();
@@ -31,6 +33,12 @@ export default class ClipService extends Emitter<{ preview: [TaskResult]; done: 
     this.eventBus.on(EventNames.CancelTask, ({ error }) => error && this.cancelByError(error));
     this.eventBus.on(EventNames.FinishTask, this.reset.bind(this));
     window.addEventListener('pagehide', this.cancelByUser.bind(this));
+
+    this.elementSelector = new ElementSelector({
+      selectableRoot: document.body,
+      onSelect: this.clipElement.bind(this),
+      onCancel: this.cancelByUser.bind(this),
+    });
   }
 
   private readonly clipWholePage = async () => {
@@ -100,12 +108,6 @@ export default class ClipService extends Emitter<{ preview: [TaskResult]; done: 
 
     return { content, title };
   }
-
-  private readonly elementSelector = new ElementSelector({
-    selectableRoot: document.body,
-    onSelect: this.clipElement,
-    onCancel: this.cancelByUser.bind(this),
-  });
 
   private async startTask(task: Task) {
     if (this.activeTask) {

@@ -1,7 +1,7 @@
 import { container } from 'tsyringe';
 import { observer } from 'mobx-react-lite';
 
-import HistoryService from 'domain/service/HistoryService';
+import HistoryService from 'service/HistoryService';
 
 export default observer(function History() {
   const { historyRecords, clear } = container.resolve(HistoryService);

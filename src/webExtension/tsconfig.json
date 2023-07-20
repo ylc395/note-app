@@ -5,8 +5,11 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "shared/*": ["../shared/*"],
-      "web/*": ["../client/driver/web/*"]
+      "components/*": ["../shared/components/*"],
+      "interface/*": ["../shared/interface/*"],
+      "service/*": ["domain/service/*"],
+      "infra/*": ["domain/infra/*"],
+      "model/*": ["domain/model/*"]
     }
   }
 }

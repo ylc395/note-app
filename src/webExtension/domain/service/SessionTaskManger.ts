@@ -1,9 +1,9 @@
 import browser, { type Tabs } from 'webextension-polyfill';
 import uniqueId from 'lodash/uniqueId';
 
-import { type Task, type TaskTypes, type SubmitEvent, EventNames } from 'domain/model/task';
-import EventBus from 'domain/infra/EventBus';
-import HttpClient from 'domain/infra/HttpClient';
+import { type Task, type TaskTypes, type SubmitEvent, EventNames } from 'model/task';
+import EventBus from 'infra/EventBus';
+import HttpClient from 'infra/HttpClient';
 
 import ConfigService from './ConfigService';
 import HistoryService from './HistoryService';

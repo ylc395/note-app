@@ -90,6 +90,8 @@ export default observer(function DraggingArea({ page }: { page: number }) {
           : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             displayHeight - finalPos.height - finalPos.bottom!,
     });
+
+    setFinalPos(null);
   };
 
   if (pos) {
@@ -100,9 +102,9 @@ export default observer(function DraggingArea({ page }: { page: number }) {
     <div ref={rootRef}>
       <div ref={refs.setReference} className="absolute bg-yellow-400 opacity-30" style={finalPos}></div>
       {finalPos && !startPos && (
-        <div className="z-20" onClick={create} ref={refs.setFloating} style={floatingStyles}>
+        <button className="pointer-events-auto" onClick={create} ref={refs.setFloating} style={floatingStyles}>
           Add Highlight
-        </div>
+        </button>
       )}
     </div>
   ) : null;

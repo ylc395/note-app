@@ -1,7 +1,7 @@
 import browser from 'webextension-polyfill';
 import { observable, makeObservable, runInAction, action } from 'mobx';
-import { CONFIG_KEY, type Config } from 'domain/model/config';
-import { EntityTypes } from 'shared/interface/entity';
+import { CONFIG_KEY, type Config } from 'model/config';
+import { EntityTypes } from 'interface/entity';
 
 const defaultConfig: Config = {
   targetEntityType: EntityTypes.Material,

@@ -76,8 +76,7 @@ export function normalizeTitle(material?: MaterialVO) {
 export enum AnnotationTypes {
   PdfRange = 1,
   PdfArea = 2,
-  HtmlElement = 3,
-  HtmlRange = 4,
+  HtmlRange = 3,
 }
 
 const rectSchema = object({
@@ -112,12 +111,6 @@ const PdfAreaAnnotationSchema = object({
   page: number(),
 }).merge(commonAnnotationSchema);
 
-const htmlElementAnnotationSchema = object({
-  type: literal(AnnotationTypes.HtmlElement),
-  selector: string(),
-  snapshot: string(),
-}).merge(commonAnnotationSchema);
-
 const htmlRangeSchema = object({
   selector: string(),
   offset: number(),
@@ -131,7 +124,6 @@ const htmlRangeAnnotationSchema = object({
 export const annotationDTOSchema = discriminatedUnion('type', [
   PdfAreaAnnotationSchema,
   PdfRangeAnnotationSchema,
-  htmlElementAnnotationSchema,
   htmlRangeAnnotationSchema,
 ]);
 
@@ -149,6 +141,5 @@ interface CommonAnnotationVO {
 
 export type PdfRangeAnnotationVO = CommonAnnotationVO & Infer<typeof PdfRangeAnnotationSchema>;
 export type PdfAreaAnnotationVO = CommonAnnotationVO & Infer<typeof PdfAreaAnnotationSchema>;
-export type HtmlElementAnnotationVO = CommonAnnotationVO & Infer<typeof htmlElementAnnotationSchema>;
 export type HtmlRangeAnnotationVO = CommonAnnotationVO & Infer<typeof htmlRangeAnnotationSchema>;
-export type AnnotationVO = PdfRangeAnnotationVO | PdfAreaAnnotationVO | HtmlElementAnnotationVO | HtmlRangeAnnotationVO;
+export type AnnotationVO = PdfRangeAnnotationVO | PdfAreaAnnotationVO | HtmlRangeAnnotationVO;

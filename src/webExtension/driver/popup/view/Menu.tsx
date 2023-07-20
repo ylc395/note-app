@@ -1,9 +1,9 @@
 import { container } from 'tsyringe';
 import { observer } from 'mobx-react-lite';
 
-import TaskService from 'domain/service/TaskService';
-import { TaskTypes } from 'domain/model/task';
-import { EntityTypes } from 'shared/interface/entity';
+import TaskService from 'service/TaskService';
+import { TaskTypes } from 'model/task';
+import { EntityTypes } from 'interface/entity';
 
 const ACTIONS = [
   TaskTypes.SelectElement,

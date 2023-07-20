@@ -1,7 +1,7 @@
 import { observer } from 'mobx-react-lite';
 import dayjs from 'dayjs';
 
-import { AnnotationTypes, type AnnotationVO } from 'interface/material';
+import type { AnnotationVO } from 'interface/material';
 import ctx from '../Context';
 import { useContext } from 'react';
 
@@ -15,11 +15,7 @@ export default observer(function Annotation({ annotation }: { annotation: Annota
         className="cursor-pointer border-0 border-l-2 border-solid pl-2 text-sm text-gray-400"
         style={{ borderColor: annotation.color }}
         onClick={() => htmlViewer?.jumpToAnnotation(annotation)}
-      >
-        {annotation.type === AnnotationTypes.HtmlElement && (
-          <img className="max-w-full opacity-70" src={annotation.snapshot} />
-        )}
-      </div>
+      ></div>
       <div className="mt-2 px-2">
         <div className="whitespace-pre">{comment}</div>
         <div className="mt-2 text-right text-sm text-gray-400">

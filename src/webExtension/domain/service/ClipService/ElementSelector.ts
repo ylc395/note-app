@@ -1,10 +1,8 @@
-import { makeObservable, computed, observable, action } from 'mobx';
 import { computePosition, autoUpdate } from '@floating-ui/dom';
-
-import { coverElementMiddleware } from './floatingMiddleware';
+import { coverElementMiddleware } from 'components/floatingMiddleware';
 
 export default class ElementSelector {
-  @observable.ref private overlayEl?: HTMLElement;
+  private overlayEl?: HTMLElement;
   private styleEl?: HTMLStyleElement;
   private cancelAutoUpdate?: ReturnType<typeof autoUpdate>;
   private currentTarget?: HTMLElement;
@@ -16,15 +14,12 @@ export default class ElementSelector {
       selectableRoot?: HTMLElement | ShadowRoot;
       cancelableRoot?: HTMLElement;
     },
-  ) {
-    makeObservable(this);
-  }
+  ) {}
 
   private get selectableRoot() {
     return this.options.selectableRoot || document.body;
   }
 
-  @computed
   get isEnabled() {
     return Boolean(this.overlayEl);
   }
@@ -42,7 +37,6 @@ export default class ElementSelector {
     document.body.addEventListener('keyup', this.handleKeyup);
   }
 
-  @action
   disable() {
     this.selectableRoot.removeEventListener('mouseover', this.handleHover);
     this.selectableRoot.removeEventListener('click', this.handleClick);
@@ -56,7 +50,6 @@ export default class ElementSelector {
     this.currentTarget = undefined;
   }
 
-  @action
   private initOverlay() {
     this.overlayEl = document.createElement('div');
     this.overlayEl.style.backgroundColor = 'blue';

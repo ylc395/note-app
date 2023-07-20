@@ -1,6 +1,7 @@
 {
   "extends": "../../tsconfig.json",
   "include": ["./**/*"],
+  "exclude": ["./components"],
   "compilerOptions": {
     "lib": ["ESNext"],
     "types": ["node"],

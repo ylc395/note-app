@@ -1,14 +1,12 @@
 import { when, computed, makeObservable, observable, action } from 'mobx';
 import DOMPurify from 'dompurify';
 import getCssSelector from 'css-selector-generator';
-import { toPng } from 'html-to-image';
 
 import { ui } from 'web/infra/ui';
 import { AnnotationTypes, AnnotationVO } from 'interface/material';
 import type HtmlEditorView from 'model/material/view/HtmlEditorView';
 
 import RangeSelector, { type RangeSelectEvent } from '../../common/RangeSelector';
-import ElementSelector from '../../common/ElementSelector';
 
 interface Options {
   editorView: HtmlEditorView;
@@ -19,7 +17,6 @@ interface Options {
 export default class HtmlViewer {
   readonly shadowRoot: ShadowRoot;
   private stopLoadingHtml?: ReturnType<typeof when>;
-  readonly elementSelector: ElementSelector;
   private readonly rangeSelector: RangeSelector;
 
   @observable.ref
@@ -62,12 +59,6 @@ export default class HtmlViewer {
     this.shadowRoot.addEventListener('click', this.hijackClick);
     options.editorRootEl.addEventListener('scroll', this.updateScrollState);
 
-    this.elementSelector = new ElementSelector({
-      selectableRoot: this.shadowRoot,
-      onSelect: this.handleElementSelect,
-      cancelableRoot: options.editorRootEl,
-    });
-
     this.rangeSelector = new RangeSelector({
       rootEl: this.shadowRoot,
       onTextSelectionChanged: action((e) => (this.selection = e)),
@@ -84,22 +75,7 @@ export default class HtmlViewer {
     return getCssSelector(el, { root: this.shadowRoot }).replace(':root > :nth-child(1)', 'html');
   }
 
-  private readonly handleElementSelect = async (e: HTMLElement) => {
-    const result = await this.createElementAnnotation(e, 'yellow');
-
-    if (result) {
-      this.elementSelector.disable();
-    } else {
-      ui.feedback({ type: 'fail', content: '该位置已有标记' });
-    }
-  };
-
   private readonly hijackClick = (e: Event) => {
-    if (this.elementSelector.isEnabled) {
-      e.preventDefault();
-      return;
-    }
-
     for (const el of e.composedPath() as HTMLElement[]) {
       if (el.tagName === 'A') {
         const href = el.getAttribute('href');
@@ -121,7 +97,6 @@ export default class HtmlViewer {
 
   destroy(): void {
     this.shadowRoot.removeEventListener('click', this.hijackClick);
-    this.elementSelector.disable();
     this.rangeSelector.destroy();
     this.stopLoadingHtml?.();
     this.options.editorRootEl.removeEventListener('scroll', this.updateScrollState);
@@ -214,26 +189,6 @@ export default class HtmlViewer {
     return fragment as HTMLHtmlElement;
   }
 
-  private async createElementAnnotation(el: HTMLElement, color: string) {
-    const uniqueSelector = this.getUniqueSelector(el);
-    const existed = this.editor.annotations.find(
-      (annotation) => annotation.type === AnnotationTypes.HtmlElement && annotation.selector === uniqueSelector,
-    );
-
-    if (existed) {
-      return false;
-    }
-
-    await this.editor.createAnnotation({
-      type: AnnotationTypes.HtmlElement,
-      color,
-      selector: uniqueSelector,
-      snapshot: await toPng(el),
-    });
-
-    return true;
-  }
-
   createRangeAnnotation(color: string) {
     if (!this.selection) {
       throw new Error('no selection');
@@ -255,9 +210,6 @@ export default class HtmlViewer {
     let el: HTMLElement | null = null;
 
     switch (annotation.type) {
-      case AnnotationTypes.HtmlElement:
-        el = this.shadowRoot.querySelector(annotation.selector);
-        break;
       case AnnotationTypes.HtmlRange:
         el = this.shadowRoot.querySelector(annotation.range[0].selector);
         break;

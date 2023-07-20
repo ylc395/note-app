@@ -1,8 +1,8 @@
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 
-import TaskService from 'domain/service/TaskService';
-import { EntityTypes } from 'shared/interface/entity';
+import TaskService from 'service/TaskService';
+import { EntityTypes } from 'interface/entity';
 
 export default observer(function Options() {
   const { config, isUnavailable } = container.resolve(TaskService);

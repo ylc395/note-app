@@ -2,7 +2,7 @@ import { container } from 'tsyringe';
 import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
 
-import Client, { Statuses } from 'domain/infra/HttpClient';
+import Client, { Statuses } from 'infra/HttpClient';
 
 const errorMessages = {
   [Statuses.EmptyToken]: '空 token',

@@ -52,7 +52,7 @@ export default observer(function Annotation({
       onMouseOver={handleMouseOver}
       onMouseLeave={handleMouseLeave}
       className={clsx(
-        'pointer-events-auto absolute z-30 cursor-pointer bg-clip-content opacity-30',
+        'pointer-events-auto absolute cursor-pointer bg-clip-content opacity-30',
         annotationId === pdfViewer.editorView.currentAnnotationId ? 'brightness-150' : null,
       )}
       style={{

@@ -38,7 +38,7 @@ export default class PdfViewer {
 
   @observable.ref selection: RangeSelectEvent | null = null;
 
-  @observable.struct private visiblePages: number[] = [];
+  @observable.struct visiblePages: number[] = [];
 
   @observable
   readonly page = { current: 1, total: 1 };
@@ -64,17 +64,6 @@ export default class PdfViewer {
     this.cancelLoadingDoc = when(
       () => Boolean(this.editorView.editor.entity),
       () => this.init(),
-    );
-  }
-
-  @computed
-  get pagesWithAnnotation() {
-    return intersection(
-      this.visiblePages,
-      union(
-        Object.keys(this.editorView.editor.areaAnnotationsByPage).map(Number),
-        Object.keys(this.editorView.editor.fragmentsByPage).map(Number),
-      ),
     );
   }
 
