@@ -3,7 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { join } from 'node:path';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 
-import AppClient, { EventNames as AppClientEventNames } from 'infra/AppClient';
+import ClientApp, { EventNames as ClientAppEventNames } from 'infra/ClientApp';
 import { APP_PROTOCOL, NODE_ENV } from 'infra/constants';
 
 import { UI_CHANNELS, createContextmenu, openNewWindow } from './ui';
@@ -21,7 +21,7 @@ protocol.registerSchemesAsPrivileged([
 ]);
 
 @Injectable()
-export default class ElectronClient extends AppClient {
+export default class ElectronApp extends ClientApp {
   private mainWindow?: BrowserWindow;
   readonly type = 'electron';
 
@@ -61,7 +61,7 @@ export default class ElectronClient extends AppClient {
     }
 
     await super.start();
-    this.emit(AppClientEventNames.Ready);
+    this.emit(ClientAppEventNames.Ready);
 
     await this.initWindow();
   }

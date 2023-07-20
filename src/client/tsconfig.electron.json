@@ -1,6 +1,6 @@
 {
   "extends": "./tsconfig.json",
-  "include": ["./driver/desktop/electron/**/*", "./driver/desktop/DesktopClient.ts", "./domain/infra/**/*"],
+  "include": ["./driver/desktop/**/*", "./domain/infra/**/*"],
   "exclude": ["./driver/desktop/electron/preload.ts", "./domain/infra/remote.ts"],
   "compilerOptions": {
     "composite": true,

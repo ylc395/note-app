@@ -9,8 +9,8 @@ import { APP_NAME, NODE_ENV } from './constants';
 import { token as kvDatabaseToken, type KvDatabase } from './kvDatabase';
 
 export enum EventNames {
-  BeforeStart = 'appClient.created',
-  Ready = 'appClient.ready',
+  BeforeStart = 'clientApp.created',
+  Ready = 'clientApp.ready',
 }
 
 interface Events extends EventMap {
@@ -18,11 +18,11 @@ interface Events extends EventMap {
   [EventNames.Ready]: [];
 }
 
-export const token = Symbol('appClient');
+export const token = Symbol('clientApp');
 
-export default abstract class AppClient extends Emitter<Events> {
+export default abstract class ClientApp extends Emitter<Events> {
   abstract type: string;
-  private clientInfo?: {
+  private appInfo?: {
     clientId: string;
     appName: string;
     deviceName: string;
@@ -33,7 +33,7 @@ export default abstract class AppClient extends Emitter<Events> {
   }
 
   getDataDir() {
-    const dir = NODE_ENV === 'development' ? `${APP_NAME}-dev` : APP_NAME;
+    const dir = (NODE_ENV && { development: `${APP_NAME}-dev`, test: `${APP_NAME}-test` }[NODE_ENV]) || APP_NAME;
 
     if (process.env.APPDATA) {
       return join(process.env.APPDATA, dir);
@@ -47,18 +47,18 @@ export default abstract class AppClient extends Emitter<Events> {
 
   async start() {
     const kvDb = this.moduleRef.get<KvDatabase>(kvDatabaseToken, { strict: false });
-    this.clientInfo = {
+    this.appInfo = {
       clientId: await kvDb.get('app.desktop.id', randomUUID),
       appName: APP_NAME,
       deviceName: hostname(),
     };
   }
 
-  getClientInfo() {
-    if (!this.clientInfo) {
+  getAppInfo() {
+    if (!this.appInfo) {
       throw new Error('no client info');
     }
 
-    return this.clientInfo;
+    return this.appInfo;
   }
 }

@@ -3,7 +3,7 @@ import { Controller } from '@nestjs/common';
 import { type FileVO, type WebFileMetadataVO, type FilesDTO, filesDTOSchema } from 'interface/file';
 import FileService from 'service/FileService';
 
-import { Get, Body, Query, createSchemaPipe, Patch, Param } from './decorators';
+import { Get, Body, createSchemaPipe, Patch, Param } from './decorators';
 
 @Controller()
 export default class ResourcesController {

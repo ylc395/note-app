@@ -3,8 +3,8 @@ import { object, type infer as Infer, number, string } from 'zod';
 import differenceWith from 'lodash/differenceWith';
 import fm from 'front-matter';
 
-import { token as appClientToken } from 'infra/AppClient';
-import type AppClient from 'infra/AppClient';
+import { token as clientAppToken } from 'infra/ClientApp';
+import type ClientApp from 'infra/ClientApp';
 import { type EntityLocator, EntityTypes } from 'interface/entity';
 import type { Conflict, Log } from 'infra/synchronizer';
 import type { RawNoteVO } from 'model/note';
@@ -34,7 +34,7 @@ type EntityMetadata = { id: string; updatedAt: number } & (
 @Injectable()
 export default class SyncService extends BaseService {
   @Inject(syncTargetFactoryToken) private readonly syncTargetFactory!: SyncTargetFactory;
-  @Inject(appClientToken) protected readonly appClient!: AppClient;
+  @Inject(clientAppToken) protected readonly clientApp!: ClientApp;
   private syncTarget?: SyncTarget;
   private isBusy = false;
   private logs: Log[] = [];
@@ -78,7 +78,7 @@ export default class SyncService extends BaseService {
     this.syncTarget = this.syncTargetFactory('fs');
 
     const remoteMeta = await this.getRemoteMeta();
-    const { clientId } = this.appClient.getClientInfo();
+    const { clientId } = this.clientApp.getAppInfo();
 
     if (remoteMeta && !remoteMeta.finishAt && remoteMeta.clientId !== clientId) {
       this.isBusy = false;
@@ -301,7 +301,7 @@ export default class SyncService extends BaseService {
       throw new Error('no remote');
     }
 
-    const { deviceName, clientId, appName } = this.appClient.getClientInfo();
+    const { deviceName, clientId, appName } = this.clientApp.getAppInfo();
 
     const meta: Meta = {
       startAt,

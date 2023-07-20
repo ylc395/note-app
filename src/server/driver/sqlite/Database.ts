@@ -5,8 +5,8 @@ import { ensureDirSync, emptyDirSync } from 'fs-extra';
 import { join } from 'node:path';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 
-import { token as appClientToken } from 'infra/AppClient';
-import type AppClient from 'infra/AppClient';
+import { token as clientAppToken } from 'infra/ClientApp';
+import type ClientApp from 'infra/ClientApp';
 import type { Database } from 'infra/database';
 import { NODE_ENV } from 'infra/constants';
 import type Repository from 'service/repository';
@@ -31,8 +31,8 @@ export interface Db {
 @Injectable()
 export default class SqliteDb implements Database {
   private readonly logger: Logger;
-  constructor(@Inject(appClientToken) private readonly appClient: AppClient) {
-    this.logger = new Logger(`${appClient.type} ${SqliteDb.name}`);
+  constructor(@Inject(clientAppToken) private readonly clientApp: ClientApp) {
+    this.logger = new Logger(`${clientApp.type} ${SqliteDb.name}`);
     this.db = this.createDb();
     this.ready = this.init();
   }
@@ -73,14 +73,14 @@ export default class SqliteDb implements Database {
   }
 
   private createDb() {
-    const dir = this.appClient.getDataDir();
+    const dir = this.clientApp.getDataDir();
     ensureDirSync(dir);
 
     const isDevelopment = NODE_ENV === 'development';
     const isTest = NODE_ENV === 'test';
     const needClean = process.env.DEV_CLEAN === '1';
 
-    if ((isDevelopment && needClean && this.appClient.type === 'electron') || isTest) {
+    if ((isDevelopment && needClean && this.clientApp.type === 'electron') || isTest) {
       emptyDirSync(dir);
     }
 
