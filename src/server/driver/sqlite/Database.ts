@@ -19,7 +19,6 @@ export interface Db {
   [schemas.note.tableName]: RowTypes.NoteRow;
   [schemas.recyclable.tableName]: RowTypes.RecyclableRow;
   [schemas.star.tableName]: RowTypes.StarRow;
-  [schemas.resource.tableName]: RowTypes.ResourceRow;
   [schemas.file.tableName]: RowTypes.FileRow;
   [schemas.materialAnnotation.tableName]: RowTypes.MaterialAnnotationRow;
   [schemas.revision.tableName]: RowTypes.RevisionRow;

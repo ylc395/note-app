@@ -7,7 +7,6 @@ import {
   editorViewCtx,
   parserCtx,
   editorViewOptionsCtx,
-  editorStateCtx,
   commandsCtx,
 } from '@milkdown/core';
 import { Slice } from '@milkdown/prose/model';
@@ -21,7 +20,6 @@ import '@milkdown/prose/tables/style/tables.css';
 
 import { uploadOptions, htmlUpload } from './uploadFile';
 import multimedia from './multimedia';
-import iconLink from './iconLink';
 import search, { enableSearchCommand } from './search';
 
 interface State {
@@ -54,19 +52,9 @@ export default class Editor {
       .use(multimedia) // order attention!
       .use(commonmark)
       .use(gfm)
-      // .use(iconLink)
       .use(listener)
       .use(search)
-      .config((ctx) => {
-        ctx.set(rootCtx, this.options.root);
-
-        if (this.options.readonly) {
-          ctx.update(editorViewOptionsCtx, (prev) => ({
-            ...prev,
-            editable: () => false,
-          }));
-        }
-      });
+      .config((ctx) => ctx.set(rootCtx, this.options.root));
 
     if (!this.options.readonly) {
       editor
@@ -87,6 +75,13 @@ export default class Editor {
             });
           }
         });
+    } else {
+      editor.config((ctx) => {
+        ctx.update(editorViewOptionsCtx, (prev) => ({
+          ...prev,
+          editable: () => false,
+        }));
+      });
     }
 
     editor.create().then(() => {
@@ -132,30 +127,26 @@ export default class Editor {
   }
 
   setReadonly(isReadonly: boolean) {
-    if (typeof this.options.readonly === 'boolean') {
-      throw new Error('can not set `readonly` prop if using setReadonly');
-    }
-
-    const editorView = this.editor.ctx.get(editorViewCtx);
-    const editorState = this.editor.ctx.get(editorStateCtx);
-    editorView.update({ state: editorState, editable: () => !isReadonly });
+    this.editor.ctx.update(editorViewOptionsCtx, (prev) => ({
+      ...prev,
+      editable: () => !isReadonly,
+    }));
   }
 
   updateContent(content: string) {
-    this.editor.action((ctx) => {
-      const view = ctx.get(editorViewCtx);
-      const parser = ctx.get(parserCtx);
-      const doc = parser(content);
-      const state = view.state;
+    const { ctx } = this.editor;
+    const view = ctx.get(editorViewCtx);
+    const parser = ctx.get(parserCtx);
+    const doc = parser(content);
+    const state = view.state;
 
-      if (!doc) {
-        return;
-      }
+    if (!doc) {
+      return;
+    }
 
-      this.isUpdating = true;
-      view.dispatch(state.tr.replace(0, state.doc.content.size, new Slice(doc.content, 0, 0)));
-      this.isUpdating = false;
-    });
+    this.isUpdating = true;
+    view.dispatch(state.tr.replace(0, state.doc.content.size, new Slice(doc.content, 0, 0)));
+    this.isUpdating = false;
   }
 
   destroy() {

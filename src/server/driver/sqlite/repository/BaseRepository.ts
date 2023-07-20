@@ -14,7 +14,7 @@ export default abstract class BaseRepository {
     return this.db.insertInto(table).values(row).returningAll().executeTakeFirstOrThrow();
   }
 
-  protected batchCreate<T extends keyof Db>(table: T, rows: Insertable<Db[T]>[]) {
+  protected _batchCreate<T extends keyof Db>(table: T, rows: Insertable<Db[T]>[]) {
     return this.db.insertInto(table).values(rows).returningAll().execute();
   }
 

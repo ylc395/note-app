@@ -6,12 +6,13 @@ import type { NoteRepository, NoteQuery, InternalNoteDTO } from 'service/reposit
 import type { NoteDTO, NoteVO, NotesDTO } from 'interface/note';
 
 import BaseRepository from './BaseRepository';
-import noteSchema, { type Row } from '../schema/note';
+import schema, { type Row } from '../schema/note';
+
+const { tableName } = schema;
 
 export default class SqliteNoteRepository extends BaseRepository implements NoteRepository {
-  protected readonly schema = noteSchema;
   async create(note: InternalNoteDTO) {
-    const row = await this.createOne(this.schema.tableName, {
+    const row = await this.createOne(tableName, {
       ...SqliteNoteRepository.dtoToRow(note),
       id: this.generateId(),
     });
@@ -20,11 +21,7 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
   }
 
   async findBody(noteId: string) {
-    const row = await this.db
-      .selectFrom(noteSchema.tableName)
-      .select('body')
-      .where('id', '=', noteId)
-      .executeTakeFirst();
+    const row = await this.db.selectFrom(tableName).select('body').where('id', '=', noteId).executeTakeFirst();
 
     if (!row) {
       return null;
@@ -34,7 +31,7 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
   }
 
   async update(id: NoteVO['id'], note: InternalNoteDTO) {
-    const row = await this.updateOne(this.schema.tableName, id, SqliteNoteRepository.dtoToRow(note));
+    const row = await this.updateOne(tableName, id, SqliteNoteRepository.dtoToRow(note));
 
     if (!row) {
       return null;
@@ -45,7 +42,7 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
 
   async updateBody(id: NoteVO['id'], noteBody: string) {
     const { numUpdatedRows } = await this.db
-      .updateTable(this.schema.tableName)
+      .updateTable(tableName)
       .where('id', '=', id)
       .set({ body: noteBody })
       .executeTakeFirst();
@@ -58,7 +55,7 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
   }
 
   async findAll(query?: NoteQuery | { parentId: NoteVO['id'][] }) {
-    let sql = this.db.selectFrom(this.schema.tableName).selectAll();
+    let sql = this.db.selectFrom(tableName).selectAll();
 
     for (const [k, v] of Object.entries(query || {})) {
       if (v === undefined) {
@@ -82,7 +79,7 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
     const ids: EntityId[] = [];
 
     for (const note of notes) {
-      const row = await this.updateOne(this.schema.tableName, note.id, SqliteNoteRepository.dtoToRow(note));
+      const row = await this.updateOne(tableName, note.id, SqliteNoteRepository.dtoToRow(note));
 
       if (!row) {
         continue;
@@ -97,7 +94,7 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
   }
 
   async findAllChildren(noteIds: NoteVO['id'][]) {
-    const rows = await this.db.selectFrom(this.schema.tableName).where('parentId', 'in', noteIds).selectAll().execute();
+    const rows = await this.db.selectFrom(tableName).where('parentId', 'in', noteIds).selectAll().execute();
     return rows.map(this.rowToVO);
   }
 
@@ -106,7 +103,7 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
       return [];
     }
 
-    const noteTable = this.schema.tableName;
+    const noteTable = tableName;
     const rows = await this.db
       .withRecursive(
         'ancestors',
@@ -136,7 +133,7 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
       return [];
     }
 
-    const noteTable = this.schema.tableName;
+    const noteTable = tableName;
     const rows = await this.db
       .withRecursive(
         'descendants',
@@ -161,20 +158,17 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
   }
 
   async findTreeFragment(noteId: NoteVO['id']) {
-    const {
-      schema: { tableName: noteTable },
-    } = this;
     const ancestorIds = await this.db
       .withRecursive('ancestors', (qb) =>
         qb
-          .selectFrom(noteTable)
+          .selectFrom(tableName)
           .selectAll()
           .where('id', '=', noteId)
           .union(
             qb
               .selectFrom('ancestors')
-              .innerJoin(noteTable, `${noteTable}.id`, 'ancestors.parentId')
-              .selectAll(noteTable),
+              .innerJoin(tableName, `${tableName}.id`, 'ancestors.parentId')
+              .selectAll(tableName),
           ),
       )
       .selectFrom('ancestors')
@@ -211,7 +205,7 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
 
   async removeById(noteId: NoteVO['id'] | NoteVO['id'][]) {
     await this.db
-      .deleteFrom(this.schema.tableName)
+      .deleteFrom(tableName)
       .where('id', typeof noteId === 'string' ? '=' : 'in', noteId)
       .execute();
   }

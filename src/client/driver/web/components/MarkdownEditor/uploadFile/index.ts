@@ -23,7 +23,7 @@ export const uploadOptions: UploadOptions = {
     return updatedFiles.map((file) => {
       const node = multimediaNode.createAndFill({
         src: getFileUrlById(file.id),
-        alt: file.name,
+        alt: file.id,
       });
 
       if (!node) {
@@ -40,7 +40,7 @@ export const uploadOptions: UploadOptions = {
   },
 };
 
-// paste html & upload html image
+// paste html & transform online url to app url
 export const htmlUpload = $prose(() => {
   return new Plugin({
     props: {

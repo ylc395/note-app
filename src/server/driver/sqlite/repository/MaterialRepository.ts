@@ -6,17 +6,18 @@ import type { MaterialRepository, Directory, MaterialQuery } from 'service/repos
 import type { DirectoryVO, EntityMaterialVO, MaterialDTO, MaterialVO } from 'interface/material';
 
 import schema, { type Row } from '../schema/material';
-import type { Row as FileRow } from '../schema/file';
+import fileSchema, { type Row as FileRow } from '../schema/file';
 import BaseRepository from './BaseRepository';
 import FileRepository from './FileRepository';
 import MaterialAnnotationRepository from './MaterialAnnotationRepository';
 
+const { tableName } = schema;
+
 export default class SqliteMaterialRepository extends BaseRepository implements MaterialRepository {
-  protected readonly schema = schema;
   private readonly files = new FileRepository(this.db);
   private readonly annotations = new MaterialAnnotationRepository(this.db);
   async createDirectory(directory: Directory) {
-    const createdRow = await this.createOne(this.schema.tableName, { ...directory, id: this.generateId() });
+    const createdRow = await this.createOne(tableName, { ...directory, id: this.generateId() });
     return SqliteMaterialRepository.rowToDirectory(createdRow);
   }
 
@@ -39,7 +40,7 @@ export default class SqliteMaterialRepository extends BaseRepository implements 
       throw new Error('invalid material');
     }
 
-    const createdMaterial = await this.createOne(this.schema.tableName, {
+    const createdMaterial = await this.createOne(tableName, {
       ...pick(material, ['name', 'icon', 'parentId']),
       id: this.generateId(),
       fileId: file.id,
@@ -66,7 +67,7 @@ export default class SqliteMaterialRepository extends BaseRepository implements 
 
   private async getChildrenCounts(ids: Row['id'][]) {
     const childrenCount = await this.db
-      .selectFrom(this.schema.tableName)
+      .selectFrom(tableName)
       .where('parentId', 'in', ids)
       .groupBy('parentId')
       .select([this.db.fn.countAll().as('childrenCount'), 'parentId'])
@@ -82,17 +83,17 @@ export default class SqliteMaterialRepository extends BaseRepository implements 
 
   async findAll(query: MaterialQuery) {
     let qb = query.parentId
-      ? this.db.selectFrom(this.schema.tableName).where('parentId', '=', query.parentId)
-      : this.db.selectFrom(this.schema.tableName).where('parentId', 'is', null);
+      ? this.db.selectFrom(tableName).where('parentId', '=', query.parentId)
+      : this.db.selectFrom(tableName).where('parentId', 'is', null);
 
     if (query.ids) {
-      qb = qb.where(`${this.schema.tableName}.id`, 'in', query.ids);
+      qb = qb.where(`${tableName}.id`, 'in', query.ids);
     }
 
     const rows = await qb
-      .leftJoin(this.files.tableName, `${this.schema.tableName}.fileId`, `${this.files.tableName}.id`)
-      .selectAll(this.schema.tableName)
-      .select([`${this.files.tableName}.mimeType`])
+      .leftJoin(fileSchema.tableName, `${tableName}.fileId`, `${fileSchema.tableName}.id`)
+      .selectAll(tableName)
+      .select([`${fileSchema.tableName}.mimeType`])
       .execute();
 
     const directories: DirectoryVO[] = [];
@@ -118,11 +119,11 @@ export default class SqliteMaterialRepository extends BaseRepository implements 
 
   async findOneById(id: MaterialVO['id']) {
     const row = await this.db
-      .selectFrom(this.schema.tableName)
-      .leftJoin(this.files.tableName, `${this.schema.tableName}.fileId`, `${this.files.tableName}.id`)
-      .selectAll(this.schema.tableName)
-      .select(`${this.files.tableName}.mimeType`)
-      .where(`${this.schema.tableName}.id`, '=', id)
+      .selectFrom(tableName)
+      .leftJoin(fileSchema.tableName, `${tableName}.fileId`, `${fileSchema.tableName}.id`)
+      .selectAll(tableName)
+      .select(`${fileSchema.tableName}.mimeType`)
+      .where(`${tableName}.id`, '=', id)
       .executeTakeFirst();
 
     if (!row) {
@@ -140,17 +141,14 @@ export default class SqliteMaterialRepository extends BaseRepository implements 
 
   async findBlobById(id: MaterialVO['id']) {
     const row = await this.db
-      .selectFrom(this.schema.tableName)
-      .innerJoin(this.files.tableName, `${this.schema.tableName}.fileId`, `${this.files.tableName}.id`)
+      .selectFrom(tableName)
+      .innerJoin(fileSchema.tableName, `${tableName}.fileId`, `${fileSchema.tableName}.id`)
       .selectAll()
-      .where(`${this.schema.tableName}.id`, '=', id)
+      .where(`${tableName}.id`, '=', id)
       .executeTakeFirst();
 
     if (row) {
-      if (row.mimeType.startsWith('text')) {
-        return (row.data as Uint8Array).toString();
-      }
-      return (row.data as Uint8Array).buffer;
+      return FileRepository.getBlob(row);
     }
 
     return null;
@@ -167,11 +165,7 @@ export default class SqliteMaterialRepository extends BaseRepository implements 
   }
 
   async updateText<T>(materialId: MaterialVO['id'], payload: T) {
-    const row = await this.db
-      .selectFrom(this.schema.tableName)
-      .selectAll()
-      .where('id', '=', materialId)
-      .executeTakeFirst();
+    const row = await this.db.selectFrom(tableName).selectAll().where('id', '=', materialId).executeTakeFirst();
 
     if (!row?.fileId) {
       return null;

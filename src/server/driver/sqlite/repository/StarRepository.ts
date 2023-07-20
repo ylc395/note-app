@@ -5,24 +5,22 @@ import type { StarRepository } from 'service/repository/StarRepository';
 import BaseRepository from './BaseRepository';
 import schema from '../schema/star';
 
-export default class SqliteStarRepository extends BaseRepository implements StarRepository {
-  protected readonly schema = schema;
+const { tableName } = schema;
 
-  async create(entities: EntityLocator[]) {
+export default class SqliteStarRepository extends BaseRepository implements StarRepository {
+  async batchCreate(entities: EntityLocator[]) {
     const rows = entities.map(({ id, type }) => ({ entityId: id, entityType: type, id: this.generateId() }));
-    const starRows = await this.batchCreate(this.schema.tableName, rows);
+    const starRows = await this._batchCreate(tableName, rows);
 
     return starRows;
   }
 
   async findOneById(id: StarRecord['id']) {
-    return (
-      (await this.db.selectFrom(this.schema.tableName).selectAll().where('id', '=', id).executeTakeFirst()) || null
-    );
+    return (await this.db.selectFrom(tableName).selectAll().where('id', '=', id).executeTakeFirst()) || null;
   }
 
   async findAllByLocators(entities?: EntityLocator[]) {
-    let qb = this.db.selectFrom(this.schema.tableName);
+    let qb = this.db.selectFrom(tableName);
 
     if (entities) {
       const ids = entities.map(({ id }) => id);
@@ -33,6 +31,6 @@ export default class SqliteStarRepository extends BaseRepository implements Star
   }
 
   async remove(id: StarRecord['id']) {
-    await this.db.deleteFrom(this.schema.tableName).where('id', '=', id).execute();
+    await this.db.deleteFrom(tableName).where('id', '=', id).execute();
   }
 }

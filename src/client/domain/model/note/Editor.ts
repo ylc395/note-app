@@ -6,7 +6,6 @@ import type { NoteVO, NoteBodyVO, NoteBodyDTO, NoteDTO } from 'interface/Note';
 import type Tile from 'model/workbench/Tile';
 import Editor from 'model/abstract/Editor';
 import type NoteTree from './Tree';
-import type NoteEditorView from './EditorView';
 
 export interface Entity {
   body: NoteBodyVO;

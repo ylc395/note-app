@@ -1,7 +1,6 @@
 export { default as note, Row as NoteRow } from './note';
 export { default as recyclable, Row as RecyclableRow } from './recyclable';
 export { default as star, Row as StarRow } from './star';
-export { default as resource, Row as ResourceRow } from './resource';
 export { default as file, Row as FileRow } from './file';
 export { default as memo, Row as MemoRow } from './memo';
 export { default as material, Row as MaterialRow } from './material';

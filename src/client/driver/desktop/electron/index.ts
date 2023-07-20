@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 
 import AppClient, { EventNames as AppClientEventNames } from 'infra/AppClient';
-import { APP_FILE_PROTOCOL, NODE_ENV } from 'infra/constants';
+import { APP_PROTOCOL, NODE_ENV } from 'infra/constants';
 
 import { UI_CHANNELS, createContextmenu, openNewWindow } from './ui';
 
@@ -12,7 +12,7 @@ const ENTRY_URL = process.env.VITE_SERVER_ENTRY_URL;
 
 protocol.registerSchemesAsPrivileged([
   {
-    scheme: APP_FILE_PROTOCOL,
+    scheme: APP_PROTOCOL,
     privileges: {
       supportFetchAPI: true,
       stream: true,

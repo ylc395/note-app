@@ -20,14 +20,6 @@ export default observer(function NoteEditor() {
     }, 300);
 
     const disposer = [
-      reaction(
-        () => editorView.editor.entity?.body,
-        (body) => {
-          if (typeof body === 'string' && !editorView.tile.isFocused) {
-            updateContent(body);
-          }
-        },
-      ),
       when(
         () => Boolean(editorView.editor.entity?.body),
         () => {
@@ -37,14 +29,24 @@ export default observer(function NoteEditor() {
         },
       ),
       reaction(
+        () => editorView.editor.entity?.body,
+        (body) => {
+          if (typeof body === 'string' && !editorView.tile.isFocused) {
+            updateContent(body);
+          }
+        },
+      ),
+      reaction(
         () => editorView.editor.entity?.metadata.isReadonly,
         (isReadonly) => {
-          if (typeof isReadonly === 'boolean') {
-            markdownEditor.setReadonly(isReadonly);
+          if (typeof isReadonly === 'undefined') {
+            return;
+          }
 
-            if (!isReadonly) {
-              markdownEditor.focus();
-            }
+          markdownEditor.setReadonly(isReadonly);
+
+          if (!isReadonly) {
+            markdownEditor.focus();
           }
         },
         { fireImmediately: true },

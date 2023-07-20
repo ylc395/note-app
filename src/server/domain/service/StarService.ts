@@ -22,7 +22,7 @@ export default class StarService extends BaseService {
     }
 
     await this.entityService.assertAvailableEntities(entities);
-    return await this.stars.create(entities);
+    return await this.stars.batchCreate(entities);
   }
 
   async query() {

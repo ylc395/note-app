@@ -15,7 +15,7 @@ export default class RecyclableService extends BaseService {
   async create(entities: EntityLocator[]) {
     await this.entityService.assertAvailableEntities(entities);
 
-    const result = await this.recyclables.create(entities);
+    const result = await this.recyclables.batchCreate(entities);
     this.eventEmitter.emit(Events.RecyclablesCreated, entities);
 
     return result;

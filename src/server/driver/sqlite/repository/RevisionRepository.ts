@@ -5,16 +5,17 @@ import BaseRepository from './BaseRepository';
 import schema from '../schema/revision';
 import type { RevisionVO } from 'interface/revision';
 
+const { tableName } = schema;
+
 export default class SqliteRevisionRepository extends BaseRepository implements RevisionRepository {
-  protected readonly schema = schema;
   async create(revision: RevisionDTO) {
-    const { id, createdAt, diff } = await this.createOne(this.schema.tableName, { ...revision, id: this.generateId() });
+    const { id, createdAt, diff } = await this.createOne(tableName, { ...revision, id: this.generateId() });
     return { id, createdAt, diff };
   }
 
   async findLatest({ type: entityType, id: entityId }: EntityLocator) {
     const result = await this.db
-      .selectFrom(this.schema.tableName)
+      .selectFrom(tableName)
       .where('entityType', '=', entityType)
       .where('entityId', '=', entityId)
       .orderBy('createdAt', 'desc')
@@ -25,18 +26,14 @@ export default class SqliteRevisionRepository extends BaseRepository implements 
   }
 
   async findUtil(revisionId: RevisionVO['id']) {
-    const row = await this.db
-      .selectFrom(this.schema.tableName)
-      .where('id', '=', revisionId)
-      .selectAll()
-      .executeTakeFirst();
+    const row = await this.db.selectFrom(tableName).where('id', '=', revisionId).selectAll().executeTakeFirst();
 
     if (!row) {
       return [];
     }
 
     const rows = await this.db
-      .selectFrom(this.schema.tableName)
+      .selectFrom(tableName)
       .where('entityType', '=', row.entityType)
       .where('entityId', '=', row.entityId)
       .where('createdAt', '<=', row.createdAt)

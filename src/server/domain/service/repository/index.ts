@@ -1,7 +1,7 @@
 import type { NoteRepository } from './NoteRepository';
 import type { RecyclablesRepository } from './RecyclableRepository';
 import type { StarRepository } from './StarRepository';
-import type { ResourceRepository } from './ResourceRepository';
+import type { FileRepository } from './FileRepository';
 import type { MemoRepository } from './MemoRepository';
 import type { MaterialRepository } from './MaterialRepository';
 import type { RevisionRepository } from './RevisionRepository';
@@ -11,7 +11,7 @@ export default interface Repositories {
   notes: NoteRepository;
   recyclables: RecyclablesRepository;
   stars: StarRepository;
-  resources: ResourceRepository;
+  files: FileRepository;
   memos: MemoRepository;
   materials: MaterialRepository;
   revisions: RevisionRepository;

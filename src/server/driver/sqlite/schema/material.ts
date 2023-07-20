@@ -10,7 +10,6 @@ export interface Row {
   parentId: string | null;
   sourceUrl: string | null;
   icon: string | null;
-  text: string | null;
   createdAt: Generated<number>;
   updatedAt: Generated<number>;
 }
@@ -26,7 +25,6 @@ export default {
       .addColumn('parentId', 'text')
       .addColumn('sourceUrl', 'text')
       .addColumn('icon', 'text')
-      .addColumn('text', 'text')
       .addColumn('createdAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch())`))
       .addColumn('updatedAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch())`))
       .addForeignKeyConstraint('fileId-foreign', ['fileId'], filesTableName, ['id']);

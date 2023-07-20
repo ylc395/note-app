@@ -26,16 +26,6 @@ export const multimediaSchema = imageSchema.extendSchema((prev) => {
       // toDOM is still required even when NodeView is defined.
       // see https://discuss.prosemirror.net/t/custom-nodeview-and-nodespec-todom/650
       toDOM: () => document.createElement('span'),
-      toMarkdown: {
-        match: (node) => node.type.name === NODE_NAME,
-        runner: (state, node) => {
-          state.addNode('image', undefined, undefined, {
-            title: node.attrs.title,
-            url: node.attrs.src,
-            alt: node.attrs.alt,
-          });
-        },
-      },
     };
   };
 });

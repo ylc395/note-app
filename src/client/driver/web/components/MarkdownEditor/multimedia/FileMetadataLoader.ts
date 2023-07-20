@@ -1,38 +1,22 @@
-import type { WebResourceMetadata, WebResourceMetadataRequest } from 'interface/resource';
+import type { FileVO, WebFileMetadataVO } from 'interface/file';
 import { singleton, container } from 'tsyringe';
-import memoize from 'lodash/memoize';
 
 import { token as remoteToken } from 'infra/remote';
+import { getFileIdFromUrl } from 'utils/url';
 
 @singleton()
 export default class FileMetadataLoader {
   private readonly remote = container.resolve(remoteToken);
 
-  private readonly _load = memoize(async (url: string) => {
-    const storageKey = `file-metadata-${url}`;
-    const metadataJson = localStorage.getItem(storageKey);
+  load = async (url: string) => {
+    const fileId = getFileIdFromUrl(url);
 
-    if (metadataJson) {
-      return JSON.parse(metadataJson) as WebResourceMetadata;
-    }
-
-    const { body, status } = await this.remote.get<WebResourceMetadataRequest, WebResourceMetadata>(
-      '/resources/metadata',
-      {
-        url,
-      },
-    );
-
-    if (status === 200) {
-      localStorage.setItem(storageKey, JSON.stringify(body));
+    if (fileId) {
+      const { body } = await this.remote.get<void, FileVO>('/files');
       return body;
     }
-  });
 
-  async load(url: string) {
-    const result = await this._load(url);
-    this._load.cache.delete(url);
-
-    return result;
-  }
+    const { body } = await this.remote.get<void, WebFileMetadataVO>(`/web-files/${encodeURIComponent(url)}`);
+    return body;
+  };
 }

@@ -17,6 +17,7 @@ import RecyclableService from './RecyclableService';
 @Injectable()
 export default class MaterialService extends BaseService {
   @Inject(forwardRef(() => RecyclableService)) private readonly recyclableService!: RecyclableService;
+
   async create({ file, fileId, ...info }: MaterialDTO) {
     if (file && fileId) {
       throw new Error('invalid material');

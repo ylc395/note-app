@@ -8,10 +8,11 @@ import BaseRepository from './BaseRepository';
 import schema, { type Row } from '../schema/memo';
 import type { Selectable } from 'kysely';
 
+const { tableName } = schema;
+
 export default class SqliteMemoRepository extends BaseRepository implements MemoRepository {
-  protected readonly schema = schema;
   async create(memo: MemoDTO) {
-    const createdRow = await this.createOne(this.schema.tableName, {
+    const createdRow = await this.createOne(tableName, {
       ...memo,
       id: this.generateId(),
       isPinned: memo.isPinned ? 1 : 0,
@@ -25,7 +26,7 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
   }
 
   async update(id: ParentMemoVO['id'], patch: MemoPatchDTO) {
-    const updatedRow = await this.updateOne(this.schema.tableName, id, { ...patch, isPinned: patch.isPinned ? 1 : 0 });
+    const updatedRow = await this.updateOne(tableName, id, { ...patch, isPinned: patch.isPinned ? 1 : 0 });
 
     if (!updatedRow) {
       return null;
@@ -38,7 +39,7 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
     const pageSize = query.pageSize || 50;
     const page = query.page || 1;
     const rows = await this.db
-      .selectFrom(this.schema.tableName)
+      .selectFrom(tableName)
       .where('parentId', 'is', null)
       .orderBy('isPinned', 'desc')
       .orderBy('id', 'desc')
@@ -48,7 +49,7 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
       .execute();
 
     const total = await this.db
-      .selectFrom(this.schema.tableName)
+      .selectFrom(tableName)
       .where('parentId', 'is', null)
       .select(this.db.fn.countAll<number>().as('count'))
       .executeTakeFirst();
@@ -61,7 +62,7 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
 
   private async findChildren(parentId: ParentMemoVO['id'] | ParentMemoVO['id'][]) {
     const children = await this.db
-      .selectFrom(this.schema.tableName)
+      .selectFrom(tableName)
       .where('parentId', typeof parentId === 'string' ? '=' : 'in', parentId)
       .selectAll()
       .orderBy('id', 'desc')
@@ -71,17 +72,13 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
   }
 
   async findParent(id: ParentMemoVO['id']) {
-    const target = await this.db.selectFrom(this.schema.tableName).where('id', '=', id).selectAll().executeTakeFirst();
+    const target = await this.db.selectFrom(tableName).where('id', '=', id).selectAll().executeTakeFirst();
 
     if (!target?.parentId) {
       return null;
     }
 
-    const parent = await this.db
-      .selectFrom(this.schema.tableName)
-      .where('id', '=', target.parentId)
-      .selectAll()
-      .executeTakeFirst();
+    const parent = await this.db.selectFrom(tableName).where('id', '=', target.parentId).selectAll().executeTakeFirst();
 
     if (!parent) {
       return null;
@@ -92,7 +89,7 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
   }
 
   async findOneById(id: MemoVO['id']) {
-    const row = await this.db.selectFrom(this.schema.tableName).where('id', '=', id).selectAll().executeTakeFirst();
+    const row = await this.db.selectFrom(tableName).where('id', '=', id).selectAll().executeTakeFirst();
 
     if (!row) {
       return null;
@@ -122,7 +119,7 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
   }
 
   async findAll(q?: MemoQuery) {
-    let sql = this.db.selectFrom(this.schema.tableName).selectAll();
+    let sql = this.db.selectFrom(tableName).selectAll();
 
     if (q) {
       sql = sql.where('updatedAt', '>', q.updatedAt);
@@ -136,6 +133,6 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
   }
 
   async removeById(id: MemoVO['id']) {
-    await this.db.deleteFrom(this.schema.tableName).where('id', '=', id).execute();
+    await this.db.deleteFrom(tableName).where('id', '=', id).execute();
   }
 }

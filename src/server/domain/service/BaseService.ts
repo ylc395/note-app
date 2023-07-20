@@ -28,8 +28,8 @@ export default class BaseService {
     return this.db.getRepository('recyclables');
   }
 
-  protected get resources() {
-    return this.db.getRepository('resources');
+  protected get files() {
+    return this.db.getRepository('files');
   }
 
   protected get revisions() {

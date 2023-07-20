@@ -4,12 +4,12 @@ import type { RecyclablesRepository } from 'service/repository/RecyclableReposit
 import BaseRepository from './BaseRepository';
 import schema from '../schema/recyclable';
 
-export default class SqliteRecyclableRepository extends BaseRepository implements RecyclablesRepository {
-  protected readonly schema = schema;
+const { tableName } = schema;
 
-  async create(entities: EntityLocator[]) {
+export default class SqliteRecyclableRepository extends BaseRepository implements RecyclablesRepository {
+  async batchCreate(entities: EntityLocator[]) {
     const rows = await this.db
-      .insertInto(this.schema.tableName)
+      .insertInto(tableName)
       .values(entities.map(({ id, type }) => ({ entityId: id, entityType: type })))
       .returning(['entityId', 'entityType', 'deletedAt'])
       .execute();
@@ -19,7 +19,7 @@ export default class SqliteRecyclableRepository extends BaseRepository implement
 
   async findOneByLocator({ id: entityId, type: entityType }: EntityLocator) {
     const row = await this.db
-      .selectFrom(this.schema.tableName)
+      .selectFrom(tableName)
       .select(['entityId', 'entityType', 'deletedAt'])
       .where('entityId', '=', entityId)
       .where('entityType', '=', entityType)
@@ -36,7 +36,7 @@ export default class SqliteRecyclableRepository extends BaseRepository implement
 
     const ids = entities.map(({ id }) => id);
     const rows = await this.db
-      .selectFrom(this.schema.tableName)
+      .selectFrom(tableName)
       .select(['entityId', 'entityType', 'deletedAt'])
       .where('entityId', 'in', ids)
       .where('isHard', '=', 0)
@@ -47,7 +47,7 @@ export default class SqliteRecyclableRepository extends BaseRepository implement
 
   async getHardDeletedRecord({ id: entityId, type: entityType }: EntityLocator) {
     const row = await this.db
-      .selectFrom(this.schema.tableName)
+      .selectFrom(tableName)
       .selectAll()
       .where('entityId', '=', entityId)
       .where('entityType', '=', entityType)
