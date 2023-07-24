@@ -1,7 +1,5 @@
 import { EventBus, PDFViewer, type PDFPageView, PDFLinkService } from 'pdfjs-dist/web/pdf_viewer';
 import numberRange from 'lodash/range';
-import intersection from 'lodash/intersection';
-import union from 'lodash/union';
 import { makeObservable, observable, when, action, runInAction, computed, autorun } from 'mobx';
 
 import { AnnotationTypes, type AnnotationVO, type Rect } from 'interface/material';
@@ -46,8 +44,8 @@ export default class PdfViewer {
 
   @observable status: 'loading' | 'loaded' = 'loading';
 
-  protected get rootEl() {
-    return this.pdfViewer.viewer as HTMLElement | null;
+  get rootEl() {
+    return this.pdfViewer.viewer as HTMLElement;
   }
 
   constructor(options: Options) {

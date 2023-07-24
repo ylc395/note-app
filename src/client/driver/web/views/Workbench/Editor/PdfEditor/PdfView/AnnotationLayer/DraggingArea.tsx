@@ -1,111 +1,94 @@
-import { useState, useRef, useCallback, useContext } from 'react';
-import { useEventListener, useMouse, useRafState, useKeyPress, useClickAway } from 'ahooks';
+import { useCallback, useContext, useRef, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { useFloating } from '@floating-ui/react';
+import { useEventListener } from 'ahooks';
+
+import RectAreaSelector, { type Position, type ReactAreaSelectorRef } from 'components/RectAreaSelector';
 
 import context from '../../Context';
 
-interface Position {
-  left?: number;
-  top?: number;
-  right?: number;
-  bottom?: number;
-  width: number;
-  height: number;
-}
-
 export default observer(function DraggingArea({ page }: { page: number }) {
   const { pdfViewer } = useContext(context);
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-  const pageEl = pdfViewer!.getPageEl(page);
-  const { elementX, elementY, elementW, elementH } = useMouse(pageEl);
-  const [startPos, setStartPos] = useState<{ x: number; y: number } | null>(null);
-  const [isKeyPressed, setIsKeyPressed] = useState(false);
-  const [finalPos, setFinalPos] = useRafState<Position | null>(null);
+  const [pos, setPos] = useState<Position | undefined>();
+  const selectorRef = useRef<ReactAreaSelectorRef | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
-  const { refs, floatingStyles } = useFloating();
+  const pageEl = pdfViewer?.getPageEl(page);
 
-  const stopDragging = useCallback(() => {
-    setStartPos(null);
-    pageEl?.classList.remove('select-none');
+  if (!pageEl) {
+    throw new Error('no page el');
+  }
+
+  const { refs, floatingStyles } = useFloating();
+  const stop = useCallback(() => {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    selectorRef.current!.stop();
+    setPos(undefined);
+    pageEl.classList.remove('select-none');
   }, [pageEl]);
 
-  const startDragging = () => {
-    if (!isKeyPressed) {
-      return;
-    }
-
-    setFinalPos(null);
-    setStartPos({ x: elementX, y: elementY });
-    pageEl?.classList.add('select-none');
-  };
-
-  useKeyPress('shift', () => setIsKeyPressed(true), { events: ['keydown'] });
-  useKeyPress(
-    'shift',
-    () => {
-      setIsKeyPressed(false);
-      stopDragging();
-    },
-    { events: ['keyup'] },
-  );
-
-  useEventListener('mousedown', startDragging, { target: pageEl });
-  useEventListener('mouseup', stopDragging);
-  useClickAway(() => {
-    if (!startPos && finalPos && !isKeyPressed) {
-      setFinalPos(null);
-    }
-  }, rootRef);
-
-  const pos = startPos
-    ? {
-        [elementX > startPos.x ? 'left' : 'right']: elementX > startPos.x ? startPos.x : elementW - startPos.x,
-        [elementY > startPos.y ? 'top' : 'bottom']: elementY > startPos.y ? startPos.y : elementH - startPos.y,
-        width: Math.abs(elementX - startPos.x),
-        height: Math.abs(elementY - startPos.y),
-      }
-    : null;
-
-  const create = () => {
-    if (!finalPos) {
-      throw new Error('no canvas');
+  const create = useCallback(async () => {
+    if (!pos) {
+      throw new Error('no pos');
     }
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const { height: displayHeight, width: displayWith } = pdfViewer!.getSize(page);
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    pdfViewer!.createAreaAnnotation(page, {
-      width: finalPos.width,
-      height: finalPos.height,
+    await pdfViewer!.createAreaAnnotation(page, {
+      width: pos.width,
+      height: pos.height,
       x:
-        typeof finalPos.left === 'number'
-          ? finalPos.left
+        typeof pos.left === 'number'
+          ? pos.left
           : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            displayWith - finalPos.width - finalPos.right!,
+            displayWith - pos.width - pos.right!,
       y:
-        typeof finalPos.top === 'number'
-          ? finalPos.top
+        typeof pos.top === 'number'
+          ? pos.top
           : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            displayHeight - finalPos.height - finalPos.bottom!,
+            displayHeight - pos.height - pos.bottom!,
     });
+    stop();
+  }, [page, pdfViewer, pos, stop]);
 
-    setFinalPos(null);
-  };
+  const onStart = useCallback(() => {
+    pageEl.classList.add('select-none');
+  }, [pageEl]);
 
-  if (pos) {
-    setFinalPos(pos);
-  }
+  const setRef = useCallback(
+    (ref: ReactAreaSelectorRef | null) => {
+      selectorRef.current = ref;
+      refs.setReference(ref);
+    },
+    [refs],
+  );
 
-  return finalPos ? (
-    <div ref={rootRef}>
-      <div ref={refs.setReference} className="absolute bg-yellow-400 opacity-30" style={finalPos}></div>
-      {finalPos && !startPos && (
-        <button className="pointer-events-auto" onClick={create} ref={refs.setFloating} style={floatingStyles}>
+  useEventListener(
+    'click',
+    (e) => {
+      if (!rootRef.current?.contains(e.target as HTMLElement)) {
+        stop();
+      }
+    },
+    { target: pdfViewer?.rootEl },
+  );
+
+  return (
+    <div ref={rootRef} className="pointer-events-auto">
+      <RectAreaSelector
+        onStart={onStart}
+        onSelect={setPos}
+        pressedKey="shift"
+        target={pageEl}
+        ref={setRef}
+        className="absolute bg-yellow-400 opacity-30"
+      />
+      {pos && (
+        <button onClick={create} ref={refs.setFloating} style={floatingStyles}>
           Add Highlight
         </button>
       )}
     </div>
-  ) : null;
+  );
 });
