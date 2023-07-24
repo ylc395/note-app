@@ -4,6 +4,7 @@
     "types": ["electron"],
     "lib": ["dom", "dom.iterable", "ESNext"],
     "baseUrl": ".",
+    "module": "CommonJS",
     "jsx": "react-jsx",
     "paths": {
       "model/*": ["domain/model/*", "../shared/model/*"],

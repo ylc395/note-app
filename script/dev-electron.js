@@ -10,20 +10,19 @@ const debounce = require('lodash/debounce');
 
 const CLIENT_TSCONFIG = path.resolve('src/client/tsconfig.json');
 const ELECTRON_OUTPUT = 'dist/electron';
-const BUILD_ELECTRON_COMMAND = 'tsc --build ./src/tsconfig.electron.json';
+const BUILD_ELECTRON_COMMAND = 'tsc --build ./tsconfig.electron.json';
 
 async function buildPreload() {
   // preload script must be processed by a bundler(`vite build` here), since `require` doesn't work
   // @see https://www.electronjs.org/docs/latest/tutorial/sandbox#preload-scripts
   await build({
-    root: 'src/client',
     build: {
       minify: false,
       sourcemap: true,
       emptyOutDir: false,
-      outDir: path.resolve(ELECTRON_OUTPUT, 'client/driver/desktop/electron'),
+      outDir: path.resolve(ELECTRON_OUTPUT, 'client/driver/electron'),
       lib: {
-        entry: 'driver/desktop/electron/preload.ts',
+        entry: 'src/client/driver/electron/preload.ts',
         fileName: () => 'preload.js',
         formats: ['cjs'],
       },

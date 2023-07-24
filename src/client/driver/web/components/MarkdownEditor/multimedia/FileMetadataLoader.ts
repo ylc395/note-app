@@ -12,7 +12,7 @@ export default class FileMetadataLoader {
     const fileId = getFileIdFromUrl(url);
 
     if (fileId) {
-      const { body } = await this.remote.get<void, FileVO>('/files');
+      const { body } = await this.remote.get<void, FileVO>(`/files/${fileId}`);
       return body;
     }
 

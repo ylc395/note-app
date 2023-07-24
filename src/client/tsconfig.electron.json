@@ -1,12 +1,11 @@
 {
   "extends": "./tsconfig.json",
-  "include": ["./driver/desktop/**/*", "./domain/infra/**/*"],
-  "exclude": ["./driver/desktop/electron/preload.ts", "./domain/infra/remote.ts"],
+  "include": ["./driver/electron/**/*", "./driver/HeadlessApp.ts", "./domain/infra/**/*"],
+  "exclude": ["./driver/electron/preload.ts", "./domain/infra/remote.ts"],
   "compilerOptions": {
     "composite": true,
-    "module": "CommonJS",
     "rootDir": "../",
     "outDir": "../../dist/electron"
   },
-  "references": [{ "path": "../shared/tsconfig.json" }]
+  "references": [{ "path": "../shared/tsconfig.electron.json" }]
 }

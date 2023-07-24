@@ -1,0 +1,8 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./src/shared/tsconfig.electron.json" },
+    { "path": "./src/client/tsconfig.electron.json" },
+    { "path": "./src/server/tsconfig.electron.json" }
+  ]
+}

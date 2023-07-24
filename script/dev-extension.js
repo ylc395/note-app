@@ -28,13 +28,12 @@ chokidar.watch(manifest).on('all', () => {
 });
 
 build({
-  root: 'src/webExtension',
   mode: 'development',
   build: {
     outDir,
     emptyOutDir: false,
     lib: {
-      entry: 'driver/background.ts',
+      entry: 'src/webExtension/driver/background.ts',
       fileName: () => 'background.js',
       formats: ['es'],
     },
@@ -45,13 +44,12 @@ build({
 });
 
 build({
-  root: 'src/webExtension/driver/contentScript',
   mode: 'development',
   build: {
     outDir,
     emptyOutDir: false,
     lib: {
-      entry: 'index.ts',
+      entry: 'src/webExtension/driver/contentScript/index.ts',
       fileName: () => 'content-script.js',
       name: 'clipper', // meaningless but required
       formats: ['iife'],

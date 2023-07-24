@@ -1,6 +1,7 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
+    "module": "CommonJS",
     "baseUrl": ".",
     "lib": ["ESNext"],
     "paths": {
@@ -9,8 +10,7 @@
       "service/*": ["domain/service/*"],
       "infra/*": ["domain/infra/*", "../shared/infra/*"],
       "client/*": ["../client/*"],
-      "utils/*": ["../shared/utils/*"],
-      "shared/*": ["../shared/*"]
+      "utils/*": ["../shared/utils/*"]
     }
   }
 }
