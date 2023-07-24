@@ -1,4 +1,4 @@
-import { useState, useRef, forwardRef, useImperativeHandle, useCallback } from 'react';
+import { useState, useRef, forwardRef, useImperativeHandle, useCallback, useMemo } from 'react';
 import { useMouse, useEventListener, useKeyPress } from 'ahooks';
 import type { VirtualElement } from '@floating-ui/dom';
 
@@ -6,7 +6,7 @@ interface Props {
   target: HTMLElement;
   pressedKey?: string;
   className: string;
-  onSelect: (pos: Position) => void;
+  onSelect?: (pos: Position) => void;
   onStart?: () => void;
 }
 
@@ -21,6 +21,7 @@ export interface Position {
 
 export interface ReactAreaSelectorRef extends VirtualElement {
   stop: () => void;
+  setFinalPos: (cb: (pos: Position) => Position) => void;
 }
 
 export default forwardRef<ReactAreaSelectorRef, Props>(function RectAreaSelector(
@@ -33,20 +34,25 @@ export default forwardRef<ReactAreaSelectorRef, Props>(function RectAreaSelector
   const [isKeyPressed, setIsKeyPressed] = useState(!pressedKey || false);
   const rectRef = useRef<HTMLDivElement | null>(null);
 
-  if (!isKeyPressed && startPos) {
-    setStartPos(null);
-  }
-
-  const pos =
-    final ||
-    (startPos
-      ? {
-          [elementX > startPos.x ? 'left' : 'right']: elementX > startPos.x ? startPos.x : elementW - startPos.x,
-          [elementY > startPos.y ? 'top' : 'bottom']: elementY > startPos.y ? startPos.y : elementH - startPos.y,
-          width: Math.min(Math.abs(elementX - startPos.x), elementX > startPos.x ? elementW - startPos.x : startPos.x),
-          height: Math.min(Math.abs(elementY - startPos.y), elementY > startPos.y ? elementH - startPos.y : startPos.y),
-        }
-      : null);
+  const pos = useMemo(
+    () =>
+      final ||
+      (startPos
+        ? {
+            [elementX > startPos.x ? 'left' : 'right']: elementX > startPos.x ? startPos.x : elementW - startPos.x,
+            [elementY > startPos.y ? 'top' : 'bottom']: elementY > startPos.y ? startPos.y : elementH - startPos.y,
+            width: Math.min(
+              Math.abs(elementX - startPos.x),
+              elementX > startPos.x ? elementW - startPos.x : startPos.x,
+            ),
+            height: Math.min(
+              Math.abs(elementY - startPos.y),
+              elementY > startPos.y ? elementH - startPos.y : startPos.y,
+            ),
+          }
+        : null),
+    [elementH, elementW, elementX, elementY, final, startPos],
+  );
 
   const start = () => {
     if (!isKeyPressed) {
@@ -67,7 +73,7 @@ export default forwardRef<ReactAreaSelectorRef, Props>(function RectAreaSelector
       return;
     }
 
-    onSelect(pos);
+    onSelect?.(pos);
     setFinal(pos);
 
     // prevent click event after mouseup event
@@ -89,15 +95,23 @@ export default forwardRef<ReactAreaSelectorRef, Props>(function RectAreaSelector
 
   useImperativeHandle(
     ref,
-    () => {
-      return {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        getBoundingClientRect: () => rectRef.current!.getBoundingClientRect(),
-        stop,
-      };
-    },
-    [stop],
+    () => ({
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      getBoundingClientRect: () => rectRef.current!.getBoundingClientRect(),
+      setFinalPos: (cb: (pos: Position) => Position) => {
+        if (!pos) {
+          throw new Error('pos not existed');
+        }
+        setFinal(cb(pos));
+      },
+      stop,
+    }),
+    [pos, stop],
   );
+
+  if (!isKeyPressed && startPos) {
+    setStartPos(null);
+  }
 
   return pos ? <div ref={rectRef} className={className} style={pos}></div> : null;
 });

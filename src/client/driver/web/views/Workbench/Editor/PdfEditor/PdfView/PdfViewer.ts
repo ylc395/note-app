@@ -40,7 +40,7 @@ export default class PdfViewer {
 
   @observable
   readonly page = { current: 1, total: 1 };
-  @observable scale: number | string = 'auto';
+  @observable scale = 1;
 
   @observable status: 'loading' | 'loaded' = 'loading';
 

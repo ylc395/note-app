@@ -3,9 +3,9 @@ import { useContext } from 'react';
 import { useFloating, autoUpdate } from '@floating-ui/react';
 
 import { coverElementMiddleware } from 'components/floatingMiddleware';
-import Annotation from './Annotation';
-import DraggingArea from './DraggingArea';
 
+import Annotation from './Annotation';
+import AreaAnnotationGenerator from './AreaAnnotationGenerator';
 import context from '../../Context';
 
 export default observer(function AnnotationLayer({ page }: { page: number }) {
@@ -45,7 +45,7 @@ export default observer(function AnnotationLayer({ page }: { page: number }) {
       {areas.map((area) => (
         <Annotation key={area.id} rect={area.rect} page={page} annotationId={area.id} color={area.color} isLast />
       ))}
-      <DraggingArea page={page} />
+      <AreaAnnotationGenerator page={page} />
     </div>
   );
 });
