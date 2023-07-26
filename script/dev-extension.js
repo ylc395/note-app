@@ -43,18 +43,24 @@ build({
   define,
 });
 
+const CONTENT_SCRIPT_DIR = 'src/webExtension/driver/contentScript';
+
 build({
   mode: 'development',
   build: {
     outDir,
     emptyOutDir: false,
     lib: {
-      entry: 'src/webExtension/driver/contentScript/index.tsx',
+      entry: `${CONTENT_SCRIPT_DIR}/index.tsx`,
       fileName: () => 'content-script.js',
       name: 'clipper', // meaningless but required
       formats: ['iife'],
     },
     ...COMMON_BUILD_OPTIONS,
+  },
+  // when using lib mode, we should set css options manually
+  css: {
+    postcss: `${CONTENT_SCRIPT_DIR}/postcss.config.js`,
   },
   plugins,
   define,

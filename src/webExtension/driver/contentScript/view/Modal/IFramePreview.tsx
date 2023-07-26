@@ -19,11 +19,8 @@ export default function IFramePreview({
       <iframe
         width={viewportWidth}
         height={height}
-        style={{
-          transform: `scale(${ratio})`,
-          transformOrigin: '0 0',
-          userSelect: 'none',
-        }}
+        className="origin-top-left select-none"
+        style={{ transform: `scale(${ratio})` }}
         srcDoc={processedHtml}
       />
     </div>

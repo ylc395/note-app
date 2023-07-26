@@ -32,14 +32,9 @@ export default observer(function ScreenCapture() {
   }, [clipService, rect]);
 
   return isEnabled ? (
-    <div ref={setTarget} style={{ position: 'fixed', inset: 0 }}>
+    <div ref={setTarget} className="fixed inset-0">
       {target && (
-        <RectAreaSelector
-          style={{ background: 'yellow', opacity: '0.4' }}
-          onSelect={setRect}
-          target={target}
-          ref={setRefs}
-        />
+        <RectAreaSelector className="bg-yellow-50 opacity-40" onSelect={setRect} target={target} ref={setRefs} />
       )}
       {rect && (
         <button onClick={_onConfirm} ref={refs.setFloating} style={floatingStyles}>

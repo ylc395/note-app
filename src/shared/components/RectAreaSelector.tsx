@@ -1,4 +1,4 @@
-import { useState, useRef, forwardRef, useImperativeHandle, useCallback, useMemo, type CSSProperties } from 'react';
+import { useState, useRef, forwardRef, useImperativeHandle, useCallback, useMemo } from 'react';
 import { useMouse, useEventListener, useKeyPress } from 'ahooks';
 import type { VirtualElement } from '@floating-ui/dom';
 
@@ -8,7 +8,6 @@ interface Props {
   className?: string;
   onSelect: (pos: Rect) => void;
   onStart?: () => void;
-  style?: CSSProperties;
 }
 
 export interface Rect {
@@ -26,7 +25,7 @@ export interface ReactAreaSelectorRef extends VirtualElement {
 }
 
 export default forwardRef<ReactAreaSelectorRef, Props>(function RectAreaSelector(
-  { target, pressedKey, className, onSelect, onStart, style },
+  { target, pressedKey, className, onSelect, onStart },
   ref,
 ) {
   const { elementX, elementY, elementW, elementH } = useMouse(target);
@@ -114,7 +113,5 @@ export default forwardRef<ReactAreaSelectorRef, Props>(function RectAreaSelector
     setStartPos(null);
   }
 
-  return pos ? (
-    <div ref={rectRef} className={className} style={{ ...style, ...pos, position: 'absolute' }}></div>
-  ) : null;
+  return pos ? <div ref={rectRef} className={className} style={{ ...pos, position: 'absolute' }}></div> : null;
 });

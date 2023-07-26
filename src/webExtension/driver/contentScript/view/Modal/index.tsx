@@ -1,7 +1,6 @@
-import { useCallback, useContext, useEffect, useState } from 'react';
+import { useContext, useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 
-import type { TaskResult } from 'model/task';
 import IFramePreview from './IFramePreview';
 import ctx from '../Context';
 
@@ -27,7 +26,7 @@ export default observer(function Modal() {
   }, [clipService.activeTaskResult]);
 
   return clipService.activeTaskResult ? (
-    <div style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: modalWidth }}>
+    <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" style={{ width: modalWidth }}>
       {clipService.activeTaskResult.contentType === 'html' && (
         <IFramePreview
           html={clipService.activeTaskResult.content}
@@ -35,7 +34,7 @@ export default observer(function Modal() {
           width={modalWidth}
         />
       )}
-      <div style={{ textAlign: 'right' }}>
+      <div className="text-right">
         {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
         <button onClick={() => clipService.submit(clipService.activeTaskResult!)}>确认</button>
         <button onClick={() => clipService.cancelByUser()}>取消</button>

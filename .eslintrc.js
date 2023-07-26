@@ -33,7 +33,6 @@ module.exports = {
     {
       files: ['*.ts', '*.tsx'],
       extends: ['plugin:tailwindcss/recommended'],
-      excludedFiles: ['./src/webExtension/driver/contentScript/**'],
     },
     {
       files: ['*.tsx'],
