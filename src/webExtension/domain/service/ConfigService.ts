@@ -18,7 +18,7 @@ export default class ConfigService {
     this.init();
   }
 
-  @observable config?: Config;
+  @observable private config?: Config;
 
   private async init() {
     const config = await ConfigService.load();
@@ -47,5 +47,9 @@ export default class ConfigService {
 
     this.config[key] = value;
     browser.storage.local.set({ [CONFIG_KEY]: this.config });
+  }
+
+  get<T extends keyof Config>(key: T): Config[T] | undefined {
+    return this.config?.[key];
   }
 }

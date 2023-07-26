@@ -7,10 +7,10 @@ import { EntityTypes } from 'interface/entity';
 export default observer(function Options() {
   const { config, isUnavailable } = container.resolve(TaskService);
 
-  return isUnavailable || !config.config ? null : (
+  return isUnavailable || !config ? null : (
     <div>
       <select
-        value={config.config.targetEntityType}
+        value={config.get('targetEntityType')}
         onChange={(e) => config.set('targetEntityType', Number(e.target.value) as EntityTypes)}
       >
         <option value={EntityTypes.Material}>材料</option>

@@ -64,13 +64,7 @@ async function createViteServer() {
     configFile: false,
     clearScreen: false,
     root: './src/client/driver/web',
-    plugins: [
-      checker({ typescript: { tsconfigPath: WEB_TSCONFIG } }),
-      tsconfigPaths({
-        projects: [CLIENT_TSCONFIG],
-        loose: true,
-      }),
-    ],
+    plugins: [checker({ typescript: { tsconfigPath: WEB_TSCONFIG } }), tsconfigPaths({ projects: [CLIENT_TSCONFIG] })],
     define: {
       __ENV__: JSON.stringify('dev'),
       __PLATFORM__: JSON.stringify('electron'),

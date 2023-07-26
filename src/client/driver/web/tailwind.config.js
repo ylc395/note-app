@@ -1,14 +1,12 @@
 /* eslint-env node */
+const path = require('path');
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ['./index.html', './**/*.{tsx,ts}'],
+  content: [path.join(__dirname, './index.html'), path.join(__dirname, './**/*.{tsx,ts}')],
   important: '#app',
-  theme: {
-    extend: {},
-  },
   corePlugins: {
+    // todo: enable preflight after removing antd
     preflight: false,
   },
-  plugins: [],
 };

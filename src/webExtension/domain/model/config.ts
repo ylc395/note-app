@@ -1,4 +1,4 @@
-import type { EntityId, EntityTypes } from 'shared/interface/entity';
+import type { EntityId, EntityTypes } from 'interface/entity';
 
 export interface Config {
   targetEntityType: EntityTypes;

@@ -31,7 +31,7 @@ export default observer(function Menu() {
         {ACTIONS.map((action) => {
           const { visible, text } = ACTION_TEXT_MAP[action];
 
-          return visible === 'all' || visible === config.config?.targetEntityType ? (
+          return visible === 'all' || visible === config.get('targetEntityType') ? (
             <li key={action}>
               <button
                 className={action === taskService.currentAction ? 'bg-red-300' : ''}

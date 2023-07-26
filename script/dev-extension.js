@@ -8,11 +8,12 @@ const chokidar = require('chokidar');
 const outDir = path.resolve('dist/webExtension');
 const tsconfigPath = path.resolve('src/webExtension/tsconfig.json');
 const manifest = './src/webExtension/manifest.json';
-const plugins = [checker({ typescript: { tsconfigPath } }), tsconfigPaths({ projects: [tsconfigPath] })];
 
 const define = {
   'process.env.NODE_ENV': JSON.stringify('development'),
 };
+
+const getPlugins = () => [checker({ typescript: { tsconfigPath } }), tsconfigPaths({ projects: [tsconfigPath] })];
 
 const COMMON_BUILD_OPTIONS = {
   minify: false,
@@ -39,7 +40,7 @@ build({
     },
     ...COMMON_BUILD_OPTIONS,
   },
-  plugins,
+  plugins: getPlugins(),
   define,
 });
 
@@ -62,7 +63,7 @@ build({
   css: {
     postcss: `${CONTENT_SCRIPT_DIR}/postcss.config.js`,
   },
-  plugins,
+  plugins: getPlugins(),
   define,
 });
 
@@ -75,6 +76,6 @@ build({
     outDir: path.join(outDir, 'popup'),
     ...COMMON_BUILD_OPTIONS,
   },
-  plugins,
+  plugins: getPlugins(),
   define,
 });

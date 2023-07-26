@@ -1,13 +1,7 @@
 /* eslint-env node */
+const path = require('path');
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: ['./index.html', './**/*.{tsx,ts}'],
-  theme: {
-    extend: {},
-  },
-  corePlugins: {
-    preflight: false,
-  },
-  plugins: [],
+  content: [path.join(__dirname, './index.html'), path.join(__dirname, './**/*.{tsx,ts}')],
 };
