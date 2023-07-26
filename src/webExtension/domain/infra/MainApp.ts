@@ -19,7 +19,12 @@ export enum Statuses {
   InvalidToken,
 }
 
-export default class HttpClient {
+interface Payload extends TaskResult {
+  sourceUrl: string;
+  parentId: string | null;
+}
+
+export default class MainApp {
   @observable status: Statuses | string = Statuses.NotReady;
   private token?: string;
 
@@ -96,60 +101,71 @@ export default class HttpClient {
     return null;
   }
 
-  async save(saveAs: EntityTypes, payload: TaskResult & { sourceUrl: string; parentId: string | null }) {
-    if (saveAs === EntityTypes.Material) {
-      let file: FileVO | undefined;
+  async save(saveAs: EntityTypes, payload: Payload) {
+    switch (saveAs) {
+      case EntityTypes.Material:
+        return this.saveMaterial(payload);
+      case EntityTypes.Note:
+        return this.saveNote(payload);
+      case EntityTypes.Memo:
+        return this.saveMemo(payload);
+      default:
+        throw new Error('invalid type');
+    }
+  }
 
-      if (payload.contentType === 'png') {
-        const data = new FormData();
-        data.append('files', await (await fetch(payload.content)).blob());
-        const files = await this.fetch<FileVO[], FormData>('PATCH', '/files', data);
-        file = files?.[0];
+  private async saveMaterial(payload: Payload) {
+    let file: FileVO | undefined;
 
-        if (!file) {
-          throw new Error('create files fail');
-        }
+    if (payload.contentType === 'png') {
+      const data = new FormData();
+      data.append('files', await (await fetch(payload.content)).blob());
+      const files = await this.fetch<FileVO[], FormData>('PATCH', '/files', data);
+      file = files?.[0];
+
+      if (!file) {
+        throw new Error('create files fail');
       }
-
-      await this.fetch<void, MaterialDTO>('POST', '/materials', {
-        name: payload.title,
-        sourceUrl: payload.sourceUrl,
-        parentId: payload.parentId,
-        ...(file
-          ? { fileId: file.id }
-          : {
-              mimeType: payload.contentType === 'html' ? 'text/html' : 'text/markdown',
-              data: payload.content,
-            }),
-      });
     }
 
-    if (saveAs === EntityTypes.Note) {
-      if (payload.contentType !== 'md') {
-        throw new Error('invalid content type for note');
-      }
+    await this.fetch<void, MaterialDTO>('POST', '/materials', {
+      name: payload.title,
+      sourceUrl: payload.sourceUrl,
+      parentId: payload.parentId,
+      ...(file
+        ? { fileId: file.id }
+        : {
+            mimeType: payload.contentType === 'html' ? 'text/html' : 'text/markdown',
+            data: payload.content,
+          }),
+    });
+  }
 
-      const note = await this.fetch<NoteVO, NoteDTO>('POST', '/notes', {
-        title: payload.title,
-        parentId: payload.parentId,
-      });
-
-      if (!note) {
-        throw new Error('create note failed');
-      }
-
-      await this.fetch<void, NoteBodyDTO>('PUT', `/notes/${note.id}/body`, { content: payload.content });
+  private async saveNote(payload: Payload) {
+    if (payload.contentType !== 'md') {
+      throw new Error('invalid content type for note');
     }
 
-    if (saveAs === EntityTypes.Memo) {
-      if (payload.contentType !== 'md') {
-        throw new Error('invalid content type for memo');
-      }
+    const note = await this.fetch<NoteVO, NoteDTO>('POST', '/notes', {
+      title: payload.title,
+      parentId: payload.parentId,
+    });
 
-      await this.fetch<void, MemoDTO>('POST', '/memos', {
-        content: payload.content,
-        parentId: payload.parentId || undefined,
-      });
+    if (!note) {
+      throw new Error('create note failed');
     }
+
+    await this.fetch<void, NoteBodyDTO>('PUT', `/notes/${note.id}/body`, { content: payload.content });
+  }
+
+  private async saveMemo(payload: Payload) {
+    if (payload.contentType !== 'md') {
+      throw new Error('invalid content type for memo');
+    }
+
+    await this.fetch<void, MemoDTO>('POST', '/memos', {
+      content: payload.content,
+      parentId: payload.parentId || undefined,
+    });
   }
 }

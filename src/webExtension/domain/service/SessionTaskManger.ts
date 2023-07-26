@@ -3,14 +3,14 @@ import uniqueId from 'lodash/uniqueId';
 
 import { type Task, type TaskTypes, type SubmitEvent, EventNames } from 'model/task';
 import EventBus from 'infra/EventBus';
-import HttpClient from 'infra/HttpClient';
+import MainApp from 'infra/MainApp';
 
 import ConfigService from './ConfigService';
 import HistoryService from './HistoryService';
 
 export default class SessionTaskManager {
   private readonly eventBus = new EventBus();
-  private client = new HttpClient();
+  private mainApp = new MainApp();
   private tasks: Required<Task>[] = [];
 
   getTasks() {
@@ -53,7 +53,7 @@ export default class SessionTaskManager {
     }
 
     try {
-      await this.client.save(task.targetType, {
+      await this.mainApp.save(task.targetType, {
         ...result,
         sourceUrl: task.url,
         parentId: task.targetId,

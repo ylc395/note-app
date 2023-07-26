@@ -2,7 +2,7 @@ const path = require('node:path');
 const { build } = require('vite');
 const { checker } = require('vite-plugin-checker');
 const { default: tsconfigPaths } = require('vite-tsconfig-paths');
-const { copyFileSync, ensureDirSync } = require('fs-extra');
+const { copyFileSync, emptyDirSync } = require('fs-extra');
 const chokidar = require('chokidar');
 
 const outDir = path.resolve('dist/webExtension');
@@ -20,7 +20,7 @@ const COMMON_BUILD_OPTIONS = {
   watch: true,
 };
 
-ensureDirSync(outDir);
+emptyDirSync(outDir);
 
 chokidar.watch(manifest).on('all', () => {
   copyFileSync(manifest, path.join(outDir, 'manifest.json'));
@@ -48,11 +48,11 @@ const CONTENT_SCRIPT_DIR = 'src/webExtension/driver/contentScript';
 build({
   mode: 'development',
   build: {
-    outDir,
+    outDir: path.join(outDir, 'content-script'),
     emptyOutDir: false,
     lib: {
       entry: `${CONTENT_SCRIPT_DIR}/index.tsx`,
-      fileName: () => 'content-script.js',
+      fileName: () => 'index.js',
       name: 'clipper', // meaningless but required
       formats: ['iife'],
     },

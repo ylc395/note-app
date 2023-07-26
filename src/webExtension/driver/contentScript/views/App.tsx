@@ -7,7 +7,7 @@ import ElementSelector from './ElementSelector';
 import Context from './Context';
 
 const ctx = { clipService: new ClipService() };
-const styleUrl = browser.runtime.getURL('./style.css');
+const styleUrl = browser.runtime.getURL('./content-script/style.css');
 
 export default function App() {
   return (

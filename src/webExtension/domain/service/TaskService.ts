@@ -4,7 +4,7 @@ import { computed, action, makeObservable, observable, runInAction } from 'mobx'
 
 import { type Task, type CancelEvent, TaskTypes, EventNames } from 'model/task';
 import EventBus from 'infra/EventBus';
-import HttpClient, { Statuses } from 'infra/HttpClient';
+import MainApp, { Statuses } from 'infra/MainApp';
 import { getRemoteApi } from 'infra/remoteApi';
 
 import ConfigService from './ConfigService';
@@ -20,7 +20,7 @@ export default class TaskService {
   @observable private targetTabId?: NonNullable<Tabs.Tab['id']>;
   readonly config = new ConfigService();
   private readonly eventBus = new EventBus();
-  private readonly httpClient = container.resolve(HttpClient);
+  private readonly mainApp = container.resolve(MainApp);
   @observable private isPageReady = false;
 
   constructor() {
@@ -66,7 +66,7 @@ export default class TaskService {
 
   @computed
   get isUnavailable() {
-    return !this.isPageReady || this.httpClient.status !== Statuses.Online || Boolean(this.currentAction);
+    return !this.isPageReady || this.mainApp.status !== Statuses.Online || Boolean(this.currentAction);
   }
 
   private static async getTargetTabId() {

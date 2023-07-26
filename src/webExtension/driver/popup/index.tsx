@@ -1,11 +1,11 @@
 import 'reflect-metadata';
 import { container } from 'tsyringe';
 import { createRoot } from 'react-dom/client';
-import HttpClient from 'infra/HttpClient';
+import MainApp from 'infra/MainApp';
 
-import App from './view/App';
+import App from './views/App';
 
-container.registerInstance(HttpClient, new HttpClient(true));
+container.registerInstance(MainApp, new MainApp(true));
 
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const root = createRoot(document.querySelector('#app')!);
