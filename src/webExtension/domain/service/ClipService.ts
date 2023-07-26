@@ -1,12 +1,13 @@
 import { getPageData, helper } from 'single-file-core/single-file';
 import Turndown from 'turndown';
 import { Readability } from '@mozilla/readability';
-import { Emitter } from 'strict-event-emitter';
+import { action, makeObservable, observable } from 'mobx';
 
-import { type Task, type TaskResult, EventNames, TaskTypes } from 'model/task';
 import EventBus from 'infra/EventBus';
-
-import ElementSelector from './ElementSelector';
+import { getRemoteApi } from 'infra/remoteApi';
+import type WebPageService from 'service/WebPageService';
+import type { Rect } from 'components/RectAreaSelector';
+import { type Task, type TaskResult, EventNames, TaskTypes } from 'model/task';
 
 // single-file lib will modify the options. so use a option factory to always get a new option object
 const getCommonPageOptions = () => ({
@@ -21,50 +22,76 @@ const getCommonPageOptions = () => ({
 });
 
 const turndownService = new Turndown();
+const remoteApi = getRemoteApi<typeof WebPageService>();
 
-export default class ClipService extends Emitter<{ preview: [TaskResult]; done: [] }> {
-  private activeTask?: Task;
+type Mode = 'element-select' | 'screen-capture';
+
+export default class ClipService {
+  activeTask?: Task;
+  @observable activeTaskResult?: TaskResult;
+  @observable mode?: Mode;
   private readonly eventBus = new EventBus();
-  private readonly elementSelector: ElementSelector;
 
   constructor() {
-    super();
     this.eventBus.on(EventNames.StartTask, ({ task }) => this.startTask(task));
     this.eventBus.on(EventNames.CancelTask, ({ error }) => error && this.cancelByError(error));
     this.eventBus.on(EventNames.FinishTask, this.reset.bind(this));
     window.addEventListener('pagehide', this.cancelByUser.bind(this));
-
-    this.elementSelector = new ElementSelector({
-      selectableRoot: document.body,
-      onSelect: this.clipElement.bind(this),
-      onCancel: this.cancelByUser.bind(this),
-    });
+    makeObservable(this);
   }
 
   private readonly clipWholePage = async () => {
     const res = await getPageData(getCommonPageOptions());
 
-    this.submit({
+    this.preview({
       title: res.title,
       content: res.content,
       contentType: 'html',
     });
   };
 
-  private readonly clipElement = async (el: HTMLElement) => {
-    this.elementSelector.disable();
-
+  async clipElement(el: HTMLElement) {
     if (!this.activeTask) {
       throw new Error('no activeTask');
     }
 
     if (this.activeTask.type === TaskTypes.SelectElementText) {
-      this.submit({ ...ClipService.getMarkdown(el), contentType: 'md' });
+      this.preview({ ...ClipService.getMarkdown(el), contentType: 'md' });
     } else {
       const res = await ClipService.getHtml(el);
-      this.submit({ ...res, contentType: 'html' });
+      this.preview({ ...res, contentType: 'html' });
     }
-  };
+  }
+
+  async captureScreen(pos: Rect) {
+    const imgDataUrl = await remoteApi.captureScreen();
+    const imgEl = new Image();
+    const canvasEl = document.createElement('canvas');
+    canvasEl.width = pos.width * window.devicePixelRatio;
+    canvasEl.height = pos.height * window.devicePixelRatio;
+    imgEl.src = imgDataUrl;
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const ctx = canvasEl.getContext('2d')!;
+
+    imgEl.addEventListener('load', () => {
+      ctx.drawImage(
+        imgEl,
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        (typeof pos.left === 'number' ? pos.left : pos.right! - pos.width) * window.devicePixelRatio,
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        (typeof pos.top === 'number' ? pos.top : pos.bottom! - pos.height) * window.devicePixelRatio,
+        pos.width * window.devicePixelRatio,
+        pos.height * window.devicePixelRatio,
+        0,
+        0,
+        canvasEl.width,
+        canvasEl.height,
+      );
+      const clippedDataUrl = canvasEl.toDataURL();
+      this.submit({ title: `Screenshot - ${document.title}`, content: clippedDataUrl, contentType: 'png' });
+    });
+  }
 
   private extractMainText() {
     const readability = new Readability(document.cloneNode(true) as Document);
@@ -119,7 +146,9 @@ export default class ClipService extends Emitter<{ preview: [TaskResult]; done: 
     switch (task.type) {
       case TaskTypes.SelectElement:
       case TaskTypes.SelectElementText:
-        return this.elementSelector.enable();
+        return this.setMode('element-select');
+      case TaskTypes.ScreenShot:
+        return this.setMode('screen-capture');
       case TaskTypes.SelectPage:
         return this.clipWholePage();
       case TaskTypes.ExtractText:
@@ -147,21 +176,46 @@ export default class ClipService extends Emitter<{ preview: [TaskResult]; done: 
     this.reset();
   }
 
-  submit(result: TaskResult, afterPreview?: true) {
+  submit(result: TaskResult) {
     if (!this.activeTask) {
       throw new Error('no activeTask');
     }
 
-    if (this.activeTask.type !== TaskTypes.ScreenShot && !afterPreview) {
-      this.emit('preview', result);
-    } else {
-      this.eventBus.emit(EventNames.Submit, { taskId: this.activeTask.id, ...result });
-      this.emit('preview', result);
-    }
+    this.eventBus.emit(EventNames.Submit, { taskId: this.activeTask.id, ...result });
   }
 
+  @action
+  private preview(result: TaskResult) {
+    this.mode = undefined;
+    this.activeTaskResult = result;
+  }
+
+  @action
   private reset() {
+    this.mode = undefined;
     this.activeTask = undefined;
-    this.emit('done');
+    this.activeTaskResult = undefined;
+  }
+
+  @action
+  private setMode(mode: Mode) {
+    this.mode = mode;
+  }
+
+  static processHtmlForPreview(html: string) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+
+    for (const el of doc.querySelectorAll('*')) {
+      for (const { name, value } of (el as HTMLElement).attributes) {
+        if (name.startsWith('data-sf-original-')) {
+          const attr = name.replace('data-sf-original-', '');
+          el.setAttribute(attr, value);
+        }
+      }
+    }
+
+    const result = doc.documentElement.outerHTML.replaceAll(/\/\* original URL: (.+?) \*\/url\((.+?)\)/g, 'url($1)');
+    return result;
   }
 }

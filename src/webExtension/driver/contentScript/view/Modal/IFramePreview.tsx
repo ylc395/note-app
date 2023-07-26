@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import Previewer from '../Previewer';
+import ClipService from 'service/ClipService';
 
 export default function IFramePreview({
   html,
@@ -10,7 +10,7 @@ export default function IFramePreview({
   viewportWidth: number;
   width: number;
 }) {
-  const processedHtml = useMemo(() => Previewer.processHtml(html), [html]);
+  const processedHtml = useMemo(() => ClipService.processHtmlForPreview(html), [html]);
   const ratio = width / viewportWidth;
   const height = 600;
 

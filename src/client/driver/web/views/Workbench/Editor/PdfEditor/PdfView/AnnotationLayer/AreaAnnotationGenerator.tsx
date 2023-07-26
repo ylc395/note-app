@@ -5,53 +5,55 @@ import { useFloating } from '@floating-ui/react';
 import { useEventListener } from 'ahooks';
 import mapValues from 'lodash/mapValues';
 
-import RectAreaSelector, { ReactAreaSelectorRef, type Position } from 'components/RectAreaSelector';
+import RectAreaSelector, { ReactAreaSelectorRef, type Rect } from 'components/RectAreaSelector';
 
 import context from '../../Context';
 
 export default observer(function AreaAnnotationGenerator({ page }: { page: number }) {
   const { pdfViewer } = useContext(context);
-  const [pos, setPos] = useState<Position | null>(null);
+  const [rect, setRect] = useState<Rect | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const selectorRef = useRef<ReactAreaSelectorRef | null>(null);
-  const pageEl = pdfViewer?.getPageEl(page);
+  const { refs, floatingStyles, update } = useFloating();
+
+  if (!pdfViewer) {
+    throw new Error('no pdfViewer');
+  }
+
+  const pageEl = pdfViewer.getPageEl(page);
 
   if (!pageEl) {
     throw new Error('no page el');
   }
-
-  const { refs, floatingStyles, update } = useFloating();
   const stop = useCallback(() => {
-    setPos(null);
+    setRect(null);
     selectorRef.current?.stop();
     pdfViewer?.rootEl.classList.remove('select-none');
   }, [pdfViewer]);
 
   const create = useCallback(async () => {
-    if (!pos) {
+    if (!rect) {
       throw new Error('no pos');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const { height: displayHeight, width: displayWith } = pdfViewer!.getSize(page);
+    const { height: displayHeight, width: displayWith } = pdfViewer.getSize(page);
 
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    await pdfViewer!.createAreaAnnotation(page, {
-      width: pos.width,
-      height: pos.height,
+    await pdfViewer.createAreaAnnotation(page, {
+      width: rect.width,
+      height: rect.height,
       x:
-        typeof pos.left === 'number'
-          ? pos.left
+        typeof rect.left === 'number'
+          ? rect.left
           : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            displayWith - pos.width - pos.right!,
+            displayWith - rect.width - rect.right!,
       y:
-        typeof pos.top === 'number'
-          ? pos.top
+        typeof rect.top === 'number'
+          ? rect.top
           : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            displayHeight - pos.height - pos.bottom!,
+            displayHeight - rect.height - rect.bottom!,
     });
     stop();
-  }, [page, pdfViewer, pos, stop]);
+  }, [page, pdfViewer, rect, stop]);
 
   const onStart = useCallback(() => {
     pdfViewer?.rootEl.classList.add('select-none');
@@ -78,29 +80,28 @@ export default observer(function AreaAnnotationGenerator({ page }: { page: numbe
   useEffect(
     () =>
       reaction(
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        () => pdfViewer!.scale,
+        () => pdfViewer.scale,
         (scale, oldScale) => {
-          if (pos && selectorRef.current) {
-            selectorRef.current.setFinalPos((pos) => mapValues(pos, (v) => ((v as number) / oldScale) * scale));
+          if (rect && selectorRef.current) {
+            selectorRef.current.setRect((pos) => mapValues(pos, (v) => ((v as number) / oldScale) * scale));
           }
           update();
         },
       ),
-    [pdfViewer, pos, update],
+    [pdfViewer, rect, update],
   );
 
   return (
     <div ref={rootRef} className="pointer-events-auto">
       <RectAreaSelector
         onStart={onStart}
-        onSelect={setPos}
+        onSelect={setRect}
         pressedKey="shift"
         target={pageEl}
         ref={setRefs}
-        className="absolute bg-yellow-400 opacity-30"
+        className="bg-yellow-400 opacity-30"
       />
-      {pos && (
+      {rect && (
         <button onClick={create} ref={refs.setFloating} style={floatingStyles}>
           Add Highlight
         </button>

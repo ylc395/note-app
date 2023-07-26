@@ -1,4 +1,4 @@
-import type { EntityId, EntityTypes } from 'shared/interface/entity';
+import type { EntityId, EntityTypes } from 'interface/entity';
 import type { Tabs } from 'webextension-polyfill';
 
 export interface Task {
@@ -15,7 +15,7 @@ export interface Task {
 export interface TaskResult {
   title: string;
   content: string;
-  contentType: 'md' | 'html';
+  contentType: 'md' | 'html' | 'png';
 }
 
 export enum TaskTypes {

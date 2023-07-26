@@ -49,7 +49,7 @@ build({
     outDir,
     emptyOutDir: false,
     lib: {
-      entry: 'src/webExtension/driver/contentScript/index.ts',
+      entry: 'src/webExtension/driver/contentScript/index.tsx',
       fileName: () => 'content-script.js',
       name: 'clipper', // meaningless but required
       formats: ['iife'],

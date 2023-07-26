@@ -52,12 +52,10 @@ export default class SessionTaskManager {
       throw new Error(`invalid task id: ${taskId}`);
     }
 
-    const tab = await browser.tabs.get(task.tabId);
-
     try {
       await this.client.save(task.targetType, {
         ...result,
-        sourceUrl: tab.url || '',
+        sourceUrl: task.url,
         parentId: task.targetId,
       });
 

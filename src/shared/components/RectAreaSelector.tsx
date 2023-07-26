@@ -1,16 +1,17 @@
-import { useState, useRef, forwardRef, useImperativeHandle, useCallback, useMemo } from 'react';
+import { useState, useRef, forwardRef, useImperativeHandle, useCallback, useMemo, type CSSProperties } from 'react';
 import { useMouse, useEventListener, useKeyPress } from 'ahooks';
 import type { VirtualElement } from '@floating-ui/dom';
 
 interface Props {
   target: HTMLElement;
   pressedKey?: string;
-  className: string;
-  onSelect?: (pos: Position) => void;
+  className?: string;
+  onSelect: (pos: Rect) => void;
   onStart?: () => void;
+  style?: CSSProperties;
 }
 
-export interface Position {
+export interface Rect {
   left?: number;
   top?: number;
   right?: number;
@@ -21,22 +22,22 @@ export interface Position {
 
 export interface ReactAreaSelectorRef extends VirtualElement {
   stop: () => void;
-  setFinalPos: (cb: (pos: Position) => Position) => void;
+  setRect: (cb: (pos: Rect) => Rect) => void;
 }
 
 export default forwardRef<ReactAreaSelectorRef, Props>(function RectAreaSelector(
-  { target, pressedKey, className, onSelect, onStart },
+  { target, pressedKey, className, onSelect, onStart, style },
   ref,
 ) {
   const { elementX, elementY, elementW, elementH } = useMouse(target);
   const [startPos, setStartPos] = useState<{ x: number; y: number } | null>(null);
-  const [final, setFinal] = useState<Position | null>(null);
+  const [rect, setRect] = useState<Rect | null>(null);
   const [isKeyPressed, setIsKeyPressed] = useState(!pressedKey || false);
   const rectRef = useRef<HTMLDivElement | null>(null);
 
   const pos = useMemo(
     () =>
-      final ||
+      rect ||
       (startPos
         ? {
             [elementX > startPos.x ? 'left' : 'right']: elementX > startPos.x ? startPos.x : elementW - startPos.x,
@@ -51,7 +52,7 @@ export default forwardRef<ReactAreaSelectorRef, Props>(function RectAreaSelector
             ),
           }
         : null),
-    [elementH, elementW, elementX, elementY, final, startPos],
+    [elementH, elementW, elementX, elementY, rect, startPos],
   );
 
   const start = () => {
@@ -65,16 +66,16 @@ export default forwardRef<ReactAreaSelectorRef, Props>(function RectAreaSelector
 
   const stop = useCallback(() => {
     setStartPos(null);
-    setFinal(null);
+    setRect(null);
   }, []);
 
   const select = () => {
-    if (!pos || final) {
+    if (!pos || rect) {
       return;
     }
 
-    onSelect?.(pos);
-    setFinal(pos);
+    onSelect(pos);
+    setRect(pos);
 
     // prevent click event after mouseup event
     window.addEventListener(
@@ -98,11 +99,11 @@ export default forwardRef<ReactAreaSelectorRef, Props>(function RectAreaSelector
     () => ({
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       getBoundingClientRect: () => rectRef.current!.getBoundingClientRect(),
-      setFinalPos: (cb: (pos: Position) => Position) => {
+      setRect: (cb: (pos: Rect) => Rect) => {
         if (!pos) {
           throw new Error('pos not existed');
         }
-        setFinal(cb(pos));
+        setRect(cb(pos));
       },
       stop,
     }),
@@ -113,5 +114,7 @@ export default forwardRef<ReactAreaSelectorRef, Props>(function RectAreaSelector
     setStartPos(null);
   }
 
-  return pos ? <div ref={rectRef} className={className} style={pos}></div> : null;
+  return pos ? (
+    <div ref={rectRef} className={className} style={{ ...style, ...pos, position: 'absolute' }}></div>
+  ) : null;
 });

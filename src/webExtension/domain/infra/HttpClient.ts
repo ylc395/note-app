@@ -2,9 +2,11 @@ import { observable, makeObservable, runInAction } from 'mobx';
 import browser from 'webextension-polyfill';
 
 import type { MaterialDTO } from 'interface/material';
+import type { FileVO } from 'interface/file';
 import type { NoteBodyDTO, NoteDTO, NoteVO } from 'interface/note';
 import type { MemoDTO } from 'interface/memo';
 import { EntityTypes } from 'interface/entity';
+import type { TaskResult } from 'model/task';
 
 const HOST = 'http://localhost:3001';
 const TOKEN_KEY = 'token';
@@ -67,18 +69,17 @@ export default class HttpClient {
     this.checkOnline();
   }
 
-  private async fetch<T, K>(method: 'GET' | 'POST' | 'PUT', url: string, body?: K) {
+  private async fetch<T, K>(method: 'GET' | 'POST' | 'PUT' | 'PATCH', url: string, body?: K) {
     if (!this.token) {
       throw new Error('no token');
     }
-
     // there is no `window` in background env. so use `globalThis`
     const res = await globalThis.fetch(`${HOST}${url}`, {
       method,
-      body: body ? JSON.stringify(body) : undefined,
+      body: body instanceof FormData ? body : body ? JSON.stringify(body) : undefined,
       headers: {
         Authorization: this.token,
-        ...(body ? { 'Content-Type': 'application/json' } : null),
+        ...(body ? { 'Content-Type': body instanceof FormData ? 'multipart/form-data' : 'application/json' } : null),
       },
     });
 
@@ -95,20 +96,39 @@ export default class HttpClient {
     return null;
   }
 
-  async save(
-    saveAs: EntityTypes,
-    payload: { title: string; content: string; contentType: 'html' | 'md'; sourceUrl: string; parentId: string | null },
-  ) {
+  async save(saveAs: EntityTypes, payload: TaskResult & { sourceUrl: string; parentId: string | null }) {
     if (saveAs === EntityTypes.Material) {
+      let file: FileVO | undefined;
+
+      if (payload.contentType === 'png') {
+        const data = new FormData();
+        data.append('files', await (await fetch(payload.content)).blob());
+        const files = await this.fetch<FileVO[], FormData>('PATCH', '/files', data);
+        file = files?.[0];
+
+        if (!file) {
+          throw new Error('create files fail');
+        }
+      }
+
       await this.fetch<void, MaterialDTO>('POST', '/materials', {
         name: payload.title,
         sourceUrl: payload.sourceUrl,
-        file: { mimeType: payload.contentType === 'html' ? 'text/html' : 'text/markdown', data: payload.content },
         parentId: payload.parentId,
+        ...(file
+          ? { fileId: file.id }
+          : {
+              mimeType: payload.contentType === 'html' ? 'text/html' : 'text/markdown',
+              data: payload.content,
+            }),
       });
     }
 
     if (saveAs === EntityTypes.Note) {
+      if (payload.contentType !== 'md') {
+        throw new Error('invalid content type for note');
+      }
+
       const note = await this.fetch<NoteVO, NoteDTO>('POST', '/notes', {
         title: payload.title,
         parentId: payload.parentId,
@@ -122,6 +142,10 @@ export default class HttpClient {
     }
 
     if (saveAs === EntityTypes.Memo) {
+      if (payload.contentType !== 'md') {
+        throw new Error('invalid content type for memo');
+      }
+
       await this.fetch<void, MemoDTO>('POST', '/memos', {
         content: payload.content,
         parentId: payload.parentId || undefined,

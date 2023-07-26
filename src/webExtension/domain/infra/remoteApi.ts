@@ -41,8 +41,6 @@ export function exposeApi(api: unknown) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return Promise.resolve((api as any)[message.api](...message.args));
       }
-
-      throw new Error('invalid remote api call');
     }
   });
 }
