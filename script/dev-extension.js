@@ -32,7 +32,6 @@ build({
   mode: 'development',
   build: {
     outDir,
-    emptyOutDir: false,
     lib: {
       entry: 'src/webExtension/driver/background.ts',
       fileName: () => 'background.js',
@@ -50,7 +49,6 @@ build({
   mode: 'development',
   build: {
     outDir: path.join(outDir, 'content-script'),
-    emptyOutDir: false,
     lib: {
       entry: `${CONTENT_SCRIPT_DIR}/index.tsx`,
       fileName: () => 'index.js',
@@ -59,7 +57,7 @@ build({
     },
     ...COMMON_BUILD_OPTIONS,
   },
-  // when using lib mode, we should set css options manually
+  // we should set css options manually since we don't set `root` for building
   css: {
     postcss: `${CONTENT_SCRIPT_DIR}/postcss.config.js`,
   },
@@ -72,7 +70,6 @@ build({
   mode: 'development',
   base: './', // use relative path to load script
   build: {
-    emptyOutDir: true,
     outDir: path.join(outDir, 'popup'),
     ...COMMON_BUILD_OPTIONS,
   },

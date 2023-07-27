@@ -8,6 +8,9 @@ import { APP_PROTOCOL, IS_DEV } from 'infra/constants';
 
 import { UI_CHANNELS, createContextmenu, openNewWindow } from './ui';
 
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+const INDEX_URL = process.env.VITE_SERVER_ENTRY_URL!;
+
 @Injectable()
 export default class ElectronApp extends ClientApp {
   static {
@@ -80,13 +83,17 @@ export default class ElectronApp extends ClientApp {
     });
 
     this.mainWindow.webContents.on('will-navigate', (e, url) => {
+      // allow reload in dev env
+      if (IS_DEV && url === INDEX_URL) {
+        return;
+      }
+
       this.logger.warn(`prevent from redirect to ${url}`);
       e.preventDefault();
     });
 
     if (IS_DEV) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      await this.mainWindow.loadURL(process.env.VITE_SERVER_ENTRY_URL!);
+      await this.mainWindow.loadURL(INDEX_URL);
       this.mainWindow.webContents.openDevTools();
     }
   }
