@@ -5,8 +5,8 @@ const chokidar = require('chokidar');
 const { default: tsconfigPaths } = require('vite-tsconfig-paths');
 const { replaceTscAliasPaths } = require('tsc-alias');
 const { checker } = require('vite-plugin-checker');
-const { parse: parseTsconfig } = require('tsconfck');
 const debounce = require('lodash/debounce');
+const react = require('@vitejs/plugin-react-swc');
 
 const CLIENT_TSCONFIG = path.resolve('src/client/tsconfig.json');
 const ELECTRON_OUTPUT = 'dist/electron';
@@ -59,19 +59,18 @@ async function buildElectron(options) {
 }
 
 async function createViteServer() {
-  const WEB_TSCONFIG = path.resolve(process.cwd(), 'src/client/tsconfig.web.json');
   const server = await createServer({
     configFile: false,
     clearScreen: false,
     root: './src/client/driver/web',
-    plugins: [checker({ typescript: { tsconfigPath: WEB_TSCONFIG } }), tsconfigPaths({ projects: [CLIENT_TSCONFIG] })],
+    plugins: [
+      react({ tsDecorators: true }), // use this plugin to speed up react compiling and enjoy "fast refresh"
+      checker({ typescript: { tsconfigPath: CLIENT_TSCONFIG } }),
+      tsconfigPaths({ projects: [CLIENT_TSCONFIG] }),
+    ],
     define: {
       __ENV__: JSON.stringify('dev'),
       __PLATFORM__: JSON.stringify('electron'),
-    },
-    esbuild: {
-      jsxInject: `import React from 'react'`,
-      tsconfigRaw: (await parseTsconfig(WEB_TSCONFIG)).tsconfig,
     },
   });
 
