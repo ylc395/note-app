@@ -1,5 +1,5 @@
 import { app as electronApp, BrowserWindow, ipcMain, protocol } from 'electron';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { join } from 'node:path';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 
@@ -21,6 +21,7 @@ export default class ElectronApp extends ClientApp {
       },
     ]);
   }
+  private readonly logger = new Logger('electron app');
   private mainWindow?: BrowserWindow;
   readonly type = 'electron';
 
@@ -51,11 +52,11 @@ export default class ElectronApp extends ClientApp {
 
     if (IS_DEV) {
       try {
-        console.log('try to install devtool');
+        this.logger.verbose('try to install devtool');
         await installExtension(REACT_DEVELOPER_TOOLS);
-        console.log('devtool installed');
+        this.logger.verbose('devtool installed');
       } catch (error) {
-        console.error(error);
+        this.logger.error(error);
       }
     }
 
@@ -78,7 +79,8 @@ export default class ElectronApp extends ClientApp {
       this.mainWindow = undefined;
     });
 
-    this.mainWindow.webContents.on('will-navigate', (e) => {
+    this.mainWindow.webContents.on('will-navigate', (e, url) => {
+      this.logger.warn(`prevent from redirect to ${url}`);
       e.preventDefault();
     });
 

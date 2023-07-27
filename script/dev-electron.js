@@ -41,7 +41,8 @@ async function buildPreload() {
 }
 
 async function buildElectron(options) {
-  if (!options?.skipBuildTs) {
+  // 1. compile
+  if (options?.compile) {
     const result = shell.exec(BUILD_ELECTRON_COMMAND);
 
     if (result.code > 0) {
@@ -49,13 +50,15 @@ async function buildElectron(options) {
     }
   }
 
+  // 2. replace ts path
   await replaceTscAliasPaths({
     configFile: 'src/server/tsconfig.json',
     outDir: path.join(ELECTRON_OUTPUT, 'server'),
   });
   await replaceTscAliasPaths({ configFile: CLIENT_TSCONFIG, outDir: path.join(ELECTRON_OUTPUT, 'client') });
 
-  if (options?.bootstrap !== false) {
+  // 3. bootstrap electron process
+  if (options?.bootstrap) {
     const electronProcess = shell.exec(`electron ${ELECTRON_OUTPUT}/server/bootstrap.desktop.js`, { async: true });
     return electronProcess;
   }
@@ -94,9 +97,11 @@ if (process.argv[1] === __filename) {
     shell.env['DEV_CLEAN'] = process.argv.includes('--clean') ? '1' : '0';
 
     await buildPreload();
-    let electronProcess = await buildElectron();
+    let electronProcess = await buildElectron({ compile: true, bootstrap: true });
 
     if (electronProcess) {
+      // this will trigger building again though we only want to enable watch mode. But the cost is cheap since we have .tsbuildinfo
+      // see https://github.com/microsoft/TypeScript/issues/12996#issuecomment-522744917
       shell.exec(`${BUILD_ELECTRON_COMMAND} --watch`, { async: true });
 
       chokidar.watch(ELECTRON_OUTPUT, { ignoreInitial: true, ignored: [/\.tsbuildinfo$/, /\.map$/, /\.d\.ts$/] }).on(
@@ -106,7 +111,7 @@ if (process.argv[1] === __filename) {
           console.log(path, event);
           electronProcess.kill();
           shell.env['DEV_CLEAN'] = '0';
-          electronProcess = await buildElectron(true);
+          electronProcess = await buildElectron({ compile: false, bootstrap: true });
         }, 500),
       );
     } else {
