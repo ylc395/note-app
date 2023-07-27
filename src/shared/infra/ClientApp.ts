@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { ModuleRef } from '@nestjs/core';
 import { Inject } from '@nestjs/common';
 
-import { APP_NAME, NODE_ENV } from './constants';
+import { APP_NAME, IS_DEV, IS_TEST } from './constants';
 import { token as kvDatabaseToken, type KvDatabase } from './kvDatabase';
 
 export enum EventNames {
@@ -33,7 +33,7 @@ export default abstract class ClientApp extends Emitter<Events> {
   }
 
   getDataDir() {
-    const dir = (NODE_ENV && { development: `${APP_NAME}-dev`, test: `${APP_NAME}-test` }[NODE_ENV]) || APP_NAME;
+    const dir = IS_DEV ? `${APP_NAME}-dev` : IS_TEST ? `${APP_NAME}-test` : APP_NAME;
 
     if (process.env.APPDATA) {
       return join(process.env.APPDATA, dir);

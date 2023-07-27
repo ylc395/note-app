@@ -5,6 +5,7 @@ import { useDroppable, useDndMonitor } from '@dnd-kit/core';
 import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import { CloseOutlined } from '@ant-design/icons';
 
+import { IS_DEV } from 'infra/constants';
 import EditorService from 'service/EditorService';
 import Tile from 'model/workbench/Tile';
 import EditorView from 'model/abstract/EditorView';
@@ -56,7 +57,7 @@ export default observer(function TabBar({ tileId }: { tileId: Tile['id'] }) {
         </SortableContext>
       </div>
       <div className="flex items-center">
-        {__ENV__ === 'dev' ? <span className="text-xs">{tileId}</span> : null}
+        {IS_DEV ? <span className="text-xs">{tileId}</span> : null}
         <Tooltip title="关闭全部">
           <Button onFocus={(e) => e.stopPropagation()} onClick={closeAllEditors} type="text" icon={<CloseOutlined />} />
         </Tooltip>

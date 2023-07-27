@@ -1,4 +1,5 @@
 import debounce from 'lodash/debounce';
+import { IS_DEV } from 'infra/constants';
 import { isTextNode, isElement, isVisible } from './domUtils';
 
 export interface RangeSelectEvent {
@@ -107,7 +108,7 @@ export default class RangeSelector {
     range.insertNode(tmpEl);
     tmpEl.style.height = '1em';
 
-    if (__ENV__ === 'dev') {
+    if (IS_DEV) {
       tmpEl.className = 'selection-end-mark';
     }
 

@@ -3,6 +3,7 @@ import { Breadcrumb as AntdBreadcrumb } from 'antd';
 import { BookOutlined } from '@ant-design/icons';
 import { useContext } from 'react';
 
+import { IS_DEV } from 'infra/constants';
 import IconTitle from 'web/components/IconTitle';
 
 import EditorContext from './Context';
@@ -20,7 +21,7 @@ export default observer(function Breadcrumb() {
         ...breadcrumbs.map((pathNode, i) => ({
           title: (
             <IconTitle
-              title={`${__ENV__ === 'dev' ? `${pathNode.id.slice(0, 3)} ` : ''}${
+              title={`${IS_DEV ? `${pathNode.id.slice(0, 3)} ` : ''}${
                 i === breadcrumbs.length - 1 ? '当前笔记' : pathNode.title
               }`}
               icon={pathNode.icon}
@@ -31,7 +32,7 @@ export default observer(function Breadcrumb() {
           menu: pathNode.siblings.length
             ? {
                 items: pathNode.siblings.map(({ id, icon, title }) => ({
-                  label: <IconTitle icon={icon} title={`${__ENV__ === 'dev' ? `${id} ` : ''}${title}`} size="1em" />,
+                  label: <IconTitle icon={icon} title={`${IS_DEV ? `${id} ` : ''}${title}`} size="1em" />,
                   key: id,
                 })),
               }

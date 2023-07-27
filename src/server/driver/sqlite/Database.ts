@@ -8,12 +8,14 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { token as clientAppToken } from 'infra/ClientApp';
 import type ClientApp from 'infra/ClientApp';
 import type { Database } from 'infra/database';
-import { NODE_ENV } from 'infra/constants';
+import { IS_TEST, IS_DEV } from 'infra/constants';
 import type Repository from 'service/repository';
 
 import * as schemas from './schema';
 import type * as RowTypes from './schema';
 import * as repositories from './repository';
+
+const CLEAN_DB = process.env.DEV_CLEAN === '1' && IS_DEV;
 
 export interface Db {
   [schemas.note.tableName]: RowTypes.NoteRow;
@@ -76,11 +78,7 @@ export default class SqliteDb implements Database {
     const dir = this.clientApp.getDataDir();
     ensureDirSync(dir);
 
-    const isDevelopment = NODE_ENV === 'development';
-    const isTest = NODE_ENV === 'test';
-    const needClean = process.env.DEV_CLEAN === '1';
-
-    if ((isDevelopment && needClean && this.clientApp.type === 'electron') || isTest) {
+    if ((CLEAN_DB && this.clientApp.type === 'electron') || IS_TEST) {
       emptyDirSync(dir);
     }
 
@@ -90,7 +88,7 @@ export default class SqliteDb implements Database {
     return new Kysely<Db>({
       dialect: new SqliteDialect({
         database: new BetterSqlite3(dbPath, {
-          verbose: isDevelopment ? this.logger.verbose.bind(this.logger) : undefined,
+          verbose: IS_DEV ? this.logger.verbose.bind(this.logger) : undefined,
         }),
       }),
       plugins: [new CamelCasePlugin()],

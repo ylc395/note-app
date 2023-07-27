@@ -1,8 +1,8 @@
 import type { FileVO } from 'interface/file';
-import { APP_PROTOCOL } from 'infra/constants';
+import { APP_PROTOCOL, IS_ELECTRON } from 'infra/constants';
 
 export function getFileUrlById(fileId: FileVO['id']) {
-  if (__PLATFORM__ === 'electron') {
+  if (IS_ELECTRON) {
     return `${APP_PROTOCOL}://files/${fileId}`;
   }
 
@@ -10,7 +10,7 @@ export function getFileUrlById(fileId: FileVO['id']) {
 }
 
 export function isInternalFileUrl(url: string) {
-  if (__PLATFORM__ === 'electron') {
+  if (IS_ELECTRON) {
     return url.startsWith(APP_PROTOCOL);
   }
 

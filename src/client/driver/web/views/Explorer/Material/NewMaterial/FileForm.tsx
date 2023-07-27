@@ -4,6 +4,7 @@ import { useCallback } from 'react';
 
 import type FileFormModel from 'model/material/FileForm';
 import selectFiles from 'web/infra/selectFiles';
+import { IS_ELECTRON } from 'infra/constants';
 
 export default observer(function FileForm({ model }: { model: FileFormModel }) {
   const handleSelectFile = useCallback(async () => {
@@ -15,7 +16,7 @@ export default observer(function FileForm({ model }: { model: FileFormModel }) {
 
     model.updateValue('file', {
       mimeType: file.type,
-      ...(__PLATFORM__ === 'electron' ? { path: file.path } : { data: await file.arrayBuffer() }),
+      ...(IS_ELECTRON ? { path: file.path } : { data: await file.arrayBuffer() }),
     });
     model.updateValue('name', file.name);
   }, [model]);

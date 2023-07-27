@@ -8,6 +8,9 @@ const { checker } = require('vite-plugin-checker');
 const debounce = require('lodash/debounce');
 const react = require('@vitejs/plugin-react-swc');
 
+const ENV = 'development';
+const APP_PLATFORM = 'electron';
+
 const CLIENT_TSCONFIG = path.resolve('src/client/tsconfig.json');
 const ELECTRON_OUTPUT = 'dist/electron';
 const BUILD_ELECTRON_COMMAND = 'tsc --build ./tsconfig.electron.json';
@@ -69,8 +72,8 @@ async function createViteServer() {
       tsconfigPaths({ projects: [CLIENT_TSCONFIG] }),
     ],
     define: {
-      __ENV__: JSON.stringify('dev'),
-      __PLATFORM__: JSON.stringify('electron'),
+      'process.env.NODE_ENV': JSON.stringify(ENV),
+      'process.env.APP_PLATFORM': JSON.stringify(APP_PLATFORM),
     },
   });
 
@@ -86,8 +89,8 @@ if (process.argv[1] === __filename) {
     const viteUrl = viteServer.resolvedUrls.local[0];
 
     shell.env['VITE_SERVER_ENTRY_URL'] = viteUrl;
-    shell.env['NODE_ENV'] = 'development';
-    shell.env['APP_PLATFORM'] = 'electron';
+    shell.env['NODE_ENV'] = ENV;
+    shell.env['APP_PLATFORM'] = APP_PLATFORM;
     shell.env['DEV_CLEAN'] = process.argv.includes('--clean') ? '1' : '0';
 
     await buildPreload();

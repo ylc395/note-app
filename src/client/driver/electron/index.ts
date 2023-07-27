@@ -4,29 +4,28 @@ import { join } from 'node:path';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 
 import ClientApp, { EventNames as ClientAppEventNames } from 'infra/ClientApp';
-import { APP_PROTOCOL, NODE_ENV } from 'infra/constants';
+import { APP_PROTOCOL, IS_DEV } from 'infra/constants';
 
 import { UI_CHANNELS, createContextmenu, openNewWindow } from './ui';
 
-const ENTRY_URL = process.env.VITE_SERVER_ENTRY_URL;
-
-protocol.registerSchemesAsPrivileged([
-  {
-    scheme: APP_PROTOCOL,
-    privileges: {
-      supportFetchAPI: true,
-      stream: true,
-    },
-  },
-]);
-
 @Injectable()
 export default class ElectronApp extends ClientApp {
+  static {
+    protocol.registerSchemesAsPrivileged([
+      {
+        scheme: APP_PROTOCOL,
+        privileges: {
+          supportFetchAPI: true,
+          stream: true,
+        },
+      },
+    ]);
+  }
   private mainWindow?: BrowserWindow;
   readonly type = 'electron';
 
   async start() {
-    if (NODE_ENV === 'development') {
+    if (IS_DEV) {
       if (process.platform === 'win32') {
         process.on('message', (data) => {
           if (data === 'graceful-exit') {
@@ -50,7 +49,7 @@ export default class ElectronApp extends ClientApp {
 
     await electronApp.whenReady();
 
-    if (NODE_ENV === 'development') {
+    if (IS_DEV) {
       try {
         console.log('try to install devtool');
         await installExtension(REACT_DEVELOPER_TOOLS);
@@ -79,15 +78,13 @@ export default class ElectronApp extends ClientApp {
       this.mainWindow = undefined;
     });
 
-    this.mainWindow.webContents.on('will-navigate', (e, url) => {
-      if (NODE_ENV !== 'development' || url !== ENTRY_URL) {
-        e.preventDefault();
-      }
+    this.mainWindow.webContents.on('will-navigate', (e) => {
+      e.preventDefault();
     });
 
-    if (NODE_ENV === 'development') {
+    if (IS_DEV) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      await this.mainWindow.loadURL(ENTRY_URL!);
+      await this.mainWindow.loadURL(process.env.VITE_SERVER_ENTRY_URL!);
       this.mainWindow.webContents.openDevTools();
     }
   }

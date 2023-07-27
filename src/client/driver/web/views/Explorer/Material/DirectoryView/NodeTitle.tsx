@@ -6,10 +6,11 @@ import { useContext } from 'react';
 
 import type { MaterialTreeNode } from 'model/material/Tree';
 import MaterialService from 'service/MaterialService';
+import { isDirectory } from 'interface/material';
+import { IS_DEV } from 'infra/constants';
 
 import IconTitle from 'web/components/IconTitle';
 import ctx from '../Context';
-import { isDirectory } from 'interface/material';
 
 export default observer(function Title({ node }: { node: MaterialTreeNode }) {
   const { createDirectory } = container.resolve(MaterialService);
@@ -17,10 +18,7 @@ export default observer(function Title({ node }: { node: MaterialTreeNode }) {
 
   return (
     <span className="group flex">
-      <IconTitle
-        icon={node.entity.icon}
-        title={`${__ENV__ === 'dev' ? `${node.key.slice(0, 3)} ` : ''}${node.title}`}
-      />
+      <IconTitle icon={node.entity.icon} title={`${IS_DEV ? `${node.key.slice(0, 3)} ` : ''}${node.title}`} />
       {isDirectory(node.entity) && (
         <>
           <Tooltip title="新建素材" placement="right">

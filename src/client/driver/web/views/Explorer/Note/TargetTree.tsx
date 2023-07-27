@@ -5,6 +5,7 @@ import { Button } from 'antd';
 import { useCreation } from 'ahooks';
 
 import type { NoteVO } from 'interface/Note';
+import { IS_DEV } from 'infra/constants';
 import NoteTree, { VIRTUAL_ROOT_NODE_KEY, type NoteTreeNode } from 'model/note/Tree';
 import NoteService from 'service/NoteService';
 
@@ -53,11 +54,7 @@ export default observer(function NoteTreeView() {
   const titleRender = useCallback<NonNullable<TreeProps<NoteTreeNode>['titleRender']>>(
     (node) => (
       <span className="group flex">
-        <IconTitle
-          icon={node.entity.icon}
-          size="1em"
-          title={`${__ENV__ === 'dev' ? `${node.key} ` : ''}${node.title}`}
-        />
+        <IconTitle icon={node.entity.icon} size="1em" title={`${IS_DEV ? `${node.key} ` : ''}${node.title}`} />
       </span>
     ),
     [],

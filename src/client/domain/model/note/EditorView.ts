@@ -1,8 +1,10 @@
 import { makeObservable, computed } from 'mobx';
 
+import { IS_DEV } from 'infra/constants';
 import EditorView, { type Breadcrumbs } from 'model/abstract/EditorView';
 import type Tile from 'model/workbench/Tile';
 import { normalizeTitle, type NoteVO } from 'interface/Note';
+
 import type NoteEditor from './Editor';
 
 interface State {
@@ -20,7 +22,7 @@ export default class NoteEditorView extends EditorView<NoteEditor, State> {
   get tabView() {
     return {
       title:
-        (__ENV__ === 'dev' ? `${this.id} ${this.editor.id} ${this.editor.entityId.slice(0, 3)} ` : '') +
+        (IS_DEV ? `${this.id} ${this.editor.id} ${this.editor.entityId.slice(0, 3)} ` : '') +
         normalizeTitle(this.editor.entity?.metadata),
       icon: this.editor.entity?.metadata.icon || null,
     };
