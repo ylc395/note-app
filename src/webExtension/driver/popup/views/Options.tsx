@@ -3,6 +3,7 @@ import { container } from 'tsyringe';
 
 import TaskService from 'service/TaskService';
 import { EntityTypes } from 'interface/entity';
+import Tree from 'components/Tree';
 
 export default observer(function Options() {
   const { config, isUnavailable } = container.resolve(TaskService);
@@ -17,6 +18,10 @@ export default observer(function Options() {
         <option value={EntityTypes.Note}>笔记</option>
         <option value={EntityTypes.Memo}>Memo</option>
       </select>
+      <div>
+        {config.targetPath && <span>{config.targetPath}</span>}
+        {config.targetTree && <Tree tree={config.targetTree} />}
+      </div>
     </div>
   );
 });

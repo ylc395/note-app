@@ -1,6 +1,6 @@
 import browser, { type Tabs } from 'webextension-polyfill';
 import { singleton, container } from 'tsyringe';
-import { computed, action, makeObservable, observable, runInAction } from 'mobx';
+import { computed, action, makeObservable, observable, runInAction, reaction } from 'mobx';
 
 import { type Task, type CancelEvent, TaskTypes, EventNames } from 'model/task';
 import EventBus from 'infra/EventBus';
@@ -45,6 +45,8 @@ export default class TaskService {
       this.targetTabId = targetTabId;
       this.tasks = tasks;
     });
+
+    reaction(() => this.config.get('targetEntityType'), this.config.updateTargetTree, { fireImmediately: true });
   }
 
   private handleCancel(e: CancelEvent) {

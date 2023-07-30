@@ -5,8 +5,9 @@ import type { MaterialDTO } from 'interface/material';
 import type { FileVO } from 'interface/file';
 import type { NoteBodyDTO, NoteDTO, NoteVO } from 'interface/note';
 import type { MemoDTO } from 'interface/memo';
-import { EntityTypes } from 'interface/entity';
+import { type EntityId, EntityTypes } from 'interface/entity';
 import type { TaskResult } from 'model/task';
+import NoteTree from 'model/NoteTree';
 
 const HOST = 'http://localhost:3001';
 const TOKEN_KEY = 'token';
@@ -74,7 +75,7 @@ export default class MainApp {
     this.checkOnline();
   }
 
-  private async fetch<T, K>(method: 'GET' | 'POST' | 'PUT' | 'PATCH', url: string, body?: K) {
+  private async fetch<T, K = void>(method: 'GET' | 'POST' | 'PUT' | 'PATCH', url: string, body?: K) {
     if (!this.token) {
       throw new Error('no token');
     }
@@ -89,7 +90,7 @@ export default class MainApp {
     });
 
     if (!res.ok) {
-      throw new Error('http error');
+      return null;
     }
 
     const responseType = res.headers.get('Content-Type');
@@ -167,5 +168,29 @@ export default class MainApp {
       content: payload.content,
       parentId: payload.parentId || undefined,
     });
+  }
+
+  async getTree(type: EntityTypes, id?: EntityId | null) {
+    if (type === EntityTypes.Note) {
+      const notes = await this.fetch<NoteVO[]>('GET', id ? `/notes/${id}/tree-fragment` : `/notes`);
+
+      if (notes) {
+        return NoteTree.fromNotes(notes);
+      }
+    }
+
+    throw new Error('can not get tree');
+  }
+
+  async getChildren(type: EntityTypes, id: EntityId) {
+    if (type === EntityTypes.Note) {
+      const children = await this.fetch<NoteVO[]>('GET', `/notes?parentId=${id}`);
+
+      if (children) {
+        return children;
+      }
+    }
+
+    throw new Error('can not get children');
   }
 }

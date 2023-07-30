@@ -19,6 +19,7 @@ const COMMON_BUILD_OPTIONS = {
   minify: false,
   sourcemap: true,
   watch: true,
+  emptyOutDir: false,
 };
 
 emptyDirSync(outDir);
