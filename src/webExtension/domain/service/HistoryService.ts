@@ -13,17 +13,14 @@ export default class HistoryService {
 
   constructor() {
     makeObservable(this);
-    this.init();
   }
 
-  private async init() {
+  async refresh() {
     const data = await HistoryService.load();
 
-    if (data) {
-      runInAction(() => {
-        this.historyRecords = data;
-      });
-    }
+    runInAction(() => {
+      this.historyRecords = data || [];
+    });
   }
 
   static async load() {

@@ -9,11 +9,12 @@ import TaskList from './TaskList';
 // eslint-disable-next-line mobx/missing-observer
 export default function App() {
   return (
-    <div className="w-96">
-      <Menu />
+    <div className="w-96 bg-gray-100 px-6">
+      <h1 className="py-4 text-lg">StarNote Clipper</h1>
       <Options />
-      <TaskList />
-      <History />
+      <Menu />
+      {/* <TaskList /> */}
+      {/* <History /> */}
       <Network />
     </div>
   );

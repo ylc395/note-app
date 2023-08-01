@@ -19,5 +19,11 @@
       "js": ["./content-script/index.js"],
       "run_at": "document_idle"
     }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["content-script/style.css"],
+      "matches": ["<all_urls>"]
+    }
   ]
 }

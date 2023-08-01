@@ -66,7 +66,7 @@ export default observer(function ElementSelector() {
   return isEnabled ? (
     <div
       ref={refs.setFloating}
-      className="pointer-events-none absolute z-50 bg-blue-600 opacity-20"
+      className="pointer-events-none z-50 bg-blue-600 opacity-20"
       style={floatingStyles}
     ></div>
   ) : null;

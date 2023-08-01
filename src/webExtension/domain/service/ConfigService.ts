@@ -3,11 +3,9 @@ import { observable, makeObservable, runInAction, action, computed } from 'mobx'
 import { container } from 'tsyringe';
 
 import { CONFIG_KEY, type Config } from 'model/config';
-import Tree from 'model/Tree';
-import type { NoteVO } from 'interface/note';
-import type { MaterialVO } from 'interface/material';
 import { EntityTypes } from 'interface/entity';
 import MainApp from 'infra/MainApp';
+import type NoteTree from 'model/NoteTree';
 
 const defaultConfig: Config = {
   targetEntityType: EntityTypes.Material,
@@ -25,11 +23,11 @@ export default class ConfigService {
   }
 
   private mainApp = container.resolve(MainApp);
-  @observable.ref targetTree?: Tree<NoteVO> | Tree<MaterialVO>;
+  @observable.ref targetTree?: NoteTree;
   @observable private config?: Config;
 
   @computed
-  get targetPath() {
+  get target() {
     const targetType = this.get('targetEntityType');
     const targetId = targetType && this.get('targetEntityId')?.[targetType];
 
@@ -38,8 +36,12 @@ export default class ConfigService {
     }
 
     const ancestors = this.targetTree.getAncestors(targetId);
+    const node = this.targetTree.getNode(targetId);
 
-    return [...ancestors, this.targetTree.getNode(targetId)].map(({ title }) => title).join(' / ');
+    return {
+      title: node.title,
+      path: [...ancestors, node].map(({ title }) => title).join(' / '),
+    };
   }
 
   private async init() {
@@ -57,8 +59,10 @@ export default class ConfigService {
       throw new Error('no config');
     }
 
-    this.config.targetEntityId[this.config.targetEntityType] = id;
-    browser.storage.local.set({ [CONFIG_KEY]: this.config });
+    this.set('targetEntityId', {
+      ...this.config.targetEntityId,
+      [this.config.targetEntityType]: id,
+    });
   }
 
   @action
@@ -97,10 +101,7 @@ export default class ConfigService {
 
     tree.on('nodeExpanded', async ({ id }) => {
       const children = await this.mainApp.getChildren(targetType, id);
-
-      for (const child of children) {
-        tree.updateTree(child);
-      }
+      tree.updateTree(children);
     });
 
     runInAction(() => (this.targetTree = tree));

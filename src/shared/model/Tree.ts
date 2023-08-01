@@ -1,4 +1,4 @@
-import { observable, action, computed } from 'mobx';
+import { observable, action, computed, makeObservable } from 'mobx';
 import pull from 'lodash/pull';
 import { Emitter } from 'strict-event-emitter';
 
@@ -30,6 +30,7 @@ export default abstract class Tree<E extends EntityWithParent> extends Emitter<{
 }> {
   constructor(options?: Options) {
     super();
+    makeObservable(this);
     if (options?.virtualRoot) {
       this.initVirtualRoot();
     }
@@ -135,37 +136,39 @@ export default abstract class Tree<E extends EntityWithParent> extends Emitter<{
       isSelected: false,
     });
 
-    const siblings = parent?.children || this.roots;
+    const siblings = parent?.children || this._roots;
 
     siblings.push(node);
     this.nodes[entity.id] = node;
-
-    return node;
   }
 
   @action
-  updateTree(entity: E) {
-    const node = this.nodes[entity.id];
+  updateTree(entity: E | E[]) {
+    const entities = Array.isArray(entity) ? entity : [entity];
 
-    if (!node) {
-      this.createNode(entity);
-      return;
-    }
+    for (const entity of entities) {
+      const node = this.nodes[entity.id];
 
-    Object.assign(node, this.toNode(entity));
+      if (!node) {
+        this.createNode(entity);
+        continue;
+      }
 
-    if (node.parent?.id === entity.parentId) {
-      return;
-    }
+      Object.assign(node, this.toNode(entity));
 
-    pull(node.parent?.children || this._roots, node);
-    const newParent = entity.parentId ? this.getNode(entity.parentId) : undefined;
+      if (node.parent?.id === entity.parentId) {
+        return;
+      }
 
-    if (newParent) {
-      newParent.children.push(node);
-      newParent.isLeaf = false;
-    } else {
-      this._roots.push(node);
+      pull(node.parent?.children || this._roots, node);
+      const newParent = entity.parentId ? this.getNode(entity.parentId) : undefined;
+
+      if (newParent) {
+        newParent.children.push(node);
+        newParent.isLeaf = false;
+      } else {
+        this._roots.push(node);
+      }
     }
   }
 

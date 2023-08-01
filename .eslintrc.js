@@ -16,11 +16,6 @@ module.exports = {
   },
   overrides: [
     {
-      files: ['src/client/**', 'src/webExtension/popup/**'],
-      excludedFiles: ['**/components/**'],
-      extends: ['plugin:mobx/recommended'],
-    },
-    {
       files: ['*.ts', '*.tsx'],
       parser: '@typescript-eslint/parser',
       extends: ['plugin:@typescript-eslint/recommended', 'plugin:react-hooks/recommended', 'plugin:react/recommended'],
@@ -32,7 +27,7 @@ module.exports = {
     },
     {
       files: ['*.ts', '*.tsx'],
-      extends: ['plugin:tailwindcss/recommended'],
+      extends: ['plugin:tailwindcss/recommended', 'plugin:mobx/recommended'],
     },
     {
       files: ['*.tsx'],

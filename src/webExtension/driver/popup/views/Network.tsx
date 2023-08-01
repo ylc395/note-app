@@ -15,7 +15,7 @@ export default observer(function Network() {
 
   return (
     <div>
-      {mainApp.status === Statuses.Online && <div>通信正常</div>}
+      {mainApp.status === Statuses.Online && <div className="text-green-600">通信正常</div>}
       {mainApp.status === Statuses.NotReady && <div>正在连接中</div>}
       {mainApp.status === Statuses.ConnectionFailure && (
         <div>

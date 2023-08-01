@@ -171,15 +171,28 @@ export default class MainApp {
   }
 
   async getTree(type: EntityTypes, id?: EntityId | null) {
+    let tree: NoteTree | undefined;
     if (type === EntityTypes.Note) {
       const notes = await this.fetch<NoteVO[]>('GET', id ? `/notes/${id}/tree-fragment` : `/notes`);
 
       if (notes) {
-        return NoteTree.fromNotes(notes);
+        tree = NoteTree.fromNotes(notes);
       }
     }
 
-    throw new Error('can not get tree');
+    if (!tree) {
+      throw new Error('can not get tree');
+    }
+
+    if (id) {
+      for (const ancestor of tree.getAncestors(id)) {
+        tree.toggleExpand(ancestor.id);
+      }
+
+      tree.toggleSelect(id);
+    }
+
+    return tree;
   }
 
   async getChildren(type: EntityTypes, id: EntityId) {

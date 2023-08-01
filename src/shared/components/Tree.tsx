@@ -5,7 +5,7 @@ import { observer } from 'mobx-react-lite';
 import type { TreeNode as TreeNodeModel, EntityWithParent } from 'model/Tree';
 import type TreeModel from 'model/Tree';
 
-const TreeNode = observer(function TreeNode({
+const TreeNode = observer(function ({
   node,
   level,
   tree,
@@ -16,24 +16,31 @@ const TreeNode = observer(function TreeNode({
 }) {
   const expand = useCallback(
     (e: MouseEvent) => {
-      tree.toggleExpand(node.id);
       e.stopPropagation();
+      tree.toggleExpand(node.id);
     },
     [node.id, tree],
   );
 
-  const select = useCallback(() => tree.toggleSelect(node.id), [node.id, tree]);
+  const select = useCallback(
+    (e: MouseEvent) => {
+      e.stopPropagation();
+      tree.toggleSelect(node.id);
+    },
+    [node.id, tree],
+  );
 
   return (
     <>
       <div onClick={select} style={{ paddingLeft: `${level * 30}px` }}>
-        <div>
+        <div className="flex items-center">
           {!node.isLeaf &&
             (node.isExpanded ? <CaretDownOutlined onClick={expand} /> : <CaretRightFilled onClick={expand} />)}
-          {node.title}
+          <span>{node.title}</span>
         </div>
       </div>
       {node.isExpanded &&
+        !node.isLeaf &&
         node.children.map((child) => <TreeNode key={child.id} node={child} level={level + 1} tree={tree} />)}
     </>
   );

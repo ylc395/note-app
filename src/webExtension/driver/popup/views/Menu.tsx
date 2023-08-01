@@ -1,5 +1,6 @@
 import { container } from 'tsyringe';
 import { observer } from 'mobx-react-lite';
+import clsx from 'clsx';
 
 import TaskService from 'service/TaskService';
 import { TaskTypes } from 'model/task';
@@ -34,7 +35,10 @@ export default observer(function Menu() {
           return visible === 'all' || visible === config.get('targetEntityType') ? (
             <li key={action}>
               <button
-                className={action === taskService.currentAction ? 'bg-red-300' : ''}
+                className={clsx(
+                  action === taskService.currentAction && 'bg-red-300',
+                  'mb-3 block h-9 w-full rounded-md bg-gray-800 text-sm text-gray-100',
+                )}
                 disabled={taskService.isUnavailable}
                 onClick={() => taskService.addTask(action)}
               >
