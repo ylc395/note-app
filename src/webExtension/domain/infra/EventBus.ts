@@ -9,6 +9,7 @@ interface TaskEventMap {
   [EventNames.FinishTask]: FinishEvent;
   [EventNames.StartTask]: StartTaskEvent;
   [EventNames.Submit]: SubmitEvent;
+  [EventNames.Preview]: void;
 }
 
 const MESSAGE_TYPE = '__MOCK_EVENT';

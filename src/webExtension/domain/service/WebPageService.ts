@@ -19,8 +19,9 @@ export default class WebPageService {
 
   static createAppRoot() {
     const container = document.createElement('div');
+    // reset inheritance. see https://web.dev/shadowdom-v1/#resetting-inheritable-styles
+    container.style.setProperty('all', 'initial', 'important');
     document.body.append(container);
-    container.style.all = 'initial';
 
     return container.attachShadow({ mode: 'open' });
   }

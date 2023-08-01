@@ -4,6 +4,7 @@ import { observer } from 'mobx-react-lite';
 
 import RectAreaSelector, { type Rect, type ReactAreaSelectorRef } from 'components/RectAreaSelector';
 import ctx from './Context';
+import { TaskTypes } from 'model/task';
 
 export default observer(function ScreenCapture() {
   const [rect, setRect] = useState<null | Rect>(null);
@@ -12,7 +13,7 @@ export default observer(function ScreenCapture() {
   const { refs, floatingStyles } = useFloating();
   const { clipService } = useContext(ctx);
 
-  const isEnabled = clipService.mode === 'screen-capture';
+  const isEnabled = !clipService.activeTaskResult && clipService.activeTask?.type === TaskTypes.ScreenShot;
   const setRefs = useCallback(
     (ref: ReactAreaSelectorRef | null) => {
       refs.setReference(ref);

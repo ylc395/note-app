@@ -1,5 +1,6 @@
 import { container } from 'tsyringe';
 import { observer } from 'mobx-react-lite';
+import { LoadingOutlined } from '@ant-design/icons';
 import clsx from 'clsx';
 
 import TaskService from 'service/TaskService';
@@ -24,7 +25,8 @@ const ACTION_TEXT_MAP = {
 
 export default observer(function Menu() {
   const taskService = container.resolve(TaskService);
-  const { config } = taskService;
+  const { config, readyState } = taskService;
+  const isDisabled = readyState === 'DOING';
 
   return (
     <div>
@@ -36,12 +38,13 @@ export default observer(function Menu() {
             <li key={action}>
               <button
                 className={clsx(
-                  action === taskService.currentAction && 'bg-red-300',
-                  'mb-3 block h-9 w-full rounded-md bg-gray-800 text-sm text-gray-100',
+                  'mb-3 flex h-9 w-full items-center justify-center rounded-md bg-gray-800 text-sm text-gray-100',
+                  isDisabled && 'cursor-not-allowed opacity-60',
                 )}
-                disabled={taskService.isUnavailable}
+                disabled={isDisabled}
                 onClick={() => taskService.addTask(action)}
               >
+                {action === taskService.currentAction && <LoadingOutlined className="mr-1" />}
                 {text}
               </button>
             </li>

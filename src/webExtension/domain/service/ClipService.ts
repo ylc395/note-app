@@ -1,7 +1,7 @@
 import { getPageData, helper } from 'single-file-core/single-file';
 import Turndown from 'turndown';
 import { Readability } from '@mozilla/readability';
-import { action, makeObservable, observable } from 'mobx';
+import { action, makeObservable, observable, runInAction } from 'mobx';
 
 import EventBus from 'infra/EventBus';
 import { getRemoteApi } from 'infra/remoteApi';
@@ -24,12 +24,10 @@ const getCommonPageOptions = () => ({
 const turndownService = new Turndown();
 const remoteApi = getRemoteApi<typeof WebPageService>();
 
-type Mode = 'element-select' | 'screen-capture';
-
 export default class ClipService {
-  activeTask?: Task;
+  @observable activeTask?: Task;
   @observable activeTaskResult?: TaskResult;
-  @observable mode?: Mode;
+  @observable isLoading = false;
   private readonly eventBus = new EventBus();
 
   constructor() {
@@ -41,6 +39,7 @@ export default class ClipService {
   }
 
   private readonly clipWholePage = async () => {
+    runInAction(() => (this.isLoading = true));
     const res = await getPageData(getCommonPageOptions());
 
     this.preview({
@@ -54,6 +53,8 @@ export default class ClipService {
     if (!this.activeTask) {
       throw new Error('no activeTask');
     }
+
+    runInAction(() => (this.isLoading = true));
 
     if (this.activeTask.type === TaskTypes.SelectElementText) {
       this.preview({ ...ClipService.getMarkdown(el), contentType: 'md' });
@@ -89,7 +90,12 @@ export default class ClipService {
         canvasEl.height,
       );
       const clippedDataUrl = canvasEl.toDataURL();
-      this.submit({ title: `Screenshot - ${document.title}`, content: clippedDataUrl, contentType: 'png' });
+
+      this.preview({
+        title: `Screenshot - ${document.title}`,
+        content: clippedDataUrl,
+        contentType: 'png',
+      });
     });
   }
 
@@ -141,14 +147,11 @@ export default class ClipService {
       throw new Error('can not clip now');
     }
 
-    this.activeTask = task;
+    runInAction(() => {
+      this.activeTask = task;
+    });
 
     switch (task.type) {
-      case TaskTypes.SelectElement:
-      case TaskTypes.SelectElementText:
-        return this.setMode('element-select');
-      case TaskTypes.ScreenShot:
-        return this.setMode('screen-capture');
       case TaskTypes.SelectPage:
         return this.clipWholePage();
       case TaskTypes.ExtractText:
@@ -168,11 +171,15 @@ export default class ClipService {
   }
 
   private cancelByError(error: string) {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    if ([TaskTypes.SelectElement, TaskTypes.SelectElementText, TaskTypes.ScreenShot].includes(this.activeTask!.type)) {
+    if (!this.activeTask) {
+      throw new Error('no activeTask');
+    }
+
+    if ([TaskTypes.SelectElement, TaskTypes.SelectElementText, TaskTypes.ScreenShot].includes(this.activeTask.type)) {
       window.alert(error);
     }
 
+    this.eventBus.emit(EventNames.CancelTask, { taskId: this.activeTask.id, error });
     this.reset();
   }
 
@@ -186,20 +193,15 @@ export default class ClipService {
 
   @action
   private preview(result: TaskResult) {
-    this.mode = undefined;
     this.activeTaskResult = result;
+    this.isLoading = false;
+    this.eventBus.emit(EventNames.Preview, undefined);
   }
 
   @action
   private reset() {
-    this.mode = undefined;
     this.activeTask = undefined;
     this.activeTaskResult = undefined;
-  }
-
-  @action
-  private setMode(mode: Mode) {
-    this.mode = mode;
   }
 
   static processHtmlForPreview(html: string) {

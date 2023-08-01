@@ -1,10 +1,9 @@
 import browser from 'webextension-polyfill';
 import { observable, makeObservable, runInAction, action, computed } from 'mobx';
-import { container } from 'tsyringe';
 
 import { CONFIG_KEY, type Config } from 'model/config';
 import { EntityTypes } from 'interface/entity';
-import MainApp from 'infra/MainApp';
+import type MainApp from 'infra/MainApp';
 import type NoteTree from 'model/NoteTree';
 
 const defaultConfig: Config = {
@@ -17,12 +16,11 @@ const defaultConfig: Config = {
 };
 
 export default class ConfigService {
-  constructor() {
+  constructor(private readonly mainApp: MainApp) {
     makeObservable(this);
     this.init();
   }
 
-  private mainApp = container.resolve(MainApp);
   @observable.ref targetTree?: NoteTree;
   @observable private config?: Config;
 

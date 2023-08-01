@@ -1,6 +1,7 @@
 import browser, { type Tabs } from 'webextension-polyfill';
 import { singleton, container } from 'tsyringe';
-import { computed, action, makeObservable, observable, runInAction, reaction } from 'mobx';
+import { computed, action, makeObservable, observable, runInAction } from 'mobx';
+import delay from 'lodash/delay';
 
 import { type Task, type CancelEvent, TaskTypes, EventNames } from 'model/task';
 import EventBus from 'infra/EventBus';
@@ -17,10 +18,10 @@ const sessionTaskManager = getRemoteApi<SessionTaskManager>();
 @singleton()
 export default class TaskService {
   @observable tasks: Required<Task>[] = [];
-  @observable private targetTabId?: NonNullable<Tabs.Tab['id']>;
-  readonly config = new ConfigService();
+  @observable targetTab?: Tabs.Tab;
   private readonly eventBus = new EventBus();
   private readonly mainApp = container.resolve(MainApp);
+  readonly config = new ConfigService(this.mainApp);
   @observable private isPageReady = false;
 
   constructor() {
@@ -28,25 +29,30 @@ export default class TaskService {
     this.init();
     this.eventBus.on(EventNames.CancelTask, this.handleCancel.bind(this));
     this.eventBus.on(EventNames.FinishTask, ({ taskId }) => this.handleFinish(taskId));
+    this.eventBus.on(EventNames.Preview, () => window.close());
   }
 
   private async init() {
     const tasks = await sessionTaskManager.getTasks();
-    const targetTabId = await TaskService.getTargetTabId();
-    const pageApi = getRemoteApi<typeof WebPageService>(targetTabId);
+    const targetTab = await TaskService.getTargetTab();
+    const pageApi = getRemoteApi<typeof WebPageService>(targetTab.id);
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const that = this;
 
-    pageApi.pageReady().then(
-      action(() => {
-        this.isPageReady = true;
-      }),
-    );
+    function getPageReady() {
+      pageApi.pageReady().then(
+        action(() => {
+          that.isPageReady = true;
+        }),
+        (e) => setTimeout(getPageReady, 1000),
+      );
+    }
 
+    getPageReady();
     runInAction(() => {
-      this.targetTabId = targetTabId;
+      this.targetTab = targetTab;
       this.tasks = tasks;
     });
-
-    reaction(() => this.config.get('targetEntityType'), this.config.updateTargetTree, { fireImmediately: true });
   }
 
   private handleCancel(e: CancelEvent) {
@@ -59,31 +65,45 @@ export default class TaskService {
 
   @computed
   get currentAction() {
-    if (typeof this.targetTabId === 'undefined') {
+    const { targetTab } = this;
+
+    if (!targetTab) {
       return undefined;
     }
 
-    return this.tasks.find((task) => task.tabId === this.targetTabId)?.type;
+    return this.tasks.find((task) => task.tabId === targetTab.id)?.type;
   }
 
   @computed
-  get isUnavailable() {
-    return !this.isPageReady || this.mainApp.status !== Statuses.Online || Boolean(this.currentAction);
+  get readyState() {
+    if (this.mainApp.status !== Statuses.Online) {
+      return 'APP_NOT_READY';
+    }
+
+    if (!this.isPageReady) {
+      return 'PAGE_NOT_READY';
+    }
+
+    if (this.currentAction) {
+      return 'DOING';
+    }
+
+    return 'READY';
   }
 
-  private static async getTargetTabId() {
+  private static async getTargetTab() {
     const tabs = await browser.tabs.query({
       active: true,
       currentWindow: true,
     });
 
-    const targetTabId = tabs[0]?.id;
+    const targetTab = tabs[0];
 
-    if (!targetTabId) {
+    if (!targetTab) {
       throw new Error('no target tab');
     }
 
-    return targetTabId;
+    return targetTab;
   }
 
   private handleFinish(taskId: Task['id']) {
@@ -104,11 +124,15 @@ export default class TaskService {
   }
 
   async addTask(action: TaskTypes) {
-    if (typeof this.targetTabId === 'undefined') {
+    if (!this.targetTab?.id) {
       throw new Error('not ready');
     }
 
-    await sessionTaskManager.add(this.targetTabId, action);
-    window.close();
+    const newTask = await sessionTaskManager.add(this.targetTab.id, action);
+    this.tasks.push(newTask);
+
+    if ([TaskTypes.SelectElement, TaskTypes.SelectElementText, TaskTypes.ScreenShot].includes(action)) {
+      window.close();
+    }
   }
 }

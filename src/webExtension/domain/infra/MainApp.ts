@@ -26,8 +26,7 @@ interface Payload extends TaskResult {
 }
 
 export default class MainApp {
-  @observable status: Statuses | string = Statuses.NotReady;
-  private token?: string;
+  @observable status: Statuses = Statuses.NotReady;
 
   constructor(checkOnline?: true) {
     makeObservable(this);
@@ -35,15 +34,15 @@ export default class MainApp {
   }
 
   private async init(checkOnline?: true) {
-    this.token = (await browser.storage.local.get(TOKEN_KEY))[TOKEN_KEY];
-
     if (checkOnline) {
       this.checkOnline();
     }
   }
 
-  async checkOnline() {
-    if (!this.token) {
+  private async checkOnline() {
+    const token = await this.getToken();
+
+    if (!token) {
       runInAction(() => {
         this.status = Statuses.EmptyToken;
       });
@@ -51,7 +50,7 @@ export default class MainApp {
     }
 
     try {
-      const res = await fetch(`${HOST}/ping`, { headers: { Authorization: this.token } });
+      const res = await fetch(`${HOST}/ping`, { headers: { Authorization: token } });
 
       runInAction(() => {
         if (res.status === 200) {
@@ -59,24 +58,31 @@ export default class MainApp {
         } else if (res.status === 403) {
           this.status = Statuses.InvalidToken;
         } else {
-          this.status = `${res.status} ${res.statusText}`;
+          this.status = Statuses.ConnectionFailure;
         }
       });
-    } catch {
+    } catch (e) {
       runInAction(() => {
         this.status = Statuses.ConnectionFailure;
       });
+
+      setTimeout(this.checkOnline.bind(this), 1000);
     }
   }
 
   setToken(token: string) {
     browser.storage.local.set({ [TOKEN_KEY]: token });
-    this.token = token;
     this.checkOnline();
   }
 
+  private async getToken() {
+    return (await browser.storage.local.get(TOKEN_KEY))[TOKEN_KEY];
+  }
+
   private async fetch<T, K = void>(method: 'GET' | 'POST' | 'PUT' | 'PATCH', url: string, body?: K) {
-    if (!this.token) {
+    const token = await this.getToken();
+
+    if (!token) {
       throw new Error('no token');
     }
     // there is no `window` in background env. so use `globalThis`
@@ -84,7 +90,7 @@ export default class MainApp {
       method,
       body: body instanceof FormData ? body : body ? JSON.stringify(body) : undefined,
       headers: {
-        Authorization: this.token,
+        Authorization: token,
         ...(body ? { 'Content-Type': body instanceof FormData ? 'multipart/form-data' : 'application/json' } : null),
       },
     });

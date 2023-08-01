@@ -1,12 +1,11 @@
 import { observer } from 'mobx-react-lite';
 import { CaretDownFilled } from '@ant-design/icons';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useContext } from 'react';
 import { useClick, useFloating, useInteractions, offset } from '@floating-ui/react';
-import { container } from 'tsyringe';
 import { useClickAway } from 'ahooks';
 
-import TaskService from 'service/TaskService';
 import Tree from 'components/Tree';
+import ctx from '../Context';
 
 export default observer(function () {
   const [isOpen, setIsOpen] = useState(false);
@@ -19,7 +18,7 @@ export default observer(function () {
 
   const click = useClick(context);
   const { getReferenceProps, getFloatingProps } = useInteractions([click]);
-  const { config } = container.resolve(TaskService);
+  const { configService: config } = useContext(ctx);
 
   useEffect(() => {
     if (config.targetTree) {

@@ -31,6 +31,7 @@ export enum EventNames {
   CancelTask = 'CANCEL_TASK',
   Submit = 'Submit',
   FinishTask = 'Finish_TASK',
+  Preview = 'PREVIEW',
 }
 
 export interface StartTaskEvent {

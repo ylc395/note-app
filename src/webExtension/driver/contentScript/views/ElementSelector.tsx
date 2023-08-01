@@ -4,11 +4,16 @@ import { useCallback, useContext, useEffect } from 'react';
 
 import ctx from './Context';
 import { coverElementMiddleware } from 'components/floatingMiddleware';
+import { TaskTypes } from 'model/task';
 
 export default observer(function ElementSelector() {
   const { clipService } = useContext(ctx);
   const { floatingStyles, refs } = useFloating({ middleware: coverElementMiddleware });
-  const isEnabled = clipService.mode === 'element-select';
+  const isEnabled =
+    clipService.activeTask &&
+    !clipService.isLoading &&
+    !clipService.activeTaskResult &&
+    [TaskTypes.SelectElement, TaskTypes.SelectElementText].includes(clipService.activeTask.type);
 
   const handleClick = useCallback(
     (e: Event) => {
