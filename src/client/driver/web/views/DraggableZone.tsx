@@ -9,7 +9,6 @@ import TabItem from './Workbench/TabBar/TabItem';
 import NoteTree from './Explorer/Note/TreeView/DraggingTreeView';
 import EditorView from 'model/abstract/EditorView';
 
-// eslint-disable-next-line mobx/missing-observer
 export function DragPreview() {
   const { active } = useDndContext();
   const { noteTree } = container.resolve(NoteService);
@@ -28,7 +27,6 @@ export function DragPreview() {
   );
 }
 
-// eslint-disable-next-line mobx/missing-observer
 export function DraggableZone({ children }: { children: ReactNode }) {
   const sensors = useSensors(
     useSensor(MouseSensor, {

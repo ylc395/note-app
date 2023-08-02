@@ -19,7 +19,6 @@ interface Props {
   onClickOutside: () => void;
 }
 
-// eslint-disable-next-line mobx/missing-observer
 export function EmojiPicker({ onSelect, onClickOutside }: Props) {
   return (
     <EmojiMart
@@ -39,7 +38,6 @@ export interface EmojiProps {
 }
 
 let inited = false;
-// eslint-disable-next-line mobx/missing-observer
 export function Emoji({ id, className, size }: EmojiProps) {
   useEffect(() => {
     if (inited) {

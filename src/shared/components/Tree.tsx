@@ -5,7 +5,7 @@ import { observer } from 'mobx-react-lite';
 import type { TreeNode as TreeNodeModel, EntityWithParent } from 'model/Tree';
 import type TreeModel from 'model/Tree';
 
-const TreeNode = observer(function ({
+const TreeNode = observer(function TreeNode({
   node,
   level,
   tree,

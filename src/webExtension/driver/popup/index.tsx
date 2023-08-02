@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import { container } from 'tsyringe';
 import { createRoot } from 'react-dom/client';
 import MainApp from 'infra/MainApp';
+import 'utils/mobx';
 
 import App from './views/App';
 

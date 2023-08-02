@@ -9,7 +9,8 @@
       "interface/*": ["../shared/interface/*"],
       "service/*": ["domain/service/*"],
       "infra/*": ["domain/infra/*"],
-      "model/*": ["../shared/model/*", "domain/model/*"]
+      "model/*": ["../shared/model/*", "domain/model/*"],
+      "utils/*": ["../shared/utils/*"]
     }
   }
 }

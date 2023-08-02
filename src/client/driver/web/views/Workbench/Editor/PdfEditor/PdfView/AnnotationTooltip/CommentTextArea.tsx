@@ -1,7 +1,6 @@
 import { Input, Button } from 'antd';
 import { useState } from 'react';
 
-// eslint-disable-next-line mobx/missing-observer
 export default function CommentTextArea({
   onConfirm,
   defaultValue,

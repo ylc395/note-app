@@ -28,6 +28,9 @@ module.exports = {
     {
       files: ['*.ts', '*.tsx'],
       extends: ['plugin:tailwindcss/recommended', 'plugin:mobx/recommended'],
+      rules: {
+        'mobx/missing-observer': 'off', // checked in runtime
+      },
     },
     {
       files: ['*.tsx'],

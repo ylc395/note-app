@@ -1,4 +1,3 @@
-import { observer } from 'mobx-react-lite';
 import { ConfigProvider, message as antdMessage } from 'antd';
 import { useEffect } from 'react';
 
@@ -9,7 +8,7 @@ import './index.css';
 
 const getContainer = () => document.querySelector('#app') as HTMLElement;
 
-export default observer(function App() {
+export default function App() {
   useEffect(() => {
     antdMessage.config({ getContainer });
   }, []);
@@ -25,4 +24,4 @@ export default observer(function App() {
       </ConfigProvider>
     </DraggableZone>
   );
-});
+}

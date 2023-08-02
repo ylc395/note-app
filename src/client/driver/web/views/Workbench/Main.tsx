@@ -5,7 +5,6 @@ import TabBar from './TabBar';
 import Editor from './Editor';
 import type Tile from 'model/workbench/Tile';
 
-// eslint-disable-next-line mobx/missing-observer
 export default (function WorkbenchMain({ tileId }: { tileId: Tile['id'] }) {
   const { tileManager } = container.resolve(EditorService);
 

@@ -3,6 +3,8 @@ import 'tailwindcss/tailwind.css';
 
 import { exposeApi } from 'infra/remoteApi';
 import WebPageService from 'service/WebPageService';
+import 'utils/mobx';
+
 import App from './views/App';
 
 WebPageService.pageReady().then(() => {

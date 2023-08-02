@@ -1,11 +1,10 @@
-import { observer } from 'mobx-react-lite';
 import { Button, Tooltip } from 'antd';
 import { container } from 'tsyringe';
 import { ArrowLeftOutlined, ArrowRightOutlined, SettingOutlined } from '@ant-design/icons';
 
 import SyncService from 'service/SyncService';
 
-export default observer(function BottomBar() {
+export default function BottomBar() {
   const { startSync } = container.resolve(SyncService);
 
   return (
@@ -28,4 +27,4 @@ export default observer(function BottomBar() {
       </div>
     </div>
   );
-});
+}
