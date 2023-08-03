@@ -1,9 +1,10 @@
-import { useState, useCallback, useRef, useContext } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useFloating } from '@floating-ui/react';
 import { observer } from 'mobx-react-lite';
+import { container } from 'tsyringe';
 
+import ClipService from 'service/ClipService';
 import RectAreaSelector, { type Rect, type ReactAreaSelectorRef } from 'components/RectAreaSelector';
-import ctx from './Context';
 import { TaskTypes } from 'model/task';
 
 export default observer(function ScreenCapture() {
@@ -11,7 +12,7 @@ export default observer(function ScreenCapture() {
   const [target, setTarget] = useState<HTMLDivElement | null>(null);
   const selectorRef = useRef<ReactAreaSelectorRef | null>(null);
   const { refs, floatingStyles } = useFloating();
-  const { clipService } = useContext(ctx);
+  const clipService = container.resolve(ClipService);
 
   const isEnabled = !clipService.activeTaskResult && clipService.activeTask?.type === TaskTypes.ScreenShot;
   const setRefs = useCallback(

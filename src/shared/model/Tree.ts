@@ -24,7 +24,7 @@ export interface EntityWithParent {
 
 const VIRTUAL_ROOT_NODE_KEY = 'virtual-root-node';
 
-export default abstract class Tree<E extends EntityWithParent> extends Emitter<{
+export default abstract class Tree<E extends EntityWithParent = EntityWithParent> extends Emitter<{
   nodeSelected: [TreeNode];
   nodeExpanded: [TreeNode];
 }> {

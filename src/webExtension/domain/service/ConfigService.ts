@@ -1,10 +1,12 @@
 import browser from 'webextension-polyfill';
 import { observable, makeObservable, runInAction, action, computed } from 'mobx';
+import { singleton, container } from 'tsyringe';
 
 import { CONFIG_KEY, type Config } from 'model/config';
 import { EntityTypes } from 'interface/entity';
-import type MainApp from 'infra/MainApp';
+import { token as mainAppToken } from 'infra/MainApp';
 import type NoteTree from 'model/NoteTree';
+import type MaterialTree from 'model/MaterialTree';
 
 const defaultConfig: Config = {
   targetEntityType: EntityTypes.Material,
@@ -15,13 +17,16 @@ const defaultConfig: Config = {
   },
 };
 
+@singleton()
 export default class ConfigService {
-  constructor(private readonly mainApp: MainApp) {
+  private mainApp = container.resolve(mainAppToken);
+
+  constructor() {
     makeObservable(this);
     this.init();
   }
 
-  @observable.ref targetTree?: NoteTree;
+  @observable.ref targetTree?: NoteTree | MaterialTree;
   @observable private config?: Config;
 
   @computed
@@ -43,12 +48,17 @@ export default class ConfigService {
   }
 
   private async init() {
-    const config = await ConfigService.load();
+    const config = ((await browser.storage.local.get(CONFIG_KEY))[CONFIG_KEY] as Config | undefined) || defaultConfig;
     runInAction(() => (this.config = config));
-  }
 
-  static async load() {
-    return ((await browser.storage.local.get(CONFIG_KEY))[CONFIG_KEY] as Config | undefined) || defaultConfig;
+    browser.storage.onChanged.addListener(
+      action((e) => {
+        if (e[CONFIG_KEY]) {
+          const { newValue } = e[CONFIG_KEY];
+          this.config = newValue;
+        }
+      }),
+    );
   }
 
   @action
@@ -69,39 +79,38 @@ export default class ConfigService {
       throw new Error('no config');
     }
 
-    this.config[key] = value;
-    browser.storage.local.set({ [CONFIG_KEY]: this.config });
+    browser.storage.local.set({ [CONFIG_KEY]: { ...this.config, [key]: value } });
   }
 
   get<T extends keyof Config>(key: T): Config[T] | undefined {
     return this.config?.[key];
   }
 
-  readonly updateTargetTree = async () => {
-    const targetType = this.get('targetEntityType');
-    const targetId = targetType && this.get('targetEntityId')?.[targetType];
+  // readonly updateTargetTree = async () => {
+  //   const targetType = this.get('targetEntityType');
+  //   const targetId = targetType && this.get('targetEntityId')?.[targetType];
 
-    if (!targetType) {
-      return;
-    }
+  //   if (!targetType || targetType === EntityTypes.Memo) {
+  //     return;
+  //   }
 
-    this.targetTree?.destroy();
-    runInAction(() => (this.targetTree = undefined));
-    const tree = await this.mainApp.getTree(targetType, targetId);
+  //   this.targetTree?.destroy();
+  //   runInAction(() => (this.targetTree = undefined));
+  //   const tree = await this.mainApp.getTree<MaterialTree | NoteTree>(targetType, targetId);
 
-    if (this.targetTree) {
-      return;
-    }
+  //   if (this.targetTree || !tree) {
+  //     return;
+  //   }
 
-    tree.on('nodeSelected', ({ id }) => {
-      this.setTargetId(id);
-    });
+  //   tree.on('nodeSelected', ({ id }) => {
+  //     this.setTargetId(id);
+  //   });
 
-    tree.on('nodeExpanded', async ({ id }) => {
-      const children = await this.mainApp.getChildren(targetType, id);
-      tree.updateTree(children);
-    });
+  //   tree.on('nodeExpanded', async ({ id }) => {
+  //     const children = await this.mainApp.getChildren(targetType, id);
+  //     tree.updateTree(children);
+  //   });
 
-    runInAction(() => (this.targetTree = tree));
-  };
+  //   runInAction(() => (this.targetTree = tree));
+  // };
 }

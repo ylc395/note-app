@@ -34,7 +34,7 @@ build({
   build: {
     outDir,
     lib: {
-      entry: 'src/webExtension/driver/background.ts',
+      entry: 'src/webExtension/driver/background/index.ts',
       fileName: () => 'background.js',
       formats: ['es'],
     },

@@ -1,19 +1,45 @@
 import browser, { type Tabs } from 'webextension-polyfill';
 import { Emitter } from 'strict-event-emitter';
 import isObject from 'lodash/isObject';
+import noop from 'lodash/noop';
 
-import { EventNames, type StartTaskEvent, type SubmitEvent, type FinishEvent, type CancelEvent } from 'model/task';
+import { singleton } from 'tsyringe';
 
-interface TaskEventMap {
-  [EventNames.CancelTask]: CancelEvent;
-  [EventNames.FinishTask]: FinishEvent;
-  [EventNames.StartTask]: StartTaskEvent;
-  [EventNames.Submit]: SubmitEvent;
-  [EventNames.Preview]: void;
+import {
+  EventNames as TaskEventNames,
+  type StartTaskEvent,
+  type SubmitEvent,
+  type FinishEvent,
+  type CancelEvent,
+} from 'model/task';
+
+interface EventMap {
+  [TaskEventNames.CancelTask]: CancelEvent;
+  [TaskEventNames.FinishTask]: FinishEvent;
+  [TaskEventNames.StartTask]: StartTaskEvent;
+  [TaskEventNames.Submit]: SubmitEvent;
+  [TaskEventNames.Preview]: void;
 }
 
 const MESSAGE_TYPE = '__MOCK_EVENT';
 
+interface EventMessage {
+  type: typeof MESSAGE_TYPE;
+  event: string;
+  payload?: unknown;
+}
+
+const isEventMessage = (message: unknown): message is EventMessage => {
+  return (
+    isObject(message) &&
+    'type' in message &&
+    message.type === MESSAGE_TYPE &&
+    'event' in message &&
+    typeof message.event === 'string'
+  );
+};
+
+@singleton()
 export default class EventBus {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private emitter = new Emitter<any>();
@@ -23,29 +49,27 @@ export default class EventBus {
   }
 
   private readonly handleMessage = (message: unknown) => {
-    if (isObject(message) && 'type' in message && message.type === MESSAGE_TYPE) {
-      if ('event' in message && typeof message.event === 'string') {
-        if ('payload' in message) {
-          this.emitter.emit(message.event, message.payload);
-        } else {
-          this.emitter.emit(message.event);
-        }
-      } else {
-        throw new Error('invalid mock event');
-      }
+    if (!isEventMessage(message)) {
+      return;
+    }
+    if (message.payload) {
+      this.emitter.emit(message.event, message.payload);
+    } else {
+      this.emitter.emit(message.event);
     }
   };
 
-  emit<E extends keyof TaskEventMap>(eventName: E, e: TaskEventMap[E], tabId?: NonNullable<Tabs.Tab['id']>) {
-    const message = { type: MESSAGE_TYPE, event: eventName, payload: e };
-    browser.runtime.sendMessage(message);
+  emit<E extends keyof EventMap>(eventName: E, e: EventMap[E], tabId?: NonNullable<Tabs.Tab['id']>) {
+    const message: EventMessage = { type: MESSAGE_TYPE, event: eventName, payload: e };
+
+    browser.runtime.sendMessage(message).catch(noop);
 
     if (tabId) {
       browser.tabs.sendMessage(tabId, message);
     }
   }
 
-  on<E extends keyof TaskEventMap>(eventName: E, cb: (args: TaskEventMap[E]) => void) {
+  on<E extends keyof EventMap>(eventName: E, cb: (args: EventMap[E]) => void) {
     this.emitter.on(eventName, cb);
   }
 }

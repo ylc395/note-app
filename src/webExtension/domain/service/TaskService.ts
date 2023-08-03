@@ -1,27 +1,26 @@
 import browser, { type Tabs } from 'webextension-polyfill';
 import { singleton, container } from 'tsyringe';
 import { computed, action, makeObservable, observable, runInAction } from 'mobx';
-import delay from 'lodash/delay';
 
 import { type Task, type CancelEvent, TaskTypes, EventNames } from 'model/task';
 import EventBus from 'infra/EventBus';
-import MainApp, { Statuses } from 'infra/MainApp';
+import { Statuses, token as mainAppToken } from 'infra/MainApp';
 import { getRemoteApi } from 'infra/remoteApi';
 
 import ConfigService from './ConfigService';
 import HistoryService from './HistoryService';
-import type SessionTaskManager from './SessionTaskManger';
-import type WebPageService from './WebPageService';
-
-const sessionTaskManager = getRemoteApi<SessionTaskManager>();
+import { REMOTE_ID as SESSION_TASK_MANAGER_REMOTE_ID } from './SessionTaskManger';
+import { token as pageFactoryToken } from 'infra/page';
 
 @singleton()
 export default class TaskService {
+  private readonly sessionTaskManager = getRemoteApi(SESSION_TASK_MANAGER_REMOTE_ID);
   @observable tasks: Required<Task>[] = [];
   @observable targetTab?: Tabs.Tab;
-  private readonly eventBus = new EventBus();
-  private readonly mainApp = container.resolve(MainApp);
-  readonly config = new ConfigService(this.mainApp);
+  private readonly eventBus = container.resolve(EventBus);
+  @observable mainAppStatus = Statuses.NotReady;
+  private readonly mainApp = container.resolve(mainAppToken);
+  readonly config = container.resolve(ConfigService);
   @observable private isPageReady = false;
 
   constructor() {
@@ -32,27 +31,49 @@ export default class TaskService {
     this.eventBus.on(EventNames.Preview, () => window.close());
   }
 
+  private readonly getPage = container.resolve(pageFactoryToken);
+
   private async init() {
-    const tasks = await sessionTaskManager.getTasks();
     const targetTab = await TaskService.getTargetTab();
-    const pageApi = getRemoteApi<typeof WebPageService>(targetTab.id);
+    const page = this.getPage(targetTab.id);
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const that = this;
 
     function getPageReady() {
-      pageApi.pageReady().then(
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      page.ready!().then(
         action(() => {
           that.isPageReady = true;
         }),
-        (e) => setTimeout(getPageReady, 1000),
+        () => setTimeout(getPageReady, 1000),
       );
     }
 
     getPageReady();
+
+    const tasks = await this.sessionTaskManager.getTasks();
     runInAction(() => {
       this.targetTab = targetTab;
       this.tasks = tasks;
     });
+
+    this.updateAppStatus();
+  }
+
+  private async updateAppStatus() {
+    const mainAppStatus = await this.mainApp.getStatus();
+    runInAction(() => {
+      this.mainAppStatus = mainAppStatus;
+    });
+
+    if (mainAppStatus === Statuses.ConnectionFailure) {
+      setTimeout(this.updateAppStatus.bind(this), 1000);
+    }
+  }
+
+  async setMainAppToken(token: string) {
+    await this.mainApp.setToken(token);
+    this.updateAppStatus();
   }
 
   private handleCancel(e: CancelEvent) {
@@ -76,7 +97,7 @@ export default class TaskService {
 
   @computed
   get readyState() {
-    if (this.mainApp.status !== Statuses.Online) {
+    if (this.mainAppStatus !== Statuses.Online) {
       return 'APP_NOT_READY';
     }
 
@@ -128,7 +149,7 @@ export default class TaskService {
       throw new Error('not ready');
     }
 
-    const newTask = await sessionTaskManager.add(this.targetTab.id, action);
+    const newTask = await this.sessionTaskManager.add(this.targetTab.id, action);
     this.tasks.push(newTask);
 
     if ([TaskTypes.SelectElement, TaskTypes.SelectElementText, TaskTypes.ScreenShot].includes(action)) {

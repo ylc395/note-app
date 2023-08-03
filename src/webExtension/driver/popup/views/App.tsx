@@ -14,18 +14,21 @@ export default observer(function App() {
   const taskService = container.resolve(TaskService);
   const { readyState, targetTab } = taskService;
   const isVisible = readyState === 'READY' || readyState === 'DOING';
+  const isPageLoading = readyState === 'PAGE_NOT_READY';
 
   return (
     <div className="w-96 bg-gray-100 px-6">
       <h1 className="py-4 text-lg">StarNote Clipper</h1>
-      <p className="mb-4 truncate text-sm text-gray-400">当前页面：{targetTab?.url}</p>
       {isVisible && (
         <>
+          <p title={targetTab?.url} className="mb-4 truncate text-sm text-gray-400">
+            当前页面：{targetTab?.url}
+          </p>
           <TargetOption />
           <Menu />
         </>
       )}
-      {readyState === 'PAGE_NOT_READY' && (
+      {isPageLoading && (
         <div className="flex items-center justify-center py-4">
           <LoadingOutlined className="mr-2" />
           等待页面加载...

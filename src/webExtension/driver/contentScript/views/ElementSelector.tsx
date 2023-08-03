@@ -1,13 +1,14 @@
 import { useFloating } from '@floating-ui/react';
 import { observer } from 'mobx-react-lite';
-import { useCallback, useContext, useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
+import { container } from 'tsyringe';
 
-import ctx from './Context';
 import { coverElementMiddleware } from 'components/floatingMiddleware';
 import { TaskTypes } from 'model/task';
+import ClipService from 'service/ClipService';
 
 export default observer(function ElementSelector() {
-  const { clipService } = useContext(ctx);
+  const clipService = container.resolve(ClipService);
   const { floatingStyles, refs } = useFloating({ middleware: coverElementMiddleware });
   const isEnabled =
     clipService.activeTask &&

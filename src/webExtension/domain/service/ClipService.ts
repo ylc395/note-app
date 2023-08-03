@@ -2,12 +2,17 @@ import { getPageData, helper } from 'single-file-core/single-file';
 import Turndown from 'turndown';
 import { Readability } from '@mozilla/readability';
 import { action, makeObservable, observable, runInAction } from 'mobx';
+import { container, singleton } from 'tsyringe';
 
 import EventBus from 'infra/EventBus';
-import { getRemoteApi } from 'infra/remoteApi';
-import type WebPageService from 'service/WebPageService';
-import type { Rect } from 'components/RectAreaSelector';
+import { token as pageFactoryToken } from 'infra/page';
+
+import type NoteTree from 'model/NoteTree';
 import { type Task, type TaskResult, EventNames, TaskTypes } from 'model/task';
+import type MaterialTree from 'model/MaterialTree';
+
+import type { Rect } from 'components/RectAreaSelector';
+import ConfigService from './ConfigService';
 
 // single-file lib will modify the options. so use a option factory to always get a new option object
 const getCommonPageOptions = () => ({
@@ -22,13 +27,15 @@ const getCommonPageOptions = () => ({
 });
 
 const turndownService = new Turndown();
-const remoteApi = getRemoteApi<typeof WebPageService>();
 
+@singleton()
 export default class ClipService {
   @observable activeTask?: Task;
   @observable activeTaskResult?: TaskResult;
   @observable isLoading = false;
-  private readonly eventBus = new EventBus();
+  private readonly eventBus = container.resolve(EventBus);
+  @observable.ref targetTree?: NoteTree | MaterialTree;
+  readonly config = container.resolve(ConfigService);
 
   constructor() {
     this.eventBus.on(EventNames.StartTask, ({ task }) => this.startTask(task));
@@ -65,7 +72,8 @@ export default class ClipService {
   }
 
   async captureScreen(pos: Rect) {
-    const imgDataUrl = await remoteApi.captureScreen();
+    const page = container.resolve(pageFactoryToken)();
+    const imgDataUrl = await page.captureScreen();
     const imgEl = new Image();
     const canvasEl = document.createElement('canvas');
     canvasEl.width = pos.width * window.devicePixelRatio;

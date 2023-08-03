@@ -1,5 +1,5 @@
 module.exports = {
-  extends: ['eslint:recommended', 'plugin:lodash/recommended'],
+  extends: ['eslint:recommended'],
   plugins: ['lodash', 'mobx'],
   parserOptions: {
     ecmaVersion: 'latest',
@@ -7,13 +7,6 @@ module.exports = {
   },
   root: true,
   ignorePatterns: ['dist'],
-  rules: {
-    'lodash/prefer-lodash-typecheck': 'off',
-    'lodash/prefer-lodash-method': 'off',
-    'lodash/prefer-constant': 'off',
-    'lodash/prefer-immutable-method': 'off',
-    'lodash/path-style': 'off',
-  },
   overrides: [
     {
       files: ['*.ts', '*.tsx'],

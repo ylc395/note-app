@@ -1,16 +1,22 @@
 import browser, { type Tabs } from 'webextension-polyfill';
 import uniqueId from 'lodash/uniqueId';
+import { container } from 'tsyringe';
 
 import { type Task, type TaskTypes, type SubmitEvent, EventNames } from 'model/task';
 import EventBus from 'infra/EventBus';
-import MainApp from 'infra/MainApp';
+import { token as mainAppToken } from 'infra/MainApp';
+import type { RemoteCallable, RemoteId } from 'infra/remoteApi';
 
 import ConfigService from './ConfigService';
 import HistoryService from './HistoryService';
 
-export default class SessionTaskManager {
-  private readonly eventBus = new EventBus();
-  private mainApp = new MainApp();
+export const REMOTE_ID: RemoteId<SessionTaskManager> = 'SessionTaskManager';
+
+export default class SessionTaskManager implements RemoteCallable {
+  readonly __remoteId = REMOTE_ID as string;
+  private readonly eventBus = container.resolve(EventBus);
+  private readonly mainApp = container.resolve(mainAppToken);
+  private readonly config = container.resolve(ConfigService);
   private tasks: Required<Task>[] = [];
 
   getTasks() {
@@ -24,8 +30,14 @@ export default class SessionTaskManager {
 
   async add(tabId: NonNullable<Tabs.Tab['id']>, type: TaskTypes) {
     const tab = await browser.tabs.get(tabId);
-    const config = await ConfigService.load();
     const id = uniqueId('task-');
+    const targetType = this.config.get('targetEntityType');
+    const targetIds = this.config.get('targetEntityId');
+
+    if (!targetType || !targetIds) {
+      throw new Error('no config');
+    }
+
     const task: Required<Task> = {
       time: Date.now(),
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -35,8 +47,8 @@ export default class SessionTaskManager {
       type,
       tabId,
       id,
-      targetType: config.targetEntityType,
-      targetId: config.targetEntityId[config.targetEntityType],
+      targetType,
+      targetId: targetIds[targetType],
     };
 
     this.tasks.push(task);

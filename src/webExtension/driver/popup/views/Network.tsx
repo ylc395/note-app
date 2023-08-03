@@ -3,7 +3,8 @@ import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 
-import MainApp, { Statuses } from 'infra/MainApp';
+import { Statuses } from 'infra/MainApp';
+import TaskService from 'service/TaskService';
 
 const errorMessages = {
   [Statuses.EmptyToken]: '请填入 token 以连接至 App',
@@ -11,25 +12,27 @@ const errorMessages = {
 } as const;
 
 export default observer(function Network() {
-  const mainApp = container.resolve(MainApp);
+  const { mainAppStatus, setMainAppToken } = container.resolve(TaskService);
   const [token, setToken] = useState('');
 
   return (
     <div className="pb-2 text-gray-600">
-      {mainApp.status === Statuses.NotReady && <div>正在连接中...</div>}
-      {mainApp.status === Statuses.Online && <div>已连接 App</div>}
-      {mainApp.status === Statuses.ConnectionFailure && (
-        <div className="flex items-center py-3">
-          <ExclamationCircleOutlined className="mr-1" />
+      {mainAppStatus === Statuses.NotReady && <div>正在连接中...</div>}
+      {mainAppStatus === Statuses.Online && (
+        <div className="flex items-center before:mr-1 before:inline-block before:h-2 before:w-2 before:rounded-full before:bg-green-400">
+          已连接 App
+        </div>
+      )}
+      {mainAppStatus === Statuses.ConnectionFailure && (
+        <div className="flex items-center before:mr-1 before:inline-block before:h-2 before:w-2 before:rounded-full before:bg-red-400">
           无法连接至 App, 请检查 App 是否正在运行
         </div>
       )}
-      {(mainApp.status === Statuses.EmptyToken || mainApp.status === Statuses.InvalidToken) && (
+      {(mainAppStatus === Statuses.EmptyToken || mainAppStatus === Statuses.InvalidToken) && (
         <div>
-          <span className="mb-2 flex items-center text-red-400">
-            <ExclamationCircleOutlined className="mr-1" />
-            {errorMessages[mainApp.status]}
-          </span>
+          <div className="flex items-center before:mr-1 before:inline-block before:h-2 before:w-2 before:rounded-full before:bg-yellow-400">
+            {errorMessages[mainAppStatus]}
+          </div>
           <input
             className="mr-2 h-6 p-1 focus:outline-none"
             value={token}
@@ -39,7 +42,7 @@ export default observer(function Network() {
           <button
             className="h-6 cursor-pointer rounded-sm bg-gray-800 px-1 text-gray-100"
             disabled={!token}
-            onClick={() => mainApp.setToken(token)}
+            onClick={() => setMainAppToken(token)}
           >
             确认
           </button>
