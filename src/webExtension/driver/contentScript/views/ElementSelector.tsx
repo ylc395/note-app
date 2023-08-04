@@ -1,7 +1,8 @@
 import { useFloating } from '@floating-ui/react';
 import { observer } from 'mobx-react-lite';
-import { useCallback, useEffect } from 'react';
+import { useEffect } from 'react';
 import { container } from 'tsyringe';
+import { useMemoizedFn } from 'ahooks';
 
 import { coverElementMiddleware } from 'components/floatingMiddleware';
 import { TaskTypes } from 'model/task';
@@ -16,42 +17,30 @@ export default observer(function ElementSelector() {
     !clipService.activeTaskResult &&
     [TaskTypes.SelectElement, TaskTypes.SelectElementText].includes(clipService.activeTask.type);
 
-  const handleClick = useCallback(
-    (e: Event) => {
-      e.preventDefault();
-      e.stopImmediatePropagation();
+  const handleClick = useMemoizedFn((e: Event) => {
+    e.preventDefault();
+    e.stopImmediatePropagation();
 
-      if (e.target === refs.reference.current) {
-        clipService.clipElement(e.target as HTMLElement);
-      }
-    },
-    [clipService, refs.reference],
-  );
+    if (e.target === refs.reference.current) {
+      clipService.clipElement(e.target as HTMLElement);
+    }
+  });
 
-  const handleHover = useCallback(
-    (e: Event) => {
-      refs.setReference(e.target as HTMLElement);
-    },
-    [refs],
-  );
+  const handleHover = useMemoizedFn((e: Event) => {
+    refs.setReference(e.target as HTMLElement);
+  });
 
-  const handleContextmenu = useCallback(
-    (e: Event) => {
-      e.preventDefault();
-      e.stopImmediatePropagation();
+  const handleContextmenu = useMemoizedFn((e: Event) => {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    clipService.cancelByUser();
+  });
+
+  const handleKeyup = useMemoizedFn((e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
       clipService.cancelByUser();
-    },
-    [clipService],
-  );
-
-  const handleKeyup = useCallback(
-    (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        clipService.cancelByUser();
-      }
-    },
-    [clipService],
-  );
+    }
+  });
 
   useEffect(() => {
     if (isEnabled) {

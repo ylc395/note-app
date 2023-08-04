@@ -22,7 +22,7 @@ export default observer(function Modal() {
       <div className="text-right">
         {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
         <button onClick={() => clipService.submit(clipService.activeTaskResult!)}>确认</button>
-        <button onClick={() => clipService.cancelByUser()}>取消</button>
+        <button onClick={clipService.cancelByUser}>取消</button>
       </div>
     </div>
   ) : null;

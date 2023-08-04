@@ -1,13 +1,15 @@
-import { useState, useRef, forwardRef, useImperativeHandle, useCallback, useMemo } from 'react';
-import { useMouse, useEventListener, useKeyPress } from 'ahooks';
+import { useState, useRef, forwardRef, useImperativeHandle, useEffect } from 'react';
+import { useMouse, useEventListener, useKeyPress, useMemoizedFn, useRafState } from 'ahooks';
 import type { VirtualElement } from '@floating-ui/dom';
 
 interface Props {
   target: HTMLElement;
   pressedKey?: string;
   className?: string;
+  targetClassName?: string;
   onSelect: (pos: Rect) => void;
   onStart?: () => void;
+  onStop?: () => void;
 }
 
 export interface Rect {
@@ -21,41 +23,45 @@ export interface Rect {
 
 export interface ReactAreaSelectorRef extends VirtualElement {
   stop: () => void;
-  setRect: (cb: (pos: Rect) => Rect) => void;
+  setRect: (cb: (pos: Rect | null) => Rect) => void;
 }
 
+const emptyClientRect = {
+  width: 0,
+  height: 0,
+  x: 0,
+  y: 0,
+  top: 0,
+  right: 0,
+  bottom: 0,
+  left: 0,
+};
+
 export default forwardRef<ReactAreaSelectorRef, Props>(function RectAreaSelector(
-  { target, pressedKey, className, onSelect, onStart },
+  { target, pressedKey, className, targetClassName, onSelect, onStart, onStop },
   ref,
 ) {
   const { elementX, elementY, elementW, elementH } = useMouse(target);
   const [startPos, setStartPos] = useState<{ x: number; y: number } | null>(null);
-  const [rect, setRect] = useState<Rect | null>(null);
-  const [isKeyPressed, setIsKeyPressed] = useState(!pressedKey || false);
+  const [rect, setRect] = useRafState<Rect | null>(null);
+  const [isSelecting, setIsSelecting] = useState(!pressedKey || false);
   const rectRef = useRef<HTMLDivElement | null>(null);
 
-  const pos = useMemo(
-    () =>
-      rect ||
-      (startPos
-        ? {
-            [elementX > startPos.x ? 'left' : 'right']: elementX > startPos.x ? startPos.x : elementW - startPos.x,
-            [elementY > startPos.y ? 'top' : 'bottom']: elementY > startPos.y ? startPos.y : elementH - startPos.y,
-            width: Math.min(
-              Math.abs(elementX - startPos.x),
-              elementX > startPos.x ? elementW - startPos.x : startPos.x,
-            ),
-            height: Math.min(
-              Math.abs(elementY - startPos.y),
-              elementY > startPos.y ? elementH - startPos.y : startPos.y,
-            ),
-          }
-        : null),
-    [elementH, elementW, elementX, elementY, rect, startPos],
-  );
+  if (startPos) {
+    setRect({
+      [elementX > startPos.x ? 'left' : 'right']: elementX > startPos.x ? startPos.x : elementW - startPos.x,
+      [elementY > startPos.y ? 'top' : 'bottom']: elementY > startPos.y ? startPos.y : elementH - startPos.y,
+      width: Math.min(Math.abs(elementX - startPos.x), elementX > startPos.x ? elementW - startPos.x : startPos.x),
+      height: Math.min(Math.abs(elementY - startPos.y), elementY > startPos.y ? elementH - startPos.y : startPos.y),
+    });
+  }
+
+  if (!isSelecting && startPos) {
+    setStartPos(null);
+  }
 
   const start = () => {
-    if (!isKeyPressed) {
+    if (!isSelecting) {
       return;
     }
 
@@ -63,18 +69,20 @@ export default forwardRef<ReactAreaSelectorRef, Props>(function RectAreaSelector
     onStart?.();
   };
 
-  const stop = useCallback(() => {
+  const stop = useMemoizedFn((e?: MouseEvent) => {
+    e?.preventDefault();
     setStartPos(null);
     setRect(null);
-  }, []);
+    onStop?.();
+  });
 
   const select = () => {
-    if (!pos || rect) {
+    if (!rect) {
       return;
     }
 
-    onSelect(pos);
-    setRect(pos);
+    onSelect(rect);
+    setIsSelecting(false);
 
     // prevent click event after mouseup event
     window.addEventListener(
@@ -89,29 +97,29 @@ export default forwardRef<ReactAreaSelectorRef, Props>(function RectAreaSelector
 
   useEventListener('mousedown', start, { target });
   useEventListener('mouseup', select);
+  useEventListener('contextmenu', stop, { target });
 
-  useKeyPress(pressedKey || '', () => setIsKeyPressed(true), { events: ['keydown'] });
-  useKeyPress(pressedKey || '', () => setIsKeyPressed(false), { events: ['keyup'] });
+  useKeyPress(pressedKey || '', () => setIsSelecting(true), { events: ['keydown'] });
+  useKeyPress(pressedKey || '', () => setIsSelecting(false), { events: ['keyup'] });
 
   useImperativeHandle(
     ref,
     () => ({
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      getBoundingClientRect: () => rectRef.current!.getBoundingClientRect(),
-      setRect: (cb: (pos: Rect) => Rect) => {
-        if (!pos) {
-          throw new Error('pos not existed');
-        }
-        setRect(cb(pos));
-      },
+      getBoundingClientRect: () => rectRef.current?.getBoundingClientRect() || emptyClientRect,
+      setRect: (cb) => setRect(cb(rect)),
       stop,
     }),
-    [pos, stop],
+    [rect, setRect, stop],
   );
 
-  if (!isKeyPressed && startPos) {
-    setStartPos(null);
-  }
+  useEffect(() => {
+    if (isSelecting && targetClassName) {
+      const classes = targetClassName.split(/\s+/);
+      target.classList.add(...classes);
 
-  return pos ? <div ref={rectRef} className={className} style={{ ...pos, position: 'absolute' }}></div> : null;
+      return () => target.classList.remove(...classes);
+    }
+  }, [isSelecting, target, targetClassName]);
+
+  return rect ? <div ref={rectRef} className={className} style={{ ...rect, position: 'absolute' }}></div> : null;
 });

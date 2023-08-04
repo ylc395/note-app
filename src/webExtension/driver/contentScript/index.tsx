@@ -1,7 +1,6 @@
 import 'reflect-metadata';
 import { container } from 'tsyringe';
 import { createRoot } from 'react-dom/client';
-import 'tailwindcss/tailwind.css';
 
 import { exposeApi, getRemoteApi } from 'infra/remoteApi';
 import { token as mainAppToken, REMOTE_ID as MAIN_APP_REMOTE_ID } from 'infra/MainApp';

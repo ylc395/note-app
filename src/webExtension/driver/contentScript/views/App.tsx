@@ -4,6 +4,7 @@ import Modal from './Modal';
 import ScreenCapture from './ScreenCapture';
 import ElementSelector from './ElementSelector';
 import Loading from './Loading';
+import './index.css';
 
 const styleUrl = browser.runtime.getURL('content-script/style.css');
 

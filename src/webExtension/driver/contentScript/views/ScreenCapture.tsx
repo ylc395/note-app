@@ -1,7 +1,8 @@
-import { useState, useCallback, useRef } from 'react';
-import { useFloating } from '@floating-ui/react';
+import { useState, useRef, useEffect } from 'react';
+import { useFloating, offset } from '@floating-ui/react';
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
+import { useMemoizedFn } from 'ahooks';
 
 import ClipService from 'service/ClipService';
 import RectAreaSelector, { type Rect, type ReactAreaSelectorRef } from 'components/RectAreaSelector';
@@ -11,19 +12,18 @@ export default observer(function ScreenCapture() {
   const [rect, setRect] = useState<null | Rect>(null);
   const [target, setTarget] = useState<HTMLDivElement | null>(null);
   const selectorRef = useRef<ReactAreaSelectorRef | null>(null);
-  const { refs, floatingStyles } = useFloating();
+  const { refs, floatingStyles } = useFloating({
+    middleware: [offset(16)],
+  });
   const clipService = container.resolve(ClipService);
 
   const isEnabled = !clipService.activeTaskResult && clipService.activeTask?.type === TaskTypes.ScreenShot;
-  const setRefs = useCallback(
-    (ref: ReactAreaSelectorRef | null) => {
-      refs.setReference(ref);
-      selectorRef.current = ref;
-    },
-    [refs],
-  );
+  const setRefs = useMemoizedFn((ref: ReactAreaSelectorRef | null) => {
+    refs.setReference(ref);
+    selectorRef.current = ref;
+  });
 
-  const _onConfirm = useCallback(async () => {
+  const _onConfirm = async () => {
     if (!rect) {
       throw new Error('no pos');
     }
@@ -31,16 +31,44 @@ export default observer(function ScreenCapture() {
     await clipService.captureScreen(rect);
     setRect(null);
     selectorRef.current?.stop();
-  }, [clipService, rect]);
+  };
+
+  if (!isEnabled && rect) {
+    setRect(null);
+  }
+
+  useEffect(() => {
+    if (target) {
+      const bodyStyle = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+
+      return () => {
+        document.body.style.overflow = bodyStyle;
+      };
+    }
+  }, [target]);
 
   return isEnabled ? (
-    <div ref={setTarget} className="fixed inset-0">
+    <div ref={setTarget} className="fixed inset-0 z-[999]">
+      <div className="message pointer-events-none top-16 select-none">按住鼠标左键，拖拽选择一块区域。点击右键取消</div>
       {target && (
-        <RectAreaSelector className="bg-yellow-50 opacity-40" onSelect={setRect} target={target} ref={setRefs} />
+        <RectAreaSelector
+          targetClassName="cursor-crosshair"
+          className="bg-blue-200 opacity-40"
+          onSelect={setRect}
+          onStop={clipService.cancelByUser}
+          target={target}
+          ref={setRefs}
+        />
       )}
       {rect && (
-        <button onClick={_onConfirm} ref={refs.setFloating} style={floatingStyles}>
-          Capture
+        <button
+          className="cursor-pointer rounded-lg border-none bg-gray-800 px-2 py-1 text-sm text-gray-200"
+          onClick={_onConfirm}
+          ref={refs.setFloating}
+          style={floatingStyles}
+        >
+          保存
         </button>
       )}
     </div>

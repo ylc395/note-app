@@ -30,7 +30,7 @@ export default observer(function Menu() {
 
   return (
     <div>
-      <ul className="list-none">
+      <ul>
         {ACTIONS.map((action) => {
           const { visible, text } = ACTION_TEXT_MAP[action];
 

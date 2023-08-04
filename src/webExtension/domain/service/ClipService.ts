@@ -3,6 +3,7 @@ import Turndown from 'turndown';
 import { Readability } from '@mozilla/readability';
 import { action, makeObservable, observable, runInAction } from 'mobx';
 import { container, singleton } from 'tsyringe';
+import pageLifecycle from 'page-lifecycle';
 
 import EventBus from 'infra/EventBus';
 import { token as pageFactoryToken } from 'infra/page';
@@ -41,7 +42,11 @@ export default class ClipService {
     this.eventBus.on(EventNames.StartTask, ({ task }) => this.startTask(task));
     this.eventBus.on(EventNames.CancelTask, ({ error }) => error && this.cancelByError(error));
     this.eventBus.on(EventNames.FinishTask, this.reset.bind(this));
-    window.addEventListener('pagehide', this.cancelByUser.bind(this));
+    pageLifecycle.addEventListener('statechange', ({ newState }: { newState: string }) => {
+      if (newState === 'terminated') {
+        this.cancelByUser();
+      }
+    });
     makeObservable(this);
   }
 
@@ -169,14 +174,14 @@ export default class ClipService {
     }
   }
 
-  cancelByUser() {
+  readonly cancelByUser = () => {
     if (!this.activeTask) {
       return;
     }
 
     this.eventBus.emit(EventNames.CancelTask, { taskId: this.activeTask.id });
     this.reset();
-  }
+  };
 
   private cancelByError(error: string) {
     if (!this.activeTask) {
