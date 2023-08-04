@@ -1,10 +1,9 @@
 import { container } from 'tsyringe';
 import { observer } from 'mobx-react-lite';
 import { useState } from 'react';
-import { ExclamationCircleOutlined } from '@ant-design/icons';
 
 import { Statuses } from 'infra/MainApp';
-import TaskService from 'service/TaskService';
+import MainAppService from 'service/MainAppService';
 
 const errorMessages = {
   [Statuses.EmptyToken]: '请填入 token 以连接至 App',
@@ -12,26 +11,26 @@ const errorMessages = {
 } as const;
 
 export default observer(function Network() {
-  const { mainAppStatus, setMainAppToken } = container.resolve(TaskService);
+  const { status, setToken: setMainAppToken } = container.resolve(MainAppService);
   const [token, setToken] = useState('');
 
   return (
     <div className="pb-2 text-gray-600">
-      {mainAppStatus === Statuses.NotReady && <div>正在连接中...</div>}
-      {mainAppStatus === Statuses.Online && (
+      {status === Statuses.NotReady && <div>正在连接中...</div>}
+      {status === Statuses.Online && (
         <div className="flex items-center before:mr-1 before:inline-block before:h-2 before:w-2 before:rounded-full before:bg-green-400">
           已连接 App
         </div>
       )}
-      {mainAppStatus === Statuses.ConnectionFailure && (
+      {status === Statuses.ConnectionFailure && (
         <div className="flex items-center before:mr-1 before:inline-block before:h-2 before:w-2 before:rounded-full before:bg-red-400">
           无法连接至 App, 请检查 App 是否正在运行
         </div>
       )}
-      {(mainAppStatus === Statuses.EmptyToken || mainAppStatus === Statuses.InvalidToken) && (
+      {(status === Statuses.EmptyToken || status === Statuses.InvalidToken) && (
         <div>
           <div className="flex items-center before:mr-1 before:inline-block before:h-2 before:w-2 before:rounded-full before:bg-yellow-400">
-            {errorMessages[mainAppStatus]}
+            {errorMessages[status]}
           </div>
           <input
             className="mr-2 h-6 p-1 focus:outline-none"

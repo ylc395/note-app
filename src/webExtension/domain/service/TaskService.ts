@@ -4,22 +4,21 @@ import { computed, action, makeObservable, observable, runInAction } from 'mobx'
 
 import { type Task, type CancelEvent, TaskTypes, EventNames } from 'model/task';
 import EventBus from 'infra/EventBus';
-import { Statuses, token as mainAppToken } from 'infra/MainApp';
-import { getRemoteApi } from 'infra/remoteApi';
+import { Statuses } from 'infra/MainApp';
+import { token as pageFactoryToken } from 'infra/page';
 
 import ConfigService from './ConfigService';
 import HistoryService from './HistoryService';
-import { REMOTE_ID as SESSION_TASK_MANAGER_REMOTE_ID } from './SessionTaskManger';
-import { token as pageFactoryToken } from 'infra/page';
+import SessionTaskManger from './SessionTaskManger';
+import MainAppService from './MainAppService';
 
 @singleton()
 export default class TaskService {
-  private readonly sessionTaskManager = getRemoteApi(SESSION_TASK_MANAGER_REMOTE_ID);
+  private readonly sessionTaskManager = container.resolve(SessionTaskManger);
+  private readonly mainAppService = container.resolve(MainAppService);
   @observable tasks: Required<Task>[] = [];
   @observable targetTab?: Tabs.Tab;
   private readonly eventBus = container.resolve(EventBus);
-  @observable mainAppStatus = Statuses.NotReady;
-  private readonly mainApp = container.resolve(mainAppToken);
   readonly config = container.resolve(ConfigService);
   @observable private isPageReady = false;
 
@@ -56,24 +55,6 @@ export default class TaskService {
       this.targetTab = targetTab;
       this.tasks = tasks;
     });
-
-    this.updateAppStatus();
-  }
-
-  private async updateAppStatus() {
-    const mainAppStatus = await this.mainApp.getStatus();
-    runInAction(() => {
-      this.mainAppStatus = mainAppStatus;
-    });
-
-    if (mainAppStatus === Statuses.ConnectionFailure) {
-      setTimeout(this.updateAppStatus.bind(this), 1000);
-    }
-  }
-
-  async setMainAppToken(token: string) {
-    await this.mainApp.setToken(token);
-    this.updateAppStatus();
   }
 
   private handleCancel(e: CancelEvent) {
@@ -97,7 +78,7 @@ export default class TaskService {
 
   @computed
   get readyState() {
-    if (this.mainAppStatus !== Statuses.Online) {
+    if (this.mainAppService.status !== Statuses.Online) {
       return 'APP_NOT_READY';
     }
 

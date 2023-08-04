@@ -22,9 +22,8 @@ export interface Payload extends TaskResult {
 
 export interface MainApp extends RemoteCallable {
   setToken: (token: string) => Promise<void>;
-  // getTree: <T extends Tree>(type: EntityTypes, id?: EntityId | null) => Promise<T>;
-  save: (saveAs: EntityTypes, payload: Payload) => Promise<void>;
   getStatus: () => Promise<Statuses>;
+  fetch<T, K = void>(method: 'GET' | 'POST' | 'PUT' | 'PATCH', url: string, body?: K): Promise<T | null>;
 }
 
 export const token: InjectionToken<MainApp> = Symbol();

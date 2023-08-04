@@ -10,8 +10,8 @@ import { token as pageFactoryToken } from 'infra/page';
 import type NoteTree from 'model/NoteTree';
 import { type Task, type TaskResult, EventNames, TaskTypes } from 'model/task';
 import type MaterialTree from 'model/MaterialTree';
-
 import type { Rect } from 'components/RectAreaSelector';
+
 import ConfigService from './ConfigService';
 
 // single-file lib will modify the options. so use a option factory to always get a new option object

@@ -4,18 +4,18 @@ import { container } from 'tsyringe';
 
 import { type Task, type TaskTypes, type SubmitEvent, EventNames } from 'model/task';
 import EventBus from 'infra/EventBus';
-import { token as mainAppToken } from 'infra/MainApp';
 import type { RemoteCallable, RemoteId } from 'infra/remoteApi';
 
 import ConfigService from './ConfigService';
 import HistoryService from './HistoryService';
+import MainAppService from './MainAppService';
 
 export const REMOTE_ID: RemoteId<SessionTaskManager> = 'SessionTaskManager';
 
 export default class SessionTaskManager implements RemoteCallable {
   readonly __remoteId = REMOTE_ID as string;
   private readonly eventBus = container.resolve(EventBus);
-  private readonly mainApp = container.resolve(mainAppToken);
+  private readonly mainApp = container.resolve(MainAppService);
   private readonly config = container.resolve(ConfigService);
   private tasks: Required<Task>[] = [];
 
