@@ -1,6 +1,5 @@
 module.exports = {
   extends: ['eslint:recommended'],
-  plugins: ['lodash', 'mobx'],
   parserOptions: {
     ecmaVersion: 'latest',
     sourceType: 'module',
@@ -11,35 +10,36 @@ module.exports = {
     {
       files: ['*.ts', '*.tsx'],
       parser: '@typescript-eslint/parser',
-      extends: ['plugin:@typescript-eslint/recommended', 'plugin:react-hooks/recommended', 'plugin:react/recommended'],
-      settings: {
-        react: {
-          version: 'detect',
-        },
-      },
-    },
-    {
-      files: ['*.ts', '*.tsx'],
-      extends: ['plugin:tailwindcss/recommended', 'plugin:mobx/recommended'],
+      extends: ['plugin:mobx/recommended', 'plugin:@typescript-eslint/recommended'],
       rules: {
         'mobx/missing-observer': 'off', // checked in runtime
       },
     },
     {
       files: ['*.tsx'],
-      extends: ['plugin:react/jsx-runtime'],
+      extends: [
+        'plugin:tailwindcss/recommended',
+        'plugin:react-hooks/recommended',
+        'plugin:react/recommended',
+        'plugin:react/jsx-runtime',
+      ],
+      rules: {
+        'no-restricted-syntax': [
+          'error',
+          {
+            selector: "CallExpression[callee.name='useCallback']",
+            message: 'Do not useCallback. Use `useMemoizedFn` from ahooks if you really want to cache a function',
+          },
+        ],
+      },
     },
     {
       files: ['*Controller.ts'],
       rules: { '@typescript-eslint/explicit-function-return-type': 'error' },
     },
     {
-      files: ['./*.js', 'test/**/*', 'script/**/*', 'src/client/driver/electron/**/*'],
+      files: ['*.js', 'test/**/*', 'src/client/driver/electron/**/*'],
       env: { node: true },
-    },
-    {
-      files: ['src/client/driver/web/**/*'],
-      env: { browser: true },
     },
   ],
 };
