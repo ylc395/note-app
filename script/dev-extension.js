@@ -4,6 +4,8 @@ const { checker } = require('vite-plugin-checker');
 const { default: tsconfigPaths } = require('vite-tsconfig-paths');
 const { copyFileSync, emptyDirSync } = require('fs-extra');
 const chokidar = require('chokidar');
+const react = require('@vitejs/plugin-react-swc');
+const compact = require('lodash/compact');
 
 const outDir = path.resolve('dist/webExtension');
 const tsconfigPath = path.resolve('src/webExtension/tsconfig.json');
@@ -13,7 +15,12 @@ const define = {
   'process.env.NODE_ENV': JSON.stringify('development'),
 };
 
-const getPlugins = () => [checker({ typescript: { tsconfigPath } }), tsconfigPaths({ projects: [tsconfigPath] })];
+const getPlugins = (useReact) =>
+  compact([
+    checker({ typescript: { tsconfigPath } }),
+    tsconfigPaths({ projects: [tsconfigPath] }),
+    useReact && react({ tsDecorators: true }),
+  ]);
 
 const COMMON_BUILD_OPTIONS = {
   minify: false,
@@ -62,7 +69,7 @@ build({
   css: {
     postcss: `${CONTENT_SCRIPT_DIR}/postcss.config.js`,
   },
-  plugins: getPlugins(),
+  plugins: getPlugins(true),
   define,
 });
 
@@ -74,6 +81,6 @@ build({
     outDir: path.join(outDir, 'popup'),
     ...COMMON_BUILD_OPTIONS,
   },
-  plugins: getPlugins(),
+  plugins: getPlugins(true),
   define,
 });

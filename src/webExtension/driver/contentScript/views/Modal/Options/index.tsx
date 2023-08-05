@@ -1,20 +1,18 @@
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 
-import TaskService from 'service/TaskService';
 import { EntityTypes } from 'interface/entity';
+import ClipService from 'service/ClipService';
 
 export default observer(function Options() {
-  const { config, readyState } = container.resolve(TaskService);
+  const { activeTask } = container.resolve(ClipService);
 
   return (
-    <div className="mb-4 flex h-6 items-center text-sm text-gray-700">
-      <label className="text-gray-400">保存为：</label>
+    <div>
       <select
-        disabled={readyState === 'DOING'}
+        disabled
         className="mr-2 rounded-md py-1 pl-1 shadow-sm focus:outline-none"
-        value={config.get('targetEntityType')}
-        onChange={(e) => config.set('targetEntityType', Number(e.target.value) as EntityTypes)}
+        value={activeTask?.targetType}
       >
         <option value={EntityTypes.Material}>材料</option>
         <option value={EntityTypes.Note}>笔记</option>

@@ -8,6 +8,8 @@ import ClipService from 'service/ClipService';
 import RectAreaSelector, { type Rect, type ReactAreaSelectorRef } from 'components/RectAreaSelector';
 import { TaskTypes } from 'model/task';
 
+import usePreventScroll from './hooks/usePreventScroll';
+
 export default observer(function ScreenCapture() {
   const [rect, setRect] = useState<null | Rect>(null);
   const [target, setTarget] = useState<HTMLDivElement | null>(null);
@@ -37,16 +39,7 @@ export default observer(function ScreenCapture() {
     setRect(null);
   }
 
-  useEffect(() => {
-    if (target) {
-      const bodyStyle = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-
-      return () => {
-        document.body.style.overflow = bodyStyle;
-      };
-    }
-  }, [target]);
+  usePreventScroll(Boolean(target));
 
   return isEnabled ? (
     <div ref={setTarget} className="fixed inset-0 z-[999]">
@@ -62,12 +55,7 @@ export default observer(function ScreenCapture() {
         />
       )}
       {rect && (
-        <button
-          className="cursor-pointer rounded-lg border-none bg-gray-800 px-2 py-1 text-sm text-gray-200"
-          onClick={_onConfirm}
-          ref={refs.setFloating}
-          style={floatingStyles}
-        >
+        <button className="button text-sm" onClick={_onConfirm} ref={refs.setFloating} style={floatingStyles}>
           保存
         </button>
       )}

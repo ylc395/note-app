@@ -4,4 +4,8 @@
   .message {
     @apply fixed z-[999] rounded-2xl border border-solid border-gray-200 bg-white px-6 py-4 text-gray-500 shadow-xl left-1/2 -translate-x-1/2 flex items-center;
   }
+
+  .button {
+    @apply cursor-pointer rounded-md bg-gray-700 text-gray-200 px-2 py-1;
+  }
 }

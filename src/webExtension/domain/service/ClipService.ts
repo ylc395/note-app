@@ -51,7 +51,6 @@ export default class ClipService {
   }
 
   private readonly clipWholePage = async () => {
-    runInAction(() => (this.isLoading = true));
     const res = await getPageData(getCommonPageOptions());
 
     this.preview({

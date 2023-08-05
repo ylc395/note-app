@@ -15,7 +15,7 @@ export default function IFramePreview({
   const height = 600;
 
   return (
-    <div style={{ height: height * ratio }}>
+    <div style={{ height: height * ratio }} className="border">
       <iframe
         width={viewportWidth}
         height={height}
