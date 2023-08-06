@@ -176,6 +176,11 @@ export default abstract class Tree<E extends EntityWithParent = EntityWithParent
   @action
   toggleExpand(id: TreeNode['id']) {
     const node = this.getNode(id);
+
+    if (node.isLeaf) {
+      throw new Error('can not expand a leaf');
+    }
+
     node.isExpanded = !node.isExpanded;
 
     if (node.isExpanded) {

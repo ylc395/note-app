@@ -51,7 +51,7 @@ export default observer(function TargetPath() {
   useClickAway(close, [refs.domReference, refs.floating]);
 
   return (
-    <div className="relative min-w-0 grow rounded-md bg-white px-4 py-1">
+    <div className="relative min-w-0 grow rounded-md bg-white">
       <div
         onClick={open}
         ref={refs.setReference}
@@ -76,6 +76,11 @@ export default observer(function TargetPath() {
             className="w-full"
             nodeClassName="flex items-center cursor-pointer py-1 pl-2 data-[selected=true]:text-white data-[selected=true]:bg-blue-400"
             titleClassName="truncate min-w-0 "
+            emptyChildren={({ indent }) => (
+              <div className="text-xs italic text-gray-500" style={{ paddingLeft: indent }}>
+                暂无子目录
+              </div>
+            )}
           />
         </div>
       )}
