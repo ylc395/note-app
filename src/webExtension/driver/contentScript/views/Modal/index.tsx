@@ -11,7 +11,7 @@ const modalWidth = 680;
 
 export default observer(function Modal() {
   const { clientWidth: iframeViewportWidth } = document.documentElement;
-  const { activeTaskResult, submit, cancelByUser } = container.resolve(ClipService);
+  const { activeTaskResult, submit, cancelByUser, config } = container.resolve(ClipService);
 
   usePreventScroll(Boolean(activeTaskResult));
 
@@ -26,7 +26,7 @@ export default observer(function Modal() {
       )}
       <Options />
       <div className="py-4 text-right">
-        <button className="button mr-2 px-3 py-1" onClick={submit}>
+        <button disabled={!config.isValidTarget} className="button mr-2 px-3 py-1" onClick={submit}>
           确认
         </button>
         <button className="button px-3 py-1" onClick={cancelByUser}>

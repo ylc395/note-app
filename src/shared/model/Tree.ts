@@ -77,11 +77,11 @@ export default abstract class Tree<E extends EntityWithParent = EntityWithParent
     const virtualRoot: TreeNode = observable({
       id: VIRTUAL_ROOT_NODE_KEY,
       ...this.toNode(null),
-      isLeaf: true,
+      isLeaf: false,
       children: [],
       parent: null,
       isVirtual: true,
-      isExpanded: true,
+      isExpanded: false,
       isSelected: false,
     });
 
@@ -90,8 +90,8 @@ export default abstract class Tree<E extends EntityWithParent = EntityWithParent
     this._roots = virtualRoot.children;
   }
 
-  getNode(id: TreeNode['id']) {
-    const node = this.nodes[id];
+  getNode(id: TreeNode['id'] | null) {
+    const node = id ? this.nodes[id] : this.virtualRoot;
 
     if (!node) {
       throw new Error(`no node for id ${id}`);
@@ -125,6 +125,8 @@ export default abstract class Tree<E extends EntityWithParent = EntityWithParent
     if (entity.parentId) {
       parent = this.getNode(entity.parentId);
       parent.isLeaf = false;
+    } else if (this.virtualRoot) {
+      parent = this.virtualRoot;
     }
 
     const node: TreeNode = observable({
@@ -174,11 +176,7 @@ export default abstract class Tree<E extends EntityWithParent = EntityWithParent
   }
 
   @action
-  toggleExpand(id: TreeNode['id']) {
-    if (id === VIRTUAL_ROOT_NODE_KEY) {
-      throw new Error('can not expand root');
-    }
-
+  toggleExpand(id: TreeNode['id'] | null) {
     const node = this.getNode(id);
     node.isExpanded = !node.isExpanded;
 
@@ -188,7 +186,7 @@ export default abstract class Tree<E extends EntityWithParent = EntityWithParent
   }
 
   @action
-  toggleSelect(id: TreeNode['id']) {
+  toggleSelect(id: TreeNode['id'] | null) {
     const node = this.getNode(id);
     node.isSelected = !node.isSelected;
 

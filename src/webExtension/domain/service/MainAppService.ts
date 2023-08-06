@@ -1,4 +1,4 @@
-import { container, injectable } from 'tsyringe';
+import { container } from 'tsyringe';
 import { makeObservable, observable, runInAction } from 'mobx';
 
 import { Statuses, token as mainAppToken, type Payload } from 'infra/MainApp';
@@ -111,7 +111,7 @@ export default class MainAppService {
         'GET',
         targetId ? `/notes/${targetId}/tree-fragment` : `/notes`,
       );
-      return entities && NoteTree.from(entities, { radio: true });
+      return entities && NoteTree.from(entities, { radio: true, virtualRoot: true });
     }
 
     if (type === EntityTypes.Material) {

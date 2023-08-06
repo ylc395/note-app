@@ -35,16 +35,29 @@ export default class ConfigService {
     const targetId = targetType && this.get('targetEntityId')?.[targetType];
 
     if (!targetId || !this.targetTree) {
-      return null;
+      return { type: targetType };
     }
 
     const ancestors = this.targetTree.getAncestors(targetId);
     const node = this.targetTree.getNode(targetId);
 
     return {
+      type: targetType,
       title: node.title,
       path: [...ancestors, node].map(({ title }) => title).join(' / '),
     };
+  }
+
+  @computed
+  get isValidTarget() {
+    const targetType = this.get('targetEntityType');
+    const targetId = targetType && this.get('targetEntityId')?.[targetType];
+
+    if (targetType === EntityTypes.Material && !targetId) {
+      return false;
+    }
+
+    return true;
   }
 
   private async init() {
@@ -62,7 +75,7 @@ export default class ConfigService {
   }
 
   @action
-  setTargetId(id: string) {
+  private setTargetId(id: string | null) {
     if (!this.config) {
       throw new Error('no config');
     }
@@ -94,38 +107,46 @@ export default class ConfigService {
 
   async updateTargetTree() {
     const targetType = this.get('targetEntityType');
-    const targetId = targetType && this.get('targetEntityId')?.[targetType];
+    let targetId = targetType && this.get('targetEntityId')?.[targetType];
 
     if (!targetType || targetType === EntityTypes.Memo || typeof targetId === 'undefined') {
       return;
     }
 
-    const tree: Tree | null = await this.mainApp.getTree(targetType, targetId);
+    let tree: Tree | null = await this.mainApp.getTree(targetType, targetId);
+
+    if (!tree && targetId) {
+      // retry with root children
+      targetId = null;
+      this.setTargetId(targetId);
+      tree = await this.mainApp.getTree(targetType, targetId);
+    }
 
     if (!tree) {
-      return;
+      throw new Error('can not get a tree');
     }
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    runInAction(() => (this.targetTree = tree!));
 
     if (targetId) {
       for (const node of tree.getAncestors(targetId)) {
         tree.toggleExpand(node.id);
       }
-
-      tree.toggleSelect(targetId);
     }
 
-    tree.on('nodeSelected', ({ id }) => {
-      this.setTargetId(id);
+    tree.toggleSelect(targetId);
+    tree.on('nodeSelected', ({ id, isVirtual }) => {
+      this.setTargetId(isVirtual ? null : id);
     });
 
     tree.on('nodeExpanded', async ({ id }) => {
       const children = await this.mainApp.getChildren(targetType, id);
 
       if (children) {
-        tree.updateTree(children);
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        tree!.updateTree(children);
       }
     });
-
-    runInAction(() => (this.targetTree = tree));
   }
 }

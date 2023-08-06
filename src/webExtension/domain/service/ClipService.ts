@@ -200,6 +200,10 @@ export default class ClipService {
       throw new Error('no activeTask');
     }
 
+    if (!this.config.isValidTarget) {
+      throw new Error('invalid target');
+    }
+
     this.eventBus.emit(EventNames.Submit, { taskId: this.activeTask.id, ...this.activeTaskResult });
   };
 

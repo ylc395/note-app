@@ -7,6 +7,7 @@ import { container } from 'tsyringe';
 
 import Tree from 'components/Tree';
 import ConfigService from 'service/ConfigService';
+import { EntityTypes } from 'interface/entity';
 
 export default observer(function TargetPath() {
   const [isOpen, { setTrue: open, setFalse: close, set: setIsOpen }] = useBoolean(false);
@@ -43,7 +44,7 @@ export default observer(function TargetPath() {
   useEffect(() => {
     if (treeRef.current && isShowingTree) {
       const selected = treeRef.current.querySelector('[data-selected="true"]');
-      selected?.scrollIntoView();
+      selected?.scrollIntoView({ block: 'center' });
     }
   }, [isShowingTree]);
 
@@ -55,10 +56,10 @@ export default observer(function TargetPath() {
         onClick={open}
         ref={refs.setReference}
         {...getReferenceProps()}
-        title={config.target?.path}
+        title={config.target.path}
         className="cursor-pointer truncate border p-2"
       >
-        <span>{config.target?.title || '请选择一个父笔记'}</span>
+        <span>{config.target.title || (config.target.type === EntityTypes.Note ? '根' : '点击选择')}</span>
         <CaretDownFilled className="absolute right-5 top-1/2 -translate-y-1/2 opacity-60" />
       </div>
       {isShowingTree && (
