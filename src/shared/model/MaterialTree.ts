@@ -1,5 +1,5 @@
 import { type MaterialVO, normalizeTitle, isDirectory, DirectoryVO } from '../interface/material';
-import Tree from './Tree';
+import Tree, { type Options } from './Tree';
 
 export default class MaterialTree extends Tree<MaterialVO> {
   protected toNode(material: MaterialVO | null) {
@@ -10,8 +10,8 @@ export default class MaterialTree extends Tree<MaterialVO> {
     return { title: '根' };
   }
 
-  static fromMaterials(materials: DirectoryVO[]) {
-    const tree = new MaterialTree();
+  static from(materials: DirectoryVO[], options?: Options) {
+    const tree = new MaterialTree(options);
 
     for (const material of materials) {
       tree.updateTree(material);

@@ -1,6 +1,6 @@
 import { normalizeTitle, type NoteVO } from '../interface/note';
 
-import Tree from './Tree';
+import Tree, { type Options } from './Tree';
 
 export default class NoteTree extends Tree<NoteVO> {
   protected toNode(note: NoteVO | null) {
@@ -11,8 +11,8 @@ export default class NoteTree extends Tree<NoteVO> {
     return { title: '根' };
   }
 
-  static fromNotes(notes: NoteVO[]) {
-    const tree = new NoteTree();
+  static from(notes: NoteVO[], options?: Options) {
+    const tree = new NoteTree(options);
 
     for (const note of notes) {
       tree.updateTree(note);

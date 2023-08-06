@@ -4,9 +4,9 @@ import { singleton, container } from 'tsyringe';
 
 import { CONFIG_KEY, type Config } from 'model/config';
 import { EntityTypes } from 'interface/entity';
-import { token as mainAppToken } from 'infra/MainApp';
-import type NoteTree from 'model/NoteTree';
-import type MaterialTree from 'model/MaterialTree';
+import type Tree from 'model/Tree';
+
+import MainAppService from './MainAppService';
 
 const defaultConfig: Config = {
   targetEntityType: EntityTypes.Material,
@@ -19,14 +19,14 @@ const defaultConfig: Config = {
 
 @singleton()
 export default class ConfigService {
-  private mainApp = container.resolve(mainAppToken);
+  private mainApp = container.resolve(MainAppService);
 
   constructor() {
     makeObservable(this);
     this.init();
   }
 
-  @observable.ref targetTree?: NoteTree | MaterialTree;
+  @observable.ref targetTree?: Tree;
   @observable private config?: Config;
 
   @computed
@@ -35,7 +35,7 @@ export default class ConfigService {
     const targetId = targetType && this.get('targetEntityId')?.[targetType];
 
     if (!targetId || !this.targetTree) {
-      return '';
+      return null;
     }
 
     const ancestors = this.targetTree.getAncestors(targetId);
@@ -48,9 +48,6 @@ export default class ConfigService {
   }
 
   private async init() {
-    const config = ((await browser.storage.local.get(CONFIG_KEY))[CONFIG_KEY] as Config | undefined) || defaultConfig;
-    runInAction(() => (this.config = config));
-
     browser.storage.onChanged.addListener(
       action((e) => {
         if (e[CONFIG_KEY]) {
@@ -59,6 +56,9 @@ export default class ConfigService {
         }
       }),
     );
+
+    const config = ((await browser.storage.local.get(CONFIG_KEY))[CONFIG_KEY] as Config | undefined) || defaultConfig;
+    runInAction(() => (this.config = config));
   }
 
   @action
@@ -86,31 +86,46 @@ export default class ConfigService {
     return this.config?.[key];
   }
 
-  // readonly updateTargetTree = async () => {
-  //   const targetType = this.get('targetEntityType');
-  //   const targetId = targetType && this.get('targetEntityId')?.[targetType];
+  @action
+  destroyTargetTree() {
+    this.targetTree?.destroy();
+    this.targetTree = undefined;
+  }
 
-  //   if (!targetType || targetType === EntityTypes.Memo) {
-  //     return;
-  //   }
+  async updateTargetTree() {
+    const targetType = this.get('targetEntityType');
+    const targetId = targetType && this.get('targetEntityId')?.[targetType];
 
-  //   this.targetTree?.destroy();
-  //   runInAction(() => (this.targetTree = undefined));
-  //   const tree = await this.mainApp.getTree<MaterialTree | NoteTree>(targetType, targetId);
+    if (!targetType || targetType === EntityTypes.Memo || typeof targetId === 'undefined') {
+      return;
+    }
 
-  //   if (this.targetTree || !tree) {
-  //     return;
-  //   }
+    const tree: Tree | null = await this.mainApp.getTree(targetType, targetId);
 
-  //   tree.on('nodeSelected', ({ id }) => {
-  //     this.setTargetId(id);
-  //   });
+    if (!tree) {
+      return;
+    }
 
-  //   tree.on('nodeExpanded', async ({ id }) => {
-  //     const children = await this.mainApp.getChildren(targetType, id);
-  //     tree.updateTree(children);
-  //   });
+    if (targetId) {
+      for (const node of tree.getAncestors(targetId)) {
+        tree.toggleExpand(node.id);
+      }
 
-  //   runInAction(() => (this.targetTree = tree));
-  // };
+      tree.toggleSelect(targetId);
+    }
+
+    tree.on('nodeSelected', ({ id }) => {
+      this.setTargetId(id);
+    });
+
+    tree.on('nodeExpanded', async ({ id }) => {
+      const children = await this.mainApp.getChildren(targetType, id);
+
+      if (children) {
+        tree.updateTree(children);
+      }
+    });
+
+    runInAction(() => (this.targetTree = tree));
+  }
 }

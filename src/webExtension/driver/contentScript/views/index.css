@@ -6,6 +6,6 @@
   }
 
   .button {
-    @apply cursor-pointer rounded-md bg-gray-700 text-gray-200 px-2 py-1;
+    @apply cursor-pointer rounded-md bg-gray-700 text-gray-200;
   }
 }

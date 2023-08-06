@@ -14,7 +14,8 @@ export interface TreeNode {
 }
 
 export interface Options {
-  virtualRoot: boolean;
+  virtualRoot?: boolean;
+  radio?: boolean;
 }
 
 export interface EntityWithParent {
@@ -28,7 +29,7 @@ export default abstract class Tree<E extends EntityWithParent = EntityWithParent
   nodeSelected: [TreeNode];
   nodeExpanded: [TreeNode];
 }> {
-  constructor(options?: Options) {
+  constructor(private readonly options?: Options) {
     super();
     makeObservable(this);
     if (options?.virtualRoot) {
@@ -193,6 +194,12 @@ export default abstract class Tree<E extends EntityWithParent = EntityWithParent
 
     if (node.isSelected) {
       this.emit('nodeSelected', node);
+
+      if (this.options?.radio) {
+        for (const selected of this.selectedNodes) {
+          selected !== node && (selected.isSelected = false);
+        }
+      }
     }
   }
 

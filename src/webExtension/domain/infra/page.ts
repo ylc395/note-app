@@ -2,7 +2,7 @@ import type { InjectionToken } from 'tsyringe';
 import type { RemoteCallable, RemoteId } from './remoteApi';
 import type { Tabs } from 'webextension-polyfill';
 
-interface Page extends RemoteCallable {
+export interface Page extends RemoteCallable {
   ready?: () => Promise<void>;
   captureScreen: () => Promise<string>;
 }

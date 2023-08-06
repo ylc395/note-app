@@ -72,7 +72,7 @@ export default class SessionTaskManager implements RemoteCallable {
       });
 
       HistoryService.add(task);
-      this.eventBus.emit(EventNames.FinishTask, { taskId });
+      this.eventBus.emit(EventNames.FinishTask, { taskId }, task.tabId);
     } catch (e) {
       this.eventBus.emit(EventNames.CancelTask, { taskId, error: `Can not save: ${e}` }, task.tabId);
     }

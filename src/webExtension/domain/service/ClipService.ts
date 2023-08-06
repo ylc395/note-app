@@ -34,7 +34,7 @@ export default class ClipService {
   @observable activeTask?: Task;
   @observable activeTaskResult?: TaskResult;
   @observable isLoading = false;
-  private readonly eventBus = container.resolve(EventBus);
+  readonly eventBus = container.resolve(EventBus);
   @observable.ref targetTree?: NoteTree | MaterialTree;
   readonly config = container.resolve(ConfigService);
 
@@ -120,7 +120,7 @@ export default class ClipService {
       return;
     }
 
-    this.submit({ title: result.title, content: turndownService.turndown(result.content), contentType: 'md' });
+    this.preview({ title: result.title, content: turndownService.turndown(result.content), contentType: 'md' });
   }
 
   private static getMarkdown(el: HTMLElement) {
@@ -195,13 +195,13 @@ export default class ClipService {
     this.reset();
   }
 
-  submit(result: TaskResult) {
-    if (!this.activeTask) {
+  readonly submit = () => {
+    if (!this.activeTask || !this.activeTaskResult) {
       throw new Error('no activeTask');
     }
 
-    this.eventBus.emit(EventNames.Submit, { taskId: this.activeTask.id, ...result });
-  }
+    this.eventBus.emit(EventNames.Submit, { taskId: this.activeTask.id, ...this.activeTaskResult });
+  };
 
   @action
   private preview(result: TaskResult) {

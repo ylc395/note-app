@@ -1,58 +1,83 @@
-// import { observer } from 'mobx-react-lite';
-// import { CaretDownFilled } from '@ant-design/icons';
-// import { useEffect, useState, useContext } from 'react';
-// import { useClick, useFloating, useInteractions, offset } from '@floating-ui/react';
-// import { useClickAway } from 'ahooks';
-// import { container } from 'tsyringe';
+import { observer } from 'mobx-react-lite';
+import { CaretDownFilled } from '@ant-design/icons';
+import { useEffect, useRef } from 'react';
+import { useClick, useFloating, useInteractions, offset } from '@floating-ui/react';
+import { useClickAway, useBoolean } from 'ahooks';
+import { container } from 'tsyringe';
 
-// import Tree from 'components/Tree';
-// import ConfigService from 'service/ConfigService';
+import Tree from 'components/Tree';
+import ConfigService from 'service/ConfigService';
 
-// export default observer(function () {
-//   const [isOpen, setIsOpen] = useState(false);
-//   const { refs, floatingStyles, context } = useFloating({
-//     open: isOpen,
-//     onOpenChange: setIsOpen,
-//     placement: 'bottom',
-//     middleware: [offset(10)],
-//   });
+export default observer(function TargetPath() {
+  const [isOpen, { setTrue: open, setFalse: close, set: setIsOpen }] = useBoolean(false);
+  const { refs, floatingStyles, context } = useFloating({
+    open: isOpen,
+    onOpenChange: setIsOpen,
+    placement: 'bottom-start',
+    middleware: [offset(10)],
+  });
 
-//   const click = useClick(context);
-//   const { getReferenceProps, getFloatingProps } = useInteractions([click]);
-//   const config = container.resolve(ConfigService);
+  const treeRef = useRef<HTMLDivElement | null>(null);
+  const click = useClick(context);
+  const { getReferenceProps, getFloatingProps } = useInteractions([click]);
+  const config = container.resolve(ConfigService);
+  const isShowingTree = isOpen && Boolean(config.targetTree);
 
-//   useEffect(() => {
-//     if (config.targetTree) {
-//       const { targetTree } = config;
-//       const close = () => setIsOpen(false);
-//       targetTree.on('nodeSelected', close);
+  useEffect(() => {
+    config.updateTargetTree();
+    return () => config.destroyTargetTree();
+  }, [config]);
 
-//       return () => {
-//         targetTree.off('nodeSelected', close);
-//       };
-//     }
-//   }, [config, config.targetTree]);
+  useEffect(() => {
+    const { targetTree } = config;
 
-//   useClickAway(() => setIsOpen(false), [refs.domReference, refs.floating]);
+    if (targetTree) {
+      targetTree.on('nodeSelected', close);
 
-//   return (
-//     <div className="relative min-w-0 grow cursor-default rounded-md bg-white px-4 py-1">
-//       {config.target && (
-//         <div ref={refs.setReference} {...getReferenceProps()} title={config.target.path} className="truncate">
-//           <span>{config.target.title}</span>
-//           <CaretDownFilled className="absolute right-1 top-1/2 -translate-y-1/2 opacity-60" />
-//         </div>
-//       )}
-//       {config.targetTree && isOpen && (
-//         <div
-//           ref={refs.setFloating}
-//           {...getFloatingProps()}
-//           style={floatingStyles}
-//           className=" max-h-36 overflow-auto rounded-md bg-white p-2 shadow-md"
-//         >
-//           <Tree tree={config.targetTree} />
-//         </div>
-//       )}
-//     </div>
-//   );
-// });
+      return () => {
+        targetTree.off('nodeSelected', close);
+      };
+    }
+  }, [close, config, config.targetTree]);
+
+  useEffect(() => {
+    if (treeRef.current && isShowingTree) {
+      const selected = treeRef.current.querySelector('[data-selected="true"]');
+      selected?.scrollIntoView();
+    }
+  }, [isShowingTree]);
+
+  useClickAway(close, [refs.domReference, refs.floating]);
+
+  return (
+    <div className="relative min-w-0 grow rounded-md bg-white px-4 py-1">
+      <div
+        onClick={open}
+        ref={refs.setReference}
+        {...getReferenceProps()}
+        title={config.target?.path}
+        className="cursor-pointer truncate border p-2"
+      >
+        <span>{config.target?.title || '请选择一个父笔记'}</span>
+        <CaretDownFilled className="absolute right-5 top-1/2 -translate-y-1/2 opacity-60" />
+      </div>
+      {isShowingTree && (
+        <div
+          ref={refs.setFloating}
+          {...getFloatingProps()}
+          style={floatingStyles}
+          className=" max-h-80 w-[400px] overflow-auto rounded-md bg-white p-2 shadow-md"
+        >
+          <Tree
+            ref={treeRef}
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            tree={config.targetTree!}
+            className="w-full"
+            nodeClassName="flex items-center cursor-pointer py-1 pl-2 data-[selected=true]:text-white data-[selected=true]:bg-blue-400"
+            titleClassName="truncate min-w-0 "
+          />
+        </div>
+      )}
+    </div>
+  );
+});

@@ -5,9 +5,9 @@ import { container } from 'tsyringe';
 import ClipService from 'service/ClipService';
 
 export default observer(function Loading() {
-  const clipService = container.resolve(ClipService);
+  const {isLoading} = container.resolve(ClipService);
 
-  return clipService.isLoading ? (
+  return isLoading ? (
     <div className="message top-40">
       <LoadingOutlined className="mr-4" />
       剪切中...

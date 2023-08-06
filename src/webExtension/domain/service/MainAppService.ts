@@ -1,4 +1,4 @@
-import { container } from 'tsyringe';
+import { container, injectable } from 'tsyringe';
 import { makeObservable, observable, runInAction } from 'mobx';
 
 import { Statuses, token as mainAppToken, type Payload } from 'infra/MainApp';
@@ -105,56 +105,29 @@ export default class MainAppService {
     });
   }
 
-  async getTree(type: EntityTypes.Note | EntityTypes.Material, id?: EntityId | null) {
-    let tree: NoteTree | MaterialTree | undefined;
+  async getTree(type: EntityTypes.Material | EntityTypes.Note, targetId: EntityId | null) {
     if (type === EntityTypes.Note) {
-      const notes = await this.mainApp.fetch<NoteVO[]>('GET', id ? `/notes/${id}/tree-fragment` : `/notes`);
-
-      if (notes) {
-        tree = NoteTree.fromNotes(notes);
-      }
+      const entities = await this.mainApp.fetch<NoteVO[]>(
+        'GET',
+        targetId ? `/notes/${targetId}/tree-fragment` : `/notes`,
+      );
+      return entities && NoteTree.from(entities, { radio: true });
     }
 
     if (type === EntityTypes.Material) {
-      const query = '?type=directory';
-      const directories = await this.mainApp.fetch<DirectoryVO[]>(
+      const entities = await this.mainApp.fetch<DirectoryVO[]>(
         'GET',
-        id ? `/materials/${id}/tree-fragment${query}` : `/materials${query}`,
+        targetId ? `/materials/${targetId}/tree-fragment?type=directory` : `/materials?type=directory`,
       );
-
-      if (directories) {
-        tree = MaterialTree.fromMaterials(directories);
-      }
+      return entities && MaterialTree.from(entities, { radio: true });
     }
 
-    if (!tree) {
-      return null;
-    }
-
-    if (id) {
-      for (const ancestor of tree.getAncestors(id)) {
-        tree.toggleExpand(ancestor.id);
-      }
-
-      tree.toggleSelect(id);
-    }
-
-    return tree;
+    return null;
   }
 
-  async getChildren(type: EntityTypes.Note, id: EntityId): Promise<NoteVO[]>;
-  async getChildren(type: EntityTypes.Material, id: EntityId): Promise<DirectoryVO[]>;
-  async getChildren(type: EntityTypes.Material | EntityTypes.Note, id: EntityId) {
-    let children: NoteVO[] | DirectoryVO[] | null = null;
-
-    if (type === EntityTypes.Note) {
-      children = await this.mainApp.fetch<NoteVO[]>('GET', `/notes?parentId=${id}`);
-    }
-
-    if (type === EntityTypes.Material) {
-      children = await this.mainApp.fetch<DirectoryVO[]>('GET', `/materials?parentId=${id}&type=1`);
-    }
-
-    return children || [];
+  async getChildren(type: EntityTypes.Material | EntityTypes.Note, parentId: EntityId) {
+    const url =
+      type === EntityTypes.Material ? `/materials?parentId=${parentId}&type=directory` : `/notes?parentId=${parentId}`;
+    return await this.mainApp.fetch<NoteVO[] | DirectoryVO[]>('GET', url);
   }
 }

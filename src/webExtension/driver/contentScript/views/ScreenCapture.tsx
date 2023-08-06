@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useFloating, offset } from '@floating-ui/react';
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
@@ -18,7 +18,6 @@ export default observer(function ScreenCapture() {
     middleware: [offset(16)],
   });
   const clipService = container.resolve(ClipService);
-
   const isEnabled = !clipService.activeTaskResult && clipService.activeTask?.type === TaskTypes.ScreenShot;
   const setRefs = useMemoizedFn((ref: ReactAreaSelectorRef | null) => {
     refs.setReference(ref);
@@ -55,7 +54,7 @@ export default observer(function ScreenCapture() {
         />
       )}
       {rect && (
-        <button className="button text-sm" onClick={_onConfirm} ref={refs.setFloating} style={floatingStyles}>
+        <button className="button px-3 py-1 text-sm" onClick={_onConfirm} ref={refs.setFloating} style={floatingStyles}>
           保存
         </button>
       )}
