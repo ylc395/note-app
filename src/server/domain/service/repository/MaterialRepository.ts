@@ -5,6 +5,7 @@ import type {
   DirectoryVO,
   EntityMaterialVO,
   MaterialDTO,
+  MaterialTypes,
   MaterialVO,
 } from 'interface/material';
 
@@ -13,6 +14,7 @@ export type Directory = Pick<MaterialDTO, 'name' | 'parentId' | 'icon'>;
 export interface MaterialQuery {
   parentId?: MaterialVO['parentId'];
   ids?: MaterialVO['id'][];
+  type?: MaterialTypes;
 }
 
 export interface MaterialRepository {

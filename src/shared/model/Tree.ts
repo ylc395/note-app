@@ -81,7 +81,7 @@ export default abstract class Tree<E extends EntityWithParent = EntityWithParent
       children: [],
       parent: null,
       isVirtual: true,
-      isExpanded: false,
+      isExpanded: true,
       isSelected: false,
     });
 
@@ -125,8 +125,6 @@ export default abstract class Tree<E extends EntityWithParent = EntityWithParent
     if (entity.parentId) {
       parent = this.getNode(entity.parentId);
       parent.isLeaf = false;
-    } else if (this.virtualRoot) {
-      parent = this.virtualRoot;
     }
 
     const node: TreeNode = observable({
@@ -176,7 +174,7 @@ export default abstract class Tree<E extends EntityWithParent = EntityWithParent
   }
 
   @action
-  toggleExpand(id: TreeNode['id'] | null) {
+  toggleExpand(id: TreeNode['id']) {
     const node = this.getNode(id);
     node.isExpanded = !node.isExpanded;
 

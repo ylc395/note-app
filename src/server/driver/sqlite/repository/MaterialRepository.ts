@@ -3,7 +3,13 @@ import { readFile } from 'fs-extra';
 import type { Selectable } from 'kysely';
 
 import type { MaterialRepository, Directory, MaterialQuery } from 'service/repository/MaterialRepository';
-import type { DirectoryVO, EntityMaterialVO, MaterialDTO, MaterialVO } from 'interface/material';
+import {
+  MaterialTypes,
+  type DirectoryVO,
+  type EntityMaterialVO,
+  type MaterialDTO,
+  type MaterialVO,
+} from 'interface/material';
 
 import schema, { type Row } from '../schema/material';
 import fileSchema, { type Row as FileRow } from '../schema/file';
@@ -88,6 +94,10 @@ export default class SqliteMaterialRepository extends BaseRepository implements 
 
     if (query.ids) {
       qb = qb.where(`${tableName}.id`, 'in', query.ids);
+    }
+
+    if (query.type) {
+      qb = qb.where(`${tableName}.fileId`, query.type === MaterialTypes.Directory ? 'is' : 'is not', null);
     }
 
     const rows = await qb

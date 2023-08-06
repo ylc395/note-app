@@ -8,6 +8,8 @@ import {
   literal,
   tuple,
   type infer as Infer,
+  nativeEnum,
+  preprocess,
 } from 'zod';
 import type { EntityId } from './entity';
 
@@ -34,6 +36,11 @@ export interface DirectoryVO {
   childrenCount: number;
 }
 
+export enum MaterialTypes {
+  Directory = 1,
+  Entity,
+}
+
 export type EntityMaterialVO = Omit<DirectoryVO, 'childrenCount'> & {
   mimeType: string;
   sourceUrl: string | null;
@@ -45,6 +52,7 @@ export type MaterialVO = DirectoryVO | EntityMaterialVO;
 
 export const materialQuerySchema = object({
   parentId: string().optional(),
+  type: preprocess((v) => v && Number(v), nativeEnum(MaterialTypes).optional()),
 });
 
 export type MaterialQuery = Infer<typeof materialQuerySchema>;

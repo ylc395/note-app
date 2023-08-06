@@ -135,7 +135,10 @@ export default class ConfigService {
       }
     }
 
-    tree.toggleSelect(targetId);
+    if (targetId || tree.hasNode(null)) {
+      tree.toggleSelect(targetId);
+    }
+
     tree.on('nodeSelected', ({ id, isVirtual }) => {
       this.setTargetId(isVirtual ? null : id);
     });

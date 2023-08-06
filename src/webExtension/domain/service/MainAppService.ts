@@ -2,7 +2,7 @@ import { container } from 'tsyringe';
 import { makeObservable, observable, runInAction } from 'mobx';
 
 import { Statuses, token as mainAppToken, type Payload } from 'infra/MainApp';
-import type { DirectoryVO, MaterialDTO } from 'interface/material';
+import { MaterialTypes, type DirectoryVO, type MaterialDTO } from 'interface/material';
 import type { FileVO } from 'interface/file';
 import type { NoteBodyDTO, NoteDTO, NoteVO } from 'interface/note';
 import type { MemoDTO } from 'interface/memo';
@@ -71,8 +71,10 @@ export default class MainAppService {
       ...(file
         ? { fileId: file.id }
         : {
-            mimeType: payload.contentType === 'html' ? 'text/html' : 'text/markdown',
-            data: payload.content,
+            file: {
+              mimeType: payload.contentType === 'html' ? 'text/html' : 'text/markdown',
+              data: payload.content,
+            },
           }),
     });
   }
@@ -115,9 +117,10 @@ export default class MainAppService {
     }
 
     if (type === EntityTypes.Material) {
+      const query = `?type=${MaterialTypes.Directory}`;
       const entities = await this.mainApp.fetch<DirectoryVO[]>(
         'GET',
-        targetId ? `/materials/${targetId}/tree-fragment?type=directory` : `/materials?type=directory`,
+        targetId ? `/materials/${targetId}/tree-fragment${query}` : `/materials${query}`,
       );
       return entities && MaterialTree.from(entities, { radio: true });
     }
@@ -127,7 +130,9 @@ export default class MainAppService {
 
   async getChildren(type: EntityTypes.Material | EntityTypes.Note, parentId: EntityId) {
     const url =
-      type === EntityTypes.Material ? `/materials?parentId=${parentId}&type=directory` : `/notes?parentId=${parentId}`;
+      type === EntityTypes.Material
+        ? `/materials?parentId=${parentId}&type=${MaterialTypes.Directory}`
+        : `/notes?parentId=${parentId}`;
     return await this.mainApp.fetch<NoteVO[] | DirectoryVO[]>('GET', url);
   }
 }

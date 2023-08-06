@@ -4,7 +4,7 @@ import Tree, { type Options } from './Tree';
 export default class MaterialTree extends Tree<MaterialVO> {
   protected toNode(material: MaterialVO | null) {
     if (material) {
-      return { title: normalizeTitle(material), isLeaf: isDirectory(material) };
+      return { title: normalizeTitle(material), isLeaf: !isDirectory(material) || material.childrenCount === 0 };
     }
 
     return { title: '根' };

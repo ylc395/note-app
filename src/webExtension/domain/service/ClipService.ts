@@ -191,7 +191,6 @@ export default class ClipService {
       window.alert(error);
     }
 
-    this.eventBus.emit(EventNames.CancelTask, { taskId: this.activeTask.id, error });
     this.reset();
   }
 
