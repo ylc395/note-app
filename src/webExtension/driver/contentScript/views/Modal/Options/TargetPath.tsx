@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { CaretDownFilled } from '@ant-design/icons';
+import { CaretDownFilled, LoadingOutlined } from '@ant-design/icons';
 import { useEffect, useRef } from 'react';
 import { useClick, useFloating, useInteractions, offset } from '@floating-ui/react';
 import { useClickAway, useBoolean } from 'ahooks';
@@ -76,7 +76,8 @@ export default observer(function TargetPath() {
             className="w-full"
             nodeClassName="flex items-center cursor-pointer py-1 pl-2 data-[selected=true]:text-white data-[selected=true]:bg-blue-400"
             titleClassName="truncate min-w-0 "
-            emptyChildren={({ indent }) => (
+            loadingIcon={<LoadingOutlined className="mr-1" />}
+            emptyChildrenView={({ indent }) => (
               <div className="text-xs italic text-gray-500" style={{ paddingLeft: indent }}>
                 暂无子目录
               </div>

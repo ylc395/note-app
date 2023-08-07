@@ -1,11 +1,14 @@
 import { observable, action, computed, makeObservable } from 'mobx';
 import pull from 'lodash/pull';
+import differenceWith from 'lodash/differenceWith';
 import { Emitter } from 'strict-event-emitter';
+
+import { getIds } from '../utils/collection';
 
 export interface TreeNode {
   id: string;
   title: string;
-  children: TreeNode[];
+  children?: TreeNode[];
   isLeaf: boolean;
   parent: TreeNode | null;
   isExpanded: boolean;
@@ -39,6 +42,11 @@ export default abstract class Tree<E extends EntityWithParent = EntityWithParent
 
   sort(parentId: TreeNode['id'], cb: (node1: TreeNode, node2: TreeNode) => number, recursive: boolean) {
     const { children } = this.getNode(parentId);
+
+    if (!children) {
+      throw new Error('no children');
+    }
+
     children.sort(cb);
 
     if (recursive) {
@@ -74,7 +82,7 @@ export default abstract class Tree<E extends EntityWithParent = EntityWithParent
 
   @action
   private initVirtualRoot() {
-    const virtualRoot: TreeNode = observable({
+    const virtualRoot = observable({
       id: VIRTUAL_ROOT_NODE_KEY,
       ...this.toNode(null),
       isLeaf: false,
@@ -83,7 +91,7 @@ export default abstract class Tree<E extends EntityWithParent = EntityWithParent
       isVirtual: true,
       isExpanded: true,
       isSelected: false,
-    });
+    }) satisfies TreeNode;
 
     this.virtualRoot = virtualRoot;
     this.nodes[virtualRoot.id] = virtualRoot;
@@ -111,15 +119,15 @@ export default abstract class Tree<E extends EntityWithParent = EntityWithParent
       const node = this.getNode(id);
       pull(node.parent?.children || this._roots, node);
       delete this.nodes[id];
+
+      if (node.children) {
+        this.removeNodes(getIds(node.children));
+      }
     }
   }
 
   @action
   private createNode(entity: E) {
-    if (entity.id === this.virtualRoot?.id) {
-      throw new Error('invalid entity id');
-    }
-
     let parent: TreeNode | null = null;
 
     if (entity.parentId) {
@@ -131,16 +139,42 @@ export default abstract class Tree<E extends EntityWithParent = EntityWithParent
       id: entity.id,
       isLeaf: false,
       ...this.toNode(entity),
-      children: [],
       parent,
       isExpanded: false,
       isSelected: false,
     });
 
-    const siblings = parent?.children || this._roots;
+    let siblings = this._roots;
+
+    if (parent) {
+      if (!parent.children) {
+        parent.children = [];
+      }
+
+      siblings = parent.children;
+    }
 
     siblings.push(node);
     this.nodes[entity.id] = node;
+  }
+
+  setChildren(entities: E[], parentId: TreeNode['id'] | null) {
+    const children = parentId ? this.getNode(parentId).children : this._roots;
+
+    if (children) {
+      const toRemoveIds = getIds(differenceWith(children, entities, (a, b) => a.id === b.id));
+      this.removeNodes(toRemoveIds);
+    }
+
+    if (entities.length === 0) {
+      if (parentId) {
+        this.getNode(parentId).children = [];
+      } else {
+        this._roots = [];
+      }
+    }
+
+    this.updateTree(entities);
   }
 
   @action
@@ -165,9 +199,15 @@ export default abstract class Tree<E extends EntityWithParent = EntityWithParent
       const newParent = entity.parentId ? this.getNode(entity.parentId) : undefined;
 
       if (newParent) {
+        if (!newParent.children) {
+          newParent.children = [];
+        }
+
+        node.parent = newParent;
         newParent.children.push(node);
         newParent.isLeaf = false;
       } else {
+        node.parent = null;
         this._roots.push(node);
       }
     }
@@ -191,6 +231,11 @@ export default abstract class Tree<E extends EntityWithParent = EntityWithParent
   @action
   toggleSelect(id: TreeNode['id'] | null) {
     const node = this.getNode(id);
+
+    if (this.options?.radio && node.isSelected) {
+      throw new Error('can not unselect node on radio tree');
+    }
+
     node.isSelected = !node.isSelected;
 
     if (node.isSelected) {

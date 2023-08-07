@@ -148,7 +148,7 @@ export default class ConfigService {
 
       if (children) {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        tree!.updateTree(children);
+        tree!.setChildren(children, id);
       }
     });
   }

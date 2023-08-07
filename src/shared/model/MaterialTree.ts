@@ -12,10 +12,7 @@ export default class MaterialTree extends Tree<MaterialVO> {
 
   static from(materials: DirectoryVO[], options?: Options) {
     const tree = new MaterialTree(options);
-
-    for (const material of materials) {
-      tree.updateTree(material);
-    }
+    tree.setChildren(materials, null);
 
     return tree;
   }

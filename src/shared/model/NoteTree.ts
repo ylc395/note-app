@@ -13,11 +13,7 @@ export default class NoteTree extends Tree<NoteVO> {
 
   static from(notes: NoteVO[], options?: Options) {
     const tree = new NoteTree(options);
-
-    for (const note of notes) {
-      tree.updateTree(note);
-    }
-
+    tree.setChildren(notes, null);
     return tree;
   }
 }
