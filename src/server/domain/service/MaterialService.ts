@@ -137,6 +137,10 @@ export default class MaterialService extends BaseService {
   }
 
   async getTreeFragment(id: MaterialVO['id']) {
+    if (!(await this.areAvailable([id]))) {
+      throw new Error('invalid id');
+    }
+
     return [];
   }
 }

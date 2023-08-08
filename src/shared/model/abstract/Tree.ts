@@ -138,10 +138,10 @@ export default abstract class Tree<E extends TreeNodeEntity = TreeNodeEntity, T 
       throw new Error('invalid id');
     }
 
-    const parent = entity.parentId ? this.getNode(entity.parentId, true) : this.root;
+    const parent = this.getNode(entity.parentId, true);
 
     if (!parent) {
-      return;
+      throw new Error('no parent');
     }
 
     parent.isLeaf = false;

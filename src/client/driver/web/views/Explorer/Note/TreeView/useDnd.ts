@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { useDndMonitor, useDroppable } from '@dnd-kit/core';
 import uniqueId from 'lodash/uniqueId';
 import { container } from 'tsyringe';
@@ -10,6 +11,12 @@ export default function useDrag() {
   const { moveNotes, noteTree } = container.resolve(NoteService);
   const id = useCreation(() => uniqueId('note-tree-view-'), []);
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({ id, data: { instance: noteTree.root } });
+  const isDraggingNode = useRef(false);
+
+  function reset() {
+    noteTree.resetUndroppable();
+    isDraggingNode.current = true;
+  }
 
   useDndMonitor({
     onDragStart: ({ active }) => {
@@ -20,11 +27,17 @@ export default function useDrag() {
       }
 
       if (noteTree.hasNode(draggingItem)) {
+        isDraggingNode.current = true;
         if (!draggingItem.isSelected) {
           noteTree.toggleSelect(draggingItem.id, { reason: 'drag' });
         }
 
         noteTree.updateInvalidTargetNodes();
+      }
+    },
+    onDragCancel: () => {
+      if (isDraggingNode.current) {
+        reset();
       }
     },
     onDragEnd: ({ over, active }) => {
@@ -40,8 +53,10 @@ export default function useDrag() {
 
           moveNotes(dropNode === noteTree.root ? null : dropNode.id, draggingItems);
         }
+      }
 
-        noteTree.resetUndroppable();
+      if (isDraggingNode.current) {
+        reset();
       }
     },
   });

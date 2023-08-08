@@ -3,7 +3,7 @@ import { Controller } from '@nestjs/common';
 import RecyclableService from 'service/RecyclableService';
 import { RecyclablesDTOSchema, type RecyclableRecord, type RecyclablesDTO } from 'interface/recyclables';
 
-import { Body, createSchemaPipe, Patch } from './decorators';
+import { Body, createSchemaPipe, Get, Patch } from './decorators';
 
 @Controller()
 export default class RecyclablesController {
@@ -13,4 +13,7 @@ export default class RecyclablesController {
   async create(@Body(createSchemaPipe(RecyclablesDTOSchema)) entities: RecyclablesDTO): Promise<RecyclableRecord[]> {
     return await this.recyclableService.create(entities);
   }
+
+  @Get('/recyclables')
+  async queryItems(): Promise<RecyclableRecord[]> {}
 }
