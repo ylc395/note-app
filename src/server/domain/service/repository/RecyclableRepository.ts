@@ -1,10 +1,11 @@
-import type { RecyclableRecord } from 'interface/recyclables';
+import type { RecyclableRecord, RecycleReason } from 'interface/recyclables';
 import type { EntityLocator } from 'interface/entity';
 
-export type DeletedRecord = EntityLocator & { deletedAt: number };
+export type Recyclable = EntityLocator & { reason: RecycleReason };
 
 export interface RecyclablesRepository {
-  batchCreate: (entities: EntityLocator[]) => Promise<RecyclableRecord[]>;
   findAllByLocators: (entities: EntityLocator[]) => Promise<RecyclableRecord[]>; // not including hard deleted record
-  getHardDeletedRecord: (entity: EntityLocator) => Promise<DeletedRecord | null>;
+  findAll: (reason?: RecycleReason) => Promise<RecyclableRecord[]>; // not including hard deleted record
+  batchCreate: (entities: Recyclable[]) => Promise<RecyclableRecord[]>;
+  getHardDeletedRecord: (entity: EntityLocator) => Promise<RecyclableRecord | null>;
 }

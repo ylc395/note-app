@@ -1,5 +1,6 @@
 import type { EntityLocator } from 'interface/entity';
-import type { RecyclablesRepository } from 'service/repository/RecyclableRepository';
+import type { RecycleReason } from 'interface/recyclables';
+import type { RecyclablesRepository, Recyclable } from 'service/repository/RecyclableRepository';
 
 import BaseRepository from './BaseRepository';
 import schema from '../schema/recyclable';
@@ -7,26 +8,31 @@ import schema from '../schema/recyclable';
 const { tableName } = schema;
 
 export default class SqliteRecyclableRepository extends BaseRepository implements RecyclablesRepository {
-  async batchCreate(entities: EntityLocator[]) {
+  async batchCreate(entities: Recyclable[]) {
     const rows = await this.db
       .insertInto(tableName)
-      .values(entities.map(({ id, type }) => ({ entityId: id, entityType: type })))
+      .values(entities.map(({ id, type, reason }) => ({ entityId: id, entityType: type, reason })))
       .returning(['entityId', 'entityType', 'deletedAt'])
       .execute();
 
     return rows;
   }
 
-  async findOneByLocator({ id: entityId, type: entityType }: EntityLocator) {
-    const row = await this.db
+  private getCommonSql(query?: { isHard?: 0 | 1; reason?: RecycleReason }) {
+    let sql = this.db
       .selectFrom(tableName)
-      .select(['entityId', 'entityType', 'deletedAt'])
-      .where('entityId', '=', entityId)
-      .where('entityType', '=', entityType)
-      .where('isHard', '=', 0)
-      .executeTakeFirst();
+      .select(['entityId', 'entityType', 'deletedAt', 'reason'])
+      .where('isHard', '=', query?.isHard ? 1 : 0);
 
-    return row || null;
+    if (query?.reason) {
+      sql = sql.where('reason', '=', query.reason);
+    }
+
+    return sql;
+  }
+
+  async findAll(reason?: RecycleReason) {
+    return await this.getCommonSql({ reason }).execute();
   }
 
   async findAllByLocators(entities: EntityLocator[]) {
@@ -35,25 +41,17 @@ export default class SqliteRecyclableRepository extends BaseRepository implement
     }
 
     const ids = entities.map(({ id }) => id);
-    const rows = await this.db
-      .selectFrom(tableName)
-      .select(['entityId', 'entityType', 'deletedAt'])
-      .where('entityId', 'in', ids)
-      .where('isHard', '=', 0)
-      .execute();
+    const rows = await this.getCommonSql().where('entityId', 'in', ids).execute();
 
     return rows;
   }
 
   async getHardDeletedRecord({ id: entityId, type: entityType }: EntityLocator) {
-    const row = await this.db
-      .selectFrom(tableName)
-      .selectAll()
+    const row = await this.getCommonSql({ isHard: 1 })
       .where('entityId', '=', entityId)
       .where('entityType', '=', entityType)
-      .where('isHard', '=', 0)
       .executeTakeFirst();
 
-    return row ? { id: row.entityId, type: row.entityType, deletedAt: row.deletedAt } : null;
+    return row || null;
   }
 }
