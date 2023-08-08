@@ -9,8 +9,8 @@ import EventBus from 'infra/EventBus';
 import { token as pageFactoryToken } from 'infra/page';
 
 import type NoteTree from 'model/note/Tree';
-import type MaterialTree from 'model/material/Tree';
 import { type Task, type TaskResult, EventNames, TaskTypes } from 'model/task';
+import type MaterialTree from 'model/material/Tree';
 import type { Rect } from 'components/RectAreaSelector';
 
 import ConfigService from './ConfigService';
@@ -217,22 +217,5 @@ export default class ClipService {
   private reset() {
     this.activeTask = undefined;
     this.activeTaskResult = undefined;
-  }
-
-  static processHtmlForPreview(html: string) {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-
-    for (const el of doc.querySelectorAll('*')) {
-      for (const { name, value } of (el as HTMLElement).attributes) {
-        if (name.startsWith('data-sf-original-')) {
-          const attr = name.replace('data-sf-original-', '');
-          el.setAttribute(attr, value);
-        }
-      }
-    }
-
-    const result = doc.documentElement.outerHTML.replaceAll(/\/\* original URL: (.+?) \*\/url\((.+?)\)/g, 'url($1)');
-    return result;
   }
 }

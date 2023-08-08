@@ -135,4 +135,8 @@ export default class MaterialService extends BaseService {
 
     return true;
   }
+
+  async getTreeFragment(id: MaterialVO['id']) {
+    return [];
+  }
 }

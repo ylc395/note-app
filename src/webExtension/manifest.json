@@ -22,7 +22,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["content-script/style.css"],
+      "resources": ["content-script/style.css", "content-script/preview.html"],
       "matches": ["<all_urls>"]
     }
   ]

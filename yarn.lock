@@ -879,6 +879,11 @@
   dependencies:
     defer-to-connect "^2.0.0"
 
+"@thedutchcoder/postcss-rem-to-px@^0.0.2":
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/@thedutchcoder/postcss-rem-to-px/-/postcss-rem-to-px-0.0.2.tgz#632a3cabae8454d2c50ee61bfb88d77d31213e3c"
+  integrity sha512-M2T3bJSTgLtZF8+KDYDtSDAFGuTlaxYfitpjkmNswnfJ8AjbQ/g7NC+bqgAAViYWFV9I3tdrQuQ3Bu8j7GrjwA==
+
 "@tootallnate/once@2":
   version "2.0.0"
   resolved "https://registry.npmjs.org/@tootallnate/once/-/once-2.0.0.tgz"

@@ -2,14 +2,17 @@ const path = require('node:path');
 const { build } = require('vite');
 const { checker } = require('vite-plugin-checker');
 const { default: tsconfigPaths } = require('vite-tsconfig-paths');
-const { copyFileSync, emptyDirSync } = require('fs-extra');
+const { copyFileSync, emptyDirSync, ensureDirSync } = require('fs-extra');
 const chokidar = require('chokidar');
 const react = require('@vitejs/plugin-react-swc');
 const compact = require('lodash/compact');
 
 const outDir = path.resolve('dist/webExtension');
+const contentScriptOutDir = path.join(outDir, 'content-script');
 const tsconfigPath = path.resolve('src/webExtension/tsconfig.json');
-const manifest = './src/webExtension/manifest.json';
+const manifest = path.resolve('src/webExtension/manifest.json');
+const previewPage = path.resolve('src/webExtension/driver/contentScript/views/Modal/preview.html');
+const previewPageScript = path.resolve('src/webExtension/driver/contentScript/views/Modal/preview.js');
 
 const define = {
   'process.env.NODE_ENV': JSON.stringify('development'),
@@ -30,10 +33,17 @@ const COMMON_BUILD_OPTIONS = {
 };
 
 emptyDirSync(outDir);
+ensureDirSync(contentScriptOutDir);
 
 chokidar.watch(manifest).on('all', () => {
   copyFileSync(manifest, path.join(outDir, 'manifest.json'));
   console.log('copy manifest');
+});
+
+chokidar.watch([previewPage, previewPageScript]).on('all', (_, filePath) => {
+  const fileName = path.basename(filePath);
+  copyFileSync(filePath, path.join(contentScriptOutDir, path.basename(fileName)));
+  console.log(`copy ${fileName}`);
 });
 
 build({
@@ -56,7 +66,7 @@ const CONTENT_SCRIPT_DIR = 'src/webExtension/driver/contentScript';
 build({
   mode: 'development',
   build: {
-    outDir: path.join(outDir, 'content-script'),
+    outDir: contentScriptOutDir,
     lib: {
       entry: `${CONTENT_SCRIPT_DIR}/index.tsx`,
       fileName: () => 'index.js',
