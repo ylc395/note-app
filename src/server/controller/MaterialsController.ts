@@ -38,6 +38,11 @@ export default class MaterialsController {
     return await this.materialService.queryAnnotations(materialId);
   }
 
+  @Get('/materials/:id/tree-fragment')
+  async queryTreeFragment(@Param('id') materialId: string): Promise<MaterialVO[]> {
+    return await this.materialService.getTreeFragment(materialId);
+  }
+
   @Delete('/materials/annotations/:annotationId')
   async removeAnnotation(@Param('annotationId') annotationId: string): Promise<void> {
     return await this.materialService.removeAnnotation(annotationId);

@@ -63,7 +63,7 @@ export default abstract class Tree<E extends TreeNodeEntity = TreeNodeEntity, T 
 
   @computed
   get expandedNodes() {
-    return Object.values(this.nodes).filter((node) => node.isExpanded);
+    return Object.values(this.nodes).filter((node) => node.isExpanded && node !== this.root);
   }
 
   @computed
@@ -282,10 +282,6 @@ export default abstract class Tree<E extends TreeNodeEntity = TreeNodeEntity, T 
     }
 
     return ancestors;
-  }
-
-  destroy() {
-    this.removeAllListeners();
   }
 
   private getDescendants(id: TreeNode['id'] | null): TreeNode<T>[] {

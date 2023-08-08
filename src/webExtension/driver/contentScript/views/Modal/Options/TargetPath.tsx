@@ -22,12 +22,16 @@ export default observer(function TargetPath() {
   const click = useClick(context);
   const { getReferenceProps, getFloatingProps } = useInteractions([click]);
   const config = container.resolve(ConfigService);
-  const isShowingTree = isOpen && Boolean(config.targetTree);
 
   useEffect(() => {
-    config.updateTargetTree();
-    return () => config.destroyTargetTree();
-  }, [config]);
+    if (isOpen) {
+      config.updateTargetTree();
+
+      return () => {
+        config.targetTree = undefined;
+      };
+    }
+  }, [config, isOpen]);
 
   useEffect(() => {
     const { targetTree } = config;
@@ -42,11 +46,11 @@ export default observer(function TargetPath() {
   }, [close, config, config.targetTree]);
 
   useEffect(() => {
-    if (treeRef.current && isShowingTree) {
+    if (treeRef.current && isOpen && config.targetTree) {
       const selected = treeRef.current.querySelector('[data-selected="true"]');
       selected?.scrollIntoView({ block: 'center' });
     }
-  }, [isShowingTree]);
+  }, [isOpen, config.targetTree]);
 
   useClickAway(close, [refs.domReference, refs.floating]);
 
@@ -62,27 +66,30 @@ export default observer(function TargetPath() {
         <span>{config.target.title || (config.target.type === EntityTypes.Note ? '根' : '点击选择')}</span>
         <CaretDownFilled className="absolute right-5 top-1/2 -translate-y-1/2 opacity-60" />
       </div>
-      {isShowingTree && (
+      {isOpen && (
         <div
           ref={refs.setFloating}
           {...getFloatingProps()}
           style={floatingStyles}
           className=" max-h-80 w-[400px] overflow-auto rounded-md bg-white p-2 shadow-md"
         >
-          <Tree
-            ref={treeRef}
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            tree={config.targetTree!}
-            className="w-full"
-            nodeClassName="flex items-center cursor-pointer py-1 pl-2 data-[selected=true]:text-white data-[selected=true]:bg-blue-400"
-            titleClassName="truncate min-w-0 "
-            loadingIcon={<LoadingOutlined className="mr-1" />}
-            emptyChildrenView={({ indent }) => (
-              <div className="text-xs italic text-gray-500" style={{ paddingLeft: indent }}>
-                暂无子目录（重新展开节点以刷新）
-              </div>
-            )}
-          />
+          {config.targetTree ? (
+            <Tree
+              ref={treeRef}
+              tree={config.targetTree}
+              className="w-full"
+              nodeClassName="flex items-center cursor-pointer py-1 pl-2 data-[selected=true]:text-white data-[selected=true]:bg-blue-400"
+              titleClassName="truncate min-w-0 "
+              loadingIcon={<LoadingOutlined className="mr-1" />}
+              emptyChildrenView={({ indent }) => (
+                <div className="text-xs italic text-gray-500" style={{ paddingLeft: indent }}>
+                  暂无子目录（重新展开节点以刷新）
+                </div>
+              )}
+            />
+          ) : (
+            <LoadingOutlined />
+          )}
         </div>
       )}
     </div>

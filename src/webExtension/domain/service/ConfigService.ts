@@ -99,18 +99,12 @@ export default class ConfigService {
     return this.config?.[key];
   }
 
-  @action
-  destroyTargetTree() {
-    this.targetTree?.destroy();
-    this.targetTree = undefined;
-  }
-
   async updateTargetTree() {
     const targetType = this.get('targetEntityType');
-    let targetId = targetType && this.get('targetEntityId')?.[targetType];
+    let targetId = (targetType && this.get('targetEntityId')?.[targetType]) || null;
 
-    if (!targetType || targetType === EntityTypes.Memo || typeof targetId === 'undefined') {
-      return;
+    if (!targetType || targetType === EntityTypes.Memo) {
+      return [];
     }
 
     let tree: Tree | null = await this.mainApp.getTree(targetType, targetId);
@@ -126,18 +120,20 @@ export default class ConfigService {
       throw new Error('can not get a tree');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    runInAction(() => (this.targetTree = tree!));
-
-    if (targetId) {
-      for (const node of tree.getAncestors(targetId)) {
-        tree.toggleExpand(node.id);
+    runInAction(() => {
+      if (!tree) {
+        throw new Error('no tree');
       }
-    }
 
-    if (targetId || tree.hasNode(null)) {
+      if (targetId) {
+        for (const node of tree.getAncestors(targetId)) {
+          tree.toggleExpand(node.id);
+        }
+      }
+
       tree.toggleSelect(targetId);
-    }
+      this.targetTree = tree;
+    });
 
     tree.on('nodeSelected', this.setTargetId);
     tree.on('nodeExpanded', async (id) => {
