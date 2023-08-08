@@ -15,7 +15,7 @@ export function DragPreview() {
   const draggingItem = active?.data.current?.instance;
 
   const previewTree = useMemo(
-    () => (noteTree.hasNode(draggingItem) ? noteTree.getFragmentFromSelected() : undefined),
+    () => (noteTree.hasNode(draggingItem) ? noteTree.fromSelected() : undefined),
     [draggingItem, noteTree],
   );
 

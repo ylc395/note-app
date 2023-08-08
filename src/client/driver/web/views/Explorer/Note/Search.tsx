@@ -1,21 +1,17 @@
-import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 import { Input, Button, Tooltip } from 'antd';
 import { InfoCircleOutlined } from '@ant-design/icons';
 
 import SearchService from 'service/SearchService';
-import { ChangeEventHandler, useCallback } from 'react';
+import type { ChangeEventHandler } from 'react';
 import { Scopes, Types } from 'interface/search';
 
-export default observer(function Search() {
+export default (function Search() {
   const { search } = container.resolve(SearchService);
-  const onChange: ChangeEventHandler = useCallback(
-    (e) => {
-      const { value } = e.target as HTMLInputElement;
-      search({ terms: [value], types: [Types.Note] });
-    },
-    [search],
-  );
+  const onChange: ChangeEventHandler = (e) => {
+    const { value } = e.target as HTMLInputElement;
+    search({ terms: [value], types: [Types.Note] });
+  };
 
   return (
     <Input

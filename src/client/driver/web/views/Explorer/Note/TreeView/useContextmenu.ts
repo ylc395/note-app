@@ -2,13 +2,14 @@ import { useCallback, useContext } from 'react';
 import { container } from 'tsyringe';
 
 import { EntityTypes } from 'interface/entity';
-import type { NoteTreeNode } from 'model/note/Tree';
 import { TileSplitDirections } from 'model/workbench/TileManger';
+import type { NoteTreeNode } from 'model/note/Tree';
 
 import NoteService from 'service/NoteService';
 import EditorService from 'service/EditorService';
 import StarService from 'service/StarService';
 
+import { getIds } from 'utils/collection';
 import type { ContextmenuItem } from 'infra/ui';
 import { ui } from 'web/infra/ui';
 
@@ -28,13 +29,13 @@ export default function useContextmenu() {
 
       const { selectedNodes } = noteService.noteTree;
 
-      if (!selectedNodes.has(targetNode)) {
-        noteService.noteTree.toggleSelect(targetNode.key, true);
+      if (!selectedNodes.includes(targetNode)) {
+        noteService.noteTree.toggleSelect(targetNode.id, { multiple: true, reason: 'drag' });
       }
 
-      const targetId = targetNode.key;
-      const isMultiple = selectedNodes.size > 1;
-      const description = selectedNodes.size + '项';
+      const targetId = targetNode.id;
+      const isMultiple = selectedNodes.length > 1;
+      const description = selectedNodes.length + '项';
 
       const items: ContextmenuItem[] = isMultiple
         ? [
@@ -51,7 +52,7 @@ export default function useContextmenu() {
             { label: '在新窗口打开', key: 'openInNewWindow', visible: Boolean(focusedTile) },
             { type: 'separator' },
             { label: '移动至...', key: 'move' },
-            { label: targetNode.entity.isStar ? '已收藏' : '收藏', key: 'star', disabled: targetNode.entity.isStar },
+            // { label: targetNode.entity.isStar ? '已收藏' : '收藏', key: 'star', disabled: targetNode.entity.isStar },
             { label: '制作副本', key: 'duplicate' },
             { label: '编辑属性', key: 'edit' },
             { type: 'separator' },
@@ -67,7 +68,7 @@ export default function useContextmenu() {
         return;
       }
 
-      const targetIds = noteService.noteTree.getSelectedIds();
+      const targetIds = getIds(noteService.noteTree.selectedNodes);
 
       switch (action) {
         case 'duplicate':

@@ -8,9 +8,9 @@ import pageLifecycle from 'page-lifecycle';
 import EventBus from 'infra/EventBus';
 import { token as pageFactoryToken } from 'infra/page';
 
-import type NoteTree from 'model/NoteTree';
+import type NoteTree from 'model/note/Tree';
+import type MaterialTree from 'model/material/Tree';
 import { type Task, type TaskResult, EventNames, TaskTypes } from 'model/task';
-import type MaterialTree from 'model/MaterialTree';
 import type { Rect } from 'components/RectAreaSelector';
 
 import ConfigService from './ConfigService';

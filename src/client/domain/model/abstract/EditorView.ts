@@ -10,7 +10,7 @@ import type Tile from 'model/workbench/Tile';
 interface Breadcrumb {
   title: string;
   id: string;
-  icon?: string;
+  icon?: string | null;
 }
 
 export type Breadcrumbs = Array<Breadcrumb & { siblings: Breadcrumb[] }>;

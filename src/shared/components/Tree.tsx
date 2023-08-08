@@ -1,24 +1,69 @@
 import { CaretDownOutlined, CaretRightFilled } from '@ant-design/icons';
-import { type MouseEvent, forwardRef, ReactNode, useContext, createContext } from 'react';
+import { type MouseEvent, type ReactNode, type Ref, useContext, createContext } from 'react';
 import { observer } from 'mobx-react-lite';
+import { useDraggable, useDroppable } from '@dnd-kit/core';
+import uniqueId from 'lodash/uniqueId';
+import { useCreation } from 'ahooks';
 
-import type { TreeNode as TreeNodeModel, EntityWithParent } from 'model/Tree';
-import type TreeModel from 'model/Tree';
+import type { TreeNode as TreeNodeModel, TreeNodeEntity, TreeNode } from 'model/abstract/Tree';
+import type TreeModel from 'model/abstract/Tree';
+import memoize from 'lodash/memoize';
 
 const INDENT = 30;
 
-interface TreeContext {
-  tree: TreeModel<EntityWithParent>;
+interface TreeContext<T> {
+  tree: TreeModel<TreeNodeEntity, T>;
   nodeClassName?: string;
   titleClassName?: string;
+  draggingOverNodeClassName?: string;
+  draggingOverTitleClassName?: string;
   emptyChildrenView?: (param: { indent: number }) => ReactNode;
   loadingIcon?: ReactNode;
+  draggable?: boolean;
+  droppable?: boolean;
+  multiple?: boolean;
+  renderTitle?: (node: TreeNode<T>) => ReactNode;
 }
 
-const Context = createContext<TreeContext>({} as never);
+export const createTreeContext = memoize(function <T>() {
+  const context = createContext<TreeNodeModel<T>>({} as never);
 
-const TreeNode = observer(function ({ node, level }: { node: TreeNodeModel; level: number }) {
-  const { tree, nodeClassName: className, titleClassName, emptyChildrenView, loadingIcon } = useContext(Context);
+  return {
+    Provider: context.Provider,
+    context,
+  };
+});
+
+const TreeNode = observer(function <T>({
+  node,
+  level,
+  ctx,
+}: {
+  node: TreeNodeModel<T>;
+  level: number;
+  ctx: ReturnType<typeof createContext<TreeContext<T>>>;
+}) {
+  const {
+    tree,
+    nodeClassName,
+    titleClassName,
+    emptyChildrenView,
+    loadingIcon,
+    draggable,
+    droppable,
+    multiple,
+    renderTitle,
+  } = useContext(ctx);
+
+  const id = useCreation(() => uniqueId(`tree-node-${node.id}`), [node.id]);
+
+  const {
+    setNodeRef: setDraggableRef,
+    listeners,
+    attributes,
+  } = useDraggable({ id, disabled: !draggable, data: { instance: node } });
+
+  const { setNodeRef: setDroppableRef, isOver } = useDroppable({ id, data: { instance: node }, disabled: !droppable });
 
   const isLoading = node.isExpanded && !node.children;
   const useLoadingIcon = isLoading && loadingIcon;
@@ -34,18 +79,23 @@ const TreeNode = observer(function ({ node, level }: { node: TreeNodeModel; leve
     tree.toggleExpand(node.id);
   };
 
-  const select = (e: MouseEvent) => {
+  const onClick = (e: MouseEvent) => {
     e.stopPropagation();
-
-    if (!node.isSelected) {
-      tree.toggleSelect(node.id);
-    }
+    tree.toggleSelect(node.id, { multiple: (multiple && e.metaKey) || e.ctrlKey });
   };
 
   return (
     <>
-      <div style={{ paddingLeft: `${level * INDENT}px` }}>
-        <div className={className} data-selected={node.isSelected}>
+      <div style={{ paddingLeft: `${level * INDENT}px` }} ref={setDroppableRef}>
+        <div
+          className={nodeClassName}
+          data-dragging={node.isUndroppable ? 'not-allowed' : isOver ? 'over' : undefined}
+          data-selected={node.isSelected}
+          ref={setDraggableRef}
+          onClick={onClick}
+          {...listeners}
+          {...attributes}
+        >
           {!node.isLeaf &&
             (useLoadingIcon ? (
               loadingIcon
@@ -54,30 +104,42 @@ const TreeNode = observer(function ({ node, level }: { node: TreeNodeModel; leve
             ) : (
               <CaretRightFilled onClick={expand} />
             ))}
-          <span onClick={select} data-selected={node.isSelected} className={titleClassName}>
-            {node.title}
+          <span
+            data-dragging={node.isUndroppable ? 'not-allowed' : isOver ? 'over' : undefined}
+            data-selected={node.isSelected}
+            className={titleClassName}
+          >
+            {renderTitle ? renderTitle(node) : node.title}
           </span>
         </div>
       </div>
       {node.isExpanded &&
         node.children &&
         (node.children.length > 0
-          ? node.children.map((child) => <TreeNode key={child.id} node={child} level={level + 1} />)
+          ? node.children.map((child) => <TreeNode ctx={ctx} key={child.id} node={child} level={level + 1} />)
           : emptyChildrenView?.({ indent: (level + 1) * INDENT }))}
     </>
   );
 });
 
 export default observer(
-  forwardRef<HTMLDivElement, TreeContext & { className?: string }>(function Tree({ className, ...ctx }, treeRef) {
+  function Tree<T = void>(
+    { className, visibleRoot, ...ctx }: { className?: string; visibleRoot?: boolean } & TreeContext<T>,
+    treeRef: Ref<HTMLDivElement>,
+  ) {
+    const Context = useCreation(() => createContext<TreeContext<T>>({} as never), []);
+
     return (
       <Context.Provider value={ctx}>
         <div className={className} ref={treeRef}>
-          {ctx.tree.roots.map((node) => (
-            <TreeNode key={node.id} node={node} level={0} />
-          ))}
+          {visibleRoot ? (
+            <TreeNode<T> node={ctx.tree.root} level={0} ctx={Context} />
+          ) : (
+            ctx.tree.root.children?.map((node) => <TreeNode<T> ctx={Context} key={node.id} node={node} level={0} />)
+          )}
         </div>
       </Context.Provider>
     );
-  }),
+  },
+  { forwardRef: true },
 );

@@ -4,7 +4,7 @@ import { type ChangeEvent, useCallback, useContext } from 'react';
 import { InfoCircleOutlined, FileSearchOutlined } from '@ant-design/icons';
 
 import EditorContext from './Context';
-import { normalizeTitle } from 'interface/Note';
+import { normalizeTitle } from 'interface/note';
 
 export default observer(function NoteTitle() {
   const { markdownEditor, editorView, infoModal } = useContext(EditorContext);

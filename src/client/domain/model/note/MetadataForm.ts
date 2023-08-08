@@ -1,5 +1,5 @@
 import Form from 'model/abstract/Form';
-import type { NoteDTO } from 'interface/Note';
+import type { NoteDTO } from 'interface/note';
 
 export interface NoteMetadata {
   icon: NonNullable<NoteDTO['icon']> | null | symbol;

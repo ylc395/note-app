@@ -6,8 +6,8 @@ import Modal from 'web/components/Modal';
 import useModal from 'web/components/Modal/useModal';
 
 import Search from './Search';
-import DirectoryOperations from './DirectoryView/Operations';
-import DirectoryView from './DirectoryView';
+import DirectoryOperations from './TreeView/Operations';
+import DirectoryView from './TreeView';
 import NewMaterial from './NewMaterial';
 import Context, { type Context as IContext } from './Context';
 

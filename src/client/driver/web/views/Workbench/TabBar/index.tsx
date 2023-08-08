@@ -16,7 +16,7 @@ export default observer(function TabBar({ tileId }: { tileId: Tile['id'] }) {
   const { tileManager, moveEditorView } = container.resolve(EditorService);
   const tile = tileManager.getTile(tileId);
   const { currentEditorView: currentEditor, editorViews: editors, closeAllEditorViews: closeAllEditors } = tile;
-  const { setNodeRef, isOver } = useDroppable({
+  const { setNodeRef: setDroppableRef, isOver } = useDroppable({
     id: `${tileId}-tab`,
     data: { instance: tile },
   });
@@ -49,7 +49,7 @@ export default observer(function TabBar({ tileId }: { tileId: Tile['id'] }) {
 
   return (
     <div className="flex justify-between border-0 border-b border-solid border-gray-200">
-      <div className={`scrollbar-hidden flex grow overflow-auto ${isOver ? 'bg-gray-200' : ''}`} ref={setNodeRef}>
+      <div className={`scrollbar-hidden flex grow overflow-auto ${isOver ? 'bg-gray-200' : ''}`} ref={setDroppableRef}>
         <SortableContext items={editors} strategy={horizontalListSortingStrategy}>
           {editors.map((editor) => (
             <TabItem key={editor.id} editorView={editor} />

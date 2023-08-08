@@ -4,7 +4,7 @@ import { singleton, container } from 'tsyringe';
 
 import { CONFIG_KEY, type Config } from 'model/config';
 import { EntityTypes } from 'interface/entity';
-import type Tree from 'model/Tree';
+import type Tree from 'model/abstract/Tree';
 
 import MainAppService from './MainAppService';
 
@@ -75,7 +75,7 @@ export default class ConfigService {
   }
 
   @action
-  private setTargetId(id: string | null) {
+  private readonly setTargetId = (id: string | null) => {
     if (!this.config) {
       throw new Error('no config');
     }
@@ -84,7 +84,7 @@ export default class ConfigService {
       ...this.config.targetEntityId,
       [this.config.targetEntityType]: id,
     });
-  }
+  };
 
   @action
   set<T extends keyof Config>(key: T, value: Config[T]) {
@@ -139,11 +139,8 @@ export default class ConfigService {
       tree.toggleSelect(targetId);
     }
 
-    tree.on('nodeSelected', ({ id, isVirtual }) => {
-      this.setTargetId(isVirtual ? null : id);
-    });
-
-    tree.on('nodeExpanded', async ({ id }) => {
+    tree.on('nodeSelected', this.setTargetId);
+    tree.on('nodeExpanded', async (id) => {
       const children = await this.mainApp.getChildren(targetType, id);
 
       if (children) {

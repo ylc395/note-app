@@ -1,11 +1,12 @@
 import { makeObservable, action, toJS } from 'mobx';
 import debounce from 'lodash/debounce';
+import { container } from 'tsyringe';
 
 import { EntityTypes } from 'interface/entity';
-import type { NoteVO, NoteBodyVO, NoteBodyDTO, NoteDTO } from 'interface/Note';
+import type { NoteVO, NoteBodyVO, NoteBodyDTO, NoteDTO } from 'interface/note';
 import type Tile from 'model/workbench/Tile';
 import Editor from 'model/abstract/Editor';
-import type NoteTree from './Tree';
+import NoteTree from 'model/note/Tree';
 
 export interface Entity {
   body: NoteBodyVO;
@@ -14,7 +15,8 @@ export interface Entity {
 
 export default class NoteEditor extends Editor<Entity> {
   readonly entityType = EntityTypes.Note;
-  constructor(tile: Tile, noteId: NoteVO['id'], readonly noteTree: NoteTree) {
+  readonly noteTree = container.resolve(NoteTree);
+  constructor(tile: Tile, noteId: NoteVO['id']) {
     super(tile, noteId);
     makeObservable(this);
   }
@@ -56,7 +58,7 @@ export default class NoteEditor extends Editor<Entity> {
 
     const metadata = toJS(this.entity.metadata);
     this.uploadNote(metadata);
-    this.noteTree.updateTreeByEntity(metadata);
+    this.noteTree.updateTree(metadata);
   }
 
   private readonly uploadNote = debounce((note: Partial<NoteVO>) => {

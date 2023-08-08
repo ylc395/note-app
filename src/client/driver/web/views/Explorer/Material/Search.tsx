@@ -1,8 +1,7 @@
-import { observer } from 'mobx-react-lite';
 import { Button, Input, Tooltip } from 'antd';
 import { InfoCircleOutlined } from '@ant-design/icons';
 
-export default observer(function Search() {
+export default function Search() {
   return (
     <Input
       placeholder="搜索素材"
@@ -14,4 +13,4 @@ export default observer(function Search() {
       }
     />
   );
-});
+}

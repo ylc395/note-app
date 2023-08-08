@@ -3,9 +3,10 @@ import { makeObservable, computed } from 'mobx';
 import { IS_DEV } from 'infra/constants';
 import EditorView, { type Breadcrumbs } from 'model/abstract/EditorView';
 import type Tile from 'model/workbench/Tile';
-import { normalizeTitle, type NoteVO } from 'interface/Note';
+import { normalizeTitle } from 'interface/note';
 
 import type NoteEditor from './Editor';
+import type { NoteTreeNode } from 'model/note/Tree';
 
 interface State {
   scrollTop: number;
@@ -32,20 +33,22 @@ export default class NoteEditorView extends EditorView<NoteEditor, State> {
   get breadcrumbs() {
     const result: Breadcrumbs = [];
     const { editor } = this;
-    let note = editor.noteTree.getNode(editor.entityId, true)?.entity;
-    const noteToBreadcrumb = (note: NoteVO) => ({
-      id: note.id,
-      title: normalizeTitle(note),
-      icon: note.icon || undefined,
+
+    const nodeToBreadcrumb = (node: NoteTreeNode) => ({
+      id: node.id,
+      title: node.title,
+      icon: node.attributes?.icon,
     });
 
-    while (note) {
+    let node: NoteTreeNode | null = editor.noteTree.getNode(editor.entityId);
+
+    while (node && node !== editor.noteTree.root) {
       result.unshift({
-        ...noteToBreadcrumb(note),
-        siblings: editor.noteTree.getSiblings(note.id).map(({ entity: note }) => noteToBreadcrumb(note)),
+        ...nodeToBreadcrumb(node),
+        siblings: editor.noteTree.getSiblings(node.id).map(nodeToBreadcrumb),
       });
 
-      note = note.parentId ? editor.noteTree.getNode(note.parentId).entity : undefined;
+      node = node.parent;
     }
 
     return result;

@@ -10,7 +10,7 @@ import TreeOperations from './TreeView/Operations';
 import Search from './Search';
 import CustomView from './CustomView';
 import TargetTree from './TargetTree';
-import MetadataForm from './MetadataForm';
+// import MetadataForm from './MetadataForm';
 import Context from './Context';
 
 export default observer(function NoteExplorer() {
@@ -35,9 +35,9 @@ export default observer(function NoteExplorer() {
         <Modal open={movingModal.isOpen}>
           <TargetTree />
         </Modal>
-        <Modal open={editingModal.isOpen}>
+        {/* <Modal open={editingModal.isOpen}>
           <MetadataForm />
-        </Modal>
+        </Modal> */}
       </div>
     </Context.Provider>
   );

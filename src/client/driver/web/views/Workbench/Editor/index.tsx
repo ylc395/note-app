@@ -17,10 +17,10 @@ import useDrop from './useDrop';
 export default observer(function Editor({ tileId }: { tileId: Tile['id'] }) {
   const { tileManager } = container.resolve(EditorService);
   const tile = tileManager.getTile(tileId);
-  const { setNodeRef, isOver, dropPosition } = useDrop(tile);
+  const { setDroppableRef, isOver, dropPosition } = useDrop(tile);
 
   return (
-    <div ref={setNodeRef} className="relative min-h-0 shrink grow">
+    <div ref={setDroppableRef} className="relative min-h-0 shrink grow">
       {tile.currentEditorView instanceof NoteEditor && <NoteEditorView editorView={tile.currentEditorView} />}
       {tile.currentEditorView instanceof ImageEditor && <ImageEditorView editorView={tile.currentEditorView} />}
       {tile.currentEditorView instanceof PdfEditor && <PdfEditorView editorView={tile.currentEditorView} />}

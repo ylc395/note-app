@@ -79,7 +79,7 @@ export default observer(function TargetPath() {
             loadingIcon={<LoadingOutlined className="mr-1" />}
             emptyChildrenView={({ indent }) => (
               <div className="text-xs italic text-gray-500" style={{ paddingLeft: indent }}>
-                暂无子目录
+                暂无子目录（重新展开节点以刷新）
               </div>
             )}
           />

@@ -1,54 +1,36 @@
-import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
-import { useCallback, useEffect } from 'react';
+import { useEffect } from 'react';
 import clsx from 'clsx';
 
 import NoteService from 'service/NoteService';
-import type { NoteTreeNode } from 'model/note/Tree';
-import Tree, { type TreeProps } from 'web/components/Tree';
+import Tree from 'components/Tree';
 
 import NodeTitle from './NodeTitle';
-import useDrag from './useDrag';
-import useContextmenu from './useContextmenu';
+import useDnd from './useDnd';
 
-export default observer(function NoteTreeView() {
-  const { selectNote, noteTree } = container.resolve(NoteService);
-  const handleExpand = useCallback<NonNullable<TreeProps<NoteTreeNode>['onExpand']>>(
-    ({ key }) => noteTree.toggleExpand(key, false),
-    [noteTree],
-  );
-  const handleSelect = useCallback<NonNullable<TreeProps<NoteTreeNode>['onSelect']>>(
-    ({ entity }, isMultiple) => selectNote(entity, isMultiple),
-    [selectNote],
-  );
-  const titleRender = useCallback<NonNullable<TreeProps<NoteTreeNode>['titleRender']>>(
-    (node) => <NodeTitle node={node} />,
-    [],
-  );
-  const { isOver, setNodeRef } = useDrag(noteTree);
-  const onContextmenu = useContextmenu();
+export default function NoteTreeView() {
+  const { noteTree, loadChildren } = container.resolve(NoteService);
+  const { isOver, setDroppableRef } = useDnd();
 
   useEffect(() => {
-    noteTree.loadChildren();
-  }, [noteTree]);
+    loadChildren(null);
+  }, [loadChildren]);
 
   return (
     <div
       className={clsx('h-full', {
-        'cursor-pointer bg-blue-50': isOver && !noteTree.invalidParentKeys.has(null),
-        'cursor-no-drop': isOver && noteTree.invalidParentKeys.has(null),
+        'cursor-pointer bg-blue-50': isOver && !noteTree.root.isUndroppable,
+        'cursor-no-drop': isOver && noteTree.root.isUndroppable,
       })}
-      ref={setNodeRef}
+      ref={setDroppableRef}
     >
       <Tree
-        multiple
         draggable
+        droppable
+        nodeClassName="tree-node"
         tree={noteTree}
-        onContextmenu={onContextmenu}
-        titleRender={titleRender}
-        onSelect={handleSelect}
-        onExpand={handleExpand}
+        renderTitle={(node) => <NodeTitle node={node} />}
       />
     </div>
   );
-});
+}

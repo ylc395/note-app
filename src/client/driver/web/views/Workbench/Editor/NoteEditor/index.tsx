@@ -1,8 +1,8 @@
-import { observer, useLocalObservable } from 'mobx-react-lite';
+import { useLocalObservable } from 'mobx-react-lite';
 import { observable, runInAction } from 'mobx';
 import { useEffect } from 'react';
 
-import type NoteEditor from 'model/note/EditorView';
+import type NoteEditorModel from 'model/note/EditorView';
 import Modal from 'web/components/Modal';
 
 import Body from './Body';
@@ -12,7 +12,7 @@ import Info from './Info';
 import Context, { type EditorContext } from './Context';
 import useModal from 'web/components/Modal/useModal';
 
-export default observer(function NoteEditor({ editorView }: { editorView: NoteEditor }) {
+export default function NoteEditor({ editorView }: { editorView: NoteEditorModel }) {
   const infoModal = useModal();
   const context = useLocalObservable<EditorContext>(
     () => ({
@@ -47,4 +47,4 @@ export default observer(function NoteEditor({ editorView }: { editorView: NoteEd
       </div>
     </Context.Provider>
   );
-});
+}

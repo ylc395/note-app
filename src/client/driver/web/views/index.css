@@ -12,6 +12,18 @@ body {
   outline: none;
 }
 
+@layer components {
+  .tree-node {
+    @apply flex cursor-pointer
+      data-[selected=true]:bg-blue-600
+      data-[selected=true]:text-white
+      data-[dragging="over"]:bg-blue-100
+      data-[dragging="not-allowed"]:bg-gray-100
+      data-[dragging="not-allowed"]:cursor-not-allowed
+      data-[dragging="not-allowed"]:text-black;
+  }
+}
+
 @layer utilities {
   .scrollbar-hidden {
     scrollbar-width: none;

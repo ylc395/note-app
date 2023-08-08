@@ -7,8 +7,8 @@ import type { FileVO } from 'interface/file';
 import type { NoteBodyDTO, NoteDTO, NoteVO } from 'interface/note';
 import type { MemoDTO } from 'interface/memo';
 import { type EntityId, EntityTypes } from 'interface/entity';
-import NoteTree from 'model/NoteTree';
-import MaterialTree from 'model/MaterialTree';
+import NoteTree from 'model/note/Tree';
+import MaterialTree from 'model/material/Tree';
 
 export default class MainAppService {
   constructor(checkStatus?: boolean) {
@@ -113,7 +113,7 @@ export default class MainAppService {
         'GET',
         targetId ? `/notes/${targetId}/tree-fragment` : `/notes`,
       );
-      return entities && NoteTree.from(entities, { radio: true, virtualRoot: true });
+      return entities && NoteTree.from(entities);
     }
 
     if (type === EntityTypes.Material) {
@@ -122,7 +122,7 @@ export default class MainAppService {
         'GET',
         targetId ? `/materials/${targetId}/tree-fragment${query}` : `/materials${query}`,
       );
-      return entities && MaterialTree.from(entities, { radio: true });
+      return entities && MaterialTree.from(entities);
     }
 
     return null;

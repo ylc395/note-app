@@ -14,12 +14,12 @@ export default observer(function Title({ node }: { node: NoteTreeNode }) {
 
   return (
     <span className="group flex">
-      <IconTitle icon={node.entity.icon} title={`${IS_DEV ? `${node.key.slice(0, 3)} ` : ''}${node.title}`} />
+      <IconTitle icon={node.attributes?.icon} title={`${IS_DEV ? `${node.id.slice(0, 3)} ` : ''}${node.title}`} />
       <Tooltip title="新建子笔记" placement="right">
         <Button
           onClick={(e) => {
             e.stopPropagation();
-            createNote(node.key);
+            createNote(node.id);
           }}
           className="invisible ml-auto mr-2 group-hover:visible"
           size="small"

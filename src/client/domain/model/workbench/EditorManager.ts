@@ -1,5 +1,3 @@
-import { container } from 'tsyringe';
-
 import { EntityTypes, type EntityLocator } from 'interface/entity';
 import type Editor from 'model/abstract/Editor';
 import { Events as EditorEvents } from 'model/abstract/Editor';
@@ -17,15 +15,14 @@ import ImageEditor from 'model/material/editor/ImageEditor';
 import ImageEditorView from 'model/material/view/ImageEditorView';
 
 import type Tile from './Tile';
-import { token as treeToken } from 'model/note/Tree';
 
 export default class EditorManager {
-  private editors: { [key in EntityTypes]?: Record<EntityLocator['id'], Editor> } = {
+  private readonly editors: { [key in EntityTypes]?: Record<EntityLocator['id'], Editor> } = {
     [EntityTypes.Note]: {},
     [EntityTypes.Material]: {},
   };
 
-  private editorViews = new Map<EntityEditor, Set<EditorView>>();
+  private readonly editorViews = new Map<EntityEditor, Set<EditorView>>();
 
   getEditorByEntity(entity: EntityLocator) {
     return this.editors[entity.type]?.[entity.id];
@@ -40,7 +37,7 @@ export default class EditorManager {
 
     switch (entity.type) {
       case EntityTypes.Note:
-        editor = new NoteEditor(tile, entity.id, container.resolve(treeToken));
+        editor = new NoteEditor(tile, entity.id);
         break;
       case EntityTypes.Material:
         editor = this.createMaterialEditor(tile, entity);

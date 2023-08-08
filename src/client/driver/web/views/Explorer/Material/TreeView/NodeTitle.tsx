@@ -6,7 +6,6 @@ import { useContext } from 'react';
 
 import type { MaterialTreeNode } from 'model/material/Tree';
 import MaterialService from 'service/MaterialService';
-import { isDirectory } from 'interface/material';
 import { IS_DEV } from 'infra/constants';
 
 import IconTitle from 'web/components/IconTitle';
@@ -18,14 +17,14 @@ export default observer(function Title({ node }: { node: MaterialTreeNode }) {
 
   return (
     <span className="group flex">
-      <IconTitle icon={node.entity.icon} title={`${IS_DEV ? `${node.key.slice(0, 3)} ` : ''}${node.title}`} />
-      {isDirectory(node.entity) && (
+      <IconTitle icon={node.attributes?.icon} title={`${IS_DEV ? `${node.id.slice(0, 3)} ` : ''}${node.title}`} />
+      {!node.isLeaf && (
         <>
           <Tooltip title="新建素材" placement="right">
             <Button
               onClick={(e) => {
                 e.stopPropagation();
-                setCurrentMaterialId(node.entity.id);
+                setCurrentMaterialId(node.id);
                 newMaterialModal.open();
               }}
               className="invisible ml-auto mr-2 group-hover:visible"
@@ -38,7 +37,7 @@ export default observer(function Title({ node }: { node: MaterialTreeNode }) {
             <Button
               onClick={(e) => {
                 e.stopPropagation();
-                createDirectory(node.key);
+                createDirectory(node.id);
               }}
               className="invisible ml-auto mr-2 group-hover:visible"
               size="small"

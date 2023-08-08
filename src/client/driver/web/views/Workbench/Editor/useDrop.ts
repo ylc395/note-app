@@ -29,7 +29,7 @@ export default function useDrop(tile: Tile) {
   const { noteTree } = container.resolve(NoteService);
   const [dropPosition, setDropPosition] = useState<Position>();
   const {
-    setNodeRef,
+    setNodeRef: setDroppableRef,
     isOver,
     rect: editorRect,
   } = useDroppable({
@@ -62,7 +62,7 @@ export default function useDrop(tile: Tile) {
         if (draggingItem instanceof EditorView) {
           moveEditor(draggingItem, tile);
         } else {
-          openEntity({ id: draggingItem.entity.id, type: EntityTypes.Note });
+          openEntity({ id: draggingItem.id, type: EntityTypes.Note });
         }
         return;
       }
@@ -74,7 +74,7 @@ export default function useDrop(tile: Tile) {
       } else if (draggingItem instanceof EditorView) {
         moveEditor(draggingItem, { from: tile, splitDirection: d });
       } else {
-        openEntity({ id: draggingItem.entity.id, type: EntityTypes.Note }, { direction: d, from: overItem });
+        openEntity({ id: draggingItem.id, type: EntityTypes.Note }, { direction: d, from: overItem });
       }
     },
     onDragMove: throttle(({ active }: DragMoveEvent) => {
@@ -106,5 +106,5 @@ export default function useDrop(tile: Tile) {
     }, 300),
   });
 
-  return { setNodeRef, isOver, dropPosition };
+  return { setDroppableRef, isOver, dropPosition };
 }

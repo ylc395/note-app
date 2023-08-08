@@ -44,9 +44,6 @@ export type NoteBodyVO = NoteBodyDTO['content'];
 
 export type NoteQuery = Infer<typeof noteQuerySchema>;
 
-type NotePathNode = Pick<NoteVO, 'title' | 'icon' | 'id'>;
-export type NotePath = Array<NotePathNode & { siblings: NotePathNode[] }>;
-
 export function normalizeTitle(note?: Pick<NoteVO, 'title' | 'createdAt'>) {
   if (!note) {
     return '';
