@@ -1,4 +1,4 @@
-import type { EntityMaterialVO } from 'interface/material';
+import type { EntityMaterialVO } from 'model/material';
 import type Tile from 'model/workbench/Tile';
 import Editor from './Editor';
 

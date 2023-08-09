@@ -1,5 +1,5 @@
 import { createTypedListener } from 'nest-typed-event-emitter';
-import type { EntityLocator } from 'interface/entity';
+import type { EntityLocator } from 'model/entity';
 
 export enum Events {
   ContentUpdated = 'content.updated',

@@ -7,7 +7,7 @@ import { singleton, container } from 'tsyringe';
 //   ExpressionNodeType,
 // } from 'search-expression-parser';
 
-import type { SearchQuery, SearchResult } from 'interface/search';
+import type { SearchQuery, SearchResult } from 'model/search';
 import { token as remoteToken } from 'infra/remote';
 
 @singleton()

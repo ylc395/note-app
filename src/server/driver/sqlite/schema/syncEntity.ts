@@ -1,5 +1,5 @@
 import type { SchemaModule } from 'kysely';
-import type { EntityTypes } from 'interface/entity';
+import type { EntityTypes } from 'model/entity';
 
 export const tableName = 'sync_entities';
 

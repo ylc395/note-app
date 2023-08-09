@@ -2,11 +2,11 @@ import { container } from 'tsyringe';
 import { makeObservable, observable, runInAction } from 'mobx';
 
 import { Statuses, token as mainAppToken, type Payload } from 'infra/MainApp';
-import { MaterialTypes, type DirectoryVO, type MaterialDTO } from 'interface/material';
-import type { FileVO } from 'interface/file';
-import type { NoteBodyDTO, NoteDTO, NoteVO } from 'interface/note';
-import type { MemoDTO } from 'interface/memo';
-import { type EntityId, type EntityParentId, EntityTypes } from 'interface/entity';
+import { MaterialTypes, type DirectoryVO, type MaterialDTO } from 'model/material';
+import type { FileVO } from 'model/file';
+import type { NoteBodyDTO, NoteDTO, NoteVO } from 'model/note';
+import type { MemoDTO } from 'model/memo';
+import { type EntityId, type EntityParentId, EntityTypes } from 'model/entity';
 import NoteTree from 'model/note/Tree';
 import MaterialTree from 'model/material/Tree';
 

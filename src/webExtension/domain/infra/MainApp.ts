@@ -1,6 +1,6 @@
 import type { InjectionToken } from 'tsyringe';
 
-import type { EntityParentId } from 'interface/entity';
+import type { EntityParentId } from 'model/entity';
 import type { TaskResult } from 'model/task';
 
 import type { RemoteCallable, RemoteId } from './remoteApi';

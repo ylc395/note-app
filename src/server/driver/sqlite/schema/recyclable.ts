@@ -1,4 +1,4 @@
-import type { EntityTypes } from 'interface/entity';
+import type { EntityTypes } from 'model/entity';
 import { type SchemaModule, type Generated, sql } from 'kysely';
 
 export const tableName = 'recyclables';

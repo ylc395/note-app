@@ -3,7 +3,7 @@ import { useDroppable, useDndMonitor, type DragMoveEvent } from '@dnd-kit/core';
 import { container } from 'tsyringe';
 import throttle from 'lodash/throttle';
 
-import { EntityTypes } from 'interface/entity';
+import { EntityTypes } from 'model/entity';
 import { TileSplitDirections } from 'model/workbench/TileManger';
 import type Tile from 'model/workbench/Tile';
 import EditorService from 'service/EditorService';

@@ -1,9 +1,9 @@
 import type { RevisionDTO, RevisionRepository } from 'service/repository/RevisionRepository';
 
-import type { EntityLocator } from 'interface/entity';
+import type { EntityLocator } from 'model/entity';
 import BaseRepository from './BaseRepository';
 import schema from '../schema/revision';
-import type { RevisionVO } from 'interface/revision';
+import type { RevisionVO } from 'model/revision';
 
 const { tableName } = schema;
 

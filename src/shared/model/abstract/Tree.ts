@@ -3,6 +3,7 @@ import pull from 'lodash/pull';
 import differenceWith from 'lodash/differenceWith';
 import { Emitter } from 'strict-event-emitter';
 
+import type { HierarchyEntity } from '../entity';
 import { getIds } from '../../utils/collection';
 
 export interface TreeNode<T = void> {
@@ -17,10 +18,7 @@ export interface TreeNode<T = void> {
   attributes?: T;
 }
 
-export interface TreeNodeEntity {
-  id: string;
-  parentId: string | null;
-}
+export type TreeNodeEntity = HierarchyEntity;
 
 const ROOT_NODE_KEY = '__root-node';
 

@@ -1,5 +1,5 @@
-import type { EntityLocator } from 'interface/entity';
-import type { SearchQuery, SearchResult } from 'interface/search';
+import type { EntityLocator } from 'model/entity';
+import type { SearchQuery, SearchResult } from 'model/search';
 
 export interface SearchEngine {
   ready: Promise<void>;
@@ -9,4 +9,4 @@ export interface SearchEngine {
 
 export const token = Symbol();
 
-export { type SearchQuery, type SearchResult, Types, Scopes } from 'interface/search';
+export { type SearchQuery, type SearchResult, Types, Scopes } from 'model/search';

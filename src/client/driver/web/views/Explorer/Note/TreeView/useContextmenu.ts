@@ -1,7 +1,7 @@
 import { useCallback, useContext } from 'react';
 import { container } from 'tsyringe';
 
-import { EntityTypes } from 'interface/entity';
+import { EntityTypes } from 'model/entity';
 import { TileSplitDirections } from 'model/workbench/TileManger';
 import type { NoteTreeNode } from 'model/note/Tree';
 

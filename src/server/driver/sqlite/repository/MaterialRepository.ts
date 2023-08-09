@@ -2,14 +2,16 @@ import pick from 'lodash/pick';
 import { readFile } from 'fs-extra';
 import type { Selectable } from 'kysely';
 
-import type { MaterialRepository, Directory, MaterialQuery } from 'service/repository/MaterialRepository';
 import {
   MaterialTypes,
   type DirectoryVO,
   type EntityMaterialVO,
   type MaterialDTO,
   type MaterialVO,
-} from 'interface/material';
+  type Directory,
+  type MaterialQuery,
+} from 'model/material';
+import type { MaterialRepository } from 'service/repository/MaterialRepository';
 
 import schema, { type Row } from '../schema/material';
 import fileSchema, { type Row as FileRow } from '../schema/file';
@@ -92,8 +94,8 @@ export default class SqliteMaterialRepository extends BaseRepository implements 
       ? this.db.selectFrom(tableName).where('parentId', '=', query.parentId)
       : this.db.selectFrom(tableName).where('parentId', 'is', null);
 
-    if (query.ids) {
-      qb = qb.where(`${tableName}.id`, 'in', query.ids);
+    if (query.id) {
+      qb = qb.where(`${tableName}.id`, 'in', query.id);
     }
 
     if (query.type) {

@@ -1,5 +1,5 @@
-import type { EntityLocator } from 'interface/entity';
-import type { RevisionVO } from 'interface/revision';
+import type { EntityLocator } from 'model/entity';
+import type { RevisionVO } from 'model/revision';
 
 export interface RevisionDTO {
   entityId: EntityLocator['id'];

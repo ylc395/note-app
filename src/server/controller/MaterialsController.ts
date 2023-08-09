@@ -3,15 +3,15 @@ import { Controller } from '@nestjs/common';
 import {
   type MaterialDTO,
   type MaterialVO,
-  type MaterialQuery,
+  type ClientMaterialQuery,
   type AnnotationDTO,
   type AnnotationVO,
   type AnnotationPatchDTO,
   materialDTOSchema,
-  materialQuerySchema,
+  ClientMaterialQuerySchema,
   annotationDTOSchema,
   annotationPatchSchema,
-} from 'interface/material';
+} from 'model/material';
 import MaterialService from 'service/MaterialService';
 
 import { createSchemaPipe, Post, Body, Get, Query, Param, Delete, Patch } from './decorators';
@@ -58,7 +58,7 @@ export default class MaterialsController {
 
   @Get('/materials/:id')
   async queryOne(@Param('id') materialId: string): Promise<MaterialVO> {
-    return await this.materialService.queryById(materialId);
+    return await this.materialService.query(materialId);
   }
 
   @Post('/materials')
@@ -67,7 +67,7 @@ export default class MaterialsController {
   }
 
   @Get('/materials')
-  async query(@Query(createSchemaPipe(materialQuerySchema)) query: MaterialQuery): Promise<MaterialVO[]> {
+  async query(@Query(createSchemaPipe(ClientMaterialQuerySchema)) query: ClientMaterialQuery): Promise<MaterialVO[]> {
     return await this.materialService.query(query);
   }
 }

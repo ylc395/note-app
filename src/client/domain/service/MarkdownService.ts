@@ -1,7 +1,7 @@
 import { container, singleton } from 'tsyringe';
 
 import { token as remoteToken } from 'infra/remote';
-import type { FileVO, FilesDTO } from 'interface/file';
+import type { FileVO, FilesDTO } from 'model/file';
 
 @singleton()
 export default class MarkdownService {

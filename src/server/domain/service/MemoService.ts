@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 
-import type { MemoDTO, MemoPatchDTO, MemoPaginationQuery, ParentMemoVO, MemoVO } from 'interface/memo';
+import type { MemoDTO, MemoPatchDTO, MemoPaginationQuery, ParentMemoVO, MemoVO } from 'model/memo';
 import { Events } from 'model/events';
 
 import BaseService from './BaseService';
-import { EntityTypes } from 'interface/entity';
+import { EntityTypes } from 'model/entity';
 
 @Injectable()
 export default class MemoService extends BaseService {

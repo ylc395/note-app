@@ -1,17 +1,19 @@
 import type { Selectable } from 'kysely';
 import omit from 'lodash/omit';
 
-import type { EntityId } from 'interface/entity';
-import type { NoteRepository, NoteQuery, InternalNoteDTO } from 'service/repository/NoteRepository';
-import type { NoteDTO, NoteVO, NotesDTO } from 'interface/note';
+import type { EntityId } from 'model/entity';
+import type { NoteQuery, RawNote } from 'model/note';
+import type { NoteRepository } from 'service/repository/NoteRepository';
+import type { NoteDTO, NoteVO, NotesDTO } from 'model/note';
 
 import BaseRepository from './BaseRepository';
 import schema, { type Row } from '../schema/note';
+import { groupDescantsByAncestorId } from './treeHelper';
 
 const { tableName } = schema;
 
 export default class SqliteNoteRepository extends BaseRepository implements NoteRepository {
-  async create(note: InternalNoteDTO) {
+  async create(note: RawNote) {
     const row = await this.createOne(tableName, {
       ...SqliteNoteRepository.dtoToRow(note),
       id: this.generateId(),
@@ -30,7 +32,7 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
     return row.body;
   }
 
-  async update(id: NoteVO['id'], note: InternalNoteDTO) {
+  async update(id: NoteVO['id'], note: RawNote) {
     const row = await this.updateOne(tableName, id, SqliteNoteRepository.dtoToRow(note));
 
     if (!row) {
@@ -98,63 +100,32 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
     return rows.map(this.rowToVO);
   }
 
-  async findAllAncestors(noteIds: NoteVO['id'][]) {
+  async findAllDescendantIds(noteIds: NoteVO['id'][]) {
     if (noteIds.length === 0) {
-      return [];
+      return {};
     }
 
-    const noteTable = tableName;
-    const rows = await this.db
-      .withRecursive(
-        'ancestors',
-        (qb) =>
-          qb
-            .selectFrom(noteTable)
-            .select(['id', 'parentId'])
-            .where('id', 'in', noteIds)
-            .union(
-              qb
-                .selectFrom('ancestors')
-                .innerJoin(noteTable, `${noteTable}.id`, 'ancestors.id')
-                .select([`${noteTable}.id`, `${noteTable}.parentId`])
-                .where(`${noteTable}.id`, '=', 'ancestors.parentId'),
-            ),
-        // todo: add a limit statement to stop infinite recursive
-      )
-      .selectFrom('ancestors')
-      .select('ancestors.id')
-      .execute();
-
-    return await this.findAll({ id: rows.map(({ id }) => id) });
-  }
-
-  async findAllDescendants(noteIds: NoteVO['id'][]) {
-    if (noteIds.length === 0) {
-      return [];
-    }
-
-    const noteTable = tableName;
     const rows = await this.db
       .withRecursive(
         'descendants',
         (qb) =>
           qb
-            .selectFrom(noteTable)
+            .selectFrom(tableName)
             .select(['id', 'parentId'])
             .where((eb) => eb.or([eb.cmpr('id', 'in', noteIds), eb.cmpr('parentId', 'in', noteIds)]))
             .union(
               qb
                 .selectFrom('descendants')
-                .innerJoin(noteTable, `${noteTable}.parentId`, 'descendants.id')
-                .select([`${noteTable}.id`, `${noteTable}.parentId`]),
+                .innerJoin(tableName, `${tableName}.parentId`, 'descendants.id')
+                .select([`${tableName}.id`, `${tableName}.parentId`]),
             ),
         // todo: add a limit statement to stop infinite recursive
       )
       .selectFrom('descendants')
-      .select('descendants.id')
+      .select(['descendants.id', 'descendants.parentId'])
       .execute();
 
-    return await this.findAll({ id: rows.map(({ id }) => id) });
+    return groupDescantsByAncestorId(noteIds, rows);
   }
 
   async findTreeFragment(noteId: NoteVO['id']) {

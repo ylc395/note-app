@@ -11,7 +11,7 @@ import {
   type PaginationMemeVO,
   type MemoPatchDTO,
   type MemoVO,
-} from 'interface/memo';
+} from 'model/memo';
 import MemoService from 'service/MemoService';
 
 @Controller()

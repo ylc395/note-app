@@ -1,4 +1,4 @@
-import type { EntityTypes } from 'interface/entity';
+import type { EntityTypes } from 'model/entity';
 
 export function buildIndex<T>(list: T[], key?: keyof T) {
   const index: Record<string | number, T> = {};

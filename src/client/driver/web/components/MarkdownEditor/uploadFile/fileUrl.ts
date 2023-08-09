@@ -1,4 +1,4 @@
-import type { FileVO } from 'interface/file';
+import type { FileVO } from 'model/file';
 import { APP_PROTOCOL, IS_ELECTRON } from 'infra/constants';
 
 export function getFileUrlById(fileId: FileVO['id']) {

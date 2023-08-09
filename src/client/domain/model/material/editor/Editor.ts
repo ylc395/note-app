@@ -1,13 +1,14 @@
 import { makeObservable, observable, runInAction } from 'mobx';
 import remove from 'lodash/remove';
 
-import { EntityTypes } from 'interface/entity';
-import type { EntityMaterialVO, AnnotationVO, AnnotationDTO, AnnotationPatchDTO } from 'interface/material';
+import { EntityTypes } from 'model/entity';
+import type { EntityMaterialVO, AnnotationVO, AnnotationDTO, AnnotationPatchDTO } from 'model/material';
 import EntityEditor from 'model/abstract/Editor';
 import type Tile from 'model/workbench/Tile';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export default abstract class Editor<T extends { metadata: EntityMaterialVO } = any> extends EntityEditor<T> {
+export default abstract class Editor<
+  T extends { metadata: EntityMaterialVO } = { metadata: EntityMaterialVO },
+> extends EntityEditor<T> {
   constructor(tile: Tile, materialId: EntityMaterialVO['id']) {
     super(tile, materialId);
     makeObservable(this);

@@ -6,10 +6,9 @@
     "baseUrl": ".",
     "paths": {
       "components/*": ["../shared/components/*"],
-      "interface/*": ["../shared/interface/*"],
       "service/*": ["domain/service/*"],
       "infra/*": ["domain/infra/*"],
-      "model/*": ["../shared/model/*", "domain/model/*"],
+      "model/*": ["domain/model/*", "../shared/model/*"],
       "utils/*": ["../shared/utils/*"]
     }
   }

@@ -1,6 +1,6 @@
 import { Controller, Inject } from '@nestjs/common';
 
-import { type SearchResult, type SearchQuery, searchQuerySchema } from 'interface/search';
+import { type SearchResult, type SearchQuery, searchQuerySchema } from 'model/search';
 import { token as searchEngineToken, type SearchEngine } from 'infra/searchEngine';
 import { Post, Body, createSchemaPipe } from './decorators';
 

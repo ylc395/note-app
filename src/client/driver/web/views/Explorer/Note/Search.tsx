@@ -4,7 +4,7 @@ import { InfoCircleOutlined } from '@ant-design/icons';
 
 import SearchService from 'service/SearchService';
 import type { ChangeEventHandler } from 'react';
-import { Scopes, Types } from 'interface/search';
+import { Scopes, Types } from 'model/search';
 
 export default (function Search() {
   const { search } = container.resolve(SearchService);

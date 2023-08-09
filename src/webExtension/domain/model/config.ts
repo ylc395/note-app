@@ -1,4 +1,4 @@
-import type { EntityParentId, EntityTypes } from 'interface/entity';
+import type { EntityParentId, EntityTypes } from 'model/entity';
 
 export interface Config {
   targetEntityType: EntityTypes;

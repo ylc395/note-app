@@ -5,7 +5,7 @@ import clsx from 'clsx';
 
 import TaskService from 'service/TaskService';
 import { TaskTypes } from 'model/task';
-import { EntityTypes } from 'interface/entity';
+import { EntityTypes } from 'model/entity';
 
 const ACTIONS = [
   TaskTypes.SelectElement,

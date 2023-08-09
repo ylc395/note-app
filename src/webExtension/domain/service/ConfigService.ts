@@ -3,7 +3,7 @@ import { observable, makeObservable, runInAction, action, computed } from 'mobx'
 import { singleton, container } from 'tsyringe';
 
 import { CONFIG_KEY, type Config } from 'model/config';
-import { type EntityParentId, EntityTypes } from 'interface/entity';
+import { type EntityParentId, EntityTypes } from 'model/entity';
 import type Tree from 'model/abstract/Tree';
 
 import MainAppService from './MainAppService';

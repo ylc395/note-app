@@ -2,7 +2,7 @@ import { EventBus, PDFViewer, type PDFPageView, PDFLinkService } from 'pdfjs-dis
 import numberRange from 'lodash/range';
 import { makeObservable, observable, when, action, runInAction, computed, autorun } from 'mobx';
 
-import { AnnotationTypes, type AnnotationVO, type Rect } from 'interface/material';
+import { AnnotationTypes, type AnnotationVO, type Rect } from 'model/material';
 import type PdfEditorView from 'model/material/view/PdfEditorView';
 
 import { isElement } from '../../common/domUtils';

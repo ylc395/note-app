@@ -1,5 +1,5 @@
-import type { EntityLocator } from 'interface/entity';
-import type { RecycleReason } from 'interface/recyclables';
+import type { EntityLocator } from 'model/entity';
+import type { RecycleReason } from 'model/recyclables';
 import type { RecyclablesRepository, Recyclable } from 'service/repository/RecyclableRepository';
 
 import BaseRepository from './BaseRepository';

@@ -1,4 +1,4 @@
-import type { EntityLocator } from 'interface/entity';
+import type { EntityLocator } from 'model/entity';
 
 export interface SynchronizationRepository {
   getLastFinishedSyncTimestamp: () => Promise<number | null>;

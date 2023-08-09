@@ -5,11 +5,8 @@ import type {
   PaginationMemeVO,
   MemoVO,
   MemoPatchDTO,
-} from 'interface/memo';
-
-export interface MemoQuery {
-  updatedAt: number;
-}
+  MemoQuery,
+} from 'model/memo';
 
 export interface MemoRepository {
   create: (memo: MemoDTO) => Promise<MemoVO>;

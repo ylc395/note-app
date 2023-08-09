@@ -1,5 +1,5 @@
-import type { RecyclableRecord, RecycleReason } from 'interface/recyclables';
-import type { EntityLocator } from 'interface/entity';
+import type { RecyclableRecord, RecycleReason } from 'model/recyclables';
+import type { EntityLocator } from 'model/entity';
 
 export type Recyclable = EntityLocator & { reason: RecycleReason };
 

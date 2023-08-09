@@ -3,7 +3,7 @@ import { array, nativeEnum, object, string, type infer as Infer } from 'zod';
 import isEmpty from 'lodash/isEmpty';
 import negate from 'lodash/negate';
 
-import type { EntityId } from 'interface/entity';
+import type { EntityId } from 'model/entity';
 
 export interface SearchResult {
   title: string;

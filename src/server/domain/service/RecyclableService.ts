@@ -2,12 +2,12 @@ import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import omit from 'lodash/omit';
 import differenceWith from 'lodash/differenceWith';
 
-import type { EntityLocator, EntityId, EntityTypes } from 'interface/entity';
+import type { EntityLocator, EntityId, EntityTypes } from 'model/entity';
+import { RecycleReason } from 'model/recyclables';
+import { getIds } from 'utils/collection';
 
 import BaseService from './BaseService';
 import EntityService from './EntityService';
-import { RecycleReason } from 'interface/recyclables';
-import { getIds } from 'utils/collection';
 
 @Injectable()
 export default class RecyclableService extends BaseService {
@@ -31,9 +31,22 @@ export default class RecyclableService extends BaseService {
     return result.filter((record) => record.reason === RecycleReason.Direct).map((record) => omit(record, ['reason']));
   }
 
+  async query() {
+    return await this.recyclables.findAll(RecycleReason.Direct);
+  }
+
   async filter<T extends { id: EntityId }>(type: EntityTypes, entities: T[]) {
     const ids = getIds(entities);
     const recyclables = await this.recyclables.findAllByLocators(ids.map((id) => ({ id, type })));
     return differenceWith(entities, recyclables, ({ id }, recyclable) => id === recyclable.entityId);
+  }
+
+  async filterByLocators<T>(entities: T[], toLocator: (entity: T) => EntityLocator) {
+    const recyclables = await this.recyclables.findAllByLocators(entities.map(toLocator));
+    return differenceWith(entities, recyclables, (entity, recyclable) => {
+      const { id, type } = toLocator(entity);
+
+      return id === recyclable.entityId && type === recyclable.entityType;
+    });
   }
 }

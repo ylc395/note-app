@@ -1,4 +1,4 @@
-import { EntityTypes, type EntityLocator } from 'interface/entity';
+import { EntityTypes, type EntityLocator } from 'model/entity';
 import type Editor from 'model/abstract/Editor';
 import { Events as EditorEvents } from 'model/abstract/Editor';
 import type EditorView from 'model/abstract/EditorView';

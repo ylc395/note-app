@@ -2,7 +2,7 @@ import { observer } from 'mobx-react-lite';
 import { MouseEvent, useContext, useEffect, useRef } from 'react';
 import clsx from 'clsx';
 
-import type { AnnotationVO } from 'interface/material';
+import type { AnnotationVO } from 'model/material';
 import context from '../../Context';
 
 export default observer(function Annotation({

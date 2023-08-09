@@ -6,18 +6,21 @@ export enum EntityTypes {
   Material,
 }
 
-export type EntityId = string;
-export type EntityParentId = EntityId | null;
-
-export const entityId = string;
-
-export const entityLocatorSchema = object({
-  id: entityId(),
-  type: nativeEnum(EntityTypes),
-});
-
-export type EntityLocator = {
+export interface EntityLocator {
   type: EntityTypes;
   id: EntityId;
   mimeType?: string;
-};
+}
+
+export type EntityId = string;
+export type EntityParentId = EntityId | null;
+
+export interface HierarchyEntity {
+  id: EntityId;
+  parentId: EntityParentId;
+}
+
+export const entityLocatorSchema = object({
+  id: string(),
+  type: nativeEnum(EntityTypes),
+});

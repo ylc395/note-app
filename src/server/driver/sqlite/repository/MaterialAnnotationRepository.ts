@@ -2,7 +2,7 @@ import pick from 'lodash/pick';
 import isEmpty from 'lodash/isEmpty';
 import type { Selectable } from 'kysely';
 
-import type { AnnotationDTO, AnnotationPatchDTO, AnnotationVO, MaterialVO } from 'interface/material';
+import type { AnnotationDTO, AnnotationPatchDTO, AnnotationVO, MaterialVO } from 'model/material';
 
 import BaseRepository from './BaseRepository';
 import materialAnnotationSchema, { type Row } from '../schema/materialAnnotation';
@@ -34,7 +34,9 @@ export default class MaterialAnnotationRepository extends BaseRepository {
   async findOneById(id: AnnotationVO['id']) {
     const row = await this.db.selectFrom(tableName).where('id', '=', id).selectAll().executeTakeFirst();
 
-    return row ? MaterialAnnotationRepository.rowToVO(row) : null;
+    return row
+      ? { ...MaterialAnnotationRepository.rowToVO(row), materialId: row.materialId, comment: row.comment || null }
+      : null;
   }
 
   private static rowToVO(row: Selectable<Row>) {

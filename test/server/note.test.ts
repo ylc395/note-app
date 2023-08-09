@@ -4,8 +4,8 @@ import { strictEqual, deepStrictEqual, ok, rejects } from 'node:assert';
 
 import NotesController from '../../dist/electron/server/controller/NotesController';
 import RecyclablesController from '../../dist/electron/server/controller/RecyclablesController';
-import { EntityTypes } from '../../dist/electron/shared/interface/entity';
-import type { NoteVO } from '../../dist/electron/shared/interface/note';
+import { EntityTypes } from '../../dist/electron/shared/model/entity';
+import type { NoteVO } from '../../dist/electron/shared/model/note';
 
 describe('notes', async function () {
   let noteController: NotesController;

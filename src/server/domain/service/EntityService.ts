@@ -1,18 +1,13 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import groupBy from 'lodash/groupBy';
 import compact from 'lodash/compact';
-import { type EntityLocator, type EntityId, type EntityParentId, EntityTypes } from 'interface/entity';
+import { type EntityLocator, type EntityId, type HierarchyEntity, EntityTypes } from 'model/entity';
 
 import { getIds } from 'utils/collection';
 import BaseService from './BaseService';
 import NoteService from './NoteService';
 import MaterialService from './MaterialService';
 import MemoService from './MemoService';
-
-export interface HierarchyEntity {
-  id: EntityId;
-  parentId: EntityParentId;
-}
 
 @Injectable()
 export default class EntityService extends BaseService {

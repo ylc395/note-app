@@ -1,12 +1,12 @@
 import { singleton, container } from 'tsyringe';
 
-import type { MaterialDTO, DirectoryVO, MaterialVO, MaterialQuery, EntityMaterialVO } from 'interface/material';
-import { token as remoteToken } from 'infra/remote';
 import type { SelectEvent } from 'model/abstract/Tree';
 import MaterialTree from 'model/material/Tree';
+import { EntityTypes } from 'model/entity';
+import type { MaterialDTO, DirectoryVO, MaterialVO, ClientMaterialQuery, EntityMaterialVO } from 'model/material';
+import { token as remoteToken } from 'infra/remote';
 
 import EditorService from './EditorService';
-import { EntityTypes } from 'interface/entity';
 
 @singleton()
 export default class MaterialService {
@@ -19,7 +19,7 @@ export default class MaterialService {
   }
 
   readonly loadChildren = async (parentId: MaterialVO['parentId']) => {
-    const { body: materials } = await this.remote.get<MaterialQuery, MaterialVO[]>(
+    const { body: materials } = await this.remote.get<ClientMaterialQuery, MaterialVO[]>(
       '/materials',
       parentId ? { parentId } : {},
     );

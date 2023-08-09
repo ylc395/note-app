@@ -8,7 +8,7 @@ import {
   type PdfRangeAnnotationVO,
   type PdfAreaAnnotationVO,
   AnnotationTypes,
-} from 'interface/material';
+} from 'model/material';
 import type Tile from 'model/workbench/Tile';
 import Editor from './Editor';
 

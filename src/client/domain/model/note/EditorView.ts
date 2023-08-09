@@ -3,7 +3,6 @@ import { makeObservable, computed } from 'mobx';
 import { IS_DEV } from 'infra/constants';
 import EditorView, { type Breadcrumbs } from 'model/abstract/EditorView';
 import type Tile from 'model/workbench/Tile';
-import { normalizeTitle } from 'interface/note';
 
 import type NoteEditor from './Editor';
 import type { NoteTreeNode } from 'model/note/Tree';
@@ -24,7 +23,7 @@ export default class NoteEditorView extends EditorView<NoteEditor, State> {
     return {
       title:
         (IS_DEV ? `${this.id} ${this.editor.id} ${this.editor.entityId.slice(0, 3)} ` : '') +
-        normalizeTitle(this.editor.entity?.metadata),
+        this.editor.entity?.metadata.title,
       icon: this.editor.entity?.metadata.icon || null,
     };
   }

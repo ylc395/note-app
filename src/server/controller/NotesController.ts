@@ -6,13 +6,13 @@ import {
   type NoteBodyDTO,
   type NoteBodyVO,
   type NoteVO,
-  type NoteQuery,
+  type ClientNoteQuery,
   type NotesDTO,
   noteDTOSchema,
   notesDTOSchema,
-  noteQuerySchema,
+  clientNoteQuerySchema,
   noteBodySchema,
-} from 'interface/note';
+} from 'model/note';
 import NoteService from 'service/NoteService';
 
 @Controller()
@@ -30,7 +30,7 @@ export default class NotesController {
   }
 
   @Get('/notes')
-  async query(@Query(createSchemaPipe(noteQuerySchema)) q: NoteQuery): Promise<NoteVO[]> {
+  async query(@Query(createSchemaPipe(clientNoteQuerySchema)) q: ClientNoteQuery): Promise<NoteVO[]> {
     return await this.noteService.query(q);
   }
 
@@ -46,12 +46,12 @@ export default class NotesController {
 
   @Get('/notes/:id')
   async queryOne(@Param('id') noteId: string): Promise<NoteVO> {
-    return await this.noteService.queryOne(noteId);
+    return await this.noteService.query(noteId);
   }
 
   @Get('/notes/:id/body')
   async queryBody(@Param('id') noteId: string): Promise<NoteBodyVO> {
-    return await this.noteService.getBody(noteId);
+    return await this.noteService.queryBody(noteId);
   }
 
   @Put('/notes/:id/body')

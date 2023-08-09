@@ -1,6 +1,6 @@
 import { Controller } from '@nestjs/common';
 
-import { type StarsDTO, starsDTOSchema, StarRecord } from 'interface/star';
+import { type StarsDTO, starsDTOSchema, StarRecord } from 'model/star';
 import StarService from 'service/StarService';
 import { Get, Body, createSchemaPipe, Delete, Param, Patch } from './decorators';
 

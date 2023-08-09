@@ -1,6 +1,6 @@
 import { Inject } from '@nestjs/common';
 import type { SynchronizationRepository } from 'service/repository/SynchronizationRepository';
-import type { EntityLocator } from 'interface/entity';
+import type { EntityLocator } from 'model/entity';
 import { token as kvDatabaseToken, type KvDatabase } from 'infra/kvDatabase';
 
 import BaseRepository from './BaseRepository';

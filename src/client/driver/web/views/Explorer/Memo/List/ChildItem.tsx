@@ -6,7 +6,7 @@ import { Dropdown, Button, type MenuProps } from 'antd';
 import { MoreOutlined, StarOutlined, EditOutlined, DeleteOutlined, FileAddOutlined } from '@ant-design/icons';
 import { useBoolean } from 'ahooks';
 
-import type { ChildMemoVO } from 'interface/Memo';
+import type { ChildMemoVO } from 'model/Memo';
 import MemoService from 'service/MemoService';
 import Editable from './Editable';
 

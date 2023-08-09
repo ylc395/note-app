@@ -4,7 +4,7 @@ import { makeObservable, action, observable } from 'mobx';
 import { Emitter, type EventMap } from 'strict-event-emitter';
 
 import type Tile from 'model/workbench/Tile';
-import type { EntityId, EntityLocator, EntityTypes } from 'interface/entity';
+import type { EntityId, EntityLocator, EntityTypes } from 'model/entity';
 import { token as remoteToken } from 'infra/remote';
 
 export enum Events {

@@ -5,17 +5,10 @@ import type {
   DirectoryVO,
   EntityMaterialVO,
   MaterialDTO,
-  MaterialTypes,
   MaterialVO,
-} from 'interface/material';
-
-export type Directory = Pick<MaterialDTO, 'name' | 'parentId' | 'icon'>;
-
-export interface MaterialQuery {
-  parentId?: MaterialVO['parentId'];
-  ids?: MaterialVO['id'][];
-  type?: MaterialTypes;
-}
+  Directory,
+  MaterialQuery,
+} from 'model/material';
 
 export interface MaterialRepository {
   createDirectory: (directory: Directory) => Promise<DirectoryVO>;
@@ -28,6 +21,6 @@ export interface MaterialRepository {
   findAllAnnotations: (materialId: MaterialVO['id']) => Promise<AnnotationVO[]>;
   updateText: <T>(materialId: MaterialVO['id'], payload: T) => Promise<T | null>;
   removeAnnotation: (annotationId: AnnotationVO['id']) => Promise<boolean>;
-  findAnnotationById: (annotationId: AnnotationVO['id']) => Promise<AnnotationVO | null>;
+  findAnnotationById: (annotationId: AnnotationVO['id']) => Promise<Required<AnnotationVO> | null>;
   updateAnnotation: (annotationId: AnnotationVO['id'], patch: AnnotationPatchDTO) => Promise<AnnotationVO | null>;
 }

@@ -15,7 +15,7 @@ import {
 import { useCallback } from 'react';
 import { useBoolean } from 'ahooks';
 
-import type { ParentMemoVO } from 'interface/Memo';
+import type { ParentMemoVO } from 'model/Memo';
 import MemoService from 'service/MemoService';
 import ChildItem from './ChildItem';
 import Editable from './Editable';

@@ -1,4 +1,4 @@
-import type { FileVO, WebFileMetadataVO } from 'interface/file';
+import type { FileVO, WebFileMetadataVO } from 'model/file';
 import { singleton, container } from 'tsyringe';
 
 import { token as remoteToken } from 'infra/remote';

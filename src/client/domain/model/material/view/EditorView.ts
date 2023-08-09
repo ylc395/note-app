@@ -1,5 +1,5 @@
 import { makeObservable, observable, computed, action, runInAction } from 'mobx';
-import { type AnnotationPatchDTO, type AnnotationVO, normalizeTitle } from 'interface/material';
+import type { AnnotationPatchDTO, AnnotationVO } from 'model/material';
 
 import EditorView from 'model/abstract/EditorView';
 import type Tile from 'model/workbench/Tile';
@@ -19,7 +19,7 @@ export default abstract class MaterialEditorView<T extends MaterialEditor, S = u
   @computed
   get tabView() {
     return {
-      title: normalizeTitle(this.editor.entity?.metadata),
+      title: this.editor.entity?.metadata.name || '',
       icon: this.editor.entity?.metadata.icon || null,
     };
   }

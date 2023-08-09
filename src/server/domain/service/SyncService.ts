@@ -5,10 +5,10 @@ import fm from 'front-matter';
 
 import { token as clientAppToken } from 'infra/ClientApp';
 import type ClientApp from 'infra/ClientApp';
-import { type EntityLocator, EntityTypes } from 'interface/entity';
+import { type EntityLocator, EntityTypes } from 'model/entity';
 import type { Conflict, Log } from 'infra/synchronizer';
-import type { RawNoteVO } from 'model/note';
-import type { MemoVO } from 'interface/memo';
+import type { Note } from 'model/note';
+import type { MemoVO } from 'model/memo';
 import { type SyncTargetFactory, type SyncTarget, token as syncTargetFactoryToken } from 'infra/synchronizer';
 
 import BaseService from './BaseService';
@@ -45,14 +45,14 @@ export default class SyncService extends BaseService {
     return { metadata: attributes, content: body };
   }
 
-  private static serialize(entity: RawNoteVO | MemoVO, { content, type }: { type: EntityTypes; content: string }) {
+  private static serialize(entity: Note | MemoVO, { content, type }: { type: EntityTypes; content: string }) {
     const attributes: EntityMetadata = {
       id: entity.id,
       updatedAt: entity.updatedAt,
       ...(type === EntityTypes.Note
         ? {
             type: EntityTypes.Note,
-            title: (entity as RawNoteVO).title,
+            title: (entity as Note).title,
           }
         : {
             type: EntityTypes.Memo,
@@ -254,7 +254,7 @@ export default class SyncService extends BaseService {
   }
 
   private async getLocalEntity({ type, id }: EntityLocator) {
-    let metadata: RawNoteVO | MemoVO | null = null;
+    let metadata: Note | MemoVO | null = null;
     let content: string | null = null;
 
     switch (type) {

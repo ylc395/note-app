@@ -14,4 +14,5 @@ export interface RecyclableRecord {
   deletedAt: number;
   entityType: EntityTypes;
   entityId: EntityId;
+  title: string;
 }

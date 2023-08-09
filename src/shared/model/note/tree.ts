@@ -1,4 +1,4 @@
-import { normalizeTitle, type NoteVO } from '../../interface/note';
+import type { NoteVO } from './index';
 import Tree, { type TreeNode } from '../abstract/Tree';
 
 export interface NoteNodeAttr {
@@ -10,7 +10,7 @@ export type NoteTreeNode = TreeNode<NoteNodeAttr>;
 export default class NoteTree extends Tree<NoteVO, NoteNodeAttr> {
   protected toNode(note: NoteVO | null) {
     if (note) {
-      return { title: normalizeTitle(note), isLeaf: note.childrenCount === 0, attributes: { icon: note.icon } };
+      return { title: note.title, isLeaf: note.childrenCount === 0, attributes: { icon: note.icon } };
     }
 
     return { title: '根' };

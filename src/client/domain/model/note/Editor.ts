@@ -2,8 +2,8 @@ import { makeObservable, action, toJS } from 'mobx';
 import debounce from 'lodash/debounce';
 import { container } from 'tsyringe';
 
-import { EntityTypes } from 'interface/entity';
-import type { NoteVO, NoteBodyVO, NoteBodyDTO, NoteDTO } from 'interface/note';
+import { EntityTypes } from 'model/entity';
+import type { NoteVO, NoteBodyVO, NoteBodyDTO, NoteDTO } from 'model/note';
 import type Tile from 'model/workbench/Tile';
 import Editor from 'model/abstract/Editor';
 import NoteTree from 'model/note/Tree';

@@ -1,4 +1,4 @@
-import type { FileVO } from 'interface/file';
+import type { FileVO } from 'model/file';
 import type { File } from 'model/file';
 
 export interface FileRepository {

@@ -4,8 +4,8 @@ import { observable, makeObservable, runInAction, action } from 'mobx';
 import pull from 'lodash/pull';
 
 import { token as remoteToken } from 'infra/remote';
-import type { EntityId, EntityLocator, EntityTypes } from 'interface/entity';
-import type { StarRecord, StarsDTO } from 'interface/star';
+import type { EntityId, EntityLocator, EntityTypes } from 'model/entity';
+import type { StarRecord, StarsDTO } from 'model/star';
 
 export enum StarEvents {
   Added = 'star.added',

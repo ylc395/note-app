@@ -9,17 +9,17 @@ import {
   type NoteVO,
   type NoteBodyDTO,
   type NoteDTO,
-  type NoteQuery,
+  type ClientNoteQuery,
   type NotesDTO,
   normalizeTitle,
-} from 'interface/note';
-import { EntityTypes } from 'interface/entity';
+} from 'model/note';
+import { EntityTypes, type HierarchyEntity } from 'model/entity';
 import { Events } from 'model/events';
-import type { RawNoteVO } from 'model/note';
+import type { Note } from 'model/note';
 
 import BaseService, { Transaction } from './BaseService';
 import RecyclableService from './RecyclableService';
-import EntityService, { type HierarchyEntity } from './EntityService';
+import EntityService from './EntityService';
 
 @Injectable()
 export default class NoteService extends BaseService {
@@ -103,7 +103,7 @@ export default class NoteService extends BaseService {
     return result;
   }
 
-  async getBody(noteId: NoteVO['id']) {
+  async queryBody(noteId: NoteVO['id']) {
     if (!(await this.areAvailable([noteId]))) {
       throw new Error('note unavailable');
     }
@@ -117,7 +117,7 @@ export default class NoteService extends BaseService {
     return result;
   }
 
-  private async addInfo(rawNotes: RawNoteVO[], children?: Record<NoteVO['id'], RawNoteVO[]>) {
+  private async addInfo(rawNotes: Note[], children?: Record<NoteVO['id'], Note[]>) {
     const stars = buildIndex(await this.stars.findAllByLocators(getLocators(rawNotes, EntityTypes.Note)), 'entityId');
     const _children = children || (await this.getChildren(getIds(rawNotes)));
 
@@ -140,21 +140,20 @@ export default class NoteService extends BaseService {
     return this.addInfo(result);
   }
 
-  async query(q: NoteQuery | { id: NoteVO['id'] }) {
-    const notes = await this.notes.findAll('id' in q ? { id: [q.id] } : q);
-    const availableNotes = await this.recyclableService.filter(EntityTypes.Note, notes);
+  async query(q: ClientNoteQuery): Promise<NoteVO[]>;
+  async query(id: NoteVO['id']): Promise<NoteVO>;
+  async query(q: ClientNoteQuery | NoteVO['id']): Promise<NoteVO[] | NoteVO> {
+    const rawNotes = await this.notes.findAll(typeof q === 'string' ? { id: [q] } : q);
+    const availableNotes = await this.recyclableService.filter(EntityTypes.Note, rawNotes);
 
-    return this.addInfo(availableNotes);
-  }
+    const notes = await this.addInfo(availableNotes);
+    const result = typeof q === 'string' ? notes[0] : notes;
 
-  async queryOne(noteId: NoteVO['id']) {
-    const note = (await this.query({ id: noteId }))[0];
-
-    if (!note) {
-      throw new Error('invalid note id');
+    if (!result) {
+      throw new Error('no note');
     }
 
-    return note;
+    return result;
   }
 
   async getTreeFragment(noteId: NoteVO['id']) {
@@ -168,7 +167,7 @@ export default class NoteService extends BaseService {
 
     /* topo sort */
     const parents = groupBy(availableNotes, 'parentId');
-    const result: RawNoteVO[] = availableNotes.filter(({ parentId }) => parentId === null);
+    const result: Note[] = availableNotes.filter(({ parentId }) => parentId === null);
 
     for (let i = 0; result[i]; i++) {
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -205,20 +204,15 @@ export default class NoteService extends BaseService {
       return false;
     }
 
-    return !(await this.areNoteRecyclables(uniqueIds));
+    return (await this.recyclableService.filter(EntityTypes.Note, rows)).length === uniqueIds.length;
   }
 
   private async isWritable(noteId: NoteVO['id']) {
     try {
-      const row = await this.queryOne(noteId);
+      const row = await this.query(noteId);
       return !row.isReadonly;
     } catch (error) {
       return false;
     }
-  }
-
-  private async areNoteRecyclables(noteIds: NoteVO['id'][]) {
-    const recyclables = await this.recyclables.findAllByLocators(noteIds.map((id) => ({ id, type: EntityTypes.Note })));
-    return recyclables.length === 0;
   }
 }

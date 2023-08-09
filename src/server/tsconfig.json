@@ -6,11 +6,11 @@
     "lib": ["ESNext"],
     "paths": {
       "model/*": ["domain/model/*", "../shared/model/*"],
-      "interface/*": ["../shared/interface/*"],
       "service/*": ["domain/service/*"],
       "infra/*": ["domain/infra/*", "../shared/infra/*"],
       "client/*": ["../client/*"],
-      "utils/*": ["../shared/utils/*"]
+      "utils/*": ["../shared/utils/*"],
+      "shard/*": ["../shared/*"]
     }
   }
 }

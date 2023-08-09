@@ -11,7 +11,8 @@ import {
   nativeEnum,
   preprocess,
 } from 'zod';
-import type { EntityId } from './entity';
+import type { EntityId, EntityParentId } from '../entity';
+import type { Starable } from 'model/star';
 
 export const materialDTOSchema = object({
   name: string().min(1).optional(),
@@ -28,58 +29,43 @@ export const materialDTOSchema = object({
 
 export type MaterialDTO = Infer<typeof materialDTOSchema>;
 
-export interface DirectoryVO {
-  id: EntityId;
-  name: string;
-  icon: string | null;
-  parentId: DirectoryVO['id'] | null;
-  childrenCount: number;
-}
-
 export enum MaterialTypes {
   Directory = 1,
   Entity,
 }
 
-export type EntityMaterialVO = Omit<DirectoryVO, 'childrenCount'> & {
-  mimeType: string;
-  sourceUrl: string | null;
+export interface MaterialVO extends Starable {
+  id: EntityId;
+  name: string;
+  icon: string | null;
+  parentId: EntityParentId;
   createdAt: number;
   updatedAt: number;
+}
+
+export interface DirectoryVO extends MaterialVO {
+  childrenCount: number;
+}
+
+export interface EntityMaterialVO extends MaterialVO {
+  mimeType: string;
+  sourceUrl: string | null;
+}
+
+export const isDirectory = (entity: MaterialVO): entity is DirectoryVO => {
+  return 'childrenCount' in entity;
 };
 
-export type MaterialVO = DirectoryVO | EntityMaterialVO;
+export const isEntityMaterial = (entity: MaterialVO): entity is EntityMaterialVO => {
+  return 'mimeType' in entity;
+};
 
-export const materialQuerySchema = object({
+export const ClientMaterialQuerySchema = object({
   parentId: string().optional(),
   type: preprocess((v) => v && Number(v), nativeEnum(MaterialTypes).optional()),
 });
 
-export type MaterialQuery = Infer<typeof materialQuerySchema>;
-
-export const isDirectory = (entity: MaterialVO): entity is DirectoryVO => {
-  return !('mimeType' in entity);
-};
-
-export function normalizeTitle(material?: MaterialVO) {
-  if (!material) {
-    return '';
-  }
-
-  if (material.name) {
-    return material.name;
-  }
-
-  if (isDirectory(material)) {
-    return '未命名目录';
-  }
-
-  if (material.mimeType.startsWith('image')) {
-    return '未命名图片';
-  }
-
-  return '未命名文件';
-}
+export type ClientMaterialQuery = Infer<typeof ClientMaterialQuerySchema>;
 
 export enum AnnotationTypes {
   PdfRange = 1,
@@ -150,4 +136,6 @@ interface CommonAnnotationVO {
 export type PdfRangeAnnotationVO = CommonAnnotationVO & Infer<typeof PdfRangeAnnotationSchema>;
 export type PdfAreaAnnotationVO = CommonAnnotationVO & Infer<typeof PdfAreaAnnotationSchema>;
 export type HtmlRangeAnnotationVO = CommonAnnotationVO & Infer<typeof htmlRangeAnnotationSchema>;
-export type AnnotationVO = PdfRangeAnnotationVO | PdfAreaAnnotationVO | HtmlRangeAnnotationVO;
+export type AnnotationVO = (PdfRangeAnnotationVO | PdfAreaAnnotationVO | HtmlRangeAnnotationVO) & {
+  materialId?: MaterialVO['id'];
+};

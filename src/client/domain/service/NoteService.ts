@@ -3,9 +3,9 @@ import { Emitter } from 'strict-event-emitter';
 
 import { token as remoteToken } from 'infra/remote';
 import { token as UIToken } from 'infra/ui';
-import type { NoteDTO, NoteVO as Note, NotesDTO, NoteQuery, NoteVO } from 'interface/note';
-import type { RecyclablesDTO } from 'interface/Recyclables';
-import { EntityTypes } from 'interface/entity';
+import type { NoteDTO, NoteVO as Note, NotesDTO, ClientNoteQuery, NoteVO } from 'model/note';
+import type { RecyclablesDTO } from 'model/Recyclables';
+import { EntityTypes } from 'model/entity';
 import NoteTree from 'model/note/Tree';
 
 import { MULTIPLE_ICON_FLAG, type NoteMetadata } from 'model/note/MetadataForm';
@@ -42,7 +42,7 @@ export default class NoteService extends Emitter<{
   };
 
   readonly fetchChildren = async (parentId: Note['parentId']) => {
-    const { body: notes } = await this.remote.get<NoteQuery, Note[]>('/notes', { parentId });
+    const { body: notes } = await this.remote.get<ClientNoteQuery, Note[]>('/notes', { parentId });
     return notes;
   };
 

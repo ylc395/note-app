@@ -7,7 +7,7 @@ import { container } from 'tsyringe';
 
 import Tree from 'components/Tree';
 import ConfigService from 'service/ConfigService';
-import { EntityTypes } from 'interface/entity';
+import { EntityTypes } from 'model/entity';
 
 export default observer(function TargetPath() {
   const [isOpen, { setTrue: open, setFalse: close, set: setIsOpen }] = useBoolean(false);

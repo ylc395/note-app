@@ -1,4 +1,4 @@
-import type { EntityId, EntityTypes } from 'interface/entity';
+import type { EntityId, EntityTypes } from 'model/entity';
 import type { Tabs } from 'webextension-polyfill';
 
 export interface Task {

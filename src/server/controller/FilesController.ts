@@ -1,6 +1,6 @@
 import { Controller } from '@nestjs/common';
 
-import { type FileVO, type WebFileMetadataVO, type FilesDTO, filesDTOSchema } from 'interface/file';
+import { type FileVO, type WebFileMetadataVO, type FilesDTO, filesDTOSchema } from 'model/file';
 import FileService from 'service/FileService';
 
 import { Get, Body, createSchemaPipe, Patch, Param } from './decorators';

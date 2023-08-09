@@ -3,7 +3,7 @@ import { type Kysely, sql } from 'kysely';
 import groupBy from 'lodash/groupBy';
 
 import { type SearchEngine, type SearchQuery, Types, Scopes, SearchResult } from 'infra/searchEngine';
-import { EntityId, EntityLocator, EntityTypes } from 'interface/entity';
+import { EntityId, EntityLocator, EntityTypes } from 'model/entity';
 import SqliteDb from './Database';
 import noteTable from './schema/note';
 

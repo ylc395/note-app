@@ -1,9 +1,9 @@
 import { createPatch, applyPatch } from 'diff';
 
-import { type EntityLocator, EntityTypes } from 'interface/entity';
-import type { MemoVO } from 'interface/memo';
-import type { RevisionVO } from 'interface/revision';
-import type { RawNoteVO } from 'model/note';
+import { type EntityLocator, EntityTypes } from 'model/entity';
+import type { MemoVO } from 'model/memo';
+import type { RevisionVO } from 'model/revision';
+import type { Note } from 'model/note';
 import { type ContentUpdatedEvent, Events, OnEvent } from 'model/events';
 
 import BaseService from './BaseService';
@@ -33,7 +33,7 @@ export default class RevisionService extends BaseService {
   }
 
   private async getCreatedAt(entityLocator: EntityLocator) {
-    let entity: RawNoteVO | MemoVO | null;
+    let entity: Note | MemoVO | null;
 
     switch (entityLocator.type) {
       case EntityTypes.Note:

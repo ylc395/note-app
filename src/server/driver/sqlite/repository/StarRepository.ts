@@ -1,5 +1,5 @@
-import type { EntityLocator } from 'interface/entity';
-import type { StarRecord } from 'interface/star';
+import type { EntityLocator } from 'model/entity';
+import type { StarRecord } from 'model/star';
 import type { StarRepository } from 'service/repository/StarRepository';
 
 import BaseRepository from './BaseRepository';

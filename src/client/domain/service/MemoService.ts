@@ -9,7 +9,7 @@ import type {
   MemoPaginationQuery,
   ParentMemoVO,
   PaginationMemeVO,
-} from 'interface/Memo';
+} from 'model/Memo';
 
 @singleton()
 export default class MemoService {

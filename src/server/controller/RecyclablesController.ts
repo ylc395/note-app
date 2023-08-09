@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 
 import RecyclableService from 'service/RecyclableService';
-import { RecyclablesDTOSchema, type RecyclableRecord, type RecyclablesDTO } from 'interface/recyclables';
+import { RecyclablesDTOSchema, type RecyclableRecord, type RecyclablesDTO } from 'model/recyclables';
 
 import { Body, createSchemaPipe, Get, Patch } from './decorators';
 
@@ -15,5 +15,7 @@ export default class RecyclablesController {
   }
 
   @Get('/recyclables')
-  async queryItems(): Promise<RecyclableRecord[]> {}
+  async queryItems(): Promise<RecyclableRecord[]> {
+    return await this.recyclableService.query();
+  }
 }

@@ -1,8 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import compact from 'lodash/compact';
 
-import type { FileVO, FilesDTO } from 'interface/file';
-import type { File } from 'model/file';
+import type { FileVO, FilesDTO, File } from 'model/file';
 import { token as downloaderToken, Downloader } from 'infra/downloader';
 
 import BaseService from './BaseService';

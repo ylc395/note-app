@@ -1,8 +1,7 @@
 import { union, boolean, object, string, null as zodNull, type infer as Infer, array } from 'zod';
-import dayjs from 'dayjs';
 
-import type { Starable } from './star';
-import type { EntityId } from './entity';
+import type { Starable } from '../star';
+import type { EntityId } from '../entity';
 
 export const noteDTOSchema = object({
   title: string(),
@@ -29,7 +28,7 @@ export interface NoteVO extends Starable {
   childrenCount: number;
 }
 
-export const noteQuerySchema = object({
+export const clientNoteQuerySchema = object({
   parentId: union([zodNull(), string()]).optional(),
 });
 
@@ -42,12 +41,4 @@ export type NoteBodyDTO = Infer<typeof noteBodySchema>;
 
 export type NoteBodyVO = NoteBodyDTO['content'];
 
-export type NoteQuery = Infer<typeof noteQuerySchema>;
-
-export function normalizeTitle(note?: Pick<NoteVO, 'title' | 'createdAt'>) {
-  if (!note) {
-    return '';
-  }
-
-  return note.title || `未命名笔记-${dayjs.unix(note.createdAt).format('YYYYMMDD-HHmm')}`;
-}
+export type ClientNoteQuery = Infer<typeof clientNoteQuerySchema>;

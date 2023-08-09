@@ -1,15 +1,19 @@
 import uniq from 'lodash/uniq';
+import negate from 'lodash/negate';
 import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import {
   type AnnotationDTO,
   type MaterialDTO,
-  type MaterialQuery,
+  type ClientMaterialQuery,
   type MaterialVO,
   type AnnotationVO,
   type AnnotationPatchDTO,
   AnnotationTypes,
   isDirectory,
-} from 'interface/material';
+  MaterialTypes,
+  isEntityMaterial,
+} from 'model/material';
+import { EntityTypes } from 'model/entity';
 
 import BaseService from './BaseService';
 import RecyclableService from './RecyclableService';
@@ -31,7 +35,7 @@ export default class MaterialService extends BaseService {
       throw new Error('invalid file');
     }
 
-    if (info.parentId && !(await this.areAvailableDirectory([info.parentId]))) {
+    if (info.parentId && !(await this.areAvailable([info.parentId], MaterialTypes.Directory))) {
       throw new Error('invalid parent id');
     }
 
@@ -42,32 +46,22 @@ export default class MaterialService extends BaseService {
     return this.materials.createDirectory(info);
   }
 
-  private async areAvailableDirectory(parentIds: MaterialVO['id'][]) {
-    const uniqueIds = uniq(parentIds);
-    const materials = await this.materials.findAll({ ids: uniqueIds });
+  async query(q: ClientMaterialQuery): Promise<MaterialVO[]>;
+  async query(q: MaterialVO['id']): Promise<MaterialVO>;
+  async query(q: ClientMaterialQuery | MaterialVO['id']): Promise<MaterialVO[] | MaterialVO> {
+    const rows = await this.materials.findAll(typeof q === 'string' ? { id: [q] } : q);
+    const availableMaterials = await this.recyclableService.filter(EntityTypes.Material, rows);
+    const result = typeof q === 'string' ? availableMaterials[0] : availableMaterials;
 
-    if (materials.length !== uniqueIds.length) {
-      return false;
+    if (!result) {
+      throw new Error('no result');
     }
 
-    return materials.every(isDirectory);
-  }
-
-  query(q: MaterialQuery) {
-    return this.materials.findAll(q);
-  }
-
-  async queryById(materialId: MaterialVO['id']) {
-    const material = await this.materials.findOneById(materialId);
-
-    if (!material) {
-      throw new Error('no material');
-    }
-
-    return material;
+    return result;
   }
 
   async getBlob(materialId: MaterialVO['id']) {
+    await this.assertEntityMaterial(materialId);
     const blob = await this.materials.findBlobById(materialId);
 
     if (blob === null) {
@@ -79,30 +73,23 @@ export default class MaterialService extends BaseService {
 
   async createAnnotation(materialId: MaterialVO['id'], annotation: AnnotationDTO) {
     if (annotation.type === AnnotationTypes.PdfRange || annotation.type === AnnotationTypes.PdfArea) {
-      await this.assertMaterial(materialId, 'application/pdf');
+      await this.assertEntityMaterial(materialId, 'application/pdf');
     }
 
     if (annotation.type === AnnotationTypes.HtmlRange) {
-      await this.assertMaterial(materialId, 'text/html');
+      await this.assertEntityMaterial(materialId, 'text/html');
     }
 
     return await this.materials.createAnnotation(materialId, annotation);
   }
 
   async queryAnnotations(materialId: MaterialVO['id']) {
-    await this.assertMaterial(materialId);
+    await this.assertEntityMaterial(materialId);
     return await this.materials.findAllAnnotations(materialId);
   }
 
-  private async assertMaterial(materialId: MaterialVO['id'], mimeType?: string) {
-    const material = await this.materials.findOneById(materialId);
-
-    if (!material || isDirectory(material) || (mimeType && material.mimeType !== mimeType)) {
-      throw new Error('invalid material id');
-    }
-  }
-
   async removeAnnotation(annotationId: AnnotationVO['id']) {
+    await this.assertValidAnnotation(annotationId);
     const result = await this.materials.removeAnnotation(annotationId);
 
     if (!result) {
@@ -111,12 +98,7 @@ export default class MaterialService extends BaseService {
   }
 
   async updateAnnotation(annotationId: AnnotationVO['id'], patch: AnnotationPatchDTO) {
-    const annotation = await this.materials.findAnnotationById(annotationId);
-
-    if (!annotation) {
-      throw new Error('invalid annotation id');
-    }
-
+    await this.assertValidAnnotation(annotationId);
     const updated = await this.materials.updateAnnotation(annotationId, patch);
 
     if (!updated) {
@@ -126,14 +108,41 @@ export default class MaterialService extends BaseService {
     return updated;
   }
 
-  async areAvailable(ids: MaterialVO['id'][]) {
-    const rows = await this.materials.findAll({ ids });
+  async areAvailable(ids: MaterialVO['id'][], type?: MaterialTypes) {
+    const uniqueIds = uniq(ids);
+    const rows = await this.materials.findAll({ id: uniqueIds });
 
     if (rows.length !== ids.length) {
       return false;
     }
 
+    if ((await this.recyclableService.filter(EntityTypes.Material, rows)).length !== rows.length) {
+      return false;
+    }
+
+    if (type) {
+      return rows.every(type === MaterialTypes.Directory ? isDirectory : negate(isDirectory));
+    }
+
     return true;
+  }
+
+  private async assertEntityMaterial(materialId: MaterialVO['id'], mimeType?: string) {
+    const material = await this.query(materialId);
+
+    if (!isEntityMaterial(material) || (mimeType && material.mimeType !== mimeType)) {
+      throw new Error('invalid material id');
+    }
+  }
+
+  private async assertValidAnnotation(annotationId: AnnotationVO['id']) {
+    const annotation = await this.materials.findAnnotationById(annotationId);
+
+    if (!annotation) {
+      throw new Error('invalid annotation id');
+    }
+
+    await this.assertEntityMaterial(annotation.materialId);
   }
 
   async getTreeFragment(id: MaterialVO['id']) {

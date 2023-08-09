@@ -1,7 +1,7 @@
 import { singleton } from 'tsyringe';
 import { action, makeObservable } from 'mobx';
 
-import type { EntityLocator } from 'interface/entity';
+import type { EntityLocator } from 'model/entity';
 import Tile from 'model/workbench/Tile';
 import TileManager, { type TileSplitDirections } from 'model/workbench/TileManger';
 import EditorManager from 'model/workbench/EditorManager';

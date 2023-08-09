@@ -4,7 +4,7 @@ import { useEffect, useContext, useState } from 'react';
 import { Button } from 'antd';
 import { useCreation } from 'ahooks';
 
-import type { NoteVO } from 'interface/note';
+import type { NoteVO } from 'model/note';
 import { IS_DEV } from 'infra/constants';
 import NoteTree, { type NoteTreeNode } from 'model/note/Tree';
 import NoteService from 'service/NoteService';

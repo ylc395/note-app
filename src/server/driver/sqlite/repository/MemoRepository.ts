@@ -1,7 +1,7 @@
 import omit from 'lodash/omit';
 import groupBy from 'lodash/groupBy';
 
-import type { MemoPaginationQuery, ParentMemoVO, ChildMemoVO, MemoVO, MemoDTO, MemoPatchDTO } from 'interface/memo';
+import type { MemoPaginationQuery, ParentMemoVO, ChildMemoVO, MemoVO, MemoDTO, MemoPatchDTO } from 'model/memo';
 import type { MemoRepository, MemoQuery } from 'service/repository/MemoRepository';
 
 import BaseRepository from './BaseRepository';
