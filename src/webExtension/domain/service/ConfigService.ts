@@ -3,7 +3,7 @@ import { observable, makeObservable, runInAction, action, computed } from 'mobx'
 import { singleton, container } from 'tsyringe';
 
 import { CONFIG_KEY, type Config } from 'model/config';
-import { EntityTypes } from 'interface/entity';
+import { type EntityParentId, EntityTypes } from 'interface/entity';
 import type Tree from 'model/abstract/Tree';
 
 import MainAppService from './MainAppService';
@@ -75,7 +75,7 @@ export default class ConfigService {
   }
 
   @action
-  private readonly setTargetId = (id: string | null) => {
+  private readonly setTargetId = (id: EntityParentId) => {
     if (!this.config) {
       throw new Error('no config');
     }

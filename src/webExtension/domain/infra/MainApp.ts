@@ -1,6 +1,6 @@
 import type { InjectionToken } from 'tsyringe';
 
-import type { EntityTypes } from 'interface/entity';
+import type { EntityParentId } from 'interface/entity';
 import type { TaskResult } from 'model/task';
 
 import type { RemoteCallable, RemoteId } from './remoteApi';
@@ -17,7 +17,7 @@ export enum Statuses {
 
 export interface Payload extends TaskResult {
   sourceUrl: string;
-  parentId: string | null;
+  parentId: EntityParentId;
 }
 
 export interface MainApp extends RemoteCallable {

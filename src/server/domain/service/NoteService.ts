@@ -1,8 +1,6 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import omit from 'lodash/omit';
 import groupBy from 'lodash/groupBy';
-import intersectionWith from 'lodash/intersectionWith';
-import zipObject from 'lodash/zipObject';
 import uniq from 'lodash/uniq';
 import dayjs from 'dayjs';
 
@@ -21,16 +19,16 @@ import type { RawNoteVO } from 'model/note';
 
 import BaseService, { Transaction } from './BaseService';
 import RecyclableService from './RecyclableService';
-import EntityService from './EntityService';
+import EntityService, { type HierarchyEntity } from './EntityService';
 
 @Injectable()
 export default class NoteService extends BaseService {
   @Inject(forwardRef(() => RecyclableService)) private readonly recyclableService!: RecyclableService;
+  @Inject(forwardRef(() => EntityService)) private readonly entityService!: EntityService;
 
-  // not check the note ids' availability
   private async getChildren(noteIds: NoteVO['id'][]) {
     const children = await this.notes.findAllChildren(noteIds);
-    const availableNotes = await this.recyclableService.filterAvailable(EntityTypes.Note, children);
+    const availableNotes = await this.recyclableService.filter(EntityTypes.Note, children);
 
     return groupBy(availableNotes, 'parentId');
   }
@@ -119,6 +117,17 @@ export default class NoteService extends BaseService {
     return result;
   }
 
+  private async addInfo(rawNotes: RawNoteVO[], children?: Record<NoteVO['id'], RawNoteVO[]>) {
+    const stars = buildIndex(await this.stars.findAllByLocators(getLocators(rawNotes, EntityTypes.Note)), 'entityId');
+    const _children = children || (await this.getChildren(getIds(rawNotes)));
+
+    return rawNotes.map((note) => ({
+      ...note,
+      childrenCount: _children[note.id]?.length || 0,
+      isStar: Boolean(stars[note.id]),
+    }));
+  }
+
   @Transaction
   async batchUpdate(notes: NotesDTO) {
     await this.assertValidChanges(notes);
@@ -128,29 +137,14 @@ export default class NoteService extends BaseService {
       throw new Error('invalid notes');
     }
 
-    const stars = buildIndex(await this.stars.findAllByLocators(getLocators(notes, EntityTypes.Note)), 'entityId');
-    const children = await this.getChildren(getIds(notes));
-
-    return result.map((note) => ({
-      ...note,
-      childrenCount: children[note.id]?.length || 0,
-      isStar: Boolean(stars[note.id]),
-    }));
+    return this.addInfo(result);
   }
 
   async query(q: NoteQuery | { id: NoteVO['id'] }) {
     const notes = await this.notes.findAll('id' in q ? { id: [q.id] } : q);
-    const availableNotes = await this.recyclableService.filterAvailable(EntityTypes.Note, notes);
+    const availableNotes = await this.recyclableService.filter(EntityTypes.Note, notes);
 
-    const locators = getLocators(availableNotes, EntityTypes.Note);
-    const stars = buildIndex(await this.stars.findAllByLocators(locators), 'entityId');
-    const children = await this.getChildren(getIds(availableNotes));
-
-    return availableNotes.map((note) => ({
-      ...note,
-      childrenCount: children[note.id]?.length || 0,
-      isStar: Boolean(stars[note.id]),
-    }));
+    return this.addInfo(availableNotes);
   }
 
   async queryOne(noteId: NoteVO['id']) {
@@ -169,11 +163,7 @@ export default class NoteService extends BaseService {
     }
 
     const notes = await this.notes.findTreeFragment(noteId);
-    const availableNotes = await this.recyclableService.filterAvailable(EntityTypes.Note, notes);
-    const stars = buildIndex(
-      await this.stars.findAllByLocators(getLocators(availableNotes, EntityTypes.Note)),
-      'entityId',
-    );
+    const availableNotes = await this.recyclableService.filter(EntityTypes.Note, notes);
     const children = await this.getChildren(getIds(availableNotes));
 
     /* topo sort */
@@ -190,11 +180,7 @@ export default class NoteService extends BaseService {
     }
     /* topo sort end */
 
-    return result.map((note) => ({
-      ...note,
-      childrenCount: children[note.id]?.length || 0,
-      isStar: Boolean(stars[note.id]),
-    }));
+    return this.addInfo(result, children);
   }
 
   private async assertValidChanges(notes: NotesDTO) {
@@ -208,25 +194,7 @@ export default class NoteService extends BaseService {
       return;
     }
 
-    const newParentIds = parentChangedNotes.map(({ parentId }) => parentId).filter((id) => id) as NoteVO['id'][];
-
-    if (!(await this.areAvailable(newParentIds))) {
-      throw new Error('invalid ids');
-    }
-
-    const ids = getIds(parentChangedNotes);
-    const allDescendants = await this.notes.findAllDescendants(ids);
-    const descendantGroup = EntityService.groupDescants(ids, allDescendants);
-
-    for (const { parentId, id } of parentChangedNotes) {
-      if (!parentId) {
-        continue;
-      }
-
-      if (descendantGroup[id]?.find((descants) => descants.id === parentId)) {
-        throw new Error(`can not move ${id} to ${parentId}`);
-      }
-    }
+    await this.entityService.assertValidParents(EntityTypes.Note, parentChangedNotes as HierarchyEntity[]);
   }
 
   async areAvailable(noteIds: NoteVO['id'][]) {
@@ -241,34 +209,16 @@ export default class NoteService extends BaseService {
   }
 
   private async isWritable(noteId: NoteVO['id']) {
-    const row = await this.notes.findOneById(noteId);
-
-    if (!row) {
+    try {
+      const row = await this.queryOne(noteId);
+      return !row.isReadonly;
+    } catch (error) {
       return false;
     }
-
-    if (await this.areNoteRecyclables([noteId])) {
-      return false;
-    }
-
-    return !row.isReadonly;
   }
 
   private async areNoteRecyclables(noteIds: NoteVO['id'][]) {
-    const recyclables = await this.getNoteRecyclables(noteIds);
-    return Object.values(recyclables).some((v) => v);
-  }
-
-  private async getNoteRecyclables(noteIds: NoteVO['id'][]) {
-    const ancestors = await this.notes.findAllAncestors(noteIds);
-    const ancestorsMap = EntityService.getAncestorsMap(noteIds, ancestors);
-    const recyclables = await this.recyclables.findAllByLocators(getLocators(ancestors, EntityTypes.Note));
-
-    return zipObject(
-      noteIds,
-      noteIds.map(
-        (id) => intersectionWith(ancestorsMap[id], recyclables, ({ id }, { entityId }) => entityId === id).length > 0,
-      ),
-    );
+    const recyclables = await this.recyclables.findAllByLocators(noteIds.map((id) => ({ id, type: EntityTypes.Note })));
+    return recyclables.length === 0;
   }
 }

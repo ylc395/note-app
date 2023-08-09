@@ -6,7 +6,7 @@ import { MaterialTypes, type DirectoryVO, type MaterialDTO } from 'interface/mat
 import type { FileVO } from 'interface/file';
 import type { NoteBodyDTO, NoteDTO, NoteVO } from 'interface/note';
 import type { MemoDTO } from 'interface/memo';
-import { type EntityId, EntityTypes } from 'interface/entity';
+import { type EntityId, type EntityParentId, EntityTypes } from 'interface/entity';
 import NoteTree from 'model/note/Tree';
 import MaterialTree from 'model/material/Tree';
 
@@ -107,7 +107,7 @@ export default class MainAppService {
     });
   }
 
-  async getTree(type: EntityTypes.Material | EntityTypes.Note, targetId: EntityId | null) {
+  async getTree(type: EntityTypes.Material | EntityTypes.Note, targetId: EntityParentId) {
     if (type === EntityTypes.Note) {
       const entities = await this.mainApp.fetch<NoteVO[]>(
         'GET',

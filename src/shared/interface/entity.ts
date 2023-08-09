@@ -7,6 +7,7 @@ export enum EntityTypes {
 }
 
 export type EntityId = string;
+export type EntityParentId = EntityId | null;
 
 export const entityId = string;
 

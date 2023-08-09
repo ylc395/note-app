@@ -12,7 +12,7 @@ export default class SqliteRecyclableRepository extends BaseRepository implement
     const rows = await this.db
       .insertInto(tableName)
       .values(entities.map(({ id, type, reason }) => ({ entityId: id, entityType: type, reason })))
-      .returning(['entityId', 'entityType', 'deletedAt'])
+      .returning(['entityId', 'entityType', 'deletedAt', 'reason'])
       .execute();
 
     return rows;

@@ -1,87 +1,90 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import groupBy from 'lodash/groupBy';
-import { type EntityLocator, type EntityId, EntityTypes } from 'interface/entity';
+import compact from 'lodash/compact';
+import { type EntityLocator, type EntityId, type EntityParentId, EntityTypes } from 'interface/entity';
 
+import { getIds } from 'utils/collection';
 import BaseService from './BaseService';
 import NoteService from './NoteService';
 import MaterialService from './MaterialService';
-import { buildIndex } from 'utils/collection';
+import MemoService from './MemoService';
 
-interface HierarchyEntity {
+export interface HierarchyEntity {
   id: EntityId;
-  parentId: EntityId | null;
+  parentId: EntityParentId;
 }
 
 @Injectable()
 export default class EntityService extends BaseService {
   @Inject(forwardRef(() => NoteService)) private readonly noteService!: NoteService;
   @Inject(forwardRef(() => MaterialService)) private readonly materialService!: MaterialService;
+  @Inject(forwardRef(() => MaterialService)) private readonly memoService!: MemoService;
 
-  async assertAvailableEntities(entities: EntityLocator[]) {
+  private static mapGroupByType<T>(
+    entities: EntityLocator[],
+    mapper: (type: EntityTypes, ids: EntityId[]) => Promise<T>,
+  ) {
     const groups = groupBy(entities, 'type');
 
-    const isValid = await Promise.all(
-      Object.entries(groups).map(([type, entitiesOfType]) => {
-        const ids = entitiesOfType.map(({ id }) => id);
-
-        switch (Number(type)) {
-          case EntityTypes.Note:
-            return this.noteService.areAvailable(ids);
-          default:
-            return true;
-        }
-      }),
+    return Promise.all(
+      Object.entries(groups).map(([type, entitiesOfType]) =>
+        mapper(Number(type) as EntityTypes, getIds(entitiesOfType)),
+      ),
     );
+  }
+
+  async assertAvailableEntities(entities: EntityLocator[]) {
+    const isValid = await EntityService.mapGroupByType(entities, (type, ids) => {
+      switch (type) {
+        case EntityTypes.Note:
+          return this.noteService.areAvailable(ids);
+        case EntityTypes.Material:
+          return this.materialService.areAvailable(ids);
+        case EntityTypes.Memo:
+          return this.memoService.areAvailable(ids);
+        default:
+          return Promise.resolve(true);
+      }
+    });
 
     if (!isValid.every((result) => result)) {
       throw new Error('invalid entities');
     }
   }
 
-  static groupDescants<T extends HierarchyEntity>(ids: EntityId[], entities: T[]) {
-    const groups = groupBy(entities, 'parentId');
-    const result: Record<EntityId, T[]> = {};
+  async assertValidParents(type: EntityTypes, changeSet: HierarchyEntity[]) {
+    const parentIds = compact(changeSet.map(({ parentId }) => parentId));
+    await this.assertAvailableEntities(parentIds.map((id) => ({ id, type })));
 
-    for (const id of ids) {
-      const entity = entities.find((entity) => id === entity.id);
-      const descendants: T[] = entity ? [entity] : [];
+    // an ancestor note can not be a child of its descants nodes
+    const descants = await this.getDescantsOfType(type, getIds(changeSet));
 
-      const findChildren = (parentId: EntityId) => {
-        const children = groups[parentId];
-
-        if (children) {
-          descendants.push(...children);
-
-          for (const child of children) {
-            findChildren(child.id);
-          }
-        }
-      };
-
-      findChildren(id);
-
-      result[id] = descendants;
+    for (const { id, parentId: newParentId } of changeSet) {
+      if (newParentId && (newParentId === id || descants[id]?.includes(newParentId))) {
+        throw new Error('invalid new parent id');
+      }
     }
-
-    return result;
   }
 
-  static getAncestorsMap<T extends HierarchyEntity>(ids: EntityId[], entities: T[]) {
-    const entitiesMap = buildIndex(entities, 'id');
-    const ancestorsMap: Record<EntityId, T[]> = {};
-
-    for (const id of ids) {
-      const ancestors: T[] = [];
-      let entity = entitiesMap[id];
-
-      while (entity) {
-        ancestors.push(entity);
-        entity = entity.parentId ? entitiesMap[entity.parentId] : undefined;
-      }
-
-      ancestorsMap[id] = ancestors;
+  private getDescantsOfType(type: EntityTypes, ids: EntityId[]) {
+    switch (type) {
+      case EntityTypes.Note:
+        return this.notes.findAllDescendantIds(ids);
+      case EntityTypes.Material:
+        return this.materials.findAllDescendantIds(ids);
+      case EntityTypes.Memo:
+        return this.memos.findAllDescendantIds(ids);
+      default:
+        return Promise.resolve({} as Record<EntityId, EntityId[]>);
     }
+  }
 
-    return ancestorsMap;
+  async getDescants(entities: EntityLocator[]) {
+    const allDescants = await EntityService.mapGroupByType(entities, async (type, ids) => {
+      const descants = Object.values(await this.getDescantsOfType(type, ids));
+      return descants.flat().map((id) => ({ type, id }));
+    });
+
+    return allDescants.flat();
   }
 }

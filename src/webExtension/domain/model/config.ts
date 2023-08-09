@@ -1,8 +1,8 @@
-import type { EntityId, EntityTypes } from 'interface/entity';
+import type { EntityParentId, EntityTypes } from 'interface/entity';
 
 export interface Config {
   targetEntityType: EntityTypes;
-  targetEntityId: Record<EntityTypes, EntityId | null>;
+  targetEntityId: Record<EntityTypes, EntityParentId>;
 }
 
 export const CONFIG_KEY = 'config';

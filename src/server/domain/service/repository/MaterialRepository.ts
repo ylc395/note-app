@@ -21,6 +21,7 @@ export interface MaterialRepository {
   createDirectory: (directory: Directory) => Promise<DirectoryVO>;
   createEntity: (material: MaterialDTO) => Promise<EntityMaterialVO>;
   findAll: (query: MaterialQuery) => Promise<MaterialVO[]>;
+  findAllDescendantIds: (noteIds: MaterialVO['id'][]) => Promise<Record<MaterialVO['id'], MaterialVO['id'][]>>;
   findOneById: (id: MaterialVO['id']) => Promise<MaterialVO | null>;
   findBlobById: (id: MaterialVO['id']) => Promise<ArrayBuffer | string | null>;
   createAnnotation: (materialId: MaterialVO['id'], annotation: AnnotationDTO) => Promise<AnnotationVO>;

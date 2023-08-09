@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import type { MemoDTO, MemoPatchDTO, MemoPaginationQuery, ParentMemoVO } from 'interface/memo';
+import type { MemoDTO, MemoPatchDTO, MemoPaginationQuery, ParentMemoVO, MemoVO } from 'interface/memo';
 import { Events } from 'model/events';
 
 import BaseService from './BaseService';
@@ -48,5 +48,10 @@ export default class MemoService extends BaseService {
 
   async query(q: MemoPaginationQuery) {
     return await this.memos.list(q);
+  }
+
+  async areAvailable(ids: MemoVO['id'][]) {
+    const recyclables = await this.recyclables.findAllByLocators(ids.map((id) => ({ id, type: EntityTypes.Memo })));
+    return recyclables.length === 0;
   }
 }
