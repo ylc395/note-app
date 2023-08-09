@@ -39,11 +39,8 @@ export default class NoteService extends BaseService {
       throw new Error('invalid parentId');
     }
 
-    if (note.duplicateFrom) {
-      return { ...(await this.duplicate(note.duplicateFrom)), isStar: false, childrenCount: 0 };
-    }
-
-    return { ...(await this.notes.create(note)), isStar: false, childrenCount: 0 };
+    const newNote = note.duplicateFrom ? await this.duplicate(note.duplicateFrom) : await this.notes.create(note);
+    return this.query(newNote.id);
   }
 
   private async duplicate(noteId: NoteVO['id']) {
@@ -123,6 +120,7 @@ export default class NoteService extends BaseService {
 
     return rawNotes.map((note) => ({
       ...note,
+      title: normalizeTitle(note),
       childrenCount: _children[note.id]?.length || 0,
       isStar: Boolean(stars[note.id]),
     }));

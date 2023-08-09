@@ -2,7 +2,7 @@ import type { MaterialVO, MaterialTypes, MaterialDTO } from 'shard/model/materia
 
 export type Directory = Pick<MaterialDTO, 'name' | 'parentId' | 'icon'>;
 
-export type RawMaterial = Omit<MaterialVO, 'isStar'>;
+export type Material = Omit<MaterialVO, 'isStar'>;
 
 export interface MaterialQuery {
   parentId?: MaterialVO['parentId'];

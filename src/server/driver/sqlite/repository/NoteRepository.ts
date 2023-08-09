@@ -56,7 +56,7 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
     return noteBody;
   }
 
-  async findAll(query?: NoteQuery | { parentId: NoteVO['id'][] }) {
+  async findAll(query?: NoteQuery | { parentIds: NoteVO['id'][] }) {
     let sql = this.db.selectFrom(tableName).selectAll();
 
     for (const [k, v] of Object.entries(query || {})) {
@@ -148,7 +148,7 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
 
     const children = [
       ...(await this.findAll({ parentId: null })),
-      ...(await this.findAll({ parentId: ancestorIds.map(({ id }) => id) })),
+      ...(await this.findAll({ parentIds: ancestorIds.map(({ id }) => id) })),
     ];
 
     return children;

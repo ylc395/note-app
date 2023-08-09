@@ -26,6 +26,14 @@ describe('notes', async function () {
       await noteController.create({ title: '' }),
       await noteController.create({ title: 'test title', isReadonly: true }),
     ];
+
+    for (const note of rootNotes) {
+      ok(typeof note.id === 'string');
+    }
+  });
+
+  it('should has a normalized title (not empty) ', function () {
+    ok(rootNotes[1]?.title);
   });
 
   it('should query root notes', async function () {
@@ -83,6 +91,10 @@ describe('notes', async function () {
     await noteController.create({ parentId: parentNoteId, title: 'child note1' });
     await noteController.create({ parentId: parentNoteId, title: 'child 2' });
     await rejects(noteController.create({ parentId: 'some invalid id' }));
+  });
+
+  it('should fail when parent id is invalid', async function () {
+    await rejects(noteController.create({ parentId: 'invalid id' }));
   });
 
   it('should query children notes, and right childrenCount', async function () {
@@ -204,6 +216,33 @@ describe('notes', async function () {
     strictEqual(duplicatedNote.isReadonly, true);
   });
 
+  it('should not query/duplicate/recycle a recyclable note and its body', async function () {
+    const newNote = await noteController.create({});
+    await recyclablesController.create([{ type: EntityTypes.Note, id: newNote.id }]);
+
+    await rejects(noteController.create({ duplicateFrom: newNote.id }));
+    await rejects(noteController.queryOne(newNote.id));
+    await rejects(noteController.queryBody(newNote.id));
+    await rejects(recyclablesController.create([{ type: EntityTypes.Note, id: newNote.id }]));
+  });
+
+  it('should not query/duplicate a note and its body if its ancestor note is recyclable', async function () {
+    const newNote = await noteController.create({});
+    const newChildNote = await noteController.create({ parentId: newNote.id });
+    const newGrandChildNote1 = await noteController.create({ parentId: newChildNote.id });
+    const newGrandChildNote2 = await noteController.create({ parentId: newChildNote.id });
+
+    recyclablesController.create([{ type: EntityTypes.Note, id: newChildNote.id }]);
+
+    await rejects(noteController.create({ duplicateFrom: newGrandChildNote1.id }));
+    await rejects(noteController.create({ duplicateFrom: newGrandChildNote2.id }));
+    await rejects(noteController.queryOne(newGrandChildNote1.id));
+    await rejects(noteController.queryOne(newGrandChildNote2.id));
+    await rejects(noteController.queryBody(newGrandChildNote1.id));
+    await rejects(noteController.queryBody(newGrandChildNote2.id));
+    await rejects(recyclablesController.create([{ type: EntityTypes.Note, id: newGrandChildNote1.id }]));
+  });
+
   it('should get correct childrenCount and children after some children become recyclables', async function () {
     const parent = await noteController.create({ parentId: null });
     const child1 = await noteController.create({ parentId: parent.id });
@@ -229,5 +268,24 @@ describe('notes', async function () {
     const children = await noteController.query({ parentId: parent.id });
     strictEqual(children.length, 1);
     deepStrictEqual(children[0], child3);
+  });
+
+  it('can not be a parent if it is a recyclable', async function () {
+    const newNote1 = await noteController.create({ parentId: parentNoteId });
+    const newNote2 = await noteController.create({});
+    recyclablesController.create([{ type: EntityTypes.Note, id: newNote1.id }]);
+
+    await rejects(noteController.create({ parentId: newNote1.id }));
+    await rejects(noteController.update(newNote2.id, { parentId: newNote1.id }));
+  });
+
+  it('can not be a parent if its ancestor are recyclable', async function () {
+    const newNote = await noteController.create({});
+    const newChildNote = await noteController.create({ parentId: newNote.id });
+    const newGrandChildNote = await noteController.create({ parentId: newChildNote.id });
+
+    recyclablesController.create([{ type: EntityTypes.Note, id: newChildNote.id }]);
+
+    await rejects(noteController.create({ parentId: newGrandChildNote.id }));
   });
 });
