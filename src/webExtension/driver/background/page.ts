@@ -1,8 +1,7 @@
 import browser from 'webextension-polyfill';
 import { REMOTE_ID as PAGE_REMOTE_ID, PageFactory } from 'infra/page';
-import memoize from 'lodash/memoize';
 
-export const getPage: PageFactory = memoize(() => {
+export const getPage: PageFactory = () => {
   return {
     __remoteId: PAGE_REMOTE_ID as string,
     async captureScreen() {
@@ -11,4 +10,4 @@ export const getPage: PageFactory = memoize(() => {
       });
     },
   };
-});
+};

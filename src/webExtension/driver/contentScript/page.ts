@@ -1,8 +1,7 @@
 import { type PageFactory, REMOTE_ID } from 'infra/page';
 import { getRemoteApi } from 'infra/remoteApi';
-import memoize from 'lodash/memoize';
 
-export const getPage: PageFactory = memoize(() => ({
+export const getPage: PageFactory = () => ({
   __remoteId: REMOTE_ID as string,
   ready() {
     return new Promise<void>((resolve) => {
@@ -14,4 +13,4 @@ export const getPage: PageFactory = memoize(() => ({
     });
   },
   captureScreen: getRemoteApi(REMOTE_ID).captureScreen,
-}));
+});
