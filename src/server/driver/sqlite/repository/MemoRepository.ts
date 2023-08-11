@@ -1,16 +1,7 @@
 import omit from 'lodash/omit';
-import groupBy from 'lodash/groupBy';
 
 import type { Selectable } from 'kysely';
-import type {
-  MemoPaginationQuery,
-  ParentMemoVO,
-  ChildMemoVO,
-  MemoVO,
-  MemoDTO,
-  MemoPatchDTO,
-  MemoQuery,
-} from 'model/memo';
+import type { ParentMemoVO, ChildMemoVO, MemoVO, MemoDTO, MemoPatchDTO, MemoQuery } from 'model/memo';
 import type { MemoRepository } from 'service/repository/MemoRepository';
 
 import HierarchyEntityRepository from './HierarchyEntityRepository';
@@ -40,31 +31,6 @@ export default class SqliteMemoRepository extends HierarchyEntityRepository impl
     }
 
     return await this.findOneById(updatedRow.id);
-  }
-
-  async list(query: MemoPaginationQuery) {
-    const pageSize = query.pageSize || 50;
-    const page = query.page || 1;
-    const rows = await this.db
-      .selectFrom(this.tableName)
-      .where('parentId', 'is', null)
-      .orderBy('isPinned', 'desc')
-      .orderBy('id', 'desc')
-      .selectAll()
-      .limit(pageSize)
-      .offset((page - 1) * pageSize)
-      .execute();
-
-    const total = await this.db
-      .selectFrom(this.tableName)
-      .where('parentId', 'is', null)
-      .select(this.db.fn.countAll<number>().as('count'))
-      .executeTakeFirst();
-
-    const childrenMap = groupBy(await this.findChildren(rows.map(({ id }) => id)), 'parentId');
-    const list = rows.map((row) => SqliteMemoRepository.rowToVO(row, childrenMap[row.id] || []));
-
-    return { list, total: Number(total?.count) };
   }
 
   private async findChildren(parentId: ParentMemoVO['id'] | ParentMemoVO['id'][]) {
@@ -143,7 +109,7 @@ export default class SqliteMemoRepository extends HierarchyEntityRepository impl
     const rows = await sql.execute();
 
     return rows.map((row) =>
-      row.parentId ? SqliteMemoRepository.rowToVO(row, []) : SqliteMemoRepository.rowToVO(row),
+      row.parentId ? SqliteMemoRepository.rowToVO(row) : SqliteMemoRepository.rowToVO(row, []),
     );
   }
 

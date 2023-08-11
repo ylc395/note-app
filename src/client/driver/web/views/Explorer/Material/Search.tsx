@@ -1,6 +1,7 @@
 import { Button, Input, Tooltip } from 'antd';
 import { InfoCircleOutlined } from '@ant-design/icons';
 
+// eslint-disable-next-line mobx/missing-observer
 export default function Search() {
   return (
     <Input

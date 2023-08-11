@@ -60,12 +60,12 @@ export const isEntityMaterial = (entity: MaterialVO): entity is EntityMaterialVO
   return 'mimeType' in entity;
 };
 
-export const ClientMaterialQuerySchema = object({
+export const clientMaterialQuerySchema = object({
   parentId: string().nullable().optional(),
   type: preprocess((v) => v && Number(v), nativeEnum(MaterialTypes).optional()),
 });
 
-export type ClientMaterialQuery = Infer<typeof ClientMaterialQuerySchema>;
+export type ClientMaterialQuery = Infer<typeof clientMaterialQuerySchema>;
 
 export enum AnnotationTypes {
   PdfRange = 1,

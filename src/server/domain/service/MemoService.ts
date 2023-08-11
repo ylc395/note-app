@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import type { MemoDTO, MemoPatchDTO, MemoPaginationQuery, ParentMemoVO, MemoVO } from 'model/memo';
+import type { MemoDTO, MemoPatchDTO, ParentMemoVO, MemoVO } from 'model/memo';
 import { Events } from 'model/events';
 
 import BaseService from './BaseService';
@@ -46,8 +46,8 @@ export default class MemoService extends BaseService {
     return updated;
   }
 
-  async query(q: MemoPaginationQuery) {
-    return await this.memos.list(q);
+  async query() {
+    return await this.memos.findAll();
   }
 
   async areAvailable(ids: MemoVO['id'][]) {

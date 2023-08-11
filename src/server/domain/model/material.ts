@@ -21,4 +21,8 @@ export function isDirectory(m: Material): m is Directory {
   return !('mimeType' in m);
 }
 
+export function isEntityMaterial(m: Material): m is EntityMaterial {
+  return !isDirectory(m);
+}
+
 export * from 'shard/model/material';

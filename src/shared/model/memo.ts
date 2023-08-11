@@ -1,6 +1,5 @@
 import { boolean, infer as Infer, object, string } from 'zod';
 import type { EntityId } from './entity';
-import { type PaginationEntity, type PaginationQuery, paginationQuerySchema } from './pagination';
 import type { Starable } from './star';
 
 export interface ChildMemoVO extends Starable {
@@ -16,12 +15,6 @@ export interface ParentMemoVO extends ChildMemoVO {
 }
 
 export type MemoVO = ChildMemoVO | ParentMemoVO;
-
-export type PaginationMemeVO = PaginationEntity<ParentMemoVO>;
-
-export type MemoPaginationQuery = PaginationQuery;
-
-export const memoQuerySchema = paginationQuerySchema;
 
 export const memoDTOSchema = object({
   content: string().min(1),

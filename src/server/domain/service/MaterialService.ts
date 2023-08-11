@@ -5,7 +5,6 @@ import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import {
   type AnnotationDTO,
   type MaterialDTO,
-  type ClientMaterialQuery,
   type MaterialVO,
   type AnnotationVO,
   type AnnotationPatchDTO,
@@ -51,8 +50,9 @@ export default class MaterialService extends BaseService {
     return { ...(await this.materials.createDirectory(info)), isStar: false, childrenCount: 0 };
   }
 
-  private async addInfo(materials: Material[]) {
-    const children = await this.getChildrenIds(getIds(materials.filter(isDirectory)));
+  private async toVOs(materials: Material[]) {
+    const parentIds = getIds(materials.filter(isDirectory));
+    const children = await this.getChildrenIds(parentIds);
     const stars = buildIndex(await this.stars.findAllByLocators(getLocators(materials, EntityTypes.Note)), 'entityId');
 
     return materials.map((material) => ({
@@ -73,18 +73,20 @@ export default class MaterialService extends BaseService {
     return availableChildren;
   }
 
-  private async getAll(q: MaterialQuery | Material['id']) {
-    const rawNotes = await this.materials.findAll(typeof q === 'string' ? { id: [q] } : q);
-    return this.addInfo(rawNotes);
-  }
-
-  async query(q: ClientMaterialQuery): Promise<MaterialVO[]>;
-  async query(q: MaterialVO['id']): Promise<MaterialVO>;
-  async query(q: ClientMaterialQuery | MaterialVO['id']): Promise<MaterialVO[] | MaterialVO> {
-    const materials = await this.getAll(typeof q === 'string' ? q : { parentId: null, ...q });
+  private async queryAvailableMaterials(q: MaterialQuery) {
+    const materials = await this.materials.findAll(q);
     const availableMaterials = await this.recyclableService.filter(EntityTypes.Material, materials);
 
-    const result = typeof q === 'string' ? availableMaterials[0] : availableMaterials;
+    return availableMaterials;
+  }
+
+  async queryVO(q: MaterialQuery): Promise<MaterialVO[]>;
+  async queryVO(q: MaterialVO['id']): Promise<MaterialVO>;
+  async queryVO(q: MaterialQuery | MaterialVO['id']): Promise<MaterialVO[] | MaterialVO> {
+    const materials = await this.queryAvailableMaterials(typeof q === 'string' ? { id: [q] } : q);
+    const materialVOs = await this.toVOs(materials);
+
+    const result = typeof q === 'string' ? materialVOs[0] : materialVOs;
 
     if (!result) {
       throw new Error('no result');
@@ -143,13 +145,9 @@ export default class MaterialService extends BaseService {
 
   async areAvailable(ids: MaterialVO['id'][], type?: MaterialTypes) {
     const uniqueIds = uniq(ids);
-    const rows = await this.materials.findAll({ id: uniqueIds });
+    const rows = await this.queryAvailableMaterials({ id: uniqueIds });
 
     if (rows.length !== ids.length) {
-      return false;
-    }
-
-    if ((await this.recyclableService.filter(EntityTypes.Material, rows)).length !== rows.length) {
       return false;
     }
 
@@ -161,9 +159,9 @@ export default class MaterialService extends BaseService {
   }
 
   private async assertEntityMaterial(materialId: MaterialVO['id'], mimeType?: string) {
-    const material = await this.query(materialId);
+    const material = (await this.queryAvailableMaterials({ id: [materialId] }))[0];
 
-    if (!isEntityMaterial(material) || (mimeType && material.mimeType !== mimeType)) {
+    if (!material || !isEntityMaterial(material) || (mimeType && material.mimeType !== mimeType)) {
       throw new Error('invalid material id');
     }
   }
@@ -184,10 +182,10 @@ export default class MaterialService extends BaseService {
     }
 
     const ancestorIds = await this.materials.findAncestorIds(materialId);
-    const childrenIds = await this.getChildrenIds(ancestorIds);
+    const childrenIds = Object.values(await this.materials.findChildrenIds(ancestorIds)).flat();
 
-    const roots = await this.query({ parentId: null, type });
-    const children = groupBy(await this.getAll({ id: Object.values(childrenIds).flat(), type }), 'parentId');
+    const roots = await this.queryVO({ parentId: null, type });
+    const children = groupBy(await this.queryVO({ id: childrenIds, type }), 'parentId');
 
     /* topo sort */
     const result: MaterialVO[] = [...roots];

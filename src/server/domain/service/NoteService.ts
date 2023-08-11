@@ -5,14 +5,7 @@ import uniq from 'lodash/uniq';
 import dayjs from 'dayjs';
 
 import { buildIndex, getIds, getLocators } from 'utils/collection';
-import {
-  type NoteVO,
-  type NoteBodyDTO,
-  type NoteDTO,
-  type ClientNoteQuery,
-  type NotesDTO,
-  normalizeTitle,
-} from 'model/note';
+import { type NoteVO, type NoteBodyDTO, type NoteDTO, type NotesDTO, normalizeTitle } from 'model/note';
 import { EntityTypes, type HierarchyEntity } from 'model/entity';
 import { Events } from 'model/events';
 import type { Note, NoteQuery } from 'model/note';
@@ -43,7 +36,7 @@ export default class NoteService extends BaseService {
     }
 
     const newNote = note.duplicateFrom ? await this.duplicate(note.duplicateFrom) : await this.notes.create(note);
-    return this.query(newNote.id);
+    return this.queryVO(newNote.id);
   }
 
   private async duplicate(noteId: NoteVO['id']) {
@@ -117,9 +110,9 @@ export default class NoteService extends BaseService {
     return result;
   }
 
-  private async addInfo(rawNotes: Note[], children?: Record<NoteVO['id'], NoteVO['id'][]>) {
+  private async toVOs(rawNotes: Note[]) {
     const stars = buildIndex(await this.stars.findAllByLocators(getLocators(rawNotes, EntityTypes.Note)), 'entityId');
-    const _children = children || (await this.getChildrenIds(getIds(rawNotes)));
+    const _children = await this.getChildrenIds(getIds(rawNotes));
 
     return rawNotes.map((note) => ({
       ...note,
@@ -138,16 +131,22 @@ export default class NoteService extends BaseService {
       throw new Error('invalid notes');
     }
 
-    return this.addInfo(result);
+    return this.toVOs(result);
   }
 
-  async query(q: ClientNoteQuery): Promise<NoteVO[]>;
-  async query(id: NoteVO['id']): Promise<NoteVO>;
-  async query(q: ClientNoteQuery | NoteVO['id']): Promise<NoteVO[] | NoteVO> {
-    const notes = await this.getAll(typeof q === 'string' ? q : { parentId: null, ...q });
+  private async queryAvailableNotes(q: NoteQuery) {
+    const notes = await this.notes.findAll(q);
     const availableNotes = await this.recyclableService.filter(EntityTypes.Note, notes);
 
-    const result = typeof q === 'string' ? availableNotes[0] : availableNotes;
+    return availableNotes;
+  }
+
+  async queryVO(q: NoteQuery): Promise<NoteVO[]>;
+  async queryVO(id: NoteVO['id']): Promise<NoteVO>;
+  async queryVO(q: NoteQuery | Note['id']) {
+    const notes = await this.queryAvailableNotes(typeof q === 'string' ? { id: [q] } : q);
+    const noteVOs = await this.toVOs(notes);
+    const result = typeof q === 'string' ? noteVOs[0] : noteVOs;
 
     if (!result) {
       throw new Error('no note');
@@ -156,21 +155,16 @@ export default class NoteService extends BaseService {
     return result;
   }
 
-  private async getAll(q: NoteQuery | Note['id']) {
-    const rawNotes = await this.notes.findAll(typeof q === 'string' ? { id: [q] } : q);
-    return this.addInfo(rawNotes);
-  }
-
   async getTreeFragment(noteId: NoteVO['id']) {
     if (!(await this.areAvailable([noteId]))) {
       throw new Error('invalid id');
     }
 
     const ancestorIds = await this.notes.findAncestorIds(noteId);
-    const childrenIds = await this.getChildrenIds(ancestorIds);
+    const childrenIds = Object.values(await this.notes.findChildrenIds(ancestorIds)).flat();
 
-    const roots = await this.query({ parentId: null });
-    const children = groupBy(await this.getAll({ id: Object.values(childrenIds).flat() }), 'parentId');
+    const roots = await this.queryVO({ parentId: null });
+    const children = groupBy(await this.queryVO({ id: childrenIds }), 'parentId');
 
     /* topo sort */
     const result: NoteVO[] = [...roots];
@@ -200,21 +194,22 @@ export default class NoteService extends BaseService {
 
   async areAvailable(noteIds: NoteVO['id'][]) {
     const uniqueIds = uniq(noteIds);
-    const rows = await this.notes.findAll({ id: uniqueIds });
+    const rows = await this.queryAvailableNotes({ id: uniqueIds });
 
     if (rows.length !== uniqueIds.length) {
       return false;
     }
 
-    return (await this.recyclableService.filter(EntityTypes.Note, rows)).length === uniqueIds.length;
+    return true;
   }
 
   private async isWritable(noteId: NoteVO['id']) {
-    try {
-      const row = await this.query(noteId);
-      return !row.isReadonly;
-    } catch (error) {
+    const row = (await this.queryAvailableNotes({ id: [noteId] }))[0];
+
+    if (!row) {
       return false;
     }
+
+    return row.isReadonly;
   }
 }

@@ -1,12 +1,4 @@
-import type {
-  MemoDTO,
-  MemoPaginationQuery,
-  ParentMemoVO,
-  PaginationMemeVO,
-  MemoVO,
-  MemoPatchDTO,
-  MemoQuery,
-} from 'model/memo';
+import type { MemoDTO, ParentMemoVO, MemoVO, MemoPatchDTO, MemoQuery } from 'model/memo';
 
 export interface MemoRepository {
   create: (memo: MemoDTO) => Promise<MemoVO>;
@@ -14,7 +6,6 @@ export interface MemoRepository {
     id: ParentMemoVO['id'],
     patch: MemoPatchDTO & Partial<Pick<MemoVO, 'createdAt' | 'updatedAt'>>,
   ) => Promise<MemoVO | null>;
-  list: (query: MemoPaginationQuery) => Promise<PaginationMemeVO>;
   findParent: (id: ParentMemoVO['id']) => Promise<ParentMemoVO | null>;
   findDescendantIds: (ids: MemoVO['id'][]) => Promise<Record<MemoVO['id'], MemoVO['id'][]>>;
   findOneById: (id: MemoVO['id']) => Promise<MemoVO | null>;

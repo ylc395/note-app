@@ -1,14 +1,11 @@
 import { Controller } from '@nestjs/common';
 
-import { Post, Body, Get, Patch, createSchemaPipe, Param, Query } from './decorators';
+import { Post, Body, Get, Patch, createSchemaPipe, Param } from './decorators';
 import {
   memoDTOSchema,
-  memoQuerySchema,
   memoPatchDTOSchema,
   type MemoDTO,
   type ParentMemoVO,
-  type MemoPaginationQuery,
-  type PaginationMemeVO,
   type MemoPatchDTO,
   type MemoVO,
 } from 'model/memo';
@@ -32,7 +29,7 @@ export default class MemosController {
   }
 
   @Get('/memos')
-  async list(@Query(createSchemaPipe(memoQuerySchema)) q: MemoPaginationQuery): Promise<PaginationMemeVO> {
-    return await this.memoService.query(q);
+  async query(): Promise<MemoVO[]> {
+    return await this.memoService.query();
   }
 }

@@ -1,15 +1,8 @@
-import { observable, makeObservable, computed, runInAction, action } from 'mobx';
+import { observable, makeObservable, runInAction, action } from 'mobx';
 import { container, singleton } from 'tsyringe';
 
 import { token as remoteToken } from 'infra/remote';
-import type {
-  ChildMemoVO,
-  MemoDTO,
-  MemoPatchDTO,
-  MemoPaginationQuery,
-  ParentMemoVO,
-  PaginationMemeVO,
-} from 'model/Memo';
+import type { ChildMemoVO, MemoDTO, MemoPatchDTO, ParentMemoVO } from 'model/Memo';
 
 @singleton()
 export default class MemoService {
@@ -18,29 +11,13 @@ export default class MemoService {
     makeObservable(this);
   }
   @observable memos: ParentMemoVO[] = [];
-  @observable totalCount = 0;
-  @observable currentPage = 1;
-  @observable pageSize = 10;
   @observable newContent = '';
 
-  @computed
-  get maxPage() {
-    return Math.ceil(this.totalCount / this.pageSize);
-  }
-
-  async load(page?: number) {
-    const _page = page ?? this.currentPage;
-    const {
-      body: { total, list },
-    } = await this.remote.get<MemoPaginationQuery, PaginationMemeVO>('/memos', {
-      pageSize: this.pageSize,
-      page: _page,
-    });
+  async load() {
+    const { body: memos } = await this.remote.get<void, ParentMemoVO[]>('/memos');
 
     runInAction(() => {
-      this.totalCount = total;
-      this.memos = list;
-      this.currentPage = _page;
+      this.memos = memos;
     });
   }
 
@@ -89,7 +66,6 @@ export default class MemoService {
   @action
   reset() {
     this.memos = [];
-    this.totalCount = 0;
   }
 
   @action.bound

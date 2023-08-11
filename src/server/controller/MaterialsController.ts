@@ -8,7 +8,7 @@ import {
   type AnnotationVO,
   type AnnotationPatchDTO,
   materialDTOSchema,
-  ClientMaterialQuerySchema,
+  clientMaterialQuerySchema,
   annotationDTOSchema,
   annotationPatchSchema,
 } from 'model/material';
@@ -41,7 +41,7 @@ export default class MaterialsController {
   @Get('/materials/:id/tree-fragment')
   async queryTreeFragment(
     @Param('id') materialId: string,
-    @Query(createSchemaPipe(ClientMaterialQuerySchema)) query: ClientMaterialQuery,
+    @Query(createSchemaPipe(clientMaterialQuerySchema)) query: ClientMaterialQuery,
   ): Promise<MaterialVO[]> {
     return await this.materialService.getTreeFragment(materialId, query.type);
   }
@@ -61,7 +61,7 @@ export default class MaterialsController {
 
   @Get('/materials/:id')
   async queryOne(@Param('id') materialId: string): Promise<MaterialVO> {
-    return await this.materialService.query(materialId);
+    return await this.materialService.queryVO(materialId);
   }
 
   @Post('/materials')
@@ -70,7 +70,7 @@ export default class MaterialsController {
   }
 
   @Get('/materials')
-  async query(@Query(createSchemaPipe(ClientMaterialQuerySchema)) query: ClientMaterialQuery): Promise<MaterialVO[]> {
-    return await this.materialService.query(query);
+  async query(@Query(createSchemaPipe(clientMaterialQuerySchema)) query: ClientMaterialQuery): Promise<MaterialVO[]> {
+    return await this.materialService.queryVO({ parentId: null, ...query });
   }
 }

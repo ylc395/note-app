@@ -1,10 +1,10 @@
-import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 import { Tooltip, Button } from 'antd';
 import { SettingOutlined, FolderAddOutlined, SortAscendingOutlined, ShrinkOutlined } from '@ant-design/icons';
 import MaterialService from 'service/MaterialService';
 
-export default observer(function Operations() {
+// eslint-disable-next-line mobx/missing-observer
+export default function Operations() {
   const materialService = container.resolve(MaterialService);
 
   return (
@@ -25,4 +25,4 @@ export default observer(function Operations() {
       </Tooltip>
     </div>
   );
-});
+}

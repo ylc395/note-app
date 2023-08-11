@@ -26,7 +26,7 @@ const createMethod = <T, H>(method: FakeHttpRequest<unknown>['method']) => {
     console.log('☎️request:', request);
 
     const response = await ipcRenderer.invoke(FAKE_HTTP_CHANNEL, request);
-    console.log('🎺response:', response);
+    console.log(`🎺response (${path}):`, response);
 
     return response;
   };
