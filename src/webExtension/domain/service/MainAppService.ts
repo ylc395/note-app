@@ -108,12 +108,13 @@ export default class MainAppService {
   }
 
   async getTree(type: EntityTypes.Material | EntityTypes.Note, targetId: EntityParentId) {
+    const options = { unselectable: true };
     if (type === EntityTypes.Note) {
       const entities = await this.mainApp.fetch<NoteVO[]>(
         'GET',
         targetId ? `/notes/${targetId}/tree-fragment` : `/notes`,
       );
-      return entities && NoteTree.from(entities);
+      return entities && NoteTree.from(entities, options);
     }
 
     if (type === EntityTypes.Material) {
@@ -122,7 +123,7 @@ export default class MainAppService {
         'GET',
         targetId ? `/materials/${targetId}/tree-fragment${query}` : `/materials${query}`,
       );
-      return entities && MaterialTree.from(entities);
+      return entities && MaterialTree.from(entities, options);
     }
 
     return null;

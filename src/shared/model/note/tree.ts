@@ -1,5 +1,5 @@
 import type { NoteVO } from './index';
-import Tree, { type TreeNode } from '../abstract/Tree';
+import Tree, { type TreeOptions, type TreeNode } from '../abstract/Tree';
 
 export interface NoteNodeAttr {
   icon: NoteVO['icon'];
@@ -29,8 +29,8 @@ export default class NoteTree extends Tree<NoteVO, NoteNodeAttr> {
     return tree;
   }
 
-  static from(notes: NoteVO[]) {
-    const tree = new NoteTree();
+  static from(notes: NoteVO[], options?: TreeOptions) {
+    const tree = new NoteTree(options);
     tree.setChildren(notes, null);
     return tree;
   }

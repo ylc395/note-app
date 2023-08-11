@@ -8,12 +8,13 @@ import Tree from 'components/Tree';
 import NodeTitle from './NodeTitle';
 import useDnd from './useDnd';
 
+// eslint-disable-next-line mobx/missing-observer
 export default function NoteTreeView() {
   const { noteTree, loadChildren } = container.resolve(NoteService);
   const { isOver, setDroppableRef } = useDnd();
 
   useEffect(() => {
-    loadChildren(null);
+    loadChildren();
   }, [loadChildren]);
 
   return (

@@ -26,12 +26,12 @@ export default observer(function TargetPath() {
   useEffect(() => {
     if (isOpen) {
       config.updateTargetTree();
-
-      return () => {
-        config.targetTree = undefined;
-      };
     }
   }, [config, isOpen]);
+
+  useEffect(() => {
+    config.updateTargetTree();
+  }, [config]);
 
   useEffect(() => {
     const { targetTree } = config;

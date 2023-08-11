@@ -18,6 +18,10 @@ export interface TreeNode<T = void> {
   attributes?: T;
 }
 
+export interface TreeOptions {
+  unselectable?: boolean;
+}
+
 export type TreeNodeEntity = HierarchyEntity;
 
 const ROOT_NODE_KEY = '__root-node';
@@ -33,7 +37,7 @@ export default abstract class Tree<E extends TreeNodeEntity = TreeNodeEntity, T 
 }> {
   readonly root: TreeNode<T>;
 
-  constructor() {
+  constructor(protected readonly options?: TreeOptions) {
     super();
     this.root = this.generateRoot();
     makeObservable(this);
@@ -235,6 +239,10 @@ export default abstract class Tree<E extends TreeNodeEntity = TreeNodeEntity, T 
   @action
   toggleSelect(id: TreeNode['id'] | null, options?: SelectEvent) {
     const node = this.getNode(id);
+
+    if (this.options?.unselectable && node.isSelected) {
+      return;
+    }
 
     node.isSelected = !node.isSelected;
 

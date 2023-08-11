@@ -39,8 +39,11 @@ export default class MaterialsController {
   }
 
   @Get('/materials/:id/tree-fragment')
-  async queryTreeFragment(@Param('id') materialId: string): Promise<MaterialVO[]> {
-    return await this.materialService.getTreeFragment(materialId);
+  async queryTreeFragment(
+    @Param('id') materialId: string,
+    @Query(createSchemaPipe(ClientMaterialQuerySchema)) query: ClientMaterialQuery,
+  ): Promise<MaterialVO[]> {
+    return await this.materialService.getTreeFragment(materialId, query.type);
   }
 
   @Delete('/materials/annotations/:annotationId')

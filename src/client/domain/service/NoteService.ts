@@ -41,14 +41,14 @@ export default class NoteService extends Emitter<{
     return fragment;
   };
 
-  readonly fetchChildren = async (parentId: Note['parentId']) => {
+  readonly fetchChildren = async (parentId?: Note['parentId']) => {
     const { body: notes } = await this.remote.get<ClientNoteQuery, Note[]>('/notes', { parentId });
     return notes;
   };
 
-  readonly loadChildren = async (parentId: Note['parentId']) => {
+  readonly loadChildren = async (parentId?: Note['parentId']) => {
     const notes = await this.fetchChildren(parentId);
-    this.noteTree.setChildren(notes, parentId);
+    this.noteTree.setChildren(notes, parentId || null);
   };
 
   readonly createNote = async (parentId?: Note['parentId']) => {

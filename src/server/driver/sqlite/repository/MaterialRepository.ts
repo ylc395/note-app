@@ -72,9 +72,7 @@ export default class SqliteMaterialRepository extends HierarchyEntityRepository 
   }
 
   async findAll(query: MaterialQuery) {
-    let qb = query.parentId
-      ? this.db.selectFrom(this.tableName).where('parentId', '=', query.parentId)
-      : this.db.selectFrom(this.tableName).where('parentId', 'is', null);
+    let qb = this.db.selectFrom(this.tableName);
 
     if (query.id) {
       qb = qb.where(`${this.tableName}.id`, 'in', query.id);
@@ -82,6 +80,10 @@ export default class SqliteMaterialRepository extends HierarchyEntityRepository 
 
     if (query.type) {
       qb = qb.where(`${this.tableName}.fileId`, query.type === MaterialTypes.Directory ? 'is' : 'is not', null);
+    }
+
+    if (typeof query.parentId !== 'undefined') {
+      qb = qb.where(`${this.tableName}.parentId`, query.parentId === null ? 'is' : '=', query.parentId);
     }
 
     const rows = await qb

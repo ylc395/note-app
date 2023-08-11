@@ -1,5 +1,5 @@
 import { type MaterialVO, type DirectoryVO, type EntityMaterialVO, isEntityMaterial, isDirectory } from './index';
-import Tree, { type TreeNode } from '../abstract/Tree';
+import Tree, { type TreeOptions, type TreeNode } from '../abstract/Tree';
 
 export interface MaterialNodeAttr {
   icon: MaterialVO['icon'];
@@ -26,8 +26,8 @@ export default class MaterialTree extends Tree<MaterialVO, MaterialNodeAttr> {
     return { title: '根' };
   }
 
-  static from(materials: DirectoryVO[]) {
-    const tree = new MaterialTree();
+  static from(materials: DirectoryVO[], options?: TreeOptions) {
+    const tree = new MaterialTree(options);
     tree.setChildren(materials, null);
 
     return tree;

@@ -81,7 +81,7 @@ export default class MaterialService extends BaseService {
   async query(q: ClientMaterialQuery): Promise<MaterialVO[]>;
   async query(q: MaterialVO['id']): Promise<MaterialVO>;
   async query(q: ClientMaterialQuery | MaterialVO['id']): Promise<MaterialVO[] | MaterialVO> {
-    const materials = await this.getAll(q);
+    const materials = await this.getAll(typeof q === 'string' ? q : { parentId: null, ...q });
     const availableMaterials = await this.recyclableService.filter(EntityTypes.Material, materials);
 
     const result = typeof q === 'string' ? availableMaterials[0] : availableMaterials;
@@ -178,16 +178,16 @@ export default class MaterialService extends BaseService {
     await this.assertEntityMaterial(annotation.materialId);
   }
 
-  async getTreeFragment(noteId: Material['id']) {
-    if (!(await this.areAvailable([noteId]))) {
+  async getTreeFragment(materialId: Material['id'], type?: MaterialTypes) {
+    if (!(await this.areAvailable([materialId]))) {
       throw new Error('invalid id');
     }
 
-    const ancestorIds = await this.notes.findAncestorIds(noteId);
+    const ancestorIds = await this.materials.findAncestorIds(materialId);
     const childrenIds = await this.getChildrenIds(ancestorIds);
 
-    const roots = await this.query({ parentId: null });
-    const children = groupBy(await this.getAll({ id: Object.values(childrenIds).flat() }));
+    const roots = await this.query({ parentId: null, type });
+    const children = groupBy(await this.getAll({ id: Object.values(childrenIds).flat(), type }), 'parentId');
 
     /* topo sort */
     const result: MaterialVO[] = [...roots];

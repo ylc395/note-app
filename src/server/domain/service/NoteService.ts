@@ -144,7 +144,7 @@ export default class NoteService extends BaseService {
   async query(q: ClientNoteQuery): Promise<NoteVO[]>;
   async query(id: NoteVO['id']): Promise<NoteVO>;
   async query(q: ClientNoteQuery | NoteVO['id']): Promise<NoteVO[] | NoteVO> {
-    const notes = await this.getAll(q);
+    const notes = await this.getAll(typeof q === 'string' ? q : { parentId: null, ...q });
     const availableNotes = await this.recyclableService.filter(EntityTypes.Note, notes);
 
     const result = typeof q === 'string' ? availableNotes[0] : availableNotes;
@@ -170,7 +170,7 @@ export default class NoteService extends BaseService {
     const childrenIds = await this.getChildrenIds(ancestorIds);
 
     const roots = await this.query({ parentId: null });
-    const children = groupBy(await this.getAll({ id: Object.values(childrenIds).flat() }));
+    const children = groupBy(await this.getAll({ id: Object.values(childrenIds).flat() }), 'parentId');
 
     /* topo sort */
     const result: NoteVO[] = [...roots];
