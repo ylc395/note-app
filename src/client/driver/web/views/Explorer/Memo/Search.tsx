@@ -1,8 +1,8 @@
-import { observer } from 'mobx-react-lite';
 import { Button, Input, Tooltip } from 'antd';
 import { InfoCircleOutlined } from '@ant-design/icons';
 
-export default observer(function Search() {
+// eslint-disable-next-line mobx/missing-observer
+export default function Search() {
   return (
     <Input
       placeholder="搜索碎片"
@@ -14,4 +14,4 @@ export default observer(function Search() {
       }
     />
   );
-});
+}

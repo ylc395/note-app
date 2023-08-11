@@ -1,6 +1,5 @@
-import { observer } from 'mobx-react-lite';
 import { Button } from 'antd';
-import { useCallback, useRef } from 'react';
+import { useRef } from 'react';
 
 import MarkdownEditor from 'web/components/MarkdownEditor';
 
@@ -11,12 +10,13 @@ interface Props {
   isEditing: boolean;
 }
 
-export default observer(function ChildEditor({ onCancel, onSubmit, content, isEditing }: Props) {
+// eslint-disable-next-line mobx/missing-observer
+export default function ChildEditor({ onCancel, onSubmit, content, isEditing }: Props) {
   const contentRef = useRef(content);
-  const _onSubmit = useCallback(() => {
+  const _onSubmit = () => {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     onSubmit(contentRef.current!);
-  }, [onSubmit]);
+  };
 
   return (
     <div>
@@ -36,4 +36,4 @@ export default observer(function ChildEditor({ onCancel, onSubmit, content, isEd
       )}
     </div>
   );
-});
+}

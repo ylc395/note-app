@@ -10,6 +10,7 @@ interface Props {
   children: ReactNode;
 }
 
+// eslint-disable-next-line mobx/missing-observer
 export default function Mosaic({ root, renderTile, children }: Props) {
   if (!root) {
     return <>{children}</>;

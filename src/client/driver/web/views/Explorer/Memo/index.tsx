@@ -1,4 +1,3 @@
-import { observer } from 'mobx-react-lite';
 import { useBoolean } from 'ahooks';
 
 import List from './List';
@@ -6,7 +5,8 @@ import Search from './Search';
 import Operations from './Operations';
 import NewMemo from './NewMemo';
 
-export default observer(() => {
+// eslint-disable-next-line mobx/missing-observer
+export default function MemoExplorer() {
   const [isExpanded, { toggle }] = useBoolean(false);
 
   return (
@@ -22,4 +22,4 @@ export default observer(() => {
       <List />
     </div>
   );
-});
+}

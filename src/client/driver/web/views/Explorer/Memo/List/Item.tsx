@@ -1,4 +1,3 @@
-import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 import { Tag, Dropdown, Button, Tooltip, type MenuProps } from 'antd';
 import dayjs from 'dayjs';
@@ -12,7 +11,6 @@ import {
   BookOutlined,
   DatabaseOutlined,
 } from '@ant-design/icons';
-import { useCallback } from 'react';
 import { useBoolean } from 'ahooks';
 
 import type { ParentMemoVO } from 'model/Memo';
@@ -31,42 +29,34 @@ const menuItems: NonNullable<MenuProps['items']> = [
   { label: '删除', key: 'remove', icon: <DeleteOutlined /> },
 ];
 
-export default observer(function ({ memo }: { memo: ParentMemoVO }) {
+// eslint-disable-next-line mobx/missing-observer
+export default (function MemoItem({ memo }: { memo: ParentMemoVO }) {
   const memoService = container.resolve(MemoService);
   const [isCreatingChild, { setTrue: startCreatingChild, setFalse: stopCreatingChild }] = useBoolean(false);
   const [isEditing, { setTrue: startEditing, setFalse: stopEditing }] = useBoolean(false);
 
-  const onClickMenu = useCallback<NonNullable<MenuProps['onClick']>>(
-    ({ key }) => {
-      switch (key) {
-        case 'pin':
-          memoService.toggleMemoPin(memo);
-          break;
-        case 'edit':
-          startEditing();
-          break;
-        default:
-          break;
-      }
-    },
-    [memo, memoService, startEditing],
-  );
+  const onClickMenu: NonNullable<MenuProps['onClick']> = ({ key }) => {
+    switch (key) {
+      case 'pin':
+        memoService.toggleMemoPin(memo);
+        break;
+      case 'edit':
+        startEditing();
+        break;
+      default:
+        break;
+    }
+  };
 
-  const submit = useCallback(
-    async (content: string) => {
-      await memoService.updateContent(memo, content);
-      stopEditing();
-    },
-    [memo, memoService, stopEditing],
-  );
+  const submit = async (content: string) => {
+    await memoService.updateContent(memo, content);
+    stopEditing();
+  };
 
-  const submitChild = useCallback(
-    async (content: string) => {
-      await memoService.createMemo({ content, parent: memo });
-      stopCreatingChild();
-    },
-    [memo, memoService, stopCreatingChild],
-  );
+  const submitChild = async (content: string) => {
+    await memoService.createMemo({ content, parent: memo });
+    stopCreatingChild();
+  };
 
   return (
     <div className="mb-4 border border-solid border-gray-100 bg-white p-2 shadow-md">

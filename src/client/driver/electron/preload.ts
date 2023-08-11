@@ -1,4 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
+import omitBy from 'lodash/omitBy';
 
 import type { Remote } from 'infra/remote';
 import type { ContextmenuItem, UI } from 'infra/ui';
@@ -12,7 +13,10 @@ const createMethod = <T, H>(method: FakeHttpRequest<unknown>['method']) => {
     const request: FakeHttpRequest<T> = { path, method };
 
     if (payload !== undefined) {
-      request[['POST', 'PATCH', 'PUT'].includes(method) ? 'body' : 'query'] = payload;
+      request[['POST', 'PATCH', 'PUT'].includes(method) ? 'body' : 'query'] = omitBy(
+        payload,
+        (v) => v === undefined,
+      ) as T;
     }
 
     if (headers) {
