@@ -232,7 +232,7 @@ describe('notes', async function () {
     const newGrandChildNote1 = await noteController.create({ parentId: newChildNote.id });
     const newGrandChildNote2 = await noteController.create({ parentId: newChildNote.id });
 
-    recyclablesController.create([{ type: EntityTypes.Note, id: newChildNote.id }]);
+    await recyclablesController.create([{ type: EntityTypes.Note, id: newChildNote.id }]);
 
     await rejects(noteController.create({ duplicateFrom: newGrandChildNote1.id }));
     await rejects(noteController.create({ duplicateFrom: newGrandChildNote2.id }));
@@ -249,7 +249,7 @@ describe('notes', async function () {
     const child2 = await noteController.create({ parentId: parent.id });
     const child3 = await noteController.create({ parentId: parent.id });
 
-    recyclablesController.create([
+    await recyclablesController.create([
       { type: EntityTypes.Note, id: child1.id },
       { type: EntityTypes.Note, id: child2.id },
     ]);
@@ -273,7 +273,7 @@ describe('notes', async function () {
   it('can not be a parent if it is a recyclable', async function () {
     const newNote1 = await noteController.create({ parentId: parentNoteId });
     const newNote2 = await noteController.create({});
-    recyclablesController.create([{ type: EntityTypes.Note, id: newNote1.id }]);
+    await recyclablesController.create([{ type: EntityTypes.Note, id: newNote1.id }]);
 
     await rejects(noteController.create({ parentId: newNote1.id }));
     await rejects(noteController.update(newNote2.id, { parentId: newNote1.id }));
@@ -284,7 +284,7 @@ describe('notes', async function () {
     const newChildNote = await noteController.create({ parentId: newNote.id });
     const newGrandChildNote = await noteController.create({ parentId: newChildNote.id });
 
-    recyclablesController.create([{ type: EntityTypes.Note, id: newChildNote.id }]);
+    await recyclablesController.create([{ type: EntityTypes.Note, id: newChildNote.id }]);
 
     await rejects(noteController.create({ parentId: newGrandChildNote.id }));
   });

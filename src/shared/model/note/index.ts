@@ -29,7 +29,7 @@ export interface NoteVO extends Starable {
 }
 
 export const clientNoteQuerySchema = object({
-  parentId: union([zodNull(), string()]).optional(),
+  parentId: string().nullable().optional(),
 });
 
 export const noteBodySchema = object({

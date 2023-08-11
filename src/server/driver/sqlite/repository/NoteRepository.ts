@@ -93,32 +93,6 @@ export default class SqliteNoteRepository extends HierarchyEntityRepository impl
     return rows;
   }
 
-  async findTreeFragment(noteId: NoteVO['id']) {
-    const ancestorIds = await this.db
-      .withRecursive('ancestors', (qb) =>
-        qb
-          .selectFrom(this.tableName)
-          .selectAll()
-          .where('id', '=', noteId)
-          .union(
-            qb
-              .selectFrom('ancestors')
-              .innerJoin(this.tableName, `${this.tableName}.id`, 'ancestors.parentId')
-              .selectAll(this.tableName),
-          ),
-      )
-      .selectFrom('ancestors')
-      .select('ancestors.id')
-      .execute();
-
-    const children = [
-      ...(await this.findAll({ parentId: null })),
-      ...(await this.findAll({ parentIds: ancestorIds.map(({ id }) => id) })),
-    ];
-
-    return children;
-  }
-
   private rowToVO(row: Selectable<Row>) {
     return {
       ...omit(row, ['body']),

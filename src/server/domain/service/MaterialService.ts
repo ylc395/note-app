@@ -1,6 +1,6 @@
 import uniq from 'lodash/uniq';
 import negate from 'lodash/negate';
-import compact from 'lodash/compact';
+import groupBy from 'lodash/groupBy';
 import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import {
   type AnnotationDTO,
@@ -10,6 +10,7 @@ import {
   type AnnotationVO,
   type AnnotationPatchDTO,
   type Material,
+  type MaterialQuery,
   AnnotationTypes,
   isDirectory,
   MaterialTypes,
@@ -51,7 +52,7 @@ export default class MaterialService extends BaseService {
   }
 
   private async addInfo(materials: Material[]) {
-    const children = await this.getChildren(getIds(materials.filter(isDirectory)));
+    const children = await this.getChildrenIds(getIds(materials.filter(isDirectory)));
     const stars = buildIndex(await this.stars.findAllByLocators(getLocators(materials, EntityTypes.Note)), 'entityId');
 
     return materials.map((material) => ({
@@ -62,8 +63,8 @@ export default class MaterialService extends BaseService {
     }));
   }
 
-  private async getChildren(materialIds: Material['id'][]) {
-    const children = await this.materials.findAllChildrenIds(materialIds);
+  private async getChildrenIds(materialIds: Material['id'][]) {
+    const children = await this.materials.findChildrenIds(materialIds);
     const availableChildren = await this.recyclableService.filterByLocators(children, (id) => ({
       id,
       type: EntityTypes.Material,
@@ -72,15 +73,18 @@ export default class MaterialService extends BaseService {
     return availableChildren;
   }
 
+  private async getAll(q: MaterialQuery | Material['id']) {
+    const rawNotes = await this.materials.findAll(typeof q === 'string' ? { id: [q] } : q);
+    return this.addInfo(rawNotes);
+  }
+
   async query(q: ClientMaterialQuery): Promise<MaterialVO[]>;
   async query(q: MaterialVO['id']): Promise<MaterialVO>;
   async query(q: ClientMaterialQuery | MaterialVO['id']): Promise<MaterialVO[] | MaterialVO> {
-    const rows =
-      typeof q === 'string' ? compact([await this.materials.findOneById(q)]) : await this.materials.findAll(q);
-    const availableMaterials = await this.recyclableService.filter(EntityTypes.Material, rows);
-    const materials = await this.addInfo(availableMaterials);
+    const materials = await this.getAll(q);
+    const availableMaterials = await this.recyclableService.filter(EntityTypes.Material, materials);
 
-    const result = typeof q === 'string' ? materials[0] : materials;
+    const result = typeof q === 'string' ? availableMaterials[0] : availableMaterials;
 
     if (!result) {
       throw new Error('no result');
@@ -174,11 +178,26 @@ export default class MaterialService extends BaseService {
     await this.assertEntityMaterial(annotation.materialId);
   }
 
-  async getTreeFragment(id: MaterialVO['id']) {
-    if (!(await this.areAvailable([id]))) {
+  async getTreeFragment(noteId: Material['id']) {
+    if (!(await this.areAvailable([noteId]))) {
       throw new Error('invalid id');
     }
 
-    return [];
+    const ancestorIds = await this.notes.findAncestorIds(noteId);
+    const childrenIds = await this.getChildrenIds(ancestorIds);
+
+    const roots = await this.query({ parentId: null });
+    const children = groupBy(await this.getAll({ id: Object.values(childrenIds).flat() }));
+
+    /* topo sort */
+    const result: MaterialVO[] = [...roots];
+
+    for (let i = 0; result[i]; i++) {
+      const { id } = result[i]!;
+      result.push(...(children[id] || []));
+    }
+    /* topo sort end */
+
+    return result;
   }
 }

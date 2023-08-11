@@ -69,11 +69,11 @@ export default class EntityService extends BaseService {
   private getDescantsOfType(type: EntityTypes, ids: EntityId[]) {
     switch (type) {
       case EntityTypes.Note:
-        return this.notes.findAllDescendantIds(ids);
+        return this.notes.findDescendantIds(ids);
       case EntityTypes.Material:
-        return this.materials.findAllDescendantIds(ids);
+        return this.materials.findDescendantIds(ids);
       case EntityTypes.Memo:
-        return this.memos.findAllDescendantIds(ids);
+        return this.memos.findDescendantIds(ids);
       default:
         return Promise.resolve({} as Record<EntityId, EntityId[]>);
     }

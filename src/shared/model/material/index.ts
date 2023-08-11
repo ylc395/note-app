@@ -61,7 +61,7 @@ export const isEntityMaterial = (entity: MaterialVO): entity is EntityMaterialVO
 };
 
 export const ClientMaterialQuerySchema = object({
-  parentId: string().optional(),
+  parentId: string().nullable().optional(),
   type: preprocess((v) => v && Number(v), nativeEnum(MaterialTypes).optional()),
 });
 

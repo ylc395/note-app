@@ -2,7 +2,6 @@ import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import omit from 'lodash/omit';
 import groupBy from 'lodash/groupBy';
 import uniq from 'lodash/uniq';
-import compact from 'lodash/compact';
 import dayjs from 'dayjs';
 
 import { buildIndex, getIds, getLocators } from 'utils/collection';
@@ -16,7 +15,7 @@ import {
 } from 'model/note';
 import { EntityTypes, type HierarchyEntity } from 'model/entity';
 import { Events } from 'model/events';
-import type { Note } from 'model/note';
+import type { Note, NoteQuery } from 'model/note';
 
 import BaseService, { Transaction } from './BaseService';
 import RecyclableService from './RecyclableService';
@@ -27,8 +26,8 @@ export default class NoteService extends BaseService {
   @Inject(forwardRef(() => RecyclableService)) private readonly recyclableService!: RecyclableService;
   @Inject(forwardRef(() => EntityService)) private readonly entityService!: EntityService;
 
-  private async getChildren(noteIds: NoteVO['id'][]) {
-    const children = await this.notes.findAllChildrenIds(noteIds);
+  private async getChildrenIds(noteIds: NoteVO['id'][]) {
+    const children = await this.notes.findChildrenIds(noteIds);
     const availableChildren = await this.recyclableService.filterByLocators(children, (id) => ({
       id,
       type: EntityTypes.Note,
@@ -120,7 +119,7 @@ export default class NoteService extends BaseService {
 
   private async addInfo(rawNotes: Note[], children?: Record<NoteVO['id'], NoteVO['id'][]>) {
     const stars = buildIndex(await this.stars.findAllByLocators(getLocators(rawNotes, EntityTypes.Note)), 'entityId');
-    const _children = children || (await this.getChildren(getIds(rawNotes)));
+    const _children = children || (await this.getChildrenIds(getIds(rawNotes)));
 
     return rawNotes.map((note) => ({
       ...note,
@@ -145,11 +144,10 @@ export default class NoteService extends BaseService {
   async query(q: ClientNoteQuery): Promise<NoteVO[]>;
   async query(id: NoteVO['id']): Promise<NoteVO>;
   async query(q: ClientNoteQuery | NoteVO['id']): Promise<NoteVO[] | NoteVO> {
-    const rawNotes = typeof q === 'string' ? compact([await this.notes.findOneById(q)]) : await this.notes.findAll(q);
-    const availableNotes = await this.recyclableService.filter(EntityTypes.Note, rawNotes);
+    const notes = await this.getAll(q);
+    const availableNotes = await this.recyclableService.filter(EntityTypes.Note, notes);
 
-    const notes = await this.addInfo(availableNotes);
-    const result = typeof q === 'string' ? notes[0] : notes;
+    const result = typeof q === 'string' ? availableNotes[0] : availableNotes;
 
     if (!result) {
       throw new Error('no note');
@@ -158,30 +156,32 @@ export default class NoteService extends BaseService {
     return result;
   }
 
+  private async getAll(q: NoteQuery | Note['id']) {
+    const rawNotes = await this.notes.findAll(typeof q === 'string' ? { id: [q] } : q);
+    return this.addInfo(rawNotes);
+  }
+
   async getTreeFragment(noteId: NoteVO['id']) {
     if (!(await this.areAvailable([noteId]))) {
       throw new Error('invalid id');
     }
 
-    const notes = await this.notes.findTreeFragment(noteId);
-    const availableNotes = await this.recyclableService.filter(EntityTypes.Note, notes);
-    const children = await this.getChildren(getIds(availableNotes));
+    const ancestorIds = await this.notes.findAncestorIds(noteId);
+    const childrenIds = await this.getChildrenIds(ancestorIds);
+
+    const roots = await this.query({ parentId: null });
+    const children = groupBy(await this.getAll({ id: Object.values(childrenIds).flat() }));
 
     /* topo sort */
-    const parents = groupBy(availableNotes, 'parentId');
-    const result: Note[] = availableNotes.filter(({ parentId }) => parentId === null);
+    const result: NoteVO[] = [...roots];
 
     for (let i = 0; result[i]; i++) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const children = parents[result[i]!.id];
-
-      if (children) {
-        result.push(...children);
-      }
+      const { id } = result[i]!;
+      result.push(...(children[id] || []));
     }
     /* topo sort end */
 
-    return this.addInfo(result, children);
+    return result;
   }
 
   private async assertValidChanges(notes: NotesDTO) {

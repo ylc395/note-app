@@ -9,14 +9,36 @@ import type { Db } from '../Database';
 
 export default abstract class HierarchyEntityRepository extends BaseRepository {
   abstract readonly tableName: keyof Db;
-  async findAllChildrenIds(ids: EntityId[]) {
+  async findChildrenIds(ids: EntityId[]) {
     const rows = await this.db.selectFrom(this.tableName).selectAll().where('parentId', 'in', ids).execute();
 
     return mapValues(groupBy(rows, 'parentId'), getIds);
   }
 
-  async findAllDescendantIds(materialIds: EntityId[]) {
-    if (materialIds.length === 0) {
+  async findAncestorIds(id: EntityId) {
+    const ancestorIds = await this.db
+      .withRecursive('ancestors', (qb) =>
+        qb
+          .selectFrom(this.tableName)
+          .select(['id', 'parentId'])
+          .where('id', '=', id)
+          .union(
+            qb
+              .selectFrom('ancestors')
+              .select([`${this.tableName}.id`, `${this.tableName}.parentId`])
+              .innerJoin(this.tableName, `${this.tableName}.id`, 'ancestors.parentId'),
+          ),
+      )
+      .selectFrom('ancestors')
+      .select('ancestors.id')
+      .where('ancestors.id', '!=', id)
+      .execute();
+
+    return getIds(ancestorIds);
+  }
+
+  async findDescendantIds(ids: EntityId[]) {
+    if (ids.length === 0) {
       return {};
     }
 
@@ -27,7 +49,7 @@ export default abstract class HierarchyEntityRepository extends BaseRepository {
           qb
             .selectFrom(this.tableName)
             .select(['id', 'parentId'])
-            .where((eb) => eb.or([eb.cmpr('id', 'in', materialIds), eb.cmpr('parentId', 'in', materialIds)]))
+            .where((eb) => eb.or([eb.cmpr('id', 'in', ids), eb.cmpr('parentId', 'in', ids)]))
             .union(
               qb
                 .selectFrom('descendants')
@@ -38,9 +60,10 @@ export default abstract class HierarchyEntityRepository extends BaseRepository {
       )
       .selectFrom('descendants')
       .select(['descendants.id', 'descendants.parentId'])
+      .where('descendants.id', 'not in', ids)
       .execute();
 
-    return HierarchyEntityRepository.groupDescantsByAncestorId(materialIds, rows);
+    return HierarchyEntityRepository.groupDescantsByAncestorId(ids, rows);
   }
 
   private static groupDescantsByAncestorId<T extends HierarchyEntity>(ancestorIds: EntityId[], entities: T[]) {

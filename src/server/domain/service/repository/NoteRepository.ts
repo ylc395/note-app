@@ -6,10 +6,10 @@ export interface NoteRepository {
   batchUpdate: (notes: NotesDTO) => Promise<Note[]>;
   updateBody: (noteId: Note['id'], noteBody: NoteBodyDTO['content']) => Promise<NoteBodyVO | null>;
   findAll: (query?: NoteQuery) => Promise<Note[]>;
-  findAllChildrenIds: (noteIds: Note['id'][]) => Promise<Record<Note['id'], Note['id'][]>>;
+  findChildrenIds: (noteIds: Note['id'][]) => Promise<Record<Note['id'], Note['id'][]>>;
   findBody: (noteId: Note['id']) => Promise<NoteBodyVO | null>;
-  findAllDescendantIds: (noteIds: Note['id'][]) => Promise<Record<Note['id'], Note['id'][]>>;
-  findTreeFragment: (noteId: Note['id']) => Promise<Note[]>; // including self
+  findDescendantIds: (noteIds: Note['id'][]) => Promise<Record<Note['id'], Note['id'][]>>;
+  findAncestorIds: (noteId: Note['id']) => Promise<Note['id'][]>;
   findOneById: (id: Note['id']) => Promise<Note | null>;
   removeById: (noteId: Note['id'] | Note['id'][]) => Promise<void>;
 }
