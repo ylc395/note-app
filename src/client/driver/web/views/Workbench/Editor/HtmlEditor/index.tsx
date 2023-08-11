@@ -1,5 +1,4 @@
-import { observer, useLocalObservable } from 'mobx-react-lite';
-import { observable } from 'mobx';
+import { useCreation } from 'ahooks';
 
 import type HtmlEditor from 'model/material/view/HtmlEditorView';
 import HtmlViewer from './HtmlView';
@@ -7,8 +6,9 @@ import Toolbar from './Toolbar';
 import Context, { getContext } from './Context';
 import AnnotationList from './AnnotationList';
 
-export default observer(function HtmlEditor({ editorView }: { editorView: HtmlEditor }) {
-  const ctx = useLocalObservable(getContext, { htmlViewer: observable.ref });
+// eslint-disable-next-line mobx/missing-observer
+export default (function HtmlEditor({ editorView }: { editorView: HtmlEditor }) {
+  const ctx = useCreation(getContext, []);
 
   return (
     <div className="h-full">

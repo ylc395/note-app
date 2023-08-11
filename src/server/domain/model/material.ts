@@ -14,7 +14,7 @@ export interface MaterialQuery {
 }
 
 export function normalizeTitle(v: Directory | EntityMaterial) {
-  return v.name || `未命名素材-${dayjs.unix(v.createdAt).format('YYYYMMDD-HHmm')}`;
+  return v.name || `${isDirectory(v) ? '未命名目录' : '未命名素材'}${dayjs.unix(v.createdAt).format('YYYYMMDD-HHmm')}`;
 }
 
 export function isDirectory(m: Material): m is Directory {

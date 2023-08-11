@@ -1,4 +1,5 @@
 import { createContext } from 'react';
+import { action, makeAutoObservable } from 'mobx';
 
 import type HtmlViewer from './HtmlView/HtmlViewer';
 
@@ -8,12 +9,15 @@ interface EditorContext {
 }
 
 export function getContext(): EditorContext {
-  return {
-    htmlViewer: null,
-    setHtmlViewer: function (v: HtmlViewer) {
-      this.htmlViewer = v;
+  return makeAutoObservable(
+    {
+      htmlViewer: null as null | HtmlViewer,
+      setHtmlViewer(v: HtmlViewer) {
+        this.htmlViewer = v;
+      },
     },
-  };
+    { setHtmlViewer: action.bound },
+  );
 }
 
 export default createContext<EditorContext>(null as never);
