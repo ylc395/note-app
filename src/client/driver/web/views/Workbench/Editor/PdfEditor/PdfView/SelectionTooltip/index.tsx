@@ -1,11 +1,10 @@
 import { useContext } from 'react';
-import { observer } from 'mobx-react-lite';
 
 import Palette from '../AnnotationTooltip/Palette';
 import Context from '../../Context';
 import useTooltip from './useTooltip';
 
-export default observer(function SelectionTooltip() {
+export default function SelectionTooltip() {
   const { pdfViewer } = useContext(Context);
   const { setFloating, styles, open } = useTooltip();
 
@@ -14,4 +13,4 @@ export default observer(function SelectionTooltip() {
       <Palette onSelect={(color) => pdfViewer?.createRangeAnnotation(color)} />
     </div>
   ) : null;
-});
+}

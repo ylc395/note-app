@@ -1,6 +1,7 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import omit from 'lodash/omit';
 import differenceWith from 'lodash/differenceWith';
+import mapValues from 'lodash/mapValues';
 
 import type { EntityLocator, EntityId, EntityTypes } from 'model/entity';
 import { RecycleReason } from 'model/recyclables';
@@ -28,11 +29,36 @@ export default class RecyclableService extends BaseService {
     );
 
     const result = await this.recyclables.batchCreate(newRecyclables);
-    return result.filter((record) => record.reason === RecycleReason.Direct).map((record) => omit(record, ['reason']));
+    const directResult = result.filter((record) => record.reason === RecycleReason.Direct);
+    const titles = await this.entityService.getEntityTitles(directResult);
+
+    return directResult.map((record) => {
+      const title = titles[record.entityType][record.entityId];
+
+      if (!title) {
+        throw new Error('no title');
+      }
+
+      return {
+        ...omit(record, ['reason']),
+        title,
+      };
+    });
   }
 
   async query() {
-    return await this.recyclables.findAll(RecycleReason.Direct);
+    const records = await this.recyclables.findAll(RecycleReason.Direct);
+    const titles = await this.entityService.getEntityTitles(records);
+
+    return records.map((record) => {
+      const title = titles[record.entityType][record.entityId];
+
+      if (!title) {
+        throw new Error('no title');
+      }
+
+      return { ...record, title };
+    });
   }
 
   async filter<T extends { id: EntityId }>(type: EntityTypes, entities: T[]) {
@@ -41,12 +67,23 @@ export default class RecyclableService extends BaseService {
     return differenceWith(entities, recyclables, ({ id }, recyclable) => id === recyclable.entityId);
   }
 
-  async filterByLocators<T>(entities: T[], toLocator: (entity: T) => EntityLocator) {
-    const recyclables = await this.recyclables.findAllByLocators(entities.map(toLocator));
-    return differenceWith(entities, recyclables, (entity, recyclable) => {
-      const { id, type } = toLocator(entity);
+  async filterByLocators<T>(
+    entities: Record<string, T[]>,
+    toLocator: (entity: T) => EntityLocator,
+  ): Promise<Record<string, T[]>>;
+  async filterByLocators<T>(entities: T[] | Record<string, T[]>, toLocator: (entity: T) => EntityLocator): Promise<T[]>;
+  async filterByLocators<T>(entities: T[] | Record<string, T[]>, toLocator: (entity: T) => EntityLocator) {
+    const _entities = Array.isArray(entities) ? entities : Object.values(entities).flat();
+    const recyclables = await this.recyclables.findAllByLocators(_entities.map(toLocator));
 
-      return id === recyclable.entityId && type === recyclable.entityType;
-    });
+    const filterOut = (e: T[]) => {
+      return differenceWith(e, recyclables, (entity, recyclable) => {
+        const { id, type } = toLocator(entity);
+
+        return id === recyclable.entityId && type === recyclable.entityType;
+      });
+    };
+
+    return Array.isArray(entities) ? filterOut(entities) : mapValues(entities, filterOut);
   }
 }

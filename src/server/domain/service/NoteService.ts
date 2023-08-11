@@ -2,6 +2,7 @@ import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import omit from 'lodash/omit';
 import groupBy from 'lodash/groupBy';
 import uniq from 'lodash/uniq';
+import compact from 'lodash/compact';
 import dayjs from 'dayjs';
 
 import { buildIndex, getIds, getLocators } from 'utils/collection';
@@ -27,10 +28,13 @@ export default class NoteService extends BaseService {
   @Inject(forwardRef(() => EntityService)) private readonly entityService!: EntityService;
 
   private async getChildren(noteIds: NoteVO['id'][]) {
-    const children = await this.notes.findAllChildren(noteIds);
-    const availableNotes = await this.recyclableService.filter(EntityTypes.Note, children);
+    const children = await this.notes.findAllChildrenIds(noteIds);
+    const availableChildren = await this.recyclableService.filterByLocators(children, (id) => ({
+      id,
+      type: EntityTypes.Note,
+    }));
 
-    return groupBy(availableNotes, 'parentId');
+    return availableChildren;
   }
 
   @Transaction
@@ -114,7 +118,7 @@ export default class NoteService extends BaseService {
     return result;
   }
 
-  private async addInfo(rawNotes: Note[], children?: Record<NoteVO['id'], Note[]>) {
+  private async addInfo(rawNotes: Note[], children?: Record<NoteVO['id'], NoteVO['id'][]>) {
     const stars = buildIndex(await this.stars.findAllByLocators(getLocators(rawNotes, EntityTypes.Note)), 'entityId');
     const _children = children || (await this.getChildren(getIds(rawNotes)));
 
@@ -141,7 +145,7 @@ export default class NoteService extends BaseService {
   async query(q: ClientNoteQuery): Promise<NoteVO[]>;
   async query(id: NoteVO['id']): Promise<NoteVO>;
   async query(q: ClientNoteQuery | NoteVO['id']): Promise<NoteVO[] | NoteVO> {
-    const rawNotes = await this.notes.findAll(typeof q === 'string' ? { id: [q] } : q);
+    const rawNotes = typeof q === 'string' ? compact([await this.notes.findOneById(q)]) : await this.notes.findAll(q);
     const availableNotes = await this.recyclableService.filter(EntityTypes.Note, rawNotes);
 
     const notes = await this.addInfo(availableNotes);

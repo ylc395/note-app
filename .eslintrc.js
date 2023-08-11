@@ -11,9 +11,6 @@ module.exports = {
       files: ['*.ts', '*.tsx'],
       parser: '@typescript-eslint/parser',
       extends: ['plugin:mobx/recommended', 'plugin:@typescript-eslint/recommended'],
-      rules: {
-        'mobx/missing-observer': 'off', // checked in runtime
-      },
     },
     {
       files: ['*.tsx'],

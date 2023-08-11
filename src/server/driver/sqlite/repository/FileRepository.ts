@@ -56,8 +56,4 @@ export default class SqliteFileRepository extends BaseRepository implements File
 
     return rows.map((row) => pick(row, ['id', 'mimeType', 'size']));
   }
-
-  async updateText(fileId: Row['id'], text: string) {
-    return await this.updateOne(tableName, fileId, { text });
-  }
 }

@@ -1,4 +1,4 @@
-import type { EntityTypes } from 'model/entity';
+import type { EntityId, EntityTypes } from 'model/entity';
 
 export function buildIndex<T>(list: T[], key?: keyof T) {
   const index: Record<string | number, T> = {};
@@ -18,10 +18,10 @@ export function buildIndex<T>(list: T[], key?: keyof T) {
   return index;
 }
 
-export function getIds<T extends { id: string }>(entities: T[]) {
+export function getIds<T extends { id: EntityId }>(entities: T[]) {
   return entities.map(({ id }) => id);
 }
 
-export function getLocators<T extends { id: string }>(entities: T[], type: EntityTypes) {
-  return entities.map(({ id }) => ({ id, type }));
+export function getLocators<T extends { id: EntityId }>(entities: T[] | EntityId[], type: EntityTypes) {
+  return entities.map((v) => ({ id: typeof v === 'string' ? v : v.id, type }));
 }

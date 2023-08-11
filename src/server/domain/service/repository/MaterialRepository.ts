@@ -2,24 +2,23 @@ import type {
   AnnotationDTO,
   AnnotationPatchDTO,
   AnnotationVO,
-  DirectoryVO,
-  EntityMaterialVO,
   MaterialDTO,
-  MaterialVO,
   Directory,
+  Material,
   MaterialQuery,
+  EntityMaterial,
 } from 'model/material';
 
 export interface MaterialRepository {
-  createDirectory: (directory: Directory) => Promise<DirectoryVO>;
-  createEntity: (material: MaterialDTO) => Promise<EntityMaterialVO>;
-  findAll: (query: MaterialQuery) => Promise<MaterialVO[]>;
-  findAllDescendantIds: (noteIds: MaterialVO['id'][]) => Promise<Record<MaterialVO['id'], MaterialVO['id'][]>>;
-  findOneById: (id: MaterialVO['id']) => Promise<MaterialVO | null>;
-  findBlobById: (id: MaterialVO['id']) => Promise<ArrayBuffer | string | null>;
-  createAnnotation: (materialId: MaterialVO['id'], annotation: AnnotationDTO) => Promise<AnnotationVO>;
-  findAllAnnotations: (materialId: MaterialVO['id']) => Promise<AnnotationVO[]>;
-  updateText: <T>(materialId: MaterialVO['id'], payload: T) => Promise<T | null>;
+  createDirectory: (directory: MaterialDTO) => Promise<Directory>;
+  createEntity: (material: MaterialDTO) => Promise<EntityMaterial>;
+  findAll: (query: MaterialQuery) => Promise<Material[]>;
+  findAllChildrenIds: (ids: Material['id'][]) => Promise<Record<Material['id'], Material['id'][]>>;
+  findAllDescendantIds: (materialIds: Material['id'][]) => Promise<Record<Material['id'], Material['id'][]>>;
+  findOneById: (id: Material['id']) => Promise<Material | null>;
+  findBlobById: (id: Material['id']) => Promise<ArrayBuffer | string | null>;
+  createAnnotation: (materialId: Material['id'], annotation: AnnotationDTO) => Promise<AnnotationVO>;
+  findAllAnnotations: (materialId: Material['id']) => Promise<AnnotationVO[]>;
   removeAnnotation: (annotationId: AnnotationVO['id']) => Promise<boolean>;
   findAnnotationById: (annotationId: AnnotationVO['id']) => Promise<Required<AnnotationVO> | null>;
   updateAnnotation: (annotationId: AnnotationVO['id'], patch: AnnotationPatchDTO) => Promise<AnnotationVO | null>;

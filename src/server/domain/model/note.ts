@@ -9,13 +9,9 @@ export type NoteQuery = {
   updatedAt?: number;
 };
 
-export type RawNote = NoteDTO & Partial<Pick<Note, 'updatedAt' | 'createdAt' | 'id'>>;
+export type NotePatch = Omit<NoteDTO, 'duplicateFrom'> & Partial<Pick<Note, 'updatedAt' | 'createdAt' | 'id'>>;
 
-export function normalizeTitle(note?: Pick<NoteVO, 'title' | 'createdAt'>) {
-  if (!note) {
-    return '';
-  }
-
+export function normalizeTitle(note: Pick<NoteVO, 'title' | 'createdAt'>) {
   return note.title || `未命名笔记-${dayjs.unix(note.createdAt).format('YYYYMMDD-HHmm')}`;
 }
 

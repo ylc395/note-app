@@ -12,6 +12,11 @@ export interface EntityLocator {
   mimeType?: string;
 }
 
+export interface EntityRecord {
+  entityType: EntityTypes;
+  entityId: EntityId;
+}
+
 export type EntityId = string;
 export type EntityParentId = EntityId | null;
 

@@ -1,5 +1,6 @@
 import uniq from 'lodash/uniq';
 import negate from 'lodash/negate';
+import compact from 'lodash/compact';
 import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import {
   type AnnotationDTO,
@@ -8,15 +9,18 @@ import {
   type MaterialVO,
   type AnnotationVO,
   type AnnotationPatchDTO,
+  type Material,
   AnnotationTypes,
   isDirectory,
   MaterialTypes,
   isEntityMaterial,
+  normalizeTitle,
 } from 'model/material';
 import { EntityTypes } from 'model/entity';
 
 import BaseService from './BaseService';
 import RecyclableService from './RecyclableService';
+import { buildIndex, getIds, getLocators } from 'utils/collection';
 
 @Injectable()
 export default class MaterialService extends BaseService {
@@ -40,18 +44,43 @@ export default class MaterialService extends BaseService {
     }
 
     if (file || fileId) {
-      return this.materials.createEntity({ file, fileId, ...info });
+      return { ...(await this.materials.createEntity({ file, fileId, ...info })), isStar: false };
     }
 
-    return this.materials.createDirectory(info);
+    return { ...(await this.materials.createDirectory(info)), isStar: false, childrenCount: 0 };
+  }
+
+  private async addInfo(materials: Material[]) {
+    const children = await this.getChildren(getIds(materials.filter(isDirectory)));
+    const stars = buildIndex(await this.stars.findAllByLocators(getLocators(materials, EntityTypes.Note)), 'entityId');
+
+    return materials.map((material) => ({
+      ...material,
+      isStar: Boolean(stars[material.id]),
+      name: normalizeTitle(material),
+      ...(isDirectory(material) ? { childrenCount: children[material.id]?.length || 0 } : null),
+    }));
+  }
+
+  private async getChildren(materialIds: Material['id'][]) {
+    const children = await this.materials.findAllChildrenIds(materialIds);
+    const availableChildren = await this.recyclableService.filterByLocators(children, (id) => ({
+      id,
+      type: EntityTypes.Material,
+    }));
+
+    return availableChildren;
   }
 
   async query(q: ClientMaterialQuery): Promise<MaterialVO[]>;
   async query(q: MaterialVO['id']): Promise<MaterialVO>;
   async query(q: ClientMaterialQuery | MaterialVO['id']): Promise<MaterialVO[] | MaterialVO> {
-    const rows = await this.materials.findAll(typeof q === 'string' ? { id: [q] } : q);
+    const rows =
+      typeof q === 'string' ? compact([await this.materials.findOneById(q)]) : await this.materials.findAll(q);
     const availableMaterials = await this.recyclableService.filter(EntityTypes.Material, rows);
-    const result = typeof q === 'string' ? availableMaterials[0] : availableMaterials;
+    const materials = await this.addInfo(availableMaterials);
+
+    const result = typeof q === 'string' ? materials[0] : materials;
 
     if (!result) {
       throw new Error('no result');

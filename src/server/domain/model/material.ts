@@ -1,8 +1,11 @@
-import type { MaterialVO, MaterialTypes, MaterialDTO } from 'shard/model/material';
-
-export type Directory = Pick<MaterialDTO, 'name' | 'parentId' | 'icon'>;
+import dayjs from 'dayjs';
+import type { MaterialVO, MaterialTypes, EntityMaterialVO } from 'shard/model/material';
 
 export type Material = Omit<MaterialVO, 'isStar'>;
+
+export type Directory = Material;
+
+export type EntityMaterial = Omit<EntityMaterialVO, 'isStar'>;
 
 export interface MaterialQuery {
   parentId?: MaterialVO['parentId'];
@@ -10,8 +13,12 @@ export interface MaterialQuery {
   type?: MaterialTypes;
 }
 
-export function normalizeTitle(v: unknown) {
-  return 'material-title';
+export function normalizeTitle(v: Directory | EntityMaterial) {
+  return v.name || `未命名素材-${dayjs.unix(v.createdAt).format('YYYYMMDD-HHmm')}`;
+}
+
+export function isDirectory(m: Material): m is Directory {
+  return !('mimeType' in m);
 }
 
 export * from 'shard/model/material';

@@ -1,13 +1,7 @@
 import { Inject, Injectable, forwardRef } from '@nestjs/common';
-import groupBy from 'lodash/groupBy';
-import mapValues from 'lodash/mapValues';
 
-import { EntityTypes, EntityLocator, EntityId } from 'model/entity';
-import { normalizeTitle as normalizeNoteTitle } from 'model/note';
-import { normalizeTitle as normalizeMaterialTitle } from 'model/material';
-import { digest } from 'model/memo';
+import type { EntityLocator } from 'model/entity';
 import type { StarRecord } from 'model/star';
-import { buildIndex } from 'utils/collection';
 
 import BaseService from './BaseService';
 import EntityService from './EntityService';
@@ -35,45 +29,16 @@ export default class StarService extends BaseService {
       type: entityType,
     }));
 
-    const starGroups = groupBy(availableStars, 'entityType');
-    const entityTitles: Record<EntityTypes, Record<EntityId, string>> = {
-      [EntityTypes.Note]: {},
-      [EntityTypes.Memo]: {},
-      [EntityTypes.Material]: {},
-    };
-
-    for (const [type, stars] of Object.entries(starGroups)) {
-      const entityType = Number(type) as EntityTypes;
-      const titles = await this.getEntityTitles(
-        entityType,
-        stars.map(({ entityId }) => entityId),
-      );
-
-      entityTitles[entityType] = titles;
-    }
+    const titles = await this.entityService.getEntityTitles(availableStars);
 
     return availableStars.map((star) => {
-      return { ...star, title: entityTitles[star.entityType][star.entityId] };
+      const title = titles[star.entityType][star.entityId];
+
+      if (!title) {
+        throw new Error('no title');
+      }
+      return { ...star, title };
     });
-  }
-
-  private async getEntityTitles(type: EntityTypes, ids: EntityId[]) {
-    if (type === EntityTypes.Note) {
-      const notes = await this.notes.findAll({ id: ids });
-      return mapValues(buildIndex(notes), normalizeNoteTitle);
-    }
-
-    if (type === EntityTypes.Material) {
-      const materials = await this.materials.findAll({ id: ids });
-      return mapValues(buildIndex(materials), normalizeMaterialTitle);
-    }
-
-    if (type === EntityTypes.Memo) {
-      const memos = await this.memos.findAll({ id: ids });
-      return mapValues(buildIndex(memos), digest);
-    }
-
-    throw new Error('can not get title');
   }
 
   async remove(id: StarRecord['id']) {

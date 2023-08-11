@@ -58,5 +58,6 @@ export const Transaction: MethodDecorator = function (target, properKey, descrip
     }
 
     return this.db.transaction(originFunc.bind(this, ...args));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any;
 };

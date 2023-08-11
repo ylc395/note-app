@@ -16,7 +16,7 @@ export interface MemoRepository {
   ) => Promise<MemoVO | null>;
   list: (query: MemoPaginationQuery) => Promise<PaginationMemeVO>;
   findParent: (id: ParentMemoVO['id']) => Promise<ParentMemoVO | null>;
-  findAllDescendantIds: (noteIds: MemoVO['id'][]) => Promise<Record<MemoVO['id'], MemoVO['id'][]>>;
+  findAllDescendantIds: (ids: MemoVO['id'][]) => Promise<Record<MemoVO['id'], MemoVO['id'][]>>;
   findOneById: (id: MemoVO['id']) => Promise<MemoVO | null>;
   findAll: (q?: MemoQuery) => Promise<MemoVO[]>;
   removeById: (id: MemoVO['id']) => Promise<void>;
