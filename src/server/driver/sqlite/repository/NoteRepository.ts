@@ -2,16 +2,15 @@ import type { Selectable } from 'kysely';
 import omit from 'lodash/omit';
 
 import type { EntityId } from 'model/entity';
-import type { NoteQuery, NotePatch } from 'model/note';
 import type { NoteRepository } from 'service/repository/NoteRepository';
-import type { NoteDTO, NoteVO, NotesDTO } from 'model/note';
+import type { NoteVO, NotesDTO, NoteQuery, NotePatch, NewNote, NoteDTO } from 'model/note';
 
 import HierarchyEntityRepository from './HierarchyEntityRepository';
 import schema, { type Row } from '../schema/note';
 
 export default class SqliteNoteRepository extends HierarchyEntityRepository implements NoteRepository {
   readonly tableName = schema.tableName;
-  async create(note: NotePatch) {
+  async create(note: NewNote) {
     const row = await this.createOne(this.tableName, {
       ...SqliteNoteRepository.dtoToRow(note),
       id: this.generateId(),

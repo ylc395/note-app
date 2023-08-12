@@ -5,10 +5,20 @@ import uniq from 'lodash/uniq';
 import dayjs from 'dayjs';
 
 import { buildIndex, getIds, getLocators } from 'utils/collection';
-import { type NoteVO, type NoteBodyDTO, type NoteDTO, type NotesDTO, normalizeTitle } from 'model/note';
+import {
+  type NoteVO,
+  type NoteBodyDTO,
+  type NewNoteDTO,
+  type NotesDTO,
+  type NotePatch,
+  type Note,
+  type NoteQuery,
+  isDuplicate,
+  isNewNote,
+  normalizeTitle,
+} from 'model/note';
 import { EntityTypes, type HierarchyEntity } from 'model/entity';
 import { Events } from 'model/events';
-import type { Note, NoteQuery } from 'model/note';
 
 import BaseService, { Transaction } from './BaseService';
 import RecyclableService from './RecyclableService';
@@ -30,12 +40,12 @@ export default class NoteService extends BaseService {
   }
 
   @Transaction
-  async create(note: NoteDTO) {
-    if (note.parentId && !(await this.areAvailable([note.parentId]))) {
+  async create(note: NewNoteDTO) {
+    if (isNewNote(note) && note.parentId && !(await this.areAvailable([note.parentId]))) {
       throw new Error('invalid parentId');
     }
 
-    const newNote = note.duplicateFrom ? await this.duplicate(note.duplicateFrom) : await this.notes.create(note);
+    const newNote = isDuplicate(note) ? await this.duplicate(note.duplicateFrom) : await this.notes.create(note);
     return this.queryVO(newNote.id);
   }
 
@@ -59,7 +69,7 @@ export default class NoteService extends BaseService {
     return newNote;
   }
 
-  async update(noteId: NoteVO['id'], note: NoteDTO) {
+  async update(noteId: NoteVO['id'], note: NotePatch) {
     const updated = (await this.batchUpdate([{ ...note, id: noteId }]))[0];
 
     if (!updated) {

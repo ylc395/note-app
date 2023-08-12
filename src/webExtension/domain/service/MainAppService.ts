@@ -4,7 +4,7 @@ import { makeObservable, observable, runInAction } from 'mobx';
 import { Statuses, token as mainAppToken, type Payload } from 'infra/MainApp';
 import { MaterialTypes, type DirectoryVO, type MaterialDTO } from 'model/material';
 import type { FileVO } from 'model/file';
-import type { NoteBodyDTO, NoteDTO, NoteVO } from 'model/note';
+import type { NoteBodyDTO, NewNoteDTO, NoteVO } from 'model/note';
 import type { MemoDTO } from 'model/memo';
 import { type EntityId, type EntityParentId, EntityTypes } from 'model/entity';
 import NoteTree from 'model/note/Tree';
@@ -84,7 +84,7 @@ export default class MainAppService {
       throw new Error('invalid content type for note');
     }
 
-    const note = await this.mainApp.fetch<NoteVO, NoteDTO>('POST', '/notes', {
+    const note = await this.mainApp.fetch<NoteVO, NewNoteDTO>('POST', '/notes', {
       title: payload.title,
       parentId: payload.parentId,
     });

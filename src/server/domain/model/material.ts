@@ -1,9 +1,9 @@
 import dayjs from 'dayjs';
-import type { MaterialVO, MaterialTypes, EntityMaterialVO } from 'shard/model/material';
+import type { MaterialVO, MaterialTypes, EntityMaterialVO, DirectoryVO } from 'shard/model/material';
 
 export type Material = Omit<MaterialVO, 'isStar'>;
 
-export type Directory = Material;
+export type Directory = Omit<DirectoryVO, 'isStar' | 'childrenCount'>;
 
 export type EntityMaterial = Omit<EntityMaterialVO, 'isStar'>;
 

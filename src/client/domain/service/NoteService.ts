@@ -3,7 +3,7 @@ import { Emitter } from 'strict-event-emitter';
 
 import { token as remoteToken } from 'infra/remote';
 import { token as UIToken } from 'infra/ui';
-import type { NoteDTO, NoteVO as Note, NotesDTO, ClientNoteQuery, NoteVO } from 'model/note';
+import type { NoteDTO, NoteVO as Note, NotesDTO, ClientNoteQuery, NoteVO, DuplicateNoteDTO } from 'model/note';
 import type { RecyclablesDTO } from 'model/Recyclables';
 import { EntityTypes } from 'model/entity';
 import NoteTree from 'model/note/Tree';
@@ -68,7 +68,7 @@ export default class NoteService extends Emitter<{
   };
 
   async duplicateNote(targetId: Note['id']) {
-    const { body: note } = await this.remote.post<NoteDTO, Note>('/notes', { duplicateFrom: targetId });
+    const { body: note } = await this.remote.post<DuplicateNoteDTO, Note>('/notes', { duplicateFrom: targetId });
 
     this.noteTree.updateTree(note);
     this.noteTree.toggleSelect(note.id);

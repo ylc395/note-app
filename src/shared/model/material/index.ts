@@ -12,7 +12,7 @@ import {
   preprocess,
 } from 'zod';
 import type { EntityId, EntityParentId } from '../entity';
-import type { Starable } from 'model/star';
+import type { Starable } from '../star';
 
 export const materialDTOSchema = object({
   name: string().min(1).optional(),
@@ -87,7 +87,7 @@ const commonAnnotationSchema = object({
   comment: string().nullish(),
 });
 
-const PdfRangeAnnotationSchema = object({
+const PdfRangeAnnotationSchema = commonAnnotationSchema.extend({
   type: literal(AnnotationTypes.PdfRange),
   content: string(),
   fragments: array(
@@ -96,24 +96,24 @@ const PdfRangeAnnotationSchema = object({
       rect: rectSchema,
     }),
   ),
-}).merge(commonAnnotationSchema);
+});
 
-const PdfAreaAnnotationSchema = object({
+const PdfAreaAnnotationSchema = commonAnnotationSchema.extend({
   type: literal(AnnotationTypes.PdfArea),
   snapshot: string(),
   rect: rectSchema,
   page: number(),
-}).merge(commonAnnotationSchema);
+});
 
 const htmlRangeSchema = object({
   selector: string(),
   offset: number(),
 });
 
-const htmlRangeAnnotationSchema = object({
+const htmlRangeAnnotationSchema = commonAnnotationSchema.extend({
   type: literal(AnnotationTypes.HtmlRange),
   range: tuple([htmlRangeSchema, htmlRangeSchema]),
-}).merge(commonAnnotationSchema);
+});
 
 export const annotationDTOSchema = discriminatedUnion('type', [
   PdfAreaAnnotationSchema,

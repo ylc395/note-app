@@ -1,7 +1,7 @@
-import type { NoteBodyDTO, NotesDTO, NoteBodyVO, Note, NotePatch, NoteQuery } from 'model/note';
+import type { NoteBodyDTO, NotesDTO, NoteBodyVO, Note, NoteQuery, NotePatch, NewNote } from 'model/note';
 
 export interface NoteRepository {
-  create: (note: NotePatch) => Promise<Note>;
+  create: (note: NewNote) => Promise<Note>;
   update: (noteId: Note['id'], note: NotePatch) => Promise<Note | null>;
   batchUpdate: (notes: NotesDTO) => Promise<Note[]>;
   updateBody: (noteId: Note['id'], noteBody: NoteBodyDTO['content']) => Promise<NoteBodyVO | null>;

@@ -2,16 +2,18 @@ import { Controller } from '@nestjs/common';
 
 import { Post, Body, Get, Patch, createSchemaPipe, Param, Put, Query } from './decorators';
 import {
-  type NoteDTO,
+  type NewNoteDTO,
   type NoteBodyDTO,
   type NoteBodyVO,
   type NoteVO,
   type ClientNoteQuery,
   type NotesDTO,
-  noteDTOSchema,
+  type NoteDTO,
+  NewNoteDTOSchema,
   notesDTOSchema,
   clientNoteQuerySchema,
   noteBodySchema,
+  noteDTOSchema,
 } from 'model/note';
 import NoteService from 'service/NoteService';
 
@@ -20,7 +22,7 @@ export default class NotesController {
   constructor(private noteService: NoteService) {}
 
   @Post('/notes')
-  async create(@Body(createSchemaPipe(noteDTOSchema)) noteDTO: NoteDTO): Promise<NoteVO> {
+  async create(@Body(createSchemaPipe(NewNoteDTOSchema)) noteDTO: NewNoteDTO): Promise<NoteVO> {
     return await this.noteService.create(noteDTO);
   }
 
