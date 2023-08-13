@@ -4,9 +4,11 @@ import type { SelectEvent } from 'model/abstract/Tree';
 import MaterialTree from 'model/material/Tree';
 import { EntityTypes } from 'model/entity';
 import type { MaterialDTO, DirectoryVO, MaterialVO, ClientMaterialQuery, EntityMaterialVO } from 'model/material';
+import type Form from 'model/material/Form';
 import { token as remoteToken } from 'infra/remote';
 
 import EditorService from './EditorService';
+import type { FileVO, FilesDTO } from 'model/file';
 
 @singleton()
 export default class MaterialService {
@@ -45,11 +47,21 @@ export default class MaterialService {
     this.materialTree.toggleSelect(directory.id);
   };
 
-  readonly createMaterial = async (newMaterial: MaterialDTO) => {
-    const { body: material } = await this.remote.post<MaterialDTO, EntityMaterialVO>('/materials', newMaterial);
+  readonly createMaterial = async (form: Form) => {
+    if (!form.files) {
+      throw new Error('invalid form');
+    }
 
-    if (newMaterial.parentId && !this.materialTree.getNode(newMaterial.parentId).isExpanded) {
-      await this.materialTree.toggleExpand(newMaterial.parentId);
+    const { body: files } = await this.remote.patch<FilesDTO, FileVO[]>('/files', form.files);
+
+    const newMaterial = await form.validate();
+    const { body: material } = await this.remote.post<MaterialDTO, EntityMaterialVO>('/materials', {
+      fileId: files[0]!.id,
+      ...newMaterial,
+    });
+
+    if (material.parentId && !this.materialTree.getNode(material.parentId).isExpanded) {
+      await this.materialTree.toggleExpand(material.parentId);
     }
 
     this.materialTree.updateTree(material);

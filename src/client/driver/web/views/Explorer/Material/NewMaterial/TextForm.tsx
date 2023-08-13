@@ -1,10 +1,10 @@
 import { observer } from 'mobx-react-lite';
 import { Form, Input } from 'antd';
 
-import type TextFormModel from 'model/material/TextForm';
+import type FormModel from 'model/material/Form';
 import MarkdownEditor from 'web/components/MarkdownEditor';
 
-export default observer(function TextForm({ model }: { model: TextFormModel }) {
+export default observer(function TextForm({ model }: { model: FormModel }) {
   return (
     <Form>
       <Form.Item label="文件名">
@@ -14,7 +14,7 @@ export default observer(function TextForm({ model }: { model: TextFormModel }) {
         <Input onChange={(e) => model.updateValue('sourceUrl', e.target.value)} />
       </Form.Item>
       <Form.Item label="内容">
-        <MarkdownEditor onChange={(content) => model.updateValue('text', content)} />
+        <MarkdownEditor onChange={(content) => (model.files = [{ mimeType: 'text/markdown', data: content }])} />
       </Form.Item>
     </Form>
   );

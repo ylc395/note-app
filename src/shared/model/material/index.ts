@@ -1,15 +1,14 @@
 import {
   object,
   string,
-  instanceof as zodInstanceof,
   array,
   number,
   discriminatedUnion,
   literal,
   tuple,
-  type infer as Infer,
   nativeEnum,
   preprocess,
+  type infer as Infer,
 } from 'zod';
 import type { EntityId, EntityParentId } from '../entity';
 import type { Starable } from '../star';
@@ -19,11 +18,6 @@ export const materialDTOSchema = object({
   parentId: string().nullable().optional(),
   icon: string().min(1).optional(),
   fileId: string().optional(),
-  file: object({
-    data: zodInstanceof(ArrayBuffer).or(string()).optional(),
-    path: string().optional(),
-    mimeType: string().min(1),
-  }).optional(),
   sourceUrl: string().url().optional(),
 });
 

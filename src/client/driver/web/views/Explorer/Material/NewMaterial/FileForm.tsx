@@ -1,25 +1,25 @@
 import { observer } from 'mobx-react-lite';
 import { Form, Input, Button } from 'antd';
-import { useCallback } from 'react';
 
-import type FileFormModel from 'model/material/FileForm';
+import type FormModel from 'model/material/Form';
 import selectFiles from 'web/infra/selectFiles';
 import { IS_ELECTRON } from 'infra/constants';
 
-export default observer(function FileForm({ model }: { model: FileFormModel }) {
-  const handleSelectFile = useCallback(async () => {
+export default observer(function FileForm({ model }: { model: FormModel }) {
+  const handleSelectFile = async () => {
     const file = (await selectFiles())?.[0];
 
     if (!file) {
       return;
     }
 
-    model.updateValue('file', {
-      mimeType: file.type,
-      ...(IS_ELECTRON ? { path: file.path } : { data: await file.arrayBuffer() }),
-    });
-    model.updateValue('name', file.name);
-  }, [model]);
+    model.files = [
+      {
+        mimeType: file.type,
+        ...(IS_ELECTRON ? { path: file.path } : { data: await file.arrayBuffer(), name: file.name }),
+      },
+    ];
+  };
 
   return (
     <Form>

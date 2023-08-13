@@ -1,6 +1,5 @@
 import pick from 'lodash/pick';
 import omit from 'lodash/omit';
-import { readFile } from 'fs-extra';
 import type { Selectable } from 'kysely';
 
 import {
@@ -29,28 +28,20 @@ export default class SqliteMaterialRepository extends HierarchyEntityRepository 
   }
 
   async createEntity(material: MaterialDTO) {
-    let file: FileRow | null | undefined;
-
-    if (material.fileId) {
-      file = await this.files.findOneById(material.fileId);
-    } else if (material.file?.path) {
-      const data = await readFile(material.file.path);
-      file = await this.files.findOrCreate({ data, mimeType: material.file.mimeType });
-    } else if (material.file?.data) {
-      file = await this.files.findOrCreate({
-        data: typeof material.file.data === 'string' ? Buffer.from(material.file.data) : material.file.data,
-        mimeType: material.file.mimeType,
-      });
+    if (!material.fileId) {
+      throw new Error('no fileId');
     }
 
+    const file: FileRow | null = await this.files.findOneById(material.fileId);
+
     if (!file) {
-      throw new Error('invalid material');
+      throw new Error('no file');
     }
 
     const createdMaterial = await this.createOne(this.tableName, {
       ...pick(material, ['name', 'icon', 'parentId']),
       id: this.generateId(),
-      fileId: file.id,
+      fileId: material.fileId,
     });
 
     return SqliteMaterialRepository.rowToMaterial(createdMaterial, file.mimeType);

@@ -26,25 +26,17 @@ import EntityService from './EntityService';
 export default class MaterialService extends BaseService {
   @Inject(forwardRef(() => RecyclableService)) private readonly recyclableService!: RecyclableService;
 
-  async create({ file, fileId, ...info }: MaterialDTO) {
-    if (file && fileId) {
-      throw new Error('invalid material');
-    }
-
-    if ((file || fileId) && !info.parentId) {
+  async create({ fileId, ...info }: MaterialDTO) {
+    if (fileId && !info.parentId) {
       throw new Error('empty parentId');
-    }
-
-    if (file && !file.data && !file.path) {
-      throw new Error('invalid file');
     }
 
     if (info.parentId && !(await this.areAvailable([info.parentId], MaterialTypes.Directory))) {
       throw new Error('invalid parent id');
     }
 
-    if (file || fileId) {
-      return { ...(await this.materials.createEntity({ file, fileId, ...info })), isStar: false };
+    if (fileId) {
+      return { ...(await this.materials.createEntity({ fileId, ...info })), isStar: false };
     }
 
     return { ...(await this.materials.createDirectory(info)), isStar: false, childrenCount: 0 };

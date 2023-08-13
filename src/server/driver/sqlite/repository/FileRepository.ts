@@ -32,19 +32,24 @@ export default class SqliteFileRepository extends BaseRepository implements File
     return (row.data as Uint8Array).buffer;
   }
 
-  async findOrCreate({ data, mimeType }: { data: ArrayBuffer; mimeType: string }) {
-    const hash = createHash('md5').update(new Uint8Array(data)).digest('base64');
+  async findOrCreate({ data, mimeType }: { data: ArrayBuffer | string; mimeType: string }) {
+    const hash = createHash('md5')
+      .update(typeof data === 'string' ? data : new Uint8Array(data))
+      .digest('base64');
+
     const existedFile = await this.db.selectFrom(tableName).selectAll().where('hash', '=', hash).executeTakeFirst();
 
     if (existedFile) {
       return existedFile;
     }
 
+    const buffer = Buffer.from(data as string);
+
     const createdFile = await this.createOne(tableName, {
       id: this.generateId(),
       hash,
-      data: Buffer.from(data),
-      size: data.byteLength,
+      data: buffer,
+      size: buffer.byteLength,
       mimeType,
     });
 

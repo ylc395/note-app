@@ -9,12 +9,23 @@ export interface FileVO {
 
 export type WebFileMetadataVO = Omit<FileVO, 'id'>;
 
-export const filesDTOSchema = union([
+const urlSchema = object({
+  url: string().url(),
+});
+
+const fileDTOSchema = union([
   object({
     mimeType: string(),
-    data: zodInstanceof(ArrayBuffer),
+    data: union([zodInstanceof(ArrayBuffer), string()]).optional(),
+    path: string().optional(),
+    name: string().optional(),
   }),
-  string().url(),
-]).array();
+  urlSchema,
+]);
+
+export type FileDTO = Infer<typeof fileDTOSchema>;
+export type FileUrlDTO = Infer<typeof urlSchema>;
+
+export const filesDTOSchema = fileDTOSchema.array();
 
 export type FilesDTO = Infer<typeof filesDTOSchema>;

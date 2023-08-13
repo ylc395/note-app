@@ -10,7 +10,7 @@ export default class MarkdownService {
     const _files = await Promise.all(
       files.map(async (file) => {
         return typeof file === 'string'
-          ? file
+          ? { url: file }
           : { name: file.name, data: await file.arrayBuffer(), mimeType: file.type };
       }),
     );
