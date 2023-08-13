@@ -15,6 +15,7 @@ import {
   noteBodySchema,
   noteDTOSchema,
 } from 'model/note';
+import type { NoteTreeVO } from 'model/note/Tree';
 import NoteService from 'service/NoteService';
 
 @Controller()
@@ -36,8 +37,8 @@ export default class NotesController {
     return await this.noteService.queryVO({ parentId: null, ...q });
   }
 
-  @Get('/notes/:id/tree-fragment')
-  async queryTreeFragment(@Param('id') noteId: string): Promise<NoteVO[]> {
+  @Get('/notes/:id/tree')
+  async queryTree(@Param('id') noteId: string): Promise<NoteTreeVO> {
     return await this.noteService.getTreeFragment(noteId);
   }
 

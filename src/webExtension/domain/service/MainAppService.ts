@@ -2,13 +2,14 @@ import { container } from 'tsyringe';
 import { makeObservable, observable, runInAction } from 'mobx';
 
 import { Statuses, token as mainAppToken, type Payload } from 'infra/MainApp';
-import { MaterialTypes, type DirectoryVO, type MaterialDTO } from 'model/material';
+import { MaterialTypes, type DirectoryVO, type MaterialDTO, MaterialVO } from 'model/material';
 import type { FileVO } from 'model/file';
 import type { NoteBodyDTO, NewNoteDTO, NoteVO } from 'model/note';
 import type { MemoDTO } from 'model/memo';
-import { type EntityId, type EntityParentId, EntityTypes } from 'model/entity';
-import NoteTree from 'model/note/Tree';
-import MaterialTree from 'model/material/Tree';
+import { type EntityId, EntityTypes } from 'model/entity';
+import NoteTree, { type NoteTreeVO } from 'model/note/Tree';
+import MaterialTree, { type MaterialTreeVO } from 'model/material/Tree';
+import type { TreeVO } from 'model/abstract/Tree';
 
 export default class MainAppService {
   constructor(checkStatus?: boolean) {
@@ -107,23 +108,31 @@ export default class MainAppService {
     });
   }
 
-  async getTree(type: EntityTypes.Material | EntityTypes.Note, targetId: EntityParentId) {
+  async getTree(type: EntityTypes.Material | EntityTypes.Note, targetId: EntityId | null) {
     const options = { unselectable: true };
-    if (type === EntityTypes.Note) {
-      const entities = await this.mainApp.fetch<NoteVO[]>(
-        'GET',
-        targetId ? `/notes/${targetId}/tree-fragment` : `/notes`,
-      );
-      return entities && NoteTree.from(entities, options);
+    const urlMap = {
+      [EntityTypes.Material]: 'materials',
+      [EntityTypes.Note]: 'notes',
+    };
+
+    const query = type === EntityTypes.Material ? `?type=${MaterialTypes.Directory}` : '';
+    let treeVO: TreeVO | null = null;
+
+    if (targetId) {
+      treeVO = await this.mainApp.fetch<TreeVO>('GET', `/${urlMap[type]}/${targetId}/tree${query}`);
+    } else {
+      const roots = await this.mainApp.fetch<NoteVO[] | MaterialVO[]>('GET', `/${urlMap[type]}${query}`);
+      treeVO = roots && roots.map((entity) => ({ entity }));
     }
 
-    if (type === EntityTypes.Material) {
-      const query = `?type=${MaterialTypes.Directory}`;
-      const entities = await this.mainApp.fetch<DirectoryVO[]>(
-        'GET',
-        targetId ? `/materials/${targetId}/tree-fragment${query}` : `/materials${query}`,
-      );
-      return entities && MaterialTree.from(entities, options);
+    if (treeVO) {
+      if (type === EntityTypes.Material) {
+        return new MaterialTree({ ...options, from: treeVO as MaterialTreeVO });
+      }
+
+      if (type === EntityTypes.Note) {
+        return new NoteTree({ ...options, from: treeVO as NoteTreeVO });
+      }
     }
 
     return null;

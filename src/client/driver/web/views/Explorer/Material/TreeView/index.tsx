@@ -1,4 +1,3 @@
-import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 import { useEffect } from 'react';
 
@@ -8,6 +7,7 @@ import Tree from 'components/Tree';
 
 import NodeTitle from './NodeTitle';
 
+// eslint-disable-next-line mobx/missing-observer
 export default function MaterialTreeView() {
   const { loadChildren, materialTree } = container.resolve(MaterialService);
 

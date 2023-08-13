@@ -1,6 +1,5 @@
 import uniq from 'lodash/uniq';
 import negate from 'lodash/negate';
-import groupBy from 'lodash/groupBy';
 import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import {
   type AnnotationDTO,
@@ -21,6 +20,7 @@ import { EntityTypes } from 'model/entity';
 import BaseService from './BaseService';
 import RecyclableService from './RecyclableService';
 import { buildIndex, getIds, getLocators } from 'utils/collection';
+import EntityService from './EntityService';
 
 @Injectable()
 export default class MaterialService extends BaseService {
@@ -185,17 +185,8 @@ export default class MaterialService extends BaseService {
     const childrenIds = Object.values(await this.materials.findChildrenIds(ancestorIds)).flat();
 
     const roots = await this.queryVO({ parentId: null, type });
-    const children = groupBy(await this.queryVO({ id: childrenIds, type }), 'parentId');
+    const children = await this.queryVO({ id: childrenIds, type });
 
-    /* topo sort */
-    const result: MaterialVO[] = [...roots];
-
-    for (let i = 0; result[i]; i++) {
-      const { id } = result[i]!;
-      result.push(...(children[id] || []));
-    }
-    /* topo sort end */
-
-    return result;
+    return EntityService.getTree(roots, children);
   }
 }

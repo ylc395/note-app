@@ -24,14 +24,10 @@ export default observer(function TargetPath() {
   const config = container.resolve(ConfigService);
 
   useEffect(() => {
-    if (isOpen) {
+    if (!config.targetTree || isOpen) {
       config.updateTargetTree();
     }
   }, [config, isOpen]);
-
-  useEffect(() => {
-    config.updateTargetTree();
-  }, [config]);
 
   useEffect(() => {
     const { targetTree } = config;
@@ -77,13 +73,14 @@ export default observer(function TargetPath() {
             <Tree
               ref={treeRef}
               tree={config.targetTree}
+              visibleRoot={config.target.type === EntityTypes.Note}
               className="w-full"
               nodeClassName="flex items-center cursor-pointer py-1 pl-2 data-[selected=true]:text-white data-[selected=true]:bg-blue-400"
               titleClassName="truncate min-w-0 "
               loadingIcon={<LoadingOutlined className="mr-1" />}
               emptyChildrenView={({ indent }) => (
                 <div className="text-xs italic text-gray-500" style={{ paddingLeft: indent }}>
-                  暂无子目录（重新展开节点以刷新）
+                  暂无子目录
                 </div>
               )}
             />

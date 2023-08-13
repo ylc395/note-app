@@ -63,7 +63,7 @@ export default class MaterialService {
 
     const node = this.materialTree.getNode(materialId);
 
-    if (!multiple && !node.attributes?.isDirectory) {
+    if (!multiple && node.attributes?.mimeType) {
       const { openEntity } = container.resolve(EditorService);
       openEntity({ type: EntityTypes.Material, id: materialId, mimeType: node.attributes?.mimeType });
     }

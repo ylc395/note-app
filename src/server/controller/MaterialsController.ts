@@ -12,6 +12,7 @@ import {
   annotationDTOSchema,
   annotationPatchSchema,
 } from 'model/material';
+import type { MaterialTreeVO } from 'model/material/Tree';
 import MaterialService from 'service/MaterialService';
 
 import { createSchemaPipe, Post, Body, Get, Query, Param, Delete, Patch } from './decorators';
@@ -38,11 +39,11 @@ export default class MaterialsController {
     return await this.materialService.queryAnnotations(materialId);
   }
 
-  @Get('/materials/:id/tree-fragment')
-  async queryTreeFragment(
+  @Get('/materials/:id/tree')
+  async queryTree(
     @Param('id') materialId: string,
     @Query(createSchemaPipe(clientMaterialQuerySchema)) query: ClientMaterialQuery,
-  ): Promise<MaterialVO[]> {
+  ): Promise<MaterialTreeVO> {
     return await this.materialService.getTreeFragment(materialId, query.type);
   }
 

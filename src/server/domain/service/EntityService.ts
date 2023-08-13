@@ -7,6 +7,7 @@ import { type EntityLocator, type EntityId, type HierarchyEntity, EntityTypes, E
 import { normalizeTitle as normalizeNoteTitle } from 'model/note';
 import { normalizeTitle as normalizeMaterialTitle } from 'model/material';
 import { digest } from 'model/memo';
+import type { TreeNodeVO } from 'model/abstract/Tree';
 import { buildIndex, getIds } from 'utils/collection';
 
 import BaseService from './BaseService';
@@ -118,5 +119,17 @@ export default class EntityService extends BaseService {
     }
 
     return entityTitles;
+  }
+
+  static getTree<T extends HierarchyEntity>(roots: T[], descants: T[]) {
+    const childrenGroup = groupBy(descants, 'parentId');
+
+    const getChildrenNodes = (entities: T[]): TreeNodeVO<T>[] =>
+      entities.map((entity) => {
+        const children = childrenGroup[entity.id];
+        return { entity, children: children ? getChildrenNodes(children) : undefined };
+      });
+
+    return getChildrenNodes(roots);
   }
 }

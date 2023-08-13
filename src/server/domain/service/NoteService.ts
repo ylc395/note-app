@@ -1,6 +1,5 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import omit from 'lodash/omit';
-import groupBy from 'lodash/groupBy';
 import uniq from 'lodash/uniq';
 import dayjs from 'dayjs';
 
@@ -174,18 +173,9 @@ export default class NoteService extends BaseService {
     const childrenIds = Object.values(await this.notes.findChildrenIds(ancestorIds)).flat();
 
     const roots = await this.queryVO({ parentId: null });
-    const children = groupBy(await this.queryVO({ id: childrenIds }), 'parentId');
+    const children = await this.queryVO({ id: childrenIds });
 
-    /* topo sort */
-    const result: NoteVO[] = [...roots];
-
-    for (let i = 0; result[i]; i++) {
-      const { id } = result[i]!;
-      result.push(...(children[id] || []));
-    }
-    /* topo sort end */
-
-    return result;
+    return EntityService.getTree(roots, children);
   }
 
   private async assertValidChanges(notes: NotesDTO) {
@@ -220,6 +210,6 @@ export default class NoteService extends BaseService {
       return false;
     }
 
-    return row.isReadonly;
+    return !row.isReadonly;
   }
 }

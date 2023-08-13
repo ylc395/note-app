@@ -76,12 +76,12 @@ const TreeNode = observer(function <T>({
       return;
     }
 
-    tree.toggleExpand(node.id);
+    tree.toggleExpand(node === tree.root ? null : node.id);
   };
 
-  const onClick = (e: MouseEvent) => {
+  const select = (e: MouseEvent) => {
     e.stopPropagation();
-    tree.toggleSelect(node.id, { multiple: (multiple && e.metaKey) || e.ctrlKey });
+    tree.toggleSelect(node === tree.root ? null : node.id, { multiple: (multiple && e.metaKey) || e.ctrlKey });
   };
 
   return (
@@ -92,7 +92,7 @@ const TreeNode = observer(function <T>({
           data-dragging={node.isUndroppable ? 'not-allowed' : isOver ? 'over' : undefined}
           data-selected={node.isSelected}
           ref={setDraggableRef}
-          onClick={onClick}
+          onClick={select}
           {...listeners}
           {...attributes}
         >
@@ -123,7 +123,7 @@ const TreeNode = observer(function <T>({
 });
 
 export default observer(
-  function Tree<T = void>(
+  function Tree<T = unknown>(
     { className, visibleRoot, ...ctx }: { className?: string; visibleRoot?: boolean } & TreeContext<T>,
     treeRef: Ref<HTMLDivElement>,
   ) {

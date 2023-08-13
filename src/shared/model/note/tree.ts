@@ -1,11 +1,13 @@
 import type { NoteVO } from './index';
-import Tree, { type TreeOptions, type TreeNode } from '../abstract/Tree';
+import Tree, { type TreeNode, type TreeVO } from '../abstract/Tree';
 
 export interface NoteNodeAttr {
   icon: NoteVO['icon'];
 }
 
 export type NoteTreeNode = TreeNode<NoteNodeAttr>;
+
+export type NoteTreeVO = TreeVO<NoteVO>;
 
 export default class NoteTree extends Tree<NoteVO, NoteNodeAttr> {
   protected toNode(note: NoteVO | null) {
@@ -26,12 +28,6 @@ export default class NoteTree extends Tree<NoteVO, NoteNodeAttr> {
       isExpanded: false,
     }));
 
-    return tree;
-  }
-
-  static from(notes: NoteVO[], options?: TreeOptions) {
-    const tree = new NoteTree(options);
-    tree.setChildren(notes, null);
     return tree;
   }
 }

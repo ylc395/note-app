@@ -46,7 +46,7 @@ async function buildElectron(options) {
     const result = shell.exec(BUILD_ELECTRON_COMMAND);
 
     if (result.code > 0) {
-      throw new Error(`compile electron error: ${result}`);
+      throw new Error('compile electron error');
     }
   }
 

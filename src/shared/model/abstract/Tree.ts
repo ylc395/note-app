@@ -3,7 +3,7 @@ import pull from 'lodash/pull';
 import differenceWith from 'lodash/differenceWith';
 import { Emitter } from 'strict-event-emitter';
 
-import type { HierarchyEntity } from '../entity';
+import type { EntityParentId, HierarchyEntity } from '../entity';
 import { getIds } from '../../utils/collection';
 
 export interface TreeNode<T = void> {
@@ -18,8 +18,16 @@ export interface TreeNode<T = void> {
   attributes?: T;
 }
 
-export interface TreeOptions {
+export interface TreeNodeVO<T> {
+  entity: T;
+  children?: TreeNodeVO<T>[];
+}
+
+export type TreeVO<T = unknown> = TreeNodeVO<T>[];
+
+export interface TreeOptions<T> {
   unselectable?: boolean;
+  from?: TreeVO<T>;
 }
 
 export type TreeNodeEntity = HierarchyEntity;
@@ -37,10 +45,32 @@ export default abstract class Tree<E extends TreeNodeEntity = TreeNodeEntity, T 
 }> {
   readonly root: TreeNode<T>;
 
-  constructor(protected readonly options?: TreeOptions) {
+  constructor(protected readonly options?: TreeOptions<E>) {
     super();
     this.root = this.generateRoot();
     makeObservable(this);
+
+    if (options?.from) {
+      this.fromTreeVO(options.from);
+    }
+  }
+
+  private fromTreeVO(treeVO: TreeVO<E>) {
+    const traverse = (nodes: TreeNodeVO<E>[], parentId: EntityParentId) => {
+      this.setChildren(
+        nodes.map(({ entity }) => entity),
+        parentId,
+      );
+
+      for (const treeNode of nodes) {
+        if (!treeNode.children) {
+          continue;
+        }
+        traverse(treeNode.children, treeNode.entity.id);
+      }
+    };
+
+    traverse(treeVO, null);
   }
 
   sort(parentId: TreeNode['id'], cb: (node1: TreeNode<T>, node2: TreeNode<T>) => number, recursive: boolean) {
@@ -222,7 +252,7 @@ export default abstract class Tree<E extends TreeNodeEntity = TreeNodeEntity, T 
   }
 
   @action
-  toggleExpand(id: TreeNode['id']) {
+  toggleExpand(id: TreeNode['id'] | null) {
     const node = this.getNode(id);
 
     if (node.isLeaf) {

@@ -48,7 +48,7 @@ describe('notes', async function () {
     }
   });
 
-  it('should query specified note', async function () {
+  it('should query specified note and fail when id is invalid', async function () {
     for (const note of rootNotes) {
       deepStrictEqual(await noteController.queryOne(note.id), note);
     }
@@ -107,6 +107,24 @@ describe('notes', async function () {
     for (const child of children) {
       strictEqual(child.parentId, parentNote.id);
     }
+  });
+
+  it('should query a tree by a note id', async function () {
+    const rootNotes = await noteController.query({ parentId: null });
+    const parentNote = await noteController.queryOne(parentNoteId);
+    const children = await noteController.query({ parentId: parentNote.id });
+    const grandChildNote1 = await noteController.create({ parentId: children[0]!.id });
+    const grandChildNote2 = await noteController.create({ parentId: children[0]!.id });
+
+    const tree = await noteController.queryTree(grandChildNote1.id);
+    const parentNode = tree.find(({ entity: { id } }) => id === parentNoteId);
+    const childNode = parentNode?.children?.find(({ entity: { id } }) => id === children[0]!.id);
+
+    ok(tree.length === rootNotes.length);
+    ok(parentNode?.children?.length === children.length);
+    ok(childNode);
+    ok(childNode.children?.find(({ entity: { id } }) => id === grandChildNote1.id));
+    ok(childNode.children?.find(({ entity: { id } }) => id === grandChildNote2.id));
   });
 
   it('should update one note', async function () {

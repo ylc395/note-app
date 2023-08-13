@@ -1,13 +1,14 @@
-import { type MaterialVO, type DirectoryVO, type EntityMaterialVO, isEntityMaterial, isDirectory } from './index';
-import Tree, { type TreeOptions, type TreeNode } from '../abstract/Tree';
+import { type MaterialVO, type EntityMaterialVO, isEntityMaterial, isDirectory } from './index';
+import Tree, { type TreeNode, type TreeVO } from '../abstract/Tree';
 
 export interface MaterialNodeAttr {
   icon: MaterialVO['icon'];
-  isDirectory: boolean;
   mimeType?: EntityMaterialVO['mimeType'];
 }
 
 export type MaterialTreeNode = TreeNode<MaterialNodeAttr>;
+
+export type MaterialTreeVO = TreeVO<MaterialVO>;
 
 export default class MaterialTree extends Tree<MaterialVO, MaterialNodeAttr> {
   protected toNode(material: MaterialVO | null) {
@@ -17,19 +18,11 @@ export default class MaterialTree extends Tree<MaterialVO, MaterialNodeAttr> {
         isLeaf: !isDirectory(material) || material.childrenCount === 0,
         attributes: {
           icon: material.icon,
-          isDirectory: isDirectory(material),
           mimeType: isEntityMaterial(material) ? material.mimeType : undefined,
         },
       };
     }
 
     return { title: '根' };
-  }
-
-  static from(materials: DirectoryVO[], options?: TreeOptions) {
-    const tree = new MaterialTree(options);
-    tree.setChildren(materials, null);
-
-    return tree;
   }
 }
