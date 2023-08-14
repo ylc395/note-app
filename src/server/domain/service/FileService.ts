@@ -2,18 +2,19 @@ import { Inject, Injectable } from '@nestjs/common';
 import compact from 'lodash/compact';
 
 import { type FileVO, type FilesDTO, isFileUrl } from 'model/file';
-import { token as downloaderToken, Downloader } from 'infra/downloader';
+import { token as downloaderToken, FileReader } from 'infra/fileReader';
 
 import BaseService from './BaseService';
 
 @Injectable()
 export default class FileService extends BaseService {
-  @Inject(downloaderToken) private readonly downloader!: Downloader;
+  @Inject(downloaderToken) private readonly fileReader!: FileReader;
 
   async createFiles(files: FilesDTO) {
     const tasks = files.map(async (file) => {
       if (isFileUrl(file)) {
-        return this.downloader.downloadFile(file.url);
+        const remoteFile = await this.fileReader.readRemoteFile(file.url);
+        return remoteFile && { ...remoteFile, sourceUrl: file.url };
       }
 
       if (file.data) {
@@ -25,39 +26,35 @@ export default class FileService extends BaseService {
       }
 
       if (file.path) {
-        const downloaded = await this.downloader.downloadFile(`file://${file.path}`);
-        return downloaded && { ...downloaded, mimeType: file.mimeType };
+        const localFile = await this.fileReader.readLocalFile(file.path);
+        return localFile && { ...localFile, mimeType: file.mimeType };
       }
+
+      throw new Error('invalid file');
     });
 
-    const downloadedFiles = await Promise.all(tasks);
-
-    return await this.files.batchCreate(compact(downloadedFiles));
+    const loadedFiles = await Promise.all(tasks);
+    return await this.files.batchCreate(compact(loadedFiles));
   }
 
   async queryFileById(id: FileVO['id']) {
     const file = await this.files.findOneById(id);
+    const data = await this.files.findBlobById(id);
 
-    if (file) {
-      return file;
+    if (!file || !data) {
+      throw new Error('invalid url');
     }
 
-    throw new Error('invalid url');
+    return { ...file, data };
   }
 
-  async fetchWebFileMetadata(url: string) {
-    const abortController = new AbortController();
-    const res = await fetch(url, { signal: abortController.signal });
+  async fetchRemoteFile(url: string) {
+    const file = await this.fileReader.readRemoteFile(url);
 
-    abortController.abort();
-
-    if (!res.ok) {
+    if (!file) {
       throw new Error('can not request file');
     }
 
-    return {
-      mimeType: res.headers.get('content-type') || '',
-      size: Number(res.headers.get('content-length')),
-    };
+    return file;
   }
 }

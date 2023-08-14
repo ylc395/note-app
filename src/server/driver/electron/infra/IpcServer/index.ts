@@ -7,21 +7,22 @@ import toPlainObject from 'lodash/toPlainObject';
 
 import { InvalidInputError } from 'model/Error';
 import { FAKE_HTTP_CHANNEL, type FakeHttpRequest, type FakeHttpResponse } from 'infra/fakeHttp';
+import Context from './Context';
 
 export default class ElectronIpcServer extends Server implements CustomTransportStrategy {
-  #routeMap = new Map<string, MatchFunction>();
+  private readonly routeMap = new Map<string, MatchFunction>();
 
   listen(cb: () => void) {
     const allPaths = Array.from(this.getHandlers().keys()).map((pattern) => JSON.parse(pattern).path);
 
     for (const path of allPaths) {
-      this.#routeMap.set(path, match(path));
+      this.routeMap.set(path, match(path));
     }
 
     ipcMain.handle(FAKE_HTTP_CHANNEL, async (e, req: FakeHttpRequest<unknown>): Promise<FakeHttpResponse<unknown>> => {
-      this.#populateRequest(req);
+      this.populateRequest(req);
 
-      const pattern = this.normalizePattern({ path: req.originPath || '', method: req.method });
+      const pattern = this.normalizePattern({ path: req.route || '', method: req.method });
       const handler = this.messageHandlers.get(pattern);
 
       if (!handler) {
@@ -31,9 +32,13 @@ export default class ElectronIpcServer extends Server implements CustomTransport
         };
       }
 
+      const ctx = new Context();
+
       try {
-        const result = await handler(req);
-        return { status: 200, body: result };
+        console.log(ctx);
+
+        const result = await handler(req, ctx);
+        return { status: 200, body: result, headers: ctx.getHeaders() };
       } catch (e) {
         if (!isError(e)) {
           this.logger.error(e);
@@ -52,8 +57,8 @@ export default class ElectronIpcServer extends Server implements CustomTransport
     cb();
   }
 
-  #populateRequest(req: FakeHttpRequest<unknown>) {
-    for (const [path, matcher] of this.#routeMap.entries()) {
+  private populateRequest(req: FakeHttpRequest<unknown>) {
+    for (const [path, matcher] of this.routeMap.entries()) {
       const result = matcher(req.path);
 
       if (!result) {
@@ -62,7 +67,7 @@ export default class ElectronIpcServer extends Server implements CustomTransport
 
       const { params } = result;
       req.params = params as Record<string, string>;
-      req.originPath = path;
+      req.route = path;
       break;
     }
   }

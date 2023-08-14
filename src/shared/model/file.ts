@@ -1,31 +1,32 @@
 import { object, union, string, type infer as Infer, instanceof as zodInstanceof } from 'zod';
 import type { EntityId } from './entity';
+import { APP_NAME } from '../infra/constants';
 
-export interface FileVO {
-  id: EntityId;
-  mimeType: string;
-  size: number;
-}
-
-export type WebFileMetadataVO = Omit<FileVO, 'id'>;
-
-const urlSchema = object({
+const FileUrlDTOSchema = object({
   url: string().url(),
 });
 
 const fileDTOSchema = union([
   object({
     mimeType: string(),
-    data: union([zodInstanceof(ArrayBuffer), string()]).optional(),
+    data: zodInstanceof(ArrayBuffer).optional(),
     path: string().optional(),
     name: string().optional(),
   }),
-  urlSchema,
+  FileUrlDTOSchema,
 ]);
-
-export type FileDTO = Infer<typeof fileDTOSchema>;
-export type FileUrlDTO = Infer<typeof urlSchema>;
 
 export const filesDTOSchema = fileDTOSchema.array();
 
+export type FileDTO = Infer<typeof fileDTOSchema>;
+export type FileUrlDTO = Infer<typeof FileUrlDTOSchema>;
 export type FilesDTO = Infer<typeof filesDTOSchema>;
+
+export interface FileVO {
+  id: EntityId;
+  mimeType: string;
+  size: number;
+  sourceUrl?: string;
+}
+
+export const FILE_URL_PREFIX = `${APP_NAME}://file/`;

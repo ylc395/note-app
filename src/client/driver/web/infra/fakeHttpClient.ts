@@ -16,10 +16,10 @@ const ipcClient = window.electronIpcHttpClient
   ? (mapValues(window.electronIpcHttpClient, (method) =>
       wrap(method, async (func, ...args: unknown[]) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { status, body } = (await func.apply(window.electronIpcHttpClient, args as any)) as FakeHttpResponse;
+        const res = (await func.apply(window.electronIpcHttpClient, args as any)) as FakeHttpResponse;
 
-        if (status < 200 || status > 299) {
-          const { error } = body;
+        if (res.status < 200 || res.status > 299) {
+          const { error } = res.body;
 
           if (InvalidInputError.is(error)) {
             throw new InvalidInputError(error.issues);
@@ -28,7 +28,7 @@ const ipcClient = window.electronIpcHttpClient
           throw isObject(error) ? Object.assign(new Error(), { stack: undefined }, error) : new Error(String(error));
         }
 
-        return { status, body };
+        return res;
       }),
     ) as Remote)
   : undefined;

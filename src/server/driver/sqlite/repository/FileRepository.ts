@@ -26,13 +26,10 @@ export default class SqliteFileRepository extends BaseRepository implements File
   }
 
   static getBlob(row: Pick<Row, 'mimeType' | 'data'>) {
-    if (row.mimeType.startsWith('text')) {
-      return (row.data as Uint8Array).toString();
-    }
     return (row.data as Uint8Array).buffer;
   }
 
-  async findOrCreate({ data, mimeType }: { data: ArrayBuffer | string; mimeType: string }) {
+  private async findOrCreate({ data, mimeType }: { data: ArrayBuffer; mimeType: string }) {
     const hash = createHash('md5')
       .update(typeof data === 'string' ? data : new Uint8Array(data))
       .digest('base64');
@@ -43,7 +40,7 @@ export default class SqliteFileRepository extends BaseRepository implements File
       return existedFile;
     }
 
-    const buffer = Buffer.from(data as string);
+    const buffer = Buffer.from(data);
 
     const createdFile = await this.createOne(tableName, {
       id: this.generateId(),

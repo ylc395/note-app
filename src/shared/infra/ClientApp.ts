@@ -1,4 +1,3 @@
-import { Emitter, type EventMap } from 'strict-event-emitter';
 import { randomUUID } from 'node:crypto';
 import { hostname } from 'node:os';
 import { join } from 'node:path';
@@ -8,19 +7,9 @@ import { Inject } from '@nestjs/common';
 import { APP_NAME, IS_DEV, IS_TEST } from './constants';
 import { token as kvDatabaseToken, type KvDatabase } from './kvDatabase';
 
-export enum EventNames {
-  BeforeStart = 'clientApp.created',
-  Ready = 'clientApp.ready',
-}
-
-interface Events extends EventMap {
-  [EventNames.BeforeStart]: [];
-  [EventNames.Ready]: [];
-}
-
 export const token = Symbol('clientApp');
 
-export default abstract class ClientApp extends Emitter<Events> {
+export default abstract class ClientApp {
   abstract type: string;
   private appInfo?: {
     clientId: string;
@@ -28,9 +17,7 @@ export default abstract class ClientApp extends Emitter<Events> {
     deviceName: string;
   };
 
-  constructor(@Inject(ModuleRef) private readonly moduleRef: ModuleRef) {
-    super();
-  }
+  constructor(@Inject(ModuleRef) private readonly moduleRef: ModuleRef) {}
 
   getDataDir() {
     const dir = IS_DEV ? `${APP_NAME}-dev` : IS_TEST ? `${APP_NAME}-test` : APP_NAME;

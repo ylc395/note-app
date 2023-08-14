@@ -2,7 +2,7 @@ import { $view } from '@milkdown/utils';
 import { imageSchema } from '@milkdown/preset-commonmark';
 import { container } from 'tsyringe';
 
-import FileMetadataLoader from './FileMetadataLoader';
+import FileLoader from './FileLoader';
 
 export const NODE_NAME = 'image';
 
@@ -30,7 +30,7 @@ export const multimediaSchema = imageSchema.extendSchema((prev) => {
   };
 });
 
-function createMediaElement(mimeType: string, url: string) {
+function createMediaElement(mimeType: string, data: ArrayBuffer) {
   let mediaEl: HTMLImageElement | HTMLAudioElement | HTMLVideoElement;
 
   if (mimeType.startsWith('audio')) {
@@ -44,8 +44,9 @@ function createMediaElement(mimeType: string, url: string) {
   if (!(mediaEl instanceof HTMLImageElement)) {
     mediaEl.controls = true;
   }
-  mediaEl.src = url;
 
+  // todo: revoke url
+  mediaEl.src = window.URL.createObjectURL(new Blob([data]));
   return mediaEl;
 }
 
@@ -59,9 +60,9 @@ export const multimediaNodeView = $view(imageSchema.node, () => {
       return { dom };
     }
 
-    const fileMetadataLoader = container.resolve(FileMetadataLoader);
-    fileMetadataLoader.load(url).then((metadata) => {
-      const mediaEl = createMediaElement(metadata?.mimeType || '', url);
+    const fileLoader = container.resolve(FileLoader);
+    fileLoader.load(url).then(({ data, mimeType }) => {
+      const mediaEl = createMediaElement(mimeType, data);
       dom.append(mediaEl);
     });
 

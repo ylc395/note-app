@@ -1,22 +1,38 @@
 import { Controller } from '@nestjs/common';
 
-import { type FileVO, type WebFileMetadataVO, type FilesDTO, filesDTOSchema } from 'model/file';
+import { type FileVO, type FilesDTO, filesDTOSchema } from 'model/file';
 import FileService from 'service/FileService';
 
-import { Get, Body, createSchemaPipe, Patch, Param } from './decorators';
+import { Get, Body, createSchemaPipe, Patch, Param, Response } from './decorators';
 
 @Controller()
 export default class ResourcesController {
   constructor(private readonly fileService: FileService) {}
 
-  @Get('/files/:id')
-  async queryFile(@Param('id') id: string): Promise<FileVO> {
-    return await this.fileService.queryFileById(id);
+  @Get('/files/remote/:url')
+  async getFileByUrl(
+    @Param('url') url: string,
+    @Response({ passthrough: true }) res: { set: (k: string, v: string) => void },
+  ): Promise<ArrayBuffer> {
+    const { mimeType, size, data } = await this.fileService.fetchRemoteFile(url);
+
+    res.set('Content-Type', mimeType);
+    res.set('Content-Length', String(size));
+
+    return data;
   }
 
-  @Get('/web-files/:url')
-  async getWebFileMetadata(@Param('url') url: string): Promise<WebFileMetadataVO> {
-    return await this.fileService.fetchWebFileMetadata(url);
+  @Get('/files/:id')
+  async queryFile(
+    @Param('id') id: string,
+    @Response({ passthrough: true }) res: { set: (k: string, v: string) => void },
+  ): Promise<ArrayBuffer> {
+    const { mimeType, data, size } = await this.fileService.queryFileById(id);
+
+    res.set('Content-Type', mimeType);
+    res.set('Content-Length', String(size));
+
+    return data;
   }
 
   @Patch('/files')

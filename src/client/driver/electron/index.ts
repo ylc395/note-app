@@ -1,10 +1,10 @@
-import { app as electronApp, BrowserWindow, ipcMain, protocol } from 'electron';
+import { app as electronApp, BrowserWindow, ipcMain } from 'electron';
 import { Injectable, Logger } from '@nestjs/common';
 import { join } from 'node:path';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 
-import ClientApp, { EventNames as ClientAppEventNames } from 'infra/ClientApp';
-import { APP_PROTOCOL, IS_DEV } from 'infra/constants';
+import ClientApp from 'infra/ClientApp';
+import { IS_DEV } from 'infra/constants';
 
 import { UI_CHANNELS, createContextmenu, openNewWindow } from './ui';
 
@@ -13,17 +13,6 @@ const INDEX_URL = process.env.VITE_SERVER_ENTRY_URL!;
 
 @Injectable()
 export default class ElectronApp extends ClientApp {
-  static {
-    protocol.registerSchemesAsPrivileged([
-      {
-        scheme: APP_PROTOCOL,
-        privileges: {
-          supportFetchAPI: true,
-          stream: true,
-        },
-      },
-    ]);
-  }
   private readonly logger = new Logger('electron app');
   private mainWindow?: BrowserWindow;
   readonly type = 'electron';
@@ -64,8 +53,6 @@ export default class ElectronApp extends ClientApp {
     }
 
     await super.start();
-    this.emit(ClientAppEventNames.Ready);
-
     await this.initWindow();
   }
 

@@ -1,4 +1,3 @@
-export const APP_PROTOCOL = 'app';
 export const SYNC_LOG_CHANNEL = 'synchronizer-log-update';
 export const APP_NAME = 'my-note-app';
 export const IS_DEV = process.env.NODE_ENV === 'development';

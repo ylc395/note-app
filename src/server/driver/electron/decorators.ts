@@ -79,3 +79,11 @@ export const Param = createParamDecorator((field, ctx: ExecutionContext) => {
   const param = ctx.getArgByIndex<FakeHttpRequest<unknown>>(0)?.params?.[field];
   return param ? decodeURIComponent(param) : undefined;
 });
+
+export const Response = createParamDecorator((_, ctx: ExecutionContext) => {
+  if (ctx.getType() === 'http') {
+    return ctx.switchToHttp().getResponse();
+  }
+
+  return ctx.switchToRpc().getContext();
+});

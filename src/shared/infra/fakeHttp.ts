@@ -2,7 +2,7 @@ export const FAKE_HTTP_CHANNEL = 'fakeHttp';
 
 export interface FakeHttpRequest<T> {
   path: string;
-  originPath?: string;
+  route?: string;
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
   query?: T;
   params?: Record<string, string>;

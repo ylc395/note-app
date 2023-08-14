@@ -1,13 +1,17 @@
 import { container } from 'tsyringe';
 import type { UploadOptions } from '@milkdown/plugin-upload';
 import { Decoration } from '@milkdown/prose/view';
+import { $prose } from '@milkdown/utils';
+import { Plugin } from '@milkdown/prose/state';
 
+import { FILE_URL_PREFIX } from 'model/file';
 import MarkdownService from 'service/MarkdownService';
 
 import { NODE_NAME as MULTIMEDIA_NODE_NAME } from '../multimedia';
-import { getFileUrlById, isInternalFileUrl } from './fileUrl';
-import { $prose } from '@milkdown/utils';
-import { Plugin } from '@milkdown/prose/state';
+
+function getFileUrlFromId(id: string) {
+  return `${FILE_URL_PREFIX}${id}`;
+}
 
 export const uploadOptions: UploadOptions = {
   enableHtmlFileUploader: true,
@@ -22,7 +26,7 @@ export const uploadOptions: UploadOptions = {
 
     return updatedFiles.map((file) => {
       const node = multimediaNode.createAndFill({
-        src: getFileUrlById(file.id),
+        src: getFileUrlFromId(file.id),
         alt: file.id,
       });
 
@@ -68,10 +72,9 @@ export const htmlUpload = $prose(() => {
 
         while (node) {
           if (
-            (node instanceof HTMLImageElement ||
-              node instanceof HTMLVideoElement ||
-              node instanceof HTMLAudioElement) &&
-            !isInternalFileUrl(node.src)
+            node instanceof HTMLImageElement ||
+            node instanceof HTMLVideoElement ||
+            node instanceof HTMLAudioElement
           ) {
             mediaElements.push(node);
           }
@@ -91,7 +94,7 @@ export const htmlUpload = $prose(() => {
               continue;
             }
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            mediaElements[index]!.src = getFileUrlById(result.id);
+            mediaElements[index]!.src = getFileUrlFromId(result.id);
           }
 
           const dataTransfer = new DataTransfer();

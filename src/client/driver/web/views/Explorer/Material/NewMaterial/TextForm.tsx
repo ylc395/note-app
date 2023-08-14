@@ -14,7 +14,7 @@ export default observer(function TextForm({ model }: { model: FormModel }) {
         <Input onChange={(e) => model.updateValue('sourceUrl', e.target.value)} />
       </Form.Item>
       <Form.Item label="内容">
-        <MarkdownEditor onChange={(content) => (model.files = [{ mimeType: 'text/markdown', data: content }])} />
+        <MarkdownEditor onChange={(content) => (model.file = { mimeType: 'text/markdown', data: content })} />
       </Form.Item>
     </Form>
   );

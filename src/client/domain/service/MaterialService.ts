@@ -48,11 +48,16 @@ export default class MaterialService {
   };
 
   readonly createMaterial = async (form: Form) => {
-    if (!form.files) {
+    if (!form.file || (!form.file.data && !form.file.path)) {
       throw new Error('invalid form');
     }
 
-    const { body: files } = await this.remote.patch<FilesDTO, FileVO[]>('/files', form.files);
+    const { body: files } = await this.remote.patch<FilesDTO, FileVO[]>('/files', [
+      {
+        ...form.file,
+        data: typeof form.file.data === 'string' ? MaterialService.stringToArrayBuffer(form.file.data) : form.file.data,
+      },
+    ]);
 
     const newMaterial = await form.validate();
     const { body: material } = await this.remote.post<MaterialDTO, EntityMaterialVO>('/materials', {
@@ -80,4 +85,13 @@ export default class MaterialService {
       openEntity({ type: EntityTypes.Material, id: materialId, mimeType: node.attributes?.mimeType });
     }
   };
+
+  private static stringToArrayBuffer(str: string) {
+    const buf = new ArrayBuffer(str.length * 2); // 2 bytes for each char
+    const bufView = new Uint16Array(buf);
+    for (let i = 0, strLen = str.length; i < strLen; i++) {
+      bufView[i] = str.charCodeAt(i);
+    }
+    return buf;
+  }
 }
