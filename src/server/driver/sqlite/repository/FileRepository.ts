@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import pick from 'lodash/pick';
 
 import type { FileRepository } from 'service/repository/FileRepository';
-import type { File } from 'model/file';
+import type { File, FileVO } from 'model/file';
 
 import BaseRepository from './BaseRepository';
 import fileSchema, { type Row } from '../schema/file';
@@ -30,10 +30,7 @@ export default class SqliteFileRepository extends BaseRepository implements File
   }
 
   private async findOrCreate({ data, mimeType }: { data: ArrayBuffer; mimeType: string }) {
-    const hash = createHash('md5')
-      .update(typeof data === 'string' ? data : new Uint8Array(data))
-      .digest('base64');
-
+    const hash = createHash('md5').update(new Uint8Array(data)).digest('base64');
     const existedFile = await this.db.selectFrom(tableName).selectAll().where('hash', '=', hash).executeTakeFirst();
 
     if (existedFile) {
@@ -54,7 +51,12 @@ export default class SqliteFileRepository extends BaseRepository implements File
   }
 
   async batchCreate(files: File[]) {
-    const rows = await Promise.all(files.map((file) => this.findOrCreate(file)));
+    const rows: FileVO[] = [];
+
+    for (const file of files) {
+      const row = await this.findOrCreate(file);
+      rows.push(row);
+    }
 
     return rows.map((row) => pick(row, ['id', 'mimeType', 'size']));
   }

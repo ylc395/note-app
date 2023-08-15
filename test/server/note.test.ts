@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { describe, it, before } from 'mocha';
 import { strictEqual, deepStrictEqual, ok, rejects } from 'node:assert';
 
@@ -7,7 +6,7 @@ import RecyclablesController from '../../dist/electron/server/controller/Recycla
 import { EntityTypes } from '../../dist/electron/shared/model/entity';
 import type { NoteVO } from '../../dist/electron/shared/model/note';
 
-describe('notes', async function () {
+describe('notes', function () {
   let noteController: NotesController;
   let recyclablesController: RecyclablesController;
 

@@ -30,7 +30,7 @@ export default class FileManager {
     const fileId = FileManager.getFileIdFromUrl(url);
 
     const { body, headers } = await this.remote.get<void, ArrayBuffer>(
-      fileId ? `/files/${fileId}` : `/files/remote/${encodeURIComponent(url)}`,
+      fileId ? `/files/${fileId}/blob` : `/files/remote/${encodeURIComponent(url)}/blob`,
     );
 
     const mimeType = headers?.['Content-Type'];

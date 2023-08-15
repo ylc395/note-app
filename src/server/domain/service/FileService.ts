@@ -13,13 +13,11 @@ export default class FileService extends BaseService {
   async createFiles(files: FilesDTO) {
     const tasks = files.map(async (file) => {
       if (isFileUrl(file)) {
-        const remoteFile = await this.fileReader.readRemoteFile(file.url);
-        return remoteFile && { ...remoteFile, sourceUrl: file.url };
+        return this.fileReader.readRemoteFile(file.url);
       }
 
       if (file.data) {
         return {
-          name: file.name || 'untitled',
           data: file.data,
           mimeType: file.mimeType,
         };
@@ -34,7 +32,19 @@ export default class FileService extends BaseService {
     });
 
     const loadedFiles = await Promise.all(tasks);
-    return await this.files.batchCreate(compact(loadedFiles));
+    const fileVOs = await this.files.batchCreate(compact(loadedFiles));
+
+    const result: (FileVO | null)[] = loadedFiles.map(() => null);
+
+    let j = 0;
+    for (let i = 0; i < loadedFiles.length; i++) {
+      if (loadedFiles[i]) {
+        result[i] = fileVOs[j]!;
+        j += 1;
+      }
+    }
+
+    return result;
   }
 
   async queryFileById(id: FileVO['id']) {
@@ -42,10 +52,10 @@ export default class FileService extends BaseService {
     const data = await this.files.findBlobById(id);
 
     if (!file || !data) {
-      throw new Error('invalid url');
+      throw new Error('invalid id');
     }
 
-    return { ...file, data };
+    return { mimeType: file.mimeType, data };
   }
 
   async fetchRemoteFile(url: string) {

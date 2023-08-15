@@ -11,7 +11,6 @@ const fileDTOSchema = union([
     mimeType: string(),
     data: zodInstanceof(ArrayBuffer).optional(),
     path: string().optional(),
-    name: string().optional(),
   }),
   FileUrlDTOSchema,
 ]);
@@ -26,7 +25,6 @@ export interface FileVO {
   id: EntityId;
   mimeType: string;
   size: number;
-  sourceUrl?: string;
 }
 
 export const FILE_URL_PREFIX = `${APP_NAME}://file/`;

@@ -2,7 +2,7 @@ import { parse as parseUrl } from 'node:url';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { readFile, writeFile, readJSON, writeJSON, pathExists, ensureDirSync } from 'fs-extra';
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, Logger } from '@nestjs/common';
 
 import type { FileReader } from 'infra/fileReader';
 import type ClientApp from 'infra/ClientApp';
@@ -19,8 +19,10 @@ declare global {
 export default class ElectronFileReader implements FileReader {
   private readonly cachePath: string;
   private readonly cacheIndexPath: string;
+  private readonly logger: Logger;
 
   constructor(@Inject(clientAppToken) private readonly clientApp: ClientApp) {
+    this.logger = new Logger(`${clientApp.type} ${ElectronFileReader.name}`);
     this.cachePath = path.join(this.clientApp.getDataDir(), 'cache');
     this.cacheIndexPath = path.join(this.cachePath, 'cache.index.json');
 
@@ -45,7 +47,6 @@ export default class ElectronFileReader implements FileReader {
     }
 
     try {
-      const name = ElectronFileReader.getFileNameFromUrl(url);
       const res = await fetch(url);
 
       if (!res.ok) {
@@ -53,8 +54,6 @@ export default class ElectronFileReader implements FileReader {
       }
 
       const result = {
-        name,
-        size: Number(res.headers.get('content-length')),
         mimeType: res.headers.get('content-type') || '',
         data: await res.arrayBuffer(),
       };
@@ -62,7 +61,8 @@ export default class ElectronFileReader implements FileReader {
       this.writeCache(url, result);
 
       return result;
-    } catch {
+    } catch (e) {
+      this.logger.error(e);
       return null;
     }
   }
@@ -80,15 +80,15 @@ export default class ElectronFileReader implements FileReader {
       const data = await readFile(path.join(this.cachePath, filePath));
       const name = ElectronFileReader.getFileNameFromUrl(url);
 
-      return { name, mimeType, data: data.buffer, size: data.buffer.byteLength };
+      return { name, mimeType, data: data.buffer };
     }
 
     return null;
   }
 
-  private async writeCache(url: string, { data, mimeType, name }: File) {
+  private async writeCache(url: string, { data, mimeType }: File) {
     const cacheIndex = await this.readCacheIndex();
-    const extName = path.extname(name);
+    const extName = path.extname(ElectronFileReader.getFileNameFromUrl(url));
     const cacheFileName = extName ? `${randomUUID()}${extName}` : randomUUID();
 
     cacheIndex[url] = { path: cacheFileName, mimeType };
@@ -98,10 +98,9 @@ export default class ElectronFileReader implements FileReader {
   }
 
   async readLocalFile(filePath: string) {
-    const name = path.basename(filePath);
     const data = await readFile(filePath);
 
-    return { data, name };
+    return { data };
   }
 
   async readDataUrl(dataUrl: string) {
@@ -120,7 +119,6 @@ export default class ElectronFileReader implements FileReader {
     }
 
     return {
-      name: '',
       mimeType: mimeType || 'text/plain',
       data: base64Flag
         ? Buffer.from(content, 'base64').buffer

@@ -21,6 +21,11 @@ module.exports = {
         'plugin:react/recommended',
         'plugin:react/jsx-runtime',
       ],
+      settings: {
+        react: {
+          version: 'detect',
+        },
+      },
       rules: {
         'no-restricted-syntax': [
           'error',

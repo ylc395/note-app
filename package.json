@@ -13,6 +13,10 @@
     "lint:fix": "eslint . --fix",
     "postinstall": "electron-rebuild"
   },
+  "engines": {
+    "node": ">=18",
+    "yarn": "*"
+  },
   "devDependencies": {
     "@electron/rebuild": "^3.2.10",
     "@nestjs/testing": "^10.0.5",
