@@ -22,7 +22,7 @@ export default class MaterialsController {
   constructor(private readonly materialService: MaterialService) {}
 
   @Get('/materials/:id/blob')
-  async getBlob(@Param('id') materialId: string): Promise<ArrayBuffer | string> {
+  async getBlob(@Param('id') materialId: string): Promise<ArrayBuffer> {
     return await this.materialService.getBlob(materialId);
   }
 

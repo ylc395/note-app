@@ -17,7 +17,7 @@ export interface MaterialRepository {
   findDescendantIds: (materialIds: Material['id'][]) => Promise<Record<Material['id'], Material['id'][]>>;
   findAncestorIds: (materialIds: Material['id']) => Promise<Material['id'][]>;
   findOneById: (id: Material['id']) => Promise<Material | null>;
-  findBlobById: (id: Material['id']) => Promise<ArrayBuffer | string | null>;
+  findBlobById: (id: Material['id']) => Promise<ArrayBuffer | null>;
   createAnnotation: (materialId: Material['id'], annotation: AnnotationDTO) => Promise<AnnotationVO>;
   findAllAnnotations: (materialId: Material['id']) => Promise<AnnotationVO[]>;
   removeAnnotation: (annotationId: AnnotationVO['id']) => Promise<boolean>;

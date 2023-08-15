@@ -25,7 +25,7 @@ export default class SqliteFileRepository extends BaseRepository implements File
     return row ? SqliteFileRepository.getBlob(row) : null;
   }
 
-  static getBlob(row: Pick<Row, 'mimeType' | 'data'>) {
+  static getBlob(row: Pick<Row, 'data'>) {
     return (row.data as Uint8Array).buffer;
   }
 

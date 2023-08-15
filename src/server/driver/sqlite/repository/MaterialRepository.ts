@@ -123,7 +123,7 @@ export default class SqliteMaterialRepository extends HierarchyEntityRepository 
     const row = await this.db
       .selectFrom(this.tableName)
       .innerJoin(fileSchema.tableName, `${this.tableName}.fileId`, `${fileSchema.tableName}.id`)
-      .selectAll()
+      .select([`${fileSchema.tableName}.data`])
       .where(`${this.tableName}.id`, '=', id)
       .executeTakeFirst();
 

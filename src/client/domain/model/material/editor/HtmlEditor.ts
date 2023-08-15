@@ -13,11 +13,12 @@ export default class HtmlEditor extends Editor<WebPage> {
   }
 
   protected async init() {
-    const [{ body: metadata }, { body: html }] = await Promise.all([
+    const [{ body: metadata }, { body: blob }] = await Promise.all([
       this.remote.get<void, EntityMaterialVO>(`/materials/${this.entityId}`),
-      this.remote.get<void, string>(`/materials/${this.entityId}/blob`),
+      this.remote.get<void, ArrayBuffer>(`/materials/${this.entityId}/blob`),
     ]);
 
-    this.load({ metadata, html });
+    const textDecoder = new TextDecoder();
+    this.load({ metadata, html: textDecoder.decode(blob) });
   }
 }
