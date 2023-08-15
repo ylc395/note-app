@@ -7,7 +7,7 @@ import { Plugin } from '@milkdown/prose/state';
 import { FILE_URL_PREFIX } from 'model/file';
 import MarkdownService from 'service/MarkdownService';
 
-import { NODE_NAME as MULTIMEDIA_NODE_NAME } from '../multimedia';
+import { NODE_NAME as MULTIMEDIA_NODE_NAME } from './multimedia';
 
 function getFileUrlFromId(id: string) {
   return `${FILE_URL_PREFIX}${id}`;

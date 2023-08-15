@@ -1,8 +1,7 @@
 import { $view } from '@milkdown/utils';
 import { imageSchema } from '@milkdown/preset-commonmark';
-import { container } from 'tsyringe';
 
-import FileLoader from './FileLoader';
+import FileManager from './FileManager';
 
 export const NODE_NAME = 'image';
 
@@ -30,27 +29,9 @@ export const multimediaSchema = imageSchema.extendSchema((prev) => {
   };
 });
 
-function createMediaElement(mimeType: string, data: ArrayBuffer) {
-  let mediaEl: HTMLImageElement | HTMLAudioElement | HTMLVideoElement;
+export const multimediaNodeView = $view(imageSchema.node, (ctx) => {
+  const fileManager = new FileManager(ctx);
 
-  if (mimeType.startsWith('audio')) {
-    mediaEl = document.createElement('audio');
-  } else if (mimeType.startsWith('video')) {
-    mediaEl = document.createElement('video');
-  } else {
-    mediaEl = document.createElement('img');
-  }
-
-  if (!(mediaEl instanceof HTMLImageElement)) {
-    mediaEl.controls = true;
-  }
-
-  // todo: revoke url
-  mediaEl.src = window.URL.createObjectURL(new Blob([data]));
-  return mediaEl;
-}
-
-export const multimediaNodeView = $view(imageSchema.node, () => {
   return (node) => {
     const dom = document.createElement('span');
     const url = node.attrs.src;
@@ -60,12 +41,7 @@ export const multimediaNodeView = $view(imageSchema.node, () => {
       return { dom };
     }
 
-    const fileLoader = container.resolve(FileLoader);
-    fileLoader.load(url).then(({ data, mimeType }) => {
-      const mediaEl = createMediaElement(mimeType, data);
-      dom.append(mediaEl);
-    });
-
+    fileManager.mountView(url, dom);
     return { dom };
   };
 });

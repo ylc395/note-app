@@ -3,7 +3,8 @@ import { useDeepCompareEffect } from 'ahooks';
 
 import Editor, { type Options } from './Editor';
 
-export default (function MarkdownEditor(options: Omit<Options, 'root'>) {
+// eslint-disable-next-line mobx/missing-observer
+export default function MarkdownEditor(options: Omit<Options, 'root'>) {
   const rootRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<Editor | null>(null);
 
@@ -30,4 +31,4 @@ export default (function MarkdownEditor(options: Omit<Options, 'root'>) {
       spellCheck={false}
     ></div>
   );
-});
+}

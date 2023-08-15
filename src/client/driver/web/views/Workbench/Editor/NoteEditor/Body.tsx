@@ -1,14 +1,15 @@
 import { observer } from 'mobx-react-lite';
-import { useEffect, useContext, useCallback } from 'react';
+import { useEffect, useContext } from 'react';
 import { reaction, when } from 'mobx';
 import debounce from 'lodash/debounce';
+import { useMemoizedFn } from 'ahooks';
 
 import MarkdownEditor from 'web/components/MarkdownEditor';
 import EditorContext from './Context';
 
 export default observer(function NoteEditor() {
   const { editorView, markdownEditor, setMarkdownEditor } = useContext(EditorContext);
-  const onChange = useCallback((content: string) => editorView.editor.updateBody(content), [editorView]);
+  const onChange = useMemoizedFn((content: string) => editorView.editor.updateBody(content));
 
   useEffect(() => {
     if (!markdownEditor?.isReady) {
@@ -16,15 +17,14 @@ export default observer(function NoteEditor() {
     }
 
     const updateContent = debounce((content: string) => {
-      markdownEditor.updateContent(content);
+      markdownEditor.resetContent(content);
     }, 300);
 
     const disposer = [
       when(
         () => Boolean(editorView.editor.entity?.body),
         () => {
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          markdownEditor.updateContent(editorView.editor.entity!.body);
+          markdownEditor.resetContent(editorView.editor.entity!.body);
           markdownEditor.applyState(editorView.state);
         },
       ),

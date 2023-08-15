@@ -12,6 +12,7 @@ import Info from './Info';
 import Context, { type EditorContext } from './Context';
 import useModal from 'web/components/Modal/useModal';
 
+// eslint-disable-next-line mobx/missing-observer
 export default function NoteEditor({ editorView }: { editorView: NoteEditorModel }) {
   const infoModal = useModal();
   const context = useLocalObservable<EditorContext>(

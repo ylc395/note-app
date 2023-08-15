@@ -12,16 +12,16 @@ export default observer(function NewMemo() {
   const [markdownEditor, setMarkdownEditor] = useState<Editor | null>(null);
   const create = useCallback(async () => {
     await memoService.createMemo();
-    markdownEditor?.updateContent('');
+    markdownEditor?.resetContent('');
   }, [markdownEditor, memoService]);
 
   const clear = useCallback(() => {
     memoService.updateNewContent('');
-    markdownEditor?.updateContent('');
+    markdownEditor?.resetContent('');
   }, [markdownEditor, memoService]);
 
   useEffect(() => {
-    markdownEditor?.updateContent(memoService.newContent);
+    markdownEditor?.resetContent(memoService.newContent);
     markdownEditor?.focus();
   }, [markdownEditor, memoService]);
 

@@ -39,10 +39,10 @@ export interface Options {
 }
 
 export default class Editor {
-  private readonly editor: MilkdownEditor;
+  private readonly milkdown: MilkdownEditor;
 
   constructor(private readonly options: Options) {
-    this.editor = this.init();
+    this.milkdown = this.init();
   }
 
   private isUpdating = false;
@@ -54,7 +54,9 @@ export default class Editor {
       .use(gfm)
       .use(listener)
       .use(search)
-      .config((ctx) => ctx.set(rootCtx, this.options.root));
+      .config((ctx) => {
+        ctx.set(rootCtx, this.options.root);
+      });
 
     if (!this.options.readonly) {
       editor
@@ -86,11 +88,11 @@ export default class Editor {
 
     editor.create().then(() => {
       if (this.options.autoFocus) {
-        focus();
+        this.focus();
       }
 
       if (typeof this.options.defaultValue === 'string') {
-        this.updateContent(this.options.defaultValue);
+        this.resetContent(this.options.defaultValue);
       }
 
       this.options.onInitialized?.(this);
@@ -110,14 +112,14 @@ export default class Editor {
   };
 
   enableSearch() {
-    this.editor.action((ctx) => {
+    this.milkdown.action((ctx) => {
       const commandManager = ctx.get(commandsCtx);
       commandManager.call(enableSearchCommand.key);
     });
   }
 
   focus() {
-    this.editor.action((ctx) => {
+    this.milkdown.action((ctx) => {
       const view = ctx.get(editorViewCtx);
 
       if (!this.options.readonly && !view.hasFocus()) {
@@ -127,14 +129,14 @@ export default class Editor {
   }
 
   setReadonly(isReadonly: boolean) {
-    this.editor.ctx.update(editorViewOptionsCtx, (prev) => ({
+    this.milkdown.ctx.update(editorViewOptionsCtx, (prev) => ({
       ...prev,
       editable: () => !isReadonly,
     }));
   }
 
-  updateContent(content: string) {
-    const { ctx } = this.editor;
+  resetContent(content: string) {
+    const { ctx } = this.milkdown;
     const view = ctx.get(editorViewCtx);
     const parser = ctx.get(parserCtx);
     const doc = parser(content);
@@ -150,7 +152,7 @@ export default class Editor {
   }
 
   destroy() {
-    this.editor.destroy();
+    this.milkdown.destroy();
     this.options.onDestroy?.();
 
     if (this.options.onUIStateChange) {
@@ -159,7 +161,7 @@ export default class Editor {
   }
 
   get isReady() {
-    return this.editor.status === EditorStatus.Created;
+    return this.milkdown.status === EditorStatus.Created;
   }
 
   applyState(state: State) {
@@ -168,7 +170,7 @@ export default class Editor {
     }
 
     if (state.cursor) {
-      this.editor.action((ctx) => {
+      this.milkdown.action((ctx) => {
         const view = ctx.get(editorViewCtx);
         const viewState = view.state;
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
