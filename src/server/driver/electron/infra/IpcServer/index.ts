@@ -35,8 +35,6 @@ export default class ElectronIpcServer extends Server implements CustomTransport
       const ctx = new Context();
 
       try {
-        console.log(ctx);
-
         const result = await handler(req, ctx);
         return { status: 200, body: result, headers: ctx.getHeaders() };
       } catch (e) {

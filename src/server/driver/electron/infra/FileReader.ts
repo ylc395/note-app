@@ -1,9 +1,13 @@
 import { parse as parseUrl } from 'node:url';
 import path from 'node:path';
-import { readFile } from 'fs-extra';
-import { Injectable } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
+import { readFile, writeFile, readJSON, writeJSON, pathExists, ensureDirSync } from 'fs-extra';
+import { Injectable, Inject } from '@nestjs/common';
 
 import type { FileReader } from 'infra/fileReader';
+import type ClientApp from 'infra/ClientApp';
+import { token as clientAppToken } from 'infra/ClientApp';
+import type { File } from 'model/file';
 
 // remove this once native fetch type is launched in @types/node
 // see https://github.com/DefinitelyTyped/DefinitelyTyped/issues/60924#issuecomment-1358424866
@@ -13,30 +17,84 @@ declare global {
 
 @Injectable()
 export default class ElectronFileReader implements FileReader {
-  async readRemoteFile(url: string) {
+  private readonly cachePath: string;
+  private readonly cacheIndexPath: string;
+
+  constructor(@Inject(clientAppToken) private readonly clientApp: ClientApp) {
+    this.cachePath = path.join(this.clientApp.getDataDir(), 'cache');
+    this.cacheIndexPath = path.join(this.cachePath, 'cache.index.json');
+
+    ensureDirSync(this.cachePath);
+  }
+
+  private static getFileNameFromUrl(url: string) {
     const { pathname } = parseUrl(url);
 
     if (!pathname) {
       throw new Error(`invalid url ${url}`);
     }
 
+    return path.basename(pathname);
+  }
+
+  async readRemoteFile(url: string) {
+    const cache = await this.getCache(url);
+
+    if (cache) {
+      return cache;
+    }
+
     try {
-      const name = path.basename(pathname);
+      const name = ElectronFileReader.getFileNameFromUrl(url);
       const res = await fetch(url);
 
       if (!res.ok) {
         return null;
       }
 
-      return {
+      const result = {
         name,
         size: Number(res.headers.get('content-length')),
         mimeType: res.headers.get('content-type') || '',
         data: await res.arrayBuffer(),
       };
+
+      this.writeCache(url, result);
+
+      return result;
     } catch {
       return null;
     }
+  }
+
+  private async readCacheIndex() {
+    const cacheIndex = (await pathExists(this.cacheIndexPath)) ? await readJSON(this.cacheIndexPath) : {};
+    return cacheIndex;
+  }
+
+  private async getCache(url: string) {
+    const cacheIndex = await this.readCacheIndex();
+
+    if (cacheIndex[url]) {
+      const { path: filePath, mimeType } = cacheIndex[url];
+      const data = await readFile(path.join(this.cachePath, filePath));
+      const name = ElectronFileReader.getFileNameFromUrl(url);
+
+      return { name, mimeType, data: data.buffer, size: data.buffer.byteLength };
+    }
+
+    return null;
+  }
+
+  private async writeCache(url: string, { data, mimeType, name }: File) {
+    const cacheIndex = await this.readCacheIndex();
+    const extName = path.extname(name);
+    const cacheFileName = extName ? `${randomUUID()}${extName}` : randomUUID();
+
+    cacheIndex[url] = { path: cacheFileName, mimeType };
+
+    await writeFile(path.join(this.cachePath, cacheFileName), Buffer.from(data));
+    await writeJSON(this.cacheIndexPath, cacheIndex);
   }
 
   async readLocalFile(filePath: string) {

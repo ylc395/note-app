@@ -87,3 +87,7 @@ export const Response = createParamDecorator((_, ctx: ExecutionContext) => {
 
   return ctx.switchToRpc().getContext();
 });
+
+export interface IResponse {
+  set: (k: string, v: string) => void;
+}
