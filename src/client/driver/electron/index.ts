@@ -5,8 +5,7 @@ import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-insta
 
 import ClientApp from 'infra/ClientApp';
 import { IS_DEV } from 'infra/constants';
-
-import { UI_CHANNELS, createContextmenu, openNewWindow } from './ui';
+import { UI_CHANNEL, UIHandler } from './ui';
 
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const INDEX_URL = process.env.VITE_SERVER_ENTRY_URL!;
@@ -37,8 +36,7 @@ export default class ElectronApp extends ClientApp {
       electronApp.quit();
     });
 
-    ipcMain.handle(UI_CHANNELS.CONTEXTMENU, createContextmenu);
-    ipcMain.handle(UI_CHANNELS.NEW_WINDOW, openNewWindow);
+    ipcMain.handle(UI_CHANNEL, UIHandler);
 
     await electronApp.whenReady();
 

@@ -1,18 +1,14 @@
 import { ipcRenderer } from 'electron';
-import type { ContextmenuItem, UI } from 'infra/ui';
-import { UI_CHANNELS } from '../ui';
+import { UI_CHANNEL, type UIIpcPayload, type ui } from '../ui';
 
-const electronUI: Pick<UI, 'getActionFromContextmenu' | 'openNewWindow'> = {
-  getActionFromContextmenu: (menuItems: ContextmenuItem[]) => {
-    if (menuItems.length === 0) {
-      return Promise.resolve(null);
-    }
+const uiFuncNames: (keyof typeof ui)[] = ['openNewWindow', 'createContextmenu'];
 
-    return ipcRenderer.invoke(UI_CHANNELS.CONTEXTMENU, menuItems);
-  },
-  openNewWindow: (url: string) => {
-    ipcRenderer.invoke(UI_CHANNELS.NEW_WINDOW, url);
-  },
-};
+const proxyUI = uiFuncNames.reduce((proxy, funcName) => {
+  proxy[funcName] = (...args: unknown[]) => {
+    return ipcRenderer.invoke(UI_CHANNEL, { args, funcName } satisfies UIIpcPayload);
+  };
 
-export default electronUI;
+  return proxy;
+}, {} as Record<keyof typeof ui, (...args: unknown[]) => void>);
+
+export default proxyUI;

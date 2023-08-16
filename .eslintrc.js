@@ -10,7 +10,11 @@ module.exports = {
     {
       files: ['*.ts', '*.tsx'],
       parser: '@typescript-eslint/parser',
-      extends: ['plugin:mobx/recommended', 'plugin:@typescript-eslint/recommended'],
+      extends: ['plugin:@typescript-eslint/recommended'],
+    },
+    {
+      files: ['./src/client/driver/web/**', './src/client/domain/**', './src/webExtension/**'],
+      extends: ['plugin:mobx/recommended'],
     },
     {
       files: ['*.tsx'],
@@ -41,7 +45,7 @@ module.exports = {
       rules: { '@typescript-eslint/explicit-function-return-type': 'error' },
     },
     {
-      files: ['*.js', 'test/**/*', 'src/client/driver/electron/**/*'],
+      files: ['*.js', 'test/**/*', 'src/client/driver/electron/**'],
       env: { node: true },
     },
   ],
