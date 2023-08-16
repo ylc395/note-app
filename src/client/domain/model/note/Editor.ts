@@ -3,28 +3,28 @@ import debounce from 'lodash/debounce';
 import { container } from 'tsyringe';
 
 import { EntityTypes } from 'model/entity';
-import type { NoteVO, NoteBodyVO, NoteBodyDTO, NoteDTO } from 'model/note';
+import type { ClientNote as Note, NoteBody, ClientNotePatch as NotePatch } from 'model/note';
 import type Tile from 'model/workbench/Tile';
 import Editor from 'model/abstract/Editor';
 import NoteTree from 'model/note/Tree';
 
 export interface Entity {
-  body: NoteBodyVO;
-  metadata: NoteVO;
+  body: NoteBody;
+  metadata: Note;
 }
 
 export default class NoteEditor extends Editor<Entity> {
   readonly entityType = EntityTypes.Note;
   readonly noteTree = container.resolve(NoteTree);
-  constructor(tile: Tile, noteId: NoteVO['id']) {
+  constructor(tile: Tile, noteId: Note['id']) {
     super(tile, noteId);
     makeObservable(this);
   }
 
   protected async init() {
     const [{ body: metadata }, { body }] = await Promise.all([
-      this.remote.get<void, NoteVO>(`/notes/${this.entityId}`),
-      this.remote.get<void, NoteBodyVO>(`/notes/${this.entityId}/body`),
+      this.remote.get<void, Note>(`/notes/${this.entityId}`),
+      this.remote.get<void, NoteBody>(`/notes/${this.entityId}/body`),
     ]);
 
     this.load({ metadata, body });
@@ -41,11 +41,11 @@ export default class NoteEditor extends Editor<Entity> {
   }
 
   private readonly uploadBody = debounce((body: string) => {
-    this.remote.put<NoteBodyDTO>(`/notes/${this.entityId}/body`, { content: body });
+    this.remote.put<NoteBody>(`/notes/${this.entityId}/body`, body);
   }, 800);
 
   @action
-  updateNote(note: Partial<NoteVO>) {
+  updateNote(note: Partial<Note>) {
     if (!this.entity) {
       throw new Error('no load note');
     }
@@ -61,7 +61,7 @@ export default class NoteEditor extends Editor<Entity> {
     this.noteTree.updateTree(metadata);
   }
 
-  private readonly uploadNote = debounce((note: Partial<NoteVO>) => {
-    this.remote.patch<NoteDTO>(`/notes/${note.id}`, note);
+  private readonly uploadNote = debounce((note: Note) => {
+    this.remote.patch<NotePatch>(`/notes/${note.id}`, note);
   }, 1000);
 }

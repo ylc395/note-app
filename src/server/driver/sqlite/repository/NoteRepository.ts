@@ -3,7 +3,7 @@ import omit from 'lodash/omit';
 
 import type { EntityId } from 'model/entity';
 import type { NoteRepository } from 'service/repository/NoteRepository';
-import type { NoteVO, NotesDTO, NoteQuery, NotePatch, NewNote, NoteDTO } from 'model/note';
+import type { ClientNote, ClientNotesPatch, NoteQuery, NotePatch, NewNote, ClientNotePatch } from 'model/note';
 
 import HierarchyEntityRepository from './HierarchyEntityRepository';
 import schema, { type Row } from '../schema/note';
@@ -29,7 +29,7 @@ export default class SqliteNoteRepository extends HierarchyEntityRepository impl
     return row.body;
   }
 
-  async update(id: NoteVO['id'], note: NotePatch) {
+  async update(id: ClientNote['id'], note: NotePatch) {
     const row = await this.updateOne(this.tableName, id, SqliteNoteRepository.dtoToRow(note));
 
     if (!row) {
@@ -39,7 +39,7 @@ export default class SqliteNoteRepository extends HierarchyEntityRepository impl
     return this.rowToVO(row);
   }
 
-  async updateBody(id: NoteVO['id'], noteBody: string) {
+  async updateBody(id: ClientNote['id'], noteBody: string) {
     const { numUpdatedRows } = await this.db
       .updateTable(this.tableName)
       .where('id', '=', id)
@@ -53,7 +53,7 @@ export default class SqliteNoteRepository extends HierarchyEntityRepository impl
     return noteBody;
   }
 
-  async findAll(query?: NoteQuery | { parentIds: NoteVO['id'][] }) {
+  async findAll(query?: NoteQuery | { parentIds: ClientNote['id'][] }) {
     let sql = this.db.selectFrom(this.tableName).selectAll();
 
     for (const [k, v] of Object.entries(query || {})) {
@@ -74,7 +74,7 @@ export default class SqliteNoteRepository extends HierarchyEntityRepository impl
     return notes;
   }
 
-  async batchUpdate(notes: NotesDTO) {
+  async batchUpdate(notes: ClientNotesPatch) {
     const ids: EntityId[] = [];
 
     for (const note of notes) {
@@ -99,20 +99,20 @@ export default class SqliteNoteRepository extends HierarchyEntityRepository impl
     };
   }
 
-  private static dtoToRow(note: NoteDTO) {
+  private static dtoToRow(note: ClientNotePatch) {
     return {
       ...note,
       ...('isReadonly' in note ? { isReadonly: note.isReadonly ? (1 as const) : (0 as const) } : null),
     } as Omit<Selectable<Row>, 'id'>;
   }
 
-  async findOneById(id: NoteVO['id']) {
+  async findOneById(id: ClientNote['id']) {
     const note = await this.findAll({ id: [id] });
 
     return note[0] || null;
   }
 
-  async removeById(noteId: NoteVO['id'] | NoteVO['id'][]) {
+  async removeById(noteId: ClientNote['id'] | ClientNote['id'][]) {
     await this.db
       .deleteFrom(this.tableName)
       .where('id', typeof noteId === 'string' ? '=' : 'in', noteId)

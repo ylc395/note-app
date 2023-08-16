@@ -1,44 +1,44 @@
 import { union, boolean, object, string, null as zodNull, type infer as Infer, array } from 'zod';
 
 import type { Starable } from '../star';
-import type { EntityId } from '../entity';
+import type { EntityId, EntityParentId } from '../entity';
 
 const duplicatedNoteDTOSchema = object({ duplicateFrom: string() });
-export const noteDTOSchema = object({
+
+export const ClientNotePatchSchema = object({
   title: string(),
   isReadonly: boolean(),
   parentId: union([zodNull(), string()]),
   icon: union([string().regex(/^(emoji:|file:).+/), zodNull()]),
 }).partial();
 
-export const NewNoteDTOSchema = union([duplicatedNoteDTOSchema, noteDTOSchema]);
+export const ClientNotesPatchSchema = array(ClientNotePatchSchema.extend({ id: string() }));
 
-export const notesDTOSchema = array(noteDTOSchema.extend({ id: string() }));
+export const ClientNewNoteSchema = union([duplicatedNoteDTOSchema, ClientNotePatchSchema]);
 
 export const clientNoteQuerySchema = object({
   parentId: string().nullable().optional(),
 });
 
-export const noteBodySchema = object({
-  content: string(),
-  isImportant: boolean().optional(),
-});
+export const noteBodySchema = string();
 
-export type NewNoteDTO = Infer<typeof NewNoteDTOSchema>;
-export type NotesDTO = Infer<typeof notesDTOSchema>;
-export type DuplicateNoteDTO = Infer<typeof duplicatedNoteDTOSchema>;
-export type NoteDTO = Infer<typeof noteDTOSchema>;
-export type NoteBodyDTO = Infer<typeof noteBodySchema>;
-export type NoteBodyVO = NoteBodyDTO['content'];
+export type ClientNewNote = Infer<typeof ClientNewNoteSchema>;
+export type ClientNotesPatch = Infer<typeof ClientNotesPatchSchema>;
+export type ClientNotePatch = Infer<typeof ClientNotePatchSchema>;
+export type DuplicateNote = Infer<typeof duplicatedNoteDTOSchema>;
+export type NoteBody = Infer<typeof noteBodySchema>;
 export type ClientNoteQuery = Infer<typeof clientNoteQuerySchema>;
 
-export interface NoteVO extends Starable {
+export interface Note {
   title: string;
   isReadonly: boolean;
   id: EntityId;
-  parentId: NoteVO['id'] | null;
+  parentId: EntityParentId;
   icon: string | null;
   updatedAt: number;
   createdAt: number;
+}
+
+export interface ClientNote extends Starable, Note {
   childrenCount: number;
 }

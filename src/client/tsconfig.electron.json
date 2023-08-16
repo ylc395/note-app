@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "include": ["./driver/electron/**/*", "./driver/HeadlessApp.ts", "./domain/infra/**/*"],
-  "exclude": ["./driver/electron/preload.ts", "./domain/infra/remote.ts"],
+  "exclude": ["./driver/electron/preload", "./domain/infra/remote.ts"],
   "compilerOptions": {
     "composite": true,
     "rootDir": "../",

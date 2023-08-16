@@ -1,8 +1,8 @@
 import Form from 'model/abstract/Form';
-import type { NoteDTO } from 'model/note';
+import type { ClientNotePatch as NotePatch } from 'model/note';
 
 export interface NoteMetadata {
-  icon: NonNullable<NoteDTO['icon']> | null | symbol;
+  icon: NonNullable<NotePatch['icon']> | null | symbol;
   isReadonly: 0 | 1 | 2;
 }
 

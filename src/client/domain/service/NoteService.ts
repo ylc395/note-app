@@ -3,7 +3,13 @@ import { Emitter } from 'strict-event-emitter';
 
 import { token as remoteToken } from 'infra/remote';
 import { token as UIToken } from 'infra/ui';
-import type { NoteDTO, NoteVO as Note, NotesDTO, ClientNoteQuery, NoteVO, DuplicateNoteDTO } from 'model/note';
+import type {
+  ClientNotesPatch as NotesPatch,
+  ClientNote as Note,
+  ClientNoteQuery as NoteQuery,
+  ClientNotePatch as NotePatch,
+  DuplicateNote,
+} from 'model/note';
 import type { RecyclablesDTO } from 'model/Recyclables';
 import { EntityTypes } from 'model/entity';
 import NoteTree from 'model/note/Tree';
@@ -42,7 +48,7 @@ export default class NoteService extends Emitter<{
   };
 
   readonly fetchChildren = async (parentId?: Note['parentId']) => {
-    const { body: notes } = await this.remote.get<ClientNoteQuery, Note[]>('/notes', { parentId });
+    const { body: notes } = await this.remote.get<NoteQuery, Note[]>('/notes', { parentId });
     return notes;
   };
 
@@ -52,7 +58,7 @@ export default class NoteService extends Emitter<{
   };
 
   readonly createNote = async (parentId?: Note['parentId']) => {
-    const { body: note } = await this.remote.post<NoteDTO, Note>('/notes', {
+    const { body: note } = await this.remote.post<NotePatch, Note>('/notes', {
       parentId: parentId || null,
     });
 
@@ -68,13 +74,13 @@ export default class NoteService extends Emitter<{
   };
 
   async duplicateNote(targetId: Note['id']) {
-    const { body: note } = await this.remote.post<DuplicateNoteDTO, Note>('/notes', { duplicateFrom: targetId });
+    const { body: note } = await this.remote.post<DuplicateNote, Note>('/notes', { duplicateFrom: targetId });
 
     this.noteTree.updateTree(note);
     this.noteTree.toggleSelect(note.id);
   }
 
-  private readonly handleSelect = (id: NoteVO['id'] | null, { multiple, reason }: SelectEvent) => {
+  private readonly handleSelect = (id: Note['id'] | null, { multiple, reason }: SelectEvent) => {
     if (!id) {
       throw new Error('invalid id');
     }
@@ -98,7 +104,7 @@ export default class NoteService extends Emitter<{
   readonly moveNotes = async (targetId: Note['parentId'], ids?: Note['id'][]) => {
     const _ids = ids || getIds(this.noteTree.selectedNodes);
 
-    const { body: updatedNotes } = await this.remote.patch<NotesDTO, Note[]>(
+    const { body: updatedNotes } = await this.remote.patch<NotesPatch, Note[]>(
       '/notes',
       _ids.map((id) => ({ id, parentId: targetId })),
     );
@@ -122,14 +128,14 @@ export default class NoteService extends Emitter<{
   };
 
   async editNotes(metadata: NoteMetadata) {
-    const result: NotesDTO = this.noteTree.selectedNodes.map(({ id }) => ({
+    const result: NotesPatch = this.noteTree.selectedNodes.map(({ id }) => ({
       id,
       ...metadata,
       isReadonly: metadata.isReadonly === 2 ? undefined : Boolean(metadata.isReadonly),
       icon: metadata.icon === MULTIPLE_ICON_FLAG ? undefined : (metadata.icon as string | null | undefined),
     }));
 
-    const { body: notes } = await this.remote.patch<NotesDTO, Note[]>('/notes', result);
+    const { body: notes } = await this.remote.patch<NotesPatch, Note[]>('/notes', result);
     this.noteTree.updateTree(notes);
     this.emit(NoteEvents.Updated, notes);
   }

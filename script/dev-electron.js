@@ -25,7 +25,7 @@ async function buildPreload() {
       emptyOutDir: false,
       outDir: path.resolve(ELECTRON_OUTPUT, 'client/driver/electron'),
       lib: {
-        entry: 'src/client/driver/electron/preload.ts',
+        entry: 'src/client/driver/electron/preload/index.ts',
         fileName: () => 'preload.js',
         formats: ['cjs'],
       },
