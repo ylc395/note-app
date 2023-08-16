@@ -1,7 +1,7 @@
 import { singleton, container } from 'tsyringe';
 
 import type { SelectEvent } from 'model/abstract/Tree';
-import MaterialTree from 'model/material/Tree';
+import MaterialTree, { MaterialTreeNode } from 'model/material/Tree';
 import { EntityTypes } from 'model/entity';
 import type { MaterialDTO, DirectoryVO, MaterialVO, ClientMaterialQuery, EntityMaterialVO } from 'model/material';
 import type Form from 'model/material/Form';
@@ -80,7 +80,7 @@ export default class MaterialService {
 
     const node = this.materialTree.getNode(materialId);
 
-    if (!multiple && node.attributes?.mimeType) {
+    if (!multiple && !this.isDirectory(materialId)) {
       const { openEntity } = container.resolve(EditorService);
       openEntity({ type: EntityTypes.Material, id: materialId, mimeType: node.attributes?.mimeType });
     }
@@ -94,4 +94,8 @@ export default class MaterialService {
     }
     return buf;
   }
+
+  readonly isDirectory = (nodeId: MaterialTreeNode['id']) => {
+    return !this.materialTree.getNode(nodeId)?.attributes?.mimeType;
+  };
 }

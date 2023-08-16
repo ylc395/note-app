@@ -12,13 +12,13 @@ import IconTitle from 'web/components/IconTitle';
 import ctx from '../Context';
 
 export default observer(function Title({ node }: { node: MaterialTreeNode }) {
-  const { createDirectory } = container.resolve(MaterialService);
+  const { createDirectory, isDirectory } = container.resolve(MaterialService);
   const { newMaterialModal, setCurrentMaterialId } = useContext(ctx);
 
   return (
     <span className="group flex">
       <IconTitle icon={node.attributes?.icon} title={`${IS_DEV ? `${node.id.slice(0, 3)} ` : ''}${node.title}`} />
-      {!node.isLeaf && (
+      {isDirectory(node.id) && (
         <>
           <Tooltip title="新建素材" placement="right">
             <Button

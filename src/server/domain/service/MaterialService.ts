@@ -36,10 +36,13 @@ export default class MaterialService extends BaseService {
     }
 
     if (fileId) {
-      return { ...(await this.materials.createEntity({ fileId, ...info })), isStar: false };
+      const material = await this.materials.createEntity({ fileId, ...info });
+      return { ...material, name: normalizeTitle(material), isStar: false };
     }
 
-    return { ...(await this.materials.createDirectory(info)), isStar: false, childrenCount: 0 };
+    const directory = await this.materials.createDirectory(info);
+
+    return { ...directory, name: normalizeTitle(directory), isStar: false, childrenCount: 0 };
   }
 
   private async toVOs(materials: Material[]) {
