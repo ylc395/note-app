@@ -1,10 +1,16 @@
 import { type IpcMainInvokeEvent, Menu, BrowserWindow, shell } from 'electron';
+import { BLANK_URL, sanitizeUrl } from '@braintree/sanitize-url';
+
 import type { ContextmenuItem } from 'infra/ui';
 
 export const UI_CHANNEL = 'electron-ui';
 
 export const ui = {
   openNewWindow(e: IpcMainInvokeEvent, url: string) {
+    if (url !== BLANK_URL && sanitizeUrl(url) === BLANK_URL) {
+      return Promise.reject('unsafe url');
+    }
+
     return shell.openExternal(url);
   },
   createContextmenu(e: IpcMainInvokeEvent, menuItems: ContextmenuItem[]) {
