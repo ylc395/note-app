@@ -4,9 +4,9 @@ import type { Selectable } from 'kysely';
 
 import {
   MaterialTypes,
-  type MaterialDTO,
-  type Directory,
-  type EntityMaterial,
+  type MaterialPatchDTO,
+  type MaterialDirectory,
+  type MaterialEntity,
   type Material,
   type MaterialQuery,
 } from 'model/material';
@@ -22,12 +22,12 @@ export default class SqliteMaterialRepository extends HierarchyEntityRepository 
   readonly tableName = schema.tableName;
   private readonly files = new FileRepository(this.db);
   private readonly annotations = new MaterialAnnotationRepository(this.db);
-  async createDirectory(directory: MaterialDTO) {
+  async createDirectory(directory: MaterialPatchDTO) {
     const createdRow = await this.createOne(this.tableName, { ...directory, id: this.generateId() });
     return SqliteMaterialRepository.rowToDirectory(createdRow);
   }
 
-  async createEntity(material: MaterialDTO) {
+  async createEntity(material: MaterialPatchDTO) {
     if (!material.fileId) {
       throw new Error('no fileId');
     }
@@ -54,12 +54,7 @@ export default class SqliteMaterialRepository extends HierarchyEntityRepository 
   }
 
   private static rowToMaterial(row: Selectable<Row>, mimeType: string) {
-    return {
-      ...pick(row, ['name', 'icon', 'sourceUrl', 'createdAt', 'updatedAt']),
-      mimeType,
-      id: row.id,
-      parentId: row.parentId,
-    };
+    return { ...omit(row, ['fileId']), mimeType };
   }
 
   async findAll(query: MaterialQuery) {
@@ -83,15 +78,14 @@ export default class SqliteMaterialRepository extends HierarchyEntityRepository 
       .select([`${fileSchema.tableName}.mimeType`])
       .execute();
 
-    const directories: Directory[] = [];
-    const materials: EntityMaterial[] = [];
+    const directories: MaterialDirectory[] = [];
+    const materials: MaterialEntity[] = [];
 
     for (const row of rows) {
       if (!SqliteMaterialRepository.isFileRow(row)) {
         directories.push(SqliteMaterialRepository.rowToDirectory(row));
       } else {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        materials.push(SqliteMaterialRepository.rowToMaterial(row, row.mimeType!));
+        materials.push(SqliteMaterialRepository.rowToMaterial(row, row.mimeType));
       }
     }
 
@@ -112,8 +106,7 @@ export default class SqliteMaterialRepository extends HierarchyEntityRepository 
     }
 
     if (SqliteMaterialRepository.isFileRow(row)) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      return SqliteMaterialRepository.rowToMaterial(row, row.mimeType!);
+      return SqliteMaterialRepository.rowToMaterial(row, row.mimeType);
     }
 
     return SqliteMaterialRepository.rowToDirectory(row);
@@ -140,7 +133,7 @@ export default class SqliteMaterialRepository extends HierarchyEntityRepository 
   readonly updateAnnotation = this.annotations.update.bind(this.annotations);
   readonly findAnnotationById = this.annotations.findOneById.bind(this.annotations);
 
-  private static isFileRow(row: Selectable<Row>) {
+  private static isFileRow(row: Selectable<Row>): row is Selectable<Row> & { mimeType: string } {
     return Boolean(row.fileId);
   }
 }

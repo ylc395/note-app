@@ -5,10 +5,10 @@ import dayjs from 'dayjs';
 
 import { buildIndex, getIds, getLocators } from 'utils/collection';
 import {
-  type ClientNote,
+  type NoteVO,
   type NoteBody,
-  type ClientNewNote,
-  type ClientNotesPatch,
+  type NewNoteDTO,
+  type NotesPatchDTO,
   type NotePatch,
   type Note,
   type NoteQuery,
@@ -28,7 +28,7 @@ export default class NoteService extends BaseService {
   @Inject(forwardRef(() => RecyclableService)) private readonly recyclableService!: RecyclableService;
   @Inject(forwardRef(() => EntityService)) private readonly entityService!: EntityService;
 
-  private async getChildrenIds(noteIds: ClientNote['id'][]) {
+  private async getChildrenIds(noteIds: NoteVO['id'][]) {
     const children = await this.notes.findChildrenIds(noteIds);
     const availableChildren = await this.recyclableService.filterByLocators(children, (id) => ({
       id,
@@ -39,7 +39,7 @@ export default class NoteService extends BaseService {
   }
 
   @Transaction
-  async create(note: ClientNewNote) {
+  async create(note: NewNoteDTO) {
     if (isNewNote(note) && note.parentId && !(await this.areAvailable([note.parentId]))) {
       throw new Error('invalid parentId');
     }
@@ -48,7 +48,7 @@ export default class NoteService extends BaseService {
     return this.queryVO(newNote.id);
   }
 
-  private async duplicate(noteId: ClientNote['id']) {
+  private async duplicate(noteId: NoteVO['id']) {
     if (!(await this.areAvailable([noteId]))) {
       throw new Error('note unavailable');
     }
@@ -68,7 +68,7 @@ export default class NoteService extends BaseService {
     return newNote;
   }
 
-  async update(noteId: ClientNote['id'], note: NotePatch) {
+  async update(noteId: NoteVO['id'], note: NotePatch) {
     const updated = (await this.batchUpdate([{ ...note, id: noteId }]))[0];
 
     if (!updated) {
@@ -78,7 +78,7 @@ export default class NoteService extends BaseService {
     return updated;
   }
 
-  async updateBody(noteId: ClientNote['id'], content: NoteBody) {
+  async updateBody(noteId: NoteVO['id'], content: NoteBody) {
     const result = await this.db.transaction(async () => {
       if (!(await this.isWritable(noteId))) {
         throw new Error('note is readonly');
@@ -104,7 +104,7 @@ export default class NoteService extends BaseService {
     return result;
   }
 
-  async queryBody(noteId: ClientNote['id']) {
+  async queryBody(noteId: NoteVO['id']) {
     if (!(await this.areAvailable([noteId]))) {
       throw new Error('note unavailable');
     }
@@ -131,7 +131,7 @@ export default class NoteService extends BaseService {
   }
 
   @Transaction
-  async batchUpdate(notes: ClientNotesPatch) {
+  async batchUpdate(notes: NotesPatchDTO) {
     await this.assertValidChanges(notes);
     const result = await this.notes.batchUpdate(notes);
 
@@ -149,8 +149,8 @@ export default class NoteService extends BaseService {
     return availableNotes;
   }
 
-  async queryVO(q: NoteQuery): Promise<ClientNote[]>;
-  async queryVO(id: ClientNote['id']): Promise<ClientNote>;
+  async queryVO(q: NoteQuery): Promise<NoteVO[]>;
+  async queryVO(id: NoteVO['id']): Promise<NoteVO>;
   async queryVO(q: NoteQuery | Note['id']) {
     const notes = await this.queryAvailableNotes(typeof q === 'string' ? { id: [q] } : q);
     const noteVOs = await this.toVOs(notes);
@@ -163,7 +163,7 @@ export default class NoteService extends BaseService {
     return result;
   }
 
-  async getTreeFragment(noteId: ClientNote['id']) {
+  async getTreeFragment(noteId: NoteVO['id']) {
     if (!(await this.areAvailable([noteId]))) {
       throw new Error('invalid id');
     }
@@ -177,7 +177,7 @@ export default class NoteService extends BaseService {
     return EntityService.getTree(roots, children);
   }
 
-  private async assertValidChanges(notes: ClientNotesPatch) {
+  private async assertValidChanges(notes: NotesPatchDTO) {
     if (!(await this.areAvailable(getIds(notes)))) {
       throw new Error('invalid ids');
     }
@@ -191,7 +191,7 @@ export default class NoteService extends BaseService {
     await this.entityService.assertValidParents(EntityTypes.Note, parentChangedNotes as HierarchyEntity[]);
   }
 
-  async areAvailable(noteIds: ClientNote['id'][]) {
+  async areAvailable(noteIds: NoteVO['id'][]) {
     const uniqueIds = uniq(noteIds);
     const rows = await this.queryAvailableNotes({ id: uniqueIds });
 
@@ -202,7 +202,7 @@ export default class NoteService extends BaseService {
     return true;
   }
 
-  private async isWritable(noteId: ClientNote['id']) {
+  private async isWritable(noteId: NoteVO['id']) {
     const row = (await this.queryAvailableNotes({ id: [noteId] }))[0];
 
     if (!row) {

@@ -2,14 +2,14 @@ import { makeObservable, observable, runInAction } from 'mobx';
 import remove from 'lodash/remove';
 
 import { EntityTypes } from 'model/entity';
-import type { EntityMaterialVO, AnnotationVO, AnnotationDTO, AnnotationPatchDTO } from 'model/material';
+import type { MaterialEntityVO, AnnotationVO, NewAnnotationDTO, AnnotationPatchDTO } from 'model/material';
 import EntityEditor from 'model/abstract/Editor';
 import type Tile from 'model/workbench/Tile';
 
 export default abstract class Editor<
-  T extends { metadata: EntityMaterialVO } = { metadata: EntityMaterialVO },
+  T extends { metadata: MaterialEntityVO } = { metadata: MaterialEntityVO },
 > extends EntityEditor<T> {
-  constructor(tile: Tile, materialId: EntityMaterialVO['id']) {
+  constructor(tile: Tile, materialId: MaterialEntityVO['id']) {
     super(tile, materialId);
     makeObservable(this);
     this.loadAnnotations();
@@ -19,8 +19,8 @@ export default abstract class Editor<
 
   @observable readonly annotations: AnnotationVO[] = [];
 
-  async createAnnotation(annotation: AnnotationDTO) {
-    const { body: createdAnnotation } = await this.remote.post<AnnotationDTO, AnnotationVO>(
+  async createAnnotation(annotation: NewAnnotationDTO) {
+    const { body: createdAnnotation } = await this.remote.post<NewAnnotationDTO, AnnotationVO>(
       `/materials/${this.entityId}/annotations`,
       annotation,
     );

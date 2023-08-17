@@ -1,9 +1,9 @@
-import type { NoteBody, ClientNotesPatch, Note, NoteQuery, NotePatch, NewNote } from 'model/note';
+import type { NoteBody, NotesPatchDTO, Note, NoteQuery, NotePatch, NewNote } from 'model/note';
 
 export interface NoteRepository {
   create: (note: NewNote) => Promise<Note>;
   update: (noteId: Note['id'], note: NotePatch) => Promise<Note | null>;
-  batchUpdate: (notes: ClientNotesPatch) => Promise<Note[]>;
+  batchUpdate: (notes: NotesPatchDTO) => Promise<Note[]>;
   updateBody: (noteId: Note['id'], noteBody: NoteBody) => Promise<NoteBody | null>;
   findAll: (query?: NoteQuery) => Promise<Note[]>;
   findChildrenIds: (noteIds: Note['id'][]) => Promise<Record<Note['id'], Note['id'][]>>;

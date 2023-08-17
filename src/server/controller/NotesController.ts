@@ -2,17 +2,17 @@ import { Controller } from '@nestjs/common';
 
 import { Post, Body, Get, Patch, createSchemaPipe, Param, Put, Query } from './decorators';
 import {
-  type ClientNewNote,
+  type NewNoteDTO,
   type NoteBody,
-  type ClientNote,
+  type NoteVO,
   type ClientNoteQuery,
-  type ClientNotesPatch,
-  type ClientNotePatch,
-  ClientNewNoteSchema,
-  ClientNotesPatchSchema,
+  type NotesPatchDTO,
+  type NotePatchDTO,
+  NewNoteDTOSchema,
+  NotesPatchDTOSchema,
   clientNoteQuerySchema,
   noteBodySchema,
-  ClientNotePatchSchema,
+  NotePatchDTOSchema,
 } from 'model/note';
 import type { NoteTreeVO } from 'model/note/Tree';
 import NoteService from 'service/NoteService';
@@ -22,17 +22,17 @@ export default class NotesController {
   constructor(private noteService: NoteService) {}
 
   @Post('/notes')
-  async create(@Body(createSchemaPipe(ClientNewNoteSchema)) noteDTO: ClientNewNote): Promise<ClientNote> {
+  async create(@Body(createSchemaPipe(NewNoteDTOSchema)) noteDTO: NewNoteDTO): Promise<NoteVO> {
     return await this.noteService.create(noteDTO);
   }
 
   @Patch('/notes')
-  async batchUpdate(@Body(createSchemaPipe(ClientNotesPatchSchema)) notesDTO: ClientNotesPatch): Promise<ClientNote[]> {
+  async batchUpdate(@Body(createSchemaPipe(NotesPatchDTOSchema)) notesDTO: NotesPatchDTO): Promise<NoteVO[]> {
     return await this.noteService.batchUpdate(notesDTO);
   }
 
   @Get('/notes')
-  async query(@Query(createSchemaPipe(clientNoteQuerySchema)) q: ClientNoteQuery): Promise<ClientNote[]> {
+  async query(@Query(createSchemaPipe(clientNoteQuerySchema)) q: ClientNoteQuery): Promise<NoteVO[]> {
     return await this.noteService.queryVO({ parentId: null, ...q });
   }
 
@@ -44,13 +44,13 @@ export default class NotesController {
   @Patch('/notes/:id')
   async update(
     @Param('id') noteId: string,
-    @Body(createSchemaPipe(ClientNotePatchSchema)) note: ClientNotePatch,
-  ): Promise<ClientNote> {
+    @Body(createSchemaPipe(NotePatchDTOSchema)) note: NotePatchDTO,
+  ): Promise<NoteVO> {
     return await this.noteService.update(noteId, note);
   }
 
   @Get('/notes/:id')
-  async queryOne(@Param('id') noteId: string): Promise<ClientNote> {
+  async queryOne(@Param('id') noteId: string): Promise<NoteVO> {
     return await this.noteService.queryVO(noteId);
   }
 

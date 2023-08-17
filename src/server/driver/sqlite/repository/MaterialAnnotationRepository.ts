@@ -2,7 +2,7 @@ import pick from 'lodash/pick';
 import isEmpty from 'lodash/isEmpty';
 import type { Selectable } from 'kysely';
 
-import type { AnnotationDTO, AnnotationPatchDTO, AnnotationVO, MaterialVO } from 'model/material';
+import type { NewAnnotationDTO, AnnotationPatchDTO, Annotation, Material } from 'model/material';
 
 import BaseRepository from './BaseRepository';
 import materialAnnotationSchema, { type Row } from '../schema/materialAnnotation';
@@ -10,7 +10,7 @@ import materialAnnotationSchema, { type Row } from '../schema/materialAnnotation
 const { tableName } = materialAnnotationSchema;
 
 export default class MaterialAnnotationRepository extends BaseRepository {
-  async create(materialId: MaterialVO['id'], { type, comment, ...annotation }: AnnotationDTO) {
+  async create(materialId: Material['id'], { type, comment, ...annotation }: NewAnnotationDTO) {
     const created = await this.createOne(tableName, {
       id: this.generateId(),
       materialId,
@@ -22,16 +22,16 @@ export default class MaterialAnnotationRepository extends BaseRepository {
     return {
       ...pick(created, ['id', 'createdAt', 'updatedAt', 'type', 'comment']),
       ...annotation,
-    } as AnnotationVO;
+    } as Annotation;
   }
 
-  async findAll(materialId: MaterialVO['id']) {
+  async findAll(materialId: Material['id']) {
     const rows = await this.db.selectFrom(tableName).where('materialId', '=', materialId).selectAll().execute();
 
     return rows.map(MaterialAnnotationRepository.rowToVO);
   }
 
-  async findOneById(id: AnnotationVO['id']) {
+  async findOneById(id: Annotation['id']) {
     const row = await this.db.selectFrom(tableName).where('id', '=', id).selectAll().executeTakeFirst();
 
     return row
@@ -43,16 +43,16 @@ export default class MaterialAnnotationRepository extends BaseRepository {
     return {
       ...pick(row, ['id', 'createdAt', 'updatedAt', 'comment', 'type']),
       ...JSON.parse(row.meta),
-    } as AnnotationVO;
+    } as Annotation;
   }
 
-  async remove(annotationId: AnnotationVO['id']) {
+  async remove(annotationId: Annotation['id']) {
     const { numDeletedRows } = await this.db.deleteFrom(tableName).where('id', '=', annotationId).executeTakeFirst();
 
     return numDeletedRows === 1n;
   }
 
-  async update(annotationId: AnnotationVO['id'], { comment, ...attr }: AnnotationPatchDTO) {
+  async update(annotationId: Annotation['id'], { comment, ...attr }: AnnotationPatchDTO) {
     let newMeta;
 
     if (!isEmpty(attr)) {

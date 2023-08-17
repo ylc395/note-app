@@ -1,16 +1,16 @@
 import { Controller } from '@nestjs/common';
 
 import {
-  type MaterialDTO,
+  type MaterialPatchDTO,
   type MaterialVO,
   type ClientMaterialQuery,
-  type AnnotationDTO,
   type AnnotationVO,
   type AnnotationPatchDTO,
-  materialDTOSchema,
+  MaterialPatchDTOSchema,
   clientMaterialQuerySchema,
-  annotationDTOSchema,
-  annotationPatchSchema,
+  newAnnotationDTOSchema,
+  annotationPatchDTOSchema,
+  NewAnnotationDTO,
 } from 'model/material';
 import type { MaterialTreeVO } from 'model/material/Tree';
 import MaterialService from 'service/MaterialService';
@@ -29,7 +29,7 @@ export default class MaterialsController {
   @Post('/materials/:id/annotations')
   async createAnnotation(
     @Param('id') materialId: string,
-    @Body(createSchemaPipe(annotationDTOSchema)) annotation: AnnotationDTO,
+    @Body(createSchemaPipe(newAnnotationDTOSchema)) annotation: NewAnnotationDTO,
   ): Promise<AnnotationVO> {
     return await this.materialService.createAnnotation(materialId, annotation);
   }
@@ -55,7 +55,7 @@ export default class MaterialsController {
   @Patch('/materials/annotations/:annotationId')
   async updateAnnotation(
     @Param('annotationId') annotationId: string,
-    @Body(createSchemaPipe(annotationPatchSchema)) patch: AnnotationPatchDTO,
+    @Body(createSchemaPipe(annotationPatchDTOSchema)) patch: AnnotationPatchDTO,
   ): Promise<AnnotationVO> {
     return await this.materialService.updateAnnotation(annotationId, patch);
   }
@@ -66,7 +66,7 @@ export default class MaterialsController {
   }
 
   @Post('/materials')
-  async create(@Body(createSchemaPipe(materialDTOSchema)) material: MaterialDTO): Promise<MaterialVO> {
+  async create(@Body(createSchemaPipe(MaterialPatchDTOSchema)) material: MaterialPatchDTO): Promise<MaterialVO> {
     return await this.materialService.create(material);
   }
 

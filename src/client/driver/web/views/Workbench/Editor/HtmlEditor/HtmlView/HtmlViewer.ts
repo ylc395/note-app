@@ -3,7 +3,7 @@ import DOMPurify from 'dompurify';
 import getCssSelector from 'css-selector-generator';
 
 import { ui } from 'web/infra/ui';
-import { AnnotationTypes, AnnotationVO } from 'model/material';
+import { AnnotationTypes, type AnnotationVO } from 'model/material';
 import type HtmlEditorView from 'model/material/view/HtmlEditorView';
 
 import RangeSelector, { type RangeSelectEvent } from '../../common/RangeSelector';

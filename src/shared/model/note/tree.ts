@@ -1,16 +1,16 @@
-import type { ClientNote } from './index';
+import type { NoteVO } from './index';
 import Tree, { type TreeNode, type TreeVO } from '../abstract/Tree';
 
 export interface NoteNodeAttr {
-  icon: ClientNote['icon'];
+  icon: NoteVO['icon'];
 }
 
 export type NoteTreeNode = TreeNode<NoteNodeAttr>;
 
-export type NoteTreeVO = TreeVO<ClientNote>;
+export type NoteTreeVO = TreeVO<NoteVO>;
 
-export default class NoteTree extends Tree<ClientNote, NoteNodeAttr> {
-  protected toNode(note: ClientNote | null) {
+export default class NoteTree extends Tree<NoteVO, NoteNodeAttr> {
+  protected toNode(note: NoteVO | null) {
     if (note) {
       return { title: note.title, isLeaf: note.childrenCount === 0, attributes: { icon: note.icon } };
     }

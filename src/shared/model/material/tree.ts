@@ -1,9 +1,9 @@
-import { type MaterialVO, type EntityMaterialVO, isEntityMaterial, isDirectory } from './index';
+import { type MaterialVO, type MaterialEntity, isEntityMaterial, isDirectory } from './index';
 import Tree, { type TreeNode, type TreeVO } from '../abstract/Tree';
 
 export interface MaterialNodeAttr {
   icon: MaterialVO['icon'];
-  mimeType?: EntityMaterialVO['mimeType'];
+  mimeType?: MaterialEntity['mimeType'];
 }
 
 export type MaterialTreeNode = TreeNode<MaterialNodeAttr>;
@@ -15,7 +15,7 @@ export default class MaterialTree extends Tree<MaterialVO, MaterialNodeAttr> {
     if (material) {
       return {
         title: material.name,
-        isLeaf: !isDirectory(material) || material.childrenCount === 0,
+        isLeaf: isDirectory(material) ? material.childrenCount === 0 : true,
         attributes: {
           icon: material.icon,
           mimeType: isEntityMaterial(material) ? material.mimeType : undefined,

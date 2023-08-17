@@ -3,7 +3,7 @@ import debounce from 'lodash/debounce';
 import { container } from 'tsyringe';
 
 import { EntityTypes } from 'model/entity';
-import type { ClientNote as Note, NoteBody, ClientNotePatch as NotePatch } from 'model/note';
+import type { NoteVO as Note, NoteBody, NotePatchDTO as NotePatch } from 'model/note';
 import type Tile from 'model/workbench/Tile';
 import Editor from 'model/abstract/Editor';
 import NoteTree from 'model/note/Tree';

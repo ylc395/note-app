@@ -4,7 +4,7 @@ import { useEffect, useContext, useState } from 'react';
 import { Button } from 'antd';
 import { useCreation } from 'ahooks';
 
-import type { ClientNote } from 'model/note';
+import type { NoteVO } from 'model/note';
 import { IS_DEV } from 'infra/constants';
 import NoteTree, { type NoteTreeNode } from 'model/note/Tree';
 import NoteService from 'service/NoteService';
@@ -41,7 +41,7 @@ export default observer(function NoteTreeView() {
   const { moveNotes, fetchChildren } = container.resolve(NoteService);
   const { movingModal } = useContext(Context);
   const noteTree = useCreation(() => new NoteTree(), []);
-  const [targetId, setTargetId] = useState<ClientNote['parentId'] | undefined>();
+  const [targetId, setTargetId] = useState<NoteVO['parentId'] | undefined>();
 
   const submit = async () => {
     if (typeof targetId === 'undefined') {

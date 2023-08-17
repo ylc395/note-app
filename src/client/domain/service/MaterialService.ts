@@ -3,7 +3,13 @@ import { singleton, container } from 'tsyringe';
 import type { SelectEvent } from 'model/abstract/Tree';
 import MaterialTree, { MaterialTreeNode } from 'model/material/Tree';
 import { EntityTypes } from 'model/entity';
-import type { MaterialDTO, DirectoryVO, MaterialVO, ClientMaterialQuery, EntityMaterialVO } from 'model/material';
+import type {
+  MaterialPatchDTO,
+  MaterialDirectoryVO,
+  MaterialVO,
+  ClientMaterialQuery,
+  MaterialEntityVO,
+} from 'model/material';
 import type Form from 'model/material/Form';
 import { token as remoteToken } from 'infra/remote';
 
@@ -29,13 +35,8 @@ export default class MaterialService {
     this.materialTree.setChildren(materials, parentId);
   };
 
-  private readonly fetchTreeFragment = async (id: MaterialVO['id']) => {
-    const { body: fragment } = await this.remote.get<void, MaterialVO[]>(`/materials/${id}/tree-fragment`);
-    return fragment;
-  };
-
-  readonly createDirectory = async (parentId?: DirectoryVO['parentId']) => {
-    const { body: directory } = await this.remote.post<MaterialDTO, DirectoryVO>('/materials', {
+  readonly createDirectory = async (parentId?: MaterialDirectoryVO['parentId']) => {
+    const { body: directory } = await this.remote.post<MaterialPatchDTO, MaterialDirectoryVO>('/materials', {
       parentId: parentId || null,
     });
 
@@ -52,15 +53,16 @@ export default class MaterialService {
       throw new Error('invalid form');
     }
 
+    const textEncoder = new TextEncoder();
     const { body: files } = await this.remote.patch<FilesDTO, FileVO[]>('/files', [
       {
         ...form.file,
-        data: typeof form.file.data === 'string' ? MaterialService.stringToArrayBuffer(form.file.data) : form.file.data,
+        data: typeof form.file.data === 'string' ? textEncoder.encode(form.file.data).buffer : form.file.data,
       },
     ]);
 
     const newMaterial = await form.validate();
-    const { body: material } = await this.remote.post<MaterialDTO, EntityMaterialVO>('/materials', {
+    const { body: material } = await this.remote.post<MaterialPatchDTO, MaterialEntityVO>('/materials', {
       fileId: files[0]!.id,
       ...newMaterial,
     });
@@ -85,15 +87,6 @@ export default class MaterialService {
       openEntity({ type: EntityTypes.Material, id: materialId, mimeType: node.attributes?.mimeType });
     }
   };
-
-  private static stringToArrayBuffer(str: string) {
-    const buf = new ArrayBuffer(str.length * 2); // 2 bytes for each char
-    const bufView = new Uint16Array(buf);
-    for (let i = 0, strLen = str.length; i < strLen; i++) {
-      bufView[i] = str.charCodeAt(i);
-    }
-    return buf;
-  }
 
   readonly isDirectory = (nodeId: MaterialTreeNode['id']) => {
     return !this.materialTree.getNode(nodeId)?.attributes?.mimeType;

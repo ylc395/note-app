@@ -1,5 +1,5 @@
 import Form from 'model/abstract/Form';
-import type { ClientNotePatch as NotePatch } from 'model/note';
+import type { NotePatchDTO as NotePatch } from 'model/note';
 
 export interface NoteMetadata {
   icon: NonNullable<NotePatch['icon']> | null | symbol;

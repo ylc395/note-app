@@ -2,15 +2,14 @@ import uniq from 'lodash/uniq';
 import negate from 'lodash/negate';
 import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import {
-  type AnnotationDTO,
-  type MaterialDTO,
+  type NewAnnotationDTO,
+  type MaterialPatchDTO,
   type MaterialVO,
   type AnnotationVO,
   type AnnotationPatchDTO,
   type Material,
   type MaterialQuery,
   AnnotationTypes,
-  isDirectory,
   MaterialTypes,
   isEntityMaterial,
   normalizeTitle,
@@ -26,7 +25,7 @@ import EntityService from './EntityService';
 export default class MaterialService extends BaseService {
   @Inject(forwardRef(() => RecyclableService)) private readonly recyclableService!: RecyclableService;
 
-  async create({ fileId, ...info }: MaterialDTO) {
+  async create({ fileId, ...info }: MaterialPatchDTO) {
     if (fileId && !info.parentId) {
       throw new Error('empty parentId');
     }
@@ -46,7 +45,7 @@ export default class MaterialService extends BaseService {
   }
 
   private async toVOs(materials: Material[]) {
-    const parentIds = getIds(materials.filter(isDirectory));
+    const parentIds = getIds(materials.filter(negate(isEntityMaterial)));
     const children = await this.getChildrenIds(parentIds);
     const stars = buildIndex(await this.stars.findAllByLocators(getLocators(materials, EntityTypes.Note)), 'entityId');
 
@@ -54,8 +53,8 @@ export default class MaterialService extends BaseService {
       ...material,
       isStar: Boolean(stars[material.id]),
       name: normalizeTitle(material),
-      ...(isDirectory(material) ? { childrenCount: children[material.id]?.length || 0 } : null),
-    }));
+      ...(isEntityMaterial(material) ? null : { childrenCount: children[material.id]?.length || 0 }),
+    })) as MaterialVO[];
   }
 
   private async getChildrenIds(materialIds: Material['id'][]) {
@@ -101,7 +100,7 @@ export default class MaterialService extends BaseService {
     return blob;
   }
 
-  async createAnnotation(materialId: MaterialVO['id'], annotation: AnnotationDTO) {
+  async createAnnotation(materialId: MaterialVO['id'], annotation: NewAnnotationDTO) {
     if (annotation.type === AnnotationTypes.PdfRange || annotation.type === AnnotationTypes.PdfArea) {
       await this.assertEntityMaterial(materialId, 'application/pdf');
     }
@@ -147,7 +146,7 @@ export default class MaterialService extends BaseService {
     }
 
     if (type) {
-      return rows.every(type === MaterialTypes.Directory ? isDirectory : negate(isDirectory));
+      return rows.every(type === MaterialTypes.Entity ? isEntityMaterial : negate(isEntityMaterial));
     }
 
     return true;
