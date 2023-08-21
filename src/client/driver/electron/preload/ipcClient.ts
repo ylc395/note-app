@@ -10,9 +10,8 @@ const createMethod = <T, H>(method: FakeHttpRequest<unknown>['method']) => {
     const request: FakeHttpRequest<T> = { path, method };
 
     if (payload !== undefined) {
-      request[['POST', 'PATCH', 'PUT'].includes(method) ? 'body' : 'query'] = isObject(payload)
-        ? (omitBy(payload, (v) => v === undefined) as T)
-        : payload;
+      request[['POST', 'PATCH', 'PUT'].includes(method) ? 'body' : 'query'] =
+        isObject(payload) && !Array.isArray(payload) ? (omitBy(payload, (v) => v === undefined) as T) : payload;
     }
 
     if (headers) {

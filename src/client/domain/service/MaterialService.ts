@@ -1,4 +1,5 @@
 import { singleton, container } from 'tsyringe';
+import { makeObservable } from 'mobx';
 
 import type { SelectEvent } from 'model/abstract/Tree';
 import MaterialTree, { MaterialTreeNode } from 'model/material/Tree';
@@ -11,19 +12,23 @@ import type {
   MaterialEntityVO,
 } from 'model/material';
 import type Form from 'model/material/Form';
+import Value from 'model/Value';
 import { token as remoteToken } from 'infra/remote';
 
 import EditorService from './EditorService';
 import type { FileVO, FilesDTO } from 'model/file';
+import { observable } from 'mobx';
 
 @singleton()
 export default class MaterialService {
   private readonly remote = container.resolve(remoteToken);
   readonly materialTree = new MaterialTree();
+  @observable readonly targetId = new Value<MaterialVO['id']>();
 
   constructor() {
     this.materialTree.on('nodeExpanded', this.loadChildren);
     this.materialTree.on('nodeSelected', this.selectMaterial);
+    makeObservable(this);
   }
 
   readonly loadChildren = async (parentId: MaterialVO['parentId']) => {
@@ -40,16 +45,17 @@ export default class MaterialService {
       parentId: parentId || null,
     });
 
+    this.materialTree.updateTree(directory);
+
     if (parentId) {
       await this.materialTree.toggleExpand(parentId);
     }
 
-    this.materialTree.updateTree(directory);
     this.materialTree.toggleSelect(directory.id);
   };
 
   readonly createMaterial = async (form: Form) => {
-    if (!form.file || (!form.file.data && !form.file.path)) {
+    if (!form.file || !this.targetId.value || (!form.file.data && !form.file.path)) {
       throw new Error('invalid form');
     }
 
@@ -64,15 +70,18 @@ export default class MaterialService {
     const newMaterial = await form.validate();
     const { body: material } = await this.remote.post<MaterialPatchDTO, MaterialEntityVO>('/materials', {
       fileId: files[0]!.id,
+      parentId: this.targetId.value,
       ...newMaterial,
     });
+
+    this.materialTree.updateTree(material);
 
     if (material.parentId && !this.materialTree.getNode(material.parentId).isExpanded) {
       await this.materialTree.toggleExpand(material.parentId);
     }
 
-    this.materialTree.updateTree(material);
     this.materialTree.toggleSelect(material.id, { multiple: true });
+    this.targetId.reset();
   };
 
   private readonly selectMaterial = (materialId: MaterialVO['id'] | null, { multiple }: SelectEvent) => {

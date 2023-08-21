@@ -2,18 +2,15 @@ import { observer } from 'mobx-react-lite';
 import { Button, Tooltip } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { container } from 'tsyringe';
-import { useContext } from 'react';
 
 import type { MaterialTreeNode } from 'model/material/Tree';
 import MaterialService from 'service/MaterialService';
 import { IS_DEV } from 'infra/constants';
 
 import IconTitle from 'web/components/IconTitle';
-import ctx from '../Context';
 
 export default observer(function Title({ node }: { node: MaterialTreeNode }) {
-  const { createDirectory, isDirectory } = container.resolve(MaterialService);
-  const { newMaterialModal, setCurrentMaterialId } = useContext(ctx);
+  const { createDirectory, isDirectory, targetId } = container.resolve(MaterialService);
 
   return (
     <span className="group flex">
@@ -24,8 +21,7 @@ export default observer(function Title({ node }: { node: MaterialTreeNode }) {
             <Button
               onClick={(e) => {
                 e.stopPropagation();
-                setCurrentMaterialId(node.id);
-                newMaterialModal.open();
+                targetId.set(node.id);
               }}
               className="invisible ml-auto mr-2 group-hover:visible"
               size="small"

@@ -23,7 +23,7 @@ export default observer(function Explorer() {
     <div className="flex h-full overflow-x-hidden border-0 border-r border-solid  border-gray-200">
       <ActivityBar />
       <Resizable enable={{ right: true }} minWidth={220} defaultSize={{ width: 300, height: '100%' }}>
-        {explorerMap[currentExplorer]()}
+        {explorerMap[currentExplorer.value!]()}
       </Resizable>
     </div>
   );

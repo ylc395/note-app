@@ -1,5 +1,6 @@
-import { observable, makeObservable, action } from 'mobx';
+import { observable, makeObservable } from 'mobx';
 import { singleton } from 'tsyringe';
+import Value from './Value';
 
 export enum ExplorerTypes {
   Materials = 'materials',
@@ -20,18 +21,14 @@ export enum MaterialExplorerViews {
 
 @singleton()
 export default class Layout {
-  @observable currentExplorer = ExplorerTypes.Materials;
-  @observable readonly explorerPanel = {
-    [ExplorerTypes.Notes]: NoteExplorerViews.Tree,
-    [ExplorerTypes.Materials]: MaterialExplorerViews.Directory,
-  };
-
   constructor() {
     makeObservable(this);
   }
 
-  @action.bound
-  setExplorer(type: ExplorerTypes) {
-    this.currentExplorer = type;
-  }
+  currentExplorer = new Value(ExplorerTypes.Materials);
+
+  @observable readonly explorerPanel = {
+    [ExplorerTypes.Notes]: NoteExplorerViews.Tree,
+    [ExplorerTypes.Materials]: MaterialExplorerViews.Directory,
+  };
 }

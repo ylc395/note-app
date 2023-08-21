@@ -17,6 +17,8 @@ export default observer(function FileForm({ model }: { model: FormModel }) {
       mimeType: file.type,
       ...(IS_ELECTRON ? { path: file.path } : { data: await file.arrayBuffer(), name: file.name }),
     };
+
+    model.updateValue('name', file.name);
   };
 
   return (

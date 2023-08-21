@@ -37,7 +37,7 @@ const BUTTON_PROPS: ButtonProps = {
 };
 
 export default observer(function ActivityBar() {
-  const { currentExplorer, setExplorer } = container.resolve(Layout);
+  const { currentExplorer } = container.resolve(Layout);
   const [isStarVisible, { set: setStarVisible }] = useToggle(false);
   const [isStarTooltipVisible, { set: setStarTooltipVisible }] = useToggle(false);
   const handleStarClick = useMemoizedFn(() => {
@@ -54,8 +54,8 @@ export default observer(function ActivityBar() {
     <Tooltip placement="right" title={button.label}>
       <Button
         {...BUTTON_PROPS}
-        onClick={() => setExplorer(button.key)}
-        className={currentExplorer === button.key ? 'text-blue-600' : ''}
+        onClick={() => currentExplorer.set(button.key)}
+        className={currentExplorer.value === button.key ? 'text-blue-600' : ''}
         icon={button.icon}
       />
     </Tooltip>
