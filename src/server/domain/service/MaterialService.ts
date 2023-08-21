@@ -3,7 +3,7 @@ import negate from 'lodash/negate';
 import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import {
   type NewAnnotationDTO,
-  type MaterialPatchDTO,
+  type NewMaterialDTO,
   type MaterialVO,
   type AnnotationVO,
   type AnnotationPatchDTO,
@@ -25,16 +25,16 @@ import EntityService from './EntityService';
 export default class MaterialService extends BaseService {
   @Inject(forwardRef(() => RecyclableService)) private readonly recyclableService!: RecyclableService;
 
-  async create({ fileId, ...info }: MaterialPatchDTO) {
-    if (fileId && !info.parentId) {
-      throw new Error('empty parentId');
-    }
-
-    if (info.parentId && !(await this.areAvailable([info.parentId], MaterialTypes.Directory))) {
-      throw new Error('invalid parent id');
+  async create({ fileId, ...info }: NewMaterialDTO) {
+    if (info.parentId) {
+      await this.assertAvailableIds([info.parentId], MaterialTypes.Directory);
     }
 
     if (fileId) {
+      if (!(await this.files.findOneById(fileId))) {
+        throw new Error('invalid fileId');
+      }
+
       const material = await this.materials.createEntity({ fileId, ...info });
       return { ...material, name: normalizeTitle(material), isStar: false };
     }
@@ -137,19 +137,16 @@ export default class MaterialService extends BaseService {
     return updated;
   }
 
-  async areAvailable(ids: MaterialVO['id'][], type?: MaterialTypes) {
+  async assertAvailableIds(ids: MaterialVO['id'][], type?: MaterialTypes) {
     const uniqueIds = uniq(ids);
     const rows = await this.queryAvailableMaterials({ id: uniqueIds });
+    const result =
+      rows.length === uniqueIds.length &&
+      rows.every(type === MaterialTypes.Entity ? isEntityMaterial : negate(isEntityMaterial));
 
-    if (rows.length !== ids.length) {
-      return false;
+    if (!result) {
+      throw new Error('invalid material id');
     }
-
-    if (type) {
-      return rows.every(type === MaterialTypes.Entity ? isEntityMaterial : negate(isEntityMaterial));
-    }
-
-    return true;
   }
 
   private async assertEntityMaterial(materialId: MaterialVO['id'], mimeType?: string) {
@@ -171,9 +168,7 @@ export default class MaterialService extends BaseService {
   }
 
   async getTreeFragment(materialId: Material['id'], type?: MaterialTypes) {
-    if (!(await this.areAvailable([materialId]))) {
-      throw new Error('invalid id');
-    }
+    await this.assertAvailableIds([materialId]);
 
     const ancestorIds = await this.materials.findAncestorIds(materialId);
     const childrenIds = Object.values(await this.materials.findChildrenIds(ancestorIds)).flat();

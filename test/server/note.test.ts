@@ -36,7 +36,7 @@ describe('notes', function () {
   });
 
   it('should query root notes', async function () {
-    const notes = await noteController.query({ parentId: null });
+    const notes = await noteController.query({});
     strictEqual(rootNotes.length, 3);
 
     for (const note of notes) {
@@ -47,7 +47,7 @@ describe('notes', function () {
     }
   });
 
-  it('should query specified note and fail when id is invalid', async function () {
+  it('should query specified note by id, and fail for an invalid id', async function () {
     for (const note of rootNotes) {
       deepStrictEqual(await noteController.queryOne(note.id), note);
     }
@@ -65,14 +65,14 @@ describe('notes', function () {
   it('should write body, respecting isReadonly', async function () {
     for (const note of rootNotes) {
       if (note.isReadonly) {
-        await rejects(noteController.updateBody(note.id, { content: 'test body' }));
+        await rejects(noteController.updateBody(note.id, 'test body'));
       } else {
-        const body = await noteController.updateBody(note.id, { content: 'test body' });
+        const body = await noteController.updateBody(note.id, 'test body');
         strictEqual(body, 'test body');
       }
     }
 
-    await rejects(noteController.updateBody('some invalid note id', { content: 'test body' }));
+    await rejects(noteController.updateBody('some invalid note id', 'test body'));
   });
 
   it('should get right body', async function () {
@@ -92,7 +92,7 @@ describe('notes', function () {
     await rejects(noteController.create({ parentId: 'some invalid id' }));
   });
 
-  it('should fail when parent id is invalid', async function () {
+  it('should fail when parent id is invalid for creating', async function () {
     await rejects(noteController.create({ parentId: 'invalid id' }));
   });
 
@@ -224,7 +224,7 @@ describe('notes', function () {
 
   it('should duplicate one note', async function () {
     const newNote = await noteController.create({ parentId: parentNoteId });
-    await noteController.updateBody(newNote.id, { content: 'new body' });
+    await noteController.updateBody(newNote.id, 'new body');
     await noteController.update(newNote.id, { isReadonly: true });
 
     const duplicatedNote = await noteController.create({ duplicateFrom: newNote.id });

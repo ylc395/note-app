@@ -50,8 +50,11 @@ export default class MemoService extends BaseService {
     return await this.memos.findAll();
   }
 
-  async areAvailable(ids: MemoVO['id'][]) {
+  async assertAvailableIds(ids: MemoVO['id'][]) {
     const recyclables = await this.recyclables.findAllByLocators(ids.map((id) => ({ id, type: EntityTypes.Memo })));
-    return recyclables.length === 0;
+
+    if (recyclables.length > 0) {
+      throw new Error('invalid id');
+    }
   }
 }

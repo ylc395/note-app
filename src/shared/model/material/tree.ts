@@ -15,7 +15,7 @@ export default class MaterialTree extends Tree<MaterialVO, MaterialNodeAttr> {
     if (material) {
       return {
         title: material.name,
-        isLeaf: isDirectory(material) ? material.childrenCount === 0 : true,
+        isLeaf: !isDirectory(material) || material.childrenCount === 0,
         attributes: {
           icon: material.icon,
           mimeType: isEntityMaterial(material) ? material.mimeType : undefined,

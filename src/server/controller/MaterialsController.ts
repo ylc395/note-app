@@ -1,16 +1,16 @@
 import { Controller } from '@nestjs/common';
 
 import {
-  type MaterialPatchDTO,
+  type NewMaterialDTO,
   type MaterialVO,
   type ClientMaterialQuery,
   type AnnotationVO,
   type AnnotationPatchDTO,
-  MaterialPatchDTOSchema,
+  type NewAnnotationDTO,
+  newMaterialDTOSchema,
   clientMaterialQuerySchema,
   newAnnotationDTOSchema,
   annotationPatchDTOSchema,
-  NewAnnotationDTO,
 } from 'model/material';
 import type { MaterialTreeVO } from 'model/material/Tree';
 import MaterialService from 'service/MaterialService';
@@ -66,7 +66,7 @@ export default class MaterialsController {
   }
 
   @Post('/materials')
-  async create(@Body(createSchemaPipe(MaterialPatchDTOSchema)) material: MaterialPatchDTO): Promise<MaterialVO> {
+  async create(@Body(createSchemaPipe(newMaterialDTOSchema)) material: NewMaterialDTO): Promise<MaterialVO> {
     return await this.materialService.create(material);
   }
 

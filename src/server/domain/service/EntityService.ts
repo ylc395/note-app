@@ -35,22 +35,18 @@ export default class EntityService extends BaseService {
   }
 
   async assertAvailableEntities(entities: EntityLocator[]) {
-    const isValid = await EntityService.mapGroupByType(entities, (type, ids) => {
+    await EntityService.mapGroupByType(entities, (type, ids) => {
       switch (type) {
         case EntityTypes.Note:
-          return this.noteService.areAvailable(ids);
+          return this.noteService.assertAvailableIds(ids);
         case EntityTypes.Material:
-          return this.materialService.areAvailable(ids);
+          return this.materialService.assertAvailableIds(ids);
         case EntityTypes.Memo:
-          return this.memoService.areAvailable(ids);
+          return this.memoService.assertAvailableIds(ids);
         default:
-          return Promise.resolve(true);
+          throw new Error('invalid type');
       }
     });
-
-    if (!isValid.every((result) => result)) {
-      throw new Error('invalid entities');
-    }
   }
 
   async assertValidParents(type: EntityTypes, changeSet: HierarchyEntity[]) {

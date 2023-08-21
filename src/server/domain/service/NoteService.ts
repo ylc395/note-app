@@ -40,8 +40,8 @@ export default class NoteService extends BaseService {
 
   @Transaction
   async create(note: NewNoteDTO) {
-    if (isNewNote(note) && note.parentId && !(await this.areAvailable([note.parentId]))) {
-      throw new Error('invalid parentId');
+    if (isNewNote(note) && note.parentId) {
+      await this.assertAvailableIds([note.parentId]);
     }
 
     const newNote = isDuplicate(note) ? await this.duplicate(note.duplicateFrom) : await this.notes.create(note);
@@ -49,9 +49,7 @@ export default class NoteService extends BaseService {
   }
 
   private async duplicate(noteId: NoteVO['id']) {
-    if (!(await this.areAvailable([noteId]))) {
-      throw new Error('note unavailable');
-    }
+    await this.assertAvailableIds([noteId]);
 
     const targetNote = await this.notes.findOneById(noteId);
     const targetNoteBody = await this.notes.findBody(noteId);
@@ -69,12 +67,7 @@ export default class NoteService extends BaseService {
   }
 
   async update(noteId: NoteVO['id'], note: NotePatch) {
-    const updated = (await this.batchUpdate([{ ...note, id: noteId }]))[0];
-
-    if (!updated) {
-      throw new Error('invalid update');
-    }
-
+    const updated = (await this.batchUpdate([{ ...note, id: noteId }]))[0]!;
     return updated;
   }
 
@@ -105,9 +98,7 @@ export default class NoteService extends BaseService {
   }
 
   async queryBody(noteId: NoteVO['id']) {
-    if (!(await this.areAvailable([noteId]))) {
-      throw new Error('note unavailable');
-    }
+    await this.assertAvailableIds([noteId]);
 
     const result = await this.notes.findBody(noteId);
 
@@ -132,13 +123,15 @@ export default class NoteService extends BaseService {
 
   @Transaction
   async batchUpdate(notes: NotesPatchDTO) {
-    await this.assertValidChanges(notes);
-    const result = await this.notes.batchUpdate(notes);
+    await this.assertAvailableIds(getIds(notes));
 
-    if (result.length !== notes.length) {
-      throw new Error('invalid notes');
+    const parentChangedNotes = notes.filter(({ parentId }) => typeof parentId !== 'undefined');
+
+    if (parentChangedNotes.length > 0) {
+      await this.entityService.assertValidParents(EntityTypes.Note, parentChangedNotes as HierarchyEntity[]);
     }
 
+    const result = await this.notes.batchUpdate(notes);
     return this.toVOs(result);
   }
 
@@ -164,10 +157,7 @@ export default class NoteService extends BaseService {
   }
 
   async getTreeFragment(noteId: NoteVO['id']) {
-    if (!(await this.areAvailable([noteId]))) {
-      throw new Error('invalid id');
-    }
-
+    await this.assertAvailableIds([noteId]);
     const ancestorIds = await this.notes.findAncestorIds(noteId);
     const childrenIds = Object.values(await this.notes.findChildrenIds(ancestorIds)).flat();
 
@@ -177,29 +167,13 @@ export default class NoteService extends BaseService {
     return EntityService.getTree(roots, children);
   }
 
-  private async assertValidChanges(notes: NotesPatchDTO) {
-    if (!(await this.areAvailable(getIds(notes)))) {
-      throw new Error('invalid ids');
-    }
-
-    const parentChangedNotes = notes.filter(({ parentId }) => typeof parentId !== 'undefined');
-
-    if (parentChangedNotes.length === 0) {
-      return;
-    }
-
-    await this.entityService.assertValidParents(EntityTypes.Note, parentChangedNotes as HierarchyEntity[]);
-  }
-
-  async areAvailable(noteIds: NoteVO['id'][]) {
+  async assertAvailableIds(noteIds: NoteVO['id'][]) {
     const uniqueIds = uniq(noteIds);
     const rows = await this.queryAvailableNotes({ id: uniqueIds });
 
     if (rows.length !== uniqueIds.length) {
-      return false;
+      throw new Error('invalid note id');
     }
-
-    return true;
   }
 
   private async isWritable(noteId: NoteVO['id']) {

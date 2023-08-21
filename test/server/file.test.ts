@@ -16,7 +16,7 @@ describe('files', function () {
     fileController = this.nestModule.get(FilesController);
   });
 
-  it('should fetch remote file', async function () {
+  it("should fetch remote file's content, with correct content-type header", async function () {
     const ctx = new Context();
     const remoteFile = await fileController.getFileByUrl(DEMO_ONLINE_IMAGE_URL, ctx);
     const headers = ctx.getHeaders();
@@ -31,7 +31,7 @@ describe('files', function () {
     rejects(fileController.getFileByUrl('https://www.baidu.com/invalid-path', ctx));
   });
 
-  it('should upload and query file by id', async function () {
+  it('should upload file and then query it by id', async function () {
     const files = await fileController.uploadFiles([{ data: Buffer.from('1111'), mimeType: 'text/plain' }]);
 
     const id = files[0]!.id;

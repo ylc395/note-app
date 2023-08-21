@@ -2,7 +2,7 @@ import { object, string, nativeEnum, preprocess, type infer as Infer } from 'zod
 import type { EntityId, EntityParentId } from '../entity';
 import type { Starable } from '../star';
 
-export const MaterialPatchDTOSchema = object({
+export const newMaterialDTOSchema = object({
   name: string().min(1).optional(),
   parentId: string().nullable().optional(),
   icon: string().min(1).optional(),
@@ -10,7 +10,10 @@ export const MaterialPatchDTOSchema = object({
   sourceUrl: string().url().optional(),
 });
 
-export type MaterialPatchDTO = Infer<typeof MaterialPatchDTOSchema>;
+export const materialPatchDTOScheme = newMaterialDTOSchema.omit({ fileId: true });
+
+export type NewMaterialDTO = Infer<typeof newMaterialDTOSchema>;
+export type MaterialPatchDTO = Infer<typeof materialPatchDTOScheme>;
 
 export enum MaterialTypes {
   Directory = 1,
