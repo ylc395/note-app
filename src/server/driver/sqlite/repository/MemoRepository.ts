@@ -24,7 +24,12 @@ export default class SqliteMemoRepository extends HierarchyEntityRepository impl
   }
 
   async update(id: ParentMemoVO['id'], patch: MemoPatchDTO) {
-    const updatedRow = await this.updateOne(this.tableName, id, { ...patch, isPinned: patch.isPinned ? 1 : 0 });
+    const updatedRow = await this.db
+      .updateTable(this.tableName)
+      .where('id', '=', id)
+      .set({ ...patch, isPinned: patch.isPinned ? 1 : 0 })
+      .returningAll()
+      .executeTakeFirst();
 
     if (!updatedRow) {
       return null;

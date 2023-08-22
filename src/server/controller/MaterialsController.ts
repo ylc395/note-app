@@ -7,10 +7,12 @@ import {
   type AnnotationVO,
   type AnnotationPatchDTO,
   type NewAnnotationDTO,
+  type MaterialsPatchDTO,
   newMaterialDTOSchema,
   clientMaterialQuerySchema,
   newAnnotationDTOSchema,
   annotationPatchDTOSchema,
+  materialsPatchDTOSchema,
 } from 'model/material';
 import type { MaterialTreeVO } from 'model/material/Tree';
 import MaterialService from 'service/MaterialService';
@@ -68,6 +70,13 @@ export default class MaterialsController {
   @Post('/materials')
   async create(@Body(createSchemaPipe(newMaterialDTOSchema)) material: NewMaterialDTO): Promise<MaterialVO> {
     return await this.materialService.create(material);
+  }
+
+  @Patch('/materials')
+  async batchUpdate(
+    @Body(createSchemaPipe(materialsPatchDTOSchema)) patches: MaterialsPatchDTO,
+  ): Promise<MaterialVO[]> {
+    return await this.materialService.batchUpdate(patches);
   }
 
   @Get('/materials')

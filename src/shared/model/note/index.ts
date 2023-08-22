@@ -1,20 +1,23 @@
 import { union, boolean, object, string, null as zodNull, type infer as Infer, array } from 'zod';
+import uniqBy from 'lodash/uniqBy';
 
 import type { Starable } from '../star';
 import type { EntityId, EntityParentId } from '../entity';
 
 const duplicatedNoteDTOSchema = object({ duplicateFrom: string() });
 
-export const NotePatchDTOSchema = object({
+export const notePatchDTOSchema = object({
   title: string(),
   isReadonly: boolean(),
   parentId: union([zodNull(), string()]),
   icon: union([string().regex(/^(emoji:|file:).+/), zodNull()]),
 }).partial();
 
-export const NotesPatchDTOSchema = array(NotePatchDTOSchema.extend({ id: string() }));
+export const notesPatchDTOSchema = array(notePatchDTOSchema.extend({ id: string() })).refine(
+  (patches) => uniqBy(patches, 'id').length === patches.length,
+);
 
-export const NewNoteDTOSchema = union([duplicatedNoteDTOSchema, NotePatchDTOSchema]);
+export const newNoteDTOSchema = union([duplicatedNoteDTOSchema, notePatchDTOSchema]);
 
 export const clientNoteQuerySchema = object({
   parentId: string().nullable().optional(),
@@ -22,9 +25,9 @@ export const clientNoteQuerySchema = object({
 
 export const noteBodySchema = string();
 
-export type NewNoteDTO = Infer<typeof NewNoteDTOSchema>;
-export type NotesPatchDTO = Infer<typeof NotesPatchDTOSchema>;
-export type NotePatchDTO = Infer<typeof NotePatchDTOSchema>;
+export type NewNoteDTO = Infer<typeof newNoteDTOSchema>;
+export type NotesPatchDTO = Infer<typeof notesPatchDTOSchema>;
+export type NotePatchDTO = Infer<typeof notePatchDTOSchema>;
 export type DuplicateNoteDTO = Infer<typeof duplicatedNoteDTOSchema>;
 export type NoteBody = Infer<typeof noteBodySchema>;
 export type ClientNoteQuery = Infer<typeof clientNoteQuerySchema>;

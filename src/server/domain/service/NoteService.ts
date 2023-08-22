@@ -9,7 +9,6 @@ import {
   type NoteBody,
   type NewNoteDTO,
   type NotesPatchDTO,
-  type NotePatch,
   type Note,
   type NoteQuery,
   isDuplicate,
@@ -64,11 +63,6 @@ export default class NoteService extends BaseService {
 
     await this.notes.updateBody(newNote.id, targetNoteBody);
     return newNote;
-  }
-
-  async update(noteId: NoteVO['id'], note: NotePatch) {
-    const updated = (await this.batchUpdate([{ ...note, id: noteId }]))[0]!;
-    return updated;
   }
 
   async updateBody(noteId: NoteVO['id'], content: NoteBody) {

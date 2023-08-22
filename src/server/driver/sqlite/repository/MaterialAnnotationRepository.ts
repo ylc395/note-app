@@ -65,7 +65,13 @@ export default class MaterialAnnotationRepository extends BaseRepository {
       newMeta = JSON.stringify({ ...JSON.parse(row.meta), ...attr });
     }
 
-    const updated = await this.updateOne(tableName, annotationId, { comment, meta: newMeta });
+    const updated = await this.db
+      .updateTable(tableName)
+      .set({ comment, meta: newMeta })
+      .where('id', '=', annotationId)
+      .returningAll()
+      .executeTakeFirst();
+
     return updated ? MaterialAnnotationRepository.rowToVO(updated) : null;
   }
 }

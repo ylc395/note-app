@@ -126,14 +126,14 @@ describe('notes', function () {
     ok(childNode.children?.find(({ entity: { id } }) => id === grandChildNote2.id));
   });
 
-  it('should update one note', async function () {
+  it('should update one note, and fail when id is invalid', async function () {
     const targetNoteId = rootNotes[0]!.id;
-    await noteController.update(targetNoteId, { title: 'new test title', isReadonly: false });
+    await noteController.batchUpdate([{ id: targetNoteId, title: 'new test title', isReadonly: false }]);
     const updatedNote = await noteController.queryOne(targetNoteId);
 
     strictEqual(updatedNote.title, 'new test title');
     strictEqual(updatedNote.isReadonly, false);
-    rejects(noteController.update('invalid id', { title: 'new test title' }));
+    await rejects(noteController.batchUpdate([{ id: 'invalid id', title: 'new test title' }]));
   });
 
   it("update one's parentId correctly", async function () {
@@ -144,8 +144,9 @@ describe('notes', function () {
     const childNoteId = oldChildren[0]!.id;
     const childNoteId2 = oldChildren[1]!.id;
 
-    grandChildNoteId = (await noteController.update(newRootNote.id, { parentId: childNoteId })).id;
-    await noteController.update(childNoteId2, { parentId: null });
+    grandChildNoteId = newRootNote.id;
+    await noteController.batchUpdate([{ id: grandChildNoteId, parentId: childNoteId }]);
+    await noteController.batchUpdate([{ id: childNoteId2, parentId: null }]);
 
     const newRoots = await noteController.query({ parentId: null });
     const newChildren = await noteController.query({ parentId: parentNoteId });
@@ -161,11 +162,11 @@ describe('notes', function () {
     const children = await noteController.query({ parentId: parentNoteId });
     const childNote = children[0]!;
 
-    await rejects(noteController.update(parentNoteId, { parentId: 'invalid id' }));
-    await rejects(noteController.update(parentNoteId, { parentId: parentNoteId }));
-    await rejects(noteController.update(parentNoteId, { parentId: childNote!.id }));
-    await rejects(noteController.update(parentNoteId, { parentId: grandChildNoteId }));
-    await rejects(noteController.update(childNote!.id, { parentId: grandChildNoteId }));
+    await rejects(noteController.batchUpdate([{ id: parentNoteId, parentId: 'invalid id' }]));
+    await rejects(noteController.batchUpdate([{ id: parentNoteId, parentId: parentNoteId }]));
+    await rejects(noteController.batchUpdate([{ id: parentNoteId, parentId: childNote!.id }]));
+    await rejects(noteController.batchUpdate([{ id: parentNoteId, parentId: grandChildNoteId }]));
+    await rejects(noteController.batchUpdate([{ id: childNote!.id, parentId: grandChildNoteId }]));
     strictEqual((await noteController.queryOne(parentNoteId)).parentId, null);
     strictEqual((await noteController.queryOne(childNote!.id)).parentId, childNote!.parentId);
   });
@@ -225,7 +226,7 @@ describe('notes', function () {
   it('should duplicate one note', async function () {
     const newNote = await noteController.create({ parentId: parentNoteId });
     await noteController.updateBody(newNote.id, 'new body');
-    await noteController.update(newNote.id, { isReadonly: true });
+    await noteController.batchUpdate([{ id: newNote.id, isReadonly: true }]);
 
     const duplicatedNote = await noteController.create({ duplicateFrom: newNote.id });
     deepStrictEqual(duplicatedNote, await noteController.queryOne(duplicatedNote.id));
@@ -293,7 +294,7 @@ describe('notes', function () {
     await recyclablesController.create([{ type: EntityTypes.Note, id: newNote1.id }]);
 
     await rejects(noteController.create({ parentId: newNote1.id }));
-    await rejects(noteController.update(newNote2.id, { parentId: newNote1.id }));
+    await rejects(noteController.batchUpdate([{ id: newNote2.id, parentId: newNote1.id }]));
   });
 
   it('can not be a parent if its ancestor are recyclable', async function () {

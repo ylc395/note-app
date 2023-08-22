@@ -21,14 +21,14 @@ describe('files', function () {
     const remoteFile = await fileController.getFileByUrl(DEMO_ONLINE_IMAGE_URL, ctx);
     const headers = ctx.getHeaders();
 
-    ok(remoteFile);
+    ok(remoteFile instanceof ArrayBuffer);
     ok(headers['Content-Type'] === DEMO_ONLINE_IMAGE_MIMETYPE);
   });
 
   it('should fail when can not fetch remote file', async function () {
     const ctx = new Context();
-    rejects(fileController.getFileByUrl('invalid url', ctx));
-    rejects(fileController.getFileByUrl('https://www.baidu.com/invalid-path', ctx));
+    await rejects(fileController.getFileByUrl('invalid url', ctx));
+    await rejects(fileController.getFileByUrl('https://www.baidu.com/invalid-path', ctx));
   });
 
   it('should upload file and then query it by id', async function () {

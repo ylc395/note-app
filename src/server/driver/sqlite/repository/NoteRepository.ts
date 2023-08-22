@@ -3,7 +3,7 @@ import omit from 'lodash/omit';
 
 import type { EntityId } from 'model/entity';
 import type { NoteRepository } from 'service/repository/NoteRepository';
-import type { NoteVO, NotesPatchDTO, NoteQuery, NotePatch, NewNote, NotePatchDTO } from 'model/note';
+import type { NoteVO, NotesPatchDTO, NoteQuery, NotePatch, NewNote } from 'model/note';
 
 import HierarchyEntityRepository from './HierarchyEntityRepository';
 import schema, { type Row } from '../schema/note';
@@ -30,7 +30,12 @@ export default class SqliteNoteRepository extends HierarchyEntityRepository impl
   }
 
   async update(id: NoteVO['id'], note: NotePatch) {
-    const row = await this.updateOne(this.tableName, id, SqliteNoteRepository.dtoToRow(note));
+    const row = await this.db
+      .updateTable(this.tableName)
+      .where('id', '=', id)
+      .set(SqliteNoteRepository.dtoToRow(note))
+      .returningAll()
+      .executeTakeFirst();
 
     if (!row) {
       return null;
@@ -78,7 +83,12 @@ export default class SqliteNoteRepository extends HierarchyEntityRepository impl
     const ids: EntityId[] = [];
 
     for (const note of notes) {
-      const row = await this.updateOne(this.tableName, note.id, SqliteNoteRepository.dtoToRow(note));
+      const row = await this.db
+        .updateTable(this.tableName)
+        .where('id', '=', note.id)
+        .set(SqliteNoteRepository.dtoToRow(note))
+        .returningAll()
+        .executeTakeFirst();
 
       if (!row) {
         continue;
@@ -99,10 +109,10 @@ export default class SqliteNoteRepository extends HierarchyEntityRepository impl
     };
   }
 
-  private static dtoToRow(note: NotePatchDTO) {
+  private static dtoToRow(note: NotePatch) {
     return {
       ...note,
-      ...('isReadonly' in note ? { isReadonly: note.isReadonly ? (1 as const) : (0 as const) } : null),
+      isReadonly: note.isReadonly ? 1 : 0,
     } as Omit<Selectable<Row>, 'id'>;
   }
 

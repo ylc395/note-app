@@ -1,6 +1,8 @@
 import uniq from 'lodash/uniq';
 import negate from 'lodash/negate';
+import compact from 'lodash/compact';
 import { Inject, Injectable, forwardRef } from '@nestjs/common';
+
 import {
   type NewAnnotationDTO,
   type NewMaterialDTO,
@@ -9,21 +11,23 @@ import {
   type AnnotationPatchDTO,
   type Material,
   type MaterialQuery,
+  type MaterialsPatchDTO,
   AnnotationTypes,
   MaterialTypes,
   isEntityMaterial,
   normalizeTitle,
 } from 'model/material';
-import { EntityTypes } from 'model/entity';
+import { EntityTypes, HierarchyEntity } from 'model/entity';
+import { buildIndex, getIds, getLocators } from 'utils/collection';
 
 import BaseService from './BaseService';
 import RecyclableService from './RecyclableService';
-import { buildIndex, getIds, getLocators } from 'utils/collection';
 import EntityService from './EntityService';
 
 @Injectable()
 export default class MaterialService extends BaseService {
   @Inject(forwardRef(() => RecyclableService)) private readonly recyclableService!: RecyclableService;
+  @Inject(forwardRef(() => EntityService)) private readonly entityService!: EntityService;
 
   async create({ fileId, ...info }: NewMaterialDTO) {
     if (info.parentId) {
@@ -89,6 +93,23 @@ export default class MaterialService extends BaseService {
     return result;
   }
 
+  async batchUpdate(materials: MaterialsPatchDTO) {
+    await this.assertAvailableIds(getIds(materials));
+    const parentChangedMaterials = materials.filter(
+      ({ parentId }) => typeof parentId !== 'undefined',
+    ) as HierarchyEntity[];
+
+    if (parentChangedMaterials.length > 0) {
+      const newParentIds = compact(parentChangedMaterials.map((m) => m.parentId));
+
+      await this.assertEntityMaterial(newParentIds);
+      await this.entityService.assertValidParents(EntityTypes.Material, parentChangedMaterials);
+    }
+
+    const result = await this.materials.batchUpdate(materials);
+    return this.toVOs(result);
+  }
+
   async getBlob(materialId: MaterialVO['id']) {
     await this.assertEntityMaterial(materialId);
     const blob = await this.materials.findBlobById(materialId);
@@ -142,17 +163,21 @@ export default class MaterialService extends BaseService {
     const rows = await this.queryAvailableMaterials({ id: uniqueIds });
     const result =
       rows.length === uniqueIds.length &&
-      rows.every(type === MaterialTypes.Entity ? isEntityMaterial : negate(isEntityMaterial));
+      (type ? rows.every(type === MaterialTypes.Entity ? isEntityMaterial : negate(isEntityMaterial)) : true);
 
     if (!result) {
       throw new Error('invalid material id');
     }
   }
 
-  private async assertEntityMaterial(materialId: MaterialVO['id'], mimeType?: string) {
-    const material = (await this.queryAvailableMaterials({ id: [materialId] }))[0];
+  private async assertEntityMaterial(materialId: MaterialVO['id'] | MaterialVO['id'][], mimeType?: string) {
+    const ids = Array.isArray(materialId) ? uniq(materialId) : [materialId];
+    const materials = await this.queryAvailableMaterials({ id: ids });
 
-    if (!material || !isEntityMaterial(material) || (mimeType && material.mimeType !== mimeType)) {
+    if (
+      materials.length !== ids.length ||
+      materials.every((material) => isEntityMaterial(material) && (mimeType ? material.mimeType === mimeType : true))
+    ) {
       throw new Error('invalid material id');
     }
   }

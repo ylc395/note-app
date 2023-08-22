@@ -1,11 +1,11 @@
 import { singleton, container } from 'tsyringe';
-import { makeObservable } from 'mobx';
+import { makeObservable, observable } from 'mobx';
 
 import type { SelectEvent } from 'model/abstract/Tree';
 import MaterialTree, { MaterialTreeNode } from 'model/material/Tree';
 import { EntityTypes } from 'model/entity';
 import type {
-  MaterialPatchDTO,
+  NewMaterialDTO,
   MaterialDirectoryVO,
   MaterialVO,
   ClientMaterialQuery,
@@ -17,7 +17,6 @@ import { token as remoteToken } from 'infra/remote';
 
 import EditorService from './EditorService';
 import type { FileVO, FilesDTO } from 'model/file';
-import { observable } from 'mobx';
 
 @singleton()
 export default class MaterialService {
@@ -41,7 +40,7 @@ export default class MaterialService {
   };
 
   readonly createDirectory = async (parentId?: MaterialDirectoryVO['parentId']) => {
-    const { body: directory } = await this.remote.post<MaterialPatchDTO, MaterialDirectoryVO>('/materials', {
+    const { body: directory } = await this.remote.post<NewMaterialDTO, MaterialDirectoryVO>('/materials', {
       parentId: parentId || null,
     });
 
@@ -68,7 +67,7 @@ export default class MaterialService {
     ]);
 
     const newMaterial = await form.validate();
-    const { body: material } = await this.remote.post<MaterialPatchDTO, MaterialEntityVO>('/materials', {
+    const { body: material } = await this.remote.post<NewMaterialDTO, MaterialEntityVO>('/materials', {
       fileId: files[0]!.id,
       parentId: this.targetId.value,
       ...newMaterial,

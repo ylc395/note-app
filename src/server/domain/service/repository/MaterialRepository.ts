@@ -7,11 +7,13 @@ import type {
   Material,
   MaterialQuery,
   MaterialEntity,
+  MaterialsPatchDTO,
 } from 'model/material';
 
 export interface MaterialRepository {
   createDirectory: (directory: NewMaterialDTO) => Promise<MaterialDirectory>;
   createEntity: (material: NewMaterialDTO) => Promise<MaterialEntity>;
+  batchUpdate: (notes: MaterialsPatchDTO) => Promise<Material[]>;
   findAll: (query: MaterialQuery) => Promise<Material[]>;
   findChildrenIds: (ids: Material['id'][]) => Promise<Record<Material['id'], Material['id'][]>>;
   findDescendantIds: (materialIds: Material['id'][]) => Promise<Record<Material['id'], Material['id'][]>>;

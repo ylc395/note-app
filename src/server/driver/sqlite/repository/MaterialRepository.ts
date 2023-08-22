@@ -9,6 +9,7 @@ import {
   type MaterialEntity,
   type Material,
   type MaterialQuery,
+  type MaterialsPatchDTO,
 } from 'model/material';
 import type { MaterialRepository } from 'service/repository/MaterialRepository';
 
@@ -17,6 +18,7 @@ import fileSchema, { type Row as FileRow } from '../schema/file';
 import FileRepository from './FileRepository';
 import MaterialAnnotationRepository from './MaterialAnnotationRepository';
 import HierarchyEntityRepository from './HierarchyEntityRepository';
+import { getIds } from 'utils/collection';
 
 export default class SqliteMaterialRepository extends HierarchyEntityRepository implements MaterialRepository {
   readonly tableName = schema.tableName;
@@ -135,5 +137,13 @@ export default class SqliteMaterialRepository extends HierarchyEntityRepository 
 
   private static isFileRow(row: Selectable<Row>): row is Selectable<Row> & { mimeType: string } {
     return Boolean(row.fileId);
+  }
+
+  async batchUpdate(patches: MaterialsPatchDTO) {
+    await Promise.all(
+      patches.map(({ id, ...patch }) => this.db.updateTable(this.tableName).set(patch).where('id', '=', id).execute()),
+    );
+
+    return this.findAll({ id: getIds(patches) });
   }
 }

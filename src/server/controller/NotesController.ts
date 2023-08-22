@@ -7,12 +7,10 @@ import {
   type NoteVO,
   type ClientNoteQuery,
   type NotesPatchDTO,
-  type NotePatchDTO,
-  NewNoteDTOSchema,
-  NotesPatchDTOSchema,
+  newNoteDTOSchema,
+  notesPatchDTOSchema,
   clientNoteQuerySchema,
   noteBodySchema,
-  NotePatchDTOSchema,
 } from 'model/note';
 import type { NoteTreeVO } from 'model/note/Tree';
 import NoteService from 'service/NoteService';
@@ -22,12 +20,12 @@ export default class NotesController {
   constructor(private noteService: NoteService) {}
 
   @Post('/notes')
-  async create(@Body(createSchemaPipe(NewNoteDTOSchema)) noteDTO: NewNoteDTO): Promise<NoteVO> {
+  async create(@Body(createSchemaPipe(newNoteDTOSchema)) noteDTO: NewNoteDTO): Promise<NoteVO> {
     return await this.noteService.create(noteDTO);
   }
 
   @Patch('/notes')
-  async batchUpdate(@Body(createSchemaPipe(NotesPatchDTOSchema)) notesDTO: NotesPatchDTO): Promise<NoteVO[]> {
+  async batchUpdate(@Body(createSchemaPipe(notesPatchDTOSchema)) notesDTO: NotesPatchDTO): Promise<NoteVO[]> {
     return await this.noteService.batchUpdate(notesDTO);
   }
 
@@ -39,14 +37,6 @@ export default class NotesController {
   @Get('/notes/:id/tree')
   async queryTree(@Param('id') noteId: string): Promise<NoteTreeVO> {
     return await this.noteService.getTreeFragment(noteId);
-  }
-
-  @Patch('/notes/:id')
-  async update(
-    @Param('id') noteId: string,
-    @Body(createSchemaPipe(NotePatchDTOSchema)) note: NotePatchDTO,
-  ): Promise<NoteVO> {
-    return await this.noteService.update(noteId, note);
   }
 
   @Get('/notes/:id')

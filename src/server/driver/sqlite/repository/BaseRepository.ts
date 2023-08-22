@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import type { Insertable, Kysely, Updateable } from 'kysely';
+import type { Insertable, Kysely } from 'kysely';
 
 import type { Db } from '../Database';
 
@@ -16,18 +16,5 @@ export default abstract class BaseRepository {
 
   protected _batchCreate<T extends keyof Db>(table: T, rows: Insertable<Db[T]>[]) {
     return this.db.insertInto(table).values(rows).returningAll().execute();
-  }
-
-  protected updateOne<T extends keyof Db>(
-    table: T,
-    id: Db[T] extends { id: string } ? string : never,
-    row: Updateable<Db[T]>,
-  ) {
-    return this.db
-      .updateTable(table)
-      .set(row as any)
-      .where('id' as any, '=', id)
-      .returningAll()
-      .executeTakeFirstOrThrow();
   }
 }

@@ -8,6 +8,7 @@ import {
   isDirectory,
   isEntityMaterial,
   MaterialDirectoryVO,
+  MaterialTypes,
   MaterialVO,
 } from '../../dist/electron/shared/model/material';
 
@@ -42,7 +43,7 @@ describe('materials', function () {
     ok(rootMaterials[1]?.name);
   });
 
-  it('should query root materials', async function () {
+  it('should query root materials (and filter by type)', async function () {
     const materials = await materialsController.query({});
     ok(materials.length === 3);
 
@@ -52,6 +53,9 @@ describe('materials', function () {
         rootMaterials.find(({ id }) => id === material.id),
       );
     }
+
+    ok((await materialsController.query({ type: MaterialTypes.Directory })).length === 2);
+    ok((await materialsController.query({ type: MaterialTypes.Entity })).length === 1);
   });
 
   it('should query specified material by id, and fail for an invalid id', async function () {
@@ -91,5 +95,30 @@ describe('materials', function () {
 
     const children = await materialsController.query({ parentId: parent.id });
     ok(children.length === parent.childrenCount);
+  });
+
+  it('should batch update material and fail when one of ids is valid', async function () {
+    const rootMaterials = await materialsController.query({});
+    await materialsController.batchUpdate([
+      { id: rootMaterials[0]!.id, name: 'one' },
+      { id: rootMaterials[1]!.id, name: 'two' },
+      { id: rootMaterials[2]!.id, name: 'three', icon: 'warning' },
+    ]);
+
+    const updated1 = await materialsController.queryOne(rootMaterials[0]!.id);
+    const updated2 = await materialsController.queryOne(rootMaterials[1]!.id);
+    const updated3 = await materialsController.queryOne(rootMaterials[2]!.id);
+
+    ok(updated1.name === 'one');
+    ok(updated2.name === 'two');
+    ok(updated3.name === 'three');
+    ok(updated3.icon === 'warning');
+
+    await rejects(
+      materialsController.batchUpdate([
+        { id: 'invalid id', name: 'new test title' },
+        { id: rootMaterials[0]!.id, name: 'newName' },
+      ]),
+    );
   });
 });
