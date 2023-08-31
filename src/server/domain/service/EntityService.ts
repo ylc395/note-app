@@ -3,7 +3,7 @@ import groupBy from 'lodash/groupBy';
 import compact from 'lodash/compact';
 import mapValues from 'lodash/mapValues';
 
-import { type EntityLocator, type EntityId, type HierarchyEntity, EntityTypes, EntityRecord } from 'model/entity';
+import { type EntityId, type HierarchyEntity, EntityTypes, EntityRecord, EntitiesLocator } from 'model/entity';
 import { normalizeTitle as normalizeNoteTitle } from 'model/note';
 import { normalizeTitle as normalizeMaterialTitle } from 'model/material';
 import { digest } from 'model/memo';
@@ -21,37 +21,22 @@ export default class EntityService extends BaseService {
   @Inject(forwardRef(() => MaterialService)) private readonly materialService!: MaterialService;
   @Inject(forwardRef(() => MaterialService)) private readonly memoService!: MemoService;
 
-  private static mapGroupByType<T>(
-    entities: EntityLocator[],
-    mapper: (type: EntityTypes, ids: EntityId[]) => Promise<T>,
-  ) {
-    const groups = groupBy(entities, 'type');
-
-    return Promise.all(
-      Object.entries(groups).map(([type, entitiesOfType]) =>
-        mapper(Number(type) as EntityTypes, getIds(entitiesOfType)),
-      ),
-    );
-  }
-
-  async assertAvailableEntities(entities: EntityLocator[]) {
-    await EntityService.mapGroupByType(entities, (type, ids) => {
-      switch (type) {
-        case EntityTypes.Note:
-          return this.noteService.assertAvailableIds(ids);
-        case EntityTypes.Material:
-          return this.materialService.assertAvailableIds(ids);
-        case EntityTypes.Memo:
-          return this.memoService.assertAvailableIds(ids);
-        default:
-          throw new Error('invalid type');
-      }
-    });
+  async assertAvailableEntities({ type, ids }: EntitiesLocator) {
+    switch (type) {
+      case EntityTypes.Note:
+        return this.noteService.assertAvailableIds(ids);
+      case EntityTypes.Material:
+        return this.materialService.assertAvailableIds(ids);
+      case EntityTypes.Memo:
+        return this.memoService.assertAvailableIds(ids);
+      default:
+        throw new Error('invalid type');
+    }
   }
 
   async assertValidParents(type: EntityTypes, changeSet: HierarchyEntity[]) {
     const parentIds = compact(changeSet.map(({ parentId }) => parentId));
-    await this.assertAvailableEntities(parentIds.map((id) => ({ id, type })));
+    await this.assertAvailableEntities({ type, ids: parentIds });
 
     // an ancestor note can not be a child of its descants nodes
     const descants = await this.getDescantsOfType(type, getIds(changeSet));
@@ -76,13 +61,9 @@ export default class EntityService extends BaseService {
     }
   }
 
-  async getDescants(entities: EntityLocator[]) {
-    const allDescants = await EntityService.mapGroupByType(entities, async (type, ids) => {
-      const descants = Object.values(await this.getDescantsOfType(type, ids));
-      return descants.flat().map((id) => ({ type, id }));
-    });
-
-    return allDescants.flat();
+  async getDescants({ type, ids }: EntitiesLocator) {
+    const descants = Object.values(await this.getDescantsOfType(type, ids));
+    return descants.flat();
   }
 
   async getEntityTitles(entities: EntityRecord[]) {

@@ -3,9 +3,9 @@ import omit from 'lodash/omit';
 import differenceWith from 'lodash/differenceWith';
 import mapValues from 'lodash/mapValues';
 
-import type { EntityLocator, EntityId, EntityTypes } from 'model/entity';
+import type { EntityLocator, EntityId, EntityTypes, EntitiesLocator } from 'model/entity';
 import { RecycleReason } from 'model/recyclables';
-import { getIds } from 'utils/collection';
+import { getIds, getLocators } from 'utils/collection';
 
 import BaseService from './BaseService';
 import EntityService from './EntityService';
@@ -14,15 +14,15 @@ import EntityService from './EntityService';
 export default class RecyclableService extends BaseService {
   @Inject(forwardRef(() => EntityService)) private readonly entityService!: EntityService;
 
-  async create(entities: EntityLocator[]) {
-    await this.entityService.assertAvailableEntities(entities);
-    const descants = await this.entityService.getDescants(entities);
-    const recyclables = await this.recyclables.findAllByLocators([...entities, ...descants]);
+  async create({ type, ids }: EntitiesLocator) {
+    await this.entityService.assertAvailableEntities({ type, ids });
+    const descants = await this.entityService.getDescants({ type, ids });
+    const recyclables = await this.recyclables.findAllByLocators(getLocators([...ids, ...descants], type));
 
     const newRecyclables = differenceWith(
       [
-        ...entities.map((entity) => ({ ...entity, reason: RecycleReason.Direct })),
-        ...descants.map((entity) => ({ ...entity, reason: RecycleReason.Cascade })),
+        ...ids.map((id) => ({ id, type, reason: RecycleReason.Direct })),
+        ...descants.map((id) => ({ id, type, reason: RecycleReason.Cascade })),
       ],
       recyclables,
       ({ type, id }, { entityId, entityType }) => id === entityId && type === entityType,

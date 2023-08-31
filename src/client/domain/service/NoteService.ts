@@ -92,10 +92,7 @@ export default class NoteService extends Emitter<{
   };
 
   async deleteNotes(ids: Note['id'][]) {
-    await this.remote.patch<RecyclablesDTO>(
-      `/recyclables`,
-      ids.map((id) => ({ id, type: EntityTypes.Note })),
-    );
+    await this.remote.patch<RecyclablesDTO>(`/recyclables`, { ids, type: EntityTypes.Note });
     this.noteTree.removeNodes(ids);
     this.ui.feedback({ type: 'success', content: '已移至回收站' });
     this.emit(NoteEvents.Deleted, ids);

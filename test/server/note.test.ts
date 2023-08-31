@@ -236,12 +236,12 @@ describe('notes', function () {
 
   it('should not query/duplicate/recycle a recyclable note and its body', async function () {
     const newNote = await noteController.create({});
-    await recyclablesController.create([{ type: EntityTypes.Note, id: newNote.id }]);
+    await recyclablesController.create({ type: EntityTypes.Note, ids: [newNote.id] });
 
     await rejects(noteController.create({ duplicateFrom: newNote.id }));
     await rejects(noteController.queryOne(newNote.id));
     await rejects(noteController.queryBody(newNote.id));
-    await rejects(recyclablesController.create([{ type: EntityTypes.Note, id: newNote.id }]));
+    await rejects(recyclablesController.create({ type: EntityTypes.Note, ids: [newNote.id] }));
   });
 
   it('should not query/duplicate a note and its body if its ancestor note is recyclable', async function () {
@@ -250,7 +250,7 @@ describe('notes', function () {
     const newGrandChildNote1 = await noteController.create({ parentId: newChildNote.id });
     const newGrandChildNote2 = await noteController.create({ parentId: newChildNote.id });
 
-    await recyclablesController.create([{ type: EntityTypes.Note, id: newChildNote.id }]);
+    await recyclablesController.create({ type: EntityTypes.Note, ids: [newChildNote.id] });
 
     await rejects(noteController.create({ duplicateFrom: newGrandChildNote1.id }));
     await rejects(noteController.create({ duplicateFrom: newGrandChildNote2.id }));
@@ -258,7 +258,7 @@ describe('notes', function () {
     await rejects(noteController.queryOne(newGrandChildNote2.id));
     await rejects(noteController.queryBody(newGrandChildNote1.id));
     await rejects(noteController.queryBody(newGrandChildNote2.id));
-    await rejects(recyclablesController.create([{ type: EntityTypes.Note, id: newGrandChildNote1.id }]));
+    await rejects(recyclablesController.create({ type: EntityTypes.Note, ids: [newGrandChildNote1.id] }));
   });
 
   it('should get correct childrenCount and children after some children become recyclables', async function () {
@@ -267,10 +267,7 @@ describe('notes', function () {
     const child2 = await noteController.create({ parentId: parent.id });
     const child3 = await noteController.create({ parentId: parent.id });
 
-    await recyclablesController.create([
-      { type: EntityTypes.Note, id: child1.id },
-      { type: EntityTypes.Note, id: child2.id },
-    ]);
+    await recyclablesController.create({ type: EntityTypes.Note, ids: [child1.id, child2.id] });
 
     const parentNote = await noteController.queryOne(parent.id);
     strictEqual(parentNote.childrenCount, 1);
@@ -291,7 +288,7 @@ describe('notes', function () {
   it('can not be a parent if it is a recyclable', async function () {
     const newNote1 = await noteController.create({ parentId: parentNoteId });
     const newNote2 = await noteController.create({});
-    await recyclablesController.create([{ type: EntityTypes.Note, id: newNote1.id }]);
+    await recyclablesController.create({ type: EntityTypes.Note, ids: [newNote1.id] });
 
     await rejects(noteController.create({ parentId: newNote1.id }));
     await rejects(noteController.batchUpdate([{ id: newNote2.id, parentId: newNote1.id }]));
@@ -302,8 +299,7 @@ describe('notes', function () {
     const newChildNote = await noteController.create({ parentId: newNote.id });
     const newGrandChildNote = await noteController.create({ parentId: newChildNote.id });
 
-    await recyclablesController.create([{ type: EntityTypes.Note, id: newChildNote.id }]);
-
+    await recyclablesController.create({ type: EntityTypes.Note, ids: [newChildNote.id] });
     await rejects(noteController.create({ parentId: newGrandChildNote.id }));
   });
 });

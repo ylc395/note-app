@@ -27,10 +27,7 @@ export default class StarService extends Emitter<{
   @observable stars?: Required<StarRecord>[];
 
   async star(type: EntityTypes, ids: EntityId[]) {
-    await this.remote.patch<StarsDTO, StarRecord[]>(
-      '/stars',
-      ids.map((id) => ({ id, type })),
-    );
+    await this.remote.patch<StarsDTO, StarRecord[]>('/stars', { type, ids });
     this.emit(StarEvents.Added, { ids, type });
   }
 

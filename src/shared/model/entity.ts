@@ -1,15 +1,9 @@
-import { nativeEnum, object, string } from 'zod';
+import { array, nativeEnum, object, string, infer as Infer } from 'zod';
 
 export enum EntityTypes {
   Note = 1,
   Memo,
   Material,
-}
-
-export interface EntityLocator {
-  type: EntityTypes;
-  id: EntityId;
-  mimeType?: string;
 }
 
 export interface EntityRecord {
@@ -25,7 +19,15 @@ export interface HierarchyEntity {
   parentId: EntityParentId;
 }
 
-export const entityLocatorSchema = object({
-  id: string(),
+export interface EntityLocator {
+  id: EntityId;
+  type: EntityTypes;
+  mimeType?: string;
+}
+
+export const entitiesLocatorSchema = object({
   type: nativeEnum(EntityTypes),
+  ids: array(string()),
 });
+
+export type EntitiesLocator = Infer<typeof entitiesLocatorSchema>;
