@@ -74,9 +74,9 @@ export default class MaterialsController {
 
   @Patch('/materials')
   async batchUpdate(
-    @Body(createSchemaPipe(materialsPatchDTOSchema)) patches: MaterialsPatchDTO,
+    @Body(createSchemaPipe(materialsPatchDTOSchema)) { ids, material }: MaterialsPatchDTO,
   ): Promise<MaterialVO[]> {
-    return await this.materialService.batchUpdate(patches);
+    return await this.materialService.batchUpdate(ids, material);
   }
 
   @Get('/materials')

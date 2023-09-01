@@ -128,12 +128,12 @@ describe('notes', function () {
 
   it('should update one note, and fail when id is invalid', async function () {
     const targetNoteId = rootNotes[0]!.id;
-    await noteController.batchUpdate([{ id: targetNoteId, title: 'new test title', isReadonly: false }]);
+    await noteController.batchUpdate({ ids: [targetNoteId], note: { title: 'new test title', isReadonly: false } });
     const updatedNote = await noteController.queryOne(targetNoteId);
 
     strictEqual(updatedNote.title, 'new test title');
     strictEqual(updatedNote.isReadonly, false);
-    await rejects(noteController.batchUpdate([{ id: 'invalid id', title: 'new test title' }]));
+    await rejects(noteController.batchUpdate({ ids: ['invalid id'], note: { title: 'new test title' } }));
   });
 
   it("update one's parentId correctly", async function () {
@@ -145,8 +145,8 @@ describe('notes', function () {
     const childNoteId2 = oldChildren[1]!.id;
 
     grandChildNoteId = newRootNote.id;
-    await noteController.batchUpdate([{ id: grandChildNoteId, parentId: childNoteId }]);
-    await noteController.batchUpdate([{ id: childNoteId2, parentId: null }]);
+    await noteController.batchUpdate({ ids: [grandChildNoteId], note: { parentId: childNoteId } });
+    await noteController.batchUpdate({ ids: [childNoteId2], note: { parentId: null } });
 
     const newRoots = await noteController.query({ parentId: null });
     const newChildren = await noteController.query({ parentId: parentNoteId });
@@ -162,11 +162,11 @@ describe('notes', function () {
     const children = await noteController.query({ parentId: parentNoteId });
     const childNote = children[0]!;
 
-    await rejects(noteController.batchUpdate([{ id: parentNoteId, parentId: 'invalid id' }]));
-    await rejects(noteController.batchUpdate([{ id: parentNoteId, parentId: parentNoteId }]));
-    await rejects(noteController.batchUpdate([{ id: parentNoteId, parentId: childNote!.id }]));
-    await rejects(noteController.batchUpdate([{ id: parentNoteId, parentId: grandChildNoteId }]));
-    await rejects(noteController.batchUpdate([{ id: childNote!.id, parentId: grandChildNoteId }]));
+    await rejects(noteController.batchUpdate({ ids: [parentNoteId], note: { parentId: 'invalid id' } }));
+    await rejects(noteController.batchUpdate({ ids: [parentNoteId], note: { parentId: parentNoteId } }));
+    await rejects(noteController.batchUpdate({ ids: [parentNoteId], note: { parentId: childNote!.id } }));
+    await rejects(noteController.batchUpdate({ ids: [parentNoteId], note: { parentId: grandChildNoteId } }));
+    await rejects(noteController.batchUpdate({ ids: [childNote!.id], note: { parentId: grandChildNoteId } }));
     strictEqual((await noteController.queryOne(parentNoteId)).parentId, null);
     strictEqual((await noteController.queryOne(childNote!.id)).parentId, childNote!.parentId);
   });
@@ -175,10 +175,10 @@ describe('notes', function () {
     let rootNotes = await noteController.query({ parentId: null });
     let children = await noteController.query({ parentId: rootNotes[0]!.id });
 
-    const updatedNotes = await noteController.batchUpdate([
-      ...rootNotes.map(({ id }) => ({ id, title: 'batch updated title' })),
-      ...children.map(({ id }) => ({ id, title: 'batch updated title' })),
-    ]);
+    const updatedNotes = await noteController.batchUpdate({
+      ids: [...rootNotes.map(({ id }) => id), ...children.map(({ id }) => id)],
+      note: { title: 'batch updated title' },
+    });
 
     for (const note of updatedNotes) {
       strictEqual(note.title, 'batch updated title');
@@ -197,13 +197,18 @@ describe('notes', function () {
     let children = await noteController.query({ parentId: parentNoteId });
 
     const rootNote = rootNotes[rootNotes.length - 1]!;
-    const toBeGrandChildren = [
-      { id: rootNote.id, parentId: grandChildNoteId },
-      ...children.slice(2).map(({ id }) => ({ id, parentId: grandChildNoteId })),
-    ];
-    const toBeNewRoot = children.slice(0, 2).map(({ id }) => ({ id, parentId: null }));
+    const toBeGrandChildren = [rootNote.id, ...children.slice(2).map(({ id }) => id)];
+    const toBeNewRoot = children.slice(0, 2).map(({ id }) => id);
 
-    await noteController.batchUpdate([...toBeGrandChildren, ...toBeNewRoot]);
+    await noteController.batchUpdate({
+      ids: toBeGrandChildren,
+      note: { parentId: grandChildNoteId },
+    });
+
+    await noteController.batchUpdate({
+      ids: toBeNewRoot,
+      note: { parentId: null },
+    });
 
     children = await noteController.query({ parentId: parentNoteId });
     strictEqual(children.length, 0);
@@ -211,22 +216,22 @@ describe('notes', function () {
     const newRootNotes = await noteController.query({ parentId: null });
     strictEqual(newRootNotes.length, rootNotes.length - 1 + toBeNewRoot.length);
     parentNoteId = grandChildNoteId;
-    grandChildNoteId = toBeGrandChildren[0]!.id;
+    grandChildNoteId = toBeGrandChildren[0]!;
   });
 
   it('should reject invalid batch updates', async function () {
     await rejects(
-      noteController.batchUpdate([
-        { id: parentNoteId, parentId: grandChildNoteId },
-        ...rootNotes.filter(({ id }) => id !== parentNoteId).map(({ id }) => ({ id, parentId: grandChildNoteId })),
-      ]),
+      noteController.batchUpdate({
+        ids: [parentNoteId, ...rootNotes.filter(({ id }) => id !== parentNoteId).map(({ id }) => id)],
+        note: { parentId: grandChildNoteId },
+      }),
     );
   });
 
   it('should duplicate one note', async function () {
     const newNote = await noteController.create({ parentId: parentNoteId });
     await noteController.updateBody(newNote.id, 'new body');
-    await noteController.batchUpdate([{ id: newNote.id, isReadonly: true }]);
+    await noteController.batchUpdate({ ids: [newNote.id], note: { isReadonly: true } });
 
     const duplicatedNote = await noteController.create({ duplicateFrom: newNote.id });
     deepStrictEqual(duplicatedNote, await noteController.queryOne(duplicatedNote.id));
@@ -291,7 +296,7 @@ describe('notes', function () {
     await recyclablesController.create({ type: EntityTypes.Note, ids: [newNote1.id] });
 
     await rejects(noteController.create({ parentId: newNote1.id }));
-    await rejects(noteController.batchUpdate([{ id: newNote2.id, parentId: newNote1.id }]));
+    await rejects(noteController.batchUpdate({ ids: [newNote2.id], note: { parentId: newNote1.id } }));
   });
 
   it('can not be a parent if its ancestor are recyclable', async function () {

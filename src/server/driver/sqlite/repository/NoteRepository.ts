@@ -1,9 +1,8 @@
-import type { Selectable } from 'kysely';
+import type { Selectable, Updateable } from 'kysely';
 import omit from 'lodash/omit';
 
-import type { EntityId } from 'model/entity';
 import type { NoteRepository } from 'service/repository/NoteRepository';
-import type { NoteVO, NotesPatchDTO, NoteQuery, NotePatch, NewNote } from 'model/note';
+import type { NoteVO, NoteQuery, NotePatch, NewNote, Note } from 'model/note';
 
 import HierarchyEntityRepository from './HierarchyEntityRepository';
 import schema, { type Row } from '../schema/note';
@@ -12,8 +11,8 @@ export default class SqliteNoteRepository extends HierarchyEntityRepository impl
   readonly tableName = schema.tableName;
   async create(note: NewNote) {
     const row = await this.createOne(this.tableName, {
-      ...SqliteNoteRepository.dtoToRow(note),
       id: this.generateId(),
+      ...SqliteNoteRepository.dtoToRow(note),
     });
 
     return this.rowToVO(row);
@@ -29,33 +28,21 @@ export default class SqliteNoteRepository extends HierarchyEntityRepository impl
     return row.body;
   }
 
-  async update(id: NoteVO['id'], note: NotePatch) {
-    const row = await this.db
+  update(noteId: Note['id'], patch: NotePatch): Promise<Note | null>;
+  update(noteIds: Note['id'][], patch: NotePatch): Promise<Note[]>;
+  async update(id: Note['id'] | Note['id'][], note: NotePatch) {
+    const rows = await this.db
       .updateTable(this.tableName)
-      .where('id', '=', id)
-      .set(SqliteNoteRepository.dtoToRow(note))
-      .returningAll()
-      .executeTakeFirst();
+      .where('id', Array.isArray(id) ? 'in' : '=', id)
+      .set({ updatedAt: this.getTimestamp(), ...SqliteNoteRepository.dtoToRow(note) })
+      .returning(['id', 'icon', 'isReadonly', 'title', 'parentId', 'userUpdatedAt', 'createdAt', 'updatedAt'])
+      .execute();
 
-    if (!row) {
-      return null;
+    if (Array.isArray(id)) {
+      return rows.map(this.rowToVO);
     }
 
-    return this.rowToVO(row);
-  }
-
-  async updateBody(id: NoteVO['id'], noteBody: string) {
-    const { numUpdatedRows } = await this.db
-      .updateTable(this.tableName)
-      .where('id', '=', id)
-      .set({ body: noteBody })
-      .executeTakeFirst();
-
-    if (numUpdatedRows === 0n) {
-      return null;
-    }
-
-    return noteBody;
+    return rows[0] ? this.rowToVO(rows[0]) : null;
   }
 
   async findAll(query?: NoteQuery | { parentIds: NoteVO['id'][] }) {
@@ -79,41 +66,20 @@ export default class SqliteNoteRepository extends HierarchyEntityRepository impl
     return notes;
   }
 
-  async batchUpdate(notes: NotesPatchDTO) {
-    const ids: EntityId[] = [];
-
-    for (const note of notes) {
-      const row = await this.db
-        .updateTable(this.tableName)
-        .where('id', '=', note.id)
-        .set(SqliteNoteRepository.dtoToRow(note))
-        .returningAll()
-        .executeTakeFirst();
-
-      if (!row) {
-        continue;
-      }
-
-      ids.push(String(row.id));
-    }
-
-    const rows = await this.findAll({ id: ids });
-
-    return rows;
-  }
-
-  private rowToVO(row: Selectable<Row>) {
+  private rowToVO(row: Omit<Selectable<Row>, 'body'>) {
     return {
-      ...omit(row, ['body']),
+      ...omit(row, ['userUpdatedAt']),
       isReadonly: Boolean(row.isReadonly),
+      updatedAt: row.userUpdatedAt,
     };
   }
 
   private static dtoToRow(note: NotePatch) {
     return {
       ...note,
-      isReadonly: note.isReadonly ? 1 : 0,
-    } as Omit<Selectable<Row>, 'id'>;
+      ...(note.updatedAt ? { userUpdatedAt: note.updatedAt } : null),
+      ...(typeof note.isReadonly === 'boolean' ? { isReadonly: note.isReadonly ? 1 : 0 } : null),
+    } as Updateable<Row>;
   }
 
   async findOneById(id: NoteVO['id']) {

@@ -101,10 +101,10 @@ export default class NoteService extends Emitter<{
   readonly moveNotes = async (targetId: Note['parentId'], ids?: Note['id'][]) => {
     const _ids = ids || getIds(this.noteTree.selectedNodes);
 
-    const { body: updatedNotes } = await this.remote.patch<NotesPatch, Note[]>(
-      '/notes',
-      _ids.map((id) => ({ id, parentId: targetId })),
-    );
+    const { body: updatedNotes } = await this.remote.patch<NotesPatch, Note[]>('/notes', {
+      ids: _ids,
+      note: { parentId: targetId },
+    });
 
     this.noteTree.updateTree(updatedNotes);
 
@@ -125,14 +125,15 @@ export default class NoteService extends Emitter<{
   };
 
   async editNotes(metadata: NoteMetadata) {
-    const result: NotesPatch = this.noteTree.selectedNodes.map(({ id }) => ({
-      id,
-      ...metadata,
-      isReadonly: metadata.isReadonly === 2 ? undefined : Boolean(metadata.isReadonly),
-      icon: metadata.icon === MULTIPLE_ICON_FLAG ? undefined : (metadata.icon as string | null | undefined),
-    }));
+    const { body: notes } = await this.remote.patch<NotesPatch, Note[]>('/notes', {
+      ids: getIds(this.noteTree.selectedNodes),
+      note: {
+        ...metadata,
+        isReadonly: metadata.isReadonly === 2 ? undefined : Boolean(metadata.isReadonly),
+        icon: metadata.icon === MULTIPLE_ICON_FLAG ? undefined : (metadata.icon as string | null | undefined),
+      },
+    });
 
-    const { body: notes } = await this.remote.patch<NotesPatch, Note[]>('/notes', result);
     this.noteTree.updateTree(notes);
     this.emit(NoteEvents.Updated, notes);
   }

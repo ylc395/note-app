@@ -8,14 +8,14 @@ import {
   type NoteVO,
   type NoteBody,
   type NewNoteDTO,
-  type NotesPatchDTO,
   type Note,
   type NoteQuery,
   isDuplicate,
   isNewNote,
   normalizeTitle,
+  NotePatch,
 } from 'model/note';
-import { EntityTypes, type HierarchyEntity } from 'model/entity';
+import { EntityTypes } from 'model/entity';
 import { Events } from 'model/events';
 
 import BaseService, { Transaction } from './BaseService';
@@ -44,7 +44,8 @@ export default class NoteService extends BaseService {
     }
 
     const newNote = isDuplicate(note) ? await this.duplicate(note.duplicateFrom) : await this.notes.create(note);
-    return this.queryVO(newNote.id);
+
+    return (await this.toVOs([newNote]))[0]!;
   }
 
   private async duplicate(noteId: NoteVO['id']) {
@@ -59,25 +60,28 @@ export default class NoteService extends BaseService {
 
     targetNote.title = `${normalizeTitle(targetNote)} - 副本`;
 
-    const newNote = await this.notes.create(omit(targetNote, ['id', 'createdAt', 'updatedAt']));
+    const newNote = await this.notes.create({
+      body: targetNoteBody,
+      ...omit(targetNote, ['id', 'createdAt', 'updatedAt']),
+    });
 
-    await this.notes.updateBody(newNote.id, targetNoteBody);
     return newNote;
   }
 
   async updateBody(noteId: NoteVO['id'], content: NoteBody) {
-    const result = await this.db.transaction(async () => {
+    await this.db.transaction(async () => {
       if (!(await this.isWritable(noteId))) {
         throw new Error('note is readonly');
       }
 
-      const result = await this.notes.updateBody(noteId, content);
+      const result = await this.notes.update(noteId, {
+        body: content,
+        updatedAt: dayjs().unix(),
+      });
 
       if (result === null) {
         throw new Error('update note body failed');
       }
-
-      await this.notes.update(noteId, { updatedAt: dayjs().unix() });
 
       return result;
     });
@@ -88,7 +92,7 @@ export default class NoteService extends BaseService {
       content,
     });
 
-    return result;
+    return content;
   }
 
   async queryBody(noteId: NoteVO['id']) {
@@ -116,16 +120,18 @@ export default class NoteService extends BaseService {
   }
 
   @Transaction
-  async batchUpdate(notes: NotesPatchDTO) {
-    await this.assertAvailableIds(getIds(notes));
+  async batchUpdate(ids: Note['id'][], patch: NotePatch) {
+    await this.assertAvailableIds(ids);
 
-    const parentChangedNotes = notes.filter(({ parentId }) => typeof parentId !== 'undefined');
-
-    if (parentChangedNotes.length > 0) {
-      await this.entityService.assertValidParents(EntityTypes.Note, parentChangedNotes as HierarchyEntity[]);
+    if (patch.parentId) {
+      await this.entityService.assertValidParent(EntityTypes.Note, patch.parentId, ids);
     }
 
-    const result = await this.notes.batchUpdate(notes);
+    const result = await this.notes.update(ids, {
+      ...patch,
+      ...(typeof patch.title === 'undefined' ? null : { updatedAt: dayjs().unix() }),
+    });
+
     return this.toVOs(result);
   }
 

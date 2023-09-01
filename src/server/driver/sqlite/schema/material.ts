@@ -12,6 +12,7 @@ export interface Row {
   icon: string | null;
   createdAt: Generated<number>;
   updatedAt: Generated<number>;
+  userUpdatedAt: Generated<number>;
 }
 
 export default {
@@ -27,6 +28,7 @@ export default {
       .addColumn('icon', 'text')
       .addColumn('createdAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch())`))
       .addColumn('updatedAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch())`))
+      .addColumn('userUpdatedAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch())`))
       .addForeignKeyConstraint('fileId-foreign', ['fileId'], filesTableName, ['id']);
   },
 } as const;

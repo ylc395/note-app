@@ -228,8 +228,7 @@ export default class SyncService extends BaseService {
   private async updateLocalEntity(metadata: EntityMetadata, content: string) {
     switch (metadata.type) {
       case EntityTypes.Note:
-        await this.notes.update(metadata.id, { title: metadata.title, updatedAt: metadata.updatedAt });
-        await this.notes.updateBody(metadata.id, content);
+        await this.notes.update(metadata.id, { title: metadata.title, updatedAt: metadata.updatedAt, body: content });
         return;
       case EntityTypes.Memo:
         await this.memos.update(metadata.id, { content, updatedAt: metadata.updatedAt });
@@ -242,8 +241,12 @@ export default class SyncService extends BaseService {
   private async createLocalEntity(metadata: EntityMetadata, content: string) {
     switch (metadata.type) {
       case EntityTypes.Note:
-        await this.notes.create({ id: metadata.id, title: metadata.title, updatedAt: metadata.updatedAt });
-        await this.notes.updateBody(metadata.id, content);
+        await this.notes.create({
+          id: metadata.id,
+          title: metadata.title,
+          updatedAt: metadata.updatedAt,
+          body: content,
+        });
         return;
       case EntityTypes.Memo:
         // await this.memos.create({ id: metadata.id, content, updatedAt: metadata.updatedAt });

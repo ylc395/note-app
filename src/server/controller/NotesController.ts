@@ -25,8 +25,8 @@ export default class NotesController {
   }
 
   @Patch('/notes')
-  async batchUpdate(@Body(createSchemaPipe(notesPatchDTOSchema)) notesDTO: NotesPatchDTO): Promise<NoteVO[]> {
-    return await this.noteService.batchUpdate(notesDTO);
+  async batchUpdate(@Body(createSchemaPipe(notesPatchDTOSchema)) { ids, note }: NotesPatchDTO): Promise<NoteVO[]> {
+    return await this.noteService.batchUpdate(ids, note);
   }
 
   @Get('/notes')

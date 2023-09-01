@@ -1,7 +1,7 @@
 import uniq from 'lodash/uniq';
 import negate from 'lodash/negate';
-import compact from 'lodash/compact';
 import { Inject, Injectable, forwardRef } from '@nestjs/common';
+import dayjs from 'dayjs';
 
 import {
   type NewAnnotationDTO,
@@ -11,13 +11,13 @@ import {
   type AnnotationPatchDTO,
   type Material,
   type MaterialQuery,
-  type MaterialsPatchDTO,
+  type MaterialPatch,
   AnnotationTypes,
   MaterialTypes,
   isEntityMaterial,
   normalizeTitle,
 } from 'model/material';
-import { EntityTypes, HierarchyEntity } from 'model/entity';
+import { EntityTypes } from 'model/entity';
 import { buildIndex, getIds, getLocators } from 'utils/collection';
 
 import BaseService from './BaseService';
@@ -93,20 +93,18 @@ export default class MaterialService extends BaseService {
     return result;
   }
 
-  async batchUpdate(materials: MaterialsPatchDTO) {
-    await this.assertAvailableIds(getIds(materials));
-    const parentChangedMaterials = materials.filter(
-      ({ parentId }) => typeof parentId !== 'undefined',
-    ) as HierarchyEntity[];
+  async batchUpdate(ids: Material['id'][], patch: MaterialPatch) {
+    await this.assertAvailableIds(ids);
 
-    if (parentChangedMaterials.length > 0) {
-      const newParentIds = compact(parentChangedMaterials.map((m) => m.parentId));
-
-      await this.assertEntityMaterial(newParentIds);
-      await this.entityService.assertValidParents(EntityTypes.Material, parentChangedMaterials);
+    if (patch.parentId) {
+      await this.entityService.assertValidParent(EntityTypes.Material, patch.parentId, ids);
     }
 
-    const result = await this.materials.batchUpdate(materials);
+    const result = await this.materials.update(ids, {
+      ...patch,
+      ...(typeof patch.name === 'undefined' ? null : { updatedAt: dayjs().unix() }),
+    });
+
     return this.toVOs(result);
   }
 

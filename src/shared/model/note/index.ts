@@ -1,5 +1,4 @@
-import { union, boolean, object, string, null as zodNull, type infer as Infer, array } from 'zod';
-import uniqBy from 'lodash/uniqBy';
+import { union, boolean, object, string, null as zodNull, type infer as Infer } from 'zod';
 
 import type { Starable } from '../star';
 import type { EntityId, EntityParentId } from '../entity';
@@ -13,9 +12,12 @@ export const notePatchDTOSchema = object({
   icon: union([string().regex(/^(emoji:|file:).+/), zodNull()]),
 }).partial();
 
-export const notesPatchDTOSchema = array(notePatchDTOSchema.extend({ id: string() })).refine(
-  (patches) => uniqBy(patches, 'id').length === patches.length,
-);
+export const notesPatchDTOSchema = object({
+  ids: string()
+    .array()
+    .refine((ids) => new Set(ids).size === ids.length),
+  note: notePatchDTOSchema,
+});
 
 export const newNoteDTOSchema = union([duplicatedNoteDTOSchema, notePatchDTOSchema]);
 

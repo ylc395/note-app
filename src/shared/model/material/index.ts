@@ -1,5 +1,4 @@
-import { object, string, nativeEnum, preprocess, array, type infer as Infer } from 'zod';
-import uniqBy from 'lodash/uniqBy';
+import { object, string, nativeEnum, preprocess, type infer as Infer } from 'zod';
 
 import type { EntityId, EntityParentId } from '../entity';
 import type { Starable } from '../star';
@@ -12,11 +11,12 @@ export const newMaterialDTOSchema = object({
   sourceUrl: string().url().optional(),
 });
 
-const materialPatchDTOSchema = newMaterialDTOSchema.omit({ fileId: true });
-
-export const materialsPatchDTOSchema = array(materialPatchDTOSchema.extend({ id: string() })).refine(
-  (patches) => uniqBy(patches, 'id').length === patches.length,
-);
+export const materialsPatchDTOSchema = object({
+  ids: string()
+    .array()
+    .refine((ids) => new Set(ids).size === ids.length),
+  material: newMaterialDTOSchema.omit({ fileId: true }),
+});
 
 export type NewMaterialDTO = Infer<typeof newMaterialDTOSchema>;
 export type MaterialsPatchDTO = Infer<typeof materialsPatchDTOSchema>;

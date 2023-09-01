@@ -9,7 +9,7 @@ import {
   type MaterialEntity,
   type Material,
   type MaterialQuery,
-  type MaterialsPatchDTO,
+  type MaterialPatch,
 } from 'model/material';
 import type { MaterialRepository } from 'service/repository/MaterialRepository';
 
@@ -18,7 +18,6 @@ import fileSchema, { type Row as FileRow } from '../schema/file';
 import FileRepository from './FileRepository';
 import MaterialAnnotationRepository from './MaterialAnnotationRepository';
 import HierarchyEntityRepository from './HierarchyEntityRepository';
-import { getIds } from 'utils/collection';
 
 export default class SqliteMaterialRepository extends HierarchyEntityRepository implements MaterialRepository {
   readonly tableName = schema.tableName;
@@ -139,11 +138,25 @@ export default class SqliteMaterialRepository extends HierarchyEntityRepository 
     return Boolean(row.fileId);
   }
 
-  async batchUpdate(patches: MaterialsPatchDTO) {
-    await Promise.all(
-      patches.map(({ id, ...patch }) => this.db.updateTable(this.tableName).set(patch).where('id', '=', id).execute()),
-    );
+  update(id: Material['id'], material: MaterialPatch): Promise<Material | null>;
+  update(id: Material['id'][], material: MaterialPatch): Promise<Material[]>;
+  async update(id: Material['id'] | Material['id'][], patch: MaterialPatch) {
+    await this.db
+      .updateTable(this.tableName)
+      .set({
+        updatedAt: this.getTimestamp(),
+        ...patch,
+        ...(patch.updatedAt ? { userUpdatedAt: patch.updatedAt } : null),
+      })
+      .where('id', Array.isArray(id) ? 'in' : '=', id)
+      .execute();
 
-    return this.findAll({ id: getIds(patches) });
+    const rows = await this.findAll({ id: Array.isArray(id) ? id : [id] });
+
+    if (Array.isArray(id)) {
+      return rows;
+    }
+
+    return rows[0] || null;
   }
 }

@@ -99,26 +99,25 @@ describe('materials', function () {
 
   it('should batch update material and fail when one of ids is valid', async function () {
     const rootMaterials = await materialsController.query({});
-    await materialsController.batchUpdate([
-      { id: rootMaterials[0]!.id, name: 'one' },
-      { id: rootMaterials[1]!.id, name: 'two' },
-      { id: rootMaterials[2]!.id, name: 'three', icon: 'warning' },
-    ]);
+    await materialsController.batchUpdate({
+      ids: [rootMaterials[0]!.id, rootMaterials[1]!.id, rootMaterials[2]!.id],
+      material: { name: 'newName', icon: 'warning' },
+    });
 
     const updated1 = await materialsController.queryOne(rootMaterials[0]!.id);
     const updated2 = await materialsController.queryOne(rootMaterials[1]!.id);
     const updated3 = await materialsController.queryOne(rootMaterials[2]!.id);
 
-    ok(updated1.name === 'one');
-    ok(updated2.name === 'two');
-    ok(updated3.name === 'three');
-    ok(updated3.icon === 'warning');
+    for (const { name, icon } of [updated1, updated2, updated3]) {
+      ok(name === 'newName');
+      ok(icon === 'warning');
+    }
 
     await rejects(
-      materialsController.batchUpdate([
-        { id: 'invalid id', name: 'new test title' },
-        { id: rootMaterials[0]!.id, name: 'newName' },
-      ]),
+      materialsController.batchUpdate({
+        ids: ['invalid id', updated1.id],
+        material: { name: 'new name' },
+      }),
     );
   });
 });

@@ -7,13 +7,14 @@ import type {
   Material,
   MaterialQuery,
   MaterialEntity,
-  MaterialsPatchDTO,
+  MaterialPatch,
 } from 'model/material';
 
 export interface MaterialRepository {
   createDirectory: (directory: NewMaterialDTO) => Promise<MaterialDirectory>;
   createEntity: (material: NewMaterialDTO) => Promise<MaterialEntity>;
-  batchUpdate: (notes: MaterialsPatchDTO) => Promise<Material[]>;
+  update(id: Material['id'], material: MaterialPatch): Promise<Material | null>;
+  update(id: Material['id'][], material: MaterialPatch): Promise<Material[]>;
   findAll: (query: MaterialQuery) => Promise<Material[]>;
   findChildrenIds: (ids: Material['id'][]) => Promise<Record<Material['id'], Material['id'][]>>;
   findDescendantIds: (materialIds: Material['id'][]) => Promise<Record<Material['id'], Material['id'][]>>;
