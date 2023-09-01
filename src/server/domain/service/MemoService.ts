@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
+import mapValues from 'lodash/mapValues';
 
+import { buildIndex } from 'utils/collection';
 import type { MemoDTO, MemoPatchDTO, ParentMemoVO, MemoVO } from 'model/memo';
+import { EntityTypes } from 'model/entity';
 import { Events } from 'model/events';
 
 import BaseService from './BaseService';
-import { EntityTypes } from 'model/entity';
 
 @Injectable()
 export default class MemoService extends BaseService {
@@ -48,6 +50,11 @@ export default class MemoService extends BaseService {
 
   async query() {
     return await this.memos.findAll();
+  }
+
+  async getDigest(ids: MemoVO['id'][]) {
+    const memos = await this.memos.findAll({ id: ids });
+    return mapValues(buildIndex(memos), ({ content }) => content.slice(0, 5));
   }
 
   async assertAvailableIds(ids: MemoVO['id'][]) {

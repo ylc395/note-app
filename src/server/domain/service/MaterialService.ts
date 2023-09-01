@@ -1,5 +1,5 @@
 import uniq from 'lodash/uniq';
-import negate from 'lodash/negate';
+import mapValues from 'lodash/mapValues';
 import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import dayjs from 'dayjs';
 
@@ -20,9 +20,10 @@ import {
 import { EntityTypes } from 'model/entity';
 import { buildIndex, getIds, getLocators } from 'utils/collection';
 
-import BaseService from './BaseService';
+import BaseService, { Transaction } from './BaseService';
 import RecyclableService from './RecyclableService';
 import EntityService from './EntityService';
+import { isDirectory } from 'model/material';
 
 @Injectable()
 export default class MaterialService extends BaseService {
@@ -49,7 +50,7 @@ export default class MaterialService extends BaseService {
   }
 
   private async toVOs(materials: Material[]) {
-    const parentIds = getIds(materials.filter(negate(isEntityMaterial)));
+    const parentIds = getIds(materials.filter(isDirectory));
     const children = await this.getChildrenIds(parentIds);
     const stars = buildIndex(await this.stars.findAllByLocators(getLocators(materials, EntityTypes.Note)), 'entityId');
 
@@ -97,7 +98,7 @@ export default class MaterialService extends BaseService {
     await this.assertAvailableIds(ids);
 
     if (patch.parentId) {
-      await this.entityService.assertValidParent(EntityTypes.Material, patch.parentId, ids);
+      await this.assertValidParent(patch.parentId, ids);
     }
 
     const result = await this.materials.update(ids, {
@@ -106,6 +107,23 @@ export default class MaterialService extends BaseService {
     });
 
     return this.toVOs(result);
+  }
+
+  private async assertValidParent(parentId: Material['id'], childrenIds: Material['id'][]) {
+    await this.assertAvailableIds([parentId], MaterialTypes.Directory);
+
+    const descants = await this.materials.findDescendantIds(childrenIds);
+
+    for (const id of childrenIds) {
+      if (parentId === id || descants[id]?.includes(parentId)) {
+        throw new Error('invalid new parent id');
+      }
+    }
+  }
+
+  async getTitles(ids: Material['id'][]) {
+    const notes = await this.materials.findAll({ id: ids });
+    return mapValues(buildIndex(notes), normalizeTitle);
   }
 
   async getBlob(materialId: MaterialVO['id']) {
@@ -119,6 +137,7 @@ export default class MaterialService extends BaseService {
     return blob;
   }
 
+  @Transaction
   async createAnnotation(materialId: MaterialVO['id'], annotation: NewAnnotationDTO) {
     if (annotation.type === AnnotationTypes.PdfRange || annotation.type === AnnotationTypes.PdfArea) {
       await this.assertEntityMaterial(materialId, 'application/pdf');
@@ -136,6 +155,7 @@ export default class MaterialService extends BaseService {
     return await this.materials.findAllAnnotations(materialId);
   }
 
+  @Transaction
   async removeAnnotation(annotationId: AnnotationVO['id']) {
     await this.assertValidAnnotation(annotationId);
     const result = await this.materials.removeAnnotation(annotationId);
@@ -143,8 +163,11 @@ export default class MaterialService extends BaseService {
     if (!result) {
       throw new Error('invalid annotation');
     }
+
+    await this.materials.update(result.materialId, { userUpdatedAt: dayjs().unix() });
   }
 
+  @Transaction
   async updateAnnotation(annotationId: AnnotationVO['id'], patch: AnnotationPatchDTO) {
     await this.assertValidAnnotation(annotationId);
     const updated = await this.materials.updateAnnotation(annotationId, patch);
@@ -152,6 +175,7 @@ export default class MaterialService extends BaseService {
     if (!updated) {
       throw new Error('invalid id');
     }
+    await this.materials.update(updated.materialId, { userUpdatedAt: updated.updatedAt });
 
     return updated;
   }
@@ -161,7 +185,7 @@ export default class MaterialService extends BaseService {
     const rows = await this.queryAvailableMaterials({ id: uniqueIds });
     const result =
       rows.length === uniqueIds.length &&
-      (type ? rows.every(type === MaterialTypes.Entity ? isEntityMaterial : negate(isEntityMaterial)) : true);
+      (type ? rows.every(type === MaterialTypes.Entity ? isEntityMaterial : isDirectory) : true);
 
     if (!result) {
       throw new Error('invalid material id');

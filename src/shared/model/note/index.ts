@@ -41,9 +41,10 @@ export interface Note {
   parentId: EntityParentId;
   icon: string | null;
   updatedAt: number;
+  userUpdatedAt: number;
   createdAt: number;
 }
 
-export interface NoteVO extends Starable, Note {
+export interface NoteVO extends Starable, Omit<Note, 'userUpdatedAt'> {
   childrenCount: number;
 }

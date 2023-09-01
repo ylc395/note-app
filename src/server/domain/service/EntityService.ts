@@ -1,13 +1,8 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import groupBy from 'lodash/groupBy';
-import mapValues from 'lodash/mapValues';
 
 import { type EntityId, type HierarchyEntity, EntityTypes, EntityRecord, EntitiesLocator } from 'model/entity';
-import { normalizeTitle as normalizeNoteTitle } from 'model/note';
-import { MaterialTypes, normalizeTitle as normalizeMaterialTitle } from 'model/material';
-import { digest } from 'model/memo';
 import type { TreeNodeVO } from 'model/abstract/Tree';
-import { buildIndex } from 'utils/collection';
 
 import BaseService from './BaseService';
 import NoteService from './NoteService';
@@ -20,29 +15,16 @@ export default class EntityService extends BaseService {
   @Inject(forwardRef(() => MaterialService)) private readonly materialService!: MaterialService;
   @Inject(forwardRef(() => MaterialService)) private readonly memoService!: MemoService;
 
-  async assertAvailableEntities({ type, ids }: EntitiesLocator, isParent?: true) {
+  async assertAvailableEntities({ type, ids }: EntitiesLocator) {
     switch (type) {
       case EntityTypes.Note:
         return this.noteService.assertAvailableIds(ids);
       case EntityTypes.Material:
-        return this.materialService.assertAvailableIds(ids, isParent && MaterialTypes.Directory);
+        return this.materialService.assertAvailableIds(ids);
       case EntityTypes.Memo:
         return this.memoService.assertAvailableIds(ids);
       default:
         throw new Error('invalid type');
-    }
-  }
-
-  async assertValidParent(type: EntityTypes, parentId: EntityId, entityIds: EntityId[]) {
-    await this.assertAvailableEntities({ type, ids: [parentId] }, true);
-
-    // an ancestor note can not be a child of its descants nodes
-    const descants = await this.getDescantsOfType(type, entityIds);
-
-    for (const id of entityIds) {
-      if (parentId === id || descants[id]?.includes(parentId)) {
-        throw new Error('invalid new parent id');
-      }
     }
   }
 
@@ -75,22 +57,23 @@ export default class EntityService extends BaseService {
 
     for (const [type, records] of Object.entries(entitiesGroup)) {
       const ids = records.map(({ entityId }) => entityId);
-      const _type = Number(type) as EntityTypes;
+      let titles: Record<EntityId, string>;
 
-      if (_type === EntityTypes.Note) {
-        const notes = await this.notes.findAll({ id: ids });
-        entityTitles[_type] = mapValues(buildIndex(notes), normalizeNoteTitle);
+      switch (Number(type)) {
+        case EntityTypes.Note:
+          titles = await this.noteService.getTitles(ids);
+          break;
+        case EntityTypes.Material:
+          titles = await this.materialService.getTitles(ids);
+          break;
+        case EntityTypes.Memo:
+          titles = await this.memoService.getDigest(ids);
+          break;
+        default:
+          throw new Error('invalid type');
       }
 
-      if (_type === EntityTypes.Material) {
-        const materials = await this.materials.findAll({ id: ids });
-        entityTitles[_type] = mapValues(buildIndex(materials), normalizeMaterialTitle);
-      }
-
-      if (_type === EntityTypes.Memo) {
-        const memos = await this.memos.findAll({ id: ids });
-        entityTitles[_type] = mapValues(buildIndex(memos), digest);
-      }
+      entityTitles[Number(type) as EntityTypes] = titles;
     }
 
     return entityTitles;

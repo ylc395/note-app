@@ -144,9 +144,8 @@ export default class SqliteMaterialRepository extends HierarchyEntityRepository 
     await this.db
       .updateTable(this.tableName)
       .set({
-        updatedAt: this.getTimestamp(),
         ...patch,
-        ...(patch.updatedAt ? { userUpdatedAt: patch.updatedAt } : null),
+        updatedAt: this.getTimestamp(),
       })
       .where('id', Array.isArray(id) ? 'in' : '=', id)
       .execute();

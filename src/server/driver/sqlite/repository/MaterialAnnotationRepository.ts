@@ -47,9 +47,9 @@ export default class MaterialAnnotationRepository extends BaseRepository {
   }
 
   async remove(annotationId: Annotation['id']) {
-    const { numDeletedRows } = await this.db.deleteFrom(tableName).where('id', '=', annotationId).executeTakeFirst();
+    const row = await this.db.deleteFrom(tableName).where('id', '=', annotationId).returningAll().executeTakeFirst();
 
-    return numDeletedRows === 1n;
+    return row ? MaterialAnnotationRepository.rowToVO(row) : null;
   }
 
   async update(annotationId: Annotation['id'], { comment, ...attr }: AnnotationPatchDTO) {
@@ -67,7 +67,7 @@ export default class MaterialAnnotationRepository extends BaseRepository {
 
     const updated = await this.db
       .updateTable(tableName)
-      .set({ comment, meta: newMeta })
+      .set({ comment, meta: newMeta, updatedAt: this.getTimestamp() })
       .where('id', '=', annotationId)
       .returningAll()
       .executeTakeFirst();

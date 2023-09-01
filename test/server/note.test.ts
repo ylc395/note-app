@@ -63,12 +63,16 @@ describe('notes', function () {
   });
 
   it('should write body, respecting isReadonly', async function () {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
     for (const note of rootNotes) {
       if (note.isReadonly) {
         await rejects(noteController.updateBody(note.id, 'test body'));
       } else {
         const body = await noteController.updateBody(note.id, 'test body');
         strictEqual(body, 'test body');
+        const updatedNote = await noteController.queryOne(note.id);
+        ok(updatedNote.updatedAt > note.updatedAt);
       }
     }
 

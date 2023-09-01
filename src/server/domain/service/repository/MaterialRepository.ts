@@ -23,7 +23,7 @@ export interface MaterialRepository {
   findBlobById: (id: Material['id']) => Promise<ArrayBuffer | null>;
   createAnnotation: (materialId: Material['id'], annotation: NewAnnotationDTO) => Promise<Annotation>;
   findAllAnnotations: (materialId: Material['id']) => Promise<Annotation[]>;
-  removeAnnotation: (annotationId: Annotation['id']) => Promise<boolean>;
+  removeAnnotation: (annotationId: Annotation['id']) => Promise<Annotation | null>;
   findAnnotationById: (annotationId: Annotation['id']) => Promise<Annotation | null>;
   updateAnnotation: (annotationId: Annotation['id'], patch: AnnotationPatchDTO) => Promise<Annotation | null>;
 }

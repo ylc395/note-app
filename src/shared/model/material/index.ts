@@ -11,11 +11,15 @@ export const newMaterialDTOSchema = object({
   sourceUrl: string().url().optional(),
 });
 
+const materialPatchDTOSchema = newMaterialDTOSchema.omit({ fileId: true });
+
+export type MaterialPatchDTO = Infer<typeof materialPatchDTOSchema>;
+
 export const materialsPatchDTOSchema = object({
   ids: string()
     .array()
     .refine((ids) => new Set(ids).size === ids.length),
-  material: newMaterialDTOSchema.omit({ fileId: true }),
+  material: materialPatchDTOSchema,
 });
 
 export type NewMaterialDTO = Infer<typeof newMaterialDTOSchema>;
@@ -32,6 +36,7 @@ interface BaseMaterial {
   icon: string | null;
   parentId: EntityParentId;
   createdAt: number;
+  userUpdatedAt: number;
   updatedAt: number;
 }
 
@@ -44,19 +49,19 @@ export interface MaterialEntity extends BaseMaterial {
 
 export type Material = MaterialDirectory | MaterialEntity;
 
-export interface MaterialDirectoryVO extends MaterialDirectory, Starable {
+export interface MaterialDirectoryVO extends Omit<MaterialDirectory, 'userUpdatedAt'>, Starable {
   childrenCount: number;
 }
 
-export interface MaterialEntityVO extends MaterialEntity, Starable {}
+export interface MaterialEntityVO extends Omit<MaterialEntity, 'userUpdatedAt'>, Starable {}
 
 export type MaterialVO = MaterialDirectoryVO | MaterialEntityVO;
 
-export const isDirectory = (entity: Material): entity is MaterialDirectoryVO => {
+export const isDirectory = (entity: MaterialVO): entity is MaterialDirectoryVO => {
   return 'childrenCount' in entity;
 };
 
-export const isEntityMaterial = (entity: Material): entity is MaterialEntity => {
+export const isEntityMaterial = (entity: MaterialVO): entity is MaterialEntityVO => {
   return 'mimeType' in entity;
 };
 

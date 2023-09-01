@@ -1,6 +1,7 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import omit from 'lodash/omit';
 import uniq from 'lodash/uniq';
+import mapValues from 'lodash/mapValues';
 import dayjs from 'dayjs';
 
 import { buildIndex, getIds, getLocators } from 'utils/collection';
@@ -45,7 +46,12 @@ export default class NoteService extends BaseService {
 
     const newNote = isDuplicate(note) ? await this.duplicate(note.duplicateFrom) : await this.notes.create(note);
 
-    return (await this.toVOs([newNote]))[0]!;
+    return {
+      ...omit(newNote, ['userUpdatedAt']),
+      isStar: false,
+      childrenCount: 0,
+      title: normalizeTitle(newNote),
+    };
   }
 
   private async duplicate(noteId: NoteVO['id']) {
@@ -76,7 +82,7 @@ export default class NoteService extends BaseService {
 
       const result = await this.notes.update(noteId, {
         body: content,
-        updatedAt: dayjs().unix(),
+        userUpdatedAt: dayjs().unix(),
       });
 
       if (result === null) {
@@ -112,10 +118,11 @@ export default class NoteService extends BaseService {
     const _children = await this.getChildrenIds(getIds(rawNotes));
 
     return rawNotes.map((note) => ({
-      ...note,
+      ...omit(note, ['userUpdatedAt']),
       title: normalizeTitle(note),
       childrenCount: _children[note.id]?.length || 0,
       isStar: Boolean(stars[note.id]),
+      updatedAt: note.userUpdatedAt,
     }));
   }
 
@@ -124,7 +131,7 @@ export default class NoteService extends BaseService {
     await this.assertAvailableIds(ids);
 
     if (patch.parentId) {
-      await this.entityService.assertValidParent(EntityTypes.Note, patch.parentId, ids);
+      await this.assertValidParent(patch.parentId, ids);
     }
 
     const result = await this.notes.update(ids, {
@@ -133,6 +140,22 @@ export default class NoteService extends BaseService {
     });
 
     return this.toVOs(result);
+  }
+
+  private async assertValidParent(parentId: Note['id'], childrenIds: Note['id'][]) {
+    await this.assertAvailableIds([parentId]);
+    const descantIds = await this.notes.findDescendantIds(childrenIds);
+
+    for (const id of childrenIds) {
+      if (parentId === id || descantIds[id]?.includes(parentId)) {
+        throw new Error('invalid new parent id');
+      }
+    }
+  }
+
+  async getTitles(ids: Note['id'][]) {
+    const notes = await this.notes.findAll({ id: ids });
+    return mapValues(buildIndex(notes), normalizeTitle);
   }
 
   private async queryAvailableNotes(q: NoteQuery) {
