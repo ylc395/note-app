@@ -8,6 +8,9 @@ import type {
   MaterialEntity,
 } from 'shard/model/material';
 
+export type NewMaterialDirectory = Partial<MaterialDirectory>;
+export type NewMaterialEntity = Partial<MaterialEntity> & { fileId: string };
+
 export interface MaterialQuery {
   parentId?: Material['parentId'];
   id?: Material['id'][];
@@ -18,9 +21,7 @@ export type Annotation = AnnotationVO & {
   materialId: Material['id'];
 };
 
-export interface MaterialPatch extends MaterialPatchDTO {
-  userUpdatedAt?: number;
-}
+export type MaterialPatch = MaterialPatchDTO & { userUpdatedAt?: number };
 
 export const isEntityMaterial = (entity: Material): entity is MaterialEntity => {
   return 'mimeType' in entity;

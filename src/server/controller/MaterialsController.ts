@@ -8,7 +8,7 @@ import {
   type AnnotationPatchDTO,
   type NewAnnotationDTO,
   type MaterialsPatchDTO,
-  newMaterialDTOSchema,
+  newMaterialDirectoryDTOSchema,
   clientMaterialQuerySchema,
   newAnnotationDTOSchema,
   annotationPatchDTOSchema,
@@ -68,7 +68,7 @@ export default class MaterialsController {
   }
 
   @Post('/materials')
-  async create(@Body(createSchemaPipe(newMaterialDTOSchema)) material: NewMaterialDTO): Promise<MaterialVO> {
+  async create(@Body(createSchemaPipe(newMaterialDirectoryDTOSchema)) material: NewMaterialDTO): Promise<MaterialVO> {
     return await this.materialService.create(material);
   }
 

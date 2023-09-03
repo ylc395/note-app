@@ -4,12 +4,13 @@ import type { Selectable } from 'kysely';
 
 import {
   MaterialTypes,
-  type NewMaterialDTO,
   type MaterialDirectory,
   type MaterialEntity,
   type Material,
   type MaterialQuery,
   type MaterialPatch,
+  type NewMaterialDirectory,
+  type NewMaterialEntity,
 } from 'model/material';
 import type { MaterialRepository } from 'service/repository/MaterialRepository';
 
@@ -23,12 +24,12 @@ export default class SqliteMaterialRepository extends HierarchyEntityRepository 
   readonly tableName = schema.tableName;
   private readonly files = new FileRepository(this.db);
   private readonly annotations = new MaterialAnnotationRepository(this.db);
-  async createDirectory(directory: NewMaterialDTO) {
+  async createDirectory(directory: NewMaterialDirectory) {
     const createdRow = await this.createOne(this.tableName, { ...directory, id: this.generateId() });
     return SqliteMaterialRepository.rowToDirectory(createdRow);
   }
 
-  async createEntity(material: NewMaterialDTO) {
+  async createEntity(material: NewMaterialEntity) {
     if (!material.fileId) {
       throw new Error('no fileId');
     }

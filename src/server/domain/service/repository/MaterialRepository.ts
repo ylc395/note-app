@@ -2,7 +2,8 @@ import type {
   NewAnnotationDTO,
   AnnotationPatchDTO,
   Annotation,
-  NewMaterialDTO,
+  NewMaterialDirectory,
+  NewMaterialEntity,
   MaterialDirectory,
   Material,
   MaterialQuery,
@@ -11,8 +12,8 @@ import type {
 } from 'model/material';
 
 export interface MaterialRepository {
-  createDirectory: (directory: NewMaterialDTO) => Promise<MaterialDirectory>;
-  createEntity: (material: NewMaterialDTO) => Promise<MaterialEntity>;
+  createDirectory: (directory: NewMaterialDirectory) => Promise<MaterialDirectory>;
+  createEntity: (material: NewMaterialEntity) => Promise<MaterialEntity>;
   update(id: Material['id'], material: MaterialPatch): Promise<Material | null>;
   update(id: Material['id'][], material: MaterialPatch): Promise<Material[]>;
   findAll: (query: MaterialQuery) => Promise<Material[]>;

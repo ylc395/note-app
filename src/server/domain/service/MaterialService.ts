@@ -15,6 +15,7 @@ import {
   AnnotationTypes,
   MaterialTypes,
   isEntityMaterial,
+  isNewMaterialEntity,
   normalizeTitle,
 } from 'model/material';
 import { EntityTypes } from 'model/entity';
@@ -30,23 +31,22 @@ export default class MaterialService extends BaseService {
   @Inject(forwardRef(() => RecyclableService)) private readonly recyclableService!: RecyclableService;
   @Inject(forwardRef(() => EntityService)) private readonly entityService!: EntityService;
 
-  async create({ fileId, ...info }: NewMaterialDTO) {
-    if (info.parentId) {
-      await this.assertAvailableIds([info.parentId], MaterialTypes.Directory);
+  async create(newMaterial: NewMaterialDTO) {
+    if (newMaterial.parentId) {
+      await this.assertAvailableIds([newMaterial.parentId], MaterialTypes.Directory);
     }
 
-    if (fileId) {
-      if (!(await this.files.findOneById(fileId))) {
+    if (isNewMaterialEntity(newMaterial)) {
+      if (!(await this.files.findOneById(newMaterial.fileId))) {
         throw new Error('invalid fileId');
       }
 
-      const material = await this.materials.createEntity({ fileId, ...info });
+      const material = await this.materials.createEntity(newMaterial);
       return { ...material, name: normalizeTitle(material), isStar: false };
+    } else {
+      const directory = await this.materials.createDirectory(newMaterial);
+      return { ...directory, name: normalizeTitle(directory), isStar: false, childrenCount: 0 };
     }
-
-    const directory = await this.materials.createDirectory(info);
-
-    return { ...directory, name: normalizeTitle(directory), isStar: false, childrenCount: 0 };
   }
 
   private async toVOs(materials: Material[]) {

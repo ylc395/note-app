@@ -3,26 +3,41 @@ import { object, string, nativeEnum, preprocess, type infer as Infer } from 'zod
 import type { EntityId, EntityParentId } from '../entity';
 import type { Starable } from '../star';
 
-export const newMaterialDTOSchema = object({
+export const newMaterialDirectoryDTOSchema = object({
   name: string().min(1).optional(),
   parentId: string().nullable().optional(),
   icon: string().min(1).optional(),
-  fileId: string().optional(),
+});
+
+export const newMaterialEntityDTOSchema = newMaterialDirectoryDTOSchema.extend({
+  fileId: string(),
   sourceUrl: string().url().optional(),
 });
 
-const materialPatchDTOSchema = newMaterialDTOSchema.omit({ fileId: true });
+const materialDirectoryPatchDTOSchema = newMaterialDirectoryDTOSchema;
+const materialEntityPatchDTOSchema = newMaterialEntityDTOSchema.omit({ fileId: true });
 
-export type MaterialPatchDTO = Infer<typeof materialPatchDTOSchema>;
+export type MaterialPatchDTO =
+  | Infer<typeof materialDirectoryPatchDTOSchema>
+  | Infer<typeof materialEntityPatchDTOSchema>;
 
 export const materialsPatchDTOSchema = object({
   ids: string()
     .array()
     .refine((ids) => new Set(ids).size === ids.length),
-  material: materialPatchDTOSchema,
+  material: materialEntityPatchDTOSchema.or(materialDirectoryPatchDTOSchema),
 });
 
-export type NewMaterialDTO = Infer<typeof newMaterialDTOSchema>;
+export type NewMaterialEntityDTO = Infer<typeof newMaterialEntityDTOSchema>;
+
+export type NewMaterialDTO = Infer<typeof newMaterialDirectoryDTOSchema> | NewMaterialEntityDTO;
+
+export const isNewMaterialEntity = (
+  newMaterial: NewMaterialDTO,
+): newMaterial is Infer<typeof newMaterialEntityDTOSchema> => {
+  return 'fileId' in newMaterial;
+};
+
 export type MaterialsPatchDTO = Infer<typeof materialsPatchDTOSchema>;
 
 export enum MaterialTypes {
