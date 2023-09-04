@@ -3,13 +3,13 @@ import debounce from 'lodash/debounce';
 import { container } from 'tsyringe';
 
 import { EntityTypes } from 'model/entity';
-import type { NoteVO as Note, NoteBody, NotePatchDTO as NotePatch } from 'model/note';
+import type { NoteVO as Note, NotePatchDTO as NotePatch, NoteBodyVO } from 'model/note';
 import type Tile from 'model/workbench/Tile';
 import Editor from 'model/abstract/Editor';
 import NoteTree from 'model/note/Tree';
 
 export interface Entity {
-  body: NoteBody;
+  body: string;
   metadata: Note;
 }
 
@@ -24,7 +24,7 @@ export default class NoteEditor extends Editor<Entity> {
   protected async init() {
     const [{ body: metadata }, { body }] = await Promise.all([
       this.remote.get<void, Note>(`/notes/${this.entityId}`),
-      this.remote.get<void, NoteBody>(`/notes/${this.entityId}/body`),
+      this.remote.get<void, NoteBodyVO>(`/notes/${this.entityId}/body`),
     ]);
 
     this.load({ metadata, body });
@@ -41,7 +41,7 @@ export default class NoteEditor extends Editor<Entity> {
   }
 
   private readonly uploadBody = debounce((body: string) => {
-    this.remote.put<NoteBody>(`/notes/${this.entityId}/body`, body);
+    this.remote.put<NoteBodyVO>(`/notes/${this.entityId}/body`, body);
   }, 800);
 
   @action

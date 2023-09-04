@@ -26,7 +26,7 @@ export interface TreeNodeVO<T> {
 export type TreeVO<T = unknown> = TreeNodeVO<T>[];
 
 export interface TreeOptions<T> {
-  unselectable?: boolean;
+  unselectable?: boolean; // if true, can not unselect a node
   from?: TreeVO<T>;
 }
 
@@ -41,7 +41,7 @@ export interface SelectEvent {
 
 export default abstract class Tree<E extends TreeNodeEntity = TreeNodeEntity, T = unknown> extends Emitter<{
   nodeSelected: [TreeNode['id'] | null, SelectEvent];
-  nodeExpanded: [TreeNode['id']];
+  nodeExpanded: [TreeNode['id'] | null];
 }> {
   readonly root: TreeNode<T>;
 
@@ -262,7 +262,7 @@ export default abstract class Tree<E extends TreeNodeEntity = TreeNodeEntity, T 
     node.isExpanded = !node.isExpanded;
 
     if (node.isExpanded) {
-      this.emit('nodeExpanded', node.id);
+      this.emit('nodeExpanded', id);
     }
   }
 

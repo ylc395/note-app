@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
-import type { NoteVO, NewNoteDTO, DuplicateNoteDTO, NotePatchDTO, Note, NoteBody } from 'shard/model/note';
+import type { NoteVO, NewNoteDTO, DuplicateNoteDTO, NotePatchDTO, Note, NoteBodyDTO } from 'shard/model/note';
 
-export type NewNote = Partial<Note> & { body?: NoteBody; userUpdatedAt?: number };
+export type NewNote = Partial<Note> & { body?: NoteBodyDTO; userUpdatedAt?: number };
 
 export type NotePatch = Omit<NewNote, 'id'>;
 

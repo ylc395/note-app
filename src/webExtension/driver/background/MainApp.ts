@@ -39,7 +39,7 @@ export default class MainApp implements IMainApp, RemoteCallable {
     return (await browser.storage.local.get(TOKEN_KEY))[TOKEN_KEY];
   }
 
-  async fetch<T, K = void>(method: 'GET' | 'POST' | 'PUT' | 'PATCH', url: string, body?: K) {
+  async fetch<T, K = void>(method: 'GET' | 'POST' | 'PUT' | 'PATCH', url: string, body?: K, mimeType?: string) {
     const token = await this.getToken();
 
     if (!token) {
@@ -51,7 +51,9 @@ export default class MainApp implements IMainApp, RemoteCallable {
       body: body instanceof FormData ? body : body ? JSON.stringify(body) : undefined,
       headers: {
         Authorization: token,
-        ...(body ? { 'Content-Type': body instanceof FormData ? 'multipart/form-data' : 'application/json' } : null),
+        ...(body
+          ? { 'Content-Type': mimeType || (body instanceof FormData ? 'multipart/form-data' : 'application/json') }
+          : null),
       },
     });
 

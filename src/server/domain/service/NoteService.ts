@@ -7,7 +7,7 @@ import dayjs from 'dayjs';
 import { buildIndex, getIds, getLocators } from 'utils/collection';
 import {
   type NoteVO,
-  type NoteBody,
+  type NoteBodyDTO,
   type NewNoteDTO,
   type Note,
   type NoteQuery,
@@ -74,7 +74,7 @@ export default class NoteService extends BaseService {
     return newNote;
   }
 
-  async updateBody(noteId: NoteVO['id'], content: NoteBody) {
+  async updateBody(noteId: NoteVO['id'], content: NoteBodyDTO) {
     await this.db.transaction(async () => {
       if (!(await this.isWritable(noteId))) {
         throw new Error('note is readonly');

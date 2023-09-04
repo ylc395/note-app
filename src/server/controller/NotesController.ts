@@ -3,14 +3,14 @@ import { Controller } from '@nestjs/common';
 import { Post, Body, Get, Patch, createSchemaPipe, Param, Put, Query } from './decorators';
 import {
   type NewNoteDTO,
-  type NoteBody,
+  type NoteBodyDTO,
   type NoteVO,
   type ClientNoteQuery,
   type NotesPatchDTO,
   newNoteDTOSchema,
   notesPatchDTOSchema,
   clientNoteQuerySchema,
-  noteBodySchema,
+  noteBodyDTOSchema,
 } from 'model/note';
 import type { NoteTreeVO } from 'model/note/Tree';
 import NoteService from 'service/NoteService';
@@ -45,15 +45,15 @@ export default class NotesController {
   }
 
   @Get('/notes/:id/body')
-  async queryBody(@Param('id') noteId: string): Promise<NoteBody> {
+  async queryBody(@Param('id') noteId: string): Promise<NoteBodyDTO> {
     return await this.noteService.queryBody(noteId);
   }
 
   @Put('/notes/:id/body')
   async updateBody(
     @Param('id') noteId: string,
-    @Body(createSchemaPipe(noteBodySchema)) body: NoteBody,
-  ): Promise<NoteBody> {
+    @Body(createSchemaPipe(noteBodyDTOSchema)) body: NoteBodyDTO,
+  ): Promise<NoteBodyDTO> {
     return await this.noteService.updateBody(noteId, body);
   }
 }

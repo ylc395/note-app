@@ -34,8 +34,12 @@ export default class ConfigService {
     const targetType = this.get('targetEntityType');
     const targetId = targetType && this.get('targetEntityId')?.[targetType];
 
-    if (!targetId || !this.targetTree) {
+    if (!this.targetTree) {
       return { type: targetType };
+    }
+
+    if (!targetId) {
+      return { type: targetType, title: this.targetTree.root.title, path: '' };
     }
 
     const ancestors = this.targetTree.getAncestors(targetId);
@@ -50,14 +54,7 @@ export default class ConfigService {
 
   @computed
   get isValidTarget() {
-    const targetType = this.get('targetEntityType');
-    const targetId = targetType && this.get('targetEntityId')?.[targetType];
-
-    if (targetType === EntityTypes.Material && !targetId) {
-      return false;
-    }
-
-    return true;
+    return Boolean(this.targetTree);
   }
 
   private async init() {

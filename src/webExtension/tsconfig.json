@@ -2,6 +2,7 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "lib": ["DOM", "ESNext", "DOM.Iterable"],
+    "types": ["node"],
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {

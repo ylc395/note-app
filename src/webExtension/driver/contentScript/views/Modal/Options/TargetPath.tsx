@@ -7,7 +7,6 @@ import { container } from 'tsyringe';
 
 import Tree from 'components/Tree';
 import ConfigService from 'service/ConfigService';
-import { EntityTypes } from 'model/entity';
 
 export default observer(function TargetPath() {
   const [isOpen, { setTrue: open, setFalse: close, set: setIsOpen }] = useBoolean(false);
@@ -59,7 +58,7 @@ export default observer(function TargetPath() {
         title={config.target.path}
         className="cursor-pointer truncate border p-2"
       >
-        <span>{config.target.title || (config.target.type === EntityTypes.Note ? '根' : '点击选择')}</span>
+        <span>{config.target.title || config.targetTree?.root.title}</span>
         <CaretDownFilled className="absolute right-5 top-1/2 -translate-y-1/2 opacity-60" />
       </div>
       {isOpen && (
@@ -73,7 +72,7 @@ export default observer(function TargetPath() {
             <Tree
               ref={treeRef}
               tree={config.targetTree}
-              visibleRoot={config.target.type === EntityTypes.Note}
+              visibleRoot
               className="w-full"
               nodeClassName="flex items-center cursor-pointer py-1 pl-2 data-[selected=true]:text-white data-[selected=true]:bg-blue-400"
               titleClassName="truncate min-w-0 "

@@ -23,7 +23,12 @@ export interface Payload extends TaskResult {
 export interface MainApp extends RemoteCallable {
   setToken: (token: string) => Promise<void>;
   getStatus: () => Promise<Statuses>;
-  fetch<T, K = void>(method: 'GET' | 'POST' | 'PUT' | 'PATCH', url: string, body?: K): Promise<T | null>;
+  fetch<T, K = void>(
+    method: 'GET' | 'POST' | 'PUT' | 'PATCH',
+    url: string,
+    body?: K,
+    mimeType?: string,
+  ): Promise<T | null>;
 }
 
 export const token: InjectionToken<MainApp> = Symbol();

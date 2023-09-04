@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 import type { Request } from 'express';
+import rawbody from 'raw-body';
 
 import type { FakeHttpRequest } from 'infra/fakeHttp';
 
@@ -44,9 +45,15 @@ export const Put = createHttpDecorator('PUT');
 
 // todo: don't know how to reuse decorators below from @nestjs/common package. So just DIY some simple impl for both fakeHTTP and real HTTP
 
-export const Body = createParamDecorator((field, ctx: ExecutionContext) => {
+export const Body = createParamDecorator(async (field, ctx: ExecutionContext) => {
   if (ctx.getType() === 'http') {
     const request = ctx.switchToHttp().getRequest<Request>();
+
+    if (request.headers['content-type']?.startsWith('text/')) {
+      const raw = (await rawbody(request)).toString();
+      return raw;
+    }
+
     return typeof field === 'string' ? request.body?.[field] : request.body;
   }
 

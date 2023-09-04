@@ -2,7 +2,7 @@ import { container } from 'tsyringe';
 import { makeObservable, observable, runInAction } from 'mobx';
 
 import { Statuses, token as mainAppToken, type Payload } from 'infra/MainApp';
-import { MaterialTypes, type DirectoryVO, type MaterialDTO, MaterialVO } from 'model/material';
+import { MaterialTypes, type MaterialDirectoryVO, type NewMaterialEntityDTO, type MaterialVO } from 'model/material';
 import type { FileVO } from 'model/file';
 import type { NoteBodyDTO, NewNoteDTO, NoteVO } from 'model/note';
 import type { MemoDTO } from 'model/memo';
@@ -33,10 +33,10 @@ export default class MainAppService {
     }
   }
 
-  async setToken(token: string) {
+  readonly setToken = async (token: string) => {
     await this.mainApp.setToken(token);
     this.updateAppStatus();
-  }
+  };
 
   async save(saveAs: EntityTypes, payload: Payload) {
     switch (saveAs) {
@@ -52,31 +52,20 @@ export default class MainAppService {
   }
 
   private async saveMaterial(payload: Payload) {
-    let file: FileVO | undefined;
+    const data = new FormData();
+    data.append('files', payload.contentType === 'png' ? await (await fetch(payload.content)).blob() : payload.content);
+    const files = await this.mainApp.fetch<FileVO[], FormData>('PATCH', '/files', data);
+    const file = files?.[0];
 
-    if (payload.contentType === 'png') {
-      const data = new FormData();
-      data.append('files', await (await fetch(payload.content)).blob());
-      const files = await this.mainApp.fetch<FileVO[], FormData>('PATCH', '/files', data);
-      file = files?.[0];
-
-      if (!file) {
-        throw new Error('create files fail');
-      }
+    if (!file) {
+      throw new Error('create files fail');
     }
 
-    await this.mainApp.fetch<void, MaterialDTO>('POST', '/materials', {
+    await this.mainApp.fetch<void, NewMaterialEntityDTO>('POST', '/materials', {
       name: payload.title,
       sourceUrl: payload.sourceUrl,
       parentId: payload.parentId,
-      ...(file
-        ? { fileId: file.id }
-        : {
-            file: {
-              mimeType: payload.contentType === 'html' ? 'text/html' : 'text/markdown',
-              data: payload.content,
-            },
-          }),
+      fileId: file.id,
     });
   }
 
@@ -94,7 +83,7 @@ export default class MainAppService {
       throw new Error('create note failed');
     }
 
-    await this.mainApp.fetch<void, NoteBodyDTO>('PUT', `/notes/${note.id}/body`, { content: payload.content });
+    await this.mainApp.fetch<void, NoteBodyDTO>('PUT', `/notes/${note.id}/body`, payload.content, 'text/markdown');
   }
 
   private async saveMemo(payload: Payload) {
@@ -138,11 +127,11 @@ export default class MainAppService {
     return null;
   }
 
-  async getChildren(type: EntityTypes.Material | EntityTypes.Note, parentId: EntityId) {
+  async getChildren(type: EntityTypes.Material | EntityTypes.Note, parentId: EntityId | null) {
     const url =
       type === EntityTypes.Material
-        ? `/materials?parentId=${parentId}&type=${MaterialTypes.Directory}`
-        : `/notes?parentId=${parentId}`;
-    return await this.mainApp.fetch<NoteVO[] | DirectoryVO[]>('GET', url);
+        ? `/materials?${parentId ? `parentId=${parentId}&` : ''}type=${MaterialTypes.Directory}`
+        : `/notes${parentId ? `?parentId=${parentId}` : ''}`;
+    return await this.mainApp.fetch<NoteVO[] | MaterialDirectoryVO[]>('GET', url);
   }
 }

@@ -109,6 +109,7 @@
     "page-lifecycle": "^0.1.2",
     "path-to-regexp": "^6.2.1",
     "pdfjs-dist": "^3.6.172",
+    "raw-body": "^2.5.2",
     "re-resizable": "^6.9.9",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
