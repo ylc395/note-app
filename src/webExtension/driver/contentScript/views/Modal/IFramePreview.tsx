@@ -31,6 +31,7 @@ export default function IFramePreview({ html }: { html: string }) {
     <div className="box-content border" style={{ width, height }}>
       <iframe
         ref={iframeRef}
+        // csp won't prevent chrome:// url for iframe
         src={previewPageUrl}
         width={viewportWidth}
         height={height / ratio}

@@ -53,7 +53,13 @@ export default class MainAppService {
 
   private async saveMaterial(payload: Payload) {
     const data = new FormData();
-    data.append('files', payload.contentType === 'png' ? await (await fetch(payload.content)).blob() : payload.content);
+    data.append(
+      'files[]',
+      payload.contentType === 'png'
+        ? await (await fetch(payload.content)).blob()
+        : new Blob([payload.content], { type: payload.contentType === 'html' ? 'text/html' : 'text/markdown' }),
+    );
+
     const files = await this.mainApp.fetch<FileVO[], FormData>('PATCH', '/files', data);
     const file = files?.[0];
 

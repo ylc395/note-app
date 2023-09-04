@@ -11,6 +11,8 @@ export const newMaterialEntityDTOSchema = newMaterialDirectoryDTOSchema.extend({
   sourceUrl: string().url().optional(),
 });
 
+export const newMaterialDTOSchema = newMaterialEntityDTOSchema.or(newMaterialDirectoryDTOSchema);
+
 const materialDirectoryPatchDTOSchema = newMaterialDirectoryDTOSchema;
 const materialEntityPatchDTOSchema = newMaterialEntityDTOSchema.omit({ fileId: true });
 

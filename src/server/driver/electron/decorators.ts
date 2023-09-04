@@ -1,6 +1,6 @@
 import {
-  createParamDecorator,
   type ExecutionContext,
+  createParamDecorator,
   applyDecorators,
   Get as HttpGet,
   Post as HttpPost,
@@ -9,12 +9,12 @@ import {
   Put as HttpPut,
 } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
-import type { Request } from 'express';
+import type { Request as ExpressRequest } from 'express';
 import rawbody from 'raw-body';
 
-import type { FakeHttpRequest } from 'infra/fakeHttp';
+import type { IpcRequest } from 'infra/transport';
 
-type Method = FakeHttpRequest<unknown>['method'];
+type Method = IpcRequest<unknown>['method'];
 
 const REAL_HTTP: Record<Method, (path: string) => MethodDecorator> = {
   GET: HttpGet,
@@ -47,7 +47,7 @@ export const Put = createHttpDecorator('PUT');
 
 export const Body = createParamDecorator(async (field, ctx: ExecutionContext) => {
   if (ctx.getType() === 'http') {
-    const request = ctx.switchToHttp().getRequest<Request>();
+    const request = ctx.switchToHttp().getRequest<ExpressRequest>();
 
     if (request.headers['content-type']?.startsWith('text/')) {
       const raw = (await rawbody(request)).toString();
@@ -58,32 +58,32 @@ export const Body = createParamDecorator(async (field, ctx: ExecutionContext) =>
   }
 
   return typeof field === 'string'
-    ? ctx.getArgByIndex<FakeHttpRequest<Record<string, unknown>>>(0)?.body?.[field]
-    : ctx.getArgByIndex<FakeHttpRequest<unknown>>(0)?.body;
+    ? ctx.getArgByIndex<IpcRequest<Record<string, unknown>>>(0)?.body?.[field]
+    : ctx.getArgByIndex<IpcRequest<unknown>>(0)?.body;
 });
 
 export const Query = createParamDecorator((_, ctx: ExecutionContext) => {
   if (ctx.getType() === 'http') {
-    return ctx.switchToHttp().getRequest<Request>().query;
+    return ctx.switchToHttp().getRequest<ExpressRequest>().query;
   }
 
-  return ctx.getArgByIndex<FakeHttpRequest<unknown>>(0)?.query || {};
+  return ctx.getArgByIndex<IpcRequest<unknown>>(0)?.query || {};
 });
 
 export const Headers = createParamDecorator((filed, ctx: ExecutionContext) => {
   if (ctx.getType() === 'http') {
-    return ctx.switchToHttp().getRequest<Request>().headers[filed];
+    return ctx.switchToHttp().getRequest<ExpressRequest>().headers[filed];
   }
 
-  return ctx.getArgByIndex<FakeHttpRequest<unknown>>(0)?.headers?.[filed];
+  return ctx.getArgByIndex<IpcRequest<unknown>>(0)?.headers?.[filed];
 });
 
 export const Param = createParamDecorator((field, ctx: ExecutionContext) => {
   if (ctx.getType() === 'http') {
-    return ctx.switchToHttp().getRequest<Request>().params[field];
+    return ctx.switchToHttp().getRequest<ExpressRequest>().params[field];
   }
 
-  const param = ctx.getArgByIndex<FakeHttpRequest<unknown>>(0)?.params?.[field];
+  const param = ctx.getArgByIndex<IpcRequest<unknown>>(0)?.params?.[field];
   return param ? decodeURIComponent(param) : undefined;
 });
 
@@ -95,6 +95,10 @@ export const Response = createParamDecorator((_, ctx: ExecutionContext) => {
   return ctx.switchToRpc().getContext();
 });
 
-export interface IResponse {
-  set: (k: string, v: string) => void;
-}
+export const Request = createParamDecorator((_, ctx: ExecutionContext) => {
+  if (ctx.getType() === 'http') {
+    return ctx.switchToHttp().getRequest();
+  }
+
+  return ctx.switchToRpc().getData();
+});

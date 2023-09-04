@@ -48,12 +48,10 @@ export default class MainApp implements IMainApp, RemoteCallable {
     // there is no `window` in background env. so use `globalThis`
     const res = await globalThis.fetch(`${HOST}${url}`, {
       method,
-      body: body instanceof FormData ? body : body ? JSON.stringify(body) : undefined,
+      body: body instanceof FormData || typeof body === 'string' ? body : body && JSON.stringify(body),
       headers: {
         Authorization: token,
-        ...(body
-          ? { 'Content-Type': mimeType || (body instanceof FormData ? 'multipart/form-data' : 'application/json') }
-          : null),
+        ...(body && !(body instanceof FormData) ? { 'Content-Type': mimeType || 'application/json' } : null),
       },
     });
 

@@ -8,7 +8,7 @@ import { token as localStorageToken } from 'infra/localStorage';
 import 'utils/mobx';
 
 import httpClient from './infra/httpClient';
-import ipcClient from './infra/fakeHttpClient';
+import ipcClient from './infra/ipcClient';
 import { getRootElement, ui } from './infra/ui';
 import webLocalStorage from './infra/localStorage';
 import App from './views/App';

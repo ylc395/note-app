@@ -6,7 +6,7 @@ import isError from 'lodash/isError';
 import toPlainObject from 'lodash/toPlainObject';
 
 import { InvalidInputError } from 'model/Error';
-import { FAKE_HTTP_CHANNEL, type FakeHttpRequest, type FakeHttpResponse } from 'infra/fakeHttp';
+import { IPC_CHANNEL, type IpcRequest, type IpcResponse } from 'infra/transport';
 import Context from './Context';
 
 export default class ElectronIpcServer extends Server implements CustomTransportStrategy {
@@ -19,7 +19,7 @@ export default class ElectronIpcServer extends Server implements CustomTransport
       this.routeMap.set(path, match(path));
     }
 
-    ipcMain.handle(FAKE_HTTP_CHANNEL, async (e, req: FakeHttpRequest<unknown>): Promise<FakeHttpResponse<unknown>> => {
+    ipcMain.handle(IPC_CHANNEL, async (e, req: IpcRequest<unknown>): Promise<IpcResponse<unknown>> => {
       this.populateRequest(req);
 
       const pattern = this.normalizePattern({ path: req.route || '', method: req.method });
@@ -55,7 +55,7 @@ export default class ElectronIpcServer extends Server implements CustomTransport
     cb();
   }
 
-  private populateRequest(req: FakeHttpRequest<unknown>) {
+  private populateRequest(req: IpcRequest<unknown>) {
     for (const [path, matcher] of this.routeMap.entries()) {
       const result = matcher(req.path);
 
@@ -71,7 +71,7 @@ export default class ElectronIpcServer extends Server implements CustomTransport
   }
 
   close() {
-    ipcMain.removeHandler(FAKE_HTTP_CHANNEL);
+    ipcMain.removeHandler(IPC_CHANNEL);
   }
 }
 

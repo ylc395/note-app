@@ -1,9 +1,12 @@
 import { Controller } from '@nestjs/common';
+import multer from 'multer';
+import type { Request as ExpressRequest, Response as ExpressResponse } from 'express';
 
-import { type FileVO, type FilesDTO, filesDTOSchema } from 'model/file';
+import type { IRequest, IResponse } from 'infra/transport';
+import { type FileVO, filesDTOSchema } from 'model/file';
 import FileService from 'service/FileService';
 
-import { Get, Body, createSchemaPipe, Patch, Param, Response, IResponse } from './decorators';
+import { Get, Patch, Param, Response, Request } from './decorators';
 
 @Controller()
 export default class ResourcesController {
@@ -28,7 +31,30 @@ export default class ResourcesController {
   }
 
   @Patch('/files')
-  async uploadFiles(@Body(createSchemaPipe(filesDTOSchema)) files: FilesDTO): Promise<(FileVO | null)[]> {
-    return await this.fileService.createFiles(files);
+  async uploadFiles(@Request() req: IRequest, @Response() res: IResponse): Promise<(FileVO | null)[]> {
+    const validation = filesDTOSchema.safeParse(req.body);
+
+    if (validation.success) {
+      return await this.fileService.createFiles(validation.data);
+    }
+
+    const upload = multer().array('files[]');
+
+    return new Promise((resolve, reject) => {
+      upload(req as ExpressRequest, res as ExpressResponse, (err) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        const files = (req as ExpressRequest).files;
+
+        if (Array.isArray(files)) {
+          resolve(this.fileService.createFiles(files.map((file) => ({ mimeType: file.mimetype, data: file.buffer }))));
+        }
+
+        throw new Error('invalid input');
+      });
+    });
   }
 }

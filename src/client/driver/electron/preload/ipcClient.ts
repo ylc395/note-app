@@ -3,11 +3,11 @@ import omitBy from 'lodash/omitBy';
 import isObject from 'lodash/isObject';
 
 import type { Remote } from 'infra/remote';
-import { FAKE_HTTP_CHANNEL, type FakeHttpRequest } from 'infra/fakeHttp';
+import { IPC_CHANNEL, type IpcRequest } from 'infra/transport';
 
-const createMethod = <T, H>(method: FakeHttpRequest<unknown>['method']) => {
+const createMethod = <T, H>(method: IpcRequest<unknown>['method']) => {
   return async (path: string, payload: T, headers: H) => {
-    const request: FakeHttpRequest<T> = { path, method };
+    const request: IpcRequest<T> = { path, method };
 
     if (payload !== undefined) {
       request[['POST', 'PATCH', 'PUT'].includes(method) ? 'body' : 'query'] =
@@ -20,7 +20,7 @@ const createMethod = <T, H>(method: FakeHttpRequest<unknown>['method']) => {
 
     console.log('☎️request:', request);
 
-    const response = await ipcRenderer.invoke(FAKE_HTTP_CHANNEL, request);
+    const response = await ipcRenderer.invoke(IPC_CHANNEL, request);
     console.log(`🎺response (${path}):`, response);
 
     return response;

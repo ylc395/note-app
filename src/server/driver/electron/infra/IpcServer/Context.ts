@@ -1,7 +1,7 @@
-import type { FakeHttpResponse } from 'infra/fakeHttp';
+import type { IResponse, IpcResponse } from 'infra/transport';
 
-export default class Context {
-  readonly headers: NonNullable<FakeHttpResponse['headers']> = {};
+export default class Context implements IResponse {
+  readonly headers: NonNullable<IpcResponse['headers']> = {};
 
   set(key: string, value: string) {
     this.headers[key] = value;

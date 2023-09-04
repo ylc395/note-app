@@ -1,5 +1,6 @@
 import uniq from 'lodash/uniq';
 import mapValues from 'lodash/mapValues';
+import omit from 'lodash/omit';
 import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import dayjs from 'dayjs';
 
@@ -55,8 +56,9 @@ export default class MaterialService extends BaseService {
     const stars = buildIndex(await this.stars.findAllByLocators(getLocators(materials, EntityTypes.Note)), 'entityId');
 
     return materials.map((material) => ({
-      ...material,
+      ...omit(material, ['userUpdatedAt']),
       isStar: Boolean(stars[material.id]),
+      updatedAt: material.userUpdatedAt,
       name: normalizeTitle(material),
       ...(isEntityMaterial(material) ? null : { childrenCount: children[material.id]?.length || 0 }),
     })) as MaterialVO[];
@@ -198,7 +200,7 @@ export default class MaterialService extends BaseService {
 
     if (
       materials.length !== ids.length ||
-      materials.every((material) => isEntityMaterial(material) && (mimeType ? material.mimeType === mimeType : true))
+      materials.some((material) => !isEntityMaterial(material) || (mimeType && material.mimeType !== mimeType))
     ) {
       throw new Error('invalid material id');
     }
