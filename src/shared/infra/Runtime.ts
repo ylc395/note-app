@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { hostname } from 'node:os';
 import { join } from 'node:path';
-import { isMainThread } from 'node:worker_threads';
+import { isMainThread, workerData } from 'node:worker_threads';
 import { ModuleRef } from '@nestjs/core';
 import { Inject } from '@nestjs/common';
 
@@ -9,9 +9,10 @@ import type { AppServerStatus } from 'model/app';
 import { APP_NAME, IS_DEV, IS_TEST } from './constants';
 import { token as kvDatabaseToken, type KvDatabase } from './kvDatabase';
 
-export const token = Symbol('clientApp');
+export const token = Symbol('runtime');
+export const IS_IPC = workerData?.runtime !== 'http';
 
-export default abstract class ClientApp {
+export default abstract class Runtime {
   private appInfo?: {
     clientId: string;
     appName: string;

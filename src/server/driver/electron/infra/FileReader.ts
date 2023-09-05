@@ -5,8 +5,8 @@ import { readFile, writeFile, readJSON, writeJSON, pathExists, ensureDirSync } f
 import { Injectable, Inject, Logger } from '@nestjs/common';
 
 import type { FileReader } from 'infra/fileReader';
-import type ClientApp from 'infra/ClientApp';
-import { token as clientAppToken } from 'infra/ClientApp';
+import type Runtime from 'infra/Runtime';
+import { token as runtimeToken } from 'infra/Runtime';
 import type { File } from 'model/file';
 
 // remove this once native fetch type is launched in @types/node
@@ -21,9 +21,9 @@ export default class ElectronFileReader implements FileReader {
   private readonly cacheIndexPath: string;
   private readonly logger: Logger;
 
-  constructor(@Inject(clientAppToken) private readonly clientApp: ClientApp) {
-    this.logger = new Logger(`${clientApp.isMain() ? 'app' : 'http'} ${ElectronFileReader.name}`);
-    this.cachePath = path.join(this.clientApp.getDataDir(), 'cache');
+  constructor(@Inject(runtimeToken) private readonly runtime: Runtime) {
+    this.logger = new Logger(`${runtime.isMain() ? 'app' : 'http'} ${ElectronFileReader.name}`);
+    this.cachePath = path.join(this.runtime.getDataDir(), 'cache');
     this.cacheIndexPath = path.join(this.cachePath, 'cache.index.json');
 
     ensureDirSync(this.cachePath);

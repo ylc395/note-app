@@ -3,18 +3,20 @@ import { Injectable, Logger } from '@nestjs/common';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { Worker } from 'node:worker_threads';
+import { type Remote, wrap, releaseProxy } from 'comlink';
+import nodeEndpoint from 'comlink/dist/umd/node-adapter';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 
-import type { AppServerStatus } from 'model/app';
-import ClientApp from 'infra/ClientApp';
+import Runtime from 'infra/Runtime';
 import { IS_DEV } from 'infra/constants';
-import { UI_CHANNEL, UIHandler } from './ui';
+import { UI_CHANNEL, UIHandler } from 'client/driver/electron/ui';
+import type LocalServer from '../localHttpServer';
 
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const INDEX_URL = process.env.VITE_SERVER_ENTRY_URL!;
 
 @Injectable()
-export default class ElectronApp extends ClientApp {
+export default class ElectronRuntime extends Runtime {
   private readonly logger = new Logger('electron app');
   private mainWindow?: BrowserWindow;
   readonly type = 'electron';
@@ -62,7 +64,7 @@ export default class ElectronApp extends ClientApp {
       width: 800,
       height: 600,
       webPreferences: {
-        preload: path.join(__dirname, 'preload.js'),
+        preload: path.resolve(__dirname, '../../../client/driver/electron/preload.js'),
       },
     });
 
@@ -99,67 +101,53 @@ export default class ElectronApp extends ClientApp {
   }
 
   private httpServerWorker?: Worker;
-  private httpServerWorkerStatus: 'offline' | 'terminating' | 'online' | 'starting' = 'offline';
+  private httpServer?: Remote<LocalServer>;
+  private httpServerStatus: 'offline' | 'terminating' | 'online' | 'starting' = 'offline';
 
-  private terminateServer() {
-    if (!this.httpServerWorker) {
+  private async terminateServer() {
+    if (!this.httpServerWorker || !this.httpServer) {
       throw new Error('no server');
     }
 
-    if (this.httpServerWorkerStatus !== 'terminating') {
+    if (this.httpServerStatus !== 'online') {
       throw new Error('not terminating');
     }
 
-    this.httpServerWorkerStatus = 'offline';
+    this.httpServerStatus = 'terminating';
+    await this.httpServer.close();
+    this.httpServer[releaseProxy]();
+    this.httpServer = undefined;
     this.httpServerWorker?.terminate();
     this.httpServerWorker = undefined;
+
+    this.httpServerStatus = 'offline';
   }
 
-  readonly toggleHttpServer = (enable: boolean) => {
-    if (enable) {
-      return new Promise<AppServerStatus>((resolve) => {
-        if (this.httpServerWorkerStatus !== 'offline') {
-          throw new Error('not offline');
-        }
-
-        const worker = new Worker(path.resolve(path.dirname(__dirname), '../../server/bootstrap.httpServer.js'));
-        this.httpServerWorker = worker;
-        this.httpServerWorkerStatus = 'starting';
-
-        worker.on('message', (message) => {
-          switch (message.type) {
-            case 'started':
-              this.httpServerWorkerStatus = 'online';
-              resolve(message.payload);
-              break;
-            default:
-              break;
-          }
-        });
-      });
-    } else {
-      return new Promise<null>((resolve) => {
-        if (!this.httpServerWorker) {
-          throw new Error('offline already');
-        }
-
-        if (this.httpServerWorkerStatus !== 'online') {
-          throw new Error('not online');
-        }
-
-        this.httpServerWorkerStatus = 'terminating';
-        this.httpServerWorker.on('message', (message) => {
-          switch (message.type) {
-            case 'terminated':
-              this.terminateServer();
-              resolve(null);
-              break;
-            default:
-              break;
-          }
-        });
-        this.httpServerWorker.postMessage({ type: 'offline' });
-      });
+  private async startServer() {
+    if (this.httpServerStatus !== 'offline') {
+      throw new Error('not offline');
     }
-  };
+
+    const worker = new Worker(path.resolve(path.dirname(__dirname), '../../server/bootstrap.localServer.js'), {
+      workerData: { runtime: 'http' },
+    });
+    this.httpServerWorker = worker;
+    this.httpServer = wrap<LocalServer>(nodeEndpoint(worker));
+    this.httpServerStatus = 'starting';
+
+    const port = await this.httpServer.start();
+
+    this.httpServerStatus = 'online';
+
+    return { port };
+  }
+
+  async toggleHttpServer(enable: boolean) {
+    if (enable) {
+      return this.startServer();
+    } else {
+      await this.terminateServer();
+      return null;
+    }
+  }
 }

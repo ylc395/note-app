@@ -1,21 +1,21 @@
 import type { PipeTransform } from '@nestjs/common';
 import type { ZodType } from 'zod';
-import { isMainThread } from 'node:worker_threads';
 
 import { InvalidInputError } from 'model/Error';
+import { IS_IPC } from 'infra/Runtime';
 import * as ipcDecorators from 'driver/electron/decorators';
 import * as httpDecorators from 'driver/localHttpServer/decorators';
 
-export const Get = isMainThread ? ipcDecorators.Get : httpDecorators.Get;
-export const Post = isMainThread ? ipcDecorators.Post : httpDecorators.Post;
-export const Patch = isMainThread ? ipcDecorators.Patch : httpDecorators.Patch;
-export const Put = isMainThread ? ipcDecorators.Put : httpDecorators.Put;
-export const Delete = isMainThread ? ipcDecorators.Delete : httpDecorators.Delete;
-export const Body = isMainThread ? ipcDecorators.Body : httpDecorators.Body;
-export const Query = isMainThread ? ipcDecorators.Query : httpDecorators.Query;
-export const Param = isMainThread ? ipcDecorators.Param : httpDecorators.Param;
-export const Response = isMainThread ? ipcDecorators.Response : httpDecorators.Response;
-export const Request = isMainThread ? ipcDecorators.Request : httpDecorators.Request;
+export const Get = IS_IPC ? ipcDecorators.Get : httpDecorators.Get;
+export const Post = IS_IPC ? ipcDecorators.Post : httpDecorators.Post;
+export const Patch = IS_IPC ? ipcDecorators.Patch : httpDecorators.Patch;
+export const Put = IS_IPC ? ipcDecorators.Put : httpDecorators.Put;
+export const Delete = IS_IPC ? ipcDecorators.Delete : httpDecorators.Delete;
+export const Body = IS_IPC ? ipcDecorators.Body : httpDecorators.Body;
+export const Query = IS_IPC ? ipcDecorators.Query : httpDecorators.Query;
+export const Param = IS_IPC ? ipcDecorators.Param : httpDecorators.Param;
+export const Response = IS_IPC ? ipcDecorators.Response : httpDecorators.Response;
+export const Request = IS_IPC ? ipcDecorators.Request : httpDecorators.Request;
 
 export function createSchemaPipe<T>(schema: ZodType<T>): PipeTransform {
   return {

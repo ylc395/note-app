@@ -54,7 +54,7 @@ export default observer(function ActivityBar() {
 
   const handleHttpClick = useMemoizedFn(() => {
     const remote = container.resolve(token);
-    remote.post('/httpServer', { isOnline: true });
+    remote.post('/app/httpServer', { isOnline: true });
   });
 
   const getExplorerButton = useMemoizedFn((button: ExplorerButton) => (

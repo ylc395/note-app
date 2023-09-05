@@ -17,7 +17,7 @@ export default class MainApp implements IMainApp, RemoteCallable {
     }
 
     try {
-      const res = await fetch(`${HOST}/ping`, { headers: { Authorization: token } });
+      const res = await fetch(`${HOST}/app/ping`, { headers: { Authorization: token } });
 
       if (res.status === 200) {
         return Statuses.Online;

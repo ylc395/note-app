@@ -5,8 +5,8 @@ import { ensureDirSync, emptyDirSync } from 'fs-extra';
 import { join } from 'node:path';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 
-import { token as clientAppToken } from 'infra/ClientApp';
-import type ClientApp from 'infra/ClientApp';
+import { token as runtimeToken } from 'infra/Runtime';
+import type Runtime from 'infra/Runtime';
 import type { Database } from 'infra/database';
 import { IS_TEST, IS_DEV } from 'infra/constants';
 import type Repository from 'service/repository';
@@ -33,8 +33,8 @@ export interface Db {
 @Injectable()
 export default class SqliteDb implements Database {
   private readonly logger: Logger;
-  constructor(@Inject(clientAppToken) private readonly clientApp: ClientApp) {
-    this.logger = new Logger(`${clientApp.isMain() ? 'main' : 'http'} ${SqliteDb.name}`);
+  constructor(@Inject(runtimeToken) private readonly app: Runtime) {
+    this.logger = new Logger(`${app.isMain() ? 'main' : 'http'} ${SqliteDb.name}`);
     this.db = this.createDb();
     this.ready = this.init();
   }
@@ -75,10 +75,10 @@ export default class SqliteDb implements Database {
   }
 
   private createDb() {
-    const dir = this.clientApp.getDataDir();
+    const dir = this.app.getDataDir();
     ensureDirSync(dir);
 
-    if ((CLEAN_DB && this.clientApp.isMain()) || IS_TEST) {
+    if ((CLEAN_DB && this.app.isMain()) || IS_TEST) {
       emptyDirSync(dir);
     }
 

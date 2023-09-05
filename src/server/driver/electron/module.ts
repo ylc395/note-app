@@ -1,24 +1,24 @@
 import { Global, Module, type OnModuleInit } from '@nestjs/common';
 
 import * as controllers from 'controller';
-
-import { token as clientAppToken } from 'infra/ClientApp';
-import ElectronApp from 'client/driver/electron';
-import ElectronInfraModule from './infra/module';
+import { token as runtimeToken } from 'infra/Runtime';
+import ElectronRuntime from 'driver/electron';
 import SqliteModule from 'driver/sqlite/module';
 import ServiceModule from 'service/module';
+
+import ElectronInfraModule from './infra/module';
 
 @Global()
 @Module({
   controllers: Object.values(controllers),
   imports: [ElectronInfraModule, SqliteModule, ServiceModule],
-  providers: [ElectronApp, { provide: clientAppToken, useExisting: ElectronApp }],
-  exports: [ElectronInfraModule, clientAppToken],
+  providers: [ElectronRuntime, { provide: runtimeToken, useExisting: ElectronRuntime }],
+  exports: [ElectronInfraModule, runtimeToken],
 })
 export default class ElectronModule implements OnModuleInit {
-  constructor(private readonly clientApp: ElectronApp) {}
+  constructor(private readonly app: ElectronRuntime) {}
 
   async onModuleInit() {
-    await this.clientApp.start();
+    await this.app.start();
   }
 }

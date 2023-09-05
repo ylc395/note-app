@@ -1,9 +1,9 @@
-import { Global, Module } from '@nestjs/common';
+import { Global, Module, type OnApplicationShutdown, Logger } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 
 import * as controllers from 'controller';
-import { token as clientAppToken } from 'infra/ClientApp';
-import HeadlessApp from 'client/driver/HeadlessApp';
+import { token as runtimeToken } from 'infra/Runtime';
+import LocalHttpRuntime from 'driver/localHttpServer/Runtime';
 import ElectronInfraModule from 'driver/electron/infra/module';
 import SqliteModule from 'driver/sqlite/module';
 import ServiceModule from 'service/module';
@@ -15,9 +15,15 @@ import HttpGuard from './HttpGuard';
   controllers: Object.values(controllers),
   imports: [ElectronInfraModule, SqliteModule, ServiceModule],
   providers: [
-    { provide: clientAppToken, useClass: HeadlessApp },
+    { provide: runtimeToken, useClass: LocalHttpRuntime },
     { provide: APP_GUARD, useClass: HttpGuard },
   ],
-  exports: [ElectronInfraModule, clientAppToken],
+  exports: [ElectronInfraModule, runtimeToken],
 })
-export default class LocalHttpModule {}
+export default class LocalHttpModule implements OnApplicationShutdown {
+  private readonly logger = new Logger('localHttp module');
+
+  onApplicationShutdown() {
+    this.logger.log('shutdown');
+  }
+}
