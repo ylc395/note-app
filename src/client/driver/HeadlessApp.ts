@@ -1,5 +1,11 @@
 import ClientApp from 'infra/ClientApp';
 
 export default class HeadlessApp extends ClientApp {
-  readonly type = 'headless';
+  toggleHttpServer(): never {
+    throw new Error('can not toggleHttpServer');
+  }
+
+  getAppToken(): never {
+    throw new Error('can not getAppToken');
+  }
 }

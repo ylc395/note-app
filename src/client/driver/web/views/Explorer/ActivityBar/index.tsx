@@ -12,10 +12,12 @@ import {
   DeleteOutlined,
   SearchOutlined,
   SettingOutlined,
+  CloudServerOutlined,
 } from '@ant-design/icons';
 import { useToggle, useMemoizedFn } from 'ahooks';
 
 import Layout, { ExplorerTypes } from 'model/Layout';
+import { token } from 'infra/remote';
 import StarList from './StarList';
 
 interface ExplorerButton {
@@ -48,6 +50,11 @@ export default observer(function ActivityBar() {
   const closeStar = useMemoizedFn(() => {
     setStarTooltipVisible(false);
     setStarVisible(false);
+  });
+
+  const handleHttpClick = useMemoizedFn(() => {
+    const remote = container.resolve(token);
+    remote.post('/httpServer', { isOnline: true });
   });
 
   const getExplorerButton = useMemoizedFn((button: ExplorerButton) => (
@@ -108,6 +115,11 @@ export default observer(function ActivityBar() {
         <li>
           <Tooltip placement="right" title="设置">
             <Button {...BUTTON_PROPS} icon={<SettingOutlined />} />
+          </Tooltip>
+        </li>
+        <li>
+          <Tooltip placement="right" title="HTTP">
+            <Button onClick={handleHttpClick} {...BUTTON_PROPS} icon={<CloudServerOutlined />} />
           </Tooltip>
         </li>
       </ul>

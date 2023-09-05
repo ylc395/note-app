@@ -22,7 +22,7 @@ export default class ElectronFileReader implements FileReader {
   private readonly logger: Logger;
 
   constructor(@Inject(clientAppToken) private readonly clientApp: ClientApp) {
-    this.logger = new Logger(`${clientApp.type} ${ElectronFileReader.name}`);
+    this.logger = new Logger(`${clientApp.isMain() ? 'app' : 'http'} ${ElectronFileReader.name}`);
     this.cachePath = path.join(this.clientApp.getDataDir(), 'cache');
     this.cacheIndexPath = path.join(this.cachePath, 'cache.index.json');
 

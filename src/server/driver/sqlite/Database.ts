@@ -34,7 +34,7 @@ export interface Db {
 export default class SqliteDb implements Database {
   private readonly logger: Logger;
   constructor(@Inject(clientAppToken) private readonly clientApp: ClientApp) {
-    this.logger = new Logger(`${clientApp.type} ${SqliteDb.name}`);
+    this.logger = new Logger(`${clientApp.isMain() ? 'main' : 'http'} ${SqliteDb.name}`);
     this.db = this.createDb();
     this.ready = this.init();
   }
@@ -78,7 +78,7 @@ export default class SqliteDb implements Database {
     const dir = this.clientApp.getDataDir();
     ensureDirSync(dir);
 
-    if ((CLEAN_DB && this.clientApp.type === 'electron') || IS_TEST) {
+    if ((CLEAN_DB && this.clientApp.isMain()) || IS_TEST) {
       emptyDirSync(dir);
     }
 

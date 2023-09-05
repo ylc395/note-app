@@ -1,8 +1,11 @@
 import { app as electronApp, BrowserWindow, ipcMain } from 'electron';
 import { Injectable, Logger } from '@nestjs/common';
-import { join } from 'node:path';
+import path from 'node:path';
+import { randomUUID } from 'node:crypto';
+import { Worker } from 'node:worker_threads';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 
+import type { AppServerStatus } from 'model/app';
 import ClientApp from 'infra/ClientApp';
 import { IS_DEV } from 'infra/constants';
 import { UI_CHANNEL, UIHandler } from './ui';
@@ -59,7 +62,7 @@ export default class ElectronApp extends ClientApp {
       width: 800,
       height: 600,
       webPreferences: {
-        preload: join(__dirname, 'preload.js'),
+        preload: path.join(__dirname, 'preload.js'),
       },
     });
 
@@ -90,4 +93,73 @@ export default class ElectronApp extends ClientApp {
 
     this.mainWindow.webContents.send(channel, payload);
   }
+
+  async getAppToken() {
+    return await this.kvDb.get('app.http.token', randomUUID);
+  }
+
+  private httpServerWorker?: Worker;
+  private httpServerWorkerStatus: 'offline' | 'terminating' | 'online' | 'starting' = 'offline';
+
+  private terminateServer() {
+    if (!this.httpServerWorker) {
+      throw new Error('no server');
+    }
+
+    if (this.httpServerWorkerStatus !== 'terminating') {
+      throw new Error('not terminating');
+    }
+
+    this.httpServerWorkerStatus = 'offline';
+    this.httpServerWorker?.terminate();
+    this.httpServerWorker = undefined;
+  }
+
+  readonly toggleHttpServer = (enable: boolean) => {
+    if (enable) {
+      return new Promise<AppServerStatus>((resolve) => {
+        if (this.httpServerWorkerStatus !== 'offline') {
+          throw new Error('not offline');
+        }
+
+        const worker = new Worker(path.resolve(path.dirname(__dirname), '../../server/bootstrap.httpServer.js'));
+        this.httpServerWorker = worker;
+        this.httpServerWorkerStatus = 'starting';
+
+        worker.on('message', (message) => {
+          switch (message.type) {
+            case 'started':
+              this.httpServerWorkerStatus = 'online';
+              resolve(message.payload);
+              break;
+            default:
+              break;
+          }
+        });
+      });
+    } else {
+      return new Promise<null>((resolve) => {
+        if (!this.httpServerWorker) {
+          throw new Error('offline already');
+        }
+
+        if (this.httpServerWorkerStatus !== 'online') {
+          throw new Error('not online');
+        }
+
+        this.httpServerWorkerStatus = 'terminating';
+        this.httpServerWorker.on('message', (message) => {
+          switch (message.type) {
+            case 'terminated':
+              this.terminateServer();
+              resolve(null);
+              break;
+            default:
+              break;
+          }
+        });
+        this.httpServerWorker.postMessage({ type: 'offline' });
+      });
+    }
+  };
 }

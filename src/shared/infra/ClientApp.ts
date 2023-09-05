@@ -1,16 +1,17 @@
 import { randomUUID } from 'node:crypto';
 import { hostname } from 'node:os';
 import { join } from 'node:path';
+import { isMainThread } from 'node:worker_threads';
 import { ModuleRef } from '@nestjs/core';
 import { Inject } from '@nestjs/common';
 
+import type { AppServerStatus } from 'model/app';
 import { APP_NAME, IS_DEV, IS_TEST } from './constants';
 import { token as kvDatabaseToken, type KvDatabase } from './kvDatabase';
 
 export const token = Symbol('clientApp');
 
 export default abstract class ClientApp {
-  abstract type: string;
   private appInfo?: {
     clientId: string;
     appName: string;
@@ -18,6 +19,10 @@ export default abstract class ClientApp {
   };
 
   constructor(@Inject(ModuleRef) private readonly moduleRef: ModuleRef) {}
+
+  isMain() {
+    return isMainThread;
+  }
 
   getDataDir() {
     const dir = IS_DEV ? `${APP_NAME}-dev` : IS_TEST ? `${APP_NAME}-test` : APP_NAME;
@@ -32,10 +37,13 @@ export default abstract class ClientApp {
     );
   }
 
+  protected get kvDb() {
+    return this.moduleRef.get<KvDatabase>(kvDatabaseToken, { strict: false });
+  }
+
   async start() {
-    const kvDb = this.moduleRef.get<KvDatabase>(kvDatabaseToken, { strict: false });
     this.appInfo = {
-      clientId: await kvDb.get('app.desktop.id', randomUUID),
+      clientId: await this.kvDb.get('app.desktop.id', randomUUID),
       appName: APP_NAME,
       deviceName: hostname(),
     };
@@ -48,4 +56,7 @@ export default abstract class ClientApp {
 
     return this.appInfo;
   }
+
+  abstract getAppToken(): Promise<string>;
+  abstract toggleHttpServer(enable: boolean): Promise<AppServerStatus | null>;
 }

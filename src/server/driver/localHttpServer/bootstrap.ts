@@ -8,4 +8,9 @@ export default async function bootstrap() {
 
   httpApp.useBodyParser('json', { limit: Infinity });
   await httpApp.listen(3001);
+
+  return {
+    port: 3001,
+    terminate: httpApp.close.bind(httpApp),
+  };
 }
