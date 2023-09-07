@@ -1,4 +1,3 @@
-import pick from 'lodash/pick';
 import omit from 'lodash/omit';
 import type { Selectable } from 'kysely';
 
@@ -41,9 +40,8 @@ export default class SqliteMaterialRepository extends HierarchyEntityRepository 
     }
 
     const createdMaterial = await this.createOne(this.tableName, {
-      ...pick(material, ['name', 'icon', 'parentId']),
-      id: this.generateId(),
-      fileId: material.fileId,
+      ...material,
+      id: material.id || this.generateId(),
     });
 
     return SqliteMaterialRepository.rowToMaterial(createdMaterial, file.mimeType);

@@ -58,6 +58,9 @@ export default abstract class Runtime {
     return this.appInfo;
   }
 
-  abstract getAppToken(): Promise<string>;
+  async getAppToken() {
+    return await this.kvDb.get('app.http.token', randomUUID);
+  }
+
   abstract toggleHttpServer(enable: boolean): Promise<AppServerStatus | null>;
 }

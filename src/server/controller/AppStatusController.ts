@@ -27,6 +27,10 @@ export default class AppStatusController {
 
   @Get('/app/token')
   async getToken(): Promise<string> {
+    if (!this.runtime.isMain()) {
+      throw new Error('can not get token');
+    }
+
     return await this.runtime.getAppToken();
   }
 }

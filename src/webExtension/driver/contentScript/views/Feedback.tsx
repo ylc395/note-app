@@ -4,20 +4,21 @@ import { useBoolean, useResetState } from 'ahooks';
 import { CheckCircleFilled, CloseOutlined } from '@ant-design/icons';
 
 import { EventNames } from 'model/task';
-import ClipService from 'service/ClipService';
+import EventBus from 'infra/EventBus';
 
+// eslint-disable-next-line mobx/missing-observer
 export default function Feedback() {
-  const clipService = container.resolve(ClipService);
+  const eventBus = container.resolve(EventBus);
   const [isShowing, { setTrue: open, setFalse: close }] = useBoolean(false);
   const [countDown, setCountDown, resetCountDown] = useResetState(5);
 
   useEffect(() => {
-    clipService.eventBus.on(EventNames.FinishTask, open);
+    eventBus.on(EventNames.FinishTask, open);
 
     return () => {
-      clipService.eventBus.on(EventNames.FinishTask, open);
+      eventBus.on(EventNames.FinishTask, open);
     };
-  }, [clipService.eventBus, open]);
+  }, [eventBus, open]);
 
   useEffect(() => {
     if (!isShowing) {

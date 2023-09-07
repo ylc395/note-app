@@ -1,24 +1,25 @@
-import browser, { type Tabs } from 'webextension-polyfill';
+import type { Tabs } from 'webextension-polyfill';
 import { singleton, container } from 'tsyringe';
 import { computed, action, makeObservable, observable, runInAction } from 'mobx';
 
 import { type Task, type CancelEvent, TaskTypes, EventNames } from 'model/task';
+import { Statuses } from 'model/mainApp';
 import EventBus from 'infra/EventBus';
-import { Statuses } from 'infra/MainApp';
-import { token as pageFactoryToken } from 'infra/page';
 
 import ConfigService from './ConfigService';
 import HistoryService from './HistoryService';
-import SessionTaskManger from './SessionTaskManger';
 import MainAppService from './MainAppService';
+import BackgroundService from './BackgroundService';
+import PageService from './PageService';
 
 @singleton()
 export default class TaskService {
-  private readonly sessionTaskManager = container.resolve(SessionTaskManger);
-  private readonly mainAppService = container.resolve(MainAppService);
+  private readonly background = container.resolve(BackgroundService);
+  private readonly mainApp = container.resolve(MainAppService);
+  private readonly history = container.resolve(HistoryService);
+  private readonly eventBus = container.resolve(EventBus);
   @observable tasks: Required<Task>[] = [];
   @observable targetTab?: Tabs.Tab;
-  private readonly eventBus = container.resolve(EventBus);
   readonly config = container.resolve(ConfigService);
   @observable private isPageReady = false;
 
@@ -30,29 +31,31 @@ export default class TaskService {
     this.eventBus.on(EventNames.Preview, () => window.close());
   }
 
-  private readonly getPage = container.resolve(pageFactoryToken);
-
   private async init() {
-    const targetTab = await TaskService.getTargetTab();
-    const page = this.getPage(targetTab.id);
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
-    const that = this;
+    const targetTab = await this.background.getActiveTab();
+    const page = PageService.fromTabId(targetTab.id);
 
-    function getPageReady() {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      page.ready!().then(
+    const getPageReady = () => {
+      page.ready().then(
         action(() => {
-          that.isPageReady = true;
+          this.isPageReady = true;
         }),
         () => setTimeout(getPageReady, 1000),
       );
-    }
+    };
 
     getPageReady();
 
-    const tasks = await this.sessionTaskManager.getTasks();
     runInAction(() => {
       this.targetTab = targetTab;
+    });
+
+    await this.updateTasks();
+  }
+
+  private async updateTasks() {
+    const tasks = await this.background.getTasks();
+    runInAction(() => {
       this.tasks = tasks;
     });
   }
@@ -62,7 +65,7 @@ export default class TaskService {
       window.alert(e.error);
     }
 
-    this.remove(e.taskId);
+    this.updateTasks();
   }
 
   @computed
@@ -78,7 +81,7 @@ export default class TaskService {
 
   @computed
   get readyState() {
-    if (this.mainAppService.status !== Statuses.Online) {
+    if (this.mainApp.status !== Statuses.Online) {
       return 'APP_NOT_READY';
     }
 
@@ -93,36 +96,15 @@ export default class TaskService {
     return 'READY';
   }
 
-  private static async getTargetTab() {
-    const tabs = await browser.tabs.query({
-      active: true,
-      currentWindow: true,
-    });
-
-    const targetTab = tabs[0];
-
-    if (!targetTab) {
-      throw new Error('no target tab');
-    }
-
-    return targetTab;
-  }
-
   private handleFinish(taskId: Task['id']) {
     const task = this.tasks.find(({ id }) => id === taskId);
 
     if (!task) {
       throw new Error('invalid taskId');
     }
-    this.remove(taskId);
 
-    const history = container.resolve(HistoryService);
-    history.add(task);
-  }
-
-  @action
-  private remove(taskId: Task['id']) {
-    this.tasks = this.tasks.filter((task) => task.id !== taskId);
+    this.history.add(task);
+    this.updateTasks();
   }
 
   async addTask(action: TaskTypes) {
@@ -130,8 +112,10 @@ export default class TaskService {
       throw new Error('not ready');
     }
 
-    const newTask = await this.sessionTaskManager.add(this.targetTab.id, action);
-    this.tasks.push(newTask);
+    const newTask = await this.background.add(this.targetTab.id, action);
+
+    PageService.fromTabId(newTask.tabId).doTask(newTask);
+    this.updateTasks();
 
     if ([TaskTypes.SelectElement, TaskTypes.SelectElementText, TaskTypes.ScreenShot].includes(action)) {
       window.close();

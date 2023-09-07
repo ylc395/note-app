@@ -92,6 +92,7 @@
     "better-sqlite3": "^8.6.0",
     "clsx": "^1.2.1",
     "comlink": "^4.4.1",
+    "comlink-adapters": "^0.0.3",
     "css-selector-generator": "^3.6.4",
     "dayjs": "^1.11.6",
     "diff": "^5.1.0",

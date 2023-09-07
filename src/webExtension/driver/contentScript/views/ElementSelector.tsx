@@ -6,10 +6,10 @@ import { useMemoizedFn } from 'ahooks';
 
 import { coverElementMiddleware } from 'components/floatingMiddleware';
 import { TaskTypes } from 'model/task';
-import ClipService from 'service/ClipService';
+import PageService from 'service/PageService';
 
 export default observer(function ElementSelector() {
-  const clipService = container.resolve(ClipService);
+  const clipService = container.resolve(PageService);
   const { floatingStyles, refs } = useFloating({ middleware: coverElementMiddleware });
   const isEnabled =
     clipService.activeTask &&

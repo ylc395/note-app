@@ -1,20 +1,18 @@
 import 'reflect-metadata';
 import { container } from 'tsyringe';
 import { createRoot } from 'react-dom/client';
-
-import { exposeApi, getRemoteApi } from 'infra/remoteApi';
-import { token as mainAppToken, REMOTE_ID as MAIN_APP_REMOTE_ID } from 'infra/MainApp';
-import { token as pageFactoryToken, type Page } from 'infra/page';
-import MainAppService from 'service/MainAppService';
+import { wrap, expose } from 'comlink';
+import { chromeRuntimeMessageEndpoint } from 'comlink-adapters';
 import 'utils/mobx';
 
+import BackgroundService from 'service/BackgroundService';
+import PageService from 'service/PageService';
+
 import App from './views/App';
-import { getPage } from './page';
 
-container.registerInstance(mainAppToken, getRemoteApi(MAIN_APP_REMOTE_ID));
-container.registerInstance(pageFactoryToken, getPage);
-container.registerInstance(MainAppService, new MainAppService());
+container.registerInstance(BackgroundService, wrap(chromeRuntimeMessageEndpoint()) as unknown as BackgroundService);
 
+const pageService = container.resolve(PageService);
 function createAppRoot() {
   const container = document.createElement('div');
   // reset inheritance. see https://web.dev/shadowdom-v1/#resetting-inheritable-styles
@@ -24,11 +22,9 @@ function createAppRoot() {
   return container.attachShadow({ mode: 'open' });
 }
 
-const page = getPage() as Required<Page>;
-
-page.ready().then(() => {
+pageService.ready().then(() => {
   const root = createRoot(createAppRoot());
   root.render(<App />);
 });
 
-exposeApi(page);
+expose(pageService, chromeRuntimeMessageEndpoint());

@@ -4,7 +4,7 @@ import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 import { useMemoizedFn } from 'ahooks';
 
-import ClipService from 'service/ClipService';
+import PageService from 'service/PageService';
 import RectAreaSelector, { type Rect, type ReactAreaSelectorRef } from 'components/RectAreaSelector';
 import { TaskTypes } from 'model/task';
 
@@ -17,7 +17,7 @@ export default observer(function ScreenCapture() {
   const { refs, floatingStyles } = useFloating({
     middleware: [offset(16)],
   });
-  const clipService = container.resolve(ClipService);
+  const clipService = container.resolve(PageService);
   const isEnabled = !clipService.activeTaskResult && clipService.activeTask?.type === TaskTypes.ScreenShot;
   const setRefs = useMemoizedFn((ref: ReactAreaSelectorRef | null) => {
     refs.setReference(ref);

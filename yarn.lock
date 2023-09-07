@@ -1946,6 +1946,11 @@ color-support@^1.1.2, color-support@^1.1.3:
   resolved "https://registry.npmjs.org/color-support/-/color-support-1.1.3.tgz"
   integrity sha512-qiBjkpbMLO/HL68y+lh4q0/O1MZFj2RX6X/KmMa3+gJD3z+WwI1ZzDHysvqHGS3mP6mznPckpXmw1nI9cJjyRg==
 
+comlink-adapters@^0.0.3:
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/comlink-adapters/-/comlink-adapters-0.0.3.tgz#558cd4ab6a71f5cc997958baf8bec8d9b76da670"
+  integrity sha512-HmH+9IaEWdrDS0mZ+bi7AbaAJ6/HL1sggPxeHi6KBlpUG4R3DaU7lfsxpDDvhfDdmodAqiRV5cenBC9vOsuf9A==
+
 comlink@^4.4.1:
   version "4.4.1"
   resolved "https://registry.yarnpkg.com/comlink/-/comlink-4.4.1.tgz#e568b8e86410b809e8600eb2cf40c189371ef981"

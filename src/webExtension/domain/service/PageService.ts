@@ -1,19 +1,21 @@
 import { getPageData, helper } from 'single-file-core/single-file';
 import Turndown from 'turndown';
+import type { Tabs } from 'webextension-polyfill';
 import { Readability } from '@mozilla/readability';
 import { action, makeObservable, observable, runInAction } from 'mobx';
 import { container, singleton } from 'tsyringe';
 import pageLifecycle from 'page-lifecycle';
-
-import EventBus from 'infra/EventBus';
-import { token as pageFactoryToken } from 'infra/page';
+import { wrap } from 'comlink';
+import { chromeRuntimeMessageEndpoint } from 'comlink-adapters';
 
 import type NoteTree from 'model/note/Tree';
 import { type Task, type TaskResult, EventNames, TaskTypes } from 'model/task';
 import type MaterialTree from 'model/material/Tree';
 import type { Rect } from 'components/RectAreaSelector';
+import EventBus from 'infra/EventBus';
 
 import ConfigService from './ConfigService';
+import BackgroundService from './BackgroundService';
 
 // single-file lib will modify the options. so use a option factory to always get a new option object
 const getCommonPageOptions = () => ({
@@ -30,21 +32,24 @@ const getCommonPageOptions = () => ({
 const turndownService = new Turndown();
 
 @singleton()
-export default class ClipService {
+export default class PageService {
   @observable activeTask?: Task;
   @observable activeTaskResult?: TaskResult;
   @observable isLoading = false;
-  readonly eventBus = container.resolve(EventBus);
   @observable.ref targetTree?: NoteTree | MaterialTree;
   readonly config = container.resolve(ConfigService);
+  private readonly eventBus = container.resolve(EventBus);
+  private readonly background = container.resolve(BackgroundService);
 
   constructor() {
-    this.eventBus.on(EventNames.StartTask, ({ task }) => this.startTask(task));
-    this.eventBus.on(EventNames.CancelTask, ({ error }) => error && this.cancelByError(error));
-    this.eventBus.on(EventNames.FinishTask, this.reset.bind(this));
+    this.eventBus.on(
+      EventNames.CancelTask,
+      ({ error, taskId }) => taskId === this.activeTask?.id && error && this.cancelByError(error),
+    );
+    this.eventBus.on(EventNames.FinishTask, ({ taskId }) => taskId === this.activeTask?.id && this.reset());
     pageLifecycle.addEventListener('statechange', ({ newState }: { newState: string }) => {
       if (newState === 'terminated') {
-        this.cancelByUser();
+        this.activeTask && this.cancelByUser();
       }
     });
     makeObservable(this);
@@ -68,16 +73,15 @@ export default class ClipService {
     runInAction(() => (this.isLoading = true));
 
     if (this.activeTask.type === TaskTypes.SelectElementText) {
-      this.preview({ ...ClipService.getMarkdown(el), contentType: 'md' });
+      this.preview({ ...PageService.getMarkdown(el), contentType: 'md' });
     } else {
-      const res = await ClipService.getHtml(el);
+      const res = await PageService.getHtml(el);
       this.preview({ ...res, contentType: 'html' });
     }
   }
 
   async captureScreen(pos: Rect) {
-    const page = container.resolve(pageFactoryToken)();
-    const imgDataUrl = await page.captureScreen();
+    const imgDataUrl = await this.background.captureScreen();
     const imgEl = new Image();
     const canvasEl = document.createElement('canvas');
     canvasEl.width = pos.width * window.devicePixelRatio;
@@ -154,7 +158,7 @@ export default class ClipService {
     return { content, title };
   }
 
-  private async startTask(task: Task) {
+  async doTask(task: Task) {
     if (this.activeTask) {
       throw new Error('can not clip now');
     }
@@ -175,8 +179,10 @@ export default class ClipService {
 
   readonly cancelByUser = () => {
     if (!this.activeTask) {
-      return;
+      throw new Error('no activeTask');
     }
+
+    console.log('cancel by user');
 
     this.eventBus.emit(EventNames.CancelTask, { taskId: this.activeTask.id });
     this.reset();
@@ -217,5 +223,19 @@ export default class ClipService {
   private reset() {
     this.activeTask = undefined;
     this.activeTaskResult = undefined;
+  }
+
+  ready() {
+    return new Promise<void>((resolve) => {
+      if (document.readyState !== 'loading') {
+        resolve();
+        return;
+      }
+      document.addEventListener('DOMContentLoaded', () => resolve());
+    });
+  }
+
+  static fromTabId(tabId: Tabs.Tab['id']) {
+    return wrap<PageService>(chromeRuntimeMessageEndpoint({ tabId }));
   }
 }

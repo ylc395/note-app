@@ -1,8 +1,8 @@
 import { container } from 'tsyringe';
 import { observer } from 'mobx-react-lite';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
-import { Statuses } from 'infra/MainApp';
+import { Statuses } from 'model/mainApp';
 import MainAppService from 'service/MainAppService';
 
 const errorMessages = {
@@ -11,8 +11,12 @@ const errorMessages = {
 } as const;
 
 export default observer(function Network() {
-  const { status, setToken: setMainAppToken } = container.resolve(MainAppService);
+  const { status, setToken: setMainAppToken, updateAppStatus } = container.resolve(MainAppService);
   const [token, setToken] = useState('');
+
+  useEffect(() => {
+    updateAppStatus();
+  }, [updateAppStatus]);
 
   return (
     <div className="pb-2 text-gray-600">

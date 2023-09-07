@@ -1,14 +1,14 @@
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 
-import ClipService from 'service/ClipService';
+import PageService from 'service/PageService';
 
 import IFramePreview from './IFramePreview';
 import Options from './Options';
 import usePreventScroll from '../hooks/usePreventScroll';
 
 export default observer(function Modal() {
-  const { activeTaskResult, submit, cancelByUser, config } = container.resolve(ClipService);
+  const { activeTaskResult, submit, cancelByUser, config } = container.resolve(PageService);
 
   usePreventScroll(Boolean(activeTaskResult));
 

@@ -1,7 +1,7 @@
-import { container } from 'tsyringe';
 import { makeObservable, observable, runInAction } from 'mobx';
+import browser from 'webextension-polyfill';
+import { singleton } from 'tsyringe';
 
-import { Statuses, token as mainAppToken, type Payload } from 'infra/MainApp';
 import { MaterialTypes, type MaterialDirectoryVO, type NewMaterialEntityDTO, type MaterialVO } from 'model/material';
 import type { FileVO } from 'model/file';
 import type { NoteBodyDTO, NewNoteDTO, NoteVO } from 'model/note';
@@ -10,20 +10,79 @@ import { type EntityId, EntityTypes } from 'model/entity';
 import NoteTree, { type NoteTreeVO } from 'model/note/Tree';
 import MaterialTree, { type MaterialTreeVO } from 'model/material/Tree';
 import type { TreeVO } from 'model/abstract/Tree';
+import { Statuses, type Payload } from 'model/mainApp';
 
+const HOST = 'http://localhost:3001';
+const TOKEN_KEY = 'token';
+
+@singleton()
 export default class MainAppService {
-  constructor(checkStatus?: boolean) {
+  constructor() {
     makeObservable(this);
-
-    if (checkStatus) {
-      this.updateAppStatus();
-    }
   }
   @observable status = Statuses.NotReady;
-  private readonly mainApp = container.resolve(mainAppToken);
 
-  private async updateAppStatus() {
-    const mainAppStatus = await this.mainApp.getStatus();
+  private async getStatus() {
+    const token = await this.getToken();
+
+    if (!token) {
+      return Statuses.EmptyToken;
+    }
+
+    try {
+      const res = await fetch(`${HOST}/app/ping`, { headers: { Authorization: token } });
+
+      if (res.status === 200) {
+        return Statuses.Online;
+      } else if (res.status === 403) {
+        return Statuses.InvalidToken;
+      } else {
+        return Statuses.ConnectionFailure;
+      }
+    } catch (e) {
+      return Statuses.ConnectionFailure;
+    }
+  }
+
+  readonly setToken = async (token: string) => {
+    await browser.storage.local.set({ [TOKEN_KEY]: token });
+    this.updateAppStatus();
+  };
+
+  private async getToken() {
+    return (await browser.storage.local.get(TOKEN_KEY))[TOKEN_KEY];
+  }
+
+  async fetch<T, K = void>(method: 'GET' | 'POST' | 'PUT' | 'PATCH', url: string, body?: K, mimeType?: string) {
+    const token = await this.getToken();
+
+    if (!token) {
+      throw new Error('no token');
+    }
+    // there is no `window` in background env. so use `globalThis`
+    const res = await globalThis.fetch(`${HOST}${url}`, {
+      method,
+      body: body instanceof FormData || typeof body === 'string' ? body : body && JSON.stringify(body),
+      headers: {
+        Authorization: token,
+        ...(body && !(body instanceof FormData) ? { 'Content-Type': mimeType || 'application/json' } : null),
+      },
+    });
+
+    if (!res.ok) {
+      return null;
+    }
+
+    const responseType = res.headers.get('Content-Type');
+
+    if (responseType?.startsWith('application/json')) {
+      return (await res.json()) as T;
+    }
+
+    return null;
+  }
+  readonly updateAppStatus = async () => {
+    const mainAppStatus = await this.getStatus();
     runInAction(() => {
       this.status = mainAppStatus;
     });
@@ -31,14 +90,9 @@ export default class MainAppService {
     if (mainAppStatus === Statuses.ConnectionFailure) {
       setTimeout(this.updateAppStatus.bind(this), 1000);
     }
-  }
-
-  readonly setToken = async (token: string) => {
-    await this.mainApp.setToken(token);
-    this.updateAppStatus();
   };
 
-  async save(saveAs: EntityTypes, payload: Payload) {
+  async saveToMainApp(saveAs: EntityTypes, payload: Payload) {
     switch (saveAs) {
       case EntityTypes.Material:
         return this.saveMaterial(payload);
@@ -60,14 +114,14 @@ export default class MainAppService {
         : new Blob([payload.content], { type: payload.contentType === 'html' ? 'text/html' : 'text/markdown' }),
     );
 
-    const files = await this.mainApp.fetch<FileVO[], FormData>('PATCH', '/files', data);
+    const files = await this.fetch<FileVO[], FormData>('PATCH', '/files', data);
     const file = files?.[0];
 
     if (!file) {
       throw new Error('create files fail');
     }
 
-    await this.mainApp.fetch<void, NewMaterialEntityDTO>('POST', '/materials', {
+    await this.fetch<void, NewMaterialEntityDTO>('POST', '/materials', {
       name: payload.title,
       sourceUrl: payload.sourceUrl,
       parentId: payload.parentId,
@@ -80,7 +134,7 @@ export default class MainAppService {
       throw new Error('invalid content type for note');
     }
 
-    const note = await this.mainApp.fetch<NoteVO, NewNoteDTO>('POST', '/notes', {
+    const note = await this.fetch<NoteVO, NewNoteDTO>('POST', '/notes', {
       title: payload.title,
       parentId: payload.parentId,
     });
@@ -89,7 +143,7 @@ export default class MainAppService {
       throw new Error('create note failed');
     }
 
-    await this.mainApp.fetch<void, NoteBodyDTO>('PUT', `/notes/${note.id}/body`, payload.content, 'text/markdown');
+    await this.fetch<void, NoteBodyDTO>('PUT', `/notes/${note.id}/body`, payload.content, 'text/markdown');
   }
 
   private async saveMemo(payload: Payload) {
@@ -97,7 +151,7 @@ export default class MainAppService {
       throw new Error('invalid content type for memo');
     }
 
-    await this.mainApp.fetch<void, MemoDTO>('POST', '/memos', {
+    await this.fetch<void, MemoDTO>('POST', '/memos', {
       content: payload.content,
       parentId: payload.parentId || undefined,
     });
@@ -114,9 +168,9 @@ export default class MainAppService {
     let treeVO: TreeVO | null = null;
 
     if (targetId) {
-      treeVO = await this.mainApp.fetch<TreeVO>('GET', `/${urlMap[type]}/${targetId}/tree${query}`);
+      treeVO = await this.fetch<TreeVO>('GET', `/${urlMap[type]}/${targetId}/tree${query}`);
     } else {
-      const roots = await this.mainApp.fetch<NoteVO[] | MaterialVO[]>('GET', `/${urlMap[type]}${query}`);
+      const roots = await this.fetch<NoteVO[] | MaterialVO[]>('GET', `/${urlMap[type]}${query}`);
       treeVO = roots && roots.map((entity) => ({ entity }));
     }
 
@@ -138,6 +192,6 @@ export default class MainAppService {
       type === EntityTypes.Material
         ? `/materials?${parentId ? `parentId=${parentId}&` : ''}type=${MaterialTypes.Directory}`
         : `/notes${parentId ? `?parentId=${parentId}` : ''}`;
-    return await this.mainApp.fetch<NoteVO[] | MaterialDirectoryVO[]>('GET', url);
+    return await this.fetch<NoteVO[] | MaterialDirectoryVO[]>('GET', url);
   }
 }

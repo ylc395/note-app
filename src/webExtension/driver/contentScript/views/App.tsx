@@ -1,7 +1,4 @@
 import browser from 'webextension-polyfill';
-import { container } from 'tsyringe';
-
-import ClipService from 'service/ClipService';
 
 import Modal from './Modal';
 import ScreenCapture from './ScreenCapture';
@@ -12,6 +9,7 @@ import './index.css';
 
 const styleUrl = browser.runtime.getURL('content-script/style.css');
 
+// eslint-disable-next-line mobx/missing-observer
 export default function App() {
   return (
     <>

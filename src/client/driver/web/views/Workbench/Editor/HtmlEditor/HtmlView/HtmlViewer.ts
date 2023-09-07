@@ -181,7 +181,7 @@ export default class HtmlViewer {
     for (const link of links) {
       const href = link.getAttribute('href');
 
-      if (href?.startsWith('#') && !fragment.querySelector(href)) {
+      if (href?.startsWith('#') && !fragment.querySelector(decodeURIComponent(href))) {
         link.removeAttribute('href');
       }
     }

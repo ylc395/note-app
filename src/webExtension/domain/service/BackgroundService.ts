@@ -2,21 +2,17 @@ import browser, { type Tabs } from 'webextension-polyfill';
 import uniqueId from 'lodash/uniqueId';
 import { container } from 'tsyringe';
 
-import { type Task, type TaskTypes, type SubmitEvent, EventNames } from 'model/task';
+import { EventNames as TaskEventNames, type TaskTypes, type Task, type SubmitEvent } from 'model/task';
 import EventBus from 'infra/EventBus';
-import type { RemoteCallable, RemoteId } from 'infra/remoteApi';
 
 import ConfigService from './ConfigService';
 import HistoryService from './HistoryService';
 import MainAppService from './MainAppService';
 
-export const REMOTE_ID: RemoteId<SessionTaskManager> = 'SessionTaskManager';
-
-export default class SessionTaskManager implements RemoteCallable {
-  readonly __remoteId = REMOTE_ID as string;
+export default class BackgroundService {
   private readonly eventBus = container.resolve(EventBus);
-  private readonly mainApp = container.resolve(MainAppService);
   private readonly config = container.resolve(ConfigService);
+  private readonly mainApp = container.resolve(MainAppService);
   private tasks: Required<Task>[] = [];
 
   getTasks() {
@@ -24,8 +20,8 @@ export default class SessionTaskManager implements RemoteCallable {
   }
 
   constructor() {
-    this.eventBus.on(EventNames.Submit, this.submit.bind(this));
-    this.eventBus.on(EventNames.CancelTask, ({ taskId }) => taskId && this.cancel(taskId));
+    this.eventBus.on(TaskEventNames.Submit, this.submit.bind(this));
+    this.eventBus.on(TaskEventNames.CancelTask, ({ taskId }) => taskId && this.cancel(taskId));
   }
 
   async add(tabId: NonNullable<Tabs.Tab['id']>, type: TaskTypes) {
@@ -52,7 +48,7 @@ export default class SessionTaskManager implements RemoteCallable {
     };
 
     this.tasks.push(task);
-    this.eventBus.emit(EventNames.StartTask, { task }, tabId);
+    this.eventBus.emit(TaskEventNames.StartTask, { task });
 
     return task;
   }
@@ -64,23 +60,44 @@ export default class SessionTaskManager implements RemoteCallable {
       throw new Error(`invalid task id: ${taskId}`);
     }
 
+    this.tasks = this.tasks.filter((t) => t !== task);
+
     try {
-      await this.mainApp.save(task.targetType, {
+      await this.mainApp.saveToMainApp(task.targetType, {
         ...result,
         sourceUrl: task.url,
         parentId: task.targetId,
       });
 
       HistoryService.add(task);
-      this.eventBus.emit(EventNames.FinishTask, { taskId }, task.tabId);
+      this.eventBus.emit(TaskEventNames.FinishTask, { taskId }, task.tabId);
     } catch (e) {
-      this.eventBus.emit(EventNames.CancelTask, { taskId, error: `Can not save: ${e}` }, task.tabId);
+      this.eventBus.emit(TaskEventNames.CancelTask, { taskId, error: `Can not save: ${e}` }, task.tabId);
     }
-
-    this.tasks = this.tasks.filter((t) => t !== task);
   }
 
   private cancel(taskId: Task['id']) {
     this.tasks = this.tasks.filter((task) => task.id !== taskId);
+  }
+
+  async captureScreen() {
+    return await browser.tabs.captureVisibleTab(undefined, {
+      format: 'png',
+    });
+  }
+
+  async getActiveTab() {
+    const tabs = await browser.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
+
+    const targetTab = tabs[0];
+
+    if (!targetTab) {
+      throw new Error('no target tab');
+    }
+
+    return targetTab;
   }
 }

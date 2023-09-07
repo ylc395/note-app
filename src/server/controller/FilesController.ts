@@ -31,11 +31,11 @@ export default class ResourcesController {
   }
 
   @Patch('/files')
-  async uploadFiles(@Request() req: IRequest, @Response() res: IResponse): Promise<(FileVO | null)[]> {
+  uploadFiles(@Request() req: IRequest, @Response({ passthrough: true }) res: IResponse): Promise<(FileVO | null)[]> {
     const validation = filesDTOSchema.safeParse(req.body);
 
     if (validation.success) {
-      return await this.fileService.createFiles(validation.data);
+      return this.fileService.createFiles(validation.data);
     }
 
     const upload = multer().array('files[]');
@@ -51,9 +51,9 @@ export default class ResourcesController {
 
         if (Array.isArray(files)) {
           resolve(this.fileService.createFiles(files.map((file) => ({ mimeType: file.mimetype, data: file.buffer }))));
+        } else {
+          reject(new Error('invalid input'));
         }
-
-        throw new Error('invalid input');
       });
     });
   }

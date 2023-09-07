@@ -39,6 +39,8 @@ const isEventMessage = (message: unknown): message is EventMessage => {
   );
 };
 
+// comlink chrome adapter doesn't support proxy function (see https://github.com/kinglisky/comlink-adapters/tree/master#chrome-extensions-adapters)
+// so we have to create a EventBus
 @singleton()
 export default class EventBus {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -2,10 +2,10 @@ import { observer } from 'mobx-react-lite';
 import { LoadingOutlined } from '@ant-design/icons';
 import { container } from 'tsyringe';
 
-import ClipService from 'service/ClipService';
+import PageService from 'service/PageService';
 
 export default observer(function Loading() {
-  const {isLoading} = container.resolve(ClipService);
+  const { isLoading } = container.resolve(PageService);
 
   return isLoading ? (
     <div className="message top-40">

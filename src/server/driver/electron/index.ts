@@ -1,7 +1,6 @@
 import { app as electronApp, BrowserWindow, ipcMain } from 'electron';
 import { Injectable, Logger } from '@nestjs/common';
 import path from 'node:path';
-import { randomUUID } from 'node:crypto';
 import { Worker } from 'node:worker_threads';
 import { type Remote, wrap, releaseProxy } from 'comlink';
 import nodeEndpoint from 'comlink/dist/umd/node-adapter';
@@ -94,10 +93,6 @@ export default class ElectronRuntime extends Runtime {
     }
 
     this.mainWindow.webContents.send(channel, payload);
-  }
-
-  async getAppToken() {
-    return await this.kvDb.get('app.http.token', randomUUID);
   }
 
   private httpServerWorker?: Worker;
