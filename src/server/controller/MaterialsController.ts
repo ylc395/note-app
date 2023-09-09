@@ -14,7 +14,6 @@ import {
   annotationPatchDTOSchema,
   materialsPatchDTOSchema,
 } from 'model/material';
-import type { MaterialTreeVO } from 'model/material/Tree';
 import MaterialService from 'service/MaterialService';
 
 import { createSchemaPipe, Post, Body, Get, Query, Param, Delete, Patch } from './decorators';
@@ -45,7 +44,7 @@ export default class MaterialsController {
   async queryTree(
     @Param('id') materialId: string,
     @Query(createSchemaPipe(clientMaterialQuerySchema)) query: ClientMaterialQuery,
-  ): Promise<MaterialTreeVO> {
+  ): Promise<MaterialVO[]> {
     return await this.materialService.getTreeFragment(materialId, query.type);
   }
 

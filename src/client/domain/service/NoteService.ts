@@ -62,11 +62,12 @@ export default class NoteService extends Emitter<{
       parentId: parentId || null,
     });
 
+    this.noteTree.updateTree(note);
+
     if (parentId && !this.noteTree.getNode(parentId).isExpanded) {
       await this.noteTree.toggleExpand(parentId);
     }
 
-    this.noteTree.updateTree(note);
     this.noteTree.toggleSelect(note.id);
 
     const { openEntity } = container.resolve(EditorService);

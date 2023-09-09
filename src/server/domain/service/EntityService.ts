@@ -1,8 +1,7 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import groupBy from 'lodash/groupBy';
 
-import { type EntityId, type HierarchyEntity, EntityTypes, EntityRecord, EntitiesLocator } from 'model/entity';
-import type { TreeNodeVO } from 'model/abstract/Tree';
+import { type EntityId, EntityTypes, EntityRecord, EntitiesLocator } from 'model/entity';
 
 import BaseService from './BaseService';
 import NoteService from './NoteService';
@@ -77,17 +76,5 @@ export default class EntityService extends BaseService {
     }
 
     return entityTitles;
-  }
-
-  static getTree<T extends HierarchyEntity>(roots: T[], descants: T[]) {
-    const childrenGroup = groupBy(descants, 'parentId');
-
-    const getChildrenNodes = (entities: T[]): TreeNodeVO<T>[] =>
-      entities.map((entity) => {
-        const children = childrenGroup[entity.id];
-        return { entity, children: children ? getChildrenNodes(children) : undefined };
-      });
-
-    return getChildrenNodes(roots);
   }
 }

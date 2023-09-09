@@ -22,6 +22,7 @@ export default function MaterialTreeView() {
         droppable
         nodeClassName="tree-node"
         tree={materialTree}
+        multiple
         renderTitle={(node) => <NodeTitle node={node} />}
       />
     </div>

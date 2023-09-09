@@ -26,7 +26,7 @@ export default class MaterialService {
 
   constructor() {
     this.materialTree.on('nodeExpanded', this.loadChildren);
-    this.materialTree.on('nodeSelected', this.selectMaterial);
+    this.materialTree.on('nodeSelected', this.handleSelectMaterial);
     makeObservable(this);
   }
 
@@ -83,7 +83,7 @@ export default class MaterialService {
     this.targetId.reset();
   };
 
-  private readonly selectMaterial = (materialId: MaterialVO['id'] | null, { multiple }: SelectEvent) => {
+  private readonly handleSelectMaterial = (materialId: MaterialVO['id'] | null, { multiple }: SelectEvent) => {
     if (!materialId) {
       throw new Error('invalid id');
     }

@@ -1,5 +1,5 @@
 import { type MaterialVO, type MaterialEntity, isEntityMaterial, isDirectory } from './index';
-import Tree, { type TreeNode, type TreeVO } from '../abstract/Tree';
+import Tree, { type TreeNode } from '../abstract/Tree';
 
 export interface MaterialNodeAttr {
   icon: MaterialVO['icon'];
@@ -7,8 +7,6 @@ export interface MaterialNodeAttr {
 }
 
 export type MaterialTreeNode = TreeNode<MaterialNodeAttr>;
-
-export type MaterialTreeVO = TreeVO<MaterialVO>;
 
 export default class MaterialTree extends Tree<MaterialVO, MaterialNodeAttr> {
   protected toNode(material: MaterialVO | null) {

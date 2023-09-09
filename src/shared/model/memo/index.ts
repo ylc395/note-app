@@ -1,6 +1,6 @@
 import { boolean, infer as Infer, object, string } from 'zod';
-import type { EntityId } from './entity';
-import type { Starable } from './star';
+import type { EntityId } from '../entity';
+import type { Starable } from '../star';
 
 export interface ChildMemoVO extends Starable {
   id: EntityId;

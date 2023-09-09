@@ -81,7 +81,7 @@ const TreeNode = observer(function <T>({
 
   const select = (e: MouseEvent) => {
     e.stopPropagation();
-    tree.toggleSelect(node === tree.root ? null : node.id, { multiple: (multiple && e.metaKey) || e.ctrlKey });
+    tree.toggleSelect(node === tree.root ? null : node.id, { multiple: multiple && (e.metaKey || e.ctrlKey) });
   };
 
   return (

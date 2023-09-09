@@ -30,6 +30,7 @@ export default function NoteTreeView() {
         droppable
         nodeClassName="tree-node"
         tree={noteTree}
+        multiple
         renderTitle={(node) => <NodeTitle node={node} />}
       />
     </div>

@@ -187,7 +187,7 @@ export default class NoteService extends BaseService {
     const roots = await this.queryVO({ parentId: null });
     const children = await this.queryVO({ id: childrenIds });
 
-    return EntityService.getTree(roots, children);
+    return [...roots, ...children];
   }
 
   async assertAvailableIds(noteIds: NoteVO['id'][]) {

@@ -7,9 +7,8 @@ import type { FileVO } from 'model/file';
 import type { NoteBodyDTO, NewNoteDTO, NoteVO } from 'model/note';
 import type { MemoDTO } from 'model/memo';
 import { type EntityId, EntityTypes } from 'model/entity';
-import NoteTree, { type NoteTreeVO } from 'model/note/Tree';
-import MaterialTree, { type MaterialTreeVO } from 'model/material/Tree';
-import type { TreeVO } from 'model/abstract/Tree';
+import NoteTree from 'model/note/Tree';
+import MaterialTree from 'model/material/Tree';
 import { Statuses, type Payload } from 'model/mainApp';
 
 const HOST = 'http://localhost:3001';
@@ -165,22 +164,18 @@ export default class MainAppService {
     };
 
     const query = type === EntityTypes.Material ? `?type=${MaterialTypes.Directory}` : '';
-    let treeVO: TreeVO | null = null;
 
-    if (targetId) {
-      treeVO = await this.fetch<TreeVO>('GET', `/${urlMap[type]}/${targetId}/tree${query}`);
-    } else {
-      const roots = await this.fetch<NoteVO[] | MaterialVO[]>('GET', `/${urlMap[type]}${query}`);
-      treeVO = roots && roots.map((entity) => ({ entity }));
-    }
+    const entities = targetId
+      ? await this.fetch<NoteVO[] | MaterialVO[]>('GET', `/${urlMap[type]}/${targetId}/tree${query}`)
+      : await this.fetch<NoteVO[] | MaterialVO[]>('GET', `/${urlMap[type]}${query}`);
 
-    if (treeVO) {
+    if (entities) {
       if (type === EntityTypes.Material) {
-        return new MaterialTree({ ...options, from: treeVO as MaterialTreeVO });
+        return new MaterialTree({ ...options, from: entities as MaterialVO[] });
       }
 
       if (type === EntityTypes.Note) {
-        return new NoteTree({ ...options, from: treeVO as NoteTreeVO });
+        return new NoteTree({ ...options, from: entities as NoteVO[] });
       }
     }
 

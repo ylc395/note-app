@@ -225,6 +225,6 @@ export default class MaterialService extends BaseService {
     const roots = await this.queryVO({ parentId: null, type });
     const children = await this.queryVO({ id: childrenIds, type });
 
-    return EntityService.getTree(roots, children);
+    return [...roots, ...children];
   }
 }

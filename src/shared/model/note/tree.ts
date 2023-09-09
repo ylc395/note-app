@@ -1,13 +1,11 @@
 import type { NoteVO } from './index';
-import Tree, { type TreeNode, type TreeVO } from '../abstract/Tree';
+import Tree, { type TreeNode } from '../abstract/Tree';
 
 export interface NoteNodeAttr {
   icon: NoteVO['icon'];
 }
 
 export type NoteTreeNode = TreeNode<NoteNodeAttr>;
-
-export type NoteTreeVO = TreeVO<NoteVO>;
 
 export default class NoteTree extends Tree<NoteVO, NoteNodeAttr> {
   protected toNode(note: NoteVO | null) {
