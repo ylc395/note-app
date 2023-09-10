@@ -1,10 +1,16 @@
-import type { MemoVO } from 'shard/model/memo';
-
-type Memo = Pick<MemoVO, 'id' | 'content' | 'createdAt'>;
+import type { Memo } from 'shard/model/memo';
 
 export * from 'shard/model/memo';
 
 export interface MemoQuery {
+  createdAfter?: number;
+  updatedAfter?: number;
+  limit?: number;
   id?: Memo['id'][];
-  updatedAt?: number;
+  isAvailable?: boolean;
+  orderBy?: 'createdAt';
 }
+
+export type NewMemo = Partial<Memo>;
+
+export type MemoPatch = Omit<NewMemo, 'id' | 'createdAt'>;

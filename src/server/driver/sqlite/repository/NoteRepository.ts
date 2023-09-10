@@ -5,6 +5,7 @@ import type { NoteVO, NoteQuery, NotePatch, NewNote, Note } from 'model/note';
 
 import HierarchyEntityRepository from './HierarchyEntityRepository';
 import schema, { type Row } from '../schema/note';
+import { tableName as recyclableTableName } from '../schema/recyclable';
 
 const fields = ['id', 'icon', 'isReadonly', 'title', 'parentId', 'userUpdatedAt', 'createdAt', 'updatedAt'] as const;
 
@@ -50,19 +51,25 @@ export default class SqliteNoteRepository extends HierarchyEntityRepository impl
     return rows[0] ? this.rowToNote(rows[0]) : null;
   }
 
-  async findAll(query?: NoteQuery | { parentIds: NoteVO['id'][] }) {
+  async findAll(q?: NoteQuery) {
     let sql = this.db.selectFrom(this.tableName).select(fields);
 
-    for (const [k, v] of Object.entries(query || {})) {
-      if (v === undefined) {
-        continue;
-      }
+    if (typeof q?.isAvailable === 'boolean') {
+      sql = sql
+        .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.id`)
+        .where(`${recyclableTableName}.entityId`, q.isAvailable ? 'is' : 'is not', null);
+    }
 
-      sql = Array.isArray(v)
-        ? sql.where(k as keyof NoteQuery, 'in', v)
-        : typeof v === 'boolean'
-        ? sql.where(k as keyof NoteQuery, '=', Number(v))
-        : sql.where(k as keyof NoteQuery, v === null ? 'is' : '=', v);
+    if (q?.updatedAfter) {
+      sql = sql.where('updatedAt', '>', q.updatedAfter);
+    }
+
+    if (typeof q?.parentId !== 'undefined') {
+      sql = sql.where('parentId', q.parentId === null ? 'is' : '=', q.parentId);
+    }
+
+    if (q?.id) {
+      sql = sql.where('id', 'in', q.id);
     }
 
     const rows = await sql.execute();

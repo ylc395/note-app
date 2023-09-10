@@ -26,14 +26,10 @@ export default class StarService extends BaseService {
   }
 
   async query() {
-    const stars = await this.stars.findAllByLocators();
-    const availableStars = await this.recyclableService.filterByLocators(stars, ({ entityId, entityType }) => ({
-      id: entityId,
-      type: entityType,
-    }));
-    const titles = await this.entityService.getEntityTitles(availableStars);
+    const stars = await this.stars.findAllByLocators(undefined, { isAvailable: true });
+    const titles = await this.entityService.getEntityTitles(stars);
 
-    return availableStars.map((star) => {
+    return stars.map((star) => {
       const title = titles[star.entityType][star.entityId];
 
       if (!title) {

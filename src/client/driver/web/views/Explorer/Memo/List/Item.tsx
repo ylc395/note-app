@@ -13,9 +13,8 @@ import {
 } from '@ant-design/icons';
 import { useBoolean } from 'ahooks';
 
-import type { ParentMemoVO } from 'model/Memo';
 import MemoService from 'service/MemoService';
-import ChildItem from './ChildItem';
+import type { MemoVO } from 'model/Memo';
 import Editable from './Editable';
 
 const menuItems: NonNullable<MenuProps['items']> = [
@@ -30,7 +29,7 @@ const menuItems: NonNullable<MenuProps['items']> = [
 ];
 
 // eslint-disable-next-line mobx/missing-observer
-export default (function MemoItem({ memo }: { memo: ParentMemoVO }) {
+export default (function MemoItem({ memo }: { memo: MemoVO }) {
   const memoService = container.resolve(MemoService);
   const [isCreatingChild, { setTrue: startCreatingChild, setFalse: stopCreatingChild }] = useBoolean(false);
   const [isEditing, { setTrue: startEditing, setFalse: stopEditing }] = useBoolean(false);
@@ -82,13 +81,6 @@ export default (function MemoItem({ memo }: { memo: ParentMemoVO }) {
       </div>
       <Editable content={memo.content} onSubmit={submit} onCancel={stopEditing} isEditing={isEditing} />
       {isCreatingChild && <Editable onSubmit={submitChild} onCancel={stopCreatingChild} isEditing />}
-      {memo.threads.length > 0 && (
-        <div className="pl-4">
-          {memo.threads.map((child) => (
-            <ChildItem memo={child} key={child.id} />
-          ))}
-        </div>
-      )}
     </div>
   );
 });

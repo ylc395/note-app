@@ -1,14 +1,15 @@
 import dayjs from 'dayjs';
 import type { NoteVO, NewNoteDTO, DuplicateNoteDTO, NotePatchDTO, Note, NoteBodyDTO } from 'shard/model/note';
 
-export type NewNote = Partial<Note> & { body?: NoteBodyDTO; userUpdatedAt?: number };
+export type NewNote = Partial<Note> & { body?: NoteBodyDTO };
 
-export type NotePatch = Omit<NewNote, 'id'>;
+export type NotePatch = Omit<NewNote, 'id' | 'createdAt'>;
 
 export type NoteQuery = {
   parentId?: Note['parentId'];
   id?: Note['id'][];
-  updatedAt?: number;
+  updatedAfter?: number;
+  isAvailable?: boolean;
 };
 
 export function normalizeTitle(note: Pick<NoteVO, 'title' | 'createdAt'>) {

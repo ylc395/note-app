@@ -15,6 +15,7 @@ import type { MaterialRepository } from 'service/repository/MaterialRepository';
 
 import schema, { type Row } from '../schema/material';
 import fileSchema, { type Row as FileRow } from '../schema/file';
+import { tableName as recyclableTableName } from '../schema/recyclable';
 import FileRepository from './FileRepository';
 import MaterialAnnotationRepository from './MaterialAnnotationRepository';
 import HierarchyEntityRepository from './HierarchyEntityRepository';
@@ -57,19 +58,25 @@ export default class SqliteMaterialRepository extends HierarchyEntityRepository 
     return { ...omit(row, ['fileId']), mimeType };
   }
 
-  async findAll(query: MaterialQuery) {
+  async findAll(q: MaterialQuery) {
     let qb = this.db.selectFrom(this.tableName);
 
-    if (query.id) {
-      qb = qb.where(`${this.tableName}.id`, 'in', query.id);
+    if (typeof q?.isAvailable === 'boolean') {
+      qb = qb
+        .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.id`)
+        .where(`${recyclableTableName}.entityId`, q.isAvailable ? 'is' : 'is not', null);
     }
 
-    if (query.type) {
-      qb = qb.where(`${this.tableName}.fileId`, query.type === MaterialTypes.Directory ? 'is' : 'is not', null);
+    if (q.id) {
+      qb = qb.where(`${this.tableName}.id`, 'in', q.id);
     }
 
-    if (typeof query.parentId !== 'undefined') {
-      qb = qb.where(`${this.tableName}.parentId`, query.parentId === null ? 'is' : '=', query.parentId);
+    if (q.type) {
+      qb = qb.where(`${this.tableName}.fileId`, q.type === MaterialTypes.Directory ? 'is' : 'is not', null);
+    }
+
+    if (typeof q.parentId !== 'undefined') {
+      qb = qb.where(`${this.tableName}.parentId`, q.parentId === null ? 'is' : '=', q.parentId);
     }
 
     const rows = await qb

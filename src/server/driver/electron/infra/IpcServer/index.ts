@@ -25,6 +25,8 @@ export default class ElectronIpcServer extends Server implements CustomTransport
       const pattern = this.normalizePattern({ path: req.route || '', method: req.method });
       const handler = this.messageHandlers.get(pattern);
 
+      this.logger.log(req);
+
       if (!handler) {
         return {
           status: 404,

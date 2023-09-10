@@ -2,7 +2,7 @@ import { observable, makeObservable, runInAction, action } from 'mobx';
 import { container, singleton } from 'tsyringe';
 
 import { token as remoteToken } from 'infra/remote';
-import type { ChildMemoVO, MemoDTO, MemoPatchDTO, ParentMemoVO } from 'model/Memo';
+import type { MemoDTO, MemoPatchDTO, MemoVO } from 'model/Memo';
 
 @singleton()
 export default class MemoService {
@@ -10,23 +10,23 @@ export default class MemoService {
   constructor() {
     makeObservable(this);
   }
-  @observable memos: ParentMemoVO[] = [];
+  @observable memos: MemoVO[] = [];
   @observable newContent = '';
 
   async load() {
-    const { body: memos } = await this.remote.get<void, ParentMemoVO[]>('/memos');
+    const { body: memos } = await this.remote.get<void, MemoVO[]>('/memos');
 
     runInAction(() => {
       this.memos = memos;
     });
   }
 
-  async createMemo(childMemo?: { parent: ParentMemoVO; content: string }) {
+  async createMemo(childMemo?: { parent: MemoVO; content: string }) {
     if (!this.newContent && !childMemo?.content) {
       throw new Error('can not be empty');
     }
 
-    const { body: created } = await this.remote.post<MemoDTO, ParentMemoVO>(
+    await this.remote.post<MemoDTO, MemoVO>(
       '/memos',
       childMemo ? { content: childMemo.content, parentId: childMemo.parent.id } : { content: this.newContent },
     );
@@ -38,25 +38,25 @@ export default class MemoService {
       await this.load();
     } else {
       runInAction(() => {
-        childMemo.parent.threads.unshift(created);
+        // childMemo.parent.threads.unshift(created);
       });
     }
   }
 
-  async toggleMemoPin(memo: ParentMemoVO) {
-    await this.remote.patch<MemoPatchDTO, ParentMemoVO>(`/memos/${memo.id}`, {
+  async toggleMemoPin(memo: MemoVO) {
+    await this.remote.patch<MemoPatchDTO, MemoVO>(`/memos/${memo.id}`, {
       isPinned: !memo.isPinned,
     });
 
     await this.load();
   }
 
-  async updateContent(memo: ParentMemoVO | ChildMemoVO, content: NonNullable<MemoPatchDTO['content']>) {
+  async updateContent(memo: MemoVO, content: NonNullable<MemoPatchDTO['content']>) {
     if (!content) {
       throw new Error('can not be empty');
     }
 
-    const { body: updated } = await this.remote.patch<MemoPatchDTO, ParentMemoVO>(`/memos/${memo.id}`, { content });
+    const { body: updated } = await this.remote.patch<MemoPatchDTO, MemoVO>(`/memos/${memo.id}`, { content });
 
     runInAction(() => {
       memo.content = updated.content;

@@ -17,7 +17,10 @@ export interface MaterialRepository {
   update(id: Material['id'], material: MaterialPatch): Promise<Material | null>;
   update(id: Material['id'][], material: MaterialPatch): Promise<Material[]>;
   findAll: (query: MaterialQuery) => Promise<Material[]>;
-  findChildrenIds: (ids: Material['id'][]) => Promise<Record<Material['id'], Material['id'][]>>;
+  findChildrenIds: (
+    ids: Material['id'][],
+    filter?: { isAvailable?: boolean },
+  ) => Promise<Record<Material['id'], Material['id'][]>>;
   findDescendantIds: (materialIds: Material['id'][]) => Promise<Record<Material['id'], Material['id'][]>>;
   findAncestorIds: (materialIds: Material['id']) => Promise<Material['id'][]>;
   findOneById: (id: Material['id']) => Promise<Material | null>;

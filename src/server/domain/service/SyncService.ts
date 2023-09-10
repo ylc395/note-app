@@ -8,7 +8,7 @@ import type Runtime from 'infra/Runtime';
 import { type EntityLocator, EntityTypes } from 'model/entity';
 import type { Conflict, Log } from 'infra/synchronizer';
 import type { Note } from 'model/note';
-import type { MemoVO } from 'model/memo';
+import type { Memo } from 'model/memo';
 import { type SyncTargetFactory, type SyncTarget, token as syncTargetFactoryToken } from 'infra/synchronizer';
 
 import BaseService from './BaseService';
@@ -45,7 +45,7 @@ export default class SyncService extends BaseService {
     return { metadata: attributes, content: body };
   }
 
-  private static serialize(entity: Note | MemoVO, { content, type }: { type: EntityTypes; content: string }) {
+  private static serialize(entity: Note | Memo, { content, type }: { type: EntityTypes; content: string }) {
     const attributes: EntityMetadata = {
       id: entity.id,
       updatedAt: entity.updatedAt,
@@ -257,7 +257,7 @@ export default class SyncService extends BaseService {
   }
 
   private async getLocalEntity({ type, id }: EntityLocator) {
-    let metadata: Note | MemoVO | null = null;
+    let metadata: Note | Memo | null = null;
     let content: string | null = null;
 
     switch (type) {
@@ -317,9 +317,9 @@ export default class SyncService extends BaseService {
     await this.syncTarget.putFile('.meta', JSON.stringify(meta));
   }
 
-  private async getLocalEntities(updatedAt?: number) {
-    const notes = await this.notes.findAll(updatedAt ? { updatedAt } : undefined);
-    const memos = await this.memos.findAll(updatedAt ? { updatedAt } : undefined);
+  private async getLocalEntities(updatedAfter?: number) {
+    const notes = await this.notes.findAll(updatedAfter ? { updatedAfter } : undefined);
+    const memos = await this.memos.findAll(updatedAfter ? { updatedAfter } : undefined);
 
     return [
       ...notes.map(({ id, createdAt, updatedAt }) => ({ id, type: EntityTypes.Note, createdAt, updatedAt })),

@@ -5,12 +5,26 @@ import type { EntityId, HierarchyEntity } from 'model/entity';
 import { getIds } from 'utils/collection';
 
 import BaseRepository from './BaseRepository';
-import type { Db } from '../Database';
+import { tableName as recyclableTableName } from '../schema/recyclable';
+import type { tableName as noteTableName } from '../schema/note';
+import type { tableName as materialTableName } from '../schema/material';
+import type { tableName as memoTableName } from '../schema/memo';
 
 export default abstract class HierarchyEntityRepository extends BaseRepository {
-  abstract readonly tableName: keyof Db;
-  async findChildrenIds(ids: EntityId[]) {
-    const rows = await this.db.selectFrom(this.tableName).selectAll().where('parentId', 'in', ids).execute();
+  abstract readonly tableName: typeof noteTableName | typeof materialTableName | typeof memoTableName;
+
+  async findChildrenIds(ids: EntityId[], { isAvailable }: { isAvailable?: boolean } = {}) {
+    let qb = this.db.selectFrom(this.tableName).selectAll(this.tableName);
+
+    if (typeof isAvailable === 'boolean') {
+      qb = qb
+        .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.id`)
+        .where(`${recyclableTableName}.entityId`, isAvailable ? 'is' : 'is not', null);
+    }
+
+    qb = qb.where('parentId', 'in', ids);
+
+    const rows = await qb.execute();
 
     return mapValues(groupBy(rows, 'parentId'), getIds);
   }

@@ -1,11 +1,12 @@
 import { Controller } from '@nestjs/common';
 
-import { Post, Body, Get, Patch, createSchemaPipe, Param } from './decorators';
+import { Post, Body, Get, Patch, createSchemaPipe, Param, Query } from './decorators';
 import {
   memoDTOSchema,
+  memoQuerySchema,
   memoPatchDTOSchema,
+  type ClientMemoQuery,
   type MemoDTO,
-  type ParentMemoVO,
   type MemoPatchDTO,
   type MemoVO,
 } from 'model/memo';
@@ -22,14 +23,14 @@ export default class MemosController {
 
   @Patch('/memos/:id')
   async update(
-    @Param('id') id: ParentMemoVO['id'],
-    @Body(createSchemaPipe(memoPatchDTOSchema)) memoVO: MemoPatchDTO,
+    @Param('id') id: MemoVO['id'],
+    @Body(createSchemaPipe(memoPatchDTOSchema)) patch: MemoPatchDTO,
   ): Promise<MemoVO> {
-    return await this.memoService.update(id, memoVO);
+    return await this.memoService.update(id, patch);
   }
 
-  @Get('/memos')
-  async query(): Promise<MemoVO[]> {
-    return await this.memoService.query();
+  @Get('/memos/tree')
+  async query(@Query(createSchemaPipe(memoQuerySchema)) q: ClientMemoQuery): Promise<MemoVO[]> {
+    return await this.memoService.getTree(q);
   }
 }

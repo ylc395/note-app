@@ -52,7 +52,7 @@ export default class MaterialService extends BaseService {
 
   private async toVOs(materials: Material[]) {
     const parentIds = getIds(materials.filter(isDirectory));
-    const children = await this.getChildrenIds(parentIds);
+    const children = await this.materials.findChildrenIds(parentIds, { isAvailable: true });
     const stars = buildIndex(await this.stars.findAllByLocators(getLocators(materials, EntityTypes.Note)), 'entityId');
 
     return materials.map((material) => ({
@@ -64,27 +64,10 @@ export default class MaterialService extends BaseService {
     })) as MaterialVO[];
   }
 
-  private async getChildrenIds(materialIds: Material['id'][]) {
-    const children = await this.materials.findChildrenIds(materialIds);
-    const availableChildren = await this.recyclableService.filterByLocators(children, (id) => ({
-      id,
-      type: EntityTypes.Material,
-    }));
-
-    return availableChildren;
-  }
-
-  private async queryAvailableMaterials(q: MaterialQuery) {
-    const materials = await this.materials.findAll(q);
-    const availableMaterials = await this.recyclableService.filter(EntityTypes.Material, materials);
-
-    return availableMaterials;
-  }
-
   async queryVO(q: MaterialQuery): Promise<MaterialVO[]>;
   async queryVO(q: MaterialVO['id']): Promise<MaterialVO>;
   async queryVO(q: MaterialQuery | MaterialVO['id']): Promise<MaterialVO[] | MaterialVO> {
-    const materials = await this.queryAvailableMaterials(typeof q === 'string' ? { id: [q] } : q);
+    const materials = await this.materials.findAll({ ...(typeof q === 'string' ? { id: [q] } : q), isAvailable: true });
     const materialVOs = await this.toVOs(materials);
 
     const result = typeof q === 'string' ? materialVOs[0] : materialVOs;
@@ -184,7 +167,7 @@ export default class MaterialService extends BaseService {
 
   async assertAvailableIds(ids: MaterialVO['id'][], type?: MaterialTypes) {
     const uniqueIds = uniq(ids);
-    const rows = await this.queryAvailableMaterials({ id: uniqueIds });
+    const rows = await this.materials.findAll({ id: uniqueIds, isAvailable: true });
     const result =
       rows.length === uniqueIds.length &&
       (type ? rows.every(type === MaterialTypes.Entity ? isEntityMaterial : isDirectory) : true);
@@ -196,7 +179,7 @@ export default class MaterialService extends BaseService {
 
   private async assertEntityMaterial(materialId: MaterialVO['id'] | MaterialVO['id'][], mimeType?: string) {
     const ids = Array.isArray(materialId) ? uniq(materialId) : [materialId];
-    const materials = await this.queryAvailableMaterials({ id: ids });
+    const materials = await this.materials.findAll({ id: ids, isAvailable: true });
 
     if (
       materials.length !== ids.length ||

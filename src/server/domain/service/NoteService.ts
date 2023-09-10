@@ -10,7 +10,7 @@ import {
   type NoteBodyDTO,
   type NewNoteDTO,
   type Note,
-  type NoteQuery,
+  type ClientNoteQuery,
   isDuplicate,
   isNewNote,
   normalizeTitle,
@@ -27,16 +27,6 @@ import EntityService from './EntityService';
 export default class NoteService extends BaseService {
   @Inject(forwardRef(() => RecyclableService)) private readonly recyclableService!: RecyclableService;
   @Inject(forwardRef(() => EntityService)) private readonly entityService!: EntityService;
-
-  private async getChildrenIds(noteIds: NoteVO['id'][]) {
-    const children = await this.notes.findChildrenIds(noteIds);
-    const availableChildren = await this.recyclableService.filterByLocators(children, (id) => ({
-      id,
-      type: EntityTypes.Note,
-    }));
-
-    return availableChildren;
-  }
 
   @Transaction
   async create(note: NewNoteDTO) {
@@ -115,7 +105,7 @@ export default class NoteService extends BaseService {
 
   private async toVOs(rawNotes: Note[]) {
     const stars = buildIndex(await this.stars.findAllByLocators(getLocators(rawNotes, EntityTypes.Note)), 'entityId');
-    const _children = await this.getChildrenIds(getIds(rawNotes));
+    const _children = await this.notes.findChildrenIds(getIds(rawNotes), { isAvailable: true });
 
     return rawNotes.map((note) => ({
       ...omit(note, ['userUpdatedAt']),
@@ -136,7 +126,7 @@ export default class NoteService extends BaseService {
 
     const result = await this.notes.update(ids, {
       ...patch,
-      ...(typeof patch.title === 'undefined' ? null : { updatedAt: dayjs().unix() }),
+      ...(typeof patch.title === 'undefined' ? null : { userUpdatedAt: dayjs().unix() }),
     });
 
     return this.toVOs(result);
@@ -158,17 +148,10 @@ export default class NoteService extends BaseService {
     return mapValues(buildIndex(notes), normalizeTitle);
   }
 
-  private async queryAvailableNotes(q: NoteQuery) {
-    const notes = await this.notes.findAll(q);
-    const availableNotes = await this.recyclableService.filter(EntityTypes.Note, notes);
-
-    return availableNotes;
-  }
-
-  async queryVO(q: NoteQuery): Promise<NoteVO[]>;
+  async queryVO(q: ClientNoteQuery): Promise<NoteVO[]>;
   async queryVO(id: NoteVO['id']): Promise<NoteVO>;
-  async queryVO(q: NoteQuery | Note['id']) {
-    const notes = await this.queryAvailableNotes(typeof q === 'string' ? { id: [q] } : q);
+  async queryVO(q: ClientNoteQuery | Note['id']) {
+    const notes = await this.notes.findAll({ ...(typeof q === 'string' ? { id: [q] } : q), isAvailable: true });
     const noteVOs = await this.toVOs(notes);
     const result = typeof q === 'string' ? noteVOs[0] : noteVOs;
 
@@ -182,17 +165,17 @@ export default class NoteService extends BaseService {
   async getTreeFragment(noteId: NoteVO['id']) {
     await this.assertAvailableIds([noteId]);
     const ancestorIds = await this.notes.findAncestorIds(noteId);
-    const childrenIds = Object.values(await this.notes.findChildrenIds(ancestorIds)).flat();
+    const childrenIds = Object.values(await this.notes.findChildrenIds(ancestorIds, { isAvailable: true })).flat();
 
-    const roots = await this.queryVO({ parentId: null });
-    const children = await this.queryVO({ id: childrenIds });
+    const roots = await this.notes.findAll({ parentId: null, isAvailable: true });
+    const children = await this.notes.findAll({ id: childrenIds });
 
-    return [...roots, ...children];
+    return this.toVOs([...roots, ...children]);
   }
 
   async assertAvailableIds(noteIds: NoteVO['id'][]) {
     const uniqueIds = uniq(noteIds);
-    const rows = await this.queryAvailableNotes({ id: uniqueIds });
+    const rows = await this.notes.findAll({ id: uniqueIds, isAvailable: true });
 
     if (rows.length !== uniqueIds.length) {
       throw new Error('invalid note id');
@@ -200,7 +183,7 @@ export default class NoteService extends BaseService {
   }
 
   private async isWritable(noteId: NoteVO['id']) {
-    const row = (await this.queryAvailableNotes({ id: [noteId] }))[0];
+    const row = (await this.notes.findAll({ id: [noteId], isAvailable: true }))[0];
 
     if (!row) {
       return false;

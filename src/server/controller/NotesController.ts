@@ -29,8 +29,10 @@ export default class NotesController {
   }
 
   @Get('/notes')
-  async query(@Query(createSchemaPipe(clientNoteQuerySchema)) q: ClientNoteQuery): Promise<NoteVO[]> {
-    return await this.noteService.queryVO({ parentId: null, ...q });
+  async query(
+    @Query(createSchemaPipe(clientNoteQuerySchema)) { parentId = null, ...q }: ClientNoteQuery,
+  ): Promise<NoteVO[]> {
+    return await this.noteService.queryVO({ parentId, ...q });
   }
 
   @Get('/notes/:id/tree')

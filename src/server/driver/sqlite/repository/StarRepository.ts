@@ -4,33 +4,39 @@ import type { StarRepository } from 'service/repository/StarRepository';
 
 import BaseRepository from './BaseRepository';
 import schema from '../schema/star';
-
-const { tableName } = schema;
+import { tableName as recyclableTableName } from '../schema/recyclable';
 
 export default class SqliteStarRepository extends BaseRepository implements StarRepository {
+  readonly tableName = schema.tableName;
   async batchCreate(entities: EntityLocator[]) {
     const rows = entities.map(({ id, type }) => ({ entityId: id, entityType: type, id: this.generateId() }));
-    const starRows = await this._batchCreate(tableName, rows);
+    const starRows = await this._batchCreate(this.tableName, rows);
 
     return starRows;
   }
 
   async findOneById(id: StarRecord['id']) {
-    return (await this.db.selectFrom(tableName).selectAll().where('id', '=', id).executeTakeFirst()) || null;
+    return (await this.db.selectFrom(this.tableName).selectAll().where('id', '=', id).executeTakeFirst()) || null;
   }
 
-  async findAllByLocators(entities?: EntityLocator[]) {
-    let qb = this.db.selectFrom(tableName);
+  async findAllByLocators(entities?: EntityLocator[], filter?: { isAvailable?: boolean }) {
+    let qb = this.db.selectFrom(this.tableName).selectAll(this.tableName);
+
+    if (typeof filter?.isAvailable === 'boolean') {
+      qb = qb
+        .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.entityId`)
+        .where(`${recyclableTableName}.entityId`, filter.isAvailable ? 'is' : 'is not', null);
+    }
 
     if (entities) {
       const ids = entities.map(({ id }) => id);
-      qb = qb.where('entityId', 'in', ids);
+      qb = qb.where(`${this.tableName}.entityId`, 'in', ids);
     }
 
-    return await qb.selectAll().execute();
+    return await qb.execute();
   }
 
   async remove(id: StarRecord['id']) {
-    await this.db.deleteFrom(tableName).where('id', '=', id).execute();
+    await this.db.deleteFrom(this.tableName).where('id', '=', id).execute();
   }
 }

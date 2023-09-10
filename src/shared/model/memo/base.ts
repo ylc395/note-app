@@ -1,4 +1,4 @@
-import type { EntityId } from '../entity';
+import type { EntityId, EntityParentId } from '../entity';
 
 export interface Memo {
   id: EntityId;
@@ -7,4 +7,5 @@ export interface Memo {
   userUpdatedAt: number;
   createdAt: number;
   isPinned?: boolean;
+  parentId: EntityParentId;
 }

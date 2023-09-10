@@ -15,6 +15,7 @@ export interface MaterialQuery {
   parentId?: Material['parentId'];
   id?: Material['id'][];
   type?: MaterialTypes;
+  isAvailable?: boolean;
 }
 
 export type Annotation = AnnotationVO & {
