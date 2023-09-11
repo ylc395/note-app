@@ -1,6 +1,7 @@
 import omit from 'lodash/omit';
+import fromPairs from 'lodash/fromPairs';
 
-import type { Selectable } from 'kysely';
+import { sql, type Selectable } from 'kysely';
 import type { MemoPatchDTO, MemoQuery, Memo, NewMemo } from 'model/memo';
 import type { MemoRepository } from 'service/repository/MemoRepository';
 
@@ -25,7 +26,7 @@ export default class SqliteMemoRepository extends HierarchyEntityRepository impl
     const updatedRow = await this.db
       .updateTable(this.tableName)
       .where('id', '=', id)
-      .set({ ...patch, isPinned: patch.isPinned ? 1 : 0 })
+      .set({ ...patch, isPinned: patch.isPinned ? 1 : 0, updatedAt: Date.now() })
       .returningAll()
       .executeTakeFirst();
 
@@ -87,11 +88,19 @@ export default class SqliteMemoRepository extends HierarchyEntityRepository impl
     }
 
     if (q?.createdAfter) {
-      sql = sql.where('createdAt', '>', q.createdAfter);
+      sql = sql.where('createdAt', '>=', q.createdAfter);
+    }
+
+    if (q?.createdBefore) {
+      sql = sql.where('createdAt', '<', q.createdBefore);
     }
 
     if (q?.id) {
       sql = sql.where('id', 'in', q.id);
+    }
+
+    if (typeof q?.parentId !== 'undefined') {
+      sql = sql.where('parentId', q.parentId === null ? 'is' : '=', q.parentId);
     }
 
     if (q?.orderBy === 'createdAt') {
@@ -109,5 +118,20 @@ export default class SqliteMemoRepository extends HierarchyEntityRepository impl
 
   async removeById(id: Memo['id']) {
     await this.db.deleteFrom(this.tableName).where('id', '=', id).execute();
+  }
+
+  async queryAvailableDates() {
+    const rows = await this.db
+      .selectFrom(this.tableName)
+      .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.id`)
+      .where(`${recyclableTableName}.entityId`, 'is', null)
+      .groupBy(sql`date(createdAt / 1000, 'unixepoch')`)
+      .select(({ fn }) => [
+        fn.count<number>('id').as('count'),
+        sql<string>`date(createdAt / 1000, 'unixepoch')`.as('date'),
+      ])
+      .execute();
+
+    return fromPairs(rows.map(({ date, count }) => [date, count]));
   }
 }

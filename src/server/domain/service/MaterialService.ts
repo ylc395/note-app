@@ -1,8 +1,7 @@
 import uniq from 'lodash/uniq';
 import mapValues from 'lodash/mapValues';
 import omit from 'lodash/omit';
-import { Inject, Injectable, forwardRef } from '@nestjs/common';
-import dayjs from 'dayjs';
+import { Injectable } from '@nestjs/common';
 
 import {
   type NewAnnotationDTO,
@@ -23,15 +22,10 @@ import { EntityTypes } from 'model/entity';
 import { buildIndex, getIds, getLocators } from 'utils/collection';
 
 import BaseService, { Transaction } from './BaseService';
-import RecyclableService from './RecyclableService';
-import EntityService from './EntityService';
 import { isDirectory } from 'model/material';
 
 @Injectable()
 export default class MaterialService extends BaseService {
-  @Inject(forwardRef(() => RecyclableService)) private readonly recyclableService!: RecyclableService;
-  @Inject(forwardRef(() => EntityService)) private readonly entityService!: EntityService;
-
   async create(newMaterial: NewMaterialDTO) {
     if (newMaterial.parentId) {
       await this.assertAvailableIds([newMaterial.parentId], MaterialTypes.Directory);
@@ -88,7 +82,7 @@ export default class MaterialService extends BaseService {
 
     const result = await this.materials.update(ids, {
       ...patch,
-      ...(typeof patch.name === 'undefined' ? null : { updatedAt: dayjs().unix() }),
+      ...(typeof patch.name === 'undefined' ? null : { userUpdatedAt: Date.now() }),
     });
 
     return this.toVOs(result);
@@ -149,7 +143,7 @@ export default class MaterialService extends BaseService {
       throw new Error('invalid annotation');
     }
 
-    await this.materials.update(result.materialId, { userUpdatedAt: dayjs().unix() });
+    await this.materials.update(result.materialId, { userUpdatedAt: Date.now() });
   }
 
   @Transaction

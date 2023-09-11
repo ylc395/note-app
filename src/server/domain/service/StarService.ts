@@ -1,17 +1,15 @@
 import { Inject, Injectable, forwardRef } from '@nestjs/common';
 
-import type { EntitiesLocator, EntityLocator } from 'model/entity';
+import type { EntitiesLocator } from 'model/entity';
 import type { StarRecord } from 'model/star';
 import { getLocators } from 'utils/collection';
 
 import BaseService from './BaseService';
 import EntityService from './EntityService';
-import RecyclableService from './RecyclableService';
 
 @Injectable()
 export default class StarService extends BaseService {
   @Inject(forwardRef(() => EntityService)) private readonly entityService!: EntityService;
-  @Inject(forwardRef(() => RecyclableService)) private readonly recyclableService!: RecyclableService;
 
   async create({ type, ids }: EntitiesLocator) {
     await this.entityService.assertAvailableEntities({ type, ids });
@@ -45,10 +43,5 @@ export default class StarService extends BaseService {
     }
 
     await this.stars.remove(id);
-  }
-
-  async isStar(entity: EntityLocator) {
-    const stars = await this.stars.findAllByLocators([entity]);
-    return stars.length > 0;
   }
 }

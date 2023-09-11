@@ -40,7 +40,7 @@ export default class SqliteNoteRepository extends HierarchyEntityRepository impl
     const rows = await this.db
       .updateTable(this.tableName)
       .where('id', Array.isArray(id) ? 'in' : '=', id)
-      .set({ updatedAt: this.getTimestamp(), ...SqliteNoteRepository.patchToRow(note) })
+      .set({ updatedAt: Date.now(), ...SqliteNoteRepository.patchToRow(note) })
       .returning(fields)
       .execute();
 

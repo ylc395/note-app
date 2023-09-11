@@ -67,7 +67,7 @@ export default class MaterialAnnotationRepository extends BaseRepository {
 
     const updated = await this.db
       .updateTable(tableName)
-      .set({ comment, meta: newMeta, updatedAt: this.getTimestamp() })
+      .set({ comment, meta: newMeta, updatedAt: Date.now() })
       .where('id', '=', annotationId)
       .returningAll()
       .executeTakeFirst();

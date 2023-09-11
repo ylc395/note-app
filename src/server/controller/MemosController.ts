@@ -9,6 +9,7 @@ import {
   type MemoDTO,
   type MemoPatchDTO,
   type MemoVO,
+  type MemoDatesVO,
 } from 'model/memo';
 import MemoService from 'service/MemoService';
 
@@ -32,5 +33,10 @@ export default class MemosController {
   @Get('/memos/tree')
   async query(@Query(createSchemaPipe(memoQuerySchema)) q: ClientMemoQuery): Promise<MemoVO[]> {
     return await this.memoService.getTree(q);
+  }
+
+  @Get('/memos/dates')
+  async queryDates(): Promise<MemoDatesVO> {
+    return await this.memoService.queryDates();
   }
 }

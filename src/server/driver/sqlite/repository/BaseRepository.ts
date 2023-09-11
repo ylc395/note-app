@@ -1,6 +1,5 @@
 import { randomUUID } from 'node:crypto';
 import type { Insertable, Kysely } from 'kysely';
-import dayjs from 'dayjs';
 
 import type { Db } from '../Database';
 
@@ -9,10 +8,6 @@ export default abstract class BaseRepository {
 
   protected generateId() {
     return randomUUID().replaceAll('-', '');
-  }
-
-  protected getTimestamp() {
-    return dayjs().unix();
   }
 
   protected createOne<T extends keyof Db>(table: T, row: Insertable<Db[T]>) {

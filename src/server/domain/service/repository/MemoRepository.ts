@@ -1,4 +1,4 @@
-import type { Memo, MemoVO, MemoQuery, NewMemo, MemoPatch } from 'model/memo';
+import type { Memo, MemoVO, MemoQuery, NewMemo, MemoPatch, MemoDatesVO } from 'model/memo';
 
 export interface MemoRepository {
   create: (memo: NewMemo) => Promise<Memo>;
@@ -8,4 +8,5 @@ export interface MemoRepository {
   findOneById: (id: MemoVO['id']) => Promise<Memo | null>;
   findAll: (q?: MemoQuery) => Promise<Memo[]>;
   removeById: (id: MemoVO['id']) => Promise<void>;
+  queryAvailableDates: () => Promise<MemoDatesVO>;
 }

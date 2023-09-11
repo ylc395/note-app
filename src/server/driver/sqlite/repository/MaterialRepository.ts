@@ -149,10 +149,7 @@ export default class SqliteMaterialRepository extends HierarchyEntityRepository 
   async update(id: Material['id'] | Material['id'][], patch: MaterialPatch) {
     await this.db
       .updateTable(this.tableName)
-      .set({
-        ...patch,
-        updatedAt: this.getTimestamp(),
-      })
+      .set({ ...patch, updatedAt: Date.now() })
       .where('id', Array.isArray(id) ? 'in' : '=', id)
       .execute();
 

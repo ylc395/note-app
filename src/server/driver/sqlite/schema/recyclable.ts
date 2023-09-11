@@ -20,7 +20,7 @@ export default {
       .addColumn('entityType', 'integer', (col) => col.notNull())
       .addColumn('isHard', 'integer', (col) => col.notNull().defaultTo(0))
       .addColumn('reason', 'integer', (col) => col.notNull())
-      .addColumn('deletedAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch())`))
+      .addColumn('deletedAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch('subsec') * 1000)`))
       .addUniqueConstraint('id-type-unique', ['entityId', 'entityType']);
   },
 } as const;

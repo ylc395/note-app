@@ -3,7 +3,7 @@ import mapValues from 'lodash/mapValues';
 import omit from 'lodash/omit';
 
 import { buildIndex, getIds, getLocators } from 'utils/collection';
-import type { Memo, MemoDTO, MemoPatchDTO, ClientMemoQuery, MemoVO } from 'model/memo';
+import type { Memo, NewMemo, MemoPatch, ClientMemoQuery, MemoVO } from 'model/memo';
 import { EntityTypes } from 'model/entity';
 import { Events } from 'model/events';
 
@@ -11,7 +11,7 @@ import BaseService from './BaseService';
 
 @Injectable()
 export default class MemoService extends BaseService {
-  async create(memo: MemoDTO) {
+  async create(memo: NewMemo) {
     if (memo.parentId && memo.isPinned) {
       throw new Error('can not pin child memo');
     }
@@ -31,7 +31,7 @@ export default class MemoService extends BaseService {
     };
   }
 
-  async update(id: MemoVO['id'], patch: MemoPatchDTO) {
+  async update(id: MemoVO['id'], patch: MemoPatch) {
     if (typeof patch.isPinned !== 'undefined' && (await this.memos.findParent(id))) {
       throw new Error('can not pin child memo');
     }
@@ -53,8 +53,8 @@ export default class MemoService extends BaseService {
     return this.toVOs(updated);
   }
 
-  async getTree({ after, limit = 30 }: ClientMemoQuery) {
-    let createdAfter = 0;
+  async getTree({ after, createdAfter, createdBefore, limit = 30 }: ClientMemoQuery) {
+    let _createdAfter = createdAfter || 0;
 
     if (after) {
       const memo = await this.memos.findOneById(after);
@@ -63,10 +63,18 @@ export default class MemoService extends BaseService {
         throw new Error('invalid memo');
       }
 
-      createdAfter = memo.createdAt;
+      _createdAfter = memo.createdAt;
     }
 
-    const memos = await this.memos.findAll({ createdAfter, limit, isAvailable: true });
+    const memos = await this.memos.findAll({
+      createdAfter: _createdAfter,
+      createdBefore,
+      limit,
+      isAvailable: true,
+      parentId: null,
+      orderBy: 'createdAt',
+    });
+
     const descantIds = await this.memos.findDescendantIds(getIds(memos));
     const descantMemos = await this.memos.findAll({ id: Object.values(descantIds).flat(), isAvailable: true });
 
@@ -99,5 +107,9 @@ export default class MemoService extends BaseService {
     if ((await this.memos.findAll({ id: ids, isAvailable: true })).length !== ids.length) {
       throw new Error('invalid id');
     }
+  }
+
+  async queryDates() {
+    return await this.memos.queryAvailableDates();
   }
 }

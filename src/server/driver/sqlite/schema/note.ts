@@ -23,9 +23,9 @@ export default {
       .addColumn('title', 'text', (col) => col.notNull().defaultTo(''))
       .addColumn('body', 'text', (col) => col.notNull().defaultTo(''))
       .addColumn('parentId', 'text')
-      .addColumn('createdAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch())`))
-      .addColumn('updatedAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch())`))
-      .addColumn('userUpdatedAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch())`))
+      .addColumn('createdAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch('subsec') * 1000)`))
+      .addColumn('updatedAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch('subsec') * 1000)`))
+      .addColumn('userUpdatedAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch('subsec') * 1000)`))
       .addColumn('isReadonly', 'integer', (col) => col.notNull().defaultTo(0))
       .addColumn('icon', 'text');
   },

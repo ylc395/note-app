@@ -1,8 +1,7 @@
-import { Injectable, Inject, forwardRef } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import omit from 'lodash/omit';
 import uniq from 'lodash/uniq';
 import mapValues from 'lodash/mapValues';
-import dayjs from 'dayjs';
 
 import { buildIndex, getIds, getLocators } from 'utils/collection';
 import {
@@ -20,14 +19,9 @@ import { EntityTypes } from 'model/entity';
 import { Events } from 'model/events';
 
 import BaseService, { Transaction } from './BaseService';
-import RecyclableService from './RecyclableService';
-import EntityService from './EntityService';
 
 @Injectable()
 export default class NoteService extends BaseService {
-  @Inject(forwardRef(() => RecyclableService)) private readonly recyclableService!: RecyclableService;
-  @Inject(forwardRef(() => EntityService)) private readonly entityService!: EntityService;
-
   @Transaction
   async create(note: NewNoteDTO) {
     if (isNewNote(note) && note.parentId) {
@@ -72,7 +66,7 @@ export default class NoteService extends BaseService {
 
       const result = await this.notes.update(noteId, {
         body: content,
-        userUpdatedAt: dayjs().unix(),
+        userUpdatedAt: Date.now(),
       });
 
       if (result === null) {
@@ -126,7 +120,7 @@ export default class NoteService extends BaseService {
 
     const result = await this.notes.update(ids, {
       ...patch,
-      ...(typeof patch.title === 'undefined' ? null : { userUpdatedAt: dayjs().unix() }),
+      ...(typeof patch.title === 'undefined' ? null : { userUpdatedAt: Date.now() }),
     });
 
     return this.toVOs(result);

@@ -24,8 +24,8 @@ export default {
       .addColumn('comment', 'text')
       .addColumn('type', 'integer', (col) => col.notNull())
       .addColumn('meta', 'text', (col) => col.notNull())
-      .addColumn('createdAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch())`))
-      .addColumn('updatedAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch())`))
+      .addColumn('createdAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch('subsec') * 1000)`))
+      .addColumn('updatedAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch('subsec') * 1000)`))
       .addForeignKeyConstraint('materialId-foreign', ['materialId'], materialsTableName, ['id']);
   },
 } as const;
