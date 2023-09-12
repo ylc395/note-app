@@ -1,7 +1,7 @@
 import uniq from 'lodash/uniq';
 import mapValues from 'lodash/mapValues';
 import omit from 'lodash/omit';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 
 import {
   type NewAnnotationDTO,
@@ -17,15 +17,18 @@ import {
   isEntityMaterial,
   isNewMaterialEntity,
   normalizeTitle,
+  isDirectory,
 } from 'model/material';
 import { EntityTypes } from 'model/entity';
 import { buildIndex, getIds, getLocators } from 'utils/collection';
 
 import BaseService, { Transaction } from './BaseService';
-import { isDirectory } from 'model/material';
+import ContentService from './ContentService';
 
 @Injectable()
 export default class MaterialService extends BaseService {
+  @Inject() private readonly contentService!: ContentService;
+
   async create(newMaterial: NewMaterialDTO) {
     if (newMaterial.parentId) {
       await this.assertAvailableIds([newMaterial.parentId], MaterialTypes.Directory);
@@ -155,6 +158,10 @@ export default class MaterialService extends BaseService {
       throw new Error('invalid id');
     }
     await this.materials.update(updated.materialId, { userUpdatedAt: updated.updatedAt });
+
+    if (typeof patch.comment === 'string') {
+      this.contentService.processContent({ content: patch.comment, type: EntityTypes.Material, id: annotationId });
+    }
 
     return updated;
   }

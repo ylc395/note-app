@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import omit from 'lodash/omit';
 import uniq from 'lodash/uniq';
 import mapValues from 'lodash/mapValues';
@@ -16,12 +16,14 @@ import {
   NotePatch,
 } from 'model/note';
 import { EntityTypes } from 'model/entity';
-import { Events } from 'model/events';
 
 import BaseService, { Transaction } from './BaseService';
+import ContentService from './ContentService';
 
 @Injectable()
 export default class NoteService extends BaseService {
+  @Inject() private readonly contentService!: ContentService;
+
   @Transaction
   async create(note: NewNoteDTO) {
     if (isNewNote(note) && note.parentId) {
@@ -55,6 +57,8 @@ export default class NoteService extends BaseService {
       ...omit(targetNote, ['id', 'createdAt', 'updatedAt']),
     });
 
+    this.contentService.processContent({ content: targetNoteBody, id: newNote.id, type: EntityTypes.Note });
+
     return newNote;
   }
 
@@ -76,11 +80,7 @@ export default class NoteService extends BaseService {
       return result;
     });
 
-    this.eventEmitter.emit(Events.ContentUpdated, {
-      id: noteId,
-      type: EntityTypes.Note,
-      content,
-    });
+    this.contentService.processContent({ content, id: noteId, type: EntityTypes.Note });
 
     return content;
   }

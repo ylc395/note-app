@@ -645,13 +645,6 @@
     path-to-regexp "3.2.0"
     tslib "2.6.2"
 
-"@nestjs/event-emitter@^2.0.2":
-  version "2.0.2"
-  resolved "https://registry.yarnpkg.com/@nestjs/event-emitter/-/event-emitter-2.0.2.tgz#eff758710841a62fb092f0829c26ddfe5de4befe"
-  integrity sha512-qxJE+6yKSW/ReBzT1jKES2m3zZh6gmgunDtIvCl66G8i9zZ4TQciwoq01MigqnruTgXjH/AzNPqtr6ZUt207mg==
-  dependencies:
-    eventemitter2 "6.4.9"
-
 "@nestjs/microservices@^10.2.4":
   version "10.2.4"
   resolved "https://registry.yarnpkg.com/@nestjs/microservices/-/microservices-10.2.4.tgz#01508eeb5df500c73fbedc915574debc98655599"
@@ -2262,7 +2255,7 @@ electron-to-chromium@^1.4.284:
   resolved "https://registry.npmjs.org/electron-to-chromium/-/electron-to-chromium-1.4.311.tgz"
   integrity sha512-RoDlZufvrtr2Nx3Yx5MB8jX3aHIxm8nRWPJm3yVvyHmyKaRvn90RjzB6hNnt0AkhS3IInJdyRfQb4mWhPvUjVw==
 
-electron@25.8:
+electron@25.8.0:
   version "25.8.0"
   resolved "https://registry.yarnpkg.com/electron/-/electron-25.8.0.tgz#60c84f1f256924ac5a0aff13276b901b0c43767a"
   integrity sha512-T3kC1a/3ntSaYMCVVfUUc9v7myPzi6J2GP0Ad/CyfWKDPp054dGyKxb2EEjKnxQQ7wfjsT1JTEdBG04x6ekVBw==
@@ -2574,11 +2567,6 @@ etag@~1.8.1:
   version "1.8.1"
   resolved "https://registry.npmjs.org/etag/-/etag-1.8.1.tgz"
   integrity sha512-aIL5Fx7mawVa300al2BnEE4iNvo1qETxLrPI/o05L7z6go7fCw1J6EQmbK4FmJ2AS7kgVF/KEZWufBfdClMcPg==
-
-eventemitter2@6.4.9:
-  version "6.4.9"
-  resolved "https://registry.yarnpkg.com/eventemitter2/-/eventemitter2-6.4.9.tgz#41f2750781b4230ed58827bc119d293471ecb125"
-  integrity sha512-JEPTiaOt9f04oa6NOkc4aH+nVp5I3wEjpHbIPqfgCdD5v5bUzy7xQqwcVO2aDQgOWhI28da57HksMrzK9HlRxg==
 
 expand-template@^2.0.3:
   version "2.0.3"
@@ -4396,11 +4384,6 @@ negotiator@0.6.3, negotiator@^0.6.3:
   version "0.6.3"
   resolved "https://registry.npmjs.org/negotiator/-/negotiator-0.6.3.tgz"
   integrity sha512-+EUsqGPLsM+j/zdChZjsnX51g4XrHFOIXwfnCVPGlQk/k5giakcKsuxCObBRu6DSm9opw/O6slWbJdghQM4bBg==
-
-nest-typed-event-emitter@^1.0.4:
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/nest-typed-event-emitter/-/nest-typed-event-emitter-1.0.4.tgz#a026f4402be359e671f9171814c6eff48a894055"
-  integrity sha512-nVMBVEF5Kj1UigcTgMPxUutcnEQcWh20D9pFbStHzEiCEVsobKw/hKAVsKx61HP2cy290FEOBUOM4ERkkW7U7w==
 
 node-abi@^3.3.0, node-abi@^3.45.0:
   version "3.47.0"

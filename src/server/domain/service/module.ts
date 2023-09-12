@@ -1,12 +1,11 @@
-import { Module, forwardRef } from '@nestjs/common';
-import { EventEmitterModule } from '@nestjs/event-emitter';
+import { Module } from '@nestjs/common';
 
 import BaseService from './BaseService';
 import NoteService from './NoteService';
 import RecyclableService from './RecyclableService';
 import StarService from './StarService';
 import FileService from './FileService';
-import TopicService from './TopicService';
+import ContentService from './ContentService';
 import MemoService from './MemoService';
 import MaterialService from './MaterialService';
 import RevisionService from './RevisionService';
@@ -18,7 +17,7 @@ const services = [
   RecyclableService,
   StarService,
   FileService,
-  TopicService,
+  ContentService,
   MemoService,
   MaterialService,
   RevisionService,
@@ -27,7 +26,6 @@ const services = [
 ];
 
 @Module({
-  imports: [forwardRef(() => EventEmitterModule.forRoot({ verboseMemoryLeak: true }))], // use forwardRef to prevent one emitter shared by different env
   providers: [BaseService, ...services],
   exports: services,
 })

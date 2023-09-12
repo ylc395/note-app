@@ -1,28 +1,24 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import mapValues from 'lodash/mapValues';
 import omit from 'lodash/omit';
 
 import { buildIndex, getIds, getLocators } from 'utils/collection';
 import type { Memo, NewMemo, MemoPatch, ClientMemoQuery, MemoVO } from 'model/memo';
 import { EntityTypes } from 'model/entity';
-import { Events } from 'model/events';
 
 import BaseService from './BaseService';
+import ContentService from './ContentService';
 
 @Injectable()
 export default class MemoService extends BaseService {
+  @Inject() private readonly contentService!: ContentService;
+
   async create(memo: NewMemo) {
     if (memo.parentId && memo.isPinned) {
       throw new Error('can not pin child memo');
     }
 
     const newMemo = await this.memos.create(memo);
-
-    this.eventEmitter.emit(Events.ContentUpdated, {
-      id: newMemo.id,
-      type: EntityTypes.Memo,
-      content: newMemo.content,
-    });
 
     return {
       ...omit(newMemo, ['userUpdatedAt']),
@@ -42,12 +38,8 @@ export default class MemoService extends BaseService {
       throw new Error('wrong id');
     }
 
-    if (patch.content) {
-      this.eventEmitter.emit(Events.ContentUpdated, {
-        id,
-        type: EntityTypes.Memo,
-        content: patch.content,
-      });
+    if (typeof patch.content === 'string') {
+      this.contentService.processContent({ content: patch.content, id, type: EntityTypes.Memo });
     }
 
     return this.toVOs(updated);

@@ -7,3 +7,5 @@ export { default as material, Row as MaterialRow } from './material';
 export { default as revision, Row as RevisionRow } from './revision';
 export { default as materialAnnotation, Row as MaterialAnnotationRow } from './materialAnnotation';
 export { default as syncEntity, Row as SyncEntityRow } from './syncEntity';
+export { default as topic, Row as TopicRow } from './topic';
+export { default as link, Row as LinkRow } from './link';

@@ -62,7 +62,7 @@ interface CommonAnnotationVO {
   createdAt: number;
 }
 
-export type PdfRangeAnnotationVO = CommonAnnotationVO & Infer<typeof PdfRangeAnnotationSchema>;
-export type PdfAreaAnnotationVO = CommonAnnotationVO & Infer<typeof PdfAreaAnnotationSchema>;
-export type HtmlRangeAnnotationVO = CommonAnnotationVO & Infer<typeof htmlRangeAnnotationSchema>;
+export type PdfRangeAnnotationVO = CommonAnnotationVO & Required<Infer<typeof PdfRangeAnnotationSchema>>;
+export type PdfAreaAnnotationVO = CommonAnnotationVO & Required<Infer<typeof PdfAreaAnnotationSchema>>;
+export type HtmlRangeAnnotationVO = CommonAnnotationVO & Required<Infer<typeof htmlRangeAnnotationSchema>>;
 export type AnnotationVO = PdfRangeAnnotationVO | PdfAreaAnnotationVO | HtmlRangeAnnotationVO;

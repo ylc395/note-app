@@ -27,6 +27,8 @@ export interface Db {
   [schemas.material.tableName]: RowTypes.MaterialRow;
   [schemas.memo.tableName]: RowTypes.MemoRow;
   [schemas.syncEntity.tableName]: RowTypes.SyncEntityRow;
+  [schemas.topic.tableName]: RowTypes.TopicRow;
+  [schemas.link.tableName]: RowTypes.LinkRow;
   sqlite_master: { name: string; type: string };
 }
 
