@@ -1,6 +1,5 @@
 import { object, union, string, type infer as Infer, instanceof as zodInstanceof } from 'zod';
 import type { EntityId } from './entity';
-import { APP_NAME } from '../infra/constants';
 
 const FileUrlDTOSchema = object({
   url: string().url(),
@@ -26,5 +25,3 @@ export interface FileVO {
   mimeType: string;
   size: number;
 }
-
-export const FILE_URL_PREFIX = `${APP_NAME}://file/`;

@@ -4,14 +4,10 @@ import { Decoration } from '@milkdown/prose/view';
 import { $prose } from '@milkdown/utils';
 import { Plugin } from '@milkdown/prose/state';
 
-import { FILE_URL_PREFIX } from 'model/file';
+import { getUrlFromFileId } from 'infra/markdown/utils';
 import MarkdownService from 'service/MarkdownService';
 
 import { NODE_NAME as MULTIMEDIA_NODE_NAME } from './multimedia';
-
-function getFileUrlFromId(id: string) {
-  return `${FILE_URL_PREFIX}${id}`;
-}
 
 export const uploadOptions: UploadOptions = {
   enableHtmlFileUploader: true,
@@ -26,7 +22,7 @@ export const uploadOptions: UploadOptions = {
 
     return updatedFiles.map((file) => {
       const node = multimediaNode.createAndFill({
-        src: getFileUrlFromId(file.id),
+        src: getUrlFromFileId(file.id),
         alt: file.id,
       });
 
@@ -94,7 +90,7 @@ export const htmlUpload = $prose(() => {
               continue;
             }
             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            mediaElements[index]!.src = getFileUrlFromId(result.id);
+            mediaElements[index]!.src = getUrlFromFileId(result.id);
           }
 
           const dataTransfer = new DataTransfer();

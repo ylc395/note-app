@@ -4,6 +4,7 @@ export enum EntityTypes {
   Note = 1,
   Memo,
   Material,
+  MaterialAnnotation,
 }
 
 export interface EntityRecord {

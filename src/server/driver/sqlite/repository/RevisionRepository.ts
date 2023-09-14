@@ -18,7 +18,7 @@ export default class SqliteRevisionRepository extends BaseRepository implements 
       .selectFrom(tableName)
       .where('entityType', '=', entityType)
       .where('entityId', '=', entityId)
-      .orderBy('createdAt', 'desc')
+      .orderBy('createdAt', 'asc')
       .select(['id', 'createdAt', 'diff'])
       .execute();
 

@@ -4,7 +4,11 @@ import { token as databaseToken, type Database } from 'infra/database';
 
 @Injectable()
 export default class BaseService {
-  constructor(@Inject(databaseToken) readonly db: Database) {}
+  constructor(@Inject(databaseToken) private readonly db: Database) {}
+
+  get transaction() {
+    return this.db.transaction.bind(this.db);
+  }
 
   protected get materials() {
     return this.db.getRepository('materials');
@@ -37,21 +41,8 @@ export default class BaseService {
   protected get synchronization() {
     return this.db.getRepository('synchronization');
   }
-}
 
-export const Transaction: MethodDecorator = function (target, properKey, descriptor) {
-  const originFunc = descriptor.value;
-
-  if (typeof originFunc !== 'function') {
-    throw new Error('not a function');
+  protected get contents() {
+    return this.db.getRepository('contents');
   }
-
-  descriptor.value = function (this: unknown, ...args: unknown[]) {
-    if (!(this instanceof BaseService)) {
-      throw new Error('not a service');
-    }
-
-    return this.db.transaction(originFunc.bind(this, ...args));
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as any;
-};
+}

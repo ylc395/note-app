@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import mapValues from 'lodash/mapValues';
 import omit from 'lodash/omit';
 
@@ -11,7 +11,7 @@ import ContentService from './ContentService';
 
 @Injectable()
 export default class MemoService extends BaseService {
-  @Inject() private readonly contentService!: ContentService;
+  @Inject(forwardRef(() => ContentService)) private readonly contentService!: ContentService;
 
   async create(memo: NewMemo) {
     if (memo.parentId && memo.isPinned) {

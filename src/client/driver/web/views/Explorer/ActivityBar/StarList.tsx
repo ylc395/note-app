@@ -12,6 +12,7 @@ const iconMap = {
   [EntityTypes.Note]: () => <FileOutlined />,
   [EntityTypes.Memo]: () => <BuildOutlined />,
   [EntityTypes.Material]: () => <DatabaseOutlined />,
+  [EntityTypes.MaterialAnnotation]: () => <DatabaseOutlined />,
 };
 
 export default observer(function StarList({ close }: { close: () => void }) {

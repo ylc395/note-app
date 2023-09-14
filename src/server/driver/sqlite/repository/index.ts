@@ -6,3 +6,4 @@ export { default as memos } from './MemoRepository';
 export { default as materials } from './MaterialRepository';
 export { default as revisions } from './RevisionRepository';
 export { default as synchronization } from './SynchronizationRepository';
+export { default as contents } from './ContentRepository';

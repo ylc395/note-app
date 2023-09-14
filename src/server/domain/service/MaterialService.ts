@@ -1,7 +1,7 @@
 import uniq from 'lodash/uniq';
 import mapValues from 'lodash/mapValues';
 import omit from 'lodash/omit';
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable, Inject, forwardRef } from '@nestjs/common';
 
 import {
   type NewAnnotationDTO,
@@ -22,12 +22,12 @@ import {
 import { EntityTypes } from 'model/entity';
 import { buildIndex, getIds, getLocators } from 'utils/collection';
 
-import BaseService, { Transaction } from './BaseService';
+import BaseService from './BaseService';
 import ContentService from './ContentService';
 
 @Injectable()
 export default class MaterialService extends BaseService {
-  @Inject() private readonly contentService!: ContentService;
+  @Inject(forwardRef(() => ContentService)) private readonly contentService!: ContentService;
 
   async create(newMaterial: NewMaterialDTO) {
     if (newMaterial.parentId) {
@@ -119,7 +119,6 @@ export default class MaterialService extends BaseService {
     return blob;
   }
 
-  @Transaction
   async createAnnotation(materialId: MaterialVO['id'], annotation: NewAnnotationDTO) {
     if (annotation.type === AnnotationTypes.PdfRange || annotation.type === AnnotationTypes.PdfArea) {
       await this.assertEntityMaterial(materialId, 'application/pdf');
@@ -137,7 +136,6 @@ export default class MaterialService extends BaseService {
     return await this.materials.findAllAnnotations(materialId);
   }
 
-  @Transaction
   async removeAnnotation(annotationId: AnnotationVO['id']) {
     await this.assertValidAnnotation(annotationId);
     const result = await this.materials.removeAnnotation(annotationId);
@@ -149,7 +147,6 @@ export default class MaterialService extends BaseService {
     await this.materials.update(result.materialId, { userUpdatedAt: Date.now() });
   }
 
-  @Transaction
   async updateAnnotation(annotationId: AnnotationVO['id'], patch: AnnotationPatchDTO) {
     await this.assertValidAnnotation(annotationId);
     const updated = await this.materials.updateAnnotation(annotationId, patch);

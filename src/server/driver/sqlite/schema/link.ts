@@ -6,7 +6,7 @@ export interface Row {
   fromEntityType: EntityTypes;
   fromFragmentId: string;
   toEntityId: string;
-  toEntityTypes: EntityTypes;
+  toEntityType: EntityTypes;
   toFragmentId: string;
 }
 

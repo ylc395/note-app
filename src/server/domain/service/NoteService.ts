@@ -17,14 +17,13 @@ import {
 } from 'model/note';
 import { EntityTypes } from 'model/entity';
 
-import BaseService, { Transaction } from './BaseService';
+import BaseService from './BaseService';
 import ContentService from './ContentService';
 
 @Injectable()
 export default class NoteService extends BaseService {
   @Inject() private readonly contentService!: ContentService;
 
-  @Transaction
   async create(note: NewNoteDTO) {
     if (isNewNote(note) && note.parentId) {
       await this.assertAvailableIds([note.parentId]);
@@ -63,7 +62,7 @@ export default class NoteService extends BaseService {
   }
 
   async updateBody(noteId: NoteVO['id'], content: NoteBodyDTO) {
-    await this.db.transaction(async () => {
+    await this.transaction(async () => {
       if (!(await this.isWritable(noteId))) {
         throw new Error('note is readonly');
       }
@@ -110,7 +109,6 @@ export default class NoteService extends BaseService {
     }));
   }
 
-  @Transaction
   async batchUpdate(ids: Note['id'][], patch: NotePatch) {
     await this.assertAvailableIds(ids);
 

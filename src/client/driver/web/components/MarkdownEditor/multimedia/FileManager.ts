@@ -3,7 +3,7 @@ import type { Ctx } from '@milkdown/ctx';
 import { EditorStatus, editorCtx } from '@milkdown/core';
 
 import { token as remoteToken } from 'infra/remote';
-import { FILE_URL_PREFIX } from 'model/file';
+import { getFileIdFromUrl } from 'infra/markdown/utils';
 
 export default class FileManager {
   private readonly remote = container.resolve(remoteToken);
@@ -27,7 +27,7 @@ export default class FileManager {
   }
 
   private load = async (url: string) => {
-    const fileId = FileManager.getFileIdFromUrl(url);
+    const fileId = getFileIdFromUrl(url);
 
     const { body, headers } = await this.remote.get<void, ArrayBuffer>(
       fileId ? `/files/${fileId}/blob` : `/files/remote/${encodeURIComponent(url)}/blob`,
@@ -67,10 +67,5 @@ export default class FileManager {
     mediaEl.src = blobUrl;
 
     return mediaEl;
-  }
-
-  private static getFileIdFromUrl(url: string) {
-    const match = url.match(new RegExp(`${FILE_URL_PREFIX}(.+)`));
-    return match?.[1] || null;
   }
 }

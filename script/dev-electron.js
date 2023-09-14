@@ -7,6 +7,7 @@ const { replaceTscAliasPaths } = require('tsc-alias');
 const { checker } = require('vite-plugin-checker');
 const debounce = require('lodash/debounce');
 const react = require('@vitejs/plugin-react-swc');
+const { nodePolyfills } = require('vite-plugin-node-polyfills');
 
 const ENV = 'development';
 const APP_PLATFORM = 'electron';
@@ -73,6 +74,7 @@ async function createViteServer() {
       react({ tsDecorators: true }), // use this plugin to speed up react compiling and enjoy "fast refresh"
       checker({ typescript: { tsconfigPath: CLIENT_TSCONFIG } }),
       tsconfigPaths({ projects: [CLIENT_TSCONFIG] }),
+      nodePolyfills(),
     ],
     define: {
       'process.env.NODE_ENV': JSON.stringify(ENV),

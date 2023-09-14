@@ -6,6 +6,7 @@ import type { MemoRepository } from './MemoRepository';
 import type { MaterialRepository } from './MaterialRepository';
 import type { RevisionRepository } from './RevisionRepository';
 import type { SynchronizationRepository } from './SynchronizationRepository';
+import type { ContentRepository } from './ContentRepository';
 
 export default interface Repositories {
   notes: NoteRepository;
@@ -16,4 +17,5 @@ export default interface Repositories {
   materials: MaterialRepository;
   revisions: RevisionRepository;
   synchronization: SynchronizationRepository;
+  contents: ContentRepository;
 }
