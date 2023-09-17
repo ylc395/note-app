@@ -1,6 +1,27 @@
 import type { Extension, State, Tokenizer } from 'micromark-util-types';
 import type { Extension as MdastExtension } from 'mdast-util-from-markdown';
-import { codes } from 'micromark-util-symbol/codes';
+import { codes } from 'micromark-util-symbol';
+import { markdownLineEnding, markdownSpace } from 'micromark-util-character';
+import type { Node } from 'mdast';
+
+export interface Topic extends Node {
+  type: 'topic';
+  value: string;
+}
+
+declare module 'micromark-util-types' {
+  interface TokenTypeMap {
+    topic: 'topic';
+    topicMarker: 'topicMarker';
+    topicName: 'topicName';
+  }
+}
+
+declare module 'mdast' {
+  interface RootContentMap {
+    topic: Topic;
+  }
+}
 
 const tokenize: Tokenizer = function (effects, ok, nok) {
   const start: State = (code) => {
@@ -8,15 +29,21 @@ const tokenize: Tokenizer = function (effects, ok, nok) {
     effects.enter('topicMarker');
     effects.consume(code);
     effects.exit('topicMarker');
-    effects.enter('topicName');
-    return (code) => {
-      return code === codes.numberSign ? nok(code) : inside(code);
-    };
+
+    return inside;
   };
 
   const inside: State = (code) => {
-    if ([codes.lineFeed, codes.carriageReturnLineFeed, codes.carriageReturn, codes.eof].includes(code)) {
+    if (markdownLineEnding(code)) {
       return nok(code);
+    }
+
+    if (this.previous === codes.numberSign) {
+      if (code === codes.numberSign || code === codes.eof || markdownSpace(code)) {
+        return nok(code);
+      }
+
+      effects.enter('topicName');
     }
 
     if (code === codes.numberSign) {
@@ -25,7 +52,7 @@ const tokenize: Tokenizer = function (effects, ok, nok) {
       effects.consume(code);
       effects.exit('topicMarker');
       effects.exit('topic');
-      return ok;
+      return ok(code);
     }
 
     effects.consume(code);
@@ -35,7 +62,7 @@ const tokenize: Tokenizer = function (effects, ok, nok) {
   return start;
 };
 
-export const extension: Extension = {
+export const tokenExtension: Extension = {
   text: {
     [codes.numberSign]: { tokenize },
   },
@@ -45,8 +72,7 @@ export const mdastExtension: MdastExtension = {
   enter: {
     topic: function (token) {
       const value = this.sliceSerialize(token);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      this.enter({ type: token.type as any, value: value.slice(1, -1) }, token);
+      this.enter({ type: 'topic', value: value.slice(1, -1) }, token);
     },
   },
   exit: {

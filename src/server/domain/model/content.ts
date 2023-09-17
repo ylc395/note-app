@@ -1,13 +1,13 @@
-import type { EntityId, EntityLocator, EntityTypes } from 'model/entity';
+import type { EntityLocator } from 'model/entity';
 
-export interface ContentUpdate {
-  id: EntityId;
-  type: EntityTypes;
+type Pos = `${number},${number}`;
+
+export interface ContentUpdate extends EntityLocator {
   content: string;
 }
 
 interface LinkFrom extends EntityLocator {
-  pos: `${number},${number}`;
+  pos: Pos;
 }
 
 interface LinkTo extends EntityLocator {
@@ -17,4 +17,9 @@ interface LinkTo extends EntityLocator {
 export interface Link {
   from: LinkFrom;
   to: LinkTo;
+}
+
+export interface Topic extends EntityLocator {
+  name: string;
+  pos: Pos;
 }

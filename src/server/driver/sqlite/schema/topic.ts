@@ -4,9 +4,10 @@ import type { EntityTypes } from 'model/entity';
 export const tableName = 'topics';
 
 export interface Row {
-  name: EntityTypes;
+  name: string;
   entityId: string;
   entityType: EntityTypes;
+  position: string;
 }
 
 export default {
@@ -15,8 +16,9 @@ export default {
     return schema
       .createTable(tableName)
       .addColumn('name', 'text', (col) => col.notNull())
+      .addColumn('position', 'text', (col) => col.notNull())
       .addColumn('entityId', 'text', (col) => col.notNull())
       .addColumn('entityType', 'integer', (col) => col.notNull())
-      .addUniqueConstraint('row-unique', ['name', 'entityId', 'entityType']);
+      .addUniqueConstraint('row-unique', ['name', 'entityId', 'entityType', 'position']);
   },
 } as const;

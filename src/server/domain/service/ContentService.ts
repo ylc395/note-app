@@ -6,7 +6,12 @@ import type { Link as MdAstLinkNode } from 'mdast';
 import intersectionWith from 'lodash/intersectionWith';
 
 import { is, parseUrl } from 'infra/markdown/utils';
-import type { ContentUpdate, Link } from 'model/content';
+import {
+  mdastExtension as topicExtension,
+  tokenExtension as topicTokenExtension,
+  type Topic as TopicNode,
+} from 'infra/markdown/topic';
+import type { ContentUpdate, Link, Topic } from 'model/content';
 import type { EntityLocator } from 'model/entity';
 
 import BaseService from './BaseService';
@@ -17,6 +22,34 @@ import EntityService from './EntityService';
 export default class ContentService extends BaseService {
   @Inject() private revisionService!: RevisionService;
   @Inject(forwardRef(() => EntityService)) private readonly entityService!: EntityService;
+
+  private extractTopics(entity: EntityLocator) {
+    const topics: Topic[] = [];
+
+    return {
+      visitor: (node: UnistNode) => {
+        if (!is<TopicNode>(node, 'topic') || !node.position) {
+          return;
+        }
+
+        topics.push({
+          ...entity,
+          pos: `${node.position.start.offset || 0},${node.position.end.offset || 0}`,
+          name: node.value,
+        });
+      },
+      done: () => {
+        if (topics.length === 0) {
+          return;
+        }
+
+        return this.transaction(async () => {
+          await this.contents.removeTopics(entity);
+          await this.contents.createTopics(topics);
+        });
+      },
+    };
+  }
 
   private extractLinks(entity: EntityLocator) {
     const links: Link[] = [];
@@ -52,8 +85,8 @@ export default class ContentService extends BaseService {
   }
 
   async processContent({ content, ...entity }: ContentUpdate) {
-    const mdAst = fromMarkdown(content);
-    const reducers = [this.extractLinks].map((cb) => cb.call(this, entity));
+    const mdAst = fromMarkdown(content, { mdastExtensions: [topicExtension], extensions: [topicTokenExtension] });
+    const reducers = [this.extractLinks, this.extractTopics].map((cb) => cb.call(this, entity));
     const visitors = reducers.map(({ visitor }) => visitor);
     const doneCbs = reducers.map(({ done }) => done);
 

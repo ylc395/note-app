@@ -1,8 +1,9 @@
-import type { Link } from 'model/content';
+import type { Link, Topic } from 'model/content';
 import type { ContentRepository } from 'service/repository/ContentRepository';
 
 import BaseRepository from './BaseRepository';
 import linkSchema from '../schema/link';
+import topicSchema from '../schema/topic';
 import type { EntityLocator } from 'model/entity';
 
 export default class SqliteContentRepository extends BaseRepository implements ContentRepository {
@@ -28,8 +29,20 @@ export default class SqliteContentRepository extends BaseRepository implements C
       )
       .execute();
   }
-  async createTopics() {}
-  async removeTopics(entity: EntityLocator) {
-    entity;
+
+  async createTopics(topics: Topic[]) {
+    await this._batchCreate(
+      topicSchema.tableName,
+      topics.map((topic) => ({
+        entityId: topic.id,
+        entityType: topic.type,
+        name: topic.name,
+        position: topic.pos,
+      })),
+    );
+  }
+
+  async removeTopics({ id, type }: EntityLocator) {
+    await this.db.deleteFrom(topicSchema.tableName).where('entityId', '=', id).where('entityType', '=', type).execute();
   }
 }
