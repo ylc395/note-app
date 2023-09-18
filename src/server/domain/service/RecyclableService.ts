@@ -16,7 +16,7 @@ export default class RecyclableService extends BaseService {
   async create({ type, ids }: EntitiesLocator) {
     await this.entityService.assertAvailableEntities({ type, ids });
     const descants = await this.entityService.getDescants({ type, ids });
-    const recyclables = await this.recyclables.findAllByLocators(getLocators([...ids, ...descants], type));
+    const recyclables = await this.repo.recyclables.findAllByLocators(getLocators([...ids, ...descants], type));
 
     const newRecyclables = differenceWith(
       [
@@ -27,7 +27,7 @@ export default class RecyclableService extends BaseService {
       ({ type, id }, { entityId, entityType }) => id === entityId && type === entityType,
     );
 
-    const result = await this.recyclables.batchCreate(newRecyclables);
+    const result = await this.repo.recyclables.batchCreate(newRecyclables);
     const directResult = result.filter((record) => record.reason === RecycleReason.Direct);
     const titles = await this.entityService.getEntityTitles(directResult);
 
@@ -46,7 +46,7 @@ export default class RecyclableService extends BaseService {
   }
 
   async query() {
-    const records = await this.recyclables.findAll(RecycleReason.Direct);
+    const records = await this.repo.recyclables.findAll(RecycleReason.Direct);
     const titles = await this.entityService.getEntityTitles(records);
 
     return records.map((record) => {

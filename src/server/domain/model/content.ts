@@ -1,6 +1,9 @@
 import type { EntityLocator } from 'model/entity';
 
-type Pos = `${number},${number}`;
+interface Pos {
+  start: number;
+  end: number;
+}
 
 export interface ContentUpdate extends EntityLocator {
   content: string;

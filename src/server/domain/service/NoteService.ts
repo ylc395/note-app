@@ -29,7 +29,7 @@ export default class NoteService extends BaseService {
       await this.assertAvailableIds([note.parentId]);
     }
 
-    const newNote = isDuplicate(note) ? await this.duplicate(note.duplicateFrom) : await this.notes.create(note);
+    const newNote = isDuplicate(note) ? await this.duplicate(note.duplicateFrom) : await this.repo.notes.create(note);
 
     return {
       ...omit(newNote, ['userUpdatedAt']),
@@ -42,8 +42,8 @@ export default class NoteService extends BaseService {
   private async duplicate(noteId: NoteVO['id']) {
     await this.assertAvailableIds([noteId]);
 
-    const targetNote = await this.notes.findOneById(noteId);
-    const targetNoteBody = await this.notes.findBody(noteId);
+    const targetNote = await this.repo.notes.findOneById(noteId);
+    const targetNoteBody = await this.repo.notes.findBody(noteId);
 
     if (!targetNote || targetNoteBody === null) {
       throw new Error('invalid duplicate target');
@@ -51,7 +51,7 @@ export default class NoteService extends BaseService {
 
     targetNote.title = `${normalizeTitle(targetNote)} - 副本`;
 
-    const newNote = await this.notes.create({
+    const newNote = await this.repo.notes.create({
       body: targetNoteBody,
       ...omit(targetNote, ['id', 'createdAt', 'updatedAt']),
     });
@@ -67,7 +67,7 @@ export default class NoteService extends BaseService {
         throw new Error('note is readonly');
       }
 
-      const result = await this.notes.update(noteId, {
+      const result = await this.repo.notes.update(noteId, {
         body: content,
         userUpdatedAt: Date.now(),
       });
@@ -87,7 +87,7 @@ export default class NoteService extends BaseService {
   async queryBody(noteId: NoteVO['id']) {
     await this.assertAvailableIds([noteId]);
 
-    const result = await this.notes.findBody(noteId);
+    const result = await this.repo.notes.findBody(noteId);
 
     if (result === null) {
       throw new Error('note unavailable');
@@ -97,8 +97,11 @@ export default class NoteService extends BaseService {
   }
 
   private async toVOs(rawNotes: Note[]) {
-    const stars = buildIndex(await this.stars.findAllByLocators(getLocators(rawNotes, EntityTypes.Note)), 'entityId');
-    const _children = await this.notes.findChildrenIds(getIds(rawNotes), { isAvailable: true });
+    const stars = buildIndex(
+      await this.repo.stars.findAllByLocators(getLocators(rawNotes, EntityTypes.Note)),
+      'entityId',
+    );
+    const _children = await this.repo.notes.findChildrenIds(getIds(rawNotes), { isAvailable: true });
 
     return rawNotes.map((note) => ({
       ...omit(note, ['userUpdatedAt']),
@@ -116,7 +119,7 @@ export default class NoteService extends BaseService {
       await this.assertValidParent(patch.parentId, ids);
     }
 
-    const result = await this.notes.update(ids, {
+    const result = await this.repo.notes.update(ids, {
       ...patch,
       ...(typeof patch.title === 'undefined' ? null : { userUpdatedAt: Date.now() }),
     });
@@ -126,7 +129,7 @@ export default class NoteService extends BaseService {
 
   private async assertValidParent(parentId: Note['id'], childrenIds: Note['id'][]) {
     await this.assertAvailableIds([parentId]);
-    const descantIds = await this.notes.findDescendantIds(childrenIds);
+    const descantIds = await this.repo.notes.findDescendantIds(childrenIds);
 
     for (const id of childrenIds) {
       if (parentId === id || descantIds[id]?.includes(parentId)) {
@@ -136,14 +139,14 @@ export default class NoteService extends BaseService {
   }
 
   async getTitles(ids: Note['id'][]) {
-    const notes = await this.notes.findAll({ id: ids });
+    const notes = await this.repo.notes.findAll({ id: ids });
     return mapValues(buildIndex(notes), normalizeTitle);
   }
 
   async queryVO(q: ClientNoteQuery): Promise<NoteVO[]>;
   async queryVO(id: NoteVO['id']): Promise<NoteVO>;
   async queryVO(q: ClientNoteQuery | Note['id']) {
-    const notes = await this.notes.findAll({ ...(typeof q === 'string' ? { id: [q] } : q), isAvailable: true });
+    const notes = await this.repo.notes.findAll({ ...(typeof q === 'string' ? { id: [q] } : q), isAvailable: true });
     const noteVOs = await this.toVOs(notes);
     const result = typeof q === 'string' ? noteVOs[0] : noteVOs;
 
@@ -156,18 +159,18 @@ export default class NoteService extends BaseService {
 
   async getTreeFragment(noteId: NoteVO['id']) {
     await this.assertAvailableIds([noteId]);
-    const ancestorIds = await this.notes.findAncestorIds(noteId);
-    const childrenIds = Object.values(await this.notes.findChildrenIds(ancestorIds, { isAvailable: true })).flat();
+    const ancestorIds = await this.repo.notes.findAncestorIds(noteId);
+    const childrenIds = Object.values(await this.repo.notes.findChildrenIds(ancestorIds, { isAvailable: true })).flat();
 
-    const roots = await this.notes.findAll({ parentId: null, isAvailable: true });
-    const children = await this.notes.findAll({ id: childrenIds });
+    const roots = await this.repo.notes.findAll({ parentId: null, isAvailable: true });
+    const children = await this.repo.notes.findAll({ id: childrenIds });
 
     return this.toVOs([...roots, ...children]);
   }
 
   async assertAvailableIds(noteIds: NoteVO['id'][]) {
     const uniqueIds = uniq(noteIds);
-    const rows = await this.notes.findAll({ id: uniqueIds, isAvailable: true });
+    const rows = await this.repo.notes.findAll({ id: uniqueIds, isAvailable: true });
 
     if (rows.length !== uniqueIds.length) {
       throw new Error('invalid note id');
@@ -175,7 +178,7 @@ export default class NoteService extends BaseService {
   }
 
   private async isWritable(noteId: NoteVO['id']) {
-    const row = (await this.notes.findAll({ id: [noteId], isAvailable: true }))[0];
+    const row = (await this.repo.notes.findAll({ id: [noteId], isAvailable: true }))[0];
 
     if (!row) {
       return false;

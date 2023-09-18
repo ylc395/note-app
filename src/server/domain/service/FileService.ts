@@ -32,7 +32,7 @@ export default class FileService extends BaseService {
     });
 
     const loadedFiles = await Promise.all(tasks);
-    const fileVOs = await this.files.batchCreate(compact(loadedFiles));
+    const fileVOs = await this.repo.files.batchCreate(compact(loadedFiles));
 
     const result: (FileVO | null)[] = loadedFiles.map(() => null);
 
@@ -48,8 +48,8 @@ export default class FileService extends BaseService {
   }
 
   async queryFileById(id: FileVO['id']) {
-    const file = await this.files.findOneById(id);
-    const data = await this.files.findBlobById(id);
+    const file = await this.repo.files.findOneById(id);
+    const data = await this.repo.files.findBlobById(id);
 
     if (!file || !data) {
       throw new Error('invalid id');

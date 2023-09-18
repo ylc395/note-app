@@ -1,3 +1,4 @@
+import { Subject, groupBy, map, debounceTime, mergeAll } from 'rxjs';
 import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { visit } from 'unist-util-visit';
@@ -12,16 +13,25 @@ import {
   type Topic as TopicNode,
 } from 'infra/markdown/topic';
 import type { ContentUpdate, Link, Topic } from 'model/content';
-import type { EntityLocator } from 'model/entity';
+import { EntityTypes, type EntityLocator } from 'model/entity';
 
 import BaseService from './BaseService';
-import RevisionService from './RevisionService';
 import EntityService from './EntityService';
 
 @Injectable()
 export default class ContentService extends BaseService {
-  @Inject() private revisionService!: RevisionService;
+  readonly tasks$ = new Subject<ContentUpdate>();
   @Inject(forwardRef(() => EntityService)) private readonly entityService!: EntityService;
+
+  enableExtract() {
+    this.tasks$
+      .pipe(
+        groupBy((v) => v.type === EntityTypes.Note),
+        map((grouped$) => (grouped$.key ? grouped$.pipe(debounceTime(10 * 1000)) : grouped$)),
+        mergeAll(),
+      )
+      .subscribe(this.extract);
+  }
 
   private extractTopics(entity: EntityLocator) {
     const topics: Topic[] = [];
@@ -34,18 +44,18 @@ export default class ContentService extends BaseService {
 
         topics.push({
           ...entity,
-          pos: `${node.position.start.offset || 0},${node.position.end.offset || 0}`,
+          pos: { start: node.position.start.offset || 0, end: node.position.end.offset || 0 },
           name: node.value,
         });
       },
-      done: () => {
+      done: async () => {
         if (topics.length === 0) {
           return;
         }
 
-        return this.transaction(async () => {
-          await this.contents.removeTopics(entity);
-          await this.contents.createTopics(topics);
+        await this.transaction(async () => {
+          await this.repo.contents.removeTopics(entity);
+          await this.repo.contents.createTopics(topics);
         });
       },
     };
@@ -64,7 +74,7 @@ export default class ContentService extends BaseService {
 
         if (parsed) {
           links.push({
-            from: { ...entity, pos: `${node.position.start.offset || 0},${node.position.end.offset || 0}` },
+            from: { ...entity, pos: { start: node.position.start.offset || 0, end: node.position.end.offset || 0 } },
             to: parsed,
           });
         }
@@ -77,25 +87,25 @@ export default class ContentService extends BaseService {
         const targets = await this.entityService.filterAvailable(links.map(({ to }) => to));
 
         await this.transaction(async () => {
-          await this.contents.removeLinks(entity, 'from');
-          await this.contents.createLinks(intersectionWith(links, targets, ({ to }, { id }) => to.id === id));
+          await this.repo.contents.removeLinks(entity, 'from');
+          await this.repo.contents.createLinks(intersectionWith(links, targets, ({ to }, { id }) => to.id === id));
         });
       },
     };
   }
 
-  async processContent({ content, ...entity }: ContentUpdate) {
+  private readonly extract = async ({ content, ...entity }: ContentUpdate) => {
     const mdAst = fromMarkdown(content, { mdastExtensions: [topicExtension], extensions: [topicTokenExtension] });
     const reducers = [this.extractLinks, this.extractTopics].map((cb) => cb.call(this, entity));
-    const visitors = reducers.map(({ visitor }) => visitor);
-    const doneCbs = reducers.map(({ done }) => done);
 
-    visit(mdAst, (node) => visitors.forEach((visitor) => visitor(node)));
+    visit(mdAst, (node) => reducers.forEach(({ visitor }) => visitor(node)));
 
-    for (const done of doneCbs) {
+    for (const { done } of reducers) {
       await done();
     }
+  };
 
-    await this.revisionService.createRevision({ content, ...entity });
+  async processContent(update: ContentUpdate) {
+    this.tasks$.next(update);
   }
 }

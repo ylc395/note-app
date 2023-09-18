@@ -7,7 +7,7 @@ export interface Row {
   name: string;
   entityId: string;
   entityType: EntityTypes;
-  position: string;
+  position: `${number},${number}`;
 }
 
 export default {

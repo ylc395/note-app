@@ -16,15 +16,15 @@ export default class StarService extends BaseService {
 
     const locators = getLocators(ids, type);
 
-    if ((await this.stars.findAllByLocators(locators)).length > 0) {
+    if ((await this.repo.stars.findAllByLocators(locators)).length > 0) {
       throw new Error('already exist');
     }
 
-    return await this.stars.batchCreate(locators);
+    return await this.repo.stars.batchCreate(locators);
   }
 
   async query() {
-    const stars = await this.stars.findAllByLocators(undefined, { isAvailable: true });
+    const stars = await this.repo.stars.findAllByLocators(undefined, { isAvailable: true });
     const titles = await this.entityService.getEntityTitles(stars);
 
     return stars.map((star) => {
@@ -38,10 +38,10 @@ export default class StarService extends BaseService {
   }
 
   async remove(id: StarRecord['id']) {
-    if (!(await this.stars.findOneById(id))) {
+    if (!(await this.repo.stars.findOneById(id))) {
       throw new Error('invalid id');
     }
 
-    await this.stars.remove(id);
+    await this.repo.stars.remove(id);
   }
 }

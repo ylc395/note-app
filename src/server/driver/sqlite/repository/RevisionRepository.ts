@@ -24,4 +24,16 @@ export default class SqliteRevisionRepository extends BaseRepository implements 
 
     return result;
   }
+
+  async getLatestRevisionTime({ id, type }: EntityLocator) {
+    const row = await this.db
+      .selectFrom(tableName)
+      .select(['createdAt'])
+      .where('entityType', '=', type)
+      .where('entityId', '=', id)
+      .orderBy('createdAt', 'asc')
+      .executeTakeFirst();
+
+    return row ? row.createdAt : null;
+  }
 }

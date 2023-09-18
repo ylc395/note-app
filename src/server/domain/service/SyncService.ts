@@ -94,7 +94,7 @@ export default class SyncService extends BaseService {
       await this.pushAllSince();
     } else {
       await this.updateRemoteMeta(startAt);
-      const lastSyncTime = await this.synchronization.getLastFinishedSyncTimestamp();
+      const lastSyncTime = await this.repo.synchronization.getLastFinishedSyncTimestamp();
 
       if (remoteMeta.finishAt === lastSyncTime) {
         // 上次同步（已完成）来自本机
@@ -107,7 +107,7 @@ export default class SyncService extends BaseService {
 
     const finishAt = Date.now();
     await this.updateRemoteMeta(startAt, finishAt);
-    await this.synchronization.updateLastFinishedSyncTimestamp(finishAt);
+    await this.repo.synchronization.updateLastFinishedSyncTimestamp(finishAt);
     this.isBusy = false;
   }
 
@@ -131,7 +131,7 @@ export default class SyncService extends BaseService {
           continue;
         }
 
-        const localSyncAt = (await this.synchronization.getEntitySyncAt(entityLocator)) || 0;
+        const localSyncAt = (await this.repo.synchronization.getEntitySyncAt(entityLocator)) || 0;
 
         if (localEntity.metadata.updatedAt > localSyncAt) {
           // 本地自上次同步后存在新改动，需要推送到远程
@@ -146,13 +146,13 @@ export default class SyncService extends BaseService {
           await this.updateLocalEntity(remoteEntity, content);
         }
 
-        await this.synchronization.updateEntitySyncAt(entityLocator, currentTime);
+        await this.repo.synchronization.updateEntitySyncAt(entityLocator, currentTime);
       } else {
-        const deletedRecord = await this.recyclables.getHardDeletedRecord(entityLocator);
+        const deletedRecord = await this.repo.recyclables.getHardDeletedRecord(entityLocator);
 
         if (!deletedRecord) {
           await this.createLocalEntity(remoteEntity, content);
-          await this.synchronization.updateEntitySyncAt(entityLocator, currentTime);
+          await this.repo.synchronization.updateEntitySyncAt(entityLocator, currentTime);
         } else if (deletedRecord.deletedAt > remoteEntity.updatedAt) {
           await this.syncTarget.removeFile(remoteEntity.id);
         } else {
@@ -192,7 +192,7 @@ export default class SyncService extends BaseService {
         localEntity.metadata.id,
         SyncService.serialize(localEntity.metadata, { content: localEntity.content, type: locator.type }),
       );
-      await this.synchronization.updateEntitySyncAt(locator, Date.now());
+      await this.repo.synchronization.updateEntitySyncAt(locator, Date.now());
     }
   }
 
@@ -216,9 +216,9 @@ export default class SyncService extends BaseService {
   private async removeLocalEntity({ id, type }: EntityLocator) {
     switch (type) {
       case EntityTypes.Note:
-        return await this.notes.removeById(id);
+        return await this.repo.notes.removeById(id);
       case EntityTypes.Memo:
-        return await this.memos.removeById(id);
+        return await this.repo.memos.removeById(id);
       default:
         break;
     }
@@ -228,10 +228,14 @@ export default class SyncService extends BaseService {
   private async updateLocalEntity(metadata: EntityMetadata, content: string) {
     switch (metadata.type) {
       case EntityTypes.Note:
-        await this.notes.update(metadata.id, { title: metadata.title, updatedAt: metadata.updatedAt, body: content });
+        await this.repo.notes.update(metadata.id, {
+          title: metadata.title,
+          updatedAt: metadata.updatedAt,
+          body: content,
+        });
         return;
       case EntityTypes.Memo:
-        await this.memos.update(metadata.id, { content, updatedAt: metadata.updatedAt });
+        await this.repo.memos.update(metadata.id, { content, updatedAt: metadata.updatedAt });
         return;
       default:
         break;
@@ -241,7 +245,7 @@ export default class SyncService extends BaseService {
   private async createLocalEntity(metadata: EntityMetadata, content: string) {
     switch (metadata.type) {
       case EntityTypes.Note:
-        await this.notes.create({
+        await this.repo.notes.create({
           id: metadata.id,
           title: metadata.title,
           updatedAt: metadata.updatedAt,
@@ -262,11 +266,11 @@ export default class SyncService extends BaseService {
 
     switch (type) {
       case EntityTypes.Note:
-        metadata = await this.notes.findOneById(id);
-        content = await this.notes.findBody(id);
+        metadata = await this.repo.notes.findOneById(id);
+        content = await this.repo.notes.findBody(id);
         break;
       case EntityTypes.Memo:
-        metadata = await this.memos.findOneById(id);
+        metadata = await this.repo.memos.findOneById(id);
         content = metadata ? metadata.content : null;
         break;
       default:
@@ -318,8 +322,8 @@ export default class SyncService extends BaseService {
   }
 
   private async getLocalEntities(updatedAfter?: number) {
-    const notes = await this.notes.findAll(updatedAfter ? { updatedAfter } : undefined);
-    const memos = await this.memos.findAll(updatedAfter ? { updatedAfter } : undefined);
+    const notes = await this.repo.notes.findAll(updatedAfter ? { updatedAfter } : undefined);
+    const memos = await this.repo.memos.findAll(updatedAfter ? { updatedAfter } : undefined);
 
     return [
       ...notes.map(({ id, createdAt, updatedAt }) => ({ id, type: EntityTypes.Note, createdAt, updatedAt })),

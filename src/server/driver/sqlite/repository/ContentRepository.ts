@@ -1,10 +1,10 @@
 import type { Link, Topic } from 'model/content';
+import type { EntityLocator } from 'model/entity';
 import type { ContentRepository } from 'service/repository/ContentRepository';
 
 import BaseRepository from './BaseRepository';
-import linkSchema from '../schema/link';
-import topicSchema from '../schema/topic';
-import type { EntityLocator } from 'model/entity';
+import linkSchema, { type Row as LinkRow } from '../schema/link';
+import topicSchema, { type Row as TopicRow } from '../schema/topic';
 
 export default class SqliteContentRepository extends BaseRepository implements ContentRepository {
   async createLinks(links: Link[]) {
@@ -13,7 +13,7 @@ export default class SqliteContentRepository extends BaseRepository implements C
       links.map(({ from, to }) => ({
         fromEntityId: from.id,
         fromEntityType: from.type,
-        fromFragmentId: from.pos,
+        fromFragmentPosition: `${from.pos.start},${from.pos.end}` satisfies LinkRow['fromFragmentPosition'],
         toEntityId: to.id,
         toEntityType: to.type,
         toFragmentId: to.fragmentId,
@@ -37,7 +37,7 @@ export default class SqliteContentRepository extends BaseRepository implements C
         entityId: topic.id,
         entityType: topic.type,
         name: topic.name,
-        position: topic.pos,
+        position: `${topic.pos.start},${topic.pos.end}` satisfies TopicRow['position'],
       })),
     );
   }

@@ -32,11 +32,11 @@ export default class EntityService extends BaseService {
   private getDescantsOfType(type: EntityTypes, ids: EntityId[]) {
     switch (type) {
       case EntityTypes.Note:
-        return this.notes.findDescendantIds(ids);
+        return this.repo.notes.findDescendantIds(ids);
       case EntityTypes.Material:
-        return this.materials.findDescendantIds(ids);
+        return this.repo.materials.findDescendantIds(ids);
       case EntityTypes.Memo:
-        return this.memos.findDescendantIds(ids);
+        return this.repo.memos.findDescendantIds(ids);
       default:
         return Promise.resolve({} as Record<EntityId, EntityId[]>);
     }
@@ -57,13 +57,13 @@ export default class EntityService extends BaseService {
 
       switch (Number(type)) {
         case EntityTypes.Note:
-          availables = await this.notes.findAll({ id: ids, isAvailable: true });
+          availables = await this.repo.notes.findAll({ id: ids, isAvailable: true });
           break;
         case EntityTypes.Material:
-          availables = await this.materials.findAll({ id: ids, isAvailable: true });
+          availables = await this.repo.materials.findAll({ id: ids, isAvailable: true });
           break;
         case EntityTypes.Memo:
-          availables = await this.memos.findAll({ id: ids, isAvailable: true });
+          availables = await this.repo.memos.findAll({ id: ids, isAvailable: true });
           break;
         default:
           throw new Error('unsupported type');

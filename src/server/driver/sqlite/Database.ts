@@ -61,6 +61,10 @@ export default class SqliteDb implements Database {
   }
 
   getRepository<T extends keyof Repository>(name: T) {
+    if (!(name in repositories)) {
+      throw new Error('invalid repository name');
+    }
+
     return new repositories[name](this.getDb()) as unknown as Repository[T];
   }
 

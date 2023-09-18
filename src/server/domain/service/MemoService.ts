@@ -18,7 +18,7 @@ export default class MemoService extends BaseService {
       throw new Error('can not pin child memo');
     }
 
-    const newMemo = await this.memos.create(memo);
+    const newMemo = await this.repo.memos.create(memo);
 
     return {
       ...omit(newMemo, ['userUpdatedAt']),
@@ -28,11 +28,11 @@ export default class MemoService extends BaseService {
   }
 
   async update(id: MemoVO['id'], patch: MemoPatch) {
-    if (typeof patch.isPinned !== 'undefined' && (await this.memos.findParent(id))) {
+    if (typeof patch.isPinned !== 'undefined' && (await this.repo.memos.findParent(id))) {
       throw new Error('can not pin child memo');
     }
 
-    const updated = await this.memos.update(id, patch);
+    const updated = await this.repo.memos.update(id, patch);
 
     if (!updated) {
       throw new Error('wrong id');
@@ -49,7 +49,7 @@ export default class MemoService extends BaseService {
     let _createdAfter = createdAfter || 0;
 
     if (after) {
-      const memo = await this.memos.findOneById(after);
+      const memo = await this.repo.memos.findOneById(after);
 
       if (!memo) {
         throw new Error('invalid memo');
@@ -58,7 +58,7 @@ export default class MemoService extends BaseService {
       _createdAfter = memo.createdAt;
     }
 
-    const memos = await this.memos.findAll({
+    const memos = await this.repo.memos.findAll({
       createdAfter: _createdAfter,
       createdBefore,
       limit,
@@ -67,8 +67,8 @@ export default class MemoService extends BaseService {
       orderBy: 'createdAt',
     });
 
-    const descantIds = await this.memos.findDescendantIds(getIds(memos));
-    const descantMemos = await this.memos.findAll({ id: Object.values(descantIds).flat(), isAvailable: true });
+    const descantIds = await this.repo.memos.findDescendantIds(getIds(memos));
+    const descantMemos = await this.repo.memos.findAll({ id: Object.values(descantIds).flat(), isAvailable: true });
 
     return this.toVOs([...memos, ...descantMemos]);
   }
@@ -77,7 +77,7 @@ export default class MemoService extends BaseService {
   private async toVOs(memos: Memo[]): Promise<MemoVO[]>;
   private async toVOs(memos: Memo[] | Memo) {
     const stars = buildIndex(
-      await this.stars.findAllByLocators(getLocators(Array.isArray(memos) ? memos : [memos], EntityTypes.Memo)),
+      await this.repo.stars.findAllByLocators(getLocators(Array.isArray(memos) ? memos : [memos], EntityTypes.Memo)),
       'entityId',
     );
 
@@ -91,17 +91,17 @@ export default class MemoService extends BaseService {
   }
 
   async getDigest(ids: MemoVO['id'][]) {
-    const memos = await this.memos.findAll({ id: ids });
+    const memos = await this.repo.memos.findAll({ id: ids });
     return mapValues(buildIndex(memos), ({ content }) => content.slice(0, 5));
   }
 
   async assertAvailableIds(ids: MemoVO['id'][]) {
-    if ((await this.memos.findAll({ id: ids, isAvailable: true })).length !== ids.length) {
+    if ((await this.repo.memos.findAll({ id: ids, isAvailable: true })).length !== ids.length) {
       throw new Error('invalid id');
     }
   }
 
   async queryDates() {
-    return await this.memos.queryAvailableDates();
+    return await this.repo.memos.queryAvailableDates();
   }
 }
