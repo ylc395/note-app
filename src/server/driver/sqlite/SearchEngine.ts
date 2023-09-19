@@ -1,16 +1,20 @@
 import { Injectable } from '@nestjs/common';
 import { type Kysely, sql } from 'kysely';
-import groupBy from 'lodash/groupBy';
 
-import { type SearchEngine, type SearchQuery, Types, Scopes, SearchResult } from 'infra/searchEngine';
-import { EntityId, EntityLocator, EntityTypes } from 'model/entity';
-import SqliteDb from './Database';
-import noteTable from './schema/note';
+import type { SearchEngine } from 'infra/searchEngine';
+import { EntityTypes } from 'model/entity';
+import { type SearchParams, type SearchResult, Scopes } from 'model/search';
+import SqliteDb, { type Db } from './Database';
+import noteTable, { Row as NoteRow } from './schema/note';
+import recyclableTable from './schema/recyclable';
+import dayjs from 'dayjs';
 
 const NOTE_FTS_TABLE = 'notes_fts';
+const WRAPPER_START_TEXT = '__%START%__';
+const WRAPPER_END_TEXT = '__%END%__';
 
-interface SearchEngineDb {
-  [NOTE_FTS_TABLE]: { id: string; title: string; body: string; rowid: number; [NOTE_FTS_TABLE]: string };
+interface SearchEngineDb extends Db {
+  [NOTE_FTS_TABLE]: NoteRow & { rowid: number; [NOTE_FTS_TABLE]: string; rank: number };
 }
 
 @Injectable()
@@ -35,16 +39,16 @@ export default class SqliteSearchEngine implements SearchEngine {
       return;
     }
 
-    // prettier-ignore
-    await sql`CREATE VIRTUAL TABLE ${sql.table(NOTE_FTS_TABLE)} USING fts5(id UNINDEXED, title, body, content=${sql.table( noteTable.tableName)});`.execute(this.db);
+    await sql`
+      CREATE VIRTUAL TABLE ${sql.table(NOTE_FTS_TABLE)} 
+      USING fts5(id UNINDEXED, title, body, content=${sql.table(noteTable.tableName)});
+    `.execute(this.db);
 
-    // prettier-ignore
     await sql`
       CREATE TRIGGER ${sql.raw(NOTE_FTS_TABLE)}_ai AFTER INSERT ON ${sql.table(noteTable.tableName)}
       BEGIN 
         INSERT INTO ${sql.table(NOTE_FTS_TABLE)} (title, body) VALUES (new.title, new.body);
-      END;`
-    .execute(this.db);
+      END;`.execute(this.db);
 
     // prettier-ignore
     await sql`
@@ -64,72 +68,106 @@ export default class SqliteSearchEngine implements SearchEngine {
     .execute(this.db);
   }
 
-  async search(q: SearchQuery) {
-    const types = q.types || [Types.Note, Types.Memo, Types.Html, Types.Pdf];
-    const searchPromises = types.map((type) => {
-      if (type === Types.Note) {
-        return this.searchNotes(q);
-      }
+  async search(q: SearchParams) {
+    const types = q.types || [EntityTypes.Note, EntityTypes.Memo, EntityTypes.Material, EntityTypes.MaterialAnnotation];
 
-      throw new Error('unsupported type');
+    const searchResult = (
+      await Promise.all([
+        types.includes(EntityTypes.Note) ? this.searchNotes(q) : [],
+        // types.includes(EntityTypes.Material) ? this.searchMaterials(q) : [],
+        // types.includes(EntityTypes.MaterialAnnotation) ? this.searchMaterialAnnotations(q) : [],
+        // types.includes(EntityTypes.Memo) ? this.searchMemos(q) : [],
+      ])
+    ).flat();
+
+    return searchResult.map((result) => {
+      const { text: title, highlights: titleHighlights } = SqliteSearchEngine.extractSnippet(
+        result.title,
+        Scopes.Title,
+      );
+      const { text: body, highlights: bodyHighlights } = SqliteSearchEngine.extractSnippet(result.body, Scopes.Body);
+
+      return { ...result, title, body, highlights: [...titleHighlights, ...bodyHighlights] };
     });
-
-    console.log(await Promise.all(searchPromises));
-
-    return [];
   }
 
-  async remove(entities: EntityLocator[]) {
-    const entityGroups = groupBy(entities, 'type');
+  private static extractSnippet(snippet: string, type: Scopes) {
+    const highlights: SearchResult['highlights'] = [];
 
-    await Promise.all(
-      Object.entries(entityGroups).map(([type, entities]) => {
-        switch (Number(type) as EntityTypes) {
-          case EntityTypes.Note:
-            return this.removeNotes(entities.map(({ id }) => id));
-          default:
-            break;
-        }
-      }),
-    );
+    let i = 0;
+    let index = -1;
+
+    while ((index = snippet.indexOf(WRAPPER_START_TEXT, index + 1)) > -1) {
+      const endIndex = snippet.indexOf(WRAPPER_END_TEXT, index + 1);
+
+      highlights.push({
+        start: index - (WRAPPER_START_TEXT.length + WRAPPER_END_TEXT.length) * i,
+        end: endIndex - (WRAPPER_START_TEXT.length * (i + 1) + WRAPPER_END_TEXT.length * i) - 1,
+        scope: type,
+      });
+
+      i += 1;
+    }
+
+    return {
+      text: snippet.replaceAll(WRAPPER_START_TEXT, '').replaceAll(WRAPPER_END_TEXT, ''),
+      highlights,
+    };
   }
 
-  private async removeNotes(ids: EntityId[]) {
-    const rows = await this.db.selectFrom(NOTE_FTS_TABLE).selectAll().select('rowid').where('id', 'in', ids).execute();
-    await this.db
-      .insertInto(NOTE_FTS_TABLE)
-      .values(rows.map((row) => ({ ...row, [NOTE_FTS_TABLE]: 'delete' })))
-      .execute();
-  }
-
-  private async searchNotes(q: SearchQuery): Promise<SearchResult[]> {
+  private async searchNotes(q: SearchParams) {
     if (!this.db) {
-      throw new Error('no knex');
+      throw new Error('no db');
     }
 
     const term = q.terms.join(' ');
-    let query = this.db
-      .selectFrom(NOTE_FTS_TABLE)
-      .select([
-        sql<string>`snippet(${sql.raw(NOTE_FTS_TABLE)}, 1, '<b>', '</b>', '...',  10)`.as('title'),
-        sql<string>`snippet(${sql.raw(NOTE_FTS_TABLE)}, 2, '<b>', '</b>', '...',  10)`.as('content'),
-        'id as entityId',
-      ]);
+
+    let query = this.db.selectFrom(NOTE_FTS_TABLE).select([
+      // prettier-ignore
+      sql<string>`snippet(${sql.raw(NOTE_FTS_TABLE)}, 1, '${sql.raw(WRAPPER_START_TEXT)}', '${sql.raw(WRAPPER_END_TEXT)}', '...',  10)`.as('title'),
+      // prettier-ignore
+      sql<string>`snippet(${sql.raw(NOTE_FTS_TABLE)}, 2, '${sql.raw(WRAPPER_START_TEXT)}', '${sql.raw(WRAPPER_END_TEXT)}', '...',  10)`.as('body'),
+      'id as entityId',
+    ]);
+
+    if (!q.recyclables) {
+      query = query
+        .leftJoin(recyclableTable.tableName, `${recyclableTable.tableName}.entityId`, `${NOTE_FTS_TABLE}.id`)
+        .where(`${recyclableTable.tableName}.entityId`, 'is', null);
+    }
 
     if (!q.scopes) {
       query = query.where(NOTE_FTS_TABLE, '=', term);
     } else {
       if (q.scopes.includes(Scopes.Body)) {
-        query = query.where('body', 'match', term);
+        query = query.where(`${NOTE_FTS_TABLE}.body`, 'match', term);
       }
 
       if (q.scopes.includes(Scopes.Title)) {
-        query = query.where('title', 'match', term);
+        query = query.where(`${NOTE_FTS_TABLE}.title`, 'match', term);
       }
     }
 
-    const result = await query.execute();
+    if (q.created) {
+      if (q.created.from) {
+        query = query.where(`${NOTE_FTS_TABLE}.createdAt`, '>=', dayjs(q.created.from).valueOf());
+      }
+      if (q.created.to) {
+        query = query.where(`${NOTE_FTS_TABLE}.createdAt`, '<=', dayjs(q.created.to).valueOf());
+      }
+    }
 
-    return result.map((row) => ({ ...row, type: Types.Note }));
+    if (q.updated) {
+      if (q.updated.from) {
+        query = query.where(`${NOTE_FTS_TABLE}.userUpdatedAt`, '>=', dayjs(q.updated.from).valueOf());
+      }
+      if (q.updated.to) {
+        query = query.where(`${NOTE_FTS_TABLE}.userUpdatedAt`, '<=', dayjs(q.updated.to).valueOf());
+      }
+    }
+
+    const result = await query.orderBy(`${NOTE_FTS_TABLE}.rank`).execute();
+
+    return result.map((row) => ({ ...row, entityType: EntityTypes.Note }));
   }
 }

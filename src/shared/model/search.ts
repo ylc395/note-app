@@ -1,36 +1,31 @@
 import dayjs from 'dayjs';
-import { array, nativeEnum, object, string, type infer as Infer } from 'zod';
+import { array, nativeEnum, object, string, type infer as Infer, boolean } from 'zod';
 import isEmpty from 'lodash/isEmpty';
 import negate from 'lodash/negate';
 
-import type { EntityId } from 'model/entity';
+import { EntityTypes, type EntityId, type EntityRecord } from './entity';
 
-export interface SearchResult {
+export interface SearchResult extends EntityRecord {
   title: string;
-  content: string;
-  type: Types;
-  entityId: EntityId;
+  body: string;
+  highlights: { start: number; end: number; scope: Scopes }[];
   mainEntityId?: EntityId;
-  // path: string;
+  mimeType?: string;
 }
 
-export enum Types {
-  Note = 'note',
-  Memo = 'memo',
-  Pdf = 'pdf',
-  Html = 'html',
+export interface SearchResultVO extends SearchResult {
+  path: string;
 }
 
 export enum Scopes {
   Title = 'title',
   Body = 'body',
-  Annotation = 'annotation',
 }
 
 const isNotEmpty = negate(isEmpty);
 const isValidDate = (v: string) => dayjs(v).isValid();
 
-export const searchQuerySchema = object({
+export const searchParamsSchema = object({
   terms: array(string()).min(1),
   created: object({
     from: string().refine(isValidDate).optional(),
@@ -45,8 +40,9 @@ export const searchQuerySchema = object({
     .refine(isNotEmpty)
     .optional(),
   root: string().optional(),
-  types: array(nativeEnum(Types)).optional(),
+  types: array(nativeEnum(EntityTypes)).optional(),
   scopes: array(nativeEnum(Scopes)).optional(),
+  recyclables: boolean().optional(),
 });
 
-export type SearchQuery = Infer<typeof searchQuerySchema>;
+export type SearchParams = Infer<typeof searchParamsSchema>;

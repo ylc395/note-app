@@ -7,15 +7,15 @@ import { singleton, container } from 'tsyringe';
 //   ExpressionNodeType,
 // } from 'search-expression-parser';
 
-import type { SearchQuery, SearchResult } from 'model/search';
+import type { SearchParams, SearchResult } from 'model/search';
 import { token as remoteToken } from 'infra/remote';
 
 @singleton()
 export default class SearchService {
   private readonly remote = container.resolve(remoteToken);
 
-  readonly search = async (q: SearchQuery) => {
-    await this.remote.post<SearchQuery, SearchResult[]>('/search', q);
+  readonly search = async (q: SearchParams) => {
+    await this.remote.post<SearchParams, SearchResult[]>('/search', q);
   };
 
   // private static parseKeyword(q: string): SearchQuery | null {

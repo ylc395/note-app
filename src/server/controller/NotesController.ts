@@ -11,6 +11,8 @@ import {
   notesPatchDTOSchema,
   clientNoteQuerySchema,
   noteBodyDTOSchema,
+  notePatchDTOSchema,
+  NotePatchDTO,
 } from 'model/note';
 import NoteService from 'service/NoteService';
 
@@ -21,6 +23,14 @@ export default class NotesController {
   @Post('/notes')
   async create(@Body(createSchemaPipe(newNoteDTOSchema)) noteDTO: NewNoteDTO): Promise<NoteVO> {
     return await this.noteService.create(noteDTO);
+  }
+
+  @Patch('/notes/:id')
+  async update(
+    @Param('id') id: string,
+    @Body(createSchemaPipe(notePatchDTOSchema)) patch: NotePatchDTO,
+  ): Promise<NoteVO[]> {
+    return await this.noteService.batchUpdate([id], patch);
   }
 
   @Patch('/notes')

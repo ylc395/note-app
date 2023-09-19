@@ -1,16 +1,18 @@
 import { container } from 'tsyringe';
+import type { ChangeEventHandler } from 'react';
 import { Input, Button, Tooltip } from 'antd';
 import { InfoCircleOutlined } from '@ant-design/icons';
 
 import SearchService from 'service/SearchService';
-import type { ChangeEventHandler } from 'react';
-import { Scopes, Types } from 'model/search';
+// import { Scopes } from 'model/search';
+import { EntityTypes } from 'model/entity';
 
+// eslint-disable-next-line mobx/missing-observer
 export default (function Search() {
   const { search } = container.resolve(SearchService);
   const onChange: ChangeEventHandler = (e) => {
     const { value } = e.target as HTMLInputElement;
-    search({ terms: [value], types: [Types.Note] });
+    search({ terms: [value], types: [EntityTypes.Note] });
   };
 
   return (
