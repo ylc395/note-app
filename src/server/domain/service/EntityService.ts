@@ -29,22 +29,24 @@ export default class EntityService extends BaseService {
     }
   }
 
-  private getDescantsOfType(type: EntityTypes, ids: EntityId[]) {
+  async getDescants({ type, ids }: EntitiesLocator) {
+    let descants: Record<EntityId, EntityId[]> = {};
+
     switch (type) {
       case EntityTypes.Note:
-        return this.repo.notes.findDescendantIds(ids);
+        descants = await this.repo.notes.findDescendantIds(ids);
+        break;
       case EntityTypes.Material:
-        return this.repo.materials.findDescendantIds(ids);
+        descants = await this.repo.materials.findDescendantIds(ids);
+        break;
       case EntityTypes.Memo:
-        return this.repo.memos.findDescendantIds(ids);
+        descants = await this.repo.memos.findDescendantIds(ids);
+        break;
       default:
-        return Promise.resolve({} as Record<EntityId, EntityId[]>);
+        break;
     }
-  }
 
-  async getDescants({ type, ids }: EntitiesLocator) {
-    const descants = Object.values(await this.getDescantsOfType(type, ids));
-    return descants.flat();
+    return Object.values(descants).flat();
   }
 
   async filterAvailable<T extends EntityLocator>(entities: T[]) {

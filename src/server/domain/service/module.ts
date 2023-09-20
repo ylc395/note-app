@@ -1,4 +1,4 @@
-import { Module, type OnApplicationBootstrap } from '@nestjs/common';
+import { Global, Module, type OnApplicationBootstrap } from '@nestjs/common';
 
 import NoteService from './NoteService';
 import RecyclableService from './RecyclableService';
@@ -24,6 +24,7 @@ const services = [
   EntityService,
 ];
 
+@Global()
 @Module({
   providers: services,
   exports: services,
