@@ -5,7 +5,6 @@ import intersectionWith from 'lodash/intersectionWith';
 import type { SearchEngine } from 'infra/searchEngine';
 import { type EntityId, EntityTypes } from 'model/entity';
 import { type SearchParams, type SearchResult, Scopes } from 'model/search';
-import EntityService from 'service/EntityService';
 
 import SqliteDb, { type Db } from '../Database';
 import type { Row as NoteRow } from '../schema/note';
@@ -21,7 +20,7 @@ interface SearchEngineDb extends Db {
 export default class SqliteSearchEngine implements SearchEngine {
   readonly ready: Promise<void>;
 
-  constructor(readonly sqliteDb: SqliteDb, readonly entityService: EntityService) {
+  constructor(readonly sqliteDb: SqliteDb) {
     this.ready = this.init();
   }
 
@@ -46,7 +45,7 @@ export default class SqliteSearchEngine implements SearchEngine {
         throw new Error('more than one type');
       }
 
-      descantIds = await this.entityService.getDescants({ type: types[0]!, ids: [q.root] });
+      descantIds = await this.sqliteDb.getRepository('entities').findDescendantIds(types[0]!, [q.root]);
     }
 
     let searchResult = (

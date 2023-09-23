@@ -4,6 +4,7 @@ import isEmpty from 'lodash/isEmpty';
 import negate from 'lodash/negate';
 
 import { EntityTypes, type EntityId, type EntityRecord } from './entity';
+import type { Starable } from './star';
 
 export interface SearchResult extends EntityRecord {
   title: string;
@@ -13,7 +14,7 @@ export interface SearchResult extends EntityRecord {
   mimeType?: string;
 }
 
-export interface SearchResultVO extends SearchResult {
+export interface SearchResultVO extends SearchResult, Starable {
   path: string;
 }
 

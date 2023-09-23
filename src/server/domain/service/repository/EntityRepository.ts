@@ -1,5 +1,5 @@
-import type { EntityLocator } from 'model/entity';
+import type { EntityId, EntityTypes } from 'model/entity';
 
 export interface EntityRepository {
-  findAllDescants(entities: EntityLocator[]): Promise<EntityLocator[]>;
+  findDescendantIds(type: EntityTypes, ids: EntityId[]): Promise<EntityId[]>;
 }

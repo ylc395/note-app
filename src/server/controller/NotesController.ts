@@ -18,7 +18,7 @@ import NoteService from 'service/NoteService';
 
 @Controller()
 export default class NotesController {
-  constructor(private noteService: NoteService) {}
+  constructor(private readonly noteService: NoteService) {}
 
   @Post('/notes')
   async create(@Body(createSchemaPipe(newNoteDTOSchema)) noteDTO: NewNoteDTO): Promise<NoteVO> {

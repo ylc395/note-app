@@ -2,7 +2,7 @@ import groupBy from 'lodash/groupBy';
 import mapValues from 'lodash/mapValues';
 
 import type { EntityId, HierarchyEntity } from 'model/entity';
-import { getIds } from 'utils/collection';
+import { buildIndex, getIds } from 'utils/collection';
 
 import BaseRepository from './BaseRepository';
 import { tableName as recyclableTableName } from '../schema/recyclable';
@@ -29,13 +29,13 @@ export default abstract class HierarchyEntityRepository extends BaseRepository {
     return mapValues(groupBy(rows, 'parentId'), getIds);
   }
 
-  async findAncestorIds(id: EntityId) {
-    const ancestorIds = await this.db
+  async findAncestorIds(ids: EntityId[]) {
+    const rows = await this.db
       .withRecursive('ancestors', (qb) =>
         qb
           .selectFrom(this.tableName)
           .select(['id', 'parentId'])
-          .where('id', '=', id)
+          .where('id', 'in', ids)
           .union(
             qb
               .selectFrom('ancestors')
@@ -44,11 +44,13 @@ export default abstract class HierarchyEntityRepository extends BaseRepository {
           ),
       )
       .selectFrom('ancestors')
-      .select('ancestors.id')
-      .where('ancestors.id', '!=', id)
+      .select(['ancestors.id', 'ancestors.parentId'])
       .execute();
 
-    return getIds(ancestorIds);
+    return HierarchyEntityRepository.groupAncestorIdsByDescantId(
+      rows.filter(({ id }) => ids.includes(id)),
+      rows,
+    );
   }
 
   async findDescendantIds(ids: EntityId[]) {
@@ -57,27 +59,48 @@ export default abstract class HierarchyEntityRepository extends BaseRepository {
     }
 
     const rows = await this.db
-      .withRecursive(
-        'descendants',
-        (qb) =>
-          qb
-            .selectFrom(this.tableName)
-            .select(['id', 'parentId'])
-            .where((eb) => eb.or([eb.cmpr('id', 'in', ids), eb.cmpr('parentId', 'in', ids)]))
-            .union(
-              qb
-                .selectFrom('descendants')
-                .select([`${this.tableName}.id`, `${this.tableName}.parentId`])
-                .innerJoin(this.tableName, `${this.tableName}.parentId`, 'descendants.id'),
-            ),
-        // todo: add a limit statement to stop infinite recursive
+      .withRecursive('descendants', (qb) =>
+        qb
+          .selectFrom(this.tableName)
+          .select(['id', 'parentId'])
+          .where((eb) => eb.or([eb.cmpr('id', 'in', ids), eb.cmpr('parentId', 'in', ids)]))
+          .union(
+            qb
+              .selectFrom('descendants')
+              .select([`${this.tableName}.id`, `${this.tableName}.parentId`])
+              .innerJoin(this.tableName, `${this.tableName}.parentId`, 'descendants.id'),
+          ),
       )
       .selectFrom('descendants')
       .select(['descendants.id', 'descendants.parentId'])
-      .where('descendants.id', 'not in', ids)
       .execute();
 
     return HierarchyEntityRepository.groupDescantsByAncestorId(ids, rows);
+  }
+
+  private static groupAncestorIdsByDescantId<T extends HierarchyEntity>(descendants: T[], entities: T[]) {
+    const entitiesMap = buildIndex(entities);
+    const result: Record<EntityId, EntityId[]> = {};
+
+    for (const { id, parentId } of descendants) {
+      const ancestorIds: EntityId[] = [];
+      let ancestorId = parentId;
+
+      while (ancestorId) {
+        ancestorIds.unshift(ancestorId);
+        const parent = entitiesMap[ancestorId];
+
+        if (!parent) {
+          break;
+        }
+
+        ancestorId = parent.parentId;
+      }
+
+      result[id] = ancestorIds;
+    }
+
+    return result;
   }
 
   private static groupDescantsByAncestorId<T extends HierarchyEntity>(ancestorIds: EntityId[], entities: T[]) {
@@ -85,14 +108,13 @@ export default abstract class HierarchyEntityRepository extends BaseRepository {
     const result: Record<EntityId, EntityId[]> = {};
 
     for (const id of ancestorIds) {
-      const entity = entities.find((entity) => id === entity.id);
-      const descendants: T[] = entity ? [entity] : [];
+      const descendantIds: EntityId[] = [];
 
       const findChildren = (parentId: EntityId) => {
         const children = groups[parentId];
 
         if (children) {
-          descendants.push(...children);
+          descendantIds.push(...getIds(children));
 
           for (const child of children) {
             findChildren(child.id);
@@ -102,7 +124,7 @@ export default abstract class HierarchyEntityRepository extends BaseRepository {
 
       findChildren(id);
 
-      result[id] = getIds(descendants);
+      result[id] = descendantIds;
     }
 
     return result;

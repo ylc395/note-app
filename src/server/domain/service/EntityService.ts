@@ -1,5 +1,6 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import groupBy from 'lodash/groupBy';
+import mapValues from 'lodash/mapValues';
 import intersectionBy from 'lodash/intersectionBy';
 
 import { type EntityId, EntityTypes, EntityRecord, EntitiesLocator, EntityLocator } from 'model/entity';
@@ -14,7 +15,7 @@ import { getIds } from 'utils/collection';
 export default class EntityService extends BaseService {
   @Inject(forwardRef(() => NoteService)) private readonly noteService!: NoteService;
   @Inject(forwardRef(() => MaterialService)) private readonly materialService!: MaterialService;
-  @Inject(forwardRef(() => MaterialService)) private readonly memoService!: MemoService;
+  @Inject(forwardRef(() => MemoService)) private readonly memoService!: MemoService;
 
   async assertAvailableEntities({ type, ids }: EntitiesLocator) {
     switch (type) {
@@ -29,24 +30,43 @@ export default class EntityService extends BaseService {
     }
   }
 
-  async getDescants({ type, ids }: EntitiesLocator) {
-    let descants: Record<EntityId, EntityId[]> = {};
+  async getPath(entities: EntityRecord[]) {
+    const entitiesGroup = groupBy(entities, 'entityType');
+    const ancestors: Record<EntityTypes.Note | EntityTypes.Material, Record<EntityId, EntityId[]>> = {
+      [EntityTypes.Note]: {},
+      [EntityTypes.Material]: {},
+    };
 
-    switch (type) {
-      case EntityTypes.Note:
-        descants = await this.repo.notes.findDescendantIds(ids);
-        break;
-      case EntityTypes.Material:
-        descants = await this.repo.materials.findDescendantIds(ids);
-        break;
-      case EntityTypes.Memo:
-        descants = await this.repo.memos.findDescendantIds(ids);
-        break;
-      default:
-        break;
+    for (const [type, _entities] of Object.entries(entitiesGroup)) {
+      const ids = _entities.map(({ entityId }) => entityId);
+
+      switch (Number(type)) {
+        case EntityTypes.Note:
+          ancestors[EntityTypes.Note] = await this.repo.notes.findAncestorIds(ids);
+          break;
+        case EntityTypes.Material:
+          ancestors[EntityTypes.Material] = await this.repo.materials.findAncestorIds(ids);
+          break;
+        default:
+          throw new Error('unsupported type');
+      }
     }
 
-    return Object.values(descants).flat();
+    const ancestorEntities = [...Object.entries(ancestors)]
+      .map(([type, ancestorIds]) =>
+        Object.values(ancestorIds).flatMap((entityIds) =>
+          entityIds.map((entityId) => ({ entityId, entityType: Number(type) })),
+        ),
+      )
+      .flat();
+
+    const titles = await this.getEntityTitles([...entities, ...ancestorEntities]);
+
+    return mapValues(ancestors, (entities, type) => {
+      return mapValues(entities, (ids) => {
+        return ids.map((id) => titles[Number(type) as EntityTypes][id]!);
+      });
+    });
   }
 
   async filterAvailable<T extends EntityLocator>(entities: T[]) {

@@ -24,10 +24,12 @@ import { buildIndex, getIds, getLocators } from 'utils/collection';
 
 import BaseService from './BaseService';
 import ContentService from './ContentService';
+import StarService from './StarService';
 
 @Injectable()
 export default class MaterialService extends BaseService {
   @Inject(forwardRef(() => ContentService)) private readonly contentService!: ContentService;
+  @Inject(forwardRef(() => StarService)) private readonly starService!: StarService;
 
   async create(newMaterial: NewMaterialDTO) {
     if (newMaterial.parentId) {
@@ -50,10 +52,7 @@ export default class MaterialService extends BaseService {
   private async toVOs(materials: Material[]) {
     const parentIds = getIds(materials.filter(isDirectory));
     const children = await this.repo.materials.findChildrenIds(parentIds, { isAvailable: true });
-    const stars = buildIndex(
-      await this.repo.stars.findAllByLocators(getLocators(materials, EntityTypes.Note)),
-      'entityId',
-    );
+    const stars = await this.starService.getStarMap(getLocators(materials, EntityTypes.Note));
 
     return materials.map((material) => ({
       ...omit(material, ['userUpdatedAt']),
@@ -206,7 +205,7 @@ export default class MaterialService extends BaseService {
   async getTreeFragment(materialId: Material['id'], type?: MaterialTypes) {
     await this.assertAvailableIds([materialId]);
 
-    const ancestorIds = await this.repo.materials.findAncestorIds(materialId);
+    const ancestorIds = (await this.repo.materials.findAncestorIds([materialId]))[materialId] || [];
     const childrenIds = Object.values(await this.repo.materials.findChildrenIds(ancestorIds)).flat();
 
     const roots = await this.queryVO({ parentId: null, type });

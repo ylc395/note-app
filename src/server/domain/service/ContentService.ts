@@ -23,7 +23,7 @@ export default class ContentService extends BaseService {
   readonly tasks$ = new Subject<ContentUpdate>();
   @Inject(forwardRef(() => EntityService)) private readonly entityService!: EntityService;
 
-  enableExtract() {
+  enableAutoExtract() {
     this.tasks$
       .pipe(
         groupBy((v) => v.type === EntityTypes.Note),

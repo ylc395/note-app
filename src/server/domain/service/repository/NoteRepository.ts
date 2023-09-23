@@ -11,7 +11,7 @@ export interface NoteRepository {
   ) => Promise<Record<Note['id'], Note['id'][]>>;
   findBody: (noteId: Note['id']) => Promise<NoteBodyDTO | null>;
   findDescendantIds: (noteIds: Note['id'][]) => Promise<Record<Note['id'], Note['id'][]>>;
-  findAncestorIds: (noteId: Note['id']) => Promise<Note['id'][]>;
+  findAncestorIds: (noteId: Note['id'][]) => Promise<Record<Note['id'], Note['id'][]>>;
   findOneById: (id: Note['id']) => Promise<Note | null>;
   removeById: (noteId: Note['id'] | Note['id'][]) => Promise<void>;
 }

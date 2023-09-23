@@ -1,8 +1,9 @@
 import { Inject, Injectable, forwardRef } from '@nestjs/common';
+import {} from 'lodash/mapValues';
 
-import type { EntitiesLocator } from 'model/entity';
+import type { EntitiesLocator, EntityLocator } from 'model/entity';
 import type { StarRecord } from 'model/star';
-import { getLocators } from 'utils/collection';
+import { getLocators, buildIndex } from 'utils/collection';
 
 import BaseService from './BaseService';
 import EntityService from './EntityService';
@@ -43,5 +44,9 @@ export default class StarService extends BaseService {
     }
 
     await this.repo.stars.remove(id);
+  }
+
+  async getStarMap(entities: EntityLocator[]) {
+    return buildIndex(await this.repo.stars.findAllByLocators(entities), 'entityId');
   }
 }

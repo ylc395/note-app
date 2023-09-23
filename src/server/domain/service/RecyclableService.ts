@@ -15,7 +15,7 @@ export default class RecyclableService extends BaseService {
 
   async create({ type, ids }: EntitiesLocator) {
     await this.entityService.assertAvailableEntities({ type, ids });
-    const descants = await this.entityService.getDescants({ type, ids });
+    const descants = await this.repo.entities.findDescendantIds(type, ids);
     const recyclables = await this.repo.recyclables.findAllByLocators(getLocators([...ids, ...descants], type));
 
     const newRecyclables = differenceWith(

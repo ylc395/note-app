@@ -22,7 +22,7 @@ export interface MaterialRepository {
     filter?: { isAvailable?: boolean },
   ) => Promise<Record<Material['id'], Material['id'][]>>;
   findDescendantIds: (materialIds: Material['id'][]) => Promise<Record<Material['id'], Material['id'][]>>;
-  findAncestorIds: (materialIds: Material['id']) => Promise<Material['id'][]>;
+  findAncestorIds: (materialIds: Material['id'][]) => Promise<Record<Material['id'], Material['id'][]>>;
   findOneById: (id: Material['id']) => Promise<Material | null>;
   findBlobById: (id: Material['id']) => Promise<ArrayBuffer | null>;
   createAnnotation: (materialId: Material['id'], annotation: NewAnnotationDTO) => Promise<Annotation>;

@@ -8,10 +8,12 @@ import { EntityTypes } from 'model/entity';
 
 import BaseService from './BaseService';
 import ContentService from './ContentService';
+import StarService from './StarService';
 
 @Injectable()
 export default class MemoService extends BaseService {
   @Inject(forwardRef(() => ContentService)) private readonly contentService!: ContentService;
+  @Inject(forwardRef(() => StarService)) private readonly starService!: StarService;
 
   async create(memo: NewMemo) {
     if (memo.parentId && memo.isPinned) {
@@ -76,9 +78,8 @@ export default class MemoService extends BaseService {
   private async toVOs(memos: Memo): Promise<MemoVO>;
   private async toVOs(memos: Memo[]): Promise<MemoVO[]>;
   private async toVOs(memos: Memo[] | Memo) {
-    const stars = buildIndex(
-      await this.repo.stars.findAllByLocators(getLocators(Array.isArray(memos) ? memos : [memos], EntityTypes.Memo)),
-      'entityId',
+    const stars = await this.starService.getStarMap(
+      getLocators(Array.isArray(memos) ? memos : [memos], EntityTypes.Memo),
     );
 
     const toVO = (memo: Memo) => ({

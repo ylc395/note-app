@@ -10,6 +10,7 @@ import MaterialService from './MaterialService';
 import RevisionService from './RevisionService';
 import SyncService from './SyncService';
 import EntityService from './EntityService';
+import SearchService from './SearchService';
 
 const services = [
   NoteService,
@@ -22,6 +23,7 @@ const services = [
   RevisionService,
   SyncService,
   EntityService,
+  SearchService,
 ];
 
 @Global()
@@ -32,7 +34,7 @@ const services = [
 export default class ServiceModule implements OnApplicationBootstrap {
   constructor(private readonly contentService: ContentService, private readonly revisionService: RevisionService) {}
   onApplicationBootstrap() {
-    this.contentService.enableExtract();
+    this.contentService.enableAutoExtract();
     this.revisionService.enableAutoCreateRevision();
   }
 }

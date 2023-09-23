@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import omit from 'lodash/omit';
 import uniq from 'lodash/uniq';
 import mapValues from 'lodash/mapValues';
@@ -19,10 +19,12 @@ import { EntityTypes } from 'model/entity';
 
 import BaseService from './BaseService';
 import ContentService from './ContentService';
+import StarService from './StarService';
 
 @Injectable()
 export default class NoteService extends BaseService {
-  @Inject() private readonly contentService!: ContentService;
+  @Inject(forwardRef(() => ContentService)) private readonly contentService!: ContentService;
+  @Inject(forwardRef(() => StarService)) private readonly starService!: StarService;
 
   async create(note: NewNoteDTO) {
     if (isNewNote(note) && note.parentId) {
@@ -97,10 +99,7 @@ export default class NoteService extends BaseService {
   }
 
   private async toVOs(rawNotes: Note[]) {
-    const stars = buildIndex(
-      await this.repo.stars.findAllByLocators(getLocators(rawNotes, EntityTypes.Note)),
-      'entityId',
-    );
+    const stars = await this.starService.getStarMap(getLocators(rawNotes, EntityTypes.Note));
     const _children = await this.repo.notes.findChildrenIds(getIds(rawNotes), { isAvailable: true });
 
     return rawNotes.map((note) => ({
@@ -159,7 +158,8 @@ export default class NoteService extends BaseService {
 
   async getTreeFragment(noteId: NoteVO['id']) {
     await this.assertAvailableIds([noteId]);
-    const ancestorIds = await this.repo.notes.findAncestorIds(noteId);
+
+    const ancestorIds = (await this.repo.notes.findAncestorIds([noteId]))[noteId] || [];
     const childrenIds = Object.values(await this.repo.notes.findChildrenIds(ancestorIds, { isAvailable: true })).flat();
 
     const roots = await this.repo.notes.findAll({ parentId: null, isAvailable: true });
