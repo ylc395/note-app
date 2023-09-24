@@ -8,6 +8,7 @@ export interface Row {
   entityId: string;
   entityType: EntityTypes;
   position: `${number},${number}`;
+  createdAt: number;
 }
 
 export default {
@@ -19,6 +20,7 @@ export default {
       .addColumn('position', 'text', (col) => col.notNull())
       .addColumn('entityId', 'text', (col) => col.notNull())
       .addColumn('entityType', 'integer', (col) => col.notNull())
+      .addColumn('createdAt', 'integer', (col) => col.notNull())
       .addUniqueConstraint('row-unique', ['name', 'entityId', 'entityType', 'position']);
   },
 } as const;

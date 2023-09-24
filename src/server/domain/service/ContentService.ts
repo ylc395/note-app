@@ -35,6 +35,7 @@ export default class ContentService extends BaseService {
 
   private extractTopics(entity: EntityLocator) {
     const topics: Topic[] = [];
+    const createdAt = Date.now();
 
     return {
       visitor: (node: UnistNode) => {
@@ -46,6 +47,7 @@ export default class ContentService extends BaseService {
           ...entity,
           pos: { start: node.position.start.offset || 0, end: node.position.end.offset || 0 },
           name: node.value,
+          createdAt,
         });
       },
       done: async () => {
@@ -63,6 +65,7 @@ export default class ContentService extends BaseService {
 
   private extractLinks(entity: EntityLocator) {
     const links: Link[] = [];
+    const createdAt = Date.now();
 
     return {
       visitor: (node: UnistNode) => {
@@ -76,6 +79,7 @@ export default class ContentService extends BaseService {
           links.push({
             from: { ...entity, pos: { start: node.position.start.offset || 0, end: node.position.end.offset || 0 } },
             to: parsed,
+            createdAt,
           });
         }
       },

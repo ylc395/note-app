@@ -10,13 +10,14 @@ export default class SqliteContentRepository extends BaseRepository implements C
   async createLinks(links: Link[]) {
     await this._batchCreate(
       linkSchema.tableName,
-      links.map(({ from, to }) => ({
+      links.map(({ from, to, createdAt }) => ({
         fromEntityId: from.id,
         fromEntityType: from.type,
         fromFragmentPosition: `${from.pos.start},${from.pos.end}` satisfies LinkRow['fromFragmentPosition'],
         toEntityId: to.id,
         toEntityType: to.type,
         toFragmentId: to.fragmentId,
+        createdAt,
       })),
     );
   }
@@ -38,6 +39,7 @@ export default class SqliteContentRepository extends BaseRepository implements C
         entityType: topic.type,
         name: topic.name,
         position: `${topic.pos.start},${topic.pos.end}` satisfies TopicRow['position'],
+        createdAt: topic.createdAt,
       })),
     );
   }

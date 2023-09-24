@@ -20,9 +20,11 @@ interface LinkTo extends EntityLocator {
 export interface Link {
   from: LinkFrom;
   to: LinkTo;
+  createdAt: number;
 }
 
 export interface Topic extends EntityLocator {
   name: string;
   pos: Pos;
+  createdAt: number;
 }

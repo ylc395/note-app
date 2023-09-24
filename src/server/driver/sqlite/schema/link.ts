@@ -8,6 +8,7 @@ export interface Row {
   toEntityId: string;
   toEntityType: EntityTypes;
   toFragmentId: string;
+  createdAt: number;
 }
 
 export const tableName = 'links';
@@ -22,6 +23,7 @@ export default {
       .addColumn('fromFragmentPosition', 'text', (col) => col.notNull())
       .addColumn('toEntityType', 'integer', (col) => col.notNull())
       .addColumn('toEntityId', 'text', (col) => col.notNull())
-      .addColumn('toFragmentId', 'text', (col) => col.notNull());
+      .addColumn('toFragmentId', 'text', (col) => col.notNull())
+      .addColumn('createdAt', 'integer', (col) => col.notNull());
   },
 } as const;
