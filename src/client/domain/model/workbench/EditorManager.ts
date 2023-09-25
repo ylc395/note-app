@@ -17,55 +17,55 @@ import ImageEditorView from 'model/material/view/ImageEditorView';
 import type Tile from './Tile';
 
 export default class EditorManager {
-  private readonly editors: { [key in EntityTypes]?: Record<EntityLocator['id'], Editor> } = {
+  private readonly editors: { [key in EntityTypes]?: Record<EntityLocator['entityId'], Editor> } = {
     [EntityTypes.Note]: {},
     [EntityTypes.Material]: {},
   };
 
   private readonly editorViews = new Map<EntityEditor, Set<EditorView>>();
 
-  getEditorByEntity(entity: EntityLocator) {
-    return this.editors[entity.type]?.[entity.id];
+  getEditorByEntity({ entityType, entityId }: EntityLocator) {
+    return this.editors[entityType]?.[entityId];
   }
 
-  private createEditor(tile: Tile, entity: EntityLocator) {
-    let editor = this.getEditorByEntity(entity);
+  private createEditor(tile: Tile, { entityId, entityType }: EntityLocator) {
+    let editor = this.getEditorByEntity({ entityId, entityType });
 
     if (editor) {
       return editor;
     }
 
-    switch (entity.type) {
+    switch (entityType) {
       case EntityTypes.Note:
-        editor = new NoteEditor(tile, entity.id);
+        editor = new NoteEditor(tile, entityId);
         break;
       case EntityTypes.Material:
-        editor = this.createMaterialEditor(tile, entity);
+        editor = this.createMaterialEditor(tile, { entityId, entityType });
         break;
       default:
         throw new Error('invalid type');
     }
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    editor.once(EditorEvents.Destroyed, () => delete this.editors[entity.type]![entity.id]);
+    editor.once(EditorEvents.Destroyed, () => delete this.editors[entityType]![entityId]);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    this.editors[entity.type]![entity.id] = editor;
+    this.editors[entityType]![entityId] = editor;
     return editor;
   }
 
-  private createMaterialEditor(tile: Tile, entity: EntityLocator) {
-    if (!entity.mimeType) {
+  private createMaterialEditor(tile: Tile, { mimeType, entityId }: EntityLocator) {
+    if (!mimeType) {
       throw new Error('no mimeType');
     }
 
     let editor: MaterialEditor | null = null;
 
-    if (entity.mimeType.startsWith('image')) {
-      editor = new ImageEditor(tile, entity.id);
-    } else if (entity.mimeType === 'application/pdf') {
-      editor = new PdfEditor(tile, entity.id);
-    } else if (entity.mimeType === 'text/html') {
-      editor = new HtmlEditor(tile, entity.id);
+    if (mimeType.startsWith('image')) {
+      editor = new ImageEditor(tile, entityId);
+    } else if (mimeType === 'application/pdf') {
+      editor = new PdfEditor(tile, entityId);
+    } else if (mimeType === 'text/html') {
+      editor = new HtmlEditor(tile, entityId);
     }
 
     if (!editor) {

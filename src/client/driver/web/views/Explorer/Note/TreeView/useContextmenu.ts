@@ -1,5 +1,6 @@
 import { useCallback, useContext } from 'react';
 import { container } from 'tsyringe';
+import map from 'lodash/map';
 
 import { EntityTypes } from 'model/entity';
 import { TileSplitDirections } from 'model/workbench/TileManger';
@@ -9,7 +10,6 @@ import NoteService from 'service/NoteService';
 import EditorService from 'service/EditorService';
 import StarService from 'service/StarService';
 
-import { getIds } from 'utils/collection';
 import type { ContextmenuItem } from 'infra/ui';
 import { ui } from 'web/infra/ui';
 
@@ -68,7 +68,7 @@ export default function useContextmenu() {
         return;
       }
 
-      const targetIds = getIds(noteService.noteTree.selectedNodes);
+      const targetIds = map(noteService.noteTree.selectedNodes, 'id');
 
       switch (action) {
         case 'duplicate':
@@ -87,7 +87,7 @@ export default function useContextmenu() {
           }
 
           return openEntity(
-            { type: EntityTypes.Note, id: targetId },
+            { entityType: EntityTypes.Note, entityId: targetId },
             { from: focusedTile, direction: TileSplitDirections.Right },
           );
         default:

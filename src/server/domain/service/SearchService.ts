@@ -17,9 +17,7 @@ export default class SearchService extends BaseService {
   async search(q: SearchParams) {
     const results = await this.searchEngine.search(q);
     const paths = await this.entityService.getPath(results);
-    const stars = await this.starService.getStarMap(
-      results.map(({ entityId: id, entityType: type }) => ({ id, type })),
-    );
+    const stars = await this.starService.getStarMap(results);
     return results.map((result) => ({
       ...result,
       isStar: Boolean(stars[result.entityId]),

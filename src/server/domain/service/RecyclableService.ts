@@ -13,18 +13,20 @@ import EntityService from './EntityService';
 export default class RecyclableService extends BaseService {
   @Inject(forwardRef(() => EntityService)) private readonly entityService!: EntityService;
 
-  async create({ type, ids }: EntitiesLocator) {
-    await this.entityService.assertAvailableEntities({ type, ids });
-    const descants = await this.repo.entities.findDescendantIds(type, ids);
-    const recyclables = await this.repo.recyclables.findAllByLocators(getLocators([...ids, ...descants], type));
+  async create({ entityType, entityIds }: EntitiesLocator) {
+    await this.entityService.assertAvailableEntities({ entityType, entityIds });
+    const descants = await this.repo.entities.findDescendantIds(entityType, entityIds);
+    const recyclables = await this.repo.recyclables.findAllByLocators(
+      getLocators([...entityIds, ...descants], entityType),
+    );
 
     const newRecyclables = differenceWith(
       [
-        ...ids.map((id) => ({ id, type, reason: RecycleReason.Direct })),
-        ...descants.map((id) => ({ id, type, reason: RecycleReason.Cascade })),
+        ...entityIds.map((entityId) => ({ entityId, entityType, reason: RecycleReason.Direct })),
+        ...descants.map((entityId) => ({ entityId, entityType, reason: RecycleReason.Cascade })),
       ],
       recyclables,
-      ({ type, id }, { entityId, entityType }) => id === entityId && type === entityType,
+      ({ entityId: id, entityType: type }, { entityId, entityType }) => id === entityId && type === entityType,
     );
 
     const result = await this.repo.recyclables.batchCreate(newRecyclables);

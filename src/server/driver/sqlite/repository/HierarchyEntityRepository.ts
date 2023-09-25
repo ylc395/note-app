@@ -1,8 +1,9 @@
 import groupBy from 'lodash/groupBy';
 import mapValues from 'lodash/mapValues';
+import map from 'lodash/map';
 
 import type { EntityId, HierarchyEntity } from 'model/entity';
-import { buildIndex, getIds } from 'utils/collection';
+import { buildIndex } from 'utils/collection';
 
 import BaseRepository from './BaseRepository';
 import { tableName as recyclableTableName } from '../schema/recyclable';
@@ -26,7 +27,7 @@ export default abstract class HierarchyEntityRepository extends BaseRepository {
 
     const rows = await qb.execute();
 
-    return mapValues(groupBy(rows, 'parentId'), getIds);
+    return mapValues(groupBy(rows, 'parentId'), (rows) => map(rows, 'id'));
   }
 
   async findAncestorIds(ids: EntityId[]) {
@@ -114,7 +115,7 @@ export default abstract class HierarchyEntityRepository extends BaseRepository {
         const children = groups[parentId];
 
         if (children) {
-          descendantIds.push(...getIds(children));
+          descendantIds.push(...map(children, 'id'));
 
           for (const child of children) {
             findChildren(child.id);

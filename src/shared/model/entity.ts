@@ -7,12 +7,8 @@ export enum EntityTypes {
   MaterialAnnotation,
 }
 
-export interface EntityRecord {
-  entityType: EntityTypes;
-  entityId: EntityId;
-}
-
 export type EntityId = string;
+
 export type EntityParentId = EntityId | null;
 
 export interface HierarchyEntity {
@@ -21,14 +17,14 @@ export interface HierarchyEntity {
 }
 
 export interface EntityLocator {
-  id: EntityId;
-  type: EntityTypes;
+  entityId: EntityId;
+  entityType: EntityTypes;
   mimeType?: string;
 }
 
 export const entitiesLocatorSchema = object({
-  type: nativeEnum(EntityTypes),
-  ids: array(string()),
+  entityType: nativeEnum(EntityTypes),
+  entityIds: array(string()),
 });
 
 export type EntitiesLocator = Infer<typeof entitiesLocatorSchema>;

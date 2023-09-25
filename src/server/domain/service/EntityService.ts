@@ -2,14 +2,14 @@ import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import groupBy from 'lodash/groupBy';
 import mapValues from 'lodash/mapValues';
 import intersectionBy from 'lodash/intersectionBy';
+import map from 'lodash/map';
 
-import { type EntityId, EntityTypes, EntityRecord, EntitiesLocator, EntityLocator } from 'model/entity';
+import { type EntityId, EntityTypes, EntitiesLocator, EntityLocator } from 'model/entity';
 
 import BaseService from './BaseService';
 import NoteService from './NoteService';
 import MaterialService from './MaterialService';
 import MemoService from './MemoService';
-import { getIds } from 'utils/collection';
 
 @Injectable()
 export default class EntityService extends BaseService {
@@ -17,7 +17,7 @@ export default class EntityService extends BaseService {
   @Inject(forwardRef(() => MaterialService)) private readonly materialService!: MaterialService;
   @Inject(forwardRef(() => MemoService)) private readonly memoService!: MemoService;
 
-  async assertAvailableEntities({ type, ids }: EntitiesLocator) {
+  async assertAvailableEntities({ entityType: type, entityIds: ids }: EntitiesLocator) {
     switch (type) {
       case EntityTypes.Note:
         return this.noteService.assertAvailableIds(ids);
@@ -30,7 +30,7 @@ export default class EntityService extends BaseService {
     }
   }
 
-  async getPath(entities: EntityRecord[]) {
+  async getPath(entities: EntityLocator[]) {
     const entitiesGroup = groupBy(entities, 'entityType');
     const ancestors: Record<EntityTypes.Note | EntityTypes.Material, Record<EntityId, EntityId[]>> = {
       [EntityTypes.Note]: {},
@@ -74,7 +74,7 @@ export default class EntityService extends BaseService {
     const result: T[] = [];
 
     for (const [type, _entities] of Object.entries(entitiesGroup)) {
-      const ids = getIds(_entities);
+      const ids = map(_entities, 'entityId');
       let availables: { id: string }[];
 
       switch (Number(type)) {
@@ -97,7 +97,7 @@ export default class EntityService extends BaseService {
     return result;
   }
 
-  async getEntityTitles(entities: EntityRecord[]) {
+  async getEntityTitles(entities: EntityLocator[]) {
     const entityTitles: Record<EntityTypes, Record<EntityId, string>> = {
       [EntityTypes.Note]: {},
       [EntityTypes.Memo]: {},

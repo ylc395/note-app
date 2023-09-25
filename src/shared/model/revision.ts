@@ -7,7 +7,7 @@ export interface RevisionVO {
 }
 
 export interface Revision {
-  entityId: EntityLocator['id'];
-  entityType: EntityLocator['type'];
+  entityId: EntityLocator['entityId'];
+  entityType: EntityLocator['entityType'];
   diff: string;
 }

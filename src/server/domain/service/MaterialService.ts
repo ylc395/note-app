@@ -1,6 +1,7 @@
 import uniq from 'lodash/uniq';
 import mapValues from 'lodash/mapValues';
 import omit from 'lodash/omit';
+import map from 'lodash/map';
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
 
 import {
@@ -20,7 +21,7 @@ import {
   isDirectory,
 } from 'model/material';
 import { EntityTypes } from 'model/entity';
-import { buildIndex, getIds, getLocators } from 'utils/collection';
+import { buildIndex, getLocators } from 'utils/collection';
 
 import BaseService from './BaseService';
 import ContentService from './ContentService';
@@ -50,7 +51,7 @@ export default class MaterialService extends BaseService {
   }
 
   private async toVOs(materials: Material[]) {
-    const parentIds = getIds(materials.filter(isDirectory));
+    const parentIds = map(materials.filter(isDirectory), 'id');
     const children = await this.repo.materials.findChildrenIds(parentIds, { isAvailable: true });
     const stars = await this.starService.getStarMap(getLocators(materials, EntityTypes.Note));
 
@@ -162,7 +163,11 @@ export default class MaterialService extends BaseService {
     await this.repo.materials.update(updated.materialId, { userUpdatedAt: updated.updatedAt });
 
     if (typeof patch.comment === 'string') {
-      this.contentService.processContent({ content: patch.comment, type: EntityTypes.Material, id: annotationId });
+      this.contentService.processContent({
+        content: patch.comment,
+        entityType: EntityTypes.Material,
+        entityId: annotationId,
+      });
     }
 
     return updated;

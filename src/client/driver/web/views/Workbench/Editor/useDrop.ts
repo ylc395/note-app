@@ -62,7 +62,7 @@ export default function useDrop(tile: Tile) {
         if (draggingItem instanceof EditorView) {
           moveEditor(draggingItem, tile);
         } else {
-          openEntity({ id: draggingItem.id, type: EntityTypes.Note });
+          openEntity({ entityId: draggingItem.id, entityType: EntityTypes.Note });
         }
         return;
       }
@@ -74,7 +74,7 @@ export default function useDrop(tile: Tile) {
       } else if (draggingItem instanceof EditorView) {
         moveEditor(draggingItem, { from: tile, splitDirection: d });
       } else {
-        openEntity({ id: draggingItem.id, type: EntityTypes.Note }, { direction: d, from: overItem });
+        openEntity({ entityId: draggingItem.id, entityType: EntityTypes.Note }, { direction: d, from: overItem });
       }
     },
     onDragMove: throttle(({ active }: DragMoveEvent) => {

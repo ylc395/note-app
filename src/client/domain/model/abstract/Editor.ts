@@ -43,6 +43,6 @@ export default abstract class EntityEditor<T = unknown> extends Emitter<CommonEd
   abstract readonly entityType: EntityTypes;
   protected abstract init(): void;
   toEntityLocator(): EntityLocator {
-    return { type: this.entityType, id: this.entityId };
+    return { entityType: this.entityType, entityId: this.entityId };
   }
 }

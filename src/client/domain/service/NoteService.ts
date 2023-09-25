@@ -1,5 +1,6 @@
 import { container, singleton } from 'tsyringe';
 import { Emitter } from 'strict-event-emitter';
+import map from 'lodash/map';
 
 import { token as remoteToken } from 'infra/remote';
 import { token as UIToken } from 'infra/ui';
@@ -17,7 +18,6 @@ import NoteTree from 'model/note/Tree';
 import { MULTIPLE_ICON_FLAG, type NoteMetadata } from 'model/note/MetadataForm';
 
 import EditorService from './EditorService';
-import { getIds } from 'utils/collection';
 import type { SelectEvent } from 'model/abstract/Tree';
 
 export enum NoteEvents {
@@ -71,7 +71,7 @@ export default class NoteService extends Emitter<{
     this.noteTree.toggleSelect(note.id);
 
     const { openEntity } = container.resolve(EditorService);
-    openEntity({ type: EntityTypes.Note, id: note.id });
+    openEntity({ entityType: EntityTypes.Note, entityId: note.id });
   };
 
   async duplicateNote(targetId: Note['id']) {
@@ -88,19 +88,19 @@ export default class NoteService extends Emitter<{
 
     if (!multiple && reason !== 'drag') {
       const { openEntity } = container.resolve(EditorService);
-      openEntity({ type: EntityTypes.Note, id: id });
+      openEntity({ entityType: EntityTypes.Note, entityId: id });
     }
   };
 
   async deleteNotes(ids: Note['id'][]) {
-    await this.remote.patch<RecyclablesDTO>(`/recyclables`, { ids, type: EntityTypes.Note });
+    await this.remote.patch<RecyclablesDTO>(`/recyclables`, { entityIds: ids, entityType: EntityTypes.Note });
     this.noteTree.removeNodes(ids);
     this.ui.feedback({ type: 'success', content: '已移至回收站' });
     this.emit(NoteEvents.Deleted, ids);
   }
 
   readonly moveNotes = async (targetId: Note['parentId'], ids?: Note['id'][]) => {
-    const _ids = ids || getIds(this.noteTree.selectedNodes);
+    const _ids = ids || map(this.noteTree.selectedNodes, 'id');
 
     const { body: updatedNotes } = await this.remote.patch<NotesPatch, Note[]>('/notes', {
       ids: _ids,
@@ -127,7 +127,7 @@ export default class NoteService extends Emitter<{
 
   async editNotes(metadata: NoteMetadata) {
     const { body: notes } = await this.remote.patch<NotesPatch, Note[]>('/notes', {
-      ids: getIds(this.noteTree.selectedNodes),
+      ids: map(this.noteTree.selectedNodes, 'id'),
       note: {
         ...metadata,
         isReadonly: metadata.isReadonly === 2 ? undefined : Boolean(metadata.isReadonly),

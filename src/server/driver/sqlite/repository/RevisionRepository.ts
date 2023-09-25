@@ -13,7 +13,7 @@ export default class SqliteRevisionRepository extends BaseRepository implements 
     return { id, createdAt, diff };
   }
 
-  async findAll({ type: entityType, id: entityId }: EntityLocator) {
+  async findAll({ entityType, entityId }: EntityLocator) {
     const result = await this.db
       .selectFrom(tableName)
       .where('entityType', '=', entityType)
@@ -25,12 +25,12 @@ export default class SqliteRevisionRepository extends BaseRepository implements 
     return result;
   }
 
-  async getLatestRevisionTime({ id, type }: EntityLocator) {
+  async getLatestRevisionTime({ entityId, entityType }: EntityLocator) {
     const row = await this.db
       .selectFrom(tableName)
       .select(['createdAt'])
-      .where('entityType', '=', type)
-      .where('entityId', '=', id)
+      .where('entityType', '=', entityType)
+      .where('entityId', '=', entityId)
       .orderBy('createdAt', 'asc')
       .executeTakeFirst();
 

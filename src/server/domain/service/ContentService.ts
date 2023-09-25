@@ -14,7 +14,7 @@ import {
   type Topic as TopicNode,
 } from 'infra/markdown/topic';
 import type { ContentUpdate, Link, Pos, Topic, TopicQuery, TopicVO } from 'model/content';
-import { EntityTypes, type EntityLocator, EntityRecord, EntityId } from 'model/entity';
+import { EntityTypes, type EntityLocator, EntityId } from 'model/entity';
 
 import BaseService from './BaseService';
 import EntityService from './EntityService';
@@ -27,7 +27,7 @@ export default class ContentService extends BaseService {
   enableAutoExtract() {
     this.tasks$
       .pipe(
-        groupBy$((v) => v.type === EntityTypes.Note),
+        groupBy$((v) => v.entityType === EntityTypes.Note),
         map((grouped$) => (grouped$.key ? grouped$.pipe(debounceTime(10 * 1000)) : grouped$)),
         mergeAll(),
       )
@@ -93,7 +93,9 @@ export default class ContentService extends BaseService {
 
         await this.transaction(async () => {
           await this.repo.contents.removeLinks(entity, 'from');
-          await this.repo.contents.createLinks(intersectionWith(links, targets, ({ to }, { id }) => to.id === id));
+          await this.repo.contents.createLinks(
+            intersectionWith(links, targets, ({ to }, { entityId: id }) => to.entityId === id),
+          );
         });
       },
     };

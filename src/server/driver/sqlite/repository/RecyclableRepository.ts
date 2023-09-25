@@ -11,7 +11,9 @@ export default class SqliteRecyclableRepository extends BaseRepository implement
   async batchCreate(entities: Recyclable[]) {
     const rows = await this.db
       .insertInto(tableName)
-      .values(entities.map(({ id, type, reason }) => ({ entityId: id, entityType: type, reason })))
+      .values(
+        entities.map(({ entityId: id, entityType: type, reason }) => ({ entityId: id, entityType: type, reason })),
+      )
       .returning(['entityId', 'entityType', 'deletedAt', 'reason'])
       .execute();
 
@@ -40,13 +42,13 @@ export default class SqliteRecyclableRepository extends BaseRepository implement
       return [];
     }
 
-    const ids = entities.map(({ id }) => id);
+    const ids = entities.map(({ entityId: id }) => id);
     const rows = await this.getCommonSql().where('entityId', 'in', ids).execute();
 
     return rows;
   }
 
-  async getHardDeletedRecord({ id: entityId, type: entityType }: EntityLocator) {
+  async getHardDeletedRecord({ entityId: entityId, entityType: entityType }: EntityLocator) {
     const row = await this.getCommonSql({ isHard: 1 })
       .where('entityId', '=', entityId)
       .where('entityType', '=', entityType)

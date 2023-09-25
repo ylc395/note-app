@@ -121,7 +121,7 @@ export default class SyncService extends BaseService {
     for await (const fileContent of this.syncTarget.list()) {
       const currentTime = Date.now();
       const { metadata: remoteEntity, content } = SyncService.deserialize(fileContent);
-      const entityLocator: EntityLocator = { type: remoteEntity.type, id: remoteEntity.id };
+      const entityLocator: EntityLocator = { entityType: remoteEntity.type, entityId: remoteEntity.id };
       const localEntity = await this.getLocalEntity(entityLocator);
 
       remoteEntities.push(entityLocator);
@@ -166,7 +166,8 @@ export default class SyncService extends BaseService {
     const localOnlyEntities = differenceWith(
       localEntities,
       remoteEntities,
-      (localEntity, remoteEntity) => localEntity.type === remoteEntity.type && localEntity.id === remoteEntity.id,
+      (localEntity, remoteEntity) =>
+        localEntity.entityType === remoteEntity.entityType && localEntity.entityId === remoteEntity.entityId,
     );
 
     for (const entity of localOnlyEntities) {
@@ -190,7 +191,7 @@ export default class SyncService extends BaseService {
     if (localEntity) {
       await this.syncTarget.putFile(
         localEntity.metadata.id,
-        SyncService.serialize(localEntity.metadata, { content: localEntity.content, type: locator.type }),
+        SyncService.serialize(localEntity.metadata, { content: localEntity.content, type: locator.entityType }),
       );
       await this.repo.synchronization.updateEntitySyncAt(locator, Date.now());
     }
@@ -209,11 +210,11 @@ export default class SyncService extends BaseService {
 
     await this.syncTarget.putFile(
       entity.metadata.id,
-      SyncService.serialize(entity.metadata, { content: entity.content, type: locator.type }),
+      SyncService.serialize(entity.metadata, { content: entity.content, type: locator.entityType }),
     );
   }
 
-  private async removeLocalEntity({ id, type }: EntityLocator) {
+  private async removeLocalEntity({ entityId: id, entityType: type }: EntityLocator) {
     switch (type) {
       case EntityTypes.Note:
         return await this.repo.notes.removeById(id);
@@ -260,7 +261,7 @@ export default class SyncService extends BaseService {
     }
   }
 
-  private async getLocalEntity({ type, id }: EntityLocator) {
+  private async getLocalEntity({ entityType: type, entityId: id }: EntityLocator) {
     let metadata: Note | Memo | null = null;
     let content: string | null = null;
 
@@ -326,8 +327,18 @@ export default class SyncService extends BaseService {
     const memos = await this.repo.memos.findAll(updatedAfter ? { updatedAfter } : undefined);
 
     return [
-      ...notes.map(({ id, createdAt, updatedAt }) => ({ id, type: EntityTypes.Note, createdAt, updatedAt })),
-      ...memos.map(({ id, createdAt, updatedAt }) => ({ id, createdAt, updatedAt, type: EntityTypes.Memo })),
+      ...notes.map(({ id, createdAt, updatedAt }) => ({
+        entityId: id,
+        entityType: EntityTypes.Note,
+        createdAt,
+        updatedAt,
+      })),
+      ...memos.map(({ id, createdAt, updatedAt }) => ({
+        entityId: id,
+        entityType: EntityTypes.Memo,
+        createdAt,
+        updatedAt,
+      })),
     ];
   }
 }

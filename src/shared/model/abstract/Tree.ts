@@ -1,11 +1,11 @@
 import { observable, action, computed, makeObservable } from 'mobx';
+import { Emitter } from 'strict-event-emitter';
 import pull from 'lodash/pull';
 import differenceWith from 'lodash/differenceWith';
 import groupBy from 'lodash/groupBy';
-import { Emitter } from 'strict-event-emitter';
+import map from 'lodash/map';
 
 import type { HierarchyEntity } from '../entity';
-import { getIds } from '../../utils/collection';
 
 export interface TreeNode<T = void> {
   readonly id: string;
@@ -135,7 +135,7 @@ export default abstract class Tree<E extends TreeNodeEntity = TreeNodeEntity, T 
       delete this.nodes[id];
 
       if (node.children) {
-        this.removeNodes(getIds(node.children));
+        this.removeNodes(map(node.children, 'id'));
       }
     }
   }
@@ -176,7 +176,10 @@ export default abstract class Tree<E extends TreeNodeEntity = TreeNodeEntity, T 
     const parentNode = this.getNode(parentId);
 
     if (parentNode.children) {
-      const toRemoveIds = getIds(differenceWith(parentNode.children, entities, (a, b) => a.id === b.id));
+      const toRemoveIds = map(
+        differenceWith(parentNode.children, entities, (a, b) => a.id === b.id),
+        'id',
+      );
       this.removeNodes(toRemoveIds);
     }
 
@@ -313,7 +316,7 @@ export default abstract class Tree<E extends TreeNodeEntity = TreeNodeEntity, T 
   updateInvalidTargetNodes(id?: TreeNode['id']) {
     this.resetUndroppable();
 
-    const selectedIds = id ? [id] : getIds(this.selectedNodes);
+    const selectedIds = id ? [id] : map(this.selectedNodes, 'id');
 
     for (const id of selectedIds) {
       const node = this.getNode(id);

@@ -1,11 +1,11 @@
 import type { infer as Infer } from 'zod';
-import { type EntityId, type EntityRecord, entitiesLocatorSchema } from './entity';
+import { type EntityId, type EntityLocator, entitiesLocatorSchema } from './entity';
 
 export const starsDTOSchema = entitiesLocatorSchema;
 
 export type StarsDTO = Infer<typeof starsDTOSchema>;
 
-export interface StarRecord extends EntityRecord {
+export interface StarRecord extends Omit<EntityLocator, 'mimeType'> {
   id: EntityId;
   title?: string;
 }

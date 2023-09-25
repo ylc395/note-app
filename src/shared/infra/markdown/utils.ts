@@ -49,7 +49,7 @@ export function parseUrl(url: string) {
     const result = matcher(`/${host}${path}`);
 
     if (result) {
-      return { type, id: result.params.id, fragmentId: hash?.slice(1) || '' };
+      return { entityType: type, entityId: result.params.id, fragmentId: hash?.slice(1) || '' };
     }
   }
 

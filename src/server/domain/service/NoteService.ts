@@ -2,8 +2,9 @@ import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import omit from 'lodash/omit';
 import uniq from 'lodash/uniq';
 import mapValues from 'lodash/mapValues';
+import map from 'lodash/map';
 
-import { buildIndex, getIds, getLocators } from 'utils/collection';
+import { buildIndex, getLocators } from 'utils/collection';
 import {
   type NoteVO,
   type NoteBodyDTO,
@@ -58,7 +59,7 @@ export default class NoteService extends BaseService {
       ...omit(targetNote, ['id', 'createdAt', 'updatedAt']),
     });
 
-    this.contentService.processContent({ content: targetNoteBody, id: newNote.id, type: EntityTypes.Note });
+    this.contentService.processContent({ content: targetNoteBody, entityId: newNote.id, entityType: EntityTypes.Note });
 
     return newNote;
   }
@@ -81,7 +82,7 @@ export default class NoteService extends BaseService {
       return result;
     });
 
-    this.contentService.processContent({ content, id: noteId, type: EntityTypes.Note });
+    this.contentService.processContent({ content, entityId: noteId, entityType: EntityTypes.Note });
 
     return content;
   }
@@ -100,7 +101,7 @@ export default class NoteService extends BaseService {
 
   private async toVOs(rawNotes: Note[]) {
     const stars = await this.starService.getStarMap(getLocators(rawNotes, EntityTypes.Note));
-    const _children = await this.repo.notes.findChildrenIds(getIds(rawNotes), { isAvailable: true });
+    const _children = await this.repo.notes.findChildrenIds(map(rawNotes, 'id'), { isAvailable: true });
 
     return rawNotes.map((note) => ({
       ...omit(note, ['userUpdatedAt']),

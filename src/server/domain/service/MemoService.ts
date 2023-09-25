@@ -1,8 +1,9 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import mapValues from 'lodash/mapValues';
 import omit from 'lodash/omit';
+import map from 'lodash/map';
 
-import { buildIndex, getIds, getLocators } from 'utils/collection';
+import { buildIndex, getLocators } from 'utils/collection';
 import type { Memo, NewMemo, MemoPatch, ClientMemoQuery, MemoVO } from 'model/memo';
 import { EntityTypes } from 'model/entity';
 
@@ -41,7 +42,7 @@ export default class MemoService extends BaseService {
     }
 
     if (typeof patch.content === 'string') {
-      this.contentService.processContent({ content: patch.content, id, type: EntityTypes.Memo });
+      this.contentService.processContent({ content: patch.content, entityId: id, entityType: EntityTypes.Memo });
     }
 
     return this.toVOs(updated);
@@ -69,7 +70,7 @@ export default class MemoService extends BaseService {
       orderBy: 'createdAt',
     });
 
-    const descantIds = await this.repo.memos.findDescendantIds(getIds(memos));
+    const descantIds = await this.repo.memos.findDescendantIds(map(memos, 'id'));
     const descantMemos = await this.repo.memos.findAll({ id: Object.values(descantIds).flat(), isAvailable: true });
 
     return this.toVOs([...memos, ...descantMemos]);

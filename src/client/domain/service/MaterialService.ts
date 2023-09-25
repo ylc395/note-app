@@ -92,7 +92,7 @@ export default class MaterialService {
 
     if (!multiple && !this.isDirectory(materialId)) {
       const { openEntity } = container.resolve(EditorService);
-      openEntity({ type: EntityTypes.Material, id: materialId, mimeType: node.attributes?.mimeType });
+      openEntity({ entityType: EntityTypes.Material, entityId: materialId, mimeType: node.attributes?.mimeType });
     }
   };
 

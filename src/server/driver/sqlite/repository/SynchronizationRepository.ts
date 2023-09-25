@@ -11,7 +11,7 @@ const LAST_SYNC_TIME_KEY = 'sync.lastSyncTime';
 export default class SqliteSynchronizationRepository extends BaseRepository implements SynchronizationRepository {
   protected readonly schema = syncEntitySchema;
   @Inject(kvDatabaseToken) private readonly kvDb!: KvDatabase;
-  async getEntitySyncAt({ id: entityId, type: entityType }: EntityLocator) {
+  async getEntitySyncAt({ entityId: entityId, entityType: entityType }: EntityLocator) {
     const row = await this.db
       .selectFrom(this.schema.tableName)
       .selectAll()
@@ -31,8 +31,8 @@ export default class SqliteSynchronizationRepository extends BaseRepository impl
     await this.kvDb.set(LAST_SYNC_TIME_KEY, String(time));
   }
 
-  async updateEntitySyncAt({ id: entityId, type: entityType }: EntityLocator, syncAt: number) {
-    const row = await this.getEntitySyncAt({ id: entityId, type: entityType });
+  async updateEntitySyncAt({ entityId, entityType }: EntityLocator, syncAt: number) {
+    const row = await this.getEntitySyncAt({ entityId, entityType });
 
     if (row) {
       await this.db

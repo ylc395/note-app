@@ -12,8 +12,8 @@ import EntityService from './EntityService';
 export default class StarService extends BaseService {
   @Inject(forwardRef(() => EntityService)) private readonly entityService!: EntityService;
 
-  async create({ type, ids }: EntitiesLocator) {
-    await this.entityService.assertAvailableEntities({ type, ids });
+  async create({ entityType: type, entityIds: ids }: EntitiesLocator) {
+    await this.entityService.assertAvailableEntities({ entityType: type, entityIds: ids });
 
     const locators = getLocators(ids, type);
 

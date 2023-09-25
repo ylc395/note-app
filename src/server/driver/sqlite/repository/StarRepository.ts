@@ -1,3 +1,5 @@
+import map from 'lodash/map';
+
 import type { EntityLocator } from 'model/entity';
 import type { StarRecord } from 'model/star';
 import type { StarRepository } from 'service/repository/StarRepository';
@@ -9,7 +11,11 @@ import { tableName as recyclableTableName } from '../schema/recyclable';
 export default class SqliteStarRepository extends BaseRepository implements StarRepository {
   readonly tableName = schema.tableName;
   async batchCreate(entities: EntityLocator[]) {
-    const rows = entities.map(({ id, type }) => ({ entityId: id, entityType: type, id: this.generateId() }));
+    const rows = entities.map(({ entityId, entityType }) => ({
+      entityId,
+      entityType,
+      id: this.generateId(),
+    }));
     const starRows = await this._batchCreate(this.tableName, rows);
 
     return starRows;
@@ -29,8 +35,7 @@ export default class SqliteStarRepository extends BaseRepository implements Star
     }
 
     if (entities) {
-      const ids = entities.map(({ id }) => id);
-      qb = qb.where(`${this.tableName}.entityId`, 'in', ids);
+      qb = qb.where(`${this.tableName}.entityId`, 'in', map(entities, 'id'));
     }
 
     return await qb.execute();

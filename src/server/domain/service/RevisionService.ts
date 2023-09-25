@@ -17,12 +17,12 @@ export default class RevisionService extends BaseService {
     this.revisionSubscription = this.contentService.tasks$.subscribe(this.createRevision);
   }
 
-  private readonly createRevision = async ({ content, id, type }: ContentUpdate) => {
-    if (!(await this.shouldCreate({ id, type }))) {
+  private readonly createRevision = async ({ content, entityId: id, entityType: type }: ContentUpdate) => {
+    if (!(await this.shouldCreate({ entityId: id, entityType: type }))) {
       return;
     }
 
-    const oldContent = await this.getOldContent({ id, type });
+    const oldContent = await this.getOldContent({ entityId: id, entityType: type });
     const diff = createPatch(`${type}-${id}`, oldContent || '', content);
     await this.repo.revisions.create({ entityId: id, entityType: type, diff });
   };
@@ -37,8 +37,8 @@ export default class RevisionService extends BaseService {
     return true;
   }
 
-  private async getOldContent({ id, type }: EntityLocator) {
-    const revisions = await this.repo.revisions.findAll({ id, type });
+  private async getOldContent({ entityId: id, entityType: type }: EntityLocator) {
+    const revisions = await this.repo.revisions.findAll({ entityId: id, entityType: type });
     let result = '';
 
     for (const { diff } of revisions) {
