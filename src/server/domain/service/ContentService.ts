@@ -1,10 +1,11 @@
-import { Subject, groupBy, map, debounceTime, mergeAll } from 'rxjs';
+import { Subject, groupBy as groupBy$, map, debounceTime, mergeAll } from 'rxjs';
 import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { visit } from 'unist-util-visit';
 import type { UnistNode } from 'unist-util-visit/lib';
 import type { Link as MdAstLinkNode } from 'mdast';
 import intersectionWith from 'lodash/intersectionWith';
+import groupBy from 'lodash/groupBy';
 
 import { is, parseUrl } from 'infra/markdown/utils';
 import {
@@ -12,8 +13,8 @@ import {
   tokenExtension as topicTokenExtension,
   type Topic as TopicNode,
 } from 'infra/markdown/topic';
-import type { ContentUpdate, Link, Topic } from 'model/content';
-import { EntityTypes, type EntityLocator } from 'model/entity';
+import type { ContentUpdate, Link, Pos, Topic, TopicQuery, TopicVO } from 'model/content';
+import { EntityTypes, type EntityLocator, EntityRecord, EntityId } from 'model/entity';
 
 import BaseService from './BaseService';
 import EntityService from './EntityService';
@@ -26,7 +27,7 @@ export default class ContentService extends BaseService {
   enableAutoExtract() {
     this.tasks$
       .pipe(
-        groupBy((v) => v.type === EntityTypes.Note),
+        groupBy$((v) => v.type === EntityTypes.Note),
         map((grouped$) => (grouped$.key ? grouped$.pipe(debounceTime(10 * 1000)) : grouped$)),
         mergeAll(),
       )
@@ -112,4 +113,50 @@ export default class ContentService extends BaseService {
   async processContent(update: ContentUpdate) {
     this.tasks$.next(update);
   }
+
+  async queryTopicNames() {
+    return this.repo.contents.findAllTopicNames({ orderBy: 'updatedAt' });
+  }
+
+  async queryTopics(q: TopicQuery) {
+    return [];
+    // const topics = await this.repo.contents.findAllTopics(q);
+    // const topicsGroup = groupBy(topics, 'name');
+    // const result: TopicVO[] = [];
+    // const entities = topics.map(({ id, type, pos }) => ({ entityId: id, entityType: type, pos }));
+    // const titles = await this.entityService.getEntityTitles(entities);
+    // const digests = await this.getDigests(entities);
+    // for (const [name, topics] of Object.entries(topicsGroup)) {
+    //   const topicVO: TopicVO = {
+    //     updatedAt: 0,
+    //     name,
+    //     entities: [],
+    //   };
+    //   for (const topic of topics) {
+    //     if (topic.createdAt > topicVO.updatedAt) {
+    //       topicVO.updatedAt = topic.createdAt;
+    //     }
+    //     topicVO.entities.push({
+    //       id: topic.id,
+    //       type: topic.type,
+    //       title: titles[topic.type][topic.id] || '',
+    //       ...digests[topic.type][topic.id],
+    //     });
+    //   }
+    //   result.push(topicVO);
+    // }
+    // return result;
+  }
+
+  // private async getDigests(entities: (EntityRecord & { pos: Pos })[]) {
+  //   const result: Record<EntityTypes, Record<EntityId, { digest: string; highlightPos: Pos }>> = {
+  //     [EntityTypes.Material]: {},
+  //     [EntityTypes.Note]: {},
+  //     [EntityTypes.MaterialAnnotation]: {},
+  //     [EntityTypes.Memo]: {},
+  //   };
+
+  //   for await (const { content, entityId, entityType, pos } of this.entityService.getContents(entities)) {
+  //   }
+  // }
 }

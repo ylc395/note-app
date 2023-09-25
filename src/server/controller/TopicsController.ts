@@ -1,15 +1,21 @@
 import { Controller } from '@nestjs/common';
 
-import { TopicQuerySchema, type TopicQuery, type TopicVO } from 'model/topic';
-import StarService from 'service/StarService';
+import { type TopicQuery, type TopicVO, topicQuerySchema } from 'model/content';
+import ContentService from 'service/ContentService';
+
 import { Get, createSchemaPipe, Query } from './decorators';
 
 @Controller()
 export default class TopicsController {
-  constructor(private starService: StarService) {}
+  constructor(private contentService: ContentService) {}
+
+  @Get('/topics/names')
+  async queryTopicNames(): Promise<string[]> {
+    return await this.contentService.queryTopicNames();
+  }
 
   @Get('/topics')
-  async queryAll(@Query(createSchemaPipe(TopicQuerySchema)) query: TopicQuery): Promise<TopicVO[]> {
-    return [];
+  async queryTopics(@Query(createSchemaPipe(topicQuerySchema)) q: TopicQuery): Promise<TopicVO[]> {
+    return await this.contentService.queryTopics(q);
   }
 }

@@ -47,4 +47,19 @@ export default class SqliteContentRepository extends BaseRepository implements C
   async removeTopics({ id, type }: EntityLocator) {
     await this.db.deleteFrom(topicSchema.tableName).where('entityId', '=', id).where('entityType', '=', type).execute();
   }
+
+  async findAllTopicNames() {
+    const rows = await this.db.selectFrom(topicSchema.tableName).select('name').distinct().execute();
+
+    return rows.map((row) => row.name);
+  }
+
+  async findAllTopics() {
+    const rows = await this.db.selectFrom(topicSchema.tableName).selectAll().execute();
+
+    return rows.map(({ position, entityId, entityType, ...row }) => {
+      const [start, end] = position.split(',');
+      return { ...row, id: entityId, type: entityType, pos: { start: Number(start), end: Number(end) } };
+    });
+  }
 }

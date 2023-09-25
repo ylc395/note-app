@@ -1,9 +1,7 @@
 import type { EntityLocator } from 'model/entity';
+import type { Pos } from 'shard/model/content';
 
-interface Pos {
-  start: number;
-  end: number;
-}
+export * from 'shard/model/content';
 
 export interface ContentUpdate extends EntityLocator {
   content: string;
