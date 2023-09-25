@@ -91,7 +91,7 @@ export default class MemoService extends BaseService {
     return Array.isArray(memos) ? memos.map(toVO) : toVO(memos);
   }
 
-  async getDigest(ids: MemoVO['id'][]) {
+  async getTitles(ids: MemoVO['id'][]) {
     const memos = await this.repo.memos.findAll({ id: ids });
     return mapValues(buildIndex(memos), ({ content }) => content.slice(0, 5));
   }

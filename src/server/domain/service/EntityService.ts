@@ -119,7 +119,7 @@ export default class EntityService extends BaseService {
           titles = await this.materialService.getTitles(ids);
           break;
         case EntityTypes.Memo:
-          titles = await this.memoService.getDigest(ids);
+          titles = await this.memoService.getTitles(ids);
           break;
         default:
           throw new Error('invalid type');
