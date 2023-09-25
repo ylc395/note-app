@@ -19,12 +19,10 @@ import {
 import { EntityTypes } from 'model/entity';
 
 import BaseService from './BaseService';
-import ContentService from './ContentService';
 import StarService from './StarService';
 
 @Injectable()
 export default class NoteService extends BaseService {
-  @Inject(forwardRef(() => ContentService)) private readonly contentService!: ContentService;
   @Inject(forwardRef(() => StarService)) private readonly starService!: StarService;
 
   async create(note: NewNoteDTO) {
@@ -59,7 +57,7 @@ export default class NoteService extends BaseService {
       ...omit(targetNote, ['id', 'createdAt', 'updatedAt']),
     });
 
-    this.contentService.processContent({ content: targetNoteBody, entityId: newNote.id, entityType: EntityTypes.Note });
+    // this.contentService.processContent({ content: targetNoteBody, entityId: newNote.id, entityType: EntityTypes.Note });
 
     return newNote;
   }
@@ -82,7 +80,7 @@ export default class NoteService extends BaseService {
       return result;
     });
 
-    this.contentService.processContent({ content, entityId: noteId, entityType: EntityTypes.Note });
+    // this.contentService.processContent({ content, entityId: noteId, entityType: EntityTypes.Note });
 
     return content;
   }

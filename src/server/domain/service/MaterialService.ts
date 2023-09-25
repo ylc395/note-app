@@ -24,12 +24,10 @@ import { EntityTypes } from 'model/entity';
 import { buildIndex, getLocators } from 'utils/collection';
 
 import BaseService from './BaseService';
-import ContentService from './ContentService';
 import StarService from './StarService';
 
 @Injectable()
 export default class MaterialService extends BaseService {
-  @Inject(forwardRef(() => ContentService)) private readonly contentService!: ContentService;
   @Inject(forwardRef(() => StarService)) private readonly starService!: StarService;
 
   async create(newMaterial: NewMaterialDTO) {
@@ -162,13 +160,13 @@ export default class MaterialService extends BaseService {
     }
     await this.repo.materials.update(updated.materialId, { userUpdatedAt: updated.updatedAt });
 
-    if (typeof patch.comment === 'string') {
-      this.contentService.processContent({
-        content: patch.comment,
-        entityType: EntityTypes.Material,
-        entityId: annotationId,
-      });
-    }
+    // if (typeof patch.comment === 'string') {
+    // this.contentService.processContent({
+    //   content: patch.comment,
+    //   entityType: EntityTypes.Material,
+    //   entityId: annotationId,
+    // });
+    // }
 
     return updated;
   }

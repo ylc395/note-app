@@ -30,3 +30,16 @@ export function createSchemaPipe<T>(schema: ZodType<T>): PipeTransform {
     },
   };
 }
+
+export function EnableOnly(type: 'ipc' | 'http') {
+  return (_: unknown, propertyKey: string, propertyDescriptor: PropertyDescriptor) => {
+    const origin = propertyDescriptor.value;
+    propertyDescriptor.value = function (...args: unknown[]) {
+      if ((type === 'http' && IS_IPC) || (type === 'ipc' && !IS_IPC)) {
+        throw new Error(`only enabled for ${type}`);
+      }
+
+      return origin.apply(this, args);
+    };
+  };
+}

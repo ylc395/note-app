@@ -1,22 +1,11 @@
 import { createPatch, applyPatch } from 'diff';
-import type { Subscription } from 'rxjs';
-import { Inject } from '@nestjs/common';
 
 import type { EntityLocator } from 'model/entity';
 import type { ContentUpdate } from 'model/content';
 
 import BaseService from './BaseService';
-import ContentService from './ContentService';
 
 export default class RevisionService extends BaseService {
-  private revisionSubscription?: Subscription;
-
-  @Inject() private readonly contentService!: ContentService;
-
-  enableAutoCreateRevision() {
-    this.revisionSubscription = this.contentService.tasks$.subscribe(this.createRevision);
-  }
-
   private readonly createRevision = async ({ content, entityId: id, entityType: type }: ContentUpdate) => {
     if (!(await this.shouldCreate({ entityId: id, entityType: type }))) {
       return;

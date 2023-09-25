@@ -8,12 +8,10 @@ import type { Memo, NewMemo, MemoPatch, ClientMemoQuery, MemoVO } from 'model/me
 import { EntityTypes } from 'model/entity';
 
 import BaseService from './BaseService';
-import ContentService from './ContentService';
 import StarService from './StarService';
 
 @Injectable()
 export default class MemoService extends BaseService {
-  @Inject(forwardRef(() => ContentService)) private readonly contentService!: ContentService;
   @Inject(forwardRef(() => StarService)) private readonly starService!: StarService;
 
   async create(memo: NewMemo) {
@@ -41,9 +39,9 @@ export default class MemoService extends BaseService {
       throw new Error('wrong id');
     }
 
-    if (typeof patch.content === 'string') {
-      this.contentService.processContent({ content: patch.content, entityId: id, entityType: EntityTypes.Memo });
-    }
+    // if (typeof patch.content === 'string') {
+    //   this.contentService.processContent({ content: patch.content, entityId: id, entityType: EntityTypes.Memo });
+    // }
 
     return this.toVOs(updated);
   }

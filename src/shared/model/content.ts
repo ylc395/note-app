@@ -1,24 +1,24 @@
 import { object, string, type infer as Infer } from 'zod';
 import type { EntityLocator } from './entity';
 
-export interface Pos {
+export interface HighlightPosition {
   start: number;
   end: number;
 }
 
-interface EntityWithDigest extends EntityLocator {
+export interface EntityWithSnippet extends EntityLocator {
   title: string;
-  digest: string;
-  highlightPos: Pos;
+  snippet: string;
+  highlight: HighlightPosition;
 }
 
 export interface TopicVO {
   name: string;
   updatedAt: number;
-  entities: EntityWithDigest[];
+  entities: EntityWithSnippet[];
 }
 
-export type LinkFromVO = EntityWithDigest;
+export type LinkFromVO = EntityWithSnippet;
 
 export const topicQuerySchema = object({ name: string() });
 

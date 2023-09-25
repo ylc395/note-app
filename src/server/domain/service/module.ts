@@ -1,4 +1,4 @@
-import { Global, Module, type OnApplicationBootstrap } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 
 import NoteService from './NoteService';
 import RecyclableService from './RecyclableService';
@@ -31,10 +31,4 @@ const services = [
   providers: services,
   exports: services,
 })
-export default class ServiceModule implements OnApplicationBootstrap {
-  constructor(private readonly contentService: ContentService, private readonly revisionService: RevisionService) {}
-  onApplicationBootstrap() {
-    this.contentService.enableAutoExtract();
-    this.revisionService.enableAutoCreateRevision();
-  }
-}
+export default class ServiceModule {}

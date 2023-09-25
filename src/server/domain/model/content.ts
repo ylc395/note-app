@@ -1,5 +1,5 @@
 import type { EntityLocator } from 'model/entity';
-import type { Pos } from 'shard/model/content';
+import type { HighlightPosition } from 'shard/model/content';
 
 export * from 'shard/model/content';
 
@@ -8,7 +8,7 @@ export interface ContentUpdate extends EntityLocator {
 }
 
 interface LinkFrom extends EntityLocator {
-  pos: Pos;
+  position: HighlightPosition;
 }
 
 interface LinkTo extends EntityLocator {
@@ -23,6 +23,8 @@ export interface Link {
 
 export interface Topic extends EntityLocator {
   name: string;
-  pos: Pos;
+  position: HighlightPosition;
   createdAt: number;
 }
+
+export type TopicDTO = Omit<Topic, 'createdAt'>;

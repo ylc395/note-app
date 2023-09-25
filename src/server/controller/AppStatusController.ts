@@ -3,7 +3,7 @@ import { Controller, Inject } from '@nestjs/common';
 import { type AppServerDTO, type AppServerStatus, appServerDTOSchema } from 'model/app';
 import { token as runtimeToken } from 'infra/Runtime';
 import type Runtime from 'infra/Runtime';
-import { Body, Get, Post, createSchemaPipe } from './decorators';
+import { Body, EnableOnly, Get, Post, createSchemaPipe } from './decorators';
 
 @Controller()
 export default class AppStatusController {
@@ -14,6 +14,7 @@ export default class AppStatusController {
     return;
   }
 
+  @EnableOnly('ipc')
   @Post('/app/httpServer')
   async bootstrapHttpServer(
     @Body(createSchemaPipe(appServerDTOSchema)) { isOnline }: AppServerDTO,
@@ -25,12 +26,9 @@ export default class AppStatusController {
     return await this.runtime.toggleHttpServer(isOnline);
   }
 
+  @EnableOnly('ipc')
   @Get('/app/token')
   async getToken(): Promise<string> {
-    if (!this.runtime.isMain()) {
-      throw new Error('can not get token');
-    }
-
     return await this.runtime.getAppToken();
   }
 }

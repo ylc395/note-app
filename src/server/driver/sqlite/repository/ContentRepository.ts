@@ -13,7 +13,7 @@ export default class SqliteContentRepository extends BaseRepository implements C
       links.map(({ from, to, createdAt }) => ({
         fromEntityId: from.entityId,
         fromEntityType: from.entityType,
-        fromFragmentPosition: `${from.pos.start},${from.pos.end}` satisfies LinkRow['fromFragmentPosition'],
+        fromFragmentPosition: `${from.position.start},${from.position.end}` satisfies LinkRow['fromFragmentPosition'],
         toEntityId: to.entityId,
         toEntityType: to.entityType,
         toFragmentId: to.fragmentId,
@@ -35,11 +35,8 @@ export default class SqliteContentRepository extends BaseRepository implements C
     await this._batchCreate(
       topicSchema.tableName,
       topics.map((topic) => ({
-        entityId: topic.entityId,
-        entityType: topic.entityType,
-        name: topic.name,
-        position: `${topic.pos.start},${topic.pos.end}` satisfies TopicRow['position'],
-        createdAt: topic.createdAt,
+        ...topic,
+        position: `${topic.position.start},${topic.position.end}` satisfies TopicRow['position'],
       })),
     );
   }
@@ -59,7 +56,7 @@ export default class SqliteContentRepository extends BaseRepository implements C
 
     return rows.map(({ position, ...row }) => {
       const [start, end] = position.split(',');
-      return { ...row, pos: { start: Number(start), end: Number(end) } };
+      return { ...row, position: { start: Number(start), end: Number(end) } };
     });
   }
 }
