@@ -3,6 +3,7 @@ import type { ZodType } from 'zod';
 
 import { InvalidInputError } from 'model/Error';
 import { IS_IPC } from 'infra/Runtime';
+import { IS_DEV } from 'infra/constants';
 import * as ipcDecorators from 'driver/electron/decorators';
 import * as httpDecorators from 'driver/localHttpServer/decorators';
 
@@ -20,13 +21,17 @@ export const Request = IS_IPC ? ipcDecorators.Request : httpDecorators.Request;
 export function createSchemaPipe<T>(schema: ZodType<T>): PipeTransform {
   return {
     transform(value: unknown) {
-      const result = schema.safeParse(value);
+      if (IS_DEV || !IS_IPC) {
+        const result = schema.safeParse(value);
 
-      if (!result.success) {
-        throw InvalidInputError.fromZodError(result.error);
+        if (!result.success) {
+          throw InvalidInputError.fromZodError(result.error);
+        }
+
+        return result.data;
       }
 
-      return result.data;
+      return value;
     },
   };
 }

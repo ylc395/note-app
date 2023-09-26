@@ -5,6 +5,8 @@ import type { UnistNode } from 'unist-util-visit/lib';
 import type { Link as MdAstLinkNode } from 'mdast';
 import intersectionWith from 'lodash/intersectionWith';
 import groupBy from 'lodash/groupBy';
+import uniqBy from 'lodash/uniqBy';
+import map from 'lodash/map';
 
 import { is, parseUrl } from 'infra/markdown/utils';
 import {
@@ -21,6 +23,8 @@ import type {
   TopicQuery,
   TopicVO,
   TopicDTO,
+  LinkDTO,
+  LinkToQuery,
 } from 'model/content';
 import { EntityTypes, type EntityLocator, EntityId } from 'model/entity';
 
@@ -150,6 +154,20 @@ export default class ContentService extends BaseService {
     return result;
   }
 
+  async queryLinkTos(q: LinkToQuery) {
+    const links = await this.repo.contents.findAllLinkTos(q);
+    const froms = map(links, 'from');
+    const snippets = await this.getSnippets(froms);
+    const titles = await this.entityService.getEntityTitles(froms);
+
+    return froms.map(({ entityId, entityType, position }) => ({
+      entityId,
+      entityType,
+      title: titles[entityType][entityId]!,
+      ...snippets[entityType][entityId]![`${position.start},${position.end}`]!,
+    }));
+  }
+
   private async getSnippets(entities: (EntityLocator & { position: HighlightPosition })[]) {
     const result: Record<
       EntityTypes,
@@ -182,8 +200,42 @@ export default class ContentService extends BaseService {
 
   async createTopics(topics: TopicDTO[]) {
     const createdAt = Date.now();
-    const _topics = topics.map((topic) => ({ ...topic, createdAt }));
-    await this.repo.contents.createTopics(_topics);
+
+    for (const [type, entities] of Object.entries(groupBy(topics, 'entityType'))) {
+      await this.entityService.assertAvailableEntities({
+        entityType: Number(type),
+        entityIds: map(entities, 'id'),
+      });
+    }
+
+    await this.transaction(async () => {
+      const _topics = topics.map((topic) => ({ ...topic, createdAt }));
+
+      for (const topic of uniqBy(topics, 'entityId')) {
+        await this.repo.contents.removeTopics(topic);
+      }
+      await this.repo.contents.createTopics(_topics);
+    });
+  }
+
+  async createLinks(links: LinkDTO[]) {
+    const createdAt = Date.now();
+    const _links = links.map((link) => ({ ...link, createdAt }));
+    const entityGroups = Object.entries(groupBy([...map(links, 'from'), ...map(links, 'to')], 'entityType'));
+
+    for (const [type, entities] of entityGroups) {
+      await this.entityService.assertAvailableEntities({
+        entityType: Number(type),
+        entityIds: map(entities, 'id'),
+      });
+    }
+
+    await this.transaction(async () => {
+      for (const link of uniqBy(map(links, 'from'), 'entityId')) {
+        await this.repo.contents.removeLinks(link, 'from');
+      }
+      await this.repo.contents.createLinks(_links);
+    });
   }
 
   private static extractSnippet(content: string, pos: HighlightPosition) {

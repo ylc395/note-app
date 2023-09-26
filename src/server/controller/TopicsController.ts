@@ -1,9 +1,9 @@
 import { Controller } from '@nestjs/common';
 
-import { type TopicQuery, type TopicVO, topicQuerySchema, TopicDTO } from 'model/content';
+import { type TopicVO, type TopicDTO, topicsDTOSchema } from 'model/content';
 import ContentService from 'service/ContentService';
 
-import { Get, createSchemaPipe, Query, Patch, Body, EnableOnly } from './decorators';
+import { Get, Patch, Body, EnableOnly, createSchemaPipe, Param } from './decorators';
 
 @Controller()
 export default class TopicsController {
@@ -14,14 +14,14 @@ export default class TopicsController {
     return await this.contentService.queryTopicNames();
   }
 
-  @Get('/topics')
-  async queryTopics(@Query(createSchemaPipe(topicQuerySchema)) q: TopicQuery): Promise<TopicVO[]> {
-    return await this.contentService.queryTopics(q);
+  @Get('/topics/:name')
+  async queryTopics(@Param('name') name: string): Promise<TopicVO[]> {
+    return await this.contentService.queryTopics({ name });
   }
 
   @EnableOnly('ipc')
   @Patch('/topics')
-  async createTopics(@Body() topics: TopicDTO[]): Promise<void> {
+  async createTopics(@Body(createSchemaPipe(topicsDTOSchema)) topics: TopicDTO[]): Promise<void> {
     return await this.contentService.createTopics(topics);
   }
 }

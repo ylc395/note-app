@@ -1,4 +1,4 @@
-import type { Link, Topic } from 'model/content';
+import type { Link, LinkDirection, LinkToQuery, Topic } from 'model/content';
 import type { EntityLocator } from 'model/entity';
 import type { ContentRepository } from 'service/repository/ContentRepository';
 
@@ -13,7 +13,7 @@ export default class SqliteContentRepository extends BaseRepository implements C
       links.map(({ from, to, createdAt }) => ({
         fromEntityId: from.entityId,
         fromEntityType: from.entityType,
-        fromFragmentPosition: `${from.position.start},${from.position.end}` satisfies LinkRow['fromFragmentPosition'],
+        fromPosition: `${from.position.start},${from.position.end}` satisfies LinkRow['fromPosition'],
         toEntityId: to.entityId,
         toEntityType: to.entityType,
         toFragmentId: to.fragmentId,
@@ -22,13 +22,37 @@ export default class SqliteContentRepository extends BaseRepository implements C
     );
   }
 
-  async removeLinks({ entityId: id, entityType: type }: EntityLocator, _type: 'from' | 'to') {
+  async removeLinks({ entityId: id, entityType: type }: EntityLocator, direction: LinkDirection) {
     await this.db
       .deleteFrom(linkSchema.tableName)
       .where((eb) =>
-        eb.and(_type === 'to' ? { toEntityId: id, toEntityType: type } : { fromEntityId: id, fromEntityType: type }),
+        eb.and(
+          direction === 'to' ? { toEntityId: id, toEntityType: type } : { fromEntityId: id, fromEntityType: type },
+        ),
       )
       .execute();
+  }
+
+  async findAllLinkTos(q: LinkToQuery) {
+    const rows = await this.db
+      .selectFrom(linkSchema.tableName)
+      .selectAll()
+      .where((eb) => eb.and({ toEntityId: q.entityId, toEntityType: q.entityType }))
+      .execute();
+
+    return rows.map((row) => {
+      const [start, end] = row.fromPosition.split(',');
+
+      return {
+        createdAt: row.createdAt,
+        from: {
+          entityId: row.fromEntityId,
+          entityType: row.fromEntityType,
+          position: { start: Number(start), end: Number(end) },
+        },
+        to: { entityId: row.toEntityId, entityType: row.toEntityType, fragmentId: row.toFragmentId },
+      };
+    });
   }
 
   async createTopics(topics: Topic[]) {

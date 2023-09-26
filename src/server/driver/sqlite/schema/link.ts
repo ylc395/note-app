@@ -4,7 +4,7 @@ import type { EntityTypes } from 'model/entity';
 export interface Row {
   fromEntityId: string;
   fromEntityType: EntityTypes;
-  fromFragmentPosition: `${number},${number}`;
+  fromPosition: `${number},${number}`;
   toEntityId: string;
   toEntityType: EntityTypes;
   toFragmentId: string;
@@ -20,7 +20,7 @@ export default {
       .createTable(tableName)
       .addColumn('fromEntityType', 'integer', (col) => col.notNull())
       .addColumn('fromEntityId', 'text', (col) => col.notNull())
-      .addColumn('fromFragmentPosition', 'text', (col) => col.notNull())
+      .addColumn('fromPosition', 'text', (col) => col.notNull())
       .addColumn('toEntityType', 'integer', (col) => col.notNull())
       .addColumn('toEntityId', 'text', (col) => col.notNull())
       .addColumn('toFragmentId', 'text', (col) => col.notNull())

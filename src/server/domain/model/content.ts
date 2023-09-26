@@ -1,30 +1,21 @@
 import type { EntityLocator } from 'model/entity';
-import type { HighlightPosition } from 'shard/model/content';
+import type { TopicDTO, LinkDTO } from 'shard/model/content';
 
 export * from 'shard/model/content';
 
 export interface ContentUpdate extends EntityLocator {
   content: string;
+  updatedAt?: number;
 }
 
-interface LinkFrom extends EntityLocator {
-  position: HighlightPosition;
-}
-
-interface LinkTo extends EntityLocator {
-  fragmentId: string;
-}
-
-export interface Link {
-  from: LinkFrom;
-  to: LinkTo;
+export interface Link extends LinkDTO {
   createdAt: number;
 }
 
-export interface Topic extends EntityLocator {
+export interface Topic extends TopicDTO {
+  createdAt: number;
+}
+
+export interface TopicQuery {
   name: string;
-  position: HighlightPosition;
-  createdAt: number;
 }
-
-export type TopicDTO = Omit<Topic, 'createdAt'>;

@@ -16,11 +16,13 @@ export interface HierarchyEntity {
   parentId: EntityParentId;
 }
 
-export interface EntityLocator {
-  entityId: EntityId;
-  entityType: EntityTypes;
-  mimeType?: string;
-}
+export const entityLocatorSchema = object({
+  entityId: string(),
+  entityType: nativeEnum(EntityTypes),
+  mimeType: string().optional(),
+});
+
+export type EntityLocator = Infer<typeof entityLocatorSchema>;
 
 export const entitiesLocatorSchema = object({
   entityType: nativeEnum(EntityTypes),
