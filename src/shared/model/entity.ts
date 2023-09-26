@@ -19,7 +19,6 @@ export interface HierarchyEntity {
 export const entityLocatorSchema = object({
   entityId: string(),
   entityType: nativeEnum(EntityTypes),
-  mimeType: string().optional(),
 });
 
 export type EntityLocator = Infer<typeof entityLocatorSchema>;

@@ -12,7 +12,8 @@
       "web/*": ["driver/web/*"],
       "utils/*": ["../shared/utils/*"],
       "components/*": ["../shared/components/*", "driver/web/components/*"],
-      "infra/*": ["domain/infra/*", "../shared/infra/*"]
+      "infra/*": ["domain/infra/*", "../shared/infra/*"],
+      "shard/*": ["../shared/*"]
     }
   }
 }
