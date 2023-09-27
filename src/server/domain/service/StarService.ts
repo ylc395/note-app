@@ -1,9 +1,8 @@
 import { Inject, Injectable, forwardRef } from '@nestjs/common';
-import {} from 'lodash/mapValues';
 
-import type { EntitiesLocator, EntityLocator } from 'model/entity';
+import type { EntityLocator } from 'model/entity';
 import type { StarRecord } from 'model/star';
-import { getLocators, buildIndex } from 'utils/collection';
+import { buildIndex } from 'utils/collection';
 
 import BaseService from './BaseService';
 import EntityService from './EntityService';
@@ -12,16 +11,14 @@ import EntityService from './EntityService';
 export default class StarService extends BaseService {
   @Inject(forwardRef(() => EntityService)) private readonly entityService!: EntityService;
 
-  async create({ entityType: type, entityIds: ids }: EntitiesLocator) {
-    await this.entityService.assertAvailableEntities({ entityType: type, entityIds: ids });
+  async create(entities: EntityLocator[]) {
+    await this.entityService.assertAvailableEntities(entities);
 
-    const locators = getLocators(ids, type);
-
-    if ((await this.repo.stars.findAllByLocators(locators)).length > 0) {
+    if ((await this.repo.stars.findAllByLocators(entities)).length > 0) {
       throw new Error('already exist');
     }
 
-    return await this.repo.stars.batchCreate(locators);
+    return await this.repo.stars.batchCreate(entities);
   }
 
   async query() {

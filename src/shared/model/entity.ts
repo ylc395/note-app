@@ -1,4 +1,4 @@
-import { array, nativeEnum, object, string, infer as Infer } from 'zod';
+import { nativeEnum, object, string, infer as Infer } from 'zod';
 
 export enum EntityTypes {
   Note = 1,
@@ -22,10 +22,3 @@ export const entityLocatorSchema = object({
 });
 
 export type EntityLocator = Infer<typeof entityLocatorSchema>;
-
-export const entitiesLocatorSchema = object({
-  entityType: nativeEnum(EntityTypes),
-  entityIds: array(string()),
-});
-
-export type EntitiesLocator = Infer<typeof entitiesLocatorSchema>;

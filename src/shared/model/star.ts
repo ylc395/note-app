@@ -1,7 +1,7 @@
 import type { infer as Infer } from 'zod';
-import { type EntityId, type EntityLocator, entitiesLocatorSchema } from './entity';
+import { type EntityId, type EntityLocator, entityLocatorSchema } from './entity';
 
-export const starsDTOSchema = entitiesLocatorSchema;
+export const starsDTOSchema = entityLocatorSchema.array();
 
 export type StarsDTO = Infer<typeof starsDTOSchema>;
 

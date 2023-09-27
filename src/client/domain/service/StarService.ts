@@ -4,8 +4,9 @@ import { observable, makeObservable, runInAction, action } from 'mobx';
 import pull from 'lodash/pull';
 
 import { token as remoteToken } from 'infra/remote';
-import type { EntitiesLocator, EntityId, EntityLocator, EntityTypes } from 'model/entity';
+import type { EntityId, EntityLocator, EntityTypes } from 'model/entity';
 import type { StarRecord, StarsDTO } from 'model/star';
+import { getLocators } from 'utils/collection';
 
 export enum StarEvents {
   Added = 'star.added',
@@ -15,7 +16,7 @@ export enum StarEvents {
 // todo: 能够收藏具体段落
 @singleton()
 export default class StarService extends Emitter<{
-  [StarEvents.Added]: [EntitiesLocator];
+  [StarEvents.Added]: [EntityLocator[]];
   [StarEvents.Removed]: [EntityLocator];
 }> {
   constructor() {
@@ -27,8 +28,9 @@ export default class StarService extends Emitter<{
   @observable stars?: Required<StarRecord>[];
 
   async star(entityType: EntityTypes, entityIds: EntityId[]) {
-    await this.remote.patch<StarsDTO, StarRecord[]>('/stars', { entityType, entityIds });
-    this.emit(StarEvents.Added, { entityType, entityIds });
+    const entities = getLocators(entityIds, entityType);
+    await this.remote.patch<StarsDTO, StarRecord[]>('/stars', entities);
+    this.emit(StarEvents.Added, entities);
   }
 
   @action

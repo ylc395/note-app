@@ -4,7 +4,7 @@ import mapValues from 'lodash/mapValues';
 import intersectionBy from 'lodash/intersectionBy';
 import map from 'lodash/map';
 
-import { type EntityId, EntityTypes, EntitiesLocator, EntityLocator } from 'model/entity';
+import { type EntityId, EntityTypes, EntityLocator } from 'model/entity';
 
 import BaseService from './BaseService';
 import NoteService from './NoteService';
@@ -17,16 +17,25 @@ export default class EntityService extends BaseService {
   @Inject(forwardRef(() => MaterialService)) private readonly materialService!: MaterialService;
   @Inject(forwardRef(() => MemoService)) private readonly memoService!: MemoService;
 
-  async assertAvailableEntities({ entityType: type, entityIds: ids }: EntitiesLocator) {
-    switch (type) {
-      case EntityTypes.Note:
-        return this.noteService.assertAvailableIds(ids);
-      case EntityTypes.Material:
-        return this.materialService.assertAvailableIds(ids);
-      case EntityTypes.Memo:
-        return this.memoService.assertAvailableIds(ids);
-      default:
-        throw new Error('invalid type');
+  async assertAvailableEntities(entities: EntityLocator[]) {
+    const entitiesGroup = groupBy(entities, 'entityType');
+
+    for (const [type, _entities] of Object.entries(entitiesGroup)) {
+      const ids = map(_entities, 'entityId');
+
+      switch (Number(type)) {
+        case EntityTypes.Note:
+          await this.noteService.assertAvailableIds(ids);
+          break;
+        case EntityTypes.Material:
+          await this.materialService.assertAvailableIds(ids);
+          break;
+        case EntityTypes.Memo:
+          await this.memoService.assertAvailableIds(ids);
+          break;
+        default:
+          throw new Error('invalid type');
+      }
     }
   }
 

@@ -45,7 +45,11 @@ export default class SqliteSearchEngine implements SearchEngine {
         throw new Error('more than one type');
       }
 
-      descantIds = await this.sqliteDb.getRepository('entities').findDescendantIds(types[0]!, [q.root]);
+      const descants = await this.sqliteDb
+        .getRepository('entities')
+        .findDescendantIds([{ entityType: EntityTypes.Note, entityId: q.root }]);
+
+      descantIds = descants[EntityTypes.Note][q.root];
     }
 
     let searchResult = (

@@ -1,7 +1,7 @@
 import type { infer as Infer } from 'zod';
-import { entitiesLocatorSchema, type EntityLocator } from './entity';
+import { entityLocatorSchema, type EntityLocator } from './entity';
 
-export const RecyclablesDTOSchema = entitiesLocatorSchema;
+export const RecyclablesDTOSchema = entityLocatorSchema.array();
 
 export type RecyclablesDTO = Infer<typeof RecyclablesDTOSchema>;
 

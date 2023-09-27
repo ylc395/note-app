@@ -1,7 +1,7 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import differenceWith from 'lodash/differenceWith';
 
-import type { EntitiesLocator } from 'model/entity';
+import type { EntityLocator } from 'model/entity';
 import { RecycleReason } from 'model/recyclables';
 import { getLocators } from 'utils/collection';
 
@@ -12,17 +12,19 @@ import EntityService from './EntityService';
 export default class RecyclableService extends BaseService {
   @Inject(forwardRef(() => EntityService)) private readonly entityService!: EntityService;
 
-  async create({ entityType, entityIds }: EntitiesLocator) {
-    await this.entityService.assertAvailableEntities({ entityType, entityIds });
-    const descants = await this.repo.entities.findDescendantIds(entityType, entityIds);
-    const recyclables = await this.repo.recyclables.findAllByLocators(
-      getLocators([...entityIds, ...descants], entityType),
-    );
+  async create(entities: EntityLocator[]) {
+    await this.entityService.assertAvailableEntities(entities);
 
+    const descantIds = await this.repo.entities.findDescendantIds(entities);
+    const descants = Object.entries(descantIds)
+      .map(([type, ids]) => getLocators(Object.values(ids).flat(), Number(type)))
+      .flat();
+
+    const recyclables = await this.repo.recyclables.findAllByLocators([...entities, ...descants]);
     const newRecyclables = differenceWith(
       [
-        ...entityIds.map((entityId) => ({ entityId, entityType, reason: RecycleReason.Direct })),
-        ...descants.map((entityId) => ({ entityId, entityType, reason: RecycleReason.Cascade })),
+        ...entities.map((entity) => ({ ...entity, reason: RecycleReason.Direct })),
+        ...descants.map((entity) => ({ ...entity, reason: RecycleReason.Cascade })),
       ],
       recyclables,
       ({ entityId: id, entityType: type }, { entityId, entityType }) => id === entityId && type === entityType,
@@ -30,6 +32,15 @@ export default class RecyclableService extends BaseService {
 
     const created = await this.repo.recyclables.batchCreate(newRecyclables);
     this.eventBus.emit('recyclableCreated', created);
+  }
+
+  async remove(entity: EntityLocator) {
+    if ((await this.repo.recyclables.findAllByLocators([entity], RecycleReason.Direct)).length === 0) {
+      throw new Error('invalid entity');
+    }
+
+    await this.repo.recyclables.batchRemove([entity]);
+    this.eventBus.emit('recyclableRemoved', entity);
   }
 
   async query() {

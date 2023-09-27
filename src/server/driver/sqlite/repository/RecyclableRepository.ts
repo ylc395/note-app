@@ -1,3 +1,4 @@
+import map from 'lodash/map';
 import type { EntityLocator } from 'model/entity';
 import type { RecycleReason, Recyclable } from 'model/recyclables';
 import type { RecyclablesRepository } from 'service/repository/RecyclableRepository';
@@ -20,6 +21,10 @@ export default class SqliteRecyclableRepository extends BaseRepository implement
     return rows;
   }
 
+  async batchRemove(entities: EntityLocator[]) {
+    await this.db.deleteFrom(tableName).where('entityId', 'in', map(entities, 'entityId')).execute();
+  }
+
   private getCommonSql(query?: { isHard?: 0 | 1; reason?: RecycleReason }) {
     let sql = this.db
       .selectFrom(tableName)
@@ -37,13 +42,13 @@ export default class SqliteRecyclableRepository extends BaseRepository implement
     return await this.getCommonSql({ reason }).execute();
   }
 
-  async findAllByLocators(entities: EntityLocator[]) {
+  async findAllByLocators(entities: EntityLocator[], reason?: RecycleReason) {
     if (entities.length === 0) {
       return [];
     }
 
-    const ids = entities.map(({ entityId: id }) => id);
-    const rows = await this.getCommonSql().where('entityId', 'in', ids).execute();
+    const ids = map(entities, 'entityId');
+    const rows = await this.getCommonSql({ reason }).where('entityId', 'in', ids).execute();
 
     return rows;
   }

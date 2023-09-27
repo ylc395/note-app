@@ -13,24 +13,48 @@ export default class SqliteEntityRepository extends BaseRepository implements En
   private readonly materials = new SqliteMaterialRepository(this.db);
   private readonly memos = new SqliteMemoRepository(this.db);
 
-  async findDescendantIds(type: EntityTypes, ids: EntityId[]) {
-    let descants: Record<EntityId, EntityId[]> = {};
+  async findDescendantIds(entities: EntityLocator[]) {
+    const entitiesGroup = groupBy(entities, 'entityType');
+    const result: Record<EntityTypes, Record<EntityId, EntityId[]>> = {
+      [EntityTypes.Note]: {},
+      [EntityTypes.Memo]: {},
+      [EntityTypes.Material]: {},
+      [EntityTypes.MaterialAnnotation]: {},
+    };
 
-    switch (type) {
-      case EntityTypes.Note:
-        descants = await this.notes.findDescendantIds(ids);
-        break;
-      case EntityTypes.Material:
-        descants = await this.materials.findDescendantIds(ids);
-        break;
-      case EntityTypes.Memo:
-        descants = await this.memos.findDescendantIds(ids);
-        break;
-      default:
-        break;
+    for (const [type, _entities] of Object.entries(entitiesGroup)) {
+      let descants: Record<EntityId, EntityId[]> = {};
+      const ids = map(_entities, 'entityId');
+
+      switch (Number(type)) {
+        case EntityTypes.Note:
+          descants = await this.notes.findDescendantIds(ids);
+          break;
+        case EntityTypes.Material:
+          descants = await this.materials.findDescendantIds(ids);
+          break;
+        case EntityTypes.Memo:
+          descants = await this.memos.findDescendantIds(ids);
+          break;
+        default:
+          break;
+      }
+
+      result[Number(type) as EntityTypes] = descants;
     }
 
-    return Object.values(descants).flat();
+    return result;
+  }
+
+  async findBody({ entityId, entityType }: EntityLocator) {
+    switch (Number(entityType)) {
+      case EntityTypes.Note:
+        return await this.notes.findBody(entityId);
+      case EntityTypes.Memo:
+        return (await this.memos.findOneById(entityId))?.content ?? '';
+      default:
+        throw new Error('unsupported type');
+    }
   }
 
   async *findAllBody(entities: EntityLocator[]) {

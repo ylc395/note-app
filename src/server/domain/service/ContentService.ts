@@ -43,6 +43,7 @@ export default class ContentService extends BaseService implements OnModuleInit 
     }
 
     this.eventBus.on('recyclableCreated', this.removeAll);
+    this.eventBus.on('recyclableRemoved', this.extract);
   }
 
   private extractTopics(entity: ContentUpdatedEvent) {
@@ -113,12 +114,16 @@ export default class ContentService extends BaseService implements OnModuleInit 
     };
   }
 
-  private readonly extract = async (entity: ContentUpdatedEvent) => {
-    const mdAst = fromMarkdown(entity.content, {
+  private readonly extract = async (entity: ContentUpdatedEvent | EntityLocator) => {
+    const content = 'content' in entity ? entity.content : (await this.repo.entities.findBody(entity))!;
+    const mdAst = fromMarkdown(content, {
       mdastExtensions: [topicExtension],
       extensions: [topicTokenExtension],
     });
-    const reducers = [this.extractLinks, this.extractTopics].map((cb) => cb.call(this, entity));
+
+    const reducers = [this.extractLinks, this.extractTopics].map((cb) =>
+      cb.call(this, { content, updatedAt: Date.now(), ...entity }),
+    );
 
     visit(mdAst, (node) => reducers.forEach(({ visitor }) => visitor(node)));
 
@@ -218,12 +223,7 @@ export default class ContentService extends BaseService implements OnModuleInit 
   async createTopics(topics: TopicDTO[]) {
     const createdAt = Date.now();
 
-    for (const [type, entities] of Object.entries(groupBy(topics, 'entityType'))) {
-      await this.entityService.assertAvailableEntities({
-        entityType: Number(type),
-        entityIds: map(entities, 'id'),
-      });
-    }
+    await this.entityService.assertAvailableEntities(topics);
 
     await this.transaction(async () => {
       const _topics = topics.map((topic) => ({ ...topic, createdAt }));
@@ -236,16 +236,12 @@ export default class ContentService extends BaseService implements OnModuleInit 
   }
 
   async createLinks(links: LinkDTO[]) {
+    const entities = [...map(links, 'from'), ...map(links, 'to')];
+
+    await this.entityService.assertAvailableEntities(entities);
+
     const createdAt = Date.now();
     const _links = links.map((link) => ({ ...link, createdAt }));
-    const entityGroups = Object.entries(groupBy([...map(links, 'from'), ...map(links, 'to')], 'entityType'));
-
-    for (const [type, entities] of entityGroups) {
-      await this.entityService.assertAvailableEntities({
-        entityType: Number(type),
-        entityIds: map(entities, 'id'),
-      });
-    }
 
     await this.transaction(async () => {
       for (const link of uniqBy(map(links, 'from'), 'entityId')) {

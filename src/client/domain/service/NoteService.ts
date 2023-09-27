@@ -19,6 +19,7 @@ import { MULTIPLE_ICON_FLAG, type NoteMetadata } from 'model/note/MetadataForm';
 
 import EditorService from './EditorService';
 import type { SelectEvent } from 'model/abstract/Tree';
+import { getLocators } from 'utils/collection';
 
 export enum NoteEvents {
   'Deleted' = 'noteTree.deleted',
@@ -93,7 +94,7 @@ export default class NoteService extends Emitter<{
   };
 
   async deleteNotes(ids: Note['id'][]) {
-    await this.remote.patch<RecyclablesDTO>(`/recyclables`, { entityIds: ids, entityType: EntityTypes.Note });
+    await this.remote.patch<RecyclablesDTO>(`/recyclables`, getLocators(ids, EntityTypes.Note));
     this.noteTree.removeNodes(ids);
     this.ui.feedback({ type: 'success', content: '已移至回收站' });
     this.emit(NoteEvents.Deleted, ids);

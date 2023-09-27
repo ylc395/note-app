@@ -1,6 +1,7 @@
 import type { EntityId, EntityLocator, EntityTypes } from 'model/entity';
 
 export interface EntityRepository {
-  findDescendantIds(type: EntityTypes, ids: EntityId[]): Promise<EntityId[]>;
+  findDescendantIds(entities: EntityLocator[]): Promise<Record<EntityTypes, Record<EntityId, string[]>>>;
   findAllBody: (entities: EntityLocator[]) => AsyncGenerator<{ content: string } & EntityLocator>;
+  findBody: (entity: EntityLocator) => Promise<string | null>;
 }
