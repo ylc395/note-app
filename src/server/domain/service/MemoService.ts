@@ -39,9 +39,14 @@ export default class MemoService extends BaseService {
       throw new Error('wrong id');
     }
 
-    // if (typeof patch.content === 'string') {
-    //   this.contentService.processContent({ content: patch.content, entityId: id, entityType: EntityTypes.Memo });
-    // }
+    if (typeof patch.content === 'string') {
+      this.eventEmitter.emit('contentUpdated', {
+        updatedAt: updated.updatedAt,
+        content: patch.content,
+        entityId: id,
+        entityType: EntityTypes.Memo,
+      });
+    }
 
     return this.toVOs(updated);
   }

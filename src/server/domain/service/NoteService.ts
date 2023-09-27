@@ -57,12 +57,19 @@ export default class NoteService extends BaseService {
       ...omit(targetNote, ['id', 'createdAt', 'updatedAt']),
     });
 
-    // this.contentService.processContent({ content: targetNoteBody, entityId: newNote.id, entityType: EntityTypes.Note });
+    this.eventEmitter.emit('contentUpdated', {
+      content: targetNoteBody,
+      entityId: newNote.id,
+      entityType: EntityTypes.Note,
+      updatedAt: targetNote.updatedAt,
+    });
 
     return newNote;
   }
 
   async updateBody(noteId: NoteVO['id'], content: NoteBodyDTO) {
+    const userUpdatedAt = Date.now();
+
     await this.transaction(async () => {
       if (!(await this.isWritable(noteId))) {
         throw new Error('note is readonly');
@@ -70,17 +77,22 @@ export default class NoteService extends BaseService {
 
       const result = await this.repo.notes.update(noteId, {
         body: content,
-        userUpdatedAt: Date.now(),
+        userUpdatedAt,
       });
 
       if (result === null) {
         throw new Error('update note body failed');
       }
 
+      this.eventEmitter.emit('contentUpdated', {
+        content,
+        entityId: noteId,
+        entityType: EntityTypes.Note,
+        updatedAt: userUpdatedAt,
+      });
+
       return result;
     });
-
-    // this.contentService.processContent({ content, entityId: noteId, entityType: EntityTypes.Note });
 
     return content;
   }

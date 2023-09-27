@@ -1,19 +1,24 @@
 import { createPatch, applyPatch } from 'diff';
+import type { OnModuleInit } from '@nestjs/common';
 
 import type { EntityLocator } from 'model/entity';
-import type { ContentUpdate } from 'model/content';
+import type { ContentUpdatedEvent } from 'model/content';
 
 import BaseService from './BaseService';
 
-export default class RevisionService extends BaseService {
-  private readonly createRevision = async ({ content, entityId: id, entityType: type }: ContentUpdate) => {
-    if (!(await this.shouldCreate({ entityId: id, entityType: type }))) {
+export default class RevisionService extends BaseService implements OnModuleInit {
+  onModuleInit() {
+    this.eventEmitter.on('contentUpdated', this.createRevision);
+  }
+
+  private readonly createRevision = async ({ content, entityId, entityType }: ContentUpdatedEvent) => {
+    if (!(await this.shouldCreate({ entityId, entityType }))) {
       return;
     }
 
-    const oldContent = await this.getOldContent({ entityId: id, entityType: type });
-    const diff = createPatch(`${type}-${id}`, oldContent || '', content);
-    await this.repo.revisions.create({ entityId: id, entityType: type, diff });
+    const oldContent = await this.getOldContent({ entityId, entityType });
+    const diff = createPatch(`${entityType}-${entityId}`, oldContent || '', content);
+    await this.repo.revisions.create({ entityId, entityType, diff });
   };
 
   private async shouldCreate(entity: EntityLocator) {

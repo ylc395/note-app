@@ -1,4 +1,4 @@
-import { Inject, Injectable, forwardRef } from '@nestjs/common';
+import { Inject, Injectable, type OnModuleInit, forwardRef } from '@nestjs/common';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { visit } from 'unist-util-visit';
 import type { UnistNode } from 'unist-util-visit/lib';
@@ -14,8 +14,9 @@ import {
   tokenExtension as topicTokenExtension,
   type Topic as TopicNode,
 } from 'infra/markdown/topic';
+import { IS_IPC } from 'infra/Runtime';
 import type {
-  ContentUpdate,
+  ContentUpdatedEvent,
   EntityWithSnippet,
   Link,
   HighlightPosition,
@@ -32,12 +33,17 @@ import BaseService from './BaseService';
 import EntityService from './EntityService';
 
 @Injectable()
-export default class ContentService extends BaseService {
+export default class ContentService extends BaseService implements OnModuleInit {
   @Inject(forwardRef(() => EntityService)) private readonly entityService!: EntityService;
 
-  private extractTopics(entity: EntityLocator) {
+  onModuleInit() {
+    if (!IS_IPC) {
+      this.eventEmitter.on('contentUpdated', this.extract);
+    }
+  }
+
+  private extractTopics(entity: ContentUpdatedEvent) {
     const topics: Topic[] = [];
-    const createdAt = Date.now();
 
     return {
       visitor: (node: UnistNode) => {
@@ -49,7 +55,7 @@ export default class ContentService extends BaseService {
           ...entity,
           position: { start: node.position.start.offset || 0, end: node.position.end.offset || 0 },
           name: node.value,
-          createdAt,
+          createdAt: entity.updatedAt,
         });
       },
       done: async () => {
@@ -65,9 +71,8 @@ export default class ContentService extends BaseService {
     };
   }
 
-  private extractLinks(entity: EntityLocator) {
+  private extractLinks(entity: ContentUpdatedEvent) {
     const links: Link[] = [];
-    const createdAt = Date.now();
 
     return {
       visitor: (node: UnistNode) => {
@@ -84,7 +89,7 @@ export default class ContentService extends BaseService {
               position: { start: node.position.start.offset || 0, end: node.position.end.offset || 0 },
             },
             to: parsed,
-            createdAt,
+            createdAt: entity.updatedAt,
           });
         }
       },
@@ -105,9 +110,11 @@ export default class ContentService extends BaseService {
     };
   }
 
-  // todo: used in http server, not ipc server
-  async extract({ content, ...entity }: ContentUpdate) {
-    const mdAst = fromMarkdown(content, { mdastExtensions: [topicExtension], extensions: [topicTokenExtension] });
+  private readonly extract = async (entity: ContentUpdatedEvent) => {
+    const mdAst = fromMarkdown(entity.content, {
+      mdastExtensions: [topicExtension],
+      extensions: [topicTokenExtension],
+    });
     const reducers = [this.extractLinks, this.extractTopics].map((cb) => cb.call(this, entity));
 
     visit(mdAst, (node) => reducers.forEach(({ visitor }) => visitor(node)));
@@ -115,7 +122,7 @@ export default class ContentService extends BaseService {
     for (const { done } of reducers) {
       await done();
     }
-  }
+  };
 
   async queryTopicNames() {
     return this.repo.contents.findAllTopicNames({ orderBy: 'updatedAt' });

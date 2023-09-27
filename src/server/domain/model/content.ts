@@ -3,9 +3,9 @@ import type { TopicDTO, LinkDTO } from 'shard/model/content';
 
 export * from 'shard/model/content';
 
-export interface ContentUpdate extends EntityLocator {
+export interface ContentUpdatedEvent extends EntityLocator {
   content: string;
-  updatedAt?: number;
+  updatedAt: number;
 }
 
 export interface Link extends LinkDTO {

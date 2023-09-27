@@ -160,13 +160,14 @@ export default class MaterialService extends BaseService {
     }
     await this.repo.materials.update(updated.materialId, { userUpdatedAt: updated.updatedAt });
 
-    // if (typeof patch.comment === 'string') {
-    // this.contentService.processContent({
-    //   content: patch.comment,
-    //   entityType: EntityTypes.Material,
-    //   entityId: annotationId,
-    // });
-    // }
+    if (typeof patch.comment === 'string') {
+      this.eventEmitter.emit('contentUpdated', {
+        content: patch.comment,
+        entityType: EntityTypes.MaterialAnnotation,
+        entityId: annotationId,
+        updatedAt: updated.updatedAt,
+      });
+    }
 
     return updated;
   }

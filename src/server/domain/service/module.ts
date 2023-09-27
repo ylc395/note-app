@@ -11,6 +11,7 @@ import RevisionService from './RevisionService';
 import SyncService from './SyncService';
 import EntityService from './EntityService';
 import SearchService from './SearchService';
+import { token as eventEmitterToken, eventEmitter } from 'infra/eventEmitter';
 
 const services = [
   NoteService,
@@ -28,7 +29,7 @@ const services = [
 
 @Global()
 @Module({
-  providers: services,
-  exports: services,
+  providers: [...services, { provide: eventEmitterToken, useValue: eventEmitter }],
+  exports: [...services, eventEmitterToken],
 })
 export default class ServiceModule {}
