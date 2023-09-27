@@ -38,8 +38,11 @@ export default class ContentService extends BaseService implements OnModuleInit 
 
   onModuleInit() {
     if (!IS_IPC) {
-      this.eventEmitter.on('contentUpdated', this.extract);
+      // only extract on non-ipc server. ipc server will receive everything from render process, no need to do extracting itself
+      this.eventBus.on('contentUpdated', this.extract);
     }
+
+    this.eventBus.on('recyclableCreated', this.removeAll);
   }
 
   private extractTopics(entity: ContentUpdatedEvent) {
@@ -121,6 +124,13 @@ export default class ContentService extends BaseService implements OnModuleInit 
 
     for (const { done } of reducers) {
       await done();
+    }
+  };
+
+  private readonly removeAll = async (entities: EntityLocator[]) => {
+    for (const entity of entities) {
+      await this.repo.contents.removeLinks(entity);
+      await this.repo.contents.removeTopics(entity);
     }
   };
 

@@ -8,7 +8,7 @@ import BaseService from './BaseService';
 
 export default class RevisionService extends BaseService implements OnModuleInit {
   onModuleInit() {
-    this.eventEmitter.on('contentUpdated', this.createRevision);
+    this.eventBus.on('contentUpdated', this.createRevision);
   }
 
   private readonly createRevision = async ({ content, entityId, entityType }: ContentUpdatedEvent) => {

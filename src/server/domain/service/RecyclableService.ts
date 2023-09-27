@@ -1,5 +1,4 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
-import omit from 'lodash/omit';
 import differenceWith from 'lodash/differenceWith';
 
 import type { EntitiesLocator } from 'model/entity';
@@ -29,22 +28,8 @@ export default class RecyclableService extends BaseService {
       ({ entityId: id, entityType: type }, { entityId, entityType }) => id === entityId && type === entityType,
     );
 
-    const result = await this.repo.recyclables.batchCreate(newRecyclables);
-    const directResult = result.filter((record) => record.reason === RecycleReason.Direct);
-    const titles = await this.entityService.getEntityTitles(directResult);
-
-    return directResult.map((record) => {
-      const title = titles[record.entityType][record.entityId];
-
-      if (!title) {
-        throw new Error('no title');
-      }
-
-      return {
-        ...omit(record, ['reason']),
-        title,
-      };
-    });
+    const created = await this.repo.recyclables.batchCreate(newRecyclables);
+    this.eventBus.emit('recyclableCreated', created);
   }
 
   async query() {

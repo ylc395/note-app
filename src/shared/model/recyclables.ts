@@ -10,7 +10,7 @@ export enum RecycleReason {
   Cascade,
 }
 
-export interface RecyclableRecord extends EntityLocator {
+export interface RecyclableVO extends EntityLocator {
   deletedAt: number;
   title: string;
 }

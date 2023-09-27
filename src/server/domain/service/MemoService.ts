@@ -40,7 +40,7 @@ export default class MemoService extends BaseService {
     }
 
     if (typeof patch.content === 'string') {
-      this.eventEmitter.emit('contentUpdated', {
+      this.eventBus.emit('contentUpdated', {
         updatedAt: updated.updatedAt,
         content: patch.content,
         entityId: id,

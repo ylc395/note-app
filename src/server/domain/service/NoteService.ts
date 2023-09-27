@@ -57,7 +57,7 @@ export default class NoteService extends BaseService {
       ...omit(targetNote, ['id', 'createdAt', 'updatedAt']),
     });
 
-    this.eventEmitter.emit('contentUpdated', {
+    this.eventBus.emit('contentUpdated', {
       content: targetNoteBody,
       entityId: newNote.id,
       entityType: EntityTypes.Note,
@@ -84,7 +84,7 @@ export default class NoteService extends BaseService {
         throw new Error('update note body failed');
       }
 
-      this.eventEmitter.emit('contentUpdated', {
+      this.eventBus.emit('contentUpdated', {
         content,
         entityId: noteId,
         entityType: EntityTypes.Note,

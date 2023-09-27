@@ -1,13 +1,13 @@
 import { Inject } from '@nestjs/common';
 
 import { token as databaseToken, type Database } from 'infra/database';
-import { token as eventEmitterToken, type EventEmitter } from 'infra/eventEmitter';
+import { token as eventBusToken, type EventBus } from 'infra/eventBus';
 import type Repositories from './repository';
 
 export default abstract class BaseService {
   constructor(
     @Inject(databaseToken) private readonly db: Database,
-    @Inject(eventEmitterToken) protected readonly eventEmitter: EventEmitter,
+    @Inject(eventBusToken) protected readonly eventBus: EventBus,
   ) {}
 
   protected repo = new Proxy({} as Repositories, {

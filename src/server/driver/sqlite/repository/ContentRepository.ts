@@ -22,13 +22,15 @@ export default class SqliteContentRepository extends BaseRepository implements C
     );
   }
 
-  async removeLinks({ entityId: id, entityType: type }: EntityLocator, direction: LinkDirection) {
+  async removeLinks({ entityId: id, entityType: type }: EntityLocator, direction?: LinkDirection) {
     await this.db
       .deleteFrom(linkSchema.tableName)
       .where((eb) =>
-        eb.and(
-          direction === 'to' ? { toEntityId: id, toEntityType: type } : { fromEntityId: id, fromEntityType: type },
-        ),
+        direction
+          ? eb.and(
+              direction === 'to' ? { toEntityId: id, toEntityType: type } : { fromEntityId: id, fromEntityType: type },
+            )
+          : eb.or([eb.and({ toEntityId: id, toEntityType: type }), eb.and({ fromEntityId: id, fromEntityType: type })]),
       )
       .execute();
   }

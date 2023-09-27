@@ -1,7 +1,8 @@
 import type { EntityLocator } from 'model/entity';
-import type { RecycleReason, RecyclableRecord } from 'shard/model/recyclables';
+import type { RecycleReason, RecyclableVO } from 'shard/model/recyclables';
 
 export type Recyclable = EntityLocator & { reason: RecycleReason };
-export type RawRecyclableRecord = Omit<RecyclableRecord, 'title'> & { reason: RecycleReason };
+export type RecyclableRecord = Omit<RecyclableVO, 'title'> & { reason: RecycleReason };
+export type RecyclableCreatedEvent = RecyclableRecord[];
 
 export * from 'shard/model/recyclables';
