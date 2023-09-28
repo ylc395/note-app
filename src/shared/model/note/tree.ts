@@ -1,3 +1,4 @@
+import { action } from 'mobx';
 import type { NoteVO } from './index';
 import Tree, { type TreeNode } from '../abstract/Tree';
 
@@ -16,6 +17,7 @@ export default class NoteTree extends Tree<NoteVO, NoteNodeAttr> {
     return { title: '根' };
   }
 
+  @action
   fromSelected() {
     const tree = new NoteTree();
     tree.root.children = this.selectedNodes.map((node) => ({
