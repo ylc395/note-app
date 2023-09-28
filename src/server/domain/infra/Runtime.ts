@@ -6,8 +6,8 @@ import { ModuleRef } from '@nestjs/core';
 import { Inject } from '@nestjs/common';
 
 import type { AppServerStatus } from 'model/app';
-import { APP_NAME, IS_DEV, IS_TEST } from './constants';
-import { token as kvDatabaseToken, type KvDatabase } from './kvDatabase';
+import { APP_NAME, IS_DEV, IS_TEST } from 'infra/constants';
+import { token as databaseToken, type Database } from 'infra/database';
 
 export const token = Symbol('runtime');
 export const IS_IPC = workerData?.runtime !== 'http';
@@ -38,13 +38,13 @@ export default abstract class Runtime {
     );
   }
 
-  protected get kvDb() {
-    return this.moduleRef.get<KvDatabase>(kvDatabaseToken, { strict: false });
+  protected get db() {
+    return this.moduleRef.get<Database>(databaseToken, { strict: false });
   }
 
   async start() {
     this.appInfo = {
-      clientId: await this.kvDb.get('app.desktop.id', randomUUID),
+      clientId: await this.db.kv.get('app.desktop.id', randomUUID),
       appName: APP_NAME,
       deviceName: hostname(),
     };
@@ -59,7 +59,7 @@ export default abstract class Runtime {
   }
 
   async getAppToken() {
-    return await this.kvDb.get('app.http.token', randomUUID);
+    return await this.db.kv.get('app.http.token', randomUUID);
   }
 
   abstract toggleHttpServer(enable: boolean): Promise<AppServerStatus | null>;

@@ -1,5 +1,5 @@
 import { app as electronApp, BrowserWindow, ipcMain } from 'electron';
-import { Injectable, Logger } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import path from 'node:path';
 import { Worker } from 'node:worker_threads';
 import { type Remote, wrap, releaseProxy } from 'comlink';
@@ -14,7 +14,6 @@ import type LocalServer from '../localHttpServer';
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const INDEX_URL = process.env.VITE_SERVER_ENTRY_URL!;
 
-@Injectable()
 export default class ElectronRuntime extends Runtime {
   private readonly logger = new Logger('electron app');
   private mainWindow?: BrowserWindow;

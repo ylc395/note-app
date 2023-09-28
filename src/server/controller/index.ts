@@ -7,4 +7,4 @@ export { default as MemosController } from './MemosController';
 export { default as MaterialsController } from './MaterialsController';
 export { default as SyncController } from './SyncController';
 export { default as SearchController } from './SearchController';
-export { default as AppStatusController } from './AppStatusController';
+export { default as AppController } from './AppController';

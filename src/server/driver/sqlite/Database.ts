@@ -14,6 +14,7 @@ import type Repository from 'service/repository';
 import * as schemas from './schema';
 import type * as RowTypes from './schema';
 import * as repositories from './repository';
+import SqliteKvDatabase from './KvDatabase';
 
 const CLEAN_DB = process.env.DEV_CLEAN === '1' && IS_DEV;
 
@@ -39,9 +40,11 @@ export default class SqliteDb implements Database {
     this.logger = new Logger(`${app.isMain() ? 'main' : 'http'} ${SqliteDb.name}`);
     this.db = this.createDb();
     this.ready = this.init();
+    this.kv = new SqliteKvDatabase(this);
   }
 
   private db: Kysely<Db>;
+  readonly kv: SqliteKvDatabase;
   private readonly als = new AsyncLocalStorage<Transaction<Db>>();
   readonly ready: Promise<void>;
   private tableNames?: string[];
@@ -65,7 +68,7 @@ export default class SqliteDb implements Database {
       throw new Error('invalid repository name');
     }
 
-    return new repositories[name](this.getDb()) as unknown as Repository[T];
+    return new repositories[name](this) as unknown as Repository[T];
   }
 
   private async init() {
@@ -74,6 +77,7 @@ export default class SqliteDb implements Database {
     ).map(({ name }) => name);
 
     await this.createTables();
+    await this.kv.init();
   }
 
   getDb() {

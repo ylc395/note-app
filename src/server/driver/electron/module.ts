@@ -1,4 +1,4 @@
-import { Global, Module, type OnModuleInit } from '@nestjs/common';
+import { Global, Inject, Module, type OnModuleInit } from '@nestjs/common';
 
 import * as controllers from 'controller';
 import { token as runtimeToken } from 'infra/Runtime';
@@ -12,11 +12,11 @@ import ElectronInfraModule from './infra/module';
 @Module({
   controllers: Object.values(controllers),
   imports: [ElectronInfraModule, SqliteModule, ServiceModule],
-  providers: [ElectronRuntime, { provide: runtimeToken, useExisting: ElectronRuntime }],
+  providers: [{ provide: runtimeToken, useClass: ElectronRuntime }],
   exports: [ElectronInfraModule, runtimeToken],
 })
 export default class ElectronModule implements OnModuleInit {
-  constructor(private readonly app: ElectronRuntime) {}
+  constructor(@Inject(runtimeToken) private readonly app: ElectronRuntime) {}
 
   async onModuleInit() {
     await this.app.start();

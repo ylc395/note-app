@@ -8,6 +8,7 @@ import type { RevisionRepository } from './RevisionRepository';
 import type { SynchronizationRepository } from './SynchronizationRepository';
 import type { ContentRepository } from './ContentRepository';
 import type { EntityRepository } from './EntityRepository';
+import type { ConfigRepository } from './ConfigRepository';
 
 export default interface Repositories {
   notes: NoteRepository;
@@ -20,4 +21,5 @@ export default interface Repositories {
   synchronization: SynchronizationRepository;
   contents: ContentRepository;
   entities: EntityRepository;
+  configs: ConfigRepository;
 }

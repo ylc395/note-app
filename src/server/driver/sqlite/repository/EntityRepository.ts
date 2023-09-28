@@ -9,9 +9,9 @@ import SqliteMaterialRepository from './MaterialRepository';
 import SqliteMemoRepository from './MemoRepository';
 
 export default class SqliteEntityRepository extends BaseRepository implements EntityRepository {
-  private readonly notes = new SqliteNoteRepository(this.db);
-  private readonly materials = new SqliteMaterialRepository(this.db);
-  private readonly memos = new SqliteMemoRepository(this.db);
+  private readonly notes = new SqliteNoteRepository(this.sqliteDb);
+  private readonly materials = new SqliteMaterialRepository(this.sqliteDb);
+  private readonly memos = new SqliteMemoRepository(this.sqliteDb);
 
   async findDescendantIds(entities: EntityLocator[]) {
     const entitiesGroup = groupBy(entities, 'entityType');

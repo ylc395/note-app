@@ -1,10 +1,19 @@
 import { randomUUID } from 'node:crypto';
-import type { Insertable, Kysely } from 'kysely';
+import type { Insertable } from 'kysely';
 
 import type { Db } from '../Database';
+import type SqliteDatabase from '../Database';
 
 export default abstract class BaseRepository {
-  constructor(protected readonly db: Kysely<Db>) {}
+  constructor(protected readonly sqliteDb: SqliteDatabase) {}
+
+  protected get db() {
+    return this.sqliteDb.getDb();
+  }
+
+  protected get kv() {
+    return this.sqliteDb.kv;
+  }
 
   protected generateId() {
     return randomUUID().replaceAll('-', '');

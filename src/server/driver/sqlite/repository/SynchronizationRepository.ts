@@ -1,7 +1,5 @@
-import { Inject } from '@nestjs/common';
 import type { SynchronizationRepository } from 'service/repository/SynchronizationRepository';
 import type { EntityLocator } from 'model/entity';
-import { token as kvDatabaseToken, type KvDatabase } from 'infra/kvDatabase';
 
 import BaseRepository from './BaseRepository';
 import syncEntitySchema from '../schema/syncEntity';
@@ -10,7 +8,6 @@ const LAST_SYNC_TIME_KEY = 'sync.lastSyncTime';
 
 export default class SqliteSynchronizationRepository extends BaseRepository implements SynchronizationRepository {
   protected readonly schema = syncEntitySchema;
-  @Inject(kvDatabaseToken) private readonly kvDb!: KvDatabase;
   async getEntitySyncAt({ entityId: entityId, entityType: entityType }: EntityLocator) {
     const row = await this.db
       .selectFrom(this.schema.tableName)
@@ -23,12 +20,12 @@ export default class SqliteSynchronizationRepository extends BaseRepository impl
   }
 
   async getLastFinishedSyncTimestamp() {
-    const value = await this.kvDb.get(LAST_SYNC_TIME_KEY);
+    const value = await this.kv.get(LAST_SYNC_TIME_KEY);
     return value ? Number(value) : null;
   }
 
   async updateLastFinishedSyncTimestamp(time: number) {
-    await this.kvDb.set(LAST_SYNC_TIME_KEY, String(time));
+    await this.kv.set(LAST_SYNC_TIME_KEY, String(time));
   }
 
   async updateEntitySyncAt({ entityId, entityType }: EntityLocator, syncAt: number) {

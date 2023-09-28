@@ -8,3 +8,4 @@ export { default as revisions } from './RevisionRepository';
 export { default as synchronization } from './SynchronizationRepository';
 export { default as contents } from './ContentRepository';
 export { default as entities } from './EntityRepository';
+export { default as configs } from './ConfigRepository';

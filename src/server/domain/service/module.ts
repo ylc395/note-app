@@ -11,9 +11,11 @@ import RevisionService from './RevisionService';
 import SyncService from './SyncService';
 import EntityService from './EntityService';
 import SearchService from './SearchService';
+import AppService from './AppService';
 import { token as eventBusToken, eventBus } from 'infra/eventBus';
 
 const services = [
+  AppService,
   NoteService,
   RecyclableService,
   StarService,

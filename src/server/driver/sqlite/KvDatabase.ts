@@ -1,13 +1,9 @@
 import type { Kysely } from 'kysely';
-import { Injectable } from '@nestjs/common';
+import type { KvDatabase } from 'infra/database';
 
-import type { KvDatabase } from 'infra/kvDatabase';
-import SqliteDb from './Database';
+import type SqliteDb from './Database';
 
-type Row = {
-  key: string;
-  value: string;
-};
+type Row = { key: string; value: string };
 
 const tableName = 'kv';
 
@@ -15,19 +11,14 @@ export interface KvDb {
   [tableName]: Row;
 }
 
-@Injectable()
 export default class SqliteKvDatabase implements KvDatabase {
-  readonly ready: Promise<void>;
-  constructor(private readonly sqliteDb: SqliteDb) {
-    this.ready = this.init();
-  }
+  constructor(private readonly sqliteDb: SqliteDb) {}
 
   private get db() {
     return this.sqliteDb.getDb() as unknown as Kysely<KvDb>;
   }
 
-  private async init() {
-    await this.sqliteDb.ready;
+  async init() {
     await this.createTable();
   }
 

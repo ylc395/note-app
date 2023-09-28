@@ -22,8 +22,8 @@ import HierarchyEntityRepository from './HierarchyEntityRepository';
 
 export default class SqliteMaterialRepository extends HierarchyEntityRepository implements MaterialRepository {
   readonly tableName = schema.tableName;
-  private readonly files = new FileRepository(this.db);
-  private readonly annotations = new MaterialAnnotationRepository(this.db);
+  private readonly files = new FileRepository(this.sqliteDb);
+  private readonly annotations = new MaterialAnnotationRepository(this.sqliteDb);
   async createDirectory(directory: NewMaterialDirectory) {
     const createdRow = await this.createOne(this.tableName, { ...directory, id: this.generateId() });
     return SqliteMaterialRepository.rowToDirectory(createdRow);
