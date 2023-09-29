@@ -2,10 +2,11 @@ import { createHash } from 'node:crypto';
 import pick from 'lodash/pick';
 
 import type { FileRepository } from 'service/repository/FileRepository';
-import type { File, FileVO } from 'model/file';
+import type { File, FileText, FileVO } from 'model/file';
 
 import BaseRepository from './BaseRepository';
 import fileSchema, { type Row } from '../schema/file';
+import fileTextSchema from '../schema/fileText';
 
 const { tableName } = fileSchema;
 
@@ -59,5 +60,26 @@ export default class SqliteFileRepository extends BaseRepository implements File
     }
 
     return rows.map((row) => pick(row, ['id', 'mimeType', 'size']));
+  }
+
+  async haveText(ids: FileVO['id'][]) {
+    const counts = await this.db
+      .selectFrom(fileTextSchema.tableName)
+      .select((eb) => ['fileId', eb.fn.countAll().as('count')])
+      .where('fileId', 'in', ids)
+      .groupBy('fileId')
+      .execute();
+
+    return counts.reduce((result, { fileId, count }) => {
+      result[fileId] = Boolean(count);
+      return result;
+    }, {} as Record<FileVO['id'], boolean>);
+  }
+
+  async createText({ fileId, records }: FileText) {
+    await this.db
+      .insertInto(fileTextSchema.tableName)
+      .values(records.map((record) => ({ fileId, ...record })))
+      .execute();
   }
 }

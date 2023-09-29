@@ -5,31 +5,18 @@ import { ensureDirSync, emptyDirSync } from 'fs-extra';
 import { join } from 'node:path';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 
-import { token as runtimeToken } from 'infra/Runtime';
-import type Runtime from 'infra/Runtime';
+import { type default as Runtime, token as runtimeToken } from 'infra/Runtime';
 import type { Database } from 'infra/database';
 import { IS_TEST, IS_DEV } from 'infra/constants';
 import type Repository from 'service/repository';
 
-import * as schemas from './schema';
-import type * as RowTypes from './schema';
+import { type Schemas, schemas } from './schema';
 import * as repositories from './repository';
 import SqliteKvDatabase from './KvDatabase';
 
 const CLEAN_DB = process.env.DEV_CLEAN === '1' && IS_DEV;
 
-export interface Db {
-  [schemas.note.tableName]: RowTypes.NoteRow;
-  [schemas.recyclable.tableName]: RowTypes.RecyclableRow;
-  [schemas.star.tableName]: RowTypes.StarRow;
-  [schemas.file.tableName]: RowTypes.FileRow;
-  [schemas.materialAnnotation.tableName]: RowTypes.MaterialAnnotationRow;
-  [schemas.revision.tableName]: RowTypes.RevisionRow;
-  [schemas.material.tableName]: RowTypes.MaterialRow;
-  [schemas.memo.tableName]: RowTypes.MemoRow;
-  [schemas.syncEntity.tableName]: RowTypes.SyncEntityRow;
-  [schemas.topic.tableName]: RowTypes.TopicRow;
-  [schemas.link.tableName]: RowTypes.LinkRow;
+export interface Db extends Schemas {
   sqlite_master: { name: string; type: string };
 }
 
@@ -106,7 +93,7 @@ export default class SqliteDb implements Database {
   }
 
   private async createTables() {
-    for (const schema of Object.values(schemas)) {
+    for (const schema of schemas) {
       if (this.hasTable(schema.tableName)) {
         continue;
       }

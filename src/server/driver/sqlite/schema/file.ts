@@ -18,7 +18,6 @@ export default {
       .createTable(tableName)
       .addColumn('id', 'text', (col) => col.primaryKey().notNull())
       .addColumn('data', 'binary', (col) => col.notNull())
-      .addColumn('text', 'text')
       .addColumn('mimeType', 'text', (col) => col.notNull())
       .addColumn('size', 'integer', (col) => col.notNull())
       .addColumn('hash', 'text', (col) => col.notNull());

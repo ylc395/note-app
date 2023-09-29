@@ -28,8 +28,8 @@ export default class EditorManager {
     return this.editors[entityType]?.[entityId];
   }
 
-  private createEditor(tile: Tile, { entityId, entityType }: EntityLocator) {
-    let editor = this.getEditorByEntity({ entityId, entityType });
+  private createEditor(tile: Tile, { entityId, entityType, mimeType }: EntityLocator) {
+    let editor = this.getEditorByEntity({ entityId, entityType, mimeType });
 
     if (editor) {
       return editor;
@@ -40,7 +40,7 @@ export default class EditorManager {
         editor = new NoteEditor(tile, entityId);
         break;
       case EntityTypes.Material:
-        editor = this.createMaterialEditor(tile, { entityId, entityType });
+        editor = this.createMaterialEditor(tile, { entityId, entityType, mimeType });
         break;
       default:
         throw new Error('invalid type');
