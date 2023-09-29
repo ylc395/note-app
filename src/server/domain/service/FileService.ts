@@ -89,6 +89,7 @@ export default class FileService extends BaseService {
   };
 
   private async extractPdfText(data: ArrayBuffer) {
+    // todo: set a workerPort just like in client/PfEditor
     const doc = await getDocument(new Uint8Array(data)).promise;
     const records: FileTextRecord[] = [];
 

@@ -1,6 +1,6 @@
 import { computed, makeObservable, observable, runInAction } from 'mobx';
 import groupBy from 'lodash/groupBy';
-import { type PDFDocumentLoadingTask, type PDFDocumentProxy, PDFWorker, getDocument } from 'pdfjs-dist';
+import { type PDFDocumentLoadingTask, type PDFDocumentProxy, getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
 import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.min.js?worker';
 
 import {
@@ -53,12 +53,19 @@ export default class PdfEditor extends Editor<Pdf> {
   }
 
   protected async init() {
+    PdfEditor.activeCount += 1;
+
+    if (!GlobalWorkerOptions.workerPort) {
+      // every PDFWorker will share one web worker when we do this
+      GlobalWorkerOptions.workerPort = new PdfJsWorker();
+    }
+
     const [{ body: metadata }, { body: blob }] = await Promise.all([
       this.remote.get<void, MaterialEntityVO>(`/materials/${this.entityId}`),
       this.remote.get<void, ArrayBuffer>(`/materials/${this.entityId}/blob`),
     ]);
 
-    this.loadingTask = getDocument({ data: blob.slice(0), worker: new PDFWorker({ port: new PdfJsWorker() }) });
+    this.loadingTask = getDocument(blob.slice(0));
     const doc = await this.loadingTask.promise;
 
     this.load({ metadata, doc });
@@ -92,8 +99,15 @@ export default class PdfEditor extends Editor<Pdf> {
     return groupBy(areas, 'page');
   }
 
-  destroy() {
-    this.loadingTask?.destroy();
+  async destroy() {
+    PdfEditor.activeCount -= 1;
+    await this.loadingTask?.destroy();
+
+    if (PdfEditor.activeCount === 0) {
+      GlobalWorkerOptions.workerPort?.terminate();
+      GlobalWorkerOptions.workerPort = null;
+    }
+
     super.destroy();
   }
 
@@ -121,4 +135,6 @@ export default class PdfEditor extends Editor<Pdf> {
       this.outline = items;
     });
   }
+
+  private static activeCount = 0;
 }
