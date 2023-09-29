@@ -3,11 +3,10 @@ import { array, nativeEnum, object, string, type infer as Infer, boolean } from 
 import isEmpty from 'lodash/isEmpty';
 import negate from 'lodash/negate';
 
-import { EntityTypes, type EntityId, type EntityLocator } from './entity';
+import { EntityTypes, type EntityId, type EntityWithTitle } from './entity';
 import type { Starable } from './star';
 
-export interface SearchResult extends EntityLocator {
-  title: string;
+export interface SearchResult extends EntityWithTitle {
   body: string;
   highlights: { start: number; end: number; scope: Scopes }[];
   mainEntityId?: EntityId;

@@ -1,7 +1,7 @@
 import map from 'lodash/map';
 
 import type { EntityLocator } from 'model/entity';
-import type { StarRecord } from 'model/star';
+import type { StarVO } from 'model/star';
 import type { StarRepository } from 'service/repository/StarRepository';
 
 import BaseRepository from './BaseRepository';
@@ -21,7 +21,7 @@ export default class SqliteStarRepository extends BaseRepository implements Star
     return starRows;
   }
 
-  async findOneById(id: StarRecord['id']) {
+  async findOneById(id: StarVO['id']) {
     return (await this.db.selectFrom(this.tableName).selectAll().where('id', '=', id).executeTakeFirst()) || null;
   }
 
@@ -41,7 +41,7 @@ export default class SqliteStarRepository extends BaseRepository implements Star
     return await qb.execute();
   }
 
-  async remove(id: StarRecord['id']) {
+  async remove(id: StarVO['id']) {
     await this.db.deleteFrom(this.tableName).where('id', '=', id).execute();
   }
 }

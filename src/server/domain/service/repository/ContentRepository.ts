@@ -6,7 +6,7 @@ export interface ContentRepository {
   removeLinks: (entity: EntityLocator, direction?: LinkDirection) => Promise<void>;
   findAllLinkTos: (q: LinkToQuery) => Promise<Link[]>;
   createTopics: (topics: Topic[]) => Promise<void>;
-  removeTopics: (entity: EntityLocator) => Promise<void>;
-  findAllTopicNames: (q?: { orderBy?: 'name' | 'updatedAt' }) => Promise<string[]>;
-  findAllTopics: (q?: TopicQuery) => Promise<Topic[]>;
+  removeTopics: (entity: EntityLocator, inlineOnly: boolean) => Promise<void>;
+  findAvailableTopicNames: (q?: { orderBy?: 'name' | 'updatedAt' }) => Promise<string[]>;
+  findAvailableTopics: (q?: TopicQuery) => Promise<Topic[]>;
 }

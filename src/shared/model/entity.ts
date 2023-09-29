@@ -22,3 +22,7 @@ export const entityLocatorSchema = object({
 });
 
 export type EntityLocator = Infer<typeof entityLocatorSchema>;
+
+export interface EntityWithTitle extends EntityLocator {
+  title: string;
+}

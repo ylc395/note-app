@@ -30,8 +30,7 @@ export default class RecyclableService extends BaseService {
       ({ entityId: id, entityType: type }, { entityId, entityType }) => id === entityId && type === entityType,
     );
 
-    const created = await this.repo.recyclables.batchCreate(newRecyclables);
-    this.eventBus.emit('recyclableCreated', created);
+    await this.repo.recyclables.batchCreate(newRecyclables);
   }
 
   async remove(entity: EntityLocator) {
@@ -40,7 +39,6 @@ export default class RecyclableService extends BaseService {
     }
 
     await this.repo.recyclables.batchRemove([entity]);
-    this.eventBus.emit('recyclableRemoved', entity);
   }
 
   async query() {

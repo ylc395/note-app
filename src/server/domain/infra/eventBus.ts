@@ -1,12 +1,9 @@
 import { Emitter } from 'strict-event-emitter';
 import type { ContentUpdatedEvent } from 'model/content';
-import type { RecyclableCreatedEvent, RecyclableRemovedEvent } from 'model/recyclables';
 import type { Config } from 'model/config';
 
 type EventMaps = {
   contentUpdated: [ContentUpdatedEvent];
-  recyclableCreated: [RecyclableCreatedEvent];
-  recyclableRemoved: [RecyclableRemovedEvent];
 };
 
 type ConfigEventMaps = Required<{

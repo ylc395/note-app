@@ -1,15 +1,16 @@
-import type { Link, LinkDirection, LinkToQuery, Topic } from 'model/content';
+import { isInlineTopic, type Link, type LinkDirection, type LinkToQuery, type Topic } from 'model/content';
 import type { EntityLocator } from 'model/entity';
 import type { ContentRepository } from 'service/repository/ContentRepository';
 
 import BaseRepository from './BaseRepository';
-import linkSchema, { type Row as LinkRow } from '../schema/link';
-import topicSchema, { type Row as TopicRow } from '../schema/topic';
+import { type Row as LinkRow, tableName as linkTableName } from '../schema/link';
+import { type Row as TopicRow, tableName as topicTableName } from '../schema/topic';
+import { tableName as recyclableTableName } from '../schema/recyclable';
 
 export default class SqliteContentRepository extends BaseRepository implements ContentRepository {
   async createLinks(links: Link[]) {
     await this._batchCreate(
-      linkSchema.tableName,
+      linkTableName,
       links.map(({ from, to, createdAt }) => ({
         fromEntityId: from.entityId,
         fromEntityType: from.entityType,
@@ -24,7 +25,7 @@ export default class SqliteContentRepository extends BaseRepository implements C
 
   async removeLinks({ entityId: id, entityType: type }: EntityLocator, direction?: LinkDirection) {
     await this.db
-      .deleteFrom(linkSchema.tableName)
+      .deleteFrom(linkTableName)
       .where((eb) =>
         direction
           ? eb.and(
@@ -37,8 +38,10 @@ export default class SqliteContentRepository extends BaseRepository implements C
 
   async findAllLinkTos(q: LinkToQuery) {
     const rows = await this.db
-      .selectFrom(linkSchema.tableName)
-      .selectAll()
+      .selectFrom(linkTableName)
+      .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${linkTableName}.toEntityId`)
+      .selectAll(linkTableName)
+      .where(`${recyclableTableName}.entityId`, 'is', null)
       .where((eb) => eb.and({ toEntityId: q.entityId, toEntityType: q.entityType }))
       .execute();
 
@@ -59,30 +62,54 @@ export default class SqliteContentRepository extends BaseRepository implements C
 
   async createTopics(topics: Topic[]) {
     await this._batchCreate(
-      topicSchema.tableName,
+      topicTableName,
       topics.map((topic) => ({
         ...topic,
-        position: `${topic.position.start},${topic.position.end}` satisfies TopicRow['position'],
+        position: (isInlineTopic(topic)
+          ? `${topic.position.start},${topic.position.end}`
+          : null) as TopicRow['position'],
       })),
     );
   }
 
-  async removeTopics({ entityId: id, entityType: type }: EntityLocator) {
-    await this.db.deleteFrom(topicSchema.tableName).where('entityId', '=', id).where('entityType', '=', type).execute();
+  async removeTopics({ entityId: id, entityType: type }: EntityLocator, inlineOnly: boolean) {
+    let qb = this.db.deleteFrom(topicTableName).where('entityId', '=', id).where('entityType', '=', type);
+
+    if (inlineOnly) {
+      qb = qb.where('position', 'is', null);
+    }
+
+    await qb.execute();
   }
 
-  async findAllTopicNames() {
-    const rows = await this.db.selectFrom(topicSchema.tableName).select('name').distinct().execute();
+  async findAvailableTopicNames() {
+    const rows = await this.db
+      .selectFrom(topicTableName)
+      .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${topicTableName}.entityId`)
+      .where(`${recyclableTableName}.entityId`, 'is', null)
+      .select('name')
+      .distinct()
+      .execute();
 
     return rows.map((row) => row.name);
   }
 
-  async findAllTopics() {
-    const rows = await this.db.selectFrom(topicSchema.tableName).selectAll().execute();
+  async findAvailableTopics() {
+    const rows = await this.db
+      .selectFrom(topicTableName)
+
+      .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${topicTableName}.entityId`)
+      .where(`${recyclableTableName}.entityId`, 'is', null)
+      .selectAll(topicTableName)
+      .execute();
 
     return rows.map(({ position, ...row }) => {
-      const [start, end] = position.split(',');
-      return { ...row, position: { start: Number(start), end: Number(end) } };
+      if (position) {
+        const [start, end] = position.split(',');
+        return { ...row, position: { start: Number(start), end: Number(end) } };
+      }
+
+      return row;
     });
   }
 }

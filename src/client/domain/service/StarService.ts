@@ -5,7 +5,7 @@ import pull from 'lodash/pull';
 
 import { token as remoteToken } from 'infra/remote';
 import type { EntityId, EntityLocator, EntityTypes } from 'model/entity';
-import type { StarRecord, StarsDTO } from 'model/star';
+import type { StarVO, StarsDTO } from 'model/star';
 import { getLocators } from 'utils/collection';
 
 export enum StarEvents {
@@ -25,11 +25,11 @@ export default class StarService extends Emitter<{
   }
 
   private readonly remote = container.resolve(remoteToken);
-  @observable stars?: Required<StarRecord>[];
+  @observable stars?: Required<StarVO>[];
 
   async star(entityType: EntityTypes, entityIds: EntityId[]) {
     const entities = getLocators(entityIds, entityType);
-    await this.remote.patch<StarsDTO, StarRecord[]>('/stars', entities);
+    await this.remote.patch<StarsDTO>('/stars', entities);
     this.emit(StarEvents.Added, entities);
   }
 
@@ -39,11 +39,11 @@ export default class StarService extends Emitter<{
   }
 
   async loadStars() {
-    const { body: stars } = await this.remote.get<void, Required<StarRecord>[]>('/stars');
+    const { body: stars } = await this.remote.get<void, StarVO[]>('/stars');
     runInAction(() => (this.stars = stars));
   }
 
-  async removeStar(starId: StarRecord['id']) {
+  async removeStar(starId: StarVO['id']) {
     if (!this.stars) {
       throw new Error('no stars');
     }

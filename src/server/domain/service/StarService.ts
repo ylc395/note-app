@@ -1,7 +1,7 @@
 import { Inject, Injectable, forwardRef } from '@nestjs/common';
 
 import type { EntityLocator } from 'model/entity';
-import type { StarRecord } from 'model/star';
+import type { StarVO } from 'model/star';
 import { buildIndex } from 'utils/collection';
 
 import BaseService from './BaseService';
@@ -18,7 +18,7 @@ export default class StarService extends BaseService {
       throw new Error('already exist');
     }
 
-    return await this.repo.stars.batchCreate(entities);
+    await this.repo.stars.batchCreate(entities);
   }
 
   async query() {
@@ -35,7 +35,7 @@ export default class StarService extends BaseService {
     });
   }
 
-  async remove(id: StarRecord['id']) {
+  async remove(id: StarVO['id']) {
     if (!(await this.repo.stars.findOneById(id))) {
       throw new Error('invalid id');
     }

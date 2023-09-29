@@ -1,5 +1,5 @@
 import type { infer as Infer } from 'zod';
-import { entityLocatorSchema, type EntityLocator } from './entity';
+import { entityLocatorSchema, type EntityWithTitle } from './entity';
 
 export const RecyclablesDTOSchema = entityLocatorSchema.array();
 
@@ -10,7 +10,6 @@ export enum RecycleReason {
   Cascade,
 }
 
-export interface RecyclableVO extends EntityLocator {
+export interface RecyclableVO extends EntityWithTitle {
   deletedAt: number;
-  title: string;
 }

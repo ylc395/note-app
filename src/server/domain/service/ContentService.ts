@@ -15,17 +15,19 @@ import {
   type Topic as TopicNode,
 } from 'infra/markdown/topic';
 import { IS_IPC } from 'infra/Runtime';
-import type {
-  ContentUpdatedEvent,
-  EntityWithSnippet,
-  Link,
-  HighlightPosition,
-  Topic,
-  TopicQuery,
-  TopicVO,
-  TopicDTO,
-  LinkDTO,
-  LinkToQuery,
+import {
+  type ContentUpdatedEvent,
+  type EntityWithSnippet,
+  type Link,
+  type HighlightPosition,
+  type TopicQuery,
+  type TopicVO,
+  type TopicDTO,
+  type LinkDTO,
+  type LinkToQuery,
+  type InlineTopicDTO,
+  type InlineTopic,
+  isInlineTopic,
 } from 'model/content';
 import { EntityTypes, type EntityLocator, EntityId } from 'model/entity';
 
@@ -41,13 +43,10 @@ export default class ContentService extends BaseService implements OnModuleInit 
       // only extract on non-ipc server. ipc server will receive everything from render process, no need to do extracting itself
       this.eventBus.on('contentUpdated', this.extract);
     }
-
-    this.eventBus.on('recyclableCreated', this.removeAll);
-    this.eventBus.on('recyclableRemoved', this.extract);
   }
 
-  private extractTopics(entity: ContentUpdatedEvent) {
-    const topics: Topic[] = [];
+  private extractInlineTopics(entity: ContentUpdatedEvent) {
+    const topics: InlineTopic[] = [];
 
     return {
       visitor: (node: UnistNode) => {
@@ -68,7 +67,7 @@ export default class ContentService extends BaseService implements OnModuleInit 
         }
 
         await this.transaction(async () => {
-          await this.repo.contents.removeTopics(entity);
+          await this.repo.contents.removeTopics(entity, true);
           await this.repo.contents.createTopics(topics);
         });
       },
@@ -121,7 +120,7 @@ export default class ContentService extends BaseService implements OnModuleInit 
       extensions: [topicTokenExtension],
     });
 
-    const reducers = [this.extractLinks, this.extractTopics].map((cb) =>
+    const reducers = [this.extractLinks, this.extractInlineTopics].map((cb) =>
       cb.call(this, { content, updatedAt: Date.now(), ...entity }),
     );
 
@@ -132,23 +131,16 @@ export default class ContentService extends BaseService implements OnModuleInit 
     }
   };
 
-  private readonly removeAll = async (entities: EntityLocator[]) => {
-    for (const entity of entities) {
-      await this.repo.contents.removeLinks(entity);
-      await this.repo.contents.removeTopics(entity);
-    }
-  };
-
   async queryTopicNames() {
-    return this.repo.contents.findAllTopicNames({ orderBy: 'updatedAt' });
+    return this.repo.contents.findAvailableTopicNames({ orderBy: 'updatedAt' });
   }
 
   async queryTopics(q: TopicQuery) {
-    const topics = await this.repo.contents.findAllTopics(q);
+    const topics = await this.repo.contents.findAvailableTopics(q);
     const topicsGroup = groupBy(topics, 'name');
     const result: TopicVO[] = [];
     const titles = await this.entityService.getEntityTitles(topics);
-    const snippets = await this.getSnippets(topics);
+    const snippets = await this.getSnippets(topics.filter(isInlineTopic));
 
     for (const [name, topics] of Object.entries(topicsGroup)) {
       const topicVO: TopicVO = {
@@ -158,7 +150,9 @@ export default class ContentService extends BaseService implements OnModuleInit 
       };
 
       for (const topic of topics) {
-        const snippet = snippets[topic.entityType][topic.entityId]![`${topic.position.start},${topic.position.end}`]!;
+        const snippet = isInlineTopic(topic)
+          ? snippets[topic.entityType][topic.entityId]![`${topic.position.start},${topic.position.end}`]!
+          : null;
 
         topicVO.entities.push({
           entityId: topic.entityId,
@@ -220,7 +214,7 @@ export default class ContentService extends BaseService implements OnModuleInit 
     return result;
   }
 
-  async createTopics(topics: TopicDTO[]) {
+  async createTopics(topics: TopicDTO[] | InlineTopicDTO[]) {
     const createdAt = Date.now();
 
     await this.entityService.assertAvailableEntities(topics);
@@ -229,7 +223,7 @@ export default class ContentService extends BaseService implements OnModuleInit 
       const _topics = topics.map((topic) => ({ ...topic, createdAt }));
 
       for (const topic of uniqBy(topics, 'entityId')) {
-        await this.repo.contents.removeTopics(topic);
+        await this.repo.contents.removeTopics(topic, isInlineTopic(topics[0]!));
       }
       await this.repo.contents.createTopics(_topics);
     });
