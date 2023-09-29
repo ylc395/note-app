@@ -15,7 +15,7 @@ export interface CreatedFile extends File {
 }
 
 export interface FileTextRecord {
-  position: string;
+  location: string;
   text: string;
 }
 

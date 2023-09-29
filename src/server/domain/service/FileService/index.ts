@@ -1,16 +1,22 @@
 import { Inject, Injectable } from '@nestjs/common';
+import { Worker } from 'node:worker_threads';
+import path from 'node:path';
 import compact from 'lodash/compact';
 import map from 'lodash/map';
-import { getDocument } from 'pdfjs-dist';
+import { wrap } from 'comlink';
+import nodeEndpoint from 'comlink/dist/umd/node-adapter';
 
 import { type FileVO, type FilesDTO, type FileTextRecord, type CreatedFile, isFileUrl } from 'model/file';
 import { token as fileReaderToken, FileReader } from 'infra/fileReader';
 
-import BaseService from './BaseService';
+import BaseService from '../BaseService';
+import type TextExtraction from './TextExtraction';
 
 @Injectable()
 export default class FileService extends BaseService {
   @Inject(fileReaderToken) private readonly fileReader!: FileReader;
+
+  private readonly extraction = wrap<TextExtraction>(nodeEndpoint(new Worker(path.join(__dirname, 'TextExtraction'))));
 
   async createFiles(files: FilesDTO) {
     const tasks = files.map(async (file) => {
@@ -78,7 +84,7 @@ export default class FileService extends BaseService {
     let records: FileTextRecord[] | undefined;
 
     if (mimeType === 'application/pdf') {
-      records = await this.extractPdfText(data);
+      records = await this.extraction.extractPdfText(data);
     }
 
     if (!records) {
@@ -87,27 +93,4 @@ export default class FileService extends BaseService {
 
     this.repo.files.createText({ records, fileId: id });
   };
-
-  private async extractPdfText(data: ArrayBuffer) {
-    // todo: set a workerPort just like in client/PfEditor
-    const doc = await getDocument(new Uint8Array(data)).promise;
-    const records: FileTextRecord[] = [];
-
-    for (let pageNum = 1; pageNum <= doc.numPages; pageNum++) {
-      const page = await doc.getPage(pageNum);
-      const textContent = await page.getTextContent();
-
-      let text = '';
-
-      for (const item of textContent.items) {
-        if ('str' in item) {
-          text += item.str;
-        }
-      }
-
-      text && records.push({ text, position: String(pageNum) });
-    }
-
-    return records;
-  }
 }
