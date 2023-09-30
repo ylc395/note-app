@@ -25,7 +25,7 @@ export default abstract class Runtime {
     return isMainThread;
   }
 
-  getDataDir() {
+  private getDataDir() {
     const dir = IS_DEV ? `${APP_NAME}-dev` : IS_TEST ? `${APP_NAME}-test` : APP_NAME;
 
     if (process.env.APPDATA) {
@@ -36,6 +36,16 @@ export default abstract class Runtime {
       process.platform == 'darwin' ? process.env.HOME + '/Library/Preferences' : process.env.HOME + '/.local/share',
       dir,
     );
+  }
+
+  getPaths() {
+    const appDir = this.getDataDir();
+
+    return {
+      rootPath: appDir,
+      fileCachePath: join(appDir, 'file_cache'),
+      ocrCachePath: join(appDir, 'ocr_cache'),
+    };
   }
 
   protected get db() {

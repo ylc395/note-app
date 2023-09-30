@@ -1,7 +1,7 @@
 import { parse as parseUrl } from 'node:url';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { readFile, writeFile, readJSON, writeJSON, pathExists, ensureDirSync } from 'fs-extra';
+import { readFile, writeFile, readJSON, writeJSON, pathExists } from 'fs-extra';
 import { Injectable, Inject, Logger } from '@nestjs/common';
 
 import type { FileReader } from 'infra/fileReader';
@@ -23,10 +23,8 @@ export default class ElectronFileReader implements FileReader {
 
   constructor(@Inject(runtimeToken) private readonly runtime: Runtime) {
     this.logger = new Logger(`${runtime.isMain() ? 'app' : 'http'} ${ElectronFileReader.name}`);
-    this.cachePath = path.join(this.runtime.getDataDir(), 'cache');
+    this.cachePath = this.runtime.getPaths().fileCachePath;
     this.cacheIndexPath = path.join(this.cachePath, 'cache.index.json');
-
-    ensureDirSync(this.cachePath);
   }
 
   private static getFileNameFromUrl(url: string) {

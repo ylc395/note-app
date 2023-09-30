@@ -1,7 +1,7 @@
 import { Kysely, SqliteDialect, CamelCasePlugin, type Transaction } from 'kysely';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import BetterSqlite3 from 'better-sqlite3';
-import { ensureDirSync, emptyDirSync } from 'fs-extra';
+import { removeSync } from 'fs-extra';
 import { join } from 'node:path';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 
@@ -72,14 +72,13 @@ export default class SqliteDb implements Database {
   }
 
   private createDb() {
-    const dir = this.app.getDataDir();
-    ensureDirSync(dir);
+    const { rootPath } = this.app.getPaths();
+    const dbPath = join(rootPath, 'db.sqlite');
 
     if ((CLEAN_DB && this.app.isMain()) || IS_TEST) {
-      emptyDirSync(dir);
+      removeSync(dbPath);
     }
 
-    const dbPath = join(dir, 'db.sqlite');
     this.logger.verbose(dbPath);
 
     return new Kysely<Db>({

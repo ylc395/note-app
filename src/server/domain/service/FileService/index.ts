@@ -1,10 +1,11 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, type OnModuleInit } from '@nestjs/common';
 import { Worker } from 'node:worker_threads';
 import path from 'node:path';
 import compact from 'lodash/compact';
 import map from 'lodash/map';
 import { wrap } from 'comlink';
 import nodeEndpoint from 'comlink/dist/umd/node-adapter';
+import TaskQueue from 'queue';
 
 import { type FileVO, type FilesDTO, type FileTextRecord, type CreatedFile, isFileUrl } from 'model/file';
 import { token as fileReaderToken, FileReader } from 'infra/fileReader';
@@ -13,10 +14,22 @@ import BaseService from '../BaseService';
 import type TextExtraction from './TextExtraction';
 
 @Injectable()
-export default class FileService extends BaseService {
+export default class FileService extends BaseService implements OnModuleInit {
   @Inject(fileReaderToken) private readonly fileReader!: FileReader;
 
-  private readonly extraction = wrap<TextExtraction>(nodeEndpoint(new Worker(path.join(__dirname, 'TextExtraction'))));
+  private readonly extraction = wrap<TextExtraction>(
+    nodeEndpoint(new Worker(path.join(__dirname, 'TextExtraction')).setMaxListeners(Infinity)),
+  );
+
+  private extractingTextTaskQueue = new TaskQueue({ concurrency: 1, autostart: true });
+  private fileIdsOnQueue = new Set<FileVO['id']>();
+
+  onModuleInit() {
+    this.extractingTextTaskQueue.addEventListener('success', (e) => {
+      const [file] = e.detail.result as [CreatedFile];
+      this.fileIdsOnQueue.delete(file.id);
+    });
+  }
 
   async createFiles(files: FilesDTO) {
     const tasks = files.map(async (file) => {
@@ -54,7 +67,12 @@ export default class FileService extends BaseService {
       }
     }
 
-    createdFiles.filter(({ id }) => !haveText[id]).forEach(this.extractText);
+    createdFiles
+      .filter(({ id }) => !haveText[id] && !this.fileIdsOnQueue.has(id))
+      .forEach((file) => {
+        this.fileIdsOnQueue.add(file.id);
+        this.extractingTextTaskQueue.push(() => this.extractText(file));
+      });
 
     return result;
   }
@@ -80,17 +98,40 @@ export default class FileService extends BaseService {
     return file;
   }
 
-  private extractText = async ({ data, mimeType, id }: CreatedFile) => {
-    let records: FileTextRecord[] | undefined;
-
-    if (mimeType === 'application/pdf') {
-      records = await this.extraction.extractPdfText(data);
+  private extractText = async (file: CreatedFile) => {
+    if (file.mimeType === 'application/pdf') {
+      await this.extractPdfText(file);
     }
 
-    if (!records) {
-      return;
-    }
-
-    this.repo.files.createText({ records, fileId: id });
+    return file;
   };
+
+  private async extractPdfText({ id, data }: CreatedFile) {
+    const pageCount = await this.extraction.initPdf(id, data);
+    const records: FileTextRecord[] = [];
+
+    for (let i = 1; i < pageCount; i++) {
+      const text = await this.extraction.getPdfTextContent(i);
+      text && records.push({ text, location: String(i) });
+    }
+
+    if (records.length > 0) {
+      await this.repo.files.createText({ records, fileId: id });
+    } else {
+      const { ocrCachePath } = this.runtime.getPaths();
+      const concurrency = await this.extraction.initOcr(ocrCachePath);
+      const queue = new TaskQueue({ concurrency });
+
+      for (let i = 1; i <= pageCount; i++) {
+        queue.push(async () => {
+          const { text, location } = await this.extraction.getPdfImageTextContent(i);
+          await this.repo.files.createText({ fileId: id, records: [{ text, location: JSON.stringify(location) }] });
+        });
+      }
+
+      await queue.start();
+    }
+
+    await this.extraction.cleanup();
+  }
 }

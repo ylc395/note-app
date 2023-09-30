@@ -1,15 +1,11 @@
-import { Injectable, Inject, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 
 import type { Config } from 'model/config';
-import { token as runtimeToken } from 'infra/Runtime';
-import type Runtime from 'infra/Runtime';
 
 import BaseService from './BaseService';
 
 @Injectable()
 export default class AppService extends BaseService implements OnModuleInit {
-  @Inject(runtimeToken) private readonly runtime!: Runtime;
-
   async onModuleInit() {
     const config = await this.queryConfig();
 
