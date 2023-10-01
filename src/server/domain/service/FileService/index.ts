@@ -24,9 +24,8 @@ import type TextExtraction from './TextExtraction';
 export default class FileService extends BaseService implements OnApplicationBootstrap {
   @Inject(fileReaderToken) private readonly fileReader!: FileReader;
 
-  private readonly extraction = wrap<TextExtraction>(
-    nodeEndpoint(new Worker(path.join(__dirname, 'TextExtraction')).setMaxListeners(Infinity)),
-  );
+  private extraction?: TextExtraction;
+  private extractionWorker?: Worker;
 
   private extractingTextTaskQueue = new TaskQueue({ concurrency: 1, autostart: true });
   private fileIdsOnQueue = new Set<FileVO['id']>();
@@ -104,16 +103,40 @@ export default class FileService extends BaseService implements OnApplicationBoo
     return file;
   }
 
+  private readonly terminateExtraction = async () => {
+    if (!this.extractionWorker) {
+      throw new Error('no extraction');
+    }
+
+    await this.extractionWorker.terminate();
+    this.extractionWorker = undefined;
+    this.extraction = undefined;
+  };
+
   private extractText = async (file: CreatedFile, finished?: UnfinishedTextExtraction['finished']) => {
+    if (!this.extraction) {
+      this.extractionWorker = new Worker(path.join(__dirname, 'TextExtraction')).setMaxListeners(Infinity);
+      this.extraction = wrap<TextExtraction>(nodeEndpoint(this.extractionWorker));
+    }
+
     if (file.mimeType === 'application/pdf') {
       await this.extractPdfText(file, finished);
     }
 
     this.fileIdsOnQueue.delete(file.id);
     await this.repo.files.markTextExtracted(file.id);
+
+    // is last one
+    if (this.extractingTextTaskQueue.length === 1) {
+      await this.terminateExtraction();
+    }
   };
 
   private async extractPdfText({ id, data }: CreatedFile, finished?: UnfinishedTextExtraction['finished']) {
+    if (!this.extraction) {
+      throw new Error('no extraction');
+    }
+
     const pageCount = await this.extraction.initPdf(data);
     const records: FileTextRecord[] = [];
 
@@ -138,7 +161,7 @@ export default class FileService extends BaseService implements OnApplicationBoo
           continue;
         }
         queue.push(async () => {
-          const { text, location } = await this.extraction.getPdfImageTextContent(i);
+          const { text, location } = await this.extraction!.getPdfImageTextContent(i);
           // always save ocr result even if `text` is empty
           await this.repo.files.createText({ fileId: id, records: [{ text, location }] });
         });
