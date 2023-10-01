@@ -37,7 +37,7 @@ export default class TextExtraction {
     return text;
   }
 
-  async initOcr(cachePath: string) {
+  async initOcr({ cachePath, maxConcurrency }: { cachePath: string; maxConcurrency: number }) {
     if (this.ocrScheduler) {
       throw new Error('is doing ocr');
     }
@@ -46,11 +46,12 @@ export default class TextExtraction {
       throw new Error('no pdf document');
     }
 
-    const workerCount = Math.min(cpus().length, 4);
+    const workerCount = Math.min(cpus().length, this.currentPdfDoc.numPages, maxConcurrency, 1);
+
     this.ocrScheduler = createScheduler();
 
     const workers = await Promise.all(
-      range(0, Math.min(workerCount, this.currentPdfDoc.numPages)).map(() =>
+      range(0, workerCount).map(() =>
         createWorker('chi_sim', OEM.DEFAULT, {
           corePath: path.join(process.cwd(), 'node_modules/tesseract.js-core'),
           cachePath,
@@ -64,7 +65,7 @@ export default class TextExtraction {
       this.ocrScheduler.addWorker(worker);
     }
 
-    return this.ocrScheduler.getNumWorkers();
+    return workers.length;
   }
 
   async cleanup() {

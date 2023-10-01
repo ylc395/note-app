@@ -153,7 +153,7 @@ export default class FileService extends BaseService implements OnApplicationBoo
       await this.repo.files.createText({ records, fileId: id });
     } else {
       const { ocrCachePath } = this.runtime.getPaths();
-      const concurrency = await this.extraction.initOcr(ocrCachePath);
+      const concurrency = await this.extraction.initOcr({ cachePath: ocrCachePath, maxConcurrency: 4 });
       const queue = new TaskQueue({ concurrency });
 
       for (let i = 1; i <= pageCount; i++) {
