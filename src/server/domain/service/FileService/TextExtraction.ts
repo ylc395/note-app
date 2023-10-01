@@ -8,13 +8,11 @@ import { OEM, createScheduler, createWorker, type Scheduler } from 'tesseract.js
 import nodeAdaptor from 'comlink/dist/umd/node-adapter';
 import range from 'lodash/range';
 
-import type { FileVO } from 'model/file';
-
 export default class TextExtraction {
   private currentPdfDoc?: PDFDocumentProxy;
   private ocrScheduler?: Scheduler;
 
-  async initPdf(id: FileVO['id'], data: ArrayBuffer) {
+  async initPdf(data: ArrayBuffer) {
     const doc = await getDocument(new Uint8Array(data)).promise;
     this.currentPdfDoc = doc;
 

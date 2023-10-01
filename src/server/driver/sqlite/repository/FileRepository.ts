@@ -79,7 +79,14 @@ export default class SqliteFileRepository extends BaseRepository implements File
   async createText({ fileId, records }: FileText) {
     await this.db
       .insertInto(fileTextSchema.tableName)
-      .values(records.map((record) => ({ fileId, ...record })))
+      .values(
+        records.map(({ location: { page, ...info }, text }) => ({
+          fileId,
+          text,
+          location: JSON.stringify(info),
+          page: page || null,
+        })),
+      )
       .execute();
   }
 }

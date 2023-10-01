@@ -15,7 +15,14 @@ export interface CreatedFile extends File {
 }
 
 export interface FileTextRecord {
-  location: string;
+  location: {
+    page?: number;
+    scale?: number;
+    words?: {
+      text: string;
+      box: { x0: number; x1: number; y0: number; y1: number };
+    }[];
+  };
   text: string;
 }
 

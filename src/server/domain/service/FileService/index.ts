@@ -107,12 +107,12 @@ export default class FileService extends BaseService implements OnModuleInit {
   };
 
   private async extractPdfText({ id, data }: CreatedFile) {
-    const pageCount = await this.extraction.initPdf(id, data);
+    const pageCount = await this.extraction.initPdf(data);
     const records: FileTextRecord[] = [];
 
     for (let i = 1; i < pageCount; i++) {
       const text = await this.extraction.getPdfTextContent(i);
-      text && records.push({ text, location: String(i) });
+      text && records.push({ text, location: { page: i } });
     }
 
     if (records.length > 0) {
@@ -125,7 +125,8 @@ export default class FileService extends BaseService implements OnModuleInit {
       for (let i = 1; i <= pageCount; i++) {
         queue.push(async () => {
           const { text, location } = await this.extraction.getPdfImageTextContent(i);
-          await this.repo.files.createText({ fileId: id, records: [{ text, location: JSON.stringify(location) }] });
+          // always save ocr result even if `text` is empty
+          await this.repo.files.createText({ fileId: id, records: [{ text, location }] });
         });
       }
 
