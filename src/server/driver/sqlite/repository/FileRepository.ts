@@ -5,20 +5,19 @@ import type { FileRepository } from 'service/repository/FileRepository';
 import type { File, FileText, FileVO } from 'model/file';
 
 import BaseRepository from './BaseRepository';
-import fileSchema, { type Row } from '../schema/file';
-import fileTextSchema from '../schema/fileText';
-
-const { tableName } = fileSchema;
+import { tableName as fileTableName, type Row } from '../schema/file';
+import { tableName as fileTextTableName } from '../schema/fileText';
+import { sql } from 'kysely';
 
 export default class SqliteFileRepository extends BaseRepository implements FileRepository {
   async findOneById(id: string) {
-    const existedFile = await this.db.selectFrom(tableName).selectAll().where('id', '=', id).executeTakeFirst();
+    const existedFile = await this.db.selectFrom(fileTableName).selectAll().where('id', '=', id).executeTakeFirst();
     return existedFile || null;
   }
 
   async findBlobById(id: string) {
     const row = await this.db
-      .selectFrom(tableName)
+      .selectFrom(fileTableName)
       .select(['data', 'mimeType'])
       .where('id', '=', id)
       .executeTakeFirst();
@@ -32,7 +31,7 @@ export default class SqliteFileRepository extends BaseRepository implements File
 
   private async findOrCreate({ data, mimeType }: { data: ArrayBuffer; mimeType: string }) {
     const hash = createHash('md5').update(new Uint8Array(data)).digest('base64');
-    const existedFile = await this.db.selectFrom(tableName).selectAll().where('hash', '=', hash).executeTakeFirst();
+    const existedFile = await this.db.selectFrom(fileTableName).selectAll().where('hash', '=', hash).executeTakeFirst();
 
     if (existedFile) {
       return existedFile;
@@ -40,7 +39,7 @@ export default class SqliteFileRepository extends BaseRepository implements File
 
     const buffer = Buffer.from(data);
 
-    const createdFile = await this.createOne(tableName, {
+    const createdFile = await this.createOne(fileTableName, {
       id: this.generateId(),
       hash,
       data: buffer,
@@ -64,7 +63,7 @@ export default class SqliteFileRepository extends BaseRepository implements File
 
   async haveText(ids: FileVO['id'][]) {
     const counts = await this.db
-      .selectFrom(fileTextSchema.tableName)
+      .selectFrom(fileTextTableName)
       .select((eb) => ['fileId', eb.fn.countAll().as('count')])
       .where('fileId', 'in', ids)
       .groupBy('fileId')
@@ -78,7 +77,7 @@ export default class SqliteFileRepository extends BaseRepository implements File
 
   async createText({ fileId, records }: FileText) {
     await this.db
-      .insertInto(fileTextSchema.tableName)
+      .insertInto(fileTextTableName)
       .values(
         records.map(({ location: { page, ...info }, text }) => ({
           fileId,
@@ -88,5 +87,26 @@ export default class SqliteFileRepository extends BaseRepository implements File
         })),
       )
       .execute();
+  }
+
+  async markTextExtracted(fileId: FileVO['id']) {
+    await this.db.updateTable(fileTableName).set({ textExtracted: 1 }).where('id', '=', fileId).execute();
+  }
+
+  async findTextUnextracted(mimeTypes: string[]) {
+    const rows = await this.db
+      .selectFrom(fileTableName)
+      .leftJoin(fileTextTableName, `${fileTableName}.id`, `${fileTextTableName}.fileId`)
+      .select([
+        `${fileTableName}.id as fileId`,
+        `${fileTableName}.mimeType`,
+        sql<string>`group_concat(${sql.ref(`${fileTextTableName}.page`)})`.as('pages'),
+      ])
+      .where(`${fileTableName}.textExtracted`, '=', 0)
+      .where(`${fileTableName}.mimeType`, 'in', mimeTypes)
+      .groupBy(`${fileTableName}.id`)
+      .execute();
+
+    return rows.map(({ fileId, pages, mimeType }) => ({ fileId, mimeType, finished: pages.split(',').map(Number) }));
   }
 }

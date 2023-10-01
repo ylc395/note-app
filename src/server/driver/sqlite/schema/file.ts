@@ -1,4 +1,4 @@
-import type { SchemaModule } from 'kysely';
+import type { SchemaModule, Generated } from 'kysely';
 
 export interface Row {
   id: string;
@@ -7,6 +7,7 @@ export interface Row {
   mimeType: string;
   size: number;
   hash: string;
+  textExtracted: Generated<number>;
 }
 
 export const tableName = 'files';
@@ -20,6 +21,7 @@ export default {
       .addColumn('data', 'binary', (col) => col.notNull())
       .addColumn('mimeType', 'text', (col) => col.notNull())
       .addColumn('size', 'integer', (col) => col.notNull())
+      .addColumn('textExtracted', 'integer', (col) => col.notNull().defaultTo(0))
       .addColumn('hash', 'text', (col) => col.notNull());
   },
 } as const;

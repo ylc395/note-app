@@ -34,7 +34,7 @@ export default class SqliteMaterialRepository extends HierarchyEntityRepository 
       throw new Error('no fileId');
     }
 
-    const file: FileRow | null = await this.files.findOneById(material.fileId);
+    const file = await this.files.findOneById(material.fileId);
 
     if (!file) {
       throw new Error('no file');

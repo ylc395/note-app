@@ -1,4 +1,4 @@
-import { Inject, Injectable, type OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, type OnApplicationBootstrap } from '@nestjs/common';
 import { Worker } from 'node:worker_threads';
 import path from 'node:path';
 import compact from 'lodash/compact';
@@ -7,14 +7,21 @@ import { wrap } from 'comlink';
 import nodeEndpoint from 'comlink/dist/umd/node-adapter';
 import TaskQueue from 'queue';
 
-import { type FileVO, type FilesDTO, type FileTextRecord, type CreatedFile, isFileUrl } from 'model/file';
+import {
+  type FileVO,
+  type FilesDTO,
+  type FileTextRecord,
+  type CreatedFile,
+  type UnfinishedTextExtraction,
+  isFileUrl,
+} from 'model/file';
 import { token as fileReaderToken, FileReader } from 'infra/fileReader';
 
 import BaseService from '../BaseService';
 import type TextExtraction from './TextExtraction';
 
 @Injectable()
-export default class FileService extends BaseService implements OnModuleInit {
+export default class FileService extends BaseService implements OnApplicationBootstrap {
   @Inject(fileReaderToken) private readonly fileReader!: FileReader;
 
   private readonly extraction = wrap<TextExtraction>(
@@ -24,11 +31,10 @@ export default class FileService extends BaseService implements OnModuleInit {
   private extractingTextTaskQueue = new TaskQueue({ concurrency: 1, autostart: true });
   private fileIdsOnQueue = new Set<FileVO['id']>();
 
-  onModuleInit() {
-    this.extractingTextTaskQueue.addEventListener('success', (e) => {
-      const [file] = e.detail.result as [CreatedFile];
-      this.fileIdsOnQueue.delete(file.id);
-    });
+  onApplicationBootstrap() {
+    if (this.runtime.isMain()) {
+      this.resumeUnfinishedTextExtraction();
+    }
   }
 
   async createFiles(files: FilesDTO) {
@@ -98,19 +104,24 @@ export default class FileService extends BaseService implements OnModuleInit {
     return file;
   }
 
-  private extractText = async (file: CreatedFile) => {
+  private extractText = async (file: CreatedFile, finished?: UnfinishedTextExtraction['finished']) => {
     if (file.mimeType === 'application/pdf') {
-      await this.extractPdfText(file);
+      await this.extractPdfText(file, finished);
     }
 
-    return file;
+    this.fileIdsOnQueue.delete(file.id);
+    await this.repo.files.markTextExtracted(file.id);
   };
 
-  private async extractPdfText({ id, data }: CreatedFile) {
+  private async extractPdfText({ id, data }: CreatedFile, finished?: UnfinishedTextExtraction['finished']) {
     const pageCount = await this.extraction.initPdf(data);
     const records: FileTextRecord[] = [];
 
     for (let i = 1; i < pageCount; i++) {
+      if (finished?.includes(i)) {
+        continue;
+      }
+
       const text = await this.extraction.getPdfTextContent(i);
       text && records.push({ text, location: { page: i } });
     }
@@ -123,6 +134,9 @@ export default class FileService extends BaseService implements OnModuleInit {
       const queue = new TaskQueue({ concurrency });
 
       for (let i = 1; i <= pageCount; i++) {
+        if (finished?.includes(i)) {
+          continue;
+        }
         queue.push(async () => {
           const { text, location } = await this.extraction.getPdfImageTextContent(i);
           // always save ocr result even if `text` is empty
@@ -134,5 +148,17 @@ export default class FileService extends BaseService implements OnModuleInit {
     }
 
     await this.extraction.cleanup();
+  }
+
+  private async resumeUnfinishedTextExtraction() {
+    const mimeTypes = ['application/pdf'];
+    const unextracted = await this.repo.files.findTextUnextracted(mimeTypes);
+
+    for (const { fileId, mimeType, finished } of unextracted) {
+      this.extractingTextTaskQueue.push(async () => {
+        const data = await this.repo.files.findBlobById(fileId);
+        await this.extractText({ mimeType, id: fileId, data: data! }, finished);
+      });
+    }
   }
 }

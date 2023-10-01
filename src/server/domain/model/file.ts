@@ -31,4 +31,10 @@ export interface FileText {
   fileId: string;
 }
 
+export interface UnfinishedTextExtraction {
+  fileId: CreatedFile['id'];
+  mimeType: string;
+  finished?: number[];
+}
+
 export * from 'shard/model/file';
