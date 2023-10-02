@@ -101,6 +101,6 @@ export default class SqliteNoteSearchEngine {
 
     const result = await query.orderBy(`${NOTE_FTS_TABLE}.rank`).execute();
 
-    return result.map((row) => ({ ...row, entityType: EntityTypes.Note }));
+    return result.map((row) => ({ ...row, entityType: EntityTypes.Note as const }));
   }
 }

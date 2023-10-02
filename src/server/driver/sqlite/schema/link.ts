@@ -1,9 +1,10 @@
 import type { SchemaModule } from 'kysely';
+import type { ContentEntityTypes } from 'model/content';
 import type { EntityTypes } from 'model/entity';
 
 export interface Row {
   fromEntityId: string;
-  fromEntityType: EntityTypes;
+  fromEntityType: ContentEntityTypes;
   fromPosition: `${number},${number}`;
   toEntityId: string;
   toEntityType: EntityTypes;

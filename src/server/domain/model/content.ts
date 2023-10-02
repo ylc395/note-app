@@ -1,9 +1,11 @@
 import type { EntityLocator } from 'model/entity';
-import type { TopicDTO, LinkDTO, HighlightPosition, InlineTopicDTO } from 'shard/model/content';
+import type { TopicDTO, LinkDTO, HighlightPosition, InlineTopicDTO, ContentEntityTypes } from 'shard/model/content';
 
 export * from 'shard/model/content';
 
-export interface ContentUpdatedEvent extends EntityLocator {
+export type ContentEntityLocator = EntityLocator<ContentEntityTypes>;
+
+export interface ContentUpdatedEvent extends ContentEntityLocator {
   content: string;
   updatedAt: number;
 }

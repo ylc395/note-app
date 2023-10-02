@@ -11,6 +11,7 @@ import type { Row as NoteRow } from '../schema/note';
 
 import NoteSearchEngine, { NOTE_FTS_TABLE } from './NoteSearchEngine';
 import { WRAPPER_END_TEXT, WRAPPER_START_TEXT } from './constants';
+import type { ContentEntityTypes } from 'model/content';
 
 interface SearchEngineDb extends Db {
   [NOTE_FTS_TABLE]: NoteRow & { rowid: number; [NOTE_FTS_TABLE]: string; rank: number };
@@ -36,7 +37,12 @@ export default class SqliteSearchEngine implements SearchEngine {
   }
 
   async search(q: SearchParams) {
-    const types = q.types || [EntityTypes.Note, EntityTypes.Memo, EntityTypes.Material, EntityTypes.MaterialAnnotation];
+    const types: ContentEntityTypes[] = q.types || [
+      EntityTypes.Note,
+      EntityTypes.Memo,
+      EntityTypes.Material,
+      EntityTypes.MaterialAnnotation,
+    ];
 
     let descantIds: EntityId[] | undefined;
 

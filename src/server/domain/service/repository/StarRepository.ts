@@ -1,8 +1,8 @@
-import type { StarRecord } from 'model/star';
 import type { EntityLocator } from 'model/entity';
+import type { StarEntityLocator, StarRecord } from 'model/star';
 
 export interface StarRepository {
-  batchCreate: (entities: EntityLocator[]) => Promise<StarRecord[]>;
+  batchCreate: (entities: StarEntityLocator[]) => Promise<StarRecord[]>;
   findAllByLocators: (entities?: EntityLocator[], filter?: { isAvailable?: boolean }) => Promise<StarRecord[]>;
   remove: (id: StarRecord['entityId']) => Promise<void>;
   findOneById: (id: StarRecord['entityId']) => Promise<StarRecord | null>;

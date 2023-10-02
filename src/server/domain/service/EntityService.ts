@@ -112,6 +112,7 @@ export default class EntityService extends BaseService {
       [EntityTypes.Memo]: {},
       [EntityTypes.Material]: {},
       [EntityTypes.MaterialAnnotation]: {},
+      [EntityTypes.File]: {},
     };
 
     const entitiesGroup = groupBy(entities, 'entityType');

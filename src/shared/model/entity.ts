@@ -5,6 +5,7 @@ export enum EntityTypes {
   Memo,
   Material,
   MaterialAnnotation,
+  File,
 }
 
 export type HierarchyEntityTypes = EntityTypes.Note | EntityTypes.Memo | EntityTypes.Material;
@@ -18,6 +19,10 @@ export type EntityParentId = EntityId | null;
 export interface HierarchyEntity {
   id: EntityId;
   parentId: EntityParentId;
+}
+
+export interface HierarchyEntityLocator extends EntityLocator {
+  entityType: HierarchyEntityTypes;
 }
 
 export const entityLocatorSchema = object({

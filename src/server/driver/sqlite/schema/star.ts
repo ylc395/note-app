@@ -1,11 +1,11 @@
 import type { SchemaModule } from 'kysely';
-import type { EntityTypes } from 'model/entity';
+import type { StarEntityTypes } from 'model/star';
 
 export const tableName = 'stars';
 
 export interface Row {
   id: string;
-  entityType: EntityTypes;
+  entityType: StarEntityTypes;
   entityId: string;
 }
 

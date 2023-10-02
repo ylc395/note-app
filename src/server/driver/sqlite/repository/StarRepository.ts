@@ -1,7 +1,7 @@
 import map from 'lodash/map';
 
 import type { EntityLocator } from 'model/entity';
-import type { StarVO } from 'model/star';
+import type { StarVO, StarEntityLocator } from 'model/star';
 import type { StarRepository } from 'service/repository/StarRepository';
 
 import BaseRepository from './BaseRepository';
@@ -10,7 +10,7 @@ import { tableName as recyclableTableName } from '../schema/recyclable';
 
 export default class SqliteStarRepository extends BaseRepository implements StarRepository {
   readonly tableName = schema.tableName;
-  async batchCreate(entities: EntityLocator[]) {
+  async batchCreate(entities: StarEntityLocator[]) {
     const rows = entities.map(({ entityId, entityType }) => ({
       entityId,
       entityType,

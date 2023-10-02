@@ -1,11 +1,23 @@
-import type { infer as Infer } from 'zod';
-import { type EntityId, type EntityWithTitle, entityLocatorSchema } from './entity';
+import { nativeEnum } from 'zod';
+import pick from 'lodash/pick';
 
-export const starsDTOSchema = entityLocatorSchema.array();
+import { type EntityId, type EntityWithTitle, type EntityLocator, entityLocatorSchema, EntityTypes } from './entity';
 
-export type StarsDTO = Infer<typeof starsDTOSchema>;
+const starEntityTypes = pick(EntityTypes, ['Material', 'Memo', 'Note', 'MaterialAnnotation']);
 
-export interface StarVO extends EntityWithTitle {
+export const starsDTOSchema = entityLocatorSchema.extend({ entityType: nativeEnum(starEntityTypes) }).array();
+
+export type StarEntityTypes =
+  | EntityTypes.Material
+  | EntityTypes.MaterialAnnotation
+  | EntityTypes.Memo
+  | EntityTypes.Note;
+
+export type StarEntityLocator = EntityLocator<StarEntityTypes>;
+
+export type StarsDTO = StarEntityLocator[];
+
+export interface StarVO extends EntityWithTitle<StarEntityTypes> {
   id: EntityId;
 }
 

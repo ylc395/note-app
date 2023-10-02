@@ -4,8 +4,8 @@ import { observable, makeObservable, runInAction, action } from 'mobx';
 import pull from 'lodash/pull';
 
 import { token as remoteToken } from 'infra/remote';
-import type { EntityId, EntityLocator, EntityTypes } from 'model/entity';
-import type { StarVO, StarsDTO } from 'model/star';
+import type { EntityId, EntityLocator } from 'model/entity';
+import type { StarVO, StarsDTO, StarEntityTypes } from 'model/star';
 import { getLocators } from 'utils/collection';
 
 export enum StarEvents {
@@ -27,7 +27,7 @@ export default class StarService extends Emitter<{
   private readonly remote = container.resolve(remoteToken);
   @observable stars?: Required<StarVO>[];
 
-  async star(entityType: EntityTypes, entityIds: EntityId[]) {
+  async star(entityType: StarEntityTypes, entityIds: EntityId[]) {
     const entities = getLocators(entityIds, entityType);
     await this.remote.patch<StarsDTO>('/stars', entities);
     this.emit(StarEvents.Added, entities);

@@ -1,7 +1,7 @@
 import { Inject, Injectable, forwardRef } from '@nestjs/common';
 
+import type { StarEntityLocator, StarVO } from 'model/star';
 import type { EntityLocator } from 'model/entity';
-import type { StarVO } from 'model/star';
 import { buildIndex } from 'utils/collection';
 
 import BaseService from './BaseService';
@@ -11,7 +11,7 @@ import EntityService from './EntityService';
 export default class StarService extends BaseService {
   @Inject(forwardRef(() => EntityService)) private readonly entityService!: EntityService;
 
-  async create(entities: EntityLocator[]) {
+  async create(entities: StarEntityLocator[]) {
     await this.entityService.assertAvailableEntities(entities);
 
     if ((await this.repo.stars.findAllByLocators(entities)).length > 0) {

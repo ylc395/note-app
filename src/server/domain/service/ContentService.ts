@@ -27,9 +27,11 @@ import {
   type LinkToQuery,
   type InlineTopicDTO,
   type InlineTopic,
+  type ContentEntityLocator,
+  type ContentEntityTypes,
   isInlineTopic,
 } from 'model/content';
-import { EntityTypes, type EntityLocator, EntityId } from 'model/entity';
+import { EntityTypes, type EntityId, EntityLocator } from 'model/entity';
 
 import BaseService from './BaseService';
 import EntityService from './EntityService';
@@ -113,7 +115,7 @@ export default class ContentService extends BaseService implements OnModuleInit 
     };
   }
 
-  private readonly extract = async (entity: ContentUpdatedEvent | EntityLocator) => {
+  private readonly extract = async (entity: ContentUpdatedEvent | ContentEntityLocator) => {
     const content = 'content' in entity ? entity.content : (await this.repo.entities.findBody(entity))!;
     const mdAst = fromMarkdown(content, {
       mdastExtensions: [topicExtension],
@@ -186,7 +188,7 @@ export default class ContentService extends BaseService implements OnModuleInit 
 
   private async getSnippets(entities: (EntityLocator & { position: HighlightPosition })[]) {
     const result: Record<
-      EntityTypes,
+      ContentEntityTypes,
       Record<EntityId, Record<`${number},${number}`, Pick<EntityWithSnippet, 'snippet' | 'highlight'>>>
     > = {
       [EntityTypes.Note]: {},

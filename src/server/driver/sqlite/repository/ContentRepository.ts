@@ -1,4 +1,12 @@
-import { isInlineTopic, type Link, type LinkDirection, type LinkToQuery, type Topic } from 'model/content';
+import {
+  isInlineTopic,
+  type ContentEntityTypes,
+  type Link,
+  type LinkDirection,
+  type LinkToQuery,
+  type Topic,
+  type ContentEntityLocator,
+} from 'model/content';
 import type { EntityLocator } from 'model/entity';
 import type { ContentRepository } from 'service/repository/ContentRepository';
 
@@ -29,9 +37,14 @@ export default class SqliteContentRepository extends BaseRepository implements C
       .where((eb) =>
         direction
           ? eb.and(
-              direction === 'to' ? { toEntityId: id, toEntityType: type } : { fromEntityId: id, fromEntityType: type },
+              direction === 'to'
+                ? { toEntityId: id, toEntityType: type }
+                : { fromEntityId: id, fromEntityType: type as ContentEntityTypes },
             )
-          : eb.or([eb.and({ toEntityId: id, toEntityType: type }), eb.and({ fromEntityId: id, fromEntityType: type })]),
+          : eb.or([
+              eb.and({ toEntityId: id, toEntityType: type }),
+              eb.and({ fromEntityId: id, fromEntityType: type as ContentEntityTypes }),
+            ]),
       )
       .execute();
   }
@@ -72,7 +85,7 @@ export default class SqliteContentRepository extends BaseRepository implements C
     );
   }
 
-  async removeTopics({ entityId: id, entityType: type }: EntityLocator, inlineOnly: boolean) {
+  async removeTopics({ entityId: id, entityType: type }: ContentEntityLocator, inlineOnly: boolean) {
     let qb = this.db.deleteFrom(topicTableName).where('entityId', '=', id).where('entityType', '=', type);
 
     if (inlineOnly) {

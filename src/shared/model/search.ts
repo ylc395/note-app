@@ -3,10 +3,11 @@ import { array, nativeEnum, object, string, type infer as Infer, boolean } from 
 import isEmpty from 'lodash/isEmpty';
 import negate from 'lodash/negate';
 
-import { EntityTypes, type EntityId, type EntityWithTitle } from './entity';
+import type { EntityId, EntityWithTitle } from './entity';
 import type { Starable } from './star';
+import { type ContentEntityTypes, contentEntityTypes } from './content';
 
-export interface SearchResult extends EntityWithTitle {
+export interface SearchResult extends EntityWithTitle<ContentEntityTypes> {
   body: string;
   highlights: { start: number; end: number; scope: Scopes }[];
   mainEntityId?: EntityId;
@@ -40,7 +41,7 @@ export const searchParamsSchema = object({
     .refine(isNotEmpty)
     .optional(),
   root: string().optional(),
-  types: array(nativeEnum(EntityTypes)).optional(),
+  types: array(nativeEnum(contentEntityTypes)).optional(),
   scopes: array(nativeEnum(Scopes)).optional(),
   recyclables: boolean().optional(),
 });

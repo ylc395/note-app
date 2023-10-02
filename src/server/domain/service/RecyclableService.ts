@@ -1,8 +1,7 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import differenceWith from 'lodash/differenceWith';
 
-import type { EntityLocator } from 'model/entity';
-import { RecyclableEntity, RecyclableEntityTypes, RecycleReason } from 'model/recyclables';
+import { type RecyclableEntityLocator, type RecyclableEntityTypes, RecycleReason } from 'model/recyclables';
 import { getLocators } from 'utils/collection';
 
 import BaseService from './BaseService';
@@ -12,7 +11,7 @@ import EntityService from './EntityService';
 export default class RecyclableService extends BaseService {
   @Inject(forwardRef(() => EntityService)) private readonly entityService!: EntityService;
 
-  async create(entities: RecyclableEntity[]) {
+  async create(entities: RecyclableEntityLocator[]) {
     await this.entityService.assertAvailableEntities(entities);
 
     const descantIds = await this.repo.entities.findDescendantIds(entities);
@@ -34,7 +33,7 @@ export default class RecyclableService extends BaseService {
     await this.repo.recyclables.batchCreate(newRecyclables);
   }
 
-  async remove(entity: RecyclableEntity) {
+  async remove(entity: RecyclableEntityLocator) {
     if ((await this.repo.recyclables.findAllByLocators([entity], RecycleReason.Direct)).length === 0) {
       throw new Error('invalid entity');
     }

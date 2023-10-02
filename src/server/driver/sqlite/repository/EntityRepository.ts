@@ -1,6 +1,7 @@
 import groupBy from 'lodash/groupBy';
 import map from 'lodash/map';
-import { type EntityId, EntityTypes, EntityLocator } from 'model/entity';
+import { type EntityId, EntityTypes, EntityLocator, HierarchyEntityTypes, HierarchyEntityLocator } from 'model/entity';
+import type { ContentEntityTypes } from 'model/content';
 import type { EntityRepository } from 'service/repository/EntityRepository';
 
 import BaseRepository from './BaseRepository';
@@ -13,13 +14,12 @@ export default class SqliteEntityRepository extends BaseRepository implements En
   private readonly materials = new SqliteMaterialRepository(this.sqliteDb);
   private readonly memos = new SqliteMemoRepository(this.sqliteDb);
 
-  async findDescendantIds(entities: EntityLocator[]) {
+  async findDescendantIds(entities: HierarchyEntityLocator[]) {
     const entitiesGroup = groupBy(entities, 'entityType');
-    const result: Record<EntityTypes, Record<EntityId, EntityId[]>> = {
+    const result: Record<HierarchyEntityTypes, Record<EntityId, EntityId[]>> = {
       [EntityTypes.Note]: {},
       [EntityTypes.Memo]: {},
       [EntityTypes.Material]: {},
-      [EntityTypes.MaterialAnnotation]: {},
     };
 
     for (const [type, _entities] of Object.entries(entitiesGroup)) {
@@ -40,7 +40,7 @@ export default class SqliteEntityRepository extends BaseRepository implements En
           break;
       }
 
-      result[Number(type) as EntityTypes] = descants;
+      result[Number(type) as HierarchyEntityTypes] = descants;
     }
 
     return result;
@@ -84,7 +84,7 @@ export default class SqliteEntityRepository extends BaseRepository implements En
       }
 
       for await (const row of stream) {
-        yield { ...row, entityType: Number(type) as EntityTypes };
+        yield { ...row, entityType: Number(type) as ContentEntityTypes };
       }
     }
   }

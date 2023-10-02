@@ -1,12 +1,12 @@
 import type { SchemaModule } from 'kysely';
-import type { EntityTypes } from 'model/entity';
+import type { ContentEntityTypes } from 'model/content';
 
 export const tableName = 'topics';
 
 export interface Row {
   name: string;
   entityId: string;
-  entityType: EntityTypes;
+  entityType: ContentEntityTypes;
   position: `${number},${number}` | null;
   createdAt: number;
 }
