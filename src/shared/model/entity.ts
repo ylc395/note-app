@@ -7,6 +7,10 @@ export enum EntityTypes {
   MaterialAnnotation,
 }
 
+export type HierarchyEntityTypes = EntityTypes.Note | EntityTypes.Memo | EntityTypes.Material;
+
+export type MainEntityTypes = HierarchyEntityTypes;
+
 export type EntityId = string;
 
 export type EntityParentId = EntityId | null;
@@ -21,8 +25,8 @@ export const entityLocatorSchema = object({
   entityType: nativeEnum(EntityTypes),
 });
 
-export type EntityLocator = Infer<typeof entityLocatorSchema>;
+export type EntityLocator<T = EntityTypes> = Infer<typeof entityLocatorSchema> & { entityType: T };
 
-export interface EntityWithTitle extends EntityLocator {
+export interface EntityWithTitle<T = EntityTypes> extends EntityLocator<T> {
   title: string;
 }

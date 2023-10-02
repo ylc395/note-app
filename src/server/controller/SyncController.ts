@@ -9,6 +9,6 @@ export default class SyncController {
 
   @Post('/synchronization')
   async start(): Promise<void> {
-    return this.syncService.sync();
+    // return this.syncService.sync();
   }
 }

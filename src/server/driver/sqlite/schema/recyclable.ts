@@ -1,14 +1,14 @@
-import type { EntityTypes } from 'model/entity';
 import { type SchemaModule, type Generated, sql } from 'kysely';
+import type { RecyclableEntityTypes } from 'model/recyclables';
 
 export const tableName = 'recyclables';
 
 export interface Row {
   entityId: string;
-  entityType: EntityTypes;
+  entityType: RecyclableEntityTypes;
   reason: number;
   isHard: Generated<0 | 1>;
-  deletedAt: Generated<number>;
+  deletedAt: number;
 }
 
 export default {

@@ -18,6 +18,6 @@ export function buildIndex<T>(list: T[], key?: keyof T) {
   return index;
 }
 
-export function getLocators<T extends { id: EntityId }>(entities: T[] | EntityId[], type: EntityTypes) {
+export function getLocators<T extends { id: EntityId }, E extends EntityTypes>(entities: T[] | EntityId[], type: E) {
   return entities.map((v) => ({ entityId: typeof v === 'string' ? v : v.id, entityType: type }));
 }

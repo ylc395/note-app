@@ -1,15 +1,33 @@
-import type { infer as Infer } from 'zod';
-import { entityLocatorSchema, type EntityWithTitle } from './entity';
+import { nativeEnum } from 'zod';
+import pick from 'lodash/pick';
 
-export const RecyclablesDTOSchema = entityLocatorSchema.array();
+import {
+  entityLocatorSchema,
+  EntityTypes,
+  type MainEntityTypes,
+  type EntityWithTitle,
+  type EntityLocator,
+} from './entity';
 
-export type RecyclablesDTO = Infer<typeof RecyclablesDTOSchema>;
+export const recyclableDTOSchema = entityLocatorSchema.extend({
+  entityType: nativeEnum(pick(EntityTypes, ['Note', 'Material', 'Memo'])),
+});
+
+export const recyclablesDTOSchema = recyclableDTOSchema.array();
+
+export type RecyclableDTO = RecyclableEntity;
+
+export type RecyclablesDTO = RecyclableDTO[];
+
+export type RecyclableEntityTypes = MainEntityTypes;
+
+export type RecyclableEntity = EntityLocator<RecyclableEntityTypes>;
 
 export enum RecycleReason {
   Direct = 1,
   Cascade,
 }
 
-export interface RecyclableVO extends EntityWithTitle {
+export interface RecyclableVO extends EntityWithTitle<RecyclableEntityTypes> {
   deletedAt: number;
 }

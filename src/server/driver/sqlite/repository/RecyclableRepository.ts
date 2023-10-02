@@ -1,6 +1,6 @@
 import map from 'lodash/map';
 import type { EntityLocator } from 'model/entity';
-import type { RecycleReason, Recyclable } from 'model/recyclables';
+import type { RecycleReason, RecyclableRecord } from 'model/recyclables';
 import type { RecyclablesRepository } from 'service/repository/RecyclableRepository';
 
 import BaseRepository from './BaseRepository';
@@ -9,12 +9,10 @@ import schema from '../schema/recyclable';
 const { tableName } = schema;
 
 export default class SqliteRecyclableRepository extends BaseRepository implements RecyclablesRepository {
-  async batchCreate(entities: Recyclable[]) {
+  async batchCreate(entities: RecyclableRecord[]) {
     const rows = await this.db
       .insertInto(tableName)
-      .values(
-        entities.map(({ entityId: id, entityType: type, reason }) => ({ entityId: id, entityType: type, reason })),
-      )
+      .values(entities)
       .returning(['entityId', 'entityType', 'deletedAt', 'reason'])
       .execute();
 
@@ -51,14 +49,5 @@ export default class SqliteRecyclableRepository extends BaseRepository implement
     const rows = await this.getCommonSql({ reason }).where('entityId', 'in', ids).execute();
 
     return rows;
-  }
-
-  async getHardDeletedRecord({ entityId: entityId, entityType: entityType }: EntityLocator) {
-    const row = await this.getCommonSql({ isHard: 1 })
-      .where('entityId', '=', entityId)
-      .where('entityType', '=', entityType)
-      .executeTakeFirst();
-
-    return row || null;
   }
 }
