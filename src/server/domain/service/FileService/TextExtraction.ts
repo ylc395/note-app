@@ -46,7 +46,7 @@ export default class TextExtraction {
       throw new Error('no pdf document');
     }
 
-    const workerCount = Math.min(cpus().length, this.currentPdfDoc.numPages, maxConcurrency, 1);
+    const workerCount = Math.max(Math.min(cpus().length, this.currentPdfDoc.numPages, maxConcurrency), 1);
 
     this.ocrScheduler = createScheduler();
 
@@ -69,17 +69,15 @@ export default class TextExtraction {
   }
 
   async cleanup() {
-    if (!this.currentPdfDoc) {
-      throw new Error('no pdf document');
+    if (this.currentPdfDoc) {
+      await this.currentPdfDoc.destroy();
+      this.currentPdfDoc = undefined;
     }
 
     if (this.ocrScheduler) {
       await this.ocrScheduler.terminate();
+      this.ocrScheduler = undefined;
     }
-
-    await this.currentPdfDoc.destroy();
-    this.ocrScheduler = undefined;
-    this.currentPdfDoc = undefined;
   }
 
   async getPdfImageTextContent(pageNum: number) {

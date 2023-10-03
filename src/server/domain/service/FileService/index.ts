@@ -125,6 +125,7 @@ export default class FileService extends BaseService implements OnApplicationBoo
 
     this.fileIdsOnQueue.delete(file.id);
     await this.repo.files.markTextExtracted(file.id);
+    await this.extraction.cleanup();
 
     // is last one
     if (this.extractingTextTaskQueue.length === 1) {
@@ -169,8 +170,6 @@ export default class FileService extends BaseService implements OnApplicationBoo
 
       await queue.start();
     }
-
-    await this.extraction.cleanup();
   }
 
   private async resumeUnfinishedTextExtraction() {
