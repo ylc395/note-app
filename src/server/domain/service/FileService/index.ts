@@ -97,7 +97,7 @@ export default class FileService extends BaseService implements OnApplicationBoo
     const file = await this.fileReader.readRemoteFile(url);
 
     if (!file) {
-      throw new Error('can not request file');
+      throw new Error(`can not request file: ${url}`);
     }
 
     return file;

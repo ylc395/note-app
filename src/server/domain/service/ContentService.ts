@@ -13,7 +13,11 @@ import {
   mdastExtension as topicExtension,
   tokenExtension as topicTokenExtension,
   type Topic as TopicNode,
-} from 'infra/markdown/topic';
+} from 'infra/markdown/syntax/topic';
+import {
+  mdastExtension as multimediaExtension,
+  type Multimedia as MultimediaNode,
+} from 'infra/markdown/syntax/multimedia';
 import { IS_IPC } from 'infra/Runtime';
 import {
   type ContentUpdatedEvent,
@@ -81,22 +85,28 @@ export default class ContentService extends BaseService implements OnModuleInit 
 
     return {
       visitor: (node: UnistNode) => {
-        if (!is<MdAstLinkNode>(node, 'link') || !node.position || !node.url) {
+        if (
+          !(is<MdAstLinkNode>(node, 'link') || is<MultimediaNode>(node, 'multimedia')) ||
+          !node.position ||
+          !node.url
+        ) {
           return;
         }
 
         const parsed = parseUrl(node.url);
 
-        if (parsed) {
-          links.push({
-            from: {
-              ...entity,
-              position: { start: node.position.start.offset || 0, end: node.position.end.offset || 0 },
-            },
-            to: parsed,
-            createdAt: entity.updatedAt,
-          });
+        if (!parsed) {
+          return;
         }
+
+        links.push({
+          from: {
+            ...entity,
+            position: { start: node.position.start.offset || 0, end: node.position.end.offset || 0 },
+          },
+          to: parsed,
+          createdAt: entity.updatedAt,
+        });
       },
       done: async () => {
         if (links.length === 0) {
@@ -118,7 +128,7 @@ export default class ContentService extends BaseService implements OnModuleInit 
   private readonly extract = async (entity: ContentUpdatedEvent | ContentEntityLocator) => {
     const content = 'content' in entity ? entity.content : (await this.repo.entities.findBody(entity))!;
     const mdAst = fromMarkdown(content, {
-      mdastExtensions: [topicExtension],
+      mdastExtensions: [topicExtension, multimediaExtension],
       extensions: [topicTokenExtension],
     });
 

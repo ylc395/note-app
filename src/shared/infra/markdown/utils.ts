@@ -39,19 +39,23 @@ const routes = [
 ];
 
 export function parseUrl(url: string) {
-  const { protocol, host, path, hash } = parse(url);
+  try {
+    const { protocol, host, path, hash } = parse(url);
 
-  if (protocol && !URL_PREFIX.startsWith(protocol)) {
+    if (protocol && !URL_PREFIX.startsWith(protocol)) {
+      return null;
+    }
+
+    for (const { type, matcher } of routes) {
+      const result = matcher(`/${host}${path}`);
+
+      if (result) {
+        return { entityType: type, entityId: result.params.id, fragmentId: hash?.slice(1) || '' };
+      }
+    }
+
+    return null;
+  } catch {
     return null;
   }
-
-  for (const { type, matcher } of routes) {
-    const result = matcher(`/${host}${path}`);
-
-    if (result) {
-      return { entityType: type, entityId: result.params.id, fragmentId: hash?.slice(1) || '' };
-    }
-  }
-
-  return null;
 }
