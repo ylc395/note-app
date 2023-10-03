@@ -60,7 +60,7 @@ export default class ElectronFileReader implements FileReader {
 
       return result;
     } catch (e) {
-      this.logger.error(e);
+      this.logger.log(e);
       return null;
     }
   }

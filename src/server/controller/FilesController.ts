@@ -3,17 +3,20 @@ import multer from 'multer';
 import type { Request as ExpressRequest, Response as ExpressResponse } from 'express';
 
 import type { IRequest, IResponse } from 'infra/transport';
-import { type FileVO, filesDTOSchema } from 'model/file';
+import { type FileVO, filesDTOSchema, httpUrlSchema } from 'model/file';
 import FileService from 'service/FileService';
 
-import { Get, Patch, Param, Response, Request } from './decorators';
+import { Get, Patch, Param, Response, Request, createSchemaPipe } from './decorators';
 
 @Controller()
 export default class ResourcesController {
   constructor(private readonly fileService: FileService) {}
 
   @Get('/files/remote/:url/blob')
-  async getFileByUrl(@Param('url') url: string, @Response({ passthrough: true }) res: IResponse): Promise<ArrayBuffer> {
+  async getFileByUrl(
+    @Param('url', createSchemaPipe(httpUrlSchema)) url: string,
+    @Response({ passthrough: true }) res: IResponse,
+  ): Promise<ArrayBuffer> {
     const { mimeType, data } = await this.fileService.fetchRemoteFile(url);
 
     res.set('Content-Type', mimeType);

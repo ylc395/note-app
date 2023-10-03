@@ -1,6 +1,11 @@
+import { string } from 'zod';
 import type { FileDTO, FileUrlDTO, FileVO } from 'shard/model/file';
 
 export const isFileUrl = (dto: FileDTO): dto is FileUrlDTO => 'url' in dto;
+
+export const httpUrlSchema = string()
+  .url()
+  .refine((str) => /^https?:\/\//.test(str));
 
 export interface LocalFile {
   data: ArrayBuffer;
