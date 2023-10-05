@@ -4,7 +4,7 @@ import mapValues from 'lodash/mapValues';
 import intersectionBy from 'lodash/intersectionBy';
 import map from 'lodash/map';
 
-import { type EntityId, EntityTypes, EntityLocator } from 'model/entity';
+import { type EntityId, EntityTypes, EntityLocator, HierarchyEntityTypes } from 'model/entity';
 
 import BaseService from './BaseService';
 import NoteService from './NoteService';
@@ -41,9 +41,10 @@ export default class EntityService extends BaseService {
 
   async getPath(entities: EntityLocator[]) {
     const entitiesGroup = groupBy(entities, 'entityType');
-    const ancestors: Record<EntityTypes.Note | EntityTypes.Material, Record<EntityId, EntityId[]>> = {
+    const ancestors: Record<HierarchyEntityTypes, Record<EntityId, EntityId[]>> = {
       [EntityTypes.Note]: {},
       [EntityTypes.Material]: {},
+      [EntityTypes.Memo]: {},
     };
 
     for (const [type, _entities] of Object.entries(entitiesGroup)) {
@@ -55,6 +56,8 @@ export default class EntityService extends BaseService {
           break;
         case EntityTypes.Material:
           ancestors[EntityTypes.Material] = await this.repo.materials.findAncestorIds(ids);
+          break;
+        case EntityTypes.Memo:
           break;
         default:
           throw new Error('unsupported type');
@@ -73,7 +76,11 @@ export default class EntityService extends BaseService {
 
     return mapValues(ancestors, (entities, type) => {
       return mapValues(entities, (ids) => {
-        return ids.map((id) => titles[Number(type) as EntityTypes][id]!);
+        return ids.map((id) => ({
+          title: titles[Number(type) as EntityTypes][id]!,
+          entityId: id,
+          entityType: type,
+        }));
       });
     });
   }

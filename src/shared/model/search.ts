@@ -3,20 +3,34 @@ import { array, nativeEnum, object, string, type infer as Infer, boolean } from 
 import isEmpty from 'lodash/isEmpty';
 import negate from 'lodash/negate';
 
-import type { EntityId, EntityWithTitle } from './entity';
+import type { EntityId, EntityTypes } from './entity';
 import type { Starable } from './star';
-import { type ContentEntityTypes, contentEntityTypes } from './content';
+import { contentEntityTypes } from './content';
 
-export interface SearchResult extends EntityWithTitle<ContentEntityTypes> {
+interface BaseSearchResult {
+  entityId: string;
+  title: string;
   body: string;
   highlights: { start: number; end: number; scope: Scopes }[];
-  mainEntityId?: EntityId;
-  mimeType?: string;
 }
 
-export interface SearchResultVO extends SearchResult, Starable {
-  path: string;
+interface CommonSearchResult extends BaseSearchResult {
+  entityType: EntityTypes.Note | EntityTypes.Memo;
 }
+
+export interface MaterialAnnotationSearchResult extends BaseSearchResult {
+  entityType: EntityTypes.MaterialAnnotation;
+  mainEntityId: EntityId;
+}
+
+interface MaterialSearchResult extends BaseSearchResult {
+  entityType: EntityTypes.Material;
+  mimeType: string;
+}
+
+export type SearchResult = CommonSearchResult | MaterialSearchResult | MaterialAnnotationSearchResult;
+
+export type SearchResultVO = SearchResult & Starable & { path: { entityId: string; title: string }[] };
 
 export enum Scopes {
   Title = 'title',
