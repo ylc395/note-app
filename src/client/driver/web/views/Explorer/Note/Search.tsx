@@ -12,7 +12,7 @@ export default (function Search() {
   const { search } = container.resolve(SearchService);
   const onChange: ChangeEventHandler = (e) => {
     const { value } = e.target as HTMLInputElement;
-    search({ terms: [value], types: [EntityTypes.Note] });
+    search({ terms: [value], types: [EntityTypes.Note], created: { from: '2022-02-01' } });
   };
 
   return (

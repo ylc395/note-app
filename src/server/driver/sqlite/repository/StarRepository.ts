@@ -25,20 +25,21 @@ export default class SqliteStarRepository extends BaseRepository implements Star
     return (await this.db.selectFrom(this.tableName).selectAll().where('id', '=', id).executeTakeFirst()) || null;
   }
 
-  async findAllByLocators(entities?: EntityLocator[], filter?: { isAvailable?: boolean }) {
-    let qb = this.db.selectFrom(this.tableName).selectAll(this.tableName);
+  async findAllAvailable() {
+    return await this.db
+      .selectFrom(this.tableName)
+      .selectAll(this.tableName)
+      .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.entityId`)
+      .where(`${recyclableTableName}.entityId`, 'is', null)
+      .execute();
+  }
 
-    if (typeof filter?.isAvailable === 'boolean') {
-      qb = qb
-        .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.entityId`)
-        .where(`${recyclableTableName}.entityId`, filter.isAvailable ? 'is' : 'is not', null);
-    }
-
-    if (entities) {
-      qb = qb.where(`${this.tableName}.entityId`, 'in', map(entities, 'id'));
-    }
-
-    return await qb.execute();
+  async findAllByLocators(entities: EntityLocator[]) {
+    return await this.db
+      .selectFrom(this.tableName)
+      .selectAll(this.tableName)
+      .where(`${this.tableName}.entityId`, 'in', map(entities, 'entityId'))
+      .execute();
   }
 
   async remove(id: StarVO['id']) {

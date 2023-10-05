@@ -21,7 +21,14 @@ export default class SqliteNoteSearchEngine {
 
     await sql`
       CREATE VIRTUAL TABLE ${sql.table(NOTE_FTS_TABLE)} 
-      USING fts5(id UNINDEXED, title, body, content=${sql.table(noteTable.tableName)});
+      USING fts5(
+        id UNINDEXED, 
+        title, 
+        body, 
+        created_at UNINDEXED, 
+        user_updated_at UNINDEXED, 
+        content=${sql.table(noteTable.tableName)}
+      );
     `.execute(this.engine.db);
 
     await sql`

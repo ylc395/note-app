@@ -22,7 +22,7 @@ export default class StarService extends BaseService {
   }
 
   async query() {
-    const stars = await this.repo.stars.findAllByLocators(undefined, { isAvailable: true });
+    const stars = await this.repo.stars.findAllAvailable();
     const titles = await this.entityService.getEntityTitles(stars);
 
     return stars.map((star) => {
