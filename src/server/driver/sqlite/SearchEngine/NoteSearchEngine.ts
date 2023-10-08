@@ -34,7 +34,7 @@ export default class SqliteNoteSearchEngine {
     await sql`
       CREATE TRIGGER ${sql.raw(NOTE_FTS_TABLE)}_ai AFTER INSERT ON ${sql.table(noteTable.tableName)}
       BEGIN 
-        INSERT INTO ${sql.table(NOTE_FTS_TABLE)} (title, body) VALUES (new.title, new.body);
+        INSERT INTO ${sql.table(NOTE_FTS_TABLE)} (rowid, title, body) VALUES (new.rowid, new.title, new.body);
       END;`.execute(this.engine.db);
 
     // prettier-ignore

@@ -3,7 +3,6 @@ import type { SchemaModule, Generated } from 'kysely';
 export interface Row {
   id: string;
   data: ArrayBuffer | string;
-  text: string | null;
   mimeType: string;
   size: number;
   hash: string;

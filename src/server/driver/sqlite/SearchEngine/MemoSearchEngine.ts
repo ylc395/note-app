@@ -34,15 +34,14 @@ export default class SqliteNoteSearchEngine {
     await sql`
       CREATE TRIGGER ${sql.raw(MEMO_FTS_TABLE)}_ai AFTER INSERT ON ${sql.table(memoTable.tableName)}
       BEGIN 
-        INSERT INTO ${sql.table(MEMO_FTS_TABLE)} (content) VALUES (new.content);
+        INSERT INTO ${sql.table(MEMO_FTS_TABLE)} (rowid, content) VALUES (new.rowid, new.content);
       END;`.execute(this.engine.db);
 
+    // prettier-ignore
     await sql`
       CREATE TRIGGER ${sql.raw(MEMO_FTS_TABLE)}_ad AFTER DELETE on ${sql.table(memoTable.tableName)}
       BEGIN
-        INSERT INTO ${sql.table(MEMO_FTS_TABLE)} (${sql.raw(
-      MEMO_FTS_TABLE,
-    )}, rowid, title, body) VALUES ('delete', old.rowid, new.content);
+        INSERT INTO ${sql.table(MEMO_FTS_TABLE)} (${sql.raw(MEMO_FTS_TABLE)}, rowid, content) VALUES ('delete', old.rowid, new.content);
       END;`.execute(this.engine.db);
 
     // prettier-ignore

@@ -10,14 +10,17 @@ import { type SearchParams, type SearchResult, Scopes } from 'model/search';
 import SqliteDb, { type Db } from '../Database';
 import type { Row as NoteRow } from '../schema/note';
 import type { Row as MemoRow } from '../schema/memo';
+import type { Row as FileTextRow } from '../schema/fileText';
 
 import NoteSearchEngine, { NOTE_FTS_TABLE } from './NoteSearchEngine';
 import MemoSearchEngine, { MEMO_FTS_TABLE } from './MemoSearchEngine';
+import MaterialSearchEngine, { FILE_TEXTS_FTS_TABLE } from './MaterialSearchEngine';
 import { WRAPPER_END_TEXT, WRAPPER_START_TEXT } from './constants';
 
 interface SearchEngineDb extends Db {
   [NOTE_FTS_TABLE]: NoteRow & { rowid: number; [NOTE_FTS_TABLE]: string; rank: number };
   [MEMO_FTS_TABLE]: MemoRow & { rowid: number; [MEMO_FTS_TABLE]: string; rank: number };
+  [FILE_TEXTS_FTS_TABLE]: FileTextRow & { rowid: number; [FILE_TEXTS_FTS_TABLE]: string; rank: number };
 }
 
 @Injectable()
@@ -30,6 +33,7 @@ export default class SqliteSearchEngine implements SearchEngine {
 
   private readonly notes = new NoteSearchEngine(this);
   private readonly memos = new MemoSearchEngine(this);
+  private readonly materials = new MaterialSearchEngine(this);
 
   get db() {
     return this.sqliteDb.getDb() as unknown as Kysely<SearchEngineDb>;
@@ -65,8 +69,7 @@ export default class SqliteSearchEngine implements SearchEngine {
     let searchResult = (
       await Promise.all([
         types.includes(EntityTypes.Note) ? this.notes.search(q) : [],
-        // types.includes(EntityTypes.Material) ? this.searchMaterials(q) : [],
-        // types.includes(EntityTypes.MaterialAnnotation) ? this.searchMaterialAnnotations(q) : [],
+        types.includes(EntityTypes.Material) ? this.materials.search(q) : [],
         types.includes(EntityTypes.Memo) ? this.memos.search(q) : [],
       ])
     ).flat();
