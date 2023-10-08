@@ -4,7 +4,7 @@ import mapValues from 'lodash/mapValues';
 import intersectionBy from 'lodash/intersectionBy';
 import map from 'lodash/map';
 
-import { type EntityId, EntityTypes, EntityLocator, HierarchyEntityTypes } from 'model/entity';
+import { type EntityId, type EntityLocator, type HierarchyEntityTypes, EntityTypes } from 'model/entity';
 
 import BaseService from './BaseService';
 import NoteService from './NoteService';
@@ -73,16 +73,20 @@ export default class EntityService extends BaseService {
       .flat();
 
     const titles = await this.getEntityTitles([...entities, ...ancestorEntities]);
+    const result: Record<EntityId, { title: string; entityId: EntityId }[]> = {};
 
-    return mapValues(ancestors, (entities, type) => {
-      return mapValues(entities, (ids) => {
-        return ids.map((id) => ({
-          title: titles[Number(type) as EntityTypes][id]!,
+    for (const entities of Object.values(ancestors)) {
+      const _entities = mapValues(entities, (ids) =>
+        ids.map((id) => ({
+          title: titles[id]!,
           entityId: id,
-          entityType: type,
-        }));
-      });
-    });
+        })),
+      );
+
+      Object.assign(result, _entities);
+    }
+
+    return result;
   }
 
   async filterAvailable<T extends EntityLocator>(entities: T[]) {
@@ -114,37 +118,28 @@ export default class EntityService extends BaseService {
   }
 
   async getEntityTitles(entities: EntityLocator[]) {
-    const entityTitles: Record<EntityTypes, Record<EntityId, string>> = {
-      [EntityTypes.Note]: {},
-      [EntityTypes.Memo]: {},
-      [EntityTypes.Material]: {},
-      [EntityTypes.MaterialAnnotation]: {},
-      [EntityTypes.File]: {},
-    };
+    const titles: Record<EntityId, string> = {};
 
     const entitiesGroup = groupBy(entities, 'entityType');
 
     for (const [type, records] of Object.entries(entitiesGroup)) {
       const ids = records.map(({ entityId }) => entityId);
-      let titles: Record<EntityId, string>;
 
       switch (Number(type)) {
         case EntityTypes.Note:
-          titles = await this.noteService.getTitles(ids);
+          Object.assign(titles, await this.noteService.getTitles(ids));
           break;
         case EntityTypes.Material:
-          titles = await this.materialService.getTitles(ids);
+          Object.assign(titles, await this.materialService.getTitles(ids));
           break;
         case EntityTypes.Memo:
-          titles = await this.memoService.getTitles(ids);
+          Object.assign(titles, await this.memoService.getTitles(ids));
           break;
         default:
           throw new Error('invalid type');
       }
-
-      entityTitles[Number(type) as EntityTypes] = titles;
     }
 
-    return entityTitles;
+    return titles;
   }
 }

@@ -169,7 +169,7 @@ export default class ContentService extends BaseService implements OnModuleInit 
         topicVO.entities.push({
           entityId: topic.entityId,
           entityType: topic.entityType,
-          title: titles[topic.entityType][topic.entityId] || '',
+          title: titles[topic.entityId] || '',
           ...snippet,
         });
 
@@ -191,7 +191,7 @@ export default class ContentService extends BaseService implements OnModuleInit 
     return froms.map(({ entityId, entityType, position }) => ({
       entityId,
       entityType,
-      title: titles[entityType][entityId]!,
+      title: titles[entityId]!,
       ...snippets[entityType][entityId]![`${position.start},${position.end}`]!,
     }));
   }

@@ -26,7 +26,7 @@ export default class StarService extends BaseService {
     const titles = await this.entityService.getEntityTitles(stars);
 
     return stars.map((star) => {
-      const title = titles[star.entityType][star.entityId];
+      const title = titles[star.entityId];
 
       if (!title) {
         throw new Error('no title');

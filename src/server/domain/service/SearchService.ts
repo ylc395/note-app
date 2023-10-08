@@ -30,9 +30,7 @@ export default class SearchService extends BaseService {
       ...result,
       isStar: Boolean(stars[result.entityId]),
       path:
-        result.entityType === EntityTypes.MaterialAnnotation
-          ? paths[EntityTypes.Material][result.mainEntityId]!
-          : paths[result.entityType][result.entityId]!,
+        result.entityType === EntityTypes.MaterialAnnotation ? paths[result.mainEntityId]! : paths[result.entityId]!,
     }));
   }
 }

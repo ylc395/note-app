@@ -46,7 +46,7 @@ export default class RecyclableService extends BaseService {
     const titles = await this.entityService.getEntityTitles(records);
 
     return records.map((record) => {
-      const title = titles[record.entityType][record.entityId];
+      const title = titles[record.entityId];
 
       if (!title) {
         throw new Error('no title');
