@@ -7,9 +7,7 @@ import { EntityTypes } from 'model/entity';
 import noteTable from '../schema/note';
 import recyclableTable from '../schema/recyclable';
 import type SearchEngine from './index';
-import { WRAPPER_END_TEXT, WRAPPER_START_TEXT } from './constants';
-
-export const NOTE_FTS_TABLE = 'notes_fts';
+import { NOTE_FTS_TABLE, WRAPPER_END_TEXT, WRAPPER_START_TEXT } from './tables';
 
 export default class SqliteNoteSearchEngine {
   constructor(private readonly engine: SearchEngine) {}

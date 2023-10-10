@@ -8,11 +8,10 @@ import { EntityTypes } from 'model/entity';
 
 import materialTable from '../schema/material';
 import fileTextTable from '../schema/fileText';
+import fileTable from '../schema/file';
 import recyclableTable from '../schema/recyclable';
 import type SearchEngine from './index';
-import { WRAPPER_END_TEXT, WRAPPER_START_TEXT } from './constants';
-
-export const FILE_TEXTS_FTS_TABLE = 'file_texts_fts';
+import { FILE_TEXTS_FTS_TABLE, WRAPPER_END_TEXT, WRAPPER_START_TEXT } from './tables';
 
 export default class SqliteNoteSearchEngine {
   constructor(private readonly engine: SearchEngine) {}
@@ -29,6 +28,7 @@ export default class SqliteNoteSearchEngine {
         text,
         page UNINDEXED,
         location UNINDEXED,
+        mimeType UNINDEXED,
         content=${sql.table(fileTextTable.tableName)}
       );
     `.execute(this.engine.db);
@@ -66,10 +66,12 @@ export default class SqliteNoteSearchEngine {
     // prettier-ignore
     let query = this.engine.db.selectFrom(FILE_TEXTS_FTS_TABLE)
     .innerJoin(materialTable.tableName, `${materialTable.tableName}.fileId`, `${FILE_TEXTS_FTS_TABLE}.fileId`)
+    .innerJoin(fileTable.tableName, `${fileTable.tableName}.id`, `${FILE_TEXTS_FTS_TABLE}.fileId`)
     .select(eb => [
       sql<string>`snippet(${sql.raw(FILE_TEXTS_FTS_TABLE)}, 1, '${sql.raw(WRAPPER_START_TEXT)}', '${sql.raw(WRAPPER_END_TEXT)}', '...',  10)`.as('body'),
       `${materialTable.tableName}.id as entityId`,
       `${materialTable.tableName}.createdAt`,
+      `${fileTable.tableName}.mimeType`,
       // https://www.sqlite.org/lang_select.html#bareagg
       eb.fn.max(`${FILE_TEXTS_FTS_TABLE}.rank`).as('rank'),
     ])
@@ -112,9 +114,10 @@ export default class SqliteNoteSearchEngine {
     const result = await query.groupBy(`${materialTable.tableName}.id`).execute();
 
     return result.map((row) => ({
+      mimeType: row.mimeType,
       body: row.body,
       entityId: row.entityId,
-      entityType: EntityTypes.Memo as const,
+      entityType: EntityTypes.Material as const,
       title: normalizeEntityTitle(row),
     }));
   }

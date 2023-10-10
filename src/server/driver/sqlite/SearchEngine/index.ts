@@ -7,21 +7,11 @@ import { type EntityId, EntityTypes } from 'model/entity';
 import type { ContentEntityTypes } from 'model/content';
 import { type SearchParams, type SearchResult, Scopes } from 'model/search';
 
-import SqliteDb, { type Db } from '../Database';
-import type { Row as NoteRow } from '../schema/note';
-import type { Row as MemoRow } from '../schema/memo';
-import type { Row as FileTextRow } from '../schema/fileText';
-
-import NoteSearchEngine, { NOTE_FTS_TABLE } from './NoteSearchEngine';
-import MemoSearchEngine, { MEMO_FTS_TABLE } from './MemoSearchEngine';
-import MaterialSearchEngine, { FILE_TEXTS_FTS_TABLE } from './MaterialSearchEngine';
-import { WRAPPER_END_TEXT, WRAPPER_START_TEXT } from './constants';
-
-interface SearchEngineDb extends Db {
-  [NOTE_FTS_TABLE]: NoteRow & { rowid: number; [NOTE_FTS_TABLE]: string; rank: number };
-  [MEMO_FTS_TABLE]: MemoRow & { rowid: number; [MEMO_FTS_TABLE]: string; rank: number };
-  [FILE_TEXTS_FTS_TABLE]: FileTextRow & { rowid: number; [FILE_TEXTS_FTS_TABLE]: string; rank: number };
-}
+import SqliteDb from '../Database';
+import NoteSearchEngine from './NoteSearchEngine';
+import MemoSearchEngine from './MemoSearchEngine';
+import MaterialSearchEngine from './MaterialSearchEngine';
+import { WRAPPER_END_TEXT, WRAPPER_START_TEXT, type SearchEngineDb } from './tables';
 
 @Injectable()
 export default class SqliteSearchEngine implements SearchEngine {
