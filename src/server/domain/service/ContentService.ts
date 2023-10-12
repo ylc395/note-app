@@ -29,13 +29,11 @@ import {
   type TopicDTO,
   type LinkDTO,
   type LinkToQuery,
-  type InlineTopicDTO,
   type InlineTopic,
   type ContentEntityLocator,
-  type ContentEntityTypes,
   isInlineTopic,
 } from 'model/content';
-import { EntityTypes, type EntityId, EntityLocator } from 'model/entity';
+import type { EntityId, EntityLocator } from 'model/entity';
 
 import BaseService from './BaseService';
 import EntityService from './EntityService';
@@ -163,7 +161,7 @@ export default class ContentService extends BaseService implements OnModuleInit 
 
       for (const topic of topics) {
         const snippet = isInlineTopic(topic)
-          ? snippets[topic.entityType][topic.entityId]![`${topic.position.start},${topic.position.end}`]!
+          ? snippets[topic.entityId]![`${topic.position.start},${topic.position.end}`]!
           : null;
 
         topicVO.entities.push({
@@ -192,20 +190,15 @@ export default class ContentService extends BaseService implements OnModuleInit 
       entityId,
       entityType,
       title: titles[entityId]!,
-      ...snippets[entityType][entityId]![`${position.start},${position.end}`]!,
+      ...snippets[entityId]![`${position.start},${position.end}`]!,
     }));
   }
 
   private async getSnippets(entities: (EntityLocator & { position: HighlightPosition })[]) {
     const result: Record<
-      ContentEntityTypes,
-      Record<EntityId, Record<`${number},${number}`, Pick<EntityWithSnippet, 'snippet' | 'highlight'>>>
-    > = {
-      [EntityTypes.Note]: {},
-      [EntityTypes.Material]: {},
-      [EntityTypes.Memo]: {},
-      [EntityTypes.MaterialAnnotation]: {},
-    };
+      EntityId,
+      Record<`${number},${number}`, Pick<EntityWithSnippet, 'snippet' | 'highlight'>>
+    > = {};
 
     const groups = groupBy(entities, ({ entityId, entityType }) => `${entityType}-${entityId}`);
 
@@ -213,20 +206,17 @@ export default class ContentService extends BaseService implements OnModuleInit 
       const positions = groups[`${entityType}-${entityId}`]!;
 
       for (const { position } of positions) {
-        if (!result[entityType][entityId]) {
-          result[entityType][entityId] = {};
+        if (!result[entityId]) {
+          result[entityId] = {};
         }
 
-        result[entityType][entityId]![`${position.start},${position.end}`] = ContentService.extractSnippet(
-          content,
-          position,
-        );
+        result[entityId]![`${position.start},${position.end}`] = ContentService.extractSnippet(content, position);
       }
     }
     return result;
   }
 
-  async createTopics(topics: TopicDTO[] | InlineTopicDTO[]) {
+  async createTopics(topics: TopicDTO[]) {
     const createdAt = Date.now();
 
     await this.entityService.assertAvailableEntities(topics);
@@ -235,7 +225,7 @@ export default class ContentService extends BaseService implements OnModuleInit 
       const _topics = topics.map((topic) => ({ ...topic, createdAt }));
 
       for (const topic of uniqBy(topics, 'entityId')) {
-        await this.repo.contents.removeTopics(topic, isInlineTopic(topics[0]!));
+        await this.repo.contents.removeTopics(topic, isInlineTopic(topic));
       }
       await this.repo.contents.createTopics(_topics);
     });

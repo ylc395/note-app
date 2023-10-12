@@ -40,3 +40,35 @@ export interface SearchEngineDb extends Db {
   [MEMO_FTS_TABLE]: MemoFtsRow;
   [FILE_TEXTS_FTS_TABLE]: FileTextFtsRow;
 }
+export function commonSql(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  qb: SelectQueryBuilder<SearchEngineDb, any, any>,
+  table: 'materials' | 'notes_fts' | 'memos_fts',
+  query: SearchParams,
+) {
+  if (!query.recyclables) {
+    qb = qb
+      .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${table}.id`)
+      .where(`${recyclableTableName}.entityId`, 'is', null);
+  }
+
+  if (query.created) {
+    if (query.created.from) {
+      qb = qb.where(`${table}.createdAt`, '>=', dayjs(query.created.from).valueOf());
+    }
+    if (query.created.to) {
+      qb = qb.where(`${table}.createdAt`, '<=', dayjs(query.created.to).valueOf());
+    }
+  }
+
+  if (query.updated) {
+    if (query.updated.from) {
+      qb = qb.where(`${table}.userUpdatedAt`, '>=', dayjs(query.updated.from).valueOf());
+    }
+    if (query.updated.to) {
+      qb = qb.where(`${table}.userUpdatedAt`, '<=', dayjs(query.updated.to).valueOf());
+    }
+  }
+
+  return qb;
+}

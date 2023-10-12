@@ -20,6 +20,7 @@ interface CommonSearchResult extends BaseSearchResult {
 
 export interface MaterialAnnotationSearchResult extends BaseSearchResult {
   entityType: EntityTypes.MaterialAnnotation;
+  mimeType: string;
   mainEntityId: EntityId;
 }
 
@@ -41,7 +42,7 @@ const isNotEmpty = negate(isEmpty);
 const isValidDate = (v: string) => dayjs(v).isValid();
 
 export const searchParamsSchema = object({
-  terms: array(string()).min(1),
+  keyword: string().min(1),
   created: object({
     from: string().refine(isValidDate).optional(),
     to: string().refine(isValidDate).optional(),

@@ -81,11 +81,15 @@ export default class SqliteDb implements Database {
 
     this.logger.verbose(dbPath);
 
+    const db = new BetterSqlite3(dbPath, {
+      verbose: IS_DEV ? this.logger.verbose.bind(this.logger) : undefined,
+    });
+
+    db.loadExtension(join(__dirname, 'simple-tokenizer/libsimple'));
+
     return new Kysely<Db>({
       dialect: new SqliteDialect({
-        database: new BetterSqlite3(dbPath, {
-          verbose: IS_DEV ? this.logger.verbose.bind(this.logger) : undefined,
-        }),
+        database: db,
       }),
       plugins: [new CamelCasePlugin()],
     });

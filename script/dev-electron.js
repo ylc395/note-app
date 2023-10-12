@@ -8,6 +8,7 @@ const { checker } = require('vite-plugin-checker');
 const debounce = require('lodash/debounce');
 const react = require('@vitejs/plugin-react-swc');
 const { nodePolyfills } = require('vite-plugin-node-polyfills');
+const downloadSqliteTokenizer = require('./download-sqlite-tokenizer');
 
 const ENV = 'development';
 const APP_PLATFORM = 'electron';
@@ -57,6 +58,8 @@ async function buildElectron(options) {
     outDir: path.join(ELECTRON_OUTPUT, 'server'),
   });
   await replaceTscAliasPaths({ configFile: CLIENT_TSCONFIG, outDir: path.join(ELECTRON_OUTPUT, 'client') });
+
+  await downloadSqliteTokenizer();
 
   // 3. bootstrap electron process
   if (options?.bootstrap) {

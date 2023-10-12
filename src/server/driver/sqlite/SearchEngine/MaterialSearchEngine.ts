@@ -1,5 +1,4 @@
 import { sql } from 'kysely';
-import dayjs from 'dayjs';
 import compact from 'lodash/compact';
 
 import { type SearchParams, Scopes } from 'model/search';
@@ -9,9 +8,8 @@ import { EntityTypes } from 'model/entity';
 import materialTable from '../schema/material';
 import fileTextTable from '../schema/fileText';
 import fileTable from '../schema/file';
-import recyclableTable from '../schema/recyclable';
 import type SearchEngine from './index';
-import { FILE_TEXTS_FTS_TABLE, WRAPPER_END_TEXT, WRAPPER_START_TEXT } from './tables';
+import { FILE_TEXTS_FTS_TABLE, WRAPPER_END_TEXT, WRAPPER_START_TEXT, commonSql } from './tables';
 
 export default class SqliteNoteSearchEngine {
   constructor(private readonly engine: SearchEngine) {}
@@ -24,11 +22,11 @@ export default class SqliteNoteSearchEngine {
     await sql`
       CREATE VIRTUAL TABLE ${sql.table(FILE_TEXTS_FTS_TABLE)} 
       USING fts5(
-        fileId UNINDEXED,
+        file_id UNINDEXED,
         text,
         page UNINDEXED,
         location UNINDEXED,
-        mimeType UNINDEXED,
+        tokenize="simple 0",
         content=${sql.table(fileTextTable.tableName)}
       );
     `.execute(this.engine.db);
@@ -61,62 +59,38 @@ export default class SqliteNoteSearchEngine {
       throw new Error('no db');
     }
 
-    const term = q.terms.join(' ');
-
     // prettier-ignore
     let query = this.engine.db.selectFrom(FILE_TEXTS_FTS_TABLE)
     .innerJoin(materialTable.tableName, `${materialTable.tableName}.fileId`, `${FILE_TEXTS_FTS_TABLE}.fileId`)
     .innerJoin(fileTable.tableName, `${fileTable.tableName}.id`, `${FILE_TEXTS_FTS_TABLE}.fileId`)
-    .select(eb => [
-      sql<string>`snippet(${sql.raw(FILE_TEXTS_FTS_TABLE)}, 1, '${sql.raw(WRAPPER_START_TEXT)}', '${sql.raw(WRAPPER_END_TEXT)}', '...',  10)`.as('body'),
+    .select([
+      sql<string>`simple_snippet(${sql.raw(FILE_TEXTS_FTS_TABLE)}, 1, '${sql.raw(WRAPPER_START_TEXT)}', '${sql.raw(WRAPPER_END_TEXT)}', '...',  100)`.as('body'),
       `${materialTable.tableName}.id as entityId`,
       `${materialTable.tableName}.createdAt`,
       `${fileTable.tableName}.mimeType`,
-      // https://www.sqlite.org/lang_select.html#bareagg
-      eb.fn.max(`${FILE_TEXTS_FTS_TABLE}.rank`).as('rank'),
+      `${FILE_TEXTS_FTS_TABLE}.rank`
     ])
 
-    if (!q.recyclables) {
-      query = query
-        .leftJoin(recyclableTable.tableName, `${recyclableTable.tableName}.entityId`, `${materialTable.tableName}.id`)
-        .where(`${recyclableTable.tableName}.entityId`, 'is', null);
-    }
+    query = commonSql(query, materialTable.tableName, q);
 
-    query = query.where((eb) => {
-      const scopes = q.scopes || [Scopes.Title, Scopes.Body];
+    query = query
+      .where((eb) => {
+        const scopes = q.scopes || [Scopes.Title, Scopes.Body];
 
-      return eb.or(
-        compact([
-          scopes.includes(Scopes.Body) && eb(`${FILE_TEXTS_FTS_TABLE}.text`, 'match', term),
-          scopes.includes(Scopes.Title) && eb(`${materialTable.tableName}.name`, 'like', `%${term}%`),
-        ]),
-      );
-    });
+        return eb.or(
+          compact([
+            scopes.includes(Scopes.Body) && eb(`${FILE_TEXTS_FTS_TABLE}.text`, 'match', q.keyword),
+            // see https://sqlite.org/forum/forumpost/f9bb0db67d?t=h&hist
+            // scopes.includes(Scopes.Title) && eb(`${materialTable.tableName}.name`, 'like', `%${term}%`),
+          ]),
+        );
+      })
+      .orderBy(`${FILE_TEXTS_FTS_TABLE}.rank`, 'desc');
 
-    if (q.created) {
-      if (q.created.from) {
-        query = query.where(`${materialTable.tableName}.createdAt`, '>=', dayjs(q.created.from).valueOf());
-      }
-      if (q.created.to) {
-        query = query.where(`${materialTable.tableName}.createdAt`, '<=', dayjs(q.created.to).valueOf());
-      }
-    }
-
-    if (q.updated) {
-      if (q.updated.from) {
-        query = query.where(`${materialTable.tableName}.userUpdatedAt`, '>=', dayjs(q.updated.from).valueOf());
-      }
-      if (q.updated.to) {
-        query = query.where(`${materialTable.tableName}.userUpdatedAt`, '<=', dayjs(q.updated.to).valueOf());
-      }
-    }
-
-    const result = await query.groupBy(`${materialTable.tableName}.id`).execute();
+    const result = await query.execute();
 
     return result.map((row) => ({
-      mimeType: row.mimeType,
-      body: row.body,
-      entityId: row.entityId,
+      ...row,
       entityType: EntityTypes.Material as const,
       title: normalizeEntityTitle(row),
     }));

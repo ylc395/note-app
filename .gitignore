@@ -1,5 +1,6 @@
 node_modules
 dist
 .vscode
+src/server/driver/sqlite/lib
 *.log
 *.tsbuildinfo

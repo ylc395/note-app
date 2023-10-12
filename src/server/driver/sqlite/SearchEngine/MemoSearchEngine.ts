@@ -1,14 +1,12 @@
 import { sql } from 'kysely';
-import dayjs from 'dayjs';
 
 import { type SearchParams, Scopes } from 'model/search';
 import { normalizeTitle } from 'model/memo';
 import { EntityTypes } from 'model/entity';
 
 import memoTable from '../schema/memo';
-import recyclableTable from '../schema/recyclable';
 import type SearchEngine from './index';
-import { MEMO_FTS_TABLE, WRAPPER_END_TEXT, WRAPPER_START_TEXT } from './tables';
+import { MEMO_FTS_TABLE, WRAPPER_END_TEXT, WRAPPER_START_TEXT, commonSql } from './tables';
 
 export default class SqliteNoteSearchEngine {
   constructor(private readonly engine: SearchEngine) {}
@@ -25,6 +23,7 @@ export default class SqliteNoteSearchEngine {
         content,
         created_at UNINDEXED, 
         user_updated_at UNINDEXED, 
+        tokenize="simple 0",
         content=${sql.table(memoTable.tableName)}
       );
     `.execute(this.engine.db);
@@ -57,52 +56,28 @@ export default class SqliteNoteSearchEngine {
       throw new Error('no db');
     }
 
-    const term = q.terms.join(' ');
-
     // prettier-ignore
     let query = this.engine.db.selectFrom(MEMO_FTS_TABLE).select([
       sql<string>`snippet(${sql.raw(MEMO_FTS_TABLE)}, 1, '${sql.raw(WRAPPER_START_TEXT)}', '${sql.raw(WRAPPER_END_TEXT)}', '...',  10)`.as('body'),
-      'createdAt',
-      'id as entityId',
+      `${MEMO_FTS_TABLE}.createdAt`,
+      `${MEMO_FTS_TABLE}.id as entityId`,
+      `${MEMO_FTS_TABLE}.rank`,
     ]);
 
-    if (!q.recyclables) {
-      query = query
-        .leftJoin(recyclableTable.tableName, `${recyclableTable.tableName}.entityId`, `${MEMO_FTS_TABLE}.id`)
-        .where(`${recyclableTable.tableName}.entityId`, 'is', null);
-    }
+    query = commonSql(query, MEMO_FTS_TABLE, q);
 
     if (!q.scopes) {
-      query = query.where(MEMO_FTS_TABLE, '=', term);
+      query = query.where(MEMO_FTS_TABLE, '=', q.keyword);
     } else {
       if (q.scopes.includes(Scopes.Body)) {
-        query = query.where(`${MEMO_FTS_TABLE}.content`, 'match', term);
+        query = query.where(`${MEMO_FTS_TABLE}.content`, 'match', q.keyword);
       }
     }
 
-    if (q.created) {
-      if (q.created.from) {
-        query = query.where(`${MEMO_FTS_TABLE}.createdAt`, '>=', dayjs(q.created.from).valueOf());
-      }
-      if (q.created.to) {
-        query = query.where(`${MEMO_FTS_TABLE}.createdAt`, '<=', dayjs(q.created.to).valueOf());
-      }
-    }
-
-    if (q.updated) {
-      if (q.updated.from) {
-        query = query.where(`${MEMO_FTS_TABLE}.userUpdatedAt`, '>=', dayjs(q.updated.from).valueOf());
-      }
-      if (q.updated.to) {
-        query = query.where(`${MEMO_FTS_TABLE}.userUpdatedAt`, '<=', dayjs(q.updated.to).valueOf());
-      }
-    }
-
-    const result = await query.orderBy(`${MEMO_FTS_TABLE}.rank`).execute();
+    const result = await query.execute();
 
     return result.map((row) => ({
-      body: row.body,
-      entityId: row.entityId,
+      ...row,
       entityType: EntityTypes.Memo as const,
       title: normalizeTitle(row),
     }));

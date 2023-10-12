@@ -1,13 +1,12 @@
 import { sql } from 'kysely';
-import dayjs from 'dayjs';
 
 import { type SearchParams, Scopes } from 'model/search';
 import { EntityTypes } from 'model/entity';
 
 import noteTable from '../schema/note';
-import recyclableTable from '../schema/recyclable';
 import type SearchEngine from './index';
-import { NOTE_FTS_TABLE, WRAPPER_END_TEXT, WRAPPER_START_TEXT } from './tables';
+import { NOTE_FTS_TABLE, WRAPPER_END_TEXT, WRAPPER_START_TEXT, commonSql } from './tables';
+import { normalizeTitle } from 'model/note';
 
 export default class SqliteNoteSearchEngine {
   constructor(private readonly engine: SearchEngine) {}
@@ -25,6 +24,7 @@ export default class SqliteNoteSearchEngine {
         body, 
         created_at UNINDEXED, 
         user_updated_at UNINDEXED, 
+        tokenize="simple 0",
         content=${sql.table(noteTable.tableName)}
       );
     `.execute(this.engine.db);
@@ -58,54 +58,36 @@ export default class SqliteNoteSearchEngine {
       throw new Error('no db');
     }
 
-    const term = q.terms.join(' ');
-
     let query = this.engine.db.selectFrom(NOTE_FTS_TABLE).select([
       // prettier-ignore
-      sql<string>`snippet(${sql.raw(NOTE_FTS_TABLE)}, 1, '${sql.raw(WRAPPER_START_TEXT)}', '${sql.raw(WRAPPER_END_TEXT)}', '...',  10)`.as('title'),
+      sql<string>`snippet(${sql.raw(NOTE_FTS_TABLE)}, 1, '${sql.raw(WRAPPER_START_TEXT)}', '${sql.raw(WRAPPER_END_TEXT)}', '...',  100)`.as('title'),
       // prettier-ignore
-      sql<string>`snippet(${sql.raw(NOTE_FTS_TABLE)}, 2, '${sql.raw(WRAPPER_START_TEXT)}', '${sql.raw(WRAPPER_END_TEXT)}', '...',  10)`.as('body'),
-      'id as entityId',
+      sql<string>`snippet(${sql.raw(NOTE_FTS_TABLE)}, 2, '${sql.raw(WRAPPER_START_TEXT)}', '${sql.raw(WRAPPER_END_TEXT)}', '...',  100)`.as('body'),
+      `${NOTE_FTS_TABLE}.id as entityId`,
+      `${NOTE_FTS_TABLE}.createdAt`,
+      `${NOTE_FTS_TABLE}.rank`,
     ]);
 
-    if (!q.recyclables) {
-      query = query
-        .leftJoin(recyclableTable.tableName, `${recyclableTable.tableName}.entityId`, `${NOTE_FTS_TABLE}.id`)
-        .where(`${recyclableTable.tableName}.entityId`, 'is', null);
-    }
+    query = commonSql(query, NOTE_FTS_TABLE, q);
 
     if (!q.scopes) {
-      query = query.where(NOTE_FTS_TABLE, '=', term);
+      query = query.where(NOTE_FTS_TABLE, '=', q.keyword);
     } else {
       if (q.scopes.includes(Scopes.Body)) {
-        query = query.where(`${NOTE_FTS_TABLE}.body`, 'match', term);
+        query = query.where(`${NOTE_FTS_TABLE}.body`, 'match', q.keyword);
       }
 
       if (q.scopes.includes(Scopes.Title)) {
-        query = query.where(`${NOTE_FTS_TABLE}.title`, 'match', term);
+        query = query.where(`${NOTE_FTS_TABLE}.title`, 'match', q.keyword);
       }
     }
 
-    if (q.created) {
-      if (q.created.from) {
-        query = query.where(`${NOTE_FTS_TABLE}.createdAt`, '>=', dayjs(q.created.from).valueOf());
-      }
-      if (q.created.to) {
-        query = query.where(`${NOTE_FTS_TABLE}.createdAt`, '<=', dayjs(q.created.to).valueOf());
-      }
-    }
+    const result = await query.execute();
 
-    if (q.updated) {
-      if (q.updated.from) {
-        query = query.where(`${NOTE_FTS_TABLE}.userUpdatedAt`, '>=', dayjs(q.updated.from).valueOf());
-      }
-      if (q.updated.to) {
-        query = query.where(`${NOTE_FTS_TABLE}.userUpdatedAt`, '<=', dayjs(q.updated.to).valueOf());
-      }
-    }
-
-    const result = await query.orderBy(`${NOTE_FTS_TABLE}.rank`).execute();
-
-    return result.map((row) => ({ ...row, entityType: EntityTypes.Note as const }));
+    return result.map((row) => ({
+      ...row,
+      entityType: EntityTypes.Note as const,
+      title: normalizeTitle(row),
+    }));
   }
 }

@@ -31,7 +31,7 @@ export default class SqliteSearchEngine implements SearchEngine {
 
   private async init() {
     await this.sqliteDb.ready;
-    await Promise.all([this.notes.createFtsTable(), this.memos.createFtsTable()]);
+    await Promise.all([this.notes.createFtsTable(), this.memos.createFtsTable(), this.materials.createFtsTable()]);
   }
 
   async search(q: SearchParams) {
@@ -68,15 +68,33 @@ export default class SqliteSearchEngine implements SearchEngine {
       searchResult = intersectionWith(searchResult, descantIds, ({ entityId }, id) => entityId === id);
     }
 
-    return searchResult.map((result) => {
-      const { text: body, highlights: bodyHighlights } = SqliteSearchEngine.extractSnippet(result.body, Scopes.Body);
-      const withTitle = [EntityTypes.Note, EntityTypes.Material].includes(result.entityType);
-      const { text: title, highlights: titleHighlights } = withTitle
-        ? SqliteSearchEngine.extractSnippet(result.title, Scopes.Title)
-        : { text: result.title, highlights: [] };
+    return (
+      searchResult
+        .map((result) => {
+          const { text: body, highlights: bodyHighlights } = SqliteSearchEngine.extractSnippet(
+            result.body,
+            Scopes.Body,
+          );
+          const withTitle = [EntityTypes.Note, EntityTypes.Material].includes(result.entityType);
+          const { text: title = result.title, highlights: titleHighlights = [] } = withTitle
+            ? SqliteSearchEngine.extractSnippet(result.title, Scopes.Title)
+            : {};
 
-      return { ...result, title, body, highlights: [...titleHighlights, ...bodyHighlights] };
-    });
+          return { ...result, title, body, highlights: [...titleHighlights, ...bodyHighlights] };
+        })
+        .sort((row1, row2) => {
+          const title1 = row1.highlights.find(({ scope }) => scope === Scopes.Title);
+          const title2 = row2.highlights.find(({ scope }) => scope === Scopes.Title);
+
+          if ((title1 && title2) || (!title1 && !title2)) {
+            return row1.rank - row2.rank;
+          }
+
+          return title1 ? 1 : -1;
+        })
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        .map(({ rank, ...row }) => row)
+    );
   }
 
   private static extractSnippet(snippet: string, type: Scopes) {
