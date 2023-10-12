@@ -3,7 +3,7 @@ import type { Kysely } from 'kysely';
 import intersectionWith from 'lodash/intersectionWith';
 
 import type { SearchEngine } from 'infra/searchEngine';
-import { type EntityId, EntityTypes } from 'model/entity';
+import { type EntityId, type HierarchyEntityTypes, EntityTypes } from 'model/entity';
 import type { ContentEntityTypes } from 'model/content';
 import { type SearchParams, type SearchResult, Scopes } from 'model/search';
 
@@ -45,13 +45,9 @@ export default class SqliteSearchEngine implements SearchEngine {
     let descantIds: EntityId[] | undefined;
 
     if (q.root) {
-      if (types.length !== 1) {
-        throw new Error('more than one type');
-      }
-
       const descants = await this.sqliteDb
         .getRepository('entities')
-        .findDescendantIds([{ entityType: EntityTypes.Note, entityId: q.root }]);
+        .findDescendantIds([{ entityType: types[0] as HierarchyEntityTypes, entityId: q.root }]);
 
       descantIds = descants[EntityTypes.Note][q.root];
     }

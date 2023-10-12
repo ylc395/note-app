@@ -33,13 +33,12 @@ export const isDirectory = (entity: Material): entity is MaterialDirectory => {
 };
 
 export function normalizeEntityTitle(v: Pick<Material, 'createdAt'>) {
-  return `未命名素材${dayjs.unix(v.createdAt).format('YYYYMMDD-HHmm')}`;
+  return `未命名素材${dayjs(v.createdAt).format('YYYYMMDD-HHmm')}`;
 }
 
 export function normalizeTitle(v: Material) {
   return (
-    v.name ||
-    (isDirectory(v) ? `未命名目录${dayjs.unix(v.createdAt).format('YYYYMMDD-HHmm')}` : normalizeEntityTitle(v))
+    v.name || (isDirectory(v) ? `未命名目录${dayjs(v.createdAt).format('YYYYMMDD-HHmm')}` : normalizeEntityTitle(v))
   );
 }
 

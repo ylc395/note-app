@@ -62,7 +62,7 @@ export default (function MemoItem({ memo }: { memo: MemoVO }) {
       <div className="flex items-center justify-between">
         <div>
           {memo.isPinned && <Tag>置顶</Tag>}
-          <span className="text-sm text-gray-600">{dayjs.unix(memo.createdAt).format('YYYY-MM-DD HH:mm:ss')}</span>
+          <span className="text-sm text-gray-600">{dayjs(memo.createdAt).format('YYYY-MM-DD HH:mm:ss')}</span>
         </div>
         <div>
           <Tooltip title="创建子碎片">

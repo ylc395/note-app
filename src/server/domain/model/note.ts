@@ -13,7 +13,7 @@ export type NoteQuery = {
 };
 
 export function normalizeTitle(note: Pick<NoteVO, 'title' | 'createdAt'>) {
-  return note.title || `未命名笔记-${dayjs.unix(note.createdAt).format('YYYYMMDD-HHmm')}`;
+  return note.title || `未命名笔记-${dayjs(note.createdAt).format('YYYYMMDD-HHmm')}`;
 }
 
 export function isDuplicate(dto: NewNoteDTO): dto is DuplicateNoteDTO {
