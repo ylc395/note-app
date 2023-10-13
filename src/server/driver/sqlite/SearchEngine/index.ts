@@ -11,14 +11,15 @@ import SqliteDb from '../Database';
 import NoteSearchEngine from './NoteSearchEngine';
 import MemoSearchEngine from './MemoSearchEngine';
 import MaterialSearchEngine from './MaterialSearchEngine';
-import { WRAPPER_END_TEXT, WRAPPER_START_TEXT, type SearchEngineDb } from './tables';
+import { WRAPPER_END_TEXT, WRAPPER_START_TEXT, NOTE_FTS_TABLE, type SearchEngineDb } from './tables';
+import { createFtsSql } from './sql';
 
 @Injectable()
 export default class SqliteSearchEngine implements SearchEngine {
   readonly ready: Promise<void>;
 
   constructor(readonly sqliteDb: SqliteDb) {
-    this.ready = this.init();
+    this.ready = this.createTables();
   }
 
   private readonly notes = new NoteSearchEngine(this);
@@ -29,9 +30,18 @@ export default class SqliteSearchEngine implements SearchEngine {
     return this.sqliteDb.getDb() as unknown as Kysely<SearchEngineDb>;
   }
 
-  private async init() {
+  private async createTables() {
     await this.sqliteDb.ready;
-    await Promise.all([this.notes.createFtsTable(), this.memos.createFtsTable(), this.materials.createFtsTable()]);
+
+    if (this.sqliteDb.hasTable(NOTE_FTS_TABLE)) {
+      return;
+    }
+
+    this.sqliteDb.transaction(async () => {
+      for (const sql of createFtsSql) {
+        await sql.execute(this.db);
+      }
+    });
   }
 
   async search(q: SearchParams) {

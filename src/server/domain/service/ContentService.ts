@@ -78,7 +78,7 @@ export default class ContentService extends BaseService implements OnModuleInit 
     };
   }
 
-  private extractLinks(entity: ContentUpdatedEvent) {
+  private extractLinksAndMedias(entity: ContentUpdatedEvent) {
     const links: Link[] = [];
 
     return {
@@ -130,7 +130,7 @@ export default class ContentService extends BaseService implements OnModuleInit 
       extensions: [topicTokenExtension],
     });
 
-    const reducers = [this.extractLinks, this.extractInlineTopics].map((cb) =>
+    const reducers = [this.extractLinksAndMedias, this.extractInlineTopics].map((cb) =>
       cb.call(this, { content, updatedAt: Date.now(), ...entity }),
     );
 
