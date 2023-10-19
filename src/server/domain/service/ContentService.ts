@@ -3,7 +3,6 @@ import { fromMarkdown } from 'mdast-util-from-markdown';
 import { visit } from 'unist-util-visit';
 import type { UnistNode } from 'unist-util-visit/lib';
 import type { Link as MdAstLinkNode } from 'mdast';
-import intersectionWith from 'lodash/intersectionWith';
 import groupBy from 'lodash/groupBy';
 import uniqBy from 'lodash/uniqBy';
 import map from 'lodash/map';
@@ -111,13 +110,9 @@ export default class ContentService extends BaseService implements OnModuleInit 
           return;
         }
 
-        const targets = await this.entityService.filterAvailable(links.map(({ to }) => to));
-
         await this.transaction(async () => {
           await this.repo.contents.removeLinks(entity, 'from');
-          await this.repo.contents.createLinks(
-            intersectionWith(links, targets, ({ to }, { entityId: id }) => to.entityId === id),
-          );
+          await this.repo.contents.createLinks(links); // don't do filtering here.
         });
       },
     };
@@ -182,7 +177,7 @@ export default class ContentService extends BaseService implements OnModuleInit 
 
   async queryLinkTos(q: LinkToQuery) {
     const links = await this.repo.contents.findAllLinkTos(q);
-    const froms = map(links, 'from');
+    const froms = await this.entityService.filterAvailable(map(links, 'from'));
     const snippets = await this.getSnippets(froms);
     const titles = await this.entityService.getEntityTitles(froms);
 
@@ -232,10 +227,6 @@ export default class ContentService extends BaseService implements OnModuleInit 
   }
 
   async createLinks(links: LinkDTO[]) {
-    const entities = [...map(links, 'from'), ...map(links, 'to')];
-
-    await this.entityService.assertAvailableEntities(entities);
-
     const createdAt = Date.now();
     const _links = links.map((link) => ({ ...link, createdAt }));
 
