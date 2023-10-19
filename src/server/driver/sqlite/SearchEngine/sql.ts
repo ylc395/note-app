@@ -106,7 +106,6 @@ export const createFtsSql = [
         file_id UNINDEXED,
         text,
         page UNINDEXED,
-        location UNINDEXED,
         tokenize="simple 0",
         content=${sql.table(fileTextTableName)}
       )`,
@@ -131,7 +130,7 @@ export const createFtsSql = [
       USING fts5(
         id UNINDEXED,
         comment,
-        material_id UNINDEXED
+        material_id UNINDEXED,
         updated_at UNINDEXED,
         created_at UNINDEXED,
         meta UNINDEXED,
@@ -159,7 +158,15 @@ export const createFtsSql = [
 export function commonSql(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   qb: SelectQueryBuilder<SearchEngineDb, any, any>,
-  table: typeof MATERIAL_FTS_TABLE | typeof NOTE_FTS_TABLE | typeof MEMO_FTS_TABLE,
+  table:
+    | typeof MATERIAL_FTS_TABLE
+    | typeof materialTableName
+    | typeof NOTE_FTS_TABLE
+    | typeof noteTableName
+    | typeof MEMO_FTS_TABLE
+    | typeof MATERIAL_ANNOTATION_FTS_TABLE
+    | typeof materialAnnotationTableName
+    | typeof memoTableName,
   query: SearchParams,
 ) {
   if (!query.recyclables) {
@@ -178,11 +185,14 @@ export function commonSql(
   }
 
   if (query.updated) {
+    const field =
+      table === materialAnnotationTableName || table === MATERIAL_ANNOTATION_FTS_TABLE ? 'updatedAt' : 'userUpdatedAt';
+
     if (query.updated.from) {
-      qb = qb.where(`${table}.userUpdatedAt`, '>=', dayjs(query.updated.from).valueOf());
+      qb = qb.where(`${table}.${field}`, '>=', dayjs(query.updated.from).valueOf());
     }
     if (query.updated.to) {
-      qb = qb.where(`${table}.userUpdatedAt`, '<=', dayjs(query.updated.to).valueOf());
+      qb = qb.where(`${table}.${field}`, '<=', dayjs(query.updated.to).valueOf());
     }
   }
 

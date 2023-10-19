@@ -9,10 +9,8 @@ import {
   type EntityLocator,
 } from './entity';
 
-const recyclableEntityTypes = pick(EntityTypes, ['Note', 'Material', 'Memo']);
-
 export const recyclableDTOSchema = entityLocatorSchema.extend({
-  entityType: nativeEnum(recyclableEntityTypes),
+  entityType: nativeEnum(pick(EntityTypes, ['Note', 'Material', 'Memo'] as const)),
 });
 
 export const recyclablesDTOSchema = recyclableDTOSchema.array();

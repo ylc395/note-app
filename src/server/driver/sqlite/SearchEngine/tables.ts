@@ -40,6 +40,18 @@ type MaterialAnnotationFtsRow = FtsRow &
     [MATERIAL_ANNOTATION_FTS_TABLE]: string;
   };
 
+export interface SearchRow {
+  entityId: string;
+  title: string;
+  body: string;
+  rank: number;
+  location?: number | null;
+  annotationId?: string;
+  mimeType?: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
 export interface SearchEngineDb extends Db {
   [NOTE_FTS_TABLE]: NoteFtsFow;
   [MEMO_FTS_TABLE]: MemoFtsRow;

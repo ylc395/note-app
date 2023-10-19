@@ -3,9 +3,8 @@ import type { Kysely } from 'kysely';
 import intersectionWith from 'lodash/intersectionWith';
 
 import type { SearchEngine } from 'infra/searchEngine';
-import { type EntityId, type HierarchyEntityTypes, EntityTypes } from 'model/entity';
-import type { ContentEntityTypes } from 'model/content';
-import { type SearchParams, type SearchResult, Scopes } from 'model/search';
+import { type EntityId, EntityTypes } from 'model/entity';
+import type { SearchParams, SearchResult } from 'model/search';
 
 import SqliteDb from '../Database';
 import NoteSearchEngine from './NoteSearchEngine';
@@ -44,67 +43,76 @@ export default class SqliteSearchEngine implements SearchEngine {
     });
   }
 
-  async search(q: SearchParams) {
-    const types: ContentEntityTypes[] = q.types || [
-      EntityTypes.Note,
-      EntityTypes.Memo,
-      EntityTypes.Material,
-      EntityTypes.MaterialAnnotation,
-    ];
-
+  async search(q: SearchParams): Promise<SearchResult[]> {
     let descantIds: EntityId[] | undefined;
 
     if (q.root) {
-      const descants = await this.sqliteDb
-        .getRepository('entities')
-        .findDescendantIds([{ entityType: types[0] as HierarchyEntityTypes, entityId: q.root }]);
-
-      descantIds = descants[EntityTypes.Note][q.root];
+      const descants = await this.sqliteDb.getRepository('entities').findDescendantIds([q.root]);
+      descantIds = descants[q.root.entityType][q.root.entityId];
     }
 
-    let searchResult = (
-      await Promise.all([
-        types.includes(EntityTypes.Note) ? this.notes.search(q) : [],
-        types.includes(EntityTypes.Material) ? this.materials.search(q) : [],
-        types.includes(EntityTypes.Memo) ? this.memos.search(q) : [],
-      ])
+    let searchRecords = (
+      await Promise.all([this.notes.search(q), this.materials.search(q), this.memos.search(q)])
     ).flat();
 
     if (descantIds) {
-      searchResult = intersectionWith(searchResult, descantIds, ({ entityId }, id) => entityId === id);
+      searchRecords = intersectionWith(searchRecords, descantIds, ({ entityId }, id) => entityId === id);
+    }
+
+    const results: Record<string, SearchResult & { rank: number }> = {};
+
+    for (const record of searchRecords) {
+      const result =
+        results[record.entityId] ||
+        ({
+          entityId: record.entityId,
+          title: { text: record.title, highlights: [] },
+          updatedAt: record.updatedAt,
+          createdAt: record.createdAt,
+          content: [],
+          entityType: record.entityType,
+          rank: record.rank,
+          ...(record.entityType === EntityTypes.Material ? { mimeType: record.mimeType! } : {}),
+        } as SearchResult & { rank: number });
+
+      if (
+        result.title.highlights.length === 0 &&
+        (record.entityType === EntityTypes.Note || record.entityType === EntityTypes.Material)
+      ) {
+        result.title = SqliteSearchEngine.extractSnippet(record.title);
+      }
+
+      result.rank = Math.max(record.rank, result.rank);
+      result.content.push({
+        ...SqliteSearchEngine.extractSnippet(record.body),
+        ...(record.location && { location: String(record.location) }),
+        ...(record.annotationId && { annotationId: record.annotationId }),
+      });
+
+      if (!results[record.entityId]) {
+        results[record.entityId] = result;
+      }
     }
 
     return (
-      searchResult
-        .map((result) => {
-          const { text: body, highlights: bodyHighlights } = SqliteSearchEngine.extractSnippet(
-            result.body,
-            Scopes.Body,
-          );
-          const withTitle = [EntityTypes.Note, EntityTypes.Material].includes(result.entityType);
-          const { text: title = result.title, highlights: titleHighlights = [] } = withTitle
-            ? SqliteSearchEngine.extractSnippet(result.title, Scopes.Title)
-            : {};
-
-          return { ...result, title, body, highlights: [...titleHighlights, ...bodyHighlights] };
-        })
+      Object.values(results)
         .sort((row1, row2) => {
-          const title1 = row1.highlights.find(({ scope }) => scope === Scopes.Title);
-          const title2 = row2.highlights.find(({ scope }) => scope === Scopes.Title);
+          const title1 = row1.title.highlights.length;
+          const title2 = row2.title.highlights.length;
 
-          if ((title1 && title2) || (!title1 && !title2)) {
+          if (title1 === title2) {
             return row1.rank - row2.rank;
           }
 
-          return title1 ? 1 : -1;
+          return title1 - title2;
         })
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         .map(({ rank, ...row }) => row)
     );
   }
 
-  private static extractSnippet(snippet: string, type: Scopes) {
-    const highlights: SearchResult['highlights'] = [];
+  private static extractSnippet(snippet: string) {
+    const highlights: { start: number; end: number }[] = [];
 
     let i = 0;
     let index = -1;
@@ -115,7 +123,6 @@ export default class SqliteSearchEngine implements SearchEngine {
       highlights.push({
         start: index - (WRAPPER_START_TEXT.length + WRAPPER_END_TEXT.length) * i,
         end: endIndex - (WRAPPER_START_TEXT.length * (i + 1) + WRAPPER_END_TEXT.length * i) - 1,
-        scope: type,
       });
 
       i += 1;

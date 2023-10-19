@@ -7,7 +7,9 @@ const highlightPositionSchema = object({
   end: number(),
 });
 
-export const contentEntityTypes = pick(EntityTypes, ['Note', 'Memo', 'Material', 'MaterialAnnotation']);
+const contentEntityTypesSchema = nativeEnum(
+  pick(EntityTypes, ['Note', 'Memo', 'Material', 'MaterialAnnotation'] as const),
+);
 
 export type HighlightPosition = Infer<typeof highlightPositionSchema>;
 
@@ -31,7 +33,7 @@ export type LinkDirection = 'to' | 'from';
 export type LinkToQuery = Infer<typeof linkToQuerySchema>;
 
 const topicDTOSchema = entityLocatorSchema.extend({
-  entityType: nativeEnum(contentEntityTypes),
+  entityType: contentEntityTypesSchema,
   name: string(),
 });
 
@@ -47,7 +49,7 @@ export type TopicDTO = Infer<typeof topicDTOSchema>;
 export type InlineTopicDTO = Infer<typeof inlineTopicDTOSchema>;
 
 const linkDTOSchema = object({
-  from: entityLocatorSchema.extend({ position: highlightPositionSchema, entityType: nativeEnum(contentEntityTypes) }),
+  from: entityLocatorSchema.extend({ position: highlightPositionSchema, entityType: contentEntityTypesSchema }),
   to: entityLocatorSchema.extend({ fragmentId: string() }),
 });
 

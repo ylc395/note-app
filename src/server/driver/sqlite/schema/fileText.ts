@@ -15,7 +15,7 @@ export default {
     return schema
       .createTable(tableName)
       .addColumn('fileId', 'text', (col) => col.notNull())
-      .addColumn('text', 'binary', (col) => col.notNull())
+      .addColumn('text', 'text', (col) => col.notNull())
       .addColumn('page', 'integer')
       .addColumn('location', 'text', (col) => col.notNull());
   },

@@ -3,9 +3,9 @@ import pick from 'lodash/pick';
 
 import { type EntityId, type EntityWithTitle, type EntityLocator, entityLocatorSchema, EntityTypes } from './entity';
 
-const starEntityTypes = pick(EntityTypes, ['Material', 'Memo', 'Note', 'MaterialAnnotation']);
-
-export const starsDTOSchema = entityLocatorSchema.extend({ entityType: nativeEnum(starEntityTypes) }).array();
+export const starsDTOSchema = entityLocatorSchema
+  .extend({ entityType: nativeEnum(pick(EntityTypes, ['Material', 'Memo', 'Note', 'MaterialAnnotation'] as const)) })
+  .array();
 
 export type StarEntityTypes =
   | EntityTypes.Material
