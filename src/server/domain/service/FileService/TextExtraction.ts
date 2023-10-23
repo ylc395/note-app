@@ -37,7 +37,7 @@ export default class TextExtraction {
     return text;
   }
 
-  async initOcr({ cachePath, maxConcurrency }: { cachePath: string; maxConcurrency: number }) {
+  async initOcr({ cachePath, maxConcurrency, lang }: { cachePath: string; maxConcurrency: number; lang: string }) {
     if (this.ocrScheduler) {
       throw new Error('is doing ocr');
     }
@@ -52,7 +52,7 @@ export default class TextExtraction {
 
     const workers = await Promise.all(
       range(0, workerCount).map(() =>
-        createWorker('chi_sim', OEM.DEFAULT, {
+        createWorker(lang, OEM.DEFAULT, {
           corePath: path.join(process.cwd(), 'node_modules/tesseract.js-core'),
           cachePath,
           workerBlobURL: false,

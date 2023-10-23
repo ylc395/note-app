@@ -18,7 +18,7 @@ export default class AppController {
   }
 
   @Get('/app/config')
-  async queryConfig(): Promise<Config> {
+  async queryConfig(): Promise<Required<Config>> {
     return this.appService.queryConfig();
   }
 

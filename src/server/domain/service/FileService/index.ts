@@ -119,8 +119,10 @@ export default class FileService extends BaseService implements OnApplicationBoo
       this.extraction = wrap<TextExtraction>(nodeEndpoint(this.extractionWorker));
     }
 
+    const { 'ocr.language': lang } = await this.repo.configs.getAll();
+
     if (file.mimeType === 'application/pdf') {
-      await this.extractPdfText(file, finished);
+      await this.extractPdfText(file, lang, finished);
     }
 
     this.fileIdsOnQueue.delete(file.id);
@@ -133,7 +135,11 @@ export default class FileService extends BaseService implements OnApplicationBoo
     }
   };
 
-  private async extractPdfText({ id, data }: CreatedFile, finished?: UnfinishedTextExtraction['finished']) {
+  private async extractPdfText(
+    { id, data }: CreatedFile,
+    lang: string,
+    finished?: UnfinishedTextExtraction['finished'],
+  ) {
     if (!this.extraction) {
       throw new Error('no extraction');
     }
@@ -154,7 +160,8 @@ export default class FileService extends BaseService implements OnApplicationBoo
       await this.repo.files.createText({ records, fileId: id });
     } else {
       const { ocrCachePath } = this.runtime.getPaths();
-      const concurrency = await this.extraction.initOcr({ cachePath: ocrCachePath, maxConcurrency: 4 });
+
+      const concurrency = await this.extraction.initOcr({ cachePath: ocrCachePath, maxConcurrency: 4, lang });
       const queue = new TaskQueue({ concurrency });
 
       for (let i = 1; i <= pageCount; i++) {
