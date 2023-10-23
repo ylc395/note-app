@@ -52,6 +52,7 @@ export const createFtsSql = [
       USING fts5(
         id UNINDEXED, 
         name,
+        comment,
         created_at UNINDEXED, 
         user_updated_at UNINDEXED, 
         file_id UNINDEXED,

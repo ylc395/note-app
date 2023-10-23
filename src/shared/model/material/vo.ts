@@ -9,6 +9,8 @@ export interface MaterialEntityVO extends Omit<MaterialEntity, 'userUpdatedAt'>,
 
 export type MaterialVO = MaterialDirectoryVO | MaterialEntityVO;
 
+export type MaterialCommentVO = string;
+
 export const isDirectory = (entity: MaterialVO): entity is MaterialDirectoryVO => {
   return 'childrenCount' in entity;
 };

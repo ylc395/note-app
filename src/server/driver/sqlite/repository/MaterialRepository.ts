@@ -51,7 +51,7 @@ export default class SqliteMaterialRepository extends HierarchyEntityRepository 
   private static rowToDirectory(
     row: Selectable<Row> & { fileId?: FileRow['id'] | null; mimeType?: FileRow['mimeType'] | null },
   ) {
-    return omit(row, ['fileId', 'sourceUrl', 'mimeType']);
+    return omit(row, ['fileId', 'sourceUrl', 'mimeType', 'comment']);
   }
 
   private static rowToMaterial(row: Selectable<Row>, mimeType: string) {

@@ -42,8 +42,8 @@ export default class SqliteNoteSearchEngine {
         }
 
         return scopes.includes(Scopes.NoteTitle)
-          ? eb(`${NOTE_FTS_TABLE}.body`, 'match', q.keyword)
-          : eb(`${NOTE_FTS_TABLE}.title`, 'match', q.keyword);
+          ? eb(`${NOTE_FTS_TABLE}.title`, 'match', q.keyword)
+          : eb(`${NOTE_FTS_TABLE}.body`, 'match', q.keyword);
       });
 
       result = await query.execute();

@@ -43,6 +43,7 @@ export enum Scopes {
   NoteBody,
   NoteFile,
   MaterialTitle,
+  MaterialComment,
   MaterialContent,
   MaterialAnnotation,
   MaterialAnnotationFile,

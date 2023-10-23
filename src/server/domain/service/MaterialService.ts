@@ -81,6 +81,10 @@ export default class MaterialService extends BaseService {
   }
 
   async batchUpdate(ids: Material['id'][], patch: MaterialPatch) {
+    if (typeof patch.comment !== 'undefined') {
+      throw new Error('can not update comment by batchUpdate');
+    }
+
     await this.assertAvailableIds(ids);
 
     if (patch.parentId) {
@@ -93,6 +97,22 @@ export default class MaterialService extends BaseService {
     });
 
     return this.toVOs(result);
+  }
+
+  async updateComment(materialId: Material['id'], comment: string) {
+    await this.assertAvailableIds([materialId], MaterialTypes.Entity);
+
+    const now = Date.now();
+    await this.repo.materials.update(materialId, { comment, userUpdatedAt: now });
+
+    this.eventBus.emit('contentUpdated', {
+      content: comment,
+      entityType: EntityTypes.Material,
+      entityId: materialId,
+      updatedAt: now,
+    });
+
+    return comment;
   }
 
   private async assertValidParent(parentId: Material['id'], childrenIds: Material['id'][]) {

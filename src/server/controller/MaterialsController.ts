@@ -8,15 +8,18 @@ import {
   type AnnotationPatchDTO,
   type NewAnnotationDTO,
   type MaterialsPatchDTO,
+  type MaterialCommentDTO,
   newMaterialDTOSchema,
   clientMaterialQuerySchema,
   newAnnotationDTOSchema,
   annotationPatchDTOSchema,
   materialsPatchDTOSchema,
+  materialCommentDTOSchema,
+  MaterialCommentVO,
 } from 'model/material';
 import MaterialService from 'service/MaterialService';
 
-import { createSchemaPipe, Post, Body, Get, Query, Param, Delete, Patch } from './decorators';
+import { createSchemaPipe, Post, Body, Get, Query, Param, Delete, Patch, Put } from './decorators';
 
 @Controller()
 export default class MaterialsController {
@@ -38,6 +41,14 @@ export default class MaterialsController {
   @Get('/materials/:id/annotations')
   async queryAnnotations(@Param('id') materialId: string): Promise<AnnotationVO[]> {
     return await this.materialService.queryAnnotations(materialId);
+  }
+
+  @Put('/materials/:id/comment')
+  async updateComment(
+    @Param('id') materialId: string,
+    @Body(createSchemaPipe(materialCommentDTOSchema)) comment: MaterialCommentDTO,
+  ): Promise<MaterialCommentVO> {
+    return await this.materialService.updateComment(materialId, comment);
   }
 
   @Get('/materials/:id/tree')

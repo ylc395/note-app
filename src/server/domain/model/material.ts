@@ -22,7 +22,7 @@ export type Annotation = AnnotationVO & {
   materialId: Material['id'];
 };
 
-export type MaterialPatch = MaterialPatchDTO & { userUpdatedAt?: number };
+export type MaterialPatch = MaterialPatchDTO & { userUpdatedAt?: number; comment?: string };
 
 export const isEntityMaterial = (entity: Material): entity is MaterialEntity => {
   return 'mimeType' in entity;

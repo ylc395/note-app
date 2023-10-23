@@ -38,3 +38,7 @@ export const isNewMaterialEntity = (
 };
 
 export type MaterialsPatchDTO = Infer<typeof materialsPatchDTOSchema>;
+
+export const materialCommentDTOSchema = string();
+
+export type MaterialCommentDTO = Infer<typeof materialCommentDTOSchema>;

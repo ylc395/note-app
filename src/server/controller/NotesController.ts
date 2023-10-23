@@ -7,12 +7,13 @@ import {
   type NoteVO,
   type ClientNoteQuery,
   type NotesPatchDTO,
+  type NotePatchDTO,
+  type NoteBodyVO,
   newNoteDTOSchema,
   notesPatchDTOSchema,
   clientNoteQuerySchema,
   noteBodyDTOSchema,
   notePatchDTOSchema,
-  NotePatchDTO,
 } from 'model/note';
 import NoteService from 'service/NoteService';
 
@@ -64,7 +65,7 @@ export default class NotesController {
   async updateBody(
     @Param('id') noteId: string,
     @Body(createSchemaPipe(noteBodyDTOSchema)) body: NoteBodyDTO,
-  ): Promise<NoteBodyDTO> {
+  ): Promise<NoteBodyVO> {
     return await this.noteService.updateBody(noteId, body);
   }
 }

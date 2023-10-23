@@ -15,7 +15,6 @@ import {
 } from './tables';
 import { commonSql } from './sql';
 import { tableName as fileTableName } from '../schema/file';
-import { tableName as fileTextTable } from '../schema/fileText';
 import { tableName as materialTable } from '../schema/material';
 import { tableName as linkTableName } from '../schema/link';
 import { tableName as materialAnnotationTableName } from '../schema/materialAnnotation';
@@ -40,22 +39,30 @@ export default class SqliteMaterialSearchEngine {
     // sqlite doesn't support `or` operator for FTS tables
     // so we have to use multiple sql query
     // see https://sqlite.org/forum/forumpost/f9bb0db67d?t=h&hist
-    if (scopes.includes(Scopes.MaterialTitle)) {
+    if (scopes.includes(Scopes.MaterialTitle) || scopes.includes(Scopes.MaterialComment)) {
       let query = this.engine.db
         .selectFrom(MATERIAL_FTS_TABLE)
         .innerJoin(fileTableName, `${fileTableName}.id`, `${MATERIAL_FTS_TABLE}.fileId`)
-        .innerJoin(fileTextTable, `${fileTextTable}.fileId`, `${MATERIAL_FTS_TABLE}.fileId`)
         .select([
           // prettier-ignore
           sql<string>`simple_snippet(${sql.raw(MATERIAL_FTS_TABLE)}, 1, '${sql.raw(WRAPPER_START_TEXT)}', '${sql.raw(WRAPPER_END_TEXT)}', '...',  100)`.as('title'),
+          // prettier-ignore
+          sql<string>`simple_snippet(${sql.raw(MATERIAL_FTS_TABLE)}, 2, '${sql.raw(WRAPPER_START_TEXT)}', '${sql.raw(WRAPPER_END_TEXT)}', '...',  100)`.as('body'),
           `${MATERIAL_FTS_TABLE}.id as entityId`,
           `${MATERIAL_FTS_TABLE}.rank`,
           `${MATERIAL_FTS_TABLE}.createdAt`,
           `${MATERIAL_FTS_TABLE}.userUpdatedAt as updatedAt`,
           `${fileTableName}.mimeType`,
-          `${fileTextTable}.text as body`,
         ])
-        .where(`${MATERIAL_FTS_TABLE}.name`, 'match', q.keyword)
+        .where((eb) => {
+          if (scopes.includes(Scopes.MaterialComment) && scopes.includes(Scopes.MaterialTitle)) {
+            return eb(MATERIAL_FTS_TABLE, 'match', q.keyword);
+          }
+
+          return scopes.includes(Scopes.MaterialComment)
+            ? eb(`${MATERIAL_FTS_TABLE}.comment`, 'match', q.keyword)
+            : eb(`${MATERIAL_FTS_TABLE}.name`, 'match', q.keyword);
+        })
         .groupBy(`${MATERIAL_FTS_TABLE}.id`);
 
       query = commonSql(query, MATERIAL_FTS_TABLE, q);

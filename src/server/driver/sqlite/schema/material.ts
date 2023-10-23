@@ -10,6 +10,7 @@ export interface Row {
   parentId: string | null;
   sourceUrl: string | null;
   icon: string | null;
+  comment: Generated<string>;
   createdAt: Generated<number>;
   updatedAt: Generated<number>;
   userUpdatedAt: Generated<number>;
@@ -25,6 +26,7 @@ export default {
       .addColumn('fileId', 'text')
       .addColumn('parentId', 'text')
       .addColumn('sourceUrl', 'text')
+      .addColumn('comment', 'text', (col) => col.notNull().defaultTo(''))
       .addColumn('icon', 'text')
       .addColumn('createdAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch('subsec') * 1000)`))
       .addColumn('updatedAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch('subsec') * 1000)`))
