@@ -41,9 +41,8 @@ export default class ResourcesController {
       return this.fileService.createFiles(validation.data);
     }
 
-    const upload = multer().array('files[]');
-
     return new Promise((resolve, reject) => {
+      const upload = multer().array('files[]');
       upload(req as ExpressRequest, res as ExpressResponse, (err) => {
         if (err) {
           reject(err);
@@ -53,7 +52,14 @@ export default class ResourcesController {
         const files = (req as ExpressRequest).files;
 
         if (Array.isArray(files)) {
-          resolve(this.fileService.createFiles(files.map((file) => ({ mimeType: file.mimetype, data: file.buffer }))));
+          const created = this.fileService.createFiles(
+            files.map((file) => ({
+              mimeType: file.mimetype,
+              data: file.buffer,
+              lang: (req as ExpressRequest).body.lang || '',
+            })),
+          );
+          resolve(created);
         } else {
           reject(new Error('invalid input'));
         }

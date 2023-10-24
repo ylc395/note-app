@@ -7,7 +7,7 @@ import { Injectable, Inject, Logger } from '@nestjs/common';
 import type { FileReader } from 'infra/fileReader';
 import type Runtime from 'infra/Runtime';
 import { token as runtimeToken } from 'infra/Runtime';
-import type { File } from 'model/file';
+import type { LoadedFile } from 'model/file';
 
 // remove this once native fetch type is launched in @types/node
 // see https://github.com/DefinitelyTyped/DefinitelyTyped/issues/60924#issuecomment-1358424866
@@ -84,7 +84,7 @@ export default class ElectronFileReader implements FileReader {
     return null;
   }
 
-  private async writeCache(url: string, { data, mimeType }: File) {
+  private async writeCache(url: string, { data, mimeType }: LoadedFile) {
     const cacheIndex = await this.readCacheIndex();
     const extName = path.extname(ElectronFileReader.getFileNameFromUrl(url));
     const cacheFileName = extName ? `${randomUUID()}${extName}` : randomUUID();

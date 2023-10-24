@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import pick from 'lodash/pick';
 
 import type { FileRepository } from 'service/repository/FileRepository';
-import type { File, FileText, FileVO } from 'model/file';
+import type { LoadedFile, FileText, FileVO } from 'model/file';
 
 import BaseRepository from './BaseRepository';
 import { tableName as fileTableName, type Row } from '../schema/file';
@@ -29,7 +29,7 @@ export default class SqliteFileRepository extends BaseRepository implements File
     return (row.data as Uint8Array).buffer;
   }
 
-  private async findOrCreate({ data, mimeType }: { data: ArrayBuffer; mimeType: string }) {
+  private async findOrCreate({ data, ...file }: Required<LoadedFile>) {
     const hash = createHash('md5').update(new Uint8Array(data)).digest('base64');
     const existedFile = await this.db.selectFrom(fileTableName).selectAll().where('hash', '=', hash).executeTakeFirst();
 
@@ -44,13 +44,13 @@ export default class SqliteFileRepository extends BaseRepository implements File
       hash,
       data: buffer,
       size: buffer.byteLength,
-      mimeType,
+      ...file,
     });
 
     return createdFile;
   }
 
-  async batchCreate(files: File[]) {
+  async batchCreate(files: Required<LoadedFile>[]) {
     const rows: FileVO[] = [];
 
     for (const file of files) {
@@ -58,21 +58,7 @@ export default class SqliteFileRepository extends BaseRepository implements File
       rows.push(row);
     }
 
-    return rows.map((row) => pick(row, ['id', 'mimeType', 'size']));
-  }
-
-  async haveText(ids: FileVO['id'][]) {
-    const counts = await this.db
-      .selectFrom(fileTextTableName)
-      .select((eb) => ['fileId', eb.fn.countAll().as('count')])
-      .where('fileId', 'in', ids)
-      .groupBy('fileId')
-      .execute();
-
-    return counts.reduce((result, { fileId, count }) => {
-      result[fileId] = Boolean(count);
-      return result;
-    }, {} as Record<FileVO['id'], boolean>);
+    return rows.map((row) => pick(row, ['id', 'mimeType', 'size', 'lang']));
   }
 
   async createText({ fileId, records }: FileText) {
@@ -100,6 +86,7 @@ export default class SqliteFileRepository extends BaseRepository implements File
       .select([
         `${fileTableName}.id as fileId`,
         `${fileTableName}.mimeType`,
+        `${fileTableName}.lang`,
         sql<string>`group_concat(${sql.ref(`${fileTextTableName}.page`)})`.as('pages'),
       ])
       .where(`${fileTableName}.textExtracted`, '=', 0)
@@ -107,6 +94,6 @@ export default class SqliteFileRepository extends BaseRepository implements File
       .groupBy(`${fileTableName}.id`)
       .execute();
 
-    return rows.map(({ fileId, pages, mimeType }) => ({ fileId, mimeType, finished: pages.split(',').map(Number) }));
+    return rows.map(({ pages, ...row }) => ({ ...row, finished: pages.split(',').map(Number) }));
   }
 }

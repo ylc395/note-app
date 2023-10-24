@@ -155,4 +155,9 @@ export default class ElectronRuntime extends Runtime implements OnModuleInit {
       return null;
     }
   }
+
+  getLang() {
+    // todo: normalize return value
+    return electronApp.getSystemLocale();
+  }
 }

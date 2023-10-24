@@ -6,12 +6,10 @@ import type { FileVO, FilesDTO } from 'model/file';
 @singleton()
 export default class MarkdownService {
   private readonly remote = container.resolve(remoteToken);
-  async uploadFiles(files: File[] | string[]) {
+  async uploadFiles(files: File[]) {
     const _files = await Promise.all(
       files.map(async (file) => {
-        return typeof file === 'string'
-          ? { url: file }
-          : { name: file.name, data: await file.arrayBuffer(), mimeType: file.type };
+        return { data: await file.arrayBuffer(), mimeType: file.type, lang: 'chi_sim' };
       }),
     );
 

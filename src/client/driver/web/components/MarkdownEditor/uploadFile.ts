@@ -59,44 +59,9 @@ export const htmlUpload = $prose(() => {
           return false;
         }
 
-        const template = document.createElement('template');
-        template.innerHTML = html;
-
-        const treeWalker = document.createTreeWalker(template.content, NodeFilter.SHOW_ELEMENT);
-        let node = treeWalker.nextNode();
-        const mediaElements: (HTMLImageElement | HTMLVideoElement | HTMLAudioElement)[] = [];
-
-        while (node) {
-          if (
-            node instanceof HTMLImageElement ||
-            node instanceof HTMLVideoElement ||
-            node instanceof HTMLAudioElement
-          ) {
-            mediaElements.push(node);
-          }
-
-          node = treeWalker.nextNode();
-        }
-
-        if (mediaElements.length === 0) {
-          return false;
-        }
-
-        const markdownService = container.resolve(MarkdownService);
-
-        markdownService.uploadFiles(mediaElements.map((el) => el.src)).then((results) => {
-          for (const [index, result] of results.entries()) {
-            if (typeof result === 'string') {
-              continue;
-            }
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            mediaElements[index]!.src = getUrlFromFileId(result.id);
-          }
-
-          const dataTransfer = new DataTransfer();
-          dataTransfer.setData('text/html', template.innerHTML);
-          view.dom.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dataTransfer }));
-        });
+        const dataTransfer = new DataTransfer();
+        dataTransfer.setData('text/html', html);
+        view.dom.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dataTransfer }));
 
         return true;
       },

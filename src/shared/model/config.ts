@@ -1,7 +1,7 @@
 import { object, type infer as Infer, string } from 'zod';
 
 export const configSchema = object({
-  'ocr.language': string(),
+  unknown: string(),
 }).partial();
 
 type UneditableConfig = Partial<{

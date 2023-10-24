@@ -2,19 +2,11 @@ import { Inject, Injectable, type OnApplicationBootstrap } from '@nestjs/common'
 import { Worker } from 'node:worker_threads';
 import path from 'node:path';
 import compact from 'lodash/compact';
-import map from 'lodash/map';
 import { wrap } from 'comlink';
 import nodeEndpoint from 'comlink/dist/umd/node-adapter';
 import TaskQueue from 'queue';
 
-import {
-  type FileVO,
-  type FilesDTO,
-  type FileTextRecord,
-  type CreatedFile,
-  type UnfinishedTextExtraction,
-  isFileUrl,
-} from 'model/file';
+import type { FileVO, FilesDTO, FileTextRecord, CreatedFile, UnfinishedTextExtraction, FileDTO } from 'model/file';
 import { token as fileReaderToken, FileReader } from 'infra/fileReader';
 
 import BaseService from '../BaseService';
@@ -36,30 +28,21 @@ export default class FileService extends BaseService implements OnApplicationBoo
     }
   }
 
+  private async loadFile(file: FileDTO) {
+    if (file.data) {
+      return { data: file.data, mimeType: file.mimeType, lang: file.lang };
+    }
+
+    if (file.path) {
+      const localFile = await this.fileReader.readLocalFile(file.path);
+      return localFile && { ...localFile, mimeType: file.mimeType, lang: file.lang };
+    }
+  }
+
   async createFiles(files: FilesDTO) {
-    const tasks = files.map(async (file) => {
-      if (isFileUrl(file)) {
-        return this.fileReader.readRemoteFile(file.url);
-      }
-
-      if (file.data) {
-        return {
-          data: file.data,
-          mimeType: file.mimeType,
-        };
-      }
-
-      if (file.path) {
-        const localFile = await this.fileReader.readLocalFile(file.path);
-        return localFile && { ...localFile, mimeType: file.mimeType };
-      }
-
-      throw new Error('invalid file');
-    });
-
+    const tasks = files.map(this.loadFile.bind(this));
     const loadedFiles = await Promise.all(tasks);
     const fileVOs = await this.repo.files.batchCreate(compact(loadedFiles));
-    const haveText = await this.repo.files.haveText(map(fileVOs, 'id'));
     const result: (FileVO | null)[] = loadedFiles.map(() => null);
     const createdFiles: CreatedFile[] = [];
 
@@ -73,13 +56,15 @@ export default class FileService extends BaseService implements OnApplicationBoo
     }
 
     createdFiles
-      .filter(({ id }) => !haveText[id] && !this.fileIdsOnQueue.has(id))
-      .forEach((file) => {
-        this.fileIdsOnQueue.add(file.id);
-        this.extractingTextTaskQueue.push(() => this.extractText(file));
-      });
+      .filter(({ id }) => !this.fileIdsOnQueue.has(id))
+      .forEach(({ id }) => this.addTextExtractionJob({ fileId: id }));
 
     return result;
+  }
+
+  private addTextExtractionJob({ fileId, finished }: UnfinishedTextExtraction) {
+    this.fileIdsOnQueue.add(fileId);
+    this.extractingTextTaskQueue.push(() => this.extractText(fileId, finished));
   }
 
   async queryFileById(id: FileVO['id']) {
@@ -113,16 +98,21 @@ export default class FileService extends BaseService implements OnApplicationBoo
     this.extraction = undefined;
   };
 
-  private extractText = async (file: CreatedFile, finished?: UnfinishedTextExtraction['finished']) => {
+  private extractText = async (fileId: CreatedFile['id'], finished?: UnfinishedTextExtraction['finished']) => {
     if (!this.extraction) {
       this.extractionWorker = new Worker(path.join(__dirname, 'TextExtraction')).setMaxListeners(Infinity);
       this.extraction = wrap<TextExtraction>(nodeEndpoint(this.extractionWorker));
     }
 
-    const { 'ocr.language': lang } = await this.repo.configs.getAll();
+    const file = await this.repo.files.findOneById(fileId);
+    const data = await this.repo.files.findBlobById(fileId);
+
+    if (!file || !data) {
+      return;
+    }
 
     if (file.mimeType === 'application/pdf') {
-      await this.extractPdfText(file, lang, finished);
+      await this.extractPdfText({ ...file, data }, finished);
     }
 
     this.fileIdsOnQueue.delete(file.id);
@@ -136,8 +126,7 @@ export default class FileService extends BaseService implements OnApplicationBoo
   };
 
   private async extractPdfText(
-    { id, data }: CreatedFile,
-    lang: string,
+    { id, data, lang }: Required<CreatedFile>,
     finished?: UnfinishedTextExtraction['finished'],
   ) {
     if (!this.extraction) {
@@ -161,7 +150,12 @@ export default class FileService extends BaseService implements OnApplicationBoo
     } else {
       const { ocrCachePath } = this.runtime.getPaths();
 
-      const concurrency = await this.extraction.initOcr({ cachePath: ocrCachePath, maxConcurrency: 4, lang });
+      const concurrency = await this.extraction.initOcr({
+        cachePath: ocrCachePath,
+        maxConcurrency: 4,
+        lang,
+      });
+
       const queue = new TaskQueue({ concurrency });
 
       for (let i = 1; i <= pageCount; i++) {
@@ -183,11 +177,8 @@ export default class FileService extends BaseService implements OnApplicationBoo
     const mimeTypes = ['application/pdf'];
     const unextracted = await this.repo.files.findTextUnextracted(mimeTypes);
 
-    for (const { fileId, mimeType, finished } of unextracted) {
-      this.extractingTextTaskQueue.push(async () => {
-        const data = await this.repo.files.findBlobById(fileId);
-        await this.extractText({ mimeType, id: fileId, data: data! }, finished);
-      });
+    for (const job of unextracted) {
+      this.addTextExtractionJob(job);
     }
   }
 }

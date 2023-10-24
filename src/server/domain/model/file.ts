@@ -1,21 +1,16 @@
-import { string } from 'zod';
-import type { FileDTO, FileUrlDTO, FileVO } from 'shard/model/file';
-
-export const isFileUrl = (dto: FileDTO): dto is FileUrlDTO => 'url' in dto;
-
-export const httpUrlSchema = string()
-  .url()
-  .refine((str) => /^https?:\/\//.test(str));
+import type { FileVO } from 'shard/model/file';
 
 export interface LocalFile {
   data: ArrayBuffer;
 }
 
-export interface File extends LocalFile {
+export interface LoadedFile {
+  data: ArrayBuffer;
+  lang?: string;
   mimeType: string;
 }
 
-export interface CreatedFile extends File {
+export interface CreatedFile extends LoadedFile {
   id: FileVO['id'];
 }
 
@@ -38,7 +33,6 @@ export interface FileText {
 
 export interface UnfinishedTextExtraction {
   fileId: CreatedFile['id'];
-  mimeType: string;
   finished?: number[];
 }
 

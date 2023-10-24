@@ -63,6 +63,7 @@ export default class MaterialService {
       {
         ...form.file,
         data: typeof form.file.data === 'string' ? textEncoder.encode(form.file.data).buffer : form.file.data,
+        lang: 'chi_sim',
       },
     ]);
 
