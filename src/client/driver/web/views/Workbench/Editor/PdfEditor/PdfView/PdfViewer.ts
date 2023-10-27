@@ -3,7 +3,7 @@ import numberRange from 'lodash/range';
 import { makeObservable, observable, when, action, runInAction, computed, autorun } from 'mobx';
 
 import { AnnotationTypes, type AnnotationVO, type Rect } from 'model/material';
-import type PdfEditorView from 'model/material/view/PdfEditorView';
+import type PdfEditor from 'model/material/editor/PdfEditor';
 
 import { isElement } from '../../common/domUtils';
 import RangeSelector, { type RangeSelectEvent } from '../../common/RangeSelector';
@@ -11,7 +11,7 @@ import RangeSelector, { type RangeSelectEvent } from '../../common/RangeSelector
 interface Options {
   container: HTMLDivElement;
   viewer: HTMLDivElement;
-  editorView: PdfEditorView;
+  editor: PdfEditor;
 }
 
 export enum ScaleValues {
@@ -28,7 +28,7 @@ export const SCALE_STEPS = [
 
 export default class PdfViewer {
   private readonly pdfViewer: PDFViewer;
-  readonly editorView: PdfEditorView;
+  readonly editor: PdfEditor;
   private readonly cancelLoadingDoc: ReturnType<typeof when>;
   private readonly rangeSelector: RangeSelector;
 
@@ -56,11 +56,11 @@ export default class PdfViewer {
       onTextSelectionChanged: action((e) => (this.selection = e)),
     });
 
-    this.editorView = options.editorView;
+    this.editor = options.editor;
 
     this.pdfViewer = this.createPDFViewer(options);
     this.cancelLoadingDoc = when(
-      () => Boolean(this.editorView.editor.entity),
+      () => Boolean(this.editor.editable.entity),
       () => this.init(),
     );
   }
@@ -91,11 +91,11 @@ export default class PdfViewer {
   }
 
   private async init() {
-    if (!this.editorView.editor.entity) {
+    if (!this.editor.editable.entity) {
       throw new Error('not ready');
     }
 
-    const { doc } = this.editorView.editor.entity;
+    const { doc } = this.editor.editable.entity;
     this.pdfViewer.setDocument(doc);
     (this.pdfViewer.linkService as PDFLinkService).setDocument(doc);
 
@@ -114,7 +114,7 @@ export default class PdfViewer {
     this.pdfViewer.eventBus.on(
       'updateviewarea',
       action(({ location }: { location: { pdfOpenParams: string } }) => {
-        this.editorView.updateUIState({ hash: location.pdfOpenParams });
+        this.editor.updateUIState({ hash: location.pdfOpenParams });
         this.updateVisiblePages();
       }),
     );
@@ -131,7 +131,7 @@ export default class PdfViewer {
   };
 
   private async initFromState() {
-    const { hash } = this.editorView.uiState;
+    const { hash } = this.editor.uiState;
 
     await this.pdfViewer.firstPagePromise;
 
@@ -193,7 +193,7 @@ export default class PdfViewer {
       throw new Error('no range');
     }
 
-    await this.editorView.editor.createAnnotation({
+    await this.editor.editable.createAnnotation({
       type: AnnotationTypes.PdfRange,
       color,
       content: RangeSelector.getTextFromRange(range),
@@ -232,7 +232,7 @@ export default class PdfViewer {
 
     const snapshot = canvas.toDataURL('image/png');
 
-    await this.editorView.editor.createAnnotation({
+    await this.editor.editable.createAnnotation({
       color: 'yellow',
       type: AnnotationTypes.PdfArea,
       rect: {
@@ -368,6 +368,6 @@ export default class PdfViewer {
 
   @computed
   get currentAnnotationElement() {
-    return this.editorView.currentAnnotationId ? this.referenceElMap[this.editorView.currentAnnotationId] : null;
+    return this.editor.currentAnnotationId ? this.referenceElMap[this.editor.currentAnnotationId] : null;
   }
 }

@@ -3,14 +3,13 @@ import remove from 'lodash/remove';
 
 import { EntityTypes } from 'model/entity';
 import type { MaterialEntityVO, AnnotationVO, NewAnnotationDTO, AnnotationPatchDTO } from 'model/material';
-import EntityEditor from 'model/abstract/Editor';
-import type Tile from 'model/workbench/Tile';
+import EditableEntity from 'model/abstract/EditableEntity';
 
-export default abstract class Editor<
+export default abstract class EditableMaterial<
   T extends { metadata: MaterialEntityVO } = { metadata: MaterialEntityVO },
-> extends EntityEditor<T> {
-  constructor(tile: Tile, materialId: MaterialEntityVO['id']) {
-    super(tile, materialId);
+> extends EditableEntity<T> {
+  constructor(materialId: MaterialEntityVO['id']) {
+    super(materialId);
     makeObservable(this);
     this.loadAnnotations();
   }

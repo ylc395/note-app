@@ -8,14 +8,14 @@ import { CloseOutlined } from '@ant-design/icons';
 import { IS_DEV } from 'infra/constants';
 import EditorService from 'service/EditorService';
 import Tile from 'model/workbench/Tile';
-import EditorView from 'model/abstract/EditorView';
+import Editor from 'model/abstract/Editor';
 
 import TabItem from './TabItem';
 
 export default observer(function TabBar({ tileId }: { tileId: Tile['id'] }) {
-  const { tileManager, moveEditorView } = container.resolve(EditorService);
+  const { tileManager, moveEditor } = container.resolve(EditorService);
   const tile = tileManager.getTile(tileId);
-  const { currentEditorView: currentEditor, editorViews: editors, closeAllEditorViews: closeAllEditors } = tile;
+  const { currentEditor: currentEditor, editors: editors, closeAllEditors: closeAllEditors } = tile;
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
     id: `${tileId}-tab`,
     data: { instance: tile },
@@ -30,15 +30,15 @@ export default observer(function TabBar({ tileId }: { tileId: Tile['id'] }) {
       const src = active.data.current?.instance;
       const dest = over.data.current?.instance;
 
-      if (src instanceof EditorView && (dest instanceof EditorView || dest instanceof Tile)) {
-        moveEditorView(src, dest);
+      if (src instanceof Editor && (dest instanceof Editor || dest instanceof Tile)) {
+        moveEditor(src, dest);
       }
     },
     onDragStart({ active }) {
       const editor = active.data.current?.instance;
 
-      if (editor instanceof EditorView) {
-        editor.tile.switchToEditorView(editor.id);
+      if (editor instanceof Editor) {
+        editor.tile.switchToEditor(editor.id);
       }
     },
   });
@@ -52,7 +52,7 @@ export default observer(function TabBar({ tileId }: { tileId: Tile['id'] }) {
       <div className={`scrollbar-hidden flex grow overflow-auto ${isOver ? 'bg-gray-200' : ''}`} ref={setDroppableRef}>
         <SortableContext items={editors} strategy={horizontalListSortingStrategy}>
           {editors.map((editor) => (
-            <TabItem key={editor.id} editorView={editor} />
+            <TabItem key={editor.id} editor={editor} />
           ))}
         </SortableContext>
       </div>

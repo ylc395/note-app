@@ -5,7 +5,7 @@ import { container } from 'tsyringe';
 import { useCreation } from 'ahooks';
 
 import NoteService from 'service/NoteService';
-import NoteEditorView from 'model/note/EditorView';
+import NoteEditor from 'model/note/Editor';
 
 export default function useDrag() {
   const { moveNotes, noteTree } = container.resolve(NoteService);
@@ -22,8 +22,8 @@ export default function useDrag() {
     onDragStart: ({ active }) => {
       const draggingItem = active.data.current?.instance;
 
-      if (draggingItem instanceof NoteEditorView) {
-        noteTree.updateInvalidTargetNodes(draggingItem.editor.entityId);
+      if (draggingItem instanceof NoteEditor) {
+        noteTree.updateInvalidTargetNodes(draggingItem.editable.entityId);
       }
 
       if (noteTree.hasNode(draggingItem)) {
@@ -46,10 +46,10 @@ export default function useDrag() {
 
       if (noteTree.hasNode(dropNode)) {
         if (
-          (noteTree.hasNode(draggingItem) || draggingItem instanceof NoteEditorView) &&
+          (noteTree.hasNode(draggingItem) || draggingItem instanceof NoteEditor) &&
           !noteTree.undroppableNodes.includes(dropNode)
         ) {
-          const draggingItems = draggingItem instanceof NoteEditorView ? [draggingItem.editor.entityId] : undefined;
+          const draggingItems = draggingItem instanceof NoteEditor ? [draggingItem.editable.entityId] : undefined;
 
           moveNotes(dropNode === noteTree.root ? null : dropNode.id, draggingItems);
         }

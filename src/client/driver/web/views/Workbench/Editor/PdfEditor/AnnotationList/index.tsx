@@ -7,7 +7,7 @@ import Annotation from './Annotation';
 
 export default observer(function AnnotationList() {
   const { pdfViewer } = useContext(context);
-  const annotations = pdfViewer?.editorView.editor.pdfAnnotations;
+  const annotations = pdfViewer?.editor.editable.pdfAnnotations;
 
   return (
     <Resizable

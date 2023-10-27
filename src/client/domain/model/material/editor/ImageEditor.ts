@@ -1,18 +1,13 @@
-import type { MaterialEntityVO } from 'model/material';
+import MaterialEditor from 'model/material/editor/MaterialEditor';
 import type Tile from 'model/workbench/Tile';
-import Editor from './Editor';
+import type EditableImage from '../editable/EditableImage';
 
-interface Entity {
-  metadata: MaterialEntityVO;
-  blob: ArrayBuffer;
+interface UIState {
+  scrollOffset: 0;
 }
 
-export default class ImageEditor extends Editor<Entity> {
-  constructor(tile: Tile, materialId: MaterialEntityVO['id']) {
-    super(tile, materialId);
-  }
-
-  protected async init() {
-    return;
+export default class ImageEditor extends MaterialEditor<EditableImage, UIState> {
+  constructor(tile: Tile, editor: EditableImage) {
+    super(tile, editor, { scrollOffset: 0 });
   }
 }

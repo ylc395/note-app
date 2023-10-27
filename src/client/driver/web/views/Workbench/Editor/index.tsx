@@ -2,10 +2,10 @@ import { container } from 'tsyringe';
 import { observer } from 'mobx-react-lite';
 
 import type Tile from 'model/workbench/Tile';
-import NoteEditor from 'model/note/EditorView';
-import ImageEditor from 'model/material/view/ImageEditorView';
-import PdfEditor from 'model/material/view/PdfEditorView';
-import HtmlEditor from 'model/material/view/HtmlEditorView';
+import NoteEditor from 'model/note/Editor';
+import ImageEditor from 'model/material/editor/ImageEditor';
+import PdfEditor from 'model/material/editor/PdfEditor';
+import HtmlEditor from 'model/material/editor/HtmlEditor';
 import EditorService from 'service/EditorService';
 
 import NoteEditorView from './NoteEditor';
@@ -21,10 +21,10 @@ export default observer(function Editor({ tileId }: { tileId: Tile['id'] }) {
 
   return (
     <div ref={setDroppableRef} className="relative min-h-0 shrink grow">
-      {tile.currentEditorView instanceof NoteEditor && <NoteEditorView editorView={tile.currentEditorView} />}
-      {tile.currentEditorView instanceof ImageEditor && <ImageEditorView editorView={tile.currentEditorView} />}
-      {tile.currentEditorView instanceof PdfEditor && <PdfEditorView editorView={tile.currentEditorView} />}
-      {tile.currentEditorView instanceof HtmlEditor && <HtmlEditorView editorView={tile.currentEditorView} />}
+      {tile.currentEditor instanceof NoteEditor && <NoteEditorView editor={tile.currentEditor} />}
+      {tile.currentEditor instanceof ImageEditor && <ImageEditorView editor={tile.currentEditor} />}
+      {tile.currentEditor instanceof PdfEditor && <PdfEditorView editor={tile.currentEditor} />}
+      {tile.currentEditor instanceof HtmlEditor && <HtmlEditorView editor={tile.currentEditor} />}
       {isOver ? <div className="absolute bg-blue-50 opacity-60" style={dropPosition} /> : null}
     </div>
   );

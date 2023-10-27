@@ -1,35 +1,34 @@
 import { EntityTypes, type EntityLocator } from 'model/entity';
-import type Editor from 'model/abstract/Editor';
-import { Events as EditorEvents } from 'model/abstract/Editor';
-import type EditorView from 'model/abstract/EditorView';
-import { Events as EditorViewEvents } from 'model/abstract/EditorView';
-import type EntityEditor from 'model/abstract/Editor';
-import type MaterialEditor from 'model/material/editor/Editor';
-import NoteEditorView from 'model/note/EditorView';
+
+import { Events as EditableEntityEvents, type default as EditableEntity } from 'model/abstract/EditableEntity';
+import EditableNote from 'model/note/Editable';
+import EditablePdf from 'model/material/editable/EditablePdf';
+import EditableHtml from 'model/material/editable/EditableHtml';
+import EditableImage from 'model/material/editable/EditableImage';
+
+import { Events as EditorEvents, type default as Editor } from 'model/abstract/Editor';
 import NoteEditor from 'model/note/Editor';
+import type MaterialEditor from 'model/material/editable/Editable';
 import PdfEditor from 'model/material/editor/PdfEditor';
-import PdfEditorView from 'model/material/view/PdfEditorView';
 import HtmlEditor from 'model/material/editor/HtmlEditor';
-import HtmlEditorView from 'model/material/view/HtmlEditorView';
 import ImageEditor from 'model/material/editor/ImageEditor';
-import ImageEditorView from 'model/material/view/ImageEditorView';
 
 import type Tile from './Tile';
 
 export default class EditorManager {
-  private readonly editors: { [key in EntityTypes]?: Record<EntityLocator['entityId'], Editor> } = {
+  private readonly editableEntities: { [key in EntityTypes]?: Record<EntityLocator['entityId'], EditableEntity> } = {
     [EntityTypes.Note]: {},
     [EntityTypes.Material]: {},
   };
 
-  private readonly editorViews = new Map<EntityEditor, Set<EditorView>>();
+  private readonly editors = new Map<EditableEntity, Set<Editor>>();
 
-  getEditorByEntity({ entityType, entityId }: EntityLocator) {
-    return this.editors[entityType]?.[entityId];
+  getEditableEntity({ entityType, entityId }: EntityLocator) {
+    return this.editableEntities[entityType]?.[entityId];
   }
 
-  private createEditor(tile: Tile, { entityId, entityType, mimeType }: EntityLocator) {
-    let editor = this.getEditorByEntity({ entityId, entityType, mimeType });
+  private createEditableEntity(tile: Tile, { entityId, entityType, mimeType }: EntityLocator) {
+    let editor = this.getEditableEntity({ entityId, entityType, mimeType });
 
     if (editor) {
       return editor;
@@ -37,23 +36,23 @@ export default class EditorManager {
 
     switch (entityType) {
       case EntityTypes.Note:
-        editor = new NoteEditor(tile, entityId);
+        editor = new EditableNote(tile, entityId);
         break;
       case EntityTypes.Material:
-        editor = this.createMaterialEditor(tile, { entityId, entityType, mimeType });
+        editor = this.createEditableMaterial(tile, { entityId, entityType, mimeType });
         break;
       default:
         throw new Error('invalid type');
     }
 
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    editor.once(EditorEvents.Destroyed, () => delete this.editors[entityType]![entityId]);
+    editor.once(EditableEntityEvents.Destroyed, () => delete this.editableEntities[entityType]![entityId]);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    this.editors[entityType]![entityId] = editor;
+    this.editableEntities[entityType]![entityId] = editor;
     return editor;
   }
 
-  private createMaterialEditor(tile: Tile, { mimeType, entityId }: EntityLocator) {
+  private createEditableMaterial(tile: Tile, { mimeType, entityId }: EntityLocator) {
     if (!mimeType) {
       throw new Error('no mimeType');
     }
@@ -61,11 +60,11 @@ export default class EditorManager {
     let editor: MaterialEditor | null = null;
 
     if (mimeType.startsWith('image')) {
-      editor = new ImageEditor(tile, entityId);
+      editor = new EditableImage(entityId);
     } else if (mimeType === 'application/pdf') {
-      editor = new PdfEditor(tile, entityId);
+      editor = new EditablePdf(entityId);
     } else if (mimeType === 'text/html') {
-      editor = new HtmlEditor(tile, entityId);
+      editor = new EditableHtml(entityId);
     }
 
     if (!editor) {
@@ -75,50 +74,50 @@ export default class EditorManager {
     return editor;
   }
 
-  createEditorView(tile: Tile, entity: EntityLocator) {
-    const editor = this.createEditor(tile, entity);
-    let editorView: EditorView | undefined;
+  createEditor(tile: Tile, entity: EntityLocator) {
+    const editableEntity = this.createEditableEntity(tile, entity);
+    let editor: Editor | undefined;
 
-    if (editor instanceof NoteEditor) {
-      editorView = new NoteEditorView(tile, editor);
+    if (editableEntity instanceof EditableNote) {
+      editor = new NoteEditor(tile, editableEntity);
     }
 
-    if (editor instanceof PdfEditor) {
-      editorView = new PdfEditorView(tile, editor);
+    if (editableEntity instanceof EditablePdf) {
+      editor = new PdfEditor(tile, editableEntity);
     }
 
-    if (editor instanceof HtmlEditor) {
-      editorView = new HtmlEditorView(tile, editor);
+    if (editableEntity instanceof EditableHtml) {
+      editor = new HtmlEditor(tile, editableEntity);
     }
 
-    if (editor instanceof ImageEditor) {
-      editorView = new ImageEditorView(tile, editor);
+    if (editableEntity instanceof EditableImage) {
+      editor = new ImageEditor(tile, editableEntity);
     }
 
-    if (!editorView) {
+    if (!editor) {
       throw new Error('invalid editor');
     }
 
-    editorView.once(EditorViewEvents.Destroyed, () => this.handleViewDestroyed(editorView!));
-    const viewSet = this.editorViews.get(editor);
+    editor.once(EditorEvents.Destroyed, () => this.handleEditorDestroyed(editor!));
+    const viewSet = this.editors.get(editableEntity);
 
     if (viewSet) {
-      viewSet.add(editorView);
+      viewSet.add(editor);
     } else {
-      this.editorViews.set(editor, new Set([editorView]));
+      this.editors.set(editableEntity, new Set([editor]));
     }
 
-    return editorView;
+    return editor;
   }
 
-  private handleViewDestroyed(editorView: EditorView) {
+  private handleEditorDestroyed(editor: Editor) {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const viewSet = this.editorViews.get(editorView.editor)!;
-    viewSet.delete(editorView);
+    const viewSet = this.editors.get(editor.editable)!;
+    viewSet.delete(editor);
 
     if (viewSet.size === 0) {
-      this.editorViews.delete(editorView.editor);
-      editorView.editor.destroy();
+      this.editors.delete(editor.editable);
+      editor.editable.destroy();
     }
   }
 }

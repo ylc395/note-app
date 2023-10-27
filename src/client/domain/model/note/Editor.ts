@@ -1,67 +1,60 @@
-import { makeObservable, action, toJS } from 'mobx';
-import debounce from 'lodash/debounce';
-import { container } from 'tsyringe';
+import { makeObservable, computed, observable, action } from 'mobx';
 
-import { EntityTypes } from 'model/entity';
-import type { NoteVO as Note, NotePatchDTO as NotePatch, NoteBodyVO } from 'model/note';
+import { IS_DEV } from 'infra/constants';
+import Editor, { type Breadcrumbs } from 'model/abstract/Editor';
 import type Tile from 'model/workbench/Tile';
-import Editor from 'model/abstract/Editor';
-import NoteTree from 'model/note/Tree';
 
-export interface Entity {
-  body: string;
-  metadata: Note;
+import type EditableNote from './Editable';
+import type { NoteTreeNode } from 'model/note/Tree';
+
+interface UIState {
+  scrollTop: number;
+  cursor: number;
 }
 
-export default class NoteEditor extends Editor<Entity> {
-  readonly entityType = EntityTypes.Note;
-  readonly noteTree = container.resolve(NoteTree);
-  constructor(tile: Tile, noteId: Note['id']) {
-    super(tile, noteId);
+export default class NoteEditor extends Editor<EditableNote, UIState> {
+  constructor(tile: Tile, editor: EditableNote) {
+    super(tile, editor, { cursor: 0, scrollTop: 0 });
     makeObservable(this);
   }
 
-  protected async init() {
-    const [{ body: metadata }, { body }] = await Promise.all([
-      this.remote.get<void, Note>(`/notes/${this.entityId}`),
-      this.remote.get<void, NoteBodyVO>(`/notes/${this.entityId}/body`),
-    ]);
+  @observable searchEnabled = false;
 
-    this.load({ metadata, body });
+  @computed
+  get tabView() {
+    return {
+      title: (IS_DEV ? `${this.id} ${this.editable.entityId.slice(0, 3)} ` : '') + this.editable.entity?.metadata.title,
+      icon: this.editable.entity?.metadata.icon || null,
+    };
+  }
+
+  @computed
+  get breadcrumbs() {
+    const result: Breadcrumbs = [];
+    const { editable: editor } = this;
+
+    const nodeToBreadcrumb = (node: NoteTreeNode) => ({
+      id: node.id,
+      title: node.title,
+      icon: node.attributes?.icon,
+    });
+
+    let node: NoteTreeNode | null = editor.noteTree.getNode(editor.entityId);
+
+    while (node && node !== editor.noteTree.root) {
+      result.unshift({
+        ...nodeToBreadcrumb(node),
+        siblings: editor.noteTree.getSiblings(node.id).map(nodeToBreadcrumb),
+      });
+
+      node = node.parent;
+    }
+
+    return result;
   }
 
   @action.bound
-  updateBody(body: string) {
-    if (!this.entity) {
-      throw new Error('no load note');
-    }
-
-    this.entity.body = body;
-    this.uploadBody(body);
+  toggleSearch() {
+    this.searchEnabled = !this.searchEnabled;
   }
-
-  private readonly uploadBody = debounce((body: string) => {
-    this.remote.put<NoteBodyVO>(`/notes/${this.entityId}/body`, body);
-  }, 800);
-
-  @action
-  updateNote(note: Partial<Note>) {
-    if (!this.entity) {
-      throw new Error('no load note');
-    }
-
-    if (note.id && note.id !== this.entity.metadata.id) {
-      throw new Error('wrong id');
-    }
-
-    Object.assign(this.entity.metadata, note);
-
-    const metadata = toJS(this.entity.metadata);
-    this.uploadNote(metadata);
-    this.noteTree.updateTree(metadata);
-  }
-
-  private readonly uploadNote = debounce((note: Note) => {
-    this.remote.patch<NotePatch>(`/notes/${note.id}`, note);
-  }, 1000);
 }

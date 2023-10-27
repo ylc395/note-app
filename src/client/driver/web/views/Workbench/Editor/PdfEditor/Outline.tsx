@@ -3,7 +3,7 @@ import { ReactNode, useContext } from 'react';
 import { Resizable } from 're-resizable';
 import clsx from 'clsx';
 
-import type { OutlineItem } from 'model/material/editor/PdfEditor';
+import type { OutlineItem } from 'model/material/editable/EditablePdf';
 import context from './Context';
 
 const OutlineItemView = observer(function OutlineItemView({
@@ -14,7 +14,7 @@ const OutlineItemView = observer(function OutlineItemView({
   level: number;
 }) {
   const { pdfViewer } = useContext(context);
-  const dest = pdfViewer?.editorView.editor.outlineDestMap[key];
+  const dest = pdfViewer?.editor.editable.outlineDestMap[key];
 
   return (
     <div style={{ paddingLeft: level * 5 }} className="mb-2">
@@ -35,7 +35,7 @@ export default observer(function Outline() {
   const { pdfViewer } = useContext(context);
 
   let content: ReactNode = null;
-  const outline = pdfViewer?.editorView.editor.outline;
+  const outline = pdfViewer?.editor.editable.outline;
 
   if (!outline) {
     content = '加载中...';

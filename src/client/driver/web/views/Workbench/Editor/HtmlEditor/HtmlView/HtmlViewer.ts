@@ -4,12 +4,12 @@ import getCssSelector from 'css-selector-generator';
 
 import { ui } from 'web/infra/ui';
 import { AnnotationTypes, type AnnotationVO } from 'model/material';
-import type HtmlEditorView from 'model/material/view/HtmlEditorView';
+import type HtmlEditor from 'model/material/editor/HtmlEditor';
 
 import RangeSelector, { type RangeSelectEvent } from '../../common/RangeSelector';
 
 interface Options {
-  editorView: HtmlEditorView;
+  editor: HtmlEditor;
   rootEl: HTMLElement;
   editorRootEl: HTMLElement;
 }
@@ -22,27 +22,27 @@ export default class HtmlViewer {
   @observable.ref
   selection: RangeSelectEvent | null = null;
 
-  get editor() {
-    return this.options.editorView.editor;
+  get html() {
+    return this.options.editor.editable;
   }
 
-  get editorView() {
-    return this.options.editorView;
+  get editor() {
+    return this.options.editor;
   }
 
   @computed
   get title() {
-    let text = this.editor.entity?.metadata.sourceUrl || '未命名 HTML 文档';
-    let icon = this.editor.entity?.metadata.icon || '';
+    let text = this.html.entity?.metadata.sourceUrl || '未命名 HTML 文档';
+    let icon = this.html.entity?.metadata.icon || '';
 
-    if (this.editorView.documentElement instanceof HTMLHtmlElement) {
-      const titleContent = this.editorView.documentElement.querySelector('title')?.innerText;
+    if (this.editor.documentElement instanceof HTMLHtmlElement) {
+      const titleContent = this.editor.documentElement.querySelector('title')?.innerText;
 
       if (titleContent) {
         text = titleContent;
       }
 
-      const iconContent = this.editorView.documentElement.querySelector('link[rel="icon"]')?.getAttribute('href');
+      const iconContent = this.editor.documentElement.querySelector('link[rel="icon"]')?.getAttribute('href');
 
       if (iconContent) {
         icon = iconContent;
@@ -68,7 +68,7 @@ export default class HtmlViewer {
 
   private readonly updateScrollState = action((e: Event) => {
     const { scrollTop } = e.target as HTMLElement;
-    this.editorView.updateUIState({ scrollTop });
+    this.editor.updateUIState({ scrollTop });
   });
 
   private getUniqueSelector(el: HTMLElement) {
@@ -103,16 +103,16 @@ export default class HtmlViewer {
   }
 
   private initContent() {
-    if (this.editorView.documentElement instanceof HTMLHtmlElement) {
-      this.updateContent(this.editorView.documentElement);
+    if (this.editor.documentElement instanceof HTMLHtmlElement) {
+      this.updateContent(this.editor.documentElement);
     } else {
       this.stopLoadingHtml = when(
-        () => Boolean(this.editor.entity),
+        () => Boolean(this.html.entity),
         () => {
           // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          const documentElement = HtmlViewer.sanitizeHtml(this.editor.entity!.html);
+          const documentElement = HtmlViewer.sanitizeHtml(this.html.entity!.html);
           HtmlViewer.processStyles(documentElement);
-          this.editorView.documentElement = documentElement;
+          this.editor.documentElement = documentElement;
           this.updateContent(documentElement);
         },
       );
@@ -121,7 +121,7 @@ export default class HtmlViewer {
 
   private updateContent(html: HTMLHtmlElement) {
     this.shadowRoot.replaceChildren(html);
-    this.options.editorRootEl.scrollTop = this.editorView.uiState.scrollTop;
+    this.options.editorRootEl.scrollTop = this.editor.uiState.scrollTop;
   }
 
   private static processStyles(root: HTMLHtmlElement) {
@@ -196,7 +196,7 @@ export default class HtmlViewer {
 
     const { range } = this.selection;
 
-    this.editor.createAnnotation({
+    this.html.createAnnotation({
       type: AnnotationTypes.HtmlRange,
       color,
       range: [

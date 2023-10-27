@@ -1,24 +1,34 @@
-import type { MaterialEntityVO } from 'model/material';
-import type Tile from 'model/workbench/Tile';
-import Editor from './Editor';
+import { makeObservable, observable, action } from 'mobx';
 
-interface WebPage {
-  metadata: MaterialEntityVO;
-  html: string;
+import MaterialEditor from 'model/material/editor/MaterialEditor';
+import type Tile from 'model/workbench/Tile';
+import type EditableHtml from '../editable/EditableHtml';
+
+interface State {
+  scrollTop: number;
 }
 
-export default class HtmlEditor extends Editor<WebPage> {
-  constructor(tile: Tile, materialId: MaterialEntityVO['id']) {
-    super(tile, materialId);
+export enum Panels {
+  Outline,
+  AnnotationList,
+}
+
+export default class HtmlEditor extends MaterialEditor<EditableHtml, State> {
+  constructor(tile: Tile, editor: EditableHtml) {
+    super(tile, editor, { scrollTop: 0 });
+    makeObservable(this);
   }
 
-  protected async init() {
-    const [{ body: metadata }, { body: blob }] = await Promise.all([
-      this.remote.get<void, MaterialEntityVO>(`/materials/${this.entityId}`),
-      this.remote.get<void, ArrayBuffer>(`/materials/${this.entityId}/blob`),
-    ]);
+  @observable.ref
+  documentElement?: unknown;
 
-    const textDecoder = new TextDecoder();
-    this.load({ metadata, html: textDecoder.decode(blob) });
+  @observable panelsVisibility = {
+    [Panels.Outline]: false,
+    [Panels.AnnotationList]: true,
+  };
+
+  @action
+  togglePanel(panel: Panels) {
+    this.panelsVisibility[panel] = !this.panelsVisibility[panel];
   }
 }

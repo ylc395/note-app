@@ -2,7 +2,7 @@ import { useLocalObservable } from 'mobx-react-lite';
 import { observable, runInAction } from 'mobx';
 import { useEffect } from 'react';
 
-import type NoteEditorModel from 'model/note/EditorView';
+import type NoteEditor from 'model/note/Editor';
 import Modal from 'web/components/Modal';
 
 import Body from './Body';
@@ -13,23 +13,15 @@ import Context, { type EditorContext } from './Context';
 import useModal from 'web/components/Modal/useModal';
 
 // eslint-disable-next-line mobx/missing-observer
-export default function NoteEditor({ editorView }: { editorView: NoteEditorModel }) {
+export default function NoteEditorView({ editor }: { editor: NoteEditor }) {
   const infoModal = useModal();
-  const context = useLocalObservable<EditorContext>(
-    () => ({
-      editorView,
-      infoModal,
-    }),
-    {
-      editorView: observable.ref,
-    },
-  );
+  const context = useLocalObservable<EditorContext>(() => ({ editor, infoModal }), { editor: observable.ref });
 
   useEffect(() => {
     runInAction(() => {
-      context.editorView = editorView;
+      context.editor = editor;
     });
-  }, [context, editorView]);
+  }, [context, editor]);
 
   return (
     <Context.Provider value={context}>

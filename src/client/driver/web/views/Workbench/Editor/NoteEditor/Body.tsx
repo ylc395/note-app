@@ -7,23 +7,23 @@ import EditorContext from './Context';
 
 export default observer(function NoteEditor() {
   const ctx = useContext(EditorContext);
-  const { editorView } = ctx;
+  const { editor } = ctx;
   const onChange = useMemoizedFn((content: string) => {
-    if (editorView.tile.isFocused) {
-      editorView.editor.updateBody(content);
+    if (editor.tile.isFocused) {
+      editor.editable.updateBody(content);
     }
   });
 
   return (
     <div className="min-h-0 grow px-4">
-      {typeof editorView.editor.entity?.body === 'string' && (
+      {typeof editor.editable.entity?.body === 'string' && (
         <MarkdownEditor
           autoFocus
-          initialContent={editorView.editor.entity.body}
-          content={editorView.tile.isFocused ? undefined : editorView.editor.entity.body}
-          readonly={editorView.editor.entity.metadata.isReadonly}
+          initialContent={editor.editable.entity.body}
+          content={editor.tile.isFocused ? undefined : editor.editable.entity.body}
+          readonly={editor.editable.entity.metadata.isReadonly}
           onChange={onChange}
-          onUIStateChange={editorView.updateUIState}
+          onUIStateChange={editor.updateUIState}
         />
       )}
     </div>

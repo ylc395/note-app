@@ -1,13 +1,13 @@
 import { makeObservable, observable, computed, action, runInAction } from 'mobx';
 import type { AnnotationPatchDTO, AnnotationVO } from 'model/material';
 
-import EditorView from 'model/abstract/EditorView';
+import Editor from 'model/abstract/Editor';
 import type Tile from 'model/workbench/Tile';
-import type MaterialEditor from 'model/material/editor/Editor';
+import type EditableMaterial from 'model/material/editable/Editable';
 
-export default abstract class MaterialEditorView<T extends MaterialEditor, S = unknown> extends EditorView<T, S> {
-  constructor(tile: Tile, editor: T, state: S) {
-    super(tile, editor, state);
+export default abstract class MaterialEditor<T extends EditableMaterial, S = unknown> extends Editor<T, S> {
+  constructor(tile: Tile, editor: T, uiState: S) {
+    super(tile, editor, uiState);
     makeObservable(this);
   }
 
@@ -19,8 +19,8 @@ export default abstract class MaterialEditorView<T extends MaterialEditor, S = u
   @computed
   get tabView() {
     return {
-      title: this.editor.entity?.metadata.name || '',
-      icon: this.editor.entity?.metadata.icon || null,
+      title: this.editable.entity?.metadata.name || '',
+      icon: this.editable.entity?.metadata.icon || null,
     };
   }
 
@@ -31,7 +31,7 @@ export default abstract class MaterialEditorView<T extends MaterialEditor, S = u
       throw new Error('no currentAnnotation');
     }
 
-    await this.editor.removeAnnotation(this.currentAnnotationId);
+    await this.editable.removeAnnotation(this.currentAnnotationId);
     runInAction(() => {
       this.currentAnnotationId = null;
     });
@@ -42,7 +42,7 @@ export default abstract class MaterialEditorView<T extends MaterialEditor, S = u
       throw new Error('no currentAnnotation');
     }
 
-    await this.editor.updateCurrentAnnotation(this.currentAnnotationId, patch);
+    await this.editable.updateCurrentAnnotation(this.currentAnnotationId, patch);
     runInAction(() => {
       this.currentAnnotationId = null;
     });
@@ -50,7 +50,7 @@ export default abstract class MaterialEditorView<T extends MaterialEditor, S = u
 
   @computed
   get currentAnnotation() {
-    const annotation = this.editor.annotations.find(({ id }) => this.currentAnnotationId === id);
+    const annotation = this.editable.annotations.find(({ id }) => this.currentAnnotationId === id);
     return annotation;
   }
 

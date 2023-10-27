@@ -10,7 +10,7 @@ import EditorContext from './Context';
 
 export default observer(function Breadcrumb() {
   const {
-    editorView: { breadcrumbs },
+    editor: { breadcrumbs },
   } = useContext(EditorContext);
 
   return (

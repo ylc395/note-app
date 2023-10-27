@@ -7,7 +7,7 @@ import Annotation from './Annotation';
 
 export default observer(function AnnotationList() {
   const { htmlViewer } = useContext(context);
-  const annotations = htmlViewer?.editor.annotations;
+  const annotations = htmlViewer?.html.annotations;
 
   return (
     <Resizable

@@ -1,29 +1,44 @@
-import uniqueId from 'lodash/uniqueId';
 import { container } from 'tsyringe';
-import { makeObservable, action, observable } from 'mobx';
+import uniqueId from 'lodash/uniqueId';
+import debounce from 'lodash/debounce';
 import { Emitter, type EventMap } from 'strict-event-emitter';
 
+import { token as localStorageToken } from 'infra/localStorage';
+import type EditableEntity from 'model/abstract/EditableEntity';
 import type Tile from 'model/workbench/Tile';
-import type { EntityId, EntityLocator, EntityTypes } from 'model/entity';
-import { token as remoteToken } from 'infra/remote';
+
+interface Breadcrumb {
+  title: string;
+  id: string;
+  icon?: string | null;
+}
+
+export type Breadcrumbs = Array<Breadcrumb & { siblings: Breadcrumb[] }>;
 
 export enum Events {
   Destroyed = 'entityEditor.destroyed',
 }
 
-interface CommonEditorEvents extends EventMap {
+export interface CommonEditorEvents extends EventMap {
   [Events.Destroyed]: [];
 }
 
-export default abstract class EntityEditor<T = unknown> extends Emitter<CommonEditorEvents> {
-  protected remote = container.resolve(remoteToken);
+export default abstract class Editor<
+  T extends EditableEntity = EditableEntity,
+  S = unknown,
+> extends Emitter<CommonEditorEvents> {
   readonly id = uniqueId('editor-');
-  @observable entity?: T;
-
-  constructor(public tile: Tile, readonly entityId: EntityId) {
+  abstract readonly tabView: { title: string; icon: string | null };
+  abstract readonly breadcrumbs: Breadcrumbs;
+  protected localStorage = container.resolve(localStorageToken);
+  uiState: S;
+  constructor(public tile: Tile, public readonly editable: T, initialUIState: S) {
     super();
-    makeObservable(this);
-    this.init();
+    this.uiState = this.localStorage.get<S>(this.localStorageKey) || initialUIState;
+  }
+
+  private get localStorageKey() {
+    return `ui.state.editor.${this.editable.entityType}.${this.editable.entityId}`;
   }
 
   destroy() {
@@ -31,18 +46,8 @@ export default abstract class EntityEditor<T = unknown> extends Emitter<CommonEd
     this.removeAllListeners();
   }
 
-  @action
-  protected load(entity: T) {
-    if (this.entity) {
-      throw new Error('can not reload entity');
-    }
-
-    this.entity = entity;
-  }
-
-  abstract readonly entityType: EntityTypes;
-  protected abstract init(): void;
-  toEntityLocator(): EntityLocator {
-    return { entityType: this.entityType, entityId: this.entityId };
-  }
+  updateUIState = debounce((state: Partial<S>) => {
+    this.uiState = { ...this.uiState, ...state };
+    this.localStorage.set(this.localStorageKey, this.uiState);
+  }, 200);
 }

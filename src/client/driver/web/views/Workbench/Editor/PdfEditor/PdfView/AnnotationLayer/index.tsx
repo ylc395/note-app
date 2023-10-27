@@ -29,8 +29,8 @@ export default observer(function AnnotationLayer({ page }: { page: number }) {
     return null;
   }
 
-  const fragments = pdfViewer.editorView.editor.fragmentsByPage[page] || [];
-  const areas = pdfViewer.editorView.editor.areaAnnotationsByPage[page] || [];
+  const fragments = pdfViewer.editor.editable.fragmentsByPage[page] || [];
+  const areas = pdfViewer.editor.editable.areaAnnotationsByPage[page] || [];
 
   return (
     <div ref={setFloating} style={styles} className="pointer-events-none z-10">

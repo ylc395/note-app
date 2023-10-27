@@ -5,7 +5,7 @@ import type { EntityLocator } from 'model/entity';
 import Tile from 'model/workbench/Tile';
 import TileManager, { type TileSplitDirections } from 'model/workbench/TileManger';
 import EditorManager from 'model/workbench/EditorManager';
-import EditorView from 'model/abstract/EditorView';
+import Editor from 'model/abstract/Editor';
 
 @singleton()
 export default class EditorService {
@@ -20,43 +20,43 @@ export default class EditorService {
   openEntity(entity: EntityLocator, newTileOptions?: { direction: TileSplitDirections; from: Tile }) {
     if (newTileOptions) {
       const newTile = this.tileManager.splitTile(newTileOptions.from.id, newTileOptions.direction);
-      const editorView = this.editorManager.createEditorView(newTile, entity);
-      newTile.addEditorView(editorView);
+      const editor = this.editorManager.createEditor(newTile, entity);
+      newTile.addEditor(editor);
     } else {
       const targetTile = this.tileManager.getTileAsTarget();
-      const existingEditor = this.editorManager.getEditorByEntity(entity);
+      const existingEntity = this.editorManager.getEditableEntity(entity);
 
-      if (existingEditor && targetTile.switchToEditorView(({ editor }) => editor === existingEditor)) {
+      if (existingEntity && targetTile.switchToEditor(({ editable: editor }) => editor === existingEntity)) {
         return;
       }
 
-      const editorView = this.editorManager.createEditorView(targetTile, entity);
-      targetTile.addEditorView(editorView);
+      const editor = this.editorManager.createEditor(targetTile, entity);
+      targetTile.addEditor(editor);
     }
   }
 
   @action.bound
-  moveEditorView(srcEditor: EditorView, dest: EditorView | Tile | { from: Tile; splitDirection: TileSplitDirections }) {
+  moveEditor(srcEditor: Editor, dest: Editor | Tile | { from: Tile; splitDirection: TileSplitDirections }) {
     if (dest instanceof Tile) {
       if (srcEditor.tile === dest) {
-        srcEditor.tile.moveEditorView(srcEditor, 'end');
+        srcEditor.tile.moveEditor(srcEditor, 'end');
       } else {
-        srcEditor.tile.removeEditorView(srcEditor.id, false);
-        dest.addEditorView(srcEditor);
+        srcEditor.tile.removeEditor(srcEditor.id, false);
+        dest.addEditor(srcEditor);
       }
       return;
-    } else if (dest instanceof EditorView) {
+    } else if (dest instanceof Editor) {
       if (srcEditor.tile === dest.tile) {
-        dest.tile.moveEditorView(srcEditor, dest);
+        dest.tile.moveEditor(srcEditor, dest);
       } else {
-        srcEditor.tile.removeEditorView(srcEditor.id, false);
-        dest.tile.addEditorView(srcEditor, dest);
+        srcEditor.tile.removeEditor(srcEditor.id, false);
+        dest.tile.addEditor(srcEditor, dest);
       }
     } else {
       const { from, splitDirection } = dest;
       const newTile = this.tileManager.splitTile(from.id, splitDirection);
-      from.removeEditorView(srcEditor.id, false);
-      newTile.addEditorView(srcEditor);
+      from.removeEditor(srcEditor.id, false);
+      newTile.addEditor(srcEditor);
     }
   }
 }

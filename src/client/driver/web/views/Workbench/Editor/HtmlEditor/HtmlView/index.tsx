@@ -1,11 +1,11 @@
 import { observer } from 'mobx-react-lite';
 import { useRef, useEffect, useContext } from 'react';
 
-import type HtmlEditorView from 'model/material/view/HtmlEditorView';
+import type HtmlEditor from 'model/material/editor/HtmlEditor';
 import HtmlViewer from './HtmlViewer';
 import context from '../Context';
 
-export default observer(function HtmlView({ editorView }: { editorView: HtmlEditorView }) {
+export default observer(function HtmlView({ editor }: { editor: HtmlEditor }) {
   const shadowWrapperRef = useRef<HTMLDivElement | null>(null);
   const editorRootRef = useRef<HTMLDivElement | null>(null);
   const { setHtmlViewer } = useContext(context);
@@ -16,7 +16,7 @@ export default observer(function HtmlView({ editorView }: { editorView: HtmlEdit
       rootEl: shadowWrapperRef.current!,
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       editorRootEl: editorRootRef.current!,
-      editorView,
+      editor,
       // onTextSelected: showSelectionTooltip,
       // onTextSelectCancel: hideSelectionTooltip,
     });
@@ -24,14 +24,14 @@ export default observer(function HtmlView({ editorView }: { editorView: HtmlEdit
     setHtmlViewer(htmlViewer);
 
     return () => htmlViewer.destroy();
-  }, [editorView, setHtmlViewer]);
+  }, [editor, setHtmlViewer]);
 
   return (
     <div className="grow overflow-auto" ref={editorRootRef}>
       <div className="all-initial">
         <div className="h-full select-text" ref={shadowWrapperRef}></div>
       </div>
-      {editorView.editor.annotations.length > 0 && <div className="relative"></div>}
+      {editor.editable.annotations.length > 0 && <div className="relative"></div>}
       {/* {selectionTooltipShowing && <SelectionTooltip ref={setSelectionTooltipPopper} style={selectionTooltipStyles} />} */}
     </div>
   );

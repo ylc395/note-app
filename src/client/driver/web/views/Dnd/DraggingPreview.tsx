@@ -2,7 +2,7 @@ import { container } from 'tsyringe';
 import { DragOverlay, useDndContext } from '@dnd-kit/core';
 import { useMemo } from 'react';
 
-import EditorView from 'model/abstract/EditorView';
+import Editor from 'model/abstract/Editor';
 import NoteService from 'service/NoteService';
 
 import TabItem from '../Workbench/TabBar/TabItem';
@@ -21,7 +21,7 @@ export default function DragPreview() {
 
   return (
     <DragOverlay className="pointer-events-none" dropAnimation={null}>
-      {draggingItem instanceof EditorView && <TabItem editorView={draggingItem}></TabItem>}
+      {draggingItem instanceof Editor && <TabItem editor={draggingItem}></TabItem>}
       {previewTree && <NoteTree tree={previewTree} />}
     </DragOverlay>
   );

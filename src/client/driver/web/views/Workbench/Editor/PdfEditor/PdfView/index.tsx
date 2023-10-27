@@ -1,7 +1,7 @@
 import { observer } from 'mobx-react-lite';
 import { useEffect, useRef, useContext } from 'react';
 
-import type PdfEditorView from 'model/material/view/PdfEditorView';
+import type PdfEditor from 'model/material/editor/PdfEditor';
 import SelectionTooltip from './SelectionTooltip';
 import AnnotationLayer from './AnnotationLayer';
 import AnnotationTooltip from './AnnotationTooltip';
@@ -10,7 +10,7 @@ import Loading from './Loading';
 import context from '../Context';
 import './style.css';
 
-export default observer(function PdfView({ editorView }: { editorView: PdfEditorView }) {
+export default observer(function PdfView({ editor }: { editor: PdfEditor }) {
   const containerElRef = useRef<HTMLDivElement | null>(null);
   const viewerElRef = useRef<HTMLDivElement | null>(null);
   const { setPdfViewer, pdfViewer } = useContext(context);
@@ -22,7 +22,7 @@ export default observer(function PdfView({ editorView }: { editorView: PdfEditor
     }
 
     const pdfViewer = new PdfViewer({
-      editorView,
+      editor,
       container: containerElRef.current,
       viewer: viewerElRef.current,
     });
@@ -30,7 +30,7 @@ export default observer(function PdfView({ editorView }: { editorView: PdfEditor
     setPdfViewer(pdfViewer);
 
     return () => pdfViewer.destroy();
-  }, [editorView, setPdfViewer]);
+  }, [editor, setPdfViewer]);
 
   return (
     <div className="relative grow overflow-hidden">
