@@ -14,7 +14,7 @@ interface UIState {
 
 export default class NoteEditor extends Editor<EditableNote, UIState> {
   constructor(tile: Tile, editor: EditableNote) {
-    super(tile, editor, { cursor: 0, scrollTop: 0 });
+    super(tile, editor);
     makeObservable(this);
   }
 

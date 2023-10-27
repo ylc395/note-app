@@ -31,10 +31,10 @@ export default abstract class Editor<
   abstract readonly tabView: { title: string; icon: string | null };
   abstract readonly breadcrumbs: Breadcrumbs;
   protected localStorage = container.resolve(localStorageToken);
-  uiState: S;
-  constructor(public tile: Tile, public readonly editable: T, initialUIState: S) {
+  uiState: Partial<S> | null;
+  constructor(public tile: Tile, public readonly editable: T) {
     super();
-    this.uiState = this.localStorage.get<S>(this.localStorageKey) || initialUIState;
+    this.uiState = this.localStorage.get<S>(this.localStorageKey);
   }
 
   private get localStorageKey() {

@@ -121,7 +121,7 @@ export default class HtmlViewer {
 
   private updateContent(html: HTMLHtmlElement) {
     this.shadowRoot.replaceChildren(html);
-    this.options.editorRootEl.scrollTop = this.editor.uiState.scrollTop;
+    this.options.editorRootEl.scrollTop = this.editor.uiState?.scrollTop || 0;
   }
 
   private static processStyles(root: HTMLHtmlElement) {

@@ -15,7 +15,7 @@ export enum Panels {
 
 export default class HtmlEditor extends MaterialEditor<EditableHtml, State> {
   constructor(tile: Tile, editor: EditableHtml) {
-    super(tile, editor, { scrollTop: 0 });
+    super(tile, editor);
     makeObservable(this);
   }
 

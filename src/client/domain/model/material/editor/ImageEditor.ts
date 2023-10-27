@@ -8,6 +8,6 @@ interface UIState {
 
 export default class ImageEditor extends MaterialEditor<EditableImage, UIState> {
   constructor(tile: Tile, editor: EditableImage) {
-    super(tile, editor, { scrollOffset: 0 });
+    super(tile, editor);
   }
 }

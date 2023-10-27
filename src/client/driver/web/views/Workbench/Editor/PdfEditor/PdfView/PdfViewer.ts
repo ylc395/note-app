@@ -131,7 +131,7 @@ export default class PdfViewer {
   };
 
   private async initFromState() {
-    const { hash } = this.editor.uiState;
+    const hash = this.editor.uiState?.hash;
 
     await this.pdfViewer.firstPagePromise;
 

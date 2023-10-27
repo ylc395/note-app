@@ -6,8 +6,8 @@ import type Tile from 'model/workbench/Tile';
 import type EditableMaterial from 'model/material/editable/Editable';
 
 export default abstract class MaterialEditor<T extends EditableMaterial, S = unknown> extends Editor<T, S> {
-  constructor(tile: Tile, editor: T, uiState: S) {
-    super(tile, editor, uiState);
+  constructor(tile: Tile, editor: T) {
+    super(tile, editor);
     makeObservable(this);
   }
 

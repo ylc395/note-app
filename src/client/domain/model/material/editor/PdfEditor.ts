@@ -15,7 +15,7 @@ export enum Panels {
 
 export default class PdfEditor extends MaterialEditor<EditablePdf, UIState> {
   constructor(tile: Tile, editor: EditablePdf) {
-    super(tile, editor, { hash: null });
+    super(tile, editor);
     makeObservable(this);
   }
 
