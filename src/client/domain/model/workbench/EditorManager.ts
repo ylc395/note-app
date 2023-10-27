@@ -99,7 +99,6 @@ export default class EditorManager {
       throw new Error('invalid editor');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     editorView.once(EditorViewEvents.Destroyed, () => this.handleViewDestroyed(editorView!));
     const viewSet = this.editorViews.get(editor);
 

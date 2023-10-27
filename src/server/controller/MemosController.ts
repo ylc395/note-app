@@ -22,17 +22,17 @@ export default class MemosController {
     return await this.memoService.create(memoDTO);
   }
 
+  @Get('/memos/tree')
+  async query(@Query(createSchemaPipe(memoQuerySchema)) q: ClientMemoQuery): Promise<MemoVO[]> {
+    return await this.memoService.getTree(q);
+  }
+
   @Patch('/memos/:id')
   async update(
     @Param('id') id: MemoVO['id'],
     @Body(createSchemaPipe(memoPatchDTOSchema)) patch: MemoPatchDTO,
   ): Promise<MemoVO> {
     return await this.memoService.update(id, patch);
-  }
-
-  @Get('/memos/tree')
-  async query(@Query(createSchemaPipe(memoQuerySchema)) q: ClientMemoQuery): Promise<MemoVO[]> {
-    return await this.memoService.getTree(q);
   }
 
   @Get('/memos/dates')

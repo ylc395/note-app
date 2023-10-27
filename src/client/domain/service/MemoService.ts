@@ -14,7 +14,7 @@ export default class MemoService {
   @observable newContent = '';
 
   async load() {
-    const { body: memos } = await this.remote.get<void, MemoVO[]>('/memos');
+    const { body: memos } = await this.remote.get<void, MemoVO[]>('/memos/tree');
 
     runInAction(() => {
       this.memos = memos;

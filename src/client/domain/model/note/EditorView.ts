@@ -1,4 +1,4 @@
-import { makeObservable, computed } from 'mobx';
+import { makeObservable, computed, observable, action } from 'mobx';
 
 import { IS_DEV } from 'infra/constants';
 import EditorView, { type Breadcrumbs } from 'model/abstract/EditorView';
@@ -17,6 +17,8 @@ export default class NoteEditorView extends EditorView<NoteEditor, State> {
     super(tile, editor, { cursor: 0, scrollTop: 0 });
     makeObservable(this);
   }
+
+  @observable searchEnabled = false;
 
   @computed
   get tabView() {
@@ -51,5 +53,10 @@ export default class NoteEditorView extends EditorView<NoteEditor, State> {
     }
 
     return result;
+  }
+
+  @action.bound
+  toggleSearch() {
+    this.searchEnabled = !this.searchEnabled;
   }
 }

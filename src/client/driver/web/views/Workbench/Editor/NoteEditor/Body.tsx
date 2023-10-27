@@ -1,67 +1,31 @@
 import { observer } from 'mobx-react-lite';
-import { useEffect, useContext } from 'react';
-import { reaction, when } from 'mobx';
-import debounce from 'lodash/debounce';
+import { useContext } from 'react';
 import { useMemoizedFn } from 'ahooks';
 
 import MarkdownEditor from 'web/components/MarkdownEditor';
 import EditorContext from './Context';
 
 export default observer(function NoteEditor() {
-  const { editorView, markdownEditor, setMarkdownEditor } = useContext(EditorContext);
-  const onChange = useMemoizedFn((content: string) => editorView.editor.updateBody(content));
-
-  useEffect(() => {
-    if (!markdownEditor?.isReady) {
-      return;
+  const ctx = useContext(EditorContext);
+  const { editorView } = ctx;
+  const onChange = useMemoizedFn((content: string) => {
+    if (editorView.tile.isFocused) {
+      editorView.editor.updateBody(content);
     }
-
-    const updateContent = debounce((content: string) => {
-      markdownEditor.resetContent(content);
-    }, 300);
-
-    const disposer = [
-      when(
-        () => Boolean(editorView.editor.entity?.body),
-        () => {
-          markdownEditor.resetContent(editorView.editor.entity!.body);
-          markdownEditor.applyState(editorView.state);
-        },
-      ),
-      reaction(
-        () => editorView.editor.entity?.body,
-        (body) => {
-          if (typeof body === 'string' && !editorView.tile.isFocused) {
-            updateContent(body);
-          }
-        },
-      ),
-      reaction(
-        () => editorView.editor.entity?.metadata.isReadonly,
-        (isReadonly) => {
-          if (typeof isReadonly === 'undefined') {
-            return;
-          }
-
-          markdownEditor.setReadonly(isReadonly);
-
-          if (!isReadonly) {
-            markdownEditor.focus();
-          }
-        },
-        { fireImmediately: true },
-      ),
-    ];
-
-    return () => {
-      disposer.forEach((cb) => cb());
-      updateContent.cancel();
-    };
-  }, [editorView, markdownEditor, setMarkdownEditor]);
+  });
 
   return (
     <div className="min-h-0 grow px-4">
-      <MarkdownEditor onInitialized={setMarkdownEditor} onChange={onChange} onUIStateChange={editorView.updateState} />
+      {typeof editorView.editor.entity?.body === 'string' && (
+        <MarkdownEditor
+          autoFocus
+          initialContent={editorView.editor.entity.body}
+          content={editorView.tile.isFocused ? undefined : editorView.editor.entity.body}
+          readonly={editorView.editor.entity.metadata.isReadonly}
+          onChange={onChange}
+          onUIStateChange={editorView.updateUIState}
+        />
+      )}
     </div>
   );
 });

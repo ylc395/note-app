@@ -18,15 +18,10 @@ export default function NoteEditor({ editorView }: { editorView: NoteEditorModel
   const context = useLocalObservable<EditorContext>(
     () => ({
       editorView,
-      markdownEditor: null,
       infoModal,
-      setMarkdownEditor(v) {
-        this.markdownEditor = v;
-      },
     }),
     {
       editorView: observable.ref,
-      markdownEditor: observable.ref,
     },
   );
 

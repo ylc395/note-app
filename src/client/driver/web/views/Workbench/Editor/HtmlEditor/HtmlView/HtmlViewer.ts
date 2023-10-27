@@ -68,7 +68,7 @@ export default class HtmlViewer {
 
   private readonly updateScrollState = action((e: Event) => {
     const { scrollTop } = e.target as HTMLElement;
-    this.editorView.updateState({ scrollTop });
+    this.editorView.updateUIState({ scrollTop });
   });
 
   private getUniqueSelector(el: HTMLElement) {
@@ -121,7 +121,7 @@ export default class HtmlViewer {
 
   private updateContent(html: HTMLHtmlElement) {
     this.shadowRoot.replaceChildren(html);
-    this.options.editorRootEl.scrollTop = this.editorView.state.scrollTop;
+    this.options.editorRootEl.scrollTop = this.editorView.uiState.scrollTop;
   }
 
   private static processStyles(root: HTMLHtmlElement) {

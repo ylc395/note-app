@@ -1,20 +1,20 @@
 import { gfm } from '@milkdown/preset-gfm';
 import { commonmark } from '@milkdown/preset-commonmark';
+import { forceUpdate, replaceAll } from '@milkdown/utils';
 import {
   Editor as MilkdownEditor,
-  EditorStatus,
   rootCtx,
   editorViewCtx,
-  parserCtx,
   editorViewOptionsCtx,
   commandsCtx,
+  defaultValueCtx,
 } from '@milkdown/core';
-import { Slice } from '@milkdown/prose/model';
 import { listenerCtx, listener } from '@milkdown/plugin-listener';
 import { history } from '@milkdown/plugin-history';
 import { upload, uploadConfig } from '@milkdown/plugin-upload';
 import { cursor } from '@milkdown/plugin-cursor';
 import { clipboard } from '@milkdown/plugin-clipboard';
+import uniqueId from 'lodash/uniqueId';
 import '@milkdown/prose/view/style/prosemirror.css';
 import '@milkdown/prose/tables/style/tables.css';
 
@@ -22,25 +22,24 @@ import { uploadOptions, htmlUpload } from './uploadFile';
 import multimedia from './multimedia';
 import search, { enableSearchCommand } from './search';
 
-interface State {
+interface UIState {
   scrollTop?: number;
   cursor?: number;
 }
 
 export interface Options {
-  onChange?: (content: string) => void; // won't fire when calling updateContent
-  readonly?: boolean;
-  autoFocus?: boolean;
-  defaultValue?: string;
-  onInitialized?: (editor: Editor) => void;
-  onDestroy?: () => void;
-  onUIStateChange?: (state: State) => void;
   root: HTMLElement;
+  defaultValue?: string;
+  autoFocus?: boolean;
+  onUIStateChange?: (state: UIState) => void;
+  onChange?: (content: string) => void; // won't fire when calling setContent
+  onReady?: () => void;
 }
 
 export default class Editor {
   private readonly milkdown: MilkdownEditor;
-
+  readonly id = uniqueId(); // for debugging
+  private isReadonly = false;
   constructor(private readonly options: Options) {
     this.milkdown = this.init();
   }
@@ -54,52 +53,46 @@ export default class Editor {
       .use(gfm)
       .use(listener)
       .use(search)
+      .use(history)
+      .use(upload) // upload 插件在前, 先处理粘贴文件的情况
+      .use(htmlUpload)
+      .use(clipboard)
+      .use(cursor)
       .config((ctx) => {
-        ctx.set(rootCtx, this.options.root);
-      });
+        const { onChange, onUIStateChange, root, defaultValue } = this.options;
 
-    if (!this.options.readonly) {
-      editor
-        .use(history)
-        .use(upload) // upload 插件在前, 先处理粘贴文件的情况
-        .use(htmlUpload)
-        .use(clipboard)
-        .use(cursor)
-        .config((ctx) => {
-          ctx.set(uploadConfig.key, uploadOptions);
-
-          if (this.options.onChange) {
-            ctx.get(listenerCtx).markdownUpdated((_, markdown, pre) => {
-              if (typeof pre === 'string' && !this.isUpdating) {
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                this.options.onChange!(markdown);
-              }
-            });
-          }
-        });
-    } else {
-      editor.config((ctx) => {
+        ctx.set(uploadConfig.key, uploadOptions);
+        ctx.set(rootCtx, root);
         ctx.update(editorViewOptionsCtx, (prev) => ({
           ...prev,
-          editable: () => false,
+          editable: () => !this.isReadonly,
         }));
+
+        if (typeof defaultValue === 'string') {
+          ctx.set(defaultValueCtx, defaultValue);
+        }
+
+        if (onChange) {
+          ctx.get(listenerCtx).markdownUpdated((_, markdown, pre) => {
+            if (typeof pre === 'string' && !this.isUpdating) {
+              onChange(markdown);
+            }
+          });
+        }
+
+        if (onUIStateChange) {
+          ctx.get(listenerCtx).mounted(() => {
+            this.options.root.addEventListener('scroll', this.handleScroll);
+          });
+          ctx.get(listenerCtx).destroy(() => {
+            this.options.root.removeEventListener('scroll', this.handleScroll);
+          });
+        }
       });
-    }
 
     editor.create().then(() => {
-      if (this.options.autoFocus) {
-        this.focus();
-      }
-
-      if (typeof this.options.defaultValue === 'string') {
-        this.resetContent(this.options.defaultValue);
-      }
-
-      this.options.onInitialized?.(this);
-
-      if (this.options.onUIStateChange) {
-        this.options.root.addEventListener('scroll', this.handleScroll);
-      }
+      this.options.autoFocus && this.focus();
+      this.options.onReady?.();
     });
 
     return editor;
@@ -111,10 +104,10 @@ export default class Editor {
     this.options.onUIStateChange!({ scrollTop });
   };
 
-  enableSearch() {
+  toggleSearch(enabled = false) {
     this.milkdown.action((ctx) => {
       const commandManager = ctx.get(commandsCtx);
-      commandManager.call(enableSearchCommand.key);
+      enabled && commandManager.call(enableSearchCommand.key);
     });
   }
 
@@ -122,49 +115,31 @@ export default class Editor {
     this.milkdown.action((ctx) => {
       const view = ctx.get(editorViewCtx);
 
-      if (!this.options.readonly && !view.hasFocus()) {
+      if (!view.hasFocus()) {
         view.focus();
       }
     });
   }
 
   setReadonly(isReadonly: boolean) {
-    this.milkdown.ctx.update(editorViewOptionsCtx, (prev) => ({
-      ...prev,
-      editable: () => !isReadonly,
-    }));
+    this.isReadonly = isReadonly;
+    this.milkdown.action(forceUpdate());
   }
 
-  resetContent(content: string) {
-    const { ctx } = this.milkdown;
-    const view = ctx.get(editorViewCtx);
-    const parser = ctx.get(parserCtx);
-    const doc = parser(content);
-    const state = view.state;
-
-    if (!doc) {
-      return;
-    }
+  setContent(content: string) {
+    console.debug(`setContent editor-${this.id}`);
 
     this.isUpdating = true;
-    view.dispatch(state.tr.replace(0, state.doc.content.size, new Slice(doc.content, 0, 0)));
+    this.milkdown.action(replaceAll(content));
     this.isUpdating = false;
   }
 
   destroy() {
-    this.milkdown.destroy();
-    this.options.onDestroy?.();
-
-    if (this.options.onUIStateChange) {
-      this.options.root.removeEventListener('scroll', this.handleScroll);
-    }
+    console.debug(`destroy editor-${this.id}`);
+    this.milkdown.destroy(true);
   }
 
-  get isReady() {
-    return this.milkdown.status === EditorStatus.Created;
-  }
-
-  applyState(state: State) {
+  applyUIState(state: UIState) {
     if (state.scrollTop) {
       this.options.root.scrollTop = state.scrollTop;
     }

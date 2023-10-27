@@ -114,7 +114,7 @@ export default class PdfViewer {
     this.pdfViewer.eventBus.on(
       'updateviewarea',
       action(({ location }: { location: { pdfOpenParams: string } }) => {
-        this.editorView.updateState({ hash: location.pdfOpenParams });
+        this.editorView.updateUIState({ hash: location.pdfOpenParams });
         this.updateVisiblePages();
       }),
     );
@@ -131,7 +131,7 @@ export default class PdfViewer {
   };
 
   private async initFromState() {
-    const { hash } = this.editorView.state;
+    const { hash } = this.editorView.uiState;
 
     await this.pdfViewer.firstPagePromise;
 

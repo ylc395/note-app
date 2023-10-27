@@ -1,16 +1,16 @@
 import { container } from 'tsyringe';
 import type { Ctx } from '@milkdown/ctx';
-import { EditorStatus, editorCtx } from '@milkdown/core';
 
 import { token as remoteToken } from 'infra/remote';
 import { getFileIdFromUrl } from 'infra/markdown/utils';
+import { listenerCtx } from '@milkdown/plugin-listener';
 
 export default class FileManager {
   private readonly remote = container.resolve(remoteToken);
   private urlMap = new Map<string, { mimeType: string; blobUrl: string }>();
 
   constructor(ctx: Ctx) {
-    ctx.get(editorCtx).onStatusChange((status) => status === EditorStatus.OnDestroy && this.reset());
+    ctx.get(listenerCtx).destroy(() => this.reset());
   }
 
   private reset() {

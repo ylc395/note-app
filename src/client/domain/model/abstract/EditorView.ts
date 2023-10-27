@@ -31,10 +31,10 @@ export default abstract class EditorView<
   abstract readonly tabView: { title: string; icon: string | null };
   abstract readonly breadcrumbs: Breadcrumbs;
   protected localStorage = container.resolve(localStorageToken);
-  state: S;
-  constructor(public tile: Tile, public editor: T, initialState: S) {
+  uiState: S;
+  constructor(public tile: Tile, public readonly editor: T, initialState: S) {
     super();
-    this.state = this.localStorage.get<S>(this.localStorageKey) || initialState;
+    this.uiState = this.localStorage.get<S>(this.localStorageKey) || initialState;
   }
 
   private get localStorageKey() {
@@ -46,8 +46,8 @@ export default abstract class EditorView<
     this.removeAllListeners();
   }
 
-  updateState = debounce((state: Partial<S>) => {
-    this.state = { ...this.state, ...state };
-    this.localStorage.set(this.localStorageKey, this.state);
+  updateUIState = debounce((state: Partial<S>) => {
+    this.uiState = { ...this.uiState, ...state };
+    this.localStorage.set(this.localStorageKey, this.uiState);
   }, 200);
 }

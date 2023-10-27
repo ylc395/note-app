@@ -30,7 +30,7 @@ export default class NoteEditor extends Editor<Entity> {
     this.load({ metadata, body });
   }
 
-  @action
+  @action.bound
   updateBody(body: string) {
     if (!this.entity) {
       throw new Error('no load note');
