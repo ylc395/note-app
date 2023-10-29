@@ -7,12 +7,13 @@ const chokidar = require('chokidar');
 const react = require('@vitejs/plugin-react-swc');
 const compact = require('lodash/compact');
 
+const rootDir = 'src/client/webExtension';
 const outDir = path.resolve('dist/webExtension');
 const contentScriptOutDir = path.join(outDir, 'content-script');
-const tsconfigPath = path.resolve('src/webExtension/tsconfig.json');
-const manifest = path.resolve('src/webExtension/manifest.json');
-const previewPage = path.resolve('src/webExtension/driver/contentScript/views/Modal/preview.html');
-const previewPageScript = path.resolve('src/webExtension/driver/contentScript/views/Modal/preview.js');
+const tsconfigPath = path.resolve(`${rootDir}/tsconfig.json`);
+const manifest = path.resolve(`${rootDir}/manifest.json`);
+const previewPage = path.resolve(`${rootDir}/driver/contentScript/views/Modal/preview.html`);
+const previewPageScript = path.resolve(`${rootDir}/driver/contentScript/views/Modal/preview.js`);
 
 const define = {
   'process.env.NODE_ENV': JSON.stringify('development'),
@@ -51,7 +52,7 @@ build({
   build: {
     outDir,
     lib: {
-      entry: 'src/webExtension/driver/background/index.ts',
+      entry: `${rootDir}/driver/background/index.ts`,
       fileName: () => 'background.js',
       formats: ['es'],
     },
@@ -61,7 +62,7 @@ build({
   define,
 });
 
-const CONTENT_SCRIPT_DIR = 'src/webExtension/driver/contentScript';
+const CONTENT_SCRIPT_DIR = `${rootDir}/driver/contentScript`;
 
 build({
   mode: 'development',
@@ -84,7 +85,7 @@ build({
 });
 
 build({
-  root: 'src/webExtension/driver/popup',
+  root: `${rootDir}/driver/popup`,
   mode: 'development',
   base: './', // use relative path to load script
   build: {

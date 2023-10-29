@@ -26,7 +26,7 @@ module.exports = async () => {
 
   console.info(`[install] Target platform: -${platform}-`);
   console.info(`[install] Target arch: ${arch}`);
-  console.info(`[install] Download prebuilt binaries from ${downloadUrl}`);
+  console.info(`[install] Download prebuilt binaries from ${downloadUrl} to ${localPath}`);
 
   await download(downloadUrl, localPath, {
     extract: true,

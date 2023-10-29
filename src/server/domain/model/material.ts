@@ -6,7 +6,7 @@ import type {
   MaterialPatchDTO,
   MaterialDirectory,
   MaterialEntity,
-} from 'shard/model/material';
+} from 'shared/model/material';
 
 export type NewMaterialDirectory = Partial<MaterialDirectory>;
 export type NewMaterialEntity = Partial<MaterialEntity> & { fileId: string };
@@ -42,4 +42,4 @@ export function normalizeTitle(v: Material) {
   );
 }
 
-export * from 'shard/model/material';
+export * from 'shared/model/material';

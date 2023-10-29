@@ -1,7 +1,6 @@
 {
   "extends": "./tsconfig.json",
   "include": ["./**/*"],
-  "exclude": ["./components/**/*"],
   "compilerOptions": {
     "outDir": "../../dist/electron"
   }

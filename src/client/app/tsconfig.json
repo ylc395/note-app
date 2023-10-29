@@ -1,0 +1,19 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "types": ["electron"],
+    "lib": ["dom", "dom.iterable", "ESNext"],
+    "baseUrl": ".",
+    "module": "CommonJS",
+    "jsx": "react-jsx",
+    "paths": {
+      "model/*": ["domain/model/*", "../shared/model/*", "../../shared/model/*"],
+      "service/*": ["domain/service/*"],
+      "web/*": ["driver/web/*"],
+      "utils/*": ["../../shared/utils/*"],
+      "components/*": ["../shared/components/*", "driver/web/components/*"],
+      "infra/*": ["domain/infra/*", "../../shared/infra/*"],
+      "shared/*": ["../../shared/*"]
+    }
+  }
+}

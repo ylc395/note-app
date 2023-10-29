@@ -8,9 +8,8 @@
       "model/*": ["domain/model/*", "../shared/model/*"],
       "service/*": ["domain/service/*"],
       "infra/*": ["domain/infra/*", "../shared/infra/*"],
-      "client/*": ["../client/*"],
       "utils/*": ["../shared/utils/*"],
-      "shard/*": ["../shared/*"]
+      "shared/*": ["../shared/*"]
     }
   }
 }

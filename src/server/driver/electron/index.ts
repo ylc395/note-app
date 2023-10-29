@@ -9,8 +9,10 @@ import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-insta
 
 import Runtime from 'infra/Runtime';
 import { IS_DEV } from 'infra/constants';
-import { UI_CHANNEL, UIHandler } from 'client/driver/electron/ui';
+import { UI_CHANNEL, type UIIpcPayload, type ElectronUI } from 'infra/ui';
+
 import type LocalServer from '../localHttpServer';
+import ui from './infra/ui';
 
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const INDEX_URL = process.env.VITE_SERVER_ENTRY_URL!;
@@ -50,7 +52,14 @@ export default class ElectronRuntime extends Runtime implements OnModuleInit {
       electronApp.quit();
     });
 
-    ipcMain.handle(UI_CHANNEL, UIHandler);
+    ipcMain.handle(UI_CHANNEL, (e, { funcName, args }: UIIpcPayload) => {
+      if (!(funcName in ui)) {
+        throw new Error(`invalid funcName: ${funcName}`);
+      }
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (ui[funcName as keyof ElectronUI] as any)(...args, e);
+    });
 
     await electronApp.whenReady();
 
@@ -73,7 +82,7 @@ export default class ElectronRuntime extends Runtime implements OnModuleInit {
       width: 800,
       height: 600,
       webPreferences: {
-        preload: path.resolve(__dirname, '../../../client/driver/electron/preload.js'),
+        preload: path.resolve(__dirname, '../../../client/driver/electronPreload/index.js'),
       },
     });
 

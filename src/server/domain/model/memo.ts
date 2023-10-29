@@ -1,8 +1,8 @@
 import dayjs from 'dayjs';
 import type { EntityParentId } from 'model/entity';
-import type { Memo } from 'shard/model/memo';
+import type { Memo } from 'shared/model/memo';
 
-export * from 'shard/model/memo';
+export * from 'shared/model/memo';
 
 export interface MemoQuery {
   createdAfter?: number;

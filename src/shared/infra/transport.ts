@@ -1,3 +1,5 @@
+export const IPC_CHANNEL = 'ipc_transport';
+
 export interface IResponse {
   set: (k: string, v: string) => void;
 }
@@ -5,8 +7,6 @@ export interface IResponse {
 export interface IRequest<T = unknown> {
   body?: T;
 }
-
-export const IPC_CHANNEL = 'ipc_transport';
 
 export interface IpcRequest<T> extends IRequest<T> {
   path: string;

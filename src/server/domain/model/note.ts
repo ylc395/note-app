@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import type { NoteVO, NewNoteDTO, DuplicateNoteDTO, NotePatchDTO, Note, NoteBodyDTO } from 'shard/model/note';
+import type { NoteVO, NewNoteDTO, DuplicateNoteDTO, NotePatchDTO, Note, NoteBodyDTO } from 'shared/model/note';
 
 export type NewNote = Partial<Note> & { body?: NoteBodyDTO };
 
@@ -24,4 +24,4 @@ export function isNewNote(dto: NewNoteDTO): dto is NotePatchDTO {
   return !isDuplicate(dto);
 }
 
-export * from 'shard/model/note';
+export * from 'shared/model/note';

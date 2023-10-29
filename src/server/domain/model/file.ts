@@ -1,4 +1,4 @@
-import type { FileVO } from 'shard/model/file';
+import type { FileVO } from 'shared/model/file';
 
 export interface LocalFile {
   data: ArrayBuffer;
@@ -36,4 +36,4 @@ export interface UnfinishedTextExtraction {
   finished?: number[];
 }
 
-export * from 'shard/model/file';
+export * from 'shared/model/file';

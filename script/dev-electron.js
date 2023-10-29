@@ -13,9 +13,10 @@ const downloadSqliteTokenizer = require('./download-sqlite-tokenizer');
 const ENV = 'development';
 const APP_PLATFORM = 'electron';
 
-const CLIENT_TSCONFIG = path.resolve('src/client/tsconfig.json');
+const rootDir = 'src/client/app';
+const CLIENT_TSCONFIG = path.resolve(`${rootDir}/tsconfig.json`);
 const ELECTRON_OUTPUT = 'dist/electron';
-const BUILD_ELECTRON_COMMAND = 'tsc --build ./tsconfig.electron.json';
+const BUILD_ELECTRON_COMMAND = 'tsc --build ./src/server/tsconfig.electron.json';
 
 async function buildPreload() {
   // preload script must be processed by a bundler(`vite build` here), since `require` doesn't work
@@ -25,10 +26,10 @@ async function buildPreload() {
       minify: false,
       sourcemap: true,
       emptyOutDir: false,
-      outDir: path.resolve(ELECTRON_OUTPUT, 'client/driver/electron'),
+      outDir: path.resolve(ELECTRON_OUTPUT, 'client/driver/electronPreload'),
       lib: {
-        entry: 'src/client/driver/electron/preload/index.ts',
-        fileName: () => 'preload.js',
+        entry: `${rootDir}/driver/electronPreload/index.ts`,
+        fileName: () => 'index.js',
         formats: ['cjs'],
       },
       rollupOptions: {
@@ -72,7 +73,7 @@ async function createViteServer() {
   const server = await createServer({
     configFile: false,
     clearScreen: false,
-    root: './src/client/driver/web',
+    root: `${rootDir}/driver/web`,
     plugins: [
       react({ tsDecorators: true }), // use this plugin to speed up react compiling and enjoy "fast refresh"
       checker({ typescript: { tsconfigPath: CLIENT_TSCONFIG } }),
