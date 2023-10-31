@@ -18,7 +18,7 @@ export type Rect = Infer<typeof rectSchema>;
 
 const commonAnnotationSchema = object({
   color: string(),
-  comment: string().nullish(),
+  comment: string().optional(),
 });
 
 const PdfRangeAnnotationSchema = commonAnnotationSchema.extend({

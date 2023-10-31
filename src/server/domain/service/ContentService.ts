@@ -18,21 +18,20 @@ import {
   type Multimedia as MultimediaNode,
 } from 'infra/markdown/syntax/multimedia';
 import { IS_IPC } from 'infra/Runtime';
-import {
-  type ContentUpdatedEvent,
-  type EntityWithSnippet,
-  type Link,
-  type HighlightPosition,
-  type TopicQuery,
-  type TopicVO,
-  type TopicDTO,
-  type LinkDTO,
-  type LinkToQuery,
-  type InlineTopic,
-  type ContentEntityLocator,
-  isInlineTopic,
+import type {
+  ContentUpdatedEvent,
+  EntityWithSnippet,
+  Link,
+  HighlightPosition,
+  TopicQuery,
+  TopicVO,
+  TopicDTO,
+  LinkDTO,
+  LinkToQuery,
+  InlineTopic,
+  ContentEntityLocator,
 } from 'model/content';
-import type { EntityId, EntityLocator } from 'model/entity';
+import type { EntityId } from 'model/entity';
 
 import BaseService from './BaseService';
 import EntityService from './EntityService';
@@ -70,7 +69,7 @@ export default class ContentService extends BaseService implements OnModuleInit 
         }
 
         await this.transaction(async () => {
-          await this.repo.contents.removeTopics(entity, true);
+          await this.repo.contents.removeTopicsOf(entity);
           await this.repo.contents.createTopics(topics);
         });
       },
@@ -118,16 +117,13 @@ export default class ContentService extends BaseService implements OnModuleInit 
     };
   }
 
-  private readonly extract = async (entity: ContentUpdatedEvent | ContentEntityLocator) => {
-    const content = 'content' in entity ? entity.content : (await this.repo.entities.findBody(entity))!;
-    const mdAst = fromMarkdown(content, {
+  private readonly extract = async (entity: ContentUpdatedEvent) => {
+    const mdAst = fromMarkdown(entity.content, {
       mdastExtensions: [topicExtension, multimediaExtension],
       extensions: [topicTokenExtension],
     });
 
-    const reducers = [this.extractLinksAndMedias, this.extractInlineTopics].map((cb) =>
-      cb.call(this, { content, updatedAt: Date.now(), ...entity }),
-    );
+    const reducers = [this.extractLinksAndMedias, this.extractInlineTopics].map((cb) => cb.call(this, entity));
 
     visit(mdAst, (node) => reducers.forEach(({ visitor }) => visitor(node)));
 
@@ -145,7 +141,7 @@ export default class ContentService extends BaseService implements OnModuleInit 
     const topicsGroup = groupBy(topics, 'name');
     const result: TopicVO[] = [];
     const titles = await this.entityService.getEntityTitles(topics);
-    const snippets = await this.getSnippets(topics.filter(isInlineTopic));
+    const snippets = await this.getSnippets(topics);
 
     for (const [name, topics] of Object.entries(topicsGroup)) {
       const topicVO: TopicVO = {
@@ -155,9 +151,7 @@ export default class ContentService extends BaseService implements OnModuleInit 
       };
 
       for (const topic of topics) {
-        const snippet = isInlineTopic(topic)
-          ? snippets[topic.entityId]![`${topic.position.start},${topic.position.end}`]!
-          : null;
+        const snippet = snippets[topic.entityId]![`${topic.position.start},${topic.position.end}`]!;
 
         topicVO.entities.push({
           entityId: topic.entityId,
@@ -189,7 +183,7 @@ export default class ContentService extends BaseService implements OnModuleInit 
     }));
   }
 
-  private async getSnippets(entities: (EntityLocator & { position: HighlightPosition })[]) {
+  private async getSnippets(entities: (ContentEntityLocator & { position: HighlightPosition })[]) {
     const result: Record<
       EntityId,
       Record<`${number},${number}`, Pick<EntityWithSnippet, 'snippet' | 'highlight'>>
@@ -220,7 +214,7 @@ export default class ContentService extends BaseService implements OnModuleInit 
       const _topics = topics.map((topic) => ({ ...topic, createdAt }));
 
       for (const topic of uniqBy(topics, 'entityId')) {
-        await this.repo.contents.removeTopics(topic, isInlineTopic(topic));
+        await this.repo.contents.removeTopicsOf(topic);
       }
       await this.repo.contents.createTopics(_topics);
     });

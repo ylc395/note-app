@@ -1,12 +1,13 @@
 import { runInAction } from 'mobx';
 import { observer } from 'mobx-react-lite';
-import { useCallback, type MouseEventHandler, useState, useRef, useEffect } from 'react';
+import { type MouseEventHandler, useState, useRef, useEffect } from 'react';
 import throttle from 'lodash/throttle';
 import clamp from 'lodash/clamp';
 import mapValues from 'lodash/mapValues';
 
 import { TileDirections, type TileParent, MIN_TILE_WIDTH, MAX_TILE_WIDTH } from 'model/workbench/TileManger';
 import { type BoundingBox, getAbsoluteSplitPercentage, getRelativeSplitPercentage } from './utils';
+import { useMemoizedFn } from 'ahooks';
 
 interface Props {
   node: TileParent;
@@ -17,11 +18,9 @@ export default observer(({ node, boundingBox }: Props) => {
   const position = node.direction === TileDirections.Vertical ? 'top' : 'left';
   const [isResizing, setIsResizing] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const updateNode = useCallback(
+  const updateNode = useMemoizedFn(
     throttle((e: MouseEvent) => {
       const { direction } = node;
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       const parentBoundingBox = ref.current!.parentElement!.getBoundingClientRect();
 
       let absolutePercentage: number;
@@ -37,21 +36,17 @@ export default observer(({ node, boundingBox }: Props) => {
         node.splitPercentage = clamp(relativePercentage, MIN_TILE_WIDTH, MAX_TILE_WIDTH - MIN_TILE_WIDTH);
       });
     }, 1000 / 30),
-    [node, boundingBox],
   );
-  const onMouseDown = useCallback<MouseEventHandler>(
-    (e) => {
-      if (e.button !== 0) {
-        return;
-      }
-      e.preventDefault();
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      const parentEl = ref.current!.parentElement!;
-      parentEl.classList.add(node.direction === TileDirections.Vertical ? 'cursor-row-resize' : 'cursor-col-resize');
-      setIsResizing(true);
-    },
-    [node.direction],
-  );
+
+  const onMouseDown = useMemoizedFn<MouseEventHandler>((e) => {
+    if (e.button !== 0) {
+      return;
+    }
+    e.preventDefault();
+    const parentEl = ref.current!.parentElement!;
+    parentEl.classList.add(node.direction === TileDirections.Vertical ? 'cursor-row-resize' : 'cursor-col-resize');
+    setIsResizing(true);
+  });
 
   useEffect(() => {
     const onMousemove = (e: MouseEvent) => {
@@ -62,7 +57,6 @@ export default observer(({ node, boundingBox }: Props) => {
       e.preventDefault();
       updateNode(e);
     };
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const parentEl = ref.current!.parentElement!;
     const onMouseUp = () => {
       parentEl.classList.remove(node.direction === TileDirections.Vertical ? 'cursor-row-resize' : 'cursor-col-resize');

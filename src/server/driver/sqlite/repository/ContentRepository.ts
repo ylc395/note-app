@@ -1,12 +1,4 @@
-import {
-  isInlineTopic,
-  type ContentEntityTypes,
-  type Link,
-  type LinkDirection,
-  type LinkToQuery,
-  type Topic,
-  type ContentEntityLocator,
-} from 'model/content';
+import type { ContentEntityTypes, Link, LinkDirection, LinkToQuery, Topic, ContentEntityLocator } from 'model/content';
 import type { EntityLocator } from 'model/entity';
 import type { ContentRepository } from 'service/repository/ContentRepository';
 
@@ -78,21 +70,13 @@ export default class SqliteContentRepository extends BaseRepository implements C
       topicTableName,
       topics.map((topic) => ({
         ...topic,
-        position: (isInlineTopic(topic)
-          ? `${topic.position.start},${topic.position.end}`
-          : null) as TopicRow['position'],
+        position: `${topic.position.start},${topic.position.end}` as TopicRow['position'],
       })),
     );
   }
 
-  async removeTopics({ entityId: id, entityType: type }: ContentEntityLocator, inlineOnly: boolean) {
-    let qb = this.db.deleteFrom(topicTableName).where('entityId', '=', id).where('entityType', '=', type);
-
-    if (inlineOnly) {
-      qb = qb.where('position', 'is', null);
-    }
-
-    await qb.execute();
+  async removeTopicsOf({ entityId: id, entityType: type }: ContentEntityLocator) {
+    await this.db.deleteFrom(topicTableName).where('entityId', '=', id).where('entityType', '=', type).execute();
   }
 
   async findAvailableTopicNames() {
@@ -117,12 +101,8 @@ export default class SqliteContentRepository extends BaseRepository implements C
       .execute();
 
     return rows.map(({ position, ...row }) => {
-      if (position) {
-        const [start, end] = position.split(',');
-        return { ...row, position: { start: Number(start), end: Number(end) } };
-      }
-
-      return row;
+      const [start, end] = position.split(',');
+      return { ...row, position: { start: Number(start), end: Number(end) } };
     });
   }
 }

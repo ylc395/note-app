@@ -106,17 +106,14 @@ export default class SqliteMaterialRepository extends HierarchyEntityRepository 
       .selectAll(this.tableName)
       .select(`${fileSchema.tableName}.mimeType`)
       .where(`${this.tableName}.id`, '=', id)
+      .where(`${fileSchema.tableName}.mimeType`, 'is not', null)
       .executeTakeFirst();
 
     if (!row) {
       return null;
     }
 
-    if (SqliteMaterialRepository.isFileRow(row)) {
-      return SqliteMaterialRepository.rowToMaterial(row, row.mimeType);
-    }
-
-    return SqliteMaterialRepository.rowToDirectory(row);
+    return SqliteMaterialRepository.isFileRow(row) ? SqliteMaterialRepository.rowToMaterial(row, row.mimeType) : null;
   }
 
   async findBlobById(id: Material['id']) {

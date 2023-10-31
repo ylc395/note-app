@@ -21,7 +21,7 @@ export interface EntityWithSnippet extends EntityWithTitle<ContentEntityTypes> {
 export interface TopicVO {
   name: string;
   updatedAt: number;
-  entities: (EntityWithSnippet | EntityWithTitle<ContentEntityTypes>)[];
+  entities: EntityWithSnippet[];
 }
 
 export type LinkToVO = EntityWithSnippet;
@@ -34,19 +34,13 @@ export type LinkToQuery = Infer<typeof linkToQuerySchema>;
 
 const topicDTOSchema = entityLocatorSchema.extend({
   entityType: contentEntityTypesSchema,
+  position: highlightPositionSchema,
   name: string(),
 });
 
-const inlineTopicDTOSchema = topicDTOSchema.extend({
-  position: highlightPositionSchema,
-});
-
 export const topicsDTOSchema = topicDTOSchema.array();
-export const inlineTopicsDTOSchema = inlineTopicDTOSchema.array();
 
 export type TopicDTO = Infer<typeof topicDTOSchema>;
-
-export type InlineTopicDTO = Infer<typeof inlineTopicDTOSchema>;
 
 const linkDTOSchema = object({
   from: entityLocatorSchema.extend({ position: highlightPositionSchema, entityType: contentEntityTypesSchema }),

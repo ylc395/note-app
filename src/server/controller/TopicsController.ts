@@ -1,12 +1,6 @@
 import { Controller } from '@nestjs/common';
 
-import {
-  type TopicVO,
-  type TopicDTO,
-  type InlineTopicDTO,
-  topicsDTOSchema,
-  inlineTopicsDTOSchema,
-} from 'model/content';
+import { type TopicVO, type TopicDTO, topicsDTOSchema } from 'model/content';
 import ContentService from 'service/ContentService';
 
 import { Get, Patch, Body, createSchemaPipe, Param, EnableOnly } from './decorators';
@@ -25,14 +19,9 @@ export default class TopicsController {
     return await this.contentService.queryTopics({ name });
   }
 
+  @EnableOnly('ipc')
   @Patch('/topics')
   async createTopics(@Body(createSchemaPipe(topicsDTOSchema)) topics: TopicDTO[]): Promise<void> {
-    return await this.contentService.createTopics(topics);
-  }
-
-  @EnableOnly('ipc')
-  @Patch('/topics/inline')
-  async createInlineTopics(@Body(createSchemaPipe(inlineTopicsDTOSchema)) topics: InlineTopicDTO[]): Promise<void> {
     return await this.contentService.createTopics(topics);
   }
 }

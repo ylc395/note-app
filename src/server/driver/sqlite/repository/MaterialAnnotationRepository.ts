@@ -7,11 +7,10 @@ import type { NewAnnotationDTO, AnnotationPatchDTO, Annotation, Material } from 
 import BaseRepository from './BaseRepository';
 import materialAnnotationSchema, { type Row } from '../schema/materialAnnotation';
 
-const { tableName } = materialAnnotationSchema;
-
 export default class MaterialAnnotationRepository extends BaseRepository {
+  readonly tableName = materialAnnotationSchema.tableName;
   async create(materialId: Material['id'], { type, comment, ...annotation }: NewAnnotationDTO) {
-    const created = await this.createOne(tableName, {
+    const created = await this.createOne(this.tableName, {
       id: this.generateId(),
       materialId,
       type,
@@ -26,17 +25,15 @@ export default class MaterialAnnotationRepository extends BaseRepository {
   }
 
   async findAll(materialId: Material['id']) {
-    const rows = await this.db.selectFrom(tableName).where('materialId', '=', materialId).selectAll().execute();
+    const rows = await this.db.selectFrom(this.tableName).where('materialId', '=', materialId).selectAll().execute();
 
     return rows.map(MaterialAnnotationRepository.rowToVO);
   }
 
   async findOneById(id: Annotation['id']) {
-    const row = await this.db.selectFrom(tableName).where('id', '=', id).selectAll().executeTakeFirst();
+    const row = await this.db.selectFrom(this.tableName).where('id', '=', id).selectAll().executeTakeFirst();
 
-    return row
-      ? { ...MaterialAnnotationRepository.rowToVO(row), materialId: row.materialId, comment: row.comment || null }
-      : null;
+    return row ? MaterialAnnotationRepository.rowToVO(row) : null;
   }
 
   private static rowToVO(row: Selectable<Row>) {
@@ -47,7 +44,11 @@ export default class MaterialAnnotationRepository extends BaseRepository {
   }
 
   async remove(annotationId: Annotation['id']) {
-    const row = await this.db.deleteFrom(tableName).where('id', '=', annotationId).returningAll().executeTakeFirst();
+    const row = await this.db
+      .deleteFrom(this.tableName)
+      .where('id', '=', annotationId)
+      .returningAll()
+      .executeTakeFirst();
 
     return row ? MaterialAnnotationRepository.rowToVO(row) : null;
   }
@@ -56,7 +57,11 @@ export default class MaterialAnnotationRepository extends BaseRepository {
     let newMeta;
 
     if (!isEmpty(attr)) {
-      const row = await this.db.selectFrom(tableName).where('id', '=', annotationId).select('meta').executeTakeFirst();
+      const row = await this.db
+        .selectFrom(this.tableName)
+        .where('id', '=', annotationId)
+        .select('meta')
+        .executeTakeFirst();
 
       if (!row) {
         return null;
@@ -66,7 +71,7 @@ export default class MaterialAnnotationRepository extends BaseRepository {
     }
 
     const updated = await this.db
-      .updateTable(tableName)
+      .updateTable(this.tableName)
       .set({ comment, meta: newMeta, updatedAt: Date.now() })
       .where('id', '=', annotationId)
       .returningAll()

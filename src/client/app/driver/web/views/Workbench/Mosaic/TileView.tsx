@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import mapValues from 'lodash/mapValues';
+import { observer } from 'mobx-react-lite';
 
 import type Tile from 'model/workbench/Tile';
 import { type TileNode, type TileParent, TileDirections, isTileLeaf } from 'model/workbench/TileManger';
@@ -17,8 +18,7 @@ function split(boundingBox: BoundingBox, node: TileParent) {
   };
 }
 
-// eslint-disable-next-line mobx/missing-observer
-export default function TileView({
+export default observer(function TileView({
   node,
   renderTile,
   boundingBox,
@@ -44,4 +44,4 @@ export default function TileView({
       <TileView key={`${node.id}-second-tile`} boundingBox={second} node={node.second} renderTile={renderTile} />
     </>
   );
-}
+});
