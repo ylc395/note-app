@@ -12,6 +12,5 @@ import App from './views/App';
 
 container.registerInstance(BackgroundService, wrap(chromeRuntimeMessageEndpoint()) as unknown as BackgroundService);
 
-// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const root = createRoot(document.querySelector('#app')!);
 root.render(<App />);

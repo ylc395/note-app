@@ -88,15 +88,12 @@ export default class PageService {
     canvasEl.height = pos.height * window.devicePixelRatio;
     imgEl.src = imgDataUrl;
 
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const ctx = canvasEl.getContext('2d')!;
 
     imgEl.addEventListener('load', () => {
       ctx.drawImage(
         imgEl,
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         (typeof pos.left === 'number' ? pos.left : pos.right! - pos.width) * window.devicePixelRatio,
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         (typeof pos.top === 'number' ? pos.top : pos.bottom! - pos.height) * window.devicePixelRatio,
         pos.width * window.devicePixelRatio,
         pos.height * window.devicePixelRatio,

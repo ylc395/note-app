@@ -36,9 +36,7 @@ export default class BackgroundService {
 
     const task: Required<Task> = {
       time: Date.now(),
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       url: tab.url!,
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       title: tab.title!,
       type,
       tabId,

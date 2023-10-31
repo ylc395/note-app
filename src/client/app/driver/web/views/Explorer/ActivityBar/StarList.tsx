@@ -42,7 +42,6 @@ export default observer(function StarList({ close }: { close: () => void }) {
       {starService.stars?.length === 0 && <Empty description="没有任何收藏" />}
       {Number(starService.stars?.length) > 0 && (
         <ul className="list-none p-0">
-          {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
           {starService.stars!.map((record) => (
             <li key={record.id} className="group">
               {iconMap[record.entityType]()}

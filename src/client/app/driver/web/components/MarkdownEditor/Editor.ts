@@ -100,7 +100,7 @@ export default class Editor {
 
   private readonly handleScroll = (e: Event) => {
     const { scrollTop } = e.target as HTMLElement;
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
     this.options.onUIStateChange!({ scrollTop });
   };
 
@@ -148,7 +148,7 @@ export default class Editor {
       this.milkdown.action((ctx) => {
         const view = ctx.get(editorViewCtx);
         const viewState = view.state;
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
         view.dispatch(viewState.tr.replace(state.cursor!));
       });
     }

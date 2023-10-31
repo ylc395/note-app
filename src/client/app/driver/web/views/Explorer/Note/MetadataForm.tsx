@@ -55,7 +55,6 @@
 //         <Form.Item label="图标">
 //           <div className="flex items-center">
 //             {noteMetadata.values.icon === MULTIPLE_ICON_FLAG && uniqIcons.length === 1 && (
-//               // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 //               <Emoji id={uniqIcons[0]!} className="mr-4" />
 //             )}
 //             {noteMetadata.values.icon !== MULTIPLE_ICON_FLAG && (

@@ -216,7 +216,6 @@ export default class PdfViewer {
     canvas.width = rect.width / canvasHorizontalRatio;
     canvas.height = rect.height / canvasVerticalRatio;
 
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const ctx = canvas.getContext('2d')!;
     ctx.drawImage(
       sourceCanvas,
@@ -293,9 +292,7 @@ export default class PdfViewer {
         throw new Error('no page');
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       if (PdfViewer.isIn(rects[i]!, page.el)) {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const { x, y, width, height } = rects[i]!;
         const canvas = this.getCanvasEl(page.number);
         const { x: pageX, y: pageY } = canvas.getBoundingClientRect();
@@ -344,7 +341,13 @@ export default class PdfViewer {
   }
 
   getPageEl(page: number) {
-    return (this.pdfViewer.getPageView(page - 1) as PDFPageView | undefined)?.div;
+    const div = (this.pdfViewer.getPageView(page - 1) as PDFPageView | undefined)?.div;
+
+    if (!div) {
+      throw new Error('no div');
+    }
+
+    return div;
   }
 
   private getCanvasEl(page: number) {

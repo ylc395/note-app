@@ -14,7 +14,6 @@ import { UI_CHANNEL, type UIIpcPayload, type ElectronUI } from 'infra/ui';
 import type LocalServer from '../localHttpServer';
 import ui from './infra/ui';
 
-// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const INDEX_URL = process.env.VITE_SERVER_ENTRY_URL!;
 
 process.traceProcessWarnings = IS_DEV;

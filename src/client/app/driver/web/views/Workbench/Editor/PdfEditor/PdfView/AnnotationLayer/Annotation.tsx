@@ -38,7 +38,6 @@ export default observer(function Annotation({
 
   useEffect(() => {
     if (isLast) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       pdfViewer.referenceElMap[annotationId] = rootRef.current!;
       return () => {
         delete pdfViewer.referenceElMap[annotationId];

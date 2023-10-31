@@ -137,7 +137,6 @@ export default class ConfigService {
       const children = await this.mainApp.getChildren(targetType, id);
 
       if (children) {
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         tree!.setChildren(children, id);
       }
     });

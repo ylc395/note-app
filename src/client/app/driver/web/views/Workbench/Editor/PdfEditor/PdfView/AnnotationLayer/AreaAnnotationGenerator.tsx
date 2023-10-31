@@ -1,14 +1,11 @@
-import { useEffect, useCallback, useContext, useRef, useState } from 'react';
+import { useEffect, useContext, useRef, useState } from 'react';
 import { observer } from 'mobx-react-lite';
 import { reaction } from 'mobx';
 import { useFloating } from '@floating-ui/react';
-import { useEventListener } from 'ahooks';
+import { useEventListener, useMemoizedFn } from 'ahooks';
 import mapValues from 'lodash/mapValues';
 
-import RectAreaSelector, {
-  ReactAreaSelectorRef,
-  type Rect,
-} from '../../../../../../../../../shared/components/RectAreaSelector';
+import RectAreaSelector, { ReactAreaSelectorRef, type Rect } from 'components/RectAreaSelector';
 
 import context from '../../Context';
 
@@ -24,17 +21,13 @@ export default observer(function AreaAnnotationGenerator({ page }: { page: numbe
   }
 
   const pageEl = pdfViewer.getPageEl(page);
-
-  if (!pageEl) {
-    throw new Error('no page el');
-  }
-  const stop = useCallback(() => {
+  const stop = useMemoizedFn(() => {
     setRect(null);
     selectorRef.current?.stop();
     pdfViewer?.rootEl.classList.remove('select-none');
-  }, [pdfViewer]);
+  });
 
-  const create = useCallback(async () => {
+  const create = useMemoizedFn(async () => {
     if (!rect) {
       throw new Error('no pos');
     }
@@ -44,23 +37,15 @@ export default observer(function AreaAnnotationGenerator({ page }: { page: numbe
     await pdfViewer.createAreaAnnotation(page, {
       width: rect.width,
       height: rect.height,
-      x:
-        typeof rect.left === 'number'
-          ? rect.left
-          : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            displayWith - rect.width - rect.right!,
-      y:
-        typeof rect.top === 'number'
-          ? rect.top
-          : // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            displayHeight - rect.height - rect.bottom!,
+      x: typeof rect.left === 'number' ? rect.left : displayWith - rect.width - rect.right!,
+      y: typeof rect.top === 'number' ? rect.top : displayHeight - rect.height - rect.bottom!,
     });
     stop();
-  }, [page, pdfViewer, rect, stop]);
+  });
 
-  const onStart = useCallback(() => {
+  const onStart = useMemoizedFn(() => {
     pdfViewer?.rootEl.classList.add('select-none');
-  }, [pdfViewer]);
+  });
 
   useEventListener(
     'click',
@@ -72,13 +57,10 @@ export default observer(function AreaAnnotationGenerator({ page }: { page: numbe
     { target: pdfViewer?.rootEl },
   );
 
-  const setRefs = useCallback(
-    (ref: ReactAreaSelectorRef | null) => {
-      refs.setReference(ref);
-      selectorRef.current = ref;
-    },
-    [refs],
-  );
+  const setRefs = useMemoizedFn((ref: ReactAreaSelectorRef | null) => {
+    refs.setReference(ref);
+    selectorRef.current = ref;
+  });
 
   useEffect(
     () =>

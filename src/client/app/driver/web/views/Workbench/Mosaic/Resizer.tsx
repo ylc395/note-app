@@ -57,6 +57,7 @@ export default observer(({ node, boundingBox }: Props) => {
       e.preventDefault();
       updateNode(e);
     };
+
     const parentEl = ref.current!.parentElement!;
     const onMouseUp = () => {
       parentEl.classList.remove(node.direction === TileDirections.Vertical ? 'cursor-row-resize' : 'cursor-col-resize');

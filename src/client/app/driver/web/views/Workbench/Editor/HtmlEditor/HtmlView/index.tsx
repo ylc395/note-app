@@ -12,9 +12,7 @@ export default observer(function HtmlView({ editor }: { editor: HtmlEditor }) {
 
   useEffect(() => {
     const htmlViewer = new HtmlViewer({
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       rootEl: shadowWrapperRef.current!,
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       editorRootEl: editorRootRef.current!,
       editor,
       // onTextSelected: showSelectionTooltip,

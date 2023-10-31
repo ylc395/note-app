@@ -14,7 +14,6 @@ interface Props {
 export default function ChildEditor({ onCancel, onSubmit, content, isEditing }: Props) {
   const contentRef = useRef(content);
   const _onSubmit = () => {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     onSubmit(contentRef.current!);
   };
 

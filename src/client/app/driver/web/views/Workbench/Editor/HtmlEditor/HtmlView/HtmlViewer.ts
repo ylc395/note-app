@@ -109,8 +109,8 @@ export default class HtmlViewer {
       this.stopLoadingHtml = when(
         () => Boolean(this.html.entity),
         () => {
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           const documentElement = HtmlViewer.sanitizeHtml(this.html.entity!.html);
+
           HtmlViewer.processStyles(documentElement);
           this.editor.documentElement = documentElement;
           this.updateContent(documentElement);

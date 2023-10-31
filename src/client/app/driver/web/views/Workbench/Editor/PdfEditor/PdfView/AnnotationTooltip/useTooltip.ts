@@ -16,11 +16,9 @@ export default function useAnnotationTooltip() {
   });
 
   if (floating.current) {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     pdfViewer!.annotationTooltipRoot = floating.current;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   useEventListener('mouseleave', () => pdfViewer!.editor.setCurrentAnnotationId(null), { target: floating });
 
   return { setFloating, showing: Boolean(pdfViewer?.editor.currentAnnotationId), styles };

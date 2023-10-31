@@ -45,9 +45,7 @@ export default class EditorManager {
         throw new Error('invalid type');
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     editor.once(EditableEntityEvents.Destroyed, () => delete this.editableEntities[entityType]![entityId]);
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     this.editableEntities[entityType]![entityId] = editor;
     return editor;
   }
@@ -111,7 +109,6 @@ export default class EditorManager {
   }
 
   private handleEditorDestroyed(editor: Editor) {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const viewSet = this.editors.get(editor.editable)!;
     viewSet.delete(editor);
 

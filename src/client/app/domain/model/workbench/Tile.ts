@@ -37,7 +37,6 @@ export default class Tile extends Emitter<{ [Events.destroyed]: [void] }> {
 
     if (dest === 'end') {
       const [item] = this.editors.splice(srcIndex, 1);
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       this.editors.push(item!);
       return;
     }
@@ -49,7 +48,7 @@ export default class Tile extends Emitter<{ [Events.destroyed]: [void] }> {
     }
 
     const [item] = this.editors.splice(srcIndex, 1);
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+
     this.editors.splice(destIndex, 0, item!);
   }
 
@@ -101,7 +100,6 @@ export default class Tile extends Emitter<{ [Events.destroyed]: [void] }> {
     const [closedView] = this.editors.splice(existedTabIndex, 1);
 
     if (destroy) {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       closedView!.destroy();
     }
 
