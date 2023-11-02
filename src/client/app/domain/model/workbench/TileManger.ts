@@ -5,6 +5,7 @@ import { observable, makeObservable, action, computed } from 'mobx';
 import Tile, { Events as TileEvents } from './Tile';
 
 export type TileNode = TileParent | Tile['id'];
+
 export enum TileDirections {
   Horizontal,
   Vertical,
@@ -57,7 +58,7 @@ export default class TileManager {
   }
 
   private createTile(focus?: true) {
-    const tile = new Tile(this);
+    const tile = new Tile();
 
     tile.on(TileEvents.destroyed, () => this.removeTile(tile.id));
     this.tilesMap.set(tile.id, tile);

@@ -4,7 +4,6 @@ import { container } from 'tsyringe';
 
 import { EntityTypes } from 'model/entity';
 import type { NoteVO as Note, NotePatchDTO as NotePatch, NoteBodyVO } from 'model/note';
-import type Tile from 'model/workbench/Tile';
 import EditableEntity from 'model/abstract/EditableEntity';
 import NoteTree from 'model/note/Tree';
 
@@ -14,7 +13,7 @@ export default class EditableNote extends EditableEntity<{
 }> {
   readonly entityType = EntityTypes.Note;
   readonly noteTree = container.resolve(NoteTree);
-  constructor(tile: Tile, noteId: Note['id']) {
+  constructor(noteId: Note['id']) {
     super(noteId);
     makeObservable(this);
   }

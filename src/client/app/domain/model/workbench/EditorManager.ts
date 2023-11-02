@@ -1,4 +1,10 @@
-import { EntityTypes, type EntityLocator } from 'model/entity';
+import {
+  EntityTypes,
+  type EntityLocator,
+  type EntityId,
+  EditableEntityTypes,
+  EditableEntityLocator,
+} from 'model/entity';
 
 import { Events as EditableEntityEvents, type default as EditableEntity } from 'model/abstract/EditableEntity';
 import EditableNote from 'model/note/Editable';
@@ -16,18 +22,18 @@ import ImageEditor from 'model/material/editor/ImageEditor';
 import type Tile from './Tile';
 
 export default class EditorManager {
-  private readonly editableEntities: { [key in EntityTypes]?: Record<EntityLocator['entityId'], EditableEntity> } = {
+  private readonly editableEntities: Record<EditableEntityTypes, Record<EntityId, EditableEntity>> = {
     [EntityTypes.Note]: {},
     [EntityTypes.Material]: {},
   };
 
   private readonly editors = new Map<EditableEntity, Set<Editor>>();
 
-  getEditableEntity({ entityType, entityId }: EntityLocator) {
+  getEditableEntity({ entityType, entityId }: EditableEntityLocator) {
     return this.editableEntities[entityType]?.[entityId];
   }
 
-  private createEditableEntity(tile: Tile, { entityId, entityType, mimeType }: EntityLocator) {
+  private createEditableEntity(tile: Tile, { entityId, entityType, mimeType }: EditableEntityLocator) {
     let editor = this.getEditableEntity({ entityId, entityType, mimeType });
 
     if (editor) {
@@ -36,7 +42,7 @@ export default class EditorManager {
 
     switch (entityType) {
       case EntityTypes.Note:
-        editor = new EditableNote(tile, entityId);
+        editor = new EditableNote(entityId);
         break;
       case EntityTypes.Material:
         editor = this.createEditableMaterial(tile, { entityId, entityType, mimeType });
@@ -72,7 +78,7 @@ export default class EditorManager {
     return editor;
   }
 
-  createEditor(tile: Tile, entity: EntityLocator) {
+  createEditor(tile: Tile, entity: EditableEntityLocator) {
     const editableEntity = this.createEditableEntity(tile, entity);
     let editor: Editor | undefined;
 

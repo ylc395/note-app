@@ -3,8 +3,10 @@ import { useRef, useEffect, useState } from 'react';
 import Editor, { type Options as EditorOptions } from './Editor';
 
 interface Options {
-  onChange?: (content: string) => void;
+  onChange?: EditorOptions['onChange'];
   onUIStateChange?: EditorOptions['onUIStateChange'];
+  onBlur?: EditorOptions['onBlur'];
+  onFocus?: EditorOptions['onFocus'];
   autoFocus?: boolean;
   readonly?: boolean;
   searchEnabled?: boolean;
@@ -16,7 +18,8 @@ interface Options {
 export default (function MarkdownEditor(options: Options) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [editor, setEditor] = useState<Editor | null>(null);
-  const { onChange, onUIStateChange, autoFocus, readonly, searchEnabled, initialContent, content } = options;
+  const { onChange, onUIStateChange, onBlur, onFocus, autoFocus, readonly, searchEnabled, initialContent, content } =
+    options;
 
   useEffect(() => {
     if (!rootRef.current) {
@@ -29,17 +32,17 @@ export default (function MarkdownEditor(options: Options) {
       autoFocus,
       onChange,
       onUIStateChange,
+      onBlur,
+      onFocus,
       onReady: () => setEditor(editor),
     });
-
-    console.debug(`create editor-${editor.id}`);
 
     return () => {
       editor.destroy();
       setEditor(null);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onChange, onUIStateChange]);
+  }, [onChange, onUIStateChange, onBlur, onFocus]);
 
   useEffect(() => {
     typeof content === 'string' && editor?.setContent(content);
@@ -56,7 +59,7 @@ export default (function MarkdownEditor(options: Options) {
   return (
     <div
       className="relative h-full select-text overflow-auto"
-      onClick={() => editor?.focus()}
+      onClick={editor?.focus}
       ref={rootRef}
       spellCheck={false}
     ></div>

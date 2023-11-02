@@ -1,7 +1,7 @@
 import { singleton } from 'tsyringe';
 import { action, makeObservable } from 'mobx';
 
-import type { EntityLocator } from 'model/entity';
+import type { EditableEntityLocator } from 'model/entity';
 import Tile from 'model/workbench/Tile';
 import TileManager, { type TileSplitDirections } from 'model/workbench/TileManger';
 import EditorManager from 'model/workbench/EditorManager';
@@ -17,7 +17,7 @@ export default class EditorService {
   }
 
   @action.bound
-  openEntity(entity: EntityLocator, newTileOptions?: { direction: TileSplitDirections; from: Tile }) {
+  openEntity(entity: EditableEntityLocator, newTileOptions?: { direction: TileSplitDirections; from: Tile }) {
     if (newTileOptions) {
       const newTile = this.tileManager.splitTile(newTileOptions.from.id, newTileOptions.direction);
       const editor = this.editorManager.createEditor(newTile, entity);

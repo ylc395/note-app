@@ -1,6 +1,7 @@
 import { container } from 'tsyringe';
 import uniqueId from 'lodash/uniqueId';
 import debounce from 'lodash/debounce';
+import { action, makeObservable, observable } from 'mobx';
 import { Emitter, type EventMap } from 'strict-event-emitter';
 
 import { token as localStorageToken } from 'infra/localStorage';
@@ -35,6 +36,7 @@ export default abstract class Editor<
   constructor(public tile: Tile, public readonly editable: T) {
     super();
     this.uiState = this.localStorage.get<S>(this.localStorageKey);
+    makeObservable(this);
   }
 
   private get localStorageKey() {
@@ -44,6 +46,21 @@ export default abstract class Editor<
   destroy() {
     this.emit(Events.Destroyed);
     this.removeAllListeners();
+  }
+
+  @observable isFocused = false;
+
+  @action.bound
+  setBlur() {
+    console.log(`blur ${this.id}`);
+    this.isFocused = false;
+  }
+
+  @action.bound
+  setFocus() {
+    console.log(`focus ${this.id}`);
+
+    this.isFocused = true;
   }
 
   updateUIState = debounce((state: Partial<S>) => {

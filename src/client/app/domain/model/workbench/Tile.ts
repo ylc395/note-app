@@ -1,9 +1,8 @@
-import { action, makeObservable, observable, computed } from 'mobx';
+import { action, makeObservable, observable } from 'mobx';
 import uniqueId from 'lodash/uniqueId';
 import { Emitter } from 'strict-event-emitter';
 
 import type Editor from 'model/abstract/Editor';
-import type Manager from './TileManger';
 
 export enum Events {
   destroyed = 'tile.destroyed',
@@ -13,14 +12,9 @@ export default class Tile extends Emitter<{ [Events.destroyed]: [void] }> {
   readonly id = uniqueId('tile-');
   @observable.ref currentEditor?: Editor;
   @observable.shallow editors: Editor[] = [];
-  constructor(private readonly manager: Manager) {
+  constructor() {
     super();
     makeObservable(this);
-  }
-
-  @computed
-  get isFocused() {
-    return this.manager.focusedTile?.id === this.id;
   }
 
   @action.bound

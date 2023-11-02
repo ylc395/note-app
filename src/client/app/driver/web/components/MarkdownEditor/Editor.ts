@@ -8,6 +8,7 @@ import {
   editorViewOptionsCtx,
   commandsCtx,
   defaultValueCtx,
+  EditorStatus,
 } from '@milkdown/core';
 import { listenerCtx, listener } from '@milkdown/plugin-listener';
 import { history } from '@milkdown/plugin-history';
@@ -32,19 +33,20 @@ export interface Options {
   defaultValue?: string;
   autoFocus?: boolean;
   onUIStateChange?: (state: UIState) => void;
-  onChange?: (content: string) => void; // won't fire when calling setContent
+  onChange?: (content: string) => void;
   onReady?: () => void;
+  onBlur?: () => void;
+  onFocus?: () => void;
 }
 
 export default class Editor {
   private readonly milkdown: MilkdownEditor;
-  readonly id = uniqueId(); // for debugging
+  private readonly id = uniqueId('milkdown-'); // for debugging
   private isReadonly = false;
   constructor(private readonly options: Options) {
+    console.debug(`create editor-${this.id}`);
     this.milkdown = this.init();
   }
-
-  private isUpdating = false;
 
   private init() {
     const editor = MilkdownEditor.make()
@@ -59,7 +61,8 @@ export default class Editor {
       .use(clipboard)
       .use(cursor)
       .config((ctx) => {
-        const { onChange, onUIStateChange, root, defaultValue } = this.options;
+        const { onChange, onUIStateChange, onBlur, onFocus, root, defaultValue } = this.options;
+        const listener = ctx.get(listenerCtx);
 
         ctx.set(uploadConfig.key, uploadOptions);
         ctx.set(rootCtx, root);
@@ -69,25 +72,28 @@ export default class Editor {
         }));
 
         if (typeof defaultValue === 'string') {
+          // this won't trigger event
           ctx.set(defaultValueCtx, defaultValue);
         }
 
         if (onChange) {
-          ctx.get(listenerCtx).markdownUpdated((_, markdown, pre) => {
-            if (typeof pre === 'string' && !this.isUpdating) {
-              onChange(markdown);
-            }
+          listener.markdownUpdated((_, markdown) => {
+            this.milkdown.status === EditorStatus.Created && onChange(markdown);
           });
         }
 
         if (onUIStateChange) {
-          ctx.get(listenerCtx).mounted(() => {
-            this.options.root.addEventListener('scroll', this.handleScroll);
-          });
-          ctx.get(listenerCtx).destroy(() => {
-            this.options.root.removeEventListener('scroll', this.handleScroll);
-          });
+          listener
+            .mounted(() => {
+              this.options.root.addEventListener('scroll', this.handleScroll);
+            })
+            .destroy(() => {
+              this.options.root.removeEventListener('scroll', this.handleScroll);
+            });
         }
+
+        onBlur && listener.blur(onBlur);
+        onFocus && listener.focus(onFocus);
       });
 
     editor.create().then(() => {
@@ -111,7 +117,7 @@ export default class Editor {
     });
   }
 
-  focus() {
+  readonly focus = () => {
     this.milkdown.action((ctx) => {
       const view = ctx.get(editorViewCtx);
 
@@ -119,7 +125,7 @@ export default class Editor {
         view.focus();
       }
     });
-  }
+  };
 
   setReadonly(isReadonly: boolean) {
     this.isReadonly = isReadonly;
@@ -127,11 +133,12 @@ export default class Editor {
   }
 
   setContent(content: string) {
-    console.debug(`setContent editor-${this.id}`);
+    if (this.milkdown.status !== EditorStatus.Created) {
+      return;
+    }
 
-    this.isUpdating = true;
+    console.debug(`setContent ${this.id}`);
     this.milkdown.action(replaceAll(content));
-    this.isUpdating = false;
   }
 
   destroy() {
