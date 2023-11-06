@@ -1,9 +1,9 @@
 import { $view } from '@milkdown/utils';
 import { imageSchema } from '@milkdown/preset-commonmark';
 
-import FileManager from './FileManager';
+import NodeView from './NodeView';
 
-export const NODE_NAME = imageSchema.id;
+export const NODE_NAME = 'image';
 
 // we extend imageSchema into multimediaSchema, instead of creating a new type of node called 'multimedia'
 // to avoid overriding a lot of original markdown tokenizer which are based on image node.
@@ -31,20 +31,7 @@ const multimediaSchema = imageSchema.extendSchema((prev) => (ctx) => ({
 }));
 
 const multimediaNodeView = $view(imageSchema.node, () => {
-  const fileManager = new FileManager();
-
-  return (node) => {
-    const dom = document.createElement('span');
-    const url = node.attrs.src;
-
-    if (typeof url !== 'string') {
-      // todo: visible and friendly non-url resource element
-      return { dom };
-    }
-
-    fileManager.mountView(url, dom);
-    return { dom, destroy: () => fileManager.remove(url) };
-  };
+  return (node) => new NodeView(node);
 });
 
 export default [multimediaSchema, multimediaNodeView].flat();

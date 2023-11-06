@@ -41,9 +41,7 @@ const topicSchema = $nodeSchema('topic', () => ({
   toMarkdown: {
     match: ({ type }) => type.name === 'topic',
     runner: (state, node) => {
-      state.addNode('topic', undefined, undefined, {
-        value: node.attrs.value,
-      });
+      state.addNode('topic', undefined, undefined, { value: node.attrs.value });
     },
   },
 }));

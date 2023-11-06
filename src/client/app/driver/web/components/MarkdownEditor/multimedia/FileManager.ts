@@ -1,22 +1,40 @@
-import { container } from 'tsyringe';
+import { container, singleton } from 'tsyringe';
 
 import { token as remoteToken } from 'infra/remote';
 import { getFileIdFromUrl } from 'infra/markdown/utils';
 
+@singleton()
 export default class FileManager {
   private readonly remote = container.resolve(remoteToken);
-  private urlMap = new Map<string, { mimeType: string; blobUrl: string }>();
+  private readonly urlMap: Record<string, { mimeType: string; blobUrl: string }> = {};
+  private readonly urlCountMap: Record<string, number> = {};
 
   remove(url: string) {
-    const { blobUrl } = this.urlMap.get(url)!;
-    window.URL.revokeObjectURL(blobUrl);
+    const urlCount = this.urlCountMap[url];
+
+    if (!urlCount) {
+      return;
+    }
+
+    if (urlCount > 1) {
+      this.urlCountMap[url] -= 1;
+      return;
+    }
+
+    delete this.urlCountMap[url];
+
+    const file = this.urlMap[url];
+
+    if (file) {
+      window.URL.revokeObjectURL(file.blobUrl);
+      delete this.urlMap[url];
+      console.debug(`revokeObjectURL ${file.blobUrl}`);
+    }
   }
 
-  async mountView(url: string, nodeViewRoot: HTMLElement) {
-    const file = this.urlMap.get(url) || (await this.load(url));
-    const el = this.createMediaElement(file);
-
-    nodeViewRoot.append(el);
+  async get(url: string) {
+    this.urlCountMap[url] = (this.urlCountMap[url] || 0) + 1;
+    return this.urlMap[url] || (await this.load(url));
   }
 
   private load = async (url: string) => {
@@ -37,28 +55,8 @@ export default class FileManager {
       mimeType,
     };
 
-    this.urlMap.set(url, result);
+    this.urlMap[url] = result;
 
     return result;
   };
-
-  private createMediaElement({ mimeType, blobUrl }: { mimeType: string; blobUrl: string }) {
-    let mediaEl: HTMLImageElement | HTMLAudioElement | HTMLVideoElement;
-
-    if (mimeType.startsWith('audio')) {
-      mediaEl = document.createElement('audio');
-    } else if (mimeType.startsWith('video')) {
-      mediaEl = document.createElement('video');
-    } else {
-      mediaEl = document.createElement('img');
-    }
-
-    if (!(mediaEl instanceof HTMLImageElement)) {
-      mediaEl.controls = true;
-    }
-
-    mediaEl.src = blobUrl;
-
-    return mediaEl;
-  }
 }

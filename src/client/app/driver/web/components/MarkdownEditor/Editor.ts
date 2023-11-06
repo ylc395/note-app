@@ -85,12 +85,8 @@ export default class Editor {
 
         if (onUIStateChange) {
           listener
-            .mounted(() => {
-              this.options.root.addEventListener('scroll', this.handleScroll);
-            })
-            .destroy(() => {
-              this.options.root.removeEventListener('scroll', this.handleScroll);
-            });
+            .mounted(() => this.options.root.addEventListener('scroll', this.handleScroll))
+            .destroy(() => this.options.root.removeEventListener('scroll', this.handleScroll));
         }
 
         onBlur && listener.blur(onBlur);
