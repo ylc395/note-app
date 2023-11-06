@@ -1,5 +1,6 @@
 import type { Extension, State, Tokenizer } from 'micromark-util-types';
 import type { Extension as MdastExtension } from 'mdast-util-from-markdown';
+import type { Options } from 'mdast-util-to-markdown';
 import { codes } from 'micromark-util-symbol';
 import { markdownLineEnding, markdownSpace } from 'micromark-util-character';
 import type { Node } from 'mdast';
@@ -78,6 +79,14 @@ export const mdastExtension: MdastExtension = {
   exit: {
     topic: function (token) {
       this.exit(token);
+    },
+  },
+};
+
+export const stringifyExtension: Options = {
+  handlers: {
+    topic: (node: Topic) => {
+      return `#${node.value}#`;
     },
   },
 };

@@ -1,4 +1,4 @@
-import type { UnistNode } from 'unist-util-visit/lib';
+import type { Node as UnistNode } from 'mdast';
 import { match } from 'path-to-regexp';
 import { parse } from 'node:url';
 

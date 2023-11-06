@@ -1,8 +1,7 @@
 import { Inject, Injectable, type OnModuleInit, forwardRef } from '@nestjs/common';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { visit } from 'unist-util-visit';
-import type { UnistNode } from 'unist-util-visit/lib';
-import type { Link as MdAstLinkNode } from 'mdast';
+import type { Link as MdAstLinkNode, Image as MdAstImageNode, Node as UnistNode } from 'mdast';
 import groupBy from 'lodash/groupBy';
 import uniqBy from 'lodash/uniqBy';
 import map from 'lodash/map';
@@ -13,10 +12,6 @@ import {
   tokenExtension as topicTokenExtension,
   type Topic as TopicNode,
 } from 'infra/markdown/syntax/topic';
-import {
-  mdastExtension as multimediaExtension,
-  type Multimedia as MultimediaNode,
-} from 'infra/markdown/syntax/multimedia';
 import { IS_IPC } from 'infra/Runtime';
 import type {
   ContentUpdatedEvent,
@@ -47,7 +42,7 @@ export default class ContentService extends BaseService implements OnModuleInit 
     }
   }
 
-  private extractInlineTopics(entity: ContentUpdatedEvent) {
+  private extractTopics(entity: ContentUpdatedEvent) {
     const topics: InlineTopic[] = [];
 
     return {
@@ -81,11 +76,7 @@ export default class ContentService extends BaseService implements OnModuleInit 
 
     return {
       visitor: (node: UnistNode) => {
-        if (
-          !(is<MdAstLinkNode>(node, 'link') || is<MultimediaNode>(node, 'multimedia')) ||
-          !node.position ||
-          !node.url
-        ) {
+        if (!(is<MdAstLinkNode>(node, 'link') || is<MdAstImageNode>(node, 'image')) || !node.position || !node.url) {
           return;
         }
 
@@ -119,11 +110,11 @@ export default class ContentService extends BaseService implements OnModuleInit 
 
   private readonly extract = async (entity: ContentUpdatedEvent) => {
     const mdAst = fromMarkdown(entity.content, {
-      mdastExtensions: [topicExtension, multimediaExtension],
+      mdastExtensions: [topicExtension],
       extensions: [topicTokenExtension],
     });
 
-    const reducers = [this.extractLinksAndMedias, this.extractInlineTopics].map((cb) => cb.call(this, entity));
+    const reducers = [this.extractLinksAndMedias, this.extractTopics].map((cb) => cb.call(this, entity));
 
     visit(mdAst, (node) => reducers.forEach(({ visitor }) => visitor(node)));
 

@@ -4,7 +4,7 @@
     "types": ["electron"],
     "lib": ["dom", "dom.iterable", "ESNext"],
     "baseUrl": ".",
-    "module": "CommonJS",
+    "moduleResolution": "Bundler",
     "jsx": "react-jsx",
     "paths": {
       "model/*": ["domain/model/*", "../shared/model/*", "../../shared/model/*"],

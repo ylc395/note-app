@@ -1,22 +1,15 @@
 import { container } from 'tsyringe';
-import type { Ctx } from '@milkdown/ctx';
 
 import { token as remoteToken } from 'infra/remote';
 import { getFileIdFromUrl } from 'infra/markdown/utils';
-import { listenerCtx } from '@milkdown/plugin-listener';
 
 export default class FileManager {
   private readonly remote = container.resolve(remoteToken);
   private urlMap = new Map<string, { mimeType: string; blobUrl: string }>();
 
-  constructor(ctx: Ctx) {
-    ctx.get(listenerCtx).destroy(() => this.reset());
-  }
-
-  private reset() {
-    for (const { blobUrl } of this.urlMap.values()) {
-      window.URL.revokeObjectURL(blobUrl);
-    }
+  remove(url: string) {
+    const { blobUrl } = this.urlMap.get(url)!;
+    window.URL.revokeObjectURL(blobUrl);
   }
 
   async mountView(url: string, nodeViewRoot: HTMLElement) {

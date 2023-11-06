@@ -19,8 +19,9 @@ import uniqueId from 'lodash/uniqueId';
 import '@milkdown/prose/view/style/prosemirror.css';
 import '@milkdown/prose/tables/style/tables.css';
 
-import { uploadOptions, htmlUpload } from './uploadFile';
+import { uploadOptions } from './uploadFile';
 import multimedia from './multimedia';
+import topic from './topic';
 import search, { enableSearchCommand } from './search';
 
 interface UIState {
@@ -50,14 +51,14 @@ export default class Editor {
 
   private init() {
     const editor = MilkdownEditor.make()
-      .use(multimedia) // order attention!
       .use(commonmark)
       .use(gfm)
+      .use(multimedia)
+      .use(topic)
       .use(listener)
       .use(search)
       .use(history)
       .use(upload) // upload 插件在前, 先处理粘贴文件的情况
-      .use(htmlUpload)
       .use(clipboard)
       .use(cursor)
       .config((ctx) => {

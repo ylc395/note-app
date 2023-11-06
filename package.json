@@ -106,6 +106,7 @@
     "kysely": "^0.26.3",
     "lodash": "^4.17.21",
     "mdast-util-from-markdown": "^2.0.0",
+    "mdast-util-to-markdown": "^2.1.0",
     "micromark-util-character": "^2.0.1",
     "micromark-util-symbol": "^2.0.0",
     "micromark-util-types": "^2.0.0",
