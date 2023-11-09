@@ -2,15 +2,15 @@ import { Controller, Inject } from '@nestjs/common';
 
 import { type AppServerDTO, type AppServerStatus, appServerDTOSchema } from 'model/app';
 import { type ConfigDTO, type Config, configSchema } from 'model/config';
-import { token as runtimeToken } from 'infra/Runtime';
-import type Runtime from 'infra/Runtime';
+import { token as runtimeToken } from 'infra/DesktopRuntime';
+import type DesktopRuntime from 'infra/DesktopRuntime';
 import AppService from 'service/AppService';
 
 import { Body, EnableOnly, Get, Patch, Post, createSchemaPipe } from './decorators';
 
 @Controller()
 export default class AppController {
-  constructor(@Inject(runtimeToken) private readonly runtime: Runtime, private readonly appService: AppService) {}
+  constructor(@Inject(runtimeToken) private readonly runtime: DesktopRuntime, private readonly appService: AppService) {}
 
   @Get('/app/ping')
   async ping(): Promise<void> {

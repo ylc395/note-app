@@ -4,6 +4,8 @@ import { join } from 'node:path';
 import { isMainThread, workerData } from 'node:worker_threads';
 import { ModuleRef } from '@nestjs/core';
 import { Inject } from '@nestjs/common';
+import { ensureDirSync } from 'fs-extra';
+
 
 import type { AppServerStatus } from 'model/app';
 import { APP_NAME, IS_DEV, IS_TEST } from 'infra/constants';
@@ -12,20 +14,30 @@ import { token as databaseToken, type Database } from 'infra/database';
 export const token = Symbol('runtime');
 export const IS_IPC = workerData?.runtime !== 'http';
 
-export default abstract class Runtime {
+export default abstract class DesktopRuntime {
   private appInfo?: {
     clientId: string;
     appName: string;
     deviceName: string;
   };
 
-  constructor(@Inject(ModuleRef) private readonly moduleRef: ModuleRef) {}
+  constructor(@Inject(ModuleRef) private readonly moduleRef: ModuleRef) {
+    this.ensurePaths();
+  }
 
   isMain() {
     return isMainThread;
   }
 
-  private getDataDir() {
+  private ensurePaths() {
+    const paths = this.getPaths();
+
+    for (const path of Object.values(paths)) {
+      ensureDirSync(path);
+    }
+  }
+
+  private static getDataDir() {
     const dir = IS_DEV ? `${APP_NAME}-dev` : IS_TEST ? `${APP_NAME}-test` : APP_NAME;
 
     if (process.env.APPDATA) {
@@ -39,7 +51,7 @@ export default abstract class Runtime {
   }
 
   getPaths() {
-    const appDir = this.getDataDir();
+    const appDir = DesktopRuntime.getDataDir();
 
     return {
       rootPath: appDir,

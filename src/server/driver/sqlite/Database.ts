@@ -5,7 +5,7 @@ import { removeSync } from 'fs-extra';
 import { join } from 'node:path';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 
-import { type default as Runtime, token as runtimeToken } from 'infra/Runtime';
+import { type default as Runtime, token as runtimeToken } from 'infra/DesktopRuntime';
 import type { Database } from 'infra/database';
 import { IS_TEST, IS_DEV } from 'infra/constants';
 import type Repository from 'service/repository';
@@ -44,7 +44,7 @@ export default class SqliteDb implements Database {
     return this.tableNames.includes(name);
   }
 
-  transaction<T>(cb: () => Promise<T>): Promise<T> {
+  transaction<T>(cb: () => Promise<T>) {
     return this.db.transaction().execute((trx) => {
       return this.als.run(trx, cb);
     });

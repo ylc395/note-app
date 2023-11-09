@@ -1,13 +1,12 @@
 import { app as electronApp, BrowserWindow, ipcMain } from 'electron';
-import { Logger, type OnModuleInit } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import path from 'node:path';
 import { Worker } from 'node:worker_threads';
 import { type Remote, wrap, releaseProxy } from 'comlink';
 import nodeEndpoint from 'comlink/dist/umd/node-adapter';
-import { ensureDir } from 'fs-extra';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 
-import Runtime from 'infra/Runtime';
+import DesktopRuntime from 'infra/DesktopRuntime';
 import { IS_DEV } from 'infra/constants';
 import { UI_CHANNEL, type UIIpcPayload, type ElectronUI } from 'infra/ui';
 
@@ -18,18 +17,10 @@ const INDEX_URL = process.env.VITE_SERVER_ENTRY_URL!;
 
 process.traceProcessWarnings = IS_DEV;
 
-export default class ElectronRuntime extends Runtime implements OnModuleInit {
+export default class ElectronRuntime extends DesktopRuntime {
   private readonly logger = new Logger('electron app');
   private mainWindow?: BrowserWindow;
   readonly type = 'electron';
-
-  async onModuleInit() {
-    const paths = this.getPaths();
-
-    for (const path of Object.values(paths)) {
-      await ensureDir(path);
-    }
-  }
 
   async start() {
     if (IS_DEV) {

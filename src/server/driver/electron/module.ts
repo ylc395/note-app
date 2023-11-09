@@ -1,7 +1,7 @@
 import { Global, Inject, Module, type OnModuleInit } from '@nestjs/common';
 
 import * as controllers from 'controller';
-import { token as runtimeToken } from 'infra/Runtime';
+import { token as runtimeToken } from 'infra/DesktopRuntime';
 import ElectronRuntime from 'driver/electron';
 import SqliteModule from 'driver/sqlite/module';
 import ServiceModule from 'service/module';

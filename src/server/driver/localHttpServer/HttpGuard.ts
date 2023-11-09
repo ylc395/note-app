@@ -1,12 +1,12 @@
 import { CanActivate, ExecutionContext, Injectable, Inject } from '@nestjs/common';
 import type { Request } from 'express';
 
-import { token as runtimeToken } from 'infra/Runtime';
-import type Runtime from 'infra/Runtime';
+import { token as runtimeToken } from 'infra/DesktopRuntime';
+import type DesktopRuntime from 'infra/DesktopRuntime';
 
 @Injectable()
 export default class HttpGuard implements CanActivate {
-  constructor(@Inject(runtimeToken) private readonly runtime: Runtime) {}
+  constructor(@Inject(runtimeToken) private readonly runtime: DesktopRuntime) {}
 
   private token?: string;
 

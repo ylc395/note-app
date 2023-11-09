@@ -12,7 +12,7 @@ import {
   tokenExtension as topicTokenExtension,
   type Topic as TopicNode,
 } from 'infra/markdown/syntax/topic';
-import { IS_IPC } from 'infra/Runtime';
+import { IS_IPC } from 'infra/DesktopRuntime';
 import type {
   ContentUpdatedEvent,
   EntityWithSnippet,
