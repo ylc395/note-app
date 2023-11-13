@@ -6,7 +6,7 @@ import Editor from 'model/abstract/Editor';
 import NoteService from 'service/NoteService';
 
 import TabItem from '../Workbench/TabBar/TabItem';
-import NoteTree from '../Explorer/Note/TreeView/DraggingTreeView';
+import TreeView from '../Explorer/components/TreeView';
 
 // eslint-disable-next-line mobx/missing-observer
 export default function DragPreview() {
@@ -22,7 +22,7 @@ export default function DragPreview() {
   return (
     <DragOverlay className="pointer-events-none" dropAnimation={null}>
       {draggingItem instanceof Editor && <TabItem editor={draggingItem}></TabItem>}
-      {previewTree && <NoteTree tree={previewTree} />}
+      {previewTree && <TreeView tree={previewTree} />}
     </DragOverlay>
   );
 }

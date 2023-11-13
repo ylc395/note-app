@@ -2,13 +2,13 @@ import { action } from 'mobx';
 import type { NoteVO } from '../../../../shared/model/note';
 import Tree, { type TreeNode } from '../abstract/Tree';
 
-export interface NoteNodeAttr {
+interface NoteNodeAttr {
   icon: NoteVO['icon'];
 }
 
 export type NoteTreeNode = TreeNode<NoteNodeAttr>;
 
-export default class NoteTree extends Tree<NoteVO, NoteNodeAttr> {
+export default class NoteTree extends Tree<NoteNodeAttr, NoteVO> {
   protected toNode(note: NoteVO | null) {
     if (note) {
       return { title: note.title, isLeaf: note.childrenCount === 0, attributes: { icon: note.icon } };

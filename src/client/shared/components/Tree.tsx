@@ -2,6 +2,7 @@ import { CaretDownOutlined, CaretRightFilled } from '@ant-design/icons';
 import { type MouseEvent, type ReactNode, type Ref, useContext, createContext } from 'react';
 import { observer } from 'mobx-react-lite';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
+import clsx from 'clsx';
 import uniqueId from 'lodash/uniqueId';
 import memoize from 'lodash/memoize';
 import { useCreation } from 'ahooks';
@@ -9,11 +10,12 @@ import { useCreation } from 'ahooks';
 import type { TreeNode as TreeNodeModel, TreeNodeEntity, TreeNode } from '../model/abstract/Tree';
 import type TreeModel from '../model/abstract/Tree';
 
-const INDENT = 30;
+const INDENT = 10;
 
 interface TreeContext<T> {
-  tree: TreeModel<TreeNodeEntity, T>;
+  tree: TreeModel<T, TreeNodeEntity>;
   nodeClassName?: string;
+  caretClassName?: string;
   titleClassName?: string;
   draggingOverNodeClassName?: string;
   draggingOverTitleClassName?: string;
@@ -47,6 +49,7 @@ const TreeNode = observer(function <T>({
     tree,
     nodeClassName,
     titleClassName,
+    caretClassName,
     emptyChildrenView,
     loadingIcon,
     draggable,
@@ -86,31 +89,24 @@ const TreeNode = observer(function <T>({
 
   return (
     <>
-      <div style={{ paddingLeft: `${level * INDENT}px` }} ref={setDroppableRef}>
-        <div
-          className={nodeClassName}
-          data-dragging={node.isUndroppable ? 'not-allowed' : isOver ? 'over' : undefined}
-          data-selected={node.isSelected}
-          ref={setDraggableRef}
-          onClick={select}
-          {...listeners}
-          {...attributes}
-        >
+      <div
+        data-dragging={node.isUndroppable ? 'not-allowed' : isOver ? 'over' : undefined}
+        data-selected={node.isSelected}
+        style={{ paddingLeft: `${level * INDENT}px` }}
+        ref={setDroppableRef}
+        onClick={select}
+        className={nodeClassName}
+      >
+        <div className={clsx('flex', node.isLeaf && 'pl-4')} ref={setDraggableRef} {...listeners} {...attributes}>
           {!node.isLeaf &&
             (useLoadingIcon ? (
               loadingIcon
             ) : node.isExpanded ? (
-              <CaretDownOutlined onClick={expand} />
+              <CaretDownOutlined className={caretClassName} onClick={expand} />
             ) : (
-              <CaretRightFilled onClick={expand} />
+              <CaretRightFilled className={caretClassName} onClick={expand} />
             ))}
-          <span
-            data-dragging={node.isUndroppable ? 'not-allowed' : isOver ? 'over' : undefined}
-            data-selected={node.isSelected}
-            className={titleClassName}
-          >
-            {renderTitle ? renderTitle(node) : node.title}
-          </span>
+          {renderTitle ? renderTitle(node) : <span className={titleClassName}>{node.title}</span>}
         </div>
       </div>
       {node.isExpanded &&

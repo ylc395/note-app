@@ -16,7 +16,7 @@ export interface TreeNode<T = void> {
   isSelected: boolean;
   isUndroppable?: boolean;
   isLeaf?: boolean;
-  attributes?: T;
+  attributes?: T; // root node has no attribute;
 }
 
 export type TreeNodeEntity = HierarchyEntity;
@@ -32,7 +32,7 @@ export interface SelectEvent {
   reason?: string;
 }
 
-export default abstract class Tree<E extends TreeNodeEntity = TreeNodeEntity, T = unknown> extends Emitter<{
+export default abstract class Tree<T = unknown, E extends TreeNodeEntity = TreeNodeEntity> extends Emitter<{
   nodeSelected: [TreeNode['id'] | null, SelectEvent];
   nodeExpanded: [TreeNode['id'] | null];
 }> {

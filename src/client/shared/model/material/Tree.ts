@@ -1,14 +1,14 @@
 import { type MaterialVO, type MaterialEntity, isEntityMaterial, isDirectory } from '../../../../shared/model/material';
 import Tree, { type TreeNode } from '../abstract/Tree';
 
-export interface MaterialNodeAttr {
+interface MaterialNodeAttr {
   icon: MaterialVO['icon'];
   mimeType?: MaterialEntity['mimeType'];
 }
 
 export type MaterialTreeNode = TreeNode<MaterialNodeAttr>;
 
-export default class MaterialTree extends Tree<MaterialVO, MaterialNodeAttr> {
+export default class MaterialTree extends Tree<MaterialNodeAttr, MaterialVO> {
   protected toNode(material: MaterialVO | null) {
     if (material) {
       return {

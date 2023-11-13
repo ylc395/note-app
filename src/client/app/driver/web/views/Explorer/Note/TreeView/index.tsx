@@ -3,14 +3,16 @@ import { useEffect } from 'react';
 import clsx from 'clsx';
 
 import NoteService from 'service/NoteService';
-import Tree from '../../../../../../../shared/components/Tree';
+import TreeView from '../../components/TreeView';
 
-import NodeTitle from './NodeTitle';
 import useDnd from './useDnd';
+import { EntityTypes } from 'model/entity';
+import { PlusOutlined } from '@ant-design/icons';
+import IconButton from 'web/components/IconButton';
 
 // eslint-disable-next-line mobx/missing-observer
 export default function NoteTreeView() {
-  const { noteTree, loadChildren } = container.resolve(NoteService);
+  const { noteTree, loadChildren, createNote } = container.resolve(NoteService);
   const { isOver, setDroppableRef } = useDnd();
 
   useEffect(() => {
@@ -18,21 +20,24 @@ export default function NoteTreeView() {
   }, [loadChildren]);
 
   return (
-    <div
-      className={clsx('h-full', {
-        'cursor-pointer bg-blue-50': isOver && !noteTree.root.isUndroppable,
-        'cursor-no-drop': isOver && noteTree.root.isUndroppable,
-      })}
-      ref={setDroppableRef}
-    >
-      <Tree
-        draggable
-        droppable
-        nodeClassName="tree-node"
-        tree={noteTree}
-        multiple
-        renderTitle={(node) => <NodeTitle node={node} />}
-      />
+    <div className="scrollbar-stable min-h-0 grow overflow-auto">
+      <div
+        className={clsx('h-full', {
+          'cursor-pointer bg-blue-50': isOver && !noteTree.root.isUndroppable,
+          'cursor-no-drop': isOver && noteTree.root.isUndroppable,
+        })}
+        ref={setDroppableRef}
+      >
+        <TreeView
+          tree={noteTree}
+          entityType={EntityTypes.Note}
+          nodeOperation={({ id }) => (
+            <IconButton onClick={() => createNote(id)}>
+              <PlusOutlined />
+            </IconButton>
+          )}
+        />
+      </div>
     </div>
   );
 }
