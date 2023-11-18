@@ -1,4 +1,3 @@
-import { observer } from 'mobx-react-lite';
 import {
   BuildOutlined,
   BookOutlined,
@@ -10,10 +9,11 @@ import {
   SettingOutlined,
 } from '@ant-design/icons';
 
-import { ExplorerTypes } from 'service/ExplorerService';
+import { ExplorerTypes } from 'model/Explorer';
 import Button from './Button';
 
-export default observer(function ActivityBar() {
+// eslint-disable-next-line mobx/missing-observer
+export default function ActivityBar() {
   return (
     <nav className="flex h-full w-14 flex-col justify-between border-0 border-r border-solid border-gray-200 bg-gray-50 text-center">
       <div>
@@ -50,4 +50,4 @@ export default observer(function ActivityBar() {
       </div>
     </nav>
   );
-});
+}

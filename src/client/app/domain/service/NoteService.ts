@@ -14,11 +14,12 @@ import type {
 import type { RecyclablesDTO } from 'model/recyclables';
 import { EntityTypes } from 'model/entity';
 import NoteTree from 'model/note/Tree';
+import Explorer from 'model/Explorer';
+import type { SelectEvent } from 'model/abstract/Tree';
 
 import { MULTIPLE_ICON_FLAG, type NoteMetadata } from 'model/note/MetadataForm';
 
 import EditorService from './EditorService';
-import type { SelectEvent } from 'model/abstract/Tree';
 import { getLocators } from 'utils/collection';
 
 export enum NoteEvents {
@@ -33,7 +34,11 @@ export default class NoteService extends Emitter<{
 }> {
   private readonly remote = container.resolve(remoteToken);
   private readonly ui = container.resolve(UIToken);
-  readonly noteTree = new NoteTree();
+  private readonly explorer = container.resolve(Explorer);
+
+  get noteTree() {
+    return this.explorer.noteTree;
+  }
 
   constructor() {
     super();
@@ -55,7 +60,7 @@ export default class NoteService extends Emitter<{
 
   readonly loadChildren = async (parentId?: Note['parentId']) => {
     const notes = await this.fetchChildren(parentId);
-    this.noteTree.setChildren(notes, parentId || null);
+    this.noteTree.updateChildren(parentId || null, notes);
   };
 
   readonly createNote = async (parentId?: Note['parentId']) => {

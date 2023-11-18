@@ -14,7 +14,7 @@ interface CommonEditorEvents extends EventMap {
   [Events.Destroyed]: [];
 }
 
-export default abstract class EditableEntity<T = unknown> extends Emitter<CommonEditorEvents> {
+export default abstract class Editable<T = unknown> extends Emitter<CommonEditorEvents> {
   protected remote = container.resolve(remoteToken);
   readonly id = uniqueId('editableEntity-');
   abstract readonly entityType: EntityTypes;

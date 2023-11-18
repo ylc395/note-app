@@ -5,7 +5,7 @@ import { useMemoizedFn } from 'ahooks';
 import MarkdownEditor from 'web/components/MarkdownEditor';
 import EditorContext from './Context';
 
-export default observer(function NoteEditor() {
+export default observer(function Body() {
   const ctx = useContext(EditorContext);
   const { editor } = ctx;
   const onChange = useMemoizedFn((content: string) => editor.isFocused && editor.editable.updateBody(content));

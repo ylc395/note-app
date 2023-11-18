@@ -3,11 +3,11 @@ import remove from 'lodash/remove';
 
 import { EntityTypes } from 'model/entity';
 import type { MaterialEntityVO, AnnotationVO, NewAnnotationDTO, AnnotationPatchDTO } from 'model/material';
-import EditableEntity from 'model/abstract/EditableEntity';
+import Editable from 'model/abstract/Editable';
 
 export default abstract class EditableMaterial<
   T extends { metadata: MaterialEntityVO } = { metadata: MaterialEntityVO },
-> extends EditableEntity<T> {
+> extends Editable<T> {
   constructor(materialId: MaterialEntityVO['id']) {
     super(materialId);
     makeObservable(this);

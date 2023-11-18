@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import clsx from 'clsx';
 import { container } from 'tsyringe';
 
-import ExplorerService, { type ExplorerTypes } from 'service/ExplorerService';
+import Explorer, { type ExplorerTypes } from 'model/Explorer';
 
 interface Props {
   children: ReactNode;
@@ -11,7 +11,7 @@ interface Props {
 }
 
 export default observer(function Button({ children, explorerType }: Props) {
-  const { currentExplorer } = container.resolve(ExplorerService);
+  const { currentExplorer } = container.resolve(Explorer);
 
   return (
     <button

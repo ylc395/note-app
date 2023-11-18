@@ -4,7 +4,7 @@ import { container } from 'tsyringe';
 
 import { EntityTypes } from 'model/entity';
 import type { NoteVO as Note, NotePatchDTO as NotePatch, NoteBodyVO } from 'model/note';
-import EditableEntity from 'model/abstract/EditableEntity';
+import EditableEntity from 'model/abstract/Editable';
 import NoteTree from 'model/note/Tree';
 
 export default class EditableNote extends EditableEntity<{

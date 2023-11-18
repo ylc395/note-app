@@ -53,7 +53,7 @@ export default observer(function NoteTreeView() {
   };
 
   useEffect(() => {
-    fetchChildren(null).then((children) => noteTree.setChildren(children, null));
+    fetchChildren(null).then((children) => noteTree.updateChildren(null, children));
   }, [fetchChildren, noteTree]);
 
   useEffect(() => {
@@ -67,7 +67,7 @@ export default observer(function NoteTreeView() {
   const renderTitle = (node: NoteTreeNode) => (
     <span className="group flex">
       <IconTitle
-        icon={node.attributes?.icon}
+        icon={node.entity?.icon}
         size="1em"
         title={`${IS_DEV ? `${node.id.slice(0, 3)} ` : ''}${node.title}`}
       />

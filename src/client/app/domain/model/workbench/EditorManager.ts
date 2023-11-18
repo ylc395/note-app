@@ -6,7 +6,7 @@ import {
   EditableEntityLocator,
 } from 'model/entity';
 
-import { Events as EditableEntityEvents, type default as EditableEntity } from 'model/abstract/EditableEntity';
+import { Events as EditableEntityEvents, type default as Editable } from 'model/abstract/Editable';
 import EditableNote from 'model/note/Editable';
 import EditablePdf from 'model/material/editable/EditablePdf';
 import EditableHtml from 'model/material/editable/EditableHtml';
@@ -22,12 +22,12 @@ import ImageEditor from 'model/material/editor/ImageEditor';
 import type Tile from './Tile';
 
 export default class EditorManager {
-  private readonly editableEntities: Record<EditableEntityTypes, Record<EntityId, EditableEntity>> = {
+  private readonly editableEntities: Record<EditableEntityTypes, Record<EntityId, Editable>> = {
     [EntityTypes.Note]: {},
     [EntityTypes.Material]: {},
   };
 
-  private readonly editors = new Map<EditableEntity, Set<Editor>>();
+  private readonly editors = new Map<Editable, Set<Editor>>();
 
   getEditableEntity({ entityType, entityId }: EditableEntityLocator) {
     return this.editableEntities[entityType]?.[entityId];

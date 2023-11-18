@@ -7,13 +7,14 @@ import TreeView from '../../components/TreeView';
 import { EntityTypes } from 'model/entity';
 import { FileAddOutlined, FolderAddOutlined } from '@ant-design/icons';
 import IconButton from 'web/components/IconButton';
+import { isDirectory } from 'model/material';
 
 // eslint-disable-next-line mobx/missing-observer
 export default function MaterialTreeView() {
   const { loadChildren, materialTree, createDirectory, targetId } = container.resolve(MaterialService);
 
   useEffect(() => {
-    loadChildren(null);
+    loadChildren();
   }, [loadChildren]);
 
   return (
@@ -23,7 +24,7 @@ export default function MaterialTreeView() {
           tree={materialTree}
           entityType={EntityTypes.Material}
           nodeOperation={(node) =>
-            node.attributes?.mimeType ? null : (
+            node.entity && isDirectory(node.entity) ? (
               <>
                 <IconButton onClick={() => targetId.set(node.id)}>
                   <FileAddOutlined />
@@ -32,7 +33,7 @@ export default function MaterialTreeView() {
                   <FolderAddOutlined />
                 </IconButton>
               </>
-            )
+            ) : null
           }
         />
       </div>

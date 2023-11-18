@@ -5,7 +5,7 @@ import { action, makeObservable, observable } from 'mobx';
 import { Emitter, type EventMap } from 'strict-event-emitter';
 
 import { token as localStorageToken } from 'infra/localStorage';
-import type EditableEntity from 'model/abstract/EditableEntity';
+import type Editable from 'model/abstract/Editable';
 import type Tile from 'model/workbench/Tile';
 
 interface Breadcrumb {
@@ -24,10 +24,7 @@ export interface CommonEditorEvents extends EventMap {
   [Events.Destroyed]: [];
 }
 
-export default abstract class Editor<
-  T extends EditableEntity = EditableEntity,
-  S = unknown,
-> extends Emitter<CommonEditorEvents> {
+export default abstract class Editor<T extends Editable = Editable, S = unknown> extends Emitter<CommonEditorEvents> {
   readonly id = uniqueId('editor-');
   abstract readonly tabView: { title: string; icon: string | null };
   abstract readonly breadcrumbs: Breadcrumbs;

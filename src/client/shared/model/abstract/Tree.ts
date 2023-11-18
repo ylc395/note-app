@@ -7,46 +7,53 @@ import map from 'lodash/map';
 
 import type { HierarchyEntity } from '../../../../shared/model/entity';
 
-export interface TreeNode<T = void> {
+export interface TreeNode<T = unknown> {
   readonly id: string;
+  readonly entity: T | null; // only root node has no entity;
   title: string;
-  children?: TreeNode<T>[];
-  parent: TreeNode<T> | null;
+  children: TreeNode<T>[];
+  parent: TreeNode<T> | null; // only root node has no parent;
   isExpanded: boolean;
   isSelected: boolean;
-  isUndroppable?: boolean;
-  isLeaf?: boolean;
-  attributes?: T; // root node has no attribute;
+  isValidTarget: boolean;
+  isLoading: boolean;
+  isLeaf: boolean;
 }
 
-export type TreeNodeEntity = HierarchyEntity;
+const ROOT_NODE_ID = '__root-node';
 
-export interface TreeOptions<T extends TreeNodeEntity> {
-  from?: T[];
-}
+export type SelectEvent = { reason?: 'drag'; multiple?: boolean };
 
-const ROOT_NODE_KEY = '__root-node';
-
-export interface SelectEvent {
-  multiple?: boolean;
-  reason?: string;
-}
-
-export default abstract class Tree<T = unknown, E extends TreeNodeEntity = TreeNodeEntity> extends Emitter<{
+type TreeEvents = {
   nodeSelected: [TreeNode['id'] | null, SelectEvent];
   nodeExpanded: [TreeNode['id'] | null];
-}> {
-  readonly root: TreeNode<T>;
+};
 
-  constructor(protected readonly options?: TreeOptions<E>) {
+const getDefaultNode = <T extends HierarchyEntity>() => ({
+  isLeaf: false,
+  isExpanded: false,
+  isSelected: false,
+  isValidTarget: true,
+  isLoading: false,
+  children: [] as TreeNode<T>[],
+  title: '',
+});
+
+export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> extends Emitter<TreeEvents> {
+  readonly root: TreeNode<T> = observable({
+    entity: null,
+    parent: null,
+    id: ROOT_NODE_ID,
+    ...getDefaultNode<T>(),
+  });
+
+  constructor(entities?: T[]) {
     super();
-    this.root = this.generateRoot();
-
-    if (options?.from) {
-      this.fromEntities(options.from);
-    }
-
     makeObservable(this);
+
+    if (entities) {
+      this.fromEntities(entities);
+    }
   }
 
   sort(parentId: TreeNode['id'], cb: (node1: TreeNode<T>, node2: TreeNode<T>) => number, recursive: boolean) {
@@ -65,39 +72,19 @@ export default abstract class Tree<T = unknown, E extends TreeNodeEntity = TreeN
     }
   }
 
-  protected abstract toNode(entity: E | null): Pick<TreeNode<T>, 'isLeaf' | 'title' | 'attributes'>;
-
   @observable.shallow private nodes: Record<TreeNode['id'], TreeNode<T>> = {};
 
   @computed
   get expandedNodes() {
-    return Object.values(this.nodes).filter((node) => node.isExpanded && node !== this.root);
+    return Object.values(this.nodes).filter((node) => node.isExpanded);
   }
 
-  @computed
   get selectedNodes() {
     return Object.values(this.nodes).filter((node) => node.isSelected);
   }
 
-  @computed
-  get undroppableNodes() {
-    return Object.values(this.nodes).filter((node) => node.isUndroppable);
-  }
-
-  @action
-  private generateRoot() {
-    const root = observable({
-      isLeaf: false,
-      ...this.toNode(null),
-      id: ROOT_NODE_KEY,
-      children: [],
-      parent: null,
-      isExpanded: true,
-      isSelected: false,
-    }) satisfies TreeNode<T>;
-
-    this.nodes[root.id] = root;
-    return root;
+  private get invalidTargets() {
+    return Object.values(this.nodes).filter((node) => !node.isValidTarget);
   }
 
   getNode(id: TreeNode['id'] | null): TreeNode<T>;
@@ -125,63 +112,45 @@ export default abstract class Tree<T = unknown, E extends TreeNodeEntity = TreeN
   removeNodes(ids: TreeNode['id'][]) {
     for (const id of ids) {
       const node = this.getNode(id);
+      pull(node.parent!.children, node);
+    }
 
-      if (!node.parent?.children) {
-        throw new Error('no children');
-      }
-
-      pull(node.parent.children, node);
-
+    for (const id of ids) {
       delete this.nodes[id];
-
-      if (node.children) {
-        this.removeNodes(map(node.children, 'id'));
-      }
     }
   }
 
+  protected abstract entityToNode(entity: T): Partial<Pick<TreeNode, 'isLeaf' | 'title'>>;
+
   @action
-  private createNode(entity: E) {
+  private addNode(entity: T) {
     if (entity.id === this.root.id) {
       throw new Error('invalid id');
     }
 
-    const parent = this.getNode(entity.parentId, true);
-
-    if (!parent) {
-      throw new Error('no parent');
-    }
-
-    parent.isLeaf = false;
-
+    const parent = this.getNode(entity.parentId);
     const node: TreeNode<T> = observable({
-      isLeaf: false,
-      ...this.toNode(entity),
       id: entity.id,
       parent,
-      isExpanded: false,
-      isSelected: false,
+      entity,
+      ...getDefaultNode<T>(),
+      ...this.entityToNode(entity),
     });
 
-    if (!parent.children) {
-      parent.children = [];
-    }
-
+    parent.isLeaf = false;
     parent.children.push(node);
     this.nodes[entity.id] = node;
   }
 
   @action
-  setChildren(entities: E[], parentId: TreeNode['id'] | null) {
+  updateChildren(parentId: TreeNode['id'] | null, entities: T[]) {
     const parentNode = this.getNode(parentId);
+    const toRemoveIds = map(
+      differenceWith(parentNode.children, entities, (a, b) => a.id === b.id),
+      'id',
+    );
 
-    if (parentNode.children) {
-      const toRemoveIds = map(
-        differenceWith(parentNode.children, entities, (a, b) => a.id === b.id),
-        'id',
-      );
-      this.removeNodes(toRemoveIds);
-    }
+    this.removeNodes(toRemoveIds);
 
     if (entities.length === 0) {
       parentNode.children = [];
@@ -191,39 +160,27 @@ export default abstract class Tree<T = unknown, E extends TreeNodeEntity = TreeN
   }
 
   @action
-  updateTree(entity: E | E[]) {
+  updateTree(entity: T | T[]) {
     const entities = Array.isArray(entity) ? entity : [entity];
 
     for (const entity of entities) {
-      const node = this.nodes[entity.id];
+      const node = this.getNode(entity.id, true);
 
       if (!node) {
-        this.createNode(entity);
+        this.addNode(entity);
         continue;
       }
 
-      if (!node.parent?.children) {
-        throw new Error('no parent or siblings');
-      }
+      Object.assign(node, this.entityToNode(entity));
 
-      Object.assign(node, this.toNode(entity));
-
-      if (node.parent.id === (entity.parentId || this.root.id)) {
+      if (node.parent!.id === (entity.parentId || ROOT_NODE_ID)) {
         continue;
       }
 
-      pull(node.parent.children, node);
+      // reset parent-child relationship
+      const newParent = this.getNode(entity.parentId);
 
-      const newParent = this.getNode(entity.parentId, true);
-
-      if (!newParent) {
-        continue;
-      }
-
-      if (!newParent.children) {
-        newParent.children = [];
-      }
-
+      pull(node.parent!.children, node);
       newParent.children.push(node);
       newParent.isLeaf = false;
       node.parent = newParent;
@@ -276,11 +233,7 @@ export default abstract class Tree<T = unknown, E extends TreeNodeEntity = TreeN
   getSiblings(id: TreeNode['id']) {
     const { parent } = this.getNode(id);
 
-    if (!parent?.children) {
-      throw new Error('no parent');
-    }
-
-    return parent.children.filter(({ id: _id }) => _id !== id);
+    return parent!.children.filter(({ id: _id }) => _id !== id);
   }
 
   getAncestors(id: TreeNode['id']) {
@@ -295,14 +248,10 @@ export default abstract class Tree<T = unknown, E extends TreeNodeEntity = TreeN
     return ancestors;
   }
 
-  private getDescendants(id: TreeNode['id'] | null): TreeNode<T>[] {
+  private getDescendants(id: TreeNode['id']): TreeNode<T>[] {
     const { children } = this.getNode(id);
 
-    if (children) {
-      return [...children, ...children.flatMap((child) => this.getDescendants(child.id))];
-    }
-
-    return [];
+    return [...children, ...children.flatMap((child) => this.getDescendants(child.id))];
   }
 
   @action.bound
@@ -313,42 +262,40 @@ export default abstract class Tree<T = unknown, E extends TreeNodeEntity = TreeN
   }
 
   @action
-  updateInvalidTargetNodes(id?: TreeNode['id']) {
-    this.resetUndroppable();
+  disableInvalidParents(ids: TreeNode['id'][]) {
+    this.resetTargets();
 
-    const selectedIds = id ? [id] : map(this.selectedNodes, 'id');
-
-    for (const id of selectedIds) {
+    for (const id of ids) {
       const node = this.getNode(id);
 
-      node.isUndroppable = true;
-      (node.parent || this.root).isUndroppable = true;
+      node.isValidTarget = false;
+      node.parent!.isValidTarget = false;
 
       for (const descendant of this.getDescendants(id)) {
-        descendant.isUndroppable = true;
+        descendant.isValidTarget = false;
       }
     }
   }
 
   @action
-  resetUndroppable() {
-    for (const node of this.undroppableNodes) {
-      node.isUndroppable = false;
+  resetTargets() {
+    for (const node of this.invalidTargets) {
+      node.isValidTarget = true;
     }
   }
 
-  private fromEntities(entities: E[]) {
-    const descants: E[] = [];
-    const roots: E[] = [];
+  private fromEntities(entities: T[]) {
+    const descants: T[] = [];
+    const roots: T[] = [];
 
     for (const entity of entities) {
       (entity.parentId ? descants : roots).push(entity);
     }
 
     const childrenGroup = groupBy(descants, 'parentId');
-    const createChildrenNodes = (entities: E[]) => {
+    const createChildrenNodes = (entities: T[]) => {
       for (const entity of entities) {
-        this.createNode(entity);
+        this.addNode(entity);
         const children = childrenGroup[entity.id];
         children && createChildrenNodes(children);
       }

@@ -3,7 +3,7 @@ import { container } from 'tsyringe';
 import type { ReactNode } from 'react';
 import { observer } from 'mobx-react-lite';
 
-import ExplorerService, { ExplorerTypes } from 'service/ExplorerService';
+import Explorer, { ExplorerTypes } from 'model/Explorer';
 import ActivityBar from './ActivityBar';
 import NoteExplorer from './Note';
 import Memo from './Memo';
@@ -16,7 +16,7 @@ const explorerMap: Record<ExplorerTypes, () => ReactNode> = {
 };
 
 export default observer(function ExplorerView() {
-  const { currentExplorer } = container.resolve(ExplorerService);
+  const { currentExplorer } = container.resolve(Explorer);
 
   return (
     <div className="flex h-full overflow-x-hidden border-0 border-r border-solid  border-gray-200">

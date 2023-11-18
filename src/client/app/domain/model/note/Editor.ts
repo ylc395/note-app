@@ -36,7 +36,7 @@ export default class NoteEditor extends Editor<EditableNote, UIState> {
     const nodeToBreadcrumb = (node: NoteTreeNode) => ({
       id: node.id,
       title: node.title,
-      icon: node.attributes?.icon,
+      icon: node.entity?.icon,
     });
 
     let node: NoteTreeNode | null = editor.noteTree.getNode(editor.entityId);

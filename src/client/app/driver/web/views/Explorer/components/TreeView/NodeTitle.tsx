@@ -15,7 +15,7 @@ export default observer(function NodeTitle({ node, children }: Props) {
     <span className="flex">
       <IconTitle
         titleClassName="text-gray-600"
-        icon={node.attributes?.icon}
+        icon={node.entity?.icon}
         title={`${IS_DEV ? `${node.id.slice(0, 3)} ` : ''}${node.title}`}
       />
       {children && (

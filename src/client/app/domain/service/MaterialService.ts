@@ -2,15 +2,16 @@ import { singleton, container } from 'tsyringe';
 import { makeObservable, observable } from 'mobx';
 
 import type { SelectEvent } from 'model/abstract/Tree';
-import MaterialTree, { MaterialTreeNode } from 'model/material/Tree';
 import { EntityTypes } from 'model/entity';
-import type {
-  NewMaterialDTO,
-  MaterialDirectoryVO,
-  MaterialVO,
-  ClientMaterialQuery,
-  MaterialEntityVO,
+import {
+  type NewMaterialDTO,
+  type MaterialDirectoryVO,
+  type MaterialVO,
+  type ClientMaterialQuery,
+  type MaterialEntityVO,
+  isDirectory,
 } from 'model/material';
+import Explorer from 'model/Explorer';
 import type Form from 'model/material/Form';
 import Value from 'model/Value';
 import { token as remoteToken } from 'infra/remote';
@@ -21,7 +22,11 @@ import type { FileVO, FilesDTO } from 'model/file';
 @singleton()
 export default class MaterialService {
   private readonly remote = container.resolve(remoteToken);
-  readonly materialTree = new MaterialTree();
+  private readonly explorer = container.resolve(Explorer);
+
+  get materialTree() {
+    return this.explorer.materialTree;
+  }
   @observable readonly targetId = new Value<MaterialVO['id']>();
 
   constructor() {
@@ -30,13 +35,13 @@ export default class MaterialService {
     makeObservable(this);
   }
 
-  readonly loadChildren = async (parentId: MaterialVO['parentId']) => {
+  readonly loadChildren = async (parentId?: MaterialVO['parentId']) => {
     const { body: materials } = await this.remote.get<ClientMaterialQuery, MaterialVO[]>(
       '/materials',
       parentId ? { parentId } : {},
     );
 
-    this.materialTree.setChildren(materials, parentId);
+    this.materialTree.updateChildren(parentId || null, materials);
   };
 
   readonly createDirectory = async (parentId?: MaterialDirectoryVO['parentId']) => {
@@ -91,13 +96,9 @@ export default class MaterialService {
 
     const node = this.materialTree.getNode(materialId);
 
-    if (!multiple && !this.isDirectory(materialId)) {
+    if (!multiple && node.entity && !isDirectory(node.entity)) {
       const { openEntity } = container.resolve(EditorService);
-      openEntity({ entityType: EntityTypes.Material, entityId: materialId, mimeType: node.attributes?.mimeType });
+      openEntity({ entityType: EntityTypes.Material, entityId: materialId, mimeType: node.entity.mimeType });
     }
-  };
-
-  readonly isDirectory = (nodeId: MaterialTreeNode['id']) => {
-    return !this.materialTree.getNode(nodeId)?.attributes?.mimeType;
   };
 }

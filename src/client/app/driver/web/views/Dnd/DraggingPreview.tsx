@@ -1,28 +1,23 @@
 import { container } from 'tsyringe';
-import { DragOverlay, useDndContext } from '@dnd-kit/core';
-import { useMemo } from 'react';
+import { DragOverlay } from '@dnd-kit/core';
+import { observer } from 'mobx-react-lite';
 
+import DndService from 'service/DndService';
 import Editor from 'model/abstract/Editor';
-import NoteService from 'service/NoteService';
+import NoteTree from 'model/note/Tree';
+import MaterialTree from 'model/material/Tree';
 
 import TabItem from '../Workbench/TabBar/TabItem';
 import TreeView from '../Explorer/components/TreeView';
 
-// eslint-disable-next-line mobx/missing-observer
-export default function DragPreview() {
-  const { active } = useDndContext();
-  const { noteTree } = container.resolve(NoteService);
-  const draggingItem = active?.data.current?.instance;
-
-  const previewTree = useMemo(
-    () => (noteTree.hasNode(draggingItem) ? noteTree.fromSelected() : undefined),
-    [draggingItem, noteTree],
-  );
+export default observer(function DragPreview() {
+  const { previewingItem } = container.resolve(DndService);
 
   return (
     <DragOverlay className="pointer-events-none" dropAnimation={null}>
-      {draggingItem instanceof Editor && <TabItem editor={draggingItem}></TabItem>}
-      {previewTree && <TreeView tree={previewTree} />}
+      {previewingItem instanceof Editor && <TabItem editor={previewingItem}></TabItem>}
+      {previewingItem instanceof NoteTree && <TreeView tree={previewingItem} />}
+      {previewingItem instanceof MaterialTree && <TreeView tree={previewingItem} />}
     </DragOverlay>
   );
-}
+});

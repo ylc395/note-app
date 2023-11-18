@@ -1,18 +1,22 @@
 import type { ReactNode } from 'react';
-import type { MainEntityTypes } from 'model/entity';
+import type { HierarchyEntity, MainEntityTypes } from 'model/entity';
 import type { default as TreeModel, TreeNode } from 'model/abstract/Tree';
 import Tree from 'components/Tree';
 
 import SearchInput from './SearchInput';
 import NodeTitle from './NodeTitle';
 
-interface Props<T extends { icon: string | null }> {
+interface EntityWithIcon extends HierarchyEntity {
+  icon: string | null;
+}
+
+interface Props<T extends EntityWithIcon> {
   entityType?: MainEntityTypes;
   tree: TreeModel<T>;
   nodeOperation?: (node: TreeNode<T>) => ReactNode;
 }
 
-export default function TreeView<T extends { icon: string | null }>({ entityType, tree, nodeOperation }: Props<T>) {
+export default function TreeView<T extends EntityWithIcon>({ entityType, tree, nodeOperation }: Props<T>) {
   const isNormal = Boolean(entityType);
 
   return (
@@ -21,7 +25,7 @@ export default function TreeView<T extends { icon: string | null }>({ entityType
       <Tree
         draggable={isNormal}
         droppable={isNormal}
-        nodeClassName="flex py-1 cursor-pointer data-[selected=true]:bg-slate-200 group relative"
+        nodeClassName="hover:bg-gray-100 flex py-1 cursor-pointer data-[selected=true]:bg-slate-200 group relative"
         caretClassName="text-gray-500"
         tree={tree}
         multiple

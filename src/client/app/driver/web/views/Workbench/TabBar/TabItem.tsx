@@ -19,11 +19,7 @@ export default observer(function TabItem({ editor }: { editor: Editor }) {
   const buttonRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    if (!buttonRef.current || !currentEditor) {
-      throw new Error('unexpected');
-    }
-
-    currentEditor === editor && buttonRef.current.scrollIntoView();
+    currentEditor === editor && buttonRef.current!.scrollIntoView();
   }, [currentEditor, editor]);
 
   const onContextMenu = useContextmenu();

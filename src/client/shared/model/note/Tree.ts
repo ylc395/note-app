@@ -1,32 +1,26 @@
-import { action } from 'mobx';
+import { runInAction } from 'mobx';
 import type { NoteVO } from '../../../../shared/model/note';
 import Tree, { type TreeNode } from '../abstract/Tree';
 
-interface NoteNodeAttr {
-  icon: NoteVO['icon'];
-}
+export type NoteTreeNode = TreeNode<NoteVO>;
 
-export type NoteTreeNode = TreeNode<NoteNodeAttr>;
-
-export default class NoteTree extends Tree<NoteNodeAttr, NoteVO> {
-  protected toNode(note: NoteVO | null) {
-    if (note) {
-      return { title: note.title, isLeaf: note.childrenCount === 0, attributes: { icon: note.icon } };
-    }
-
-    return { title: '根' };
+export default class NoteTree extends Tree<NoteVO> {
+  protected entityToNode(note: NoteVO) {
+    return { title: note.title, isLeaf: note.childrenCount === 0 };
   }
 
-  @action
-  fromSelected() {
+  getSubTree() {
     const tree = new NoteTree();
-    tree.root.children = this.selectedNodes.map((node) => ({
-      ...node,
-      children: [],
-      isSelected: false,
-      isLeaf: true,
-      isExpanded: false,
-    }));
+
+    runInAction(() => {
+      tree.root.children = this.selectedNodes.map((node) => ({
+        ...node,
+        children: [],
+        isSelected: false,
+        isLeaf: true,
+        isExpanded: false,
+      }));
+    });
 
     return tree;
   }
