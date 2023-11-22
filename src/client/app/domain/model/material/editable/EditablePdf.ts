@@ -9,7 +9,7 @@ import {
   type PdfAreaAnnotationVO,
   AnnotationTypes,
 } from 'model/material';
-import EditableMaterial from './Editable';
+import EditableMaterial from './EditableMaterial';
 
 interface Pdf {
   metadata: MaterialEntityVO;
@@ -99,6 +99,8 @@ export default class EditablePdf extends EditableMaterial<Pdf> {
   }
 
   async destroy() {
+    super.destroy();
+
     EditablePdf.activeCount -= 1;
     await this.loadingTask?.destroy();
 
@@ -106,8 +108,6 @@ export default class EditablePdf extends EditableMaterial<Pdf> {
       GlobalWorkerOptions.workerPort?.terminate();
       GlobalWorkerOptions.workerPort = null;
     }
-
-    super.destroy();
   }
 
   private async initOutline(doc: PDFDocumentProxy) {

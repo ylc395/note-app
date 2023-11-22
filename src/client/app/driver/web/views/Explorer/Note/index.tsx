@@ -1,12 +1,12 @@
 import { observer } from 'mobx-react-lite';
 
-import Modal from 'web/components/Modal';
+// import Modal from 'web/components/Modal';
 import useModal from 'web/components/Modal/useModal';
 
 import ExplorerHeader from '../components/ExplorerHeader';
 import TreeView from './TreeView';
 import TreeOperations from './Operations';
-import TargetTree from './TargetTree';
+// import TargetTree from './TargetTree';
 // import MetadataForm from './MetadataForm';
 import Context from './Context';
 
@@ -20,9 +20,9 @@ export default observer(function NoteExplorer() {
         <TreeOperations />
       </ExplorerHeader>
       <TreeView />
-      <Modal open={movingModal.isOpen}>
+      {/* <Modal open={movingModal.isOpen}>
         <TargetTree />
-      </Modal>
+      </Modal> */}
       {/* <Modal open={editingModal.isOpen}>
           <MetadataForm />
         </Modal> */}

@@ -1,4 +1,4 @@
-import { action, makeObservable, observable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 
 import MaterialEditor from './MaterialEditor';
 import type Tile from 'model/workbench/Tile';
@@ -14,8 +14,8 @@ export enum Panels {
 }
 
 export default class PdfEditor extends MaterialEditor<EditablePdf, UIState> {
-  constructor(tile: Tile, editor: EditablePdf) {
-    super(tile, editor);
+  constructor(editable: EditablePdf, tile: Tile) {
+    super(editable, tile);
     makeObservable(this);
   }
 
@@ -27,5 +27,23 @@ export default class PdfEditor extends MaterialEditor<EditablePdf, UIState> {
   @action
   togglePanel(panel: Panels) {
     this.panelsVisibility[panel] = !this.panelsVisibility[panel];
+  }
+
+  @computed
+  get outline() {
+    return this.editable.outline;
+  }
+
+  get doc() {
+    return this.editable.entity?.doc;
+  }
+
+  @computed
+  get pdfAnnotations() {
+    return this.editable.pdfAnnotations;
+  }
+
+  getOutlineDest(key: string) {
+    return this.editable.outlineDestMap[key];
   }
 }

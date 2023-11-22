@@ -1,18 +1,20 @@
 import { makeObservable, action, toJS } from 'mobx';
 import debounce from 'lodash/debounce';
-import { container } from 'tsyringe';
+import assert from 'assert';
 
 import { EntityTypes } from 'model/entity';
 import type { NoteVO as Note, NotePatchDTO as NotePatch, NoteBodyVO } from 'model/note';
-import EditableEntity from 'model/abstract/Editable';
-import NoteTree from 'model/note/Tree';
+import EditableEntity from 'model/abstract/EditableEntity';
 
-export default class EditableNote extends EditableEntity<{
+interface Entity {
   body: string;
   metadata: Note;
-}> {
+}
+
+type UpdatableNote = Partial<Pick<Note, 'title'>>;
+
+export default class EditableNote extends EditableEntity<Entity> {
   readonly entityType = EntityTypes.Note;
-  readonly noteTree = container.resolve(NoteTree);
   constructor(noteId: Note['id']) {
     super(noteId);
     makeObservable(this);
@@ -37,28 +39,19 @@ export default class EditableNote extends EditableEntity<{
     this.uploadBody(body);
   }
 
+  @action
+  updateMetadata(note: UpdatableNote) {
+    assert(this.entity);
+    Object.assign(this.entity.metadata, note);
+    this.uploadNote(this.entity.metadata);
+    this.emit('metadataUpdated');
+  }
+
   private readonly uploadBody = debounce((body: string) => {
     this.remote.put<NoteBodyVO>(`/notes/${this.entityId}/body`, body);
   }, 800);
 
-  @action
-  updateNote(note: Partial<Note>) {
-    if (!this.entity) {
-      throw new Error('no load note');
-    }
-
-    if (note.id && note.id !== this.entity.metadata.id) {
-      throw new Error('wrong id');
-    }
-
-    Object.assign(this.entity.metadata, note);
-
-    const metadata = toJS(this.entity.metadata);
-    this.uploadNote(metadata);
-    this.noteTree.updateTree(metadata);
-  }
-
   private readonly uploadNote = debounce((note: Note) => {
-    this.remote.patch<NotePatch>(`/notes/${note.id}`, note);
+    this.remote.patch<NotePatch>(`/notes/${note.id}`, toJS(note));
   }, 1000);
 }

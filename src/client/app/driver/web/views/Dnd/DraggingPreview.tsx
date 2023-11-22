@@ -7,7 +7,7 @@ import Editor from 'model/abstract/Editor';
 import NoteTree from 'model/note/Tree';
 import MaterialTree from 'model/material/Tree';
 
-import TabItem from '../Workbench/TabBar/TabItem';
+import TabItem from '../Workbench/Tile/TabBar/TabItem';
 import TreeView from '../Explorer/components/TreeView';
 
 export default observer(function DragPreview() {

@@ -12,7 +12,7 @@ import IconButton from 'web/components/IconButton';
 
 // eslint-disable-next-line mobx/missing-observer
 export default function NoteTreeView() {
-  const { noteTree, loadChildren, createNote } = container.resolve(NoteService);
+  const { tree: noteTree, loadChildren, createNote } = container.resolve(NoteService);
   // const id = useCreation(() => uniqueId('note-tree-view-'), []);
   // const { setNodeRef: setDroppableRef, isOver } = useDroppable({ id, data: { instance: noteTree.root } });
 

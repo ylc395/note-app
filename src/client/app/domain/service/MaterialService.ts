@@ -89,7 +89,7 @@ export default class MaterialService {
     this.targetId.reset();
   };
 
-  private readonly handleSelectMaterial = (materialId: MaterialVO['id'] | null, { multiple }: SelectEvent) => {
+  private readonly handleSelectMaterial = ({ id: materialId, multiple }: SelectEvent) => {
     if (!materialId) {
       throw new Error('invalid id');
     }

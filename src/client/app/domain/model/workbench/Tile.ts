@@ -1,81 +1,59 @@
 import { action, makeObservable, observable } from 'mobx';
+import { container } from 'tsyringe';
 import uniqueId from 'lodash/uniqueId';
 import { Emitter } from 'strict-event-emitter';
+import assert from 'assert';
 
 import type Editor from 'model/abstract/Editor';
+import EditorManager from './EditorManager';
+import { EditableEntityLocator } from 'model/entity';
 
-export enum Events {
-  destroyed = 'tile.destroyed',
-}
+type Events = {
+  destroyed: [];
+};
 
-export default class Tile extends Emitter<{ [Events.destroyed]: [void] }> {
+export const MAX_TILE_WIDTH = 100;
+export const MIN_TILE_WIDTH = 20;
+
+export default class Tile extends Emitter<Events> {
   readonly id = uniqueId('tile-');
+  private readonly editorManager = container.resolve(EditorManager);
   @observable.ref currentEditor?: Editor;
   @observable.shallow editors: Editor[] = [];
+
   constructor() {
     super();
     makeObservable(this);
   }
 
   @action.bound
-  moveEditor(src: Editor, dest: Editor | 'end') {
+  moveEditor(src: Editor, dest?: Editor) {
     if (src === dest) {
       return;
     }
 
     const srcIndex = this.editors.findIndex((editor) => editor === src);
 
-    if (srcIndex < 0) {
-      throw new Error('can not find index');
-    }
+    assert(srcIndex >= 0, 'src editor is not in this tile');
 
-    if (dest === 'end') {
+    if (!dest) {
       const [item] = this.editors.splice(srcIndex, 1);
       this.editors.push(item!);
-      return;
-    }
-
-    const destIndex = this.editors.findIndex((editor) => editor === dest);
-
-    if (destIndex < 0) {
-      throw new Error('can not find index');
-    }
-
-    const [item] = this.editors.splice(srcIndex, 1);
-
-    this.editors.splice(destIndex, 0, item!);
-  }
-
-  @action.bound
-  addEditor(editor: Editor, destEditor?: Editor) {
-    editor.tile = this;
-
-    if (destEditor) {
-      const index = this.editors.findIndex((editor) => editor === destEditor);
-
-      if (index < 0) {
-        throw new Error('wrong dest');
-      }
-
-      this.editors.splice(index, 0, editor);
     } else {
-      this.editors.push(editor);
-    }
+      const destIndex = this.editors.findIndex((editor) => editor === dest);
+      assert(destIndex >= 0, 'dest is not in this tile');
 
-    this.currentEditor = editor;
+      const [item] = this.editors.splice(srcIndex, 1);
+      this.editors.splice(destIndex, 0, item!);
+    }
   }
 
   @action.bound
-  switchToEditor(editorId: Editor['id'] | ((tab: Editor) => boolean)) {
-    const existedTab = this.editors.find(
-      typeof editorId === 'function' ? editorId : (editor) => editor.id === editorId,
-    );
+  switchToEditor(editor: Editor | ((tab: Editor) => boolean), safe?: boolean) {
+    const existedTab = this.editors.find(typeof editor === 'function' ? editor : (e) => e === editor);
 
     if (!existedTab) {
-      if (typeof editorId !== 'function') {
-        throw new Error('no target tab');
-      }
-
+      !safe && assert.fail('no target tab');
       return false;
     }
 
@@ -84,20 +62,17 @@ export default class Tile extends Emitter<{ [Events.destroyed]: [void] }> {
   }
 
   @action.bound
-  removeEditor(editorId: Editor['id'], destroy = true) {
-    const existedTabIndex = this.editors.findIndex((editor) => editor.id === editorId);
+  removeEditor(editor: Editor, destroy = true) {
+    const existedTabIndex = this.editors.findIndex((e) => e === editor);
+    assert(existedTabIndex >= 0, 'editor not in this tile');
 
-    if (existedTabIndex === -1) {
-      throw new Error('no target tab');
-    }
-
-    const [closedView] = this.editors.splice(existedTabIndex, 1);
+    const [closedEditor] = this.editors.splice(existedTabIndex, 1);
 
     if (destroy) {
-      closedView!.destroy();
+      closedEditor!.destroy();
     }
 
-    if (this.currentEditor?.id === editorId) {
+    if (this.currentEditor === editor) {
       this.currentEditor = this.editors[existedTabIndex] || this.editors[existedTabIndex - 1];
     }
 
@@ -108,15 +83,32 @@ export default class Tile extends Emitter<{ [Events.destroyed]: [void] }> {
 
   @action.bound
   closeAllEditors() {
-    const editorIds = this.editors.map(({ id }) => id);
-
-    for (const id of editorIds) {
-      this.removeEditor(id);
+    for (const editor of this.editors) {
+      this.removeEditor(editor);
     }
   }
 
+  createEditor(entity: EditableEntityLocator, dest?: Editor) {
+    if (dest) {
+      assert(dest.tile === this);
+    }
+
+    const newEditor = this.editorManager.createEditor(entity, this);
+
+    if (dest) {
+      const destIndex = this.editors.findIndex((editor) => editor === dest);
+
+      assert(destIndex >= 0, 'dest is not in this tile');
+      this.editors.splice(destIndex, 0, newEditor);
+    } else {
+      this.editors.push(newEditor);
+    }
+
+    return newEditor;
+  }
+
   private destroy() {
-    this.emit(Events.destroyed);
+    this.emit('destroyed');
     this.removeAllListeners();
   }
 }

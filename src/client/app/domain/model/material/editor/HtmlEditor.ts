@@ -1,4 +1,4 @@
-import { makeObservable, observable, action } from 'mobx';
+import { makeObservable, observable, action, computed } from 'mobx';
 
 import MaterialEditor from 'model/material/editor/MaterialEditor';
 import type Tile from 'model/workbench/Tile';
@@ -14,8 +14,8 @@ export enum Panels {
 }
 
 export default class HtmlEditor extends MaterialEditor<EditableHtml, State> {
-  constructor(tile: Tile, editor: EditableHtml) {
-    super(tile, editor);
+  constructor(editor: EditableHtml, tile: Tile) {
+    super(editor, tile);
     makeObservable(this);
   }
 
@@ -30,5 +30,21 @@ export default class HtmlEditor extends MaterialEditor<EditableHtml, State> {
   @action
   togglePanel(panel: Panels) {
     this.panelsVisibility[panel] = !this.panelsVisibility[panel];
+  }
+
+  @computed
+  get metadata() {
+    if (!this.editable.entity) {
+      return null;
+    }
+
+    const { icon, sourceUrl } = this.editable.entity.metadata;
+
+    return { icon, sourceUrl };
+  }
+
+  @computed
+  get html() {
+    return this.editable.entity?.html;
   }
 }

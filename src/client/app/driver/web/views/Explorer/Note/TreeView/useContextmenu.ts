@@ -1,9 +1,8 @@
 import { useCallback, useContext } from 'react';
 import { container } from 'tsyringe';
-import map from 'lodash/map';
 
 import { EntityTypes } from 'model/entity';
-import { TileSplitDirections } from 'model/workbench/TileManger';
+import Workbench, { TileSplitDirections } from 'model/workbench/Workbench';
 import type { NoteTreeNode } from 'model/note/Tree';
 
 import NoteService from 'service/NoteService';
@@ -20,22 +19,20 @@ export default function useContextmenu() {
 
   return useCallback(
     async (targetNode: NoteTreeNode) => {
-      const {
-        tileManager: { focusedTile },
-        openEntity,
-      } = container.resolve(EditorService);
+      const { openEntity } = container.resolve(EditorService);
+      const { focusedTile } = container.resolve(Workbench);
       const noteService = container.resolve(NoteService);
       const starService = container.resolve(StarService);
 
-      const { selectedNodes } = noteService.noteTree;
+      const { selectedNodeIds } = noteService.tree;
 
-      if (!selectedNodes.includes(targetNode)) {
-        noteService.noteTree.toggleSelect(targetNode.id, { multiple: true, reason: 'drag' });
+      if (!selectedNodeIds.includes(targetNode.id)) {
+        noteService.tree.toggleSelect(targetNode.id, { multiple: true, reason: 'drag' });
       }
 
       const targetId = targetNode.id;
-      const isMultiple = selectedNodes.length > 1;
-      const description = selectedNodes.length + '项';
+      const isMultiple = selectedNodeIds.length > 1;
+      const description = selectedNodeIds.length + '项';
 
       const items: ContextmenuItem[] = isMultiple
         ? [
@@ -68,19 +65,17 @@ export default function useContextmenu() {
         return;
       }
 
-      const targetIds = map(noteService.noteTree.selectedNodes, 'id');
-
       switch (action) {
         case 'duplicate':
           return noteService.duplicateNote(targetId);
         case 'delete':
-          return noteService.deleteNotes(targetIds);
+          return noteService.deleteNotes(selectedNodeIds);
         case 'move':
           return movingModal.open();
         case 'edit':
           return editingModal.open();
         case 'star':
-          return starService.star(EntityTypes.Note, targetIds);
+          return starService.star(EntityTypes.Note, selectedNodeIds);
         case 'openInNewWindow':
           if (!focusedTile) {
             throw new Error('no focusedTile');
@@ -88,7 +83,7 @@ export default function useContextmenu() {
 
           return openEntity(
             { entityType: EntityTypes.Note, entityId: targetId },
-            { from: focusedTile, direction: TileSplitDirections.Right },
+            { from: focusedTile, splitDirection: TileSplitDirections.Right },
           );
         default:
           break;

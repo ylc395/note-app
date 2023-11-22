@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import type { MouseEvent, ReactNode } from 'react';
+import { type MouseEvent, type ReactNode, forwardRef } from 'react';
 
 interface Props {
   children: ReactNode;
@@ -10,7 +10,10 @@ interface Props {
   size?: 'small' | 'medium';
 }
 
-export default function IconButton({ children, className, onClick, disabled, selected, size = 'medium' }: Props) {
+export default forwardRef<HTMLButtonElement, Props>(function IconButton(
+  { children, className, onClick, disabled, selected, size = 'medium' },
+  ref,
+) {
   const handleClick =
     onClick &&
     ((e: MouseEvent) => {
@@ -20,6 +23,7 @@ export default function IconButton({ children, className, onClick, disabled, sel
 
   return (
     <button
+      ref={ref}
       disabled={disabled}
       onClick={handleClick}
       className={clsx(
@@ -33,4 +37,4 @@ export default function IconButton({ children, className, onClick, disabled, sel
       {children}
     </button>
   );
-}
+});

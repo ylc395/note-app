@@ -1,5 +1,5 @@
 import type { MaterialEntityVO } from 'model/material';
-import EditableMaterial from './Editable';
+import EditableMaterial from './EditableMaterial';
 
 interface WebPage {
   metadata: MaterialEntityVO;

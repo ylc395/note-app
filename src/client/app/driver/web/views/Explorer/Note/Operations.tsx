@@ -7,7 +7,7 @@ import IconButton from 'web/components/IconButton';
 
 export default observer(function Operations() {
   const {
-    noteTree: { expandedNodes, collapseAll },
+    tree: { expandedNodes, collapseAll },
     createNote,
   } = container.resolve(NoteService);
 

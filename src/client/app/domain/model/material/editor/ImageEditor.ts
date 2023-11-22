@@ -7,7 +7,7 @@ interface UIState {
 }
 
 export default class ImageEditor extends MaterialEditor<EditableImage, UIState> {
-  constructor(tile: Tile, editor: EditableImage) {
-    super(tile, editor);
+  constructor(editor: EditableImage, tile: Tile) {
+    super(editor, tile);
   }
 }

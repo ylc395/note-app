@@ -1,11 +1,10 @@
 import { makeObservable, computed, observable, action } from 'mobx';
 
 import { IS_DEV } from 'infra/constants';
-import Editor, { type Breadcrumbs } from 'model/abstract/Editor';
+import Editor from 'model/abstract/Editor';
 import type Tile from 'model/workbench/Tile';
 
 import type EditableNote from './Editable';
-import type { NoteTreeNode } from 'model/note/Tree';
 
 interface UIState {
   scrollTop: number;
@@ -13,8 +12,8 @@ interface UIState {
 }
 
 export default class NoteEditor extends Editor<EditableNote, UIState> {
-  constructor(tile: Tile, editor: EditableNote) {
-    super(tile, editor);
+  constructor(editable: EditableNote, tile: Tile) {
+    super(editable, tile);
     makeObservable(this);
   }
 
@@ -29,32 +28,30 @@ export default class NoteEditor extends Editor<EditableNote, UIState> {
   }
 
   @computed
-  get breadcrumbs() {
-    const result: Breadcrumbs = [];
-    const { editable: editor } = this;
-
-    const nodeToBreadcrumb = (node: NoteTreeNode) => ({
-      id: node.id,
-      title: node.title,
-      icon: node.entity?.icon,
-    });
-
-    let node: NoteTreeNode | null = editor.noteTree.getNode(editor.entityId);
-
-    while (node && node !== editor.noteTree.root) {
-      result.unshift({
-        ...nodeToBreadcrumb(node),
-        siblings: editor.noteTree.getSiblings(node.id).map(nodeToBreadcrumb),
-      });
-
-      node = node.parent;
-    }
-
-    return result;
+  get title() {
+    return this.editable.entity?.metadata.title;
   }
 
   @action.bound
   toggleSearch() {
     this.searchEnabled = !this.searchEnabled;
+  }
+
+  updateTitle(title: string) {
+    this.editable.updateMetadata({ title });
+  }
+
+  updateBody(body: string) {
+    this.editable.updateBody(body);
+  }
+
+  @computed
+  get isReadonly() {
+    return this.editable.entity?.metadata.isReadonly;
+  }
+
+  @computed
+  get body() {
+    return this.editable.entity?.body;
   }
 }

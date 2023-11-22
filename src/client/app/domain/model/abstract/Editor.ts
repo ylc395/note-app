@@ -1,67 +1,62 @@
-import { container } from 'tsyringe';
 import uniqueId from 'lodash/uniqueId';
-import debounce from 'lodash/debounce';
 import { action, makeObservable, observable } from 'mobx';
-import { Emitter, type EventMap } from 'strict-event-emitter';
+import { Emitter } from 'strict-event-emitter';
 
-import { token as localStorageToken } from 'infra/localStorage';
-import type Editable from 'model/abstract/Editable';
+import type EditableEntity from 'model/abstract/EditableEntity';
 import type Tile from 'model/workbench/Tile';
 
-interface Breadcrumb {
-  title: string;
-  id: string;
-  icon?: string | null;
-}
+// interface Breadcrumb {
+//   title: string;
+//   id: string;
+//   icon?: string | null;
+// }
 
-export type Breadcrumbs = Array<Breadcrumb & { siblings: Breadcrumb[] }>;
+// type Breadcrumbs = Array<Breadcrumb & { siblings: Breadcrumb[] }>;
 
-export enum Events {
-  Destroyed = 'entityEditor.destroyed',
-}
+type Events<S> = {
+  destroyed: [];
+  uiUpdated: [Partial<S>];
+  focus: [];
+};
 
-export interface CommonEditorEvents extends EventMap {
-  [Events.Destroyed]: [];
-}
-
-export default abstract class Editor<T extends Editable = Editable, S = unknown> extends Emitter<CommonEditorEvents> {
+export default abstract class Editor<T extends EditableEntity = EditableEntity, S = unknown> extends Emitter<
+  Events<S>
+> {
   readonly id = uniqueId('editor-');
   abstract readonly tabView: { title: string; icon: string | null };
-  abstract readonly breadcrumbs: Breadcrumbs;
-  protected localStorage = container.resolve(localStorageToken);
-  uiState: Partial<S> | null;
-  constructor(public tile: Tile, public readonly editable: T) {
+  // abstract readonly breadcrumbs: Breadcrumbs;
+  @observable isFocused = false;
+  uiState: Partial<S> | null = null;
+
+  constructor(protected readonly editable: T, public tile: Tile) {
     super();
-    this.uiState = this.localStorage.get<S>(this.localStorageKey);
     makeObservable(this);
   }
-
-  private get localStorageKey() {
-    return `ui.state.editor.${this.editable.entityType}.${this.editable.entityId}`;
+  toEntityLocator() {
+    return this.editable.toEntityLocator();
   }
 
   destroy() {
-    this.emit(Events.Destroyed);
+    this.emit('destroyed');
     this.removeAllListeners();
   }
 
-  @observable isFocused = false;
-
   @action.bound
-  setBlur() {
+  blur() {
     console.log(`blur ${this.id}`);
     this.isFocused = false;
   }
 
   @action.bound
-  setFocus() {
+  focus() {
     console.log(`focus ${this.id}`);
-
+    this.emit('focus');
     this.isFocused = true;
   }
 
-  updateUIState = debounce((state: Partial<S>) => {
+  @action
+  updateUIState(state: Partial<S>) {
     this.uiState = { ...this.uiState, ...state };
-    this.localStorage.set(this.localStorageKey, this.uiState);
-  }, 200);
+    this.emit('uiUpdated', state);
+  }
 }

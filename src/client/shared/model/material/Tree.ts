@@ -12,7 +12,7 @@ export default class MaterialTree extends Tree<MaterialVO> {
     };
   }
 
-  getSubTree() {
+  getSelectedNodesAsTree() {
     const tree = new MaterialTree();
 
     runInAction(() => {

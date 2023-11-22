@@ -1,65 +1,61 @@
-import {
-  EntityTypes,
-  type EntityLocator,
-  type EntityId,
-  EditableEntityTypes,
-  EditableEntityLocator,
-} from 'model/entity';
+import { singleton } from 'tsyringe';
 
-import { Events as EditableEntityEvents, type default as Editable } from 'model/abstract/Editable';
+import { Emitter } from 'strict-event-emitter';
+import assert from 'assert';
+import { type EntityLocator, type EntityId, type EditableEntityLocator, EntityTypes } from 'model/entity';
+
+import type EditableEntity from 'model/abstract/EditableEntity';
 import EditableNote from 'model/note/Editable';
 import EditablePdf from 'model/material/editable/EditablePdf';
 import EditableHtml from 'model/material/editable/EditableHtml';
 import EditableImage from 'model/material/editable/EditableImage';
 
-import { Events as EditorEvents, type default as Editor } from 'model/abstract/Editor';
+import type Editor from 'model/abstract/Editor';
+import type MaterialEditor from 'model/material/editable/EditableMaterial';
 import NoteEditor from 'model/note/Editor';
-import type MaterialEditor from 'model/material/editable/Editable';
 import PdfEditor from 'model/material/editor/PdfEditor';
 import HtmlEditor from 'model/material/editor/HtmlEditor';
 import ImageEditor from 'model/material/editor/ImageEditor';
 
 import type Tile from './Tile';
 
-export default class EditorManager {
-  private readonly editableEntities: Record<EditableEntityTypes, Record<EntityId, Editable>> = {
-    [EntityTypes.Note]: {},
-    [EntityTypes.Material]: {},
-  };
+type Events = {
+  editorFocus: [Editor];
+  entityUpdated: [EditableEntity];
+};
 
-  private readonly editors = new Map<Editable, Set<Editor>>();
+@singleton()
+export default class EditorManager extends Emitter<Events> {
+  private readonly editableEntities: Record<EntityId, EditableEntity> = {};
 
-  getEditableEntity({ entityType, entityId }: EditableEntityLocator) {
-    return this.editableEntities[entityType]?.[entityId];
-  }
+  private readonly editors = new Map<EditableEntity, Set<Editor>>();
 
-  private createEditableEntity(tile: Tile, { entityId, entityType, mimeType }: EditableEntityLocator) {
-    let editor = this.getEditableEntity({ entityId, entityType, mimeType });
+  private createEditableEntity({ entityId, entityType, mimeType }: EditableEntityLocator) {
+    let editableEntity = this.editableEntities[entityId];
 
-    if (editor) {
-      return editor;
+    if (editableEntity) {
+      return editableEntity;
     }
 
     switch (entityType) {
       case EntityTypes.Note:
-        editor = new EditableNote(entityId);
+        editableEntity = new EditableNote(entityId);
         break;
       case EntityTypes.Material:
-        editor = this.createEditableMaterial(tile, { entityId, entityType, mimeType });
+        editableEntity = this.createEditableMaterial({ entityId, entityType, mimeType });
         break;
       default:
-        throw new Error('invalid type');
+        assert.fail('invalid type');
     }
 
-    editor.once(EditableEntityEvents.Destroyed, () => delete this.editableEntities[entityType]![entityId]);
-    this.editableEntities[entityType]![entityId] = editor;
-    return editor;
+    this.editableEntities[entityId] = editableEntity;
+    editableEntity.on('metadataUpdated', () => this.emit('entityUpdated', editableEntity!));
+
+    return editableEntity;
   }
 
-  private createEditableMaterial(tile: Tile, { mimeType, entityId }: EntityLocator) {
-    if (!mimeType) {
-      throw new Error('no mimeType');
-    }
+  private createEditableMaterial({ mimeType, entityId }: EntityLocator) {
+    assert(mimeType, 'no mimeType');
 
     let editor: MaterialEditor | null = null;
 
@@ -71,42 +67,40 @@ export default class EditorManager {
       editor = new EditableHtml(entityId);
     }
 
-    if (!editor) {
-      throw new Error('can not create editor');
-    }
+    assert(editor, `can not create editor for ${mimeType}`);
 
     return editor;
   }
 
-  createEditor(tile: Tile, entity: EditableEntityLocator) {
-    const editableEntity = this.createEditableEntity(tile, entity);
+  createEditor(entity: EditableEntityLocator, tile: Tile) {
+    const editableEntity = this.createEditableEntity(entity);
     let editor: Editor | undefined;
 
     if (editableEntity instanceof EditableNote) {
-      editor = new NoteEditor(tile, editableEntity);
+      editor = new NoteEditor(editableEntity, tile);
     }
 
     if (editableEntity instanceof EditablePdf) {
-      editor = new PdfEditor(tile, editableEntity);
+      editor = new PdfEditor(editableEntity, tile);
     }
 
     if (editableEntity instanceof EditableHtml) {
-      editor = new HtmlEditor(tile, editableEntity);
+      editor = new HtmlEditor(editableEntity, tile);
     }
 
     if (editableEntity instanceof EditableImage) {
-      editor = new ImageEditor(tile, editableEntity);
+      editor = new ImageEditor(editableEntity, tile);
     }
 
-    if (!editor) {
-      throw new Error('invalid editor');
-    }
+    assert(editor, 'invalid editor');
 
-    editor.once(EditorEvents.Destroyed, () => this.handleEditorDestroyed(editor!));
-    const viewSet = this.editors.get(editableEntity);
+    editor.once('destroyed', () => this.handleEditorDestroyed(editableEntity, editor!));
+    editor.on('focus', () => this.emit('editorFocus', editor!));
 
-    if (viewSet) {
-      viewSet.add(editor);
+    const editorSet = this.editors.get(editableEntity);
+
+    if (editorSet) {
+      editorSet.add(editor);
     } else {
       this.editors.set(editableEntity, new Set([editor]));
     }
@@ -114,13 +108,13 @@ export default class EditorManager {
     return editor;
   }
 
-  private handleEditorDestroyed(editor: Editor) {
-    const viewSet = this.editors.get(editor.editable)!;
-    viewSet.delete(editor);
+  private handleEditorDestroyed(editable: EditableEntity, editor: Editor) {
+    const editorSet = this.editors.get(editable)!;
+    editorSet.delete(editor);
 
-    if (viewSet.size === 0) {
-      this.editors.delete(editor.editable);
-      editor.editable.destroy();
+    if (editorSet.size === 0) {
+      this.editors.delete(editable);
+      editable.destroy();
     }
   }
 }

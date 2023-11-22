@@ -1,62 +1,53 @@
-import { singleton } from 'tsyringe';
+import { container, singleton } from 'tsyringe';
 import { action, makeObservable } from 'mobx';
+import isMatch from 'lodash/isMatch';
 
 import type { EditableEntityLocator } from 'model/entity';
 import Tile from 'model/workbench/Tile';
-import TileManager, { type TileSplitDirections } from 'model/workbench/TileManger';
-import EditorManager from 'model/workbench/EditorManager';
+import { type TileSplitDirections, Workbench } from 'model/workbench';
 import Editor from 'model/abstract/Editor';
+
+type Dest = Tile | Editor | { from: Tile; splitDirection: TileSplitDirections };
 
 @singleton()
 export default class EditorService {
-  readonly tileManager = new TileManager();
-  private readonly editorManager = new EditorManager();
+  private readonly workbench = container.resolve(Workbench);
 
   constructor() {
     makeObservable(this);
   }
 
   @action.bound
-  openEntity(entity: EditableEntityLocator, newTileOptions?: { direction: TileSplitDirections; from: Tile }) {
-    if (newTileOptions) {
-      const newTile = this.tileManager.splitTile(newTileOptions.from.id, newTileOptions.direction);
-      const editor = this.editorManager.createEditor(newTile, entity);
-      newTile.addEditor(editor);
-    } else {
-      const targetTile = this.tileManager.getTileAsTarget();
-      const existingEntity = this.editorManager.getEditableEntity(entity);
+  openEntity(entity: EditableEntityLocator, dest?: Dest) {
+    let targetTile: Tile;
+    let editor: Editor;
 
-      if (existingEntity && targetTile.switchToEditor(({ editable: editor }) => editor === existingEntity)) {
+    if (dest instanceof Tile || dest instanceof Editor || !dest) {
+      targetTile = dest ? (dest instanceof Tile ? dest : dest.tile) : this.workbench.getFocusedTile();
+
+      if (targetTile.switchToEditor((editor) => isMatch(entity, editor.toEntityLocator()), true)) {
         return;
       }
 
-      const editor = this.editorManager.createEditor(targetTile, entity);
-      targetTile.addEditor(editor);
+      editor = targetTile.createEditor(entity, dest instanceof Editor ? dest : undefined);
+    } else {
+      targetTile = this.workbench.splitTile(dest.from.id, dest.splitDirection);
+      editor = targetTile.createEditor(entity);
     }
+
+    targetTile.switchToEditor(editor);
   }
 
   @action.bound
-  moveEditor(srcEditor: Editor, dest: Editor | Tile | { from: Tile; splitDirection: TileSplitDirections }) {
+  moveEditor(srcEditor: Editor, dest: Dest) {
     if (dest instanceof Tile) {
-      if (srcEditor.tile === dest) {
-        srcEditor.tile.moveEditor(srcEditor, 'end');
-      } else {
-        srcEditor.tile.removeEditor(srcEditor.id, false);
-        dest.addEditor(srcEditor);
-      }
-      return;
+      dest.moveEditor(srcEditor);
     } else if (dest instanceof Editor) {
-      if (srcEditor.tile === dest.tile) {
-        dest.tile.moveEditor(srcEditor, dest);
-      } else {
-        srcEditor.tile.removeEditor(srcEditor.id, false);
-        dest.tile.addEditor(srcEditor, dest);
-      }
+      dest.tile.moveEditor(srcEditor, dest);
     } else {
       const { from, splitDirection } = dest;
-      const newTile = this.tileManager.splitTile(from.id, splitDirection);
-      from.removeEditor(srcEditor.id, false);
-      newTile.addEditor(srcEditor);
+      const newTile = this.workbench.splitTile(from.id, splitDirection);
+      newTile.moveEditor(srcEditor);
     }
   }
 }

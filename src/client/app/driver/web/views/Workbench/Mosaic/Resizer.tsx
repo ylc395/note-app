@@ -5,7 +5,7 @@ import throttle from 'lodash/throttle';
 import clamp from 'lodash/clamp';
 import mapValues from 'lodash/mapValues';
 
-import { TileDirections, type TileParent, MIN_TILE_WIDTH, MAX_TILE_WIDTH } from 'model/workbench/TileManger';
+import { TileDirections, type TileParent, MIN_TILE_WIDTH, MAX_TILE_WIDTH } from 'model/workbench';
 import { type BoundingBox, getAbsoluteSplitPercentage, getRelativeSplitPercentage } from './utils';
 import { useMemoizedFn } from 'ahooks';
 

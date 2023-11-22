@@ -9,7 +9,7 @@ export default class NoteTree extends Tree<NoteVO> {
     return { title: note.title, isLeaf: note.childrenCount === 0 };
   }
 
-  getSubTree() {
+  getSelectedNodesAsTree() {
     const tree = new NoteTree();
 
     runInAction(() => {

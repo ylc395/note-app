@@ -1,5 +1,6 @@
 import { observable, action, computed, makeObservable } from 'mobx';
 import { Emitter } from 'strict-event-emitter';
+import assert from 'assert';
 import pull from 'lodash/pull';
 import differenceWith from 'lodash/differenceWith';
 import groupBy from 'lodash/groupBy';
@@ -20,14 +21,14 @@ export interface TreeNode<T = unknown> {
   isLeaf: boolean;
 }
 
-const ROOT_NODE_ID = '__root-node';
-
-export type SelectEvent = { reason?: 'drag'; multiple?: boolean };
-
 type TreeEvents = {
-  nodeSelected: [TreeNode['id'] | null, SelectEvent];
+  nodeSelected: [SelectEvent];
   nodeExpanded: [TreeNode['id'] | null];
 };
+
+export type SelectEvent = { id: TreeNode['id'] | null; reason?: 'drag'; multiple?: boolean };
+
+const ROOT_NODE_ID = '__root-node';
 
 const getDefaultNode = <T extends HierarchyEntity>() => ({
   isLeaf: false,
@@ -56,31 +57,20 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
     }
   }
 
-  sort(parentId: TreeNode['id'], cb: (node1: TreeNode<T>, node2: TreeNode<T>) => number, recursive: boolean) {
-    const { children } = this.getNode(parentId);
-
-    if (!children) {
-      throw new Error('no children');
-    }
-
-    children.sort(cb);
-
-    if (recursive) {
-      for (const child of children) {
-        this.sort(child.id, cb, true);
-      }
-    }
-  }
-
-  @observable.shallow private nodes: Record<TreeNode['id'], TreeNode<T>> = {};
+  @observable.shallow
+  private nodes: Record<TreeNode['id'], TreeNode<T>> = {};
 
   @computed
   get expandedNodes() {
     return Object.values(this.nodes).filter((node) => node.isExpanded);
   }
 
-  get selectedNodes() {
+  protected get selectedNodes() {
     return Object.values(this.nodes).filter((node) => node.isSelected);
+  }
+
+  get selectedNodeIds() {
+    return this.selectedNodes.map((node) => node.id);
   }
 
   private get invalidTargets() {
@@ -140,6 +130,8 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
     parent.isLeaf = false;
     parent.children.push(node);
     this.nodes[entity.id] = node;
+
+    return node;
   }
 
   @action
@@ -164,26 +156,23 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
     const entities = Array.isArray(entity) ? entity : [entity];
 
     for (const entity of entities) {
-      const node = this.getNode(entity.id, true);
+      let node = this.getNode(entity.id, true);
 
-      if (!node) {
-        this.addNode(entity);
-        continue;
+      if (node) {
+        Object.assign(node, this.entityToNode(entity));
+
+        if (node.parent!.id !== (entity.parentId || ROOT_NODE_ID)) {
+          // reset parent-child relationship
+          const newParent = this.getNode(entity.parentId);
+
+          pull(node.parent!.children, node);
+          newParent.children.push(node);
+          newParent.isLeaf = false;
+          node.parent = newParent;
+        }
+      } else {
+        node = this.addNode(entity);
       }
-
-      Object.assign(node, this.entityToNode(entity));
-
-      if (node.parent!.id === (entity.parentId || ROOT_NODE_ID)) {
-        continue;
-      }
-
-      // reset parent-child relationship
-      const newParent = this.getNode(entity.parentId);
-
-      pull(node.parent!.children, node);
-      newParent.children.push(node);
-      newParent.isLeaf = false;
-      node.parent = newParent;
     }
   }
 
@@ -191,10 +180,7 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
   toggleExpand(id: TreeNode['id'] | null) {
     const node = this.getNode(id);
 
-    if (node.isLeaf) {
-      throw new Error('can not expand a leaf');
-    }
-
+    assert(!node.isLeaf, 'can not expand leaf');
     node.isExpanded = !node.isExpanded;
 
     if (node.isExpanded) {
@@ -203,19 +189,18 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
   }
 
   @action
-  toggleSelect(id: TreeNode['id'] | null, options?: SelectEvent) {
+  toggleSelect(id: TreeNode['id'] | null, options?: Pick<SelectEvent, 'multiple' | 'reason'>) {
     const node = this.getNode(id);
 
     node.isSelected = !node.isSelected;
 
     if (node.isSelected) {
-      this.emit('nodeSelected', id, options || {});
-
       if (!options?.multiple) {
         for (const selected of this.selectedNodes) {
           selected !== node && (selected.isSelected = false);
         }
       }
+      this.emit('nodeSelected', { id, ...options });
     }
   }
 

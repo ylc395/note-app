@@ -10,7 +10,7 @@ import type { TreeNode as TreeNodeModel } from '../../model/abstract/Tree';
 import type { HierarchyEntity } from '../../../../shared/model/entity';
 import type { TreeContext } from './context';
 
-const INDENT = 10;
+const INDENT = 25;
 
 // we should use an anonymous component to make <TreeNode> reactive
 const TreeNode = observer(function <T extends HierarchyEntity>({

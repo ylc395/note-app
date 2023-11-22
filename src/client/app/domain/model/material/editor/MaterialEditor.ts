@@ -1,19 +1,15 @@
 import { makeObservable, observable, computed, action, runInAction } from 'mobx';
-import type { AnnotationPatchDTO, AnnotationVO } from 'model/material';
+import assert from 'assert';
 
+import type { AnnotationPatchDTO, AnnotationVO } from 'model/material';
 import Editor from 'model/abstract/Editor';
 import type Tile from 'model/workbench/Tile';
-import type EditableMaterial from 'model/material/editable/Editable';
+import type EditableMaterial from 'model/material/editable/EditableMaterial';
 
 export default abstract class MaterialEditor<T extends EditableMaterial, S = unknown> extends Editor<T, S> {
-  constructor(tile: Tile, editor: T) {
-    super(tile, editor);
+  constructor(editor: T, tile: Tile) {
+    super(editor, tile);
     makeObservable(this);
-  }
-
-  @computed
-  get breadcrumbs() {
-    return [];
   }
 
   @computed
@@ -27,9 +23,7 @@ export default abstract class MaterialEditor<T extends EditableMaterial, S = unk
   @observable currentAnnotationId: AnnotationVO['id'] | null = null;
 
   async removeCurrentAnnotation() {
-    if (!this.currentAnnotationId) {
-      throw new Error('no currentAnnotation');
-    }
+    assert(this.currentAnnotationId);
 
     await this.editable.removeAnnotation(this.currentAnnotationId);
     runInAction(() => {
@@ -37,12 +31,12 @@ export default abstract class MaterialEditor<T extends EditableMaterial, S = unk
     });
   }
 
-  async updateCurrentAnnotation(patch: AnnotationPatchDTO) {
-    if (!this.currentAnnotationId) {
-      throw new Error('no currentAnnotation');
-    }
+  readonly createAnnotation = this.editable.createAnnotation;
 
-    await this.editable.updateCurrentAnnotation(this.currentAnnotationId, patch);
+  async updateCurrentAnnotation(patch: AnnotationPatchDTO) {
+    assert(this.currentAnnotationId);
+
+    await this.editable.updateAnnotation(this.currentAnnotationId, patch);
     runInAction(() => {
       this.currentAnnotationId = null;
     });
@@ -57,5 +51,9 @@ export default abstract class MaterialEditor<T extends EditableMaterial, S = unk
   @action
   setCurrentAnnotationId(id: AnnotationVO['id'] | null) {
     this.currentAnnotationId = id;
+  }
+
+  get annotations() {
+    return this.editable.annotations;
   }
 }

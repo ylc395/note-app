@@ -3,7 +3,7 @@ import mapValues from 'lodash/mapValues';
 import { observer } from 'mobx-react-lite';
 
 import type Tile from 'model/workbench/Tile';
-import { type TileNode, type TileParent, TileDirections, isTileLeaf } from 'model/workbench/TileManger';
+import { type TileNode, type TileParent, TileDirections, isTileLeaf } from 'model/workbench';
 
 import { type BoundingBox, getAbsoluteSplitPercentage } from './utils';
 import Resizer from './Resizer';
@@ -18,7 +18,7 @@ function split(boundingBox: BoundingBox, node: TileParent) {
   };
 }
 
-export default observer(function TileView({
+const TileView = observer(function ({
   node,
   renderTile,
   boundingBox,
@@ -45,3 +45,5 @@ export default observer(function TileView({
     </>
   );
 });
+
+export default TileView;
