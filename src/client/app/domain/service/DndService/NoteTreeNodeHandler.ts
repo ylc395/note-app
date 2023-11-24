@@ -4,15 +4,15 @@ import Tile from 'model/workbench/Tile';
 import Editor from 'model/abstract/Editor';
 import Explorer from 'model/Explorer';
 import NoteService from 'service/NoteService';
-import EditorService from 'service/EditorService';
 
 import type Handler from './Handler';
 import { EntityTypes } from 'model/entity';
+import { Workbench } from 'model/workbench';
 
 export default class NoteTreeNodeHandler implements Handler {
   private readonly explorer = container.resolve(Explorer);
   private readonly noteService = container.resolve(NoteService);
-  private readonly editorService = container.resolve(EditorService);
+  private readonly workbench = container.resolve(Workbench);
   private get tree() {
     return this.explorer.noteTree;
   }
@@ -49,7 +49,7 @@ export default class NoteTreeNodeHandler implements Handler {
     }
 
     if (dropTarget instanceof Tile || dropTarget instanceof Editor) {
-      this.editorService.openEntity({ entityType: EntityTypes.Note, entityId: draggingItem.id }, dropTarget);
+      this.workbench.openEntity({ entityType: EntityTypes.Note, entityId: draggingItem.id }, dropTarget);
     }
 
     this.tree.resetTargets();

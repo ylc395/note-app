@@ -11,7 +11,7 @@ interface Props {
 
 export default function IconTitle({ titleClassName, className, icon = null, title, size }: Props) {
   return (
-    <span className={`flex items-center ${className || ''}`}>
+    <span className={clsx('flex items-center', className)}>
       <Emoji id={icon} className="mr-1" size={size} />
       <span className={clsx('whitespace-nowrap', titleClassName)}>{title}</span>
     </span>

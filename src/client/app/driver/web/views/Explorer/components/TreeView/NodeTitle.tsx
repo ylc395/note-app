@@ -12,14 +12,15 @@ export interface Props {
 
 export default observer(function NodeTitle({ node, children }: Props) {
   return (
-    <span className="flex">
+    <span className="flex min-w-0">
       <IconTitle
-        titleClassName="text-gray-600"
+        className="w-full"
+        titleClassName="text-gray-600 min-w-0 overflow-hidden text-ellipsis"
         icon={node.entity?.icon}
         title={`${IS_DEV ? `${node.id.slice(0, 3)} ` : ''}${node.title}`}
       />
       {children && (
-        <span className="invisible absolute inset-y-0 right-0 flex h-full items-center text-black group-hover:visible">
+        <span className="invisible absolute inset-y-0 right-0 flex h-full items-center bg-[--hover-color] text-black group-hover:visible group-[[data-selected=true]]:bg-[var(--selected-color)]">
           {children}
         </span>
       )}

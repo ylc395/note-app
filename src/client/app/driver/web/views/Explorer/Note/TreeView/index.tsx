@@ -21,16 +21,14 @@ export default function NoteTreeView() {
   }, [loadChildren]);
 
   return (
-    <div className="scrollbar-stable min-h-0 grow overflow-auto">
-      <TreeView
-        tree={noteTree}
-        entityType={EntityTypes.Note}
-        nodeOperation={({ id }) => (
-          <IconButton onClick={() => createNote(id)}>
-            <PlusOutlined />
-          </IconButton>
-        )}
-      />
-    </div>
+    <TreeView
+      tree={noteTree}
+      entityType={EntityTypes.Note}
+      nodeOperation={({ id }) => (
+        <IconButton onClick={() => createNote(id)}>
+          <PlusOutlined />
+        </IconButton>
+      )}
+    />
   );
 }

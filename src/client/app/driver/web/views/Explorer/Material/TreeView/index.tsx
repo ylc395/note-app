@@ -18,25 +18,21 @@ export default function MaterialTreeView() {
   }, [loadChildren]);
 
   return (
-    <div className="scrollbar-stable min-h-0 grow overflow-y-auto">
-      <div className="h-full">
-        <TreeView
-          tree={materialTree}
-          entityType={EntityTypes.Material}
-          nodeOperation={(node) =>
-            node.entity && isDirectory(node.entity) ? (
-              <>
-                <IconButton onClick={() => targetId.set(node.id)}>
-                  <FileAddOutlined />
-                </IconButton>
-                <IconButton onClick={() => createDirectory(node.id)}>
-                  <FolderAddOutlined />
-                </IconButton>
-              </>
-            ) : null
-          }
-        />
-      </div>
-    </div>
+    <TreeView
+      tree={materialTree}
+      entityType={EntityTypes.Material}
+      nodeOperation={(node) =>
+        node.entity && isDirectory(node.entity) ? (
+          <>
+            <IconButton onClick={() => targetId.set(node.id)}>
+              <FileAddOutlined />
+            </IconButton>
+            <IconButton onClick={() => createDirectory(node.id)}>
+              <FolderAddOutlined />
+            </IconButton>
+          </>
+        ) : null
+      }
+    />
   );
 }

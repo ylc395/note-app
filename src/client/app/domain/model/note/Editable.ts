@@ -4,7 +4,7 @@ import assert from 'assert';
 
 import { EntityTypes } from 'model/entity';
 import type { NoteVO as Note, NotePatchDTO as NotePatch, NoteBodyVO } from 'model/note';
-import EditableEntity from 'model/abstract/EditableEntity';
+import EditableEntity, { EventNames } from 'model/abstract/EditableEntity';
 
 interface Entity {
   body: string;
@@ -44,7 +44,7 @@ export default class EditableNote extends EditableEntity<Entity> {
     assert(this.entity);
     Object.assign(this.entity.metadata, note);
     this.uploadNote(this.entity.metadata);
-    this.emit('metadataUpdated');
+    this.emit(EventNames.MetadataUpdated);
   }
 
   private readonly uploadBody = debounce((body: string) => {

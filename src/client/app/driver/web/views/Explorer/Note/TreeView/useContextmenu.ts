@@ -6,21 +6,20 @@ import Workbench, { TileSplitDirections } from 'model/workbench/Workbench';
 import type { NoteTreeNode } from 'model/note/Tree';
 
 import NoteService from 'service/NoteService';
-import EditorService from 'service/EditorService';
 import StarService from 'service/StarService';
 
 import type { ContextmenuItem } from 'infra/ui';
 import { ui } from 'web/infra/ui';
 
 import Context from '../Context';
+import assert from 'assert';
 
 export default function useContextmenu() {
   const { movingModal, editingModal } = useContext(Context);
 
   return useCallback(
     async (targetNode: NoteTreeNode) => {
-      const { openEntity } = container.resolve(EditorService);
-      const { focusedTile } = container.resolve(Workbench);
+      const workbench = container.resolve(Workbench);
       const noteService = container.resolve(NoteService);
       const starService = container.resolve(StarService);
 
@@ -46,7 +45,7 @@ export default function useContextmenu() {
             { label: `删除${description}`, key: 'delete' },
           ]
         : [
-            { label: '在新窗口打开', key: 'openInNewWindow', visible: Boolean(focusedTile) },
+            { label: '在新窗口打开', key: 'openInNewWindow', visible: Boolean(workbench.focusedTile) },
             { type: 'separator' },
             { label: '移动至...', key: 'move' },
             // { label: targetNode.entity.isStar ? '已收藏' : '收藏', key: 'star', disabled: targetNode.entity.isStar },
@@ -77,13 +76,11 @@ export default function useContextmenu() {
         case 'star':
           return starService.star(EntityTypes.Note, selectedNodeIds);
         case 'openInNewWindow':
-          if (!focusedTile) {
-            throw new Error('no focusedTile');
-          }
+          assert(workbench.focusedTile);
 
-          return openEntity(
+          return workbench.openEntity(
             { entityType: EntityTypes.Note, entityId: targetId },
-            { from: focusedTile, splitDirection: TileSplitDirections.Right },
+            { from: workbench.focusedTile, splitDirection: TileSplitDirections.Right },
           );
         default:
           break;

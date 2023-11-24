@@ -15,7 +15,7 @@ export default observer(function DragPreview() {
 
   return (
     <DragOverlay className="pointer-events-none" dropAnimation={null}>
-      {previewingItem instanceof Editor && <TabItem editor={previewingItem}></TabItem>}
+      {previewingItem instanceof Editor && <TabItem editor={previewingItem} />}
       {previewingItem instanceof NoteTree && <TreeView tree={previewingItem} />}
       {previewingItem instanceof MaterialTree && <TreeView tree={previewingItem} />}
     </DragOverlay>

@@ -4,13 +4,13 @@ import { Emitter } from 'strict-event-emitter';
 import assert from 'assert';
 import { type EntityLocator, type EntityId, type EditableEntityLocator, EntityTypes } from 'model/entity';
 
-import type EditableEntity from 'model/abstract/EditableEntity';
+import { type default as EditableEntity, EventNames as EditableEntityEvents } from 'model/abstract/EditableEntity';
 import EditableNote from 'model/note/Editable';
 import EditablePdf from 'model/material/editable/EditablePdf';
 import EditableHtml from 'model/material/editable/EditableHtml';
 import EditableImage from 'model/material/editable/EditableImage';
 
-import type Editor from 'model/abstract/Editor';
+import { type default as Editor, EventNames as EditorEvents } from 'model/abstract/Editor';
 import type MaterialEditor from 'model/material/editable/EditableMaterial';
 import NoteEditor from 'model/note/Editor';
 import PdfEditor from 'model/material/editor/PdfEditor';
@@ -19,9 +19,14 @@ import ImageEditor from 'model/material/editor/ImageEditor';
 
 import type Tile from './Tile';
 
+export enum EventNames {
+  EditorFocus = 'editorManager.editorFocus',
+  entityUpdated = 'editorManager.entityUpdated',
+}
+
 type Events = {
-  editorFocus: [Editor];
-  entityUpdated: [EditableEntity];
+  [EventNames.EditorFocus]: [Editor];
+  [EventNames.entityUpdated]: [EditableEntity];
 };
 
 @singleton()
@@ -49,7 +54,7 @@ export default class EditorManager extends Emitter<Events> {
     }
 
     this.editableEntities[entityId] = editableEntity;
-    editableEntity.on('metadataUpdated', () => this.emit('entityUpdated', editableEntity!));
+    editableEntity.on(EditableEntityEvents.MetadataUpdated, () => this.emit(EventNames.entityUpdated, editableEntity!));
 
     return editableEntity;
   }
@@ -94,8 +99,8 @@ export default class EditorManager extends Emitter<Events> {
 
     assert(editor, 'invalid editor');
 
-    editor.once('destroyed', () => this.handleEditorDestroyed(editableEntity, editor!));
-    editor.on('focus', () => this.emit('editorFocus', editor!));
+    editor.once(EditorEvents.Destroyed, () => this.handleEditorDestroyed(editableEntity, editor!));
+    editor.on(EditorEvents.Focus, () => this.emit(EventNames.EditorFocus, editor!));
 
     const editorSet = this.editors.get(editableEntity);
 

@@ -16,13 +16,14 @@ import type Form from 'model/material/Form';
 import Value from 'model/Value';
 import { token as remoteToken } from 'infra/remote';
 
-import EditorService from './EditorService';
 import type { FileVO, FilesDTO } from 'model/file';
+import { Workbench } from 'model/workbench';
 
 @singleton()
 export default class MaterialService {
   private readonly remote = container.resolve(remoteToken);
   private readonly explorer = container.resolve(Explorer);
+  private readonly workbench = container.resolve(Workbench);
 
   get materialTree() {
     return this.explorer.materialTree;
@@ -97,8 +98,11 @@ export default class MaterialService {
     const node = this.materialTree.getNode(materialId);
 
     if (!multiple && node.entity && !isDirectory(node.entity)) {
-      const { openEntity } = container.resolve(EditorService);
-      openEntity({ entityType: EntityTypes.Material, entityId: materialId, mimeType: node.entity.mimeType });
+      this.workbench.openEntity({
+        entityType: EntityTypes.Material,
+        entityId: materialId,
+        mimeType: node.entity.mimeType,
+      });
     }
   };
 }

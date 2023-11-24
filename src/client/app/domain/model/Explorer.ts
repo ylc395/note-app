@@ -4,7 +4,7 @@ import Value from 'model/Value';
 import NoteTree, { type NoteTreeNode } from 'model/note/Tree';
 import MaterialTree, { type MaterialTreeNode } from 'model/material/Tree';
 import { EntityTypes } from './entity';
-import EditorManager from './workbench/EditorManager';
+import EditorManager, { EventNames as EditorManagerEvents } from './workbench/EditorManager';
 import EditableEntity from './abstract/EditableEntity';
 import type EditableNote from './note/Editable';
 import EditableMaterial from './material/editable/EditableMaterial';
@@ -26,7 +26,7 @@ export default class Explorer {
   private readonly editorManager = container.resolve(EditorManager);
 
   constructor() {
-    this.editorManager.on('entityUpdated', this.updateTree);
+    this.editorManager.on(EditorManagerEvents.entityUpdated, this.updateTree);
   }
 
   private readonly updateTree = ({ entityType, entity }: EditableEntity) => {

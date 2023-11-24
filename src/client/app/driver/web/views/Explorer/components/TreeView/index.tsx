@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+
 import type { HierarchyEntity, MainEntityTypes } from 'model/entity';
 import type { default as TreeModel, TreeNode } from 'model/abstract/Tree';
 import Tree from 'components/Tree';
@@ -23,9 +24,14 @@ export default function TreeView<T extends EntityWithIcon>({ entityType, tree, n
     <>
       {isNormal && <SearchInput entityType={entityType!} />}
       <Tree
+        className="scrollbar-stable scrollbar-thin grow overflow-hidden pr-2 hover:overflow-auto"
         draggable={isNormal}
         droppable={isNormal}
-        nodeClassName="hover:bg-gray-100 flex py-1 cursor-pointer data-[selected=true]:bg-slate-200 group relative"
+        nodeClassName="[--hover-color:#f3f4f6] [--selected-color:#e2e8f0] 
+         hover:bg-[var(--hover-color)]
+         data-[selected=true]:bg-[var(--selected-color)]
+         data-[dragging='not-allowed']:cursor-not-allowed 
+         py-1 cursor-pointer group relative"
         caretClassName="text-gray-500"
         tree={tree}
         multiple

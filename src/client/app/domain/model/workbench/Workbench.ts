@@ -1,11 +1,15 @@
 import pull from 'lodash/pull';
 import uniqueId from 'lodash/uniqueId';
+import last from 'lodash/last';
+import isMatch from 'lodash/isMatch';
 import { observable, makeObservable, action, computed } from 'mobx';
 import { container, singleton } from 'tsyringe';
 import assert from 'assert';
 
-import Tile from './Tile';
-import EditorManager from './EditorManager';
+import Editor from 'model/abstract/Editor';
+import Tile, { EventNames as TileEvents } from './Tile';
+import type { EditableEntityLocator } from 'model/entity';
+import EditorManager, { EventNames as EditorManagerEvents } from './EditorManager';
 import { type TileNode, type TileParent, TileDirections, isTileLeaf } from './tileTree';
 
 export enum TileSplitDirections {
@@ -21,6 +25,8 @@ const splitDirectionToDirection = (direction: TileSplitDirections) => {
     : TileDirections.Horizontal;
 };
 
+type Dest = Tile | Editor | { from: Tile; splitDirection: TileSplitDirections };
+
 @singleton()
 export default class Workbench {
   private readonly tilesMap = new Map<Tile['id'], Tile>();
@@ -35,13 +41,21 @@ export default class Workbench {
 
   constructor() {
     makeObservable(this);
-    this.editorManager.on('editorFocus', ({ tile }) => this.focusedTileHistory.push(tile));
+    this.editorManager.on(EditorManagerEvents.EditorFocus, this.handleEditorFocus);
   }
+
+  private readonly handleEditorFocus = ({ tile }: Editor) => {
+    assert(tile);
+
+    if (last(this.focusedTileHistory) !== tile) {
+      this.focusedTileHistory.push(tile);
+    }
+  };
 
   private createTile() {
     const tile = new Tile();
 
-    tile.on('destroyed', () => this.removeTile(tile));
+    tile.on(TileEvents.Destroyed, () => this.removeTile(tile));
     this.tilesMap.set(tile.id, tile);
 
     return tile;
@@ -87,7 +101,7 @@ export default class Workbench {
   }
 
   @action.bound
-  splitTile(from: Tile['id'], direction: TileSplitDirections) {
+  private splitTile(from: Tile['id'], direction: TileSplitDirections) {
     assert(this.root);
 
     const newTile = this.createTile();
@@ -152,7 +166,7 @@ export default class Workbench {
     return tile;
   }
 
-  getFocusedTile() {
+  private getFocusedTile() {
     if (this.focusedTile) {
       return this.focusedTile;
     }
@@ -163,5 +177,50 @@ export default class Workbench {
 
     assert(isTileLeaf(this.root), 'no focusedTile');
     return this.getTileById(this.root);
+  }
+
+  @action.bound
+  moveEditor(src: Editor, dest: Dest) {
+    if (src === dest) {
+      return;
+    }
+
+    if (src.tile) {
+      src.tile.removeEditor(src);
+    }
+
+    if (dest instanceof Editor) {
+      assert(dest.tile);
+      const destIndex = dest.tile.editors.findIndex((editor) => editor === dest);
+      dest.tile.addEditor(src, destIndex);
+    } else if (dest instanceof Tile) {
+      dest.addEditor(src);
+    } else {
+      const { from, splitDirection } = dest;
+      const newTile = this.splitTile(from.id, splitDirection);
+      newTile.addEditor(src);
+    }
+  }
+
+  openEntity(entity: EditableEntityLocator, dest?: Dest) {
+    let targetTile: Tile | undefined;
+    let editor: Editor;
+
+    if (dest instanceof Tile || dest instanceof Editor || !dest) {
+      targetTile = dest ? (dest instanceof Tile ? dest : dest.tile) : this.getFocusedTile();
+
+      assert(targetTile);
+
+      if (targetTile.switchToEditor((editor) => isMatch(entity, editor.toEntityLocator()), true)) {
+        return;
+      }
+
+      editor = targetTile.createEditor(entity, dest instanceof Editor ? dest : undefined);
+    } else {
+      targetTile = this.splitTile(dest.from.id, dest.splitDirection);
+      editor = targetTile.createEditor(entity);
+    }
+
+    targetTile.switchToEditor(editor);
   }
 }

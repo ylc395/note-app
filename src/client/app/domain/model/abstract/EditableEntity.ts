@@ -6,8 +6,12 @@ import { Emitter } from 'strict-event-emitter';
 import type { EditableEntityLocator, EntityId, EditableEntityTypes } from 'model/entity';
 import { token as remoteToken } from 'infra/remote';
 
+export enum EventNames {
+  MetadataUpdated = 'editableEntity.metadataUpdated',
+}
+
 type Events = {
-  metadataUpdated: [];
+  [EventNames.MetadataUpdated]: [];
 };
 
 export default abstract class EditableEntity<T = unknown, E extends Events = Events> extends Emitter<E> {

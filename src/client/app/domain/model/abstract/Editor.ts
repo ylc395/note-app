@@ -13,10 +13,16 @@ import type Tile from 'model/workbench/Tile';
 
 // type Breadcrumbs = Array<Breadcrumb & { siblings: Breadcrumb[] }>;
 
+export enum EventNames {
+  Destroyed = 'editor.destroyed',
+  Focus = 'editor.focus',
+  UIUpdated = 'editor.uiUpdated',
+}
+
 type Events<S> = {
-  destroyed: [];
-  uiUpdated: [Partial<S>];
-  focus: [];
+  [EventNames.Destroyed]: [];
+  [EventNames.UIUpdated]: [Partial<S>];
+  [EventNames.Focus]: [];
 };
 
 export default abstract class Editor<T extends EditableEntity = EditableEntity, S = unknown> extends Emitter<
@@ -28,16 +34,17 @@ export default abstract class Editor<T extends EditableEntity = EditableEntity, 
   @observable isFocused = false;
   uiState: Partial<S> | null = null;
 
-  constructor(protected readonly editable: T, public tile: Tile) {
+  constructor(protected readonly editable: T, public tile?: Tile) {
     super();
     makeObservable(this);
   }
+
   toEntityLocator() {
     return this.editable.toEntityLocator();
   }
 
   destroy() {
-    this.emit('destroyed');
+    this.emit(EventNames.Destroyed);
     this.removeAllListeners();
   }
 
@@ -50,13 +57,13 @@ export default abstract class Editor<T extends EditableEntity = EditableEntity, 
   @action.bound
   focus() {
     console.log(`focus ${this.id}`);
-    this.emit('focus');
+    this.emit(EventNames.Focus);
     this.isFocused = true;
   }
 
   @action
   updateUIState(state: Partial<S>) {
     this.uiState = { ...this.uiState, ...state };
-    this.emit('uiUpdated', state);
+    this.emit(EventNames.UIUpdated, state);
   }
 }

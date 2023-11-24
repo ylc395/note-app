@@ -8,8 +8,12 @@ import type Editor from 'model/abstract/Editor';
 import EditorManager from './EditorManager';
 import { EditableEntityLocator } from 'model/entity';
 
+export enum EventNames {
+  Destroyed = 'tile.destroyed',
+}
+
 type Events = {
-  destroyed: [];
+  [EventNames.Destroyed]: [];
 };
 
 export const MAX_TILE_WIDTH = 100;
@@ -24,28 +28,6 @@ export default class Tile extends Emitter<Events> {
   constructor() {
     super();
     makeObservable(this);
-  }
-
-  @action.bound
-  moveEditor(src: Editor, dest?: Editor) {
-    if (src === dest) {
-      return;
-    }
-
-    const srcIndex = this.editors.findIndex((editor) => editor === src);
-
-    assert(srcIndex >= 0, 'src editor is not in this tile');
-
-    if (!dest) {
-      const [item] = this.editors.splice(srcIndex, 1);
-      this.editors.push(item!);
-    } else {
-      const destIndex = this.editors.findIndex((editor) => editor === dest);
-      assert(destIndex >= 0, 'dest is not in this tile');
-
-      const [item] = this.editors.splice(srcIndex, 1);
-      this.editors.splice(destIndex, 0, item!);
-    }
   }
 
   @action.bound
@@ -68,8 +50,10 @@ export default class Tile extends Emitter<Events> {
 
     const [closedEditor] = this.editors.splice(existedTabIndex, 1);
 
+    assert(closedEditor);
+
     if (destroy) {
-      closedEditor!.destroy();
+      closedEditor.destroy();
     }
 
     if (this.currentEditor === editor) {
@@ -79,6 +63,8 @@ export default class Tile extends Emitter<Events> {
     if (this.editors.length === 0) {
       this.destroy();
     }
+
+    closedEditor.tile = undefined;
   }
 
   @action.bound
@@ -88,6 +74,7 @@ export default class Tile extends Emitter<Events> {
     }
   }
 
+  @action
   createEditor(entity: EditableEntityLocator, dest?: Editor) {
     if (dest) {
       assert(dest.tile === this);
@@ -107,8 +94,16 @@ export default class Tile extends Emitter<Events> {
     return newEditor;
   }
 
+  @action
+  addEditor(editor: Editor, index?: number) {
+    editor.tile = this;
+    this.editors.splice(typeof index === 'number' ? index : this.editors.length, 0, editor);
+    this.currentEditor = editor;
+  }
+
   private destroy() {
-    this.emit('destroyed');
+    this.emit(EventNames.Destroyed);
     this.removeAllListeners();
+    this.currentEditor = undefined;
   }
 }

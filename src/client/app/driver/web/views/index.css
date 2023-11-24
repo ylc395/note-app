@@ -17,6 +17,19 @@ body {
     scrollbar-gutter: stable;
   }
 
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: #bfbfbf;
+  }
+
   .scrollbar-hidden {
     scrollbar-width: none;
     -ms-overflow-style: none;

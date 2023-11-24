@@ -3,19 +3,26 @@ import { CloseOutlined } from '@ant-design/icons';
 import { useSortable } from '@dnd-kit/sortable';
 import { useRef, useEffect } from 'react';
 import clsx from 'clsx';
+import assert from 'assert';
 
 import IconTitle from 'web/components/IconTitle';
 import IconButton from 'web/components/IconButton';
 import type Editor from 'model/abstract/Editor';
 import useContextmenu from './useContextmenu';
+import { container } from 'tsyringe';
+import DndService from 'service/DndService';
 
 export default observer(function TabItem({ editor }: { editor: Editor }) {
   const { tile } = editor;
+
+  assert(tile);
+
   const { switchToEditor, removeEditor, currentEditor } = tile;
-  const { setNodeRef, attributes, listeners, over } = useSortable({
+  const { setNodeRef, attributes, listeners } = useSortable({
     id: editor.id,
     data: { instance: editor },
   });
+  const { overItem } = container.resolve(DndService);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -34,11 +41,8 @@ export default observer(function TabItem({ editor }: { editor: Editor }) {
       {...listeners}
       ref={setNodeRef}
       className={clsx(
-        'flex cursor-pointer flex-nowrap items-center border-0 border-r border-solid border-gray-200 bg-gray-100 p-2',
-        {
-          'bg-slate-50': currentEditor === editor,
-          'bg-gray-200': over?.data.current?.instance.id === editor.id,
-        },
+        'flex cursor-pointer flex-nowrap items-center border-0 border-r border-solid border-gray-200 p-2',
+        currentEditor === editor ? 'bg-white' : overItem === editor ? 'bg-gray-200' : 'bg-gray-50',
       )}
       onClick={() => switchToEditor(editor)}
       onContextMenu={onContextMenu}

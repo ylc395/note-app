@@ -18,8 +18,8 @@ import type { SelectEvent } from 'model/abstract/Tree';
 
 import { MULTIPLE_ICON_FLAG, type NoteMetadata } from 'model/note/MetadataForm';
 
-import EditorService from './EditorService';
 import { getLocators } from 'utils/collection';
+import { Workbench } from 'model/workbench';
 
 @singleton()
 export default class NoteService extends Emitter<{
@@ -29,7 +29,7 @@ export default class NoteService extends Emitter<{
   private readonly remote = container.resolve(remoteToken);
   private readonly ui = container.resolve(UIToken);
   private readonly explorer = container.resolve(Explorer);
-  private readonly editorService = container.resolve(EditorService);
+  private readonly workbench = container.resolve(Workbench);
 
   get tree() {
     return this.explorer.noteTree;
@@ -59,7 +59,7 @@ export default class NoteService extends Emitter<{
     }
 
     this.tree.toggleSelect(note.id);
-    this.editorService.openEntity({ entityType: EntityTypes.Note, entityId: note.id });
+    this.workbench.openEntity({ entityType: EntityTypes.Note, entityId: note.id });
   };
 
   async duplicateNote(targetId: Note['id']) {
@@ -73,8 +73,7 @@ export default class NoteService extends Emitter<{
     assert(id);
 
     if (!multiple && reason !== 'drag') {
-      const { openEntity } = container.resolve(EditorService);
-      openEntity({ entityType: EntityTypes.Note, entityId: id });
+      this.workbench.openEntity({ entityType: EntityTypes.Note, entityId: id });
     }
   };
 

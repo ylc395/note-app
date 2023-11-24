@@ -1,10 +1,9 @@
 import { container } from 'tsyringe';
 import { observable, makeObservable, action, computed } from 'mobx';
 
-import { Tile, TileSplitDirections } from 'model/workbench';
+import { Tile, TileSplitDirections, Workbench } from 'model/workbench';
 import Explorer from 'model/Explorer';
 import Editor from 'model/abstract/Editor';
-import EditorService from 'service/EditorService';
 
 import type { default as Handler, DragMoveEvent } from './Handler';
 
@@ -27,7 +26,7 @@ export default class TileHandler implements Handler {
     makeObservable(this);
   }
   private readonly explorer = container.resolve(Explorer);
-  private readonly editorService = container.resolve(EditorService);
+  private readonly workbench = container.resolve(Workbench);
 
   @observable.ref
   dropAreaPosition?: Position;
@@ -73,23 +72,27 @@ export default class TileHandler implements Handler {
   }
 
   handleDrop(draggingItem: unknown, dropTarget: unknown) {
-    if (!this.dropAreaPosition || !(dropTarget instanceof Tile)) {
+    const { dropAreaPosition } = this;
+
+    if (dropAreaPosition) {
+      this.dropAreaPosition = undefined;
+    }
+
+    if (!dropAreaPosition || !(dropTarget instanceof Tile)) {
       return;
     }
 
-    const direction = Object.keys(this.dropAreaPosition).find(
-      (key) => this.dropAreaPosition![key as keyof Position] !== '0px',
-    ) as keyof Position | undefined;
+    const direction = Object.keys(dropAreaPosition).find((key) => dropAreaPosition[key as keyof Position] !== '0px') as
+      | keyof Position
+      | undefined;
 
     const newTile = direction ? { splitDirection: directionMap[direction], from: dropTarget } : undefined;
 
     if (draggingItem instanceof Editor) {
-      this.editorService.moveEditor(draggingItem, newTile || dropTarget);
+      this.workbench.moveEditor(draggingItem, newTile || dropTarget);
     } else if (this.explorer.isTreeNode(draggingItem)) {
-      this.editorService.openEntity(this.explorer.treeNodeToEntityLocator(draggingItem), newTile || dropTarget);
+      this.workbench.openEntity(this.explorer.treeNodeToEntityLocator(draggingItem), newTile || dropTarget);
     }
-
-    this.dropAreaPosition = undefined;
   }
 
   handleCancel(): void {
