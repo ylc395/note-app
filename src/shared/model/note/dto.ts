@@ -1,10 +1,9 @@
-import { union, boolean, object, string, null as zodNull, type infer as Infer } from 'zod';
-
-const duplicatedNoteDTOSchema = object({ duplicateFrom: string() });
+import { union, boolean, object, string, null as zodNull, type infer as Infer, undefined } from 'zod';
 
 export const notePatchDTOSchema = object({
   title: string(),
   isReadonly: boolean(),
+  body: string(),
   parentId: union([zodNull(), string()]),
   icon: union([string().regex(/^(emoji:|file:).+/), zodNull()]),
 }).partial();
@@ -16,10 +15,11 @@ export const notesPatchDTOSchema = object({
   note: notePatchDTOSchema,
 });
 
-export const newNoteDTOSchema = union([duplicatedNoteDTOSchema, notePatchDTOSchema]);
-export const noteBodyDTOSchema = string();
+export const newNoteDTOSchema = union([notePatchDTOSchema, undefined()]);
+
+export const newNoteParamsSchema = object({ from: string().optional() });
+
 export type NewNoteDTO = Infer<typeof newNoteDTOSchema>;
 export type NotesPatchDTO = Infer<typeof notesPatchDTOSchema>;
 export type NotePatchDTO = Infer<typeof notePatchDTOSchema>;
-export type DuplicateNoteDTO = Infer<typeof duplicatedNoteDTOSchema>;
-export type NoteBodyDTO = Infer<typeof noteBodyDTOSchema>;
+export type NewNoteParams = Infer<typeof newNoteParamsSchema>;

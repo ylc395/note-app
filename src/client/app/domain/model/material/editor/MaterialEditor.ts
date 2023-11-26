@@ -15,7 +15,7 @@ export default abstract class MaterialEditor<T extends EditableMaterial, S = unk
   @computed
   get tabView() {
     return {
-      title: this.editable.entity?.metadata.name || '',
+      title: this.editable.entity?.metadata.title || '',
       icon: this.editable.entity?.metadata.icon || null,
     };
   }

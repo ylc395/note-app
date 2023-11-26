@@ -6,8 +6,8 @@ import MaterialTree, { type MaterialTreeNode } from 'model/material/Tree';
 import { EntityTypes } from './entity';
 import EditorManager, { EventNames as EditorManagerEvents } from './workbench/EditorManager';
 import EditableEntity from './abstract/EditableEntity';
-import type EditableNote from './note/Editable';
 import EditableMaterial from './material/editable/EditableMaterial';
+import { DetailedNoteVO } from 'model/note';
 
 export enum ExplorerTypes {
   Materials = 'materials',
@@ -32,7 +32,11 @@ export default class Explorer {
   private readonly updateTree = ({ entityType, entity }: EditableEntity) => {
     switch (entityType) {
       case EntityTypes.Note:
-        return this.noteTree.updateTree((entity as EditableNote['entity'])!.metadata);
+        return this.noteTree.updateNode({
+          id: (entity as DetailedNoteVO).id,
+          title: (entity as DetailedNoteVO).title,
+          updatedAt: (entity as DetailedNoteVO).updatedAt,
+        });
       case EntityTypes.Material:
         return this.materialTree.updateTree((entity as EditableMaterial['entity'])!.metadata);
       default:

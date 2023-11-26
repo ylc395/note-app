@@ -1,18 +1,18 @@
 import { Controller } from '@nestjs/common';
 
-import { Post, Body, Get, Patch, createSchemaPipe, Param, Put, Query } from './decorators';
+import { Post, Body, Get, Patch, createSchemaPipe, Param, Query } from './decorators';
 import {
   type NewNoteDTO,
-  type NoteBodyDTO,
   type NoteVO,
   type ClientNoteQuery,
   type NotesPatchDTO,
   type NotePatchDTO,
-  type NoteBodyVO,
+  type DetailedNoteVO,
+  type NewNoteParams,
   newNoteDTOSchema,
+  newNoteParamsSchema,
   notesPatchDTOSchema,
   clientNoteQuerySchema,
-  noteBodyDTOSchema,
   notePatchDTOSchema,
 } from 'model/note';
 import NoteService from 'service/NoteService';
@@ -21,51 +21,36 @@ import NoteService from 'service/NoteService';
 export default class NotesController {
   constructor(private readonly noteService: NoteService) {}
 
-  @Post('/notes')
-  async create(@Body(createSchemaPipe(newNoteDTOSchema)) noteDTO: NewNoteDTO): Promise<NoteVO> {
-    return await this.noteService.create(noteDTO);
+  @Get('/notes')
+  async query(
+    @Query(createSchemaPipe(clientNoteQuerySchema)) { parentId = null, to }: ClientNoteQuery,
+  ): Promise<NoteVO[]> {
+    return to ? await this.noteService.getTreeFragment(to) : await this.noteService.queryNotes({ parentId });
   }
 
-  @Patch('/notes/:id')
-  async update(
-    @Param('id') id: string,
-    @Body(createSchemaPipe(notePatchDTOSchema)) patch: NotePatchDTO,
-  ): Promise<NoteVO[]> {
-    return await this.noteService.batchUpdate([id], patch);
+  @Post('/notes')
+  async create(
+    @Body(createSchemaPipe(newNoteDTOSchema)) noteDTO: NewNoteDTO,
+    @Query(createSchemaPipe(newNoteParamsSchema)) { from }: NewNoteParams,
+  ): Promise<NoteVO> {
+    return await this.noteService.create(noteDTO, from);
   }
 
   @Patch('/notes')
-  async batchUpdate(@Body(createSchemaPipe(notesPatchDTOSchema)) { ids, note }: NotesPatchDTO): Promise<NoteVO[]> {
+  async batchUpdate(@Body(createSchemaPipe(notesPatchDTOSchema)) { ids, note }: NotesPatchDTO): Promise<void> {
     return await this.noteService.batchUpdate(ids, note);
   }
 
-  @Get('/notes')
-  async query(
-    @Query(createSchemaPipe(clientNoteQuerySchema)) { parentId = null, ...q }: ClientNoteQuery,
-  ): Promise<NoteVO[]> {
-    return await this.noteService.queryVO({ parentId, ...q });
-  }
-
-  @Get('/notes/:id/tree')
-  async queryTree(@Param('id') noteId: string): Promise<NoteVO[]> {
-    return await this.noteService.getTreeFragment(noteId);
-  }
-
   @Get('/notes/:id')
-  async queryOne(@Param('id') noteId: string): Promise<NoteVO> {
-    return await this.noteService.queryVO(noteId);
+  async queryOne(@Param('id') noteId: string): Promise<DetailedNoteVO> {
+    return await this.noteService.queryOneNote(noteId);
   }
 
-  @Get('/notes/:id/body')
-  async queryBody(@Param('id') noteId: string): Promise<NoteBodyDTO> {
-    return await this.noteService.queryBody(noteId);
-  }
-
-  @Put('/notes/:id/body')
-  async updateBody(
+  @Patch('/notes/:id')
+  async updateOne(
     @Param('id') noteId: string,
-    @Body(createSchemaPipe(noteBodyDTOSchema)) body: NoteBodyDTO,
-  ): Promise<NoteBodyVO> {
-    return await this.noteService.updateBody(noteId, body);
+    @Body(createSchemaPipe(notePatchDTOSchema)) patch: NotePatchDTO,
+  ): Promise<void> {
+    return await this.noteService.updateOne(noteId, patch);
   }
 }

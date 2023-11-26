@@ -1,64 +1,65 @@
-import { Inject, Injectable, forwardRef } from '@nestjs/common';
-import omit from 'lodash/omit';
-import uniq from 'lodash/uniq';
-import mapValues from 'lodash/mapValues';
-import map from 'lodash/map';
-
-import { buildIndex, getLocators } from 'utils/collection';
+import { Inject, Injectable } from '@nestjs/common';
+import assert from 'node:assert';
+import pick from 'lodash/pick';
 import {
   type NoteVO,
-  type NoteBodyDTO,
   type NewNoteDTO,
+  type NotePatchDTO,
   type Note,
   type ClientNoteQuery,
-  isDuplicate,
-  isNewNote,
+  type NotePatch,
   normalizeTitle,
-  NotePatch,
 } from 'model/note';
 import { EntityTypes } from 'model/entity';
 
 import BaseService from './BaseService';
 import StarService from './StarService';
+import EntityService from './EntityService';
 
 @Injectable()
 export default class NoteService extends BaseService {
-  @Inject(forwardRef(() => StarService)) private readonly starService!: StarService;
+  @Inject() private readonly starService!: StarService;
+  @Inject() private readonly entityService!: EntityService;
 
-  async create(note: NewNoteDTO) {
-    if (isNewNote(note) && note.parentId) {
-      await this.assertAvailableIds([note.parentId]);
+  private static getMetadata(note: Note) {
+    return {
+      ...pick(note, ['id', 'createdAt', 'icon', 'isReadonly', 'parentId']),
+      title: normalizeTitle(note),
+      updatedAt: note.userUpdatedAt,
+    };
+  }
+
+  async create(note: NewNoteDTO, from?: Note['id']) {
+    let newNote: Required<Note>;
+
+    if (from) {
+      newNote = await this.duplicate(from);
+    } else {
+      if (note?.parentId) {
+        await this.entityService.assertAvailableIds(EntityTypes.Note, [note.parentId]);
+      }
+
+      newNote = await this.repo.notes.create(note);
     }
 
-    const newNote = isDuplicate(note) ? await this.duplicate(note.duplicateFrom) : await this.repo.notes.create(note);
-
     return {
-      ...omit(newNote, ['userUpdatedAt']),
+      ...NoteService.getMetadata(newNote),
       isStar: false,
       childrenCount: 0,
-      title: normalizeTitle(newNote),
     };
   }
 
   private async duplicate(noteId: NoteVO['id']) {
-    await this.assertAvailableIds([noteId]);
+    await this.entityService.assertAvailableIds(EntityTypes.Note, [noteId]);
 
     const targetNote = await this.repo.notes.findOneById(noteId);
-    const targetNoteBody = await this.repo.notes.findBody(noteId);
-
-    if (!targetNote || targetNoteBody === null) {
-      throw new Error('invalid duplicate target');
-    }
-
+    assert(targetNote);
     targetNote.title = `${normalizeTitle(targetNote)} - 副本`;
 
-    const newNote = await this.repo.notes.create({
-      body: targetNoteBody,
-      ...omit(targetNote, ['id', 'createdAt', 'updatedAt']),
-    });
+    const newNote = await this.repo.notes.create(pick(targetNote, ['title', 'body', 'icon', 'parentId']));
 
     this.eventBus.emit('contentUpdated', {
-      content: targetNoteBody,
+      content: targetNote.body,
       entityId: newNote.id,
       entityType: EntityTypes.Note,
       updatedAt: targetNote.updatedAt,
@@ -67,54 +68,47 @@ export default class NoteService extends BaseService {
     return newNote;
   }
 
-  async updateBody(noteId: NoteVO['id'], content: NoteBodyDTO) {
-    const userUpdatedAt = Date.now();
+  private async noteToDetail(note: Required<Note>) {
+    const path = (await this.entityService.getPaths(EntityService.getLocators([note], EntityTypes.Note)))[note.id];
 
+    assert(path);
+
+    return { ...NoteService.getMetadata(note), body: note.body, path };
+  }
+
+  async updateOne(noteId: NoteVO['id'], note: NotePatchDTO) {
     await this.transaction(async () => {
-      if (!(await this.isWritable(noteId))) {
-        throw new Error('note is readonly');
+      const userUpdatedAt = Date.now();
+
+      if (typeof note.body === 'string') {
+        assert(await this.isWritable(noteId));
       }
 
       const result = await this.repo.notes.update(noteId, {
-        body: content,
+        ...note,
         userUpdatedAt,
       });
 
-      if (result === null) {
-        throw new Error('update note body failed');
+      assert(result);
+
+      if (typeof note.body === 'string') {
+        this.eventBus.emit('contentUpdated', {
+          content: note.body,
+          entityId: noteId,
+          entityType: EntityTypes.Note,
+          updatedAt: userUpdatedAt,
+        });
       }
-
-      this.eventBus.emit('contentUpdated', {
-        content,
-        entityId: noteId,
-        entityType: EntityTypes.Note,
-        updatedAt: userUpdatedAt,
-      });
-
-      return result;
     });
-
-    return content;
   }
 
-  async queryBody(noteId: NoteVO['id']) {
-    await this.assertAvailableIds([noteId]);
+  private async toVO(notes: Note[]) {
+    const ids = notes.map(({ id }) => id);
+    const stars = await this.starService.getStarMap(ids);
+    const _children = await this.repo.notes.findChildrenIds(ids);
 
-    const result = await this.repo.notes.findBody(noteId);
-
-    if (result === null) {
-      throw new Error('note unavailable');
-    }
-
-    return result;
-  }
-
-  private async toVOs(rawNotes: Note[]) {
-    const stars = await this.starService.getStarMap(getLocators(rawNotes, EntityTypes.Note));
-    const _children = await this.repo.notes.findChildrenIds(map(rawNotes, 'id'), { isAvailable: true });
-
-    return rawNotes.map((note) => ({
-      ...omit(note, ['userUpdatedAt']),
+    return notes.map((note) => ({
+      ...pick(note, ['id', 'createdAt', 'icon', 'isReadonly', 'parentId']),
       title: normalizeTitle(note),
       childrenCount: _children[note.id]?.length || 0,
       isStar: Boolean(stars[note.id]),
@@ -123,78 +117,61 @@ export default class NoteService extends BaseService {
   }
 
   async batchUpdate(ids: Note['id'][], patch: NotePatch) {
-    await this.assertAvailableIds(ids);
+    await this.entityService.assertAvailableIds(EntityTypes.Note, ids);
 
     if (patch.parentId) {
       await this.assertValidParent(patch.parentId, ids);
     }
 
-    const result = await this.repo.notes.update(ids, {
+    await this.repo.notes.update(ids, {
       ...patch,
       ...(typeof patch.title === 'undefined' ? null : { userUpdatedAt: Date.now() }),
     });
-
-    return this.toVOs(result);
   }
 
   private async assertValidParent(parentId: Note['id'], childrenIds: Note['id'][]) {
-    await this.assertAvailableIds([parentId]);
+    await this.entityService.assertAvailableIds(EntityTypes.Note, [parentId]);
     const descantIds = await this.repo.notes.findDescendantIds(childrenIds);
 
     for (const id of childrenIds) {
-      if (parentId === id || descantIds[id]?.includes(parentId)) {
-        throw new Error('invalid new parent id');
-      }
+      assert(parentId !== id && !descantIds[id]?.includes(parentId));
     }
   }
 
-  async getTitles(ids: Note['id'][]) {
-    const notes = await this.repo.notes.findAll({ id: ids });
-    return mapValues(buildIndex(notes), normalizeTitle);
-  }
-
-  async queryVO(q: ClientNoteQuery): Promise<NoteVO[]>;
-  async queryVO(id: NoteVO['id']): Promise<NoteVO>;
-  async queryVO(q: ClientNoteQuery | Note['id']) {
+  async queryNotes(q: ClientNoteQuery) {
     const notes = await this.repo.notes.findAll({ ...(typeof q === 'string' ? { id: [q] } : q), isAvailable: true });
-    const noteVOs = await this.toVOs(notes);
-    const result = typeof q === 'string' ? noteVOs[0] : noteVOs;
+    const noteVOs = await this.toVO(notes);
 
-    if (!result) {
-      throw new Error('no note');
-    }
+    return noteVOs;
+  }
 
-    return result;
+  async queryOneNote(id: Note['id']) {
+    const note = await this.repo.notes.findOneById(id);
+
+    assert(note);
+
+    return this.noteToDetail(note);
   }
 
   async getTreeFragment(noteId: NoteVO['id']) {
-    await this.assertAvailableIds([noteId]);
+    await this.entityService.assertAvailableIds(EntityTypes.Note, [noteId]);
 
     const ancestorIds = (await this.repo.notes.findAncestorIds([noteId]))[noteId] || [];
-    const childrenIds = Object.values(await this.repo.notes.findChildrenIds(ancestorIds, { isAvailable: true })).flat();
+    const childrenIds = Object.values(await this.repo.notes.findChildrenIds(ancestorIds, true)).flat();
 
     const roots = await this.repo.notes.findAll({ parentId: null, isAvailable: true });
     const children = await this.repo.notes.findAll({ id: childrenIds });
 
-    return this.toVOs([...roots, ...children]);
-  }
-
-  async assertAvailableIds(noteIds: NoteVO['id'][]) {
-    const uniqueIds = uniq(noteIds);
-    const rows = await this.repo.notes.findAll({ id: uniqueIds, isAvailable: true });
-
-    if (rows.length !== uniqueIds.length) {
-      throw new Error('invalid note id');
-    }
+    return this.toVO([...roots, ...children]);
   }
 
   private async isWritable(noteId: NoteVO['id']) {
-    const row = (await this.repo.notes.findAll({ id: [noteId], isAvailable: true }))[0];
+    const row = await this.repo.notes.findOneById(noteId, true);
 
-    if (!row) {
+    if (!row || row.isReadonly) {
       return false;
     }
 
-    return !row.isReadonly;
+    return true;
   }
 }

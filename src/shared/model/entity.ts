@@ -9,10 +9,6 @@ export enum EntityTypes {
   File,
 }
 
-export type HierarchyEntityTypes = EntityTypes.Note | EntityTypes.Memo | EntityTypes.Material;
-
-export type MainEntityTypes = EntityTypes.Note | EntityTypes.Memo | EntityTypes.Material;
-
 export type EntityId = string;
 
 export type EntityParentId = EntityId | null;
@@ -38,3 +34,5 @@ export type EntityLocator<T = EntityTypes> = Infer<typeof entityLocatorSchema> &
 export interface EntityWithTitle<T = EntityTypes> extends EntityLocator<T> {
   title: string;
 }
+
+export type Path = { id: EntityId; title: string }[];

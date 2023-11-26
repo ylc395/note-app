@@ -1,5 +1,3 @@
-import map from 'lodash/map';
-
 import type { EntityLocator } from 'model/entity';
 import type { StarVO, StarEntityLocator } from 'model/star';
 import type { StarRepository } from 'service/repository/StarRepository';
@@ -34,15 +32,17 @@ export default class SqliteStarRepository extends BaseRepository implements Star
       .execute();
   }
 
-  async findAllByLocators(entities: EntityLocator[]) {
+  async findAllByEntityId(entityIds: EntityLocator['entityId'][]) {
     return await this.db
       .selectFrom(this.tableName)
       .selectAll(this.tableName)
-      .where(`${this.tableName}.entityId`, 'in', map(entities, 'entityId'))
+      .where(`${this.tableName}.entityId`, 'in', entityIds)
       .execute();
   }
 
   async remove(id: StarVO['id']) {
-    await this.db.deleteFrom(this.tableName).where('id', '=', id).execute();
+    const { numDeletedRows } = await this.db.deleteFrom(this.tableName).where('id', '=', id).executeTakeFirst();
+
+    return Number(numDeletedRows) === 1;
   }
 }

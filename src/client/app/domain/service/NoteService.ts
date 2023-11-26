@@ -9,7 +9,6 @@ import type {
   NoteVO as Note,
   ClientNoteQuery as NoteQuery,
   NotePatchDTO as NotePatch,
-  DuplicateNoteDTO,
 } from 'model/note';
 import type { RecyclablesDTO } from 'model/recyclables';
 import { EntityTypes } from 'model/entity';
@@ -18,7 +17,6 @@ import type { SelectEvent } from 'model/abstract/Tree';
 
 import { MULTIPLE_ICON_FLAG, type NoteMetadata } from 'model/note/MetadataForm';
 
-import { getLocators } from 'utils/collection';
 import { Workbench } from 'model/workbench';
 
 @singleton()
@@ -63,7 +61,7 @@ export default class NoteService extends Emitter<{
   };
 
   async duplicateNote(targetId: Note['id']) {
-    const { body: note } = await this.remote.post<DuplicateNoteDTO, Note>('/notes', { duplicateFrom: targetId });
+    const { body: note } = await this.remote.post<void, Note>(`/notes?from=${targetId}`);
 
     this.tree.updateTree(note);
     this.tree.toggleSelect(note.id);
@@ -78,7 +76,8 @@ export default class NoteService extends Emitter<{
   };
 
   async deleteNotes(ids: Note['id'][]) {
-    await this.remote.patch<RecyclablesDTO>(`/recyclables`, getLocators(ids, EntityTypes.Note));
+    const locators = ids.map((id) => ({ entityId: id, entityType: EntityTypes.Note } as const));
+    await this.remote.patch<RecyclablesDTO>(`/recyclables`, locators);
     this.tree.removeNodes(ids);
     this.ui.feedback({ type: 'success', content: '已移至回收站' });
     this.emit('deleted', ids);

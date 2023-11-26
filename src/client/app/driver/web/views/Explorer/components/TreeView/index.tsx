@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import type { HierarchyEntity, MainEntityTypes } from 'model/entity';
+import type { EntityTypes, HierarchyEntity } from 'model/entity';
 import type { default as TreeModel, TreeNode } from 'model/abstract/Tree';
 import Tree from 'components/Tree';
 
@@ -12,7 +12,7 @@ interface EntityWithIcon extends HierarchyEntity {
 }
 
 interface Props<T extends EntityWithIcon> {
-  entityType?: MainEntityTypes;
+  entityType?: EntityTypes.Note | EntityTypes.Material;
   tree: TreeModel<T>;
   nodeOperation?: (node: TreeNode<T>) => ReactNode;
 }

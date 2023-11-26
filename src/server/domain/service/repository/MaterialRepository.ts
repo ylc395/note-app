@@ -19,7 +19,7 @@ export interface MaterialRepository {
   findAll: (query: MaterialQuery) => Promise<Material[]>;
   findChildrenIds: (
     ids: Material['id'][],
-    filter?: { isAvailable?: boolean },
+    availableOnly?: boolean,
   ) => Promise<Record<Material['id'], Material['id'][]>>;
   findDescendantIds: (materialIds: Material['id'][]) => Promise<Record<Material['id'], Material['id'][]>>;
   findAncestorIds: (materialIds: Material['id'][]) => Promise<Record<Material['id'], Material['id'][]>>;

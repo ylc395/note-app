@@ -7,11 +7,11 @@ import type { EditableEntityLocator, EntityId, EditableEntityTypes } from 'model
 import { token as remoteToken } from 'infra/remote';
 
 export enum EventNames {
-  MetadataUpdated = 'editableEntity.metadataUpdated',
+  EntityUpdated = 'editableEntity.entityUpdated',
 }
 
 type Events = {
-  [EventNames.MetadataUpdated]: [];
+  [EventNames.EntityUpdated]: [];
 };
 
 export default abstract class EditableEntity<T = unknown, E extends Events = Events> extends Emitter<E> {

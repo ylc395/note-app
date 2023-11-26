@@ -22,14 +22,14 @@ export default class NoteEditor extends Editor<EditableNote, UIState> {
   @computed
   get tabView() {
     return {
-      title: (IS_DEV ? `${this.id} ${this.editable.entityId.slice(0, 3)} ` : '') + this.editable.entity?.metadata.title,
-      icon: this.editable.entity?.metadata.icon || null,
+      title: (IS_DEV ? `${this.id} ${this.editable.entityId.slice(0, 3)} ` : '') + this.title,
+      icon: this.editable.entity?.icon || null,
     };
   }
 
   @computed
   get title() {
-    return this.editable.entity?.metadata.title;
+    return this.editable.entity?.title;
   }
 
   @action.bound
@@ -38,16 +38,16 @@ export default class NoteEditor extends Editor<EditableNote, UIState> {
   }
 
   updateTitle(title: string) {
-    this.editable.updateMetadata({ title });
+    this.editable.update({ title });
   }
 
   updateBody(body: string) {
-    this.editable.updateBody(body);
+    this.editable.update({ body });
   }
 
   @computed
   get isReadonly() {
-    return this.editable.entity?.metadata.isReadonly;
+    return this.editable.entity?.isReadonly;
   }
 
   @computed

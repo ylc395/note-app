@@ -1,7 +1,8 @@
-import { Inject, Injectable, forwardRef } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import assert from 'node:assert';
 
 import type { StarEntityLocator, StarVO } from 'model/star';
-import type { EntityLocator } from 'model/entity';
+import type { EntityId } from 'model/entity';
 import { buildIndex } from 'utils/collection';
 
 import BaseService from './BaseService';
@@ -9,41 +10,38 @@ import EntityService from './EntityService';
 
 @Injectable()
 export default class StarService extends BaseService {
-  @Inject(forwardRef(() => EntityService)) private readonly entityService!: EntityService;
+  @Inject() private readonly entityService!: EntityService;
 
   async create(entities: StarEntityLocator[]) {
-    await this.entityService.assertAvailableEntities(entities);
+    const existingStars = await this.repo.stars.findAllByEntityId(EntityService.toIds(entities));
 
-    if ((await this.repo.stars.findAllByLocators(entities)).length > 0) {
-      throw new Error('already exist');
-    }
+    assert(existingStars.length === 0);
+    await this.entityService.assertAvailableEntities(entities);
 
     await this.repo.stars.batchCreate(entities);
   }
 
   async query() {
     const stars = await this.repo.stars.findAllAvailable();
-    const titles = await this.entityService.getEntityTitles(stars);
+    const titles = await this.entityService.getTitles(stars);
 
     return stars.map((star) => {
       const title = titles[star.entityId];
 
-      if (!title) {
-        throw new Error('no title');
-      }
+      assert(title);
+
       return { ...star, title };
     });
   }
 
   async remove(id: StarVO['id']) {
-    if (!(await this.repo.stars.findOneById(id))) {
-      throw new Error('invalid id');
-    }
+    const result = await this.repo.stars.remove(id);
 
-    await this.repo.stars.remove(id);
+    assert(result);
   }
 
-  async getStarMap(entities: EntityLocator[]) {
-    return buildIndex(await this.repo.stars.findAllByLocators(entities), 'entityId');
+  async getStarMap(entities: EntityId[]) {
+    const stars = await this.repo.stars.findAllByEntityId(entities);
+    return buildIndex(stars, 'entityId');
   }
 }

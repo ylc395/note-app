@@ -5,11 +5,11 @@ import { container } from 'tsyringe';
 
 import SearchService from 'service/SearchService';
 
-import { MainEntityTypes } from 'model/entity';
 import IconButton from 'web/components/IconButton';
+import type { SearchTreeParams } from 'model/search';
 
 interface Props {
-  entityType: MainEntityTypes;
+  entityType: SearchTreeParams['type'];
 }
 
 export default (function Input({ entityType }: Props) {

@@ -1,8 +1,7 @@
 import uniq from 'lodash/uniq';
-import mapValues from 'lodash/mapValues';
 import omit from 'lodash/omit';
 import map from 'lodash/map';
-import { Injectable, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 
 import {
   type NewAnnotationDTO,
@@ -21,14 +20,15 @@ import {
   isDirectory,
 } from 'model/material';
 import { EntityTypes } from 'model/entity';
-import { buildIndex, getLocators } from 'utils/collection';
 
 import BaseService from './BaseService';
 import StarService from './StarService';
+import EntityService from './EntityService';
 
 @Injectable()
 export default class MaterialService extends BaseService {
-  @Inject(forwardRef(() => StarService)) private readonly starService!: StarService;
+  @Inject() private readonly starService!: StarService;
+  @Inject() private readonly entityService!: EntityService;
 
   async create(newMaterial: NewMaterialDTO) {
     if (newMaterial.parentId) {
@@ -50,14 +50,14 @@ export default class MaterialService extends BaseService {
 
   private async toVOs(materials: Material[]) {
     const parentIds = map(materials.filter(isDirectory), 'id');
-    const children = await this.repo.materials.findChildrenIds(parentIds, { isAvailable: true });
-    const stars = await this.starService.getStarMap(getLocators(materials, EntityTypes.Note));
+    const children = await this.repo.materials.findChildrenIds(parentIds, true);
+    const stars = await this.starService.getStarMap(map(materials, 'id'));
 
     return materials.map((material) => ({
       ...omit(material, ['userUpdatedAt']),
       isStar: Boolean(stars[material.id]),
       updatedAt: material.userUpdatedAt,
-      name: normalizeTitle(material),
+      title: normalizeTitle(material),
       ...(isEntityMaterial(material) ? null : { childrenCount: children[material.id]?.length || 0 }),
     })) as MaterialVO[];
   }
@@ -127,11 +127,6 @@ export default class MaterialService extends BaseService {
     }
   }
 
-  async getTitles(ids: Material['id'][]) {
-    const notes = await this.repo.materials.findAll({ id: ids });
-    return mapValues(buildIndex(notes), normalizeTitle);
-  }
-
   async getBlob(materialId: MaterialVO['id']) {
     await this.assertEntityMaterial(materialId);
     const blob = await this.repo.materials.findBlobById(materialId);
@@ -192,7 +187,7 @@ export default class MaterialService extends BaseService {
     return updated;
   }
 
-  async assertAvailableIds(ids: MaterialVO['id'][], type?: MaterialTypes) {
+  private async assertAvailableIds(ids: MaterialVO['id'][], type?: MaterialTypes) {
     const uniqueIds = uniq(ids);
     const rows = await this.repo.materials.findAll({ id: uniqueIds, isAvailable: true });
     const result =

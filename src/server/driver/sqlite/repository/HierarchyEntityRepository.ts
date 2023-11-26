@@ -14,13 +14,13 @@ import type { tableName as memoTableName } from '../schema/memo';
 export default abstract class HierarchyEntityRepository extends BaseRepository {
   abstract readonly tableName: typeof noteTableName | typeof materialTableName | typeof memoTableName;
 
-  async findChildrenIds(ids: EntityId[], { isAvailable }: { isAvailable?: boolean } = {}) {
+  async findChildrenIds(ids: EntityId[], availableOnly?: boolean) {
     let qb = this.db.selectFrom(this.tableName).selectAll(this.tableName);
 
-    if (typeof isAvailable === 'boolean') {
+    if (availableOnly) {
       qb = qb
         .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.id`)
-        .where(`${recyclableTableName}.entityId`, isAvailable ? 'is' : 'is not', null);
+        .where(`${recyclableTableName}.entityId`, 'is', null);
     }
 
     qb = qb.where('parentId', 'in', ids);

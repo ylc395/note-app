@@ -2,7 +2,7 @@ import type { EntityId, EntityParentId } from '../entity';
 
 interface BaseMaterial {
   id: EntityId;
-  name: string;
+  title: string;
   icon: string | null;
   parentId: EntityParentId;
   createdAt: number;

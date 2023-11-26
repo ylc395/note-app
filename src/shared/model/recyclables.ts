@@ -1,13 +1,7 @@
 import { nativeEnum } from 'zod';
 import pick from 'lodash/pick';
 
-import {
-  entityLocatorSchema,
-  EntityTypes,
-  type MainEntityTypes,
-  type EntityWithTitle,
-  type EntityLocator,
-} from './entity';
+import { entityLocatorSchema, EntityTypes, type EntityWithTitle, type EntityLocator } from './entity';
 
 export const recyclableDTOSchema = entityLocatorSchema.extend({
   entityType: nativeEnum(pick(EntityTypes, ['Note', 'Material', 'Memo'] as const)),
@@ -21,7 +15,7 @@ export type RecyclableDTO = RecyclableEntityLocator;
 
 export type RecyclablesDTO = RecyclableDTO[];
 
-export type RecyclableEntityTypes = MainEntityTypes;
+export type RecyclableEntityTypes = EntityTypes.Note | EntityTypes.Memo | EntityTypes.Material;
 
 export enum RecycleReason {
   Direct = 1,

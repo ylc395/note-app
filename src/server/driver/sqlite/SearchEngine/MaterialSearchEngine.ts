@@ -61,7 +61,7 @@ export default class SqliteMaterialSearchEngine {
 
           return scopes.includes(Scopes.MaterialComment)
             ? eb(`${MATERIAL_FTS_TABLE}.comment`, 'match', q.keyword)
-            : eb(`${MATERIAL_FTS_TABLE}.name`, 'match', q.keyword);
+            : eb(`${MATERIAL_FTS_TABLE}.title`, 'match', q.keyword);
         })
         .groupBy(`${MATERIAL_FTS_TABLE}.id`);
 
@@ -80,7 +80,7 @@ export default class SqliteMaterialSearchEngine {
           `${materialTable}.id as entityId`,
           `${materialTable}.createdAt`,
           `${materialTable}.userUpdatedAt as updatedAt`,
-          `${materialTable}.name as title`,
+          `${materialTable}.title`,
           `${fileTableName}.mimeType`,
           `${FILE_TEXTS_FTS_TABLE}.rank`,
           `${FILE_TEXTS_FTS_TABLE}.page as location`,
@@ -102,7 +102,7 @@ export default class SqliteMaterialSearchEngine {
           `${materialTable}.id as entityId`,
           `${materialTable}.createdAt`,
           `${materialTable}.userUpdatedAt as updatedAt`,
-          `${materialTable}.name as title`,
+          `${materialTable}.title`,
           `${fileTableName}.mimeType`,
           `${MATERIAL_ANNOTATION_FTS_TABLE}.rank`,
           `${MATERIAL_ANNOTATION_FTS_TABLE}.id as annotationId`,

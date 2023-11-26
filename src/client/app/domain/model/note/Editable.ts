@@ -3,17 +3,10 @@ import debounce from 'lodash/debounce';
 import assert from 'assert';
 
 import { EntityTypes } from 'model/entity';
-import type { NoteVO as Note, NotePatchDTO as NotePatch, NoteBodyVO } from 'model/note';
+import type { DetailedNoteVO as Note, NotePatchDTO as NotePatch } from 'model/note';
 import EditableEntity, { EventNames } from 'model/abstract/EditableEntity';
 
-interface Entity {
-  body: string;
-  metadata: Note;
-}
-
-type UpdatableNote = Partial<Pick<Note, 'title'>>;
-
-export default class EditableNote extends EditableEntity<Entity> {
+export default class EditableNote extends EditableEntity<Note> {
   readonly entityType = EntityTypes.Note;
   constructor(noteId: Note['id']) {
     super(noteId);
@@ -21,37 +14,21 @@ export default class EditableNote extends EditableEntity<Entity> {
   }
 
   protected async init() {
-    const [{ body: metadata }, { body }] = await Promise.all([
-      this.remote.get<void, Note>(`/notes/${this.entityId}`),
-      this.remote.get<void, NoteBodyVO>(`/notes/${this.entityId}/body`),
-    ]);
+    const { body: note } = await this.remote.get<void, Note>(`/notes/${this.entityId}`);
 
-    this.load({ metadata, body });
-  }
-
-  @action.bound
-  updateBody(body: string) {
-    if (!this.entity) {
-      throw new Error('no load note');
-    }
-
-    this.entity.body = body;
-    this.uploadBody(body);
+    this.load(note);
   }
 
   @action
-  updateMetadata(note: UpdatableNote) {
+  async update(note: Pick<NotePatch, 'title' | 'body'>) {
     assert(this.entity);
-    Object.assign(this.entity.metadata, note);
-    this.uploadNote(this.entity.metadata);
-    this.emit(EventNames.MetadataUpdated);
+    Object.assign(this.entity, { ...note, updatedAt: Date.now() });
+
+    this.uploadNote(note);
+    this.emit(EventNames.EntityUpdated);
   }
 
-  private readonly uploadBody = debounce((body: string) => {
-    this.remote.put<NoteBodyVO>(`/notes/${this.entityId}/body`, body);
-  }, 800);
-
-  private readonly uploadNote = debounce((note: Note) => {
-    this.remote.patch<NotePatch>(`/notes/${note.id}`, toJS(note));
+  private readonly uploadNote = debounce((note: NotePatch) => {
+    this.remote.patch<NotePatch>(`/notes/${this.entityId}`, toJS(note));
   }, 1000);
 }

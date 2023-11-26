@@ -54,7 +54,7 @@ export default class EditorManager extends Emitter<Events> {
     }
 
     this.editableEntities[entityId] = editableEntity;
-    editableEntity.on(EditableEntityEvents.MetadataUpdated, () => this.emit(EventNames.entityUpdated, editableEntity!));
+    editableEntity.on(EditableEntityEvents.EntityUpdated, () => this.emit(EventNames.entityUpdated, editableEntity!));
 
     return editableEntity;
   }
@@ -119,6 +119,7 @@ export default class EditorManager extends Emitter<Events> {
 
     if (editorSet.size === 0) {
       this.editors.delete(editable);
+      delete this.editableEntities[editable.id];
       editable.destroy();
     }
   }

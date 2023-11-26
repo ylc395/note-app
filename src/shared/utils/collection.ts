@@ -1,5 +1,3 @@
-import type { EntityId, EntityTypes } from 'model/entity';
-
 export function buildIndex<T>(list: T[], key?: keyof T) {
   const index: Record<string | number, T> = {};
   const indexBy = key || 'id';
@@ -16,8 +14,4 @@ export function buildIndex<T>(list: T[], key?: keyof T) {
   }
 
   return index;
-}
-
-export function getLocators<T extends { id: EntityId }, E extends EntityTypes>(entities: T[] | EntityId[], type: E) {
-  return entities.map((v) => ({ entityId: typeof v === 'string' ? v : v.id, entityType: type }));
 }

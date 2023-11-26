@@ -1,9 +1,9 @@
-import { Injectable, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import mapValues from 'lodash/mapValues';
 import omit from 'lodash/omit';
 import map from 'lodash/map';
 
-import { buildIndex, getLocators } from 'utils/collection';
+import { buildIndex } from 'utils/collection';
 import type { Memo, NewMemo, MemoPatch, ClientMemoQuery, MemoVO } from 'model/memo';
 import { EntityTypes } from 'model/entity';
 
@@ -12,7 +12,7 @@ import StarService from './StarService';
 
 @Injectable()
 export default class MemoService extends BaseService {
-  @Inject(forwardRef(() => StarService)) private readonly starService!: StarService;
+  @Inject() private readonly starService!: StarService;
 
   async create(memo: NewMemo) {
     if (memo.parentId && memo.isPinned) {
@@ -82,9 +82,7 @@ export default class MemoService extends BaseService {
   private async toVOs(memos: Memo): Promise<MemoVO>;
   private async toVOs(memos: Memo[]): Promise<MemoVO[]>;
   private async toVOs(memos: Memo[] | Memo) {
-    const stars = await this.starService.getStarMap(
-      getLocators(Array.isArray(memos) ? memos : [memos], EntityTypes.Memo),
-    );
+    const stars = await this.starService.getStarMap((Array.isArray(memos) ? memos : [memos]).map(({ id }) => id));
 
     const toVO = (memo: Memo) => ({
       ...omit(memo, ['userUpdatedAt']),

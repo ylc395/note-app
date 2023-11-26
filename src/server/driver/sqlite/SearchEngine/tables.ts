@@ -33,7 +33,7 @@ type NoteFtsFow = FtsRow &
   Pick<NoteRow, 'id' | 'title' | 'body' | 'createdAt' | 'userUpdatedAt'> & { [NOTE_FTS_TABLE]: string };
 
 type MaterialFtsFow = FtsRow &
-  Pick<MaterialRow, 'id' | 'name' | 'fileId' | 'createdAt' | 'userUpdatedAt' | 'comment'> & {
+  Pick<MaterialRow, 'id' | 'title' | 'fileId' | 'createdAt' | 'userUpdatedAt' | 'comment'> & {
     [MATERIAL_FTS_TABLE]: string;
   };
 

@@ -5,7 +5,7 @@ export const tableName = 'materials';
 
 export interface Row {
   id: string;
-  name: Generated<string>;
+  title: Generated<string>;
   fileId: string | null;
   parentId: string | null;
   sourceUrl: string | null;
@@ -22,7 +22,7 @@ export default {
     return schema
       .createTable(tableName)
       .addColumn('id', 'text', (col) => col.primaryKey().notNull())
-      .addColumn('name', 'text', (col) => col.notNull().defaultTo(''))
+      .addColumn('title', 'text', (col) => col.notNull().defaultTo(''))
       .addColumn('fileId', 'text')
       .addColumn('parentId', 'text')
       .addColumn('sourceUrl', 'text')

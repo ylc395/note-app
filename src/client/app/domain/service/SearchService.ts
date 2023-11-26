@@ -7,8 +7,7 @@ import { singleton, container } from 'tsyringe';
 //   ExpressionNodeType,
 // } from 'search-expression-parser';
 
-import type { SearchParams, SearchResult } from 'model/search';
-import type { MainEntityTypes } from 'model/entity';
+import type { SearchParams, SearchResult, SearchTreeParams } from 'model/search';
 import { token as remoteToken } from 'infra/remote';
 
 @singleton()
@@ -19,8 +18,8 @@ export default class SearchService {
     await this.remote.post<SearchParams, SearchResult[]>('/search', q);
   };
 
-  readonly searchTree = (q: { type: MainEntityTypes; keyword: string; containBody: boolean }) => {
-    this.remote.post<SearchParams, SearchResult[]>('/search/tree', q);
+  readonly searchTree = (q: SearchTreeParams) => {
+    this.remote.post<SearchTreeParams, SearchResult[]>('/search/tree', q);
   };
 
   // private static parseKeyword(q: string): SearchQuery | null {

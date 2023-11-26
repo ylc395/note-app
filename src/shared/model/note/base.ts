@@ -9,4 +9,5 @@ export interface Note {
   updatedAt: number;
   userUpdatedAt: number;
   createdAt: number;
+  body?: string;
 }

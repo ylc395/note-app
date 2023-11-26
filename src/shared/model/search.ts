@@ -2,8 +2,9 @@ import dayjs from 'dayjs';
 import { array, nativeEnum, object, string, type infer as Infer, boolean } from 'zod';
 import isEmpty from 'lodash/isEmpty';
 import negate from 'lodash/negate';
+import pick from 'lodash/pick';
 
-import { type EntityId, type EntityTypes, hierarchyEntityLocatorSchema } from './entity';
+import { type EntityId, EntityTypes, hierarchyEntityLocatorSchema, Path } from './entity';
 import type { Starable } from './star';
 import type { MaterialEntity } from './material';
 
@@ -33,10 +34,7 @@ interface MaterialSearchResult extends BaseSearchResult {
 
 export type SearchResult = CommonSearchResult | MaterialSearchResult;
 
-export type SearchResultVO = SearchResult &
-  Starable & {
-    path: { entityId: string; title: string }[];
-  };
+export type SearchResultVO = SearchResult & Starable & { path: Path };
 
 export enum Scopes {
   NoteTitle = 1,
@@ -73,4 +71,12 @@ export const searchParamsSchema = object({
   recyclables: boolean().optional(),
 });
 
+export const searchTreeParamsSchema = object({
+  keyword: string().min(1),
+  type: nativeEnum(pick(EntityTypes, ['Note', 'Material', 'Memo'] as const)),
+  containBody: boolean().optional(),
+});
+
 export type SearchParams = Infer<typeof searchParamsSchema>;
+
+export type SearchTreeParams = Infer<typeof searchTreeParamsSchema>;

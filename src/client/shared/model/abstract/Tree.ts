@@ -28,10 +28,12 @@ type TreeEvents = {
 
 export type SelectEvent = { id: TreeNode['id'] | null; reason?: 'drag'; multiple?: boolean };
 
+type EntityPatch<T> = Partial<T> & { id: HierarchyEntity['id'] };
+
 const ROOT_NODE_ID = '__root-node';
 
 const getDefaultNode = <T extends HierarchyEntity>() => ({
-  isLeaf: false,
+  isLeaf: true,
   isExpanded: false,
   isSelected: false,
   isValidTarget: true,
@@ -151,28 +153,46 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
     this.updateTree(entities);
   }
 
-  @action
   updateTree(entity: T | T[]) {
     const entities = Array.isArray(entity) ? entity : [entity];
 
     for (const entity of entities) {
-      let node = this.getNode(entity.id, true);
+      const node = this.getNode(entity.id, true);
 
       if (node) {
-        Object.assign(node, this.entityToNode(entity));
-
-        if (node.parent!.id !== (entity.parentId || ROOT_NODE_ID)) {
-          // reset parent-child relationship
-          const newParent = this.getNode(entity.parentId);
-
-          pull(node.parent!.children, node);
-          newParent.children.push(node);
-          newParent.isLeaf = false;
-          node.parent = newParent;
-        }
+        this.updateNode(entity);
       } else {
-        node = this.addNode(entity);
+        this.addNode(entity);
       }
+    }
+  }
+
+  @action
+  updateNode(patch: EntityPatch<T>) {
+    const node = this.getNode(patch.id);
+
+    assert(node.entity);
+
+    Object.assign(node.entity, patch);
+    Object.assign(node, this.entityToNode(node.entity));
+
+    if (typeof patch.parentId === 'undefined') {
+      return;
+    }
+
+    if (node.parent!.id !== (patch.parentId || ROOT_NODE_ID)) {
+      // reset parent-child relationship
+      const newParent = this.getNode(patch.parentId);
+
+      pull(node.parent!.children, node);
+      newParent.children.push(node);
+      newParent.isLeaf = false;
+
+      if (node.parent!.children.length === 0) {
+        node.parent!.isLeaf = true;
+      }
+
+      node.parent = newParent;
     }
   }
 

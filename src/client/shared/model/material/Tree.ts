@@ -7,7 +7,7 @@ export type MaterialTreeNode = TreeNode<MaterialVO>;
 export default class MaterialTree extends Tree<MaterialVO> {
   protected entityToNode(material: MaterialVO) {
     return {
-      title: material.name,
+      title: material.title,
       isLeaf: !isDirectory(material) || material.childrenCount === 0,
     };
   }

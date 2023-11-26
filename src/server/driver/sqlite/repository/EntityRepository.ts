@@ -1,6 +1,6 @@
 import groupBy from 'lodash/groupBy';
 import map from 'lodash/map';
-import { type EntityId, EntityTypes, HierarchyEntityTypes, HierarchyEntityLocator } from 'model/entity';
+import { type EntityId, EntityTypes, type HierarchyEntityLocator } from 'model/entity';
 import type { ContentEntityTypes, ContentEntityLocator } from 'model/content';
 import type { EntityRepository } from 'service/repository/EntityRepository';
 
@@ -18,7 +18,7 @@ export default class SqliteEntityRepository extends BaseRepository implements En
 
   async findDescendantIds(entities: HierarchyEntityLocator[]) {
     const entitiesGroup = groupBy(entities, 'entityType');
-    const result: Record<HierarchyEntityTypes, Record<EntityId, EntityId[]>> = {
+    const result: Record<HierarchyEntityLocator['entityType'], Record<EntityId, EntityId[]>> = {
       [EntityTypes.Note]: {},
       [EntityTypes.Memo]: {},
       [EntityTypes.Material]: {},
@@ -42,25 +42,10 @@ export default class SqliteEntityRepository extends BaseRepository implements En
           break;
       }
 
-      result[Number(type) as HierarchyEntityTypes] = descants;
+      result[Number(type) as HierarchyEntityLocator['entityType']] = descants;
     }
 
     return result;
-  }
-
-  async findBody({ entityId, entityType }: ContentEntityLocator) {
-    switch (entityType) {
-      case EntityTypes.Note:
-        return await this.notes.findBody(entityId);
-      case EntityTypes.Memo:
-        return (await this.memos.findOneById(entityId))?.content ?? null;
-      case EntityTypes.Material:
-        return (await this.materials.findOneById(entityId))?.comment ?? null;
-      case EntityTypes.MaterialAnnotation:
-        return (await this.materials.findAnnotationById(entityId))?.comment ?? null;
-      default:
-        throw new Error('unsupported type');
-    }
   }
 
   async *findAllBody(entities: ContentEntityLocator[]) {

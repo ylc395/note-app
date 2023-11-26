@@ -1,5 +1,3 @@
-import { observer } from 'mobx-react-lite';
-
 // import Modal from 'web/components/Modal';
 import useModal from 'web/components/Modal/useModal';
 
@@ -10,7 +8,8 @@ import TreeOperations from './Operations';
 // import MetadataForm from './MetadataForm';
 import Context from './Context';
 
-export default observer(function NoteExplorer() {
+// eslint-disable-next-line mobx/missing-observer
+export default (function NoteExplorer() {
   const editingModal = useModal();
   const movingModal = useModal();
 

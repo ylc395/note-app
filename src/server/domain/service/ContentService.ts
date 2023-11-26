@@ -1,4 +1,4 @@
-import { Inject, Injectable, type OnModuleInit, forwardRef } from '@nestjs/common';
+import { Inject, Injectable, type OnModuleInit } from '@nestjs/common';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { visit } from 'unist-util-visit';
 import type { Link as MdAstLinkNode, Image as MdAstImageNode, Node as UnistNode } from 'mdast';
@@ -33,7 +33,7 @@ import EntityService from './EntityService';
 
 @Injectable()
 export default class ContentService extends BaseService implements OnModuleInit {
-  @Inject(forwardRef(() => EntityService)) private readonly entityService!: EntityService;
+  @Inject() private readonly entityService!: EntityService;
 
   onModuleInit() {
     if (!IS_IPC) {
@@ -131,7 +131,7 @@ export default class ContentService extends BaseService implements OnModuleInit 
     const topics = await this.repo.contents.findAvailableTopics(q);
     const topicsGroup = groupBy(topics, 'name');
     const result: TopicVO[] = [];
-    const titles = await this.entityService.getEntityTitles(topics);
+    const titles = await this.entityService.getTitles(topics);
     const snippets = await this.getSnippets(topics);
 
     for (const [name, topics] of Object.entries(topicsGroup)) {
@@ -164,7 +164,7 @@ export default class ContentService extends BaseService implements OnModuleInit 
     const links = await this.repo.contents.findAllLinkTos(q);
     const froms = await this.entityService.filterAvailable(map(links, 'from'));
     const snippets = await this.getSnippets(froms);
-    const titles = await this.entityService.getEntityTitles(froms);
+    const titles = await this.entityService.getTitles(froms);
 
     return froms.map(({ entityId, entityType, position }) => ({
       entityId,

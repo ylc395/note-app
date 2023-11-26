@@ -38,7 +38,7 @@ export function normalizeEntityTitle(v: Pick<Material, 'createdAt'>) {
 
 export function normalizeTitle(v: Material) {
   return (
-    v.name || (isDirectory(v) ? `未命名目录${dayjs(v.createdAt).format('YYYYMMDD-HHmm')}` : normalizeEntityTitle(v))
+    v.title || (isDirectory(v) ? `未命名目录${dayjs(v.createdAt).format('YYYYMMDD-HHmm')}` : normalizeEntityTitle(v))
   );
 }
 

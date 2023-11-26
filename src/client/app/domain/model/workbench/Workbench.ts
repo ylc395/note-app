@@ -166,6 +166,7 @@ export default class Workbench {
     return tile;
   }
 
+  @action
   private getFocusedTile() {
     if (this.focusedTile) {
       return this.focusedTile;
