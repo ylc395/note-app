@@ -9,17 +9,13 @@ import EditableEntity from './abstract/EditableEntity';
 import EditableMaterial from './material/editable/EditableMaterial';
 import { DetailedNoteVO } from 'model/note';
 
-export enum ExplorerTypes {
-  Materials = 'materials',
-  Notes = 'notes',
-  Memo = 'memo',
-}
+export type ExplorerTypes = EntityTypes.Note | EntityTypes.Material | EntityTypes.Memo;
 
 type ExplorerTreeNode = NoteTreeNode | MaterialTreeNode;
 
 @singleton()
 export default class Explorer {
-  readonly currentExplorer = new Value(ExplorerTypes.Materials);
+  readonly currentExplorer = new Value<ExplorerTypes>(EntityTypes.Material);
   readonly noteTree = new NoteTree();
   readonly materialTree = new MaterialTree();
 

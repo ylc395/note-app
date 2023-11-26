@@ -20,6 +20,11 @@ export default class NoteEditor extends Editor<EditableNote, UIState> {
   @observable searchEnabled = false;
 
   @computed
+  get breadcrumbs() {
+    return this.editable.entity?.path || [];
+  }
+
+  @computed
   get tabView() {
     return {
       title: (IS_DEV ? `${this.id} ${this.editable.entityId.slice(0, 3)} ` : '') + this.title,

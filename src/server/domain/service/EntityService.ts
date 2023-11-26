@@ -52,15 +52,21 @@ export default class EntityService extends BaseService {
 
   async getPaths(locators: HierarchyEntityLocator[]) {
     const groups = groupBy(locators, 'entityType');
-    let result: Record<EntityId, { title: string; id: string }[]> = {};
+    let result: Record<EntityId, { title: string; id: string; icon: string | null }[]> = {};
 
     for (const [type, locators] of Object.entries(groups)) {
       const entityType = Number(type) as HierarchyEntityLocator['entityType'];
+      const repo = this.getRepo(entityType);
       const ids = EntityService.toIds(locators);
-      const ancestorIds = await this.getRepo(entityType).findAncestorIds(ids);
-      const notes = buildIndex(await this.repo.notes.findAll({ id: Object.values(ancestorIds).flat() }));
+      const ancestorIds = await repo.findAncestorIds(ids);
+
+      const entities = buildIndex(await repo.findAll({ id: Object.values(ancestorIds).flat() }));
       const titles = mapValues(ancestorIds, (ids) =>
-        ids.map((id) => ({ id, title: titleTransformers[entityType](notes[id]!) })),
+        ids.map((id) => ({
+          id,
+          title: titleTransformers[entityType](entities[id]!),
+          icon: entities[id]!.icon,
+        })),
       );
 
       result = { ...result, ...titles };

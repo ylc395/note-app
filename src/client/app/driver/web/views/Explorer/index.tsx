@@ -3,16 +3,17 @@ import { container } from 'tsyringe';
 import type { ReactNode } from 'react';
 import { observer } from 'mobx-react-lite';
 
-import Explorer, { ExplorerTypes } from 'model/Explorer';
+import Explorer, { type ExplorerTypes } from 'model/Explorer';
+import { EntityTypes } from 'model/entity';
 import ActivityBar from './ActivityBar';
 import NoteExplorer from './Note';
 import Memo from './Memo';
 import Material from './Material';
 
 const explorerMap: Record<ExplorerTypes, () => ReactNode> = {
-  [ExplorerTypes.Notes]: () => <NoteExplorer />,
-  [ExplorerTypes.Materials]: () => <Material />,
-  [ExplorerTypes.Memo]: () => <Memo />,
+  [EntityTypes.Note]: () => <NoteExplorer />,
+  [EntityTypes.Material]: () => <Material />,
+  [EntityTypes.Memo]: () => <Memo />,
 };
 
 export default observer(function ExplorerView() {

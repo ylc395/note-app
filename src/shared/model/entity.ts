@@ -35,4 +35,4 @@ export interface EntityWithTitle<T = EntityTypes> extends EntityLocator<T> {
   title: string;
 }
 
-export type Path = { id: EntityId; title: string }[];
+export type Path = { id: EntityId; title: string; icon: string | null }[];

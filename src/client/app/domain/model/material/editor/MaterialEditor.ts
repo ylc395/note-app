@@ -22,6 +22,10 @@ export default abstract class MaterialEditor<T extends EditableMaterial, S = unk
 
   @observable currentAnnotationId: AnnotationVO['id'] | null = null;
 
+  get breadcrumbs() {
+    return [];
+  }
+
   async removeCurrentAnnotation() {
     assert(this.currentAnnotationId);
 

@@ -2,16 +2,9 @@ import uniqueId from 'lodash/uniqueId';
 import { action, makeObservable, observable } from 'mobx';
 import { Emitter } from 'strict-event-emitter';
 
+import type { Path } from 'model/entity';
 import type EditableEntity from 'model/abstract/EditableEntity';
 import type Tile from 'model/workbench/Tile';
-
-// interface Breadcrumb {
-//   title: string;
-//   id: string;
-//   icon?: string | null;
-// }
-
-// type Breadcrumbs = Array<Breadcrumb & { siblings: Breadcrumb[] }>;
 
 export enum EventNames {
   Destroyed = 'editor.destroyed',
@@ -30,7 +23,7 @@ export default abstract class Editor<T extends EditableEntity = EditableEntity, 
 > {
   readonly id = uniqueId('editor-');
   abstract readonly tabView: { title: string; icon: string | null };
-  // abstract readonly breadcrumbs: Breadcrumbs;
+  abstract readonly breadcrumbs: Path;
   @observable isFocused = false;
   uiState: Partial<S> | null = null;
 
