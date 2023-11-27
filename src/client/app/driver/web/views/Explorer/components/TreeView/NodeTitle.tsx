@@ -1,12 +1,13 @@
 import { observer } from 'mobx-react-lite';
 import type { ReactNode } from 'react';
 
-import type { TreeNode } from 'model/abstract/Tree';
+import type { MaterialTreeNode } from 'model/material/Tree';
+import type { NoteTreeNode } from 'model/note/Tree';
 import { IS_DEV } from 'infra/constants';
 import IconTitle from 'web/components/IconTitle';
 
 export interface Props {
-  node: TreeNode<{ icon: string | null }>;
+  node: MaterialTreeNode | NoteTreeNode;
   children?: ReactNode;
 }
 
@@ -17,6 +18,7 @@ export default observer(function NodeTitle({ node, children }: Props) {
         className="w-full"
         titleClassName="text-gray-600 min-w-0 overflow-hidden text-ellipsis"
         icon={node.entity?.icon}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         title={`${IS_DEV ? `${node.id.slice(0, 3)} ` : ''}${node.title}`}
       />
       {children && (

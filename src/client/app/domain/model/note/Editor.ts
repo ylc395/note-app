@@ -3,6 +3,7 @@ import { makeObservable, computed, observable, action } from 'mobx';
 import { IS_DEV } from 'infra/constants';
 import Editor from 'model/abstract/Editor';
 import type Tile from 'model/workbench/Tile';
+import { normalizeTitle } from 'model/note/common';
 
 import type EditableNote from './Editable';
 
@@ -27,7 +28,9 @@ export default class NoteEditor extends Editor<EditableNote, UIState> {
   @computed
   get tabView() {
     return {
-      title: (IS_DEV ? `${this.id} ${this.editable.entityId.slice(0, 3)} ` : '') + this.title,
+      title:
+        (IS_DEV ? `${this.id} ${this.editable.entityId.slice(0, 3)} ` : '') +
+        (this.editable.entity ? normalizeTitle(this.editable.entity) : ''),
       icon: this.editable.entity?.icon || null,
     };
   }

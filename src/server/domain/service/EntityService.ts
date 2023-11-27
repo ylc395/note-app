@@ -9,18 +9,8 @@ import isMatch from 'lodash/isMatch';
 import { type EntityId, type EntityLocator, EntityTypes, HierarchyEntityLocator } from 'model/entity';
 import BaseService from './BaseService';
 import { buildIndex } from 'utils/collection';
-import { normalizeTitle as normalizeNoteTitle } from 'model/note';
-import { normalizeTitle as normalizeMaterialTitle } from 'model/material';
-import { normalizeTitle as normalizeMemoTitle } from 'model/memo';
 
 type TitleEntityTypes = EntityTypes.Note | EntityTypes.Material | EntityTypes.Memo | EntityTypes.MaterialAnnotation;
-
-const titleTransformers = {
-  [EntityTypes.Note]: normalizeNoteTitle,
-  [EntityTypes.Material]: normalizeMaterialTitle,
-  [EntityTypes.Memo]: normalizeMemoTitle,
-  [EntityTypes.MaterialAnnotation]: () => 'annotation',
-};
 
 @Injectable()
 export default class EntityService extends BaseService {
@@ -43,7 +33,7 @@ export default class EntityService extends BaseService {
       });
 
       for (const entity of entities) {
-        result[entity.id] = titleTransformers[entityType](entity);
+        result[entity.id] = entity.title;
       }
     }
 
@@ -64,7 +54,7 @@ export default class EntityService extends BaseService {
       const titles = mapValues(ancestorIds, (ids) =>
         ids.map((id) => ({
           id,
-          title: titleTransformers[entityType](entities[id]!),
+          title: entities[id]!.title,
           icon: entities[id]!.icon,
         })),
       );

@@ -4,7 +4,6 @@ import { useEffect } from 'react';
 import MaterialService from 'service/MaterialService';
 
 import TreeView from '../../components/TreeView';
-import { EntityTypes } from 'model/entity';
 import { FileAddOutlined, FolderAddOutlined } from '@ant-design/icons';
 import IconButton from 'web/components/IconButton';
 import { isDirectory } from 'model/material';
@@ -20,7 +19,6 @@ export default function MaterialTreeView() {
   return (
     <TreeView
       tree={materialTree}
-      entityType={EntityTypes.Material}
       nodeOperation={(node) =>
         node.entity && isDirectory(node.entity) ? (
           <>

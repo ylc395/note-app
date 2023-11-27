@@ -6,7 +6,6 @@ import { useEffect } from 'react';
 import NoteService from 'service/NoteService';
 import TreeView from '../../components/TreeView';
 
-import { EntityTypes } from 'model/entity';
 import { PlusOutlined } from '@ant-design/icons';
 import IconButton from 'web/components/IconButton';
 
@@ -23,7 +22,6 @@ export default function NoteTreeView() {
   return (
     <TreeView
       tree={noteTree}
-      entityType={EntityTypes.Note}
       nodeOperation={({ id }) => (
         <IconButton onClick={() => createNote(id)}>
           <PlusOutlined />

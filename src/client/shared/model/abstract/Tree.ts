@@ -6,7 +6,7 @@ import differenceWith from 'lodash/differenceWith';
 import groupBy from 'lodash/groupBy';
 import map from 'lodash/map';
 
-import type { HierarchyEntity } from '../../../../shared/model/entity';
+import type { HierarchyEntityLocator, HierarchyEntity } from '../../../../shared/model/entity';
 
 export interface TreeNode<T = unknown> {
   readonly id: string;
@@ -43,6 +43,8 @@ const getDefaultNode = <T extends HierarchyEntity>() => ({
 });
 
 export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> extends Emitter<TreeEvents> {
+  abstract readonly entityType: HierarchyEntityLocator['entityType'];
+
   readonly root: TreeNode<T> = observable({
     entity: null,
     parent: null,
@@ -168,31 +170,35 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
   }
 
   @action
-  updateNode(patch: EntityPatch<T>) {
-    const node = this.getNode(patch.id);
+  updateNode(patch: EntityPatch<T> | EntityPatch<T>[]) {
+    const patches = Array.isArray(patch) ? patch : [patch];
 
-    assert(node.entity);
+    for (const patch of patches) {
+      const node = this.getNode(patch.id);
 
-    Object.assign(node.entity, patch);
-    Object.assign(node, this.entityToNode(node.entity));
+      assert(node.entity);
 
-    if (typeof patch.parentId === 'undefined') {
-      return;
-    }
+      Object.assign(node.entity, patch);
+      Object.assign(node, this.entityToNode(node.entity));
 
-    if (node.parent!.id !== (patch.parentId || ROOT_NODE_ID)) {
-      // reset parent-child relationship
-      const newParent = this.getNode(patch.parentId);
-
-      pull(node.parent!.children, node);
-      newParent.children.push(node);
-      newParent.isLeaf = false;
-
-      if (node.parent!.children.length === 0) {
-        node.parent!.isLeaf = true;
+      if (typeof patch.parentId === 'undefined') {
+        return;
       }
 
-      node.parent = newParent;
+      if (node.parent!.id !== (patch.parentId || ROOT_NODE_ID)) {
+        // reset parent-child relationship
+        const newParent = this.getNode(patch.parentId);
+
+        pull(node.parent!.children, node);
+        newParent.children.push(node);
+        newParent.isLeaf = false;
+
+        if (node.parent!.children.length === 0) {
+          node.parent!.isLeaf = true;
+        }
+
+        node.parent = newParent;
+      }
     }
   }
 

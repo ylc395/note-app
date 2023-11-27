@@ -41,7 +41,7 @@ export default observer(function TabItem({ editor }: { editor: Editor }) {
       {...listeners}
       ref={setNodeRef}
       className={clsx(
-        'flex cursor-pointer flex-nowrap items-center border-0 border-r border-solid border-gray-200 p-2',
+        'flex cursor-pointer flex-nowrap items-center border-0 border-r border-solid border-gray-200 p-2 text-gray-500',
         currentEditor === editor ? 'bg-white' : overItem === editor ? 'bg-gray-200' : 'bg-transparent',
       )}
       onClick={() => switchToEditor(editor)}
@@ -49,7 +49,7 @@ export default observer(function TabItem({ editor }: { editor: Editor }) {
     >
       <IconTitle
         className="mr-1 max-w-[200px] text-sm"
-        titleClassName=" overflow-hidden text-ellipsis"
+        titleClassName="overflow-hidden text-ellipsis"
         size="1em"
         {...editor.tabView}
       />

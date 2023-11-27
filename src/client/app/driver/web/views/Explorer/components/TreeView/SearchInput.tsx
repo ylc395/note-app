@@ -12,7 +12,7 @@ interface Props {
   entityType: SearchTreeParams['type'];
 }
 
-export default (function Input({ entityType }: Props) {
+export default (function SearchInput({ entityType }: Props) {
   const { searchTree } = container.resolve(SearchService);
   const [keyword, setKeyword] = useState('');
   const [containBody, { toggle: toggleContainBody }] = useToggle(false);

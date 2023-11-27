@@ -13,7 +13,7 @@ export default observer(function NoteTitle() {
     <div className="flex items-center border-0 border-b border-solid border-gray-200">
       <Input
         className="border-none py-2 text-lg font-semibold"
-        placeholder={editor.title || ''}
+        placeholder={editor.title || editor.tabView.title}
         value={editor.title}
         onChange={handleChange}
         disabled={typeof editor.title !== 'string'}

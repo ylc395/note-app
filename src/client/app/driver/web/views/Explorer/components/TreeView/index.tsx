@@ -1,32 +1,27 @@
 import type { ReactNode } from 'react';
 
-import type { EntityTypes, HierarchyEntity } from 'model/entity';
 import type { default as TreeModel, TreeNode } from 'model/abstract/Tree';
 import Tree from 'components/Tree';
+import type { MaterialVO } from 'model/material';
+import type { NoteVO } from 'model/note';
 
 import SearchInput from './SearchInput';
 import NodeTitle from './NodeTitle';
 
-interface EntityWithIcon extends HierarchyEntity {
-  icon: string | null;
-}
-
-interface Props<T extends EntityWithIcon> {
-  entityType?: EntityTypes.Note | EntityTypes.Material;
+interface Props<T extends MaterialVO | NoteVO> {
   tree: TreeModel<T>;
   nodeOperation?: (node: TreeNode<T>) => ReactNode;
+  simple?: boolean;
 }
 
-export default function TreeView<T extends EntityWithIcon>({ entityType, tree, nodeOperation }: Props<T>) {
-  const isNormal = Boolean(entityType);
-
+export default function TreeView<T extends MaterialVO | NoteVO>({ tree, simple, nodeOperation }: Props<T>) {
   return (
     <>
-      {isNormal && <SearchInput entityType={entityType!} />}
+      {!simple && <SearchInput entityType={tree.entityType} />}
       <Tree
         className="scrollbar-stable scrollbar-thin grow overflow-hidden pr-2 hover:overflow-auto"
-        draggable={isNormal}
-        droppable={isNormal}
+        draggable={!simple}
+        droppable={!simple}
         nodeClassName="[--hover-color:#f3f4f6] [--selected-color:#e2e8f0] 
          hover:bg-[var(--hover-color)]
          data-[selected=true]:bg-[var(--selected-color)]

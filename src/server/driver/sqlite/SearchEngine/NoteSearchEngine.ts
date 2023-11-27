@@ -2,7 +2,6 @@ import { sql } from 'kysely';
 
 import { type SearchParams, Scopes } from 'model/search';
 import { EntityTypes } from 'model/entity';
-import { normalizeTitle } from 'model/note';
 
 import type SearchEngine from './index';
 import { FILE_TEXTS_FTS_TABLE, NOTE_FTS_TABLE, WRAPPER_END_TEXT, WRAPPER_START_TEXT, type SearchRow } from './tables';
@@ -73,7 +72,6 @@ export default class SqliteNoteSearchEngine {
     return result.map((row) => ({
       ...row,
       entityType: EntityTypes.Note as const,
-      title: normalizeTitle(row),
     }));
   }
 }

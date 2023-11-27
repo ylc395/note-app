@@ -9,6 +9,7 @@ import MaterialTree from 'model/material/Tree';
 
 import TabItem from '../Workbench/Tile/TabBar/TabItem';
 import TreeView from '../Explorer/components/TreeView';
+import { EntityTypes } from 'model/entity';
 
 export default observer(function DragPreview() {
   const { previewingItem } = container.resolve(DndService);
@@ -16,8 +17,8 @@ export default observer(function DragPreview() {
   return (
     <DragOverlay className="pointer-events-none" dropAnimation={null}>
       {previewingItem instanceof Editor && <TabItem editor={previewingItem} />}
-      {previewingItem instanceof NoteTree && <TreeView tree={previewingItem} />}
-      {previewingItem instanceof MaterialTree && <TreeView tree={previewingItem} />}
+      {previewingItem instanceof NoteTree && <TreeView simple tree={previewingItem} />}
+      {previewingItem instanceof MaterialTree && <TreeView simple tree={previewingItem} />}
     </DragOverlay>
   );
 });

@@ -1,15 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import assert from 'node:assert';
 import pick from 'lodash/pick';
-import {
-  type NoteVO,
-  type NewNoteDTO,
-  type NotePatchDTO,
-  type Note,
-  type ClientNoteQuery,
-  type NotePatch,
-  normalizeTitle,
-} from 'model/note';
+import type { NoteVO, NewNoteDTO, NotePatchDTO, Note, ClientNoteQuery, NotePatch } from 'model/note';
 import { EntityTypes } from 'model/entity';
 
 import BaseService from './BaseService';
@@ -23,8 +15,7 @@ export default class NoteService extends BaseService {
 
   private static getMetadata(note: Note) {
     return {
-      ...pick(note, ['id', 'createdAt', 'icon', 'isReadonly', 'parentId']),
-      title: normalizeTitle(note),
+      ...pick(note, ['id', 'createdAt', 'icon', 'isReadonly', 'parentId', 'title']),
       updatedAt: note.userUpdatedAt,
     };
   }
@@ -54,7 +45,6 @@ export default class NoteService extends BaseService {
 
     const targetNote = await this.repo.notes.findOneById(noteId);
     assert(targetNote);
-    targetNote.title = `${normalizeTitle(targetNote)} - 副本`;
 
     const newNote = await this.repo.notes.create(pick(targetNote, ['title', 'body', 'icon', 'parentId']));
 
@@ -108,11 +98,9 @@ export default class NoteService extends BaseService {
     const _children = await this.repo.notes.findChildrenIds(ids);
 
     return notes.map((note) => ({
-      ...pick(note, ['id', 'createdAt', 'icon', 'isReadonly', 'parentId']),
-      title: normalizeTitle(note),
+      ...NoteService.getMetadata(note),
       childrenCount: _children[note.id]?.length || 0,
       isStar: Boolean(stars[note.id]),
-      updatedAt: note.userUpdatedAt,
     }));
   }
 

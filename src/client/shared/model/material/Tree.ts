@@ -1,10 +1,12 @@
 import { runInAction } from 'mobx';
 import { type MaterialVO, isDirectory } from '../../../../shared/model/material';
 import Tree, { type TreeNode } from '../abstract/Tree';
+import { EntityTypes } from '../../../../shared/model/entity';
 
 export type MaterialTreeNode = TreeNode<MaterialVO>;
 
 export default class MaterialTree extends Tree<MaterialVO> {
+  readonly entityType = EntityTypes.Material;
   protected entityToNode(material: MaterialVO) {
     return {
       title: material.title,

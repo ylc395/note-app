@@ -1,5 +1,4 @@
 import { container, singleton } from 'tsyringe';
-import { Emitter } from 'strict-event-emitter';
 import assert from 'assert';
 
 import { token as remoteToken } from 'infra/remote';
@@ -20,10 +19,7 @@ import { MULTIPLE_ICON_FLAG, type NoteMetadata } from 'model/note/MetadataForm';
 import { Workbench } from 'model/workbench';
 
 @singleton()
-export default class NoteService extends Emitter<{
-  deleted: [Note['id'][]];
-  updated: [Note[]];
-}> {
+export default class NoteService {
   private readonly remote = container.resolve(remoteToken);
   private readonly ui = container.resolve(UIToken);
   private readonly explorer = container.resolve(Explorer);
@@ -34,8 +30,6 @@ export default class NoteService extends Emitter<{
   }
 
   constructor() {
-    super();
-
     this.tree.on('nodeSelected', this.handleSelect);
     this.tree.on('nodeExpanded', this.loadChildren);
   }
@@ -80,18 +74,17 @@ export default class NoteService extends Emitter<{
     await this.remote.patch<RecyclablesDTO>(`/recyclables`, locators);
     this.tree.removeNodes(ids);
     this.ui.feedback({ type: 'success', content: '已移至回收站' });
-    this.emit('deleted', ids);
   }
 
   readonly moveNotes = async (targetId: Note['parentId'], ids?: Note['id'][]) => {
     const _ids = ids || this.tree.selectedNodeIds;
 
-    const { body: updatedNotes } = await this.remote.patch<NotesPatch, Note[]>('/notes', {
+    await this.remote.patch<NotesPatch>('/notes', {
       ids: _ids,
       note: { parentId: targetId },
     });
 
-    this.tree.updateTree(updatedNotes);
+    this.tree.updateNode(_ids.map((id) => ({ id, parentId: targetId })));
 
     const targetNode = this.tree.getNode(targetId, true);
 
@@ -105,8 +98,6 @@ export default class NoteService extends Emitter<{
           }
         : undefined,
     });
-
-    this.emit('updated', updatedNotes);
   };
 
   async editNotes(metadata: NoteMetadata) {
@@ -120,6 +111,5 @@ export default class NoteService extends Emitter<{
     });
 
     this.tree.updateTree(notes);
-    this.emit('updated', notes);
   }
 }
