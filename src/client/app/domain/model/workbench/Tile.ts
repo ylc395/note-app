@@ -1,10 +1,11 @@
 import { action, makeObservable, observable } from 'mobx';
 import { container } from 'tsyringe';
 import uniqueId from 'lodash/uniqueId';
+import isMatch from 'lodash/isMatch';
 import { Emitter } from 'strict-event-emitter';
 import assert from 'assert';
 
-import type Editor from 'model/abstract/Editor';
+import Editor from 'model/abstract/Editor';
 import EditorManager from './EditorManager';
 import { EditableEntityLocator } from 'model/entity';
 
@@ -31,11 +32,12 @@ export default class Tile extends Emitter<Events> {
   }
 
   @action.bound
-  switchToEditor(editor: Editor | ((tab: Editor) => boolean), safe?: boolean) {
-    const existedTab = this.editors.find(typeof editor === 'function' ? editor : (e) => e === editor);
+  switchToEditor(editor: Editor | EditableEntityLocator) {
+    const existedTab = this.editors.find((e) =>
+      editor instanceof Editor ? editor === e : isMatch(editor, e.toEntityLocator()),
+    );
 
     if (!existedTab) {
-      !safe && assert.fail('no target tab');
       return false;
     }
 
@@ -48,12 +50,12 @@ export default class Tile extends Emitter<Events> {
     const existedTabIndex = this.editors.findIndex((e) => e === editor);
     assert(existedTabIndex >= 0, 'editor not in this tile');
 
-    const [closedEditor] = this.editors.splice(existedTabIndex, 1);
+    const [removedEditor] = this.editors.splice(existedTabIndex, 1);
 
-    assert(closedEditor);
+    assert(removedEditor);
 
     if (destroy) {
-      closedEditor.destroy();
+      removedEditor.destroy();
     }
 
     if (this.currentEditor === editor) {
@@ -64,7 +66,7 @@ export default class Tile extends Emitter<Events> {
       this.destroy();
     }
 
-    closedEditor.tile = undefined;
+    removedEditor.tile = undefined;
   }
 
   @action.bound
@@ -95,9 +97,18 @@ export default class Tile extends Emitter<Events> {
   }
 
   @action
-  addEditor(editor: Editor, index?: number) {
+  addEditor(editor: Editor, to?: Editor) {
+    const existedEditorIndex = this.editors.findIndex((e) => isMatch(e.toEntityLocator(), editor.toEntityLocator()));
+
+    if (existedEditorIndex >= 0) {
+      const [existedEditor] = this.editors.splice(existedEditorIndex, 1);
+      existedEditor!.destroy();
+    }
+
+    const destIndex = this.editors.findIndex((editor) => editor === to);
+
     editor.tile = this;
-    this.editors.splice(typeof index === 'number' ? index : this.editors.length, 0, editor);
+    this.editors.splice(destIndex >= 0 ? destIndex : this.editors.length, 0, editor);
     this.currentEditor = editor;
   }
 

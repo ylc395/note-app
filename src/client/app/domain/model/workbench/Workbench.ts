@@ -1,7 +1,6 @@
 import pull from 'lodash/pull';
 import uniqueId from 'lodash/uniqueId';
 import last from 'lodash/last';
-import isMatch from 'lodash/isMatch';
 import { observable, makeObservable, action, computed } from 'mobx';
 import { container, singleton } from 'tsyringe';
 import assert from 'assert';
@@ -187,13 +186,12 @@ export default class Workbench {
     }
 
     if (src.tile) {
-      src.tile.removeEditor(src);
+      src.tile.removeEditor(src, false);
     }
 
     if (dest instanceof Editor) {
       assert(dest.tile);
-      const destIndex = dest.tile.editors.findIndex((editor) => editor === dest);
-      dest.tile.addEditor(src, destIndex);
+      dest.tile.addEditor(src, dest);
     } else if (dest instanceof Tile) {
       dest.addEditor(src);
     } else {
@@ -212,7 +210,7 @@ export default class Workbench {
 
       assert(targetTile);
 
-      if (targetTile.switchToEditor((editor) => isMatch(entity, editor.toEntityLocator()), true)) {
+      if (targetTile.switchToEditor(entity)) {
         return;
       }
 
