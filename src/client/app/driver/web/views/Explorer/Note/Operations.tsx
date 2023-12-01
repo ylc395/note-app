@@ -12,16 +12,18 @@ export default observer(function Operations() {
   } = container.resolve(NoteService);
 
   return (
-    <div className="flex justify-between">
+    <div className="flex grow justify-between">
       <IconButton onClick={createNote}>
         <PlusOutlined />
       </IconButton>
-      <IconButton disabled={expandedNodes.length === 0} onClick={collapseAll}>
-        <ShrinkOutlined />
-      </IconButton>
-      <IconButton>
-        <SettingOutlined />
-      </IconButton>
+      <div>
+        <IconButton disabled={expandedNodes.length === 0} onClick={collapseAll}>
+          <ShrinkOutlined />
+        </IconButton>
+        <IconButton>
+          <SettingOutlined />
+        </IconButton>
+      </div>
     </div>
   );
 });

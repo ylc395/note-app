@@ -15,7 +15,7 @@ export default (function NoteExplorer() {
 
   return (
     <Context.Provider value={{ editingModal, movingModal }}>
-      <ExplorerHeader title="笔记本">
+      <ExplorerHeader title="笔记">
         <TreeOperations />
       </ExplorerHeader>
       <TreeView />

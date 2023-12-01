@@ -62,6 +62,8 @@ export default abstract class EditableMaterial<T extends Material = Material> ex
     });
   }
 
+  destroy() {}
+
   toEntityLocator() {
     return { ...super.toEntityLocator(), mimeType: this.entity?.metadata.mimeType };
   }

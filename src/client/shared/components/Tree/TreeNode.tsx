@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { MouseEventHandler, createContext, useContext } from 'react';
+import { MouseEventHandler, createContext, useContext, useEffect } from 'react';
 import { CaretDownOutlined, CaretRightFilled } from '@ant-design/icons';
 import clsx from 'clsx';
 import uniqueId from 'lodash/uniqueId';
@@ -9,6 +9,7 @@ import { useCreation } from 'ahooks';
 import type { TreeNode as TreeNodeModel } from '../../model/abstract/Tree';
 import type { HierarchyEntity } from '../../../../shared/model/entity';
 import type { TreeContext } from './context';
+import scrollIntoViewIfNeeded from './scrollIntoViewIfNeeded';
 
 const INDENT = 25;
 
@@ -41,7 +42,11 @@ const TreeNode = observer(function <T extends HierarchyEntity>({
     listeners,
     attributes,
   } = useDraggable({ id, disabled: !draggable, data: { instance: node } });
-  const { setNodeRef: setDroppableRef, isOver } = useDroppable({ id, data: { instance: node }, disabled: !droppable });
+  const {
+    setNodeRef: setDroppableRef,
+    isOver,
+    node: domNode,
+  } = useDroppable({ id, data: { instance: node }, disabled: !droppable });
   const useLoadingIcon = node.isLoading && loadingIcon;
   const expand: MouseEventHandler = (e) => {
     e.stopPropagation();
@@ -57,6 +62,12 @@ const TreeNode = observer(function <T extends HierarchyEntity>({
     e.stopPropagation();
     tree.toggleSelect(node === tree.root ? null : node.id, { multiple: multiple && (e.metaKey || e.ctrlKey) });
   };
+
+  useEffect(() => {
+    if (node.isSelected) {
+      scrollIntoViewIfNeeded(domNode.current!, false);
+    }
+  }, [node.isSelected, domNode]);
 
   return (
     <>

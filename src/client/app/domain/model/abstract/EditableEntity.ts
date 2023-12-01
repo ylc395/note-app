@@ -37,5 +37,5 @@ export default abstract class EditableEntity<T = unknown, E extends Events = Eve
     return { entityType: this.entityType, entityId: this.entityId };
   }
 
-  destroy() {}
+  abstract destroy(): void;
 }

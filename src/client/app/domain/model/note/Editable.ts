@@ -31,4 +31,8 @@ export default class EditableNote extends EditableEntity<Note> {
   private readonly uploadNote = debounce((note: NotePatch) => {
     this.remote.patch<NotePatch>(`/notes/${this.entityId}`, toJS(note));
   }, 1000);
+
+  destroy(): void {
+    this.uploadNote.flush();
+  }
 }
