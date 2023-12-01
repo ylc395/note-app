@@ -11,7 +11,7 @@ export default class EditableHtml extends EditableMaterial<WebPage> {
     super(materialId);
   }
 
-  protected async init() {
+  async init() {
     const [{ body: metadata }, { body: blob }] = await Promise.all([
       this.remote.get<void, MaterialEntityVO>(`/materials/${this.entityId}`),
       this.remote.get<void, ArrayBuffer>(`/materials/${this.entityId}/blob`),

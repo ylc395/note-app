@@ -13,7 +13,7 @@ export default class EditableNote extends EditableEntity<Note> {
     makeObservable(this);
   }
 
-  protected async init() {
+  async init() {
     const { body: note } = await this.remote.get<void, Note>(`/notes/${this.entityId}`);
 
     this.load(note);

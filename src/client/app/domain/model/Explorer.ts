@@ -1,13 +1,14 @@
 import { container, singleton } from 'tsyringe';
+import assert from 'assert';
 
 import Value from 'model/Value';
 import NoteTree, { type NoteTreeNode } from 'model/note/Tree';
 import MaterialTree, { type MaterialTreeNode } from 'model/material/Tree';
 import { EntityTypes } from './entity';
 import EditorManager, { EventNames as EditorManagerEvents } from './workbench/EditorManager';
-import EditableEntity from './abstract/EditableEntity';
+import type EditableEntity from './abstract/EditableEntity';
+import EditableNote from './note/Editable';
 import EditableMaterial from './material/editable/EditableMaterial';
-import { DetailedNoteVO } from 'model/note';
 
 export type ExplorerTypes = EntityTypes.Note | EntityTypes.Material | EntityTypes.Memo;
 
@@ -25,18 +26,15 @@ export default class Explorer {
     this.editorManager.on(EditorManagerEvents.entityUpdated, this.updateTree);
   }
 
-  private readonly updateTree = ({ entityType, entity }: EditableEntity) => {
-    switch (entityType) {
-      case EntityTypes.Note:
-        return this.noteTree.updateNode({
-          id: (entity as DetailedNoteVO).id,
-          title: (entity as DetailedNoteVO).title,
-          updatedAt: (entity as DetailedNoteVO).updatedAt,
-        });
-      case EntityTypes.Material:
-        return this.materialTree.updateTree((entity as EditableMaterial['entity'])!.metadata);
-      default:
-        break;
+  private readonly updateTree = (editable: EditableEntity) => {
+    assert(editable.entity);
+
+    if (editable instanceof EditableNote) {
+      return this.noteTree.updateNode(editable.entity);
+    }
+
+    if (editable instanceof EditableMaterial) {
+      return this.materialTree.updateTree(editable.entity);
     }
   };
 

@@ -51,7 +51,7 @@ export default class EditablePdf extends EditableMaterial<Pdf> {
       .sort(({ startPage: startPage1 }, { startPage: startPage2 }) => startPage1 - startPage2);
   }
 
-  protected async init() {
+  async init() {
     EditablePdf.activeCount += 1;
 
     if (!GlobalWorkerOptions.workerPort) {

@@ -3,7 +3,7 @@ import { makeObservable, computed, observable, action } from 'mobx';
 import { IS_DEV } from 'infra/constants';
 import Editor from 'model/abstract/Editor';
 import type Tile from 'model/workbench/Tile';
-import { normalizeTitle } from 'model/note/common';
+import { normalizeTitle } from 'model/note';
 
 import type EditableNote from './Editable';
 

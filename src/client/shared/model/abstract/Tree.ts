@@ -5,6 +5,7 @@ import pull from 'lodash/pull';
 import differenceWith from 'lodash/differenceWith';
 import groupBy from 'lodash/groupBy';
 import map from 'lodash/map';
+import pick from 'lodash/pick';
 
 import type { HierarchyEntityLocator, HierarchyEntity } from '../../../../shared/model/entity';
 
@@ -26,7 +27,7 @@ type TreeEvents = {
   nodeExpanded: [TreeNode['id'] | null];
 };
 
-export type SelectEvent = { id: TreeNode['id'] | null; reason?: 'drag'; multiple?: boolean };
+export type SelectEvent = { id: TreeNode['id'] | null; reason?: string; multiple?: boolean };
 
 type EntityPatch<T> = Partial<T> & { id: HierarchyEntity['id'] };
 
@@ -155,6 +156,7 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
     this.updateTree(entities);
   }
 
+  @action
   updateTree(entity: T | T[]) {
     const entities = Array.isArray(entity) ? entity : [entity];
 
@@ -178,7 +180,7 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
 
       assert(node.entity);
 
-      Object.assign(node.entity, patch);
+      Object.assign(node.entity, pick(patch, Object.keys(node.entity)));
       Object.assign(node, this.entityToNode(node.entity));
 
       if (typeof patch.parentId === 'undefined') {
@@ -203,29 +205,39 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
   }
 
   @action
-  toggleExpand(id: TreeNode['id'] | null) {
+  toggleExpand(id: TreeNode['id'], value?: boolean) {
     const node = this.getNode(id);
 
     assert(!node.isLeaf, 'can not expand leaf');
-    node.isExpanded = !node.isExpanded;
 
-    if (node.isExpanded) {
+    let toggled: boolean;
+
+    if (typeof value === 'boolean') {
+      toggled = node.isExpanded !== value;
+      node.isExpanded = value;
+    } else {
+      toggled = true;
+      node.isExpanded = !node.isExpanded;
+    }
+
+    if (node.isExpanded && toggled) {
       this.emit('nodeExpanded', id);
     }
   }
 
   @action
   toggleSelect(id: TreeNode['id'] | null, options?: Pick<SelectEvent, 'multiple' | 'reason'>) {
+    if (!options?.multiple) {
+      for (const selected of this.selectedNodes) {
+        selected.isSelected = false;
+      }
+    }
+
     const node = this.getNode(id);
 
     node.isSelected = !node.isSelected;
 
     if (node.isSelected) {
-      if (!options?.multiple) {
-        for (const selected of this.selectedNodes) {
-          selected !== node && (selected.isSelected = false);
-        }
-      }
       this.emit('nodeSelected', { id, ...options });
     }
   }

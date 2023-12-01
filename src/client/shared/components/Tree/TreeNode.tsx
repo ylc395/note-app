@@ -46,11 +46,11 @@ const TreeNode = observer(function <T extends HierarchyEntity>({
   const expand: MouseEventHandler = (e) => {
     e.stopPropagation();
 
-    if (useLoadingIcon) {
+    if (useLoadingIcon || node === tree.root) {
       return;
     }
 
-    tree.toggleExpand(node === tree.root ? null : node.id);
+    tree.toggleExpand(node.id);
   };
 
   const select: MouseEventHandler = (e) => {

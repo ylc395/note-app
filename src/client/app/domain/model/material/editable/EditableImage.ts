@@ -11,7 +11,7 @@ export default class EditableImage extends EditableMaterial<Image> {
     super(materialId);
   }
 
-  protected async init() {
+  async init() {
     return;
   }
 }

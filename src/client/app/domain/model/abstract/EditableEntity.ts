@@ -18,7 +18,7 @@ export default abstract class EditableEntity<T = unknown, E extends Events = Eve
   protected readonly remote = container.resolve(remoteToken);
   readonly id = uniqueId('editableEntity-');
   abstract readonly entityType: EditableEntityTypes;
-  protected abstract init(): void;
+  abstract init(): void;
 
   @observable entity?: T;
 
@@ -37,7 +37,5 @@ export default abstract class EditableEntity<T = unknown, E extends Events = Eve
     return { entityType: this.entityType, entityId: this.entityId };
   }
 
-  destroy() {
-    this.removeAllListeners();
-  }
+  destroy() {}
 }

@@ -7,8 +7,8 @@ import { container, singleton } from 'tsyringe';
 import assert from 'assert';
 
 import Editor from 'model/abstract/Editor';
-import Tile, { EventNames as TileEvents } from './Tile';
 import type { EditableEntityLocator } from 'model/entity';
+import Tile, { EventNames as TileEvents } from './Tile';
 import EditorManager, { EventNames as EditorManagerEvents } from './EditorManager';
 import { type TileNode, type TileParent, TileDirections, isTileLeaf } from './tileTree';
 
@@ -30,7 +30,7 @@ type Dest = Tile | Editor | { from: Tile; splitDirection: TileSplitDirections };
 @singleton()
 export default class Workbench {
   private readonly tilesMap = new Map<Tile['id'], Tile>();
-  private readonly editorManager = container.resolve(EditorManager);
+  readonly editorManager = container.resolve(EditorManager);
   @observable.shallow private readonly focusedTileHistory: Tile[] = [];
   @observable root?: TileNode; // a binary tree
 

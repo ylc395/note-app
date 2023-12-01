@@ -46,8 +46,8 @@ export default class NoteService {
 
     this.tree.updateTree(note);
 
-    if (parentId && !this.tree.getNode(parentId).isExpanded) {
-      this.tree.toggleExpand(parentId);
+    if (parentId) {
+      this.tree.toggleExpand(parentId, true);
     }
 
     this.tree.toggleSelect(note.id);
@@ -63,7 +63,6 @@ export default class NoteService {
 
   private readonly handleSelect = ({ id, multiple, reason }: SelectEvent) => {
     assert(id);
-
     if (!multiple && reason !== 'drag') {
       this.workbench.openEntity({ entityType: EntityTypes.Note, entityId: id });
     }
@@ -84,20 +83,16 @@ export default class NoteService {
       note: { parentId: targetId },
     });
 
-    this.tree.updateNode(_ids.map((id) => ({ id, parentId: targetId })));
+    for (const id of _ids) {
+      this.workbench.editorManager.getEditable(id)?.init();
+      this.tree.updateNode({ id, parentId: targetId });
+    }
 
-    const targetNode = this.tree.getNode(targetId, true);
+    if (targetId) {
+      this.tree.toggleExpand(targetId, true);
+    }
 
-    this.ui.feedback({
-      type: 'success',
-      content: `移动成功${targetId === null || targetNode?.isExpanded ? '' : '。点击定位到新位置'}`,
-      onClick: targetId
-        ? async () => {
-            await this.tree.toggleExpand(targetId);
-            this.tree.setSelected(_ids);
-          }
-        : undefined,
-    });
+    this.tree.setSelected(_ids);
   };
 
   async editNotes(metadata: NoteMetadata) {

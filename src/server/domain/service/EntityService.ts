@@ -7,8 +7,11 @@ import mapValues from 'lodash/mapValues';
 import isMatch from 'lodash/isMatch';
 
 import { type EntityId, type EntityLocator, EntityTypes, HierarchyEntityLocator } from 'model/entity';
-import BaseService from './BaseService';
 import { buildIndex } from 'utils/collection';
+import { normalizeTitle as normalizeNoteTitle } from 'model/note';
+import { normalizeTitle as normalizeMaterialTitle } from 'model/material';
+import { normalizeTitle as normalizeMemoTitle } from 'model/memo';
+import BaseService from './BaseService';
 
 type TitleEntityTypes = EntityTypes.Note | EntityTypes.Material | EntityTypes.Memo | EntityTypes.MaterialAnnotation;
 
@@ -43,6 +46,11 @@ export default class EntityService extends BaseService {
   async getPaths(locators: HierarchyEntityLocator[]) {
     const groups = groupBy(locators, 'entityType');
     let result: Record<EntityId, { title: string; id: string; icon: string | null }[]> = {};
+    const normalizeTitleMap = {
+      [EntityTypes.Note]: normalizeNoteTitle,
+      [EntityTypes.Material]: normalizeMaterialTitle,
+      [EntityTypes.Memo]: normalizeMemoTitle,
+    };
 
     for (const [type, locators] of Object.entries(groups)) {
       const entityType = Number(type) as HierarchyEntityLocator['entityType'];
@@ -54,7 +62,7 @@ export default class EntityService extends BaseService {
       const titles = mapValues(ancestorIds, (ids) =>
         ids.map((id) => ({
           id,
-          title: entities[id]!.title,
+          title: normalizeTitleMap[entityType](entities[id]!),
           icon: entities[id]!.icon,
         })),
       );

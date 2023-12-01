@@ -1,4 +1,4 @@
-import { union, boolean, object, string, null as zodNull, type infer as Infer, undefined } from 'zod';
+import { union, boolean, object, string, null as zodNull, type infer as Infer, undefined as zodUndefined } from 'zod';
 
 export const notePatchDTOSchema = object({
   title: string(),
@@ -15,7 +15,7 @@ export const notesPatchDTOSchema = object({
   note: notePatchDTOSchema,
 });
 
-export const newNoteDTOSchema = union([notePatchDTOSchema, undefined()]);
+export const newNoteDTOSchema = union([notePatchDTOSchema, zodUndefined()]);
 
 export const newNoteParamsSchema = object({ from: string().optional() });
 

@@ -1,8 +1,7 @@
 import { runInAction } from 'mobx';
-import type { NoteVO } from '../../../../shared/model/note';
+import { type NoteVO, normalizeTitle } from '../../../../shared/model/note';
 import { EntityTypes } from '../../../../shared/model/entity';
 import Tree, { type TreeNode } from '../abstract/Tree';
-import { normalizeTitle } from './common';
 
 export type NoteTreeNode = TreeNode<NoteVO>;
 

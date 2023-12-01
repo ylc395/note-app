@@ -59,10 +59,8 @@ export default class NoteService extends BaseService {
   }
 
   private async noteToDetail(note: Required<Note>) {
-    const path = (await this.entityService.getPaths(EntityService.getLocators([note], EntityTypes.Note)))[note.id];
-
+    const path = (await this.entityService.getPaths([{ entityType: EntityTypes.Note, entityId: note.id }]))[note.id];
     assert(path);
-
     return { ...NoteService.getMetadata(note), body: note.body, path };
   }
 

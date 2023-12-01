@@ -119,8 +119,12 @@ export default class EditorManager extends Emitter<Events> {
 
     if (editorSet.size === 0) {
       this.editors.delete(editable);
-      delete this.editableEntities[editable.id];
+      delete this.editableEntities[editable.entityId];
       editable.destroy();
     }
+  }
+
+  getEditable(id: EntityId) {
+    return this.editableEntities[id];
   }
 }
