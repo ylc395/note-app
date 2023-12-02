@@ -72,6 +72,7 @@ export default class SqliteSearchEngine implements SearchEngine {
           content: [],
           entityType: record.entityType,
           rank: record.rank,
+          icon: null,
           ...(record.entityType === EntityTypes.Material ? { mimeType: record.mimeType! } : {}),
         } as SearchResult & { rank: number });
 

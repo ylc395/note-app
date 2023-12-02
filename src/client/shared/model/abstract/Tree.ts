@@ -7,11 +7,11 @@ import groupBy from 'lodash/groupBy';
 import map from 'lodash/map';
 import pick from 'lodash/pick';
 
-import type { HierarchyEntityLocator, HierarchyEntity } from '../../../../shared/model/entity';
+import type { HierarchyEntity } from '../../../../shared/model/entity';
 
 export interface TreeNode<T = unknown> {
   readonly id: string;
-  readonly entity: T | null; // only root node has no entity;
+  entity: T | null; // only root node has no entity;
   title: string;
   children: TreeNode<T>[];
   parent: TreeNode<T> | null; // only root node has no parent;
@@ -44,8 +44,6 @@ const getDefaultNode = <T extends HierarchyEntity>() => ({
 });
 
 export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> extends Emitter<TreeEvents> {
-  abstract readonly entityType: HierarchyEntityLocator['entityType'];
-
   readonly root: TreeNode<T> = observable({
     entity: null,
     parent: null,

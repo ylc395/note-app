@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 
 import type { default as TreeModel, TreeNode } from 'model/abstract/Tree';
 import Tree from 'components/Tree';
+import type { SearchableEntityType } from 'model/search';
 import type { MaterialVO } from 'model/material';
 import type { NoteVO } from 'model/note';
 
@@ -11,13 +12,15 @@ import NodeTitle from './NodeTitle';
 interface Props<T extends MaterialVO | NoteVO> {
   tree: TreeModel<T>;
   nodeOperation?: (node: TreeNode<T>) => ReactNode;
-  simple?: boolean;
+  entityType?: SearchableEntityType;
 }
 
-export default function TreeView<T extends MaterialVO | NoteVO>({ tree, simple, nodeOperation }: Props<T>) {
+export default function TreeView<T extends MaterialVO | NoteVO>({ tree, entityType, nodeOperation }: Props<T>) {
+  const simple = !entityType;
+
   return (
     <>
-      {!simple && <SearchInput entityType={tree.entityType} />}
+      {entityType && <SearchInput entityType={entityType} />}
       <Tree
         className="scrollbar-stable scrollbar-thin grow overflow-hidden pr-2 hover:overflow-auto"
         draggable={!simple}

@@ -1,13 +1,13 @@
 import { container } from 'tsyringe';
 import { useEffect } from 'react';
+import { PlusOutlined } from '@ant-design/icons';
 // import clsx from 'clsx';
 // import { useDroppable } from '@dnd-kit/core';
 
 import NoteService from 'service/NoteService';
-import TreeView from '../../components/TreeView';
-
-import { PlusOutlined } from '@ant-design/icons';
+import { EntityTypes } from 'model/entity';
 import IconButton from 'web/components/IconButton';
+import TreeView from '../../components/TreeView';
 
 // eslint-disable-next-line mobx/missing-observer
 export default function NoteTreeView() {
@@ -22,6 +22,7 @@ export default function NoteTreeView() {
   return (
     <TreeView
       tree={noteTree}
+      entityType={EntityTypes.Note}
       nodeOperation={({ id }) => (
         <IconButton onClick={() => createNote(id)}>
           <PlusOutlined />

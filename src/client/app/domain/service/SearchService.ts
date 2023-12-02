@@ -1,4 +1,5 @@
 import { singleton, container } from 'tsyringe';
+import assert from 'assert';
 // import {
 //   parse,
 //   type ExpressionNode,
@@ -7,20 +8,40 @@ import { singleton, container } from 'tsyringe';
 //   ExpressionNodeType,
 // } from 'search-expression-parser';
 
-import type { SearchParams, SearchResult, SearchTreeParams } from 'model/search';
+import { Scopes, type SearchParams, type SearchResult, type SearchableEntityType } from 'model/search';
 import { token as remoteToken } from 'infra/remote';
+import { EntityTypes } from 'model/entity';
+import Explorer from 'model/Explorer';
 
 @singleton()
 export default class SearchService {
   private readonly remote = container.resolve(remoteToken);
+  private readonly explorer = container.resolve(Explorer);
 
   readonly search = async (q: SearchParams) => {
-    await this.remote.post<SearchParams, SearchResult[]>('/search', q);
+    return this.remote.post<SearchParams, SearchResult[]>('/search', q);
   };
 
-  readonly searchTree = (q: SearchTreeParams) => {
-    this.remote.post<SearchTreeParams, SearchResult[]>('/search/tree', q);
+  readonly searchInTree = async (q: { keyword: string; containBody: boolean; type: SearchableEntityType }) => {
+    if (!q.keyword) {
+      return;
+    }
+
+    const result = await this.search({
+      keyword: q.keyword,
+      scopes: SearchService.getScopes(q.type, q.containBody),
+    });
+
+    this.explorer;
   };
+
+  private static getScopes(type: SearchableEntityType, containBody: boolean) {
+    if (type === EntityTypes.Note) {
+      return [Scopes.NoteTitle, ...(containBody ? [Scopes.NoteBody, Scopes.NoteFile] : [])];
+    }
+
+    assert.fail('invalid type');
+  }
 
   // private static parseKeyword(q: string): SearchQuery | null {
   //   // we won't support AND / OR / NOT operators. so convert them into common content

@@ -2,7 +2,6 @@ import dayjs from 'dayjs';
 import { array, nativeEnum, object, string, type infer as Infer, boolean } from 'zod';
 import isEmpty from 'lodash/isEmpty';
 import negate from 'lodash/negate';
-import pick from 'lodash/pick';
 
 import { type EntityId, EntityTypes, hierarchyEntityLocatorSchema, Path } from './entity';
 import type { Starable } from './star';
@@ -15,16 +14,16 @@ interface SearchRecord {
   annotationId?: EntityId; // for material annotation
 }
 
+export type SearchableEntityType = EntityTypes.Note | EntityTypes.Memo | EntityTypes.Material;
+
 interface BaseSearchResult {
+  entityType: SearchableEntityType;
   entityId: string;
   title: SearchRecord;
   updatedAt: number;
   createdAt: number;
+  icon: string | null;
   content: SearchRecord[];
-}
-
-export interface CommonSearchResult extends BaseSearchResult {
-  entityType: EntityTypes.Note | EntityTypes.Memo;
 }
 
 interface MaterialSearchResult extends BaseSearchResult {
@@ -32,7 +31,7 @@ interface MaterialSearchResult extends BaseSearchResult {
   mimeType: MaterialEntity['mimeType'];
 }
 
-export type SearchResult = CommonSearchResult | MaterialSearchResult;
+export type SearchResult = BaseSearchResult | MaterialSearchResult;
 
 export type SearchResultVO = SearchResult & Starable & { path: Path };
 
@@ -71,12 +70,4 @@ export const searchParamsSchema = object({
   recyclables: boolean().optional(),
 });
 
-export const searchTreeParamsSchema = object({
-  keyword: string().min(1),
-  type: nativeEnum(pick(EntityTypes, ['Note', 'Material', 'Memo'] as const)),
-  containBody: boolean().optional(),
-});
-
 export type SearchParams = Infer<typeof searchParamsSchema>;
-
-export type SearchTreeParams = Infer<typeof searchTreeParamsSchema>;

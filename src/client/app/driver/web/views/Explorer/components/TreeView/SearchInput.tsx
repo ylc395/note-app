@@ -4,16 +4,16 @@ import { useToggle } from 'ahooks';
 import { container } from 'tsyringe';
 
 import SearchService from 'service/SearchService';
+import type { SearchableEntityType } from 'model/search';
 
 import IconButton from 'web/components/IconButton';
-import type { SearchTreeParams } from 'model/search';
 
 interface Props {
-  entityType: SearchTreeParams['type'];
+  entityType: SearchableEntityType;
 }
 
 export default (function SearchInput({ entityType }: Props) {
-  const { searchTree } = container.resolve(SearchService);
+  const { searchInTree } = container.resolve(SearchService);
   const [keyword, setKeyword] = useState('');
   const [containBody, { toggle: toggleContainBody }] = useToggle(false);
   const inputRef = useRef<null | HTMLInputElement>(null);
@@ -24,16 +24,12 @@ export default (function SearchInput({ entityType }: Props) {
   };
 
   useEffect(() => {
-    if (!keyword) {
-      return;
-    }
-
-    searchTree({
+    searchInTree({
       type: entityType,
       keyword,
       containBody,
     });
-  }, [keyword, containBody, searchTree, entityType]);
+  }, [keyword, containBody, searchInTree, entityType]);
 
   return (
     <div className="sticky top-0 z-10 mb-2 flex items-center justify-between rounded border border-solid border-gray-200 bg-white  focus-within:border-blue-600">

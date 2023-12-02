@@ -1,14 +1,17 @@
 import { container, singleton } from 'tsyringe';
 import assert from 'assert';
+import { makeObservable, observable } from 'mobx';
 
 import Value from 'model/Value';
-import NoteTree, { type NoteTreeNode } from 'model/note/Tree';
-import MaterialTree, { type MaterialTreeNode } from 'model/material/Tree';
-import { EntityTypes } from './entity';
-import EditorManager, { EventNames as EditorManagerEvents } from './workbench/EditorManager';
-import type EditableEntity from './abstract/EditableEntity';
-import EditableNote from './note/Editable';
-import EditableMaterial from './material/editable/EditableMaterial';
+import type { SearchableEntityType } from 'model/search';
+
+import NoteTree, { type NoteTreeNode } from './NoteTree';
+import MaterialTree, { type MaterialTreeNode } from './MaterialTree';
+import { EntityTypes } from '../entity';
+import EditorManager, { EventNames as EditorManagerEvents } from '../workbench/EditorManager';
+import type EditableEntity from '../abstract/EditableEntity';
+import EditableNote from '../note/Editable';
+import EditableMaterial from '../material/editable/EditableMaterial';
 
 export type ExplorerTypes = EntityTypes.Note | EntityTypes.Material | EntityTypes.Memo;
 
@@ -20,9 +23,17 @@ export default class Explorer {
   readonly noteTree = new NoteTree();
   readonly materialTree = new MaterialTree();
 
+  @observable.shallow
+  readonly searchResultTree: Record<SearchableEntityType, null> = {
+    [EntityTypes.Note]: null,
+    [EntityTypes.Material]: null,
+    [EntityTypes.Memo]: null,
+  };
+
   private readonly editorManager = container.resolve(EditorManager);
 
   constructor() {
+    makeObservable(this);
     this.editorManager.on(EditorManagerEvents.entityUpdated, this.updateTree);
   }
 

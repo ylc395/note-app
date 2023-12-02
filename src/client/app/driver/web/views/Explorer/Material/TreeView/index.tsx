@@ -1,12 +1,13 @@
 import { container } from 'tsyringe';
 import { useEffect } from 'react';
+import { FileAddOutlined, FolderAddOutlined } from '@ant-design/icons';
 
 import MaterialService from 'service/MaterialService';
+import { isDirectory } from 'model/material';
+import { EntityTypes } from 'model/entity';
+import IconButton from 'web/components/IconButton';
 
 import TreeView from '../../components/TreeView';
-import { FileAddOutlined, FolderAddOutlined } from '@ant-design/icons';
-import IconButton from 'web/components/IconButton';
-import { isDirectory } from 'model/material';
 
 // eslint-disable-next-line mobx/missing-observer
 export default function MaterialTreeView() {
@@ -19,6 +20,7 @@ export default function MaterialTreeView() {
   return (
     <TreeView
       tree={materialTree}
+      entityType={EntityTypes.Material}
       nodeOperation={(node) =>
         node.entity && isDirectory(node.entity) ? (
           <>
