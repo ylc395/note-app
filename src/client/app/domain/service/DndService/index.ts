@@ -1,4 +1,4 @@
-import { singleton } from 'tsyringe';
+import { container, singleton } from 'tsyringe';
 import { action, computed, makeObservable, observable } from 'mobx';
 import assert from 'assert';
 
@@ -13,8 +13,8 @@ export default class DndService {
   private handlers: Handler[] = [
     new NoteTreeNodeHandler(),
     new MaterialTreeNodeHandler(),
-    new TileHandler(),
     new EditorHandler(),
+    container.resolve(TileHandler),
   ];
 
   @observable.ref

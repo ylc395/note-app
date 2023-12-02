@@ -2,17 +2,25 @@ import { observer } from 'mobx-react-lite';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import clsx from 'clsx';
+import { container } from 'tsyringe';
 
-import Tile from 'model/workbench/Tile';
+import type Tile from 'model/workbench/Tile';
+import TileHandler from 'service/DndService/TileHandler';
 
 import TabItem from './TabItem';
+import { useEffect } from 'react';
 
 export default observer(function TabBar({ tile }: { tile: Tile }) {
   const { editors } = tile;
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({
-    id: `${tile}-tab`,
+    id: `${tile.id}-tab`,
     data: { instance: tile },
   });
+  const { toggleDropAreaEnabled } = container.resolve(TileHandler);
+
+  useEffect(() => {
+    toggleDropAreaEnabled(!isOver);
+  }, [isOver, toggleDropAreaEnabled]);
 
   return (
     <div className="flex justify-between border-0 border-b border-solid border-gray-200">

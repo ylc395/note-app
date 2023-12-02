@@ -7,7 +7,6 @@ import NoteEditor from 'model/note/Editor';
 import ImageEditor from 'model/material/editor/ImageEditor';
 import PdfEditor from 'model/material/editor/PdfEditor';
 import HtmlEditor from 'model/material/editor/HtmlEditor';
-import DndService from 'service/DndService';
 import TileHandler from 'service/DndService/TileHandler';
 
 import NoteEditorView from './NoteEditor';
@@ -20,8 +19,7 @@ export default observer(function Editor({ tile }: { tile: Tile }) {
     id: `${tile.id}-tile`,
     data: { instance: tile },
   });
-  const dndService = container.resolve(DndService);
-  const { dropAreaPosition, targetTileId } = dndService.getHandler(TileHandler);
+  const { dropArea, targetTileId } = container.resolve(TileHandler);
 
   return (
     <div className="relative min-h-0 shrink grow" ref={setDroppableRef}>
@@ -29,8 +27,8 @@ export default observer(function Editor({ tile }: { tile: Tile }) {
       {tile.currentEditor instanceof ImageEditor && <ImageEditorView editor={tile.currentEditor} />}
       {tile.currentEditor instanceof PdfEditor && <PdfEditorView editor={tile.currentEditor} />}
       {tile.currentEditor instanceof HtmlEditor && <HtmlEditorView editor={tile.currentEditor} />}
-      {isOver && dropAreaPosition && targetTileId === tile.id ? (
-        <div className="absolute bg-blue-50 opacity-60" style={dropAreaPosition} />
+      {isOver && dropArea && targetTileId === tile.id ? (
+        <div className="absolute bg-blue-50 opacity-60" style={dropArea} />
       ) : null}
     </div>
   );

@@ -1,4 +1,4 @@
-import { container } from 'tsyringe';
+import { container, singleton } from 'tsyringe';
 import { observable, makeObservable, action, computed } from 'mobx';
 
 import { Tile, TileSplitDirections, Workbench } from 'model/workbench';
@@ -21,6 +21,7 @@ const directionMap = {
   right: TileSplitDirections.Left,
 };
 
+@singleton()
 export default class TileHandler implements Handler {
   constructor() {
     makeObservable(this);
@@ -29,7 +30,7 @@ export default class TileHandler implements Handler {
   private readonly workbench = container.resolve(Workbench);
 
   @observable.ref
-  dropAreaPosition?: Position;
+  dropArea?: Position;
 
   @observable.ref
   private targetTile?: Tile;
@@ -39,9 +40,11 @@ export default class TileHandler implements Handler {
     return this.targetTile?.id;
   }
 
-  @action.bound
-  handleDragMove(draggingItem: unknown, over: unknown, { draggingItemRect, overRect }: DragMoveEvent) {
-    if (!(over instanceof Tile) || !overRect) {
+  private dropAreaEnabled = true;
+
+  @action
+  handleDragMove(draggingItem: unknown, over: unknown, event: DragMoveEvent) {
+    if (!(over instanceof Tile)) {
       return;
     }
 
@@ -50,6 +53,14 @@ export default class TileHandler implements Handler {
     }
 
     this.targetTile = over;
+    this.updateDropArea(event);
+  }
+
+  @action
+  private updateDropArea({ draggingItemRect, overRect }: DragMoveEvent) {
+    if (!overRect || !this.dropAreaEnabled) {
+      return;
+    }
 
     const portion = 6;
     const position: Position = { top: '0px', left: '0px', bottom: '0px', right: '0px' };
@@ -68,23 +79,24 @@ export default class TileHandler implements Handler {
       position.top = `${overRect.height / 2}px`;
     }
 
-    this.dropAreaPosition = position;
+    this.dropArea = position;
   }
 
+  @action
   handleDrop(draggingItem: unknown, dropTarget: unknown) {
-    const { dropAreaPosition } = this;
+    const { dropArea } = this;
 
-    if (dropAreaPosition) {
-      this.dropAreaPosition = undefined;
+    if (dropArea) {
+      this.dropArea = undefined;
     }
 
-    if (!dropAreaPosition || !(dropTarget instanceof Tile)) {
+    if (!(dropTarget instanceof Tile)) {
       return;
     }
 
-    const direction = Object.keys(dropAreaPosition).find((key) => dropAreaPosition[key as keyof Position] !== '0px') as
-      | keyof Position
-      | undefined;
+    const direction = dropArea
+      ? (Object.keys(dropArea).find((key) => dropArea[key as keyof Position] !== '0px') as keyof Position | undefined)
+      : undefined;
 
     const newTile = direction ? { splitDirection: directionMap[direction], from: dropTarget } : undefined;
 
@@ -95,9 +107,16 @@ export default class TileHandler implements Handler {
     }
   }
 
-  handleCancel(): void {
-    if (this.dropAreaPosition) {
-      this.dropAreaPosition = undefined;
+  @action.bound
+  toggleDropAreaEnabled(value: boolean) {
+    this.dropAreaEnabled = value;
+
+    if (!value) {
+      this.dropArea = undefined;
     }
+  }
+
+  handleCancel(): void {
+    this.dropArea = undefined;
   }
 }

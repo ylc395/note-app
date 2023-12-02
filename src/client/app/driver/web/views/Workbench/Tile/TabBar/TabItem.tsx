@@ -42,7 +42,7 @@ export default observer(function TabItem({ editor }: { editor: Editor }) {
       ref={setNodeRef}
       className={clsx(
         'flex cursor-pointer flex-nowrap items-center border-0 border-r border-solid border-gray-200 p-2 text-gray-500',
-        currentEditor === editor ? 'bg-white' : overItem === editor ? 'bg-gray-200' : 'bg-transparent',
+        currentEditor === editor ? 'bg-white' : overItem === editor ? 'bg-gray-200' : 'bg-gray-50',
       )}
       onClick={() => switchToEditor(editor)}
       onContextMenu={onContextMenu}

@@ -1,9 +1,9 @@
-import { runInAction } from 'mobx';
-import { observer } from 'mobx-react-lite';
+import { action } from 'mobx';
 import { type MouseEventHandler, useState, useRef, useEffect } from 'react';
 import throttle from 'lodash/throttle';
 import clamp from 'lodash/clamp';
 import mapValues from 'lodash/mapValues';
+import clsx from 'clsx';
 
 import { TileDirections, type TileParent, MIN_TILE_WIDTH, MAX_TILE_WIDTH } from 'model/workbench';
 import { type BoundingBox, getAbsoluteSplitPercentage, getRelativeSplitPercentage } from './utils';
@@ -14,28 +14,30 @@ interface Props {
   boundingBox: BoundingBox;
 }
 
-export default observer(({ node, boundingBox }: Props) => {
+// eslint-disable-next-line mobx/missing-observer
+export default (function Resizer({ node, boundingBox }: Props) {
   const position = node.direction === TileDirections.Vertical ? 'top' : 'left';
   const [isResizing, setIsResizing] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const updateNode = useMemoizedFn(
-    throttle((e: MouseEvent) => {
-      const { direction } = node;
-      const parentBoundingBox = ref.current!.parentElement!.getBoundingClientRect();
+    throttle(
+      action((e: MouseEvent) => {
+        const { direction } = node;
+        const parentBoundingBox = ref.current!.parentElement!.getBoundingClientRect();
 
-      let absolutePercentage: number;
-      if (direction === TileDirections.Vertical) {
-        absolutePercentage = ((e.clientY - parentBoundingBox.top) / parentBoundingBox.height) * 100.0;
-      } else {
-        absolutePercentage = ((e.clientX - parentBoundingBox.left) / parentBoundingBox.width) * 100.0;
-      }
+        let absolutePercentage: number;
+        if (direction === TileDirections.Vertical) {
+          absolutePercentage = ((e.clientY - parentBoundingBox.top) / parentBoundingBox.height) * 100.0;
+        } else {
+          absolutePercentage = ((e.clientX - parentBoundingBox.left) / parentBoundingBox.width) * 100.0;
+        }
 
-      const relativePercentage = getRelativeSplitPercentage(boundingBox, absolutePercentage, direction);
+        const relativePercentage = getRelativeSplitPercentage(boundingBox, absolutePercentage, direction);
 
-      runInAction(() => {
         node.splitPercentage = clamp(relativePercentage, MIN_TILE_WIDTH, MAX_TILE_WIDTH - MIN_TILE_WIDTH);
-      });
-    }, 1000 / 30),
+      }),
+      1000 / 30,
+    ),
   );
 
   const onMouseDown = useMemoizedFn<MouseEventHandler>((e) => {
@@ -77,9 +79,12 @@ export default observer(({ node, boundingBox }: Props) => {
     <div
       ref={ref}
       onMouseDown={onMouseDown}
-      className={`absolute z-10 bg-red-300 ${
-        node.direction === TileDirections.Vertical ? 'h-2 cursor-row-resize' : 'w-2 cursor-col-resize'
-      }`}
+      className={clsx(
+        'absolute z-10 bg-gray-100 hover:bg-blue-100',
+        node.direction === TileDirections.Vertical
+          ? 'h-[2px] cursor-row-resize hover:h-1'
+          : 'w-[2px] cursor-col-resize hover:w-1',
+      )}
       style={{
         ...mapValues(boundingBox, (v) => `${v}%`),
         [position]: `${getAbsoluteSplitPercentage(boundingBox, node)}%`,
