@@ -63,7 +63,7 @@ const TreeNode = observer(function <T extends HierarchyEntity>({ node, level, ..
   return (
     <>
       <div
-        data-dragging={!node.isValidTarget ? 'not-allowed' : isOver ? 'over' : undefined}
+        data-dragging={isOver ? (node.isValidTarget ? 'over' : 'not-allowed') : undefined}
         data-selected={node.isSelected}
         style={{ paddingLeft: `${level * INDENT}px` }}
         ref={setDroppableRef}

@@ -3,13 +3,14 @@ import { container } from 'tsyringe';
 import { PlusOutlined, ShrinkOutlined, SettingOutlined } from '@ant-design/icons';
 
 import NoteService from 'service/NoteService';
+import Explorer from 'model/Explorer';
 import IconButton from 'web/components/IconButton';
 
 export default observer(function Operations() {
+  const { createNote } = container.resolve(NoteService);
   const {
-    tree: { expandedNodes, collapseAll },
-    createNote,
-  } = container.resolve(NoteService);
+    noteTree: { expandedNodes, collapseAll },
+  } = container.resolve(Explorer);
 
   return (
     <div className="flex grow justify-between">

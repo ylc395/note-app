@@ -25,7 +25,7 @@ export default class NoteService {
   private readonly workbench = container.resolve(Workbench);
   private readonly editableEntityManager = container.resolve(EditableEntityManager);
 
-  get tree() {
+  private get tree() {
     return this.explorer.noteTree;
   }
 

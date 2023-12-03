@@ -26,7 +26,7 @@ export default class NoteTreeNodeHandler implements Handler {
       this.tree.toggleSelect(item.id, { reason: 'drag' });
     }
 
-    this.tree.disableInvalidParents(this.tree.selectedNodeIds);
+    this.tree.updateValidParents(this.tree.selectedNodeIds);
   }
 
   handleCancel(draggingItem: unknown) {
@@ -45,7 +45,7 @@ export default class NoteTreeNodeHandler implements Handler {
     }
 
     if (this.tree.hasNode(dropTarget) && dropTarget.isValidTarget) {
-      this.noteService.moveNotes(dropTarget.id, this.tree.selectedNodeIds);
+      this.noteService.moveNotes(dropTarget === this.tree.root ? null : dropTarget.id, this.tree.selectedNodeIds);
     }
 
     if (dropTarget instanceof Tile || dropTarget instanceof Editor) {

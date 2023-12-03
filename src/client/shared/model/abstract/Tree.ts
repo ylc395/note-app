@@ -37,7 +37,7 @@ const getDefaultNode = <T extends HierarchyEntity>() => ({
   isLeaf: true,
   isExpanded: false,
   isSelected: false,
-  isValidTarget: true,
+  isValidTarget: false,
   isLoading: false,
   children: [] as TreeNode<T>[],
   title: '',
@@ -63,6 +63,10 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
   @observable.shallow
   private nodes: Record<TreeNode['id'], TreeNode<T>> = {};
 
+  private get allNodes() {
+    return [...Object.values(this.nodes), this.root];
+  }
+
   @computed
   get expandedNodes() {
     return Object.values(this.nodes).filter((node) => node.isExpanded);
@@ -76,10 +80,6 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
     return this.selectedNodes.map((node) => node.id);
   }
 
-  private get invalidTargets() {
-    return Object.values(this.nodes).filter((node) => !node.isValidTarget);
-  }
-
   getNode(id: TreeNode['id'] | null): TreeNode<T>;
   getNode(id: TreeNode['id'] | null, safe: true): TreeNode<T> | undefined;
   getNode(id: TreeNode['id'] | null, safe?: true) {
@@ -90,7 +90,7 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
     const node = id ? this.nodes[id] : this.root;
 
     if (!node && !safe) {
-      throw new Error(`no node for id ${id}`);
+      assert.fail(`no node for id ${id}`);
     }
 
     return node;
@@ -98,7 +98,7 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   hasNode(node: any): node is TreeNode<T> {
-    return Object.values(this.nodes).includes(node);
+    return this.root === node || Object.values(this.nodes).includes(node);
   }
 
   @action
@@ -287,8 +287,10 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
   }
 
   @action
-  disableInvalidParents(ids: TreeNode['id'][]) {
-    this.resetTargets();
+  updateValidParents(ids: TreeNode['id'][]) {
+    for (const node of this.allNodes) {
+      node.isValidTarget = true;
+    }
 
     for (const id of ids) {
       const node = this.getNode(id);
@@ -304,8 +306,8 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
 
   @action
   resetTargets() {
-    for (const node of this.invalidTargets) {
-      node.isValidTarget = true;
+    for (const node of this.allNodes) {
+      node.isValidTarget = false;
     }
   }
 

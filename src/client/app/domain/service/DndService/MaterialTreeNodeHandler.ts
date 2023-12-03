@@ -33,7 +33,7 @@ export default class MaterialTreeNodeHandler implements Handler {
       return;
     }
 
-    this.tree.disableInvalidParents(this.tree.selectedNodeIds);
+    this.tree.updateValidParents(this.tree.selectedNodeIds);
   }
 
   handleDrop(draggingItem: unknown, dropTarget: unknown) {

@@ -13,6 +13,7 @@ import { ui } from 'web/infra/ui';
 
 import Context from '../Context';
 import assert from 'assert';
+import Explorer from 'model/Explorer';
 
 export default function useContextmenu() {
   const { movingModal, editingModal } = useContext(Context);
@@ -20,13 +21,14 @@ export default function useContextmenu() {
   return useCallback(
     async (targetNode: NoteTreeNode) => {
       const workbench = container.resolve(Workbench);
+      const { noteTree } = container.resolve(Explorer);
       const noteService = container.resolve(NoteService);
       const starService = container.resolve(StarService);
 
-      const { selectedNodeIds } = noteService.tree;
+      const { selectedNodeIds } = noteTree;
 
       if (!selectedNodeIds.includes(targetNode.id)) {
-        noteService.tree.toggleSelect(targetNode.id, { multiple: true, reason: 'drag' });
+        noteTree.toggleSelect(targetNode.id, { multiple: true, reason: 'drag' });
       }
 
       const targetId = targetNode.id;
