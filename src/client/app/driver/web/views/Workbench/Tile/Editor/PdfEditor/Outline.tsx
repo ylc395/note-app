@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import { ReactNode, useContext } from 'react';
-import { Resizable } from 're-resizable';
+import Resizable from 'web/components/Resizable';
 import clsx from 'clsx';
 
 import type { OutlineItem } from 'model/material/editable/EditablePdf';
@@ -45,7 +45,7 @@ export default observer(function Outline() {
   }
 
   return (
-    <Resizable enable={{ right: true }} defaultSize={{ width: 300, height: 'auto' }} className="h-full overflow-auto">
+    <Resizable resizable="right" initialWidth={300} className="h-full overflow-auto">
       {content}
     </Resizable>
   );

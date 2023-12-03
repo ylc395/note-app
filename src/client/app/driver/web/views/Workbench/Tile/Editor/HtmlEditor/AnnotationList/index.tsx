@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import { useContext } from 'react';
-import { Resizable } from 're-resizable';
+import Resizable from 'web/components/Resizable';
 
 import context from '../Context';
 import Annotation from './Annotation';
@@ -10,12 +10,7 @@ export default observer(function AnnotationList() {
   const annotations = htmlViewer?.editor.annotations;
 
   return (
-    <Resizable
-      enable={{ left: true }}
-      minWidth={220}
-      defaultSize={{ width: 300, height: 'auto' }}
-      className="overflow-auto"
-    >
+    <Resizable resizable="left" minWidth={220} initialWidth={300} className="overflow-auto">
       {annotations && annotations.length > 0
         ? annotations.map((annotation) => {
             return <Annotation key={annotation.id} annotation={annotation} />;

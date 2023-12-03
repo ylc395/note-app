@@ -17,9 +17,6 @@ type Events = {
   [EventNames.Destroyed]: [];
 };
 
-export const MAX_TILE_WIDTH = 100;
-export const MIN_TILE_WIDTH = 20;
-
 export default class Tile extends Emitter<Events> {
   readonly id = uniqueId('tile-');
   private readonly editorManager = container.resolve(EditorManager);
