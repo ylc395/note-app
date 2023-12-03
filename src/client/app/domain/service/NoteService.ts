@@ -3,6 +3,7 @@ import assert from 'assert';
 
 import { token as remoteToken } from 'infra/remote';
 import { token as UIToken } from 'infra/ui';
+
 import type {
   NotesPatchDTO as NotesPatch,
   NoteVO as Note,
@@ -13,10 +14,8 @@ import type { RecyclablesDTO } from 'model/recyclables';
 import { EntityTypes } from 'model/entity';
 import Explorer from 'model/Explorer';
 import type { SelectEvent } from 'model/abstract/Tree';
-
 import { MULTIPLE_ICON_FLAG, type NoteMetadata } from 'model/note/MetadataForm';
-
-import { Workbench } from 'model/workbench';
+import { EditableEntityManager, Workbench } from 'model/workbench';
 
 @singleton()
 export default class NoteService {
@@ -24,6 +23,7 @@ export default class NoteService {
   private readonly ui = container.resolve(UIToken);
   private readonly explorer = container.resolve(Explorer);
   private readonly workbench = container.resolve(Workbench);
+  private readonly editableEntityManager = container.resolve(EditableEntityManager);
 
   get tree() {
     return this.explorer.noteTree;
@@ -84,7 +84,7 @@ export default class NoteService {
     });
 
     for (const id of _ids) {
-      this.workbench.editorManager.getEditable(id)?.init();
+      this.editableEntityManager.refresh(id);
       this.tree.updateNode({ id, parentId: targetId });
     }
 

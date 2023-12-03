@@ -174,7 +174,11 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
     const patches = Array.isArray(patch) ? patch : [patch];
 
     for (const patch of patches) {
-      const node = this.getNode(patch.id);
+      const node = this.getNode(patch.id, true);
+
+      if (!node) {
+        continue;
+      }
 
       assert(node.entity);
 

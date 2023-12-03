@@ -5,6 +5,8 @@ import assert from 'assert';
 import { EntityTypes } from 'model/entity';
 import type { DetailedNoteVO as Note, NotePatchDTO as NotePatch } from 'model/note';
 import EditableEntity, { EventNames } from 'model/abstract/EditableEntity';
+import NoteEditor from './Editor';
+import { Tile } from 'model/workbench';
 
 export default class EditableNote extends EditableEntity<Note> {
   readonly entityType = EntityTypes.Note;
@@ -17,6 +19,10 @@ export default class EditableNote extends EditableEntity<Note> {
     const { body: note } = await this.remote.get<void, Note>(`/notes/${this.entityId}`);
 
     this.load(note);
+  }
+
+  protected getEditor(tile: Tile) {
+    return new NoteEditor(this, tile);
   }
 
   @action

@@ -8,7 +8,7 @@ import type { SearchableEntityType } from 'model/search';
 import NoteTree, { type NoteTreeNode } from './NoteTree';
 import MaterialTree, { type MaterialTreeNode } from './MaterialTree';
 import { EntityTypes } from '../entity';
-import EditorManager, { EventNames as EditorManagerEvents } from '../workbench/EditorManager';
+import { EditableEntityEvents, EditableEntityManager } from '../workbench';
 import type EditableEntity from '../abstract/EditableEntity';
 import EditableNote from '../note/Editable';
 import EditableMaterial from '../material/editable/EditableMaterial';
@@ -30,11 +30,11 @@ export default class Explorer {
     [EntityTypes.Memo]: null,
   };
 
-  private readonly editorManager = container.resolve(EditorManager);
+  private readonly editorManager = container.resolve(EditableEntityManager);
 
   constructor() {
     makeObservable(this);
-    this.editorManager.on(EditorManagerEvents.entityUpdated, this.updateTree);
+    this.editorManager.on(EditableEntityEvents.entityUpdated, this.updateTree);
   }
 
   private readonly updateTree = (editable: EditableEntity) => {

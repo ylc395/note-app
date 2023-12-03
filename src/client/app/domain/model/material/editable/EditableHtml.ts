@@ -1,5 +1,7 @@
 import type { MaterialEntityVO } from 'model/material';
+import type { Tile } from 'model/workbench';
 import EditableMaterial from './EditableMaterial';
+import HtmlEditor from '../editor/HtmlEditor';
 
 interface WebPage {
   metadata: MaterialEntityVO;
@@ -9,6 +11,10 @@ interface WebPage {
 export default class EditableHtml extends EditableMaterial<WebPage> {
   constructor(materialId: MaterialEntityVO['id']) {
     super(materialId);
+  }
+
+  protected getEditor(tile: Tile) {
+    return new HtmlEditor(this, tile);
   }
 
   async init() {

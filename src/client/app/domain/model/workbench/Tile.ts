@@ -5,21 +5,23 @@ import isMatch from 'lodash/isMatch';
 import { Emitter } from 'strict-event-emitter';
 import assert from 'assert';
 
-import Editor from 'model/abstract/Editor';
-import EditorManager from './EditorManager';
-import { EditableEntityLocator } from 'model/entity';
+import Editor, { EventNames as EditorEvents } from 'model/abstract/Editor';
+import type { EditableEntityLocator } from 'model/abstract/EditableEntity';
+import EditableEntityManager from './EditableEntityManager';
 
 export enum EventNames {
   Destroyed = 'tile.destroyed',
+  Focus = 'tile.focus',
 }
 
 type Events = {
   [EventNames.Destroyed]: [];
+  [EventNames.Focus]: [];
 };
 
 export default class Tile extends Emitter<Events> {
   readonly id = uniqueId('tile-');
-  private readonly editorManager = container.resolve(EditorManager);
+  private readonly editableEntityManager = container.resolve(EditableEntityManager);
   @observable.ref currentEditor?: Editor;
   @observable.shallow editors: Editor[] = [];
 
@@ -50,6 +52,7 @@ export default class Tile extends Emitter<Events> {
     const [removedEditor] = this.editors.splice(existedTabIndex, 1);
 
     assert(removedEditor);
+    removedEditor.off(EditorEvents.Focus, this.handleEditorFocus);
 
     if (destroy) {
       removedEditor.destroy();
@@ -66,10 +69,14 @@ export default class Tile extends Emitter<Events> {
     removedEditor.tile = undefined;
   }
 
+  private readonly handleEditorFocus = () => {
+    this.emit(EventNames.Focus);
+  };
+
   @action.bound
   closeAllEditors() {
     for (const editor of this.editors) {
-      this.removeEditor(editor);
+      this.removeEditor(editor, true);
     }
   }
 
@@ -79,7 +86,8 @@ export default class Tile extends Emitter<Events> {
       assert(dest.tile === this);
     }
 
-    const newEditor = this.editorManager.createEditor(entity, this);
+    const editableEntity = this.editableEntityManager.getOrCreateEditable(entity);
+    const newEditor = editableEntity.createEditor(this);
 
     if (dest) {
       const destIndex = this.editors.findIndex((editor) => editor === dest);
@@ -89,6 +97,8 @@ export default class Tile extends Emitter<Events> {
     } else {
       this.editors.push(newEditor);
     }
+
+    newEditor.on(EditorEvents.Focus, this.handleEditorFocus);
 
     return newEditor;
   }

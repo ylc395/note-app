@@ -2,13 +2,12 @@ import pull from 'lodash/pull';
 import uniqueId from 'lodash/uniqueId';
 import last from 'lodash/last';
 import { observable, makeObservable, action, computed } from 'mobx';
-import { container, singleton } from 'tsyringe';
+import { singleton } from 'tsyringe';
 import assert from 'assert';
 
 import Editor from 'model/abstract/Editor';
-import type { EditableEntityLocator } from 'model/entity';
+import type { EditableEntityLocator } from 'model/abstract/EditableEntity';
 import Tile, { EventNames as TileEvents } from './Tile';
-import EditorManager, { EventNames as EditorManagerEvents } from './EditorManager';
 import { type TileNode, type TileParent, TileDirections, isTileLeaf } from './tileTree';
 
 export enum TileSplitDirections {
@@ -29,7 +28,6 @@ type Dest = Tile | Editor | { from: Tile; splitDirection: TileSplitDirections };
 @singleton()
 export default class Workbench {
   private readonly tilesMap = new Map<Tile['id'], Tile>();
-  readonly editorManager = container.resolve(EditorManager);
   @observable.shallow private readonly focusedTileHistory: Tile[] = [];
   @observable root?: TileNode; // a binary tree
 
@@ -40,12 +38,9 @@ export default class Workbench {
 
   constructor() {
     makeObservable(this);
-    this.editorManager.on(EditorManagerEvents.EditorFocus, this.handleEditorFocus);
   }
 
-  private readonly handleEditorFocus = ({ tile }: Editor) => {
-    assert(tile);
-
+  private readonly handleTileFocus = (tile: Tile) => {
     if (last(this.focusedTileHistory) !== tile) {
       this.focusedTileHistory.push(tile);
     }
@@ -55,6 +50,7 @@ export default class Workbench {
     const tile = new Tile();
 
     tile.on(TileEvents.Destroyed, () => this.removeTile(tile));
+    tile.on(TileEvents.Focus, () => this.handleTileFocus(tile));
     this.tilesMap.set(tile.id, tile);
 
     return tile;

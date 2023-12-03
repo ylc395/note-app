@@ -9,7 +9,9 @@ import {
   type PdfAreaAnnotationVO,
   AnnotationTypes,
 } from 'model/material';
+import type { Tile } from 'model/workbench';
 import EditableMaterial from './EditableMaterial';
+import PdfEditor from '../editor/PdfEditor';
 
 interface Pdf {
   metadata: MaterialEntityVO;
@@ -31,6 +33,10 @@ export default class EditablePdf extends EditableMaterial<Pdf> {
   @observable.ref outline?: OutlineItem[];
   private loadingTask?: PDFDocumentLoadingTask;
   readonly outlineDestMap: Record<string, unknown> = {};
+
+  protected getEditor(tile: Tile) {
+    return new PdfEditor(this, tile);
+  }
 
   @computed
   get pdfAnnotations() {

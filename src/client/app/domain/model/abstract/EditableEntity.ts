@@ -1,10 +1,19 @@
 import uniqueId from 'lodash/uniqueId';
+import pull from 'lodash/pull';
 import { container } from 'tsyringe';
-import { makeObservable, action, observable } from 'mobx';
+import { action, makeObservable, observable } from 'mobx';
 import { Emitter } from 'strict-event-emitter';
 
-import type { EditableEntityLocator, EntityId, EditableEntityTypes } from 'model/entity';
+import type { EntityId, EntityLocator, EntityTypes } from 'model/entity';
+import type { Tile } from 'model/workbench';
 import { token as remoteToken } from 'infra/remote';
+import { type default as Editor, EventNames as EditorEvents } from './Editor';
+
+export type EditableEntityTypes = EntityTypes.Note | EntityTypes.Material;
+
+export interface EditableEntityLocator extends EntityLocator {
+  entityType: EditableEntityTypes;
+}
 
 export enum EventNames {
   EntityUpdated = 'editableEntity.entityUpdated',
@@ -18,6 +27,8 @@ export default abstract class EditableEntity<T = unknown, E extends Events = Eve
   protected readonly remote = container.resolve(remoteToken);
   readonly id = uniqueId('editableEntity-');
   abstract readonly entityType: EditableEntityTypes;
+  protected readonly editors: Editor[] = [];
+
   abstract init(): void;
 
   @observable entity?: T;
@@ -35,6 +46,25 @@ export default abstract class EditableEntity<T = unknown, E extends Events = Eve
 
   toEntityLocator(): EditableEntityLocator {
     return { entityType: this.entityType, entityId: this.entityId };
+  }
+
+  protected abstract getEditor(tile: Tile): Editor;
+
+  createEditor(tile: Tile) {
+    const editor = this.getEditor(tile);
+
+    this.editors.push(editor);
+    editor.once(EditorEvents.Destroyed, () => this.handleEditorDestroy(editor));
+
+    return editor;
+  }
+
+  private handleEditorDestroy(editor: Editor) {
+    pull(this.editors, editor);
+
+    if (this.editors.length === 0) {
+      this.destroy();
+    }
   }
 
   abstract destroy(): void;
