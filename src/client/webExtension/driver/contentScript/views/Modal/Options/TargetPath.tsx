@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import { CaretDownFilled, LoadingOutlined } from '@ant-design/icons';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useClick, useFloating, useInteractions, offset } from '@floating-ui/react';
 import { useClickAway, useBoolean } from 'ahooks';
 import { container } from 'tsyringe';
@@ -17,7 +17,6 @@ export default observer(function TargetPath() {
     middleware: [offset(10)],
   });
 
-  const treeRef = useRef<HTMLDivElement | null>(null);
   const click = useClick(context);
   const { getReferenceProps, getFloatingProps } = useInteractions([click]);
   const config = container.resolve(ConfigService);
@@ -39,13 +38,6 @@ export default observer(function TargetPath() {
       };
     }
   }, [close, config, config.targetTree]);
-
-  useEffect(() => {
-    if (treeRef.current && isOpen && config.targetTree) {
-      const selected = treeRef.current.querySelector('[data-selected="true"]');
-      selected?.scrollIntoView({ block: 'center' });
-    }
-  }, [isOpen, config.targetTree]);
 
   useClickAway(close, [refs.domReference, refs.floating]);
 
@@ -70,9 +62,8 @@ export default observer(function TargetPath() {
         >
           {config.targetTree ? (
             <Tree
-              ref={treeRef}
               tree={config.targetTree}
-              visibleRoot
+              rootTitle="root"
               className="w-full"
               nodeClassName="flex items-center cursor-pointer py-1 pl-2 data-[selected=true]:text-white data-[selected=true]:bg-blue-400"
               titleClassName="truncate min-w-0 "

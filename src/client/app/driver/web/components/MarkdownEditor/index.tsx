@@ -41,8 +41,9 @@ export default (function MarkdownEditor(options: Options) {
       editor.destroy();
       setEditor(null);
     };
+    // ignore 'initialContent' changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onChange, onUIStateChange, onBlur, onFocus]);
+  }, [onChange, onUIStateChange, onBlur, onFocus, autoFocus]);
 
   useEffect(() => {
     typeof content === 'string' && editor?.setContent(content);

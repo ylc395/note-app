@@ -1,28 +1,19 @@
 import { observer } from 'mobx-react-lite';
-import { MouseEventHandler, createContext, useContext, useEffect } from 'react';
+import { type MouseEventHandler, useEffect } from 'react';
 import { CaretDownOutlined, CaretRightFilled } from '@ant-design/icons';
 import clsx from 'clsx';
 import uniqueId from 'lodash/uniqueId';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { useCreation } from 'ahooks';
 
-import type { TreeNode as TreeNodeModel } from '../../model/abstract/Tree';
 import type { HierarchyEntity } from '../../../../shared/model/entity';
-import type { TreeContext } from './context';
 import scrollIntoViewIfNeeded from './scrollIntoViewIfNeeded';
+import type { TreeNodeProps } from './types';
 
 const INDENT = 25;
 
 // we should use an anonymous component to make <TreeNode> reactive
-const TreeNode = observer(function <T extends HierarchyEntity>({
-  node,
-  level,
-  ctx,
-}: {
-  node: TreeNodeModel<T>;
-  level: number;
-  ctx: ReturnType<typeof createContext<TreeContext<T>>>;
-}) {
+const TreeNode = observer(function <T extends HierarchyEntity>({ node, level, ...ctx }: TreeNodeProps<T>) {
   const {
     tree,
     nodeClassName,
@@ -34,7 +25,7 @@ const TreeNode = observer(function <T extends HierarchyEntity>({
     droppable,
     multiple,
     renderTitle,
-  } = useContext(ctx);
+  } = ctx;
 
   const id = useCreation(() => uniqueId('treeNode'), []);
   const {
@@ -92,7 +83,7 @@ const TreeNode = observer(function <T extends HierarchyEntity>({
         </div>
       </div>
       {node.isExpanded && node.children.length > 0
-        ? node.children.map((child) => <TreeNode ctx={ctx} key={child.id} node={child} level={level + 1} />)
+        ? node.children.map((child) => <TreeNode key={child.id} node={child} level={level + 1} {...ctx} />)
         : emptyChildrenView?.({ indent: (level + 1) * INDENT })}
     </>
   );

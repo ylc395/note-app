@@ -30,11 +30,11 @@ export default class Explorer {
     [EntityTypes.Memo]: null,
   };
 
-  private readonly editorManager = container.resolve(EditableEntityManager);
+  private readonly editableEntityManager = container.resolve(EditableEntityManager);
 
   constructor() {
     makeObservable(this);
-    this.editorManager.on(EditableEntityEvents.entityUpdated, this.updateTree);
+    this.editableEntityManager.on(EditableEntityEvents.entityUpdated, this.updateTree);
   }
 
   private readonly updateTree = (editable: EditableEntity) => {

@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import type { HierarchyEntity } from '../../../../shared/model/entity';
 import type { default as TreeModel, TreeNode } from '../../model/abstract/Tree';
 
-export interface TreeContext<T extends HierarchyEntity> {
+interface TreeBaseProps<T extends HierarchyEntity> {
   tree: TreeModel<T>;
   nodeClassName?: string;
   caretClassName?: string;
@@ -16,4 +16,14 @@ export interface TreeContext<T extends HierarchyEntity> {
   droppable?: boolean;
   multiple?: boolean;
   renderTitle?: (node: TreeNode<T>) => ReactNode;
+}
+
+export interface TreeNodeProps<T extends HierarchyEntity> extends TreeBaseProps<T> {
+  node: TreeNode<T>;
+  level: number;
+}
+
+export interface TreeProps<T extends HierarchyEntity> extends TreeBaseProps<T> {
+  className?: string;
+  rootTitle?: string;
 }
