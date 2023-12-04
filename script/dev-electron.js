@@ -37,7 +37,7 @@ async function buildPreload() {
       },
     },
     plugins: [
-      // checker({ typescript: { tsconfigPath: CLIENT_TSCONFIG } }),
+      checker({ typescript: { tsconfigPath: CLIENT_TSCONFIG, buildMode: true } }),
       tsconfigPaths({ projects: [CLIENT_TSCONFIG] }),
     ],
   });
@@ -76,7 +76,7 @@ async function createViteServer() {
     root: `${rootDir}/driver/web`,
     plugins: [
       react({ tsDecorators: true }), // use this plugin to speed up react compiling and enjoy "fast refresh"
-      // checker({ typescript: { tsconfigPath: CLIENT_TSCONFIG } }),
+      checker({ typescript: { tsconfigPath: CLIENT_TSCONFIG, buildMode: true } }),
       tsconfigPaths({ projects: [CLIENT_TSCONFIG] }),
       nodePolyfills(),
     ],

@@ -6,6 +6,8 @@
     "baseUrl": ".",
     "moduleResolution": "Bundler",
     "jsx": "react-jsx",
+    "rootDir": "../../",
+    "outDir": "../../../dist/client",
     "paths": {
       "@domain/*": ["domain/*", "../shared/domain/*", "../../shared/domain/*"],
       "@components/*": ["driver/web/components/*", "../shared/components/*"],
@@ -14,5 +16,5 @@
       "@shared/*": ["../shared/*", "../../shared/*"]
     }
   },
-  "references": [{ "path": "../shared/tsconfig.json" }, { "path": "../../shared/tsconfig.json" }]
+  "references": [{ "path": "../shared/tsconfig.json" }]
 }

@@ -7,8 +7,11 @@
     "module": "CommonJS",
     "composite": true,
     "baseUrl": ".",
+    "rootDir": "../../",
+    "outDir": "../../../dist/client",
     "paths": {
       "@shared/*": ["../../shared/*"]
     }
-  }
+  },
+  "references": [{ "path": "../../shared/tsconfig.client.json" }]
 }

@@ -4,6 +4,7 @@
     "module": "CommonJS",
     "baseUrl": ".",
     "lib": ["ESNext"],
+    "rootDir": "../",
     "paths": {
       "@domain/*": ["domain/*", "../shared/domain/*"],
       "@utils/*": ["../shared/utils/*"],
