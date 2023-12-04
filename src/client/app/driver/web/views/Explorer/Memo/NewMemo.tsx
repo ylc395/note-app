@@ -3,8 +3,8 @@ import { container } from 'tsyringe';
 import { Button } from 'antd';
 import { observer } from 'mobx-react-lite';
 
-import MemoService from 'service/MemoService';
-import MarkdownEditor from 'web/components/MarkdownEditor';
+import MemoService from '@domain/service/MemoService';
+import MarkdownEditor from '@components/MarkdownEditor';
 
 export default observer(function NewMemo() {
   const memoService = container.resolve(MemoService);

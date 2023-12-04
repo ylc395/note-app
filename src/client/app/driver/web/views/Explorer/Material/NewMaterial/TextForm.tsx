@@ -1,8 +1,8 @@
 import { observer } from 'mobx-react-lite';
 import { Form, Input } from 'antd';
 
-import type FormModel from 'model/material/Form';
-import MarkdownEditor from 'web/components/MarkdownEditor';
+import type FormModel from '@domain/model/material/Form';
+import MarkdownEditor from '@components/MarkdownEditor';
 
 export default observer(function TextForm({ model }: { model: FormModel }) {
   return (

@@ -1,7 +1,7 @@
 import { Module, Global, type OnModuleInit } from '@nestjs/common';
 
-import { token as databaseToken } from 'infra/database';
-import { token as searchEngineToken } from 'infra/searchEngine';
+import { token as databaseToken } from '@domain/infra/database';
+import { token as searchEngineToken } from '@domain/infra/searchEngine';
 
 import SqliteSearchEngine from './SearchEngine';
 import SqliteDb from './Database';

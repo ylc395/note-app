@@ -1,7 +1,7 @@
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 
-import { Workbench } from 'model/workbench';
+import { Workbench } from '@domain/model/workbench';
 
 import Mosaic from './Mosaic';
 import Tile from './Tile';

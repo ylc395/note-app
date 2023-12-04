@@ -1,8 +1,8 @@
 import { observable, makeObservable, runInAction, action } from 'mobx';
 import { container, singleton } from 'tsyringe';
 
-import { token as remoteToken } from 'infra/remote';
-import type { MemoDTO, MemoPatchDTO, MemoVO } from 'model/memo';
+import { token as remoteToken } from '@domain/infra/remote';
+import type { MemoDTO, MemoPatchDTO, MemoVO } from '@domain/model/memo';
 
 @singleton()
 export default class MemoService {

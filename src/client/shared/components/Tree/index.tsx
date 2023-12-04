@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite';
 
-import type { HierarchyEntity } from '../../../../shared/model/entity';
+import type { HierarchyEntity } from '@shared/domain/model/entity';
 import TreeNode from './TreeNode';
 import type { TreeProps } from './types';
 

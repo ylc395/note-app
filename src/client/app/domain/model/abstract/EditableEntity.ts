@@ -4,9 +4,9 @@ import { container } from 'tsyringe';
 import { action, makeObservable, observable } from 'mobx';
 import { Emitter } from 'strict-event-emitter';
 
-import type { EntityId, EntityLocator, EntityTypes } from 'model/entity';
-import type { Tile } from 'model/workbench';
-import { token as remoteToken } from 'infra/remote';
+import type { EntityId, EntityLocator, EntityTypes } from '@domain/model/entity';
+import type { Tile } from '@domain/model/workbench';
+import { token as remoteToken } from '@domain/infra/remote';
 import { type default as Editor, EventNames as EditorEvents } from './Editor';
 
 export type EditableEntityTypes = EntityTypes.Note | EntityTypes.Material;

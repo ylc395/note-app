@@ -1,7 +1,7 @@
-import NoteTree from 'model/note/Tree';
+import NoteTree from '@domain/model/note/Tree';
 import { runInAction } from 'mobx';
 
-export type { NoteTreeNode } from 'model/note/Tree';
+export type { NoteTreeNode } from '@domain/model/note/Tree';
 
 export default class ExplorerNoteTree extends NoteTree {
   getSelectedNodesAsTree() {

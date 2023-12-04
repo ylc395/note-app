@@ -1,7 +1,7 @@
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 
-import PageService from 'service/PageService';
+import PageService from '@domain/service/PageService';
 
 import IFramePreview from './IFramePreview';
 import Options from './Options';

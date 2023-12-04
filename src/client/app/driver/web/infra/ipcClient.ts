@@ -2,9 +2,9 @@ import mapValues from 'lodash/mapValues';
 import wrap from 'lodash/wrap';
 import isObject from 'lodash/isObject';
 
-import type { Remote } from 'infra/remote';
-import type { IpcResponse } from 'infra/transport';
-import { InvalidInputError } from 'model/Error';
+import type { Remote } from '@domain/infra/remote';
+import type { IpcResponse } from '@domain/infra/transport';
+import { InvalidInputError } from '@domain/model/Error';
 
 declare global {
   interface Window {

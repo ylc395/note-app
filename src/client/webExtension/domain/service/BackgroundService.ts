@@ -2,8 +2,8 @@ import browser, { type Tabs } from 'webextension-polyfill';
 import uniqueId from 'lodash/uniqueId';
 import { container } from 'tsyringe';
 
-import { EventNames as TaskEventNames, type TaskTypes, type Task, type SubmitEvent } from 'model/task';
-import EventBus from 'infra/EventBus';
+import { EventNames as TaskEventNames, type TaskTypes, type Task, type SubmitEvent } from '@domain/model/task';
+import EventBus from '@domain/infra/EventBus';
 
 import ConfigService from './ConfigService';
 import HistoryService from './HistoryService';

@@ -1,4 +1,4 @@
-import type { UI, ElectronUI } from 'infra/ui';
+import type { UI, ElectronUI } from '@domain/infra/ui';
 import messageFeedback from './messageFeedback';
 
 declare global {

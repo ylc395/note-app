@@ -1,5 +1,5 @@
-import type { SynchronizationRepository } from 'service/repository/SynchronizationRepository';
-import type { EntityLocator } from 'model/entity';
+import type { SynchronizationRepository } from '@domain/service/repository/SynchronizationRepository';
+import type { EntityLocator } from '@domain/model/entity';
 
 import BaseRepository from './BaseRepository';
 import syncEntitySchema from '../schema/syncEntity';

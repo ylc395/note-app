@@ -2,8 +2,8 @@ import { ipcRenderer } from 'electron';
 import omitBy from 'lodash/omitBy';
 import isObject from 'lodash/isObject';
 
-import type { Remote } from 'infra/remote';
-import { IPC_CHANNEL, type IpcRequest } from 'infra/transport';
+import type { Remote } from '@domain/infra/remote';
+import { IPC_CHANNEL, type IpcRequest } from '@domain/infra/transport';
 
 const createMethod = <T, H>(method: IpcRequest<unknown>['method']) => {
   return async (path: string, payload: T, headers: H) => {

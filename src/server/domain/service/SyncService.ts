@@ -3,11 +3,11 @@ import { Injectable } from '@nestjs/common';
 // import differenceWith from 'lodash/differenceWith';
 // import fm from 'front-matter';
 
-// import { type EntityLocator, EntityTypes } from 'model/entity';
-// import type { Conflict, Log } from 'infra/synchronizer';
-// import type { Note } from 'model/note';
-// import type { Memo } from 'model/memo';
-// import { type SyncTargetFactory, type SyncTarget, token as syncTargetFactoryToken } from 'infra/synchronizer';
+// import { type EntityLocator, EntityTypes } from '@domain/model/entity';
+// import type { Conflict, Log } from '@domain/infra/synchronizer';
+// import type { Note } from '@domain/model/note';
+// import type { Memo } from '@domain/model/memo';
+// import { type SyncTargetFactory, type SyncTarget, token as syncTargetFactoryToken } from '@domain/infra/synchronizer';
 
 import BaseService from './BaseService';
 

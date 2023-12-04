@@ -14,8 +14,8 @@ import {
   notesPatchDTOSchema,
   clientNoteQuerySchema,
   notePatchDTOSchema,
-} from 'model/note';
-import NoteService from 'service/NoteService';
+} from '@domain/model/note';
+import NoteService from '@domain/service/NoteService';
 
 @Controller()
 export default class NotesController {

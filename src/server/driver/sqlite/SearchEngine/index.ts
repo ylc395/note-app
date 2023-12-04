@@ -2,9 +2,9 @@ import { Injectable } from '@nestjs/common';
 import type { Kysely } from 'kysely';
 import intersectionWith from 'lodash/intersectionWith';
 
-import type { SearchEngine } from 'infra/searchEngine';
-import { type EntityId, EntityTypes } from 'model/entity';
-import type { SearchParams, SearchResult } from 'model/search';
+import type { SearchEngine } from '@domain/infra/searchEngine';
+import { type EntityId, EntityTypes } from '@domain/model/entity';
+import type { SearchParams, SearchResult } from '@domain/model/search';
 
 import SqliteDb from '../Database';
 import NoteSearchEngine from './NoteSearchEngine';

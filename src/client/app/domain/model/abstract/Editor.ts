@@ -2,9 +2,9 @@ import uniqueId from 'lodash/uniqueId';
 import { action, makeObservable, observable } from 'mobx';
 import { Emitter } from 'strict-event-emitter';
 
-import type { Path } from 'model/entity';
-import type EditableEntity from 'model/abstract/EditableEntity';
-import type Tile from 'model/workbench/Tile';
+import type { Path } from '@domain/model/entity';
+import type EditableEntity from '@domain/model/abstract/EditableEntity';
+import type Tile from '@domain/model/workbench/Tile';
 
 export enum EventNames {
   Destroyed = 'editor.destroyed',

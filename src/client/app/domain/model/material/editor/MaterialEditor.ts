@@ -1,10 +1,10 @@
 import { makeObservable, observable, computed, action, runInAction } from 'mobx';
 import assert from 'assert';
 
-import type { AnnotationPatchDTO, AnnotationVO } from 'model/material';
-import Editor from 'model/abstract/Editor';
-import type Tile from 'model/workbench/Tile';
-import type EditableMaterial from 'model/material/editable/EditableMaterial';
+import type { AnnotationPatchDTO, AnnotationVO } from '@domain/model/material';
+import Editor from '@domain/model/abstract/Editor';
+import type Tile from '@domain/model/workbench/Tile';
+import type EditableMaterial from '@domain/model/material/editable/EditableMaterial';
 
 export default abstract class MaterialEditor<T extends EditableMaterial, S = unknown> extends Editor<T, S> {
   constructor(editor: T, tile: Tile) {

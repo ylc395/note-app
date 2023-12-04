@@ -2,9 +2,10 @@ import { Button, Tooltip } from 'antd';
 import { container } from 'tsyringe';
 import { ArrowLeftOutlined, ArrowRightOutlined, SettingOutlined } from '@ant-design/icons';
 
-import SyncService from 'service/SyncService';
+import SyncService from '@domain/service/SyncService';
 
-export default function BottomBar() {
+// eslint-disable-next-line mobx/missing-observer
+export default (function BottomBar() {
   const { startSync } = container.resolve(SyncService);
 
   return (
@@ -27,4 +28,4 @@ export default function BottomBar() {
       </div>
     </div>
   );
-}
+});

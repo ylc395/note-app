@@ -6,11 +6,11 @@ import intersectionWith from 'lodash/intersectionWith';
 import mapValues from 'lodash/mapValues';
 import isMatch from 'lodash/isMatch';
 
-import { type EntityId, type EntityLocator, EntityTypes, HierarchyEntityLocator } from 'model/entity';
-import { buildIndex } from 'utils/collection';
-import { normalizeTitle as normalizeNoteTitle } from 'model/note';
-import { normalizeTitle as normalizeMaterialTitle } from 'model/material';
-import { normalizeTitle as normalizeMemoTitle } from 'model/memo';
+import { type EntityId, type EntityLocator, EntityTypes, HierarchyEntityLocator } from '@domain/model/entity';
+import { buildIndex } from '@utils/collection';
+import { normalizeTitle as normalizeNoteTitle } from '@domain/model/note';
+import { normalizeTitle as normalizeMaterialTitle } from '@domain/model/material';
+import { normalizeTitle as normalizeMemoTitle } from '@domain/model/memo';
 import BaseService from './BaseService';
 
 type TitleEntityTypes = EntityTypes.Note | EntityTypes.Material | EntityTypes.Memo | EntityTypes.MaterialAnnotation;

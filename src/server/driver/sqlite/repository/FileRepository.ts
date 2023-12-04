@@ -1,8 +1,8 @@
 import { createHash } from 'node:crypto';
 import pick from 'lodash/pick';
 
-import type { FileRepository } from 'service/repository/FileRepository';
-import type { LoadedFile, FileText, FileVO } from 'model/file';
+import type { FileRepository } from '@domain/service/repository/FileRepository';
+import type { LoadedFile, FileText, FileVO } from '@domain/model/file';
 
 import BaseRepository from './BaseRepository';
 import { tableName as fileTableName, type Row } from '../schema/file';

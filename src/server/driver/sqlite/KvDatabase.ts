@@ -1,5 +1,5 @@
 import type { Kysely } from 'kysely';
-import type { KvDatabase } from 'infra/database';
+import type { KvDatabase } from '@domain/infra/database';
 
 import type SqliteDb from './Database';
 

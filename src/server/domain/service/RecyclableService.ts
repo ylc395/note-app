@@ -3,7 +3,7 @@ import differenceWith from 'lodash/differenceWith';
 import isMatch from 'lodash/isMatch';
 import assert from 'node:assert';
 
-import { type RecyclableEntityLocator, type RecyclableEntityTypes, RecycleReason } from 'model/recyclables';
+import { type RecyclableEntityLocator, type RecyclableEntityTypes, RecycleReason } from '@domain/model/recyclables';
 
 import BaseService from './BaseService';
 import EntityService from './EntityService';

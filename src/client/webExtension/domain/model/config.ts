@@ -1,4 +1,4 @@
-import type { EntityParentId, MainEntityTypes } from 'model/entity';
+import type { EntityParentId, MainEntityTypes } from '@domain/model/entity';
 
 export interface Config {
   targetEntityType: MainEntityTypes;

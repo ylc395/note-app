@@ -4,12 +4,12 @@
 // import { Form, Button, Checkbox, Popover } from 'antd';
 // import type { CheckboxChangeEvent } from 'antd/es/checkbox';
 // import uniq from 'lodash/uniq';
-// import NoteMetadata, { MULTIPLE_ICON_FLAG } from 'model/note/MetadataForm';
+// import NoteMetadata, { MULTIPLE_ICON_FLAG } from '@domain/model/note/MetadataForm';
 
-// import { FORM_ITEM_LAYOUT } from 'web/components/utils';
-// import { EmojiPicker, Emoji } from 'web/components/Emoji';
+// import { FORM_ITEM_LAYOUT } from '@components/utils';
+// import { EmojiPicker, Emoji } from '@components/Emoji';
 // import { useCreation } from 'ahooks';
-// import NoteService from 'service/NoteService';
+// import NoteService from '@domain/service/NoteService';
 // import Context from './Context';
 
 // export default observer(function MetadataForm() {

@@ -3,9 +3,9 @@ import mapValues from 'lodash/mapValues';
 import omit from 'lodash/omit';
 import map from 'lodash/map';
 
-import { buildIndex } from 'utils/collection';
-import type { Memo, NewMemo, MemoPatch, ClientMemoQuery, MemoVO } from 'model/memo';
-import { EntityTypes } from 'model/entity';
+import { buildIndex } from '@utils/collection';
+import type { Memo, NewMemo, MemoPatch, ClientMemoQuery, MemoVO } from '@domain/model/memo';
+import { EntityTypes } from '@domain/model/entity';
 
 import BaseService from './BaseService';
 import StarService from './StarService';

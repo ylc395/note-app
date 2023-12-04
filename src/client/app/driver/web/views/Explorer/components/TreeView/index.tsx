@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react';
 
-import type { default as TreeModel, TreeNode } from 'model/abstract/Tree';
-import Tree from 'components/Tree';
-import type { SearchableEntityType } from 'model/search';
-import type { MaterialVO } from 'model/material';
-import type { NoteVO } from 'model/note';
+import type { default as TreeModel, TreeNode } from '@domain/model/abstract/Tree';
+import Tree from '@components/Tree';
+import type { SearchableEntityType } from '@domain/model/search';
+import type { MaterialVO } from '@domain/model/material';
+import type { NoteVO } from '@domain/model/note';
 
 import SearchInput from './SearchInput';
 import NodeTitle from './NodeTitle';

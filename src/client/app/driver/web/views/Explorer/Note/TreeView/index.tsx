@@ -2,10 +2,10 @@ import { container } from 'tsyringe';
 import { useEffect } from 'react';
 import { PlusOutlined } from '@ant-design/icons';
 
-import { EntityTypes } from 'model/entity';
-import Explorer from 'model/Explorer';
-import NoteService from 'service/NoteService';
-import IconButton from 'web/components/IconButton';
+import { EntityTypes } from '@domain/model/entity';
+import Explorer from '@domain/model/Explorer';
+import NoteService from '@domain/service/NoteService';
+import IconButton from '@components/IconButton';
 import TreeView from '../../components/TreeView';
 
 // eslint-disable-next-line mobx/missing-observer

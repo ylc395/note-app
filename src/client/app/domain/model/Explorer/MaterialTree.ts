@@ -1,7 +1,7 @@
 import { runInAction } from 'mobx';
-import MaterialTree from 'model/material/Tree';
+import MaterialTree from '@domain/model/material/Tree';
 
-export type { MaterialTreeNode } from 'model/material/Tree';
+export type { MaterialTreeNode } from '@domain/model/material/Tree';
 
 export default class ExplorerMaterialTree extends MaterialTree {
   getSelectedNodesAsTree() {

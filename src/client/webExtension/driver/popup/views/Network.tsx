@@ -2,8 +2,8 @@ import { container } from 'tsyringe';
 import { observer } from 'mobx-react-lite';
 import { useState, useEffect } from 'react';
 
-import { Statuses } from 'model/mainApp';
-import MainAppService from 'service/MainAppService';
+import { Statuses } from '@domain/model/mainApp';
+import MainAppService from '@domain/service/MainAppService';
 
 const errorMessages = {
   [Statuses.EmptyToken]: '请填入 token 以连接至 App',

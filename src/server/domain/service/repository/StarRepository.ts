@@ -1,5 +1,5 @@
-import type { EntityId } from 'model/entity';
-import type { StarEntityLocator, StarRecord } from 'model/star';
+import type { EntityId } from '@domain/model/entity';
+import type { StarEntityLocator, StarRecord } from '@domain/model/star';
 
 export interface StarRepository {
   batchCreate: (entities: StarEntityLocator[]) => Promise<StarRecord[]>;

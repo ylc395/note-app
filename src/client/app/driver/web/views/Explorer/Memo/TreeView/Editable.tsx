@@ -1,7 +1,7 @@
 import { Button } from 'antd';
 import { useRef } from 'react';
 
-import MarkdownEditor from 'web/components/MarkdownEditor';
+import MarkdownEditor from '@components/MarkdownEditor';
 
 interface Props {
   onCancel: () => void;

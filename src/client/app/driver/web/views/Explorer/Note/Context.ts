@@ -1,6 +1,6 @@
 import { createContext } from 'react';
 
-import type useModal from 'web/components/Modal/useModal';
+import type useModal from '@components/Modal/useModal';
 
 interface Context {
   editingModal: ReturnType<typeof useModal>;

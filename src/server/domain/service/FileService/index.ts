@@ -6,8 +6,15 @@ import { wrap } from 'comlink';
 import nodeEndpoint from 'comlink/dist/umd/node-adapter';
 import TaskQueue from 'queue';
 
-import type { FileVO, FilesDTO, FileTextRecord, CreatedFile, UnfinishedTextExtraction, FileDTO } from 'model/file';
-import { token as fileReaderToken, FileReader } from 'infra/fileReader';
+import type {
+  FileVO,
+  FilesDTO,
+  FileTextRecord,
+  CreatedFile,
+  UnfinishedTextExtraction,
+  FileDTO,
+} from '@domain/model/file';
+import { token as fileReaderToken, FileReader } from '@domain/infra/fileReader';
 
 import BaseService from '../BaseService';
 import type TextExtraction from './TextExtraction';

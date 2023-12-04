@@ -5,7 +5,7 @@ module.exports = {
   content: [
     path.join(__dirname, './index.html'),
     path.join(__dirname, './**/*.{tsx,ts}'),
-    path.resolve(__dirname, '../../../shared/components/**/*.{tsx,ts}'),
+    path.resolve(__dirname, '../../../components/**/*.{tsx,ts}'),
   ],
   important: '#app',
   corePlugins: {

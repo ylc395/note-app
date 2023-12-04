@@ -3,10 +3,10 @@ import { useEffect, useState, useRef } from 'react';
 import { useToggle } from 'ahooks';
 import { container } from 'tsyringe';
 
-import SearchService from 'service/SearchService';
-import type { SearchableEntityType } from 'model/search';
+import SearchService from '@domain/service/SearchService';
+import type { SearchableEntityType } from '@domain/model/search';
 
-import IconButton from 'web/components/IconButton';
+import IconButton from '@components/IconButton';
 
 interface Props {
   entityType: SearchableEntityType;

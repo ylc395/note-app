@@ -1,8 +1,8 @@
 import type { Selectable, Updateable } from 'kysely';
 import compact from 'lodash/compact';
 
-import type { NoteRepository, NoteQuery } from 'service/repository/NoteRepository';
-import type { NotePatch, NewNote, Note } from 'model/note';
+import type { NoteRepository, NoteQuery } from '@domain/service/repository/NoteRepository';
+import type { NotePatch, NewNote, Note } from '@domain/model/note';
 
 import HierarchyEntityRepository from './HierarchyEntityRepository';
 import schema, { type Row } from '../schema/note';

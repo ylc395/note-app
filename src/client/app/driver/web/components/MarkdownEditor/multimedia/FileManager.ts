@@ -1,7 +1,7 @@
 import { container, singleton } from 'tsyringe';
 
-import { token as remoteToken } from 'infra/remote';
-import { getFileIdFromUrl } from 'infra/markdown/utils';
+import { token as remoteToken } from '@domain/infra/remote';
+import { getFileIdFromUrl } from '@domain/infra/markdown/utils';
 
 @singleton()
 export default class FileManager {

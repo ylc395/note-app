@@ -2,8 +2,8 @@ import { container } from 'tsyringe';
 import type { UploadOptions } from '@milkdown/plugin-upload';
 import { Decoration } from '@milkdown/prose/view';
 
-import { getUrlFromFileId } from 'infra/markdown/utils';
-import MarkdownService from 'service/MarkdownService';
+import { getUrlFromFileId } from '@domain/infra/markdown/utils';
+import MarkdownService from '@domain/service/MarkdownService';
 
 import { NODE_NAME as MULTIMEDIA_NODE_NAME } from './multimedia';
 

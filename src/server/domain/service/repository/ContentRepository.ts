@@ -1,5 +1,5 @@
-import type { ContentEntityLocator, Link, LinkDirection, LinkToQuery, Topic, TopicQuery } from 'model/content';
-import type { EntityLocator } from 'model/entity';
+import type { ContentEntityLocator, Link, LinkDirection, LinkToQuery, Topic, TopicQuery } from '@domain/model/content';
+import type { EntityLocator } from '@domain/model/entity';
 
 export interface ContentRepository {
   createLinks: (links: Link[]) => Promise<void>;

@@ -4,8 +4,8 @@ import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortabl
 import clsx from 'clsx';
 import { container } from 'tsyringe';
 
-import type Tile from 'model/workbench/Tile';
-import TileHandler from 'service/DndService/TileHandler';
+import type Tile from '@domain/model/workbench/Tile';
+import TileHandler from '@domain/service/DndService/TileHandler';
 
 import TabItem from './TabItem';
 import { useEffect } from 'react';

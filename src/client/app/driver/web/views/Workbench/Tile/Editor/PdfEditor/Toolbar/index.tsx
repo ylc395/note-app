@@ -3,7 +3,7 @@ import { Button } from 'antd';
 import { useContext } from 'react';
 import { OrderedListOutlined, HighlightOutlined } from '@ant-design/icons';
 
-import { Panels } from 'model/material/editor/PdfEditor';
+import { Panels } from '@domain/model/material/editor/PdfEditor';
 import context from '../Context';
 import PageSwitcher from './PageSwitcher';
 import ScaleChanger from './ScaleChanger';

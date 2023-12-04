@@ -1,16 +1,16 @@
 import { Emitter } from 'strict-event-emitter';
 import assert from 'assert';
-import { type EntityLocator, type EntityId, EntityTypes } from 'model/entity';
+import { type EntityLocator, type EntityId, EntityTypes } from '@domain/model/entity';
 
 import {
   type default as EditableEntity,
   type EditableEntityLocator,
   EventNames as EditableEntityEvents,
-} from 'model/abstract/EditableEntity';
-import EditableNote from 'model/note/Editable';
-import EditablePdf from 'model/material/editable/EditablePdf';
-import EditableHtml from 'model/material/editable/EditableHtml';
-import EditableImage from 'model/material/editable/EditableImage';
+} from '@domain/model/abstract/EditableEntity';
+import EditableNote from '@domain/model/note/Editable';
+import EditablePdf from '@domain/model/material/editable/EditablePdf';
+import EditableHtml from '@domain/model/material/editable/EditableHtml';
+import EditableImage from '@domain/model/material/editable/EditableImage';
 import { singleton } from 'tsyringe';
 
 export enum EventNames {

@@ -4,7 +4,7 @@ import { HistoryOutlined } from '@ant-design/icons';
 import clsx from 'clsx';
 import { useState } from 'react';
 
-import HistoryService from 'service/HistoryService';
+import HistoryService from '@domain/service/HistoryService';
 
 export default observer(function History() {
   const { historyRecords, clear } = container.resolve(HistoryService);

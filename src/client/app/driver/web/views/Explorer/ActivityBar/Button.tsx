@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import clsx from 'clsx';
 import { container } from 'tsyringe';
 
-import Explorer, { type ExplorerTypes } from 'model/Explorer';
+import Explorer, { type ExplorerTypes } from '@domain/model/Explorer';
 
 interface Props {
   children: ReactNode;

@@ -1,9 +1,9 @@
 import { container, singleton } from 'tsyringe';
 import { observable, makeObservable, action, computed } from 'mobx';
 
-import { Tile, TileSplitDirections, Workbench } from 'model/workbench';
-import Explorer from 'model/Explorer';
-import Editor from 'model/abstract/Editor';
+import { Tile, TileSplitDirections, Workbench } from '@domain/model/workbench';
+import Explorer from '@domain/model/Explorer';
+import Editor from '@domain/model/abstract/Editor';
 
 import type { default as Handler, DragMoveEvent } from './Handler';
 

@@ -2,10 +2,10 @@ import 'reflect-metadata';
 import { container } from 'tsyringe';
 import { createRoot } from 'react-dom/client';
 
-import { token as remoteToken } from 'infra/remote';
-import { token as uiToken } from 'infra/ui';
-import { token as localStorageToken } from 'infra/localStorage';
-import 'utils/mobx';
+import { token as remoteToken } from '@domain/infra/remote';
+import { token as uiToken } from '@domain/infra/ui';
+import { token as localStorageToken } from '@domain/infra/localStorage';
+import '@utils/mobx';
 
 import httpClient from './infra/httpClient';
 import ipcClient from './infra/ipcClient';

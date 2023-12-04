@@ -1,7 +1,7 @@
 import { container } from 'tsyringe';
 import { SettingOutlined, FolderAddOutlined, ShrinkOutlined } from '@ant-design/icons';
-import MaterialService from 'service/MaterialService';
-import IconButton from 'web/components/IconButton';
+import MaterialService from '@domain/service/MaterialService';
+import IconButton from '@components/IconButton';
 
 // eslint-disable-next-line mobx/missing-observer
 export default function Operations() {

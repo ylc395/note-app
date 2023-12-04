@@ -2,8 +2,8 @@ import { EventBus, PDFViewer, type PDFPageView, PDFLinkService } from 'pdfjs-dis
 import numberRange from 'lodash/range';
 import { makeObservable, observable, when, action, runInAction, computed, autorun } from 'mobx';
 
-import { AnnotationTypes, type AnnotationVO, type Rect } from 'model/material';
-import type PdfEditor from 'model/material/editor/PdfEditor';
+import { AnnotationTypes, type AnnotationVO, type Rect } from '@domain/model/material';
+import type PdfEditor from '@domain/model/material/editor/PdfEditor';
 
 import { isElement } from '../../common/domUtils';
 import RangeSelector, { type RangeSelectEvent } from '../../common/RangeSelector';

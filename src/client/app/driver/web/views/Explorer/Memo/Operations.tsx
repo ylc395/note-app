@@ -1,5 +1,5 @@
 import { EditOutlined, SettingOutlined } from '@ant-design/icons';
-import IconButton from 'web/components/IconButton';
+import IconButton from '@components/IconButton';
 
 // eslint-disable-next-line mobx/missing-observer
 export default function Operations() {

@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import { useContext } from 'react';
-import Resizable from 'web/components/Resizable';
+import Resizable from '@components/Resizable';
 
 import context from '../Context';
 import Annotation from './Annotation';

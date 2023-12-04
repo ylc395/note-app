@@ -1,5 +1,5 @@
 import type { SchemaModule } from 'kysely';
-import type { ContentEntityTypes } from 'model/content';
+import type { ContentEntityTypes } from '@domain/model/content';
 
 export const tableName = 'topics';
 

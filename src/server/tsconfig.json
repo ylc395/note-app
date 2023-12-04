@@ -5,11 +5,9 @@
     "baseUrl": ".",
     "lib": ["ESNext"],
     "paths": {
-      "model/*": ["domain/model/*", "../shared/model/*"],
-      "service/*": ["domain/service/*"],
-      "infra/*": ["domain/infra/*", "../shared/infra/*"],
-      "utils/*": ["../shared/utils/*"],
-      "shared/*": ["../shared/*"]
+      "@domain/*": ["domain/*", "../shared/domain/*"],
+      "@utils/*": ["../shared/utils/*"],
+      "@shared/*": ["../shared/*"]
     }
   }
 }

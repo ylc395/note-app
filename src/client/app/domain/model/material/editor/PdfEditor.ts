@@ -1,7 +1,7 @@
 import { action, computed, makeObservable, observable } from 'mobx';
 
 import MaterialEditor from './MaterialEditor';
-import type Tile from 'model/workbench/Tile';
+import type Tile from '@domain/model/workbench/Tile';
 import type EditablePdf from '../editable/EditablePdf';
 
 interface UIState {

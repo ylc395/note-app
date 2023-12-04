@@ -7,7 +7,7 @@ import groupBy from 'lodash/groupBy';
 import map from 'lodash/map';
 import pick from 'lodash/pick';
 
-import type { HierarchyEntity } from '../../../../shared/model/entity';
+import type { HierarchyEntity } from '@shared/domain/model/entity';
 
 export interface TreeNode<T = unknown> {
   readonly id: string;

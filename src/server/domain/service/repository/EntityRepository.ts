@@ -1,5 +1,5 @@
-import type { ContentEntityLocator } from 'model/content';
-import type { EntityId, HierarchyEntityLocator } from 'model/entity';
+import type { ContentEntityLocator } from '@domain/model/content';
+import type { EntityId, HierarchyEntityLocator } from '@domain/model/entity';
 
 export interface EntityRepository {
   findDescendantIds(

@@ -2,9 +2,9 @@ import type { Tabs } from 'webextension-polyfill';
 import { singleton, container } from 'tsyringe';
 import { computed, action, makeObservable, observable, runInAction } from 'mobx';
 
-import { type Task, type CancelEvent, TaskTypes, EventNames } from 'model/task';
-import { Statuses } from 'model/mainApp';
-import EventBus from 'infra/EventBus';
+import { type Task, type CancelEvent, TaskTypes, EventNames } from '@domain/model/task';
+import { Statuses } from '@domain/model/mainApp';
+import EventBus from '@domain/infra/EventBus';
 
 import ConfigService from './ConfigService';
 import HistoryService from './HistoryService';

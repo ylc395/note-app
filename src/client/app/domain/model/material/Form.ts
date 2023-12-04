@@ -1,5 +1,5 @@
-import type { NewMaterialEntityDTO } from 'model/material';
-import Form from 'model/abstract/Form';
+import type { NewMaterialEntityDTO } from '@domain/model/material';
+import Form from '@domain/model/abstract/Form';
 
 type Material = Pick<NewMaterialEntityDTO, 'icon' | 'name' | 'sourceUrl'>;
 

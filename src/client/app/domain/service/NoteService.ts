@@ -1,21 +1,21 @@
 import { container, singleton } from 'tsyringe';
 import assert from 'assert';
 
-import { token as remoteToken } from 'infra/remote';
-import { token as UIToken } from 'infra/ui';
+import { token as remoteToken } from '@domain/infra/remote';
+import { token as UIToken } from '@domain/infra/ui';
 
 import type {
   NotesPatchDTO as NotesPatch,
   NoteVO as Note,
   ClientNoteQuery as NoteQuery,
   NotePatchDTO as NotePatch,
-} from 'model/note';
-import type { RecyclablesDTO } from 'model/recyclables';
-import { EntityTypes } from 'model/entity';
-import Explorer from 'model/Explorer';
-import type { SelectEvent } from 'model/abstract/Tree';
-import { MULTIPLE_ICON_FLAG, type NoteMetadata } from 'model/note/MetadataForm';
-import { EditableEntityManager, Workbench } from 'model/workbench';
+} from '@domain/model/note';
+import type { RecyclablesDTO } from '@domain/model/recyclables';
+import { EntityTypes } from '@domain/model/entity';
+import Explorer from '@domain/model/Explorer';
+import type { SelectEvent } from '@domain/model/abstract/Tree';
+import { MULTIPLE_ICON_FLAG, type NoteMetadata } from '@domain/model/note/MetadataForm';
+import { EditableEntityManager, Workbench } from '@domain/model/workbench';
 
 @singleton()
 export default class NoteService {

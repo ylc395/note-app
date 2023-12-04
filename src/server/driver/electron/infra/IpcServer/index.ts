@@ -5,8 +5,8 @@ import { match, type MatchFunction } from 'path-to-regexp';
 import isError from 'lodash/isError';
 import toPlainObject from 'lodash/toPlainObject';
 
-import { InvalidInputError } from 'model/Error';
-import { IPC_CHANNEL, type IpcRequest, type IpcResponse } from 'infra/transport';
+import { InvalidInputError } from '@domain/model/Error';
+import { IPC_CHANNEL, type IpcRequest, type IpcResponse } from '@domain/infra/transport';
 import Context from './Context';
 
 export default class ElectronIpcServer extends Server implements CustomTransportStrategy {

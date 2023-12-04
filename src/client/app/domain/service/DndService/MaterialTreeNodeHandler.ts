@@ -1,13 +1,13 @@
 import { container } from 'tsyringe';
 
-import Tile from 'model/workbench/Tile';
-import Editor from 'model/abstract/Editor';
-import Explorer from 'model/Explorer';
-import MaterialService from 'service/MaterialService';
+import Tile from '@domain/model/workbench/Tile';
+import Editor from '@domain/model/abstract/Editor';
+import Explorer from '@domain/model/Explorer';
+import MaterialService from '@domain/service/MaterialService';
 
 import type Handler from './Handler';
-import { EntityTypes } from 'model/entity';
-import { Workbench } from 'model/workbench';
+import { EntityTypes } from '@domain/model/entity';
+import { Workbench } from '@domain/model/workbench';
 
 export default class MaterialTreeNodeHandler implements Handler {
   private readonly explorer = container.resolve(Explorer);

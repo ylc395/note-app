@@ -6,10 +6,9 @@ import { ModuleRef } from '@nestjs/core';
 import { Inject } from '@nestjs/common';
 import { ensureDirSync } from 'fs-extra';
 
-
-import type { AppServerStatus } from 'model/app';
-import { APP_NAME, IS_DEV, IS_TEST } from 'infra/constants';
-import { token as databaseToken, type Database } from 'infra/database';
+import type { AppServerStatus } from '@domain/model/app';
+import { APP_NAME, IS_DEV, IS_TEST } from '@domain/infra//constants';
+import { token as databaseToken, type Database } from '@domain/infra//database';
 
 export const token = Symbol('runtime');
 export const IS_IPC = workerData?.runtime !== 'http';

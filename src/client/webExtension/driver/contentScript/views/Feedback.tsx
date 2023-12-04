@@ -3,8 +3,8 @@ import { useEffect } from 'react';
 import { useBoolean, useResetState } from 'ahooks';
 import { CheckCircleFilled, CloseOutlined } from '@ant-design/icons';
 
-import { EventNames } from 'model/task';
-import EventBus from 'infra/EventBus';
+import { EventNames } from '@domain/model/task';
+import EventBus from '@domain/infra/EventBus';
 
 // eslint-disable-next-line mobx/missing-observer
 export default function Feedback() {

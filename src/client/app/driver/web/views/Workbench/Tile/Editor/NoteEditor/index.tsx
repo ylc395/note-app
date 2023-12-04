@@ -2,14 +2,14 @@ import { useLocalObservable } from 'mobx-react-lite';
 import { observable, runInAction } from 'mobx';
 import { useEffect } from 'react';
 
-import type NoteEditor from 'model/note/Editor';
-import Modal from 'web/components/Modal';
+import type NoteEditor from '@domain/model/note/Editor';
+import Modal from '@components/Modal';
 
 import Body from './Body';
 import Title from './Title';
 import Info from './Info';
 import Context, { type EditorContext } from './Context';
-import useModal from 'web/components/Modal/useModal';
+import useModal from '@components/Modal/useModal';
 
 // eslint-disable-next-line mobx/missing-observer
 export default function NoteEditorView({ editor }: { editor: NoteEditor }) {

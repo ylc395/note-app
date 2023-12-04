@@ -1,5 +1,5 @@
-import type { RecyclableRecord, RecycleReason } from 'model/recyclables';
-import type { EntityLocator } from 'model/entity';
+import type { RecyclableRecord, RecycleReason } from '@domain/model/recyclables';
+import type { EntityLocator } from '@domain/model/entity';
 
 export interface RecyclablesRepository {
   findAllByLocators: (entities: EntityLocator[], reason?: RecycleReason) => Promise<RecyclableRecord[]>; // not including hard deleted record

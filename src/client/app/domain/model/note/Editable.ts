@@ -2,11 +2,11 @@ import { makeObservable, action, toJS } from 'mobx';
 import debounce from 'lodash/debounce';
 import assert from 'assert';
 
-import { EntityTypes } from 'model/entity';
-import type { DetailedNoteVO as Note, NotePatchDTO as NotePatch } from 'model/note';
-import EditableEntity, { EventNames } from 'model/abstract/EditableEntity';
+import { EntityTypes } from '@domain/model/entity';
+import type { DetailedNoteVO as Note, NotePatchDTO as NotePatch } from '@domain/model/note';
+import EditableEntity, { EventNames } from '@domain/model/abstract/EditableEntity';
 import NoteEditor from './Editor';
-import { Tile } from 'model/workbench';
+import { Tile } from '@domain/model/workbench';
 
 export default class EditableNote extends EditableEntity<Note> {
   readonly entityType = EntityTypes.Note;

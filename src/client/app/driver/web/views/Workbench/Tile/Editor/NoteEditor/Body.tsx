@@ -2,7 +2,7 @@ import { observer } from 'mobx-react-lite';
 import { useContext } from 'react';
 import { useMemoizedFn } from 'ahooks';
 
-import MarkdownEditor from 'web/components/MarkdownEditor';
+import MarkdownEditor from '@components/MarkdownEditor';
 import EditorContext from './Context';
 
 export default observer(function Body() {

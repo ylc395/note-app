@@ -5,8 +5,8 @@ import { useClick, useFloating, useInteractions, offset } from '@floating-ui/rea
 import { useClickAway, useBoolean } from 'ahooks';
 import { container } from 'tsyringe';
 
-import Tree from '../../../../../../shared/components/Tree';
-import ConfigService from 'service/ConfigService';
+import Tree from '../../../../../../components/Tree';
+import ConfigService from '@domain/service/ConfigService';
 
 export default observer(function TargetPath() {
   const [isOpen, { setTrue: open, setFalse: close, set: setIsOpen }] = useBoolean(false);

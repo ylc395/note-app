@@ -1,8 +1,8 @@
 import { sql } from 'kysely';
 
-import { type SearchParams, Scopes } from 'model/search';
-import { normalizeEntityTitle } from 'model/material';
-import { EntityTypes } from 'model/entity';
+import { type SearchParams, Scopes } from '@domain/model/search';
+import { normalizeEntityTitle } from '@domain/model/material';
+import { EntityTypes } from '@domain/model/entity';
 
 import type SearchEngine from './index';
 import {

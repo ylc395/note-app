@@ -1,7 +1,7 @@
-import type { EntityLocator } from 'model/entity';
-import type { TopicDTO, LinkDTO, HighlightPosition, ContentEntityTypes } from 'shared/model/content';
+import type { EntityLocator } from '@domain/model/entity';
+import type { TopicDTO, LinkDTO, HighlightPosition, ContentEntityTypes } from '@shared/domain/model/content';
 
-export * from 'shared/model/content';
+export * from '@shared/domain/model/content';
 
 export type ContentEntityLocator = EntityLocator<ContentEntityTypes>;
 

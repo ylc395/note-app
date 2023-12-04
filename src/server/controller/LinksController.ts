@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 
-import { type LinkToVO, linksDTOSchema, type LinkDTO, type LinkToQuery } from 'model/content';
-import ContentService from 'service/ContentService';
+import { type LinkToVO, linksDTOSchema, type LinkDTO, type LinkToQuery } from '@domain/model/content';
+import ContentService from '@domain/service/ContentService';
 
 import { Get, Patch, Body, EnableOnly, createSchemaPipe, Query } from './decorators';
 

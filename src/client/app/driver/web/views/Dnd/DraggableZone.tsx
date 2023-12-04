@@ -2,7 +2,7 @@ import { container } from 'tsyringe';
 import { DndContext, MouseSensor, useSensor, useSensors, pointerWithin } from '@dnd-kit/core';
 import type { ReactNode } from 'react';
 
-import DndService from 'service/DndService';
+import DndService from '@domain/service/DndService';
 
 // eslint-disable-next-line mobx/missing-observer
 export default function DraggableZone({ children }: { children: ReactNode }) {

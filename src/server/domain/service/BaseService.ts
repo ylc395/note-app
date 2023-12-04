@@ -1,8 +1,8 @@
 import { Inject } from '@nestjs/common';
 
-import { token as databaseToken, type Database } from 'infra/database';
-import { token as eventBusToken, type EventBus } from 'infra/eventBus';
-import { type default as Runtime, token as runtimeToken } from 'infra/DesktopRuntime';
+import { token as databaseToken, type Database } from '@domain/infra/database';
+import { token as eventBusToken, type EventBus } from '@domain/infra/eventBus';
+import { type default as Runtime, token as runtimeToken } from '@domain/infra/DesktopRuntime';
 import type Repositories from './repository';
 
 export default abstract class BaseService {

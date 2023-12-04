@@ -2,12 +2,12 @@ import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 import { useDroppable } from '@dnd-kit/core';
 
-import type { Tile } from 'model/workbench';
-import NoteEditor from 'model/note/Editor';
-import ImageEditor from 'model/material/editor/ImageEditor';
-import PdfEditor from 'model/material/editor/PdfEditor';
-import HtmlEditor from 'model/material/editor/HtmlEditor';
-import TileHandler from 'service/DndService/TileHandler';
+import type { Tile } from '@domain/model/workbench';
+import NoteEditor from '@domain/model/note/Editor';
+import ImageEditor from '@domain/model/material/editor/ImageEditor';
+import PdfEditor from '@domain/model/material/editor/PdfEditor';
+import HtmlEditor from '@domain/model/material/editor/HtmlEditor';
+import TileHandler from '@domain/service/DndService/TileHandler';
 
 import NoteEditorView from './NoteEditor';
 import ImageEditorView from './ImageEditor';

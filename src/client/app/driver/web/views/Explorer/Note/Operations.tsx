@@ -2,9 +2,9 @@ import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 import { PlusOutlined, ShrinkOutlined, SettingOutlined } from '@ant-design/icons';
 
-import NoteService from 'service/NoteService';
-import Explorer from 'model/Explorer';
-import IconButton from 'web/components/IconButton';
+import NoteService from '@domain/service/NoteService';
+import Explorer from '@domain/model/Explorer';
+import IconButton from '@components/IconButton';
 
 export default observer(function Operations() {
   const { createNote } = container.resolve(NoteService);

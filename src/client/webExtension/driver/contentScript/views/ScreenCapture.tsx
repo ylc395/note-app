@@ -4,9 +4,9 @@ import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 import { useMemoizedFn } from 'ahooks';
 
-import PageService from 'service/PageService';
-import RectAreaSelector, { type Rect, type ReactAreaSelectorRef } from '../../../../shared/components/RectAreaSelector';
-import { TaskTypes } from 'model/task';
+import PageService from '@domain/service/PageService';
+import RectAreaSelector, { type Rect, type ReactAreaSelectorRef } from '../../../../components/RectAreaSelector';
+import { TaskTypes } from '@domain/model/task';
 
 import usePreventScroll from './hooks/usePreventScroll';
 

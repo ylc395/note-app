@@ -1,8 +1,8 @@
 import groupBy from 'lodash/groupBy';
 import map from 'lodash/map';
-import { type EntityId, EntityTypes, type HierarchyEntityLocator } from 'model/entity';
-import type { ContentEntityTypes, ContentEntityLocator } from 'model/content';
-import type { EntityRepository } from 'service/repository/EntityRepository';
+import { type EntityId, EntityTypes, type HierarchyEntityLocator } from '@domain/model/entity';
+import type { ContentEntityTypes, ContentEntityLocator } from '@domain/model/content';
+import type { EntityRepository } from '@domain/service/repository/EntityRepository';
 
 import BaseRepository from './BaseRepository';
 import SqliteNoteRepository from './NoteRepository';

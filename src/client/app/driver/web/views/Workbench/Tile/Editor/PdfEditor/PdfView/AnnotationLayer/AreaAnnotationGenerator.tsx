@@ -5,7 +5,7 @@ import { useFloating } from '@floating-ui/react';
 import { useEventListener, useMemoizedFn } from 'ahooks';
 import mapValues from 'lodash/mapValues';
 
-import RectAreaSelector, { ReactAreaSelectorRef, type Rect } from 'components/RectAreaSelector';
+import RectAreaSelector, { ReactAreaSelectorRef, type Rect } from '@components/RectAreaSelector';
 
 import context from '../../Context';
 

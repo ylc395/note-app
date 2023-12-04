@@ -1,7 +1,7 @@
 import { createContext } from 'react';
 
-import type NoteEditor from 'model/note/Editor';
-import type useModal from 'web/components/Modal/useModal';
+import type NoteEditor from '@domain/model/note/Editor';
+import type useModal from '@components/Modal/useModal';
 
 export interface EditorContext {
   editor: NoteEditor;

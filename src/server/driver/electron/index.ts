@@ -6,9 +6,9 @@ import { type Remote, wrap, releaseProxy } from 'comlink';
 import nodeEndpoint from 'comlink/dist/umd/node-adapter';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 
-import DesktopRuntime from 'infra/DesktopRuntime';
-import { IS_DEV } from 'infra/constants';
-import { UI_CHANNEL, type UIIpcPayload, type ElectronUI } from 'infra/ui';
+import DesktopRuntime from '@domain/infra/DesktopRuntime';
+import { IS_DEV } from '@domain/infra/constants';
+import { UI_CHANNEL, type UIIpcPayload, type ElectronUI } from '@domain/infra/ui';
 
 import type LocalServer from '../localHttpServer';
 import ui from './infra/ui';

@@ -1,4 +1,4 @@
-import type { FileVO, LoadedFile, FileText, UnfinishedTextExtraction } from 'model/file';
+import type { FileVO, LoadedFile, FileText, UnfinishedTextExtraction } from '@domain/model/file';
 
 export interface FileRepository {
   findOneById: (id: FileVO['id']) => Promise<FileVO | null>;

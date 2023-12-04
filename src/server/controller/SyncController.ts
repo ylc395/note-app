@@ -1,6 +1,6 @@
 import { Controller } from '@nestjs/common';
 
-import SyncService from 'service/SyncService';
+import SyncService from '@domain/service/SyncService';
 import { Post } from './decorators';
 
 @Controller()

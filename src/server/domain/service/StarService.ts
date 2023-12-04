@@ -1,9 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
 import assert from 'node:assert';
 
-import type { StarEntityLocator, StarVO } from 'model/star';
-import type { EntityId } from 'model/entity';
-import { buildIndex } from 'utils/collection';
+import type { StarEntityLocator, StarVO } from '@domain/model/star';
+import type { EntityId } from '@domain/model/entity';
+import { buildIndex } from '@utils/collection';
 
 import BaseService from './BaseService';
 import EntityService from './EntityService';

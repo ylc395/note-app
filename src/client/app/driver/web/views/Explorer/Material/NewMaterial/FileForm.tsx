@@ -1,9 +1,9 @@
 import { observer } from 'mobx-react-lite';
 import { Form, Input, Button } from 'antd';
 
-import type FormModel from 'model/material/Form';
-import selectFiles from 'web/infra/selectFiles';
-import { IS_ELECTRON } from 'infra/constants';
+import type FormModel from '@domain/model/material/Form';
+import selectFiles from '@web-infra/selectFiles';
+import { IS_ELECTRON } from '@domain/infra/constants';
 
 export default observer(function FileForm({ model }: { model: FormModel }) {
   const handleSelectFile = async () => {

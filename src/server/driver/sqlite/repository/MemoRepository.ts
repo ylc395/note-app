@@ -2,8 +2,8 @@ import omit from 'lodash/omit';
 import fromPairs from 'lodash/fromPairs';
 
 import { sql, type Selectable } from 'kysely';
-import type { MemoPatchDTO, MemoQuery, Memo, NewMemo } from 'model/memo';
-import type { MemoRepository } from 'service/repository/MemoRepository';
+import type { MemoPatchDTO, MemoQuery, Memo, NewMemo } from '@domain/model/memo';
+import type { MemoRepository } from '@domain/service/repository/MemoRepository';
 
 import HierarchyEntityRepository from './HierarchyEntityRepository';
 import schema, { type Row } from '../schema/memo';

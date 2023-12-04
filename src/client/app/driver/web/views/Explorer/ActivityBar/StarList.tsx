@@ -5,8 +5,8 @@ import { Button, Empty } from 'antd';
 import { CloseOutlined, FileOutlined, LoadingOutlined, BuildOutlined, DatabaseOutlined } from '@ant-design/icons';
 import { useClickAway } from 'ahooks';
 
-import { EntityTypes } from 'model/entity';
-import StarService from 'service/StarService';
+import { EntityTypes } from '@domain/model/entity';
+import StarService from '@domain/service/StarService';
 
 const iconMap = {
   [EntityTypes.Note]: () => <FileOutlined />,

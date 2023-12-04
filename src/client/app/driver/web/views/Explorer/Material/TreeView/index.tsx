@@ -2,10 +2,10 @@ import { container } from 'tsyringe';
 import { useEffect } from 'react';
 import { FileAddOutlined, FolderAddOutlined } from '@ant-design/icons';
 
-import MaterialService from 'service/MaterialService';
-import { isDirectory } from 'model/material';
-import { EntityTypes } from 'model/entity';
-import IconButton from 'web/components/IconButton';
+import MaterialService from '@domain/service/MaterialService';
+import { isDirectory } from '@domain/model/material';
+import { EntityTypes } from '@domain/model/entity';
+import IconButton from '@components/IconButton';
 
 import TreeView from '../../components/TreeView';
 

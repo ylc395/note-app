@@ -2,8 +2,8 @@ import groupBy from 'lodash/groupBy';
 import mapValues from 'lodash/mapValues';
 import map from 'lodash/map';
 
-import type { EntityId, HierarchyEntity } from 'model/entity';
-import { buildIndex } from 'utils/collection';
+import type { EntityId, HierarchyEntity } from '@domain/model/entity';
+import { buildIndex } from '@utils/collection';
 
 import BaseRepository from './BaseRepository';
 import { tableName as recyclableTableName } from '../schema/recyclable';

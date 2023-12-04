@@ -1,4 +1,4 @@
-import { type MaterialVO, isDirectory } from '../../../../shared/model/material';
+import { type MaterialVO, isDirectory } from '@shared/domain/model/material';
 import Tree, { type TreeNode } from '../abstract/Tree';
 
 export type MaterialTreeNode = TreeNode<MaterialVO>;

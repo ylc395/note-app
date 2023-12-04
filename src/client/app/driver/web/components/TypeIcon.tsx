@@ -1,5 +1,5 @@
 import { BookOutlined, DatabaseOutlined, BuildOutlined } from '@ant-design/icons';
-import { EntityTypes } from 'model/entity';
+import { EntityTypes } from '@domain/model/entity';
 
 const icons = {
   [EntityTypes.Note]: () => <BookOutlined />,

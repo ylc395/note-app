@@ -1,5 +1,5 @@
 import type { SchemaModule } from 'kysely';
-import type { StarEntityTypes } from 'model/star';
+import type { StarEntityTypes } from '@domain/model/star';
 
 export const tableName = 'stars';
 

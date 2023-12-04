@@ -2,7 +2,7 @@ import { observer } from 'mobx-react-lite';
 import { useContext } from 'react';
 import dayjs from 'dayjs';
 
-import { AnnotationTypes, type PdfRangeAnnotationVO, type PdfAreaAnnotationVO } from 'model/material';
+import { AnnotationTypes, type PdfRangeAnnotationVO, type PdfAreaAnnotationVO } from '@domain/model/material';
 import context from '../Context';
 
 export default observer(function Annotation({

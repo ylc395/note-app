@@ -1,8 +1,8 @@
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 
-import MaterialService from 'service/MaterialService';
-import Modal from 'web/components/Modal';
+import MaterialService from '@domain/service/MaterialService';
+import Modal from '@components/Modal';
 
 import DirectoryOperations from './Operations';
 import DirectoryView from './TreeView';

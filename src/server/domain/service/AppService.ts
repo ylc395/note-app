@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 
-import type { Config } from 'model/config';
+import type { Config } from '@domain/model/config';
 
 import BaseService from './BaseService';
 

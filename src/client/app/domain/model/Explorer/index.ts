@@ -2,8 +2,8 @@ import { container, singleton } from 'tsyringe';
 import assert from 'assert';
 import { makeObservable, observable } from 'mobx';
 
-import Value from 'model/Value';
-import type { SearchableEntityType } from 'model/search';
+import Value from '@domain/model/Value';
+import type { SearchableEntityType } from '@domain/model/search';
 
 import NoteTree, { type NoteTreeNode } from './NoteTree';
 import MaterialTree, { type MaterialTreeNode } from './MaterialTree';

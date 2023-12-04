@@ -3,7 +3,7 @@ import browser from 'webextension-polyfill';
 import { singleton } from 'tsyringe';
 import omit from 'lodash/omit';
 
-import type { Task } from 'model/task';
+import type { Task } from '@domain/model/task';
 
 const HISTORY_KEY = 'history';
 

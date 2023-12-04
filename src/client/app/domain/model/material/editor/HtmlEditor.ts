@@ -1,7 +1,7 @@
 import { makeObservable, observable, action, computed } from 'mobx';
 
-import MaterialEditor from 'model/material/editor/MaterialEditor';
-import type Tile from 'model/workbench/Tile';
+import MaterialEditor from '@domain/model/material/editor/MaterialEditor';
+import type Tile from '@domain/model/workbench/Tile';
 import type EditableHtml from '../editable/EditableHtml';
 
 interface State {

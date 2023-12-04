@@ -1,8 +1,8 @@
 import { singleton, container } from 'tsyringe';
 import { makeObservable, observable } from 'mobx';
 
-import type { SelectEvent } from 'model/abstract/Tree';
-import { EntityTypes } from 'model/entity';
+import type { SelectEvent } from '@domain/model/abstract/Tree';
+import { EntityTypes } from '@domain/model/entity';
 import {
   type NewMaterialDTO,
   type MaterialDirectoryVO,
@@ -10,14 +10,14 @@ import {
   type ClientMaterialQuery,
   type MaterialEntityVO,
   isDirectory,
-} from 'model/material';
-import Explorer from 'model/Explorer';
-import type Form from 'model/material/Form';
-import Value from 'model/Value';
-import { token as remoteToken } from 'infra/remote';
+} from '@domain/model/material';
+import Explorer from '@domain/model/Explorer';
+import type Form from '@domain/model/material/Form';
+import Value from '@domain/model/Value';
+import { token as remoteToken } from '@domain/infra/remote';
 
-import type { FileVO, FilesDTO } from 'model/file';
-import { Workbench } from 'model/workbench';
+import type { FileVO, FilesDTO } from '@domain/model/file';
+import { Workbench } from '@domain/model/workbench';
 
 @singleton()
 export default class MaterialService {

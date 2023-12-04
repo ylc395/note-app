@@ -10,8 +10,8 @@ import {
   type MaterialPatch,
   type NewMaterialDirectory,
   type NewMaterialEntity,
-} from 'model/material';
-import type { MaterialRepository } from 'service/repository/MaterialRepository';
+} from '@domain/model/material';
+import type { MaterialRepository } from '@domain/service/repository/MaterialRepository';
 
 import schema, { type Row } from '../schema/material';
 import fileSchema, { type Row as FileRow } from '../schema/file';

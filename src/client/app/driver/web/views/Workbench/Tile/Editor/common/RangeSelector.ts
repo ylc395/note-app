@@ -1,5 +1,5 @@
 import debounce from 'lodash/debounce';
-import { IS_DEV } from 'infra/constants';
+import { IS_DEV } from '@domain/infra/constants';
 import { isTextNode, isElement, isVisible } from './domUtils';
 
 export interface RangeSelectEvent {

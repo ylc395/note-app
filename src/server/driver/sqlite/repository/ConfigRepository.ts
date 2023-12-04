@@ -1,5 +1,5 @@
-import type { ConfigRepository } from 'service/repository/ConfigRepository';
-import { type Config, DEFAULT_CONFIG } from 'model/config';
+import type { ConfigRepository } from '@domain/service/repository/ConfigRepository';
+import { type Config, DEFAULT_CONFIG } from '@domain/model/config';
 
 import BaseRepository from './BaseRepository';
 

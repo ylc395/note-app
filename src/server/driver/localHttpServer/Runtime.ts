@@ -1,4 +1,4 @@
-import DesktopRuntime from 'infra/DesktopRuntime';
+import DesktopRuntime from '@domain/infra/DesktopRuntime';
 
 export default class LocalHttpRuntime extends DesktopRuntime {
   toggleHttpServer(): never {

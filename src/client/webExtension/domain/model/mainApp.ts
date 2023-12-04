@@ -1,4 +1,4 @@
-import type { EntityParentId } from 'model/entity';
+import type { EntityParentId } from '@domain/model/entity';
 import type { TaskResult } from './task';
 
 export enum Statuses {

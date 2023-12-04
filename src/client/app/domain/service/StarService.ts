@@ -3,9 +3,9 @@ import { container, singleton } from 'tsyringe';
 import { observable, makeObservable, runInAction, action } from 'mobx';
 import pull from 'lodash/pull';
 
-import { token as remoteToken } from 'infra/remote';
-import type { EntityId, EntityLocator } from 'model/entity';
-import type { StarVO, StarsDTO, StarEntityTypes } from 'model/star';
+import { token as remoteToken } from '@domain/infra/remote';
+import type { EntityId, EntityLocator } from '@domain/model/entity';
+import type { StarVO, StarsDTO, StarEntityTypes } from '@domain/model/star';
 
 export enum StarEvents {
   Added = 'star.added',

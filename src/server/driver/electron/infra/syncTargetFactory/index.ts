@@ -1,4 +1,4 @@
-import type { SyncTargetFactory } from 'infra/synchronizer';
+import type { SyncTargetFactory } from '@domain/infra/synchronizer';
 
 import FsSyncTarget from './FsSyncTarget';
 

@@ -1,9 +1,9 @@
 import { observer } from 'mobx-react-lite';
 import { ReactNode, useContext } from 'react';
-import Resizable from 'web/components/Resizable';
+import Resizable from '@components/Resizable';
 import clsx from 'clsx';
 
-import type { OutlineItem } from 'model/material/editable/EditablePdf';
+import type { OutlineItem } from '@domain/model/material/editable/EditablePdf';
 import context from './Context';
 
 const OutlineItemView = observer(function OutlineItemView({

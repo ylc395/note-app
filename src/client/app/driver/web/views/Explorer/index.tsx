@@ -2,9 +2,9 @@ import { container } from 'tsyringe';
 import type { ReactNode } from 'react';
 import { observer } from 'mobx-react-lite';
 
-import Explorer, { type ExplorerTypes } from 'model/Explorer';
-import { EntityTypes } from 'model/entity';
-import Resizable from 'web/components/Resizable';
+import Explorer, { type ExplorerTypes } from '@domain/model/Explorer';
+import { EntityTypes } from '@domain/model/entity';
+import Resizable from '@components/Resizable';
 
 import ActivityBar from './ActivityBar';
 import NoteExplorer from './Note';

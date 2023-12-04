@@ -1,8 +1,8 @@
 import { StarOutlined, NumberOutlined, DeleteOutlined, SearchOutlined, SettingOutlined } from '@ant-design/icons';
 
-import TypeIcon from 'web/components/TypeIcon';
+import TypeIcon from '@components/TypeIcon';
 import Button from './Button';
-import { EntityTypes } from 'model/entity';
+import { EntityTypes } from '@domain/model/entity';
 
 // eslint-disable-next-line mobx/missing-observer
 export default function ActivityBar() {

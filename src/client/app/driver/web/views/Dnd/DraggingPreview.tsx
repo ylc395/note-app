@@ -2,10 +2,10 @@ import { container } from 'tsyringe';
 import { DragOverlay } from '@dnd-kit/core';
 import { observer } from 'mobx-react-lite';
 
-import DndService from 'service/DndService';
-import Editor from 'model/abstract/Editor';
-import NoteTree from 'model/note/Tree';
-import MaterialTree from 'model/material/Tree';
+import DndService from '@domain/service/DndService';
+import Editor from '@domain/model/abstract/Editor';
+import NoteTree from '@domain/model/note/Tree';
+import MaterialTree from '@domain/model/material/Tree';
 
 import TabItem from '../Workbench/Tile/TabBar/TabItem';
 import TreeView from '../Explorer/components/TreeView';

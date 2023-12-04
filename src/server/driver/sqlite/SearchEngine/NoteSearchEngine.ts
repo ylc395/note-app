@@ -1,7 +1,7 @@
 import { sql } from 'kysely';
 
-import { type SearchParams, Scopes } from 'model/search';
-import { EntityTypes } from 'model/entity';
+import { type SearchParams, Scopes } from '@domain/model/search';
+import { EntityTypes } from '@domain/model/entity';
 
 import type SearchEngine from './index';
 import { FILE_TEXTS_FTS_TABLE, NOTE_FTS_TABLE, WRAPPER_END_TEXT, WRAPPER_START_TEXT, type SearchRow } from './tables';

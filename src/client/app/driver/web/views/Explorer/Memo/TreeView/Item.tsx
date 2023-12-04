@@ -13,8 +13,8 @@ import {
 } from '@ant-design/icons';
 import { useBoolean } from 'ahooks';
 
-import MemoService from 'service/MemoService';
-import type { MemoVO } from 'model/memo';
+import MemoService from '@domain/service/MemoService';
+import type { MemoVO } from '@domain/model/memo';
 import Editable from './Editable';
 
 const menuItems: NonNullable<MenuProps['items']> = [

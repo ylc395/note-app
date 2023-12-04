@@ -1,7 +1,7 @@
 import { type IpcMainInvokeEvent, Menu, BrowserWindow, shell } from 'electron';
 import { BLANK_URL, sanitizeUrl } from '@braintree/sanitize-url';
 
-import type { ContextmenuItem, ElectronUI } from 'infra/ui';
+import type { ContextmenuItem, ElectronUI } from '@domain/infra/ui';
 
 const ui: ElectronUI = {
   openNewWindow(url: string) {

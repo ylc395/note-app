@@ -1,6 +1,6 @@
 import { pathExists, readFile, writeFile, remove, readdir, emptyDir } from 'fs-extra';
 
-import type { SyncTarget } from 'infra/synchronizer';
+import type { SyncTarget } from '@domain/infra/synchronizer';
 
 export default class FsSyncTarget implements SyncTarget {
   constructor(private readonly dir: string) {}

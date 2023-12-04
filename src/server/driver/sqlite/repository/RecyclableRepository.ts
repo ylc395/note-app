@@ -1,7 +1,7 @@
 import map from 'lodash/map';
-import type { EntityLocator } from 'model/entity';
-import type { RecycleReason, RecyclableRecord } from 'model/recyclables';
-import type { RecyclablesRepository } from 'service/repository/RecyclableRepository';
+import type { EntityLocator } from '@domain/model/entity';
+import type { RecycleReason, RecyclableRecord } from '@domain/model/recyclables';
+import type { RecyclablesRepository } from '@domain/service/repository/RecyclableRepository';
 
 import BaseRepository from './BaseRepository';
 import schema from '../schema/recyclable';

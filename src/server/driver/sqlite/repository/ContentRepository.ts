@@ -1,6 +1,13 @@
-import type { ContentEntityTypes, Link, LinkDirection, LinkToQuery, Topic, ContentEntityLocator } from 'model/content';
-import type { EntityLocator } from 'model/entity';
-import type { ContentRepository } from 'service/repository/ContentRepository';
+import type {
+  ContentEntityTypes,
+  Link,
+  LinkDirection,
+  LinkToQuery,
+  Topic,
+  ContentEntityLocator,
+} from '@domain/model/content';
+import type { EntityLocator } from '@domain/model/entity';
+import type { ContentRepository } from '@domain/service/repository/ContentRepository';
 
 import BaseRepository from './BaseRepository';
 import { type Row as LinkRow, tableName as linkTableName } from '../schema/link';

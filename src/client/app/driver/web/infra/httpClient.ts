@@ -1,4 +1,4 @@
-import type { Remote } from 'infra/remote';
+import type { Remote } from '@domain/infra/remote';
 
 const httpClient: Remote = {
   async get<T>() {

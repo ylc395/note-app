@@ -6,7 +6,7 @@ import uniqueId from 'lodash/uniqueId';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { useCreation } from 'ahooks';
 
-import type { HierarchyEntity } from '../../../../shared/model/entity';
+import type { HierarchyEntity } from '@shared/domain/model/entity';
 import scrollIntoViewIfNeeded from './scrollIntoViewIfNeeded';
 import type { TreeNodeProps } from './types';
 

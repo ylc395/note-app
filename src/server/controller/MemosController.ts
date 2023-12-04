@@ -10,8 +10,8 @@ import {
   type MemoPatchDTO,
   type MemoVO,
   type MemoDatesVO,
-} from 'model/memo';
-import MemoService from 'service/MemoService';
+} from '@domain/model/memo';
+import MemoService from '@domain/service/MemoService';
 
 @Controller()
 export default class MemosController {

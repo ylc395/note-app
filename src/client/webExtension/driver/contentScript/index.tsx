@@ -3,10 +3,10 @@ import { container } from 'tsyringe';
 import { createRoot } from 'react-dom/client';
 import { wrap, expose } from 'comlink';
 import { chromeRuntimeMessageEndpoint } from 'comlink-adapters';
-import 'utils/mobx';
+import '@utils/mobx';
 
-import BackgroundService from 'service/BackgroundService';
-import PageService from 'service/PageService';
+import BackgroundService from '@domain/service/BackgroundService';
+import PageService from '@domain/service/PageService';
 
 import App from './views/App';
 

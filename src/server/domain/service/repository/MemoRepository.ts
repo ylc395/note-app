@@ -1,4 +1,4 @@
-import type { Memo, MemoVO, MemoQuery, NewMemo, MemoPatch, MemoDatesVO } from 'model/memo';
+import type { Memo, MemoVO, MemoQuery, NewMemo, MemoPatch, MemoDatesVO } from '@domain/model/memo';
 
 export interface MemoRepository {
   create: (memo: NewMemo) => Promise<Memo>;

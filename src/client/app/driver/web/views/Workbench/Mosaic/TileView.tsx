@@ -2,8 +2,8 @@ import type { ReactNode } from 'react';
 import mapValues from 'lodash/mapValues';
 import { observer } from 'mobx-react-lite';
 
-import type Tile from 'model/workbench/Tile';
-import { type TileNode, type TileParent, TileDirections, isTileLeaf } from 'model/workbench';
+import type Tile from '@domain/model/workbench/Tile';
+import { type TileNode, type TileParent, TileDirections, isTileLeaf } from '@domain/model/workbench';
 
 import { type BoundingBox, getAbsoluteSplitPercentage } from './utils';
 import Resizer from './Resizer';

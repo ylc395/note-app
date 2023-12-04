@@ -2,7 +2,7 @@ import { sql } from 'kysely';
 import type { SelectQueryBuilder } from 'kysely';
 import dayjs from 'dayjs';
 
-import type { SearchParams } from 'model/search';
+import type { SearchParams } from '@domain/model/search';
 import {
   NOTE_FTS_TABLE,
   MEMO_FTS_TABLE,

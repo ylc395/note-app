@@ -1,5 +1,5 @@
 import { ipcRenderer } from 'electron';
-import { type ElectronUI, type UIIpcPayload, UI_CHANNEL } from 'infra/ui';
+import { type ElectronUI, type UIIpcPayload, UI_CHANNEL } from '@shared/domain/infra/ui';
 
 const invoke =
   (funcName: keyof ElectronUI) =>

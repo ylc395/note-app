@@ -6,13 +6,13 @@ import groupBy from 'lodash/groupBy';
 import uniqBy from 'lodash/uniqBy';
 import map from 'lodash/map';
 
-import { is, parseUrl } from 'infra/markdown/utils';
+import { is, parseUrl } from '@domain/infra//markdown/utils';
 import {
   mdastExtension as topicExtension,
   tokenExtension as topicTokenExtension,
   type Topic as TopicNode,
-} from 'infra/markdown/syntax/topic';
-import { IS_IPC } from 'infra/DesktopRuntime';
+} from '@domain/infra//markdown/syntax/topic';
+import { IS_IPC } from '@domain/infra//DesktopRuntime';
 import type {
   ContentUpdatedEvent,
   EntityWithSnippet,
@@ -25,8 +25,8 @@ import type {
   LinkToQuery,
   InlineTopic,
   ContentEntityLocator,
-} from 'model/content';
-import type { EntityId } from 'model/entity';
+} from '@domain/model/content';
+import type { EntityId } from '@domain/model/entity';
 
 import BaseService from './BaseService';
 import EntityService from './EntityService';

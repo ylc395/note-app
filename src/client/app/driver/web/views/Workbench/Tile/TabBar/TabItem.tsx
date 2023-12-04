@@ -5,12 +5,12 @@ import { useRef, useEffect } from 'react';
 import clsx from 'clsx';
 import assert from 'assert';
 
-import IconTitle from 'web/components/IconTitle';
-import IconButton from 'web/components/IconButton';
-import type Editor from 'model/abstract/Editor';
+import IconTitle from '@components/IconTitle';
+import IconButton from '@components/IconButton';
+import type Editor from '@domain/model/abstract/Editor';
 import useContextmenu from './useContextmenu';
 import { container } from 'tsyringe';
-import DndService from 'service/DndService';
+import DndService from '@domain/service/DndService';
 
 export default observer(function TabItem({ editor }: { editor: Editor }) {
   const { tile } = editor;

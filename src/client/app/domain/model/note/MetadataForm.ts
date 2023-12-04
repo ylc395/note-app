@@ -1,5 +1,5 @@
-import Form from 'model/abstract/Form';
-import type { NotePatchDTO as NotePatch } from 'model/note';
+import Form from '@domain/model/abstract/Form';
+import type { NotePatchDTO as NotePatch } from '@domain/model/note';
 
 export interface NoteMetadata {
   icon: NonNullable<NotePatch['icon']> | null | symbol;

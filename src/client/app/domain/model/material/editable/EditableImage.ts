@@ -1,5 +1,5 @@
-import type { MaterialEntityVO } from 'model/material';
-import type { Tile } from 'model/workbench';
+import type { MaterialEntityVO } from '@domain/model/material';
+import type { Tile } from '@domain/model/workbench';
 
 import EditableMaterial from './EditableMaterial';
 import ImageEditor from '../editor/ImageEditor';

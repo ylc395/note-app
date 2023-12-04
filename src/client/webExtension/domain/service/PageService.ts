@@ -8,11 +8,11 @@ import pageLifecycle from 'page-lifecycle';
 import { wrap } from 'comlink';
 import { chromeRuntimeMessageEndpoint } from 'comlink-adapters';
 
-import type NoteTree from 'model/note/Tree';
-import { type Task, type TaskResult, EventNames, TaskTypes } from 'model/task';
-import type MaterialTree from 'model/material/Tree';
-import type { Rect } from '../../../shared/components/RectAreaSelector';
-import EventBus from 'infra/EventBus';
+import type NoteTree from '@domain/model/note/Tree';
+import { type Task, type TaskResult, EventNames, TaskTypes } from '@domain/model/task';
+import type MaterialTree from '@domain/model/material/Tree';
+import type { Rect } from '../../../components/RectAreaSelector';
+import EventBus from '@domain/infra/EventBus';
 
 import ConfigService from './ConfigService';
 import BackgroundService from './BackgroundService';

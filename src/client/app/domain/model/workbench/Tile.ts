@@ -5,8 +5,8 @@ import isMatch from 'lodash/isMatch';
 import { Emitter } from 'strict-event-emitter';
 import assert from 'assert';
 
-import Editor, { EventNames as EditorEvents } from 'model/abstract/Editor';
-import type { EditableEntityLocator } from 'model/abstract/EditableEntity';
+import Editor, { EventNames as EditorEvents } from '@domain/model/abstract/Editor';
+import type { EditableEntityLocator } from '@domain/model/abstract/EditableEntity';
 import EditableEntityManager from './EditableEntityManager';
 
 export enum EventNames {

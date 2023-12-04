@@ -1,13 +1,13 @@
 import { Controller } from '@nestjs/common';
 
-import RecyclableService from 'service/RecyclableService';
 import {
   type RecyclableVO,
   type RecyclablesDTO,
   type RecyclableDTO,
   recyclableDTOSchema,
   recyclablesDTOSchema,
-} from 'model/recyclables';
+} from '@domain/model/recyclables';
+import RecyclableService from '@domain/service/RecyclableService';
 
 import { Body, createSchemaPipe, Delete, Get, Patch, Query } from './decorators';
 

@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import assert from 'node:assert';
 import pick from 'lodash/pick';
-import type { NoteVO, NewNoteDTO, NotePatchDTO, Note, ClientNoteQuery, NotePatch } from 'model/note';
-import { EntityTypes } from 'model/entity';
+import type { NoteVO, NewNoteDTO, NotePatchDTO, Note, ClientNoteQuery, NotePatch } from '@domain/model/note';
+import { EntityTypes } from '@domain/model/entity';
 
 import BaseService from './BaseService';
 import StarService from './StarService';

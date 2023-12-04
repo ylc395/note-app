@@ -1,7 +1,7 @@
-import type { RevisionRepository } from 'service/repository/RevisionRepository';
+import type { RevisionRepository } from '@domain/service/repository/RevisionRepository';
 
-import type { EntityLocator } from 'model/entity';
-import type { Revision } from 'model/revision';
+import type { EntityLocator } from '@domain/model/entity';
+import type { Revision } from '@domain/model/revision';
 import BaseRepository from './BaseRepository';
 import schema from '../schema/revision';
 

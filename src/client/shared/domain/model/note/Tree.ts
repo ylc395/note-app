@@ -1,4 +1,4 @@
-import { type NoteVO, normalizeTitle } from '../../../../shared/model/note';
+import { type NoteVO, normalizeTitle } from '@shared/domain/model/note';
 import Tree, { type TreeNode } from '../abstract/Tree';
 
 export type NoteTreeNode = TreeNode<NoteVO>;

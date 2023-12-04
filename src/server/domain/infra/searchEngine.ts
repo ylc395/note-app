@@ -1,4 +1,4 @@
-import type { SearchParams, SearchResult } from 'model/search';
+import type { SearchParams, SearchResult } from '@domain/model/search';
 
 export interface SearchEngine {
   ready: Promise<void>;

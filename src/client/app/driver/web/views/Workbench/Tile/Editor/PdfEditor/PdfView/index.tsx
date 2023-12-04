@@ -1,7 +1,7 @@
 import { observer } from 'mobx-react-lite';
 import { useEffect, useRef, useContext } from 'react';
 
-import type PdfEditor from 'model/material/editor/PdfEditor';
+import type PdfEditor from '@domain/model/material/editor/PdfEditor';
 import SelectionTooltip from './SelectionTooltip';
 // import AnnotationLayer from './AnnotationLayer';
 import AnnotationTooltip from './AnnotationTooltip';

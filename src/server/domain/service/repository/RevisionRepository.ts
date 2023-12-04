@@ -1,5 +1,5 @@
-import type { EntityLocator } from 'model/entity';
-import type { RevisionVO, Revision } from 'model/revision';
+import type { EntityLocator } from '@domain/model/entity';
+import type { RevisionVO, Revision } from '@domain/model/revision';
 
 export interface RevisionRepository {
   create: (revision: Revision) => Promise<RevisionVO>;

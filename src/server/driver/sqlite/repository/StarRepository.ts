@@ -1,6 +1,6 @@
-import type { EntityLocator } from 'model/entity';
-import type { StarVO, StarEntityLocator } from 'model/star';
-import type { StarRepository } from 'service/repository/StarRepository';
+import type { EntityLocator } from '@domain/model/entity';
+import type { StarVO, StarEntityLocator } from '@domain/model/star';
+import type { StarRepository } from '@domain/service/repository/StarRepository';
 
 import BaseRepository from './BaseRepository';
 import schema from '../schema/star';

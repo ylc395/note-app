@@ -1,8 +1,8 @@
 import { sql } from 'kysely';
 
-import { type SearchParams, Scopes } from 'model/search';
-import { normalizeTitle } from 'model/memo';
-import { EntityTypes } from 'model/entity';
+import { type SearchParams, Scopes } from '@domain/model/search';
+import { normalizeTitle } from '@domain/model/memo';
+import { EntityTypes } from '@domain/model/entity';
 
 import type SearchEngine from './index';
 import { MEMO_FTS_TABLE, WRAPPER_END_TEXT, WRAPPER_START_TEXT, type SearchRow, FILE_TEXTS_FTS_TABLE } from './tables';

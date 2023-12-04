@@ -1,8 +1,8 @@
 import { createPatch, applyPatch } from 'diff';
 import type { OnModuleInit } from '@nestjs/common';
 
-import type { EntityLocator } from 'model/entity';
-import type { ContentUpdatedEvent } from 'model/content';
+import type { EntityLocator } from '@domain/model/entity';
+import type { ContentUpdatedEvent } from '@domain/model/content';
 
 import BaseService from './BaseService';
 

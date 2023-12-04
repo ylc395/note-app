@@ -5,8 +5,8 @@ import { observable, makeObservable, action, computed } from 'mobx';
 import { singleton } from 'tsyringe';
 import assert from 'assert';
 
-import Editor from 'model/abstract/Editor';
-import type { EditableEntityLocator } from 'model/abstract/EditableEntity';
+import Editor from '@domain/model/abstract/Editor';
+import type { EditableEntityLocator } from '@domain/model/abstract/EditableEntity';
 import Tile, { EventNames as TileEvents } from './Tile';
 import { type TileNode, type TileParent, TileDirections, isTileLeaf } from './tileTree';
 

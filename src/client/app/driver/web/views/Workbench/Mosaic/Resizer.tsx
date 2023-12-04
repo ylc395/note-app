@@ -4,8 +4,8 @@ import throttle from 'lodash/throttle';
 import clamp from 'lodash/clamp';
 import mapValues from 'lodash/mapValues';
 
-import { TileDirections, type TileParent } from 'model/workbench';
-import BaseResizer from 'web/components/Resizable/Resizer';
+import { TileDirections, type TileParent } from '@domain/model/workbench';
+import BaseResizer from '@components/Resizable/Resizer';
 import { type BoundingBox, getAbsoluteSplitPercentage, getRelativeSplitPercentage } from './utils';
 
 interface Props {

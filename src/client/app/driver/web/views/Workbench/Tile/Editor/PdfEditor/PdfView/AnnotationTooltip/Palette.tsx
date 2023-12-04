@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite';
 
-import { ANNOTATION_COLORS } from 'model/material/editable/EditableMaterial';
+import { ANNOTATION_COLORS } from '@domain/model/material/editable/EditableMaterial';
 
 export default observer(function SelectionTooltip({ onSelect }: { onSelect: (color: string) => void }) {
   return (

@@ -1,10 +1,10 @@
 import { observer } from 'mobx-react-lite';
 import type { ReactNode } from 'react';
 
-import type { MaterialTreeNode } from 'model/material/Tree';
-import type { NoteTreeNode } from 'model/note/Tree';
-import { IS_DEV } from 'infra/constants';
-import IconTitle from 'web/components/IconTitle';
+import type { MaterialTreeNode } from '@domain/model/material/Tree';
+import type { NoteTreeNode } from '@domain/model/note/Tree';
+import { IS_DEV } from '@domain/infra/constants';
+import IconTitle from '@components/IconTitle';
 
 export interface Props {
   node: MaterialTreeNode | NoteTreeNode;

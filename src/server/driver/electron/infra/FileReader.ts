@@ -4,10 +4,10 @@ import { randomUUID } from 'node:crypto';
 import { readFile, writeFile, readJSON, writeJSON, pathExists } from 'fs-extra';
 import { Injectable, Inject, Logger } from '@nestjs/common';
 
-import type { FileReader } from 'infra/fileReader';
-import type DesktopRuntime from 'infra/DesktopRuntime';
-import { token as runtimeToken } from 'infra/DesktopRuntime';
-import type { LoadedFile } from 'model/file';
+import type { FileReader } from '@domain/infra/fileReader';
+import type DesktopRuntime from '@domain/infra/DesktopRuntime';
+import { token as runtimeToken } from '@domain/infra/DesktopRuntime';
+import type { LoadedFile } from '@domain/model/file';
 
 // remove this once native fetch type is launched in @types/node
 // see https://github.com/DefinitelyTyped/DefinitelyTyped/issues/60924#issuecomment-1358424866

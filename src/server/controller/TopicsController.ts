@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 
-import { type TopicVO, type TopicDTO, topicsDTOSchema } from 'model/content';
-import ContentService from 'service/ContentService';
+import { type TopicVO, type TopicDTO, topicsDTOSchema } from '@domain/model/content';
+import ContentService from '@domain/service/ContentService';
 
 import { Get, Patch, Body, createSchemaPipe, Param, EnableOnly } from './decorators';
 

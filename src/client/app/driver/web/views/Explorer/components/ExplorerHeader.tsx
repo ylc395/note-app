@@ -3,7 +3,7 @@ import { useDroppable } from '@dnd-kit/core';
 import uniqueId from 'lodash/uniqueId';
 import { useCreation } from 'ahooks';
 
-import type Tree from 'model/abstract/Tree';
+import type Tree from '@domain/model/abstract/Tree';
 import clsx from 'clsx';
 import { observer } from 'mobx-react-lite';
 

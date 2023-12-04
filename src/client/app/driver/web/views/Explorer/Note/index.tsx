@@ -1,6 +1,6 @@
 import { container } from 'tsyringe';
-// import Modal from 'web/components/Modal';
-import useModal from 'web/components/Modal/useModal';
+// import Modal from '@components/Modal';
+import useModal from '@components/Modal/useModal';
 
 import ExplorerHeader from '../components/ExplorerHeader';
 import TreeView from './TreeView';
@@ -8,7 +8,7 @@ import TreeOperations from './Operations';
 // import TargetTree from './TargetTree';
 // import MetadataForm from './MetadataForm';
 import Context from './Context';
-import Explorer from 'model/Explorer';
+import Explorer from '@domain/model/Explorer';
 
 // eslint-disable-next-line mobx/missing-observer
 export default (function NoteExplorer() {

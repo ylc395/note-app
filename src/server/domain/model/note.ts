@@ -1,7 +1,7 @@
-import type { Note } from 'shared/model/note';
+import type { Note } from '@shared/domain/model/note';
 
 export type NewNote = Partial<Note>;
 
 export type NotePatch = Omit<NewNote, 'id' | 'createdAt'>;
 
-export * from 'shared/model/note';
+export * from '@shared/domain/model/note';

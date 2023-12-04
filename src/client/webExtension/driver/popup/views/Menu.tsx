@@ -3,9 +3,9 @@ import { observer } from 'mobx-react-lite';
 import { LoadingOutlined } from '@ant-design/icons';
 import clsx from 'clsx';
 
-import TaskService from 'service/TaskService';
-import { TaskTypes } from 'model/task';
-import { EntityTypes } from 'model/entity';
+import TaskService from '@domain/service/TaskService';
+import { TaskTypes } from '@domain/model/task';
+import { EntityTypes } from '@domain/model/entity';
 
 const ACTIONS = [
   TaskTypes.SelectElement,

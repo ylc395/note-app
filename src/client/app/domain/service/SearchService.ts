@@ -8,10 +8,10 @@ import assert from 'assert';
 //   ExpressionNodeType,
 // } from 'search-expression-parser';
 
-import { Scopes, type SearchParams, type SearchResult, type SearchableEntityType } from 'model/search';
-import { token as remoteToken } from 'infra/remote';
-import { EntityTypes } from 'model/entity';
-import Explorer from 'model/Explorer';
+import { Scopes, type SearchParams, type SearchResult, type SearchableEntityType } from '@domain/model/search';
+import { token as remoteToken } from '@domain/infra/remote';
+import { EntityTypes } from '@domain/model/entity';
+import Explorer from '@domain/model/Explorer';
 
 @singleton()
 export default class SearchService {

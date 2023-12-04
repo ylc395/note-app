@@ -1,5 +1,5 @@
-import MaterialEditor from 'model/material/editor/MaterialEditor';
-import type Tile from 'model/workbench/Tile';
+import MaterialEditor from '@domain/model/material/editor/MaterialEditor';
+import type Tile from '@domain/model/workbench/Tile';
 import type EditableImage from '../editable/EditableImage';
 
 interface UIState {

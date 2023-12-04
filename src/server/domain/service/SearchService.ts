@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 
-import { token as searchEngineToken, type SearchEngine } from 'infra/searchEngine';
-import type { SearchParams, SearchResultVO } from 'model/search';
+import { token as searchEngineToken, type SearchEngine } from '@domain/infra/searchEngine';
+import type { SearchParams, SearchResultVO } from '@domain/model/search';
 
 import BaseService from './BaseService';
 import EntityService from './EntityService';

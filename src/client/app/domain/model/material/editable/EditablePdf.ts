@@ -8,8 +8,8 @@ import {
   type PdfRangeAnnotationVO,
   type PdfAreaAnnotationVO,
   AnnotationTypes,
-} from 'model/material';
-import type { Tile } from 'model/workbench';
+} from '@domain/model/material';
+import type { Tile } from '@domain/model/workbench';
 import EditableMaterial from './EditableMaterial';
 import PdfEditor from '../editor/PdfEditor';
 

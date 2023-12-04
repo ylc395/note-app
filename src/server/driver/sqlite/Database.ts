@@ -5,10 +5,10 @@ import { removeSync } from 'fs-extra';
 import { join } from 'node:path';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 
-import { type default as Runtime, token as runtimeToken } from 'infra/DesktopRuntime';
-import type { Database } from 'infra/database';
-import { IS_TEST, IS_DEV } from 'infra/constants';
-import type Repository from 'service/repository';
+import { type default as Runtime, token as runtimeToken } from '@domain/infra/DesktopRuntime';
+import type { Database } from '@domain/infra/database';
+import { IS_TEST, IS_DEV } from '@domain/infra/constants';
+import type Repository from '@domain/service/repository';
 
 import { type Schemas, schemas } from './schema';
 import * as repositories from './repository';

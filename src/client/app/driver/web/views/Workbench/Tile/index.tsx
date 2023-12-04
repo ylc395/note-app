@@ -1,6 +1,6 @@
 import { container } from 'tsyringe';
-import { Workbench, type Tile } from 'model/workbench';
-import { IS_DEV } from 'infra/constants';
+import { Workbench, type Tile } from '@domain/model/workbench';
+import { IS_DEV } from '@domain/infra/constants';
 
 import TabBar from './TabBar';
 import Editor from './Editor';

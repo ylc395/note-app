@@ -12,7 +12,7 @@ import SyncService from './SyncService';
 import EntityService from './EntityService';
 import SearchService from './SearchService';
 import AppService from './AppService';
-import { token as eventBusToken, eventBus } from 'infra/eventBus';
+import { token as eventBusToken, eventBus } from '@domain/infra/eventBus';
 
 const services = [
   AppService,

@@ -4,8 +4,8 @@ import { container } from 'tsyringe';
 import { useCreation } from 'ahooks';
 import { observer } from 'mobx-react-lite';
 
-import FormModel from 'model/material/Form';
-import MaterialService from 'service/MaterialService';
+import FormModel from '@domain/model/material/Form';
+import MaterialService from '@domain/service/MaterialService';
 
 import Menu, { FormTypes } from './Menu';
 import FileForm from './FileForm';

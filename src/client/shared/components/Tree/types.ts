@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
-import type { HierarchyEntity } from '../../../../shared/model/entity';
-import type { default as TreeModel, TreeNode } from '../../model/abstract/Tree';
+import type { HierarchyEntity } from '@shared/domain/model/entity';
+import type { default as TreeModel, TreeNode } from '../../domain/model/abstract/Tree';
 
 interface TreeBaseProps<T extends HierarchyEntity> {
   tree: TreeModel<T>;

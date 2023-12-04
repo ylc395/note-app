@@ -1,9 +1,9 @@
 import { makeObservable, computed, observable, action } from 'mobx';
 
-import { IS_DEV } from 'infra/constants';
-import Editor from 'model/abstract/Editor';
-import type Tile from 'model/workbench/Tile';
-import { normalizeTitle } from 'model/note';
+import { IS_DEV } from '@domain/infra/constants';
+import Editor from '@domain/model/abstract/Editor';
+import type Tile from '@domain/model/workbench/Tile';
+import { normalizeTitle } from '@domain/model/note';
 
 import type EditableNote from './Editable';
 

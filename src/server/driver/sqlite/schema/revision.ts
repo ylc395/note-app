@@ -1,5 +1,5 @@
 import { type SchemaModule, type Generated, sql } from 'kysely';
-import type { EntityTypes } from 'model/entity';
+import type { EntityTypes } from '@domain/model/entity';
 
 export const tableName = 'revisions';
 

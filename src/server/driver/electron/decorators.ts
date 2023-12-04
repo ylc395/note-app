@@ -1,7 +1,7 @@
 import { type ExecutionContext, createParamDecorator } from '@nestjs/common';
 import { MessagePattern } from '@nestjs/microservices';
 
-import type { IpcRequest } from 'infra/transport';
+import type { IpcRequest } from '@domain/infra/transport';
 
 type Method = IpcRequest<unknown>['method'];
 

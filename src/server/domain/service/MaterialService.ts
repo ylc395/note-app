@@ -18,8 +18,8 @@ import {
   isNewMaterialEntity,
   normalizeTitle,
   isDirectory,
-} from 'model/material';
-import { EntityTypes } from 'model/entity';
+} from '@domain/model/material';
+import { EntityTypes } from '@domain/model/entity';
 
 import BaseService from './BaseService';
 import StarService from './StarService';

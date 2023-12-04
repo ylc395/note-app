@@ -16,8 +16,8 @@ import {
   materialsPatchDTOSchema,
   materialCommentDTOSchema,
   MaterialCommentVO,
-} from 'model/material';
-import MaterialService from 'service/MaterialService';
+} from '@domain/model/material';
+import MaterialService from '@domain/service/MaterialService';
 
 import { createSchemaPipe, Post, Body, Get, Query, Param, Delete, Patch, Put } from './decorators';
 

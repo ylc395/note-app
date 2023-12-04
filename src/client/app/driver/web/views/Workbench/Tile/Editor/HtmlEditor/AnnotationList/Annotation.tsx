@@ -1,7 +1,7 @@
 import { observer } from 'mobx-react-lite';
 import dayjs from 'dayjs';
 
-import type { AnnotationVO } from 'model/material';
+import type { AnnotationVO } from '@domain/model/material';
 import ctx from '../Context';
 import { useContext } from 'react';
 

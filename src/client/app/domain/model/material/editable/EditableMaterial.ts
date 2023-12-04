@@ -1,9 +1,9 @@
 import { makeObservable, observable, runInAction } from 'mobx';
 import remove from 'lodash/remove';
 
-import { EntityTypes } from 'model/entity';
-import type { MaterialEntityVO, AnnotationVO, NewAnnotationDTO, AnnotationPatchDTO } from 'model/material';
-import EditableEntity from 'model/abstract/EditableEntity';
+import { EntityTypes } from '@domain/model/entity';
+import type { MaterialEntityVO, AnnotationVO, NewAnnotationDTO, AnnotationPatchDTO } from '@domain/model/material';
+import EditableEntity from '@domain/model/abstract/EditableEntity';
 import assert from 'assert';
 
 interface Material {

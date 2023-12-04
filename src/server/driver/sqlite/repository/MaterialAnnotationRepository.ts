@@ -2,7 +2,7 @@ import pick from 'lodash/pick';
 import isEmpty from 'lodash/isEmpty';
 import type { Selectable } from 'kysely';
 
-import type { NewAnnotationDTO, AnnotationPatchDTO, Annotation, Material } from 'model/material';
+import type { NewAnnotationDTO, AnnotationPatchDTO, Annotation, Material } from '@domain/model/material';
 
 import BaseRepository from './BaseRepository';
 import materialAnnotationSchema, { type Row } from '../schema/materialAnnotation';

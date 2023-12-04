@@ -1,9 +1,9 @@
 import type { PipeTransform } from '@nestjs/common';
 import type { ZodType } from 'zod';
 
-import { InvalidInputError } from 'model/Error';
-import { IS_IPC } from 'infra/DesktopRuntime';
-import { IS_DEV } from 'infra/constants';
+import { InvalidInputError } from '@domain/model/Error';
+import { IS_IPC } from '@domain/infra/DesktopRuntime';
+import { IS_DEV } from '@domain/infra/constants';
 import * as ipcDecorators from 'driver/electron/decorators';
 import * as httpDecorators from 'driver/localHttpServer/decorators';
 

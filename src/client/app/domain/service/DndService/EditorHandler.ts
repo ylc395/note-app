@@ -1,7 +1,7 @@
 import { container } from 'tsyringe';
 
-import Editor from 'model/abstract/Editor';
-import { Workbench } from 'model/workbench';
+import Editor from '@domain/model/abstract/Editor';
+import { Workbench } from '@domain/model/workbench';
 import Handler from './Handler';
 
 export default class EditorHandler implements Handler {

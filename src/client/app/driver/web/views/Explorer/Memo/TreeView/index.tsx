@@ -2,10 +2,10 @@ import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 import { useEffect } from 'react';
 
-import MemoService from 'service/MemoService';
+import MemoService from '@domain/service/MemoService';
 import Item from './Item';
 import SearchInput from '../../components/TreeView/SearchInput';
-import { EntityTypes } from 'model/entity';
+import { EntityTypes } from '@domain/model/entity';
 
 export default observer(() => {
   const memoService = container.resolve(MemoService);

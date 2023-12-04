@@ -2,7 +2,7 @@
 // import { useContext } from 'react';
 // import { useFloating, autoUpdate } from '@floating-ui/react';
 
-// import { coverElementMiddleware } from '../../../../../../../../../../shared/components/floatingMiddleware';
+// import { coverElementMiddleware } from '../../../../../../../../../../components/floatingMiddleware';
 
 // import Annotation from './Annotation';
 // import AreaAnnotationGenerator from './AreaAnnotationGenerator';

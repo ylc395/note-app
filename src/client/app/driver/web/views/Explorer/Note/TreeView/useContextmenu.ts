@@ -1,19 +1,19 @@
 import { useCallback, useContext } from 'react';
 import { container } from 'tsyringe';
 
-import { EntityTypes } from 'model/entity';
-import Workbench, { TileSplitDirections } from 'model/workbench/Workbench';
-import type { NoteTreeNode } from 'model/note/Tree';
+import { EntityTypes } from '@domain/model/entity';
+import Workbench, { TileSplitDirections } from '@domain/model/workbench/Workbench';
+import type { NoteTreeNode } from '@domain/model/note/Tree';
 
-import NoteService from 'service/NoteService';
-import StarService from 'service/StarService';
+import NoteService from '@domain/service/NoteService';
+import StarService from '@domain/service/StarService';
 
-import type { ContextmenuItem } from 'infra/ui';
-import { ui } from 'web/infra/ui';
+import type { ContextmenuItem } from '@domain/infra/ui';
+import { ui } from '@web-infra/ui';
 
 import Context from '../Context';
 import assert from 'assert';
-import Explorer from 'model/Explorer';
+import Explorer from '@domain/model/Explorer';
 
 export default function useContextmenu() {
   const { movingModal, editingModal } = useContext(Context);
