@@ -1,16 +1,16 @@
-import type { UI, ElectronUI } from '@domain/infra/ui';
+import type { UI } from '@domain/infra/ui';
 import messageFeedback from './messageFeedback';
 
 declare global {
   interface Window {
-    electronUI?: ElectronUI;
+    electronUI?: UI;
   }
 }
 
-export const getRootElement = () => document.querySelector('#app') as HTMLElement;
-
-export const ui: UI = {
+const ui: UI = {
   feedback: messageFeedback,
   getActionFromContextmenu: window.electronUI?.getActionFromContextmenu || (() => Promise.resolve(null)),
   openNewWindow: window.electronUI?.openNewWindow || ((url) => (window.open(url), void 0)),
 };
+
+export default ui;

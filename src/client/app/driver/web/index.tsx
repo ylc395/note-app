@@ -9,7 +9,7 @@ import '@utils/mobx';
 
 import httpClient from './infra/httpClient';
 import ipcClient from './infra/ipcClient';
-import { getRootElement, ui } from './infra/ui';
+import ui from './infra/ui';
 import webLocalStorage from './infra/localStorage';
 import App from './views/App';
 
@@ -17,5 +17,5 @@ container.registerInstance(remoteToken, ipcClient || httpClient);
 container.registerInstance(uiToken, ui);
 container.registerInstance(localStorageToken, webLocalStorage);
 
-const root = createRoot(getRootElement());
+const root = createRoot(document.querySelector('#app')!);
 root.render(<App />);

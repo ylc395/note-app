@@ -1,4 +1,4 @@
-import { app as electronApp, BrowserWindow, ipcMain } from 'electron';
+import { app as electronApp, BrowserWindow } from 'electron';
 import { Logger } from '@nestjs/common';
 import path from 'node:path';
 import { Worker } from 'node:worker_threads';
@@ -8,10 +8,9 @@ import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-insta
 
 import DesktopRuntime from '@domain/infra/DesktopRuntime';
 import { IS_DEV } from '@domain/infra/constants';
-import { UI_CHANNEL, type UIIpcPayload, type ElectronUI } from '@domain/infra/ui';
+import UI from '@client/app/driver/electron/UI';
 
 import type LocalServer from '../localHttpServer';
-import ui from './infra/ui';
 
 const INDEX_URL = process.env.VITE_SERVER_ENTRY_URL!;
 
@@ -21,6 +20,7 @@ export default class ElectronRuntime extends DesktopRuntime {
   private readonly logger = new Logger('electron app');
   private mainWindow?: BrowserWindow;
   readonly type = 'electron';
+  private readonly ui = new UI();
 
   async start() {
     if (IS_DEV) {
@@ -40,15 +40,6 @@ export default class ElectronRuntime extends DesktopRuntime {
     // https://www.electronjs.org/docs/latest/api/app#event-window-all-closed
     electronApp.on('window-all-closed', () => {
       electronApp.quit();
-    });
-
-    ipcMain.handle(UI_CHANNEL, (e, { funcName, args }: UIIpcPayload) => {
-      if (!(funcName in ui)) {
-        throw new Error(`invalid funcName: ${funcName}`);
-      }
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return (ui[funcName as keyof ElectronUI] as any)(...args, e);
     });
 
     await electronApp.whenReady();
@@ -72,7 +63,7 @@ export default class ElectronRuntime extends DesktopRuntime {
       width: 800,
       height: 600,
       webPreferences: {
-        preload: path.resolve(__dirname, '../../../client/driver/electronPreload/index.js'),
+        preload: path.resolve(__dirname, '../../../client/driver/electron/preload.js'),
       },
     });
 

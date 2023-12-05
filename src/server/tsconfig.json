@@ -8,7 +8,8 @@
     "paths": {
       "@domain/*": ["domain/*", "../shared/domain/*"],
       "@utils/*": ["../shared/utils/*"],
-      "@shared/*": ["../shared/*"]
+      "@shared/*": ["../shared/*"],
+      "@client/*": ["../client/*"]
     }
   }
 }

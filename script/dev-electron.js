@@ -26,10 +26,10 @@ async function buildPreload() {
       minify: false,
       sourcemap: true,
       emptyOutDir: false,
-      outDir: path.resolve(ELECTRON_OUTPUT, 'client/driver/electronPreload'),
+      outDir: path.resolve(ELECTRON_OUTPUT, 'client/driver/electron'),
       lib: {
-        entry: `${rootDir}/driver/electronPreload/index.ts`,
-        fileName: () => 'index.js',
+        entry: `${rootDir}/driver/electron/preload/index.ts`,
+        fileName: () => 'preload.js',
         formats: ['cjs'],
       },
       rollupOptions: {
@@ -58,7 +58,6 @@ async function buildElectron(options) {
     configFile: 'src/server/tsconfig.json',
     outDir: path.join(ELECTRON_OUTPUT, 'server'),
   });
-  await replaceTscAliasPaths({ configFile: CLIENT_TSCONFIG, outDir: path.join(ELECTRON_OUTPUT, 'client') });
 
   await downloadSqliteTokenizer();
 

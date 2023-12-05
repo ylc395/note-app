@@ -3,5 +3,5 @@
   "compilerOptions": {
     "outDir": "../../dist/electron"
   },
-  "references": [{ "path": "../shared/tsconfig.electron.json" }]
+  "references": [{ "path": "../shared/tsconfig.electron.json" }, { "path": "../client/app/tsconfig.electron.json" }]
 }

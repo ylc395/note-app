@@ -1,6 +1,6 @@
 import type { ContextmenuItem } from '@domain/infra/ui';
 import { useCallback } from 'react';
-import { ui } from '@web-infra/ui';
+import ui from '@web-infra/ui';
 
 export default function useContextmenu() {
   return useCallback(async () => {

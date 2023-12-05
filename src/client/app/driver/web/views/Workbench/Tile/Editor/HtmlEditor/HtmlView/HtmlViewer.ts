@@ -2,7 +2,7 @@ import { when, computed, makeObservable, observable, action } from 'mobx';
 import DOMPurify from 'dompurify';
 import getCssSelector from 'css-selector-generator';
 
-import { ui } from '@web-infra/ui';
+import ui from '@web-infra/ui';
 import { AnnotationTypes, type AnnotationVO } from '@domain/model/material';
 import type HtmlEditor from '@domain/model/material/editor/HtmlEditor';
 

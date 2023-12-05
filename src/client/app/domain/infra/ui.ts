@@ -1,10 +1,18 @@
 import type { InjectionToken } from 'tsyringe';
-import type { ElectronUI } from '@shared/domain/infra/ui';
 
-export interface UI extends ElectronUI {
+export type ContextmenuItem =
+  | {
+      label: string;
+      key: string;
+      disabled?: boolean;
+      visible?: boolean;
+    }
+  | { type: 'separator' };
+
+export interface UI {
+  getActionFromContextmenu: (items: ContextmenuItem[]) => Promise<string | null>;
+  openNewWindow: (url: string) => Promise<void> | void;
   feedback: (options: { type: 'success' | 'fail'; content: string; onClick?: () => void }) => Promise<void>;
 }
-
-export * from '@shared/domain/infra/ui';
 
 export const token: InjectionToken<UI> = Symbol();
