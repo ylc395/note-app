@@ -18,14 +18,16 @@ export default function NoteTreeView() {
   }, [noteTree]);
 
   return (
-    <TreeView
-      tree={noteTree}
-      entityType={EntityTypes.Note}
-      nodeOperation={({ id }) => (
-        <IconButton onClick={() => createNote(id)}>
-          <PlusOutlined />
-        </IconButton>
-      )}
-    />
+    <>
+      <TreeView
+        tree={noteTree}
+        entityType={EntityTypes.Note}
+        nodeOperation={({ id }) => (
+          <IconButton onClick={() => createNote(id)}>
+            <PlusOutlined />
+          </IconButton>
+        )}
+      />
+    </>
   );
 }

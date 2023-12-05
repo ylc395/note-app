@@ -11,7 +11,7 @@ import StarService from '@domain/service/StarService';
 import type { ContextmenuItem } from '@domain/infra/ui';
 import { ui } from '@web-infra/ui';
 
-import Context from '../Context';
+import Context from '../context';
 import assert from 'assert';
 import Explorer from '@domain/model/Explorer';
 

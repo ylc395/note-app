@@ -1,11 +1,11 @@
 import { createContext } from 'react';
 
 import type NoteEditor from '@domain/model/note/Editor';
-import type useModal from '@components/Modal/useModal';
+import type { Modal } from '@components/Modal';
 
 export interface EditorContext {
   editor: NoteEditor;
-  infoModal: ReturnType<typeof useModal>;
+  infoModal: Modal;
 }
 
 export default createContext<EditorContext>(null as never);

@@ -1,14 +1,12 @@
 import { container } from 'tsyringe';
-// import Modal from '@components/Modal';
-import useModal from '@components/Modal/useModal';
+import { useModal } from '@components/Modal';
+import Explorer from '@domain/model/Explorer';
 
 import ExplorerHeader from '../components/ExplorerHeader';
 import TreeView from './TreeView';
 import TreeOperations from './Operations';
-// import TargetTree from './TargetTree';
-// import MetadataForm from './MetadataForm';
-import Context from './Context';
-import Explorer from '@domain/model/Explorer';
+import TargetTreeModal from './TargetTreeModal';
+import ctx from './context';
 
 // eslint-disable-next-line mobx/missing-observer
 export default (function NoteExplorer() {
@@ -17,17 +15,12 @@ export default (function NoteExplorer() {
   const { noteTree } = container.resolve(Explorer);
 
   return (
-    <Context.Provider value={{ editingModal, movingModal }}>
+    <ctx.Provider value={{ editingModal, movingModal }}>
       <ExplorerHeader tree={noteTree} title="笔记">
         <TreeOperations />
       </ExplorerHeader>
       <TreeView />
-      {/* <Modal open={movingModal.isOpen}>
-        <TargetTree />
-      </Modal> */}
-      {/* <Modal open={editingModal.isOpen}>
-          <MetadataForm />
-        </Modal> */}
-    </Context.Provider>
+      <TargetTreeModal />
+    </ctx.Provider>
   );
 });

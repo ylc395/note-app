@@ -1,4 +1,5 @@
 import { type ReactNode, useRef, useEffect } from 'react';
+import { useBoolean } from 'ahooks';
 
 interface Props {
   children: ReactNode;
@@ -9,7 +10,15 @@ interface Props {
   canConfirm?: boolean;
 }
 
-export default function Modal({ children, title, isOpen, onCancel, onConfirm, canConfirm }: Props) {
+export function useModal() {
+  const [isOpen, { setFalse: close, setTrue: open }] = useBoolean(false);
+
+  return { isOpen, close, open };
+}
+
+export type Modal = ReturnType<typeof useModal>;
+
+export default function ModalView({ children, title, isOpen, onCancel, onConfirm, canConfirm }: Props) {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
 
   useEffect(() => {

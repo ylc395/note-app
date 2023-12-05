@@ -1,10 +1,10 @@
 import { createContext } from 'react';
 
-import type useModal from '@components/Modal/useModal';
+import type { Modal } from '@components/Modal';
 
 interface Context {
-  editingModal: ReturnType<typeof useModal>;
-  movingModal: ReturnType<typeof useModal>;
+  editingModal: Modal;
+  movingModal: Modal;
 }
 
 export default createContext<Context>(null as never);

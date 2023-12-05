@@ -6,7 +6,7 @@ import Modal from '@components/Modal';
 import Tree from '@components/Tree';
 import NoteTree from '@domain/model/note/Tree';
 import NoteService from '@domain/service/NoteService';
-import ctx from './Context';
+import ctx from './context';
 
 // eslint-disable-next-line mobx/missing-observer
 export default (function TargetTreeModal() {
