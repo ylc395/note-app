@@ -11,17 +11,24 @@ import NodeTitle from './NodeTitle';
 
 interface Props<T extends MaterialVO | NoteVO> {
   tree: TreeModel<T>;
+  onContextmenu?: (id: TreeNode['id']) => void;
   nodeOperation?: (node: TreeNode<T>) => ReactNode;
   entityType?: SearchableEntityType;
 }
 
-export default function TreeView<T extends MaterialVO | NoteVO>({ tree, entityType, nodeOperation }: Props<T>) {
+export default function TreeView<T extends MaterialVO | NoteVO>({
+  tree,
+  onContextmenu,
+  entityType,
+  nodeOperation,
+}: Props<T>) {
   const simple = !entityType;
 
   return (
     <>
       {entityType && <SearchInput entityType={entityType} />}
       <Tree
+        onContextmenu={onContextmenu}
         className="scrollbar-stable scrollbar-thin grow overflow-hidden pr-2 hover:overflow-auto"
         draggable={!simple}
         droppable={!simple}

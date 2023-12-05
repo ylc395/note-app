@@ -21,10 +21,11 @@ export default class ElectronUI implements UI {
 
   private readonly _ipcHandler = (e: IpcMainInvokeEvent, payload: unknown) => {
     const p = uiIpcPayloadSchema.parse(payload);
-    assert(p.funcName in this && typeof this === 'function');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    assert(p.funcName in this && typeof (this[p.funcName as keyof ElectronUI] as any) === 'function');
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (this[p.funcName] as any).call(this, ...p.args, e);
+    return (this[p.funcName as keyof ElectronUI] as any).call(this, ...p.args, e);
   };
 
   feedback(): never {

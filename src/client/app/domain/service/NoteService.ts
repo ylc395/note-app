@@ -44,16 +44,19 @@ export default class NoteService {
     this.workbench.openEntity({ entityType: EntityTypes.Note, entityId: note.id });
   };
 
-  async duplicateNote(targetId: Note['id']) {
-    const { body: note } = await this.remote.post<void, Note>(`/notes?from=${targetId}`);
+  readonly duplicateNote = async (targetId?: Note['id']) => {
+    const fromId = targetId || this.tree.getSelectedId();
+    assert(typeof fromId === 'string');
+
+    const { body: note } = await this.remote.post<void, Note>(`/notes?from=${fromId}`);
 
     this.tree.updateTree(note);
     this.tree.toggleSelect(note.id);
-  }
+  };
 
   private readonly handleSelect = ({ id, multiple, reason }: SelectEvent) => {
     assert(id);
-    if (!multiple && reason !== 'drag') {
+    if (!multiple && (!reason || !['drag', 'contextmenu'].includes(reason))) {
       this.workbench.openEntity({ entityType: EntityTypes.Note, entityId: id });
     }
   };

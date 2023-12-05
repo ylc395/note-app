@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { type MouseEventHandler, useEffect } from 'react';
+import { type MouseEventHandler, useEffect, type MouseEvent } from 'react';
 import { CaretDownOutlined, CaretRightFilled } from '@ant-design/icons';
 import clsx from 'clsx';
 import uniqueId from 'lodash/uniqueId';
@@ -24,6 +24,7 @@ const TreeNode = observer(function <T extends HierarchyEntity>({ node, level, ..
     draggable,
     droppable,
     multiple,
+    onContextmenu,
     renderTitle,
   } = ctx;
 
@@ -54,6 +55,15 @@ const TreeNode = observer(function <T extends HierarchyEntity>({ node, level, ..
     tree.toggleSelect(node === tree.root ? null : node.id, { multiple: multiple && (e.metaKey || e.ctrlKey) });
   };
 
+  const handleContextmenu =
+    !node.isDisabled && onContextmenu
+      ? (e: MouseEvent) => {
+          e.stopPropagation();
+          !node.isSelected && tree.toggleSelect(node.id, { reason: 'contextmenu' });
+          onContextmenu(node.id);
+        }
+      : undefined;
+
   useEffect(() => {
     if (node.isSelected) {
       scrollIntoViewIfNeeded(domNode.current!, false);
@@ -69,6 +79,7 @@ const TreeNode = observer(function <T extends HierarchyEntity>({ node, level, ..
         style={{ paddingLeft: `${level * INDENT}px` }}
         ref={setDroppableRef}
         onClick={select}
+        onContextMenu={handleContextmenu}
         className={nodeClassName}
       >
         <div className={clsx('flex', node.isLeaf && 'pl-4')} ref={setDraggableRef} {...listeners} {...attributes}>

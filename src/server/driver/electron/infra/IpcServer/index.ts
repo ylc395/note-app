@@ -8,6 +8,7 @@ import toPlainObject from 'lodash/toPlainObject';
 import { InvalidInputError } from '@domain/model/Error';
 import { IPC_CHANNEL, type IpcRequest, type IpcResponse } from '@domain/infra/transport';
 import Context from './Context';
+import assert from 'assert';
 
 export default class ElectronIpcServer extends Server implements CustomTransportStrategy {
   private readonly routeMap = new Map<string, MatchFunction>();
@@ -21,11 +22,11 @@ export default class ElectronIpcServer extends Server implements CustomTransport
 
     ipcMain.handle(IPC_CHANNEL, async (e, req: IpcRequest<unknown>): Promise<IpcResponse<unknown>> => {
       this.populateRequest(req);
-
-      const pattern = this.normalizePattern({ path: req.route || '', method: req.method });
-      const handler = this.messageHandlers.get(pattern);
-
       this.logger.log(req);
+
+      assert(req.route, 'empty route for request');
+      const pattern = this.normalizePattern({ path: req.route, method: req.method });
+      const handler = this.messageHandlers.get(pattern);
 
       if (!handler) {
         return {

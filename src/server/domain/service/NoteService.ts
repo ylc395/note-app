@@ -1,7 +1,15 @@
 import { Inject, Injectable } from '@nestjs/common';
 import assert from 'node:assert';
 import pick from 'lodash/pick';
-import type { NoteVO, NewNoteDTO, NotePatchDTO, Note, ClientNoteQuery, NotePatch } from '@domain/model/note';
+import {
+  type NoteVO,
+  type NewNoteDTO,
+  type NotePatchDTO,
+  type Note,
+  type ClientNoteQuery,
+  type NotePatch,
+  normalizeTitle,
+} from '@domain/model/note';
 import { EntityTypes } from '@domain/model/entity';
 
 import BaseService from './BaseService';
@@ -46,7 +54,10 @@ export default class NoteService extends BaseService {
     const targetNote = await this.repo.notes.findOneById(noteId);
     assert(targetNote);
 
-    const newNote = await this.repo.notes.create(pick(targetNote, ['title', 'body', 'icon', 'parentId']));
+    const newNote = await this.repo.notes.create({
+      ...pick(targetNote, ['body', 'icon', 'parentId']),
+      title: `${normalizeTitle(targetNote)}-副本`,
+    });
 
     this.eventBus.emit('contentUpdated', {
       content: targetNote.body,
