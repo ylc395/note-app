@@ -70,13 +70,15 @@ export default function useContextmenu() {
         case 'duplicate':
           return noteService.duplicateNote(targetId);
         case 'delete':
-          return noteService.deleteNotes(selectedNodeIds);
+          return;
+        // return noteService.deleteNotes(selectedNodeIds);
         case 'move':
           return movingModal.open();
         case 'edit':
           return editingModal.open();
         case 'star':
-          return starService.star(EntityTypes.Note, selectedNodeIds);
+          return;
+        // return starService.star(EntityTypes.Note, selectedNodeIds);
         case 'openInNewWindow':
           assert(workbench.focusedTile);
 

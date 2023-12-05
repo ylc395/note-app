@@ -1,6 +1,5 @@
 import { container, singleton } from 'tsyringe';
 import { action, computed, makeObservable, observable } from 'mobx';
-import assert from 'assert';
 
 import type { default as Handler, DragMoveEvent } from './Handler';
 import NoteTreeNodeHandler from './NoteTreeNodeHandler';
@@ -18,7 +17,7 @@ export default class DndService {
   ];
 
   @observable.ref
-  private draggingItem?: unknown;
+  draggingItem?: unknown;
 
   constructor() {
     makeObservable(this);
@@ -42,16 +41,6 @@ export default class DndService {
     }
 
     return this.draggingItem;
-  }
-
-  getHandler<T>(token: { new (...args: unknown[]): T }): T {
-    for (const handler of this.handlers) {
-      if (handler instanceof token) {
-        return handler;
-      }
-    }
-
-    assert.fail('invalid token');
   }
 
   @action.bound

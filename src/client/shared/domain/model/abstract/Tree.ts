@@ -3,9 +3,9 @@ import { Emitter } from 'strict-event-emitter';
 import assert from 'assert';
 import pull from 'lodash/pull';
 import differenceWith from 'lodash/differenceWith';
-import groupBy from 'lodash/groupBy';
 import map from 'lodash/map';
 import pick from 'lodash/pick';
+import get from 'lodash/get';
 
 import type { HierarchyEntity } from '@shared/domain/model/entity';
 
@@ -17,7 +17,7 @@ export interface TreeNode<T = unknown> {
   parent: TreeNode<T> | null; // only root node has no parent;
   isExpanded: boolean;
   isSelected: boolean;
-  isValidTarget: boolean;
+  isDisabled: boolean;
   isLoading: boolean;
   isLeaf: boolean;
 }
@@ -31,13 +31,11 @@ export type SelectEvent = { id: TreeNode['id'] | null; reason?: string; multiple
 
 type EntityPatch<T> = Partial<T> & { id: HierarchyEntity['id'] };
 
-const ROOT_NODE_ID = '__root-node';
-
 const getDefaultNode = <T extends HierarchyEntity>() => ({
   isLeaf: true,
   isExpanded: false,
   isSelected: false,
-  isValidTarget: false,
+  isDisabled: false,
   isLoading: false,
   children: [] as TreeNode<T>[],
   title: '',
@@ -47,37 +45,44 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
   readonly root: TreeNode<T> = observable({
     entity: null,
     parent: null,
-    id: ROOT_NODE_ID,
+    id: '__ROOT_ID',
     ...getDefaultNode<T>(),
   });
 
-  constructor(entities?: T[]) {
+  constructor() {
     super();
     makeObservable(this);
-
-    if (entities) {
-      this.fromEntities(entities);
-    }
   }
 
   @observable.shallow
   private nodes: Record<TreeNode['id'], TreeNode<T>> = {};
 
-  private get allNodes() {
+  protected get allNodes() {
     return [...Object.values(this.nodes), this.root];
   }
 
   @computed
+  // root node not included
   get expandedNodes() {
     return Object.values(this.nodes).filter((node) => node.isExpanded);
   }
 
+  @computed
+  // root node may be included
   protected get selectedNodes() {
-    return Object.values(this.nodes).filter((node) => node.isSelected);
+    return [...Object.values(this.nodes), this.root].filter((node) => node.isSelected);
   }
 
+  @computed
   get selectedNodeIds() {
-    return this.selectedNodes.map((node) => node.id);
+    return this.selectedNodes.map((node) => (node === this.root ? null : node.id));
+  }
+
+  getSelectedId() {
+    const selectedId = this.selectedNodeIds[0];
+    assert(selectedId !== undefined);
+
+    return selectedId;
   }
 
   getNode(id: TreeNode['id'] | null): TreeNode<T>;
@@ -96,9 +101,15 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
     return node;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  hasNode(node: any): node is TreeNode<T> {
-    return this.root === node || Object.values(this.nodes).includes(node);
+  hasNode(node: unknown): node is TreeNode<T> {
+    if (this.root === node) {
+      return true;
+    }
+
+    const id = get(node, 'id');
+    const target = typeof id === 'string' && this.nodes[id];
+
+    return Boolean(target && target === node);
   }
 
   @action
@@ -189,7 +200,7 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
         return;
       }
 
-      if (node.parent!.id !== (patch.parentId || ROOT_NODE_ID)) {
+      if (node.parent!.id !== (patch.parentId || this.root.id)) {
         // reset parent-child relationship
         const newParent = this.getNode(patch.parentId);
 
@@ -273,7 +284,7 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
     return ancestors;
   }
 
-  private getDescendants(id: TreeNode['id']): TreeNode<T>[] {
+  protected getDescendants(id: TreeNode['id'] | null): TreeNode<T>[] {
     const { children } = this.getNode(id);
 
     return [...children, ...children.flatMap((child) => this.getDescendants(child.id))];
@@ -286,48 +297,9 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
     }
   }
 
-  @action
-  updateValidParents(ids: TreeNode['id'][]) {
+  resetDisabled() {
     for (const node of this.allNodes) {
-      node.isValidTarget = true;
+      node.isDisabled = false;
     }
-
-    for (const id of ids) {
-      const node = this.getNode(id);
-
-      node.isValidTarget = false;
-      node.parent!.isValidTarget = false;
-
-      for (const descendant of this.getDescendants(id)) {
-        descendant.isValidTarget = false;
-      }
-    }
-  }
-
-  @action
-  resetTargets() {
-    for (const node of this.allNodes) {
-      node.isValidTarget = false;
-    }
-  }
-
-  private fromEntities(entities: T[]) {
-    const descants: T[] = [];
-    const roots: T[] = [];
-
-    for (const entity of entities) {
-      (entity.parentId ? descants : roots).push(entity);
-    }
-
-    const childrenGroup = groupBy(descants, 'parentId');
-    const createChildrenNodes = (entities: T[]) => {
-      for (const entity of entities) {
-        this.addNode(entity);
-        const children = childrenGroup[entity.id];
-        children && createChildrenNodes(children);
-      }
-    };
-
-    createChildrenNodes(roots);
   }
 }

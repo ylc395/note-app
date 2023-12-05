@@ -3,6 +3,7 @@ import { DndContext, MouseSensor, useSensor, useSensors, pointerWithin } from '@
 import type { ReactNode } from 'react';
 
 import DndService from '@domain/service/DndService';
+import DraggingPreview from './DraggingPreview';
 
 // eslint-disable-next-line mobx/missing-observer
 export default function DraggableZone({ children }: { children: ReactNode }) {
@@ -35,6 +36,7 @@ export default function DraggableZone({ children }: { children: ReactNode }) {
       }
     >
       {children}
+      <DraggingPreview />
     </DndContext>
   );
 }

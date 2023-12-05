@@ -20,7 +20,7 @@ export default class MaterialTreeNodeHandler implements Handler {
 
   handleCancel(draggingItem: unknown) {
     if (this.tree.hasNode(draggingItem)) {
-      this.tree.resetTargets();
+      this.tree.resetDisabled();
     }
   }
 
@@ -33,7 +33,7 @@ export default class MaterialTreeNodeHandler implements Handler {
       return;
     }
 
-    this.tree.updateValidParents(this.tree.selectedNodeIds);
+    this.tree.updateValidParentTargets();
   }
 
   handleDrop(draggingItem: unknown, dropTarget: unknown) {
@@ -49,6 +49,6 @@ export default class MaterialTreeNodeHandler implements Handler {
       this.workbench.openEntity({ entityType: EntityTypes.Note, entityId: draggingItem.id }, dropTarget);
     }
 
-    this.tree.resetTargets();
+    this.tree.resetDisabled();
   }
 }

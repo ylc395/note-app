@@ -26,12 +26,12 @@ export default class NoteTreeNodeHandler implements Handler {
       this.tree.toggleSelect(item.id, { reason: 'drag' });
     }
 
-    this.tree.updateValidParents(this.tree.selectedNodeIds);
+    this.tree.updateValidParentTargets();
   }
 
   handleCancel(draggingItem: unknown) {
     if (this.tree.hasNode(draggingItem)) {
-      this.tree.resetTargets();
+      this.tree.resetDisabled();
     }
   }
 
@@ -44,14 +44,14 @@ export default class NoteTreeNodeHandler implements Handler {
       return;
     }
 
-    if (this.tree.hasNode(dropTarget) && dropTarget.isValidTarget) {
-      this.noteService.moveNotes(dropTarget === this.tree.root ? null : dropTarget.id, this.tree.selectedNodeIds);
+    if (this.tree.hasNode(dropTarget) && !dropTarget.isDisabled) {
+      this.noteService.moveNotes(dropTarget === this.tree.root ? null : dropTarget.id);
     }
 
     if (dropTarget instanceof Tile || dropTarget instanceof Editor) {
       this.workbench.openEntity({ entityType: EntityTypes.Note, entityId: draggingItem.id }, dropTarget);
     }
 
-    this.tree.resetTargets();
+    this.tree.resetDisabled();
   }
 }

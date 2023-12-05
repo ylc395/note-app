@@ -10,12 +10,12 @@ import TreeView from '../../components/TreeView';
 
 // eslint-disable-next-line mobx/missing-observer
 export default function NoteTreeView() {
-  const { loadChildren, createNote } = container.resolve(NoteService);
+  const { createNote } = container.resolve(NoteService);
   const { noteTree } = container.resolve(Explorer);
 
   useEffect(() => {
-    loadChildren();
-  }, [loadChildren]);
+    noteTree.loadChildren();
+  }, [noteTree]);
 
   return (
     <TreeView

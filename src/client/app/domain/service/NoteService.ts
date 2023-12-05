@@ -1,15 +1,11 @@
 import { container, singleton } from 'tsyringe';
 import assert from 'assert';
+import compact from 'lodash/compact';
 
 import { token as remoteToken } from '@domain/infra/remote';
 import { token as UIToken } from '@domain/infra/ui';
 
-import type {
-  NotesPatchDTO as NotesPatch,
-  NoteVO as Note,
-  ClientNoteQuery as NoteQuery,
-  NotePatchDTO as NotePatch,
-} from '@domain/model/note';
+import type { NotesPatchDTO as NotesPatch, NoteVO as Note, NotePatchDTO as NotePatch } from '@domain/model/note';
 import type { RecyclablesDTO } from '@domain/model/recyclables';
 import { EntityTypes } from '@domain/model/entity';
 import Explorer from '@domain/model/Explorer';
@@ -31,13 +27,7 @@ export default class NoteService {
 
   constructor() {
     this.tree.on('nodeSelected', this.handleSelect);
-    this.tree.on('nodeExpanded', this.loadChildren);
   }
-
-  readonly loadChildren = async (parentId?: Note['parentId']) => {
-    const { body: notes } = await this.remote.get<NoteQuery, Note[]>('/notes', { parentId });
-    this.tree.updateChildren(parentId || null, notes);
-  };
 
   readonly createNote = async (parentId?: Note['parentId']) => {
     const { body: note } = await this.remote.post<NotePatch, Note>('/notes', {
@@ -76,7 +66,7 @@ export default class NoteService {
   }
 
   readonly moveNotes = async (targetId: Note['parentId'], ids?: Note['id'][]) => {
-    const _ids = ids || this.tree.selectedNodeIds;
+    const _ids = ids || compact(this.tree.selectedNodeIds);
 
     await this.remote.patch<NotesPatch>('/notes', {
       ids: _ids,
@@ -97,7 +87,7 @@ export default class NoteService {
 
   async editNotes(metadata: NoteMetadata) {
     const { body: notes } = await this.remote.patch<NotesPatch, Note[]>('/notes', {
-      ids: this.tree.selectedNodeIds,
+      ids: compact(this.tree.selectedNodeIds),
       note: {
         ...metadata,
         isReadonly: metadata.isReadonly === 2 ? undefined : Boolean(metadata.isReadonly),

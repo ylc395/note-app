@@ -3,11 +3,11 @@ import { observable, runInAction } from 'mobx';
 import { useEffect } from 'react';
 
 import type NoteEditor from '@domain/model/note/Editor';
-import Modal from '@components/Modal';
+// import Modal from '@components/Modal';
 
 import Body from './Body';
 import Title from './Title';
-import Info from './Info';
+// import Info from './Info';
 import Context, { type EditorContext } from './Context';
 import useModal from '@components/Modal/useModal';
 
@@ -27,9 +27,9 @@ export default function NoteEditorView({ editor }: { editor: NoteEditor }) {
       <div className="flex h-full flex-col">
         <Title />
         <Body />
-        <Modal title="详情" closable open={infoModal.isOpen}>
+        {/* <Modal title="详情" closable open={infoModal.isOpen}>
           <Info />
-        </Modal>
+        </Modal> */}
       </div>
     </Context.Provider>
   );

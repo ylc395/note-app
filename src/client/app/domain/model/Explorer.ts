@@ -5,13 +5,13 @@ import { makeObservable, observable } from 'mobx';
 import Value from '@domain/model/Value';
 import type { SearchableEntityType } from '@domain/model/search';
 
-import NoteTree, { type NoteTreeNode } from './NoteTree';
-import MaterialTree, { type MaterialTreeNode } from './MaterialTree';
-import { EntityTypes } from '../entity';
-import { EditableEntityEvents, EditableEntityManager } from '../workbench';
-import type EditableEntity from '../abstract/EditableEntity';
-import EditableNote from '../note/Editable';
-import EditableMaterial from '../material/editable/EditableMaterial';
+import NoteTree, { type NoteTreeNode } from './note/Tree';
+import MaterialTree, { type MaterialTreeNode } from './material/Tree';
+import { EntityTypes } from './entity';
+import { EditableEntityEvents, EditableEntityManager } from './workbench';
+import type EditableEntity from './abstract/EditableEntity';
+import EditableNote from './note/Editable';
+import EditableMaterial from './material/editable/EditableMaterial';
 
 export type ExplorerTypes = EntityTypes.Note | EntityTypes.Material | EntityTypes.Memo;
 
@@ -49,9 +49,9 @@ export default class Explorer {
     }
   };
 
-  isTreeNode(item: unknown): item is ExplorerTreeNode {
+  readonly isTreeNode = (item: unknown): item is ExplorerTreeNode => {
     return this.noteTree.hasNode(item) || this.materialTree.hasNode(item);
-  }
+  };
 
   treeNodeToEntityLocator(node: ExplorerTreeNode) {
     return {

@@ -28,8 +28,7 @@ export default function TreeView<T extends MaterialVO | NoteVO>({ tree, entityTy
         nodeClassName="[--hover-color:#f3f4f6] [--selected-color:#e2e8f0] 
          hover:bg-[var(--hover-color)]
          data-[selected=true]:bg-[var(--selected-color)]
-         data-[dragging='not-allowed']:cursor-not-allowed 
-         data-[dragging='over']:cursor-default
+         data-[disabled=true]:cursor-not-allowed 
          py-1 cursor-pointer group relative"
         caretClassName="text-gray-500"
         tree={tree}

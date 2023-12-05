@@ -2,11 +2,11 @@ import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 
 import MaterialService from '@domain/service/MaterialService';
-import Modal from '@components/Modal';
+// import Modal from '@components/Modal';
 
 import DirectoryOperations from './Operations';
 import DirectoryView from './TreeView';
-import NewMaterial from './NewMaterial';
+// import NewMaterial from './NewMaterial';
 import ExplorerHeader from '../components/ExplorerHeader';
 
 export default observer(() => {
@@ -18,9 +18,9 @@ export default observer(() => {
         <DirectoryOperations />
       </ExplorerHeader>
       <DirectoryView />
-      <Modal open={Boolean(targetId.value)}>
+      {/* <Modal open={Boolean(targetId.value)}>
         <NewMaterial />
-      </Modal>
+      </Modal> */}
     </>
   );
 });

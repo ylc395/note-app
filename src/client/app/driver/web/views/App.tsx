@@ -3,8 +3,7 @@ import { useEffect } from 'react';
 
 import Explorer from './Explorer';
 import Workbench from './Workbench';
-import DraggableZone from './Dnd/DraggableZone';
-import DraggingPreview from './Dnd/DraggingPreview';
+import Dnd from './Dnd';
 
 import './index.css';
 
@@ -17,14 +16,13 @@ export default function App() {
   }, []);
 
   return (
-    <DraggableZone>
+    <Dnd>
       <ConfigProvider getPopupContainer={getContainer}>
         <main className="flex h-screen">
           <Explorer />
           <Workbench />
-          <DraggingPreview />
         </main>
       </ConfigProvider>
-    </DraggableZone>
+    </Dnd>
   );
 }
