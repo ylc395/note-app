@@ -3,7 +3,7 @@ import type { InjectionToken } from 'tsyringe';
 export type ContextmenuItem =
   | {
       label: string;
-      key: string;
+      key?: string;
       disabled?: boolean;
       visible?: boolean;
     }

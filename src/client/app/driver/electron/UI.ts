@@ -53,7 +53,7 @@ export default class ElectronUI implements UI {
       const menu = Menu.buildFromTemplate(
         menuItems.map((item) => ({
           ...item,
-          click: 'key' in item ? () => (key = item.key) : undefined,
+          click: 'key' in item ? () => (key = item.key!) : undefined,
           enabled: 'disabled' in item ? !item.disabled : true,
         })),
       );
