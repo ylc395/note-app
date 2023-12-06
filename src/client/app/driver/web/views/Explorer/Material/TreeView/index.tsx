@@ -4,7 +4,6 @@ import { FileAddOutlined, FolderAddOutlined } from '@ant-design/icons';
 
 import MaterialService from '@domain/service/MaterialService';
 import { isDirectory } from '@domain/model/material';
-import { EntityTypes } from '@domain/model/entity';
 import IconButton from '@components/IconButton';
 
 import TreeView from '../../components/TreeView';
@@ -20,7 +19,6 @@ export default function MaterialTreeView() {
   return (
     <TreeView
       tree={materialTree}
-      entityType={EntityTypes.Material}
       nodeOperation={(node) =>
         node.entity && isDirectory(node.entity) ? (
           <>

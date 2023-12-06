@@ -47,6 +47,7 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
     parent: null,
     id: '__ROOT_ID',
     ...getDefaultNode<T>(),
+    isExpanded: true,
   });
 
   constructor() {
@@ -75,7 +76,7 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
 
   @computed
   get selectedNodeIds() {
-    return this.selectedNodes.map((node) => (node === this.root ? null : node.id));
+    return this.selectedNodes.map((node) => (node.id === this.root.id ? null : node.id));
   }
 
   getSelectedId() {
@@ -89,7 +90,7 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
   getNode(id: TreeNode['id'] | null, safe: true): TreeNode<T> | undefined;
   getNode(id: TreeNode['id'] | null, safe?: true) {
     if (id === this.root.id) {
-      throw new Error('invalid id');
+      return this.root;
     }
 
     const node = id ? this.nodes[id] : this.root;
@@ -124,7 +125,7 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
     }
   }
 
-  protected abstract entityToNode(entity: T): Partial<Pick<TreeNode, 'isLeaf' | 'title'>>;
+  protected abstract entityToNode(entity: T): Partial<Pick<TreeNode, 'isLeaf' | 'title' | 'isDisabled'>>;
 
   @action
   private addNode(entity: T) {
@@ -200,16 +201,18 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
         return;
       }
 
-      if (node.parent!.id !== (patch.parentId || this.root.id)) {
+      assert(node.parent);
+
+      if (node.parent.id !== (patch.parentId || this.root.id)) {
         // reset parent-child relationship
         const newParent = this.getNode(patch.parentId);
 
-        pull(node.parent!.children, node);
+        pull(node.parent.children, node);
         newParent.children.push(node);
         newParent.isLeaf = false;
 
-        if (node.parent!.children.length === 0) {
-          node.parent!.isLeaf = true;
+        if (node.parent.children.length === 0) {
+          node.parent.isLeaf = true;
         }
 
         node.parent = newParent;
@@ -234,24 +237,28 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
     }
 
     if (node.isExpanded && toggled) {
-      this.emit('nodeExpanded', id);
+      this.emit('nodeExpanded', node.id === this.root.id ? null : node.id);
     }
   }
 
   @action
-  toggleSelect(id: TreeNode['id'] | null, options?: Pick<SelectEvent, 'multiple' | 'reason'>) {
+  toggleSelect(id: TreeNode['id'], options?: Pick<SelectEvent, 'multiple' | 'reason'>) {
+    const node = this.getNode(id);
+
+    if (node.isDisabled) {
+      return;
+    }
+
     if (!options?.multiple) {
       for (const selected of this.selectedNodes) {
         selected.isSelected = false;
       }
     }
 
-    const node = this.getNode(id);
-
     node.isSelected = !node.isSelected;
 
     if (node.isSelected) {
-      this.emit('nodeSelected', { id, ...options });
+      this.emit('nodeSelected', { id: node.id, ...options });
     }
   }
 

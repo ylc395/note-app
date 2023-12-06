@@ -43,7 +43,7 @@ const TreeNode = observer(function <T extends HierarchyEntity>({ node, level, ..
   const expand: MouseEventHandler = (e) => {
     e.stopPropagation();
 
-    if (useLoadingIcon || node === tree.root) {
+    if (useLoadingIcon || node.id === tree.root.id) {
       return;
     }
 
@@ -52,7 +52,7 @@ const TreeNode = observer(function <T extends HierarchyEntity>({ node, level, ..
 
   const select: MouseEventHandler = (e) => {
     e.stopPropagation();
-    tree.toggleSelect(node === tree.root ? null : node.id, { multiple: multiple && (e.metaKey || e.ctrlKey) });
+    tree.toggleSelect(node.id, { multiple: multiple && (e.metaKey || e.ctrlKey) });
   };
 
   const handleContextmenu =

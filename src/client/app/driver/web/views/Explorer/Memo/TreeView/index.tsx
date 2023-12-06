@@ -4,8 +4,6 @@ import { useEffect } from 'react';
 
 import MemoService from '@domain/service/MemoService';
 import Item from './Item';
-import SearchInput from '../../components/TreeView/SearchInput';
-import { EntityTypes } from '@domain/model/entity';
 
 export default observer(() => {
   const memoService = container.resolve(MemoService);
@@ -17,7 +15,6 @@ export default observer(() => {
 
   return (
     <div className="h-full">
-      <SearchInput entityType={EntityTypes.Memo} />
       {memoService.memos.map((memo) => (
         <Item memo={memo} key={memo.id} />
       ))}

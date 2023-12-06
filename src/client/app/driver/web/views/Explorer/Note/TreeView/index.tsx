@@ -2,11 +2,13 @@ import { container } from 'tsyringe';
 import { useEffect } from 'react';
 import { PlusOutlined } from '@ant-design/icons';
 
-import { EntityTypes } from '@domain/model/entity';
 import Explorer from '@domain/model/Explorer';
+import { EntityTypes } from '@domain/model/entity';
 import NoteService from '@domain/service/NoteService';
 import IconButton from '@components/IconButton';
+
 import TreeView from '../../components/TreeView';
+import SearchInput from '../../components/SearchInput';
 import useContextmenu from './useContextmenu';
 
 // eslint-disable-next-line mobx/missing-observer
@@ -21,9 +23,9 @@ export default function NoteTreeView() {
 
   return (
     <>
+      <SearchInput entityType={EntityTypes.Note} />
       <TreeView
         tree={noteTree}
-        entityType={EntityTypes.Note}
         onContextmenu={handleContextmenu}
         nodeOperation={({ id }) => (
           <IconButton onClick={() => createNote(id)}>
