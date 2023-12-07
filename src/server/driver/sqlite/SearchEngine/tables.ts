@@ -1,9 +1,9 @@
-import type { Row as NoteRow } from '../schema/note';
-import type { Row as FileTextRow } from '../schema/fileText';
-import type { Row as MemoRow } from '../schema/memo';
-import type { Row as MaterialRow } from '../schema/material';
-import type { Row as MaterialAnnotationRow } from '../schema/materialAnnotation';
-import type { Db } from '../Database';
+import type { Row as NoteRow } from '../schema/note.js';
+import type { Row as FileTextRow } from '../schema/fileText.js';
+import type { Row as MemoRow } from '../schema/memo.js';
+import type { Row as MaterialRow } from '../schema/material.js';
+import type { Row as MaterialAnnotationRow } from '../schema/materialAnnotation.js';
+import type { Db } from '../Database.js';
 
 interface FtsRow {
   rowid: number;

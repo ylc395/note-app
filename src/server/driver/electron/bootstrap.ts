@@ -1,8 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import type { MicroserviceOptions } from '@nestjs/microservices';
 
-import ElectronModule from './module';
-import ElectronTransporter, { RawExceptionFilter } from './infra/IpcServer';
+import ElectronModule from './module.js';
+import ElectronTransporter, { RawExceptionFilter } from './infra/IpcServer/index.js';
 
 export default async function bootstrap() {
   const electronApp = await NestFactory.createMicroservice<MicroserviceOptions>(ElectronModule, {

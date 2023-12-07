@@ -1,13 +1,13 @@
 import { parse as parseUrl } from 'node:url';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { readFile, writeFile, readJSON, writeJSON, pathExists } from 'fs-extra';
+import fs from 'fs-extra';
 import { Injectable, Inject, Logger } from '@nestjs/common';
 
-import type { FileReader } from '@domain/infra/fileReader';
-import type DesktopRuntime from '@domain/infra/DesktopRuntime';
-import { token as runtimeToken } from '@domain/infra/DesktopRuntime';
-import type { LoadedFile } from '@domain/model/file';
+import type { FileReader } from '@domain/infra/fileReader.js';
+import type DesktopRuntime from '@domain/infra/DesktopRuntime.js';
+import { token as runtimeToken } from '@domain/infra/DesktopRuntime.js';
+import type { LoadedFile } from '@domain/model/file.js';
 
 // remove this once native fetch type is launched in @types/node
 // see https://github.com/DefinitelyTyped/DefinitelyTyped/issues/60924#issuecomment-1358424866
@@ -66,7 +66,7 @@ export default class ElectronFileReader implements FileReader {
   }
 
   private async readCacheIndex() {
-    const cacheIndex = (await pathExists(this.cacheIndexPath)) ? await readJSON(this.cacheIndexPath) : {};
+    const cacheIndex = (await fs.pathExists(this.cacheIndexPath)) ? await fs.readJSON(this.cacheIndexPath) : {};
     return cacheIndex;
   }
 
@@ -75,7 +75,7 @@ export default class ElectronFileReader implements FileReader {
 
     if (cacheIndex[url]) {
       const { path: filePath, mimeType } = cacheIndex[url];
-      const data = await readFile(path.join(this.cachePath, filePath));
+      const data = await fs.readFile(path.join(this.cachePath, filePath));
       const name = ElectronFileReader.getFileNameFromUrl(url);
 
       return { name, mimeType, data: data.buffer };
@@ -91,12 +91,12 @@ export default class ElectronFileReader implements FileReader {
 
     cacheIndex[url] = { path: cacheFileName, mimeType };
 
-    await writeFile(path.join(this.cachePath, cacheFileName), Buffer.from(data));
-    await writeJSON(this.cacheIndexPath, cacheIndex);
+    await fs.writeFile(path.join(this.cachePath, cacheFileName), Buffer.from(data));
+    await fs.writeJSON(this.cacheIndexPath, cacheIndex);
   }
 
   async readLocalFile(filePath: string) {
-    const data = await readFile(filePath);
+    const data = await fs.readFile(filePath);
 
     return { data };
   }

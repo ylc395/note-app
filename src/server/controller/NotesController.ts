@@ -1,6 +1,6 @@
 import { Controller } from '@nestjs/common';
 
-import { Post, Body, Get, Patch, createSchemaPipe, Param, Query } from './decorators';
+import { Post, Body, Get, Patch, createSchemaPipe, Param, Query } from './decorators.js';
 import {
   type NewNoteDTO,
   type NoteVO,
@@ -14,8 +14,8 @@ import {
   notesPatchDTOSchema,
   clientNoteQuerySchema,
   notePatchDTOSchema,
-} from '@domain/model/note';
-import NoteService from '@domain/service/NoteService';
+} from '@domain/model/note.js';
+import NoteService from '@domain/service/NoteService.js';
 
 @Controller()
 export default class NotesController {

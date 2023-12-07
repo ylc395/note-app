@@ -1,4 +1,4 @@
-import type { EntityId, EntityParentId } from '../entity';
+import type { EntityId, EntityParentId } from '../entity.js';
 import dayjs from 'dayjs';
 
 export interface Note {

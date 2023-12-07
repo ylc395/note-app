@@ -1,6 +1,6 @@
-import type { SyncTargetFactory } from '@domain/infra/synchronizer';
+import type { SyncTargetFactory } from '@domain/infra/synchronizer.js';
 
-import FsSyncTarget from './FsSyncTarget';
+import FsSyncTarget from './FsSyncTarget.js';
 
 const syncTargetFactory: SyncTargetFactory = function (target) {
   switch (target) {

@@ -1,9 +1,10 @@
 import { Inject, Injectable, type OnApplicationBootstrap } from '@nestjs/common';
 import { Worker } from 'node:worker_threads';
-import path from 'node:path';
-import compact from 'lodash/compact';
+import path, { dirname } from 'node:path';
+
+import { compact } from 'lodash-es';
 import { wrap } from 'comlink';
-import nodeEndpoint from 'comlink/dist/umd/node-adapter';
+import nodeEndpoint from 'comlink/dist/umd/node-adapter.js';
 import TaskQueue from 'queue';
 
 import type {
@@ -13,11 +14,12 @@ import type {
   CreatedFile,
   UnfinishedTextExtraction,
   FileDTO,
-} from '@domain/model/file';
-import { token as fileReaderToken, FileReader } from '@domain/infra/fileReader';
+} from '@domain/model/file.js';
+import { token as fileReaderToken, FileReader } from '@domain/infra/fileReader.js';
 
-import BaseService from '../BaseService';
-import type TextExtraction from './TextExtraction';
+import BaseService from '../BaseService.js';
+import type TextExtraction from './TextExtraction.js';
+import { fileURLToPath } from 'node:url';
 
 @Injectable()
 export default class FileService extends BaseService implements OnApplicationBootstrap {
@@ -107,8 +109,11 @@ export default class FileService extends BaseService implements OnApplicationBoo
 
   private extractText = async (fileId: CreatedFile['id'], finished?: UnfinishedTextExtraction['finished']) => {
     if (!this.extraction) {
-      this.extractionWorker = new Worker(path.join(__dirname, 'TextExtraction')).setMaxListeners(Infinity);
-      this.extraction = wrap<TextExtraction>(nodeEndpoint(this.extractionWorker));
+      this.extractionWorker = new Worker(
+        path.join(dirname(fileURLToPath(import.meta.url)), 'TextExtraction'),
+      ).setMaxListeners(Infinity);
+
+      this.extraction = wrap<TextExtraction>(nodeEndpoint.default(this.extractionWorker));
     }
 
     const file = await this.repo.files.findOneById(fileId);

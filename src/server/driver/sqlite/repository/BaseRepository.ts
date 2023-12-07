@@ -1,8 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { Insertable } from 'kysely';
 
-import type { Db } from '../Database';
-import type SqliteDatabase from '../Database';
+import type { default as SqliteDatabase, Db } from '../Database.js';
 
 export default abstract class BaseRepository {
   constructor(protected readonly sqliteDb: SqliteDatabase) {}

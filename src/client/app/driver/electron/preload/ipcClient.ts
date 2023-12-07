@@ -1,8 +1,5 @@
 import { ipcRenderer } from 'electron';
-import omitBy from 'lodash/omitBy';
-import isUndefined from 'lodash/isUndefined';
-import isPlainObject from 'lodash/isPlainObject';
-
+import { omitBy, isUndefined, isPlainObject } from 'lodash-es';
 import type { Remote } from '@domain/infra/remote';
 import { IPC_CHANNEL, type IpcRequest } from '@domain/infra/transport';
 

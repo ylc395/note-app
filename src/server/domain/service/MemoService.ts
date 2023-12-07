@@ -1,14 +1,12 @@
 import { Injectable, Inject } from '@nestjs/common';
-import mapValues from 'lodash/mapValues';
-import omit from 'lodash/omit';
-import map from 'lodash/map';
+import { mapValues, omit, map } from 'lodash-es';
 
-import { buildIndex } from '@utils/collection';
-import type { Memo, NewMemo, MemoPatch, ClientMemoQuery, MemoVO } from '@domain/model/memo';
-import { EntityTypes } from '@domain/model/entity';
+import { buildIndex } from '@utils/collection.js';
+import type { Memo, NewMemo, MemoPatch, ClientMemoQuery, MemoVO } from '@domain/model/memo.js';
+import { EntityTypes } from '@domain/model/entity.js';
 
-import BaseService from './BaseService';
-import StarService from './StarService';
+import BaseService from './BaseService.js';
+import StarService from './StarService.js';
 
 @Injectable()
 export default class MemoService extends BaseService {

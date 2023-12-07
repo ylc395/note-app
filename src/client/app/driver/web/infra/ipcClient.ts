@@ -1,6 +1,4 @@
-import mapValues from 'lodash/mapValues';
-import wrap from 'lodash/wrap';
-import isObject from 'lodash/isObject';
+import { mapValues, wrap, isObject } from 'lodash-es';
 
 import type { Remote } from '@domain/infra/remote';
 import type { IpcResponse } from '@domain/infra/transport';

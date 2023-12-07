@@ -1,6 +1,6 @@
 import { Emitter } from 'strict-event-emitter';
-import type { ContentUpdatedEvent } from '@domain/model/content';
-import type { Config } from '@domain/model/config';
+import type { ContentUpdatedEvent } from '@domain/model/content.js';
+import type { Config } from '@domain/model/config.js';
 
 type EventMaps = {
   contentUpdated: [ContentUpdatedEvent];

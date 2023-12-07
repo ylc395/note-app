@@ -1,5 +1,5 @@
 import { object, string, type infer as Infer, instanceof as zodInstanceof } from 'zod';
-import type { EntityId } from './entity';
+import type { EntityId } from './entity.js';
 
 export const httpUrlSchema = string()
   .url()

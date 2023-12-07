@@ -1,11 +1,11 @@
 import { Inject, Injectable } from '@nestjs/common';
 
-import { token as searchEngineToken, type SearchEngine } from '@domain/infra/searchEngine';
-import type { SearchParams, SearchResultVO } from '@domain/model/search';
+import { token as searchEngineToken, type SearchEngine } from '@domain/infra/searchEngine.js';
+import type { SearchParams, SearchResultVO } from '@domain/model/search.js';
 
-import BaseService from './BaseService';
-import EntityService from './EntityService';
-import StarService from './StarService';
+import BaseService from './BaseService.js';
+import EntityService from './EntityService.js';
+import StarService from './StarService.js';
 
 @Injectable()
 export default class SearchService extends BaseService {

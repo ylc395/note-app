@@ -1,9 +1,5 @@
-/** used in development env */
-import './driver/enableEsm';
-/*******/
+import { IS_DEV } from '@domain/infra/constants.js';
+import bootstrapElectron from './driver/electron/bootstrap.js';
 
-import bootstrapElectron from './driver/electron/bootstrap';
-
-(async function () {
-  await bootstrapElectron();
-})();
+process.traceProcessWarnings = IS_DEV;
+await bootstrapElectron();

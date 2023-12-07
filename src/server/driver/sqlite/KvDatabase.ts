@@ -1,7 +1,7 @@
 import type { Kysely } from 'kysely';
-import type { KvDatabase } from '@domain/infra/database';
+import type { KvDatabase } from '@domain/infra/database.js';
 
-import type SqliteDb from './Database';
+import type SqliteDb from './Database.js';
 
 type Row = { key: string; value: string };
 

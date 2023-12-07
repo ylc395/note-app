@@ -1,9 +1,10 @@
-const path = require('path');
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-module.exports = {
+export default {
   plugins: {
     tailwindcss: {
-      config: path.join(__dirname, 'tailwind.config.js'),
+      config: path.join(path.dirname(fileURLToPath(import.meta.url)), 'tailwind.config.js'),
     },
     autoprefixer: {},
   },

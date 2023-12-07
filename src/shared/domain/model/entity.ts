@@ -1,5 +1,5 @@
 import { nativeEnum, object, string, infer as Infer } from 'zod';
-import pick from 'lodash/pick';
+import { pick } from 'lodash-es';
 
 export enum EntityTypes {
   Note = 1,

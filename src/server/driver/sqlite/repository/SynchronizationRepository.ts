@@ -1,8 +1,8 @@
-import type { SynchronizationRepository } from '@domain/service/repository/SynchronizationRepository';
-import type { EntityLocator } from '@domain/model/entity';
+import type { SynchronizationRepository } from '@domain/service/repository/SynchronizationRepository.js';
+import type { EntityLocator } from '@domain/model/entity.js';
 
-import BaseRepository from './BaseRepository';
-import syncEntitySchema from '../schema/syncEntity';
+import BaseRepository from './BaseRepository.js';
+import syncEntitySchema from '../schema/syncEntity.js';
 
 const LAST_SYNC_TIME_KEY = 'sync.lastSyncTime';
 

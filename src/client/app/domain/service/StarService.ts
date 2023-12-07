@@ -1,7 +1,7 @@
 import { Emitter } from 'strict-event-emitter';
 import { container, singleton } from 'tsyringe';
 import { observable, makeObservable, runInAction, action } from 'mobx';
-import pull from 'lodash/pull';
+import { pull } from 'lodash-es';
 
 import { token as remoteToken } from '@domain/infra/remote';
 import type { EntityId, EntityLocator } from '@domain/model/entity';

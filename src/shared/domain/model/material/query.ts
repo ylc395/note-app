@@ -1,5 +1,5 @@
 import { object, string, nativeEnum, preprocess, type infer as Infer } from 'zod';
-import { MaterialTypes } from './base';
+import { MaterialTypes } from './base.js';
 
 export const clientMaterialQuerySchema = object({
   parentId: string().nullable().optional(),

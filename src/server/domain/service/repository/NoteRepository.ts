@@ -1,4 +1,4 @@
-import type { Note, NotePatch, NewNote } from '@domain/model/note';
+import type { Note, NotePatch, NewNote } from '@domain/model/note.js';
 
 export interface NoteQuery {
   parentId?: Note['parentId'];

@@ -1,8 +1,6 @@
 import { action } from 'mobx';
 import { useRef } from 'react';
-import throttle from 'lodash/throttle';
-import clamp from 'lodash/clamp';
-import mapValues from 'lodash/mapValues';
+import { throttle, clamp, mapValues } from 'lodash-es';
 
 import { TileDirections, type TileParent } from '@domain/model/workbench';
 import BaseResizer from '@components/Resizable/Resizer';

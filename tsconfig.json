@@ -6,7 +6,6 @@
     "lib": [],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "moduleResolution": "node",
     "sourceMap": true,
     "importHelpers": true,
     "ignoreDeprecations": "5.0",

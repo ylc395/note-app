@@ -1,6 +1,6 @@
 import { container, singleton } from 'tsyringe';
 import assert from 'assert';
-import compact from 'lodash/compact';
+import { compact } from 'lodash-es';
 
 import { token as remoteToken } from '@domain/infra/remote';
 import { token as UIToken } from '@domain/infra/ui';

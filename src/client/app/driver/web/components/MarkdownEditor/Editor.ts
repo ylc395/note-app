@@ -15,7 +15,7 @@ import { history } from '@milkdown/plugin-history';
 import { upload, uploadConfig } from '@milkdown/plugin-upload';
 import { cursor } from '@milkdown/plugin-cursor';
 import { clipboard } from '@milkdown/plugin-clipboard';
-import uniqueId from 'lodash/uniqueId';
+import { uniqueId } from 'lodash-es';
 import '@milkdown/prose/view/style/prosemirror.css';
 import '@milkdown/prose/tables/style/tables.css';
 

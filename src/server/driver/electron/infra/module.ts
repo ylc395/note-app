@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 
-import { token as downloaderToken } from '@domain/infra/fileReader';
-import { token as syncTargetFactoryToken } from '@domain/infra/synchronizer';
+import { token as downloaderToken } from '@domain/infra/fileReader.js';
+import { token as syncTargetFactoryToken } from '@domain/infra/synchronizer.js';
 
-import ElectronFileReader from './FileReader';
-import syncTargetFactory from './syncTargetFactory';
+import ElectronFileReader from './FileReader.js';
+import syncTargetFactory from './syncTargetFactory/index.js';
 
 @Module({
   providers: [

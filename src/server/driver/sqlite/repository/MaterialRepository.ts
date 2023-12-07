@@ -1,4 +1,4 @@
-import omit from 'lodash/omit';
+import { omit } from 'lodash-es';
 import type { Selectable } from 'kysely';
 
 import {
@@ -10,15 +10,15 @@ import {
   type MaterialPatch,
   type NewMaterialDirectory,
   type NewMaterialEntity,
-} from '@domain/model/material';
-import type { MaterialRepository } from '@domain/service/repository/MaterialRepository';
+} from '@domain/model/material.js';
+import type { MaterialRepository } from '@domain/service/repository/MaterialRepository.js';
 
-import schema, { type Row } from '../schema/material';
-import fileSchema, { type Row as FileRow } from '../schema/file';
-import { tableName as recyclableTableName } from '../schema/recyclable';
-import FileRepository from './FileRepository';
-import MaterialAnnotationRepository from './MaterialAnnotationRepository';
-import HierarchyEntityRepository from './HierarchyEntityRepository';
+import schema, { type Row } from '../schema/material.js';
+import fileSchema, { type Row as FileRow } from '../schema/file.js';
+import { tableName as recyclableTableName } from '../schema/recyclable.js';
+import FileRepository from './FileRepository.js';
+import MaterialAnnotationRepository from './MaterialAnnotationRepository.js';
+import HierarchyEntityRepository from './HierarchyEntityRepository.js';
 
 export default class SqliteMaterialRepository extends HierarchyEntityRepository implements MaterialRepository {
   readonly tableName = schema.tableName;

@@ -1,12 +1,11 @@
 import { Injectable, Inject } from '@nestjs/common';
-import differenceWith from 'lodash/differenceWith';
-import isMatch from 'lodash/isMatch';
+import { differenceWith, isMatch } from 'lodash-es';
 import assert from 'node:assert';
 
-import { type RecyclableEntityLocator, type RecyclableEntityTypes, RecycleReason } from '@domain/model/recyclables';
+import { type RecyclableEntityLocator, type RecyclableEntityTypes, RecycleReason } from '@domain/model/recyclables.js';
 
-import BaseService from './BaseService';
-import EntityService from './EntityService';
+import BaseService from './BaseService.js';
+import EntityService from './EntityService.js';
 
 @Injectable()
 export default class RecyclableService extends BaseService {

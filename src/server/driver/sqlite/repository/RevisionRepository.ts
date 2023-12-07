@@ -1,9 +1,9 @@
-import type { RevisionRepository } from '@domain/service/repository/RevisionRepository';
+import type { RevisionRepository } from '@domain/service/repository/RevisionRepository.js';
 
-import type { EntityLocator } from '@domain/model/entity';
-import type { Revision } from '@domain/model/revision';
-import BaseRepository from './BaseRepository';
-import schema from '../schema/revision';
+import type { EntityLocator } from '@domain/model/entity.js';
+import type { Revision } from '@domain/model/revision.js';
+import BaseRepository from './BaseRepository.js';
+import schema from '../schema/revision.js';
 
 const { tableName } = schema;
 

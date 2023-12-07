@@ -1,11 +1,10 @@
-import pick from 'lodash/pick';
-import isEmpty from 'lodash/isEmpty';
+import { pick, isEmpty } from 'lodash-es';
 import type { Selectable } from 'kysely';
 
-import type { NewAnnotationDTO, AnnotationPatchDTO, Annotation, Material } from '@domain/model/material';
+import type { NewAnnotationDTO, AnnotationPatchDTO, Annotation, Material } from '@domain/model/material.js';
 
-import BaseRepository from './BaseRepository';
-import materialAnnotationSchema, { type Row } from '../schema/materialAnnotation';
+import BaseRepository from './BaseRepository.js';
+import materialAnnotationSchema, { type Row } from '../schema/materialAnnotation.js';
 
 export default class MaterialAnnotationRepository extends BaseRepository {
   readonly tableName = materialAnnotationSchema.tableName;

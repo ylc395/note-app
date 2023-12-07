@@ -1,6 +1,6 @@
 import { number, object, string, type infer as Infer, nativeEnum } from 'zod';
-import pick from 'lodash/pick';
-import { entityLocatorSchema, EntityTypes, type EntityWithTitle } from './entity';
+import { pick } from 'lodash-es';
+import { entityLocatorSchema, EntityTypes, type EntityWithTitle } from './entity.js';
 
 const highlightPositionSchema = object({
   start: number(),

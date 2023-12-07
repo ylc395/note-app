@@ -1,6 +1,6 @@
 import { type SchemaModule, type Generated, sql } from 'kysely';
-import type { AnnotationTypes } from '@domain/model/material';
-import { tableName as materialsTableName } from './material';
+import type { AnnotationTypes } from '@domain/model/material.js';
+import { tableName as materialsTableName } from './material.js';
 
 export const tableName = 'material_annotations';
 

@@ -1,5 +1,5 @@
 import { object, number, string, literal, array, tuple, discriminatedUnion, type infer as Infer } from 'zod';
-import type { EntityId } from '../entity';
+import type { EntityId } from '../entity.js';
 
 export enum AnnotationTypes {
   PdfRange = 1,

@@ -1,4 +1,4 @@
-import type { FileVO } from '@shared/domain/model/file';
+import type { FileVO } from '@shared/domain/model/file.js';
 
 export interface LocalFile {
   data: ArrayBuffer;
@@ -36,4 +36,4 @@ export interface UnfinishedTextExtraction {
   finished?: number[];
 }
 
-export * from '@shared/domain/model/file';
+export * from '@shared/domain/model/file.js';

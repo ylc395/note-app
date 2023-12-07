@@ -1,4 +1,4 @@
-import type Repositories from '@domain/service/repository';
+import type Repositories from '@domain/service/repository/index.js';
 
 export interface KvDatabase {
   get(key: string, setter: () => string): Promise<string>;

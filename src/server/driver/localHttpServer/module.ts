@@ -1,14 +1,14 @@
 import { Global, Module, type OnApplicationShutdown, Logger } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 
-import * as controllers from 'controller';
-import { token as runtimeToken } from '@domain/infra/DesktopRuntime';
-import LocalHttpRuntime from 'driver/localHttpServer/Runtime';
-import ElectronInfraModule from 'driver/electron/infra/module';
-import SqliteModule from 'driver/sqlite/module';
-import ServiceModule from '@domain/service/module';
+import * as controllers from 'controller/index.js';
+import { token as runtimeToken } from '@domain/infra/DesktopRuntime.js';
+import LocalHttpRuntime from 'driver/localHttpServer/Runtime.js';
+import ElectronInfraModule from 'driver/electron/infra/module.js';
+import SqliteModule from 'driver/sqlite/module.js';
+import ServiceModule from '@domain/service/module.js';
 
-import HttpGuard from './HttpGuard';
+import HttpGuard from './HttpGuard.js';
 
 @Global()
 @Module({

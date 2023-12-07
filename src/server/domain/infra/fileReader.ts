@@ -1,4 +1,4 @@
-import type { LoadedFile, LocalFile } from '@domain/model/file';
+import type { LoadedFile, LocalFile } from '@domain/model/file.js';
 
 export const token = Symbol();
 

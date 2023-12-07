@@ -1,11 +1,11 @@
 import { container } from 'tsyringe';
 import { useContext } from 'react';
-import compact from 'lodash/compact';
+import { compact } from 'lodash-es';
 
 import { type ContextmenuItem, token as uiToken } from '@domain/infra/ui';
 import Explorer from '@domain/model/Explorer';
-import ctx from '../context';
 import NoteService from '@domain/service/NoteService';
+import ctx from '../context';
 
 export default function useContextmenu() {
   const { movingModal } = useContext(ctx);

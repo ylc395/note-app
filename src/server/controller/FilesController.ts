@@ -2,11 +2,11 @@ import { Controller } from '@nestjs/common';
 import multer from 'multer';
 import type { Request as ExpressRequest, Response as ExpressResponse } from 'express';
 
-import type { IRequest, IResponse } from '@domain/infra/transport';
-import { type FileVO, filesDTOSchema, httpUrlSchema } from '@domain/model/file';
-import FileService from '@domain/service/FileService';
+import type { IRequest, IResponse } from '@domain/infra/transport.js';
+import { type FileVO, filesDTOSchema, httpUrlSchema } from '@domain/model/file.js';
+import FileService from '@domain/service/FileService/index.js';
 
-import { Get, Patch, Param, Response, Request, createSchemaPipe } from './decorators';
+import { Get, Patch, Param, Response, Request, createSchemaPipe } from './decorators.js';
 
 @Controller()
 export default class ResourcesController {

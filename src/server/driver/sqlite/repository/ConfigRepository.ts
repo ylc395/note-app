@@ -1,7 +1,7 @@
-import type { ConfigRepository } from '@domain/service/repository/ConfigRepository';
-import { type Config, DEFAULT_CONFIG } from '@domain/model/config';
+import type { ConfigRepository } from '@domain/service/repository/ConfigRepository.js';
+import { type Config, DEFAULT_CONFIG } from '@domain/model/config.js';
 
-import BaseRepository from './BaseRepository';
+import BaseRepository from './BaseRepository.js';
 
 const CONFIG_KEY = 'app.config';
 

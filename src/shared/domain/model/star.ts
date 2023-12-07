@@ -1,7 +1,7 @@
 import { nativeEnum } from 'zod';
-import pick from 'lodash/pick';
+import { pick } from 'lodash-es';
 
-import { type EntityId, type EntityWithTitle, type EntityLocator, entityLocatorSchema, EntityTypes } from './entity';
+import { type EntityId, type EntityWithTitle, type EntityLocator, entityLocatorSchema, EntityTypes } from './entity.js';
 
 export const starsDTOSchema = entityLocatorSchema
   .extend({ entityType: nativeEnum(pick(EntityTypes, ['Material', 'Memo', 'Note', 'MaterialAnnotation'] as const)) })

@@ -1,5 +1,5 @@
 import { type SchemaModule, type Generated, sql } from 'kysely';
-import type { RecyclableEntityTypes } from '@domain/model/recyclables';
+import type { RecyclableEntityTypes } from '@domain/model/recyclables.js';
 
 export const tableName = 'recyclables';
 

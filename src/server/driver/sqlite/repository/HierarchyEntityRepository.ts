@@ -1,15 +1,13 @@
-import groupBy from 'lodash/groupBy';
-import mapValues from 'lodash/mapValues';
-import map from 'lodash/map';
+import { groupBy, mapValues, map } from 'lodash-es';
 
-import type { EntityId, HierarchyEntity } from '@domain/model/entity';
-import { buildIndex } from '@utils/collection';
+import type { EntityId, HierarchyEntity } from '@domain/model/entity.js';
+import { buildIndex } from '@utils/collection.js';
 
-import BaseRepository from './BaseRepository';
-import { tableName as recyclableTableName } from '../schema/recyclable';
-import type { tableName as noteTableName } from '../schema/note';
-import type { tableName as materialTableName } from '../schema/material';
-import type { tableName as memoTableName } from '../schema/memo';
+import BaseRepository from './BaseRepository.js';
+import { tableName as recyclableTableName } from '../schema/recyclable.js';
+import type { tableName as noteTableName } from '../schema/note.js';
+import type { tableName as materialTableName } from '../schema/material.js';
+import type { tableName as memoTableName } from '../schema/memo.js';
 
 export default abstract class HierarchyEntityRepository extends BaseRepository {
   abstract readonly tableName: typeof noteTableName | typeof materialTableName | typeof memoTableName;

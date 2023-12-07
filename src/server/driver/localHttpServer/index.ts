@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 
-import AppModule from './module';
+import AppModule from './module.js';
 
 export default class LocalServer {
   private nestApp?: NestExpressApplication;

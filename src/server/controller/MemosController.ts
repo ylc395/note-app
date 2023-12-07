@@ -1,6 +1,6 @@
 import { Controller } from '@nestjs/common';
 
-import { Post, Body, Get, Patch, createSchemaPipe, Param, Query } from './decorators';
+import { Post, Body, Get, Patch, createSchemaPipe, Param, Query } from './decorators.js';
 import {
   memoDTOSchema,
   memoQuerySchema,
@@ -10,8 +10,8 @@ import {
   type MemoPatchDTO,
   type MemoVO,
   type MemoDatesVO,
-} from '@domain/model/memo';
-import MemoService from '@domain/service/MemoService';
+} from '@domain/model/memo.js';
+import MemoService from '@domain/service/MemoService.js';
 
 @Controller()
 export default class MemosController {

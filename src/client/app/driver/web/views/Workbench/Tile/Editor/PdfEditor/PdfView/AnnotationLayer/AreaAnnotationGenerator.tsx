@@ -3,7 +3,7 @@ import { observer } from 'mobx-react-lite';
 import { reaction } from 'mobx';
 import { useFloating } from '@floating-ui/react';
 import { useEventListener, useMemoizedFn } from 'ahooks';
-import mapValues from 'lodash/mapValues';
+import { mapValues } from 'lodash-es';
 
 import RectAreaSelector, { ReactAreaSelectorRef, type Rect } from '@components/RectAreaSelector';
 

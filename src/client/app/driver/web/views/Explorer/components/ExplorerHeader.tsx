@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { useDroppable } from '@dnd-kit/core';
-import uniqueId from 'lodash/uniqueId';
+import { uniqueId } from 'lodash';
 import { useCreation } from 'ahooks';
 import clsx from 'clsx';
 

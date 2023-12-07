@@ -1,5 +1,5 @@
 import { useRef, type ReactNode, useState } from 'react';
-import throttle from 'lodash/throttle';
+import { throttle } from 'lodash-es';
 import Resizer, { type Props as ResizerProps } from './Resizer';
 
 export interface Props {

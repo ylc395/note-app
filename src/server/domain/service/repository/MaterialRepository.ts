@@ -9,7 +9,7 @@ import type {
   MaterialQuery,
   MaterialEntity,
   MaterialPatch,
-} from '@domain/model/material';
+} from '@domain/model/material.js';
 
 export interface MaterialRepository {
   createDirectory: (directory: NewMaterialDirectory) => Promise<MaterialDirectory>;

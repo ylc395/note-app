@@ -1,6 +1,6 @@
 import type { SchemaModule } from 'kysely';
-import type { ContentEntityTypes } from '@domain/model/content';
-import type { EntityTypes } from '@domain/model/entity';
+import type { ContentEntityTypes } from '@domain/model/content.js';
+import type { EntityTypes } from '@domain/model/entity.js';
 
 export interface Row {
   fromEntityId: string;

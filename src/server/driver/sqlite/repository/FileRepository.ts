@@ -1,13 +1,13 @@
 import { createHash } from 'node:crypto';
-import pick from 'lodash/pick';
-
-import type { FileRepository } from '@domain/service/repository/FileRepository';
-import type { LoadedFile, FileText, FileVO } from '@domain/model/file';
-
-import BaseRepository from './BaseRepository';
-import { tableName as fileTableName, type Row } from '../schema/file';
-import { tableName as fileTextTableName } from '../schema/fileText';
+import { pick } from 'lodash-es';
 import { sql } from 'kysely';
+
+import type { FileRepository } from '@domain/service/repository/FileRepository.js';
+import type { LoadedFile, FileText, FileVO } from '@domain/model/file.js';
+
+import BaseRepository from './BaseRepository.js';
+import { tableName as fileTableName, type Row } from '../schema/file.js';
+import { tableName as fileTextTableName } from '../schema/fileText.js';
 
 export default class SqliteFileRepository extends BaseRepository implements FileRepository {
   async findOneById(id: string) {

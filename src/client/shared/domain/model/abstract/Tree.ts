@@ -1,11 +1,7 @@
 import { observable, action, computed, makeObservable } from 'mobx';
 import { Emitter } from 'strict-event-emitter';
 import assert from 'assert';
-import pull from 'lodash/pull';
-import differenceWith from 'lodash/differenceWith';
-import map from 'lodash/map';
-import pick from 'lodash/pick';
-import get from 'lodash/get';
+import { pull, differenceWith, map, pick, get } from 'lodash-es';
 
 import type { HierarchyEntity } from '@shared/domain/model/entity';
 

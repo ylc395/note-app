@@ -1,4 +1,4 @@
-import type { EntityId, EntityLocator } from './entity';
+import type { EntityId, EntityLocator } from './entity.js';
 
 export interface RevisionVO {
   id: EntityId;

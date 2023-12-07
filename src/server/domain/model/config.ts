@@ -1,6 +1,6 @@
-import type { Config } from '@shared/domain/model/config';
+import type { Config } from '@shared/domain/model/config.js';
 
-export * from '@shared/domain/model/config';
+export * from '@shared/domain/model/config.js';
 
 export const DEFAULT_CONFIG: Required<Config> = {
   'httpServer.enabled': false,

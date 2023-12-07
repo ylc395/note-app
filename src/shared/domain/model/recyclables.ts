@@ -1,7 +1,7 @@
 import { nativeEnum } from 'zod';
-import pick from 'lodash/pick';
+import { pick } from 'lodash-es';
 
-import { entityLocatorSchema, EntityTypes, type EntityWithTitle, type EntityLocator } from './entity';
+import { entityLocatorSchema, EntityTypes, type EntityWithTitle, type EntityLocator } from './entity.js';
 
 export const recyclableDTOSchema = entityLocatorSchema.extend({
   entityType: nativeEnum(pick(EntityTypes, ['Note', 'Material', 'Memo'] as const)),

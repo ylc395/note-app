@@ -2,7 +2,7 @@ import { observer } from 'mobx-react-lite';
 import { type MouseEventHandler, useEffect, type MouseEvent } from 'react';
 import { CaretDownOutlined, CaretRightFilled } from '@ant-design/icons';
 import clsx from 'clsx';
-import uniqueId from 'lodash/uniqueId';
+import { uniqueId } from 'lodash-es';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { useCreation } from 'ahooks';
 

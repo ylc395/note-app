@@ -1,5 +1,5 @@
-import type { Starable } from '../star';
-import type { MaterialDirectory, MaterialEntity } from './base';
+import type { Starable } from '../star.js';
+import type { MaterialDirectory, MaterialEntity } from './base.js';
 
 export interface MaterialDirectoryVO extends Omit<MaterialDirectory, 'userUpdatedAt'>, Starable {
   childrenCount: number;

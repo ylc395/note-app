@@ -1,18 +1,18 @@
 import { Global, Module } from '@nestjs/common';
 
-import NoteService from './NoteService';
-import RecyclableService from './RecyclableService';
-import StarService from './StarService';
-import FileService from './FileService';
-import ContentService from './ContentService';
-import MemoService from './MemoService';
-import MaterialService from './MaterialService';
-import RevisionService from './RevisionService';
-import SyncService from './SyncService';
-import EntityService from './EntityService';
-import SearchService from './SearchService';
-import AppService from './AppService';
-import { token as eventBusToken, eventBus } from '@domain/infra/eventBus';
+import NoteService from './NoteService.js';
+import RecyclableService from './RecyclableService.js';
+import StarService from './StarService.js';
+import FileService from './FileService/index.js';
+import ContentService from './ContentService.js';
+import MemoService from './MemoService.js';
+import MaterialService from './MaterialService.js';
+import RevisionService from './RevisionService.js';
+import SyncService from './SyncService.js';
+import EntityService from './EntityService.js';
+import SearchService from './SearchService.js';
+import AppService from './AppService.js';
+import { token as eventBusToken, eventBus } from '@domain/infra/eventBus.js';
 
 const services = [
   AppService,

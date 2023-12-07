@@ -1,6 +1,4 @@
-import uniq from 'lodash/uniq';
-import omit from 'lodash/omit';
-import map from 'lodash/map';
+import { uniq, omit, map } from 'lodash-es';
 import { Injectable, Inject } from '@nestjs/common';
 
 import {
@@ -18,12 +16,12 @@ import {
   isNewMaterialEntity,
   normalizeTitle,
   isDirectory,
-} from '@domain/model/material';
-import { EntityTypes } from '@domain/model/entity';
+} from '@domain/model/material.js';
+import { EntityTypes } from '@domain/model/entity.js';
 
-import BaseService from './BaseService';
-import StarService from './StarService';
-import EntityService from './EntityService';
+import BaseService from './BaseService.js';
+import StarService from './StarService.js';
+import EntityService from './EntityService.js';
 
 @Injectable()
 export default class MaterialService extends BaseService {

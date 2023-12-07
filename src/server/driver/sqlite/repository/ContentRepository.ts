@@ -5,14 +5,14 @@ import type {
   LinkToQuery,
   Topic,
   ContentEntityLocator,
-} from '@domain/model/content';
-import type { EntityLocator } from '@domain/model/entity';
-import type { ContentRepository } from '@domain/service/repository/ContentRepository';
+} from '@domain/model/content.js';
+import type { EntityLocator } from '@domain/model/entity.js';
+import type { ContentRepository } from '@domain/service/repository/ContentRepository.js';
 
-import BaseRepository from './BaseRepository';
-import { type Row as LinkRow, tableName as linkTableName } from '../schema/link';
-import { type Row as TopicRow, tableName as topicTableName } from '../schema/topic';
-import { tableName as recyclableTableName } from '../schema/recyclable';
+import BaseRepository from './BaseRepository.js';
+import { type Row as LinkRow, tableName as linkTableName } from '../schema/link.js';
+import { type Row as TopicRow, tableName as topicTableName } from '../schema/topic.js';
+import { tableName as recyclableTableName } from '../schema/recyclable.js';
 
 export default class SqliteContentRepository extends BaseRepository implements ContentRepository {
   async createLinks(links: Link[]) {

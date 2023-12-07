@@ -1,8 +1,8 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 
-import type { Config } from '@domain/model/config';
+import type { Config } from '@domain/model/config.js';
 
-import BaseService from './BaseService';
+import BaseService from './BaseService.js';
 
 @Injectable()
 export default class AppService extends BaseService implements OnModuleInit {

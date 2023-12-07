@@ -1,17 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import type { Kysely } from 'kysely';
-import intersectionWith from 'lodash/intersectionWith';
+import { intersectionWith } from 'lodash-es';
 
-import type { SearchEngine } from '@domain/infra/searchEngine';
-import { type EntityId, EntityTypes } from '@domain/model/entity';
-import type { SearchParams, SearchResult } from '@domain/model/search';
+import type { SearchEngine } from '@domain/infra/searchEngine.js';
+import { type EntityId, EntityTypes } from '@domain/model/entity.js';
+import type { SearchParams, SearchResult } from '@domain/model/search.js';
 
-import SqliteDb from '../Database';
-import NoteSearchEngine from './NoteSearchEngine';
-import MemoSearchEngine from './MemoSearchEngine';
-import MaterialSearchEngine from './MaterialSearchEngine';
-import { WRAPPER_END_TEXT, WRAPPER_START_TEXT, NOTE_FTS_TABLE, type SearchEngineDb } from './tables';
-import { createFtsSql } from './sql';
+import SqliteDb from '../Database.js';
+import NoteSearchEngine from './NoteSearchEngine.js';
+import MemoSearchEngine from './MemoSearchEngine.js';
+import MaterialSearchEngine from './MaterialSearchEngine.js';
+import { WRAPPER_END_TEXT, WRAPPER_START_TEXT, NOTE_FTS_TABLE, type SearchEngineDb } from './tables.js';
+import { createFtsSql } from './sql.js';
 
 @Injectable()
 export default class SqliteSearchEngine implements SearchEngine {

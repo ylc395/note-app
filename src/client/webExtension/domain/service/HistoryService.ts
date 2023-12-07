@@ -1,7 +1,7 @@
 import { observable, runInAction, makeObservable, action } from 'mobx';
 import browser from 'webextension-polyfill';
 import { singleton } from 'tsyringe';
-import omit from 'lodash/omit';
+import omit from 'lodash-es/omit';
 
 import type { Task } from '@domain/model/task';
 

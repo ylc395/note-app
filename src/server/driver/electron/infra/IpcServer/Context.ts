@@ -1,4 +1,4 @@
-import type { IResponse, IpcResponse } from '@domain/infra/transport';
+import type { IResponse, IpcResponse } from '@domain/infra/transport.js';
 
 export default class Context implements IResponse {
   readonly headers: NonNullable<IpcResponse['headers']> = {};

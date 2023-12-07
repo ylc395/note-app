@@ -1,5 +1,5 @@
 import { EventBus, PDFViewer, type PDFPageView, PDFLinkService } from 'pdfjs-dist/web/pdf_viewer';
-import numberRange from 'lodash/range';
+import { range as numberRange } from 'lodash-es';
 import { makeObservable, observable, when, action, runInAction, computed, autorun } from 'mobx';
 
 import { AnnotationTypes, type AnnotationVO, type Rect } from '@domain/model/material';

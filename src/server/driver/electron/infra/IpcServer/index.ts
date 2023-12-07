@@ -2,13 +2,12 @@ import { Server, type CustomTransportStrategy } from '@nestjs/microservices';
 import type { ExceptionFilter } from '@nestjs/common';
 import { ipcMain } from 'electron';
 import { match, type MatchFunction } from 'path-to-regexp';
-import isError from 'lodash/isError';
-import toPlainObject from 'lodash/toPlainObject';
-
-import { InvalidInputError } from '@domain/model/Error';
-import { IPC_CHANNEL, type IpcRequest, type IpcResponse } from '@domain/infra/transport';
-import Context from './Context';
+import { isError, toPlainObject } from 'lodash-es';
 import assert from 'assert';
+
+import { InvalidInputError } from '@domain/model/Error.js';
+import { IPC_CHANNEL, type IpcRequest, type IpcResponse } from '@domain/infra/transport.js';
+import Context from './Context.js';
 
 export default class ElectronIpcServer extends Server implements CustomTransportStrategy {
   private readonly routeMap = new Map<string, MatchFunction>();

@@ -1,10 +1,10 @@
-import type { EntityLocator } from '@domain/model/entity';
-import type { StarVO, StarEntityLocator } from '@domain/model/star';
-import type { StarRepository } from '@domain/service/repository/StarRepository';
+import type { EntityLocator } from '@domain/model/entity.js';
+import type { StarVO, StarEntityLocator } from '@domain/model/star.js';
+import type { StarRepository } from '@domain/service/repository/StarRepository.js';
 
-import BaseRepository from './BaseRepository';
-import schema from '../schema/star';
-import { tableName as recyclableTableName } from '../schema/recyclable';
+import BaseRepository from './BaseRepository.js';
+import schema from '../schema/star.js';
+import { tableName as recyclableTableName } from '../schema/recyclable.js';
 
 export default class SqliteStarRepository extends BaseRepository implements StarRepository {
   readonly tableName = schema.tableName;

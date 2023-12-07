@@ -1,5 +1,5 @@
 import { makeObservable, action, toJS } from 'mobx';
-import debounce from 'lodash/debounce';
+import { debounce } from 'lodash-es';
 import assert from 'assert';
 
 import { EntityTypes } from '@domain/model/entity';

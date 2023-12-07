@@ -2,8 +2,8 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "module": "NodeNext",
     "types": ["node"],
-    "module": "CommonJS",
     "baseUrl": ".",
     "composite": true,
     "rootDir": "../"

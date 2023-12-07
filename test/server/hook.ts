@@ -1,4 +1,3 @@
-import '../../src/server/driver/enableEsm';
 import { Test } from '@nestjs/testing';
 
 import BasicModule from '../../dist/electron/server/driver/localHttpServer/module';

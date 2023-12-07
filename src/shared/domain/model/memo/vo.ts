@@ -1,5 +1,5 @@
-import type { Starable } from '../star';
-import type { Memo } from './base';
+import type { Starable } from '../star.js';
+import type { Memo } from './base.js';
 
 export type MemoVO = Omit<Memo, 'userUpdatedAt'> & Starable;
 

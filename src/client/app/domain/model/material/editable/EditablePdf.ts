@@ -1,5 +1,5 @@
 import { computed, makeObservable, observable, runInAction } from 'mobx';
-import groupBy from 'lodash/groupBy';
+import { groupBy } from 'lodash-es';
 import { type PDFDocumentLoadingTask, type PDFDocumentProxy, getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
 import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.min.js?worker';
 

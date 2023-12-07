@@ -1,4 +1,4 @@
-import type { Config } from '@domain/model/config';
+import type { Config } from '@domain/model/config.js';
 
 export interface ConfigRepository {
   getAll(): Promise<Required<Config>>;

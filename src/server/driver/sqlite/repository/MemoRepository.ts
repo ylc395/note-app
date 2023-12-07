@@ -1,13 +1,12 @@
-import omit from 'lodash/omit';
-import fromPairs from 'lodash/fromPairs';
-
+import { omit, fromPairs } from 'lodash-es';
 import { sql, type Selectable } from 'kysely';
-import type { MemoPatchDTO, MemoQuery, Memo, NewMemo } from '@domain/model/memo';
-import type { MemoRepository } from '@domain/service/repository/MemoRepository';
 
-import HierarchyEntityRepository from './HierarchyEntityRepository';
-import schema, { type Row } from '../schema/memo';
-import { tableName as recyclableTableName } from '../schema/recyclable';
+import type { MemoPatchDTO, MemoQuery, Memo, NewMemo } from '@domain/model/memo.js';
+import type { MemoRepository } from '@domain/service/repository/MemoRepository.js';
+
+import HierarchyEntityRepository from './HierarchyEntityRepository.js';
+import schema, { type Row } from '../schema/memo.js';
+import { tableName as recyclableTableName } from '../schema/recyclable.js';
 
 export default class SqliteMemoRepository extends HierarchyEntityRepository implements MemoRepository {
   readonly tableName = schema.tableName;

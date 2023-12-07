@@ -1,7 +1,6 @@
 import { action, makeObservable, observable } from 'mobx';
 import { container } from 'tsyringe';
-import uniqueId from 'lodash/uniqueId';
-import isMatch from 'lodash/isMatch';
+import { uniqueId, isMatch } from 'lodash';
 import { Emitter } from 'strict-event-emitter';
 import assert from 'assert';
 

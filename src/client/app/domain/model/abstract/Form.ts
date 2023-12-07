@@ -1,5 +1,4 @@
-import set from 'lodash/set';
-import cloneDeep from 'lodash/cloneDeep';
+import { set, cloneDeep } from 'lodash-es';
 import { observable, makeObservable, computed, action, runInAction, toJS } from 'mobx';
 
 type ValuePath = string;

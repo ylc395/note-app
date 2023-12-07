@@ -1,9 +1,9 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "module": "CommonJS",
     "baseUrl": ".",
     "lib": ["ESNext"],
+    "module": "NodeNext",
     "rootDir": "../",
     "paths": {
       "@domain/*": ["domain/*", "../shared/domain/*"],

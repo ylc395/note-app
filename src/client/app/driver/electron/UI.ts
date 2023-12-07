@@ -1,9 +1,9 @@
 import { type IpcMainInvokeEvent, Menu, BrowserWindow, shell, ipcMain } from 'electron';
 import { BLANK_URL, sanitizeUrl } from '@braintree/sanitize-url';
+import assert from 'node:assert';
 import { object, string, array, unknown as zodUnknown, type infer as ZodInfer } from 'zod';
-import assert from 'assert';
 
-import type { ContextmenuItem, UI } from '@domain/infra/ui';
+import type { ContextmenuItem, UI } from '@domain/infra/ui.js';
 
 export const UI_CHANNEL = 'electron-ui';
 

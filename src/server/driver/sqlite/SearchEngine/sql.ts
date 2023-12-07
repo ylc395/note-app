@@ -2,7 +2,7 @@ import { sql } from 'kysely';
 import type { SelectQueryBuilder } from 'kysely';
 import dayjs from 'dayjs';
 
-import type { SearchParams } from '@domain/model/search';
+import type { SearchParams } from '@domain/model/search.js';
 import {
   NOTE_FTS_TABLE,
   MEMO_FTS_TABLE,
@@ -10,13 +10,13 @@ import {
   MATERIAL_FTS_TABLE,
   MATERIAL_ANNOTATION_FTS_TABLE,
   type SearchEngineDb,
-} from './tables';
-import { tableName as noteTableName } from '../schema/note';
-import { tableName as memoTableName } from '../schema/memo';
-import { tableName as materialTableName } from '../schema/material';
-import { tableName as fileTextTableName } from '../schema/fileText';
-import { tableName as materialAnnotationTableName } from '../schema/materialAnnotation';
-import { tableName as recyclableTableName } from '../schema/recyclable';
+} from './tables.js';
+import { tableName as noteTableName } from '../schema/note.js';
+import { tableName as memoTableName } from '../schema/memo.js';
+import { tableName as materialTableName } from '../schema/material.js';
+import { tableName as fileTextTableName } from '../schema/fileText.js';
+import { tableName as materialAnnotationTableName } from '../schema/materialAnnotation.js';
+import { tableName as recyclableTableName } from '../schema/recyclable.js';
 
 // prettier-ignore
 export const createFtsSql = [

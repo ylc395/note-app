@@ -1,15 +1,8 @@
-const path = require('path');
-
 /** @type {import('tailwindcss').Config} */
-module.exports = {
-  content: [
-    path.join(__dirname, './index.html'),
-    path.join(__dirname, './**/*.{tsx,ts}'),
-    path.resolve(__dirname, '../../../components/**/*.{tsx,ts}'),
-  ],
+export default {
+  content: ['./src/client/app/driver/web/**/*.{tsx,ts,html}', './src/client/shared/components/**/*.{tsx,ts,html}'],
   important: '#app',
   corePlugins: {
-    // todo: enable preflight after removing antd
     preflight: false,
   },
 };

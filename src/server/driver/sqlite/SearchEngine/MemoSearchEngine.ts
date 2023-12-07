@@ -1,14 +1,20 @@
 import { sql } from 'kysely';
 
-import { type SearchParams, Scopes } from '@domain/model/search';
-import { normalizeTitle } from '@domain/model/memo';
-import { EntityTypes } from '@domain/model/entity';
+import { type SearchParams, Scopes } from '@domain/model/search.js';
+import { normalizeTitle } from '@domain/model/memo.js';
+import { EntityTypes } from '@domain/model/entity.js';
 
-import type SearchEngine from './index';
-import { MEMO_FTS_TABLE, WRAPPER_END_TEXT, WRAPPER_START_TEXT, type SearchRow, FILE_TEXTS_FTS_TABLE } from './tables';
-import { tableName as linkTableName } from '../schema/link';
-import { tableName as memoTableName } from '../schema/memo';
-import { commonSql } from './sql';
+import type SearchEngine from './index.js';
+import {
+  MEMO_FTS_TABLE,
+  WRAPPER_END_TEXT,
+  WRAPPER_START_TEXT,
+  type SearchRow,
+  FILE_TEXTS_FTS_TABLE,
+} from './tables.js';
+import { tableName as linkTableName } from '../schema/link.js';
+import { tableName as memoTableName } from '../schema/memo.js';
+import { commonSql } from './sql.js';
 
 const MEMO_SCOPES = [Scopes.MemoContent, Scopes.MemoFile] as const;
 

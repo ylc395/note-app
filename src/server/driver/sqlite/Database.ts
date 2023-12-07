@@ -1,18 +1,19 @@
 import { Kysely, SqliteDialect, CamelCasePlugin, type Transaction } from 'kysely';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import BetterSqlite3 from 'better-sqlite3';
-import { removeSync } from 'fs-extra';
-import { join } from 'node:path';
+import fs from 'fs-extra';
+import path, { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 
-import { type default as Runtime, token as runtimeToken } from '@domain/infra/DesktopRuntime';
-import type { Database } from '@domain/infra/database';
-import { IS_TEST, IS_DEV } from '@domain/infra/constants';
-import type Repository from '@domain/service/repository';
+import { type default as Runtime, token as runtimeToken } from '@domain/infra/DesktopRuntime.js';
+import type { Database } from '@domain/infra/database.js';
+import { IS_TEST, IS_DEV } from '@domain/infra/constants.js';
+import type Repository from '@domain/service/repository/index.js';
 
-import { type Schemas, schemas } from './schema';
-import * as repositories from './repository';
-import SqliteKvDatabase from './KvDatabase';
+import { type Schemas, schemas } from './schema/index.js';
+import * as repositories from './repository/index.js';
+import SqliteKvDatabase from './KvDatabase.js';
 
 const CLEAN_DB = process.env.DEV_CLEAN === '1' && IS_DEV;
 
@@ -76,7 +77,7 @@ export default class SqliteDb implements Database {
     const dbPath = join(rootPath, 'db.sqlite');
 
     if ((CLEAN_DB && this.app.isMain()) || IS_TEST) {
-      removeSync(dbPath);
+      fs.removeSync(dbPath);
     }
 
     this.logger.verbose(dbPath);
@@ -85,7 +86,7 @@ export default class SqliteDb implements Database {
       verbose: IS_DEV ? this.logger.verbose.bind(this.logger) : undefined,
     });
 
-    db.loadExtension(join(__dirname, 'simple-tokenizer/libsimple'));
+    db.loadExtension(join(path.dirname(fileURLToPath(import.meta.url)), 'simple-tokenizer/libsimple'));
 
     return new Kysely<Db>({
       dialect: new SqliteDialect({

@@ -1,5 +1,5 @@
 import { type Generated, type SchemaModule, sql } from 'kysely';
-import { tableName as filesTableName } from './file';
+import { tableName as filesTableName } from './file.js';
 
 export const tableName = 'materials';
 

@@ -1,6 +1,4 @@
-import pull from 'lodash/pull';
-import uniqueId from 'lodash/uniqueId';
-import last from 'lodash/last';
+import { pull, uniqueId, last } from 'lodash-es';
 import { observable, makeObservable, action, computed } from 'mobx';
 import { singleton } from 'tsyringe';
 import assert from 'assert';

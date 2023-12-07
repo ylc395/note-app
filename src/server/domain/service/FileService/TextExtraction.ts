@@ -5,8 +5,8 @@ import path from 'node:path';
 import { expose } from 'comlink';
 import { createCanvas } from 'canvas';
 import { OEM, createScheduler, createWorker, type Scheduler } from 'tesseract.js';
-import nodeAdaptor from 'comlink/dist/umd/node-adapter';
-import range from 'lodash/range';
+import nodeEndpoint from 'comlink/dist/umd/node-adapter.js';
+import { range } from 'lodash-es';
 
 export default class TextExtraction {
   private currentPdfDoc?: PDFDocumentProxy;
@@ -114,4 +114,4 @@ export default class TextExtraction {
 // see https://github.com/nodejs/node/issues/43583
 // so we use worker_threads (comlink) here
 parentPort!.setMaxListeners(Infinity);
-expose(new TextExtraction(), nodeAdaptor(parentPort!));
+expose(new TextExtraction(), nodeEndpoint.default(parentPort!));

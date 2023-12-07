@@ -1,7 +1,7 @@
-import type { EntityId, EntityLocator } from '@domain/model/entity';
-import type { StarEntityTypes } from '@shared/domain/model/star';
+import type { EntityId, EntityLocator } from '@domain/model/entity.js';
+import type { StarEntityTypes } from '@shared/domain/model/star.js';
 
-export * from '@shared/domain/model/star';
+export * from '@shared/domain/model/star.js';
 
 export interface StarRecord extends EntityLocator<StarEntityTypes> {
   id: EntityId;

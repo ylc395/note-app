@@ -2,8 +2,8 @@ import type { Node as UnistNode } from 'mdast';
 import { match } from 'path-to-regexp';
 import { parse } from 'node:url';
 
-import { EntityTypes } from '../../model/entity';
-import { URL_PREFIX } from './constants';
+import { EntityTypes } from '../../model/entity.js';
+import { URL_PREFIX } from './constants.js';
 
 export function is<T extends UnistNode>(node: UnistNode, type: string): node is T {
   return node.type === type;

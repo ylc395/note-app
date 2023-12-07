@@ -6,10 +6,10 @@ import {
   type RecyclableDTO,
   recyclableDTOSchema,
   recyclablesDTOSchema,
-} from '@domain/model/recyclables';
-import RecyclableService from '@domain/service/RecyclableService';
+} from '@domain/model/recyclables.js';
+import RecyclableService from '@domain/service/RecyclableService.js';
 
-import { Body, createSchemaPipe, Delete, Get, Patch, Query } from './decorators';
+import { Body, createSchemaPipe, Delete, Get, Patch, Query } from './decorators.js';
 
 @Controller()
 export default class RecyclablesController {

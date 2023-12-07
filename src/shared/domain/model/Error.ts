@@ -1,7 +1,5 @@
 import type { ZodError } from 'zod';
-import get from 'lodash/get';
-import set from 'lodash/set';
-import isObject from 'lodash/isObject';
+import { get, set, isObject } from 'lodash-es';
 
 enum BusinessErrorTypes {
   InvalidInput,

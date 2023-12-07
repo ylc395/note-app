@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import assert from 'node:assert';
-import pick from 'lodash/pick';
+import { pick } from 'lodash-es';
 import {
   type NoteVO,
   type NewNoteDTO,
@@ -9,12 +9,12 @@ import {
   type ClientNoteQuery,
   type NotePatch,
   normalizeTitle,
-} from '@domain/model/note';
-import { EntityTypes } from '@domain/model/entity';
+} from '@domain/model/note.js';
+import { EntityTypes } from '@domain/model/entity.js';
 
-import BaseService from './BaseService';
-import StarService from './StarService';
-import EntityService from './EntityService';
+import BaseService from './BaseService.js';
+import StarService from './StarService.js';
+import EntityService from './EntityService.js';
 
 @Injectable()
 export default class NoteService extends BaseService {

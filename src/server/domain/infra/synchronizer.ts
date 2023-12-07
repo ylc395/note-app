@@ -1,4 +1,4 @@
-import type { EntityLocator } from '@domain/model/entity';
+import type { EntityLocator } from '@domain/model/entity.js';
 
 export interface SyncTarget {
   putFile: (name: string, content: string) => Promise<void>;

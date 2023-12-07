@@ -2,10 +2,9 @@
   "extends": "./tsconfig.json",
   "files": ["./domain/infra/ui.ts", "./driver/electron/UI.ts"],
   "compilerOptions": {
-    "module": "CommonJS",
-    "moduleResolution": "Node",
     "composite": true,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "outDir": "../../../dist/electron"
-  },
-  "references": [{ "path": "../shared/tsconfig.json" }]
+  }
 }

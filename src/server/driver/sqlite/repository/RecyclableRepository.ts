@@ -1,10 +1,10 @@
-import map from 'lodash/map';
-import type { EntityLocator } from '@domain/model/entity';
-import type { RecycleReason, RecyclableRecord } from '@domain/model/recyclables';
-import type { RecyclablesRepository } from '@domain/service/repository/RecyclableRepository';
+import { map } from 'lodash-es';
+import type { EntityLocator } from '@domain/model/entity.js';
+import type { RecycleReason, RecyclableRecord } from '@domain/model/recyclables.js';
+import type { RecyclablesRepository } from '@domain/service/repository/RecyclableRepository.js';
 
-import BaseRepository from './BaseRepository';
-import schema from '../schema/recyclable';
+import BaseRepository from './BaseRepository.js';
+import schema from '../schema/recyclable.js';
 
 const { tableName } = schema;
 

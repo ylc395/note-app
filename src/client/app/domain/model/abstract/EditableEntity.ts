@@ -1,5 +1,4 @@
-import uniqueId from 'lodash/uniqueId';
-import pull from 'lodash/pull';
+import { uniqueId, pull } from 'lodash-es';
 import { container } from 'tsyringe';
 import { action, makeObservable, observable } from 'mobx';
 import { Emitter } from 'strict-event-emitter';

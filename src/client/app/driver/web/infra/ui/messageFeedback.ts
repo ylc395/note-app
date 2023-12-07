@@ -1,5 +1,5 @@
 import { message } from 'antd';
-import uniqueId from 'lodash/uniqueId';
+import { uniqueId } from 'lodash';
 import type { UI } from '@domain/infra/ui';
 
 const feedback: UI['feedback'] = function (options) {

@@ -1,8 +1,8 @@
 import { Controller } from '@nestjs/common';
-import data from '@emoji-mart/data';
 import type { EmojiMartData } from '@emoji-mart/data';
+import data from '@emoji-mart/data' assert { type: 'json' };
 
-import { Get } from './decorators';
+import { Get } from './decorators.js';
 
 @Controller()
 export default class IconsController {

@@ -1,11 +1,10 @@
 import dayjs from 'dayjs';
 import { array, nativeEnum, object, string, type infer as Infer, boolean } from 'zod';
-import isEmpty from 'lodash/isEmpty';
-import negate from 'lodash/negate';
+import { isEmpty, negate } from 'lodash-es';
 
-import { type EntityId, EntityTypes, hierarchyEntityLocatorSchema, Path } from './entity';
-import type { Starable } from './star';
-import type { MaterialEntity } from './material';
+import { type EntityId, EntityTypes, hierarchyEntityLocatorSchema, Path } from './entity.js';
+import type { Starable } from './star.js';
+import type { MaterialEntity } from './material/index.js';
 
 interface SearchRecord {
   text: string;

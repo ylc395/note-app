@@ -1,12 +1,12 @@
 import type { Selectable, Updateable } from 'kysely';
-import compact from 'lodash/compact';
+import { compact } from 'lodash-es';
 
-import type { NoteRepository, NoteQuery } from '@domain/service/repository/NoteRepository';
-import type { NotePatch, NewNote, Note } from '@domain/model/note';
+import type { NoteRepository, NoteQuery } from '@domain/service/repository/NoteRepository.js';
+import type { NotePatch, NewNote, Note } from '@domain/model/note.js';
 
-import HierarchyEntityRepository from './HierarchyEntityRepository';
-import schema, { type Row } from '../schema/note';
-import { tableName as recyclableTableName } from '../schema/recyclable';
+import HierarchyEntityRepository from './HierarchyEntityRepository.js';
+import schema, { type Row } from '../schema/note.js';
+import { tableName as recyclableTableName } from '../schema/recyclable.js';
 
 export default class SqliteNoteRepository extends HierarchyEntityRepository implements NoteRepository {
   readonly tableName = schema.tableName;

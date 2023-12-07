@@ -1,17 +1,13 @@
 import assert from 'node:assert';
 import { Injectable } from '@nestjs/common';
-import uniq from 'lodash/uniq';
-import groupBy from 'lodash/groupBy';
-import intersectionWith from 'lodash/intersectionWith';
-import mapValues from 'lodash/mapValues';
-import isMatch from 'lodash/isMatch';
+import { uniq, groupBy, intersectionWith, mapValues, isMatch } from 'lodash-es';
 
-import { type EntityId, type EntityLocator, EntityTypes, HierarchyEntityLocator } from '@domain/model/entity';
-import { buildIndex } from '@utils/collection';
-import { normalizeTitle as normalizeNoteTitle } from '@domain/model/note';
-import { normalizeTitle as normalizeMaterialTitle } from '@domain/model/material';
-import { normalizeTitle as normalizeMemoTitle } from '@domain/model/memo';
-import BaseService from './BaseService';
+import { type EntityId, type EntityLocator, EntityTypes, HierarchyEntityLocator } from '@domain/model/entity.js';
+import { buildIndex } from '@utils/collection.js';
+import { normalizeTitle as normalizeNoteTitle } from '@domain/model/note.js';
+import { normalizeTitle as normalizeMaterialTitle } from '@domain/model/material.js';
+import { normalizeTitle as normalizeMemoTitle } from '@domain/model/memo.js';
+import BaseService from './BaseService.js';
 
 type TitleEntityTypes = EntityTypes.Note | EntityTypes.Material | EntityTypes.Memo | EntityTypes.MaterialAnnotation;
 

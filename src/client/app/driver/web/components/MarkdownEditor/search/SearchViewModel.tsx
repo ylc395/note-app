@@ -1,5 +1,5 @@
 import { observable, action, makeObservable, reaction } from 'mobx';
-import debounce from 'lodash/debounce';
+import { debounce } from 'lodash-es';
 import { type Root, createRoot } from 'react-dom/client';
 
 import SearchBox from './SearchBox';

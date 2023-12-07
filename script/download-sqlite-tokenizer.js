@@ -1,8 +1,8 @@
-const path = require('path');
-const fs = require('fs-extra');
-const download = require('download');
+import path from 'node:path';
+import fs from 'fs-extra';
+import download from 'download';
 
-module.exports = async () => {
+export default async () => {
   const localPath = path.join(process.cwd(), 'dist/electron/server/driver/sqlite/simple-tokenizer');
   if (fs.pathExistsSync(localPath)) {
     return;

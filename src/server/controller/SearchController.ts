@@ -1,9 +1,9 @@
 import { Controller } from '@nestjs/common';
 
-import { type SearchResultVO, type SearchParams, searchParamsSchema } from '@domain/model/search';
-import SearchService from '@domain/service/SearchService';
+import { type SearchResultVO, type SearchParams, searchParamsSchema } from '@domain/model/search.js';
+import SearchService from '@domain/service/SearchService.js';
 
-import { Post, Body, createSchemaPipe } from './decorators';
+import { Post, Body, createSchemaPipe } from './decorators.js';
 
 @Controller()
 export default class SearchController {

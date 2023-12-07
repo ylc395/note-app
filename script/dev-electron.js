@@ -1,14 +1,15 @@
-const path = require('node:path');
-const { createServer, build } = require('vite');
-const shell = require('shelljs');
-const chokidar = require('chokidar');
-const { default: tsconfigPaths } = require('vite-tsconfig-paths');
-const { replaceTscAliasPaths } = require('tsc-alias');
-const { checker } = require('vite-plugin-checker');
-const debounce = require('lodash/debounce');
-const react = require('@vitejs/plugin-react-swc');
-const { nodePolyfills } = require('vite-plugin-node-polyfills');
-const downloadSqliteTokenizer = require('./download-sqlite-tokenizer');
+import path from 'node:path';
+import { createServer, build } from 'vite';
+import shell from 'shelljs';
+import chokidar from 'chokidar';
+import { checker } from 'vite-plugin-checker';
+import tsconfigPaths from 'vite-tsconfig-paths';
+import { replaceTscAliasPaths } from 'tsc-alias';
+import { debounce } from 'lodash-es';
+import react from '@vitejs/plugin-react-swc';
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
+import downloadSqliteTokenizer from './download-sqlite-tokenizer.js';
+import { fileURLToPath } from 'node:url';
 
 const ENV = 'development';
 const APP_PLATFORM = 'electron';
@@ -30,6 +31,8 @@ async function buildPreload() {
       lib: {
         entry: `${rootDir}/driver/electron/preload/index.ts`,
         fileName: () => 'preload.js',
+        // preload script doesn't support esm
+        // https://github.com/electron/electron/blob/main/docs/tutorial/esm.md#sandboxed-preload-scripts-cant-use-esm-imports
         formats: ['cjs'],
       },
       rollupOptions: {
@@ -43,7 +46,7 @@ async function buildPreload() {
   });
 }
 
-async function buildElectron(options) {
+export async function buildElectron(options) {
   // 1. compile
   if (options?.compile) {
     const result = shell.exec(BUILD_ELECTRON_COMMAND);
@@ -91,7 +94,7 @@ async function createViteServer() {
   return server;
 }
 
-if (process.argv[1] === __filename) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   (async () => {
     const viteServer = await createViteServer();
     const viteUrl = viteServer.resolvedUrls.local[0];
@@ -124,7 +127,3 @@ if (process.argv[1] === __filename) {
     }
   })();
 }
-
-module.exports = {
-  buildElectron,
-};

@@ -1,12 +1,12 @@
 import { Controller, Inject } from '@nestjs/common';
 
-import { type AppServerDTO, type AppServerStatus, appServerDTOSchema } from '@domain/model/app';
-import { type ConfigDTO, type Config, configSchema } from '@domain/model/config';
-import { token as runtimeToken } from '@domain/infra/DesktopRuntime';
-import type DesktopRuntime from '@domain/infra/DesktopRuntime';
-import AppService from '@domain/service/AppService';
+import { type AppServerDTO, type AppServerStatus, appServerDTOSchema } from '@domain/model/app.js';
+import { type ConfigDTO, type Config, configSchema } from '@domain/model/config.js';
+import { token as runtimeToken } from '@domain/infra/DesktopRuntime.js';
+import type DesktopRuntime from '@domain/infra/DesktopRuntime.js';
+import AppService from '@domain/service/AppService.js';
 
-import { Body, EnableOnly, Get, Patch, Post, createSchemaPipe } from './decorators';
+import { Body, EnableOnly, Get, Patch, Post, createSchemaPipe } from './decorators.js';
 
 @Controller()
 export default class AppController {

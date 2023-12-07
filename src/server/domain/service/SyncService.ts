@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 // import { object, type infer as Infer, number, string } from 'zod';
-// import differenceWith from 'lodash/differenceWith';
+// import differenceWith from 'lodash-es/differenceWith';
 // import fm from 'front-matter';
 
 // import { type EntityLocator, EntityTypes } from '@domain/model/entity';
@@ -9,7 +9,7 @@ import { Injectable } from '@nestjs/common';
 // import type { Memo } from '@domain/model/memo';
 // import { type SyncTargetFactory, type SyncTarget, token as syncTargetFactoryToken } from '@domain/infra/synchronizer';
 
-import BaseService from './BaseService';
+import BaseService from './BaseService.js';
 
 // const metaSchema = object({
 //   startAt: number(),

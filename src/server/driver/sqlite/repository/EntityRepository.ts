@@ -1,14 +1,13 @@
-import groupBy from 'lodash/groupBy';
-import map from 'lodash/map';
-import { type EntityId, EntityTypes, type HierarchyEntityLocator } from '@domain/model/entity';
-import type { ContentEntityTypes, ContentEntityLocator } from '@domain/model/content';
-import type { EntityRepository } from '@domain/service/repository/EntityRepository';
+import { groupBy, map } from 'lodash-es';
+import { type EntityId, EntityTypes, type HierarchyEntityLocator } from '@domain/model/entity.js';
+import type { ContentEntityTypes, ContentEntityLocator } from '@domain/model/content.js';
+import type { EntityRepository } from '@domain/service/repository/EntityRepository.js';
 
-import BaseRepository from './BaseRepository';
-import SqliteNoteRepository from './NoteRepository';
-import SqliteMaterialRepository from './MaterialRepository';
-import SqliteMemoRepository from './MemoRepository';
-import MaterialAnnotationRepository from './MaterialAnnotationRepository';
+import BaseRepository from './BaseRepository.js';
+import SqliteNoteRepository from './NoteRepository.js';
+import SqliteMaterialRepository from './MaterialRepository.js';
+import SqliteMemoRepository from './MemoRepository.js';
+import MaterialAnnotationRepository from './MaterialAnnotationRepository.js';
 
 export default class SqliteEntityRepository extends BaseRepository implements EntityRepository {
   private readonly notes = new SqliteNoteRepository(this.sqliteDb);

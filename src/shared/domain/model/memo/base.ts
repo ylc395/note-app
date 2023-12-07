@@ -1,4 +1,4 @@
-import type { EntityId, EntityParentId } from '../entity';
+import type { EntityId, EntityParentId } from '../entity.js';
 
 export interface Memo {
   id: EntityId;

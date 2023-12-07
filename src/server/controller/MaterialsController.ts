@@ -16,10 +16,10 @@ import {
   materialsPatchDTOSchema,
   materialCommentDTOSchema,
   MaterialCommentVO,
-} from '@domain/model/material';
-import MaterialService from '@domain/service/MaterialService';
+} from '@domain/model/material.js';
+import MaterialService from '@domain/service/MaterialService.js';
 
-import { createSchemaPipe, Post, Body, Get, Query, Param, Delete, Patch, Put } from './decorators';
+import { createSchemaPipe, Post, Body, Get, Query, Param, Delete, Patch, Put } from './decorators.js';
 
 @Controller()
 export default class MaterialsController {

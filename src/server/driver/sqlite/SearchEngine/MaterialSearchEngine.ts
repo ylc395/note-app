@@ -1,10 +1,10 @@
 import { sql } from 'kysely';
 
-import { type SearchParams, Scopes } from '@domain/model/search';
-import { normalizeEntityTitle } from '@domain/model/material';
-import { EntityTypes } from '@domain/model/entity';
+import { type SearchParams, Scopes } from '@domain/model/search.js';
+import { normalizeEntityTitle } from '@domain/model/material.js';
+import { EntityTypes } from '@domain/model/entity.js';
 
-import type SearchEngine from './index';
+import type SearchEngine from './index.js';
 import {
   FILE_TEXTS_FTS_TABLE,
   MATERIAL_FTS_TABLE,
@@ -12,12 +12,12 @@ import {
   WRAPPER_END_TEXT,
   WRAPPER_START_TEXT,
   type SearchRow,
-} from './tables';
-import { commonSql } from './sql';
-import { tableName as fileTableName } from '../schema/file';
-import { tableName as materialTable } from '../schema/material';
-import { tableName as linkTableName } from '../schema/link';
-import { tableName as materialAnnotationTableName } from '../schema/materialAnnotation';
+} from './tables.js';
+import { commonSql } from './sql.js';
+import { tableName as fileTableName } from '../schema/file.js';
+import { tableName as materialTable } from '../schema/material.js';
+import { tableName as linkTableName } from '../schema/link.js';
+import { tableName as materialAnnotationTableName } from '../schema/materialAnnotation.js';
 
 export default class SqliteMaterialSearchEngine {
   constructor(private readonly engine: SearchEngine) {}

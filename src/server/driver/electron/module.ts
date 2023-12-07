@@ -1,12 +1,12 @@
 import { Global, Inject, Module, type OnModuleInit } from '@nestjs/common';
 
-import * as controllers from 'controller';
-import { token as runtimeToken } from '@domain/infra/DesktopRuntime';
-import ElectronRuntime from 'driver/electron';
-import SqliteModule from 'driver/sqlite/module';
-import ServiceModule from '@domain/service/module';
+import * as controllers from 'controller/index.js';
+import { token as runtimeToken } from '@domain/infra/DesktopRuntime.js';
+import ElectronRuntime from 'driver/electron/index.js';
+import SqliteModule from 'driver/sqlite/module.js';
+import ServiceModule from '@domain/service/module.js';
 
-import ElectronInfraModule from './infra/module';
+import ElectronInfraModule from './infra/module.js';
 
 @Global()
 @Module({

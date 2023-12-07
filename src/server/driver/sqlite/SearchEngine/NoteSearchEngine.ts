@@ -1,13 +1,19 @@
 import { sql } from 'kysely';
 
-import { type SearchParams, Scopes } from '@domain/model/search';
-import { EntityTypes } from '@domain/model/entity';
+import { type SearchParams, Scopes } from '@domain/model/search.js';
+import { EntityTypes } from '@domain/model/entity.js';
 
-import type SearchEngine from './index';
-import { FILE_TEXTS_FTS_TABLE, NOTE_FTS_TABLE, WRAPPER_END_TEXT, WRAPPER_START_TEXT, type SearchRow } from './tables';
-import { commonSql } from './sql';
-import { tableName as linkTableName } from '../schema/link';
-import { tableName as noteTableName } from '../schema/note';
+import type SearchEngine from './index.js';
+import {
+  FILE_TEXTS_FTS_TABLE,
+  NOTE_FTS_TABLE,
+  WRAPPER_END_TEXT,
+  WRAPPER_START_TEXT,
+  type SearchRow,
+} from './tables.js';
+import { commonSql } from './sql.js';
+import { tableName as linkTableName } from '../schema/link.js';
+import { tableName as noteTableName } from '../schema/note.js';
 
 const NOTE_SCOPES = [Scopes.NoteBody, Scopes.NoteTitle, Scopes.NoteFile] as const;
 

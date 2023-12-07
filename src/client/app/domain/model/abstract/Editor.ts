@@ -1,4 +1,4 @@
-import uniqueId from 'lodash/uniqueId';
+import { uniqueId } from 'lodash-es';
 import { action, makeObservable, observable } from 'mobx';
 import { Emitter } from 'strict-event-emitter';
 
