@@ -11,12 +11,19 @@ interface Props<T extends MaterialVO | NoteVO> {
   tree: TreeModel<T>;
   onContextmenu?: (id: TreeNode['id']) => void;
   nodeOperation?: (node: TreeNode<T>) => ReactNode;
+  onClick?: (id: TreeNode['id']) => void;
 }
 
-export default function TreeView<T extends MaterialVO | NoteVO>({ tree, onContextmenu, nodeOperation }: Props<T>) {
+export default function TreeView<T extends MaterialVO | NoteVO>({
+  tree,
+  onClick,
+  onContextmenu,
+  nodeOperation,
+}: Props<T>) {
   return (
     <Tree
       onContextmenu={onContextmenu}
+      onClick={onClick}
       className="scrollbar-stable scrollbar-thin grow overflow-hidden pr-2 hover:overflow-auto"
       draggable
       droppable

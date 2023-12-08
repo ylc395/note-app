@@ -5,7 +5,7 @@ import { makeObservable, observable } from 'mobx';
 import Value from '@domain/model/Value';
 import type { SearchableEntityType } from '@domain/model/search';
 
-import NoteTree, { type NoteTreeNode } from './note/Tree';
+import NoteExplorerTree, { type NoteTreeNode } from './note/ExplorerTree';
 import MaterialTree, { type MaterialTreeNode } from './material/Tree';
 import { EntityTypes } from './entity';
 import { EditableEntityEvents, EditableEntityManager } from './workbench';
@@ -20,7 +20,7 @@ type ExplorerTreeNode = NoteTreeNode | MaterialTreeNode;
 @singleton()
 export default class Explorer {
   readonly currentExplorer = new Value<ExplorerTypes>(EntityTypes.Material);
-  readonly noteTree = new NoteTree();
+  readonly noteTree = container.resolve(NoteExplorerTree);
   readonly materialTree = new MaterialTree();
 
   @observable.shallow

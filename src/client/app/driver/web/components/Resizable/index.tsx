@@ -1,5 +1,4 @@
 import { useRef, type ReactNode, useState } from 'react';
-import { throttle } from 'lodash-es';
 import Resizer, { type Props as ResizerProps } from './Resizer';
 
 export interface Props {
@@ -14,7 +13,7 @@ export interface Props {
 export default function Resizable({ children, className, initialWidth, minWidth = 0, resizable }: Props) {
   const divRef = useRef<HTMLDivElement | null>(null);
   const [width, setWidth] = useState(initialWidth);
-  const updateNode: ResizerProps['onResize'] = throttle((e) => {
+  const updateNode: ResizerProps['onResize'] = (e) => {
     const { left, right } = divRef.current!.getBoundingClientRect();
 
     if (resizable === 'left') {
@@ -26,7 +25,7 @@ export default function Resizable({ children, className, initialWidth, minWidth 
       const diff = Math.abs(e.clientX - right);
       setWidth(Math.max(width + (e.clientX > right ? diff : -diff), minWidth));
     }
-  }, 24);
+  };
 
   return (
     <div ref={divRef} style={{ width }} className="relative">

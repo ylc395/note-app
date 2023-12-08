@@ -22,10 +22,7 @@ export default class NoteTreeNodeHandler implements Handler {
       return;
     }
 
-    if (!item.isSelected) {
-      this.tree.toggleSelect(item.id, { reason: 'drag' });
-    }
-
+    this.tree.toggleSelect(item.id, { value: true });
     this.tree.updateValidParentTargets();
   }
 

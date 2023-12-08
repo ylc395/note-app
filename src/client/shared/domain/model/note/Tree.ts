@@ -18,10 +18,10 @@ export default class NoteTree extends Tree<NoteVO> {
     this.updateChildren(parentId || null, notes);
   };
 
-  protected entityToNode(note: NoteVO) {
+  protected entityToNode(note: NoteVO | null) {
     return {
-      title: normalizeTitle(note),
-      isLeaf: note.childrenCount === 0,
+      title: note ? normalizeTitle(note) : '根',
+      isLeaf: note ? note.childrenCount === 0 : false,
     };
   }
 }

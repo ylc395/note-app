@@ -25,6 +25,7 @@ const TreeNode = observer(function <T extends HierarchyEntity>({ node, level, ..
     droppable,
     multiple,
     onContextmenu,
+    onClick,
     renderTitle,
   } = ctx;
 
@@ -40,6 +41,7 @@ const TreeNode = observer(function <T extends HierarchyEntity>({ node, level, ..
     node: domNode,
   } = useDroppable({ id, data: { instance: node }, disabled: !droppable });
   const useLoadingIcon = node.isLoading && loadingIcon;
+
   const expand: MouseEventHandler = (e) => {
     e.stopPropagation();
 
@@ -50,19 +52,23 @@ const TreeNode = observer(function <T extends HierarchyEntity>({ node, level, ..
     tree.toggleExpand(node.id);
   };
 
-  const select: MouseEventHandler = (e) => {
+  const handleClick: MouseEventHandler = (e) => {
     e.stopPropagation();
-    tree.toggleSelect(node.id, { multiple: multiple && (e.metaKey || e.ctrlKey) });
+    tree.toggleSelect(node.id, { isMultiple: multiple && (e.metaKey || e.ctrlKey) });
+
+    onClick?.(node.id);
   };
 
-  const handleContextmenu =
-    !node.isDisabled && onContextmenu
-      ? (e: MouseEvent) => {
-          e.stopPropagation();
-          !node.isSelected && tree.toggleSelect(node.id, { reason: 'contextmenu' });
-          onContextmenu(node.id);
-        }
-      : undefined;
+  const handleContextmenu: MouseEventHandler = (e) => {
+    e.stopPropagation();
+
+    if (node.isDisabled || !onContextmenu) {
+      return;
+    }
+
+    tree.toggleSelect(node.id, { value: true });
+    onContextmenu(node.id);
+  };
 
   useEffect(() => {
     if (node.isSelected) {
@@ -78,7 +84,7 @@ const TreeNode = observer(function <T extends HierarchyEntity>({ node, level, ..
         data-selected={node.isSelected}
         style={{ paddingLeft: `${level * INDENT}px` }}
         ref={setDroppableRef}
-        onClick={select}
+        onClick={handleClick}
         onContextMenu={handleContextmenu}
         className={nodeClassName}
       >

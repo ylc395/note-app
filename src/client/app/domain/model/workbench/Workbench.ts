@@ -195,6 +195,7 @@ export default class Workbench {
     }
   }
 
+  @action.bound
   openEntity(entity: EditableEntityLocator, dest?: Dest) {
     let targetTile: Tile | undefined;
     let editor: Editor;

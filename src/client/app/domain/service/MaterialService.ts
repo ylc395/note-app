@@ -86,18 +86,18 @@ export default class MaterialService {
       await this.materialTree.toggleExpand(material.parentId);
     }
 
-    this.materialTree.toggleSelect(material.id, { multiple: true });
+    this.materialTree.toggleSelect(material.id, { isMultiple: true });
     this.targetId.reset();
   };
 
-  private readonly handleSelectMaterial = ({ id: materialId, multiple }: SelectEvent) => {
+  private readonly handleSelectMaterial = ({ id: materialId, isMultiple }: SelectEvent) => {
     if (!materialId) {
       throw new Error('invalid id');
     }
 
     const node = this.materialTree.getNode(materialId);
 
-    if (!multiple && node.entity && !isDirectory(node.entity)) {
+    if (!isMultiple && node.entity && !isDirectory(node.entity)) {
       this.workbench.openEntity({
         entityType: EntityTypes.Material,
         entityId: materialId,

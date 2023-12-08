@@ -23,7 +23,7 @@ type TreeEvents = {
   nodeExpanded: [TreeNode['id'] | null];
 };
 
-export type SelectEvent = { id: TreeNode['id'] | null; reason?: string; multiple?: boolean };
+export type SelectEvent = { id: TreeNode['id'] | null; isMultiple?: boolean };
 
 type EntityPatch<T> = Partial<T> & { id: HierarchyEntity['id'] };
 
@@ -39,11 +39,13 @@ const getDefaultNode = <T extends HierarchyEntity>() => ({
 
 export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> extends Emitter<TreeEvents> {
   readonly root: TreeNode<T> = observable({
+    ...getDefaultNode<T>(),
+    ...this.entityToNode(null),
+    isExpanded: true,
+    isLeaf: false,
     entity: null,
     parent: null,
     id: '__ROOT_ID',
-    ...getDefaultNode<T>(),
-    isExpanded: true,
   });
 
   constructor() {
@@ -66,8 +68,8 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
 
   @computed
   // root node may be included
-  protected get selectedNodes() {
-    return [...Object.values(this.nodes), this.root].filter((node) => node.isSelected);
+  get selectedNodes() {
+    return this.allNodes.filter((node) => node.isSelected);
   }
 
   @computed
@@ -121,7 +123,7 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
     }
   }
 
-  protected abstract entityToNode(entity: T): Partial<Pick<TreeNode, 'isLeaf' | 'title' | 'isDisabled'>>;
+  protected abstract entityToNode(entity: T | null): Partial<Pick<TreeNode, 'isLeaf' | 'title' | 'isDisabled'>>;
 
   @action
   private addNode(entity: T) {
@@ -238,14 +240,20 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
   }
 
   @action
-  toggleSelect(id: TreeNode['id'], options?: Pick<SelectEvent, 'multiple' | 'reason'>) {
+  toggleSelect(id: TreeNode['id'], options?: { isMultiple?: boolean; value?: boolean }) {
     const node = this.getNode(id);
 
     if (node.isDisabled) {
       return;
     }
 
-    if (!options?.multiple) {
+    const oldValue = node.isSelected;
+
+    if (oldValue === options?.value) {
+      return;
+    }
+
+    if (!options?.isMultiple) {
       for (const selected of this.selectedNodes) {
         selected.isSelected = false;
       }
@@ -265,7 +273,7 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
     }
 
     for (const id of ids) {
-      this.toggleSelect(id, { multiple: true });
+      this.toggleSelect(id, { isMultiple: true });
     }
   }
 
@@ -275,7 +283,7 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
     return parent!.children.filter(({ id: _id }) => _id !== id);
   }
 
-  getAncestors(id: TreeNode['id']) {
+  getAncestors(id: TreeNode['id'] | null) {
     let parent = this.getNode(id).parent;
     const ancestors: TreeNode<T>[] = [];
 

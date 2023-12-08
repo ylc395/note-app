@@ -16,6 +16,7 @@ interface TreeBaseProps<T extends HierarchyEntity> {
   droppable?: boolean;
   multiple?: boolean;
   onContextmenu?: (id: TreeNode['id']) => void;
+  onClick?: (id: TreeNode['id']) => void;
   renderTitle?: (node: TreeNode<T>) => ReactNode;
 }
 
@@ -26,5 +27,5 @@ export interface TreeNodeProps<T extends HierarchyEntity> extends TreeBaseProps<
 
 export interface TreeProps<T extends HierarchyEntity> extends TreeBaseProps<T> {
   className?: string;
-  rootTitle?: string;
+  showRoot?: boolean;
 }

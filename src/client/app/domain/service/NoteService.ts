@@ -9,7 +9,6 @@ import type { NotesPatchDTO as NotesPatch, NoteVO as Note, NotePatchDTO as NoteP
 import type { RecyclablesDTO } from '@domain/model/recyclables';
 import { EntityTypes } from '@domain/model/entity';
 import Explorer from '@domain/model/Explorer';
-import type { SelectEvent } from '@domain/model/abstract/Tree';
 import { MULTIPLE_ICON_FLAG, type NoteMetadata } from '@domain/model/note/MetadataForm';
 import { EditableEntityManager, Workbench } from '@domain/model/workbench';
 
@@ -23,10 +22,6 @@ export default class NoteService {
 
   private get tree() {
     return this.explorer.noteTree;
-  }
-
-  constructor() {
-    this.tree.on('nodeSelected', this.handleSelect);
   }
 
   readonly createNote = async (parentId?: Note['parentId']) => {
@@ -54,13 +49,6 @@ export default class NoteService {
     this.tree.toggleSelect(note.id);
   };
 
-  private readonly handleSelect = ({ id, multiple, reason }: SelectEvent) => {
-    assert(id);
-    if (!multiple && (!reason || !['drag', 'contextmenu'].includes(reason))) {
-      this.workbench.openEntity({ entityType: EntityTypes.Note, entityId: id });
-    }
-  };
-
   async deleteNotes(ids: Note['id'][]) {
     const locators = ids.map((id) => ({ entityId: id, entityType: EntityTypes.Note } as const));
     await this.remote.patch<RecyclablesDTO>(`/recyclables`, locators);
@@ -68,15 +56,15 @@ export default class NoteService {
     this.ui.feedback({ type: 'success', content: '已移至回收站' });
   }
 
-  readonly moveNotes = async (targetId: Note['parentId'], ids?: Note['id'][]) => {
-    const _ids = ids || compact(this.tree.selectedNodeIds);
+  readonly moveNotes = async (targetId: Note['parentId']) => {
+    const ids = compact(this.tree.selectedNodeIds);
 
     await this.remote.patch<NotesPatch>('/notes', {
-      ids: _ids,
+      ids,
       note: { parentId: targetId },
     });
 
-    for (const id of _ids) {
+    for (const id of ids) {
       this.editableEntityManager.refresh(id);
       this.tree.updateNode({ id, parentId: targetId });
     }
@@ -85,7 +73,7 @@ export default class NoteService {
       this.tree.toggleExpand(targetId, true);
     }
 
-    this.tree.setSelected(_ids);
+    this.tree.setSelected(ids);
   };
 
   async editNotes(metadata: NoteMetadata) {
