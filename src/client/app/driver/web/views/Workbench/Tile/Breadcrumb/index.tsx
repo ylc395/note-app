@@ -10,7 +10,7 @@ export default observer(function Breadcrumb({ tile }: { tile: Tile }) {
   const editor = tile.currentEditor;
   assert(editor);
 
-  const { entityType } = editor.toEntityLocator();
+  const { entityType } = editor.getEntityLocator();
 
   return (
     <ul className="scrollbar-thin m-0 flex list-none overflow-auto border-0 border-b border-solid border-gray-200 px-2 py-1 text-sm text-gray-500">

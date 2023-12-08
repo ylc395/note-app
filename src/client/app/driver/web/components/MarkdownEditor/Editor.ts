@@ -1,6 +1,6 @@
 import { gfm } from '@milkdown/preset-gfm';
 import { commonmark } from '@milkdown/preset-commonmark';
-import { forceUpdate, replaceAll } from '@milkdown/utils';
+import { $prose, forceUpdate, replaceAll } from '@milkdown/utils';
 import {
   Editor as MilkdownEditor,
   rootCtx,
@@ -15,6 +15,7 @@ import { history } from '@milkdown/plugin-history';
 import { upload, uploadConfig } from '@milkdown/plugin-upload';
 import { cursor } from '@milkdown/plugin-cursor';
 import { clipboard } from '@milkdown/plugin-clipboard';
+import { Plugin, Selection } from '@milkdown/prose/state';
 import { uniqueId } from 'lodash-es';
 import '@milkdown/prose/view/style/prosemirror.css';
 import '@milkdown/prose/tables/style/tables.css';
@@ -26,13 +27,14 @@ import search, { enableSearchCommand } from './search';
 
 interface UIState {
   scrollTop?: number;
-  cursor?: number;
+  selection?: unknown;
 }
 
 export interface Options {
   root: HTMLElement;
   defaultValue?: string;
   autoFocus?: boolean;
+  initialUIState?: Partial<UIState>;
   onUIStateChange?: (state: UIState) => void;
   onChange?: (content: string) => void;
   onReady?: () => void;
@@ -44,6 +46,7 @@ export default class Editor {
   private readonly milkdown: MilkdownEditor;
   private readonly id = uniqueId('milkdown-'); // for debugging
   private isReadonly = false;
+  private isFocused = false;
   constructor(private readonly options: Options) {
     console.debug(`create editor-${this.id}`);
     this.milkdown = this.init();
@@ -60,42 +63,71 @@ export default class Editor {
       .use(history)
       .use(upload) // upload 插件在前, 先处理粘贴文件的情况
       .use(clipboard)
-      .use(cursor)
-      .config((ctx) => {
-        const { onChange, onUIStateChange, onBlur, onFocus, root, defaultValue } = this.options;
-        const listener = ctx.get(listenerCtx);
+      .use(cursor);
 
-        ctx.set(uploadConfig.key, uploadOptions);
-        ctx.set(rootCtx, root);
-        ctx.update(editorViewOptionsCtx, (prev) => ({
-          ...prev,
-          editable: () => !this.isReadonly,
-        }));
+    if (this.options.onUIStateChange) {
+      const plugin = $prose(
+        () =>
+          new Plugin({
+            view: () => ({
+              update: (editorView) => {
+                if (editorView.hasFocus()) {
+                  this.options.onUIStateChange!({ selection: editorView.state.selection.toJSON() });
+                }
+              },
+            }),
+          }),
+      );
+      editor.use(plugin);
+    }
 
-        if (typeof defaultValue === 'string') {
-          // this won't trigger event
-          ctx.set(defaultValueCtx, defaultValue);
-        }
+    editor.config((ctx) => {
+      const { onChange, onUIStateChange, onBlur, onFocus, root, defaultValue } = this.options;
+      const listener = ctx.get(listenerCtx);
 
-        if (onChange) {
-          listener.markdownUpdated((_, markdown) => {
-            this.milkdown.status === EditorStatus.Created && onChange(markdown);
-          });
-        }
+      ctx.set(uploadConfig.key, uploadOptions);
+      ctx.set(rootCtx, root);
+      ctx.update(editorViewOptionsCtx, (prev) => ({
+        ...prev,
+        editable: () => !this.isReadonly,
+      }));
 
-        if (onUIStateChange) {
-          listener
-            .mounted(() => this.options.root.addEventListener('scroll', this.handleScroll))
-            .destroy(() => this.options.root.removeEventListener('scroll', this.handleScroll));
-        }
+      if (typeof defaultValue === 'string') {
+        // this won't trigger event
+        ctx.set(defaultValueCtx, defaultValue);
+      }
 
-        onBlur && listener.blur(onBlur);
-        onFocus && listener.focus(onFocus);
-      });
+      if (onChange) {
+        listener.markdownUpdated((_, markdown) => {
+          this.milkdown.status === EditorStatus.Created && onChange(markdown);
+        });
+      }
+
+      if (onUIStateChange) {
+        listener
+          .mounted(() => this.options.root.addEventListener('scroll', this.handleScroll))
+          .destroy(() => this.options.root.removeEventListener('scroll', this.handleScroll));
+      }
+
+      listener
+        .blur(() => {
+          if (document.hasFocus()) {
+            this.isFocused = false;
+            onBlur?.();
+          }
+        })
+        .focus(() => {
+          if (!this.isFocused) {
+            this.isFocused = true;
+            onFocus?.();
+          }
+        });
+    });
 
     editor.create().then(() => {
       this.options.autoFocus && this.focus();
       this.options.onReady?.();
+      this.options.initialUIState && this.applyUIState(this.options.initialUIState);
     });
 
     return editor;
@@ -143,17 +175,17 @@ export default class Editor {
     this.milkdown.destroy(true);
   }
 
-  applyUIState(state: UIState) {
+  private applyUIState(state: UIState) {
     if (state.scrollTop) {
       this.options.root.scrollTop = state.scrollTop;
     }
 
-    if (state.cursor) {
+    if (state.selection) {
       this.milkdown.action((ctx) => {
         const view = ctx.get(editorViewCtx);
         const viewState = view.state;
 
-        view.dispatch(viewState.tr.replace(state.cursor!));
+        view.dispatch(viewState.tr.setSelection(Selection.fromJSON(viewState.doc, state.selection!)));
       });
     }
   }

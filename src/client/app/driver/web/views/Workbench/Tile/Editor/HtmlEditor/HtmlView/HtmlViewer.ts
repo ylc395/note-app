@@ -64,7 +64,7 @@ export default class HtmlViewer {
 
   private readonly updateScrollState = action((e: Event) => {
     const { scrollTop } = e.target as HTMLElement;
-    this.editor.updateUIState({ scrollTop });
+    this.editor.saveUIState({ scrollTop });
   });
 
   private getUniqueSelector(el: HTMLElement) {

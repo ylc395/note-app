@@ -1,12 +1,14 @@
 import { useRef, useEffect, useState } from 'react';
 
 import Editor, { type Options as EditorOptions } from './Editor';
+import assert from 'assert';
 
 interface Options {
   onChange?: EditorOptions['onChange'];
   onUIStateChange?: EditorOptions['onUIStateChange'];
   onBlur?: EditorOptions['onBlur'];
   onFocus?: EditorOptions['onFocus'];
+  initialUIState?: EditorOptions['initialUIState'];
   autoFocus?: boolean;
   readonly?: boolean;
   searchEnabled?: boolean;
@@ -22,9 +24,7 @@ export default (function MarkdownEditor(options: Options) {
     options;
 
   useEffect(() => {
-    if (!rootRef.current) {
-      throw new Error('no root');
-    }
+    assert(rootRef.current);
 
     const editor: Editor = new Editor({
       root: rootRef.current,
@@ -34,6 +34,7 @@ export default (function MarkdownEditor(options: Options) {
       onUIStateChange,
       onBlur,
       onFocus,
+      initialUIState: options.initialUIState,
       onReady: () => setEditor(editor),
     });
 

@@ -16,12 +16,13 @@ export default observer(function Body() {
         <MarkdownEditor
           autoFocus
           initialContent={editor.body}
+          initialUIState={editor.uiState || undefined}
           content={editor.isFocused ? undefined : editor.body}
           readonly={editor.isReadonly}
           onChange={onChange}
           onFocus={editor.focus}
           onBlur={editor.blur}
-          onUIStateChange={editor.updateUIState}
+          onUIStateChange={editor.saveUIState}
         />
       )}
     </div>

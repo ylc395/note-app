@@ -32,7 +32,7 @@ export default class Tile extends Emitter<Events> {
   @action.bound
   switchToEditor(editor: Editor | EditableEntityLocator) {
     const existedTab = this.editors.find((e) =>
-      editor instanceof Editor ? editor === e : isMatch(editor, e.toEntityLocator()),
+      editor instanceof Editor ? editor === e : isMatch(editor, e.getEntityLocator()),
     );
 
     if (!existedTab) {
@@ -104,7 +104,7 @@ export default class Tile extends Emitter<Events> {
 
   @action
   addEditor(editor: Editor, to?: Editor) {
-    const existedEditorIndex = this.editors.findIndex((e) => isMatch(e.toEntityLocator(), editor.toEntityLocator()));
+    const existedEditorIndex = this.editors.findIndex((e) => isMatch(e.getEntityLocator(), editor.getEntityLocator()));
 
     if (existedEditorIndex >= 0) {
       const [existedEditor] = this.editors.splice(existedEditorIndex, 1);
