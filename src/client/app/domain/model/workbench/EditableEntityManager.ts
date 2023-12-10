@@ -1,7 +1,8 @@
 import { Emitter } from 'strict-event-emitter';
 import assert from 'assert';
-import { type EntityLocator, type EntityId, EntityTypes } from '@domain/model/entity';
+import { singleton } from 'tsyringe';
 
+import { type EntityLocator, type EntityId, EntityTypes } from '@domain/model/entity';
 import {
   type default as EditableEntity,
   type EditableEntityLocator,
@@ -11,7 +12,6 @@ import EditableNote from '@domain/model/note/Editable';
 import EditablePdf from '@domain/model/material/editable/EditablePdf';
 import EditableHtml from '@domain/model/material/editable/EditableHtml';
 import EditableImage from '@domain/model/material/editable/EditableImage';
-import { singleton } from 'tsyringe';
 
 export enum EventNames {
   entityUpdated = 'editorManager.entityUpdated',
@@ -45,6 +45,10 @@ export default class EditableEntityManager extends Emitter<Events> {
 
     this.editableEntities[entityId] = editableEntity;
     editableEntity.on(EditableEntityEvents.EntityUpdated, () => this.emit(EventNames.entityUpdated, editableEntity!));
+    editableEntity.on(
+      EditableEntityEvents.EntityDestroyed,
+      () => delete this.editableEntities[editableEntity!.entityId],
+    );
 
     return editableEntity;
   }

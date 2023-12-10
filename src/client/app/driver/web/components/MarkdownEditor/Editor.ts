@@ -16,7 +16,7 @@ import { upload, uploadConfig } from '@milkdown/plugin-upload';
 import { cursor } from '@milkdown/plugin-cursor';
 import { clipboard } from '@milkdown/plugin-clipboard';
 import { Plugin, Selection } from '@milkdown/prose/state';
-import { uniqueId } from 'lodash-es';
+import { uniqueId, after } from 'lodash-es';
 import '@milkdown/prose/view/style/prosemirror.css';
 import '@milkdown/prose/tables/style/tables.css';
 
@@ -27,26 +27,27 @@ import search, { enableSearchCommand } from './search';
 
 interface UIState {
   scrollTop?: number;
-  selection?: unknown;
+  selection?: ReturnType<Selection['toJSON']>;
 }
 
 export interface Options {
-  root: HTMLElement;
   defaultValue?: string;
   autoFocus?: boolean;
   initialUIState?: Partial<UIState>;
   onUIStateChange?: (state: UIState) => void;
-  onChange?: (content: string) => void;
-  onReady?: () => void;
+  onChange?: (content: string) => void; // first time not included and only when focused
   onBlur?: () => void;
   onFocus?: () => void;
 }
 
 export default class Editor {
   private readonly milkdown: MilkdownEditor;
-  private readonly id = uniqueId('milkdown-'); // for debugging
+  readonly id = uniqueId('milkdown-'); // for debugging
   private isReadonly = false;
   private isFocused = false;
+  private root?: HTMLElement;
+  private contentToSet?: string;
+
   constructor(private readonly options: Options) {
     console.debug(`create editor-${this.id}`);
     this.milkdown = this.init();
@@ -82,11 +83,10 @@ export default class Editor {
     }
 
     editor.config((ctx) => {
-      const { onChange, onUIStateChange, onBlur, onFocus, root, defaultValue } = this.options;
+      const { onChange, onUIStateChange, onBlur, onFocus, defaultValue } = this.options;
       const listener = ctx.get(listenerCtx);
 
       ctx.set(uploadConfig.key, uploadOptions);
-      ctx.set(rootCtx, root);
       ctx.update(editorViewOptionsCtx, (prev) => ({
         ...prev,
         editable: () => !this.isReadonly,
@@ -98,15 +98,13 @@ export default class Editor {
       }
 
       if (onChange) {
-        listener.markdownUpdated((_, markdown) => {
-          this.milkdown.status === EditorStatus.Created && onChange(markdown);
-        });
+        listener.markdownUpdated(after(2, (_, markdown) => this.isFocused && onChange(markdown)));
       }
 
       if (onUIStateChange) {
         listener
-          .mounted(() => this.options.root.addEventListener('scroll', this.handleScroll))
-          .destroy(() => this.options.root.removeEventListener('scroll', this.handleScroll));
+          .mounted(() => this.root!.addEventListener('scroll', this.handleScroll))
+          .destroy(() => this.root!.removeEventListener('scroll', this.handleScroll));
       }
 
       listener
@@ -124,13 +122,24 @@ export default class Editor {
         });
     });
 
-    editor.create().then(() => {
-      this.options.autoFocus && this.focus();
-      this.options.onReady?.();
-      this.options.initialUIState && this.applyUIState(this.options.initialUIState);
+    editor.onStatusChange((status) => {
+      if (status === EditorStatus.Created) {
+        if (this.contentToSet) {
+          this.setContent(this.contentToSet);
+        }
+
+        this.options.autoFocus && this.focus();
+        this.options.initialUIState && this.applyUIState(this.options.initialUIState);
+        this.setReadonly(this.isReadonly);
+      }
     });
 
     return editor;
+  }
+
+  mount(root: HTMLElement) {
+    this.root = root;
+    this.milkdown.config((ctx) => ctx.set(rootCtx, root)).create();
   }
 
   private readonly handleScroll = (e: Event) => {
@@ -139,7 +148,7 @@ export default class Editor {
     this.options.onUIStateChange!({ scrollTop });
   };
 
-  toggleSearch(enabled = false) {
+  toggleSearch(enabled: boolean) {
     this.milkdown.action((ctx) => {
       const commandManager = ctx.get(commandsCtx);
       enabled && commandManager.call(enableSearchCommand.key);
@@ -158,14 +167,21 @@ export default class Editor {
 
   setReadonly(isReadonly: boolean) {
     this.isReadonly = isReadonly;
+
+    if (this.milkdown.status !== EditorStatus.Created) {
+      return;
+    }
+
     this.milkdown.action(forceUpdate());
   }
 
   setContent(content: string) {
     if (this.milkdown.status !== EditorStatus.Created) {
+      this.contentToSet = content;
       return;
     }
 
+    this.contentToSet = undefined;
     console.debug(`setContent ${this.id}`);
     this.milkdown.action(replaceAll(content));
   }
@@ -177,7 +193,7 @@ export default class Editor {
 
   private applyUIState(state: UIState) {
     if (state.scrollTop) {
-      this.options.root.scrollTop = state.scrollTop;
+      this.root!.scrollTop = state.scrollTop;
     }
 
     if (state.selection) {

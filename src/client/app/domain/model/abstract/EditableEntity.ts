@@ -16,10 +16,12 @@ export interface EditableEntityLocator extends EntityLocator {
 
 export enum EventNames {
   EntityUpdated = 'editableEntity.entityUpdated',
+  EntityDestroyed = 'editableEntity.destroyed',
 }
 
 type Events = {
   [EventNames.EntityUpdated]: [];
+  [EventNames.EntityDestroyed]: [];
 };
 
 export default abstract class EditableEntity<T = unknown, E extends Events = Events> extends Emitter<E> {
@@ -66,5 +68,7 @@ export default abstract class EditableEntity<T = unknown, E extends Events = Eve
     }
   }
 
-  abstract destroy(): void;
+  destroy() {
+    this.emit(EventNames.EntityDestroyed);
+  }
 }

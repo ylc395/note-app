@@ -40,5 +40,6 @@ export default class EditableNote extends EditableEntity<Note> {
 
   destroy(): void {
     this.uploadNote.flush();
+    super.destroy();
   }
 }

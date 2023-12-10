@@ -13,14 +13,12 @@ export enum EventNames {
   Focus = 'editor.focus',
 }
 
-type Events<S> = {
+type Events = {
   [EventNames.Destroyed]: [];
   [EventNames.Focus]: [];
 };
 
-export default abstract class Editor<T extends EditableEntity = EditableEntity, S = unknown> extends Emitter<
-  Events<S>
-> {
+export default abstract class Editor<T extends EditableEntity = EditableEntity, S = unknown> extends Emitter<Events> {
   readonly id = uniqueId('editor-');
   private readonly localStorage = container.resolve(localStorageToken);
   abstract readonly tabView: { title: string; icon: string | null };

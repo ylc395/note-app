@@ -9,7 +9,7 @@ import type EditableNote from './Editable';
 
 interface UIState {
   scrollTop: number;
-  cursor: number;
+  selection: unknown;
 }
 
 export default class NoteEditor extends Editor<EditableNote, UIState> {
@@ -49,9 +49,9 @@ export default class NoteEditor extends Editor<EditableNote, UIState> {
     this.editable.update({ title });
   }
 
-  updateBody(body: string) {
+  readonly updateBody = (body: string) => {
     this.editable.update({ body });
-  }
+  };
 
   @computed
   get isReadonly() {
