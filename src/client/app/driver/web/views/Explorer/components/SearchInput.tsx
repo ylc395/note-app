@@ -6,7 +6,7 @@ import { container } from 'tsyringe';
 import SearchService from '@domain/service/SearchService';
 import type { SearchableEntityType } from '@domain/model/search';
 
-import IconButton from '@components/IconButton';
+import Button from '@components/Button';
 
 interface Props {
   entityType: SearchableEntityType;
@@ -40,13 +40,13 @@ export default (function SearchInput({ entityType }: Props) {
         onInput={(e) => setKeyword((e.target as HTMLInputElement).value)}
       />
       <div className="mr-2">
-        <IconButton size="small" onClick={toggleContainBody} selected={containBody} className="opacity-70">
+        <Button size="small" onClick={toggleContainBody} selected={containBody} className="opacity-70">
           <FileTextOutlined />
-        </IconButton>
+        </Button>
         {keyword.length > 0 && (
-          <IconButton size="small" onClick={clearKeyword} className="opacity-70">
+          <Button size="small" onClick={clearKeyword} className="opacity-70">
             <CloseOutlined />
-          </IconButton>
+          </Button>
         )}
       </div>
     </div>

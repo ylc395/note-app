@@ -1,16 +1,16 @@
 import { EditOutlined, SettingOutlined } from '@ant-design/icons';
-import IconButton from '@components/IconButton';
+import Button from '@components/Button';
 
 // eslint-disable-next-line mobx/missing-observer
 export default function Operations() {
   return (
     <div className="flex items-center justify-between">
-      <IconButton>
+      <Button>
         <EditOutlined />
-      </IconButton>
-      <IconButton>
+      </Button>
+      <Button>
         <SettingOutlined />
-      </IconButton>
+      </Button>
     </div>
   );
 }

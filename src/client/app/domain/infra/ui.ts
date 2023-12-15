@@ -1,6 +1,6 @@
 import type { InjectionToken } from 'tsyringe';
 
-export type ContextmenuItem =
+export type MenuItem =
   | {
       label: string;
       key?: string;
@@ -10,7 +10,7 @@ export type ContextmenuItem =
   | { type: 'separator' };
 
 export interface UI {
-  getActionFromContextmenu: (items: ContextmenuItem[]) => Promise<string | null>;
+  getActionFromMenu: (items: MenuItem[], pos?: { x: number; y: number }) => Promise<string | null>;
   openNewWindow: (url: string) => Promise<void> | void;
   feedback: (options: { type: 'success' | 'fail'; content: string; onClick?: () => void }) => Promise<void>;
 }

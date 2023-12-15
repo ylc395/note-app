@@ -4,7 +4,7 @@ import { PlusOutlined, ShrinkOutlined, SettingOutlined } from '@ant-design/icons
 
 import NoteService from '@domain/service/NoteService';
 import Explorer from '@domain/model/Explorer';
-import IconButton from '@components/IconButton';
+import Button from '@components/Button';
 
 export default observer(function Operations() {
   const { createNote } = container.resolve(NoteService);
@@ -14,16 +14,16 @@ export default observer(function Operations() {
 
   return (
     <div className="flex grow justify-between">
-      <IconButton onClick={createNote}>
+      <Button onClick={createNote}>
         <PlusOutlined />
-      </IconButton>
+      </Button>
       <div>
-        <IconButton disabled={expandedNodes.length === 0} onClick={collapseAll}>
+        <Button disabled={expandedNodes.length === 0} onClick={collapseAll}>
           <ShrinkOutlined />
-        </IconButton>
-        <IconButton>
+        </Button>
+        <Button>
           <SettingOutlined />
-        </IconButton>
+        </Button>
       </div>
     </div>
   );

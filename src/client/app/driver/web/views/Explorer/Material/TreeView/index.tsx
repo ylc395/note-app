@@ -1,16 +1,15 @@
 import { container } from 'tsyringe';
 import { useEffect } from 'react';
-import { FileAddOutlined, FolderAddOutlined } from '@ant-design/icons';
 
 import MaterialService from '@domain/service/MaterialService';
 import { isDirectory } from '@domain/model/material';
-import IconButton from '@components/IconButton';
 
 import TreeView from '../../components/TreeView';
+import AddButton from '../AddButton';
 
 // eslint-disable-next-line mobx/missing-observer
 export default function MaterialTreeView() {
-  const { loadChildren, materialTree, createDirectory, targetId } = container.resolve(MaterialService);
+  const { loadChildren, materialTree } = container.resolve(MaterialService);
 
   useEffect(() => {
     loadChildren();
@@ -19,18 +18,7 @@ export default function MaterialTreeView() {
   return (
     <TreeView
       tree={materialTree}
-      nodeOperation={(node) =>
-        node.entity && isDirectory(node.entity) ? (
-          <>
-            <IconButton onClick={() => targetId.set(node.id)}>
-              <FileAddOutlined />
-            </IconButton>
-            <IconButton onClick={() => createDirectory(node.id)}>
-              <FolderAddOutlined />
-            </IconButton>
-          </>
-        ) : null
-      }
+      nodeOperation={(node) => node.entity && isDirectory(node.entity) && <AddButton materialId={node.id} />}
     />
   );
 }

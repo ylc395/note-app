@@ -3,7 +3,7 @@ import { BLANK_URL, sanitizeUrl } from '@braintree/sanitize-url';
 import assert from 'node:assert';
 import { object, string, array, unknown as zodUnknown, type infer as ZodInfer } from 'zod';
 
-import type { ContextmenuItem, UI } from '@domain/infra/ui.js';
+import type { MenuItem, UI } from '@domain/infra/ui.js';
 
 export const UI_CHANNEL = 'electron-ui';
 
@@ -19,13 +19,17 @@ export default class ElectronUI implements UI {
     ipcMain.handle(UI_CHANNEL, this._ipcHandler);
   }
 
+  private e?: IpcMainInvokeEvent;
+
   private readonly _ipcHandler = (e: IpcMainInvokeEvent, payload: unknown) => {
     const p = uiIpcPayloadSchema.parse(payload);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     assert(p.funcName in this && typeof (this[p.funcName as keyof ElectronUI] as any) === 'function');
 
+    this.e = e;
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (this[p.funcName as keyof ElectronUI] as any).call(this, ...p.args, e);
+    return (this[p.funcName as keyof ElectronUI] as any).apply(this, p.args);
   };
 
   feedback(): never {
@@ -40,12 +44,9 @@ export default class ElectronUI implements UI {
     return shell.openExternal(url);
   }
 
-  getActionFromContextmenu(menuItems: ContextmenuItem[], e?: IpcMainInvokeEvent) {
-    const w = BrowserWindow.fromWebContents(e!.sender);
-
-    if (!w) {
-      return Promise.resolve(null);
-    }
+  getActionFromMenu(menuItems: MenuItem[], pos?: { x: number; y: number }) {
+    const w = BrowserWindow.fromWebContents(this.e!.sender);
+    assert(w);
 
     return new Promise<string | null>((resolve) => {
       let key: string;
@@ -60,6 +61,8 @@ export default class ElectronUI implements UI {
 
       menu.popup({
         window: w,
+        // a float number will throw an error
+        ...(pos ? { x: Math.ceil(pos.x), y: Math.ceil(pos.y) } : null),
         callback: () => resolve(key || null),
       });
     });

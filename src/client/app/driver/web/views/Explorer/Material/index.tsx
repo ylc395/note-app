@@ -9,7 +9,7 @@ import ExplorerHeader from '../components/ExplorerHeader';
 export default observer(() => {
   return (
     <>
-      <ExplorerHeader title="素材库">
+      <ExplorerHeader title="素材">
         <DirectoryOperations />
       </ExplorerHeader>
       <DirectoryView />

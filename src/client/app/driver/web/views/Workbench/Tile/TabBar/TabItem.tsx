@@ -6,7 +6,7 @@ import clsx from 'clsx';
 import assert from 'assert';
 
 import IconTitle from '@components/IconTitle';
-import IconButton from '@components/IconButton';
+import Button from '@components/Button';
 import type Editor from '@domain/model/abstract/Editor';
 import useContextmenu from './useContextmenu';
 import { container } from 'tsyringe';
@@ -53,9 +53,9 @@ export default observer(function TabItem({ editor }: { editor: Editor }) {
         size="1em"
         {...editor.tabView}
       />
-      <IconButton ref={buttonRef} size="small" onClick={() => removeEditor(editor)}>
+      <Button ref={buttonRef} size="small" onClick={() => removeEditor(editor)}>
         <CloseOutlined />
-      </IconButton>
+      </Button>
     </div>
   );
 });

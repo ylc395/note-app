@@ -2,7 +2,7 @@ import { container } from 'tsyringe';
 import { useContext } from 'react';
 import { compact } from 'lodash-es';
 
-import { type ContextmenuItem, token as uiToken } from '@domain/infra/ui';
+import { type MenuItem, token as uiToken } from '@domain/infra/ui';
 import Explorer from '@domain/model/Explorer';
 import NoteService from '@domain/service/NoteService';
 import ctx from '../context';
@@ -16,7 +16,7 @@ export default function useContextmenu() {
     const ui = container.resolve(uiToken);
 
     const isMultiple = noteTree.selectedNodeIds.length > 1;
-    const items: ContextmenuItem[] = compact([
+    const items: MenuItem[] = compact([
       isMultiple && { label: `共${noteTree.selectedNodeIds.length}项`, disabled: true },
       isMultiple && { type: 'separator' },
       { label: '移动至...', key: 'move' },
@@ -25,7 +25,7 @@ export default function useContextmenu() {
       { label: '删除', key: 'delete' },
     ]);
 
-    const key = await ui.getActionFromContextmenu(items);
+    const key = await ui.getActionFromMenu(items);
 
     switch (key) {
       case 'move':

@@ -1,23 +1,25 @@
 import { container } from 'tsyringe';
-import { SettingOutlined, FolderAddOutlined, ShrinkOutlined } from '@ant-design/icons';
-import MaterialService from '@domain/service/MaterialService';
-import IconButton from '@components/IconButton';
+import { SettingOutlined, ShrinkOutlined } from '@ant-design/icons';
+import { observer } from 'mobx-react-lite';
 
-// eslint-disable-next-line mobx/missing-observer
-export default function Operations() {
-  const { createDirectory } = container.resolve(MaterialService);
+import Button from '@components/Button';
+import Explorer from '@domain/model/Explorer';
+import AddButton from './AddButton';
+
+export default observer(function Operations() {
+  const { materialTree } = container.resolve(Explorer);
 
   return (
-    <div className="flex justify-between">
-      <IconButton onClick={createDirectory}>
-        <FolderAddOutlined />
-      </IconButton>
-      <IconButton>
-        <ShrinkOutlined />
-      </IconButton>
-      <IconButton>
-        <SettingOutlined />
-      </IconButton>
+    <div className="flex justify-between grow">
+      <AddButton />
+      <div>
+        <Button disabled={materialTree.expandedNodes.length === 0} onClick={materialTree.collapseAll}>
+          <ShrinkOutlined />
+        </Button>
+        <Button>
+          <SettingOutlined />
+        </Button>
+      </div>
     </div>
   );
-}
+});

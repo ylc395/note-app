@@ -7,9 +7,9 @@ import { EntityTypes } from '@domain/model/entity';
 import { Workbench } from '@domain/model/workbench';
 import NoteService from '@domain/service/NoteService';
 
-import IconButton from '@components/IconButton';
+import Button from '@components/Button';
 import TreeView from '../../components/TreeView';
-import SearchInput from '../../components/SearchInput';
+// import SearchInput from '../../components/SearchInput';
 import useContextmenu from './useContextmenu';
 
 // eslint-disable-next-line mobx/missing-observer
@@ -25,15 +25,15 @@ export default function NoteTreeView() {
 
   return (
     <>
-      <SearchInput entityType={EntityTypes.Note} />
+      {/* <SearchInput entityType={EntityTypes.Note} /> */}
       <TreeView
         tree={noteTree}
         onClick={(id) => openEntity({ entityType: EntityTypes.Note, entityId: id })}
         onContextmenu={handleContextmenu}
         nodeOperation={({ id }) => (
-          <IconButton onClick={() => createNote(id)}>
+          <Button onClick={() => createNote(id)}>
             <PlusOutlined />
-          </IconButton>
+          </Button>
         )}
       />
     </>
