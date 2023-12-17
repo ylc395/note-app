@@ -1,22 +1,22 @@
-import { union, boolean, object, string, null as zodNull, type infer as Infer, undefined as zodUndefined } from 'zod';
+import { uniq } from 'lodash-es';
+import { boolean, object, string, type infer as Infer } from 'zod';
 
 export const notePatchDTOSchema = object({
-  title: string(),
-  isReadonly: boolean(),
-  body: string(),
-  parentId: union([zodNull(), string()]),
-  icon: union([string().regex(/^(emoji:|file:).+/), zodNull()]),
-}).partial();
+  title: string().optional(),
+  isReadonly: boolean().optional(),
+  body: string().optional(),
+  parentId: string().nullish(),
+  icon: string()
+    .regex(/^(emoji:|file:).+/)
+    .nullish(),
+});
 
 export const notesPatchDTOSchema = object({
-  ids: string()
-    .array()
-    .refine((ids) => new Set(ids).size === ids.length),
+  ids: string().array().refine(uniq),
   note: notePatchDTOSchema,
 });
 
-export const newNoteDTOSchema = union([notePatchDTOSchema, zodUndefined()]);
-
+export const newNoteDTOSchema = notePatchDTOSchema.optional();
 export const newNoteParamsSchema = object({ from: string().optional() });
 
 export type NewNoteDTO = Infer<typeof newNoteDTOSchema>;

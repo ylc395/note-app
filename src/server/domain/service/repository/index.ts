@@ -9,6 +9,7 @@ import type { SynchronizationRepository } from './SynchronizationRepository.js';
 import type { ContentRepository } from './ContentRepository.js';
 import type { EntityRepository } from './EntityRepository.js';
 import type { ConfigRepository } from './ConfigRepository.js';
+import type { MaterialAnnotationRepository } from './MaterialAnnotationRepository.js';
 
 export default interface Repositories {
   notes: NoteRepository;
@@ -17,6 +18,7 @@ export default interface Repositories {
   files: FileRepository;
   memos: MemoRepository;
   materials: MaterialRepository;
+  materialAnnotations: MaterialAnnotationRepository;
   revisions: RevisionRepository;
   synchronization: SynchronizationRepository;
   contents: ContentRepository;

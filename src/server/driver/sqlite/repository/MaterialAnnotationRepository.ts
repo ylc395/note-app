@@ -2,11 +2,12 @@ import { pick, isEmpty } from 'lodash-es';
 import type { Selectable } from 'kysely';
 
 import type { NewAnnotationDTO, AnnotationPatchDTO, Annotation, Material } from '@domain/model/material.js';
+import type { MaterialAnnotationRepository } from '@domain/service/repository/MaterialAnnotationRepository.js';
 
 import BaseRepository from './BaseRepository.js';
 import materialAnnotationSchema, { type Row } from '../schema/materialAnnotation.js';
 
-export default class MaterialAnnotationRepository extends BaseRepository {
+export default class SqliteMaterialAnnotationRepository extends BaseRepository implements MaterialAnnotationRepository {
   readonly tableName = materialAnnotationSchema.tableName;
   async create(materialId: Material['id'], { type, comment, ...annotation }: NewAnnotationDTO) {
     const created = await this.createOne(this.tableName, {
@@ -26,13 +27,13 @@ export default class MaterialAnnotationRepository extends BaseRepository {
   async findAll(materialId: Material['id']) {
     const rows = await this.db.selectFrom(this.tableName).where('materialId', '=', materialId).selectAll().execute();
 
-    return rows.map(MaterialAnnotationRepository.rowToVO);
+    return rows.map(SqliteMaterialAnnotationRepository.rowToVO);
   }
 
   async findOneById(id: Annotation['id']) {
     const row = await this.db.selectFrom(this.tableName).where('id', '=', id).selectAll().executeTakeFirst();
 
-    return row ? MaterialAnnotationRepository.rowToVO(row) : null;
+    return row ? SqliteMaterialAnnotationRepository.rowToVO(row) : null;
   }
 
   private static rowToVO(row: Selectable<Row>) {
@@ -49,7 +50,7 @@ export default class MaterialAnnotationRepository extends BaseRepository {
       .returningAll()
       .executeTakeFirst();
 
-    return row ? MaterialAnnotationRepository.rowToVO(row) : null;
+    return row ? SqliteMaterialAnnotationRepository.rowToVO(row) : null;
   }
 
   async update(annotationId: Annotation['id'], { comment, ...attr }: AnnotationPatchDTO) {
@@ -76,6 +77,6 @@ export default class MaterialAnnotationRepository extends BaseRepository {
       .returningAll()
       .executeTakeFirst();
 
-    return updated ? MaterialAnnotationRepository.rowToVO(updated) : null;
+    return updated ? SqliteMaterialAnnotationRepository.rowToVO(updated) : null;
   }
 }

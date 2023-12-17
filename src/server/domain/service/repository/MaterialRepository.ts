@@ -1,7 +1,4 @@
 import type {
-  NewAnnotationDTO,
-  AnnotationPatchDTO,
-  Annotation,
   NewMaterialDirectory,
   NewMaterialEntity,
   MaterialDirectory,
@@ -23,11 +20,6 @@ export interface MaterialRepository {
   ) => Promise<Record<Material['id'], Material['id'][]>>;
   findDescendantIds: (materialIds: Material['id'][]) => Promise<Record<Material['id'], Material['id'][]>>;
   findAncestorIds: (materialIds: Material['id'][]) => Promise<Record<Material['id'], Material['id'][]>>;
-  findOneById: (id: Material['id']) => Promise<Material | null>;
+  findOneById: (id: Material['id'], availableOnly?: boolean) => Promise<Material | null>;
   findBlobById: (id: Material['id']) => Promise<ArrayBuffer | null>;
-  createAnnotation: (materialId: Material['id'], annotation: NewAnnotationDTO) => Promise<Annotation>;
-  findAllAnnotations: (materialId: Material['id']) => Promise<Annotation[]>;
-  removeAnnotation: (annotationId: Annotation['id']) => Promise<Annotation | null>;
-  findAnnotationById: (annotationId: Annotation['id']) => Promise<Annotation | null>;
-  updateAnnotation: (annotationId: Annotation['id'], patch: AnnotationPatchDTO) => Promise<Annotation | null>;
 }

@@ -21,11 +21,24 @@ import NoteService from '@domain/service/NoteService.js';
 export default class NotesController {
   constructor(private readonly noteService: NoteService) {}
 
+  @Get('/notes/:id')
+  async queryOne(@Param('id') noteId: string): Promise<DetailedNoteVO> {
+    return await this.noteService.queryOne(noteId);
+  }
+
+  @Patch('/notes/:id')
+  async updateOne(
+    @Param('id') noteId: string,
+    @Body(createSchemaPipe(notePatchDTOSchema)) patch: NotePatchDTO,
+  ): Promise<void> {
+    return await this.noteService.updateOne(noteId, patch);
+  }
+
   @Get('/notes')
   async query(
     @Query(createSchemaPipe(clientNoteQuerySchema)) { parentId = null, to }: ClientNoteQuery,
   ): Promise<NoteVO[]> {
-    return to ? await this.noteService.getTreeFragment(to) : await this.noteService.queryNotes({ parentId });
+    return to ? await this.noteService.getTreeFragment(to) : await this.noteService.query({ parentId });
   }
 
   @Post('/notes')
@@ -39,18 +52,5 @@ export default class NotesController {
   @Patch('/notes')
   async batchUpdate(@Body(createSchemaPipe(notesPatchDTOSchema)) { ids, note }: NotesPatchDTO): Promise<void> {
     return await this.noteService.batchUpdate(ids, note);
-  }
-
-  @Get('/notes/:id')
-  async queryOne(@Param('id') noteId: string): Promise<DetailedNoteVO> {
-    return await this.noteService.queryOneNote(noteId);
-  }
-
-  @Patch('/notes/:id')
-  async updateOne(
-    @Param('id') noteId: string,
-    @Body(createSchemaPipe(notePatchDTOSchema)) patch: NotePatchDTO,
-  ): Promise<void> {
-    return await this.noteService.updateOne(noteId, patch);
   }
 }

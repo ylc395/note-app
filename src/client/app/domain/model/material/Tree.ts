@@ -1,13 +1,13 @@
 import { runInAction } from 'mobx';
 import MaterialTree, { type MaterialTreeNode } from '@shared/domain/model/material/Tree';
-import { isDirectory } from '@shared/domain/model/material';
+import { isDirectoryVO } from '@shared/domain/model/material';
 
 export type { MaterialTreeNode } from '@shared/domain/model/material/Tree';
 
 export default class ExplorerMaterialTree extends MaterialTree {
   updateValidParentTargets(ids?: (MaterialTreeNode['id'] | null)[]) {
     for (const node of this.allNodes) {
-      node.isDisabled = !!node.entity && isDirectory(node.entity);
+      node.isDisabled = !!node.entity && isDirectoryVO(node.entity);
     }
 
     for (const id of ids || this.selectedNodeIds) {

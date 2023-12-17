@@ -1,5 +1,6 @@
 import { uniq, omit, map } from 'lodash-es';
 import { Injectable, Inject } from '@nestjs/common';
+import assert from 'assert';
 
 import {
   type NewAnnotationDTO,
@@ -8,13 +9,14 @@ import {
   type AnnotationVO,
   type AnnotationPatchDTO,
   type Material,
-  type MaterialQuery,
-  type MaterialPatch,
+  type ClientMaterialQuery,
+  type MaterialsPatchDTO,
+  type MaterialEntity,
+  type MaterialPatchDTO,
   AnnotationTypes,
   MaterialTypes,
   isEntityMaterial,
   isNewMaterialEntity,
-  normalizeTitle,
   isDirectory,
 } from '@domain/model/material.js';
 import { EntityTypes } from '@domain/model/entity.js';
@@ -30,132 +32,171 @@ export default class MaterialService extends BaseService {
 
   async create(newMaterial: NewMaterialDTO) {
     if (newMaterial.parentId) {
-      await this.assertAvailableIds([newMaterial.parentId], MaterialTypes.Directory);
+      await this.assertAvailableIds([newMaterial.parentId], { type: MaterialTypes.Directory });
     }
 
     if (isNewMaterialEntity(newMaterial)) {
-      if (!(await this.repo.files.findOneById(newMaterial.fileId))) {
-        throw new Error('invalid fileId');
-      }
+      assert(await this.repo.files.findOneById(newMaterial.fileId));
 
       const material = await this.repo.materials.createEntity(newMaterial);
-      return { ...material, name: normalizeTitle(material), isStar: false };
+      return { ...omit(material, ['userUpdatedAt']), updatedAt: material.userUpdatedAt, isStar: false };
     } else {
       const directory = await this.repo.materials.createDirectory(newMaterial);
-      return { ...directory, name: normalizeTitle(directory), isStar: false, childrenCount: 0 };
+      return { ...omit(directory, ['userUpdatedAt']), updatedAt: directory.userUpdatedAt, childrenCount: 0 };
     }
   }
 
-  private async toVOs(materials: Material[]) {
-    const parentIds = map(materials.filter(isDirectory), 'id');
-    const children = await this.repo.materials.findChildrenIds(parentIds, true);
-    const stars = await this.starService.getStarMap(map(materials, 'id'));
+  async query(q: ClientMaterialQuery): Promise<MaterialVO[]> {
+    const materials = await this.repo.materials.findAll({ ...q, isAvailable: true });
+    return await this.toVO(materials);
+  }
 
-    return materials.map((material) => ({
+  private async toVO(materials: Material[]) {
+    const children = await this.repo.materials.findChildrenIds(map(materials.filter(isDirectory), 'id'), true);
+    const stars = await this.starService.getStarMap(map(materials.filter(isEntityMaterial), 'id'));
+    const materialVOs = materials.map((material) => ({
       ...omit(material, ['userUpdatedAt']),
-      isStar: Boolean(stars[material.id]),
       updatedAt: material.userUpdatedAt,
-      title: normalizeTitle(material),
-      ...(isEntityMaterial(material) ? null : { childrenCount: children[material.id]?.length || 0 }),
-    })) as MaterialVO[];
+      ...(isDirectory(material)
+        ? { childrenCount: children[material.id]?.length || 0 }
+        : { isStar: Boolean(stars[material]) }),
+    }));
+
+    return materialVOs as MaterialVO[];
   }
 
-  async queryVO(q: MaterialQuery): Promise<MaterialVO[]>;
-  async queryVO(q: MaterialVO['id']): Promise<MaterialVO>;
-  async queryVO(q: MaterialQuery | MaterialVO['id']): Promise<MaterialVO[] | MaterialVO> {
-    const materials = await this.repo.materials.findAll({
-      ...(typeof q === 'string' ? { id: [q] } : q),
-      isAvailable: true,
-    });
-    const materialVOs = await this.toVOs(materials);
+  async queryOne(id: Material['id']) {
+    const material = await this.repo.materials.findOneById(id, true);
 
-    const result = typeof q === 'string' ? materialVOs[0] : materialVOs;
+    assert(material);
 
-    if (!result) {
-      throw new Error('no result');
+    const result = {
+      ...omit(material, ['userUpdatedAt']),
+      updatedAt: material.userUpdatedAt,
+    };
+
+    if (isEntityMaterial(material)) {
+      const stars = await this.starService.getStarMap([material.id]);
+      const path = (await this.entityService.getPaths([{ entityId: material.id, entityType: EntityTypes.Material }]))[
+        material.id
+      ];
+
+      assert(path);
+
+      return {
+        ...(result as MaterialEntity),
+        isStar: Boolean(stars[material.id]),
+        path,
+      };
+    } else {
+      const children = await this.repo.materials.findChildrenIds([material.id]);
+
+      return {
+        ...result,
+        childrenCount: children[material.id]?.length || 0,
+      };
     }
-
-    return result;
   }
 
-  async batchUpdate(ids: Material['id'][], patch: MaterialPatch) {
-    if (typeof patch.comment !== 'undefined') {
-      throw new Error('can not update comment by batchUpdate');
-    }
-
+  async batchUpdate(ids: Material['id'][], patch: MaterialsPatchDTO['material']) {
     await this.assertAvailableIds(ids);
 
     if (patch.parentId) {
       await this.assertValidParent(patch.parentId, ids);
     }
 
-    const result = await this.repo.materials.update(ids, {
+    await this.repo.materials.update(ids, {
       ...patch,
-      ...(typeof patch.name === 'undefined' ? null : { userUpdatedAt: Date.now() }),
+      userUpdatedAt: Date.now(),
     });
-
-    return this.toVOs(result);
   }
 
-  async updateComment(materialId: Material['id'], comment: string) {
-    await this.assertAvailableIds([materialId], MaterialTypes.Entity);
+  async updateOne(materialId: Material['id'], patch: MaterialPatchDTO) {
+    const isEntityPatch = 'comment' in patch || 'sourceUrl' in patch;
+    await this.assertAvailableIds([materialId], isEntityPatch ? { type: MaterialTypes.Entity } : undefined);
 
     const now = Date.now();
-    await this.repo.materials.update(materialId, { comment, userUpdatedAt: now });
+    await this.repo.materials.update(materialId, { ...patch, userUpdatedAt: now });
 
-    this.eventBus.emit('contentUpdated', {
-      content: comment,
-      entityType: EntityTypes.Material,
-      entityId: materialId,
-      updatedAt: now,
-    });
-
-    return comment;
+    if (typeof patch.comment === 'string') {
+      this.eventBus.emit('contentUpdated', {
+        content: patch.comment,
+        entityType: EntityTypes.Material,
+        entityId: materialId,
+        updatedAt: now,
+      });
+    }
   }
 
   private async assertValidParent(parentId: Material['id'], childrenIds: Material['id'][]) {
-    await this.assertAvailableIds([parentId], MaterialTypes.Directory);
-
+    await this.assertAvailableIds([parentId], { type: MaterialTypes.Directory });
     const descants = await this.repo.materials.findDescendantIds(childrenIds);
 
     for (const id of childrenIds) {
-      if (parentId === id || descants[id]?.includes(parentId)) {
-        throw new Error('invalid new parent id');
-      }
+      assert(parentId !== id && !descants[id]?.includes(parentId));
     }
   }
 
   async getBlob(materialId: MaterialVO['id']) {
-    await this.assertEntityMaterial(materialId);
+    await this.assertAvailableIds([materialId], { type: MaterialTypes.Entity });
     const blob = await this.repo.materials.findBlobById(materialId);
-
-    if (blob === null) {
-      throw new Error('no file');
-    }
-
+    assert(blob);
     return blob;
+  }
+
+  private async assertAvailableIds(ids: MaterialVO['id'][], params?: { type?: MaterialTypes; mimeType?: string }) {
+    const uniqueIds = uniq(ids);
+    const rows = await this.repo.materials.findAll({ id: uniqueIds, isAvailable: true });
+    const result =
+      rows.length === uniqueIds.length &&
+      (params
+        ? rows.every((row) => {
+            if (params.mimeType) {
+              return isEntityMaterial(row) && row.mimeType === params.mimeType;
+            }
+
+            if (params.type) {
+              const checker = params.type === MaterialTypes.Entity ? isEntityMaterial : isDirectory;
+              return checker(row);
+            }
+          })
+        : true);
+
+    assert(result);
+  }
+
+  async getTreeFragment(materialId: Material['id'], type?: MaterialTypes) {
+    await this.assertAvailableIds([materialId]);
+
+    const ancestorIds = (await this.repo.materials.findAncestorIds([materialId]))[materialId] || [];
+    const childrenIds = Object.values(await this.repo.materials.findChildrenIds(ancestorIds)).flat();
+
+    const roots = await this.repo.materials.findAll({ parentId: null, type, isAvailable: true });
+    const children = await this.repo.materials.findAll({ id: childrenIds, type });
+
+    return await this.toVO([...roots, ...children]);
   }
 
   async createAnnotation(materialId: MaterialVO['id'], annotation: NewAnnotationDTO) {
     if (annotation.type === AnnotationTypes.PdfRange || annotation.type === AnnotationTypes.PdfArea) {
-      await this.assertEntityMaterial(materialId, 'application/pdf');
+      await this.assertAvailableIds([materialId], { mimeType: 'application/pdf' });
     }
 
     if (annotation.type === AnnotationTypes.HtmlRange) {
-      await this.assertEntityMaterial(materialId, 'text/html');
+      await this.assertAvailableIds([materialId], { mimeType: 'text/html' });
     }
 
-    return await this.repo.materials.createAnnotation(materialId, annotation);
+    return await this.repo.materialAnnotations.create(materialId, annotation);
   }
 
   async queryAnnotations(materialId: MaterialVO['id']) {
-    await this.assertEntityMaterial(materialId);
-    return await this.repo.materials.findAllAnnotations(materialId);
+    await this.assertAvailableIds([materialId], { type: MaterialTypes.Entity });
+    return await this.repo.materialAnnotations.findAll(materialId);
   }
 
   async removeAnnotation(annotationId: AnnotationVO['id']) {
     await this.assertValidAnnotation(annotationId);
-    const result = await this.repo.materials.removeAnnotation(annotationId);
+    const result = await this.repo.materialAnnotations.remove(annotationId);
 
     if (!result) {
       throw new Error('invalid annotation');
@@ -166,7 +207,7 @@ export default class MaterialService extends BaseService {
 
   async updateAnnotation(annotationId: AnnotationVO['id'], patch: AnnotationPatchDTO) {
     await this.assertValidAnnotation(annotationId);
-    const updated = await this.repo.materials.updateAnnotation(annotationId, patch);
+    const updated = await this.repo.materialAnnotations.update(annotationId, patch);
 
     if (!updated) {
       throw new Error('invalid id');
@@ -185,49 +226,9 @@ export default class MaterialService extends BaseService {
     return updated;
   }
 
-  private async assertAvailableIds(ids: MaterialVO['id'][], type?: MaterialTypes) {
-    const uniqueIds = uniq(ids);
-    const rows = await this.repo.materials.findAll({ id: uniqueIds, isAvailable: true });
-    const result =
-      rows.length === uniqueIds.length &&
-      (type ? rows.every(type === MaterialTypes.Entity ? isEntityMaterial : isDirectory) : true);
-
-    if (!result) {
-      throw new Error('invalid material id');
-    }
-  }
-
-  private async assertEntityMaterial(materialId: MaterialVO['id'] | MaterialVO['id'][], mimeType?: string) {
-    const ids = Array.isArray(materialId) ? uniq(materialId) : [materialId];
-    const materials = await this.repo.materials.findAll({ id: ids, isAvailable: true });
-
-    if (
-      materials.length !== ids.length ||
-      materials.some((material) => !isEntityMaterial(material) || (mimeType && material.mimeType !== mimeType))
-    ) {
-      throw new Error('invalid material id');
-    }
-  }
-
   private async assertValidAnnotation(annotationId: AnnotationVO['id']) {
-    const annotation = await this.repo.materials.findAnnotationById(annotationId);
-
-    if (!annotation) {
-      throw new Error('invalid annotation id');
-    }
-
-    await this.assertEntityMaterial(annotation.materialId);
-  }
-
-  async getTreeFragment(materialId: Material['id'], type?: MaterialTypes) {
-    await this.assertAvailableIds([materialId]);
-
-    const ancestorIds = (await this.repo.materials.findAncestorIds([materialId]))[materialId] || [];
-    const childrenIds = Object.values(await this.repo.materials.findChildrenIds(ancestorIds)).flat();
-
-    const roots = await this.queryVO({ parentId: null, type });
-    const children = await this.queryVO({ id: childrenIds, type });
-
-    return [...roots, ...children];
+    const annotation = await this.repo.materialAnnotations.findOneById(annotationId);
+    assert(annotation);
+    await this.assertAvailableIds([annotation.materialId], { type: MaterialTypes.Entity });
   }
 }

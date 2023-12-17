@@ -1,7 +1,7 @@
 import { sql } from 'kysely';
 
 import { type SearchParams, Scopes } from '@domain/model/search.js';
-import { normalizeEntityTitle } from '@domain/model/material.js';
+import { normalizeTitle } from '@domain/model/material.js';
 import { EntityTypes } from '@domain/model/entity.js';
 
 import type SearchEngine from './index.js';
@@ -139,7 +139,7 @@ export default class SqliteMaterialSearchEngine {
     return result.map((row) => ({
       ...row,
       entityType: EntityTypes.Material as const,
-      title: normalizeEntityTitle(row),
+      title: normalizeTitle(row),
     }));
   }
 }

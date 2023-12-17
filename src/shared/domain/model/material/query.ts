@@ -3,7 +3,8 @@ import { MaterialTypes } from './base.js';
 
 export const clientMaterialQuerySchema = object({
   parentId: string().nullable().optional(),
-  type: preprocess((v) => v && Number(v), nativeEnum(MaterialTypes).optional()),
+  type: preprocess((v) => Number(v), nativeEnum(MaterialTypes)).optional(),
+  to: string().optional(),
 });
 
 export type ClientMaterialQuery = Infer<typeof clientMaterialQuerySchema>;

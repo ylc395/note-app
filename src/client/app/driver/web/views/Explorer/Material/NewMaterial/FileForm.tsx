@@ -24,7 +24,7 @@ export default observer(function FileForm({ model }: { model: FormModel }) {
   return (
     <Form>
       <Form.Item label="素材名">
-        <Input value={model.values.name} onChange={(e) => model.updateValue('name', e.target.value)} />
+        <Input value={model.values.title} onChange={(e) => model.updateValue('name', e.target.value)} />
       </Form.Item>
       <Form.Item label="选择文件">
         <Button onClick={handleSelectFile}>点击选择</Button>

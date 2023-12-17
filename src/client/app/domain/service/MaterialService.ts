@@ -9,7 +9,7 @@ import {
   type MaterialVO,
   type ClientMaterialQuery,
   type MaterialEntityVO,
-  isDirectory,
+  isDirectoryVO,
 } from '@domain/model/material';
 import Explorer from '@domain/model/Explorer';
 import type Form from '@domain/model/material/Form';
@@ -97,7 +97,7 @@ export default class MaterialService {
 
     const node = this.materialTree.getNode(materialId);
 
-    if (!isMultiple && node.entity && !isDirectory(node.entity)) {
+    if (!isMultiple && node.entity && !isDirectoryVO(node.entity)) {
       this.workbench.openEntity({
         entityType: EntityTypes.Material,
         entityId: materialId,

@@ -52,6 +52,10 @@ export default class TileHandler implements Handler {
       return;
     }
 
+    if (this.workbench.hasOnlyOneEditor && draggingItem instanceof Editor) {
+      return;
+    }
+
     this.targetTile = over;
     this.updateDropArea(event);
   }

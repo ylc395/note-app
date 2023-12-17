@@ -2,7 +2,7 @@ import { container } from 'tsyringe';
 import { useEffect } from 'react';
 
 import MaterialService from '@domain/service/MaterialService';
-import { isDirectory } from '@domain/model/material';
+import { isDirectoryVO } from '@domain/model/material';
 
 import TreeView from '../../components/TreeView';
 import AddButton from '../AddButton';
@@ -18,7 +18,7 @@ export default function MaterialTreeView() {
   return (
     <TreeView
       tree={materialTree}
-      nodeOperation={(node) => node.entity && isDirectory(node.entity) && <AddButton materialId={node.id} />}
+      nodeOperation={(node) => node.entity && isDirectoryVO(node.entity) && <AddButton materialId={node.id} />}
     />
   );
 }

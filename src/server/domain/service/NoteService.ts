@@ -21,7 +21,7 @@ export default class NoteService extends BaseService {
   @Inject() private readonly starService!: StarService;
   @Inject() private readonly entityService!: EntityService;
 
-  private static getMetadata(note: Note) {
+  private static normalize(note: Note) {
     return {
       ...pick(note, ['id', 'createdAt', 'icon', 'isReadonly', 'parentId', 'title']),
       updatedAt: note.userUpdatedAt,
@@ -42,7 +42,7 @@ export default class NoteService extends BaseService {
     }
 
     return {
-      ...NoteService.getMetadata(newNote),
+      ...NoteService.normalize(newNote),
       isStar: false,
       childrenCount: 0,
     };
@@ -67,12 +67,6 @@ export default class NoteService extends BaseService {
     });
 
     return newNote;
-  }
-
-  private async noteToDetail(note: Required<Note>) {
-    const path = (await this.entityService.getPaths([{ entityType: EntityTypes.Note, entityId: note.id }]))[note.id];
-    assert(path);
-    return { ...NoteService.getMetadata(note), body: note.body, path };
   }
 
   async updateOne(noteId: NoteVO['id'], note: NotePatchDTO) {
@@ -107,7 +101,7 @@ export default class NoteService extends BaseService {
     const _children = await this.repo.notes.findChildrenIds(ids);
 
     return notes.map((note) => ({
-      ...NoteService.getMetadata(note),
+      ...NoteService.normalize(note),
       childrenCount: _children[note.id]?.length || 0,
       isStar: Boolean(stars[note.id]),
     }));
@@ -122,7 +116,7 @@ export default class NoteService extends BaseService {
 
     await this.repo.notes.update(ids, {
       ...patch,
-      ...(typeof patch.title === 'undefined' ? null : { userUpdatedAt: Date.now() }),
+      userUpdatedAt: Date.now(),
     });
   }
 
@@ -135,19 +129,21 @@ export default class NoteService extends BaseService {
     }
   }
 
-  async queryNotes(q: ClientNoteQuery) {
+  async query(q: ClientNoteQuery) {
     const notes = await this.repo.notes.findAll({ ...(typeof q === 'string' ? { id: [q] } : q), isAvailable: true });
     const noteVOs = await this.toVO(notes);
 
     return noteVOs;
   }
 
-  async queryOneNote(id: Note['id']) {
-    const note = await this.repo.notes.findOneById(id);
-
+  async queryOne(id: Note['id']) {
+    const note = await this.repo.notes.findOneById(id, true);
     assert(note);
 
-    return this.noteToDetail(note);
+    const path = (await this.entityService.getPaths([{ entityType: EntityTypes.Note, entityId: note.id }]))[note.id];
+    assert(path);
+
+    return { ...NoteService.normalize(note), body: note.body, path };
   }
 
   async getTreeFragment(noteId: NoteVO['id']) {

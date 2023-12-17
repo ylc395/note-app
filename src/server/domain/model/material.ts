@@ -1,4 +1,3 @@
-import dayjs from 'dayjs';
 import type {
   Material,
   MaterialTypes,
@@ -23,23 +22,5 @@ export type Annotation = AnnotationVO & {
 };
 
 export type MaterialPatch = MaterialPatchDTO & { userUpdatedAt?: number; comment?: string };
-
-export const isEntityMaterial = (entity: Material): entity is MaterialEntity => {
-  return 'mimeType' in entity;
-};
-
-export const isDirectory = (entity: Material): entity is MaterialDirectory => {
-  return !isEntityMaterial(entity);
-};
-
-export function normalizeEntityTitle(v: Pick<Material, 'createdAt'>) {
-  return `未命名素材${dayjs(v.createdAt).format('YYYYMMDD-HHmm')}`;
-}
-
-export function normalizeTitle(v: Material) {
-  return (
-    v.title || (isDirectory(v) ? `未命名目录${dayjs(v.createdAt).format('YYYYMMDD-HHmm')}` : normalizeEntityTitle(v))
-  );
-}
 
 export * from '@shared/domain/model/material/index.js';

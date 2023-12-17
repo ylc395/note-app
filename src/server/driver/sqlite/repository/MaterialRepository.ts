@@ -23,17 +23,12 @@ import HierarchyEntityRepository from './HierarchyEntityRepository.js';
 export default class SqliteMaterialRepository extends HierarchyEntityRepository implements MaterialRepository {
   readonly tableName = schema.tableName;
   private readonly files = new FileRepository(this.sqliteDb);
-  private readonly annotations = new MaterialAnnotationRepository(this.sqliteDb);
   async createDirectory(directory: NewMaterialDirectory) {
     const createdRow = await this.createOne(this.tableName, { ...directory, id: this.generateId() });
     return SqliteMaterialRepository.rowToDirectory(createdRow);
   }
 
   async createEntity(material: NewMaterialEntity) {
-    if (!material.fileId) {
-      throw new Error('no fileId');
-    }
-
     const file = await this.files.findOneById(material.fileId);
 
     if (!file) {
@@ -130,12 +125,6 @@ export default class SqliteMaterialRepository extends HierarchyEntityRepository 
 
     return null;
   }
-
-  readonly createAnnotation = this.annotations.create.bind(this.annotations);
-  readonly findAllAnnotations = this.annotations.findAll.bind(this.annotations);
-  readonly removeAnnotation = this.annotations.remove.bind(this.annotations);
-  readonly updateAnnotation = this.annotations.update.bind(this.annotations);
-  readonly findAnnotationById = this.annotations.findOneById.bind(this.annotations);
 
   private static isFileRow(row: Selectable<Row>): row is Selectable<Row> & { mimeType: string } {
     return Boolean(row.fileId);

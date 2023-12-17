@@ -173,9 +173,21 @@ export default class Workbench {
     return this.getTileById(this.root);
   }
 
+  get hasOnlyOneEditor() {
+    if (this.root && isTileLeaf(this.root)) {
+      const rootTile = this.getTileById(this.root);
+
+      if (rootTile.editors.length === 1) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   @action.bound
   moveEditor(src: Editor, dest: Dest) {
-    if (src === dest) {
+    if (src === dest || this.hasOnlyOneEditor) {
       return;
     }
 
