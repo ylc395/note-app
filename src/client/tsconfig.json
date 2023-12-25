@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "types": ["electron"],
+    "lib": ["dom", "dom.iterable", "ESNext"],
+    "baseUrl": ".",
+    "rootDir": "../",
+    "jsx": "react-jsx",
+    "paths": {
+      "@domain/*": ["./domain/*"],
+      "@web/*": ["./driver/web/*"],
+      "@shared/*": ["../shared/*"]
+    }
+  }
+}

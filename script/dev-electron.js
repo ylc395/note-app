@@ -14,10 +14,11 @@ import { fileURLToPath } from 'node:url';
 const ENV = 'development';
 const APP_PLATFORM = 'electron';
 
-const rootDir = 'src/client/app';
-const CLIENT_TSCONFIG = path.resolve(`${rootDir}/tsconfig.json`);
+const rootDir = 'src/client';
+const WEB_TSCONFIG = path.resolve(`${rootDir}/tsconfig.web.json`);
+const PRELOAD_TSCONFIG = path.resolve(`${rootDir}/tsconfig.preload.json`);
 const ELECTRON_OUTPUT = 'dist/electron';
-const BUILD_ELECTRON_COMMAND = 'tsc --build ./src/server/tsconfig.electron.json';
+const BUILD_ELECTRON_COMMAND = 'tsc --build ./tsconfig.electron.json';
 
 async function buildPreload() {
   // preload script must be processed by a bundler(`vite build` here), since `require` doesn't work
@@ -40,8 +41,8 @@ async function buildPreload() {
       },
     },
     plugins: [
-      checker({ typescript: { tsconfigPath: CLIENT_TSCONFIG, buildMode: true } }),
-      tsconfigPaths({ projects: [CLIENT_TSCONFIG] }),
+      checker({ typescript: { tsconfigPath: PRELOAD_TSCONFIG } }),
+      tsconfigPaths({ projects: [PRELOAD_TSCONFIG] }),
     ],
   });
 }
@@ -57,10 +58,8 @@ export async function buildElectron(options) {
   }
 
   // 2. replace ts path
-  await replaceTscAliasPaths({
-    configFile: 'src/server/tsconfig.json',
-    outDir: path.join(ELECTRON_OUTPUT, 'server'),
-  });
+  await replaceTscAliasPaths({ configFile: 'src/server/tsconfig.json', outDir: path.join(ELECTRON_OUTPUT, 'server') });
+  await replaceTscAliasPaths({ configFile: 'src/shared/tsconfig.json', outDir: path.join(ELECTRON_OUTPUT, 'shared') });
 
   await downloadSqliteTokenizer();
 
@@ -78,8 +77,8 @@ async function createViteServer() {
     root: `${rootDir}/driver/web`,
     plugins: [
       react({ tsDecorators: true }), // use this plugin to speed up react compiling and enjoy "fast refresh"
-      checker({ typescript: { tsconfigPath: CLIENT_TSCONFIG, buildMode: true } }),
-      tsconfigPaths({ projects: [CLIENT_TSCONFIG] }),
+      checker({ typescript: { tsconfigPath: WEB_TSCONFIG, buildMode: true } }),
+      tsconfigPaths({ projects: [WEB_TSCONFIG] }),
       nodePolyfills(),
     ],
     define: {

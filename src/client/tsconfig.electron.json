@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "files": ["./domain/app/infra/ui.ts", "./driver/electron/UI.ts"],
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "../../dist/electron",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext"
+  }
+}

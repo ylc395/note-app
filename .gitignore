@@ -4,3 +4,4 @@ dist
 src/server/driver/sqlite/lib
 *.log
 *.tsbuildinfo
+.DS_Store

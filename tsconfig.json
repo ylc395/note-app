@@ -8,9 +8,7 @@
     "emitDecoratorMetadata": true,
     "sourceMap": true,
     "importHelpers": true,
-    "ignoreDeprecations": "5.0",
     "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "skipLibCheck": true

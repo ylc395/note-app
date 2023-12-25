@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["./driver/web/**/*", "./domain/app/**/*", "./domain/common/**/*"],
+  "compilerOptions": {
+    "outDir": "../../dist/web"
+  },
+  "references": [{ "path": "../shared/tsconfig.web.json" }]
+}

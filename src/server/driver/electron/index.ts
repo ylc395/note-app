@@ -9,7 +9,7 @@ import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-insta
 
 import DesktopRuntime from '@domain/infra/DesktopRuntime.js';
 import { IS_DEV } from '@domain/infra/constants.js';
-import UI from '@client/app/driver/electron/UI.js';
+import UI from '@client/driver/electron/UI.js';
 
 import type LocalServer from '../localHttpServer/index.js';
 
