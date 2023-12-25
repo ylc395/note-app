@@ -1,5 +1,5 @@
 import { action, computed, makeObservable, observable } from 'mobx';
-import { container } from 'tsyringe';
+import { container, singleton } from 'tsyringe';
 
 import { token as localStorageToken } from '@domain/app/infra/localStorage';
 import type Explorer from '@domain/app/model/abstract/Explorer';
@@ -11,21 +11,22 @@ const CURRENT_EXPLORER_KEY = 'EXPLORER_CURRENT';
 
 export type ExplorerTypes = EntityTypes.Note | EntityTypes.Material;
 
+@singleton()
 export default class ExplorerManager {
   constructor() {
     makeObservable(this);
-    this.currentExplorerType = this.localStorage.get<ExplorerTypes>(CURRENT_EXPLORER_KEY) || EntityTypes.Note;
+    this.switchTo(this.localStorage.get<ExplorerTypes>(CURRENT_EXPLORER_KEY) || EntityTypes.Note);
   }
 
   private readonly explorers: Record<ExplorerTypes, Explorer> = {
-    [EntityTypes.Note]: new NoteExplorer(),
-    [EntityTypes.Material]: new MaterialExplorer(),
+    [EntityTypes.Note]: container.resolve(NoteExplorer),
+    [EntityTypes.Material]: container.resolve(MaterialExplorer),
   } as const;
 
   private readonly localStorage = container.resolve(localStorageToken);
 
   @observable.ref
-  public currentExplorerType: ExplorerTypes;
+  public currentExplorerType!: ExplorerTypes;
 
   @computed
   public get currentExplorer() {

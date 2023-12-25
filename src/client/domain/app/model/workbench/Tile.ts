@@ -1,6 +1,6 @@
 import { action, makeObservable, observable } from 'mobx';
 import { container } from 'tsyringe';
-import { uniqueId, isEqual, find } from 'lodash';
+import { uniqueId, isMatch } from 'lodash';
 import { Emitter } from 'strict-event-emitter';
 import assert from 'assert';
 
@@ -29,8 +29,8 @@ export default class Tile extends Emitter<Events> {
     makeObservable(this);
   }
 
-  public findByEntity(entity: EditableEntityLocator) {
-    return this.editors.find((e) => isEqual(entity, e.entityLocator));
+  public findByEntity({ entityId, entityType }: EditableEntityLocator) {
+    return this.editors.find((e) => isMatch(e.entityLocator, { entityId, entityType }));
   }
 
   @action.bound
@@ -107,7 +107,7 @@ export default class Tile extends Emitter<Events> {
   @action
   public addEditorTo(editor: Editor, to?: Editor) {
     const isWithin = this.editors.includes(editor);
-    const existedEditorIndex = this.editors.findIndex((e) => isEqual(e.entityLocator, editor.entityLocator));
+    const existedEditorIndex = this.editors.findIndex((e) => isMatch(e.entityLocator, editor.entityLocator));
 
     if (existedEditorIndex >= 0) {
       const [existedEditor] = this.editors.splice(existedEditorIndex, 1);

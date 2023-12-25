@@ -1,4 +1,4 @@
-import { action } from 'mobx';
+import { action, makeObservable } from 'mobx';
 import { compact, once } from 'lodash-es';
 
 import NoteTree from '@domain/common/model/note/Tree';
@@ -15,6 +15,11 @@ type Events = {
 
 @singleton()
 export default class NoteExplorer extends Explorer<Events> {
+  constructor() {
+    super();
+    makeObservable(this);
+  }
+
   public readonly tree = new NoteTree();
 
   public loadRoot() {

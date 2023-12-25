@@ -1,4 +1,4 @@
-import { action, makeObservable, observable } from 'mobx';
+import { action, makeObservable, observable, runInAction } from 'mobx';
 import { differenceWith, map } from 'lodash-es';
 
 import { HierarchyEntity } from '@shared/domain/model/entity';
@@ -45,16 +45,20 @@ export default class TreeNode<T extends HierarchyEntity> {
   }
 
   public async loadChildren() {
-    if (!this.isLoading) {
+    if (this.isLoading) {
       return;
     }
 
-    this.isLoading = true;
+    runInAction(() => {
+      this.isLoading = true;
+    });
 
-    const childrenEntities = await this.tree.fetchChildren(this.id);
+    const childrenEntities = await this.tree.fetchChildren(this.entity ? this.id : null);
     this.updateChildren(childrenEntities);
 
-    this.isLoading = false;
+    runInAction(() => {
+      this.isLoading = false;
+    });
   }
 
   @action
@@ -65,11 +69,6 @@ export default class TreeNode<T extends HierarchyEntity> {
     );
 
     this.tree.removeNodes(toRemoveIds);
-
-    if (entities.length === 0) {
-      this.children = [];
-    }
-
     this.tree.updateTree(entities);
   }
 

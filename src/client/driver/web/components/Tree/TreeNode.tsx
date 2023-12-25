@@ -57,24 +57,34 @@ const TreeNode = observer(function <T extends HierarchyEntity>({ node, level, ..
 
   const treeNodeView = (
     <div
-      data-disabled={node.isDisabled}
-      data-selected={node.isSelected}
       style={{ paddingLeft: `${level * INDENT}px` }}
       ref={setRootEl}
       onClick={handleClick}
       onContextMenu={handleContextmenu}
-      className={nodeClassName}
+      className={typeof nodeClassName === 'function' ? nodeClassName(node) : nodeClassName}
     >
       <div className={clsx('flex', node.isLeaf && 'pl-4')}>
         {!node.isLeaf &&
           (useLoadingIcon ? (
             loadingIcon
           ) : node.isExpanded ? (
-            <CaretDownOutlined className={caretClassName} onClick={expand} />
+            <CaretDownOutlined
+              className={typeof caretClassName === 'function' ? caretClassName(node) : caretClassName}
+              onClick={expand}
+            />
           ) : (
-            <CaretRightFilled className={caretClassName} onClick={expand} />
+            <CaretRightFilled
+              className={typeof caretClassName === 'function' ? caretClassName(node) : caretClassName}
+              onClick={expand}
+            />
           ))}
-        {renderTitle ? renderTitle(node) : <span className={titleClassName}>{node.title}</span>}
+        {renderTitle ? (
+          renderTitle(node)
+        ) : (
+          <span className={typeof titleClassName === 'function' ? titleClassName(node) : titleClassName}>
+            {node.title}
+          </span>
+        )}
       </div>
     </div>
   );

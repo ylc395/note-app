@@ -1,11 +1,13 @@
-import { ReactNode } from 'react';
-import { useMemoizedFn } from 'ahooks';
+import { ReactNode, useState } from 'react';
+import clsx from 'clsx';
 
 import Draggable from '@web/components/dnd/Draggable';
 import Droppable from '@web/components/dnd/Droppable';
 import type TreeNode from '@domain/common/model/abstract/TreeNode';
 import { NoteVO } from '@shared/domain/model/note';
 import { MaterialVO } from '@shared/domain/model/material';
+import { observer } from 'mobx-react-lite';
+import TreeDraggingPreview from './TreeDraggingPreview';
 
 interface Props<T extends NoteVO | MaterialVO> {
   children: ReactNode;
@@ -22,9 +24,26 @@ export default function DndTreeNode<T>({
   onDragStart,
   onDragStop,
 }: Props<NoteVO | MaterialVO>) {
+  const handleDragStart = () => {
+    node.tree.toggleSelect(node.id, { value: true });
+    onDragStart();
+  };
+
+  const [isOver, setIsOver] = useState(false);
+
   return (
-    <Droppable onDrop={useMemoizedFn((item) => onDrop(item, node))}>
-      <Draggable onDragStart={onDragStart} onDragCancel={onDragStop} onDragEnd={onDragStop} item={node}>
+    <Droppable
+      onOverToggle={setIsOver}
+      className={clsx(isOver && !node.isDisabled && 'bg-gray-100')}
+      onDrop={(item) => !node.isDisabled && onDrop(item, node)}
+    >
+      <Draggable
+        renderPreview={() => <TreeDraggingPreview />}
+        onDragStart={handleDragStart}
+        onDragCancel={onDragStop}
+        onDragEnd={onDragStop}
+        item={node}
+      >
         {children}
       </Draggable>
     </Droppable>

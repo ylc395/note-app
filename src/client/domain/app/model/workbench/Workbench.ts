@@ -172,6 +172,10 @@ export default class Workbench {
 
   @action.bound
   public moveEditor(src: Editor, dest: Dest) {
+    if (src === dest) {
+      return;
+    }
+
     let targetTile: Tile;
 
     if (dest instanceof Editor) {

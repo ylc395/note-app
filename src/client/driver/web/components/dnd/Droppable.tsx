@@ -14,7 +14,10 @@ export default function Droppable({ children, onOverToggle, onDrop, onDragMove, 
   const [{ isOver, cursor }, dropRef] = useDrop(
     {
       accept: 'any',
-      drop: (item, monitor) => !monitor.didDrop() && onDrop(item),
+      drop: (item, monitor) => {
+        !monitor.didDrop() && onDrop(item);
+        return; // always return undefined
+      },
       collect: (monitor) => ({
         isOver: monitor.isOver({ shallow: true }),
         cursor: monitor.getClientOffset(),

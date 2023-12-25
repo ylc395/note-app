@@ -1,11 +1,13 @@
-import { type ReactElement, useEffect, useMemo, type ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { useDrag } from 'react-dnd';
+import { createPortal } from 'react-dom';
+import { getEmptyImage } from 'react-dnd-html5-backend';
 
 interface Props {
   children: ReactNode;
   item: unknown;
   className?: string;
-  customPreview?: () => ReactElement;
+  renderPreview?: () => ReactNode;
   onDragEnd?: () => void;
   onDragCancel?: () => void;
   onDragStart?: () => void;
@@ -16,21 +18,23 @@ export default function Draggable({
   onDragEnd,
   onDragStart,
   onDragCancel,
-  customPreview,
+  renderPreview,
   children,
-  ...props
+  className,
 }: Props) {
-  const [{ isDragging }, drag, dragPreview] = useDrag(
+  const [{ isDragging, initialOffset, currentOffset }, drag, dragPreview] = useDrag(
     () => ({
       type: 'any',
       item,
       end: (_, monitor) => (monitor.didDrop() ? onDragEnd?.() : onDragCancel?.()),
-      collect: (monitor) => ({ isDragging: monitor.isDragging() }),
+      collect: (monitor) => ({
+        isDragging: monitor.isDragging(),
+        initialOffset: monitor.getInitialSourceClientOffset(),
+        currentOffset: monitor.getSourceClientOffset(),
+      }),
     }),
     [onDragEnd, item],
   );
-
-  const previewContent = useMemo(() => customPreview && customPreview(), [customPreview]);
 
   useEffect(() => {
     if (isDragging) {
@@ -38,12 +42,18 @@ export default function Draggable({
     }
   }, [onDragStart, isDragging]);
 
+  useEffect(() => {
+    if (renderPreview) {
+      dragPreview(getEmptyImage(), { captureDraggingState: true });
+    }
+  }, [renderPreview, dragPreview]);
+
   return (
     <>
-      <div ref={drag} {...props}>
-        {!previewContent ? <div ref={dragPreview}>{children}</div> : children}
+      <div ref={drag} className={className}>
+        {children}
       </div>
-      {previewContent && dragPreview(previewContent)}
+      {renderPreview && isDragging && createPortal(<div>{renderPreview()}</div>, document.body)}
     </>
   );
 }

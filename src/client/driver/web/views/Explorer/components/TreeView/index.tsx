@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import clsx from 'clsx';
 
 import type TreeModel from '@domain/common/model/abstract/Tree';
 import type TreeNode from '@domain/common/model/abstract/TreeNode';
@@ -8,6 +9,7 @@ import type { NoteVO } from '@shared/domain/model/note';
 
 import NodeTitle from './NodeTitle';
 import DndTreeNode from './DndTreeNode';
+import { observer } from 'mobx-react-lite';
 
 interface Props<T extends MaterialVO | NoteVO> {
   tree: TreeModel<T>;
@@ -19,7 +21,7 @@ interface Props<T extends MaterialVO | NoteVO> {
   onDragStop: () => void;
 }
 
-export default function TreeView<T extends MaterialVO | NoteVO>({
+export default observer(function TreeView<T extends MaterialVO | NoteVO>({
   tree,
   onClick,
   onDragStart,
@@ -33,11 +35,9 @@ export default function TreeView<T extends MaterialVO | NoteVO>({
       onContextmenu={onContextmenu}
       onClick={onClick}
       className="scrollbar-stable scrollbar-thin grow overflow-hidden pr-2 hover:overflow-auto"
-      nodeClassName="[--hover-color:#f3f4f6] [--selected-color:#e2e8f0] 
-         hover:bg-[var(--hover-color)]
-         data-[selected=true]:bg-[var(--selected-color)]
-         data-[disabled=true]:cursor-not-allowed 
-         py-1 cursor-pointer group relative"
+      nodeClassName={(node) =>
+        clsx('py-1 cursor-pointer', node.isSelected && 'bg-gray-100', node.isDisabled && 'opacity-60')
+      }
       caretClassName="text-gray-500"
       tree={tree}
       multiple
@@ -54,4 +54,4 @@ export default function TreeView<T extends MaterialVO | NoteVO>({
       renderTitle={(node) => <NodeTitle node={node}>{nodeOperation(node)}</NodeTitle>}
     />
   );
-}
+});

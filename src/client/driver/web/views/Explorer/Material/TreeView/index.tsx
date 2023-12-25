@@ -22,6 +22,7 @@ export default function MaterialTreeView() {
       onDrop={noop}
       tree={tree}
       onClick={({ id, entity }) =>
+        tree.selectedNodes.length === 1 &&
         entity &&
         isEntityMaterialVO(entity) &&
         openEntity({ entityType: EntityTypes.Material, entityId: id, mimeType: entity.mimeType })

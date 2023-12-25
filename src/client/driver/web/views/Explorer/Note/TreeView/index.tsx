@@ -1,5 +1,4 @@
 import { container } from 'tsyringe';
-import { useEffect } from 'react';
 import { PlusOutlined } from '@ant-design/icons';
 
 import Explorer from '@domain/app/model/note/Explorer';
@@ -22,7 +21,9 @@ export default function NoteTreeView() {
       {/* <SearchInput entityType={EntityTypes.Note} /> */}
       <TreeView
         tree={tree}
-        onClick={({ id }) => openEntity({ entityType: EntityTypes.Note, entityId: id })}
+        onClick={({ id }) =>
+          tree.selectedNodes.length === 1 && openEntity({ entityType: EntityTypes.Note, entityId: id })
+        }
         onContextmenu={showContextmenu}
         onDragStop={resetTree}
         onDragStart={disableInvalidTargetNode}

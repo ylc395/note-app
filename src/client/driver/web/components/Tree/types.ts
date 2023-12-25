@@ -6,9 +6,9 @@ import type TreeNode from '@domain/common/model/abstract/TreeNode';
 
 interface TreeBaseProps<T extends HierarchyEntity> {
   tree: TreeModel<T>;
-  nodeClassName?: string;
-  caretClassName?: string;
-  titleClassName?: string;
+  nodeClassName?: string | ((node: TreeNode<T>) => string);
+  caretClassName?: string | ((node: TreeNode<T>) => string);
+  titleClassName?: string | ((node: TreeNode<T>) => string);
   loadingIcon?: ReactNode;
   multiple?: boolean;
   onContextmenu?: (node: TreeNode<T>) => void;
