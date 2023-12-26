@@ -6,8 +6,6 @@ import Droppable from '@web/components/dnd/Droppable';
 import type TreeNode from '@domain/common/model/abstract/TreeNode';
 import { NoteVO } from '@shared/domain/model/note';
 import { MaterialVO } from '@shared/domain/model/material';
-import { observer } from 'mobx-react-lite';
-import TreeDraggingPreview from './TreeDraggingPreview';
 
 interface Props<T extends NoteVO | MaterialVO> {
   children: ReactNode;
@@ -37,13 +35,7 @@ export default function DndTreeNode<T>({
       className={clsx(isOver && !node.isDisabled && 'bg-gray-100')}
       onDrop={(item) => !node.isDisabled && onDrop(item, node)}
     >
-      <Draggable
-        renderPreview={() => <TreeDraggingPreview />}
-        onDragStart={handleDragStart}
-        onDragCancel={onDragStop}
-        onDragEnd={onDragStop}
-        item={node}
-      >
+      <Draggable noPreview onDragStart={handleDragStart} onDragCancel={onDragStop} onDragEnd={onDragStop} item={node}>
         {children}
       </Draggable>
     </Droppable>

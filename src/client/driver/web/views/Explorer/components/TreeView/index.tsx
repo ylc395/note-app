@@ -10,6 +10,7 @@ import type { NoteVO } from '@shared/domain/model/note';
 import NodeTitle from './NodeTitle';
 import DndTreeNode from './DndTreeNode';
 import { observer } from 'mobx-react-lite';
+import TreeDraggingPreview from './TreeDraggingPreview';
 
 interface Props<T extends MaterialVO | NoteVO> {
   tree: TreeModel<T>;
@@ -31,27 +32,34 @@ export default observer(function TreeView<T extends MaterialVO | NoteVO>({
   onDragStop,
 }: Props<T>) {
   return (
-    <Tree
-      onContextmenu={onContextmenu}
-      onClick={onClick}
-      className="scrollbar-stable scrollbar-thin grow overflow-hidden pr-2 hover:overflow-auto"
-      nodeClassName={(node) =>
-        clsx('py-1 cursor-pointer', node.isSelected && 'bg-gray-100', node.isDisabled && 'opacity-60')
-      }
-      caretClassName="text-gray-500"
-      tree={tree}
-      multiple
-      renderNode={(node, originalNodeView) => (
-        <DndTreeNode<T>
-          node={node}
-          onDrop={onDrop as (item: unknown, node: TreeNode<MaterialVO | NoteVO>) => void}
-          onDragStart={onDragStart}
-          onDragStop={onDragStop}
-        >
-          {originalNodeView}
-        </DndTreeNode>
-      )}
-      renderTitle={(node) => <NodeTitle node={node}>{nodeOperation(node)}</NodeTitle>}
-    />
+    <>
+      <Tree
+        onContextmenu={onContextmenu}
+        onClick={onClick}
+        className="scrollbar-stable scrollbar-thin grow overflow-hidden pr-2 hover:overflow-auto"
+        nodeClassName={(node) =>
+          clsx(
+            'py-1 cursor-pointer',
+            node.isSelected && 'bg-gray-100',
+            node.isDisabled && 'opacity-60 cursor-not-allowed',
+          )
+        }
+        caretClassName="text-gray-500"
+        tree={tree}
+        multiple
+        renderNode={(node, originalNodeView) => (
+          <DndTreeNode<T>
+            node={node}
+            onDrop={onDrop as (item: unknown, node: TreeNode<MaterialVO | NoteVO>) => void}
+            onDragStart={onDragStart}
+            onDragStop={onDragStop}
+          >
+            {originalNodeView}
+          </DndTreeNode>
+        )}
+        renderTitle={(node) => <NodeTitle node={node}>{nodeOperation(node)}</NodeTitle>}
+      />
+      <TreeDraggingPreview />
+    </>
   );
 });

@@ -1,5 +1,5 @@
 import { container } from 'tsyringe';
-import { action } from 'mobx';
+import { action, computed } from 'mobx';
 import { Emitter, type EventMap } from 'strict-event-emitter';
 
 import Tree from '@domain/common/model/abstract/Tree';
@@ -17,13 +17,13 @@ export default abstract class Explorer<T extends EventMap = any> extends Emitter
     }
   }
 
-  @action.bound
-  public getSelectedNodesAsTree() {
+  @computed
+  public get selectedNodesAsTree() {
     const tree = new (this.tree.constructor as { new (): Tree })();
 
     tree.updateChildren(
       null,
-      this.tree.selectedNodes.map(({ entity }) => entity!),
+      this.tree.selectedNodes.map(({ entity }) => ({ ...entity!, parentId: null })),
     );
 
     for (const node of tree.root.children) {

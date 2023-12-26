@@ -4,9 +4,9 @@ import type { HierarchyEntity } from '@shared/domain/model/entity';
 import TreeNode from './TreeNode';
 import type { TreeProps } from './types';
 
-export default observer(function Tree<T extends HierarchyEntity>({ className, showRoot, ...ctx }: TreeProps<T>) {
+export default observer(function Tree<T extends HierarchyEntity>({ className, style, showRoot, ...ctx }: TreeProps<T>) {
   return (
-    <div className={className}>
+    <div className={className} style={style}>
       {showRoot ? (
         <TreeNode<T> node={ctx.tree.root} level={0} {...ctx} />
       ) : (

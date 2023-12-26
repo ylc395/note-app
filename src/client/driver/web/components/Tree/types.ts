@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 
 import type { HierarchyEntity } from '@shared/domain/model/entity';
 import type TreeModel from '@domain/common/model/abstract/Tree';
@@ -25,4 +25,5 @@ export interface TreeNodeProps<T extends HierarchyEntity> extends TreeBaseProps<
 export interface TreeProps<T extends HierarchyEntity> extends TreeBaseProps<T> {
   className?: string;
   showRoot?: boolean;
+  style?: CSSProperties;
 }

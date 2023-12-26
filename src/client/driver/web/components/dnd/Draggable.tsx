@@ -1,5 +1,5 @@
-import { useEffect, type ReactNode } from 'react';
-import { useDrag } from 'react-dnd';
+import { useEffect, type ReactNode, useRef, useLayoutEffect } from 'react';
+import { useDrag, useDragLayer } from 'react-dnd';
 import { createPortal } from 'react-dom';
 import { getEmptyImage } from 'react-dnd-html5-backend';
 
@@ -7,7 +7,7 @@ interface Props {
   children: ReactNode;
   item: unknown;
   className?: string;
-  renderPreview?: () => ReactNode;
+  noPreview?: boolean;
   onDragEnd?: () => void;
   onDragCancel?: () => void;
   onDragStart?: () => void;
@@ -18,19 +18,17 @@ export default function Draggable({
   onDragEnd,
   onDragStart,
   onDragCancel,
-  renderPreview,
+  noPreview,
   children,
   className,
 }: Props) {
-  const [{ isDragging, initialOffset, currentOffset }, drag, dragPreview] = useDrag(
+  const [{ isDragging }, drag, dragPreview] = useDrag(
     () => ({
       type: 'any',
       item,
       end: (_, monitor) => (monitor.didDrop() ? onDragEnd?.() : onDragCancel?.()),
       collect: (monitor) => ({
         isDragging: monitor.isDragging(),
-        initialOffset: monitor.getInitialSourceClientOffset(),
-        currentOffset: monitor.getSourceClientOffset(),
       }),
     }),
     [onDragEnd, item],
@@ -43,17 +41,14 @@ export default function Draggable({
   }, [onDragStart, isDragging]);
 
   useEffect(() => {
-    if (renderPreview) {
+    if (noPreview) {
       dragPreview(getEmptyImage(), { captureDraggingState: true });
     }
-  }, [renderPreview, dragPreview]);
+  }, [noPreview, dragPreview]);
 
   return (
-    <>
-      <div ref={drag} className={className}>
-        {children}
-      </div>
-      {renderPreview && isDragging && createPortal(<div>{renderPreview()}</div>, document.body)}
-    </>
+    <div ref={drag} className={className}>
+      {children}
+    </div>
   );
 }

@@ -1,7 +1,7 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./src/client/driver/web/**/*.{tsx,ts,html}'],
-  important: '#app',
+  important: '.note-app',
   corePlugins: {
     preflight: false,
   },
