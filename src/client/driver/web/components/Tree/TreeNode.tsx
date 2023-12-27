@@ -39,9 +39,11 @@ const TreeNode = observer(function <T extends HierarchyEntity>({ node, level, ..
 
   const handleClick: MouseEventHandler = (e) => {
     e.stopPropagation();
-    tree.toggleSelect(node.id, { isMultiple: multiple && (e.metaKey || e.ctrlKey) });
 
-    onClick?.(node);
+    const isMultiple = Boolean(multiple) && (e.metaKey || e.ctrlKey);
+
+    tree.toggleSelect(node.id, { isMultiple });
+    onClick?.(node, isMultiple);
   };
 
   const handleContextmenu: MouseEventHandler = (e) => {

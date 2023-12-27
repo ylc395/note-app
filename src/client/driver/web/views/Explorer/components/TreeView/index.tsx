@@ -9,14 +9,13 @@ import type { NoteVO } from '@shared/domain/model/note';
 
 import NodeTitle from './NodeTitle';
 import DndTreeNode from './DndTreeNode';
-import { observer } from 'mobx-react-lite';
 import TreeDraggingPreview from './TreeDraggingPreview';
 
 interface Props<T extends MaterialVO | NoteVO> {
   tree: TreeModel<T>;
   onContextmenu: (node: TreeNode<T>) => void;
   nodeOperation: (node: TreeNode<T>) => ReactNode;
-  onClick: (node: TreeNode<T>) => void;
+  onClick: (node: TreeNode<T>, isMultiple: boolean) => void;
   onDrop: (item: unknown, node: TreeNode<T>) => void;
   onDragStart: () => void;
   onDragStop: () => void;

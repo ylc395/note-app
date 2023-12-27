@@ -12,7 +12,7 @@ interface TreeBaseProps<T extends HierarchyEntity> {
   loadingIcon?: ReactNode;
   multiple?: boolean;
   onContextmenu?: (node: TreeNode<T>) => void;
-  onClick?: (node: TreeNode<T>) => void;
+  onClick?: (node: TreeNode<T>, isMultiple: boolean) => void;
   renderTitle?: (node: TreeNode<T>) => ReactNode;
   renderNode?: (node: TreeNode<T>, originalNodeView: ReactNode) => ReactNode;
 }

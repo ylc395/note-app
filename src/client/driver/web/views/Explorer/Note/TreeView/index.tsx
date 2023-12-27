@@ -21,9 +21,7 @@ export default function NoteTreeView() {
       {/* <SearchInput entityType={EntityTypes.Note} /> */}
       <TreeView
         tree={tree}
-        onClick={({ id }) =>
-          tree.selectedNodes.length === 1 && openEntity({ entityType: EntityTypes.Note, entityId: id })
-        }
+        onClick={({ id }, isMultiple) => !isMultiple && openEntity({ entityType: EntityTypes.Note, entityId: id })}
         onContextmenu={showContextmenu}
         onDragStop={resetTree}
         onDragStart={updateTreeForDropping}

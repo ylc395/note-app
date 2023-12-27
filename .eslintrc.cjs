@@ -13,7 +13,7 @@ module.exports = {
       extends: ['plugin:@typescript-eslint/recommended'],
     },
     {
-      files: ['./src/client/app/driver/web/**', './src/client/app/domain/**', './src/client/webExtension/**'],
+      files: ['./src/client/driver/web/**', './src/client/domain/**'],
       excludedFiles: ['**/components/**'],
       extends: ['plugin:mobx/recommended'],
     },
@@ -46,7 +46,7 @@ module.exports = {
       rules: { '@typescript-eslint/explicit-function-return-type': 'error' },
     },
     {
-      files: ['*.js', 'test/**/*'],
+      files: ['*.js', '*.cjs', 'test/**/*'],
       env: { node: true },
     },
   ],
