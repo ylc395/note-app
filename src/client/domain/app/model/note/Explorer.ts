@@ -1,7 +1,7 @@
 import { action, makeObservable } from 'mobx';
 import { compact, once } from 'lodash-es';
 
-import NoteTree from '@domain/common/model/note/Tree';
+import NoteTree, { NoteTreeNode } from '@domain/common/model/note/Tree';
 import Explorer from '../abstract/Explorer';
 import { singleton } from 'tsyringe';
 
@@ -27,12 +27,10 @@ export default class NoteExplorer extends Explorer<Events> {
   }
 
   @action.bound
-  public disableInvalidTargetNode() {
-    for (const node of this.tree.selectedNodes) {
-      if (node.isDisabled) {
-        continue;
-      }
+  public updateTreeForDropping(movingId?: NoteTreeNode['id']) {
+    const nodes = movingId ? [this.tree.getNode(movingId)] : this.tree.selectedNodes;
 
+    for (const node of nodes) {
       node.isDisabled = true;
       node.parent!.isDisabled = true;
 
@@ -40,6 +38,8 @@ export default class NoteExplorer extends Explorer<Events> {
         descendant.isDisabled = true;
       }
     }
+
+    this.status = 'toDrop';
   }
 
   public async showContextmenu() {

@@ -13,6 +13,8 @@ import NoteEditor from '@domain/app/model/note/Editor';
 import NoteExplorer from '@domain/app/model/note/Explorer';
 import type { RecyclablesDTO } from '@shared/domain/model/recyclables';
 import { EntityParentId, EntityTypes } from '@shared/domain/model/entity';
+import TreeNode from '@domain/common/model/abstract/TreeNode';
+import NoteTree from '@domain/common/model/note/Tree';
 
 @singleton()
 export default class NoteService {
@@ -58,30 +60,26 @@ export default class NoteService {
     this.ui.feedback({ type: 'success', content: '已移至回收站' });
   }
 
-  private getIds(item: unknown) {
-    if (item === this.tree) {
-      return (item as typeof this.tree).selectedNodes.map(({ id }) => id);
+  public readonly getNoteIds = (item: unknown) => {
+    if (item instanceof TreeNode && item.tree === this.tree) {
+      return item.tree.selectedNodes.map(({ id }) => id);
     }
 
     if (item instanceof NoteEditor) {
       return [item.entityLocator.entityId];
     }
 
-    return [];
-  }
-
-  public readonly canMoveTo = (movingItem: unknown, target: EntityParentId) => {
-    const ids = this.getIds(movingItem);
-
-    if (ids.length === 0) {
-      return false;
+    if (item instanceof NoteTree) {
+      return item.selectedNodes.map(({ id }) => id);
     }
-
-    this.tree;
   };
 
   public readonly moveNotes = async (targetId: NoteVO['parentId'], item: unknown) => {
-    const ids = compact(this.tree.selectedNodes.map(({ id }) => id));
+    const ids = item ? this.getNoteIds(item) : compact(this.tree.selectedNodes.map(({ id }) => id));
+
+    if (!ids) {
+      return;
+    }
 
     await this.remote.patch<NotesPatchDTO>('/notes', {
       ids,

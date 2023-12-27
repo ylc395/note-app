@@ -1,9 +1,10 @@
 import { container } from 'tsyringe';
-import { useDragDropManager } from 'react-dnd';
+import { observer } from 'mobx-react-lite';
+import { useMemo } from 'react';
+import { useDragLayer } from 'react-dnd';
 
 import NoteService from '@domain/app/service/NoteService';
 import { useModal } from '@web/components/Modal';
-import Droppable from '@web/components/dnd/Droppable';
 import NoteExplorer from '@domain/app/model/note/Explorer';
 
 import ExplorerHeader from '../components/ExplorerHeader';
@@ -12,21 +13,22 @@ import TreeOperations from './Operations';
 import TargetTreeModal from './TargetTreeModal';
 import ctx from './context';
 
-// eslint-disable-next-line mobx/missing-observer
-export default (function NoteExplorerView() {
-  const { moveNotes } = container.resolve(NoteService);
-  const { tree } = container.resolve(NoteExplorer);
+export default observer(function NoteExplorerView() {
+  const { moveNotes, getNoteIds } = container.resolve(NoteService);
+  const { tree, status } = container.resolve(NoteExplorer);
   const editingModal = useModal();
   const movingModal = useModal();
-  const draggingItem = useDragDropManager().getMonitor().getItem();
+  const { item } = useDragLayer((monitor) => ({ item: monitor.getItem() }));
+  const canDrop = useMemo(
+    () => status === 'toDrop' && !tree.root.isDisabled && getNoteIds(item),
+    [tree.root.isDisabled, item, status],
+  );
 
   return (
     <ctx.Provider value={{ editingModal, movingModal }}>
-      <Droppable onDrop={() => !tree.root.isDisabled && moveNotes(null, draggingItem)}>
-        <ExplorerHeader title="笔记">
-          <TreeOperations />
-        </ExplorerHeader>
-      </Droppable>
+      <ExplorerHeader onDrop={canDrop ? () => moveNotes(null, item) : undefined} title="笔记">
+        <TreeOperations />
+      </ExplorerHeader>
       <TreeView />
       <TargetTreeModal />
     </ctx.Provider>

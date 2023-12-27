@@ -35,7 +35,7 @@ export default function DndTreeNode<T>({
       className={clsx(isOver && !node.isDisabled && 'bg-gray-100')}
       onDrop={(item) => !node.isDisabled && onDrop(item, node)}
     >
-      <Draggable noPreview onDragStart={handleDragStart} onDragCancel={onDragStop} onDragEnd={onDragStop} item={node}>
+      <Draggable noPreview onDragStart={handleDragStart} onDragEnd={onDragStop} item={node}>
         {children}
       </Draggable>
     </Droppable>

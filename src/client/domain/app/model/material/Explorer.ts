@@ -1,5 +1,4 @@
 import { action } from 'mobx';
-import { once } from 'lodash-es';
 import { singleton } from 'tsyringe';
 
 import { isEntityMaterialVO } from '@shared/domain/model/material';
@@ -15,7 +14,7 @@ export default class MaterialExplorer extends Explorer {
   }
 
   @action.bound
-  public disableInvalidTargetNode() {
+  public updateTreeForDropping() {
     for (const node of this.tree.allNodes) {
       node.isDisabled = !node.entity || isEntityMaterialVO(node.entity);
     }
@@ -32,5 +31,7 @@ export default class MaterialExplorer extends Explorer {
         descendant.isDisabled = false;
       }
     }
+
+    this.status = 'toDrop';
   }
 }

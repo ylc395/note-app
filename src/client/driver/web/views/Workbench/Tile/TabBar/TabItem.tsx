@@ -10,6 +10,8 @@ import Button from '@web/components/Button';
 import Draggable from '@web/components/dnd/Draggable';
 import Droppable from '@web/components/dnd/Droppable';
 import useDrop from './useDrop';
+import { container } from 'tsyringe';
+import ExplorerManager from '@domain/app/model/manager/ExplorerManager';
 
 export default observer(function TabItem({ editor }: { editor: Editor }) {
   const { tile } = editor;
@@ -17,6 +19,7 @@ export default observer(function TabItem({ editor }: { editor: Editor }) {
   assert(tile);
 
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const { currentExplorer } = container.resolve(ExplorerManager);
   const [isOver, setIsOver] = useState(false);
   const { onDrop } = useDrop(editor);
 
@@ -34,6 +37,8 @@ export default observer(function TabItem({ editor }: { editor: Editor }) {
     <Droppable onDrop={onDrop} onOverToggle={setIsOver}>
       <Draggable
         item={editor}
+        onDragStart={() => currentExplorer.updateTreeForDropping(editor.entityLocator.entityId)}
+        onDragEnd={currentExplorer.reset}
         className={clsx(
           'flex cursor-pointer flex-nowrap items-center border-0 border-r border-solid border-gray-200 p-2 text-gray-500',
           currentEditor === editor ? 'bg-white' : isOver ? 'bg-gray-200' : 'bg-gray-50',

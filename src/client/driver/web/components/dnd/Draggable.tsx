@@ -9,24 +9,15 @@ interface Props {
   className?: string;
   noPreview?: boolean;
   onDragEnd?: () => void;
-  onDragCancel?: () => void;
   onDragStart?: () => void;
 }
 
-export default function Draggable({
-  item,
-  onDragEnd,
-  onDragStart,
-  onDragCancel,
-  noPreview,
-  children,
-  className,
-}: Props) {
+export default function Draggable({ item, onDragEnd, onDragStart, noPreview, children, className }: Props) {
   const [{ isDragging }, drag, dragPreview] = useDrag(
     () => ({
       type: 'any',
       item,
-      end: (_, monitor) => (monitor.didDrop() ? onDragEnd?.() : onDragCancel?.()),
+      end: onDragEnd,
       collect: (monitor) => ({
         isDragging: monitor.isDragging(),
       }),

@@ -22,7 +22,7 @@ interface Props<T extends MaterialVO | NoteVO> {
   onDragStop: () => void;
 }
 
-export default observer(function TreeView<T extends MaterialVO | NoteVO>({
+export default function TreeView<T extends MaterialVO | NoteVO>({
   tree,
   onClick,
   onDragStart,
@@ -62,4 +62,4 @@ export default observer(function TreeView<T extends MaterialVO | NoteVO>({
       <TreeDraggingPreview />
     </>
   );
-});
+}

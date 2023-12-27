@@ -1,5 +1,5 @@
 import { container } from 'tsyringe';
-import { action, computed } from 'mobx';
+import { action, computed, observable } from 'mobx';
 import { Emitter, type EventMap } from 'strict-event-emitter';
 
 import Tree from '@domain/common/model/abstract/Tree';
@@ -9,12 +9,15 @@ export default abstract class Explorer<T extends EventMap = any> extends Emitter
   protected readonly ui = container.resolve(uiToken);
   public abstract readonly tree: Tree;
   public abstract loadRoot(): void;
+  @observable public status: 'idle' | 'toDrop' = 'idle';
 
   @action.bound
-  public resetTree() {
+  public reset() {
     for (const node of this.tree.allNodes) {
       node.isDisabled = false;
     }
+
+    this.status = 'idle';
   }
 
   @computed
