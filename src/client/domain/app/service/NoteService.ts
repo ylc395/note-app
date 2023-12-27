@@ -8,13 +8,13 @@ import { token as UIToken } from '@domain/app/infra/ui';
 import type { NotesPatchDTO, NoteVO, NotePatchDTO } from '@shared/domain/model/note';
 import { MULTIPLE_ICON_FLAG, type NoteMetadata } from '@domain/app/model/note/MetadataForm';
 import { Workbench } from '@domain/app/model/workbench';
-import EditableEntityManager from '@domain/app/model/manager/EditableEntityManager';
 import NoteEditor from '@domain/app/model/note/Editor';
 import NoteExplorer from '@domain/app/model/note/Explorer';
 import type { RecyclablesDTO } from '@shared/domain/model/recyclables';
 import { EntityTypes } from '@shared/domain/model/entity';
 import TreeNode from '@domain/common/model/abstract/TreeNode';
 import NoteTree from '@domain/common/model/note/Tree';
+import eventBus, { Events } from '../model/note/eventBus';
 
 @singleton()
 export default class NoteService {
@@ -22,7 +22,6 @@ export default class NoteService {
   private readonly ui = container.resolve(UIToken);
   private readonly explorer = container.resolve(NoteExplorer);
   private readonly workbench = container.resolve(Workbench);
-  private readonly editableEntityManager = container.resolve(EditableEntityManager);
 
   private get tree() {
     return this.explorer.tree;
@@ -87,11 +86,7 @@ export default class NoteService {
     });
 
     for (const id of ids) {
-      const entity = this.tree.getNode(id).entity;
-      assert(entity);
-
-      this.tree.updateNode({ ...entity, parentId: targetId });
-      this.editableEntityManager.refresh(id);
+      eventBus.emit(Events.Updated, { id, parentId: targetId });
     }
 
     if (targetId) {

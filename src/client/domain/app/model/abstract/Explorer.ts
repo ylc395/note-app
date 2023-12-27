@@ -4,7 +4,6 @@ import { Emitter, type EventMap } from 'strict-event-emitter';
 
 import Tree from '@domain/common/model/abstract/Tree';
 import { token as uiToken } from '@domain/app/infra/ui';
-import EditableEntityManager from '../manager/EditableEntityManager';
 
 export default abstract class Explorer<T extends EventMap = never> extends Emitter<T> {
   constructor() {
@@ -12,7 +11,6 @@ export default abstract class Explorer<T extends EventMap = never> extends Emitt
     makeObservable(this);
   }
 
-  protected readonly editableEntityManager = container.resolve(EditableEntityManager);
   protected readonly ui = container.resolve(uiToken);
   public abstract readonly tree: Tree;
   public abstract loadRoot(): void;

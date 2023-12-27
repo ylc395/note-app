@@ -7,14 +7,12 @@ import MaterialTree from '@domain/common/model/material/Tree';
 import Explorer from '@domain/app/model/abstract/Explorer';
 import EditableMaterial from './editable/EditableMaterial';
 import EditableEntity from '../abstract/EditableEntity';
-import { EventNames as EditableEntityEvents } from '../manager/EditableEntityManager';
 
 @singleton()
 export default class MaterialExplorer extends Explorer {
   constructor() {
     super();
     makeObservable(this);
-    this.editableEntityManager.on(EditableEntityEvents.entityUpdated, this.handleEntityUpdated);
   }
   public readonly tree = new MaterialTree();
 

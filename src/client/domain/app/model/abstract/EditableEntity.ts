@@ -1,6 +1,6 @@
 import { uniqueId, pull } from 'lodash-es';
 import { container } from 'tsyringe';
-import { action, makeObservable, observable } from 'mobx';
+import { makeObservable, observable } from 'mobx';
 import { Emitter } from 'strict-event-emitter';
 
 import { token as remoteToken } from '@domain/common/infra/remote';
@@ -18,16 +18,14 @@ export const isEditableEntityLocator = (locator: EntityLocator): locator is Edit
   [EntityTypes.Note, EntityTypes.Material].includes(locator.entityType);
 
 export enum EventNames {
-  EntityUpdated = 'editableEntity.entityUpdated',
   EntityDestroyed = 'editableEntity.destroyed',
 }
 
 type Events = {
-  [EventNames.EntityUpdated]: [];
   [EventNames.EntityDestroyed]: [];
 };
 
-export default abstract class EditableEntity<T = unknown, E extends Events = Events> extends Emitter<E> {
+export default abstract class EditableEntity<T = unknown> extends Emitter<Events> {
   protected readonly remote = container.resolve(remoteToken);
   readonly id = uniqueId('editableEntity-');
   abstract readonly entityType: EditableEntityTypes;

@@ -4,18 +4,20 @@ import assert from 'assert';
 
 import { EntityTypes } from '@domain/app/model/entity';
 import type { DetailedNoteVO as Note, NotePatchDTO as NotePatch } from '@shared/domain/model/note';
-import EditableEntity, { EventNames } from '@domain/app/model/abstract/EditableEntity';
-import NoteEditor from './Editor';
+import EditableEntity from '@domain/app/model/abstract/EditableEntity';
 import { Tile } from '@domain/app/model/workbench';
+import NoteEditor from './Editor';
+import eventBus, { Events as NoteEvents, UpdateEvent } from './eventBus';
 
 export default class EditableNote extends EditableEntity<Note> {
   readonly entityType = EntityTypes.Note;
   constructor(noteId: Note['id']) {
     super(noteId);
     makeObservable(this);
+    eventBus.on(NoteEvents.Updated, this.handleNoteUpdated);
   }
 
-  async load() {
+  public async load() {
     const { body: note } = await this.remote.get<void, Note>(`/notes/${this.entityId}`);
     runInAction(() => (this.entity = note));
   }
@@ -24,13 +26,23 @@ export default class EditableNote extends EditableEntity<Note> {
     return new NoteEditor(this, tile);
   }
 
+  private readonly handleNoteUpdated = ({ id, parentId }: UpdateEvent) => {
+    if (id !== this.entityId) {
+      return;
+    }
+
+    if (parentId) {
+      this.load();
+    }
+  };
+
   @action
   async update(note: Pick<NotePatch, 'title' | 'body'>) {
     assert(this.entity);
     Object.assign(this.entity, { ...note, updatedAt: Date.now() });
 
     this.uploadNote(note);
-    this.emit(EventNames.EntityUpdated);
+    eventBus.emit(NoteEvents.Updated, { id: this.entityId, ...note });
   }
 
   private readonly uploadNote = debounce((note: NotePatch) => {
@@ -39,6 +51,7 @@ export default class EditableNote extends EditableEntity<Note> {
 
   destroy(): void {
     this.uploadNote.flush();
+    eventBus.off(NoteEvents.Updated, this.handleNoteUpdated);
     super.destroy();
   }
 }

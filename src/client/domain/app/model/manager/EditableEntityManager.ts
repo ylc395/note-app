@@ -1,4 +1,3 @@
-import { Emitter } from 'strict-event-emitter';
 import assert from 'assert';
 import { singleton } from 'tsyringe';
 
@@ -13,16 +12,8 @@ import EditablePdf from '@domain/app/model/material/editable/EditablePdf';
 import EditableHtml from '@domain/app/model/material/editable/EditableHtml';
 import EditableImage from '@domain/app/model/material/editable/EditableImage';
 
-export enum EventNames {
-  entityUpdated = 'editorManager.entityUpdated',
-}
-
-type Events = {
-  [EventNames.entityUpdated]: [EditableEntity];
-};
-
 @singleton()
-export default class EditableEntityManager extends Emitter<Events> {
+export default class EditableEntityManager {
   private readonly editableEntities: Record<EntityId, EditableEntity> = {};
 
   private createEditableEntity({ entityId, entityType, mimeType }: EditableEntityLocator) {
@@ -44,7 +35,6 @@ export default class EditableEntityManager extends Emitter<Events> {
     }
 
     this.editableEntities[entityId] = editableEntity;
-    editableEntity.on(EditableEntityEvents.EntityUpdated, () => this.emit(EventNames.entityUpdated, editableEntity!));
     editableEntity.on(
       EditableEntityEvents.EntityDestroyed,
       () => delete this.editableEntities[editableEntity!.entityId],
@@ -73,10 +63,6 @@ export default class EditableEntityManager extends Emitter<Events> {
 
   private getEditable(id: EntityId) {
     return this.editableEntities[id];
-  }
-
-  public refresh(id: EntityId) {
-    this.getEditable(id)?.load();
   }
 
   public getOrCreateEditable(locator: EditableEntityLocator) {

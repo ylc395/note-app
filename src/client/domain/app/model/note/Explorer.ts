@@ -5,9 +5,7 @@ import assert from 'assert';
 
 import NoteTree, { NoteTreeNode } from '@domain/common/model/note/Tree';
 import Explorer from '../abstract/Explorer';
-import type EditableEntity from '../abstract/EditableEntity';
-import EditableNote from './Editable';
-import { EventNames as EditableEntityEvents } from '../manager/EditableEntityManager';
+import eventBus, { Events as NoteEvents, UpdateEvent } from './eventBus';
 
 export enum EventNames {
   Action = 'noteExplorer.action',
@@ -22,7 +20,7 @@ export default class NoteExplorer extends Explorer<Events> {
   constructor() {
     super();
     makeObservable(this);
-    this.editableEntityManager.on(EditableEntityEvents.entityUpdated, this.handleEntityUpdated);
+    eventBus.on(NoteEvents.Updated, this.handleUpdate);
   }
 
   public readonly tree = new NoteTree();
@@ -31,16 +29,17 @@ export default class NoteExplorer extends Explorer<Events> {
     this.tree.root.loadChildren();
   }
 
-  protected readonly handleEntityUpdated = (editableEntity: EditableEntity) => {
-    if (!(editableEntity instanceof EditableNote)) {
-      return;
-    }
-
-    const node = this.tree.getNode(editableEntity.entityId, true);
+  private readonly handleUpdate = ({ id, title, parentId }: UpdateEvent) => {
+    const node = this.tree.getNode(id, true);
 
     if (node) {
       assert(node.entity);
-      this.tree.updateNode({ ...node.entity, ...editableEntity.entity });
+      const patch = {
+        title: title !== undefined ? title : node.entity.title,
+        parentId: parentId !== undefined ? parentId : node.entity.parentId,
+      };
+
+      this.tree.updateNode({ ...node.entity, ...patch });
     }
   };
 

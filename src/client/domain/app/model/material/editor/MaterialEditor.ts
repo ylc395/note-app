@@ -15,16 +15,13 @@ export default abstract class MaterialEditor<T extends EditableMaterial, S = unk
   @computed
   get tabView() {
     return {
+      breadcrumbs: [],
       title: this.editable.entity?.metadata.title || '',
       icon: this.editable.entity?.metadata.icon || null,
     };
   }
 
   @observable currentAnnotationId: AnnotationVO['id'] | null = null;
-
-  get breadcrumbs() {
-    return [];
-  }
 
   async removeCurrentAnnotation() {
     assert(this.currentAnnotationId);

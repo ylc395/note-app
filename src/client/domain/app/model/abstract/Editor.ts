@@ -21,8 +21,7 @@ type Events = {
 export default abstract class Editor<T extends EditableEntity = EditableEntity, S = unknown> extends Emitter<Events> {
   readonly id = uniqueId('editor-');
   private readonly localStorage = container.resolve(localStorageToken);
-  abstract readonly tabView: { title: string; icon: string | null };
-  abstract readonly breadcrumbs: Path;
+  abstract readonly tabView: { title: string; icon: string | null; breadcrumbs: Path };
   @observable isFocused = false;
   uiState: Partial<S> | null = null;
 
