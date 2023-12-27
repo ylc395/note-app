@@ -1,9 +1,13 @@
 import { action, makeObservable } from 'mobx';
-import { compact, once } from 'lodash-es';
+import { compact } from 'lodash-es';
+import { singleton } from 'tsyringe';
+import assert from 'assert';
 
 import NoteTree, { NoteTreeNode } from '@domain/common/model/note/Tree';
 import Explorer from '../abstract/Explorer';
-import { singleton } from 'tsyringe';
+import type EditableEntity from '../abstract/EditableEntity';
+import EditableNote from './Editable';
+import { EventNames as EditableEntityEvents } from '../manager/EditableEntityManager';
 
 export enum EventNames {
   Action = 'noteExplorer.action',
@@ -18,6 +22,7 @@ export default class NoteExplorer extends Explorer<Events> {
   constructor() {
     super();
     makeObservable(this);
+    this.editableEntityManager.on(EditableEntityEvents.entityUpdated, this.handleEntityUpdated);
   }
 
   public readonly tree = new NoteTree();
@@ -25,6 +30,19 @@ export default class NoteExplorer extends Explorer<Events> {
   public loadRoot() {
     this.tree.root.loadChildren();
   }
+
+  protected readonly handleEntityUpdated = (editableEntity: EditableEntity) => {
+    if (!(editableEntity instanceof EditableNote)) {
+      return;
+    }
+
+    const node = this.tree.getNode(editableEntity.entityId, true);
+
+    if (node) {
+      assert(node.entity);
+      this.tree.updateNode({ ...node.entity, ...editableEntity.entity });
+    }
+  };
 
   @action.bound
   public updateTreeForDropping(movingId?: NoteTreeNode['id']) {

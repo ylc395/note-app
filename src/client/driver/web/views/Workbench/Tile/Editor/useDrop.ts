@@ -1,9 +1,8 @@
 import { useMemoizedFn } from 'ahooks';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { container } from 'tsyringe';
 
 import { type Tile, TileSplitDirections } from '@domain/app/model/workbench';
-import ExplorerManager from '@domain/app/model/manager/ExplorerManager';
 import Editor from '@domain/app/model/abstract/Editor';
 import { Workbench } from '@domain/app/model/workbench';
 import TreeNode from '@domain/common/model/abstract/TreeNode';
@@ -25,6 +24,7 @@ const directionMap = {
 export default function useDrop(tile: Tile) {
   const { moveEditor, openEntity } = container.resolve(Workbench);
   const [dropArea, setDropArea] = useState<Position>();
+  const [isOver, setIsOver] = useState(false);
 
   const onDrop = useMemoizedFn((item: unknown) => {
     const direction = dropArea
@@ -65,5 +65,11 @@ export default function useDrop(tile: Tile) {
     setDropArea(position);
   });
 
-  return { onDrop, onDragMove, dropArea };
+  useEffect(() => {
+    if (!isOver) {
+      setDropArea(undefined);
+    }
+  }, [isOver]);
+
+  return { onDrop, onDragMove, dropArea, setIsOver };
 }

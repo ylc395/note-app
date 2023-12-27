@@ -1,9 +1,10 @@
 import { ConfigProvider, message as antdMessage } from 'antd';
+import { DndProvider } from 'react-dnd';
 import { useEffect } from 'react';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 
 import Explorer from './Explorer';
 import Workbench from './Workbench';
-import Dnd from './Dnd';
 
 import './index.css';
 
@@ -16,13 +17,13 @@ export default function App() {
   }, []);
 
   return (
-    <Dnd>
+    <DndProvider backend={HTML5Backend}>
       <ConfigProvider getPopupContainer={getContainer}>
         <main className="flex h-screen">
           <Explorer />
           <Workbench />
         </main>
       </ConfigProvider>
-    </Dnd>
+    </DndProvider>
   );
 }

@@ -12,7 +12,7 @@ import EditableEntityManager from '@domain/app/model/manager/EditableEntityManag
 import NoteEditor from '@domain/app/model/note/Editor';
 import NoteExplorer from '@domain/app/model/note/Explorer';
 import type { RecyclablesDTO } from '@shared/domain/model/recyclables';
-import { EntityParentId, EntityTypes } from '@shared/domain/model/entity';
+import { EntityTypes } from '@shared/domain/model/entity';
 import TreeNode from '@domain/common/model/abstract/TreeNode';
 import NoteTree from '@domain/common/model/note/Tree';
 

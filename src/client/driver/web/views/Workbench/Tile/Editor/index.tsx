@@ -14,10 +14,10 @@ import HtmlEditorView from './HtmlEditor';
 import useDrop from './useDrop';
 
 export default observer(function Tile({ tile }: { tile: Tile }) {
-  const { onDrop, onDragMove, dropArea } = useDrop(tile);
+  const { onDrop, setIsOver, dropArea } = useDrop(tile);
 
   return (
-    <Droppable className="relative min-h-0 shrink grow" onDragMove={onDragMove} onDrop={onDrop}>
+    <Droppable className="relative min-h-0 shrink grow" onOverToggle={setIsOver} onDrop={onDrop}>
       {tile.currentEditor instanceof NoteEditor && <NoteEditorView editor={tile.currentEditor} />}
       {tile.currentEditor instanceof ImageEditor && <ImageEditorView editor={tile.currentEditor} />}
       {tile.currentEditor instanceof PdfEditor && <PdfEditorView editor={tile.currentEditor} />}

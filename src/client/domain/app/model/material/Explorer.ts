@@ -1,17 +1,39 @@
-import { action } from 'mobx';
+import { action, makeObservable } from 'mobx';
 import { singleton } from 'tsyringe';
+import assert from 'assert';
 
 import { isEntityMaterialVO } from '@shared/domain/model/material';
 import MaterialTree from '@domain/common/model/material/Tree';
 import Explorer from '@domain/app/model/abstract/Explorer';
+import EditableMaterial from './editable/EditableMaterial';
+import EditableEntity from '../abstract/EditableEntity';
+import { EventNames as EditableEntityEvents } from '../manager/EditableEntityManager';
 
 @singleton()
 export default class MaterialExplorer extends Explorer {
+  constructor() {
+    super();
+    makeObservable(this);
+    this.editableEntityManager.on(EditableEntityEvents.entityUpdated, this.handleEntityUpdated);
+  }
   public readonly tree = new MaterialTree();
 
   public loadRoot() {
     this.tree.root.loadChildren();
   }
+
+  private readonly handleEntityUpdated = (editableEntity: EditableEntity) => {
+    if (!(editableEntity instanceof EditableMaterial)) {
+      return;
+    }
+
+    const node = this.tree.getNode(editableEntity.entityId, true);
+
+    if (node) {
+      assert(node.entity);
+      this.tree.updateNode({ ...node.entity, ...editableEntity.entity });
+    }
+  };
 
   @action.bound
   public updateTreeForDropping() {
