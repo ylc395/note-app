@@ -2,11 +2,12 @@ import { Input, Space, Button, Tooltip } from 'antd';
 import { observer } from 'mobx-react-lite';
 import { type ChangeEvent, useContext } from 'react';
 import { InfoCircleOutlined, FileSearchOutlined } from '@ant-design/icons';
+import ui from '@web/infra/ui';
 
 import EditorContext from './Context';
 
 export default observer(function NoteTitle() {
-  const { editor, infoModal } = useContext(EditorContext);
+  const { editor } = useContext(EditorContext);
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => editor.updateTitle(e.target.value);
 
   return (
@@ -23,7 +24,7 @@ export default observer(function NoteTitle() {
           <Button onClick={editor.toggleSearch} type="text" icon={<FileSearchOutlined />} />
         </Tooltip>
         <Tooltip title="信息与统计">
-          <Button onClick={infoModal.open} type="text" icon={<InfoCircleOutlined />} />
+          <Button onClick={() => ui.showModal(Symbol())} type="text" icon={<InfoCircleOutlined />} />
         </Tooltip>
       </Space.Compact>
     </div>

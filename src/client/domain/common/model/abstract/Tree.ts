@@ -31,9 +31,17 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
   }
 
   @computed
-  // root node may be included
+  // root node not included
   public get selectedNodes() {
     return this.allNodes.filter((node) => node.isSelected);
+  }
+
+  public getSelectedNodeIds(): string[];
+  public getSelectedNodeIds(containRoot: true): (string | null)[];
+  public getSelectedNodeIds(containRoot?: true) {
+    return this.allNodes
+      .filter((node) => (containRoot ? node.isSelected : node.isSelected && node !== this.root))
+      .map((node) => (this.root === node ? null : node.id));
   }
 
   getNode(id: TreeNode<T>['id'] | null): TreeNode<T>;
@@ -82,12 +90,12 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
     const node = new TreeNode(this, {
       entity,
       parent,
-      ...this.entityToNode(entity),
     });
 
     parent.isLeaf = false;
     parent.children.push(node);
     this.nodes[entity.id] = node;
+    Object.assign(node, this.entityToNode(entity));
 
     return node;
   }

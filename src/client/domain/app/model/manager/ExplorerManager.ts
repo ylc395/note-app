@@ -36,6 +36,6 @@ export default class ExplorerManager {
   public switchTo(type: ExplorerTypes) {
     this.localStorage.set(CURRENT_EXPLORER_KEY, type);
     this.currentExplorerType = type;
-    this.currentExplorer.loadRoot();
+    this.currentExplorer.load();
   }
 }

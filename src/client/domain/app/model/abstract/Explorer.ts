@@ -11,7 +11,7 @@ export default abstract class Explorer {
 
   protected readonly ui = container.resolve(uiToken);
   public abstract readonly tree: Tree;
-  public abstract loadRoot(): void;
+  public abstract load(): void;
 
   @observable
   public status: 'idle' | 'toDrop' = 'idle';

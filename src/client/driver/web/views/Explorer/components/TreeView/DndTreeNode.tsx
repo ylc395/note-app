@@ -15,13 +15,7 @@ interface Props<T extends NoteVO | MaterialVO> {
   onDragStop: () => void;
 }
 
-export default function DndTreeNode<T>({
-  children,
-  node,
-  onDrop,
-  onDragStart,
-  onDragStop,
-}: Props<NoteVO | MaterialVO>) {
+export default function DndTreeNode({ children, node, onDrop, onDragStart, onDragStop }: Props<NoteVO | MaterialVO>) {
   const handleDragStart = () => {
     node.tree.toggleSelect(node.id, { value: true });
     onDragStart();

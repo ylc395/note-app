@@ -6,10 +6,7 @@ import type Tree from './Tree';
 import assert from 'assert';
 
 export default class TreeNode<T extends HierarchyEntity> {
-  constructor(
-    public readonly tree: Tree<T>,
-    options?: { parent: TreeNode<T>; entity: T; title?: string; isDisabled?: boolean; isLeaf?: boolean },
-  ) {
+  constructor(public readonly tree: Tree<T>, options?: { parent: TreeNode<T>; entity: T }) {
     if (!options) {
       this.isLeaf = false;
       this.isExpanded = true;
@@ -17,9 +14,6 @@ export default class TreeNode<T extends HierarchyEntity> {
 
     this.parent = options?.parent || null;
     this.entity = options?.entity || null;
-    this.title = options?.title ?? '';
-    this.isDisabled = options?.isDisabled ?? false;
-    this.isLeaf = options?.isLeaf ?? true;
 
     makeObservable(this);
   }
@@ -90,9 +84,9 @@ export default class TreeNode<T extends HierarchyEntity> {
 
   @observable.ref public parent: TreeNode<T> | null; // only root node has no parent;
   @observable.ref public entity: T | null; // only root node has no entity;
-  @observable public isDisabled;
-  @observable public title;
-  @observable public isLeaf;
+  @observable public isDisabled = false;
+  @observable public title = '';
+  @observable public isLeaf = true;
   @observable.shallow public children: TreeNode<T>[] = [];
   @observable public isExpanded = false;
   @observable public isSelected = false;

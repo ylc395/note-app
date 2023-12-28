@@ -17,7 +17,7 @@ export default class NoteExplorer extends Explorer {
 
   public readonly tree = new NoteTree();
 
-  public loadRoot() {
+  public load() {
     this.tree.root.loadChildren();
   }
 
@@ -65,7 +65,7 @@ export default class NoteExplorer extends Explorer {
     );
 
     if (action) {
-      eventBus.emit(NoteEvents.Action, { action, id: this.tree.selectedNodes.map(({ id }) => id) });
+      eventBus.emit(NoteEvents.Action, { action, id: this.tree.getSelectedNodeIds() });
     }
   };
 }

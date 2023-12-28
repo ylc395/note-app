@@ -10,9 +10,10 @@ export type MenuItem =
   | { type: 'separator' };
 
 export interface UI {
-  getActionFromMenu: (items: MenuItem[], pos?: { x: number; y: number }) => Promise<string | null>;
+  getActionFromMenu: (items: MenuItem[], pos?: { x: number; y: number }) => Promise<string | undefined>;
   openNewWindow: (url: string) => Promise<void> | void;
   feedback: (options: { type: 'success' | 'fail'; content: string; onClick?: () => void }) => Promise<void>;
+  showModal: (modalId: symbol) => void;
 }
 
 export const token: InjectionToken<UI> = Symbol();

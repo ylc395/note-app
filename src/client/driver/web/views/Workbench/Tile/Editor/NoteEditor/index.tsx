@@ -9,12 +9,10 @@ import Body from './Body';
 import Title from './Title';
 // import Info from './Info';
 import Context, { type EditorContext } from './Context';
-import { useModal } from '@web/components/Modal';
 
 // eslint-disable-next-line mobx/missing-observer
 export default function NoteEditorView({ editor }: { editor: NoteEditor }) {
-  const infoModal = useModal();
-  const context = useLocalObservable<EditorContext>(() => ({ editor, infoModal }), { editor: observable.ref });
+  const context = useLocalObservable<EditorContext>(() => ({ editor }), { editor: observable.ref });
 
   useEffect(() => {
     runInAction(() => {

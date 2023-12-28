@@ -25,7 +25,7 @@ export default function NoteTreeView() {
         onContextmenu={showContextmenu}
         onDragStop={resetTree}
         onDragStart={updateTreeForDropping}
-        onDrop={(item, node) => moveNotes(node.id, item)}
+        onDrop={(item, node) => moveNotes({ item, targetId: node.id })}
         nodeOperation={({ id }) => (
           <Button onClick={() => createNote(id)}>
             <PlusOutlined />

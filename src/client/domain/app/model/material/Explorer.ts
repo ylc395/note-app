@@ -16,7 +16,7 @@ export default class MaterialExplorer extends Explorer {
   }
   public readonly tree = new MaterialTree();
 
-  public loadRoot() {
+  public load() {
     this.tree.root.loadChildren();
   }
 

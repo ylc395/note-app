@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { type MouseEventHandler, useEffect, type MouseEvent, useState } from 'react';
+import { type MouseEventHandler, useEffect, useState } from 'react';
 import { CaretDownOutlined, CaretRightFilled } from '@ant-design/icons';
 import clsx from 'clsx';
 

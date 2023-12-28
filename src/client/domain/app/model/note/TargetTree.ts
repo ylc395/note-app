@@ -1,14 +1,13 @@
-import { runInAction } from 'mobx';
+import { action, computed, makeObservable } from 'mobx';
+import assert from 'assert';
+
 import { NoteVO } from '@shared/domain/model/note';
 import NoteTree from '@domain/common/model/note/Tree';
 
 export default class TargetTree extends NoteTree {
-  constructor() {
+  constructor(private readonly movingNotes: NoteVO[]) {
     super();
-
-    runInAction(() => {
-      Object.assign(this.root, this.entityToNode(this.root.entity));
-    });
+    makeObservable(this);
   }
 
   protected entityToNode(note: NoteVO | null) {
@@ -18,22 +17,38 @@ export default class TargetTree extends NoteTree {
     };
   }
 
+  @computed
+  get targetId() {
+    return this.getSelectedNodeIds(true)[0];
+  }
+
   private isDisable(note: NoteVO | null) {
-    return false;
-    // if (!this.from) {
-    //   return false;
-    // }
+    const parentIds = this.movingNotes.map(({ parentId }) => parentId);
 
-    // const parentIds = this.from.selectedNodes.map(({ entity }) => entity?.parentId || null);
+    if (!note) {
+      return parentIds.includes(null);
+    }
 
-    // if (!note) {
-    //   return parentIds.includes(null);
-    // }
+    const ids = this.movingNotes.map(({ id }) => id);
+    if ([...parentIds, ...ids].includes(note.id)) {
+      return true;
+    }
 
-    // if ([...parentIds, ...this.from.selectedNodeIds].includes(note.id)) {
-    //   return true;
-    // }
+    return this.getNode(note.parentId).ancestors.some((node) => node.isDisabled);
+  }
 
-    // return this.getAncestors(note.parentId).some((node) => node.isDisabled);
+  @action
+  static from(tree: NoteTree) {
+    const movingIds = tree.selectedNodes.map(({ entity }) => {
+      assert(entity);
+      return entity;
+    });
+
+    const targetTree = new TargetTree(movingIds);
+    Object.assign(targetTree.root, targetTree.entityToNode(targetTree.root.entity));
+
+    targetTree.root.loadChildren();
+
+    return targetTree;
   }
 }

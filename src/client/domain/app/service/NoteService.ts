@@ -1,6 +1,5 @@
 import { container, singleton } from 'tsyringe';
 import assert from 'assert';
-import { compact, first } from 'lodash-es';
 
 import { token as remoteToken } from '@domain/common/infra/remote';
 import { token as UIToken } from '@domain/app/infra/ui';
@@ -12,9 +11,9 @@ import NoteEditor from '@domain/app/model/note/Editor';
 import NoteExplorer from '@domain/app/model/note/Explorer';
 import type { RecyclablesDTO } from '@shared/domain/model/recyclables';
 import { EntityTypes } from '@shared/domain/model/entity';
+import eventBus, { type ActionEvent, Events } from '@domain/app/model/note/eventBus';
+import { MOVE_TARGET_MODAL } from '@domain/app/model/note/modals';
 import TreeNode from '@domain/common/model/abstract/TreeNode';
-import NoteTree from '@domain/common/model/note/Tree';
-import eventBus, { type ActionEvent, Events } from '../model/note/eventBus';
 
 @singleton()
 export default class NoteService {
@@ -26,7 +25,7 @@ export default class NoteService {
   private readonly explorer = container.resolve(NoteExplorer);
   private readonly workbench = container.resolve(Workbench);
 
-  private get tree() {
+  get tree() {
     return this.explorer.tree;
   }
 
@@ -46,10 +45,7 @@ export default class NoteService {
   };
 
   private async duplicateNote(targetId: NoteVO['id']) {
-    const fromId = targetId || this.tree.selectedNodes[0]?.id;
-    assert(typeof fromId === 'string');
-
-    const { body: note } = await this.remote.post<void, NoteVO>(`/notes?from=${fromId}`);
+    const { body: note } = await this.remote.post<void, NoteVO>(`/notes?from=${targetId}`);
 
     this.tree.updateTree(note);
     this.tree.toggleSelect(note.id);
@@ -64,30 +60,19 @@ export default class NoteService {
   }
 
   public readonly getNoteIds = (item: unknown) => {
-    if (item instanceof TreeNode && item.tree === this.tree) {
-      return item.tree.selectedNodes.map(({ id }) => id);
+    if (item instanceof TreeNode) {
+      return item.tree.getSelectedNodeIds();
     }
 
     if (item instanceof NoteEditor) {
       return [item.entityLocator.entityId];
     }
-
-    if (item instanceof NoteTree) {
-      return item.selectedNodes.map(({ id }) => id);
-    }
   };
 
-  public readonly moveNotes = async (targetId: NoteVO['parentId'], item: unknown) => {
-    const ids = item ? this.getNoteIds(item) : compact(this.tree.selectedNodes.map(({ id }) => id));
+  public readonly moveNotes = async ({ targetId, item }: { targetId: NoteVO['parentId']; item?: unknown }) => {
+    const ids = this.getNoteIds(item) || this.tree.getSelectedNodeIds();
 
-    if (!ids) {
-      return;
-    }
-
-    await this.remote.patch<NotesPatchDTO>('/notes', {
-      ids,
-      note: { parentId: targetId },
-    });
+    await this.remote.patch<NotesPatchDTO>('/notes', { ids, note: { parentId: targetId } });
 
     for (const id of ids) {
       eventBus.emit(Events.Updated, { id, parentId: targetId });
@@ -96,13 +81,12 @@ export default class NoteService {
     if (targetId) {
       this.tree.toggleExpand(targetId, true);
     }
-
     this.tree.setSelected(ids);
   };
 
   public async editNotes(metadata: NoteMetadata) {
     const { body: notes } = await this.remote.patch<NotesPatchDTO, NoteVO[]>('/notes', {
-      ids: compact(this.tree.selectedNodes.map(({ id }) => id)),
+      ids: this.tree.getSelectedNodeIds(),
       note: {
         ...metadata,
         isReadonly: metadata.isReadonly === 2 ? undefined : Boolean(metadata.isReadonly),
@@ -114,14 +98,16 @@ export default class NoteService {
   }
 
   private readonly handleAction = ({ action, id }: ActionEvent) => {
-    const oneId = first(id);
+    const oneId = id[0];
     assert(oneId);
 
     switch (action) {
       case 'duplicate':
         return this.duplicateNote(oneId);
+      case 'move':
+        return this.ui.showModal(MOVE_TARGET_MODAL);
       default:
-        break;
+        assert.fail(`invalid action: ${action}`);
     }
   };
 }

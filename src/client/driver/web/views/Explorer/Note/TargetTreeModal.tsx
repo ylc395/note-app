@@ -1,6 +1,7 @@
-import { useContext, useEffect } from 'react';
+import { useState } from 'react';
 import { container } from 'tsyringe';
 import { useCreation } from 'ahooks';
+import clsx from 'clsx';
 import { observer } from 'mobx-react-lite';
 import assert from 'assert';
 
@@ -8,36 +9,38 @@ import Modal from '@web/components/Modal';
 import Tree from '@web/components/Tree';
 import NoteService from '@domain/app/service/NoteService';
 import TargetTree from '@domain/app/model/note/TargetTree';
-import ctx from './context';
+import { MOVE_TARGET_MODAL } from '@domain/app/model/note/modals';
 
 export default observer(function TargetTreeModal() {
-  const { movingModal } = useContext(ctx);
-  const { moveNotes } = container.resolve(NoteService);
-  const targetTree = useCreation(() => (movingModal.isOpen ? new TargetTree() : null), [movingModal.isOpen]);
+  const { moveNotes, tree } = container.resolve(NoteService);
+  const [isOpen, setIsOpen] = useState(false);
+  const targetTree = useCreation(() => (isOpen ? TargetTree.from(tree) : null), [isOpen]);
 
-  const onConfirm = () => {
-    assert(targetTree);
-    // moveNotes(targetTree.getSelectedId());
-    movingModal.close();
+  const onConfirm = async () => {
+    assert(targetTree?.targetId !== undefined);
+    await moveNotes({ targetId: targetTree.targetId });
+    return true;
   };
 
   return (
     <Modal
-      isOpen={movingModal.isOpen}
+      id={MOVE_TARGET_MODAL}
       bodyClassName="border border-solid border-gray-200 p-4"
       title="移动至..."
-      // canConfirm={targetTree ? targetTree.selectedNodeIds.length > 0 : false}
+      canConfirm={targetTree?.targetId !== undefined}
+      onToggle={setIsOpen}
       onConfirm={onConfirm}
-      onCancel={movingModal.close}
     >
       {targetTree && (
         <Tree
           showRoot
-          nodeClassName=" 
-            data-[selected=true]:bg-slate-100
-            data-[disabled=true]:cursor-not-allowed
-            data-[disabled=true]:opacity-30 
-            py-1 cursor-pointer group relative"
+          nodeClassName={(node) =>
+            clsx(
+              node.isSelected && 'bg-slate-100',
+              node.isDisabled && 'cursor-not-allowed opacity-30',
+              'group relative cursor-pointer py-1',
+            )
+          }
           caretClassName="text-gray-500"
           tree={targetTree}
         />

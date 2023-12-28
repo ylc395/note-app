@@ -47,7 +47,7 @@ export default function TreeView<T extends MaterialVO | NoteVO>({
         tree={tree}
         multiple
         renderNode={(node, originalNodeView) => (
-          <DndTreeNode<T>
+          <DndTreeNode
             node={node}
             onDrop={onDrop as (item: unknown, node: TreeNode<MaterialVO | NoteVO>) => void}
             onDragStart={onDragStart}
