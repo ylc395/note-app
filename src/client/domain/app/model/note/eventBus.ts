@@ -1,17 +1,24 @@
 import { Emitter } from 'strict-event-emitter';
-import type { Note } from '@shared/domain/model/note';
+import type { NoteVO } from '@shared/domain/model/note';
 
 export enum Events {
   Updated = 'note.updated',
+  Action = 'note.action',
 }
 
 export interface UpdateEvent {
-  id: Note['id'];
-  title?: Note['title'];
-  body?: Note['body'];
-  parentId?: Note['parentId'];
+  id: NoteVO['id'];
+  title?: NoteVO['title'];
+  parentId?: NoteVO['parentId'];
+  body?: string;
+}
+
+export interface ActionEvent {
+  action: string;
+  id: NoteVO['id'][];
 }
 
 export default new Emitter<{
   [Events.Updated]: [UpdateEvent];
-}>();
+  [Events.Action]: [ActionEvent];
+}>().setMaxListeners(Infinity);

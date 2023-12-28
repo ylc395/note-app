@@ -4,7 +4,6 @@ import { boolean, object, string, type infer as Infer } from 'zod';
 export const notePatchDTOSchema = object({
   title: string().optional(),
   isReadonly: boolean().optional(),
-  body: string().optional(),
   parentId: string().nullish(),
   icon: string()
     .regex(/^(emoji:|file:).+/)

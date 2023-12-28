@@ -25,15 +25,15 @@ export default class NoteEditor extends Editor<EditableNote, UIState> {
     return {
       title:
         (IS_DEV ? `${this.id} ${this.editable.entityId.slice(0, 3)} ` : '') +
-        (this.editable.entity ? normalizeTitle(this.editable.entity) : ''),
-      icon: this.editable.entity?.icon || null,
-      breadcrumbs: this.editable.entity?.path || [],
+        (this.editable.entity ? normalizeTitle(this.editable.entity.info) : ''),
+      icon: this.editable.entity?.info.icon || null,
+      breadcrumbs: this.editable.entity?.info.path || [],
     };
   }
 
   @computed
   get title() {
-    return this.editable.entity?.title;
+    return this.editable.entity?.info.title;
   }
 
   @action.bound
@@ -41,17 +41,17 @@ export default class NoteEditor extends Editor<EditableNote, UIState> {
     this.searchEnabled = !this.searchEnabled;
   }
 
-  updateTitle(title: string) {
+  public updateTitle(title: string) {
     this.editable.update({ title });
   }
 
-  readonly updateBody = (body: string) => {
-    this.editable.update({ body });
+  public readonly updateBody = (body: string) => {
+    this.editable.updateBody(body);
   };
 
   @computed
   get isReadonly() {
-    return this.editable.entity?.isReadonly;
+    return this.editable.entity?.info.isReadonly;
   }
 
   @computed

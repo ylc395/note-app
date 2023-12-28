@@ -7,16 +7,8 @@ import NoteTree, { NoteTreeNode } from '@domain/common/model/note/Tree';
 import Explorer from '../abstract/Explorer';
 import eventBus, { Events as NoteEvents, UpdateEvent } from './eventBus';
 
-export enum EventNames {
-  Action = 'noteExplorer.action',
-}
-
-type Events = {
-  [EventNames.Action]: [string];
-};
-
 @singleton()
-export default class NoteExplorer extends Explorer<Events> {
+export default class NoteExplorer extends Explorer {
   constructor() {
     super();
     makeObservable(this);
@@ -59,7 +51,7 @@ export default class NoteExplorer extends Explorer<Events> {
     this.status = 'toDrop';
   }
 
-  public async showContextmenu() {
+  public readonly showContextmenu = async () => {
     const isMultiple = this.tree.selectedNodes.length > 1;
     const action = await this.ui.getActionFromMenu(
       compact([
@@ -73,7 +65,7 @@ export default class NoteExplorer extends Explorer<Events> {
     );
 
     if (action) {
-      this.emit(EventNames.Action, action);
+      eventBus.emit(NoteEvents.Action, { action, id: this.tree.selectedNodes.map(({ id }) => id) });
     }
-  }
+  };
 }

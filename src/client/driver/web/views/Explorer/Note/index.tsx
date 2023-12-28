@@ -21,7 +21,7 @@ export default observer(function NoteExplorerView() {
   const { item } = useDragLayer((monitor) => ({ item: monitor.getItem() }));
   const canDrop = useMemo(
     () => status === 'toDrop' && !tree.root.isDisabled && getNoteIds(item),
-    [tree.root.isDisabled, item, status],
+    [tree.root.isDisabled, item, status, getNoteIds],
   );
 
   return (

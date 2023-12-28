@@ -38,9 +38,9 @@ export default function TreeView<T extends MaterialVO | NoteVO>({
         className="scrollbar-stable scrollbar-thin grow overflow-hidden pr-2 hover:overflow-auto"
         nodeClassName={(node) =>
           clsx(
-            'py-1 cursor-pointer',
+            'group relative cursor-pointer py-1',
             node.isSelected && 'bg-gray-100',
-            node.isDisabled && 'opacity-60 cursor-not-allowed',
+            node.isDisabled && 'cursor-not-allowed opacity-60',
           )
         }
         caretClassName="text-gray-500"

@@ -10,7 +10,7 @@ export interface Note {
   updatedAt: number;
   userUpdatedAt: number;
   createdAt: number;
-  body?: string;
+  body: string;
 }
 
 export function normalizeTitle(note: Pick<Note, 'createdAt' | 'title'>) {

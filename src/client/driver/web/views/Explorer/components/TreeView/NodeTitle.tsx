@@ -6,6 +6,7 @@ import type TreeNode from '@domain/common/model/abstract/TreeNode';
 import IconTitle from '@web/components/IconTitle';
 
 export interface Props {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   node: TreeNode<any>;
   children?: ReactNode;
 }
@@ -20,7 +21,7 @@ export default observer(function NodeTitle({ node, children }: Props) {
         title={`${IS_DEV ? `${node.id.slice(0, 3)} ` : ''}${node.title}`}
       />
       {children && (
-        <span className="invisible absolute inset-y-0 right-0 flex h-full items-center bg-[--hover-color] text-black group-hover:visible group-[[data-selected=true]]:bg-[var(--selected-color)]">
+        <span className="invisible absolute inset-y-0 right-0 flex h-full items-center bg-[--hover-color] text-black group-hover:visible">
           {children}
         </span>
       )}

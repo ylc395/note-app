@@ -1,6 +1,6 @@
 import { observable, action, computed, makeObservable } from 'mobx';
 import assert from 'assert';
-import { pull, differenceWith, map, get } from 'lodash-es';
+import { pull, differenceWith, map } from 'lodash-es';
 import { container } from 'tsyringe';
 
 import type { EntityParentId, EntityTypes, HierarchyEntity } from '@shared/domain/model/entity';
@@ -147,6 +147,7 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
 
         if (node.parent.children.length === 0) {
           node.parent.isLeaf = true;
+          node.parent.isExpanded = false;
         }
 
         node.parent = newParent;
@@ -155,7 +156,7 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
   }
 
   @action
-  toggleExpand(id: TreeNode<T>['id'], value?: boolean) {
+  public toggleExpand(id: TreeNode<T>['id'], value?: boolean) {
     const node = this.getNode(id);
 
     assert(!node.isLeaf, 'can not expand leaf');

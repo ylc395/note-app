@@ -3,23 +3,32 @@ import { debounce } from 'lodash-es';
 import assert from 'assert';
 
 import { EntityTypes } from '@domain/app/model/entity';
-import type { DetailedNoteVO as Note, NotePatchDTO as NotePatch } from '@shared/domain/model/note';
+import type { NoteVO, NotePatchDTO } from '@shared/domain/model/note';
 import EditableEntity from '@domain/app/model/abstract/EditableEntity';
 import { Tile } from '@domain/app/model/workbench';
 import NoteEditor from './Editor';
 import eventBus, { Events as NoteEvents, UpdateEvent } from './eventBus';
 
-export default class EditableNote extends EditableEntity<Note> {
+export default class EditableNote extends EditableEntity<{
+  info: NoteVO;
+  body: string;
+}> {
   readonly entityType = EntityTypes.Note;
-  constructor(noteId: Note['id']) {
+  constructor(noteId: NoteVO['id']) {
     super(noteId);
     makeObservable(this);
     eventBus.on(NoteEvents.Updated, this.handleNoteUpdated);
   }
 
   public async load() {
-    const { body: note } = await this.remote.get<void, Note>(`/notes/${this.entityId}`);
-    runInAction(() => (this.entity = note));
+    const [{ body: info }, { body }] = await Promise.all([
+      this.remote.get<void, NoteVO>(`/notes/${this.entityId}`),
+      this.remote.get<void, string>(`/notes/${this.entityId}/body`),
+    ]);
+
+    runInAction(() => {
+      this.entity = { info, body };
+    });
   }
 
   protected getEditor(tile: Tile) {
@@ -37,20 +46,34 @@ export default class EditableNote extends EditableEntity<Note> {
   };
 
   @action
-  async update(note: Pick<NotePatch, 'title' | 'body'>) {
+  public update(note: Pick<NotePatchDTO, 'title'>) {
     assert(this.entity);
-    Object.assign(this.entity, { ...note, updatedAt: Date.now() });
-
+    this.entity.info = { ...this.entity.info, ...note, updatedAt: Date.now() };
     this.uploadNote(note);
     eventBus.emit(NoteEvents.Updated, { id: this.entityId, ...note });
   }
 
-  private readonly uploadNote = debounce((note: NotePatch) => {
-    this.remote.patch<NotePatch>(`/notes/${this.entityId}`, toJS(note));
+  @action
+  public updateBody(body: string) {
+    assert(this.entity);
+    this.entity.body = body;
+    this.entity.info.updatedAt = Date.now();
+
+    this.uploadNoteBody(body);
+    eventBus.emit(NoteEvents.Updated, { id: this.entityId, body });
+  }
+
+  private readonly uploadNote = debounce((note: NotePatchDTO) => {
+    this.remote.patch<NotePatchDTO>(`/notes/${this.entityId}`, toJS(note));
+  }, 1000);
+
+  private readonly uploadNoteBody = debounce((body: string) => {
+    this.remote.put<string>(`/notes/${this.entityId}/body`, body);
   }, 1000);
 
   destroy(): void {
     this.uploadNote.flush();
+    this.uploadNoteBody.flush();
     eventBus.off(NoteEvents.Updated, this.handleNoteUpdated);
     super.destroy();
   }

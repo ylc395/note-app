@@ -1,13 +1,12 @@
 import { Controller } from '@nestjs/common';
 
-import { Post, Body, Get, Patch, createSchemaPipe, Param, Query } from './decorators.js';
+import { Post, Body, Get, Patch, createSchemaPipe, Param, Query, Put } from './decorators.js';
 import {
   type NewNoteDTO,
   type NoteVO,
   type ClientNoteQuery,
   type NotesPatchDTO,
   type NotePatchDTO,
-  type DetailedNoteVO,
   type NewNoteParams,
   newNoteDTOSchema,
   newNoteParamsSchema,
@@ -21,8 +20,18 @@ import NoteService from '@domain/service/NoteService.js';
 export default class NotesController {
   constructor(private readonly noteService: NoteService) {}
 
+  @Get('/notes/:id/body')
+  async queryBody(@Param('id') noteId: string): Promise<string> {
+    return await this.noteService.queryBody(noteId);
+  }
+
+  @Put('/notes/:id/body')
+  async updateBody(@Param('id') noteId: string, @Body() body: string): Promise<void> {
+    return await this.noteService.updateBody(noteId, body);
+  }
+
   @Get('/notes/:id')
-  async queryOne(@Param('id') noteId: string): Promise<DetailedNoteVO> {
+  async queryOne(@Param('id') noteId: string): Promise<NoteVO> {
     return await this.noteService.queryOne(noteId);
   }
 
