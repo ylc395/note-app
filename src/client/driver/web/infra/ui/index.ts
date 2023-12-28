@@ -14,7 +14,7 @@ const modalManager = container.resolve(ModalManager);
 
 const ui: UI = {
   feedback: messageFeedback,
-  getActionFromMenu: window.electronUI?.getActionFromMenu || (() => Promise.resolve(undefined)),
+  getActionFromMenu: window.electronUI?.getActionFromMenu || (() => Promise.resolve(null)),
   openNewWindow: window.electronUI?.openNewWindow || ((url) => (window.open(url), void 0)),
   showModal: modalManager.show,
 };

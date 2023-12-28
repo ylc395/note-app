@@ -36,6 +36,10 @@ export default class ElectronUI implements UI {
     assert.fail('not implement');
   }
 
+  showModal(): never {
+    assert.fail('not implement');
+  }
+
   openNewWindow(url: string) {
     if (url !== BLANK_URL && sanitizeUrl(url) === BLANK_URL) {
       return Promise.reject('unsafe url');
