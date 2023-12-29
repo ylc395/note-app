@@ -18,7 +18,7 @@ import {
 } from '@domain/model/material.js';
 import MaterialService from '@domain/service/MaterialService.js';
 
-import { createSchemaPipe, Post, Body, Get, Query, Param, Delete, Patch, Put } from './decorators.js';
+import { createSchemaPipe, Post, Body, Get, Query, Param, Delete, Patch } from './decorators.js';
 
 @Controller()
 export default class MaterialsController {

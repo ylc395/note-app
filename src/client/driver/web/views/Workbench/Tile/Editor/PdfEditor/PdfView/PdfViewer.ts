@@ -113,7 +113,7 @@ export default class PdfViewer {
     this.pdfViewer.eventBus.on(
       'updateviewarea',
       action(({ location }: { location: { pdfOpenParams: string } }) => {
-        this.editor.saveUIState({ hash: location.pdfOpenParams });
+        this.editor.updateUIState({ hash: location.pdfOpenParams });
         this.updateVisiblePages();
       }),
     );

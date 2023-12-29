@@ -46,7 +46,6 @@ export default class Tile extends Emitter<Events> {
     }
 
     this.currentEditor = existedTab;
-    this.currentEditor.focus();
     return true;
   }
 

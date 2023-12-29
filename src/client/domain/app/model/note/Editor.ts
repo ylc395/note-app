@@ -10,6 +10,7 @@ import type EditableNote from './Editable';
 interface UIState {
   scrollTop: number;
   selection: unknown;
+  titleSelection: [number, number]; // todo: maintain this state
 }
 
 export default class NoteEditor extends Editor<EditableNote, UIState> {
@@ -18,10 +19,11 @@ export default class NoteEditor extends Editor<EditableNote, UIState> {
     makeObservable(this);
   }
 
-  @observable searchEnabled = false;
+  @observable
+  public searchEnabled = false;
 
   @computed
-  get tabView() {
+  public get tabView() {
     return {
       title:
         (IS_DEV ? `${this.id} ${this.editable.entityId.slice(0, 3)} ` : '') +
@@ -32,12 +34,12 @@ export default class NoteEditor extends Editor<EditableNote, UIState> {
   }
 
   @computed
-  get title() {
+  public get title() {
     return this.editable.entity?.info.title;
   }
 
   @action.bound
-  toggleSearch() {
+  public toggleSearch() {
     this.searchEnabled = !this.searchEnabled;
   }
 
@@ -50,12 +52,17 @@ export default class NoteEditor extends Editor<EditableNote, UIState> {
   };
 
   @computed
-  get isReadonly() {
+  public get isReadonly() {
     return this.editable.entity?.info.isReadonly;
   }
 
   @computed
-  get body() {
+  public get body() {
     return this.editable.entity?.body;
+  }
+
+  @computed
+  public get isEmpty() {
+    return this.title === '' && this.body === '';
   }
 }

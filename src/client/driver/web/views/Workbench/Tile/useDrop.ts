@@ -39,26 +39,32 @@ export default function useDrop(tile: Tile) {
     }
   });
 
-  const onDragMove = useMemoizedFn(({ cursor, dropRect }: { cursor: { x: number; y: number }; dropRect: DOMRect }) => {
-    const portion = 6;
-    const position: Position = { top: '0px', left: '0px', bottom: '0px', right: '0px' };
-    const isInLeftBoundary = cursor.x - dropRect.left < dropRect.width / portion;
-    const isInRightBoundary = dropRect.right - cursor.x < dropRect.width / portion;
-    const isInTopBoundary = cursor.y - dropRect.top < dropRect.height / portion;
-    const isInBottomBoundary = dropRect.bottom - cursor.y < dropRect.height / portion;
+  const onDragMove = useMemoizedFn(
+    ({ cursor, dropRect, item }: { item: unknown; cursor: { x: number; y: number }; dropRect: DOMRect }) => {
+      if (!(item instanceof Editor)) {
+        return;
+      }
 
-    if (isInLeftBoundary && !isInTopBoundary && !isInBottomBoundary) {
-      position.right = `${dropRect.width / 2}px`;
-    } else if (isInRightBoundary && !isInTopBoundary && !isInBottomBoundary) {
-      position.left = `${dropRect.width / 2}px`;
-    } else if (isInTopBoundary && !isInLeftBoundary && !isInRightBoundary) {
-      position.bottom = `${dropRect.height / 2}px`;
-    } else if (isInBottomBoundary && !isInLeftBoundary && !isInRightBoundary) {
-      position.top = `${dropRect.height / 2}px`;
-    }
+      const portion = 6;
+      const position: Position = { top: '0px', left: '0px', bottom: '0px', right: '0px' };
+      const isInLeftBoundary = cursor.x - dropRect.left < dropRect.width / portion;
+      const isInRightBoundary = dropRect.right - cursor.x < dropRect.width / portion;
+      const isInTopBoundary = cursor.y - dropRect.top < dropRect.height / portion;
+      const isInBottomBoundary = dropRect.bottom - cursor.y < dropRect.height / portion;
 
-    setDropArea(position);
-  });
+      if (isInLeftBoundary && !isInTopBoundary && !isInBottomBoundary) {
+        position.right = `${dropRect.width / 2}px`;
+      } else if (isInRightBoundary && !isInTopBoundary && !isInBottomBoundary) {
+        position.left = `${dropRect.width / 2}px`;
+      } else if (isInTopBoundary && !isInLeftBoundary && !isInRightBoundary) {
+        position.bottom = `${dropRect.height / 2}px`;
+      } else if (isInBottomBoundary && !isInLeftBoundary && !isInRightBoundary) {
+        position.top = `${dropRect.height / 2}px`;
+      }
+
+      setDropArea(position);
+    },
+  );
 
   useEffect(() => {
     if (!isOver) {

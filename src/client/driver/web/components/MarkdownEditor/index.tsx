@@ -1,4 +1,4 @@
-import { useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { useCreation } from 'ahooks';
 
 import Editor, { type Options as EditorOptions } from './Editor';

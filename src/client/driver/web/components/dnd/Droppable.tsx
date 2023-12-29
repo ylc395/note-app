@@ -7,7 +7,7 @@ interface Props {
   children: ReactNode;
   className?: string;
   onDrop: (item: unknown) => void;
-  onDragMove?: (e: { cursor: NonNullable<XYCoord>; dropRect: DOMRect }) => void;
+  onDragMove?: (e: { cursor: NonNullable<XYCoord>; dropRect: DOMRect; item: unknown }) => void;
   onOverToggle?: (isOver: boolean) => void;
 }
 
@@ -27,15 +27,15 @@ export default function Droppable({ children, className, onOverToggle, onDragMov
     [onDrop],
   );
 
-  const { position } = useDragItem();
+  const { position, item } = useDragItem();
 
   useEffect(() => {
     onOverToggle?.(isOver);
   }, [isOver, onOverToggle]);
 
   useEffect(() => {
-    isOver && position && onDragMove?.({ cursor: position, dropRect: divRef.current!.getBoundingClientRect() });
-  }, [position, onDragMove, isOver]);
+    isOver && position && onDragMove?.({ item, cursor: position, dropRect: divRef.current!.getBoundingClientRect() });
+  }, [position, onDragMove, isOver, item]);
 
   return dropRef(
     <div className={className} ref={divRef}>

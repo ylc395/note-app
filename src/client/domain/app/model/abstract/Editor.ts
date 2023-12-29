@@ -19,11 +19,12 @@ type Events = {
 };
 
 export default abstract class Editor<T extends EditableEntity = EditableEntity, S = unknown> extends Emitter<Events> {
-  readonly id = uniqueId('editor-');
+  public readonly id = uniqueId('editor-');
   private readonly localStorage = container.resolve(localStorageToken);
-  abstract readonly tabView: { title: string; icon: string | null; breadcrumbs: Path };
+  public abstract readonly tabView: { title: string; icon: string | null; breadcrumbs: Path };
+
   @observable isFocused = false;
-  uiState: Partial<S> | null = null;
+  public uiState: Partial<S> | null = null;
 
   private get uiStateKey() {
     return `UI_STATE_${this.entityLocator.entityId}`;
@@ -36,30 +37,30 @@ export default abstract class Editor<T extends EditableEntity = EditableEntity, 
     this.uiState = this.localStorage.get(this.uiStateKey);
   }
 
-  get entityLocator() {
+  public get entityLocator() {
     return this.editable.toEntityLocator();
   }
 
-  destroy() {
+  public destroy() {
     this.emit(EventNames.Destroyed);
     this.removeAllListeners();
   }
 
   @action.bound
-  blur() {
+  public blur() {
     console.log(`blur ${this.id}`);
     this.isFocused = false;
   }
 
   @action.bound
-  focus() {
+  public focus() {
     console.log(`focus ${this.id}`);
     this.emit(EventNames.Focus);
     this.isFocused = true;
   }
 
   @action.bound
-  saveUIState(state: Partial<S>) {
+  public updateUIState(state: Partial<S>) {
     this.uiState = { ...this.uiState, ...state };
     this.localStorage.set(this.uiStateKey, this.uiState);
   }
