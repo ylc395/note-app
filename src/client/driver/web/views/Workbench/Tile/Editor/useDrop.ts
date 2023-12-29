@@ -15,8 +15,8 @@ interface Position {
 }
 
 const directionMap = {
-  top: TileSplitDirections.Down,
-  bottom: TileSplitDirections.Up,
+  top: TileSplitDirections.Bottom,
+  bottom: TileSplitDirections.Top,
   left: TileSplitDirections.Right,
   right: TileSplitDirections.Left,
 };

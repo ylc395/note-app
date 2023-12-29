@@ -10,19 +10,19 @@ import { type TileNode, type TileParent, TileDirections, isTileLeaf } from './ti
 import { EntityLocator, EntityTypes } from '../entity';
 
 export enum TileSplitDirections {
-  Up,
-  Down,
+  Top,
+  Bottom,
   Left,
   Right,
 }
 
 const splitDirectionToDirection = (direction: TileSplitDirections) => {
-  return direction === TileSplitDirections.Down || direction === TileSplitDirections.Up
+  return direction === TileSplitDirections.Bottom || direction === TileSplitDirections.Top
     ? TileDirections.Vertical
     : TileDirections.Horizontal;
 };
 
-type Dest = Tile | Editor | { from: Tile; splitDirection: TileSplitDirections };
+type Dest = Tile | Editor | { from?: Tile; splitDirection: TileSplitDirections };
 
 @singleton()
 export default class Workbench {
@@ -104,7 +104,7 @@ export default class Workbench {
       this.root = {
         id: uniqueId('tileParent-'),
         direction: splitDirectionToDirection(direction),
-        ...(direction === TileSplitDirections.Down || direction === TileSplitDirections.Right
+        ...(direction === TileSplitDirections.Bottom || direction === TileSplitDirections.Right
           ? {
               first: this.root,
               second: newTile.id,
@@ -127,7 +127,7 @@ export default class Workbench {
         parentNode[parentBranch] = {
           id: uniqueId('tileParent-'),
           direction: splitDirectionToDirection(direction),
-          ...(direction === TileSplitDirections.Down || direction === TileSplitDirections.Right
+          ...(direction === TileSplitDirections.Bottom || direction === TileSplitDirections.Right
             ? {
                 first: parentNode[parentBranch],
                 second: newTile.id,
@@ -184,7 +184,8 @@ export default class Workbench {
     } else if (dest instanceof Tile) {
       targetTile = dest;
     } else {
-      const { from, splitDirection } = dest;
+      const { from = this.focusedTile, splitDirection } = dest;
+      assert(from);
       targetTile = this.splitTile(from.id, splitDirection);
     }
 
@@ -224,7 +225,9 @@ export default class Workbench {
 
       editor = targetTile.createEditor(entity, dest instanceof Editor ? dest : undefined);
     } else {
-      targetTile = this.splitTile(dest.from.id, dest.splitDirection);
+      const { from = this.focusedTile, splitDirection } = dest;
+      assert(from);
+      targetTile = this.splitTile(from.id, splitDirection);
       editor = targetTile.createEditor(entity);
     }
 

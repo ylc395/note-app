@@ -1,4 +1,11 @@
-import { type IpcMainInvokeEvent, Menu, BrowserWindow, shell, ipcMain } from 'electron';
+import {
+  type IpcMainInvokeEvent,
+  Menu,
+  BrowserWindow,
+  shell,
+  ipcMain,
+  type MenuItemConstructorOptions as ElectronMenuItem,
+} from 'electron';
 import { BLANK_URL, sanitizeUrl } from '@braintree/sanitize-url';
 import assert from 'node:assert';
 import { object, string, array, unknown as zodUnknown, type infer as ZodInfer } from 'zod';
@@ -56,11 +63,14 @@ export default class ElectronUI implements UI {
       let key: string;
 
       const menu = Menu.buildFromTemplate(
-        menuItems.map((item) => ({
-          ...item,
-          click: 'key' in item ? () => (key = item.key!) : undefined,
-          enabled: 'disabled' in item ? !item.disabled : true,
-        })),
+        menuItems.map(function mapping(item): ElectronMenuItem {
+          return {
+            ...item,
+            submenu: 'submenu' in item && item.submenu ? item.submenu.map(mapping) : undefined,
+            click: 'key' in item ? () => (key = item.key!) : undefined,
+            enabled: 'disabled' in item ? !item.disabled : true,
+          };
+        }),
       );
 
       menu.popup({

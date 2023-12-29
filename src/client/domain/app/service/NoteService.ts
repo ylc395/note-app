@@ -6,7 +6,7 @@ import { token as UIToken } from '@domain/app/infra/ui';
 
 import type { NotesPatchDTO, NoteVO, NotePatchDTO } from '@shared/domain/model/note';
 import { MULTIPLE_ICON_FLAG, type NoteMetadata } from '@domain/app/model/note/MetadataForm';
-import { Workbench } from '@domain/app/model/workbench';
+import { TileSplitDirections, Workbench } from '@domain/app/model/workbench';
 import NoteEditor from '@domain/app/model/note/Editor';
 import NoteExplorer from '@domain/app/model/note/Explorer';
 import type { RecyclablesDTO } from '@shared/domain/model/recyclables';
@@ -106,6 +106,15 @@ export default class NoteService {
         return this.duplicateNote(oneId);
       case 'move':
         return this.ui.showModal(MOVE_TARGET_MODAL);
+      case 'openToTop':
+      case 'openToBottom':
+      case 'openToRight':
+      case 'openToLeft':
+        return this.workbench.openEntity(
+          { entityType: EntityTypes.Note, entityId: oneId },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          { splitDirection: TileSplitDirections[action.match(/openTo(.+)/)![1] as any] as any },
+        );
       default:
         assert.fail(`invalid action: ${action}`);
     }

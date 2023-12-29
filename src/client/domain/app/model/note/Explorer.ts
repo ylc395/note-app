@@ -57,6 +57,15 @@ export default class NoteExplorer extends Explorer {
       compact([
         isMultiple && { label: `共${this.tree.selectedNodes.length}项`, disabled: true },
         isMultiple && { type: 'separator' },
+        this.workbench.focusedTile && {
+          label: '打开至...',
+          submenu: [
+            { label: '左边', key: 'openToLeft' },
+            { label: '右边', key: 'openToRight' },
+            { label: '上边', key: 'openToTop' },
+            { label: '下边', key: 'openToBottom' },
+          ],
+        },
         { label: '移动至...', key: 'move' },
         !isMultiple && { label: '制作副本', key: 'duplicate' },
         { type: 'separator' },
