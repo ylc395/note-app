@@ -3,7 +3,6 @@ import { Form, Input, Button } from 'antd';
 
 import type FormModel from '@domain/app/model/material/Form';
 import selectFiles from '@web/infra/selectFiles';
-import { IS_ELECTRON } from '@shared/domain/infra/constants';
 
 export default observer(function FileForm({ model }: { model: FormModel }) {
   const handleSelectFile = async () => {
@@ -15,7 +14,7 @@ export default observer(function FileForm({ model }: { model: FormModel }) {
 
     model.file = {
       mimeType: file.type,
-      ...(IS_ELECTRON ? { path: file.path } : { data: await file.arrayBuffer(), name: file.name }),
+      ...(window.IS_ELECTRON ? { path: file.path } : { data: await file.arrayBuffer(), name: file.name }),
     };
 
     model.updateValue('name', file.name);

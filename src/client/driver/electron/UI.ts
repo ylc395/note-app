@@ -1,10 +1,9 @@
 import {
-  type IpcMainInvokeEvent,
   Menu,
   BrowserWindow,
   shell,
-  ipcMain,
   type MenuItemConstructorOptions as ElectronMenuItem,
+  type IpcMainInvokeEvent,
 } from 'electron';
 import { BLANK_URL, sanitizeUrl } from '@braintree/sanitize-url';
 import assert from 'node:assert';
@@ -21,33 +20,18 @@ const uiIpcPayloadSchema = object({
 
 export type UIIpcPayload = ZodInfer<typeof uiIpcPayloadSchema>;
 
-export default class ElectronUI implements UI {
-  constructor() {
-    ipcMain.handle(UI_CHANNEL, this._ipcHandler);
-  }
+export default class electronUI implements UI {
+  public ipcEvent?: IpcMainInvokeEvent;
 
-  private e?: IpcMainInvokeEvent;
-
-  private readonly _ipcHandler = (e: IpcMainInvokeEvent, payload: unknown) => {
-    const p = uiIpcPayloadSchema.parse(payload);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    assert(p.funcName in this && typeof (this[p.funcName as keyof ElectronUI] as any) === 'function');
-
-    this.e = e;
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (this[p.funcName as keyof ElectronUI] as any).apply(this, p.args);
-  };
-
-  feedback(): never {
+  public feedback(): never {
     assert.fail('not implement');
   }
 
-  showModal(): never {
+  public showModal(): never {
     assert.fail('not implement');
   }
 
-  openNewWindow(url: string) {
+  public openNewWindow(url: string) {
     if (url !== BLANK_URL && sanitizeUrl(url) === BLANK_URL) {
       return Promise.reject('unsafe url');
     }
@@ -55,8 +39,9 @@ export default class ElectronUI implements UI {
     return shell.openExternal(url);
   }
 
-  getActionFromMenu(menuItems: MenuItem[], pos?: { x: number; y: number }) {
-    const w = BrowserWindow.fromWebContents(this.e!.sender);
+  public getActionFromMenu(menuItems: MenuItem[], pos?: { x: number; y: number }) {
+    assert(this.ipcEvent);
+    const w = BrowserWindow.fromWebContents(this.ipcEvent.sender);
     assert(w);
 
     return new Promise<string | null>((resolve) => {
@@ -80,5 +65,10 @@ export default class ElectronUI implements UI {
         callback: () => resolve(key || null),
       });
     });
+  }
+
+  public static isValidPayload(payload: unknown): payload is UIIpcPayload {
+    const p = uiIpcPayloadSchema.safeParse(payload);
+    return p.success;
   }
 }

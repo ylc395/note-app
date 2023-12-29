@@ -12,7 +12,6 @@ import downloadSqliteTokenizer from './download-sqlite-tokenizer.js';
 import { fileURLToPath } from 'node:url';
 
 const ENV = 'development';
-const APP_PLATFORM = 'electron';
 
 const rootDir = 'src/client';
 const WEB_TSCONFIG = path.resolve(`${rootDir}/tsconfig.web.json`);
@@ -83,7 +82,6 @@ async function createViteServer() {
     ],
     define: {
       'process.env.NODE_ENV': JSON.stringify(ENV),
-      'process.env.APP_PLATFORM': JSON.stringify(APP_PLATFORM),
     },
   });
 
@@ -100,7 +98,6 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 
     shell.env['VITE_SERVER_ENTRY_URL'] = viteUrl;
     shell.env['NODE_ENV'] = ENV;
-    shell.env['APP_PLATFORM'] = APP_PLATFORM;
     shell.env['DEV_CLEAN'] = process.argv.includes('--clean') ? '1' : '0';
 
     await buildPreload();

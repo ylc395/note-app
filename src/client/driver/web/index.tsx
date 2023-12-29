@@ -9,13 +9,12 @@ import { token as localStorageToken } from '@domain/app/infra/localStorage';
 import '@domain/common/infra/mobx';
 
 import httpClient from './infra/httpClient';
-import ipcClient from './infra/ipcClient';
 import ui from './infra/ui';
 import webLocalStorage from './infra/localStorage';
 import App from './views/App';
 import { APP_CLASS_NAME } from './infra/ui/constants';
 
-container.registerInstance(remoteToken, ipcClient || httpClient);
+container.registerInstance(remoteToken, window.electronIpcHttpClient || httpClient);
 container.registerInstance(uiToken, ui);
 container.registerInstance(localStorageToken, webLocalStorage);
 

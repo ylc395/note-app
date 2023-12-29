@@ -1,6 +1,7 @@
 {
   "extends": "./tsconfig.json",
-  "files": ["./domain/app/infra/ui.ts", "./driver/electron/UI.ts"],
+  "include": ["./domain/app/infra/ui.ts", "./driver/electron/**/*"],
+  "exclude": ["./driver/electron/preload/**/*"],
   "compilerOptions": {
     "composite": true,
     "outDir": "../../dist/electron",

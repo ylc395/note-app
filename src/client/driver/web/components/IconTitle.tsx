@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { Emoji, type EmojiProps } from './Emoji';
+import { default as Emoji, type EmojiProps } from './emoji/Icon';
 
 interface Props {
   className?: string;

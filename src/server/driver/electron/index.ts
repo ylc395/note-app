@@ -1,6 +1,7 @@
-import { app as electronApp, BrowserWindow } from 'electron';
+import { app as electronApp, ipcMain, BrowserWindow } from 'electron';
 import { Logger } from '@nestjs/common';
 import path from 'node:path';
+import assert from 'node:assert';
 import { fileURLToPath } from 'node:url';
 import { Worker } from 'node:worker_threads';
 import { type Remote, wrap, releaseProxy } from 'comlink';
@@ -9,7 +10,7 @@ import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-insta
 
 import DesktopRuntime from '@domain/infra/DesktopRuntime.js';
 import { IS_DEV } from '@domain/infra/constants.js';
-import UI from '@client/driver/electron/UI.js';
+import UI, { UI_CHANNEL } from '@client/driver/electron/UI.js';
 
 import type LocalServer from '../localHttpServer/index.js';
 
@@ -19,9 +20,9 @@ const DIRNAME = path.dirname(fileURLToPath(import.meta.url));
 export default class ElectronRuntime extends DesktopRuntime {
   private readonly logger = new Logger('electron app');
   private mainWindow?: BrowserWindow;
-  private readonly ui = new UI();
+  private ui = new UI();
 
-  async start() {
+  public async start() {
     await super.start();
 
     if (IS_DEV) {
@@ -38,7 +39,6 @@ export default class ElectronRuntime extends DesktopRuntime {
       }
     }
 
-    // https://www.electronjs.org/docs/latest/api/app#event-window-all-closed
     electronApp.on('window-all-closed', () => {
       electronApp.quit();
     });
@@ -55,6 +55,17 @@ export default class ElectronRuntime extends DesktopRuntime {
       }
 
       await this.initWindow();
+    });
+
+    ipcMain.handle(UI_CHANNEL, (e, payload: unknown) => {
+      this.ui.ipcEvent = e;
+      const isValid = (str: string): str is keyof UI => Object.hasOwn(this.ui, str);
+
+      assert(UI.isValidPayload(payload));
+      assert(isValid(payload.funcName));
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return (this.ui[payload.funcName] as any)(...payload.args);
     });
   }
 

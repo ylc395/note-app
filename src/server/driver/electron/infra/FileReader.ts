@@ -9,12 +9,6 @@ import type DesktopRuntime from '@domain/infra/DesktopRuntime.js';
 import { token as runtimeToken } from '@domain/infra/DesktopRuntime.js';
 import type { LoadedFile } from '@domain/model/file.js';
 
-// remove this once native fetch type is launched in @types/node
-// see https://github.com/DefinitelyTyped/DefinitelyTyped/issues/60924#issuecomment-1358424866
-declare global {
-  export const { fetch, FormData, Headers, Request, Response }: typeof import('undici');
-}
-
 @Injectable()
 export default class ElectronFileReader implements FileReader {
   private readonly cachePath: string;

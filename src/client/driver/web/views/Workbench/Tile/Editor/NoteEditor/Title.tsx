@@ -1,8 +1,7 @@
 import { observer } from 'mobx-react-lite';
 import { type ChangeEvent, useContext, useRef, useEffect } from 'react';
-import { InfoCircleOutlined, FileSearchOutlined } from '@ant-design/icons';
+import { FileSearchOutlined } from '@ant-design/icons';
 
-import ui from '@web/infra/ui';
 import Button from '@web/components/Button';
 
 import EditorContext from './Context';
@@ -32,9 +31,6 @@ export default observer(function NoteTitle() {
       <div className="mr-2">
         <Button onClick={editor.toggleSearch}>
           <FileSearchOutlined />
-        </Button>
-        <Button onClick={() => ui.showModal(Symbol())}>
-          <InfoCircleOutlined />
         </Button>
       </div>
     </div>

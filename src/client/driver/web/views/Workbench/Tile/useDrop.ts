@@ -46,7 +46,7 @@ export default function useDrop(tile: Tile) {
       }
 
       const portion = 6;
-      const position: Position = { top: '0px', left: '0px', bottom: '0px', right: '0px' };
+      let position: Position | undefined = { top: '0px', left: '0px', bottom: '0px', right: '0px' };
       const isInLeftBoundary = cursor.x - dropRect.left < dropRect.width / portion;
       const isInRightBoundary = dropRect.right - cursor.x < dropRect.width / portion;
       const isInTopBoundary = cursor.y - dropRect.top < dropRect.height / portion;
@@ -60,6 +60,8 @@ export default function useDrop(tile: Tile) {
         position.bottom = `${dropRect.height / 2}px`;
       } else if (isInBottomBoundary && !isInLeftBoundary && !isInRightBoundary) {
         position.top = `${dropRect.height / 2}px`;
+      } else if (item.tile === tile) {
+        position = undefined;
       }
 
       setDropArea(position);
