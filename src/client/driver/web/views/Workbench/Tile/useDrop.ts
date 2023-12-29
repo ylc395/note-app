@@ -5,7 +5,6 @@ import { container } from 'tsyringe';
 import { type Tile, TileSplitDirections } from '@domain/app/model/workbench';
 import Editor from '@domain/app/model/abstract/Editor';
 import { Workbench } from '@domain/app/model/workbench';
-import TreeNode from '@domain/common/model/abstract/TreeNode';
 
 interface Position {
   top: string;
@@ -22,7 +21,7 @@ const directionMap = {
 };
 
 export default function useDrop(tile: Tile) {
-  const { moveEditor, openEntity } = container.resolve(Workbench);
+  const { moveEditor } = container.resolve(Workbench);
   const [dropArea, setDropArea] = useState<Position>();
   const [isOver, setIsOver] = useState(false);
 
@@ -31,16 +30,12 @@ export default function useDrop(tile: Tile) {
       ? (Object.keys(dropArea).find((key) => dropArea[key as keyof Position] !== '0px') as keyof Position | undefined)
       : undefined;
 
-    if (!direction) {
-      return;
-    }
-
     if (item instanceof Editor) {
-      moveEditor(item, { from: tile, splitDirection: directionMap[direction] });
-    }
+      if (!direction && tile === item.tile) {
+        return;
+      }
 
-    if (item instanceof TreeNode) {
-      openEntity(item.toEntityLocator(), { from: tile, splitDirection: directionMap[direction] });
+      moveEditor(item, direction ? { from: tile, splitDirection: directionMap[direction] } : tile);
     }
   });
 

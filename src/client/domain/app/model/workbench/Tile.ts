@@ -19,15 +19,19 @@ type Events = {
 };
 
 export default class Tile extends Emitter<Events> {
-  public readonly id = uniqueId('tile-');
-  private readonly editableEntityManager = container.resolve(EditableEntityManager);
-  @observable.ref public currentEditor?: Editor;
-  @observable.shallow public editors: Editor[] = [];
-
   constructor() {
     super();
     makeObservable(this);
   }
+
+  public readonly id = uniqueId('tile-');
+  private readonly editableEntityManager = container.resolve(EditableEntityManager);
+
+  @observable.ref
+  public currentEditor?: Editor;
+
+  @observable.shallow
+  public readonly editors: Editor[] = [];
 
   public findByEntity({ entityId, entityType }: EditableEntityLocator) {
     return this.editors.find((e) => isMatch(e.entityLocator, { entityId, entityType }));
@@ -42,6 +46,7 @@ export default class Tile extends Emitter<Events> {
     }
 
     this.currentEditor = existedTab;
+    this.currentEditor.focus();
     return true;
   }
 
