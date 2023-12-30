@@ -66,7 +66,7 @@ export default class TreeNode<T extends HierarchyEntity> {
     this.tree.updateTree(entities);
   }
 
-  public toEntityLocator() {
+  public get entityLocator() {
     assert(this.entity);
 
     return {
