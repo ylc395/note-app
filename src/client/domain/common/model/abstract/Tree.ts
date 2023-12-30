@@ -78,7 +78,9 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
     }
   }
 
-  protected abstract entityToNode(entity: T | null): Partial<Pick<TreeNode<T>, 'isLeaf' | 'title' | 'isDisabled'>>;
+  protected abstract entityToNode(
+    entity: T | null,
+  ): Partial<Pick<TreeNode<T>, 'isLeaf' | 'title' | 'isDisabled' | 'icon'>>;
 
   @action
   private addNode(entity: T) {

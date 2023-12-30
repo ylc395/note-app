@@ -47,6 +47,10 @@ export default class NoteEditor extends Editor<EditableNote, UIState> {
     this.editable.update({ title });
   }
 
+  public updateIcon(icon: string | null) {
+    this.editable.update({ icon });
+  }
+
   public readonly updateBody = (body: string) => {
     this.editable.updateBody(body);
   };
@@ -64,5 +68,10 @@ export default class NoteEditor extends Editor<EditableNote, UIState> {
   @computed
   public get isEmpty() {
     return this.title === '' && this.body === '';
+  }
+
+  @computed
+  public get icon() {
+    return this.editable.entity?.info.icon || null;
   }
 }

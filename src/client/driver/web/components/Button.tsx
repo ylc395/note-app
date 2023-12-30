@@ -1,10 +1,10 @@
 import clsx from 'clsx';
-import { type MouseEvent, type ReactNode, forwardRef } from 'react';
+import { type MouseEvent, type ReactNode, forwardRef, MouseEventHandler } from 'react';
 
 export interface Props {
   children: ReactNode;
   className?: string;
-  onClick?: () => void;
+  onClick?: MouseEventHandler;
   disabled?: boolean;
   selected?: boolean;
   size?: 'small' | 'medium';
@@ -14,12 +14,10 @@ export default forwardRef<HTMLButtonElement, Props>(function Button(
   { children, className, onClick, disabled, selected, size = 'medium' },
   ref,
 ) {
-  const handleClick =
-    onClick &&
-    ((e: MouseEvent) => {
-      e.stopPropagation();
-      onClick();
-    });
+  const handleClick = (e: MouseEvent) => {
+    e.stopPropagation();
+    onClick?.(e);
+  };
 
   return (
     <button
@@ -27,10 +25,11 @@ export default forwardRef<HTMLButtonElement, Props>(function Button(
       disabled={disabled}
       onClick={handleClick}
       className={clsx(
-        'cursor-pointer rounded border-0  p-1',
+        'flex  cursor-pointer items-center justify-center rounded border-0  p-1',
         size === 'small' && 'text-sm',
         size === 'medium' && 'text-lg',
-        selected ? 'bg-gray-300' : 'bg-transparent hover:bg-gray-100',
+        selected ? 'bg-gray-200' : 'bg-transparent hover:bg-gray-100',
+        disabled && 'opacity-40',
         className,
       )}
     >

@@ -4,19 +4,17 @@ import { observer } from 'mobx-react-lite';
 
 import Button from '@web/components/Button';
 import Explorer from '@domain/app/model/material/Explorer';
-import AddButton from './AddButton';
 
 export default observer(function Operations() {
   const { tree } = container.resolve(Explorer);
 
   return (
-    <div className="flex justify-between grow">
-      <AddButton />
+    <div className="flex grow justify-between">
       <div>
         <Button disabled={tree.expandedNodes.length === 0} onClick={tree.collapseAll}>
           <ShrinkOutlined />
         </Button>
-        <Button>
+        <Button onClick={() => {}}>
           <SettingOutlined />
         </Button>
       </div>

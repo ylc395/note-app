@@ -6,7 +6,6 @@ import { EntityTypes } from '@shared/domain/model/entity';
 import MaterialExplorer from '@domain/app/model/material/Explorer';
 
 import TreeView from '../../components/TreeView';
-import AddButton from '../AddButton';
 import { noop } from 'lodash-es';
 
 // eslint-disable-next-line mobx/missing-observer
@@ -27,7 +26,7 @@ export default function MaterialTreeView() {
         isEntityMaterialVO(entity) &&
         openEntity({ entityType: EntityTypes.Material, entityId: id, mimeType: entity.mimeType })
       }
-      nodeOperation={(node) => node.entity && isDirectoryVO(node.entity) && <AddButton materialId={node.id} />}
+      nodeOperation={() => []}
     />
   );
 }

@@ -59,7 +59,7 @@ export default class ElectronRuntime extends DesktopRuntime {
 
     ipcMain.handle(UI_CHANNEL, (e, payload: unknown) => {
       this.ui.ipcEvent = e;
-      const isValid = (str: string): str is keyof UI => Object.hasOwn(this.ui, str);
+      const isValid = (str: string): str is keyof UI => str in this.ui;
 
       assert(UI.isValidPayload(payload));
       assert(isValid(payload.funcName));

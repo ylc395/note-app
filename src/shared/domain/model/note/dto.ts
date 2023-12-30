@@ -5,9 +5,7 @@ export const notePatchDTOSchema = object({
   title: string().optional(),
   isReadonly: boolean().optional(),
   parentId: string().nullish(),
-  icon: string()
-    .regex(/^(emoji:|file:).+/)
-    .nullish(),
+  icon: string().nullish(),
 });
 
 export const notesPatchDTOSchema = object({

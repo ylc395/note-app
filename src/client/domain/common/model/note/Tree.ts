@@ -16,6 +16,7 @@ export default class NoteTree extends Tree<NoteVO> {
   protected entityToNode(note: NoteVO | null) {
     return {
       title: note ? normalizeTitle(note) : '根',
+      icon: note ? note.icon : null,
       isLeaf: note ? note.childrenCount === 0 : true,
     };
   }

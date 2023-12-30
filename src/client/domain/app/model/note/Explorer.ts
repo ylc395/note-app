@@ -21,17 +21,12 @@ export default class NoteExplorer extends Explorer {
     this.tree.root.loadChildren();
   }
 
-  private readonly handleUpdate = ({ id, title, parentId }: UpdateEvent) => {
+  private readonly handleUpdate = ({ id, ...patch }: UpdateEvent) => {
     const node = this.tree.getNode(id, true);
 
     if (node) {
       assert(node.entity);
-      const patch = {
-        title: title !== undefined ? title : node.entity.title,
-        parentId: parentId !== undefined ? parentId : node.entity.parentId,
-      };
-
-      this.tree.updateNode({ ...node.entity, ...patch });
+      this.tree.updateNode(Object.assign(node.entity, patch));
     }
   };
 

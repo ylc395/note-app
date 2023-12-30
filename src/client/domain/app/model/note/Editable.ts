@@ -46,7 +46,7 @@ export default class EditableNote extends EditableEntity<{
   };
 
   @action
-  public update(note: Pick<NotePatchDTO, 'title'>) {
+  public update(note: Pick<NotePatchDTO, 'title' | 'icon'>) {
     assert(this.entity);
     this.entity.info = { ...this.entity.info, ...note, updatedAt: Date.now() };
     this.uploadNote(note);

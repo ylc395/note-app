@@ -14,7 +14,7 @@ export default observer(function Operations() {
 
   return (
     <div className="flex grow justify-between">
-      <Button onClick={createNote}>
+      <Button onClick={() => createNote()}>
         <PlusOutlined />
       </Button>
       <div>

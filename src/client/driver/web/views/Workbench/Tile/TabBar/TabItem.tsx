@@ -12,6 +12,7 @@ import Droppable from '@web/components/dnd/Droppable';
 import useDrop from './useDrop';
 import { container } from 'tsyringe';
 import ExplorerManager from '@domain/app/model/manager/ExplorerManager';
+import TypeIcon from '@web/components/TypeIcon';
 
 export default observer(function TabItem({ editor }: { editor: Editor }) {
   const { tile } = editor;
@@ -45,9 +46,10 @@ export default observer(function TabItem({ editor }: { editor: Editor }) {
         )}
       >
         <IconTitle
-          className="mr-1  max-w-[200px] cursor-pointer py-3 text-sm"
+          defaultIcon={<TypeIcon type={editor.entityLocator.entityType} />}
+          className="mr-1 h-6 max-w-[200px] cursor-pointer py-3 text-sm"
           titleClassName="overflow-hidden text-ellipsis"
-          size="1em"
+          iconSize="1em"
           onClick={() => switchToEditor(editor)}
           {...editor.tabView}
         />

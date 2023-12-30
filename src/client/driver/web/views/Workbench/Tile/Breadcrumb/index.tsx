@@ -22,8 +22,8 @@ export default observer(function Breadcrumb({ tile }: { tile: Tile }) {
           <RightOutlined />
         </li>
       ))}
-      <li className="cursor-pointer">
-        <IconTitle icon={editor.tabView.icon} title={editor.tabView.title} />
+      <li>
+        <IconTitle iconSize="1em" icon={editor.tabView.icon} title={editor.tabView.title} />
       </li>
     </ul>
   );

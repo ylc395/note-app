@@ -1,16 +1,18 @@
-import emojiData from '@emoji-mart/data/sets/14/apple.json';
+import emojiData from '@emoji-mart/data/sets/14/native.json';
 import { init } from 'emoji-mart';
 import clsx from 'clsx';
-import { observable } from 'mobx';
+import { action, observable } from 'mobx';
 import { observer } from 'mobx-react-lite';
+import type { ReactNode } from 'react';
 
 const isEmojiReady = observable.box(false);
 
-init({ data: emojiData }).then(() => isEmojiReady.set(true));
+init({ data: emojiData }).then(action(() => isEmojiReady.set(true)));
 
 export interface EmojiProps {
-  id: string | null;
+  code: string | null;
   className?: string;
+  fallback?: ReactNode;
   size?: string;
 }
 
@@ -28,10 +30,12 @@ declare global {
   }
 }
 
-export default observer(function Emoji({ id, className, size }: EmojiProps) {
-  return isEmojiReady.get() && id ? (
+export default observer(function Emoji({ code, className, size, fallback }: EmojiProps) {
+  const shouldShow = isEmojiReady.get() && (code || fallback);
+
+  return shouldShow ? (
     <span className={clsx(className)}>
-      <em-emoji size={size || '1.5em'} shortcodes={id.replace(/^emoji:/, '')}></em-emoji>
+      {code ? <em-emoji size={size || '1em'} shortcodes={code}></em-emoji> : fallback}
     </span>
   ) : null;
 });

@@ -1,5 +1,5 @@
-import { action, computed, makeObservable, observable, runInAction } from 'mobx';
-import { differenceWith, map, get } from 'lodash-es';
+import { action, makeObservable, observable, runInAction } from 'mobx';
+import { differenceWith, map } from 'lodash-es';
 
 import { HierarchyEntity } from '@shared/domain/model/entity';
 import type Tree from './Tree';
@@ -77,16 +77,12 @@ export default class TreeNode<T extends HierarchyEntity> {
     };
   }
 
-  @computed get icon() {
-    const icon = get(this.entity, 'icon');
-    return typeof icon === 'string' ? (icon as string) : null;
-  }
-
   @observable.ref public parent: TreeNode<T> | null; // only root node has no parent;
   @observable.ref public entity: T | null; // only root node has no entity;
   @observable public isDisabled = false;
   @observable public title = '';
   @observable public isLeaf = true;
+  @observable public icon: string | null = null;
   @observable.shallow public children: TreeNode<T>[] = [];
   @observable public isExpanded = false;
   @observable public isSelected = false;

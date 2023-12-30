@@ -1,6 +1,5 @@
 export { default as NotesController } from './NotesController.js';
 export { default as RecyclablesController } from './RecyclablesController.js';
-export { default as IconsController } from './IconsController.js';
 export { default as StarsController } from './StarsController.js';
 export { default as FilesController } from './FilesController.js';
 export { default as MemosController } from './MemosController.js';
