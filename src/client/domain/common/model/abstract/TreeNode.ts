@@ -1,19 +1,19 @@
 import { action, makeObservable, observable, runInAction } from 'mobx';
 import { differenceWith, map } from 'lodash-es';
+import assert from 'assert';
 
 import { HierarchyEntity } from '@shared/domain/model/entity';
 import type Tree from './Tree';
-import assert from 'assert';
 
 export default class TreeNode<T extends HierarchyEntity> {
-  constructor(public readonly tree: Tree<T>, options?: { parent: TreeNode<T>; entity: T }) {
-    if (!options) {
+  constructor(public readonly tree: Tree<T>, entity?: T) {
+    if (!entity) {
       this.isLeaf = false;
       this.isExpanded = true;
     }
 
-    this.parent = options?.parent || null;
-    this.entity = options?.entity || null;
+    this.parent = entity ? tree.getNode(entity.parentId) : null;
+    this.entity = entity || null;
 
     makeObservable(this);
   }

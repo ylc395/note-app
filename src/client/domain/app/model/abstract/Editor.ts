@@ -54,6 +54,10 @@ export default abstract class Editor<T extends EditableEntity = EditableEntity, 
 
   @action.bound
   public focus() {
+    if (this.isFocused) {
+      return;
+    }
+
     console.log(`focus ${this.id}`);
     this.emit(EventNames.Focus);
     this.isFocused = true;

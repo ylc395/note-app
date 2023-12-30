@@ -12,7 +12,7 @@ export default observer(function Body() {
     <div className="relative min-h-0 grow px-4">
       {typeof editor.body === 'string' && (
         <MarkdownEditor
-          autoFocus={!editor.isEmpty}
+          autoFocus={editor.isFocused && !editor.uiState?.titleSelection}
           initialContent={editor.body}
           initialUIState={!editor.uiState || editor.uiState.titleSelection ? undefined : editor.uiState}
           content={editor.isFocused ? undefined : editor.body}

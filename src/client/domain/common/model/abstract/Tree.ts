@@ -89,10 +89,7 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
     }
 
     const parent = this.getNode(entity.parentId);
-    const node = new TreeNode(this, {
-      entity,
-      parent,
-    });
+    const node = new TreeNode(this, entity);
 
     parent.isLeaf = false;
     parent.children.push(node);
