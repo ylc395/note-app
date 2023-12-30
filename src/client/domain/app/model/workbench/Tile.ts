@@ -122,7 +122,8 @@ export default class Tile extends Emitter<Events> {
     }
 
     if (!isWithin) {
-      editor.tile?.removeEditor(editor, false);
+      assert(editor.tile);
+      editor.tile.removeEditor(editor, false);
       editor.tile = this;
     }
 

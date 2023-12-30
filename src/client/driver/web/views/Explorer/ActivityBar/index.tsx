@@ -1,4 +1,4 @@
-import { StarOutlined, NumberOutlined, DeleteOutlined, SearchOutlined, SettingOutlined } from '@ant-design/icons';
+import { StarOutlined, NumberOutlined, DeleteOutlined, SettingOutlined } from '@ant-design/icons';
 
 import TypeIcon from '@web/components/TypeIcon';
 import Button from './Button';
@@ -7,7 +7,7 @@ import { EntityTypes } from '@domain/app/model/entity';
 // eslint-disable-next-line mobx/missing-observer
 export default function ActivityBar() {
   return (
-    <nav className="flex h-full w-14 flex-shrink-0 flex-col justify-between border-0 border-r border-solid border-gray-200 bg-gray-50 text-center">
+    <nav className="flex h-full w-14 shrink-0 flex-col justify-between border-0 border-r border-solid border-gray-200 bg-gray-50 text-center">
       <div>
         <div>
           <Button explorerType={EntityTypes.Material}>
@@ -30,9 +30,6 @@ export default function ActivityBar() {
         </div>
       </div>
       <div className="mb-1">
-        <Button>
-          <SearchOutlined />
-        </Button>
         <Button>
           <SettingOutlined />
         </Button>

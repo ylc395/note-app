@@ -16,12 +16,6 @@ export enum TileSplitDirections {
   Right,
 }
 
-const splitDirectionToDirection = (direction: TileSplitDirections) => {
-  return direction === TileSplitDirections.Bottom || direction === TileSplitDirections.Top
-    ? TileDirections.Vertical
-    : TileDirections.Horizontal;
-};
-
 type Dest = Tile | Editor | { from?: Tile; splitDirection: TileSplitDirections };
 
 @singleton()
@@ -103,7 +97,7 @@ export default class Workbench {
     if (this.root === from) {
       this.root = {
         id: uniqueId('tileParent-'),
-        direction: splitDirectionToDirection(direction),
+        direction: Workbench.splitDirectionToDirection(direction),
         ...(direction === TileSplitDirections.Bottom || direction === TileSplitDirections.Right
           ? {
               first: this.root,
@@ -126,7 +120,7 @@ export default class Workbench {
         const parentBranch = parentNode.first === node ? 'first' : 'second';
         parentNode[parentBranch] = {
           id: uniqueId('tileParent-'),
-          direction: splitDirectionToDirection(direction),
+          direction: Workbench.splitDirectionToDirection(direction),
           ...(direction === TileSplitDirections.Bottom || direction === TileSplitDirections.Right
             ? {
                 first: parentNode[parentBranch],
@@ -232,5 +226,11 @@ export default class Workbench {
     }
 
     targetTile.switchToEditor(editor);
+  }
+
+  private static splitDirectionToDirection(direction: TileSplitDirections) {
+    return direction === TileSplitDirections.Bottom || direction === TileSplitDirections.Top
+      ? TileDirections.Vertical
+      : TileDirections.Horizontal;
   }
 }

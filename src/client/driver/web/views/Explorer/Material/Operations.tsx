@@ -10,7 +10,7 @@ export default observer(function Operations() {
 
   return (
     <div className="flex grow justify-between">
-      <div>
+      <div className="flex">
         <Button disabled={tree.expandedNodes.length === 0} onClick={tree.collapseAll}>
           <ShrinkOutlined />
         </Button>

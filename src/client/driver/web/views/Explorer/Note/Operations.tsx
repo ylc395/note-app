@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
-import { PlusOutlined, ShrinkOutlined, SettingOutlined } from '@ant-design/icons';
+import { AiOutlinePlus, AiOutlineShrink, AiOutlineSetting } from 'react-icons/ai';
 
 import NoteService from '@domain/app/service/NoteService';
 import Explorer from '@domain/app/model/note/Explorer';
@@ -15,14 +15,14 @@ export default observer(function Operations() {
   return (
     <div className="flex grow justify-between">
       <Button onClick={() => createNote()}>
-        <PlusOutlined />
+        <AiOutlinePlus />
       </Button>
-      <div>
+      <div className="flex">
         <Button disabled={expandedNodes.length === 0} onClick={collapseAll}>
-          <ShrinkOutlined />
+          <AiOutlineShrink />
         </Button>
         <Button>
-          <SettingOutlined />
+          <AiOutlineSetting />
         </Button>
       </div>
     </div>

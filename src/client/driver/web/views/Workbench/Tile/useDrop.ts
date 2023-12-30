@@ -31,7 +31,7 @@ export default function useDrop(tile: Tile) {
       : undefined;
 
     if (item instanceof Editor) {
-      if (!direction && tile === item.tile) {
+      if (tile === item.tile && (!direction || tile.editors.length === 1)) {
         return;
       }
 
@@ -42,6 +42,10 @@ export default function useDrop(tile: Tile) {
   const onDragMove = useMemoizedFn(
     ({ cursor, dropRect, item }: { item: unknown; cursor: { x: number; y: number }; dropRect: DOMRect }) => {
       if (!(item instanceof Editor)) {
+        return;
+      }
+
+      if (item.tile === tile && tile.editors.length === 1) {
         return;
       }
 
