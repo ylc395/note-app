@@ -44,7 +44,7 @@ export default class NoteEditor extends Editor<EditableNote, UIState> {
   }
 
   @action.bound
-  public updateInfo(info: { title?: string; icon?: string | null }) {
+  public updateInfo(info: { isReadonly?: boolean; title?: string; icon?: string | null }) {
     this.editable.update(info);
     this.isActive = true;
   }
@@ -57,7 +57,7 @@ export default class NoteEditor extends Editor<EditableNote, UIState> {
 
   @computed
   public get isReadonly() {
-    return this.editable.entity?.info.isReadonly;
+    return Boolean(this.editable.entity?.info.isReadonly);
   }
 
   @computed

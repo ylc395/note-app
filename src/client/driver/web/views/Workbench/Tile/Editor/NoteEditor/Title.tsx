@@ -1,12 +1,15 @@
 import { observer } from 'mobx-react-lite';
 import { useContext, useRef, useEffect } from 'react';
 import { MdOutlineAddReaction } from 'react-icons/md';
+import { AiOutlineFileSearch, AiOutlineInfoCircle } from 'react-icons/ai';
 
 import ButtonPopover, { PopoverRef } from '@web/components/ButtonPopover';
+import Switch from '@web/components/Switch';
 import Picker from '@web/components/icon/Picker';
 import Icon from '@web/components/icon/Icon';
 
 import EditorContext from './Context';
+import Button from '@web/components/Button';
 
 export default observer(function NoteTitle() {
   const { editor } = useContext(EditorContext);
@@ -49,8 +52,23 @@ export default observer(function NoteTitle() {
         placeholder={editor.tabView.title}
         value={editor.title || ''}
         onChange={(e) => editor.updateInfo({ title: e.target.value })}
+        readOnly={editor.isReadonly}
         disabled={typeof editor.title !== 'string'}
       />
+      <div className="mr-2 flex space-x-2">
+        <Button>
+          <AiOutlineFileSearch />
+        </Button>
+        <Button>
+          <AiOutlineInfoCircle />
+        </Button>
+        <Switch
+          trueText="仅阅读"
+          falseText="可编辑"
+          value={editor.isReadonly}
+          onChange={(value) => editor.updateInfo({ isReadonly: value })}
+        />
+      </div>
     </div>
   );
 });

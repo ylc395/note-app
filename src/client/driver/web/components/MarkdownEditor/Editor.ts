@@ -42,11 +42,12 @@ export interface Options {
 
 export default class Editor {
   private readonly milkdown: MilkdownEditor;
-  readonly id = uniqueId('milkdown-'); // for debugging
+  public readonly id = uniqueId('milkdown-'); // for debugging
   private isReadonly = false;
   private isFocused = false;
   private root?: HTMLElement;
   private contentToSet?: string;
+  private uiState?: UIState;
 
   constructor(private readonly options: Options) {
     console.debug(`create editor-${this.id}`);
@@ -66,21 +67,22 @@ export default class Editor {
       .use(clipboard)
       .use(cursor);
 
-    if (this.options.onUIStateChange) {
-      const plugin = $prose(
+    editor.use(
+      $prose(
         () =>
           new Plugin({
             view: () => ({
               update: (editorView) => {
                 if (editorView.hasFocus()) {
-                  this.options.onUIStateChange!({ selection: editorView.state.selection.toJSON() });
+                  const uiState = { selection: editorView.state.selection.toJSON() };
+                  this.options.onUIStateChange?.(uiState);
+                  this.uiState = uiState;
                 }
               },
             }),
           }),
-      );
-      editor.use(plugin);
-    }
+      ),
+    );
 
     editor.config((ctx) => {
       const { onChange, onUIStateChange, onBlur, onFocus, defaultValue } = this.options;
@@ -129,7 +131,11 @@ export default class Editor {
         }
 
         this.options.autoFocus && this.focus();
-        this.options.initialUIState && this.applyUIState(this.options.initialUIState);
+
+        if (this.options.initialUIState) {
+          this.uiState = this.options.initialUIState;
+          this.applyUIState(this.options.initialUIState);
+        }
         this.setReadonly(this.isReadonly);
       }
     });
@@ -137,7 +143,7 @@ export default class Editor {
     return editor;
   }
 
-  mount(root: HTMLElement) {
+  public mount(root: HTMLElement) {
     this.root = root;
     this.milkdown.config((ctx) => ctx.set(rootCtx, root)).create();
   }
@@ -148,14 +154,14 @@ export default class Editor {
     this.options.onUIStateChange!({ scrollTop });
   };
 
-  toggleSearch(enabled: boolean) {
+  public toggleSearch(enabled: boolean) {
     this.milkdown.action((ctx) => {
       const commandManager = ctx.get(commandsCtx);
       enabled && commandManager.call(enableSearchCommand.key);
     });
   }
 
-  readonly focus = () => {
+  public readonly focus = () => {
     this.milkdown.action((ctx) => {
       const view = ctx.get(editorViewCtx);
 
@@ -165,7 +171,7 @@ export default class Editor {
     });
   };
 
-  setReadonly(isReadonly: boolean) {
+  public setReadonly(isReadonly: boolean) {
     this.isReadonly = isReadonly;
 
     if (this.milkdown.status !== EditorStatus.Created) {
@@ -175,7 +181,7 @@ export default class Editor {
     this.milkdown.action(forceUpdate());
   }
 
-  setContent(content: string) {
+  public setContent(content: string) {
     if (this.milkdown.status !== EditorStatus.Created) {
       this.contentToSet = content;
       return;
@@ -186,7 +192,7 @@ export default class Editor {
     this.milkdown.action(replaceAll(content));
   }
 
-  destroy() {
+  public destroy() {
     console.debug(`destroy editor-${this.id}`);
     this.milkdown.destroy(true);
   }
