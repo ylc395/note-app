@@ -148,7 +148,7 @@ export default class Workbench {
   }
 
   @action
-  private getFocusedTile() {
+  private getOrCreateFocusedTile() {
     if (this.focusedTile) {
       return this.focusedTile;
     }
@@ -195,29 +195,37 @@ export default class Workbench {
   }
 
   @action.bound
-  public openEntity(entity: EntityLocator, dest?: Dest) {
+  public openEntity(entity: EntityLocator, options?: { dest?: Dest; newTab?: true }) {
     if (!isEditableEntityLocator(entity) || (entity.entityType === EntityTypes.Material && !entity.mimeType)) {
       return;
     }
 
+    const dest = options?.dest || this.getOrCreateFocusedTile();
+
     let targetTile: Tile | undefined;
     let editor: Editor;
 
-    if (dest instanceof Tile || dest instanceof Editor || !dest) {
-      targetTile = dest ? (dest instanceof Tile ? dest : dest.tile) : this.getFocusedTile();
-
+    if (dest instanceof Tile || dest instanceof Editor) {
+      targetTile = dest instanceof Tile ? dest : dest.tile;
       assert(targetTile);
 
       if (targetTile.switchToEditor(entity)) {
+        // move existing editor to target editor
         if (dest instanceof Editor) {
           const editor = targetTile.findByEntity(entity);
           assert(editor);
           targetTile.addEditorTo(editor, dest);
         }
         return;
-      }
+      } else {
+        const targetEditor = dest instanceof Editor ? dest : undefined;
 
-      editor = targetTile.createEditor(entity, dest instanceof Editor ? dest : undefined);
+        if (options?.newTab) {
+          editor = targetTile.createEditor(entity, { dest: targetEditor, isActive: true });
+        } else {
+          editor = targetTile.replaceEditorWith(entity, targetEditor);
+        }
+      }
     } else {
       const { from = this.focusedTile, splitDirection } = dest;
       assert(from);

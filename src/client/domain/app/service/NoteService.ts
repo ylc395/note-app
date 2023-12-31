@@ -106,6 +106,8 @@ export default class NoteService {
         return this.duplicateNote(oneId);
       case 'move':
         return this.ui.showModal(MOVE_TARGET_MODAL);
+      case 'openInNewTab':
+        return this.workbench.openEntity(this.tree.getNode(oneId).entityLocator, { newTab: true });
       case 'openToTop':
       case 'openToBottom':
       case 'openToRight':
@@ -113,7 +115,7 @@ export default class NoteService {
         return this.workbench.openEntity(
           { entityType: EntityTypes.Note, entityId: oneId },
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          { splitDirection: TileSplitDirections[action.match(/openTo(.+)/)![1] as any] as any },
+          { dest: { splitDirection: TileSplitDirections[action.match(/openTo(.+)/)![1] as any] as any } },
         );
       default:
         assert.fail(`invalid action: ${action}`);

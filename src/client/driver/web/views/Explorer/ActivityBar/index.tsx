@@ -24,12 +24,12 @@ export default function ActivityBar() {
           <Button>
             <NumberOutlined />
           </Button>
-          <Button>
-            <DeleteOutlined />
-          </Button>
         </div>
       </div>
       <div className="mb-1">
+        <Button>
+          <DeleteOutlined />
+        </Button>
         <Button>
           <SettingOutlined />
         </Button>

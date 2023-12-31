@@ -5,6 +5,7 @@ import { default as Emoji, type EmojiProps } from './icon/Icon';
 interface Props {
   className?: string;
   onClick?: () => void;
+  onDoubleClick?: () => void;
   title: string;
   icon: string | null;
   defaultIcon?: ReactNode;
@@ -12,9 +13,18 @@ interface Props {
   titleClassName?: string;
 }
 
-export default function IconTitle({ titleClassName, className, icon, defaultIcon, title, iconSize, onClick }: Props) {
+export default function IconTitle({
+  titleClassName,
+  className,
+  icon,
+  defaultIcon,
+  title,
+  iconSize,
+  onClick,
+  onDoubleClick,
+}: Props) {
   return (
-    <span className={clsx('flex items-center', className)} onClick={onClick}>
+    <span onDoubleClick={onDoubleClick} className={clsx('flex items-center', className)} onClick={onClick}>
       <Emoji code={icon} className="mr-1" size={iconSize} fallback={defaultIcon} />
       <span className={clsx('whitespace-nowrap', titleClassName)}>{title}</span>
     </span>

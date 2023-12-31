@@ -24,6 +24,7 @@ export default abstract class Editor<T extends EditableEntity = EditableEntity, 
   public abstract readonly tabView: { title: string; icon: string | null; breadcrumbs: Path };
 
   @observable isFocused = false;
+  @observable isActive = false;
   public uiState: Partial<S> | null = null;
 
   private get uiStateKey() {

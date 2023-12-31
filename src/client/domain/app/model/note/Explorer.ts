@@ -1,5 +1,5 @@
 import { action, makeObservable } from 'mobx';
-import { compact } from 'lodash-es';
+import { compact, first } from 'lodash-es';
 import { singleton } from 'tsyringe';
 import assert from 'assert';
 
@@ -48,10 +48,17 @@ export default class NoteExplorer extends Explorer {
 
   public readonly showContextmenu = async () => {
     const isMultiple = this.tree.selectedNodes.length > 1;
+    const oneNode = first(this.tree.selectedNodes);
+    assert(oneNode);
+
+    const canOpenInNewTab =
+      this.workbench.focusedTile && !isMultiple && !this.workbench.focusedTile.findByEntity(oneNode.entityLocator);
+
     const action = await this.ui.getActionFromMenu(
       compact([
         isMultiple && { label: `共${this.tree.selectedNodes.length}项`, disabled: true },
         isMultiple && { type: 'separator' },
+        canOpenInNewTab && { label: '新标签页打开', key: 'openInNewTab' },
         this.workbench.focusedTile && {
           label: '打开至...',
           submenu: [

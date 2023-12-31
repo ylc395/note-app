@@ -17,7 +17,7 @@ export default function useDrop(target: Tile | Editor) {
 
     if (item instanceof TreeNode) {
       for (const node of item.tree.selectedNodes) {
-        openEntity(node.entityLocator, target);
+        openEntity(node.entityLocator, { dest: target, newTab: true });
       }
     }
   });

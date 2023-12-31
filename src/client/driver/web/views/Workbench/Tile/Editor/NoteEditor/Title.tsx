@@ -37,7 +37,7 @@ export default observer(function NoteTitle() {
         <Picker
           canClear={Boolean(editor.icon)}
           onSelect={(emoji) => {
-            editor.updateIcon(emoji);
+            editor.updateInfo({ icon: emoji });
             popoverRef.current!.dismiss();
           }}
         />
@@ -48,7 +48,7 @@ export default observer(function NoteTitle() {
         className="grow border-none text-xl font-medium"
         placeholder={editor.tabView.title}
         value={editor.title || ''}
-        onChange={(e) => editor.updateTitle(e.target.value)}
+        onChange={(e) => editor.updateInfo({ title: e.target.value })}
         disabled={typeof editor.title !== 'string'}
       />
     </div>

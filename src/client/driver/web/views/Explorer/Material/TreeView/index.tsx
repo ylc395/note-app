@@ -1,7 +1,7 @@
 import { container } from 'tsyringe';
 
 import { Workbench } from '@domain/app/model/workbench';
-import { isDirectoryVO, isEntityMaterialVO } from '@shared/domain/model/material';
+import { isEntityMaterialVO } from '@shared/domain/model/material';
 import { EntityTypes } from '@shared/domain/model/entity';
 import MaterialExplorer from '@domain/app/model/material/Explorer';
 

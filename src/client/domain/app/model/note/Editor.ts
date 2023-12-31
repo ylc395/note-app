@@ -43,16 +43,16 @@ export default class NoteEditor extends Editor<EditableNote, UIState> {
     this.searchEnabled = !this.searchEnabled;
   }
 
-  public updateTitle(title: string) {
-    this.editable.update({ title });
+  @action.bound
+  public updateInfo(info: { title?: string; icon?: string | null }) {
+    this.editable.update(info);
+    this.isActive = true;
   }
 
-  public updateIcon(icon: string | null) {
-    this.editable.update({ icon });
-  }
-
+  @action.bound
   public readonly updateBody = (body: string) => {
     this.editable.updateBody(body);
+    this.isActive = true;
   };
 
   @computed

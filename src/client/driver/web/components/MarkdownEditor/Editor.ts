@@ -201,7 +201,11 @@ export default class Editor {
         const view = ctx.get(editorViewCtx);
         const viewState = view.state;
 
-        view.dispatch(viewState.tr.setSelection(Selection.fromJSON(viewState.doc, state.selection!)));
+        try {
+          view.dispatch(viewState.tr.setSelection(Selection.fromJSON(viewState.doc, state.selection!)));
+        } catch (error) {
+          console.warn(error);
+        }
       });
     }
   }

@@ -43,7 +43,7 @@ export default function useDrop(tile: Tile) {
     }
 
     if (item instanceof TreeNode) {
-      openEntity(item.entityLocator, dest);
+      openEntity(item.entityLocator, { dest, newTab: true });
     }
   });
 
