@@ -1,4 +1,4 @@
-import { pull, uniqueId, last } from 'lodash-es';
+import { uniqueId } from 'lodash-es';
 import { observable, makeObservable, action, computed } from 'mobx';
 import { singleton } from 'tsyringe';
 import assert from 'assert';
@@ -25,31 +25,23 @@ export default class Workbench {
   }
 
   private readonly tilesMap: Record<Tile['id'], Tile> = {};
-  @observable.shallow private readonly focusedTileHistory: Tile[] = [];
   @observable public root?: TileNode; // a binary tree
-  @observable.ref public editingEditor?: Editor;
+  @observable.ref public currentTile?: Tile;
 
   @action.bound
-  public setEditingEditor(editor: Editor) {
-    this.editingEditor = editor;
+  public setCurrentTile(tile: Tile) {
+    this.currentTile = tile;
   }
 
   @computed
   public get focusedTile() {
-    return this.focusedTileHistory[this.focusedTileHistory.length - 1];
+    return this.currentTile;
   }
-
-  private readonly handleTileFocus = (tile: Tile) => {
-    if (last(this.focusedTileHistory) !== tile) {
-      this.focusedTileHistory.push(tile);
-    }
-  };
 
   private createTile() {
     const tile = new Tile();
 
     tile.on(TileEvents.Destroyed, () => this.removeTile(tile));
-    tile.on(TileEvents.Focus, () => this.handleTileFocus(tile));
     this.tilesMap[tile.id] = tile;
 
     return tile;
@@ -90,8 +82,6 @@ export default class Workbench {
         assert.fail('can not find tile');
       }
     }
-
-    pull(this.focusedTileHistory, tile);
   }
 
   @action

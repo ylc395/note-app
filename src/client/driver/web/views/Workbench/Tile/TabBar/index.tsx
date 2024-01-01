@@ -14,21 +14,21 @@ export default observer(function TabBar({ tile }: { tile: Tile }) {
   const { setIsOver, isOver, onDrop } = useDrop(tile);
 
   return (
-    tile.editors.length > 1 && (
-      <div className="flex justify-between border-0 border-b border-solid border-gray-200">
-        <Droppable
-          onOverToggle={setIsOver}
-          onDrop={onDrop}
-          className={clsx('scrollbar-hidden flex grow overflow-auto', isOver ? 'bg-slate-200' : 'bg-gray-50')}
-        >
-          {editors.map((editor) => (
-            <TabItem key={editor.id} editor={editor} />
-          ))}
-        </Droppable>
+    <div className="flex justify-between border-0 border-b border-solid border-gray-200">
+      <Droppable
+        onOverToggle={setIsOver}
+        onDrop={onDrop}
+        className={clsx('scrollbar-hidden flex grow overflow-auto', isOver ? 'bg-slate-200' : 'bg-gray-50')}
+      >
+        {editors.map((editor) => (
+          <TabItem key={editor.id} editor={editor} />
+        ))}
+      </Droppable>
+      {tile.editors.length > 1 && (
         <Button onClick={tile.closeAllEditors}>
           <AiOutlineClose />
         </Button>
-      </div>
-    )
+      )}
+    </div>
   );
 });

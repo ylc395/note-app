@@ -4,19 +4,17 @@ import { uniqueId, isMatch } from 'lodash';
 import { Emitter } from 'strict-event-emitter';
 import assert from 'assert';
 
-import Editor, { EventNames as EditorEvents } from '@domain/app/model/abstract/Editor';
+import Editor from '@domain/app/model/abstract/Editor';
 import type { EditableEntityLocator } from '@domain/app/model/abstract/EditableEntity';
 import EditableEntityManager from '@domain/app/model/manager/EditableEntityManager';
 import type { EntityLocator } from '../entity';
 
 export enum EventNames {
   Destroyed = 'tile.destroyed',
-  Focus = 'tile.focus',
 }
 
 type Events = {
   [EventNames.Destroyed]: [];
-  [EventNames.Focus]: [];
 };
 
 export default class Tile extends Emitter<Events> {
@@ -47,7 +45,6 @@ export default class Tile extends Emitter<Events> {
     }
 
     this.currentEditor = existedTab;
-    this.currentEditor.focus();
     return true;
   }
 
@@ -59,7 +56,6 @@ export default class Tile extends Emitter<Events> {
     const [removedEditor] = this.editors.splice(existedTabIndex, 1);
 
     assert(removedEditor);
-    removedEditor.off(EditorEvents.Focus, this.handleEditorFocus);
 
     if (destroy) {
       removedEditor.destroy();
@@ -76,10 +72,6 @@ export default class Tile extends Emitter<Events> {
     removedEditor.tile = undefined;
   }
 
-  private readonly handleEditorFocus = () => {
-    this.emit(EventNames.Focus);
-  };
-
   @action.bound
   public closeAllEditors() {
     const editors = Array.from(this.editors);
@@ -92,7 +84,6 @@ export default class Tile extends Emitter<Events> {
   private entityToEditor(entity: EditableEntityLocator) {
     const editableEntity = this.editableEntityManager.getOrCreateEditable(entity);
     const editor = editableEntity.createEditor(this);
-    editor.on(EditorEvents.Focus, this.handleEditorFocus);
 
     return editor;
   }

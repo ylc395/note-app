@@ -7,7 +7,6 @@ import { IS_DEV } from '@shared/domain/infra/constants';
 interface Options {
   onChange?: EditorOptions['onChange'];
   onUIStateChange?: EditorOptions['onUIStateChange'];
-  onFocus?: EditorOptions['onFocus'];
   initialUIState?: EditorOptions['initialUIState'];
   autoFocus?: boolean;
   readonly?: boolean;
@@ -18,7 +17,7 @@ interface Options {
 
 // eslint-disable-next-line mobx/missing-observer
 export default (function MarkdownEditor(options: Options) {
-  const { onChange, onUIStateChange, onFocus, autoFocus, initialContent, initialUIState } = options;
+  const { onChange, onUIStateChange, autoFocus, initialContent, initialUIState } = options;
   const rootRef = useRef<HTMLDivElement | null>(null);
   const editor = useCreation(
     () =>
@@ -27,10 +26,9 @@ export default (function MarkdownEditor(options: Options) {
         autoFocus,
         onChange,
         onUIStateChange,
-        onFocus,
         initialUIState,
       }),
-    [onChange, onUIStateChange, onFocus],
+    [onChange, onUIStateChange],
   );
 
   useEffect(() => {

@@ -1,11 +1,10 @@
 import assert from 'assert';
 import { observer } from 'mobx-react-lite';
-import { AiOutlineClose, AiOutlineRight } from 'react-icons/ai';
+import { AiOutlineRight } from 'react-icons/ai';
 
 import type { Tile } from '@domain/app/model/workbench';
 import IconTitle from '@web/components/IconTitle';
 import TypeIcon from '@web/components/TypeIcon';
-import Button from '@web/components/Button';
 
 export default observer(function Breadcrumb({ tile }: { tile: Tile }) {
   const editor = tile.currentEditor;
@@ -28,11 +27,6 @@ export default observer(function Breadcrumb({ tile }: { tile: Tile }) {
           <IconTitle iconSize="1em" icon={editor.tabView.icon} title={editor.tabView.title} />
         </li>
       </ul>
-      {tile.editors.length === 1 && (
-        <Button onClick={tile.closeAllEditors}>
-          <AiOutlineClose />
-        </Button>
-      )}
     </div>
   );
 });

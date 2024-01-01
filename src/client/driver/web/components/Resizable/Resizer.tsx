@@ -57,7 +57,7 @@ export default forwardRef<HTMLDivElement, Props>(function Resizer({ onResize, di
       ref={ref}
       onMouseDown={onMouseDown}
       className={clsx(
-        'bg-gray-100 hover:bg-blue-100',
+        'opacity-0 hover:opacity-100',
         direction === 'y' ? 'h-[2px] cursor-row-resize hover:h-1' : 'w-[2px] cursor-col-resize hover:w-1',
         className,
       )}

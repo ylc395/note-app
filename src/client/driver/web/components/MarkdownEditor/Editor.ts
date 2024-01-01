@@ -36,7 +36,6 @@ export interface Options {
   initialUIState?: Partial<UIState>;
   onUIStateChange?: (state: UIState) => void;
   onChange?: (content: string) => void; // only when focused
-  onFocus?: () => void;
 }
 
 export default class Editor {
@@ -83,7 +82,7 @@ export default class Editor {
     );
 
     editor.config((ctx) => {
-      const { onChange, onFocus, defaultValue } = this.options;
+      const { onChange, defaultValue } = this.options;
       const listener = ctx.get(listenerCtx);
 
       ctx.set(uploadConfig.key, uploadOptions);
@@ -108,8 +107,7 @@ export default class Editor {
           }
         })
         .mounted(() => this.root!.addEventListener('scroll', this.handleScroll))
-        .destroy(() => this.root!.removeEventListener('scroll', this.handleScroll))
-        .focus(() => onFocus?.());
+        .destroy(() => this.root!.removeEventListener('scroll', this.handleScroll));
     });
 
     editor.onStatusChange((status) => {

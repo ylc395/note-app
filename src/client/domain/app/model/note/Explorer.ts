@@ -51,8 +51,7 @@ export default class NoteExplorer extends Explorer {
     const oneNode = first(this.tree.selectedNodes);
     assert(oneNode);
 
-    const canOpenInNewTab =
-      this.workbench.focusedTile && !isMultiple && !this.workbench.focusedTile.findByEntity(oneNode.entityLocator);
+    const canOpenInNewTab = !this.workbench.currentTile?.findByEntity(oneNode.entityLocator);
 
     const action = await this.ui.getActionFromMenu(
       compact([

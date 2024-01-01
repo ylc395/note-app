@@ -5,7 +5,6 @@ import { token as remoteToken } from '@domain/common/infra/remote';
 import { token as UIToken } from '@domain/app/infra/ui';
 
 import type { NotesPatchDTO, NoteVO, NotePatchDTO } from '@shared/domain/model/note';
-import { MULTIPLE_ICON_FLAG, type NoteMetadata } from '@domain/app/model/note/MetadataForm';
 import { TileSplitDirections, Workbench } from '@domain/app/model/workbench';
 import NoteEditor from '@domain/app/model/note/Editor';
 import NoteExplorer from '@domain/app/model/note/Explorer';
@@ -83,19 +82,6 @@ export default class NoteService {
     }
     this.tree.setSelected(ids);
   };
-
-  public async editNotes(metadata: NoteMetadata) {
-    const { body: notes } = await this.remote.patch<NotesPatchDTO, NoteVO[]>('/notes', {
-      ids: this.tree.getSelectedNodeIds(),
-      note: {
-        ...metadata,
-        isReadonly: metadata.isReadonly === 2 ? undefined : Boolean(metadata.isReadonly),
-        icon: metadata.icon === MULTIPLE_ICON_FLAG ? undefined : (metadata.icon as string | null | undefined),
-      },
-    });
-
-    this.tree.updateTree(notes);
-  }
 
   private readonly handleAction = ({ action, id }: ActionEvent) => {
     const oneId = id[0];

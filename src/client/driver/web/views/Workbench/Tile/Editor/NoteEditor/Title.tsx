@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { useRef, useEffect } from 'react';
+import { useRef } from 'react';
 import { MdOutlineAddReaction } from 'react-icons/md';
 import { AiOutlineFileSearch, AiOutlineInfoCircle } from 'react-icons/ai';
 
@@ -13,13 +13,6 @@ import type NoteEditor from '@domain/app/model/note/Editor';
 export default observer(function NoteTitle({ editor }: { editor: NoteEditor }) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const popoverRef = useRef<PopoverRef | null>(null);
-
-  useEffect(() => {
-    if (editor.isEmpty && !editor.isFocused) {
-      inputRef.current!.focus();
-      editor.focus();
-    }
-  }, [editor, editor.isEmpty, editor.isFocused]);
 
   return (
     <div className="flex items-center border-0 border-b border-solid border-gray-200 px-1 py-2">
@@ -49,11 +42,13 @@ export default observer(function NoteTitle({ editor }: { editor: NoteEditor }) {
         className="grow border-none text-xl font-medium"
         placeholder={editor.tabView.title}
         value={editor.title || ''}
-        onChange={(e) => editor.updateInfo({ title: e.target.value })}
+        onChange={(e) => {
+          editor.updateInfo({ title: e.target.value });
+        }}
         readOnly={editor.isReadonly}
         disabled={typeof editor.title !== 'string'}
       />
-      <div className="mr-2 flex space-x-2">
+      <div className="mr-2 flex space-x-1">
         <Button>
           <AiOutlineFileSearch />
         </Button>

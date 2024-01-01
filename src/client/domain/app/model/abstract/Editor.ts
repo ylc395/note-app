@@ -10,12 +10,10 @@ import type Tile from '../workbench/Tile';
 
 export enum EventNames {
   Destroyed = 'editor.destroyed',
-  Focus = 'editor.focus',
 }
 
 type Events = {
   [EventNames.Destroyed]: [];
-  [EventNames.Focus]: [];
 };
 
 export default abstract class Editor<T extends EditableEntity = EditableEntity, S = unknown> extends Emitter<Events> {
@@ -23,7 +21,6 @@ export default abstract class Editor<T extends EditableEntity = EditableEntity, 
   private readonly localStorage = container.resolve(localStorageToken);
   public abstract readonly tabView: { title: string; icon: string | null; breadcrumbs: Path };
 
-  @observable isFocused = false;
   @observable isActive = false;
   public uiState: Partial<S> | null = null;
 
@@ -45,23 +42,6 @@ export default abstract class Editor<T extends EditableEntity = EditableEntity, 
   public destroy() {
     this.emit(EventNames.Destroyed);
     this.removeAllListeners();
-  }
-
-  @action.bound
-  public blur() {
-    console.log(`blur ${this.id}`);
-    this.isFocused = false;
-  }
-
-  @action.bound
-  public focus() {
-    if (this.isFocused) {
-      return;
-    }
-
-    console.log(`focus ${this.id}`);
-    this.emit(EventNames.Focus);
-    this.isFocused = true;
   }
 
   @action.bound
