@@ -16,7 +16,7 @@ import { upload, uploadConfig } from '@milkdown/plugin-upload';
 import { cursor } from '@milkdown/plugin-cursor';
 import { clipboard } from '@milkdown/plugin-clipboard';
 import { Plugin, Selection } from '@milkdown/prose/state';
-import { uniqueId, after } from 'lodash-es';
+import { uniqueId } from 'lodash-es';
 import '@milkdown/prose/view/style/prosemirror.css';
 import '@milkdown/prose/tables/style/tables.css';
 
@@ -35,8 +35,7 @@ export interface Options {
   autoFocus?: boolean;
   initialUIState?: Partial<UIState>;
   onUIStateChange?: (state: UIState) => void;
-  onChange?: (content: string) => void; // first time not included and only when focused
-  onBlur?: () => void;
+  onChange?: (content: string) => void; // only when focused
   onFocus?: () => void;
 }
 
@@ -44,9 +43,8 @@ export default class Editor {
   private readonly milkdown: MilkdownEditor;
   public readonly id = uniqueId('milkdown-'); // for debugging
   private isReadonly = false;
-  private isFocused = false;
+  private isReady = false;
   private root?: HTMLElement;
-  private contentToSet?: string;
   private uiState?: UIState;
 
   constructor(private readonly options: Options) {
@@ -85,13 +83,17 @@ export default class Editor {
     );
 
     editor.config((ctx) => {
-      const { onChange, onUIStateChange, onBlur, onFocus, defaultValue } = this.options;
+      const { onChange, onFocus, defaultValue } = this.options;
       const listener = ctx.get(listenerCtx);
 
       ctx.set(uploadConfig.key, uploadOptions);
       ctx.update(editorViewOptionsCtx, (prev) => ({
         ...prev,
-        editable: () => !this.isReadonly,
+        editable: () => {
+          // UI state can not be applied if editorView is not editable
+          // so we only set real `isReadonly` when created
+          return this.isReady ? !this.isReadonly : true;
+        },
       }));
 
       if (typeof defaultValue === 'string') {
@@ -99,44 +101,27 @@ export default class Editor {
         ctx.set(defaultValueCtx, defaultValue);
       }
 
-      if (onChange) {
-        listener.markdownUpdated(after(2, (_, markdown) => this.isFocused && onChange(markdown)));
-      }
-
-      if (onUIStateChange) {
-        listener
-          .mounted(() => this.root!.addEventListener('scroll', this.handleScroll))
-          .destroy(() => this.root!.removeEventListener('scroll', this.handleScroll));
-      }
-
       listener
-        .blur(() => {
-          if (document.hasFocus()) {
-            this.isFocused = false;
-            onBlur?.();
+        .markdownUpdated((_, markdown) => {
+          if (this.isReady && ctx.get(editorViewCtx).hasFocus()) {
+            onChange?.(markdown);
           }
         })
-        .focus(() => {
-          if (!this.isFocused) {
-            this.isFocused = true;
-            onFocus?.();
-          }
-        });
+        .mounted(() => this.root!.addEventListener('scroll', this.handleScroll))
+        .destroy(() => this.root!.removeEventListener('scroll', this.handleScroll))
+        .focus(() => onFocus?.());
     });
 
     editor.onStatusChange((status) => {
       if (status === EditorStatus.Created) {
-        if (this.contentToSet) {
-          this.setContent(this.contentToSet);
-        }
-
         this.options.autoFocus && this.focus();
 
         if (this.options.initialUIState) {
           this.uiState = this.options.initialUIState;
           this.applyUIState(this.options.initialUIState);
         }
-        this.setReadonly(this.isReadonly);
+
+        this.isReady = true;
       }
     });
 
@@ -164,30 +149,34 @@ export default class Editor {
   public readonly focus = () => {
     this.milkdown.action((ctx) => {
       const view = ctx.get(editorViewCtx);
-
-      if (!view.hasFocus()) {
-        view.focus();
-      }
+      view.focus();
     });
   };
 
   public setReadonly(isReadonly: boolean) {
     this.isReadonly = isReadonly;
 
-    if (this.milkdown.status !== EditorStatus.Created) {
+    if (!this.isReady) {
       return;
+    }
+
+    // we should apply ui state before forceUpdate
+    if (this.uiState) {
+      this.applyUIState(this.uiState);
     }
 
     this.milkdown.action(forceUpdate());
+
+    if (!isReadonly) {
+      this.focus();
+    }
   }
 
   public setContent(content: string) {
-    if (this.milkdown.status !== EditorStatus.Created) {
-      this.contentToSet = content;
+    if (!this.isReady) {
       return;
     }
 
-    this.contentToSet = undefined;
     console.debug(`setContent ${this.id}`);
     this.milkdown.action(replaceAll(content));
   }

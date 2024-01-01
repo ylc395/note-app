@@ -27,6 +27,12 @@ export default class Workbench {
   private readonly tilesMap: Record<Tile['id'], Tile> = {};
   @observable.shallow private readonly focusedTileHistory: Tile[] = [];
   @observable public root?: TileNode; // a binary tree
+  @observable.ref public editingEditor?: Editor;
+
+  @action.bound
+  public setEditingEditor(editor: Editor) {
+    this.editingEditor = editor;
+  }
 
   @computed
   public get focusedTile() {

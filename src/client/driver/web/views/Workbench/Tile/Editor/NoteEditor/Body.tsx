@@ -1,12 +1,14 @@
 import { observer } from 'mobx-react-lite';
-import { useContext } from 'react';
+import { container } from 'tsyringe';
+import { useMemoizedFn } from 'ahooks';
 
+import { Workbench } from '@domain/app/model/workbench';
+import type NoteEditor from '@domain/app/model/note/Editor';
 import MarkdownEditor from '@web/components/MarkdownEditor';
-import EditorContext from './Context';
 
-export default observer(function Body() {
-  const ctx = useContext(EditorContext);
-  const { editor } = ctx;
+export default observer(function Body({ editor }: { editor: NoteEditor }) {
+  const { editingEditor, setEditingEditor } = container.resolve(Workbench);
+  const onFocus = useMemoizedFn(() => setEditingEditor(editor));
 
   return (
     <div className="relative min-h-0 grow px-4">
@@ -15,11 +17,10 @@ export default observer(function Body() {
           autoFocus={editor.isFocused && !editor.uiState?.titleSelection}
           initialContent={editor.body}
           initialUIState={!editor.uiState || editor.uiState.titleSelection ? undefined : editor.uiState}
-          content={editor.isFocused ? undefined : editor.body}
+          content={editingEditor === editor ? undefined : editor.body}
           readonly={editor.isReadonly}
           onChange={editor.updateBody}
-          onFocus={editor.focus}
-          onBlur={editor.blur}
+          onFocus={onFocus}
           onUIStateChange={editor.updateUIState}
         />
       )}

@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { useContext, useRef, useEffect } from 'react';
+import { useRef, useEffect } from 'react';
 import { MdOutlineAddReaction } from 'react-icons/md';
 import { AiOutlineFileSearch, AiOutlineInfoCircle } from 'react-icons/ai';
 
@@ -7,12 +7,10 @@ import ButtonPopover, { PopoverRef } from '@web/components/ButtonPopover';
 import Switch from '@web/components/Switch';
 import Picker from '@web/components/icon/Picker';
 import Icon from '@web/components/icon/Icon';
-
-import EditorContext from './Context';
 import Button from '@web/components/Button';
+import type NoteEditor from '@domain/app/model/note/Editor';
 
-export default observer(function NoteTitle() {
-  const { editor } = useContext(EditorContext);
+export default observer(function NoteTitle({ editor }: { editor: NoteEditor }) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const popoverRef = useRef<PopoverRef | null>(null);
 
