@@ -61,12 +61,7 @@ export default class EditableEntityManager {
     return editableEntity;
   }
 
-  private getEditable(id: EntityId) {
-    return this.editableEntities[id];
-  }
-
-  public getOrCreateEditable(locator: EditableEntityLocator) {
-    const entity = this.getEditable(locator.entityId);
-    return entity || this.createEditableEntity(locator);
+  public get(locator: EditableEntityLocator) {
+    return this.editableEntities[locator.entityId] || this.createEditableEntity(locator);
   }
 }

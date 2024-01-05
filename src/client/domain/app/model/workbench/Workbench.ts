@@ -7,7 +7,8 @@ import Editor from '@domain/app/model/abstract/Editor';
 import { isEditableEntityLocator } from '@domain/app/model/abstract/EditableEntity';
 import Tile, { EventNames as TileEvents } from './Tile';
 import { type TileNode, type TileParent, TileDirections, isTileLeaf } from './tileTree';
-import { EntityLocator, EntityTypes } from '../entity';
+import { type EntityLocator, EntityTypes } from '../entity';
+import HistoryManager from './HistoryManager';
 
 export enum TileSplitDirections {
   Top,
@@ -24,24 +25,20 @@ export default class Workbench {
     makeObservable(this);
   }
 
+  public readonly historyManager = new HistoryManager(this);
   private readonly tilesMap: Record<Tile['id'], Tile> = {};
   @observable public root?: TileNode; // a binary tree
-  @observable.ref public currentTile?: Tile;
-
-  @action.bound
-  public setCurrentTile(tile: Tile) {
-    this.currentTile = tile;
-  }
 
   @computed
-  public get focusedTile() {
-    return this.currentTile;
+  public get currentTile() {
+    return this.historyManager.currentEditor?.tile;
   }
 
   private createTile() {
     const tile = new Tile();
 
     tile.on(TileEvents.Destroyed, () => this.removeTile(tile));
+    tile.on(TileEvents.Switched, this.historyManager.update);
     this.tilesMap[tile.id] = tile;
 
     return tile;
@@ -145,8 +142,8 @@ export default class Workbench {
 
   @action
   private getOrCreateFocusedTile() {
-    if (this.focusedTile) {
-      return this.focusedTile;
+    if (this.currentTile) {
+      return this.currentTile;
     }
 
     if (!this.root) {
@@ -174,7 +171,7 @@ export default class Workbench {
     } else if (dest instanceof Tile) {
       targetTile = dest;
     } else {
-      const { from = this.focusedTile, splitDirection } = dest;
+      const { from = this.currentTile, splitDirection } = dest;
       assert(from);
       targetTile = this.splitTile(from.id, splitDirection);
     }
@@ -184,14 +181,14 @@ export default class Workbench {
   }
 
   public getTileById(id: Tile['id']) {
-    const tile = this.tilesMap[id];
-    assert(tile);
-
-    return tile;
+    return this.tilesMap[id];
   }
 
   @action.bound
-  public openEntity(entity: EntityLocator, options?: { dest?: Dest; newTab?: true }) {
+  public openEntity(
+    entity: EntityLocator,
+    options?: { dest?: Dest; forceNewTab?: true; reason?: Editor['visibilityReason'] },
+  ) {
     if (!isEditableEntityLocator(entity) || (entity.entityType === EntityTypes.Material && !entity.mimeType)) {
       return;
     }
@@ -205,7 +202,7 @@ export default class Workbench {
       targetTile = dest instanceof Tile ? dest : dest.tile;
       assert(targetTile);
 
-      if (targetTile.switchToEditor(entity)) {
+      if (targetTile.switchToEditor(entity, options?.reason)) {
         // move existing editor to target editor
         if (dest instanceof Editor) {
           const editor = targetTile.findByEntity(entity);
@@ -214,22 +211,21 @@ export default class Workbench {
         }
         return;
       } else {
-        const targetEditor = dest instanceof Editor ? dest : undefined;
-
-        if (options?.newTab) {
-          editor = targetTile.createEditor(entity, { dest: targetEditor, isActive: true });
+        if (options?.forceNewTab) {
+          editor = targetTile.createEditor(entity, { dest: 'tile', isActive: true });
         } else {
-          editor = targetTile.replaceEditorWith(entity, targetEditor);
+          const targetEditor = dest instanceof Editor ? dest : undefined;
+          editor = targetTile.replaceOrCreateEditor(entity, { dest: targetEditor });
         }
       }
     } else {
-      const { from = this.focusedTile, splitDirection } = dest;
+      const { from = this.currentTile, splitDirection } = dest;
       assert(from);
       targetTile = this.splitTile(from.id, splitDirection);
-      editor = targetTile.createEditor(entity);
+      editor = targetTile.createEditor(entity, { isActive: options?.forceNewTab, dest: 'tile' });
     }
 
-    targetTile.switchToEditor(editor);
+    targetTile.switchToEditor(editor, options?.reason);
   }
 
   private static splitDirectionToDirection(direction: TileSplitDirections) {

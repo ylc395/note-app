@@ -18,17 +18,18 @@ type Events = {
 
 export default abstract class Editor<T extends EditableEntity = EditableEntity, S = unknown> extends Emitter<Events> {
   public readonly id = uniqueId('editor-');
+  public visibilityReason?: 'history';
   private readonly localStorage = container.resolve(localStorageToken);
   public abstract readonly tabView: { title: string; icon: string | null; breadcrumbs: Path };
 
-  @observable isActive = false;
+  @observable public isActive = false;
   public uiState: Partial<S> | null = null;
 
   private get uiStateKey() {
     return `UI_STATE_${this.entityLocator.entityId}`;
   }
 
-  constructor(protected readonly editable: T, public tile?: Tile) {
+  constructor(protected readonly editable: T, public tile: Tile) {
     super();
     makeObservable(this);
 

@@ -12,7 +12,7 @@ import Draggable from '@web/components/dnd/Draggable';
 import Droppable from '@web/components/dnd/Droppable';
 import useDrop from './useDrop';
 import { container } from 'tsyringe';
-import ExplorerManager from '@domain/app/model/manager/ExplorerManager';
+import ExplorerManager from '@domain/app/model/ExplorerManager';
 import TypeIcon from '@web/components/TypeIcon';
 
 export default observer(function TabItem({ editor }: { editor: Editor }) {

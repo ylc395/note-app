@@ -9,30 +9,34 @@ import TabBar from './TabBar';
 import Editor from './Editor';
 import Breadcrumb from './Breadcrumb';
 import useDrop from './useDrop';
+import assert from 'assert';
 
 export default observer(function TileView({ id }: { id: Tile['id'] }) {
   const workbench = container.resolve(Workbench);
   const tile = workbench.getTileById(id);
+  assert(tile);
+
   const { onDrop, setIsOver, dropArea, onDragMove } = useDrop(tile);
-  const setTile = () => workbench.setCurrentTile(tile);
+  const updateHistory = () => tile.currentEditor && workbench.historyManager.update(tile.currentEditor, true);
 
   return (
     <Droppable
       onDragMove={onDragMove}
       onOverToggle={setIsOver}
       onDrop={onDrop}
-      onFocusCapture={setTile}
-      onClickCapture={setTile}
+      onFocusCapture={updateHistory}
       className={clsx(
-        'relative flex h-full flex-col border-2 border-solid',
-        workbench.currentTile?.id === id && workbench.root !== id ? 'z-10 border-blue-100' : 'border-transparent',
+        'flex h-full flex-col border border-solid',
+        workbench.currentTile?.id === id && workbench.root !== id ? 'z-10 border-blue-300' : 'border-gray-100 ',
       )}
     >
       {IS_DEV ? <span className="absolute right-0 top-0 text-xs">{id}</span> : null}
       <TabBar tile={tile} />
-      <Breadcrumb tile={tile} />
-      <Editor tile={tile} />
-      {dropArea && <div className="absolute bg-blue-50 opacity-60" style={dropArea} />}
+      <div className="relative flex min-h-0 grow flex-col">
+        <Breadcrumb tile={tile} />
+        <Editor tile={tile} />
+        {dropArea && <div className="absolute bg-blue-50 opacity-60" style={dropArea} />}
+      </div>
     </Droppable>
   );
 });

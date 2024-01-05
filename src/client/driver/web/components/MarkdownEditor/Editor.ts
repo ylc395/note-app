@@ -49,6 +49,7 @@ export default class Editor {
   constructor(private readonly options: Options) {
     console.debug(`create editor-${this.id}`);
     this.milkdown = this.init();
+    this.uiState = options.initialUIState;
   }
 
   private init() {
@@ -70,7 +71,7 @@ export default class Editor {
           new Plugin({
             view: () => ({
               update: (editorView) => {
-                if (editorView.hasFocus()) {
+                if (editorView.hasFocus() || !editorView.editable) {
                   const uiState = { selection: editorView.state.selection.toJSON() };
                   this.options.onUIStateChange?.(uiState);
                   this.uiState = uiState;
@@ -112,14 +113,13 @@ export default class Editor {
 
     editor.onStatusChange((status) => {
       if (status === EditorStatus.Created) {
-        this.options.autoFocus && this.focus();
-
-        if (this.options.initialUIState) {
-          this.uiState = this.options.initialUIState;
-          this.applyUIState(this.options.initialUIState);
-        }
-
         this.isReady = true;
+
+        if (this.options.autoFocus) {
+          this.focus();
+        } else {
+          this.applyUIState();
+        }
       }
     });
 
@@ -145,9 +145,21 @@ export default class Editor {
   }
 
   public readonly focus = () => {
+    if (!this.isReady) {
+      return;
+    }
+
+    console.log(`focus: ${this.id}`);
+
     this.milkdown.action((ctx) => {
       const view = ctx.get(editorViewCtx);
+
+      if (view.hasFocus()) {
+        return;
+      }
+
       view.focus();
+      this.applyUIState();
     });
   };
 
@@ -159,9 +171,7 @@ export default class Editor {
     }
 
     // we should apply ui state before forceUpdate
-    if (this.uiState) {
-      this.applyUIState(this.uiState);
-    }
+    this.applyUIState();
 
     this.milkdown.action(forceUpdate());
 
@@ -184,18 +194,22 @@ export default class Editor {
     this.milkdown.destroy(true);
   }
 
-  private applyUIState(state: UIState) {
-    if (state.scrollTop) {
-      this.root!.scrollTop = state.scrollTop;
+  private applyUIState() {
+    if (!this.uiState) {
+      return;
     }
 
-    if (state.selection) {
+    if (this.uiState.scrollTop) {
+      this.root!.scrollTop = this.uiState.scrollTop;
+    }
+
+    if (this.uiState.selection) {
       this.milkdown.action((ctx) => {
         const view = ctx.get(editorViewCtx);
         const viewState = view.state;
 
         try {
-          view.dispatch(viewState.tr.setSelection(Selection.fromJSON(viewState.doc, state.selection!)));
+          view.dispatch(viewState.tr.setSelection(Selection.fromJSON(viewState.doc, this.uiState!.selection)));
         } catch (error) {
           console.warn(error);
         }

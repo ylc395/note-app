@@ -93,7 +93,7 @@ export default class NoteService {
       case 'move':
         return this.ui.showModal(MOVE_TARGET_MODAL);
       case 'openInNewTab':
-        return this.workbench.openEntity(this.tree.getNode(oneId).entityLocator, { newTab: true });
+        return this.workbench.openEntity(this.tree.getNode(oneId).entityLocator, { forceNewTab: true });
       case 'openToTop':
       case 'openToBottom':
       case 'openToRight':

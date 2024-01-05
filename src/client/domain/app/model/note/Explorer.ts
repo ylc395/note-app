@@ -58,7 +58,7 @@ export default class NoteExplorer extends Explorer {
         isMultiple && { label: `共${this.tree.selectedNodes.length}项`, disabled: true },
         isMultiple && { type: 'separator' },
         canOpenInNewTab && { label: '新标签页打开', key: 'openInNewTab' },
-        this.workbench.focusedTile && {
+        this.workbench.currentTile && {
           label: '打开至...',
           submenu: [
             { label: '左边', key: 'openToLeft' },

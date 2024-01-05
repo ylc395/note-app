@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { useCreation } from 'ahooks';
 
 import Editor, { type Options as EditorOptions } from './Editor';
@@ -15,21 +15,25 @@ interface Options {
   content?: string;
 }
 
+export type EditorRef = Pick<Editor, 'focus'>;
+
 // eslint-disable-next-line mobx/missing-observer
-export default (function MarkdownEditor(options: Options) {
+export default forwardRef<EditorRef, Options>(function MarkdownEditor(options, ref) {
   const { onChange, onUIStateChange, autoFocus, initialContent, initialUIState } = options;
   const rootRef = useRef<HTMLDivElement | null>(null);
   const editor = useCreation(
     () =>
       new Editor({
         defaultValue: initialContent,
-        autoFocus,
         onChange,
+        autoFocus,
         onUIStateChange,
         initialUIState,
       }),
     [onChange, onUIStateChange],
   );
+
+  useImperativeHandle(ref, () => editor, [editor]);
 
   useEffect(() => {
     editor.mount(rootRef.current!);
@@ -58,7 +62,7 @@ export default (function MarkdownEditor(options: Options) {
         ref={rootRef}
         spellCheck={false}
       ></div>
-      {IS_DEV && <small className="absolute right-0 top-0">{editor.id}</small>}
+      {IS_DEV && <span className="absolute right-0 top-0">{editor.id}</span>}
     </>
   );
 });

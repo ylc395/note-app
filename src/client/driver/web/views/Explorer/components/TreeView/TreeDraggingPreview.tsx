@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 
 import Tree from '@web/components/Tree';
 import { useDragItem } from '@web/components/dnd/hooks';
-import ExplorerManager from '@domain/app/model/manager/ExplorerManager';
+import ExplorerManager from '@domain/app/model/ExplorerManager';
 import TreeNode from '@domain/common/model/abstract/TreeNode';
 import { APP_CLASS_NAME } from '@web/infra/ui/constants';
 import NodeTitle from './NodeTitle';

@@ -1,5 +1,5 @@
 import { container } from 'tsyringe';
-import { action, computed, makeObservable, observable } from 'mobx';
+import { action, computed, makeObservable, observable, runInAction } from 'mobx';
 import { Workbench } from '../workbench';
 
 import Tree from '@domain/common/model/abstract/Tree';
@@ -36,9 +36,11 @@ export default abstract class Explorer {
       this.tree.selectedNodes.map(({ entity }) => ({ ...entity!, parentId: null })),
     );
 
-    for (const node of tree.root.children) {
-      node.isLeaf = true;
-    }
+    runInAction(() => {
+      for (const node of tree.root.children) {
+        node.isLeaf = true;
+      }
+    });
 
     return tree;
   }

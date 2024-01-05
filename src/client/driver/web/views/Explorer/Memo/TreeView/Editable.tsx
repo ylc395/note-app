@@ -20,12 +20,7 @@ export default function ChildEditor({ onCancel, onSubmit, content, isEditing }: 
   return (
     <div>
       <div className="h-16 text-sm">
-        <MarkdownEditor
-          readonly={!isEditing}
-          initialContent={content}
-          autoFocus
-          onChange={(e) => (contentRef.current = e)}
-        />
+        <MarkdownEditor readonly={!isEditing} initialContent={content} onChange={(e) => (contentRef.current = e)} />
       </div>
       {isEditing && (
         <div>

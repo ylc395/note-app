@@ -1,4 +1,4 @@
-import { uniqueId, pull } from 'lodash-es';
+import { uniqueId } from 'lodash-es';
 import { container } from 'tsyringe';
 import { makeObservable, observable } from 'mobx';
 import { Emitter } from 'strict-event-emitter';
@@ -27,9 +27,9 @@ type Events = {
 
 export default abstract class EditableEntity<T = unknown> extends Emitter<Events> {
   protected readonly remote = container.resolve(remoteToken);
-  readonly id = uniqueId('editableEntity-');
-  abstract readonly entityType: EditableEntityTypes;
-  protected readonly editors: Editor[] = [];
+  public readonly id = uniqueId('editableEntity-');
+  public abstract readonly entityType: EditableEntityTypes;
+  private editorsCount = 0;
 
   @observable entity?: T;
 
@@ -50,19 +50,19 @@ export default abstract class EditableEntity<T = unknown> extends Emitter<Events
   public createEditor(tile: Tile) {
     const editor = this.getEditor(tile);
 
-    this.editors.push(editor);
-    editor.once(EditorEvents.Destroyed, () => this.handleEditorDestroy(editor));
+    this.editorsCount += 1;
+    editor.once(EditorEvents.Destroyed, this.handleEditorDestroy);
 
     return editor;
   }
 
-  private handleEditorDestroy(editor: Editor) {
-    pull(this.editors, editor);
+  private readonly handleEditorDestroy = () => {
+    this.editorsCount -= 1;
 
-    if (this.editors.length === 0) {
+    if (this.editorsCount === 0) {
       this.destroy();
     }
-  }
+  };
 
   public destroy() {
     this.emit(EventNames.EntityDestroyed);

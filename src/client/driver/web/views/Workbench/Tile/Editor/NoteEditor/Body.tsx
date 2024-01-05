@@ -3,20 +3,29 @@ import { container } from 'tsyringe';
 
 import { Workbench } from '@domain/app/model/workbench';
 import type NoteEditor from '@domain/app/model/note/Editor';
-import MarkdownEditor from '@web/components/MarkdownEditor';
+import MarkdownEditor, { type EditorRef } from '@web/components/MarkdownEditor';
+import { useEffect, useRef } from 'react';
 
 export default observer(function Body({ editor }: { editor: NoteEditor }) {
   const { currentTile } = container.resolve(Workbench);
+  const editorRef = useRef<EditorRef | null>(null);
+  const isFocus = currentTile === editor.tile;
+
+  useEffect(() => {
+    if (isFocus && editor.visibilityReason === 'history' && editorRef.current) {
+      editorRef.current.focus();
+    }
+  }, [editor.visibilityReason, isFocus]);
 
   return (
     <div className="relative min-h-0 grow px-4">
       {typeof editor.body === 'string' && (
         <MarkdownEditor
-          // todo: autoFocus should be set correctly
-          autoFocus
+          ref={editorRef}
+          autoFocus={isFocus}
           initialContent={editor.body}
           initialUIState={!editor.uiState || editor.uiState.titleSelection ? undefined : editor.uiState}
-          content={currentTile?.currentEditor === editor ? undefined : editor.body}
+          content={isFocus ? undefined : editor.body}
           readonly={editor.isReadonly}
           onChange={editor.updateBody}
           onUIStateChange={editor.updateUIState}

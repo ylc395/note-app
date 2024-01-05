@@ -6,15 +6,17 @@ import assert from 'assert';
 
 import Editor from '@domain/app/model/abstract/Editor';
 import type { EditableEntityLocator } from '@domain/app/model/abstract/EditableEntity';
-import EditableEntityManager from '@domain/app/model/manager/EditableEntityManager';
+import EditableEntityManager from './EditableEntityManager';
 import type { EntityLocator } from '../entity';
 
 export enum EventNames {
   Destroyed = 'tile.destroyed',
+  Switched = 'tile.switched',
 }
 
 type Events = {
   [EventNames.Destroyed]: [];
+  [EventNames.Switched]: [Editor];
 };
 
 export default class Tile extends Emitter<Events> {
@@ -37,7 +39,7 @@ export default class Tile extends Emitter<Events> {
   }
 
   @action.bound
-  public switchToEditor(editor: Editor | EditableEntityLocator) {
+  public switchToEditor(editor: Editor | EditableEntityLocator, reason?: Editor['visibilityReason']) {
     const existedTab = editor instanceof Editor ? this.editors.find((e) => editor === e) : this.findByEntity(editor);
 
     if (!existedTab) {
@@ -45,6 +47,8 @@ export default class Tile extends Emitter<Events> {
     }
 
     this.currentEditor = existedTab;
+    this.currentEditor.visibilityReason = reason;
+    this.emit(EventNames.Switched, this.currentEditor);
     return true;
   }
 
@@ -63,13 +67,12 @@ export default class Tile extends Emitter<Events> {
 
     if (this.currentEditor === editor) {
       this.currentEditor = this.editors[existedTabIndex] || this.editors[existedTabIndex - 1];
+      this.currentEditor && this.switchToEditor(this.currentEditor);
     }
 
     if (this.editors.length === 0) {
       this.destroy();
     }
-
-    removedEditor.tile = undefined;
   }
 
   @action.bound
@@ -81,29 +84,23 @@ export default class Tile extends Emitter<Events> {
     }
   }
 
-  private entityToEditor(entity: EditableEntityLocator) {
-    const editableEntity = this.editableEntityManager.getOrCreateEditable(entity);
-    const editor = editableEntity.createEditor(this);
-
-    return editor;
-  }
-
   @action
-  public createEditor(entity: EditableEntityLocator, options?: { dest?: Editor; isActive?: boolean }) {
-    if (options?.dest) {
+  public createEditor(entity: EditableEntityLocator, options?: { dest?: Editor | 'tile'; isActive?: boolean }) {
+    if (options?.dest instanceof Editor) {
       assert(options.dest.tile === this, 'tile of target editor is not this tile');
     }
 
-    const newEditor = this.entityToEditor(entity);
+    const editableEntity = this.editableEntityManager.get(entity);
+    const newEditor = editableEntity.createEditor(this);
     newEditor.isActive = Boolean(options?.isActive);
 
-    if (options?.dest) {
+    if (options?.dest instanceof Editor) {
       // insert editor into dest's position
       const destIndex = this.editors.findIndex((editor) => editor === options.dest);
 
       assert(destIndex >= 0, 'dest is not in this tile');
       this.editors.splice(destIndex, 0, newEditor);
-    } else {
+    } else if (options?.dest === 'tile') {
       this.editors.push(newEditor);
     }
 
@@ -112,18 +109,16 @@ export default class Tile extends Emitter<Events> {
 
   @action
   public addEditorTo(editor: Editor, to?: Editor) {
-    const isWithin = this.editors.includes(editor);
-    const existedEditorIndex = this.editors.findIndex((e) => isMatch(e.entityLocator, editor.entityLocator));
+    const duplicatedIndex = this.editors.findIndex(
+      (e) => e !== editor && isMatch(e.entityLocator, editor.entityLocator),
+    );
 
-    if (existedEditorIndex >= 0) {
-      const [existedEditor] = this.editors.splice(existedEditorIndex, 1);
-
-      if (!isWithin) {
-        existedEditor!.destroy();
-      }
+    if (duplicatedIndex >= 0) {
+      const [duplicated] = this.editors.splice(duplicatedIndex, 1);
+      duplicated!.destroy();
     }
 
-    if (!isWithin) {
+    if (!this.editors.includes(editor)) {
       assert(editor.tile);
       editor.tile.removeEditor(editor, false);
       editor.tile = this;
@@ -134,10 +129,11 @@ export default class Tile extends Emitter<Events> {
   }
 
   @action
-  public replaceEditorWith(entity: EditableEntityLocator, dest?: Editor) {
-    assert(!this.editors.find((e) => isMatch(e.entityLocator, entity)), 'entity is existing so we can not replace');
-
-    dest = dest || this.editors.find((e) => !e.isActive);
+  public replaceOrCreateEditor(
+    entity: EditableEntityLocator,
+    options?: { dest?: Editor; source?: Editor['visibilityReason'] },
+  ) {
+    const dest = options?.dest || this.editors.find((e) => !e.isActive);
 
     let newEditor: Editor;
 
@@ -145,7 +141,7 @@ export default class Tile extends Emitter<Events> {
       const index = this.editors.findIndex((e) => e === dest);
       assert(index >= 0, 'can not find editor in this tile');
 
-      newEditor = this.entityToEditor(entity);
+      newEditor = this.createEditor(entity);
 
       this.editors[index]!.destroy();
       this.editors[index] = newEditor;
@@ -154,7 +150,7 @@ export default class Tile extends Emitter<Events> {
         this.currentEditor = newEditor;
       }
     } else {
-      newEditor = this.createEditor(entity);
+      newEditor = this.createEditor(entity, { dest: 'tile' });
       this.currentEditor = newEditor;
     }
 
