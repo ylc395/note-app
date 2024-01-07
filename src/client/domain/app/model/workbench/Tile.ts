@@ -14,9 +14,14 @@ export enum EventNames {
   Switched = 'tile.switched',
 }
 
+export enum SwitchReasons {
+  HistoryBack,
+  HistoryForward,
+}
+
 type Events = {
   [EventNames.Destroyed]: [];
-  [EventNames.Switched]: [Editor];
+  [EventNames.Switched]: [Editor, SwitchReasons | undefined];
 };
 
 export default class Tile extends Emitter<Events> {
@@ -32,14 +37,14 @@ export default class Tile extends Emitter<Events> {
   public currentEditor?: Editor;
 
   @observable.shallow
-  public readonly editors: Editor[] = [];
+  public editors: Editor[] = [];
 
   public findByEntity({ entityId, entityType }: EntityLocator) {
     return this.editors.find((e) => isMatch(e.entityLocator, { entityId, entityType }));
   }
 
   @action.bound
-  public switchToEditor(editor: Editor | EditableEntityLocator, reason?: Editor['visibilityReason']) {
+  public switchToEditor(editor: Editor | EditableEntityLocator, reason?: SwitchReasons) {
     const existedTab = editor instanceof Editor ? this.editors.find((e) => editor === e) : this.findByEntity(editor);
 
     if (!existedTab) {
@@ -47,8 +52,7 @@ export default class Tile extends Emitter<Events> {
     }
 
     this.currentEditor = existedTab;
-    this.currentEditor.visibilityReason = reason;
-    this.emit(EventNames.Switched, this.currentEditor);
+    this.emit(EventNames.Switched, this.currentEditor, reason);
     return true;
   }
 
@@ -77,11 +81,12 @@ export default class Tile extends Emitter<Events> {
 
   @action.bound
   public closeAllEditors() {
-    const editors = Array.from(this.editors);
-
-    for (const editor of editors) {
-      this.removeEditor(editor, true);
+    for (const editor of this.editors) {
+      editor.destroy();
     }
+
+    this.destroy();
+    this.editors = [];
   }
 
   @action
@@ -129,11 +134,8 @@ export default class Tile extends Emitter<Events> {
   }
 
   @action
-  public replaceOrCreateEditor(
-    entity: EditableEntityLocator,
-    options?: { dest?: Editor; source?: Editor['visibilityReason'] },
-  ) {
-    const dest = options?.dest || this.editors.find((e) => !e.isActive);
+  public replaceOrCreateEditor(entity: EditableEntityLocator, dest?: Editor) {
+    dest = dest || this.editors.find((e) => !e.isActive);
 
     let newEditor: Editor;
 

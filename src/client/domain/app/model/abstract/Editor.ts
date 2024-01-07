@@ -18,7 +18,6 @@ type Events = {
 
 export default abstract class Editor<T extends EditableEntity = EditableEntity, S = unknown> extends Emitter<Events> {
   public readonly id = uniqueId('editor-');
-  public visibilityReason?: 'history';
   private readonly localStorage = container.resolve(localStorageToken);
   public abstract readonly tabView: { title: string; icon: string | null; breadcrumbs: Path };
 

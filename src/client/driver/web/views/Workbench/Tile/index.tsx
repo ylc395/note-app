@@ -17,14 +17,12 @@ export default observer(function TileView({ id }: { id: Tile['id'] }) {
   assert(tile);
 
   const { onDrop, setIsOver, dropArea, onDragMove } = useDrop(tile);
-  const updateHistory = () => tile.currentEditor && workbench.historyManager.update(tile.currentEditor, true);
 
   return (
     <Droppable
       onDragMove={onDragMove}
       onOverToggle={setIsOver}
       onDrop={onDrop}
-      onFocusCapture={updateHistory}
       className={clsx(
         'flex h-full flex-col border border-solid',
         workbench.currentTile?.id === id && workbench.root !== id ? 'z-10 border-blue-300' : 'border-gray-100 ',

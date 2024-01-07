@@ -5,7 +5,7 @@ import assert from 'assert';
 
 import Editor from '@domain/app/model/abstract/Editor';
 import { isEditableEntityLocator } from '@domain/app/model/abstract/EditableEntity';
-import Tile, { EventNames as TileEvents } from './Tile';
+import Tile, { type SwitchReasons, EventNames as TileEvents } from './Tile';
 import { type TileNode, type TileParent, TileDirections, isTileLeaf } from './tileTree';
 import { type EntityLocator, EntityTypes } from '../entity';
 import HistoryManager from './HistoryManager';
@@ -60,14 +60,14 @@ export default class Workbench {
           return searchAndRemove(node.first, node) || searchAndRemove(node.second, node);
         }
 
-        const branchToKeep = node.first === tile.id ? 'second' : 'first';
+        const nodeToKeep = node.first === tile.id ? node.second : node.first;
 
         if (parentNode) {
           const branchOfParent = parentNode.first === node ? 'first' : 'second';
-          parentNode[branchOfParent] = node[branchToKeep];
+          parentNode[branchOfParent] = nodeToKeep;
         } else {
           // if parentNode is undefined, node must be root
-          this.root = node[branchToKeep];
+          this.root = nodeToKeep;
         }
 
         return true;
@@ -185,10 +185,7 @@ export default class Workbench {
   }
 
   @action.bound
-  public openEntity(
-    entity: EntityLocator,
-    options?: { dest?: Dest; forceNewTab?: true; reason?: Editor['visibilityReason'] },
-  ) {
+  public openEntity(entity: EntityLocator, options?: { dest?: Dest; forceNewTab?: true; reason?: SwitchReasons }) {
     if (!isEditableEntityLocator(entity) || (entity.entityType === EntityTypes.Material && !entity.mimeType)) {
       return;
     }
@@ -215,7 +212,7 @@ export default class Workbench {
           editor = targetTile.createEditor(entity, { dest: 'tile', isActive: true });
         } else {
           const targetEditor = dest instanceof Editor ? dest : undefined;
-          editor = targetTile.replaceOrCreateEditor(entity, { dest: targetEditor });
+          editor = targetTile.replaceOrCreateEditor(entity, targetEditor);
         }
       }
     } else {

@@ -9,13 +9,13 @@ import { useEffect, useRef } from 'react';
 export default observer(function Body({ editor }: { editor: NoteEditor }) {
   const { currentTile } = container.resolve(Workbench);
   const editorRef = useRef<EditorRef | null>(null);
-  const isFocus = currentTile === editor.tile;
+  const isFocus = currentTile === editor.tile; // todo: only focus when uiState is on body
 
   useEffect(() => {
-    if (isFocus && editor.visibilityReason === 'history' && editorRef.current) {
+    if (isFocus && editorRef.current) {
       editorRef.current.focus();
     }
-  }, [editor.visibilityReason, isFocus]);
+  }, [isFocus]);
 
   return (
     <div className="relative min-h-0 grow px-4">

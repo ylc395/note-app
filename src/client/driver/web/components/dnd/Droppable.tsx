@@ -7,12 +7,11 @@ interface Props {
   children: ReactNode;
   className?: string;
   onDrop: (item: unknown) => void;
-  onFocusCapture?: () => void;
   onDragMove?: (e: { cursor: NonNullable<XYCoord>; dropRect: DOMRect; item: unknown }) => void;
   onOverToggle?: (isOver: boolean) => void;
 }
 
-export default function Droppable({ children, className, onFocusCapture, onOverToggle, onDragMove, onDrop }: Props) {
+export default function Droppable({ children, className, onOverToggle, onDragMove, onDrop }: Props) {
   const divRef = useRef<HTMLDivElement | null>(null);
   const [{ isOver }, dropRef] = useDrop(
     {
@@ -39,7 +38,7 @@ export default function Droppable({ children, className, onFocusCapture, onOverT
   }, [position, onDragMove, isOver, item]);
 
   return dropRef(
-    <div className={className} onFocusCapture={onFocusCapture} ref={divRef}>
+    <div className={className} ref={divRef}>
       {children}
     </div>,
   );

@@ -5,7 +5,7 @@ import assert from 'assert';
 import Editor from '../abstract/Editor';
 import { EditableEntityLocator } from '../abstract/EditableEntity';
 import type Workbench from './Workbench';
-import type Tile from './Tile';
+import { type default as Tile, SwitchReasons } from './Tile';
 
 interface Record extends EditableEntityLocator {
   tileId: Tile['id'];
@@ -37,30 +37,24 @@ export default class HistoryManager {
   }
 
   @action.bound
-  public update(editor: Editor, resetReason?: boolean) {
-    const reason = editor.visibilityReason;
-
-    if (resetReason) {
-      editor.visibilityReason = undefined;
-    }
-
+  public update(editor: Editor, reason?: SwitchReasons) {
     if (editor === this.currentEditor) {
       return;
     }
 
-    if (reason !== 'history') {
-      const lastRecord = last(this.backwards);
+    if (this.currentEditor && last(this.backwards)?.editorId !== this.currentEditor.id) {
+      const stack = reason === SwitchReasons.HistoryBack ? this.forwards : this.backwards;
 
-      if (this.currentEditor && lastRecord?.editorId !== this.currentEditor.id) {
-        assert(this.currentEditor.tile);
-        this.backwards.push({
-          ...this.currentEditor.entityLocator,
-          tileId: this.currentEditor.tile.id,
-          editorId: this.currentEditor.id,
-        });
-        console.log(`backwards added: ${JSON.stringify(last(this.backwards))}`);
-      }
+      assert(this.currentEditor.tile);
+      stack.push({
+        ...this.currentEditor.entityLocator,
+        tileId: this.currentEditor.tile.id,
+        editorId: this.currentEditor.id,
+      });
+      console.log(`backwards added: ${JSON.stringify(last(this.backwards))}`);
+    }
 
+    if (reason !== SwitchReasons.HistoryBack && reason !== SwitchReasons.HistoryForward) {
       this.forwards = [];
     }
 
@@ -69,18 +63,12 @@ export default class HistoryManager {
 
   @action.bound
   public go(direction: 'forward' | 'backward') {
-    const recordToOpen = this[direction === 'backward' ? 'backwards' : 'forwards'].pop();
-    assert(recordToOpen && this.currentEditor?.tile);
-
-    this[direction === 'backward' ? 'forwards' : 'backwards'].push({
-      ...this.currentEditor.entityLocator,
-      tileId: this.currentEditor.tile.id,
-      editorId: this.currentEditor.id,
-    });
+    const recordToOpen = (direction === 'backward' ? this.backwards : this.forwards).pop();
+    assert(recordToOpen);
 
     this.workbench.openEntity(recordToOpen, {
       dest: this.workbench.getTileById(recordToOpen.tileId),
-      reason: 'history',
+      reason: direction === 'backward' ? SwitchReasons.HistoryBack : SwitchReasons.HistoryForward,
     });
   }
 }
