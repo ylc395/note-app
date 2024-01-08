@@ -92,14 +92,8 @@ export default class Workbench {
         id: uniqueId('tileParent-'),
         direction: Workbench.splitDirectionToDirection(direction),
         ...(direction === TileSplitDirections.Bottom || direction === TileSplitDirections.Right
-          ? {
-              first: this.root,
-              second: newTile.id,
-            }
-          : {
-              second: this.root,
-              first: newTile.id,
-            }),
+          ? { first: this.root, second: newTile.id }
+          : { second: this.root, first: newTile.id }),
       };
       return newTile;
     }

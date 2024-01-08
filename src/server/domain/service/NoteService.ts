@@ -92,7 +92,7 @@ export default class NoteService extends BaseService {
     const ids = _notes.map(({ id }) => id);
     const stars = await this.starService.getStarMap(ids);
     const children = await this.repo.notes.findChildrenIds(ids);
-    const paths = await this.entityService.getPaths(EntityService.getLocators(_notes, EntityTypes.Note));
+    const paths = await this.entityService.getPaths(EntityService.getLocators(ids, EntityTypes.Note));
 
     const result = _notes.map((note) => ({
       ...pick(note, ['id', 'createdAt', 'icon', 'isReadonly', 'parentId', 'title']),
