@@ -14,7 +14,7 @@ export default class EditableHtml extends EditableMaterial<WebPage> {
     super(materialId);
   }
 
-  protected getEditor(tile: Tile) {
+  public createEditor(tile: Tile) {
     return new HtmlEditor(this, tile);
   }
 

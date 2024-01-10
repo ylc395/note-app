@@ -5,12 +5,25 @@ import assert from 'assert';
 
 import NoteTree, { NoteTreeNode } from '@domain/common/model/note/Tree';
 import Explorer from '../abstract/Explorer';
-import eventBus, { Events as NoteEvents, UpdateEvent } from './eventBus';
+import { eventBus, Events as NoteEvents, UpdateEvent } from './eventBus';
+
+export enum EventNames {
+  Action = 'noteExplorer.action',
+}
+
+export interface ActionEvent {
+  action: string;
+  id: NoteTreeNode['id'][];
+}
+
+type Events = {
+  [EventNames.Action]: ActionEvent;
+};
 
 @singleton()
-export default class NoteExplorer extends Explorer {
+export default class NoteExplorer extends Explorer<Events> {
   constructor() {
-    super();
+    super('noteExplorer');
     makeObservable(this);
     eventBus.on(NoteEvents.Updated, this.handleUpdate);
   }
@@ -52,7 +65,6 @@ export default class NoteExplorer extends Explorer {
     assert(oneNode);
 
     const canOpenInNewTab = !this.workbench.currentTile?.findByEntity(oneNode.entityLocator);
-
     const action = await this.ui.getActionFromMenu(
       compact([
         isMultiple && { label: `共${this.tree.selectedNodes.length}项`, disabled: true },
@@ -75,7 +87,7 @@ export default class NoteExplorer extends Explorer {
     );
 
     if (action) {
-      eventBus.emit(NoteEvents.Action, { action, id: this.tree.getSelectedNodeIds() });
+      this.emit(EventNames.Action, { action, id: this.tree.getSelectedNodeIds() });
     }
   };
 }

@@ -1,70 +1,45 @@
 import { uniqueId } from 'lodash-es';
 import { container } from 'tsyringe';
 import { makeObservable, observable } from 'mobx';
-import { Emitter } from 'strict-event-emitter';
 
 import { token as remoteToken } from '@domain/common/infra/remote';
 import { EntityId, EntityLocator, EntityTypes } from '../entity';
 import type { Tile } from '../workbench';
-import { type default as Editor, EventNames as EditorEvents } from './Editor';
-
-export type EditableEntityTypes = EntityTypes.Note | EntityTypes.Material;
+import type Editor from './Editor';
 
 export interface EditableEntityLocator extends EntityLocator {
-  entityType: EditableEntityTypes;
+  entityType: EntityTypes.Note | EntityTypes.Material;
 }
 
-export const isEditableEntityLocator = (locator: EntityLocator): locator is EditableEntityLocator =>
-  [EntityTypes.Note, EntityTypes.Material].includes(locator.entityType);
-
-export enum EventNames {
-  EntityDestroyed = 'editableEntity.destroyed',
-}
-
-type Events = {
-  [EventNames.EntityDestroyed]: [];
-};
-
-export default abstract class EditableEntity<T = unknown> extends Emitter<Events> {
-  protected readonly remote = container.resolve(remoteToken);
-  public readonly id = uniqueId('editableEntity-');
-  public abstract readonly entityType: EditableEntityTypes;
-  private editorsCount = 0;
-
-  @observable entity?: T;
-
+export default abstract class EditableEntity<T = unknown> {
   constructor(public readonly entityId: EntityId) {
-    super();
     makeObservable(this);
     this.load();
   }
 
-  public abstract load(): Promise<void>;
+  protected readonly remote = container.resolve(remoteToken);
+  public readonly id = uniqueId('editableEntity-');
+  public abstract readonly entityType: EditableEntityLocator['entityType'];
+
+  @observable entity?: T;
+
+  public abstract load(): Promise<void>; // todo: load must return a cancel function.
+  public abstract destroy(): void;
+  public abstract createEditor(tile: Tile): Editor;
 
   public toEntityLocator(): EditableEntityLocator {
     return { entityType: this.entityType, entityId: this.entityId };
   }
 
-  protected abstract getEditor(tile: Tile): Editor;
-
-  public createEditor(tile: Tile) {
-    const editor = this.getEditor(tile);
-
-    this.editorsCount += 1;
-    editor.once(EditorEvents.Destroyed, this.handleEditorDestroy);
-
-    return editor;
-  }
-
-  private readonly handleEditorDestroy = () => {
-    this.editorsCount -= 1;
-
-    if (this.editorsCount === 0) {
-      this.destroy();
+  static isEditable(locator: EntityLocator): locator is EditableEntityLocator {
+    if (![EntityTypes.Note, EntityTypes.Material].includes(locator.entityType)) {
+      return false;
     }
-  };
 
-  public destroy() {
-    this.emit(EventNames.EntityDestroyed);
+    if (locator.entityType === EntityTypes.Material && !locator.mimeType) {
+      return false;
+    }
+
+    return true;
   }
 }

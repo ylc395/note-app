@@ -7,17 +7,17 @@ import { token as UIToken } from '@domain/app/infra/ui';
 import type { NotesPatchDTO, NoteVO, NotePatchDTO } from '@shared/domain/model/note';
 import { TileSplitDirections, Workbench } from '@domain/app/model/workbench';
 import NoteEditor from '@domain/app/model/note/Editor';
-import NoteExplorer from '@domain/app/model/note/Explorer';
+import NoteExplorer, { EventNames as ExplorerEvents, type ActionEvent } from '@domain/app/model/note/Explorer';
 import type { RecyclablesDTO } from '@shared/domain/model/recyclables';
 import { EntityTypes } from '@shared/domain/model/entity';
-import eventBus, { type ActionEvent, Events } from '@domain/app/model/note/eventBus';
+import { eventBus, Events } from '@domain/app/model/note/eventBus';
 import { MOVE_TARGET_MODAL } from '@domain/app/model/note/modals';
 import TreeNode from '@domain/common/model/abstract/TreeNode';
 
 @singleton()
 export default class NoteService {
   constructor() {
-    eventBus.on(Events.Action, this.handleAction);
+    this.explorer.on(ExplorerEvents.Action, this.handleAction);
   }
   private readonly remote = container.resolve(remoteToken);
   private readonly ui = container.resolve(UIToken);
@@ -74,7 +74,7 @@ export default class NoteService {
     await this.remote.patch<NotesPatchDTO>('/notes', { ids, note: { parentId: targetId } });
 
     for (const id of ids) {
-      eventBus.emit(Events.Updated, { id, parentId: targetId });
+      eventBus.emit(Events.Updated, { id, actor: this, parentId: targetId });
     }
 
     if (targetId) {

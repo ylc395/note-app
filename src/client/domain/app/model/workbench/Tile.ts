@@ -1,32 +1,21 @@
 import { action, makeObservable, observable } from 'mobx';
 import { container } from 'tsyringe';
 import { uniqueId, isMatch } from 'lodash';
-import { Emitter } from 'strict-event-emitter';
 import assert from 'assert';
 
 import Editor from '@domain/app/model/abstract/Editor';
 import type { EditableEntityLocator } from '@domain/app/model/abstract/EditableEntity';
 import EditableEntityManager from './EditableEntityManager';
+import { eventBus, EventNames } from './eventBus';
 import type { EntityLocator } from '../entity';
-
-export enum EventNames {
-  Destroyed = 'tile.destroyed',
-  Switched = 'tile.switched',
-}
 
 export enum SwitchReasons {
   HistoryBack,
   HistoryForward,
 }
 
-type Events = {
-  [EventNames.Destroyed]: [];
-  [EventNames.Switched]: [Editor, SwitchReasons | undefined];
-};
-
-export default class Tile extends Emitter<Events> {
+export default class Tile {
   constructor() {
-    super();
     makeObservable(this);
   }
 
@@ -52,7 +41,7 @@ export default class Tile extends Emitter<Events> {
     }
 
     this.currentEditor = existedTab;
-    this.emit(EventNames.Switched, this.currentEditor, reason);
+    eventBus.emit(EventNames.EditorSwitched, [this.currentEditor, reason]);
     return true;
   }
 
@@ -66,7 +55,7 @@ export default class Tile extends Emitter<Events> {
     assert(removedEditor);
 
     if (destroy) {
-      removedEditor.destroy();
+      this.editableEntityManager.destroyEditor(removedEditor);
     }
 
     if (this.currentEditor === editor) {
@@ -75,17 +64,17 @@ export default class Tile extends Emitter<Events> {
     }
 
     if (this.editors.length === 0) {
-      this.destroy();
+      this.empty();
     }
   }
 
   @action.bound
   public closeAllEditors() {
     for (const editor of this.editors) {
-      editor.destroy();
+      this.editableEntityManager.destroyEditor(editor);
     }
 
-    this.destroy();
+    this.empty();
     this.editors = [];
   }
 
@@ -95,8 +84,7 @@ export default class Tile extends Emitter<Events> {
       assert(options.dest.tile === this, 'tile of target editor is not this tile');
     }
 
-    const editableEntity = this.editableEntityManager.get(entity);
-    const newEditor = editableEntity.createEditor(this);
+    const newEditor = this.editableEntityManager.createEditor(this, entity);
     newEditor.isActive = Boolean(options?.isActive);
 
     if (options?.dest instanceof Editor) {
@@ -120,7 +108,7 @@ export default class Tile extends Emitter<Events> {
 
     if (duplicatedIndex >= 0) {
       const [duplicated] = this.editors.splice(duplicatedIndex, 1);
-      duplicated!.destroy();
+      this.editableEntityManager.destroyEditor(duplicated!);
     }
 
     if (!this.editors.includes(editor)) {
@@ -145,7 +133,7 @@ export default class Tile extends Emitter<Events> {
 
       newEditor = this.createEditor(entity);
 
-      this.editors[index]!.destroy();
+      this.editableEntityManager.destroyEditor(this.editors[index]!);
       this.editors[index] = newEditor;
 
       if (this.currentEditor === dest) {
@@ -160,9 +148,8 @@ export default class Tile extends Emitter<Events> {
   }
 
   @action
-  private destroy() {
-    this.emit(EventNames.Destroyed);
-    this.removeAllListeners();
+  private empty() {
+    eventBus.emit(EventNames.TileEmptied, this);
     this.currentEditor = undefined;
   }
 }

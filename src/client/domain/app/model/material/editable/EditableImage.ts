@@ -14,7 +14,7 @@ export default class EditableImage extends EditableMaterial<Image> {
     super(materialId);
   }
 
-  protected getEditor(tile: Tile) {
+  public createEditor(tile: Tile) {
     return new ImageEditor(this, tile);
   }
 

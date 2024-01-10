@@ -3,17 +3,19 @@ import { action, computed, makeObservable, observable, runInAction } from 'mobx'
 import { Workbench } from '../workbench';
 
 import Tree from '@domain/common/model/abstract/Tree';
+import EventBus, { type Events } from '@domain/app/infra/EventBus';
 import { token as uiToken } from '@domain/app/infra/ui';
 
-export default abstract class Explorer {
-  constructor() {
+export default abstract class Explorer<T extends Events = Events> extends EventBus<T> {
+  constructor(name: string) {
+    super(name);
     makeObservable(this);
   }
 
   protected readonly ui = container.resolve(uiToken);
+  protected readonly workbench = container.resolve(Workbench);
   public abstract readonly tree: Tree;
   public abstract load(): void;
-  protected readonly workbench = container.resolve(Workbench);
 
   @observable
   public status: 'idle' | 'toDrop' = 'idle';

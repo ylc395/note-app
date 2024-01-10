@@ -4,11 +4,12 @@ import { singleton } from 'tsyringe';
 import assert from 'assert';
 
 import Editor from '@domain/app/model/abstract/Editor';
-import { isEditableEntityLocator } from '@domain/app/model/abstract/EditableEntity';
-import Tile, { type SwitchReasons, EventNames as TileEvents } from './Tile';
+import EditableEntity from '@domain/app/model/abstract/EditableEntity';
+import Tile, { type SwitchReasons } from './Tile';
 import { type TileNode, type TileParent, TileDirections, isTileLeaf } from './tileTree';
-import { type EntityLocator, EntityTypes } from '../entity';
+import type { EntityLocator } from '../entity';
 import HistoryManager from './HistoryManager';
+import { eventBus, EventNames } from './eventBus';
 
 export enum TileSplitDirections {
   Top,
@@ -23,6 +24,7 @@ type Dest = Tile | Editor | { from?: Tile; splitDirection: TileSplitDirections }
 export default class Workbench {
   constructor() {
     makeObservable(this);
+    eventBus.on(EventNames.TileEmptied, this.removeTile);
   }
 
   public readonly historyManager = new HistoryManager(this);
@@ -37,8 +39,6 @@ export default class Workbench {
   private createTile() {
     const tile = new Tile();
 
-    tile.on(TileEvents.Destroyed, () => this.removeTile(tile));
-    tile.on(TileEvents.Switched, this.historyManager.update);
     this.tilesMap[tile.id] = tile;
 
     return tile;
@@ -47,36 +47,41 @@ export default class Workbench {
   @action.bound
   private removeTile(tile: Tile) {
     delete this.tilesMap[tile.id];
+    const searchAndRemove = (node: TileNode, parentNode?: TileParent): TileNode | null => {
+      if (isTileLeaf(node)) {
+        return null;
+      }
+
+      if (node.first !== tile.id && node.second !== tile.id) {
+        return searchAndRemove(node.first, node) || searchAndRemove(node.second, node);
+      }
+
+      const nodeToKeep = node.first === tile.id ? node.second : node.first;
+
+      if (parentNode) {
+        const branchOfParent = parentNode.first === node ? 'first' : 'second';
+        parentNode[branchOfParent] = nodeToKeep;
+      } else {
+        // if parentNode is undefined, node must be root
+        this.root = nodeToKeep;
+      }
+
+      return nodeToKeep;
+    };
+
+    assert(this.root, 'no root');
 
     if (this.root === tile.id) {
       this.root = undefined;
+      eventBus.emit(EventNames.EditorSwitched, [undefined, undefined]);
     } else {
-      const searchAndRemove = (node: TileNode, parentNode?: TileParent): boolean => {
-        if (typeof node === 'string') {
-          return false;
-        }
+      const keptTile = searchAndRemove(this.root);
+      assert(keptTile, 'can not find tile');
 
-        if (node.first !== tile.id && node.second !== tile.id) {
-          return searchAndRemove(node.first, node) || searchAndRemove(node.second, node);
-        }
-
-        const nodeToKeep = node.first === tile.id ? node.second : node.first;
-
-        if (parentNode) {
-          const branchOfParent = parentNode.first === node ? 'first' : 'second';
-          parentNode[branchOfParent] = nodeToKeep;
-        } else {
-          // if parentNode is undefined, node must be root
-          this.root = nodeToKeep;
-        }
-
-        return true;
-      };
-
-      assert(this.root, 'no root');
-
-      if (!searchAndRemove(this.root)) {
-        assert.fail('can not find tile');
+      if (isTileLeaf(keptTile)) {
+        const tile = this.getTileById(keptTile);
+        assert(tile?.currentEditor);
+        tile.switchToEditor(tile.currentEditor);
       }
     }
   }
@@ -180,7 +185,7 @@ export default class Workbench {
 
   @action.bound
   public openEntity(entity: EntityLocator, options?: { dest?: Dest; forceNewTab?: true; reason?: SwitchReasons }) {
-    if (!isEditableEntityLocator(entity) || (entity.entityType === EntityTypes.Material && !entity.mimeType)) {
+    if (!EditableEntity.isEditable(entity)) {
       return;
     }
 

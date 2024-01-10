@@ -11,7 +11,7 @@ import EditableEntity from '../abstract/EditableEntity';
 @singleton()
 export default class MaterialExplorer extends Explorer {
   constructor() {
-    super();
+    super('materialExplorer');
     makeObservable(this);
   }
   public readonly tree = new MaterialTree();

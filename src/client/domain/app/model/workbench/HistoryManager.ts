@@ -6,6 +6,7 @@ import Editor from '../abstract/Editor';
 import { EditableEntityLocator } from '../abstract/EditableEntity';
 import type Workbench from './Workbench';
 import { type default as Tile, SwitchReasons } from './Tile';
+import { eventBus, EventNames } from './eventBus';
 
 interface Record extends EditableEntityLocator {
   tileId: Tile['id'];
@@ -15,16 +16,14 @@ interface Record extends EditableEntityLocator {
 export default class HistoryManager {
   constructor(private readonly workbench: Workbench) {
     makeObservable(this);
+    eventBus.on(EventNames.EditorSwitched, ([editor, reason]) => this.update(editor, reason));
   }
 
-  @observable.ref
-  public currentEditor?: Editor;
+  @observable.ref public currentEditor?: Editor;
 
-  @observable.shallow
-  private readonly backwards: Record[] = [];
+  @observable.shallow private readonly backwards: Record[] = [];
 
-  @observable.shallow
-  private forwards: Record[] = [];
+  @observable.shallow private forwards: Record[] = [];
 
   @computed
   public get canForward() {
@@ -37,7 +36,7 @@ export default class HistoryManager {
   }
 
   @action.bound
-  public update(editor: Editor, reason?: SwitchReasons) {
+  private update(editor?: Editor, reason?: SwitchReasons) {
     if (editor === this.currentEditor) {
       return;
     }

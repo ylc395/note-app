@@ -7,7 +7,7 @@ import type { NoteVO, NotePatchDTO } from '@shared/domain/model/note';
 import EditableEntity from '@domain/app/model/abstract/EditableEntity';
 import { Tile } from '@domain/app/model/workbench';
 import NoteEditor from './Editor';
-import eventBus, { Events as NoteEvents, UpdateEvent } from './eventBus';
+import { eventBus, Events as NoteEvents } from './eventBus';
 
 export default class EditableNote extends EditableEntity<{
   info: NoteVO;
@@ -17,7 +17,6 @@ export default class EditableNote extends EditableEntity<{
   constructor(noteId: NoteVO['id']) {
     super(noteId);
     makeObservable(this);
-    eventBus.on(NoteEvents.Updated, this.handleNoteUpdated);
   }
 
   public async load() {
@@ -31,26 +30,16 @@ export default class EditableNote extends EditableEntity<{
     });
   }
 
-  protected getEditor(tile: Tile) {
+  public createEditor(tile: Tile) {
     return new NoteEditor(this, tile);
   }
-
-  private readonly handleNoteUpdated = ({ id, parentId }: UpdateEvent) => {
-    if (id !== this.entityId) {
-      return;
-    }
-
-    if (parentId) {
-      this.load();
-    }
-  };
 
   @action
   public update(note: Pick<NotePatchDTO, 'title' | 'icon'>) {
     assert(this.entity);
     this.entity.info = { ...this.entity.info, ...note, updatedAt: Date.now() };
     this.uploadNote(note);
-    eventBus.emit(NoteEvents.Updated, { id: this.entityId, ...note });
+    eventBus.emit(NoteEvents.Updated, { id: this.entityId, actor: this, ...note });
   }
 
   @action
@@ -60,7 +49,7 @@ export default class EditableNote extends EditableEntity<{
     this.entity.info.updatedAt = Date.now();
 
     this.uploadNoteBody(body);
-    eventBus.emit(NoteEvents.Updated, { id: this.entityId, body });
+    eventBus.emit(NoteEvents.Updated, { id: this.entityId, actor: this, body });
   }
 
   private readonly uploadNote = debounce((note: NotePatchDTO) => {
@@ -74,7 +63,5 @@ export default class EditableNote extends EditableEntity<{
   destroy(): void {
     this.uploadNote.flush();
     this.uploadNoteBody.flush();
-    eventBus.off(NoteEvents.Updated, this.handleNoteUpdated);
-    super.destroy();
   }
 }

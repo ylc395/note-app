@@ -34,7 +34,7 @@ export default class EditablePdf extends EditableMaterial<Pdf> {
   private loadingTask?: PDFDocumentLoadingTask;
   readonly outlineDestMap: Record<string, unknown> = {};
 
-  protected getEditor(tile: Tile) {
+  public createEditor(tile: Tile) {
     return new PdfEditor(this, tile);
   }
 

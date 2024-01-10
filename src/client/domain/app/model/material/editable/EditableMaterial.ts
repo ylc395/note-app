@@ -67,9 +67,11 @@ export default abstract class EditableMaterial<T extends Material = Material> ex
     });
   }
 
-  toEntityLocator() {
+  public toEntityLocator() {
     return { ...super.toEntityLocator(), mimeType: this.entity?.metadata.mimeType };
   }
+
+  public destroy() {}
 }
 
 export const ANNOTATION_COLORS = [

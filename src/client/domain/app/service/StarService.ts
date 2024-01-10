@@ -1,25 +1,15 @@
-import { Emitter } from 'strict-event-emitter';
 import { container, singleton } from 'tsyringe';
 import { observable, makeObservable, runInAction, action } from 'mobx';
 import { pull } from 'lodash-es';
 
 import { token as remoteToken } from '@domain/common/infra/remote';
-import type { EntityId, EntityLocator } from '@domain/app/model/entity';
+import type { EntityId } from '@domain/app/model/entity';
 import type { StarVO, StarsDTO, StarEntityTypes } from '@shared/domain/model/star';
-
-export enum StarEvents {
-  Added = 'star.added',
-  Removed = 'star.removed',
-}
 
 // todo: 能够收藏具体段落
 @singleton()
-export default class StarService extends Emitter<{
-  [StarEvents.Added]: [EntityLocator[]];
-  [StarEvents.Removed]: [EntityLocator];
-}> {
+export default class StarService {
   constructor() {
-    super();
     makeObservable(this);
   }
 
@@ -29,7 +19,6 @@ export default class StarService extends Emitter<{
   async star(entityType: StarEntityTypes, entityIds: EntityId[]) {
     const entities = entityIds.map((id) => ({ entityId: id, entityType }));
     await this.remote.patch<StarsDTO>('/stars', entities);
-    this.emit(StarEvents.Added, entities);
   }
 
   @action
@@ -62,7 +51,5 @@ export default class StarService extends Emitter<{
 
       pull(this.stars, starToRemove);
     });
-
-    this.emit(StarEvents.Removed, starToRemove);
   }
 }
