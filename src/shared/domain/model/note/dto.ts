@@ -13,7 +13,7 @@ export const notesPatchDTOSchema = object({
   note: notePatchDTOSchema,
 });
 
-export const newNoteDTOSchema = notePatchDTOSchema.optional();
+export const newNoteDTOSchema = notePatchDTOSchema;
 export const newNoteParamsSchema = object({ from: string().optional() });
 
 export type NewNoteDTO = Infer<typeof newNoteDTOSchema>;

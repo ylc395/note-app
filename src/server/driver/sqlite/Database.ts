@@ -4,6 +4,7 @@ import BetterSqlite3 from 'better-sqlite3';
 import fs from 'fs-extra';
 import path, { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import assert from 'node:assert';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 
 import { type default as Runtime, token as runtimeToken } from '@domain/infra/DesktopRuntime.js';
@@ -38,10 +39,7 @@ export default class SqliteDb implements Database {
   private tableNames?: string[];
 
   hasTable(name: string) {
-    if (!this.tableNames) {
-      throw new Error('no table names');
-    }
-
+    assert(this.tableNames);
     return this.tableNames.includes(name);
   }
 
@@ -60,9 +58,13 @@ export default class SqliteDb implements Database {
   }
 
   private async init() {
-    this.tableNames = (
-      await this.db.selectFrom('sqlite_master').select('name').where('type', '=', 'table').execute()
-    ).map(({ name }) => name);
+    const tables = await this.db
+      .selectFrom('sqlite_master')
+      .select('name')
+      .where('type', 'in', ['table', 'view'])
+      .execute();
+
+    this.tableNames = tables.map(({ name }) => name);
 
     await this.createTables();
     await this.kv.init();
@@ -98,11 +100,9 @@ export default class SqliteDb implements Database {
 
   private async createTables() {
     for (const schema of schemas) {
-      if (this.hasTable(schema.tableName)) {
-        continue;
+      if (!this.hasTable(schema.tableName)) {
+        await schema.builder(this.db as never).execute();
       }
-
-      await schema.builder(this.db.schema).execute();
     }
   }
 }

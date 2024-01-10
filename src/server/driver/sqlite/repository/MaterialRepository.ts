@@ -1,56 +1,39 @@
 import { omit } from 'lodash-es';
 import type { Selectable } from 'kysely';
 
-import {
-  MaterialTypes,
-  type MaterialDirectory,
-  type MaterialEntity,
-  type Material,
-  type MaterialQuery,
-  type MaterialPatch,
-  type NewMaterialDirectory,
-  type NewMaterialEntity,
-} from '@domain/model/material.js';
+import type { Material, MaterialQuery, MaterialPatch, NewMaterialDTO } from '@domain/model/material.js';
 import type { MaterialRepository } from '@domain/service/repository/MaterialRepository.js';
 
 import schema, { type Row } from '../schema/material.js';
 import fileSchema, { type Row as FileRow } from '../schema/file.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
 import FileRepository from './FileRepository.js';
-import MaterialAnnotationRepository from './MaterialAnnotationRepository.js';
 import HierarchyEntityRepository from './HierarchyEntityRepository.js';
 
 export default class SqliteMaterialRepository extends HierarchyEntityRepository implements MaterialRepository {
   readonly tableName = schema.tableName;
   private readonly files = new FileRepository(this.sqliteDb);
-  async createDirectory(directory: NewMaterialDirectory) {
-    const createdRow = await this.createOne(this.tableName, { ...directory, id: this.generateId() });
-    return SqliteMaterialRepository.rowToDirectory(createdRow);
-  }
 
-  async createEntity(material: NewMaterialEntity) {
-    const file = await this.files.findOneById(material.fileId);
+  async create(material: NewMaterialDTO) {
+    let file: Selectable<FileRow> | null = null;
 
-    if (!file) {
-      throw new Error('no file');
+    if (material.fileId) {
+      file = await this.files.findOneById(material.fileId);
     }
 
     const createdMaterial = await this.createOne(this.tableName, {
       ...material,
-      id: material.id || this.generateId(),
+      id: this.generateId(),
     });
 
-    return SqliteMaterialRepository.rowToMaterial(createdMaterial, file.mimeType);
+    return SqliteMaterialRepository.rowToMaterial(createdMaterial, file?.mimeType);
   }
 
-  private static rowToDirectory(
-    row: Selectable<Row> & { fileId?: FileRow['id'] | null; mimeType?: FileRow['mimeType'] | null },
-  ) {
-    return omit(row, ['fileId', 'sourceUrl', 'mimeType', 'comment']);
-  }
-
-  private static rowToMaterial(row: Selectable<Row>, mimeType: string) {
-    return { ...omit(row, ['fileId']), mimeType };
+  private static rowToMaterial(row: Selectable<Row>, mimeType?: string | null) {
+    return {
+      ...omit(row, ['fileId']),
+      ...(mimeType ? { mimeType } : null),
+    };
   }
 
   async findAll(q: MaterialQuery) {
@@ -66,10 +49,6 @@ export default class SqliteMaterialRepository extends HierarchyEntityRepository 
       qb = qb.where(`${this.tableName}.id`, 'in', q.id);
     }
 
-    if (q.type) {
-      qb = qb.where(`${this.tableName}.fileId`, q.type === MaterialTypes.Directory ? 'is' : 'is not', null);
-    }
-
     if (typeof q.parentId !== 'undefined') {
       qb = qb.where(`${this.tableName}.parentId`, q.parentId === null ? 'is' : '=', q.parentId);
     }
@@ -80,18 +59,7 @@ export default class SqliteMaterialRepository extends HierarchyEntityRepository 
       .select([`${fileSchema.tableName}.mimeType`])
       .execute();
 
-    const directories: MaterialDirectory[] = [];
-    const materials: MaterialEntity[] = [];
-
-    for (const row of rows) {
-      if (!SqliteMaterialRepository.isFileRow(row)) {
-        directories.push(SqliteMaterialRepository.rowToDirectory(row));
-      } else {
-        materials.push(SqliteMaterialRepository.rowToMaterial(row, row.mimeType));
-      }
-    }
-
-    return [...directories, ...materials];
+    return rows.map((row) => SqliteMaterialRepository.rowToMaterial(row, row.mimeType));
   }
 
   async findOneById(id: Material['id']) {
@@ -108,7 +76,7 @@ export default class SqliteMaterialRepository extends HierarchyEntityRepository 
       return null;
     }
 
-    return SqliteMaterialRepository.isFileRow(row) ? SqliteMaterialRepository.rowToMaterial(row, row.mimeType) : null;
+    return SqliteMaterialRepository.rowToMaterial(row, row.mimeType);
   }
 
   async findBlobById(id: Material['id']) {
@@ -126,25 +94,13 @@ export default class SqliteMaterialRepository extends HierarchyEntityRepository 
     return null;
   }
 
-  private static isFileRow(row: Selectable<Row>): row is Selectable<Row> & { mimeType: string } {
-    return Boolean(row.fileId);
-  }
-
-  update(id: Material['id'], material: MaterialPatch): Promise<Material | null>;
-  update(id: Material['id'][], material: MaterialPatch): Promise<Material[]>;
   async update(id: Material['id'] | Material['id'][], patch: MaterialPatch) {
-    await this.db
+    const { numUpdatedRows } = await this.db
       .updateTable(this.tableName)
       .set({ ...patch, updatedAt: Date.now() })
       .where('id', Array.isArray(id) ? 'in' : '=', id)
-      .execute();
+      .executeTakeFirst();
 
-    const rows = await this.findAll({ id: Array.isArray(id) ? id : [id] });
-
-    if (Array.isArray(id)) {
-      return rows;
-    }
-
-    return rows[0] || null;
+    return Array.isArray(id) ? id.length === Number(numUpdatedRows) : Number(numUpdatedRows) === 1;
   }
 }

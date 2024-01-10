@@ -1,7 +1,7 @@
 import { container } from 'tsyringe';
 
 import { Workbench } from '@domain/app/model/workbench';
-import { isEntityMaterialVO } from '@shared/domain/model/material';
+import { isEntityMaterial } from '@shared/domain/model/material';
 import { EntityTypes } from '@shared/domain/model/entity';
 import MaterialExplorer from '@domain/app/model/material/Explorer';
 
@@ -23,7 +23,7 @@ export default function MaterialTreeView() {
       onClick={({ id, entity }) =>
         tree.selectedNodes.length === 1 &&
         entity &&
-        isEntityMaterialVO(entity) &&
+        isEntityMaterial(entity) &&
         openEntity({ entityType: EntityTypes.Material, entityId: id, mimeType: entity.mimeType })
       }
       nodeOperation={() => []}

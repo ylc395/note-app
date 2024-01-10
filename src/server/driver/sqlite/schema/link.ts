@@ -1,4 +1,4 @@
-import type { SchemaModule } from 'kysely';
+import type { Kysely } from 'kysely';
 import type { ContentEntityTypes } from '@domain/model/content.js';
 import type { EntityTypes } from '@domain/model/entity.js';
 
@@ -16,8 +16,8 @@ export const tableName = 'links';
 
 export default {
   tableName,
-  builder: (schema: SchemaModule) => {
-    return schema
+  builder: (db: Kysely<unknown>) => {
+    return db.schema
       .createTable(tableName)
       .addColumn('fromEntityType', 'integer', (col) => col.notNull())
       .addColumn('fromEntityId', 'text', (col) => col.notNull())

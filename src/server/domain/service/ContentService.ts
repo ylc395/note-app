@@ -129,7 +129,7 @@ export default class ContentService extends BaseService implements OnModuleInit 
     const topics = await this.repo.contents.findAvailableTopics(q);
     const topicsGroup = groupBy(topics, 'name');
     const result: TopicVO[] = [];
-    const titles = await this.entityService.getTitles(topics);
+    const titles = await this.entityService.getNormalizedTitles(topics);
     const snippets = await this.getSnippets(topics);
 
     for (const [name, topics] of Object.entries(topicsGroup)) {
@@ -162,7 +162,7 @@ export default class ContentService extends BaseService implements OnModuleInit 
     const links = await this.repo.contents.findAllLinkTos(q);
     const froms = await this.entityService.filterAvailable(map(links, 'from'));
     const snippets = await this.getSnippets(froms);
-    const titles = await this.entityService.getTitles(froms);
+    const titles = await this.entityService.getNormalizedTitles(froms);
 
     return froms.map(({ entityId, entityType, position }) => ({
       entityId,
@@ -179,16 +179,17 @@ export default class ContentService extends BaseService implements OnModuleInit 
     > = {};
 
     const groups = groupBy(entities, ({ entityId, entityType }) => `${entityType}-${entityId}`);
+    const bodyIterator = this.repo.entities.findAllBody(EntityService.toIds(entities));
 
-    for await (const { content, entityId, entityType } of this.repo.entities.findAllBody(entities)) {
-      const positions = groups[`${entityType}-${entityId}`]!;
+    for await (const { content, id } of bodyIterator) {
+      const positions = groups[id]!;
 
       for (const { position } of positions) {
-        if (!result[entityId]) {
-          result[entityId] = {};
+        if (!result[id]) {
+          result[id] = {};
         }
 
-        result[entityId]![`${position.start},${position.end}`] = ContentService.extractSnippet(content, position);
+        result[id]![`${position.start},${position.end}`] = ContentService.extractSnippet(content, position);
       }
     }
     return result;

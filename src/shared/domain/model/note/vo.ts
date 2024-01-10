@@ -1,8 +1,8 @@
 import type { Note } from './base.js';
-import type { Starable } from '../star.js';
 import type { Path } from '../entity.js';
 
-export interface NoteVO extends Starable, Omit<Note, 'userUpdatedAt' | 'body'> {
+export interface NoteVO extends Omit<Note, 'userUpdatedAt' | 'body'> {
+  isStar: boolean;
   childrenCount: number;
-  path: Path;
+  path?: Path;
 }

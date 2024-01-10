@@ -1,4 +1,4 @@
-import { type Generated, type SchemaModule, sql } from 'kysely';
+import { type Generated, type Kysely, sql } from 'kysely';
 import { tableName as filesTableName } from './file.js';
 
 export const tableName = 'materials';
@@ -18,8 +18,8 @@ export interface Row {
 
 export default {
   tableName,
-  builder: (schema: SchemaModule) => {
-    return schema
+  builder: (db: Kysely<unknown>) => {
+    return db.schema
       .createTable(tableName)
       .addColumn('id', 'text', (col) => col.primaryKey().notNull())
       .addColumn('title', 'text', (col) => col.notNull().defaultTo(''))

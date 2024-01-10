@@ -1,9 +1,4 @@
-import {
-  type MaterialVO,
-  type ClientMaterialQuery,
-  isDirectoryVO,
-  normalizeTitle,
-} from '@shared/domain/model/material';
+import { type MaterialVO, type ClientMaterialQuery, normalizeTitle } from '@shared/domain/model/material';
 import Tree from '../abstract/Tree';
 import type TreeNode from '../abstract/TreeNode';
 import { EntityTypes } from '@shared/domain/model/entity';
@@ -20,7 +15,7 @@ export default class MaterialTree extends Tree<MaterialVO> {
   protected entityToNode(material: MaterialVO | null) {
     return {
       title: material ? normalizeTitle(material) : '根',
-      isLeaf: material ? !isDirectoryVO(material) || material.childrenCount === 0 : true,
+      isLeaf: material ? material.childrenCount === 0 : true,
     };
   }
 }

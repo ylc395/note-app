@@ -1,4 +1,4 @@
-import type { SchemaModule } from 'kysely';
+import type { Kysely } from 'kysely';
 import type { StarEntityTypes } from '@domain/model/star.js';
 
 export const tableName = 'stars';
@@ -11,8 +11,8 @@ export interface Row {
 
 export default {
   tableName,
-  builder: (schema: SchemaModule) => {
-    return schema
+  builder: (db: Kysely<unknown>) => {
+    return db.schema
       .createTable(tableName)
       .addColumn('id', 'text', (col) => col.primaryKey().notNull())
 

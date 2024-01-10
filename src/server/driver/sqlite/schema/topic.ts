@@ -1,4 +1,4 @@
-import type { SchemaModule } from 'kysely';
+import type { Kysely } from 'kysely';
 import type { ContentEntityTypes } from '@domain/model/content.js';
 
 export const tableName = 'topics';
@@ -13,8 +13,8 @@ export interface Row {
 
 export default {
   tableName,
-  builder: (schema: SchemaModule) => {
-    return schema
+  builder: (db: Kysely<unknown>) => {
+    return db.schema
       .createTable(tableName)
       .addColumn('name', 'text', (col) => col.notNull())
       .addColumn('position', 'text', (col) => col.notNull())

@@ -1,4 +1,4 @@
-import { type SchemaModule, type Generated, sql } from 'kysely';
+import { type Kysely, type Generated, sql } from 'kysely';
 import type { EntityTypes } from '@domain/model/entity.js';
 
 export const tableName = 'revisions';
@@ -13,8 +13,8 @@ export interface Row {
 
 export default {
   tableName,
-  builder: (schema: SchemaModule) => {
-    return schema
+  builder: (db: Kysely<unknown>) => {
+    return db.schema
       .createTable(tableName)
       .addColumn('id', 'text', (col) => col.primaryKey().notNull())
       .addColumn('entityType', 'integer', (col) => col.notNull())

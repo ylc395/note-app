@@ -20,7 +20,3 @@ export type StarsDTO = StarEntityLocator[];
 export interface StarVO extends EntityWithTitle<StarEntityTypes> {
   id: EntityId;
 }
-
-export interface Starable {
-  isStar: boolean;
-}

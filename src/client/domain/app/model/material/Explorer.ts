@@ -2,7 +2,7 @@ import { action, makeObservable } from 'mobx';
 import { singleton } from 'tsyringe';
 import assert from 'assert';
 
-import { isEntityMaterialVO } from '@shared/domain/model/material';
+import { isEntityMaterial } from '@shared/domain/model/material';
 import MaterialTree from '@domain/common/model/material/Tree';
 import Explorer from '@domain/app/model/abstract/Explorer';
 import EditableMaterial from './editable/EditableMaterial';
@@ -36,7 +36,7 @@ export default class MaterialExplorer extends Explorer {
   @action.bound
   public updateTreeForDropping() {
     for (const node of this.tree.allNodes) {
-      node.isDisabled = !node.entity || isEntityMaterialVO(node.entity);
+      node.isDisabled = !node.entity || isEntityMaterial(node.entity);
     }
 
     for (const node of this.tree.selectedNodes) {

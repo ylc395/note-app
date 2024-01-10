@@ -1,5 +1,5 @@
-import { uniq, omit, map } from 'lodash-es';
-import { Injectable, Inject } from '@nestjs/common';
+import { uniq, pick } from 'lodash-es';
+import { Injectable } from '@nestjs/common';
 import assert from 'assert';
 
 import {
@@ -11,39 +11,31 @@ import {
   type Material,
   type ClientMaterialQuery,
   type MaterialsPatchDTO,
-  type MaterialEntity,
   type MaterialPatchDTO,
   AnnotationTypes,
   MaterialTypes,
   isEntityMaterial,
-  isNewMaterialEntity,
-  isDirectory,
+  normalizeTitle,
 } from '@domain/model/material.js';
 import { EntityTypes } from '@domain/model/entity.js';
 
 import BaseService from './BaseService.js';
-import StarService from './StarService.js';
-import EntityService from './EntityService.js';
+import { getNormalizedTitles, getPaths } from './composables.js';
+import { buildIndex } from '@utils/collection.js';
 
 @Injectable()
 export default class MaterialService extends BaseService {
-  @Inject() private readonly starService!: StarService;
-  @Inject() private readonly entityService!: EntityService;
-
   async create(newMaterial: NewMaterialDTO) {
     if (newMaterial.parentId) {
-      await this.assertAvailableIds([newMaterial.parentId], { type: MaterialTypes.Directory });
+      await this.assertAvailableIds([newMaterial.parentId]);
     }
 
-    if (isNewMaterialEntity(newMaterial)) {
+    if (newMaterial.fileId) {
       assert(await this.repo.files.findOneById(newMaterial.fileId));
-
-      const material = await this.repo.materials.createEntity(newMaterial);
-      return { ...omit(material, ['userUpdatedAt']), updatedAt: material.userUpdatedAt, isStar: false };
-    } else {
-      const directory = await this.repo.materials.createDirectory(newMaterial);
-      return { ...omit(directory, ['userUpdatedAt']), updatedAt: directory.userUpdatedAt, childrenCount: 0 };
     }
+
+    const material = await this.repo.materials.create(newMaterial);
+    return await this.toVO(material);
   }
 
   async query(q: ClientMaterialQuery): Promise<MaterialVO[]> {
@@ -51,15 +43,27 @@ export default class MaterialService extends BaseService {
     return await this.toVO(materials);
   }
 
-  private async toVO(materials: Material[]) {
-    const children = await this.repo.materials.findChildrenIds(map(materials.filter(isDirectory), 'id'), true);
-    const stars = await this.starService.getStarMap(map(materials.filter(isEntityMaterial), 'id'));
-    const materialVOs = materials.map((material) => ({
-      ...omit(material, ['userUpdatedAt']),
+  private async toVO(materials: Material): Promise<Required<MaterialVO>>;
+  private async toVO(materials: Material[]): Promise<MaterialVO[]>;
+  private async toVO(materials: Material[] | Material): Promise<MaterialVO[] | MaterialVO> {
+    const _materials = Array.isArray(materials) ? materials : [materials];
+    const ids = _materials.map(({ id }) => id);
+    const entityIds = _materials.filter(isEntityMaterial).map(({ id }) => id);
+    const children = await this.repo.materials.findChildrenIds(ids, true);
+    const stars = buildIndex(await this.repo.stars.findAllByEntityId(entityIds));
+    const paths = Array.isArray(materials) ? {} : await this.getPaths(ids);
+
+    const materialVOs = _materials.map((material) => ({
+      ...pick(material, ['id', 'title', 'icon', 'parentId', 'updatedAt']),
       updatedAt: material.userUpdatedAt,
-      ...(isDirectory(material)
-        ? { childrenCount: children[material.id]?.length || 0 }
-        : { isStar: Boolean(stars[material]) }),
+      childrenCount: children[material.id]?.length || 0,
+      ...(isEntityMaterial(material)
+        ? {
+            isStar: Boolean(stars[material.id]),
+            ...pick(material, ['mimeType', 'comment', 'sourceUrl']),
+          }
+        : null),
+      ...(Array.isArray(materials) ? null : { path: paths[materials.id] }),
     }));
 
     return materialVOs as MaterialVO[];
@@ -69,63 +73,41 @@ export default class MaterialService extends BaseService {
     const material = await this.repo.materials.findOneById(id, true);
 
     assert(material);
-
-    const result = {
-      ...omit(material, ['userUpdatedAt']),
-      updatedAt: material.userUpdatedAt,
-    };
-
-    if (isEntityMaterial(material)) {
-      const stars = await this.starService.getStarMap([material.id]);
-      const path = (await this.entityService.getPaths([{ entityId: material.id, entityType: EntityTypes.Material }]))[
-        material.id
-      ];
-
-      assert(path);
-
-      return {
-        ...(result as MaterialEntity),
-        isStar: Boolean(stars[material.id]),
-        path,
-      };
-    } else {
-      const children = await this.repo.materials.findChildrenIds([material.id]);
-
-      return {
-        ...result,
-        childrenCount: children[material.id]?.length || 0,
-      };
-    }
+    return await this.toVO(material);
   }
 
   async batchUpdate(ids: Material['id'][], patch: MaterialsPatchDTO['material']) {
-    await this.assertAvailableIds(ids);
+    await this.transaction(async () => {
+      await this.assertAvailableIds(ids);
 
-    if (patch.parentId) {
-      await this.assertValidParent(patch.parentId, ids);
-    }
+      if (patch.parentId) {
+        await this.assertValidParent(patch.parentId, ids);
+      }
 
-    await this.repo.materials.update(ids, {
-      ...patch,
-      userUpdatedAt: Date.now(),
+      await this.repo.materials.update(ids, {
+        ...patch,
+        userUpdatedAt: Date.now(),
+      });
     });
   }
 
   async updateOne(materialId: Material['id'], patch: MaterialPatchDTO) {
-    const isEntityPatch = 'comment' in patch || 'sourceUrl' in patch;
-    await this.assertAvailableIds([materialId], isEntityPatch ? { type: MaterialTypes.Entity } : undefined);
+    await this.transaction(async () => {
+      const isEntityPatch = 'comment' in patch || 'sourceUrl' in patch;
+      await this.assertAvailableIds([materialId], isEntityPatch ? { type: MaterialTypes.Entity } : undefined);
 
-    const now = Date.now();
-    await this.repo.materials.update(materialId, { ...patch, userUpdatedAt: now });
+      const now = Date.now();
+      await this.repo.materials.update(materialId, { ...patch, userUpdatedAt: now });
 
-    if (typeof patch.comment === 'string') {
-      this.eventBus.emit('contentUpdated', {
-        content: patch.comment,
-        entityType: EntityTypes.Material,
-        entityId: materialId,
-        updatedAt: now,
-      });
-    }
+      if (typeof patch.comment === 'string') {
+        this.eventBus.emit('contentUpdated', {
+          content: patch.comment,
+          entityType: EntityTypes.Material,
+          entityId: materialId,
+          updatedAt: now,
+        });
+      }
+    });
   }
 
   private async assertValidParent(parentId: Material['id'], childrenIds: Material['id'][]) {
@@ -141,38 +123,49 @@ export default class MaterialService extends BaseService {
     await this.assertAvailableIds([materialId], { type: MaterialTypes.Entity });
     const blob = await this.repo.materials.findBlobById(materialId);
     assert(blob);
+
     return blob;
   }
 
-  private async assertAvailableIds(ids: MaterialVO['id'][], params?: { type?: MaterialTypes; mimeType?: string }) {
+  public readonly assertAvailableIds = async (
+    ids: MaterialVO['id'][],
+    params?: { type?: MaterialTypes; mimeType?: string },
+  ) => {
     const uniqueIds = uniq(ids);
     const rows = await this.repo.materials.findAll({ id: uniqueIds, isAvailable: true });
-    const result =
-      rows.length === uniqueIds.length &&
-      (params
-        ? rows.every((row) => {
-            if (params.mimeType) {
-              return isEntityMaterial(row) && row.mimeType === params.mimeType;
-            }
+    let result = rows.length === uniqueIds.length;
 
-            if (params.type) {
-              const checker = params.type === MaterialTypes.Entity ? isEntityMaterial : isDirectory;
-              return checker(row);
-            }
-          })
-        : true);
+    if (params) {
+      result = rows.every((row) => {
+        if (params.mimeType) {
+          return isEntityMaterial(row) && row.mimeType === params.mimeType;
+        }
+
+        if (params.type) {
+          return params.type === MaterialTypes.Entity ? isEntityMaterial(row) : !isEntityMaterial(row);
+        }
+      });
+    }
 
     assert(result);
-  }
+  };
 
-  async getTreeFragment(materialId: Material['id'], type?: MaterialTypes) {
+  public readonly getNormalizedTitles = async (ids: Material['id'][]) => {
+    return getNormalizedTitles({ repo: this.repo.materials, ids, normalizeTitle });
+  };
+
+  public readonly getPaths = async (ids: Material['id'][]) => {
+    return getPaths({ ids, repo: this.repo.notes, normalizeTitle });
+  };
+
+  async getTreeFragment(materialId: Material['id']) {
     await this.assertAvailableIds([materialId]);
 
     const ancestorIds = (await this.repo.materials.findAncestorIds([materialId]))[materialId] || [];
     const childrenIds = Object.values(await this.repo.materials.findChildrenIds(ancestorIds)).flat();
 
-    const roots = await this.repo.materials.findAll({ parentId: null, type, isAvailable: true });
-    const children = await this.repo.materials.findAll({ id: childrenIds, type });
+    const roots = await this.repo.materials.findAll({ parentId: null, isAvailable: true });
+    const children = await this.repo.materials.findAll({ id: childrenIds });
 
     return await this.toVO([...roots, ...children]);
   }

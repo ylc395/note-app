@@ -19,17 +19,12 @@ export default class SqliteKvDatabase implements KvDatabase {
   }
 
   async init() {
-    await this.createTable();
-  }
-
-  private async createTable() {
-    if (!this.sqliteDb.hasTable(tableName)) {
-      await this.db.schema
-        .createTable(tableName)
-        .addColumn('key', 'text', (col) => col.notNull().primaryKey())
-        .addColumn('value', 'text', (col) => col.notNull())
-        .execute();
-    }
+    await this.db.schema
+      .createTable(tableName)
+      .ifNotExists()
+      .addColumn('key', 'text', (col) => col.notNull().primaryKey())
+      .addColumn('value', 'text', (col) => col.notNull())
+      .execute();
   }
 
   async set(key: string, value: string) {

@@ -3,8 +3,7 @@ import { array, nativeEnum, object, string, type infer as Infer, boolean } from 
 import { isEmpty, negate } from 'lodash-es';
 
 import { type EntityId, EntityTypes, hierarchyEntityLocatorSchema, Path } from './entity.js';
-import type { Starable } from './star.js';
-import type { MaterialEntity } from './material/index.js';
+import type { EntityMaterial } from './material/index.js';
 
 interface SearchRecord {
   text: string;
@@ -27,12 +26,12 @@ interface BaseSearchResult {
 
 interface MaterialSearchResult extends BaseSearchResult {
   entityType: EntityTypes.Material;
-  mimeType: MaterialEntity['mimeType'];
+  mimeType: EntityMaterial['mimeType'];
 }
 
 export type SearchResult = BaseSearchResult | MaterialSearchResult;
 
-export type SearchResultVO = SearchResult & Starable & { path: Path };
+export type SearchResultVO = SearchResult & { path: Path; isStar: boolean };
 
 export enum Scopes {
   NoteTitle = 1,

@@ -1,4 +1,4 @@
-import type { SchemaModule, Generated } from 'kysely';
+import type { Kysely, Generated } from 'kysely';
 
 export interface Row {
   id: string;
@@ -14,8 +14,8 @@ export const tableName = 'files';
 
 export default {
   tableName,
-  builder: (schema: SchemaModule) => {
-    return schema
+  builder: (db: Kysely<unknown>) => {
+    return db.schema
       .createTable(tableName)
       .addColumn('id', 'text', (col) => col.primaryKey().notNull())
       .addColumn('data', 'binary', (col) => col.notNull())

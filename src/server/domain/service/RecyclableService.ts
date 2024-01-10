@@ -14,7 +14,7 @@ export default class RecyclableService extends BaseService {
   async create(entities: RecyclableEntityLocator[]) {
     await this.entityService.assertAvailableEntities(entities);
 
-    const descantIds = await this.repo.entities.findDescendantIds(entities);
+    const descantIds = await this.repo.entities.findDescendantIds(EntityService.toIds(entities));
     const descants = Object.entries(descantIds)
       .map(([type, ids]) => EntityService.getLocators(Object.values(ids).flat(), Number(type) as RecyclableEntityTypes))
       .flat();
@@ -43,7 +43,7 @@ export default class RecyclableService extends BaseService {
 
   async query() {
     const records = await this.repo.recyclables.findAll(RecycleReason.Direct);
-    const titles = await this.entityService.getTitles(records);
+    const titles = await this.entityService.getNormalizedTitles(records);
 
     return records.map((record) => {
       const title = titles[record.entityId];

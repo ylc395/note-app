@@ -1,16 +1,16 @@
-import type { MaterialEntityVO } from '@shared/domain/model/material';
+import type { EntityMaterialVO } from '@shared/domain/model/material';
 import type { Tile } from '@domain/app/model/workbench';
 import EditableMaterial from './EditableMaterial';
 import HtmlEditor from '../editor/HtmlEditor';
 import { runInAction } from 'mobx';
 
 interface WebPage {
-  metadata: MaterialEntityVO;
+  metadata: EntityMaterialVO;
   html: string;
 }
 
 export default class EditableHtml extends EditableMaterial<WebPage> {
-  constructor(materialId: MaterialEntityVO['id']) {
+  constructor(materialId: EntityMaterialVO['id']) {
     super(materialId);
   }
 
@@ -20,7 +20,7 @@ export default class EditableHtml extends EditableMaterial<WebPage> {
 
   public async load() {
     const [{ body: metadata }, { body: blob }] = await Promise.all([
-      this.remote.get<void, MaterialEntityVO>(`/materials/${this.entityId}`),
+      this.remote.get<void, EntityMaterialVO>(`/materials/${this.entityId}`),
       this.remote.get<void, ArrayBuffer>(`/materials/${this.entityId}/blob`),
     ]);
 

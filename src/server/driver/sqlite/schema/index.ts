@@ -10,6 +10,7 @@ import { default as syncEntity, type Row as SyncEntityRow } from './syncEntity.j
 import { default as topic, type Row as TopicRow } from './topic.js';
 import { default as link, type Row as LinkRow } from './link.js';
 import { default as fileText, type Row as FileTextRow } from './fileText.js';
+import { default as entity, type Row as EntityRow } from './entity.js';
 
 export interface Schemas {
   [note.tableName]: NoteRow;
@@ -24,6 +25,7 @@ export interface Schemas {
   [topic.tableName]: TopicRow;
   [link.tableName]: LinkRow;
   [fileText.tableName]: FileTextRow;
+  [entity.tableName]: EntityRow;
 }
 
 export const schemas = [
@@ -39,4 +41,5 @@ export const schemas = [
   topic,
   link,
   fileText,
+  entity,
 ];

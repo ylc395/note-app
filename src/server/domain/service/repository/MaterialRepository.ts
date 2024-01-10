@@ -1,18 +1,8 @@
-import type {
-  NewMaterialDirectory,
-  NewMaterialEntity,
-  MaterialDirectory,
-  Material,
-  MaterialQuery,
-  MaterialEntity,
-  MaterialPatch,
-} from '@domain/model/material.js';
+import type { NewMaterialDTO, Material, MaterialQuery, MaterialPatch } from '@domain/model/material.js';
 
 export interface MaterialRepository {
-  createDirectory: (directory: NewMaterialDirectory) => Promise<MaterialDirectory>;
-  createEntity: (material: NewMaterialEntity) => Promise<MaterialEntity>;
-  update(id: Material['id'], material: MaterialPatch): Promise<Material | null>;
-  update(id: Material['id'][], material: MaterialPatch): Promise<Material[]>;
+  create: (directory: NewMaterialDTO) => Promise<Material>;
+  update(id: Material['id'] | Material['id'][], material: MaterialPatch): Promise<boolean>;
   findAll: (query: MaterialQuery) => Promise<Material[]>;
   findChildrenIds: (
     ids: Material['id'][],

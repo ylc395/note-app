@@ -56,7 +56,7 @@ export default class MaterialsController {
   }
 
   @Get('/materials/:id')
-  async queryOne(@Param('id') materialId: string): Promise<Required<MaterialVO>> {
+  async queryOne(@Param('id') materialId: string): Promise<MaterialVO> {
     return await this.materialService.queryOne(materialId);
   }
 
@@ -70,12 +70,9 @@ export default class MaterialsController {
 
   @Get('/materials')
   async query(
-    @Param('id') materialId: string,
-    @Query(createSchemaPipe(clientMaterialQuerySchema)) { parentId, to, type }: ClientMaterialQuery,
+    @Query(createSchemaPipe(clientMaterialQuerySchema)) { parentId, to }: ClientMaterialQuery,
   ): Promise<MaterialVO[]> {
-    return to
-      ? await this.materialService.getTreeFragment(materialId, type)
-      : await this.materialService.query({ parentId, type });
+    return to ? await this.materialService.getTreeFragment(to) : await this.materialService.query({ parentId });
   }
 
   @Post('/materials')

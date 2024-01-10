@@ -1,4 +1,4 @@
-import type { SchemaModule } from 'kysely';
+import type { Kysely } from 'kysely';
 import type { EntityTypes } from '@domain/model/entity.js';
 
 export const tableName = 'sync_entities';
@@ -11,8 +11,8 @@ export interface Row {
 
 export default {
   tableName,
-  builder: (schema: SchemaModule) => {
-    return schema
+  builder: (db: Kysely<unknown>) => {
+    return db.schema
       .createTable(tableName)
       .addColumn('entityType', 'integer', (col) => col.notNull())
       .addColumn('entityId', 'text', (col) => col.notNull())

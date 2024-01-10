@@ -1,114 +1,91 @@
-import assert from 'node:assert';
-import { Injectable } from '@nestjs/common';
-import { uniq, groupBy, intersectionWith, mapValues, isMatch } from 'lodash-es';
+import { Inject, Injectable, type OnModuleInit } from '@nestjs/common';
+import { groupBy, intersectionWith } from 'lodash-es';
 
-import { type EntityId, type EntityLocator, EntityTypes, HierarchyEntityLocator } from '@domain/model/entity.js';
-import { buildIndex } from '@utils/collection.js';
-import { normalizeTitle as normalizeNoteTitle } from '@domain/model/note.js';
-import { normalizeTitle as normalizeMaterialTitle } from '@domain/model/material.js';
-import { normalizeTitle as normalizeMemoTitle } from '@domain/model/memo.js';
+import {
+  type EntityId,
+  type EntityLocator,
+  EntityTypes,
+  type Path,
+  HierarchyEntityLocator,
+} from '@domain/model/entity.js';
 import BaseService from './BaseService.js';
+import NoteService from './NoteService.js';
+import MaterialService from './MaterialService.js';
+import MemoService from './MemoService.js';
 
-type TitleEntityTypes = EntityTypes.Note | EntityTypes.Material | EntityTypes.Memo | EntityTypes.MaterialAnnotation;
+type MainEntityLocator = EntityLocator<
+  EntityTypes.Note | EntityTypes.Memo | EntityTypes.Material | EntityTypes.MaterialAnnotation
+>;
 
 @Injectable()
-export default class EntityService extends BaseService {
-  async assertAvailableEntities(locators: EntityLocator[]) {
-    const groups = groupBy(locators, 'entityType');
+export default class EntityService extends BaseService implements OnModuleInit {
+  @Inject() private readonly noteService!: NoteService;
+  @Inject() private readonly materialService!: MaterialService;
+  @Inject() private readonly memoService!: MemoService;
 
-    for (const [type, locators] of Object.entries(groups)) {
-      await this.assertAvailableIds(Number(type) as EntityTypes, EntityService.toIds(locators));
-    }
+  public onModuleInit() {
+    this.assertAvailableEntities = EntityService.doByEntityType({
+      [EntityTypes.Note]: this.noteService.assertAvailableIds,
+      [EntityTypes.Material]: this.materialService.assertAvailableIds,
+      [EntityTypes.Memo]: this.memoService.assertAvailableIds,
+      [EntityTypes.MaterialAnnotation]: () => Promise.resolve(),
+    });
+
+    this.getNormalizedTitles = EntityService.mergeMapByEntityType({
+      [EntityTypes.Note]: this.noteService.getNormalizedTitles,
+      [EntityTypes.Material]: this.materialService.getNormalizedTitles,
+      [EntityTypes.Memo]: this.memoService.getTitles,
+      [EntityTypes.MaterialAnnotation]: () => Promise.resolve({} as Record<string, string>),
+    });
+
+    this.getPaths = EntityService.mergeMapByEntityType({
+      [EntityTypes.Note]: this.noteService.getPaths,
+      [EntityTypes.Material]: this.materialService.getPaths,
+      [EntityTypes.Memo]: () => Promise.resolve({} as Record<string, Path>),
+    });
   }
 
-  async getTitles(locators: EntityLocator<TitleEntityTypes>[]) {
-    const groups = groupBy(locators, 'entityType');
-    const result: Record<EntityId, string> = {};
+  public assertAvailableEntities!: (locators: MainEntityLocator[]) => Promise<void>;
+  public getNormalizedTitles!: (locators: MainEntityLocator[]) => Promise<Record<EntityId, string>>;
+  public getPaths!: (locators: HierarchyEntityLocator[]) => Promise<Record<EntityId, Path>>;
 
-    for (const [type, locators] of Object.entries(groups)) {
-      const entityType = Number(type) as TitleEntityTypes;
-      const entities = await this.getRepo(entityType).findAll({
-        id: EntityService.toIds(locators),
+  private static mergeMapByEntityType<T extends EntityTypes, R>(mappers: Record<T, (ids: EntityId[]) => Promise<R>>) {
+    return async (locators: EntityLocator<T>[]) => {
+      const groups = groupBy(locators, 'entityType');
+      const tasks = Object.entries(groups).map(([type, locators]) => {
+        const mapper = mappers[Number(type) as T];
+        const ids = EntityService.toIds(locators);
+        return mapper(ids);
       });
 
-      for (const entity of entities) {
-        result[entity.id] = entity.title;
-      }
-    }
-
-    return result;
-  }
-
-  async getPaths(locators: HierarchyEntityLocator[]) {
-    const groups = groupBy(locators, 'entityType');
-    let result: Record<EntityId, { title: string; id: string; icon: string | null }[]> = {};
-    const normalizeTitleMap = {
-      [EntityTypes.Note]: normalizeNoteTitle,
-      [EntityTypes.Material]: normalizeMaterialTitle,
-      [EntityTypes.Memo]: normalizeMemoTitle,
+      const results = await Promise.all(tasks);
+      return Object.assign({}, ...results) as R;
     };
-
-    for (const [type, locators] of Object.entries(groups)) {
-      const entityType = Number(type) as HierarchyEntityLocator['entityType'];
-      const repo = this.getRepo(entityType);
-      const ids = EntityService.toIds(locators);
-      const ancestorIds = await repo.findAncestorIds(ids);
-
-      const entities = buildIndex(await repo.findAll({ id: Object.values(ancestorIds).flat() }));
-      const titles = mapValues(ancestorIds, (ids) =>
-        ids.map((id) => ({
-          id,
-          title: normalizeTitleMap[entityType](entities[id]!),
-          icon: entities[id]!.icon,
-        })),
-      );
-
-      result = { ...result, ...titles };
-    }
-
-    return result;
   }
 
-  async assertAvailableIds(entityType: EntityTypes, ids: EntityId[]) {
-    const uniqueIds = uniq(ids);
-    const rows = await this.getRepo(entityType).findAll({ id: uniqueIds, isAvailable: true });
+  private static doByEntityType<T extends EntityTypes>(mappers: Record<T, (ids: EntityId[]) => Promise<void>>) {
+    return async (locators: EntityLocator<T>[]) => {
+      const groups = groupBy(locators, 'entityType');
+      const tasks = Object.entries(groups).map(([type, locators]) => {
+        const mapper = mappers[Number(type) as T];
+        const ids = EntityService.toIds(locators);
+        return mapper(ids);
+      });
 
-    assert(rows.length === uniqueIds.length, 'unavailable ids');
+      await Promise.all(tasks);
+    };
   }
 
   async filterAvailable<T extends EntityLocator>(locators: T[]) {
-    const groups = groupBy(locators, 'entityType');
-    let availableLocators: EntityLocator[] = [];
-
-    for (const [type, locators] of Object.entries(groups)) {
-      const entityType = Number(type) as EntityTypes;
-      const rows = await this.getRepo(entityType).findAll({
-        id: EntityService.toIds(locators),
-        isAvailable: true,
-      });
-
-      availableLocators = availableLocators.concat(EntityService.getLocators(rows, entityType));
-    }
-
-    return intersectionWith(locators, availableLocators, isMatch);
+    const ids = await this.repo.entities.findAllAvailable(EntityService.toIds(locators));
+    return intersectionWith(locators, ids, ({ entityId }, id) => entityId === id);
   }
 
-  private getRepo(entityType: EntityTypes) {
-    switch (entityType) {
-      case EntityTypes.Note:
-        return this.repo.notes;
-      case EntityTypes.Material:
-        return this.repo.materials;
-      default:
-        assert.fail('invalid type');
-    }
-  }
-
-  static getLocators<T extends { id: EntityId }, E extends EntityTypes>(entities: T[] | EntityId[], type: E) {
+  public static getLocators<T extends { id: EntityId }, E extends EntityTypes>(entities: T[] | EntityId[], type: E) {
     return entities.map((v) => ({ entityId: typeof v === 'string' ? v : v.id, entityType: type }));
   }
 
-  static toIds(locators: EntityLocator[]) {
+  public static toIds(locators: EntityLocator[]) {
     return locators.map(({ entityId }) => entityId);
   }
 }

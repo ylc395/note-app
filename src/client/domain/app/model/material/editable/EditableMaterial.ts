@@ -4,7 +4,7 @@ import assert from 'assert';
 
 import { EntityTypes } from '@shared/domain/model/entity';
 import type {
-  MaterialEntityVO,
+  EntityMaterialVO,
   AnnotationVO,
   NewAnnotationDTO,
   AnnotationPatchDTO,
@@ -12,14 +12,14 @@ import type {
 import EditableEntity from '@domain/app/model/abstract/EditableEntity';
 
 interface Material {
-  metadata: MaterialEntityVO;
+  metadata: EntityMaterialVO;
 }
 
 export default abstract class EditableMaterial<T extends Material = Material> extends EditableEntity<T> {
   readonly entityType = EntityTypes.Material;
   @observable annotations: AnnotationVO[] = [];
 
-  constructor(materialId: MaterialEntityVO['id']) {
+  constructor(materialId: EntityMaterialVO['id']) {
     super(materialId);
     makeObservable(this);
     this.loadAnnotations();

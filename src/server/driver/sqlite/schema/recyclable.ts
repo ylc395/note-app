@@ -1,4 +1,4 @@
-import { type SchemaModule, type Generated, sql } from 'kysely';
+import { type Kysely, type Generated, sql } from 'kysely';
 import type { RecyclableEntityTypes } from '@domain/model/recyclables.js';
 
 export const tableName = 'recyclables';
@@ -13,8 +13,8 @@ export interface Row {
 
 export default {
   tableName,
-  builder: (schema: SchemaModule) => {
-    return schema
+  builder: (db: Kysely<unknown>) => {
+    return db.schema
       .createTable(tableName)
       .addColumn('entityId', 'text', (col) => col.notNull())
       .addColumn('entityType', 'integer', (col) => col.notNull())

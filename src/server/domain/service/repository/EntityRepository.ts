@@ -1,9 +1,8 @@
-import type { ContentEntityLocator } from '@domain/model/content.js';
-import type { EntityId, HierarchyEntityLocator } from '@domain/model/entity.js';
+import type { EntityId } from '@domain/model/entity.js';
 
 export interface EntityRepository {
-  findDescendantIds(
-    entities: HierarchyEntityLocator[],
-  ): Promise<Record<HierarchyEntityLocator['entityType'], Record<EntityId, string[]>>>;
-  findAllBody: (entities: ContentEntityLocator[]) => AsyncGenerator<{ content: string } & ContentEntityLocator>;
+  findDescendantIds: (ids: EntityId[]) => Promise<Record<EntityId, EntityId[]>>;
+  findAncestorIds: (ids: EntityId[]) => Promise<Record<EntityId, EntityId[]>>;
+  findAllBody: (ids: EntityId[]) => AsyncGenerator<{ content: string; id: EntityId }>;
+  findAllAvailable: (ids: EntityId[]) => Promise<EntityId[]>;
 }

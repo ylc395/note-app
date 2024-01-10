@@ -8,9 +8,14 @@ import { tableName as recyclableTableName } from '../schema/recyclable.js';
 import type { tableName as noteTableName } from '../schema/note.js';
 import type { tableName as materialTableName } from '../schema/material.js';
 import type { tableName as memoTableName } from '../schema/memo.js';
+import type { tableName as entityTableName } from '../schema/entity.js';
 
 export default abstract class HierarchyEntityRepository extends BaseRepository {
-  abstract readonly tableName: typeof noteTableName | typeof materialTableName | typeof memoTableName;
+  abstract readonly tableName:
+    | typeof noteTableName
+    | typeof materialTableName
+    | typeof memoTableName
+    | typeof entityTableName;
 
   async findChildrenIds(ids: EntityId[], availableOnly?: boolean) {
     let qb = this.db.selectFrom(this.tableName).selectAll(this.tableName);
@@ -62,7 +67,7 @@ export default abstract class HierarchyEntityRepository extends BaseRepository {
         qb
           .selectFrom(this.tableName)
           .select(['id', 'parentId'])
-          .where((eb) => eb.or([eb.cmpr('id', 'in', ids), eb.cmpr('parentId', 'in', ids)]))
+          .where((eb) => eb.or([eb('id', 'in', ids), eb('parentId', 'in', ids)]))
           .union(
             qb
               .selectFrom('descendants')

@@ -1,19 +1,10 @@
-import type {
-  Material,
-  MaterialTypes,
-  AnnotationVO,
-  MaterialPatchDTO,
-  MaterialDirectory,
-  MaterialEntity,
-} from '@shared/domain/model/material/index.js';
+import type { Material, AnnotationVO, MaterialPatchDTO } from '@shared/domain/model/material/index.js';
 
-export type NewMaterialDirectory = Partial<MaterialDirectory>;
-export type NewMaterialEntity = Partial<MaterialEntity> & { fileId: string };
+export type NewMaterial = Omit<Partial<Material>, 'id'>;
 
 export interface MaterialQuery {
   parentId?: Material['parentId'];
   id?: Material['id'][];
-  type?: MaterialTypes;
   isAvailable?: boolean;
 }
 

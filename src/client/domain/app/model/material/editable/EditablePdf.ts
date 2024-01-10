@@ -4,7 +4,7 @@ import { type PDFDocumentLoadingTask, type PDFDocumentProxy, getDocument, Global
 import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.min.js?worker';
 
 import {
-  type MaterialEntityVO,
+  type EntityMaterialVO,
   type PdfRangeAnnotationVO,
   type PdfAreaAnnotationVO,
   AnnotationTypes,
@@ -14,7 +14,7 @@ import EditableMaterial from './EditableMaterial';
 import PdfEditor from '../editor/PdfEditor';
 
 interface Pdf {
-  metadata: MaterialEntityVO;
+  metadata: EntityMaterialVO;
   doc: PDFDocumentProxy;
 }
 
@@ -25,7 +25,7 @@ export interface OutlineItem {
 }
 
 export default class EditablePdf extends EditableMaterial<Pdf> {
-  constructor(materialId: MaterialEntityVO['id']) {
+  constructor(materialId: EntityMaterialVO['id']) {
     super(materialId);
     makeObservable(this);
   }
@@ -66,7 +66,7 @@ export default class EditablePdf extends EditableMaterial<Pdf> {
     }
 
     const [{ body: metadata }, { body: blob }] = await Promise.all([
-      this.remote.get<void, MaterialEntityVO>(`/materials/${this.entityId}`),
+      this.remote.get<void, EntityMaterialVO>(`/materials/${this.entityId}`),
       this.remote.get<void, ArrayBuffer>(`/materials/${this.entityId}/blob`),
     ]);
 

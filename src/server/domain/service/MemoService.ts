@@ -1,4 +1,4 @@
-import { Injectable, Inject } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { mapValues, omit, map } from 'lodash-es';
 
 import { buildIndex } from '@utils/collection.js';
@@ -6,12 +6,9 @@ import type { Memo, NewMemo, MemoPatch, ClientMemoQuery, MemoVO } from '@domain/
 import { EntityTypes } from '@domain/model/entity.js';
 
 import BaseService from './BaseService.js';
-import StarService from './StarService.js';
 
 @Injectable()
 export default class MemoService extends BaseService {
-  @Inject() private readonly starService!: StarService;
-
   async create(memo: NewMemo) {
     if (memo.parentId && memo.isPinned) {
       throw new Error('can not pin child memo');
@@ -80,7 +77,9 @@ export default class MemoService extends BaseService {
   private async toVOs(memos: Memo): Promise<MemoVO>;
   private async toVOs(memos: Memo[]): Promise<MemoVO[]>;
   private async toVOs(memos: Memo[] | Memo) {
-    const stars = await this.starService.getStarMap((Array.isArray(memos) ? memos : [memos]).map(({ id }) => id));
+    const stars = buildIndex(
+      await this.repo.stars.findAllByEntityId((Array.isArray(memos) ? memos : [memos]).map(({ id }) => id)),
+    );
 
     const toVO = (memo: Memo) => ({
       ...omit(memo, ['userUpdatedAt']),
@@ -91,16 +90,16 @@ export default class MemoService extends BaseService {
     return Array.isArray(memos) ? memos.map(toVO) : toVO(memos);
   }
 
-  async getTitles(ids: MemoVO['id'][]) {
+  public readonly getTitles = async (ids: MemoVO['id'][]) => {
     const memos = await this.repo.memos.findAll({ id: ids });
     return mapValues(buildIndex(memos), ({ content }) => content.slice(0, 5));
-  }
+  };
 
-  async assertAvailableIds(ids: MemoVO['id'][]) {
+  public readonly assertAvailableIds = async (ids: MemoVO['id'][]) => {
     if ((await this.repo.memos.findAll({ id: ids, isAvailable: true })).length !== ids.length) {
       throw new Error('invalid id');
     }
-  }
+  };
 
   async queryDates() {
     return await this.repo.memos.queryAvailableDates();
