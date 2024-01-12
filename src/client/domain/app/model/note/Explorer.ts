@@ -1,5 +1,5 @@
 import { action, makeObservable } from 'mobx';
-import { compact, first } from 'lodash-es';
+import { compact, first, pickBy } from 'lodash-es';
 import { singleton } from 'tsyringe';
 import assert from 'assert';
 
@@ -39,7 +39,10 @@ export default class NoteExplorer extends Explorer<Events> {
 
     if (node) {
       assert(node.entity);
-      this.tree.updateNode(Object.assign(node.entity, patch));
+      this.tree.updateNode({
+        ...node.entity,
+        ...pickBy(patch, (_, key) => key in node.entity!),
+      });
     }
   };
 

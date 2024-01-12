@@ -5,11 +5,13 @@ import { Workbench } from '@domain/app/model/workbench';
 import type NoteEditor from '@domain/app/model/note/Editor';
 import MarkdownEditor, { type EditorRef } from '@web/components/MarkdownEditor';
 import { useEffect, useRef } from 'react';
+import { useMemoizedFn } from 'ahooks';
 
 export default observer(function Body({ editor }: { editor: NoteEditor }) {
   const { currentTile } = container.resolve(Workbench);
   const editorRef = useRef<EditorRef | null>(null);
   const isFocus = currentTile === editor.tile; // todo: only focus when uiState is on body
+  const onFocus = useMemoizedFn(() => editor.tile.switchToEditor(editor));
 
   useEffect(() => {
     if (isFocus && editorRef.current) {
@@ -28,6 +30,7 @@ export default observer(function Body({ editor }: { editor: NoteEditor }) {
           content={isFocus ? undefined : editor.body}
           readonly={editor.isReadonly}
           onChange={editor.updateBody}
+          onFocus={onFocus}
           onUIStateChange={editor.updateUIState}
         />
       )}
