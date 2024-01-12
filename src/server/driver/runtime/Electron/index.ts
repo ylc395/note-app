@@ -42,14 +42,12 @@ export default class ElectronRuntime extends DesktopRuntime {
     ipcMain.handle(UI_CHANNEL, this.handleUI);
 
     await this.whenReady();
+    await this.installDevExtension();
     this.initWindow();
   }
 
   protected async whenUIReady() {
-    await Promise.all([
-      this.installDevExtension(),
-      new Promise<void>((resolve) => electronApp.on('ready', () => resolve())),
-    ]);
+    return new Promise<void>((resolve) => electronApp.on('ready', () => resolve()));
   }
 
   private readonly handleUI = (e: IpcMainInvokeEvent, payload: unknown) => {
@@ -82,7 +80,7 @@ export default class ElectronRuntime extends DesktopRuntime {
       width: 800,
       height: 600,
       webPreferences: {
-        preload: path.resolve(DIRNAME, '../../../client/driver/electron/preload.js'),
+        preload: path.resolve(DIRNAME, '../../../../client/driver/electron/preload.js'),
       },
     });
 

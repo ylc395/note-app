@@ -13,13 +13,14 @@ import { fileURLToPath } from 'node:url';
 
 const ENV = 'development';
 
-const rootDir = 'src/client';
-const WEB_TSCONFIG = path.resolve(`${rootDir}/tsconfig.web.json`);
-const PRELOAD_TSCONFIG = path.resolve(`${rootDir}/tsconfig.preload.json`);
+const clientRootDir = 'src/client';
+const WEB_TSCONFIG = path.resolve(`${clientRootDir}/tsconfig.web.json`);
 const ELECTRON_OUTPUT = 'dist/electron';
-const BUILD_ELECTRON_COMMAND = 'tsc --build ./tsconfig.electron.json';
+const BUILD_ELECTRON_COMMAND = 'tsc --build ./src/server/tsconfig.electron.json';
 
 async function buildPreload() {
+  const PRELOAD_TSCONFIG = path.resolve(`${clientRootDir}/tsconfig.preload.json`);
+
   // preload script must be processed by a bundler(`vite build` here), since `require` doesn't work
   // @see https://www.electronjs.org/docs/latest/tutorial/sandbox#preload-scripts
   await build({
@@ -29,7 +30,7 @@ async function buildPreload() {
       emptyOutDir: false,
       outDir: path.resolve(ELECTRON_OUTPUT, 'client/driver/electron'),
       lib: {
-        entry: `${rootDir}/driver/electron/preload/index.ts`,
+        entry: `${clientRootDir}/driver/electron/preload/index.ts`,
         fileName: () => 'preload.js',
         // preload script doesn't support esm
         // https://github.com/electron/electron/blob/main/docs/tutorial/esm.md#sandboxed-preload-scripts-cant-use-esm-imports
@@ -64,7 +65,7 @@ export async function buildElectron(options) {
 
   // 3. bootstrap electron process
   if (options?.bootstrap) {
-    const electronProcess = shell.exec(`electron ${ELECTRON_OUTPUT}/server/bootstrap.desktop.js`, { async: true });
+    const electronProcess = shell.exec(`electron ${ELECTRON_OUTPUT}/server/bootstrap.electron.js`, { async: true });
     return electronProcess;
   }
 }
@@ -73,7 +74,7 @@ async function createViteServer() {
   const server = await createServer({
     configFile: false,
     clearScreen: false,
-    root: `${rootDir}/driver/web`,
+    root: `${clientRootDir}/driver/web`,
     plugins: [
       react({ tsDecorators: true }), // use this plugin to speed up react compiling and enjoy "fast refresh"
       checker({ typescript: { tsconfigPath: WEB_TSCONFIG, buildMode: true } }),

@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "composite": true,
     "outDir": "../../dist/electron"
-  }
+  },
+  "references": [{ "path": "../shared/tsconfig.electron.json" }]
 }

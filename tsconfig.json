@@ -9,6 +9,7 @@
     "sourceMap": true,
     "importHelpers": true,
     "esModuleInterop": true,
+    "rootDir": "./src",
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "skipLibCheck": true

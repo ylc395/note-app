@@ -4,7 +4,7 @@ import { createRoot } from 'react-dom/client';
 import assert from 'assert';
 
 import { token as rpcToken } from '@domain/common/infra/rpc';
-import { token as uiToken } from '@domain/app/infra/ui';
+import { token as uiToken } from '@shared/domain/infra/ui';
 import { token as localStorageToken } from '@domain/app/infra/localStorage';
 import '@domain/common/infra/mobx';
 

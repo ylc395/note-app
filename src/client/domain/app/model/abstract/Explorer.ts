@@ -4,7 +4,7 @@ import { Workbench } from '../workbench';
 
 import Tree from '@domain/common/model/abstract/Tree';
 import EventBus, { type Events } from '@domain/app/infra/EventBus';
-import { token as uiToken } from '@domain/app/infra/ui';
+import { token as uiToken } from '@shared/domain/infra/ui';
 
 export default abstract class Explorer<T extends Events = Events> extends EventBus<T> {
   constructor(name: string) {

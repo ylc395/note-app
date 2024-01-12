@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import type { Insertable } from 'kysely';
+import type { Insertable, Selectable } from 'kysely';
 
 import type { default as SqliteDatabase, Db } from '../Database.js';
 
@@ -14,11 +14,11 @@ export default abstract class BaseRepository {
     return randomUUID().replaceAll('-', '');
   }
 
-  protected createOne<T extends keyof Db>(table: T, row: Insertable<Db[T]>) {
+  protected createOne<T extends keyof Db>(table: T, row: Insertable<Db[T]>): Promise<Selectable<Db[T]>> {
     return this.db.insertInto(table).values(row).returningAll().executeTakeFirstOrThrow();
   }
 
-  protected _batchCreate<T extends keyof Db>(table: T, rows: Insertable<Db[T]>[]) {
+  protected _batchCreate<T extends keyof Db>(table: T, rows: Insertable<Db[T]>[]): Promise<Selectable<Db[T]>[]> {
     return this.db.insertInto(table).values(rows).returningAll().execute();
   }
 }

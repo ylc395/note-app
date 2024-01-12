@@ -6,7 +6,6 @@
     "types": ["electron"],
     "lib": ["dom", "dom.iterable", "ESNext"],
     "baseUrl": ".",
-    "rootDir": "../",
     "jsx": "react-jsx",
     "paths": {
       "@domain/*": ["./domain/*"],
