@@ -11,7 +11,7 @@ export default class AppService extends BaseService {
     // await this.repo.configs.update(config);
 
     for (const [key, value] of Object.entries(config)) {
-      this.eventBus.appConfig.emit(key as keyof Config, value);
+      // this.eventBus.appConfig.emit(key as keyof Config, value);
     }
   }
 

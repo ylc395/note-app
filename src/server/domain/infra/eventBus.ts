@@ -1,18 +1,10 @@
-import { Emitter } from 'strict-event-emitter';
+import Emitter from 'emittery';
 import type { ContentUpdatedEvent } from '@domain/model/content.js';
-import type { Config } from '@domain/model/config.js';
 
 type EventMaps = {
-  contentUpdated: [ContentUpdatedEvent];
+  contentUpdated: ContentUpdatedEvent;
 };
 
-type ConfigEventMaps = Required<{
-  [key in keyof Config]: [Required<Config>[key]];
-}>;
+const eventBus = new Emitter<EventMaps>();
 
-type EventBus = Emitter<EventMaps> & { appConfig: Emitter<ConfigEventMaps> };
-
-const eventBus = new Emitter();
-(eventBus as EventBus).appConfig = new Emitter();
-
-export default eventBus as EventBus;
+export default eventBus;
