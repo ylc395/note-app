@@ -1,5 +1,5 @@
 import type { Kysely } from 'kysely';
-import type { KvDatabase } from '@domain/infra/database.js';
+import type { KvDatabase } from '@domain/infra/kvDatabase.js';
 
 import type SqliteDb from './Database.js';
 
@@ -12,13 +12,18 @@ export interface KvDb {
 }
 
 export default class SqliteKvDatabase implements KvDatabase {
-  constructor(private readonly sqliteDb: SqliteDb) {}
+  constructor(private readonly sqliteDb: SqliteDb) {
+    this.ready = this.init();
+  }
+
+  public readonly ready: Promise<void>;
 
   private get db() {
     return this.sqliteDb.getDb() as unknown as Kysely<KvDb>;
   }
 
   async init() {
+    await this.sqliteDb.ready;
     await this.db.schema
       .createTable(tableName)
       .ifNotExists()

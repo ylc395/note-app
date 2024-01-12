@@ -1,4 +1,4 @@
-import { type NoteVO, type ClientNoteQuery, normalizeTitle } from '@shared/domain/model/note';
+import { type NoteVO, normalizeTitle } from '@shared/domain/model/note';
 import { EntityTypes } from '@shared/domain/model/entity';
 
 import type TreeNode from '../abstract/TreeNode';
@@ -9,7 +9,7 @@ export type NoteTreeNode = TreeNode<NoteVO>;
 export default class NoteTree extends Tree<NoteVO> {
   public readonly entityType = EntityTypes.Note;
   public async fetchChildren(parentId: NoteVO['parentId']) {
-    const { body: notes } = await this.remote.get<ClientNoteQuery, NoteVO[]>('/notes', { parentId });
+    const notes = await this.remote.note.query.query({ parentId });
     return notes;
   }
 

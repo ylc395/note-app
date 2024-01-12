@@ -1,65 +1,40 @@
-import { Controller } from '@nestjs/common';
+import { container } from 'tsyringe';
+import { object, string, tuple } from 'zod';
 
-import { Post, Body, Get, Patch, createSchemaPipe, Param, Query, Put } from './decorators.js';
-import {
-  type NewNoteDTO,
-  type NoteVO,
-  type ClientNoteQuery,
-  type NotesPatchDTO,
-  type NotePatchDTO,
-  type NewNoteParams,
-  newNoteDTOSchema,
-  newNoteParamsSchema,
-  notesPatchDTOSchema,
-  clientNoteQuerySchema,
-  notePatchDTOSchema,
-} from '@domain/model/note.js';
+import { newNoteDTOSchema, clientNoteQuerySchema, notePatchDTOSchema } from '@domain/model/note.js';
 import NoteService from '@domain/service/NoteService.js';
+import { publicProcedure, router } from './trpc.js';
 
-@Controller()
-export default class NotesController {
-  constructor(private readonly noteService: NoteService) {}
+const noteProcedure = publicProcedure.use(({ next }) => {
+  return next({ ctx: { noteService: container.resolve(NoteService) } });
+});
 
-  @Get('/notes/:id/body')
-  async queryBody(@Param('id') noteId: string): Promise<string> {
-    return await this.noteService.queryBody(noteId);
-  }
+export default router({
+  query: noteProcedure.input(clientNoteQuerySchema).query(({ input: { to, parentId }, ctx: { noteService } }) => {
+    return to ? noteService.getTreeFragment(to) : noteService.query({ parentId });
+  }),
 
-  @Put('/notes/:id/body')
-  async updateBody(@Param('id') noteId: string, @Body() body: string): Promise<void> {
-    return await this.noteService.updateBody(noteId, body);
-  }
+  queryOne: noteProcedure
+    .input(string())
+    .query(({ input: noteId, ctx: { noteService } }) => noteService.queryOne(noteId)),
 
-  @Get('/notes/:id')
-  async queryOne(@Param('id') noteId: string): Promise<NoteVO> {
-    return await this.noteService.queryOne(noteId);
-  }
+  queryBody: noteProcedure
+    .input(string())
+    .query(({ input: noteId, ctx: { noteService } }) => noteService.queryBody(noteId)),
 
-  @Patch('/notes/:id')
-  async updateOne(
-    @Param('id') noteId: string,
-    @Body(createSchemaPipe(notePatchDTOSchema)) patch: NotePatchDTO,
-  ): Promise<void> {
-    return await this.noteService.updateOne(noteId, patch);
-  }
+  updateOne: noteProcedure
+    .input(tuple([string(), notePatchDTOSchema]))
+    .mutation(({ input: [id, patch], ctx: { noteService } }) => noteService.updateOne(id, patch)),
 
-  @Get('/notes')
-  async query(
-    @Query(createSchemaPipe(clientNoteQuerySchema)) { parentId = null, to }: ClientNoteQuery,
-  ): Promise<NoteVO[]> {
-    return to ? await this.noteService.getTreeFragment(to) : await this.noteService.query({ parentId });
-  }
+  batchUpdate: noteProcedure
+    .input(tuple([string().array(), notePatchDTOSchema]))
+    .mutation(({ input: [ids, note], ctx: { noteService } }) => noteService.batchUpdate(ids, note)),
 
-  @Post('/notes')
-  async create(
-    @Body(createSchemaPipe(newNoteDTOSchema)) noteDTO: NewNoteDTO,
-    @Query(createSchemaPipe(newNoteParamsSchema)) { from }: NewNoteParams,
-  ): Promise<NoteVO> {
-    return await this.noteService.create(noteDTO, from);
-  }
+  updateBody: noteProcedure
+    .input(object({ id: string(), body: string() }))
+    .mutation(({ input: { id, body }, ctx: { noteService } }) => noteService.updateBody(id, body)),
 
-  @Patch('/notes')
-  async batchUpdate(@Body(createSchemaPipe(notesPatchDTOSchema)) { ids, note }: NotesPatchDTO): Promise<void> {
-    return await this.noteService.batchUpdate(ids, note);
-  }
-}
+  create: noteProcedure
+    .input(newNoteDTOSchema.extend({ from: string().optional() }))
+    .mutation(({ input: { from, ...dto }, ctx: { noteService } }) => noteService.create(dto, from)),
+});

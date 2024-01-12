@@ -22,10 +22,9 @@ export default class MultimediaNodeView implements NodeView {
   }
 
   private async mount() {
-    const file = await this.fileManager.get(this.url);
-    const el = this.createMediaElement(file);
-
-    this.dom.replaceChildren(el);
+    // const file = await this.fileManager.get(this.url);
+    // const el = this.createMediaElement(file);
+    // this.dom.replaceChildren(el);
   }
 
   update(node: Node) {

@@ -20,9 +20,9 @@ export default class EditableNote extends EditableEntity<{
   }
 
   public async load() {
-    const [{ body: info }, { body }] = await Promise.all([
-      this.remote.get<void, NoteVO>(`/notes/${this.entityId}`),
-      this.remote.get<void, string>(`/notes/${this.entityId}/body`),
+    const [info, body] = await Promise.all([
+      this.remote.note.queryOne.query(this.entityId),
+      this.remote.note.queryBody.query(this.entityId),
     ]);
 
     runInAction(() => {
@@ -53,11 +53,11 @@ export default class EditableNote extends EditableEntity<{
   }
 
   private readonly uploadNote = debounce((note: NotePatchDTO) => {
-    this.remote.patch<NotePatchDTO>(`/notes/${this.entityId}`, toJS(note));
+    this.remote.note.updateOne.mutate([this.entityId, toJS(note)]);
   }, 1000);
 
   private readonly uploadNoteBody = debounce((body: string) => {
-    this.remote.put<string>(`/notes/${this.entityId}/body`, body);
+    this.remote.note.updateBody.mutate({ id: this.entityId, body });
   }, 1000);
 
   destroy(): void {

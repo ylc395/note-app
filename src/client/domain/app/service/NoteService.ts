@@ -1,14 +1,13 @@
 import { container, singleton } from 'tsyringe';
 import assert from 'assert';
 
-import { token as remoteToken } from '@domain/common/infra/remote';
-import { token as UIToken } from '@domain/app/infra/ui';
+import { token as rpcToken } from '@domain/common/infra/rpc';
+import { token as UIToken } from '@shared/domain/infra/ui';
 
-import type { NotesPatchDTO, NoteVO, NotePatchDTO } from '@shared/domain/model/note';
+import type { NoteVO } from '@shared/domain/model/note';
 import { TileSplitDirections, Workbench } from '@domain/app/model/workbench';
 import NoteEditor from '@domain/app/model/note/Editor';
 import NoteExplorer, { EventNames as ExplorerEvents, type ActionEvent } from '@domain/app/model/note/Explorer';
-import type { RecyclablesDTO } from '@shared/domain/model/recyclables';
 import { EntityTypes } from '@shared/domain/model/entity';
 import { eventBus, Events } from '@domain/app/model/note/eventBus';
 import { MOVE_TARGET_MODAL } from '@domain/app/model/note/modals';
@@ -19,7 +18,7 @@ export default class NoteService {
   constructor() {
     this.explorer.on(ExplorerEvents.Action, this.handleAction);
   }
-  private readonly remote = container.resolve(remoteToken);
+  private readonly remote = container.resolve(rpcToken);
   private readonly ui = container.resolve(UIToken);
   private readonly explorer = container.resolve(NoteExplorer);
   private readonly workbench = container.resolve(Workbench);
@@ -29,7 +28,7 @@ export default class NoteService {
   }
 
   public readonly createNote = async (parentId?: NoteVO['parentId']) => {
-    const { body: note } = await this.remote.post<NotePatchDTO, NoteVO>('/notes', {
+    const note = await this.remote.note.create.mutate({
       parentId: parentId || null,
     });
 
@@ -44,18 +43,10 @@ export default class NoteService {
   };
 
   private async duplicateNote(targetId: NoteVO['id']) {
-    const { body: note } = await this.remote.post<void, NoteVO>(`/notes?from=${targetId}`);
-
+    const note = await this.remote.note.create.mutate({ from: targetId });
     this.tree.updateTree(note);
     this.tree.toggleSelect(note.id);
     this.workbench.openEntity({ entityId: note.id, entityType: EntityTypes.Note });
-  }
-
-  private async deleteNotes(ids: NoteVO['id'][]) {
-    const locators = ids.map((id) => ({ entityId: id, entityType: EntityTypes.Note } as const));
-    await this.remote.patch<RecyclablesDTO>(`/recyclables`, locators);
-    this.tree.removeNodes(ids);
-    this.ui.feedback({ type: 'success', content: '已移至回收站' });
   }
 
   public readonly getNoteIds = (item: unknown) => {
@@ -71,7 +62,7 @@ export default class NoteService {
   public readonly moveNotes = async ({ targetId, item }: { targetId: NoteVO['parentId']; item?: unknown }) => {
     const ids = this.getNoteIds(item) || this.tree.getSelectedNodeIds();
 
-    await this.remote.patch<NotesPatchDTO>('/notes', { ids, note: { parentId: targetId } });
+    await this.remote.note.batchUpdate.mutate([ids, { parentId: targetId }]);
 
     for (const id of ids) {
       eventBus.emit(Events.Updated, { id, actor: this, parentId: targetId });

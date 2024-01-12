@@ -1,4 +1,5 @@
 {
   "extends": "./tsconfig.json",
-  "include": ["./driver/electron/preload/**/*"]
+  "include": ["./driver/electron/preload/**/*"],
+  "references": [{ "path": "../server/tsconfig.api.json" }]
 }

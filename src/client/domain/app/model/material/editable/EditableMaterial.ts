@@ -26,10 +26,7 @@ export default abstract class EditableMaterial<T extends Material = Material> ex
   }
 
   async createAnnotation(annotation: NewAnnotationDTO) {
-    const { body: createdAnnotation } = await this.remote.post<NewAnnotationDTO, AnnotationVO>(
-      `/materials/${this.entityId}/annotations`,
-      annotation,
-    );
+    const createdAnnotation = await this.remote.material.createAnnotation.mutate([this.entityId, annotation]);
 
     runInAction(() => {
       this.annotations.push(createdAnnotation);
@@ -37,9 +34,7 @@ export default abstract class EditableMaterial<T extends Material = Material> ex
   }
 
   private async loadAnnotations() {
-    const { body: annotations } = await this.remote.get<unknown, AnnotationVO[]>(
-      `/materials/${this.entityId}/annotations`,
-    );
+    const annotations = await this.remote.material.queryAnnotations.query(this.entityId);
 
     runInAction(() => {
       this.annotations = annotations;
@@ -47,17 +42,14 @@ export default abstract class EditableMaterial<T extends Material = Material> ex
   }
 
   async removeAnnotation(id: AnnotationVO['id']) {
-    await this.remote.delete(`/materials/annotations/${id}`);
+    await this.remote.material.removeAnnotation.mutate(id);
     runInAction(() => {
       remove(this.annotations, { id });
     });
   }
 
   async updateAnnotation(id: AnnotationVO['id'], patch: AnnotationPatchDTO) {
-    const { body: annotation } = await this.remote.patch<Record<string, unknown>, AnnotationVO>(
-      `/materials/annotations/${id}`,
-      patch,
-    );
+    const annotation = await this.remote.material.updateAnnotation.mutate([id, patch]);
 
     runInAction(() => {
       const index = this.annotations.findIndex(({ id: _id }) => _id === id);

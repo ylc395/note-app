@@ -4,7 +4,7 @@ import { pull, differenceWith, map } from 'lodash-es';
 import { container } from 'tsyringe';
 
 import type { EntityParentId, EntityTypes, HierarchyEntity } from '@shared/domain/model/entity';
-import { token as remoteToken } from '@domain/common/infra/remote';
+import { token as remoteToken } from '@domain/common/infra/rpc';
 import TreeNode from './TreeNode';
 
 export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> {

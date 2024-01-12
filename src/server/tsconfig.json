@@ -7,9 +7,9 @@
     "module": "NodeNext",
     "paths": {
       "@domain/*": ["domain/*", "../shared/domain/*"],
+      "@controller/*": ["controller/*"],
       "@utils/*": ["../shared/utils/*"],
-      "@shared/*": ["../shared/*"],
-      "@client/*": ["../client/*"]
+      "@shared/*": ["../shared/*"]
     }
   }
 }

@@ -1,25 +1,14 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
-
 import type { Config } from '@domain/model/config.js';
 
 import BaseService from './BaseService.js';
 
-@Injectable()
-export default class AppService extends BaseService implements OnModuleInit {
-  async onModuleInit() {
-    const config = await this.queryConfig();
-
-    if (config['httpServer.enabled'] && this.runtime.toggleHttpServer) {
-      this.runtime.toggleHttpServer(config['httpServer.enabled']);
-    }
-  }
-
+export default class AppService extends BaseService {
   queryConfig() {
-    return this.repo.configs.getAll();
+    // return this.repo.configs.getAll();
   }
 
   async updateConfig(config: Config) {
-    await this.repo.configs.update(config);
+    // await this.repo.configs.update(config);
 
     for (const [key, value] of Object.entries(config)) {
       this.eventBus.appConfig.emit(key as keyof Config, value);

@@ -1,6 +1,6 @@
 import { container } from 'tsyringe';
 
-import type { UI } from '@domain/app/infra/ui';
+import type { UI } from '@shared/domain/infra/ui';
 import ModalManager from '@domain/common/infra/ModalManager';
 import messageFeedback from './messageFeedback';
 

@@ -10,10 +10,6 @@ export default abstract class BaseRepository {
     return this.sqliteDb.getDb();
   }
 
-  protected get kv() {
-    return this.sqliteDb.kv;
-  }
-
   protected generateId() {
     return randomUUID().replaceAll('-', '');
   }

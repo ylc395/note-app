@@ -9,7 +9,7 @@ import assert from 'assert';
 // } from 'search-expression-parser';
 
 import { Scopes, type SearchParams, type SearchResult, type SearchableEntityType } from '@shared/domain/model/search';
-import { token as remoteToken } from '@domain/common/infra/remote';
+import { token as remoteToken } from '@domain/common/infra/rpc';
 import { EntityTypes } from '@domain/app/model/entity';
 
 @singleton()
@@ -17,7 +17,7 @@ export default class SearchService {
   private readonly remote = container.resolve(remoteToken);
 
   readonly search = async (q: SearchParams) => {
-    return this.remote.post<SearchParams, SearchResult[]>('/search', q);
+    // return this.remote.post<SearchParams, SearchResult[]>('/search', q);
   };
 
   readonly searchInTree = async (q: { keyword: string; containBody: boolean; type: SearchableEntityType }) => {

@@ -2,7 +2,7 @@ import { container, singleton } from 'tsyringe';
 import { observable, makeObservable, runInAction, action } from 'mobx';
 import { pull } from 'lodash-es';
 
-import { token as remoteToken } from '@domain/common/infra/remote';
+import { token as remoteToken } from '@domain/common/infra/rpc';
 import type { EntityId } from '@domain/app/model/entity';
 import type { StarVO, StarsDTO, StarEntityTypes } from '@shared/domain/model/star';
 
@@ -18,7 +18,7 @@ export default class StarService {
 
   async star(entityType: StarEntityTypes, entityIds: EntityId[]) {
     const entities = entityIds.map((id) => ({ entityId: id, entityType }));
-    await this.remote.patch<StarsDTO>('/stars', entities);
+    // await this.remote.patch<StarsDTO>('/stars', entities);
   }
 
   @action
@@ -27,8 +27,8 @@ export default class StarService {
   }
 
   async loadStars() {
-    const { body: stars } = await this.remote.get<void, StarVO[]>('/stars');
-    runInAction(() => (this.stars = stars));
+    // const { body: stars } = await this.remote.get<void, StarVO[]>('/stars');
+    // runInAction(() => (this.stars = stars));
   }
 
   async removeStar(starId: StarVO['id']) {
@@ -42,7 +42,7 @@ export default class StarService {
       throw new Error('no star to remove');
     }
 
-    await this.remote.delete(`/stars/${starId}`);
+    // await this.remote.delete(`/stars/${starId}`);
 
     runInAction(() => {
       if (!this.stars) {

@@ -2,7 +2,7 @@ import { when, computed, makeObservable, observable, action } from 'mobx';
 import DOMPurify from 'dompurify';
 import getCssSelector from 'css-selector-generator';
 
-import { token as uiToken } from '@domain/app/infra/ui';
+import { token as uiToken } from '@shared/domain/infra/ui';
 import { AnnotationTypes, type AnnotationVO } from '@shared/domain/model/material';
 import type HtmlEditor from '@domain/app/model/material/editor/HtmlEditor';
 

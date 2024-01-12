@@ -1,74 +1,36 @@
-import { Inject, Injectable, type OnApplicationBootstrap } from '@nestjs/common';
 import { Worker } from 'node:worker_threads';
 import path, { dirname } from 'node:path';
+import { singleton } from 'tsyringe';
+import { fileURLToPath } from 'node:url';
+import { ensureDir } from 'fs-extra';
 
-import { compact } from 'lodash-es';
 import { wrap } from 'comlink';
 import nodeEndpoint from 'comlink/dist/umd/node-adapter.js';
 import TaskQueue from 'queue';
 
-import type {
-  FileVO,
-  FilesDTO,
-  FileTextRecord,
-  CreatedFile,
-  UnfinishedTextExtraction,
-  FileDTO,
-} from '@domain/model/file.js';
-import { token as fileReaderToken, FileReader } from '@domain/infra/fileReader.js';
+import type { FileVO, FileTextRecord, CreatedFile, UnfinishedTextExtraction, FileDTO } from '@domain/model/file.js';
 
 import BaseService from '../BaseService.js';
 import type TextExtraction from './TextExtraction.js';
-import { fileURLToPath } from 'node:url';
+import FileReader from './FileReader.js';
 
-@Injectable()
-export default class FileService extends BaseService implements OnApplicationBootstrap {
-  @Inject(fileReaderToken) private readonly fileReader!: FileReader;
-
+@singleton()
+export default class FileService extends BaseService {
   private extraction?: TextExtraction;
   private extractionWorker?: Worker;
-
   private extractingTextTaskQueue = new TaskQueue({ concurrency: 1, autostart: true });
   private fileIdsOnQueue = new Set<FileVO['id']>();
+  private readonly fileReader = new FileReader();
 
-  onApplicationBootstrap() {
-    if (this.runtime.isMain()) {
-      this.resumeUnfinishedTextExtraction();
-    }
-  }
+  async createFile(file: FileDTO) {
+    const data = file.data || (await this.fileReader.read(file.path!));
+    const fileVO = await this.repo.files.create({ lang: '', ...file, data });
 
-  private async loadFile(file: FileDTO) {
-    if (file.data) {
-      return { data: file.data, mimeType: file.mimeType, lang: file.lang };
+    if (!this.fileIdsOnQueue.has(fileVO.id)) {
+      this.addTextExtractionJob({ fileId: fileVO.id });
     }
 
-    if (file.path) {
-      const localFile = await this.fileReader.readLocalFile(file.path);
-      return localFile && { ...localFile, mimeType: file.mimeType, lang: file.lang };
-    }
-  }
-
-  async createFiles(files: FilesDTO) {
-    const tasks = files.map(this.loadFile.bind(this));
-    const loadedFiles = await Promise.all(tasks);
-    const fileVOs = await this.repo.files.batchCreate(compact(loadedFiles));
-    const result: (FileVO | null)[] = loadedFiles.map(() => null);
-    const createdFiles: CreatedFile[] = [];
-
-    let j = 0;
-    for (let i = 0; i < loadedFiles.length; i++) {
-      if (loadedFiles[i]) {
-        result[i] = fileVOs[j]!;
-        createdFiles.push({ ...loadedFiles[i]!, id: fileVOs[j]!.id });
-        j += 1;
-      }
-    }
-
-    createdFiles
-      .filter(({ id }) => !this.fileIdsOnQueue.has(id))
-      .forEach(({ id }) => this.addTextExtractionJob({ fileId: id }));
-
-    return result;
+    return fileVO;
   }
 
   private addTextExtractionJob({ fileId, finished }: UnfinishedTextExtraction) {
@@ -85,16 +47,6 @@ export default class FileService extends BaseService implements OnApplicationBoo
     }
 
     return { mimeType: file.mimeType, data };
-  }
-
-  async fetchRemoteFile(url: string) {
-    const file = await this.fileReader.readRemoteFile(url);
-
-    if (!file) {
-      throw new Error(`can not request file: ${url}`);
-    }
-
-    return file;
   }
 
   private readonly terminateExtraction = async () => {
@@ -160,8 +112,10 @@ export default class FileService extends BaseService implements OnApplicationBoo
     if (records.length > 0) {
       await this.repo.files.createText({ records, fileId: id });
     } else {
-      const { ocrCachePath } = this.runtime.getPaths();
+      const appDir = this.runtime.getAppDir();
+      const ocrCachePath = path.join(appDir, 'ocr_cache');
 
+      await ensureDir(ocrCachePath);
       const concurrency = await this.extraction.initOcr({
         cachePath: ocrCachePath,
         maxConcurrency: 4,
@@ -185,7 +139,7 @@ export default class FileService extends BaseService implements OnApplicationBoo
     }
   }
 
-  private async resumeUnfinishedTextExtraction() {
+  public async resumeUnfinishedTextExtraction() {
     const mimeTypes = ['application/pdf'];
     const unextracted = await this.repo.files.findTextUnextracted(mimeTypes);
 

@@ -1,12 +1,11 @@
 import { createPatch, applyPatch } from 'diff';
-import type { OnModuleInit } from '@nestjs/common';
 
 import type { EntityLocator } from '@domain/model/entity.js';
 import type { ContentUpdatedEvent } from '@domain/model/content.js';
 
 import BaseService from './BaseService.js';
 
-export default class RevisionService extends BaseService implements OnModuleInit {
+export default class RevisionService extends BaseService {
   onModuleInit() {
     this.eventBus.on('contentUpdated', this.createRevision);
   }

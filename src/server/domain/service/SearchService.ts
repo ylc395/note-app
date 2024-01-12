@@ -1,17 +1,15 @@
-import { Inject, Injectable } from '@nestjs/common';
-
-import { token as searchEngineToken, type SearchEngine } from '@domain/infra/searchEngine.js';
+import { token as searchEngineToken } from '@domain/infra/searchEngine.js';
 import type { SearchParams, SearchResultVO } from '@domain/model/search.js';
 
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
 import StarService from './StarService.js';
+import { container } from 'tsyringe';
 
-@Injectable()
 export default class SearchService extends BaseService {
-  @Inject(searchEngineToken) private readonly searchEngine!: SearchEngine;
-  @Inject() private readonly entityService!: EntityService;
-  @Inject() private readonly starService!: StarService;
+  private readonly searchEngine = container.resolve(searchEngineToken);
+  private readonly entityService = container.resolve(EntityService);
+  private readonly starService = container.resolve(StarService);
 
   async search(q: SearchParams): Promise<SearchResultVO[]> {
     // await this.assertSearchParams(q);

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { singleton } from 'tsyringe';
 import assert from 'node:assert';
 import { pick, uniq } from 'lodash-es';
 import {
@@ -16,7 +16,7 @@ import BaseService from './BaseService.js';
 import { getNormalizedTitles, getPaths } from './composables.js';
 import { buildIndex } from '@utils/collection.js';
 
-@Injectable()
+@singleton()
 export default class NoteService extends BaseService {
   public async create(note: NewNoteDTO, from?: Note['id']) {
     let newNote: Required<Note>;
@@ -140,7 +140,11 @@ export default class NoteService extends BaseService {
   }
 
   async query(q: ClientNoteQuery) {
-    const notes = await this.repo.notes.findAll({ ...(typeof q === 'string' ? { id: [q] } : q), isAvailable: true });
+    const notes = await this.repo.notes.findAll({
+      ...q,
+      parentId: q.parentId === null ? null : q.parentId,
+      isAvailable: true,
+    });
     const noteVOs = await this.toVO(notes);
 
     return noteVOs;

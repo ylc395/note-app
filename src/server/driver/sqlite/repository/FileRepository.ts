@@ -50,15 +50,9 @@ export default class SqliteFileRepository extends BaseRepository implements File
     return createdFile;
   }
 
-  async batchCreate(files: Required<LoadedFile>[]) {
-    const rows: FileVO[] = [];
-
-    for (const file of files) {
-      const row = await this.findOrCreate(file);
-      rows.push(row);
-    }
-
-    return rows.map((row) => pick(row, ['id', 'mimeType', 'size', 'lang']));
+  async create(file: Required<LoadedFile>) {
+    const row = await this.findOrCreate(file);
+    return pick(row, ['id', 'mimeType', 'size', 'lang']);
   }
 
   async createText({ fileId, records }: FileText) {

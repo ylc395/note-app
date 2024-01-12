@@ -1,4 +1,4 @@
-import { type MaterialVO, type ClientMaterialQuery, normalizeTitle } from '@shared/domain/model/material';
+import { type MaterialVO, normalizeTitle } from '@shared/domain/model/material';
 import Tree from '../abstract/Tree';
 import type TreeNode from '../abstract/TreeNode';
 import { EntityTypes } from '@shared/domain/model/entity';
@@ -8,7 +8,7 @@ export type MaterialTreeNode = TreeNode<MaterialVO>;
 export default class MaterialTree extends Tree<MaterialVO> {
   public readonly entityType = EntityTypes.Material;
   async fetchChildren(parentId: MaterialVO['parentId']) {
-    const { body: materials } = await this.remote.get<ClientMaterialQuery, MaterialVO[]>('/materials', { parentId });
+    const materials = await this.remote.material.query.query({ parentId });
     return materials;
   }
 

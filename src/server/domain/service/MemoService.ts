@@ -1,4 +1,3 @@
-import { Injectable } from '@nestjs/common';
 import { mapValues, omit, map } from 'lodash-es';
 
 import { buildIndex } from '@utils/collection.js';
@@ -7,7 +6,6 @@ import { EntityTypes } from '@domain/model/entity.js';
 
 import BaseService from './BaseService.js';
 
-@Injectable()
 export default class MemoService extends BaseService {
   async create(memo: NewMemo) {
     if (memo.parentId && memo.isPinned) {

@@ -7,18 +7,9 @@ import {
 } from 'electron';
 import { BLANK_URL, sanitizeUrl } from '@braintree/sanitize-url';
 import assert from 'node:assert';
-import { object, string, array, unknown as zodUnknown, type infer as ZodInfer } from 'zod';
+import { type MenuItem, type UI, type UIIpcPayload, uiIpcPayloadSchema } from '@shared/domain/infra/ui.js';
 
-import type { MenuItem, UI } from '../../domain/app/infra/ui.js';
-
-export const UI_CHANNEL = 'electron-ui';
-
-const uiIpcPayloadSchema = object({
-  funcName: string().refine((v) => !v.startsWith('_')),
-  args: array(zodUnknown()),
-});
-
-export type UIIpcPayload = ZodInfer<typeof uiIpcPayloadSchema>;
+export { UI_CHANNEL } from '@shared/domain/infra/ui.js';
 
 export default class electronUI implements UI {
   public ipcEvent?: IpcMainInvokeEvent;

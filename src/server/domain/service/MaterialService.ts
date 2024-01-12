@@ -1,6 +1,6 @@
 import { uniq, pick } from 'lodash-es';
-import { Injectable } from '@nestjs/common';
 import assert from 'assert';
+import { singleton } from 'tsyringe';
 
 import {
   type NewAnnotationDTO,
@@ -10,7 +10,6 @@ import {
   type AnnotationPatchDTO,
   type Material,
   type ClientMaterialQuery,
-  type MaterialsPatchDTO,
   type MaterialPatchDTO,
   AnnotationTypes,
   MaterialTypes,
@@ -23,7 +22,7 @@ import BaseService from './BaseService.js';
 import { getNormalizedTitles, getPaths } from './composables.js';
 import { buildIndex } from '@utils/collection.js';
 
-@Injectable()
+@singleton()
 export default class MaterialService extends BaseService {
   async create(newMaterial: NewMaterialDTO) {
     if (newMaterial.parentId) {
@@ -76,7 +75,7 @@ export default class MaterialService extends BaseService {
     return await this.toVO(material);
   }
 
-  async batchUpdate(ids: Material['id'][], patch: MaterialsPatchDTO['material']) {
+  async batchUpdate(ids: Material['id'][], patch: MaterialPatchDTO) {
     await this.transaction(async () => {
       await this.assertAvailableIds(ids);
 

@@ -11,7 +11,9 @@
     "paths": {
       "@domain/*": ["./domain/*"],
       "@web/*": ["./driver/web/*"],
+      "@server/*": ["../server/*"],
       "@shared/*": ["../shared/*"]
     }
-  }
+  },
+  "references": [{ "path": "../server/tsconfig.api.json" }]
 }

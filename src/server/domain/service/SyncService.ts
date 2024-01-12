@@ -1,4 +1,3 @@
-import { Injectable } from '@nestjs/common';
 // import { object, type infer as Infer, number, string } from 'zod';
 // import differenceWith from 'lodash-es/differenceWith';
 // import fm from 'front-matter';
@@ -29,7 +28,6 @@ import BaseService from './BaseService.js';
 //   | { type: EntityTypes.Memo }
 // );
 
-@Injectable()
 export default class SyncService extends BaseService {
   // @Inject(syncTargetFactoryToken) private readonly syncTargetFactory!: SyncTargetFactory;
   // private syncTarget?: SyncTarget;

@@ -1,5 +1,5 @@
-import { Inject, Injectable, type OnModuleInit } from '@nestjs/common';
 import { groupBy, intersectionWith } from 'lodash-es';
+import { container, singleton } from 'tsyringe';
 
 import {
   type EntityId,
@@ -17,11 +17,11 @@ type MainEntityLocator = EntityLocator<
   EntityTypes.Note | EntityTypes.Memo | EntityTypes.Material | EntityTypes.MaterialAnnotation
 >;
 
-@Injectable()
-export default class EntityService extends BaseService implements OnModuleInit {
-  @Inject() private readonly noteService!: NoteService;
-  @Inject() private readonly materialService!: MaterialService;
-  @Inject() private readonly memoService!: MemoService;
+@singleton()
+export default class EntityService extends BaseService {
+  private readonly noteService = container.resolve(NoteService);
+  private readonly materialService = container.resolve(MaterialService);
+  private readonly memoService = container.resolve(MemoService);
 
   public onModuleInit() {
     this.assertAvailableEntities = EntityService.doByEntityType({

@@ -1,6 +1,6 @@
-import { Inject, Injectable, type OnModuleInit } from '@nestjs/common';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { visit } from 'unist-util-visit';
+import { container } from 'tsyringe';
 import type { Link as MdAstLinkNode, Image as MdAstImageNode, Node as UnistNode } from 'mdast';
 import { groupBy, uniqBy, map } from 'lodash-es';
 
@@ -10,7 +10,6 @@ import {
   tokenExtension as topicTokenExtension,
   type Topic as TopicNode,
 } from '@domain/infra//markdown/syntax/topic.js';
-import { IS_IPC } from '@domain/infra//DesktopRuntime.js';
 import type {
   ContentUpdatedEvent,
   EntityWithSnippet,
@@ -29,15 +28,14 @@ import type { EntityId } from '@domain/model/entity.js';
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
 
-@Injectable()
-export default class ContentService extends BaseService implements OnModuleInit {
-  @Inject() private readonly entityService!: EntityService;
+export default class ContentService extends BaseService {
+  private readonly entityService = container.resolve(EntityService);
 
   onModuleInit() {
-    if (!IS_IPC) {
-      // only extract on non-ipc server. ipc server will receive everything from render process, no need to do extracting itself
-      this.eventBus.on('contentUpdated', this.extract);
-    }
+    // if (!IS_IPC) {
+    // only extract on non-ipc server. ipc server will receive everything from render process, no need to do extracting itself
+    // this.eventBus.on('contentUpdated', this.extract);
+    // }
   }
 
   private extractTopics(entity: ContentUpdatedEvent) {

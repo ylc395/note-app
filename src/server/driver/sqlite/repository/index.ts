@@ -9,4 +9,3 @@ export { default as revisions } from './RevisionRepository.js';
 export { default as synchronization } from './SynchronizationRepository.js';
 export { default as contents } from './ContentRepository.js';
 export { default as entities } from './EntityRepository.js';
-export { default as configs } from './ConfigRepository.js';

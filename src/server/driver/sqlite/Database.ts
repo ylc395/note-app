@@ -1,3 +1,4 @@
+import { container } from 'tsyringe';
 import { Kysely, SqliteDialect, CamelCasePlugin, type Transaction } from 'kysely';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import BetterSqlite3 from 'better-sqlite3';
@@ -5,16 +6,14 @@ import fs from 'fs-extra';
 import path, { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import assert from 'node:assert';
-import { Inject, Injectable, Logger } from '@nestjs/common';
 
-import { type default as Runtime, token as runtimeToken } from '@domain/infra/DesktopRuntime.js';
+import { token as loggerToken } from '@domain/infra/logger.js';
 import type { Database } from '@domain/infra/database.js';
 import { IS_TEST, IS_DEV } from '@domain/infra/constants.js';
 import type Repository from '@domain/service/repository/index.js';
 
 import { type Schemas, schemas } from './schema/index.js';
 import * as repositories from './repository/index.js';
-import SqliteKvDatabase from './KvDatabase.js';
 
 const CLEAN_DB = process.env.DEV_CLEAN === '1' && IS_DEV;
 
@@ -22,20 +21,16 @@ export interface Db extends Schemas {
   sqlite_master: { name: string; type: string };
 }
 
-@Injectable()
 export default class SqliteDb implements Database {
-  private readonly logger: Logger;
-  constructor(@Inject(runtimeToken) private readonly app: Runtime) {
-    this.logger = new Logger(`${app.isMain() ? 'main' : 'http'} ${SqliteDb.name}`);
-    this.db = this.createDb();
+  constructor(dir: string) {
+    this.db = this.connectToDb(dir);
     this.ready = this.init();
-    this.kv = new SqliteKvDatabase(this);
   }
 
+  private readonly logger = container.resolve(loggerToken);
   private db: Kysely<Db>;
-  readonly kv: SqliteKvDatabase;
   private readonly als = new AsyncLocalStorage<Transaction<Db>>();
-  readonly ready: Promise<void>;
+  public readonly ready: Promise<void>;
   private tableNames?: string[];
 
   hasTable(name: string) {
@@ -65,35 +60,26 @@ export default class SqliteDb implements Database {
       .execute();
 
     this.tableNames = tables.map(({ name }) => name);
-
     await this.createTables();
-    await this.kv.init();
   }
 
   getDb() {
     return this.als.getStore() || this.db;
   }
 
-  private createDb() {
-    const { rootPath } = this.app.getPaths();
-    const dbPath = join(rootPath, 'db.sqlite');
+  private connectToDb(dir: string) {
+    const dbPath = join(dir, 'db.sqlite');
 
-    if ((CLEAN_DB && this.app.isMain()) || IS_TEST) {
+    if (CLEAN_DB || IS_TEST) {
       fs.removeSync(dbPath);
     }
 
-    this.logger.verbose(dbPath);
-
-    const db = new BetterSqlite3(dbPath, {
-      verbose: IS_DEV ? this.logger.verbose.bind(this.logger) : undefined,
-    });
-
+    this.logger.debug(dbPath);
+    const db = new BetterSqlite3(dbPath, { verbose: this.logger.debug });
     db.loadExtension(join(path.dirname(fileURLToPath(import.meta.url)), 'simple-tokenizer/libsimple'));
 
     return new Kysely<Db>({
-      dialect: new SqliteDialect({
-        database: db,
-      }),
+      dialect: new SqliteDialect({ database: db }),
       plugins: [new CamelCasePlugin()],
     });
   }

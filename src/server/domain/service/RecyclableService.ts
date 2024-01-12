@@ -1,15 +1,14 @@
-import { Injectable, Inject } from '@nestjs/common';
 import { differenceWith, isMatch } from 'lodash-es';
 import assert from 'node:assert';
+import { container } from 'tsyringe';
 
 import { type RecyclableEntityLocator, type RecyclableEntityTypes, RecycleReason } from '@domain/model/recyclables.js';
 
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
 
-@Injectable()
 export default class RecyclableService extends BaseService {
-  @Inject() private readonly entityService!: EntityService;
+  private readonly entityService = container.resolve(EntityService);
 
   async create(entities: RecyclableEntityLocator[]) {
     await this.entityService.assertAvailableEntities(entities);

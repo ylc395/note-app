@@ -8,7 +8,6 @@ import type { RevisionRepository } from './RevisionRepository.js';
 import type { SynchronizationRepository } from './SynchronizationRepository.js';
 import type { ContentRepository } from './ContentRepository.js';
 import type { EntityRepository } from './EntityRepository.js';
-import type { ConfigRepository } from './ConfigRepository.js';
 import type { MaterialAnnotationRepository } from './MaterialAnnotationRepository.js';
 
 export default interface Repositories {
@@ -23,5 +22,4 @@ export default interface Repositories {
   synchronization: SynchronizationRepository;
   contents: ContentRepository;
   entities: EntityRepository;
-  configs: ConfigRepository;
 }

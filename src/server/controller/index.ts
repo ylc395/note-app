@@ -1,9 +1,13 @@
-export { default as NotesController } from './NotesController.js';
-export { default as RecyclablesController } from './RecyclablesController.js';
-export { default as StarsController } from './StarsController.js';
-export { default as FilesController } from './FilesController.js';
-export { default as MemosController } from './MemosController.js';
-export { default as MaterialsController } from './MaterialsController.js';
-export { default as SyncController } from './SyncController.js';
-export { default as SearchController } from './SearchController.js';
-export { default as AppController } from './AppController.js';
+import { router } from './trpc.js';
+
+import noteRouter from './NotesController.js';
+import materialRouter from './MaterialsController.js';
+import fileRouter from './FilesController.js';
+
+export const routers = router({
+  note: noteRouter,
+  material: materialRouter,
+  file: fileRouter,
+});
+
+export type Routes = typeof routers;

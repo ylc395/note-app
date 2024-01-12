@@ -1,4 +1,3 @@
-import { Injectable } from '@nestjs/common';
 import type { Kysely } from 'kysely';
 import { intersectionWith } from 'lodash-es';
 
@@ -13,14 +12,11 @@ import MaterialSearchEngine from './MaterialSearchEngine.js';
 import { WRAPPER_END_TEXT, WRAPPER_START_TEXT, NOTE_FTS_TABLE, type SearchEngineDb } from './tables.js';
 import { createFtsSql } from './sql.js';
 
-@Injectable()
 export default class SqliteSearchEngine implements SearchEngine {
-  readonly ready: Promise<void>;
-
   constructor(readonly sqliteDb: SqliteDb) {
     this.ready = this.createTables();
   }
-
+  public ready: Promise<void>;
   private readonly notes = new NoteSearchEngine(this);
   private readonly memos = new MemoSearchEngine(this);
   private readonly materials = new MaterialSearchEngine(this);

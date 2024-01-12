@@ -1,6 +1,6 @@
 import { message } from 'antd';
 import { uniqueId } from 'lodash';
-import type { UI } from '@domain/app/infra/ui';
+import type { UI } from '@shared/domain/infra/ui';
 
 const feedback: UI['feedback'] = function (options) {
   return new Promise((resolve) => {

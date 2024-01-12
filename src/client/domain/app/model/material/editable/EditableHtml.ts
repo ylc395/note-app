@@ -19,12 +19,17 @@ export default class EditableHtml extends EditableMaterial<WebPage> {
   }
 
   public async load() {
-    const [{ body: metadata }, { body: blob }] = await Promise.all([
-      this.remote.get<void, EntityMaterialVO>(`/materials/${this.entityId}`),
-      this.remote.get<void, ArrayBuffer>(`/materials/${this.entityId}/blob`),
+    const [metadata, blob] = await Promise.all([
+      this.remote.material.queryOne.query(this.entityId),
+      this.remote.material.getBlob.query(this.entityId),
     ]);
 
     const textDecoder = new TextDecoder();
-    runInAction(() => (this.entity = { metadata, html: textDecoder.decode(blob) }));
+    runInAction(() => {
+      this.entity = {
+        metadata: metadata as EntityMaterialVO,
+        html: textDecoder.decode(blob as ArrayBuffer),
+      };
+    });
   }
 }

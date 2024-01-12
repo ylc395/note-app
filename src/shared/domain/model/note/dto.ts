@@ -1,4 +1,3 @@
-import { uniq } from 'lodash-es';
 import { boolean, object, string, type infer as Infer } from 'zod';
 
 export const notePatchDTOSchema = object({
@@ -8,15 +7,7 @@ export const notePatchDTOSchema = object({
   icon: string().nullish(),
 });
 
-export const notesPatchDTOSchema = object({
-  ids: string().array().refine(uniq),
-  note: notePatchDTOSchema,
-});
-
 export const newNoteDTOSchema = notePatchDTOSchema;
-export const newNoteParamsSchema = object({ from: string().optional() });
 
 export type NewNoteDTO = Infer<typeof newNoteDTOSchema>;
-export type NotesPatchDTO = Infer<typeof notesPatchDTOSchema>;
 export type NotePatchDTO = Infer<typeof notePatchDTOSchema>;
-export type NewNoteParams = Infer<typeof newNoteParamsSchema>;

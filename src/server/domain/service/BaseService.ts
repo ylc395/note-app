@@ -1,16 +1,14 @@
-import { Inject } from '@nestjs/common';
+import { container } from 'tsyringe';
 
-import { token as databaseToken, type Database } from '@domain/infra/database.js';
-import { token as eventBusToken, type EventBus } from '@domain/infra/eventBus.js';
-import { type default as Runtime, token as runtimeToken } from '@domain/infra/DesktopRuntime.js';
+import { token as databaseToken } from '@domain/infra/database.js';
+import eventBus from '@domain/infra/eventBus.js';
+import { token as runtimeToken } from '@domain/infra/runtime.js';
 import type Repositories from './repository/index.js';
 
 export default abstract class BaseService {
-  constructor(
-    @Inject(runtimeToken) protected readonly runtime: Runtime,
-    @Inject(databaseToken) private readonly db: Database,
-    @Inject(eventBusToken) protected readonly eventBus: EventBus,
-  ) {}
+  protected readonly runtime = container.resolve(runtimeToken);
+  private readonly db = container.resolve(databaseToken);
+  protected readonly eventBus = eventBus;
 
   protected repo = new Proxy({} as Repositories, {
     get: (_, p) => {

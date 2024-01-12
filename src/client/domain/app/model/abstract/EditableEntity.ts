@@ -2,7 +2,7 @@ import { uniqueId } from 'lodash-es';
 import { container } from 'tsyringe';
 import { makeObservable, observable } from 'mobx';
 
-import { token as remoteToken } from '@domain/common/infra/remote';
+import { token as rpcToken } from '@domain/common/infra/rpc';
 import { EntityId, EntityLocator, EntityTypes } from '../entity';
 import type { Tile } from '../workbench';
 import type Editor from './Editor';
@@ -17,7 +17,7 @@ export default abstract class EditableEntity<T = unknown> {
     this.load();
   }
 
-  protected readonly remote = container.resolve(remoteToken);
+  protected readonly remote = container.resolve(rpcToken);
   public readonly id = uniqueId('editableEntity-');
   public abstract readonly entityType: EditableEntityLocator['entityType'];
 

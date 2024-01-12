@@ -10,9 +10,9 @@ type ConfigEventMaps = Required<{
   [key in keyof Config]: [Required<Config>[key]];
 }>;
 
-export type EventBus = Emitter<EventMaps> & { appConfig: Emitter<ConfigEventMaps> };
+type EventBus = Emitter<EventMaps> & { appConfig: Emitter<ConfigEventMaps> };
 
-export const eventBus = new Emitter();
+const eventBus = new Emitter();
 (eventBus as EventBus).appConfig = new Emitter();
 
-export const token = Symbol();
+export default eventBus as EventBus;

@@ -65,15 +65,17 @@ export default class EditablePdf extends EditableMaterial<Pdf> {
       GlobalWorkerOptions.workerPort = new PdfJsWorker();
     }
 
-    const [{ body: metadata }, { body: blob }] = await Promise.all([
-      this.remote.get<void, EntityMaterialVO>(`/materials/${this.entityId}`),
-      this.remote.get<void, ArrayBuffer>(`/materials/${this.entityId}/blob`),
+    const [metadata, blob] = await Promise.all([
+      this.remote.material.queryOne.query(this.entityId),
+      this.remote.material.getBlob.query(this.entityId),
     ]);
 
-    this.loadingTask = getDocument(blob.slice(0));
+    this.loadingTask = getDocument((blob as ArrayBuffer).slice(0));
     const doc = await this.loadingTask.promise;
 
-    runInAction(() => (this.entity = { metadata, doc }));
+    runInAction(() => {
+      this.entity = { metadata: metadata as EntityMaterialVO, doc };
+    });
     this.initOutline(doc);
   }
 

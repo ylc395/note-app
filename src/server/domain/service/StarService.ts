@@ -1,5 +1,5 @@
-import { Inject, Injectable } from '@nestjs/common';
 import assert from 'node:assert';
+import { container, singleton } from 'tsyringe';
 
 import type { StarEntityLocator, StarVO } from '@domain/model/star.js';
 import type { EntityId } from '@domain/model/entity.js';
@@ -8,9 +8,9 @@ import { buildIndex } from '@utils/collection.js';
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
 
-@Injectable()
+@singleton()
 export default class StarService extends BaseService {
-  @Inject() private readonly entityService!: EntityService;
+  private readonly entityService = container.resolve(EntityService);
 
   async create(entities: StarEntityLocator[]) {
     await this.entityService.assertAvailableEntities(entities);

@@ -20,12 +20,12 @@ export default class SqliteSynchronizationRepository extends BaseRepository impl
   }
 
   async getLastFinishedSyncTimestamp() {
-    const value = await this.kv.get(LAST_SYNC_TIME_KEY);
-    return value ? Number(value) : null;
+    // const value = await this.kv.get(LAST_SYNC_TIME_KEY);
+    // return value ? Number(value) : null;
   }
 
   async updateLastFinishedSyncTimestamp(time: number) {
-    await this.kv.set(LAST_SYNC_TIME_KEY, String(time));
+    // await this.kv.set(LAST_SYNC_TIME_KEY, String(time));
   }
 
   async updateEntitySyncAt({ entityId, entityType }: EntityLocator, syncAt: number) {
