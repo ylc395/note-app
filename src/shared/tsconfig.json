@@ -5,6 +5,7 @@
     "module": "NodeNext",
     "types": ["node"],
     "baseUrl": ".",
+    "rootDir": "../",
     "composite": true
   }
 }

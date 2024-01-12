@@ -3,6 +3,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "lib": ["ESNext"],
+    "rootDir": "../",
     "module": "NodeNext",
     "paths": {
       "@domain/*": ["domain/*", "../shared/domain/*"],
