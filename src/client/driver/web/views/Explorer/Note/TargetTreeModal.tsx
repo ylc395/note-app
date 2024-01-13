@@ -19,7 +19,7 @@ export default observer(function TargetTreeModal() {
 
   const onConfirm = async () => {
     assert(targetTree?.targetId !== undefined);
-    await moveNotes({ targetId: targetTree.targetId });
+    await moveNotes(targetTree.targetId);
     return true;
   };
 

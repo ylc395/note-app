@@ -7,7 +7,7 @@ import { Workbench } from '@domain/app/model/workbench';
 import NoteService from '@domain/app/service/NoteService';
 
 import Button from '@web/components/Button';
-import TreeView from '../../components/TreeView';
+import TreeView from '../components/TreeView';
 // import SearchInput from '../../components/SearchInput';
 
 // eslint-disable-next-line mobx/missing-observer
@@ -25,7 +25,7 @@ export default function NoteTreeView() {
         onContextmenu={showContextmenu}
         onDragStop={resetTree}
         onDragStart={updateTreeForDropping}
-        onDrop={(item, node) => moveNotes({ item, targetId: node.id })}
+        onDrop={(item, node) => moveNotes(node.id, item)}
         nodeOperation={({ id }) => (
           <Button onClick={() => createNote(id)}>
             <PlusOutlined />

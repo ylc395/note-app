@@ -59,13 +59,13 @@ export default class NoteService {
     }
   };
 
-  public readonly moveNotes = async ({ targetId, item }: { targetId: NoteVO['parentId']; item?: unknown }) => {
+  public readonly moveNotes = async (targetId: NoteVO['parentId'], item?: unknown) => {
     const ids = this.getNoteIds(item) || this.tree.getSelectedNodeIds();
 
     await this.remote.note.batchUpdate.mutate([ids, { parentId: targetId }]);
 
     for (const id of ids) {
-      eventBus.emit(Events.Updated, { id, actor: this, parentId: targetId });
+      eventBus.emit(Events.Updated, { id, parentId: targetId });
     }
 
     if (targetId) {

@@ -19,10 +19,11 @@ export default observer(function NoteExplorerView() {
     () => status === 'toDrop' && !tree.root.isDisabled && getNoteIds(dragItem),
     [tree.root.isDisabled, dragItem, status, getNoteIds],
   );
+  const onDrop = canDrop ? (item: unknown) => moveNotes(null, item) : undefined;
 
   return (
     <>
-      <ExplorerHeader onDrop={canDrop ? () => moveNotes({ item: dragItem, targetId: null }) : undefined} title="笔记">
+      <ExplorerHeader onDrop={onDrop} title="笔记">
         <TreeOperations />
       </ExplorerHeader>
       <TreeView />

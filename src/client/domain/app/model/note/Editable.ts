@@ -39,7 +39,7 @@ export default class EditableNote extends EditableEntity<{
     assert(this.entity);
     this.entity.info = { ...this.entity.info, ...note, updatedAt: Date.now() };
     this.uploadNote(note);
-    eventBus.emit(NoteEvents.Updated, { id: this.entityId, actor: this, ...note });
+    eventBus.emit(NoteEvents.Updated, { id: this.entityId, updatedAt: Date.now(), ...note });
   }
 
   @action
@@ -49,7 +49,7 @@ export default class EditableNote extends EditableEntity<{
     this.entity.info.updatedAt = Date.now();
 
     this.uploadNoteBody(body);
-    eventBus.emit(NoteEvents.Updated, { id: this.entityId, actor: this, body });
+    eventBus.emit(NoteEvents.Updated, { id: this.entityId, body, updatedAt: Date.now() });
   }
 
   private readonly uploadNote = debounce((note: NotePatchDTO) => {

@@ -10,6 +10,7 @@ export interface UpdateEvent {
   title?: MaterialVO['title'];
   icon?: MaterialVO['icon'];
   parentId?: MaterialVO['parentId'];
+  updatedAt?: number;
 }
 
 export default new EventBus<{
