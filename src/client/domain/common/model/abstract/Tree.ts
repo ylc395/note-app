@@ -38,15 +38,21 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
 
   protected abstract queryFragments(id: TreeNode<T>['id']): Promise<T[]>;
 
-  public async reveal(id: TreeNode<T>['id']) {
-    const nodes = await this.queryFragments(id);
-    this.updateTree(nodes);
+  public async reveal(id: TreeNode<T>['id'] | null, expand?: true) {
+    if (id && !this.getNode(id)) {
+      const nodes = await this.queryFragments(id);
+      this.updateTree(nodes);
+    }
 
     let node = this.getNode(id).parent;
 
     while (node && node !== this.root) {
       node.isExpanded = true;
       node = node.parent;
+    }
+
+    if (expand && id) {
+      this.toggleExpand(id, true);
     }
   }
 

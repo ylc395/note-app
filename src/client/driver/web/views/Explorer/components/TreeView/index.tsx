@@ -13,6 +13,7 @@ import TreeDraggingPreview from './TreeDraggingPreview';
 
 interface Props<T extends MaterialVO | NoteVO> {
   tree: TreeModel<T>;
+  defaultIcon?: (node: TreeNode<T>) => ReactNode;
   onContextmenu: (node: TreeNode<T>) => void;
   nodeOperation: (node: TreeNode<T>) => ReactNode;
   onClick: (node: TreeNode<T>, isMultiple: boolean) => void;
@@ -29,6 +30,7 @@ export default function TreeView<T extends MaterialVO | NoteVO>({
   nodeOperation,
   onDrop,
   onDragStop,
+  defaultIcon,
 }: Props<T>) {
   return (
     <>
@@ -56,7 +58,11 @@ export default function TreeView<T extends MaterialVO | NoteVO>({
             {originalNodeView}
           </DndTreeNode>
         )}
-        renderTitle={(node) => <NodeTitle node={node}>{nodeOperation(node)}</NodeTitle>}
+        renderTitle={(node) => (
+          <NodeTitle defaultIcon={defaultIcon as undefined | ((node: TreeNode) => ReactNode)} node={node}>
+            {nodeOperation(node)}
+          </NodeTitle>
+        )}
       />
       <TreeDraggingPreview />
     </>

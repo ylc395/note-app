@@ -21,11 +21,11 @@ export default observer(function NoteTitle({ editor }: { editor: NoteEditor }) {
         placement="bottom-start"
         className="mr-1 h-8"
         buttonContent={
-          editor.icon ? (
-            <Icon size="1.2em" code={editor.icon} />
-          ) : (
-            <MdOutlineAddReaction size="1.2em" className="text-gray-400" />
-          )
+          <Icon
+            size="1.2em"
+            code={editor.icon}
+            fallback={<MdOutlineAddReaction size="1.2em" className="text-gray-400" />}
+          />
         }
       >
         <Picker

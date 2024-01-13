@@ -1,6 +1,5 @@
 import emojiData from '@emoji-mart/data/sets/14/native.json';
 import { init } from 'emoji-mart';
-import clsx from 'clsx';
 import { action, observable } from 'mobx';
 import { observer } from 'mobx-react-lite';
 import type { ReactNode } from 'react';
@@ -31,11 +30,13 @@ declare global {
 }
 
 export default observer(function Emoji({ code, className, size, fallback }: EmojiProps) {
-  const shouldShow = isEmojiReady.get() && (code || fallback);
-
-  return shouldShow ? (
-    <span className={clsx(className)}>
-      {code ? <em-emoji size={size || '1em'} shortcodes={code}></em-emoji> : fallback}
-    </span>
+  return isEmojiReady.get() ? (
+    code ? (
+      <span className={className}>
+        <em-emoji size={size || '1em'} shortcodes={code}></em-emoji>
+      </span>
+    ) : (
+      fallback
+    )
   ) : null;
 });

@@ -1,35 +1,37 @@
 import { singleton, container } from 'tsyringe';
 
-import type { NewMaterialDTO, EntityMaterialVO } from '@shared/domain/model/material';
 import Explorer from '@domain/app/model/material/Explorer';
-import type Form from '@domain/app/model/material/Form';
 import { token as rpcToken } from '@domain/common/infra/rpc';
+import { NewMaterialDTO } from '@shared/domain/model/material';
+import type { FileDTO, FileVO } from '@shared/domain/model/file';
+import { Workbench } from '@domain/app/model/workbench';
+import { EntityTypes } from '../model/entity';
 
 @singleton()
 export default class MaterialService {
   private readonly remote = container.resolve(rpcToken);
   private readonly explorer = container.resolve(Explorer);
+  private readonly workbench = container.resolve(Workbench);
 
-  private get materialTree() {
+  public get tree() {
     return this.explorer.tree;
   }
 
-  public readonly createMaterial = async (form: Form) => {
-    // if (!form.file || (!form.file.data && !form.file.path)) {
-    //   throw new Error('invalid form');
-    // }
-    // const textEncoder = new TextEncoder();
-    // const file = await this.remote.file.upload.mutate({ ...form.file });
-    // const newMaterial = await form.validate();
-    // const { body: material } = await this.remote.post<NewMaterialDTO, EntityMaterialVO>('/materials', {
-    //   fileId: files[0]!.id,
-    //   parentId: form.values.parentId,
-    //   ...newMaterial,
-    // });
-    // this.materialTree.updateTree(material);
-    // if (material.parentId && !this.materialTree.getNode(material.parentId).isExpanded) {
-    //   await this.materialTree.toggleExpand(material.parentId);
-    // }
-    // this.materialTree.toggleSelect(material.id, { isMultiple: true });
+  public readonly createMaterial = async (dto?: NewMaterialDTO, file?: FileDTO) => {
+    let fileId: FileVO['id'] | undefined;
+
+    if (file) {
+      const { id } = await this.remote.file.upload.mutate(file);
+      fileId = id;
+    }
+
+    const material = await this.remote.material.create.mutate({ ...dto, fileId });
+
+    this.tree.updateTree(material);
+    await this.tree.reveal(material.parentId, true);
+    this.tree.toggleSelect(material.id, { value: true });
+    console.log(this.tree.getNode(material.id));
+
+    this.workbench.openEntity({ entityType: EntityTypes.Material, entityId: material.id });
   };
 }

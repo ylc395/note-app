@@ -1,21 +1,24 @@
 import { container } from 'tsyringe';
-import { SettingOutlined, ShrinkOutlined } from '@ant-design/icons';
+import { AiOutlinePlus, AiOutlineShrink, AiOutlineSetting } from 'react-icons/ai';
 import { observer } from 'mobx-react-lite';
 
 import Button from '@web/components/Button';
-import Explorer from '@domain/app/model/material/Explorer';
+import MaterialService from '@domain/app/service/MaterialService';
 
 export default observer(function Operations() {
-  const { tree } = container.resolve(Explorer);
+  const { createMaterial, tree } = container.resolve(MaterialService);
 
   return (
     <div className="flex grow justify-between">
+      <Button onClick={() => createMaterial()}>
+        <AiOutlinePlus />
+      </Button>
       <div className="flex">
         <Button disabled={tree.expandedNodes.length === 0} onClick={tree.collapseAll}>
-          <ShrinkOutlined />
+          <AiOutlineShrink />
         </Button>
-        <Button onClick={() => {}}>
-          <SettingOutlined />
+        <Button>
+          <AiOutlineSetting />
         </Button>
       </div>
     </div>

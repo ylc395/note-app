@@ -23,7 +23,7 @@ export default class NoteService {
   private readonly explorer = container.resolve(NoteExplorer);
   private readonly workbench = container.resolve(Workbench);
 
-  get tree() {
+  public get tree() {
     return this.explorer.tree;
   }
 
@@ -33,12 +33,8 @@ export default class NoteService {
     });
 
     this.tree.updateTree(note);
-
-    if (parentId) {
-      this.tree.toggleExpand(parentId, true);
-    }
-
-    this.tree.toggleSelect(note.id);
+    await this.tree.reveal(note.parentId, true);
+    this.tree.toggleSelect(note.id, { value: true });
     this.workbench.openEntity({ entityType: EntityTypes.Note, entityId: note.id });
   };
 
@@ -69,10 +65,7 @@ export default class NoteService {
     }
 
     if (targetId) {
-      if (!this.tree.getNode(targetId, true)) {
-        await this.tree.reveal(targetId);
-      }
-      this.tree.toggleExpand(targetId, true);
+      await this.tree.reveal(targetId, true);
     }
     this.tree.setSelected(ids);
   };

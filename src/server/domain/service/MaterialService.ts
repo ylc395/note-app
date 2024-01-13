@@ -56,16 +56,12 @@ export default class MaterialService extends BaseService {
       ...pick(material, ['id', 'title', 'icon', 'parentId', 'updatedAt']),
       updatedAt: material.userUpdatedAt,
       childrenCount: children[material.id]?.length || 0,
-      ...(isEntityMaterial(material)
-        ? {
-            isStar: Boolean(stars[material.id]),
-            ...pick(material, ['mimeType', 'comment', 'sourceUrl']),
-          }
-        : null),
+      isStar: Boolean(stars[material.id]),
+      ...(isEntityMaterial(material) ? pick(material, ['mimeType', 'comment', 'sourceUrl']) : null),
       ...(Array.isArray(materials) ? null : { path: paths[materials.id] }),
     }));
 
-    return materialVOs as MaterialVO[];
+    return Array.isArray(materials) ? (materialVOs as MaterialVO[]) : (materialVOs[0] as MaterialVO);
   }
 
   async queryOne(id: Material['id']) {

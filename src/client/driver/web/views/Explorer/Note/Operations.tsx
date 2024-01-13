@@ -3,14 +3,13 @@ import { container } from 'tsyringe';
 import { AiOutlinePlus, AiOutlineShrink, AiOutlineSetting } from 'react-icons/ai';
 
 import NoteService from '@domain/app/service/NoteService';
-import Explorer from '@domain/app/model/note/Explorer';
 import Button from '@web/components/Button';
 
 export default observer(function Operations() {
-  const { createNote } = container.resolve(NoteService);
   const {
+    createNote,
     tree: { expandedNodes, collapseAll },
-  } = container.resolve(Explorer);
+  } = container.resolve(NoteService);
 
   return (
     <div className="flex grow justify-between">

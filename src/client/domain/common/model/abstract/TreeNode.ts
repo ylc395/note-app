@@ -5,7 +5,7 @@ import assert from 'assert';
 import { HierarchyEntity } from '@shared/domain/model/entity';
 import type Tree from './Tree';
 
-export default class TreeNode<T extends HierarchyEntity> {
+export default class TreeNode<T extends HierarchyEntity = HierarchyEntity> {
   constructor(public readonly tree: Tree<T>, entity?: T) {
     if (!entity) {
       this.isLeaf = false;
