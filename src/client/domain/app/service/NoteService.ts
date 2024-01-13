@@ -69,6 +69,9 @@ export default class NoteService {
     }
 
     if (targetId) {
+      if (!this.tree.getNode(targetId, true)) {
+        await this.tree.reveal(targetId);
+      }
       this.tree.toggleExpand(targetId, true);
     }
     this.tree.setSelected(ids);

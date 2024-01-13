@@ -1,21 +1,11 @@
 import { groupBy, intersectionWith } from 'lodash-es';
 import { container, singleton } from 'tsyringe';
 
-import {
-  type EntityId,
-  type EntityLocator,
-  EntityTypes,
-  type Path,
-  HierarchyEntityLocator,
-} from '@domain/model/entity.js';
+import { type EntityId, type EntityLocator, EntityTypes, type Path } from '@domain/model/entity.js';
 import BaseService from './BaseService.js';
 import NoteService from './NoteService.js';
 import MaterialService from './MaterialService.js';
 import MemoService from './MemoService.js';
-
-type MainEntityLocator = EntityLocator<
-  EntityTypes.Note | EntityTypes.Memo | EntityTypes.Material | EntityTypes.MaterialAnnotation
->;
 
 @singleton()
 export default class EntityService extends BaseService {
@@ -23,31 +13,25 @@ export default class EntityService extends BaseService {
   private readonly materialService = container.resolve(MaterialService);
   private readonly memoService = container.resolve(MemoService);
 
-  public onModuleInit() {
-    this.assertAvailableEntities = EntityService.doByEntityType({
-      [EntityTypes.Note]: this.noteService.assertAvailableIds,
-      [EntityTypes.Material]: this.materialService.assertAvailableIds,
-      [EntityTypes.Memo]: this.memoService.assertAvailableIds,
-      [EntityTypes.MaterialAnnotation]: () => Promise.resolve(),
-    });
+  public readonly assertAvailableEntities = EntityService.doByEntityType({
+    [EntityTypes.Note]: this.noteService.assertAvailableIds,
+    [EntityTypes.Material]: this.materialService.assertAvailableIds,
+    [EntityTypes.Memo]: this.memoService.assertAvailableIds,
+    [EntityTypes.MaterialAnnotation]: () => Promise.resolve(),
+  });
 
-    this.getNormalizedTitles = EntityService.mergeMapByEntityType({
-      [EntityTypes.Note]: this.noteService.getNormalizedTitles,
-      [EntityTypes.Material]: this.materialService.getNormalizedTitles,
-      [EntityTypes.Memo]: this.memoService.getTitles,
-      [EntityTypes.MaterialAnnotation]: () => Promise.resolve({} as Record<string, string>),
-    });
+  public readonly getNormalizedTitles = EntityService.mergeMapByEntityType({
+    [EntityTypes.Note]: this.noteService.getNormalizedTitles,
+    [EntityTypes.Material]: this.materialService.getNormalizedTitles,
+    [EntityTypes.Memo]: this.memoService.getTitles,
+    [EntityTypes.MaterialAnnotation]: () => Promise.resolve({} as Record<string, string>),
+  });
 
-    this.getPaths = EntityService.mergeMapByEntityType({
-      [EntityTypes.Note]: this.noteService.getPaths,
-      [EntityTypes.Material]: this.materialService.getPaths,
-      [EntityTypes.Memo]: () => Promise.resolve({} as Record<string, Path>),
-    });
-  }
-
-  public assertAvailableEntities!: (locators: MainEntityLocator[]) => Promise<void>;
-  public getNormalizedTitles!: (locators: MainEntityLocator[]) => Promise<Record<EntityId, string>>;
-  public getPaths!: (locators: HierarchyEntityLocator[]) => Promise<Record<EntityId, Path>>;
+  public readonly getPaths = EntityService.mergeMapByEntityType({
+    [EntityTypes.Note]: this.noteService.getPaths,
+    [EntityTypes.Material]: this.materialService.getPaths,
+    [EntityTypes.Memo]: () => Promise.resolve({} as Record<string, Path>),
+  });
 
   private static mergeMapByEntityType<T extends EntityTypes, R>(mappers: Record<T, (ids: EntityId[]) => Promise<R>>) {
     return async (locators: EntityLocator<T>[]) => {

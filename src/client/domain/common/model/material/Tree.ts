@@ -12,6 +12,10 @@ export default class MaterialTree extends Tree<MaterialVO> {
     return materials;
   }
 
+  protected queryFragments(id: MaterialVO['id']) {
+    return this.remote.material.query.query({ to: id });
+  }
+
   protected entityToNode(material: MaterialVO | null) {
     return {
       title: material ? normalizeTitle(material) : '根',

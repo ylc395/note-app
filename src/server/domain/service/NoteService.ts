@@ -13,7 +13,7 @@ import {
 import { EntityTypes } from '@domain/model/entity.js';
 
 import BaseService from './BaseService.js';
-import { getNormalizedTitles, getPaths } from './composables.js';
+import { getNormalizedTitles, getPaths, getTreeFragment } from './composables.js';
 import { buildIndex } from '@utils/collection.js';
 
 @singleton()
@@ -104,7 +104,7 @@ export default class NoteService extends BaseService {
       updatedAt: note.userUpdatedAt,
       childrenCount: children[note.id]?.length || 0,
       isStar: Boolean(stars[note.id]),
-      ...(Array.isArray(notes) ? { path: paths[note.id] || [] } : null),
+      ...(Array.isArray(notes) ? null : { path: paths[note.id] || [] }),
     }));
 
     return Array.isArray(notes) ? result : result[0]!;
@@ -164,16 +164,11 @@ export default class NoteService extends BaseService {
     return note.body;
   }
 
-  public async getTreeFragment(noteId: Note['id']) {
+  async getTreeFragment(noteId: Note['id']) {
     await this.assertAvailableIds([noteId]);
+    const nodes = await getTreeFragment(this.repo.notes, noteId);
 
-    const ancestorIds = (await this.repo.notes.findAncestorIds([noteId]))[noteId] || [];
-    const childrenIds = Object.values(await this.repo.notes.findChildrenIds(ancestorIds, true)).flat();
-
-    const roots = await this.repo.notes.findAll({ parentId: null, isAvailable: true });
-    const children = await this.repo.notes.findAll({ id: childrenIds });
-
-    return this.toVO([...roots, ...children]);
+    return await this.toVO(nodes as Note[]);
   }
 
   private async isWritable(noteId: Note['id']) {

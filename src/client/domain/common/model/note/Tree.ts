@@ -13,6 +13,10 @@ export default class NoteTree extends Tree<NoteVO> {
     return notes;
   }
 
+  protected queryFragments(id: NoteVO['id']) {
+    return this.remote.note.query.query({ to: id });
+  }
+
   protected entityToNode(note: NoteVO | null) {
     return {
       title: note ? normalizeTitle(note) : '根',

@@ -1,12 +1,12 @@
 import { container } from 'tsyringe';
 import { action, computed, makeObservable, observable, runInAction } from 'mobx';
-import { Workbench } from '../workbench';
 
 import Tree from '@domain/common/model/abstract/Tree';
 import EventBus, { type Events } from '@domain/app/infra/EventBus';
 import { token as uiToken } from '@shared/domain/infra/ui';
+import { Workbench } from '../workbench';
 
-export default abstract class Explorer<T extends Events = Events> extends EventBus<T> {
+export default abstract class Explorer<E extends Events = Events> extends EventBus<E> {
   constructor(name: string) {
     super(name);
     makeObservable(this);

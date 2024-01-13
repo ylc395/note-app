@@ -36,6 +36,20 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
     return this.allNodes.filter((node) => node.isSelected);
   }
 
+  protected abstract queryFragments(id: TreeNode<T>['id']): Promise<T[]>;
+
+  public async reveal(id: TreeNode<T>['id']) {
+    const nodes = await this.queryFragments(id);
+    this.updateTree(nodes);
+
+    let node = this.getNode(id).parent;
+
+    while (node && node !== this.root) {
+      node.isExpanded = true;
+      node = node.parent;
+    }
+  }
+
   public getSelectedNodeIds(): string[];
   public getSelectedNodeIds(containRoot: true): (string | null)[];
   public getSelectedNodeIds(containRoot?: true) {
@@ -84,23 +98,25 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
 
   @action
   private addNode(entity: T) {
-    if (entity.id === this.root.id) {
-      throw new Error('invalid id');
+    assert(entity.id !== this.root.id, 'invalid id');
+    const parent = this.getNode(entity.parentId, true);
+
+    if (!parent) {
+      return;
     }
 
-    const parent = this.getNode(entity.parentId);
     const node = new TreeNode(this, entity);
-
+    this.nodes[entity.id] = node;
     parent.isLeaf = false;
     parent.children.push(node);
-    this.nodes[entity.id] = node;
+
     Object.assign(node, this.entityToNode(entity));
 
     return node;
   }
 
   @action
-  updateChildren(parentId: TreeNode<T>['id'] | null, entities: T[]) {
+  public updateChildren(parentId: TreeNode<T>['id'] | null, entities: T[]) {
     const parentNode = this.getNode(parentId);
     const toRemoveIds = map(
       differenceWith(parentNode.children, entities, (a, b) => a.id === b.id),
@@ -117,7 +133,7 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
   }
 
   @action
-  updateTree(entity: T | T[]) {
+  public updateTree(entity: T | T[]) {
     const entities = Array.isArray(entity) ? entity : [entity];
 
     for (const entity of entities) {
@@ -132,32 +148,32 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
   }
 
   @action
-  updateNode(entity: T | T[]) {
+  private updateNode(entity: T | T[]) {
     const entities = Array.isArray(entity) ? entity : [entity];
 
     for (const entity of entities) {
       const node = this.getNode(entity.id);
 
-      assert(node.entity);
-      assert(node.parent);
-
+      assert(node.entity && node.parent);
       node.entity = entity;
       Object.assign(node, this.entityToNode(node.entity));
 
       if (node.parent.id !== (entity.parentId || this.root.id)) {
         // reset parent-child relationship
-        const newParent = this.getNode(entity.parentId);
-
         pull(node.parent.children, node);
-        newParent.children.push(node);
-        newParent.isLeaf = false;
 
         if (node.parent.children.length === 0) {
           node.parent.isLeaf = true;
           node.parent.isExpanded = false;
         }
 
-        node.parent = newParent;
+        const newParent = this.getNode(entity.parentId, true);
+
+        if (newParent) {
+          newParent.children.push(node);
+          newParent.isLeaf = false;
+          node.parent = newParent;
+        }
       }
     }
   }
@@ -184,7 +200,7 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
   }
 
   @action
-  toggleSelect(id: TreeNode<T>['id'], options?: { isMultiple?: boolean; value?: boolean }) {
+  public toggleSelect(id: TreeNode<T>['id'], options?: { isMultiple?: boolean; value?: boolean }) {
     const node = this.getNode(id);
 
     if (node.isDisabled) {
@@ -207,7 +223,7 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
   }
 
   @action
-  setSelected(ids: TreeNode<T>['id'][]) {
+  public setSelected(ids: TreeNode<T>['id'][]) {
     for (const selected of this.selectedNodes) {
       selected.isSelected = false;
     }
@@ -218,7 +234,7 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
   }
 
   @action.bound
-  collapseAll() {
+  public collapseAll() {
     for (const node of this.expandedNodes) {
       node.isExpanded = false;
     }

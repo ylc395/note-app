@@ -3,7 +3,7 @@ import { compact, first, pickBy } from 'lodash-es';
 import { singleton } from 'tsyringe';
 import assert from 'assert';
 
-import NoteTree, { NoteTreeNode } from '@domain/common/model/note/Tree';
+import NoteTree, { type NoteTreeNode } from '@domain/common/model/note/Tree';
 import Explorer from '../abstract/Explorer';
 import { eventBus, Events as NoteEvents, UpdateEvent } from './eventBus';
 
@@ -39,7 +39,7 @@ export default class NoteExplorer extends Explorer<Events> {
 
     if (node) {
       assert(node.entity);
-      this.tree.updateNode({
+      this.tree.updateTree({
         ...node.entity,
         ...pickBy(patch, (_, key) => key in node.entity!),
       });

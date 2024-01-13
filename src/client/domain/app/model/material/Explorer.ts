@@ -29,7 +29,7 @@ export default class MaterialExplorer extends Explorer {
 
     if (node) {
       assert(node.entity);
-      this.tree.updateNode({ ...node.entity, ...editableEntity.entity });
+      this.tree.updateTree({ ...node.entity, ...editableEntity.entity });
     }
   };
 

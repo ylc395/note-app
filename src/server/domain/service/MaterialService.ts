@@ -19,7 +19,7 @@ import {
 import { EntityTypes } from '@domain/model/entity.js';
 
 import BaseService from './BaseService.js';
-import { getNormalizedTitles, getPaths } from './composables.js';
+import { getNormalizedTitles, getPaths, getTreeFragment } from './composables.js';
 import { buildIndex } from '@utils/collection.js';
 
 @singleton()
@@ -159,14 +159,9 @@ export default class MaterialService extends BaseService {
 
   async getTreeFragment(materialId: Material['id']) {
     await this.assertAvailableIds([materialId]);
+    const nodes = await getTreeFragment(this.repo.materials, materialId);
 
-    const ancestorIds = (await this.repo.materials.findAncestorIds([materialId]))[materialId] || [];
-    const childrenIds = Object.values(await this.repo.materials.findChildrenIds(ancestorIds)).flat();
-
-    const roots = await this.repo.materials.findAll({ parentId: null, isAvailable: true });
-    const children = await this.repo.materials.findAll({ id: childrenIds });
-
-    return await this.toVO([...roots, ...children]);
+    return await this.toVO(nodes as Material[]);
   }
 
   async createAnnotation(materialId: MaterialVO['id'], annotation: NewAnnotationDTO) {

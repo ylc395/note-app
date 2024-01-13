@@ -10,6 +10,7 @@ import Tree from '@web/components/Tree';
 import NoteService from '@domain/app/service/NoteService';
 import TargetTree from '@domain/app/model/note/TargetTree';
 import { MOVE_TARGET_MODAL } from '@domain/app/model/note/modals';
+import NodeTitle from '../components/TreeView/NodeTitle';
 
 export default observer(function TargetTreeModal() {
   const { moveNotes, tree } = container.resolve(NoteService);
@@ -41,6 +42,7 @@ export default observer(function TargetTreeModal() {
               'group relative cursor-pointer py-1',
             )
           }
+          renderTitle={(node) => <NodeTitle node={node} />}
           caretClassName="text-gray-500"
           tree={targetTree}
         />
