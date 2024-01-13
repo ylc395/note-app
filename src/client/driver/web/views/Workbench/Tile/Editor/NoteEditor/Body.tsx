@@ -1,11 +1,11 @@
 import { observer } from 'mobx-react-lite';
+import { useEffect, useRef } from 'react';
+import { useMemoizedFn } from 'ahooks';
 import { container } from 'tsyringe';
 
 import { Workbench } from '@domain/app/model/workbench';
 import type NoteEditor from '@domain/app/model/note/Editor';
 import MarkdownEditor, { type EditorRef } from '@web/components/MarkdownEditor';
-import { useEffect, useRef } from 'react';
-import { useMemoizedFn } from 'ahooks';
 
 export default observer(function Body({ editor }: { editor: NoteEditor }) {
   const { currentTile } = container.resolve(Workbench);

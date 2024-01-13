@@ -148,6 +148,7 @@ export default class Editor {
 
   public readonly focus = () => {
     if (!this.isReady) {
+      this.options.autoFocus = true;
       return;
     }
 

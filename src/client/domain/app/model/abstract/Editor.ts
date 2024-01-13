@@ -8,11 +8,13 @@ import type EditableEntity from '../abstract/EditableEntity';
 import type Tile from '../workbench/Tile';
 
 export default abstract class Editor<T extends EditableEntity = EditableEntity, S = unknown> {
-  constructor(protected readonly editable: T, public tile: Tile) {
+  constructor(protected readonly editable: T, tile: Tile) {
     makeObservable(this);
     this.uiState = this.localStorage.get(this.uiStateKey);
+    this.tile = tile;
   }
 
+  @observable.ref public tile: Tile;
   public readonly id = uniqueId('editor-');
   private readonly localStorage = container.resolve(localStorageToken);
   public abstract readonly tabView: { title: string; icon: string | null; breadcrumbs: Path };
