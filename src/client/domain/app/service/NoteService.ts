@@ -1,5 +1,6 @@
 import { container, singleton } from 'tsyringe';
 import assert from 'assert';
+import { compact } from 'lodash-es';
 
 import { token as rpcToken } from '@domain/common/infra/rpc';
 import { token as UIToken } from '@shared/domain/infra/ui';
@@ -60,14 +61,21 @@ export default class NoteService {
 
     await this.remote.note.batchUpdate.mutate([ids, { parentId: targetId }]);
 
-    for (const id of ids) {
-      eventBus.emit(Events.Updated, { id, parentId: targetId });
-    }
+    const newEntities = compact(ids.map((id) => this.tree.getNode(id, true)?.entity)).map((entity) => ({
+      ...entity,
+      parentId: targetId,
+    }));
+
+    this.tree.updateTree(newEntities);
 
     if (targetId) {
       await this.tree.reveal(targetId, true);
     }
     this.tree.setSelected(ids);
+
+    for (const id of ids) {
+      eventBus.emit(Events.Updated, { id, parentId: targetId });
+    }
   };
 
   private readonly handleAction = ({ action, id }: ActionEvent) => {

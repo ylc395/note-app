@@ -88,16 +88,10 @@ export default abstract class Explorer<T extends HierarchyEntity> extends EventB
   @computed
   public get selectedNodesAsTree() {
     const tree = new (this.tree.constructor as { new (): Tree })();
-
-    tree.updateChildren(
-      null,
-      this.tree.selectedNodes.map(({ entity }) => ({ ...entity!, parentId: null })),
-    );
+    tree.updateTree(this.tree.selectedNodes.map(({ entity }) => ({ ...entity!, parentId: null })));
 
     runInAction(() => {
-      for (const node of tree.root.children) {
-        node.isLeaf = true;
-      }
+      tree.root.isLeaf = true;
     });
 
     return tree;

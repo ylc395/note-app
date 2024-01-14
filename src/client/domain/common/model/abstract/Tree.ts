@@ -1,6 +1,6 @@
 import { observable, action, computed, makeObservable } from 'mobx';
 import assert from 'assert';
-import { pull, differenceWith, map } from 'lodash-es';
+import { pull } from 'lodash-es';
 import { container } from 'tsyringe';
 
 import type { EntityParentId, EntityTypes, HierarchyEntity } from '@shared/domain/model/entity';
@@ -112,30 +112,13 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
     }
 
     const node = new TreeNode(this, entity);
+
     this.nodes[entity.id] = node;
     parent.isLeaf = false;
     parent.children.push(node);
-
     Object.assign(node, this.entityToNode(entity));
 
     return node;
-  }
-
-  @action
-  public updateChildren(parentId: TreeNode<T>['id'] | null, entities: T[]) {
-    const parentNode = this.getNode(parentId);
-    const toRemoveIds = map(
-      differenceWith(parentNode.children, entities, (a, b) => a.id === b.id),
-      'id',
-    );
-
-    this.removeNodes(toRemoveIds);
-
-    if (entities.length === 0) {
-      parentNode.children = [];
-    }
-
-    this.updateTree(entities);
   }
 
   @action

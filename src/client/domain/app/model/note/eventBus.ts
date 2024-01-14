@@ -7,6 +7,7 @@ export enum Events {
 
 export interface UpdateEvent {
   id: NoteVO['id'];
+  actor?: unknown;
   title?: NoteVO['title'];
   icon?: NoteVO['icon'];
   parentId?: NoteVO['parentId'];

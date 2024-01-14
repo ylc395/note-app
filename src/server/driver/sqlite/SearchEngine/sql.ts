@@ -48,33 +48,33 @@ export const createFtsSql = [
         INSERT INTO ${sql.table(NOTE_FTS_TABLE)} (rowid, title, body) VALUES (new.rowid, new.title, new.body);
       END`,
 
-  sql`CREATE VIRTUAL TABLE ${sql.table(MATERIAL_FTS_TABLE)} 
-      USING fts5(
-        id UNINDEXED, 
-        title,
-        comment,
-        created_at UNINDEXED, 
-        user_updated_at UNINDEXED, 
-        file_id UNINDEXED,
-        tokenize="simple 0",
-        content=${sql.table(materialTableName)}
-      )`,
+  // sql`CREATE VIRTUAL TABLE ${sql.table(MATERIAL_FTS_TABLE)} 
+  //     USING fts5(
+  //       id UNINDEXED, 
+  //       title,
+  //       comment,
+  //       created_at UNINDEXED, 
+  //       user_updated_at UNINDEXED, 
+  //       file_id UNINDEXED,
+  //       tokenize="simple 0",
+  //       content=${sql.table(materialTableName)}
+  //     )`,
 
-  sql`CREATE TRIGGER ${sql.raw(MATERIAL_FTS_TABLE)}_ai AFTER INSERT ON ${sql.table(materialTableName)}
-      BEGIN 
-        INSERT INTO ${sql.table(MATERIAL_FTS_TABLE)} (rowid, title) VALUES (new.rowid, new.title);
-      END`,
+  // sql`CREATE TRIGGER ${sql.raw(MATERIAL_FTS_TABLE)}_ai AFTER INSERT ON ${sql.table(materialTableName)}
+  //     BEGIN 
+  //       INSERT INTO ${sql.table(MATERIAL_FTS_TABLE)} (rowid, title) VALUES (new.rowid, new.title);
+  //     END`,
 
-  sql`CREATE TRIGGER ${sql.raw(MATERIAL_FTS_TABLE)}_ad AFTER DELETE on ${sql.table(materialTableName)}
-      BEGIN
-        INSERT INTO ${sql.table(MATERIAL_FTS_TABLE)} (${sql.raw(MATERIAL_FTS_TABLE)}, rowid, title) VALUES ('delete', old.rowid, new.title);
-      END`,
+  // sql`CREATE TRIGGER ${sql.raw(MATERIAL_FTS_TABLE)}_ad AFTER DELETE on ${sql.table(materialTableName)}
+  //     BEGIN
+  //       INSERT INTO ${sql.table(MATERIAL_FTS_TABLE)} (${sql.raw(MATERIAL_FTS_TABLE)}, rowid, title) VALUES ('delete', old.rowid, new.title);
+  //     END`,
 
-  sql`CREATE TRIGGER ${sql.raw(MATERIAL_FTS_TABLE)}_au AFTER UPDATE on ${sql.table(materialTableName)}
-      BEGIN
-        INSERT INTO ${sql.table(MATERIAL_FTS_TABLE)} (${sql.raw(MATERIAL_FTS_TABLE)}, rowid, title) VALUES ('delete', old.rowid, new.title);
-        INSERT INTO ${sql.table(MATERIAL_FTS_TABLE)} (rowid, title) VALUES (new.rowid, new.title);
-      END`,
+  // sql`CREATE TRIGGER ${sql.raw(MATERIAL_FTS_TABLE)}_au AFTER UPDATE on ${sql.table(materialTableName)}
+  //     BEGIN
+  //       INSERT INTO ${sql.table(MATERIAL_FTS_TABLE)} (${sql.raw(MATERIAL_FTS_TABLE)}, rowid, title) VALUES ('delete', old.rowid, new.title);
+  //       INSERT INTO ${sql.table(MATERIAL_FTS_TABLE)} (rowid, title) VALUES (new.rowid, new.title);
+  //     END`,
 
   sql`CREATE VIRTUAL TABLE ${sql.table(MEMO_FTS_TABLE)} 
       USING fts5(

@@ -63,7 +63,12 @@ export default class TreeNode<T extends HierarchyEntity = HierarchyEntity> {
     );
 
     this.tree.removeNodes(toRemoveIds);
-    this.tree.updateTree(entities);
+
+    if (entities.length === 0) {
+      this.isLeaf = true;
+    } else {
+      this.tree.updateTree(entities);
+    }
   }
 
   public get entityLocator() {

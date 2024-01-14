@@ -8,6 +8,7 @@ import type { MaterialVO } from '@shared/domain/model/material';
 import type { NoteVO } from '@shared/domain/model/note';
 
 import NodeTitle from './NodeTitle';
+import EditingNodeTitle, { type Props as EditingNodeTitleProps } from './EditingNodeTitle';
 import DndTreeNode from './DndTreeNode';
 import TreeDraggingPreview from './TreeDraggingPreview';
 
@@ -18,17 +19,23 @@ interface Props<T extends MaterialVO | NoteVO> {
   nodeOperation: (node: TreeNode<T>) => ReactNode;
   onClick: (node: TreeNode<T>, isMultiple: boolean) => void;
   onDrop: (item: unknown, node: TreeNode<T>) => void;
+  editingNodeId?: string;
+  onEditEnd?: EditingNodeTitleProps['onEditEnd'];
+  onEditCancel?: EditingNodeTitleProps['onEditCancel'];
   onDragStart: () => void;
   onDragStop: () => void;
 }
 
 export default function TreeView<T extends MaterialVO | NoteVO>({
   tree,
+  editingNodeId,
   onClick,
   onDragStart,
   onContextmenu,
   nodeOperation,
   onDrop,
+  onEditCancel,
+  onEditEnd,
   onDragStop,
   defaultIcon,
 }: Props<T>) {
@@ -58,11 +65,20 @@ export default function TreeView<T extends MaterialVO | NoteVO>({
             {originalNodeView}
           </DndTreeNode>
         )}
-        renderTitle={(node) => (
-          <NodeTitle defaultIcon={defaultIcon as undefined | ((node: TreeNode) => ReactNode)} node={node}>
-            {nodeOperation(node)}
-          </NodeTitle>
-        )}
+        renderTitle={(node) =>
+          editingNodeId === node.id ? (
+            <EditingNodeTitle
+              onEditCancel={onEditCancel}
+              onEditEnd={onEditEnd}
+              node={node}
+              defaultIcon={defaultIcon as undefined | ((node: TreeNode) => ReactNode)}
+            />
+          ) : (
+            <NodeTitle defaultIcon={defaultIcon as undefined | ((node: TreeNode) => ReactNode)} node={node}>
+              {nodeOperation(node)}
+            </NodeTitle>
+          )
+        }
       />
       <TreeDraggingPreview />
     </>

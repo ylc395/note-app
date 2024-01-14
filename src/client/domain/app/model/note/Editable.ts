@@ -17,6 +17,7 @@ export default class EditableNote extends EditableEntity<{
   constructor(noteId: NoteVO['id']) {
     super(noteId);
     makeObservable(this);
+    eventBus.on(NoteEvents.Updated, this.refresh, ({ actor, id }) => actor !== this && id === noteId);
   }
 
   public async load() {
@@ -30,6 +31,15 @@ export default class EditableNote extends EditableEntity<{
     });
   }
 
+  private readonly refresh = async () => {
+    const info = await this.remote.note.queryOne.query(this.entityId);
+
+    runInAction(() => {
+      assert(this.entity);
+      this.entity.info = info;
+    });
+  };
+
   public createEditor(tile: Tile) {
     return new NoteEditor(this, tile);
   }
@@ -39,7 +49,7 @@ export default class EditableNote extends EditableEntity<{
     assert(this.entity);
     this.entity.info = { ...this.entity.info, ...note, updatedAt: Date.now() };
     this.uploadNote(note);
-    eventBus.emit(NoteEvents.Updated, { id: this.entityId, updatedAt: Date.now(), ...note });
+    eventBus.emit(NoteEvents.Updated, { id: this.entityId, actor: this, updatedAt: Date.now(), ...note });
   }
 
   @action
@@ -49,7 +59,7 @@ export default class EditableNote extends EditableEntity<{
     this.entity.info.updatedAt = Date.now();
 
     this.uploadNoteBody(body);
-    eventBus.emit(NoteEvents.Updated, { id: this.entityId, body, updatedAt: Date.now() });
+    eventBus.emit(NoteEvents.Updated, { id: this.entityId, actor: this, body, updatedAt: Date.now() });
   }
 
   private readonly uploadNote = debounce((note: NotePatchDTO) => {

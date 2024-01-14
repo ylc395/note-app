@@ -1,6 +1,7 @@
 import { container } from 'tsyringe';
 import { AiOutlineFolder, AiOutlineFolderOpen, AiOutlineFile } from 'react-icons/ai';
 import { FaRegFileAudio, FaRegFileVideo } from 'react-icons/fa6';
+import { observer } from 'mobx-react-lite';
 
 import { Workbench } from '@domain/app/model/workbench';
 import { isEntityMaterial, type MaterialVO } from '@shared/domain/model/material';
@@ -12,10 +13,17 @@ import Button from '@web/components/Button';
 
 import TreeView from '../components/TreeView';
 
-// eslint-disable-next-line mobx/missing-observer
-export default function MaterialTreeView() {
+export default observer(function MaterialTreeView() {
   const { openEntity } = container.resolve(Workbench);
-  const { tree, showContextmenu, updateTreeForDropping, reset: resetTree } = container.resolve(MaterialExplorer);
+  const {
+    tree,
+    showContextmenu,
+    updateTreeForDropping,
+    editingId,
+    submitEditing,
+    cancelEditing,
+    reset: resetTree,
+  } = container.resolve(MaterialExplorer);
   const { createMaterial } = container.resolve(MaterialService);
 
   const handleClick = (node: TreeNode<MaterialVO>, isMultiple: boolean) => {
@@ -46,6 +54,9 @@ export default function MaterialTreeView() {
 
   return (
     <TreeView
+      editingNodeId={editingId}
+      onEditEnd={submitEditing}
+      onEditCancel={cancelEditing}
       onContextmenu={showContextmenu}
       onDragStop={resetTree}
       onDragStart={updateTreeForDropping}
@@ -56,4 +67,4 @@ export default function MaterialTreeView() {
       nodeOperation={() => null}
     />
   );
-}
+});
