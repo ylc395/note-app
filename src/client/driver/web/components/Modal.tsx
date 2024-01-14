@@ -7,15 +7,14 @@ import { createPortal } from 'react-dom';
 
 import ModalManager from '@domain/common/infra/ModalManager';
 import { APP_CLASS_NAME } from '@web/infra/ui/constants';
+import type { PromptToken } from '@shared/domain/infra/ui';
 
 interface Props {
-  id: symbol;
+  id: PromptToken<unknown>;
   children: ReactNode;
   title?: string;
-  onConfirm: () => boolean | Promise<boolean>;
-  onCancel?: () => void;
   onToggle?: (visible: boolean) => void;
-  canConfirm?: boolean;
+  value?: unknown;
   width?: number;
   height?: number;
   modalClassName?: string;
@@ -29,27 +28,14 @@ export default observer(function Modal({
   bodyClassName,
   width = 400,
   height = 300,
-  onCancel,
-  onConfirm,
   onToggle,
-  canConfirm,
+  value,
   id,
 }: Props) {
   const modalManager = container.resolve(ModalManager);
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const divRef = useRef<HTMLDivElement | null>(null);
-  const isOpen = modalManager.currentModalId === id;
-  const handleConfirm = async () => {
-    const result = onConfirm();
-    if (result instanceof Promise ? await result : result) {
-      modalManager.close();
-    }
-  };
-
-  const handleCancel = () => {
-    onCancel?.();
-    modalManager.close();
-  };
+  const { isOpen, submit, cancel } = modalManager.use(id);
 
   useEffect(() => {
     onToggle?.(isOpen);
@@ -61,8 +47,8 @@ export default observer(function Modal({
     }
   }, [isOpen]);
 
-  useClickAway(() => isOpen && handleCancel(), divRef);
-  useKeyPress('esc', () => isOpen && handleCancel());
+  useClickAway(() => isOpen && cancel, divRef);
+  useKeyPress('esc', () => isOpen && cancel);
 
   if (!isOpen) {
     return null;
@@ -82,12 +68,12 @@ export default observer(function Modal({
           <div className="flex justify-end">
             <button
               className="h-8 w-16 cursor-pointer rounded border-0 bg-blue-100"
-              disabled={typeof canConfirm === 'boolean' ? !canConfirm : undefined}
-              onClick={handleConfirm}
+              disabled={typeof value === 'undefined'}
+              onClick={() => submit(value)}
             >
               确&ensp;认
             </button>
-            <button className="ml-2 h-8 w-16 cursor-pointer rounded border-0" onClick={handleCancel}>
+            <button className="ml-2 h-8 w-16 cursor-pointer rounded border-0" onClick={cancel}>
               取&ensp;消
             </button>
           </div>

@@ -1,5 +1,5 @@
 import { container } from 'tsyringe';
-import { AiOutlinePlus, AiOutlineShrink, AiOutlineSetting } from 'react-icons/ai';
+import { AiOutlineFileAdd, AiOutlineFolderAdd, AiOutlineShrink, AiOutlineSetting } from 'react-icons/ai';
 import { observer } from 'mobx-react-lite';
 
 import Button from '@web/components/Button';
@@ -10,9 +10,14 @@ export default observer(function Operations() {
 
   return (
     <div className="flex grow justify-between">
-      <Button onClick={() => createMaterial()}>
-        <AiOutlinePlus />
-      </Button>
+      <div className="flex">
+        <Button onClick={() => createMaterial()}>
+          <AiOutlineFolderAdd />
+        </Button>
+        <Button onClick={() => createMaterial()}>
+          <AiOutlineFileAdd />
+        </Button>
+      </div>
       <div className="flex">
         <Button disabled={tree.expandedNodes.length === 0} onClick={tree.collapseAll}>
           <AiOutlineShrink />

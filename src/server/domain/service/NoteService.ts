@@ -59,7 +59,8 @@ export default class NoteService extends BaseService {
     const userUpdatedAt = Date.now();
 
     assert(await this.isWritable(noteId));
-    await this.repo.notes.update(noteId, { body, userUpdatedAt });
+    const result = await this.repo.notes.update(noteId, { body, userUpdatedAt });
+    assert(result);
 
     this.eventBus.emit('contentUpdated', {
       content: body,
@@ -78,7 +79,7 @@ export default class NoteService extends BaseService {
   };
 
   public async updateOne(noteId: Note['id'], note: NotePatchDTO) {
-    await this.transaction(async () => {
+    return this.transaction(async () => {
       const userUpdatedAt = Date.now();
 
       const result = await this.repo.notes.update(noteId, {
@@ -87,6 +88,8 @@ export default class NoteService extends BaseService {
       });
 
       assert(result);
+
+      return this.queryOne(noteId);
     });
   }
 
@@ -111,7 +114,7 @@ export default class NoteService extends BaseService {
   }
 
   public async batchUpdate(ids: Note['id'][], patch: NotePatch) {
-    await this.transaction(async () => {
+    return this.transaction(async () => {
       if (patch.parentId) {
         await this.assertValidParent(patch.parentId, ids);
       }
@@ -122,6 +125,8 @@ export default class NoteService extends BaseService {
       });
 
       assert(result);
+
+      return this.query({ id: ids });
     });
   }
 
@@ -139,7 +144,7 @@ export default class NoteService extends BaseService {
     }
   }
 
-  async query(q: ClientNoteQuery) {
+  async query(q: ClientNoteQuery & { id?: Note['id'][] }) {
     const notes = await this.repo.notes.findAll({
       ...q,
       parentId: q.parentId === null ? null : q.parentId,

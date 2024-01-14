@@ -20,7 +20,7 @@ const proxyUI: UI = {
   openNewWindow: invoke('openNewWindow'),
   getActionFromMenu: invoke('getActionFromMenu'),
   feedback: invoke('feedback'),
-  showModal: notImplement,
+  prompt: notImplement,
 };
 
 export default proxyUI;

@@ -25,7 +25,7 @@ export default function IconTitle({
 }: Props) {
   return (
     <span onDoubleClick={onDoubleClick} className={clsx('flex items-center', className)} onClick={onClick}>
-      <Icon code={icon} className="mr-1" size={iconSize} fallback={defaultIcon} />
+      <Icon code={icon} className="mr-1 shrink-0" size={iconSize} fallback={defaultIcon} />
       <span className={clsx('whitespace-nowrap', titleClassName)}>{title}</span>
     </span>
   );

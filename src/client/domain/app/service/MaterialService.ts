@@ -35,7 +35,7 @@ export default class MaterialService {
     this.tree.updateTree(material);
     await this.tree.reveal(material.parentId, true);
     this.tree.toggleSelect(material.id, { value: true });
-    this.explorer.startEditing(material.id);
+    this.explorer.startRenaming(material.id);
     this.workbench.openEntity({ entityType: EntityTypes.Material, entityId: material.id });
   };
 
@@ -45,7 +45,7 @@ export default class MaterialService {
 
     switch (action) {
       case 'rename':
-        return this.explorer.startEditing(oneId);
+        return this.explorer.startRenaming(oneId);
       default:
         break;
     }

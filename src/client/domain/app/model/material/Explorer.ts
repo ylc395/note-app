@@ -23,17 +23,14 @@ export default class MaterialExplorer extends Explorer<MaterialVO> {
   @observable editingId?: MaterialVO['id'];
 
   @action
-  public startEditing(id: MaterialVO['id']) {
+  public startRenaming(id: MaterialVO['id']) {
     this.editingId = id;
   }
 
-  public readonly submitEditing = async (value: string) => {
+  public readonly submitRenaming = async (value: string) => {
     assert(this.editingId);
-    await this.remote.material.updateOne.mutate([this.editingId, { title: value }]);
-
-    const originalEntity = this.tree.getNode(this.editingId).entity;
-    assert(originalEntity);
-    this.tree.updateTree({ ...originalEntity, title: value });
+    const material = await this.remote.material.updateOne.mutate([this.editingId, { title: value }]);
+    this.tree.updateTree(material);
 
     runInAction(() => {
       this.editingId = undefined;
@@ -41,7 +38,7 @@ export default class MaterialExplorer extends Explorer<MaterialVO> {
   };
 
   @action.bound
-  public cancelEditing() {
+  public cancelRenaming() {
     this.editingId = undefined;
   }
 

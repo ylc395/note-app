@@ -69,7 +69,6 @@ export default class SqliteMaterialRepository extends HierarchyEntityRepository 
       .selectAll(this.tableName)
       .select(`${fileSchema.tableName}.mimeType`)
       .where(`${this.tableName}.id`, '=', id)
-      .where(`${fileSchema.tableName}.mimeType`, 'is not', null)
       .executeTakeFirst();
 
     if (!row) {

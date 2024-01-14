@@ -18,7 +18,7 @@ export default class electronUI implements UI {
     assert.fail('not implement');
   }
 
-  public showModal(): never {
+  public prompt(): never {
     assert.fail('not implement');
   }
 

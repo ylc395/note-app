@@ -6,7 +6,7 @@ export function isEntityMaterial(v: Material): v is EntityMaterial;
 export function isEntityMaterial(v: MaterialVO): v is EntityMaterialVO;
 export function isEntityMaterial(v: Material | MaterialVO): boolean;
 export function isEntityMaterial(v: Material | MaterialVO) {
-  return Boolean(v.mimeType);
+  return Boolean('mimeType' in v && v.mimeType);
 }
 
 export function normalizeTitle(v: Material | MaterialVO) {

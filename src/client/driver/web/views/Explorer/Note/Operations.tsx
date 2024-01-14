@@ -4,12 +4,13 @@ import { AiOutlinePlus, AiOutlineShrink, AiOutlineSetting } from 'react-icons/ai
 
 import NoteService from '@domain/app/service/NoteService';
 import Button from '@web/components/Button';
+import NoteExplorer from '@domain/app/model/note/Explorer';
 
 export default observer(function Operations() {
+  const { createNote } = container.resolve(NoteService);
   const {
-    createNote,
     tree: { expandedNodes, collapseAll },
-  } = container.resolve(NoteService);
+  } = container.resolve(NoteExplorer);
 
   return (
     <div className="flex grow justify-between">

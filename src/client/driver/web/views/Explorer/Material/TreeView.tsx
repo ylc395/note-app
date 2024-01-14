@@ -20,8 +20,8 @@ export default observer(function MaterialTreeView() {
     showContextmenu,
     updateTreeForDropping,
     editingId,
-    submitEditing,
-    cancelEditing,
+    submitRenaming: submitEditing,
+    cancelRenaming: cancelEditing,
     reset: resetTree,
   } = container.resolve(MaterialExplorer);
   const { createMaterial } = container.resolve(MaterialService);

@@ -29,9 +29,15 @@ export default observer(function EditingNodeTitle({ node, onEditEnd, onEditCance
   }, []);
 
   return (
-    <span className="flex min-w-0">
+    <span className="flex min-w-0 items-center">
       <Icon code={node.icon} fallback={defaultIcon?.(node)} />
-      <input ref={inputRef} onBlur={submit} value={value} onChange={(e) => setValue(e.target.value)} />
+      <input
+        className="h-4  text-base"
+        ref={inputRef}
+        onBlur={submit}
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+      />
     </span>
   );
 });

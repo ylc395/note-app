@@ -12,7 +12,7 @@ import TreeView from '../components/TreeView';
 
 // eslint-disable-next-line mobx/missing-observer
 export default function NoteTreeView() {
-  const { createNote, moveNotes } = container.resolve(NoteService);
+  const { createNote, moveNotesByItems } = container.resolve(NoteService);
   const { tree, showContextmenu, updateTreeForDropping, reset: resetTree } = container.resolve(Explorer);
   const { openEntity } = container.resolve(Workbench);
 
@@ -25,9 +25,9 @@ export default function NoteTreeView() {
         onContextmenu={showContextmenu}
         onDragStop={resetTree}
         onDragStart={updateTreeForDropping}
-        onDrop={(item, node) => moveNotes(node.id, item)}
+        onDrop={(item, node) => moveNotesByItems(node.id, item)}
         nodeOperation={({ id }) => (
-          <Button onClick={() => createNote(id)}>
+          <Button onClick={() => createNote({ parentId: id })}>
             <PlusOutlined />
           </Button>
         )}

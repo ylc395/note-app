@@ -1,6 +1,5 @@
 import { container, singleton } from 'tsyringe';
 import assert from 'assert';
-import { compact } from 'lodash-es';
 
 import { token as rpcToken } from '@domain/common/infra/rpc';
 import { token as UIToken } from '@shared/domain/infra/ui';
@@ -24,27 +23,18 @@ export default class NoteService {
   private readonly explorer = container.resolve(NoteExplorer);
   private readonly workbench = container.resolve(Workbench);
 
-  public get tree() {
+  private get tree() {
     return this.explorer.tree;
   }
 
-  public readonly createNote = async (parentId?: NoteVO['parentId']) => {
-    const note = await this.remote.note.create.mutate({
-      parentId: parentId || null,
-    });
+  public readonly createNote = async (params?: { parentId?: NoteVO['parentId']; from?: NoteVO['id'] }) => {
+    const note = await this.remote.note.create.mutate(params || {});
 
     this.tree.updateTree(note);
     await this.tree.reveal(note.parentId, true);
     this.tree.toggleSelect(note.id, { value: true });
     this.workbench.openEntity({ entityType: EntityTypes.Note, entityId: note.id });
   };
-
-  private async duplicateNote(targetId: NoteVO['id']) {
-    const note = await this.remote.note.create.mutate({ from: targetId });
-    this.tree.updateTree(note);
-    this.tree.toggleSelect(note.id);
-    this.workbench.openEntity({ entityId: note.id, entityType: EntityTypes.Note });
-  }
 
   public readonly getNoteIds = (item: unknown) => {
     if (item instanceof TreeNode) {
@@ -56,26 +46,33 @@ export default class NoteService {
     }
   };
 
-  public readonly moveNotes = async (targetId: NoteVO['parentId'], item?: unknown) => {
-    const ids = this.getNoteIds(item) || this.tree.getSelectedNodeIds();
+  private async moveNotes(targetId: NoteVO['parentId'], itemIds: NoteVO['id'][]) {
+    const notes = await this.remote.note.batchUpdate.mutate([itemIds, { parentId: targetId }]);
+    this.tree.updateTree(notes);
 
-    await this.remote.note.batchUpdate.mutate([ids, { parentId: targetId }]);
+    await this.tree.reveal(targetId, true);
+    this.tree.setSelected(itemIds);
 
-    const newEntities = compact(ids.map((id) => this.tree.getNode(id, true)?.entity)).map((entity) => ({
-      ...entity,
-      parentId: targetId,
-    }));
-
-    this.tree.updateTree(newEntities);
-
-    if (targetId) {
-      await this.tree.reveal(targetId, true);
-    }
-    this.tree.setSelected(ids);
-
-    for (const id of ids) {
+    for (const id of itemIds) {
       eventBus.emit(Events.Updated, { id, parentId: targetId });
     }
+  }
+
+  private async moveNotesByUserInput() {
+    const targetId = await this.ui.prompt(MOVE_TARGET_MODAL);
+
+    if (targetId === undefined) {
+      return;
+    }
+
+    await this.moveNotes(targetId, this.tree.getSelectedNodeIds());
+  }
+
+  public readonly moveNotesByItems = async (targetId: NoteVO['parentId'], items: unknown) => {
+    const ids = this.getNoteIds(items);
+    assert(ids);
+
+    await this.moveNotes(targetId, ids);
   };
 
   private readonly handleAction = ({ action, id }: ActionEvent) => {
@@ -84,9 +81,9 @@ export default class NoteService {
 
     switch (action) {
       case 'duplicate':
-        return this.duplicateNote(oneId);
+        return this.createNote({ from: oneId });
       case 'move':
-        return this.ui.showModal(MOVE_TARGET_MODAL);
+        return this.moveNotesByUserInput();
       case 'openInNewTab':
         return this.workbench.openEntity(this.tree.getNode(oneId).entityLocator, { forceNewTab: true });
       case 'openToTop':

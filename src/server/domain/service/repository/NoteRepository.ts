@@ -1,11 +1,4 @@
-import type { Note, NotePatch, NewNote } from '@domain/model/note.js';
-
-export interface NoteQuery {
-  parentId?: Note['parentId'];
-  id?: Note['id'][];
-  updatedAfter?: number;
-  isAvailable?: boolean;
-}
+import type { Note, NotePatch, NewNote, NoteQuery } from '@domain/model/note.js';
 
 export interface NoteRepository {
   create: (note?: NewNote) => Promise<Required<Note>>;

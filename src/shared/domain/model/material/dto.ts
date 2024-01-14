@@ -1,7 +1,7 @@
 import { object, string, type infer as Infer } from 'zod';
 
 export const newMaterialDTOSchema = object({
-  title: string().min(1).optional(),
+  title: string().optional(),
   parentId: string().nullish(),
   icon: string().min(1).optional(),
   fileId: string().optional(),

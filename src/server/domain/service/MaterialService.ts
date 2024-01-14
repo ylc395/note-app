@@ -37,7 +37,7 @@ export default class MaterialService extends BaseService {
     return await this.toVO(material);
   }
 
-  async query(q: ClientMaterialQuery): Promise<MaterialVO[]> {
+  async query(q: ClientMaterialQuery & { id?: Material['id'][] }): Promise<MaterialVO[]> {
     const materials = await this.repo.materials.findAll({ ...q, isAvailable: true });
     return await this.toVO(materials);
   }
@@ -72,27 +72,31 @@ export default class MaterialService extends BaseService {
   }
 
   async batchUpdate(ids: Material['id'][], patch: MaterialPatchDTO) {
-    await this.transaction(async () => {
+    return this.transaction(async () => {
       await this.assertAvailableIds(ids);
 
       if (patch.parentId) {
         await this.assertValidParent(patch.parentId, ids);
       }
 
-      await this.repo.materials.update(ids, {
+      const result = await this.repo.materials.update(ids, {
         ...patch,
         userUpdatedAt: Date.now(),
       });
+
+      assert(result);
+      return this.query({ id: ids });
     });
   }
 
   async updateOne(materialId: Material['id'], patch: MaterialPatchDTO) {
-    await this.transaction(async () => {
+    return this.transaction(async () => {
       const isEntityPatch = 'comment' in patch || 'sourceUrl' in patch;
       await this.assertAvailableIds([materialId], isEntityPatch ? { type: MaterialTypes.Entity } : undefined);
 
       const now = Date.now();
-      await this.repo.materials.update(materialId, { ...patch, userUpdatedAt: now });
+      const result = await this.repo.materials.update(materialId, { ...patch, userUpdatedAt: now });
+      assert(result);
 
       if (typeof patch.comment === 'string') {
         this.eventBus.emit('contentUpdated', {
@@ -102,6 +106,8 @@ export default class MaterialService extends BaseService {
           updatedAt: now,
         });
       }
+
+      return this.queryOne(materialId);
     });
   }
 

@@ -8,7 +8,6 @@ export interface Material {
   createdAt: number;
   userUpdatedAt: number;
   updatedAt: number;
-  mimeType?: string;
 }
 
 export interface EntityMaterial extends Material {
