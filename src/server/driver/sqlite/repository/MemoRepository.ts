@@ -11,7 +11,7 @@ import { tableName as recyclableTableName } from '../schema/recyclable.js';
 export default class SqliteMemoRepository extends HierarchyEntityRepository implements MemoRepository {
   readonly tableName = schema.tableName;
   async create(memo: NewMemo) {
-    const createdRow = await this.createOne(this.tableName, {
+    const createdRow = await this.createOneOn(this.tableName, {
       ...memo,
       id: memo.id || this.generateId(),
       content: memo.content || '',

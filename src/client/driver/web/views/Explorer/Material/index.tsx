@@ -3,8 +3,8 @@ import { observer } from 'mobx-react-lite';
 
 import DirectoryOperations from './Operations';
 import DirectoryView from './TreeView';
-// import NewMaterial from './NewMaterial';
-import ExplorerHeader from '../components/ExplorerHeader';
+import NewMaterialModal from './NewMaterialFormModal';
+import ExplorerHeader from '../common/ExplorerHeader';
 
 export default observer(() => {
   return (
@@ -13,9 +13,7 @@ export default observer(() => {
         <DirectoryOperations />
       </ExplorerHeader>
       <DirectoryView />
-      {/* <Modal open={Boolean(targetId.value)}>
-        <NewMaterial />
-      </Modal> */}
+      <NewMaterialModal />
     </>
   );
 });

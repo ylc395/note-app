@@ -1,28 +1,25 @@
-import { useState } from 'react';
 import { container } from 'tsyringe';
-import { useCreation } from 'ahooks';
 import clsx from 'clsx';
 import { observer } from 'mobx-react-lite';
 
-import Modal from '@web/components/Modal';
+import Modal, { useModalValue } from '@web/components/Modal';
 import Tree from '@web/components/Tree';
 import TargetTree from '@domain/app/model/note/TargetTree';
 import { MOVE_TARGET_MODAL } from '@domain/app/model/note/modals';
-import NodeTitle from '../components/TreeView/NodeTitle';
+import NodeTitle from '../common/TreeView/NodeTitle';
 import NoteExplorer from '@domain/app/model/note/Explorer';
 
 export default observer(function TargetTreeModal() {
   const { tree } = container.resolve(NoteExplorer);
-  const [isOpen, setIsOpen] = useState(false);
-  const targetTree = useCreation(() => (isOpen ? TargetTree.from(tree) : null), [isOpen]);
+  const { value: targetTree, modalProps } = useModalValue(() => TargetTree.from(tree));
 
   return (
     <Modal
+      {...modalProps}
       id={MOVE_TARGET_MODAL}
       bodyClassName="border border-solid border-gray-200 p-4"
       title="移动至..."
-      value={targetTree?.targetId}
-      onToggle={setIsOpen}
+      getSubmitResult={() => targetTree?.targetId}
     >
       {targetTree && (
         <Tree

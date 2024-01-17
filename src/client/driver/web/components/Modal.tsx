@@ -1,27 +1,43 @@
-import { type ReactNode, useEffect, useRef } from 'react';
-import { useClickAway, useKeyPress } from 'ahooks';
+import { type ReactNode, useEffect, useRef, useState } from 'react';
+import { useClickAway, useKeyPress, useCreation } from 'ahooks';
 import clsx from 'clsx';
 import { container } from 'tsyringe';
 import { observer } from 'mobx-react-lite';
 import { createPortal } from 'react-dom';
+import Form from '@domain/common/model/abstract/Form';
 
 import ModalManager from '@domain/common/infra/ModalManager';
 import { APP_CLASS_NAME } from '@web/infra/ui/constants';
 import type { PromptToken } from '@shared/domain/infra/ui';
 
-interface Props {
-  id: PromptToken<unknown>;
+interface Props<T> {
+  id: PromptToken<T>;
   children: ReactNode;
   title?: string;
   onToggle?: (visible: boolean) => void;
-  value?: unknown;
   width?: number;
   height?: number;
   modalClassName?: string;
   bodyClassName?: string;
+  canConfirm?: boolean;
+  getSubmitResult?: () => T;
 }
 
-export default observer(function Modal({
+export function useModalValue<T>(factory: () => T) {
+  const [isOpen, setIsOpen] = useState(false);
+  const value = useCreation(() => (isOpen ? factory() : undefined), [isOpen]);
+
+  return {
+    value,
+    modalProps: {
+      onToggle: setIsOpen,
+      canConfirm: value instanceof Form ? value.isValid : undefined,
+      getSubmitResult: value instanceof Form ? value.getValues : undefined,
+    },
+  };
+}
+
+export default observer(function Modal<T>({
   children,
   title,
   modalClassName,
@@ -29,9 +45,10 @@ export default observer(function Modal({
   width = 400,
   height = 300,
   onToggle,
-  value,
+  canConfirm = true,
+  getSubmitResult,
   id,
-}: Props) {
+}: Props<T>) {
   const modalManager = container.resolve(ModalManager);
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const divRef = useRef<HTMLDivElement | null>(null);
@@ -47,8 +64,8 @@ export default observer(function Modal({
     }
   }, [isOpen]);
 
-  useClickAway(() => isOpen && cancel, divRef);
-  useKeyPress('esc', () => isOpen && cancel);
+  useClickAway(() => isOpen && cancel(), divRef);
+  useKeyPress('esc', () => isOpen && cancel());
 
   if (!isOpen) {
     return null;
@@ -68,8 +85,8 @@ export default observer(function Modal({
           <div className="flex justify-end">
             <button
               className="h-8 w-16 cursor-pointer rounded border-0 bg-blue-100"
-              disabled={typeof value === 'undefined'}
-              onClick={() => submit(value)}
+              disabled={!canConfirm}
+              onClick={() => submit(getSubmitResult?.())}
             >
               确&ensp;认
             </button>

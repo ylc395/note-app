@@ -1,4 +1,4 @@
-import { type PDFDocumentProxy, getDocument } from 'pdfjs-dist';
+import * as pdfjs from 'pdfjs-dist';
 import { parentPort } from 'node:worker_threads';
 import { cpus } from 'node:os';
 import path from 'node:path';
@@ -9,11 +9,11 @@ import nodeEndpoint from 'comlink/dist/umd/node-adapter.js';
 import { range } from 'lodash-es';
 
 export default class TextExtraction {
-  private currentPdfDoc?: PDFDocumentProxy;
+  private currentPdfDoc?: pdfjs.PDFDocumentProxy;
   private ocrScheduler?: Scheduler;
 
   async initPdf(data: ArrayBuffer) {
-    const doc = await getDocument(new Uint8Array(data)).promise;
+    const doc = await pdfjs.getDocument(new Uint8Array(data)).promise;
     this.currentPdfDoc = doc;
 
     return doc.numPages;
@@ -114,4 +114,5 @@ export default class TextExtraction {
 // see https://github.com/nodejs/node/issues/43583
 // so we use worker_threads (comlink) here
 parentPort!.setMaxListeners(Infinity);
-expose(new TextExtraction(), nodeEndpoint.default(parentPort!));
+// @ts-expect-error wrong .d.ts
+expose(new TextExtraction(), nodeEndpoint(parentPort!));

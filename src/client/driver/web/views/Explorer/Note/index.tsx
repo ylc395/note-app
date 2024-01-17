@@ -5,7 +5,7 @@ import { useMemo } from 'react';
 import NoteService from '@domain/app/service/NoteService';
 import NoteExplorer from '@domain/app/model/note/Explorer';
 
-import ExplorerHeader from '../components/ExplorerHeader';
+import ExplorerHeader from '../common/ExplorerHeader';
 import TreeView from './TreeView';
 import TreeOperations from './Operations';
 import TargetTreeModal from './TargetTreeModal';

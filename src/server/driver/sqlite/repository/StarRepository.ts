@@ -8,15 +8,10 @@ import { tableName as recyclableTableName } from '../schema/recyclable.js';
 
 export default class SqliteStarRepository extends BaseRepository implements StarRepository {
   readonly tableName = schema.tableName;
-  async batchCreate(entities: StarEntityLocator[]) {
-    const rows = entities.map(({ entityId, entityType }) => ({
-      entityId,
-      entityType,
-      id: this.generateId(),
-    }));
-    const starRows = await this._batchCreate(this.tableName, rows);
 
-    return starRows;
+  async createOne(entity: StarEntityLocator) {
+    const row = await super.createOneOn(this.tableName, { ...entity, id: this.generateId() });
+    return row;
   }
 
   async findOneById(id: StarVO['id']) {

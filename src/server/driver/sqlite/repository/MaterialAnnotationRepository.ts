@@ -10,7 +10,7 @@ import materialAnnotationSchema, { type Row } from '../schema/materialAnnotation
 export default class SqliteMaterialAnnotationRepository extends BaseRepository implements MaterialAnnotationRepository {
   readonly tableName = materialAnnotationSchema.tableName;
   async create(materialId: Material['id'], { type, comment, ...annotation }: NewAnnotationDTO) {
-    const created = await this.createOne(this.tableName, {
+    const created = await this.createOneOn(this.tableName, {
       id: this.generateId(),
       materialId,
       type,

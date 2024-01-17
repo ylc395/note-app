@@ -12,12 +12,12 @@ import EntityService from './EntityService.js';
 export default class StarService extends BaseService {
   private readonly entityService = container.resolve(EntityService);
 
-  async create(entities: StarEntityLocator[]) {
-    await this.entityService.assertAvailableEntities(entities);
+  async create(entity: StarEntityLocator) {
+    await this.entityService.assertAvailableEntities([entity]);
 
-    const existingStars = await this.repo.stars.findAllByEntityId(EntityService.toIds(entities));
+    const existingStars = await this.repo.stars.findAllByEntityId([entity.entityId]);
     assert(existingStars.length === 0);
-    await this.repo.stars.batchCreate(entities);
+    await this.repo.stars.createOne(entity);
   }
 
   async query() {

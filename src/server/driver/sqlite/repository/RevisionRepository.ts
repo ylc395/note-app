@@ -9,7 +9,7 @@ const { tableName } = schema;
 
 export default class SqliteRevisionRepository extends BaseRepository implements RevisionRepository {
   async create(revision: Revision) {
-    const { id, createdAt, diff } = await this.createOne(tableName, { ...revision, id: this.generateId() });
+    const { id, createdAt, diff } = await this.createOneOn(tableName, { ...revision, id: this.generateId() });
     return { id, createdAt, diff };
   }
 

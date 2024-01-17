@@ -6,7 +6,7 @@ export const fileDTOSchema = object({
   data: zodInstanceof(ArrayBuffer).optional(),
   path: string().optional(),
   lang: string().optional(),
-});
+}).refine((v) => v.data || v.path);
 
 export type FileDTO = Infer<typeof fileDTOSchema>;
 

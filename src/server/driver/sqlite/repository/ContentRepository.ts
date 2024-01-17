@@ -16,7 +16,7 @@ import { tableName as recyclableTableName } from '../schema/recyclable.js';
 
 export default class SqliteContentRepository extends BaseRepository implements ContentRepository {
   async createLinks(links: Link[]) {
-    await this._batchCreate(
+    await this.batchCreateOn(
       linkTableName,
       links.map(({ from, to, createdAt }) => ({
         fromEntityId: from.entityId,
@@ -73,7 +73,7 @@ export default class SqliteContentRepository extends BaseRepository implements C
   }
 
   async createTopics(topics: Topic[]) {
-    await this._batchCreate(
+    await this.batchCreateOn(
       topicTableName,
       topics.map((topic) => ({
         ...topic,

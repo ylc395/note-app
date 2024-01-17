@@ -21,7 +21,7 @@ export default class SqliteMaterialRepository extends HierarchyEntityRepository 
       file = await this.files.findOneById(material.fileId);
     }
 
-    const createdMaterial = await this.createOne(this.tableName, {
+    const createdMaterial = await this.createOneOn(this.tableName, {
       ...material,
       id: this.generateId(),
     });

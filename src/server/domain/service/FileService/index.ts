@@ -27,7 +27,7 @@ export default class FileService extends BaseService {
     const fileVO = await this.repo.files.create({ lang: '', ...file, data });
 
     if (!this.fileIdsOnQueue.has(fileVO.id)) {
-      this.addTextExtractionJob({ fileId: fileVO.id });
+      // this.addTextExtractionJob({ fileId: fileVO.id });
     }
 
     return fileVO;
@@ -140,11 +140,12 @@ export default class FileService extends BaseService {
   }
 
   public async resumeUnfinishedTextExtraction() {
-    const mimeTypes = ['application/pdf'];
-    const unextracted = await this.repo.files.findTextUnextracted(mimeTypes);
+    return;
+    // const mimeTypes = ['application/pdf'];
+    // const unextracted = await this.repo.files.findTextUnextracted(mimeTypes);
 
-    for (const job of unextracted) {
-      this.addTextExtractionJob(job);
-    }
+    // for (const job of unextracted) {
+    //   this.addTextExtractionJob(job);
+    // }
   }
 }

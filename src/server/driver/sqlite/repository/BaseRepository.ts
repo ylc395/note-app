@@ -14,11 +14,11 @@ export default abstract class BaseRepository {
     return randomUUID().replaceAll('-', '');
   }
 
-  protected createOne<T extends keyof Db>(table: T, row: Insertable<Db[T]>): Promise<Selectable<Db[T]>> {
+  protected createOneOn<T extends keyof Db>(table: T, row: Insertable<Db[T]>): Promise<Selectable<Db[T]>> {
     return this.db.insertInto(table).values(row).returningAll().executeTakeFirstOrThrow();
   }
 
-  protected _batchCreate<T extends keyof Db>(table: T, rows: Insertable<Db[T]>[]): Promise<Selectable<Db[T]>[]> {
+  protected batchCreateOn<T extends keyof Db>(table: T, rows: Insertable<Db[T]>[]): Promise<Selectable<Db[T]>[]> {
     return this.db.insertInto(table).values(rows).returningAll().execute();
   }
 }

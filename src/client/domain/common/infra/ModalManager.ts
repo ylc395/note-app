@@ -25,12 +25,12 @@ export default class ModalManager {
   private confirm?: (value: any) => void;
 
   public use<T>(token: PromptToken<T>) {
-    const resolve = (value: T | undefined) => {
+    const resolve = action((value: T | undefined) => {
       assert(this.confirm);
       this.confirm(value);
       this.currentModalId = undefined;
       this.confirm = undefined;
-    };
+    });
 
     return {
       isOpen: this.currentModalId === token,

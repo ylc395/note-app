@@ -16,7 +16,7 @@ export interface UI {
   getActionFromMenu: (items: MenuItem[], pos?: { x: number; y: number }) => Promise<string | null>;
   openNewWindow: (url: string) => Promise<void> | void;
   feedback: (options: { type: 'success' | 'fail'; content: string; onClick?: () => void }) => Promise<void>;
-  prompt: <T>(promptToken: PromptToken<T>, type?: 'modal') => Promise<T | undefined>;
+  prompt: <T>(promptToken: PromptToken<T>) => Promise<T | undefined>;
 }
 
 export const token: InjectionToken<UI> = Symbol();

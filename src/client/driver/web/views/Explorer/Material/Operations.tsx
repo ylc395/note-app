@@ -4,9 +4,11 @@ import { observer } from 'mobx-react-lite';
 
 import Button from '@web/components/Button';
 import MaterialService from '@domain/app/service/MaterialService';
+import MaterialExplorer from '@domain/app/model/material/Explorer';
 
 export default observer(function Operations() {
-  const { createMaterial, tree } = container.resolve(MaterialService);
+  const { createMaterial, createMaterialFromFile } = container.resolve(MaterialService);
+  const { tree } = container.resolve(MaterialExplorer);
 
   return (
     <div className="flex grow justify-between">
@@ -14,7 +16,7 @@ export default observer(function Operations() {
         <Button onClick={() => createMaterial()}>
           <AiOutlineFolderAdd />
         </Button>
-        <Button onClick={() => createMaterial()}>
+        <Button onClick={() => createMaterialFromFile(null)}>
           <AiOutlineFileAdd />
         </Button>
       </div>
