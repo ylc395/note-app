@@ -1,4 +1,4 @@
-import { makeObservable, action, toJS, runInAction } from 'mobx';
+import { makeObservable, action, toJS, runInAction, observable } from 'mobx';
 import { debounce } from 'lodash-es';
 import assert from 'assert';
 
@@ -18,13 +18,13 @@ export default class EditableNote extends EditableEntity {
     eventBus.on(NoteEvents.Updated, this.refresh, ({ actor, id }) => actor !== this && id === noteId);
   }
 
-  public info?: Required<NoteVO>;
+  @observable public info?: Required<NoteVO>;
   public body?: string;
 
-  public async load() {
+  protected async load() {
     const [info, body] = await Promise.all([
-      this.remote.note.queryOne.query(this.entityId),
-      this.remote.note.queryBody.query(this.entityId),
+      this.remote.note.queryOne.query(this.entityLocator.entityId),
+      this.remote.note.queryBody.query(this.entityLocator.entityId),
     ]);
 
     runInAction(() => {
@@ -34,7 +34,7 @@ export default class EditableNote extends EditableEntity {
   }
 
   private readonly refresh = async () => {
-    const info = await this.remote.note.queryOne.query(this.entityId);
+    const info = await this.remote.note.queryOne.query(this.entityLocator.entityId);
 
     runInAction(() => {
       this.info = info;
@@ -50,7 +50,7 @@ export default class EditableNote extends EditableEntity {
     assert(this.info);
     this.info = { ...this.info, ...note, updatedAt: Date.now() };
     this.uploadNote(note);
-    eventBus.emit(NoteEvents.Updated, { id: this.entityId, actor: this, updatedAt: Date.now(), ...note });
+    eventBus.emit(NoteEvents.Updated, { id: this.entityLocator.entityId, actor: this, updatedAt: Date.now(), ...note });
   }
 
   @action
@@ -61,15 +61,15 @@ export default class EditableNote extends EditableEntity {
     this.info.updatedAt = Date.now();
 
     this.uploadNoteBody(body);
-    eventBus.emit(NoteEvents.Updated, { id: this.entityId, actor: this, body, updatedAt: Date.now() });
+    eventBus.emit(NoteEvents.Updated, { id: this.entityLocator.entityId, actor: this, body, updatedAt: Date.now() });
   }
 
   private readonly uploadNote = debounce((note: NotePatchDTO) => {
-    this.remote.note.updateOne.mutate([this.entityId, toJS(note)]);
+    this.remote.note.updateOne.mutate([this.entityLocator.entityId, toJS(note)]);
   }, 1000);
 
   private readonly uploadNoteBody = debounce((body: string) => {
-    this.remote.note.updateBody.mutate({ id: this.entityId, body });
+    this.remote.note.updateBody.mutate({ id: this.entityLocator.entityId, body });
   }, 1000);
 
   destroy(): void {

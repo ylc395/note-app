@@ -2,10 +2,10 @@ import { uniqueId } from 'lodash-es';
 import { action, computed, makeObservable, observable } from 'mobx';
 import { container } from 'tsyringe';
 
-import { token as localStorageToken } from '@domain/app/infra/localStorage';
-import type EditableEntity from '../abstract/EditableEntity';
-import type Tile from '../workbench/Tile';
 import { IS_DEV } from '@shared/domain/infra/constants';
+import { token as localStorageToken } from '@domain/app/infra/localStorage';
+import type { default as EditableEntity, EditableEntityLocator } from '../abstract/EditableEntity';
+import type Tile from '../workbench/Tile';
 
 export default abstract class Editor<T extends EditableEntity = EditableEntity, S = unknown> {
   constructor(protected readonly editable: T, tile: Tile) {
@@ -46,15 +46,16 @@ export default abstract class Editor<T extends EditableEntity = EditableEntity, 
   public get tabView() {
     return {
       title:
-        (IS_DEV ? `${this.id} ${this.editable.entityId.slice(0, 3)} ` : '') +
+        (IS_DEV ? `${this.id} ${this.entityLocator.entityId.slice(0, 3)} ` : '') +
         (this.editable.info ? this.normalizeTitle(this.editable.info) : ''),
       icon: this.icon,
       breadcrumbs: this.editable.info?.path || [],
     };
   }
 
-  public get entityLocator() {
-    return this.editable.toEntityLocator();
+  @computed
+  public get entityLocator(): EditableEntityLocator {
+    return this.editable.entityLocator;
   }
 
   @action.bound

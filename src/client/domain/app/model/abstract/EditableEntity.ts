@@ -10,23 +10,24 @@ export interface EditableEntityLocator extends EntityLocator {
 }
 
 export default abstract class EditableEntity {
-  constructor(public readonly entityId: EntityId) {
+  constructor(private readonly entityId: EntityId) {
     this.load();
   }
 
   protected readonly remote = container.resolve(rpcToken);
   public abstract readonly entityType: EditableEntityLocator['entityType'];
 
-  public abstract load(): Promise<void>; // todo: load must return a cancel function.
+  protected abstract load(): Promise<void>; // todo: load must return a cancel function.
   public abstract destroy(): void;
   public abstract createEditor(tile: Tile): Editor;
+
   public abstract info?: {
     icon: string | null;
     path: Path;
     title: string;
   };
 
-  public toEntityLocator(): EditableEntityLocator {
+  public get entityLocator() {
     return { entityType: this.entityType, entityId: this.entityId };
   }
 

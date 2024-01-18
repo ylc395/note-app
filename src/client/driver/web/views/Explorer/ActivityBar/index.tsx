@@ -1,6 +1,6 @@
 import { StarOutlined, NumberOutlined, DeleteOutlined, SettingOutlined } from '@ant-design/icons';
 
-import TypeIcon from '@web/components/TypeIcon';
+import TypeIcon from '@web/components/icon/TypeIcon';
 import Button from './Button';
 import { EntityTypes } from '@domain/app/model/entity';
 

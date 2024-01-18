@@ -3,16 +3,18 @@ import { CloseOutlined } from '@ant-design/icons';
 import { useRef, useEffect, useState } from 'react';
 import clsx from 'clsx';
 import assert from 'assert';
+import { container } from 'tsyringe';
 
 import type Editor from '@domain/app/model/abstract/Editor';
 import IconTitle from '@web/components/IconTitle';
 import Button from '@web/components/Button';
 import Draggable from '@web/components/dnd/Draggable';
 import Droppable from '@web/components/dnd/Droppable';
-import useDrop from './useDrop';
-import { container } from 'tsyringe';
 import ExplorerManager from '@domain/app/model/ExplorerManager';
-import TypeIcon from '@web/components/TypeIcon';
+import MimeTypeIcon from '@web/components/icon/MimeTypeIcon';
+import TypeIcon from '@web/components/icon/TypeIcon';
+
+import useDrop from './useDrop';
 
 export default observer(function TabItem({ editor }: { editor: Editor }) {
   const { tile } = editor;
@@ -46,7 +48,13 @@ export default observer(function TabItem({ editor }: { editor: Editor }) {
         )}
       >
         <IconTitle
-          defaultIcon={<TypeIcon type={editor.entityLocator.entityType} />}
+          defaultIcon={
+            editor.entityLocator.mimeType ? (
+              <MimeTypeIcon mimeType={editor.entityLocator.mimeType} />
+            ) : (
+              <TypeIcon type={editor.entityLocator.entityType} />
+            )
+          }
           className="mr-1 h-6 max-w-[200px] cursor-pointer py-3 text-sm"
           titleClassName={clsx('overflow-hidden text-ellipsis', !editor.isActive && 'italic')}
           iconSize="1em"

@@ -2,7 +2,7 @@ import { container, singleton } from 'tsyringe';
 import { observable, makeObservable, action, runInAction } from 'mobx';
 import assert from 'assert';
 
-import { isEntityMaterial, type MaterialVO } from '@shared/domain/model/material';
+import type { MaterialVO } from '@shared/domain/model/material';
 import MaterialTree from '@domain/common/model/material/Tree';
 import Explorer from '@domain/app/model/abstract/Explorer';
 import { token } from '@domain/common/infra/rpc';
@@ -47,6 +47,6 @@ export default class MaterialExplorer extends Explorer<MaterialVO> {
     const isMultiple = this.tree.selectedNodes.length > 1;
     assert(node?.entity);
 
-    return compact([!isMultiple && !isEntityMaterial(node.entity) && { label: '重命名', key: 'rename' }]);
+    return compact([!isMultiple && { label: '重命名', key: 'rename' }]);
   }
 }

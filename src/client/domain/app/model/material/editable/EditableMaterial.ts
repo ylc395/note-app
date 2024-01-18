@@ -1,4 +1,4 @@
-import { makeObservable, observable, runInAction } from 'mobx';
+import { computed, makeObservable, observable, runInAction } from 'mobx';
 import { remove } from 'lodash';
 import assert from 'assert';
 
@@ -28,10 +28,10 @@ export default abstract class EditableMaterial extends EditableEntity {
   @observable.ref
   protected blob?: ArrayBuffer;
 
-  public async load() {
+  protected async load() {
     const [info, blob] = await Promise.all([
-      this.remote.material.queryOne.query(this.entityId),
-      this.remote.material.getBlob.query(this.entityId),
+      this.remote.material.queryOne.query(this.entityLocator.entityId),
+      this.remote.material.getBlob.query(this.entityLocator.entityId),
     ]);
 
     assert(isEntityMaterial(info) && info.path);
@@ -43,7 +43,10 @@ export default abstract class EditableMaterial extends EditableEntity {
   }
 
   async createAnnotation(annotation: NewAnnotationDTO) {
-    const createdAnnotation = await this.remote.material.createAnnotation.mutate([this.entityId, annotation]);
+    const createdAnnotation = await this.remote.material.createAnnotation.mutate([
+      this.entityLocator.entityId,
+      annotation,
+    ]);
 
     runInAction(() => {
       this.annotations.push(createdAnnotation);
@@ -51,7 +54,7 @@ export default abstract class EditableMaterial extends EditableEntity {
   }
 
   private async loadAnnotations() {
-    const annotations = await this.remote.material.queryAnnotations.query(this.entityId);
+    const annotations = await this.remote.material.queryAnnotations.query(this.entityLocator.entityId);
 
     runInAction(() => {
       this.annotations = annotations;
@@ -76,8 +79,9 @@ export default abstract class EditableMaterial extends EditableEntity {
     });
   }
 
-  public toEntityLocator() {
-    return { ...super.toEntityLocator(), mimeType: this.info?.mimeType };
+  @computed
+  public get entityLocator() {
+    return { ...super.entityLocator, mimeType: this.info?.mimeType };
   }
 
   public destroy() {}

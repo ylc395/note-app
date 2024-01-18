@@ -18,7 +18,7 @@ export default class EditableHtml extends EditableMaterial {
   @observable
   public html?: string;
 
-  public async load() {
+  protected async load() {
     await super.load();
 
     const textDecoder = new TextDecoder();

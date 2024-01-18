@@ -1,8 +1,8 @@
 import { container } from 'tsyringe';
-import { AiOutlineFolder, AiOutlineFolderOpen, AiOutlineFile } from 'react-icons/ai';
-import { FaRegFileAudio, FaRegFileVideo, FaRegFilePdf } from 'react-icons/fa6';
+import { AiOutlineFolder, AiOutlineFolderOpen } from 'react-icons/ai';
 import { observer } from 'mobx-react-lite';
 
+import MimeTypeIcon from '@web/components/icon/MimeTypeIcon';
 import { Workbench } from '@domain/app/model/workbench';
 import { isEntityMaterial, type MaterialVO } from '@shared/domain/model/material';
 import { EntityTypes } from '@shared/domain/model/entity';
@@ -13,19 +13,7 @@ import TreeView from '../common/TreeView';
 
 const defaultIcon = (node: TreeNode<MaterialVO>) => {
   if (node.entity && isEntityMaterial(node.entity)) {
-    if (node.entity.mimeType.includes('audio')) {
-      return <FaRegFileAudio />;
-    }
-
-    if (node.entity.mimeType.includes('application/pdf')) {
-      return <FaRegFilePdf />;
-    }
-
-    if (node.entity.mimeType.includes('video')) {
-      return <FaRegFileVideo />;
-    }
-
-    return <AiOutlineFile />;
+    return <MimeTypeIcon className="mr-1" size="1.2em" mimeType={node.entity.mimeType} />;
   }
 
   return node.isExpanded ? (
