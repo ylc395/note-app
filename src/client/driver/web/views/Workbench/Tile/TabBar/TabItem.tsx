@@ -1,6 +1,5 @@
 import { observer } from 'mobx-react-lite';
 import { CloseOutlined } from '@ant-design/icons';
-import { action } from 'mobx';
 import { useRef, useEffect, useState } from 'react';
 import clsx from 'clsx';
 import assert from 'assert';
@@ -52,7 +51,7 @@ export default observer(function TabItem({ editor }: { editor: Editor }) {
           titleClassName={clsx('overflow-hidden text-ellipsis', !editor.isActive && 'italic')}
           iconSize="1em"
           onClick={() => switchToEditor(editor)}
-          onDoubleClick={action(() => (editor.isActive = true))}
+          onDoubleClick={editor.setActive}
           {...editor.tabView}
         />
         <Button ref={buttonRef} size="small" onClick={() => removeEditor(editor)}>

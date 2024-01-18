@@ -12,11 +12,7 @@ import {
 import type { Tile } from '@domain/app/model/workbench';
 import EditableMaterial from './EditableMaterial';
 import PdfEditor from '../editor/PdfEditor';
-
-interface Pdf {
-  metadata: EntityMaterialVO;
-  doc: PDFDocumentProxy;
-}
+import assert from 'assert';
 
 export interface OutlineItem {
   title: string;
@@ -24,7 +20,7 @@ export interface OutlineItem {
   key: string;
 }
 
-export default class EditablePdf extends EditableMaterial<Pdf> {
+export default class EditablePdf extends EditableMaterial {
   constructor(materialId: EntityMaterialVO['id']) {
     super(materialId);
     makeObservable(this);
@@ -33,6 +29,9 @@ export default class EditablePdf extends EditableMaterial<Pdf> {
   @observable.ref outline?: OutlineItem[];
   private loadingTask?: PDFDocumentLoadingTask;
   readonly outlineDestMap: Record<string, unknown> = {};
+
+  @observable.ref
+  public doc?: PDFDocumentProxy;
 
   public createEditor(tile: Tile) {
     return new PdfEditor(this, tile);
@@ -60,22 +59,21 @@ export default class EditablePdf extends EditableMaterial<Pdf> {
   async load() {
     EditablePdf.activeCount += 1;
 
+    await super.load();
+    assert(this.blob);
+
     if (!GlobalWorkerOptions.workerPort) {
       // every PDFWorker will share one web worker when we do this
       GlobalWorkerOptions.workerPort = new PdfJsWorker();
     }
 
-    const [metadata, blob] = await Promise.all([
-      this.remote.material.queryOne.query(this.entityId),
-      this.remote.material.getBlob.query(this.entityId),
-    ]);
-
-    this.loadingTask = getDocument((blob as ArrayBuffer).slice(0));
+    this.loadingTask = getDocument(this.blob.slice(0));
     const doc = await this.loadingTask.promise;
 
     runInAction(() => {
-      this.entity = { metadata: metadata as EntityMaterialVO, doc };
+      this.doc = doc;
     });
+
     this.initOutline(doc);
   }
 

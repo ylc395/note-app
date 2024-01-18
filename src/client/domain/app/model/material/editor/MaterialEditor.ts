@@ -1,25 +1,18 @@
 import { makeObservable, observable, computed, action, runInAction } from 'mobx';
 import assert from 'assert';
 
-import type { AnnotationPatchDTO, AnnotationVO } from '@shared/domain/model/material';
+import { normalizeTitle, type AnnotationPatchDTO, type AnnotationVO } from '@shared/domain/model/material';
 import Editor from '@domain/app/model/abstract/Editor';
 import type Tile from '@domain/app/model/workbench/Tile';
 import type EditableMaterial from '@domain/app/model/material/editable/EditableMaterial';
 
 export default abstract class MaterialEditor<T extends EditableMaterial, S = unknown> extends Editor<T, S> {
-  constructor(editor: T, tile: Tile) {
-    super(editor, tile);
+  constructor(editable: T, tile: Tile) {
+    super(editable, tile);
     makeObservable(this);
   }
 
-  @computed
-  get tabView() {
-    return {
-      breadcrumbs: [],
-      title: this.editable.entity?.metadata.title || '',
-      icon: this.editable.entity?.metadata.icon || null,
-    };
-  }
+  protected readonly normalizeTitle = normalizeTitle;
 
   @observable currentAnnotationId: AnnotationVO['id'] | null = null;
 

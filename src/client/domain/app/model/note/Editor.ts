@@ -1,6 +1,5 @@
 import { makeObservable, computed, observable, action } from 'mobx';
 
-import { IS_DEV } from '@shared/domain/infra/constants';
 import Editor from '@domain/app/model/abstract/Editor';
 import type Tile from '@domain/app/model/workbench/Tile';
 import { normalizeTitle } from '@shared/domain/model/note';
@@ -22,21 +21,7 @@ export default class NoteEditor extends Editor<EditableNote, UIState> {
   @observable
   public searchEnabled = false;
 
-  @computed
-  public get tabView() {
-    return {
-      title:
-        (IS_DEV ? `${this.id} ${this.editable.entityId.slice(0, 3)} ` : '') +
-        (this.editable.entity ? normalizeTitle(this.editable.entity.info) : ''),
-      icon: this.editable.entity?.info.icon || null,
-      breadcrumbs: this.editable.entity?.info.path || [],
-    };
-  }
-
-  @computed
-  public get title() {
-    return this.editable.entity?.info.title;
-  }
+  protected normalizeTitle = normalizeTitle;
 
   @action.bound
   public toggleSearch() {
@@ -46,32 +31,22 @@ export default class NoteEditor extends Editor<EditableNote, UIState> {
   @action.bound
   public updateInfo(info: { isReadonly?: boolean; title?: string; icon?: string | null }) {
     this.editable.update(info);
-    this.isActive = true;
+    this.setActive();
   }
 
   @action.bound
   public readonly updateBody = (body: string) => {
     this.editable.updateBody(body);
-    this.isActive = true;
+    this.setActive();
   };
 
   @computed
   public get isReadonly() {
-    return Boolean(this.editable.entity?.info.isReadonly);
+    return Boolean(this.editable.info?.isReadonly);
   }
 
   @computed
   public get body() {
-    return this.editable.entity?.body;
-  }
-
-  @computed
-  public get isEmpty() {
-    return this.title === '' && this.body === '';
-  }
-
-  @computed
-  public get icon() {
-    return this.editable.entity?.info.icon || null;
+    return this.editable.body || '';
   }
 }

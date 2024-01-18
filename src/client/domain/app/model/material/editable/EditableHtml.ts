@@ -1,35 +1,30 @@
+import { observable, runInAction, makeObservable } from 'mobx';
+
 import type { EntityMaterialVO } from '@shared/domain/model/material';
 import type { Tile } from '@domain/app/model/workbench';
 import EditableMaterial from './EditableMaterial';
 import HtmlEditor from '../editor/HtmlEditor';
-import { runInAction } from 'mobx';
 
-interface WebPage {
-  metadata: EntityMaterialVO;
-  html: string;
-}
-
-export default class EditableHtml extends EditableMaterial<WebPage> {
+export default class EditableHtml extends EditableMaterial {
   constructor(materialId: EntityMaterialVO['id']) {
     super(materialId);
+    makeObservable(this);
   }
 
   public createEditor(tile: Tile) {
     return new HtmlEditor(this, tile);
   }
 
+  @observable
+  public html?: string;
+
   public async load() {
-    const [metadata, blob] = await Promise.all([
-      this.remote.material.queryOne.query(this.entityId),
-      this.remote.material.getBlob.query(this.entityId),
-    ]);
+    await super.load();
 
     const textDecoder = new TextDecoder();
+
     runInAction(() => {
-      this.entity = {
-        metadata: metadata as EntityMaterialVO,
-        html: textDecoder.decode(blob as ArrayBuffer),
-      };
+      this.html = textDecoder.decode(this.blob);
     });
   }
 }

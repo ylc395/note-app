@@ -34,8 +34,9 @@ export default class PdfEditor extends MaterialEditor<EditablePdf, UIState> {
     return this.editable.outline;
   }
 
+  @computed
   get doc() {
-    return this.editable.entity?.doc;
+    return this.editable.doc;
   }
 
   @computed

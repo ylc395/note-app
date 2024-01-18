@@ -85,7 +85,10 @@ export default class Tile {
     }
 
     const newEditor = this.editableEntityManager.createEditor(this, entity);
-    newEditor.isActive = Boolean(options?.isActive);
+
+    if (options?.isActive) {
+      newEditor.setActive();
+    }
 
     if (options?.dest instanceof Editor) {
       // insert editor into dest's position

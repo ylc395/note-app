@@ -3,19 +3,16 @@ import { remove } from 'lodash';
 import assert from 'assert';
 
 import { EntityTypes } from '@shared/domain/model/entity';
-import type {
-  EntityMaterialVO,
-  AnnotationVO,
-  NewAnnotationDTO,
-  AnnotationPatchDTO,
+import {
+  type EntityMaterialVO,
+  type AnnotationVO,
+  type NewAnnotationDTO,
+  type AnnotationPatchDTO,
+  isEntityMaterial,
 } from '@shared/domain/model/material';
 import EditableEntity from '@domain/app/model/abstract/EditableEntity';
 
-interface Material {
-  metadata: EntityMaterialVO;
-}
-
-export default abstract class EditableMaterial<T extends Material = Material> extends EditableEntity<T> {
+export default abstract class EditableMaterial extends EditableEntity {
   readonly entityType = EntityTypes.Material;
   @observable annotations: AnnotationVO[] = [];
 
@@ -23,6 +20,26 @@ export default abstract class EditableMaterial<T extends Material = Material> ex
     super(materialId);
     makeObservable(this);
     this.loadAnnotations();
+  }
+
+  @observable
+  public info?: Required<EntityMaterialVO>;
+
+  @observable.ref
+  protected blob?: ArrayBuffer;
+
+  public async load() {
+    const [info, blob] = await Promise.all([
+      this.remote.material.queryOne.query(this.entityId),
+      this.remote.material.getBlob.query(this.entityId),
+    ]);
+
+    assert(isEntityMaterial(info) && info.path);
+
+    runInAction(() => {
+      this.info = info as Required<EntityMaterialVO>;
+      this.blob = blob as ArrayBuffer;
+    });
   }
 
   async createAnnotation(annotation: NewAnnotationDTO) {
@@ -60,7 +77,7 @@ export default abstract class EditableMaterial<T extends Material = Material> ex
   }
 
   public toEntityLocator() {
-    return { ...super.toEntityLocator(), mimeType: this.entity?.metadata.mimeType };
+    return { ...super.toEntityLocator(), mimeType: this.info?.mimeType };
   }
 
   public destroy() {}

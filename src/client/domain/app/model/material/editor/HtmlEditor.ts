@@ -34,17 +34,16 @@ export default class HtmlEditor extends MaterialEditor<EditableHtml, State> {
 
   @computed
   get metadata() {
-    if (!this.editable.entity) {
+    if (!this.editable.info) {
       return null;
     }
 
-    const { icon, sourceUrl } = this.editable.entity.metadata;
-
+    const { icon, sourceUrl } = this.editable.info;
     return { icon, sourceUrl };
   }
 
   @computed
   get html() {
-    return this.editable.entity?.html;
+    return this.editable.html;
   }
 }

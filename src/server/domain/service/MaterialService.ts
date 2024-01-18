@@ -156,7 +156,7 @@ export default class MaterialService extends BaseService {
   };
 
   public readonly getPaths = async (ids: Material['id'][]) => {
-    return getPaths({ ids, repo: this.repo.notes, normalizeTitle });
+    return getPaths({ ids, repo: this.repo.materials, normalizeTitle });
   };
 
   async getTreeFragment(materialId: Material['id']) {
