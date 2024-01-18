@@ -24,7 +24,7 @@ import { buildIndex } from '@utils/collection.js';
 
 @singleton()
 export default class MaterialService extends BaseService {
-  async create(newMaterial: NewMaterialDTO) {
+  public async create(newMaterial: NewMaterialDTO) {
     if (newMaterial.parentId) {
       await this.assertAvailableIds([newMaterial.parentId]);
     }
@@ -37,8 +37,8 @@ export default class MaterialService extends BaseService {
     return await this.toVO(material);
   }
 
-  async query(q: ClientMaterialQuery & { id?: Material['id'][] }): Promise<MaterialVO[]> {
-    const materials = await this.repo.materials.findAll({ ...q, isAvailable: true });
+  public async query(q: ClientMaterialQuery & { id?: Material['id'][] }): Promise<MaterialVO[]> {
+    const materials = await this.repo.materials.findAll({ ...q, ...(q.fileHash ? null : { isAvailable: true }) });
     return await this.toVO(materials);
   }
 
@@ -64,14 +64,14 @@ export default class MaterialService extends BaseService {
     return Array.isArray(materials) ? (materialVOs as MaterialVO[]) : (materialVOs[0] as MaterialVO);
   }
 
-  async queryOne(id: Material['id']) {
+  public async queryOne(id: Material['id']) {
     const material = await this.repo.materials.findOneById(id, true);
 
     assert(material);
     return await this.toVO(material);
   }
 
-  async batchUpdate(ids: Material['id'][], patch: MaterialPatchDTO) {
+  public async batchUpdate(ids: Material['id'][], patch: MaterialPatchDTO) {
     return this.transaction(async () => {
       await this.assertAvailableIds(ids);
 
@@ -89,7 +89,7 @@ export default class MaterialService extends BaseService {
     });
   }
 
-  async updateOne(materialId: Material['id'], patch: MaterialPatchDTO) {
+  public async updateOne(materialId: Material['id'], patch: MaterialPatchDTO) {
     return this.transaction(async () => {
       const isEntityPatch = 'comment' in patch || 'sourceUrl' in patch;
       await this.assertAvailableIds([materialId], isEntityPatch ? { type: MaterialTypes.Entity } : undefined);
@@ -120,7 +120,7 @@ export default class MaterialService extends BaseService {
     }
   }
 
-  async getBlob(materialId: MaterialVO['id']) {
+  public async getBlob(materialId: MaterialVO['id']) {
     await this.assertAvailableIds([materialId], { type: MaterialTypes.Entity });
     const blob = await this.repo.materials.findBlobById(materialId);
     assert(blob);

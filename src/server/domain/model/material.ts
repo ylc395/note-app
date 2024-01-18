@@ -5,6 +5,7 @@ export type NewMaterial = Omit<Partial<Material>, 'id'>;
 export interface MaterialQuery {
   parentId?: Material['parentId'];
   id?: Material['id'][];
+  fileHash?: string;
   isAvailable?: boolean;
 }
 

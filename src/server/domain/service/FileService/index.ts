@@ -24,11 +24,12 @@ export default class FileService extends BaseService {
 
   async createFile(file: FileDTO) {
     const data = file.data || (await this.fileReader.read(file.path!));
-    const fileVO = await this.repo.files.create({ lang: '', ...file, data });
+    const hash = await this.fileReader.getHash(data);
+    const fileVO = await this.repo.files.create({ lang: '', hash, ...file, data });
 
-    if (!this.fileIdsOnQueue.has(fileVO.id)) {
-      // this.addTextExtractionJob({ fileId: fileVO.id });
-    }
+    // if (!this.fileIdsOnQueue.has(fileVO.id)) {
+    // this.addTextExtractionJob({ fileId: fileVO.id });
+    // }
 
     return fileVO;
   }
@@ -76,7 +77,7 @@ export default class FileService extends BaseService {
     }
 
     if (file.mimeType === 'application/pdf') {
-      await this.extractPdfText({ ...file, data }, finished);
+      // await this.extractPdfText({ ...file, data }, finished);
     }
 
     this.fileIdsOnQueue.delete(file.id);

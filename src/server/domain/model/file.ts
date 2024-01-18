@@ -6,6 +6,7 @@ export interface LocalFile {
 
 export interface LoadedFile {
   data: ArrayBuffer;
+  hash?: string;
   lang?: string;
   mimeType: string;
 }

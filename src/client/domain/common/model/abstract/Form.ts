@@ -27,6 +27,11 @@ export default class Form<T> {
   @observable private readonly _values = {} as Partial<T>;
   @observable public errors = {} as Record<keyof T, string>;
 
+  @action
+  public setMessage(field: keyof T, message: string) {
+    this.errors[field] = message;
+  }
+
   @computed
   public get isValid() {
     return size(this.errors) === 0;

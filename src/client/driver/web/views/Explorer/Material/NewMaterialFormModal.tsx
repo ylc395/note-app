@@ -1,5 +1,7 @@
 import { observer } from 'mobx-react-lite';
 import { string } from 'zod';
+import assert from 'assert';
+import { container } from 'tsyringe';
 
 import type { EntityMaterialVO } from '@shared/domain/model/material';
 import { fileDTOSchema } from '@shared/domain/model/file';
@@ -7,7 +9,8 @@ import Modal, { useModalValue } from '@web/components/Modal';
 import { NEW_MATERIAL_MODAL } from '@domain/app/model/material/modals';
 import IconPicker from '@web/components/icon/PickerButton';
 import Form from '@domain/common/model/abstract/Form';
-import assert from 'assert';
+import { getHash } from '@shared/utils/file';
+import MaterialService from '@domain/app/service/MaterialService';
 
 const createForm = () =>
   new Form({
@@ -34,16 +37,21 @@ const createForm = () =>
 
 export default observer(function NewMaterialFormModal() {
   const { value: form, modalProps } = useModalValue(createForm);
+  const { queryMaterialByHash } = container.resolve(MaterialService);
+
   const handleFileChange = async (files: FileList | null) => {
     assert(form);
 
     if (files?.[0]) {
       const file = files[0];
-      form.set('file', {
-        mimeType: file.type,
-        path: file.path,
-        data: file.path ? undefined : await file.arrayBuffer(),
-      });
+      const data = await file.arrayBuffer();
+      const hash = getHash(data);
+      const materials = await queryMaterialByHash(hash);
+      form.set('file', { mimeType: file.type, path: file.path, data });
+
+      if (materials.length > 0) {
+        form.setMessage('file', `该文件已存在对应素材${materials.map(({ title }) => title).join()}`);
+      }
     } else {
       form.set('file', null);
     }

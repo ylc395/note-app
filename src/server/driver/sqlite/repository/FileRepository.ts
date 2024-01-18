@@ -1,4 +1,3 @@
-import { createHash } from 'node:crypto';
 import { pick } from 'lodash-es';
 import { sql } from 'kysely';
 
@@ -29,8 +28,7 @@ export default class SqliteFileRepository extends BaseRepository implements File
     return (row.data as Uint8Array).buffer;
   }
 
-  private async findOrCreate({ data, lang, mimeType }: Required<LoadedFile>) {
-    const hash = createHash('md5').update(new Uint8Array(data)).digest('base64');
+  private async findOrCreate({ data, lang, mimeType, hash }: Required<LoadedFile>) {
     const existedFile = await this.db.selectFrom(fileTableName).selectAll().where('hash', '=', hash).executeTakeFirst();
 
     if (existedFile) {

@@ -16,7 +16,7 @@ export default abstract class BaseService {
     },
   });
 
-  get transaction() {
+  protected get transaction() {
     return this.db.transaction.bind(this.db);
   }
 }

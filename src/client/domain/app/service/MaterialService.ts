@@ -25,6 +25,11 @@ export default class MaterialService {
     return this.explorer.tree;
   }
 
+  public readonly queryMaterialByHash = async (hash: string) => {
+    const materials = await this.remote.material.query.query({ fileHash: hash });
+    return materials;
+  };
+
   public readonly createMaterial = async (dto?: NewMaterialDTO, file?: FileDTO) => {
     let fileId: FileVO['id'] | undefined;
 
