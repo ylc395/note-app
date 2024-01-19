@@ -9,7 +9,7 @@ import assert from 'assert';
 
 interface Options<T extends HierarchyEntity> {
   tree: Tree<T>;
-  modalToken?: PromptToken<EntityParentId>;
+  promptToken: PromptToken<EntityParentId>;
   itemsToIds: (items: unknown) => EntityId[] | undefined;
   action: (parentId: EntityParentId, ids: EntityId[]) => Promise<T[]>;
   onMoved?: (parentId: EntityParentId, ids: EntityId[]) => void;
@@ -30,9 +30,9 @@ export default class MoveBehavior<T extends HierarchyEntity> {
   }
 
   public async byUserInput() {
-    assert(this.options.modalToken);
+    assert(this.options.promptToken);
 
-    const targetId = await this.ui.prompt(this.options.modalToken);
+    const targetId = await this.ui.prompt(this.options.promptToken);
 
     if (targetId === undefined) {
       return;

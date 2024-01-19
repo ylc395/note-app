@@ -16,19 +16,37 @@ export default class MaterialExplorer extends Explorer<MaterialVO> {
   public readonly entityType = EntityTypes.Material;
   private readonly remote = container.resolve(rpcToken);
 
-  public readonly rename = new RenameBehavior(this, ({ id, name }) =>
-    this.remote.material.updateOne.mutate([id, { title: name }]),
-  );
+  public readonly rename = new RenameBehavior({
+    explorer: this,
+    onSubmit: ({ id, name }) => this.remote.material.updateOne.mutate([id, { title: name }]),
+  });
 
   constructor() {
     super('materialExplorer');
   }
 
-  protected async getContextmenu() {
+  protected getContextmenu() {
     const node = this.tree.selectedNodes[0];
     const isMultiple = this.tree.selectedNodes.length > 1;
     assert(node?.entity);
+    const canOpenInNewTab = !this.workbench.currentTile?.findByEntity(node.entityLocator);
 
-    return compact([!isMultiple && { label: '重命名', key: 'rename' }]);
+    return compact([
+      isMultiple && { label: `共${this.tree.selectedNodes.length}项`, disabled: true },
+      isMultiple && ({ type: 'separator' } as const),
+      canOpenInNewTab && { label: '新标签页打开', key: 'openInNewTab' },
+      this.workbench.currentTile && {
+        label: '打开至...',
+        submenu: [
+          { label: '左边', key: 'openToLeft' },
+          { label: '右边', key: 'openToRight' },
+          { label: '上边', key: 'openToTop' },
+          { label: '下边', key: 'openToBottom' },
+        ],
+      },
+      { type: 'separator' } as const,
+      !isMultiple && { label: '重命名', key: 'rename' },
+      { label: '移动至...', key: 'move' },
+    ]);
   }
 }

@@ -7,8 +7,10 @@ import type { HierarchyEntity } from '../../entity';
 
 export default class RenameBehavior<T extends HierarchyEntity> {
   constructor(
-    private readonly explorer: Explorer<T>,
-    private readonly onSubmit: (e: { id: TreeNode['id']; name: string }) => Promise<T>,
+    private readonly options: {
+      explorer: Explorer<T>;
+      onSubmit: (e: { id: TreeNode['id']; name: string }) => Promise<T>;
+    },
   ) {
     makeObservable(this);
   }
@@ -22,8 +24,8 @@ export default class RenameBehavior<T extends HierarchyEntity> {
 
   public readonly submit = async (value: string) => {
     assert(this.id);
-    const material = await this.onSubmit({ id: this.id, name: value });
-    this.explorer.tree.updateTree(material);
+    const material = await this.options.onSubmit({ id: this.id, name: value });
+    this.options.explorer.tree.updateTree(material);
 
     runInAction(() => {
       this.id = undefined;

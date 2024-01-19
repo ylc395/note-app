@@ -25,13 +25,17 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
   }
 
   @computed
-  // root node not included
-  public get expandedNodes() {
+  private get expandedNodes() {
     return Object.values(this.nodes).filter((node) => node.isExpanded);
   }
 
   @computed
-  // root node not included
+  public get hasExpandedNode() {
+    return this.expandedNodes.length > 0;
+  }
+
+  @computed
+  // root node included
   public get selectedNodes() {
     return this.allNodes.filter((node) => node.isSelected);
   }

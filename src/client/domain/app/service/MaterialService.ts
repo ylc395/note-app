@@ -13,6 +13,7 @@ import TreeNode from '@domain/common/model/abstract/TreeNode';
 import MaterialEditor from '../model/material/editor/MaterialEditor';
 import MoveBehavior from './behaviors/MoveBehavior';
 import eventBus, { Events } from '../model/material/eventBus';
+import { MOVE_TARGET_MODAL } from '../model/material/prompts';
 
 @singleton()
 export default class MaterialService {
@@ -29,10 +30,11 @@ export default class MaterialService {
     return this.explorer.tree;
   }
 
-  public readonly moveBehavior = new MoveBehavior({
+  public readonly move = new MoveBehavior({
     tree: this.tree,
     itemsToIds: MaterialService.getMaterialIds,
     action: (parentId, ids) => this.remote.material.batchUpdate.mutate([ids, { parentId }]),
+    promptToken: MOVE_TARGET_MODAL,
     onMoved: (parentId, ids) => ids.forEach((id) => eventBus.emit(Events.Updated, { actor: this, parentId, id })),
   });
 
@@ -87,6 +89,8 @@ export default class MaterialService {
     switch (action) {
       case 'rename':
         return this.explorer.rename.start(oneId);
+      case 'move':
+        return this.move.byUserInput();
       default:
         break;
     }

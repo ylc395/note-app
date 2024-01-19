@@ -9,7 +9,7 @@ import NoteExplorer from '@domain/app/model/note/Explorer';
 export default observer(function Operations() {
   const { createNote } = container.resolve(NoteService);
   const {
-    tree: { expandedNodes, collapseAll },
+    tree: { hasExpandedNode, collapseAll },
   } = container.resolve(NoteExplorer);
 
   return (
@@ -18,7 +18,7 @@ export default observer(function Operations() {
         <AiOutlinePlus />
       </Button>
       <div className="flex">
-        <Button disabled={expandedNodes.length === 0} onClick={collapseAll}>
+        <Button disabled={hasExpandedNode} onClick={collapseAll}>
           <AiOutlineShrink />
         </Button>
         <Button>

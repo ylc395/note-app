@@ -31,6 +31,7 @@ export default forwardRef<PopoverRef, Props>(function ButtonPopover(
   });
   const dismiss = useDismiss(context);
   const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
+  const mountPoint = refs.domReference.current?.closest('dialog') || document.body;
 
   useImperativeHandle(ref, () => ({
     dismiss: () => setIsOpen(false),
@@ -46,7 +47,7 @@ export default forwardRef<PopoverRef, Props>(function ButtonPopover(
           <div ref={refs.setFloating} {...getFloatingProps()} className={APP_CLASS_NAME} style={floatingStyles}>
             {children}
           </div>,
-          document.body,
+          mountPoint,
         )}
     </>
   );

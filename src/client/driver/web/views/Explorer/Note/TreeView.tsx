@@ -13,7 +13,7 @@ import { observer } from 'mobx-react-lite';
 export default observer(function NoteTreeView() {
   const {
     createNote,
-    moveBehavior: { byItems: moveNotesByItems },
+    move: { byItems: moveNotesByItems },
   } = container.resolve(NoteService);
   const {
     tree,

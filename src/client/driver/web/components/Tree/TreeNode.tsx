@@ -42,7 +42,6 @@ const TreeNode = observer(function <T extends HierarchyEntity>({ node, level, ..
 
     const isMultiple = Boolean(multiple) && (e.metaKey || e.ctrlKey);
 
-    tree.toggleSelect(node.id, { isMultiple });
     onClick?.(node, isMultiple);
   };
 
@@ -53,7 +52,6 @@ const TreeNode = observer(function <T extends HierarchyEntity>({ node, level, ..
       return;
     }
 
-    tree.toggleSelect(node.id, { value: true });
     onContextmenu(node);
   };
 

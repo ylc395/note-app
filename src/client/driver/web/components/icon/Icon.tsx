@@ -35,7 +35,7 @@ export default observer(function Emoji({ code, className, size, fallback }: Emoj
   return (
     isEmojiReady.get() && (
       <span className={clsx(className, 'inline-flex')}>
-        {code ? <em-emoji size={size || '1em'} className={className} shortcodes={code}></em-emoji> : fallback}
+        {code ? <em-emoji size={size || '1em'} className={className} shortcodes={code} /> : fallback}
       </span>
     )
   );

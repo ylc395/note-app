@@ -18,8 +18,9 @@ export default class MaterialTree extends Tree<MaterialVO> {
 
   protected entityToNode(material: MaterialVO | null) {
     return {
+      icon: material ? material.icon : null,
       title: material ? normalizeTitle(material) : '根',
-      isLeaf: material ? material.childrenCount === 0 : true,
+      isLeaf: material ? material.childrenCount === 0 : false,
     };
   }
 }

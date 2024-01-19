@@ -40,11 +40,21 @@ export default function TreeView<T extends MaterialVO | NoteVO>({
   onDragStop,
   defaultIcon,
 }: Props<T>) {
+  function handleClick(node: TreeNode<T>, isMultiple: boolean) {
+    tree.toggleSelect(node.id, { isMultiple });
+    onClick?.(node, isMultiple);
+  }
+
+  function handleContextmenu(node: TreeNode<T>) {
+    tree.toggleSelect(node.id, { value: true });
+    onContextmenu?.(node);
+  }
+
   return (
     <>
       <Tree
-        onContextmenu={onContextmenu}
-        onClick={onClick}
+        onContextmenu={handleContextmenu}
+        onClick={handleClick}
         className="scrollbar-stable scrollbar-thin grow overflow-hidden pr-2 hover:overflow-auto"
         nodeClassName={(node) =>
           clsx(

@@ -2,6 +2,7 @@ import { observer } from 'mobx-react-lite';
 import { string } from 'zod';
 import assert from 'assert';
 import { container } from 'tsyringe';
+import { useRef } from 'react';
 
 import type { EntityMaterialVO } from '@shared/domain/model/material';
 import { fileDTOSchema } from '@shared/domain/model/file';
@@ -37,17 +38,25 @@ const createForm = () =>
 
 export default observer(function NewMaterialFormModal() {
   const { value: form, modalProps } = useModalValue(createForm);
+  const inputRef = useRef<HTMLInputElement | null>(null);
   const { queryMaterialByHash } = container.resolve(MaterialService);
 
-  const handleFileChange = async (files: FileList | null) => {
+  async function handleFileChange(files: FileList | null) {
     assert(form);
 
     if (files?.[0]) {
       const file = files[0];
       const data = await file.arrayBuffer();
+      form.set('file', { mimeType: file.type, path: file.path, data });
+
+      if (!form.get('title')) {
+        form.set('title', file.name.replace(/\.[^/.]+$/, ''));
+      }
+
+      Promise.resolve().then(() => inputRef.current!.select());
+
       const hash = getHash(data);
       const materials = await queryMaterialByHash(hash);
-      form.set('file', { mimeType: file.type, path: file.path, data });
 
       if (materials.length > 0) {
         form.setMessage('file', `该文件已存在对应素材${materials.map(({ title }) => title).join()}`);
@@ -55,7 +64,7 @@ export default observer(function NewMaterialFormModal() {
     } else {
       form.set('file', null);
     }
-  };
+  }
 
   return (
     <Modal {...modalProps} id={NEW_MATERIAL_MODAL} title="新建素材">
@@ -63,7 +72,7 @@ export default observer(function NewMaterialFormModal() {
         <div className="flex flex-col">
           <label className="flex">
             <span>名称</span>
-            <input value={form.get('title')} onChange={(v) => form.set('title', v.target.value)} />
+            <input ref={inputRef} value={form.get('title')} onChange={(v) => form.set('title', v.target.value)} />
           </label>
           <label className="flex">
             <span>选择文件</span>

@@ -26,7 +26,7 @@ const defaultIcon = (node: TreeNode<MaterialVO>) => {
 
 export default observer(function MaterialTreeView() {
   const {
-    moveBehavior: { byItems: moveMaterialsByItems },
+    move: { byItems: moveMaterialsByItems },
   } = container.resolve(MaterialService);
   const { openEntity } = container.resolve(Workbench);
   const {
@@ -37,8 +37,12 @@ export default observer(function MaterialTreeView() {
   } = container.resolve(MaterialExplorer);
 
   const handleClick = (node: TreeNode<MaterialVO>, isMultiple: boolean) => {
-    if (!isMultiple && node.entity && isEntityMaterial(node.entity)) {
-      openEntity({ entityType: EntityTypes.Material, entityId: node.id, mimeType: node.entity.mimeType });
+    if (!isMultiple && node.entity) {
+      if (isEntityMaterial(node.entity)) {
+        openEntity({ entityType: EntityTypes.Material, entityId: node.id, mimeType: node.entity.mimeType });
+      } else {
+        tree.toggleExpand(node.id);
+      }
     }
   };
 

@@ -6,6 +6,7 @@ interface FieldOption<T> {
   initialValue: T;
   transform?: (v: T) => T;
   validate?: ((value: T) => string | false | null) | { schema: ZodSchema<T>; message: string };
+  onChange?: (v: T, form: Form<unknown>) => void;
 }
 
 type Fields<T> = {

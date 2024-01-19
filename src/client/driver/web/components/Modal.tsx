@@ -17,7 +17,6 @@ interface Props<T> {
   onToggle?: (visible: boolean) => void;
   width?: number;
   height?: number;
-  modalClassName?: string;
   bodyClassName?: string;
   canConfirm?: boolean;
   getSubmitResult?: () => T;
@@ -40,7 +39,6 @@ export function useModalValue<T>(factory: () => T) {
 export default observer(function Modal<T>({
   children,
   title,
-  modalClassName,
   bodyClassName,
   width = 400,
   height = 300,
@@ -51,7 +49,6 @@ export default observer(function Modal<T>({
 }: Props<T>) {
   const modalManager = container.resolve(ModalManager);
   const dialogRef = useRef<HTMLDialogElement | null>(null);
-  const divRef = useRef<HTMLDivElement | null>(null);
   const { isOpen, submit, cancel } = modalManager.use(id);
 
   useEffect(() => {
@@ -64,7 +61,7 @@ export default observer(function Modal<T>({
     }
   }, [isOpen]);
 
-  useClickAway(() => isOpen && cancel(), divRef);
+  useClickAway(() => isOpen && cancel(), dialogRef);
   useKeyPress('esc', () => isOpen && cancel());
 
   if (!isOpen) {
@@ -73,27 +70,29 @@ export default observer(function Modal<T>({
 
   return createPortal(
     <div className={APP_CLASS_NAME}>
-      <dialog ref={dialogRef} className={clsx('select-none rounded-lg border-0', modalClassName)}>
-        <div ref={divRef}>
-          {title && <h1 className="mt-0 text-lg">{title}</h1>}
-          <div
-            className={clsx('mb-4 overflow-auto', bodyClassName)}
-            style={{ width: `${width}px`, height: `${height}px` }}
+      <dialog
+        autoFocus
+        ref={dialogRef}
+        className="select-none overflow-visible rounded-lg border-0 backdrop:pointer-events-none"
+      >
+        {title && <h1 className="mt-0 text-lg">{title}</h1>}
+        <div
+          className={clsx('mb-4 overflow-auto', bodyClassName)}
+          style={{ width: `${width}px`, height: `${height}px` }}
+        >
+          {children}
+        </div>
+        <div className="flex justify-end">
+          <button
+            className="h-8 w-16 cursor-pointer rounded border-0 bg-blue-100"
+            disabled={!canConfirm}
+            onClick={() => submit(getSubmitResult?.())}
           >
-            {children}
-          </div>
-          <div className="flex justify-end">
-            <button
-              className="h-8 w-16 cursor-pointer rounded border-0 bg-blue-100"
-              disabled={!canConfirm}
-              onClick={() => submit(getSubmitResult?.())}
-            >
-              确&ensp;认
-            </button>
-            <button className="ml-2 h-8 w-16 cursor-pointer rounded border-0" onClick={cancel}>
-              取&ensp;消
-            </button>
-          </div>
+            确&ensp;认
+          </button>
+          <button className="ml-2 h-8 w-16 cursor-pointer rounded border-0" onClick={cancel}>
+            取&ensp;消
+          </button>
         </div>
       </dialog>
     </div>,

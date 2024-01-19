@@ -9,7 +9,7 @@ import NoteEditor from '@domain/app/model/note/Editor';
 import NoteExplorer, { EventNames as ExplorerEvents, type ActionEvent } from '@domain/app/model/note/Explorer';
 import { EntityTypes } from '@shared/domain/model/entity';
 import { eventBus, Events } from '@domain/app/model/note/eventBus';
-import { MOVE_TARGET_MODAL } from '@domain/app/model/note/modals';
+import { MOVE_TARGET_MODAL } from '@domain/app/model/note/prompts';
 import TreeNode from '@domain/common/model/abstract/TreeNode';
 import MoveBehavior from './behaviors/MoveBehavior';
 
@@ -21,10 +21,9 @@ export default class NoteService {
   private readonly remote = container.resolve(rpcToken);
   private readonly explorer = container.resolve(NoteExplorer);
   private readonly workbench = container.resolve(Workbench);
-
-  public readonly moveBehavior = new MoveBehavior({
+  public readonly move = new MoveBehavior({
     tree: this.tree,
-    modalToken: MOVE_TARGET_MODAL,
+    promptToken: MOVE_TARGET_MODAL,
     itemsToIds: NoteService.getNoteIds,
     onMoved: (parentId, ids) => ids.forEach((id) => eventBus.emit(Events.Updated, { id, parentId })),
     action: (parentId, ids) => this.remote.note.batchUpdate.mutate([ids, { parentId }]),
@@ -53,7 +52,7 @@ export default class NoteService {
       case 'rename':
         return this.explorer.rename.start(oneId);
       case 'move':
-        return this.moveBehavior.byUserInput();
+        return this.move.byUserInput();
       case 'openInNewTab':
         return this.workbench.openEntity(this.tree.getNode(oneId).entityLocator, { forceNewTab: true });
       case 'openToTop':

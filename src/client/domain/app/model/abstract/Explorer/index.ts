@@ -3,7 +3,7 @@ import { pickBy } from 'lodash-es';
 import assert from 'assert';
 
 import Tree from '@domain/common/model/abstract/Tree';
-import type TreeNode from '@domain/common/model/abstract/TreeNode';
+import TreeNode from '@domain/common/model/abstract/TreeNode';
 import type { EntityTypes, HierarchyEntity, WithId } from '../../entity';
 import EventBus from '@domain/app/infra/EventBus';
 import { MenuItem, token as uiToken } from '@shared/domain/infra/ui';
@@ -51,10 +51,10 @@ export default abstract class Explorer<T extends HierarchyEntity> extends EventB
     }
   };
 
-  protected abstract getContextmenu(): Promise<MenuItem[]>;
+  protected abstract getContextmenu(): MenuItem[];
 
   public readonly showContextmenu = async () => {
-    const action = await this.ui.getActionFromMenu(await this.getContextmenu());
+    const action = await this.ui.getActionFromMenu(this.getContextmenu());
 
     if (action) {
       this.emit(EventNames.Action, { action, id: this.tree.getSelectedNodeIds() });

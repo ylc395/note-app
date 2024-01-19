@@ -5,7 +5,7 @@ import { observer } from 'mobx-react-lite';
 import Modal, { useModalValue } from '@web/components/Modal';
 import Tree from '@web/components/Tree';
 import TargetTree from '@domain/app/model/note/TargetTree';
-import { MOVE_TARGET_MODAL } from '@domain/app/model/note/modals';
+import { MOVE_TARGET_MODAL } from '@domain/app/model/note/prompts';
 import NodeTitle from '../common/TreeView/NodeTitle';
 import NoteExplorer from '@domain/app/model/note/Explorer';
 

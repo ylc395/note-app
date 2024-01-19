@@ -14,7 +14,7 @@ import { useDragItem } from '@web/components/dnd/hooks';
 export default observer(function NoteExplorerView() {
   const { item: dragItem } = useDragItem();
   const {
-    moveBehavior: { byItems: moveNotesByItems },
+    move: { byItems: moveNotesByItems },
   } = container.resolve(NoteService);
 
   const {

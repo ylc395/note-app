@@ -21,7 +21,7 @@ export default observer(function Operations() {
         </Button>
       </div>
       <div className="flex">
-        <Button disabled={tree.expandedNodes.length === 0} onClick={tree.collapseAll}>
+        <Button disabled={tree.hasExpandedNode} onClick={tree.collapseAll}>
           <AiOutlineShrink />
         </Button>
         <Button>
