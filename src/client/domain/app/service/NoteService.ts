@@ -82,6 +82,8 @@ export default class NoteService {
     switch (action) {
       case 'duplicate':
         return this.createNote({ from: oneId });
+      case 'rename':
+        return this.explorer.rename.start(oneId);
       case 'move':
         return this.moveNotesByUserInput();
       case 'openInNewTab':

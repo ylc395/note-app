@@ -13,7 +13,7 @@ import {
 import { EntityTypes } from '@domain/model/entity.js';
 
 import BaseService from './BaseService.js';
-import { getNormalizedTitles, getPaths, getTreeFragment } from './composables.js';
+import { getNormalizedTitles, getPaths, getTreeFragment } from './behaviors.js';
 import { buildIndex } from '@utils/collection.js';
 
 @singleton()

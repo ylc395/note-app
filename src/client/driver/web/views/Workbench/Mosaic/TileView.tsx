@@ -18,7 +18,7 @@ function split(boundingBox: BoundingBox, node: TileParent) {
   };
 }
 
-const TileView = observer(function ({
+const TileView = observer(function _TileView({
   node,
   renderTile,
   boundingBox,

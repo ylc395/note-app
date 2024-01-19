@@ -51,7 +51,7 @@ export default class MaterialService {
         mimeType: material.mimeType,
       });
     } else {
-      this.explorer.startRenaming(material.id);
+      this.explorer.rename.start(material.id);
     }
   };
 
@@ -72,7 +72,7 @@ export default class MaterialService {
 
     switch (action) {
       case 'rename':
-        return this.explorer.startRenaming(oneId);
+        return this.explorer.rename.start(oneId);
       default:
         break;
     }

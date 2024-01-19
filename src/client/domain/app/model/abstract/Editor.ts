@@ -53,7 +53,6 @@ export default abstract class Editor<T extends EditableEntity = EditableEntity, 
     };
   }
 
-  @computed
   public get entityLocator(): EditableEntityLocator {
     return this.editable.entityLocator;
   }

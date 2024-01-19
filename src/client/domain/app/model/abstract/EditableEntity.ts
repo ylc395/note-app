@@ -15,7 +15,7 @@ export default abstract class EditableEntity {
   }
 
   protected readonly remote = container.resolve(rpcToken);
-  public abstract readonly entityType: EditableEntityLocator['entityType'];
+  protected abstract readonly entityType: EditableEntityLocator['entityType'];
 
   protected abstract load(): Promise<void>; // todo: load must return a cancel function.
   public abstract destroy(): void;

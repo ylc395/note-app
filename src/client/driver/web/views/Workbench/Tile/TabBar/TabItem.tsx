@@ -40,8 +40,8 @@ export default observer(function TabItem({ editor }: { editor: Editor }) {
     <Droppable onDrop={onDrop} onOverToggle={setIsOver}>
       <Draggable
         item={editor}
-        onDragStart={() => currentExplorer.updateTreeForDropping(editor.entityLocator.entityId)}
-        onDragEnd={currentExplorer.reset}
+        onDragStart={() => currentExplorer.dnd.updateTreeForDropping(editor.entityLocator.entityId)}
+        onDragEnd={currentExplorer.dnd.reset}
         className={clsx(
           'flex flex-nowrap items-center border-0 border-r border-solid border-gray-200 px-2 text-gray-500',
           currentEditor === editor ? 'bg-white' : isOver ? 'bg-gray-200' : 'bg-gray-50',

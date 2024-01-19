@@ -26,6 +26,7 @@ interface Props<T extends MaterialVO | NoteVO> {
   onDragStop: () => void;
 }
 
+// eslint-disable-next-line mobx/missing-observer
 export default function TreeView<T extends MaterialVO | NoteVO>({
   tree,
   editingNodeId,

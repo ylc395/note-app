@@ -13,7 +13,10 @@ import { useDragItem } from '@web/components/dnd/hooks';
 
 export default observer(function NoteExplorerView() {
   const { moveNotesByItems, getNoteIds } = container.resolve(NoteService);
-  const { tree, status } = container.resolve(NoteExplorer);
+  const {
+    tree,
+    dnd: { status },
+  } = container.resolve(NoteExplorer);
   const { item: dragItem } = useDragItem();
   const canDrop = useMemo(
     () => status === 'toDrop' && !tree.root.isDisabled && getNoteIds(dragItem),

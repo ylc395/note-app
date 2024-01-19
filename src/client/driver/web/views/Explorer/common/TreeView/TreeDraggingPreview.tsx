@@ -22,7 +22,7 @@ export default observer(function TreeView() {
           className="pointer-events-none fixed max-w-[300px] opacity-60"
           nodeClassName="py-1"
           style={{ left: position?.x, top: position?.y }}
-          tree={currentExplorer.selectedNodesAsTree}
+          tree={currentExplorer.dnd.selectedNodesAsTree}
           renderTitle={(node) => <NodeTitle node={node}></NodeTitle>}
         />
       </div>,

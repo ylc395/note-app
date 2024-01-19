@@ -8,30 +8,34 @@ import NoteService from '@domain/app/service/NoteService';
 
 import Button from '@web/components/Button';
 import TreeView from '../common/TreeView';
-// import SearchInput from '../../components/SearchInput';
+import { observer } from 'mobx-react-lite';
 
-// eslint-disable-next-line mobx/missing-observer
-export default function NoteTreeView() {
+export default observer(function NoteTreeView() {
   const { createNote, moveNotesByItems } = container.resolve(NoteService);
-  const { tree, showContextmenu, updateTreeForDropping, reset: resetTree } = container.resolve(Explorer);
+  const {
+    tree,
+    showContextmenu,
+    dnd: { updateTreeForDropping, reset: resetTree },
+    rename: { id: editingId, submit: submitEditing, cancel: cancelEditing },
+  } = container.resolve(Explorer);
   const { openEntity } = container.resolve(Workbench);
 
   return (
-    <>
-      {/* <SearchInput entityType={EntityTypes.Note} /> */}
-      <TreeView
-        tree={tree}
-        onClick={({ id }, isMultiple) => !isMultiple && openEntity({ entityType: EntityTypes.Note, entityId: id })}
-        onContextmenu={showContextmenu}
-        onDragStop={resetTree}
-        onDragStart={updateTreeForDropping}
-        onDrop={(item, node) => moveNotesByItems(node.id, item)}
-        nodeOperation={({ id }) => (
-          <Button onClick={() => createNote({ parentId: id })}>
-            <PlusOutlined />
-          </Button>
-        )}
-      />
-    </>
+    <TreeView
+      editingNodeId={editingId}
+      onEditEnd={submitEditing}
+      onEditCancel={cancelEditing}
+      tree={tree}
+      onClick={({ id }, isMultiple) => !isMultiple && openEntity({ entityType: EntityTypes.Note, entityId: id })}
+      onContextmenu={showContextmenu}
+      onDragStop={resetTree}
+      onDragStart={updateTreeForDropping}
+      onDrop={(item, node) => moveNotesByItems(node.id, item)}
+      nodeOperation={({ id }) => (
+        <Button onClick={() => createNote({ parentId: id })}>
+          <PlusOutlined />
+        </Button>
+      )}
+    />
   );
-}
+});

@@ -28,11 +28,8 @@ export default observer(function MaterialTreeView() {
   const {
     tree,
     showContextmenu,
-    updateTreeForDropping,
-    editingId,
-    submitRenaming: submitEditing,
-    cancelRenaming: cancelEditing,
-    reset: resetTree,
+    dnd: { updateTreeForDropping, reset: resetTree },
+    rename: { id: editingId, submit: submitEditing, cancel: cancelEditing },
   } = container.resolve(MaterialExplorer);
 
   const handleClick = (node: TreeNode<MaterialVO>, isMultiple: boolean) => {

@@ -13,7 +13,7 @@ import {
 import EditableEntity from '@domain/app/model/abstract/EditableEntity';
 
 export default abstract class EditableMaterial extends EditableEntity {
-  readonly entityType = EntityTypes.Material;
+  protected readonly entityType = EntityTypes.Material;
   @observable annotations: AnnotationVO[] = [];
 
   constructor(materialId: EntityMaterialVO['id']) {

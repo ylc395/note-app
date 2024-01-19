@@ -1,14 +1,16 @@
 import { container } from 'tsyringe';
 import { pickBy } from 'lodash-es';
-import { action, computed, makeObservable, observable, runInAction } from 'mobx';
 import assert from 'assert';
 
 import Tree from '@domain/common/model/abstract/Tree';
 import type TreeNode from '@domain/common/model/abstract/TreeNode';
-import type { HierarchyEntity, WithId } from '../entity';
+import type { HierarchyEntity, WithId } from '../../entity';
 import EventBus from '@domain/app/infra/EventBus';
 import { MenuItem, token as uiToken } from '@shared/domain/infra/ui';
-import { Workbench } from '../workbench';
+import { Workbench } from '../../workbench';
+import DndBehavior from './DndBehavior';
+
+export { default as RenameBehavior } from './RenameBehavior';
 
 export enum EventNames {
   Action = 'action',
@@ -24,28 +26,17 @@ export default abstract class Explorer<T extends HierarchyEntity> extends EventB
 }> {
   constructor(name: string) {
     super(name);
-    makeObservable(this);
   }
 
   protected readonly ui = container.resolve(uiToken);
   protected readonly workbench = container.resolve(Workbench);
   public abstract readonly tree: Tree;
 
-  @observable
-  public status: 'idle' | 'toDrop' = 'idle';
-
-  @action.bound
-  public reset() {
-    for (const node of this.tree.allNodes) {
-      node.isDisabled = false;
-    }
-
-    this.status = 'idle';
-  }
-
   public load() {
     this.tree.root.loadChildren();
   }
+
+  public readonly dnd = new DndBehavior(this);
 
   protected readonly updateNode = ({ id, ...patch }: WithId<T>) => {
     const node = this.tree.getNode(id, true);
@@ -59,22 +50,6 @@ export default abstract class Explorer<T extends HierarchyEntity> extends EventB
     }
   };
 
-  @action.bound
-  public updateTreeForDropping(movingId?: TreeNode<T>['id']) {
-    const nodes = movingId ? [this.tree.getNode(movingId)] : this.tree.selectedNodes;
-
-    for (const node of nodes) {
-      node.isDisabled = true;
-      node.parent!.isDisabled = true;
-
-      for (const descendant of node.descendants) {
-        descendant.isDisabled = true;
-      }
-    }
-
-    this.status = 'toDrop';
-  }
-
   protected abstract getContextmenu(): Promise<MenuItem[]>;
 
   public readonly showContextmenu = async () => {
@@ -84,16 +59,4 @@ export default abstract class Explorer<T extends HierarchyEntity> extends EventB
       this.emit(EventNames.Action, { action, id: this.tree.getSelectedNodeIds() });
     }
   };
-
-  @computed
-  public get selectedNodesAsTree() {
-    const tree = new (this.tree.constructor as { new (): Tree })();
-    tree.updateTree(this.tree.selectedNodes.map(({ entity }) => ({ ...entity!, parentId: null })));
-
-    runInAction(() => {
-      tree.root.isLeaf = true;
-    });
-
-    return tree;
-  }
 }

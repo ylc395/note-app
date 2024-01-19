@@ -19,7 +19,7 @@ export default class EditableNote extends EditableEntity {
   }
 
   @observable public info?: Required<NoteVO>;
-  public body?: string;
+  @observable public body?: string;
 
   protected async load() {
     const [info, body] = await Promise.all([
