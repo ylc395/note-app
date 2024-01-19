@@ -7,13 +7,13 @@ import MaterialService from '@domain/app/service/MaterialService';
 import MaterialExplorer from '@domain/app/model/material/Explorer';
 
 export default observer(function Operations() {
-  const { createMaterial, createMaterialFromFile } = container.resolve(MaterialService);
+  const { createDirectory, createMaterialFromFile } = container.resolve(MaterialService);
   const { tree } = container.resolve(MaterialExplorer);
 
   return (
     <div className="flex grow justify-between">
       <div className="flex">
-        <Button onClick={() => createMaterial()}>
+        <Button onClick={() => createDirectory(null)}>
           <AiOutlineFolderAdd />
         </Button>
         <Button onClick={() => createMaterialFromFile(null)}>

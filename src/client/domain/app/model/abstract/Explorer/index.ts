@@ -4,7 +4,7 @@ import assert from 'assert';
 
 import Tree from '@domain/common/model/abstract/Tree';
 import type TreeNode from '@domain/common/model/abstract/TreeNode';
-import type { HierarchyEntity, WithId } from '../../entity';
+import type { EntityTypes, HierarchyEntity, WithId } from '../../entity';
 import EventBus from '@domain/app/infra/EventBus';
 import { MenuItem, token as uiToken } from '@shared/domain/infra/ui';
 import { Workbench } from '../../workbench';
@@ -28,6 +28,7 @@ export default abstract class Explorer<T extends HierarchyEntity> extends EventB
     super(name);
   }
 
+  public abstract entityType: EntityTypes;
   protected readonly ui = container.resolve(uiToken);
   protected readonly workbench = container.resolve(Workbench);
   public abstract readonly tree: Tree;

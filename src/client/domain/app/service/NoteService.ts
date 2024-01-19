@@ -2,7 +2,6 @@ import { container, singleton } from 'tsyringe';
 import assert from 'assert';
 
 import { token as rpcToken } from '@domain/common/infra/rpc';
-import { token as UIToken } from '@shared/domain/infra/ui';
 
 import type { NoteVO } from '@shared/domain/model/note';
 import { TileSplitDirections, Workbench } from '@domain/app/model/workbench';
@@ -12,6 +11,7 @@ import { EntityTypes } from '@shared/domain/model/entity';
 import { eventBus, Events } from '@domain/app/model/note/eventBus';
 import { MOVE_TARGET_MODAL } from '@domain/app/model/note/modals';
 import TreeNode from '@domain/common/model/abstract/TreeNode';
+import MoveBehavior from './behaviors/MoveBehavior';
 
 @singleton()
 export default class NoteService {
@@ -19,9 +19,16 @@ export default class NoteService {
     this.explorer.on(ExplorerEvents.Action, this.handleAction);
   }
   private readonly remote = container.resolve(rpcToken);
-  private readonly ui = container.resolve(UIToken);
   private readonly explorer = container.resolve(NoteExplorer);
   private readonly workbench = container.resolve(Workbench);
+
+  public readonly moveBehavior = new MoveBehavior({
+    tree: this.tree,
+    modalToken: MOVE_TARGET_MODAL,
+    itemsToIds: NoteService.getNoteIds,
+    onMoved: (parentId, ids) => ids.forEach((id) => eventBus.emit(Events.Updated, { id, parentId })),
+    action: (parentId, ids) => this.remote.note.batchUpdate.mutate([ids, { parentId }]),
+  });
 
   private get tree() {
     return this.explorer.tree;
@@ -36,45 +43,6 @@ export default class NoteService {
     this.workbench.openEntity({ entityType: EntityTypes.Note, entityId: note.id });
   };
 
-  public readonly getNoteIds = (item: unknown) => {
-    if (item instanceof TreeNode) {
-      return item.tree.getSelectedNodeIds();
-    }
-
-    if (item instanceof NoteEditor) {
-      return [item.entityLocator.entityId];
-    }
-  };
-
-  private async moveNotes(targetId: NoteVO['parentId'], itemIds: NoteVO['id'][]) {
-    const notes = await this.remote.note.batchUpdate.mutate([itemIds, { parentId: targetId }]);
-    this.tree.updateTree(notes);
-
-    await this.tree.reveal(targetId, true);
-    this.tree.setSelected(itemIds);
-
-    for (const id of itemIds) {
-      eventBus.emit(Events.Updated, { id, parentId: targetId });
-    }
-  }
-
-  private async moveNotesByUserInput() {
-    const targetId = await this.ui.prompt(MOVE_TARGET_MODAL);
-
-    if (targetId === undefined) {
-      return;
-    }
-
-    await this.moveNotes(targetId, this.tree.getSelectedNodeIds());
-  }
-
-  public readonly moveNotesByItems = async (targetId: NoteVO['parentId'], items: unknown) => {
-    const ids = this.getNoteIds(items);
-    assert(ids);
-
-    await this.moveNotes(targetId, ids);
-  };
-
   private readonly handleAction = ({ action, id }: ActionEvent) => {
     const oneId = id[0];
     assert(oneId);
@@ -85,7 +53,7 @@ export default class NoteService {
       case 'rename':
         return this.explorer.rename.start(oneId);
       case 'move':
-        return this.moveNotesByUserInput();
+        return this.moveBehavior.byUserInput();
       case 'openInNewTab':
         return this.workbench.openEntity(this.tree.getNode(oneId).entityLocator, { forceNewTab: true });
       case 'openToTop':
@@ -101,4 +69,14 @@ export default class NoteService {
         assert.fail(`invalid action: ${action}`);
     }
   };
+
+  public static getNoteIds(item: unknown) {
+    if (item instanceof TreeNode && item.entityLocator.entityType === EntityTypes.Note) {
+      return item.tree.getSelectedNodeIds();
+    }
+
+    if (item instanceof NoteEditor) {
+      return [item.entityLocator.entityId];
+    }
+  }
 }

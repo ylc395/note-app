@@ -1,8 +1,9 @@
 import { makeObservable, observable, action, computed, runInAction } from 'mobx';
-import type TreeNode from '@domain/common/model/abstract/TreeNode';
+import TreeNode from '@domain/common/model/abstract/TreeNode';
 import type Tree from '@domain/common/model/abstract/Tree';
 
 import type Explorer from './index';
+import { EntityLocator } from '@shared/domain/model/entity';
 
 export default class DndBehavior {
   constructor(private readonly explorer: Explorer<never>) {
@@ -22,13 +23,27 @@ export default class DndBehavior {
   }
 
   @action.bound
-  public updateTreeForDropping(movingId?: TreeNode['id']) {
-    const nodes = movingId ? [this.explorer.tree.getNode(movingId)] : this.explorer.tree.selectedNodes;
+  public updateTreeForDropping(entity?: EntityLocator) {
+    let nodes: TreeNode[] = [];
+    let isAll = false;
+
+    if (!entity) {
+      nodes = this.explorer.tree.selectedNodes;
+    } else if (entity.entityType !== this.explorer.entityType) {
+      nodes = this.explorer.tree.allNodes;
+      isAll = true;
+    } else {
+      nodes = [this.explorer.tree.getNode(entity.entityId)];
+    }
 
     for (const node of nodes) {
       node.isDisabled = true;
-      node.parent!.isDisabled = true;
 
+      if (isAll) {
+        continue;
+      }
+
+      node.parent!.isDisabled = true;
       for (const descendant of node.descendants) {
         descendant.isDisabled = true;
       }

@@ -3,14 +3,14 @@ import { remove } from 'lodash';
 import assert from 'assert';
 
 import { EntityTypes } from '@shared/domain/model/entity';
-import {
-  type EntityMaterialVO,
-  type AnnotationVO,
-  type NewAnnotationDTO,
-  type AnnotationPatchDTO,
-  isEntityMaterial,
+import type {
+  EntityMaterialVO,
+  AnnotationVO,
+  NewAnnotationDTO,
+  AnnotationPatchDTO,
 } from '@shared/domain/model/material';
 import EditableEntity from '@domain/app/model/abstract/EditableEntity';
+import eventBus, { Events } from '../eventBus';
 
 export default abstract class EditableMaterial extends EditableEntity {
   protected readonly entityType = EntityTypes.Material;
@@ -18,6 +18,7 @@ export default abstract class EditableMaterial extends EditableEntity {
 
   constructor(materialId: EntityMaterialVO['id']) {
     super(materialId);
+    eventBus.on(Events.Updated, this.refresh, ({ actor, id }) => actor !== this && id === materialId);
     makeObservable(this);
     this.loadAnnotations();
   }
@@ -28,13 +29,19 @@ export default abstract class EditableMaterial extends EditableEntity {
   @observable.ref
   protected blob?: ArrayBuffer;
 
+  private readonly refresh = async () => {
+    const info = await this.remote.material.queryOne.query(this.entityLocator.entityId);
+
+    runInAction(() => {
+      this.info = info as Required<EntityMaterialVO>;
+    });
+  };
+
   protected async load() {
     const [info, blob] = await Promise.all([
       this.remote.material.queryOne.query(this.entityLocator.entityId),
       this.remote.material.getBlob.query(this.entityLocator.entityId),
     ]);
-
-    assert(isEntityMaterial(info) && info.path);
 
     runInAction(() => {
       this.info = info as Required<EntityMaterialVO>;

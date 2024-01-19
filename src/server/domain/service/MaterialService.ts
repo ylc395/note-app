@@ -112,11 +112,11 @@ export default class MaterialService extends BaseService {
   }
 
   private async assertValidParent(parentId: Material['id'], childrenIds: Material['id'][]) {
-    await this.assertAvailableIds([parentId], { type: MaterialTypes.Directory });
+    await this.assertAvailableIds([parentId]);
     const descants = await this.repo.materials.findDescendantIds(childrenIds);
 
     for (const id of childrenIds) {
-      assert(parentId !== id && !descants[id]?.includes(parentId));
+      assert(parentId !== id && !descants[id]?.includes(parentId), 'invalid parentId');
     }
   }
 
@@ -148,7 +148,7 @@ export default class MaterialService extends BaseService {
       });
     }
 
-    assert(result);
+    assert(result, 'invalid material id');
   };
 
   public readonly getNormalizedTitles = async (ids: Material['id'][]) => {

@@ -2,7 +2,7 @@ import { makeObservable, computed, observable, action } from 'mobx';
 
 import Editor from '@domain/app/model/abstract/Editor';
 import type Tile from '@domain/app/model/workbench/Tile';
-import { normalizeTitle } from '@shared/domain/model/note';
+import { type NotePatchDTO, normalizeTitle } from '@shared/domain/model/note';
 
 import type EditableNote from './Editable';
 
@@ -29,7 +29,7 @@ export default class NoteEditor extends Editor<EditableNote, UIState> {
   }
 
   @action.bound
-  public updateInfo(info: { isReadonly?: boolean; title?: string; icon?: string | null }) {
+  public updateInfo(info: NotePatchDTO) {
     this.editable.update(info);
     this.setActive();
   }

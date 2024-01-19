@@ -40,7 +40,7 @@ export default observer(function TabItem({ editor }: { editor: Editor }) {
     <Droppable onDrop={onDrop} onOverToggle={setIsOver}>
       <Draggable
         item={editor}
-        onDragStart={() => currentExplorer.dnd.updateTreeForDropping(editor.entityLocator.entityId)}
+        onDragStart={() => currentExplorer.dnd.updateTreeForDropping(editor.entityLocator)}
         onDragEnd={currentExplorer.dnd.reset}
         className={clsx(
           'flex flex-nowrap items-center border-0 border-r border-solid border-gray-200 px-2 text-gray-500',

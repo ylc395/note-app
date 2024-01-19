@@ -11,6 +11,7 @@ import Explorer, { RenameBehavior } from '@domain/app/model/abstract/Explorer';
 import { eventBus, Events as NoteEvents } from './eventBus';
 
 export { EventNames, type ActionEvent } from '../abstract/Explorer';
+import { EntityTypes } from '../entity';
 
 @singleton()
 export default class NoteExplorer extends Explorer<NoteVO> {
@@ -18,7 +19,7 @@ export default class NoteExplorer extends Explorer<NoteVO> {
     super('noteExplorer');
     eventBus.on(NoteEvents.Updated, this.updateNode, ({ actor }) => actor !== this);
   }
-
+  public readonly entityType = EntityTypes.Note;
   public readonly tree = new NoteTree();
   private readonly remote = container.resolve(rpcToken);
 

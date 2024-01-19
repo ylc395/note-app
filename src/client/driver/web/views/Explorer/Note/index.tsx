@@ -12,15 +12,19 @@ import TargetTreeModal from './TargetTreeModal';
 import { useDragItem } from '@web/components/dnd/hooks';
 
 export default observer(function NoteExplorerView() {
-  const { moveNotesByItems, getNoteIds } = container.resolve(NoteService);
+  const { item: dragItem } = useDragItem();
+  const {
+    moveBehavior: { byItems: moveNotesByItems },
+  } = container.resolve(NoteService);
+
   const {
     tree,
     dnd: { status },
   } = container.resolve(NoteExplorer);
-  const { item: dragItem } = useDragItem();
+
   const canDrop = useMemo(
-    () => status === 'toDrop' && !tree.root.isDisabled && getNoteIds(dragItem),
-    [tree.root.isDisabled, dragItem, status, getNoteIds],
+    () => status === 'toDrop' && !tree.root.isDisabled && NoteService.getNoteIds(dragItem),
+    [tree.root.isDisabled, dragItem, status],
   );
   const onDrop = canDrop ? (item: unknown) => moveNotesByItems(null, item) : undefined;
 

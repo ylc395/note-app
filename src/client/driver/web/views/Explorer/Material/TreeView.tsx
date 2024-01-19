@@ -10,6 +10,7 @@ import type TreeNode from '@domain/common/model/abstract/TreeNode';
 import MaterialExplorer from '@domain/app/model/material/Explorer';
 
 import TreeView from '../common/TreeView';
+import MaterialService from '@domain/app/service/MaterialService';
 
 const defaultIcon = (node: TreeNode<MaterialVO>) => {
   if (node.entity && isEntityMaterial(node.entity)) {
@@ -24,6 +25,9 @@ const defaultIcon = (node: TreeNode<MaterialVO>) => {
 };
 
 export default observer(function MaterialTreeView() {
+  const {
+    moveBehavior: { byItems: moveMaterialsByItems },
+  } = container.resolve(MaterialService);
   const { openEntity } = container.resolve(Workbench);
   const {
     tree,
@@ -46,7 +50,7 @@ export default observer(function MaterialTreeView() {
       onContextmenu={showContextmenu}
       onDragStop={resetTree}
       onDragStart={updateTreeForDropping}
-      onDrop={() => null}
+      onDrop={(item, node) => moveMaterialsByItems(node.id, item)}
       tree={tree}
       onClick={handleClick}
       defaultIcon={defaultIcon}

@@ -11,7 +11,10 @@ import TreeView from '../common/TreeView';
 import { observer } from 'mobx-react-lite';
 
 export default observer(function NoteTreeView() {
-  const { createNote, moveNotesByItems } = container.resolve(NoteService);
+  const {
+    createNote,
+    moveBehavior: { byItems: moveNotesByItems },
+  } = container.resolve(NoteService);
   const {
     tree,
     showContextmenu,

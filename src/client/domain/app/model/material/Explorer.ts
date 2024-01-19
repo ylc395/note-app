@@ -1,17 +1,19 @@
 import { singleton, container } from 'tsyringe';
 import { token as rpcToken } from '@domain/common/infra/rpc';
 import assert from 'assert';
+import { compact } from 'lodash-es';
 
 import type { MaterialVO } from '@shared/domain/model/material';
 import MaterialTree from '@domain/common/model/material/Tree';
 import Explorer, { RenameBehavior } from '@domain/app/model/abstract/Explorer';
-import { compact } from 'lodash-es';
+import { EntityTypes } from '../entity';
 
 export { EventNames, type ActionEvent, RenameBehavior } from '@domain/app/model/abstract/Explorer';
 
 @singleton()
 export default class MaterialExplorer extends Explorer<MaterialVO> {
   public readonly tree = new MaterialTree();
+  public readonly entityType = EntityTypes.Material;
   private readonly remote = container.resolve(rpcToken);
 
   public readonly rename = new RenameBehavior(this, ({ id, name }) =>

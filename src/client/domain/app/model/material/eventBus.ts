@@ -6,6 +6,7 @@ export enum Events {
 }
 
 export interface UpdateEvent {
+  actor: unknown;
   id: MaterialVO['id'];
   title?: MaterialVO['title'];
   icon?: MaterialVO['icon'];

@@ -9,6 +9,10 @@ import type { FileDTO, FileVO } from '@shared/domain/model/file';
 import { Workbench } from '@domain/app/model/workbench';
 import { EntityTypes } from '../model/entity';
 import { NEW_MATERIAL_MODAL } from '../model/material/modals';
+import TreeNode from '@domain/common/model/abstract/TreeNode';
+import MaterialEditor from '../model/material/editor/MaterialEditor';
+import MoveBehavior from './behaviors/MoveBehavior';
+import eventBus, { Events } from '../model/material/eventBus';
 
 @singleton()
 export default class MaterialService {
@@ -25,12 +29,19 @@ export default class MaterialService {
     return this.explorer.tree;
   }
 
+  public readonly moveBehavior = new MoveBehavior({
+    tree: this.tree,
+    itemsToIds: MaterialService.getMaterialIds,
+    action: (parentId, ids) => this.remote.material.batchUpdate.mutate([ids, { parentId }]),
+    onMoved: (parentId, ids) => ids.forEach((id) => eventBus.emit(Events.Updated, { actor: this, parentId, id })),
+  });
+
   public readonly queryMaterialByHash = async (hash: string) => {
     const materials = await this.remote.material.query.query({ fileHash: hash });
     return materials;
   };
 
-  public readonly createMaterial = async (dto?: NewMaterialDTO, file?: FileDTO) => {
+  private async createMaterial(dto?: NewMaterialDTO, file?: FileDTO) {
     let fileId: FileVO['id'] | undefined;
 
     if (file) {
@@ -43,16 +54,12 @@ export default class MaterialService {
     this.tree.updateTree(material);
     await this.tree.reveal(material.parentId, true);
     this.tree.toggleSelect(material.id, { value: true });
+    return material;
+  }
 
-    if (isEntityMaterial(material)) {
-      this.workbench.openEntity({
-        entityType: EntityTypes.Material,
-        entityId: material.id,
-        mimeType: material.mimeType,
-      });
-    } else {
-      this.explorer.rename.start(material.id);
-    }
+  public readonly createDirectory = async (parentId: MaterialVO['parentId']) => {
+    const material = await this.createMaterial({ parentId });
+    this.explorer.rename.start(material.id);
   };
 
   public readonly createMaterialFromFile = async (parentId: MaterialVO['parentId']) => {
@@ -63,7 +70,14 @@ export default class MaterialService {
     }
 
     const { file, ...material } = result;
-    return this.createMaterial({ ...material, parentId }, file);
+    const newMaterial = await this.createMaterial({ ...material, parentId }, file);
+    assert(isEntityMaterial(newMaterial));
+
+    this.workbench.openEntity({
+      entityType: EntityTypes.Material,
+      entityId: newMaterial.id,
+      mimeType: newMaterial.mimeType,
+    });
   };
 
   private readonly handleAction = ({ action, id }: ActionEvent) => {
@@ -77,4 +91,14 @@ export default class MaterialService {
         break;
     }
   };
+
+  public static getMaterialIds(item: unknown) {
+    if (item instanceof TreeNode && item.entityLocator.entityType === EntityTypes.Material) {
+      return item.tree.getSelectedNodeIds();
+    }
+
+    if (item instanceof MaterialEditor) {
+      return [item.entityLocator.entityId];
+    }
+  }
 }
