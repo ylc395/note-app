@@ -17,7 +17,7 @@ export default observer(function NoteTreeView() {
   } = container.resolve(NoteService);
   const {
     tree,
-    showContextmenu,
+    useContextmenu: showContextmenu,
     dnd: { updateTreeForDropping, reset: resetTree },
     rename: { id: editingId, submit: submitEditing, cancel: cancelEditing },
   } = container.resolve(Explorer);

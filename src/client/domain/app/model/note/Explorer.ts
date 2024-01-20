@@ -22,7 +22,7 @@ export default class NoteExplorer extends Explorer<NoteVO> {
   private readonly remote = container.resolve(rpcToken);
 
   public readonly rename = new RenameBehavior({
-    explorer: this,
+    tree: this.tree,
     onSubmit: async ({ id, name }) => {
       const newNote = await this.remote.note.updateOne.mutate([id, { title: name }]);
       eventBus.emit(NoteEvents.Updated, { id: newNote.id, title: newNote.title, actor: this });
@@ -52,7 +52,7 @@ export default class NoteExplorer extends Explorer<NoteVO> {
       },
       { type: 'separator' } as const,
       { label: '移动至...', key: 'move' },
-      { label: '重命名', key: 'rename' },
+      { label: '重命名与选择图标', key: 'rename' },
       !isMultiple && { label: '制作副本', key: 'duplicate' },
       { type: 'separator' } as const,
       { label: '删除', key: 'delete' },

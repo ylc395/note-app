@@ -41,7 +41,7 @@ export default function TreeView<T extends MaterialVO | NoteVO>({
   defaultIcon,
 }: Props<T>) {
   function handleClick(node: TreeNode<T>, isMultiple: boolean) {
-    tree.toggleSelect(node.id, { isMultiple });
+    tree.toggleSelect(node.id, { isMultiple, value: true });
     onClick?.(node, isMultiple);
   }
 

@@ -31,7 +31,7 @@ export default observer(function MaterialTreeView() {
   const { openEntity } = container.resolve(Workbench);
   const {
     tree,
-    showContextmenu,
+    useContextmenu,
     dnd: { updateTreeForDropping, reset: resetTree },
     rename: { id: editingId, submit: submitEditing, cancel: cancelEditing },
   } = container.resolve(MaterialExplorer);
@@ -51,7 +51,7 @@ export default observer(function MaterialTreeView() {
       editingNodeId={editingId}
       onEditEnd={submitEditing}
       onEditCancel={cancelEditing}
-      onContextmenu={showContextmenu}
+      onContextmenu={useContextmenu}
       onDragStop={resetTree}
       onDragStart={updateTreeForDropping}
       onDrop={(item, node) => moveMaterialsByItems(node.id, item)}

@@ -1,9 +1,13 @@
-import type { EntityLocator as Entity, EntityId } from '@shared/domain/model/entity';
+import type { EntityLocator as CommonEntityLocator, EntityId } from '@shared/domain/model/entity';
 
 export * from '@shared/domain/model/entity';
 
-export type WithId<T> = Partial<T> & { id: EntityId };
+interface Entity {
+  id: EntityId;
+}
 
-export interface EntityLocator extends Entity {
+export type WithId<T extends Entity> = Partial<T> & Entity;
+
+export interface EntityLocator extends CommonEntityLocator {
   mimeType?: string;
 }

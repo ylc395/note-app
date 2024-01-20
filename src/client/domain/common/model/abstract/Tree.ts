@@ -212,7 +212,7 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
       }
     }
 
-    node.isSelected = !node.isSelected;
+    node.isSelected = !oldValue;
   }
 
   @action

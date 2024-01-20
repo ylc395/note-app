@@ -7,6 +7,7 @@ import type { MaterialVO } from '@shared/domain/model/material';
 import MaterialTree from '@domain/common/model/material/Tree';
 import Explorer, { RenameBehavior } from '@domain/app/model/abstract/Explorer';
 import { EntityTypes } from '../entity';
+import eventBus, { Events } from './eventBus';
 
 export { EventNames, type ActionEvent, RenameBehavior } from '@domain/app/model/abstract/Explorer';
 
@@ -17,8 +18,12 @@ export default class MaterialExplorer extends Explorer<MaterialVO> {
   private readonly remote = container.resolve(rpcToken);
 
   public readonly rename = new RenameBehavior({
-    explorer: this,
-    onSubmit: ({ id, name }) => this.remote.material.updateOne.mutate([id, { title: name }]),
+    tree: this.tree,
+    onSubmit: async ({ id, name }) => {
+      const newMaterial = await this.remote.material.updateOne.mutate([id, { title: name }]);
+      eventBus.emit(Events.Updated, { id, title: name, actor: this });
+      return newMaterial;
+    },
   });
 
   constructor() {

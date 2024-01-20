@@ -4,9 +4,9 @@ import assert from 'assert';
 import { token as rpcToken } from '@domain/common/infra/rpc';
 
 import type { NoteVO } from '@shared/domain/model/note';
-import { TileSplitDirections, Workbench } from '@domain/app/model/workbench';
+import { Workbench } from '@domain/app/model/workbench';
 import NoteEditor from '@domain/app/model/note/Editor';
-import NoteExplorer, { EventNames as ExplorerEvents, type ActionEvent } from '@domain/app/model/note/Explorer';
+import NoteExplorer, { type ActionEvent, EventNames } from '@domain/app/model/note/Explorer';
 import { EntityTypes } from '@shared/domain/model/entity';
 import { eventBus, Events } from '@domain/app/model/note/eventBus';
 import { MOVE_TARGET_MODAL } from '@domain/app/model/note/prompts';
@@ -16,7 +16,7 @@ import MoveBehavior from './behaviors/MoveBehavior';
 @singleton()
 export default class NoteService {
   constructor() {
-    this.explorer.on(ExplorerEvents.Action, this.handleAction);
+    this.explorer.on(EventNames.Action, this.handleAction);
   }
   private readonly remote = container.resolve(rpcToken);
   private readonly explorer = container.resolve(NoteExplorer);
@@ -49,21 +49,8 @@ export default class NoteService {
     switch (action) {
       case 'duplicate':
         return this.createNote({ from: oneId });
-      case 'rename':
-        return this.explorer.rename.start(oneId);
       case 'move':
         return this.move.byUserInput();
-      case 'openInNewTab':
-        return this.workbench.openEntity(this.tree.getNode(oneId).entityLocator, { forceNewTab: true });
-      case 'openToTop':
-      case 'openToBottom':
-      case 'openToRight':
-      case 'openToLeft':
-        return this.workbench.openEntity(
-          { entityType: EntityTypes.Note, entityId: oneId },
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          { dest: { splitDirection: TileSplitDirections[action.match(/openTo(.+)/)![1] as any] as any } },
-        );
       default:
         assert.fail(`invalid action: ${action}`);
     }
