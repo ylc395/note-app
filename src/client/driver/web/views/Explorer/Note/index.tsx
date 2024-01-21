@@ -8,7 +8,7 @@ import NoteExplorer from '@domain/app/model/note/Explorer';
 import ExplorerHeader from '../common/ExplorerHeader';
 import TreeView from './TreeView';
 import TreeOperations from './Operations';
-import TargetTreeModal from './TargetTreeModal';
+import TargetTreeModal from '../common/TargetTreeModal';
 import { useDragItem } from '@web/components/dnd/hooks';
 
 export default observer(function NoteExplorerView() {
@@ -34,7 +34,7 @@ export default observer(function NoteExplorerView() {
         <TreeOperations />
       </ExplorerHeader>
       <TreeView />
-      <TargetTreeModal />
+      <TargetTreeModal tree={tree} />
     </>
   );
 });

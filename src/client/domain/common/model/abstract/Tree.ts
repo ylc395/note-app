@@ -85,7 +85,7 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
   }
 
   @action
-  removeNodes(ids: TreeNode<T>['id'][], isChild = false) {
+  public removeNodes(ids: TreeNode<T>['id'][], isChild = false) {
     for (const id of ids) {
       const node = this.getNode(id);
 
@@ -102,7 +102,7 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
     }
   }
 
-  protected abstract entityToNode(
+  public abstract entityToNode(
     entity: T | null,
   ): Partial<Pick<TreeNode<T>, 'isLeaf' | 'title' | 'isDisabled' | 'icon'>>;
 

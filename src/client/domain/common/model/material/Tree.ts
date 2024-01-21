@@ -16,7 +16,7 @@ export default class MaterialTree extends Tree<MaterialVO> {
     return this.remote.material.query.query({ to: id });
   }
 
-  protected entityToNode(material: MaterialVO | null) {
+  public entityToNode(material: MaterialVO | null) {
     return {
       icon: material ? material.icon : null,
       title: material ? normalizeTitle(material) : '根',

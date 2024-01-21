@@ -17,7 +17,7 @@ export default class NoteTree extends Tree<NoteVO> {
     return this.remote.note.query.query({ to: id });
   }
 
-  protected entityToNode(note: NoteVO | null) {
+  public entityToNode(note: NoteVO | null) {
     return {
       title: note ? normalizeTitle(note) : '根',
       icon: note ? note.icon : null,

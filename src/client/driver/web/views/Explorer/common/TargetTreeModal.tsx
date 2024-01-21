@@ -1,17 +1,23 @@
-import { container } from 'tsyringe';
 import clsx from 'clsx';
 import { observer } from 'mobx-react-lite';
+import { useEffect } from 'react';
 
 import Modal, { useModalValue } from '@web/components/Modal';
 import Tree from '@web/components/Tree';
-import TargetTree from '@domain/app/model/note/TargetTree';
 import { MOVE_TARGET_MODAL } from '@domain/app/model/note/prompts';
-import NodeTitle from '../common/TreeView/NodeTitle';
-import NoteExplorer from '@domain/app/model/note/Explorer';
+import NodeTitle from './TreeView/NodeTitle';
+import type TreeModel from '@domain/common/model/abstract/Tree';
+import getTargetTree from '@domain/app/model/abstract/targetTree';
 
-export default observer(function TargetTreeModal() {
-  const { tree } = container.resolve(NoteExplorer);
-  const { value: targetTree, modalProps } = useModalValue(() => TargetTree.from(tree));
+export default observer(function TargetTreeModal({ tree }: { tree: TreeModel }) {
+  const { value: targetTree, modalProps } = useModalValue(() => getTargetTree(tree));
+  const getTargetId = () => targetTree?.getSelectedNodeIds(true)[0];
+
+  useEffect(() => {
+    if (targetTree) {
+      targetTree.root.loadChildren();
+    }
+  }, [targetTree]);
 
   return (
     <Modal
@@ -19,7 +25,7 @@ export default observer(function TargetTreeModal() {
       id={MOVE_TARGET_MODAL}
       bodyClassName="border border-solid border-gray-200 p-4"
       title="移动至..."
-      getSubmitResult={() => targetTree?.targetId}
+      getSubmitResult={getTargetId}
     >
       {targetTree && (
         <Tree

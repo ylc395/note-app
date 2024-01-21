@@ -1,11 +1,11 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import clsx from 'clsx';
 
 import Draggable from '@web/components/dnd/Draggable';
 import Droppable from '@web/components/dnd/Droppable';
 import type TreeNode from '@domain/common/model/abstract/TreeNode';
-import { NoteVO } from '@shared/domain/model/note';
-import { MaterialVO } from '@shared/domain/model/material';
+import type { NoteVO } from '@shared/domain/model/note';
+import type { MaterialVO } from '@shared/domain/model/material';
 
 interface Props<T extends NoteVO | MaterialVO> {
   children: ReactNode;
@@ -15,6 +15,7 @@ interface Props<T extends NoteVO | MaterialVO> {
   onDragStop: () => void;
 }
 
+// eslint-disable-next-line mobx/missing-observer
 export default function DndTreeNode({ children, node, onDrop, onDragStart, onDragStop }: Props<NoteVO | MaterialVO>) {
   const handleDragStart = () => {
     node.tree.toggleSelect(node.id, { value: true });
@@ -22,6 +23,16 @@ export default function DndTreeNode({ children, node, onDrop, onDragStart, onDra
   };
 
   const [isOver, setIsOver] = useState(false);
+
+  useEffect(() => {
+    if (isOver && !node.isLeaf) {
+      const timer = setTimeout(() => {
+        node.tree.toggleExpand(node.id, true);
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isOver, node]);
 
   return (
     <Droppable
