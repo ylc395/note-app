@@ -1,4 +1,4 @@
-import { size } from 'lodash-es';
+import { assert } from 'console';
 import { action, computed, makeObservable, observable, toJS } from 'mobx';
 import type { ZodSchema } from 'zod';
 
@@ -7,6 +7,11 @@ interface FieldOption<T> {
   transform?: (v: T) => T;
   validate?: ((value: T) => string | false | null) | { schema: ZodSchema<T>; message: string };
   onChange?: (v: T, form: Form<unknown>) => void;
+}
+
+interface FormError {
+  message: string;
+  fatal: boolean;
 }
 
 type Fields<T> = {
@@ -25,17 +30,17 @@ export default class Form<T> {
     }
   }
 
-  @observable private readonly _values = {} as Partial<T>;
-  @observable public errors = {} as Record<keyof T, string>;
+  @observable private readonly _values = {} as T;
+  @observable public errors = {} as Record<keyof T, FormError | undefined>;
 
   @action
-  public setMessage(field: keyof T, message: string) {
-    this.errors[field] = message;
+  public setError(field: keyof T, error: FormError) {
+    this.errors[field] = error;
   }
 
   @computed
   public get isValid() {
-    return size(this.errors) === 0;
+    return (Object.values(this.errors) as FormError[]).filter((err) => err.fatal).length === 0;
   }
 
   public readonly getValues = () => {
@@ -63,7 +68,7 @@ export default class Form<T> {
     }
 
     if (error) {
-      this.errors[key] = error;
+      this.errors[key] = { message: error, fatal: true };
     } else {
       delete this.errors[key];
     }
@@ -72,6 +77,9 @@ export default class Form<T> {
   }
 
   public get<K extends keyof T>(key: K) {
-    return this._values[key];
+    const value = this._values[key];
+    assert(value !== undefined);
+
+    return value;
   }
 }

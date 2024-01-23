@@ -3,7 +3,7 @@ import { token as rpcToken } from '@domain/common/infra/rpc';
 import assert from 'assert';
 import { compact } from 'lodash-es';
 
-import type { MaterialVO } from '@shared/domain/model/material';
+import { isEntityMaterial, type MaterialVO } from '@shared/domain/model/material';
 import MaterialTree from '@domain/common/model/material/Tree';
 import Explorer, { RenameBehavior } from '@domain/app/model/abstract/Explorer';
 import { EntityTypes } from '../entity';
@@ -34,13 +34,16 @@ export default class MaterialExplorer extends Explorer<MaterialVO> {
     const node = this.tree.selectedNodes[0];
     const isMultiple = this.tree.selectedNodes.length > 1;
     assert(node?.entity);
-    const canOpenInNewTab = !this.workbench.currentTile?.findByEntity(node.entityLocator);
+
+    const isDirectory = !isEntityMaterial(node.entity);
+    const canOpenInNewTab = !isDirectory && !this.workbench.currentTile?.findByEntity(node.entityLocator);
+    const canOpenTo = !isDirectory && this.workbench.currentTile;
 
     return compact([
       isMultiple && { label: `共${this.tree.selectedNodes.length}项`, disabled: true },
       isMultiple && ({ type: 'separator' } as const),
       canOpenInNewTab && { label: '新标签页打开', key: 'openInNewTab' },
-      this.workbench.currentTile && {
+      canOpenTo && {
         label: '打开至...',
         submenu: [
           { label: '左边', key: 'openToLeft' },

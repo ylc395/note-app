@@ -8,10 +8,10 @@ import type { EntityMaterialVO } from '@shared/domain/model/material';
 import { fileDTOSchema } from '@shared/domain/model/file';
 import Modal, { useModalValue } from '@web/components/Modal';
 import { NEW_MATERIAL_MODAL } from '@domain/app/model/material/modals';
-import IconPicker from '@web/components/icon/PickerButton';
 import Form from '@domain/common/model/abstract/Form';
 import { getHash } from '@shared/utils/file';
 import MaterialService from '@domain/app/service/MaterialService';
+import Field from '@web/components/form/Field';
 
 const createForm = () =>
   new Form({
@@ -59,7 +59,10 @@ export default observer(function NewMaterialFormModal() {
       const materials = await queryMaterialByHash(hash);
 
       if (materials.length > 0) {
-        form.setMessage('file', `该文件已存在对应素材${materials.map(({ title }) => title).join()}`);
+        form.setError('file', {
+          message: `该文件已存在对应素材${materials.map(({ title }) => title).join()}`,
+          fatal: false,
+        });
       }
     } else {
       form.set('file', null);
@@ -70,28 +73,23 @@ export default observer(function NewMaterialFormModal() {
     <Modal {...modalProps} id={NEW_MATERIAL_MODAL} title="新建素材">
       {form && (
         <div className="flex flex-col">
-          <label className="flex">
-            <span>名称</span>
-            <input ref={inputRef} value={form.get('title')} onChange={(v) => form.set('title', v.target.value)} />
-          </label>
-          <label className="flex">
-            <span>选择文件</span>
-            <input type="file" onChange={(e) => handleFileChange(e.target.files)} />
-            <span>{form.errors.file}</span>
-          </label>
-          <label className="flex">
-            <span>图标</span>
-            <IconPicker icon={form.get('icon') || null} onSelect={(icon) => form.set('icon', icon)} />
-          </label>
-          <label className="flex">
-            <span>来源 URL</span>
-            <input value={form.get('sourceUrl') || ''} onChange={(e) => form.set('sourceUrl', e.target.value)} />
-            <span>{form.errors.sourceUrl}</span>
-          </label>
-          <label className="flex">
-            <span>备注</span>
-            <textarea value={form.get('comment')} onChange={(e) => form.set('comment', e.target.value)} />
-          </label>
+          <Field
+            type="text"
+            ref={inputRef}
+            label="名称"
+            value={form.get('title')}
+            onChange={(v) => form.set('title', v)}
+          />
+          <Field type="file" label="选择文件" onChange={handleFileChange} error={form.errors.file?.message} />
+          <Field label="图标" type="icon" value={form.get('icon')} onChange={(icon) => form.set('icon', icon)} />
+          <Field
+            type="text"
+            error={form.errors.sourceUrl?.message}
+            label="来源 URL"
+            value={form.get('sourceUrl') || ''}
+            onChange={(e) => form.set('sourceUrl', e)}
+          />
+          <Field type="textarea" label="备注" value={form.get('comment')} onChange={(e) => form.set('comment', e)} />
         </div>
       )}
     </Modal>

@@ -40,7 +40,7 @@ export default observer(function MaterialTreeView() {
     if (!isMultiple && node.entity) {
       if (isEntityMaterial(node.entity)) {
         openEntity({ entityType: EntityTypes.Material, entityId: node.id, mimeType: node.entity.mimeType });
-      } else {
+      } else if (!node.isLeaf) {
         tree.toggleExpand(node.id);
       }
     }
