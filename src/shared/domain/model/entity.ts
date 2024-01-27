@@ -5,7 +5,7 @@ export enum EntityTypes {
   Note = 1,
   Memo,
   Material,
-  MaterialAnnotation,
+  Annotation,
   File,
 }
 

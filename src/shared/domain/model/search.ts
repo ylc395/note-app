@@ -3,7 +3,7 @@ import { array, nativeEnum, object, string, type infer as Infer, boolean } from 
 import { isEmpty, negate } from 'lodash-es';
 
 import { type EntityId, EntityTypes, hierarchyEntityLocatorSchema, Path } from './entity.js';
-import type { EntityMaterial } from './material/index.js';
+import type { EntityMaterial } from './material.js';
 
 interface SearchRecord {
   text: string;

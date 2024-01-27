@@ -8,7 +8,7 @@ import type SearchEngine from './index.js';
 import {
   FILE_TEXTS_FTS_TABLE,
   MATERIAL_FTS_TABLE,
-  MATERIAL_ANNOTATION_FTS_TABLE,
+  ANNOTATION_FTS_TABLE,
   WRAPPER_END_TEXT,
   WRAPPER_START_TEXT,
   type SearchRow,
@@ -17,7 +17,7 @@ import { commonSql } from './sql.js';
 import { tableName as fileTableName } from '../schema/file.js';
 import { tableName as materialTable } from '../schema/material.js';
 import { tableName as linkTableName } from '../schema/link.js';
-import { tableName as materialAnnotationTableName } from '../schema/materialAnnotation.js';
+import { tableName as materialAnnotationTableName } from '../schema/annotation.js';
 
 export default class SqliteMaterialSearchEngine {
   constructor(private readonly engine: SearchEngine) {}
@@ -93,23 +93,23 @@ export default class SqliteMaterialSearchEngine {
 
     if (scopes.includes(Scopes.MaterialAnnotation)) {
       let query = this.engine.db
-        .selectFrom(MATERIAL_ANNOTATION_FTS_TABLE)
-        .innerJoin(materialTable, `${MATERIAL_ANNOTATION_FTS_TABLE}.materialId`, `${materialTable}.id`)
+        .selectFrom(ANNOTATION_FTS_TABLE)
+        .innerJoin(materialTable, `${ANNOTATION_FTS_TABLE}.targetId`, `${materialTable}.id`)
         .innerJoin(fileTableName, `${fileTableName}.id`, `${materialTable}.fileId`)
         .select([
           // prettier-ignore
-          sql<string>`simple_snippet(${sql.table(MATERIAL_ANNOTATION_FTS_TABLE)}, 1, '${sql.raw(WRAPPER_START_TEXT)}', '${sql.raw(WRAPPER_END_TEXT)}', '...',  100)`.as('body'),
+          sql<string>`simple_snippet(${sql.table(ANNOTATION_FTS_TABLE)}, 1, '${sql.raw(WRAPPER_START_TEXT)}', '${sql.raw(WRAPPER_END_TEXT)}', '...',  100)`.as('body'),
           `${materialTable}.id as entityId`,
           `${materialTable}.createdAt`,
           `${materialTable}.userUpdatedAt as updatedAt`,
           `${materialTable}.title`,
           `${fileTableName}.mimeType`,
-          `${MATERIAL_ANNOTATION_FTS_TABLE}.rank`,
-          `${MATERIAL_ANNOTATION_FTS_TABLE}.id as annotationId`,
+          `${ANNOTATION_FTS_TABLE}.rank`,
+          `${ANNOTATION_FTS_TABLE}.id as annotationId`,
         ])
-        .where(`${MATERIAL_ANNOTATION_FTS_TABLE}.comment`, 'match', q.keyword);
+        .where(`${ANNOTATION_FTS_TABLE}.body`, 'match', q.keyword);
 
-      query = commonSql(query, MATERIAL_ANNOTATION_FTS_TABLE, q);
+      query = commonSql(query, ANNOTATION_FTS_TABLE, q);
       result = result.concat(await query.execute());
     }
 

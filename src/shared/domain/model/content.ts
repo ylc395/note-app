@@ -7,9 +7,7 @@ const highlightPositionSchema = object({
   end: number(),
 });
 
-const contentEntityTypesSchema = nativeEnum(
-  pick(EntityTypes, ['Note', 'Memo', 'Material', 'MaterialAnnotation'] as const),
-);
+const contentEntityTypesSchema = nativeEnum(pick(EntityTypes, ['Note', 'Memo', 'Material', 'Annotation'] as const));
 
 export type HighlightPosition = Infer<typeof highlightPositionSchema>;
 
@@ -51,8 +49,4 @@ export const linksDTOSchema = linkDTOSchema.array();
 
 export type LinkDTO = Infer<typeof linkDTOSchema>;
 
-export type ContentEntityTypes =
-  | EntityTypes.Material
-  | EntityTypes.MaterialAnnotation
-  | EntityTypes.Memo
-  | EntityTypes.Note;
+export type ContentEntityTypes = EntityTypes.Material | EntityTypes.Annotation | EntityTypes.Memo | EntityTypes.Note;

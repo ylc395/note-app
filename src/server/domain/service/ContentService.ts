@@ -15,11 +15,11 @@ import type {
   EntityWithSnippet,
   Link,
   HighlightPosition,
-  TopicQuery,
-  TopicVO,
-  TopicDTO,
+  // TopicQuery,
+  // TopicVO,
+  // TopicDTO,
   LinkDTO,
-  LinkToQuery,
+  // LinkToQuery,
   InlineTopic,
   ContentEntityLocator,
 } from '@domain/model/content.js';
@@ -123,52 +123,52 @@ export default class ContentService extends BaseService {
     return this.repo.contents.findAvailableTopicNames({ orderBy: 'updatedAt' });
   }
 
-  async queryTopics(q: TopicQuery) {
-    const topics = await this.repo.contents.findAvailableTopics(q);
-    const topicsGroup = groupBy(topics, 'name');
-    const result: TopicVO[] = [];
-    const titles = await this.entityService.getNormalizedTitles(topics);
-    const snippets = await this.getSnippets(topics);
+  // async queryTopics(q: TopicQuery) {
+  //   const topics = await this.repo.contents.findAvailableTopics(q);
+  //   const topicsGroup = groupBy(topics, 'name');
+  //   const result: TopicVO[] = [];
+  //   const titles = await this.entityService.getNormalizedTitles(topics);
+  //   const snippets = await this.getSnippets(topics);
 
-    for (const [name, topics] of Object.entries(topicsGroup)) {
-      const topicVO: TopicVO = {
-        updatedAt: 0,
-        name,
-        entities: [],
-      };
+  //   for (const [name, topics] of Object.entries(topicsGroup)) {
+  //     const topicVO: TopicVO = {
+  //       updatedAt: 0,
+  //       name,
+  //       entities: [],
+  //     };
 
-      for (const topic of topics) {
-        const snippet = snippets[topic.entityId]![`${topic.position.start},${topic.position.end}`]!;
+  //     for (const topic of topics) {
+  //       const snippet = snippets[topic.entityId]![`${topic.position.start},${topic.position.end}`]!;
 
-        topicVO.entities.push({
-          entityId: topic.entityId,
-          entityType: topic.entityType,
-          title: titles[topic.entityId] || '',
-          ...snippet,
-        });
+  //       topicVO.entities.push({
+  //         entityId: topic.entityId,
+  //         entityType: topic.entityType,
+  //         title: titles[topic.entityId] || '',
+  //         ...snippet,
+  //       });
 
-        if (topic.createdAt > topicVO.updatedAt) {
-          topicVO.updatedAt = topic.createdAt;
-        }
-      }
-      result.push(topicVO);
-    }
-    return result;
-  }
+  //       if (topic.createdAt > topicVO.updatedAt) {
+  //         topicVO.updatedAt = topic.createdAt;
+  //       }
+  //     }
+  //     result.push(topicVO);
+  //   }
+  //   return result;
+  // }
 
-  async queryLinkTos(q: LinkToQuery) {
-    const links = await this.repo.contents.findAllLinkTos(q);
-    const froms = await this.entityService.filterAvailable(map(links, 'from'));
-    const snippets = await this.getSnippets(froms);
-    const titles = await this.entityService.getNormalizedTitles(froms);
+  // async queryLinkTos(q: LinkToQuery) {
+  //   const links = await this.repo.contents.findAllLinkTos(q);
+  //   const froms = await this.entityService.filterAvailable(map(links, 'from'));
+  //   const snippets = await this.getSnippets(froms);
+  //   const titles = await this.entityService.getNormalizedTitles(froms);
 
-    return froms.map(({ entityId, entityType, position }) => ({
-      entityId,
-      entityType,
-      title: titles[entityId]!,
-      ...snippets[entityId]![`${position.start},${position.end}`]!,
-    }));
-  }
+  //   return froms.map(({ entityId, entityType, position }) => ({
+  //     entityId,
+  //     entityType,
+  //     title: titles[entityId]!,
+  //     ...snippets[entityId]![`${position.start},${position.end}`]!,
+  //   }));
+  // }
 
   private async getSnippets(entities: (ContentEntityLocator & { position: HighlightPosition })[]) {
     const result: Record<
@@ -193,20 +193,20 @@ export default class ContentService extends BaseService {
     return result;
   }
 
-  async createTopics(topics: TopicDTO[]) {
-    const createdAt = Date.now();
+  // async createTopics(topics: TopicDTO[]) {
+  //   const createdAt = Date.now();
 
-    await this.entityService.assertAvailableEntities(topics);
+  //   await this.entityService.assertAvailableEntities(topics);
 
-    await this.transaction(async () => {
-      const _topics = topics.map((topic) => ({ ...topic, createdAt }));
+  //   await this.transaction(async () => {
+  //     const _topics = topics.map((topic) => ({ ...topic, createdAt }));
 
-      for (const topic of uniqBy(topics, 'entityId')) {
-        await this.repo.contents.removeTopicsOf(topic);
-      }
-      await this.repo.contents.createTopics(_topics);
-    });
-  }
+  //     for (const topic of uniqBy(topics, 'entityId')) {
+  //       await this.repo.contents.removeTopicsOf(topic);
+  //     }
+  //     await this.repo.contents.createTopics(_topics);
+  //   });
+  // }
 
   async createLinks(links: LinkDTO[]) {
     const createdAt = Date.now();

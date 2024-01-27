@@ -20,30 +20,21 @@ export default class HtmlEditor extends MaterialEditor<EditableHtml, State> {
   }
 
   @observable.ref
-  documentElement?: unknown;
+  public documentElement?: unknown;
 
-  @observable panelsVisibility = {
+  @observable
+  public panelsVisibility = {
     [Panels.Outline]: false,
     [Panels.AnnotationList]: true,
   };
 
   @action
-  togglePanel(panel: Panels) {
+  public togglePanel(panel: Panels) {
     this.panelsVisibility[panel] = !this.panelsVisibility[panel];
   }
 
   @computed
-  get metadata() {
-    if (!this.editable.info) {
-      return null;
-    }
-
-    const { icon, sourceUrl } = this.editable.info;
-    return { icon, sourceUrl };
-  }
-
-  @computed
-  get html() {
+  public get html() {
     return this.editable.html;
   }
 }

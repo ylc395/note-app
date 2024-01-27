@@ -7,7 +7,7 @@ import { useRef } from 'react';
 import type { EntityMaterialVO } from '@shared/domain/model/material';
 import { fileDTOSchema } from '@shared/domain/model/file';
 import Modal, { useModalValue } from '@web/components/Modal';
-import { NEW_MATERIAL_MODAL } from '@domain/app/model/material/modals';
+import { NEW_MATERIAL_MODAL } from '@domain/app/model/material/prompts';
 import Form from '@domain/common/model/abstract/Form';
 import { getHash } from '@shared/utils/file';
 import MaterialService from '@domain/app/service/MaterialService';

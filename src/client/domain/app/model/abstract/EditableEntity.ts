@@ -1,17 +1,29 @@
 import { container } from 'tsyringe';
+import assert from 'assert';
+import { observable, makeObservable } from 'mobx';
 
 import { token as rpcToken } from '@domain/common/infra/rpc';
 import { EntityId, EntityLocator, EntityTypes, Path } from '../entity';
 import type { Tile } from '../workbench';
 import type Editor from './Editor';
+import type { AnnotationDTO, AnnotationPatchDTO, AnnotationVO } from '@shared/domain/model/annotation';
+import { runInAction } from 'mobx';
 
 export interface EditableEntityLocator extends EntityLocator {
   entityType: EntityTypes.Note | EntityTypes.Material;
 }
 
-export default abstract class EditableEntity {
+interface EntityInfo {
+  icon: string | null;
+  path: Path;
+  title: string;
+}
+
+export default abstract class EditableEntity<T extends EntityInfo = EntityInfo> {
   constructor(private readonly entityId: EntityId) {
+    makeObservable(this);
     this.load();
+    this.loadAnnotations();
   }
 
   protected readonly remote = container.resolve(rpcToken);
@@ -20,18 +32,45 @@ export default abstract class EditableEntity {
   protected abstract load(): Promise<void>; // todo: load must return a cancel function.
   public abstract destroy(): void;
   public abstract createEditor(tile: Tile): Editor;
+  @observable public annotations?: AnnotationVO[];
 
-  public abstract info?: {
-    icon: string | null;
-    path: Path;
-    title: string;
-  };
+  private async loadAnnotations() {
+    const annotations = await this.remote.annotation.queryByEntityId.query(this.entityId);
+
+    runInAction(() => {
+      this.annotations = annotations;
+    });
+  }
+
+  public async createAnnotation(annotation: Pick<AnnotationDTO, 'selector' | 'body'>) {
+    const newAnnotation = await this.remote.annotation.create.mutate({
+      targetId: this.entityId,
+      ...annotation,
+    });
+
+    runInAction(() => {
+      assert(this.annotations);
+      this.annotations.push(newAnnotation);
+    });
+  }
+
+  public async updateAnnotation(id: AnnotationVO['id'], patch: AnnotationPatchDTO) {
+    const annotation = await this.remote.annotation.updateOne.mutate([id, patch]);
+
+    runInAction(() => {
+      assert(this.annotations);
+      const index = this.annotations.findIndex(({ id }) => annotation.id === id);
+      this.annotations[index] = annotation;
+    });
+  }
+
+  public abstract info?: T;
 
   public get entityLocator() {
     return { entityType: this.entityType, entityId: this.entityId };
   }
 
-  static isEditable(locator: EntityLocator): locator is EditableEntityLocator {
+  public static isEditable(locator: EntityLocator): locator is EditableEntityLocator {
     if (![EntityTypes.Note, EntityTypes.Material].includes(locator.entityType)) {
       return false;
     }

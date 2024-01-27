@@ -8,12 +8,11 @@ import { isEntityMaterial, type MaterialVO, type NewMaterialDTO } from '@shared/
 import type { FileDTO, FileVO } from '@shared/domain/model/file';
 import { Workbench } from '@domain/app/model/workbench';
 import { EntityTypes } from '../model/entity';
-import { NEW_MATERIAL_MODAL } from '../model/material/modals';
 import TreeNode from '@domain/common/model/abstract/TreeNode';
 import MaterialEditor from '../model/material/editor/MaterialEditor';
 import MoveBehavior from './behaviors/MoveBehavior';
 import eventBus, { Events } from '../model/material/eventBus';
-import { MOVE_TARGET_MODAL } from '../model/material/prompts';
+import { MOVE_TARGET_MODAL, NEW_MATERIAL_MODAL } from '../model/material/prompts';
 
 @singleton()
 export default class MaterialService {

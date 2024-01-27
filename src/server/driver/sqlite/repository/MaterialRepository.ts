@@ -11,10 +11,10 @@ import FileRepository from './FileRepository.js';
 import HierarchyEntityRepository from './HierarchyEntityRepository.js';
 
 export default class SqliteMaterialRepository extends HierarchyEntityRepository implements MaterialRepository {
-  readonly tableName = schema.tableName;
+  public readonly tableName = schema.tableName;
   private readonly files = new FileRepository(this.sqliteDb);
 
-  async create(material: NewMaterialDTO) {
+  public async create(material: NewMaterialDTO) {
     let file: Selectable<FileRow> | null = null;
 
     if (material.fileId) {
@@ -36,7 +36,7 @@ export default class SqliteMaterialRepository extends HierarchyEntityRepository 
     };
   }
 
-  async findAll(q: MaterialQuery) {
+  public async findAll(q: MaterialQuery) {
     let qb = this.db
       .selectFrom(this.tableName)
       .leftJoin(fileTableName, `${this.tableName}.fileId`, `${fileTableName}.id`);
@@ -67,14 +67,21 @@ export default class SqliteMaterialRepository extends HierarchyEntityRepository 
     return rows.map((row) => SqliteMaterialRepository.rowToMaterial(row, row.mimeType));
   }
 
-  async findOneById(id: Material['id']) {
-    const row = await this.db
+  public async findOneById(id: Material['id'], availableOnly?: boolean) {
+    let sql = this.db
       .selectFrom(this.tableName)
       .leftJoin(fileTableName, `${this.tableName}.fileId`, `${fileTableName}.id`)
       .selectAll(this.tableName)
       .select(`${fileTableName}.mimeType`)
-      .where(`${this.tableName}.id`, '=', id)
-      .executeTakeFirst();
+      .where(`${this.tableName}.id`, '=', id);
+
+    if (availableOnly) {
+      sql = sql
+        .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.id`)
+        .where(`${recyclableTableName}.entityId`, 'is', null);
+    }
+
+    const row = await sql.executeTakeFirst();
 
     if (!row) {
       return null;
@@ -83,7 +90,7 @@ export default class SqliteMaterialRepository extends HierarchyEntityRepository 
     return SqliteMaterialRepository.rowToMaterial(row, row.mimeType);
   }
 
-  async findBlobById(id: Material['id']) {
+  public async findBlobById(id: Material['id']) {
     const row = await this.db
       .selectFrom(this.tableName)
       .innerJoin(fileTableName, `${this.tableName}.fileId`, `${fileTableName}.id`)
@@ -98,7 +105,7 @@ export default class SqliteMaterialRepository extends HierarchyEntityRepository 
     return null;
   }
 
-  async update(id: Material['id'] | Material['id'][], patch: MaterialPatch) {
+  public async update(id: Material['id'] | Material['id'][], patch: MaterialPatch) {
     const { numUpdatedRows } = await this.db
       .updateTable(this.tableName)
       .set({ ...patch, updatedAt: Date.now() })

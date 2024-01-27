@@ -1,26 +1,17 @@
 import { computed, makeObservable, observable, runInAction } from 'mobx';
-import { remove } from 'lodash';
-import assert from 'assert';
 
 import { EntityTypes } from '@shared/domain/model/entity';
-import type {
-  EntityMaterialVO,
-  AnnotationVO,
-  NewAnnotationDTO,
-  AnnotationPatchDTO,
-} from '@shared/domain/model/material';
+import type { EntityMaterialVO } from '@shared/domain/model/material';
 import EditableEntity from '@domain/app/model/abstract/EditableEntity';
 import eventBus, { Events } from '../eventBus';
 
-export default abstract class EditableMaterial extends EditableEntity {
+export default abstract class EditableMaterial extends EditableEntity<Required<EntityMaterialVO>> {
   protected readonly entityType = EntityTypes.Material;
-  @observable annotations: AnnotationVO[] = [];
 
   constructor(materialId: EntityMaterialVO['id']) {
     super(materialId);
     eventBus.on(Events.Updated, this.refresh, ({ actor, id }) => actor !== this && id === materialId);
     makeObservable(this);
-    this.loadAnnotations();
   }
 
   @observable
@@ -49,49 +40,10 @@ export default abstract class EditableMaterial extends EditableEntity {
     });
   }
 
-  async createAnnotation(annotation: NewAnnotationDTO) {
-    const createdAnnotation = await this.remote.material.createAnnotation.mutate([
-      this.entityLocator.entityId,
-      annotation,
-    ]);
-
-    runInAction(() => {
-      this.annotations.push(createdAnnotation);
-    });
-  }
-
-  private async loadAnnotations() {
-    const annotations = await this.remote.material.queryAnnotations.query(this.entityLocator.entityId);
-
-    runInAction(() => {
-      this.annotations = annotations;
-    });
-  }
-
-  async removeAnnotation(id: AnnotationVO['id']) {
-    await this.remote.material.removeAnnotation.mutate(id);
-    runInAction(() => {
-      remove(this.annotations, { id });
-    });
-  }
-
-  async updateAnnotation(id: AnnotationVO['id'], patch: AnnotationPatchDTO) {
-    const annotation = await this.remote.material.updateAnnotation.mutate([id, patch]);
-
-    runInAction(() => {
-      const index = this.annotations.findIndex(({ id: _id }) => _id === id);
-
-      assert(index > 0, 'no annotation');
-      this.annotations[index] = annotation;
-    });
-  }
-
   @computed
   public get entityLocator() {
     return { ...super.entityLocator, mimeType: this.info?.mimeType };
   }
-
-  public destroy() {}
 }
 
 export const ANNOTATION_COLORS = [

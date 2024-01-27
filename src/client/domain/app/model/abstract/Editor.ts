@@ -12,14 +12,23 @@ export default abstract class Editor<T extends EditableEntity = EditableEntity, 
     makeObservable(this);
     this.uiState = this.localStorage.get(this.uiStateKey);
     this.tile = tile;
+    this.createAnnotation = editable.createAnnotation;
+    this.updateAnnotation = editable.updateAnnotation;
   }
 
-  @observable.ref public tile: Tile;
   public readonly id = uniqueId('editor-');
   private readonly localStorage = container.resolve(localStorageToken);
+  protected abstract normalizeTitle(v: unknown): string;
 
-  @observable public isActive = false;
-  public uiState: Partial<S> | null = null;
+  public get entityLocator(): EditableEntityLocator {
+    return this.editable.entityLocator;
+  }
+
+  @observable.ref
+  public tile: Tile;
+
+  @observable
+  public isActive = false;
 
   @action.bound
   public setActive() {
@@ -31,16 +40,17 @@ export default abstract class Editor<T extends EditableEntity = EditableEntity, 
   }
 
   @computed
-  public get title() {
-    return this.editable.info?.title;
+  public get info() {
+    return this.editable.info as T['info'] | undefined;
   }
-
-  protected abstract normalizeTitle(v: unknown): string;
 
   @computed
-  public get icon() {
-    return this.editable.info?.icon || null;
+  public get annotations() {
+    return this.editable.annotations;
   }
+
+  public readonly createAnnotation: T['createAnnotation'];
+  public readonly updateAnnotation: T['updateAnnotation'];
 
   @computed
   public get tabView() {
@@ -48,14 +58,12 @@ export default abstract class Editor<T extends EditableEntity = EditableEntity, 
       title:
         (IS_DEV ? `${this.id} ${this.entityLocator.entityId.slice(0, 3)} ` : '') +
         (this.editable.info ? this.normalizeTitle(this.editable.info) : ''),
-      icon: this.icon,
+      icon: this.editable.info?.icon || null,
       breadcrumbs: this.editable.info?.path || [],
     };
   }
 
-  public get entityLocator(): EditableEntityLocator {
-    return this.editable.entityLocator;
-  }
+  public uiState: Partial<S> | null = null;
 
   @action.bound
   public updateUIState(state: Partial<S>) {

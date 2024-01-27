@@ -2,7 +2,7 @@ import { sql, type Kysely } from 'kysely';
 import type { Schemas } from './index.js';
 import { tableName as noteTableName } from './note.js';
 import { tableName as materialTableName } from './material.js';
-import { tableName as materialAnnotationTableName } from './materialAnnotation.js';
+import { tableName as annotationTableName } from './annotation.js';
 import { tableName as memoTableName } from './memo.js';
 
 export interface Row {
@@ -24,8 +24,8 @@ export default {
         .union(db.selectFrom(materialTableName).select(['id', 'title', 'parentId', 'comment as content']))
         .union(
           db
-            .selectFrom(materialAnnotationTableName)
-            .select(['id', 'comment as content', sql.val(null).as('parentId'), sql.val('').as('title')]),
+            .selectFrom(annotationTableName)
+            .select(['id', 'body as content', sql.val(null).as('parentId'), sql.val('').as('title')]),
         )
         .union(db.selectFrom(memoTableName).select(['id', sql.val('').as('title'), 'parentId', 'content'])),
     ),

@@ -2,7 +2,7 @@ import type { Row as NoteRow } from '../schema/note.js';
 import type { Row as FileTextRow } from '../schema/fileText.js';
 import type { Row as MemoRow } from '../schema/memo.js';
 import type { Row as MaterialRow } from '../schema/material.js';
-import type { Row as MaterialAnnotationRow } from '../schema/materialAnnotation.js';
+import type { Row as AnnotationRow } from '../schema/annotation.js';
 import type { Db } from '../Database.js';
 
 interface FtsRow {
@@ -17,7 +17,7 @@ export const FILE_TEXTS_FTS_TABLE = 'file_texts_fts';
 export const MEMO_FTS_TABLE = 'memos_fts';
 export const NOTE_FTS_TABLE = 'notes_fts';
 export const MATERIAL_FTS_TABLE = 'materials_fts';
-export const MATERIAL_ANNOTATION_FTS_TABLE = 'material_annotations_fts';
+export const ANNOTATION_FTS_TABLE = 'annotations_fts';
 
 type FileTextFtsRow = FtsRow &
   FileTextRow & {
@@ -38,8 +38,8 @@ type MaterialFtsFow = FtsRow &
   };
 
 type MaterialAnnotationFtsRow = FtsRow &
-  Pick<MaterialAnnotationRow, 'id' | 'comment' | 'createdAt' | 'materialId' | 'updatedAt' | 'meta'> & {
-    [MATERIAL_ANNOTATION_FTS_TABLE]: string;
+  Pick<AnnotationRow, 'id' | 'body' | 'createdAt' | 'targetId' | 'updatedAt'> & {
+    [ANNOTATION_FTS_TABLE]: string;
   };
 
 export interface SearchRow {
@@ -59,5 +59,5 @@ export interface SearchEngineDb extends Db {
   [MEMO_FTS_TABLE]: MemoFtsRow;
   [MATERIAL_FTS_TABLE]: MaterialFtsFow;
   [FILE_TEXTS_FTS_TABLE]: FileTextFtsRow;
-  [MATERIAL_ANNOTATION_FTS_TABLE]: MaterialAnnotationFtsRow;
+  [ANNOTATION_FTS_TABLE]: MaterialAnnotationFtsRow;
 }

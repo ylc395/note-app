@@ -1,7 +1,8 @@
-import { groupBy, intersectionWith } from 'lodash-es';
+import { groupBy, intersectionWith, uniq } from 'lodash-es';
 import { container, singleton } from 'tsyringe';
+import assert from 'assert';
 
-import { type EntityId, type EntityLocator, EntityTypes, type Path } from '@domain/model/entity.js';
+import { type EntityId, type EntityLocator, EntityTypes } from '@domain/model/entity.js';
 import BaseService from './BaseService.js';
 import NoteService from './NoteService.js';
 import MaterialService from './MaterialService.js';
@@ -13,24 +14,27 @@ export default class EntityService extends BaseService {
   private readonly materialService = container.resolve(MaterialService);
   private readonly memoService = container.resolve(MemoService);
 
+  public readonly assertEntityIds = async (ids: EntityId[]) => {
+    ids = uniq(ids);
+    const availableIds = await this.repo.entities.findAllAvailable(ids);
+    assert(availableIds.length === ids.length, 'invalid entity ids');
+  };
+
   public readonly assertAvailableEntities = EntityService.doByEntityType({
     [EntityTypes.Note]: this.noteService.assertAvailableIds,
     [EntityTypes.Material]: this.materialService.assertAvailableIds,
     [EntityTypes.Memo]: this.memoService.assertAvailableIds,
-    [EntityTypes.MaterialAnnotation]: () => Promise.resolve(),
   });
 
   public readonly getNormalizedTitles = EntityService.mergeMapByEntityType({
     [EntityTypes.Note]: this.noteService.getNormalizedTitles,
     [EntityTypes.Material]: this.materialService.getNormalizedTitles,
     [EntityTypes.Memo]: this.memoService.getTitles,
-    [EntityTypes.MaterialAnnotation]: () => Promise.resolve({} as Record<string, string>),
   });
 
   public readonly getPaths = EntityService.mergeMapByEntityType({
     [EntityTypes.Note]: this.noteService.getPaths,
     [EntityTypes.Material]: this.materialService.getPaths,
-    [EntityTypes.Memo]: () => Promise.resolve({} as Record<string, Path>),
   });
 
   private static mergeMapByEntityType<T extends EntityTypes, R>(mappers: Record<T, (ids: EntityId[]) => Promise<R>>) {

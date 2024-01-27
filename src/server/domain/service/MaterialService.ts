@@ -1,17 +1,13 @@
-import { uniq, pick } from 'lodash-es';
+import { uniq, pick, mapValues } from 'lodash-es';
 import assert from 'assert';
 import { singleton } from 'tsyringe';
 
 import {
-  type NewAnnotationDTO,
   type NewMaterialDTO,
   type MaterialVO,
-  type AnnotationVO,
-  type AnnotationPatchDTO,
   type Material,
   type ClientMaterialQuery,
   type MaterialPatchDTO,
-  AnnotationTypes,
   MaterialTypes,
   isEntityMaterial,
   normalizeTitle,
@@ -19,7 +15,7 @@ import {
 import { EntityTypes } from '@domain/model/entity.js';
 
 import BaseService from './BaseService.js';
-import { getNormalizedTitles, getPaths, getTreeFragment } from './behaviors.js';
+import { getPaths, getTreeFragment } from './behaviors.js';
 import { buildIndex } from '@utils/collection.js';
 
 @singleton()
@@ -152,72 +148,18 @@ export default class MaterialService extends BaseService {
   };
 
   public readonly getNormalizedTitles = async (ids: Material['id'][]) => {
-    return getNormalizedTitles({ repo: this.repo.materials, ids, normalizeTitle });
+    const entities = buildIndex(await this.repo.materials.findAll({ id: ids }));
+    return mapValues(entities, normalizeTitle);
   };
 
   public readonly getPaths = async (ids: Material['id'][]) => {
     return getPaths({ ids, repo: this.repo.materials, normalizeTitle });
   };
 
-  async getTreeFragment(materialId: Material['id']) {
+  public async getTreeFragment(materialId: Material['id']) {
     await this.assertAvailableIds([materialId]);
     const nodes = await getTreeFragment(this.repo.materials, materialId);
 
     return await this.toVO(nodes as Material[]);
-  }
-
-  async createAnnotation(materialId: MaterialVO['id'], annotation: NewAnnotationDTO) {
-    if (annotation.type === AnnotationTypes.PdfRange || annotation.type === AnnotationTypes.PdfArea) {
-      await this.assertAvailableIds([materialId], { mimeType: 'application/pdf' });
-    }
-
-    if (annotation.type === AnnotationTypes.HtmlRange) {
-      await this.assertAvailableIds([materialId], { mimeType: 'text/html' });
-    }
-
-    return await this.repo.materialAnnotations.create(materialId, annotation);
-  }
-
-  async queryAnnotations(materialId: MaterialVO['id']) {
-    await this.assertAvailableIds([materialId], { type: MaterialTypes.Entity });
-    return await this.repo.materialAnnotations.findAll(materialId);
-  }
-
-  async removeAnnotation(annotationId: AnnotationVO['id']) {
-    await this.assertValidAnnotation(annotationId);
-    const result = await this.repo.materialAnnotations.remove(annotationId);
-
-    if (!result) {
-      throw new Error('invalid annotation');
-    }
-
-    await this.repo.materials.update(result.materialId, { userUpdatedAt: Date.now() });
-  }
-
-  async updateAnnotation(annotationId: AnnotationVO['id'], patch: AnnotationPatchDTO) {
-    await this.assertValidAnnotation(annotationId);
-    const updated = await this.repo.materialAnnotations.update(annotationId, patch);
-
-    if (!updated) {
-      throw new Error('invalid id');
-    }
-    await this.repo.materials.update(updated.materialId, { userUpdatedAt: updated.updatedAt });
-
-    if (typeof patch.comment === 'string') {
-      this.eventBus.emit('contentUpdated', {
-        content: patch.comment,
-        entityType: EntityTypes.MaterialAnnotation,
-        entityId: annotationId,
-        updatedAt: updated.updatedAt,
-      });
-    }
-
-    return updated;
-  }
-
-  private async assertValidAnnotation(annotationId: AnnotationVO['id']) {
-    const annotation = await this.repo.materialAnnotations.findOneById(annotationId);
-    assert(annotation);
-    await this.assertAvailableIds([annotation.materialId], { type: MaterialTypes.Entity });
   }
 }

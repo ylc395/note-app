@@ -29,7 +29,7 @@ export default observer(function HtmlView({ editor }: { editor: HtmlEditor }) {
       <div className="all-initial">
         <div className="h-full select-text" ref={shadowWrapperRef}></div>
       </div>
-      {editor.annotations.length > 0 && <div className="relative"></div>}
+      {/* {editor.annotations.length > 0 && <div className="relative"></div>} */}
       {/* {selectionTooltipShowing && <SelectionTooltip ref={setSelectionTooltipPopper} style={selectionTooltipStyles} />} */}
     </div>
   );

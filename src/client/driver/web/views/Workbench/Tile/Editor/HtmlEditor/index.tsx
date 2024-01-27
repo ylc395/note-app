@@ -4,7 +4,7 @@ import type HtmlEditor from '@domain/app/model/material/editor/HtmlEditor';
 import HtmlViewer from './HtmlView';
 import Toolbar from './Toolbar';
 import Context, { getContext } from './Context';
-import AnnotationList from './AnnotationList';
+// import AnnotationList from './AnnotationList';
 
 // eslint-disable-next-line mobx/missing-observer
 export default (function HtmlEditor({ editor }: { editor: HtmlEditor }) {
@@ -17,7 +17,7 @@ export default (function HtmlEditor({ editor }: { editor: HtmlEditor }) {
           <Toolbar />
           <div className="flex min-h-0 grow">
             <HtmlViewer editor={editor} />
-            <AnnotationList />
+            {/* <AnnotationList /> */}
           </div>
         </div>
       </Context.Provider>

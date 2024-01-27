@@ -1,10 +1,11 @@
 import { observer } from 'mobx-react-lite';
-import { ReactNode, useContext } from 'react';
-import Resizable from '@web/components/Resizable';
+import { useContext } from 'react';
 import clsx from 'clsx';
 
 import type { OutlineItem } from '@domain/app/model/material/editable/EditablePdf';
+import Resizable from '@web/components/Resizable';
 import context from './Context';
+import PdfViewer from './PdfViewer';
 
 const OutlineItemView = observer(function OutlineItemView({
   item: { title, children, key },
@@ -13,13 +14,17 @@ const OutlineItemView = observer(function OutlineItemView({
   item: OutlineItem;
   level: number;
 }) {
-  const { pdfViewer } = useContext(context);
-  const dest = pdfViewer?.editor.getOutlineDest(key);
+  const { editor } = useContext(context);
+  const dest = editor.getOutlineDest(key);
 
   return (
     <div style={{ paddingLeft: level * 5 }} className="mb-2">
       <div
-        onClick={() => dest && pdfViewer?.jumpTo(dest)}
+        onClick={() => {
+          if (dest && PdfViewer.is(editor.viewer)) {
+            editor.viewer.jumpTo(dest);
+          }
+        }}
         className={clsx('mb-2 text-sm', dest ? 'cursor-pointer' : '')}
       >
         {title}
@@ -32,21 +37,16 @@ const OutlineItemView = observer(function OutlineItemView({
 });
 
 export default observer(function Outline() {
-  const { pdfViewer } = useContext(context);
-
-  let content: ReactNode = null;
-  const outline = pdfViewer?.editor.outline;
-
-  if (!outline) {
-    content = '加载中...';
-  } else {
-    content =
-      outline.length > 0 ? outline.map((item) => <OutlineItemView level={1} item={item} key={item.key} />) : '无提纲';
-  }
+  const { editor } = useContext(context);
+  const outline = editor.outline;
 
   return (
     <Resizable resizable="right" initialWidth={300} className="h-full overflow-auto">
-      {content}
+      {outline
+        ? outline.length > 0
+          ? outline.map((item) => <OutlineItemView level={1} item={item} key={item.key} />)
+          : '无提纲'
+        : '加载中'}
     </Resizable>
   );
 });

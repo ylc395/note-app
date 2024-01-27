@@ -5,7 +5,7 @@ import MaterialEditor from './MaterialEditor';
 import type EditablePdf from '../editable/EditablePdf';
 
 interface UIState {
-  hash: string | null; // pdfjs's hash, including page, scroll position, zoom etc;
+  hash: string | null; // pdfjs's hash, including page, scroll position, zoom etc; see https://datatracker.ietf.org/doc/html/rfc8118#section-3
 }
 
 export enum Panels {
@@ -19,32 +19,29 @@ export default class PdfEditor extends MaterialEditor<EditablePdf, UIState> {
     makeObservable(this);
   }
 
-  @observable readonly panelsVisibility = {
+  @observable
+  public readonly panelsVisibility = {
     [Panels.Outline]: false,
     [Panels.AnnotationList]: true,
   };
 
+  public readonly getOutlineDest = this.editable.getOutlineDest;
+
   @action
-  togglePanel(panel: Panels) {
+  public togglePanel(panel: Panels) {
     this.panelsVisibility[panel] = !this.panelsVisibility[panel];
   }
 
   @computed
-  get outline() {
+  public get outline() {
     return this.editable.outline;
   }
 
   @computed
-  get doc() {
+  public get doc() {
     return this.editable.doc;
   }
 
-  @computed
-  get pdfAnnotations() {
-    return this.editable.pdfAnnotations;
-  }
-
-  getOutlineDest(key: string) {
-    return this.editable.outlineDestMap[key];
-  }
+  @observable.ref
+  public viewer?: unknown;
 }

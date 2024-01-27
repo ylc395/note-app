@@ -9,7 +9,7 @@ import { Tile } from '@domain/app/model/workbench';
 import NoteEditor from './Editor';
 import { eventBus, Events as NoteEvents } from './eventBus';
 
-export default class EditableNote extends EditableEntity {
+export default class EditableNote extends EditableEntity<Required<NoteVO>> {
   public readonly entityType = EntityTypes.Note;
 
   constructor(noteId: NoteVO['id']) {
@@ -72,7 +72,7 @@ export default class EditableNote extends EditableEntity {
     this.remote.note.updateBody.mutate({ id: this.entityLocator.entityId, body });
   }, 1000);
 
-  destroy(): void {
+  public destroy(): void {
     this.uploadNote.flush();
     this.uploadNoteBody.flush();
   }

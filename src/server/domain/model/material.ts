@@ -1,4 +1,4 @@
-import type { Material, AnnotationVO, MaterialPatchDTO } from '@shared/domain/model/material/index.js';
+import type { Material, MaterialPatchDTO } from '@shared/domain/model/material.js';
 
 export type NewMaterial = Omit<Partial<Material>, 'id'>;
 
@@ -9,10 +9,6 @@ export interface MaterialQuery {
   isAvailable?: boolean;
 }
 
-export type Annotation = AnnotationVO & {
-  materialId: Material['id'];
-};
-
 export type MaterialPatch = MaterialPatchDTO & { userUpdatedAt?: number; comment?: string };
 
-export * from '@shared/domain/model/material/index.js';
+export * from '@shared/domain/model/material.js';

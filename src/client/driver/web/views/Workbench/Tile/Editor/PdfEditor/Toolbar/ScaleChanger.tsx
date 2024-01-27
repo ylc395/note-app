@@ -3,7 +3,7 @@ import { useContext } from 'react';
 import { PlusOutlined, MinusOutlined } from '@ant-design/icons';
 import { Button, Select } from 'antd';
 
-import { ScaleValues, SCALE_STEPS } from '../PdfView/PdfViewer';
+import PdfViewer, { ScaleValues, SCALE_STEPS } from '../PdfViewer';
 import context from '../Context';
 
 const scaleOptions = [
@@ -21,32 +21,38 @@ const scaleOptions = [
 const scaleValues = scaleOptions.map(({ value }) => value) as Array<string | number>;
 
 export default observer(function ScaleChanger() {
-  const { pdfViewer } = useContext(context);
+  const {
+    editor: { viewer },
+  } = useContext(context);
+
+  if (!PdfViewer.is(viewer)) {
+    return null;
+  }
 
   return (
     <div>
       <Button
-        disabled={!pdfViewer || pdfViewer.scale === SCALE_STEPS[0]}
+        disabled={!viewer || viewer.scale === SCALE_STEPS[0]}
         type="text"
         size="small"
         icon={<MinusOutlined />}
-        onClick={() => pdfViewer?.setScale('down')}
+        onClick={() => viewer?.setScale('down')}
       />
-      {pdfViewer && (
+      {viewer && (
         <Select
-          onChange={(v) => pdfViewer.setScale(v)}
+          onChange={(v) => viewer.setScale(v)}
           className="w-28"
           size="small"
-          value={scaleValues.includes(pdfViewer.scale) ? pdfViewer.scale : `${(pdfViewer.scale as number) * 100}%`}
+          value={scaleValues.includes(viewer.scale) ? viewer.scale : `${(viewer.scale as number) * 100}%`}
           options={scaleOptions}
         />
       )}
       <Button
-        disabled={!pdfViewer || pdfViewer.scale === SCALE_STEPS[SCALE_STEPS.length - 1]}
+        disabled={!viewer || viewer.scale === SCALE_STEPS[SCALE_STEPS.length - 1]}
         type="text"
         size="small"
         icon={<PlusOutlined />}
-        onClick={() => pdfViewer?.setScale('up')}
+        onClick={() => viewer?.setScale('up')}
       />
     </div>
   );

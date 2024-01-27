@@ -8,14 +8,14 @@ import {
   MEMO_FTS_TABLE,
   FILE_TEXTS_FTS_TABLE,
   MATERIAL_FTS_TABLE,
-  MATERIAL_ANNOTATION_FTS_TABLE,
+  ANNOTATION_FTS_TABLE,
   type SearchEngineDb,
 } from './tables.js';
 import { tableName as noteTableName } from '../schema/note.js';
 import { tableName as memoTableName } from '../schema/memo.js';
 import { tableName as materialTableName } from '../schema/material.js';
 import { tableName as fileTextTableName } from '../schema/fileText.js';
-import { tableName as materialAnnotationTableName } from '../schema/materialAnnotation.js';
+import { tableName as materialAnnotationTableName } from '../schema/annotation.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
 
 // prettier-ignore
@@ -127,7 +127,7 @@ export const createFtsSql = [
         INSERT INTO ${sql.table(FILE_TEXTS_FTS_TABLE)} (rowid, text) VALUES (new.rowid, new.text);
       END;`,
   
-  sql`CREATE VIRTUAL TABLE ${sql.table(MATERIAL_ANNOTATION_FTS_TABLE)} 
+  sql`CREATE VIRTUAL TABLE ${sql.table(ANNOTATION_FTS_TABLE)} 
       USING fts5(
         id UNINDEXED,
         comment,
@@ -139,20 +139,20 @@ export const createFtsSql = [
         content=${sql.table(materialAnnotationTableName)}
       )`,
 
-  sql`CREATE TRIGGER ${sql.raw(MATERIAL_ANNOTATION_FTS_TABLE)}_ai AFTER INSERT ON ${sql.table(materialAnnotationTableName)}
+  sql`CREATE TRIGGER ${sql.raw(ANNOTATION_FTS_TABLE)}_ai AFTER INSERT ON ${sql.table(materialAnnotationTableName)}
       BEGIN 
-        INSERT INTO ${sql.table(MATERIAL_ANNOTATION_FTS_TABLE)} (rowid, comment) VALUES (new.rowid, new.comment);
+        INSERT INTO ${sql.table(ANNOTATION_FTS_TABLE)} (rowid, comment) VALUES (new.rowid, new.comment);
       END`,
 
-  sql`CREATE TRIGGER ${sql.raw(MATERIAL_ANNOTATION_FTS_TABLE)}_ad AFTER DELETE on ${sql.table(materialAnnotationTableName)}
+  sql`CREATE TRIGGER ${sql.raw(ANNOTATION_FTS_TABLE)}_ad AFTER DELETE on ${sql.table(materialAnnotationTableName)}
       BEGIN
-        INSERT INTO ${sql.table(MATERIAL_ANNOTATION_FTS_TABLE)} (${sql.raw(MATERIAL_ANNOTATION_FTS_TABLE)}, rowid, comment) VALUES ('delete', old.rowid, old.comment);
+        INSERT INTO ${sql.table(ANNOTATION_FTS_TABLE)} (${sql.raw(ANNOTATION_FTS_TABLE)}, rowid, comment) VALUES ('delete', old.rowid, old.comment);
       END`,
 
-  sql`CREATE TRIGGER ${sql.raw(MATERIAL_ANNOTATION_FTS_TABLE)}_au AFTER UPDATE on ${sql.table(materialAnnotationTableName)}
+  sql`CREATE TRIGGER ${sql.raw(ANNOTATION_FTS_TABLE)}_au AFTER UPDATE on ${sql.table(materialAnnotationTableName)}
       BEGIN
-        INSERT INTO ${sql.table(MATERIAL_ANNOTATION_FTS_TABLE)} (${sql.raw(MATERIAL_ANNOTATION_FTS_TABLE)}, rowid, comment) VALUES ('delete', old.rowid, new.comment);
-        INSERT INTO ${sql.table(MATERIAL_ANNOTATION_FTS_TABLE)} (rowid, comment) VALUES (new.rowid, new.comment);
+        INSERT INTO ${sql.table(ANNOTATION_FTS_TABLE)} (${sql.raw(ANNOTATION_FTS_TABLE)}, rowid, comment) VALUES ('delete', old.rowid, new.comment);
+        INSERT INTO ${sql.table(ANNOTATION_FTS_TABLE)} (rowid, comment) VALUES (new.rowid, new.comment);
       END;`,
 ];
 
@@ -165,7 +165,7 @@ export function commonSql(
     | typeof NOTE_FTS_TABLE
     | typeof noteTableName
     | typeof MEMO_FTS_TABLE
-    | typeof MATERIAL_ANNOTATION_FTS_TABLE
+    | typeof ANNOTATION_FTS_TABLE
     | typeof materialAnnotationTableName
     | typeof memoTableName,
   query: SearchParams,
@@ -187,7 +187,7 @@ export function commonSql(
 
   if (query.updated) {
     const field =
-      table === materialAnnotationTableName || table === MATERIAL_ANNOTATION_FTS_TABLE ? 'updatedAt' : 'userUpdatedAt';
+      table === materialAnnotationTableName || table === ANNOTATION_FTS_TABLE ? 'updatedAt' : 'userUpdatedAt';
 
     if (query.updated.from) {
       qb = qb.where(`${table}.${field}`, '>=', dayjs(query.updated.from).valueOf());

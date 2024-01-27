@@ -3,7 +3,6 @@ import DOMPurify from 'dompurify';
 import getCssSelector from 'css-selector-generator';
 
 import { token as uiToken } from '@shared/domain/infra/ui';
-import { AnnotationTypes, type AnnotationVO } from '@shared/domain/model/material';
 import type HtmlEditor from '@domain/app/model/material/editor/HtmlEditor';
 
 import RangeSelector, { type RangeSelectEvent } from '../../common/RangeSelector';
@@ -30,8 +29,8 @@ export default class HtmlViewer {
 
   @computed
   get title() {
-    let text = this.editor.metadata?.sourceUrl || '未命名 HTML 文档';
-    let icon = this.editor.metadata?.icon || '';
+    let text = this.editor.info?.sourceUrl || '未命名 HTML 文档';
+    let icon = this.editor.info?.icon || '';
 
     if (this.editor.documentElement instanceof HTMLHtmlElement) {
       const titleContent = this.editor.documentElement.querySelector('title')?.innerText;
@@ -165,8 +164,8 @@ export default class HtmlViewer {
     fragment.style.transform = 'scale(1)';
 
     // disable all input elements
-    const inputs: (HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement)[] = Array.from(
-      fragment.querySelectorAll('input, textarea, select'),
+    const inputs = Array.from(
+      fragment.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>('input, textarea, select'),
     );
 
     for (const input of inputs) {
@@ -187,38 +186,38 @@ export default class HtmlViewer {
     return fragment as HTMLHtmlElement;
   }
 
-  createRangeAnnotation(color: string) {
-    if (!this.selection) {
-      throw new Error('no selection');
-    }
+  // createRangeAnnotation(color: string) {
+  //   if (!this.selection) {
+  //     throw new Error('no selection');
+  //   }
 
-    const { range } = this.selection;
+  //   const { range } = this.selection;
 
-    this.editor.createAnnotation({
-      type: AnnotationTypes.HtmlRange,
-      color,
-      range: [
-        { selector: this.getUniqueSelector(range.startContainer as HTMLElement), offset: range.startOffset },
-        { selector: this.getUniqueSelector(range.endContainer as HTMLElement), offset: range.endOffset },
-      ],
-    });
-  }
+  //   this.editor.createAnnotation({
+  //     type: AnnotationTypes.HtmlRange,
+  //     color,
+  //     range: [
+  //       { selector: this.getUniqueSelector(range.startContainer as HTMLElement), offset: range.startOffset },
+  //       { selector: this.getUniqueSelector(range.endContainer as HTMLElement), offset: range.endOffset },
+  //     ],
+  //   });
+  // }
 
-  jumpToAnnotation(annotation: AnnotationVO) {
-    let el: HTMLElement | null = null;
+  // jumpToAnnotation(annotation: AnnotationVO) {
+  //   let el: HTMLElement | null = null;
 
-    switch (annotation.type) {
-      case AnnotationTypes.HtmlRange:
-        el = this.shadowRoot.querySelector(annotation.range[0].selector);
-        break;
-      default:
-        throw new Error('unknown annotation type');
-    }
+  //   switch (annotation.type) {
+  //     case AnnotationTypes.HtmlRange:
+  //       el = this.shadowRoot.querySelector(annotation.range[0].selector);
+  //       break;
+  //     default:
+  //       throw new Error('unknown annotation type');
+  //   }
 
-    if (!el) {
-      return;
-    }
+  //   if (!el) {
+  //     return;
+  //   }
 
-    el.scrollIntoView();
-  }
+  //   el.scrollIntoView();
+  // }
 }

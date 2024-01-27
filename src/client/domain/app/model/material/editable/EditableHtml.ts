@@ -27,4 +27,6 @@ export default class EditableHtml extends EditableMaterial {
       this.html = textDecoder.decode(this.blob);
     });
   }
+
+  public destroy() {}
 }

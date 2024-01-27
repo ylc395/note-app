@@ -1,18 +1,12 @@
-import { computed, makeObservable, observable, runInAction } from 'mobx';
-import { groupBy } from 'lodash-es';
+import { makeObservable, observable, runInAction } from 'mobx';
+import assert from 'assert';
 import { type PDFDocumentLoadingTask, type PDFDocumentProxy, getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
 import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.min.js?worker';
 
-import {
-  type EntityMaterialVO,
-  type PdfRangeAnnotationVO,
-  type PdfAreaAnnotationVO,
-  AnnotationTypes,
-} from '@shared/domain/model/material';
+import type { EntityMaterialVO } from '@shared/domain/model/material';
 import type { Tile } from '@domain/app/model/workbench';
 import EditableMaterial from './EditableMaterial';
 import PdfEditor from '../editor/PdfEditor';
-import assert from 'assert';
 
 export interface OutlineItem {
   title: string;
@@ -26,39 +20,22 @@ export default class EditablePdf extends EditableMaterial {
     makeObservable(this);
   }
 
-  @observable.ref outline?: OutlineItem[];
+  @observable.ref public outline?: OutlineItem[];
   private loadingTask?: PDFDocumentLoadingTask;
-  readonly outlineDestMap: Record<string, unknown> = {};
+  private readonly outlineDestMap: Record<string, unknown> = {};
+
+  public getOutlineDest(key: string) {
+    return this.outlineDestMap[key];
+  }
 
   @observable.ref
-  public doc?: PDFDocumentProxy;
+  public doc?: PDFDocumentProxy; // this is view-independent
 
   public createEditor(tile: Tile) {
     return new PdfEditor(this, tile);
   }
 
-  @computed
-  get pdfAnnotations() {
-    return this.annotations
-      .map((annotation) => {
-        if (annotation.type === AnnotationTypes.PdfRange) {
-          const pages = annotation.fragments.map(({ page }) => page);
-
-          return { ...annotation, startPage: Math.min(...pages), endPage: Math.max(...pages) };
-        }
-
-        if (annotation.type === AnnotationTypes.PdfArea) {
-          return { ...annotation, startPage: annotation.page, endPage: annotation.page };
-        }
-
-        throw new Error('invalid type');
-      })
-      .sort(({ startPage: startPage1 }, { startPage: startPage2 }) => startPage1 - startPage2);
-  }
-
   protected async load() {
-    EditablePdf.activeCount += 1;
-
     await super.load();
     assert(this.blob);
 
@@ -66,9 +43,9 @@ export default class EditablePdf extends EditableMaterial {
       // every PDFWorker will share one web worker when we do this
       GlobalWorkerOptions.workerPort = new PdfJsWorker();
     }
-
     this.loadingTask = getDocument(this.blob.slice(0));
     const doc = await this.loadingTask.promise;
+    EditablePdf.activeCount += 1;
 
     runInAction(() => {
       this.doc = doc;
@@ -77,38 +54,10 @@ export default class EditablePdf extends EditableMaterial {
     this.initOutline(doc);
   }
 
-  @computed
-  get fragmentsByPage() {
-    const annotations = this.annotations.filter(
-      ({ type }) => type === AnnotationTypes.PdfRange,
-    ) as PdfRangeAnnotationVO[];
-
-    const fragments = annotations.flatMap(({ fragments, color, id }) => {
-      return fragments.map(({ page, rect }, i) => ({
-        annotationId: id,
-        page,
-        rect,
-        color,
-        fragmentId: `${id}-${JSON.stringify(rect)}`,
-        isLast: i === fragments.length - 1,
-      }));
-    });
-
-    return groupBy(fragments, 'page');
-  }
-
-  @computed
-  get areaAnnotationsByPage() {
-    const areas = this.annotations.filter(({ type }) => type === AnnotationTypes.PdfArea) as PdfAreaAnnotationVO[];
-
-    return groupBy(areas, 'page');
-  }
-
-  async destroy() {
-    super.destroy();
-
+  public async destroy() {
     EditablePdf.activeCount -= 1;
     await this.loadingTask?.destroy();
+    this.doc = undefined;
 
     if (EditablePdf.activeCount === 0) {
       GlobalWorkerOptions.workerPort?.terminate();
@@ -117,9 +66,9 @@ export default class EditablePdf extends EditableMaterial {
   }
 
   private async initOutline(doc: PDFDocumentProxy) {
-    const outline = await doc.getOutline();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    type RawOutlineItem = { title: string; items: RawOutlineItem[]; dest: any };
+    const outline: Awaited<ReturnType<PDFDocumentProxy['getOutline']>> | undefined = await doc.getOutline();
+    type RawOutlineItem = { title: string; items: RawOutlineItem[]; dest: unknown };
+
     const toOutlineItem = ({ items, dest, title }: RawOutlineItem, keys: number[]): OutlineItem => {
       const key = keys.join('-');
 
@@ -134,9 +83,8 @@ export default class EditablePdf extends EditableMaterial {
       };
     };
 
-    const items = outline?.map((item, i) => toOutlineItem(item, [i])) || [];
-
     runInAction(() => {
+      const items = outline?.map((item, i) => toOutlineItem(item, [i])) || [];
       this.outline = items;
     });
   }

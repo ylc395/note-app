@@ -9,13 +9,13 @@ import PageSwitcher from './PageSwitcher';
 import ScaleChanger from './ScaleChanger';
 
 export default observer(function Toolbar() {
-  const { pdfViewer } = useContext(context);
+  const { editor } = useContext(context);
 
   return (
     <div className="relative flex items-center justify-between p-2">
       <div className="flex">
         <Button
-          onClick={() => pdfViewer?.editor.togglePanel(Panels.Outline)}
+          onClick={() => editor.togglePanel(Panels.Outline)}
           className="mr-4"
           type="text"
           size="small"
@@ -25,7 +25,7 @@ export default observer(function Toolbar() {
       </div>
       <PageSwitcher />
       <Button
-        onClick={() => pdfViewer?.editor.togglePanel(Panels.AnnotationList)}
+        onClick={() => editor.togglePanel(Panels.AnnotationList)}
         type="text"
         size="small"
         icon={<HighlightOutlined />}

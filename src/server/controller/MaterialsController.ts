@@ -1,13 +1,7 @@
 import { container } from 'tsyringe';
 import { string, tuple } from 'zod';
 
-import {
-  newMaterialDTOSchema,
-  clientMaterialQuerySchema,
-  newAnnotationDTOSchema,
-  materialPatchDTOSchema,
-  annotationPatchDTOSchema,
-} from '@domain/model/material.js';
+import { newMaterialDTOSchema, clientMaterialQuerySchema, materialPatchDTOSchema } from '@domain/model/material.js';
 import MaterialService from '@domain/service/MaterialService.js';
 
 import { publicProcedure, router } from './trpc.js';
@@ -42,24 +36,4 @@ export default router({
   batchUpdate: materialProcedure
     .input(tuple([string().array(), materialPatchDTOSchema]))
     .mutation(({ input: [ids, material], ctx: { materialService } }) => materialService.batchUpdate(ids, material)),
-
-  queryAnnotations: materialProcedure
-    .input(string())
-    .query(({ input: id, ctx: { materialService } }) => materialService.queryAnnotations(id)),
-
-  createAnnotation: materialProcedure
-    .input(tuple([string(), newAnnotationDTOSchema]))
-    .mutation(({ input: [materialId, dto], ctx: { materialService } }) =>
-      materialService.createAnnotation(materialId, dto),
-    ),
-
-  updateAnnotation: materialProcedure
-    .input(tuple([string(), annotationPatchDTOSchema]))
-    .mutation(({ input: [materialId, dto], ctx: { materialService } }) =>
-      materialService.updateAnnotation(materialId, dto),
-    ),
-
-  removeAnnotation: materialProcedure
-    .input(string())
-    .mutation(({ input, ctx: { materialService } }) => materialService.removeAnnotation(input)),
 });
