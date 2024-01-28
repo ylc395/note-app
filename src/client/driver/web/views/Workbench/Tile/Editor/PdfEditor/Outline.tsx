@@ -25,7 +25,7 @@ const OutlineItemView = observer(function OutlineItemView({
             editor.viewer.jumpTo(dest);
           }
         }}
-        className={clsx('mb-2 text-sm', dest ? 'cursor-pointer' : '')}
+        className={clsx('mb-2 text-sm', Boolean(dest) && 'cursor-pointer')}
       >
         {title}
       </div>

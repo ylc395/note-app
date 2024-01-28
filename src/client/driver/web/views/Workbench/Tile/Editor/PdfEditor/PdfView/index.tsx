@@ -1,5 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import { useEffect, useRef, useState } from 'react';
+import { runInAction } from 'mobx';
 
 import type PdfEditor from '@domain/app/model/material/editor/PdfEditor';
 // import SelectionTooltip from './SelectionTooltip';
@@ -8,7 +9,6 @@ import type PdfEditor from '@domain/app/model/material/editor/PdfEditor';
 import PdfViewer from '../PdfViewer';
 import Loading from './Loading';
 import './style.css';
-import { runInAction } from 'mobx';
 
 export default observer(function PdfView({ editor }: { editor: PdfEditor }) {
   const containerElRef = useRef<HTMLDivElement | null>(null);

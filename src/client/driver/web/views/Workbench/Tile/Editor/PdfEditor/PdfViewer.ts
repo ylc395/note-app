@@ -1,9 +1,11 @@
 import { EventBus, PDFViewer, type PDFPageView, PDFLinkService } from 'pdfjs-dist/web/pdf_viewer';
 import { range as numberRange } from 'lodash-es';
 import { makeObservable, observable, when, action, computed } from 'mobx';
+import { container } from 'tsyringe';
 import assert from 'assert';
 
 import type PdfEditor from '@domain/app/model/material/editor/PdfEditor';
+import { token as uiToken } from '@shared/domain/infra/ui';
 
 interface Options {
   container: HTMLDivElement;
@@ -26,6 +28,7 @@ export const SCALE_STEPS = [
 export default class PdfViewer {
   private readonly pdfViewer: PDFViewer;
   private readonly editor: PdfEditor;
+  private readonly ui = container.resolve(uiToken);
   private readonly cancelLoadingDoc: ReturnType<typeof when>;
 
   @observable public currentPage = 1;
@@ -92,26 +95,38 @@ export default class PdfViewer {
     assert(this.editor.doc);
 
     const { doc } = this.editor;
-    this.pdfViewer.setDocument(doc);
 
+    this.pdfViewer.setDocument(doc);
     (this.pdfViewer.linkService as PDFLinkService).setDocument(doc);
+
     this.pdfViewer.onePageRendered.then(
       action(() => {
         this.isReady = true;
       }),
     );
 
-    const hash = this.editor.uiState?.hash;
-    await this.pdfViewer.firstPagePromise;
+    this.pdfViewer.firstPagePromise.then(() => {
+      const hash = this.editor.uiState?.hash;
+      if (hash) {
+        const normalizedScaleValue =
+          parseFloat(this.pdfViewer.currentScaleValue) === this.pdfViewer.currentScale
+            ? Math.round(this.pdfViewer.currentScale * 10000) / 100
+            : this.pdfViewer.currentScaleValue || 100;
 
-    if (hash) {
-      const normalizedScaleValue =
-        parseFloat(this.pdfViewer.currentScaleValue) === this.pdfViewer.currentScale
-          ? Math.round(this.pdfViewer.currentScale * 10000) / 100
-          : this.pdfViewer.currentScaleValue || 100;
+        this.pdfViewer.linkService.setHash(hash.replace('zoom=null', `zoom=${normalizedScaleValue}`).replace(/^#/, ''));
+      }
+    });
 
-      this.pdfViewer.linkService.setHash(hash.replace('zoom=null', `zoom=${normalizedScaleValue}`).replace(/^#/, ''));
-    }
+    this.hijackClick();
+  }
+
+  private hijackClick() {
+    this.pdfViewer.viewer?.addEventListener('click', (e) => {
+      if (e.target instanceof HTMLAnchorElement && e.target.href) {
+        this.ui.openNewWindow(e.target.href);
+        e.preventDefault();
+      }
+    });
   }
 
   @action
