@@ -8,6 +8,7 @@ import type PdfEditor from '@domain/app/model/material/editor/PdfEditor';
 import PdfViewer from '../PdfViewer';
 import Loading from './Loading';
 import './style.css';
+import { runInAction } from 'mobx';
 
 export default observer(function PdfView({ editor }: { editor: PdfEditor }) {
   const containerElRef = useRef<HTMLDivElement | null>(null);
@@ -25,7 +26,9 @@ export default observer(function PdfView({ editor }: { editor: PdfEditor }) {
       viewer: viewerElRef.current,
     });
 
-    editor.viewer = pdfViewer;
+    runInAction(() => {
+      editor.viewer = pdfViewer;
+    });
     setPdfViewer(pdfViewer);
     return () => pdfViewer.destroy();
   }, [editor]);

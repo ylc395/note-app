@@ -28,8 +28,11 @@ export default class PdfViewer {
   private readonly editor: PdfEditor;
   private readonly cancelLoadingDoc: ReturnType<typeof when>;
 
-  @observable public currentPage = 0;
-  @observable public scale = 1;
+  @observable public currentPage = 1;
+  @observable public scale = {
+    value: 1,
+    text: '100%',
+  };
   @observable public isReady = false;
 
   constructor(options: Options) {
@@ -51,7 +54,11 @@ export default class PdfViewer {
   private createPDFViewer(options: Options) {
     const eventBus = new EventBus();
     const linkService = new PDFLinkService({ eventBus });
-    const pdfViewer = new PDFViewer({ ...options, eventBus, linkService });
+    const pdfViewer = new PDFViewer({
+      ...options,
+      eventBus,
+      linkService,
+    });
     // pdfViewer.scrollMode = ScrollMode.PAGE;
 
     linkService.setViewer(pdfViewer);
@@ -65,8 +72,9 @@ export default class PdfViewer {
 
     pdfViewer.eventBus.on(
       'scalechanging',
-      action(({ scale }: { scale: number }) => {
-        this.scale = scale;
+      action((e: { scale: number; presetValue?: string }) => {
+        this.scale.text = e.presetValue || `${e.scale * 100}%`;
+        this.scale.value = e.scale;
       }),
     );
 
@@ -107,9 +115,11 @@ export default class PdfViewer {
   }
 
   @action
-  jumpTo(page: number | unknown) {
+  public jumpTo(page: number | unknown) {
     if (typeof page === 'number') {
-      this.pdfViewer.currentPageNumber = page;
+      if (page >= 1 && page <= this.totalPage) {
+        this.pdfViewer.currentPageNumber = page;
+      }
     } else {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       this.pdfViewer.linkService.goToDestination(page as any);
@@ -124,13 +134,12 @@ export default class PdfViewer {
     return this.pdfViewer.previousPage();
   };
 
-  destroy() {
+  public destroy() {
     this.pdfViewer.cleanup();
     this.cancelLoadingDoc();
   }
 
-  setScale(value: string | number) {
-    const _value = value;
+  public setScale(value: string) {
     const { currentScale } = this.pdfViewer;
 
     if (value === 'up') {
@@ -138,14 +147,14 @@ export default class PdfViewer {
     } else if (value === 'down') {
       this.pdfViewer.currentScale = SCALE_STEPS.findLast((step) => step < currentScale) || currentScale;
     } else {
-      this.pdfViewer.currentScaleValue = String(_value);
+      this.pdfViewer.currentScaleValue = value;
     }
   }
 
   getPageRatio(page: number) {
     const { width: displayWith, height: displayHeight } = this.getSize(page);
 
-    this.scale; // reade reactive scale to make this function depends on scale
+    // this.scale; // reade reactive scale to make this function depends on scale
 
     const {
       viewport: { rawDims },

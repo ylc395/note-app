@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { useRef, useContext } from 'react';
+import { useRef, useContext, useEffect, useState, ChangeEvent } from 'react';
 import { useKeyPress } from 'ahooks';
 import { ArrowLeftOutlined, ArrowRightOutlined } from '@ant-design/icons';
 
@@ -12,38 +12,43 @@ export default observer(function PageSwitcher() {
   const {
     editor: { viewer },
   } = useContext(context);
+  const currentPage = PdfViewer.is(viewer) ? viewer.currentPage : 0;
+  const [value, setValue] = useState('');
+  const onChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setValue(e.target.value);
+  };
 
   useKeyPress(
     'enter',
     (e) => {
-      if (!e.target || !PdfViewer.is(viewer)) {
+      const num = parseInt((e.target as HTMLInputElement).value, 10);
+
+      if (!e.target || !PdfViewer.is(viewer) || Number.isNaN(num)) {
         return null;
       }
-      viewer.jumpTo(Number((e.target as HTMLInputElement).value));
+
+      viewer.jumpTo(num);
     },
     { target: inputRef },
   );
+
+  useEffect(() => {
+    setValue(String(currentPage));
+  }, [currentPage]);
 
   if (!PdfViewer.is(viewer)) {
     return null;
   }
 
   return (
-    <div className="absolute left-1/2 top-1/2 -translate-x-1/2  -translate-y-1/2">
+    <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2  -translate-y-1/2">
       <Button disabled={viewer.currentPage === 1} size="small" onClick={viewer.goToPreviousPage}>
         <ArrowLeftOutlined />
       </Button>
       <span className="px-2 text-sm">
-        <input
-          className="w-12"
-          type="number"
-          onChange={(e) => viewer.jumpTo(Number(e.target.value))}
-          value={viewer.currentPage}
-          ref={inputRef}
-        />
-        /{viewer.totalPage}
+        <input ref={inputRef} className="w-12" value={value} onChange={onChange} />/{viewer.totalPage}
       </span>
-      <Button disabled={viewer.currentPage === viewer.totalPage} size="small" onClick={viewer.goToPreviousPage}>
+      <Button disabled={viewer.currentPage === viewer.totalPage} size="small" onClick={viewer.goToNextPage}>
         <ArrowRightOutlined />
       </Button>
     </div>

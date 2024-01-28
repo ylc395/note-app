@@ -50,9 +50,7 @@ export default class electronUI implements UI {
       );
 
       menu.popup({
-        window: w,
-        // a float number will throw an error
-        ...(pos ? { x: Math.ceil(pos.x), y: Math.ceil(pos.y) } : null),
+        ...(pos ? { x: Math.ceil(pos.x), y: Math.ceil(pos.y) } : null), // a float number will throw an error
         callback: () => resolve(key || null),
       });
     });

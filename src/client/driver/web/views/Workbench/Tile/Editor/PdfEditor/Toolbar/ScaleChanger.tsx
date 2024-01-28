@@ -1,24 +1,24 @@
 import { observer } from 'mobx-react-lite';
 import { useContext } from 'react';
-import { PlusOutlined, MinusOutlined } from '@ant-design/icons';
-import { Button, Select } from 'antd';
+import { AiOutlineZoomIn, AiOutlineZoomOut } from 'react-icons/ai';
 
+import Button from '@web/components/Button';
+import Select from '@web/components/Select';
 import PdfViewer, { ScaleValues, SCALE_STEPS } from '../PdfViewer';
 import context from '../Context';
 
 const scaleOptions = [
-  { label: 'auto', value: ScaleValues.Auto },
-  { label: 'page-width', value: ScaleValues.PageWidth },
-  { label: 'page-fit', value: ScaleValues.PageFit },
-  { label: 'page-actual', value: ScaleValues.PageActual },
-  { label: '50%', value: 0.5 },
-  { label: '75%', value: 0.75 },
-  { label: '100%', value: 1 },
-  { label: '125%', value: 1.25 },
-  { label: '150%', value: 1.5 },
-  { label: '200%', value: 2 },
+  { label: 'auto', key: ScaleValues.Auto },
+  { label: 'page-width', key: ScaleValues.PageWidth },
+  { label: 'page-fit', key: ScaleValues.PageFit },
+  { label: 'page-actual', key: ScaleValues.PageActual },
+  { label: '50%', key: '0.5' },
+  { label: '75%', key: '0.75' },
+  { label: '100%', key: '1' },
+  { label: '125%', key: '1.25' },
+  { label: '150%', key: '1.5' },
+  { label: '200%', key: '2' },
 ];
-const scaleValues = scaleOptions.map(({ value }) => value) as Array<string | number>;
 
 export default observer(function ScaleChanger() {
   const {
@@ -30,30 +30,29 @@ export default observer(function ScaleChanger() {
   }
 
   return (
-    <div>
+    <div className="flex">
       <Button
-        disabled={!viewer || viewer.scale === SCALE_STEPS[0]}
-        type="text"
+        disabled={!viewer || viewer.scale.value === SCALE_STEPS[0]}
         size="small"
-        icon={<MinusOutlined />}
         onClick={() => viewer?.setScale('down')}
-      />
+      >
+        <AiOutlineZoomOut />
+      </Button>
       {viewer && (
         <Select
           onChange={(v) => viewer.setScale(v)}
-          className="w-28"
-          size="small"
-          value={scaleValues.includes(viewer.scale) ? viewer.scale : `${(viewer.scale as number) * 100}%`}
+          className="w-24 text-sm"
+          value={String(viewer.scale.text)}
           options={scaleOptions}
         />
       )}
       <Button
-        disabled={!viewer || viewer.scale === SCALE_STEPS[SCALE_STEPS.length - 1]}
-        type="text"
+        disabled={!viewer || viewer.scale.value === SCALE_STEPS[SCALE_STEPS.length - 1]}
         size="small"
-        icon={<PlusOutlined />}
         onClick={() => viewer?.setScale('up')}
-      />
+      >
+        <AiOutlineZoomIn />
+      </Button>
     </div>
   );
 });

@@ -57,7 +57,10 @@ export default class EditablePdf extends EditableMaterial {
   public async destroy() {
     EditablePdf.activeCount -= 1;
     await this.loadingTask?.destroy();
-    this.doc = undefined;
+
+    runInAction(() => {
+      this.doc = undefined;
+    });
 
     if (EditablePdf.activeCount === 0) {
       GlobalWorkerOptions.workerPort?.terminate();
