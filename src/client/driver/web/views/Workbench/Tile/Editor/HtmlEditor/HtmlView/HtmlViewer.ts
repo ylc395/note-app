@@ -58,7 +58,7 @@ export default class HtmlViewer {
 
     this.rangeSelector = new RangeSelector({
       rootEl: this.shadowRoot,
-      onTextSelectionChanged: action((e) => (this.selection = e)),
+      onChange: action((e) => (this.selection = e)),
     });
     this.initContent();
   }

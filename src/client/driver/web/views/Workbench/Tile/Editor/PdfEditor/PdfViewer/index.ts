@@ -1,4 +1,4 @@
-import { EventBus, PDFViewer, type PDFPageView, PDFLinkService } from 'pdfjs-dist/web/pdf_viewer';
+import { EventBus, PDFViewer, PDFLinkService } from 'pdfjs-dist/web/pdf_viewer';
 import { range as numberRange } from 'lodash-es';
 import { makeObservable, observable, when, action, computed } from 'mobx';
 import { container } from 'tsyringe';
@@ -6,6 +6,8 @@ import assert from 'assert';
 
 import type PdfEditor from '@domain/app/model/material/editor/PdfEditor';
 import { token as uiToken } from '@shared/domain/infra/ui';
+import { AnnotationEditorType, AnnotationMode } from 'pdfjs-dist';
+import AnnotationManager from './AnnotationManager';
 
 interface Options {
   container: HTMLDivElement;
@@ -27,9 +29,10 @@ export const SCALE_STEPS = [
 
 export default class PdfViewer {
   private readonly pdfViewer: PDFViewer;
-  private readonly editor: PdfEditor;
+  public readonly editor: PdfEditor;
   private readonly ui = container.resolve(uiToken);
   private readonly cancelLoadingDoc: ReturnType<typeof when>;
+  public readonly annotationManager: AnnotationManager;
 
   @observable public currentPage = 1;
   @observable public scale = {
@@ -43,6 +46,7 @@ export default class PdfViewer {
 
     this.editor = options.editor;
     this.pdfViewer = this.createPDFViewer(options);
+    this.annotationManager = new AnnotationManager(this.pdfViewer, this.editor);
     this.cancelLoadingDoc = when(
       () => Boolean(this.editor.doc),
       () => this.init(),
@@ -59,10 +63,11 @@ export default class PdfViewer {
     const linkService = new PDFLinkService({ eventBus });
     const pdfViewer = new PDFViewer({
       ...options,
+      annotationEditorMode: AnnotationEditorType.NONE, // disable build-in annotation editor
+      annotationMode: AnnotationMode.ENABLE_STORAGE,
       eventBus,
       linkService,
     });
-    // pdfViewer.scrollMode = ScrollMode.PAGE;
 
     linkService.setViewer(pdfViewer);
 
@@ -117,6 +122,7 @@ export default class PdfViewer {
       }
     });
 
+    this.annotationManager.init();
     this.hijackClick();
   }
 
@@ -151,6 +157,7 @@ export default class PdfViewer {
 
   public destroy() {
     this.pdfViewer.cleanup();
+    this.annotationManager.destroy();
     this.cancelLoadingDoc();
   }
 
@@ -164,26 +171,6 @@ export default class PdfViewer {
     } else {
       this.pdfViewer.currentScaleValue = value;
     }
-  }
-
-  getPageRatio(page: number) {
-    const { width: displayWith, height: displayHeight } = this.getSize(page);
-
-    // this.scale; // reade reactive scale to make this function depends on scale
-
-    const {
-      viewport: { rawDims },
-    } = this.pdfViewer.getPageView(page - 1) as PDFPageView;
-    const horizontalRatio = displayWith / (rawDims as { pageWidth: number }).pageWidth;
-    const verticalRatio = displayHeight / (rawDims as { pageHeight: number }).pageHeight;
-
-    return { horizontalRatio, verticalRatio };
-  }
-
-  getSize(page: number) {
-    const { height, width } = this.pdfViewer.getPageView(page - 1) as PDFPageView;
-
-    return { height, width };
   }
 
   public static is(v: unknown): v is PdfViewer {

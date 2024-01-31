@@ -8,17 +8,15 @@ import PdfViewer from './PdfView';
 
 export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }) {
   return (
-    <div className="flex h-full w-full">
-      <context.Provider value={{ editor }}>
-        <div className="flex grow flex-col">
-          <Toolbar />
-          <div className="relative flex min-h-0 grow">
-            {editor.panelsVisibility[Panels.Outline] && <Outline />}
-            <PdfViewer editor={editor} />
-            {/* {editor.panelsVisibility[Panels.AnnotationList] && <AnnotationList />} */}
-          </div>
+    <context.Provider value={{ editor }}>
+      <div className="flex h-full min-w-full flex-col">
+        <Toolbar />
+        <div className="relative flex min-h-0 grow">
+          {editor.panelsVisibility[Panels.Outline] && <Outline />}
+          <PdfViewer editor={editor} />
+          {/* {editor.panelsVisibility[Panels.AnnotationList] && <AnnotationList />} */}
         </div>
-      </context.Provider>
-    </div>
+      </div>
+    </context.Provider>
   );
 });

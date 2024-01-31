@@ -1,21 +1,23 @@
-import { discriminatedUnion, literal, number, object, string, type infer as ZodInfer } from 'zod';
+import { array, discriminatedUnion, literal, number, object, string, type infer as ZodInfer } from 'zod';
 import type { EntityId } from './entity.js';
 
 export enum SelectorTypes {
   CSS = 'CssSelector',
   Fragment = 'FragmentSelector',
-  TextPosition = 'TextPositionSelector',
+  Svg = 'SvgSelector',
+  Range = 'RangeSelector',
 }
 
 const cssSelectorSchema = object({
   type: literal(SelectorTypes.CSS),
   value: string(),
+  offset: number().optional(),
 });
 
-const textPositionSchema = object({
-  type: literal(SelectorTypes.TextPosition),
-  start: number(),
-  end: number(),
+const svgSelectorSchema = object({
+  type: literal(SelectorTypes.Svg),
+  value: string(),
+  page: number().optional(),
 });
 
 const fragmentSelectorSchema = object({
@@ -23,25 +25,45 @@ const fragmentSelectorSchema = object({
   value: string(), // see https://www.w3.org/TR/annotation-model/#fragment-selector
 });
 
-export const annotationDTOSchema = object({
-  targetId: string(),
-  selector: discriminatedUnion('type', [cssSelectorSchema, fragmentSelectorSchema, textPositionSchema]),
-  body: string(),
+const rangeSelectorSchema = object({
+  type: literal(SelectorTypes.Range),
+  start: cssSelectorSchema,
+  end: cssSelectorSchema,
 });
 
-export const annotationPatchDTOSchema = object({
+const selectorSchema = discriminatedUnion('type', [
+  cssSelectorSchema,
+  fragmentSelectorSchema,
+  svgSelectorSchema,
+  rangeSelectorSchema,
+]);
+
+export const annotationDTOSchema = object({
+  targetId: string(),
+  selectors: array(selectorSchema),
   body: string(),
+  targetText: string().nullish(),
+  color: string(),
+});
+
+export const annotationPatchDTOSchema = annotationDTOSchema.pick({
+  body: true,
+  color: true,
 });
 
 type CssSelector = ZodInfer<typeof cssSelectorSchema>;
-type TextPositionSelector = ZodInfer<typeof textPositionSchema>;
+export type SvgSelector = ZodInfer<typeof svgSelectorSchema>;
 type FragmentSelector = ZodInfer<typeof fragmentSelectorSchema>;
+type RangeSelector = ZodInfer<typeof rangeSelectorSchema>;
+type Selector = CssSelector | SvgSelector | FragmentSelector | RangeSelector;
 
 export interface Annotation {
   id: EntityId;
   targetId: EntityId;
-  selector: CssSelector | TextPositionSelector | FragmentSelector;
+  targetText: string | null;
+  selectors: Selector[];
   body: string;
+  color: string;
   createdAt: number;
   updatedAt: number;
 }

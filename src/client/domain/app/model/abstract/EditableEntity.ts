@@ -42,7 +42,9 @@ export default abstract class EditableEntity<T extends EntityInfo = EntityInfo> 
     });
   }
 
-  public async createAnnotation(annotation: Pick<AnnotationDTO, 'selector' | 'body'>) {
+  public readonly createAnnotation = async (
+    annotation: Pick<AnnotationDTO, 'selectors' | 'color' | 'body' | 'targetText'>,
+  ) => {
     const newAnnotation = await this.remote.annotation.create.mutate({
       targetId: this.entityId,
       ...annotation,
@@ -52,9 +54,9 @@ export default abstract class EditableEntity<T extends EntityInfo = EntityInfo> 
       assert(this.annotations);
       this.annotations.push(newAnnotation);
     });
-  }
+  };
 
-  public async updateAnnotation(id: AnnotationVO['id'], patch: AnnotationPatchDTO) {
+  public readonly updateAnnotation = async (id: AnnotationVO['id'], patch: AnnotationPatchDTO) => {
     const annotation = await this.remote.annotation.updateOne.mutate([id, patch]);
 
     runInAction(() => {
@@ -62,7 +64,7 @@ export default abstract class EditableEntity<T extends EntityInfo = EntityInfo> 
       const index = this.annotations.findIndex(({ id }) => annotation.id === id);
       this.annotations[index] = annotation;
     });
-  }
+  };
 
   public abstract info?: T;
 

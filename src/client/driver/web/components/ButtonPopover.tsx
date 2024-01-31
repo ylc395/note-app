@@ -26,9 +26,7 @@ export default forwardRef<PopoverRef, Props>(function ButtonPopover(
     placement,
     onOpenChange: setIsOpen,
   });
-  const click = useClick(context, {
-    keyboardHandlers: false,
-  });
+  const click = useClick(context, { keyboardHandlers: false });
   const dismiss = useDismiss(context);
   const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
   const mountPoint = refs.domReference.current?.closest('dialog') || document.body;

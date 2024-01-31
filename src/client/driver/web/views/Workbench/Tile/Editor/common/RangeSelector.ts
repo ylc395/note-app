@@ -1,16 +1,18 @@
-import { debounce } from 'lodash-es';
 import { IS_DEV } from '@shared/domain/infra/constants';
-import { isTextNode, isElement, isVisible } from './domUtils';
+import { isTextNode, isVisible } from './domUtils';
+import assert from 'assert';
+import { debounce } from 'lodash-es';
 
 export interface RangeSelectEvent {
-  el: HTMLSpanElement;
-  collapseToStart: boolean;
+  markEl: HTMLSpanElement; // a temporary <span> element used as a floating ref
+  markElPosition: 'start' | 'end';
   range: Range;
 }
 
 interface Options {
-  onTextSelectionChanged: (e: RangeSelectEvent | null) => void;
-  rootEl: HTMLElement | DocumentFragment;
+  onChange: (e: RangeSelectEvent | null) => void;
+  rootEl?: HTMLElement | DocumentFragment;
+  includes?: (startContainer: Node, endContainer: Node) => boolean;
 }
 
 export default class RangeSelector {
@@ -18,67 +20,60 @@ export default class RangeSelector {
     document.addEventListener('selectionchange', this.handleSelection);
   }
 
-  private markEl?: HTMLElement;
+  private markEl?: HTMLSpanElement;
 
-  private static isEndAtStart(selection: Selection) {
-    const { focusNode, focusOffset, anchorNode, anchorOffset } = selection;
+  private getSelection() {
+    const rootNode = this.options.rootEl?.getRootNode();
+    const selection =
+      rootNode instanceof ShadowRoot && 'getSelection' in rootNode
+        ? // fixme: `shadowRoot.getSelection()` is not a standard API. But standard API `selection.getComposedRange()` is not shipped yet.
+          (rootNode as unknown as Window).getSelection()
+        : window.getSelection();
 
-    if (focusNode === anchorNode) {
-      return focusOffset < anchorOffset;
-    }
-
-    if (!anchorNode || !focusNode) {
-      throw new Error('no anchorNode / focusNode');
-    }
-
-    return Boolean(anchorNode.compareDocumentPosition(focusNode) & Node.DOCUMENT_POSITION_PRECEDING);
+    return selection;
   }
 
-  static getTextFromRange(range: Range) {
-    return Array.from(range.cloneContents().childNodes)
-      .map((el) => el.textContent)
-      .join('');
-  }
+  private getRange() {
+    const selection = this.getSelection();
 
-  private getSelectionRange() {
-    // fixme: `shadowRoot.getSelection()` is not a standard API. But standard API `selection.getComposedRange()` is not shipped yet.
-    const selection = (
-      this.options.rootEl instanceof ShadowRoot ? (this.options.rootEl as unknown as Window) : window
-    ).getSelection?.();
+    if (!selection || selection.rangeCount === 0) {
+      return null;
+    }
+
+    const range = selection.getRangeAt(0);
+    const { rootEl, includes } = this.options;
 
     if (
-      !selection ||
+      !selection.focusNode ||
+      !selection.anchorNode ||
       selection.rangeCount > 1 ||
-      // we don't use `selection.isCollapsed` here because there is chrome bug in shadowRoot's `selection.isCollapsed`(always true)
+      // `selection.isCollapsed is buggy in shadow dom, so we don't use it`
       (selection.anchorNode === selection.focusNode && selection.anchorOffset === selection.focusOffset) ||
-      !this.options.rootEl.contains(selection.anchorNode) ||
-      !this.options.rootEl.contains(selection.focusNode)
+      (rootEl && !(rootEl.contains(range.endContainer) && rootEl.contains(range.startContainer))) ||
+      (includes && !includes(range.startContainer, range.endContainer))
     ) {
       return null;
     }
 
-    return {
-      range: selection.getRangeAt(0),
-      isEndAtStart: RangeSelector.isEndAtStart(selection),
-    };
+    return range;
   }
 
   private readonly handleSelection = () => {
-    const range = this.getSelectionRange();
     this.removeMarkEl();
+    const ranges = this.getRange();
 
-    if (range) {
-      this.updateRangeEnd(range);
+    if (!ranges) {
+      this.options.onChange?.(null);
+      this.notifyRange.cancel();
     } else {
-      this.updateRangeEnd.cancel();
-      this.options.onTextSelectionChanged?.(null);
+      this.notifyRange(ranges);
     }
   };
 
-  private readonly updateRangeEnd = debounce((range: { range: Range; isEndAtStart: boolean }) => {
-    const rangeEnd = RangeSelector.getRangeEnd(range);
-    this.options.onTextSelectionChanged?.({ ...rangeEnd, range: range.range });
-    this.markEl = rangeEnd.el;
+  private readonly notifyRange = debounce((range: Range) => {
+    const { markEl, position } = this.generateMarkEl(range);
+    this.markEl = markEl;
+    this.options.onChange?.({ range, markEl, markElPosition: position });
   }, 300);
 
   private removeMarkEl() {
@@ -86,38 +81,45 @@ export default class RangeSelector {
     this.markEl = undefined;
   }
 
-  destroy() {
+  public destroy() {
     this.removeMarkEl();
-    this.updateRangeEnd.cancel();
+    this.notifyRange.cancel();
     document.removeEventListener('selectionchange', this.handleSelection);
   }
 
-  private static getRangeEnd(result: { range: Range; isEndAtStart: boolean }) {
-    const range = result.range.cloneRange();
-    let collapseToStart = result.isEndAtStart;
-    const endContainer = RangeSelector.getValidEndContainer(range);
+  private generateMarkEl(range: Range) {
+    const selection = this.getSelection();
+    assert(selection && selection.focusNode && selection.anchorNode);
 
-    if (isTextNode(endContainer) && range.endContainer !== endContainer) {
-      range.setEndAfter(endContainer);
-      collapseToStart = false;
+    const isFocusStart = Boolean(
+      selection.focusNode.compareDocumentPosition(selection.anchorNode) & Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+
+    let position: 'start' | 'end' = isFocusStart ? 'start' : 'end';
+    range = range.cloneRange();
+    const correctEndContainer = RangeSelector.getValidEndContainer(range);
+
+    if (isTextNode(correctEndContainer) && range.endContainer !== correctEndContainer) {
+      range.setEndAfter(correctEndContainer);
+      position = 'end';
     }
 
     const tmpEl = document.createElement('span');
 
-    range.collapse(collapseToStart);
+    range.collapse(isFocusStart);
     range.insertNode(tmpEl);
     tmpEl.style.height = '1em';
 
     if (IS_DEV) {
-      tmpEl.className = 'selection-end-mark';
+      tmpEl.className = 'w-1 bg-red-600';
     }
 
-    return { el: tmpEl, collapseToStart };
+    return { markEl: tmpEl, position };
   }
 
   // when double click an element to select text, `endOffset` often comes with 0 and `endContainer` is not correct
   // we should find the right endContainer
-  static getValidEndContainer = (range: Range) => {
+  private static getValidEndContainer = (range: Range) => {
     const SUSPICIOUS_EMPTY_STRING_REGEX = /^\s{5,}$/;
 
     if (range.endOffset !== 0) {
@@ -137,7 +139,7 @@ export default class RangeSelector {
         range.startContainer === currentNode ||
         range.startContainer.compareDocumentPosition(currentNode) & Node.DOCUMENT_POSITION_FOLLOWING
       ) {
-        if (isElement(currentNode) && !isVisible(currentNode)) {
+        if (currentNode instanceof HTMLElement && !isVisible(currentNode)) {
           currentNode = walker.nextSibling();
 
           if (!currentNode) {
@@ -164,4 +166,14 @@ export default class RangeSelector {
 
     return textNode || range.endContainer;
   };
+
+  public static getText(range: Range) {
+    return Array.from(range.cloneContents().childNodes)
+      .map((node) => node.textContent)
+      .join('');
+  }
+
+  public static clearRange() {
+    window.getSelection()?.removeAllRanges();
+  }
 }

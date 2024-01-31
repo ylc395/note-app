@@ -10,11 +10,12 @@ import type { EntityId } from '@domain/model/entity.js';
 
 export default class SqliteMaterialAnnotationRepository extends BaseRepository implements AnnotationRepository {
   private readonly tableName = materialAnnotationSchema.tableName;
+
   public async create(annotation: AnnotationDTO) {
     const created = await this.createOneOn(this.tableName, {
       id: this.generateId(),
       ...annotation,
-      selector: JSON.stringify(annotation),
+      selectors: JSON.stringify(annotation.selectors),
     });
 
     return SqliteMaterialAnnotationRepository.rowToVO(created);
@@ -39,8 +40,8 @@ export default class SqliteMaterialAnnotationRepository extends BaseRepository i
 
   private static rowToVO(row: Selectable<Row>) {
     return {
-      ...pick(row, ['id', 'createdAt', 'updatedAt', 'targetId', 'body']),
-      selector: JSON.parse(row.selector),
+      ...pick(row, ['id', 'createdAt', 'updatedAt', 'targetId', 'color', 'body']),
+      selectors: JSON.parse(row.selectors),
     } as Annotation;
   }
 }

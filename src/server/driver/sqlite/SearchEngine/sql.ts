@@ -126,34 +126,6 @@ export const createFtsSql = [
         INSERT INTO ${sql.table(FILE_TEXTS_FTS_TABLE)} (${sql.raw(FILE_TEXTS_FTS_TABLE)}, rowid, text) VALUES ('delete', old.rowid, new.text);
         INSERT INTO ${sql.table(FILE_TEXTS_FTS_TABLE)} (rowid, text) VALUES (new.rowid, new.text);
       END;`,
-  
-  sql`CREATE VIRTUAL TABLE ${sql.table(ANNOTATION_FTS_TABLE)} 
-      USING fts5(
-        id UNINDEXED,
-        comment,
-        material_id UNINDEXED,
-        updated_at UNINDEXED,
-        created_at UNINDEXED,
-        meta UNINDEXED,
-        tokenize="simple 0",
-        content=${sql.table(materialAnnotationTableName)}
-      )`,
-
-  sql`CREATE TRIGGER ${sql.raw(ANNOTATION_FTS_TABLE)}_ai AFTER INSERT ON ${sql.table(materialAnnotationTableName)}
-      BEGIN 
-        INSERT INTO ${sql.table(ANNOTATION_FTS_TABLE)} (rowid, comment) VALUES (new.rowid, new.comment);
-      END`,
-
-  sql`CREATE TRIGGER ${sql.raw(ANNOTATION_FTS_TABLE)}_ad AFTER DELETE on ${sql.table(materialAnnotationTableName)}
-      BEGIN
-        INSERT INTO ${sql.table(ANNOTATION_FTS_TABLE)} (${sql.raw(ANNOTATION_FTS_TABLE)}, rowid, comment) VALUES ('delete', old.rowid, old.comment);
-      END`,
-
-  sql`CREATE TRIGGER ${sql.raw(ANNOTATION_FTS_TABLE)}_au AFTER UPDATE on ${sql.table(materialAnnotationTableName)}
-      BEGIN
-        INSERT INTO ${sql.table(ANNOTATION_FTS_TABLE)} (${sql.raw(ANNOTATION_FTS_TABLE)}, rowid, comment) VALUES ('delete', old.rowid, new.comment);
-        INSERT INTO ${sql.table(ANNOTATION_FTS_TABLE)} (rowid, comment) VALUES (new.rowid, new.comment);
-      END;`,
 ];
 
 export function commonSql(
