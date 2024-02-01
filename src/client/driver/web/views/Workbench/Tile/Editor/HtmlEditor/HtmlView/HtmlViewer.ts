@@ -5,7 +5,7 @@ import getCssSelector from 'css-selector-generator';
 import { token as uiToken } from '@shared/domain/infra/ui';
 import type HtmlEditor from '@domain/app/model/material/editor/HtmlEditor';
 
-import RangeSelector, { type RangeSelectEvent } from '../../common/RangeSelector';
+import SelectionManager, { type SelectionEvent } from '../../common/SelectionManager';
 import { container } from 'tsyringe';
 
 interface Options {
@@ -17,11 +17,11 @@ interface Options {
 export default class HtmlViewer {
   readonly shadowRoot: ShadowRoot;
   private stopLoadingHtml?: ReturnType<typeof when>;
-  private readonly rangeSelector: RangeSelector;
+  private readonly rangeSelector: SelectionManager;
   private readonly ui = container.resolve(uiToken);
 
   @observable.ref
-  selection: RangeSelectEvent | null = null;
+  selection: SelectionEvent | null = null;
 
   get editor() {
     return this.options.editor;
@@ -56,7 +56,7 @@ export default class HtmlViewer {
     this.shadowRoot.addEventListener('click', this.hijackClick);
     options.editorRootEl.addEventListener('scroll', this.updateScrollState);
 
-    this.rangeSelector = new RangeSelector({
+    this.rangeSelector = new SelectionManager({
       rootEl: this.shadowRoot,
       onChange: action((e) => (this.selection = e)),
     });

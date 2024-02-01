@@ -8,24 +8,24 @@ import {
   type AnnotationDTO,
   type AnnotationPatchDTO,
   type AnnotationVO,
-  type SvgSelector,
   SelectorTypes,
+  FragmentSelector,
 } from '@shared/domain/model/annotation';
-import RangeSelector, { type RangeSelectEvent } from '../../common/RangeSelector';
+import SelectionManager, { type SelectionEvent } from '../../common/SelectionManager';
 
 export default class AnnotationManager {
   constructor(private readonly pdfViewer: PDFViewer, private readonly editor: PdfEditor) {
     makeObservable(this);
-    this.rangeSelector = new RangeSelector({
+    this.selectionManager = new SelectionManager({
       includes: (startNode, endNode) => this.isInTextLayer(startNode) && this.isInTextLayer(endNode),
-      onChange: this.updateRangeEvent,
+      onChange: this.updateSelection,
     });
   }
 
-  private readonly rangeSelector: RangeSelector;
+  private readonly selectionManager: SelectionManager;
 
   @observable
-  public rangeEvent: RangeSelectEvent | null = null;
+  public currentSelection: SelectionEvent | null = null;
 
   @observable
   public currentAnnotationId?: AnnotationVO['id'];
@@ -34,37 +34,45 @@ export default class AnnotationManager {
   private visiblePages: number[] = [];
 
   @computed
-  private get selectors() {
+  private get fragmentPageMap() {
     const selectors =
       this.editor.annotations?.flatMap(({ selectors, color }) =>
-        (selectors.filter((selector) => selector.type === SelectorTypes.Svg && selector.page) as SvgSelector[]).map(
-          (selector) => ({ ...selector, color }),
-        ),
+        selectors.map((selector) => ({ ...selector, color })),
       ) || [];
 
-    return groupBy(selectors, 'page');
+    const parseFragment = (fragment: FragmentSelector['value']) => {
+      const query = new URLSearchParams(fragment);
+      const highlight = query.get('highlight');
+      assert(highlight);
+
+      const [left, right, top, bottom] = highlight.split(',');
+
+      return { page: Number(query.get('page')), left, right, top, bottom };
+    };
+
+    const fragments = selectors
+      .filter((selector) => selector.type === SelectorTypes.Fragment)
+      .map((selector) => ({ ...parseFragment((selector as FragmentSelector).value), color: selector.color }));
+
+    return groupBy(fragments, 'page');
   }
 
   public getRectsOfPage(page: number) {
-    const selectors = this.selectors[page] || [];
-    const parser = new DOMParser();
+    const fragments = this.fragmentPageMap[page] || [];
     const { horizontalRatio, verticalRatio } = this.getPageRatio(page);
 
-    return selectors.flatMap(({ value, color }) => {
-      const rectEls = parser.parseFromString(value, 'image/svg+xml').querySelectorAll('rect');
-      return Array.from(rectEls).map((rectEl) => ({
-        x: Number(rectEl.getAttribute('x')) * horizontalRatio,
-        y: Number(rectEl.getAttribute('y')) * verticalRatio,
-        width: Number(rectEl.getAttribute('width')) * horizontalRatio,
-        height: Number(rectEl.getAttribute('height')) * verticalRatio,
-        color,
-      }));
-    });
+    return fragments.map(({ left, right, top, bottom, color }) => ({
+      left: Number(left) * horizontalRatio,
+      right: Number(right) * horizontalRatio,
+      top: Number(top) * verticalRatio,
+      bottom: Number(bottom) * verticalRatio,
+      color,
+    }));
   }
 
   @computed
   public get pageElements() {
-    const pages = intersection(Object.keys(this.selectors).map(Number), this.visiblePages);
+    const pages = intersection(Object.keys(this.fragmentPageMap).map(Number), this.visiblePages);
     const elements = pages.map((page) => {
       const div = (this.pdfViewer.getPageView(page - 1) as PDFPageView | undefined)?.div;
       assert(div);
@@ -85,8 +93,8 @@ export default class AnnotationManager {
   }
 
   @action.bound
-  private updateRangeEvent(e: RangeSelectEvent | null) {
-    this.rangeEvent = e;
+  private updateSelection(e: SelectionEvent | null) {
+    this.currentSelection = e;
   }
 
   public init() {
@@ -106,20 +114,20 @@ export default class AnnotationManager {
   }
 
   public destroy() {
-    this.rangeSelector.destroy();
+    this.selectionManager.destroy();
   }
 
   public async createAnnotation(annotation: Pick<AnnotationDTO, 'body' | 'color'>) {
-    assert(this.rangeEvent);
-    const { range } = this.rangeEvent;
+    assert(this.currentSelection);
+    const { range } = this.currentSelection;
 
     await this.editor.createAnnotation({
       ...annotation,
-      targetText: RangeSelector.getText(range),
+      targetText: SelectionManager.getText(range),
       selectors: this.getSelectors(range),
     });
 
-    RangeSelector.clearRange();
+    SelectionManager.clearSelection();
   }
 
   private getPageRatio(page: number) {
@@ -150,8 +158,6 @@ export default class AnnotationManager {
       return { el: pageEl, number: i };
     });
 
-    let i = 0;
-    let j = 0;
     const pageWidth = pages[0]?.el.clientWidth;
     assert(pageWidth);
 
@@ -160,22 +166,14 @@ export default class AnnotationManager {
     const rects = Array.from(range.getClientRects()).filter(
       ({ width, height }) => width > 0 && height > 0 && width !== pageWidth,
     );
+    const fragments: string[] = [];
 
-    let pageSvgSelector: { page: number; svg: SVGSVGElement } | undefined;
-    const pageSvgSelectors: { page: number; svg: SVGSVGElement }[] = [];
-
+    let i = 0;
+    let j = 0;
     while (rects[i]) {
       const page = pages[j];
       const rect = rects[i];
       assert(page && rect);
-
-      if (!pageSvgSelector || pageSvgSelector.page !== page.number) {
-        pageSvgSelector = {
-          page: page.number,
-          svg: document.createElementNS('http://www.w3.org/2000/svg', 'svg'),
-        };
-        pageSvgSelectors.push(pageSvgSelector);
-      }
 
       const pageElRect = page.el.getBoundingClientRect();
       const isInPageEl =
@@ -185,20 +183,18 @@ export default class AnnotationManager {
         rect.right <= pageElRect.right;
 
       if (isInPageEl) {
-        const { x, y, width, height } = rect;
-        const canvas = (this.pdfViewer.getPageView(page.number - 1) as PDFPageView | undefined)?.canvas;
-        assert(canvas && pageSvgSelector);
+        const div = (this.pdfViewer.getPageView(page.number - 1) as PDFPageView | undefined)?.div;
+        assert(div);
 
-        const { x: pageX, y: pageY } = canvas.getBoundingClientRect();
+        const { left, top, width, height } = rect;
+        const { left: pageLeft, top: pageTop, width: pageWidth, height: pageHeight } = div.getBoundingClientRect();
         const { horizontalRatio, verticalRatio } = this.getPageRatio(page.number);
 
-        const svgRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        svgRect.setAttributeNS(null, 'x', String((x - pageX) / horizontalRatio));
-        svgRect.setAttributeNS(null, 'y', String((y - pageY) / verticalRatio));
-        svgRect.setAttributeNS(null, 'width', String(width / horizontalRatio));
-        svgRect.setAttributeNS(null, 'height', String(height / horizontalRatio));
-
-        pageSvgSelector.svg.appendChild(svgRect);
+        fragments.push(
+          `page=${page.number}&highlight=${(left - pageLeft) / horizontalRatio},${
+            (pageWidth - (left - pageLeft + width)) / horizontalRatio
+          },${(top - pageTop) / verticalRatio},${(pageHeight - (top - pageTop + height)) / verticalRatio}`,
+        );
 
         i++;
       } else {
@@ -206,13 +202,6 @@ export default class AnnotationManager {
       }
     }
 
-    return pageSvgSelectors.map(
-      ({ page, svg }) =>
-        ({
-          type: SelectorTypes.Svg,
-          value: svg.outerHTML,
-          page,
-        } satisfies SvgSelector),
-    );
+    return fragments.map((fragment) => ({ type: SelectorTypes.Fragment as const, value: fragment }));
   }
 }

@@ -3,19 +3,19 @@ import { isTextNode, isVisible } from './domUtils';
 import assert from 'assert';
 import { debounce } from 'lodash-es';
 
-export interface RangeSelectEvent {
+export interface SelectionEvent {
   markEl: HTMLSpanElement; // a temporary <span> element used as a floating ref
-  markElPosition: 'start' | 'end';
+  markElPosition: 'top' | 'bottom';
   range: Range;
 }
 
 interface Options {
-  onChange: (e: RangeSelectEvent | null) => void;
+  onChange: (e: SelectionEvent | null) => void;
   rootEl?: HTMLElement | DocumentFragment;
   includes?: (startContainer: Node, endContainer: Node) => boolean;
 }
 
-export default class RangeSelector {
+export default class SelectionManager {
   constructor(protected readonly options: Options) {
     document.addEventListener('selectionchange', this.handleSelection);
   }
@@ -60,21 +60,14 @@ export default class RangeSelector {
 
   private readonly handleSelection = () => {
     this.removeMarkEl();
-    const ranges = this.getRange();
+    const range = this.getRange();
 
-    if (!ranges) {
+    if (!range) {
       this.options.onChange?.(null);
-      this.notifyRange.cancel();
     } else {
-      this.notifyRange(ranges);
+      this.generateMarkEl(range);
     }
   };
-
-  private readonly notifyRange = debounce((range: Range) => {
-    const { markEl, position } = this.generateMarkEl(range);
-    this.markEl = markEl;
-    this.options.onChange?.({ range, markEl, markElPosition: position });
-  }, 300);
 
   private removeMarkEl() {
     this.markEl?.remove();
@@ -83,11 +76,11 @@ export default class RangeSelector {
 
   public destroy() {
     this.removeMarkEl();
-    this.notifyRange.cancel();
+    this.generateMarkEl.cancel();
     document.removeEventListener('selectionchange', this.handleSelection);
   }
 
-  private generateMarkEl(range: Range) {
+  private readonly generateMarkEl = debounce((range: Range) => {
     const selection = this.getSelection();
     assert(selection && selection.focusNode && selection.anchorNode);
 
@@ -95,13 +88,13 @@ export default class RangeSelector {
       selection.focusNode.compareDocumentPosition(selection.anchorNode) & Node.DOCUMENT_POSITION_FOLLOWING,
     );
 
-    let position: 'start' | 'end' = isFocusStart ? 'start' : 'end';
+    let position: 'top' | 'bottom' = isFocusStart ? 'top' : 'bottom';
     range = range.cloneRange();
-    const correctEndContainer = RangeSelector.getValidEndContainer(range);
+    const correctEndContainer = SelectionManager.getValidEndContainer(range);
 
     if (isTextNode(correctEndContainer) && range.endContainer !== correctEndContainer) {
       range.setEndAfter(correctEndContainer);
-      position = 'end';
+      position = 'bottom';
     }
 
     const tmpEl = document.createElement('span');
@@ -114,8 +107,9 @@ export default class RangeSelector {
       tmpEl.className = 'w-1 bg-red-600';
     }
 
-    return { markEl: tmpEl, position };
-  }
+    this.markEl = tmpEl;
+    this.options.onChange({ markEl: this.markEl, markElPosition: position, range });
+  }, 300);
 
   // when double click an element to select text, `endOffset` often comes with 0 and `endContainer` is not correct
   // we should find the right endContainer
@@ -173,7 +167,7 @@ export default class RangeSelector {
       .join('');
   }
 
-  public static clearRange() {
+  public static clearSelection() {
     window.getSelection()?.removeAllRanges();
   }
 }

@@ -31,15 +31,14 @@ export default observer(function AnnotationLayer({ pageEl, page }: { pageEl: HTM
 
   assert(editor.viewer instanceof PdfViewer);
   const rects = editor.viewer.annotationManager.getRectsOfPage(page);
-  const { width, height } = pageEl.getBoundingClientRect();
 
   return (
-    <div ref={setFloating} style={{ ...styles, width, height }} className="pointer-events-none z-10 opacity-30">
-      {rects.map((rect, i) => (
+    <div ref={setFloating} style={styles} className="pointer-events-none z-10 opacity-30">
+      {rects.map(({ color, ...rect }, i) => (
         <mark
           key={i}
           className="pointer-events-auto absolute cursor-pointer"
-          style={{ backgroundColor: rect.color, left: rect.x, top: rect.y, width: rect.width, height: rect.height }}
+          style={{ backgroundColor: color, ...rect }}
         />
       ))}
     </div>

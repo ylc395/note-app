@@ -1,19 +1,21 @@
 import { observer } from 'mobx-react-lite';
 import { useEffect, useRef, useState } from 'react';
 import { runInAction } from 'mobx';
+import { AiFillHighlight, AiOutlineComment } from 'react-icons/ai';
 
 import type PdfEditor from '@domain/app/model/material/editor/PdfEditor';
-import AnnotationLayer from './AnnotationLayer';
-// import AnnotationTooltip from './AnnotationTooltip';
 import PdfViewer from '../PdfViewer';
 import SelectionTooltip from '../../common/SelectionTooltip';
 import Loading from './Loading';
+import AnnotationLayer from './AnnotationLayer';
 import './style.css';
 
 export default observer(function PdfView({ editor }: { editor: PdfEditor }) {
   const containerElRef = useRef<HTMLDivElement | null>(null);
   const viewerElRef = useRef<HTMLDivElement | null>(null);
   const [pdfViewer, setPdfViewer] = useState<PdfViewer>();
+  const reference = pdfViewer?.annotationManager.currentSelection?.markEl;
+  const placement = pdfViewer?.annotationManager.currentSelection?.markElPosition;
 
   useEffect(() => {
     if (!containerElRef.current || !viewerElRef.current) {
@@ -41,12 +43,16 @@ export default observer(function PdfView({ editor }: { editor: PdfEditor }) {
           <AnnotationLayer key={page} page={page} pageEl={div} />
         ))}
       </div>
-      <SelectionTooltip
-        onHighlight={(color) => pdfViewer?.annotationManager.createAnnotation({ color, body: 'test' })}
-        reference={pdfViewer?.annotationManager.rangeEvent?.markEl}
-        placement={pdfViewer?.annotationManager.rangeEvent?.markElPosition === 'start' ? 'top' : 'bottom'}
-      />
-      {/* <AnnotationTooltip /> */}
+      {reference && (
+        <SelectionTooltip
+          reference={reference}
+          placement={placement}
+          buttons={[
+            { icon: <AiFillHighlight />, onClick: () => {} },
+            { icon: <AiOutlineComment />, onClick: () => {} },
+          ]}
+        />
+      )}
       {!pdfViewer?.isReady && <Loading />}
     </div>
   );

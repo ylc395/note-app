@@ -4,7 +4,6 @@ import type { EntityId } from './entity.js';
 export enum SelectorTypes {
   CSS = 'CssSelector',
   Fragment = 'FragmentSelector',
-  Svg = 'SvgSelector',
   Range = 'RangeSelector',
 }
 
@@ -12,12 +11,6 @@ const cssSelectorSchema = object({
   type: literal(SelectorTypes.CSS),
   value: string(),
   offset: number().optional(),
-});
-
-const svgSelectorSchema = object({
-  type: literal(SelectorTypes.Svg),
-  value: string(),
-  page: number().optional(),
 });
 
 const fragmentSelectorSchema = object({
@@ -31,12 +24,7 @@ const rangeSelectorSchema = object({
   end: cssSelectorSchema,
 });
 
-const selectorSchema = discriminatedUnion('type', [
-  cssSelectorSchema,
-  fragmentSelectorSchema,
-  svgSelectorSchema,
-  rangeSelectorSchema,
-]);
+const selectorSchema = discriminatedUnion('type', [cssSelectorSchema, fragmentSelectorSchema, rangeSelectorSchema]);
 
 export const annotationDTOSchema = object({
   targetId: string(),
@@ -52,10 +40,9 @@ export const annotationPatchDTOSchema = annotationDTOSchema.pick({
 });
 
 type CssSelector = ZodInfer<typeof cssSelectorSchema>;
-export type SvgSelector = ZodInfer<typeof svgSelectorSchema>;
-type FragmentSelector = ZodInfer<typeof fragmentSelectorSchema>;
+export type FragmentSelector = ZodInfer<typeof fragmentSelectorSchema>;
 type RangeSelector = ZodInfer<typeof rangeSelectorSchema>;
-type Selector = CssSelector | SvgSelector | FragmentSelector | RangeSelector;
+type Selector = CssSelector | FragmentSelector | RangeSelector;
 
 export interface Annotation {
   id: EntityId;
