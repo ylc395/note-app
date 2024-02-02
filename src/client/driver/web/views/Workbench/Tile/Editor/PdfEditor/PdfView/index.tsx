@@ -3,11 +3,12 @@ import { useEffect, useRef, useState } from 'react';
 import { runInAction } from 'mobx';
 import { AiFillHighlight, AiOutlineComment } from 'react-icons/ai';
 
-import type PdfEditor from '@domain/app/model/material/editor/PdfEditor';
+import PdfEditor from '@domain/app/model/material/editor/PdfEditor';
 import PdfViewer from '../PdfViewer';
 import SelectionTooltip from '../../common/SelectionTooltip';
 import Loading from './Loading';
 import AnnotationLayer from './AnnotationLayer';
+import CommentArea from './CommentArea';
 import './style.css';
 
 export default observer(function PdfView({ editor }: { editor: PdfEditor }) {
@@ -39,21 +40,28 @@ export default observer(function PdfView({ editor }: { editor: PdfEditor }) {
     <div className="relative grow overflow-hidden">
       <div className="absolute inset-0 overflow-auto" ref={containerElRef}>
         <div className="select-text" ref={viewerElRef}></div>
-        {pdfViewer?.annotationManager.pageElements.map(({ page, div }) => (
-          <AnnotationLayer key={page} page={page} pageEl={div} />
-        ))}
       </div>
-      {reference && (
-        <SelectionTooltip
-          reference={reference}
-          placement={placement}
-          buttons={[
-            { icon: <AiFillHighlight />, onClick: () => {} },
-            { icon: <AiOutlineComment />, onClick: () => {} },
-          ]}
-        />
+      {pdfViewer instanceof PdfViewer && (
+        <>
+          <div>
+            {pdfViewer.annotationManager.pageElements.map(({ page, div }) => (
+              <AnnotationLayer key={page} page={page} pageEl={div} />
+            ))}
+          </div>
+          {reference && (
+            <SelectionTooltip
+              reference={reference}
+              placement={placement}
+              buttons={[
+                { icon: <AiFillHighlight />, onClick: () => {} },
+                { icon: <AiOutlineComment />, onClick: pdfViewer.commentArea.open },
+              ]}
+            />
+          )}
+          <CommentArea />
+          {!pdfViewer.isReady && <Loading />}
+        </>
       )}
-      {!pdfViewer?.isReady && <Loading />}
     </div>
   );
 });

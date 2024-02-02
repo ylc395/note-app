@@ -30,6 +30,7 @@ export default observer(function AnnotationLayer({ pageEl, page }: { pageEl: HTM
   });
 
   assert(editor.viewer instanceof PdfViewer);
+
   const rects = editor.viewer.annotationManager.getRectsOfPage(page);
 
   return (

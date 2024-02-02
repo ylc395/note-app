@@ -93,7 +93,7 @@ export default class AnnotationManager {
   }
 
   @action.bound
-  private updateSelection(e: SelectionEvent | null) {
+  public updateSelection(e: SelectionEvent | null) {
     this.currentSelection = e;
   }
 
@@ -130,7 +130,7 @@ export default class AnnotationManager {
     SelectionManager.clearSelection();
   }
 
-  private getPageRatio(page: number) {
+  public getPageRatio(page: number) {
     const {
       width: displayWith,
       height: displayHeight,
@@ -142,16 +142,23 @@ export default class AnnotationManager {
     return { horizontalRatio, verticalRatio };
   }
 
-  private getSelectors(range: Range) {
-    const getPageOfNode = (node: Node) => {
-      const el = node instanceof HTMLElement ? node : node.parentElement;
-      const page = el?.closest('.page')?.getAttribute('data-page-number');
-      assert(page);
-      return Number(page);
-    };
+  public static getPageOfNode(node: Node) {
+    const el = node instanceof HTMLElement ? node : node.parentElement;
+    const page = el?.closest('.page')?.getAttribute('data-page-number');
+    assert(page);
+    return Number(page);
+  }
 
-    const startPage = getPageOfNode(range.startContainer);
-    const endPage = getPageOfNode(range.endContainer);
+  public getPageRect(page: number) {
+    const div = (this.pdfViewer.getPageView(page - 1) as PDFPageView | undefined)?.div;
+    assert(div);
+
+    return div.getBoundingClientRect();
+  }
+
+  private getSelectors(range: Range) {
+    const startPage = AnnotationManager.getPageOfNode(range.startContainer);
+    const endPage = AnnotationManager.getPageOfNode(range.endContainer);
     const pages = numberRange(startPage, endPage + 1).map((i) => {
       const pageEl = (this.pdfViewer.getPageView(i - 1) as PDFPageView | undefined)?.div;
       assert(pageEl);
@@ -183,12 +190,9 @@ export default class AnnotationManager {
         rect.right <= pageElRect.right;
 
       if (isInPageEl) {
-        const div = (this.pdfViewer.getPageView(page.number - 1) as PDFPageView | undefined)?.div;
-        assert(div);
-
         const { left, top, width, height } = rect;
-        const { left: pageLeft, top: pageTop, width: pageWidth, height: pageHeight } = div.getBoundingClientRect();
         const { horizontalRatio, verticalRatio } = this.getPageRatio(page.number);
+        const { left: pageLeft, top: pageTop, height: pageHeight } = this.getPageRect(page.number);
 
         fragments.push(
           `page=${page.number}&highlight=${(left - pageLeft) / horizontalRatio},${

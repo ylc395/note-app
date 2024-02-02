@@ -89,18 +89,18 @@ export default class SelectionManager {
     );
 
     let position: 'top' | 'bottom' = isFocusStart ? 'top' : 'bottom';
-    range = range.cloneRange();
-    const correctEndContainer = SelectionManager.getValidEndContainer(range);
+    const copiedRange = range.cloneRange();
+    const correctEndContainer = SelectionManager.getValidEndContainer(copiedRange);
 
-    if (isTextNode(correctEndContainer) && range.endContainer !== correctEndContainer) {
-      range.setEndAfter(correctEndContainer);
+    if (isTextNode(correctEndContainer) && copiedRange.endContainer !== correctEndContainer) {
+      copiedRange.setEndAfter(correctEndContainer);
       position = 'bottom';
     }
 
     const tmpEl = document.createElement('span');
 
-    range.collapse(isFocusStart);
-    range.insertNode(tmpEl);
+    copiedRange.collapse(isFocusStart);
+    copiedRange.insertNode(tmpEl);
     tmpEl.style.height = '1em';
 
     if (IS_DEV) {

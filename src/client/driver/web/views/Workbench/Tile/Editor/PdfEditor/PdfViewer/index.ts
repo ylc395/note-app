@@ -8,6 +8,7 @@ import type PdfEditor from '@domain/app/model/material/editor/PdfEditor';
 import { token as uiToken } from '@shared/domain/infra/ui';
 import { AnnotationEditorType, AnnotationMode } from 'pdfjs-dist';
 import AnnotationManager from './AnnotationManager';
+import CommentArea from './CommentArea';
 
 interface Options {
   container: HTMLDivElement;
@@ -33,6 +34,7 @@ export default class PdfViewer {
   private readonly ui = container.resolve(uiToken);
   private readonly cancelLoadingDoc: ReturnType<typeof when>;
   public readonly annotationManager: AnnotationManager;
+  public readonly commentArea: CommentArea;
 
   @observable public currentPage = 1;
   @observable public scale = {
@@ -47,6 +49,7 @@ export default class PdfViewer {
     this.editor = options.editor;
     this.pdfViewer = this.createPDFViewer(options);
     this.annotationManager = new AnnotationManager(this.pdfViewer, this.editor);
+    this.commentArea = new CommentArea(this.annotationManager);
     this.cancelLoadingDoc = when(
       () => Boolean(this.editor.doc),
       () => this.init(),
