@@ -1,10 +1,9 @@
-import { action, makeObservable, observable } from 'mobx';
+import { action, computed, makeObservable, observable } from 'mobx';
 import assert from 'assert';
 
 import type { SelectionEvent } from '../../common/SelectionManager';
 import AnnotationManager from './AnnotationManager';
-
-const DEFAULT_COLOR = 'red';
+import { uniq } from 'lodash-es';
 
 export default class CommentArea {
   constructor(private readonly annotationManager: AnnotationManager) {
@@ -15,16 +14,35 @@ export default class CommentArea {
   public selection?: SelectionEvent;
 
   @observable
-  public color?: string;
+  public color = 'yellow';
 
   @observable.ref
-  public rects: {
+  private fragments: {
     color: string;
     left: number;
-    width: number;
+    right: number;
     top: number;
-    height: number;
+    bottom: number;
+    page: number;
   }[] = [];
+
+  @computed
+  public get pages() {
+    return uniq(this.fragments.map(({ page }) => page));
+  }
+
+  public getRectsOfPage(page: number) {
+    const fragments = this.fragments.filter(({ page: _page }) => _page === page) || [];
+    const { horizontalRatio, verticalRatio } = this.annotationManager.getPageRatio(page);
+
+    return fragments.map(({ left, right, top, bottom, color }) => ({
+      left: Number(left) * horizontalRatio,
+      right: Number(right) * horizontalRatio,
+      top: Number(top) * verticalRatio,
+      bottom: Number(bottom) * verticalRatio,
+      color,
+    }));
+  }
 
   @action.bound
   public open() {
@@ -39,36 +57,35 @@ export default class CommentArea {
     const range = currentSelection.range.cloneRange();
     range.collapse(currentSelection.markElPosition === 'top');
     range.insertNode(this.selection.markEl);
-    this.selection.markEl.style.height = '1em';
 
-    this.rects = this.getRects();
-    this.annotationManager.updateSelection(null);
+    this.selection.markEl.style.height = '1em';
+    this.fragments = this.getFragments();
   }
 
   @action.bound
   public close() {
-    assert(this.selection);
-
-    this.selection.markEl.remove();
+    this.selection?.markEl.remove();
     this.selection = undefined;
-    this.rects = [];
+    this.fragments = [];
   }
 
-  private getRects() {
+  private getFragments() {
     if (!this.selection) {
       return [];
     }
 
-    const page = AnnotationManager.getPageOfNode(this.selection.markEl);
-    const { left: pageLeft, top: pageTop } = this.annotationManager.getPageRect(page);
-    const rangeRects = Array.from(this.selection.range.getClientRects());
+    const fragments = this.annotationManager.getFragments(this.selection.range);
 
-    return rangeRects.map((rect) => ({
-      color: this.color || DEFAULT_COLOR,
-      left: rect.left - pageLeft,
-      width: rect.width,
-      top: rect.top - pageTop,
-      height: rect.height,
+    return fragments.map((fragment) => ({
+      color: this.color,
+      ...fragment,
     }));
+  }
+
+  @action
+  public async submit(content: string) {
+    assert(this.selection);
+    await this.annotationManager.createAnnotation({ body: content, color: this.color }, this.selection);
+    this.close();
   }
 }

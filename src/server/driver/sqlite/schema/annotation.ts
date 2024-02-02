@@ -5,7 +5,7 @@ export const tableName = 'annotations';
 export interface Row {
   id: string;
   targetId: string;
-  body: string;
+  body: Generated<string>;
   selectors: string;
   targetText: string | null;
   createdAt: Generated<number>;

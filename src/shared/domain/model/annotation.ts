@@ -29,7 +29,7 @@ const selectorSchema = discriminatedUnion('type', [cssSelectorSchema, fragmentSe
 export const annotationDTOSchema = object({
   targetId: string(),
   selectors: array(selectorSchema),
-  body: string(),
+  body: string().optional(),
   targetText: string().nullish(),
   color: string(),
 });

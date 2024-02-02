@@ -1,4 +1,4 @@
-import { EventBus, PDFViewer, PDFLinkService } from 'pdfjs-dist/web/pdf_viewer';
+import { EventBus, PDFViewer, PDFLinkService, PDFPageView } from 'pdfjs-dist/web/pdf_viewer';
 import { range as numberRange } from 'lodash-es';
 import { makeObservable, observable, when, action, computed } from 'mobx';
 import { container } from 'tsyringe';
@@ -59,6 +59,10 @@ export default class PdfViewer {
   @computed
   public get totalPage() {
     return this.editor.doc?.numPages || 0;
+  }
+
+  public getPageEl(page: number) {
+    return (this.pdfViewer.getPageView(page - 1) as PDFPageView).div;
   }
 
   private createPDFViewer(options: Options) {
@@ -159,9 +163,10 @@ export default class PdfViewer {
   };
 
   public destroy() {
-    this.pdfViewer.cleanup();
-    this.annotationManager.destroy();
     this.cancelLoadingDoc();
+    this.annotationManager.destroy();
+    this.commentArea.close();
+    this.pdfViewer.cleanup();
   }
 
   public setScale(value: string) {

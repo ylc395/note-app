@@ -4,12 +4,12 @@ import type { Selectable } from 'kysely';
 import type { AnnotationRepository } from '@domain/service/repository/AnnotationRepository.js';
 
 import BaseRepository from './BaseRepository.js';
-import materialAnnotationSchema, { type Row } from '../schema/annotation.js';
+import annotationSchema, { type Row } from '../schema/annotation.js';
 import type { Annotation, AnnotationDTO, AnnotationPatchDTO } from '@domain/model/annotation.js';
 import type { EntityId } from '@domain/model/entity.js';
 
 export default class SqliteMaterialAnnotationRepository extends BaseRepository implements AnnotationRepository {
-  private readonly tableName = materialAnnotationSchema.tableName;
+  private readonly tableName = annotationSchema.tableName;
 
   public async create(annotation: AnnotationDTO) {
     const created = await this.createOneOn(this.tableName, {

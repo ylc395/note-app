@@ -4,13 +4,7 @@ import { groupBy, intersection, range as numberRange } from 'lodash-es';
 import assert from 'assert';
 
 import type PdfEditor from '@domain/app/model/material/editor/PdfEditor';
-import {
-  type AnnotationDTO,
-  type AnnotationPatchDTO,
-  type AnnotationVO,
-  SelectorTypes,
-  FragmentSelector,
-} from '@shared/domain/model/annotation';
+import { type AnnotationVO, type FragmentSelector, SelectorTypes } from '@shared/domain/model/annotation';
 import SelectionManager, { type SelectionEvent } from '../../common/SelectionManager';
 
 export default class AnnotationManager {
@@ -36,8 +30,13 @@ export default class AnnotationManager {
   @computed
   private get fragmentPageMap() {
     const selectors =
-      this.editor.annotations?.flatMap(({ selectors, color }) =>
-        selectors.map((selector) => ({ ...selector, color })),
+      this.editor.annotations?.flatMap(({ selectors, color, id, body }) =>
+        selectors.map((selector, i) => ({
+          ...selector,
+          color,
+          annotationId: id,
+          withComment: Boolean(body) && i === selectors.length - 1,
+        })),
       ) || [];
 
     const parseFragment = (fragment: FragmentSelector['value']) => {
@@ -52,7 +51,12 @@ export default class AnnotationManager {
 
     const fragments = selectors
       .filter((selector) => selector.type === SelectorTypes.Fragment)
-      .map((selector) => ({ ...parseFragment((selector as FragmentSelector).value), color: selector.color }));
+      .map((selector) => ({
+        ...parseFragment((selector as FragmentSelector).value),
+        color: selector.color,
+        annotationId: selector.annotationId,
+        withComment: selector.withComment,
+      }));
 
     return groupBy(fragments, 'page');
   }
@@ -61,25 +65,20 @@ export default class AnnotationManager {
     const fragments = this.fragmentPageMap[page] || [];
     const { horizontalRatio, verticalRatio } = this.getPageRatio(page);
 
-    return fragments.map(({ left, right, top, bottom, color }) => ({
+    return fragments.map(({ left, right, top, bottom, color, annotationId, withComment }) => ({
       left: Number(left) * horizontalRatio,
       right: Number(right) * horizontalRatio,
       top: Number(top) * verticalRatio,
       bottom: Number(bottom) * verticalRatio,
       color,
+      annotationId,
+      withComment,
     }));
   }
 
   @computed
-  public get pageElements() {
-    const pages = intersection(Object.keys(this.fragmentPageMap).map(Number), this.visiblePages);
-    const elements = pages.map((page) => {
-      const div = (this.pdfViewer.getPageView(page - 1) as PDFPageView | undefined)?.div;
-      assert(div);
-      return { page, div };
-    });
-
-    return elements;
+  public get pages() {
+    return intersection(Object.keys(this.fragmentPageMap).map(Number), this.visiblePages);
   }
 
   @action.bound
@@ -98,33 +97,26 @@ export default class AnnotationManager {
   }
 
   public init() {
-    this.pdfViewer.eventBus.on('updateviewarea', action(this.updateVisiblePages));
+    this.pdfViewer.eventBus.on('updateviewarea', this.updateVisiblePages);
     this.pdfViewer.firstPagePromise.then(this.updateVisiblePages);
   }
 
-  @action
-  public setCurrent(id: AnnotationVO['id']) {
-    this.currentAnnotationId = id;
-  }
-
-  public async updateAnnotation(patch: AnnotationPatchDTO) {
-    assert(this.currentAnnotationId);
-    await this.editor.updateAnnotation(this.currentAnnotationId, patch);
-    this.currentAnnotationId = undefined;
-  }
-
   public destroy() {
+    this.pdfViewer.eventBus.off('updateviewarea', this.updateVisiblePages);
     this.selectionManager.destroy();
   }
 
-  public async createAnnotation(annotation: Pick<AnnotationDTO, 'body' | 'color'>) {
-    assert(this.currentSelection);
-    const { range } = this.currentSelection;
+  public async createAnnotation(annotation: { body?: string; color: string }, selection?: SelectionEvent) {
+    const range = selection?.range || this.currentSelection?.range;
+    assert(range);
 
     await this.editor.createAnnotation({
       ...annotation,
       targetText: SelectionManager.getText(range),
-      selectors: this.getSelectors(range),
+      selectors: this.getFragments(range).map((f) => ({
+        type: SelectorTypes.Fragment,
+        value: `page=${f.page}&highlight=${f.left},${f.right},${f.top},${f.bottom}`,
+      })),
     });
 
     SelectionManager.clearSelection();
@@ -149,14 +141,7 @@ export default class AnnotationManager {
     return Number(page);
   }
 
-  public getPageRect(page: number) {
-    const div = (this.pdfViewer.getPageView(page - 1) as PDFPageView | undefined)?.div;
-    assert(div);
-
-    return div.getBoundingClientRect();
-  }
-
-  private getSelectors(range: Range) {
+  public getFragments(range: Range) {
     const startPage = AnnotationManager.getPageOfNode(range.startContainer);
     const endPage = AnnotationManager.getPageOfNode(range.endContainer);
     const pages = numberRange(startPage, endPage + 1).map((i) => {
@@ -173,7 +158,7 @@ export default class AnnotationManager {
     const rects = Array.from(range.getClientRects()).filter(
       ({ width, height }) => width > 0 && height > 0 && width !== pageWidth,
     );
-    const fragments: string[] = [];
+    const fragments: { left: number; right: number; top: number; bottom: number; page: number }[] = [];
 
     let i = 0;
     let j = 0;
@@ -192,13 +177,17 @@ export default class AnnotationManager {
       if (isInPageEl) {
         const { left, top, width, height } = rect;
         const { horizontalRatio, verticalRatio } = this.getPageRatio(page.number);
-        const { left: pageLeft, top: pageTop, height: pageHeight } = this.getPageRect(page.number);
+        const div = (this.pdfViewer.getPageView(page.number - 1) as PDFPageView | undefined)?.div;
+        assert(div);
+        const { left: pageLeft, top: pageTop, height: pageHeight } = div.getBoundingClientRect();
 
-        fragments.push(
-          `page=${page.number}&highlight=${(left - pageLeft) / horizontalRatio},${
-            (pageWidth - (left - pageLeft + width)) / horizontalRatio
-          },${(top - pageTop) / verticalRatio},${(pageHeight - (top - pageTop + height)) / verticalRatio}`,
-        );
+        fragments.push({
+          page: page.number,
+          left: (left - pageLeft) / horizontalRatio,
+          right: (pageWidth - (left - pageLeft + width)) / horizontalRatio,
+          top: (top - pageTop) / verticalRatio,
+          bottom: (pageHeight - (top - pageTop + height)) / verticalRatio,
+        });
 
         i++;
       } else {
@@ -206,6 +195,6 @@ export default class AnnotationManager {
       }
     }
 
-    return fragments.map((fragment) => ({ type: SelectorTypes.Fragment as const, value: fragment }));
+    return fragments;
   }
 }

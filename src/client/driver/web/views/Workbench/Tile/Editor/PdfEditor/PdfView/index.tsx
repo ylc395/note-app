@@ -44,8 +44,8 @@ export default observer(function PdfView({ editor }: { editor: PdfEditor }) {
       {pdfViewer instanceof PdfViewer && (
         <>
           <div>
-            {pdfViewer.annotationManager.pageElements.map(({ page, div }) => (
-              <AnnotationLayer key={page} page={page} pageEl={div} />
+            {pdfViewer.annotationManager.pages.map((page) => (
+              <AnnotationLayer key={page} page={page} />
             ))}
           </div>
           {reference && (
@@ -53,7 +53,10 @@ export default observer(function PdfView({ editor }: { editor: PdfEditor }) {
               reference={reference}
               placement={placement}
               buttons={[
-                { icon: <AiFillHighlight />, onClick: () => {} },
+                {
+                  icon: <AiFillHighlight />,
+                  onClick: () => pdfViewer.annotationManager.createAnnotation({ color: 'yellow' }),
+                },
                 { icon: <AiOutlineComment />, onClick: pdfViewer.commentArea.open },
               ]}
             />
