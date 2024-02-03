@@ -30,7 +30,7 @@ export default class AnnotationManager {
   @computed
   private get fragmentPageMap() {
     const selectors =
-      this.editor.annotations?.flatMap(({ selectors, color, id, body }) =>
+      this.editor.annotations.flatMap(({ selectors, color, id, body }) =>
         selectors.map((selector, i) => ({
           ...selector,
           color,
@@ -155,9 +155,16 @@ export default class AnnotationManager {
 
     // todo: optimize
     // see https://github.com/agentcooper/react-pdf-highlighter/blob/c87474eb7dc61900a6cd1db5f82a1f7f35b7922c/src/lib/optimize-client-rects.ts
-    const rects = Array.from(range.getClientRects()).filter(
-      ({ width, height }) => width > 0 && height > 0 && width !== pageWidth,
-    );
+    let maxTop = -Infinity;
+    const rects: DOMRect[] = [];
+    for (const rect of range.getClientRects()) {
+      if (rect.top < maxTop || rect.width === 0 || (rect.height === 0 && rect.width === pageWidth)) {
+        continue;
+      }
+      maxTop = rect.top;
+      rects.push(rect);
+    }
+
     const fragments: { left: number; right: number; top: number; bottom: number; page: number }[] = [];
 
     let i = 0;
@@ -169,8 +176,8 @@ export default class AnnotationManager {
 
       const pageElRect = page.el.getBoundingClientRect();
       const isInPageEl =
-        rect.top >= pageElRect.top &&
-        rect.bottom <= pageElRect.bottom &&
+        rect.top >= pageElRect.top - 2 &&
+        rect.bottom <= pageElRect.bottom + 2 && // range rects may be a little out of page rect
         rect.left >= pageElRect.left &&
         rect.right <= pageElRect.right;
 

@@ -13,6 +13,7 @@ export default abstract class Editor<T extends EditableEntity = EditableEntity, 
     this.uiState = this.localStorage.get(this.uiStateKey);
     this.tile = tile;
     this.createAnnotation = editable.createAnnotation;
+    this.getAnnotation = editable.getAnnotation;
     this.updateAnnotation = editable.updateAnnotation;
   }
 
@@ -51,6 +52,7 @@ export default abstract class Editor<T extends EditableEntity = EditableEntity, 
 
   public readonly createAnnotation: T['createAnnotation'];
   public readonly updateAnnotation: T['updateAnnotation'];
+  public readonly getAnnotation: T['getAnnotation'];
 
   @computed
   public get tabView() {

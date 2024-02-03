@@ -35,7 +35,7 @@ export default observer(function PageOverlay({ page, children }: { page: number;
   assert(editor.viewer instanceof PdfViewer);
 
   return (
-    <div ref={setFloating} style={styles} className="pointer-events-none z-10 opacity-30">
+    <div ref={setFloating} style={styles} className="pointer-events-none z-10">
       {children}
     </div>
   );
