@@ -1,9 +1,9 @@
 import { action, computed, makeObservable, observable } from 'mobx';
 
 import type Tile from '@domain/app/model/workbench/Tile';
+import type { AnnotationVO } from '@shared/domain/model/annotation';
 import MaterialEditor from './MaterialEditor';
 import type EditablePdf from '../editable/EditablePdf';
-import { AnnotationVO } from '@shared/domain/model/annotation';
 
 interface UIState {
   hash: string | null; // pdfjs's hash, including page, scroll position, zoom etc; see https://datatracker.ietf.org/doc/html/rfc8118#section-3
@@ -20,18 +20,7 @@ export default class PdfEditor extends MaterialEditor<EditablePdf, UIState> {
     makeObservable(this);
   }
 
-  @observable
-  public readonly panelsVisibility = {
-    [Panels.Outline]: false,
-    [Panels.AnnotationList]: true,
-  };
-
   public readonly getOutlineDest = this.editable.getOutlineDest;
-
-  @action
-  public togglePanel(panel: Panels) {
-    this.panelsVisibility[panel] = !this.panelsVisibility[panel];
-  }
 
   @computed
   public get outline() {
@@ -43,33 +32,53 @@ export default class PdfEditor extends MaterialEditor<EditablePdf, UIState> {
     return this.editable.doc;
   }
 
+  @action
+  public togglePanel(panel: Panels) {
+    this.panelsVisibility[panel] = !this.panelsVisibility[panel];
+  }
+
+  @observable
+  public readonly panelsVisibility = {
+    [Panels.Outline]: false,
+    [Panels.AnnotationList]: true,
+  };
+
   @observable.ref
   public viewer?: unknown;
 
   @observable
-  private visibleAnnotations: Record<AnnotationVO['id'], boolean> = {};
+  private annotationsMap: Record<AnnotationVO['id'], { isVisible: boolean; isFixed?: boolean }> = {};
 
   @action
-  public toggleVisibleAnnotation(id: AnnotationVO['id'], force = false) {
-    if (this.visibleAnnotations[id] && !force) {
+  public toggleAnnotationVisible(id: AnnotationVO['id']) {
+    const status = this.annotationsMap[id];
+
+    if (status?.isFixed) {
       return;
     }
 
-    if (id in this.visibleAnnotations) {
-      delete this.visibleAnnotations[id];
+    if (status) {
+      status.isVisible = !status.isVisible;
     } else {
-      this.visibleAnnotations[id] = false;
+      this.annotationsMap[id] = { isVisible: true };
     }
   }
 
-  @action.bound
   public toggleAnnotationFixed(id: AnnotationVO['id']) {
-    if (this.isVisible(id)) {
-      this.visibleAnnotations[id] = !this.visibleAnnotations[id];
+    const status = this.annotationsMap[id];
+
+    if (!status) {
+      return;
     }
+
+    status.isFixed = !status.isFixed;
   }
 
-  public isVisible(id: AnnotationVO['id']) {
-    return id in this.visibleAnnotations;
+  public isAnnotationFixed(id: AnnotationVO['id']) {
+    return Boolean(this.annotationsMap[id]?.isFixed);
+  }
+
+  public isAnnotationVisible(id: AnnotationVO['id']) {
+    return Boolean(this.annotationsMap[id]?.isVisible);
   }
 }

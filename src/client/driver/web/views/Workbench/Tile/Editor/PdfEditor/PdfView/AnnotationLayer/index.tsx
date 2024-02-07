@@ -4,8 +4,8 @@ import assert from 'assert';
 
 import context from '../../Context';
 import PdfViewer from '../../PdfViewer';
-import PageOverlay from '../PageOverlay';
-import Fragment from './Fragment';
+import PageOverlay from './PageOverlay';
+import Rect from './Rect';
 
 export default observer(function AnnotationLayer({ page }: { page: number }) {
   const { editor } = useContext(context);
@@ -17,7 +17,7 @@ export default observer(function AnnotationLayer({ page }: { page: number }) {
   return (
     <PageOverlay page={page}>
       {rects.map((rect, i) => (
-        <Fragment fragment={rect} key={i} />
+        <Rect fragment={rect} key={i} />
       ))}
     </PageOverlay>
   );

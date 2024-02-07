@@ -3,8 +3,8 @@ import { type ReactNode, useContext } from 'react';
 import { useFloating, offset, size, autoUpdate } from '@floating-ui/react';
 import assert from 'assert';
 
-import context from '../Context';
-import PdfViewer from '../PdfViewer';
+import context from '../../Context';
+import PdfViewer from '../../PdfViewer';
 
 export default observer(function PageOverlay({ page, children }: { page: number; children: ReactNode }) {
   const { editor } = useContext(context);
@@ -35,7 +35,7 @@ export default observer(function PageOverlay({ page, children }: { page: number;
   assert(editor.viewer instanceof PdfViewer);
 
   return (
-    <div ref={setFloating} style={styles} className="pointer-events-none z-10">
+    <div ref={setFloating} style={styles} className="pointer-events-none z-10 ">
       {children}
     </div>
   );

@@ -1,14 +1,15 @@
 import { action, computed, makeObservable, observable } from 'mobx';
 import type { PDFViewer, PDFPageView } from 'pdfjs-dist/web/pdf_viewer';
-import { groupBy, intersection, range as numberRange } from 'lodash-es';
+import { compact, groupBy, intersection, range as numberRange } from 'lodash-es';
 import assert from 'assert';
 
 import type PdfEditor from '@domain/app/model/material/editor/PdfEditor';
-import { type AnnotationVO, type FragmentSelector, SelectorTypes } from '@shared/domain/model/annotation';
+import { type FragmentSelector, SelectorTypes } from '@shared/domain/model/annotation';
 import SelectionManager, { type SelectionEvent } from '../../common/SelectionManager';
+import CommentArea from './CommentArea';
 
 export default class AnnotationManager {
-  constructor(private readonly pdfViewer: PDFViewer, private readonly editor: PdfEditor) {
+  constructor(private readonly pdfViewer: PDFViewer, public readonly editor: PdfEditor) {
     makeObservable(this);
     this.selectionManager = new SelectionManager({
       includes: (startNode, endNode) => this.isInTextLayer(startNode) && this.isInTextLayer(endNode),
@@ -16,26 +17,24 @@ export default class AnnotationManager {
     });
   }
 
+  public readonly commentArea = new CommentArea(this);
   private readonly selectionManager: SelectionManager;
 
   @observable
   public currentSelection: SelectionEvent | null = null;
 
-  @observable
-  public currentAnnotationId?: AnnotationVO['id'];
-
   @observable.struct
   private visiblePages: number[] = [];
 
   @computed
-  private get fragmentPageMap() {
+  private get pageRectsMap() {
+    const annotations = compact([...this.editor.annotations, this.commentArea.tempAnnotation]);
     const selectors =
-      this.editor.annotations.flatMap(({ selectors, color, id, body }) =>
+      annotations.flatMap(({ selectors, id }) =>
         selectors.map((selector, i) => ({
           ...selector,
-          color,
           annotationId: id,
-          withComment: Boolean(body) && i === selectors.length - 1,
+          isLast: i === selectors.length - 1,
         })),
       ) || [];
 
@@ -49,36 +48,34 @@ export default class AnnotationManager {
       return { page: Number(query.get('page')), left, right, top, bottom };
     };
 
-    const fragments = selectors
+    const rects = selectors
       .filter((selector) => selector.type === SelectorTypes.Fragment)
       .map((selector) => ({
         ...parseFragment((selector as FragmentSelector).value),
-        color: selector.color,
+        isLast: selector.isLast,
         annotationId: selector.annotationId,
-        withComment: selector.withComment,
       }));
 
-    return groupBy(fragments, 'page');
+    return groupBy(rects, 'page');
   }
 
   public getRectsOfPage(page: number) {
-    const fragments = this.fragmentPageMap[page] || [];
+    const rects = this.pageRectsMap[page] || [];
     const { horizontalRatio, verticalRatio } = this.getPageRatio(page);
 
-    return fragments.map(({ left, right, top, bottom, color, annotationId, withComment }) => ({
+    return rects.map(({ left, right, top, bottom, annotationId, isLast }) => ({
       left: Number(left) * horizontalRatio,
       right: Number(right) * horizontalRatio,
       top: Number(top) * verticalRatio,
       bottom: Number(bottom) * verticalRatio,
-      color,
+      isLast,
       annotationId,
-      withComment,
     }));
   }
 
   @computed
   public get pages() {
-    return intersection(Object.keys(this.fragmentPageMap).map(Number), this.visiblePages);
+    return intersection(Object.keys(this.pageRectsMap).map(Number), this.visiblePages);
   }
 
   @action.bound
@@ -104,44 +101,23 @@ export default class AnnotationManager {
   public destroy() {
     this.pdfViewer.eventBus.off('updateviewarea', this.updateVisiblePages);
     this.selectionManager.destroy();
+    this.commentArea.close();
   }
 
-  public async createAnnotation(annotation: { body?: string; color: string }, selection?: SelectionEvent) {
-    const range = selection?.range || this.currentSelection?.range;
+  public async createAnnotation(annotation: { body?: string; color: string }, range?: Range) {
+    range = range || this.currentSelection?.range;
     assert(range);
 
     await this.editor.createAnnotation({
       ...annotation,
       targetText: SelectionManager.getText(range),
-      selectors: this.getFragments(range).map((f) => ({
-        type: SelectorTypes.Fragment,
-        value: `page=${f.page}&highlight=${f.left},${f.right},${f.top},${f.bottom}`,
-      })),
+      selectors: this.rangeToSelectors(range),
     });
 
     SelectionManager.clearSelection();
   }
 
-  public getPageRatio(page: number) {
-    const {
-      width: displayWith,
-      height: displayHeight,
-      viewport: { rawDims },
-    } = this.pdfViewer.getPageView(page - 1) as PDFPageView;
-    const horizontalRatio = displayWith / (rawDims as { pageWidth: number }).pageWidth;
-    const verticalRatio = displayHeight / (rawDims as { pageHeight: number }).pageHeight;
-
-    return { horizontalRatio, verticalRatio };
-  }
-
-  public static getPageOfNode(node: Node) {
-    const el = node instanceof HTMLElement ? node : node.parentElement;
-    const page = el?.closest('.page')?.getAttribute('data-page-number');
-    assert(page);
-    return Number(page);
-  }
-
-  public getFragments(range: Range) {
+  public rangeToSelectors(range: Range) {
     const startPage = AnnotationManager.getPageOfNode(range.startContainer);
     const endPage = AnnotationManager.getPageOfNode(range.endContainer);
     const pages = numberRange(startPage, endPage + 1).map((i) => {
@@ -202,6 +178,28 @@ export default class AnnotationManager {
       }
     }
 
-    return fragments;
+    return fragments.map((f) => ({
+      type: SelectorTypes.Fragment as const,
+      value: `page=${f.page}&highlight=${f.left},${f.right},${f.top},${f.bottom}`,
+    }));
+  }
+
+  private getPageRatio(page: number) {
+    const {
+      width: displayWith,
+      height: displayHeight,
+      viewport: { rawDims },
+    } = this.pdfViewer.getPageView(page - 1) as PDFPageView;
+    const horizontalRatio = displayWith / (rawDims as { pageWidth: number }).pageWidth;
+    const verticalRatio = displayHeight / (rawDims as { pageHeight: number }).pageHeight;
+
+    return { horizontalRatio, verticalRatio };
+  }
+
+  private static getPageOfNode(node: Node) {
+    const el = node instanceof HTMLElement ? node : node.parentElement;
+    const page = el?.closest('.page')?.getAttribute('data-page-number');
+    assert(page);
+    return Number(page);
   }
 }

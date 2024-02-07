@@ -57,7 +57,7 @@ export default observer(function PdfView({ editor }: { editor: PdfEditor }) {
                   icon: <AiFillHighlight />,
                   onClick: () => pdfViewer.annotationManager.createAnnotation({ color: 'yellow' }),
                 },
-                { icon: <AiOutlineComment />, onClick: pdfViewer.commentArea.open },
+                { icon: <AiOutlineComment />, onClick: pdfViewer.annotationManager.commentArea.open },
               ]}
             />
           )}
