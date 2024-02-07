@@ -5,6 +5,7 @@ import Toolbar from './Toolbar';
 import context from './Context';
 import Outline from './Outline';
 import PdfViewer from './PdfView';
+import AnnotationList from './AnnotationList';
 
 export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }) {
   return (
@@ -14,7 +15,7 @@ export default observer(function PdfEditorView({ editor }: { editor: PdfEditor }
         <div className="relative flex min-h-0 grow">
           {editor.panelsVisibility[Panels.Outline] && <Outline />}
           <PdfViewer editor={editor} />
-          {/* {editor.panelsVisibility[Panels.AnnotationList] && <AnnotationList />} */}
+          {editor.panelsVisibility[Panels.AnnotationList] && <AnnotationList />}
         </div>
       </div>
     </context.Provider>

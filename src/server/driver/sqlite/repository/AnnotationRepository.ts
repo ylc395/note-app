@@ -40,7 +40,7 @@ export default class SqliteMaterialAnnotationRepository extends BaseRepository i
 
   private static rowToVO(row: Selectable<Row>) {
     return {
-      ...pick(row, ['id', 'createdAt', 'updatedAt', 'targetId', 'color', 'body']),
+      ...pick(row, ['id', 'createdAt', 'updatedAt', 'targetId', 'color', 'body', 'targetText']),
       selectors: JSON.parse(row.selectors),
     } as Annotation;
   }

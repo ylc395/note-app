@@ -3,7 +3,7 @@ import type { PDFViewer, PDFPageView } from 'pdfjs-dist/web/pdf_viewer';
 import { compact, groupBy, intersection, range as numberRange } from 'lodash-es';
 import assert from 'assert';
 
-import type PdfEditor from '@domain/app/model/material/editor/PdfEditor';
+import PdfEditor from '@domain/app/model/material/editor/PdfEditor';
 import { type FragmentSelector, SelectorTypes } from '@shared/domain/model/annotation';
 import SelectionManager, { type SelectionEvent } from '../../common/SelectionManager';
 import CommentArea from './CommentArea';
@@ -39,20 +39,10 @@ export default class AnnotationManager {
         })),
       ) || [];
 
-    const parseFragment = (fragment: FragmentSelector['value']) => {
-      const query = new URLSearchParams(fragment);
-      const highlight = query.get('highlight');
-      assert(highlight);
-
-      const [left, right, top, bottom] = highlight.split(',');
-
-      return { page: Number(query.get('page')), left, right, top, bottom };
-    };
-
     const rects = selectors
       .filter((selector) => selector.type === SelectorTypes.Fragment)
       .map((selector) => ({
-        ...parseFragment((selector as FragmentSelector).value),
+        ...PdfEditor.parseFragment((selector as FragmentSelector).value),
         isLast: selector.isLast,
         annotationId: selector.annotationId,
       }));

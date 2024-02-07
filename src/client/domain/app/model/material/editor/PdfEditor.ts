@@ -1,7 +1,8 @@
 import { action, computed, makeObservable, observable } from 'mobx';
+import assert from 'assert';
 
 import type Tile from '@domain/app/model/workbench/Tile';
-import type { AnnotationVO } from '@shared/domain/model/annotation';
+import { SelectorTypes, type AnnotationVO, type FragmentSelector } from '@shared/domain/model/annotation';
 import MaterialEditor from './MaterialEditor';
 import type EditablePdf from '../editable/EditablePdf';
 
@@ -30,6 +31,19 @@ export default class PdfEditor extends MaterialEditor<EditablePdf, UIState> {
   @computed
   public get doc() {
     return this.editable.doc;
+  }
+
+  public get annotations() {
+    return super.annotations.toSorted(({ selectors: selectors1 }, { selectors: selectors2 }) => {
+      const firstSelector1 = selectors1[0];
+      const firstSelector2 = selectors2[0];
+
+      assert(firstSelector1?.type === SelectorTypes.Fragment && firstSelector2?.type === SelectorTypes.Fragment);
+      const { page: page1 } = PdfEditor.parseFragment(firstSelector1.value);
+      const { page: page2 } = PdfEditor.parseFragment(firstSelector2.value);
+
+      return page1 - page2;
+    });
   }
 
   @action
@@ -73,5 +87,15 @@ export default class PdfEditor extends MaterialEditor<EditablePdf, UIState> {
 
   public isAnnotationVisible(id: AnnotationVO['id']) {
     return Boolean(this.annotationsMap[id]?.isVisible);
+  }
+
+  public static parseFragment(fragment: FragmentSelector['value']) {
+    const query = new URLSearchParams(fragment);
+    const highlight = query.get('highlight');
+    assert(highlight);
+
+    const [left, right, top, bottom] = highlight.split(',');
+
+    return { page: Number(query.get('page')), left, right, top, bottom };
   }
 }
