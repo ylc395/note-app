@@ -18,6 +18,8 @@ export default class CommentArea {
 
   @observable public color = 'yellow';
 
+  @observable public content = '';
+
   @action.bound
   public open() {
     const { currentSelection } = this.annotationManager;
@@ -33,12 +35,11 @@ export default class CommentArea {
     range.insertNode(this.selection.markEl);
 
     this.selection.markEl.style.height = '1em';
-    const selectors = this.annotationManager.rangeToSelectors(currentSelection.range);
     this.tempAnnotation = {
       id: '__TEMP_ANNOTATION',
       targetId: this.annotationManager.editor.entityLocator.entityId,
       targetText: null,
-      selectors,
+      selectors: this.annotationManager.rangeToSelectors(currentSelection.range),
       body: '',
       color: this.color,
       createdAt: Date.now(),
@@ -48,16 +49,25 @@ export default class CommentArea {
 
   @action.bound
   public close() {
-    assert(this.selection);
     this.selection?.markEl.remove();
     this.selection = undefined;
     this.tempAnnotation = undefined;
+    this.updateContent('');
   }
 
   @action
-  public async submit(content: string) {
+  public readonly submit = async () => {
     assert(this.selection);
-    await this.annotationManager.createAnnotation({ body: content, color: this.color }, this.selection.range);
+    await this.annotationManager.createAnnotation({
+      body: this.content,
+      color: this.color,
+      range: this.selection.range,
+    });
     this.close();
+  };
+
+  @action
+  public updateContent(content: string) {
+    this.content = content;
   }
 }

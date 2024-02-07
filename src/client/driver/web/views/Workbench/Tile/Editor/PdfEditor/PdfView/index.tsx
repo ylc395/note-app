@@ -8,7 +8,7 @@ import PdfViewer from '../PdfViewer';
 import SelectionTooltip from '../../common/SelectionTooltip';
 import Loading from './Loading';
 import AnnotationLayer from './AnnotationLayer';
-import CommentArea from './CommentArea';
+import BodyEditor from './BodyEditor';
 import './style.css';
 
 export default observer(function PdfView({ editor }: { editor: PdfEditor }) {
@@ -48,20 +48,18 @@ export default observer(function PdfView({ editor }: { editor: PdfEditor }) {
               <AnnotationLayer key={page} page={page} />
             ))}
           </div>
-          {reference && (
-            <SelectionTooltip
-              reference={reference}
-              placement={placement}
-              buttons={[
-                {
-                  icon: <AiFillHighlight />,
-                  onClick: () => pdfViewer.annotationManager.createAnnotation({ color: 'yellow' }),
-                },
-                { icon: <AiOutlineComment />, onClick: pdfViewer.annotationManager.commentArea.open },
-              ]}
-            />
-          )}
-          <CommentArea />
+          <SelectionTooltip
+            reference={reference}
+            placement={placement}
+            buttons={[
+              {
+                icon: <AiFillHighlight />,
+                onClick: () => pdfViewer.annotationManager.createAnnotation({ color: 'yellow' }),
+              },
+              { icon: <AiOutlineComment />, onClick: pdfViewer.annotationManager.commentArea.open },
+            ]}
+          />
+          <BodyEditor />
           {!pdfViewer.isReady && <Loading />}
         </>
       )}

@@ -12,7 +12,8 @@ export default class AnnotationManager {
   constructor(private readonly pdfViewer: PDFViewer, public readonly editor: PdfEditor) {
     makeObservable(this);
     this.selectionManager = new SelectionManager({
-      includes: (startNode, endNode) => this.isInTextLayer(startNode) && this.isInTextLayer(endNode),
+      includes: (startNode, endNode) =>
+        AnnotationManager.isInTextLayer(startNode) && AnnotationManager.isInTextLayer(endNode),
       onChange: this.updateSelection,
     });
   }
@@ -61,13 +62,12 @@ export default class AnnotationManager {
 
   public getRectsOfPage(page: number) {
     const rects = this.pageRectsMap[page] || [];
-    const { horizontalRatio, verticalRatio } = this.getPageRatio(page);
 
     return rects.map(({ left, right, top, bottom, annotationId, isLast }) => ({
-      left: Number(left) * horizontalRatio,
-      right: Number(right) * horizontalRatio,
-      top: Number(top) * verticalRatio,
-      bottom: Number(bottom) * verticalRatio,
+      left: Number(left),
+      right: Number(right),
+      top: Number(top),
+      bottom: Number(bottom),
       isLast,
       annotationId,
     }));
@@ -84,7 +84,7 @@ export default class AnnotationManager {
     this.visiblePages = Array.from(ids);
   }
 
-  private isInTextLayer(node: Node) {
+  private static isInTextLayer(node: Node) {
     return Boolean((node instanceof HTMLElement ? node : node.parentElement)?.closest('.textLayer'));
   }
 
@@ -104,8 +104,8 @@ export default class AnnotationManager {
     this.commentArea.close();
   }
 
-  public async createAnnotation(annotation: { body?: string; color: string }, range?: Range) {
-    range = range || this.currentSelection?.range;
+  public async createAnnotation(annotation: { body?: string; color: string; range?: Range }) {
+    const range = annotation.range || this.currentSelection?.range;
     assert(range);
 
     await this.editor.createAnnotation({
@@ -126,20 +126,11 @@ export default class AnnotationManager {
       return { el: pageEl, number: i };
     });
 
-    const pageWidth = pages[0]?.el.clientWidth;
-    assert(pageWidth);
-
     // todo: optimize
     // see https://github.com/agentcooper/react-pdf-highlighter/blob/c87474eb7dc61900a6cd1db5f82a1f7f35b7922c/src/lib/optimize-client-rects.ts
-    let maxTop = -Infinity;
-    const rects: DOMRect[] = [];
-    for (const rect of range.getClientRects()) {
-      if (rect.top < maxTop || rect.width === 0 || (rect.height === 0 && rect.width === pageWidth)) {
-        continue;
-      }
-      maxTop = rect.top;
-      rects.push(rect);
-    }
+    const rects = Array.from(range.getClientRects()).filter((rect) => {
+      return rect.width > 0 && rect.height > 0;
+    });
 
     const fragments: { left: number; right: number; top: number; bottom: number; page: number }[] = [];
 
@@ -159,17 +150,18 @@ export default class AnnotationManager {
 
       if (isInPageEl) {
         const { left, top, width, height } = rect;
-        const { horizontalRatio, verticalRatio } = this.getPageRatio(page.number);
-        const div = (this.pdfViewer.getPageView(page.number - 1) as PDFPageView | undefined)?.div;
-        assert(div);
-        const { left: pageLeft, top: pageTop, height: pageHeight } = div.getBoundingClientRect();
+        const {
+          viewport: { scale },
+          div,
+        } = this.pdfViewer.getPageView(page.number - 1) as PDFPageView;
+        const { left: pageLeft, top: pageTop, height: pageHeight, width: pageWidth } = div.getBoundingClientRect();
 
         fragments.push({
           page: page.number,
-          left: (left - pageLeft) / horizontalRatio,
-          right: (pageWidth - (left - pageLeft + width)) / horizontalRatio,
-          top: (top - pageTop) / verticalRatio,
-          bottom: (pageHeight - (top - pageTop + height)) / verticalRatio,
+          left: (left - pageLeft) / scale,
+          right: (pageWidth - (left - pageLeft + width)) / scale,
+          top: (top - pageTop) / scale,
+          bottom: (pageHeight - (top - pageTop + height)) / scale,
         });
 
         i++;
@@ -182,18 +174,6 @@ export default class AnnotationManager {
       type: SelectorTypes.Fragment as const,
       value: `page=${f.page}&highlight=${f.left},${f.right},${f.top},${f.bottom}`,
     }));
-  }
-
-  private getPageRatio(page: number) {
-    const {
-      width: displayWith,
-      height: displayHeight,
-      viewport: { rawDims },
-    } = this.pdfViewer.getPageView(page - 1) as PDFPageView;
-    const horizontalRatio = displayWith / (rawDims as { pageWidth: number }).pageWidth;
-    const verticalRatio = displayHeight / (rawDims as { pageHeight: number }).pageHeight;
-
-    return { horizontalRatio, verticalRatio };
   }
 
   private static getPageOfNode(node: Node) {

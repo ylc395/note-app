@@ -12,12 +12,11 @@ export default observer(function AnnotationLayer({ page }: { page: number }) {
   assert(editor.viewer instanceof PdfViewer);
 
   const rects = editor.viewer.annotationManager.getRectsOfPage(page);
-  editor.viewer.scale.value; // read it to make it a reactive dependency
 
   return (
     <PageOverlay page={page}>
       {rects.map((rect, i) => (
-        <Rect fragment={rect} key={i} />
+        <Rect rect={rect} key={i} />
       ))}
     </PageOverlay>
   );

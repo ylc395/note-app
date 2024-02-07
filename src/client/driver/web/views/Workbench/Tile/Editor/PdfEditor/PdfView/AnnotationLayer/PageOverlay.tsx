@@ -11,6 +11,7 @@ export default observer(function PageOverlay({ page, children }: { page: number;
   assert(editor.viewer instanceof PdfViewer);
 
   const pageEl = editor.viewer.getPageEl(page);
+  const scale = getComputedStyle(pageEl).getPropertyValue('--scale-factor'); // set by pdf.js
   const {
     floatingStyles: styles,
     refs: { setFloating },
@@ -32,10 +33,13 @@ export default observer(function PageOverlay({ page, children }: { page: number;
     elements: { reference: pageEl },
   });
 
-  assert(editor.viewer instanceof PdfViewer);
+  const style = {
+    ...styles,
+    '--scale-factor': scale,
+  };
 
   return (
-    <div ref={setFloating} style={styles} className="pointer-events-none z-10 ">
+    <div ref={setFloating} style={style} className="pointer-events-none z-10 ">
       {children}
     </div>
   );

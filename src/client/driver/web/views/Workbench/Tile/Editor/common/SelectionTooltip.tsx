@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 import Button from '@web/components/Button';
 
 interface Props {
-  reference: HTMLSpanElement;
+  reference: HTMLSpanElement | undefined;
   placement?: Placement;
   buttons: { icon: ReactNode; onClick: () => void }[];
 }
@@ -17,6 +17,10 @@ export default function SelectionTooltip({ reference, placement, buttons }: Prop
     elements: { reference },
     placement,
   });
+
+  if (!reference) {
+    return null;
+  }
 
   return (
     <div className="z-50 flex bg-gray-800 " ref={refs.setFloating} style={floatingStyles}>

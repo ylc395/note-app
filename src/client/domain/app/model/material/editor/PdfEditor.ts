@@ -50,20 +50,17 @@ export default class PdfEditor extends MaterialEditor<EditablePdf, UIState> {
   private annotationsMap: Record<AnnotationVO['id'], { isVisible: boolean; isFixed?: boolean }> = {};
 
   @action
-  public toggleAnnotationVisible(id: AnnotationVO['id']) {
+  public setAnnotationVisible(id: AnnotationVO['id'], isVisible: boolean) {
     const status = this.annotationsMap[id];
 
     if (status?.isFixed) {
       return;
     }
 
-    if (status) {
-      status.isVisible = !status.isVisible;
-    } else {
-      this.annotationsMap[id] = { isVisible: true };
-    }
+    this.annotationsMap[id] = { isVisible };
   }
 
+  @action
   public toggleAnnotationFixed(id: AnnotationVO['id']) {
     const status = this.annotationsMap[id];
 
@@ -72,10 +69,6 @@ export default class PdfEditor extends MaterialEditor<EditablePdf, UIState> {
     }
 
     status.isFixed = !status.isFixed;
-  }
-
-  public isAnnotationFixed(id: AnnotationVO['id']) {
-    return Boolean(this.annotationsMap[id]?.isFixed);
   }
 
   public isAnnotationVisible(id: AnnotationVO['id']) {
