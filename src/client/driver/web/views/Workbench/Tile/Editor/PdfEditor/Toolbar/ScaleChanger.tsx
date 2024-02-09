@@ -25,7 +25,7 @@ export default observer(function ScaleChanger() {
     editor: { viewer },
   } = useContext(context);
 
-  if (!PdfViewer.is(viewer)) {
+  if (!(viewer instanceof PdfViewer)) {
     return null;
   }
 

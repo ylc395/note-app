@@ -4,6 +4,7 @@ import { compact, groupBy, intersection, range as numberRange } from 'lodash-es'
 import assert from 'assert';
 
 import PdfEditor from '@domain/app/model/material/editor/PdfEditor';
+import EditablePdf from '@domain/app/model/material/editable/EditablePdf';
 import { type FragmentSelector, SelectorTypes } from '@shared/domain/model/annotation';
 import SelectionManager, { type SelectionEvent } from '../../common/SelectionManager';
 import CommentArea from './CommentArea';
@@ -41,11 +42,16 @@ export default class AnnotationManager {
 
     const rects = selectors
       .filter((selector) => selector.type === SelectorTypes.Fragment)
-      .map((selector) => ({
-        ...PdfEditor.parseFragment((selector as FragmentSelector).value),
-        isLast: selector.isLast,
-        annotationId: selector.annotationId,
-      }));
+      .map((selector) => {
+        const { page, highlight } = EditablePdf.parseFragment((selector as FragmentSelector).value);
+
+        return {
+          page,
+          isLast: selector.isLast,
+          annotationId: selector.annotationId,
+          ...highlight,
+        };
+      });
 
     return groupBy(rects, 'page');
   }

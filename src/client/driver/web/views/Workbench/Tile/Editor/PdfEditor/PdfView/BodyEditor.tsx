@@ -1,23 +1,21 @@
 import { observer } from 'mobx-react-lite';
 import { useContext, useEffect, useRef } from 'react';
 import { autoUpdate, offset, useFloating } from '@floating-ui/react';
-import assert from 'assert';
 
 import context from '../Context';
 import PdfViewer from '../PdfViewer';
 
 export default observer(function BodyEditor() {
   const { editor } = useContext(context);
-  assert(editor.viewer instanceof PdfViewer);
-
-  const { commentArea } = editor.viewer.annotationManager;
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const reference = commentArea.selection?.markEl;
+
+  const commentArea = editor.viewer instanceof PdfViewer ? editor.viewer.annotationManager.commentArea : undefined;
+  const reference = commentArea?.selection?.markEl;
 
   const { refs, floatingStyles } = useFloating({
     elements: { reference },
     whileElementsMounted: autoUpdate,
-    placement: commentArea.selection?.markElPosition || 'bottom',
+    placement: commentArea?.selection?.markElPosition || 'bottom',
     middleware: [offset(10)],
   });
 

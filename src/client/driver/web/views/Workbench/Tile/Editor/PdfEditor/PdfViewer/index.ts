@@ -1,5 +1,5 @@
 import { EventBus, PDFViewer, PDFLinkService, PDFPageView } from 'pdfjs-dist/web/pdf_viewer';
-import { range as numberRange } from 'lodash-es';
+import { memoize, range as numberRange } from 'lodash-es';
 import { makeObservable, observable, when, action, computed } from 'mobx';
 import { container } from 'tsyringe';
 import assert from 'assert';
@@ -177,7 +177,48 @@ export default class PdfViewer {
     }
   }
 
-  public static is(v: unknown): v is PdfViewer {
-    return v instanceof PdfViewer;
+  private readonly createPageCanvas = memoize(async (page: number) => {
+    assert(this.pdfViewer.pdfDocument);
+    const pageView = await this.pdfViewer.pdfDocument.getPage(page);
+    const viewport = pageView.getViewport({ scale: 1 });
+    const canvas = document.createElement('canvas');
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    const renderTask = pageView.render({
+      annotationMode: AnnotationMode.DISABLE,
+      viewport,
+      canvasContext: canvas.getContext('2d')!,
+    });
+    await renderTask.promise;
+
+    return canvas;
+  });
+
+  public async getViewrectDataUrl(
+    page: number,
+    viewrect: { left: number; top: number; width: number; height: number },
+  ) {
+    const pageCanvas = await this.createPageCanvas(page);
+    const rectCanvas = document.createElement('canvas');
+
+    rectCanvas.width = viewrect.width;
+    rectCanvas.height = viewrect.height;
+
+    rectCanvas
+      .getContext('2d')!
+      .drawImage(
+        pageCanvas,
+        viewrect.left,
+        viewrect.top,
+        viewrect.width,
+        viewrect.height,
+        0,
+        0,
+        viewrect.width,
+        viewrect.height,
+      );
+    const dataUrl = rectCanvas.toDataURL();
+
+    return dataUrl;
   }
 }

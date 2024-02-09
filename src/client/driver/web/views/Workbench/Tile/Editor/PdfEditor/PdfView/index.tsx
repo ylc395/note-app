@@ -33,6 +33,7 @@ export default observer(function PdfView({ editor }: { editor: PdfEditor }) {
       editor.viewer = pdfViewer;
     });
     setPdfViewer(pdfViewer);
+
     return () => pdfViewer.destroy();
   }, [editor]);
 
@@ -59,10 +60,10 @@ export default observer(function PdfView({ editor }: { editor: PdfEditor }) {
               { icon: <AiOutlineComment />, onClick: pdfViewer.annotationManager.commentArea.open },
             ]}
           />
-          <BodyEditor />
           {!pdfViewer.isReady && <Loading />}
         </>
       )}
+      <BodyEditor />
     </div>
   );
 });

@@ -12,7 +12,7 @@ export default observer(function PageSwitcher() {
   const {
     editor: { viewer },
   } = useContext(context);
-  const currentPage = PdfViewer.is(viewer) ? viewer.currentPage : 0;
+  const currentPage = viewer instanceof PdfViewer ? viewer.currentPage : 0;
   const [value, setValue] = useState('');
   const onChange = (e: ChangeEvent<HTMLInputElement>) => {
     setValue(e.target.value);
@@ -23,7 +23,7 @@ export default observer(function PageSwitcher() {
     (e) => {
       const num = parseInt((e.target as HTMLInputElement).value, 10);
 
-      if (!e.target || !PdfViewer.is(viewer) || Number.isNaN(num)) {
+      if (!e.target || !(viewer instanceof PdfViewer) || Number.isNaN(num)) {
         return null;
       }
 
@@ -36,7 +36,7 @@ export default observer(function PageSwitcher() {
     setValue(String(currentPage));
   }, [currentPage]);
 
-  if (!PdfViewer.is(viewer)) {
+  if (!(viewer instanceof PdfViewer)) {
     return null;
   }
 

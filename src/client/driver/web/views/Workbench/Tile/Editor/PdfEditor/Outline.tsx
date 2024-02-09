@@ -21,7 +21,7 @@ const OutlineItemView = observer(function OutlineItemView({
     <div style={{ paddingLeft: level * 5 }} className="mb-2">
       <div
         onClick={() => {
-          if (dest && PdfViewer.is(editor.viewer)) {
+          if (dest && editor.viewer instanceof PdfViewer) {
             editor.viewer.jumpTo(dest);
           }
         }}

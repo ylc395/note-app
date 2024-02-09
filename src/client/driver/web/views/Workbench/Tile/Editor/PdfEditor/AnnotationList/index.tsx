@@ -7,10 +7,10 @@ import Item from './Item';
 
 export default observer(function AnnotationList() {
   const { editor } = useContext(context);
-  const annotations = editor.annotations;
+  const annotations = editor.allAnnotations;
 
   return (
-    <Resizable resizable="left" minWidth={220} initialWidth={300} className="overflow-auto">
+    <Resizable resizable="left" minWidth={220} initialWidth={300} className="h-full overflow-auto">
       {annotations.length > 0
         ? annotations.map((annotation) => {
             return <Item key={annotation.id} annotation={annotation} />;
