@@ -25,15 +25,15 @@ type FileTextFtsRow = FtsRow &
   };
 
 type MemoFtsRow = FtsRow &
-  Pick<MemoRow, 'id' | 'content' | 'createdAt' | 'userUpdatedAt'> & {
+  Pick<MemoRow, 'id' | 'body' | 'createdAt' | 'updatedAt'> & {
     [MEMO_FTS_TABLE]: string;
   };
 
 type NoteFtsFow = FtsRow &
-  Pick<NoteRow, 'id' | 'title' | 'body' | 'createdAt' | 'userUpdatedAt'> & { [NOTE_FTS_TABLE]: string };
+  Pick<NoteRow, 'id' | 'title' | 'body' | 'createdAt' | 'updatedAt'> & { [NOTE_FTS_TABLE]: string };
 
 type MaterialFtsFow = FtsRow &
-  Pick<MaterialRow, 'id' | 'title' | 'fileId' | 'createdAt' | 'userUpdatedAt' | 'comment'> & {
+  Pick<MaterialRow, 'id' | 'title' | 'fileId' | 'createdAt' | 'updatedAt' | 'comment'> & {
     [MATERIAL_FTS_TABLE]: string;
   };
 

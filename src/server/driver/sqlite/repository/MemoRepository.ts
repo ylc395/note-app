@@ -1,20 +1,18 @@
-import { omit, fromPairs } from 'lodash-es';
 import { sql, type Selectable } from 'kysely';
 
-import type { MemoPatchDTO, MemoQuery, Memo, NewMemo } from '@domain/model/memo.js';
+import type { MemoPatchDTO, MemoQuery, Memo, MemoDTO, Duration } from '@domain/model/memo.js';
 import type { MemoRepository } from '@domain/service/repository/MemoRepository.js';
 
-import HierarchyEntityRepository from './HierarchyEntityRepository.js';
 import schema, { type Row } from '../schema/memo.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
+import BaseRepository from './BaseRepository.js';
 
-export default class SqliteMemoRepository extends HierarchyEntityRepository implements MemoRepository {
+export default class SqliteMemoRepository extends BaseRepository implements MemoRepository {
   readonly tableName = schema.tableName;
-  async create(memo: NewMemo) {
+  async create(memo: MemoDTO) {
     const createdRow = await this.createOneOn(this.tableName, {
       ...memo,
-      id: memo.id || this.generateId(),
-      content: memo.content || '',
+      id: this.generateId(),
       isPinned: memo.isPinned ? 1 : 0,
     });
 
@@ -67,46 +65,39 @@ export default class SqliteMemoRepository extends HierarchyEntityRepository impl
   }
 
   private static rowToMemo(row: Selectable<Row>): Memo {
-    return {
-      ...omit(row, ['isPinned']),
-      ...(row.parentId ? { isPinned: Boolean(row.isPinned) } : null),
-    };
+    return { ...row, isPinned: Boolean(row.isPinned) };
   }
 
-  async findAll(q?: MemoQuery) {
+  async findAll(q: MemoQuery) {
     let sql = this.db.selectFrom(this.tableName).selectAll(this.tableName);
 
-    if (typeof q?.isAvailable === 'boolean') {
+    if (typeof q.isAvailable === 'boolean') {
       sql = sql
         .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.id`)
         .where(`${recyclableTableName}.entityId`, q.isAvailable ? 'is' : 'is not', null);
     }
 
-    if (q?.updatedAfter) {
-      sql = sql.where('updatedAt', '>', q.updatedAfter);
+    if (q.startTime) {
+      sql = sql.where('createdAt', '>', q.startTime);
     }
 
-    if (q?.createdAfter) {
-      sql = sql.where('createdAt', '>=', q.createdAfter);
+    if (q.endTime) {
+      sql = sql.where('createdAt', '<', q.endTime);
     }
 
-    if (q?.createdBefore) {
-      sql = sql.where('createdAt', '<', q.createdBefore);
+    if (q.id) {
+      sql = sql.where('id', Array.isArray(q.id) ? 'in' : '=', q.id);
     }
 
-    if (q?.id) {
-      sql = sql.where('id', 'in', q.id);
-    }
-
-    if (typeof q?.parentId !== 'undefined') {
+    if (typeof q.parentId !== 'undefined') {
       sql = sql.where('parentId', q.parentId === null ? 'is' : '=', q.parentId);
     }
 
-    if (q?.orderBy === 'createdAt') {
+    if (q.orderBy === 'createdAt') {
       sql = sql.orderBy('createdAt desc');
     }
 
-    if (q?.limit) {
+    if (q.limit) {
       sql = sql.limit(q.limit);
     }
 
@@ -115,15 +106,13 @@ export default class SqliteMemoRepository extends HierarchyEntityRepository impl
     return rows.map(SqliteMemoRepository.rowToMemo);
   }
 
-  async removeById(id: Memo['id']) {
-    await this.db.deleteFrom(this.tableName).where('id', '=', id).execute();
-  }
-
-  async queryAvailableDates() {
+  async queryAvailableDates({ startTime, endTime }: Duration) {
     const rows = await this.db
       .selectFrom(this.tableName)
       .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.id`)
       .where(`${recyclableTableName}.entityId`, 'is', null)
+      .where(`${this.tableName}.createdAt`, '>', startTime)
+      .where(`${this.tableName}.createdAt`, '<', endTime)
       .groupBy(sql`date(createdAt / 1000, 'unixepoch')`)
       .select(({ fn }) => [
         fn.count<number>('id').as('count'),
@@ -131,6 +120,6 @@ export default class SqliteMemoRepository extends HierarchyEntityRepository impl
       ])
       .execute();
 
-    return fromPairs(rows.map(({ date, count }) => [date, count]));
+    return rows;
   }
 }

@@ -51,7 +51,7 @@ export default class SqliteMaterialSearchEngine {
           `${MATERIAL_FTS_TABLE}.id as entityId`,
           `${MATERIAL_FTS_TABLE}.rank`,
           `${MATERIAL_FTS_TABLE}.createdAt`,
-          `${MATERIAL_FTS_TABLE}.userUpdatedAt as updatedAt`,
+          `${MATERIAL_FTS_TABLE}.updatedAt`,
           `${fileTableName}.mimeType`,
         ])
         .where((eb) => {
@@ -79,7 +79,7 @@ export default class SqliteMaterialSearchEngine {
           sql<string>`simple_snippet(${sql.raw(FILE_TEXTS_FTS_TABLE)}, 1, '${sql.raw(WRAPPER_START_TEXT)}', '${sql.raw(WRAPPER_END_TEXT)}', '...',  100)`.as('body'),
           `${materialTable}.id as entityId`,
           `${materialTable}.createdAt`,
-          `${materialTable}.userUpdatedAt as updatedAt`,
+          `${materialTable}.updatedAt`,
           `${materialTable}.title`,
           `${fileTableName}.mimeType`,
           `${FILE_TEXTS_FTS_TABLE}.rank`,
@@ -101,7 +101,7 @@ export default class SqliteMaterialSearchEngine {
           sql<string>`simple_snippet(${sql.table(ANNOTATION_FTS_TABLE)}, 1, '${sql.raw(WRAPPER_START_TEXT)}', '${sql.raw(WRAPPER_END_TEXT)}', '...',  100)`.as('body'),
           `${materialTable}.id as entityId`,
           `${materialTable}.createdAt`,
-          `${materialTable}.userUpdatedAt as updatedAt`,
+          `${materialTable}.updatedAt`,
           `${materialTable}.title`,
           `${fileTableName}.mimeType`,
           `${ANNOTATION_FTS_TABLE}.rank`,

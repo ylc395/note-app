@@ -29,12 +29,11 @@ export interface Note {
   parentId: EntityParentId;
   icon: string | null;
   updatedAt: number;
-  userUpdatedAt: number;
   createdAt: number;
-  body?: string;
+  body: string;
 }
 
-export interface NoteVO extends Omit<Note, 'userUpdatedAt' | 'body'> {
+export interface NoteVO extends Omit<Note, 'body'> {
   isStar: boolean;
   childrenCount: number;
   path?: Path;

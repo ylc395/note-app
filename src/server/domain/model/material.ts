@@ -9,6 +9,6 @@ export interface MaterialQuery {
   isAvailable?: boolean;
 }
 
-export type MaterialPatch = MaterialPatchDTO & { userUpdatedAt?: number; comment?: string };
+export type MaterialPatch = MaterialPatchDTO & { updatedAt?: number; comment?: string };
 
 export * from '@shared/domain/model/material.js';

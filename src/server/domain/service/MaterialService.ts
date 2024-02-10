@@ -50,7 +50,6 @@ export default class MaterialService extends BaseService {
 
     const materialVOs = _materials.map((material) => ({
       ...pick(material, ['id', 'title', 'icon', 'parentId', 'updatedAt']),
-      updatedAt: material.userUpdatedAt,
       childrenCount: children[material.id]?.length || 0,
       isStar: Boolean(stars[material.id]),
       ...(isEntityMaterial(material) ? pick(material, ['mimeType', 'comment', 'sourceUrl']) : null),
@@ -77,7 +76,7 @@ export default class MaterialService extends BaseService {
 
       const result = await this.repo.materials.update(ids, {
         ...patch,
-        userUpdatedAt: Date.now(),
+        updatedAt: Date.now(),
       });
 
       assert(result);
@@ -91,7 +90,7 @@ export default class MaterialService extends BaseService {
       await this.assertAvailableIds([materialId], isEntityPatch ? { type: MaterialTypes.Entity } : undefined);
 
       const now = Date.now();
-      const result = await this.repo.materials.update(materialId, { ...patch, userUpdatedAt: now });
+      const result = await this.repo.materials.update(materialId, { ...patch, updatedAt: now });
       assert(result);
 
       if (typeof patch.comment === 'string') {

@@ -25,7 +25,6 @@ export interface Material {
   icon: string | null;
   parentId: EntityParentId;
   createdAt: number;
-  userUpdatedAt: number;
   updatedAt: number;
 }
 
@@ -43,7 +42,7 @@ export enum MaterialTypes {
 export type NewMaterialDTO = Infer<typeof newMaterialDTOSchema>;
 export type MaterialPatchDTO = Infer<typeof materialPatchDTOSchema>;
 
-export interface MaterialVO extends Omit<Material, 'userUpdatedAt'> {
+export interface MaterialVO extends Material {
   childrenCount: number;
   isStar: boolean;
 }

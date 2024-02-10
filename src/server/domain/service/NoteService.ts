@@ -54,17 +54,17 @@ export default class NoteService extends BaseService {
   }
 
   public async updateBody(noteId: Note['id'], body: string) {
-    const userUpdatedAt = Date.now();
+    const updatedAt = Date.now();
 
     await this.assertWritable(noteId);
-    const result = await this.repo.notes.update(noteId, { body, userUpdatedAt });
+    const result = await this.repo.notes.update(noteId, { body, updatedAt });
     assert(result);
 
     this.eventBus.emit('contentUpdated', {
       content: body,
       entityId: noteId,
+      updatedAt,
       entityType: EntityTypes.Note,
-      updatedAt: userUpdatedAt,
     });
   }
 
@@ -79,11 +79,9 @@ export default class NoteService extends BaseService {
 
   public async updateOne(noteId: Note['id'], note: NotePatchDTO) {
     return this.transaction(async () => {
-      const userUpdatedAt = Date.now();
-
       const result = await this.repo.notes.update(noteId, {
         ...note,
-        userUpdatedAt,
+        updatedAt: Date.now(),
       });
 
       assert(result);
@@ -102,8 +100,7 @@ export default class NoteService extends BaseService {
     const paths = Array.isArray(notes) ? {} : await this.getPaths(ids);
 
     const result = _notes.map((note) => ({
-      ...pick(note, ['id', 'createdAt', 'icon', 'isReadonly', 'parentId', 'title']),
-      updatedAt: note.userUpdatedAt,
+      ...pick(note, ['id', 'createdAt', 'updatedAt', 'icon', 'isReadonly', 'parentId', 'title']),
       childrenCount: children[note.id]?.length || 0,
       isStar: Boolean(stars[note.id]),
       ...(Array.isArray(notes) ? null : { path: paths[note.id] || [] }),
@@ -120,7 +117,7 @@ export default class NoteService extends BaseService {
 
       const result = await this.repo.notes.update(ids, {
         ...patch,
-        userUpdatedAt: Date.now(),
+        updatedAt: Date.now(),
       });
 
       assert(result);

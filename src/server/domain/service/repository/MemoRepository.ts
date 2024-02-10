@@ -1,12 +1,9 @@
-import type { Memo, MemoVO, MemoQuery, NewMemo, MemoPatch, MemoDatesVO } from '@domain/model/memo.js';
+import type { Memo, MemoVO, MemoQuery, MemoDTO, MemoPatchDTO, DateInfo, Duration } from '@domain/model/memo.js';
 
 export interface MemoRepository {
-  create: (memo: NewMemo) => Promise<Memo>;
-  update: (id: MemoVO['id'], patch: MemoPatch) => Promise<Memo | null>;
-  findParent: (id: MemoVO['id']) => Promise<Memo | null>;
-  findDescendantIds: (ids: MemoVO['id'][]) => Promise<Record<MemoVO['id'], MemoVO['id'][]>>;
+  create: (memo: MemoDTO) => Promise<Memo>;
+  update: (id: MemoVO['id'], patch: MemoPatchDTO) => Promise<Memo | null>;
   findOneById: (id: MemoVO['id']) => Promise<Memo | null>;
-  findAll: (q?: MemoQuery) => Promise<Memo[]>;
-  removeById: (id: MemoVO['id']) => Promise<void>;
-  queryAvailableDates: () => Promise<MemoDatesVO>;
+  findAll: (q: MemoQuery) => Promise<Memo[]>;
+  queryAvailableDates: (duration: Duration) => Promise<DateInfo[]>;
 }

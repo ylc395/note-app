@@ -35,7 +35,7 @@ export default class SqliteNoteSearchEngine {
         sql<string>`snippet(${sql.raw(NOTE_FTS_TABLE)}, 2, '${sql.raw(WRAPPER_START_TEXT)}', '${sql.raw(WRAPPER_END_TEXT)}', '...',  100)`.as('body'),
         `${NOTE_FTS_TABLE}.id as entityId`,
         `${NOTE_FTS_TABLE}.createdAt`,
-        `${NOTE_FTS_TABLE}.userUpdatedAt as updatedAt`,
+        `${NOTE_FTS_TABLE}.updatedAt`,
         `${NOTE_FTS_TABLE}.rank`,
       ]);
 
@@ -65,7 +65,7 @@ export default class SqliteNoteSearchEngine {
           `${noteTableName}.title`,
           `${noteTableName}.id as entityId`,
           `${noteTableName}.createdAt`,
-          `${noteTableName}.userUpdatedAt as updatedAt`,
+          `${noteTableName}.updatedAt`,
           `${FILE_TEXTS_FTS_TABLE}.rank`,
           `${FILE_TEXTS_FTS_TABLE}.page as location`,
         ])

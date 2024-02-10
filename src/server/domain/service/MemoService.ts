@@ -1,105 +1,88 @@
-import { mapValues, omit, map } from 'lodash-es';
+import { mapValues, uniq } from 'lodash-es';
 
 import { buildIndex } from '@utils/collection.js';
-import type { Memo, NewMemo, MemoPatch, ClientMemoQuery, MemoVO } from '@domain/model/memo.js';
+import type { Memo, MemoDTO, ClientMemoQuery, MemoVO, MemoPatchDTO, Duration } from '@domain/model/memo.js';
 import { EntityTypes } from '@domain/model/entity.js';
 
 import BaseService from './BaseService.js';
+import assert from 'assert';
 
 export default class MemoService extends BaseService {
-  async create(memo: NewMemo) {
-    if (memo.parentId && memo.isPinned) {
-      throw new Error('can not pin child memo');
-    }
-
+  public async create(memo: MemoDTO) {
+    assert(!(memo.parentId && memo.isPinned), 'can not pin child memo');
     const newMemo = await this.repo.memos.create(memo);
 
-    return {
-      ...omit(newMemo, ['userUpdatedAt']),
-      updatedAt: newMemo.userUpdatedAt,
-      isStar: false,
-    };
+    return { ...newMemo, isStar: false };
   }
 
-  async update(id: MemoVO['id'], patch: MemoPatch) {
-    if (typeof patch.isPinned !== 'undefined' && (await this.repo.memos.findParent(id))) {
-      throw new Error('can not pin child memo');
-    }
+  public async updateOne(id: MemoVO['id'], patch: MemoPatchDTO) {
+    await this.assertAvailableIds([id]);
 
     const updated = await this.repo.memos.update(id, patch);
+    assert(updated);
 
-    if (!updated) {
-      throw new Error('wrong id');
-    }
-
-    if (typeof patch.content === 'string') {
+    if (typeof patch.body === 'string') {
       this.eventBus.emit('contentUpdated', {
         updatedAt: updated.updatedAt,
-        content: patch.content,
+        content: patch.body,
         entityId: id,
         entityType: EntityTypes.Memo,
       });
     }
 
-    return this.toVOs(updated);
+    return this.toVO(updated);
   }
 
-  async getTree({ after, createdAfter, createdBefore, limit = 30 }: ClientMemoQuery) {
-    let _createdAfter = createdAfter || 0;
+  public async query(query: ClientMemoQuery) {
+    let startTime = query.startTime;
 
-    if (after) {
-      const memo = await this.repo.memos.findOneById(after);
-
-      if (!memo) {
-        throw new Error('invalid memo');
-      }
-
-      _createdAfter = memo.createdAt;
+    if (query.after) {
+      await this.assertAvailableIds([query.after]);
+      const memo = await this.repo.memos.findOneById(query.after);
+      assert(memo);
+      startTime = memo.createdAt;
     }
 
     const memos = await this.repo.memos.findAll({
-      createdAfter: _createdAfter,
-      createdBefore,
-      limit,
+      startTime,
       isAvailable: true,
-      parentId: null,
-      orderBy: 'createdAt',
+      endTime: query.endTime,
+      limit: query.parentId ? undefined : query.limit,
+      parentId: query.parentId || null,
+      orderBy: query.parentId ? undefined : 'createdAt',
     });
 
-    const descantIds = await this.repo.memos.findDescendantIds(map(memos, 'id'));
-    const descantMemos = await this.repo.memos.findAll({ id: Object.values(descantIds).flat(), isAvailable: true });
-
-    return this.toVOs([...memos, ...descantMemos]);
+    return await this.toVO(memos);
   }
 
-  private async toVOs(memos: Memo): Promise<MemoVO>;
-  private async toVOs(memos: Memo[]): Promise<MemoVO[]>;
-  private async toVOs(memos: Memo[] | Memo) {
-    const stars = buildIndex(
-      await this.repo.stars.findAllByEntityId((Array.isArray(memos) ? memos : [memos]).map(({ id }) => id)),
-    );
+  private async toVO(memos: Memo): Promise<MemoVO>;
+  private async toVO(memos: Memo[]): Promise<MemoVO[]>;
+  private async toVO(memos: Memo[] | Memo): Promise<MemoVO[] | MemoVO> {
+    const _memos = Array.isArray(memos) ? memos : [memos];
 
-    const toVO = (memo: Memo) => ({
-      ...omit(memo, ['userUpdatedAt']),
-      updatedAt: memo.userUpdatedAt,
+    assert(_memos.length > 0);
+    const ids = _memos.map(({ id }) => id);
+    const stars = buildIndex(await this.repo.stars.findAllByEntityId(ids));
+
+    const result = _memos.map((memo) => ({
+      ...memo,
       isStar: Boolean(stars[memo.id]),
-    });
+    }));
 
-    return Array.isArray(memos) ? memos.map(toVO) : toVO(memos);
+    return Array.isArray(memos) ? result : result[0]!;
   }
 
   public readonly getTitles = async (ids: MemoVO['id'][]) => {
     const memos = await this.repo.memos.findAll({ id: ids });
-    return mapValues(buildIndex(memos), ({ content }) => content.slice(0, 5));
+    return mapValues(buildIndex(memos), ({ body }) => body.slice(0, 5));
   };
 
   public readonly assertAvailableIds = async (ids: MemoVO['id'][]) => {
-    if ((await this.repo.memos.findAll({ id: ids, isAvailable: true })).length !== ids.length) {
-      throw new Error('invalid id');
-    }
+    const memos = await this.repo.memos.findAll({ id: ids, isAvailable: true });
+    assert(memos.length === uniq(ids).length);
   };
 
-  async queryDates() {
-    return await this.repo.memos.queryAvailableDates();
+  public async queryAvailableDates(duration: Duration) {
+    return this.repo.memos.queryAvailableDates(duration);
   }
 }

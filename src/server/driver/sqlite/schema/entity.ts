@@ -27,6 +27,6 @@ export default {
             .selectFrom(annotationTableName)
             .select(['id', 'body as content', sql.val(null).as('parentId'), sql.val('').as('title')]),
         )
-        .union(db.selectFrom(memoTableName).select(['id', sql.val('').as('title'), 'parentId', 'content'])),
+        .union(db.selectFrom(memoTableName).select(['id', sql.val('').as('title'), 'parentId', 'body as content'])),
     ),
 } as const;

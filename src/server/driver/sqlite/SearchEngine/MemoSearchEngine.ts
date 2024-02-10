@@ -1,7 +1,6 @@
 import { sql } from 'kysely';
 
 import { type SearchParams, Scopes } from '@domain/model/search.js';
-import { normalizeTitle } from '@domain/model/memo.js';
 import { EntityTypes } from '@domain/model/entity.js';
 
 import type SearchEngine from './index.js';
@@ -34,7 +33,7 @@ export default class SqliteNoteSearchEngine {
       let query = this.engine.db.selectFrom(MEMO_FTS_TABLE).select([
           sql<string>`snippet(${sql.raw(MEMO_FTS_TABLE)}, 1, '${sql.raw(WRAPPER_START_TEXT)}', '${sql.raw(WRAPPER_END_TEXT)}', '...',  10)`.as('body'),
           `${MEMO_FTS_TABLE}.createdAt`,
-          `${MEMO_FTS_TABLE}.userUpdatedAt as updatedAt`,
+          `${MEMO_FTS_TABLE}.updatedAt`,
           `${MEMO_FTS_TABLE}.id as entityId`,
           sql<string>`'untitled'`.as('title'),
           `${MEMO_FTS_TABLE}.rank`,
@@ -56,7 +55,7 @@ export default class SqliteNoteSearchEngine {
           sql<string>`'untitled'`.as('title'),
           `${memoTableName}.id as entityId`,
           `${memoTableName}.createdAt`,
-          `${memoTableName}.userUpdatedAt as updatedAt`,
+          `${memoTableName}.updatedAt`,
           `${FILE_TEXTS_FTS_TABLE}.rank`,
           `${FILE_TEXTS_FTS_TABLE}.page as location`,
         ])
@@ -69,7 +68,7 @@ export default class SqliteNoteSearchEngine {
     return result.map((row) => ({
       ...row,
       entityType: EntityTypes.Memo as const,
-      title: normalizeTitle(row),
+      title: row.body.slice(0, 5),
     }));
   }
 }

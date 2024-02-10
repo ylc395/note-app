@@ -15,7 +15,7 @@ import { tableName as noteTableName } from '../schema/note.js';
 import { tableName as memoTableName } from '../schema/memo.js';
 import { tableName as materialTableName } from '../schema/material.js';
 import { tableName as fileTextTableName } from '../schema/fileText.js';
-import { tableName as materialAnnotationTableName } from '../schema/annotation.js';
+import { tableName as annotationTableName } from '../schema/annotation.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
 
 // prettier-ignore
@@ -138,7 +138,7 @@ export function commonSql(
     | typeof noteTableName
     | typeof MEMO_FTS_TABLE
     | typeof ANNOTATION_FTS_TABLE
-    | typeof materialAnnotationTableName
+    | typeof annotationTableName
     | typeof memoTableName,
   query: SearchParams,
 ) {
@@ -158,14 +158,11 @@ export function commonSql(
   }
 
   if (query.updated) {
-    const field =
-      table === materialAnnotationTableName || table === ANNOTATION_FTS_TABLE ? 'updatedAt' : 'userUpdatedAt';
-
     if (query.updated.from) {
-      qb = qb.where(`${table}.${field}`, '>=', dayjs(query.updated.from).valueOf());
+      qb = qb.where(`${table}.updatedAt`, '>=', dayjs(query.updated.from).valueOf());
     }
     if (query.updated.to) {
-      qb = qb.where(`${table}.${field}`, '<=', dayjs(query.updated.to).valueOf());
+      qb = qb.where(`${table}.updatedAt`, '<=', dayjs(query.updated.to).valueOf());
     }
   }
 

@@ -9,7 +9,6 @@ export interface Row {
   parentId: string | null;
   createdAt: Generated<number>;
   updatedAt: Generated<number>;
-  userUpdatedAt: Generated<number>;
   isReadonly: Generated<0 | 1>;
   icon: string | null;
 }
@@ -25,7 +24,6 @@ export default {
       .addColumn('parentId', 'text')
       .addColumn('createdAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch('subsec') * 1000)`))
       .addColumn('updatedAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch('subsec') * 1000)`))
-      .addColumn('userUpdatedAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch('subsec') * 1000)`))
       .addColumn('isReadonly', 'integer', (col) => col.notNull().defaultTo(0))
       .addColumn('icon', 'text');
   },

@@ -42,7 +42,6 @@ export default class SqliteNoteRepository extends HierarchyEntityRepository impl
         'notes.parentId',
         'notes.title',
         'notes.updatedAt',
-        'notes.userUpdatedAt',
         'notes.createdAt',
       ]);
 

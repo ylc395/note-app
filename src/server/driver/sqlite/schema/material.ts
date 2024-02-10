@@ -13,7 +13,6 @@ export interface Row {
   comment: Generated<string>;
   createdAt: Generated<number>;
   updatedAt: Generated<number>;
-  userUpdatedAt: Generated<number>;
 }
 
 export default {
@@ -30,7 +29,6 @@ export default {
       .addColumn('icon', 'text')
       .addColumn('createdAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch('subsec') * 1000)`))
       .addColumn('updatedAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch('subsec') * 1000)`))
-      .addColumn('userUpdatedAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch('subsec') * 1000)`))
       .addForeignKeyConstraint('fileId-foreign', ['fileId'], filesTableName, ['id']);
   },
 } as const;
