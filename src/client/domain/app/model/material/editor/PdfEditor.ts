@@ -33,20 +33,17 @@ export default class PdfEditor extends MaterialEditor<EditablePdf, UIState> {
     return this.editable.doc;
   }
 
-  @computed
-  public get allAnnotations() {
-    return [...this.annotations, ...(this.editable.nativeAnnotations || [])].sort(
-      ({ selectors: selectors1 }, { selectors: selectors2 }) => {
-        const firstSelector1 = selectors1[0];
-        const firstSelector2 = selectors2[0];
+  public get annotations() {
+    return super.annotations.sort(({ selectors: selectors1 }, { selectors: selectors2 }) => {
+      const firstSelector1 = selectors1[0];
+      const firstSelector2 = selectors2[0];
 
-        assert(firstSelector1?.type === SelectorTypes.Fragment && firstSelector2?.type === SelectorTypes.Fragment);
-        const { page: page1 } = EditablePdf.parseFragment(firstSelector1.value);
-        const { page: page2 } = EditablePdf.parseFragment(firstSelector2.value);
+      assert(firstSelector1?.type === SelectorTypes.Fragment && firstSelector2?.type === SelectorTypes.Fragment);
+      const { page: page1 } = EditablePdf.parseFragment(firstSelector1.value);
+      const { page: page2 } = EditablePdf.parseFragment(firstSelector2.value);
 
-        return page1 - page2;
-      },
-    );
+      return page1 - page2;
+    });
   }
 
   @action

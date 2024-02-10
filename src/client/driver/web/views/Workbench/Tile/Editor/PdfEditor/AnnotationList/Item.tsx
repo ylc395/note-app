@@ -7,7 +7,6 @@ import { SelectorTypes, type AnnotationVO } from '@shared/domain/model/annotatio
 import EditablePdf from '@domain/app/model/material/editable/EditablePdf';
 import context from '../Context';
 import PdfViewer from '../PdfViewer';
-import Viewrect from './Viewrect';
 
 export default observer(function Item({ annotation }: { annotation: AnnotationVO }) {
   const {
@@ -20,7 +19,7 @@ export default observer(function Item({ annotation }: { annotation: AnnotationVO
   const lastSelector = selectors[selectors.length - 1];
 
   assert(firstSelector?.type === SelectorTypes.Fragment && lastSelector?.type === SelectorTypes.Fragment);
-  const { page: startPage, viewrect } = EditablePdf.parseFragment(firstSelector.value);
+  const { page: startPage } = EditablePdf.parseFragment(firstSelector.value);
   const { page: endPage } = EditablePdf.parseFragment(lastSelector.value);
 
   return (
@@ -30,11 +29,7 @@ export default observer(function Item({ annotation }: { annotation: AnnotationVO
         style={{ borderColor: annotation.color }}
         onClick={() => viewer.jumpTo(startPage)}
       >
-        {viewrect ? (
-          <Viewrect page={startPage} rect={viewrect} />
-        ) : (
-          <blockquote className="m-0">{annotation.targetText}</blockquote>
-        )}
+        <blockquote className="m-0">{annotation.targetText}</blockquote>
         <div className="mt-2 pr-2 text-right italic">
           {startPage === endPage ? `第${startPage}页` : `第${startPage}页-第${endPage}页`}
         </div>

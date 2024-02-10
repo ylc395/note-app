@@ -1,6 +1,5 @@
 import { observer } from 'mobx-react-lite';
 import { useContext } from 'react';
-import assert from 'assert';
 
 import context from '../../Context';
 import PdfViewer from '../../PdfViewer';
@@ -9,7 +8,10 @@ import Rect from './Rect';
 
 export default observer(function AnnotationLayer({ page }: { page: number }) {
   const { editor } = useContext(context);
-  assert(editor.viewer instanceof PdfViewer);
+
+  if (!(editor.viewer instanceof PdfViewer)) {
+    return null;
+  }
 
   const rects = editor.viewer.annotationManager.getRectsOfPage(page);
 

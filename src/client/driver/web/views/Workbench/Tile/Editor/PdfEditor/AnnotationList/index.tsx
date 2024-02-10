@@ -6,8 +6,9 @@ import context from '../Context';
 import Item from './Item';
 
 export default observer(function AnnotationList() {
-  const { editor } = useContext(context);
-  const annotations = editor.allAnnotations;
+  const {
+    editor: { annotations },
+  } = useContext(context);
 
   return (
     <Resizable resizable="left" minWidth={220} initialWidth={300} className="h-full overflow-auto">
