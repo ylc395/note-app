@@ -8,7 +8,9 @@ import MaterialExplorer from '@domain/app/model/material/Explorer';
 
 export default observer(function Operations() {
   const { createDirectory, createMaterialFromFile } = container.resolve(MaterialService);
-  const { tree } = container.resolve(MaterialExplorer);
+  const {
+    tree: { hasExpandedNode, collapseAll },
+  } = container.resolve(MaterialExplorer);
 
   return (
     <div className="flex grow justify-between">
@@ -21,7 +23,7 @@ export default observer(function Operations() {
         </Button>
       </div>
       <div className="flex">
-        <Button disabled={tree.hasExpandedNode} onClick={tree.collapseAll}>
+        <Button disabled={!hasExpandedNode} onClick={collapseAll}>
           <AiOutlineShrink />
         </Button>
         <Button>

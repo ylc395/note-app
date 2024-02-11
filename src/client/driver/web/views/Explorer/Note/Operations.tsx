@@ -18,7 +18,7 @@ export default observer(function Operations() {
         <AiOutlinePlus />
       </Button>
       <div className="flex">
-        <Button disabled={hasExpandedNode} onClick={collapseAll}>
+        <Button disabled={!hasExpandedNode} onClick={collapseAll}>
           <AiOutlineShrink />
         </Button>
         <Button>
