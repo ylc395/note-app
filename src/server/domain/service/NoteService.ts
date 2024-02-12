@@ -3,11 +3,10 @@ import assert from 'node:assert';
 import { mapValues, pick, uniq } from 'lodash-es';
 import {
   type NoteVO,
-  type NewNoteDTO,
+  type NoteDTO,
   type NotePatchDTO,
   type Note,
   type ClientNoteQuery,
-  type NotePatch,
   normalizeTitle,
 } from '@domain/model/note.js';
 import { EntityTypes } from '@domain/model/entity.js';
@@ -18,7 +17,7 @@ import { buildIndex } from '@utils/collection.js';
 
 @singleton()
 export default class NoteService extends BaseService {
-  public async create(note: NewNoteDTO, from?: Note['id']) {
+  public async create(note: NoteDTO, from?: Note['id']) {
     let newNote: Required<Note>;
 
     if (from) {
@@ -35,7 +34,7 @@ export default class NoteService extends BaseService {
   }
 
   private async duplicate(noteId: Note['id']) {
-    const targetNote = await this.repo.notes.findOneById(noteId, true);
+    const targetNote = await this.repo.notes.findOneById(noteId);
     assert(targetNote);
 
     const newNote = await this.repo.notes.create({
@@ -54,18 +53,12 @@ export default class NoteService extends BaseService {
   }
 
   public async updateBody(noteId: Note['id'], body: string) {
+    await this.assertAvailableIds([noteId]);
+
     const updatedAt = Date.now();
-
-    await this.assertWritable(noteId);
     const result = await this.repo.notes.update(noteId, { body, updatedAt });
-    assert(result);
 
-    this.eventBus.emit('contentUpdated', {
-      content: body,
-      entityId: noteId,
-      updatedAt,
-      entityType: EntityTypes.Note,
-    });
+    assert(result);
   }
 
   public readonly getNormalizedTitles = async (ids: Note['id'][]) => {
@@ -78,16 +71,29 @@ export default class NoteService extends BaseService {
   };
 
   public async updateOne(noteId: Note['id'], note: NotePatchDTO) {
-    return this.transaction(async () => {
-      const result = await this.repo.notes.update(noteId, {
-        ...note,
-        updatedAt: Date.now(),
-      });
+    if (typeof note.body === 'string') {
+      await this.assertWritable(noteId);
+    } else {
+      await this.assertAvailableIds([noteId]);
+    }
 
-      assert(result);
+    const updatedAt = Date.now();
 
-      return this.queryOne(noteId);
+    await this.repo.notes.update(noteId, {
+      ...note,
+      updatedAt,
     });
+
+    if (typeof note.body === 'string') {
+      this.eventBus.emit('contentUpdated', {
+        content: note.body,
+        entityId: noteId,
+        updatedAt,
+        entityType: EntityTypes.Note,
+      });
+    }
+
+    return this.queryOne(noteId);
   }
 
   private async toVO(notes: Note): Promise<Required<NoteVO>>;
@@ -100,7 +106,7 @@ export default class NoteService extends BaseService {
     const paths = Array.isArray(notes) ? {} : await this.getPaths(ids);
 
     const result = _notes.map((note) => ({
-      ...pick(note, ['id', 'createdAt', 'updatedAt', 'icon', 'isReadonly', 'parentId', 'title']),
+      ...pick(note, ['id', 'createdAt', 'isReadonly', 'updatedAt', 'icon', 'parentId', 'title', 'body']),
       childrenCount: children[note.id]?.length || 0,
       isStar: Boolean(stars[note.id]),
       ...(Array.isArray(notes) ? null : { path: paths[note.id] || [] }),
@@ -109,7 +115,7 @@ export default class NoteService extends BaseService {
     return Array.isArray(notes) ? result : result[0]!;
   }
 
-  public async batchUpdate(ids: Note['id'][], patch: NotePatch) {
+  public async batchUpdate(ids: Note['id'][], patch: NotePatchDTO) {
     return this.transaction(async () => {
       if (patch.parentId) {
         await this.assertValidParent(patch.parentId, ids);
@@ -152,17 +158,11 @@ export default class NoteService extends BaseService {
   }
 
   public async queryOne(id: Note['id']) {
-    const note = await this.repo.notes.findOneById(id, true);
-    assert(note);
+    await this.assertAvailableIds([id]);
+    const note = await this.repo.notes.findOneById(id);
 
+    assert(note);
     return await this.toVO(note);
-  }
-
-  public async queryBody(id: Note['id']) {
-    const note = await this.repo.notes.findOneById(id, true);
-    assert(note);
-
-    return note.body;
   }
 
   public async getTreeFragment(noteId: Note['id']) {
@@ -173,8 +173,8 @@ export default class NoteService extends BaseService {
   }
 
   private async assertWritable(noteId: Note['id']) {
-    const row = await this.repo.notes.findOneById(noteId, true);
-
+    await this.assertAvailableIds([noteId]);
+    const row = await this.repo.notes.findOneById(noteId);
     assert(row && !row.isReadonly, 'not writable');
   }
 }

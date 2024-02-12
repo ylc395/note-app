@@ -29,7 +29,7 @@ export default abstract class EditableEntity<T extends EntityInfo = EntityInfo> 
 
   protected readonly remote = container.resolve(rpcToken);
   protected abstract readonly entityType: EditableEntityLocator['entityType'];
-  public abstract info?: T;
+  public abstract entity?: T;
 
   @observable
   private annotationMap: Record<AnnotationVO['id'], AnnotationVO> = {};

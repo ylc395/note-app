@@ -42,7 +42,7 @@ export default abstract class Editor<T extends EditableEntity = EditableEntity, 
 
   @computed
   public get info() {
-    return this.editable.info as T['info'] | undefined;
+    return this.editable.entity as T['entity'] | undefined;
   }
 
   @computed
@@ -59,9 +59,9 @@ export default abstract class Editor<T extends EditableEntity = EditableEntity, 
     return {
       title:
         (IS_DEV ? `${this.id} ${this.entityLocator.entityId.slice(0, 3)} ` : '') +
-        (this.editable.info ? this.normalizeTitle(this.editable.info) : ''),
-      icon: this.editable.info?.icon || null,
-      breadcrumbs: this.editable.info?.path || [],
+        (this.editable.entity ? this.normalizeTitle(this.editable.entity) : ''),
+      icon: this.editable.entity?.icon || null,
+      breadcrumbs: this.editable.entity?.path || [],
     };
   }
 

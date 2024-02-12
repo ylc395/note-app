@@ -15,7 +15,7 @@ export default abstract class EditableMaterial extends EditableEntity<Required<E
   }
 
   @observable
-  public info?: Required<EntityMaterialVO>;
+  public entity?: Required<EntityMaterialVO>;
 
   @observable.ref
   protected blob?: ArrayBuffer;
@@ -24,7 +24,7 @@ export default abstract class EditableMaterial extends EditableEntity<Required<E
     const info = await this.remote.material.queryOne.query(this.entityLocator.entityId);
 
     runInAction(() => {
-      this.info = info as Required<EntityMaterialVO>;
+      this.entity = info as Required<EntityMaterialVO>;
     });
   };
 
@@ -35,14 +35,14 @@ export default abstract class EditableMaterial extends EditableEntity<Required<E
     ]);
 
     runInAction(() => {
-      this.info = info as Required<EntityMaterialVO>;
+      this.entity = info as Required<EntityMaterialVO>;
       this.blob = blob as ArrayBuffer;
     });
   }
 
   @computed
   public get entityLocator() {
-    return { ...super.entityLocator, mimeType: this.info?.mimeType };
+    return { ...super.entityLocator, mimeType: this.entity?.mimeType };
   }
 }
 

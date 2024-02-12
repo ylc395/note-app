@@ -1,20 +1,19 @@
-import type { Selectable, Updateable } from 'kysely';
-
+import type { Selectable } from 'kysely';
 import type { NoteRepository } from '@domain/service/repository/NoteRepository.js';
-import type { NotePatch, NewNote, Note, NoteQuery } from '@domain/model/note.js';
+import type { Note, NoteDTO, NotePatch, NoteQuery, NoteVO } from '@domain/model/note.js';
 
 import HierarchyEntityRepository from './HierarchyEntityRepository.js';
-import schema, { type Row } from '../schema/note.js';
+import schema, { Row } from '../schema/note.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
 
 export default class SqliteNoteRepository extends HierarchyEntityRepository implements NoteRepository {
   public readonly tableName = schema.tableName;
-  public async create(note: NewNote) {
+  public async create(note: NoteDTO) {
     const row = await this.db
       .insertInto(this.tableName)
       .values({
         id: this.generateId(),
-        ...SqliteNoteRepository.patchToRow(note),
+        ...SqliteNoteRepository.noteToRow(note),
       })
       .returningAll()
       .executeTakeFirstOrThrow();
@@ -22,11 +21,11 @@ export default class SqliteNoteRepository extends HierarchyEntityRepository impl
     return SqliteNoteRepository.rowToNote(row);
   }
 
-  public async update(id: Note['id'] | Note['id'][], note: NotePatch) {
+  public async update(id: NoteVO['id'] | NoteVO['id'][], note: NotePatch) {
     const { numUpdatedRows } = await this.db
       .updateTable(this.tableName)
       .where('id', Array.isArray(id) ? 'in' : '=', id)
-      .set({ updatedAt: Date.now(), ...SqliteNoteRepository.patchToRow(note) })
+      .set(SqliteNoteRepository.noteToRow(note))
       .executeTakeFirst();
 
     return Array.isArray(id) ? id.length === Number(numUpdatedRows) : Number(numUpdatedRows) === 1;
@@ -64,21 +63,13 @@ export default class SqliteNoteRepository extends HierarchyEntityRepository impl
     }
 
     const rows = await sql.execute();
-    const notes = rows.map(SqliteNoteRepository.rowToNote);
-
-    return notes;
+    return rows.map(SqliteNoteRepository.rowToNote);
   }
 
-  public async findOneById(id: Note['id'], availableOnly?: boolean) {
-    let sql = this.db.selectFrom(this.tableName).selectAll();
+  public async findOneById(id: NoteVO['id']) {
+    const row = await this.db.selectFrom(this.tableName).where('id', '=', id).selectAll().executeTakeFirst();
+    console.log(row);
 
-    if (availableOnly) {
-      sql = sql
-        .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.id`)
-        .where(`${recyclableTableName}.entityId`, 'is', null);
-    }
-
-    const row = await sql.executeTakeFirst();
     return row ? SqliteNoteRepository.rowToNote(row) : null;
   }
 
@@ -88,10 +79,12 @@ export default class SqliteNoteRepository extends HierarchyEntityRepository impl
     return { ...row, isReadonly: Boolean(row.isReadonly) };
   }
 
-  private static patchToRow(note: NotePatch) {
+  private static noteToRow(note: Partial<NotePatch>) {
     return {
       ...note,
-      ...(typeof note.isReadonly === 'boolean' ? { isReadonly: note.isReadonly ? 1 : 0 } : null),
-    } as Updateable<Row>;
+      ...{
+        isReadonly: typeof note.isReadonly !== 'boolean' ? undefined : note.isReadonly ? (1 as const) : (0 as const),
+      },
+    };
   }
 }

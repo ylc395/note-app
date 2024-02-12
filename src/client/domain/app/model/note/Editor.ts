@@ -29,7 +29,7 @@ export default class NoteEditor extends Editor<EditableNote, UIState> {
   }
 
   @action.bound
-  public updateInfo(info: NotePatchDTO) {
+  public updateEntity(info: NotePatchDTO) {
     this.editable.update(info);
     this.setActive();
   }
@@ -42,11 +42,11 @@ export default class NoteEditor extends Editor<EditableNote, UIState> {
 
   @computed
   public get isReadonly() {
-    return Boolean(this.editable.info?.isReadonly);
+    return Boolean(this.editable.entity?.isReadonly);
   }
 
   @computed
   public get body() {
-    return this.editable.body;
+    return this.editable.entity?.body;
   }
 }

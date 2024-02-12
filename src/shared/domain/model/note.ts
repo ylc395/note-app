@@ -4,9 +4,10 @@ import type { EntityId, EntityParentId, Path } from './entity.js';
 
 export const notePatchDTOSchema = object({
   title: string().optional(),
-  isReadonly: boolean().optional(),
   parentId: string().nullish(),
   icon: string().nullish(),
+  isReadonly: boolean().optional(),
+  body: string().optional(),
 });
 
 export const clientNoteQuerySchema = object({
@@ -14,9 +15,9 @@ export const clientNoteQuerySchema = object({
   to: string().optional(),
 });
 
-export const newNoteDTOSchema = notePatchDTOSchema;
+export const noteDTOSchema = notePatchDTOSchema;
 
-export type NewNoteDTO = ZodInfer<typeof newNoteDTOSchema>;
+export type NoteDTO = ZodInfer<typeof noteDTOSchema>;
 
 export type NotePatchDTO = ZodInfer<typeof notePatchDTOSchema>;
 
@@ -24,16 +25,16 @@ export type ClientNoteQuery = ZodInfer<typeof clientNoteQuerySchema>;
 
 export interface Note {
   title: string;
-  isReadonly: boolean;
   id: EntityId;
   parentId: EntityParentId;
   icon: string | null;
   updatedAt: number;
   createdAt: number;
-  body: string;
+  isReadonly: boolean;
+  body?: string;
 }
 
-export interface NoteVO extends Omit<Note, 'body'> {
+export interface NoteVO extends Note {
   isStar: boolean;
   childrenCount: number;
   path?: Path;

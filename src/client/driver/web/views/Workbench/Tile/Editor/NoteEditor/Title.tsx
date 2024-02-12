@@ -12,7 +12,7 @@ export default observer(function NoteTitle({ editor }: { editor: NoteEditor }) {
 
   return (
     <div className="flex items-center border-0 border-b border-solid border-gray-200 px-1 py-2">
-      <IconPicker icon={editor.info?.icon || null} onSelect={(icon) => editor.updateInfo({ icon })} />
+      <IconPicker icon={editor.info?.icon || null} onSelect={(icon) => editor.updateEntity({ icon })} />
       <input
         spellCheck={false}
         ref={inputRef}
@@ -20,7 +20,7 @@ export default observer(function NoteTitle({ editor }: { editor: NoteEditor }) {
         placeholder={editor.tabView.title}
         value={editor.info?.title || ''}
         onChange={(e) => {
-          editor.updateInfo({ title: e.target.value });
+          editor.updateEntity({ title: e.target.value });
         }}
         readOnly={editor.isReadonly}
         disabled={typeof editor.info?.title !== 'string'}
@@ -36,7 +36,7 @@ export default observer(function NoteTitle({ editor }: { editor: NoteEditor }) {
           trueText="仅阅读"
           falseText="可编辑"
           value={editor.isReadonly}
-          onChange={(value) => editor.updateInfo({ isReadonly: value })}
+          onChange={(value) => editor.updateEntity({ isReadonly: value })}
         />
       </div>
     </div>
