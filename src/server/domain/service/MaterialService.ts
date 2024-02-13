@@ -15,11 +15,13 @@ import {
 import { EntityTypes } from '@domain/model/entity.js';
 
 import BaseService from './BaseService.js';
-import { getPaths, getTreeFragment } from './behaviors.js';
+import HierarchyBehavior from './behaviors/HierarchyBehavior.js';
 import { buildIndex } from '@utils/collection.js';
 
 @singleton()
 export default class MaterialService extends BaseService {
+  private readonly hierarchyBehavior = new HierarchyBehavior(this.repo.materials);
+
   public async create(newMaterial: NewMaterialDTO) {
     if (newMaterial.parentId) {
       await this.assertAvailableIds([newMaterial.parentId]);
@@ -44,7 +46,7 @@ export default class MaterialService extends BaseService {
     const _materials = Array.isArray(materials) ? materials : [materials];
     const ids = _materials.map(({ id }) => id);
     const entityIds = _materials.filter(isEntityMaterial).map(({ id }) => id);
-    const children = await this.repo.materials.findChildrenIds(ids, true);
+    const children = await this.repo.materials.findChildrenIds(ids, { isAvailableOnly: true });
     const stars = buildIndex(await this.repo.stars.findAllByEntityId(entityIds));
     const paths = Array.isArray(materials) ? {} : await this.getPaths(ids);
 
@@ -152,12 +154,12 @@ export default class MaterialService extends BaseService {
   };
 
   public readonly getPaths = async (ids: Material['id'][]) => {
-    return getPaths({ ids, repo: this.repo.materials, normalizeTitle });
+    return this.hierarchyBehavior.getPaths(ids, normalizeTitle);
   };
 
   public async getTreeFragment(materialId: Material['id']) {
     await this.assertAvailableIds([materialId]);
-    const nodes = await getTreeFragment(this.repo.materials, materialId);
+    const nodes = await this.hierarchyBehavior.getTreeFragment(materialId);
 
     return await this.toVO(nodes as Material[]);
   }

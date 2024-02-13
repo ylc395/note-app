@@ -17,10 +17,10 @@ export default abstract class HierarchyEntityRepository extends BaseRepository {
     | typeof memoTableName
     | typeof entityTableName;
 
-  async findChildrenIds(ids: EntityId[], availableOnly?: boolean) {
+  async findChildrenIds(ids: EntityId[], options?: { isAvailableOnly?: boolean }) {
     let qb = this.db.selectFrom(this.tableName).selectAll(this.tableName);
 
-    if (availableOnly) {
+    if (options?.isAvailableOnly) {
       qb = qb
         .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.id`)
         .where(`${recyclableTableName}.entityId`, 'is', null);

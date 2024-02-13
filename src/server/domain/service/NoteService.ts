@@ -12,11 +12,13 @@ import {
 import { EntityTypes } from '@domain/model/entity.js';
 
 import BaseService from './BaseService.js';
-import { getPaths, getTreeFragment } from './behaviors.js';
+import HierarchyBehavior from './behaviors/HierarchyBehavior.js';
 import { buildIndex } from '@utils/collection.js';
 
 @singleton()
 export default class NoteService extends BaseService {
+  private readonly hierarchyBehavior = new HierarchyBehavior(this.repo.notes);
+
   public async create(note: NoteDTO, from?: Note['id']) {
     let newNote: Required<Note>;
 
@@ -67,7 +69,7 @@ export default class NoteService extends BaseService {
   };
 
   public readonly getPaths = async (ids: Note['id'][]) => {
-    return getPaths({ ids, repo: this.repo.notes, normalizeTitle });
+    return this.hierarchyBehavior.getPaths(ids, normalizeTitle);
   };
 
   public async updateOne(noteId: Note['id'], note: NotePatchDTO) {
@@ -102,7 +104,7 @@ export default class NoteService extends BaseService {
     const _notes = Array.isArray(notes) ? notes : [notes];
     const ids = _notes.map(({ id }) => id);
     const stars = buildIndex(await this.repo.stars.findAllByEntityId(ids));
-    const children = await this.repo.notes.findChildrenIds(ids, true);
+    const children = await this.repo.notes.findChildrenIds(ids, { isAvailableOnly: true });
     const paths = Array.isArray(notes) ? {} : await this.getPaths(ids);
 
     const result = _notes.map((note) => ({
@@ -167,7 +169,7 @@ export default class NoteService extends BaseService {
 
   public async getTreeFragment(noteId: Note['id']) {
     await this.assertAvailableIds([noteId]);
-    const nodes = await getTreeFragment(this.repo.notes, noteId);
+    const nodes = await this.hierarchyBehavior.getTreeFragment(noteId);
 
     return await this.toVO(nodes as Note[]);
   }
