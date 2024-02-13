@@ -7,6 +7,7 @@ export interface MemoQuery {
   startTime?: number;
   endTime?: number;
   isAvailable?: boolean;
+  isPinned?: boolean;
   limit?: number;
   parentId?: EntityParentId;
   orderBy?: 'createdAt';

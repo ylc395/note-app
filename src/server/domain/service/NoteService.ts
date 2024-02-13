@@ -104,7 +104,7 @@ export default class NoteService extends BaseService {
     const _notes = Array.isArray(notes) ? notes : [notes];
     const ids = _notes.map(({ id }) => id);
     const stars = buildIndex(await this.repo.stars.findAllByEntityId(ids));
-    const children = await this.repo.notes.findChildrenIds(ids, { isAvailableOnly: true });
+    const children = await this.repo.entities.findChildrenIds(ids, { isAvailableOnly: true });
     const paths = Array.isArray(notes) ? {} : await this.getPaths(ids);
 
     const result = _notes.map((note) => ({
@@ -141,7 +141,7 @@ export default class NoteService extends BaseService {
 
   private async assertValidParent(parentId: Note['id'], childrenIds: Note['id'][]) {
     await this.assertAvailableIds([parentId]);
-    const descantIds = await this.repo.notes.findDescendantIds(childrenIds);
+    const descantIds = await this.repo.entities.findDescendantIds(childrenIds);
 
     for (const id of childrenIds) {
       assert(parentId !== id && !descantIds[id]?.includes(parentId));

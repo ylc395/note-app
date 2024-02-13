@@ -2,11 +2,11 @@ import type { Selectable } from 'kysely';
 import type { NoteRepository } from '@domain/service/repository/NoteRepository.js';
 import type { Note, NoteDTO, NotePatch, NoteQuery, NoteVO } from '@domain/model/note.js';
 
-import HierarchyEntityRepository from './HierarchyEntityRepository.js';
 import schema, { Row } from '../schema/note.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
+import BaseRepository from './BaseRepository.js';
 
-export default class SqliteNoteRepository extends HierarchyEntityRepository implements NoteRepository {
+export default class SqliteNoteRepository extends BaseRepository implements NoteRepository {
   public readonly tableName = schema.tableName;
   public async create(note: NoteDTO) {
     const row = await this.db

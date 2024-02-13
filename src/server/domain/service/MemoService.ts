@@ -35,12 +35,15 @@ export default class MemoService extends BaseService {
 
   public async query(query: ClientMemoQuery) {
     let startTime = query.startTime;
+    let pinnedMemos: Memo[] = [];
 
     if (query.after) {
       await this.assertAvailableIds([query.after]);
       const memo = await this.repo.memos.findOneById(query.after);
       assert(memo);
-      startTime = memo.createdAt;
+      startTime = Math.max(memo.createdAt, query.startTime || 0);
+    } else {
+      pinnedMemos = await this.repo.memos.findAll({ isPinned: true, orderBy: 'createdAt' });
     }
 
     const memos = await this.repo.memos.findAll({
@@ -52,20 +55,20 @@ export default class MemoService extends BaseService {
       orderBy: query.parentId ? undefined : 'createdAt',
     });
 
-    return await this.toVO(memos);
+    return await this.toVO([...pinnedMemos, ...memos]);
   }
 
   private async toVO(memos: Memo): Promise<MemoVO>;
   private async toVO(memos: Memo[]): Promise<MemoVO[]>;
   private async toVO(memos: Memo[] | Memo): Promise<MemoVO[] | MemoVO> {
     const _memos = Array.isArray(memos) ? memos : [memos];
-
-    assert(_memos.length > 0);
     const ids = _memos.map(({ id }) => id);
     const stars = buildIndex(await this.repo.stars.findAllByEntityId(ids));
+    const childrenIds = await this.repo.entities.findChildrenIds(ids, { isAvailableOnly: true });
 
     const result = _memos.map((memo) => ({
       ...memo,
+      childrenCount: childrenIds[memo.id]?.length || 0,
       isStar: Boolean(stars[memo.id]),
     }));
 

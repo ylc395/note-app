@@ -5,6 +5,7 @@ export interface Memo {
   id: string;
   parentId: EntityParentId;
   isPinned: boolean;
+  sourceUrl: string | null;
   body: string;
   updatedAt: number;
   createdAt: number;
@@ -12,12 +13,14 @@ export interface Memo {
 
 export interface MemoVO extends Memo {
   isStar: boolean;
+  childrenCount: number;
 }
 
 export const memoDTOSchema = object({
   parentId: string().optional(),
   body: string(),
   isPinned: boolean().optional(),
+  sourceUrl: string().url().nullish(),
 });
 
 export type MemoDTO = Infer<typeof memoDTOSchema>;
@@ -25,6 +28,7 @@ export type MemoDTO = Infer<typeof memoDTOSchema>;
 export const memoPatchDTOSchema = memoDTOSchema.pick({
   body: true,
   isPinned: true,
+  sourceUrl: true,
 });
 
 export type MemoPatchDTO = Infer<typeof memoPatchDTOSchema>;
@@ -40,7 +44,7 @@ export const clientMemoQuerySchema = object({
   after: string().optional(),
   limit: number().optional(),
   parentId: string().nullish(),
-}).merge(durationSchema);
+}).merge(durationSchema.partial());
 
 export type ClientMemoQuery = Infer<typeof clientMemoQuerySchema>;
 

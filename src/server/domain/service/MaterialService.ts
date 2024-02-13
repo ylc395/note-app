@@ -46,7 +46,7 @@ export default class MaterialService extends BaseService {
     const _materials = Array.isArray(materials) ? materials : [materials];
     const ids = _materials.map(({ id }) => id);
     const entityIds = _materials.filter(isEntityMaterial).map(({ id }) => id);
-    const children = await this.repo.materials.findChildrenIds(ids, { isAvailableOnly: true });
+    const children = await this.repo.entities.findChildrenIds(ids, { isAvailableOnly: true });
     const stars = buildIndex(await this.repo.stars.findAllByEntityId(entityIds));
     const paths = Array.isArray(materials) ? {} : await this.getPaths(ids);
 
@@ -110,7 +110,7 @@ export default class MaterialService extends BaseService {
 
   private async assertValidParent(parentId: Material['id'], childrenIds: Material['id'][]) {
     await this.assertAvailableIds([parentId]);
-    const descants = await this.repo.materials.findDescendantIds(childrenIds);
+    const descants = await this.repo.entities.findDescendantIds(childrenIds);
 
     for (const id of childrenIds) {
       assert(parentId !== id && !descants[id]?.includes(parentId), 'invalid parentId');

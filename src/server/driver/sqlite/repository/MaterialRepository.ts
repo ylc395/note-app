@@ -8,9 +8,9 @@ import schema, { type Row } from '../schema/material.js';
 import { type Row as FileRow, tableName as fileTableName } from '../schema/file.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
 import FileRepository from './FileRepository.js';
-import HierarchyEntityRepository from './HierarchyEntityRepository.js';
+import BaseRepository from './BaseRepository.js';
 
-export default class SqliteMaterialRepository extends HierarchyEntityRepository implements MaterialRepository {
+export default class SqliteMaterialRepository extends BaseRepository implements MaterialRepository {
   public readonly tableName = schema.tableName;
   private readonly files = new FileRepository(this.sqliteDb);
 
