@@ -16,6 +16,9 @@ export default function ActivityBar() {
           <Button explorerType={EntityTypes.Note}>
             <TypeIcon type={EntityTypes.Note} />
           </Button>
+          <Button explorerType={EntityTypes.Memo}>
+            <TypeIcon type={EntityTypes.Memo} />
+          </Button>
         </div>
         <div className="border-0 border-t border-solid border-gray-200">
           <Button>

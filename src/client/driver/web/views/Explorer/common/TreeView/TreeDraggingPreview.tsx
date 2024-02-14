@@ -2,6 +2,7 @@ import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import assert from 'assert';
 
 import Tree from '@web/components/Tree';
 import { useDragItem } from '@web/components/dnd/hooks';
@@ -13,6 +14,8 @@ import NodeTitle from './NodeTitle';
 export default observer(function TreeView() {
   const { currentExplorer } = container.resolve(ExplorerManager);
   const { position, item } = useDragItem();
+
+  assert(currentExplorer);
 
   return (
     item instanceof TreeNode &&

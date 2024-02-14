@@ -9,11 +9,12 @@ import Resizable from '@web/components/Resizable';
 import ActivityBar from './ActivityBar';
 import NoteExplorer from './Note';
 import Material from './Material';
+import Memo from './Memo';
 
 const explorerMap: Record<ExplorerTypes, () => ReactNode> = {
   [EntityTypes.Note]: () => <NoteExplorer />,
   [EntityTypes.Material]: () => <Material />,
-  // [EntityTypes.Memo]: () => <Memo />,
+  [EntityTypes.Memo]: () => <Memo />,
 };
 
 export default observer(function ExplorerView() {

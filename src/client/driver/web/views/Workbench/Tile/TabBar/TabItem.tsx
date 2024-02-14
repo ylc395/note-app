@@ -32,16 +32,14 @@ export default observer(function TabItem({ editor }: { editor: Editor }) {
     currentEditor === editor && buttonRef.current!.scrollIntoView();
   }, [currentEditor, editor]);
 
-  if (!currentEditor) {
-    throw new Error('no current editor');
-  }
+  assert(currentEditor, 'no current editor');
 
   return (
     <Droppable onDrop={onDrop} onOverToggle={setIsOver}>
       <Draggable
         item={editor}
-        onDragStart={() => currentExplorer.dnd.updateTreeForDropping(editor.entityLocator)}
-        onDragEnd={currentExplorer.dnd.reset}
+        onDragStart={() => currentExplorer?.dnd.updateTreeForDropping(editor.entityLocator)}
+        onDragEnd={currentExplorer?.dnd.reset}
         className={clsx(
           'flex flex-nowrap items-center border-0 border-r border-solid border-gray-200 px-2 text-gray-500',
           currentEditor === editor ? 'bg-white' : isOver ? 'bg-gray-200' : 'bg-gray-50',

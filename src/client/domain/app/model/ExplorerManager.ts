@@ -8,7 +8,7 @@ import { EntityTypes } from '@domain/app/model/entity';
 
 const CURRENT_EXPLORER_KEY = 'EXPLORER_CURRENT';
 
-export type ExplorerTypes = EntityTypes.Note | EntityTypes.Material;
+export type ExplorerTypes = EntityTypes.Note | EntityTypes.Material | EntityTypes.Memo;
 
 @singleton()
 export default class ExplorerManager {
@@ -20,6 +20,7 @@ export default class ExplorerManager {
   private readonly explorers = {
     [EntityTypes.Note]: container.resolve(NoteExplorer),
     [EntityTypes.Material]: container.resolve(MaterialExplorer),
+    [EntityTypes.Memo]: null,
   } as const;
 
   private readonly localStorage = container.resolve(localStorageToken);
@@ -34,8 +35,12 @@ export default class ExplorerManager {
 
   @action.bound
   public switchTo(type: ExplorerTypes) {
+    if (type === this.currentExplorerType) {
+      return;
+    }
+
     this.localStorage.set(CURRENT_EXPLORER_KEY, type);
     this.currentExplorerType = type;
-    this.currentExplorer.load();
+    this.currentExplorer?.load();
   }
 }

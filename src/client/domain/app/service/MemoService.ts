@@ -1,75 +1,75 @@
-// import { observable, makeObservable, runInAction, action } from 'mobx';
-// import { container, singleton } from 'tsyringe';
+import { observable, makeObservable, runInAction, computed } from 'mobx';
+import { container, singleton } from 'tsyringe';
 
-// import { token as rpcToken } from '@domain/common/infra/rpc';
-// import type { MemoDTO, MemoPatchDTO, MemoVO } from '@shared/domain/model/memo';
+import { token as rpcToken } from '@domain/common/infra/rpc';
+import type { MemoDTO, MemoPatchDTO, MemoVO } from '@shared/domain/model/memo';
+import { last } from 'lodash-es';
+import { buildIndex } from '@shared/utils/collection';
+import assert from 'assert';
 
-// @singleton()
-// export default class MemoService {
-//   private readonly remote = container.resolve(rpcToken);
-//   constructor() {
-//     makeObservable(this);
-//   }
-//   @observable memos: MemoVO[] = [];
-//   @observable newContent = '';
+@singleton()
+export default class MemoService {
+  private readonly remote = container.resolve(rpcToken);
 
-//   async load() {
-//     // const { body: memos } = await this.remote.get<void, MemoVO[]>('/memos/tree');
+  constructor() {
+    makeObservable(this);
+  }
 
-//     // runInAction(() => {
-//     //   this.memos = memos;
-//     // });
-//   }
+  @computed
+  public get memos() {
+    return Object.values(this.memosMap).sort((memo1, memo2) => {
+      if (memo1.isPinned !== memo2.isPinned) {
+        return memo1.isPinned ? 1 : -1;
+      }
 
-//   async createMemo(childMemo?: { parent: MemoVO; content: string }) {
-//     // if (!this.newContent && !childMemo?.content) {
-//     //   throw new Error('can not be empty');
-//     // }
+      return memo1.createdAt - memo2.createdAt;
+    });
+  }
 
-//     // await this.remote.post<MemoDTO, MemoVO>(
-//     //   '/memos',
-//     //   childMemo ? { content: childMemo.content, parentId: childMemo.parent.id } : { content: this.newContent },
-//     // );
+  @observable
+  private readonly memosMap: Record<MemoVO['id'], MemoVO> = {};
 
-//     // if (!childMemo) {
-//     //   runInAction(() => {
-//     //     this.newContent = '';
-//     //   });
-//     //   await this.load();
-//     // } else {
-//     //   runInAction(() => {
-//     //     // childMemo.parent.threads.unshift(created);
-//     //   });
-//     // }
-//   }
+  public async load() {
+    const limit = 30;
+    const lastMemo = last(this.memos);
+    const memos = await this.remote.memo.query.query({ after: lastMemo?.id, limit });
+    Object.assign(this.memosMap, buildIndex(memos));
 
-//   async toggleMemoPin(memo: MemoVO) {
-//     await this.remote.patch<MemoPatchDTO, MemoVO>(`/memos/${memo.id}`, {
-//       isPinned: !memo.isPinned,
-//     });
+    runInAction(() => {
+      this.memos.push(...memos);
+    });
 
-//     await this.load();
-//   }
+    return memos.length === limit;
+  }
 
-//   async updateContent(memo: MemoVO, content: NonNullable<MemoPatchDTO['content']>) {
-//     if (!content) {
-//       throw new Error('can not be empty');
-//     }
+  public async createMemo(memo: MemoDTO) {
+    const newMemo = await this.remote.memo.create.mutate(memo);
 
-//     const { body: updated } = await this.remote.patch<MemoPatchDTO, MemoVO>(`/memos/${memo.id}`, { content });
+    runInAction(() => {
+      this.memosMap[newMemo.id] = newMemo;
+    });
+  }
 
-//     runInAction(() => {
-//       memo.content = updated.content;
-//     });
-//   }
+  public async toggleMemoPin(id: MemoVO['id']) {
+    const memo = this.memosMap[id];
+    assert(memo);
 
-//   @action
-//   reset() {
-//     this.memos = [];
-//   }
+    const isPinned = !memo.isPinned;
+    await this.remote.memo.updateOne.mutate([id, { isPinned }]);
 
-//   @action.bound
-//   updateNewContent(content: string) {
-//     return (this.newContent = content);
-//   }
-// }
+    runInAction(() => {
+      memo.isPinned = isPinned;
+    });
+  }
+
+  public async updateMemo(id: MemoVO['id'], patch: MemoPatchDTO) {
+    await this.remote.memo.updateOne.mutate([id, patch]);
+
+    runInAction(() => {
+      const memo = this.memosMap[id];
+      assert(memo);
+
+      Object.assign(memo, patch);
+    });
+  }
+}

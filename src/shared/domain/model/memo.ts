@@ -25,11 +25,13 @@ export const memoDTOSchema = object({
 
 export type MemoDTO = Infer<typeof memoDTOSchema>;
 
-export const memoPatchDTOSchema = memoDTOSchema.pick({
-  body: true,
-  isPinned: true,
-  sourceUrl: true,
-});
+export const memoPatchDTOSchema = memoDTOSchema
+  .pick({
+    body: true,
+    isPinned: true,
+    sourceUrl: true,
+  })
+  .partial();
 
 export type MemoPatchDTO = Infer<typeof memoPatchDTOSchema>;
 
