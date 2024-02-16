@@ -1,11 +1,21 @@
 import { observer } from 'mobx-react-lite';
+import { container } from 'tsyringe';
 
-import ExplorerHeader from '../common/ExplorerHeader';
+import MemoService from '@domain/app/service/MemoService';
+import Header from './Header';
+import NewMemoEditor from './Editor';
+import List from './List';
 
 export default observer(function MemoExplorerView() {
+  const {
+    list: { uiState },
+  } = container.resolve(MemoService);
+
   return (
     <>
-      <ExplorerHeader right={[]} left={[]} title="Memo" />
+      <Header />
+      {uiState.panel === 'editor' && <NewMemoEditor />}
+      <List />
     </>
   );
 });

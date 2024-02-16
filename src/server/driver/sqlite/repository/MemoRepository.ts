@@ -78,7 +78,7 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
     }
 
     if (q.startTime) {
-      sql = sql.where('createdAt', '>', q.startTime);
+      sql = sql.where('createdAt', '>=', q.startTime);
     }
 
     if (q.endTime) {
@@ -93,8 +93,8 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
       sql = sql.where('parentId', q.parentId === null ? 'is' : '=', q.parentId);
     }
 
-    if (q.isPinned) {
-      sql = sql.where('isPinned', '=', 1);
+    if (typeof q.isPinned === 'boolean') {
+      sql = sql.where('isPinned', '=', q.isPinned ? 1 : 0);
     }
 
     if (q.orderBy === 'createdAt') {

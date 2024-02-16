@@ -24,7 +24,7 @@ export default observer(function ExplorerView() {
     <div className="flex h-full overflow-x-hidden border-0 border-r border-solid  border-gray-200">
       <ActivityBar />
       <Resizable
-        className="box-border flex h-full flex-col bg-gray-50 p-2"
+        className="relative box-border flex h-full flex-col bg-gray-50 p-2"
         initialWidth={300}
         minWidth={250}
         resizable="right"

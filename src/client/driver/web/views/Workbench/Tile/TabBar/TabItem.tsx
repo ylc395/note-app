@@ -6,11 +6,13 @@ import assert from 'assert';
 import { container } from 'tsyringe';
 
 import type Editor from '@domain/app/model/abstract/Editor';
+import ExplorerManager from '@domain/app/model/ExplorerManager';
+import Explorer from '@domain/app/model/abstract/Explorer';
+
 import IconTitle from '@web/components/IconTitle';
 import Button from '@web/components/Button';
 import Draggable from '@web/components/dnd/Draggable';
 import Droppable from '@web/components/dnd/Droppable';
-import ExplorerManager from '@domain/app/model/ExplorerManager';
 import MimeTypeIcon from '@web/components/icon/MimeTypeIcon';
 import TypeIcon from '@web/components/icon/TypeIcon';
 
@@ -27,6 +29,13 @@ export default observer(function TabItem({ editor }: { editor: Editor }) {
   const { onDrop } = useDrop(editor);
 
   const { switchToEditor, removeEditor, currentEditor } = tile;
+  const dnd =
+    currentExplorer instanceof Explorer
+      ? {
+          onDragStart: () => currentExplorer?.dnd.updateTreeForDropping(editor.entityLocator),
+          onDragEnd: currentExplorer.dnd.reset,
+        }
+      : null;
 
   useEffect(() => {
     currentEditor === editor && buttonRef.current!.scrollIntoView();
@@ -38,12 +47,11 @@ export default observer(function TabItem({ editor }: { editor: Editor }) {
     <Droppable onDrop={onDrop} onOverToggle={setIsOver}>
       <Draggable
         item={editor}
-        onDragStart={() => currentExplorer?.dnd.updateTreeForDropping(editor.entityLocator)}
-        onDragEnd={currentExplorer?.dnd.reset}
         className={clsx(
           'flex flex-nowrap items-center border-0 border-r border-solid border-gray-200 px-2 text-gray-500',
           currentEditor === editor ? 'bg-white' : isOver ? 'bg-gray-200' : 'bg-gray-50',
         )}
+        {...dnd}
       >
         <IconTitle
           defaultIcon={

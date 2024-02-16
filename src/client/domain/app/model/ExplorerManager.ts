@@ -4,6 +4,7 @@ import { container, singleton } from 'tsyringe';
 import { token as localStorageToken } from '@domain/app/infra/localStorage';
 import NoteExplorer from '@domain/app/model/note/Explorer';
 import MaterialExplorer from '@domain/app/model/material/Explorer';
+import MemoList from '@domain/app/model/memo/List';
 import { EntityTypes } from '@domain/app/model/entity';
 
 const CURRENT_EXPLORER_KEY = 'EXPLORER_CURRENT';
@@ -20,7 +21,7 @@ export default class ExplorerManager {
   private readonly explorers = {
     [EntityTypes.Note]: container.resolve(NoteExplorer),
     [EntityTypes.Material]: container.resolve(MaterialExplorer),
-    [EntityTypes.Memo]: null,
+    [EntityTypes.Memo]: container.resolve(MemoList),
   } as const;
 
   private readonly localStorage = container.resolve(localStorageToken);
@@ -39,8 +40,12 @@ export default class ExplorerManager {
       return;
     }
 
+    if (this.currentExplorer instanceof MemoList) {
+      this.currentExplorer.reset();
+    }
+
     this.localStorage.set(CURRENT_EXPLORER_KEY, type);
     this.currentExplorerType = type;
-    this.currentExplorer?.load();
+    this.currentExplorer.load();
   }
 }

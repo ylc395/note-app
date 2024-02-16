@@ -2,7 +2,7 @@ import { mapValues, uniq } from 'lodash-es';
 
 import { buildIndex } from '@utils/collection.js';
 import type { Memo, MemoDTO, ClientMemoQuery, MemoVO, MemoPatchDTO, Duration } from '@domain/model/memo.js';
-import { EntityTypes } from '@domain/model/entity.js';
+import { EntityParentId, EntityTypes } from '@domain/model/entity.js';
 
 import BaseService from './BaseService.js';
 import assert from 'assert';
@@ -11,7 +11,7 @@ export default class MemoService extends BaseService {
   public async create(memo: MemoDTO) {
     if (memo.parentId) {
       assert(!memo.isPinned, 'can not pin child memo');
-      await this.assertAvailableIds([memo.parentId], { isChild: false });
+      await this.assertAvailableIds([memo.parentId], { parentId: null });
     }
 
     const newMemo = await this.repo.memos.create(memo);
@@ -19,7 +19,7 @@ export default class MemoService extends BaseService {
   }
 
   public async updateOne(id: MemoVO['id'], patch: MemoPatchDTO) {
-    await this.assertAvailableIds([id], { isChild: patch.isPinned ? false : undefined });
+    await this.assertAvailableIds([id], { parentId: patch.isPinned ? null : undefined });
 
     const updated = await this.repo.memos.update(id, patch);
     assert(updated);
@@ -37,26 +37,43 @@ export default class MemoService extends BaseService {
   }
 
   public async query(query: ClientMemoQuery) {
-    let startTime = query.startTime;
+    let memos: Memo[] = [];
     let pinnedMemos: Memo[] = [];
 
-    if (query.after) {
-      await this.assertAvailableIds([query.after], { isChild: false });
-      const memo = await this.repo.memos.findOneById(query.after);
-      assert(memo);
-      startTime = Math.max(memo.createdAt, query.startTime || 0);
+    if ('startTime' in query) {
+      memos = await this.repo.memos.findAll({ ...query, orderBy: 'createdAt', isAvailable: true });
     } else {
-      pinnedMemos = await this.repo.memos.findAll({ isPinned: true, orderBy: 'createdAt' });
-    }
+      if (!query.before) {
+        pinnedMemos = await this.repo.memos.findAll({ isPinned: true, orderBy: 'createdAt', isAvailable: true });
+      }
 
-    const memos = await this.repo.memos.findAll({
-      startTime,
-      isAvailable: true,
-      endTime: query.endTime,
-      limit: query.parentId ? undefined : query.limit,
-      parentId: query.parentId || null,
-      orderBy: query.parentId ? undefined : 'createdAt',
-    });
+      let endTime: number | undefined;
+      let startTime: number | undefined;
+
+      if (query.before) {
+        const memo = await this.repo.memos.findOneById(query.before);
+        assert(memo);
+
+        endTime = memo.createdAt;
+      }
+
+      if (query.after) {
+        const memo = await this.repo.memos.findOneById(query.after);
+        assert(memo);
+
+        startTime = memo.createdAt;
+      }
+
+      memos = await this.repo.memos.findAll({
+        startTime,
+        endTime,
+        isAvailable: true,
+        isPinned: false,
+        limit: query.parentId ? undefined : query.limit,
+        parentId: query.parentId || null,
+        orderBy: 'createdAt',
+      });
+    }
 
     return await this.toVO([...pinnedMemos, ...memos]);
   }
@@ -83,13 +100,9 @@ export default class MemoService extends BaseService {
     return mapValues(buildIndex(memos), ({ body }) => body.slice(0, 5));
   };
 
-  public readonly assertAvailableIds = async (ids: MemoVO['id'][], options?: { isChild?: boolean }) => {
-    const memos = await this.repo.memos.findAll({ id: ids, isAvailable: true });
+  public readonly assertAvailableIds = async (ids: MemoVO['id'][], options?: { parentId?: EntityParentId }) => {
+    const memos = await this.repo.memos.findAll({ id: ids, parentId: options?.parentId, isAvailable: true });
     assert(memos.length === uniq(ids).length);
-
-    if (typeof options?.isChild === 'boolean') {
-      assert(memos.every((memo) => (options.isChild ? memo.parentId : !memo.parentId)));
-    }
   };
 
   public async queryAvailableDates(duration: Duration) {

@@ -4,10 +4,12 @@ import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import assert from 'assert';
 
-import Tree from '@web/components/Tree';
-import { useDragItem } from '@web/components/dnd/hooks';
+import Explorer from '@domain/app/model/abstract/Explorer';
 import ExplorerManager from '@domain/app/model/ExplorerManager';
 import TreeNode from '@domain/common/model/abstract/TreeNode';
+import { useDragItem } from '@web/components/dnd/hooks';
+
+import Tree from '@web/components/Tree';
 import { APP_CLASS_NAME } from '@web/infra/ui/constants';
 import NodeTitle from './NodeTitle';
 
@@ -15,7 +17,7 @@ export default observer(function TreeView() {
   const { currentExplorer } = container.resolve(ExplorerManager);
   const { position, item } = useDragItem();
 
-  assert(currentExplorer);
+  assert(currentExplorer instanceof Explorer);
 
   return (
     item instanceof TreeNode &&

@@ -1,4 +1,4 @@
-import { object, string, number, infer as Infer, boolean } from 'zod';
+import { object, string, number, infer as Infer, boolean, union } from 'zod';
 import type { EntityParentId } from './entity.js';
 
 export interface Memo {
@@ -42,11 +42,15 @@ export const durationSchema = object({
 
 export type Duration = Infer<typeof durationSchema>;
 
-export const clientMemoQuerySchema = object({
-  after: string().optional(),
-  limit: number().optional(),
-  parentId: string().nullish(),
-}).merge(durationSchema.partial());
+export const clientMemoQuerySchema = union([
+  object({
+    before: string().optional(),
+    after: string().optional(),
+    limit: number().optional(),
+    parentId: string().nullish(),
+  }),
+  durationSchema,
+]);
 
 export type ClientMemoQuery = Infer<typeof clientMemoQuerySchema>;
 
