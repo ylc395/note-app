@@ -43,13 +43,10 @@ export const durationSchema = object({
 export type Duration = Infer<typeof durationSchema>;
 
 export const clientMemoQuerySchema = union([
+  object({ parentId: string() }),
   object({
-    before: string().optional(),
-    after: string().optional(),
     limit: number().optional(),
-    parentId: string().nullish(),
-  }),
-  durationSchema,
+  }).merge(durationSchema.partial()),
 ]);
 
 export type ClientMemoQuery = Infer<typeof clientMemoQuerySchema>;

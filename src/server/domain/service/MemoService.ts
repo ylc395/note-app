@@ -38,40 +38,45 @@ export default class MemoService extends BaseService {
 
   public async query(query: ClientMemoQuery) {
     let memos: Memo[] = [];
-    let pinnedMemos: Memo[] = [];
 
-    if ('startTime' in query) {
-      memos = await this.repo.memos.findAll({ ...query, orderBy: 'createdAt', isAvailable: true });
-    } else {
-      if (!query.before) {
-        pinnedMemos = await this.repo.memos.findAll({ isPinned: true, orderBy: 'createdAt', isAvailable: true });
-      }
-
-      let endTime: number | undefined;
-      let startTime: number | undefined;
-
-      if (query.before) {
-        const memo = await this.repo.memos.findOneById(query.before);
-        assert(memo);
-
-        endTime = memo.createdAt;
-      }
-
-      if (query.after) {
-        const memo = await this.repo.memos.findOneById(query.after);
-        assert(memo);
-
-        startTime = memo.createdAt;
-      }
-
+    if ('parentId' in query) {
       memos = await this.repo.memos.findAll({
-        startTime,
-        endTime,
         isAvailable: true,
-        isPinned: false,
-        limit: query.parentId ? undefined : query.limit,
-        parentId: query.parentId || null,
+        parentId: query.parentId,
         orderBy: 'createdAt',
+      });
+
+      return await this.toVO(memos);
+    }
+
+    let pinnedMemos: Memo[] = [];
+    const noDuration = !query.startTime && !query.endTime;
+
+    if (noDuration) {
+      pinnedMemos = await this.repo.memos.findAll({
+        isAvailable: true,
+        isPinned: true,
+        orderBy: 'createdAt',
+      });
+    }
+
+    memos = await this.repo.memos.findAll({
+      startTime: query.startTime,
+      endTime: query.endTime,
+      isAvailable: true,
+      limit: query.limit,
+      parentId: null,
+      isPinned: noDuration ? false : undefined,
+      orderBy: 'createdAt',
+    });
+
+    if (!noDuration) {
+      memos.sort((memo1, memo2) => {
+        if (memo1.isPinned !== memo2.isPinned) {
+          return memo1.isPinned ? -1 : 1;
+        }
+
+        return memo2.createdAt - memo1.createdAt;
       });
     }
 

@@ -36,9 +36,10 @@ export default observer(function List() {
 
   return (
     <div ref={divRef} className="min-h-0 grow overflow-auto">
-      {list.memos?.map(({ id }) => (
+      {list.memos.map((id) => (
         <ListItem id={id} key={id} />
       ))}
+      {list.isEnd && <div>没有了</div>}
     </div>
   );
 });

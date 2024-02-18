@@ -1,18 +1,17 @@
-import { observable, makeObservable, runInAction, computed, action, toJS } from 'mobx';
+import { observable, makeObservable, runInAction, action, toJS, computed } from 'mobx';
 import { container, singleton } from 'tsyringe';
 import assert from 'assert';
-import { last } from 'lodash-es';
-import { buildIndex } from '@shared/utils/collection';
+import { first, last, sortedIndexBy } from 'lodash-es';
 
 import { token as rpcToken } from '@domain/common/infra/rpc';
 import { token as storageToken } from '@domain/app/infra/localStorage';
-import type { MemoVO } from '@shared/domain/model/memo';
+import type { Duration, MemoVO } from '@shared/domain/model/memo';
 import Editor from './Editor';
 
 interface UIState {
   scrollTop?: number;
   panel?: 'editor' | 'calendar' | '';
-  after?: MemoVO['id'];
+  after?: MemoVO['createdAt'];
 }
 
 @singleton()
@@ -25,6 +24,8 @@ export default class MemoList {
   }
 
   @observable public isEnd = false;
+
+  @observable.ref private duration?: Duration;
 
   @observable.shallow
   private readonly editors: Record<MemoVO['id'], Editor> = {};
@@ -46,42 +47,43 @@ export default class MemoList {
     this.updateUIState({ panel: this.uiState.panel === panel ? '' : panel });
   };
 
+  @observable
+  private readonly memoGroups = {
+    pinned: [] as MemoVO['id'][],
+    common: [] as MemoVO['id'][],
+  };
+
   @computed
   public get memos() {
-    return Object.values(this.memosMap).sort((memo1, memo2) => {
-      if (memo1.isPinned !== memo2.isPinned) {
-        return memo1.isPinned ? -1 : 1;
-      }
-
-      return memo2.createdAt - memo1.createdAt;
-    });
+    return [...this.memoGroups.pinned, ...this.memoGroups.common];
   }
 
-  @observable
   private memosMap: Record<MemoVO['id'], MemoVO> = {};
 
   public async load(more?: boolean) {
-    if (this.isEnd || (!more && this.memos.length > 0)) {
+    if (this.isEnd || (!more && this.memoGroups.pinned.length + this.memoGroups.common.length > 0)) {
       return;
     }
 
     const limit = 50;
-    let lastMemo = last(this.memos);
+    const lastMemoId = last([...this.memoGroups.pinned, ...this.memoGroups.common]);
 
-    const query = more ? { before: lastMemo?.id, limit } : { after: this.uiState.after };
+    const query =
+      more && lastMemoId
+        ? { endTime: this.get(lastMemoId).createdAt, limit, ...this.duration }
+        : { startTime: this.uiState.after, ...this.duration };
+
     const memos = await this.remote.memo.query.query(query);
-
-    lastMemo = last(memos);
+    const lastMemo = last(memos);
 
     if (lastMemo) {
-      this.updateUIState({ after: lastMemo.id });
+      this.updateUIState({ after: lastMemo.createdAt });
     }
 
     runInAction(() => {
-      if (!this.memosMap) {
-        this.memosMap = {};
+      for (const memo of memos) {
+        this.add(memo);
       }
-      Object.assign(this.memosMap, buildIndex(memos));
 
       if (more) {
         this.isEnd = memos.length < limit;
@@ -97,14 +99,30 @@ export default class MemoList {
     await this.remote.memo.updateOne.mutate([id, { isPinned }]);
 
     runInAction(() => {
+      const oldGroup = memo.isPinned ? this.memoGroups.pinned : this.memoGroups.common;
+      const newGroup = memo.isPinned ? this.memoGroups.common : this.memoGroups.pinned;
+      oldGroup.splice(oldGroup.indexOf(id), 1);
+      newGroup.splice(
+        sortedIndexBy(newGroup, id, (id) => -this.get(id).createdAt),
+        0,
+        id,
+      );
+
       memo.isPinned = isPinned;
     });
   }
 
   @action.bound
   public add(memo: MemoVO) {
-    assert(this.memosMap);
-    this.memosMap[memo.id] = memo;
+    this.memosMap[memo.id] = observable(memo);
+    const targetGroup = memo.isPinned ? this.memoGroups.pinned : this.memoGroups.common;
+    const firstId = first(targetGroup);
+
+    if (firstId && memo.createdAt > this.get(firstId).createdAt) {
+      targetGroup.unshift(memo.id);
+    } else {
+      targetGroup.push(memo.id);
+    }
   }
 
   @action.bound
@@ -139,6 +157,15 @@ export default class MemoList {
   @action
   public reset() {
     this.memosMap = {};
+    this.memoGroups.common = [];
+    this.memoGroups.pinned = [];
     this.isEnd = false;
+  }
+
+  @action.bound
+  public setDuration(duration: Duration) {
+    this.duration = duration;
+    this.reset();
+    this.load();
   }
 }

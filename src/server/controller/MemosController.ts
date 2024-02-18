@@ -1,7 +1,7 @@
 import { container } from 'tsyringe';
 import { string, tuple } from 'zod';
 
-import { clientMemoQuerySchema, memoPatchDTOSchema, memoDTOSchema } from '@domain/model/memo.js';
+import { clientMemoQuerySchema, memoPatchDTOSchema, memoDTOSchema, durationSchema } from '@domain/model/memo.js';
 import MemoService from '@domain/service/MemoService.js';
 
 import { publicProcedure, router } from './trpc.js';
@@ -22,4 +22,8 @@ export default router({
   updateOne: memoProcedure
     .input(tuple([string(), memoPatchDTOSchema]))
     .mutation(({ input: [id, patch], ctx: { memoService } }) => memoService.updateOne(id, patch)),
+
+  queryDates: memoProcedure
+    .input(durationSchema)
+    .query(({ input: duration, ctx: { memoService } }) => memoService.queryAvailableDates(duration)),
 });
