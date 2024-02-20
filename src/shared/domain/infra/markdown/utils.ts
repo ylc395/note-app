@@ -36,7 +36,6 @@ const routes = [
   { type: EntityTypes.Annotation, matcher: match<{ id: string }>('/materials/annotations/:id') },
   { type: EntityTypes.Memo, matcher: match<{ id: string }>('/memos/:id') },
   { type: EntityTypes.Material, matcher: match<{ id: string }>('/materials/:id') },
-  { type: EntityTypes.File, matcher: match<{ id: string }>('/files/:id') },
 ];
 
 export function parseUrl(url: string) {

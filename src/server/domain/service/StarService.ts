@@ -1,43 +1,42 @@
 import assert from 'node:assert';
 import { container, singleton } from 'tsyringe';
 
-import type { StarVO } from '@domain/model/star.js';
+import type { StarDTO } from '@domain/model/star.js';
 import type { EntityId } from '@domain/model/entity.js';
-import { buildIndex } from '@utils/collection.js';
-
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
+import { first } from 'lodash-es';
 
 @singleton()
 export default class StarService extends BaseService {
   private readonly entityService = container.resolve(EntityService);
 
-  // async create(entity: StarEntityLocator) {
-  //   await this.entityService.assertAvailableEntities([entity]);
+  public async create({ entityId }: StarDTO) {
+    await this.entityService.assertEntityIds([entityId]);
 
-  //   const existingStars = await this.repo.stars.findAllByEntityId([entity.entityId]);
-  //   assert(existingStars.length === 0);
-  //   await this.repo.stars.createOne(entity);
-  // }
+    const existingStars = await this.repo.stars.findAll({ entityId: [entityId] });
+    assert(existingStars.length === 0, `${entityId} has been starred`);
 
-  // async query() {
-  //   const stars = await this.repo.stars.findAllAvailable();
-  //   const titles = await this.entityService.getNormalizedTitles(stars);
+    await this.repo.stars.createOne(entityId);
 
-  //   return stars.map((star) => {
-  //     const title = titles[star.entityId];
-  //     assert(title);
-  //     return { ...star, title };
-  //   });
-  // }
+    const created = first(await this.query(entityId));
+    assert(created);
 
-  async remove(id: StarVO['id']) {
-    const result = await this.repo.stars.remove(id);
-    assert(result);
+    return created;
   }
 
-  async getStarMap(entities: EntityId[]) {
-    const stars = await this.repo.stars.findAllByEntityId(entities);
-    return buildIndex(stars, 'entityId');
+  public async query(id?: EntityId) {
+    const stars = await this.repo.stars.findAll({ isAvailableOnly: true, entityId: id ? [id] : undefined });
+    const titles = await this.entityService.getNormalizedTitles(stars);
+
+    return stars.map((star) => {
+      const title = titles[star.entityId] || '';
+      return { ...star, title };
+    });
+  }
+
+  public async remove({ entityId }: StarDTO) {
+    assert((await this.repo.stars.findAll({ entityId: [entityId] })).length > 0);
+    await this.repo.stars.removeOne(entityId);
   }
 }

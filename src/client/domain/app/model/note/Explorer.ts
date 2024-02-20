@@ -52,7 +52,7 @@ export default class NoteExplorer extends Explorer<NoteVO> {
       },
       { type: 'separator' } as const,
       { label: '移动至...', key: 'move' },
-      { label: '重命名与选择图标', key: 'rename' },
+      { label: '重命名', key: 'rename' },
       !isMultiple && { label: '制作副本', key: 'duplicate' },
       { type: 'separator' } as const,
       { label: '删除', key: 'delete' },

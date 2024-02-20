@@ -5,6 +5,7 @@ import materialRouter from './MaterialsController.js';
 import fileRouter from './FilesController.js';
 import annotationRouter from './AnnotationController.js';
 import memoRouter from './MemosController.js';
+import starRouter from './StarController.js';
 
 export const routers = router({
   note: noteRouter,
@@ -12,6 +13,7 @@ export const routers = router({
   file: fileRouter,
   memo: memoRouter,
   annotation: annotationRouter,
+  star: starRouter,
 });
 
 export type Routes = typeof routers;

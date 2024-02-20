@@ -20,12 +20,6 @@ export default class EntityService extends BaseService {
     assert(availableIds.length === ids.length, 'invalid entity ids');
   };
 
-  public readonly assertAvailableEntities = EntityService.doByEntityType({
-    [EntityTypes.Note]: this.noteService.assertAvailableIds,
-    [EntityTypes.Material]: this.materialService.assertAvailableIds,
-    [EntityTypes.Memo]: this.memoService.assertAvailableIds,
-  });
-
   public readonly getNormalizedTitles = EntityService.mergeMapByEntityType({
     [EntityTypes.Note]: this.noteService.getNormalizedTitles,
     [EntityTypes.Material]: this.materialService.getNormalizedTitles,
@@ -38,29 +32,16 @@ export default class EntityService extends BaseService {
   });
 
   private static mergeMapByEntityType<T extends EntityTypes, R>(mappers: Record<T, (ids: EntityId[]) => Promise<R>>) {
-    return async (locators: EntityLocator<T>[]) => {
+    return async (locators: EntityLocator[]) => {
       const groups = groupBy(locators, 'entityType');
       const tasks = Object.entries(groups).map(([type, locators]) => {
         const mapper = mappers[Number(type) as T];
         const ids = EntityService.toIds(locators);
-        return mapper(ids);
+        return mapper?.(ids) || {};
       });
 
       const results = await Promise.all(tasks);
       return Object.assign({}, ...results) as R;
-    };
-  }
-
-  private static doByEntityType<T extends EntityTypes>(mappers: Record<T, (ids: EntityId[]) => Promise<void>>) {
-    return async (locators: EntityLocator<T>[]) => {
-      const groups = groupBy(locators, 'entityType');
-      const tasks = Object.entries(groups).map(([type, locators]) => {
-        const mapper = mappers[Number(type) as T];
-        const ids = EntityService.toIds(locators);
-        return mapper(ids);
-      });
-
-      await Promise.all(tasks);
     };
   }
 

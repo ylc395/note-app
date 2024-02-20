@@ -1,12 +1,12 @@
 import { container, singleton } from 'tsyringe';
-import { observable, makeObservable, runInAction, action } from 'mobx';
-import { pull } from 'lodash-es';
+import { observable, makeObservable, runInAction } from 'mobx';
+import { remove } from 'lodash-es';
+import assert from 'assert';
 
 import { token as remoteToken } from '@domain/common/infra/rpc';
 import type { EntityId } from '@domain/app/model/entity';
-import type { StarVO, StarsDTO, StarEntityTypes } from '@shared/domain/model/star';
+import type { StarVO } from '@shared/domain/model/star';
 
-// todo: 能够收藏具体段落
 @singleton()
 export default class StarService {
   constructor() {
@@ -14,42 +14,30 @@ export default class StarService {
   }
 
   private readonly remote = container.resolve(remoteToken);
-  @observable stars?: Required<StarVO>[];
 
-  async star(entityType: StarEntityTypes, entityIds: EntityId[]) {
-    const entities = entityIds.map((id) => ({ entityId: id, entityType }));
-    // await this.remote.patch<StarsDTO>('/stars', entities);
+  @observable public stars?: StarVO[];
+
+  public async star(entityId: EntityId) {
+    assert(this.stars);
+
+    const newStar = await this.remote.star.create.mutate({ entityId });
+    this.stars.unshift(newStar);
   }
 
-  @action
-  clear() {
-    this.stars = undefined;
-  }
-
-  async loadStars() {
-    // const { body: stars } = await this.remote.get<void, StarVO[]>('/stars');
-    // runInAction(() => (this.stars = stars));
-  }
-
-  async removeStar(starId: StarVO['id']) {
-    if (!this.stars) {
-      throw new Error('no stars');
-    }
-
-    const starToRemove = this.stars.find(({ id }) => id === starId);
-
-    if (!starToRemove) {
-      throw new Error('no star to remove');
-    }
-
-    // await this.remote.delete(`/stars/${starId}`);
+  public async load() {
+    const stars = await this.remote.star.query.query();
 
     runInAction(() => {
-      if (!this.stars) {
-        throw new Error('no stars');
-      }
+      this.stars = stars;
+    });
+  }
 
-      pull(this.stars, starToRemove);
+  public async remove(entityId: EntityId) {
+    await this.remote.star.remove.mutate({ entityId });
+
+    runInAction(() => {
+      assert(this.stars);
+      remove(this.stars, (star) => star.entityId === entityId);
     });
   }
 }

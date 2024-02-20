@@ -43,8 +43,8 @@ export default class SqliteSearchEngine implements SearchEngine {
     let descantIds: EntityId[] | undefined;
 
     if (q.root) {
-      const descants = await this.sqliteDb.getRepository('entities').findDescendantIds([q.root.entityId]);
-      descantIds = descants[q.root.entityId];
+      const descants = await this.sqliteDb.getRepository('entities').findDescendantIds([q.root]);
+      descantIds = descants[q.root];
     }
 
     let searchRecords = (

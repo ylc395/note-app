@@ -1,8 +1,11 @@
-import type { EntityId, EntityLocator } from '@domain/model/entity.js';
-import type { StarEntityTypes } from '@shared/domain/model/star.js';
+import { EntityId } from '@domain/model/entity.js';
+import type { StarVO } from '@shared/domain/model/star.js';
 
 export * from '@shared/domain/model/star.js';
 
-export interface StarRecord extends EntityLocator<StarEntityTypes> {
-  id: EntityId;
+export type StarRecord = Pick<StarVO, 'entityId' | 'entityType' | 'icon'>;
+
+export interface StarQuery {
+  isAvailableOnly?: boolean;
+  entityId?: EntityId[];
 }

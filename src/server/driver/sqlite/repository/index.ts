@@ -1,5 +1,4 @@
 export { default as notes } from './NoteRepository.js';
-export { default as recyclables } from './RecyclableRepository.js';
 export { default as stars } from './StarRepository.js';
 export { default as files } from './FileRepository.js';
 export { default as memos } from './MemoRepository.js';

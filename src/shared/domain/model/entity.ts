@@ -1,12 +1,10 @@
 import { nativeEnum, object, string, infer as Infer } from 'zod';
-import { pick } from 'lodash-es';
 
 export enum EntityTypes {
   Note = 1,
   Memo,
   Material,
   Annotation,
-  File,
 }
 
 export type EntityId = string;
@@ -23,15 +21,9 @@ export const entityLocatorSchema = object({
   entityType: nativeEnum(EntityTypes),
 });
 
-export const hierarchyEntityLocatorSchema = entityLocatorSchema.extend({
-  entityType: nativeEnum(pick(EntityTypes, ['Note', 'Memo', 'Material'] as const)),
-});
+export type EntityLocator = Infer<typeof entityLocatorSchema>;
 
-export type HierarchyEntityLocator = Infer<typeof hierarchyEntityLocatorSchema>;
-
-export type EntityLocator<T = EntityTypes> = Infer<typeof entityLocatorSchema> & { entityType: T };
-
-export interface EntityWithTitle<T = EntityTypes> extends EntityLocator<T> {
+export interface EntityWithTitle extends EntityLocator {
   title: string;
 }
 

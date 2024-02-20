@@ -21,9 +21,8 @@ import type {
   LinkDTO,
   // LinkToQuery,
   InlineTopic,
-  ContentEntityLocator,
 } from '@domain/model/content.js';
-import type { EntityId } from '@domain/model/entity.js';
+import type { EntityId, EntityLocator } from '@domain/model/entity.js';
 
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
@@ -170,7 +169,7 @@ export default class ContentService extends BaseService {
   //   }));
   // }
 
-  private async getSnippets(entities: (ContentEntityLocator & { position: HighlightPosition })[]) {
+  private async getSnippets(entities: (EntityLocator & { position: HighlightPosition })[]) {
     const result: Record<
       EntityId,
       Record<`${number},${number}`, Pick<EntityWithSnippet, 'snippet' | 'highlight'>>

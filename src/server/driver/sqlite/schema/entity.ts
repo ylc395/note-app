@@ -1,4 +1,6 @@
 import { sql, type Kysely } from 'kysely';
+import { EntityTypes } from '@domain/model/entity.js';
+
 import type { Schemas } from './index.js';
 import { tableName as noteTableName } from './note.js';
 import { tableName as materialTableName } from './material.js';
@@ -8,6 +10,8 @@ import { tableName as memoTableName } from './memo.js';
 export interface Row {
   id: string;
   title: string;
+  icon: string | null;
+  type: EntityTypes;
   parentId: string;
   content: string;
 }
@@ -20,13 +24,42 @@ export default {
     db.schema.createView(tableName).as(
       db
         .selectFrom(noteTableName)
-        .select(['id', 'title', 'parentId', 'body as content'])
-        .union(db.selectFrom(materialTableName).select(['id', 'title', 'parentId', 'comment as content']))
+        .select(['id', 'icon', 'title', 'parentId', 'body as content', sql.val(EntityTypes.Note).as('type')])
+        .union(
+          db
+            .selectFrom(materialTableName)
+            .select([
+              'id',
+              'icon',
+              'title',
+              'parentId',
+              'comment as content',
+              sql.val(EntityTypes.Material).as('type'),
+            ]),
+        )
+        .union(
+          db
+            .selectFrom(memoTableName)
+            .select([
+              'id',
+              sql.val('').as('title'),
+              'parentId',
+              sql.val(null).as('icon'),
+              'body as content',
+              sql.val(EntityTypes.Memo).as('type'),
+            ]),
+        )
         .union(
           db
             .selectFrom(annotationTableName)
-            .select(['id', 'body as content', sql.val(null).as('parentId'), sql.val('').as('title')]),
-        )
-        .union(db.selectFrom(memoTableName).select(['id', sql.val('').as('title'), 'parentId', 'body as content'])),
+            .select([
+              'id',
+              'body as content',
+              sql.val(null).as('icon'),
+              sql.val(null).as('parentId'),
+              sql.val('').as('title'),
+              sql.val(EntityTypes.Annotation).as('type'),
+            ]),
+        ),
     ),
 } as const;

@@ -1,11 +1,4 @@
-import type {
-  ContentEntityTypes,
-  Link,
-  LinkDirection,
-  LinkToQuery,
-  Topic,
-  ContentEntityLocator,
-} from '@domain/model/content.js';
+import type { ContentEntityTypes, Link, LinkDirection, LinkToQuery, Topic } from '@domain/model/content.js';
 import type { EntityLocator } from '@domain/model/entity.js';
 import type { ContentRepository } from '@domain/service/repository/ContentRepository.js';
 
@@ -82,7 +75,7 @@ export default class SqliteContentRepository extends BaseRepository implements C
     );
   }
 
-  async removeTopicsOf({ entityId: id, entityType: type }: ContentEntityLocator) {
+  async removeTopicsOf({ entityId: id, entityType: type }: EntityLocator) {
     await this.db.deleteFrom(topicTableName).where('entityId', '=', id).where('entityType', '=', type).execute();
   }
 

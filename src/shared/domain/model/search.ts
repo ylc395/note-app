@@ -2,7 +2,7 @@ import dayjs from 'dayjs';
 import { array, nativeEnum, object, string, type infer as Infer, boolean } from 'zod';
 import { isEmpty, negate } from 'lodash-es';
 
-import { type EntityId, EntityTypes, hierarchyEntityLocatorSchema, Path } from './entity.js';
+import { type EntityId, EntityTypes, type Path } from './entity.js';
 import type { EntityMaterial } from './material.js';
 
 interface SearchRecord {
@@ -63,7 +63,7 @@ export const searchParamsSchema = object({
   })
     .refine(isNotEmpty)
     .optional(),
-  root: hierarchyEntityLocatorSchema.optional(),
+  root: string().optional(),
   scopes: array(nativeEnum(Scopes)).optional(),
   recyclables: boolean().optional(),
 });

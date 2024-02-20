@@ -1,43 +1,39 @@
-import type { EntityLocator } from '@domain/model/entity.js';
-import type { StarVO, StarEntityLocator } from '@domain/model/star.js';
+import type { EntityId } from '@domain/model/entity.js';
 import type { StarRepository } from '@domain/service/repository/StarRepository.js';
+import type { StarQuery } from '@domain/model/star.js';
 
 import BaseRepository from './BaseRepository.js';
 import schema from '../schema/star.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
+import { tableName as entityTableName } from '../schema/entity.js';
 
 export default class SqliteStarRepository extends BaseRepository implements StarRepository {
-  readonly tableName = schema.tableName;
+  private readonly tableName = schema.tableName;
 
-  async createOne(entity: StarEntityLocator) {
-    const row = await super.createOneOn(this.tableName, { ...entity, id: this.generateId() });
-    return row;
+  public async createOne(entityId: EntityId) {
+    await super.createOneOn(this.tableName, { entityId, isValid: 1, updatedAt: Date.now() });
   }
 
-  async findOneById(id: StarVO['id']) {
-    return (await this.db.selectFrom(this.tableName).selectAll().where('id', '=', id).executeTakeFirst()) || null;
-  }
-
-  async findAllAvailable() {
-    return await this.db
+  public async findAll(q: StarQuery) {
+    let sql = this.db
       .selectFrom(this.tableName)
-      .selectAll(this.tableName)
+      .innerJoin(entityTableName, `${this.tableName}.entityId`, `${entityTableName}.id`)
       .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.entityId`)
-      .where(`${recyclableTableName}.entityId`, 'is', null)
-      .execute();
+      .select([`${this.tableName}.entityId`, 'icon', 'title', 'type as entityType'])
+      .where('isValid', '=', 1);
+
+    if (q.isAvailableOnly) {
+      sql = sql.where(`${recyclableTableName}.entityId`, 'is', null);
+    }
+
+    if (q.entityId) {
+      sql = sql.where(`${this.tableName}.entityId`, 'in', q.entityId);
+    }
+
+    return sql.execute();
   }
 
-  async findAllByEntityId(entityIds: EntityLocator['entityId'][]) {
-    return await this.db
-      .selectFrom(this.tableName)
-      .selectAll(this.tableName)
-      .where(`${this.tableName}.entityId`, 'in', entityIds)
-      .execute();
-  }
-
-  async remove(id: StarVO['id']) {
-    const { numDeletedRows } = await this.db.deleteFrom(this.tableName).where('id', '=', id).executeTakeFirst();
-
-    return Number(numDeletedRows) === 1;
+  public async removeOne(id: EntityId) {
+    await this.db.updateTable(this.tableName).set({ isValid: 0 }).where('entityId', '=', id).executeTakeFirst();
   }
 }
