@@ -1,4 +1,4 @@
-import Emitter, { type EventName, type OmnipresentEventData } from 'emittery';
+import Emitter, { type EventName } from 'emittery';
 
 type Events = Record<EventName, unknown>;
 
@@ -14,22 +14,5 @@ export default class EventBus<T extends Events> extends Emitter<T> {
         },
       },
     });
-  }
-
-  public on<E extends keyof (T & OmnipresentEventData)>(
-    name: E | E[],
-    cb: (e: (T & OmnipresentEventData)[E]) => void | Promise<void>,
-    filter?: (e: T[E]) => boolean,
-  ) {
-    return super.on(
-      name,
-      !filter
-        ? cb
-        : (e) => {
-            if (filter(e)) {
-              return cb(e);
-            }
-          },
-    );
   }
 }

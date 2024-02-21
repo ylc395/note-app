@@ -6,7 +6,7 @@ import type Explorer from './index';
 import type { EntityLocator, HierarchyEntity } from '@shared/domain/model/entity';
 
 export default class DndBehavior<T extends HierarchyEntity> {
-  constructor(private readonly explorer: Explorer<T>) {
+  constructor(private readonly options: { explorer: Explorer<T> }) {
     makeObservable(this);
   }
 
@@ -15,7 +15,7 @@ export default class DndBehavior<T extends HierarchyEntity> {
 
   @action.bound
   public reset() {
-    for (const node of this.explorer.tree.allNodes) {
+    for (const node of this.options.explorer.tree.allNodes) {
       node.isDisabled = false;
     }
 
@@ -28,12 +28,12 @@ export default class DndBehavior<T extends HierarchyEntity> {
     let isAll = false;
 
     if (!entity) {
-      nodes = this.explorer.tree.selectedNodes;
-    } else if (entity.entityType !== this.explorer.entityType) {
-      nodes = this.explorer.tree.allNodes;
+      nodes = this.options.explorer.tree.selectedNodes;
+    } else if (entity.entityType !== this.options.explorer.entityType) {
+      nodes = this.options.explorer.tree.allNodes;
       isAll = true;
     } else {
-      nodes = [this.explorer.tree.getNode(entity.entityId)];
+      nodes = [this.options.explorer.tree.getNode(entity.entityId)];
     }
 
     for (const node of nodes) {
@@ -54,8 +54,8 @@ export default class DndBehavior<T extends HierarchyEntity> {
 
   @computed
   public get selectedNodesAsTree() {
-    const tree = new (this.explorer.tree.constructor as { new (): Tree })();
-    tree.updateTree(this.explorer.tree.selectedNodes.map(({ entity }) => ({ ...entity!, parentId: null })));
+    const tree = new (this.options.explorer.tree.constructor as { new (): Tree })();
+    tree.updateTree(this.options.explorer.tree.selectedNodes.map(({ entity }) => ({ ...entity!, parentId: null })));
 
     runInAction(() => {
       tree.root.isLeaf = true;

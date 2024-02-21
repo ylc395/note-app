@@ -118,20 +118,16 @@ export default class NoteService extends BaseService {
   }
 
   public async batchUpdate(ids: Note['id'][], patch: NotePatchDTO) {
-    return this.transaction(async () => {
-      if (patch.parentId) {
-        await this.assertValidParent(patch.parentId, ids);
-      }
+    if (patch.parentId) {
+      await this.assertValidParent(patch.parentId, ids);
+    }
 
-      const result = await this.repo.notes.update(ids, {
-        ...patch,
-        updatedAt: Date.now(),
-      });
-
-      assert(result);
-
-      return this.query({ id: ids });
+    const result = await this.repo.notes.update(ids, {
+      ...patch,
+      updatedAt: Date.now(),
     });
+
+    assert(result);
   }
 
   public readonly assertAvailableIds = async (ids: Note['id'][]) => {
@@ -148,7 +144,7 @@ export default class NoteService extends BaseService {
     }
   }
 
-  public async query(q: ClientNoteQuery & { id?: Note['id'][] }) {
+  public async query(q: ClientNoteQuery) {
     const notes = await this.repo.notes.findAll({
       ...q,
       parentId: q.parentId === null ? null : q.parentId,

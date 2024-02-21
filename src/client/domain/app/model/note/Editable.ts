@@ -7,7 +7,7 @@ import type { NoteVO, NotePatchDTO } from '@shared/domain/model/note';
 import EditableEntity from '@domain/app/model/abstract/EditableEntity';
 import { Tile } from '@domain/app/model/workbench';
 import NoteEditor from './Editor';
-import { eventBus, Events as NoteEvents } from './eventBus';
+import { eventBus, Events as NoteEvents, UpdateEvent } from './eventBus';
 
 export default class EditableNote extends EditableEntity<Required<NoteVO>> {
   public readonly entityType = EntityTypes.Note;
@@ -15,7 +15,7 @@ export default class EditableNote extends EditableEntity<Required<NoteVO>> {
   constructor(noteId: NoteVO['id']) {
     super(noteId);
     makeObservable(this);
-    eventBus.on(NoteEvents.Updated, this.refresh, ({ actor, id }) => actor !== this && id === noteId);
+    eventBus.on(NoteEvents.Updated, this.refresh);
   }
 
   @observable public entity?: Required<NoteVO>;
@@ -28,7 +28,11 @@ export default class EditableNote extends EditableEntity<Required<NoteVO>> {
     });
   }
 
-  private readonly refresh = async () => {
+  private readonly refresh = async ({ trigger, id }: UpdateEvent) => {
+    if (trigger === this || this.entityLocator.entityId !== id) {
+      return;
+    }
+
     const info = await this.remote.note.queryOne.query(this.entityLocator.entityId);
 
     runInAction(() => {
@@ -45,7 +49,12 @@ export default class EditableNote extends EditableEntity<Required<NoteVO>> {
     assert(this.entity);
     this.entity = { ...this.entity, ...note, updatedAt: Date.now() };
     this.uploadNote(note);
-    eventBus.emit(NoteEvents.Updated, { id: this.entityLocator.entityId, actor: this, updatedAt: Date.now(), ...note });
+    eventBus.emit(NoteEvents.Updated, {
+      id: this.entityLocator.entityId,
+      trigger: this,
+      updatedAt: Date.now(),
+      ...note,
+    });
   }
 
   @action
@@ -56,7 +65,7 @@ export default class EditableNote extends EditableEntity<Required<NoteVO>> {
     this.entity.updatedAt = Date.now();
 
     this.uploadNote({ body });
-    eventBus.emit(NoteEvents.Updated, { id: this.entityLocator.entityId, actor: this, body, updatedAt: Date.now() });
+    eventBus.emit(NoteEvents.Updated, { id: this.entityLocator.entityId, trigger: this, body, updatedAt: Date.now() });
   }
 
   private readonly uploadNote = debounce((note: NotePatchDTO) => {
@@ -65,5 +74,6 @@ export default class EditableNote extends EditableEntity<Required<NoteVO>> {
 
   public destroy(): void {
     this.uploadNote.flush();
+    eventBus.off(NoteEvents.Updated, this.refresh);
   }
 }

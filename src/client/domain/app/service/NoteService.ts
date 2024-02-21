@@ -6,17 +6,17 @@ import { token as rpcToken } from '@domain/common/infra/rpc';
 import type { NoteVO } from '@shared/domain/model/note';
 import { Workbench } from '@domain/app/model/workbench';
 import NoteEditor from '@domain/app/model/note/Editor';
-import NoteExplorer, { type ActionEvent, EventNames } from '@domain/app/model/note/Explorer';
+import NoteExplorer from '@domain/app/model/note/Explorer';
 import { EntityTypes } from '@shared/domain/model/entity';
-import { eventBus, Events } from '@domain/app/model/note/eventBus';
+import { type ActionEvent, eventBus, Events } from '@domain/app/model/note/eventBus';
 import { MOVE_TARGET_MODAL } from '@domain/app/model/note/prompts';
 import TreeNode from '@domain/common/model/abstract/TreeNode';
-import MoveBehavior from './behaviors/MoveBehavior';
+import MoveBehavior from '../model/abstract/behaviors/MoveBehavior';
 
 @singleton()
 export default class NoteService {
   constructor() {
-    this.explorer.on(EventNames.Action, this.handleAction);
+    eventBus.on(Events.Action, this.handleAction);
   }
   private readonly remote = container.resolve(rpcToken);
   private readonly explorer = container.resolve(NoteExplorer);
@@ -25,8 +25,10 @@ export default class NoteService {
     tree: this.tree,
     promptToken: MOVE_TARGET_MODAL,
     itemsToIds: NoteService.getNoteIds,
-    onMoved: (parentId, ids) => ids.forEach((id) => eventBus.emit(Events.Updated, { id, parentId })),
-    action: (parentId, ids) => this.remote.note.batchUpdate.mutate([ids, { parentId }]),
+    onMove: async (parentId, ids) => {
+      await this.remote.note.batchUpdate.mutate([ids, { parentId }]);
+      ids.forEach((id) => eventBus.emit(Events.Updated, { trigger: this.move, parentId, id }));
+    },
   });
 
   private get tree() {

@@ -31,7 +31,7 @@ export default observer(function MaterialTreeView() {
   const { openEntity } = container.resolve(Workbench);
   const {
     tree,
-    useContextmenu,
+    contextmenu: { use: useContextmenu },
     dnd: { updateTreeForDropping, reset: resetTree },
     rename: { id: editingId, submit: submitEditing, cancel: cancelEditing },
   } = container.resolve(MaterialExplorer);

@@ -1,7 +1,7 @@
 import { singleton, container } from 'tsyringe';
 import assert from 'assert';
 
-import Explorer, { EventNames as ExplorerEvents, type ActionEvent } from '@domain/app/model/material/Explorer';
+import Explorer from '@domain/app/model/material/Explorer';
 import { token as rpcToken } from '@domain/common/infra/rpc';
 import { token as UIToken } from '@shared/domain/infra/ui';
 import { isEntityMaterial, type MaterialVO, type NewMaterialDTO } from '@shared/domain/model/material';
@@ -10,14 +10,14 @@ import { Workbench } from '@domain/app/model/workbench';
 import { EntityTypes } from '../model/entity';
 import TreeNode from '@domain/common/model/abstract/TreeNode';
 import MaterialEditor from '../model/material/editor/MaterialEditor';
-import MoveBehavior from './behaviors/MoveBehavior';
-import eventBus, { Events } from '../model/material/eventBus';
+import MoveBehavior from '../model/abstract/behaviors/MoveBehavior';
+import eventBus, { type ActionEvent, Events } from '../model/material/eventBus';
 import { MOVE_TARGET_MODAL, NEW_MATERIAL_MODAL } from '../model/material/prompts';
 
 @singleton()
 export default class MaterialService {
   constructor() {
-    this.explorer.on(ExplorerEvents.Action, this.handleAction);
+    eventBus.on(Events.Action, this.handleAction);
   }
   private readonly remote = container.resolve(rpcToken);
   private readonly explorer = container.resolve(Explorer);
@@ -31,9 +31,11 @@ export default class MaterialService {
   public readonly move = new MoveBehavior({
     tree: this.tree,
     itemsToIds: MaterialService.getMaterialIds,
-    action: (parentId, ids) => this.remote.material.batchUpdate.mutate([ids, { parentId }]),
     promptToken: MOVE_TARGET_MODAL,
-    onMoved: (parentId, ids) => ids.forEach((id) => eventBus.emit(Events.Updated, { actor: this, parentId, id })),
+    onMove: async (parentId, ids) => {
+      await this.remote.material.batchUpdate.mutate([ids, { parentId }]);
+      ids.forEach((id) => eventBus.emit(Events.Updated, { trigger: this.move, parentId, id }));
+    },
   });
 
   public readonly queryMaterialByHash = async (hash: string) => {

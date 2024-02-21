@@ -3,14 +3,14 @@ import { computed, makeObservable, observable, runInAction } from 'mobx';
 import { EntityTypes } from '@shared/domain/model/entity';
 import type { EntityMaterialVO } from '@shared/domain/model/material';
 import EditableEntity from '@domain/app/model/abstract/EditableEntity';
-import eventBus, { Events } from '../eventBus';
+import eventBus, { Events, UpdateEvent } from '../eventBus';
 
 export default abstract class EditableMaterial extends EditableEntity<Required<EntityMaterialVO>> {
   protected readonly entityType = EntityTypes.Material;
 
   constructor(materialId: EntityMaterialVO['id']) {
     super(materialId);
-    eventBus.on(Events.Updated, this.refresh, ({ actor, id }) => actor !== this && id === materialId);
+    eventBus.on(Events.Updated, this.refresh);
     makeObservable(this);
   }
 
@@ -20,7 +20,11 @@ export default abstract class EditableMaterial extends EditableEntity<Required<E
   @observable.ref
   protected blob?: ArrayBuffer;
 
-  private readonly refresh = async () => {
+  private readonly refresh = async ({ trigger, id }: UpdateEvent) => {
+    if (trigger === this || id !== this.entityLocator.entityId) {
+      return;
+    }
+
     const info = await this.remote.material.queryOne.query(this.entityLocator.entityId);
 
     runInAction(() => {
@@ -43,6 +47,10 @@ export default abstract class EditableMaterial extends EditableEntity<Required<E
   @computed
   public get entityLocator() {
     return { ...super.entityLocator, mimeType: this.entity?.mimeType };
+  }
+
+  public destroy() {
+    eventBus.off(Events.Updated, this.refresh);
   }
 }
 

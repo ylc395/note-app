@@ -8,32 +8,36 @@ import MaterialTree from '@domain/common/model/material/Tree';
 import Explorer, { RenameBehavior } from '@domain/app/model/abstract/Explorer';
 import { EntityTypes } from '../entity';
 import eventBus, { Events } from './eventBus';
-
-export { EventNames, type ActionEvent, RenameBehavior } from '@domain/app/model/abstract/Explorer';
+import ContextmenuBehavior from '../abstract/Explorer/ContextmenuBehavior';
 
 @singleton()
 export default class MaterialExplorer extends Explorer<MaterialVO> {
   public readonly tree = new MaterialTree();
   public readonly entityType = EntityTypes.Material;
   private readonly remote = container.resolve(rpcToken);
-
-  public readonly rename = new RenameBehavior({
-    tree: this.tree,
-    onSubmit: async ({ id, name }) => {
-      const newMaterial = await this.remote.material.updateOne.mutate([id, { title: name }]);
-      eventBus.emit(Events.Updated, { id, title: name, actor: this });
-      return newMaterial;
-    },
-  });
+  public readonly rename: RenameBehavior;
+  public readonly contextmenu: ContextmenuBehavior<MaterialVO>;
 
   constructor() {
-    super('materialExplorer');
+    super();
+    this.rename = new RenameBehavior({ onSubmit: this.submitRename });
+    this.contextmenu = new ContextmenuBehavior({
+      explorer: this,
+      getItems: this.getContextmenuItems,
+      handleAction: (e) => eventBus.emit(Events.Action, e),
+    });
+    eventBus.on(Events.Updated, this.handleEntityUpdate);
   }
 
-  protected getContextmenu() {
-    const node = this.tree.selectedNodes[0];
+  private readonly submitRename = async ({ id, name }: { id: string; name: string }) => {
+    await this.remote.material.updateOne.mutate([id, { title: name }]);
+    eventBus.emit(Events.Updated, { id, title: name, trigger: this });
+  };
+
+  private readonly getContextmenuItems = () => {
+    const node = this.contextmenu.selectedNode;
     const isMultiple = this.tree.selectedNodes.length > 1;
-    assert(node?.entity);
+    assert(node.entity);
 
     const isDirectory = !isEntityMaterial(node.entity);
     const canOpenInNewTab = !isDirectory && !this.workbench.currentTile?.findByEntity(node.entityLocator);
@@ -56,5 +60,5 @@ export default class MaterialExplorer extends Explorer<MaterialVO> {
       !isMultiple && { label: '重命名', key: 'rename' },
       { label: '移动至...', key: 'move' },
     ]);
-  }
+  };
 }

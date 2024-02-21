@@ -61,6 +61,7 @@ export default class EditablePdf extends EditableMaterial {
   }
 
   public async destroy() {
+    super.destroy();
     EditablePdf.activeCount -= 1;
     await this.loadingTask?.destroy();
 

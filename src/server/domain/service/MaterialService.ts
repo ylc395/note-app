@@ -35,7 +35,7 @@ export default class MaterialService extends BaseService {
     return await this.toVO(material);
   }
 
-  public async query(q: ClientMaterialQuery & { id?: Material['id'][] }): Promise<MaterialVO[]> {
+  public async query(q: ClientMaterialQuery): Promise<MaterialVO[]> {
     const materials = await this.repo.materials.findAll({ ...q, ...(q.fileHash ? null : { isAvailable: true }) });
     return await this.toVO(materials);
   }
@@ -69,21 +69,18 @@ export default class MaterialService extends BaseService {
   }
 
   public async batchUpdate(ids: Material['id'][], patch: MaterialPatchDTO) {
-    return this.transaction(async () => {
-      await this.assertAvailableIds(ids);
+    await this.assertAvailableIds(ids);
 
-      if (patch.parentId) {
-        await this.assertValidParent(patch.parentId, ids);
-      }
+    if (patch.parentId) {
+      await this.assertValidParent(patch.parentId, ids);
+    }
 
-      const result = await this.repo.materials.update(ids, {
-        ...patch,
-        updatedAt: Date.now(),
-      });
-
-      assert(result);
-      return this.query({ id: ids });
+    const result = await this.repo.materials.update(ids, {
+      ...patch,
+      updatedAt: Date.now(),
     });
+
+    assert(result);
   }
 
   public async updateOne(materialId: Material['id'], patch: MaterialPatchDTO) {

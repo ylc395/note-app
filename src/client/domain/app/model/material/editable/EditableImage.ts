@@ -12,6 +12,4 @@ export default class EditableImage extends EditableMaterial {
   public createEditor(tile: Tile) {
     return new ImageEditor(this, tile);
   }
-
-  public destroy() {}
 }

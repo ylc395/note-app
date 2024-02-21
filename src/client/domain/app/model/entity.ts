@@ -2,12 +2,16 @@ import type { EntityLocator as CommonEntityLocator, EntityId } from '@shared/dom
 
 export * from '@shared/domain/model/entity';
 
-interface Entity {
-  id: EntityId;
-}
-
-export type WithId<T extends Entity> = Partial<T> & Entity;
-
 export interface EntityLocator extends CommonEntityLocator {
   mimeType?: string;
 }
+
+export interface ActionEvent {
+  id: EntityId[];
+  action: string;
+}
+
+export type UpdateEvent<T = unknown> = {
+  id: EntityId;
+  trigger?: unknown;
+} & T;

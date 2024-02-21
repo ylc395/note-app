@@ -1,12 +1,12 @@
 import { useMemoizedFn } from 'ahooks';
 import { useEffect, useState } from 'react';
 import { container } from 'tsyringe';
+import { isMatch } from 'lodash-es';
 
 import { type Tile, TileSplitDirections } from '@domain/app/model/workbench';
 import Editor from '@domain/app/model/abstract/Editor';
 import { Workbench } from '@domain/app/model/workbench';
 import TreeNode from '@domain/common/model/abstract/TreeNode';
-import { isMatch } from 'lodash-es';
 
 interface Position {
   top: string;

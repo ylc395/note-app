@@ -1,41 +1,40 @@
-import { compact } from 'lodash-es';
 import { singleton, container } from 'tsyringe';
 import { token as rpcToken } from '@domain/common/infra/rpc';
-import assert from 'assert';
+import { compact } from 'lodash-es';
 
 import NoteTree from '@domain/common/model/note/Tree';
 import type { NoteVO } from '@shared/domain/model/note';
 import Explorer, { RenameBehavior } from '@domain/app/model/abstract/Explorer';
 import { eventBus, Events as NoteEvents } from './eventBus';
 import { EntityTypes } from '../entity';
-
-export { EventNames, type ActionEvent } from '../abstract/Explorer';
+import ContextmenuBehavior from '../abstract/Explorer/ContextmenuBehavior';
 
 @singleton()
 export default class NoteExplorer extends Explorer<NoteVO> {
   constructor() {
-    super('noteExplorer');
-    eventBus.on(NoteEvents.Updated, this.updateNode, ({ actor }) => actor !== this);
+    super();
+    this.contextmenu = new ContextmenuBehavior({
+      explorer: this,
+      getItems: this.getContextmenuItems,
+      handleAction: (e) => eventBus.emit(NoteEvents.Action, e),
+    });
+    this.rename = new RenameBehavior({ onSubmit: this.submitRename });
+    eventBus.on(NoteEvents.Updated, this.handleEntityUpdate);
   }
   public readonly entityType = EntityTypes.Note;
+  public readonly contextmenu: ContextmenuBehavior<NoteVO>;
   public readonly tree = new NoteTree();
   private readonly remote = container.resolve(rpcToken);
+  public readonly rename: RenameBehavior;
 
-  public readonly rename = new RenameBehavior({
-    tree: this.tree,
-    onSubmit: async ({ id, name }) => {
-      const newNote = await this.remote.note.updateOne.mutate([id, { title: name }]);
-      eventBus.emit(NoteEvents.Updated, { id: newNote.id, title: newNote.title, actor: this });
-      return newNote;
-    },
-  });
+  private readonly submitRename = async ({ id, name }: { id: string; name: string }) => {
+    await this.remote.note.updateOne.mutate([id, { title: name }]);
+    eventBus.emit(NoteEvents.Updated, { id, title: name, trigger: this });
+  };
 
-  protected getContextmenu() {
+  private readonly getContextmenuItems = () => {
     const isMultiple = this.tree.selectedNodes.length > 1;
-    const oneNode = this.tree.selectedNodes[0];
-    assert(oneNode);
-
-    const canOpenInNewTab = !this.workbench.currentTile?.findByEntity(oneNode.entityLocator);
+    const canOpenInNewTab = !this.workbench.currentTile?.findByEntity(this.contextmenu.selectedNode.entityLocator);
 
     return compact([
       isMultiple && { label: `共${this.tree.selectedNodes.length}项`, disabled: true },
@@ -57,5 +56,5 @@ export default class NoteExplorer extends Explorer<NoteVO> {
       { type: 'separator' } as const,
       { label: '删除', key: 'delete' },
     ]);
-  }
+  };
 }

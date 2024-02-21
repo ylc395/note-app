@@ -1,6 +1,6 @@
 import { observable, action, computed, makeObservable } from 'mobx';
 import assert from 'assert';
-import { pull } from 'lodash-es';
+import { pull, pickBy } from 'lodash-es';
 import { container } from 'tsyringe';
 
 import type { EntityParentId, EntityTypes, HierarchyEntity } from '@shared/domain/model/entity';
@@ -126,16 +126,21 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
   }
 
   @action
-  public updateTree(entity: T | T[]) {
+  public updateTree(entity: Partial<T> | Partial<T>[]) {
     const entities = Array.isArray(entity) ? entity : [entity];
 
     for (const entity of entities) {
+      assert(entity.id);
       const node = this.getNode(entity.id, true);
 
       if (node) {
-        this.updateNode(entity);
+        assert(node.entity);
+        this.updateNode({
+          ...node.entity,
+          ...pickBy(entity, (_, key) => key in node.entity!),
+        });
       } else {
-        this.addNode(entity);
+        this.addNode(entity as T);
       }
     }
   }
