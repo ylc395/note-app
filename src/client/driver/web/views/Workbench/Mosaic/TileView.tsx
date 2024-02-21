@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { mapValues } from 'lodash';
+import { mapValues } from 'lodash-es';
 import { observer } from 'mobx-react-lite';
 
 import type Tile from '@domain/app/model/workbench/Tile';

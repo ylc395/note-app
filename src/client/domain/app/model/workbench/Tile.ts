@@ -1,6 +1,6 @@
 import { action, makeObservable, observable } from 'mobx';
 import { container } from 'tsyringe';
-import { uniqueId, isMatch } from 'lodash';
+import { uniqueId, isMatch } from 'lodash-es';
 import assert from 'assert';
 
 import Editor from '@domain/app/model/abstract/Editor';

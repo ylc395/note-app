@@ -5,7 +5,8 @@ const topicRemark = $remark(
   'topic',
   () =>
     function () {
-      const data = this.data();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const data: any = this.data();
 
       add('micromarkExtensions', tokenExtension);
       add('fromMarkdownExtensions', mdastExtension);

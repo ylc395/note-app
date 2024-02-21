@@ -90,6 +90,7 @@ export default class AnnotationManager {
   }
 
   public init() {
+    assert(this.pdfViewer.firstPagePromise);
     this.pdfViewer.eventBus.on('updateviewarea', this.updateVisiblePages);
     this.pdfViewer.firstPagePromise.then(this.updateVisiblePages);
   }

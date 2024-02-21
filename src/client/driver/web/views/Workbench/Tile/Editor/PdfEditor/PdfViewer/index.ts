@@ -107,6 +107,7 @@ export default class PdfViewer {
 
     this.pdfViewer.setDocument(doc);
     (this.pdfViewer.linkService as PDFLinkService).setDocument(doc);
+    assert(this.pdfViewer.onePageRendered && this.pdfViewer.firstPagePromise);
 
     this.pdfViewer.onePageRendered.then(
       action(() => {

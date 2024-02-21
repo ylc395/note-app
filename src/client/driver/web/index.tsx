@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import { container } from 'tsyringe';
 import { createRoot } from 'react-dom/client';
 import assert from 'assert';
+import 'normalize.css';
 
 import { token as rpcToken } from '@domain/common/infra/rpc';
 import { token as uiToken } from '@shared/domain/infra/ui';

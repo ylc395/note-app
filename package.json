@@ -15,8 +15,7 @@
     "postinstall": "electron-rebuild"
   },
   "engines": {
-    "node": ">=18",
-    "yarn": "*"
+    "node": ">=18"
   },
   "devDependencies": {
     "@electron/rebuild": "^3.4.1",
@@ -108,9 +107,10 @@
     "mobx": "^6.10.2",
     "mobx-react-lite": "^4.0.5",
     "multer": "^1.4.5-lts.1",
+    "normalize.css": "^8.0.1",
     "page-lifecycle": "^0.1.2",
     "path-to-regexp": "^6.2.1",
-    "pdfjs-dist": "^3.6.172",
+    "pdfjs-dist": "^3.11.174",
     "queue": "^7.0.0",
     "react": "^18.2.0",
     "react-dnd": "^16.0.1",
@@ -128,5 +128,10 @@
     "unist-util-visit": "^5.0.0",
     "webextension-polyfill": "^0.10.0",
     "zod": "^3.22.2"
+  },
+  "pnpm": {
+    "patchedDependencies": {
+      "electron-trpc@0.5.2": "patches/electron-trpc@0.5.2.patch"
+    }
   }
 }
