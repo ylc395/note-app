@@ -1,10 +1,10 @@
-import { BookOutlined, DatabaseOutlined, BuildOutlined } from '@ant-design/icons';
+import { AiOutlineBook, AiOutlineDatabase, AiOutlineBuild } from 'react-icons/ai';
 import { EntityTypes } from '@domain/app/model/entity';
 
 const icons = {
-  [EntityTypes.Note]: () => <BookOutlined />,
-  [EntityTypes.Memo]: () => <BuildOutlined />,
-  [EntityTypes.Material]: () => <DatabaseOutlined />,
+  [EntityTypes.Note]: () => <AiOutlineBook />,
+  [EntityTypes.Memo]: () => <AiOutlineBuild />,
+  [EntityTypes.Material]: () => <AiOutlineDatabase />,
 };
 
 export default function TypeIcon({ type }: { type: EntityTypes.Note | EntityTypes.Material | EntityTypes.Memo }) {

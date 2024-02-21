@@ -1,5 +1,5 @@
 import { container } from 'tsyringe';
-import { PlusOutlined } from '@ant-design/icons';
+import { AiOutlinePlus } from 'react-icons/ai';
 
 import Explorer from '@domain/app/model/note/Explorer';
 import { EntityTypes } from '@shared/domain/model/entity';
@@ -36,7 +36,7 @@ export default observer(function NoteTreeView() {
       onDrop={(item, node) => moveNotesByItems(node.id, item)}
       nodeOperation={({ id }) => (
         <Button onClick={() => createNote({ parentId: id })}>
-          <PlusOutlined />
+          <AiOutlinePlus />
         </Button>
       )}
     />

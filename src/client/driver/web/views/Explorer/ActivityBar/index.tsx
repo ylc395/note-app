@@ -1,4 +1,4 @@
-import { StarOutlined, NumberOutlined, DeleteOutlined, SettingOutlined } from '@ant-design/icons';
+import { AiOutlineStar, AiOutlineNumber, AiOutlineDelete, AiOutlineSetting } from 'react-icons/ai';
 
 import TypeIcon from '@web/components/icon/TypeIcon';
 import Button from './Button';
@@ -22,19 +22,19 @@ export default function ActivityBar() {
         </div>
         <div className="border-0 border-t border-solid border-gray-200">
           <Button>
-            <StarOutlined />
+            <AiOutlineStar />
           </Button>
           <Button>
-            <NumberOutlined />
+            <AiOutlineNumber />
           </Button>
         </div>
       </div>
       <div className="mb-1">
         <Button>
-          <DeleteOutlined />
+          <AiOutlineDelete />
         </Button>
         <Button>
-          <SettingOutlined />
+          <AiOutlineSetting />
         </Button>
       </div>
     </nav>

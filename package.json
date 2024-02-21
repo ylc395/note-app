@@ -61,7 +61,6 @@
     "vite-tsconfig-paths": "^4.2.1"
   },
   "dependencies": {
-    "@ant-design/icons": "^5.2.4",
     "@braintree/sanitize-url": "^6.0.4",
     "@emoji-mart/data": "^1.1.2",
     "@emoji-mart/react": "^1.1.1",
@@ -84,7 +83,6 @@
     "@trpc/server": "^10.45.0",
     "@types/mdast": "^4.0.0",
     "ahooks": "^3.7.4",
-    "antd": "^5.4.2",
     "assert": "^2.1.0",
     "better-sqlite3": "^9.2.2",
     "canvas": "^2.11.2",

@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { CloseOutlined } from '@ant-design/icons';
+import { AiOutlineClose } from 'react-icons/ai';
 import { useRef, useEffect, useState } from 'react';
 import clsx from 'clsx';
 import assert from 'assert';
@@ -69,7 +69,7 @@ export default observer(function TabItem({ editor }: { editor: Editor }) {
           {...editor.tabView}
         />
         <Button ref={buttonRef} size="small" onClick={() => removeEditor(editor)}>
-          <CloseOutlined />
+          <AiOutlineClose />
         </Button>
       </Draggable>
     </Droppable>

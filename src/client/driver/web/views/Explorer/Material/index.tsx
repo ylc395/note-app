@@ -1,5 +1,6 @@
 import { container } from 'tsyringe';
 import MaterialExplorer from '@domain/app/model/material/Explorer';
+import { MOVE_TARGET_MODAL } from '@domain/app/model/material/prompts';
 
 import DirectoryView from './TreeView';
 import NewMaterialModal from './NewMaterialFormModal';
@@ -15,7 +16,7 @@ export default (function MaterialExplorerView() {
       <Header />
       <DirectoryView />
       <NewMaterialModal />
-      <TargetTreeModal tree={tree} />
+      <TargetTreeModal modalId={MOVE_TARGET_MODAL} tree={tree} />
     </>
   );
 });

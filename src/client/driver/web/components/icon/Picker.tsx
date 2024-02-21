@@ -2,7 +2,7 @@ import emojiData from '@emoji-mart/data/sets/14/native.json';
 import EmojiMart from '@emoji-mart/react';
 import assert from 'assert';
 import { useEffect, useRef, useState } from 'react';
-import { ClearOutlined } from '@ant-design/icons';
+import { AiOutlineClear } from 'react-icons/ai';
 
 import Button from '../Button';
 
@@ -41,7 +41,7 @@ export default function EmojiPicker({ onSelect, canClear }: Props) {
           onClick={() => onSelect(null)}
           className="absolute right-[10px] top-[15px] z-10 text-gray-600"
         >
-          <ClearOutlined />
+          <AiOutlineClear />
         </Button>
       )}
       <EmojiMart

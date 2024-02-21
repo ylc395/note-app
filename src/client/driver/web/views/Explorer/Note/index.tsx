@@ -1,5 +1,6 @@
 import { container } from 'tsyringe';
 import NoteExplorer from '@domain/app/model/note/Explorer';
+import { MOVE_TARGET_MODAL } from '@domain/app/model/note/prompts';
 
 import TreeView from './TreeView';
 import Header from './Header';
@@ -13,7 +14,7 @@ export default (function NoteExplorerView() {
     <>
       <Header />
       <TreeView />
-      <TargetTreeModal tree={tree} />
+      <TargetTreeModal tree={tree} modalId={MOVE_TARGET_MODAL} />
     </>
   );
 });

@@ -19,7 +19,6 @@ const notImplement = () => {
 const proxyUI: UI = {
   openNewWindow: invoke('openNewWindow'),
   getActionFromMenu: invoke('getActionFromMenu'),
-  feedback: invoke('feedback'),
   prompt: notImplement,
 };
 

@@ -1,4 +1,4 @@
-import { CloseOutlined, FileTextOutlined } from '@ant-design/icons';
+import { AiOutlineClose, AiOutlineFileText } from 'react-icons/ai';
 import { useEffect, useState, useRef } from 'react';
 import { useToggle } from 'ahooks';
 import { container } from 'tsyringe';
@@ -12,6 +12,7 @@ interface Props {
   entityType: SearchableEntityType;
 }
 
+// eslint-disable-next-line mobx/missing-observer
 export default (function SearchInput({ entityType }: Props) {
   const { searchInTree } = container.resolve(SearchService);
   const [keyword, setKeyword] = useState('');
@@ -41,11 +42,11 @@ export default (function SearchInput({ entityType }: Props) {
       />
       <div className="mr-2">
         <Button size="small" onClick={toggleContainBody} selected={containBody} className="opacity-70">
-          <FileTextOutlined />
+          <AiOutlineFileText />
         </Button>
         {keyword.length > 0 && (
           <Button size="small" onClick={clearKeyword} className="opacity-70">
-            <CloseOutlined />
+            <AiOutlineClose />
           </Button>
         )}
       </div>

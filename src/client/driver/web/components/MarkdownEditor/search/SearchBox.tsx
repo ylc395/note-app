@@ -1,9 +1,9 @@
-import { Button } from 'antd';
-import { ArrowUpOutlined, ArrowDownOutlined, CloseOutlined } from '@ant-design/icons';
+import { AiOutlineArrowUp, AiOutlineArrowDown, AiOutlineClose } from 'react-icons/ai';
 import { observer } from 'mobx-react-lite';
 import { useEffect, useRef } from 'react';
 
 import type { SearchState } from './type';
+import Button from '@web/components/Button';
 
 interface Props {
   onChange: (keyword: string) => void;
@@ -28,11 +28,17 @@ export default observer(function SearchBox({ onChange, onNext, onPrevious, onClo
       <span>
         {searchState.ranges.length > 0 ? `${searchState.activeIndex + 1} / ${searchState.ranges.length}` : '无结果'}
       </span>
-      <Button.Group>
-        <Button onClick={onPrevious} type="text" icon={<ArrowUpOutlined />} />
-        <Button onClick={onNext} type="text" icon={<ArrowDownOutlined />} />
-        <Button onClick={onClose} type="text" icon={<CloseOutlined />} />
-      </Button.Group>
+      <div>
+        <Button onClick={onPrevious}>
+          <AiOutlineArrowUp />
+        </Button>
+        <Button onClick={onNext}>
+          <AiOutlineArrowDown />
+        </Button>
+        <Button onClick={onClose}>
+          <AiOutlineClose />
+        </Button>
+      </div>
     </>
   );
 });

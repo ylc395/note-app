@@ -15,7 +15,6 @@ export type PromptToken<T> = { _TYPE_: T } | symbol;
 export interface UI {
   getActionFromMenu: (items: MenuItem[], pos?: { x: number; y: number }) => Promise<string | null>;
   openNewWindow: (url: string) => Promise<void> | void;
-  feedback: (options: { type: 'success' | 'fail'; content: string; onClick?: () => void }) => Promise<void>;
   prompt: <T>(promptToken: PromptToken<T>) => Promise<T | undefined>;
 }
 
