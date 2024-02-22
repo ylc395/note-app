@@ -2,7 +2,8 @@ import { MdOutlineAddReaction } from 'react-icons/md';
 import { useRef } from 'react';
 import Picker from './Picker';
 import Icon from './Icon';
-import ButtonPopover, { PopoverRef } from '../ButtonPopover';
+import Popover, { PopoverRef } from '../Popover';
+import Button from '../Button';
 
 interface Props {
   icon: string | null;
@@ -17,15 +18,16 @@ export default function PickerButton({ icon, onSelect }: Props) {
   };
 
   return (
-    <ButtonPopover
+    <Popover
       ref={popoverRef}
       placement="bottom-start"
-      className="mr-1 h-8"
-      buttonContent={
-        <Icon size="1.2em" code={icon} fallback={<MdOutlineAddReaction size="1.2em" className="text-gray-400" />} />
-      }
+      reference={({ isOpen }) => (
+        <Button selected={isOpen} className="mr-1 h-8">
+          <Icon size="1.2em" code={icon} fallback={<MdOutlineAddReaction size="1.2em" className="text-gray-400" />} />
+        </Button>
+      )}
     >
       <Picker canClear={Boolean(icon)} onSelect={_onSelect} />
-    </ButtonPopover>
+    </Popover>
   );
 }

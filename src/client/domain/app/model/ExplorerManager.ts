@@ -1,21 +1,26 @@
 import { action, computed, makeObservable, observable } from 'mobx';
 import { container, singleton } from 'tsyringe';
 
-import { token as localStorageToken } from '@domain/app/infra/localStorage';
+import { token as localStorageToken, KEY } from '@domain/app/infra/localStorage';
 import NoteExplorer from '@domain/app/model/note/Explorer';
 import MaterialExplorer from '@domain/app/model/material/Explorer';
 import MemoList from '@domain/app/model/memo/List';
 import { EntityTypes } from '@domain/app/model/entity';
 
-const CURRENT_EXPLORER_KEY = 'EXPLORER_CURRENT';
-
 export type ExplorerTypes = EntityTypes.Note | EntityTypes.Material | EntityTypes.Memo;
+
+export enum ExtraPanelType {
+  Star = 'star',
+  Topic = 'topic',
+}
 
 @singleton()
 export default class ExplorerManager {
+  private readonly localStorage = container.resolve(localStorageToken);
+
   constructor() {
     makeObservable(this);
-    this.switchTo(this.localStorage.get<ExplorerTypes>(CURRENT_EXPLORER_KEY) || EntityTypes.Note);
+    this.currentExplorer.load();
   }
 
   private readonly explorers = {
@@ -24,10 +29,17 @@ export default class ExplorerManager {
     [EntityTypes.Memo]: container.resolve(MemoList),
   } as const;
 
-  private readonly localStorage = container.resolve(localStorageToken);
-
   @observable.ref
-  public currentExplorerType!: ExplorerTypes;
+  public currentExplorerType = this.localStorage.get<ExplorerTypes>(KEY.EXPLORER.CURRENT_EXPLORER) || EntityTypes.Note;
+
+  @observable
+  public extraPanels: ExtraPanelType[] = this.localStorage.get<ExtraPanelType[]>(KEY.EXPLORER.EXTRA_PANELS) || [];
+
+  @action.bound
+  public pinExtraPanel(type: ExtraPanelType) {
+    this.extraPanels.push(type);
+    this.localStorage.set(KEY.EXPLORER.EXTRA_PANELS, this.extraPanels);
+  }
 
   @computed
   public get currentExplorer() {
@@ -44,7 +56,7 @@ export default class ExplorerManager {
       this.currentExplorer.reset();
     }
 
-    this.localStorage.set(CURRENT_EXPLORER_KEY, type);
+    this.localStorage.set(KEY.EXPLORER.CURRENT_EXPLORER, type);
     this.currentExplorerType = type;
     this.currentExplorer.load();
   }

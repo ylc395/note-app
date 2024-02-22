@@ -40,6 +40,13 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
     return this.allNodes.filter((node) => node.isSelected);
   }
 
+  public getSelectedNode() {
+    const node = this.selectedNodes[0];
+    assert(node);
+
+    return node;
+  }
+
   protected abstract queryFragments(id: TreeNode<T>['id']): Promise<T[]>;
 
   public async reveal(id: TreeNode<T>['id'] | null, expand?: true) {

@@ -8,6 +8,7 @@ import Explorer, { RenameBehavior } from '@domain/app/model/abstract/Explorer';
 import { eventBus, Events as NoteEvents } from './eventBus';
 import { EntityTypes } from '../entity';
 import ContextmenuBehavior from '../abstract/Explorer/ContextmenuBehavior';
+import assert from 'assert';
 
 @singleton()
 export default class NoteExplorer extends Explorer<NoteVO> {
@@ -34,7 +35,10 @@ export default class NoteExplorer extends Explorer<NoteVO> {
 
   private readonly getContextmenuItems = () => {
     const isMultiple = this.tree.selectedNodes.length > 1;
-    const canOpenInNewTab = !this.workbench.currentTile?.findByEntity(this.contextmenu.selectedNode.entityLocator);
+    const node = this.tree.getSelectedNode();
+    const canOpenInNewTab = !this.workbench.currentTile?.findByEntity(node.entityLocator);
+
+    assert(node.entity);
 
     return compact([
       isMultiple && { label: `共${this.tree.selectedNodes.length}项`, disabled: true },
@@ -53,6 +57,7 @@ export default class NoteExplorer extends Explorer<NoteVO> {
       { label: '移动至...', key: 'move' },
       { label: '重命名', key: 'rename' },
       !isMultiple && { label: '制作副本', key: 'duplicate' },
+      !isMultiple && node.entity && { label: node.entity.isStar ? '取消收藏' : '收藏', key: 'star' },
       { type: 'separator' } as const,
       { label: '删除', key: 'delete' },
     ]);

@@ -5,17 +5,18 @@ export interface Props {
   children: ReactNode;
   className?: string;
   onClick?: MouseEventHandler;
+  stopPropagation?: boolean;
   disabled?: boolean;
   selected?: boolean;
   size?: 'small' | 'medium';
 }
 
 export default forwardRef<HTMLButtonElement, Props>(function Button(
-  { children, className, onClick, disabled, selected, size = 'medium' },
+  { children, stopPropagation, className, onClick, disabled, selected, size = 'medium' },
   ref,
 ) {
   const handleClick = (e: MouseEvent) => {
-    e.stopPropagation();
+    stopPropagation && e.stopPropagation();
     onClick?.(e);
   };
 

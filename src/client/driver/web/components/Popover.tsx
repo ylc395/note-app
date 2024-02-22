@@ -1,7 +1,6 @@
-import { Placement, useClick, useDismiss, useFloating, useInteractions } from '@floating-ui/react';
+import { type Placement, useClick, useDismiss, useFloating, useInteractions } from '@floating-ui/react';
 import { type ReactNode, useState, forwardRef, useImperativeHandle } from 'react';
 
-import Button from './Button';
 import { createPortal } from 'react-dom';
 import { APP_CLASS_NAME } from '@web/infra/ui/constants';
 
@@ -10,25 +9,22 @@ export interface PopoverRef {
 }
 
 interface Props {
-  className?: string;
-  buttonContent: ReactNode;
+  placement?: Placement;
+  reference: ReactNode | ((params: { isOpen: boolean }) => ReactNode);
   children: ReactNode;
-  placement: Placement;
 }
 
-export default forwardRef<PopoverRef, Props>(function ButtonPopover(
-  { className, buttonContent, placement, children },
-  ref,
-) {
+export default forwardRef<PopoverRef, Props>(function Popover({ reference, children, placement }, ref) {
   const [isOpen, setIsOpen] = useState(false);
   const { refs, context, floatingStyles } = useFloating({
     open: isOpen,
     placement,
     onOpenChange: setIsOpen,
   });
-  const click = useClick(context, { keyboardHandlers: false });
-  const dismiss = useDismiss(context);
-  const { getReferenceProps, getFloatingProps } = useInteractions([click, dismiss]);
+  const { getReferenceProps, getFloatingProps } = useInteractions([
+    useClick(context, { keyboardHandlers: false }),
+    useDismiss(context),
+  ]);
   const mountPoint = refs.domReference.current?.closest('dialog') || document.body;
 
   useImperativeHandle(ref, () => ({
@@ -37,9 +33,9 @@ export default forwardRef<PopoverRef, Props>(function ButtonPopover(
 
   return (
     <>
-      <Button selected={isOpen} className={className} ref={refs.setReference} {...getReferenceProps()}>
-        {buttonContent}
-      </Button>
+      <div ref={refs.setReference} {...getReferenceProps()}>
+        {typeof reference === 'function' ? reference({ isOpen }) : reference}
+      </div>
       {isOpen &&
         createPortal(
           <div ref={refs.setFloating} {...getFloatingProps()} className={APP_CLASS_NAME} style={floatingStyles}>

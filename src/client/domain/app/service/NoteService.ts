@@ -21,6 +21,7 @@ export default class NoteService {
   private readonly remote = container.resolve(rpcToken);
   private readonly explorer = container.resolve(NoteExplorer);
   private readonly workbench = container.resolve(Workbench);
+
   public readonly move = new MoveBehavior({
     tree: this.tree,
     promptToken: MOVE_TARGET_MODAL,

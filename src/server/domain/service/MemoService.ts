@@ -88,7 +88,7 @@ export default class MemoService extends BaseService {
   private async toVO(memos: Memo[] | Memo): Promise<MemoVO[] | MemoVO> {
     const _memos = Array.isArray(memos) ? memos : [memos];
     const ids = _memos.map(({ id }) => id);
-    const stars = buildIndex(await this.repo.stars.findAll({ entityId: ids }));
+    const stars = buildIndex(await this.repo.stars.findAll({ entityId: ids }), 'entityId');
     const childrenIds = await this.repo.entities.findChildrenIds(ids, { isAvailableOnly: true });
 
     const result = _memos.map((memo) => ({

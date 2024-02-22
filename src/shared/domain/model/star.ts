@@ -8,6 +8,7 @@ export const starDTOSchema = object({
 export type StarDTO = Infer<typeof starDTOSchema>;
 
 export interface StarVO extends EntityLocator {
+  title: string;
   mainEntityId?: EntityId;
   icon: string | null;
 }

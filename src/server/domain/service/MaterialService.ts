@@ -47,7 +47,7 @@ export default class MaterialService extends BaseService {
     const ids = _materials.map(({ id }) => id);
     const entityIds = _materials.filter(isEntityMaterial).map(({ id }) => id);
     const children = await this.repo.entities.findChildrenIds(ids, { isAvailableOnly: true });
-    const stars = buildIndex(await this.repo.stars.findAll({ entityId: entityIds }));
+    const stars = buildIndex(await this.repo.stars.findAll({ entityId: entityIds }), 'entityId');
     const paths = Array.isArray(materials) ? {} : await this.getPaths(ids);
 
     const materialVOs = _materials.map((material) => ({

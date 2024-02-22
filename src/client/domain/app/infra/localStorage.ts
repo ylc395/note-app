@@ -6,3 +6,10 @@ export interface LocalStorage {
 }
 
 export const token: InjectionToken<LocalStorage> = Symbol();
+
+export const KEY = {
+  EXPLORER: {
+    CURRENT_EXPLORER: 'explore.current',
+    EXTRA_PANELS: 'explorer.extraPanels',
+  },
+} as const;

@@ -13,5 +13,5 @@ export interface ActionEvent {
 
 export type UpdateEvent<T = unknown> = {
   id: EntityId;
-  trigger?: unknown;
+  trigger: unknown;
 } & T;

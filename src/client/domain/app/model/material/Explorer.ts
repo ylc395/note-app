@@ -1,6 +1,5 @@
 import { singleton, container } from 'tsyringe';
 import { token as rpcToken } from '@domain/common/infra/rpc';
-import assert from 'assert';
 import { compact } from 'lodash-es';
 
 import { isEntityMaterial, type MaterialVO } from '@shared/domain/model/material';
@@ -35,11 +34,10 @@ export default class MaterialExplorer extends Explorer<MaterialVO> {
   };
 
   private readonly getContextmenuItems = () => {
-    const node = this.contextmenu.selectedNode;
+    const node = this.tree.getSelectedNode();
     const isMultiple = this.tree.selectedNodes.length > 1;
-    assert(node.entity);
 
-    const isDirectory = !isEntityMaterial(node.entity);
+    const isDirectory = !node.entity || !isEntityMaterial(node.entity);
     const canOpenInNewTab = !isDirectory && !this.workbench.currentTile?.findByEntity(node.entityLocator);
     const canOpenTo = !isDirectory && this.workbench.currentTile;
 
@@ -58,7 +56,10 @@ export default class MaterialExplorer extends Explorer<MaterialVO> {
       },
       { type: 'separator' } as const,
       !isMultiple && { label: '重命名', key: 'rename' },
+      !isMultiple && node.entity && { label: node.entity.isStar ? '取消收藏' : '收藏', key: 'star' },
       { label: '移动至...', key: 'move' },
+      { type: 'separator' } as const,
+      { label: '删除', key: 'delete' },
     ]);
   };
 }
