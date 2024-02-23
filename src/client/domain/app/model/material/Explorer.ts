@@ -15,7 +15,7 @@ export default class MaterialExplorer extends Explorer<MaterialVO> {
   public readonly entityType = EntityTypes.Material;
   private readonly remote = container.resolve(rpcToken);
   public readonly rename: RenameBehavior;
-  public readonly contextmenu: ContextmenuBehavior<MaterialVO>;
+  public readonly contextmenu: ContextmenuBehavior;
 
   constructor() {
     super();

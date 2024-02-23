@@ -1,11 +1,11 @@
 import assert from 'node:assert';
 import { container, singleton } from 'tsyringe';
+import { first } from 'lodash-es';
 
 import type { StarDTO } from '@domain/model/star.js';
 import type { EntityId } from '@domain/model/entity.js';
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
-import { first } from 'lodash-es';
 
 @singleton()
 export default class StarService extends BaseService {

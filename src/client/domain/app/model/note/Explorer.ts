@@ -23,7 +23,7 @@ export default class NoteExplorer extends Explorer<NoteVO> {
     eventBus.on(NoteEvents.Updated, this.handleEntityUpdate);
   }
   public readonly entityType = EntityTypes.Note;
-  public readonly contextmenu: ContextmenuBehavior<NoteVO>;
+  public readonly contextmenu: ContextmenuBehavior;
   public readonly tree = new NoteTree();
   private readonly remote = container.resolve(rpcToken);
   public readonly rename: RenameBehavior;

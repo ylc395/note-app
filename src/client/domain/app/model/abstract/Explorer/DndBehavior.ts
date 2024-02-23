@@ -3,10 +3,10 @@ import TreeNode from '@domain/common/model/abstract/TreeNode';
 import type Tree from '@domain/common/model/abstract/Tree';
 
 import type Explorer from './index';
-import type { EntityLocator, HierarchyEntity } from '@shared/domain/model/entity';
+import type { EntityLocator } from '@shared/domain/model/entity';
 
-export default class DndBehavior<T extends HierarchyEntity> {
-  constructor(private readonly options: { explorer: Explorer<T> }) {
+export default class DndBehavior {
+  constructor(private readonly options: { explorer: Explorer }) {
     makeObservable(this);
   }
 

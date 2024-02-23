@@ -4,15 +4,15 @@ import { MenuItem, token as uiToken } from '@shared/domain/infra/ui';
 import { TileSplitDirections, Workbench } from '../../workbench';
 import StarManager from '../../StarManager';
 import type Explorer from './index';
-import type { HierarchyEntity, ActionEvent } from '../../entity';
+import type { ActionEvent } from '../../entity';
 
-export default class ContextmenuBehavior<T extends HierarchyEntity> {
+export default class ContextmenuBehavior {
   private readonly ui = container.resolve(uiToken);
   private readonly workbench = container.resolve(Workbench);
   private readonly star = container.resolve(StarManager);
   constructor(
     private readonly options: {
-      explorer: Explorer<T>;
+      explorer: Explorer;
       getItems: () => MenuItem[];
       handleAction: (e: ActionEvent) => void;
     },

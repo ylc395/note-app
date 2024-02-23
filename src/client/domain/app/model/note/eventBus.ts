@@ -3,17 +3,13 @@ import type { NoteVO } from '@shared/domain/model/note';
 import type { ActionEvent, UpdateEvent as BaseUpdateEvent } from '../entity';
 
 export enum Events {
-  Updated = 'note.updated',
-  Action = 'note.action',
+  Updated = 'updated',
+  Action = 'action',
 }
 
-export type UpdateEvent = BaseUpdateEvent<{
-  title?: NoteVO['title'];
-  icon?: NoteVO['icon'];
-  parentId?: NoteVO['parentId'];
-  body?: string;
-  updatedAt?: number;
-}>;
+export type UpdateEvent = BaseUpdateEvent<
+  Partial<Pick<NoteVO, 'title' | 'icon' | 'parentId' | 'body' | 'updatedAt' | 'isStar'>>
+>;
 
 export type { ActionEvent } from '../entity';
 
