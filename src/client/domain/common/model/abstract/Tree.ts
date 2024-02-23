@@ -14,6 +14,10 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
 
   public readonly root: TreeNode<T> = new TreeNode(this);
   public abstract readonly entityType: EntityTypes;
+  protected abstract queryFragments?(id: TreeNode<T>['id']): Promise<T[]>;
+  public abstract entityToNode?(
+    entity: T | null,
+  ): Partial<Pick<TreeNode<T>, 'isLeaf' | 'title' | 'isDisabled' | 'icon'>>;
   protected readonly remote = container.resolve(remoteToken);
   public abstract fetchChildren(parentId: EntityParentId): Promise<T[]>;
 
@@ -47,9 +51,9 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
     return node;
   }
 
-  protected abstract queryFragments(id: TreeNode<T>['id']): Promise<T[]>;
-
   public async reveal(id: TreeNode<T>['id'] | null, expand?: true) {
+    assert(this.queryFragments);
+
     if (id && !this.getNode(id, true)) {
       const nodes = await this.queryFragments(id);
       this.updateTree(nodes);
@@ -109,10 +113,6 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
     }
   }
 
-  public abstract entityToNode(
-    entity: T | null,
-  ): Partial<Pick<TreeNode<T>, 'isLeaf' | 'title' | 'isDisabled' | 'icon'>>;
-
   @action
   private addNode(entity: T) {
     assert(entity.id !== this.root.id, 'invalid id');
@@ -127,13 +127,13 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
     this.nodes[entity.id] = node;
     parent.isLeaf = false;
     parent.children.push(node);
-    Object.assign(node, this.entityToNode(entity));
+    Object.assign(node, this.entityToNode?.(entity));
 
     return node;
   }
 
   @action
-  public updateTree(entity: Partial<T> | Partial<T>[]) {
+  public updateTree(entity: T | T[]) {
     const entities = Array.isArray(entity) ? entity : [entity];
 
     for (const entity of entities) {
@@ -161,7 +161,7 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
 
       assert(node.entity && node.parent);
       node.entity = entity;
-      Object.assign(node, this.entityToNode(node.entity));
+      Object.assign(node, this.entityToNode?.(node.entity));
 
       if (node.parent.id !== (entity.parentId || this.root.id)) {
         // reset parent-child relationship

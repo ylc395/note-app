@@ -11,23 +11,26 @@ import MoveBehavior from '../behaviors/MoveBehavior';
 export { default as RenameBehavior } from './RenameBehavior';
 
 export default abstract class Explorer<T extends HierarchyEntity = HierarchyEntity> {
-  public abstract readonly rename: RenameBehavior;
   protected readonly workbench = container.resolve(Workbench);
   public abstract readonly entityType: EntityTypes;
+  public abstract readonly rename: RenameBehavior;
   public abstract readonly contextmenu: ContextmenuBehavior;
   public abstract readonly tree: Tree<T>;
   public readonly dnd = new DndBehavior({ explorer: this });
 
+  // todo: rewrite load
   public load() {
     this.tree.root.loadChildren();
   }
 
-  protected readonly handleEntityUpdate = (e: UpdateEvent) => {
-    if (e.trigger instanceof MoveBehavior) {
+  public readonly handleEntityUpdate = (e: UpdateEvent) => {
+    const entity = this.tree.getNode(e.id, true)?.entity;
+
+    if (e.trigger instanceof MoveBehavior || !entity) {
       // MoveBehavior will updateTree by itself
       return;
     }
 
-    this.tree.updateTree(e as unknown as Partial<T>);
+    this.tree.updateTree({ ...entity, ...e });
   };
 }

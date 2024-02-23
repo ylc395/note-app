@@ -5,10 +5,23 @@ import { debounce, groupBy, remove } from 'lodash-es';
 import { token as remoteToken } from '@domain/common/infra/rpc';
 import type { EntityId } from '@domain/app/model/entity';
 import type { StarVO } from '@shared/domain/model/star';
+import EventBus from '../infra/EventBus';
+
+export enum Events {
+  StarToggle = 'toggle',
+}
+
+export interface ToggleEvent {
+  id: EntityId;
+  isStar: boolean;
+}
 
 @singleton()
-export default class StarManager {
+export default class StarManager extends EventBus<{
+  [Events.StarToggle]: ToggleEvent;
+}> {
   constructor() {
+    super('star');
     makeObservable(this);
   }
 
@@ -26,6 +39,7 @@ export default class StarManager {
 
   public readonly star = async (entityId: EntityId) => {
     const newStar = await this.remote.star.create.mutate({ entityId });
+    this.emit(Events.StarToggle, { id: entityId, isStar: true });
 
     if (this.stars) {
       this.stars.unshift(newStar);
@@ -42,6 +56,7 @@ export default class StarManager {
 
   public readonly unstar = async (entityId: EntityId) => {
     await this.remote.star.remove.mutate({ entityId });
+    this.emit(Events.StarToggle, { id: entityId, isStar: false });
 
     runInAction(() => {
       if (this.stars) {

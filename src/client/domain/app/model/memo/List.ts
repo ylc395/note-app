@@ -6,7 +6,9 @@ import { first, last, sortedIndexBy } from 'lodash-es';
 import { token as rpcToken } from '@domain/common/infra/rpc';
 import { token as storageToken } from '@domain/app/infra/localStorage';
 import type { Duration, MemoVO } from '@shared/domain/model/memo';
+import MemoTree from '@domain/common/model/memo/Tree';
 import Editor from './Editor';
+import type { UpdateEvent } from './eventBus';
 
 interface UIState {
   scrollTop?: number;
@@ -18,6 +20,7 @@ interface UIState {
 export default class MemoList {
   private readonly remote = container.resolve(rpcToken);
   private readonly localStorage = container.resolve(storageToken);
+  private tree = new MemoTree();
 
   constructor() {
     makeObservable(this);
@@ -58,8 +61,6 @@ export default class MemoList {
     return [...this.memoGroups.pinned, ...this.memoGroups.common];
   }
 
-  private memosMap: Record<MemoVO['id'], MemoVO> = {};
-
   public async load(more?: boolean) {
     if (this.isEnd || (!more && this.memoGroups.pinned.length + this.memoGroups.common.length > 0)) {
       return;
@@ -92,7 +93,7 @@ export default class MemoList {
   }
 
   public async toggleMemoPin(id: MemoVO['id']) {
-    const memo = this.memosMap[id];
+    const memo = this.tree.getNode(id).entity;
     assert(memo);
 
     const isPinned = !memo.isPinned;
@@ -114,7 +115,8 @@ export default class MemoList {
 
   @action.bound
   public add(memo: MemoVO) {
-    this.memosMap[memo.id] = observable(memo);
+    this.tree.updateTree(memo);
+
     const targetGroup = memo.isPinned ? this.memoGroups.pinned : this.memoGroups.common;
     const firstId = first(targetGroup);
 
@@ -124,6 +126,16 @@ export default class MemoList {
       targetGroup.push(memo.id);
     }
   }
+
+  public readonly handleEntityUpdate = (e: UpdateEvent) => {
+    const entity = this.tree.getNode(e.id, true)?.entity;
+
+    if (!entity) {
+      return;
+    }
+
+    this.tree.updateTree({ ...entity, ...e });
+  };
 
   @action.bound
   public edit(id: MemoVO['id']) {
@@ -140,7 +152,7 @@ export default class MemoList {
   @action.bound
   public stopEditing(memo: MemoVO | MemoVO['id']) {
     if (typeof memo !== 'string') {
-      this.memosMap[memo.id] = memo;
+      this.tree.updateTree(memo);
       delete this.editors[memo.id];
     } else {
       delete this.editors[memo];
@@ -148,7 +160,7 @@ export default class MemoList {
   }
 
   public get(id: MemoVO['id']) {
-    const memo = this.memosMap[id];
+    const memo = this.tree.getNode(id).entity;
     assert(memo);
 
     return memo;
@@ -156,7 +168,7 @@ export default class MemoList {
 
   @action
   public reset() {
-    this.memosMap = {};
+    this.tree = new MemoTree();
     this.memoGroups.common = [];
     this.memoGroups.pinned = [];
     this.isEnd = false;

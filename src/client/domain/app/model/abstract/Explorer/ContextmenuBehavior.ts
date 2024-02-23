@@ -9,7 +9,7 @@ import type { ActionEvent } from '../../entity';
 export default class ContextmenuBehavior {
   private readonly ui = container.resolve(uiToken);
   private readonly workbench = container.resolve(Workbench);
-  private readonly star = container.resolve(StarManager);
+  private readonly starManager = container.resolve(StarManager);
   constructor(
     private readonly options: {
       explorer: Explorer;
@@ -33,7 +33,7 @@ export default class ContextmenuBehavior {
       case 'rename':
         return this.options.explorer.rename.start(node.id);
       case 'star':
-        return this.star.star(node.id);
+        return this.starManager.star(node.id);
       case 'openInNewTab':
         return this.workbench.openEntity(node.entityLocator, { forceNewTab: true });
       case 'openToTop':

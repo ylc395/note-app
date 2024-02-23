@@ -57,11 +57,11 @@ export default class MoveBehavior<T extends HierarchyEntity> {
     }
 
     const targetTree = new (tree.constructor as { new (): Tree<T> })();
-    Object.assign(targetTree.root, targetTree.entityToNode(targetTree.root.entity));
+    Object.assign(targetTree.root, targetTree.entityToNode?.(targetTree.root.entity));
 
     targetTree.entityToNode = wrap(targetTree.entityToNode, function (this: Tree<T>, func, entity) {
       return {
-        ...func(entity),
+        ...func?.(entity),
         isDisabled: isDisable.call(this, entity),
       };
     });
