@@ -1,20 +1,22 @@
 import { container } from 'tsyringe';
-import NoteExplorer from '@domain/app/model/note/Explorer';
 import { MOVE_TARGET_MODAL } from '@domain/app/model/note/prompts';
 
 import TreeView from './TreeView';
 import Header from './Header';
 import TargetTreeModal from '../common/TargetTreeModal';
+import NoteService from '@domain/app/service/NoteService';
 
 // eslint-disable-next-line mobx/missing-observer
 export default (function NoteExplorerView() {
-  const { tree } = container.resolve(NoteExplorer);
+  const {
+    move: { getTargetTree },
+  } = container.resolve(NoteService);
 
   return (
     <>
       <Header />
       <TreeView />
-      <TargetTreeModal tree={tree} modalId={MOVE_TARGET_MODAL} />
+      <TargetTreeModal targetTreeFactory={getTargetTree} modalId={MOVE_TARGET_MODAL} />
     </>
   );
 });

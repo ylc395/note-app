@@ -7,7 +7,7 @@ import { token as UIToken } from '@shared/domain/infra/ui';
 import { isEntityMaterial, type MaterialVO, type NewMaterialDTO } from '@shared/domain/model/material';
 import type { FileDTO, FileVO } from '@shared/domain/model/file';
 import { Workbench } from '@domain/app/model/workbench';
-import { EntityTypes } from '../model/entity';
+import { EntityParentId, EntityTypes } from '../model/entity';
 import TreeNode from '@domain/common/model/abstract/TreeNode';
 import MaterialEditor from '../model/material/editor/MaterialEditor';
 import MoveBehavior from '../model/abstract/behaviors/MoveBehavior';
@@ -28,14 +28,16 @@ export default class MaterialService {
     return this.explorer.tree;
   }
 
+  private readonly moveMaterials = async (parentId: EntityParentId, ids: MaterialVO['id'][]) => {
+    await this.remote.material.batchUpdate.mutate([ids, { parentId }]);
+    ids.forEach((id) => eventBus.emit(Events.Updated, { trigger: this.move, parentId, id }));
+  };
+
   public readonly move = new MoveBehavior({
     tree: this.tree,
     itemsToIds: MaterialService.getMaterialIds,
     promptToken: MOVE_TARGET_MODAL,
-    onMove: async (parentId, ids) => {
-      await this.remote.material.batchUpdate.mutate([ids, { parentId }]);
-      ids.forEach((id) => eventBus.emit(Events.Updated, { trigger: this.move, parentId, id }));
-    },
+    onMove: this.moveMaterials,
   });
 
   public readonly queryMaterialByHash = async (hash: string) => {

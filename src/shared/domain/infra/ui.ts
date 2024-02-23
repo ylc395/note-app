@@ -10,7 +10,7 @@ export type MenuItem =
     }
   | { type: 'separator' };
 
-export type PromptToken<T> = { _TYPE_: T } | symbol;
+export type PromptToken<T> = { _RESULT_TYPE_: T } | symbol;
 
 export interface UI {
   getActionFromMenu: (items: MenuItem[], pos?: { x: number; y: number }) => Promise<string | null>;

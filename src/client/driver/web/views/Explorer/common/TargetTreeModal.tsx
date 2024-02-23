@@ -3,7 +3,6 @@ import { observer } from 'mobx-react-lite';
 import { useEffect } from 'react';
 
 import type TreeModel from '@domain/common/model/abstract/Tree';
-import getTargetTree from '@domain/app/model/abstract/targetTree';
 import type { PromptToken } from '@shared/domain/infra/ui';
 import type { EntityParentId } from '@shared/domain/model/entity';
 
@@ -12,13 +11,13 @@ import Tree from '@web/components/Tree';
 import NodeTitle from './TreeView/NodeTitle';
 
 export default observer(function TargetTreeModal({
-  tree,
   modalId,
+  targetTreeFactory,
 }: {
-  tree: TreeModel;
   modalId: PromptToken<EntityParentId>;
+  targetTreeFactory: () => TreeModel;
 }) {
-  const { value: targetTree, modalProps } = useModalValue(() => getTargetTree(tree));
+  const { value: targetTree, modalProps } = useModalValue(targetTreeFactory);
   const getTargetId = () => targetTree?.getSelectedNodeIds(true)[0];
 
   useEffect(() => {

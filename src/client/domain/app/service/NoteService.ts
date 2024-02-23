@@ -7,7 +7,7 @@ import type { NoteVO } from '@shared/domain/model/note';
 import { Workbench } from '@domain/app/model/workbench';
 import NoteEditor from '@domain/app/model/note/Editor';
 import NoteExplorer from '@domain/app/model/note/Explorer';
-import { EntityTypes } from '@shared/domain/model/entity';
+import { EntityParentId, EntityTypes } from '@shared/domain/model/entity';
 import { type ActionEvent, eventBus, Events } from '@domain/app/model/note/eventBus';
 import { MOVE_TARGET_MODAL } from '@domain/app/model/note/prompts';
 import TreeNode from '@domain/common/model/abstract/TreeNode';
@@ -22,14 +22,16 @@ export default class NoteService {
   private readonly explorer = container.resolve(NoteExplorer);
   private readonly workbench = container.resolve(Workbench);
 
+  private readonly moveNotes = async (parentId: EntityParentId, ids: NoteVO['id'][]) => {
+    await this.remote.note.batchUpdate.mutate([ids, { parentId }]);
+    ids.forEach((id) => eventBus.emit(Events.Updated, { trigger: this.move, parentId, id }));
+  };
+
   public readonly move = new MoveBehavior({
     tree: this.tree,
     promptToken: MOVE_TARGET_MODAL,
     itemsToIds: NoteService.getNoteIds,
-    onMove: async (parentId, ids) => {
-      await this.remote.note.batchUpdate.mutate([ids, { parentId }]);
-      ids.forEach((id) => eventBus.emit(Events.Updated, { trigger: this.move, parentId, id }));
-    },
+    onMove: this.moveNotes,
   });
 
   private get tree() {
