@@ -5,7 +5,7 @@ import { first, last, sortedIndexBy } from 'lodash-es';
 
 import { token as rpcToken } from '@domain/common/infra/rpc';
 import { token as storageToken } from '@domain/app/infra/localStorage';
-import type { Duration, MemoVO } from '@shared/domain/model/memo';
+import { memoSorter, type Duration, type MemoVO } from '@shared/domain/model/memo';
 import MemoTree from '@domain/common/model/memo/Tree';
 import Editor from './Editor';
 import type { UpdateEvent } from './eventBus';
@@ -13,7 +13,6 @@ import type { UpdateEvent } from './eventBus';
 interface UIState {
   scrollTop?: number;
   panel?: 'editor' | 'calendar' | '';
-  after?: MemoVO['createdAt'];
 }
 
 @singleton()
@@ -21,6 +20,7 @@ export default class MemoList {
   private readonly remote = container.resolve(rpcToken);
   private readonly localStorage = container.resolve(storageToken);
   private tree = new MemoTree();
+  public readonly newRootMemoEditor = new Editor({ onSubmit: this.add });
 
   constructor() {
     makeObservable(this);
@@ -32,6 +32,9 @@ export default class MemoList {
 
   @observable.shallow
   private readonly editors: Record<MemoVO['id'], Editor> = {};
+
+  @observable.shallow
+  private readonly childMemoEditors: Record<MemoVO['id'], Editor> = {};
 
   @observable
   public uiState = {
@@ -72,14 +75,9 @@ export default class MemoList {
     const query =
       more && lastMemoId
         ? { endTime: this.get(lastMemoId).createdAt, limit, ...this.duration }
-        : { startTime: this.uiState.after, ...this.duration };
+        : { limit, ...this.duration };
 
     const memos = await this.remote.memo.query.query(query);
-    const lastMemo = last(memos);
-
-    if (lastMemo) {
-      this.updateUIState({ after: lastMemo.createdAt });
-    }
 
     runInAction(() => {
       for (const memo of memos) {
@@ -92,7 +90,7 @@ export default class MemoList {
     });
   }
 
-  public async toggleMemoPin(id: MemoVO['id']) {
+  public async togglePin(id: MemoVO['id']) {
     const memo = this.tree.getNode(id).entity;
     assert(memo);
 
@@ -114,7 +112,7 @@ export default class MemoList {
   }
 
   @action.bound
-  public add(memo: MemoVO) {
+  private add(memo: MemoVO) {
     this.tree.updateTree(memo);
 
     const targetGroup = memo.isPinned ? this.memoGroups.pinned : this.memoGroups.common;
@@ -138,24 +136,30 @@ export default class MemoList {
   };
 
   @action.bound
-  public edit(id: MemoVO['id']) {
-    this.editors[id] = new Editor({
-      memo: this.get(id),
-      onSubmit: this.stopEditing,
+  public edit(id: MemoVO['id'], newChild?: boolean) {
+    const editors = newChild ? this.childMemoEditors : this.editors;
+
+    editors[id] = new Editor({
+      memo: newChild ? undefined : this.get(id),
+      parentId: newChild ? id : undefined,
+      onSubmit: (result) => this.stopEditing(result, newChild),
+      onCancel: () => this.stopEditing(id, newChild),
     });
   }
 
-  public getEditor(id: MemoVO['id']) {
-    return this.editors[id];
+  public getEditor(id: MemoVO['id'], newChild?: boolean) {
+    return newChild ? this.childMemoEditors[id] : this.editors[id];
   }
 
   @action.bound
-  public stopEditing(memo: MemoVO | MemoVO['id']) {
-    if (typeof memo !== 'string') {
-      this.tree.updateTree(memo);
-      delete this.editors[memo.id];
+  public stopEditing(memo: MemoVO | MemoVO['id'], newChild?: boolean) {
+    const editors = newChild ? this.childMemoEditors : this.editors;
+
+    if (typeof memo === 'string') {
+      delete editors[memo];
     } else {
-      delete this.editors[memo];
+      this.tree.updateTree(memo);
+      delete editors[memo.id];
     }
   }
 
@@ -166,18 +170,23 @@ export default class MemoList {
     return memo;
   }
 
-  @action
-  public reset() {
-    this.tree = new MemoTree();
-    this.memoGroups.common = [];
-    this.memoGroups.pinned = [];
-    this.isEnd = false;
+  public getChildren(id: MemoVO['id']) {
+    return this.tree
+      .getNode(id)
+      .children.map(({ entity }) => {
+        assert(entity);
+        return entity;
+      })
+      .sort(memoSorter);
+  }
+
+  public loadChildren(id: MemoVO['id']) {
+    this.tree.getNode(id).loadChildren();
   }
 
   @action.bound
   public setDuration(duration: Duration) {
     this.duration = duration;
-    this.reset();
     this.load();
   }
 }

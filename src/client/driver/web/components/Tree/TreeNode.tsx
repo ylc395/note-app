@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import { type MouseEventHandler, useEffect, useState } from 'react';
-import { AiOutlineCaretLeft, AiOutlineCaretRight } from 'react-icons/ai';
+import { AiOutlineCaretDown, AiOutlineCaretRight } from 'react-icons/ai';
 import clsx from 'clsx';
 
 import type { HierarchyEntity } from '@shared/domain/model/entity';
@@ -68,7 +68,7 @@ const TreeNode = observer(function <T extends HierarchyEntity>({ node, level, ..
           (useLoadingIcon ? (
             loadingIcon
           ) : node.isExpanded ? (
-            <AiOutlineCaretLeft
+            <AiOutlineCaretDown
               className={typeof caretClassName === 'function' ? caretClassName(node) : caretClassName}
               onClick={expand}
             />

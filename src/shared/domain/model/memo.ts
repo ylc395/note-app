@@ -17,7 +17,7 @@ export interface MemoVO extends Memo {
 }
 
 export const memoDTOSchema = object({
-  parentId: string().optional(),
+  parentId: string().nullish(),
   body: string(),
   isPinned: boolean().optional(),
   sourceUrl: string().url().nullish(),
@@ -55,3 +55,11 @@ export interface DateInfo {
   date: string;
   count: number;
 }
+
+export const memoSorter = (memo1: Memo, memo2: Memo) => {
+  if (memo1.isPinned !== memo2.isPinned) {
+    return memo1.isPinned ? -1 : 1;
+  }
+
+  return memo2.createdAt - memo1.createdAt;
+};

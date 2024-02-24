@@ -55,10 +55,6 @@ export default class ExplorerManager {
       return;
     }
 
-    if (this.currentExplorer instanceof MemoList) {
-      this.currentExplorer.reset();
-    }
-
     this.localStorage.set(KEY.EXPLORER.CURRENT_EXPLORER, type);
     this.currentExplorerType = type;
     this.currentExplorer.load();

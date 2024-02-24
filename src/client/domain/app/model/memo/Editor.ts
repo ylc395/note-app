@@ -1,27 +1,25 @@
 import { container } from 'tsyringe';
 import { makeObservable, observable } from 'mobx';
 import type { MemoVO } from '@shared/domain/model/memo';
+import { action } from 'mobx';
 import assert from 'assert';
 
 import { token as rpcToken } from '@domain/common/infra/rpc';
-import { action } from 'mobx';
+import type { EntityParentId } from '../entity';
 
 export default class Editor {
   private readonly remote = container.resolve(rpcToken);
 
   constructor(
     private readonly options: {
-      onSubmit?: (newMemo: MemoVO) => void;
+      onSubmit: (newMemo: MemoVO) => void;
+      onCancel?: () => void;
       memo?: MemoVO;
+      parentId?: EntityParentId;
     },
   ) {
     this.content = options.memo?.body || '';
     makeObservable(this);
-  }
-
-  public get memoId() {
-    assert(this.options.memo);
-    return this.options.memo?.id;
   }
 
   @observable
@@ -30,8 +28,8 @@ export default class Editor {
   public readonly submit = async () => {
     const newMemo = this.options.memo
       ? await this.remote.memo.updateOne.mutate([this.options.memo.id, { body: this.content }])
-      : await this.remote.memo.create.mutate({ body: this.content });
-    this.options.onSubmit?.(newMemo);
+      : await this.remote.memo.create.mutate({ body: this.content, parentId: this.options.parentId });
+    this.options.onSubmit(newMemo);
     this.reset();
   };
 
@@ -44,4 +42,9 @@ export default class Editor {
   public reset() {
     this.content = '';
   }
+
+  public readonly cancel = () => {
+    assert(this.options.onCancel, 'can not cancel');
+    this.options.onCancel();
+  };
 }

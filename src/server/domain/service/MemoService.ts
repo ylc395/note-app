@@ -1,8 +1,16 @@
 import { mapValues, uniq } from 'lodash-es';
 
 import { buildIndex } from '@utils/collection.js';
-import type { Memo, MemoDTO, ClientMemoQuery, MemoVO, MemoPatchDTO, Duration } from '@domain/model/memo.js';
-import { EntityParentId, EntityTypes } from '@domain/model/entity.js';
+import {
+  type Memo,
+  type MemoDTO,
+  type ClientMemoQuery,
+  type MemoVO,
+  type MemoPatchDTO,
+  type Duration,
+  memoSorter,
+} from '@domain/model/memo.js';
+import { EntityTypes } from '@domain/model/entity.js';
 
 import BaseService from './BaseService.js';
 import assert from 'assert';
@@ -10,8 +18,7 @@ import assert from 'assert';
 export default class MemoService extends BaseService {
   public async create(memo: MemoDTO) {
     if (memo.parentId) {
-      assert(!memo.isPinned, 'can not pin child memo');
-      await this.assertAvailableIds([memo.parentId], { parentId: null });
+      await this.assertAvailableIds([memo.parentId]);
     }
 
     const newMemo = await this.repo.memos.create(memo);
@@ -19,7 +26,7 @@ export default class MemoService extends BaseService {
   }
 
   public async updateOne(id: MemoVO['id'], patch: MemoPatchDTO) {
-    await this.assertAvailableIds([id], { parentId: patch.isPinned ? null : undefined });
+    await this.assertAvailableIds([id]);
 
     const updated = await this.repo.memos.update(id, patch);
     assert(updated);
@@ -56,6 +63,7 @@ export default class MemoService extends BaseService {
       pinnedMemos = await this.repo.memos.findAll({
         isAvailable: true,
         isPinned: true,
+        parentId: null,
         orderBy: 'createdAt',
       });
     }
@@ -71,13 +79,7 @@ export default class MemoService extends BaseService {
     });
 
     if (!noDuration) {
-      memos.sort((memo1, memo2) => {
-        if (memo1.isPinned !== memo2.isPinned) {
-          return memo1.isPinned ? -1 : 1;
-        }
-
-        return memo2.createdAt - memo1.createdAt;
-      });
+      memos.sort(memoSorter);
     }
 
     return await this.toVO([...pinnedMemos, ...memos]);
@@ -105,8 +107,8 @@ export default class MemoService extends BaseService {
     return mapValues(buildIndex(memos), ({ body }) => body.slice(0, 5));
   };
 
-  public readonly assertAvailableIds = async (ids: MemoVO['id'][], options?: { parentId?: EntityParentId }) => {
-    const memos = await this.repo.memos.findAll({ id: ids, parentId: options?.parentId, isAvailable: true });
+  public readonly assertAvailableIds = async (ids: MemoVO['id'][]) => {
+    const memos = await this.repo.memos.findAll({ id: ids, isAvailable: true });
     assert(memos.length === uniq(ids).length);
   };
 

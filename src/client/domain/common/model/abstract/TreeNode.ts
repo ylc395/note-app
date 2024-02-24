@@ -2,7 +2,7 @@ import { action, makeObservable, observable, runInAction } from 'mobx';
 import { differenceWith, map } from 'lodash-es';
 import assert from 'assert';
 
-import { HierarchyEntity } from '@shared/domain/model/entity';
+import type { HierarchyEntity } from '@shared/domain/model/entity';
 import type Tree from './Tree';
 
 export default class TreeNode<T extends HierarchyEntity = HierarchyEntity> {
@@ -83,7 +83,7 @@ export default class TreeNode<T extends HierarchyEntity = HierarchyEntity> {
   }
 
   @observable.ref public parent: TreeNode<T> | null; // only root node has no parent;
-  @observable.ref public entity: T | null; // only root node has no entity;
+  @observable public entity: T | null; // only root node has no entity;
   @observable public isDisabled = false;
   @observable public title = '';
   @observable public isLeaf = true;

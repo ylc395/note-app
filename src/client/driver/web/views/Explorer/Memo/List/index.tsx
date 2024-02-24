@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 import { useEventListener } from 'ahooks';
 
 import MemoService from '@domain/app/service/MemoService';
-import ListItem from './ListItem';
+import ListItem from './Item';
 
 export default observer(function List() {
   const { list } = container.resolve(MemoService);

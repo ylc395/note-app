@@ -18,9 +18,10 @@ export default abstract class Explorer<T extends HierarchyEntity = HierarchyEnti
   public abstract readonly tree: Tree<T>;
   public readonly dnd = new DndBehavior({ explorer: this });
 
-  // todo: rewrite load
   public load() {
-    this.tree.root.loadChildren();
+    if (this.tree.root.children.length === 0) {
+      this.tree.root.loadChildren();
+    }
   }
 
   public readonly handleEntityUpdate = (e: UpdateEvent) => {
