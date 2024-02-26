@@ -1,4 +1,4 @@
-import { observable, action, computed, makeObservable } from 'mobx';
+import { observable, action, computed, makeObservable, runInAction } from 'mobx';
 import assert from 'assert';
 import { pull, pickBy } from 'lodash-es';
 import { container } from 'tsyringe';
@@ -51,7 +51,7 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
     return node;
   }
 
-  public async reveal(id: TreeNode<T>['id'] | null, expand?: true) {
+  public async reveal(id: TreeNode<T>['id'], options?: { expand?: boolean; select?: boolean }) {
     assert(this.queryFragments);
 
     if (id && !this.getNode(id, true)) {
@@ -61,13 +61,19 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
 
     let node = this.getNode(id).parent;
 
-    while (node && node !== this.root) {
-      node.isExpanded = true;
-      node = node.parent;
+    runInAction(() => {
+      while (node && node !== this.root) {
+        node.isExpanded = true;
+        node = node.parent;
+      }
+    });
+
+    if (options?.expand && id && !this.getNode(id).isLeaf) {
+      this.toggleExpand(id, true);
     }
 
-    if (expand && id) {
-      this.toggleExpand(id, true);
+    if (options?.select && id) {
+      this.setSelected([id]);
     }
   }
 

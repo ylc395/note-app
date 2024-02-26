@@ -135,7 +135,6 @@ export default class Tile {
       assert(index >= 0, 'can not find editor in this tile');
 
       newEditor = this.createEditor(entity);
-
       this.editableEntityManager.destroyEditor(this.editors[index]!);
       this.editors[index] = newEditor;
 

@@ -1,12 +1,13 @@
 import { action, computed, makeObservable, observable } from 'mobx';
 import { container, singleton } from 'tsyringe';
+import assert from 'assert';
 
 import { token as localStorageToken, KEY } from '@domain/app/infra/localStorage';
 import NoteExplorer from '@domain/app/model/note/Explorer';
 import MaterialExplorer from '@domain/app/model/material/Explorer';
 import MemoList from '@domain/app/model/memo/List';
-import { EntityTypes } from '@domain/app/model/entity';
-import StarManager, { Events, type ToggleEvent } from './StarManager';
+import { EntityLocator, EntityTypes } from '@domain/app/model/entity';
+import Explorer from './abstract/Explorer';
 
 export type ExplorerTypes = EntityTypes.Note | EntityTypes.Material | EntityTypes.Memo;
 
@@ -18,12 +19,10 @@ export enum ExtraPanelType {
 @singleton()
 export default class ExplorerManager {
   private readonly localStorage = container.resolve(localStorageToken);
-  private readonly starManager = container.resolve(StarManager);
 
   constructor() {
     makeObservable(this);
     this.currentExplorer.load();
-    this.starManager.on(Events.StarToggle, this.handleStarToggle);
   }
 
   private readonly explorers = {
@@ -49,6 +48,10 @@ export default class ExplorerManager {
     return this.explorers[this.currentExplorerType];
   }
 
+  public get(type: ExplorerTypes) {
+    return this.explorers[type];
+  }
+
   @action.bound
   public switchTo(type: ExplorerTypes) {
     if (type === this.currentExplorerType) {
@@ -60,11 +63,11 @@ export default class ExplorerManager {
     this.currentExplorer.load();
   }
 
-  private readonly handleStarToggle = (e: ToggleEvent) => {
-    const explorers = Object.values(this.explorers);
+  public async reveal({ entityId, entityType }: EntityLocator) {
+    assert(entityType !== EntityTypes.Annotation, 'can not reveal');
+    this.switchTo(entityType);
 
-    for (const explorer of explorers) {
-      explorer.handleEntityUpdate({ ...e, trigger: this.starManager });
-    }
-  };
+    assert(this.currentExplorer instanceof Explorer);
+    await this.currentExplorer.tree.reveal(entityId, { expand: true, select: true });
+  }
 }

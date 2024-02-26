@@ -28,22 +28,21 @@ export default class NoteService {
   };
 
   public readonly move = new MoveBehavior({
-    tree: this.tree,
+    tree: this.explorer.tree,
     promptToken: MOVE_TARGET_MODAL,
     itemsToIds: NoteService.getNoteIds,
     onMove: this.moveNotes,
   });
 
-  private get tree() {
-    return this.explorer.tree;
-  }
-
   public readonly createNote = async (params?: { parentId?: NoteVO['parentId']; from?: NoteVO['id'] }) => {
     const note = await this.remote.note.create.mutate(params || {});
 
-    this.tree.updateTree(note);
-    await this.tree.reveal(note.parentId, true);
-    this.tree.toggleSelect(note.id, { value: true });
+    this.explorer.tree.updateTree(note);
+
+    if (note.parentId) {
+      await this.explorer.tree.reveal(note.parentId, { expand: true, select: true });
+    }
+
     this.workbench.openEntity({ entityType: EntityTypes.Note, entityId: note.id });
   };
 

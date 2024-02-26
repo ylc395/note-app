@@ -33,7 +33,7 @@ export default class ContextmenuBehavior {
       case 'rename':
         return this.options.explorer.rename.start(node.id);
       case 'star':
-        return this.starManager.star(node.id);
+        return this.starManager.star({ entityId: node.id, entityType: this.options.explorer.entityType });
       case 'openInNewTab':
         return this.workbench.openEntity(node.entityLocator, { forceNewTab: true });
       case 'openToTop':

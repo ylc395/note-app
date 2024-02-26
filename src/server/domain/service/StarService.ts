@@ -3,9 +3,11 @@ import { container, singleton } from 'tsyringe';
 import { first } from 'lodash-es';
 
 import type { StarDTO } from '@domain/model/star.js';
-import type { EntityId } from '@domain/model/entity.js';
+import { EntityTypes, type EntityId } from '@domain/model/entity.js';
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
+import { buildIndex } from '@utils/collection.js';
+import { isEntityMaterial } from '@domain/model/material.js';
 
 @singleton()
 export default class StarService extends BaseService {
@@ -28,10 +30,21 @@ export default class StarService extends BaseService {
   public async query(id?: EntityId) {
     const stars = await this.repo.stars.findAll({ isAvailableOnly: true, entityId: id ? [id] : undefined });
     const titles = await this.entityService.getNormalizedTitles(stars);
+    const materialIds = stars
+      .filter(({ entityType }) => entityType === EntityTypes.Material)
+      .map(({ entityId }) => entityId);
+
+    const materials = materialIds.length > 0 ? buildIndex(await this.repo.materials.findAll({ id: materialIds })) : {};
 
     return stars.map((star) => {
       const title = titles[star.entityId] || '';
-      return { ...star, title };
+      const material = materials[star.entityId];
+
+      return {
+        ...star,
+        mimeType: material && isEntityMaterial(material) ? material.mimeType : undefined,
+        title,
+      };
     });
   }
 

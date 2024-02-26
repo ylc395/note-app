@@ -24,17 +24,13 @@ export default class MaterialService {
   private readonly ui = container.resolve(UIToken);
   private readonly workbench = container.resolve(Workbench);
 
-  private get tree() {
-    return this.explorer.tree;
-  }
-
   private readonly moveMaterials = async (parentId: EntityParentId, ids: MaterialVO['id'][]) => {
     await this.remote.material.batchUpdate.mutate([ids, { parentId }]);
     ids.forEach((id) => eventBus.emit(Events.Updated, { trigger: this.move, parentId, id }));
   };
 
   public readonly move = new MoveBehavior({
-    tree: this.tree,
+    tree: this.explorer.tree,
     itemsToIds: MaterialService.getMaterialIds,
     promptToken: MOVE_TARGET_MODAL,
     onMove: this.moveMaterials,
@@ -55,9 +51,12 @@ export default class MaterialService {
 
     const material = await this.remote.material.create.mutate({ ...dto, fileId });
 
-    this.tree.updateTree(material);
-    await this.tree.reveal(material.parentId, true);
-    this.tree.toggleSelect(material.id, { value: true });
+    this.explorer.tree.updateTree(material);
+
+    if (material.parentId) {
+      await this.explorer.tree.reveal(material.parentId, { expand: true, select: true });
+    }
+
     return material;
   }
 

@@ -23,7 +23,11 @@ export default class MoveBehavior<T extends HierarchyEntity> {
     await onMove(targetId, itemIds);
 
     tree.updateTree(itemIds.map((id) => ({ id, parentId: targetId })));
-    await tree.reveal(targetId, true);
+
+    if (targetId) {
+      await tree.reveal(targetId, { expand: true });
+    }
+
     tree.setSelected(itemIds);
   }
 
