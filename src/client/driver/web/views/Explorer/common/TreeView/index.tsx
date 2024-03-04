@@ -41,12 +41,12 @@ export default function TreeView<T extends MaterialVO | NoteVO>({
   defaultIcon,
 }: Props<T>) {
   function handleClick(node: TreeNode<T>, isMultiple: boolean) {
-    tree.toggleSelect(node.id, { isMultiple, value: true });
+    node.toggleSelect({ isMultiple, value: true });
     onClick?.(node, isMultiple);
   }
 
   function handleContextmenu(node: TreeNode<T>) {
-    tree.toggleSelect(node.id, { value: true });
+    node.toggleSelect({ value: true });
     onContextmenu?.(node);
   }
 

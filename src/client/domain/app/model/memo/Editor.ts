@@ -2,7 +2,6 @@ import { container } from 'tsyringe';
 import { makeObservable, observable } from 'mobx';
 import type { MemoVO } from '@shared/domain/model/memo';
 import { action } from 'mobx';
-import assert from 'assert';
 
 import { token as rpcToken } from '@domain/common/infra/rpc';
 import type { EntityParentId } from '../entity';
@@ -13,7 +12,6 @@ export default class Editor {
   constructor(
     private readonly options: {
       onSubmit: (newMemo: MemoVO) => void;
-      onCancel?: () => void;
       memo?: MemoVO;
       parentId?: EntityParentId;
     },
@@ -42,9 +40,4 @@ export default class Editor {
   public reset() {
     this.content = '';
   }
-
-  public readonly cancel = () => {
-    assert(this.options.onCancel, 'can not cancel');
-    this.options.onCancel();
-  };
 }

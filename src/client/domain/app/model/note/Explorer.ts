@@ -28,6 +28,10 @@ export default class NoteExplorer extends Explorer<NoteVO> {
   private readonly remote = container.resolve(rpcToken);
   public readonly rename: RenameBehavior;
 
+  protected queryFragments(id: NoteVO['id']) {
+    return this.remote.note.query.query({ to: id });
+  }
+
   private readonly submitRename = async ({ id, name }: { id: string; name: string }) => {
     await this.remote.note.updateOne.mutate([id, { title: name }]);
     eventBus.emit(NoteEvents.Updated, { id, title: name, trigger: this });

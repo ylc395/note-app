@@ -34,7 +34,7 @@ const TreeNode = observer(function <T extends HierarchyEntity>({ node, level, ..
       return;
     }
 
-    tree.toggleExpand(node.id);
+    node.toggleExpand();
   };
 
   const handleClick: MouseEventHandler = (e) => {

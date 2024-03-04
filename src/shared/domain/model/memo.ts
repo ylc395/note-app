@@ -1,4 +1,4 @@
-import { object, string, number, infer as Infer, boolean, union } from 'zod';
+import { object, string, number, infer as Infer, boolean } from 'zod';
 import type { EntityParentId } from './entity.js';
 
 export interface Memo {
@@ -16,9 +16,11 @@ export interface MemoVO extends Memo {
   childrenCount: number;
 }
 
+export const MAX_LENGTH = 500;
+
 export const memoDTOSchema = object({
   parentId: string().nullish(),
-  body: string(),
+  body: string().max(MAX_LENGTH),
   isPinned: boolean().optional(),
   sourceUrl: string().url().nullish(),
 });
@@ -42,12 +44,13 @@ export const durationSchema = object({
 
 export type Duration = Infer<typeof durationSchema>;
 
-export const clientMemoQuerySchema = union([
-  object({ parentId: string().nullable() }),
-  object({
-    limit: number().optional(),
-  }).merge(durationSchema.partial()),
-]);
+export const clientMemoQuerySchema = object({
+  limit: number().optional(),
+  parentId: string().nullish(),
+  before: string().optional(),
+  after: string().optional(),
+  isPinned: boolean().optional(),
+}).merge(durationSchema.partial());
 
 export type ClientMemoQuery = Infer<typeof clientMemoQuerySchema>;
 
@@ -55,11 +58,3 @@ export interface DateInfo {
   date: string;
   count: number;
 }
-
-export const memoSorter = (memo1: Memo, memo2: Memo) => {
-  if (memo1.isPinned !== memo2.isPinned) {
-    return memo1.isPinned ? -1 : 1;
-  }
-
-  return memo2.createdAt - memo1.createdAt;
-};

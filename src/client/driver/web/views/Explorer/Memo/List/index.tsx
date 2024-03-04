@@ -7,39 +7,37 @@ import MemoService from '@domain/app/service/MemoService';
 import ListItem from './Item';
 
 export default observer(function List() {
-  const { list } = container.resolve(MemoService);
+  const { explorer } = container.resolve(MemoService);
   const divRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (list.memos.length > 0 && divRef.current && divRef.current.scrollTop === 0) {
-      divRef.current.scrollTo(0, list.uiState.scrollTop || 0);
+    if (explorer.memos.length > 0 && divRef.current && divRef.current.scrollTop === 0) {
+      divRef.current.scrollTo(0, explorer.uiState.scrollTop || 0);
     }
   });
 
   useEventListener(
     'scroll',
     () => {
-      if (!divRef.current) {
-        return;
-      }
+      if (!divRef.current) return;
 
       const { scrollTop, clientHeight, scrollHeight } = divRef.current;
 
       if (scrollHeight - (clientHeight + scrollTop) < 10) {
-        list.load(true);
+        explorer.load('before');
       }
 
-      list.updateUIState({ scrollTop });
+      explorer.updateUIState({ scrollTop });
     },
     { target: divRef },
   );
 
   return (
     <div ref={divRef} className="min-h-0 grow overflow-auto">
-      {list.memos.map((id) => (
+      {explorer.memos.map(({ id }) => (
         <ListItem id={id} key={id} />
       ))}
-      {list.isEnd && <div>没有了</div>}
+      {explorer.isEnd.before && <div>没有了</div>}
     </div>
   );
 });

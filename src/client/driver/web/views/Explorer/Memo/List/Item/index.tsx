@@ -2,7 +2,6 @@ import { container } from 'tsyringe';
 import { observer } from 'mobx-react-lite';
 import dayjs from 'dayjs';
 import { AiOutlineEdit, AiOutlinePushpin, AiOutlineComment } from 'react-icons/ai';
-import { useBoolean } from 'ahooks';
 
 import MemoService from '@domain/app/service/MemoService';
 import type { MemoVO } from '@shared/domain/model/memo';
@@ -10,12 +9,18 @@ import type { MemoVO } from '@shared/domain/model/memo';
 import Button from '@web/components/Button';
 import Body from './Body';
 import ChildrenList from './ChildrenList';
+import { useState } from 'react';
 
 const ListItem = observer(function ({ id }: { id: MemoVO['id'] }) {
-  const { list } = container.resolve(MemoService);
-  const [childrenVisible, { toggle: toggleChildren }] = useBoolean(false);
-  const memo = list.get(id);
+  const { explorer } = container.resolve(MemoService);
+  const memo = explorer.getMemo(id);
   const isChild = Boolean(memo.parentId);
+  const [isChildrenVisible, setIsChildrenVisible] = useState(false);
+
+  function toggleChildren() {
+    const isExpanded = explorer.toggleExpand(id);
+    setIsChildrenVisible(isExpanded);
+  }
 
   return (
     <div className="mb-4 rounded-xl bg-white px-1">
@@ -24,10 +29,10 @@ const ListItem = observer(function ({ id }: { id: MemoVO['id'] }) {
         {memo.isPinned && <div>Pinned</div>}
         <time>{dayjs(memo.createdAt).format('YYYY-MM-DD HH:mm:ss')}</time>
         <div className="flex">
-          <Button onClick={() => list.edit(memo.id)}>
+          <Button onClick={() => explorer.startEditing(memo.id)}>
             <AiOutlineEdit />
           </Button>
-          <Button onClick={() => list.togglePin(memo.id)}>
+          <Button onClick={() => explorer.togglePin(memo.id)}>
             <AiOutlinePushpin />
           </Button>
           {!isChild && (
@@ -38,7 +43,7 @@ const ListItem = observer(function ({ id }: { id: MemoVO['id'] }) {
           )}
         </div>
       </div>
-      {childrenVisible && <ChildrenList id={id} />}
+      {isChildrenVisible && <ChildrenList id={id} />}
     </div>
   );
 });

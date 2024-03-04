@@ -37,7 +37,7 @@ export default observer(function TargetTreeModal({
       {targetTree && (
         <Tree
           showRoot
-          onClick={(node) => targetTree.toggleSelect(node.id, { value: true })}
+          onClick={(node) => node.toggleSelect({ value: true })}
           nodeClassName={(node) =>
             clsx(
               node.isSelected && 'bg-slate-100',

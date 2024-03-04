@@ -1,10 +1,10 @@
 import { singleton, container } from 'tsyringe';
 
-import MemoList from '@domain/app/model/memo/List';
+import MemoExplorer from '@domain/app/model/memo/Explorer';
 import Calendar from '@domain/app/model/memo/Calendar';
 
 @singleton()
 export default class MemoService {
-  public readonly list = container.resolve(MemoList);
-  public readonly calendar = new Calendar({ onSelect: this.list.setDuration });
+  public readonly explorer = container.resolve(MemoExplorer);
+  public readonly calendar = new Calendar({ onSelect: this.explorer.setDuration });
 }

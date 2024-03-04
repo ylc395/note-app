@@ -30,7 +30,7 @@ export default class MaterialService {
   };
 
   public readonly move = new MoveBehavior({
-    tree: this.explorer.tree,
+    explorer: this.explorer,
     itemsToIds: MaterialService.getMaterialIds,
     promptToken: MOVE_TARGET_MODAL,
     onMove: this.moveMaterials,
@@ -54,7 +54,7 @@ export default class MaterialService {
     this.explorer.tree.updateTree(material);
 
     if (material.parentId) {
-      await this.explorer.tree.reveal(material.parentId, { expand: true, select: true });
+      await this.explorer.reveal(material.parentId, { expand: true, select: true });
     }
 
     return material;

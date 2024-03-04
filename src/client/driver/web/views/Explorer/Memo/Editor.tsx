@@ -7,7 +7,7 @@ import Editor from '@domain/app/model/memo/Editor';
 
 export default observer(function MemoEditor({ editor }: { editor?: Editor }) {
   const {
-    list: { newRootMemoEditor },
+    explorer: { newRootMemoEditor },
   } = container.resolve(MemoService);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const _editor = editor || newRootMemoEditor;
@@ -21,7 +21,7 @@ export default observer(function MemoEditor({ editor }: { editor?: Editor }) {
       <textarea ref={textareaRef} value={_editor.content} onChange={(e) => _editor.updateContent(e.target.value)} />
       <div>
         <button onClick={_editor.submit}>提交</button>
-        {editor ? <button onClick={_editor.cancel}>取消</button> : <button onClick={_editor.reset}>重置</button>}
+        <button onClick={_editor.reset}>重置</button>
       </div>
     </div>
   );

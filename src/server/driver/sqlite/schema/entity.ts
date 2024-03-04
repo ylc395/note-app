@@ -42,9 +42,9 @@ export default {
             .selectFrom(memoTableName)
             .select([
               'id',
+              sql.val(null).as('icon'),
               sql.val('').as('title'),
               'parentId',
-              sql.val(null).as('icon'),
               'body as content',
               sql.val(EntityTypes.Memo).as('type'),
             ]),
@@ -54,10 +54,10 @@ export default {
             .selectFrom(annotationTableName)
             .select([
               'id',
-              'body as content',
               sql.val(null).as('icon'),
-              sql.val(null).as('parentId'),
               sql.val('').as('title'),
+              sql.val(null).as('parentId'),
+              'body as content',
               sql.val(EntityTypes.Annotation).as('type'),
             ]),
         ),

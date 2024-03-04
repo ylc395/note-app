@@ -5,9 +5,8 @@ import assert from 'assert';
 import { token as localStorageToken, KEY } from '@domain/app/infra/localStorage';
 import NoteExplorer from '@domain/app/model/note/Explorer';
 import MaterialExplorer from '@domain/app/model/material/Explorer';
-import MemoList from '@domain/app/model/memo/List';
+import MemoExplorer from '@domain/app/model/memo/Explorer';
 import { EntityLocator, EntityTypes } from '@domain/app/model/entity';
-import Explorer from './abstract/Explorer';
 
 export type ExplorerTypes = EntityTypes.Note | EntityTypes.Material | EntityTypes.Memo;
 
@@ -22,13 +21,13 @@ export default class ExplorerManager {
 
   constructor() {
     makeObservable(this);
-    this.currentExplorer.load();
+    this.currentExplorer.init();
   }
 
   private readonly explorers = {
     [EntityTypes.Note]: container.resolve(NoteExplorer),
     [EntityTypes.Material]: container.resolve(MaterialExplorer),
-    [EntityTypes.Memo]: container.resolve(MemoList),
+    [EntityTypes.Memo]: container.resolve(MemoExplorer),
   } as const;
 
   @observable.ref
@@ -60,14 +59,12 @@ export default class ExplorerManager {
 
     this.localStorage.set(KEY.EXPLORER.CURRENT_EXPLORER, type);
     this.currentExplorerType = type;
-    this.currentExplorer.load();
+    this.currentExplorer.init();
   }
 
-  public async reveal({ entityId, entityType }: EntityLocator) {
+  public reveal({ entityId, entityType }: EntityLocator) {
     assert(entityType !== EntityTypes.Annotation, 'can not reveal');
     this.switchTo(entityType);
-
-    assert(this.currentExplorer instanceof Explorer);
-    await this.currentExplorer.tree.reveal(entityId, { expand: true, select: true });
+    this.currentExplorer.reveal(entityId, { expand: true, select: true });
   }
 }

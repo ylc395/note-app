@@ -6,12 +6,13 @@ import type { EntityId, EntityParentId, HierarchyEntity } from '@shared/domain/m
 import type { PromptToken } from '@shared/domain/infra/ui';
 import { token as UIToken } from '@shared/domain/infra/ui';
 import type Tree from '@domain/common/model/abstract/Tree';
+import type Explorer from '../Explorer';
 
 export default class MoveBehavior<T extends HierarchyEntity> {
   private readonly ui = container.resolve(UIToken);
   constructor(
     private readonly options: {
-      tree: Tree;
+      explorer: Explorer;
       promptToken: PromptToken<EntityParentId>;
       itemsToIds: (items: unknown) => EntityId[] | undefined;
       onMove: (parentId: EntityParentId, ids: EntityId[]) => Promise<void>;
@@ -19,16 +20,16 @@ export default class MoveBehavior<T extends HierarchyEntity> {
   ) {}
 
   private async move(targetId: EntityParentId, itemIds: EntityId[]) {
-    const { tree, onMove } = this.options;
+    const { explorer, onMove } = this.options;
     await onMove(targetId, itemIds);
 
-    tree.updateTree(itemIds.map((id) => ({ id, parentId: targetId })));
+    explorer.tree.updateTree(itemIds.map((id) => ({ id, parentId: targetId })));
 
     if (targetId) {
-      await tree.reveal(targetId, { expand: true });
+      await explorer.reveal(targetId, { expand: true });
     }
 
-    tree.setSelected(itemIds);
+    explorer.tree.setSelected(itemIds);
   }
 
   public async byUserInput() {
@@ -38,11 +39,11 @@ export default class MoveBehavior<T extends HierarchyEntity> {
       return;
     }
 
-    await this.move(targetId, this.options.tree.getSelectedNodeIds());
+    await this.move(targetId, this.options.explorer.tree.getSelectedNodeIds());
   }
 
   public readonly getTargetTree = () => {
-    const tree = this.options.tree;
+    const tree = this.options.explorer.tree;
     function isDisable(this: Tree, entity: T | null) {
       const movingNodes = tree.selectedNodes;
       const parentIds = movingNodes.map(({ entity }) => entity!.parentId);

@@ -1,10 +1,8 @@
 import { type NoteVO, normalizeTitle } from '@shared/domain/model/note';
 import { EntityTypes } from '@shared/domain/model/entity';
 
-import type TreeNode from '../abstract/TreeNode';
 import Tree from '../abstract/Tree';
-
-export type NoteTreeNode = TreeNode<NoteVO>;
+import NoteTreeNode from './TreeNode';
 
 export default class NoteTree extends Tree<NoteVO> {
   public readonly entityType = EntityTypes.Note;
@@ -13,8 +11,8 @@ export default class NoteTree extends Tree<NoteVO> {
     return notes;
   }
 
-  protected queryFragments(id: NoteVO['id']) {
-    return this.remote.note.query.query({ to: id });
+  public createNode(entity: NoteVO | null): NoteTreeNode {
+    return new NoteTreeNode({ entity, tree: this });
   }
 
   public entityToNode(note: NoteVO | null) {

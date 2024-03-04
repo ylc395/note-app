@@ -18,7 +18,7 @@ interface Props<T extends NoteVO | MaterialVO> {
 // eslint-disable-next-line mobx/missing-observer
 export default function DndTreeNode({ children, node, onDrop, onDragStart, onDragStop }: Props<NoteVO | MaterialVO>) {
   const handleDragStart = () => {
-    node.tree.toggleSelect(node.id, { value: true });
+    node.toggleSelect({ value: true });
     onDragStart();
   };
 
@@ -27,7 +27,7 @@ export default function DndTreeNode({ children, node, onDrop, onDragStart, onDra
   useEffect(() => {
     if (isOver && !node.isLeaf) {
       const timer = setTimeout(() => {
-        node.tree.toggleExpand(node.id, true);
+        node.toggleExpand(true);
       }, 1000);
 
       return () => clearTimeout(timer);

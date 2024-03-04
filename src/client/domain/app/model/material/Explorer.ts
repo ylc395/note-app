@@ -28,6 +28,10 @@ export default class MaterialExplorer extends Explorer<MaterialVO> {
     eventBus.on(Events.Updated, this.handleEntityUpdate);
   }
 
+  protected queryFragments(id: MaterialVO['id']) {
+    return this.remote.material.query.query({ to: id });
+  }
+
   private readonly submitRename = async ({ id, name }: { id: string; name: string }) => {
     await this.remote.material.updateOne.mutate([id, { title: name }]);
     eventBus.emit(Events.Updated, { id, title: name, trigger: this });

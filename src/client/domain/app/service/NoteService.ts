@@ -28,7 +28,7 @@ export default class NoteService {
   };
 
   public readonly move = new MoveBehavior({
-    tree: this.explorer.tree,
+    explorer: this.explorer,
     promptToken: MOVE_TARGET_MODAL,
     itemsToIds: NoteService.getNoteIds,
     onMove: this.moveNotes,
@@ -40,7 +40,7 @@ export default class NoteService {
     this.explorer.tree.updateTree(note);
 
     if (note.parentId) {
-      await this.explorer.tree.reveal(note.parentId, { expand: true, select: true });
+      await this.explorer.reveal(note.parentId, { expand: true, select: true });
     }
 
     this.workbench.openEntity({ entityType: EntityTypes.Note, entityId: note.id });

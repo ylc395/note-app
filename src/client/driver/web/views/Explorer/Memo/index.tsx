@@ -8,7 +8,7 @@ import List from './List';
 
 export default observer(function MemoExplorerView() {
   const {
-    list: { uiState },
+    explorer: { uiState },
   } = container.resolve(MemoService);
 
   return (

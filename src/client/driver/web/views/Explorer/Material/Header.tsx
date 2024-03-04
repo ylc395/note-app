@@ -15,7 +15,9 @@ export default observer(function Header() {
     move: { byItems: moveMaterialsByItems },
   } = container.resolve(MaterialService);
   const {
-    tree: { hasExpandedNode, collapseAll, root },
+    hasExpandedNode,
+    collapseAll,
+    tree: { root },
     dnd: { status },
   } = container.resolve(MaterialExplorer);
 

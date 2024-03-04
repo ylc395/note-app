@@ -1,19 +1,11 @@
-import { mapValues, uniq } from 'lodash-es';
+import { compact, mapValues, uniq } from 'lodash-es';
+import assert from 'assert';
 
 import { buildIndex } from '@utils/collection.js';
-import {
-  type Memo,
-  type MemoDTO,
-  type ClientMemoQuery,
-  type MemoVO,
-  type MemoPatchDTO,
-  type Duration,
-  memoSorter,
-} from '@domain/model/memo.js';
+import type { Memo, MemoDTO, ClientMemoQuery, MemoVO, MemoPatchDTO, Duration } from '@domain/model/memo.js';
 import { EntityTypes } from '@domain/model/entity.js';
 
 import BaseService from './BaseService.js';
-import assert from 'assert';
 
 export default class MemoService extends BaseService {
   public async create(memo: MemoDTO) {
@@ -21,12 +13,29 @@ export default class MemoService extends BaseService {
       await this.assertAvailableIds([memo.parentId]);
     }
 
+    if (memo.isPinned) {
+      await this.assertValidPin(memo.parentId);
+    }
+
     const newMemo = await this.repo.memos.create(memo);
+
     return { ...newMemo, isStar: false, childrenCount: 0 };
+  }
+
+  private async assertValidPin(parentId?: Memo['parentId']) {
+    const memos = await this.repo.memos.findAll({ isPinned: true, parentId: parentId || null });
+    const LIMIT = 10;
+
+    assert(memos.length < LIMIT, `can not pin more than ${LIMIT} memos`);
   }
 
   public async updateOne(id: MemoVO['id'], patch: MemoPatchDTO) {
     await this.assertAvailableIds([id]);
+    const memo = await this.repo.memos.findOneById(id);
+
+    if (patch.isPinned) {
+      await this.assertValidPin(memo!.parentId);
+    }
 
     const updated = await this.repo.memos.update(id, patch);
     assert(updated);
@@ -44,45 +53,40 @@ export default class MemoService extends BaseService {
   }
 
   public async query(query: ClientMemoQuery) {
-    let memos: Memo[] = [];
+    assert(query.parentId || query.isPinned || query.limit, 'limit is required when no parentId / isPinned');
 
-    if ('parentId' in query) {
-      memos = await this.repo.memos.findAll({
-        isAvailable: true,
-        parentId: query.parentId,
-        orderBy: 'createdAt',
-      });
-
-      return await this.toVO(memos);
+    if (query.after || query.before) {
+      await this.assertAvailableIds(compact([query.after, query.before]));
     }
 
-    let pinnedMemos: Memo[] = [];
-    const noDuration = !query.startTime && !query.endTime;
+    let startTime = query.startTime;
+    let endTime = query.endTime;
 
-    if (noDuration) {
-      pinnedMemos = await this.repo.memos.findAll({
-        isAvailable: true,
-        isPinned: true,
-        parentId: null,
-        orderBy: 'createdAt',
-      });
+    if (query.before) {
+      const beforeMemo = await this.repo.memos.findOneById(query.before);
+
+      assert(beforeMemo);
+      endTime = Math.min(beforeMemo.createdAt, query.endTime || Infinity);
     }
 
-    memos = await this.repo.memos.findAll({
-      startTime: query.startTime,
-      endTime: query.endTime,
+    if (query.after) {
+      const afterMemo = await this.repo.memos.findOneById(query.after);
+
+      assert(afterMemo);
+      startTime = Math.max(afterMemo.createdAt, query.startTime || 0);
+    }
+
+    const memos = await this.repo.memos.findAll({
+      startTime,
+      endTime,
       isAvailable: true,
       limit: query.limit,
-      parentId: null,
-      isPinned: noDuration ? false : undefined,
+      parentId: query.parentId || null,
+      isPinned: query.isPinned,
       orderBy: 'createdAt',
     });
 
-    if (!noDuration) {
-      memos.sort(memoSorter);
-    }
-
-    return await this.toVO([...pinnedMemos, ...memos]);
+    return await this.toVO(memos);
   }
 
   private async toVO(memos: Memo): Promise<MemoVO>;

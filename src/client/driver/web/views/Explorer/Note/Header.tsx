@@ -10,7 +10,9 @@ import ExplorerHeader from '../common/ExplorerHeader';
 
 export default observer(function Header() {
   const {
-    tree: { root, collapseAll, hasExpandedNode },
+    hasExpandedNode,
+    collapseAll,
+    tree: { root },
     dnd: { status },
   } = container.resolve(NoteExplorer);
   const {

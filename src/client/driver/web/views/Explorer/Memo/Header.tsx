@@ -7,7 +7,7 @@ import ExplorerHeader from '../common/ExplorerHeader';
 // eslint-disable-next-line mobx/missing-observer
 export default (function Header() {
   const {
-    list: { togglePanel },
+    explorer: { togglePanel },
   } = container.resolve(MemoService);
 
   return (
