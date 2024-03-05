@@ -26,17 +26,16 @@ export default class MemoExplorer {
 
   public readonly newRootMemoEditor = new Editor({ onSubmit: this.tree.updateTree });
 
+  private readonly editors = {
+    create: observable({}, { deep: false }) as Record<MemoVO['id'], Editor>,
+    edit: observable({}, { deep: false }) as Record<MemoVO['id'], Editor>,
+  };
+
   constructor() {
     makeObservable(this);
   }
 
   @observable.ref public duration?: Duration;
-
-  @observable.shallow
-  private readonly newMemoEditors: Record<MemoVO['id'], Editor> = {};
-
-  @observable.shallow
-  private readonly childMemoEditors: Record<MemoVO['id'], Editor> = {};
 
   @observable
   public uiState = {
@@ -67,7 +66,7 @@ export default class MemoExplorer {
 
   @action.bound
   public startEditing(id: MemoVO['id'], newChild?: boolean) {
-    const editors = newChild ? this.childMemoEditors : this.newMemoEditors;
+    const editors = newChild ? this.editors.create : this.editors.edit;
 
     editors[id] = new Editor({
       memo: newChild ? undefined : this.getMemo(id),
@@ -77,12 +76,12 @@ export default class MemoExplorer {
   }
 
   public getEditor(id: MemoVO['id'], newChild?: boolean) {
-    return newChild ? this.childMemoEditors[id] : this.newMemoEditors[id];
+    return newChild ? this.editors.create[id] : this.editors.edit[id];
   }
 
   @action.bound
   public stopEditing(memo: MemoVO | MemoVO['id'], newChild?: boolean) {
-    const editors = newChild ? this.childMemoEditors : this.newMemoEditors;
+    const editors = newChild ? this.editors.create : this.editors.edit;
 
     if (typeof memo === 'string') {
       delete editors[memo];
@@ -103,27 +102,14 @@ export default class MemoExplorer {
     this.tree.loadByTime(duration);
   }
 
-  // todo: reveal 一个子 memo 怎么搞
   public async reveal(id: MemoVO['id']) {
     if (this.tree.getNode(id, true)) {
       return;
     }
 
-    const limit = 15;
-    const [after, before] = await Promise.all([
-      this.remote.memo.query.query({ after: id, limit, isPinned: false }),
-      this.remote.memo.query.query({ before: id, limit, isPinned: false }),
-    ]);
-    let pinned: MemoVO[] = [];
-
-    if (after.length < limit) {
-      this.tree.root.isEnd.after = true;
-      pinned = await this.remote.memo.query.query({ isPinned: true });
-    }
-
-    this.tree.root.isEnd.before = before.length < limit;
+    const allMemos = await this.remote.memo.queryTreeFragment.query({ to: id, limit: 15 });
     this.tree = new MemoTree();
-    this.tree.updateTree([...after, ...before, ...pinned]);
+    this.tree.updateTree(allMemos);
   }
 
   public async togglePin(id: MemoVO['id']) {

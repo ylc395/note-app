@@ -16,7 +16,7 @@ export interface MemoVO extends Memo {
   childrenCount: number;
 }
 
-export const MAX_LENGTH = 500;
+export const MAX_LENGTH = 10000;
 
 export const memoDTOSchema = object({
   parentId: string().nullish(),
@@ -51,6 +51,13 @@ export const clientMemoQuerySchema = object({
   after: string().optional(),
   isPinned: boolean().optional(),
 }).merge(durationSchema.partial());
+
+export const clientTreeFragmentQuerySchema = object({
+  limit: number(),
+  to: string(),
+});
+
+export type ClientTreeFragmentQuery = Infer<typeof clientTreeFragmentQuerySchema>;
 
 export type ClientMemoQuery = Infer<typeof clientMemoQuerySchema>;
 

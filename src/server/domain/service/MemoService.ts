@@ -1,8 +1,16 @@
-import { compact, mapValues, uniq } from 'lodash-es';
+import { compact, isEmpty, mapValues, uniq } from 'lodash-es';
 import assert from 'assert';
 
 import { buildIndex } from '@utils/collection.js';
-import type { Memo, MemoDTO, ClientMemoQuery, MemoVO, MemoPatchDTO, Duration } from '@domain/model/memo.js';
+import type {
+  Memo,
+  MemoDTO,
+  ClientMemoQuery,
+  MemoVO,
+  MemoPatchDTO,
+  Duration,
+  ClientTreeFragmentQuery,
+} from '@domain/model/memo.js';
 import { EntityTypes } from '@domain/model/entity.js';
 
 import BaseService from './BaseService.js';
@@ -53,7 +61,8 @@ export default class MemoService extends BaseService {
   }
 
   public async query(query: ClientMemoQuery) {
-    assert(query.parentId || query.isPinned || query.limit, 'limit is required when no parentId / isPinned');
+    assert(!isEmpty(query), 'can not query all');
+    assert(!(query.isPinned && query.limit), 'isPinned / pinned can not be together');
 
     if (query.after || query.before) {
       await this.assertAvailableIds(compact([query.after, query.before]));
@@ -118,5 +127,32 @@ export default class MemoService extends BaseService {
 
   public async queryAvailableDates(duration: Duration) {
     return this.repo.memos.queryAvailableDates(duration);
+  }
+
+  public async queryFragment({ to: id, limit }: ClientTreeFragmentQuery) {
+    await this.assertAvailableIds([id]);
+
+    const memo = await this.repo.memos.findOneById(id);
+    assert(memo);
+
+    id = memo.parentId || id;
+
+    const [after, before] = await Promise.all([
+      this.query({ after: id, limit, isPinned: false }),
+      this.query({ before: id, limit, isPinned: false }),
+    ]);
+
+    const allMemos = [...after, ...before];
+
+    if (memo.parentId) {
+      const [afterChildren, beforeChildren] = await Promise.all([
+        this.query({ after: id, limit, isPinned: false, parentId: memo.parentId }),
+        this.query({ before: id, limit, isPinned: false, parentId: memo.parentId }),
+      ]);
+
+      allMemos.push(...afterChildren, ...beforeChildren);
+    }
+
+    return allMemos;
   }
 }

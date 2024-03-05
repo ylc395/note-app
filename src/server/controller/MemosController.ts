@@ -1,7 +1,13 @@
 import { container } from 'tsyringe';
 import { string, tuple } from 'zod';
 
-import { clientMemoQuerySchema, memoPatchDTOSchema, memoDTOSchema, durationSchema } from '@domain/model/memo.js';
+import {
+  clientMemoQuerySchema,
+  memoPatchDTOSchema,
+  memoDTOSchema,
+  durationSchema,
+  clientTreeFragmentQuerySchema,
+} from '@domain/model/memo.js';
 import MemoService from '@domain/service/MemoService.js';
 
 import { publicProcedure, router } from './trpc.js';
@@ -14,6 +20,10 @@ export default router({
   query: memoProcedure
     .input(clientMemoQuerySchema)
     .query(({ input: query, ctx: { memoService } }) => memoService.query(query)),
+
+  queryTreeFragment: memoProcedure
+    .input(clientTreeFragmentQuerySchema)
+    .query(({ input: query, ctx: { memoService } }) => memoService.queryFragment(query)),
 
   create: memoProcedure
     .input(memoDTOSchema)

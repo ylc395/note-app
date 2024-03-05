@@ -47,14 +47,9 @@ export default class EditableNote extends EditableEntity<Required<NoteVO>> {
   @action
   public update(note: NotePatchDTO) {
     assert(this.entity);
+
     this.entity = { ...this.entity, ...note, updatedAt: Date.now() };
     this.uploadNote(note);
-    eventBus.emit(NoteEvents.Updated, {
-      id: this.entityLocator.entityId,
-      trigger: this,
-      updatedAt: Date.now(),
-      ...note,
-    });
   }
 
   @action
@@ -63,13 +58,17 @@ export default class EditableNote extends EditableEntity<Required<NoteVO>> {
 
     this.entity.body = body;
     this.entity.updatedAt = Date.now();
-
     this.uploadNote({ body });
-    eventBus.emit(NoteEvents.Updated, { id: this.entityLocator.entityId, trigger: this, body, updatedAt: Date.now() });
   }
 
-  private readonly uploadNote = debounce((note: NotePatchDTO) => {
-    this.remote.note.updateOne.mutate([this.entityLocator.entityId, toJS(note)]);
+  private readonly uploadNote = debounce(async (note: NotePatchDTO) => {
+    await this.remote.note.updateOne.mutate([this.entityLocator.entityId, toJS(note)]);
+    eventBus.emit(NoteEvents.Updated, {
+      id: this.entityLocator.entityId,
+      trigger: this,
+      updatedAt: Date.now(),
+      ...note,
+    });
   }, 1000);
 
   public destroy(): void {

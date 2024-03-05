@@ -1,4 +1,5 @@
 import { runInAction, makeObservable, computed, observable } from 'mobx';
+import assert from 'assert';
 
 import TreeNode from '@domain/common/model/abstract/TreeNode';
 import type { MemoVO } from '@shared/domain/model/memo';
@@ -13,8 +14,8 @@ export default class MemoTreeNode extends TreeNode<MemoVO> {
   @observable
   public readonly isEnd = { after: false, before: false };
 
-  protected fetchChildren() {
-    return this.remote.memo.query.query({ parentId: this.isRoot ? null : this.id });
+  protected fetchChildren(): never {
+    assert.fail('not implement');
   }
 
   public async loadChildren(direction?: 'after' | 'before') {
@@ -29,11 +30,17 @@ export default class MemoTreeNode extends TreeNode<MemoVO> {
     if (!direction) {
       await this.initChildren();
     } else {
+      const parentId = this.isRoot ? null : this.id;
       const memos = await this.remote.memo.query.query({
+        parentId,
         limit: MemoTreeNode.LIMIT,
-        parentId: this.isRoot ? null : this.id,
         [direction]: this.memos.findLast((memo) => !memo.isPinned)?.id,
       });
+
+      if (direction === 'after' && memos.length < MemoTreeNode.LIMIT) {
+        const pinned = await this.remote.memo.query.query({ isPinned: true, parentId });
+        memos.push(...pinned);
+      }
 
       runInAction(() => {
         if (memos.length < MemoTreeNode.LIMIT) {
