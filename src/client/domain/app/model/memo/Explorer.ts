@@ -65,23 +65,23 @@ export default class MemoExplorer {
   }
 
   @action.bound
-  public startEditing(id: MemoVO['id'], newChild?: boolean) {
-    const editors = newChild ? this.editors.create : this.editors.edit;
+  public startEditing(id: MemoVO['id'], mode: 'edit' | 'create') {
+    const editors = this.editors[mode];
 
     editors[id] = new Editor({
-      memo: newChild ? undefined : this.getMemo(id),
-      parentId: newChild ? id : undefined,
-      onSubmit: (result) => this.stopEditing(result, newChild),
+      memo: mode === 'create' ? undefined : this.getMemo(id),
+      parentId: mode === 'create' ? id : undefined,
+      onSubmit: (result) => this.stopEditing(result, mode),
     });
   }
 
-  public getEditor(id: MemoVO['id'], newChild?: boolean) {
-    return newChild ? this.editors.create[id] : this.editors.edit[id];
+  public getEditor(id: MemoVO['id'], mode: 'create' | 'edit') {
+    return this.editors[mode][id];
   }
 
   @action.bound
-  public stopEditing(memo: MemoVO | MemoVO['id'], newChild?: boolean) {
-    const editors = newChild ? this.editors.create : this.editors.edit;
+  public stopEditing(memo: MemoVO | MemoVO['id'], mode: 'create' | 'edit') {
+    const editors = this.editors[mode];
 
     if (typeof memo === 'string') {
       delete editors[memo];
@@ -110,6 +110,12 @@ export default class MemoExplorer {
     const allMemos = await this.remote.memo.queryTreeFragment.query({ to: id, limit: 15 });
     this.tree = new MemoTree();
     this.tree.updateTree(allMemos);
+
+    const { parent } = this.tree.getNode(id);
+
+    if (parent) {
+      this.toggleExpand(parent.id);
+    }
   }
 
   public async togglePin(id: MemoVO['id']) {
@@ -143,13 +149,17 @@ export default class MemoExplorer {
     return (this.tree.getNode(id) as MemoTreeNode).memos;
   }
 
+  public getChildrenCount(id: MemoVO['id']) {
+    return this.getChildren(id).length || this.getMemo(id).childrenCount;
+  }
+
   public toggleExpand(id: MemoVO['id']) {
     const result = this.tree.getNode(id).toggleExpand();
 
     if (result) {
-      this.startEditing(id, true);
+      this.startEditing(id, 'create');
     } else {
-      this.stopEditing(id, true);
+      this.stopEditing(id, 'create');
     }
 
     return result;

@@ -8,13 +8,13 @@ import List from './List';
 
 export default observer(function MemoExplorerView() {
   const {
-    explorer: { uiState },
+    explorer: { uiState, newRootMemoEditor },
   } = container.resolve(MemoService);
 
   return (
     <>
       <Header />
-      {uiState.panel === 'editor' && <NewMemoEditor />}
+      {uiState.panel === 'editor' && <NewMemoEditor editor={newRootMemoEditor} />}
       <List />
     </>
   );

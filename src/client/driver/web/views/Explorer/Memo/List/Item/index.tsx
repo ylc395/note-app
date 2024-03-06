@@ -14,6 +14,8 @@ import { useState } from 'react';
 const ListItem = observer(function ({ id }: { id: MemoVO['id'] }) {
   const { explorer } = container.resolve(MemoService);
   const memo = explorer.getMemo(id);
+  const childrenCount = explorer.getChildrenCount(id);
+
   const isChild = Boolean(memo.parentId);
   const [isChildrenVisible, setIsChildrenVisible] = useState(false);
 
@@ -29,7 +31,7 @@ const ListItem = observer(function ({ id }: { id: MemoVO['id'] }) {
         {memo.isPinned && <div>Pinned</div>}
         <time>{dayjs(memo.createdAt).format('YYYY-MM-DD HH:mm:ss')}</time>
         <div className="flex">
-          <Button onClick={() => explorer.startEditing(memo.id)}>
+          <Button onClick={() => explorer.startEditing(memo.id, 'edit')}>
             <AiOutlineEdit />
           </Button>
           <Button onClick={() => explorer.togglePin(memo.id)}>
@@ -38,7 +40,7 @@ const ListItem = observer(function ({ id }: { id: MemoVO['id'] }) {
           {!isChild && (
             <Button onClick={toggleChildren}>
               <AiOutlineComment />
-              {memo.childrenCount > 0 && memo.childrenCount}
+              {childrenCount > 0 && childrenCount}
             </Button>
           )}
         </div>

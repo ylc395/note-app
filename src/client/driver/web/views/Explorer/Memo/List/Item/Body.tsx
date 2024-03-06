@@ -7,7 +7,7 @@ import Editor from '../../Editor';
 
 export default observer(function Body({ id }: { id: MemoVO['id'] }) {
   const { explorer: list } = container.resolve(MemoService);
-  const editor = list.getEditor(id);
+  const editor = list.getEditor(id, 'edit');
   const memo = list.getMemo(id);
 
   return (

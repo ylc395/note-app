@@ -8,7 +8,7 @@ import Editor from '../../Editor';
 
 export default observer(function ChildrenList({ id }: { id: MemoVO['id'] }) {
   const { explorer } = container.resolve(MemoService);
-  const editor = explorer.getEditor(id, true);
+  const editor = explorer.getEditor(id, 'create');
   const children = explorer.getChildren(id);
 
   return (

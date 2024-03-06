@@ -1,14 +1,12 @@
 import { container } from 'tsyringe';
 import { AiOutlineEdit, AiOutlineSetting, AiOutlineCalendar } from 'react-icons/ai';
 
-import MemoService from '@domain/app/service/MemoService';
+import MemoExplorer from '@domain/app/model/memo/Explorer';
 import ExplorerHeader from '../common/ExplorerHeader';
 
 // eslint-disable-next-line mobx/missing-observer
 export default (function Header() {
-  const {
-    explorer: { togglePanel },
-  } = container.resolve(MemoService);
+  const { togglePanel } = container.resolve(MemoExplorer);
 
   return (
     <ExplorerHeader

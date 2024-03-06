@@ -23,6 +23,10 @@ export default class Editor {
   @observable
   public content: string;
 
+  public get memoId() {
+    return this.options.memo?.id;
+  }
+
   public readonly submit = async () => {
     const newMemo = this.options.memo
       ? await this.remote.memo.updateOne.mutate([this.options.memo.id, { body: this.content }])
