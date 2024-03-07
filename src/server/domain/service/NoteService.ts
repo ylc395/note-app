@@ -9,7 +9,6 @@ import {
   type ClientNoteQuery,
   normalizeTitle,
 } from '@domain/model/note.js';
-import { EntityTypes } from '@domain/model/entity.js';
 
 import BaseService from './BaseService.js';
 import HierarchyBehavior from './behaviors/HierarchyBehavior.js';
@@ -32,6 +31,13 @@ export default class NoteService extends BaseService {
       newNote = await this.repo.notes.create(note);
     }
 
+    if (newNote.body) {
+      this.eventBus.emit('contentUpdated', {
+        content: newNote.body,
+        entityId: newNote.id,
+        updatedAt: newNote.updatedAt,
+      });
+    }
     return await this.toVO(newNote);
   }
 
@@ -44,23 +50,7 @@ export default class NoteService extends BaseService {
       title: `${normalizeTitle(targetNote)}-副本`,
     });
 
-    this.eventBus.emit('contentUpdated', {
-      content: targetNote.body,
-      entityId: newNote.id,
-      entityType: EntityTypes.Note,
-      updatedAt: targetNote.updatedAt,
-    });
-
     return newNote;
-  }
-
-  public async updateBody(noteId: Note['id'], body: string) {
-    await this.assertAvailableIds([noteId]);
-
-    const updatedAt = Date.now();
-    const result = await this.repo.notes.update(noteId, { body, updatedAt });
-
-    assert(result);
   }
 
   public readonly getNormalizedTitles = async (ids: Note['id'][]) => {
@@ -91,7 +81,6 @@ export default class NoteService extends BaseService {
         content: note.body,
         entityId: noteId,
         updatedAt,
-        entityType: EntityTypes.Note,
       });
     }
 

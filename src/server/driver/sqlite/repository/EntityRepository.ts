@@ -10,6 +10,16 @@ import { buildIndex } from '@utils/collection.js';
 export default class SqliteEntityRepository extends BaseRepository implements EntityRepository {
   private readonly tableName = tableName;
 
+  public async findOneById(id: EntityId) {
+    const row = await this.db
+      .selectFrom(this.tableName)
+      .select(['id', 'createdAt'])
+      .where('id', '=', id)
+      .executeTakeFirst();
+
+    return row || null;
+  }
+
   public async findChildrenIds(ids: EntityId[], options?: { isAvailableOnly?: boolean }) {
     let qb = this.db.selectFrom(this.tableName).selectAll(this.tableName);
 

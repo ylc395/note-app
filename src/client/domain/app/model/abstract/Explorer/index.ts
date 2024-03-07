@@ -8,7 +8,7 @@ import type { EntityTypes, HierarchyEntity, UpdateEvent } from '@domain/app/mode
 import type RenameBehavior from './RenameBehavior';
 import type ContextmenuBehavior from './ContextmenuBehavior';
 import DndBehavior from './DndBehavior';
-import MoveBehavior from '../behaviors/MoveBehavior';
+import MoveBehavior from '../../../service/behaviors/MoveBehavior';
 
 export { default as RenameBehavior } from './RenameBehavior';
 

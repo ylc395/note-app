@@ -11,7 +11,6 @@ import type {
   Duration,
   ClientTreeFragmentQuery,
 } from '@domain/model/memo.js';
-import { EntityTypes } from '@domain/model/entity.js';
 
 import BaseService from './BaseService.js';
 
@@ -53,7 +52,6 @@ export default class MemoService extends BaseService {
         updatedAt: updated.updatedAt,
         content: patch.body,
         entityId: id,
-        entityType: EntityTypes.Memo,
       });
     }
 

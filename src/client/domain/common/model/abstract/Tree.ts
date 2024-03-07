@@ -89,11 +89,10 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
     const entities = Array.isArray(entity) ? entity : [entity];
 
     for (const entity of entities) {
-      assert(entity.id);
       const node = this.getNode(entity.id, true);
 
       if (node) {
-        assert(node.entity);
+        assert(node.entity, 'can not update root entity');
         this.updateNode({
           ...node.entity,
           ...pickBy(entity, (_, key) => key in node.entity!),
@@ -110,22 +109,23 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
 
     for (const entity of entities) {
       const node = this.getNode(entity.id);
-
       assert(node.entity && node.parent);
+
+      const oldParentId = node.parent.id || this.root.id;
       node.entity = entity;
       Object.assign(node, this.entityToNode(node.entity));
 
-      if (node.parent.id !== (entity.parentId || this.root.id)) {
+      const newParent = node.parent;
+
+      if (node.parent.id !== oldParentId) {
         // reset parent-child relationship
-        const oldParent = node.parent;
+        const oldParent = this.getNode(oldParentId);
         pull(oldParent.children, node);
 
         if (oldParent.children.length === 0) {
           oldParent.isLeaf = true;
           oldParent.isExpanded = false;
         }
-
-        const newParent = this.getNode(entity.parentId, true);
 
         if (newParent) {
           newParent.children.push(node);

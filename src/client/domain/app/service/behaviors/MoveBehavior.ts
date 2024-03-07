@@ -6,7 +6,7 @@ import type { EntityId, EntityParentId, HierarchyEntity } from '@shared/domain/m
 import type { PromptToken } from '@shared/domain/infra/ui';
 import { token as UIToken } from '@shared/domain/infra/ui';
 import type Tree from '@domain/common/model/abstract/Tree';
-import type Explorer from '../Explorer';
+import type Explorer from '../../model/abstract/Explorer';
 
 export default class MoveBehavior<T extends HierarchyEntity> {
   private readonly ui = container.resolve(UIToken);

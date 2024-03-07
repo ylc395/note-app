@@ -12,7 +12,6 @@ import {
   isEntityMaterial,
   normalizeTitle,
 } from '@domain/model/material.js';
-import { EntityTypes } from '@domain/model/entity.js';
 
 import BaseService from './BaseService.js';
 import HierarchyBehavior from './behaviors/HierarchyBehavior.js';
@@ -95,7 +94,6 @@ export default class MaterialService extends BaseService {
       if (typeof patch.comment === 'string') {
         this.eventBus.emit('contentUpdated', {
           content: patch.comment,
-          entityType: EntityTypes.Material,
           entityId: materialId,
           updatedAt: now,
         });

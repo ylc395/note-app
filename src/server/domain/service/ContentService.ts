@@ -59,7 +59,7 @@ export default class ContentService extends BaseService {
         }
 
         await this.transaction(async () => {
-          await this.repo.contents.removeTopicsOf(entity);
+          await this.repo.contents.removeTopicsOf(entity.entityId);
           await this.repo.contents.createTopics(topics);
         });
       },
@@ -96,7 +96,7 @@ export default class ContentService extends BaseService {
         }
 
         await this.transaction(async () => {
-          await this.repo.contents.removeLinks(entity, 'from');
+          await this.repo.contents.removeLinks(entity.entityId, 'from');
           await this.repo.contents.createLinks(links); // don't do filtering here.
         });
       },
@@ -213,7 +213,7 @@ export default class ContentService extends BaseService {
 
     await this.transaction(async () => {
       for (const link of uniqBy(map(links, 'from'), 'entityId')) {
-        await this.repo.contents.removeLinks(link, 'from');
+        await this.repo.contents.removeLinks(link.entityId, 'from');
       }
       await this.repo.contents.createLinks(_links);
     });

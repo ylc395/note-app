@@ -1,6 +1,6 @@
 import type { RevisionRepository } from '@domain/service/repository/RevisionRepository.js';
 
-import type { EntityLocator } from '@domain/model/entity.js';
+import type { EntityId } from '@domain/model/entity.js';
 import type { Revision } from '@domain/model/revision.js';
 import BaseRepository from './BaseRepository.js';
 import schema from '../schema/revision.js';
@@ -9,14 +9,13 @@ const { tableName } = schema;
 
 export default class SqliteRevisionRepository extends BaseRepository implements RevisionRepository {
   async create(revision: Revision) {
-    const { id, createdAt, diff } = await this.createOneOn(tableName, { ...revision, id: this.generateId() });
-    return { id, createdAt, diff };
+    const row = await this.createOneOn(tableName, { ...revision, id: this.generateId() });
+    return row;
   }
 
-  async findAll({ entityType, entityId }: EntityLocator) {
+  async findAllByEntityId(entityId: EntityId) {
     const result = await this.db
       .selectFrom(tableName)
-      .where('entityType', '=', entityType)
       .where('entityId', '=', entityId)
       .orderBy('createdAt', 'asc')
       .select(['id', 'createdAt', 'diff'])
@@ -25,11 +24,10 @@ export default class SqliteRevisionRepository extends BaseRepository implements 
     return result;
   }
 
-  async getLatestRevisionTime({ entityId, entityType }: EntityLocator) {
+  async getLatestRevisionTime(entityId: EntityId) {
     const row = await this.db
       .selectFrom(tableName)
       .select(['createdAt'])
-      .where('entityType', '=', entityType)
       .where('entityId', '=', entityId)
       .orderBy('createdAt', 'asc')
       .executeTakeFirst();

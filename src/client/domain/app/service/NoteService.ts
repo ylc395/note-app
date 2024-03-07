@@ -11,7 +11,7 @@ import { EntityParentId, EntityTypes } from '@shared/domain/model/entity';
 import { type ActionEvent, eventBus, Events } from '@domain/app/model/note/eventBus';
 import { MOVE_TARGET_MODAL } from '@domain/app/model/note/prompts';
 import TreeNode from '@domain/common/model/abstract/TreeNode';
-import MoveBehavior from '../model/abstract/behaviors/MoveBehavior';
+import MoveBehavior from './behaviors/MoveBehavior';
 
 @singleton()
 export default class NoteService {

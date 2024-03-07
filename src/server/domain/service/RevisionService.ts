@@ -1,45 +1,53 @@
 import { createPatch, applyPatch } from 'diff';
+import assert from 'node:assert';
 
-import type { EntityLocator } from '@domain/model/entity.js';
+import type { EntityId } from '@domain/model/entity.js';
 import type { ContentUpdatedEvent } from '@domain/model/content.js';
 
 import BaseService from './BaseService.js';
 
 export default class RevisionService extends BaseService {
-  onModuleInit() {
+  constructor() {
+    super();
     this.eventBus.on('contentUpdated', this.createRevision);
   }
 
-  private readonly createRevision = async ({ content, entityId, entityType }: ContentUpdatedEvent) => {
-    if (!(await this.shouldCreate({ entityId, entityType }))) {
+  private readonly createRevision = async ({ content, entityId, updatedAt }: ContentUpdatedEvent) => {
+    if (!(await this.shouldCreate(entityId))) {
       return;
     }
 
-    const oldContent = await this.getOldContent({ entityId, entityType });
-    const diff = createPatch(`${entityType}-${entityId}`, oldContent || '', content);
-    await this.repo.revisions.create({ entityId, entityType, diff });
+    const oldContent = await this.getOldContent(entityId);
+    const diff = createPatch(entityId, oldContent, content);
+
+    await this.repo.revisions.create({
+      entityId,
+      diff,
+      createdAt: updatedAt,
+      device: this.runtime.getDeviceName(),
+    });
   };
 
-  private async shouldCreate(entity: EntityLocator) {
-    const latestTime = await this.repo.revisions.getLatestRevisionTime(entity);
+  private async shouldCreate(entityId: EntityId) {
+    let latestTime = await this.repo.revisions.getLatestRevisionTime(entityId);
 
-    if (latestTime) {
-      return Date.now() - latestTime > 30 * 60 * 1000;
+    if (!latestTime) {
+      const entity = await this.repo.entities.findOneById(entityId);
+      assert(entity);
+
+      latestTime = entity.createdAt;
     }
 
-    return true;
+    return Date.now() - latestTime > 30 * 60 * 1000;
   }
 
-  private async getOldContent({ entityId: id, entityType: type }: EntityLocator) {
-    const revisions = await this.repo.revisions.findAll({ entityId: id, entityType: type });
+  private async getOldContent(entityId: EntityId) {
+    const revisions = await this.repo.revisions.findAllByEntityId(entityId);
     let result = '';
 
     for (const { diff } of revisions) {
       const applied = applyPatch(result, diff);
-
-      if (applied === false) {
-        throw new Error('can not apply patch');
-      }
+      assert(typeof applied === 'string', 'can not apply patch');
 
       result = applied;
     }

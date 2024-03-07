@@ -2,7 +2,7 @@ import assert from 'assert';
 import { container, singleton } from 'tsyringe';
 
 import type { Annotation, AnnotationDTO, AnnotationPatchDTO } from '@domain/model/annotation.js';
-import { type EntityId, EntityTypes } from '@domain/model/entity.js';
+import { type EntityId } from '@domain/model/entity.js';
 
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
@@ -28,7 +28,6 @@ export default class AnnotationService extends BaseService {
     if (typeof patch.body === 'string') {
       this.eventBus.emit('contentUpdated', {
         content: patch.body,
-        entityType: EntityTypes.Annotation,
         entityId: annotationId,
         updatedAt: updated.updatedAt,
       });

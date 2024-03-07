@@ -1,12 +1,14 @@
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
+import { hostname } from 'node:os';
 import { InjectionToken, container } from 'tsyringe';
 
 import { APP_NAME, IS_DEV, IS_TEST } from '@domain/infra/constants.js';
 import { Runtime as CommonRuntime, token as runtimeToken } from '@domain/infra/runtime.js';
-import { token as databaseToken } from '@domain/infra/database.js';
-import { token as kvDatabaseToken } from '@domain/infra/kvDatabase.js';
-import { token as searchEngineToken } from '@domain/infra/searchEngine.js';
+import { token as databaseToken, type Database } from '@domain/infra/database.js';
+import { token as kvDatabaseToken, type KvDatabase } from '@domain/infra/kvDatabase.js';
+import { token as searchEngineToken, type SearchEngine } from '@domain/infra/searchEngine.js';
+import { token as loggerToken } from '@domain/infra/logger.js';
 
 import SqliteDb from '../sqlite/Database.js';
 import SqliteKvDatabase from '../sqlite/KvDatabase.js';
@@ -15,19 +17,29 @@ import SqliteSearchEngine from '../sqlite/SearchEngine/index.js';
 export const token: InjectionToken<DesktopRuntime> = Symbol('desktop');
 
 export default abstract class DesktopRuntime extends CommonRuntime {
-  protected db = new SqliteDb(this.getAppDir());
-  protected kv = new SqliteKvDatabase(this.db);
-  protected searchEngine = new SqliteSearchEngine(this.db);
-
+  protected readonly kv: KvDatabase;
+  protected readonly db: Database;
+  protected readonly searchEngine: SearchEngine;
   constructor() {
     super();
-    container.registerInstance(databaseToken, this.db);
-    container.registerInstance(kvDatabaseToken, this.kv);
-    container.registerInstance(searchEngineToken, this.searchEngine);
+    container.registerInstance(loggerToken, console);
+
+    const db = new SqliteDb(this.getAppDir());
+    const kv = new SqliteKvDatabase(db);
+    const searchEngine = new SqliteSearchEngine(db);
+
+    container.registerInstance(databaseToken, db);
+    container.registerInstance(kvDatabaseToken, kv);
+    container.registerInstance(searchEngineToken, searchEngine);
     container.registerInstance(runtimeToken, this);
+
+    this.db = db;
+    this.kv = kv;
+    this.searchEngine = searchEngine;
   }
 
   protected abstract whenUIReady(): Promise<void>;
+
   public async whenReady() {
     await Promise.all([super.whenReady(), this.whenUIReady()]);
   }
@@ -43,6 +55,10 @@ export default abstract class DesktopRuntime extends CommonRuntime {
       process.platform == 'darwin' ? process.env.HOME + '/Library/Preferences' : process.env.HOME + '/.local/share',
       dir,
     );
+  }
+
+  public getDeviceName() {
+    return hostname();
   }
 
   async getAppToken() {

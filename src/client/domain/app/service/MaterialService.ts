@@ -10,7 +10,7 @@ import { Workbench } from '@domain/app/model/workbench';
 import { EntityParentId, EntityTypes } from '../model/entity';
 import TreeNode from '@domain/common/model/abstract/TreeNode';
 import MaterialEditor from '../model/material/editor/MaterialEditor';
-import MoveBehavior from '../model/abstract/behaviors/MoveBehavior';
+import MoveBehavior from './behaviors/MoveBehavior';
 import eventBus, { type ActionEvent, Events } from '../model/material/eventBus';
 import { MOVE_TARGET_MODAL, NEW_MATERIAL_MODAL } from '../model/material/prompts';
 

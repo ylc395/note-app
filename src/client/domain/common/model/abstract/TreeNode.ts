@@ -58,14 +58,17 @@ export default abstract class TreeNode<T extends HierarchyEntity = HierarchyEnti
     });
 
     const entities = await this.fetchChildren();
-    this.tree.updateTree(entities);
 
-    this.isLoading = false;
-    this.isLoaded = true;
+    runInAction(() => {
+      this.tree.updateTree(entities);
 
-    if (entities.length === 0) {
-      this.isLeaf = true;
-    }
+      this.isLoading = false;
+      this.isLoaded = true;
+
+      if (entities.length === 0) {
+        this.isLeaf = true;
+      }
+    });
   }
 
   @action

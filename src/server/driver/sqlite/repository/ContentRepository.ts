@@ -1,5 +1,5 @@
-import type { ContentEntityTypes, Link, LinkDirection, LinkToQuery, Topic } from '@domain/model/content.js';
-import type { EntityLocator } from '@domain/model/entity.js';
+import type { Link, LinkDirection, LinkToQuery, Topic } from '@domain/model/content.js';
+import type { EntityId } from '@domain/model/entity.js';
 import type { ContentRepository } from '@domain/service/repository/ContentRepository.js';
 
 import BaseRepository from './BaseRepository.js';
@@ -13,30 +13,21 @@ export default class SqliteContentRepository extends BaseRepository implements C
       linkTableName,
       links.map(({ from, to, createdAt }) => ({
         fromEntityId: from.entityId,
-        fromEntityType: from.entityType,
         fromPosition: `${from.position.start},${from.position.end}` satisfies LinkRow['fromPosition'],
         toEntityId: to.entityId,
-        toEntityType: to.entityType,
         toFragmentId: to.fragmentId,
         createdAt,
       })),
     );
   }
 
-  async removeLinks({ entityId: id, entityType: type }: EntityLocator, direction?: LinkDirection) {
+  async removeLinks(entityId: EntityId, direction?: LinkDirection) {
     await this.db
       .deleteFrom(linkTableName)
       .where((eb) =>
         direction
-          ? eb.and(
-              direction === 'to'
-                ? { toEntityId: id, toEntityType: type }
-                : { fromEntityId: id, fromEntityType: type as ContentEntityTypes },
-            )
-          : eb.or([
-              eb.and({ toEntityId: id, toEntityType: type }),
-              eb.and({ fromEntityId: id, fromEntityType: type as ContentEntityTypes }),
-            ]),
+          ? eb(direction === 'to' ? 'toEntityId' : 'fromEntityId', '=', entityId)
+          : eb.or([eb('toEntityId', '=', entityId), eb('fromEntityId', '=', entityId)]),
       )
       .execute();
   }
@@ -47,7 +38,7 @@ export default class SqliteContentRepository extends BaseRepository implements C
       .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${linkTableName}.toEntityId`)
       .selectAll(linkTableName)
       .where(`${recyclableTableName}.entityId`, 'is', null)
-      .where((eb) => eb.and({ toEntityId: q.entityId, toEntityType: q.entityType }))
+      .where('toEntityId', '=', q.entityId)
       .execute();
 
     return rows.map((row) => {
@@ -57,10 +48,9 @@ export default class SqliteContentRepository extends BaseRepository implements C
         createdAt: row.createdAt,
         from: {
           entityId: row.fromEntityId,
-          entityType: row.fromEntityType,
           position: { start: Number(start), end: Number(end) },
         },
-        to: { entityId: row.toEntityId, entityType: row.toEntityType, fragmentId: row.toFragmentId },
+        to: { entityId: row.toEntityId, fragmentId: row.toFragmentId },
       };
     });
   }
@@ -75,8 +65,8 @@ export default class SqliteContentRepository extends BaseRepository implements C
     );
   }
 
-  async removeTopicsOf({ entityId: id, entityType: type }: EntityLocator) {
-    await this.db.deleteFrom(topicTableName).where('entityId', '=', id).where('entityType', '=', type).execute();
+  async removeTopicsOf(entityId: EntityId) {
+    await this.db.deleteFrom(topicTableName).where('entityId', '=', entityId).execute();
   }
 
   async findAvailableTopicNames() {

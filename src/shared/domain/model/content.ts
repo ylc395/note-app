@@ -1,5 +1,5 @@
-import { number, object, string, type infer as Infer, nativeEnum } from 'zod';
-import { entityLocatorSchema, EntityTypes, type EntityWithTitle } from './entity.js';
+import { number, object, string, type infer as Infer } from 'zod';
+import { EntityTypes, type EntityWithTitle } from './entity.js';
 
 const highlightPositionSchema = object({
   start: number(),
@@ -21,13 +21,14 @@ export interface TopicVO {
 
 export type LinkToVO = EntityWithSnippet;
 
-const linkToQuerySchema = entityLocatorSchema;
+const linkToQuerySchema = object({ entityId: string() });
 
 export type LinkDirection = 'to' | 'from';
 
 export type LinkToQuery = Infer<typeof linkToQuerySchema>;
 
-const topicDTOSchema = entityLocatorSchema.extend({
+const topicDTOSchema = object({
+  entityId: string(),
   position: highlightPositionSchema,
   name: string(),
 });
@@ -37,8 +38,8 @@ export const topicsDTOSchema = topicDTOSchema.array();
 export type TopicDTO = Infer<typeof topicDTOSchema>;
 
 const linkDTOSchema = object({
-  from: entityLocatorSchema.extend({ position: highlightPositionSchema, entityType: nativeEnum(EntityTypes) }),
-  to: entityLocatorSchema.extend({ fragmentId: string() }),
+  from: object({ entityId: string(), position: highlightPositionSchema }),
+  to: object({ entityId: string(), fragmentId: string() }),
 });
 
 export const linksDTOSchema = linkDTOSchema.array();

@@ -14,6 +14,7 @@ export interface Row {
   type: EntityTypes;
   parentId: string;
   content: string;
+  createdAt: number;
 }
 
 export const tableName = 'entities';
@@ -24,7 +25,15 @@ export default {
     db.schema.createView(tableName).as(
       db
         .selectFrom(noteTableName)
-        .select(['id', 'icon', 'title', 'parentId', 'body as content', sql.val(EntityTypes.Note).as('type')])
+        .select([
+          'id',
+          'icon',
+          'title',
+          'parentId',
+          'body as content',
+          sql.val(EntityTypes.Note).as('type'),
+          'createdAt',
+        ])
         .union(
           db
             .selectFrom(materialTableName)
@@ -35,6 +44,7 @@ export default {
               'parentId',
               'comment as content',
               sql.val(EntityTypes.Material).as('type'),
+              'createdAt',
             ]),
         )
         .union(
@@ -47,6 +57,7 @@ export default {
               'parentId',
               'body as content',
               sql.val(EntityTypes.Memo).as('type'),
+              'createdAt',
             ]),
         )
         .union(
@@ -59,6 +70,7 @@ export default {
               sql.val(null).as('parentId'),
               'body as content',
               sql.val(EntityTypes.Annotation).as('type'),
+              'createdAt',
             ]),
         ),
     ),

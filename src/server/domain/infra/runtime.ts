@@ -13,6 +13,7 @@ export abstract class Runtime {
   protected abstract readonly searchEngine: SearchEngine;
   public abstract bootstrap(): Promise<void>;
   public abstract getAppDir(): string;
+  public abstract getDeviceName(): string;
   public abstract toggleHttpServer?(enable: boolean): Promise<AppServerStatus | null>;
   public async whenReady() {
     await Promise.all([this.db.ready, this.kv.ready, this.searchEngine.ready]);
