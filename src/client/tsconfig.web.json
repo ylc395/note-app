@@ -4,5 +4,5 @@
   "compilerOptions": {
     "outDir": "../../dist/web"
   },
-  "references": [{ "path": "../shared/tsconfig.api.json" }, { "path": "../server/tsconfig.api.json" }]
+  "references": [{ "path": "../server/tsconfig.api.json" }]
 }
