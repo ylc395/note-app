@@ -26,7 +26,7 @@ export default class MaterialService {
 
   private readonly moveMaterials = async (parentId: EntityParentId, ids: MaterialVO['id'][]) => {
     await this.remote.material.batchUpdate.mutate([ids, { parentId }]);
-    ids.forEach((id) => eventBus.emit(Events.Updated, { trigger: this.move, parentId, id }));
+    ids.forEach((id) => eventBus.emit(Events.Updated, { explorerUpdated: true, trigger: this.move, parentId, id }));
   };
 
   public readonly move = new MoveBehavior({

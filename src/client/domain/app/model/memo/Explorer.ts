@@ -9,7 +9,6 @@ import type { Duration, MemoVO } from '@shared/domain/model/memo';
 import MemoTree from '@domain/app/model/memo/Tree';
 import Editor from './Editor';
 import type { UpdateEvent } from './eventBus';
-import type MemoTreeNode from './TreeNode';
 
 interface UIState {
   scrollTop?: number;
@@ -146,7 +145,7 @@ export default class MemoExplorer {
   }
 
   public getChildren(id: MemoVO['id']) {
-    return (this.tree.getNode(id) as MemoTreeNode).memos;
+    return this.tree.getNode(id).memos;
   }
 
   public getChildrenCount(id: MemoVO['id']) {

@@ -13,5 +13,6 @@ export interface ActionEvent {
 
 export type UpdateEvent<T = unknown> = {
   id: EntityId;
+  explorerUpdated?: boolean;
   trigger: unknown;
 } & T;

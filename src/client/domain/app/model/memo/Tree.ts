@@ -1,3 +1,4 @@
+import assert from 'assert';
 import type { Duration, MemoVO } from '@shared/domain/model/memo';
 import { EntityTypes } from '@shared/domain/model/entity';
 import Tree from '@domain/common/model/abstract/Tree';
@@ -10,8 +11,9 @@ export default class MemoTree extends Tree<MemoVO> {
 
   public readonly entityType = EntityTypes.Memo;
   public root = this.createNode(null);
-  public entityToNode(memo: MemoVO) {
-    return { isLeaf: memo.childrenCount === 0 };
+
+  public queryChildren(): never {
+    assert.fail('not implement');
   }
 
   protected createNode(memo: MemoVO | null) {
@@ -27,4 +29,10 @@ export default class MemoTree extends Tree<MemoVO> {
     const memos = await this.remote.memo.query.query(duration);
     this.updateTree(memos);
   };
+
+  public getNode(id: MemoVO['id'] | null): MemoTreeNode;
+  public getNode(id: MemoVO['id'] | null, safe: true): MemoTreeNode | undefined;
+  public getNode(id: MemoVO['id'] | null, safe?: true) {
+    return safe ? (super.getNode(id, safe) as MemoTreeNode | undefined) : (super.getNode(id) as MemoTreeNode);
+  }
 }

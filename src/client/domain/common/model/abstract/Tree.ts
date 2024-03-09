@@ -3,20 +3,18 @@ import assert from 'assert';
 import { pull, pickBy } from 'lodash-es';
 import { container } from 'tsyringe';
 
-import type { EntityTypes, HierarchyEntity } from '@shared/domain/model/entity';
+import type { EntityId, EntityParentId, EntityTypes, HierarchyEntity } from '@shared/domain/model/entity';
 import type TreeNode from './TreeNode';
 import { token as remoteToken } from '@domain/common/infra/rpc';
 
 export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> {
-  constructor() {
+  constructor(public readonly options?: { entityToNode: TreeNode<HierarchyEntity>['entityToNode'] }) {
     makeObservable(this);
   }
 
   public readonly root = this.createNode(null);
   public abstract readonly entityType: EntityTypes;
-  public abstract entityToNode(
-    entity: T | null,
-  ): Partial<Pick<TreeNode<T>, 'isLeaf' | 'title' | 'isDisabled' | 'icon'>>;
+  public abstract queryChildren(id: EntityParentId | EntityId[]): Promise<T[]>;
   protected readonly remote = container.resolve(remoteToken);
 
   @observable.shallow
@@ -30,6 +28,12 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
   // root node included
   public get selectedNodes() {
     return this.allNodes.filter((node) => node.isSelected);
+  }
+
+  @computed
+  // root node not included
+  public get expandedNodes() {
+    return Object.values(this.nodes).filter((node) => node.isExpanded);
   }
 
   protected abstract createNode(entity: T | null): TreeNode<T>;
@@ -66,7 +70,7 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
   }
 
   @action
-  private addNode(entity: T) {
+  private addNode(entity: T, entityToNode?: TreeNode<T>['entityToNode']) {
     assert(entity.id !== this.root.id, 'invalid id');
     const parent = this.getNode(entity.parentId, true);
 
@@ -79,7 +83,7 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
     this.nodes[entity.id] = node;
     parent.isLeaf = false;
     parent.children.push(node);
-    Object.assign(node, this.entityToNode(entity));
+    Object.assign(node, entityToNode?.(entity));
 
     return node;
   }
@@ -113,7 +117,6 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
 
       const oldParentId = node.parent.id || this.root.id;
       node.entity = entity;
-      Object.assign(node, this.entityToNode(node.entity));
 
       const newParent = node.parent;
 

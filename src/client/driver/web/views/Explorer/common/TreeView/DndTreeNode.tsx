@@ -27,7 +27,7 @@ export default function DndTreeNode({ children, node, onDrop, onDragStart, onDra
   useEffect(() => {
     if (isOver && !node.isLeaf) {
       const timer = setTimeout(() => {
-        node.toggleExpand(true);
+        node.toggleExpand({ value: true });
       }, 1000);
 
       return () => clearTimeout(timer);

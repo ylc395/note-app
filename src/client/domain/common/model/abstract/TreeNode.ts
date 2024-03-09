@@ -1,28 +1,28 @@
-import { action, makeObservable, observable, runInAction } from 'mobx';
+import { action, makeObservable, observable, reaction, runInAction } from 'mobx';
 import assert from 'assert';
-import { container } from 'tsyringe';
 
 import type { HierarchyEntity } from '@shared/domain/model/entity';
-import { token } from '@domain/common/infra/rpc';
 import Tree from './Tree';
 
 export default abstract class TreeNode<T extends HierarchyEntity = HierarchyEntity> {
-  protected remote = container.resolve(token);
   constructor({ entity, tree }: { entity: T | null; tree: Tree<T> }) {
+    this.entity = entity || null;
+    this.tree = tree;
+
     if (!entity) {
       this.isLeaf = false;
       this.isExpanded = true;
     }
 
-    this.entity = entity || null;
-    this.tree = tree;
-
     makeObservable(this);
+    reaction(
+      () => this.entity,
+      action((entity) => Object.assign(this, this._entityToNode(entity))),
+      { fireImmediately: true },
+    );
   }
 
   public tree: Tree<T>;
-
-  protected abstract fetchChildren(): Promise<T[]>;
 
   protected get isRoot() {
     return this.id === '__ROOT_ID';
@@ -49,7 +49,7 @@ export default abstract class TreeNode<T extends HierarchyEntity = HierarchyEnti
   }
 
   public async loadChildren() {
-    if (this.isLoading || this.isLoaded) {
+    if (this.isLoading) {
       return;
     }
 
@@ -57,13 +57,12 @@ export default abstract class TreeNode<T extends HierarchyEntity = HierarchyEnti
       this.isLoading = true;
     });
 
-    const entities = await this.fetchChildren();
+    const entities = await this.tree.queryChildren(this.entity?.id || null);
 
     runInAction(() => {
       this.tree.updateTree(entities);
 
       this.isLoading = false;
-      this.isLoaded = true;
 
       if (entities.length === 0) {
         this.isLeaf = true;
@@ -72,18 +71,18 @@ export default abstract class TreeNode<T extends HierarchyEntity = HierarchyEnti
   }
 
   @action
-  public toggleExpand(value?: boolean) {
+  public toggleExpand(config?: { value?: boolean; noLoad?: boolean }) {
     let toggled: boolean;
 
-    if (typeof value === 'boolean') {
-      toggled = this.isExpanded !== value;
-      this.isExpanded = value;
+    if (typeof config?.value === 'boolean') {
+      toggled = this.isExpanded !== config.value;
+      this.isExpanded = config.value;
     } else {
       toggled = true;
       this.isExpanded = !this.isExpanded;
     }
 
-    if (this.isExpanded && toggled && !this.isLeaf) {
+    if (this.isExpanded && toggled && !this.isLeaf && !config?.noLoad) {
       this.loadChildren();
     }
 
@@ -126,6 +125,14 @@ export default abstract class TreeNode<T extends HierarchyEntity = HierarchyEnti
     return this.entity ? this.tree.getNode(this.entity.parentId) : null;
   }
 
+  public abstract entityToNode(
+    entity: T | null,
+  ): Partial<Pick<TreeNode, 'isLeaf' | 'title' | 'isDisabled' | 'icon' | 'isExpanded'>>;
+
+  private _entityToNode(entity: T | null) {
+    return { ...this.entityToNode(entity), ...this.tree.options?.entityToNode(entity) };
+  }
+
   @observable public entity: T | null; // only root node has no entity;
   @observable public isDisabled = false;
   @observable public title = '';
@@ -135,5 +142,4 @@ export default abstract class TreeNode<T extends HierarchyEntity = HierarchyEnti
   @observable public isExpanded = false;
   @observable public isSelected = false;
   @observable public isLoading = false;
-  protected isLoaded = false;
 }

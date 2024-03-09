@@ -10,7 +10,7 @@ import ExplorerHeader from '../common/ExplorerHeader';
 
 export default observer(function Header() {
   const {
-    hasExpandedNode,
+    canCollapse: hasExpandedNode,
     collapseAll,
     tree: { root },
     dnd: { status },

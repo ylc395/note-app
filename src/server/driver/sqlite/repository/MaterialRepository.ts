@@ -55,8 +55,10 @@ export default class SqliteMaterialRepository extends BaseRepository implements 
       qb = qb.where(`${this.tableName}.id`, 'in', q.id);
     }
 
-    if (typeof q.parentId !== 'undefined') {
-      qb = qb.where(`${this.tableName}.parentId`, q.parentId === null ? 'is' : '=', q.parentId);
+    if (Array.isArray(q.parentId)) {
+      qb = qb.where('parentId', 'in', q.parentId);
+    } else if (typeof q.parentId !== 'undefined') {
+      qb = qb.where('parentId', q.parentId === null ? 'is' : '=', q.parentId);
     }
 
     const rows = await qb

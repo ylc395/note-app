@@ -1,4 +1,4 @@
-import { boolean, object, string, type infer as ZodInfer } from 'zod';
+import { boolean, object, string, union, type infer as ZodInfer } from 'zod';
 import dayjs from 'dayjs';
 import type { EntityId, EntityParentId, Path } from './entity.js';
 
@@ -11,7 +11,7 @@ export const notePatchDTOSchema = object({
 });
 
 export const clientNoteQuerySchema = object({
-  parentId: string().nullable().optional(),
+  parentId: union([string().array(), string().nullable()]).optional(),
   to: string().optional(),
 });
 

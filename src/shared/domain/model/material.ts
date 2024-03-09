@@ -1,4 +1,4 @@
-import { object, string, type infer as Infer } from 'zod';
+import { object, string, type infer as Infer, union } from 'zod';
 import dayjs from 'dayjs';
 import type { EntityId, EntityParentId, Path } from './entity.js';
 
@@ -14,7 +14,7 @@ export const newMaterialDTOSchema = object({
 export const materialPatchDTOSchema = newMaterialDTOSchema.omit({ fileId: true });
 
 export const clientMaterialQuerySchema = object({
-  parentId: string().nullable().optional(),
+  parentId: union([string().nullable(), string().array()]).optional(),
   to: string().optional(),
   fileHash: string().optional(),
 });

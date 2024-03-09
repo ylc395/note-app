@@ -5,14 +5,12 @@ import { compact } from 'lodash-es';
 import { isEntityMaterial, type MaterialVO } from '@shared/domain/model/material';
 import MaterialTree from '@domain/common/model/material/Tree';
 import Explorer, { RenameBehavior } from '@domain/app/model/abstract/Explorer';
-import { EntityTypes } from '../entity';
 import eventBus, { Events } from './eventBus';
 import ContextmenuBehavior from '../abstract/Explorer/ContextmenuBehavior';
 
 @singleton()
 export default class MaterialExplorer extends Explorer<MaterialVO> {
   public readonly tree = new MaterialTree();
-  public readonly entityType = EntityTypes.Material;
   private readonly remote = container.resolve(rpcToken);
   public readonly rename: RenameBehavior;
   public readonly contextmenu: ContextmenuBehavior;
@@ -34,7 +32,7 @@ export default class MaterialExplorer extends Explorer<MaterialVO> {
 
   private readonly submitRename = async ({ id, name }: { id: string; name: string }) => {
     await this.remote.material.updateOne.mutate([id, { title: name }]);
-    eventBus.emit(Events.Updated, { id, title: name, trigger: this });
+    eventBus.emit(Events.Updated, { id, trigger: this.rename, title: name });
   };
 
   private readonly getContextmenuItems = () => {

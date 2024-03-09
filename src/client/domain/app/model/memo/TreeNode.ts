@@ -1,11 +1,20 @@
 import { runInAction, makeObservable, computed, observable } from 'mobx';
-import assert from 'assert';
+import { container } from 'tsyringe';
 
 import TreeNode from '@domain/common/model/abstract/TreeNode';
 import type { MemoVO } from '@shared/domain/model/memo';
+import { token } from '@domain/common/infra/rpc';
 import type MemoTree from './Tree';
 
 export default class MemoTreeNode extends TreeNode<MemoVO> {
+  protected remote = container.resolve(token);
+
+  private isLoaded = false;
+
+  public entityToNode = (memo: MemoVO | null) => {
+    return { isLeaf: memo ? memo.childrenCount === 0 : false };
+  };
+
   constructor(params: { entity: MemoVO | null; tree: MemoTree }) {
     super(params);
     makeObservable(this);
@@ -13,10 +22,6 @@ export default class MemoTreeNode extends TreeNode<MemoVO> {
 
   @observable
   public readonly isEnd = { after: false, before: false };
-
-  protected fetchChildren(): never {
-    assert.fail('not implement');
-  }
 
   public async loadChildren(direction?: 'after' | 'before') {
     if (this.isLoading || (this.isLoaded && !direction) || (direction && this.isEnd[direction])) {

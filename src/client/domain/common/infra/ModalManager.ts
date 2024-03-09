@@ -25,8 +25,6 @@ export default class ModalManager {
   private confirm?: (value: any) => void;
 
   public use<T>(token: PromptToken<T>) {
-    console.log(token);
-
     const resolve = action((value: T | undefined) => {
       assert(this.confirm);
       this.confirm(value);

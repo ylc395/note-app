@@ -54,7 +54,9 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
       sql = sql.where('updatedAt', '>', q.updatedAfter);
     }
 
-    if (typeof q.parentId !== 'undefined') {
+    if (Array.isArray(q.parentId)) {
+      sql = sql.where('parentId', 'in', q.parentId);
+    } else if (typeof q.parentId !== 'undefined') {
       sql = sql.where('parentId', q.parentId === null ? 'is' : '=', q.parentId);
     }
 

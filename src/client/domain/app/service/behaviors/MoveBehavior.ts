@@ -1,12 +1,13 @@
 import { container } from 'tsyringe';
 import assert from 'assert';
-import { wrap } from 'lodash-es';
 
 import type { EntityId, EntityParentId, HierarchyEntity } from '@shared/domain/model/entity';
 import type { PromptToken } from '@shared/domain/infra/ui';
 import { token as UIToken } from '@shared/domain/infra/ui';
-import type Tree from '@domain/common/model/abstract/Tree';
-import type Explorer from '../../model/abstract/Explorer';
+import NoteTree from '@domain/common/model/note/Tree';
+import MaterialTree from '@domain/common/model/material/Tree';
+import type Explorer from '@domain/app/model/abstract/Explorer';
+import Tree from '@domain/common/model/abstract/Tree';
 
 export default class MoveBehavior<T extends HierarchyEntity> {
   private readonly ui = container.resolve(UIToken);
@@ -42,35 +43,38 @@ export default class MoveBehavior<T extends HierarchyEntity> {
     await this.move(targetId, this.options.explorer.tree.getSelectedNodeIds());
   }
 
-  public readonly getTargetTree = () => {
+  private isNodeDisabled(entity: T | null) {
     const tree = this.options.explorer.tree;
-    function isDisable(this: Tree, entity: T | null) {
-      const movingNodes = tree.selectedNodes;
-      const parentIds = movingNodes.map(({ entity }) => entity!.parentId);
+    const movingNodes = tree.selectedNodes;
+    const parentIds = movingNodes.map(({ entity }) => entity!.parentId);
 
-      if (!entity) {
-        return parentIds.includes(null);
-      }
-
-      const ids = movingNodes.map(({ id }) => id);
-
-      if ([...parentIds, ...ids].includes(entity.id)) {
-        return true;
-      }
-
-      return this.getNode(entity.parentId).ancestors.some((node) => node.isDisabled);
+    if (!entity) {
+      return parentIds.includes(null);
     }
 
-    const targetTree = new (tree.constructor as { new (): Tree<T> })();
-    Object.assign(targetTree.root, targetTree.entityToNode?.(targetTree.root.entity));
+    const ids = movingNodes.map(({ id }) => id);
 
-    targetTree.entityToNode = wrap(targetTree.entityToNode, function (this: Tree<T>, func, entity) {
-      return {
-        ...func?.(entity),
-        isDisabled: isDisable.call(this, entity),
-      };
-    });
+    if ([...parentIds, ...ids].includes(entity.id)) {
+      return true;
+    }
 
+    return tree.getNode(entity.parentId).ancestors.some((node) => node.isDisabled);
+  }
+
+  public readonly getTargetTree = () => {
+    const { tree } = this.options.explorer;
+    const entityToNode = (entity: T | null) => ({ isDisabled: this.isNodeDisabled(entity) });
+    let targetTree: Tree | undefined;
+
+    if (tree instanceof NoteTree) {
+      targetTree = new NoteTree({ entityToNode });
+    }
+
+    if (tree instanceof MaterialTree) {
+      targetTree = new MaterialTree({ entityToNode });
+    }
+
+    assert(targetTree);
     return targetTree;
   };
 

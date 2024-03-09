@@ -1,8 +1,12 @@
+import { type MaterialVO, normalizeTitle } from '@shared/domain/model/material';
 import TreeNode from '../abstract/TreeNode';
-import type { MaterialVO } from '@shared/domain/model/material';
 
 export default class MaterialTreeNode extends TreeNode<MaterialVO> {
-  protected fetchChildren() {
-    return this.remote.material.query.query({ parentId: this.isRoot ? null : this.id });
-  }
+  public entityToNode = (material: MaterialVO | null) => {
+    return {
+      icon: material ? material.icon : null,
+      title: material ? normalizeTitle(material) : '根',
+      isLeaf: material ? material.childrenCount === 0 : false,
+    };
+  };
 }

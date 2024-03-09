@@ -24,7 +24,7 @@ export default class NoteService {
 
   private readonly moveNotes = async (parentId: EntityParentId, ids: NoteVO['id'][]) => {
     await this.remote.note.batchUpdate.mutate([ids, { parentId }]);
-    ids.forEach((id) => eventBus.emit(Events.Updated, { trigger: this.move, parentId, id }));
+    ids.forEach((id) => eventBus.emit(Events.Updated, { explorerUpdated: true, trigger: this.move, parentId, id }));
   };
 
   public readonly move = new MoveBehavior({

@@ -136,7 +136,7 @@ export default class NoteService extends BaseService {
   public async query(q: ClientNoteQuery) {
     const notes = await this.repo.notes.findAll({
       ...q,
-      parentId: q.parentId === null ? null : q.parentId,
+      parentId: q.parentId || null,
       isAvailable: true,
     });
     const noteVOs = await this.toVO(notes);
