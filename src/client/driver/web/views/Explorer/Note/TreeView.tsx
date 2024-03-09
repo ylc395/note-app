@@ -35,7 +35,7 @@ export default observer(function NoteTreeView() {
       onDragStart={updateTreeForDropping}
       onDrop={(item, node) => moveNotesByItems(node.id, item)}
       nodeOperation={({ id }) => (
-        <Button stopPropagation onClick={() => createNote({ parentId: id })}>
+        <Button onClick={() => createNote({ parentId: id })}>
           <AiOutlinePlus />
         </Button>
       )}
