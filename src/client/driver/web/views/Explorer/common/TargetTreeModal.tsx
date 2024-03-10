@@ -1,6 +1,5 @@
 import clsx from 'clsx';
 import { observer } from 'mobx-react-lite';
-import { useEffect } from 'react';
 
 import type TreeModel from '@domain/common/model/abstract/Tree';
 import type { PromptToken } from '@shared/domain/infra/ui';
@@ -19,12 +18,6 @@ export default observer(function TargetTreeModal({
 }) {
   const { value: targetTree, modalProps } = useModalValue(targetTreeFactory);
   const getTargetId = () => targetTree?.getSelectedNodeIds(true)[0];
-
-  useEffect(() => {
-    if (targetTree) {
-      targetTree.root.loadChildren();
-    }
-  }, [targetTree]);
 
   return (
     <Modal

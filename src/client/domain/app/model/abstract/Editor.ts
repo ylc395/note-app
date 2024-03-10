@@ -61,7 +61,7 @@ export default abstract class Editor<T extends EditableEntity = EditableEntity, 
         (IS_DEV ? `${this.id} ${this.entityLocator.entityId.slice(0, 3)} ` : '') +
         (this.editable.entity ? this.normalizeTitle(this.editable.entity) : ''),
       icon: this.editable.entity?.icon || null,
-      breadcrumbs: this.editable.entity?.path || [],
+      breadcrumbs: this.editable.path || [],
     };
   }
 

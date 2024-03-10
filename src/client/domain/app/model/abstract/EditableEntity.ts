@@ -3,7 +3,7 @@ import assert from 'assert';
 import { observable, makeObservable, computed } from 'mobx';
 
 import { token as rpcToken } from '@domain/common/infra/rpc';
-import { EntityId, EntityLocator, EntityTypes, Path } from '../entity';
+import { type EntityId, type EntityLocator, EntityTypes, type Path } from '../entity';
 import type { Tile } from '../workbench';
 import type Editor from './Editor';
 import type { AnnotationDTO, AnnotationPatchDTO, AnnotationVO } from '@shared/domain/model/annotation';
@@ -16,7 +16,6 @@ export interface EditableEntityLocator extends EntityLocator {
 
 interface EntityInfo {
   icon: string | null;
-  path: Path;
   title: string;
 }
 
@@ -30,6 +29,9 @@ export default abstract class EditableEntity<T extends EntityInfo = EntityInfo> 
   protected readonly remote = container.resolve(rpcToken);
   protected abstract readonly entityType: EditableEntityLocator['entityType'];
   public abstract entity?: T;
+
+  @observable
+  public path?: Path;
 
   @observable
   private annotationMap: Record<AnnotationVO['id'], AnnotationVO> = {};

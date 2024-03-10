@@ -9,7 +9,7 @@ import NoteService from '@domain/app/service/NoteService';
 // eslint-disable-next-line mobx/missing-observer
 export default (function NoteExplorerView() {
   const {
-    move: { getTargetTree },
+    move: { createTargetTree: getTargetTree },
   } = container.resolve(NoteService);
 
   return (

@@ -1,11 +1,12 @@
 import { container } from 'tsyringe';
 import { groupBy, intersection, once } from 'lodash-es';
-import { action, computed, runInAction, makeObservable, autorun } from 'mobx';
+import { action, computed, makeObservable, autorun } from 'mobx';
 
 import type Tree from '@domain/common/model/abstract/Tree';
 import { Workbench } from '@domain/app/model/workbench';
-import type { EntityId, HierarchyEntity, UpdateEvent } from '@domain/app/model/entity';
+import type { EntityId, HierarchyEntity, Path, UpdateEvent } from '@domain/app/model/entity';
 import { token as localStorage } from '@domain/app/infra/localStorage';
+import { token as rpcToken } from '@domain/common/infra/rpc';
 import type RenameBehavior from './RenameBehavior';
 import type ContextmenuBehavior from './ContextmenuBehavior';
 import DndBehavior from './DndBehavior';
@@ -22,6 +23,7 @@ export default abstract class Explorer<T extends HierarchyEntity = HierarchyEnti
   }
 
   private readonly localStorage = container.resolve(localStorage);
+  protected readonly remote = container.resolve(rpcToken);
   protected readonly workbench = container.resolve(Workbench);
   public abstract readonly rename: RenameBehavior;
   public abstract readonly contextmenu: ContextmenuBehavior;
@@ -42,30 +44,21 @@ export default abstract class Explorer<T extends HierarchyEntity = HierarchyEnti
     autorun(this.persist);
   });
 
-  protected abstract queryFragments(id: T['id']): Promise<T[]>;
+  protected abstract queryPath(id: EntityId): Promise<Path>;
 
   public async reveal(id: T['id'], options?: { expand?: boolean; select?: boolean }) {
-    if (id && !this.tree.getNode(id, true)) {
-      const nodes = await this.queryFragments(id);
-      this.tree.updateTree(nodes);
+    const ancestors = await this.queryPath(id);
+    const ids = ancestors.map(({ id }) => id);
+
+    if (options?.expand) {
+      ids.push(id);
     }
 
-    if (options?.expand && id && !this.tree.getNode(id).isLeaf) {
-      this.tree.getNode(id).toggleExpand({ value: true });
-    }
+    await this.expandNodes(ids);
 
-    if (options?.select && id) {
+    if (options?.select) {
       this.tree.setSelected([id]);
     }
-
-    let node = this.tree.getNode(id).parent;
-
-    runInAction(() => {
-      while (node && node !== this.tree.root) {
-        node.isExpanded = true;
-        node = node.parent;
-      }
-    });
   }
 
   @computed
@@ -106,18 +99,21 @@ export default abstract class Explorer<T extends HierarchyEntity = HierarchyEnti
       return;
     }
 
-    const allNodeIds = this.tree.allNodes.map((node) => node.id);
-    const entities = await this.tree.queryChildren(ids);
-    const childrenMap = groupBy(entities, 'parentId');
-    const sorted = intersection(ids, allNodeIds).flatMap((id) => childrenMap[id] || []);
-    let i = 0;
+    ids = ids.filter((id) => !this.tree.getNode(id, true)?.isLoaded);
 
-    while (sorted[i]) {
-      sorted.push(...(childrenMap[sorted[i]!.id] || []));
-      i++;
+    if (ids.length > 0) {
+      const allNodeIds = this.tree.allNodes.map((node) => node.id);
+      const childrenMap = groupBy(await this.tree.queryChildren(ids), 'parentId');
+      const sorted = intersection(ids, allNodeIds).flatMap((id) => childrenMap[id] || []);
+      let i = 0;
+
+      while (sorted[i]) {
+        sorted.push(...(childrenMap[sorted[i]!.id] || []));
+        i++;
+      }
+
+      this.tree.updateTree(sorted);
     }
-
-    this.tree.updateTree(sorted);
 
     for (const id of ids) {
       this.tree.getNode(id, true)?.toggleExpand({ value: true, noLoad: true });

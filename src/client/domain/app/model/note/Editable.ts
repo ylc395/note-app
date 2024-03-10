@@ -21,10 +21,14 @@ export default class EditableNote extends EditableEntity<Required<NoteVO>> {
   @observable public entity?: Required<NoteVO>;
 
   protected async load() {
-    const note = await this.remote.note.queryOne.query(this.entityLocator.entityId);
+    const [note, path] = await Promise.all([
+      this.remote.note.queryOne.query(this.entityLocator.entityId),
+      this.remote.note.queryPath.query(this.entityLocator.entityId),
+    ]);
 
     runInAction(() => {
       this.entity = note;
+      this.path = path;
     });
   }
 
@@ -33,11 +37,7 @@ export default class EditableNote extends EditableEntity<Required<NoteVO>> {
       return;
     }
 
-    const info = await this.remote.note.queryOne.query(this.entityLocator.entityId);
-
-    runInAction(() => {
-      this.entity = info;
-    });
+    await this.load();
   };
 
   public createEditor(tile: Tile) {

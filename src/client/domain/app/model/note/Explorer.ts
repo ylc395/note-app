@@ -1,5 +1,4 @@
-import { singleton, container } from 'tsyringe';
-import { token as rpcToken } from '@domain/common/infra/rpc';
+import { singleton } from 'tsyringe';
 import { compact } from 'lodash-es';
 
 import NoteTree from '@domain/common/model/note/Tree';
@@ -23,11 +22,10 @@ export default class NoteExplorer extends Explorer<NoteVO> {
   }
   public readonly contextmenu: ContextmenuBehavior;
   public readonly tree = new NoteTree();
-  private readonly remote = container.resolve(rpcToken);
   public readonly rename: RenameBehavior;
 
-  protected queryFragments(id: NoteVO['id']) {
-    return this.remote.note.query.query({ to: id });
+  protected queryPath(id: NoteVO['id']) {
+    return this.remote.note.queryPath.query(id);
   }
 
   private readonly submitRename = async ({ id, name }: { id: string; name: string }) => {

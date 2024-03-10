@@ -10,9 +10,13 @@ const noteProcedure = publicProcedure.use(({ next }) => {
 });
 
 export default router({
-  query: noteProcedure.input(clientNoteQuerySchema).query(({ input: { to, parentId }, ctx: { noteService } }) => {
-    return to ? noteService.getTreeFragment(to) : noteService.query({ parentId });
+  query: noteProcedure.input(clientNoteQuerySchema).query(({ input: query, ctx: { noteService } }) => {
+    return noteService.query(query);
   }),
+
+  queryPath: noteProcedure
+    .input(string())
+    .query(({ input: noteId, ctx: { noteService } }) => noteService.getPath(noteId)),
 
   queryOne: noteProcedure
     .input(string())

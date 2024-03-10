@@ -63,6 +63,7 @@ export default abstract class TreeNode<T extends HierarchyEntity = HierarchyEnti
       this.tree.updateTree(entities);
 
       this.isLoading = false;
+      this.isLoaded = true;
 
       if (entities.length === 0) {
         this.isLeaf = true;
@@ -142,4 +143,5 @@ export default abstract class TreeNode<T extends HierarchyEntity = HierarchyEnti
   @observable public isExpanded = false;
   @observable public isSelected = false;
   @observable public isLoading = false;
+  public isLoaded = false;
 }

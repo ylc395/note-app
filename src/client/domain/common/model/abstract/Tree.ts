@@ -116,11 +116,18 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
       assert(node.entity && node.parent);
 
       const oldParentId = node.parent.id || this.root.id;
+      const newParent = this.getNode(entity.parentId, true);
+
+      if (!newParent) {
+        continue;
+      }
+
       node.entity = entity;
 
-      const newParent = node.parent;
+      if (newParent.id !== oldParentId) {
+        newParent.children.push(node);
+        newParent.isLeaf = false;
 
-      if (node.parent.id !== oldParentId) {
         // reset parent-child relationship
         const oldParent = this.getNode(oldParentId);
         pull(oldParent.children, node);
@@ -128,11 +135,6 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
         if (oldParent.children.length === 0) {
           oldParent.isLeaf = true;
           oldParent.isExpanded = false;
-        }
-
-        if (newParent) {
-          newParent.children.push(node);
-          newParent.isLeaf = false;
         }
       }
     }

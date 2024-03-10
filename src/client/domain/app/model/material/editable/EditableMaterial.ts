@@ -24,23 +24,23 @@ export default abstract class EditableMaterial extends EditableEntity<Required<E
     if (trigger === this || id !== this.entityLocator.entityId) {
       return;
     }
-
-    const info = await this.remote.material.queryOne.query(this.entityLocator.entityId);
-
-    runInAction(() => {
-      this.entity = info as Required<EntityMaterialVO>;
-    });
+    this.load(true);
   };
 
-  protected async load() {
-    const [info, blob] = await Promise.all([
+  protected async load(noBlob?: true) {
+    const [info, blob, path] = await Promise.all([
       this.remote.material.queryOne.query(this.entityLocator.entityId),
-      this.remote.material.getBlob.query(this.entityLocator.entityId),
+      noBlob ? null : this.remote.material.getBlob.query(this.entityLocator.entityId),
+      this.remote.material.queryPath.query(this.entityLocator.entityId),
     ]);
 
     runInAction(() => {
       this.entity = info as Required<EntityMaterialVO>;
-      this.blob = blob as ArrayBuffer;
+      this.path = path;
+
+      if (blob) {
+        this.blob = blob as ArrayBuffer;
+      }
     });
   }
 

@@ -1,6 +1,6 @@
 import { boolean, object, string, union, type infer as ZodInfer } from 'zod';
 import dayjs from 'dayjs';
-import type { EntityId, EntityParentId, Path } from './entity.js';
+import type { EntityId, EntityParentId } from './entity.js';
 
 export const notePatchDTOSchema = object({
   title: string().optional(),
@@ -12,7 +12,6 @@ export const notePatchDTOSchema = object({
 
 export const clientNoteQuerySchema = object({
   parentId: union([string().array(), string().nullable()]).optional(),
-  to: string().optional(),
 });
 
 export const noteDTOSchema = notePatchDTOSchema;
@@ -37,7 +36,6 @@ export interface Note {
 export interface NoteVO extends Note {
   isStar: boolean;
   childrenCount: number;
-  path?: Path;
 }
 
 export function normalizeTitle(note: Note | NoteVO) {

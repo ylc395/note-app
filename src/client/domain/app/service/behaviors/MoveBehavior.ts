@@ -43,9 +43,8 @@ export default class MoveBehavior<T extends HierarchyEntity> {
     await this.move(targetId, this.options.explorer.tree.getSelectedNodeIds());
   }
 
-  private isNodeDisabled(entity: T | null) {
-    const tree = this.options.explorer.tree;
-    const movingNodes = tree.selectedNodes;
+  private isNodeDisabled(entity: T | null, tree: Tree) {
+    const movingNodes = this.options.explorer.tree.selectedNodes;
     const parentIds = movingNodes.map(({ entity }) => entity!.parentId);
 
     if (!entity) {
@@ -61,10 +60,13 @@ export default class MoveBehavior<T extends HierarchyEntity> {
     return tree.getNode(entity.parentId).ancestors.some((node) => node.isDisabled);
   }
 
-  public readonly getTargetTree = () => {
-    const { tree } = this.options.explorer;
-    const entityToNode = (entity: T | null) => ({ isDisabled: this.isNodeDisabled(entity) });
+  public readonly createTargetTree = () => {
     let targetTree: Tree | undefined;
+    const { tree } = this.options.explorer;
+    const entityToNode = (entity: T | null) => {
+      assert(targetTree);
+      return { isDisabled: this.isNodeDisabled(entity, targetTree) };
+    };
 
     if (tree instanceof NoteTree) {
       targetTree = new NoteTree({ entityToNode });
@@ -75,6 +77,8 @@ export default class MoveBehavior<T extends HierarchyEntity> {
     }
 
     assert(targetTree);
+    targetTree.root.loadChildren();
+
     return targetTree;
   };
 

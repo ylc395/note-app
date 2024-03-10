@@ -1,6 +1,6 @@
 import { object, string, type infer as Infer, union } from 'zod';
 import dayjs from 'dayjs';
-import type { EntityId, EntityParentId, Path } from './entity.js';
+import type { EntityId, EntityParentId } from './entity.js';
 
 export const newMaterialDTOSchema = object({
   title: string().optional(),
@@ -15,7 +15,6 @@ export const materialPatchDTOSchema = newMaterialDTOSchema.omit({ fileId: true }
 
 export const clientMaterialQuerySchema = object({
   parentId: union([string().nullable(), string().array()]).optional(),
-  to: string().optional(),
   fileHash: string().optional(),
 });
 
@@ -48,7 +47,6 @@ export interface MaterialVO extends Material {
 }
 
 export interface EntityMaterialVO extends MaterialVO {
-  path?: Path;
   comment: string;
   sourceUrl: string;
   mimeType: string;

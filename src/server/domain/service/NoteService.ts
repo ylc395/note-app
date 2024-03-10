@@ -62,6 +62,14 @@ export default class NoteService extends BaseService {
     return this.hierarchyBehavior.getPaths(ids, normalizeTitle);
   };
 
+  public async getPath(id: Note['id']) {
+    await this.assertAvailableIds([id]);
+    const path = (await this.getPaths([id]))[id];
+
+    assert(path);
+    return path;
+  }
+
   public async updateOne(noteId: Note['id'], note: NotePatchDTO) {
     if (typeof note.body === 'string') {
       await this.assertWritable(noteId);
@@ -94,13 +102,11 @@ export default class NoteService extends BaseService {
     const ids = _notes.map(({ id }) => id);
     const stars = buildIndex(await this.repo.stars.findAll({ entityId: ids }), 'entityId');
     const children = await this.repo.entities.findChildrenIds(ids, { isAvailableOnly: true });
-    const paths = Array.isArray(notes) ? {} : await this.getPaths(ids);
 
     const result = _notes.map((note) => ({
       ...pick(note, ['id', 'createdAt', 'isReadonly', 'updatedAt', 'icon', 'parentId', 'title', 'body']),
       childrenCount: children[note.id]?.length || 0,
       isStar: Boolean(stars[note.id]),
-      ...(Array.isArray(notes) ? null : { path: paths[note.id] || [] }),
     }));
 
     return Array.isArray(notes) ? result : result[0]!;
@@ -150,13 +156,6 @@ export default class NoteService extends BaseService {
 
     assert(note);
     return await this.toVO(note);
-  }
-
-  public async getTreeFragment(noteId: Note['id']) {
-    await this.assertAvailableIds([noteId]);
-    const nodes = await this.hierarchyBehavior.getTreeFragment(noteId);
-
-    return await this.toVO(nodes as Note[]);
   }
 
   private async assertWritable(noteId: Note['id']) {

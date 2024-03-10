@@ -47,14 +47,12 @@ export default class MaterialService extends BaseService {
     const entityIds = _materials.filter(isEntityMaterial).map(({ id }) => id);
     const children = await this.repo.entities.findChildrenIds(ids, { isAvailableOnly: true });
     const stars = buildIndex(await this.repo.stars.findAll({ entityId: entityIds }), 'entityId');
-    const paths = Array.isArray(materials) ? {} : await this.getPaths(ids);
 
     const materialVOs = _materials.map((material) => ({
       ...pick(material, ['id', 'title', 'icon', 'parentId', 'updatedAt']),
       childrenCount: children[material.id]?.length || 0,
       isStar: Boolean(stars[material.id]),
       ...(isEntityMaterial(material) ? pick(material, ['mimeType', 'comment', 'sourceUrl']) : null),
-      ...(Array.isArray(materials) ? null : { path: paths[materials.id] }),
     }));
 
     return Array.isArray(materials) ? (materialVOs as MaterialVO[]) : (materialVOs[0] as MaterialVO);
@@ -152,10 +150,11 @@ export default class MaterialService extends BaseService {
     return this.hierarchyBehavior.getPaths(ids, normalizeTitle);
   };
 
-  public async getTreeFragment(materialId: Material['id']) {
-    await this.assertAvailableIds([materialId]);
-    const nodes = await this.hierarchyBehavior.getTreeFragment(materialId);
+  public async getPath(id: Material['id']) {
+    await this.assertAvailableIds([id]);
+    const path = (await this.getPaths([id]))[id];
 
-    return await this.toVO(nodes as Material[]);
+    assert(path);
+    return path;
   }
 }

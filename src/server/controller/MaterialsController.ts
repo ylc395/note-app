@@ -13,9 +13,11 @@ const materialProcedure = publicProcedure.use(({ next }) => {
 export default router({
   query: materialProcedure
     .input(clientMaterialQuerySchema)
-    .query(({ input: { to, ...query }, ctx: { materialService } }) =>
-      to ? materialService.getTreeFragment(to) : materialService.query(query),
-    ),
+    .query(({ input: query, ctx: { materialService } }) => materialService.query(query)),
+
+  queryPath: materialProcedure
+    .input(string())
+    .query(({ input: id, ctx: { materialService } }) => materialService.getPath(id)),
 
   queryOne: materialProcedure
     .input(string())

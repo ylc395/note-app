@@ -1,5 +1,4 @@
-import { singleton, container } from 'tsyringe';
-import { token as rpcToken } from '@domain/common/infra/rpc';
+import { singleton } from 'tsyringe';
 import { compact } from 'lodash-es';
 
 import { isEntityMaterial, type MaterialVO } from '@shared/domain/model/material';
@@ -11,7 +10,6 @@ import ContextmenuBehavior from '../abstract/Explorer/ContextmenuBehavior';
 @singleton()
 export default class MaterialExplorer extends Explorer<MaterialVO> {
   public readonly tree = new MaterialTree();
-  private readonly remote = container.resolve(rpcToken);
   public readonly rename: RenameBehavior;
   public readonly contextmenu: ContextmenuBehavior;
 
@@ -26,8 +24,8 @@ export default class MaterialExplorer extends Explorer<MaterialVO> {
     eventBus.on(Events.Updated, this.handleEntityUpdate);
   }
 
-  protected queryFragments(id: MaterialVO['id']) {
-    return this.remote.material.query.query({ to: id });
+  protected queryPath(id: MaterialVO['id']) {
+    return this.remote.material.queryPath.query(id);
   }
 
   private readonly submitRename = async ({ id, name }: { id: string; name: string }) => {

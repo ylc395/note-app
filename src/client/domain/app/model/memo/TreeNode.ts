@@ -9,8 +9,6 @@ import type MemoTree from './Tree';
 export default class MemoTreeNode extends TreeNode<MemoVO> {
   protected remote = container.resolve(token);
 
-  private isLoaded = false;
-
   public entityToNode = (memo: MemoVO | null) => {
     return { isLeaf: memo ? memo.childrenCount === 0 : false };
   };

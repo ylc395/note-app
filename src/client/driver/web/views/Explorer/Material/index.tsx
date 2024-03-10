@@ -10,7 +10,7 @@ import TargetTreeModal from '../common/TargetTreeModal';
 // eslint-disable-next-line mobx/missing-observer
 export default (function MaterialExplorerView() {
   const {
-    move: { getTargetTree },
+    move: { createTargetTree: getTargetTree },
   } = container.resolve(MaterialService);
 
   return (
