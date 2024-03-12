@@ -1,5 +1,6 @@
 import { compact, isEmpty, mapValues, uniq } from 'lodash-es';
 import assert from 'assert';
+import { singleton } from 'tsyringe';
 
 import { buildIndex } from '@utils/collection.js';
 import type {
@@ -15,6 +16,7 @@ import { EntityTypes } from '@domain/model/entity.js';
 
 import BaseService from './BaseService.js';
 
+@singleton()
 export default class MemoService extends BaseService {
   public async create(memo: MemoDTO) {
     if (memo.parentId) {

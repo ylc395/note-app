@@ -25,6 +25,7 @@ export default class EditableNote extends EditableEntity<Required<NoteVO>> {
     return `${this.entityLocator.entityId}-readonly`;
   }
 
+  @observable private isUploading = false;
   @observable private latestVersionBody?: string;
   @observable public entity?: Required<NoteVO>;
   @observable public isReadonly = this.localStorage.get<boolean>(this.readonlyKey) || false;
@@ -83,8 +84,6 @@ export default class EditableNote extends EditableEntity<Required<NoteVO>> {
     return new NoteEditor(this, tile);
   }
 
-  @observable private isUploading = false;
-
   @action
   public update(note: NotePatchDTO) {
     assert(this.entity);
@@ -95,14 +94,20 @@ export default class EditableNote extends EditableEntity<Required<NoteVO>> {
   }
 
   private readonly upload = debounce(async (note: NotePatchDTO) => {
-    this.isUploading = true;
-    await this.remote.note.updateOne.mutate([this.entityLocator.entityId, toJS(note)]);
-    this.isUploading = false;
+    runInAction(() => {
+      this.isUploading = true;
+    });
+
+    const updatedNote = await this.remote.note.updateOne.mutate([this.entityLocator.entityId, toJS(note)]);
+
+    runInAction(() => {
+      this.isUploading = false;
+    });
 
     eventBus.emit(NoteEvents.Updated, {
       id: this.entityLocator.entityId,
       trigger: this,
-      updatedAt: Date.now(),
+      updatedAt: updatedNote.updatedAt,
       ...note,
     });
   }, 1000);

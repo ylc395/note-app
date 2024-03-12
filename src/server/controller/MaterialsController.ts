@@ -1,41 +1,33 @@
-import { container } from 'tsyringe';
 import { string, tuple } from 'zod';
-
 import { newMaterialDTOSchema, clientMaterialQuerySchema, materialPatchDTOSchema } from '@domain/model/material.js';
-import MaterialService from '@domain/service/MaterialService.js';
-
 import { publicProcedure, router } from './trpc.js';
 
-const materialProcedure = publicProcedure.use(({ next }) => {
-  return next({ ctx: { materialService: container.resolve(MaterialService) } });
-});
-
 export default router({
-  query: materialProcedure
+  query: publicProcedure
     .input(clientMaterialQuerySchema)
     .query(({ input: query, ctx: { materialService } }) => materialService.query(query)),
 
-  queryPath: materialProcedure
+  queryPath: publicProcedure
     .input(string())
     .query(({ input: id, ctx: { materialService } }) => materialService.getPath(id)),
 
-  queryOne: materialProcedure
+  queryOne: publicProcedure
     .input(string())
     .query(({ input: id, ctx: { materialService } }) => materialService.queryOne(id)),
 
-  getBlob: materialProcedure
+  getBlob: publicProcedure
     .input(string())
     .query(({ input: id, ctx: { materialService } }) => materialService.getBlob(id)),
 
-  create: materialProcedure
+  create: publicProcedure
     .input(newMaterialDTOSchema)
     .mutation(({ input: dto, ctx: { materialService } }) => materialService.create(dto)),
 
-  updateOne: materialProcedure
+  updateOne: publicProcedure
     .input(tuple([string(), materialPatchDTOSchema]))
     .mutation(({ input: [id, patch], ctx: { materialService } }) => materialService.updateOne(id, patch)),
 
-  batchUpdate: materialProcedure
+  batchUpdate: publicProcedure
     .input(tuple([string().array(), materialPatchDTOSchema]))
     .mutation(({ input: [ids, material], ctx: { materialService } }) => materialService.batchUpdate(ids, material)),
 });

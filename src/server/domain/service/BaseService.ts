@@ -1,4 +1,5 @@
 import { container } from 'tsyringe';
+import assert from 'node:assert';
 
 import { token as databaseToken } from '@domain/infra/database.js';
 import eventBus from '@domain/infra/eventBus.js';
@@ -16,7 +17,20 @@ export default abstract class BaseService {
     },
   });
 
-  protected get transaction() {
+  public get transaction() {
     return this.db.transaction.bind(this.db);
   }
+}
+
+export function transaction(target: unknown, propertyKey: string, descriptor: PropertyDescriptor) {
+  const originalMethod = descriptor.value;
+  assert(typeof originalMethod === 'function');
+
+  descriptor.value = function (...args: unknown[]) {
+    assert(this instanceof BaseService);
+
+    return this.transaction(() => {
+      return originalMethod.apply(this, args);
+    });
+  };
 }

@@ -1,4 +1,5 @@
 import { createPatch, applyPatch, parsePatch } from 'diff';
+import { singleton } from 'tsyringe';
 import assert from 'node:assert';
 import { first } from 'lodash-es';
 
@@ -6,12 +7,13 @@ import { EntityTypes, type EntityId } from '@domain/model/entity.js';
 import type { VersionDTO } from '@domain/model/version.js';
 import type { ContentUpdatedEvent } from '@domain/model/content.js';
 
-import BaseService from './BaseService.js';
+import BaseService, { transaction } from './BaseService.js';
 
+@singleton()
 export default class VersionService extends BaseService {
   constructor() {
     super();
-    this.eventBus.on('contentUpdated', this.autoCreate);
+    this.eventBus.on('contentUpdated', this.autoCreate.bind(this));
   }
 
   public async queryDiff(id: EntityId, content: string) {
@@ -45,7 +47,8 @@ export default class VersionService extends BaseService {
     });
   }
 
-  private readonly autoCreate = async (e: ContentUpdatedEvent) => {
+  @transaction
+  private async autoCreate(e: ContentUpdatedEvent) {
     // check whether a new version should be auto-created
     if (e.entityType === EntityTypes.Note) {
       let latestTime = await this.repo.versions.getLatestRevisionTime(e.entityId);
@@ -57,13 +60,13 @@ export default class VersionService extends BaseService {
         latestTime = entity.createdAt;
       }
 
-      if (Date.now() - latestTime < 5 * 60 * 1000) {
+      if (Date.now() - latestTime < 0.5 * 60 * 1000) {
         return;
       }
     }
 
     await this.create(e, true);
-  };
+  }
 
   private async getLatestVersionContent(entityId: EntityId) {
     const revisions = await this.repo.versions.findAllByEntityId(entityId);

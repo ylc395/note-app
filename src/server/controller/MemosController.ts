@@ -1,4 +1,3 @@
-import { container } from 'tsyringe';
 import { string, tuple } from 'zod';
 
 import {
@@ -8,32 +7,27 @@ import {
   durationSchema,
   clientTreeFragmentQuerySchema,
 } from '@domain/model/memo.js';
-import MemoService from '@domain/service/MemoService.js';
 
 import { publicProcedure, router } from './trpc.js';
 
-const memoProcedure = publicProcedure.use(({ next }) => {
-  return next({ ctx: { memoService: container.resolve(MemoService) } });
-});
-
 export default router({
-  query: memoProcedure
+  query: publicProcedure
     .input(clientMemoQuerySchema)
     .query(({ input: query, ctx: { memoService } }) => memoService.query(query)),
 
-  queryTreeFragment: memoProcedure
+  queryTreeFragment: publicProcedure
     .input(clientTreeFragmentQuerySchema)
     .query(({ input: query, ctx: { memoService } }) => memoService.queryFragment(query)),
 
-  create: memoProcedure
+  create: publicProcedure
     .input(memoDTOSchema)
     .mutation(({ input: dto, ctx: { memoService } }) => memoService.create(dto)),
 
-  updateOne: memoProcedure
+  updateOne: publicProcedure
     .input(tuple([string(), memoPatchDTOSchema]))
     .mutation(({ input: [id, patch], ctx: { memoService } }) => memoService.updateOne(id, patch)),
 
-  queryDates: memoProcedure
+  queryDates: publicProcedure
     .input(durationSchema)
     .query(({ input: duration, ctx: { memoService } }) => memoService.queryAvailableDates(duration)),
 });
