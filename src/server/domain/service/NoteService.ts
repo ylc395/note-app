@@ -1,6 +1,6 @@
-import { singleton } from 'tsyringe';
+import { container, singleton } from 'tsyringe';
 import assert from 'node:assert';
-import { mapValues, pick, uniq } from 'lodash-es';
+import { first, mapValues, pick, uniq } from 'lodash-es';
 import {
   type NoteVO,
   type NoteDTO,
@@ -9,14 +9,17 @@ import {
   type ClientNoteQuery,
   normalizeTitle,
 } from '@domain/model/note.js';
+import { EntityTypes } from '@domain/model/entity.js';
+import { buildIndex } from '@utils/collection.js';
 
 import BaseService from './BaseService.js';
 import HierarchyBehavior from './behaviors/HierarchyBehavior.js';
-import { buildIndex } from '@utils/collection.js';
+import VersionService from './VersionService.js';
 
 @singleton()
 export default class NoteService extends BaseService {
   private readonly hierarchyBehavior = new HierarchyBehavior(this.repo.notes);
+  private readonly version = container.resolve(VersionService);
 
   public async create(note: NoteDTO, from?: Note['id']) {
     let newNote: Required<Note>;
@@ -35,6 +38,7 @@ export default class NoteService extends BaseService {
       this.eventBus.emit('contentUpdated', {
         content: newNote.body,
         entityId: newNote.id,
+        entityType: EntityTypes.Note,
         updatedAt: newNote.updatedAt,
       });
     }
@@ -71,14 +75,9 @@ export default class NoteService extends BaseService {
   }
 
   public async updateOne(noteId: Note['id'], note: NotePatchDTO) {
-    if (typeof note.body === 'string') {
-      await this.assertWritable(noteId);
-    } else {
-      await this.assertAvailableIds([noteId]);
-    }
+    await this.assertAvailableIds([noteId]);
 
     const updatedAt = Date.now();
-
     await this.repo.notes.update(noteId, {
       ...note,
       updatedAt,
@@ -87,6 +86,7 @@ export default class NoteService extends BaseService {
     if (typeof note.body === 'string') {
       this.eventBus.emit('contentUpdated', {
         content: note.body,
+        entityType: EntityTypes.Note,
         entityId: noteId,
         updatedAt,
       });
@@ -102,14 +102,19 @@ export default class NoteService extends BaseService {
     const ids = _notes.map(({ id }) => id);
     const stars = buildIndex(await this.repo.stars.findAll({ entityId: ids }), 'entityId');
     const children = await this.repo.entities.findChildrenIds(ids, { isAvailableOnly: true });
+    const diff =
+      Array.isArray(notes) || typeof notes.body !== 'string'
+        ? undefined
+        : await this.version.queryDiff(notes.id, notes.body);
 
-    const result = _notes.map((note) => ({
-      ...pick(note, ['id', 'createdAt', 'isReadonly', 'updatedAt', 'icon', 'parentId', 'title', 'body']),
+    const result: NoteVO[] = _notes.map((note) => ({
+      ...note,
       childrenCount: children[note.id]?.length || 0,
+      diff,
       isStar: Boolean(stars[note.id]),
     }));
 
-    return Array.isArray(notes) ? result : result[0]!;
+    return Array.isArray(notes) ? result : first(result)!;
   }
 
   public async batchUpdate(ids: Note['id'][], patch: NotePatchDTO) {
@@ -156,11 +161,5 @@ export default class NoteService extends BaseService {
 
     assert(note);
     return await this.toVO(note);
-  }
-
-  private async assertWritable(noteId: Note['id']) {
-    await this.assertAvailableIds([noteId]);
-    const row = await this.repo.notes.findOneById(noteId);
-    assert(row && !row.isReadonly, 'not writable');
   }
 }

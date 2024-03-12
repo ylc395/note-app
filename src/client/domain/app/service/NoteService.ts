@@ -38,9 +38,10 @@ export default class NoteService {
     const note = await this.remote.note.create.mutate(params || {});
 
     this.explorer.tree.updateTree(note);
+    this.explorer.tree.setSelected([note.id]);
 
     if (note.parentId) {
-      await this.explorer.reveal(note.parentId, { expand: true, select: true });
+      await this.explorer.reveal(note.parentId, { expand: true });
     }
 
     this.workbench.openEntity({ entityType: EntityTypes.Note, entityId: note.id });

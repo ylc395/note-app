@@ -87,7 +87,7 @@ export default class Tile {
     const newEditor = this.editableEntityManager.createEditor(this, entity);
 
     if (options?.isActive) {
-      newEditor.setActive();
+      newEditor.setIsEditing();
     }
 
     if (options?.dest instanceof Editor) {
@@ -126,7 +126,7 @@ export default class Tile {
 
   @action
   public replaceOrCreateEditor(entity: EditableEntityLocator, dest?: Editor) {
-    dest = dest || this.editors.find((e) => !e.isActive);
+    dest = dest || this.editors.find((e) => !e.isEditing);
 
     let newEditor: Editor;
 

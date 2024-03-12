@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import { useRef } from 'react';
-import { AiOutlineFileSearch, AiOutlineInfoCircle } from 'react-icons/ai';
+import { AiOutlineFileSearch, AiOutlineInfoCircle, AiOutlineSave } from 'react-icons/ai';
 
 import Switch from '@web/components/Switch';
 import Button from '@web/components/Button';
@@ -32,12 +32,10 @@ export default observer(function NoteTitle({ editor }: { editor: NoteEditor }) {
         <Button>
           <AiOutlineInfoCircle />
         </Button>
-        <Switch
-          trueText="仅阅读"
-          falseText="可编辑"
-          value={editor.isReadonly}
-          onChange={(value) => editor.updateEntity({ isReadonly: value })}
-        />
+        <Button disabled={!editor.canSubmitNewVersion} onClick={editor.submitNewVersion}>
+          <AiOutlineSave />
+        </Button>
+        <Switch trueText="仅阅读" falseText="可编辑" value={editor.isReadonly} onChange={editor.setReadonly} />
       </div>
     </div>
   );

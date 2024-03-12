@@ -1,10 +1,9 @@
-import type { EntityId } from '@domain/model/entity.js';
+import type { EntityLocator } from '@domain/model/entity.js';
 import type { TopicDTO, LinkDTO, HighlightPosition } from '@shared/domain/model/content.js';
 
 export * from '@shared/domain/model/content.js';
 
-export interface ContentUpdatedEvent {
-  entityId: EntityId;
+export interface ContentUpdatedEvent extends EntityLocator {
   content: string;
   updatedAt: number;
 }

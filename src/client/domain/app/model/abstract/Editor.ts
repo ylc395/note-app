@@ -29,11 +29,11 @@ export default abstract class Editor<T extends EditableEntity = EditableEntity, 
   public tile: Tile;
 
   @observable
-  public isActive = false;
+  public isEditing = false;
 
   @action.bound
-  public setActive() {
-    this.isActive = true;
+  public setIsEditing() {
+    this.isEditing = true;
   }
 
   private get uiStateKey() {

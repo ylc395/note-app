@@ -3,7 +3,7 @@ import type { StarRepository } from './StarRepository.js';
 import type { FileRepository } from './FileRepository.js';
 import type { MemoRepository } from './MemoRepository.js';
 import type { MaterialRepository } from './MaterialRepository.js';
-import type { RevisionRepository } from './RevisionRepository.js';
+import type { VersionRepository } from './VersionRepository.js';
 import type { SynchronizationRepository } from './SynchronizationRepository.js';
 import type { ContentRepository } from './ContentRepository.js';
 import type { EntityRepository } from './EntityRepository.js';
@@ -16,7 +16,7 @@ export default interface Repositories {
   memos: MemoRepository;
   materials: MaterialRepository;
   annotations: AnnotationRepository;
-  revisions: RevisionRepository;
+  versions: VersionRepository;
   synchronization: SynchronizationRepository;
   contents: ContentRepository;
   entities: EntityRepository;

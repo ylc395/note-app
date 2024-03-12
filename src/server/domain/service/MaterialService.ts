@@ -12,10 +12,11 @@ import {
   isEntityMaterial,
   normalizeTitle,
 } from '@domain/model/material.js';
+import { EntityTypes } from '@domain/model/entity.js';
+import { buildIndex } from '@utils/collection.js';
 
 import BaseService from './BaseService.js';
 import HierarchyBehavior from './behaviors/HierarchyBehavior.js';
-import { buildIndex } from '@utils/collection.js';
 
 @singleton()
 export default class MaterialService extends BaseService {
@@ -93,6 +94,7 @@ export default class MaterialService extends BaseService {
         this.eventBus.emit('contentUpdated', {
           content: patch.comment,
           entityId: materialId,
+          entityType: EntityTypes.Material,
           updatedAt: now,
         });
       }

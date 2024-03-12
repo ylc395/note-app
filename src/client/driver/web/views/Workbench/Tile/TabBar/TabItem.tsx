@@ -62,10 +62,10 @@ export default observer(function TabItem({ editor }: { editor: Editor }) {
             )
           }
           className="mr-1 h-6 max-w-[200px] cursor-pointer py-3 text-sm"
-          titleClassName={clsx('overflow-hidden text-ellipsis', !editor.isActive && 'italic')}
+          titleClassName={clsx('overflow-hidden text-ellipsis', !editor.isEditing && 'italic')}
           iconSize="1em"
           onClick={() => switchToEditor(editor)}
-          onDoubleClick={editor.setActive}
+          onDoubleClick={editor.setIsEditing}
           {...editor.tabView}
         />
         <Button ref={buttonRef} size="small" onClick={() => removeEditor(editor)}>

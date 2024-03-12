@@ -6,6 +6,7 @@ import fileRouter from './FilesController.js';
 import annotationRouter from './AnnotationController.js';
 import memoRouter from './MemosController.js';
 import starRouter from './StarController.js';
+import versionRouter from './VersionsController.js';
 
 export const routers = router({
   note: noteRouter,
@@ -14,6 +15,7 @@ export const routers = router({
   memo: memoRouter,
   annotation: annotationRouter,
   star: starRouter,
+  version: versionRouter,
 });
 
 export type Routes = typeof routers;

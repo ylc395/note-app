@@ -13,7 +13,7 @@ export default class SqliteEntityRepository extends BaseRepository implements En
   public async findOneById(id: EntityId) {
     const row = await this.db
       .selectFrom(this.tableName)
-      .select(['id', 'createdAt'])
+      .select(['id as entityId', 'createdAt', 'content', 'updatedAt'])
       .where('id', '=', id)
       .executeTakeFirst();
 

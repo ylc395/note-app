@@ -1,12 +1,12 @@
-import { boolean, object, string, union, type infer as ZodInfer } from 'zod';
+import { object, string, union, type infer as ZodInfer } from 'zod';
 import dayjs from 'dayjs';
+import type { ParsedDiff } from 'diff';
 import type { EntityId, EntityParentId } from './entity.js';
 
 export const notePatchDTOSchema = object({
   title: string().optional(),
   parentId: string().nullish(),
   icon: string().nullish(),
-  isReadonly: boolean().optional(),
   body: string().optional(),
 });
 
@@ -29,13 +29,13 @@ export interface Note {
   icon: string | null;
   updatedAt: number;
   createdAt: number;
-  isReadonly: boolean;
   body?: string;
 }
 
 export interface NoteVO extends Note {
   isStar: boolean;
   childrenCount: number;
+  diff?: ParsedDiff;
 }
 
 export function normalizeTitle(note: Note | NoteVO) {

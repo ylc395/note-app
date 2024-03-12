@@ -1,8 +1,7 @@
-import type { Selectable } from 'kysely';
 import type { NoteRepository } from '@domain/service/repository/NoteRepository.js';
-import type { Note, NoteDTO, NotePatch, NoteQuery, NoteVO } from '@domain/model/note.js';
+import type { NoteDTO, NotePatch, NoteQuery, NoteVO } from '@domain/model/note.js';
 
-import schema, { Row } from '../schema/note.js';
+import schema from '../schema/note.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
 import BaseRepository from './BaseRepository.js';
 
@@ -11,21 +10,18 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
   public async create(note: NoteDTO) {
     const row = await this.db
       .insertInto(this.tableName)
-      .values({
-        id: this.generateId(),
-        ...SqliteNoteRepository.noteToRow(note),
-      })
+      .values({ id: this.generateId(), ...note })
       .returningAll()
       .executeTakeFirstOrThrow();
 
-    return SqliteNoteRepository.rowToNote(row);
+    return row;
   }
 
   public async update(id: NoteVO['id'] | NoteVO['id'][], note: NotePatch) {
     const { numUpdatedRows } = await this.db
       .updateTable(this.tableName)
       .where('id', Array.isArray(id) ? 'in' : '=', id)
-      .set(SqliteNoteRepository.noteToRow(note))
+      .set(note)
       .executeTakeFirst();
 
     return Array.isArray(id) ? id.length === Number(numUpdatedRows) : Number(numUpdatedRows) === 1;
@@ -34,15 +30,7 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
   public async findAll(q: NoteQuery) {
     let sql = this.db
       .selectFrom(this.tableName)
-      .select([
-        'notes.id',
-        'notes.icon',
-        'notes.isReadonly',
-        'notes.parentId',
-        'notes.title',
-        'notes.updatedAt',
-        'notes.createdAt',
-      ]);
+      .select(['notes.id', 'notes.icon', 'notes.parentId', 'notes.title', 'notes.updatedAt', 'notes.createdAt']);
 
     if (typeof q.isAvailable === 'boolean') {
       sql = sql
@@ -65,28 +53,11 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
     }
 
     const rows = await sql.execute();
-    return rows.map(SqliteNoteRepository.rowToNote);
+    return rows;
   }
 
   public async findOneById(id: NoteVO['id']) {
     const row = await this.db.selectFrom(this.tableName).where('id', '=', id).selectAll().executeTakeFirst();
-    console.log(row);
-
-    return row ? SqliteNoteRepository.rowToNote(row) : null;
-  }
-
-  private static rowToNote(row: Selectable<Row>): Required<Note>;
-  private static rowToNote(row: Omit<Selectable<Row>, 'body'>): Note;
-  private static rowToNote(row: Selectable<Row> | Omit<Selectable<Row>, 'body'>) {
-    return { ...row, isReadonly: Boolean(row.isReadonly) };
-  }
-
-  private static noteToRow(note: Partial<NotePatch>) {
-    return {
-      ...note,
-      ...{
-        isReadonly: typeof note.isReadonly !== 'boolean' ? undefined : note.isReadonly ? (1 as const) : (0 as const),
-      },
-    };
+    return row || null;
   }
 }

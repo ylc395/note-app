@@ -15,6 +15,8 @@ interface UIState {
 export default class NoteEditor extends Editor<EditableNote, UIState> {
   constructor(editable: EditableNote, tile: Tile) {
     super(editable, tile);
+    this.setReadonly = editable.setReadonly;
+    this.submitNewVersion = editable.submitNewVersion;
     makeObservable(this);
   }
 
@@ -22,6 +24,10 @@ export default class NoteEditor extends Editor<EditableNote, UIState> {
   public searchEnabled = false;
 
   protected normalizeTitle = normalizeTitle;
+
+  public readonly setReadonly: (value: boolean) => void;
+
+  public readonly submitNewVersion: () => Promise<void>;
 
   @action.bound
   public toggleSearch() {
@@ -31,18 +37,22 @@ export default class NoteEditor extends Editor<EditableNote, UIState> {
   @action.bound
   public updateEntity(info: NotePatchDTO) {
     this.editable.update(info);
-    this.setActive();
+    this.setIsEditing();
   }
 
   @action.bound
   public readonly updateBody = (body: string) => {
-    this.editable.updateBody(body);
-    this.setActive();
+    this.updateEntity({ body });
   };
 
   @computed
   public get isReadonly() {
-    return Boolean(this.editable.entity?.isReadonly);
+    return this.editable.isReadonly;
+  }
+
+  @computed
+  public get canSubmitNewVersion() {
+    return this.editable.canSubmitVersion;
   }
 
   @computed

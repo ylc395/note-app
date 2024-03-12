@@ -15,6 +15,7 @@ export interface Row {
   parentId: string;
   content: string;
   createdAt: number;
+  updatedAt: number;
 }
 
 export const tableName = 'entities';
@@ -33,6 +34,7 @@ export default {
           'body as content',
           sql.val(EntityTypes.Note).as('type'),
           'createdAt',
+          'updatedAt',
         ])
         .union(
           db
@@ -45,6 +47,7 @@ export default {
               'comment as content',
               sql.val(EntityTypes.Material).as('type'),
               'createdAt',
+              'updatedAt',
             ]),
         )
         .union(
@@ -58,6 +61,7 @@ export default {
               'body as content',
               sql.val(EntityTypes.Memo).as('type'),
               'createdAt',
+              'updatedAt',
             ]),
         )
         .union(
@@ -71,6 +75,7 @@ export default {
               'body as content',
               sql.val(EntityTypes.Annotation).as('type'),
               'createdAt',
+              'updatedAt',
             ]),
         ),
     ),
