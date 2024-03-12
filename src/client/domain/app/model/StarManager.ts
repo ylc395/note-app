@@ -70,11 +70,8 @@ export default class StarManager {
   );
 
   public readonly open = (entity: EntityLocator) => {
-    const result = this.workbench.openEntity(entity);
-
-    if (!result) {
-      this.explorerManager.reveal(entity);
-    }
+    this.workbench.openEntity(entity);
+    this.explorerManager.reveal(entity);
   };
 
   @action.bound

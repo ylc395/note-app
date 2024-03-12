@@ -65,6 +65,6 @@ export default class ExplorerManager {
   public reveal({ entityId, entityType }: EntityLocator) {
     assert(entityType !== EntityTypes.Annotation, 'can not reveal');
     this.switchTo(entityType);
-    this.currentExplorer.reveal(entityId, { expand: true, select: true });
+    this.currentExplorer.reveal(entityId, { select: true });
   }
 }

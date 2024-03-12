@@ -15,6 +15,8 @@ export default abstract class TreeNode<T extends HierarchyEntity = HierarchyEnti
     }
 
     makeObservable(this);
+
+    // this can be gc-ed in theory, so we don't dispose it manually
     reaction(
       () => this.entity,
       action((entity) => Object.assign(this, this._entityToNode(entity))),
@@ -61,7 +63,6 @@ export default abstract class TreeNode<T extends HierarchyEntity = HierarchyEnti
 
     runInAction(() => {
       this.tree.updateTree(entities);
-
       this.isLoading = false;
       this.isLoaded = true;
 

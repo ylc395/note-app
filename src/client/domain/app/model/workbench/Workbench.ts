@@ -186,7 +186,7 @@ export default class Workbench {
   @action.bound
   public openEntity(entity: EntityLocator, options?: { dest?: Dest; forceNewTab?: true; reason?: SwitchReasons }) {
     if (!EditableEntity.isEditable(entity)) {
-      return false;
+      return;
     }
 
     const dest = options?.dest || this.getOrCreateFocusedTile();
@@ -205,7 +205,7 @@ export default class Workbench {
           assert(editor);
           targetTile.addEditorTo(editor, dest);
         }
-        return true;
+        return;
       } else {
         if (options?.forceNewTab) {
           editor = targetTile.createEditor(entity, { dest: 'tile', isActive: true });
@@ -222,7 +222,6 @@ export default class Workbench {
     }
 
     targetTile.switchToEditor(editor, options?.reason);
-    return true;
   }
 
   private static splitDirectionToDirection(direction: TileSplitDirections) {
