@@ -26,7 +26,7 @@ const defaultIcon = (node: TreeNode<MaterialVO>) => {
 
 export default observer(function MaterialTreeView() {
   const {
-    move: { byItems: moveMaterialsByItems },
+    move: { moveByItems: moveMaterialsByItems },
   } = container.resolve(MaterialService);
   const { openEntity } = container.resolve(Workbench);
   const {

@@ -1,29 +1,28 @@
-import { container } from 'tsyringe';
 import assert from 'assert';
+import { action, observable, makeObservable } from 'mobx';
+import { first } from 'lodash-es';
 
 import type { EntityId, EntityParentId, HierarchyEntity } from '@shared/domain/model/entity';
-import type { PromptToken } from '@shared/domain/infra/ui';
-import { token as UIToken } from '@shared/domain/infra/ui';
 import NoteTree from '@domain/common/model/note/Tree';
 import MaterialTree from '@domain/common/model/material/Tree';
 import type Explorer from '@domain/app/model/abstract/Explorer';
 import Tree from '@domain/common/model/abstract/Tree';
 
-export default class MoveBehavior<T extends HierarchyEntity> {
-  private readonly ui = container.resolve(UIToken);
+export default class MoveBehavior<T extends HierarchyEntity = HierarchyEntity> {
   constructor(
     private readonly options: {
       explorer: Explorer;
-      promptToken: PromptToken<EntityParentId>;
-      itemsToIds: (items: unknown) => EntityId[] | undefined;
+      itemToIds: (items: unknown) => EntityId[] | undefined;
       onMove: (parentId: EntityParentId, ids: EntityId[]) => Promise<void>;
     },
-  ) {}
+  ) {
+    makeObservable(this);
+  }
 
   private async move(targetId: EntityParentId, itemIds: EntityId[]) {
     const { explorer, onMove } = this.options;
-    await onMove(targetId, itemIds);
 
+    await onMove(targetId, itemIds);
     explorer.tree.updateTree(itemIds.map((id) => ({ id, parentId: targetId })));
 
     if (targetId) {
@@ -33,14 +32,34 @@ export default class MoveBehavior<T extends HierarchyEntity> {
     explorer.tree.setSelected(itemIds);
   }
 
-  public async byUserInput() {
-    const targetId = await this.ui.prompt(this.options.promptToken);
+  public readonly moveByTargetTree = async () => {
+    assert(this.targetTree);
 
-    if (targetId === undefined) {
-      return;
-    }
+    const targetId = first(this.targetTree.getSelectedNodeIds(true));
+    assert(targetId === null || typeof targetId === 'string');
 
-    await this.move(targetId, this.options.explorer.tree.getSelectedNodeIds());
+    const itemsIds = this.options.explorer.tree.getSelectedNodeIds();
+    await this.move(targetId, itemsIds);
+    this.stopSelectingTarget();
+  };
+
+  public readonly moveByItems = async (targetId: EntityParentId, items: unknown) => {
+    const ids = this.options.itemToIds(items);
+    assert(ids);
+    await this.move(targetId, ids);
+  };
+
+  @observable
+  public targetTree?: Tree;
+
+  @action.bound
+  public selectTarget() {
+    this.targetTree = this.createTargetTree();
+  }
+
+  @action.bound
+  public stopSelectingTarget() {
+    this.targetTree = undefined;
   }
 
   private isNodeDisabled(entity: T | null, tree: Tree) {
@@ -60,7 +79,7 @@ export default class MoveBehavior<T extends HierarchyEntity> {
     return tree.getNode(entity.parentId).ancestors.some((node) => node.isDisabled);
   }
 
-  public readonly createTargetTree = () => {
+  private createTargetTree() {
     let targetTree: Tree | undefined;
     const { tree } = this.options.explorer;
     const entityToNode = (entity: T | null) => {
@@ -80,11 +99,5 @@ export default class MoveBehavior<T extends HierarchyEntity> {
     targetTree.root.loadChildren();
 
     return targetTree;
-  };
-
-  public readonly byItems = async (targetId: EntityParentId, items: unknown) => {
-    const ids = this.options.itemsToIds(items);
-    assert(ids);
-    await this.move(targetId, ids);
-  };
+  }
 }

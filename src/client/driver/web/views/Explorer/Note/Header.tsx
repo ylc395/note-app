@@ -16,7 +16,7 @@ export default observer(function Header() {
     dnd: { status },
   } = container.resolve(NoteExplorer);
   const {
-    move: { byItems: moveNotesByItems },
+    move: { moveByItems: moveNotesByItems },
     createNote,
   } = container.resolve(NoteService);
 

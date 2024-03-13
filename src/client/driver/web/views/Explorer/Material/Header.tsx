@@ -10,9 +10,8 @@ import ExplorerHeader from '../common/ExplorerHeader';
 
 export default observer(function Header() {
   const {
-    createDirectory,
-    createMaterialFromFile,
-    move: { byItems: moveMaterialsByItems },
+    creation: { createDirectory, startCreating },
+    move: { moveByItems: moveMaterialsByItems },
   } = container.resolve(MaterialService);
   const {
     canCollapse: hasExpandedNode,
@@ -32,7 +31,7 @@ export default observer(function Header() {
     <ExplorerHeader
       left={[
         { icon: <AiOutlineFolderAdd />, onClick: () => createDirectory(null) },
-        { icon: <AiOutlineFileAdd />, onClick: () => createMaterialFromFile(null) },
+        { icon: <AiOutlineFileAdd />, onClick: () => startCreating(null) },
       ]}
       right={[
         { icon: <AiOutlineShrink />, onClick: collapseAll, disabled: !hasExpandedNode },

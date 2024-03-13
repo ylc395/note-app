@@ -9,9 +9,8 @@ import NoteEditor from '@domain/app/model/note/Editor';
 import NoteExplorer from '@domain/app/model/note/Explorer';
 import { EntityParentId, EntityTypes } from '@shared/domain/model/entity';
 import { type ActionEvent, eventBus, Events } from '@domain/app/model/note/eventBus';
-import { MOVE_TARGET_MODAL } from '@domain/app/model/note/prompts';
 import TreeNode from '@domain/common/model/abstract/TreeNode';
-import MoveBehavior from './behaviors/MoveBehavior';
+import MoveBehavior from './common/MoveBehavior';
 
 @singleton()
 export default class NoteService {
@@ -29,8 +28,7 @@ export default class NoteService {
 
   public readonly move = new MoveBehavior({
     explorer: this.explorer,
-    promptToken: MOVE_TARGET_MODAL,
-    itemsToIds: NoteService.getNoteIds,
+    itemToIds: NoteService.getNoteIds,
     onMove: this.moveNotes,
   });
 
@@ -55,7 +53,7 @@ export default class NoteService {
       case 'duplicate':
         return this.createNote({ from: oneId });
       case 'move':
-        return this.move.byUserInput();
+        return this.move.selectTarget();
       default:
         assert.fail(`invalid action: ${action}`);
     }

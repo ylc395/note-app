@@ -1,31 +1,27 @@
 import clsx from 'clsx';
 import { observer } from 'mobx-react-lite';
 
-import type TreeModel from '@domain/common/model/abstract/Tree';
-import type { PromptToken } from '@shared/domain/infra/ui';
-import type { EntityParentId } from '@shared/domain/model/entity';
-
-import Modal, { useModalValue } from '@web/components/Modal';
+import Modal from '@web/components/Modal';
 import Tree from '@web/components/Tree';
 import NodeTitle from './TreeView/NodeTitle';
+import type MoveBehavior from '@domain/app/service/common/MoveBehavior';
 
 export default observer(function TargetTreeModal({
-  modalId,
-  targetTreeFactory,
+  moveBehavior: { moveByTargetTree, stopSelectingTarget, targetTree },
 }: {
-  modalId: PromptToken<EntityParentId>;
-  targetTreeFactory: () => TreeModel;
+  moveBehavior: MoveBehavior;
 }) {
-  const { value: targetTree, modalProps } = useModalValue(targetTreeFactory);
-  const getTargetId = () => targetTree?.getSelectedNodeIds(true)[0];
+  if (!targetTree) {
+    return null;
+  }
 
   return (
     <Modal
-      {...modalProps}
-      id={modalId}
       bodyClassName="border border-solid border-gray-200 p-4"
       title="移动至..."
-      getSubmitResult={getTargetId}
+      canConfirm={targetTree.selectedNodes.length > 0}
+      onConfirm={moveByTargetTree}
+      onCancel={stopSelectingTarget}
     >
       {targetTree && (
         <Tree

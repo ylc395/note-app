@@ -1,70 +1,47 @@
-import { type ReactNode, useEffect, useRef, useState } from 'react';
-import { useClickAway, useKeyPress, useCreation } from 'ahooks';
+import { type ReactNode, useEffect, useRef } from 'react';
+import { useClickAway, useKeyPress } from 'ahooks';
 import clsx from 'clsx';
-import { container } from 'tsyringe';
-import { observer } from 'mobx-react-lite';
+import { noop } from 'lodash-es';
 import { createPortal } from 'react-dom';
-import Form from '@domain/common/model/abstract/Form';
 
-import ModalManager from '@domain/common/infra/ModalManager';
 import { APP_CLASS_NAME } from '@web/infra/ui/constants';
-import type { PromptToken } from '@shared/domain/infra/ui';
 
-interface Props<T> {
-  id: PromptToken<T>;
+export interface Props {
   children: ReactNode;
   title?: string;
-  onToggle?: (visible: boolean) => void;
   width?: number;
   height?: number;
   bodyClassName?: string;
+  visible?: boolean;
   canConfirm?: boolean;
-  getSubmitResult?: () => T;
+  onConfirm: () => void;
+  onCancel: () => void;
 }
 
-export function useModalValue<T>(factory: () => T) {
-  const [isOpen, setIsOpen] = useState(false);
-  const value = useCreation(() => (isOpen ? factory() : undefined), [isOpen]);
-
-  return {
-    value,
-    modalProps: {
-      onToggle: setIsOpen,
-      canConfirm: value instanceof Form ? value.isValid : undefined,
-      getSubmitResult: value instanceof Form ? value.getValues : undefined,
-    },
-  };
-}
-
-export default observer(function Modal<T>({
+export default function Modal({
   children,
   title,
   bodyClassName,
   width = 400,
   height = 300,
-  onToggle,
+  visible = true,
+  onConfirm,
+  onCancel,
   canConfirm = true,
-  getSubmitResult,
-  id,
-}: Props<T>) {
-  const modalManager = container.resolve(ModalManager);
+}: Props) {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
-  const { isOpen, submit, cancel } = modalManager.use(id);
 
   useEffect(() => {
-    onToggle?.(isOpen);
-  }, [isOpen, onToggle]);
-
-  useEffect(() => {
-    if (isOpen && dialogRef.current && !dialogRef.current.open) {
+    if (visible && dialogRef.current && !dialogRef.current.open) {
       dialogRef.current.showModal();
     }
-  }, [isOpen]);
+  }, [visible]);
 
-  useClickAway(() => isOpen && cancel(), dialogRef);
-  useKeyPress('esc', () => isOpen && cancel());
+  onCancel = visible ? onCancel : noop;
+  useClickAway(onCancel, dialogRef);
+  useKeyPress('esc', onCancel);
 
-  if (!isOpen) {
+  if (!visible) {
     return null;
   }
 
@@ -86,11 +63,11 @@ export default observer(function Modal<T>({
           <button
             className="h-8 w-16 cursor-pointer rounded border-0 bg-blue-100"
             disabled={!canConfirm}
-            onClick={() => submit(getSubmitResult?.())}
+            onClick={onConfirm}
           >
             确&ensp;认
           </button>
-          <button className="ml-2 h-8 w-16 cursor-pointer rounded border-0" onClick={cancel}>
+          <button className="ml-2 h-8 w-16 cursor-pointer rounded border-0" onClick={onCancel}>
             取&ensp;消
           </button>
         </div>
@@ -98,4 +75,4 @@ export default observer(function Modal<T>({
     </div>,
     document.body,
   ) as ReactNode;
-});
+}
