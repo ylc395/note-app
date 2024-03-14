@@ -7,6 +7,15 @@ export enum EntityTypes {
   Annotation,
 }
 
+export interface Entity {
+  id: EntityId;
+  title: string;
+  icon: string | null;
+  content?: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
 export type EntityId = string;
 
 export type EntityParentId = EntityId | null;

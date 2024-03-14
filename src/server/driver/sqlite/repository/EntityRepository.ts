@@ -1,5 +1,5 @@
 import { mapValues, groupBy } from 'lodash-es';
-import type { EntityId, HierarchyEntity } from '@domain/model/entity.js';
+import type { Entity, EntityId } from '@domain/model/entity.js';
 import type { EntityRepository } from '@domain/service/repository/EntityRepository.js';
 
 import { tableName } from '../schema/entity.js';
@@ -13,7 +13,7 @@ export default class SqliteEntityRepository extends BaseRepository implements En
   public async findOneById(id: EntityId) {
     const row = await this.db
       .selectFrom(this.tableName)
-      .select(['id as entityId', 'createdAt', 'content', 'updatedAt'])
+      .select(['id', 'title', 'createdAt', 'content', 'updatedAt', 'icon'])
       .where('id', '=', id)
       .executeTakeFirst();
 
@@ -35,28 +35,48 @@ export default class SqliteEntityRepository extends BaseRepository implements En
     return mapValues(groupBy(rows, 'parentId'), (rows) => rows.map((row) => row.id));
   }
 
-  public async findAncestorIds(ids: EntityId[]) {
+  public async findAncestors(ids: EntityId[]) {
+    const selectedFields = ['id', 'parentId', 'title', 'updatedAt', 'createdAt', 'icon'] as const;
     const rows = await this.db
       .withRecursive('ancestors', (qb) =>
         qb
           .selectFrom(this.tableName)
-          .select(['id', 'parentId'])
+          .select(selectedFields)
           .where('id', 'in', ids)
           .union(
             qb
               .selectFrom('ancestors')
-              .select([`${this.tableName}.id`, `${this.tableName}.parentId`])
+              .select(selectedFields.map((field) => `${this.tableName}.${field}` as const))
               .innerJoin(this.tableName, `${this.tableName}.id`, 'ancestors.parentId'),
           ),
       )
       .selectFrom('ancestors')
-      .select(['ancestors.id', 'ancestors.parentId'])
+      .select(selectedFields)
       .execute();
 
-    return SqliteEntityRepository.groupAncestorIdsByDescantId(
-      rows.filter(({ id }) => ids.includes(id)),
-      rows,
-    );
+    const descendants = rows.filter(({ id }) => ids.includes(id));
+    const entitiesMap = buildIndex(rows);
+    const result: Record<EntityId, Entity[]> = {};
+
+    for (const descendant of descendants) {
+      const ancestors: Entity[] = [];
+      let parentId = descendant.parentId;
+
+      while (parentId) {
+        ancestors.unshift(descendant);
+        const parent = entitiesMap[parentId];
+
+        if (!parent) {
+          break;
+        }
+
+        parentId = parent.parentId;
+      }
+
+      result[descendant.id] = ancestors;
+    }
+
+    return result;
   }
 
   async findDescendantIds(ids: EntityId[]) {
@@ -81,39 +101,10 @@ export default class SqliteEntityRepository extends BaseRepository implements En
       .select(['descendants.id', 'descendants.parentId'])
       .execute();
 
-    return SqliteEntityRepository.groupDescantsByAncestorId(ids, rows);
-  }
-
-  private static groupAncestorIdsByDescantId<T extends HierarchyEntity>(descendants: T[], entities: T[]) {
-    const entitiesMap = buildIndex(entities);
+    const groups = groupBy(rows, 'parentId');
     const result: Record<EntityId, EntityId[]> = {};
 
-    for (const { id, parentId } of descendants) {
-      const ancestorIds: EntityId[] = [];
-      let ancestorId = parentId;
-
-      while (ancestorId) {
-        ancestorIds.unshift(ancestorId);
-        const parent = entitiesMap[ancestorId];
-
-        if (!parent) {
-          break;
-        }
-
-        ancestorId = parent.parentId;
-      }
-
-      result[id] = ancestorIds;
-    }
-
-    return result;
-  }
-
-  private static groupDescantsByAncestorId<T extends HierarchyEntity>(ancestorIds: EntityId[], entities: T[]) {
-    const groups = groupBy(entities, 'parentId');
-    const result: Record<EntityId, EntityId[]> = {};
-
-    for (const id of ancestorIds) {
+    for (const id of ids) {
       const descendantIds: EntityId[] = [];
 
       const findChildren = (parentId: EntityId) => {

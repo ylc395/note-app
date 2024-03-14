@@ -16,12 +16,9 @@ import { EntityTypes } from '@domain/model/entity.js';
 import { buildIndex } from '@utils/collection.js';
 
 import BaseService from './BaseService.js';
-import HierarchyBehavior from './behaviors/HierarchyBehavior.js';
 
 @singleton()
 export default class MaterialService extends BaseService {
-  private readonly hierarchyBehavior = new HierarchyBehavior(this.repo.materials);
-
   public async create(newMaterial: NewMaterialDTO) {
     if (newMaterial.parentId) {
       await this.assertAvailableIds([newMaterial.parentId]);
@@ -149,7 +146,13 @@ export default class MaterialService extends BaseService {
   };
 
   public readonly getPaths = async (ids: Material['id'][]) => {
-    return this.hierarchyBehavior.getPaths(ids, normalizeTitle);
+    const ancestors = await this.repo.entities.findAncestors(ids);
+
+    const paths = mapValues(ancestors, (entities) =>
+      entities.map((entity) => ({ id: entity.id, title: normalizeTitle(entity), icon: entity.icon })),
+    );
+
+    return paths;
   };
 
   public async getPath(id: Material['id']) {

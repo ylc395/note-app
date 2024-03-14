@@ -1,7 +1,7 @@
 import { object, string, union, type infer as ZodInfer } from 'zod';
 import dayjs from 'dayjs';
 import type { ParsedDiff } from 'diff';
-import type { EntityId, EntityParentId } from './entity.js';
+import type { Entity, EntityId, EntityParentId } from './entity.js';
 
 export const notePatchDTOSchema = object({
   title: string().optional(),
@@ -38,6 +38,6 @@ export interface NoteVO extends Note {
   diff?: ParsedDiff;
 }
 
-export function normalizeTitle(note: Note | NoteVO) {
+export function normalizeTitle(note: Note | NoteVO | Entity) {
   return note.title || `未命名笔记-${dayjs(note.createdAt).format('YYYYMMDD-HHmm')}`;
 }

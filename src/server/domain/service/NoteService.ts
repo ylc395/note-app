@@ -13,12 +13,10 @@ import { EntityTypes } from '@domain/model/entity.js';
 import { buildIndex } from '@utils/collection.js';
 
 import BaseService from './BaseService.js';
-import HierarchyBehavior from './behaviors/HierarchyBehavior.js';
 import VersionService from './VersionService.js';
 
 @singleton()
 export default class NoteService extends BaseService {
-  private readonly hierarchyBehavior = new HierarchyBehavior(this.repo.notes);
   private readonly version = container.resolve(VersionService);
 
   public async create(note: NoteDTO, from?: Note['id']) {
@@ -63,7 +61,13 @@ export default class NoteService extends BaseService {
   };
 
   public readonly getPaths = async (ids: Note['id'][]) => {
-    return this.hierarchyBehavior.getPaths(ids, normalizeTitle);
+    const ancestors = await this.repo.entities.findAncestors(ids);
+
+    const paths = mapValues(ancestors, (entities) =>
+      entities.map((entity) => ({ id: entity.id, title: normalizeTitle(entity), icon: entity.icon })),
+    );
+
+    return paths;
   };
 
   public async getPath(id: Note['id']) {

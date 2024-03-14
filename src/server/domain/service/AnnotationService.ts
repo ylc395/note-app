@@ -11,13 +11,13 @@ import EntityService from './EntityService.js';
 export default class AnnotationService extends BaseService {
   private readonly entityService = container.resolve(EntityService);
   public async create(annotation: AnnotationDTO) {
-    await this.entityService.assertEntityIds([annotation.targetId]);
+    await this.entityService.assertAvailableIds([annotation.targetId]);
     // todo: verify annotation type here (not very necessary)
     return await this.repo.annotations.create(annotation);
   }
 
   public async queryByEntityId(entityId: EntityId) {
-    await this.entityService.assertEntityIds([entityId]);
+    await this.entityService.assertAvailableIds([entityId]);
     return this.repo.annotations.findAllByEntityId(entityId);
   }
 

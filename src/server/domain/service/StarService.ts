@@ -14,7 +14,7 @@ export default class StarService extends BaseService {
   private readonly entityService = container.resolve(EntityService);
 
   public async create({ entityId }: StarDTO) {
-    await this.entityService.assertEntityIds([entityId]);
+    await this.entityService.assertAvailableIds([entityId]);
 
     const existingStars = await this.repo.stars.findAll({ entityId: [entityId] });
     assert(existingStars.length === 0, `${entityId} has been starred`);

@@ -35,7 +35,8 @@ export default class VersionService extends BaseService {
     const isAuto = options?.isAuto ?? false;
     const latestVersion = options?.latestVersion;
 
-    const { entityId, content, updatedAt } = entity;
+    const { content, updatedAt } = entity;
+    const entityId = 'entityId' in entity ? entity.entityId : entity.id;
     const oldContent = await this.getVersionContent(entityId);
     const diff = VersionService.createDiffText({ oldContent, newContent: content, entityId });
 

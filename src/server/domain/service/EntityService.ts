@@ -14,7 +14,7 @@ export default class EntityService extends BaseService {
   private readonly materialService = container.resolve(MaterialService);
   private readonly memoService = container.resolve(MemoService);
 
-  public readonly assertEntityIds = async (ids: EntityId[]) => {
+  public readonly assertAvailableIds = async (ids: EntityId[]) => {
     ids = uniq(ids);
     const availableIds = await this.repo.entities.findAllAvailable(ids);
     assert(availableIds.length === ids.length, 'invalid entity ids');

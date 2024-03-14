@@ -1,6 +1,6 @@
 import { object, string, type infer as Infer, union } from 'zod';
 import dayjs from 'dayjs';
-import type { EntityId, EntityParentId } from './entity.js';
+import type { Entity, EntityId, EntityParentId } from './entity.js';
 
 export const newMaterialDTOSchema = object({
   title: string().optional(),
@@ -61,6 +61,6 @@ export function isEntityMaterial(v: Material | MaterialVO) {
   return Boolean('mimeType' in v && v.mimeType);
 }
 
-export function normalizeTitle(v: Material | MaterialVO) {
-  return v.title || `未命名${isEntityMaterial(v) ? '素材' : '目录'}${dayjs(v.createdAt).format('YYYYMMDD-HHmm')}`;
+export function normalizeTitle(v: Material | MaterialVO | Entity) {
+  return v.title || `未命名${dayjs(v.createdAt).format('YYYYMMDD-HHmm')}`;
 }
