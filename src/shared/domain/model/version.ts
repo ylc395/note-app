@@ -1,4 +1,4 @@
-import { object, string, type infer as ZodInfer } from 'zod';
+import { number, object, string, type infer as ZodInfer } from 'zod';
 import type { EntityId } from './entity.js';
 
 export interface Version {
@@ -8,6 +8,7 @@ export interface Version {
   device: string;
   diff: string;
   isAuto: boolean;
+  index: number;
   createdAt: number;
 }
 
@@ -16,6 +17,15 @@ export const versionDTOSchema = object({
   comment: string().optional(),
 });
 
+export const versionMergeRequestSchema = object({
+  entityId: string(),
+  startIndex: number(),
+  endIndex: number(),
+  comment: string().optional(),
+});
+
+export type VersionMergeRequest = ZodInfer<typeof versionMergeRequestSchema>;
+
 export type VersionDTO = ZodInfer<typeof versionDTOSchema>;
 
-export type VersionVO = Required<Version>;
+export type VersionVO = Omit<Version, 'id'>;

@@ -2,7 +2,7 @@ import type { VersionRepository } from '@domain/service/repository/VersionReposi
 import type { Selectable } from 'kysely';
 
 import type { EntityId } from '@domain/model/entity.js';
-import type { Version } from '@domain/model/version.js';
+import type { IndexRange, Version } from '@domain/model/version.js';
 import BaseRepository from './BaseRepository.js';
 import schema, { type Row } from '../schema/version.js';
 
@@ -23,25 +23,33 @@ export default class SqliteRevisionRepository extends BaseRepository implements 
     return { ...row, isAuto: Boolean(row.isAuto) };
   }
 
-  public async findAllByEntityId(entityId: EntityId) {
-    const result = await this.db
-      .selectFrom(tableName)
-      .where('entityId', '=', entityId)
-      .orderBy('createdAt', 'asc')
-      .selectAll()
-      .execute();
+  public async remove(entityId: EntityId, range: IndexRange) {
+    await this.db
+      .deleteFrom(tableName)
+      .where((eb) =>
+        eb.and([eb('entityId', '=', entityId), eb('index', '>=', range.startIndex), eb('index', '<=', range.endIndex)]),
+      );
+  }
 
+  public async findAllByEntityId(entityId: EntityId, index?: number) {
+    let sql = this.db.selectFrom(tableName).where('entityId', '=', entityId);
+
+    if (index) {
+      sql = sql.where('index', '<=', index);
+    }
+
+    const result = await sql.orderBy('createdAt', 'asc').selectAll().execute();
     return result.map(SqliteRevisionRepository.rowToVersion);
   }
 
-  public async getLatestRevisionTime(entityId: EntityId) {
+  public async findLatest(entityId: EntityId) {
     const row = await this.db
       .selectFrom(tableName)
-      .select(['createdAt'])
+      .selectAll()
       .where('entityId', '=', entityId)
-      .orderBy('createdAt', 'asc')
+      .orderBy('index', 'desc')
       .executeTakeFirst();
 
-    return row ? row.createdAt : null;
+    return row ? SqliteRevisionRepository.rowToVersion(row) : null;
   }
 }

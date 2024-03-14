@@ -4,7 +4,7 @@ import assert from 'node:assert';
 import { first } from 'lodash-es';
 
 import { EntityTypes, type EntityId } from '@domain/model/entity.js';
-import type { VersionDTO } from '@domain/model/version.js';
+import type { Version, VersionDTO, VersionMergeRequest, IndexRange } from '@domain/model/version.js';
 import type { ContentUpdatedEvent } from '@domain/model/content.js';
 
 import BaseService, { transaction } from './BaseService.js';
@@ -16,26 +16,34 @@ export default class VersionService extends BaseService {
     this.eventBus.on('contentUpdated', this.autoCreate.bind(this));
   }
 
-  public async queryDiff(id: EntityId, content: string) {
-    const latestVersionContent = await this.getLatestVersionContent(id);
+  public async getDiff(id: EntityId, content: string) {
+    const latestVersionContent = await this.getVersionContent(id);
     const diff = first(parsePatch(createPatch(id, content, latestVersionContent)));
     assert(diff);
 
     return diff;
   }
 
-  public async create(event: ContentUpdatedEvent | VersionDTO, isAuto = false) {
+  @transaction
+  public async create(
+    event: ContentUpdatedEvent | VersionDTO,
+    options?: { isAuto: boolean; latestVersion: Version | null },
+  ) {
     const entity = 'content' in event ? event : await this.repo.entities.findOneById(event.entityId);
     assert(entity);
 
-    const { entityId, content, updatedAt } = entity;
-    const oldContent = await this.getLatestVersionContent(entityId);
-    const diff = createPatch(entityId, oldContent, content);
-    const parsed = first(parsePatch(diff));
+    const isAuto = options?.isAuto ?? false;
+    const latestVersion = options?.latestVersion;
 
-    if (!parsed || parsed.hunks.length === 0) {
+    const { entityId, content, updatedAt } = entity;
+    const oldContent = await this.getVersionContent(entityId);
+    const diff = VersionService.createDiffText({ oldContent, newContent: content, entityId });
+
+    if (!diff) {
       return;
     }
+
+    const latestIndex = latestVersion?.index || (await this.repo.versions.findLatest(entityId))?.index || 0;
 
     await this.repo.versions.create({
       entityId,
@@ -44,14 +52,17 @@ export default class VersionService extends BaseService {
       comment: 'comment' in event && event.comment ? event.comment : '',
       createdAt: updatedAt,
       device: this.runtime.getDeviceName(),
+      index: latestIndex + 1,
     });
   }
 
   @transaction
   private async autoCreate(e: ContentUpdatedEvent) {
+    const latestVersion = await this.repo.versions.findLatest(e.entityId);
+
     // check whether a new version should be auto-created
     if (e.entityType === EntityTypes.Note) {
-      let latestTime = await this.repo.versions.getLatestRevisionTime(e.entityId);
+      let latestTime = latestVersion?.createdAt;
 
       if (!latestTime) {
         const entity = await this.repo.entities.findOneById(e.entityId);
@@ -65,20 +76,79 @@ export default class VersionService extends BaseService {
       }
     }
 
-    await this.create(e, true);
+    await this.create(e, { latestVersion, isAuto: true });
   }
 
-  private async getLatestVersionContent(entityId: EntityId) {
-    const revisions = await this.repo.versions.findAllByEntityId(entityId);
-    let result = '';
+  @transaction
+  public async merge({ startIndex, endIndex, entityId, comment = '' }: VersionMergeRequest) {
+    assert(endIndex > startIndex, 'invalid merge index');
+    const { oldContent, newContent, createdAt } = await this.getVersionContent(entityId, { startIndex, endIndex });
+    const diff = VersionService.createDiffText({ oldContent, newContent, entityId });
 
-    for (const { diff } of revisions) {
-      const applied = applyPatch(result, diff);
-      assert(typeof applied === 'string', 'can not apply patch');
+    assert(diff, 'invalid diff');
 
-      result = applied;
+    await this.repo.versions.remove(entityId, { startIndex, endIndex });
+    await this.repo.versions.create({
+      entityId,
+      isAuto: false,
+      diff,
+      comment,
+      createdAt,
+      device: this.runtime.getDeviceName(),
+      index: endIndex,
+    });
+  }
+
+  private async getVersionContent(
+    entityId: EntityId,
+    range: IndexRange,
+  ): Promise<{ oldContent: string; newContent: string; createdAt: number }>;
+  private async getVersionContent(entityId: EntityId): Promise<string>;
+  private async getVersionContent(entityId: EntityId, range?: IndexRange) {
+    const versions = await this.repo.versions.findAllByEntityId(entityId, range?.endIndex);
+
+    if (range) {
+      assert(versions.length >= 2, 'invalid index');
     }
 
-    return result;
+    let content = '';
+    const result = { oldContent: '', newContent: '', createdAt: 0 };
+
+    for (const { diff, createdAt, index: i } of versions) {
+      const applied = applyPatch(content, diff);
+      assert(typeof applied === 'string', 'can not apply patch');
+
+      if (i === range?.startIndex) {
+        result.oldContent = applied;
+      }
+
+      if (i === range?.endIndex) {
+        result.createdAt = createdAt;
+        result.newContent = applied;
+      }
+
+      content = applied;
+    }
+
+    return range ? result : content;
+  }
+
+  private static createDiffText({
+    oldContent,
+    newContent,
+    entityId,
+  }: {
+    oldContent: string;
+    newContent: string;
+    entityId: EntityId;
+  }) {
+    const diff = createPatch(entityId, oldContent, newContent); // this diff info is too large. Is there any better solution?🤔
+    const parsed = first(parsePatch(diff));
+
+    if (!parsed || parsed.hunks.length === 0) {
+      return null;
+    }
+
+    return diff;
   }
 }

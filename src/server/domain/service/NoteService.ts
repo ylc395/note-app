@@ -105,7 +105,7 @@ export default class NoteService extends BaseService {
     const diff =
       Array.isArray(notes) || typeof notes.body !== 'string'
         ? undefined
-        : await this.version.queryDiff(notes.id, notes.body);
+        : await this.version.getDiff(notes.id, notes.body);
 
     const result: NoteVO[] = _notes.map((note) => ({
       ...note,
