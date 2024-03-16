@@ -1,6 +1,6 @@
 import { uniq, pick } from 'lodash-es';
 import assert from 'assert';
-import { container, singleton } from 'tsyringe';
+import { singleton } from 'tsyringe';
 
 import {
   type NewMaterialDTO,
@@ -16,11 +16,9 @@ import { buildIndex } from '@utils/collection.js';
 import { EventNames } from '@domain/model/content.js';
 
 import BaseService from './BaseService.js';
-import EntityService from './EntityService.js';
 
 @singleton()
 export default class MaterialService extends BaseService {
-  private readonly entity = container.resolve(EntityService);
   public async create(newMaterial: NewMaterialDTO) {
     if (newMaterial.parentId) {
       await this.assertAvailableIds([newMaterial.parentId]);

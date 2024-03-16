@@ -1,6 +1,6 @@
-import { compact, isEmpty, uniq } from 'lodash-es';
+import { compact, isEmpty } from 'lodash-es';
 import assert from 'assert';
-import { singleton } from 'tsyringe';
+import { singleton, container } from 'tsyringe';
 
 import { buildIndex } from '@utils/collection.js';
 import type {
@@ -16,9 +16,11 @@ import { EntityTypes } from '@domain/model/entity.js';
 import { EventNames } from '@domain/model/content.js';
 
 import BaseService from './BaseService.js';
+import EntityService from './EntityService.js';
 
 @singleton()
 export default class MemoService extends BaseService {
+  private readonly entity = container.resolve(EntityService);
   public async create(memo: MemoDTO) {
     if (memo.parentId) {
       await this.assertAvailableIds([memo.parentId]);
@@ -119,8 +121,7 @@ export default class MemoService extends BaseService {
   }
 
   public readonly assertAvailableIds = async (ids: MemoVO['id'][]) => {
-    const memos = await this.repo.memos.findAll({ id: ids, isAvailable: true });
-    assert(memos.length === uniq(ids).length);
+    await this.entity.assertAvailableIds(ids, { types: [EntityTypes.Memo] });
   };
 
   public async queryAvailableDates(duration: Duration) {

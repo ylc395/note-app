@@ -12,8 +12,11 @@ import EntityService from './EntityService.js';
 export default class AnnotationService extends BaseService {
   private readonly entityService = container.resolve(EntityService);
   public async create(annotation: AnnotationDTO) {
-    await this.entityService.assertAvailableIds([annotation.targetId]);
-    // todo: verify annotation type here (not very necessary)
+    await this.entityService.assertAvailableIds([annotation.targetId], {
+      types: [EntityTypes.Note, EntityTypes.Material], // only note and material have annotations
+    });
+
+    // todo: verify annotation's selectors type here (not very necessary)
     return await this.repo.annotations.create(annotation);
   }
 

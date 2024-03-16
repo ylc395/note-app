@@ -123,7 +123,7 @@ export default class NoteService extends BaseService {
   }
 
   private assertAvailableIds(ids: Note['id'][]) {
-    return this.entity.assertAvailableIds(ids);
+    return this.entity.assertAvailableIds(ids, { types: [EntityTypes.Note] });
   }
 
   private async assertValidParent(parentId: Note['id'], childrenIds: Note['id'][]) {

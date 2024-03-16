@@ -1,5 +1,5 @@
 import { mapValues, groupBy } from 'lodash-es';
-import type { Entity, EntityId } from '@domain/model/entity.js';
+import type { Entity, EntityId, EntityTypes } from '@domain/model/entity.js';
 import type { EntityRepository } from '@domain/service/repository/EntityRepository.js';
 
 import { tableName } from '../schema/entity.js';
@@ -136,12 +136,18 @@ export default class SqliteEntityRepository extends BaseRepository implements En
     return result;
   }
 
-  public async findAllAvailable(ids: EntityId[]) {
-    const rows = await this.db
+  public async findAllAvailable(ids: EntityId[], params?: { types?: EntityTypes[] }) {
+    let sql = this.db
       .selectFrom(this.tableName)
       .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.id`)
       .where(`${recyclableTableName}.entityId`, 'is', null)
-      .where(`${this.tableName}.id`, 'in', ids)
+      .where(`${this.tableName}.id`, 'in', ids);
+
+    if (params?.types) {
+      sql = sql.where('type', 'in', params.types);
+    }
+
+    const rows = await sql
       .select(SqliteEntityRepository.selectedFields.map((field) => `${this.tableName}.${field}` as const))
       .execute();
 

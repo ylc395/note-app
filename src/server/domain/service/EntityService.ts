@@ -17,10 +17,10 @@ export default class EntityService extends BaseService {
     [EntityTypes.Annotation]: constant(''),
   };
 
-  public async assertAvailableIds(ids: EntityId[]) {
+  public async assertAvailableIds(ids: EntityId[], params?: { types: EntityTypes[] }) {
     ids = uniq(ids);
-    const availableIds = await this.repo.entities.findAllAvailable(ids);
-    assert(availableIds.length === ids.length, 'invalid entity ids');
+    const entities = await this.repo.entities.findAllAvailable(ids, params);
+    assert(entities.length === ids.length, 'invalid entity ids');
   }
 
   public async getNormalizedTitles(entityIds: EntityId[]) {
