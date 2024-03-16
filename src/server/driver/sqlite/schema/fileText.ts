@@ -3,7 +3,6 @@ import type { Kysely } from 'kysely';
 export interface Row {
   fileId: string;
   text: string;
-  page: number | null;
   location: string;
 }
 
@@ -16,7 +15,6 @@ export default {
       .createTable(tableName)
       .addColumn('fileId', 'text', (col) => col.notNull())
       .addColumn('text', 'text', (col) => col.notNull())
-      .addColumn('page', 'integer')
       .addColumn('location', 'text', (col) => col.notNull());
   },
 } as const;

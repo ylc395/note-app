@@ -10,6 +10,7 @@ import MemoService from '@domain/service/MemoService.js';
 import AnnotationService from '@domain/service/AnnotationService.js';
 import EntityService from '@domain/service/EntityService.js';
 import ContentService from '@domain/service/ContentService.js';
+import SearchService from '@domain/service/SearchService.js';
 
 const t = initTRPC.context().create();
 export const router = t.router;
@@ -25,6 +26,7 @@ export const publicProcedure = t.procedure.use(({ next }) => {
       starService: container.resolve(StarService),
       versionService: container.resolve(VersionService),
       contentService: container.resolve(ContentService),
+      searchService: container.resolve(SearchService),
     },
   });
 });

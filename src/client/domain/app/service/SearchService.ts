@@ -8,7 +8,7 @@ import assert from 'assert';
 //   ExpressionNodeType,
 // } from 'search-expression-parser';
 
-import { Scopes, type SearchParams, type SearchResult, type SearchableEntityType } from '@shared/domain/model/search';
+import { Scopes, type SearchParams, type SearchResultVO } from '@shared/domain/model/search';
 import { token as remoteToken } from '@domain/common/infra/rpc';
 import { EntityTypes } from '@domain/app/model/entity';
 
@@ -19,25 +19,6 @@ export default class SearchService {
   readonly search = async (q: SearchParams) => {
     // return this.remote.post<SearchParams, SearchResult[]>('/search', q);
   };
-
-  readonly searchInTree = async (q: { keyword: string; containBody: boolean; type: SearchableEntityType }) => {
-    if (!q.keyword) {
-      return;
-    }
-
-    const result = await this.search({
-      keyword: q.keyword,
-      scopes: SearchService.getScopes(q.type, q.containBody),
-    });
-  };
-
-  private static getScopes(type: SearchableEntityType, containBody: boolean) {
-    if (type === EntityTypes.Note) {
-      return [Scopes.NoteTitle, ...(containBody ? [Scopes.NoteBody, Scopes.NoteFile] : [])];
-    }
-
-    assert.fail('invalid type');
-  }
 
   // private static parseKeyword(q: string): SearchQuery | null {
   //   // we won't support AND / OR / NOT operators. so convert them into common content
