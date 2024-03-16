@@ -10,10 +10,20 @@ import { buildIndex } from '@utils/collection.js';
 export default class SqliteEntityRepository extends BaseRepository implements EntityRepository {
   private readonly tableName = tableName;
 
+  private static readonly selectedFields = [
+    'id',
+    'parentId',
+    'title',
+    'updatedAt',
+    'createdAt',
+    'icon',
+    'type',
+  ] as const;
+
   public async findOneById(id: EntityId) {
     const row = await this.db
       .selectFrom(this.tableName)
-      .select(['id', 'title', 'createdAt', 'content', 'updatedAt', 'icon'])
+      .select([...SqliteEntityRepository.selectedFields, 'content'])
       .where('id', '=', id)
       .executeTakeFirst();
 
@@ -36,22 +46,21 @@ export default class SqliteEntityRepository extends BaseRepository implements En
   }
 
   public async findAncestors(ids: EntityId[]) {
-    const selectedFields = ['id', 'parentId', 'title', 'updatedAt', 'createdAt', 'icon'] as const;
     const rows = await this.db
       .withRecursive('ancestors', (qb) =>
         qb
           .selectFrom(this.tableName)
-          .select(selectedFields)
+          .select(SqliteEntityRepository.selectedFields)
           .where('id', 'in', ids)
           .union(
             qb
               .selectFrom('ancestors')
-              .select(selectedFields.map((field) => `${this.tableName}.${field}` as const))
+              .select(SqliteEntityRepository.selectedFields.map((field) => `${this.tableName}.${field}` as const))
               .innerJoin(this.tableName, `${this.tableName}.id`, 'ancestors.parentId'),
           ),
       )
       .selectFrom('ancestors')
-      .select(selectedFields)
+      .select(SqliteEntityRepository.selectedFields)
       .execute();
 
     const descendants = rows.filter(({ id }) => ids.includes(id));
@@ -133,13 +142,13 @@ export default class SqliteEntityRepository extends BaseRepository implements En
       .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.id`)
       .where(`${recyclableTableName}.entityId`, 'is', null)
       .where(`${this.tableName}.id`, 'in', ids)
-      .select([`${this.tableName}.id`])
+      .select(SqliteEntityRepository.selectedFields.map((field) => `${this.tableName}.${field}` as const))
       .execute();
 
-    return rows.map(({ id }) => id);
+    return rows;
   }
 
-  public async *findAllBody(entities: EntityId[]) {
+  public async *findAllContents(entities: EntityId[]) {
     const stream = this.db.selectFrom(this.tableName).select(['id', 'content']).where('id', 'in', entities).stream();
 
     for await (const row of stream) {

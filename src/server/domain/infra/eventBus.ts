@@ -1,9 +1,7 @@
 import Emitter from 'emittery';
-import type { ContentUpdatedEvent } from '@domain/model/content.js';
+import type { EventMaps as ContentEvents } from '@domain/model/content.js';
 
-type EventMaps = {
-  contentUpdated: ContentUpdatedEvent;
-};
+type EventMaps = ContentEvents;
 
 const eventBus = new Emitter<EventMaps>();
 

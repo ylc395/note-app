@@ -5,7 +5,7 @@ import { first } from 'lodash-es';
 
 import { EntityTypes, type EntityId } from '@domain/model/entity.js';
 import type { Version, VersionDTO, VersionMergeRequest, IndexRange } from '@domain/model/version.js';
-import type { ContentUpdatedEvent } from '@domain/model/content.js';
+import { EventNames, type ContentUpdatedEvent } from '@domain/model/content.js';
 
 import BaseService, { transaction } from './BaseService.js';
 
@@ -13,7 +13,7 @@ import BaseService, { transaction } from './BaseService.js';
 export default class VersionService extends BaseService {
   constructor() {
     super();
-    this.eventBus.on('contentUpdated', this.autoCreate.bind(this));
+    this.eventBus.on(EventNames.ContentUpdated, this.autoCreate.bind(this));
   }
 
   public async getDiff(id: EntityId, content: string) {
@@ -24,7 +24,6 @@ export default class VersionService extends BaseService {
     return diff;
   }
 
-  @transaction
   public async create(
     event: ContentUpdatedEvent | VersionDTO,
     options?: { isAuto: boolean; latestVersion: Version | null },

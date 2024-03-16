@@ -4,8 +4,6 @@ import {
   AiOutlineSetting,
   AiOutlineSearch,
   AiOutlineHistory,
-  AiOutlineZoomIn,
-  AiOutlineZoomOut,
 } from 'react-icons/ai';
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
@@ -34,15 +32,6 @@ export default observer(function BottomBar() {
         <input placeholder="搜索..." className="h-full border-none bg-transparent" />
       </div>
       <div className="flex space-x-2">
-        <div className="flex">
-          <Button>
-            <AiOutlineZoomIn />
-          </Button>
-          <span className="flex w-10 items-center rounded border-solid border-gray-200 px-2 text-sm">100%</span>
-          <Button>
-            <AiOutlineZoomOut />
-          </Button>
-        </div>
         <Button>
           <AiOutlineSetting />
         </Button>

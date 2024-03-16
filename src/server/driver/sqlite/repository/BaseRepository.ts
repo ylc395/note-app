@@ -19,6 +19,10 @@ export default abstract class BaseRepository {
   }
 
   protected batchCreateOn<T extends keyof Db>(table: T, rows: Insertable<Db[T]>[]): Promise<Selectable<Db[T]>[]> {
+    if (rows.length === 0) {
+      return Promise.resolve([]);
+    }
+
     return this.db.insertInto(table).values(rows).returningAll().execute();
   }
 }

@@ -1,6 +1,6 @@
 import { container, singleton } from 'tsyringe';
 import assert from 'node:assert';
-import { first, mapValues, pick, uniq } from 'lodash-es';
+import { first, pick } from 'lodash-es';
 import {
   type NoteVO,
   type NoteDTO,
@@ -10,14 +10,17 @@ import {
   normalizeTitle,
 } from '@domain/model/note.js';
 import { EntityTypes } from '@domain/model/entity.js';
+import { EventNames } from '@domain/model/content.js';
 import { buildIndex } from '@utils/collection.js';
 
 import BaseService from './BaseService.js';
 import VersionService from './VersionService.js';
+import EntityService from './EntityService.js';
 
 @singleton()
 export default class NoteService extends BaseService {
   private readonly version = container.resolve(VersionService);
+  private readonly entity = container.resolve(EntityService);
 
   public async create(note: NoteDTO, from?: Note['id']) {
     let newNote: Required<Note>;
@@ -33,7 +36,7 @@ export default class NoteService extends BaseService {
     }
 
     if (newNote.body) {
-      this.eventBus.emit('contentUpdated', {
+      this.eventBus.emit(EventNames.ContentUpdated, {
         content: newNote.body,
         entityId: newNote.id,
         entityType: EntityTypes.Note,
@@ -52,30 +55,14 @@ export default class NoteService extends BaseService {
       title: `${normalizeTitle(targetNote)}-副本`,
     });
 
+    this.eventBus.emit(EventNames.ContentUpdated, {
+      content: newNote.body,
+      entityType: EntityTypes.Note,
+      entityId: noteId,
+      updatedAt: newNote.updatedAt,
+    });
+
     return newNote;
-  }
-
-  public readonly getNormalizedTitles = async (ids: Note['id'][]) => {
-    const entities = buildIndex(await this.repo.notes.findAll({ id: ids }));
-    return mapValues(entities, normalizeTitle);
-  };
-
-  public readonly getPaths = async (ids: Note['id'][]) => {
-    const ancestors = await this.repo.entities.findAncestors(ids);
-
-    const paths = mapValues(ancestors, (entities) =>
-      entities.map((entity) => ({ id: entity.id, title: normalizeTitle(entity), icon: entity.icon })),
-    );
-
-    return paths;
-  };
-
-  public async getPath(id: Note['id']) {
-    await this.assertAvailableIds([id]);
-    const path = (await this.getPaths([id]))[id];
-
-    assert(path);
-    return path;
   }
 
   public async updateOne(noteId: Note['id'], note: NotePatchDTO) {
@@ -88,7 +75,7 @@ export default class NoteService extends BaseService {
     });
 
     if (typeof note.body === 'string') {
-      this.eventBus.emit('contentUpdated', {
+      this.eventBus.emit(EventNames.ContentUpdated, {
         content: note.body,
         entityType: EntityTypes.Note,
         entityId: noteId,
@@ -122,6 +109,7 @@ export default class NoteService extends BaseService {
   }
 
   public async batchUpdate(ids: Note['id'][], patch: NotePatchDTO) {
+    await this.assertAvailableIds(ids);
     if (patch.parentId) {
       await this.assertValidParent(patch.parentId, ids);
     }
@@ -134,10 +122,9 @@ export default class NoteService extends BaseService {
     assert(result);
   }
 
-  public readonly assertAvailableIds = async (ids: Note['id'][]) => {
-    const notes = await this.repo.notes.findAll({ id: ids, isAvailable: true });
-    assert(notes.length === uniq(ids).length);
-  };
+  private assertAvailableIds(ids: Note['id'][]) {
+    return this.entity.assertAvailableIds(ids);
+  }
 
   private async assertValidParent(parentId: Note['id'], childrenIds: Note['id'][]) {
     await this.assertAvailableIds([parentId]);

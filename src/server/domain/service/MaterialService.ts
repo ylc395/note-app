@@ -1,6 +1,6 @@
-import { uniq, pick, mapValues } from 'lodash-es';
+import { uniq, pick } from 'lodash-es';
 import assert from 'assert';
-import { singleton } from 'tsyringe';
+import { container, singleton } from 'tsyringe';
 
 import {
   type NewMaterialDTO,
@@ -10,15 +10,17 @@ import {
   type MaterialPatchDTO,
   MaterialTypes,
   isEntityMaterial,
-  normalizeTitle,
 } from '@domain/model/material.js';
 import { EntityTypes } from '@domain/model/entity.js';
 import { buildIndex } from '@utils/collection.js';
+import { EventNames } from '@domain/model/content.js';
 
 import BaseService from './BaseService.js';
+import EntityService from './EntityService.js';
 
 @singleton()
 export default class MaterialService extends BaseService {
+  private readonly entity = container.resolve(EntityService);
   public async create(newMaterial: NewMaterialDTO) {
     if (newMaterial.parentId) {
       await this.assertAvailableIds([newMaterial.parentId]);
@@ -88,7 +90,7 @@ export default class MaterialService extends BaseService {
       assert(result);
 
       if (typeof patch.comment === 'string') {
-        this.eventBus.emit('contentUpdated', {
+        this.eventBus.emit(EventNames.ContentUpdated, {
           content: patch.comment,
           entityId: materialId,
           entityType: EntityTypes.Material,
@@ -139,27 +141,4 @@ export default class MaterialService extends BaseService {
 
     assert(result, 'invalid material id');
   };
-
-  public readonly getNormalizedTitles = async (ids: Material['id'][]) => {
-    const entities = buildIndex(await this.repo.materials.findAll({ id: ids }));
-    return mapValues(entities, normalizeTitle);
-  };
-
-  public readonly getPaths = async (ids: Material['id'][]) => {
-    const ancestors = await this.repo.entities.findAncestors(ids);
-
-    const paths = mapValues(ancestors, (entities) =>
-      entities.map((entity) => ({ id: entity.id, title: normalizeTitle(entity), icon: entity.icon })),
-    );
-
-    return paths;
-  };
-
-  public async getPath(id: Material['id']) {
-    await this.assertAvailableIds([id]);
-    const path = (await this.getPaths([id]))[id];
-
-    assert(path);
-    return path;
-  }
 }

@@ -10,7 +10,7 @@ export default router({
 
   queryPath: publicProcedure
     .input(string())
-    .query(({ input: noteId, ctx: { noteService } }) => noteService.getPath(noteId)),
+    .query(({ input: noteId, ctx: { entityService } }) => entityService.getPath(noteId)),
 
   queryOne: publicProcedure
     .input(string())

@@ -1,11 +1,8 @@
 import type { Kysely } from 'kysely';
 
 export interface Row {
-  fromEntityId: string;
-  fromPosition: `${number},${number}`;
-  toEntityId: string;
-  toFragmentId: string;
-  createdAt: number;
+  sourceId: string;
+  targetId: string;
 }
 
 export const tableName = 'links';
@@ -15,10 +12,7 @@ export default {
   builder: (db: Kysely<unknown>) => {
     return db.schema
       .createTable(tableName)
-      .addColumn('fromEntityId', 'text', (col) => col.notNull())
-      .addColumn('fromPosition', 'text', (col) => col.notNull())
-      .addColumn('toEntityId', 'text', (col) => col.notNull())
-      .addColumn('toFragmentId', 'text', (col) => col.notNull())
-      .addColumn('createdAt', 'integer', (col) => col.notNull());
+      .addColumn('sourceId', 'text', (col) => col.notNull())
+      .addColumn('targetId', 'text', (col) => col.notNull());
   },
 } as const;

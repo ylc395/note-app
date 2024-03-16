@@ -29,11 +29,8 @@ export default class StarService extends BaseService {
 
   public async query(id?: EntityId) {
     const stars = await this.repo.stars.findAll({ isAvailableOnly: true, entityId: id ? [id] : undefined });
-    const titles = await this.entityService.getNormalizedTitles(stars);
-    const materialIds = stars
-      .filter(({ entityType }) => entityType === EntityTypes.Material)
-      .map(({ entityId }) => entityId);
-
+    const titles = await this.entityService.getNormalizedTitles(EntityService.toIds(stars));
+    const materialIds = EntityService.toIds(stars.filter(({ entityType }) => entityType === EntityTypes.Material));
     const materials = materialIds.length > 0 ? buildIndex(await this.repo.materials.findAll({ id: materialIds })) : {};
 
     return stars.map((star) => {

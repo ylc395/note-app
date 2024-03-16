@@ -75,7 +75,7 @@ export default class SqliteDb implements Database {
     }
 
     this.logger.debug(dbPath);
-    const db = new BetterSqlite3(dbPath, { verbose: this.logger.debug });
+    const db = new BetterSqlite3(dbPath, { verbose: (message) => this.logger.debug(`${message}\n`) });
     db.loadExtension(join(path.dirname(fileURLToPath(import.meta.url)), 'simple-tokenizer/libsimple'));
 
     return new Kysely<Db>({

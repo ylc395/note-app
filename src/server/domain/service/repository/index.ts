@@ -5,7 +5,8 @@ import type { MemoRepository } from './MemoRepository.js';
 import type { MaterialRepository } from './MaterialRepository.js';
 import type { VersionRepository } from './VersionRepository.js';
 import type { SynchronizationRepository } from './SynchronizationRepository.js';
-import type { ContentRepository } from './ContentRepository.js';
+import type { TopicRepository } from './TopicRepository.js';
+import type { LinkRepository } from './LinkRepository.js';
 import type { EntityRepository } from './EntityRepository.js';
 import type { AnnotationRepository } from './AnnotationRepository.js';
 
@@ -18,6 +19,7 @@ export default interface Repositories {
   annotations: AnnotationRepository;
   versions: VersionRepository;
   synchronization: SynchronizationRepository;
-  contents: ContentRepository;
+  topics: TopicRepository;
+  links: LinkRepository;
   entities: EntityRepository;
 }

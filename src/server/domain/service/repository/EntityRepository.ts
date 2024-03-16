@@ -5,6 +5,6 @@ export interface EntityRepository {
   findOneById: (id: EntityId) => Promise<Required<Entity> | null>;
   findChildrenIds: (ids: EntityId[], options?: { isAvailableOnly: boolean }) => Promise<Record<EntityId, EntityId[]>>;
   findAncestors: (ids: EntityId[]) => Promise<Record<EntityId, Entity[]>>;
-  findAllBody: (ids: EntityId[]) => AsyncGenerator<{ content: string; id: EntityId }>;
-  findAllAvailable: (ids: EntityId[]) => Promise<EntityId[]>;
+  findAllContents: (ids: EntityId[]) => AsyncGenerator<{ content: string; id: EntityId }>;
+  findAllAvailable: (ids: EntityId[]) => Promise<Entity[]>;
 }

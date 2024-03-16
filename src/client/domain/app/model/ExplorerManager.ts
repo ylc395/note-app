@@ -10,11 +10,6 @@ import { EntityLocator, EntityTypes } from '@domain/app/model/entity';
 
 export type ExplorerTypes = EntityTypes.Note | EntityTypes.Material | EntityTypes.Memo;
 
-export enum ExtraPanelType {
-  Star = 'star',
-  Topic = 'topic',
-}
-
 @singleton()
 export default class ExplorerManager {
   private readonly localStorage = container.resolve(localStorageToken);
@@ -32,15 +27,6 @@ export default class ExplorerManager {
 
   @observable.ref
   public currentExplorerType = this.localStorage.get<ExplorerTypes>(KEY.EXPLORER.CURRENT_EXPLORER) || EntityTypes.Note;
-
-  @observable
-  public extraPanels: ExtraPanelType[] = this.localStorage.get<ExtraPanelType[]>(KEY.EXPLORER.EXTRA_PANELS) || [];
-
-  @action.bound
-  public pinExtraPanel(type: ExtraPanelType) {
-    this.extraPanels.push(type);
-    this.localStorage.set(KEY.EXPLORER.EXTRA_PANELS, this.extraPanels);
-  }
 
   @computed
   public get currentExplorer() {

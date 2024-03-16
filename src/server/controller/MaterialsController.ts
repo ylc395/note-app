@@ -9,7 +9,7 @@ export default router({
 
   queryPath: publicProcedure
     .input(string())
-    .query(({ input: id, ctx: { materialService } }) => materialService.getPath(id)),
+    .query(({ input: id, ctx: { entityService } }) => entityService.getPath(id)),
 
   queryOne: publicProcedure
     .input(string())

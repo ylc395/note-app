@@ -10,6 +10,7 @@ export enum EntityTypes {
 export interface Entity {
   id: EntityId;
   title: string;
+  type: EntityTypes;
   icon: string | null;
   content?: string;
   createdAt: number;
@@ -31,9 +32,5 @@ export const entityLocatorSchema = object({
 });
 
 export type EntityLocator = Infer<typeof entityLocatorSchema>;
-
-export interface EntityWithTitle extends EntityLocator {
-  title: string;
-}
 
 export type Path = { id: EntityId; title: string; icon: string | null }[];

@@ -71,7 +71,7 @@ export default {
               'id',
               sql.val(null).as('icon'),
               sql.val('').as('title'),
-              sql.val(null).as('parentId'),
+              'targetId as parentId',
               'body as content',
               sql.val(EntityTypes.Annotation).as('type'),
               'createdAt',

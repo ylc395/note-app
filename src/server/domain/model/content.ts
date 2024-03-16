@@ -1,25 +1,31 @@
-import type { EntityLocator } from '@domain/model/entity.js';
-import type { TopicDTO, LinkDTO, HighlightPosition } from '@shared/domain/model/content.js';
+import type { EntityId, EntityLocator, EntityTypes } from '@domain/model/entity.js';
 
-export * from '@shared/domain/model/content.js';
+export * from '@shared/domain/model/content/topic.js';
+export * from '@shared/domain/model/content/link.js';
+
+export enum EventNames {
+  ContentUpdated = 'content.updated',
+}
 
 export interface ContentUpdatedEvent extends EntityLocator {
   content: string;
   updatedAt: number;
 }
 
-export interface Link extends LinkDTO {
-  createdAt: number;
-}
+export type EventMaps = {
+  [EventNames.ContentUpdated]: ContentUpdatedEvent;
+};
 
-export interface Topic extends TopicDTO {
-  createdAt: number;
-}
-
-export interface InlineTopic extends Topic {
-  position: HighlightPosition;
-}
-
-export interface TopicQuery {
+export interface TopicRecord {
+  entityType?: EntityTypes;
+  entityId: EntityId;
   name: string;
+  createdAt: number;
+}
+
+export interface Link {
+  sourceId: EntityId;
+  sourceType?: EntityTypes;
+  targetId: EntityId;
+  targetType?: EntityTypes;
 }

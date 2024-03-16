@@ -6,5 +6,6 @@ export { default as materials } from './MaterialRepository.js';
 export { default as annotations } from './AnnotationRepository.js';
 export { default as versions } from './VersionRepository.js';
 export { default as synchronization } from './SynchronizationRepository.js';
-export { default as contents } from './ContentRepository.js';
+export { default as links } from './LinkRepository.js';
+export { default as topics } from './TopicRepository.js';
 export { default as entities } from './EntityRepository.js';

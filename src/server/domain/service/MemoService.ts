@@ -1,4 +1,4 @@
-import { compact, isEmpty, mapValues, uniq } from 'lodash-es';
+import { compact, isEmpty, uniq } from 'lodash-es';
 import assert from 'assert';
 import { singleton } from 'tsyringe';
 
@@ -13,6 +13,7 @@ import type {
   ClientTreeFragmentQuery,
 } from '@domain/model/memo.js';
 import { EntityTypes } from '@domain/model/entity.js';
+import { EventNames } from '@domain/model/content.js';
 
 import BaseService from './BaseService.js';
 
@@ -51,7 +52,7 @@ export default class MemoService extends BaseService {
     assert(updated);
 
     if (typeof patch.body === 'string') {
-      this.eventBus.emit('contentUpdated', {
+      this.eventBus.emit(EventNames.ContentUpdated, {
         updatedAt: updated.updatedAt,
         content: patch.body,
         entityType: EntityTypes.Memo,
@@ -116,11 +117,6 @@ export default class MemoService extends BaseService {
 
     return Array.isArray(memos) ? result : result[0]!;
   }
-
-  public readonly getTitles = async (ids: MemoVO['id'][]) => {
-    const memos = await this.repo.memos.findAll({ id: ids });
-    return mapValues(buildIndex(memos), ({ body }) => body.slice(0, 5));
-  };
 
   public readonly assertAvailableIds = async (ids: MemoVO['id'][]) => {
     const memos = await this.repo.memos.findAll({ id: ids, isAvailable: true });

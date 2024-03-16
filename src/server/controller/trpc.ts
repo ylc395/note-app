@@ -8,6 +8,8 @@ import StarService from '@domain/service/StarService.js';
 import FileService from '@domain/service/FileService/index.js';
 import MemoService from '@domain/service/MemoService.js';
 import AnnotationService from '@domain/service/AnnotationService.js';
+import EntityService from '@domain/service/EntityService.js';
+import ContentService from '@domain/service/ContentService.js';
 
 const t = initTRPC.context().create();
 export const router = t.router;
@@ -15,12 +17,14 @@ export const publicProcedure = t.procedure.use(({ next }) => {
   return next({
     ctx: {
       fileService: container.resolve(FileService),
+      entityService: container.resolve(EntityService),
       noteService: container.resolve(NoteService),
       memoService: container.resolve(MemoService),
       annotationService: container.resolve(AnnotationService),
       materialService: container.resolve(MaterialService),
       starService: container.resolve(StarService),
       versionService: container.resolve(VersionService),
+      contentService: container.resolve(ContentService),
     },
   });
 });

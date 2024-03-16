@@ -1,77 +1,96 @@
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { visit } from 'unist-util-visit';
-import { container } from 'tsyringe';
+import { container, singleton } from 'tsyringe';
+import assert from 'assert';
 import type { Link as MdAstLinkNode, Image as MdAstImageNode, Node as UnistNode } from 'mdast';
-import { groupBy, uniqBy, map } from 'lodash-es';
+import { groupBy, differenceWith, intersectionWith, uniqBy } from 'lodash-es';
 
-import { is, parseUrl } from '@domain/infra//markdown/utils.js';
+import { is, parseUrl } from '@domain/infra/markdown/utils.js';
 import {
   mdastExtension as topicExtension,
   tokenExtension as topicTokenExtension,
   type Topic as TopicNode,
 } from '@domain/infra//markdown/syntax/topic.js';
-import type {
-  ContentUpdatedEvent,
-  EntityWithSnippet,
-  Link,
-  HighlightPosition,
-  // TopicQuery,
-  // TopicVO,
-  // TopicDTO,
-  LinkDTO,
-  // LinkToQuery,
-  InlineTopic,
+import {
+  EventNames,
+  type ContentUpdatedEvent,
+  type TopicRecord,
+  type Link,
+  type TopicVO,
+  type LinkSourceVO,
+  type LinkTargetVO,
+  type Source,
 } from '@domain/model/content.js';
-import type { EntityId, EntityLocator } from '@domain/model/entity.js';
+import type { EntityId } from '@domain/model/entity.js';
 
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
 
+@singleton()
 export default class ContentService extends BaseService {
-  private readonly entityService = container.resolve(EntityService);
-
-  onModuleInit() {
-    // if (!IS_IPC) {
-    // only extract on non-ipc server. ipc server will receive everything from render process, no need to do extracting itself
-    // this.eventBus.on('contentUpdated', this.extract);
-    // }
+  constructor() {
+    super();
+    this.eventBus.on(EventNames.ContentUpdated, this.extract);
   }
 
+  private readonly entityService = container.resolve(EntityService);
+
+  private static parseMarkdown(content: string) {
+    return fromMarkdown(content, {
+      mdastExtensions: [topicExtension],
+      extensions: [topicTokenExtension],
+    });
+  }
+
+  private readonly extract = async (entity: ContentUpdatedEvent) => {
+    const mdAst = ContentService.parseMarkdown(entity.content);
+    const reducers = [this.extractLinksAndMedias, this.extractTopics].map((cb) => cb.call(this, entity));
+
+    visit(mdAst, (node) => reducers.forEach(({ visitor }) => visitor(node)));
+
+    for (const { done } of reducers) {
+      await this.transaction(done);
+    }
+  };
+
   private extractTopics(entity: ContentUpdatedEvent) {
-    const topics: InlineTopic[] = [];
+    const topics = new Set<TopicRecord['name']>();
 
     return {
       visitor: (node: UnistNode) => {
-        if (!is<TopicNode>(node, 'topic') || !node.position) {
-          return;
+        if (is<TopicNode>(node, 'topic')) {
+          topics.add(node.value);
         }
-
-        topics.push({
-          ...entity,
-          position: { start: node.position.start.offset || 0, end: node.position.end.offset || 0 },
-          name: node.value,
-          createdAt: entity.updatedAt,
-        });
       },
       done: async () => {
-        if (topics.length === 0) {
-          return;
-        }
+        const newTopics = Array.from(topics);
 
-        await this.transaction(async () => {
-          await this.repo.contents.removeTopicsOf(entity.entityId);
-          await this.repo.contents.createTopics(topics);
-        });
+        const existingTopics = await this.repo.topics.findTopicsOf(entity.entityId);
+        const topicsToRemove = differenceWith(
+          existingTopics,
+          newTopics,
+          ({ name: existingTopic }, newTopic) => existingTopic === newTopic,
+        ).map(({ name }) => name);
+
+        const topicsToCreate = differenceWith(
+          newTopics,
+          existingTopics,
+          (existingTopic, { name: newTopic }) => newTopic === existingTopic,
+        );
+
+        const { entityId, updatedAt } = entity;
+        await this.repo.topics.removeTopics(entityId, topicsToRemove);
+        await this.repo.topics.createTopics(entityId, { names: topicsToCreate, createdAt: updatedAt });
       },
     };
   }
 
   private extractLinksAndMedias(entity: ContentUpdatedEvent) {
-    const links: Link[] = [];
+    let links: Link[] = [];
 
     return {
       visitor: (node: UnistNode) => {
-        if (!(is<MdAstLinkNode>(node, 'link') || is<MdAstImageNode>(node, 'image')) || !node.position || !node.url) {
+        if (!(is<MdAstLinkNode>(node, 'link') || is<MdAstImageNode>(node, 'image')) || !node.url) {
           return;
         }
 
@@ -82,145 +101,113 @@ export default class ContentService extends BaseService {
         }
 
         links.push({
-          from: {
-            ...entity,
-            position: { start: node.position.start.offset || 0, end: node.position.end.offset || 0 },
-          },
-          to: parsed,
-          createdAt: entity.updatedAt,
+          sourceId: entity.entityId,
+          targetId: parsed.entityId,
         });
       },
       done: async () => {
-        if (links.length === 0) {
-          return;
-        }
+        links = uniqBy(links, 'targetId');
+        const availableTargets = await this.repo.entities.findAllAvailable(links.map(({ targetId }) => targetId));
+        const validLinks = intersectionWith(links, availableTargets, ({ targetId }, { id }) => targetId === id);
 
-        await this.transaction(async () => {
-          await this.repo.contents.removeLinks(entity.entityId, 'from');
-          await this.repo.contents.createLinks(links); // don't do filtering here.
-        });
+        await this.repo.links.removeLinks(entity.entityId);
+        await this.repo.links.createLinks(validLinks);
       },
     };
   }
 
-  private readonly extract = async (entity: ContentUpdatedEvent) => {
-    const mdAst = fromMarkdown(entity.content, {
-      mdastExtensions: [topicExtension],
-      extensions: [topicTokenExtension],
+  public async queryAllTopics(): Promise<TopicVO[]> {
+    const allTopics = groupBy(await this.repo.topics.findAllAvailableTopics(), 'name');
+    const entityIds = Object.values(allTopics).flatMap((topics) => topics.map(({ entityId }) => entityId));
+    const titles = await this.entityService.getNormalizedTitles(entityIds);
+
+    return Object.keys(allTopics).map((name) => {
+      const topics = allTopics[name];
+      assert(topics);
+
+      const entities = topics.map(({ entityId, entityType }) => ({ entityId, entityType, title: titles[entityId]! }));
+      const activeAt = Math.max(...topics.map(({ createdAt }) => createdAt));
+
+      return { entities, activeAt, name };
     });
-
-    const reducers = [this.extractLinksAndMedias, this.extractTopics].map((cb) => cb.call(this, entity));
-
-    visit(mdAst, (node) => reducers.forEach(({ visitor }) => visitor(node)));
-
-    for (const { done } of reducers) {
-      await done();
-    }
-  };
-
-  async queryTopicNames() {
-    return this.repo.contents.findAvailableTopicNames({ orderBy: 'updatedAt' });
   }
 
-  // async queryTopics(q: TopicQuery) {
-  //   const topics = await this.repo.contents.findAvailableTopics(q);
-  //   const topicsGroup = groupBy(topics, 'name');
-  //   const result: TopicVO[] = [];
-  //   const titles = await this.entityService.getNormalizedTitles(topics);
-  //   const snippets = await this.getSnippets(topics);
+  public async queryEntityLinks(id: EntityId): Promise<{
+    sources: LinkSourceVO[]; // link to this entity
+    targets: LinkTargetVO[]; // link from this entity
+  }> {
+    await this.entityService.assertAvailableIds([id]);
 
-  //   for (const [name, topics] of Object.entries(topicsGroup)) {
-  //     const topicVO: TopicVO = {
-  //       updatedAt: 0,
-  //       name,
-  //       entities: [],
-  //     };
+    const links = await this.repo.links.findAvailableLinksOf(id);
+    const sources = links.filter(({ targetId }) => targetId === id);
+    const sourceIds = sources.map(({ sourceId }) => sourceId);
+    const targets = links.filter(({ sourceId }) => sourceId === id);
 
-  //     for (const topic of topics) {
-  //       const snippet = snippets[topic.entityId]![`${topic.position.start},${topic.position.end}`]!;
+    const titles = await this.entityService.getNormalizedTitles([
+      ...sourceIds,
+      ...targets.map(({ targetId }) => targetId),
+    ]);
 
-  //       topicVO.entities.push({
-  //         entityId: topic.entityId,
-  //         entityType: topic.entityType,
-  //         title: titles[topic.entityId] || '',
-  //         ...snippet,
-  //       });
+    const sourceEntities = await this.querySourceEntities(sourceIds);
 
-  //       if (topic.createdAt > topicVO.updatedAt) {
-  //         topicVO.updatedAt = topic.createdAt;
-  //       }
-  //     }
-  //     result.push(topicVO);
-  //   }
-  //   return result;
-  // }
+    return {
+      sources: sources.map(({ sourceId, sourceType }) => {
+        return {
+          entityId: sourceId,
+          entityType: sourceType,
+          title: titles[sourceId]!,
+          sources: sourceEntities[sourceId]!,
+        };
+      }),
+      targets: targets.map(({ targetId, targetType }) => {
+        return {
+          entityId: targetId,
+          entityType: targetType,
+          title: titles[targetId]!,
+        };
+      }),
+    };
+  }
 
-  // async queryLinkTos(q: LinkToQuery) {
-  //   const links = await this.repo.contents.findAllLinkTos(q);
-  //   const froms = await this.entityService.filterAvailable(map(links, 'from'));
-  //   const snippets = await this.getSnippets(froms);
-  //   const titles = await this.entityService.getNormalizedTitles(froms);
+  private async querySourceEntities(sourceIds: EntityId[]) {
+    const contents = this.repo.entities.findAllContents(sourceIds);
+    const result: Record<EntityId, Source[]> = {};
 
-  //   return froms.map(({ entityId, entityType, position }) => ({
-  //     entityId,
-  //     entityType,
-  //     title: titles[entityId]!,
-  //     ...snippets[entityId]![`${position.start},${position.end}`]!,
-  //   }));
-  // }
+    for await (const { id, content } of contents) {
+      const mdAst = ContentService.parseMarkdown(content);
+      const sources: Source[] = [];
 
-  private async getSnippets(entities: (EntityLocator & { position: HighlightPosition })[]) {
-    const result: Record<
-      EntityId,
-      Record<`${number},${number}`, Pick<EntityWithSnippet, 'snippet' | 'highlight'>>
-    > = {};
-
-    const groups = groupBy(entities, ({ entityId, entityType }) => `${entityType}-${entityId}`);
-    const bodyIterator = this.repo.entities.findAllBody(EntityService.toIds(entities));
-
-    for await (const { content, id } of bodyIterator) {
-      const positions = groups[id]!;
-
-      for (const { position } of positions) {
-        if (!result[id]) {
-          result[id] = {};
+      visit(mdAst, (node) => {
+        if (!is<MdAstLinkNode>(node, 'link')) {
+          return;
         }
 
-        result[id]![`${position.start},${position.end}`] = ContentService.extractSnippet(content, position);
-      }
+        const start = node.position?.start.offset;
+        const end = node.position?.end.offset;
+
+        if (typeof start !== 'number' || typeof end !== 'number') {
+          return;
+        }
+
+        const parsed = parseUrl(node.url);
+
+        if (!parsed) {
+          return;
+        }
+
+        const snippet = content.slice(Math.max(0, start - 20), Math.min(content.length, end + 20));
+
+        sources.push({
+          targetFragmentId: parsed.fragmentId,
+          snippet,
+          highlightStart: 20,
+          highlightEnd: 20 + (end - start),
+        });
+      });
+
+      result[id] = sources;
     }
+
     return result;
-  }
-
-  // async createTopics(topics: TopicDTO[]) {
-  //   const createdAt = Date.now();
-
-  //   await this.entityService.assertAvailableEntities(topics);
-
-  //   await this.transaction(async () => {
-  //     const _topics = topics.map((topic) => ({ ...topic, createdAt }));
-
-  //     for (const topic of uniqBy(topics, 'entityId')) {
-  //       await this.repo.contents.removeTopicsOf(topic);
-  //     }
-  //     await this.repo.contents.createTopics(_topics);
-  //   });
-  // }
-
-  async createLinks(links: LinkDTO[]) {
-    const createdAt = Date.now();
-    const _links = links.map((link) => ({ ...link, createdAt }));
-
-    await this.transaction(async () => {
-      for (const link of uniqBy(map(links, 'from'), 'entityId')) {
-        await this.repo.contents.removeLinks(link.entityId, 'from');
-      }
-      await this.repo.contents.createLinks(_links);
-    });
-  }
-
-  private static extractSnippet(content: string, pos: HighlightPosition) {
-    const snippet = content.slice(Math.max(0, pos.start - 20), Math.min(content.length, pos.end + 20));
-    return { snippet, highlight: { start: 20, end: 20 + (pos.end - pos.start) } };
   }
 }

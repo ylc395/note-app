@@ -1,6 +1,6 @@
 import { object, string } from 'zod';
 
-import type { EntityWithTitle, EntityId } from './entity.js';
+import type { EntityId, EntityLocator } from './entity.js';
 
 export const recyclableDTOSchema = object({ entityId: string() });
 
@@ -15,6 +15,7 @@ export enum RecycleReason {
   Cascade,
 }
 
-export interface RecyclableVO extends EntityWithTitle {
+export interface RecyclableVO extends EntityLocator {
+  title: string;
   deletedAt: number;
 }

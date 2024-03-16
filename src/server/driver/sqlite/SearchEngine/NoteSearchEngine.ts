@@ -57,8 +57,8 @@ export default class SqliteNoteSearchEngine {
     if (scopes.includes(Scopes.NoteFile)) {
       let query = this.engine.db
         .selectFrom(FILE_TEXTS_FTS_TABLE)
-        .innerJoin(linkTableName, `${FILE_TEXTS_FTS_TABLE}.fileId`, `${linkTableName}.toEntityId`)
-        .innerJoin(noteTableName, `${noteTableName}.id`, `${linkTableName}.fromEntityId`)
+        .innerJoin(linkTableName, `${FILE_TEXTS_FTS_TABLE}.fileId`, `${linkTableName}.targetId`)
+        .innerJoin(noteTableName, `${noteTableName}.id`, `${linkTableName}.sourceId`)
         .select([
           // prettier-ignore
           sql<string>`snippet(${sql.raw(FILE_TEXTS_FTS_TABLE)}, 2, '${sql.raw(WRAPPER_START_TEXT)}', '${sql.raw(WRAPPER_END_TEXT)}', '...',  100)`.as('body'),
