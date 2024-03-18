@@ -3,6 +3,7 @@ import { singleton } from 'tsyringe';
 
 import { type EntityLocator, type EntityId, EntityTypes } from '@domain/app/model/entity';
 import type { default as EditableEntity, EditableEntityLocator } from '@domain/app/model/abstract/EditableEntity';
+import { mimeTypes } from '@shared/domain/model/file';
 import type Editor from '@domain/app/model/abstract/Editor';
 import EditableNote from '@domain/app/model/note/Editable';
 import EditablePdf from '@domain/app/model/material/editable/EditablePdf';
@@ -67,9 +68,9 @@ export default class EditableEntityManager {
 
     if (mimeType.startsWith('image')) {
       editableEntity = new EditableImage(entityId);
-    } else if (mimeType === 'application/pdf') {
+    } else if (mimeType === mimeTypes.PDF) {
       editableEntity = new EditablePdf(entityId);
-    } else if (mimeType === 'text/html') {
+    } else if (mimeType === mimeTypes.HTML) {
       editableEntity = new EditableHtml(entityId);
     }
 

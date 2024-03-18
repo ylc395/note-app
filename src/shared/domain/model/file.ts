@@ -5,8 +5,8 @@ export const fileDTOSchema = object({
   mimeType: string(),
   data: zodInstanceof(ArrayBuffer).optional(),
   path: string().optional(),
-  lang: string().optional(),
-}).refine((v) => v.data || v.path);
+  lang: string(),
+});
 
 export type FileDTO = Infer<typeof fileDTOSchema>;
 
@@ -16,3 +16,8 @@ export interface FileVO {
   size: number;
   lang: string;
 }
+
+export const mimeTypes = {
+  PDF: 'application/pdf',
+  HTML: 'text/html',
+} as const;

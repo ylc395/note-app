@@ -121,7 +121,7 @@ export default class CreationBehavior {
     if (files?.[0]) {
       const file = files[0];
       const data = await file.arrayBuffer();
-      form.set('file', { mimeType: file.type, path: file.path, data });
+      form.set('file', { mimeType: file.type, path: file.path, data, lang: '' });
 
       if (!form.get('title')) {
         form.set('title', file.name.replace(/\.[^/.]+$/, ''));

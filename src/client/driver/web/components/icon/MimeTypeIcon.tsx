@@ -5,6 +5,7 @@ import {
   AiOutlineFileImage,
   AiOutlineFile,
 } from 'react-icons/ai';
+import { mimeTypes } from '@shared/domain/model/file';
 
 export default function MimeTypeIcon({
   mimeType,
@@ -19,7 +20,7 @@ export default function MimeTypeIcon({
     return <AiOutlineAudio className={className} size={size} />;
   }
 
-  if (mimeType.includes('application/pdf')) {
+  if (mimeType === mimeTypes.PDF) {
     return <AiOutlineFilePdf className={className} size={size} />;
   }
 

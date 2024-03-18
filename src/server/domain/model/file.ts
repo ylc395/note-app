@@ -1,40 +1,33 @@
-import type { FileVO } from '@shared/domain/model/file.js';
-
-export interface LocalFile {
+export interface File {
+  id?: string;
   data: ArrayBuffer;
-}
-
-export interface LoadedFile {
-  data: ArrayBuffer;
-  hash?: string;
-  lang?: string;
+  size: number;
+  hash: string;
+  lang: string;
   mimeType: string;
 }
 
-export interface CreatedFile extends LoadedFile {
-  id: FileVO['id'];
+export interface TextLocation {
+  page?: number;
+  scale?: number;
+  words?: {
+    text: string;
+    box: { x0: number; x1: number; y0: number; y1: number };
+  }[];
 }
 
-export interface FileTextRecord {
-  location: {
-    page?: number;
-    scale?: number;
-    words?: {
-      text: string;
-      box: { x0: number; x1: number; y0: number; y1: number };
-    }[];
-  };
-  text: string;
-}
-
-export interface FileText {
-  records: FileTextRecord[];
+export interface ExtractedFileTextRecord {
+  locations: TextLocation[];
   fileId: string;
+  fileCreatedAt: number;
+  lang: string;
+  mimeType: string;
 }
 
-export interface UnfinishedTextExtraction {
-  fileId: CreatedFile['id'];
-  finished?: number[];
+export interface NewFileTextRecord {
+  location: TextLocation;
+  fileId: string;
+  text: string;
 }
 
 export * from '@shared/domain/model/file.js';

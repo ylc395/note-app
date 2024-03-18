@@ -1,3 +1,4 @@
+// node modules will be polyfilled in web environment
 import { Buffer } from 'node:buffer';
 import { createHash } from 'node:crypto';
 

@@ -1,152 +1,76 @@
-import { Worker } from 'node:worker_threads';
-import path, { dirname } from 'node:path';
-import { singleton } from 'tsyringe';
-import { fileURLToPath } from 'node:url';
-import { ensureDir } from 'fs-extra';
+import { container, singleton } from 'tsyringe';
+import fs from 'fs-extra';
+import assert from 'node:assert';
 
-import { wrap } from 'comlink';
-import nodeEndpoint from 'comlink/dist/umd/node-adapter.js';
-import TaskQueue from 'queue';
-
-import type { FileVO, FileTextRecord, CreatedFile, UnfinishedTextExtraction, FileDTO } from '@domain/model/file.js';
-
-import BaseService from '../BaseService.js';
-import type TextExtraction from './TextExtraction.js';
-import FileReader from './FileReader.js';
+import { getHash } from '@utils/file.js';
+import type { FileVO, FileDTO } from '@domain/model/file.js';
+import BaseService, { transaction } from '../BaseService.js';
+import { Result, token as textExtractorToken } from './TextExtractor.js';
 
 @singleton()
 export default class FileService extends BaseService {
-  private extraction?: TextExtraction;
-  private extractionWorker?: Worker;
-  private extractingTextTaskQueue = new TaskQueue({ concurrency: 1, autostart: true });
-  private fileIdsOnQueue = new Set<FileVO['id']>();
-  private readonly fileReader = new FileReader();
+  private readonly textExtractor = container.resolve(textExtractorToken);
 
-  async createFile(file: FileDTO) {
-    const data = file.data || (await this.fileReader.read(file.path!));
-    const hash = await this.fileReader.getHash(data);
-    const fileVO = await this.repo.files.create({ lang: '', hash, ...file, data });
+  constructor() {
+    super();
+    this.textExtractor.onExtracted(this.handleTextExtracted.bind(this));
+    this.resumeTextExtractor();
+  }
 
-    // if (!this.fileIdsOnQueue.has(fileVO.id)) {
-    // this.addTextExtractionJob({ fileId: fileVO.id });
-    // }
+  private async resumeTextExtractor() {
+    const unfinishedFiles = await this.repo.files.findTextExtractedLocationOfUnfinished();
+
+    for (const file of unfinishedFiles) {
+      this.textExtractor.addJob({
+        ...file,
+        getData: this.repo.files.findBlobById,
+        skipLocations: file.locations,
+      });
+    }
+  }
+
+  public async createFile(file: FileDTO) {
+    const data = typeof file.path === 'string' ? await fs.readFile(file.path) : file.data;
+    assert(data, 'no file data');
+
+    const hash = await getHash(data);
+    const existingFile = await this.repo.files.findOneByHash(hash);
+
+    if (existingFile) {
+      return existingFile;
+    }
+
+    const fileVO = await this.repo.files.create({
+      hash,
+      mimeType: file.mimeType,
+      lang: file.lang,
+      data,
+      size: data.byteLength,
+    });
+
+    this.textExtractor.addJob({
+      fileId: fileVO.id,
+      lang: fileVO.lang,
+      getData: this.repo.files.findBlobById,
+      mimeType: file.mimeType,
+    });
 
     return fileVO;
   }
 
-  private addTextExtractionJob({ fileId, finished }: UnfinishedTextExtraction) {
-    this.fileIdsOnQueue.add(fileId);
-    this.extractingTextTaskQueue.push(() => this.extractText(fileId, finished));
+  public async queryFileById(id: FileVO['id']) {
+    const [file, data] = await Promise.all([this.repo.files.findOneById(id), this.repo.files.findBlobById(id)]);
+    assert(file && data, 'invalid file id');
+
+    return { ...file, data };
   }
 
-  async queryFileById(id: FileVO['id']) {
-    const file = await this.repo.files.findOneById(id);
-    const data = await this.repo.files.findBlobById(id);
+  @transaction
+  private async handleTextExtracted({ isFinished, ...textRecord }: Result) {
+    await this.repo.files.createText(textRecord);
 
-    if (!file || !data) {
-      throw new Error('invalid id');
+    if (isFinished) {
+      await this.repo.files.markTextExtracted(textRecord.fileId);
     }
-
-    return { mimeType: file.mimeType, data };
-  }
-
-  private readonly terminateExtraction = async () => {
-    if (!this.extractionWorker) {
-      throw new Error('no extraction');
-    }
-
-    await this.extractionWorker.terminate();
-    this.extractionWorker = undefined;
-    this.extraction = undefined;
-  };
-
-  private extractText = async (fileId: CreatedFile['id'], finished?: UnfinishedTextExtraction['finished']) => {
-    if (!this.extraction) {
-      this.extractionWorker = new Worker(
-        path.join(dirname(fileURLToPath(import.meta.url)), 'TextExtraction'),
-      ).setMaxListeners(Infinity);
-
-      this.extraction = wrap<TextExtraction>(nodeEndpoint.default(this.extractionWorker));
-    }
-
-    const file = await this.repo.files.findOneById(fileId);
-    const data = await this.repo.files.findBlobById(fileId);
-
-    if (!file || !data) {
-      return;
-    }
-
-    if (file.mimeType === 'application/pdf') {
-      // await this.extractPdfText({ ...file, data }, finished);
-    }
-
-    this.fileIdsOnQueue.delete(file.id);
-    await this.repo.files.markTextExtracted(file.id);
-    await this.extraction.cleanup();
-
-    // is last one
-    if (this.extractingTextTaskQueue.length === 1) {
-      await this.terminateExtraction();
-    }
-  };
-
-  private async extractPdfText(
-    { id, data, lang }: Required<CreatedFile>,
-    finished?: UnfinishedTextExtraction['finished'],
-  ) {
-    if (!this.extraction) {
-      throw new Error('no extraction');
-    }
-
-    const pageCount = await this.extraction.initPdf(data);
-    const records: FileTextRecord[] = [];
-
-    for (let i = 1; i < pageCount; i++) {
-      if (finished?.includes(i)) {
-        continue;
-      }
-
-      const text = await this.extraction.getPdfTextContent(i);
-      text && records.push({ text, location: { page: i } });
-    }
-
-    if (records.length > 0) {
-      await this.repo.files.createText({ records, fileId: id });
-    } else {
-      const appDir = this.runtime.getAppDir();
-      const ocrCachePath = path.join(appDir, 'ocr_cache');
-
-      await ensureDir(ocrCachePath);
-      const concurrency = await this.extraction.initOcr({
-        cachePath: ocrCachePath,
-        maxConcurrency: 4,
-        lang,
-      });
-
-      const queue = new TaskQueue({ concurrency });
-
-      for (let i = 1; i <= pageCount; i++) {
-        if (finished?.includes(i)) {
-          continue;
-        }
-        queue.push(async () => {
-          const { text, location } = await this.extraction!.getPdfImageTextContent(i);
-          // always save ocr result even if `text` is empty
-          await this.repo.files.createText({ fileId: id, records: [{ text, location }] });
-        });
-      }
-
-      await queue.start();
-    }
-  }
-
-  public async resumeUnfinishedTextExtraction() {
-    return;
-    // const mimeTypes = ['application/pdf'];
-    // const unextracted = await this.repo.files.findTextUnextracted(mimeTypes);
-
-    // for (const job of unextracted) {
-    //   this.addTextExtractionJob(job);
-    // }
   }
 }

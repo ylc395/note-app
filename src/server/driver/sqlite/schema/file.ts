@@ -1,4 +1,4 @@
-import type { Kysely, Generated } from 'kysely';
+import { type Kysely, type Generated, sql } from 'kysely';
 
 export interface Row {
   id: string;
@@ -7,6 +7,7 @@ export interface Row {
   mimeType: string;
   size: number;
   hash: string;
+  createdAt: Generated<number>;
   textExtracted: Generated<number>;
 }
 
@@ -23,6 +24,7 @@ export default {
       .addColumn('lang', 'text', (col) => col.notNull())
       .addColumn('size', 'integer', (col) => col.notNull())
       .addColumn('textExtracted', 'integer', (col) => col.notNull().defaultTo(0))
+      .addColumn('createdAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch('subsec') * 1000)`))
       .addColumn('hash', 'text', (col) => col.notNull());
   },
 } as const;

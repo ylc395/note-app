@@ -46,7 +46,8 @@ export default class EditablePdf extends EditableMaterial {
     assert(this.blob);
 
     if (!GlobalWorkerOptions.workerPort) {
-      // every PDFWorker will share one web worker when we do this
+      // every PDFDocumentProxy will share one web worker when we do this
+      // see https://github.com/mozilla/pdf.js/issues/16429
       GlobalWorkerOptions.workerPort = new PdfJsWorker();
     }
     this.loadingTask = getDocument(this.blob.slice(0));

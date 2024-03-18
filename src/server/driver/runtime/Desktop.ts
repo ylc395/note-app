@@ -9,10 +9,12 @@ import { token as databaseToken, type Database } from '@domain/infra/database.js
 import { token as kvDatabaseToken, type KvDatabase } from '@domain/infra/kvDatabase.js';
 import { token as searchEngineToken, type SearchEngine } from '@domain/infra/searchEngine.js';
 import { token as loggerToken } from '@domain/infra/logger.js';
+import { token as TextExtractorToken } from '@domain/service/FileService/TextExtractor.js';
 
 import SqliteDb from '../sqlite/Database.js';
 import SqliteKvDatabase from '../sqlite/KvDatabase.js';
 import SqliteSearchEngine from '../sqlite/SearchEngine/index.js';
+import TextExtractor from './TextExtractor/index.js';
 
 export const token: InjectionToken<DesktopRuntime> = Symbol('desktop');
 
@@ -28,10 +30,11 @@ export default abstract class DesktopRuntime extends CommonRuntime {
     const kv = new SqliteKvDatabase(db);
     const searchEngine = new SqliteSearchEngine(db);
 
+    container.registerInstance(runtimeToken, this);
     container.registerInstance(databaseToken, db);
     container.registerInstance(kvDatabaseToken, kv);
     container.registerInstance(searchEngineToken, searchEngine);
-    container.registerInstance(runtimeToken, this);
+    container.registerSingleton(TextExtractorToken, TextExtractor);
 
     this.db = db;
     this.kv = kv;
