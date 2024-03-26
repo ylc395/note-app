@@ -64,6 +64,11 @@ export default class MaterialService extends BaseService {
   }
 
   public async batchUpdate(ids: Material['id'][], patch: MaterialPatchDTO) {
+    assert(
+      typeof patch.comment === 'undefined' && typeof patch.title === 'undefined',
+      'can not batch update title & comment',
+    );
+
     await this.assertAvailableIds(ids);
 
     if (patch.parentId) {

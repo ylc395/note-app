@@ -63,7 +63,7 @@ export default class SqliteDb implements Database {
     await this.createTables();
   }
 
-  getDb() {
+  public getDb() {
     return this.als.getStore() || this.db;
   }
 
@@ -75,8 +75,9 @@ export default class SqliteDb implements Database {
     }
 
     this.logger.debug(dbPath);
-    const db = new BetterSqlite3(dbPath, { verbose: (message) => this.logger.debug(`${message}\n`) });
-    db.loadExtension(join(path.dirname(fileURLToPath(import.meta.url)), 'simple-tokenizer/libsimple'));
+
+    const extensionPath = join(path.dirname(fileURLToPath(import.meta.url)), 'simple-tokenizer/libsimple');
+    const db = new BetterSqlite3(dbPath, { verbose: this.logger.debug }).loadExtension(extensionPath); // sqlite's built-in tokenizer can not handle CJK. so we use `simple tokenizer`
 
     return new Kysely<Db>({
       dialect: new SqliteDialect({ database: db }),

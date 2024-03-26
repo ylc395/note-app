@@ -1,72 +1,72 @@
 import dayjs from 'dayjs';
-import { array, nativeEnum, object, string, type infer as Infer, boolean } from 'zod';
+import { array, nativeEnum, object, string, type infer as Infer, boolean, number, union, literal } from 'zod';
 import { isEmpty, negate } from 'lodash-es';
 
-import type { EntityId, EntityTypes, Path } from './entity.js';
+import { EntityId, EntityTypes, Path } from './entity.js';
 import type { EntityMaterial } from './material.js';
 
-export enum Scopes {
-  NoteTitle = 1,
-  NoteBody,
-  NoteFile,
-  NoteAnnotation,
-  NoteAnnotationFile,
-  MaterialTitle,
-  MaterialComment,
-  MaterialFile,
-  MaterialAnnotation,
-  MaterialAnnotationFile,
-  MemoContent,
-  MemoFile,
+export type SearchTypes = EntityTypes.Note | EntityTypes.Memo | EntityTypes.Material;
+
+export enum SearchFields {
+  Title = 'title',
+  Content = 'content',
+  Annotation = 'annotation',
+  MaterialFile = 'materialFile',
 }
 
 interface MatchRecord {
   text: string;
   highlights: { start: number; end: number }[];
-  type: Scopes;
-  location?: string; // for file and annotation
+  location?: { page?: number };
 }
 
-type SearchableEntityType = EntityTypes.Note | EntityTypes.Memo | EntityTypes.Material;
-
-interface BaseSearchResult {
-  entityType: SearchableEntityType;
+export interface CommonSearchResult {
+  entityType: SearchTypes;
   entityId: EntityId;
   updatedAt: number;
   createdAt: number;
   icon: string | null;
-  matches: MatchRecord[];
+  matches: {
+    [SearchFields.Title]?: MatchRecord;
+    [SearchFields.Content]?: MatchRecord;
+    [SearchFields.MaterialFile]?: MatchRecord[];
+    [SearchFields.Annotation]?: MatchRecord[];
+  };
   path?: Path;
+  title?: string;
 }
 
-interface MaterialSearchResult extends BaseSearchResult {
+interface MaterialSearchResult extends CommonSearchResult {
   entityType: EntityTypes.Material;
-  mimeType: EntityMaterial['mimeType'];
+  mimeType?: EntityMaterial['mimeType'];
 }
 
-export type SearchResult = BaseSearchResult | MaterialSearchResult;
+export type SearchResult = CommonSearchResult | MaterialSearchResult;
 
 export type SearchResultVO = Required<SearchResult>;
 
 const isNotEmpty = negate(isEmpty);
-const isValidDate = (v: string) => dayjs(v).isValid();
+const isValidDate = (v: number) => dayjs(v).isValid();
 
 export const searchParamsSchema = object({
   keyword: string().min(1),
   created: object({
-    after: string().refine(isValidDate).optional(),
-    before: string().refine(isValidDate).optional(),
+    after: number().refine(isValidDate).optional(),
+    before: number().refine(isValidDate).optional(),
   })
-    .optional()
-    .refine(isNotEmpty),
+    .refine(isNotEmpty)
+    .optional(),
   updated: object({
-    after: string().refine(isValidDate).optional(),
-    before: string().refine(isValidDate).optional(),
+    after: number().refine(isValidDate).optional(),
+    before: number().refine(isValidDate).optional(),
   })
-    .optional()
-    .refine(isNotEmpty),
+    .refine(isNotEmpty)
+    .optional(),
   root: string().optional(),
-  scopes: array(nativeEnum(Scopes)).optional(),
+  types: union([literal(EntityTypes.Note), literal(EntityTypes.Memo), literal(EntityTypes.Material)])
+    .array()
+    .optional(),
+  fields: array(nativeEnum(SearchFields)).optional(),
   recyclables: boolean().optional(),
 });
 

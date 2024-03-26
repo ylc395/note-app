@@ -11,10 +11,14 @@ export default class SearchService extends BaseService {
 
   public async search(q: SearchParams): Promise<SearchResultVO[]> {
     const results = await this.searchEngine.search(q);
-    const paths = await this.entityService.getPaths(EntityService.toIds(results));
+
+    const ids = EntityService.toIds(results);
+    const paths = await this.entityService.getPaths(ids);
+    const titles = await this.entityService.getNormalizedTitles(ids);
 
     return results.map((result) => ({
       ...result,
+      title: titles[result.entityId]!,
       path: paths[result.entityId]!,
     }));
   }

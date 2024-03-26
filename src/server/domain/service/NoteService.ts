@@ -109,7 +109,13 @@ export default class NoteService extends BaseService {
   }
 
   public async batchUpdate(ids: Note['id'][], patch: NotePatchDTO) {
+    assert(
+      typeof patch.body === 'undefined' && typeof patch.title === 'undefined',
+      'can not batch update title & body',
+    );
+
     await this.assertAvailableIds(ids);
+
     if (patch.parentId) {
       await this.assertValidParent(patch.parentId, ids);
     }

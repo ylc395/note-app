@@ -1,23 +1,13 @@
 import { singleton, container } from 'tsyringe';
-import assert from 'assert';
-// import {
-//   parse,
-//   type ExpressionNode,
-//   type ValueNode,
-//   type KeyValueNode,
-//   ExpressionNodeType,
-// } from 'search-expression-parser';
-
-import { Scopes, type SearchParams, type SearchResultVO } from '@shared/domain/model/search';
+import { SearchFields, type SearchParams } from '@shared/domain/model/search';
 import { token as remoteToken } from '@domain/common/infra/rpc';
-import { EntityTypes } from '@domain/app/model/entity';
 
 @singleton()
 export default class SearchService {
   private readonly remote = container.resolve(remoteToken);
 
   readonly search = async (q: SearchParams) => {
-    // return this.remote.post<SearchParams, SearchResult[]>('/search', q);
+    this.remote.search.search.mutate({ ...q, fields: [SearchFields.Content, SearchFields.MaterialFile] });
   };
 
   // private static parseKeyword(q: string): SearchQuery | null {

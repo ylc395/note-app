@@ -1,5 +1,5 @@
 import assert from 'node:assert';
-import { recognize } from 'tesseract.js';
+import tesseract from 'tesseract.js';
 import path from 'node:path';
 import { container, singleton } from 'tsyringe';
 
@@ -23,7 +23,7 @@ export default class ImageTextExtractor {
     assert(!this.isBusy, 'PDFTextExtractor is busy');
 
     this.isBusy = true;
-    const recognizeResult = await recognize(job.data, job.lang, {
+    const recognizeResult = await tesseract.recognize(job.data, job.lang, {
       corePath: path.join(process.cwd(), 'node_modules/tesseract.js-core'),
       cachePath: path.join(this.runtime.getAppDir(), 'ocr_cache'),
       workerBlobURL: false,

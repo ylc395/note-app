@@ -9,7 +9,7 @@ import { Result, token as textExtractorToken } from './TextExtractor.js';
 
 @singleton()
 export default class FileService extends BaseService {
-  private readonly textExtractor = container.resolve(textExtractorToken);
+  public readonly textExtractor = container.resolve(textExtractorToken);
 
   constructor() {
     super();
