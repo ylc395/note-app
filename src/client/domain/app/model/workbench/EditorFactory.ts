@@ -4,15 +4,15 @@ import { singleton } from 'tsyringe';
 import { type EntityLocator, type EntityId, EntityTypes } from '@domain/app/model/entity';
 import type { default as EditableEntity, EditableEntityLocator } from '@domain/app/model/abstract/EditableEntity';
 import { mimeTypes } from '@shared/domain/model/file';
-import type Editor from '@domain/app/model/abstract/Editor';
 import EditableNote from '@domain/app/model/note/Editable';
 import EditablePdf from '@domain/app/model/material/editable/EditablePdf';
 import EditableHtml from '@domain/app/model/material/editable/EditableHtml';
 import EditableImage from '@domain/app/model/material/editable/EditableImage';
 import type Tile from './Tile';
+import { Events } from '@domain/app/model/abstract/Editor';
 
 @singleton()
-export default class EditableEntityManager {
+export default class EditorFactory {
   private readonly editableEntities: Record<EntityId, EditableEntity> = {};
   private readonly editorsCount: Record<EditableEntity['entityId'], number> = {};
 
@@ -47,10 +47,13 @@ export default class EditableEntityManager {
     }
     this.editorsCount[locator.entityId] += 1;
 
-    return editable.createEditor(tile);
+    const editor = editable.createEditor(tile);
+    editor.on(Events.Destroy, () => this.handleEditorDestroyed(editor.entityLocator.entityId));
+
+    return editor;
   }
 
-  public destroyEditor({ entityLocator: { entityId } }: Editor) {
+  private handleEditorDestroyed(entityId: EntityId) {
     assert(typeof this.editorsCount[entityId] === 'number');
     this.editorsCount[entityId] -= 1;
 

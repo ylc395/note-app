@@ -5,7 +5,7 @@ import assert from 'assert';
 
 import Editor from '@domain/app/model/abstract/Editor';
 import type { EditableEntityLocator } from '@domain/app/model/abstract/EditableEntity';
-import EditableEntityManager from './EditableEntityManager';
+import EditorFactory from './EditorFactory';
 import { eventBus, EventNames } from './eventBus';
 import type { EntityLocator } from '../entity';
 
@@ -20,7 +20,7 @@ export default class Tile {
   }
 
   public readonly id = uniqueId('tile-');
-  private readonly editableEntityManager = container.resolve(EditableEntityManager);
+  private readonly editorFactory = container.resolve(EditorFactory);
 
   @observable.ref
   public currentEditor?: Editor;
@@ -55,7 +55,7 @@ export default class Tile {
     assert(removedEditor);
 
     if (destroy) {
-      this.editableEntityManager.destroyEditor(removedEditor);
+      removedEditor.destroy();
     }
 
     if (this.currentEditor === editor) {
@@ -71,7 +71,7 @@ export default class Tile {
   @action.bound
   public closeAllEditors() {
     for (const editor of this.editors) {
-      this.editableEntityManager.destroyEditor(editor);
+      editor.destroy();
     }
 
     this.empty();
@@ -84,7 +84,7 @@ export default class Tile {
       assert(options.dest.tile === this, 'tile of target editor is not this tile');
     }
 
-    const newEditor = this.editableEntityManager.createEditor(this, entity);
+    const newEditor = this.editorFactory.createEditor(this, entity);
 
     if (options?.isActive) {
       newEditor.setIsEditing();
@@ -111,7 +111,7 @@ export default class Tile {
 
     if (duplicatedIndex >= 0) {
       const [duplicated] = this.editors.splice(duplicatedIndex, 1);
-      this.editableEntityManager.destroyEditor(duplicated!);
+      duplicated!.destroy();
     }
 
     if (!this.editors.includes(editor)) {
@@ -135,7 +135,7 @@ export default class Tile {
       assert(index >= 0, 'can not find editor in this tile');
 
       newEditor = this.createEditor(entity);
-      this.editableEntityManager.destroyEditor(this.editors[index]!);
+      this.editors[index]!.destroy();
       this.editors[index] = newEditor;
 
       if (this.currentEditor === dest) {

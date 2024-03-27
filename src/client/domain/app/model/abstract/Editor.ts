@@ -2,13 +2,26 @@ import { uniqueId } from 'lodash-es';
 import { action, computed, makeObservable, observable } from 'mobx';
 import { container } from 'tsyringe';
 
+import EventBus from '@domain/app/infra/EventBus';
 import { IS_DEV } from '@shared/domain/infra/constants';
 import { token as localStorageToken } from '@domain/app/infra/localStorage';
 import type { default as EditableEntity, EditableEntityLocator } from '../abstract/EditableEntity';
 import type Tile from '../workbench/Tile';
 
-export default abstract class Editor<T extends EditableEntity = EditableEntity, S = unknown> {
+export enum Events {
+  Destroy = 'destroy',
+}
+
+type EventsMap = {
+  [Events.Destroy]: never;
+};
+
+export default abstract class Editor<
+  T extends EditableEntity = EditableEntity,
+  S = unknown,
+> extends EventBus<EventsMap> {
   constructor(protected readonly editable: T, tile: Tile) {
+    super('editor');
     makeObservable(this);
     this.uiState = this.localStorage.get(this.uiStateKey);
     this.tile = tile;
@@ -20,6 +33,9 @@ export default abstract class Editor<T extends EditableEntity = EditableEntity, 
   public readonly id = uniqueId('editor-');
   private readonly localStorage = container.resolve(localStorageToken);
   protected abstract normalizeTitle(v: unknown): string;
+  public destroy() {
+    this.emit(Events.Destroy);
+  }
 
   public get entityLocator(): EditableEntityLocator {
     return this.editable.entityLocator;
