@@ -11,12 +11,8 @@ import { type MenuItem, type UI, type UIIpcPayload, uiIpcPayloadSchema } from '@
 
 export { UI_CHANNEL } from '@shared/domain/infra/ui.js';
 
-export default class electronUI implements UI {
+export default class electronUI implements Partial<UI> {
   public ipcEvent?: IpcMainInvokeEvent;
-
-  public feedback(): never {
-    assert.fail('not implement');
-  }
 
   public openNewWindow(url: string) {
     if (url !== BLANK_URL && sanitizeUrl(url) === BLANK_URL) {
