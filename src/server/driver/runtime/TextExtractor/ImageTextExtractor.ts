@@ -4,8 +4,11 @@ import path from 'node:path';
 import { container, singleton } from 'tsyringe';
 
 import type { Job, Result } from '@domain/service/FileService/TextExtractor.js';
+import { SUPPORT_LANGS } from '@domain/model/file.js';
 import { token as runtimeToken } from '@domain/infra/runtime.js';
 import { token as loggerToken } from '@domain/infra/logger.js';
+
+const SUPPORT_LANG_CODES = Object.keys(SUPPORT_LANGS);
 
 @singleton()
 export default class ImageTextExtractor {
@@ -22,8 +25,12 @@ export default class ImageTextExtractor {
     // so everything about pdf is done in main thread(so called "fake worker").
     assert(!this.isBusy, 'PDFTextExtractor is busy');
 
+    if (job.lang.length === 0 || !job.lang.every((lang) => SUPPORT_LANG_CODES.includes(lang))) {
+      return;
+    }
+
     this.isBusy = true;
-    const recognizeResult = await tesseract.recognize(job.data, job.lang, {
+    const recognizeResult = await tesseract.recognize(job.data, job.lang.join('+'), {
       corePath: path.join(process.cwd(), 'node_modules/tesseract.js-core'),
       cachePath: path.join(this.runtime.getAppDir(), 'ocr_cache'),
       workerBlobURL: false,

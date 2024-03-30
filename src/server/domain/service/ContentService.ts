@@ -1,11 +1,12 @@
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { visit } from 'unist-util-visit';
+import { is } from 'unist-util-is';
 import { container, singleton } from 'tsyringe';
 import assert from 'assert';
 import type { Link as MdAstLinkNode, Image as MdAstImageNode, Node as UnistNode } from 'mdast';
-import { groupBy, differenceWith, intersectionWith, uniqBy } from 'lodash-es';
+import { groupBy, differenceWith, uniqBy } from 'lodash-es';
 
-import { is, parseUrl } from '@domain/infra/markdown/utils.js';
+import { urlToEntity, urlToFileId } from '@domain/infra/markdown/url.js';
 import {
   mdastExtension as topicExtension,
   tokenExtension as topicTokenExtension,
@@ -58,8 +59,8 @@ export default class ContentService extends BaseService {
 
     return {
       visitor: (node: UnistNode) => {
-        if (is<TopicNode>(node, 'topic')) {
-          topics.add(node.value);
+        if (is(node, 'topic')) {
+          topics.add((node as TopicNode).value);
         }
       },
       done: async () => {
@@ -86,32 +87,29 @@ export default class ContentService extends BaseService {
   }
 
   private extractLinksAndMedias(entity: ContentUpdatedEvent) {
-    let links: Link[] = [];
+    const links: Link[] = [];
 
     return {
       visitor: (node: UnistNode) => {
-        if (!(is<MdAstLinkNode>(node, 'link') || is<MdAstImageNode>(node, 'image')) || !node.url) {
+        if (!(is(node, 'link') || is(node, 'image'))) {
           return;
         }
 
-        const parsed = parseUrl(node.url);
+        const { url } = node as MdAstImageNode | MdAstLinkNode;
+        const targetId = is(node, 'link') ? urlToEntity(url)?.entityId : urlToFileId(url);
 
-        if (!parsed) {
+        if (!targetId) {
           return;
         }
 
         links.push({
           sourceId: entity.entityId,
-          targetId: parsed.entityId,
+          targetId,
         });
       },
       done: async () => {
-        links = uniqBy(links, 'targetId');
-        const availableTargets = await this.repo.entities.findAllAvailable(links.map(({ targetId }) => targetId));
-        const validLinks = intersectionWith(links, availableTargets, ({ targetId }, { id }) => targetId === id);
-
         await this.repo.links.removeLinks(entity.entityId);
-        await this.repo.links.createLinks(validLinks);
+        await this.repo.links.createLinks(uniqBy(links, 'targetId'));
       },
     };
   }
@@ -178,7 +176,7 @@ export default class ContentService extends BaseService {
       const sources: Source[] = [];
 
       visit(mdAst, (node) => {
-        if (!is<MdAstLinkNode>(node, 'link')) {
+        if (!is(node, 'link')) {
           return;
         }
 
@@ -189,7 +187,7 @@ export default class ContentService extends BaseService {
           return;
         }
 
-        const parsed = parseUrl(node.url);
+        const parsed = urlToEntity(node.url);
 
         if (!parsed) {
           return;

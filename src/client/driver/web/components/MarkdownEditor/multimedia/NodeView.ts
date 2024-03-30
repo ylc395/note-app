@@ -1,12 +1,13 @@
-import { container } from 'tsyringe';
 import type { NodeView } from '@milkdown/prose/view';
 import type { Node } from '@milkdown/prose/model';
-
-import FileManager from './FileManager';
+import { FileVO } from '@shared/domain/model/file';
+import { container } from 'tsyringe';
+import { token as remoteToken } from '@domain/common/infra/rpc';
+import { urlToFileId } from '@shared/domain/infra/markdown/url';
 
 export default class MultimediaNodeView implements NodeView {
-  private readonly fileManager = container.resolve(FileManager);
-  readonly dom = document.createElement('span');
+  private remote = container.resolve(remoteToken);
+  public readonly dom = document.createElement('span');
   constructor(private node: Node) {
     this.mount();
   }
@@ -22,30 +23,31 @@ export default class MultimediaNodeView implements NodeView {
   }
 
   private async mount() {
-    // const file = await this.fileManager.get(this.url);
-    // const el = this.createMediaElement(file);
-    // this.dom.replaceChildren(el);
+    const fileId = urlToFileId(this.url);
+
+    if (!fileId) {
+      return;
+    }
+
+    const file = await this.remote.file.queryOne.query(fileId);
+    const el = this.createMediaElement(file);
+    this.dom.replaceChildren(el);
   }
 
-  update(node: Node) {
+  public update(node: Node) {
     const url: string = node.attrs.src || '';
 
     if (url === this.url) {
       return false;
     }
 
-    this.fileManager.remove(this.url);
     this.node = node;
     this.mount();
 
     return true;
   }
 
-  destroy() {
-    this.fileManager.remove(this.url);
-  }
-
-  private createMediaElement({ mimeType, blobUrl }: { mimeType: string; blobUrl?: string }) {
+  private createMediaElement({ mimeType }: FileVO) {
     let mediaEl: HTMLImageElement | HTMLAudioElement | HTMLVideoElement;
 
     if (mimeType.startsWith('audio')) {
@@ -60,9 +62,7 @@ export default class MultimediaNodeView implements NodeView {
       mediaEl.controls = true;
     }
 
-    if (blobUrl) {
-      mediaEl.src = blobUrl;
-    }
+    mediaEl.src = this.url;
 
     return mediaEl;
   }

@@ -51,7 +51,7 @@ export default class PDFTextExtractor {
     this.isBusy = false;
   }
 
-  private async getTextContentByOcr(doc: pdfjs.PDFDocumentProxy, pageNum: number, lang: string) {
+  private async getTextContentByOcr(doc: pdfjs.PDFDocumentProxy, pageNum: number, lang: string[]) {
     const scale = 2;
     const page = await doc.getPage(pageNum);
     const viewport = page.getViewport({ scale });

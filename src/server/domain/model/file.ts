@@ -3,7 +3,7 @@ export interface File {
   data: ArrayBuffer;
   size: number;
   hash: string;
-  lang: string;
+  lang: string[];
   mimeType: string;
 }
 
@@ -20,7 +20,7 @@ export interface ExtractedFileTextRecord {
   locations: TextLocation[];
   fileId: string;
   fileCreatedAt: number;
-  lang: string;
+  lang: string[];
   mimeType: string;
 }
 

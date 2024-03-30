@@ -5,7 +5,7 @@ import type { Material, MaterialQuery, MaterialPatch, NewMaterialDTO } from '@do
 import type { MaterialRepository } from '@domain/service/repository/MaterialRepository.js';
 
 import schema, { type Row } from '../schema/material.js';
-import { type Row as FileRow, tableName as fileTableName } from '../schema/file.js';
+import { tableName as fileTableName } from '../schema/file.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
 import FileRepository from './FileRepository.js';
 import BaseRepository from './BaseRepository.js';
@@ -15,7 +15,7 @@ export default class SqliteMaterialRepository extends BaseRepository implements 
   private readonly files = new FileRepository(this.sqliteDb);
 
   public async create(material: NewMaterialDTO) {
-    let file: Selectable<FileRow> | null = null;
+    let file = null;
 
     if (material.fileId) {
       file = await this.files.findOneById(material.fileId);

@@ -9,7 +9,7 @@ export interface Job {
   fileId: FileVO['id'];
   mimeType: string;
   getData: (id: FileVO['id']) => Promise<ArrayBuffer | null>;
-  lang: string;
+  lang: string[];
   skipLocations?: TextLocation[];
 }
 

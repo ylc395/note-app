@@ -127,6 +127,7 @@
     "tslib": "^2.5.0",
     "tsyringe": "^4.8.0",
     "turndown": "^7.1.2",
+    "unist-util-is": "^6.0.0",
     "unist-util-visit": "^5.0.0",
     "webextension-polyfill": "^0.10.0",
     "zod": "^3.22.2"

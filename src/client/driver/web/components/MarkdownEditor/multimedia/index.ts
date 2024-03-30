@@ -1,5 +1,6 @@
 import { $view } from '@milkdown/utils';
 import { imageSchema } from '@milkdown/preset-commonmark';
+import assert from 'assert';
 
 import NodeView from './NodeView';
 
@@ -13,10 +14,7 @@ const multimediaSchema = imageSchema.extendSchema((prev) => (ctx) => ({
     {
       tag: 'img[src], video[src], audio[src]',
       getAttrs: (node) => {
-        if (!(node instanceof HTMLElement)) {
-          throw new Error('not element');
-        }
-
+        assert(node instanceof HTMLElement);
         return {
           src: node.getAttribute('src'),
           alt: node instanceof HTMLImageElement ? node.alt : '',

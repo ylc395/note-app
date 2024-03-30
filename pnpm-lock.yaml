@@ -211,6 +211,9 @@ dependencies:
   turndown:
     specifier: ^7.1.2
     version: 7.1.2
+  unist-util-is:
+    specifier: ^6.0.0
+    version: 6.0.0
   unist-util-visit:
     specifier: ^5.0.0
     version: 5.0.0

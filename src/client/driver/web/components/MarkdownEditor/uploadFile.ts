@@ -2,21 +2,29 @@ import { container } from 'tsyringe';
 import type { UploadOptions } from '@milkdown/plugin-upload';
 import { Decoration } from '@milkdown/prose/view';
 
-import { getUrlFromFileId } from '@shared/domain/infra/markdown/utils';
-import MarkdownService from '@domain/app/service/MarkdownService';
+import { fileIdToUrl } from '@shared/domain/infra/markdown/url';
+import { token as remoteToken } from '@domain/common/infra/rpc';
 
 import { NODE_NAME as MULTIMEDIA_NODE_NAME } from './multimedia';
 
 export const uploadOptions: UploadOptions = {
   enableHtmlFileUploader: true,
   async uploader(files, schema) {
-    const markdownService = container.resolve(MarkdownService);
-    const updatedFiles = await markdownService.uploadFiles(Array.from(files));
+    const remote = container.resolve(remoteToken);
+    const fileDTOs = await Promise.all(
+      Array.from(files).map(async (file) => ({
+        data: await file.arrayBuffer(),
+        mimeType: file.type,
+        lang: [],
+      })),
+    );
+
+    const updatedFiles = await Promise.all(fileDTOs.map((file) => remote.file.upload.mutate(file)));
     const multimediaNode = schema.nodes[MULTIMEDIA_NODE_NAME]!;
 
     return updatedFiles.map((file) => {
       const node = multimediaNode.createAndFill({
-        src: getUrlFromFileId(file.id),
+        src: fileIdToUrl(file.id),
         alt: file.id,
       });
 

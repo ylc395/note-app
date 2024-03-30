@@ -59,10 +59,17 @@ export default class FileService extends BaseService {
   }
 
   public async queryFileById(id: FileVO['id']) {
-    const [file, data] = await Promise.all([this.repo.files.findOneById(id), this.repo.files.findBlobById(id)]);
-    assert(file && data, 'invalid file id');
+    const file = await this.repo.files.findOneById(id);
+    assert(file, 'invalid file id');
 
-    return { ...file, data };
+    return file;
+  }
+
+  public async queryFileBlobById(id: FileVO['id']) {
+    const data = this.repo.files.findBlobById(id);
+    assert(data);
+
+    return data;
   }
 
   @transaction

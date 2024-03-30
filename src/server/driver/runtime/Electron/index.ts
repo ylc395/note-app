@@ -1,4 +1,4 @@
-import { app as electronApp, ipcMain, BrowserWindow, type IpcMainInvokeEvent } from 'electron';
+import { app as electronApp, ipcMain, BrowserWindow, type IpcMainInvokeEvent, protocol } from 'electron';
 import path from 'node:path';
 import assert from 'node:assert';
 import { fileURLToPath } from 'node:url';
@@ -8,6 +8,8 @@ import { createIPCHandler } from 'electron-trpc/main';
 
 import { IS_DEV } from '@domain/infra/constants.js';
 import { token as loggerToken } from '@domain/infra/logger.js';
+import FileService from '@domain/service/FileService/index.js';
+import { urlToFileId, PROTOCOL } from '@domain/infra/markdown/url.js';
 import { routers } from '@controller/index.js';
 import UI, { UI_CHANNEL } from './UI.js';
 import DesktopRuntime from '../Desktop.js';
@@ -17,8 +19,9 @@ const DIRNAME = path.dirname(fileURLToPath(import.meta.url));
 
 export default class ElectronRuntime extends DesktopRuntime {
   private mainWindow?: BrowserWindow;
-  private ui = new UI();
+  private readonly ui = new UI();
   protected readonly logger = container.resolve(loggerToken);
+  private readonly fileService = container.resolve(FileService);
 
   public async bootstrap() {
     if (IS_DEV) {
@@ -39,12 +42,37 @@ export default class ElectronRuntime extends DesktopRuntime {
       electronApp.quit();
     });
 
+    protocol.registerSchemesAsPrivileged([
+      {
+        scheme: PROTOCOL,
+        privileges: {
+          stream: true,
+          secure: true,
+        },
+      },
+    ]);
+
     ipcMain.handle(UI_CHANNEL, this.handleUI);
 
     await this.whenReady();
     await this.installDevExtension();
+
+    protocol.handle(PROTOCOL, this.protocolHandler);
+
     this.initWindow();
   }
+
+  private readonly protocolHandler = async (req: GlobalRequest) => {
+    const fileId = urlToFileId(req.url);
+
+    if (!fileId) {
+      return new Response(null, { status: 404 });
+    }
+
+    const data = await this.fileService.queryFileBlobById(fileId);
+
+    return new Response(data);
+  };
 
   protected async whenUIReady() {
     return new Promise<void>((resolve) => electronApp.on('ready', () => resolve()));

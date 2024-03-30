@@ -1,4 +1,4 @@
-import { compact, first, groupBy, pick } from 'lodash-es';
+import { compact, first, groupBy } from 'lodash-es';
 
 import type { FileRepository } from '@domain/service/repository/FileRepository.js';
 import type { File, FileVO, NewFileTextRecord } from '@domain/model/file.js';
@@ -10,7 +10,12 @@ import { tableName as fileTextTableName } from '../schema/fileText.js';
 export default class SqliteFileRepository extends BaseRepository implements FileRepository {
   public async findOneById(id: string) {
     const existedFile = await this.db.selectFrom(fileTableName).selectAll().where('id', '=', id).executeTakeFirst();
-    return existedFile || null;
+
+    if (!existedFile) {
+      return null;
+    }
+
+    return { ...existedFile, lang: existedFile.lang.split(',') };
   }
 
   public readonly findBlobById = async (id: string) => {
@@ -25,16 +30,27 @@ export default class SqliteFileRepository extends BaseRepository implements File
 
   public async findOneByHash(hash: string) {
     const existedFile = await this.db.selectFrom(fileTableName).selectAll().where('hash', '=', hash).executeTakeFirst();
-    return existedFile || null;
+
+    if (!existedFile) {
+      return null;
+    }
+
+    return { ...existedFile, lang: existedFile.lang.split(',') };
   }
 
   public static getBlob(row: Pick<Row, 'data'>) {
     return (row.data as Uint8Array).buffer;
   }
 
-  public async create(file: File) {
-    const row = await this.createOneOn(fileTableName, { ...file, id: this.generateId() });
-    return pick(row, ['id', 'mimeType', 'size', 'lang']);
+  public async create({ data, ...file }: File) {
+    const row = await this.createOneOn(fileTableName, {
+      ...file,
+      lang: file.lang.join(','),
+      data: Buffer.from(data),
+      id: this.generateId(),
+    });
+
+    return { ...file, id: row.id };
   }
 
   public async createText({ location, ...fileText }: NewFileTextRecord) {
@@ -70,8 +86,8 @@ export default class SqliteFileRepository extends BaseRepository implements File
       return {
         fileId,
         fileCreatedAt,
-        lang,
         mimeType,
+        lang: lang.split(','),
         locations: compact(records.map(({ location }) => location && JSON.parse(location))),
       };
     });
