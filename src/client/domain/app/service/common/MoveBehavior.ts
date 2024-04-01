@@ -3,8 +3,6 @@ import { action, observable, makeObservable } from 'mobx';
 import { first } from 'lodash-es';
 
 import type { EntityId, EntityParentId, HierarchyEntity } from '@shared/domain/model/entity';
-import NoteTree from '@domain/common/model/note/Tree';
-import MaterialTree from '@domain/common/model/material/Tree';
 import type Explorer from '@domain/app/model/abstract/Explorer';
 import Tree from '@domain/common/model/abstract/Tree';
 
@@ -80,22 +78,16 @@ export default class MoveBehavior<T extends HierarchyEntity = HierarchyEntity> {
   }
 
   private createTargetTree() {
-    let targetTree: Tree | undefined;
+    let targetTree: Tree | undefined = undefined;
     const { tree } = this.options.explorer;
     const entityToNode = (entity: T | null) => {
       assert(targetTree);
       return { isDisabled: this.isNodeDisabled(entity, targetTree) };
     };
 
-    if (tree instanceof NoteTree) {
-      targetTree = new NoteTree({ entityToNode });
-    }
-
-    if (tree instanceof MaterialTree) {
-      targetTree = new MaterialTree({ entityToNode });
-    }
-
-    assert(targetTree);
+    targetTree = new (tree.constructor as { new (...args: ConstructorParameters<typeof Tree<T>>): Tree<T> })({
+      entityToNode,
+    });
     targetTree.root.loadChildren();
 
     return targetTree;

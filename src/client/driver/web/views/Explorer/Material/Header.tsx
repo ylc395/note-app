@@ -4,8 +4,9 @@ import { AiOutlineFileAdd, AiOutlineFolderAdd, AiOutlineShrink, AiOutlineSortAsc
 import { useMemo } from 'react';
 
 import MaterialService from '@domain/app/service/MaterialService';
-import MaterialExplorer, { SortBy } from '@domain/app/model/material/Explorer';
+import MaterialExplorer from '@domain/app/model/material/Explorer';
 import { useDragItem } from '@web/components/dnd/hooks';
+import { SortBy } from '@domain/app/model/abstract/Explorer/SortBehavior';
 import ExplorerHeader from '../common/ExplorerHeader';
 
 export default observer(function Header() {
@@ -14,8 +15,7 @@ export default observer(function Header() {
     collapseAll,
     tree: { root },
     dnd: { status },
-    sortBy,
-    setSortBy,
+    sorter: { by: sortBy, setBy: setSortBy },
   } = container.resolve(MaterialExplorer);
   const {
     creation: { createDirectory, startCreating },

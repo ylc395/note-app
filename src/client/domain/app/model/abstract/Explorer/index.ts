@@ -1,6 +1,6 @@
 import { container } from 'tsyringe';
 import { groupBy, intersection, once } from 'lodash-es';
-import { action, computed, makeObservable, autorun, observable } from 'mobx';
+import { action, computed, makeObservable, autorun } from 'mobx';
 
 import type Tree from '@domain/common/model/abstract/Tree';
 import { Workbench } from '@domain/app/model/workbench';
@@ -10,21 +10,13 @@ import { token as rpcToken } from '@domain/common/infra/rpc';
 import type RenameBehavior from './RenameBehavior';
 import type ContextmenuBehavior from './ContextmenuBehavior';
 import DndBehavior from './DndBehavior';
+import SortBehavior from './SortBehavior';
 
 export { default as RenameBehavior } from './RenameBehavior';
 
 interface ExplorerState {
   expanded: EntityId[];
   selected: EntityId[];
-}
-
-export enum SortBy {
-  TitleAsc = 'titleAsc',
-  TitleDesc = 'titleDesc',
-  CreatedAtAsc = 'createdAtAsc',
-  CreatedAtDesc = 'createdAtDesc',
-  UpdatedAtAsc = 'updatedAtAsc',
-  UpdatedAtDesc = 'updatedAtDesc',
 }
 
 export default abstract class Explorer<T extends HierarchyEntity = HierarchyEntity> {
@@ -36,17 +28,12 @@ export default abstract class Explorer<T extends HierarchyEntity = HierarchyEnti
   protected readonly remote = container.resolve(rpcToken);
   protected readonly workbench = container.resolve(Workbench);
   public abstract readonly rename: RenameBehavior;
+  public readonly sorter = new SortBehavior();
   public abstract readonly contextmenu: ContextmenuBehavior;
   public readonly dnd = new DndBehavior({ explorer: this });
   public abstract readonly tree: Tree<T>;
-  @observable public sortBy = SortBy.CreatedAtDesc;
   public get entityType() {
     return this.tree.entityType;
-  }
-
-  @action.bound
-  public setSortBy(value: SortBy) {
-    this.sortBy = value;
   }
 
   public readonly init = once(async () => {

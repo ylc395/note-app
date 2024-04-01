@@ -8,7 +8,11 @@ import type TreeNode from './TreeNode';
 import { token as remoteToken } from '@domain/common/infra/rpc';
 
 export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> {
-  constructor(public readonly options?: { entityToNode: TreeNode<HierarchyEntity>['entityToNode'] }) {
+  constructor(
+    public readonly options?: {
+      entityToNode?: TreeNode<T>['entityToNode'];
+    },
+  ) {
     makeObservable(this);
   }
 

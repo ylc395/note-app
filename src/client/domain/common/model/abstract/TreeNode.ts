@@ -132,7 +132,7 @@ export default abstract class TreeNode<T extends HierarchyEntity = HierarchyEnti
   ): Partial<Pick<TreeNode, 'isLeaf' | 'title' | 'isDisabled' | 'icon' | 'isExpanded'>>;
 
   private _entityToNode(entity: T | null) {
-    return { ...this.entityToNode(entity), ...this.tree.options?.entityToNode(entity) };
+    return { ...this.entityToNode(entity), ...this.tree.options?.entityToNode?.(entity) };
   }
 
   @observable public entity: T | null; // only root node has no entity;

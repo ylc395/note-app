@@ -7,8 +7,6 @@ import Explorer, { RenameBehavior } from '@domain/app/model/abstract/Explorer';
 import eventBus, { Events } from './eventBus';
 import ContextmenuBehavior from '../abstract/Explorer/ContextmenuBehavior';
 
-export { SortBy } from '@domain/app/model/abstract/Explorer';
-
 @singleton()
 export default class MaterialExplorer extends Explorer<MaterialVO> {
   public readonly tree = new MaterialTree();

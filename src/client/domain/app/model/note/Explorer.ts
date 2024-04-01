@@ -8,8 +8,6 @@ import { eventBus, Events as NoteEvents } from './eventBus';
 import ContextmenuBehavior from '../abstract/Explorer/ContextmenuBehavior';
 import assert from 'assert';
 
-export { SortBy } from '@domain/app/model/abstract/Explorer';
-
 @singleton()
 export default class NoteExplorer extends Explorer<NoteVO> {
   constructor() {

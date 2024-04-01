@@ -4,8 +4,10 @@ import { AiOutlinePlus, AiOutlineShrink, AiOutlineSortAscending } from 'react-ic
 import { useMemo } from 'react';
 
 import NoteService from '@domain/app/service/NoteService';
-import NoteExplorer, { SortBy } from '@domain/app/model/note/Explorer';
+import NoteExplorer from '@domain/app/model/note/Explorer';
 import { useDragItem } from '@web/components/dnd/hooks';
+import { SortBy } from '@domain/app/model/abstract/Explorer/SortBehavior';
+
 import ExplorerHeader from '../common/ExplorerHeader';
 
 export default observer(function Header() {
@@ -14,8 +16,7 @@ export default observer(function Header() {
     collapseAll,
     tree: { root },
     dnd: { status },
-    sortBy,
-    setSortBy,
+    sorter: { by: sortBy, setBy: setSortBy },
   } = container.resolve(NoteExplorer);
   const {
     move: { moveByItems: moveNotesByItems },
