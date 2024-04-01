@@ -8,21 +8,15 @@ import { eventBus, Events as NoteEvents } from './eventBus';
 import ContextmenuBehavior from '../abstract/Explorer/ContextmenuBehavior';
 import assert from 'assert';
 
+export { SortBy } from '@domain/app/model/abstract/Explorer';
+
 @singleton()
 export default class NoteExplorer extends Explorer<NoteVO> {
   constructor() {
     super();
-    this.contextmenu = new ContextmenuBehavior({
-      explorer: this,
-      getItems: this.getContextmenuItems,
-      handleAction: (e) => eventBus.emit(NoteEvents.Action, e),
-    });
-    this.rename = new RenameBehavior({ onSubmit: this.submitRename });
     eventBus.on(NoteEvents.Updated, this.handleEntityUpdate);
   }
-  public readonly contextmenu: ContextmenuBehavior;
   public readonly tree = new NoteTree();
-  public readonly rename: RenameBehavior;
 
   protected queryPath(id: NoteVO['id']) {
     return this.remote.note.queryPath.query(id);
@@ -62,4 +56,11 @@ export default class NoteExplorer extends Explorer<NoteVO> {
       { label: '删除', key: 'delete' },
     ]);
   };
+
+  public readonly rename = new RenameBehavior({ onSubmit: this.submitRename });
+  public readonly contextmenu: ContextmenuBehavior = new ContextmenuBehavior({
+    explorer: this,
+    getItems: this.getContextmenuItems,
+    handleAction: (e) => eventBus.emit(NoteEvents.Action, e),
+  });
 }

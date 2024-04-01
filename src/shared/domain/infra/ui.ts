@@ -6,6 +6,7 @@ export type MenuItem =
       label: string;
       key?: string;
       disabled?: boolean;
+      checked?: boolean;
       submenu?: MenuItem[];
     }
   | { type: 'separator' };

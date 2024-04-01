@@ -1,6 +1,6 @@
 import { container } from 'tsyringe';
 import { groupBy, intersection, once } from 'lodash-es';
-import { action, computed, makeObservable, autorun } from 'mobx';
+import { action, computed, makeObservable, autorun, observable } from 'mobx';
 
 import type Tree from '@domain/common/model/abstract/Tree';
 import { Workbench } from '@domain/app/model/workbench';
@@ -17,6 +17,15 @@ interface ExplorerState {
   expanded: EntityId[];
 }
 
+export enum SortBy {
+  TitleAsc = 'titleAsc',
+  TitleDesc = 'titleDesc',
+  CreatedAtAsc = 'createdAtAsc',
+  CreatedAtDesc = 'createdAtDesc',
+  UpdatedAtAsc = 'updatedAtAsc',
+  UpdatedAtDesc = 'updatedAtDesc',
+}
+
 export default abstract class Explorer<T extends HierarchyEntity = HierarchyEntity> {
   constructor() {
     makeObservable(this);
@@ -27,10 +36,16 @@ export default abstract class Explorer<T extends HierarchyEntity = HierarchyEnti
   protected readonly workbench = container.resolve(Workbench);
   public abstract readonly rename: RenameBehavior;
   public abstract readonly contextmenu: ContextmenuBehavior;
-  public abstract readonly tree: Tree<T>;
   public readonly dnd = new DndBehavior({ explorer: this });
+  public abstract readonly tree: Tree<T>;
+  @observable public sortBy = SortBy.CreatedAtDesc;
   public get entityType() {
     return this.tree.entityType;
+  }
+
+  @action.bound
+  public setSortBy(value: SortBy) {
+    this.sortBy = value;
   }
 
   public readonly init = once(async () => {

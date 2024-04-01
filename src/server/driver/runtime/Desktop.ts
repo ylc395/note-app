@@ -41,12 +41,6 @@ export default abstract class DesktopRuntime extends CommonRuntime {
     this.searchEngine = searchEngine;
   }
 
-  protected abstract whenUIReady(): Promise<void>;
-
-  public async whenReady() {
-    await Promise.all([super.whenReady(), this.whenUIReady()]);
-  }
-
   public getAppDir() {
     const dir = IS_DEV ? `${APP_NAME}-dev` : IS_TEST ? `${APP_NAME}-test` : APP_NAME;
 

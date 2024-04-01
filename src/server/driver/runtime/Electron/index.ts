@@ -58,7 +58,6 @@ export default class ElectronRuntime extends DesktopRuntime {
     await this.installDevExtension();
 
     protocol.handle(PROTOCOL, this.protocolHandler);
-
     this.initWindow();
   }
 
@@ -74,8 +73,8 @@ export default class ElectronRuntime extends DesktopRuntime {
     return new Response(data);
   };
 
-  protected async whenUIReady() {
-    return new Promise<void>((resolve) => electronApp.on('ready', () => resolve()));
+  public async whenReady() {
+    await Promise.all([super.whenReady(), new Promise<void>((resolve) => electronApp.on('ready', () => resolve()))]);
   }
 
   private readonly handleUI = (e: IpcMainInvokeEvent, payload: unknown) => {

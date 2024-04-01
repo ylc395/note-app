@@ -11,6 +11,7 @@ function parseAppUrl(url: string) {
     return null;
   }
 
+  // browser's whatwg-url implement is not the same as electron (FYI, electron is correct)
   // @see https://github.com/nodejs/node/issues/52276
   const { pathname, hash, protocol, host } = new URL(url);
 

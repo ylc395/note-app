@@ -1,11 +1,10 @@
-import type { ReactNode } from 'react';
 import Droppable from '@web/components/dnd/Droppable';
-import Button from '@web/components/Button';
+import Button, { type Props as ButtonProps } from './Button';
 
 interface Props {
   title: string;
-  left: { icon: ReactNode; onClick: () => void }[];
-  right: { icon: ReactNode; onClick: () => void; disabled?: boolean }[];
+  left: ButtonProps[];
+  right: ButtonProps[];
   onDrop?: (item: unknown) => void;
 }
 
@@ -16,17 +15,13 @@ export default function ExplorerHeader({ title, onDrop, left, right }: Props) {
       <h1 className="m-0 mr-1 text-base">{title}</h1>
       <div className="flex grow justify-between">
         <div className="flex">
-          {left.map(({ onClick, icon }, i) => (
-            <Button onClick={() => onClick()} key={i}>
-              {icon}
-            </Button>
+          {left.map((props, i) => (
+            <Button {...props} key={i} />
           ))}
         </div>
         <div className="flex">
-          {right.map(({ onClick, icon, disabled }, i) => (
-            <Button onClick={() => onClick()} key={i} disabled={disabled}>
-              {icon}
-            </Button>
+          {right.map((props, i) => (
+            <Button {...props} key={i} />
           ))}
         </div>
       </div>

@@ -34,6 +34,7 @@ export default class electronUI implements Partial<UI> {
         menuItems.map(function mapping(item): ElectronMenuItem {
           return {
             ...item,
+            type: 'type' in item ? item.type : item.checked ? 'checkbox' : undefined,
             submenu: 'submenu' in item && item.submenu ? item.submenu.map(mapping) : undefined,
             click: 'key' in item ? () => (key = item.key!) : undefined,
             enabled: 'disabled' in item ? !item.disabled : true,

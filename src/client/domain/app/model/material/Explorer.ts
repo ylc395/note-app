@@ -7,20 +7,14 @@ import Explorer, { RenameBehavior } from '@domain/app/model/abstract/Explorer';
 import eventBus, { Events } from './eventBus';
 import ContextmenuBehavior from '../abstract/Explorer/ContextmenuBehavior';
 
+export { SortBy } from '@domain/app/model/abstract/Explorer';
+
 @singleton()
 export default class MaterialExplorer extends Explorer<MaterialVO> {
   public readonly tree = new MaterialTree();
-  public readonly rename: RenameBehavior;
-  public readonly contextmenu: ContextmenuBehavior;
 
   constructor() {
     super();
-    this.rename = new RenameBehavior({ onSubmit: this.submitRename });
-    this.contextmenu = new ContextmenuBehavior({
-      explorer: this,
-      getItems: this.getContextmenuItems,
-      handleAction: (e) => eventBus.emit(Events.Action, e),
-    });
     eventBus.on(Events.Updated, this.handleEntityUpdate);
   }
 
@@ -62,4 +56,11 @@ export default class MaterialExplorer extends Explorer<MaterialVO> {
       { label: '删除', key: 'delete' },
     ]);
   };
+
+  public readonly rename = new RenameBehavior({ onSubmit: this.submitRename });
+  public readonly contextmenu: ContextmenuBehavior = new ContextmenuBehavior({
+    explorer: this,
+    getItems: this.getContextmenuItems,
+    handleAction: (e) => eventBus.emit(Events.Action, e),
+  });
 }
