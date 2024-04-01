@@ -147,7 +147,7 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
     }
 
     for (const id of ids) {
-      this.getNode(id).toggleSelect({ isMultiple: true });
+      this.getNode(id, true)?.toggleSelect({ isMultiple: true });
     }
   }
 }

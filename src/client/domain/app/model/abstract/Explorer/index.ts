@@ -15,6 +15,7 @@ export { default as RenameBehavior } from './RenameBehavior';
 
 interface ExplorerState {
   expanded: EntityId[];
+  selected: EntityId[];
 }
 
 export enum SortBy {
@@ -54,6 +55,7 @@ export default abstract class Explorer<T extends HierarchyEntity = HierarchyEnti
 
     if (state) {
       await this.expandNodes(state.expanded);
+      this.tree.setSelected(state.selected);
     }
 
     autorun(this.persist);
@@ -106,6 +108,7 @@ export default abstract class Explorer<T extends HierarchyEntity = HierarchyEnti
   private readonly persist = () => {
     this.localStorage.set<ExplorerState>(this.localStorageKey, {
       expanded: this.tree.expandedNodes.map((node) => node.id),
+      selected: this.tree.getSelectedNodeIds(),
     });
   };
 
