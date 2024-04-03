@@ -4,10 +4,9 @@ import clsx from 'clsx';
 import Draggable from '@web/components/dnd/Draggable';
 import Droppable from '@web/components/dnd/Droppable';
 import type TreeNode from '@domain/common/model/abstract/TreeNode';
-import type { NoteVO } from '@shared/domain/model/note';
-import type { MaterialVO } from '@shared/domain/model/material';
+import type { HierarchyEntity } from '@shared/domain/model/entity';
 
-interface Props<T extends NoteVO | MaterialVO> {
+interface Props<T extends HierarchyEntity> {
   children: ReactNode;
   node: TreeNode<T>;
   onDrop: (item: unknown, treeNode: TreeNode<T>) => void;
@@ -16,7 +15,13 @@ interface Props<T extends NoteVO | MaterialVO> {
 }
 
 // eslint-disable-next-line mobx/missing-observer
-export default function DndTreeNode({ children, node, onDrop, onDragStart, onDragStop }: Props<NoteVO | MaterialVO>) {
+export default function DndTreeNode<T extends HierarchyEntity>({
+  children,
+  node,
+  onDrop,
+  onDragStart,
+  onDragStop,
+}: Props<T>) {
   const handleDragStart = () => {
     node.toggleSelect({ value: true });
     onDragStart();

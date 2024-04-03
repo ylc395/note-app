@@ -3,15 +3,16 @@ import type { ReactNode } from 'react';
 
 import { IS_DEV } from '@shared/domain/infra/constants';
 import type TreeNode from '@domain/common/model/abstract/TreeNode';
+import type { HierarchyEntity } from '@shared/domain/model/entity';
 import IconTitle from '@web/components/IconTitle';
 
-export interface Props {
-  node: TreeNode;
+export interface Props<T extends HierarchyEntity> {
+  node: TreeNode<T>;
   children?: ReactNode;
-  defaultIcon?: (node: TreeNode) => ReactNode;
+  defaultIcon?: (node: TreeNode<T>) => ReactNode;
 }
 
-export default observer(function NodeTitle({ node, children, defaultIcon }: Props) {
+export default observer(function NodeTitle<T extends HierarchyEntity>({ node, children, defaultIcon }: Props<T>) {
   return (
     <span className="flex min-w-0">
       <IconTitle

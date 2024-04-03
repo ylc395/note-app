@@ -3,16 +3,15 @@ import clsx from 'clsx';
 
 import type TreeModel from '@domain/common/model/abstract/Tree';
 import type TreeNode from '@domain/common/model/abstract/TreeNode';
+import type { HierarchyEntity } from '@shared/domain/model/entity';
 import Tree from '@web/components/Tree';
-import type { MaterialVO } from '@shared/domain/model/material';
-import type { NoteVO } from '@shared/domain/model/note';
 
 import NodeTitle from './NodeTitle';
 import EditingNodeTitle, { type Props as EditingNodeTitleProps } from './EditingNodeTitle';
 import DndTreeNode from './DndTreeNode';
 import TreeDraggingPreview from './TreeDraggingPreview';
 
-interface Props<T extends MaterialVO | NoteVO> {
+interface Props<T extends HierarchyEntity> {
   tree: TreeModel<T>;
   defaultIcon?: (node: TreeNode<T>) => ReactNode;
   onContextmenu: (node: TreeNode<T>) => void;
@@ -20,14 +19,14 @@ interface Props<T extends MaterialVO | NoteVO> {
   onClick: (node: TreeNode<T>, isMultiple: boolean) => void;
   onDrop: (item: unknown, node: TreeNode<T>) => void;
   editingNodeId?: string;
-  onEditEnd?: EditingNodeTitleProps['onEditEnd'];
-  onEditCancel?: EditingNodeTitleProps['onEditCancel'];
+  onEditEnd?: EditingNodeTitleProps<T>['onEditEnd'];
+  onEditCancel?: EditingNodeTitleProps<T>['onEditCancel'];
   onDragStart: () => void;
   onDragStop: () => void;
 }
 
 // eslint-disable-next-line mobx/missing-observer
-export default function TreeView<T extends MaterialVO | NoteVO>({
+export default function TreeView<T extends HierarchyEntity>({
   tree,
   editingNodeId,
   onClick,
@@ -67,25 +66,15 @@ export default function TreeView<T extends MaterialVO | NoteVO>({
         tree={tree}
         multiple
         renderNode={(node, originalNodeView) => (
-          <DndTreeNode
-            node={node}
-            onDrop={onDrop as (item: unknown, node: TreeNode<MaterialVO | NoteVO>) => void}
-            onDragStart={onDragStart}
-            onDragStop={onDragStop}
-          >
+          <DndTreeNode node={node} onDrop={onDrop} onDragStart={onDragStart} onDragStop={onDragStop}>
             {originalNodeView}
           </DndTreeNode>
         )}
         renderTitle={(node) =>
           editingNodeId === node.id ? (
-            <EditingNodeTitle
-              onEditCancel={onEditCancel}
-              onEditEnd={onEditEnd}
-              node={node}
-              defaultIcon={defaultIcon as undefined | ((node: TreeNode) => ReactNode)}
-            />
+            <EditingNodeTitle onEditCancel={onEditCancel} onEditEnd={onEditEnd} node={node} defaultIcon={defaultIcon} />
           ) : (
-            <NodeTitle defaultIcon={defaultIcon as undefined | ((node: TreeNode) => ReactNode)} node={node}>
+            <NodeTitle defaultIcon={defaultIcon} node={node}>
               {nodeOperation(node)}
             </NodeTitle>
           )

@@ -29,7 +29,7 @@ export default abstract class Explorer<T extends HierarchyEntity = HierarchyEnti
   protected readonly workbench = container.resolve(Workbench);
   public abstract readonly rename: RenameBehavior;
   public readonly sorter = new SortBehavior();
-  public abstract readonly contextmenu: ContextmenuBehavior;
+  public abstract readonly contextmenu: ContextmenuBehavior<T>;
   public readonly dnd = new DndBehavior({ explorer: this });
   public abstract readonly tree: Tree<T>;
   public get entityType() {

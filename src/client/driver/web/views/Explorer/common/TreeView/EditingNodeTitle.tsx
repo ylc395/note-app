@@ -5,15 +5,21 @@ import { useKeyPress } from 'ahooks';
 
 import type TreeNode from '@domain/common/model/abstract/TreeNode';
 import Icon from '@web/components/icon/Icon';
+import type { HierarchyEntity } from '@shared/domain/model/entity';
 
-export interface Props {
-  node: TreeNode;
-  defaultIcon?: (node: TreeNode) => ReactNode;
+export interface Props<T extends HierarchyEntity> {
+  node: TreeNode<T>;
+  defaultIcon?: (node: TreeNode<T>) => ReactNode;
   onEditEnd?: (value: string) => void;
   onEditCancel?: () => void;
 }
 
-export default observer(function EditingNodeTitle({ node, onEditEnd, onEditCancel, defaultIcon }: Props) {
+export default observer(function EditingNodeTitle<T extends HierarchyEntity>({
+  node,
+  onEditEnd,
+  onEditCancel,
+  defaultIcon,
+}: Props<T>) {
   const [value, setValue] = useState(node.title);
   const inputRef = useRef<HTMLInputElement | null>(null);
   assert(onEditEnd && onEditCancel);

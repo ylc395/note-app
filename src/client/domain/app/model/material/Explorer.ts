@@ -56,7 +56,7 @@ export default class MaterialExplorer extends Explorer<MaterialVO> {
   };
 
   public readonly rename = new RenameBehavior({ onSubmit: this.submitRename });
-  public readonly contextmenu: ContextmenuBehavior = new ContextmenuBehavior({
+  public readonly contextmenu: ContextmenuBehavior<MaterialVO> = new ContextmenuBehavior({
     explorer: this,
     getItems: this.getContextmenuItems,
     handleAction: (e) => eventBus.emit(Events.Action, e),

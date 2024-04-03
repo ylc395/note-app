@@ -56,7 +56,7 @@ export default class NoteExplorer extends Explorer<NoteVO> {
   };
 
   public readonly rename = new RenameBehavior({ onSubmit: this.submitRename });
-  public readonly contextmenu: ContextmenuBehavior = new ContextmenuBehavior({
+  public readonly contextmenu: ContextmenuBehavior<NoteVO> = new ContextmenuBehavior({
     explorer: this,
     getItems: this.getContextmenuItems,
     handleAction: (e) => eventBus.emit(NoteEvents.Action, e),

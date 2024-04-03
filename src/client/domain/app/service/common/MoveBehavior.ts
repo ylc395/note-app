@@ -9,7 +9,7 @@ import Tree from '@domain/common/model/abstract/Tree';
 export default class MoveBehavior<T extends HierarchyEntity = HierarchyEntity> {
   constructor(
     private readonly options: {
-      explorer: Explorer;
+      explorer: Explorer<T>;
       itemToIds: (items: unknown) => EntityId[] | undefined;
       onMove: (parentId: EntityParentId, ids: EntityId[]) => Promise<void>;
     },
@@ -21,7 +21,12 @@ export default class MoveBehavior<T extends HierarchyEntity = HierarchyEntity> {
     const { explorer, onMove } = this.options;
 
     await onMove(targetId, itemIds);
-    explorer.tree.updateTree(itemIds.map((id) => ({ id, parentId: targetId })));
+    const movedEntities = itemIds.map((id) => ({
+      ...explorer.tree.getNode(id).entity!,
+      parentId: targetId,
+    }));
+
+    explorer.tree.updateTree(movedEntities);
 
     if (targetId) {
       await explorer.reveal(targetId, { expand: true });
@@ -48,7 +53,7 @@ export default class MoveBehavior<T extends HierarchyEntity = HierarchyEntity> {
   };
 
   @observable
-  public targetTree?: Tree;
+  public targetTree?: Tree<T>;
 
   @action.bound
   public selectTarget() {
@@ -60,7 +65,7 @@ export default class MoveBehavior<T extends HierarchyEntity = HierarchyEntity> {
     this.targetTree = undefined;
   }
 
-  private isNodeDisabled(entity: T | null, tree: Tree) {
+  private isNodeDisabled(entity: T | null, tree: Tree<T>) {
     const movingNodes = this.options.explorer.tree.selectedNodes;
     const parentIds = movingNodes.map(({ entity }) => entity!.parentId);
 
@@ -78,7 +83,7 @@ export default class MoveBehavior<T extends HierarchyEntity = HierarchyEntity> {
   }
 
   private createTargetTree() {
-    let targetTree: Tree | undefined = undefined;
+    let targetTree: Tree<T> | undefined = undefined;
     const { tree } = this.options.explorer;
     const entityToNode = (entity: T | null) => {
       assert(targetTree);
