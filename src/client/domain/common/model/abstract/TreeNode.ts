@@ -1,4 +1,4 @@
-import { action, makeObservable, observable, reaction, runInAction } from 'mobx';
+import { action, computed, makeObservable, observable, reaction, runInAction } from 'mobx';
 import assert from 'assert';
 
 import type { HierarchyEntity } from '@shared/domain/model/entity';
@@ -141,6 +141,15 @@ export default abstract class TreeNode<T extends HierarchyEntity = HierarchyEnti
   @observable public isLeaf = true;
   @observable public icon: string | null = null;
   @observable.shallow public children: TreeNode<T>[] = [];
+  @computed public get sortedChildren() {
+    const sort = this.tree.options?.sort;
+
+    if (!sort) {
+      return this.children;
+    }
+
+    return this.children.toSorted(({ entity: e1 }, { entity: e2 }) => sort(e1!, e2!));
+  }
   @observable public isExpanded = false;
   @observable public isSelected = false;
   @observable public isLoading = false;

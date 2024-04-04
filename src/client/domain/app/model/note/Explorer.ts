@@ -14,7 +14,7 @@ export default class NoteExplorer extends Explorer<NoteVO> {
     super();
     eventBus.on(NoteEvents.Updated, this.handleEntityUpdate);
   }
-  public readonly tree = new NoteTree();
+  public readonly tree = new NoteTree({ sort: this.sorter.sort });
 
   protected queryPath(id: NoteVO['id']) {
     return this.remote.note.queryPath.query(id);

@@ -11,6 +11,7 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
   constructor(
     public readonly options?: {
       entityToNode?: TreeNode<T>['entityToNode'];
+      sort?: (e1: T, e2: T) => number;
     },
   ) {
     makeObservable(this);

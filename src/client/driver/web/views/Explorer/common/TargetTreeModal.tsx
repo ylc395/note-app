@@ -5,11 +5,12 @@ import Modal from '@web/components/Modal';
 import Tree from '@web/components/Tree';
 import NodeTitle from './TreeView/NodeTitle';
 import type MoveBehavior from '@domain/app/service/common/MoveBehavior';
+import type { HierarchyEntity } from '@shared/domain/model/entity';
 
-export default observer(function TargetTreeModal({
+export default observer(function TargetTreeModal<T extends HierarchyEntity>({
   moveBehavior: { moveByTargetTree, stopSelectingTarget, targetTree },
 }: {
-  moveBehavior: MoveBehavior;
+  moveBehavior: MoveBehavior<T>;
 }) {
   if (!targetTree) {
     return null;

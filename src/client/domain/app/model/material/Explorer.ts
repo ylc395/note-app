@@ -9,7 +9,7 @@ import ContextmenuBehavior from '../abstract/Explorer/ContextmenuBehavior';
 
 @singleton()
 export default class MaterialExplorer extends Explorer<MaterialVO> {
-  public readonly tree = new MaterialTree();
+  public readonly tree = new MaterialTree({ sort: this.sorter.sort });
 
   constructor() {
     super();

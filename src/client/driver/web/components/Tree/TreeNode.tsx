@@ -99,7 +99,7 @@ const TreeNode = observer(function <T extends HierarchyEntity>({ node, level, ..
     <>
       {renderNode ? renderNode(node, treeNodeView) : treeNodeView}
       {node.isExpanded &&
-        node.children.map((child) => <TreeNode key={child.id} node={child} level={level + 1} {...ctx} />)}
+        node.sortedChildren.map((child) => <TreeNode key={child.id} node={child} level={level + 1} {...ctx} />)}
     </>
   );
 });

@@ -92,6 +92,7 @@ export default class MoveBehavior<T extends HierarchyEntity = HierarchyEntity> {
 
     targetTree = new (tree.constructor as { new (...args: ConstructorParameters<typeof Tree<T>>): Tree<T> })({
       entityToNode,
+      sort: this.options.explorer.tree.options?.sort,
     });
     targetTree.root.loadChildren();
 
