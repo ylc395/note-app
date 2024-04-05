@@ -3,7 +3,6 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 
 import Explorer from './Explorer';
 import Workbench from './Workbench';
-
 import './index.css';
 
 // eslint-disable-next-line mobx/missing-observer
