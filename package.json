@@ -55,6 +55,7 @@
     "typescript": "^5.4.3",
     "vite": "^4.3.6",
     "vite-plugin-checker": "^0.5.5",
+    "vite-plugin-insert-html": "^1.0.2",
     "vite-plugin-node-polyfills": "^0.14.0",
     "vite-tsconfig-paths": "^4.2.1"
   },

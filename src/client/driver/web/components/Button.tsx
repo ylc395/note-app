@@ -25,6 +25,7 @@ export default forwardRef<HTMLButtonElement, Props>(function Button(
       disabled={disabled}
       onClick={handleClick}
       className={clsx(
+        'bg-layer-base',
         'flex  cursor-pointer items-center justify-center rounded border-0  p-1',
         size === 'small' && 'text-sm',
         size === 'medium' && 'text-lg',

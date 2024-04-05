@@ -1,10 +1,7 @@
-import { APP_CLASS_NAME } from './infra/ui/constants';
+import baseConfig from './tailwind.base';
 
 /** @type {import('tailwindcss').Config} */
 export default {
+  ...baseConfig,
   content: ['./src/client/driver/web/**/*.{tsx,ts,html}'],
-  important: `.${APP_CLASS_NAME}`,
-  corePlugins: {
-    preflight: false,
-  },
 };

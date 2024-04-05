@@ -1,8 +1,8 @@
 import { type Placement, useClick, useDismiss, useFloating, useInteractions } from '@floating-ui/react';
+import { APP_NAME } from '@shared/domain/infra/constants';
 import { type ReactNode, useState, forwardRef, useImperativeHandle } from 'react';
 
 import { createPortal } from 'react-dom';
-import { APP_CLASS_NAME } from '@web/infra/ui/constants';
 
 export interface PopoverRef {
   dismiss: () => void;
@@ -38,7 +38,7 @@ export default forwardRef<PopoverRef, Props>(function Popover({ reference, child
       </div>
       {isOpen &&
         createPortal(
-          <div ref={refs.setFloating} {...getFloatingProps()} className={APP_CLASS_NAME} style={floatingStyles}>
+          <div ref={refs.setFloating} {...getFloatingProps()} className={APP_NAME} style={floatingStyles}>
             {children}
           </div>,
           mountPoint,

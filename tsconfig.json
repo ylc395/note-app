@@ -8,6 +8,7 @@
     "emitDecoratorMetadata": true,
     "sourceMap": true,
     "importHelpers": true,
+    "allowJs": true,
     "esModuleInterop": true,
     "strict": true,
     "noUncheckedIndexedAccess": true,

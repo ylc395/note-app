@@ -5,12 +5,12 @@ import { createPortal } from 'react-dom';
 import assert from 'assert';
 
 import Explorer from '@domain/app/model/abstract/Explorer';
+import { APP_NAME } from '@shared/domain/infra/constants';
 import ExplorerManager from '@domain/app/model/ExplorerManager';
 import TreeNode from '@domain/common/model/abstract/TreeNode';
 import { useDragItem } from '@web/components/dnd/hooks';
 
 import Tree from '@web/components/Tree';
-import { APP_CLASS_NAME } from '@web/infra/ui/constants';
 import NodeTitle from './NodeTitle';
 
 export default observer(function TreeView() {
@@ -22,7 +22,7 @@ export default observer(function TreeView() {
   return (
     item instanceof TreeNode &&
     (createPortal(
-      <div className={APP_CLASS_NAME}>
+      <div className={APP_NAME}>
         <Tree
           className="pointer-events-none fixed max-w-[300px] opacity-60"
           nodeClassName="py-1"

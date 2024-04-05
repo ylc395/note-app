@@ -4,7 +4,7 @@ import clsx from 'clsx';
 import { noop } from 'lodash-es';
 import { createPortal } from 'react-dom';
 
-import { APP_CLASS_NAME } from '@web/infra/ui/constants';
+import { APP_NAME } from '@shared/domain/infra/constants';
 
 export interface Props {
   children: ReactNode;
@@ -46,7 +46,7 @@ export default function Modal({
   }
 
   return createPortal(
-    <div className={APP_CLASS_NAME}>
+    <div className={APP_NAME}>
       <dialog
         autoFocus
         ref={dialogRef}
