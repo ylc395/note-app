@@ -1,5 +1,5 @@
 import { container } from 'tsyringe';
-import { AiOutlinePlus } from 'react-icons/ai';
+import { PlusIcon } from 'lucide-react';
 
 import Explorer from '@domain/app/model/note/Explorer';
 import { EntityTypes } from '@shared/domain/model/entity';
@@ -35,9 +35,7 @@ export default observer(function NoteTreeView() {
       onDragStart={updateTreeForDropping}
       onDrop={(item, node) => moveNotesByItems(node.id, item)}
       nodeOperation={({ id }) => (
-        <Button onClick={() => createNote({ parentId: id })}>
-          <AiOutlinePlus />
-        </Button>
+        <Button icon={<PlusIcon />} variant="primary" onClick={() => createNote({ parentId: id })} size="small" />
       )}
     />
   );

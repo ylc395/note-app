@@ -21,7 +21,7 @@ export default observer(function ExplorerView() {
   const { currentExplorerType } = container.resolve(ExplorerManager);
 
   return (
-    <div className="flex h-full overflow-x-hidden border-0 border-r border-solid  border-gray-200">
+    <div className="flex h-full overflow-x-hidden border-0 border-r border-solid border-common">
       <ActivityBar />
       <Resizable
         className="relative box-border flex h-full flex-col bg-gray-50 p-2"

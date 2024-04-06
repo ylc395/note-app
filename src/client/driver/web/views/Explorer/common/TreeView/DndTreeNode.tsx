@@ -6,7 +6,7 @@ import Droppable from '@web/components/dnd/Droppable';
 import type TreeNode from '@domain/common/model/abstract/TreeNode';
 import type { HierarchyEntity } from '@shared/domain/model/entity';
 
-interface Props<T extends HierarchyEntity> {
+export interface Props<T extends HierarchyEntity> {
   children: ReactNode;
   node: TreeNode<T>;
   onDrop: (item: unknown, treeNode: TreeNode<T>) => void;

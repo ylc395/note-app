@@ -6,23 +6,22 @@ import type TreeNode from '@domain/common/model/abstract/TreeNode';
 import type { HierarchyEntity } from '@shared/domain/model/entity';
 import Tree from '@web/components/Tree';
 
-import NodeTitle from './NodeTitle';
-import EditingNodeTitle, { type Props as EditingNodeTitleProps } from './EditingNodeTitle';
-import DndTreeNode from './DndTreeNode';
+import NodeTitle, { type Props as NodeTitleProps } from './NodeTitle';
+import DndTreeNode, { type Props as DndTreeNodeProps } from './DndTreeNode';
 import TreeDraggingPreview from './TreeDraggingPreview';
 
 interface Props<T extends HierarchyEntity> {
   tree: TreeModel<T>;
-  defaultIcon?: (node: TreeNode<T>) => ReactNode;
   onContextmenu: (node: TreeNode<T>) => void;
   nodeOperation: (node: TreeNode<T>) => ReactNode;
   onClick: (node: TreeNode<T>, isMultiple: boolean) => void;
-  onDrop: (item: unknown, node: TreeNode<T>) => void;
   editingNodeId?: string;
-  onEditEnd?: EditingNodeTitleProps<T>['onEditEnd'];
-  onEditCancel?: EditingNodeTitleProps<T>['onEditCancel'];
-  onDragStart: () => void;
-  onDragStop: () => void;
+  defaultIcon?: NodeTitleProps<T>['defaultIcon'];
+  onEditEnd?: NodeTitleProps<T>['onEditEnd'];
+  onEditCancel?: NodeTitleProps<T>['onEditCancel'];
+  onDrop: DndTreeNodeProps<T>['onDrop'];
+  onDragStart: DndTreeNodeProps<T>['onDragStart'];
+  onDragStop: DndTreeNodeProps<T>['onDragStop'];
 }
 
 // eslint-disable-next-line mobx/missing-observer
@@ -54,15 +53,15 @@ export default function TreeView<T extends HierarchyEntity>({
       <Tree
         onContextmenu={handleContextmenu}
         onClick={handleClick}
-        className="scrollbar-stable scrollbar-thin grow overflow-hidden pr-2 hover:overflow-auto"
+        className="grow overflow-auto"
         nodeClassName={(node) =>
           clsx(
-            'group relative cursor-pointer py-1',
-            node.isSelected && 'bg-gray-100',
+            'group relative cursor-pointer py-1 rounded-md text-common-secondary text-sm hover:bg-common-secondary-highlight',
+            node.isSelected && 'bg-common-secondary-highlight',
             node.isDisabled && 'cursor-not-allowed opacity-60',
           )
         }
-        caretClassName="text-gray-500"
+        caretClassName="mx-1 w-3 h-3 opacity-80"
         tree={tree}
         multiple
         renderNode={(node, originalNodeView) => (
@@ -70,15 +69,17 @@ export default function TreeView<T extends HierarchyEntity>({
             {originalNodeView}
           </DndTreeNode>
         )}
-        renderTitle={(node) =>
-          editingNodeId === node.id ? (
-            <EditingNodeTitle onEditCancel={onEditCancel} onEditEnd={onEditEnd} node={node} defaultIcon={defaultIcon} />
-          ) : (
-            <NodeTitle defaultIcon={defaultIcon} node={node}>
-              {nodeOperation(node)}
-            </NodeTitle>
-          )
-        }
+        renderTitle={(node) => (
+          <NodeTitle
+            onEditCancel={onEditCancel}
+            onEditEnd={onEditEnd}
+            isEditing={editingNodeId === node.id}
+            defaultIcon={defaultIcon}
+            node={node}
+          >
+            {editingNodeId !== node.id && nodeOperation(node)}
+          </NodeTitle>
+        )}
       />
       <TreeDraggingPreview />
     </>

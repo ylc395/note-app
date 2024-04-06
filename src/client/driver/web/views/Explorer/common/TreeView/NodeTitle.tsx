@@ -1,32 +1,60 @@
 import { observer } from 'mobx-react-lite';
-import type { ReactNode } from 'react';
+import { noop } from 'lodash-es';
+import { useState, type ReactNode, useEffect, useRef } from 'react';
+import { useKeyPress } from 'ahooks';
 
 import { IS_DEV } from '@shared/domain/infra/constants';
 import type TreeNode from '@domain/common/model/abstract/TreeNode';
 import type { HierarchyEntity } from '@shared/domain/model/entity';
-import IconTitle from '@web/components/IconTitle';
+import Icon from '@web/components/icon/Icon';
+import clsx from 'clsx';
 
 export interface Props<T extends HierarchyEntity> {
   node: TreeNode<T>;
   children?: ReactNode;
   defaultIcon?: (node: TreeNode<T>) => ReactNode;
+  isEditing?: boolean;
+  onEditEnd?: (value: string) => void;
+  onEditCancel?: () => void;
 }
 
-export default observer(function NodeTitle<T extends HierarchyEntity>({ node, children, defaultIcon }: Props<T>) {
+export default observer(function NodeTitle<T extends HierarchyEntity>({
+  node,
+  children,
+  onEditCancel,
+  onEditEnd,
+  defaultIcon,
+  isEditing,
+}: Props<T>) {
+  const [value, setValue] = useState(node.title);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const title = `${IS_DEV ? `${node.id.slice(0, 3)} ` : ''}${node.title}`;
+  const submit = () => onEditEnd?.(value);
+
+  useKeyPress('enter', isEditing ? submit : noop);
+  useKeyPress('esc', isEditing && onEditCancel ? onEditCancel : noop);
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.select();
+    }
+  }, [isEditing]);
+
   return (
-    <span className="flex min-w-0">
-      <IconTitle
-        className="w-full"
-        titleClassName="text-gray-600 min-w-0 overflow-hidden text-ellipsis"
-        defaultIcon={defaultIcon?.(node)}
-        icon={node.icon}
-        title={`${IS_DEV ? `${node.id.slice(0, 3)} ` : ''}${node.title}`}
-      />
-      {children && (
-        <span className="invisible absolute inset-y-0 right-0 flex h-full items-center bg-[--hover-color] text-black group-hover:visible">
-          {children}
-        </span>
+    <span className="flex min-w-0 w-full justify-between items-center">
+      <Icon code={node.icon} fallback={defaultIcon?.(node)} />
+      {isEditing ? (
+        <input
+          className="h-4 outline-none"
+          ref={inputRef}
+          onBlur={submit}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+        />
+      ) : (
+        <span className={clsx('whitespace-nowrap min-w-0')}>{title}</span>
       )}
+      {children && <span className="hidden h-full items-center group-hover:flex">{children}</span>}
     </span>
   );
 });

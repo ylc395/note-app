@@ -33,8 +33,6 @@ export default (function HeaderButton({ onClick, icon, disabled, menuItems, onMe
   }
 
   return (
-    <Button onClick={onClick || createMenu} disabled={disabled} ref={buttonRef}>
-      {icon}
-    </Button>
+    <Button onClick={(onClick && (() => onClick())) || createMenu} disabled={disabled} ref={buttonRef} icon={icon} />
   );
 });

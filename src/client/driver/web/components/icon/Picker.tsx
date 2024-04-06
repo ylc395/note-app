@@ -36,11 +36,7 @@ export default function EmojiPicker({ onSelect, canClear }: Props) {
   return (
     <div ref={divRef} className="relative">
       {isClearVisible && (
-        <Button
-          disabled={!canClear}
-          onClick={() => onSelect(null)}
-          className="absolute right-[10px] top-[15px] z-10 text-gray-600"
-        >
+        <Button disabled={!canClear} onClick={() => onSelect(null)}>
           <AiOutlineClear />
         </Button>
       )}

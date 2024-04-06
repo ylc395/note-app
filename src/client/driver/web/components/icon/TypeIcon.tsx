@@ -1,10 +1,10 @@
-import { AiOutlineBook, AiOutlineDatabase, AiOutlineBuild } from 'react-icons/ai';
+import { BookIcon, DatabaseIcon, BlocksIcon } from 'lucide-react';
 import { EntityTypes } from '@domain/app/model/entity';
 
 const icons = {
-  [EntityTypes.Note]: () => <AiOutlineBook />,
-  [EntityTypes.Memo]: () => <AiOutlineBuild />,
-  [EntityTypes.Material]: () => <AiOutlineDatabase />,
+  [EntityTypes.Note]: () => <BookIcon />,
+  [EntityTypes.Memo]: () => <BlocksIcon />,
+  [EntityTypes.Material]: () => <DatabaseIcon />,
 };
 
 export default function TypeIcon({ type }: { type: EntityTypes.Note | EntityTypes.Material | EntityTypes.Memo }) {

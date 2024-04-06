@@ -25,7 +25,7 @@ export default function SelectionTooltip({ reference, placement, buttons }: Prop
   return (
     <div className="z-50 flex bg-gray-800 " ref={refs.setFloating} style={floatingStyles}>
       {buttons.map(({ icon, onClick }, i) => (
-        <Button className="text-white" onClick={onClick} key={i}>
+        <Button onClick={onClick} key={i}>
           {icon}
         </Button>
       ))}

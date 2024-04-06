@@ -33,7 +33,8 @@ declare global {
 
 export default observer(function Emoji({ code, className, size, fallback }: EmojiProps) {
   return (
-    isEmojiReady.get() && (
+    isEmojiReady.get() &&
+    (code || fallback) && (
       <span className={clsx(className, 'inline-flex')}>
         {code ? <em-emoji size={size || '1em'} className={className} shortcodes={code} /> : fallback}
       </span>

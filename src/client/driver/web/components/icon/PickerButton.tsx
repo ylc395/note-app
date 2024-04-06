@@ -22,7 +22,7 @@ export default function PickerButton({ icon, onSelect }: Props) {
       ref={popoverRef}
       placement="bottom-start"
       reference={({ isOpen }) => (
-        <Button selected={isOpen} className="mr-1 h-8">
+        <Button>
           <Icon size="1.2em" code={icon} fallback={<MdOutlineAddReaction size="1.2em" className="text-gray-400" />} />
         </Button>
       )}

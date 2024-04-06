@@ -1,6 +1,7 @@
 import { mapValues, groupBy } from 'lodash-es';
 import type { Entity, EntityId, EntityTypes } from '@domain/model/entity.js';
 import type { EntityRepository } from '@domain/service/repository/EntityRepository.js';
+import assert from 'node:assert';
 
 import { tableName } from '../schema/entity.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
@@ -72,13 +73,10 @@ export default class SqliteEntityRepository extends BaseRepository implements En
       let parentId = descendant.parentId;
 
       while (parentId) {
-        ancestors.unshift(descendant);
         const parent = entitiesMap[parentId];
+        assert(parent);
 
-        if (!parent) {
-          break;
-        }
-
+        ancestors.unshift(parent);
         parentId = parent.parentId;
       }
 

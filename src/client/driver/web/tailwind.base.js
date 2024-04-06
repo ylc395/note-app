@@ -1,4 +1,4 @@
-import { isPlainObject, mapValues } from 'lodash-es';
+import { isPlainObject, mapKeys, mapValues } from 'lodash-es';
 import assert from 'node:assert';
 
 import { APP_NAME } from '../../../shared/domain/infra/constants';
@@ -10,7 +10,10 @@ function tokensToTheme(tokens, path = []) {
   }
 
   if (isPlainObject(tokens)) {
-    return mapValues(tokens, (value, key) => tokensToTheme(value, [...path, key]));
+    return mapKeys(
+      mapValues(tokens, (value, key) => tokensToTheme(value, [...path, key])),
+      (_, key) => (key === 'default' ? 'DEFAULT' : key),
+    );
   }
 
   assert.fail('invalid tokens');

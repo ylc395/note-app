@@ -18,10 +18,11 @@ container.registerInstance(uiToken, ui);
 container.registerInstance(rpcToken, window.IS_ELECTRON ? electronRpc : null);
 container.registerInstance(localStorageToken, webLocalStorage);
 
-const appEl = document.querySelector('#app');
+const appEl = document.querySelector('#app') as HTMLElement | null;
 assert(appEl);
 
 appEl.className = APP_NAME;
+appEl.style.userSelect = 'none';
 
 const root = createRoot(appEl);
 root.render(<App />);

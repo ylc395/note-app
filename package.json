@@ -85,7 +85,6 @@
     "assert": "^2.1.0",
     "better-sqlite3": "^9.2.2",
     "canvas": "^2.11.2",
-    "class-variance-authority": "^0.7.0",
     "clsx": "^1.2.1",
     "comlink": "^4.4.1",
     "comlink-adapters": "^0.0.3",

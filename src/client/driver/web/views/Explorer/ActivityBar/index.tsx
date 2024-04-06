@@ -1,58 +1,47 @@
-import { AiOutlineStar, AiOutlineNumber, AiOutlineDelete, AiOutlineSetting } from 'react-icons/ai';
+import { StarIcon, HashIcon, RecycleIcon, SettingsIcon } from 'lucide-react';
+import { container } from 'tsyringe';
 import { observer } from 'mobx-react-lite';
 
 import TypeIcon from '@web/components/icon/TypeIcon';
-import Button from './Button';
+import Button from '@web/components/Button';
 import { EntityTypes } from '@domain/app/model/entity';
 import Popover from '@web/components/Popover';
+import ExplorerManager from '@domain/app/model/ExplorerManager';
+
 import StarView from '../StarView';
 import TopicView from '../TopicView';
 
 export default observer(function ActivityBar() {
+  const { currentExplorerType, switchTo } = container.resolve(ExplorerManager);
+  const types = [EntityTypes.Material, EntityTypes.Note, EntityTypes.Memo] as const;
+
   return (
-    <nav className="flex h-full w-14 shrink-0 flex-col justify-between border-0 border-r border-solid border-gray-200 bg-gray-50 text-center">
+    <nav className="flex h-full shrink-0 flex-col justify-between border-0 border-r border-solid border-common bg-common-secondary text-center px-2">
       <div>
-        <div>
-          <Button explorerType={EntityTypes.Material}>
-            <TypeIcon type={EntityTypes.Material} />
-          </Button>
-          <Button explorerType={EntityTypes.Note}>
-            <TypeIcon type={EntityTypes.Note} />
-          </Button>
-          <Button explorerType={EntityTypes.Memo}>
-            <TypeIcon type={EntityTypes.Memo} />
-          </Button>
+        <div className="flex flex-col py-2">
+          {types.map((type) => (
+            <Button
+              onClick={() => switchTo(type)}
+              icon={<TypeIcon type={type} />}
+              key={type}
+              size="large"
+              className="mb-2"
+              variant={currentExplorerType === type ? 'primary' : 'ghost'}
+            />
+          ))}
         </div>
-        <div className="border-0 border-t border-solid border-gray-200">
-          <Popover
-            placement="right"
-            reference={() => (
-              <Button>
-                <AiOutlineStar />
-              </Button>
-            )}
-          >
+        <div className="flex flex-col py-2 border-0 border-t border-solid border-common">
+          <Popover placement="right" reference={() => <Button size="large" icon={<StarIcon />} />}>
             <StarView />
           </Popover>
-          <Popover
-            placement="right"
-            reference={() => (
-              <Button>
-                <AiOutlineNumber />
-              </Button>
-            )}
-          >
+          <Popover placement="right" reference={() => <Button size="large" icon={<HashIcon />} />}>
             <TopicView />
           </Popover>
         </div>
       </div>
-      <div className="mb-1">
-        <Button>
-          <AiOutlineDelete />
-        </Button>
-        <Button>
-          <AiOutlineSetting />
-        </Button>
+      <div className="mb-2 flex flex-col">
+        <Button size="large" icon={<RecycleIcon />} />
+        <Button size="large" icon={<SettingsIcon />} />
       </div>
     </nav>
   );

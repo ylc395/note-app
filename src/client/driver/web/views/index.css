@@ -1,16 +1,11 @@
 @import 'normalize.css';
 @import 'tailwindcss/tailwind.css';
 
-body {
-  margin: 0;
-}
-
-#app {
-  user-select: none;
-}
-
-:focus-visible {
-  outline: none;
+/* https://lucide.dev/guide/advanced/global-styling */
+.lucide {
+  height: var(--icon-size, 16px);
+  width: var(--icon-size, 16px);
+  stroke-width: 1.8px;
 }
 
 @layer utilities {

@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
-import { AiOutlinePlus, AiOutlineShrink, AiOutlineSortAscending } from 'react-icons/ai';
+import { PlusIcon, ShrinkIcon, SortDescIcon } from 'lucide-react';
 import { useMemo } from 'react';
 
 import NoteService from '@domain/app/service/NoteService';
@@ -36,11 +36,11 @@ export default observer(function Header() {
 
   return (
     <ExplorerHeader
-      left={[{ icon: <AiOutlinePlus />, onClick: createNote }]}
+      left={[{ icon: <PlusIcon />, onClick: createNote }]}
       right={[
-        { icon: <AiOutlineShrink />, onClick: collapseAll, disabled: !hasExpandedNode },
+        { icon: <ShrinkIcon />, onClick: collapseAll, disabled: !hasExpandedNode },
         {
-          icon: <AiOutlineSortAscending />,
+          icon: <SortDescIcon />,
           onMenuClick: (key) => setSortBy(key as SortBy),
           menuItems: [
             getMenuItem({ label: '按名称升序', key: SortBy.TitleAsc }),

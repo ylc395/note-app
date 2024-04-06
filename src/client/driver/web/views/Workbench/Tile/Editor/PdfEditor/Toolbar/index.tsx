@@ -14,7 +14,7 @@ export default (function Toolbar() {
   return (
     <div className="relative flex items-center justify-between p-2">
       <div className="flex">
-        <Button onClick={() => editor.togglePanel(Panels.Outline)} className="mr-4">
+        <Button onClick={() => editor.togglePanel(Panels.Outline)}>
           <AiOutlineOrderedList />
         </Button>
         <ScaleChanger />
