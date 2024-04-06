@@ -2,7 +2,7 @@ import { container } from 'tsyringe';
 import { AiOutlineEdit, AiOutlineSetting, AiOutlineCalendar } from 'react-icons/ai';
 
 import MemoExplorer from '@domain/app/model/memo/Explorer';
-import ExplorerHeader from '../common/ExplorerHeader';
+import ExplorerHeader from '../common/Header';
 
 // eslint-disable-next-line mobx/missing-observer
 export default (function Header() {

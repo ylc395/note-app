@@ -1,0 +1,31 @@
+import { observer } from 'mobx-react-lite';
+import { container } from 'tsyringe';
+import type { ReactNode } from 'react';
+
+import ExplorerManager, { type ExplorerTypes } from '@domain/app/model/ExplorerManager';
+import { EntityTypes } from '@domain/app/model/entity';
+import Resizable from '@web/components/Resizable';
+import Note from './Note';
+import Material from './Material';
+import Memo from './Memo';
+
+const explorerMap: Record<ExplorerTypes, () => ReactNode> = {
+  [EntityTypes.Note]: () => <Note />,
+  [EntityTypes.Material]: () => <Material />,
+  [EntityTypes.Memo]: () => <Memo />,
+};
+
+export default observer(function TreeView() {
+  const { currentExplorerType } = container.resolve(ExplorerManager);
+
+  return (
+    <Resizable
+      className="relative box-border flex h-full flex-col bg-gray-50 p-2"
+      initialWidth={300}
+      minWidth={250}
+      resizable="right"
+    >
+      {explorerMap[currentExplorerType]()}
+    </Resizable>
+  );
+});

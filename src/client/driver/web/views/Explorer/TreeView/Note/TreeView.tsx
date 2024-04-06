@@ -7,7 +7,7 @@ import { Workbench } from '@domain/app/model/workbench';
 import NoteService from '@domain/app/service/NoteService';
 
 import Button from '@web/components/Button';
-import TreeView from '../common/TreeView';
+import TreeView from '../common/Tree';
 import { observer } from 'mobx-react-lite';
 
 export default observer(function NoteTreeView() {

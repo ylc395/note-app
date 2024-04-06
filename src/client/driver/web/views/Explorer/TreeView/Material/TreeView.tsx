@@ -1,16 +1,17 @@
 import { container } from 'tsyringe';
-import { AiOutlineFolder, AiOutlineFolderOpen } from 'react-icons/ai';
+import { PlusIcon, FolderOpenIcon, FolderClosedIcon } from 'lucide-react';
 import { observer } from 'mobx-react-lite';
 
 import MimeTypeIcon from '@web/components/icon/MimeTypeIcon';
 import { Workbench } from '@domain/app/model/workbench';
-import { isEntityMaterial, type MaterialVO } from '@shared/domain/model/material';
+import { isEntityMaterial, MaterialTypes, type MaterialVO } from '@shared/domain/model/material';
 import { EntityTypes } from '@shared/domain/model/entity';
 import type TreeNode from '@domain/common/model/abstract/TreeNode';
+import MaterialService from '@domain/app/service/MaterialService';
+import MenuButton from '@web/components/MenuButton';
 import MaterialExplorer from '@domain/app/model/material/Explorer';
 
-import TreeView from '../common/TreeView';
-import MaterialService from '@domain/app/service/MaterialService';
+import TreeView from '../common/Tree';
 
 const defaultIcon = (node: TreeNode<MaterialVO>) => {
   if (node.entity && isEntityMaterial(node.entity)) {
@@ -18,15 +19,16 @@ const defaultIcon = (node: TreeNode<MaterialVO>) => {
   }
 
   return node.isExpanded ? (
-    <AiOutlineFolderOpen size="1.3em" className="mr-1" />
+    <FolderOpenIcon size="1.3em" className="mr-1" />
   ) : (
-    <AiOutlineFolder size="1.3em" className="mr-1" />
+    <FolderClosedIcon size="1.3em" className="mr-1" />
   );
 };
 
 export default observer(function MaterialTreeView() {
   const {
     move: { moveByItems: moveMaterialsByItems },
+    creation: { create },
   } = container.resolve(MaterialService);
   const { openEntity } = container.resolve(Workbench);
   const {
@@ -58,7 +60,18 @@ export default observer(function MaterialTreeView() {
       tree={tree}
       onClick={handleClick}
       defaultIcon={defaultIcon}
-      nodeOperation={() => null}
+      nodeOperation={(node) => (
+        <MenuButton
+          size="small"
+          variant="primary"
+          icon={<PlusIcon />}
+          onMenuClick={(key) => create(node.id, key as MaterialTypes)}
+          menuItems={[
+            { label: '创建目录', key: MaterialTypes.Directory },
+            { label: '创建素材', key: MaterialTypes.Entity },
+          ]}
+        />
+      )}
     />
   );
 });

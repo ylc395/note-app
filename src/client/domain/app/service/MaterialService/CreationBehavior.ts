@@ -9,10 +9,10 @@ import { isEntityMaterial, type MaterialVO, type NewMaterialDTO } from '@shared/
 import type { FileDTO, FileVO } from '@shared/domain/model/file';
 import { Workbench } from '@domain/app/model/workbench';
 import { token as rpcToken } from '@domain/common/infra/rpc';
-import type { EntityMaterialVO } from '@shared/domain/model/material';
+import { type EntityMaterialVO, MaterialTypes } from '@shared/domain/model/material';
 import { fileDTOSchema } from '@shared/domain/model/file';
 import { getHash } from '@shared/utils/file';
-import { EntityParentId, EntityTypes } from '../../model/entity';
+import { EntityTypes } from '../../model/entity';
 
 export default class CreationBehavior {
   private readonly remote = container.resolve(rpcToken);
@@ -26,24 +26,34 @@ export default class CreationBehavior {
   @observable.ref
   public form?: ReturnType<(typeof CreationBehavior)['createForm']>;
 
-  private parentId?: EntityParentId;
+  private parentId?: MaterialVO['parentId'];
 
-  @action.bound
-  public startCreating(parentId: EntityParentId) {
+  private startCreating(parentId: MaterialVO['parentId']) {
     this.form = CreationBehavior.createForm();
     this.parentId = parentId;
   }
+
+  private async createDirectory(parentId: MaterialVO['parentId']) {
+    const material = await this.createMaterial({ parentId });
+    this.explorer.rename.start(material.id);
+  }
+
+  public readonly create = (parentId: MaterialVO['parentId'], type: MaterialTypes) => {
+    switch (type) {
+      case MaterialTypes.Directory:
+        return this.createDirectory(parentId);
+      case MaterialTypes.Entity:
+        return this.startCreating(parentId);
+      default:
+        break;
+    }
+  };
 
   @action.bound
   public stopCreating() {
     this.form = undefined;
     this.parentId = undefined;
   }
-
-  public readonly createDirectory = async (parentId: MaterialVO['parentId']) => {
-    const material = await this.createMaterial({ parentId });
-    this.explorer.rename.start(material.id);
-  };
 
   private async createMaterial(dto?: NewMaterialDTO, file?: FileDTO) {
     let fileId: FileVO['id'] | undefined;

@@ -54,8 +54,10 @@ export default class DndBehavior<T extends HierarchyEntity> {
 
   @computed
   public get selectedNodesAsTree() {
-    const tree = new (this.options.explorer.tree.constructor as { new (): Tree })();
-    tree.updateTree(this.options.explorer.tree.selectedNodes.map(({ entity }) => ({ ...entity!, parentId: null })));
+    const originalTree = this.options.explorer.tree;
+
+    const tree = new (originalTree.constructor as { new (...args: ConstructorParameters<typeof Tree<T>>): Tree<T> })();
+    tree.updateTree(originalTree.selectedNodes.map(({ entity }) => ({ ...entity!, parentId: null })));
 
     runInAction(() => {
       tree.root.isLeaf = true;

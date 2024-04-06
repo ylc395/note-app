@@ -8,7 +8,7 @@ import NoteExplorer from '@domain/app/model/note/Explorer';
 import { useDragItem } from '@web/components/dnd/hooks';
 import { SortBy } from '@domain/app/model/abstract/Explorer/SortBehavior';
 
-import ExplorerHeader from '../common/ExplorerHeader';
+import ExplorerHeader from '../common/Header';
 
 export default observer(function Header() {
   const {
@@ -41,17 +41,19 @@ export default observer(function Header() {
         { icon: <ShrinkIcon />, onClick: collapseAll, disabled: !hasExpandedNode },
         {
           icon: <SortDescIcon />,
-          onMenuClick: (key) => setSortBy(key as SortBy),
-          menuItems: [
-            getMenuItem({ label: '按名称升序', key: SortBy.TitleAsc }),
-            getMenuItem({ label: '按名称降序', key: SortBy.TitleDesc }),
-            { type: 'separator' },
-            getMenuItem({ label: '按创建日期升序', key: SortBy.CreatedAtAsc }),
-            getMenuItem({ label: '按创建日期降序', key: SortBy.CreatedAtDesc }),
-            { type: 'separator' },
-            getMenuItem({ label: '按修改时间升序', key: SortBy.UpdatedAtAsc }),
-            getMenuItem({ label: '按修改时间降序', key: SortBy.UpdatedAtDesc }),
-          ],
+          menuOptions: {
+            onClick: (key) => setSortBy(key as SortBy),
+            items: [
+              getMenuItem({ label: '按名称升序', key: SortBy.TitleAsc }),
+              getMenuItem({ label: '按名称降序', key: SortBy.TitleDesc }),
+              { type: 'separator' },
+              getMenuItem({ label: '按创建日期升序', key: SortBy.CreatedAtAsc }),
+              getMenuItem({ label: '按创建日期降序', key: SortBy.CreatedAtDesc }),
+              { type: 'separator' },
+              getMenuItem({ label: '按修改时间升序', key: SortBy.UpdatedAtAsc }),
+              getMenuItem({ label: '按修改时间降序', key: SortBy.UpdatedAtDesc }),
+            ],
+          },
         },
       ]}
       onDrop={onDrop}

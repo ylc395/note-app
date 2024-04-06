@@ -47,9 +47,9 @@ export default class NoteExplorer extends Explorer<NoteVO> {
       },
       { type: 'separator' } as const,
       { label: '移动至...', key: 'move' },
-      { label: '重命名', key: 'rename' },
+      !isMultiple && { label: '重命名', key: 'rename' },
       !isMultiple && { label: '制作副本', key: 'duplicate' },
-      !isMultiple && node.entity && { label: node.entity.isStar ? '取消收藏' : '收藏', key: 'star' },
+      !isMultiple && { label: node.entity.isStar ? '取消收藏' : '收藏', key: 'star' },
       { type: 'separator' } as const,
       { label: '删除', key: 'delete' },
     ]);

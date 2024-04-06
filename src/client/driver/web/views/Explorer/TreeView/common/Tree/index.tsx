@@ -39,7 +39,7 @@ export default function TreeView<T extends HierarchyEntity>({
   defaultIcon,
 }: Props<T>) {
   function handleClick(node: TreeNode<T>, isMultiple: boolean) {
-    node.toggleSelect({ isMultiple, value: true });
+    node.toggleSelect({ isMultiple });
     onClick?.(node, isMultiple);
   }
 
@@ -53,7 +53,7 @@ export default function TreeView<T extends HierarchyEntity>({
       <Tree
         onContextmenu={handleContextmenu}
         onClick={handleClick}
-        className="grow overflow-auto"
+        className="grow overflow-auto pr-2 -mr-2 custom-scrollbar"
         nodeClassName={(node) =>
           clsx(
             'group relative cursor-pointer py-1 rounded-md text-common-secondary text-sm hover:bg-common-secondary-highlight',
@@ -61,7 +61,7 @@ export default function TreeView<T extends HierarchyEntity>({
             node.isDisabled && 'cursor-not-allowed opacity-60',
           )
         }
-        caretClassName="mx-1 w-3 h-3 opacity-80"
+        iconClassName="ml-1 w-[10px] h-[10px] opacity-80"
         tree={tree}
         multiple
         renderNode={(node, originalNodeView) => (
@@ -77,7 +77,7 @@ export default function TreeView<T extends HierarchyEntity>({
             defaultIcon={defaultIcon}
             node={node}
           >
-            {editingNodeId !== node.id && nodeOperation(node)}
+            {!node.isDisabled && editingNodeId !== node.id && nodeOperation(node)}
           </NodeTitle>
         )}
       />

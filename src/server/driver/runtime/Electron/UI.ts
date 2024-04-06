@@ -27,8 +27,8 @@ export default class electronUI implements Partial<UI> {
     const w = BrowserWindow.fromWebContents(this.ipcEvent.sender);
     assert(w);
 
-    return new Promise<string | null>((resolve) => {
-      let key: string;
+    return new Promise<string | number | null>((resolve) => {
+      let key: string | number;
 
       const menu = Menu.buildFromTemplate(
         menuItems.map(function mapping(item): ElectronMenuItem {

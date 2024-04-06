@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import { type MouseEventHandler, useEffect, useState } from 'react';
-import { TriangleIcon } from 'lucide-react';
+import { TriangleIcon, LoaderIcon } from 'lucide-react';
 import clsx from 'clsx';
 
 import type { HierarchyEntity } from '@shared/domain/model/entity';
@@ -15,8 +15,7 @@ const TreeNode = observer(function <T extends HierarchyEntity>({ node, level, ..
     tree,
     nodeClassName,
     titleClassName,
-    caretClassName,
-    loadingIcon,
+    iconClassName,
     multiple,
     onContextmenu,
     onClick,
@@ -25,12 +24,11 @@ const TreeNode = observer(function <T extends HierarchyEntity>({ node, level, ..
   } = ctx;
 
   const [rootEl, setRootEl] = useState<HTMLElement | null>(null);
-  const useLoadingIcon = node.isLoading && loadingIcon;
 
   const expand: MouseEventHandler = (e) => {
     e.stopPropagation();
 
-    if (useLoadingIcon || node.id === tree.root.id) {
+    if (node.id === tree.root.id) {
       return;
     }
 
@@ -63,20 +61,26 @@ const TreeNode = observer(function <T extends HierarchyEntity>({ node, level, ..
       onContextMenu={handleContextmenu}
       className={typeof nodeClassName === 'function' ? nodeClassName(node) : nodeClassName}
     >
-      <div className={clsx('flex items-center', node.isLeaf && 'pl-4')}>
-        {!node.isLeaf &&
-          (useLoadingIcon ? (
-            loadingIcon
-          ) : (
-            <TriangleIcon
-              className={clsx(
-                typeof caretClassName === 'function' ? caretClassName(node) : caretClassName,
-                'fill-current shrink-0',
-                node.isExpanded ? 'rotate-180' : 'rotate-90',
-              )}
-              onClick={expand}
-            />
-          ))}
+      <div className="flex items-center">
+        {node.isLoading ? (
+          <LoaderIcon
+            className={clsx(
+              typeof iconClassName === 'function' ? iconClassName(node) : iconClassName,
+              node.isLeaf && 'invisible',
+              'shrink-0',
+            )}
+          />
+        ) : (
+          <TriangleIcon
+            className={clsx(
+              typeof iconClassName === 'function' ? iconClassName(node) : iconClassName,
+              'fill-current shrink-0',
+              node.isLeaf && 'invisible',
+              node.isExpanded ? 'rotate-180' : 'rotate-90',
+            )}
+            onClick={expand}
+          />
+        )}
         {renderTitle ? (
           renderTitle(node)
         ) : (

@@ -41,19 +41,21 @@ export default observer(function NodeTitle<T extends HierarchyEntity>({
   }, [isEditing]);
 
   return (
-    <span className="flex min-w-0 w-full justify-between items-center">
-      <Icon code={node.icon} fallback={defaultIcon?.(node)} />
-      {isEditing ? (
-        <input
-          className="h-4 outline-none"
-          ref={inputRef}
-          onBlur={submit}
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-        />
-      ) : (
-        <span className={clsx('whitespace-nowrap min-w-0')}>{title}</span>
-      )}
+    <span className="ml-1 flex min-w-0 w-full justify-between items-center">
+      <span className="flex items-center min-w-0">
+        <Icon code={node.icon} fallback={defaultIcon?.(node)} />
+        {isEditing ? (
+          <input
+            className="h-4 outline-none"
+            ref={inputRef}
+            onBlur={submit}
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+          />
+        ) : (
+          <span className={clsx('whitespace-nowrap overflow-hidden text-ellipsis')}>{title}</span>
+        )}
+      </span>
       {children && <span className="hidden h-full items-center group-hover:flex">{children}</span>}
     </span>
   );

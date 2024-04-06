@@ -9,6 +9,7 @@ export default abstract class TreeNode<T extends HierarchyEntity = HierarchyEnti
     this.entity = entity || null;
     this.tree = tree;
 
+    // this means it's a root node
     if (!entity) {
       this.isLeaf = false;
       this.isExpanded = true;

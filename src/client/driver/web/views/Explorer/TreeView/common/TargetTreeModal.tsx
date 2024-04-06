@@ -3,7 +3,7 @@ import { observer } from 'mobx-react-lite';
 
 import Modal from '@web/components/Modal';
 import Tree from '@web/components/Tree';
-import NodeTitle from './TreeView/NodeTitle';
+import NodeTitle from './Tree/NodeTitle';
 import type MoveBehavior from '@domain/app/service/common/MoveBehavior';
 import type { HierarchyEntity } from '@shared/domain/model/entity';
 
@@ -36,7 +36,7 @@ export default observer(function TargetTreeModal<T extends HierarchyEntity>({
             )
           }
           renderTitle={(node) => <NodeTitle node={node} />}
-          caretClassName="text-gray-500"
+          iconClassName="text-gray-500"
           tree={targetTree}
         />
       )}

@@ -1,10 +1,4 @@
-import {
-  AiOutlineFilePdf,
-  AiOutlineAudio,
-  AiOutlineVideoCamera,
-  AiOutlineFileImage,
-  AiOutlineFile,
-} from 'react-icons/ai';
+import { BookOpenIcon, FileAudioIcon, FileVideoIcon, FileImageIcon, FileIcon } from 'lucide-react';
 import { mimeTypes } from '@shared/domain/model/file';
 
 export default function MimeTypeIcon({
@@ -17,20 +11,20 @@ export default function MimeTypeIcon({
   className?: string;
 }) {
   if (mimeType.includes('audio')) {
-    return <AiOutlineAudio className={className} size={size} />;
+    return <FileAudioIcon className={className} size={size} />;
   }
 
   if (mimeType === mimeTypes.PDF) {
-    return <AiOutlineFilePdf className={className} size={size} />;
+    return <BookOpenIcon className={className} size={size} />;
   }
 
   if (mimeType.includes('video')) {
-    return <AiOutlineVideoCamera className={className} size={size} />;
+    return <FileVideoIcon className={className} size={size} />;
   }
 
   if (mimeType.includes('image')) {
-    return <AiOutlineFileImage className={className} size={size} />;
+    return <FileImageIcon className={className} size={size} />;
   }
 
-  return <AiOutlineFile className={className} size={size} />;
+  return <FileIcon className={className} size={size} />;
 }

@@ -19,7 +19,7 @@ export default function Select({ className, value, options, onChange }: Props) {
     const { bottom, left } = rootRef.current.getBoundingClientRect();
     const key = await ui.getActionFromMenu(options, { x: left, y: bottom + 6 });
 
-    if (key !== null) {
+    if (typeof key === 'string') {
       onChange(key);
     }
   };

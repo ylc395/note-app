@@ -28,9 +28,10 @@ export default forwardRef<HTMLButtonElement, Props>(function Button(
       disabled={disabled}
       onClick={handleClick}
       className={clsx(
-        'inline-flex justify-center items-center cursor-pointer border-0 p-0 ',
+        'inline-flex justify-center items-center border-0 p-0 ',
         className,
         disabled && 'opacity-50',
+        disabled ? 'cursor-not-allowed' : 'cursor-pointer',
         size === 'small' && 'h-4 [--icon-size:14px]',
         size === 'small' && isIconButton && 'w-4 rounded',
         size === 'medium' && 'h-8 [--icon-size:20px] rounded-md',

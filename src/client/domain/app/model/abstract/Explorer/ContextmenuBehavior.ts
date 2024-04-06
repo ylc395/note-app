@@ -1,4 +1,5 @@
 import { container } from 'tsyringe';
+import assert from 'assert';
 
 import { MenuItem, token as uiToken } from '@shared/domain/infra/ui';
 import { TileSplitDirections, Workbench } from '../../workbench';
@@ -20,6 +21,7 @@ export default class ContextmenuBehavior<T extends HierarchyEntity> {
 
   public readonly use = async () => {
     const action = await this.ui.getActionFromMenu(this.options.getItems());
+    assert(typeof action !== 'number', 'contextmenu item only support string');
 
     if (action) {
       this.handleAction(action);

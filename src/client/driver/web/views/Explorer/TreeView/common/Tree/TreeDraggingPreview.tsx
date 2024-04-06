@@ -1,6 +1,5 @@
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
-import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import assert from 'assert';
 
@@ -21,17 +20,18 @@ export default observer(function TreeView() {
 
   return (
     item instanceof TreeNode &&
-    (createPortal(
+    createPortal(
       <div className={APP_NAME}>
         <Tree
-          className="pointer-events-none fixed max-w-[300px] opacity-60"
-          nodeClassName="py-1"
+          className="rounded-md bg-common-secondary-highlight pointer-events-none fixed max-w-[300px] opacity-60 text-sm"
+          iconClassName="ml-1 w-3 h-3 opacity-80"
+          nodeClassName="py-1 opacity-60"
           style={{ left: position?.x, top: position?.y }}
           tree={currentExplorer.dnd.selectedNodesAsTree}
           renderTitle={(node) => <NodeTitle node={node}></NodeTitle>}
         />
       </div>,
       document.body,
-    ) as ReactNode)
+    )
   );
 });

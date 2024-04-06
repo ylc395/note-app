@@ -9,33 +9,43 @@
 }
 
 @layer utilities {
-  .scrollbar-stable {
+  .all-initial {
+    all: initial;
+  }
+}
+
+@layer components {
+  .custom-scrollbar {
     scrollbar-gutter: stable;
+    scrollbar-width: none;
   }
 
-  .scrollbar-thin {
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #bfbfbfa8;
+    border-radius: 4px;
+  }
+
+  @supports not (scrollbar-gutter: stable) {
+    .custom-scrollbar {
+      padding-right: 5px;
+    }
+  }
+
+  @supports not (scrollbar-width: none) {
+    .custom-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  .custom-scrollbar:hover {
     scrollbar-width: thin;
   }
 
-  .scrollbar-thin::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
-  }
-
-  .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: #bfbfbf;
-  }
-
-  .scrollbar-hidden {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-
-  .scrollbar-hidden::-webkit-scrollbar {
-    display: none;
-  }
-
-  .all-initial {
-    all: initial;
+  @supports not (scrollbar-width: thin) {
+    .custom-scrollbar:hover::-webkit-scrollbar {
+      display: initial;
+      width: 5px;
+      height: 5px;
+    }
   }
 }
