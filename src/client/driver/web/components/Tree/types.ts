@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from 'react';
+import type { CSSProperties, MouseEvent, ReactNode } from 'react';
 
 import type { HierarchyEntity } from '@shared/domain/model/entity';
 import type TreeModel from '@domain/common/model/abstract/Tree';
@@ -10,7 +10,7 @@ interface TreeBaseProps<T extends HierarchyEntity> {
   iconClassName?: string | ((node: TreeNode<T>) => string);
   titleClassName?: string | ((node: TreeNode<T>) => string);
   multiple?: boolean;
-  onContextmenu?: (node: TreeNode<T>) => void;
+  onContextmenu?: (node: TreeNode<T>, e: MouseEvent) => void;
   onClick?: (node: TreeNode<T>, isMultiple: boolean) => void;
   renderTitle?: (node: TreeNode<T>) => ReactNode;
   renderNode?: (node: TreeNode<T>, originalNodeView: ReactNode) => ReactNode;

@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
+import { useBoolean } from 'ahooks';
 import clsx from 'clsx';
 
 import type TreeModel from '@domain/common/model/abstract/Tree';
@@ -9,10 +10,12 @@ import Tree from '@web/components/Tree';
 import NodeTitle, { type Props as NodeTitleProps } from './NodeTitle';
 import DndTreeNode, { type Props as DndTreeNodeProps } from './DndTreeNode';
 import TreeDraggingPreview from './TreeDraggingPreview';
+import Menu, { type Props as MenuProps } from '@web/components/Menu';
+import type { MenuItem } from '@shared/domain/infra/ui';
 
 interface Props<T extends HierarchyEntity> {
   tree: TreeModel<T>;
-  onContextmenu: (node: TreeNode<T>) => void;
+  getContextmenuItems: (node: TreeNode<T>) => MenuItem[];
   nodeOperation: (node: TreeNode<T>) => ReactNode;
   onClick: (node: TreeNode<T>, isMultiple: boolean) => void;
   editingNodeId?: string;
@@ -22,15 +25,17 @@ interface Props<T extends HierarchyEntity> {
   onDrop: DndTreeNodeProps<T>['onDrop'];
   onDragStart: DndTreeNodeProps<T>['onDragStart'];
   onDragStop: DndTreeNodeProps<T>['onDragStop'];
+  onContextmenuSelect: MenuProps['onSelect'];
 }
 
 // eslint-disable-next-line mobx/missing-observer
 export default function TreeView<T extends HierarchyEntity>({
   tree,
+  getContextmenuItems,
+  onContextmenuSelect,
   editingNodeId,
   onClick,
   onDragStart,
-  onContextmenu,
   nodeOperation,
   onDrop,
   onEditCancel,
@@ -38,6 +43,9 @@ export default function TreeView<T extends HierarchyEntity>({
   onDragStop,
   defaultIcon,
 }: Props<T>) {
+  const [isContextmenuOpen, { setTrue: openContextmenu, setFalse: closeContextmenu }] = useBoolean(false);
+  const [contextmenuItems, setContextmenuItems] = useState<MenuItem[]>();
+
   function handleClick(node: TreeNode<T>, isMultiple: boolean) {
     node.toggleSelect({ isMultiple });
     onClick?.(node, isMultiple);
@@ -45,7 +53,8 @@ export default function TreeView<T extends HierarchyEntity>({
 
   function handleContextmenu(node: TreeNode<T>) {
     node.toggleSelect({ value: true });
-    onContextmenu?.(node);
+    setContextmenuItems(getContextmenuItems(node));
+    openContextmenu();
   }
 
   return (
@@ -82,6 +91,13 @@ export default function TreeView<T extends HierarchyEntity>({
         )}
       />
       <TreeDraggingPreview />
+      <Menu
+        native
+        items={contextmenuItems || []}
+        isOpen={isContextmenuOpen}
+        onSelect={onContextmenuSelect}
+        onClose={closeContextmenu}
+      />
     </>
   );
 }

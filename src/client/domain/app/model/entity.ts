@@ -6,11 +6,6 @@ export interface EntityLocator extends CommonEntityLocator {
   mimeType?: string;
 }
 
-export interface ActionEvent {
-  id: EntityId[];
-  action: string;
-}
-
 export type UpdateEvent<T = unknown> = {
   id: EntityId;
   explorerUpdated?: boolean;

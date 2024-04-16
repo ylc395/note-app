@@ -42,7 +42,7 @@ export default observer(function Header() {
         {
           icon: <SortDescIcon />,
           menuOptions: {
-            onClick: (key) => setSortBy(key as SortBy),
+            onSelect: (key) => setSortBy(key as SortBy),
             items: [
               getMenuItem({ label: '按名称升序', key: SortBy.TitleAsc }),
               getMenuItem({ label: '按名称降序', key: SortBy.TitleDesc }),

@@ -8,7 +8,6 @@ import type { EntityId, HierarchyEntity, Path, UpdateEvent } from '@domain/app/m
 import { token as localStorage } from '@domain/app/infra/localStorage';
 import { token as rpcToken } from '@domain/common/infra/rpc';
 import type RenameBehavior from './RenameBehavior';
-import type ContextmenuBehavior from './ContextmenuBehavior';
 import DndBehavior from './DndBehavior';
 import SortBehavior from './SortBehavior';
 
@@ -26,10 +25,8 @@ export default abstract class Explorer<T extends HierarchyEntity = HierarchyEnti
 
   private readonly localStorage = container.resolve(localStorage);
   protected readonly remote = container.resolve(rpcToken);
-  protected readonly workbench = container.resolve(Workbench);
   public abstract readonly rename: RenameBehavior;
   public readonly sorter = new SortBehavior();
-  public abstract readonly contextmenu: ContextmenuBehavior<T>;
   public readonly dnd = new DndBehavior({ explorer: this });
   public abstract readonly tree: Tree<T>;
   public get entityType() {

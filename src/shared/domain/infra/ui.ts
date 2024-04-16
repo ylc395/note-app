@@ -1,10 +1,12 @@
 import type { InjectionToken } from 'tsyringe';
 import { object, string, array, unknown as zodUnknown, type infer as ZodInfer } from 'zod';
 
+export type MenuItemKey = string | number;
+
 export type MenuItem =
   | {
       label: string;
-      key?: string | number;
+      key?: MenuItemKey;
       disabled?: boolean;
       checked?: boolean;
       submenu?: MenuItem[];
@@ -12,7 +14,7 @@ export type MenuItem =
   | { type: 'separator' };
 
 export interface UI {
-  getActionFromMenu: (items: MenuItem[], pos?: { x: number; y: number }) => Promise<string | number | null>;
+  getActionFromMenu?: (items: MenuItem[], pos?: { x: number; y: number }) => Promise<string | number | null>;
   openNewWindow: (url: string) => Promise<void> | void;
 }
 

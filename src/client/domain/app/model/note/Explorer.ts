@@ -1,12 +1,9 @@
 import { singleton } from 'tsyringe';
-import { compact } from 'lodash-es';
 
 import NoteTree from '@domain/common/model/note/Tree';
 import type { NoteVO } from '@shared/domain/model/note';
 import Explorer, { RenameBehavior } from '@domain/app/model/abstract/Explorer';
 import { eventBus, Events as NoteEvents } from './eventBus';
-import ContextmenuBehavior from '../abstract/Explorer/ContextmenuBehavior';
-import assert from 'assert';
 
 @singleton()
 export default class NoteExplorer extends Explorer<NoteVO> {
@@ -25,40 +22,5 @@ export default class NoteExplorer extends Explorer<NoteVO> {
     eventBus.emit(NoteEvents.Updated, { id, trigger: this.rename, title: name });
   };
 
-  private readonly getContextmenuItems = () => {
-    const isMultiple = this.tree.selectedNodes.length > 1;
-    const node = this.tree.getSelectedNode();
-    const canOpenInNewTab = !this.workbench.currentTile?.findByEntity(node.entityLocator);
-
-    assert(node.entity);
-
-    return compact([
-      isMultiple && { label: `共${this.tree.selectedNodes.length}项`, disabled: true },
-      isMultiple && ({ type: 'separator' } as const),
-      canOpenInNewTab && { label: '新标签页打开', key: 'openInNewTab' },
-      this.workbench.currentTile && {
-        label: '打开至...',
-        submenu: [
-          { label: '左边', key: 'openToLeft' },
-          { label: '右边', key: 'openToRight' },
-          { label: '上边', key: 'openToTop' },
-          { label: '下边', key: 'openToBottom' },
-        ],
-      },
-      { type: 'separator' } as const,
-      { label: '移动至...', key: 'move' },
-      !isMultiple && { label: '重命名', key: 'rename' },
-      !isMultiple && { label: '制作副本', key: 'duplicate' },
-      !isMultiple && { label: node.entity.isStar ? '取消收藏' : '收藏', key: 'star' },
-      { type: 'separator' } as const,
-      { label: '删除', key: 'delete' },
-    ]);
-  };
-
   public readonly rename = new RenameBehavior({ onSubmit: this.submitRename });
-  public readonly contextmenu: ContextmenuBehavior<NoteVO> = new ContextmenuBehavior({
-    explorer: this,
-    getItems: this.getContextmenuItems,
-    handleAction: (e) => eventBus.emit(NoteEvents.Action, e),
-  });
 }

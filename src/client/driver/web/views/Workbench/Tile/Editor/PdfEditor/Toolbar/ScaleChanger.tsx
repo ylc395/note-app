@@ -40,7 +40,7 @@ export default observer(function ScaleChanger() {
       </Button>
       {viewer && (
         <Select
-          onChange={(v) => viewer.setScale(v)}
+          onChange={(v) => viewer.setScale(String(v))}
           className="w-24 text-sm"
           value={String(viewer.scale.text)}
           options={scaleOptions}

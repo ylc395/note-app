@@ -12,6 +12,7 @@ import MenuButton from '@web/components/MenuButton';
 import MaterialExplorer from '@domain/app/model/material/Explorer';
 
 import TreeView from '../common/Tree';
+import useContextmenu from './useContextmenu';
 
 const defaultIcon = (node: TreeNode<MaterialVO>) => {
   if (node.entity && isEntityMaterial(node.entity)) {
@@ -33,7 +34,6 @@ export default observer(function MaterialTreeView() {
   const { openEntity } = container.resolve(Workbench);
   const {
     tree,
-    contextmenu: { use: useContextmenu },
     dnd: { updateTreeForDropping, reset: resetTree },
     rename: { id: editingId, submit: submitEditing, cancel: cancelEditing },
   } = container.resolve(MaterialExplorer);
@@ -50,10 +50,10 @@ export default observer(function MaterialTreeView() {
 
   return (
     <TreeView
+      {...useContextmenu()}
       editingNodeId={editingId}
       onEditEnd={submitEditing}
       onEditCancel={cancelEditing}
-      onContextmenu={useContextmenu}
       onDragStop={resetTree}
       onDragStart={updateTreeForDropping}
       onDrop={(item, node) => moveMaterialsByItems(node.id, item)}
@@ -62,10 +62,12 @@ export default observer(function MaterialTreeView() {
       defaultIcon={defaultIcon}
       nodeOperation={(node) => (
         <MenuButton
-          size="small"
-          variant="primary"
-          icon={<PlusIcon />}
-          onMenuClick={(key) => create(node.id, key as MaterialTypes)}
+          button={{
+            size: 'small',
+            variant: 'primary',
+            icon: <PlusIcon />,
+          }}
+          onSelect={(key) => create(node.id, key as MaterialTypes)}
           menuItems={[
             { label: '创建目录', key: MaterialTypes.Directory },
             { label: '创建素材', key: MaterialTypes.Entity },

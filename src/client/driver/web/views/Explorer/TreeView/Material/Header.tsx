@@ -44,7 +44,7 @@ export default observer(function Header() {
               { label: '创建目录', key: MaterialTypes.Directory },
               { label: '创建素材', key: MaterialTypes.Entity },
             ],
-            onClick: (key) => create(null, key as MaterialTypes),
+            onSelect: (key) => create(null, key as MaterialTypes),
           },
         },
       ]}
@@ -53,7 +53,7 @@ export default observer(function Header() {
         {
           icon: <SortDescIcon />,
           menuOptions: {
-            onClick: (key) => setSortBy(key as SortBy),
+            onSelect: (key) => setSortBy(key as SortBy),
             items: [
               getMenuItem({ label: '按名称升序', key: SortBy.TitleAsc }),
               getMenuItem({ label: '按名称降序', key: SortBy.TitleDesc }),

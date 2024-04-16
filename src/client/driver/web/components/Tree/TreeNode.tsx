@@ -50,7 +50,7 @@ const TreeNode = observer(function <T extends HierarchyEntity>({ node, level, ..
       return;
     }
 
-    onContextmenu(node);
+    onContextmenu(node, e);
   };
 
   const treeNodeView = (
