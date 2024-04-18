@@ -16,7 +16,7 @@ export default observer(function ActivityBar() {
   const types = [EntityTypes.Material, EntityTypes.Note, EntityTypes.Memo] as const;
 
   return (
-    <nav className="flex h-full shrink-0 flex-col justify-between border-0 border-r border-solid border-common bg-common-secondary text-center px-2">
+    <nav className="flex h-full shrink-0 flex-col justify-between border-0 border-r border-solid border-layout bg-layout text-center px-2">
       <div>
         <div className="flex flex-col py-2">
           {types.map((type) => (
@@ -30,7 +30,7 @@ export default observer(function ActivityBar() {
             />
           ))}
         </div>
-        <div className="flex flex-col py-2 border-0 border-t border-solid border-common">
+        <div className="flex flex-col py-2 border-0 border-t border-solid border-layout">
           <Popover placement="right" reference={() => <Button size="large" icon={<StarIcon />} />}>
             <StarView />
           </Popover>

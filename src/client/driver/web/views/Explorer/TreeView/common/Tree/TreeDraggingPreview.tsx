@@ -23,7 +23,7 @@ export default observer(function TreeView() {
     createPortal(
       <div className={APP_NAME}>
         <Tree
-          className="rounded-md bg-common-secondary-highlight pointer-events-none fixed max-w-[300px] opacity-60 text-sm"
+          className="rounded-md bg-layout-highlight pointer-events-none fixed max-w-[300px] opacity-60 text-sm"
           iconClassName="ml-1 w-3 h-3 opacity-80"
           nodeClassName="py-1 opacity-60"
           style={{ left: position?.x, top: position?.y }}

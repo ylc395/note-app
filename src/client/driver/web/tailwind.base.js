@@ -1,22 +1,38 @@
-import { isPlainObject, mapKeys, mapValues } from 'lodash-es';
-import assert from 'node:assert';
+import assert from 'assert';
+import { last } from 'lodash-es';
 
 import { APP_NAME } from '../../../shared/domain/infra/constants';
 import { tokens, tokenPathToCSSVariableName } from './designToken';
 
-function tokensToTheme(tokens, path = []) {
-  if (typeof tokens === 'string') {
-    return `var(${tokenPathToCSSVariableName(path)})`;
+function tokensToTheme(tokens) {
+  const theme = {};
+
+  function traverse(tokens, path = []) {
+    if (typeof tokens === 'string') {
+      const cssProperty = last(path);
+
+      if (!theme[cssProperty]) {
+        theme[cssProperty] = {};
+      }
+
+      const themePath = path
+        .slice(0, -1)
+        .filter((key) => key !== 'default')
+        .join('-');
+
+      theme[cssProperty][themePath] = `var(${tokenPathToCSSVariableName(path)})`;
+    } else if (typeof tokens === 'object') {
+      for (const key of Object.keys(tokens)) {
+        traverse(tokens[key], [...path, key]);
+      }
+    } else {
+      assert.fail(`invalid tokens: ${tokens}`);
+    }
   }
 
-  if (isPlainObject(tokens)) {
-    return mapKeys(
-      mapValues(tokens, (value, key) => tokensToTheme(value, [...path, key])),
-      (_, key) => (key === 'default' ? 'DEFAULT' : key),
-    );
-  }
+  traverse(tokens);
 
-  assert.fail('invalid tokens');
+  return theme;
 }
 
 /** @type {import('tailwindcss').Config} */

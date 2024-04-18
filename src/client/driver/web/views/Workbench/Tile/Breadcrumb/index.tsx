@@ -11,7 +11,7 @@ export default observer(function Breadcrumb({ tile }: { tile: Tile }) {
   assert(editor);
 
   return (
-    <div className="flex border-0 border-b border-solid border-gray-200">
+    <div className="flex">
       <ul className="scrollbar-thin m-0 flex grow list-none items-center space-x-1 overflow-auto px-2 py-1 text-sm text-gray-500">
         <li className="flex">
           <TypeIcon type={editor.entityLocator.entityType} />

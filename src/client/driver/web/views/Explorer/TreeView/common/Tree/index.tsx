@@ -65,8 +65,8 @@ export default function TreeView<T extends HierarchyEntity>({
         className="grow overflow-auto pr-2 -mr-2 custom-scrollbar"
         nodeClassName={(node) =>
           clsx(
-            'group relative cursor-pointer py-1 rounded-md text-common-secondary text-sm hover:bg-common-secondary-highlight',
-            node.isSelected && 'bg-common-secondary-highlight',
+            'group relative cursor-pointer py-1 rounded-md text-text-secondary text-sm hover:bg-tree-highlight',
+            node.isSelected && 'bg-tree-highlight',
             node.isDisabled && 'cursor-not-allowed opacity-60',
           )
         }
