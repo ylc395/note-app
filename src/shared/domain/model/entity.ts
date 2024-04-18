@@ -17,6 +17,8 @@ export interface Entity {
   updatedAt: number;
 }
 
+export type WithId<T extends { id: EntityId }> = Partial<T> & Pick<T, 'id'>;
+
 export type EntityId = string;
 
 export type EntityParentId = EntityId | null;

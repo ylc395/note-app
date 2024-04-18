@@ -15,7 +15,7 @@ export default function MaterialExplorerView() {
       <Header />
       <DirectoryView />
       <NewMaterialModal />
-      <TargetTreeModal moveBehavior={move} />
+      <TargetTreeModal moveService={move} />
     </>
   );
 }

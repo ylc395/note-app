@@ -72,7 +72,7 @@ export default class EditableNote extends EditableEntity<Required<NoteVO>> {
     });
   }
 
-  private readonly refresh = async ({ trigger, id }: UpdateEvent) => {
+  private readonly refresh = async ({ trigger, entity: { id } }: UpdateEvent) => {
     if (trigger === this || this.entityLocator.entityId !== id) {
       return;
     }
@@ -105,10 +105,12 @@ export default class EditableNote extends EditableEntity<Required<NoteVO>> {
     });
 
     eventBus.emit(NoteEvents.Updated, {
-      id: this.entityLocator.entityId,
       trigger: this,
-      updatedAt: updatedNote.updatedAt,
-      ...note,
+      entity: {
+        id: this.entityLocator.entityId,
+        updatedAt: updatedNote.updatedAt,
+        ...note,
+      },
     });
   }, 1000);
 

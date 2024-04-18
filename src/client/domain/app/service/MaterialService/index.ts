@@ -6,7 +6,7 @@ import type { MaterialVO } from '@shared/domain/model/material';
 import { EntityParentId, EntityTypes } from '../../model/entity';
 import TreeNode from '@domain/common/model/abstract/TreeNode';
 import MaterialEditor from '../../model/material/editor/MaterialEditor';
-import MoveBehavior from '../common/MoveBehavior';
+import MoveService from '../common/MoveService';
 import eventBus, { Events } from '../../model/material/eventBus';
 import CreationBehavior from './CreationBehavior';
 
@@ -17,10 +17,10 @@ export default class MaterialService {
 
   private readonly moveMaterials = async (parentId: EntityParentId, ids: MaterialVO['id'][]) => {
     await this.remote.material.batchUpdate.mutate([ids, { parentId }]);
-    ids.forEach((id) => eventBus.emit(Events.Updated, { explorerUpdated: true, trigger: this.move, parentId, id }));
+    ids.forEach((id) => eventBus.emit(Events.Updated, { trigger: this.move, entity: { parentId, id } }));
   };
 
-  public readonly move = new MoveBehavior({
+  public readonly move = new MoveService({
     explorer: this.explorer,
     itemToIds: MaterialService.getMaterialIds,
     onMove: this.moveMaterials,

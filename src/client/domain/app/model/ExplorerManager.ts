@@ -16,17 +16,19 @@ export default class ExplorerManager {
 
   constructor() {
     makeObservable(this);
-    this.currentExplorer.init();
+
+    const initialExploreType = this.localStorage.get<ExplorerTypes>(KEY.EXPLORER.CURRENT_EXPLORER) || EntityTypes.Note;
+    this.switchTo(initialExploreType);
   }
+
+  @observable.ref
+  public currentExplorerType!: ExplorerTypes;
 
   private readonly explorers = {
     [EntityTypes.Note]: container.resolve(NoteExplorer),
     [EntityTypes.Material]: container.resolve(MaterialExplorer),
     [EntityTypes.Memo]: container.resolve(MemoExplorer),
   } as const;
-
-  @observable.ref
-  public currentExplorerType = this.localStorage.get<ExplorerTypes>(KEY.EXPLORER.CURRENT_EXPLORER) || EntityTypes.Note;
 
   @computed
   public get currentExplorer() {

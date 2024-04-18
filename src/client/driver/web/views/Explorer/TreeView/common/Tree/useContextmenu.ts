@@ -22,7 +22,9 @@ export default function useContextmenu<T extends HierarchyEntity>(
         case 'rename':
           return explorer.rename.start(node.id);
         case 'star':
-          return starManager.star({ entityId: node.id, entityType: explorer.entityType });
+          return starManager.star(node.id);
+        case 'unstar':
+          return starManager.unstar(node.id);
         case 'openInNewTab':
           return workbench.openEntity(node.entityLocator, { forceNewTab: true });
         case 'openToTop':

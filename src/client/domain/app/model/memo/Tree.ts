@@ -27,7 +27,7 @@ export default class MemoTree extends Tree<MemoVO> {
 
   public readonly loadByTime = async (duration: Duration) => {
     const memos = await this.remote.memo.query.query(duration);
-    this.updateTree(memos);
+    this.updateTreeByEntity(memos);
   };
 
   public getNode(id: MemoVO['id'] | null): MemoTreeNode;

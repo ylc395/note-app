@@ -3,7 +3,7 @@ import assert from 'assert';
 import { pull, pickBy } from 'lodash-es';
 import { container } from 'tsyringe';
 
-import type { EntityId, EntityParentId, EntityTypes, HierarchyEntity } from '@shared/domain/model/entity';
+import type { EntityId, EntityParentId, EntityTypes, HierarchyEntity, WithId } from '@shared/domain/model/entity';
 import type TreeNode from './TreeNode';
 import { token as remoteToken } from '@domain/common/infra/rpc';
 
@@ -94,7 +94,26 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
   }
 
   @action.bound
-  public updateTree(entity: T | T[]) {
+  public updateTree(entity: WithId<T> | WithId<T>[]) {
+    const entities = Array.isArray(entity) ? entity : [entity];
+    const newEntities: T[] = [];
+
+    for (const patch of entities) {
+      const node = this.getNode(patch.id, true);
+
+      if (!node) {
+        continue;
+      }
+
+      assert(node.entity, 'can not update root entity');
+      newEntities.push({ ...node.entity, ...patch });
+    }
+
+    this.updateTreeByEntity(newEntities);
+  }
+
+  @action.bound
+  public updateTreeByEntity(entity: T | T[]) {
     const entities = Array.isArray(entity) ? entity : [entity];
 
     for (const entity of entities) {
@@ -102,10 +121,7 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
 
       if (node) {
         assert(node.entity, 'can not update root entity');
-        this.updateNode({
-          ...node.entity,
-          ...pickBy(entity, (_, key) => key in node.entity!),
-        });
+        this.updateNode(pickBy(entity, (_, key) => key in node.entity!) as T);
       } else {
         this.addNode(entity as T);
       }

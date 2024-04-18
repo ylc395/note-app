@@ -8,7 +8,7 @@ import NoteExplorer from '@domain/app/model/note/Explorer';
 import { type EntityParentId, EntityTypes } from '@shared/domain/model/entity';
 import { eventBus, Events } from '@domain/app/model/note/eventBus';
 import TreeNode from '@domain/common/model/abstract/TreeNode';
-import MoveBehavior from './common/MoveBehavior';
+import MoveService from './common/MoveService';
 
 @singleton()
 export default class NoteService {
@@ -18,10 +18,10 @@ export default class NoteService {
 
   private readonly moveNotes = async (parentId: EntityParentId, ids: NoteVO['id'][]) => {
     await this.remote.note.batchUpdate.mutate([ids, { parentId }]);
-    ids.forEach((id) => eventBus.emit(Events.Updated, { explorerUpdated: true, trigger: this.move, parentId, id }));
+    ids.forEach((id) => eventBus.emit(Events.Updated, { trigger: this.move, entity: { parentId, id } }));
   };
 
-  public readonly move = new MoveBehavior({
+  public readonly move = new MoveService({
     explorer: this.explorer,
     itemToIds: NoteService.getNoteIds,
     onMove: this.moveNotes,
@@ -30,7 +30,7 @@ export default class NoteService {
   public readonly createNote = async (params?: { parentId?: NoteVO['parentId']; from?: NoteVO['id'] }) => {
     const note = await this.remote.note.create.mutate(params || {});
 
-    this.explorer.tree.updateTree(note);
+    this.explorer.tree.updateTreeByEntity(note);
     this.explorer.tree.setSelected([note.id]);
 
     if (note.parentId) {

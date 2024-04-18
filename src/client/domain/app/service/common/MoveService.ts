@@ -6,7 +6,7 @@ import type { EntityId, EntityParentId, HierarchyEntity } from '@shared/domain/m
 import type Explorer from '@domain/app/model/abstract/Explorer';
 import Tree from '@domain/common/model/abstract/Tree';
 
-export default class MoveBehavior<T extends HierarchyEntity = HierarchyEntity> {
+export default class MoveService<T extends HierarchyEntity = HierarchyEntity> {
   constructor(
     private readonly options: {
       explorer: Explorer<T>;
@@ -26,7 +26,7 @@ export default class MoveBehavior<T extends HierarchyEntity = HierarchyEntity> {
       parentId: targetId,
     }));
 
-    explorer.tree.updateTree(movedEntities);
+    explorer.tree.updateTreeByEntity(movedEntities);
 
     if (targetId) {
       await explorer.reveal(targetId, { expand: true });

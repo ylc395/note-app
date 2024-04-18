@@ -32,7 +32,7 @@ export default (function MenuButton({ button, menuItems, onSelect }: Props) {
 
   return (
     <>
-      <Button {...button} onClick={onClick} ref={buttonRef} />;
+      <Button {...button} onClick={onClick} ref={buttonRef} />
       <Menu native items={menuItems} onSelect={onSelect} position={position} isOpen={isOpen} onClose={close} />
     </>
   );

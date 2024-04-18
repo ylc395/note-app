@@ -4,13 +4,13 @@ import { observer } from 'mobx-react-lite';
 import Modal from '@web/components/Modal';
 import Tree from '@web/components/Tree';
 import NodeTitle from './Tree/NodeTitle';
-import type MoveBehavior from '@domain/app/service/common/MoveBehavior';
+import type MoveService from '@domain/app/service/common/MoveService';
 import type { HierarchyEntity } from '@shared/domain/model/entity';
 
 export default observer(function TargetTreeModal<T extends HierarchyEntity>({
-  moveBehavior: { moveByTargetTree, stopSelectingTarget, targetTree },
+  moveService: { moveByTargetTree, stopSelectingTarget, targetTree },
 }: {
-  moveBehavior: MoveBehavior<T>;
+  moveService: MoveService<T>;
 }) {
   if (!targetTree) {
     return null;

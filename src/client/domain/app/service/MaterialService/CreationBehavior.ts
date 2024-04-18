@@ -65,7 +65,7 @@ export default class CreationBehavior {
 
     const material = await this.remote.material.create.mutate({ ...dto, fileId });
 
-    this.explorer.tree.updateTree(material);
+    this.explorer.tree.updateTreeByEntity(material);
 
     if (material.parentId) {
       await this.explorer.reveal(material.parentId, { expand: true, select: true });

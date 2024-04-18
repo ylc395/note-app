@@ -50,7 +50,8 @@ export default function useContextmenu() {
         { label: '移动至...', key: 'move' },
         !isMultiple && { label: '重命名', key: 'rename' },
         !isMultiple && { label: '制作副本', key: 'duplicate' },
-        !isMultiple && { label: node.entity.isStar ? '取消收藏' : '收藏', key: 'star' },
+        !isMultiple && node.entity.isStar && { label: '取消收藏', key: 'unstar' },
+        !isMultiple && !node.entity.isStar && { label: '收藏', key: 'star' },
         { type: 'separator' } as const,
         { label: '删除', key: 'delete' },
       ]);

@@ -20,7 +20,7 @@ export default abstract class EditableMaterial extends EditableEntity<Required<E
   @observable.ref
   protected blob?: ArrayBuffer;
 
-  private readonly refresh = async ({ trigger, id }: UpdateEvent) => {
+  private readonly refresh = async ({ trigger, entity: { id } }: UpdateEvent) => {
     if (trigger === this || id !== this.entityLocator.entityId) {
       return;
     }

@@ -13,7 +13,7 @@ export default (function NoteExplorerView() {
     <>
       <Header />
       <TreeView />
-      <TargetTreeModal moveBehavior={move} />
+      <TargetTreeModal moveService={move} />
     </>
   );
 });

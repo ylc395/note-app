@@ -1,22 +1,26 @@
-import { container, singleton, delay } from 'tsyringe';
+import { container, singleton } from 'tsyringe';
 import { observable, makeObservable, runInAction, computed, action } from 'mobx';
 import { debounce, groupBy, remove } from 'lodash-es';
 
 import { token as remoteToken } from '@domain/common/infra/rpc';
-import { EntityTypes, type EntityLocator } from '@domain/app/model/entity';
+import type { EntityId } from '@domain/app/model/entity';
 import type { StarVO } from '@shared/domain/model/star';
-import { Workbench } from './workbench';
-import ExplorerManager from './ExplorerManager';
+import EventBus from '../infra/EventBus';
+
+export enum Events {
+  Toggle = 'toggle',
+}
 
 @singleton()
-export default class StarManager {
+export default class StarManager extends EventBus<{
+  [Events.Toggle]: { id: EntityId; isStar: boolean };
+}> {
+  private readonly remote = container.resolve(remoteToken);
+
   constructor() {
+    super('StarManager');
     makeObservable(this);
   }
-
-  private readonly remote = container.resolve(remoteToken);
-  private readonly workbench = container.resolve(Workbench);
-  private readonly explorerManager = container.resolve(delay(() => ExplorerManager));
 
   @computed
   public get filteredStars() {
@@ -25,7 +29,6 @@ export default class StarManager {
   }
 
   @observable private keyword = '';
-
   @observable private stars?: StarVO[];
 
   public readonly load = async () => {
@@ -36,12 +39,20 @@ export default class StarManager {
     });
   };
 
-  public readonly unstar = async ({ entityId, entityType }: EntityLocator) => {
-    await this.remote.star.remove.mutate({ entityId });
+  public async star(entityId: EntityId) {
+    const newStar = await this.remote.star.create.mutate({ entityId });
+    this.emit(Events.Toggle, { id: entityId, isStar: true });
 
-    if (entityType !== EntityTypes.Annotation) {
-      this.explorerManager.get(entityType).handleEntityUpdate({ id: entityId, trigger: this, isStar: false });
-    }
+    runInAction(() => {
+      if (this.stars) {
+        this.stars.unshift(newStar);
+      }
+    });
+  }
+
+  public readonly unstar = async (entityId: EntityId) => {
+    await this.remote.star.remove.mutate({ entityId });
+    this.emit(Events.Toggle, { id: entityId, isStar: false });
 
     runInAction(() => {
       if (this.stars) {
@@ -50,28 +61,12 @@ export default class StarManager {
     });
   };
 
-  public async star({ entityId, entityType }: EntityLocator) {
-    const newStar = await this.remote.star.create.mutate({ entityId });
-
-    if (entityType !== EntityTypes.Annotation) {
-      this.explorerManager.get(entityType).handleEntityUpdate({ id: entityId, trigger: this, isStar: true });
-    }
-
-    if (this.stars) {
-      this.stars.unshift(newStar);
-    }
-  }
-
   public readonly updateKeyword = debounce(
     action((keyword: string) => {
       this.keyword = keyword;
     }),
     500,
   );
-
-  public readonly open = (entity: EntityLocator) => {
-    this.workbench.openEntity(entity);
-  };
 
   @action.bound
   public reset() {

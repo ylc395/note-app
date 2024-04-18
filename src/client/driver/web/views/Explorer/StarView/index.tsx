@@ -4,10 +4,12 @@ import { container } from 'tsyringe';
 import { AiOutlineClose } from 'react-icons/ai';
 
 import StarManager from '@domain/app/model/StarManager';
+import { Workbench } from '@domain/app/model/workbench';
 import Button from '@web/components/Button';
 
 export default observer(function StarView() {
-  const { filteredStars, load, reset, updateKeyword, unstar, open } = container.resolve(StarManager);
+  const { filteredStars, load, reset, updateKeyword, unstar } = container.resolve(StarManager);
+  const { openEntity } = container.resolve(Workbench);
 
   useEffect(() => {
     load();
@@ -21,8 +23,8 @@ export default observer(function StarView() {
         .flat()
         .map((star) => (
           <div key={star.entityId}>
-            <div onClick={() => open(star)}>{star.title}</div>
-            <Button onClick={() => unstar(star)}>
+            <div onClick={() => openEntity(star)}>{star.title}</div>
+            <Button onClick={() => unstar(star.entityId)}>
               <AiOutlineClose />
             </Button>
           </div>

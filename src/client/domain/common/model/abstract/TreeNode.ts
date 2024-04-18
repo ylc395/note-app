@@ -63,7 +63,7 @@ export default abstract class TreeNode<T extends HierarchyEntity = HierarchyEnti
     const entities = await this.tree.queryChildren(this.entity?.id || null);
 
     runInAction(() => {
-      this.tree.updateTree(entities);
+      this.tree.updateTreeByEntity(entities);
       this.isLoading = false;
       this.isLoaded = true;
 

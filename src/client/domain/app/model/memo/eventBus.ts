@@ -1,12 +1,12 @@
 import EventBus from '@domain/app/infra/EventBus';
-import type { MemoVO } from '@shared/domain/model/memo';
+import type { NoteVO } from '@shared/domain/model/note';
 import type { UpdateEvent as BaseUpdateEvent } from '../entity';
 
 export enum Events {
   Updated = 'updated',
 }
 
-export type UpdateEvent = BaseUpdateEvent<Partial<Pick<MemoVO, 'isPinned' | 'updatedAt' | 'isStar'>>>;
+export type UpdateEvent = BaseUpdateEvent<NoteVO>;
 
 export default new EventBus<{
   [Events.Updated]: UpdateEvent;

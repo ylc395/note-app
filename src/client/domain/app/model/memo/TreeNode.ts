@@ -50,7 +50,7 @@ export default class MemoTreeNode extends TreeNode<MemoVO> {
           this.isEnd[direction] = true;
         }
 
-        this.tree.updateTree(memos);
+        this.tree.updateTreeByEntity(memos);
       });
     }
 
@@ -67,7 +67,7 @@ export default class MemoTreeNode extends TreeNode<MemoVO> {
     ]);
 
     runInAction(() => {
-      this.tree.updateTree([...pinnedMemos, ...memos]);
+      this.tree.updateTreeByEntity([...pinnedMemos, ...memos]);
       this.isLoaded = true;
       this.isEnd.after = true;
 

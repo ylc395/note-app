@@ -1,5 +1,6 @@
 import { container } from 'tsyringe';
 import { compact } from 'lodash-es';
+import assert from 'assert';
 
 import { isEntityMaterial } from '@shared/domain/model/material';
 import MaterialExplorer from '@domain/app/model/material/Explorer';
@@ -31,6 +32,8 @@ export default function useContextmenu() {
       const canOpenInNewTab = !isDirectory && !workbench.currentTile?.findByEntity(node.entityLocator);
       const canOpenTo = !isDirectory && workbench.currentTile;
 
+      assert(node.entity);
+
       return compact([
         isMultiple && { label: `共${tree.selectedNodes.length}项`, disabled: true },
         isMultiple && ({ type: 'separator' } as const),
@@ -46,7 +49,8 @@ export default function useContextmenu() {
         },
         { type: 'separator' } as const,
         !isMultiple && { label: '重命名', key: 'rename' },
-        !isMultiple && node.entity && { label: node.entity.isStar ? '取消收藏' : '收藏', key: 'star' },
+        !isMultiple && node.entity.isStar && { label: '取消收藏', key: 'unstar' },
+        !isMultiple && !node.entity.isStar && { label: '收藏', key: 'star' },
         { label: '移动至...', key: 'move' },
         { type: 'separator' } as const,
         { label: '删除', key: 'delete' },

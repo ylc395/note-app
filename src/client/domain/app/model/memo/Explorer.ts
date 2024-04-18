@@ -8,7 +8,6 @@ import { token as storageToken } from '@domain/app/infra/localStorage';
 import type { Duration, MemoVO } from '@shared/domain/model/memo';
 import MemoTree from '@domain/app/model/memo/Tree';
 import Editor from './Editor';
-import type { UpdateEvent } from './eventBus';
 
 interface UIState {
   scrollTop?: number;
@@ -23,7 +22,7 @@ export default class MemoExplorer {
   @observable.ref
   private tree = new MemoTree();
 
-  public readonly newRootMemoEditor = new Editor({ onSubmit: this.tree.updateTree });
+  public readonly newRootMemoEditor = new Editor({ onSubmit: this.tree.updateTreeByEntity });
 
   private readonly editors = {
     create: observable({}, { deep: false }) as Record<MemoVO['id'], Editor>,
@@ -53,16 +52,6 @@ export default class MemoExplorer {
     this.updateUIState({ panel: this.uiState.panel === panel ? '' : panel });
   };
 
-  public handleEntityUpdate(e: UpdateEvent) {
-    const entity = this.tree.getNode(e.id, true)?.entity;
-
-    if (!entity) {
-      return;
-    }
-
-    this.tree.updateTree({ ...entity, ...e });
-  }
-
   @action.bound
   public startEditing(id: MemoVO['id'], mode: 'edit' | 'create') {
     const editors = this.editors[mode];
@@ -85,7 +74,7 @@ export default class MemoExplorer {
     if (typeof memo === 'string') {
       delete editors[memo];
     } else {
-      this.tree.updateTree(memo);
+      this.tree.updateTreeByEntity(memo);
       delete editors[memo.id];
     }
   }
@@ -108,7 +97,7 @@ export default class MemoExplorer {
 
     const allMemos = await this.remote.memo.queryTreeFragment.query({ to: id, limit: 15 });
     this.tree = new MemoTree();
-    this.tree.updateTree(allMemos);
+    this.tree.updateTreeByEntity(allMemos);
 
     const { parent } = this.tree.getNode(id);
 
@@ -120,7 +109,7 @@ export default class MemoExplorer {
   public async togglePin(id: MemoVO['id']) {
     const memo = this.getMemo(id);
     await this.remote.memo.updateOne.mutate([id, { isPinned: !memo.isPinned }]);
-    this.tree.updateTree({ ...memo, isPinned: !memo.isPinned });
+    this.tree.updateTree({ id, isPinned: !memo.isPinned });
   }
 
   public getMemo(id: MemoVO['id']) {

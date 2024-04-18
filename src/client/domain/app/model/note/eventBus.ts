@@ -6,9 +6,7 @@ export enum Events {
   Updated = 'updated',
 }
 
-export type UpdateEvent = BaseUpdateEvent<
-  Partial<Pick<NoteVO, 'title' | 'icon' | 'parentId' | 'body' | 'updatedAt' | 'isStar'>>
->;
+export type UpdateEvent = BaseUpdateEvent<NoteVO>;
 
 export const eventBus = new EventBus<{
   [Events.Updated]: UpdateEvent;
