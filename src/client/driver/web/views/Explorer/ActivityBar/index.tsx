@@ -12,7 +12,10 @@ import StarView from '../StarView';
 import TopicView from '../TopicView';
 
 export default observer(function ActivityBar() {
-  const { currentExplorerType, switchTo } = container.resolve(ExplorerManager);
+  const {
+    currentExplorer: { entityType },
+    switchTo,
+  } = container.resolve(ExplorerManager);
   const types = [EntityTypes.Material, EntityTypes.Note, EntityTypes.Memo] as const;
 
   return (
@@ -26,7 +29,7 @@ export default observer(function ActivityBar() {
               key={type}
               size="large"
               className="mb-2"
-              variant={currentExplorerType === type ? 'primary' : 'ghost'}
+              variant={entityType === type ? 'primary' : 'ghost'}
             />
           ))}
         </div>

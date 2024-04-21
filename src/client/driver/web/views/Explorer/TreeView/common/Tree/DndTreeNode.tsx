@@ -42,7 +42,7 @@ export default function DndTreeNode<T extends HierarchyEntity>({
   return (
     <Droppable
       onOverToggle={setIsOver}
-      className={clsx(isOver && !node.isDisabled && 'bg-layout-highlight')}
+      className={clsx(isOver && !node.isDisabled && 'bg-tree-highlight')}
       onDrop={(item) => !node.isDisabled && onDrop(item, node)}
     >
       <Draggable noPreview onDragStart={handleDragStart} onDragEnd={onDragStop} item={node}>

@@ -2,7 +2,8 @@ import { container, singleton } from 'tsyringe';
 
 import NoteTree from '@domain/common/model/note/Tree';
 import type { NoteVO } from '@shared/domain/model/note';
-import Explorer, { RenameBehavior } from '@domain/app/model/abstract/Explorer';
+import Explorer from '@domain/app/model/abstract/Explorer';
+import RenameBehavior from '@domain/app/model/abstract/Explorer/RenameBehavior';
 import { eventBus, Events as NoteEvents } from './eventBus';
 import StarManager, { Events as StarEvents } from '../StarManager';
 
@@ -13,7 +14,7 @@ export default class NoteExplorer extends Explorer<NoteVO> {
   constructor() {
     super();
     this.starManager.on(StarEvents.Toggle, this.tree.updateTree);
-    eventBus.on(NoteEvents.Updated, ({ entity }) => this.tree.updateTree(entity));
+    eventBus.on(NoteEvents.Updated, this.handleEntityUpdate);
   }
 
   protected queryPath(id: NoteVO['id']) {

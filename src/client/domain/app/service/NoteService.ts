@@ -5,27 +5,36 @@ import type { NoteVO } from '@shared/domain/model/note';
 import { Workbench } from '@domain/app/model/workbench';
 import NoteEditor from '@domain/app/model/note/Editor';
 import NoteExplorer from '@domain/app/model/note/Explorer';
-import { type EntityParentId, EntityTypes } from '@shared/domain/model/entity';
+import { EntityTypes } from '@shared/domain/model/entity';
 import { eventBus, Events } from '@domain/app/model/note/eventBus';
 import TreeNode from '@domain/common/model/abstract/TreeNode';
-import MoveService from './common/MoveService';
+import MoveBehavior, { Events as MoveEvents, type MoveEvent } from '../model/behavior/MoveBehavior';
 
 @singleton()
 export default class NoteService {
   private readonly remote = container.resolve(rpcToken);
   private readonly explorer = container.resolve(NoteExplorer);
   private readonly workbench = container.resolve(Workbench);
+  private readonly moveService = container.resolve(MoveBehavior);
 
-  private readonly moveNotes = async (parentId: EntityParentId, ids: NoteVO['id'][]) => {
-    await this.remote.note.batchUpdate.mutate([ids, { parentId }]);
-    ids.forEach((id) => eventBus.emit(Events.Updated, { trigger: this.move, entity: { parentId, id } }));
+  constructor() {
+    this.moveService.on(MoveEvents.Move, this.moveNotes);
+  }
+
+  private readonly moveNotes = async ({ items, target }: MoveEvent) => {
+    if (target.entityType !== EntityTypes.Note) {
+      return;
+    }
+
+    await this.remote.note.batchUpdate.mutate([items.map(({ entityId }) => entityId), { parentId: target.entityId }]);
+
+    for (const note of items) {
+      eventBus.emit(Events.Updated, {
+        trigger: this.moveService,
+        entity: { id: note.entityId, parentId: target.entityId },
+      });
+    }
   };
-
-  public readonly move = new MoveService({
-    explorer: this.explorer,
-    itemToIds: NoteService.getNoteIds,
-    onMove: this.moveNotes,
-  });
 
   public readonly createNote = async (params?: { parentId?: NoteVO['parentId']; from?: NoteVO['id'] }) => {
     const note = await this.remote.note.create.mutate(params || {});

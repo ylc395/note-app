@@ -8,6 +8,7 @@ import { token as storageToken } from '@domain/app/infra/localStorage';
 import type { Duration, MemoVO } from '@shared/domain/model/memo';
 import MemoTree from '@domain/app/model/memo/Tree';
 import Editor from './Editor';
+import { EntityTypes } from '../entity';
 
 interface UIState {
   scrollTop?: number;
@@ -17,6 +18,7 @@ interface UIState {
 @singleton()
 export default class MemoExplorer {
   private readonly remote = container.resolve(rpcToken);
+  public readonly entityType = EntityTypes.Memo;
   private readonly localStorage = container.resolve(storageToken);
 
   @observable.ref

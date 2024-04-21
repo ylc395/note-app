@@ -7,19 +7,19 @@ import MaterialExplorer from '@domain/app/model/material/Explorer';
 import { Workbench } from '@domain/app/model/workbench';
 
 import useBaseContextmenu from '../common/Tree/useContextmenu';
-import MaterialService from '@domain/app/service/MaterialService';
+import MoveBehavior from '@domain/app/model/behavior/MoveBehavior';
 
 export default function useContextmenu() {
   const explorer = container.resolve(MaterialExplorer);
   const workbench = container.resolve(Workbench);
-  const { move } = container.resolve(MaterialService);
+  const { startMoving } = container.resolve(MoveBehavior);
   const { tree } = explorer;
 
   return {
     ...useBaseContextmenu(explorer, (action) => {
       switch (action) {
         case 'move':
-          return move.selectTarget();
+          return startMoving({ mode: 'select', from: tree, item: tree });
         default:
           break;
       }

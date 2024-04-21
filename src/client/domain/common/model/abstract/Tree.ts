@@ -7,13 +7,13 @@ import type { EntityId, EntityParentId, EntityTypes, HierarchyEntity, WithId } f
 import type TreeNode from './TreeNode';
 import { token as remoteToken } from '@domain/common/infra/rpc';
 
-export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> {
-  constructor(
-    public readonly options?: {
-      entityToNode?: TreeNode<T>['entityToNode'];
-      sort?: (e1: T, e2: T) => number;
-    },
-  ) {
+interface Options<T extends HierarchyEntity> {
+  entityToNode?: (entity: T | null, tree: Tree<T>) => ReturnType<NonNullable<TreeNode<T>['entityToNode']>>;
+  sort?: (e1: T, e2: T) => number;
+}
+
+export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity, O = Options<T>> {
+  constructor(public readonly options?: O) {
     makeObservable(this);
   }
 
@@ -86,7 +86,6 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
     const node = this.createNode(entity);
 
     this.nodes[entity.id] = node;
-    parent.isLeaf = false;
     parent.children.push(node);
     Object.assign(node, entityToNode?.(entity));
 
@@ -147,15 +146,17 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
 
       if (newParent.id !== oldParentId) {
         newParent.children.push(node);
-        newParent.isLeaf = false;
+
+        if (newParent.entity) {
+          newParent.entity.childrenCount += 1;
+        }
 
         // reset parent-child relationship
         const oldParent = this.getNode(oldParentId);
         pull(oldParent.children, node);
 
-        if (oldParent.children.length === 0) {
-          oldParent.isLeaf = true;
-          oldParent.isExpanded = false;
+        if (oldParent.entity) {
+          oldParent.entity.childrenCount -= 1;
         }
       }
     }
@@ -170,5 +171,12 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
     for (const id of ids) {
       this.getNode(id, true)?.toggleSelect({ isMultiple: true });
     }
+  }
+
+  public clone(options?: O) {
+    return new (this.constructor as { new (...options: ConstructorParameters<typeof Tree<T>>): Tree<T> })({
+      ...this.options,
+      ...options,
+    });
   }
 }

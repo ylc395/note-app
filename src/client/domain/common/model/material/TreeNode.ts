@@ -6,7 +6,6 @@ export default class MaterialTreeNode extends TreeNode<MaterialVO> {
     return {
       icon: material ? material.icon : null,
       title: material ? normalizeTitle(material) : '根',
-      isLeaf: material ? material.childrenCount === 0 : false,
     };
   };
 }

@@ -1,44 +1,36 @@
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 import { PlusIcon, ShrinkIcon, SortDescIcon } from 'lucide-react';
-import { useMemo } from 'react';
 
 import NoteService from '@domain/app/service/NoteService';
 import NoteExplorer from '@domain/app/model/note/Explorer';
-import { useDragItem } from '@web/components/dnd/hooks';
 import { SortBy } from '@domain/app/model/abstract/Explorer/SortBehavior';
+import MoveBehavior from '@domain/app/model/behavior/MoveBehavior';
 
 import ExplorerHeader from '../common/Header';
 
 export default observer(function Header() {
   const {
-    canCollapse: hasExpandedNode,
+    canCollapse,
     collapseAll,
-    tree: { root },
-    dnd: { status },
+    entityType,
     sorter: { by: sortBy, setBy: setSortBy },
+    tree: { root },
   } = container.resolve(NoteExplorer);
-  const {
-    move: { moveByItems: moveNotesByItems },
-    createNote,
-  } = container.resolve(NoteService);
 
-  const { item: dragItem } = useDragItem();
-  const canDrop = useMemo(
-    () => status === 'toDrop' && !root.isDisabled && NoteService.getNoteIds(dragItem),
-    [root.isDisabled, dragItem, status],
-  );
-  const onDrop = canDrop ? (item: unknown) => moveNotesByItems(null, item) : undefined;
+  const { createNote } = container.resolve(NoteService);
 
   function getMenuItem({ label, key }: { label: string; key: SortBy }) {
     return { label, key, checked: key === sortBy };
   }
 
+  const { moveTo, isDraggingMoving } = container.resolve(MoveBehavior);
+
   return (
     <ExplorerHeader
       left={[{ icon: <PlusIcon />, onClick: createNote }]}
       right={[
-        { icon: <ShrinkIcon />, onClick: collapseAll, disabled: !hasExpandedNode },
+        { icon: <ShrinkIcon />, onClick: collapseAll, disabled: !canCollapse },
         {
           icon: <SortDescIcon />,
           menuOptions: {
@@ -56,7 +48,8 @@ export default observer(function Header() {
           },
         },
       ]}
-      onDrop={onDrop}
+      canDrop={isDraggingMoving && !root.isDisabled}
+      onDrop={() => moveTo({ entityType, entityId: null })}
       title="笔记"
     />
   );

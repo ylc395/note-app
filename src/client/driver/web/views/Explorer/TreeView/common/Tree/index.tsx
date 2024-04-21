@@ -8,10 +8,11 @@ import type { HierarchyEntity } from '@shared/domain/model/entity';
 import Tree from '@web/components/Tree';
 
 import NodeTitle, { type Props as NodeTitleProps } from './NodeTitle';
-import DndTreeNode, { type Props as DndTreeNodeProps } from './DndTreeNode';
-import TreeDraggingPreview from './TreeDraggingPreview';
+import DndTreeNode from './DndTreeNode';
 import Menu, { type Props as MenuProps } from '@web/components/Menu';
 import type { MenuItem } from '@shared/domain/infra/ui';
+import { container } from 'tsyringe';
+import MoveBehavior from '@domain/app/model/behavior/MoveBehavior';
 
 interface Props<T extends HierarchyEntity> {
   tree: TreeModel<T>;
@@ -22,9 +23,6 @@ interface Props<T extends HierarchyEntity> {
   defaultIcon?: NodeTitleProps<T>['defaultIcon'];
   onEditEnd?: NodeTitleProps<T>['onEditEnd'];
   onEditCancel?: NodeTitleProps<T>['onEditCancel'];
-  onDrop: DndTreeNodeProps<T>['onDrop'];
-  onDragStart: DndTreeNodeProps<T>['onDragStart'];
-  onDragStop: DndTreeNodeProps<T>['onDragStop'];
   onContextmenuSelect: MenuProps['onSelect'];
 }
 
@@ -35,16 +33,14 @@ export default function TreeView<T extends HierarchyEntity>({
   onContextmenuSelect,
   editingNodeId,
   onClick,
-  onDragStart,
   nodeOperation,
-  onDrop,
   onEditCancel,
   onEditEnd,
-  onDragStop,
   defaultIcon,
 }: Props<T>) {
   const [isContextmenuOpen, { setTrue: openContextmenu, setFalse: closeContextmenu }] = useBoolean(false);
   const [contextmenuItems, setContextmenuItems] = useState<MenuItem[]>();
+  const { finishMoving, startMoving, moveTo } = container.resolve(MoveBehavior);
 
   function handleClick(node: TreeNode<T>, isMultiple: boolean) {
     node.toggleSelect({ isMultiple });
@@ -74,7 +70,12 @@ export default function TreeView<T extends HierarchyEntity>({
         tree={tree}
         multiple
         renderNode={(node, originalNodeView) => (
-          <DndTreeNode node={node} onDrop={onDrop} onDragStart={onDragStart} onDragStop={onDragStop}>
+          <DndTreeNode
+            node={node}
+            onDrop={() => moveTo(node.entityLocator)}
+            onDragStart={() => startMoving({ mode: 'drag', item: node })}
+            onDragStop={finishMoving}
+          >
             {originalNodeView}
           </DndTreeNode>
         )}
@@ -90,7 +91,6 @@ export default function TreeView<T extends HierarchyEntity>({
           </NodeTitle>
         )}
       />
-      <TreeDraggingPreview />
       <Menu
         native
         items={contextmenuItems || []}

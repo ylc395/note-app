@@ -11,7 +11,6 @@ export default abstract class TreeNode<T extends HierarchyEntity = HierarchyEnti
 
     // this means it's a root node
     if (!entity) {
-      this.isLeaf = false;
       this.isExpanded = true;
     }
 
@@ -27,8 +26,8 @@ export default abstract class TreeNode<T extends HierarchyEntity = HierarchyEnti
 
   public tree: Tree<T>;
 
-  protected get isRoot() {
-    return this.id === '__ROOT_ID';
+  public get isRoot() {
+    return !this.entity;
   }
 
   public get id() {
@@ -66,10 +65,6 @@ export default abstract class TreeNode<T extends HierarchyEntity = HierarchyEnti
       this.tree.updateTreeByEntity(entities);
       this.isLoading = false;
       this.isLoaded = true;
-
-      if (entities.length === 0) {
-        this.isLeaf = true;
-      }
     });
   }
 
@@ -128,20 +123,24 @@ export default abstract class TreeNode<T extends HierarchyEntity = HierarchyEnti
     return this.entity ? this.tree.getNode(this.entity.parentId) : null;
   }
 
-  public abstract entityToNode(
+  public abstract readonly entityToNode?: (
     entity: T | null,
-  ): Partial<Pick<TreeNode, 'isLeaf' | 'title' | 'isDisabled' | 'icon' | 'isExpanded'>>;
+  ) => Partial<Pick<TreeNode, 'title' | 'isDisabled' | 'icon' | 'isExpanded'>>;
 
   private _entityToNode(entity: T | null) {
-    return { ...this.entityToNode(entity), ...this.tree.options?.entityToNode?.(entity) };
+    return { ...this.entityToNode?.(entity), ...this.tree.options?.entityToNode?.(entity, this.tree) };
   }
 
   @observable public entity: T | null; // only root node has no entity;
   @observable public isDisabled = false;
   @observable public title = '';
-  @observable public isLeaf = true;
   @observable public icon: string | null = null;
   @observable.shallow public children: TreeNode<T>[] = [];
+
+  @computed public get isLeaf() {
+    return this.entity?.childrenCount === 0;
+  }
+
   @computed public get sortedChildren() {
     const sort = this.tree.options?.sort;
 

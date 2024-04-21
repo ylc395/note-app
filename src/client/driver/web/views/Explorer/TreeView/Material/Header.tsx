@@ -1,34 +1,28 @@
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 import { PlusIcon, ShrinkIcon, SortDescIcon } from 'lucide-react';
-import { useMemo } from 'react';
 
 import MaterialService from '@domain/app/service/MaterialService';
 import MaterialExplorer from '@domain/app/model/material/Explorer';
 import { MaterialTypes } from '@shared/domain/model/material';
-import { useDragItem } from '@web/components/dnd/hooks';
 import { SortBy } from '@domain/app/model/abstract/Explorer/SortBehavior';
 import ExplorerHeader from '../common/Header';
+import MoveBehavior from '@domain/app/model/behavior/MoveBehavior';
 
 export default observer(function Header() {
   const {
-    canCollapse: hasExpandedNode,
+    canCollapse,
+    entityType,
     collapseAll,
-    tree: { root },
-    dnd: { status },
     sorter: { by: sortBy, setBy: setSortBy },
+    tree: { root },
   } = container.resolve(MaterialExplorer);
+
   const {
     creation: { create },
-    move: { moveByItems: moveMaterialsByItems },
   } = container.resolve(MaterialService);
 
-  const { item: dragItem } = useDragItem();
-  const canDrop = useMemo(
-    () => status === 'toDrop' && !root.isDisabled && MaterialService.getMaterialIds(dragItem),
-    [root.isDisabled, dragItem, status],
-  );
-  const onDrop = canDrop ? (item: unknown) => moveMaterialsByItems(null, item) : undefined;
+  const { moveTo, isDraggingMoving } = container.resolve(MoveBehavior);
 
   function getMenuItem({ label, key }: { label: string; key: SortBy }) {
     return { label, key, checked: key === sortBy };
@@ -49,7 +43,7 @@ export default observer(function Header() {
         },
       ]}
       right={[
-        { icon: <ShrinkIcon />, onClick: collapseAll, disabled: !hasExpandedNode },
+        { icon: <ShrinkIcon />, onClick: collapseAll, disabled: !canCollapse },
         {
           icon: <SortDescIcon />,
           menuOptions: {
@@ -67,7 +61,8 @@ export default observer(function Header() {
           },
         },
       ]}
-      onDrop={onDrop}
+      canDrop={isDraggingMoving && !root.isDisabled}
+      onDrop={() => moveTo({ entityType, entityId: null })}
       title="素材"
     />
   );

@@ -4,14 +4,12 @@ import { observer } from 'mobx-react-lite';
 import Modal from '@web/components/Modal';
 import Tree from '@web/components/Tree';
 import NodeTitle from './Tree/NodeTitle';
-import type MoveService from '@domain/app/service/common/MoveService';
-import type { HierarchyEntity } from '@shared/domain/model/entity';
+import { container } from 'tsyringe';
+import MoveBehavior from '@domain/app/model/behavior/MoveBehavior';
 
-export default observer(function TargetTreeModal<T extends HierarchyEntity>({
-  moveService: { moveByTargetTree, stopSelectingTarget, targetTree },
-}: {
-  moveService: MoveService<T>;
-}) {
+export default observer(function TargetTreeModal() {
+  const { targetTree, moveTo, finishMoving } = container.resolve(MoveBehavior);
+
   if (!targetTree) {
     return null;
   }
@@ -21,8 +19,8 @@ export default observer(function TargetTreeModal<T extends HierarchyEntity>({
       bodyClassName="border border-solid border-gray-200 p-4"
       title="移动至..."
       canConfirm={targetTree.selectedNodes.length > 0}
-      onConfirm={moveByTargetTree}
-      onCancel={stopSelectingTarget}
+      onConfirm={() => moveTo()}
+      onCancel={finishMoving}
     >
       {targetTree && (
         <Tree

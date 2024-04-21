@@ -3,14 +3,12 @@ import { groupBy, intersection, once } from 'lodash-es';
 import { action, computed, makeObservable, autorun } from 'mobx';
 
 import type Tree from '@domain/common/model/abstract/Tree';
-import type { EntityId, HierarchyEntity, Path } from '@domain/app/model/entity';
+import type { EntityId, HierarchyEntity, Path, UpdateEvent } from '@domain/app/model/entity';
 import { token as localStorage } from '@domain/app/infra/localStorage';
 import { token as rpcToken } from '@domain/common/infra/rpc';
 import type RenameBehavior from './RenameBehavior';
-import DndBehavior from './DndBehavior';
 import SortBehavior from './SortBehavior';
-
-export { default as RenameBehavior } from './RenameBehavior';
+import MoveBehavior from '../../behavior/MoveBehavior';
 
 interface ExplorerState {
   expanded: EntityId[];
@@ -26,7 +24,6 @@ export default abstract class Explorer<T extends HierarchyEntity = HierarchyEnti
   protected readonly remote = container.resolve(rpcToken);
   public abstract readonly rename: RenameBehavior;
   public readonly sorter = new SortBehavior();
-  public readonly dnd = new DndBehavior({ explorer: this });
   public abstract readonly tree: Tree<T>;
   public get entityType() {
     return this.tree.entityType;
@@ -47,8 +44,15 @@ export default abstract class Explorer<T extends HierarchyEntity = HierarchyEnti
   protected abstract queryPath(id: EntityId): Promise<Path>;
 
   public async reveal(id: T['id'], options?: { expand?: boolean; select?: boolean }) {
-    const ancestors = await this.queryPath(id);
-    const ids = ancestors.map(({ id }) => id);
+    const nodeToReveal = this.tree.getNode(id, true);
+    let ids: EntityId[];
+
+    if (nodeToReveal) {
+      ids = nodeToReveal.ancestors.map(({ id }) => id);
+    } else {
+      const ancestors = await this.queryPath(id);
+      ids = ancestors.map(({ id }) => id);
+    }
 
     if (options?.expand) {
       ids.push(id);
@@ -79,34 +83,61 @@ export default abstract class Explorer<T extends HierarchyEntity = HierarchyEnti
 
   private readonly persist = () => {
     this.localStorage.set<ExplorerState>(this.localStorageKey, {
-      expanded: this.tree.expandedNodes.map((node) => node.id),
       selected: this.tree.getSelectedNodeIds(),
+      expanded: this.tree.expandedNodes
+        .filter((node) => node.ancestors.every((ancestor) => ancestor.isExpanded))
+        .map((node) => node.id),
     });
   };
 
+  private readonly expandingNodes = new Set<EntityId>();
   private async expandNodes(ids: EntityId[]) {
-    if (ids.length === 0) {
-      return;
-    }
-
-    ids = ids.filter((id) => !this.tree.getNode(id, true)?.isLoaded);
+    ids = ids.filter((id) => !this.tree.getNode(id, true)?.isLoaded && !this.expandingNodes.has(id));
+    ids.forEach((id) => this.expandingNodes.add(id));
 
     if (ids.length > 0) {
       const allNodeIds = this.tree.allNodes.map((node) => node.id);
       const childrenMap = groupBy(await this.tree.queryChildren(ids), 'parentId');
-      const sorted = intersection(ids, allNodeIds).flatMap((id) => childrenMap[id] || []);
+      const topoSorted = intersection(ids, allNodeIds).flatMap((id) => childrenMap[id] || []);
       let i = 0;
 
-      while (sorted[i]) {
-        sorted.push(...(childrenMap[sorted[i]!.id] || []));
+      while (topoSorted[i]) {
+        topoSorted.push(...(childrenMap[topoSorted[i]!.id] || []));
         i++;
       }
 
-      this.tree.updateTreeByEntity(sorted);
+      this.tree.updateTreeByEntity(topoSorted);
     }
 
     for (const id of ids) {
-      this.tree.getNode(id, true)?.toggleExpand({ value: true, noLoad: true });
+      const node = this.tree.getNode(id, true);
+
+      if (node) {
+        node.toggleExpand({ value: true, noLoad: true });
+        node.isLoaded = true;
+      }
+
+      this.expandingNodes.delete(id);
     }
   }
+
+  public getTreeFromSelectedNodes() {
+    if (this.tree.selectedNodes.length === 0) {
+      return null;
+    }
+
+    const tree = this.tree.clone();
+    tree.updateTreeByEntity(this.tree.selectedNodes.map(({ entity }) => ({ ...entity!, parentId: null })));
+
+    return tree;
+  }
+
+  protected readonly handleEntityUpdate = async ({ trigger, entity }: UpdateEvent<T>) => {
+    this.tree.updateTree(entity);
+
+    if (trigger instanceof MoveBehavior) {
+      await this.reveal(entity.id);
+      this.tree.getNode(entity.id).toggleSelect({ isMultiple: true, value: true });
+    }
+  };
 }

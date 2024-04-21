@@ -2,7 +2,8 @@ import { container, singleton } from 'tsyringe';
 
 import type { MaterialVO } from '@shared/domain/model/material';
 import MaterialTree from '@domain/common/model/material/Tree';
-import Explorer, { RenameBehavior } from '@domain/app/model/abstract/Explorer';
+import Explorer from '@domain/app/model/abstract/Explorer';
+import RenameBehavior from '@domain/app/model/abstract/Explorer/RenameBehavior';
 import eventBus, { Events } from './eventBus';
 import StarManager, { Events as StarEvents } from '../StarManager';
 
@@ -14,7 +15,7 @@ export default class MaterialExplorer extends Explorer<MaterialVO> {
   constructor() {
     super();
     this.starManager.on(StarEvents.Toggle, this.tree.updateTree);
-    eventBus.on(Events.Updated, ({ entity }) => this.tree.updateTree(entity));
+    eventBus.on(Events.Updated, this.handleEntityUpdate);
   }
 
   protected queryPath(id: MaterialVO['id']) {

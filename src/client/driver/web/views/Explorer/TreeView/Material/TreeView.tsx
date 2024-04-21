@@ -28,13 +28,11 @@ const defaultIcon = (node: TreeNode<MaterialVO>) => {
 
 export default observer(function MaterialTreeView() {
   const {
-    move: { moveByItems: moveMaterialsByItems },
     creation: { create },
   } = container.resolve(MaterialService);
   const { openEntity } = container.resolve(Workbench);
   const {
     tree,
-    dnd: { updateTreeForDropping, reset: resetTree },
     rename: { id: editingId, submit: submitEditing, cancel: cancelEditing },
   } = container.resolve(MaterialExplorer);
 
@@ -54,9 +52,6 @@ export default observer(function MaterialTreeView() {
       editingNodeId={editingId}
       onEditEnd={submitEditing}
       onEditCancel={cancelEditing}
-      onDragStop={resetTree}
-      onDragStart={updateTreeForDropping}
-      onDrop={(item, node) => moveMaterialsByItems(node.id, item)}
       tree={tree}
       onClick={handleClick}
       defaultIcon={defaultIcon}

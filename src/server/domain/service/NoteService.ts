@@ -68,6 +68,10 @@ export default class NoteService extends BaseService {
   public async updateOne(noteId: Note['id'], note: NotePatchDTO) {
     await this.assertAvailableIds([noteId]);
 
+    if (note.parentId) {
+      await this.assertValidParent(note.parentId, [noteId]);
+    }
+
     const updatedAt = Date.now();
     await this.repo.notes.update(noteId, {
       ...note,

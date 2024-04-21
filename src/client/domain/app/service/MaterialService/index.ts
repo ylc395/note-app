@@ -1,32 +1,40 @@
 import { singleton, container } from 'tsyringe';
 
-import Explorer from '@domain/app/model/material/Explorer';
 import { token as rpcToken } from '@domain/common/infra/rpc';
-import type { MaterialVO } from '@shared/domain/model/material';
-import { EntityParentId, EntityTypes } from '../../model/entity';
+import { EntityTypes } from '../../model/entity';
 import TreeNode from '@domain/common/model/abstract/TreeNode';
 import MaterialEditor from '../../model/material/editor/MaterialEditor';
-import MoveService from '../common/MoveService';
 import eventBus, { Events } from '../../model/material/eventBus';
 import CreationBehavior from './CreationBehavior';
+import MoveBehavior, { Events as MoveEvents, type MoveEvent } from '../../model/behavior/MoveBehavior';
 
 @singleton()
 export default class MaterialService {
   private readonly remote = container.resolve(rpcToken);
-  private readonly explorer = container.resolve(Explorer);
-
-  private readonly moveMaterials = async (parentId: EntityParentId, ids: MaterialVO['id'][]) => {
-    await this.remote.material.batchUpdate.mutate([ids, { parentId }]);
-    ids.forEach((id) => eventBus.emit(Events.Updated, { trigger: this.move, entity: { parentId, id } }));
-  };
-
-  public readonly move = new MoveService({
-    explorer: this.explorer,
-    itemToIds: MaterialService.getMaterialIds,
-    onMove: this.moveMaterials,
-  });
-
   public readonly creation = new CreationBehavior();
+  private readonly moveService = container.resolve(MoveBehavior);
+
+  constructor() {
+    this.moveService.on(MoveEvents.Move, this.moveMaterials);
+  }
+
+  private readonly moveMaterials = async ({ items, target }: MoveEvent) => {
+    if (target.entityType !== EntityTypes.Material) {
+      return;
+    }
+
+    await this.remote.material.batchUpdate.mutate([
+      items.map(({ entityId }) => entityId),
+      { parentId: target.entityId },
+    ]);
+
+    for (const note of items) {
+      eventBus.emit(Events.Updated, {
+        trigger: this.moveService,
+        entity: { id: note.entityId, parentId: target.entityId },
+      });
+    }
+  };
 
   public static getMaterialIds(item: unknown) {
     if (item instanceof TreeNode && item.entityLocator.entityType === EntityTypes.Material) {

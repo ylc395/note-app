@@ -26,6 +26,7 @@ export type EntityParentId = EntityId | null;
 export interface HierarchyEntity {
   id: EntityId;
   parentId: EntityParentId;
+  childrenCount: number;
 }
 
 export const entityLocatorSchema = object({

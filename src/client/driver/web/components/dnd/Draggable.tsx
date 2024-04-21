@@ -1,6 +1,5 @@
-import { useEffect, type ReactNode, useRef, useLayoutEffect } from 'react';
-import { useDrag, useDragLayer } from 'react-dnd';
-import { createPortal } from 'react-dom';
+import { useEffect, type ReactNode } from 'react';
+import { useDrag } from 'react-dnd';
 import { getEmptyImage } from 'react-dnd-html5-backend';
 
 interface Props {

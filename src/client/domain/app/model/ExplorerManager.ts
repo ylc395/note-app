@@ -22,7 +22,7 @@ export default class ExplorerManager {
   }
 
   @observable.ref
-  public currentExplorerType!: ExplorerTypes;
+  private currentExplorerType!: ExplorerTypes;
 
   private readonly explorers = {
     [EntityTypes.Note]: container.resolve(NoteExplorer),
@@ -35,8 +35,8 @@ export default class ExplorerManager {
     return this.explorers[this.currentExplorerType];
   }
 
-  public get(type: ExplorerTypes) {
-    return this.explorers[type];
+  public get all() {
+    return Object.values(this.explorers);
   }
 
   @action.bound

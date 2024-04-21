@@ -8,6 +8,7 @@ import Resizable from '@web/components/Resizable';
 import Note from './Note';
 import Material from './Material';
 import Memo from './Memo';
+import TreeDraggingPreview from './common/TreeDraggingPreview';
 
 const explorerMap: Record<ExplorerTypes, () => ReactNode> = {
   [EntityTypes.Note]: () => <Note />,
@@ -16,7 +17,9 @@ const explorerMap: Record<ExplorerTypes, () => ReactNode> = {
 };
 
 export default observer(function TreeView() {
-  const { currentExplorerType } = container.resolve(ExplorerManager);
+  const {
+    currentExplorer: { entityType },
+  } = container.resolve(ExplorerManager);
 
   return (
     <Resizable
@@ -25,7 +28,8 @@ export default observer(function TreeView() {
       minWidth={250}
       resizable="right"
     >
-      {explorerMap[currentExplorerType]()}
+      {explorerMap[entityType as ExplorerTypes]()}
+      <TreeDraggingPreview />
     </Resizable>
   );
 });

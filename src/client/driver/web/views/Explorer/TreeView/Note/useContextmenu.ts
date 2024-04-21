@@ -6,11 +6,13 @@ import NoteExplorer from '@domain/app/model/note/Explorer';
 import { Workbench } from '@domain/app/model/workbench';
 import useBaseContextmenu from '../common/Tree/useContextmenu';
 import NoteService from '@domain/app/service/NoteService';
+import MoveBehavior from '@domain/app/model/behavior/MoveBehavior';
 
 export default function useContextmenu() {
   const explorer = container.resolve(NoteExplorer);
   const workbench = container.resolve(Workbench);
-  const { createNote, move } = container.resolve(NoteService);
+  const { createNote } = container.resolve(NoteService);
+  const { startMoving } = container.resolve(MoveBehavior);
   const { tree } = explorer;
 
   return {
@@ -21,7 +23,7 @@ export default function useContextmenu() {
         case 'duplicate':
           return createNote({ from: noteId });
         case 'move':
-          return move.selectTarget();
+          return startMoving({ mode: 'select', from: tree, item: tree });
         default:
           assert.fail(`invalid action: ${action}`);
       }

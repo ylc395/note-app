@@ -1,7 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 import { createPortal } from 'react-dom';
-import assert from 'assert';
 
 import Explorer from '@domain/app/model/abstract/Explorer';
 import { APP_NAME } from '@shared/domain/infra/constants';
@@ -10,24 +9,35 @@ import TreeNode from '@domain/common/model/abstract/TreeNode';
 import { useDragItem } from '@web/components/dnd/hooks';
 
 import Tree from '@web/components/Tree';
-import NodeTitle from './NodeTitle';
+import NodeTitle from './Tree/NodeTitle';
+import { useMemo } from 'react';
+import MoveBehavior from '@domain/app/model/behavior/MoveBehavior';
 
-export default observer(function TreeView() {
+export default observer(function TreeDraggingPreview() {
   const { currentExplorer } = container.resolve(ExplorerManager);
   const { position, item } = useDragItem();
+  const { isDraggingMoving } = container.resolve(MoveBehavior);
 
-  assert(currentExplorer instanceof Explorer);
+  const tree = useMemo(
+    () =>
+      currentExplorer instanceof Explorer &&
+      isDraggingMoving &&
+      item instanceof TreeNode &&
+      item.entityLocator.entityType === currentExplorer.entityType &&
+      currentExplorer.getTreeFromSelectedNodes(),
+    [currentExplorer, item, isDraggingMoving],
+  );
 
   return (
-    item instanceof TreeNode &&
+    tree &&
     createPortal(
       <div className={APP_NAME}>
         <Tree
-          className="rounded-md bg-layout-highlight pointer-events-none fixed max-w-[300px] opacity-60 text-sm"
-          iconClassName="ml-1 w-3 h-3 opacity-80"
+          className="rounded-md pointer-events-none fixed max-w-[300px] opacity-60 text-sm"
+          iconClassName="invisible"
           nodeClassName="py-1 opacity-60"
           style={{ left: position?.x, top: position?.y }}
-          tree={currentExplorer.dnd.selectedNodesAsTree}
+          tree={tree}
           renderTitle={(node) => <NodeTitle node={node}></NodeTitle>}
         />
       </div>,

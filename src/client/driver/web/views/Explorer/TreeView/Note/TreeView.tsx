@@ -12,14 +12,10 @@ import TreeView from '../common/Tree';
 import useContextmenu from './useContextmenu';
 
 export default observer(function NoteTreeView() {
-  const {
-    createNote,
-    move: { moveByItems: moveNotesByItems },
-  } = container.resolve(NoteService);
+  const { createNote } = container.resolve(NoteService);
 
   const {
     tree,
-    dnd: { updateTreeForDropping, reset: resetTree },
     rename: { id: editingId, submit: submitEditing, cancel: cancelEditing },
   } = container.resolve(Explorer);
   const { openEntity } = container.resolve(Workbench);
@@ -33,9 +29,6 @@ export default observer(function NoteTreeView() {
       onEditCancel={cancelEditing}
       tree={tree}
       onClick={({ id }, isMultiple) => !isMultiple && openEntity({ entityType: EntityTypes.Note, entityId: id })}
-      onDragStop={resetTree}
-      onDragStart={updateTreeForDropping}
-      onDrop={(item, node) => moveNotesByItems(node.id, item)}
       nodeOperation={({ id }) => (
         <Button icon={<PlusIcon />} variant="primary" onClick={() => createNote({ parentId: id })} size="small" />
       )}
