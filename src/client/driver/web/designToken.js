@@ -58,7 +58,7 @@ export const tokens = {
         textColor: '#0f172a',
       },
       highlight: {
-        backgroundColor: colorWithOpacity('#f6f6f7', 0.8),
+        backgroundColor: colorWithOpacity('#f6f6f7', 0.9),
       },
     },
     ghost: {

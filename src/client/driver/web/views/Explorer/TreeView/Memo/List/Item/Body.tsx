@@ -1,19 +1,13 @@
 import { observer } from 'mobx-react-lite';
-import { container } from 'tsyringe';
 
-import { MemoVO } from '@shared/domain/model/memo';
-import MemoService from '@domain/app/service/MemoService';
 import Editor from '../../Editor';
+import assert from 'assert';
+import type MemoTreeNode from '@domain/app/model/memo/TreeNode';
 
-export default observer(function Body({ id }: { id: MemoVO['id'] }) {
-  const { explorer: list } = container.resolve(MemoService);
-  const editor = list.getEditor(id, 'edit');
-  const memo = list.getMemo(id);
+export default observer(function Body({ node }: { node: MemoTreeNode }) {
+  assert(node.memo);
 
   return (
-    <div>
-      {editor && <Editor editor={editor} />}
-      <div className="min-h-[100px]  p-2">{memo.body}</div>
-    </div>
+    <div>{node.editor ? <Editor node={node} /> : <div className="min-h-[80px] select-text">{node.memo.body}</div>}</div>
   );
 });

@@ -8,6 +8,13 @@ import type { EntityParentId } from '../entity';
 
 export default class Editor {
   private readonly remote = container.resolve(rpcToken);
+  public get isDirty() {
+    if (this.options.memo) {
+      return this.options.memo.body === this.content;
+    }
+
+    return Boolean(this.content);
+  }
 
   constructor(
     private readonly options: {
@@ -32,7 +39,6 @@ export default class Editor {
       ? await this.remote.memo.updateOne.mutate([this.options.memo.id, { body: this.content }])
       : await this.remote.memo.create.mutate({ body: this.content, parentId: this.options.parentId });
     this.options.onSubmit(newMemo);
-    this.reset();
   };
 
   @action

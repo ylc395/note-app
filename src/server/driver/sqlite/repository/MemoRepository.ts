@@ -98,7 +98,7 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
     }
 
     if (q.orderBy === 'createdAt') {
-      sql = sql.orderBy('createdAt desc');
+      sql = sql.orderBy('createdAt', q.order);
     }
 
     if (q.limit) {

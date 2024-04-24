@@ -3,16 +3,17 @@ import { container } from 'tsyringe';
 import { useEffect, useRef } from 'react';
 import { useEventListener } from 'ahooks';
 
-import MemoService from '@domain/app/service/MemoService';
 import ListItem from './Item';
+import MemoExplorer from '@domain/app/model/memo/Explorer';
+import assert from 'assert';
 
 export default observer(function List() {
-  const { explorer } = container.resolve(MemoService);
+  const { root, uiState, updateUIState } = container.resolve(MemoExplorer);
   const divRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (explorer.memos.length > 0 && divRef.current && divRef.current.scrollTop === 0) {
-      divRef.current.scrollTo(0, explorer.uiState.scrollTop || 0);
+    if (root.sortedChildren.length > 0 && divRef.current && divRef.current.scrollTop === 0) {
+      divRef.current.scrollTo(0, uiState.scrollTop || 0);
     }
   });
 
@@ -24,20 +25,21 @@ export default observer(function List() {
       const { scrollTop, clientHeight, scrollHeight } = divRef.current;
 
       if (scrollHeight - (clientHeight + scrollTop) < 10) {
-        explorer.load('before');
+        root.load('down');
       }
 
-      explorer.updateUIState({ scrollTop });
+      updateUIState({ scrollTop });
     },
     { target: divRef },
   );
 
   return (
-    <div ref={divRef} className="min-h-0 grow overflow-auto">
-      {explorer.memos.map(({ id }) => (
-        <ListItem id={id} key={id} />
-      ))}
-      {explorer.isEnd.before && <div>没有了</div>}
+    <div ref={divRef} className="grow overflow-auto pr-2 custom-scrollbar">
+      {root.sortedChildren.map((memoTreeNode) => {
+        assert(memoTreeNode.memo);
+        return <ListItem key={memoTreeNode.memo.id} node={memoTreeNode} />;
+      })}
+      {root.isLoaded.down && <div className="text-sm text-center text-text-secondary mb-2 opacity-40">没有了</div>}
     </div>
   );
 });

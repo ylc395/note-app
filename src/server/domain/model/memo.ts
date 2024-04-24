@@ -14,5 +14,6 @@ export interface MemoQuery {
   isPinned?: boolean;
   limit?: number;
   parentId?: EntityParentId;
+  order?: 'desc' | 'asc';
   orderBy?: 'createdAt';
 }

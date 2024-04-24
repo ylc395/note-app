@@ -1,19 +1,15 @@
 import { observer } from 'mobx-react-lite';
 import { useRef, useEffect } from 'react';
-import { container } from 'tsyringe';
 
-import Editor from '@domain/app/model/memo/Editor';
-import MemoExplorer from '@domain/app/model/memo/Explorer';
 import assert from 'assert';
+import MemoTreeNode from '@domain/app/model/memo/TreeNode';
 
-export default observer(function MemoEditor({ editor }: { editor: Editor }) {
+export default observer(function MemoEditor({ node, isChild = false }: { node: MemoTreeNode; isChild?: boolean }) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const { stopEditing } = container.resolve(MemoExplorer);
+  const { isRoot, stopEditing } = node;
+  const editor = isChild ? node.newChildEditor : node.editor;
 
-  function cancel() {
-    assert(editor.memoId);
-    stopEditing(editor.memoId, 'edit');
-  }
+  assert(editor);
 
   useEffect(() => {
     textareaRef.current?.focus();
@@ -24,7 +20,7 @@ export default observer(function MemoEditor({ editor }: { editor: Editor }) {
       <textarea ref={textareaRef} value={editor.content} onChange={(e) => editor.updateContent(e.target.value)} />
       <div>
         <button onClick={editor.submit}>提交</button>
-        {editor.memoId ? <button onClick={cancel}>取消</button> : <button onClick={editor.reset}>重置</button>}
+        {!isRoot ? <button onClick={() => stopEditing()}>取消</button> : <button onClick={editor.reset}>重置</button>}
       </div>
     </div>
   );

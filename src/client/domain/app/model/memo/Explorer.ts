@@ -1,41 +1,41 @@
-import { observable, makeObservable, action, toJS, computed } from 'mobx';
+import { observable, makeObservable, action, toJS, runInAction } from 'mobx';
 import { container, singleton } from 'tsyringe';
 import { once } from 'lodash-es';
-import assert from 'assert';
 
 import { token as rpcToken } from '@domain/common/infra/rpc';
 import { token as storageToken } from '@domain/app/infra/localStorage';
 import type { Duration, MemoVO } from '@shared/domain/model/memo';
-import MemoTree from '@domain/app/model/memo/Tree';
-import Editor from './Editor';
 import { EntityTypes } from '../entity';
+import MemoTreeNode from './TreeNode';
 
 interface UIState {
   scrollTop?: number;
   panel?: 'editor' | 'calendar' | '';
 }
 
+export type Order = 'asc' | 'desc';
+
 @singleton()
 export default class MemoExplorer {
   private readonly remote = container.resolve(rpcToken);
   public readonly entityType = EntityTypes.Memo;
   private readonly localStorage = container.resolve(storageToken);
+  @observable public order: Order = 'desc'; // only work for children nodes
+
+  @action.bound
+  public setOrder(order: Order) {
+    this.order = order;
+  }
 
   @observable.ref
-  private tree = new MemoTree();
-
-  public readonly newRootMemoEditor = new Editor({ onSubmit: this.tree.updateTreeByEntity });
-
-  private readonly editors = {
-    create: observable({}, { deep: false }) as Record<MemoVO['id'], Editor>,
-    edit: observable({}, { deep: false }) as Record<MemoVO['id'], Editor>,
-  };
+  public root = new MemoTreeNode({ explorer: this });
 
   constructor() {
     makeObservable(this);
   }
 
-  @observable.ref public duration?: Duration;
+  @observable.ref
+  public duration?: Duration;
 
   @observable
   public uiState = {
@@ -54,104 +54,15 @@ export default class MemoExplorer {
     this.updateUIState({ panel: this.uiState.panel === panel ? '' : panel });
   };
 
-  @action.bound
-  public startEditing(id: MemoVO['id'], mode: 'edit' | 'create') {
-    const editors = this.editors[mode];
-
-    editors[id] = new Editor({
-      memo: mode === 'create' ? undefined : this.getMemo(id),
-      parentId: mode === 'create' ? id : undefined,
-      onSubmit: (result) => this.stopEditing(result, mode),
-    });
-  }
-
-  public getEditor(id: MemoVO['id'], mode: 'create' | 'edit') {
-    return this.editors[mode][id];
-  }
-
-  @action.bound
-  public stopEditing(memo: MemoVO | MemoVO['id'], mode: 'create' | 'edit') {
-    const editors = this.editors[mode];
-
-    if (typeof memo === 'string') {
-      delete editors[memo];
-    } else {
-      this.tree.updateTreeByEntity(memo);
-      delete editors[memo.id];
-    }
-  }
-
-  public readonly init = once(async () => {
-    this.tree.root.loadChildren();
+  public readonly init = once(() => {
+    this.root.load();
   });
 
-  @action.bound
-  public setDuration(duration: Duration) {
-    this.duration = duration;
-    this.tree = new MemoTree();
-    this.tree.loadByTime(duration);
-  }
-
   public async reveal(id: MemoVO['id']) {
-    if (this.tree.getNode(id, true)) {
-      return;
-    }
+    const memos = await this.remote.memo.queryTreeFragment.query({ to: id, limit: 15 });
 
-    const allMemos = await this.remote.memo.queryTreeFragment.query({ to: id, limit: 15 });
-    this.tree = new MemoTree();
-    this.tree.updateTreeByEntity(allMemos);
-
-    const { parent } = this.tree.getNode(id);
-
-    if (parent) {
-      this.toggleExpand(parent.id);
-    }
-  }
-
-  public async togglePin(id: MemoVO['id']) {
-    const memo = this.getMemo(id);
-    await this.remote.memo.updateOne.mutate([id, { isPinned: !memo.isPinned }]);
-    this.tree.updateTree({ id, isPinned: !memo.isPinned });
-  }
-
-  public getMemo(id: MemoVO['id']) {
-    const entity = this.tree.getNode(id).entity;
-    assert(entity);
-
-    return entity;
-  }
-
-  @computed
-  public get memos() {
-    return this.tree.root.memos;
-  }
-
-  @computed
-  public get isEnd() {
-    return this.tree.root.isEnd;
-  }
-
-  public load(direction: 'before' | 'after') {
-    this.tree.root.loadChildren(direction);
-  }
-
-  public getChildren(id: MemoVO['id']) {
-    return this.tree.getNode(id).memos;
-  }
-
-  public getChildrenCount(id: MemoVO['id']) {
-    return this.getChildren(id).length || this.getMemo(id).childrenCount;
-  }
-
-  public toggleExpand(id: MemoVO['id']) {
-    const result = this.tree.getNode(id).toggleExpand();
-
-    if (result) {
-      this.startEditing(id, 'create');
-    } else {
-      this.stopEditing(id, 'create');
-    }
-
-    return result;
+    runInAction(() => {
+      this.root = MemoTreeNode.from(memos, this);
+    });
   }
 }

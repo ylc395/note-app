@@ -67,7 +67,14 @@ export default class MemoService extends BaseService {
 
   public async query(query: ClientMemoQuery) {
     assert(!isEmpty(query), 'can not query all');
-    assert(!(query.isPinned && query.limit), 'isPinned / pinned can not be together');
+    assert(
+      !(
+        (query.startTime || typeof query.after !== 'undefined') &&
+        (query.endTime || typeof query.before !== 'undefined') &&
+        query.limit
+      ),
+      'can not set a limit when duration is set',
+    );
 
     if (query.after || query.before) {
       await this.assertAvailableIds(compact([query.after, query.before]));
@@ -97,6 +104,7 @@ export default class MemoService extends BaseService {
       limit: query.limit,
       parentId: query.parentId || null,
       isPinned: query.isPinned,
+      order: startTime ? 'asc' : 'desc',
       orderBy: 'createdAt',
     });
 

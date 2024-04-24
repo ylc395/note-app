@@ -1,20 +1,18 @@
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 
-import MemoService from '@domain/app/service/MemoService';
 import Header from './Header';
 import NewMemoEditor from './Editor';
 import List from './List';
+import MemoExplorer from '@domain/app/model/memo/Explorer';
 
 export default observer(function MemoExplorerView() {
-  const {
-    explorer: { uiState, newRootMemoEditor },
-  } = container.resolve(MemoService);
+  const { uiState, root } = container.resolve(MemoExplorer);
 
   return (
     <>
       <Header />
-      {uiState.panel === 'editor' && <NewMemoEditor editor={newRootMemoEditor} />}
+      {uiState.panel === 'editor' && <NewMemoEditor isChild node={root} />}
       <List />
     </>
   );

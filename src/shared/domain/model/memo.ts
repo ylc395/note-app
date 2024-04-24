@@ -47,8 +47,8 @@ export type Duration = Infer<typeof durationSchema>;
 export const clientMemoQuerySchema = object({
   limit: number().optional(),
   parentId: string().nullish(),
-  before: string().optional(),
-  after: string().optional(),
+  before: string().nullish(),
+  after: string().nullish(),
   isPinned: boolean().optional(),
 }).merge(durationSchema.partial());
 

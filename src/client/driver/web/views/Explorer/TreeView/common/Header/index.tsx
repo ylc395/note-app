@@ -14,7 +14,7 @@ export default function ExplorerHeader({ title, onDrop, left, right, canDrop = t
   return (
     <div className="relative shrink-0 h-10 mb-2 flex items-center justify-between">
       <h1 className="m-0 mr-1 text-base">{title}</h1>
-      {!canDrop && (
+      {(!onDrop || !canDrop) && (
         <div className="flex grow justify-between">
           <div className="flex">
             {left.map((props, i) => (
