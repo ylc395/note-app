@@ -11,7 +11,7 @@ import SortBehavior from './SortBehavior';
 import MoveBehavior from '../../behavior/MoveBehavior';
 
 interface ExplorerState {
-  scrollTop?: number;
+  scroll?: { x: number; y: number };
   expanded?: EntityId[];
   selected?: EntityId[];
 }
@@ -30,16 +30,25 @@ export default abstract class Explorer<T extends HierarchyEntity = HierarchyEnti
     return this.tree.entityType;
   }
 
+  private get uiState() {
+    return this.localStorage.get<ExplorerState>(this.localStorageKey);
+  }
+
+  public get scrollInfo() {
+    return this.uiState?.scroll;
+  }
+
   public readonly init = once(async () => {
     await this.tree.root.loadChildren();
-    const state = this.localStorage.get<ExplorerState>(this.localStorageKey);
 
-    if (state?.expanded) {
-      await this.expandNodes(state.expanded);
+    const { uiState } = this;
+
+    if (uiState?.expanded) {
+      await this.expandNodes(uiState.expanded);
     }
 
-    if (state?.selected) {
-      this.tree.setSelected(state.selected);
+    if (uiState?.selected) {
+      this.tree.setSelected(uiState.selected);
     }
 
     autorun(this.persistUIState);
@@ -94,9 +103,9 @@ export default abstract class Explorer<T extends HierarchyEntity = HierarchyEnti
     });
   };
 
-  public persistScrollTop(scrollTop: number) {
-    this.localStorage.set(this.localStorageKey, { scrollTop });
-  }
+  public readonly persistScrollInfo = (scrollInfo: NonNullable<ExplorerState['scroll']>) => {
+    this.localStorage.set<ExplorerState>(this.localStorageKey, { scroll: scrollInfo });
+  };
 
   private readonly expandingNodes = new Set<EntityId>();
   private async expandNodes(ids: EntityId[]) {

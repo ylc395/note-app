@@ -1,5 +1,5 @@
-import { useState, type ReactNode } from 'react';
-import { useBoolean } from 'ahooks';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useBoolean, useEventListener } from 'ahooks';
 import clsx from 'clsx';
 
 import type TreeNode from '@domain/common/model/abstract/TreeNode';
@@ -31,8 +31,9 @@ export default function ExplorerTreeView<T extends HierarchyEntity>({
 }: Props<T>) {
   const [isContextmenuOpen, { setTrue: openContextmenu, setFalse: closeContextmenu }] = useBoolean(false);
   const [contextmenuItems, setContextmenuItems] = useState<MenuProps['items']>();
+  const divRef = useRef<HTMLDivElement | null>(null);
   const { finishMoving, startMoving, moveTo } = container.resolve(MoveBehavior);
-  const { tree, rename } = explorer;
+  const { tree, rename, persistScrollInfo } = explorer;
 
   function handleClick(node: TreeNode<T>, isMultiple: boolean) {
     node.toggleSelect({ isMultiple });
@@ -45,12 +46,24 @@ export default function ExplorerTreeView<T extends HierarchyEntity>({
     openContextmenu();
   }
 
+  useEventListener(
+    'scroll',
+    (e) => persistScrollInfo({ y: (e.target as HTMLElement).scrollTop, x: (e.target as HTMLElement).scrollLeft }),
+    { target: divRef },
+  );
+
+  useEffect(() => {
+    if (divRef.current) {
+      const { x = 0, y = 0 } = explorer.scrollInfo || {};
+      divRef.current.scrollTo(x, y);
+    }
+  }, [explorer]);
+
   return (
-    <>
+    <div ref={divRef} className="grow overflow-auto pr-2 -mr-2 custom-scrollbar">
       <Tree
         onContextmenu={handleContextmenu}
         onClick={handleClick}
-        className="grow overflow-auto pr-2 -mr-2 custom-scrollbar"
         nodeClassName={(node) =>
           clsx(
             'group relative cursor-pointer py-1 rounded-md text-text-secondary text-sm hover:bg-tree-highlight',
@@ -84,6 +97,6 @@ export default function ExplorerTreeView<T extends HierarchyEntity>({
         )}
       />
       <Menu native items={contextmenuItems || []} isOpen={isContextmenuOpen} onClose={closeContextmenu} />
-    </>
+    </div>
   );
 }

@@ -42,7 +42,7 @@ export default class MemoTreeNode {
   public startEditing() {
     assert(this.memo, 'can not edit root node');
     this.editor = new Editor({
-      parentId: this.memo.id,
+      memo: this.memo,
       onSubmit: this.stopEditing,
       onCancel: this.stopEditing,
     });
