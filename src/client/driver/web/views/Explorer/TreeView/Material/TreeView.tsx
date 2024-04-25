@@ -1,6 +1,5 @@
 import { container } from 'tsyringe';
 import { PlusIcon, FolderOpenIcon, FolderClosedIcon } from 'lucide-react';
-import { observer } from 'mobx-react-lite';
 
 import MimeTypeIcon from '@web/components/icon/MimeTypeIcon';
 import { Workbench } from '@domain/app/model/workbench';
@@ -11,7 +10,7 @@ import MaterialService from '@domain/app/service/MaterialService';
 import MenuButton from '@web/components/MenuButton';
 import MaterialExplorer from '@domain/app/model/material/Explorer';
 
-import TreeView from '../common/Tree';
+import ExplorerTreeView from '../common/ExplorerTree';
 import useContextmenu from './useContextmenu';
 
 const defaultIcon = (node: TreeNode<MaterialVO>) => {
@@ -26,15 +25,13 @@ const defaultIcon = (node: TreeNode<MaterialVO>) => {
   );
 };
 
-export default observer(function MaterialTreeView() {
+// eslint-disable-next-line mobx/missing-observer
+export default (function MaterialTreeView() {
   const {
     creation: { create },
   } = container.resolve(MaterialService);
   const { openEntity } = container.resolve(Workbench);
-  const {
-    tree,
-    rename: { id: editingId, submit: submitEditing, cancel: cancelEditing },
-  } = container.resolve(MaterialExplorer);
+  const explorer = container.resolve(MaterialExplorer);
 
   const handleClick = (node: TreeNode<MaterialVO>, isMultiple: boolean) => {
     if (!isMultiple && node.entity) {
@@ -47,12 +44,9 @@ export default observer(function MaterialTreeView() {
   };
 
   return (
-    <TreeView
+    <ExplorerTreeView
+      explorer={explorer}
       getContextmenuItems={useContextmenu()}
-      editingNodeId={editingId}
-      onEditEnd={submitEditing}
-      onEditCancel={cancelEditing}
-      tree={tree}
       onClick={handleClick}
       defaultIcon={defaultIcon}
       nodeOperation={(node) => (

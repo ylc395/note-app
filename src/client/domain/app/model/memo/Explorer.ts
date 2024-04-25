@@ -1,4 +1,4 @@
-import { observable, makeObservable, action, toJS, runInAction } from 'mobx';
+import { observable, makeObservable, action, toJS, runInAction, autorun } from 'mobx';
 import { container, singleton } from 'tsyringe';
 import { once } from 'lodash-es';
 
@@ -10,6 +10,7 @@ import MemoTreeNode from './TreeNode';
 
 interface UIState {
   scrollTop?: number;
+  editorContent?: string;
   panel?: 'editor' | 'calendar' | '';
 }
 
@@ -22,16 +23,16 @@ export default class MemoExplorer {
   private readonly localStorage = container.resolve(storageToken);
   @observable public order: Order = 'desc'; // only work for children nodes
 
-  @action.bound
-  public setOrder(order: Order) {
-    this.order = order;
-  }
-
   @observable.ref
   public root = new MemoTreeNode({ explorer: this });
 
   constructor() {
     makeObservable(this);
+  }
+
+  @action.bound
+  public setOrder(order: Order) {
+    this.order = order;
   }
 
   @observable.ref
@@ -50,11 +51,28 @@ export default class MemoExplorer {
     this.localStorage.set('memo-ui', toJS(this.uiState));
   }
 
-  public readonly togglePanel = (panel: 'editor' | 'calendar') => {
+  @action.bound
+  public togglePanel(panel: 'editor' | 'calendar') {
     this.updateUIState({ panel: this.uiState.panel === panel ? '' : panel });
+
+    if (this.uiState.panel === 'editor' && !this.root.newChildEditor) {
+      this.root.startEditingNewChild(this.uiState.editorContent);
+    }
+  }
+
+  private readonly updateUIStateByRootChildEditor = () => {
+    if (!this.root.newChildEditor && this.uiState.panel === 'editor') {
+      this.updateUIState({ panel: '' });
+    }
+
+    this.updateUIState({ editorContent: this.root.newChildEditor?.content });
   };
 
   public readonly init = once(() => {
+    if (this.uiState.panel === 'editor' && !this.root.newChildEditor) {
+      this.root.startEditingNewChild(this.uiState.editorContent);
+    }
+    autorun(this.updateUIStateByRootChildEditor);
     this.root.load();
   });
 

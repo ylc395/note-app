@@ -8,23 +8,29 @@ import type { EntityParentId } from '../entity';
 
 export default class Editor {
   private readonly remote = container.resolve(rpcToken);
+  constructor(
+    private readonly options: {
+      onSubmit: (newMemo: MemoVO) => void;
+      onCancel: () => void;
+      initial?: string;
+      memo?: MemoVO;
+      parentId?: EntityParentId;
+    },
+  ) {
+    this.content = options.initial || options.memo?.body || '';
+    makeObservable(this);
+  }
+
+  public readonly cancel = () => {
+    this.options.onCancel();
+  };
+
   public get isDirty() {
     if (this.options.memo) {
       return this.options.memo.body === this.content;
     }
 
     return Boolean(this.content);
-  }
-
-  constructor(
-    private readonly options: {
-      onSubmit: (newMemo: MemoVO) => void;
-      memo?: MemoVO;
-      parentId?: EntityParentId;
-    },
-  ) {
-    this.content = options.memo?.body || '';
-    makeObservable(this);
   }
 
   @observable
@@ -44,10 +50,5 @@ export default class Editor {
   @action
   public updateContent(value: string) {
     this.content = value;
-  }
-
-  @action.bound
-  public reset() {
-    this.content = '';
   }
 }

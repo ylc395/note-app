@@ -30,7 +30,6 @@ export default class MemoTreeNode {
 
     if (!memo) {
       this.isExpanded = true;
-      this.initChildEditor();
     } else {
       this.isExpanded = false;
     }
@@ -42,11 +41,15 @@ export default class MemoTreeNode {
   @action.bound
   public startEditing() {
     assert(this.memo, 'can not edit root node');
-    this.editor = new Editor({ parentId: this.memo.id, onSubmit: this.stopEditing });
+    this.editor = new Editor({
+      parentId: this.memo.id,
+      onSubmit: this.stopEditing,
+      onCancel: this.stopEditing,
+    });
   }
 
   @action.bound
-  public stopEditing(memo?: MemoVO) {
+  private stopEditing(memo?: MemoVO) {
     this.editor = undefined;
 
     if (memo) {
@@ -54,12 +57,14 @@ export default class MemoTreeNode {
     }
   }
 
-  @action
-  private initChildEditor() {
+  @action.bound
+  public startEditingNewChild(initial?: string) {
     this.newChildEditor = new Editor({
-      memo: this.memo,
+      initial,
+      parentId: this.memo?.id,
+      onCancel: this.stopEditingNewChild,
       onSubmit: action((memo) => {
-        this.initChildEditor();
+        this.startEditingNewChild();
         this.children?.push(new MemoTreeNode({ memo, explorer: this.explorer }));
 
         if (this.memo) {
@@ -70,17 +75,22 @@ export default class MemoTreeNode {
   }
 
   @action.bound
+  private stopEditingNewChild() {
+    this.newChildEditor = undefined;
+  }
+
+  @action.bound
   public toggleExpand() {
+    assert(!this.isRoot, 'can not expand a root');
     this.isExpanded = !this.isExpanded;
 
     if (this.isExpanded) {
-      this.initChildEditor();
       this.load();
     } else {
       this.children = [];
 
       if (!this.newChildEditor?.isDirty) {
-        this.newChildEditor = undefined;
+        this.stopEditingNewChild();
       }
     }
   }

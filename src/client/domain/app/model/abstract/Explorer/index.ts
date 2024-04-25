@@ -11,8 +11,9 @@ import SortBehavior from './SortBehavior';
 import MoveBehavior from '../../behavior/MoveBehavior';
 
 interface ExplorerState {
-  expanded: EntityId[];
-  selected: EntityId[];
+  scrollTop?: number;
+  expanded?: EntityId[];
+  selected?: EntityId[];
 }
 
 export default abstract class Explorer<T extends HierarchyEntity = HierarchyEntity> {
@@ -33,12 +34,15 @@ export default abstract class Explorer<T extends HierarchyEntity = HierarchyEnti
     await this.tree.root.loadChildren();
     const state = this.localStorage.get<ExplorerState>(this.localStorageKey);
 
-    if (state) {
+    if (state?.expanded) {
       await this.expandNodes(state.expanded);
+    }
+
+    if (state?.selected) {
       this.tree.setSelected(state.selected);
     }
 
-    autorun(this.persist);
+    autorun(this.persistUIState);
   });
 
   protected abstract queryPath(id: EntityId): Promise<Path>;
@@ -81,7 +85,7 @@ export default abstract class Explorer<T extends HierarchyEntity = HierarchyEnti
     return `explorer-${this.entityType}-ui`;
   }
 
-  private readonly persist = () => {
+  private readonly persistUIState = () => {
     this.localStorage.set<ExplorerState>(this.localStorageKey, {
       selected: this.tree.getSelectedNodeIds(),
       expanded: this.tree.expandedNodes
@@ -89,6 +93,10 @@ export default abstract class Explorer<T extends HierarchyEntity = HierarchyEnti
         .map((node) => node.id),
     });
   };
+
+  public persistScrollTop(scrollTop: number) {
+    this.localStorage.set(this.localStorageKey, { scrollTop });
+  }
 
   private readonly expandingNodes = new Set<EntityId>();
   private async expandNodes(ids: EntityId[]) {

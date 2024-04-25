@@ -34,7 +34,7 @@ export default forwardRef<HTMLButtonElement, Props>(function Button(
         disabled && 'opacity-50',
         block ? 'flex w-full' : 'inline-flex',
         disabled ? 'cursor-not-allowed' : 'cursor-pointer',
-        size === 'small' && 'h-4 [--icon-size:14px] text-xs',
+        size === 'small' && 'h-4 [--icon-size:14px] text-xs p-0',
         size === 'small' && isIconButton && 'w-4 rounded',
         size === 'medium' && 'h-8 [--icon-size:20px] text-sm rounded-md p-2',
         size === 'medium' && isIconButton && 'w-8',

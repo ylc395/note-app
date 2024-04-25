@@ -3,7 +3,7 @@ import { observer } from 'mobx-react-lite';
 
 import Modal from '@web/components/Modal';
 import Tree from '@web/components/Tree';
-import NodeTitle from './Tree/NodeTitle';
+import NodeTitle from './ExplorerTree/NodeTitle';
 import { container } from 'tsyringe';
 import MoveBehavior from '@domain/app/model/behavior/MoveBehavior';
 

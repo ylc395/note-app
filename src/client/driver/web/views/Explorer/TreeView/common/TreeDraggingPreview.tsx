@@ -9,7 +9,7 @@ import TreeNode from '@domain/common/model/abstract/TreeNode';
 import { useDragItem } from '@web/components/dnd/hooks';
 
 import Tree from '@web/components/Tree';
-import NodeTitle from './Tree/NodeTitle';
+import NodeTitle from './ExplorerTree/NodeTitle';
 import { useMemo } from 'react';
 import MoveBehavior from '@domain/app/model/behavior/MoveBehavior';
 

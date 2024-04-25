@@ -6,7 +6,6 @@ import MemoTreeNode from '@domain/app/model/memo/TreeNode';
 
 export default observer(function MemoEditor({ node, isChild = false }: { node: MemoTreeNode; isChild?: boolean }) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const { isRoot, stopEditing } = node;
   const editor = isChild ? node.newChildEditor : node.editor;
 
   assert(editor);
@@ -20,7 +19,7 @@ export default observer(function MemoEditor({ node, isChild = false }: { node: M
       <textarea ref={textareaRef} value={editor.content} onChange={(e) => editor.updateContent(e.target.value)} />
       <div>
         <button onClick={editor.submit}>提交</button>
-        {!isRoot ? <button onClick={() => stopEditing()}>取消</button> : <button onClick={editor.reset}>重置</button>}
+        <button onClick={editor.cancel}>取消</button>
       </div>
     </div>
   );

@@ -2,7 +2,6 @@ import { useState, type ReactNode } from 'react';
 import { useBoolean } from 'ahooks';
 import clsx from 'clsx';
 
-import type TreeModel from '@domain/common/model/abstract/Tree';
 import type TreeNode from '@domain/common/model/abstract/TreeNode';
 import type { HierarchyEntity } from '@shared/domain/model/entity';
 import Tree from '@web/components/Tree';
@@ -12,32 +11,28 @@ import DndTreeNode from './DndTreeNode';
 import Menu, { type Props as MenuProps } from '@web/components/Menu';
 import { container } from 'tsyringe';
 import MoveBehavior from '@domain/app/model/behavior/MoveBehavior';
+import Explorer from '@domain/app/model/abstract/Explorer';
 
 interface Props<T extends HierarchyEntity> {
-  tree: TreeModel<T>;
+  explorer: Explorer<T>;
   getContextmenuItems: (node: TreeNode<T>) => MenuProps['items'];
   nodeOperation: (node: TreeNode<T>) => ReactNode;
   onClick: (node: TreeNode<T>, isMultiple: boolean) => void;
-  editingNodeId?: string;
   defaultIcon?: NodeTitleProps<T>['defaultIcon'];
-  onEditEnd?: NodeTitleProps<T>['onEditEnd'];
-  onEditCancel?: NodeTitleProps<T>['onEditCancel'];
 }
 
 // eslint-disable-next-line mobx/missing-observer
-export default function TreeView<T extends HierarchyEntity>({
-  tree,
+export default function ExplorerTreeView<T extends HierarchyEntity>({
   getContextmenuItems,
-  editingNodeId,
+  explorer,
   onClick,
   nodeOperation,
-  onEditCancel,
-  onEditEnd,
   defaultIcon,
 }: Props<T>) {
   const [isContextmenuOpen, { setTrue: openContextmenu, setFalse: closeContextmenu }] = useBoolean(false);
   const [contextmenuItems, setContextmenuItems] = useState<MenuProps['items']>();
   const { finishMoving, startMoving, moveTo } = container.resolve(MoveBehavior);
+  const { tree, rename } = explorer;
 
   function handleClick(node: TreeNode<T>, isMultiple: boolean) {
     node.toggleSelect({ isMultiple });
@@ -78,13 +73,13 @@ export default function TreeView<T extends HierarchyEntity>({
         )}
         renderTitle={(node) => (
           <NodeTitle
-            onEditCancel={onEditCancel}
-            onEditEnd={onEditEnd}
-            isEditing={editingNodeId === node.id}
+            onEditCancel={rename.cancel}
+            onEditEnd={rename.submit}
+            isEditing={rename.id === node.id}
             defaultIcon={defaultIcon}
             node={node}
           >
-            {!node.isDisabled && editingNodeId !== node.id && nodeOperation(node)}
+            {!node.isDisabled && rename.id !== node.id && nodeOperation(node)}
           </NodeTitle>
         )}
       />

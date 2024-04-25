@@ -12,7 +12,7 @@ export default observer(function MemoExplorerView() {
   return (
     <>
       <Header />
-      {uiState.panel === 'editor' && <NewMemoEditor isChild node={root} />}
+      {uiState.panel === 'editor' && root.newChildEditor && <NewMemoEditor isChild node={root} />}
       <List />
     </>
   );
