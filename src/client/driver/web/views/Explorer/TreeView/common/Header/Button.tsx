@@ -6,16 +6,13 @@ export interface Props {
   onClick?: () => void;
   disabled?: ButtonProps['disabled'];
 
-  menuOptions?: {
-    items: MenuButtonProps['menuItems'];
-    onSelect: MenuButtonProps['onSelect'];
-  };
+  menuItems?: MenuButtonProps['menuItems'];
 }
 
 // eslint-disable-next-line mobx/missing-observer
-export default (function HeaderButton({ onClick, icon, disabled, menuOptions }: Props) {
-  if (menuOptions) {
-    return <MenuButton menuItems={menuOptions.items} onSelect={menuOptions.onSelect} button={{ icon, disabled }} />;
+export default (function HeaderButton({ onClick, icon, disabled, menuItems }: Props) {
+  if (menuItems) {
+    return <MenuButton menuItems={menuItems} button={{ icon, disabled }} />;
   }
 
   return <Button onClick={() => onClick?.()} icon={icon} disabled={disabled} />;

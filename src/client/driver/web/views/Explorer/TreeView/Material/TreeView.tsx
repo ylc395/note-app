@@ -48,7 +48,7 @@ export default observer(function MaterialTreeView() {
 
   return (
     <TreeView
-      {...useContextmenu()}
+      getContextmenuItems={useContextmenu()}
       editingNodeId={editingId}
       onEditEnd={submitEditing}
       onEditCancel={cancelEditing}
@@ -62,10 +62,9 @@ export default observer(function MaterialTreeView() {
             variant: 'primary',
             icon: <PlusIcon />,
           }}
-          onSelect={(key) => create(node.id, key as MaterialTypes)}
           menuItems={[
-            { label: '创建目录', key: MaterialTypes.Directory },
-            { label: '创建素材', key: MaterialTypes.Entity },
+            { label: '创建目录', onSelect: () => create(node.id, MaterialTypes.Directory) },
+            { label: '创建素材', onSelect: () => create(node.id, MaterialTypes.Entity) },
           ]}
         />
       )}

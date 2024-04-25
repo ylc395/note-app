@@ -3,15 +3,19 @@ import { object, string, array, unknown as zodUnknown, type infer as ZodInfer } 
 
 export type MenuItemKey = string | number;
 
-export type MenuItem =
-  | {
-      label: string;
-      key?: MenuItemKey;
-      disabled?: boolean;
-      checked?: boolean;
-      submenu?: MenuItem[];
-    }
-  | { type: 'separator' };
+export interface SeparatorItem {
+  type: 'separator';
+}
+
+export interface CommonMenuItem {
+  label: string;
+  key: MenuItemKey;
+  disabled?: boolean;
+  checked?: boolean;
+  submenu?: MenuItem[];
+}
+
+export type MenuItem = CommonMenuItem | SeparatorItem;
 
 export interface UI {
   getActionFromMenu?: (items: MenuItem[], pos?: { x: number; y: number }) => Promise<string | number | null>;

@@ -10,27 +10,24 @@ import Tree from '@web/components/Tree';
 import NodeTitle, { type Props as NodeTitleProps } from './NodeTitle';
 import DndTreeNode from './DndTreeNode';
 import Menu, { type Props as MenuProps } from '@web/components/Menu';
-import type { MenuItem } from '@shared/domain/infra/ui';
 import { container } from 'tsyringe';
 import MoveBehavior from '@domain/app/model/behavior/MoveBehavior';
 
 interface Props<T extends HierarchyEntity> {
   tree: TreeModel<T>;
-  getContextmenuItems: (node: TreeNode<T>) => MenuItem[];
+  getContextmenuItems: (node: TreeNode<T>) => MenuProps['items'];
   nodeOperation: (node: TreeNode<T>) => ReactNode;
   onClick: (node: TreeNode<T>, isMultiple: boolean) => void;
   editingNodeId?: string;
   defaultIcon?: NodeTitleProps<T>['defaultIcon'];
   onEditEnd?: NodeTitleProps<T>['onEditEnd'];
   onEditCancel?: NodeTitleProps<T>['onEditCancel'];
-  onContextmenuSelect: MenuProps['onSelect'];
 }
 
 // eslint-disable-next-line mobx/missing-observer
 export default function TreeView<T extends HierarchyEntity>({
   tree,
   getContextmenuItems,
-  onContextmenuSelect,
   editingNodeId,
   onClick,
   nodeOperation,
@@ -39,7 +36,7 @@ export default function TreeView<T extends HierarchyEntity>({
   defaultIcon,
 }: Props<T>) {
   const [isContextmenuOpen, { setTrue: openContextmenu, setFalse: closeContextmenu }] = useBoolean(false);
-  const [contextmenuItems, setContextmenuItems] = useState<MenuItem[]>();
+  const [contextmenuItems, setContextmenuItems] = useState<MenuProps['items']>();
   const { finishMoving, startMoving, moveTo } = container.resolve(MoveBehavior);
 
   function handleClick(node: TreeNode<T>, isMultiple: boolean) {
@@ -91,13 +88,7 @@ export default function TreeView<T extends HierarchyEntity>({
           </NodeTitle>
         )}
       />
-      <Menu
-        native
-        items={contextmenuItems || []}
-        isOpen={isContextmenuOpen}
-        onSelect={onContextmenuSelect}
-        onClose={closeContextmenu}
-      />
+      <Menu native items={contextmenuItems || []} isOpen={isContextmenuOpen} onClose={closeContextmenu} />
     </>
   );
 }

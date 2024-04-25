@@ -6,10 +6,10 @@ import ExplorerHeader from '../common/Header';
 
 // eslint-disable-next-line mobx/missing-observer
 export default (function Header() {
-  const { togglePanel, order, setOrder } = container.resolve(MemoExplorer);
+  const { togglePanel, order: currentOrder, setOrder } = container.resolve(MemoExplorer);
 
-  function getMenuItem({ label, key }: { label: string; key: typeof order }) {
-    return { label, key, checked: key === order };
+  function getMenuItem({ label, order }: { label: string; order: Order }) {
+    return { label, onSelect: () => setOrder(order), checked: currentOrder === order };
   }
 
   return (
@@ -22,13 +22,10 @@ export default (function Header() {
       right={[
         {
           icon: <SortDescIcon />,
-          menuOptions: {
-            onSelect: (order) => setOrder(order as Order),
-            items: [
-              getMenuItem({ key: 'asc', label: '子 Memo 升序' }),
-              getMenuItem({ key: 'desc', label: '子 Memo 降序' }),
-            ],
-          },
+          menuItems: [
+            getMenuItem({ order: 'asc', label: '子 Memo 升序' }),
+            getMenuItem({ order: 'desc', label: '子 Memo 降序' }),
+          ],
         },
       ]}
     />

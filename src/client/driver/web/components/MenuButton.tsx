@@ -2,8 +2,7 @@ import { useRef, useState } from 'react';
 import { useBoolean } from 'ahooks';
 
 import Button, { type Props as ButtonProps } from '@web/components/Button';
-import type { MenuItem } from '@domain/common/infra/ui';
-import Menu from './Menu';
+import Menu, { type Props as MenuProps } from './Menu';
 import assert from 'assert';
 
 export interface Props {
@@ -13,11 +12,10 @@ export interface Props {
     variant?: ButtonProps['variant'];
     disabled?: ButtonProps['disabled'];
   };
-  menuItems: MenuItem[];
-  onSelect: (key: string | number) => void;
+  menuItems: MenuProps['items'];
 }
 
-export default (function MenuButton({ button, menuItems, onSelect }: Props) {
+export default (function MenuButton({ button, menuItems }: Props) {
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const [isOpen, { setTrue: open, setFalse: close }] = useBoolean(false);
   const [position, setPosition] = useState<{ x: number; y: number }>();
@@ -33,7 +31,7 @@ export default (function MenuButton({ button, menuItems, onSelect }: Props) {
   return (
     <>
       <Button {...button} onClick={onClick} ref={buttonRef} />
-      <Menu native items={menuItems} onSelect={onSelect} position={position} isOpen={isOpen} onClose={close} />
+      <Menu native items={menuItems} position={position} isOpen={isOpen} onClose={close} />
     </>
   );
 });

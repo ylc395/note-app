@@ -14,7 +14,7 @@ export default observer(function Header() {
     canCollapse,
     entityType,
     collapseAll,
-    sorter: { by: sortBy, setBy: setSortBy },
+    sorter: { by: currentSortBy, setBy: setSortBy },
     tree: { root },
   } = container.resolve(MaterialExplorer);
 
@@ -24,8 +24,8 @@ export default observer(function Header() {
 
   const { moveTo, isDraggingMoving } = container.resolve(MoveBehavior);
 
-  function getMenuItem({ label, key }: { label: string; key: SortBy }) {
-    return { label, key, checked: key === sortBy };
+  function getMenuItem({ label, sortBy }: { label: string; sortBy: SortBy }) {
+    return { label, checked: currentSortBy === sortBy, onSelect: () => setSortBy(sortBy) };
   }
 
   return (
@@ -33,32 +33,26 @@ export default observer(function Header() {
       left={[
         {
           icon: <PlusIcon />,
-          menuOptions: {
-            items: [
-              { label: '创建目录', key: MaterialTypes.Directory },
-              { label: '创建素材', key: MaterialTypes.Entity },
-            ],
-            onSelect: (key) => create(null, key as MaterialTypes),
-          },
+          menuItems: [
+            { label: '创建目录', onSelect: () => create(null, MaterialTypes.Directory) },
+            { label: '创建素材', onSelect: () => create(null, MaterialTypes.Entity) },
+          ],
         },
       ]}
       right={[
         { icon: <ShrinkIcon />, onClick: collapseAll, disabled: !canCollapse },
         {
           icon: <SortDescIcon />,
-          menuOptions: {
-            onSelect: (key) => setSortBy(key as SortBy),
-            items: [
-              getMenuItem({ label: '按名称升序', key: SortBy.TitleAsc }),
-              getMenuItem({ label: '按名称降序', key: SortBy.TitleDesc }),
-              { type: 'separator' },
-              getMenuItem({ label: '按创建日期升序', key: SortBy.CreatedAtAsc }),
-              getMenuItem({ label: '按创建日期降序', key: SortBy.CreatedAtDesc }),
-              { type: 'separator' },
-              getMenuItem({ label: '按修改时间升序', key: SortBy.UpdatedAtAsc }),
-              getMenuItem({ label: '按修改时间降序', key: SortBy.UpdatedAtDesc }),
-            ],
-          },
+          menuItems: [
+            getMenuItem({ label: '按名称升序', sortBy: SortBy.TitleAsc }),
+            getMenuItem({ label: '按名称降序', sortBy: SortBy.TitleDesc }),
+            { type: 'separator' },
+            getMenuItem({ label: '按创建日期升序', sortBy: SortBy.CreatedAtAsc }),
+            getMenuItem({ label: '按创建日期降序', sortBy: SortBy.CreatedAtDesc }),
+            { type: 'separator' },
+            getMenuItem({ label: '按修改时间升序', sortBy: SortBy.UpdatedAtAsc }),
+            getMenuItem({ label: '按修改时间降序', sortBy: SortBy.UpdatedAtDesc }),
+          ],
         },
       ]}
       canDrop={isDraggingMoving && !root.isDisabled}

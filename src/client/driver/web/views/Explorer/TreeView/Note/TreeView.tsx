@@ -19,11 +19,10 @@ export default observer(function NoteTreeView() {
     rename: { id: editingId, submit: submitEditing, cancel: cancelEditing },
   } = container.resolve(Explorer);
   const { openEntity } = container.resolve(Workbench);
-  const contextmenu = useContextmenu();
 
   return (
     <TreeView
-      {...contextmenu}
+      getContextmenuItems={useContextmenu()}
       editingNodeId={editingId}
       onEditEnd={submitEditing}
       onEditCancel={cancelEditing}

@@ -8,11 +8,10 @@ import ChildrenList from './ChildrenList';
 import type MemoTreeNode from '@domain/app/model/memo/TreeNode';
 import MenuButton from '@web/components/MenuButton';
 import Button from '@web/components/Button';
+import { noop } from 'lodash-es';
 
 const ListItem = observer(function ({ node }: { node: MemoTreeNode }) {
   assert(node.memo);
-
-  function handleMenuSelect() {}
 
   return (
     <div className="mb-4 rounded-xl bg-white shadow border-layout border-solid border p-2 group">
@@ -28,14 +27,13 @@ const ListItem = observer(function ({ node }: { node: MemoTreeNode }) {
         <MenuButton
           button={{ icon: <EllipsisIcon /> }}
           menuItems={[
-            { key: 'detail', label: '查看详情' },
+            { label: '查看详情', onSelect: noop },
             { type: 'separator' },
-            { key: 'edit', label: '编辑' },
-            node.memo.isPinned ? { key: 'unpin', label: '取消置顶' } : { key: 'pin', label: '置顶' },
+            { label: '编辑', onSelect: node.startEditing },
+            { label: node.memo.isPinned ? '取消置顶' : '置顶', onSelect: node.togglePinned },
             { type: 'separator' },
-            { key: 'delete', label: '删除' },
+            { label: '删除', onSelect: noop },
           ]}
-          onSelect={handleMenuSelect}
         />
       </div>
       <Body node={node} />

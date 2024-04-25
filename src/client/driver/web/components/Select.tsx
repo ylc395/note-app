@@ -4,13 +4,12 @@ import assert from 'assert';
 import clsx from 'clsx';
 
 import Menu from './Menu';
-import type { MenuItem } from '@shared/domain/infra/ui';
 
 interface Props {
   className?: string;
   value: string | number;
   onChange: (v: string | number) => void;
-  options: MenuItem[];
+  options: Array<{ label: string; value: string | number }>;
 }
 
 export default function Select({ className, value, options, onChange }: Props) {
@@ -34,7 +33,13 @@ export default function Select({ className, value, options, onChange }: Props) {
       <span onClick={handleClick} className="mx-auto my-0 cursor-pointer overflow-hidden text-ellipsis">
         {valueText}
       </span>
-      <Menu native items={options} position={position} isOpen={isOpen} onClose={close} onSelect={onChange} />
+      <Menu
+        native
+        items={options.map(({ label, value }) => ({ label, onSelect: () => onChange(value) }))}
+        position={position}
+        isOpen={isOpen}
+        onClose={close}
+      />
     </div>
   );
 }

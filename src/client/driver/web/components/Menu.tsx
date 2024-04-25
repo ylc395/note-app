@@ -1,28 +1,53 @@
 import { container } from 'tsyringe';
 import { useAsyncEffect } from 'ahooks';
+import { pick, get } from 'lodash-es';
 import assert from 'assert';
 
-import { type MenuItem, token, type MenuItemKey } from '@shared/domain/infra/ui';
+import { token, type SeparatorItem, type CommonMenuItem, type MenuItem as BaseMenuItem } from '@shared/domain/infra/ui';
+
+type MenuItem = Pick<CommonMenuItem, 'checked' | 'disabled' | 'label'> & {
+  onSelect?: () => void;
+  submenu?: MenuItem[];
+};
 
 export interface Props {
-  items: MenuItem[];
+  items: Array<MenuItem | SeparatorItem>;
   isOpen: boolean;
   native?: boolean;
   position?: { x: number; y: number };
-  onSelect: (key: MenuItemKey) => void;
   onClose: () => void;
 }
 
-export default function Menu({ items, position, native = false, isOpen, onClose, onSelect }: Props) {
+function getMapper(path: string[] = []) {
+  return (item: MenuItem | SeparatorItem, i: number): BaseMenuItem => {
+    const currentPath = [...path, String(i)];
+
+    return 'type' in item
+      ? item
+      : {
+          ...pick(item, ['checked', 'disabled', 'label']),
+          key: currentPath.join(),
+          submenu: item.submenu?.map(getMapper(currentPath)),
+        };
+  };
+}
+
+export default function Menu({ items, position, native = false, isOpen, onClose }: Props) {
   const ui = container.resolve(token);
   const isNative = native && ui.getActionFromMenu;
 
   useAsyncEffect(async () => {
     if (isOpen && isNative) {
-      const action = await ui.getActionFromMenu!(items, position);
+      const transformedItems = items.map(getMapper());
+      const index = await ui.getActionFromMenu!(transformedItems, position);
 
-      if (action) {
-        onSelect(action);
+      if (typeof index === 'string') {
+        const menuItem = get(
+          items,
+          index.split(',').flatMap((key, i) => (i === 0 ? key : ['submenu', key])),
+        ) as MenuItem;
+
+        menuItem.onSelect?.();
       }
 
       onClose();

@@ -21,7 +21,7 @@ export default observer(function Header() {
   const { createNote } = container.resolve(NoteService);
 
   function getMenuItem({ label, key }: { label: string; key: SortBy }) {
-    return { label, key, checked: key === sortBy };
+    return { label, key, checked: key === sortBy, onSelect: () => setSortBy(key) };
   }
 
   const { moveTo, isDraggingMoving } = container.resolve(MoveBehavior);
@@ -33,19 +33,16 @@ export default observer(function Header() {
         { icon: <ShrinkIcon />, onClick: collapseAll, disabled: !canCollapse },
         {
           icon: <SortDescIcon />,
-          menuOptions: {
-            onSelect: (key) => setSortBy(key as SortBy),
-            items: [
-              getMenuItem({ label: '按名称升序', key: SortBy.TitleAsc }),
-              getMenuItem({ label: '按名称降序', key: SortBy.TitleDesc }),
-              { type: 'separator' },
-              getMenuItem({ label: '按创建日期升序', key: SortBy.CreatedAtAsc }),
-              getMenuItem({ label: '按创建日期降序', key: SortBy.CreatedAtDesc }),
-              { type: 'separator' },
-              getMenuItem({ label: '按修改时间升序', key: SortBy.UpdatedAtAsc }),
-              getMenuItem({ label: '按修改时间降序', key: SortBy.UpdatedAtDesc }),
-            ],
-          },
+          menuItems: [
+            getMenuItem({ label: '按名称升序', key: SortBy.TitleAsc }),
+            getMenuItem({ label: '按名称降序', key: SortBy.TitleDesc }),
+            { type: 'separator' },
+            getMenuItem({ label: '按创建日期升序', key: SortBy.CreatedAtAsc }),
+            getMenuItem({ label: '按创建日期降序', key: SortBy.CreatedAtDesc }),
+            { type: 'separator' },
+            getMenuItem({ label: '按修改时间升序', key: SortBy.UpdatedAtAsc }),
+            getMenuItem({ label: '按修改时间降序', key: SortBy.UpdatedAtDesc }),
+          ],
         },
       ]}
       canDrop={isDraggingMoving && !root.isDisabled}
