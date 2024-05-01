@@ -1,0 +1,14 @@
+{
+  "extends": "./src/driver/client/web/tsconfig.json",
+  "compilerOptions": {
+    "types": ["electron"]
+  },
+  "include": [
+    "./src/driver/client/web/**/*",
+    "./src/driver/client/electron/**/*",
+    "./src/domain/client/app/**/*",
+    "./src/domain/client/common/**/*",
+    "./src/domain/shared/**/*"
+  ],
+  "exclude": ["./src/driver/client/electron/preload/**/*"]
+}

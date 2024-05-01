@@ -4,7 +4,7 @@
     "target": "ESNext",
     "incremental": true,
     "types": [],
-    "lib": [],
+    "lib": ["ESNext"],
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "sourceMap": true,
@@ -12,8 +12,17 @@
     "allowJs": true,
     "esModuleInterop": true,
     "strict": true,
+    "baseUrl": ".",
     "noUncheckedIndexedAccess": true,
-    "skipLibCheck": true
+    "moduleResolution": "Bundler",
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "paths": {
+      "@domain/*": ["./src/domain/*"],
+      "@utils/*": ["./src/utils/*"],
+      "@api/*": ["./src/driver/server/api/*"],
+      "@web/*": ["./src/driver/client/web/*"]
+    }
   },
   "ts-node": {
     "compilerOptions": {

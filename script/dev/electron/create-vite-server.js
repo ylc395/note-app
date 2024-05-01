@@ -9,11 +9,11 @@ import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { insertHtml, h } from 'vite-plugin-insert-html';
 import tailwindcss from 'tailwindcss';
 
-import { CLIENT_ROOT_DIR, ENV } from './constants.js';
-import { tokens, tokenPathToCSSVariableName } from '../../../src/client/driver/web/designToken.js';
-import { APP_NAME } from '../../../src/shared/domain/infra/constants.js';
+import { ENV } from './constants.js';
+import { tokens, tokenPathToCSSVariableName } from '../../../src/driver/client/web/designToken.js';
+import { APP_NAME } from '../../../src/domain/shared/infra/constants.js';
 
-const WEB_TSCONFIG = path.resolve(`${CLIENT_ROOT_DIR}/tsconfig.web.json`);
+const WEB_TSCONFIG = path.resolve('./tsconfig.electron.web.json');
 
 function tokensToCSSVariables() {
   const variables = [];
@@ -39,15 +39,15 @@ export default async function createViteServer() {
   const server = await createServer({
     configFile: false,
     clearScreen: false,
-    root: `${CLIENT_ROOT_DIR}/driver/web`,
+    root: './src/driver/client/web',
     css: {
       postcss: {
-        plugins: [tailwindcss({ config: path.resolve(`${CLIENT_ROOT_DIR}/driver/web/tailwind.config.js`) })],
+        plugins: [tailwindcss({ config: path.resolve('./src/driver/client/web/tailwind.config.js') })],
       },
     },
     plugins: [
       react({ tsDecorators: true }), // use this plugin to speed up react compiling and enjoy "fast refresh"
-      checker({ typescript: { tsconfigPath: WEB_TSCONFIG, buildMode: true } }),
+      checker({ typescript: { tsconfigPath: WEB_TSCONFIG } }),
       tsconfigPaths({ projects: [WEB_TSCONFIG] }),
       nodePolyfills(),
       // insert CSS Variables

@@ -1,0 +1,11 @@
+import { type MaterialVO, normalizeTitle } from '@domain/shared/model/material';
+import TreeNode from '../abstract/TreeNode';
+
+export default class MaterialTreeNode extends TreeNode<MaterialVO> {
+  public entityToNode = (material: MaterialVO | null) => {
+    return {
+      icon: material ? material.icon : null,
+      title: material ? normalizeTitle(material) : '根',
+    };
+  };
+}

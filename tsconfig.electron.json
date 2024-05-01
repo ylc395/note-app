@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "./src/utils/**/*",
+    "./src/domain/server/**/*",
+    "./src/domain/shared/**/*",
+    "./src/driver/server/**/*",
+    "./src/driver/client/electron/**/*"
+  ],
+  "exclude": ["./src/driver/client/electron/preload/**/*"],
+  "compilerOptions": {
+    "moduleResolution": "NodeNext",
+    "module": "NodeNext"
+  }
+}

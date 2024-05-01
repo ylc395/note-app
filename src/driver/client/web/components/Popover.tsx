@@ -1,0 +1,48 @@
+import { type Placement, useClick, useDismiss, useFloating, useInteractions } from '@floating-ui/react';
+import { APP_NAME } from '@domain/shared/infra/constants';
+import { type ReactNode, useState, forwardRef, useImperativeHandle } from 'react';
+
+import { createPortal } from 'react-dom';
+
+export interface PopoverRef {
+  dismiss: () => void;
+}
+
+interface Props {
+  placement?: Placement;
+  reference: ReactNode | ((params: { isOpen: boolean }) => ReactNode);
+  children: ReactNode;
+}
+
+export default forwardRef<PopoverRef, Props>(function Popover({ reference, children, placement }, ref) {
+  const [isOpen, setIsOpen] = useState(false);
+  const { refs, context, floatingStyles } = useFloating({
+    open: isOpen,
+    placement,
+    onOpenChange: setIsOpen,
+  });
+  const { getReferenceProps, getFloatingProps } = useInteractions([
+    useClick(context, { keyboardHandlers: false }),
+    useDismiss(context),
+  ]);
+  const mountPoint = refs.domReference.current?.closest('dialog') || document.body;
+
+  useImperativeHandle(ref, () => ({
+    dismiss: () => setIsOpen(false),
+  }));
+
+  return (
+    <>
+      <div ref={refs.setReference} {...getReferenceProps()}>
+        {typeof reference === 'function' ? reference({ isOpen }) : reference}
+      </div>
+      {isOpen &&
+        createPortal(
+          <div ref={refs.setFloating} {...getFloatingProps()} className={APP_NAME} style={floatingStyles}>
+            {children}
+          </div>,
+          mountPoint,
+        )}
+    </>
+  );
+});

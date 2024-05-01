@@ -1,8 +1,0 @@
-{
-  "extends": "./tsconfig.json",
-  "include": ["./driver/web/**/*", "./driver/electron/rpc.ts", "./domain/app/**/*", "./domain/common/**/*"],
-  "compilerOptions": {
-    "outDir": "../../dist/web"
-  },
-  "references": [{ "path": "../server/tsconfig.api.json" }]
-}

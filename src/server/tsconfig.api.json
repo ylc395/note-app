@@ -1,8 +1,0 @@
-{
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "composite": true,
-    "outDir": "../../dist/api"
-  },
-  "references": [{ "path": "../shared/tsconfig.api.json" }]
-}
