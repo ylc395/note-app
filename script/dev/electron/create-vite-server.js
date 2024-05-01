@@ -7,6 +7,7 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 import react from '@vitejs/plugin-react-swc';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import { insertHtml, h } from 'vite-plugin-insert-html';
+import tailwindcss from 'tailwindcss';
 
 import { CLIENT_ROOT_DIR, ENV } from './constants.js';
 import { tokens, tokenPathToCSSVariableName } from '../../../src/client/driver/web/designToken.js';
@@ -39,6 +40,11 @@ export default async function createViteServer() {
     configFile: false,
     clearScreen: false,
     root: `${CLIENT_ROOT_DIR}/driver/web`,
+    css: {
+      postcss: {
+        plugins: [tailwindcss({ config: path.resolve(`${CLIENT_ROOT_DIR}/driver/web/tailwind.config.js`) })],
+      },
+    },
     plugins: [
       react({ tsDecorators: true }), // use this plugin to speed up react compiling and enjoy "fast refresh"
       checker({ typescript: { tsconfigPath: WEB_TSCONFIG, buildMode: true } }),

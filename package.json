@@ -36,7 +36,6 @@
     "@typescript-eslint/eslint-plugin": "^6.2.1",
     "@typescript-eslint/parser": "^6.2.1",
     "@vitejs/plugin-react-swc": "^3.3.2",
-    "autoprefixer": "^10.4.12",
     "chokidar": "^3.5.3",
     "download": "^8.0.0",
     "electron": "^28.0.0",
