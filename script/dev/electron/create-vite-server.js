@@ -1,39 +1,14 @@
 import { createServer } from 'vite';
 import path from 'node:path';
-import { isPlainObject } from 'lodash-es';
 import shell from 'shelljs';
 import { checker } from 'vite-plugin-checker';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import react from '@vitejs/plugin-react-swc';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
-import { insertHtml, h } from 'vite-plugin-insert-html';
 import tailwindcss from 'tailwindcss';
 
 import { ENV } from './constants.js';
-import { tokens, tokenPathToCSSVariableName } from '../../../src/driver/client/web/designToken.js';
-import { APP_NAME } from '../../../src/domain/shared/infra/constants.js';
-
 const WEB_TSCONFIG = path.resolve('./tsconfig.electron.web.json');
-
-function tokensToCSSVariables() {
-  const variables = [];
-
-  function traverse(token, path) {
-    if (typeof token === 'string') {
-      variables.push(`${tokenPathToCSSVariableName(path)}: ${token};`);
-    }
-
-    if (isPlainObject(token)) {
-      for (const key of Object.keys(token)) {
-        traverse(token[key], [...path, key]);
-      }
-    }
-  }
-
-  traverse(tokens, []);
-
-  return `.${APP_NAME} {${variables.join('')}}`;
-}
 
 export default async function createViteServer() {
   const server = await createServer({
@@ -50,10 +25,6 @@ export default async function createViteServer() {
       checker({ typescript: { tsconfigPath: WEB_TSCONFIG } }),
       tsconfigPaths({ projects: [WEB_TSCONFIG] }),
       nodePolyfills(),
-      // insert CSS Variables
-      insertHtml({
-        head: [h('style', null, tokensToCSSVariables())],
-      }),
     ],
     define: {
       'process.env.NODE_ENV': JSON.stringify(ENV),
