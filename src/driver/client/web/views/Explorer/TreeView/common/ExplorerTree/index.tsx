@@ -60,43 +60,45 @@ export default function ExplorerTreeView<T extends HierarchyEntity>({
   }, [explorer]);
 
   return (
-    <div ref={divRef} className="grow overflow-auto pr-2 -mr-2 custom-scrollbar">
-      <Tree
-        onContextmenu={handleContextmenu}
-        onClick={handleClick}
-        nodeClassName={(node) =>
-          clsx(
-            'group relative cursor-pointer py-1 rounded-md text-text-secondary text-sm hover:bg-tree-highlight',
-            node.isSelected && 'bg-tree-highlight',
-            node.isDisabled && 'cursor-not-allowed opacity-60',
-          )
-        }
-        iconClassName="ml-1 w-[10px] h-[10px] opacity-80"
-        tree={tree}
-        multiple
-        renderNode={(node, originalNodeView) => (
-          <DndTreeNode
-            node={node}
-            onDrop={() => moveTo(node.entityLocator)}
-            onDragStart={() => startMoving({ mode: 'drag', item: node })}
-            onDragStop={finishMoving}
-          >
-            {originalNodeView}
-          </DndTreeNode>
-        )}
-        renderTitle={(node) => (
-          <NodeTitle
-            onEditCancel={rename.cancel}
-            onEditEnd={rename.submit}
-            isEditing={rename.id === node.id}
-            defaultIcon={defaultIcon}
-            node={node}
-          >
-            {!node.isDisabled && rename.id !== node.id && nodeOperation(node)}
-          </NodeTitle>
-        )}
-      />
-      <Menu native items={contextmenuItems || []} isOpen={isContextmenuOpen} onClose={closeContextmenu} />
+    <div className="grow scroll-zone">
+      <div ref={divRef} className="px-2">
+        <Tree
+          onContextmenu={handleContextmenu}
+          onClick={handleClick}
+          nodeClassName={(node) =>
+            clsx(
+              'group relative cursor-pointer py-1 rounded-md text-text-secondary text-sm hover:bg-tree-highlight',
+              node.isSelected && 'bg-tree-highlight',
+              node.isDisabled && 'cursor-not-allowed opacity-60',
+            )
+          }
+          iconClassName="ml-1 w-[10px] h-[10px] opacity-80"
+          tree={tree}
+          multiple
+          renderNode={(node, originalNodeView) => (
+            <DndTreeNode
+              node={node}
+              onDrop={() => moveTo(node.entityLocator)}
+              onDragStart={() => startMoving({ mode: 'drag', item: node })}
+              onDragStop={finishMoving}
+            >
+              {originalNodeView}
+            </DndTreeNode>
+          )}
+          renderTitle={(node) => (
+            <NodeTitle
+              onEditCancel={rename.cancel}
+              onEditEnd={rename.submit}
+              isEditing={rename.id === node.id}
+              defaultIcon={defaultIcon}
+              node={node}
+            >
+              {!node.isDisabled && rename.id !== node.id && nodeOperation(node)}
+            </NodeTitle>
+          )}
+        />
+        <Menu native items={contextmenuItems || []} isOpen={isContextmenuOpen} onClose={closeContextmenu} />
+      </div>
     </div>
   );
 }

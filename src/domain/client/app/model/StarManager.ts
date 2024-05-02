@@ -39,7 +39,7 @@ export default class StarManager extends EventBus<{
     });
   };
 
-  public async star(entityId: EntityId) {
+  public readonly star = async (entityId: EntityId) => {
     const newStar = await this.remote.star.create.mutate({ entityId });
     this.emit(Events.Toggle, { id: entityId, isStar: true });
 
@@ -48,7 +48,7 @@ export default class StarManager extends EventBus<{
         this.stars.unshift(newStar);
       }
     });
-  }
+  };
 
   public readonly unstar = async (entityId: EntityId) => {
     await this.remote.star.remove.mutate({ entityId });

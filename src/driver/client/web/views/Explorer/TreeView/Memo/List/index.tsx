@@ -34,12 +34,14 @@ export default observer(function List() {
   );
 
   return (
-    <div ref={divRef} className="grow overflow-auto pr-2 custom-scrollbar">
-      {root.sortedChildren.map((memoTreeNode) => {
-        assert(memoTreeNode.memo);
-        return <ListItem key={memoTreeNode.memo.id} node={memoTreeNode} />;
-      })}
-      {root.isLoaded.down && <div className="text-sm text-center text-text-secondary mb-2 opacity-40">没有了</div>}
+    <div className="grow scroll-zone">
+      <div ref={divRef} className="px-3">
+        {root.sortedChildren.map((memoTreeNode) => {
+          assert(memoTreeNode.memo);
+          return <ListItem key={memoTreeNode.memo.id} node={memoTreeNode} />;
+        })}
+        {root.isLoaded.down && <div className="text-sm text-center text-text-secondary mb-2 opacity-40">没有了</div>}
+      </div>
     </div>
   );
 });

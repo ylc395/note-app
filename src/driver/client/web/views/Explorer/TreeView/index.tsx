@@ -23,7 +23,7 @@ export default observer(function TreeView() {
 
   return (
     <Resizable
-      className="relative box-border flex h-full flex-col bg-gray-50 p-2"
+      className="relative box-border flex h-full flex-col bg-gray-50"
       initialWidth={300}
       minWidth={250}
       resizable="right"

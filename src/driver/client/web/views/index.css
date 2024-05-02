@@ -15,37 +15,23 @@
 }
 
 @layer components {
-  .custom-scrollbar {
-    scrollbar-gutter: stable;
-    scrollbar-width: none;
+  .scroll-zone {
+    overflow: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #bfbfbfa8 transparent;
   }
 
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #bfbfbfa8;
+  .scroll-zone::-webkit-scrollbar-thumb {
     border-radius: 4px;
   }
 
-  @supports not (scrollbar-gutter: stable) {
-    .custom-scrollbar {
-      padding-right: 5px;
+  @supports not (scrollbar-color: initial) {
+    .scroll-zone::-webkit-scrollbar-thumb {
+      background-color: #bfbfbfa8;
     }
-  }
 
-  @supports not (scrollbar-width: none) {
-    .custom-scrollbar::-webkit-scrollbar {
-      display: none;
-    }
-  }
-
-  .custom-scrollbar:hover {
-    scrollbar-width: thin;
-  }
-
-  @supports not (scrollbar-width: thin) {
-    .custom-scrollbar:hover::-webkit-scrollbar {
-      display: initial;
-      width: 5px;
-      height: 5px;
+    .scroll-zone::-webkit-scrollbar-track {
+      background-color: transparent;
     }
   }
 }

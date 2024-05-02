@@ -1,5 +1,5 @@
 import { mapValues, groupBy } from 'lodash-es';
-import type { Entity, EntityId, EntityTypes } from '@domain/shared/model/entity.js';
+import { Entity, EntityId, EntityTypes } from '@domain/shared/model/entity.js';
 import type { EntityRepository } from '@domain/server/service/repository/EntityRepository.js';
 import assert from 'node:assert';
 
@@ -40,7 +40,7 @@ export default class SqliteEntityRepository extends BaseRepository implements En
         .where(`${recyclableTableName}.entityId`, 'is', null);
     }
 
-    qb = qb.where('parentId', 'in', ids);
+    qb = qb.where('parentId', 'in', ids).where('type', '!=', EntityTypes.Annotation);
 
     const rows = await qb.execute();
     return mapValues(groupBy(rows, 'parentId'), (rows) => rows.map((row) => row.id));

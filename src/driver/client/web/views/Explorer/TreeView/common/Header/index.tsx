@@ -12,7 +12,7 @@ interface Props {
 // eslint-disable-next-line mobx/missing-observer
 export default function ExplorerHeader({ title, onDrop, left, right, canDrop = true }: Props) {
   return (
-    <div className="relative shrink-0 h-10 mb-2 flex items-center justify-between">
+    <div className="relative shrink-0 h-10 mb-2 px-2 pt-2 flex items-center justify-between">
       <h1 className="m-0 mr-1 text-base">{title}</h1>
       {(!onDrop || !canDrop) && (
         <div className="flex grow justify-between">

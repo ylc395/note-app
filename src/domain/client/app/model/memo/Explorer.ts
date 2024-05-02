@@ -69,7 +69,7 @@ export default class MemoExplorer {
   };
 
   public readonly init = once(() => {
-    if (this.uiState.panel === 'editor' && !this.root.newChildEditor) {
+    if (this.uiState.panel === 'editor') {
       this.root.startEditingNewChild(this.uiState.editorContent);
     }
     autorun(this.updateUIStateByRootChildEditor);

@@ -1,4 +1,4 @@
-import { makeObservable, observable, action, reaction, computed, runInAction } from 'mobx';
+import { makeObservable, observable, action, reaction, runInAction } from 'mobx';
 import { container } from 'tsyringe';
 import { first, last } from 'lodash-es';
 import assert from 'assert';
@@ -18,11 +18,6 @@ export default class MemoTreeNode {
   @observable public isLoaded = { up: false, down: false };
   @observable public memo?: MemoVO;
   @observable.ref public readonly explorer: MemoExplorer;
-
-  @computed
-  public get isChild() {
-    return Boolean(this.memo?.parentId);
-  }
 
   constructor({ memo, explorer }: { memo?: MemoVO; explorer: MemoExplorer }) {
     this.memo = memo;
