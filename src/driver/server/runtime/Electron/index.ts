@@ -9,7 +9,7 @@ import { createIPCHandler } from 'electron-trpc/main';
 import { IS_DEV } from '@domain/shared/infra/constants.js';
 import { token as loggerToken } from '@domain/server/infra/logger.js';
 import FileService from '@domain/server/service/FileService/index.js';
-import { urlToFileId, PROTOCOL } from '@domain/shared/infra/markdown/url.js';
+import { PROTOCOL, parseAppUrl } from '@domain/shared/infra/markdown/url.js';
 
 import UI, { UI_CHANNEL } from './UI.js';
 import { routers } from '../../api/index.js';
@@ -63,13 +63,13 @@ export default class ElectronRuntime extends DesktopRuntime {
   }
 
   private readonly protocolHandler = async (req: GlobalRequest) => {
-    const fileId = urlToFileId(req.url);
+    const parsed = parseAppUrl(req.url);
 
-    if (!fileId) {
+    if (!parsed) {
       return new Response(null, { status: 404 });
     }
 
-    const data = await this.fileService.queryFileBlobById(fileId);
+    const data = await this.fileService.queryFileBlobById(parsed.id);
 
     return new Response(data);
   };

@@ -2,13 +2,12 @@ import path from 'node:path';
 import fs from 'fs-extra';
 import download from 'download';
 import shell from 'shelljs';
-import { debounce } from 'lodash-es';
-import chokidar from 'chokidar';
 import { replaceTscAliasPaths } from 'tsc-alias';
 
-import { OUTPUT } from './constants.js';
+import { OUTPUT, ENV } from './constants.js';
 
-const BUILD_ELECTRON_COMMAND = 'tsc --project ./tsconfig.electron.json';
+const ELECTRON_TSCONFIG = './src/driver/server/runtime/Electron/tsconfig.json';
+const BUILD_ELECTRON_COMMAND = `tsc --project ${ELECTRON_TSCONFIG}`;
 
 async function downloadSqliteTokenizer() {
   const localPath = path.resolve('dist/driver/server/sqlite/simple-tokenizer');
@@ -55,32 +54,17 @@ export default async function buildElectron(options) {
   }
 
   // 2. replace ts path
-  await replaceTscAliasPaths({ configFile: './tsconfig.electron.json', outDir: OUTPUT });
+  await replaceTscAliasPaths({ configFile: ELECTRON_TSCONFIG, outDir: OUTPUT });
 
   await downloadSqliteTokenizer();
 
   // 3. bootstrap electron process
   if (options?.bootstrap) {
+    shell.env['DEV_CLEAN'] = process.argv.includes('--clean') ? '1' : '0';
+    shell.env['NODE_ENV'] = ENV;
     const electronProcess = shell.exec(`electron ${OUTPUT}/driver/server/runtime/Electron/bootstrap.js`, {
       async: true,
     });
-
-    if (electronProcess) {
-      // this will trigger building again though we only want to enable watch mode. But the cost is cheap since we have .tsbuildinfo
-      // see https://github.com/microsoft/TypeScript/issues/12996#issuecomment-522744917
-      shell.exec(`${BUILD_ELECTRON_COMMAND} --watch`, { async: true });
-
-      chokidar.watch(OUTPUT, { ignoreInitial: true, ignored: [/\.tsbuildinfo$/, /\.map$/, /\.d\.ts$/] }).on(
-        'all',
-        debounce(async (event, path) => {
-          shell.exec('clear');
-          console.log(path, event);
-          electronProcess.kill();
-          shell.env['DEV_CLEAN'] = '0';
-          await buildElectron({ compile: false, bootstrap: true });
-        }, 500),
-      );
-    }
 
     return electronProcess;
   }

@@ -6,7 +6,7 @@ import assert from 'assert';
 import type { Link as MdAstLinkNode, Image as MdAstImageNode, Node as UnistNode } from 'mdast';
 import { groupBy, differenceWith, uniqBy } from 'lodash-es';
 
-import { urlToEntity, urlToFileId } from '@domain/shared/infra/markdown/url.js';
+import { parseAppUrl } from '@domain/shared/infra/markdown/url.js';
 import {
   mdastExtension as topicExtension,
   tokenExtension as topicTokenExtension,
@@ -96,15 +96,15 @@ export default class ContentService extends BaseService {
         }
 
         const { url } = node as MdAstImageNode | MdAstLinkNode;
-        const targetId = is(node, 'link') ? urlToEntity(url)?.entityId : urlToFileId(url);
+        const parsed = parseAppUrl(url);
 
-        if (!targetId) {
+        if (!parsed) {
           return;
         }
 
         links.push({
           sourceId: entity.entityId,
-          targetId,
+          targetId: parsed.id,
         });
       },
       done: async () => {
@@ -187,7 +187,7 @@ export default class ContentService extends BaseService {
           return;
         }
 
-        const parsed = urlToEntity(node.url);
+        const parsed = parseAppUrl(node.url);
 
         if (!parsed) {
           return;
@@ -196,7 +196,7 @@ export default class ContentService extends BaseService {
         const snippet = content.slice(Math.max(0, start - 20), Math.min(content.length, end + 20));
 
         sources.push({
-          targetFragmentId: parsed.fragmentId,
+          targetFragmentId: parsed.hash,
           snippet,
           highlightStart: 20,
           highlightEnd: 20 + (end - start),

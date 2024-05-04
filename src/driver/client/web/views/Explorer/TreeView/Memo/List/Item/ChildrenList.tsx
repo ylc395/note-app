@@ -9,10 +9,12 @@ export default observer(function ChildrenList({ node }: { node: MemoTreeNode }) 
   return (
     <div>
       <Editor isChild node={node} />
-      {node.sortedChildren.map((childMemoNode) => {
-        assert(childMemoNode.memo);
-        return <ListItem key={childMemoNode.memo.id} node={childMemoNode} />;
-      })}
+      <div className="pl-2">
+        {node.sortedChildren.map((childMemoNode) => {
+          assert(childMemoNode.memo);
+          return <ListItem key={childMemoNode.memo.id} node={childMemoNode} />;
+        })}
+      </div>
     </div>
   );
 });

@@ -1,4 +1,4 @@
-import { compact, isEmpty } from 'lodash-es';
+import { compact, groupBy, isEmpty } from 'lodash-es';
 import assert from 'assert';
 import { singleton, container } from 'tsyringe';
 
@@ -32,7 +32,7 @@ export default class MemoService extends BaseService {
 
     const newMemo = await this.repo.memos.create(memo);
 
-    return { ...newMemo, isStar: false, childrenCount: 0 };
+    return { ...newMemo, isStar: false, childrenCount: 0, referrersCount: 0 };
   }
 
   private async assertValidPin(parentId?: Memo['parentId']) {
@@ -118,10 +118,13 @@ export default class MemoService extends BaseService {
     const ids = _memos.map(({ id }) => id);
     const stars = buildIndex(await this.repo.stars.findAll({ entityId: ids }), 'entityId');
     const childrenIds = await this.repo.entities.findChildrenIds(ids, { isAvailableOnly: true });
+    const links = await this.repo.links.findAvailableLinksOf(ids);
+    const referrersMap = groupBy(links, 'targetId');
 
     const result = _memos.map((memo) => ({
       ...memo,
       childrenCount: childrenIds[memo.id]?.length || 0,
+      referrersCount: referrersMap[memo.id]?.length || 0,
       isStar: Boolean(stars[memo.id]),
     }));
 

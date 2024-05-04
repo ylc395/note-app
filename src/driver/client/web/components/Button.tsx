@@ -9,7 +9,7 @@ export interface Props {
   icon?: ReactNode;
   block?: boolean;
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
-  size?: 'small' | 'medium' | 'large';
+  size?: 'tiny' | 'small' | 'medium' | 'large';
 }
 
 export default forwardRef<HTMLButtonElement, Props>(function Button(
@@ -21,7 +21,7 @@ export default forwardRef<HTMLButtonElement, Props>(function Button(
     onClick?.(e);
   };
 
-  const isIconButton = icon && !children;
+  const isIconButton = icon && typeof children === 'undefined';
 
   return (
     <button
@@ -29,14 +29,16 @@ export default forwardRef<HTMLButtonElement, Props>(function Button(
       disabled={disabled}
       onClick={handleClick}
       className={clsx(
-        'justify-center items-center border-0 ',
+        'justify-center items-center border-0 box-content p-0',
         className,
         disabled && 'opacity-50',
         block ? 'flex w-full' : 'inline-flex',
         disabled ? 'cursor-not-allowed' : 'cursor-pointer',
-        size === 'small' && 'h-4 [--icon-size:14px] text-xs p-0',
-        size === 'small' && isIconButton && 'w-4 rounded',
-        size === 'medium' && 'h-8 [--icon-size:20px] text-sm rounded-md p-2',
+        size === 'tiny' && '[--icon-size:14px] h-4 rounded text-xs',
+        size === 'tiny' && isIconButton && 'w-4',
+        size === 'small' && '[--icon-size:16px] h-6 rounded text-sm',
+        size === 'small' && isIconButton && 'w-6',
+        size === 'medium' && '[--icon-size:20px] h-8 rounded-md',
         size === 'medium' && isIconButton && 'w-8',
         size === 'large' && 'h-10 [--icon-size:20px] rounded-lg',
         size === 'large' && isIconButton && 'w-10',

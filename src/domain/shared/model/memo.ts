@@ -14,6 +14,7 @@ export interface Memo {
 export interface MemoVO extends Memo {
   isStar: boolean;
   childrenCount: number;
+  referrersCount: number;
 }
 
 export const MAX_LENGTH = 10000;

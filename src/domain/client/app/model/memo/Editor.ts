@@ -11,7 +11,7 @@ export default class Editor {
   constructor(
     private readonly options: {
       onSubmit: (newMemo: MemoVO) => void;
-      onCancel: () => void;
+      onCancel?: () => void;
       initial?: string;
       memo?: MemoVO;
       parentId?: EntityParentId;
@@ -22,16 +22,8 @@ export default class Editor {
   }
 
   public readonly cancel = () => {
-    this.options.onCancel();
+    this.options.onCancel?.();
   };
-
-  public get isDirty() {
-    if (this.options.memo) {
-      return this.options.memo.body === this.content;
-    }
-
-    return Boolean(this.content);
-  }
 
   @observable
   public content: string;
@@ -50,5 +42,10 @@ export default class Editor {
   @action
   public updateContent(value: string) {
     this.content = value;
+  }
+
+  @action.bound
+  public reset() {
+    this.updateContent('');
   }
 }

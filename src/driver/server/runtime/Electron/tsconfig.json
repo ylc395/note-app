@@ -1,0 +1,15 @@
+{
+  "extends": "../../../../../tsconfig.json",
+  "include": [
+    "../../../../utils/**/*",
+    "../../../../domain/server/**/*",
+    "../../../../domain/shared/**/*",
+    "../../../client/electron/**/*",
+    "../../**/*"
+  ],
+  "exclude": ["../../../client/electron/preload/**/*"],
+  "compilerOptions": {
+    "moduleResolution": "NodeNext",
+    "module": "NodeNext"
+  }
+}

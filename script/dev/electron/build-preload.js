@@ -5,7 +5,7 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 import { OUTPUT } from './constants.js';
 
 export default async function buildPreload() {
-  const PRELOAD_TSCONFIG = path.resolve('./tsconfig.preload.json');
+  const PRELOAD_TSCONFIG = path.resolve('./src/driver/client/electron/preload/tsconfig.json');
 
   // preload script must be processed by a bundler(`vite build` here), since `require` doesn't work
   // @see https://www.electronjs.org/docs/latest/tutorial/sandbox#preload-scripts
@@ -26,9 +26,6 @@ export default async function buildPreload() {
         external: ['electron'],
       },
     },
-    plugins: [
-      checker({ typescript: { tsconfigPath: PRELOAD_TSCONFIG } }),
-      tsconfigPaths({ projects: [PRELOAD_TSCONFIG] }),
-    ],
+    plugins: [checker({ typescript: { tsconfigPath: PRELOAD_TSCONFIG } }), tsconfigPaths()],
   });
 }

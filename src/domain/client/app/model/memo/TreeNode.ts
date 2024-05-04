@@ -23,10 +23,11 @@ export default class MemoTreeNode {
     this.memo = memo;
     this.explorer = explorer;
 
-    if (!memo) {
-      this.isExpanded = true;
-    } else {
+    if (memo) {
       this.isExpanded = false;
+      this.explorer.nodesMap[memo.id] = this;
+    } else {
+      this.isExpanded = true;
     }
 
     makeObservable(this);
@@ -59,12 +60,13 @@ export default class MemoTreeNode {
       parentId: this.memo?.id,
       onCancel: this.stopEditingNewChild,
       onSubmit: action((memo) => {
-        this.startEditingNewChild();
         this.children?.push(new MemoTreeNode({ memo, explorer: this.explorer }));
 
         if (this.memo) {
           this.memo.childrenCount += 1;
         }
+
+        this.startEditingNewChild();
       }),
     });
   }
@@ -81,12 +83,10 @@ export default class MemoTreeNode {
 
     if (this.isExpanded) {
       this.load();
+      this.startEditingNewChild();
     } else {
-      this.children = [];
-
-      if (!this.newChildEditor?.isDirty) {
-        this.stopEditingNewChild();
-      }
+      this.stopEditingNewChild();
+      this.resetChildren();
     }
   }
 
@@ -96,8 +96,12 @@ export default class MemoTreeNode {
     this.memo.isPinned = !this.memo.isPinned;
   }
 
-  public get isRoot() {
-    return Boolean(this.memo);
+  private get isRoot() {
+    return !this.memo;
+  }
+
+  public get isLeaf() {
+    return Boolean(this.memo?.parentId);
   }
 
   public get sortedChildren() {
@@ -112,17 +116,25 @@ export default class MemoTreeNode {
     });
   }
 
+  @action
+  private resetChildren() {
+    for (const { memo } of this.children) {
+      assert(memo);
+      delete this.explorer.nodesMap[memo.id];
+    }
+
+    this.isLoaded.up = false;
+    this.isLoaded.down = false;
+    this.children = [];
+  }
+
   public async load(direction: 'up' | 'down' = 'down', reset = false) {
-    if (!this.isExpanded || this.isLoaded[direction]) {
+    if ((!this.isExpanded || this.isLoaded[direction]) && !reset) {
       return;
     }
 
     if (reset) {
-      runInAction(() => {
-        this.isLoaded.up = false;
-        this.isLoaded.down = false;
-        this.children = [];
-      });
+      this.resetChildren();
     }
 
     const primaryPinnedType = direction === 'down';
@@ -138,6 +150,7 @@ export default class MemoTreeNode {
       memos = await this.remote.memo.query.query({
         [filterKey]: baseNode?.memo?.id || null,
         isPinned: primaryPinnedType,
+        parentId: this.memo?.id,
         limit: MemoTreeNode.LIMIT,
       });
     }
@@ -146,6 +159,7 @@ export default class MemoTreeNode {
       const secondaryMemos = await this.remote.memo.query.query({
         isPinned: !primaryPinnedType,
         [filterKey]: baseNode?.memo?.id || null,
+        parentId: this.memo?.id,
         limit: MemoTreeNode.LIMIT - memos.length,
       });
 

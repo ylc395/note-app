@@ -5,8 +5,9 @@ import { once } from 'lodash-es';
 import { token as rpcToken } from '@domain/client/common/infra/rpc';
 import { token as storageToken } from '@domain/client/app/infra/localStorage';
 import type { Duration, MemoVO } from '@domain/shared/model/memo';
-import { EntityTypes } from '../entity';
+import { EntityTypes, WithId } from '../entity';
 import MemoTreeNode from './TreeNode';
+import StarManager, { Events as StarEvents } from '../StarManager';
 
 interface UIState {
   scrollTop?: number;
@@ -21,6 +22,9 @@ export default class MemoExplorer {
   private readonly remote = container.resolve(rpcToken);
   public readonly entityType = EntityTypes.Memo;
   private readonly localStorage = container.resolve(storageToken);
+  private readonly starManager = container.resolve(StarManager);
+  public readonly nodesMap: Record<MemoVO['id'], MemoTreeNode> = {};
+
   @observable public order: Order = 'desc'; // only work for children nodes
 
   @observable.ref
@@ -28,6 +32,7 @@ export default class MemoExplorer {
 
   constructor() {
     makeObservable(this);
+    this.starManager.on(StarEvents.Toggle, this.updateNode);
   }
 
   @action.bound
@@ -75,6 +80,17 @@ export default class MemoExplorer {
     autorun(this.updateUIStateByRootChildEditor);
     this.root.load();
   });
+
+  @action.bound
+  private updateNode({ id, ...memo }: WithId<MemoVO>) {
+    const node = this.nodesMap[id];
+
+    if (!node?.memo) {
+      return;
+    }
+
+    Object.assign(node.memo, memo);
+  }
 
   public async reveal(id: MemoVO['id']) {
     const memos = await this.remote.memo.queryTreeFragment.query({ to: id, limit: 15 });

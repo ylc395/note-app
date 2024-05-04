@@ -52,7 +52,7 @@ export default (function MaterialTreeView() {
       nodeOperation={(node) => (
         <MenuButton
           button={{
-            size: 'small',
+            size: 'tiny',
             variant: 'primary',
             icon: <PlusIcon />,
           }}

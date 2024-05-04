@@ -16,7 +16,7 @@ export default class SqliteContentRepository extends BaseRepository implements L
     await this.db.deleteFrom(linkTableName).where('sourceId', '=', sourceId).execute();
   }
 
-  public async findAvailableLinksOf(entityId: EntityId): Promise<Required<Link>[]> {
+  public async findAvailableLinksOf(entityId: EntityId | EntityId[]): Promise<Required<Link>[]> {
     const rows = await this.db
       .selectFrom(linkTableName)
       .innerJoin(`${entityTableName} as targetEntities`, 'targetEntities.id', `${linkTableName}.targetId`)
@@ -33,7 +33,10 @@ export default class SqliteContentRepository extends BaseRepository implements L
       )
       .where((eb) =>
         eb.and([
-          eb.or([eb(`${linkTableName}.targetId`, '=', entityId), eb(`${linkTableName}.sourceId`, '=', entityId)]),
+          eb.or([
+            eb(`${linkTableName}.targetId`, Array.isArray(entityId) ? 'in' : '=', entityId),
+            eb(`${linkTableName}.sourceId`, Array.isArray(entityId) ? 'in' : '=', entityId),
+          ]),
           eb('targetRecyclables.entityId', 'is', null),
           eb('sourceRecyclables.entityId', 'is', null),
         ]),

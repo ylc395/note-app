@@ -1,5 +1,13 @@
 {
   "extends": "../../../../tsconfig.json",
+  "include": [
+    "./**/*",
+    "../electron/**/*",
+    "../../../domain/client/app/**/*",
+    "../../../domain/client/common/**/*",
+    "../../../domain/shared/**/*",
+    "../../server/api/**/*"
+  ],
   "compilerOptions": {
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "jsx": "react-jsx"

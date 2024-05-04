@@ -23,7 +23,7 @@ export default (function NoteTreeView() {
       explorer={explorer}
       onClick={({ id }, isMultiple) => !isMultiple && openEntity({ entityType: EntityTypes.Note, entityId: id })}
       nodeOperation={({ id }) => (
-        <Button icon={<PlusIcon />} variant="primary" onClick={() => createNote({ parentId: id })} size="small" />
+        <Button icon={<PlusIcon />} variant="primary" onClick={() => createNote({ parentId: id })} size="tiny" />
       )}
     />
   );

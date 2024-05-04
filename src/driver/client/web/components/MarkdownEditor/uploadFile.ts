@@ -2,7 +2,7 @@ import { container } from 'tsyringe';
 import type { UploadOptions } from '@milkdown/plugin-upload';
 import { Decoration } from '@milkdown/prose/view';
 
-import { fileIdToUrl } from '@domain/shared/infra/markdown/url';
+import { fromEntityId } from '@domain/shared/infra/markdown/url';
 import { token as remoteToken } from '@domain/client/common/infra/rpc';
 
 import { NODE_NAME as MULTIMEDIA_NODE_NAME } from './multimedia';
@@ -24,7 +24,7 @@ export const uploadOptions: UploadOptions = {
 
     return updatedFiles.map((file) => {
       const node = multimediaNode.createAndFill({
-        src: fileIdToUrl(file.id),
+        src: fromEntityId(file.id),
         alt: file.id,
       });
 

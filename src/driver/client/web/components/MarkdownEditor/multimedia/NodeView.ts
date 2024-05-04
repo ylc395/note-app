@@ -3,7 +3,7 @@ import type { Node } from '@milkdown/prose/model';
 import { FileVO } from '@domain/shared/model/file';
 import { container } from 'tsyringe';
 import { token as remoteToken } from '@domain/client/common/infra/rpc';
-import { urlToFileId } from '@domain/shared/infra/markdown/url';
+import { parseAppUrl } from '@domain/shared/infra/markdown/url';
 
 export default class MultimediaNodeView implements NodeView {
   private remote = container.resolve(remoteToken);
@@ -23,13 +23,13 @@ export default class MultimediaNodeView implements NodeView {
   }
 
   private async mount() {
-    const fileId = urlToFileId(this.url);
+    const parsed = parseAppUrl(this.url);
 
-    if (!fileId) {
+    if (!parsed) {
       return;
     }
 
-    const file = await this.remote.file.queryOne.query(fileId);
+    const file = await this.remote.file.queryOne.query(parsed.id);
     const el = this.createMediaElement(file);
     this.dom.replaceChildren(el);
   }

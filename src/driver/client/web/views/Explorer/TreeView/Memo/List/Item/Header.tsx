@@ -16,7 +16,7 @@ export default observer(function Header({ node }: { node: MemoTreeNode }) {
   assert(memo);
 
   return (
-    <div className="flex justify-between items-center mb-4 text-xs text-text-secondary">
+    <div className="flex justify-between items-center mb-2 text-xs text-text-secondary">
       <div className="flex items-center">
         {memo.isPinned && (
           <span className="mr-1 flex items-center">

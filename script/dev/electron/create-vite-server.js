@@ -8,7 +8,7 @@ import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import tailwindcss from 'tailwindcss';
 
 import { ENV } from './constants.js';
-const WEB_TSCONFIG = path.resolve('./tsconfig.electron.web.json');
+const WEB_TSCONFIG = path.resolve('./src/driver/client/web/tsconfig.json');
 
 export default async function createViteServer() {
   const server = await createServer({
@@ -23,7 +23,7 @@ export default async function createViteServer() {
     plugins: [
       react({ tsDecorators: true }), // use this plugin to speed up react compiling and enjoy "fast refresh"
       checker({ typescript: { tsconfigPath: WEB_TSCONFIG } }),
-      tsconfigPaths({ projects: [WEB_TSCONFIG] }),
+      tsconfigPaths(),
       nodePolyfills(),
     ],
     define: {

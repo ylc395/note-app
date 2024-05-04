@@ -1,4 +1,0 @@
-{
-  "extends": "./tsconfig.json",
-  "include": ["./src/driver/client/electron/preload/**/*", "./src/domain/shared/infra/ui.ts"]
-}
