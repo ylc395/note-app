@@ -20,6 +20,7 @@ export default {
       },
       layout: {
         DEFAULT: '#fff',
+        highlight: '#f4f4f5',
       },
       button: {
         primary: {

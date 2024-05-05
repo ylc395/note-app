@@ -1,10 +1,4 @@
-import {
-  AiOutlineArrowLeft,
-  AiOutlineArrowRight,
-  AiOutlineSetting,
-  AiOutlineSearch,
-  AiOutlineHistory,
-} from 'react-icons/ai';
+import { ArrowLeftIcon, ArrowRightIcon, SearchIcon, HistoryIcon } from 'lucide-react';
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 
@@ -17,30 +11,27 @@ export default observer(function BottomBar() {
   const { search } = container.resolve(SearchService);
 
   return (
-    <div className="flex h-10 items-center justify-between overflow-hidden border-0 border-b border-solid border-layout p-2">
+    <div className="py-2 border-0 border-b border-solid border-layout relative">
       <div className="flex space-x-2">
-        <Button onClick={() => historyManager.go('backward')} disabled={!historyManager.canBackward}>
-          <AiOutlineArrowLeft />
-        </Button>
-        <Button onClick={() => historyManager.go('forward')} disabled={!historyManager.canForward}>
-          <AiOutlineArrowRight />
-        </Button>
-        <Button>
-          <AiOutlineHistory />
-        </Button>
+        <Button
+          icon={<ArrowLeftIcon />}
+          onClick={() => historyManager.go('backward')}
+          disabled={!historyManager.canBackward}
+        />
+        <Button
+          icon={<ArrowRightIcon />}
+          onClick={() => historyManager.go('forward')}
+          disabled={!historyManager.canForward}
+        />
+        <Button icon={<HistoryIcon />} />
       </div>
-      <div className="mx-4 flex h-8 max-w-[280px] grow items-center rounded-md border border-solid border-gray-300 bg-gray-100 px-2">
-        <AiOutlineSearch className="mr-1" />
+      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex h-8 items-center rounded-md border border-solid border-layout px-2">
+        <SearchIcon className="mr-2" />
         <input
           placeholder="搜索..."
           onChange={(e) => search({ keyword: e.target.value })}
-          className="h-full border-none bg-transparent"
+          className="w-60 text-sm h-full border-none outline-none p-0"
         />
-      </div>
-      <div className="flex space-x-2">
-        <Button>
-          <AiOutlineSetting />
-        </Button>
       </div>
     </div>
   );

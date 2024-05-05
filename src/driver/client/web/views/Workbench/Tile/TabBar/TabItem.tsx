@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import { AiOutlineClose } from 'react-icons/ai';
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect } from 'react';
 import clsx from 'clsx';
 import assert from 'assert';
 import { container } from 'tsyringe';
@@ -23,8 +23,7 @@ export default observer(function TabItem({ editor }: { editor: Editor }) {
 
   const { startMoving, finishMoving } = container.resolve(MoveBehavior);
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const [isOver, setIsOver] = useState(false);
-  const { onDrop } = useDrop(editor);
+  const { onDrop, isOver, setIsOver } = useDrop(editor);
 
   const { switchToEditor, removeEditor, currentEditor } = tile;
 
@@ -39,8 +38,9 @@ export default observer(function TabItem({ editor }: { editor: Editor }) {
       <Draggable
         item={editor}
         className={clsx(
-          'flex flex-nowrap items-center border-0 border-r border-solid border-layout px-2 text-text-secondary',
-          currentEditor === editor ? 'bg-white' : isOver ? 'bg-gray-200' : 'bg-gray-50',
+          'flex flex-nowrap items-center border-0 border-r border-solid border-layout px-2',
+          currentEditor === editor ? 'bg-layout-highlight text-text-primary' : 'text-text-secondary bg-layout',
+          isOver && 'bg-layout-highlight',
         )}
         onDragStart={() => startMoving({ mode: 'drag', item: editor })}
         onDragEnd={finishMoving}

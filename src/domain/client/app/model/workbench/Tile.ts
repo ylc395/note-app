@@ -105,16 +105,17 @@ export default class Tile {
 
   @action
   public addEditorTo(editor: Editor, to?: Editor) {
-    const duplicatedIndex = this.editors.findIndex(
-      (e) => e !== editor && isMatch(e.entityLocator, editor.entityLocator),
-    );
+    const duplicatedIndex = this.editors.findIndex((e) => isMatch(e.entityLocator, editor.entityLocator));
 
     if (duplicatedIndex >= 0) {
       const [duplicated] = this.editors.splice(duplicatedIndex, 1);
-      duplicated!.destroy();
+
+      if (duplicated !== editor) {
+        duplicated!.destroy();
+      }
     }
 
-    if (!this.editors.includes(editor)) {
+    if (editor.tile !== this) {
       assert(editor.tile);
       editor.tile.removeEditor(editor, false);
       editor.tile = this;

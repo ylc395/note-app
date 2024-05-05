@@ -22,5 +22,5 @@ export default function useDrop(target: Tile | Editor) {
     }
   });
 
-  return { isOver, setIsOver, onDrop, moveEditor };
+  return { isOver, setIsOver, onDrop };
 }
