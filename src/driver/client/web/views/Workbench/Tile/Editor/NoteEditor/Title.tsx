@@ -11,7 +11,7 @@ export default observer(function NoteTitle({ editor }: { editor: NoteEditor }) {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   return (
-    <div className="flex items-center border-0 border-b border-solid border-gray-200 px-1 py-2">
+    <div className="flex items-center border-0 border-b border-solid border-layout px-1 py-2">
       <IconPicker icon={editor.info?.icon || null} onSelect={(icon) => editor.updateEntity({ icon })} />
       <input
         spellCheck={false}

@@ -24,8 +24,8 @@ export default observer(function TileView({ id }: { id: Tile['id'] }) {
       onOverToggle={setIsOver}
       onDrop={onDrop}
       className={clsx(
-        'flex h-full flex-col border border-solid',
-        workbench.currentTile?.id === id && workbench.root !== id ? 'z-10 border-blue-300' : 'border-gray-100 ',
+        'flex h-full flex-col ',
+        // workbench.currentTile?.id === id && workbench.root !== id ? 'z-10 border-blue-300' : 'border-gray-100 ',
       )}
     >
       {IS_DEV ? <span className="absolute right-0 top-0 text-xs">{id}</span> : null}

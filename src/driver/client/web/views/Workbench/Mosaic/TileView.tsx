@@ -29,7 +29,10 @@ const TileView = observer(function _TileView({
 }) {
   if (isTileLeaf(node)) {
     return (
-      <div className="absolute" style={mapValues(boundingBox, (v) => `${v}%`)}>
+      <div
+        className="absolute border-r border-b border-solid border-layout border-0"
+        style={mapValues(boundingBox, (v) => `${v}%`)}
+      >
         {renderTile(node)}
       </div>
     );

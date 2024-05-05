@@ -17,7 +17,7 @@ export default observer(function BottomBar() {
   const { search } = container.resolve(SearchService);
 
   return (
-    <div className="flex h-10 items-center justify-between overflow-hidden border-0 border-b border-solid border-gray-200 bg-gray-50 p-2">
+    <div className="flex h-10 items-center justify-between overflow-hidden border-0 border-b border-solid border-layout p-2">
       <div className="flex space-x-2">
         <Button onClick={() => historyManager.go('backward')} disabled={!historyManager.canBackward}>
           <AiOutlineArrowLeft />

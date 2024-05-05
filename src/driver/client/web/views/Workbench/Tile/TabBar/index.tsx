@@ -14,7 +14,7 @@ export default observer(function TabBar({ tile }: { tile: Tile }) {
   const { setIsOver, isOver, onDrop } = useDrop(tile);
 
   return (
-    <div className="flex justify-between border-0 border-b border-solid border-gray-200">
+    <div className="flex justify-between border-0 border-b border-solid border-layout">
       <Droppable
         onOverToggle={setIsOver}
         onDrop={onDrop}

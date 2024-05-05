@@ -37,9 +37,6 @@ export default {
       },
     },
     textColor: {
-      primary: '#090911',
-      secondary: '#71717a',
-
       button: {
         primary: '#f8fafc',
       },

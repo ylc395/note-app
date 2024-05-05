@@ -39,7 +39,7 @@ export default observer(function TabItem({ editor }: { editor: Editor }) {
       <Draggable
         item={editor}
         className={clsx(
-          'flex flex-nowrap items-center border-0 border-r border-solid border-gray-200 px-2 text-gray-500',
+          'flex flex-nowrap items-center border-0 border-r border-solid border-layout px-2 text-text-secondary',
           currentEditor === editor ? 'bg-white' : isOver ? 'bg-gray-200' : 'bg-gray-50',
         )}
         onDragStart={() => startMoving({ mode: 'drag', item: editor })}
