@@ -11,7 +11,7 @@ const ListItem = observer(function ({ node }: { node: MemoTreeNode }) {
   assert(node.memo);
 
   return (
-    <div className="mb-4 rounded-xl bg-white shadow border-layout border-solid border group">
+    <div className="mb-4 rounded-xl bg-white shadow border-layout border-solid border">
       <div className="px-2 pt-1">
         <Header node={node} />
         <Body node={node} />

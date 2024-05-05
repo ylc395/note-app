@@ -1,8 +1,18 @@
-import { type Placement, useClick, useDismiss, useFloating, useInteractions } from '@floating-ui/react';
-import { APP_NAME } from '@domain/shared/infra/constants';
-import { type ReactNode, useState, forwardRef, useImperativeHandle } from 'react';
-
+import {
+  type Placement,
+  type OffsetOptions,
+  useClick,
+  useDismiss,
+  useFloating,
+  useInteractions,
+  offset,
+  arrow as arrowMiddleware,
+  FloatingArrow,
+} from '@floating-ui/react';
+import { type ReactNode, useRef, useState, forwardRef, useImperativeHandle, ReactElement } from 'react';
 import { createPortal } from 'react-dom';
+
+import { APP_NAME } from '@domain/shared/infra/constants';
 
 export interface PopoverRef {
   dismiss: () => void;
@@ -10,22 +20,28 @@ export interface PopoverRef {
 
 interface Props {
   placement?: Placement;
-  reference: ReactNode | ((params: { isOpen: boolean }) => ReactNode);
+  offset?: OffsetOptions;
+  reference: ReactElement | ((params: { isOpen: boolean }) => ReactElement);
+  arrow?: boolean;
   children: ReactNode;
 }
 
-export default forwardRef<PopoverRef, Props>(function Popover({ reference, children, placement }, ref) {
+export default forwardRef<PopoverRef, Props>(function Popover(
+  { reference, children, placement, offset: offsetOptions, arrow },
+  ref,
+) {
   const [isOpen, setIsOpen] = useState(false);
+  const arrowRef = useRef(null);
   const { refs, context, floatingStyles } = useFloating({
     open: isOpen,
     placement,
     onOpenChange: setIsOpen,
+    middleware: [offset(offsetOptions), arrowMiddleware({ element: arrowRef })],
   });
   const { getReferenceProps, getFloatingProps } = useInteractions([
     useClick(context, { keyboardHandlers: false }),
     useDismiss(context),
   ]);
-  const mountPoint = refs.domReference.current?.closest('dialog') || document.body;
 
   useImperativeHandle(ref, () => ({
     dismiss: () => setIsOpen(false),
@@ -39,9 +55,10 @@ export default forwardRef<PopoverRef, Props>(function Popover({ reference, child
       {isOpen &&
         createPortal(
           <div ref={refs.setFloating} {...getFloatingProps()} className={APP_NAME} style={floatingStyles}>
-            {children}
+            {arrow && <FloatingArrow ref={arrowRef} context={context} />}
+            <div className="z-10">{children}</div>
           </div>,
-          mountPoint,
+          document.body,
         )}
     </>
   );

@@ -10,14 +10,27 @@ export interface Props {
   block?: boolean;
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost';
   size?: 'tiny' | 'small' | 'medium' | 'large';
+  stopPropagation?: boolean;
 }
 
 export default forwardRef<HTMLButtonElement, Props>(function Button(
-  { children, icon, onClick, disabled, className, variant = 'ghost', size = 'medium', block = false },
+  {
+    children,
+    icon,
+    onClick,
+    disabled,
+    className,
+    variant = 'ghost',
+    size = 'medium',
+    block = false,
+    stopPropagation = true,
+  },
   ref,
 ) {
   const handleClick = (e: MouseEvent) => {
-    e.stopPropagation();
+    if (stopPropagation) {
+      e.stopPropagation();
+    }
     onClick?.(e);
   };
 

@@ -24,7 +24,7 @@ export default {
       button: {
         primary: {
           DEFAULT: '#2f2f31',
-          highlight: colorWithOpacity('#2f2f31'),
+          highlight: colorWithOpacity('#2f2f31', 0.9),
         },
         secondary: {
           DEFAULT: '#f6f6f7',

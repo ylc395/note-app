@@ -34,10 +34,19 @@ export default observer(function ActivityBar() {
           ))}
         </div>
         <div className="flex flex-col py-2 border-0 border-t border-solid border-layout">
-          <Popover placement="right" reference={() => <Button size="large" icon={<StarIcon />} />}>
+          <Popover
+            placement="right-start"
+            offset={20}
+            arrow
+            reference={() => <Button size="large" stopPropagation={false} icon={<StarIcon />} />}
+          >
             <StarView />
           </Popover>
-          <Popover placement="right" reference={() => <Button size="large" icon={<HashIcon />} />}>
+          <Popover
+            placement="right"
+            arrow
+            reference={() => <Button size="large" stopPropagation={false} icon={<HashIcon />} />}
+          >
             <TopicView />
           </Popover>
         </div>
