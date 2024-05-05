@@ -13,7 +13,7 @@ export default class AnnotationService extends BaseService {
   private readonly entityService = container.resolve(EntityService);
   public async create(annotation: AnnotationDTO) {
     await this.entityService.assertAvailableIds([annotation.targetId], {
-      types: [EntityTypes.Note, EntityTypes.Material], // only note and material have annotations
+      types: [EntityTypes.Note], // only materials have annotations
     });
 
     // todo: verify annotation's selectors type here (not very necessary)

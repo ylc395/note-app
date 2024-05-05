@@ -25,9 +25,6 @@ export default abstract class Editor<
     makeObservable(this);
     this.uiState = this.localStorage.get(this.uiStateKey);
     this.tile = tile;
-    this.createAnnotation = editable.createAnnotation;
-    this.getAnnotation = editable.getAnnotation;
-    this.updateAnnotation = editable.updateAnnotation;
   }
 
   public readonly id = uniqueId('editor-');
@@ -60,15 +57,6 @@ export default abstract class Editor<
   public get info() {
     return this.editable.entity as T['entity'] | undefined;
   }
-
-  @computed
-  public get annotations() {
-    return this.editable.annotations;
-  }
-
-  public readonly createAnnotation: T['createAnnotation'];
-  public readonly updateAnnotation: T['updateAnnotation'];
-  public readonly getAnnotation: T['getAnnotation'];
 
   @computed
   public get tabView() {
