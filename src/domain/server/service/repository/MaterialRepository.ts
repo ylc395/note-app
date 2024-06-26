@@ -1,7 +1,7 @@
-import type { MaterialQuery, MaterialPatch, NewMaterialDTO, Material } from '@domain/server/model/material.js';
+import type { MaterialQuery, MaterialPatch, MaterialDTO, Material } from '@domain/server/model/material.js';
 
 export interface MaterialRepository {
-  create: (directory: NewMaterialDTO) => Promise<Material>;
+  create: (directory: MaterialDTO) => Promise<Material>;
   update(id: Material['id'] | Material['id'][], material: MaterialPatch): Promise<boolean>;
   findAll: (query: MaterialQuery) => Promise<Material[]>;
   findOneById: (id: Material['id'], availableOnly?: boolean) => Promise<Material | null>;

@@ -1,26 +1,28 @@
-import { object, string, union, type infer as ZodInfer } from 'zod';
 import dayjs from 'dayjs';
 import type { ParsedDiff } from 'diff';
 import type { Entity, EntityId, EntityParentId } from './entity.js';
 
-export const notePatchDTOSchema = object({
-  title: string().optional(),
-  parentId: string().nullish(),
-  icon: string().nullish(),
-  body: string().optional(),
-});
+/**
+ * @api
+ */
+export interface NotePatchDTO {
+  title?: string;
+  parentId?: EntityParentId;
+  icon?: string | null;
+  body?: string;
+}
 
-export const clientNoteQuerySchema = object({
-  parentId: union([string().array(), string().nullable()]).optional(),
-});
+/**
+ * @api
+ */
+export interface ClientNoteQuery {
+  parentId?: string[] | string | null;
+}
 
-export const noteDTOSchema = notePatchDTOSchema;
-
-export type NoteDTO = ZodInfer<typeof noteDTOSchema>;
-
-export type NotePatchDTO = ZodInfer<typeof notePatchDTOSchema>;
-
-export type ClientNoteQuery = ZodInfer<typeof clientNoteQuerySchema>;
+/**
+ * @api
+ */
+export type NoteDTO = NotePatchDTO;
 
 export interface Note {
   title: string;
@@ -32,6 +34,9 @@ export interface Note {
   body?: string;
 }
 
+/**
+ * @api
+ */
 export interface NoteVO extends Note {
   isStar: boolean;
   childrenCount: number;

@@ -1,9 +1,9 @@
 import { string, tuple } from 'zod';
 import {
-  newMaterialDTOSchema,
+  materialDTOSchema,
   clientMaterialQuerySchema,
   materialPatchDTOSchema,
-} from '@domain/server/model/material.js';
+} from '@domain/shared/infra/schema/material.js';
 import { publicProcedure, router } from './trpc.js';
 
 export default router({
@@ -24,7 +24,7 @@ export default router({
     .query(({ input: id, ctx: { materialService } }) => materialService.getBlob(id)),
 
   create: publicProcedure
-    .input(newMaterialDTOSchema)
+    .input(materialDTOSchema)
     .mutation(({ input: dto, ctx: { materialService } }) => materialService.create(dto)),
 
   updateOne: publicProcedure

@@ -1,12 +1,8 @@
-import { object, string } from 'zod';
-
 import type { EntityId, EntityLocator } from './entity.js';
 
-export const recyclableDTOSchema = object({ entityId: string() });
-
-export const recyclablesDTOSchema = recyclableDTOSchema.array();
-
-export type RecyclableDTO = { entityId: EntityId };
+export interface RecyclableDTO {
+  entityId: EntityId;
+}
 
 export type RecyclablesDTO = RecyclableDTO[];
 

@@ -1,22 +1,30 @@
-import { object, string, type infer as Infer, union } from 'zod';
 import dayjs from 'dayjs';
 import type { Entity, EntityId, EntityParentId } from './entity.js';
 
-export const newMaterialDTOSchema = object({
-  title: string().optional(),
-  parentId: string().nullish(),
-  icon: string().min(1).nullish(),
-  fileId: string().optional(),
-  sourceUrl: string().url().nullish(),
-  comment: string().optional(),
-});
+/**
+ * @api
+ */
+export interface MaterialDTO {
+  title?: string;
+  parentId?: EntityParentId;
+  icon?: string | null;
+  fileId?: string;
+  sourceUrl?: string | null;
+  comment?: string;
+}
 
-export const materialPatchDTOSchema = newMaterialDTOSchema.omit({ fileId: true });
+/**
+ * @api
+ */
+export type MaterialPatchDTO = Omit<MaterialDTO, 'fileId'>;
 
-export const clientMaterialQuerySchema = object({
-  parentId: union([string().nullable(), string().array()]).optional(),
-  fileHash: string().optional(),
-});
+/**
+ * @api
+ */
+export interface ClientMaterialQuery {
+  parentId?: EntityParentId | string[];
+  fileHash?: string;
+}
 
 export interface Material {
   id: EntityId;
@@ -38,9 +46,9 @@ export enum MaterialTypes {
   Entity,
 }
 
-export type NewMaterialDTO = Infer<typeof newMaterialDTOSchema>;
-export type MaterialPatchDTO = Infer<typeof materialPatchDTOSchema>;
-
+/**
+ * @api
+ */
 export interface MaterialVO extends Material {
   childrenCount: number;
   isStar: boolean;
@@ -51,8 +59,6 @@ export interface EntityMaterialVO extends MaterialVO {
   sourceUrl: string;
   mimeType: string;
 }
-
-export type ClientMaterialQuery = Infer<typeof clientMaterialQuerySchema>;
 
 export function isEntityMaterial(v: Material): v is EntityMaterial;
 export function isEntityMaterial(v: MaterialVO): v is EntityMaterialVO;

@@ -1,6 +1,6 @@
 import { string, tuple } from 'zod';
 
-import { annotationDTOSchema, annotationPatchDTOSchema } from '@domain/shared/model/annotation.js';
+import { annotationDTOSchema, annotationPatchDTOSchema } from '@domain/shared/infra/schema/annotation.js';
 import { publicProcedure, router } from './trpc.js';
 
 export default router({

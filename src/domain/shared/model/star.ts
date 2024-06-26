@@ -1,12 +1,15 @@
-import { object, string, type infer as Infer } from 'zod';
 import type { EntityId, EntityLocator } from './entity.js';
 
-export const starDTOSchema = object({
-  entityId: string(),
-});
+/**
+ * @api
+ */
+export interface StarDTO {
+  entityId: EntityId;
+}
 
-export type StarDTO = Infer<typeof starDTOSchema>;
-
+/**
+ * @api
+ */
 export interface StarVO extends EntityLocator {
   mimeType?: string;
   title: string;

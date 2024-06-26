@@ -1,4 +1,4 @@
-import { starDTOSchema } from '@domain/server/model/star.js';
+import { starDTOSchema } from '@domain/shared/infra/schema/star.js';
 import { publicProcedure, router } from './trpc.js';
 
 export default router({

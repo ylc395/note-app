@@ -1,4 +1,4 @@
-import { versionDTOSchema } from '@domain/shared/model/version.js';
+import { versionDTOSchema } from '@domain/shared/infra/schema/version.js';
 import { publicProcedure, router } from './trpc.js';
 
 export default router({

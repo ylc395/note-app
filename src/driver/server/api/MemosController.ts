@@ -6,7 +6,7 @@ import {
   memoDTOSchema,
   durationSchema,
   clientTreeFragmentQuerySchema,
-} from '@domain/server/model/memo.js';
+} from '@domain/shared/infra/schema/memo.js';
 
 import { publicProcedure, router } from './trpc.js';
 

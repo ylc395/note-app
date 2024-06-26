@@ -1,4 +1,3 @@
-import { object, string, number, infer as Infer, boolean } from 'zod';
 import type { EntityParentId } from './entity.js';
 
 export interface Memo {
@@ -11,56 +10,53 @@ export interface Memo {
   createdAt: number;
 }
 
+/**
+ * @api
+ */
 export interface MemoVO extends Memo {
   isStar: boolean;
   childrenCount: number;
   referrersCount: number;
 }
 
-export const MAX_LENGTH = 10000;
+/**
+ * @api
+ */
+export interface MemoDTO {
+  parentId: EntityParentId;
+  body: string;
+  isPinned?: boolean;
+  sourceUrl?: string;
+}
 
-export const memoDTOSchema = object({
-  parentId: string().nullish(),
-  body: string().max(MAX_LENGTH),
-  isPinned: boolean().optional(),
-  sourceUrl: string().url().nullish(),
-});
+/**
+ * @api
+ */
+export type MemoPatchDTO = Partial<Pick<MemoDTO, 'body' | 'isPinned' | 'sourceUrl'>>;
 
-export type MemoDTO = Infer<typeof memoDTOSchema>;
+export interface Duration {
+  startTime: number;
+  endTime: number;
+}
 
-export const memoPatchDTOSchema = memoDTOSchema
-  .pick({
-    body: true,
-    isPinned: true,
-    sourceUrl: true,
-  })
-  .partial();
+/**
+ * @api
+ */
+export interface ClientMemoQuery extends Partial<Duration> {
+  limit?: number;
+  parentId?: EntityParentId;
+  before?: Memo['id'];
+  after?: Memo['id'];
+  isPinned?: boolean;
+}
 
-export type MemoPatchDTO = Infer<typeof memoPatchDTOSchema>;
-
-export const durationSchema = object({
-  startTime: number(),
-  endTime: number(),
-});
-
-export type Duration = Infer<typeof durationSchema>;
-
-export const clientMemoQuerySchema = object({
-  limit: number().optional(),
-  parentId: string().nullish(),
-  before: string().nullish(),
-  after: string().nullish(),
-  isPinned: boolean().optional(),
-}).merge(durationSchema.partial());
-
-export const clientTreeFragmentQuerySchema = object({
-  limit: number(),
-  to: string(),
-});
-
-export type ClientTreeFragmentQuery = Infer<typeof clientTreeFragmentQuerySchema>;
-
-export type ClientMemoQuery = Infer<typeof clientMemoQuerySchema>;
+/**
+ * @api
+ */
+export interface ClientTreeFragmentQuery {
+  limit: number;
+  to: Memo['id'];
+}
 
 export interface DateInfo {
   date: string;

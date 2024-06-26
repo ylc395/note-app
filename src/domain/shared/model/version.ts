@@ -1,4 +1,3 @@
-import { number, object, string, type infer as ZodInfer } from 'zod';
 import type { EntityId } from './entity.js';
 
 export interface Version {
@@ -12,20 +11,25 @@ export interface Version {
   createdAt: number;
 }
 
-export const versionDTOSchema = object({
-  entityId: string(),
-  comment: string().optional(),
-});
+/**
+ * @api
+ */
+export interface VersionDTO {
+  entityId: EntityId;
+  comment?: string;
+}
 
-export const versionMergeRequestSchema = object({
-  entityId: string(),
-  startIndex: number(),
-  endIndex: number(),
-  comment: string().optional(),
-});
+/**
+ * @api
+ */
+export interface VersionMergeRequest {
+  entityId: EntityId;
+  startIndex: number;
+  endIndex: number;
+  comment?: string;
+}
 
-export type VersionMergeRequest = ZodInfer<typeof versionMergeRequestSchema>;
-
-export type VersionDTO = ZodInfer<typeof versionDTOSchema>;
-
+/**
+ * @api
+ */
 export type VersionVO = Omit<Version, 'id'>;

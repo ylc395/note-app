@@ -1,6 +1,6 @@
 import { string } from 'zod';
 
-import { fileDTOSchema } from '@domain/server/model/file.js';
+import { fileDTOSchema } from '@domain/shared/infra/schema/file.js';
 import { publicProcedure, router } from './trpc.js';
 
 export default router({

@@ -1,4 +1,3 @@
-import { array, discriminatedUnion, literal, number, object, string, type infer as ZodInfer } from 'zod';
 import type { EntityId } from './entity.js';
 
 export enum SelectorTypes {
@@ -7,42 +6,40 @@ export enum SelectorTypes {
   Range = 'RangeSelector',
 }
 
-const cssSelectorSchema = object({
-  type: literal(SelectorTypes.CSS),
-  value: string(),
-  offset: number().optional(),
-});
+interface CssSelector {
+  type: SelectorTypes.CSS;
+  value: string;
+  offset?: string;
+}
 
-const fragmentSelectorSchema = object({
-  type: literal(SelectorTypes.Fragment),
-  value: string(), // see https://www.w3.org/TR/annotation-model/#fragment-selector
-});
+export interface FragmentSelector {
+  type: SelectorTypes.Fragment;
+  value: string; // see https://www.w3.org/TR/annotation-model/#fragment-selector
+}
 
-const rangeSelectorSchema = object({
-  type: literal(SelectorTypes.Range),
-  start: cssSelectorSchema,
-  end: cssSelectorSchema,
-});
+interface RangeSelector {
+  type: SelectorTypes.Range;
+  start: CssSelector;
+  end: CssSelector;
+}
 
-const selectorSchema = discriminatedUnion('type', [cssSelectorSchema, fragmentSelectorSchema, rangeSelectorSchema]);
-
-export const annotationDTOSchema = object({
-  targetId: string(),
-  selectors: array(selectorSchema),
-  body: string().optional(),
-  targetText: string().nullish(),
-  color: string(),
-});
-
-export const annotationPatchDTOSchema = annotationDTOSchema.pick({
-  body: true,
-  color: true,
-});
-
-type CssSelector = ZodInfer<typeof cssSelectorSchema>;
-export type FragmentSelector = ZodInfer<typeof fragmentSelectorSchema>;
-type RangeSelector = ZodInfer<typeof rangeSelectorSchema>;
 type Selector = CssSelector | FragmentSelector | RangeSelector;
+
+/**
+ * @api
+ */
+export interface AnnotationDTO {
+  targetId: string;
+  selectors: Selector[];
+  body?: string;
+  targetText?: string | null;
+  color: string;
+}
+
+/**
+ * @api
+ */
+export type AnnotationPatchDTO = Pick<AnnotationDTO, 'body' | 'color'>;
 
 export interface Annotation {
   id: EntityId;
@@ -55,8 +52,7 @@ export interface Annotation {
   updatedAt: number;
 }
 
-export type AnnotationDTO = ZodInfer<typeof annotationDTOSchema>;
-
-export type AnnotationPatchDTO = ZodInfer<typeof annotationPatchDTOSchema>;
-
+/**
+ * @api
+ */
 export type AnnotationVO = Annotation;

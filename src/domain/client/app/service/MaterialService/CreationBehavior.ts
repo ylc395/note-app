@@ -5,12 +5,12 @@ import assert from 'assert';
 
 import Form from '@domain/client/common/model/abstract/Form';
 import Explorer from '@domain/client/app/model/material/Explorer';
-import { isEntityMaterial, type MaterialVO, type NewMaterialDTO } from '@domain/shared/model/material';
+import { isEntityMaterial, type MaterialVO, type MaterialDTO } from '@domain/shared/model/material';
 import type { FileDTO, FileVO } from '@domain/shared/model/file';
 import { Workbench } from '@domain/client/app/model/workbench';
 import { token as rpcToken } from '@domain/client/common/infra/rpc';
 import { type EntityMaterialVO, MaterialTypes } from '@domain/shared/model/material';
-import { fileDTOSchema } from '@domain/shared/model/file';
+import { fileDTOSchema } from '@domain/shared/infra/schema/file';
 import { getHash } from '@utils/file';
 import { EntityTypes } from '../../model/entity';
 
@@ -55,7 +55,7 @@ export default class CreationBehavior {
     this.parentId = undefined;
   }
 
-  private async createMaterial(dto?: NewMaterialDTO, file?: FileDTO) {
+  private async createMaterial(dto?: MaterialDTO, file?: FileDTO) {
     let fileId: FileVO['id'] | undefined;
 
     if (file) {

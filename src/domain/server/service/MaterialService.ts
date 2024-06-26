@@ -3,7 +3,7 @@ import assert from 'assert';
 import { singleton } from 'tsyringe';
 
 import {
-  type NewMaterialDTO,
+  type MaterialDTO,
   type MaterialVO,
   type Material,
   type ClientMaterialQuery,
@@ -19,7 +19,7 @@ import BaseService from './BaseService.js';
 
 @singleton()
 export default class MaterialService extends BaseService {
-  public async create(newMaterial: NewMaterialDTO) {
+  public async create(newMaterial: MaterialDTO) {
     if (newMaterial.parentId) {
       await this.assertAvailableIds([newMaterial.parentId]);
     }

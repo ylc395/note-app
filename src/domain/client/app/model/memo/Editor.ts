@@ -35,7 +35,7 @@ export default class Editor {
   public readonly submit = async () => {
     const newMemo = this.options.memo
       ? await this.remote.memo.updateOne.mutate([this.options.memo.id, { body: this.content }])
-      : await this.remote.memo.create.mutate({ body: this.content, parentId: this.options.parentId });
+      : await this.remote.memo.create.mutate({ body: this.content, parentId: this.options.parentId || null });
     this.options.onSubmit(newMemo);
   };
 

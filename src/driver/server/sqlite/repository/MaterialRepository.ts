@@ -1,7 +1,7 @@
 import { omit } from 'lodash-es';
 import type { Selectable } from 'kysely';
 
-import type { Material, MaterialQuery, MaterialPatch, NewMaterialDTO } from '@domain/server/model/material.js';
+import type { Material, MaterialQuery, MaterialPatch, MaterialDTO } from '@domain/server/model/material.js';
 import type { MaterialRepository } from '@domain/server/service/repository/MaterialRepository.js';
 
 import schema, { type Row } from '../schema/material.js';
@@ -14,7 +14,7 @@ export default class SqliteMaterialRepository extends BaseRepository implements 
   public readonly tableName = schema.tableName;
   private readonly files = new FileRepository(this.sqliteDb);
 
-  public async create(material: NewMaterialDTO) {
+  public async create(material: MaterialDTO) {
     let file = null;
 
     if (material.fileId) {

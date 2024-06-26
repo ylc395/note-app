@@ -1,6 +1,6 @@
 import { string, tuple } from 'zod';
 
-import { noteDTOSchema, clientNoteQuerySchema, notePatchDTOSchema } from '@domain/server/model/note.js';
+import { noteDTOSchema, clientNoteQuerySchema, notePatchDTOSchema } from '@domain/shared/infra/schema/note.js';
 import { publicProcedure, router } from './trpc.js';
 
 export default router({

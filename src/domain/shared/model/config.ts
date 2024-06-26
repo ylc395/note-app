@@ -1,15 +1,19 @@
-import { object, type infer as Infer, string } from 'zod';
-
-export const configSchema = object({
-  unknown: string(),
-}).partial();
+export type EditableConfig = Partial<{
+  unknown: string;
+}>;
 
 type UneditableConfig = Partial<{
   'httpServer.enabled': boolean;
 }>;
 
-export type Config = Infer<typeof configSchema> & UneditableConfig;
+export type Config = EditableConfig & UneditableConfig;
 
-export type ConfigDTO = Infer<typeof configSchema>;
+/**
+ * @api
+ */
+export type ConfigDTO = Config;
 
+/**
+ * @api
+ */
 export type ConfigVO = Config;
