@@ -1,5 +1,5 @@
 import { BookOpenIcon, FileAudioIcon, FileVideoIcon, FileImageIcon, FileIcon } from 'lucide-react';
-import { mimeTypes } from '@domain/shared/model/file';
+import { MimeTypes } from '@domain/shared/model/file';
 
 export default function MimeTypeIcon({
   mimeType,
@@ -14,7 +14,7 @@ export default function MimeTypeIcon({
     return <FileAudioIcon className={className} size={size} />;
   }
 
-  if (mimeType === mimeTypes.PDF) {
+  if (mimeType === MimeTypes.PDF) {
     return <BookOpenIcon className={className} size={size} />;
   }
 

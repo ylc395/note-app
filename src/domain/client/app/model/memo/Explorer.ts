@@ -5,7 +5,7 @@ import { once } from 'lodash-es';
 import { token as rpcToken } from '@domain/client/common/infra/rpc';
 import { token as storageToken } from '@domain/client/app/infra/localStorage';
 import type { Duration, MemoVO } from '@domain/shared/model/memo';
-import { EntityTypes, WithId } from '../entity';
+import { EntityTypes, type WithId } from '@domain/client/common/model/entity';
 import MemoTreeNode from './TreeNode';
 import StarManager, { Events as StarEvents } from '../StarManager';
 

@@ -1,3 +1,5 @@
+import type { FileVO } from './file.js';
+
 export enum EntityTypes {
   Note = 1,
   Memo,
@@ -5,31 +7,32 @@ export enum EntityTypes {
   Annotation,
 }
 
-export interface Entity {
-  id: EntityId;
-  title: string;
-  type: EntityTypes;
-  icon: string | null;
-  content?: string;
-  createdAt: number;
-  updatedAt: number;
-}
-
-export type WithId<T extends { id: EntityId }> = Partial<T> & Pick<T, 'id'>;
-
 export type EntityId = string;
 
 export type EntityParentId = EntityId | null;
-
-export interface HierarchyEntity {
-  id: EntityId;
-  parentId: EntityParentId;
-  childrenCount: number;
-}
 
 export interface EntityLocator {
   entityId: EntityId;
   entityType: EntityTypes;
 }
 
-export type Path = { id: EntityId; title: string; icon: string | null }[];
+export type EntityPath = Array<{
+  id: EntityId;
+  title: string;
+  icon: string | null;
+}>;
+
+interface StandaloneEntity {
+  id: EntityId;
+  type: EntityTypes;
+  title: string;
+  icon: string | null;
+  file?: FileVO;
+  body?: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface Entity extends StandaloneEntity {
+  main?: StandaloneEntity; // Example: the material of an annotation;
+}

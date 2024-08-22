@@ -1,7 +1,7 @@
 import { singleton, container } from 'tsyringe';
 
 import { token as rpcToken } from '@domain/client/common/infra/rpc';
-import { EntityTypes } from '../../model/entity';
+import { EntityTypes } from '../../../common/model/entity';
 import TreeNode from '@domain/client/common/model/abstract/TreeNode';
 import MaterialEditor from '../../model/material/editor/MaterialEditor';
 import eventBus, { Events } from '../../model/material/eventBus';

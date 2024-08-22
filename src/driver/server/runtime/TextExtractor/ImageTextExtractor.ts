@@ -3,10 +3,115 @@ import tesseract from 'tesseract.js';
 import path from 'node:path';
 import { container, singleton } from 'tsyringe';
 
-import type { Job, Result } from '@domain/server/service/FileService/TextExtractor.js';
-import { SUPPORT_LANGS } from '@domain/server/model/file.js';
+import type { Job } from '@domain/server/service/FileService/TextExtractor.js';
 import { token as runtimeToken } from '@domain/server/infra/runtime.js';
-import { token as loggerToken } from '@domain/server/infra/logger.js';
+import { token as loggerToken } from '@domain/shared/infra/logger.js';
+
+// @see https://tesseract-ocr.github.io/tessdoc/Data-Files#data-files-for-version-400-november-29-2016
+const SUPPORT_LANGS = {
+  afr: 'Afrikaans',
+  amh: 'Amharic',
+  ara: 'Arabic',
+  asm: 'Assamese',
+  aze: 'Azerbaijani',
+  aze_cyrl: 'Azerbaijani - Cyrillic',
+  bel: 'Belarusian',
+  ben: 'Bengali',
+  bod: 'Tibetan',
+  bos: 'Bosnian',
+  bul: 'Bulgarian',
+  cat: 'Catalan; Valencian',
+  ceb: 'Cebuano',
+  ces: 'Czech',
+  chi_sim: 'Chinese - Simplified',
+  chi_tra: 'Chinese - Traditional',
+  chr: 'Cherokee',
+  cym: 'Welsh',
+  dan: 'Danish',
+  deu: 'German',
+  dzo: 'Dzongkha',
+  ell: 'Greek, Modern (1453-)',
+  eng: 'English',
+  enm: 'English, Middle (1100-1500)',
+  epo: 'Esperanto',
+  est: 'Estonian',
+  eus: 'Basque',
+  fas: 'Persian',
+  fin: 'Finnish',
+  fra: 'French',
+  frk: 'German Fraktur',
+  frm: 'French, Middle (ca. 1400-1600)',
+  gle: 'Irish',
+  glg: 'Galician',
+  grc: 'Greek, Ancient (-1453)',
+  guj: 'Gujarati',
+  hat: 'Haitian; Haitian Creole',
+  heb: 'Hebrew',
+  hin: 'Hindi',
+  hrv: 'Croatian',
+  hun: 'Hungarian',
+  iku: 'Inuktitut',
+  ind: 'Indonesian',
+  isl: 'Icelandic',
+  ita: 'Italian',
+  ita_old: 'Italian - Old',
+  jav: 'Javanese',
+  jpn: 'Japanese',
+  kan: 'Kannada',
+  kat: 'Georgian',
+  kat_old: 'Georgian - Old',
+  kaz: 'Kazakh',
+  khm: 'Central Khmer',
+  kir: 'Kirghiz; Kyrgyz',
+  kor: 'Korean',
+  kur: 'Kurdish',
+  lao: 'Lao',
+  lat: 'Latin',
+  lav: 'Latvian',
+  lit: 'Lithuanian',
+  mal: 'Malayalam',
+  mar: 'Marathi',
+  mkd: 'Macedonian',
+  mlt: 'Maltese',
+  msa: 'Malay',
+  mya: 'Burmese',
+  nep: 'Nepali',
+  nld: 'Dutch; Flemish',
+  nor: 'Norwegian',
+  ori: 'Oriya',
+  pan: 'Panjabi; Punjabi',
+  pol: 'Polish',
+  por: 'Portuguese',
+  pus: 'Pushto; Pashto',
+  ron: 'Romanian; Moldavian; Moldovan',
+  rus: 'Russian',
+  san: 'Sanskrit',
+  sin: 'Sinhala; Sinhalese',
+  slk: 'Slovak',
+  slv: 'Slovenian',
+  spa: 'Spanish; Castilian',
+  spa_old: 'Spanish; Castilian - Old',
+  sqi: 'Albanian',
+  srp: 'Serbian',
+  srp_latn: 'Serbian - Latin',
+  swa: 'Swahili',
+  swe: 'Swedish',
+  syr: 'Syriac',
+  tam: 'Tamil',
+  tel: 'Telugu',
+  tgk: 'Tajik',
+  tgl: 'Tagalog',
+  tha: 'Thai',
+  tir: 'Tigrinya',
+  tur: 'Turkish',
+  uig: 'Uighur; Uyghur',
+  ukr: 'Ukrainian',
+  urd: 'Urdu',
+  uzb: 'Uzbek',
+  uzb_cyrl: 'Uzbek - Cyrillic',
+  vie: 'Vietnamese',
+  yid: 'Yiddish',
+};
 
 const SUPPORT_LANG_CODES = Object.keys(SUPPORT_LANGS);
 
@@ -15,22 +120,15 @@ export default class ImageTextExtractor {
   private readonly runtime = container.resolve(runtimeToken);
   private readonly logger = container.resolve(loggerToken);
   private isBusy = false;
-  public async extract(job: {
-    data: ArrayBuffer;
-    lang: Job['lang'];
-    onExtracted?: (result: Omit<Result, 'fileId'>) => void;
-  }) {
-    // in nodejs, pdf.worker.js won't work
-    // because it's a web worker, not a nodejs worker. see https://github.com/nodejs/node/issues/43583
-    // so everything about pdf is done in main thread(so called "fake worker").
-    assert(!this.isBusy, 'PDFTextExtractor is busy');
+  public async extract({ data, lang }: { data: ArrayBuffer; lang: Job['lang'] }) {
+    assert(!this.isBusy, 'ImageTextExtractor is busy');
 
-    if (job.lang.length === 0 || !job.lang.every((lang) => SUPPORT_LANG_CODES.includes(lang))) {
+    if (lang.length === 0 || !lang.every((lang) => SUPPORT_LANG_CODES.includes(lang))) {
       return;
     }
 
     this.isBusy = true;
-    const recognizeResult = await tesseract.recognize(job.data, job.lang.join('+'), {
+    const recognizeResult = await tesseract.recognize(data, lang.join('+'), {
       corePath: path.join(process.cwd(), 'node_modules/tesseract.js-core'),
       cachePath: path.join(this.runtime.getAppDir(), 'ocr_cache'),
       workerBlobURL: false,
@@ -47,10 +145,7 @@ export default class ImageTextExtractor {
           box: word.bbox,
         })),
       },
-      isFinished: true,
     };
-
-    job.onExtracted?.(result);
 
     return result;
   }

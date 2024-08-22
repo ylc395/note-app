@@ -1,39 +1,45 @@
 import type { EntityId } from '@domain/shared/model/entity.js';
-import type { StarRepository } from '@domain/server/service/repository/StarRepository.js';
-import type { StarQuery } from '@domain/server/model/star.js';
+import type { StarRepository } from '@domain/server/repository/StarRepository.js';
+import type { Star, StarQuery } from '@domain/server/model/star.js';
 
 import BaseRepository from './BaseRepository.js';
 import schema from '../schema/star.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
-import { tableName as entityTableName } from '../schema/entity.js';
 
 export default class SqliteStarRepository extends BaseRepository implements StarRepository {
   private readonly tableName = schema.tableName;
 
-  public async createOne(entityId: EntityId) {
-    await super.createOneOn(this.tableName, { entityId, isValid: 1, updatedAt: Date.now() });
+  public async createOne(star: Star) {
+    await this.db.insertInto(this.tableName).values(star);
   }
 
-  public async findAll(q: StarQuery) {
-    let sql = this.db
-      .selectFrom(this.tableName)
-      .innerJoin(entityTableName, `${this.tableName}.entityId`, `${entityTableName}.id`)
-      .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.entityId`)
-      .select([`${this.tableName}.entityId`, 'icon', 'title', 'type as entityType'])
-      .where('isValid', '=', 1);
+  public async findAll(q?: StarQuery) {
+    let sql = this.db.selectFrom(this.tableName).select([`${this.tableName}.entityId`, `${this.tableName}.createdAt`]);
 
-    if (q.isAvailableOnly) {
-      sql = sql.where(`${recyclableTableName}.entityId`, 'is', null);
+    if (q?.isAvailableOnly) {
+      sql = sql
+        .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.entityId`)
+        .where(`${recyclableTableName}.entityId`, 'is', null);
     }
 
-    if (q.entityId) {
-      sql = sql.where(`${this.tableName}.entityId`, 'in', q.entityId);
+    if (q?.entityIds) {
+      sql = sql.where(`${this.tableName}.entityId`, 'in', q.entityIds);
     }
 
     return sql.execute();
   }
 
   public async removeOne(id: EntityId) {
-    await this.db.updateTable(this.tableName).set({ isValid: 0 }).where('entityId', '=', id).executeTakeFirst();
+    await this.db.deleteFrom(this.tableName).where('entityId', '=', id).execute();
+  }
+
+  public async findOneByEntityId(entityId: EntityId) {
+    const row = await this.db
+      .selectFrom(this.tableName)
+      .select(['entityId', 'createdAt'])
+      .where('entityId', '=', entityId)
+      .executeTakeFirst();
+
+    return row || null;
   }
 }

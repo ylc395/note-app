@@ -1,29 +1,32 @@
-import { sql, type Selectable } from 'kysely';
-
-import type { MemoPatchDTO, MemoQuery, Memo, MemoDTO, Duration } from '@domain/server/model/memo.js';
-import type { MemoRepository } from '@domain/server/service/repository/MemoRepository.js';
+import type { Selectable } from 'kysely';
+import type { MemoPatchDTO, MemoQuery, Memo, Duration } from '@domain/server/model/memo.js';
+import type { MemoRepository } from '@domain/server/repository/MemoRepository.js';
 
 import schema, { type Row } from '../schema/memo.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
 import BaseRepository from './BaseRepository.js';
 
 export default class SqliteMemoRepository extends BaseRepository implements MemoRepository {
-  readonly tableName = schema.tableName;
-  async create(memo: MemoDTO) {
-    const createdRow = await this.createOneOn(this.tableName, {
-      ...memo,
-      id: this.generateId(),
-      isPinned: memo.isPinned ? 1 : 0,
-    });
+  private readonly tableName = schema.tableName;
+  public async create(memo: Memo) {
+    await this.db.insertInto(this.tableName).values({ ...memo, isPinned: memo.isPinned ? 1 : 0 });
+    return memo;
+  }
+  public async findLatest() {
+    const row = await this.db
+      .selectFrom(this.tableName)
+      .orderBy('index desc')
+      .select(['id', 'body', 'createdAt', 'updatedAt', 'isPinned', 'sourceUrl', 'index', 'parentId'])
+      .executeTakeFirst();
 
-    return SqliteMemoRepository.rowToMemo(createdRow);
+    return row ? SqliteMemoRepository.rowToMemo(row) : null;
   }
 
-  async update(id: Memo['id'], patch: MemoPatchDTO) {
+  public async update(id: Memo['id'], patch: MemoPatchDTO) {
     const updatedRow = await this.db
       .updateTable(this.tableName)
       .where('id', '=', id)
-      .set({ ...patch, isPinned: patch.isPinned ? 1 : 0, updatedAt: Date.now() })
+      .set({ ...patch, isPinned: patch.isPinned ? 1 : 0 })
       .returningAll()
       .executeTakeFirst();
 
@@ -31,31 +34,19 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
       return null;
     }
 
-    return await this.findOneById(updatedRow.id);
+    return SqliteMemoRepository.rowToMemo(updatedRow);
   }
 
-  async findParent(id: Memo['id']) {
-    const target = await this.db.selectFrom(this.tableName).where('id', '=', id).selectAll().executeTakeFirst();
+  public async findOneById(id: Memo['id'], config?: { isAvailableOnly?: boolean }) {
+    let sql = this.db.selectFrom(this.tableName).where('id', '=', id).selectAll();
 
-    if (!target?.parentId) {
-      return null;
+    if (config?.isAvailableOnly) {
+      sql = sql
+        .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.id`)
+        .where(`${recyclableTableName}.entityId`, 'is', null);
     }
 
-    const parent = await this.db
-      .selectFrom(this.tableName)
-      .where('id', '=', target.parentId)
-      .selectAll()
-      .executeTakeFirst();
-
-    if (!parent) {
-      return null;
-    }
-
-    return SqliteMemoRepository.rowToMemo(parent);
-  }
-
-  async findOneById(id: Memo['id']) {
-    const row = await this.db.selectFrom(this.tableName).where('id', '=', id).selectAll().executeTakeFirst();
+    const row = await sql.executeTakeFirst();
 
     if (!row) {
       return null;
@@ -68,13 +59,13 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
     return { ...row, isPinned: Boolean(row.isPinned) };
   }
 
-  async findAll(q: MemoQuery) {
+  public async findAll(q: MemoQuery) {
     let sql = this.db.selectFrom(this.tableName).selectAll(this.tableName);
 
-    if (typeof q.isAvailable === 'boolean') {
+    if (typeof q.isAvailableOnly === 'boolean') {
       sql = sql
         .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.id`)
-        .where(`${recyclableTableName}.entityId`, q.isAvailable ? 'is' : 'is not', null);
+        .where(`${recyclableTableName}.entityId`, q.isAvailableOnly ? 'is' : 'is not', null);
     }
 
     if (q.startTime) {
@@ -97,8 +88,8 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
       sql = sql.where('isPinned', '=', q.isPinned ? 1 : 0);
     }
 
-    if (q.orderBy === 'createdAt') {
-      sql = sql.orderBy('createdAt', q.order);
+    if (q.orderBy === 'index') {
+      sql = sql.orderBy('index', q.order);
     }
 
     if (q.limit) {
@@ -110,18 +101,18 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
     return rows.map(SqliteMemoRepository.rowToMemo);
   }
 
-  async queryAvailableDates({ startTime, endTime }: Duration) {
+  public async findAvailableBetween(q: Duration) {
     const rows = await this.db
       .selectFrom(this.tableName)
       .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.id`)
-      .where(`${recyclableTableName}.entityId`, 'is', null)
-      .where(`${this.tableName}.createdAt`, '>', startTime)
-      .where(`${this.tableName}.createdAt`, '<', endTime)
-      .groupBy(sql`date(createdAt / 1000, 'unixepoch')`)
-      .select(({ fn }) => [
-        fn.count<number>('id').as('count'),
-        sql<string>`date(createdAt / 1000, 'unixepoch')`.as('date'),
-      ])
+      .where((eb) =>
+        eb.and([
+          eb(`${this.tableName}.createdAt`, '>=', q.startTime),
+          eb(`${this.tableName}.createdAt`, '<', q.endTime),
+          eb(`${recyclableTableName}.entityId`, 'is', null),
+        ]),
+      )
+      .select(['createdAt'])
       .execute();
 
     return rows;

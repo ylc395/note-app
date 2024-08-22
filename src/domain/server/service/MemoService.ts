@@ -1,16 +1,17 @@
-import { compact, groupBy, isEmpty } from 'lodash-es';
+import { groupBy, mapValues, size } from 'lodash-es';
 import assert from 'assert';
-import { singleton, container } from 'tsyringe';
+import { singleton } from 'tsyringe';
+import dayjs from 'dayjs';
 
-import { buildIndex } from '@utils/collection.js';
-import type {
-  Memo,
-  MemoDTO,
-  ClientMemoQuery,
-  MemoVO,
-  MemoPatchDTO,
-  Duration,
-  ClientTreeFragmentQuery,
+import { arrayOf, buildIndex } from '@utils/collection.js';
+import {
+  type Memo,
+  type MemoDTO,
+  type ClientMemoQuery,
+  type MemoVO,
+  type MemoPatchDTO,
+  type Duration,
+  isDuration,
 } from '@domain/server/model/memo.js';
 import { EntityTypes } from '@domain/shared/model/entity.js';
 import { EventNames } from '@domain/server/model/content.js';
@@ -20,149 +21,134 @@ import EntityService from './EntityService.js';
 
 @singleton()
 export default class MemoService extends BaseService {
-  private readonly entity = container.resolve(EntityService);
+  @BaseService.transaction()
   public async create(memo: MemoDTO) {
     if (memo.parentId) {
-      await this.assertAvailableIds([memo.parentId]);
+      assert(typeof memo.isPinned === 'undefined', 'can not pin/unpin a child memo');
+      await this.assertAvailableId(memo.parentId);
     }
 
     if (memo.isPinned) {
-      await this.assertValidPin(memo.parentId);
+      await this.assertCanPin();
     }
 
-    const newMemo = await this.repo.memos.create(memo);
+    const now = Date.now();
 
-    return { ...newMemo, isStar: false, childrenCount: 0, referrersCount: 0 };
+    const latest = await this.repo.memos.findLatest();
+    const newMemo = await this.repo.memos.create({
+      id: EntityService.generateId(),
+      updatedAt: now,
+      createdAt: now,
+      index: latest?.index || 1,
+      parentId: memo.parentId || null,
+      isPinned: memo.isPinned || false,
+      body: memo.body,
+    });
+
+    return this.toVO(newMemo, true);
   }
 
-  private async assertValidPin(parentId?: Memo['parentId']) {
-    const memos = await this.repo.memos.findAll({ isPinned: true, parentId: parentId || null });
-    const LIMIT = 10;
-
-    assert(memos.length < LIMIT, `can not pin more than ${LIMIT} memos`);
-  }
-
+  @BaseService.transaction()
   public async updateOne(id: MemoVO['id'], patch: MemoPatchDTO) {
-    await this.assertAvailableIds([id]);
-    const memo = await this.repo.memos.findOneById(id);
+    await this.assertAvailableId(id, { isPinned: typeof patch.isPinned === 'boolean' ? !patch.isPinned : undefined });
 
     if (patch.isPinned) {
-      await this.assertValidPin(memo!.parentId);
+      await this.assertCanPin();
     }
 
-    const updated = await this.repo.memos.update(id, patch);
-    assert(updated);
+    const hasContentUpdated = typeof patch.body === 'string';
+    const now = Date.now();
 
-    if (typeof patch.body === 'string') {
+    await this.repo.memos.update(id, {
+      ...patch,
+      updatedAt: hasContentUpdated ? now : undefined,
+    });
+
+    if (hasContentUpdated) {
       this.eventBus.emit(EventNames.ContentUpdated, {
-        updatedAt: updated.updatedAt,
-        content: patch.body,
+        updatedAt: now,
+        body: patch.body,
         entityType: EntityTypes.Memo,
         entityId: id,
       });
     }
-
-    return this.toVO(updated);
   }
 
-  public async query(query: ClientMemoQuery) {
-    assert(!isEmpty(query), 'can not query all');
-    assert(
-      !(
-        (query.startTime || typeof query.after !== 'undefined') &&
-        (query.endTime || typeof query.before !== 'undefined') &&
-        query.limit
-      ),
-      'can not set a limit when duration is set',
-    );
+  @BaseService.transaction()
+  public async queryList(query: ClientMemoQuery) {
+    let memos: Memo[];
 
-    if (query.after || query.before) {
-      await this.assertAvailableIds(compact([query.after, query.before]));
+    if (isDuration(query)) {
+      memos = await this.repo.memos.findAll({ ...query, isAvailableOnly: true, orderBy: 'index', order: 'desc' });
+    } else {
+      assert(!(query.before && query.beforeIncludes), 'before and beforeIncludes can not be used together');
+      assert(!(query.after && query.afterIncludes), 'after and afterIncludes can not be used together');
+
+      const beforeId = query.before || query.beforeIncludes;
+      const afterId = query.after || query.afterIncludes;
+
+      if (beforeId) {
+        const beforeMemo = await this.repo.memos.findOneById(beforeId);
+        assert(beforeMemo);
+      }
+
+      if (afterId) {
+        const afterMemo = await this.repo.memos.findOneById(afterId);
+        assert(afterMemo);
+      }
+
+      memos = await this.repo.memos.findAll({
+        isAvailableOnly: true,
+        limit: query.limit,
+        parentId: query.parentId || null,
+        isPinned: query.isPinned,
+        order: 'desc',
+        orderBy: 'index',
+      });
     }
-
-    let startTime = query.startTime;
-    let endTime = query.endTime;
-
-    if (query.before) {
-      const beforeMemo = await this.repo.memos.findOneById(query.before);
-
-      assert(beforeMemo);
-      endTime = Math.min(beforeMemo.createdAt, query.endTime || Infinity);
-    }
-
-    if (query.after) {
-      const afterMemo = await this.repo.memos.findOneById(query.after);
-
-      assert(afterMemo);
-      startTime = Math.max(afterMemo.createdAt, query.startTime || 0);
-    }
-
-    const memos = await this.repo.memos.findAll({
-      startTime,
-      endTime,
-      isAvailable: true,
-      limit: query.limit,
-      parentId: query.parentId || null,
-      isPinned: query.isPinned,
-      order: startTime ? 'asc' : 'desc',
-      orderBy: 'createdAt',
-    });
 
     return await this.toVO(memos);
   }
 
-  private async toVO(memos: Memo): Promise<MemoVO>;
+  @BaseService.transaction()
+  public async queryAvailableDates(duration: Duration) {
+    const memos = await this.repo.memos.findAvailableBetween(duration);
+
+    return mapValues(
+      groupBy(memos, (memo) => dayjs(memo.createdAt).startOf('day')),
+      size,
+    );
+  }
+
+  private async toVO(memos: Memo, isNew?: boolean): Promise<MemoVO>;
   private async toVO(memos: Memo[]): Promise<MemoVO[]>;
-  private async toVO(memos: Memo[] | Memo): Promise<MemoVO[] | MemoVO> {
-    const _memos = Array.isArray(memos) ? memos : [memos];
+  private async toVO(memos: Memo[] | Memo, isNew?: boolean): Promise<MemoVO[] | MemoVO> {
+    const _memos = arrayOf(memos);
     const ids = _memos.map(({ id }) => id);
-    const stars = buildIndex(await this.repo.stars.findAll({ entityId: ids }), 'entityId');
-    const childrenIds = await this.repo.entities.findChildrenIds(ids, { isAvailableOnly: true });
-    const links = await this.repo.links.findAvailableLinksOf(ids);
-    const referrersMap = groupBy(links, 'targetId');
+    const stars = isNew ? {} : buildIndex(await this.repo.stars.findAll({ entityIds: ids }), 'entityId');
+    const childrenIds = isNew ? {} : await this.repo.entities.findChildrenIds(ids, { isAvailableOnly: true });
 
     const result = _memos.map((memo) => ({
       ...memo,
       childrenCount: childrenIds[memo.id]?.length || 0,
-      referrersCount: referrersMap[memo.id]?.length || 0,
+      referrers: [],
       isStar: Boolean(stars[memo.id]),
     }));
 
     return Array.isArray(memos) ? result : result[0]!;
   }
 
-  public readonly assertAvailableIds = async (ids: MemoVO['id'][]) => {
-    await this.entity.assertAvailableIds(ids, { types: [EntityTypes.Memo] });
+  private readonly assertAvailableId = async (id: MemoVO['id'], config?: { isPinned?: boolean }) => {
+    const memo = await this.repo.memos.findOneById(id, { isAvailableOnly: true });
+
+    assert(memo, 'invalid memo id');
+    assert(typeof config?.isPinned === 'boolean' ? memo.isPinned === config.isPinned : true, 'invalid pin status');
   };
 
-  public async queryAvailableDates(duration: Duration) {
-    return this.repo.memos.queryAvailableDates(duration);
-  }
+  private async assertCanPin() {
+    const memos = await this.repo.memos.findAll({ isPinned: true });
+    const LIMIT = 10;
 
-  public async queryFragment({ to: id, limit }: ClientTreeFragmentQuery) {
-    await this.assertAvailableIds([id]);
-
-    const memo = await this.repo.memos.findOneById(id);
-    assert(memo);
-
-    id = memo.parentId || id;
-
-    const [after, before] = await Promise.all([
-      this.query({ after: id, limit, isPinned: false }),
-      this.query({ before: id, limit, isPinned: false }),
-    ]);
-
-    const allMemos = [...after, ...before];
-
-    if (memo.parentId) {
-      const [afterChildren, beforeChildren] = await Promise.all([
-        this.query({ after: id, limit, isPinned: false, parentId: memo.parentId }),
-        this.query({ before: id, limit, isPinned: false, parentId: memo.parentId }),
-      ]);
-
-      allMemos.push(...afterChildren, ...beforeChildren);
-    }
-
-    return allMemos;
+    assert(memos.length < LIMIT, `can not pin more than ${LIMIT} memos`);
   }
 }

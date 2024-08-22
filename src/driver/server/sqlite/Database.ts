@@ -7,13 +7,11 @@ import path, { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import assert from 'node:assert';
 
-import { token as loggerToken } from '@domain/server/infra/logger.js';
+import { token as loggerToken } from '@domain/shared/infra/logger.js';
 import type { Database } from '@domain/server/infra/database.js';
 import { IS_TEST, IS_DEV } from '@domain/shared/infra/constants.js';
-import type Repository from '@domain/server/service/repository/index.js';
 
 import { type Schemas, schemas } from './schema/index.js';
-import * as repositories from './repository/index.js';
 
 const CLEAN_DB = process.env.DEV_CLEAN === '1' && IS_DEV;
 
@@ -22,7 +20,7 @@ export interface Db extends Schemas {
 }
 
 export default class SqliteDb implements Database {
-  constructor(dir: string) {
+  constructor({ dir }: { dir: string }) {
     this.db = this.connectToDb(dir);
     this.ready = this.init();
   }
@@ -33,23 +31,15 @@ export default class SqliteDb implements Database {
   public readonly ready: Promise<void>;
   private tableNames?: string[];
 
-  hasTable(name: string) {
+  public hasTable(name: string) {
     assert(this.tableNames);
     return this.tableNames.includes(name);
   }
 
-  transaction<T>(cb: () => Promise<T>) {
+  public transaction<T>(cb: () => Promise<T>) {
     return this.db.transaction().execute((trx) => {
       return this.als.run(trx, cb);
     });
-  }
-
-  getRepository<T extends keyof Repository>(name: T) {
-    if (!(name in repositories)) {
-      throw new Error('invalid repository name');
-    }
-
-    return new repositories[name](this) as unknown as Repository[T];
   }
 
   private async init() {

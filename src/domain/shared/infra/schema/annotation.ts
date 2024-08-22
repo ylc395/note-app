@@ -6,40 +6,56 @@ import { z } from "zod";
 import { SelectorTypes } from "../../model/annotation.js";
 import { entityIdSchema } from "./entity.js";
 export const selectorTypesSchema = z.nativeEnum(SelectorTypes);
+export const mediaFragmentSelectorSchema = z.object({
+  type: z.literal(selectorTypesSchema.enum.MEDIA),
+  value: z.object({
+    start: z.number(),
+    end: z.number()
+  })
+});
+export const pDFFragmentSelectorSchema = z.object({
+  type: z.literal(selectorTypesSchema.enum.PDF),
+  value: z.object({
+    page: z.number(),
+    height: z.number(),
+    width: z.number(),
+    left: z.number(),
+    top: z.number()
+  })
+});
+export const textQuoteSelectorSchema = z.object({
+  type: z.literal(selectorTypesSchema.enum.TEXT),
+  value: z.object({
+    start: z.string(),
+    end: z.string().optional(),
+    prefix: z.string().optional(),
+    suffix: z.string().optional()
+  })
+});
+export const fragmentSelectorSchema = z.union([textQuoteSelectorSchema, pDFFragmentSelectorSchema, mediaFragmentSelectorSchema]);
 const cssSelectorSchema = z.object({
   type: z.literal(selectorTypesSchema.enum.CSS),
-  value: z.string(),
-  offset: z.string().optional()
-});
-const rangeSelectorSchema = z.object({
-  type: z.literal(selectorTypesSchema.enum.Range),
-  start: cssSelectorSchema,
-  end: cssSelectorSchema
-});
-export const fragmentSelectorSchema = z.object({
-  type: z.literal(selectorTypesSchema.enum.Fragment),
   value: z.string()
 });
-const selectorSchema = z.union([cssSelectorSchema, fragmentSelectorSchema, rangeSelectorSchema]);
-export const annotationDTOSchema = z.object({
-  targetId: z.string(),
-  selectors: z.array(selectorSchema),
-  body: z.string().optional(),
-  targetText: z.union([z.string(), z.null()]).optional(),
-  color: z.string()
-});
-export const annotationPatchDTOSchema = annotationDTOSchema.pick({
-  "body": true,
-  "color": true
-});
+const selectorSchema = z.union([cssSelectorSchema, fragmentSelectorSchema]);
 export const annotationSchema = z.object({
   id: entityIdSchema,
   targetId: entityIdSchema,
-  targetText: z.union([z.string(), z.null()]),
   selectors: z.array(selectorSchema),
   body: z.string(),
   color: z.string(),
   createdAt: z.number(),
   updatedAt: z.number()
 });
+export const annotationDTOSchema = z.intersection(annotationSchema.pick({
+  "selectors": true,
+  "targetId": true
+}), annotationSchema.pick({
+  "body": true,
+  "color": true
+}).partial());
+export const annotationPatchDTOSchema = annotationSchema.pick({
+  "body": true,
+  "color": true
+}).partial();
 export const annotationVOSchema = annotationSchema;

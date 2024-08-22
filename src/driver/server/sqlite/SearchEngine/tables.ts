@@ -20,12 +20,13 @@ interface FtsRow {
   rank: number;
 }
 
+// prettier-ignore
 export interface SearchEngineDb extends Db {
   [fileTextsFTSTableName]: FtsRow & FileTextRow & { [fileTextsFTSTableName]: string };
-  [notesFTSTableName]: FtsRow & NoteRow & { [notesFTSTableName]: string };
-  [materialsFTSTableName]: FtsRow & MaterialRow & { [materialsFTSTableName]: string };
-  [memosFTSTableName]: FtsRow & MemoRow & { [memosFTSTableName]: string };
-  [annotationsFTSTableName]: FtsRow & AnnotationRow & { [annotationsFTSTableName]: string };
+  [notesFTSTableName]: FtsRow & Pick<NoteRow, 'id' | 'title' | 'body'> & { [notesFTSTableName]: string };
+  [materialsFTSTableName]: FtsRow & Pick<MaterialRow, 'id' | 'title' | 'comment' | 'fileId'> & { [materialsFTSTableName]: string };
+  [memosFTSTableName]: FtsRow & Pick<MemoRow, 'id' | 'body'> & { [memosFTSTableName]: string };
+  [annotationsFTSTableName]: FtsRow & Pick<AnnotationRow, 'id' | 'targetId' | 'body'> & { [annotationsFTSTableName]: string };
 }
 
 // prettier-ignore
@@ -36,9 +37,8 @@ export const initialSqls =  [
         id UNINDEXED, 
         title, 
         body, 
-        icon UNINDEXED,
-        created_at UNINDEXED, 
-        updated_at UNINDEXED, 
+        created_at UNINDEXED,
+        updated_at UNINDEXED,
         tokenize="simple",
         content=${sql.table(noteTableName)}
       )`,
@@ -49,10 +49,9 @@ export const initialSqls =  [
         id UNINDEXED, 
         title, 
         comment, 
-        icon UNINDEXED,
         file_id UNINDEXED,
-        created_at UNINDEXED, 
-        updated_at UNINDEXED, 
+        created_at UNINDEXED,
+        updated_at UNINDEXED,
         tokenize="simple",
         content=${sql.table(materialTableName)}
       )`,
@@ -62,8 +61,8 @@ export const initialSqls =  [
       USING fts5(
         id UNINDEXED, 
         body, 
-        created_at UNINDEXED, 
-        updated_at UNINDEXED, 
+        created_at UNINDEXED,
+        updated_at UNINDEXED,
         tokenize="simple",
         content=${sql.table(memoTableName)}
       )`,
@@ -72,10 +71,9 @@ export const initialSqls =  [
       USING fts5(
         id UNINDEXED,
         target_id UNINDEXED,
-        target_text UNINDEXED,
         body,
-        created_at UNINDEXED, 
-        updated_at UNINDEXED, 
+        created_at UNINDEXED,
+        updated_at UNINDEXED,
         tokenize="simple",
         content=${sql.table(fileTextTableName)}
     )`,

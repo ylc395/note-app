@@ -1,17 +1,16 @@
-import type { EntityId, EntityLocator } from './entity.js';
+import type { Entity, EntityId, EntityPath } from './entity.js';
 
 export interface RecyclableDTO {
   entityId: EntityId;
 }
 
+/**
+ * @api
+ */
 export type RecyclablesDTO = RecyclableDTO[];
 
-export enum RecycleReason {
-  Direct = 1,
-  Cascade,
-}
-
-export interface RecyclableVO extends EntityLocator {
-  title: string;
+export interface RecyclableVO {
+  entity: Entity;
+  path: EntityPath;
   deletedAt: number;
 }

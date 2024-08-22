@@ -4,7 +4,7 @@ import type { MemoVO } from '@domain/shared/model/memo';
 import { action } from 'mobx';
 
 import { token as rpcToken } from '@domain/client/common/infra/rpc';
-import type { EntityParentId } from '../entity';
+import type { EntityParentId } from '../../../common/model/entity';
 
 export default class Editor {
   private readonly remote = container.resolve(rpcToken);

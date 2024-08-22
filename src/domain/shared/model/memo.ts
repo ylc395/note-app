@@ -1,11 +1,12 @@
+import type { LinkVO } from './content.js';
 import type { EntityParentId } from './entity.js';
 
 export interface Memo {
   id: string;
   parentId: EntityParentId;
   isPinned: boolean;
-  sourceUrl: string | null;
   body: string;
+  index: number;
   updatedAt: number;
   createdAt: number;
 }
@@ -16,24 +17,26 @@ export interface Memo {
 export interface MemoVO extends Memo {
   isStar: boolean;
   childrenCount: number;
-  referrersCount: number;
+  referrers: LinkVO[];
 }
 
 /**
  * @api
  */
 export interface MemoDTO {
-  parentId: EntityParentId;
+  parentId?: EntityParentId;
   body: string;
   isPinned?: boolean;
-  sourceUrl?: string;
 }
 
 /**
  * @api
  */
-export type MemoPatchDTO = Partial<Pick<MemoDTO, 'body' | 'isPinned' | 'sourceUrl'>>;
+export type MemoPatchDTO = Partial<Pick<MemoDTO, 'body' | 'isPinned'>>;
 
+/**
+ * @api
+ */
 export interface Duration {
   startTime: number;
   endTime: number;
@@ -42,23 +45,14 @@ export interface Duration {
 /**
  * @api
  */
-export interface ClientMemoQuery extends Partial<Duration> {
-  limit?: number;
-  parentId?: EntityParentId;
-  before?: Memo['id'];
-  after?: Memo['id'];
-  isPinned?: boolean;
-}
-
-/**
- * @api
- */
-export interface ClientTreeFragmentQuery {
-  limit: number;
-  to: Memo['id'];
-}
-
-export interface DateInfo {
-  date: string;
-  count: number;
-}
+export type ClientMemoQuery =
+  | {
+      limit?: number;
+      parentId?: EntityParentId;
+      before?: Memo['id'];
+      beforeIncludes?: Memo['id'];
+      after?: Memo['id'];
+      afterIncludes?: Memo['id'];
+      isPinned?: boolean;
+    }
+  | Duration;

@@ -4,10 +4,20 @@
 */
 import { z } from "zod";
 import { EntityTypes } from "../../model/entity.js";
+import { fileVOSchema } from "./file.js";
 export const entityIdSchema = z.string();
 export const entityTypesSchema = z.nativeEnum(EntityTypes);
-export const entityLocatorSchema = z.object({
-  entityId: entityIdSchema,
-  entityType: entityTypesSchema
-});
 export const entityParentIdSchema = z.union([entityIdSchema, z.null()]);
+const standaloneEntitySchema = z.object({
+  id: entityIdSchema,
+  type: entityTypesSchema,
+  title: z.string(),
+  icon: z.union([z.string(), z.null()]),
+  file: fileVOSchema.optional(),
+  body: z.string().optional(),
+  createdAt: z.number(),
+  updatedAt: z.number()
+});
+export const entitySchema = standaloneEntitySchema.merge(z.object({
+  main: standaloneEntitySchema.optional()
+}));

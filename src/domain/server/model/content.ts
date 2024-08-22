@@ -1,14 +1,15 @@
-import type { EntityId, EntityLocator, EntityTypes } from '@domain/shared/model/entity.js';
+import type { EntityId, EntityLocator } from '@domain/shared/model/entity.js';
+import type { FragmentSelector } from './annotation.js';
 
-export * from '@domain/shared/model/content/topic.js';
-export * from '@domain/shared/model/content/link.js';
+export * from '@domain/shared/model/content.js';
 
 export enum EventNames {
   ContentUpdated = 'content.updated',
 }
 
 export interface ContentUpdatedEvent extends EntityLocator {
-  content: string;
+  body?: string;
+  title?: string;
   updatedAt: number;
 }
 
@@ -17,15 +18,24 @@ export type EventMaps = {
 };
 
 export interface TopicRecord {
-  entityType?: EntityTypes;
   entityId: EntityId;
   name: string;
+  locationStart: number;
+  locationEnd: number;
   createdAt: number;
 }
 
-export interface Link {
+export enum LinkTargetType {
+  Entity = 1,
+  File,
+  External,
+}
+
+export interface LinkRecord {
   sourceId: EntityId;
-  sourceType?: EntityTypes;
-  targetId: EntityId;
-  targetType?: EntityTypes;
+  sourceLocationStart: number;
+  sourceLocationEnd: number;
+  targetId: string;
+  targetType: LinkTargetType;
+  targetSelector?: FragmentSelector | null; // 从 URL 的 hash 部分解析而来。很可能随着目标的内容的变化而失效
 }

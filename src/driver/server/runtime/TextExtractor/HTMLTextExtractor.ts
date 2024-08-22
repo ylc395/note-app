@@ -1,29 +1,17 @@
+import { TextDecoder } from 'node:util';
 import { parseDocument } from 'htmlparser2';
 import { textContent, findOne } from 'domutils';
-import { TextDecoder } from 'node:util';
-
-import type { Result } from '@domain/server/service/FileService/TextExtractor.js';
 
 export default class HTMLTextExtractor {
-  public static extract({
-    data,
-    onExtracted,
-  }: {
-    data: ArrayBuffer;
-    onExtracted: (result: Omit<Result, 'fileId'>) => void;
-  }) {
+  public static extract(data: ArrayBuffer) {
     const textDecoder = new TextDecoder();
     const html = textDecoder.decode(data);
-    const bodyEl = findOne((el) => el.tagName.toLowerCase() === 'body', [parseDocument(html)]);
+    const bodyEl = findOne((el) => el.tagName.toLowerCase() === 'body', [parseDocument(html)], true);
 
     if (!bodyEl) {
-      return '';
+      return null;
     }
 
-    onExtracted({
-      text: textContent(bodyEl),
-      location: {},
-      isFinished: true,
-    });
+    return textContent(bodyEl);
   }
 }

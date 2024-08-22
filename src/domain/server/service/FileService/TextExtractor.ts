@@ -1,22 +1,21 @@
 import type { InjectionToken } from 'tsyringe';
-import type { NewFileTextRecord, TextLocation } from '@domain/server/model/file.js';
-import type { FileVO } from '@domain/shared/model/file.js';
-
-export interface Result extends NewFileTextRecord {
-  isFinished: boolean;
-}
+import type { FileTextRecord, File, TextLocation } from '@domain/server/model/file.js';
 
 export interface Job {
-  fileId: FileVO['id'];
-  mimeType: string;
-  getData: (id: FileVO['id']) => Promise<ArrayBuffer | null>;
+  fileId: File['id'];
+  mimeType: File['mimeType'];
+  getData: (id: File['id']) => Promise<ArrayBuffer | null>;
   lang: string[];
-  skipLocations?: TextLocation[];
+  locationsToSkip?: TextLocation[];
+}
+
+export interface JobResult extends FileTextRecord {
+  isFinished: boolean;
 }
 
 export interface TextExtractor {
   addJob: (job: Job) => void;
-  onExtracted: (cb: (result: Result) => Promise<void>) => void;
+  onExtracted: (handler: (result: JobResult) => Promise<void>) => void; // 如果无法提取文本，不会触发这个回调
 }
 
 export const token: InjectionToken<TextExtractor> = Symbol();

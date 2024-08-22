@@ -1,33 +1,11 @@
-export interface File {
-  id?: string;
-  data: ArrayBuffer;
-  size: number;
-  hash: string;
-  lang: string[];
-  mimeType: string;
-}
+import type { File, TextLocation } from '@domain/shared/model/file.js';
 
-export interface TextLocation {
-  page?: number;
-  scale?: number;
-  words?: {
-    text: string;
-    box: { x0: number; x1: number; y0: number; y1: number };
-  }[];
-}
-
-export interface ExtractedFileTextRecord {
-  locations: TextLocation[];
+export interface FileTextRecord {
   fileId: string;
-  fileCreatedAt: number;
-  lang: string[];
-  mimeType: string;
-}
-
-export interface NewFileTextRecord {
   location: TextLocation;
-  fileId: string;
   text: string;
 }
+
+export type FilePatch = Partial<Pick<File, 'isTextExtracted' | 'lang'>>;
 
 export * from '@domain/shared/model/file.js';

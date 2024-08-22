@@ -4,43 +4,40 @@
 */
 import { z } from "zod";
 import { entityParentIdSchema } from "./entity.js";
+import { linkVOSchema } from "./content.js";
 export const memoSchema = z.object({
   id: z.string(),
   parentId: entityParentIdSchema,
   isPinned: z.boolean(),
-  sourceUrl: z.union([z.string(), z.null()]),
   body: z.string(),
+  index: z.number(),
   updatedAt: z.number(),
   createdAt: z.number()
 });
 export const memoVOSchema = memoSchema.merge(z.object({
   isStar: z.boolean(),
   childrenCount: z.number(),
-  referrersCount: z.number()
+  referrers: z.array(linkVOSchema)
 }));
 export const memoDTOSchema = z.object({
-  parentId: entityParentIdSchema,
+  parentId: entityParentIdSchema.optional(),
   body: z.string(),
-  isPinned: z.boolean().optional(),
-  sourceUrl: z.string().optional()
+  isPinned: z.boolean().optional()
 });
 export const memoPatchDTOSchema = memoDTOSchema.pick({
   "body": true,
-  "isPinned": true,
-  "sourceUrl": true
+  "isPinned": true
 }).partial();
 export const durationSchema = z.object({
   startTime: z.number(),
   endTime: z.number()
 });
-export const clientMemoQuerySchema = durationSchema.partial().merge(z.object({
+export const clientMemoQuerySchema = z.union([z.object({
   limit: z.number().optional(),
   parentId: entityParentIdSchema.optional(),
   before: memoSchema.shape["id"].optional(),
+  beforeIncludes: memoSchema.shape["id"].optional(),
   after: memoSchema.shape["id"].optional(),
+  afterIncludes: memoSchema.shape["id"].optional(),
   isPinned: z.boolean().optional()
-}));
-export const clientTreeFragmentQuerySchema = z.object({
-  limit: z.number(),
-  to: memoSchema.shape["id"]
-});
+}), durationSchema]);

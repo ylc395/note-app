@@ -4,8 +4,7 @@ export const tableName = 'stars';
 
 export interface Row {
   entityId: string;
-  isValid: 0 | 1;
-  updatedAt: number;
+  createdAt: number;
 }
 
 export default {
@@ -14,7 +13,6 @@ export default {
     return db.schema
       .createTable(tableName)
       .addColumn('entityId', 'text', (col) => col.notNull())
-      .addColumn('isValid', 'integer', (col) => col.notNull())
-      .addColumn('updatedAt', 'integer', (col) => col.notNull());
+      .addColumn('createdAt', 'integer', (col) => col.notNull());
   },
 } as const;

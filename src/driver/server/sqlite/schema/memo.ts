@@ -1,15 +1,16 @@
-import { type Kysely, type Generated, sql } from 'kysely';
+import type { Kysely, Generated } from 'kysely';
 
 export const tableName = 'memos';
 
 export interface Row {
   id: string;
-  body: string;
+  body: Generated<string>;
   parentId: string | null;
   sourceUrl: string | null;
+  index: number;
   isPinned: Generated<0 | 1>;
-  createdAt: Generated<number>;
-  updatedAt: Generated<number>;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export default {
@@ -18,11 +19,12 @@ export default {
     return db.schema
       .createTable(tableName)
       .addColumn('id', 'text', (col) => col.primaryKey().notNull())
-      .addColumn('body', 'text', (col) => col.notNull())
+      .addColumn('body', 'text', (col) => col.notNull().defaultTo(''))
       .addColumn('parentId', 'text')
       .addColumn('isPinned', 'integer', (col) => col.notNull().defaultTo(0))
+      .addColumn('index', 'integer', (col) => col.notNull())
       .addColumn('sourceUrl', 'text')
-      .addColumn('createdAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch('subsec') * 1000)`))
-      .addColumn('updatedAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch('subsec') * 1000)`));
+      .addColumn('createdAt', 'integer', (col) => col.notNull())
+      .addColumn('updatedAt', 'integer', (col) => col.notNull());
   },
 } as const;

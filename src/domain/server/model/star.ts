@@ -1,11 +1,8 @@
-import { EntityId } from '@domain/shared/model/entity.js';
-import type { StarVO } from '@domain/shared/model/star.js';
-
-export * from '@domain/shared/model/star.js';
-
-export type StarRecord = Pick<StarVO, 'entityId' | 'entityType' | 'icon'>;
+import type { EntityId } from '@domain/shared/model/entity.js';
 
 export interface StarQuery {
   isAvailableOnly?: boolean;
-  entityId?: EntityId[];
+  entityIds?: EntityId[];
 }
+
+export * from '@domain/shared/model/star.js';

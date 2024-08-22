@@ -2,7 +2,7 @@ import { container } from 'tsyringe';
 import { observable, makeObservable } from 'mobx';
 
 import { token as rpcToken } from '@domain/client/common/infra/rpc';
-import { type EntityId, type EntityLocator, EntityTypes, type Path } from '../entity';
+import { type EntityId, type EntityLocator, EntityTypes, type EntityPath } from '../../../common/model/entity';
 import type { Tile } from '../workbench';
 import type Editor from './Editor';
 
@@ -26,7 +26,7 @@ export default abstract class EditableEntity<T extends EntityInfo = EntityInfo> 
   public abstract entity?: T;
 
   @observable
-  public path?: Path;
+  public path?: EntityPath;
 
   protected abstract load(): Promise<void>; // todo: load must return a cancel function.
   public abstract destroy(): void;

@@ -1,4 +1,4 @@
-import { uniq, pick } from 'lodash-es';
+import { uniq, pick, first } from 'lodash-es';
 import assert from 'assert';
 import { singleton } from 'tsyringe';
 
@@ -8,7 +8,7 @@ import {
   type Material,
   type ClientMaterialQuery,
   type MaterialPatchDTO,
-  MaterialTypes,
+  type MaterialBatchPatchDTO,
   isEntityMaterial,
 } from '@domain/shared/model/material.js';
 import { EntityTypes } from '@domain/shared/model/entity.js';
@@ -16,93 +16,115 @@ import { EventNames } from '@domain/server/model/content.js';
 import { buildIndex } from '@utils/collection.js';
 
 import BaseService from './BaseService.js';
+import EntityService from './EntityService.js';
 
 @singleton()
 export default class MaterialService extends BaseService {
+  @BaseService.transaction()
   public async create(newMaterial: MaterialDTO) {
     if (newMaterial.parentId) {
       await this.assertAvailableIds([newMaterial.parentId]);
     }
 
     if (newMaterial.fileId) {
-      assert(await this.repo.files.findOneById(newMaterial.fileId));
+      const file = await this.repo.files.findOneById(newMaterial.fileId);
+      assert(file, `invalid file id: ${newMaterial.fileId}`);
     }
 
-    const material = await this.repo.materials.create(newMaterial);
-    return await this.toVO(material);
+    const now = Date.now();
+    const material = await this.repo.materials.create({
+      ...newMaterial,
+      id: EntityService.generateId(),
+      title: newMaterial.title || '',
+      icon: newMaterial.icon || null,
+      parentId: newMaterial.parentId || null,
+      updatedAt: now,
+      createdAt: now,
+    });
+
+    if (material.title || (isEntityMaterial(material) && material.comment)) {
+      this.eventBus.emit(EventNames.ContentUpdated, {
+        body: isEntityMaterial(material) ? material.comment : undefined,
+        title: material.title,
+        entityId: material.id,
+        entityType: EntityTypes.Material,
+        updatedAt: material.updatedAt,
+      });
+    }
+
+    return this.toVO(material, true);
   }
 
-  public async query(q: ClientMaterialQuery): Promise<MaterialVO[]> {
-    const materials = await this.repo.materials.findAll({ ...q, ...(q.fileHash ? null : { isAvailable: true }) });
-    return await this.toVO(materials);
+  @BaseService.transaction()
+  public async query(q: ClientMaterialQuery) {
+    const materials = await this.repo.materials.findAll({
+      ...q,
+      parentId: q.parentId || null,
+      isAvailableOnly: true,
+    });
+
+    return this.toVO(materials);
   }
 
-  private async toVO(materials: Material): Promise<Required<MaterialVO>>;
+  private async toVO(materials: Material, isNew?: boolean): Promise<Required<MaterialVO>>;
   private async toVO(materials: Material[]): Promise<MaterialVO[]>;
-  private async toVO(materials: Material[] | Material): Promise<MaterialVO[] | MaterialVO> {
+  private async toVO(materials: Material[] | Material, isNew?: boolean): Promise<MaterialVO[] | MaterialVO> {
     const _materials = Array.isArray(materials) ? materials : [materials];
     const ids = _materials.map(({ id }) => id);
-    const entityIds = _materials.filter(isEntityMaterial).map(({ id }) => id);
-    const children = await this.repo.entities.findChildrenIds(ids, { isAvailableOnly: true });
-    const stars = buildIndex(await this.repo.stars.findAll({ entityId: entityIds }), 'entityId');
+    const children = isNew ? {} : await this.repo.entities.findChildrenIds(ids, { isAvailableOnly: true });
+    const stars = isNew ? {} : buildIndex(await this.repo.stars.findAll({ entityIds: ids }), 'entityId');
 
     const materialVOs = _materials.map((material) => ({
-      ...pick(material, ['id', 'title', 'icon', 'parentId', 'updatedAt']),
+      ...pick(material, ['id', 'title', 'icon', 'parentId', 'updatedAt', 'createdAt']),
+      ...(isEntityMaterial(material) ? pick(material, ['mimeType', 'comment', 'sourceUrl']) : null),
       childrenCount: children[material.id]?.length || 0,
       isStar: Boolean(stars[material.id]),
-      ...(isEntityMaterial(material) ? pick(material, ['mimeType', 'comment', 'sourceUrl']) : null),
     }));
 
-    return Array.isArray(materials) ? (materialVOs as MaterialVO[]) : (materialVOs[0] as MaterialVO);
+    return Array.isArray(materials) ? materialVOs : first(materialVOs)!;
   }
 
+  @BaseService.transaction()
   public async queryOne(id: Material['id']) {
-    const material = await this.repo.materials.findOneById(id, true);
+    const material = await this.repo.materials.findOneById(id, { isAvailableOnly: true });
 
     assert(material);
     return await this.toVO(material);
   }
 
-  public async batchUpdate(ids: Material['id'][], patch: MaterialPatchDTO) {
-    assert(
-      typeof patch.comment === 'undefined' && typeof patch.title === 'undefined',
-      'can not batch update title & comment',
-    );
-
+  @BaseService.transaction()
+  public async batchUpdate(ids: Material['id'][], patch: MaterialBatchPatchDTO) {
     await this.assertAvailableIds(ids);
 
     if (patch.parentId) {
       await this.assertValidParent(patch.parentId, ids);
     }
 
-    const result = await this.repo.materials.update(ids, {
-      ...patch,
-      updatedAt: Date.now(),
-    });
-
-    assert(result);
+    await this.repo.materials.update(ids, patch);
   }
 
+  @BaseService.transaction()
   public async updateOne(materialId: Material['id'], patch: MaterialPatchDTO) {
-    return this.transaction(async () => {
-      const isEntityPatch = 'comment' in patch || 'sourceUrl' in patch;
-      await this.assertAvailableIds([materialId], isEntityPatch ? { type: MaterialTypes.Entity } : undefined);
+    const isEntityPatch = typeof patch.comment === 'string' || typeof patch.sourceUrl === 'string';
+    await this.assertAvailableIds([materialId], { type: isEntityPatch ? 'entity' : 'directory' });
 
-      const now = Date.now();
-      const result = await this.repo.materials.update(materialId, { ...patch, updatedAt: now });
-      assert(result);
+    const now = Date.now();
+    const hasContentUpdated = typeof patch.comment === 'string' || typeof patch.title === 'string';
 
-      if (typeof patch.comment === 'string') {
-        this.eventBus.emit(EventNames.ContentUpdated, {
-          content: patch.comment,
-          entityId: materialId,
-          entityType: EntityTypes.Material,
-          updatedAt: now,
-        });
-      }
-
-      return this.queryOne(materialId);
+    await this.repo.materials.update(materialId, {
+      ...patch,
+      updatedAt: hasContentUpdated ? now : undefined,
     });
+
+    if (hasContentUpdated) {
+      this.eventBus.emit(EventNames.ContentUpdated, {
+        body: patch.comment,
+        title: patch.title,
+        entityId: materialId,
+        entityType: EntityTypes.Material,
+        updatedAt: now,
+      });
+    }
   }
 
   private async assertValidParent(parentId: Material['id'], childrenIds: Material['id'][]) {
@@ -114,34 +136,29 @@ export default class MaterialService extends BaseService {
     }
   }
 
+  @BaseService.transaction()
   public async getBlob(materialId: MaterialVO['id']) {
-    await this.assertAvailableIds([materialId], { type: MaterialTypes.Entity });
-    const blob = await this.repo.materials.findBlobById(materialId);
+    const blob = await this.repo.materials.findBlobById(materialId, { isAvailableOnly: true });
     assert(blob);
 
     return blob;
   }
 
-  public readonly assertAvailableIds = async (
-    ids: MaterialVO['id'][],
-    params?: { type?: MaterialTypes; mimeType?: string },
-  ) => {
-    const uniqueIds = uniq(ids);
-    const rows = await this.repo.materials.findAll({ id: uniqueIds, isAvailable: true });
-    let result = rows.length === uniqueIds.length;
+  public async assertAvailableIds(ids: MaterialVO['id'][], params?: { type?: 'entity' | 'directory' }) {
+    ids = uniq(ids);
+    const rows = await this.repo.materials.findAll({ id: ids, isAvailableOnly: true });
+    let result = rows.length === ids.length;
 
-    if (params) {
+    if (result && params) {
       result = rows.every((row) => {
-        if (params.mimeType) {
-          return isEntityMaterial(row) && row.mimeType === params.mimeType;
+        if (params.type) {
+          return params.type === 'entity' ? isEntityMaterial(row) : !isEntityMaterial(row);
         }
 
-        if (params.type) {
-          return params.type === MaterialTypes.Entity ? isEntityMaterial(row) : !isEntityMaterial(row);
-        }
+        return true;
       });
     }
 
     assert(result, 'invalid material id');
-  };
+  }
 }

@@ -1,73 +1,45 @@
-import dayjs from 'dayjs';
-import { array, nativeEnum, object, string, type infer as Infer, boolean, number, union, literal } from 'zod';
-import { isEmpty, negate } from 'lodash-es';
-
-import { EntityId, EntityTypes, Path } from './entity.js';
+import type { TextLocation } from '@domain/server/model/file.js';
+import type { EntityTypes, EntityPath, Entity, EntityId } from './entity.js';
 import type { EntityMaterial } from './material.js';
 
 export type SearchTypes = EntityTypes.Note | EntityTypes.Memo | EntityTypes.Material;
 
 export enum SearchFields {
   Title = 'title',
-  Content = 'content',
-  Annotation = 'annotation',
-  MaterialFile = 'materialFile',
+  Body = 'body',
+  File = 'file',
+}
+
+/**
+ * @api
+ */
+export interface SearchRequest {
+  keyword: string;
+  entityTypes?: SearchTypes[];
+  fields?: SearchFields[];
+  rootId?: EntityId;
+  includingRecyclables?: boolean;
 }
 
 interface MatchRecord {
   text: string;
   highlights: { start: number; end: number }[];
-  location?: { page?: number };
+  location?: TextLocation;
 }
 
-export interface CommonSearchResult {
-  entityType: SearchTypes;
+export interface SearchResult {
   entityId: EntityId;
-  updatedAt: number;
-  createdAt: number;
-  icon: string | null;
+  mimeType?: EntityMaterial['mimeType'];
+  rank: number;
   matches: {
     [SearchFields.Title]?: MatchRecord;
-    [SearchFields.Content]?: MatchRecord;
-    [SearchFields.MaterialFile]?: MatchRecord[];
-    [SearchFields.Annotation]?: MatchRecord[];
+    [SearchFields.Body]?: MatchRecord;
+    [SearchFields.File]?: MatchRecord[];
   };
-  path?: Path;
-  title?: string;
 }
 
-interface MaterialSearchResult extends CommonSearchResult {
-  entityType: EntityTypes.Material;
-  mimeType?: EntityMaterial['mimeType'];
+export interface SearchResultVO extends Entity {
+  mimeType?: SearchResult['mimeType'];
+  matches: SearchResult['matches'];
+  path?: EntityPath;
 }
-
-export type SearchResult = CommonSearchResult | MaterialSearchResult;
-
-export type SearchResultVO = Required<SearchResult>;
-
-const isNotEmpty = negate(isEmpty);
-const isValidDate = (v: number) => dayjs(v).isValid();
-
-export const searchParamsSchema = object({
-  keyword: string().min(1),
-  created: object({
-    after: number().refine(isValidDate).optional(),
-    before: number().refine(isValidDate).optional(),
-  })
-    .refine(isNotEmpty)
-    .optional(),
-  updated: object({
-    after: number().refine(isValidDate).optional(),
-    before: number().refine(isValidDate).optional(),
-  })
-    .refine(isNotEmpty)
-    .optional(),
-  root: string().optional(),
-  types: union([literal(EntityTypes.Note), literal(EntityTypes.Memo), literal(EntityTypes.Material)])
-    .array()
-    .optional(),
-  fields: array(nativeEnum(SearchFields)).optional(),
-  recyclables: boolean().optional(),
-});
-
-export type SearchParams = Infer<typeof searchParamsSchema>;

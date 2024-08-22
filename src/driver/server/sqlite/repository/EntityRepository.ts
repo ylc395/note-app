@@ -1,35 +1,15 @@
 import { mapValues, groupBy } from 'lodash-es';
 import { Entity, EntityId, EntityTypes } from '@domain/shared/model/entity.js';
-import type { EntityRepository } from '@domain/server/service/repository/EntityRepository.js';
+import type { EntityRepository } from '@domain/server/repository/EntityRepository.js';
 import assert from 'node:assert';
 
+import { arrayOf, buildIndex } from '@utils/collection.js';
 import { tableName } from '../schema/entity.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
 import BaseRepository from './BaseRepository.js';
-import { buildIndex } from '../../../../utils/collection.js';
 
 export default class SqliteEntityRepository extends BaseRepository implements EntityRepository {
-  private readonly tableName = tableName;
-
-  private static readonly selectedFields = [
-    'id',
-    'parentId',
-    'title',
-    'updatedAt',
-    'createdAt',
-    'icon',
-    'type',
-  ] as const;
-
-  public async findOneById(id: EntityId) {
-    const row = await this.db
-      .selectFrom(this.tableName)
-      .select([...SqliteEntityRepository.selectedFields, 'content'])
-      .where('id', '=', id)
-      .executeTakeFirst();
-
-    return row || null;
-  }
+  protected readonly tableName = tableName;
 
   public async findChildrenIds(ids: EntityId[], options?: { isAvailableOnly?: boolean }) {
     let qb = this.db.selectFrom(this.tableName).selectAll(this.tableName);
@@ -47,21 +27,23 @@ export default class SqliteEntityRepository extends BaseRepository implements En
   }
 
   public async findAncestors(ids: EntityId[]) {
+    const fields = ['id', 'title', 'icon', 'type', 'parentId', 'createdAt', 'updatedAt'] as const;
+
     const rows = await this.db
       .withRecursive('ancestors', (qb) =>
         qb
           .selectFrom(this.tableName)
-          .select(SqliteEntityRepository.selectedFields)
+          .select(fields)
           .where('id', 'in', ids)
           .union(
             qb
               .selectFrom('ancestors')
-              .select(SqliteEntityRepository.selectedFields.map((field) => `${this.tableName}.${field}` as const))
+              .select(fields)
               .innerJoin(this.tableName, `${this.tableName}.id`, 'ancestors.parentId'),
           ),
       )
       .selectFrom('ancestors')
-      .select(SqliteEntityRepository.selectedFields)
+      .selectAll()
       .execute();
 
     const descendants = rows.filter(({ id }) => ids.includes(id));
@@ -86,7 +68,11 @@ export default class SqliteEntityRepository extends BaseRepository implements En
     return result;
   }
 
-  async findDescendantIds(ids: EntityId[]) {
+  public async findDescendantIds(id: EntityId): Promise<EntityId[]>;
+  public async findDescendantIds(ids: EntityId[]): Promise<Record<EntityId, EntityId[]>>;
+  public async findDescendantIds(ids: EntityId | EntityId[]) {
+    ids = arrayOf(ids);
+
     if (ids.length === 0) {
       return {};
     }
@@ -131,32 +117,38 @@ export default class SqliteEntityRepository extends BaseRepository implements En
       result[id] = descendantIds;
     }
 
-    return result;
-  }
-
-  public async findAllAvailable(ids: EntityId[], params?: { types?: EntityTypes[] }) {
-    let sql = this.db
-      .selectFrom(this.tableName)
-      .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.id`)
-      .where(`${recyclableTableName}.entityId`, 'is', null)
-      .where(`${this.tableName}.id`, 'in', ids);
-
-    if (params?.types) {
-      sql = sql.where('type', 'in', params.types);
+    if (Array.isArray(ids)) {
+      return result;
     }
 
-    const rows = await sql
-      .select(SqliteEntityRepository.selectedFields.map((field) => `${this.tableName}.${field}` as const))
-      .execute();
+    return result[ids];
+  }
+
+  public async findAll(ids: EntityId[], params?: { isAvailableOnly?: boolean }) {
+    const fields = [
+      `${tableName}.id`,
+      `${tableName}.title`,
+      `${tableName}.type`,
+      `${tableName}.icon`,
+      `${tableName}.parentId`,
+      `${tableName}.createdAt`,
+      `${tableName}.updatedAt`,
+    ] as const;
+
+    let sql = this.db.selectFrom(this.tableName).where(`${this.tableName}.id`, 'in', ids);
+
+    if (params?.isAvailableOnly) {
+      sql = sql
+        .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.id`)
+        .where(`${recyclableTableName}.entityId`, 'is', null);
+    }
+
+    const rows = await sql.select(fields).execute();
 
     return rows;
   }
 
-  public async *findAllContents(entities: EntityId[]) {
-    const stream = this.db.selectFrom(this.tableName).select(['id', 'content']).where('id', 'in', entities).stream();
-
-    for await (const row of stream) {
-      yield row;
-    }
+  public async findAllContents(entities: EntityId[]) {
+    return this.db.selectFrom(this.tableName).select(['id', 'body']).where('id', 'in', entities).stream();
   }
 }

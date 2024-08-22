@@ -7,7 +7,7 @@ export default class SearchService {
   private readonly remote = container.resolve(remoteToken);
 
   readonly search = async (q: SearchParams) => {
-    this.remote.search.search.mutate({ ...q, fields: [SearchFields.Content, SearchFields.MaterialFile] });
+    this.remote.search.search.mutate({ ...q, fields: [SearchFields.Body, SearchFields.File] });
   };
 
   // private static parseKeyword(q: string): SearchQuery | null {

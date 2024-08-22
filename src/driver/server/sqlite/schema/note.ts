@@ -1,15 +1,15 @@
-import { type Generated, type Kysely, sql } from 'kysely';
+import type { Generated, Kysely } from 'kysely';
 
 export const tableName = 'notes';
 
 export interface Row {
   id: string;
+  icon: string | null;
   title: Generated<string>;
   body: Generated<string>;
   parentId: string | null;
-  createdAt: Generated<number>;
-  updatedAt: Generated<number>;
-  icon: string | null;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export default {
@@ -22,7 +22,7 @@ export default {
       .addColumn('body', 'text', (col) => col.notNull().defaultTo(''))
       .addColumn('icon', 'text')
       .addColumn('parentId', 'text')
-      .addColumn('createdAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch('subsec') * 1000)`))
-      .addColumn('updatedAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch('subsec') * 1000)`));
+      .addColumn('createdAt', 'integer', (col) => col.notNull())
+      .addColumn('updatedAt', 'integer', (col) => col.notNull());
   },
 } as const;

@@ -1,18 +1,15 @@
-import type { EntityId, EntityLocator } from './entity.js';
+import type { Entity, EntityId } from './entity.js';
 
-/**
- * @api
- */
-export interface StarDTO {
+export interface Star {
   entityId: EntityId;
+  createdAt: number;
 }
+
+export type StarVO = Pick<Star, 'createdAt'> & {
+  entity: Entity;
+};
 
 /**
  * @api
  */
-export interface StarVO extends EntityLocator {
-  mimeType?: string;
-  title: string;
-  mainEntityId?: EntityId;
-  icon: string | null;
-}
+export type StarDTO = Pick<Star, 'entityId'>;

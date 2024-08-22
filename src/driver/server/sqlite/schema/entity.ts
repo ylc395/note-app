@@ -13,7 +13,7 @@ export interface Row {
   icon: string | null;
   type: EntityTypes;
   parentId: string;
-  content: string;
+  body: string;
   createdAt: number;
   updatedAt: number;
 }
@@ -31,7 +31,7 @@ export default {
           'icon',
           'title',
           'parentId',
-          'body as content',
+          'body',
           sql.val(EntityTypes.Note).as('type'),
           'createdAt',
           'updatedAt',
@@ -44,7 +44,7 @@ export default {
               'icon',
               'title',
               'parentId',
-              'comment as content',
+              'comment as body',
               sql.val(EntityTypes.Material).as('type'),
               'createdAt',
               'updatedAt',
@@ -58,7 +58,7 @@ export default {
               sql.val(null).as('icon'),
               sql.val('').as('title'),
               'parentId',
-              'body as content',
+              'body',
               sql.val(EntityTypes.Memo).as('type'),
               'createdAt',
               'updatedAt',
@@ -72,7 +72,7 @@ export default {
               sql.val(null).as('icon'),
               sql.val('').as('title'),
               'targetId as parentId',
-              'body as content',
+              'body',
               sql.val(EntityTypes.Annotation).as('type'),
               'createdAt',
               'updatedAt',

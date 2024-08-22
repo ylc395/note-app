@@ -1,25 +1,26 @@
+import { container } from 'tsyringe';
+
 import { token as searchEngineToken } from '@domain/server/infra/searchEngine.js';
-import type { SearchParams, SearchResultVO } from '@domain/shared/model/search.js';
+import type { SearchRequest, SearchResultVO } from '@domain/shared/model/search.js';
 
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
-import { container } from 'tsyringe';
 
 export default class SearchService extends BaseService {
   private readonly searchEngine = container.resolve(searchEngineToken);
   private readonly entityService = container.resolve(EntityService);
 
-  public async search(q: SearchParams): Promise<SearchResultVO[]> {
+  public async search(q: SearchRequest): Promise<SearchResultVO[]> {
     const results = await this.searchEngine.search(q);
 
-    const ids = EntityService.toIds(results);
+    const ids = results.map(({ entityId: id }) => id);
     const paths = await this.entityService.getPaths(ids);
-    const titles = await this.entityService.getNormalizedTitles(ids);
+    const entities = await this.entityService.getEntities(ids);
 
     return results.map((result) => ({
-      ...result,
-      title: titles[result.entityId]!,
+      matches: result.matches,
       path: paths[result.entityId]!,
+      ...entities[result.entityId]!,
     }));
   }
 }

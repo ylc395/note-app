@@ -1,9 +1,9 @@
-// import { differenceWith, isMatch } from 'lodash-es';
-// import assert from 'node:assert';
+import { differenceWith, uniq } from 'lodash-es';
+import assert from 'node:assert';
 import { container } from 'tsyringe';
 
-// import { RecycleReason } from '@domain/server/model/recyclables.js';
-// import type { EntityId, EntityTypes } from '@domain/shared/model/entity.js';
+import { RecyclableVO, RecycleReason } from '@domain/server/model/recyclables.js';
+import type { EntityId } from '@domain/shared/model/entity.js';
 
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
@@ -11,45 +11,49 @@ import EntityService from './EntityService.js';
 export default class RecyclableService extends BaseService {
   private readonly entityService = container.resolve(EntityService);
 
-  // async create(entities: EntityId[]) {
-  //   await this.entityService.assertEntityIds(entities);
+  public async batchCreate(entityIds: EntityId[]) {
+    await this.entityService.assertAvailableIds(entityIds);
 
-  //   const descantIds = await this.repo.entities.findDescendantIds(entities);
-  //   const descants = Object.entries(descantIds)
-  //     .map(([type, ids]) => EntityService.getLocators(Object.values(ids).flat(), Number(type) as EntityTypes))
-  //     .flat();
+    const descantIds = Object.values(await this.repo.entities.findDescendantIds(entityIds)).flat();
+    const records = await this.repo.recyclables.findAll({ entityIds: uniq([...entityIds, ...descantIds]) });
 
-  //   const deletedAt = Date.now();
-  //   const recyclables = await this.repo.recyclables.findAllByLocators([...entities, ...descants]);
-  //   const newRecyclables = differenceWith(
-  //     [
-  //       ...entities.map((entity) => ({ ...entity, deletedAt, reason: RecycleReason.Direct })),
-  //       ...descants.map((entity) => ({ ...entity, deletedAt, reason: RecycleReason.Cascade })),
-  //     ],
-  //     recyclables,
-  //     isMatch,
-  //   );
+    const recordsToCreate = [
+      ...entityIds.map((entityId) => ({ entityId, deletedAt, reason: RecycleReason.Direct })),
+      ...descantIds.map((entityId) => ({ entityId, deletedAt, reason: RecycleReason.Cascade })),
+    ];
 
-  //   await this.repo.recyclables.batchCreate(newRecyclables);
-  // }
+    const deletedAt = Date.now();
 
-  // async remove(entity: RecyclableEntityLocator) {
-  //   if ((await this.repo.recyclables.findAllByLocators([entity], RecycleReason.Direct)).length === 0) {
-  //     throw new Error('invalid entity');
-  //   }
+    const newRecyclables = differenceWith(
+      recordsToCreate,
+      records,
+      ({ entityId }, recyclable) => entityId === recyclable.entityId,
+    );
 
-  //   await this.repo.recyclables.batchRemove([entity]);
-  // }
+    await this.repo.recyclables.batchCreate(newRecyclables);
+  }
 
-  // async query() {
-  //   const records = await this.repo.recyclables.findAll(RecycleReason.Direct);
-  //   const titles = await this.entityService.getNormalizedTitles(records);
+  public async remove(entityId: EntityId) {
+    const recyclable = await this.repo.recyclables.findOneByEntityId(entityId);
 
-  //   return records.map((record) => {
-  //     const title = titles[record.entityId];
-  //     assert(title);
+    assert(recyclable && recyclable.reason === RecycleReason.Direct, `invalid entity id: ${entityId}`);
+    await this.repo.recyclables.remove(entityId);
+  }
 
-  //     return { ...record, title };
-  //   });
-  // }
+  public async queryAll(): Promise<RecyclableVO[]> {
+    const records = await this.repo.recyclables.findAll({ reason: RecycleReason.Direct });
+
+    const ids = records.map(({ entityId }) => entityId);
+
+    const [entities, paths] = await Promise.all([
+      this.entityService.getEntities(ids),
+      this.entityService.getPaths(ids),
+    ]);
+
+    return records.map((record) => ({
+      deletedAt: record.deletedAt,
+      path: paths[record.entityId]!,
+      entity: entities[record.entityId]!,
+    }));
+  }
 }

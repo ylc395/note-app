@@ -1,95 +1,103 @@
-import { compact, first, groupBy } from 'lodash-es';
-
-import type { FileRepository } from '@domain/server/service/repository/FileRepository.js';
-import type { File, FileVO, NewFileTextRecord } from '@domain/server/model/file.js';
+import type { FileRepository } from '@domain/server/repository/FileRepository.js';
+import type { File, FilePatch, FileTextRecord } from '@domain/server/model/file.js';
 
 import BaseRepository from './BaseRepository.js';
 import { tableName as fileTableName, type Row } from '../schema/file.js';
 import { tableName as fileTextTableName } from '../schema/fileText.js';
 
 export default class SqliteFileRepository extends BaseRepository implements FileRepository {
+  public async findAllTextRecordLocations(ids: File['id'][]) {
+    const rows = await this.db
+      .selectFrom(fileTextTableName)
+      .select(['fileId', 'location', 'text'])
+      .where('fileId', 'in', ids)
+      .execute();
+
+    return rows.map((row) => ({ ...row, location: JSON.parse(row.location) }));
+  }
+
   public async findOneById(id: string) {
-    const existedFile = await this.db.selectFrom(fileTableName).selectAll().where('id', '=', id).executeTakeFirst();
+    const existedFile = await this.db
+      .selectFrom(fileTableName)
+      .select(['id', 'lang', 'mimeType', 'size'])
+      .where('id', '=', id)
+      .executeTakeFirst();
 
     if (!existedFile) {
       return null;
     }
 
-    return { ...existedFile, lang: existedFile.lang.split(',') };
+    return { ...existedFile, lang: JSON.parse(existedFile.lang) };
   }
 
   public readonly findBlobById = async (id: string) => {
-    const row = await this.db
-      .selectFrom(fileTableName)
-      .select(['data', 'mimeType'])
-      .where('id', '=', id)
-      .executeTakeFirst();
-
+    const row = await this.db.selectFrom(fileTableName).select(['data']).where('id', '=', id).executeTakeFirst();
     return row ? SqliteFileRepository.getBlob(row) : null;
   };
 
   public async findOneByHash(hash: string) {
-    const existedFile = await this.db.selectFrom(fileTableName).selectAll().where('hash', '=', hash).executeTakeFirst();
+    const existedFile = await this.db
+      .selectFrom(fileTableName)
+      .select(['id', 'lang', 'mimeType', 'size'])
+      .where('hash', '=', hash)
+      .executeTakeFirst();
 
     if (!existedFile) {
       return null;
     }
 
-    return { ...existedFile, lang: existedFile.lang.split(',') };
+    return existedFile ? SqliteFileRepository.rowToFileVO(existedFile) : null;
   }
 
   public static getBlob(row: Pick<Row, 'data'>) {
     return (row.data as Uint8Array).buffer;
   }
 
-  public async create({ data, ...file }: File) {
-    const row = await this.createOneOn(fileTableName, {
-      ...file,
-      lang: file.lang.join(','),
-      data: Buffer.from(data),
-      id: this.generateId(),
-    });
-
-    return { ...file, id: row.id };
+  public static rowToFileVO<T extends Partial<Row>>(row: T) {
+    return { ...row, ...(row.lang ? { lang: JSON.parse(row.lang) as string[] } : null) };
   }
 
-  public async createText({ location, ...fileText }: NewFileTextRecord) {
+  public async create({ data, lang, ...file }: File) {
+    const row = await this.db
+      .insertInto(fileTableName)
+      .values({
+        ...file,
+        lang: JSON.stringify(lang),
+        data: Buffer.from(data),
+      })
+      .returning(['id', 'lang', 'mimeType', 'size'])
+      .executeTakeFirstOrThrow();
+
+    return SqliteFileRepository.rowToFileVO(row);
+  }
+
+  public async createTextRecord({ location, ...record }: FileTextRecord) {
     await this.db
       .insertInto(fileTextTableName)
-      .values({ location: JSON.stringify(location), ...fileText })
+      .values({ location: JSON.stringify(location), ...record })
       .execute();
   }
 
-  public async markTextExtracted(fileId: FileVO['id']) {
-    await this.db.updateTable(fileTableName).set({ textExtracted: 1 }).where('id', '=', fileId).execute();
-  }
-
-  public async findTextExtractedLocationOfUnfinished() {
+  public async findUnfinishedFile() {
     const rows = await this.db
       .selectFrom(fileTableName)
-      .leftJoin(fileTextTableName, `${fileTableName}.id`, `${fileTextTableName}.fileId`)
-      .select([
-        `${fileTableName}.id as fileId`,
-        `${fileTableName}.lang`,
-        `${fileTableName}.mimeType`,
-        `${fileTableName}.createdAt as fileCreatedAt`,
-        `${fileTextTableName}.location`,
-      ])
+      .select(['id', 'size', 'lang', 'mimeType'])
       .where(`${fileTableName}.textExtracted`, '=', 0)
       .execute();
 
-    const groups = groupBy(rows, 'fileId');
+    return rows.map(SqliteFileRepository.rowToFileVO);
+  }
 
-    return Object.values(groups).map((records) => {
-      const { fileCreatedAt, fileId, lang, mimeType } = first(records)!;
+  public async updateOne(id: File['id'], patch: FilePatch) {
+    const row = await this.db
+      .updateTable(fileTableName)
+      .where('id', '=', id)
+      .set({
+        lang: patch.lang ? JSON.stringify(patch.lang) : undefined,
+        textExtracted: typeof patch.isTextExtracted === 'boolean' ? (patch.isTextExtracted ? 1 : 0) : undefined,
+      })
+      .executeTakeFirst();
 
-      return {
-        fileId,
-        fileCreatedAt,
-        mimeType,
-        lang: lang.split(','),
-        locations: compact(records.map(({ location }) => location && JSON.parse(location))),
-      };
-    });
+    return Boolean(row.numUpdatedRows);
   }
 }

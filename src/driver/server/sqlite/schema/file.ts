@@ -1,4 +1,4 @@
-import { type Kysely, type Generated, sql } from 'kysely';
+import { GeneratedAlways, sql, type Generated, type Kysely } from 'kysely';
 
 export interface Row {
   id: string;
@@ -7,8 +7,8 @@ export interface Row {
   mimeType: string;
   size: number;
   hash: string;
-  createdAt: Generated<number>;
-  textExtracted: Generated<number>;
+  createdAt: GeneratedAlways<number>;
+  textExtracted: Generated<0 | 1>;
 }
 
 export const tableName = 'files';

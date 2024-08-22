@@ -3,19 +3,14 @@ import assert from 'node:assert';
 import { createCanvas } from 'canvas';
 import { container, singleton } from 'tsyringe';
 
-import type { Job, Result } from '@domain/server/service/FileService/TextExtractor.js';
+import type { Job } from '@domain/server/service/FileService/TextExtractor.js';
 import ImageTextExtractor from './ImageTextExtractor.js';
 
 @singleton()
 export default class PDFTextExtractor {
   private imageTextExtractor = container.resolve(ImageTextExtractor);
   private isBusy = false;
-  public async extract(job: {
-    data: ArrayBuffer;
-    lang: Job['lang'];
-    skipLocations: Job['skipLocations'];
-    onExtracted: (result: Omit<Result, 'fileId'>) => void;
-  }) {
+  public async *extract(job: { data: ArrayBuffer; lang: Job['lang']; locationsToSkip: Job['locationsToSkip'] }) {
     // in nodejs, pdf.worker.js won't work
     // because it's a web worker, not a nodejs worker. see https://github.com/nodejs/node/issues/43583
     // so everything about pdf is done in main thread(so called "fake worker").
@@ -25,7 +20,7 @@ export default class PDFTextExtractor {
 
     const doc = await pdfjs.getDocument(new Uint8Array(job.data)).promise;
     const pagesToSkip =
-      job.skipLocations?.map(({ page }) => {
+      job.locationsToSkip?.map(({ page }) => {
         assert(typeof page === 'number');
         return page;
       }) || [];
@@ -41,10 +36,10 @@ export default class PDFTextExtractor {
         (await PDFTextExtractor.getTextContent(doc, pageNum)) ||
         (await this.getTextContentByOcr(doc, pageNum, job.lang));
 
-      await job.onExtracted({
+      yield {
         ...result,
         isFinished: pageNum === totalPages,
-      });
+      };
     }
 
     doc.destroy();

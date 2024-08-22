@@ -7,7 +7,7 @@ import Editor from '@domain/client/app/model/abstract/Editor';
 import EditableEntity from '@domain/client/app/model/abstract/EditableEntity';
 import Tile, { type SwitchReasons } from './Tile';
 import { type TileNode, type TileParent, TileDirections, isTileLeaf } from './tileTree';
-import type { EntityLocator } from '../entity';
+import type { EntityLocator } from '../../../common/model/entity';
 import HistoryManager from './HistoryManager';
 import { eventBus, EventNames } from './eventBus';
 

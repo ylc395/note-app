@@ -5,6 +5,8 @@ export const tableName = 'topics';
 export interface Row {
   name: string;
   entityId: string;
+  locationStart: number;
+  locationEnd: number;
   createdAt: number;
 }
 
@@ -15,6 +17,8 @@ export default {
       .createTable(tableName)
       .addColumn('name', 'text', (col) => col.notNull())
       .addColumn('entityId', 'text', (col) => col.notNull())
+      .addColumn('locationStart', 'integer', (col) => col.notNull())
+      .addColumn('locationEnd', 'integer', (col) => col.notNull())
       .addColumn('createdAt', 'integer', (col) => col.notNull());
   },
 } as const;

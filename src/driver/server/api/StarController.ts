@@ -1,4 +1,5 @@
 import { starDTOSchema } from '@domain/shared/infra/schema/star.js';
+import { entityIdSchema } from '@domain/shared/infra/schema/entity.js';
 import { publicProcedure, router } from './trpc.js';
 
 export default router({
@@ -10,7 +11,7 @@ export default router({
     return starService.create(input);
   }),
 
-  remove: publicProcedure.input(starDTOSchema).mutation(({ input, ctx: { starService } }) => {
+  remove: publicProcedure.input(entityIdSchema).mutation(({ input, ctx: { starService } }) => {
     return starService.remove(input);
   }),
 });

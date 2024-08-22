@@ -1,14 +1,10 @@
-import type { Material, MaterialPatchDTO } from '@domain/shared/model/material.js';
+import type { Material, MaterialPatchDTO, ClientMaterialQuery } from '@domain/shared/model/material.js';
 
-export type NewMaterial = Omit<Partial<Material>, 'id'>;
-
-export interface MaterialQuery {
-  parentId?: Material['parentId'] | Material['id'][];
+export interface MaterialQuery extends ClientMaterialQuery {
   id?: Material['id'][];
-  fileHash?: string;
-  isAvailable?: boolean;
+  isAvailableOnly?: boolean;
 }
 
-export type MaterialPatch = MaterialPatchDTO & { updatedAt?: number; comment?: string };
+export type MaterialPatch = MaterialPatchDTO & Partial<Pick<Material, 'updatedAt'>>;
 
 export * from '@domain/shared/model/material.js';

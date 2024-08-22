@@ -1,39 +1,36 @@
-import { omit } from 'lodash-es';
-import type { Selectable } from 'kysely';
+import type { Material, MaterialQuery, MaterialPatch } from '@domain/server/model/material.js';
+import type { MaterialRepository } from '@domain/server/repository/MaterialRepository.js';
+import { buildIndex } from '@utils/collection.js';
 
-import type { Material, MaterialQuery, MaterialPatch, MaterialDTO } from '@domain/server/model/material.js';
-import type { MaterialRepository } from '@domain/server/service/repository/MaterialRepository.js';
-
-import schema, { type Row } from '../schema/material.js';
+import schema from '../schema/material.js';
 import { tableName as fileTableName } from '../schema/file.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
-import FileRepository from './FileRepository.js';
 import BaseRepository from './BaseRepository.js';
+import FileRepository from './FileRepository.js';
+import assert from 'assert';
 
 export default class SqliteMaterialRepository extends BaseRepository implements MaterialRepository {
   public readonly tableName = schema.tableName;
-  private readonly files = new FileRepository(this.sqliteDb);
 
-  public async create(material: MaterialDTO) {
-    let file = null;
+  public async findFiles(ids: Material['id'][]) {
+    const rows = await this.db
+      .selectFrom(fileTableName)
+      .innerJoin(this.tableName, `${fileTableName}.id`, `${this.tableName}.fileId`)
+      .where(`${fileTableName}.id`, 'in', ids)
+      .select([`${fileTableName}.id`, 'mimeType', 'lang', 'size', `${this.tableName}.id as materialId`])
+      .execute();
 
-    if (material.fileId) {
-      file = await this.files.findOneById(material.fileId);
-    }
+    const fileVOs = rows.map(FileRepository.rowToFileVO);
 
-    const createdMaterial = await this.createOneOn(this.tableName, {
-      ...material,
-      id: this.generateId(),
-    });
-
-    return SqliteMaterialRepository.rowToMaterial(createdMaterial, file?.mimeType);
+    return buildIndex(fileVOs, 'materialId');
   }
 
-  private static rowToMaterial(row: Selectable<Row>, mimeType?: string | null) {
-    return {
-      ...omit(row, ['fileId']),
-      ...(mimeType ? { mimeType } : null),
-    };
+  public async create(material: Material) {
+    await this.db.insertInto(this.tableName).values(material).executeTakeFirst();
+    const inserted = await this.findOneById(material.id);
+
+    assert(inserted);
+    return inserted;
   }
 
   public async findAll(q: MaterialQuery) {
@@ -41,10 +38,10 @@ export default class SqliteMaterialRepository extends BaseRepository implements 
       .selectFrom(this.tableName)
       .leftJoin(fileTableName, `${this.tableName}.fileId`, `${fileTableName}.id`);
 
-    if (typeof q?.isAvailable === 'boolean') {
+    if (q.isAvailableOnly) {
       qb = qb
         .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.id`)
-        .where(`${recyclableTableName}.entityId`, q.isAvailable ? 'is' : 'is not', null);
+        .where(`${recyclableTableName}.entityId`, 'is', null);
     }
 
     if (q.fileHash) {
@@ -62,22 +59,42 @@ export default class SqliteMaterialRepository extends BaseRepository implements 
     }
 
     const rows = await qb
-      .selectAll(this.tableName)
-      .select([`${fileTableName}.mimeType`])
+      .select([
+        `${this.tableName}.id`,
+        `${this.tableName}.title`,
+        `${this.tableName}.icon`,
+        `${this.tableName}.parentId`,
+        `${this.tableName}.createdAt`,
+        `${this.tableName}.updatedAt`,
+        `${this.tableName}.fileId`,
+        `${this.tableName}.comment`,
+        `${this.tableName}.sourceUrl`,
+        `${fileTableName}.mimeType`,
+      ])
       .execute();
 
-    return rows.map((row) => SqliteMaterialRepository.rowToMaterial(row, row.mimeType));
+    return rows;
   }
 
-  public async findOneById(id: Material['id'], availableOnly?: boolean) {
+  public async findOneById(id: Material['id'], config?: { isAvailableOnly?: boolean }) {
     let sql = this.db
       .selectFrom(this.tableName)
       .leftJoin(fileTableName, `${this.tableName}.fileId`, `${fileTableName}.id`)
-      .selectAll(this.tableName)
-      .select(`${fileTableName}.mimeType`)
+      .select([
+        `${this.tableName}.id`,
+        `${this.tableName}.title`,
+        `${this.tableName}.icon`,
+        `${this.tableName}.parentId`,
+        `${this.tableName}.createdAt`,
+        `${this.tableName}.updatedAt`,
+        `${this.tableName}.fileId`,
+        `${this.tableName}.comment`,
+        `${this.tableName}.sourceUrl`,
+        `${fileTableName}.mimeType`,
+      ])
       .where(`${this.tableName}.id`, '=', id);
 
-    if (availableOnly) {
+    if (config?.isAvailableOnly) {
       sql = sql
         .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.id`)
         .where(`${recyclableTableName}.entityId`, 'is', null);
@@ -85,20 +102,23 @@ export default class SqliteMaterialRepository extends BaseRepository implements 
 
     const row = await sql.executeTakeFirst();
 
-    if (!row) {
-      return null;
-    }
-
-    return SqliteMaterialRepository.rowToMaterial(row, row.mimeType);
+    return row || null;
   }
 
-  public async findBlobById(id: Material['id']) {
-    const row = await this.db
+  public async findBlobById(id: Material['id'], config?: { isAvailableOnly?: boolean }) {
+    let sql = this.db
       .selectFrom(this.tableName)
       .innerJoin(fileTableName, `${this.tableName}.fileId`, `${fileTableName}.id`)
       .select([`${fileTableName}.data`])
-      .where(`${this.tableName}.id`, '=', id)
-      .executeTakeFirst();
+      .where(`${this.tableName}.id`, '=', id);
+
+    if (config?.isAvailableOnly) {
+      sql = sql
+        .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.id`)
+        .where(`${recyclableTableName}.entityId`, 'is', null);
+    }
+
+    const row = await sql.executeTakeFirst();
 
     if (row) {
       return FileRepository.getBlob(row);
@@ -110,7 +130,7 @@ export default class SqliteMaterialRepository extends BaseRepository implements 
   public async update(id: Material['id'] | Material['id'][], patch: MaterialPatch) {
     const { numUpdatedRows } = await this.db
       .updateTable(this.tableName)
-      .set({ ...patch, updatedAt: Date.now() })
+      .set(patch)
       .where('id', Array.isArray(id) ? 'in' : '=', id)
       .executeTakeFirst();
 

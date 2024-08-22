@@ -1,6 +1,12 @@
 import { string, tuple } from 'zod';
 
-import { noteDTOSchema, clientNoteQuerySchema, notePatchDTOSchema } from '@domain/shared/infra/schema/note.js';
+import {
+  noteDTOSchema,
+  clientNoteQuerySchema,
+  notePatchDTOSchema,
+  noteSchema,
+  noteBatchPatchDTOSchema,
+} from '@domain/shared/infra/schema/note.js';
 import { publicProcedure, router } from './trpc.js';
 
 export default router({
@@ -8,23 +14,23 @@ export default router({
     .input(clientNoteQuerySchema)
     .query(({ input: query, ctx: { noteService } }) => noteService.query(query)),
 
-  queryPath: publicProcedure
-    .input(string())
-    .query(({ input: noteId, ctx: { entityService } }) => entityService.getPath(noteId)),
-
   queryOne: publicProcedure
     .input(string())
     .query(({ input: noteId, ctx: { noteService } }) => noteService.queryOne(noteId)),
 
   updateOne: publicProcedure
-    .input(tuple([string(), notePatchDTOSchema]))
+    .input(tuple([noteSchema.shape.id, notePatchDTOSchema]))
     .mutation(({ input: [id, patch], ctx: { noteService } }) => noteService.updateOne(id, patch)),
 
   batchUpdate: publicProcedure
-    .input(tuple([string().array(), notePatchDTOSchema]))
+    .input(tuple([noteSchema.shape.id.array(), noteBatchPatchDTOSchema]))
     .mutation(({ input: [ids, note], ctx: { noteService } }) => noteService.batchUpdate(ids, note)),
 
   create: publicProcedure
-    .input(noteDTOSchema.extend({ from: string().optional() }))
+    .input(noteDTOSchema)
     .mutation(({ input: { from, ...dto }, ctx: { noteService } }) => noteService.create(dto, from)),
+
+  queryPath: publicProcedure
+    .input(noteSchema.shape.id)
+    .query(({ input: noteId, ctx: { entityService } }) => entityService.getPath(noteId)),
 });

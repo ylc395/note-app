@@ -7,7 +7,7 @@ import { container } from 'tsyringe';
 import { createIPCHandler } from 'electron-trpc/main';
 
 import { IS_DEV } from '@domain/shared/infra/constants.js';
-import { token as loggerToken } from '@domain/server/infra/logger.js';
+import { token as loggerToken } from '@domain/shared/infra/logger.js';
 import FileService from '@domain/server/service/FileService/index.js';
 import { PROTOCOL, parseAppUrl } from '@domain/shared/infra/markdown/url.js';
 
@@ -52,20 +52,19 @@ export default class ElectronRuntime extends DesktopRuntime {
         },
       },
     ]);
-
     ipcMain.handle(UI_CHANNEL, this.handleUI);
 
-    await this.whenReady();
-    await this.installDevExtension();
+    await electronApp.whenReady();
+    protocol.handle(PROTOCOL, this.protocolHandler); // 这个必须在 whenReady 后
 
-    protocol.handle(PROTOCOL, this.protocolHandler);
+    await Promise.all([this.installDevExtension(), this.componentsReady()]);
     this.initWindow();
   }
 
   private readonly protocolHandler = async (req: GlobalRequest) => {
     const parsed = parseAppUrl(req.url);
 
-    if (!parsed) {
+    if (!parsed || parsed.type !== 'files') {
       return new Response(null, { status: 404 });
     }
 
@@ -73,10 +72,6 @@ export default class ElectronRuntime extends DesktopRuntime {
 
     return new Response(data);
   };
-
-  public async whenReady() {
-    await Promise.all([super.whenReady(), new Promise<void>((resolve) => electronApp.on('ready', () => resolve()))]);
-  }
 
   private readonly handleUI = (e: IpcMainInvokeEvent, payload: unknown) => {
     this.ui.ipcEvent = e;
@@ -96,8 +91,6 @@ export default class ElectronRuntime extends DesktopRuntime {
 
     try {
       this.logger.debug('try to install devtool');
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore no bundler here
       const devToolName = await installExtension.default(REACT_DEVELOPER_TOOLS);
       this.logger.debug(`${devToolName} installed`);
     } catch (error) {

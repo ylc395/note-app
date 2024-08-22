@@ -1,5 +1,5 @@
-import type { NoteRepository } from '@domain/server/service/repository/NoteRepository.js';
-import type { NoteDTO, NotePatch, NoteQuery, NoteVO } from '@domain/server/model/note.js';
+import type { NoteRepository } from '@domain/server/repository/NoteRepository.js';
+import type { Note, NotePatch, NoteQuery, NoteVO } from '@domain/server/model/note.js';
 
 import schema from '../schema/note.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
@@ -7,11 +7,11 @@ import BaseRepository from './BaseRepository.js';
 
 export default class SqliteNoteRepository extends BaseRepository implements NoteRepository {
   public readonly tableName = schema.tableName;
-  public async create(note: NoteDTO) {
+  public async create(note: Note) {
     const row = await this.db
       .insertInto(this.tableName)
-      .values({ id: this.generateId(), ...note })
-      .returningAll()
+      .values(note)
+      .returning(['id', 'icon', 'title', 'createdAt', 'updatedAt', 'parentId', 'body'])
       .executeTakeFirstOrThrow();
 
     return row;
@@ -32,14 +32,10 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
       .selectFrom(this.tableName)
       .select(['notes.id', 'notes.icon', 'notes.parentId', 'notes.title', 'notes.updatedAt', 'notes.createdAt']);
 
-    if (typeof q.isAvailable === 'boolean') {
+    if (q.isAvailableOnly) {
       sql = sql
         .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.id`)
-        .where(`${recyclableTableName}.entityId`, q.isAvailable ? 'is' : 'is not', null);
-    }
-
-    if (q.updatedAfter) {
-      sql = sql.where('updatedAt', '>', q.updatedAfter);
+        .where(`${recyclableTableName}.entityId`, 'is', null);
     }
 
     if (Array.isArray(q.parentId)) {
@@ -56,8 +52,16 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
     return rows;
   }
 
-  public async findOneById(id: NoteVO['id']) {
-    const row = await this.db.selectFrom(this.tableName).where('id', '=', id).selectAll().executeTakeFirst();
+  public async findOneById(id: NoteVO['id'], config?: { isAvailableOnly?: boolean }) {
+    let sql = await this.db.selectFrom(this.tableName).where('id', '=', id);
+
+    if (config?.isAvailableOnly) {
+      sql = sql
+        .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.id`)
+        .where(`${recyclableTableName}.entityId`, 'is', null);
+    }
+
+    const row = await sql.selectAll().executeTakeFirst();
     return row || null;
   }
 }

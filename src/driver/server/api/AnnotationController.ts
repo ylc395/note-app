@@ -14,5 +14,5 @@ export default router({
 
   updateOne: publicProcedure
     .input(tuple([string(), annotationPatchDTOSchema]))
-    .mutation(({ input: [id, patch], ctx: { annotationService } }) => annotationService.update(id, patch)),
+    .mutation(({ input: [id, patch], ctx: { annotationService } }) => annotationService.updateOne(id, patch)),
 });

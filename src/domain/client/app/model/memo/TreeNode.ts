@@ -147,7 +147,7 @@ export default class MemoTreeNode {
     let memos: MemoVO[] = [];
 
     if (baseNode?.memo?.isPinned === primaryPinnedType) {
-      memos = await this.remote.memo.query.query({
+      memos = await this.remote.memo.queryList.query({
         [filterKey]: baseNode?.memo?.id || null,
         isPinned: primaryPinnedType,
         parentId: this.memo?.id,
@@ -156,7 +156,7 @@ export default class MemoTreeNode {
     }
 
     if (memos.length < MemoTreeNode.LIMIT) {
-      const secondaryMemos = await this.remote.memo.query.query({
+      const secondaryMemos = await this.remote.memo.queryList.query({
         isPinned: !primaryPinnedType,
         [filterKey]: baseNode?.memo?.id || null,
         parentId: this.memo?.id,

@@ -6,38 +6,62 @@ import { EntityTypes, type EntityId } from '@domain/shared/model/entity.js';
 import { EventNames } from '@domain/server/model/content.js';
 
 import BaseService from './BaseService.js';
+import MaterialService from './MaterialService.js';
 import EntityService from './EntityService.js';
 
 @singleton()
 export default class AnnotationService extends BaseService {
-  private readonly entityService = container.resolve(EntityService);
+  private readonly materialService = container.resolve(MaterialService);
+
+  @BaseService.transaction()
   public async create(annotation: AnnotationDTO) {
-    await this.entityService.assertAvailableIds([annotation.targetId], {
-      types: [EntityTypes.Note], // only materials have annotations
+    const now = Date.now();
+
+    // only materials have annotations
+    await this.materialService.assertAvailableIds([annotation.targetId], { type: 'entity' });
+
+    const created = await this.repo.annotations.create({
+      id: EntityService.generateId(),
+      targetId: annotation.targetId,
+      body: annotation.body || '',
+      selectors: annotation.selectors,
+      color: annotation.color || 'yellow',
+      createdAt: now,
+      updatedAt: now,
     });
 
-    // todo: verify annotation's selectors type here (not very necessary)
-    return await this.repo.annotations.create(annotation);
+    if (created.body) {
+      this.eventBus.emit(EventNames.ContentUpdated, {
+        body: created.body,
+        entityId: created.id,
+        entityType: EntityTypes.Annotation,
+        updatedAt: created.updatedAt,
+      });
+    }
+
+    return created;
   }
 
+  @BaseService.transaction()
   public async queryByEntityId(entityId: EntityId) {
-    await this.entityService.assertAvailableIds([entityId]);
-    return this.repo.annotations.findAllByEntityId(entityId);
+    await this.materialService.assertAvailableIds([entityId]);
+    return this.repo.annotations.findAllByEntityId(entityId, { isAvailableOnly: true });
   }
 
-  public async update(annotationId: Annotation['id'], patch: AnnotationPatchDTO) {
-    const updated = await this.repo.annotations.update(annotationId, patch);
+  @BaseService.transaction()
+  public async updateOne(annotationId: Annotation['id'], patch: AnnotationPatchDTO) {
+    const now = Date.now();
+    const updated = await this.repo.annotations.update(annotationId, { ...patch, updatedAt: now });
+
     assert(updated, 'invalid id');
 
     if (typeof patch.body === 'string') {
       this.eventBus.emit(EventNames.ContentUpdated, {
-        content: patch.body,
+        body: patch.body,
         entityId: annotationId,
         entityType: EntityTypes.Annotation,
-        updatedAt: updated.updatedAt,
+        updatedAt: now,
       });
     }
-
-    return updated;
   }
 }

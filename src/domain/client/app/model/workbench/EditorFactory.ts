@@ -6,7 +6,7 @@ import type {
   default as EditableEntity,
   EditableEntityLocator,
 } from '@domain/client/app/model/abstract/EditableEntity';
-import { mimeTypes } from '@domain/shared/model/file';
+import { MimeTypes } from '@domain/shared/model/file';
 import EditableNote from '@domain/client/app/model/note/Editable';
 import EditablePdf from '@domain/client/app/model/material/editable/EditablePdf';
 import EditableHtml from '@domain/client/app/model/material/editable/EditableHtml';
@@ -74,9 +74,9 @@ export default class EditorFactory {
 
     if (mimeType.startsWith('image')) {
       editableEntity = new EditableImage(entityId);
-    } else if (mimeType === mimeTypes.PDF) {
+    } else if (mimeType === MimeTypes.PDF) {
       editableEntity = new EditablePdf(entityId);
-    } else if (mimeType === mimeTypes.HTML) {
+    } else if (mimeType === MimeTypes.HTML) {
       editableEntity = new EditableHtml(entityId);
     }
 

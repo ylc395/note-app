@@ -3,12 +3,13 @@ import type { KvDatabase } from '@domain/server/infra/kvDatabase.js';
 
 import type SqliteDb from './Database.js';
 
-type Row = { key: string; value: string };
-
 const tableName = 'kv';
 
 export interface KvDb {
-  [tableName]: Row;
+  [tableName]: {
+    key: string;
+    value: string;
+  };
 }
 
 export default class SqliteKvDatabase implements KvDatabase {
@@ -19,10 +20,10 @@ export default class SqliteKvDatabase implements KvDatabase {
   public readonly ready: Promise<void>;
 
   private get db() {
-    return this.sqliteDb.getDb() as unknown as Kysely<KvDb>;
+    return this.sqliteDb.getDb() as Kysely<KvDb>;
   }
 
-  async init() {
+  public async init() {
     await this.sqliteDb.ready;
     await this.db.schema
       .createTable(tableName)
@@ -32,7 +33,7 @@ export default class SqliteKvDatabase implements KvDatabase {
       .execute();
   }
 
-  async set(key: string, value: string) {
+  public async set(key: string, value: string) {
     const { numUpdatedRows } = await this.db
       .updateTable(tableName)
       .set({ value })
@@ -44,9 +45,9 @@ export default class SqliteKvDatabase implements KvDatabase {
     }
   }
 
-  async get(key: string): Promise<string | null>;
-  async get(key: string, value: () => string): Promise<string>;
-  async get(key: string, value?: () => string) {
+  public async get(key: string): Promise<string | null>;
+  public async get(key: string, value: () => string): Promise<string>;
+  public async get(key: string, value?: () => string) {
     const row = await this.db.selectFrom(tableName).selectAll().where('key', '=', key).executeTakeFirst();
 
     if (row) {

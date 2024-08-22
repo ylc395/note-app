@@ -15,3 +15,7 @@ export function buildIndex<T>(list: T[], key?: keyof T) {
 
   return index;
 }
+
+export function arrayOf<T>(value: T | T[]) {
+  return Array.isArray(value) ? value : [value];
+}

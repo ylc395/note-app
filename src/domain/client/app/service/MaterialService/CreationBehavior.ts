@@ -12,7 +12,7 @@ import { token as rpcToken } from '@domain/client/common/infra/rpc';
 import { type EntityMaterialVO, MaterialTypes } from '@domain/shared/model/material';
 import { fileDTOSchema } from '@domain/shared/infra/schema/file';
 import { getHash } from '@utils/file';
-import { EntityTypes } from '../../model/entity';
+import { EntityTypes } from '../../../common/model/entity';
 
 export default class CreationBehavior {
   private readonly remote = container.resolve(rpcToken);

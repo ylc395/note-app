@@ -1,46 +1,42 @@
 import dayjs from 'dayjs';
-import type { ParsedDiff } from 'diff';
 import type { Entity, EntityId, EntityParentId } from './entity.js';
-
-/**
- * @api
- */
-export interface NotePatchDTO {
-  title?: string;
-  parentId?: EntityParentId;
-  icon?: string | null;
-  body?: string;
-}
-
-/**
- * @api
- */
-export interface ClientNoteQuery {
-  parentId?: string[] | string | null;
-}
-
-/**
- * @api
- */
-export type NoteDTO = NotePatchDTO;
 
 export interface Note {
   title: string;
   id: EntityId;
   parentId: EntityParentId;
+  body?: string;
   icon: string | null;
   updatedAt: number;
   createdAt: number;
-  body?: string;
 }
 
 /**
  * @api
  */
-export interface NoteVO extends Note {
+export type NotePatchDTO = Partial<Pick<Note, 'title' | 'parentId' | 'icon' | 'body'>>;
+
+/**
+ * @api
+ */
+export type NoteBatchPatchDTO = Pick<NotePatchDTO, 'icon' | 'parentId'>;
+
+/**
+ * @api
+ */
+export type NoteDTO = NotePatchDTO & { from?: Note['id'] };
+
+/**
+ * @api
+ */
+export interface ClientNoteQuery {
+  parentId?: EntityParentId | string[];
+}
+
+export interface NoteVO extends Omit<Note, 'body'> {
+  body?: string;
   isStar: boolean;
   childrenCount: number;
-  diff?: ParsedDiff;
 }
 
 export function normalizeTitle(note: Note | NoteVO | Entity) {

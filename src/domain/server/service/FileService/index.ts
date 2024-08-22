@@ -1,32 +1,22 @@
+import { groupBy } from 'lodash-es';
 import { container, singleton } from 'tsyringe';
 import fs from 'fs-extra';
 import assert from 'node:assert';
 
 import { getHash } from '@utils/file.js';
-import type { FileVO, FileDTO } from '@domain/shared/model/file.js';
-import BaseService, { transaction } from '../BaseService.js';
-import { Result, token as textExtractorToken } from './TextExtractor.js';
+import type { FileVO, FileDTO } from '@domain/server/model/file.js';
+import BaseService from '../BaseService.js';
+import { type JobResult, token as textExtractorToken } from './TextExtractor.js';
+import EntityService from '../EntityService.js';
 
 @singleton()
 export default class FileService extends BaseService {
-  public readonly textExtractor = container.resolve(textExtractorToken);
+  private readonly textExtractor = container.resolve(textExtractorToken);
 
   constructor() {
     super();
     this.textExtractor.onExtracted(this.handleTextExtracted.bind(this));
     this.resumeTextExtractor();
-  }
-
-  private async resumeTextExtractor() {
-    const unfinishedFiles = await this.repo.files.findTextExtractedLocationOfUnfinished();
-
-    for (const file of unfinishedFiles) {
-      this.textExtractor.addJob({
-        ...file,
-        getData: this.repo.files.findBlobById,
-        skipLocations: file.locations,
-      });
-    }
   }
 
   public async createFile(file: FileDTO) {
@@ -41,6 +31,7 @@ export default class FileService extends BaseService {
     }
 
     const fileVO = await this.repo.files.create({
+      id: EntityService.generateId(),
       hash,
       mimeType: file.mimeType,
       lang: file.lang,
@@ -72,12 +63,38 @@ export default class FileService extends BaseService {
     return data;
   }
 
-  @transaction
-  private async handleTextExtracted({ isFinished, ...textRecord }: Result) {
-    await this.repo.files.createText(textRecord);
+  private async resumeTextExtractor() {
+    const unfinishedFiles = await this.repo.files.findUnfinishedFile();
+    const textRecordLocations = groupBy(
+      await this.repo.files.findAllTextRecordLocations(unfinishedFiles.map(({ id }) => id)),
+      ({ fileId }) => fileId,
+    );
+
+    for (const { id, mimeType, lang } of unfinishedFiles) {
+      const extractedLocations = textRecordLocations[id]?.map(({ location }) => location);
+
+      this.textExtractor.addJob({
+        fileId: id,
+        mimeType,
+        lang,
+        getData: this.repo.files.findBlobById,
+        locationsToSkip: extractedLocations,
+      });
+    }
+  }
+
+  @BaseService.transaction()
+  private async handleTextExtracted({ isFinished, location, text, fileId }: JobResult) {
+    if (location && typeof text === 'string') {
+      await this.repo.files.createTextRecord({
+        location: location,
+        text: text,
+        fileId: fileId,
+      });
+    }
 
     if (isFinished) {
-      await this.repo.files.markTextExtracted(textRecord.fileId);
+      await this.repo.files.updateOne(fileId, { isTextExtracted: true });
     }
   }
 }

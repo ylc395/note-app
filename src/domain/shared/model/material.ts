@@ -1,30 +1,6 @@
 import dayjs from 'dayjs';
 import type { Entity, EntityId, EntityParentId } from './entity.js';
-
-/**
- * @api
- */
-export interface MaterialDTO {
-  title?: string;
-  parentId?: EntityParentId;
-  icon?: string | null;
-  fileId?: string;
-  sourceUrl?: string | null;
-  comment?: string;
-}
-
-/**
- * @api
- */
-export type MaterialPatchDTO = Omit<MaterialDTO, 'fileId'>;
-
-/**
- * @api
- */
-export interface ClientMaterialQuery {
-  parentId?: EntityParentId | string[];
-  fileHash?: string;
-}
+import type { File, FileVO } from './file.js';
 
 export interface Material {
   id: EntityId;
@@ -36,29 +12,45 @@ export interface Material {
 }
 
 export interface EntityMaterial extends Material {
+  fileId?: File['id'];
   mimeType: string;
   comment: string;
   sourceUrl: string | null;
 }
 
-export enum MaterialTypes {
-  Directory = 1,
-  Entity,
-}
+/**
+ * @api
+ */
+export type MaterialPatchDTO = Partial<Pick<EntityMaterial, 'title' | 'parentId' | 'icon' | 'sourceUrl' | 'comment'>>;
 
 /**
  * @api
  */
-export interface MaterialVO extends Material {
+export type MaterialBatchPatchDTO = Pick<MaterialPatchDTO, 'parentId' | 'icon'>;
+
+/**
+ * @api
+ */
+export type MaterialDTO = MaterialPatchDTO & {
+  fileId?: FileVO['id'];
+};
+
+/**
+ * @api
+ */
+export interface ClientMaterialQuery {
+  parentId?: EntityParentId | string[];
+  fileHash?: string;
+}
+
+interface BaseVO {
   childrenCount: number;
   isStar: boolean;
 }
 
-export interface EntityMaterialVO extends MaterialVO {
-  comment: string;
-  sourceUrl: string;
-  mimeType: string;
-}
+export type MaterialVO = BaseVO & Material;
+
+export type EntityMaterialVO = BaseVO & EntityMaterial;
 
 export function isEntityMaterial(v: Material): v is EntityMaterial;
 export function isEntityMaterial(v: MaterialVO): v is EntityMaterialVO;

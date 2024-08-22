@@ -3,34 +3,29 @@ import assert from 'node:assert';
 
 import { token as databaseToken } from '@domain/server/infra/database.js';
 import eventBus from '@domain/server/infra/eventBus.js';
-import { token as runtimeToken } from '@domain/server/infra/runtime.js';
-import type Repositories from './repository/index.js';
+import { token as repositoriesToken } from '../repository/index.js';
 
 export default abstract class BaseService {
-  protected readonly runtime = container.resolve(runtimeToken);
   private readonly db = container.resolve(databaseToken);
   protected readonly eventBus = eventBus;
+  protected repo = container.resolve(repositoriesToken);
 
-  protected repo = new Proxy({} as Repositories, {
-    get: (_, p) => {
-      return this.db.getRepository(p as keyof Repositories);
-    },
-  });
-
-  public get transaction() {
+  protected get transaction() {
     return this.db.transaction.bind(this.db);
   }
-}
 
-export function transaction(target: unknown, propertyKey: string, descriptor: PropertyDescriptor) {
-  const originalMethod = descriptor.value;
-  assert(typeof originalMethod === 'function');
+  public static transaction() {
+    return function (target: unknown, propertyKey: string, descriptor: PropertyDescriptor) {
+      const originalMethod = descriptor.value;
+      assert(typeof originalMethod === 'function');
 
-  descriptor.value = function (...args: unknown[]) {
-    assert(this instanceof BaseService);
+      descriptor.value = function (...args: unknown[]) {
+        assert(this instanceof BaseService);
 
-    return this.transaction(() => {
-      return originalMethod.apply(this, args);
-    });
-  };
+        return this.transaction(() => {
+          return originalMethod.apply(this, args);
+        });
+      };
+    };
+  }
 }

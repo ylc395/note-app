@@ -1,11 +1,32 @@
-export { default as notes } from './NoteRepository.js';
-export { default as stars } from './StarRepository.js';
-export { default as files } from './FileRepository.js';
-export { default as memos } from './MemoRepository.js';
-export { default as materials } from './MaterialRepository.js';
-export { default as annotations } from './AnnotationRepository.js';
-export { default as versions } from './VersionRepository.js';
-export { default as synchronization } from './SynchronizationRepository.js';
-export { default as links } from './LinkRepository.js';
-export { default as topics } from './TopicRepository.js';
-export { default as entities } from './EntityRepository.js';
+import notes from './NoteRepository.js';
+import stars from './StarRepository.js';
+import files from './FileRepository.js';
+import memos from './MemoRepository.js';
+import materials from './MaterialRepository.js';
+import annotations from './AnnotationRepository.js';
+import contents from './ContentRepository.js';
+import entities from './EntityRepository.js';
+
+import type SqliteDatabase from '../Database.js';
+
+const repositories = {
+  notes,
+  stars,
+  files,
+  memos,
+  materials,
+  annotations,
+  contents,
+  entities,
+};
+
+export function getRepositories(db: SqliteDatabase) {
+  return new Proxy(
+    {},
+    {
+      get: (_, p) => {
+        return new repositories[p as keyof typeof repositories](db);
+      },
+    },
+  );
+}

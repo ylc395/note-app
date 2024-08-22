@@ -1,44 +1,34 @@
-import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 import { hostname } from 'node:os';
-import { InjectionToken, container } from 'tsyringe';
+import { container } from 'tsyringe';
 
 import { APP_NAME, IS_DEV, IS_TEST } from '@domain/shared/infra/constants.js';
-import { Runtime as CommonRuntime, token as runtimeToken } from '@domain/server/infra/runtime.js';
-import { token as databaseToken, type Database } from '@domain/server/infra/database.js';
-import { token as kvDatabaseToken, type KvDatabase } from '@domain/server/infra/kvDatabase.js';
-import { token as searchEngineToken, type SearchEngine } from '@domain/server/infra/searchEngine.js';
-import { token as loggerToken } from '@domain/server/infra/logger.js';
-import { token as TextExtractorToken } from '@domain/server/service/FileService/TextExtractor.js';
+import { Runtime, token as runtimeToken } from '@domain/server/infra/runtime.js';
+import { token as databaseToken } from '@domain/server/infra/database.js';
+import { token as kvDatabaseToken } from '@domain/server/infra/kvDatabase.js';
+import { token as searchEngineToken } from '@domain/server/infra/searchEngine.js';
+import { token as repositoriesToken } from '@domain/server/repository/index.js';
+import { token as loggerToken } from '@domain/shared/infra/logger.js';
+import { token as textExtractorToken } from '@domain/server/service/FileService/TextExtractor.js';
 
 import SqliteDb from '../sqlite/Database.js';
 import SqliteKvDatabase from '../sqlite/KvDatabase.js';
 import SqliteSearchEngine from '../sqlite/SearchEngine/index.js';
 import TextExtractor from './TextExtractor/index.js';
+import { getRepositories } from '../sqlite/repository/index.js';
 
-export const token: InjectionToken<DesktopRuntime> = Symbol('desktop');
-
-export default abstract class DesktopRuntime extends CommonRuntime {
-  protected readonly kv: KvDatabase;
-  protected readonly db: Database;
-  protected readonly searchEngine: SearchEngine;
+export default abstract class DesktopRuntime extends Runtime {
   constructor() {
     super();
     container.registerInstance(loggerToken, console);
+    const db = new SqliteDb({ dir: this.getAppDir() });
 
-    const db = new SqliteDb(this.getAppDir());
-    const kv = new SqliteKvDatabase(db);
-    const searchEngine = new SqliteSearchEngine(db);
-
-    container.registerInstance(runtimeToken, this);
     container.registerInstance(databaseToken, db);
-    container.registerInstance(kvDatabaseToken, kv);
-    container.registerInstance(searchEngineToken, searchEngine);
-    container.registerSingleton(TextExtractorToken, TextExtractor);
-
-    this.db = db;
-    this.kv = kv;
-    this.searchEngine = searchEngine;
+    container.registerInstance(repositoriesToken, getRepositories(db));
+    container.registerInstance(kvDatabaseToken, new SqliteKvDatabase(db));
+    container.registerInstance(searchEngineToken, new SqliteSearchEngine(db));
+    container.registerInstance(runtimeToken, this);
+    container.registerSingleton(textExtractorToken, TextExtractor);
   }
 
   public getAppDir() {
@@ -54,16 +44,15 @@ export default abstract class DesktopRuntime extends CommonRuntime {
     );
   }
 
+  protected async componentsReady() {
+    const db = container.resolve(databaseToken);
+    const kvDb = container.resolve(kvDatabaseToken);
+    const searchEngine = container.resolve(searchEngineToken);
+
+    await Promise.all([db.ready, kvDb.ready, searchEngine.ready]);
+  }
+
   public getDeviceName() {
     return hostname();
-  }
-
-  async getAppToken() {
-    return await this.kv.get('app.http.token', randomUUID);
-  }
-
-  public async toggleHttpServer(enable: boolean) {
-    console.log(enable);
-    return null;
   }
 }

@@ -1,13 +1,17 @@
 import { type Kysely, sql } from 'kysely';
-import { compact, groupBy, omit, pick, unionBy } from 'lodash-es';
-import assert from 'assert';
+import { compact } from 'lodash-es';
+import { container } from 'tsyringe';
+import assert from 'node:assert';
 
 import type { SearchEngine } from '@domain/server/infra/searchEngine.js';
-import { SearchFields, type SearchParams, type SearchResult } from '@domain/shared/model/search.js';
+import { token as repositoriesToken } from '@domain/server/repository/index.js';
+import { SearchFields, SearchRequest, type SearchResult } from '@domain/shared/model/search.js';
 
 import type SqliteDb from '../Database.js';
 import { tableName as recyclablesTableName } from '../schema/recyclable.js';
 import { tableName as filesTableName } from '../schema/file.js';
+import { tableName as linkTableName } from '../schema/link.js';
+import { tableName as materialTableName } from '../schema/material.js';
 import {
   type SearchEngineDb,
   initialSqls,
@@ -19,6 +23,7 @@ import {
   fileTextsFTSTableName,
 } from './tables.js';
 import { type EntityId, EntityTypes } from '@domain/shared/model/entity.js';
+import { buildIndex } from '@utils/collection.js';
 
 export default class SqliteSearchEngine implements SearchEngine {
   constructor(readonly sqliteDb: SqliteDb) {
@@ -29,6 +34,8 @@ export default class SqliteSearchEngine implements SearchEngine {
   private get db() {
     return this.sqliteDb.getDb() as unknown as Kysely<SearchEngineDb>;
   }
+
+  private readonly repo = container.resolve(repositoriesToken);
 
   private async createTables() {
     await this.sqliteDb.ready;
@@ -44,15 +51,12 @@ export default class SqliteSearchEngine implements SearchEngine {
     });
   }
 
-  private async searchNotes(q: SearchParams, descantIds?: EntityId[]) {
-    return this.db
+  private async searchNotes(q: SearchRequest, ids?: EntityId[]) {
+    const rows = await this.db
       .selectFrom(notesFTSTableName)
       .leftJoin(recyclablesTableName, `${recyclablesTableName}.entityId`, `${notesFTSTableName}.id`)
       .select(({ fn, val }) => [
         `${notesFTSTableName}.id as entityId`,
-        `${notesFTSTableName}.updatedAt`,
-        `${notesFTSTableName}.createdAt`,
-        `${notesFTSTableName}.icon`,
         'rank',
         fn<string>('highlight', [
           sql.raw(notesFTSTableName),
@@ -73,7 +77,7 @@ export default class SqliteSearchEngine implements SearchEngine {
 
         const fieldsStatements = compact([
           q.fields?.includes(SearchFields.Title) && titleCondition,
-          q.fields?.includes(SearchFields.Content) && contentCondition,
+          q.fields?.includes(SearchFields.Body) && contentCondition,
         ]);
 
         return fieldsStatements.length === 0 ? eb(notesFTSTableName, 'match', q.keyword) : eb.or(fieldsStatements);
@@ -81,30 +85,35 @@ export default class SqliteSearchEngine implements SearchEngine {
       .where((eb) => {
         return eb.and(
           compact([
-            !q.recyclables && eb(`${recyclablesTableName}.entityId`, 'is', null),
-            descantIds && descantIds.length > 0 && eb(`${notesFTSTableName}.id`, 'in', descantIds),
-            q.updated?.after && eb(`${notesFTSTableName}.updatedAt`, '>=', q.updated.after),
-            q.updated?.before && eb(`${notesFTSTableName}.updatedAt`, '<', q.updated.before),
-            q.created?.before && eb(`${notesFTSTableName}.createdAt`, '>=', q.created.before),
-            q.created?.before && eb(`${notesFTSTableName}.createdAt`, '<', q.created.before),
+            !q.includingRecyclables && eb(`${recyclablesTableName}.entityId`, 'is', null),
+            ids && ids.length > 0 && eb(`${notesFTSTableName}.id`, 'in', ids),
           ]),
         );
       })
       .execute();
+
+    const searchResult: SearchResult[] = rows.map((row) => ({
+      entityId: row.entityId,
+      rank: row.rank,
+      entityType: EntityTypes.Note as const,
+      matches: {
+        [SearchFields.Title]: SqliteSearchEngine.parseSearchResult(row.titleResult),
+        [SearchFields.Body]: SqliteSearchEngine.parseSearchResult(row.contentResult),
+      },
+    }));
+
+    return searchResult;
   }
 
-  private searchMaterials(q: SearchParams, descantIds?: EntityId[]) {
-    return this.db
+  private async searchMaterials(q: SearchRequest, ids?: EntityId[]) {
+    const rows = await this.db
       .selectFrom(materialsFTSTableName)
       .innerJoin(filesTableName, `${materialsFTSTableName}.fileId`, `${filesTableName}.id`)
       .leftJoin(recyclablesTableName, `${recyclablesTableName}.entityId`, `${materialsFTSTableName}.id`)
       .select(({ fn, val }) => [
         `${materialsFTSTableName}.id as entityId`,
-        `${materialsFTSTableName}.updatedAt`,
-        `${materialsFTSTableName}.createdAt`,
-        `${materialsFTSTableName}.icon`,
-        'mimeType',
         `${materialsFTSTableName}.rank as rank`,
+        `${filesTableName}.id as fileId`,
         fn<string>('highlight', [
           sql.raw(materialsFTSTableName),
           val(1),
@@ -121,7 +130,7 @@ export default class SqliteSearchEngine implements SearchEngine {
       .where((eb) => {
         const fieldsStatements = compact([
           q.fields?.includes(SearchFields.Title) && eb(materialsFTSTableName, 'match', `title : ${q.keyword}`),
-          q.fields?.includes(SearchFields.Content) && eb(materialsFTSTableName, 'match', `comment : ${q.keyword}`),
+          q.fields?.includes(SearchFields.Body) && eb(materialsFTSTableName, 'match', `comment : ${q.keyword}`),
         ]);
 
         return fieldsStatements.length === 0 ? eb(materialsFTSTableName, 'match', q.keyword) : eb.or(fieldsStatements);
@@ -129,64 +138,32 @@ export default class SqliteSearchEngine implements SearchEngine {
       .where((eb) => {
         return eb.and(
           compact([
-            !q.recyclables && eb(`${recyclablesTableName}.entityId`, 'is', null),
-            descantIds && descantIds.length > 0 && eb(`${materialsFTSTableName}.id`, 'in', descantIds),
-            q.updated?.after && eb(`${materialsFTSTableName}.updatedAt`, '>=', q.updated.after),
-            q.updated?.before && eb(`${materialsFTSTableName}.updatedAt`, '<', q.updated.before),
-            q.created?.before && eb(`${materialsFTSTableName}.createdAt`, '>=', q.created.before),
-            q.created?.before && eb(`${materialsFTSTableName}.createdAt`, '<', q.created.before),
+            !q.includingRecyclables && eb(`${recyclablesTableName}.entityId`, 'is', null),
+            ids && ids.length > 0 && eb(`${materialsFTSTableName}.id`, 'in', ids),
           ]),
         );
       })
       .execute();
+
+    const searchResult: SearchResult[] = rows.map((row) => ({
+      entityId: row.entityId,
+      rank: row.rank,
+      entityType: EntityTypes.Memo as const,
+      matches: {
+        [SearchFields.Title]: SqliteSearchEngine.parseSearchResult(row.titleResult),
+        [SearchFields.Body]: SqliteSearchEngine.parseSearchResult(row.contentResult),
+      },
+    }));
+
+    return searchResult;
   }
 
-  private searchMaterialFiles(q: SearchParams, descantIds?: EntityId[]) {
-    return this.db
-      .selectFrom(fileTextsFTSTableName)
-      .innerJoin(filesTableName, `${fileTextsFTSTableName}.fileId`, `${filesTableName}.id`)
-      .innerJoin(materialsFTSTableName, `${materialsFTSTableName}.fileId`, `${filesTableName}.id`)
-      .leftJoin(recyclablesTableName, `${recyclablesTableName}.entityId`, `${materialsFTSTableName}.id`)
-      .select(({ fn, val }) => [
-        `${materialsFTSTableName}.id as entityId`,
-        `${materialsFTSTableName}.updatedAt`,
-        `${materialsFTSTableName}.createdAt`,
-        `${materialsFTSTableName}.icon`,
-        'mimeType',
-        `${fileTextsFTSTableName}.rank`,
-        sql.val('').as('titleResult'),
-        fn<string>('highlight', [
-          sql.raw(fileTextsFTSTableName),
-          val(1),
-          val(WRAPPER_START_TEXT),
-          val(WRAPPER_END_TEXT),
-        ]).as('contentResult'),
-      ])
-      .where(fileTextsFTSTableName, 'match', q.keyword)
-      .where((eb) => {
-        return eb.and(
-          compact([
-            !q.recyclables && eb(`${recyclablesTableName}.entityId`, 'is', null),
-            descantIds && descantIds.length > 0 && eb(`${materialsFTSTableName}.id`, 'in', descantIds),
-            q.updated?.after && eb(`${materialsFTSTableName}.updatedAt`, '>=', q.updated.after),
-            q.updated?.before && eb(`${materialsFTSTableName}.updatedAt`, '<', q.updated.before),
-            q.created?.before && eb(`${materialsFTSTableName}.createdAt`, '>=', q.created.before),
-            q.created?.before && eb(`${materialsFTSTableName}.createdAt`, '<', q.created.before),
-          ]),
-        );
-      })
-      .execute();
-  }
-
-  private searchMemos(q: SearchParams, descantIds?: EntityId[]) {
-    return this.db
+  private async searchMemos(q: SearchRequest, ids?: EntityId[]) {
+    const rows = await this.db
       .selectFrom(memosFTSTableName)
       .leftJoin(recyclablesTableName, `${recyclablesTableName}.entityId`, `${memosFTSTableName}.id`)
       .select(({ fn, val }) => [
         `${memosFTSTableName}.id as entityId`,
-        `${memosFTSTableName}.updatedAt`,
-        `${memosFTSTableName}.createdAt`,
-        sql.val(null).as('icon'),
         sql.val('').as('titleResult'),
         'rank',
         fn<string>('highlight', [
@@ -200,82 +177,131 @@ export default class SqliteSearchEngine implements SearchEngine {
       .where((eb) => {
         return eb.and(
           compact([
-            !q.recyclables && eb(`${recyclablesTableName}.entityId`, 'is', null),
-            descantIds && descantIds.length > 0 && eb(`${memosFTSTableName}.id`, 'in', descantIds),
-            q.updated?.after && eb(`${memosFTSTableName}.updatedAt`, '>=', q.updated.after),
-            q.updated?.before && eb(`${memosFTSTableName}.updatedAt`, '<', q.updated.before),
-            q.created?.before && eb(`${memosFTSTableName}.createdAt`, '>=', q.created.before),
-            q.created?.before && eb(`${memosFTSTableName}.createdAt`, '<', q.created.before),
+            !q.includingRecyclables && eb(`${recyclablesTableName}.entityId`, 'is', null),
+            ids && ids.length > 0 && eb(`${memosFTSTableName}.id`, 'in', ids),
           ]),
         );
       })
       .execute();
+
+    const searchResult: SearchResult[] = rows.map((row) => ({
+      entityId: row.entityId,
+      rank: row.rank,
+      entityType: EntityTypes.Memo as const,
+      matches: {
+        [SearchFields.Body]: SqliteSearchEngine.parseSearchResult(row.contentResult),
+      },
+    }));
+
+    return searchResult;
   }
 
-  public async search(q: SearchParams): Promise<SearchResult[]> {
-    const types = q.types || [EntityTypes.Note, EntityTypes.Memo, EntityTypes.Material];
-    const descantIds = q.root
-      ? (await this.sqliteDb.getRepository('entities').findDescendantIds([q.root]))[q.root]
-      : [];
+  private async searchFileText(q: SearchRequest, entityIds?: EntityId[]) {
+    return this.db
+      .selectFrom(fileTextsFTSTableName)
+      .innerJoin(filesTableName, `${fileTextsFTSTableName}.fileId`, `${filesTableName}.id`)
+      .leftJoin(materialTableName, `${materialTableName}.fileId`, `${filesTableName}.id`)
+      .leftJoin(linkTableName, `${linkTableName}.targetId`, `${filesTableName}.id`)
+      .leftJoin(recyclablesTableName, (join) =>
+        join.on((eb) =>
+          eb.or([
+            eb(`${linkTableName}.sourceId`, '=', `${recyclablesTableName}.entityId`),
+            eb(`${materialTableName}.id`, '=', `${recyclablesTableName}.entityId`),
+          ]),
+        ),
+      )
+      .where((eb) => {
+        return eb.and(
+          compact([
+            eb(fileTextsFTSTableName, 'match', q.keyword),
+            !q.includingRecyclables && eb(`${recyclablesTableName}.entityId`, 'is', null),
+            entityIds &&
+              entityIds.length > 0 &&
+              eb.or([eb(`${materialTableName}.id`, 'in', entityIds), eb(`${linkTableName}.sourceId`, 'in', entityIds)]),
+          ]),
+        );
+      })
+      .select(({ fn, val }) => [
+        `${materialTableName}.id as materialId`,
+        `${linkTableName}.sourceId as entityId`,
+        `${fileTextsFTSTableName}.rank`,
+        `${filesTableName}.mimeType`,
+        fn<string>('highlight', [
+          sql.raw(fileTextsFTSTableName),
+          val(1),
+          val(WRAPPER_START_TEXT),
+          val(WRAPPER_END_TEXT),
+        ]).as('contentResult'),
+      ])
+      .execute();
+  }
 
-    const results: (SearchResult & { rank: number })[] = [];
+  public async search(q: SearchRequest): Promise<SearchResult[]> {
+    const types = q.entityTypes || [EntityTypes.Note, EntityTypes.Memo, EntityTypes.Material];
+    const descantIds = q.rootId ? await this.repo.entities.findDescendantIds(q.rootId) : [];
+    let results: SearchResult[] = [];
 
     if (types.includes(EntityTypes.Note)) {
-      const rows = await this.searchNotes(q, descantIds);
-      const searchResult = rows.map((row) => ({
-        ...pick(row, ['icon', 'entityId', 'createdAt', 'updatedAt', 'rank']),
-        entityType: EntityTypes.Note as const,
-        matches: {
-          [SearchFields.Title]: SqliteSearchEngine.parseSearchResult(row.titleResult),
-          [SearchFields.Content]: SqliteSearchEngine.parseSearchResult(row.contentResult),
-        },
-      }));
-
-      results.push(...searchResult);
+      results.push(...(await this.searchNotes(q, descantIds)));
     }
 
     if (types.includes(EntityTypes.Memo)) {
-      const rows = await this.searchMemos(q, descantIds);
-      const searchResult = rows.map((row) => ({
-        ...pick(row, ['icon', 'entityId', 'createdAt', 'updatedAt', 'rank']),
-        entityType: EntityTypes.Memo as const,
-        matches: {
-          [SearchFields.Content]: SqliteSearchEngine.parseSearchResult(row.contentResult),
-        },
-      }));
-
-      results.push(...searchResult);
+      results.push(...(await this.searchMemos(q, descantIds)));
     }
 
     if (types.includes(EntityTypes.Material)) {
-      const [materialRows, fileTextRows] = await Promise.all([
-        this.searchMaterials(q, descantIds),
-        this.searchMaterialFiles(q, descantIds).then((rows) => rows.map((row) => ({ ...row, isFileContent: true }))),
-      ]);
-
-      const fileTextsMap = groupBy(fileTextRows, 'entityId');
-      const searchResult = unionBy(materialRows, fileTextRows, 'entityId').map((row) => ({
-        ...pick(row, ['icon', 'entityId', 'createdAt', 'updatedAt', 'mimeType', 'rank']),
-        entityType: EntityTypes.Material as const,
-        matches: {
-          [SearchFields.Title]: SqliteSearchEngine.parseSearchResult(row.titleResult),
-          [SearchFields.Content]:
-            'isFileContent' in row ? undefined : SqliteSearchEngine.parseSearchResult(row.contentResult),
-          [SearchFields.MaterialFile]: fileTextsMap[row.entityId]?.map((row) => {
-            const result = SqliteSearchEngine.parseSearchResult(row.contentResult);
-            assert(result);
-
-            return result;
-          }),
-        },
-      }));
-
-      results.push(...searchResult);
+      results.push(...(await this.searchMaterials(q, descantIds)));
     }
 
-    results.sort((result1, result2) => result1.rank - result2.rank);
+    const entityIds = results.map(({ entityId }) => entityId);
+    let fileTextResult;
 
-    return results.map((result) => omit(result, ['rank']));
+    if (!q.fields || q.fields.includes(SearchFields.File)) {
+      fileTextResult = await this.searchFileText(q, descantIds);
+
+      const fileEntityIds = fileTextResult.map(({ entityId, materialId }) => {
+        const id = entityId || materialId;
+        assert(id, 'no entityId or materialId');
+        return id;
+      });
+
+      entityIds.push(...fileEntityIds);
+    }
+
+    if (fileTextResult) {
+      const resultMap = buildIndex(results, 'entityId');
+
+      for (const { materialId, entityId, contentResult, rank, mimeType } of fileTextResult) {
+        const result = (materialId && resultMap[materialId]) || (entityId && resultMap[entityId]);
+        const id = materialId || entityId;
+        const parsed = SqliteSearchEngine.parseSearchResult(contentResult);
+
+        if (!parsed) {
+          continue;
+        }
+
+        if (result) {
+          if (!result.matches[SearchFields.File]) {
+            result.matches[SearchFields.File] = [];
+          }
+
+          result.matches[SearchFields.File].push(parsed);
+        } else if (id) {
+          resultMap[id] = {
+            entityId: id,
+            mimeType,
+            rank,
+            matches: {
+              [SearchFields.File]: [parsed],
+            },
+          };
+        }
+      }
+
+      results = Object.values(resultMap);
+    }
+
+    return results;
   }
 
   private static parseSearchResult(str: string) {
