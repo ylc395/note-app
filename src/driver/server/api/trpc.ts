@@ -1,5 +1,6 @@
 import { initTRPC } from '@trpc/server';
 import { container } from 'tsyringe';
+import { memoize } from 'lodash-es';
 
 import NoteService from '@domain/server/service/NoteService.js';
 import MaterialService from '@domain/server/service/MaterialService.js';
@@ -10,21 +11,23 @@ import AnnotationService from '@domain/server/service/AnnotationService.js';
 import EntityService from '@domain/server/service/EntityService.js';
 import ContentService from '@domain/server/service/ContentService.js';
 import SearchService from '@domain/server/service/SearchService.js';
+import RecyclableService from '@domain/server/service/RecyclableService';
 
 const t = initTRPC.context().create();
+const initServices = memoize(() => ({
+  fileService: container.resolve(FileService),
+  entityService: container.resolve(EntityService),
+  noteService: container.resolve(NoteService),
+  memoService: container.resolve(MemoService),
+  annotationService: container.resolve(AnnotationService),
+  materialService: container.resolve(MaterialService),
+  starService: container.resolve(StarService),
+  contentService: container.resolve(ContentService),
+  searchService: container.resolve(SearchService),
+  recyclableService: container.resolve(RecyclableService),
+}));
+
 export const router = t.router;
 export const publicProcedure = t.procedure.use(({ next }) => {
-  return next({
-    ctx: {
-      fileService: container.resolve(FileService),
-      entityService: container.resolve(EntityService),
-      noteService: container.resolve(NoteService),
-      memoService: container.resolve(MemoService),
-      annotationService: container.resolve(AnnotationService),
-      materialService: container.resolve(MaterialService),
-      starService: container.resolve(StarService),
-      contentService: container.resolve(ContentService),
-      searchService: container.resolve(SearchService),
-    },
-  });
+  return next({ ctx: initServices() });
 });

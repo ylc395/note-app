@@ -8,6 +8,7 @@ import memoRouter from './MemosController.js';
 import starRouter from './StarController.js';
 import contentRouter from './ContentController.js';
 import searchRouter from './SearchController.js';
+import recyclableRouter from './RecyclablesController.js';
 
 export const routers = router({
   note: noteRouter,
@@ -18,6 +19,7 @@ export const routers = router({
   star: starRouter,
   content: contentRouter,
   search: searchRouter,
+  recyclable: recyclableRouter,
 });
 
 export type Routes = typeof routers;
