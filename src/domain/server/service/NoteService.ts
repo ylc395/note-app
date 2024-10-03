@@ -1,6 +1,6 @@
-import { singleton } from 'tsyringe';
+import { container, singleton } from 'tsyringe';
 import assert from 'node:assert';
-import { first, pick, uniq } from 'lodash-es';
+import { first, omit, pick, uniq } from 'lodash-es';
 import {
   type NoteVO,
   type NoteDTO,
@@ -10,15 +10,17 @@ import {
   normalizeTitle,
   NoteBatchPatchDTO,
 } from '@domain/server/model/note.js';
-import { EntityTypes } from '@domain/shared/model/entity.js';
-import { EventNames } from '@domain/server/model/content.js';
+import { EntityTypes, EventNames as EntityEventNames } from '@domain/server/model/entity.js';
 import { arrayOf, buildIndex } from '@utils/collection.js';
 
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
+import EventService from './EventService.js';
 
 @singleton()
 export default class NoteService extends BaseService {
+  private readonly event = container.resolve(EventService);
+
   @BaseService.transaction()
   public async create(note: NoteDTO, fromNoteId?: Note['id']) {
     let newNote: Required<Note>;
@@ -31,8 +33,7 @@ export default class NoteService extends BaseService {
       }
 
       const now = Date.now();
-
-      newNote = await this.repo.notes.create({
+      newNote = {
         title: note.title || '',
         parentId: note.parentId || null,
         body: note.body || '',
@@ -40,18 +41,19 @@ export default class NoteService extends BaseService {
         id: EntityService.generateId(),
         updatedAt: now,
         createdAt: now,
-      });
+      };
+
+      await this.repo.notes.create(newNote);
     }
 
-    if (newNote.body || newNote.title) {
-      this.eventBus.emit(EventNames.ContentUpdated, {
-        body: newNote.body,
-        title: newNote.title,
+    await this.event.create({
+      type: EntityEventNames.Created,
+      payload: newNote,
+      entityLocator: {
         entityId: newNote.id,
         entityType: EntityTypes.Note,
-        updatedAt: newNote.updatedAt,
-      });
-    }
+      },
+    });
 
     return await this.toVO(newNote, true);
   }
@@ -61,14 +63,15 @@ export default class NoteService extends BaseService {
     assert(targetNote);
 
     const now = Date.now();
-    const newNote = await this.repo.notes.create({
+    const newNote = {
       ...pick(targetNote, ['body', 'icon', 'parentId']),
       title: `${normalizeTitle(targetNote)}-副本`,
       id: EntityService.generateId(),
       updatedAt: now,
       createdAt: now,
-    });
+    };
 
+    await this.repo.notes.create(newNote);
     return newNote;
   }
 
@@ -80,23 +83,24 @@ export default class NoteService extends BaseService {
       await this.assertValidParent(notePatch.parentId, [noteId]);
     }
 
-    const now = Date.now();
     const hasContentUpdated = typeof notePatch.title === 'string' || typeof notePatch.body === 'string';
-
-    await this.repo.notes.update(noteId, {
+    const patch = {
       ...notePatch,
-      updatedAt: hasContentUpdated ? now : undefined,
-    });
+      updatedAt: hasContentUpdated ? Date.now() : undefined,
+    };
 
-    if (hasContentUpdated) {
-      this.eventBus.emit(EventNames.ContentUpdated, {
-        body: notePatch.body,
-        title: notePatch.title,
-        entityType: EntityTypes.Note,
-        entityId: noteId,
-        updatedAt: now,
-      });
-    }
+    await this.repo.notes.update(noteId, patch);
+    await this.event.create(
+      {
+        type: EntityEventNames.Updated,
+        payload: patch,
+        entityLocator: {
+          entityId: noteId,
+          entityType: EntityTypes.Note,
+        },
+      },
+      (p) => omit(p, ['title', 'body']),
+    );
   }
 
   private async toVO(notes: Note, isNew?: boolean): Promise<Required<NoteVO>>;
@@ -126,6 +130,17 @@ export default class NoteService extends BaseService {
 
     const result = await this.repo.notes.update(ids, patch);
     assert(result);
+
+    await this.event.create(
+      ids.map((id) => ({
+        type: EntityEventNames.Updated,
+        payload: patch,
+        entityLocator: {
+          entityId: id,
+          entityType: EntityTypes.Note,
+        },
+      })),
+    );
   }
 
   private async assertAvailableIds(ids: Note['id'][]) {

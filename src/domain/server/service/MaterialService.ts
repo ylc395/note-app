@@ -1,6 +1,6 @@
-import { uniq, pick, first } from 'lodash-es';
+import { uniq, pick, first, omit } from 'lodash-es';
 import assert from 'assert';
-import { singleton } from 'tsyringe';
+import { container, singleton } from 'tsyringe';
 
 import {
   type MaterialDTO,
@@ -12,14 +12,17 @@ import {
   isEntityMaterial,
 } from '@domain/shared/model/material.js';
 import { EntityTypes } from '@domain/shared/model/entity.js';
-import { EventNames } from '@domain/server/model/content.js';
 import { buildIndex } from '@utils/collection.js';
 
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
+import EventService from './EventService.js';
+import { EventNames } from '../model/entity.js';
 
 @singleton()
 export default class MaterialService extends BaseService {
+  private readonly event = container.resolve(EventService);
+
   @BaseService.transaction()
   public async create(newMaterial: MaterialDTO) {
     if (newMaterial.parentId) {
@@ -42,15 +45,17 @@ export default class MaterialService extends BaseService {
       createdAt: now,
     });
 
-    if (material.title || (isEntityMaterial(material) && material.comment)) {
-      this.eventBus.emit(EventNames.ContentUpdated, {
-        body: isEntityMaterial(material) ? material.comment : undefined,
-        title: material.title,
-        entityId: material.id,
-        entityType: EntityTypes.Material,
-        updatedAt: material.updatedAt,
-      });
-    }
+    await this.event.create(
+      {
+        type: EventNames.Created,
+        payload: material,
+        entityLocator: {
+          entityId: material.id,
+          entityType: EntityTypes.Material,
+        },
+      },
+      (e) => omit(e, ['title', 'comment']),
+    );
 
     return this.toVO(material, true);
   }
@@ -101,6 +106,16 @@ export default class MaterialService extends BaseService {
     }
 
     await this.repo.materials.update(ids, patch);
+    await this.event.create(
+      ids.map((id) => ({
+        type: EventNames.Updated,
+        payload: patch,
+        entityLocator: {
+          entityId: id,
+          entityType: EntityTypes.Material,
+        },
+      })),
+    );
   }
 
   @BaseService.transaction()
@@ -108,23 +123,22 @@ export default class MaterialService extends BaseService {
     const isEntityPatch = typeof patch.comment === 'string' || typeof patch.sourceUrl === 'string';
     await this.assertAvailableIds([materialId], { type: isEntityPatch ? 'entity' : 'directory' });
 
-    const now = Date.now();
     const hasContentUpdated = typeof patch.comment === 'string' || typeof patch.title === 'string';
-
-    await this.repo.materials.update(materialId, {
+    const material = {
       ...patch,
-      updatedAt: hasContentUpdated ? now : undefined,
-    });
+      updatedAt: hasContentUpdated ? Date.now() : undefined,
+    };
 
-    if (hasContentUpdated) {
-      this.eventBus.emit(EventNames.ContentUpdated, {
-        body: patch.comment,
-        title: patch.title,
+    await this.event.create({
+      type: EventNames.Updated,
+      entityLocator: {
         entityId: materialId,
         entityType: EntityTypes.Material,
-        updatedAt: now,
-      });
-    }
+      },
+      payload: material,
+    });
+
+    await this.repo.materials.update(materialId, material);
   }
 
   private async assertValidParent(parentId: Material['id'], childrenIds: Material['id'][]) {

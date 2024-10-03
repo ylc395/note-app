@@ -1,4 +1,4 @@
-import type { Entity, EntityParentId } from '@domain/shared/model/entity.js';
+import type { Entity, EntityParentId } from './entity.js';
 import type { MemoPatchDTO, Duration, ClientMemoQuery, Memo } from '@domain/shared/model/memo.js';
 
 export * from '@domain/shared/model/memo.js';

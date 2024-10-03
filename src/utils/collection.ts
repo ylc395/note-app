@@ -16,6 +16,8 @@ export function buildIndex<T>(list: T[], key?: keyof T) {
   return index;
 }
 
-export function arrayOf<T>(value: T | T[]) {
+export type MaybeArray<T> = T | T[];
+
+export function arrayOf<T>(value: MaybeArray<T>) {
   return Array.isArray(value) ? value : [value];
 }

@@ -4,9 +4,9 @@ import buildElectron from './build-electron.js';
 
 await buildPreload();
 
-const viteServer = await createViteServer();
+// const viteServer = await createViteServer();
 const electronProcess = await buildElectron({ compile: true, bootstrap: true });
 
-if (!electronProcess) {
-  await viteServer.close();
-}
+// if (!electronProcess) {
+//   await viteServer.close();
+// }

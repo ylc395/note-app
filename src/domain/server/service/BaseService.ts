@@ -2,13 +2,13 @@ import { container } from 'tsyringe';
 import assert from 'node:assert';
 
 import { token as databaseToken } from '@domain/server/infra/database.js';
-import eventBus from '@domain/server/infra/eventBus.js';
 import { token as repositoriesToken } from '../repository/index.js';
+import { token as runtimeToken } from '../infra/runtime.js';
 
 export default abstract class BaseService {
   private readonly db = container.resolve(databaseToken);
-  protected readonly eventBus = eventBus;
   protected repo = container.resolve(repositoriesToken);
+  protected runtime = container.resolve(runtimeToken);
 
   protected get transaction() {
     return this.db.transaction.bind(this.db);

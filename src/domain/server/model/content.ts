@@ -1,21 +1,7 @@
-import type { EntityId, EntityLocator } from '@domain/shared/model/entity.js';
+import type { EntityId } from '@domain/shared/model/entity.js';
 import type { FragmentSelector } from './annotation.js';
 
 export * from '@domain/shared/model/content.js';
-
-export enum EventNames {
-  ContentUpdated = 'content.updated',
-}
-
-export interface ContentUpdatedEvent extends EntityLocator {
-  body?: string;
-  title?: string;
-  updatedAt: number;
-}
-
-export type EventMaps = {
-  [EventNames.ContentUpdated]: ContentUpdatedEvent;
-};
 
 export interface TopicRecord {
   entityId: EntityId;
@@ -38,4 +24,26 @@ export interface LinkRecord {
   targetId: string;
   targetType: LinkTargetType;
   targetSelector?: FragmentSelector | null; // 从 URL 的 hash 部分解析而来。很可能随着目标的内容的变化而失效
+}
+
+export function getTitle(v: unknown) {
+  if (typeof v === 'object' && v && 'title' in v && typeof v.title === 'string') {
+    return v.title;
+  }
+
+  return null;
+}
+
+export function getBody(v: unknown) {
+  if (typeof v === 'object' && v) {
+    if ('body' in v && typeof v.body === 'string') {
+      return v.body;
+    }
+
+    if ('comment' in v && typeof v.comment === 'string') {
+      return v.comment;
+    }
+  }
+
+  return null;
 }

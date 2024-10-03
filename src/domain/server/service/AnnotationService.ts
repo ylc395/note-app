@@ -3,15 +3,17 @@ import { container, singleton } from 'tsyringe';
 
 import type { Annotation, AnnotationDTO, AnnotationPatchDTO } from '@domain/shared/model/annotation.js';
 import { EntityTypes, type EntityId } from '@domain/shared/model/entity.js';
-import { EventNames } from '@domain/server/model/content.js';
 
 import BaseService from './BaseService.js';
 import MaterialService from './MaterialService.js';
 import EntityService from './EntityService.js';
+import EventService from './EventService.js';
+import { EventNames } from '../model/entity.js';
 
 @singleton()
 export default class AnnotationService extends BaseService {
   private readonly materialService = container.resolve(MaterialService);
+  private readonly event = container.resolve(EventService);
 
   @BaseService.transaction()
   public async create(annotation: AnnotationDTO) {
@@ -30,14 +32,14 @@ export default class AnnotationService extends BaseService {
       updatedAt: now,
     });
 
-    if (created.body) {
-      this.eventBus.emit(EventNames.ContentUpdated, {
-        body: created.body,
+    await this.event.create({
+      type: EventNames.Created,
+      entityLocator: {
         entityId: created.id,
         entityType: EntityTypes.Annotation,
-        updatedAt: created.updatedAt,
-      });
-    }
+      },
+      payload: created,
+    });
 
     return created;
   }
@@ -50,18 +52,21 @@ export default class AnnotationService extends BaseService {
 
   @BaseService.transaction()
   public async updateOne(annotationId: Annotation['id'], patch: AnnotationPatchDTO) {
-    const now = Date.now();
-    const updated = await this.repo.annotations.update(annotationId, { ...patch, updatedAt: now });
+    const annotation = {
+      ...patch,
+      updatedAt: Date.now(),
+    };
+    const updated = await this.repo.annotations.update(annotationId, annotation);
 
     assert(updated, 'invalid id');
 
-    if (typeof patch.body === 'string') {
-      this.eventBus.emit(EventNames.ContentUpdated, {
-        body: patch.body,
+    await this.event.create({
+      type: EventNames.Updated,
+      entityLocator: {
         entityId: annotationId,
         entityType: EntityTypes.Annotation,
-        updatedAt: now,
-      });
-    }
+      },
+      payload: annotation,
+    });
   }
 }

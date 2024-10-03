@@ -14,37 +14,41 @@ import {
   type Topic as TopicNode,
 } from '@domain/shared/infra/markdown/syntax/topic.js';
 import {
-  EventNames,
   LinkTargetType,
-  type ContentUpdatedEvent,
   type TopicRecord,
   type LinkRecord,
   type TopicVO,
   type Snippet,
   type LinkVO,
   type ExternalLinkVO,
-} from '@domain/server/model/content.js';
-import type { EntityId } from '@domain/shared/model/entity.js';
-
+  getBody,
+} from '../model/content.js';
+import { EventNames, type EntityId } from '../model/entity.js';
+import { Event } from '../model/event.js';
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
+import EventService from './EventService.js';
 
 @singleton()
 export default class ContentService extends BaseService {
+  private readonly event = container.resolve(EventService);
   constructor() {
     super();
-    this.eventBus.on(EventNames.ContentUpdated, this.extract.bind(this));
+    this.event.on(EventNames.Created, this.extract.bind(this));
+    this.event.on(EventNames.Updated, this.extract.bind(this));
   }
 
   private readonly entityService = container.resolve(EntityService);
 
-  private async extract(entity: ContentUpdatedEvent) {
-    if (typeof entity.body === 'undefined') {
+  private async extract(event: Required<Event>) {
+    const body = getBody(event.payload);
+
+    if (typeof body !== 'string') {
       return;
     }
 
-    const mdAst = ContentService.parseMarkdown(entity.body);
-    const tasks = [this.extractLinksAndMedias, this.extractTopics].map((cb) => cb.call(this, entity));
+    const mdAst = ContentService.parseMarkdown(body);
+    const tasks = [this.extractLinksAndMedias, this.extractTopics].map((cb) => cb.call(this, event));
 
     visit(mdAst, (node) => tasks.forEach(({ visit }) => visit(node)));
 
@@ -53,8 +57,11 @@ export default class ContentService extends BaseService {
     }
   }
 
-  private extractTopics({ entityId, updatedAt }: ContentUpdatedEvent) {
+  private extractTopics({ entityLocator, time }: Required<Event>) {
     const topics: Array<Pick<TopicRecord, 'name' | 'locationStart' | 'locationEnd'>> = [];
+    const entityId = entityLocator?.entityId;
+
+    assert(entityId);
 
     return {
       visit: (node: UnistNode) => {
@@ -77,7 +84,7 @@ export default class ContentService extends BaseService {
         const topicsToCreate = topics.map((topic) => ({
           ...topic,
           entityId,
-          createdAt: updatedAt,
+          createdAt: time,
         }));
 
         return this.transaction(async () => {
@@ -88,8 +95,11 @@ export default class ContentService extends BaseService {
     };
   }
 
-  private extractLinksAndMedias(entity: ContentUpdatedEvent) {
+  private extractLinksAndMedias({ entityLocator }: Required<Event>) {
     const links: LinkRecord[] = [];
+    const entityId = entityLocator?.entityId;
+
+    assert(entityId);
 
     return {
       visit: (node: UnistNode) => {
@@ -116,7 +126,7 @@ export default class ContentService extends BaseService {
           : LinkTargetType.External;
 
         links.push({
-          sourceId: entity.entityId,
+          sourceId: entityId,
           sourceLocationStart,
           sourceLocationEnd,
           targetId: appUrl?.id ?? url, // we don't check whether id/url is valid when writing. Do it when reading
@@ -128,7 +138,7 @@ export default class ContentService extends BaseService {
         const newLinks = uniqBy(links, (link) => `${link.targetId}-${link.targetSelector}`);
 
         return this.transaction(async () => {
-          await this.repo.contents.removeLinksOf(entity.entityId, 'source');
+          await this.repo.contents.removeLinksOf(entityId, 'source');
           await this.repo.contents.createLinks(newLinks);
         });
       },

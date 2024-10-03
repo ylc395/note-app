@@ -8,6 +8,7 @@ import type { ContentRepository } from './ContentRepository.js';
 import type { EntityRepository } from './EntityRepository.js';
 import type { AnnotationRepository } from './AnnotationRepository.js';
 import type { RecyclablesRepository } from './RecyclableRepository.js';
+import type { EventRepository } from './EventRepository.js';
 
 interface Repositories {
   notes: NoteRepository;
@@ -19,6 +20,7 @@ interface Repositories {
   entities: EntityRepository;
   contents: ContentRepository;
   recyclables: RecyclablesRepository;
+  events: EventRepository;
 }
 
 export const token: InjectionToken<Repositories> = Symbol('Repositories');

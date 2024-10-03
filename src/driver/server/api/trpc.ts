@@ -11,7 +11,7 @@ import AnnotationService from '@domain/server/service/AnnotationService.js';
 import EntityService from '@domain/server/service/EntityService.js';
 import ContentService from '@domain/server/service/ContentService.js';
 import SearchService from '@domain/server/service/SearchService.js';
-import RecyclableService from '@domain/server/service/RecyclableService';
+import RecyclableService from '@domain/server/service/RecyclableService.js';
 
 const t = initTRPC.context().create();
 const initServices = memoize(() => ({

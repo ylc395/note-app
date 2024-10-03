@@ -1,6 +1,6 @@
-import { groupBy, mapValues, size } from 'lodash-es';
+import { groupBy, mapValues, omit, size } from 'lodash-es';
 import assert from 'assert';
-import { singleton } from 'tsyringe';
+import { container, singleton } from 'tsyringe';
 import dayjs from 'dayjs';
 
 import { arrayOf, buildIndex } from '@utils/collection.js';
@@ -13,14 +13,16 @@ import {
   type Duration,
   isDuration,
 } from '@domain/server/model/memo.js';
-import { EntityTypes } from '@domain/shared/model/entity.js';
-import { EventNames } from '@domain/server/model/content.js';
+import { EntityTypes, EventNames as EntityEventNames } from '@domain/server/model/entity.js';
 
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
+import EventService from './EventService.js';
 
 @singleton()
 export default class MemoService extends BaseService {
+  private readonly event = container.resolve(EventService);
+
   @BaseService.transaction()
   public async create(memo: MemoDTO) {
     if (memo.parentId) {
@@ -35,7 +37,7 @@ export default class MemoService extends BaseService {
     const now = Date.now();
 
     const latest = await this.repo.memos.findLatest();
-    const newMemo = await this.repo.memos.create({
+    const newMemo = {
       id: EntityService.generateId(),
       updatedAt: now,
       createdAt: now,
@@ -43,7 +45,17 @@ export default class MemoService extends BaseService {
       parentId: memo.parentId || null,
       isPinned: memo.isPinned || false,
       body: memo.body,
-    });
+    };
+
+    await this.repo.memos.create(newMemo);
+    await this.event.create(
+      {
+        type: EntityEventNames.Created,
+        payload: newMemo,
+        entityLocator: { entityId: newMemo.id, entityType: EntityTypes.Memo },
+      },
+      (e) => omit(e, ['body']),
+    );
 
     return this.toVO(newMemo, true);
   }
@@ -59,19 +71,23 @@ export default class MemoService extends BaseService {
     const hasContentUpdated = typeof patch.body === 'string';
     const now = Date.now();
 
-    await this.repo.memos.update(id, {
+    const memoPatch = {
       ...patch,
       updatedAt: hasContentUpdated ? now : undefined,
-    });
+    };
 
-    if (hasContentUpdated) {
-      this.eventBus.emit(EventNames.ContentUpdated, {
-        updatedAt: now,
-        body: patch.body,
-        entityType: EntityTypes.Memo,
-        entityId: id,
-      });
-    }
+    await this.repo.memos.update(id, memoPatch);
+    await this.event.create(
+      {
+        type: EntityEventNames.Updated,
+        payload: memoPatch,
+        entityLocator: {
+          entityId: id,
+          entityType: EntityTypes.Memo,
+        },
+      },
+      (e) => omit(e, ['body']),
+    );
   }
 
   @BaseService.transaction()
