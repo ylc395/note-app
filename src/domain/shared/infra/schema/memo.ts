@@ -32,12 +32,13 @@ export const durationSchema = z.object({
   startTime: z.number(),
   endTime: z.number()
 });
-export const clientMemoQuerySchema = z.union([z.object({
+export const clientMemoQuerySchema = z.object({
   limit: z.number().optional(),
+  order: z.union([z.literal("asc"), z.literal("desc")]).optional(),
   parentId: entityParentIdSchema.optional(),
-  before: memoSchema.shape["id"].optional(),
-  beforeIncludes: memoSchema.shape["id"].optional(),
-  after: memoSchema.shape["id"].optional(),
-  afterIncludes: memoSchema.shape["id"].optional(),
-  isPinned: z.boolean().optional()
-}), durationSchema]);
+  isPinned: z.boolean().optional(),
+  startIndex: memoSchema.shape["index"].optional(),
+  endIndex: memoSchema.shape["index"].optional(),
+  startTime: z.number().optional(),
+  endTime: z.number().optional()
+});

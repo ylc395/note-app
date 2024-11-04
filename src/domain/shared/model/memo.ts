@@ -45,14 +45,13 @@ export interface Duration {
 /**
  * @api
  */
-export type ClientMemoQuery =
-  | {
-      limit?: number;
-      parentId?: EntityParentId;
-      before?: Memo['id'];
-      beforeIncludes?: Memo['id'];
-      after?: Memo['id'];
-      afterIncludes?: Memo['id'];
-      isPinned?: boolean;
-    }
-  | Duration;
+export type ClientMemoQuery = {
+  limit?: number;
+  order?: 'asc' | 'desc';
+  parentId?: EntityParentId;
+  isPinned?: boolean;
+  startIndex?: Memo['index'];
+  endIndex?: Memo['index'];
+  startTime?: number;
+  endTime?: number;
+};

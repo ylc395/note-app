@@ -6,6 +6,7 @@ export default class HTMLTextExtractor {
   public static extract(data: ArrayBuffer) {
     const textDecoder = new TextDecoder();
     const html = textDecoder.decode(data);
+
     const bodyEl = findOne((el) => el.tagName.toLowerCase() === 'body', [parseDocument(html)], true);
 
     if (!bodyEl) {

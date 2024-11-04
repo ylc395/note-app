@@ -6,7 +6,7 @@ import { tableName as fileTableName, type Row } from '../schema/file.js';
 import { tableName as fileTextTableName } from '../schema/fileText.js';
 
 export default class SqliteFileRepository extends BaseRepository implements FileRepository {
-  public async findAllTextRecordLocations(ids: File['id'][]) {
+  public async findAllFileTextRecords(ids: File['id'][]) {
     const rows = await this.db
       .selectFrom(fileTextTableName)
       .select(['fileId', 'location', 'text'])

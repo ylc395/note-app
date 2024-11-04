@@ -9,12 +9,10 @@ import { token as kvDatabaseToken } from '@domain/server/infra/kvDatabase.js';
 import { token as searchEngineToken } from '@domain/server/infra/searchEngine.js';
 import { token as repositoriesToken } from '@domain/server/repository/index.js';
 import { token as loggerToken } from '@domain/shared/infra/logger.js';
-import { token as textExtractorToken } from '@domain/server/service/FileService/TextExtractor.js';
 
 import SqliteDb from '../sqlite/Database.js';
 import SqliteKvDatabase from '../sqlite/KvDatabase.js';
 import SqliteSearchEngine from '../sqlite/SearchEngine/index.js';
-import TextExtractor from './TextExtractor/index.js';
 import { getRepositories } from '../sqlite/repository/index.js';
 
 export default abstract class DesktopRuntime extends Runtime {
@@ -28,7 +26,6 @@ export default abstract class DesktopRuntime extends Runtime {
     container.registerInstance(kvDatabaseToken, new SqliteKvDatabase(db));
     container.registerInstance(searchEngineToken, new SqliteSearchEngine(db));
     container.registerInstance(runtimeToken, this);
-    container.registerSingleton(textExtractorToken, TextExtractor);
   }
 
   public getAppDir() {
@@ -44,7 +41,7 @@ export default abstract class DesktopRuntime extends Runtime {
     );
   }
 
-  protected async componentsReady() {
+  public async ready() {
     const db = container.resolve(databaseToken);
     const kvDb = container.resolve(kvDatabaseToken);
     const searchEngine = container.resolve(searchEngineToken);

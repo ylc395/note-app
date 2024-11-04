@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 import type { Entity, EntityId, EntityParentId } from './entity.js';
-import type { File, FileVO } from './file.js';
+import type { FileVO } from './file.js';
 
 export interface Material {
   id: EntityId;
@@ -12,16 +12,15 @@ export interface Material {
 }
 
 export interface EntityMaterial extends Material {
-  fileId?: File['id'];
-  mimeType: string;
-  comment: string;
+  file: FileVO;
+  body: string;
   sourceUrl: string | null;
 }
 
 /**
  * @api
  */
-export type MaterialPatchDTO = Partial<Pick<EntityMaterial, 'title' | 'parentId' | 'icon' | 'sourceUrl' | 'comment'>>;
+export type MaterialPatchDTO = Partial<Pick<EntityMaterial, 'title' | 'parentId' | 'icon' | 'sourceUrl' | 'body'>>;
 
 /**
  * @api
@@ -56,7 +55,7 @@ export function isEntityMaterial(v: Material): v is EntityMaterial;
 export function isEntityMaterial(v: MaterialVO): v is EntityMaterialVO;
 export function isEntityMaterial(v: Material | MaterialVO): boolean;
 export function isEntityMaterial(v: Material | MaterialVO) {
-  return Boolean('mimeType' in v && v.mimeType);
+  return 'file' in v;
 }
 
 export function normalizeTitle(v: Material | MaterialVO | Entity) {

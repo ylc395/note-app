@@ -57,7 +57,7 @@ export default class ElectronRuntime extends DesktopRuntime {
     await electronApp.whenReady();
     protocol.handle(PROTOCOL, this.protocolHandler); // 这个必须在 whenReady 后
 
-    await Promise.all([this.installDevExtension(), this.componentsReady()]);
+    await Promise.all([this.installDevExtension(), this.ready()]);
     this.initWindow();
   }
 
@@ -90,7 +90,6 @@ export default class ElectronRuntime extends DesktopRuntime {
     }
 
     try {
-      this.logger.debug('try to install devtool');
       const devToolName = await installExtension.default(REACT_DEVELOPER_TOOLS);
       this.logger.debug(`${devToolName} installed`);
     } catch (error) {

@@ -1,9 +1,9 @@
 import assert from 'node:assert';
 import tesseract from 'tesseract.js';
 import path from 'node:path';
-import { container, singleton } from 'tsyringe';
+import { container } from 'tsyringe';
 
-import type { Job } from '@domain/server/service/FileService/TextExtractor.js';
+import type { Job } from './job.js';
 import { token as runtimeToken } from '@domain/server/infra/runtime.js';
 import { token as loggerToken } from '@domain/shared/infra/logger.js';
 
@@ -115,7 +115,6 @@ const SUPPORT_LANGS = {
 
 const SUPPORT_LANG_CODES = Object.keys(SUPPORT_LANGS);
 
-@singleton()
 export default class ImageTextExtractor {
   private readonly runtime = container.resolve(runtimeToken);
   private readonly logger = container.resolve(loggerToken);

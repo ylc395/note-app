@@ -1,12 +1,11 @@
 import pdfjs from 'pdfjs-dist';
 import assert from 'node:assert';
 import { createCanvas } from 'canvas';
-import { container, singleton } from 'tsyringe';
+import { container } from 'tsyringe';
 
-import type { Job } from '@domain/server/service/FileService/TextExtractor.js';
+import type { Job } from './job';
 import ImageTextExtractor from './ImageTextExtractor.js';
 
-@singleton()
 export default class PDFTextExtractor {
   private imageTextExtractor = container.resolve(ImageTextExtractor);
   private isBusy = false;

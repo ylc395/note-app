@@ -8,5 +8,5 @@ export interface FileRepository {
   updateOne: (id: File['id'], patch: FilePatch) => Promise<boolean>;
   createTextRecord: (fileText: FileTextRecord) => Promise<void>;
   findUnfinishedFile: () => Promise<FileVO[]>;
-  findAllTextRecordLocations: (ids: File['id'][]) => Promise<FileTextRecord[]>;
+  findAllFileTextRecords: (ids: File['id'][]) => Promise<FileTextRecord[]>;
 }

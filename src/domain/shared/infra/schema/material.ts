@@ -4,7 +4,7 @@
 */
 import { z } from "zod";
 import { entityIdSchema, entityParentIdSchema } from "./entity.js";
-import { fileSchema, fileVOSchema } from "./file.js";
+import { fileVOSchema } from "./file.js";
 export const materialSchema = z.object({
   id: entityIdSchema,
   title: z.string(),
@@ -14,9 +14,8 @@ export const materialSchema = z.object({
   updatedAt: z.number()
 });
 export const entityMaterialSchema = materialSchema.merge(z.object({
-  fileId: fileSchema.shape["id"].optional(),
-  mimeType: z.string(),
-  comment: z.string(),
+  file: fileVOSchema,
+  body: z.string(),
   sourceUrl: z.union([z.string(), z.null()])
 }));
 export const materialPatchDTOSchema = entityMaterialSchema.pick({
@@ -24,7 +23,7 @@ export const materialPatchDTOSchema = entityMaterialSchema.pick({
   "parentId": true,
   "icon": true,
   "sourceUrl": true,
-  "comment": true
+  "body": true
 }).partial();
 export const materialBatchPatchDTOSchema = materialPatchDTOSchema.pick({
   "parentId": true,

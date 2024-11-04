@@ -19,12 +19,19 @@ export type NotePatchDTO = Partial<Pick<Note, 'title' | 'parentId' | 'icon' | 'b
 /**
  * @api
  */
+export interface DuplicatedNoteDTO {
+  from: Note['id'];
+}
+
+/**
+ * @api
+ */
 export type NoteBatchPatchDTO = Pick<NotePatchDTO, 'icon' | 'parentId'>;
 
 /**
  * @api
  */
-export type NoteDTO = NotePatchDTO & { from?: Note['id'] };
+export type NoteDTO = NotePatchDTO | DuplicatedNoteDTO;
 
 /**
  * @api

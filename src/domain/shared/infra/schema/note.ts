@@ -19,13 +19,14 @@ export const notePatchDTOSchema = noteSchema.pick({
   "icon": true,
   "body": true
 }).partial();
+export const duplicatedNoteDTOSchema = z.object({
+  from: noteSchema.shape["id"]
+});
 export const noteBatchPatchDTOSchema = notePatchDTOSchema.pick({
   "icon": true,
   "parentId": true
 });
-export const noteDTOSchema = z.intersection(notePatchDTOSchema, z.object({
-  from: noteSchema.shape["id"].optional()
-}));
+export const noteDTOSchema = z.union([notePatchDTOSchema, duplicatedNoteDTOSchema]);
 export const clientNoteQuerySchema = z.object({
   parentId: z.union([entityParentIdSchema, z.array(z.string())]).optional()
 });
