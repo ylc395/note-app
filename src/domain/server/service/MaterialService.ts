@@ -1,6 +1,6 @@
-import { uniq, pick, first, omit } from 'lodash-es';
+import { uniq, pick, first } from 'lodash-es';
 import assert from 'assert';
-import { container, singleton } from 'tsyringe';
+import { singleton } from 'tsyringe';
 
 import {
   type MaterialDTO,
@@ -11,18 +11,13 @@ import {
   type MaterialBatchPatchDTO,
   isEntityMaterial,
 } from '@domain/shared/model/material.js';
-import { EntityTypes } from '@domain/shared/model/entity.js';
 import { buildIndex } from '@utils/collection.js';
 
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
-import EventService from './EventService.js';
-import { EventNames } from '../model/entity.js';
 
 @singleton()
 export default class MaterialService extends BaseService {
-  private readonly event = container.resolve(EventService);
-
   @BaseService.transaction()
   public async create(newMaterial: MaterialDTO) {
     if (newMaterial.parentId) {
@@ -44,18 +39,6 @@ export default class MaterialService extends BaseService {
       updatedAt: now,
       createdAt: now,
     });
-
-    await this.event.create(
-      {
-        type: EventNames.Created,
-        payload: material,
-        entityLocator: {
-          entityId: material.id,
-          entityType: EntityTypes.Material,
-        },
-      },
-      (e) => omit(e, ['title', 'comment']),
-    );
 
     return this.toVO(material, true);
   }
@@ -81,7 +64,7 @@ export default class MaterialService extends BaseService {
 
     const materialVOs = _materials.map((material) => ({
       ...pick(material, ['id', 'title', 'icon', 'parentId', 'updatedAt', 'createdAt']),
-      ...(isEntityMaterial(material) ? pick(material, ['mimeType', 'comment', 'sourceUrl']) : null),
+      ...(isEntityMaterial(material) ? pick(material, ['mimeType', 'body', 'sourceUrl']) : null),
       childrenCount: children[material.id]?.length || 0,
       isStar: Boolean(stars[material.id]),
     }));
@@ -106,37 +89,18 @@ export default class MaterialService extends BaseService {
     }
 
     await this.repo.materials.update(ids, patch);
-    await this.event.create(
-      ids.map((id) => ({
-        type: EventNames.Updated,
-        payload: patch,
-        entityLocator: {
-          entityId: id,
-          entityType: EntityTypes.Material,
-        },
-      })),
-    );
   }
 
   @BaseService.transaction()
   public async updateOne(materialId: Material['id'], patch: MaterialPatchDTO) {
-    const isEntityPatch = typeof patch.comment === 'string' || typeof patch.sourceUrl === 'string';
-    await this.assertAvailableIds([materialId], { type: isEntityPatch ? 'entity' : 'directory' });
+    const isEntityPatch = typeof patch.body === 'string' || typeof patch.sourceUrl === 'string';
+    await this.assertAvailableIds([materialId], { type: isEntityPatch ? 'entity' : undefined });
 
-    const hasContentUpdated = typeof patch.comment === 'string' || typeof patch.title === 'string';
+    const hasContentUpdated = typeof patch.body === 'string' || typeof patch.title === 'string';
     const material = {
       ...patch,
       updatedAt: hasContentUpdated ? Date.now() : undefined,
     };
-
-    await this.event.create({
-      type: EventNames.Updated,
-      entityLocator: {
-        entityId: materialId,
-        entityType: EntityTypes.Material,
-      },
-      payload: material,
-    });
 
     await this.repo.materials.update(materialId, material);
   }
@@ -163,14 +127,8 @@ export default class MaterialService extends BaseService {
     const rows = await this.repo.materials.findAll({ id: ids, isAvailableOnly: true });
     let result = rows.length === ids.length;
 
-    if (result && params) {
-      result = rows.every((row) => {
-        if (params.type) {
-          return params.type === 'entity' ? isEntityMaterial(row) : !isEntityMaterial(row);
-        }
-
-        return true;
-      });
+    if (result && params?.type) {
+      result = rows.every((row) => (params.type === 'entity' ? isEntityMaterial(row) : !isEntityMaterial(row)));
     }
 
     assert(result, 'invalid material id');

@@ -1,39 +1,37 @@
-import { container, singleton } from 'tsyringe';
+import { singleton } from 'tsyringe';
 import assert from 'node:assert';
-import { first, omit, pick, uniq } from 'lodash-es';
+import { first, pick, uniq } from 'lodash-es';
 import {
   type NoteVO,
   type NoteDTO,
   type NotePatchDTO,
   type Note,
   type ClientNoteQuery,
+  type DuplicatedNoteDTO,
+  type NoteBatchPatchDTO,
   normalizeTitle,
-  NoteBatchPatchDTO,
 } from '@domain/server/model/note.js';
-import { EntityTypes, EventNames as EntityEventNames } from '@domain/server/model/entity.js';
 import { arrayOf, buildIndex } from '@utils/collection.js';
 
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
-import EventService from './EventService.js';
 
 @singleton()
 export default class NoteService extends BaseService {
-  private readonly event = container.resolve(EventService);
-
   @BaseService.transaction()
-  public async create(note: NoteDTO, fromNoteId?: Note['id']) {
+  public async create(note: NoteDTO | DuplicatedNoteDTO) {
     let newNote: Required<Note>;
 
-    if (fromNoteId) {
-      newNote = await this.duplicate(fromNoteId);
+    if ('from' in note) {
+      newNote = await this.duplicate(note.from);
     } else {
       if (note.parentId) {
         await this.assertAvailableIds([note.parentId]);
       }
 
       const now = Date.now();
-      newNote = {
+
+      newNote = await this.repo.notes.create({
         title: note.title || '',
         parentId: note.parentId || null,
         body: note.body || '',
@@ -41,19 +39,8 @@ export default class NoteService extends BaseService {
         id: EntityService.generateId(),
         updatedAt: now,
         createdAt: now,
-      };
-
-      await this.repo.notes.create(newNote);
+      });
     }
-
-    await this.event.create({
-      type: EntityEventNames.Created,
-      payload: newNote,
-      entityLocator: {
-        entityId: newNote.id,
-        entityType: EntityTypes.Note,
-      },
-    });
 
     return await this.toVO(newNote, true);
   }
@@ -63,16 +50,14 @@ export default class NoteService extends BaseService {
     assert(targetNote);
 
     const now = Date.now();
-    const newNote = {
+
+    return await this.repo.notes.create({
       ...pick(targetNote, ['body', 'icon', 'parentId']),
       title: `${normalizeTitle(targetNote)}-副本`,
       id: EntityService.generateId(),
       updatedAt: now,
       createdAt: now,
-    };
-
-    await this.repo.notes.create(newNote);
-    return newNote;
+    });
   }
 
   @BaseService.transaction()
@@ -84,23 +69,11 @@ export default class NoteService extends BaseService {
     }
 
     const hasContentUpdated = typeof notePatch.title === 'string' || typeof notePatch.body === 'string';
-    const patch = {
+
+    await this.repo.notes.update(noteId, {
       ...notePatch,
       updatedAt: hasContentUpdated ? Date.now() : undefined,
-    };
-
-    await this.repo.notes.update(noteId, patch);
-    await this.event.create(
-      {
-        type: EntityEventNames.Updated,
-        payload: patch,
-        entityLocator: {
-          entityId: noteId,
-          entityType: EntityTypes.Note,
-        },
-      },
-      (p) => omit(p, ['title', 'body']),
-    );
+    });
   }
 
   private async toVO(notes: Note, isNew?: boolean): Promise<Required<NoteVO>>;
@@ -130,17 +103,6 @@ export default class NoteService extends BaseService {
 
     const result = await this.repo.notes.update(ids, patch);
     assert(result);
-
-    await this.event.create(
-      ids.map((id) => ({
-        type: EntityEventNames.Updated,
-        payload: patch,
-        entityLocator: {
-          entityId: id,
-          entityType: EntityTypes.Note,
-        },
-      })),
-    );
   }
 
   private async assertAvailableIds(ids: Note['id'][]) {
@@ -166,9 +128,8 @@ export default class NoteService extends BaseService {
       parentId: q.parentId || null,
       isAvailableOnly: true,
     });
-    const noteVOs = await this.toVO(notes);
 
-    return noteVOs;
+    return await this.toVO(notes);
   }
 
   @BaseService.transaction()

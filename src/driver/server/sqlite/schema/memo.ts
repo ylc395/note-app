@@ -6,7 +6,6 @@ export interface Row {
   id: string;
   body: Generated<string>;
   parentId: string | null;
-  sourceUrl: string | null;
   index: number;
   isPinned: Generated<0 | 1>;
   createdAt: number;
@@ -21,9 +20,8 @@ export default {
       .addColumn('id', 'text', (col) => col.primaryKey().notNull())
       .addColumn('body', 'text', (col) => col.notNull().defaultTo(''))
       .addColumn('parentId', 'text')
-      .addColumn('isPinned', 'integer', (col) => col.notNull().defaultTo(0))
       .addColumn('index', 'integer', (col) => col.notNull())
-      .addColumn('sourceUrl', 'text')
+      .addColumn('isPinned', 'integer', (col) => col.notNull().defaultTo(0))
       .addColumn('createdAt', 'integer', (col) => col.notNull())
       .addColumn('updatedAt', 'integer', (col) => col.notNull());
   },

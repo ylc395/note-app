@@ -8,16 +8,14 @@ import BaseRepository from './BaseRepository.js';
 
 export default class SqliteMemoRepository extends BaseRepository implements MemoRepository {
   private readonly tableName = schema.tableName;
+
   public async create(memo: Memo) {
     await this.db.insertInto(this.tableName).values({ ...memo, isPinned: memo.isPinned ? 1 : 0 });
     return memo;
   }
+
   public async findLatest() {
-    const row = await this.db
-      .selectFrom(this.tableName)
-      .orderBy('index desc')
-      .select(['id', 'body', 'createdAt', 'updatedAt', 'isPinned', 'sourceUrl', 'index', 'parentId'])
-      .executeTakeFirst();
+    const row = await this.db.selectFrom(this.tableName).selectAll().orderBy('index desc').limit(1).executeTakeFirst();
 
     return row ? SqliteMemoRepository.rowToMemo(row) : null;
   }
@@ -88,8 +86,8 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
       sql = sql.where('isPinned', '=', q.isPinned ? 1 : 0);
     }
 
-    if (q.orderBy === 'index') {
-      sql = sql.orderBy('index', q.order);
+    if (q.orderBy?.by === 'index') {
+      sql = sql.orderBy('index', q.orderBy.order);
     }
 
     if (q.limit) {

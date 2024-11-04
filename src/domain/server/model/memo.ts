@@ -1,5 +1,5 @@
 import type { Entity, EntityParentId } from './entity.js';
-import type { MemoPatchDTO, Duration, ClientMemoQuery, Memo } from '@domain/shared/model/memo.js';
+import type { MemoPatchDTO, Memo } from '@domain/shared/model/memo.js';
 
 export * from '@domain/shared/model/memo.js';
 
@@ -7,18 +7,18 @@ export type MemoPatch = MemoPatchDTO & Partial<Pick<Memo, 'updatedAt'>>;
 
 export interface MemoQuery {
   id?: string | string[];
-  startTime?: number;
-  endTime?: number;
+  startTime?: number; // included
+  endTime?: number; // not included
+  startIndex?: number; // included
+  endIndex?: number; // not included
   isAvailableOnly?: boolean;
   isPinned?: boolean;
   limit?: number;
   parentId?: EntityParentId;
-  order?: 'desc' | 'asc';
-  orderBy?: 'index';
-}
-
-export function isDuration(q: ClientMemoQuery): q is Duration {
-  return 'startTime' in q && 'endTime' in q;
+  orderBy?: {
+    by: 'index';
+    order: 'desc' | 'asc';
+  };
 }
 
 export function normalizeTitle(memo: Entity) {

@@ -26,9 +26,7 @@ export default router({
     .input(tuple([noteSchema.shape.id.array(), noteBatchPatchDTOSchema]))
     .mutation(({ input: [ids, note], ctx: { noteService } }) => noteService.batchUpdate(ids, note)),
 
-  create: publicProcedure
-    .input(noteDTOSchema)
-    .mutation(({ input: { from, ...dto }, ctx: { noteService } }) => noteService.create(dto, from)),
+  create: publicProcedure.input(noteDTOSchema).mutation(({ input, ctx: { noteService } }) => noteService.create(input)),
 
   queryPath: publicProcedure
     .input(noteSchema.shape.id)

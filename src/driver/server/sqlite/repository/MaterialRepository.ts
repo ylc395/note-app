@@ -1,3 +1,5 @@
+import assert from 'assert';
+import { pick } from 'lodash-es';
 import type { Material, MaterialQuery, MaterialPatch } from '@domain/server/model/material.js';
 import type { MaterialRepository } from '@domain/server/repository/MaterialRepository.js';
 import { buildIndex } from '@utils/collection.js';
@@ -7,7 +9,6 @@ import { tableName as fileTableName } from '../schema/file.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
 import BaseRepository from './BaseRepository.js';
 import FileRepository from './FileRepository.js';
-import assert from 'assert';
 
 export default class SqliteMaterialRepository extends BaseRepository implements MaterialRepository {
   public readonly tableName = schema.tableName;
@@ -67,13 +68,34 @@ export default class SqliteMaterialRepository extends BaseRepository implements 
         `${this.tableName}.createdAt`,
         `${this.tableName}.updatedAt`,
         `${this.tableName}.fileId`,
-        `${this.tableName}.comment`,
+        `${this.tableName}.body`,
         `${this.tableName}.sourceUrl`,
         `${fileTableName}.mimeType`,
+        `${fileTableName}.size`,
+        `${fileTableName}.lang`,
       ])
       .execute();
 
-    return rows;
+    return rows.map((row) => {
+      const material = pick(row, ['id', 'title', 'icon', 'parentId', 'createdAt', 'updatedAt']);
+
+      if (row.fileId) {
+        assert(row.mimeType && row.lang && typeof row.size === 'number');
+
+        return {
+          ...material,
+          ...pick(row, ['sourceUrl', 'body']),
+          file: {
+            id: row.fileId,
+            lang: row.lang.split(','),
+            mimeType: row.mimeType,
+            size: row.size,
+          },
+        };
+      }
+
+      return material;
+    });
   }
 
   public async findOneById(id: Material['id'], config?: { isAvailableOnly?: boolean }) {
@@ -88,7 +110,7 @@ export default class SqliteMaterialRepository extends BaseRepository implements 
         `${this.tableName}.createdAt`,
         `${this.tableName}.updatedAt`,
         `${this.tableName}.fileId`,
-        `${this.tableName}.comment`,
+        `${this.tableName}.body`,
         `${this.tableName}.sourceUrl`,
         `${fileTableName}.mimeType`,
       ])

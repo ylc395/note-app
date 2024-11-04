@@ -10,7 +10,7 @@ export interface Row {
   parentId: string | null;
   sourceUrl: string | null;
   icon: string | null;
-  comment: Generated<string>;
+  body: Generated<string>;
   createdAt: number;
   updatedAt: number;
 }
@@ -25,7 +25,7 @@ export default {
       .addColumn('fileId', 'text')
       .addColumn('parentId', 'text')
       .addColumn('sourceUrl', 'text')
-      .addColumn('comment', 'text', (col) => col.notNull().defaultTo(''))
+      .addColumn('body', 'text', (col) => col.notNull().defaultTo(''))
       .addColumn('icon', 'text')
       .addColumn('createdAt', 'integer', (col) => col.notNull())
       .addColumn('updatedAt', 'integer', (col) => col.notNull())
