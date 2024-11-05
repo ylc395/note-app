@@ -1,4 +1,5 @@
 import type { EntityId } from './entity.js';
+import type { MediaFragment, PDFFragment, TextQuoteFragment } from './fragment.js';
 
 export enum SelectorTypes {
   CSS = 'CSS',
@@ -13,42 +14,22 @@ interface CssSelector {
   value: string;
 }
 
-// inspired by https://developer.mozilla.org/en-US/docs/Web/Text_fragments#syntax
-// and https://www.w3.org/TR/annotation-model/#text-quote-selector
 export interface TextQuoteSelector {
   type: SelectorTypes.TEXT;
-  value: {
-    start: string;
-    end?: string;
-    prefix?: string;
-    suffix?: string;
-  };
+  value: TextQuoteFragment;
 }
 
-// inspired by https://datatracker.ietf.org/doc/html/rfc3778#section-3
 export interface PDFFragmentSelector {
   type: SelectorTypes.PDF;
-  value: {
-    page: number;
-    height: number;
-    width: number;
-    left: number;
-    top: number;
-  };
+  value: PDFFragment;
 }
 
-// inspired by https://www.w3.org/TR/media-frags/#fragment-dimensions
 export interface MediaFragmentSelector {
   type: SelectorTypes.MEDIA;
-  value: {
-    start: number;
-    end: number;
-  };
+  value: MediaFragment;
 }
 
-export type FragmentSelector = TextQuoteSelector | PDFFragmentSelector | MediaFragmentSelector;
-
-type Selector = CssSelector | FragmentSelector;
+type Selector = CssSelector | TextQuoteSelector | PDFFragmentSelector | MediaFragmentSelector;
 
 // This concept is inspired by https://www.w3.org/TR/annotation-model/
 export interface Annotation {

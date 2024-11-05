@@ -87,7 +87,7 @@ export default class SqliteMaterialRepository extends BaseRepository implements 
           ...pick(row, ['sourceUrl', 'body']),
           file: {
             id: row.fileId,
-            lang: row.lang.split(','),
+            lang: JSON.parse(row.lang),
             mimeType: row.mimeType,
             size: row.size,
           },

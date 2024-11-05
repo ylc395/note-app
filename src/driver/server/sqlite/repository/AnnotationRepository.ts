@@ -11,7 +11,7 @@ import type { Annotation, AnnotationPatchDTO } from '@domain/server/model/annota
 import type { EntityId } from '@domain/shared/model/entity.js';
 import { buildIndex } from '@utils/collection.js';
 
-export default class SqliteMaterialAnnotationRepository extends BaseRepository implements AnnotationRepository {
+export default class SqliteAnnotationRepository extends BaseRepository implements AnnotationRepository {
   protected readonly tableName = annotationSchema.tableName;
   public async findAllTargets(ids: Annotation['id'][]) {
     const rows = await this.db
@@ -28,7 +28,7 @@ export default class SqliteMaterialAnnotationRepository extends BaseRepository i
         `${materialTableName}.parentId`,
         `${materialTableName}.createdAt`,
         `${materialTableName}.updatedAt`,
-        `${materialTableName}.comment`,
+        `${materialTableName}.body`,
         `${materialTableName}.sourceUrl`,
       ])
       .execute();
@@ -54,7 +54,7 @@ export default class SqliteMaterialAnnotationRepository extends BaseRepository i
       ])
       .executeTakeFirstOrThrow();
 
-    return SqliteMaterialAnnotationRepository.rowToVO(created);
+    return SqliteAnnotationRepository.rowToVO(created);
   }
 
   public async findAllByEntityId(entityId: EntityId, config?: { isAvailableOnly?: boolean }) {
@@ -78,7 +78,7 @@ export default class SqliteMaterialAnnotationRepository extends BaseRepository i
     }
 
     const rows = await sql.execute();
-    return rows.map(SqliteMaterialAnnotationRepository.rowToVO);
+    return rows.map(SqliteAnnotationRepository.rowToVO);
   }
 
   public async update(annotationId: Annotation['id'], patch: AnnotationPatchDTO) {
