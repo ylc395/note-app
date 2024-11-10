@@ -1,7 +1,7 @@
 import assert from 'assert';
 import { pick } from 'lodash-es';
-import type { Material, MaterialQuery, MaterialPatch } from '@domain/server/model/material.js';
-import type { MaterialRepository } from '@domain/server/repository/MaterialRepository.js';
+import type { Material } from '@domain/shared/model/material.js';
+import type { MaterialRepository, MaterialPatch, MaterialQuery } from '@domain/server/repository/materialRepository.js';
 import { buildIndex } from '@utils/collection.js';
 
 import schema from '../schema/material.js';
@@ -131,13 +131,12 @@ export default class SqliteMaterialRepository extends BaseRepository implements 
     let sql = this.db
       .selectFrom(this.tableName)
       .innerJoin(fileTableName, `${this.tableName}.fileId`, `${fileTableName}.id`)
+      .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.id`)
       .select([`${fileTableName}.data`])
       .where(`${this.tableName}.id`, '=', id);
 
     if (config?.isAvailableOnly) {
-      sql = sql
-        .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.id`)
-        .where(`${recyclableTableName}.entityId`, 'is', null);
+      sql = sql.where(`${recyclableTableName}.entityId`, 'is', null);
     }
 
     const row = await sql.executeTakeFirst();

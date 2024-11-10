@@ -1,11 +1,10 @@
-import { type Kysely, sql } from 'kysely';
+import type { Kysely } from 'kysely';
 
 export const tableName = 'recyclables';
 
 export interface Row {
   entityId: string;
-  reason: number;
-  deletedAt: number;
+  createdAt: number;
 }
 
 export default {
@@ -14,7 +13,6 @@ export default {
     return db.schema
       .createTable(tableName)
       .addColumn('entityId', 'text', (col) => col.notNull())
-      .addColumn('reason', 'integer', (col) => col.notNull())
-      .addColumn('deletedAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch('subsec') * 1000)`));
+      .addColumn('createdAt', 'integer', (col) => col.notNull());
   },
 } as const;

@@ -1,15 +1,15 @@
 import type { Selectable } from 'kysely';
 
-import type { AnnotationRepository } from '@domain/server/repository/AnnotationRepository.js';
+import type { AnnotationRepository } from '@domain/server/repository/annotationRepository.js';
+import type { Annotation, AnnotationPatchDTO } from '@domain/shared/model/annotation.js';
+import type { EntityId } from '@domain/shared/model/entity.js';
+import { buildIndex } from '@utils/collection.js';
 
 import BaseRepository from './BaseRepository.js';
 import annotationSchema, { type Row } from '../schema/annotation.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
 import { tableName as materialTableName } from '../schema/material.js';
 import { tableName as fileTableName } from '../schema/file.js';
-import type { Annotation, AnnotationPatchDTO } from '@domain/server/model/annotation.js';
-import type { EntityId } from '@domain/shared/model/entity.js';
-import { buildIndex } from '@utils/collection.js';
 
 export default class SqliteAnnotationRepository extends BaseRepository implements AnnotationRepository {
   protected readonly tableName = annotationSchema.tableName;

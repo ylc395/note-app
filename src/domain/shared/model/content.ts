@@ -1,28 +1,31 @@
 import type { Entity } from './entity.js';
-import type { FragmentSelector } from './annotation.js';
 
-export interface Snippet {
-  text: string;
-  highlightStart: number;
-  highlightEnd: number;
-}
-
-interface Offset {
+export interface TextLocation {
   start: number;
   end: number;
 }
 
-export interface LinkVO {
+export interface Snippet {
+  text: string;
+  highlight?: TextLocation;
+}
+
+export interface Reference {
   entity: Entity;
-  links: Array<{
-    targetSelector?: FragmentSelector;
-    sourceLocation: Offset;
-    sourceSnippet: Snippet;
-  }>;
+  sourceLocation: TextLocation;
+  sourceSnippet: Required<Snippet>;
+  targetFragmentId: string | null; // URL 的 hash 部分。很可能随着目标的内容的变化而失效
+  targetSnippet: Snippet;
+}
+
+export interface Referrer {
+  entity: Entity;
+  references: Reference[];
 }
 
 export interface ExternalLinkVO {
   url: string;
+  icon: string | null;
 }
 
 export interface TopicVO {
@@ -30,7 +33,7 @@ export interface TopicVO {
   entities: Array<{
     entity: Entity;
     sources: Array<{
-      location: Offset;
+      location: TextLocation;
       snippet: Snippet;
     }>;
   }>;

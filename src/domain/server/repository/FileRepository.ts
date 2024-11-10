@@ -1,4 +1,6 @@
-import type { File, FileVO, FileTextRecord, FilePatch } from '@domain/server/model/file.js';
+import type { File, FileVO, FileTextRecord } from '@domain/server/model/file.js';
+
+export type FilePatch = Partial<Pick<File, 'isTextExtracted' | 'lang'>>;
 
 export interface FileRepository {
   findOneById: (id: File['id']) => Promise<FileVO | null>;

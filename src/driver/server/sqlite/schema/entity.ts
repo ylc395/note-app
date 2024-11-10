@@ -44,7 +44,7 @@ export default {
               'icon',
               'title',
               'parentId',
-              'comment as body',
+              'body',
               sql.val(EntityTypes.Material).as('type'),
               'createdAt',
               'updatedAt',

@@ -9,9 +9,10 @@ import FileService from '@domain/server/service/FileService/index.js';
 import MemoService from '@domain/server/service/MemoService.js';
 import AnnotationService from '@domain/server/service/AnnotationService.js';
 import EntityService from '@domain/server/service/EntityService.js';
-import ContentService from '@domain/server/service/ContentService.js';
+import ContentService from '@domain/server/service/ContentService/index.js';
 import SearchService from '@domain/server/service/SearchService.js';
 import RecyclableService from '@domain/server/service/RecyclableService.js';
+import RevisionService from '@domain/server/service/RevisionService.js';
 
 const t = initTRPC.context().create();
 const initServices = memoize(() => ({
@@ -25,6 +26,7 @@ const initServices = memoize(() => ({
   contentService: container.resolve(ContentService),
   searchService: container.resolve(SearchService),
   recyclableService: container.resolve(RecyclableService),
+  revisionService: container.resolve(RevisionService),
 }));
 
 export const router = t.router;

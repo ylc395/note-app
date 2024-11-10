@@ -1,6 +1,6 @@
 import { mapValues, groupBy } from 'lodash-es';
 import { Entity, EntityId, EntityTypes } from '@domain/shared/model/entity.js';
-import type { EntityRepository } from '@domain/server/repository/EntityRepository.js';
+import type { EntityRepository, EntityQuery } from '@domain/server/repository/entityRepository.js';
 import assert from 'node:assert';
 
 import { arrayOf, buildIndex } from '@utils/collection.js';
@@ -26,7 +26,9 @@ export default class SqliteEntityRepository extends BaseRepository implements En
     return mapValues(groupBy(rows, 'parentId'), (rows) => rows.map((row) => row.id));
   }
 
-  public async findAncestors(ids: EntityId[]) {
+  public async findAncestors(ids: EntityId[]): Promise<Record<string, Entity[]>>;
+  public async findAncestors(id: EntityId): Promise<Entity[]>;
+  public async findAncestors(ids: EntityId[] | EntityId) {
     const fields = ['id', 'title', 'icon', 'type', 'parentId', 'createdAt', 'updatedAt'] as const;
 
     const rows = await this.db
@@ -34,7 +36,7 @@ export default class SqliteEntityRepository extends BaseRepository implements En
         qb
           .selectFrom(this.tableName)
           .select(fields)
-          .where('id', 'in', ids)
+          .where('id', 'in', Array.isArray(ids) ? ids : [ids])
           .union(
             qb
               .selectFrom('ancestors')
@@ -65,7 +67,11 @@ export default class SqliteEntityRepository extends BaseRepository implements En
       result[descendant.id] = ancestors;
     }
 
-    return result;
+    if (Array.isArray(ids)) {
+      return result;
+    } else {
+      return result[ids];
+    }
   }
 
   public async findDescendantIds(id: EntityId): Promise<EntityId[]>;
@@ -124,7 +130,7 @@ export default class SqliteEntityRepository extends BaseRepository implements En
     return result[ids];
   }
 
-  public async findAll(ids: EntityId[], params?: { isAvailableOnly?: boolean }) {
+  public async findAll(params: EntityQuery) {
     const fields = [
       `${tableName}.id`,
       `${tableName}.title`,
@@ -135,9 +141,17 @@ export default class SqliteEntityRepository extends BaseRepository implements En
       `${tableName}.updatedAt`,
     ] as const;
 
-    let sql = this.db.selectFrom(this.tableName).where(`${this.tableName}.id`, 'in', ids);
+    let sql = this.db.selectFrom(this.tableName);
 
-    if (params?.isAvailableOnly) {
+    if (params.ids) {
+      sql = sql.where(`${this.tableName}.id`, 'in', params.ids);
+    }
+
+    if (params.updatedSince) {
+      sql = sql.where(`${this.tableName}.updatedAt`, '>', params.updatedSince);
+    }
+
+    if (params.isAvailableOnly) {
       sql = sql
         .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.id`)
         .where(`${recyclableTableName}.entityId`, 'is', null);
@@ -146,6 +160,11 @@ export default class SqliteEntityRepository extends BaseRepository implements En
     const rows = await sql.select(fields).execute();
 
     return rows;
+  }
+
+  public async findOneById(id: EntityId) {
+    const fields = ['title', 'body'] as const;
+    return (await this.db.selectFrom(this.tableName).select(fields).where('id', '=', id).executeTakeFirst()) || null;
   }
 
   public async findAllContents(entities: EntityId[]) {

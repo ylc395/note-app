@@ -1,5 +1,5 @@
-import type { NoteRepository } from '@domain/server/repository/NoteRepository.js';
-import type { Note, NotePatch, NoteQuery, NoteVO } from '@domain/server/model/note.js';
+import type { NoteRepository, NotePatch, NoteQuery } from '@domain/server/repository/noteRepository.js';
+import type { Note, NoteVO } from '@domain/shared/model/note.js';
 
 import schema from '../schema/note.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';

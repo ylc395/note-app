@@ -130,7 +130,7 @@ export default class SqliteSearchEngine implements SearchEngine {
       .where((eb) => {
         const fieldsStatements = compact([
           q.fields?.includes(SearchFields.Title) && eb(materialsFTSTableName, 'match', `title : ${q.keyword}`),
-          q.fields?.includes(SearchFields.Body) && eb(materialsFTSTableName, 'match', `comment : ${q.keyword}`),
+          q.fields?.includes(SearchFields.Body) && eb(materialsFTSTableName, 'match', `body : ${q.keyword}`),
         ]);
 
         return fieldsStatements.length === 0 ? eb(materialsFTSTableName, 'match', q.keyword) : eb.or(fieldsStatements);

@@ -4,21 +4,22 @@
 */
 import { z } from "zod";
 import { entitySchema } from "./entity.js";
-import { fragmentSelectorSchema } from "./annotation.js";
-export const snippetSchema = z.object({
-  text: z.string(),
-  highlightStart: z.number(),
-  highlightEnd: z.number()
-});
-const offsetSchema = z.object({
+export const textLocationSchema = z.object({
   start: z.number(),
   end: z.number()
 });
-export const linkVOSchema = z.object({
+export const snippetSchema = z.object({
+  text: z.string(),
+  highlight: textLocationSchema.optional()
+});
+export const referenceSchema = z.object({
   entity: entitySchema,
-  links: z.array(z.object({
-    targetSelector: fragmentSelectorSchema.optional(),
-    sourceLocation: offsetSchema,
-    sourceSnippet: snippetSchema
-  }))
+  sourceLocation: textLocationSchema,
+  sourceSnippet: snippetSchema.required(),
+  targetFragmentId: z.union([z.string(), z.null()]),
+  targetSnippet: snippetSchema
+});
+export const referrerSchema = z.object({
+  entity: entitySchema,
+  references: z.array(referenceSchema)
 });

@@ -10,7 +10,7 @@ import {
   type DuplicatedNoteDTO,
   type NoteBatchPatchDTO,
   normalizeTitle,
-} from '@domain/server/model/note.js';
+} from '@domain/shared/model/note.js';
 import { arrayOf, buildIndex } from '@utils/collection.js';
 
 import BaseService from './BaseService.js';

@@ -1,4 +1,5 @@
 import { entityIdSchema } from '@domain/shared/infra/schema/entity.js';
+import { recyclablesDTOSchema } from '@domain/shared/infra/schema/recyclable.js';
 import { publicProcedure, router } from './trpc.js';
 
 export default router({
@@ -6,11 +7,11 @@ export default router({
     return recyclableService.queryAll();
   }),
 
-  remove: publicProcedure.input(entityIdSchema).mutation(({ input, ctx: { recyclableService } }) => {
-    return recyclableService.remove(input);
+  recover: publicProcedure.input(entityIdSchema).mutation(({ input, ctx: { recyclableService } }) => {
+    return recyclableService.recover(input);
   }),
 
-  batchCreate: publicProcedure.input(entityIdSchema.array()).mutation(({ input, ctx: { recyclableService } }) => {
+  batchCreate: publicProcedure.input(recyclablesDTOSchema).mutation(({ input, ctx: { recyclableService } }) => {
     return recyclableService.batchCreate(input);
   }),
 });

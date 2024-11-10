@@ -9,6 +9,7 @@ import { default as topic, type Row as TopicRow } from './topic.js';
 import { default as link, type Row as LinkRow } from './link.js';
 import { default as fileText, type Row as FileTextRow } from './fileText.js';
 import { default as entity, type Row as EntityRow } from './entity.js';
+import { default as revision, type Row as RevisionRow } from './revision.js';
 
 export interface Schemas {
   [note.tableName]: NoteRow;
@@ -22,6 +23,7 @@ export interface Schemas {
   [link.tableName]: LinkRow;
   [fileText.tableName]: FileTextRow;
   [entity.tableName]: EntityRow;
+  [revision.tableName]: RevisionRow;
 }
 
 export const schemas = [note, recyclable, star, file, annotation, material, memo, topic, link, fileText, entity];

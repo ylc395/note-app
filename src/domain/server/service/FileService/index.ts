@@ -1,7 +1,7 @@
 import { groupBy } from 'lodash-es';
 import { singleton } from 'tsyringe';
 import fs from 'fs-extra';
-import isMimeType from 'validator/es/lib/isMimeType';
+import isMimeType from 'validator/es/lib/isMimeType.js';
 import assert from 'node:assert';
 
 import { getHash } from '@utils/file.js';

@@ -20,7 +20,7 @@ export default class SqliteKvDatabase implements KvDatabase {
   public readonly ready: Promise<void>;
 
   private get db() {
-    return this.sqliteDb.getDb() as Kysely<KvDb>;
+    return this.sqliteDb.getDb() as unknown as Kysely<KvDb>;
   }
 
   public async init() {

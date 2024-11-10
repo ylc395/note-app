@@ -19,6 +19,8 @@ const INDEX_URL = process.env.VITE_SERVER_ENTRY_URL!;
 const DIRNAME = path.dirname(fileURLToPath(import.meta.url));
 
 export default class ElectronRuntime extends DesktopRuntime {
+  public readonly appName = 'main-app';
+  public readonly appVersion = '1.0.0'; // todo: 从某个构建变量里取
   private mainWindow?: BrowserWindow;
   private readonly ui = new UI();
   protected readonly logger = container.resolve(loggerToken);

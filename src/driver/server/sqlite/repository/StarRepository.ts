@@ -1,6 +1,6 @@
 import type { EntityId } from '@domain/shared/model/entity.js';
-import type { StarRepository } from '@domain/server/repository/StarRepository.js';
-import type { Star, StarQuery } from '@domain/server/model/star.js';
+import type { StarRepository, StarQuery } from '@domain/server/repository/starRepository.js';
+import type { Star } from '@domain/shared/model/star.js';
 
 import BaseRepository from './BaseRepository.js';
 import schema from '../schema/star.js';

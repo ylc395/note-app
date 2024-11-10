@@ -2,11 +2,10 @@ import type { Kysely } from 'kysely';
 
 export interface Row {
   sourceId: string;
-  sourceLocationStart: number;
-  sourceLocationEnd: number;
-  targetId: string;
+  sourceLocation: string;
+  target: string;
   targetType: number;
-  targetSelector: string | null;
+  targetFragmentId: string | null;
 }
 
 export const tableName = 'links';
@@ -17,10 +16,9 @@ export default {
     return db.schema
       .createTable(tableName)
       .addColumn('sourceId', 'text', (col) => col.notNull())
-      .addColumn('sourceLocationStart', 'integer', (col) => col.notNull())
-      .addColumn('sourceLocationEnd', 'integer', (col) => col.notNull())
-      .addColumn('targetId', 'text', (col) => col.notNull())
+      .addColumn('sourceLocation', 'text', (col) => col.notNull())
+      .addColumn('target', 'text', (col) => col.notNull())
       .addColumn('targetType', 'integer', (col) => col.notNull())
-      .addColumn('targetSelector', 'text');
+      .addColumn('targetFragmentId', 'text');
   },
 } as const;

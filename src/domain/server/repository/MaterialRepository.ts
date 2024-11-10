@@ -1,5 +1,12 @@
-import type { Material, MaterialPatch, MaterialQuery } from '@domain/server/model/material.js';
+import type { Material, MaterialPatchDTO, ClientMaterialQuery } from '@domain/shared/model/material.js';
 import type { FileVO } from '@domain/shared/model/file.js';
+
+export interface MaterialQuery extends ClientMaterialQuery {
+  id?: Material['id'][];
+  isAvailableOnly?: boolean;
+}
+
+export type MaterialPatch = MaterialPatchDTO & Partial<Pick<Material, 'updatedAt'>>;
 
 export interface MaterialRepository {
   create: (directory: Material) => Promise<Material>;

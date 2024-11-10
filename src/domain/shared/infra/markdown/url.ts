@@ -1,5 +1,4 @@
-import { EntityTypes, type EntityId } from '../../model/entity.js';
-import type { FragmentSelector } from '../../model/annotation.js';
+import type { EntityId } from '../../model/entity.js';
 import { APP_NAME } from '../constants.js';
 
 export const PROTOCOL = APP_NAME;
@@ -10,6 +9,10 @@ type Type = 'notes' | 'materials' | 'memos' | 'annotations' | 'files';
 
 // App's inner url looks like: note-app://notes/abcdefg
 type AppUrl = `${typeof URL_PREFIX}${Type}/${string}`;
+
+export function getAppUrl(entityId: EntityId, type: Type): AppUrl {
+  return `${URL_PREFIX}${type}/${entityId}`;
+}
 
 export function parseAppUrl(url: string) {
   if (!URL.canParse(url)) {
@@ -32,21 +35,4 @@ export function parseAppUrl(url: string) {
   }
 
   return null;
-}
-
-export function parseHash(hash: string): FragmentSelector | null {
-  return null;
-}
-
-export function getAppUrl(entityId: EntityId, entityType?: EntityTypes): AppUrl {
-  const types: Record<EntityTypes, Type> = {
-    [EntityTypes.Note]: 'notes',
-    [EntityTypes.Material]: 'materials',
-    [EntityTypes.Annotation]: 'annotations',
-    [EntityTypes.Memo]: 'memos',
-  };
-
-  const type = entityType ? types[entityType] : 'files';
-
-  return `${URL_PREFIX}${type}/${entityId}`;
 }

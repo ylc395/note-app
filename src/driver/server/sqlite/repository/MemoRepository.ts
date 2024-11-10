@@ -1,6 +1,6 @@
 import type { Selectable } from 'kysely';
-import type { MemoPatchDTO, MemoQuery, Memo, Duration } from '@domain/server/model/memo.js';
-import type { MemoRepository } from '@domain/server/repository/MemoRepository.js';
+import type { MemoPatchDTO, Memo, Duration } from '@domain/server/model/memo.js';
+import type { MemoRepository, MemoQuery } from '@domain/server/repository/memoRepository.js';
 
 import schema, { type Row } from '../schema/memo.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';

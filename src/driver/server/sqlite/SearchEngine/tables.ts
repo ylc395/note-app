@@ -24,7 +24,7 @@ interface FtsRow {
 export interface SearchEngineDb extends Db {
   [fileTextsFTSTableName]: FtsRow & FileTextRow & { [fileTextsFTSTableName]: string };
   [notesFTSTableName]: FtsRow & Pick<NoteRow, 'id' | 'title' | 'body'> & { [notesFTSTableName]: string };
-  [materialsFTSTableName]: FtsRow & Pick<MaterialRow, 'id' | 'title' | 'comment' | 'fileId'> & { [materialsFTSTableName]: string };
+  [materialsFTSTableName]: FtsRow & Pick<MaterialRow, 'id' | 'title' | 'body' | 'fileId'> & { [materialsFTSTableName]: string };
   [memosFTSTableName]: FtsRow & Pick<MemoRow, 'id' | 'body'> & { [memosFTSTableName]: string };
   [annotationsFTSTableName]: FtsRow & Pick<AnnotationRow, 'id' | 'targetId' | 'body'> & { [annotationsFTSTableName]: string };
 }
@@ -48,7 +48,7 @@ export const initialSqls =  [
       USING fts5(
         id UNINDEXED, 
         title, 
-        comment, 
+        body, 
         file_id UNINDEXED,
         created_at UNINDEXED,
         updated_at UNINDEXED,
@@ -105,18 +105,18 @@ export const initialSqls =  [
 
   sql`CREATE TRIGGER materials_ai AFTER INSERT ON ${sql.table(materialTableName)}
       BEGIN 
-        INSERT INTO ${sql.table(materialsFTSTableName)}(rowid, title, comment) VALUES (new.rowid, new.title, new.comment);
+        INSERT INTO ${sql.table(materialsFTSTableName)}(rowid, title, body) VALUES (new.rowid, new.title, new.body);
       END`,
 
   sql`CREATE TRIGGER materials_ad AFTER DELETE on ${sql.table(materialTableName)}
       BEGIN
-        INSERT INTO ${sql.table(materialsFTSTableName)}(${sql.raw(materialsFTSTableName)}, rowid, title, comment) VALUES ('delete', old.rowid, old.title, old.comment);
+        INSERT INTO ${sql.table(materialsFTSTableName)}(${sql.raw(materialsFTSTableName)}, rowid, title, body) VALUES ('delete', old.rowid, old.title, old.body);
       END`,
 
   sql`CREATE TRIGGER materials_au AFTER UPDATE on ${sql.table(materialTableName)}
       BEGIN
-        INSERT INTO ${sql.table(materialsFTSTableName)}(${sql.raw(materialsFTSTableName)}, rowid, title, comment) VALUES ('delete', old.rowid, old.title, old.comment);
-        INSERT INTO ${sql.table(materialsFTSTableName)}(rowid, title, comment) VALUES (new.rowid, new.title, new.comment);
+        INSERT INTO ${sql.table(materialsFTSTableName)}(${sql.raw(materialsFTSTableName)}, rowid, title, body) VALUES ('delete', old.rowid, old.title, old.body);
+        INSERT INTO ${sql.table(materialsFTSTableName)}(rowid, title, body) VALUES (new.rowid, new.title, new.body);
       END`,
 
   sql`CREATE TRIGGER memos_ai AFTER INSERT ON ${sql.table(memoTableName)}

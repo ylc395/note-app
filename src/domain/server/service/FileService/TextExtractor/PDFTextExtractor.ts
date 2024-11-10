@@ -3,20 +3,15 @@ import assert from 'node:assert';
 import { createCanvas } from 'canvas';
 import { container } from 'tsyringe';
 
-import type { Job } from './job';
+import type { Job } from './job.js';
 import ImageTextExtractor from './ImageTextExtractor.js';
 
 export default class PDFTextExtractor {
   private imageTextExtractor = container.resolve(ImageTextExtractor);
-  private isBusy = false;
   public async *extract(job: { data: ArrayBuffer; lang: Job['lang']; locationsToSkip: Job['locationsToSkip'] }) {
     // in nodejs, pdf.worker.js won't work
     // because it's a web worker, not a nodejs worker. see https://github.com/nodejs/node/issues/43583
     // so everything about pdf is done in main thread(so called "fake worker").
-    assert(!this.isBusy, 'PDFTextExtractor is busy');
-
-    this.isBusy = true;
-
     const doc = await pdfjs.getDocument(new Uint8Array(job.data)).promise;
     const pagesToSkip =
       job.locationsToSkip?.map(({ page }) => {
@@ -42,7 +37,6 @@ export default class PDFTextExtractor {
     }
 
     doc.destroy();
-    this.isBusy = false;
   }
 
   private async getTextContentByOcr(doc: pdfjs.PDFDocumentProxy, pageNum: number, lang: string[]) {

@@ -12,5 +12,5 @@ export type RecyclablesDTO = RecyclableDTO[];
 export interface RecyclableVO {
   entity: Entity;
   path: EntityPath;
-  deletedAt: number;
+  createdAt: number;
 }

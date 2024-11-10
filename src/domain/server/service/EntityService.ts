@@ -1,7 +1,6 @@
 import { constant, groupBy, mapValues, pick, uniq } from 'lodash-es';
 import { singleton } from 'tsyringe';
 import assert from 'assert';
-import { randomUUID } from 'node:crypto';
 
 import { Entity, type EntityId, EntityTypes } from '@domain/shared/model/entity.js';
 import BaseService from './BaseService.js';
@@ -21,13 +20,13 @@ export default class EntityService extends BaseService {
 
   public async assertAvailableIds(ids: EntityId[]) {
     ids = uniq(ids);
-    const entities = await this.repo.entities.findAll(ids, { isAvailableOnly: true });
+    const entities = await this.repo.entities.findAll({ ids, isAvailableOnly: true });
 
     assert(entities.length === ids.length, 'invalid entity ids');
   }
 
   public async getEntities(entityIds: EntityId[]) {
-    const entities = await this.repo.entities.findAll(entityIds);
+    const entities = await this.repo.entities.findAll({ ids: entityIds });
     const entitiesGroup = groupBy(entities, ({ type }) => type);
     const annotationIds = entitiesGroup[EntityTypes.Annotation]?.map(({ id }) => id);
 
@@ -51,7 +50,7 @@ export default class EntityService extends BaseService {
           ...pick(main, ['id', 'icon', 'createdAt', 'updatedAt']),
           title: EntityService.titleMappers[EntityTypes.Material](main),
           type: EntityTypes.Material,
-          body: main.comment,
+          body: main.body,
           file: files[main.id],
         },
       };
@@ -79,13 +78,5 @@ export default class EntityService extends BaseService {
     );
 
     return paths;
-  }
-
-  // generate id on business logic level instead of database level
-  // see https://medium.com/ingeniouslysimple/why-did-we-shift-away-from-database-generated-ids-7e0e54a49bb3
-  public static generateId() {
-    // remove the "-" is ok
-    // see https://stackoverflow.com/questions/51830845/how-safe-is-it-to-remove-the-in-a-randomly-generated-uuid
-    return randomUUID().replaceAll('-', '');
   }
 }

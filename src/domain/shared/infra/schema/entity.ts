@@ -12,9 +12,9 @@ const standaloneEntitySchema = z.object({
   id: entityIdSchema,
   type: entityTypesSchema,
   title: z.string(),
+  body: z.string().optional(),
   icon: z.union([z.string(), z.null()]),
   file: fileVOSchema.optional(),
-  body: z.string().optional(),
   createdAt: z.number(),
   updatedAt: z.number()
 });
