@@ -1,6 +1,5 @@
-import type { TextLocation } from '@domain/server/model/file.js';
+import type { TextLocation } from './file.js';
 import type { EntityTypes, EntityPath, Entity, EntityId } from './entity.js';
-import type { EntityMaterial } from './material.js';
 
 export type SearchTypes = EntityTypes.Note | EntityTypes.Memo | EntityTypes.Material;
 
@@ -29,7 +28,6 @@ interface MatchRecord {
 
 export interface SearchResult {
   entityId: EntityId;
-  mimeType?: EntityMaterial['mimeType'];
   rank: number;
   matches: {
     [SearchFields.Title]?: MatchRecord;
@@ -39,7 +37,6 @@ export interface SearchResult {
 }
 
 export interface SearchResultVO extends Entity {
-  mimeType?: SearchResult['mimeType'];
   matches: SearchResult['matches'];
-  path?: EntityPath;
+  path: EntityPath;
 }

@@ -1,4 +1,4 @@
-import { constant, groupBy, mapValues, pick, uniq } from 'lodash-es';
+import { constant, mapValues, pick, uniq } from 'lodash-es';
 import { singleton } from 'tsyringe';
 import assert from 'assert';
 
@@ -11,12 +11,16 @@ import { buildIndex } from '@utils/collection.js';
 
 @singleton()
 export default class EntityService extends BaseService {
-  private static readonly titleMappers = {
-    [EntityTypes.Note]: normalizeNoteTitle,
-    [EntityTypes.Material]: normalizeMaterialTitle,
-    [EntityTypes.Memo]: normalizeMemoTitle,
-    [EntityTypes.Annotation]: constant(''),
-  };
+  public static getReadableTitle(entity: Entity) {
+    const mappers = {
+      [EntityTypes.Note]: normalizeNoteTitle,
+      [EntityTypes.Material]: normalizeMaterialTitle,
+      [EntityTypes.Memo]: normalizeMemoTitle,
+      [EntityTypes.Annotation]: constant(''),
+    };
+
+    return mappers[entity.type](entity);
+  }
 
   public async assertAvailableIds(ids: EntityId[]) {
     ids = uniq(ids);
@@ -27,7 +31,7 @@ export default class EntityService extends BaseService {
 
   public async getEntities(entityIds: EntityId[]) {
     const entities = await this.repo.entities.findAll({ ids: entityIds });
-    const entitiesGroup = groupBy(entities, ({ type }) => type);
+    const entitiesGroup = Object.groupBy(entities, ({ type }) => type);
     const annotationIds = entitiesGroup[EntityTypes.Annotation]?.map(({ id }) => id);
 
     const materialsOfAnnotations = annotationIds ? await this.repo.annotations.findAllTargets(annotationIds) : {};
@@ -44,11 +48,9 @@ export default class EntityService extends BaseService {
 
       return {
         ...entity,
-        title: EntityService.titleMappers[entity.type](entity),
         file: files[entity.id],
         main: main && {
-          ...pick(main, ['id', 'icon', 'createdAt', 'updatedAt']),
-          title: EntityService.titleMappers[EntityTypes.Material](main),
+          ...pick(main, ['id', 'icon', 'createdAt', 'updatedAt', 'title']),
           type: EntityTypes.Material,
           body: main.body,
           file: files[main.id],
@@ -67,12 +69,11 @@ export default class EntityService extends BaseService {
   }
 
   public async getPaths(ids: EntityId[]) {
-    // no need to assertAvailable here. This is not a method for client.
     const ancestors = await this.repo.entities.findAncestors(ids);
     const paths = mapValues(ancestors, (entities) =>
       entities.map((entity) => ({
         id: entity.id,
-        title: EntityService.titleMappers[entity.type](entity),
+        title: EntityService.getReadableTitle(entity),
         icon: entity.icon,
       })),
     );

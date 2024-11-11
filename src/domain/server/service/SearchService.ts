@@ -18,9 +18,9 @@ export default class SearchService extends BaseService {
     const entities = await this.entityService.getEntities(ids);
 
     return results.map((result) => ({
+      ...entities[result.entityId]!,
       matches: result.matches,
       path: paths[result.entityId]!,
-      ...entities[result.entityId]!,
     }));
   }
 }

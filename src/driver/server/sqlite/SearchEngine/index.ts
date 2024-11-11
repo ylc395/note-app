@@ -165,7 +165,7 @@ export default class SqliteSearchEngine implements SearchEngine {
       .select(({ fn, val }) => [
         `${memosFTSTableName}.id as entityId`,
         sql.val('').as('titleResult'),
-        'rank',
+        `${memosFTSTableName}.rank as rank`,
         fn<string>('highlight', [
           sql.raw(memosFTSTableName),
           val(1),
@@ -201,7 +201,7 @@ export default class SqliteSearchEngine implements SearchEngine {
       .selectFrom(fileTextsFTSTableName)
       .innerJoin(filesTableName, `${fileTextsFTSTableName}.fileId`, `${filesTableName}.id`)
       .leftJoin(materialTableName, `${materialTableName}.fileId`, `${filesTableName}.id`)
-      .leftJoin(linkTableName, `${linkTableName}.targetId`, `${filesTableName}.id`)
+      .leftJoin(linkTableName, `${linkTableName}.target`, `${filesTableName}.id`)
       .leftJoin(recyclablesTableName, (join) =>
         join.on((eb) =>
           eb.or([
@@ -225,7 +225,6 @@ export default class SqliteSearchEngine implements SearchEngine {
         `${materialTableName}.id as materialId`,
         `${linkTableName}.sourceId as entityId`,
         `${fileTextsFTSTableName}.rank`,
-        `${filesTableName}.mimeType`,
         fn<string>('highlight', [
           sql.raw(fileTextsFTSTableName),
           val(1),
@@ -271,7 +270,7 @@ export default class SqliteSearchEngine implements SearchEngine {
     if (fileTextResult) {
       const resultMap = buildIndex(results, 'entityId');
 
-      for (const { materialId, entityId, contentResult, rank, mimeType } of fileTextResult) {
+      for (const { materialId, entityId, contentResult, rank } of fileTextResult) {
         const result = (materialId && resultMap[materialId]) || (entityId && resultMap[entityId]);
         const id = materialId || entityId;
         const parsed = SqliteSearchEngine.parseSearchResult(contentResult);
@@ -289,7 +288,6 @@ export default class SqliteSearchEngine implements SearchEngine {
         } else if (id) {
           resultMap[id] = {
             entityId: id,
-            mimeType,
             rank,
             matches: {
               [SearchFields.File]: [parsed],

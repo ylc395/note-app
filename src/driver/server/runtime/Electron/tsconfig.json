@@ -5,7 +5,8 @@
     "../../../../domain/server/**/*",
     "../../../../domain/shared/**/*",
     "../../../client/electron/**/*",
-    "../../**/*"
+    "../../**/*",
+    "../../../../vendors.d.ts"
   ],
   "exclude": ["../../../client/electron/preload/**/*"],
   "compilerOptions": {

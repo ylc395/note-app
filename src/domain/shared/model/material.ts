@@ -59,5 +59,5 @@ export function isEntityMaterial(v: Material | MaterialVO) {
 }
 
 export function normalizeTitle(v: Material | MaterialVO | Entity) {
-  return v.title || `未命名${dayjs(v.createdAt).format('YYYYMMDD-HHmm')}`;
+  return v.title || `未命名素材-${dayjs(v.createdAt).format('YYYYMMDD-HHmm')}`;
 }

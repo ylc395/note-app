@@ -118,6 +118,9 @@ dependencies:
   emoji-mart:
     specifier: ^5.5.2
     version: 5.5.2
+  escape-string-regexp:
+    specifier: ^5.0.0
+    version: 5.0.0
   front-matter:
     specifier: ^4.0.2
     version: 4.0.2
@@ -142,6 +145,9 @@ dependencies:
   mdast-util-to-markdown:
     specifier: ^2.1.0
     version: 2.1.0
+  mdast-util-to-string:
+    specifier: ^4.0.0
+    version: 4.0.0
   micromark-util-character:
     specifier: ^2.1.0
     version: 2.1.0
@@ -217,9 +223,6 @@ dependencies:
   unist-util-visit:
     specifier: ^5.0.0
     version: 5.0.0
-  validator:
-    specifier: ^13.12.0
-    version: 13.12.0
   webextension-polyfill:
     specifier: ^0.10.0
     version: 0.10.0
@@ -261,9 +264,6 @@ devDependencies:
   '@types/turndown':
     specifier: ^5.0.4
     version: 5.0.4
-  '@types/validator':
-    specifier: ^13.12.2
-    version: 13.12.2
   '@types/webextension-polyfill':
     specifier: ^0.10.7
     version: 0.10.7
@@ -1563,10 +1563,6 @@ packages:
   /@types/unist@3.0.2:
     resolution: {integrity: sha512-dqId9J8K/vGi5Zr7oo212BGii5m3q5Hxlkwy3WpYuKPklmBEvsbMYYyLxAQpSffdLl/gdW0XUpKWFvYmyoWCoQ==}
     dev: false
-
-  /@types/validator@13.12.2:
-    resolution: {integrity: sha512-6SlHBzUW8Jhf3liqrGGXyTJSIFe4nqlJ5A5KaMZ2l/vbM3Wh3KSybots/wfWVzNLK4D1NZluDlSQIbIEPx6oyA==}
-    dev: true
 
   /@types/webextension-polyfill@0.10.7:
     resolution: {integrity: sha512-10ql7A0qzBmFB+F+qAke/nP1PIonS0TXZAOMVOxEUsm+lGSW6uwVcISFNa0I4Oyj0884TZVWGGMIWeXOVSNFHw==}
@@ -7267,11 +7263,6 @@ packages:
   /v8-compile-cache-lib@3.0.1:
     resolution: {integrity: sha512-wa7YjyUGfNZngI/vtK0UHAN+lgDCxBPCylVXGp0zu59Fz5aiGtNXaq3DhIov063MorB+VfufLh3JlF2KdTK3xg==}
     dev: true
-
-  /validator@13.12.0:
-    resolution: {integrity: sha512-c1Q0mCiPlgdTVVVIJIrBuxNicYE+t/7oKeI9MWLj3fh/uq2Pxh/3eeWbVZ4OcGW1TUf53At0njHw5SMdA3tmMg==}
-    engines: {node: '>= 0.10'}
-    dev: false
 
   /vfile-message@4.0.2:
     resolution: {integrity: sha512-jRDZ1IMLttGj41KcZvlrYAaI3CfqpLpfpf+Mfig13viT6NKvRzWZ+lXz0Y5D60w6uJIBAOGq9mSHf0gktF0duw==}
