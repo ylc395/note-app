@@ -1,6 +1,6 @@
 import { groupBy, mapValues, size } from 'lodash-es';
 import assert from 'assert';
-import { singleton } from 'tsyringe';
+import { container, singleton } from 'tsyringe';
 import dayjs from 'dayjs';
 
 import { arrayOf, buildIndex } from '@utils/collection.js';
@@ -8,9 +8,12 @@ import type { Memo, MemoDTO, ClientMemoQuery, MemoVO, MemoPatchDTO, Duration } f
 
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
+import ContentService from './ContentService/index.js';
 
 @singleton()
 export default class MemoService extends BaseService {
+  private readonly content = container.resolve(ContentService);
+
   @BaseService.transaction()
   public async create(memo: MemoDTO) {
     if (memo.parentId) {
@@ -30,6 +33,10 @@ export default class MemoService extends BaseService {
       body: memo.body,
     });
 
+    if (memo.body) {
+      await this.content.extract(newMemo);
+    }
+
     return this.toVO(newMemo, true);
   }
 
@@ -43,6 +50,10 @@ export default class MemoService extends BaseService {
       ...patch,
       updatedAt: hasContentUpdated ? Date.now() : undefined,
     });
+
+    if (hasContentUpdated) {
+      await this.content.extract({ id, body: patch.body });
+    }
   }
 
   @BaseService.transaction()

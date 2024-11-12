@@ -1,4 +1,4 @@
-import assert from 'assert';
+import assert from 'node:assert';
 import { container, singleton } from 'tsyringe';
 
 import type { Annotation, AnnotationDTO, AnnotationPatchDTO } from '@domain/shared/model/annotation.js';
@@ -7,10 +7,12 @@ import type { EntityId } from '@domain/shared/model/entity.js';
 import BaseService from './BaseService.js';
 import MaterialService from './MaterialService.js';
 import EntityService from './EntityService.js';
+import ContentService from './ContentService/index.js';
 
 @singleton()
 export default class AnnotationService extends BaseService {
   private readonly materialService = container.resolve(MaterialService);
+  private readonly content = container.resolve(ContentService);
 
   @BaseService.transaction()
   public async create(annotation: AnnotationDTO) {
@@ -29,6 +31,10 @@ export default class AnnotationService extends BaseService {
       updatedAt: now,
     });
 
+    if (created.body) {
+      await this.content.extract(created);
+    }
+
     return created;
   }
 
@@ -40,11 +46,17 @@ export default class AnnotationService extends BaseService {
 
   @BaseService.transaction()
   public async updateOne(annotationId: Annotation['id'], patch: AnnotationPatchDTO) {
+    const hasContentUpdated = typeof patch.body === 'string';
+
     const annotation = {
       ...patch,
-      updatedAt: Date.now(),
+      updatedAt: hasContentUpdated ? Date.now() : undefined,
     };
     const updated = await this.repo.annotations.update(annotationId, annotation);
     assert(updated, 'invalid id');
+
+    if (hasContentUpdated) {
+      await this.content.extract({ id: annotationId, body: patch.body });
+    }
   }
 }

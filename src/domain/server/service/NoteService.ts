@@ -1,4 +1,4 @@
-import { singleton } from 'tsyringe';
+import { container, singleton } from 'tsyringe';
 import assert from 'node:assert';
 import { first, pick, uniq } from 'lodash-es';
 import {
@@ -15,9 +15,12 @@ import { arrayOf, buildIndex } from '@utils/collection.js';
 
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
+import ContentService from './ContentService/index.js';
 
 @singleton()
 export default class NoteService extends BaseService {
+  private readonly content = container.resolve(ContentService);
+
   @BaseService.transaction()
   public async create(note: NoteDTO | DuplicatedNoteDTO) {
     let newNote: Required<Note>;
@@ -40,6 +43,10 @@ export default class NoteService extends BaseService {
         updatedAt: now,
         createdAt: now,
       });
+    }
+
+    if (newNote.body) {
+      await this.content.extract(newNote);
     }
 
     return await this.toVO(newNote, true);
@@ -74,6 +81,10 @@ export default class NoteService extends BaseService {
       ...notePatch,
       updatedAt: hasContentUpdated ? Date.now() : undefined,
     });
+
+    if (typeof notePatch.body === 'string') {
+      await this.content.extract({ id: noteId, body: notePatch.body });
+    }
   }
 
   private async toVO(notes: Note, isNew?: boolean): Promise<Required<NoteVO>>;

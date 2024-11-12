@@ -1,6 +1,6 @@
 import { uniq, pick, first } from 'lodash-es';
 import assert from 'assert';
-import { singleton } from 'tsyringe';
+import { container, singleton } from 'tsyringe';
 
 import {
   type MaterialDTO,
@@ -15,9 +15,12 @@ import { buildIndex } from '@utils/collection.js';
 
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
+import ContentService from './ContentService/index.js';
 
 @singleton()
 export default class MaterialService extends BaseService {
+  private readonly content = container.resolve(ContentService);
+
   @BaseService.transaction()
   public async create(newMaterial: MaterialDTO) {
     if (newMaterial.parentId) {
@@ -39,6 +42,10 @@ export default class MaterialService extends BaseService {
       updatedAt: now,
       createdAt: now,
     });
+
+    if (isEntityMaterial(material) && material.body) {
+      await this.content.extract(material);
+    }
 
     return this.toVO(material, true);
   }
@@ -101,6 +108,10 @@ export default class MaterialService extends BaseService {
       ...patch,
       updatedAt: hasContentUpdated ? Date.now() : undefined,
     };
+
+    if (typeof patch.body === 'string') {
+      await this.content.extract({ id: materialId, body: patch.body });
+    }
 
     await this.repo.materials.update(materialId, material);
   }

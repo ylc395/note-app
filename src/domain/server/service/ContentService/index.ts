@@ -31,7 +31,7 @@ import TopicExtractor from './TopicExtractor.js';
 export default class ContentService extends BaseService {
   private readonly entityService = container.resolve(EntityService);
 
-  private extract({ body, id }: Pick<Entity, 'id' | 'body'>) {
+  public async extract({ body, id }: Pick<Entity, 'id' | 'body'>) {
     if (typeof body !== 'string') {
       return;
     }
@@ -39,13 +39,16 @@ export default class ContentService extends BaseService {
     const extractors = [new TopicExtractor(id), new LinkExtractor(id)];
     const mdAst = ContentService.parseMarkdown(body);
 
-    visit(mdAst, (node) => extractors.forEach((extractor) => extractor.visit(node)));
-
-    return this.transaction(async () => {
-      for (const extractor of extractors) {
-        await extractor.done();
-      }
-    });
+    try {
+      visit(mdAst, (node) => extractors.forEach((extractor) => extractor.visit(node)));
+      await this.transaction(async () => {
+        for (const extractor of extractors) {
+          await extractor.done();
+        }
+      });
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   public async queryAllTopics() {
