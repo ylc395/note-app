@@ -10,16 +10,13 @@ export const textLocationSchema = z.object({
 });
 export const snippetSchema = z.object({
   text: z.string(),
-  highlight: textLocationSchema.optional()
+  highlights: z.array(textLocationSchema)
 });
-export const referenceSchema = z.object({
-  entity: entitySchema,
+export const linkVOSchema = z.object({
+  sourceEntity: entitySchema,
   sourceLocation: textLocationSchema,
   sourceSnippet: snippetSchema.required(),
+  targetEntity: entitySchema,
   targetFragmentId: z.union([z.string(), z.null()]),
-  targetSnippet: snippetSchema
-});
-export const referrerSchema = z.object({
-  entity: entitySchema,
-  references: z.array(referenceSchema)
+  targetSnippet: z.union([snippetSchema, z.null()])
 });

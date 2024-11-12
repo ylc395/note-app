@@ -1,5 +1,5 @@
-import { entityIdSchema } from '#domain/shared/infra/schema/entity.js';
-import { recyclablesDTOSchema } from '#domain/shared/infra/schema/recyclable.js';
+import { entityIdSchema } from '#domain/shared/infra/apiSchema/entity.js';
+import { recyclablesDTOSchema } from '#domain/shared/infra/apiSchema/recyclable.js';
 import { publicProcedure, router } from './trpc.js';
 
 export default router({

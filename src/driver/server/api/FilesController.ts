@@ -1,4 +1,4 @@
-import { fileDTOSchema } from '#domain/shared/infra/schema/file.js';
+import { fileDTOSchema } from '#domain/shared/infra/apiSchema/file.js';
 import { publicProcedure, router } from './trpc.js';
 
 export default router({

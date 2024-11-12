@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev:electron": "node script/dev/electron/index.js",
-    "dev:zod": "zodify --out-dir ./src/domain/shared/infra/schema --pattern ^src/domain/shared/model --tag api --import-with-ext",
+    "dev:zod": "zodify --out-dir ./src/domain/shared/infra/apiSchema --pattern ^src/domain/shared/model --tag api --import-with-ext",
     "dev:extension": "node script/dev-extension.js",
     "dev-clean:electron": "node script/dev/electron/index.js --clean",
     "clean": "rm -rf ./dist && rm -rf node_modules/.vite",

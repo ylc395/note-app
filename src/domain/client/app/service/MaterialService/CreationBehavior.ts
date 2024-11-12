@@ -10,7 +10,7 @@ import type { FileDTO, FileVO } from '#domain/shared/model/file';
 import { Workbench } from '#domain/client/app/model/workbench';
 import { token as rpcToken } from '#domain/client/common/infra/rpc';
 import { type EntityMaterialVO, MaterialTypes } from '#domain/shared/model/material';
-import { fileDTOSchema } from '#domain/shared/infra/schema/file';
+import { fileDTOSchema } from '#domain/shared/infra/apiSchema/file';
 import { getHash } from '#utils/file';
 import { EntityTypes } from '../../../common/model/entity';
 

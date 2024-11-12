@@ -4,7 +4,7 @@ import {
   clientMaterialQuerySchema,
   materialPatchDTOSchema,
   materialSchema,
-} from '#domain/shared/infra/schema/material.js';
+} from '#domain/shared/infra/apiSchema/material.js';
 import { publicProcedure, router } from './trpc.js';
 
 export default router({

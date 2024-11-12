@@ -1,6 +1,6 @@
 import { tuple } from 'zod';
 import { publicProcedure, router } from './trpc.js';
-import { revisionPatchDTOSchema, revisionSchema } from '#domain/shared/infra/schema/revision.js';
+import { revisionPatchDTOSchema, revisionSchema } from '#domain/shared/infra/apiSchema/revision.js';
 
 export default router({
   update: publicProcedure

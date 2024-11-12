@@ -6,7 +6,7 @@ import {
   memoDTOSchema,
   durationSchema,
   memoSchema,
-} from '#domain/shared/infra/schema/memo.js';
+} from '#domain/shared/infra/apiSchema/memo.js';
 
 import { publicProcedure, router } from './trpc.js';
 
