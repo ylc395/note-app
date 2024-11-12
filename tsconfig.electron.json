@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "./src/utils/**/*",
+    "./src/domain/server/**/*",
+    "./src/domain/shared/**/*",
+    "./src/driver/client/electron/**/*",
+    "./src/driver/server/api/**/*",
+    "./src/driver/server/runtime/Electron/**/*",
+    "./src/driver/server/sqlite/**/*",
+    "./src/driver/server/runtime/Desktop.ts",
+    "./src/vendors.d.ts"
+  ],
+  "exclude": ["./src/driver/client/electron/preload/**/*"],
+  "compilerOptions": {
+    "moduleResolution": "NodeNext",
+    "module": "NodeNext"
+  }
+}

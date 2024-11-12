@@ -4,7 +4,7 @@ import download from 'download';
 import shell from 'shelljs';
 import { get, mapValues, first } from 'lodash-es';
 
-import { OUTPUT, ENV } from './constants.js';
+import { OUTPUT, ENV, TSCONFIG } from './constants.js';
 
 async function downloadSqliteTokenizer() {
   const localPath = path.resolve('dist/driver/server/sqlite/simple-tokenizer');
@@ -42,9 +42,7 @@ async function downloadSqliteTokenizer() {
 
 function createPackageJson() {
   const getImports = () => {
-    const tsconfig = fs.readJSONSync(path.resolve('tsconfig.json'));
-    const paths = get(tsconfig, 'compilerOptions.paths');
-
+    const paths = get(TSCONFIG, 'compilerOptions.paths');
     return mapValues(paths, (targets) => first(targets).replace('./src', '.'));
   };
 
@@ -59,7 +57,7 @@ function createPackageJson() {
 }
 
 export default async function buildMain() {
-  const BUILD_COMMAND = `tsc --project ./src/driver/server/runtime/Electron/tsconfig.json`;
+  const BUILD_COMMAND = `tsc --project ./tsconfig.electron.json`;
   const compileResult = shell.exec(BUILD_COMMAND);
 
   if (compileResult.code > 0) {

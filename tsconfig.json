@@ -22,10 +22,5 @@
       "#api/*": ["./src/driver/server/api/*"],
       "#web/*": ["./src/driver/client/web/*"]
     }
-  },
-  "ts-node": {
-    "compilerOptions": {
-      "types": ["node"]
-    }
   }
 }
