@@ -3,8 +3,8 @@ import { container } from 'tsyringe';
 import { createRoot } from 'react-dom/client';
 import assert from 'assert';
 
-import { token as rpcToken } from '#domain/client/common/infra/rpc';
-import { token as uiToken } from '#domain/shared/infra/ui';
+import { token as rpcToken } from '#domain/client/shared/infra/rpc';
+import { token as uiToken } from '#domain/shared/infra/ui/common';
 import { token as localStorageToken } from '#domain/client/app/infra/localStorage';
 import { APP_NAME } from '#domain/shared/infra/constants';
 import '#domain/client/common/infra/mobx';

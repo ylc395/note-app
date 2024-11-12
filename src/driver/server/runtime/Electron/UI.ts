@@ -7,11 +7,16 @@ import {
 } from 'electron';
 import { BLANK_URL, sanitizeUrl } from '@braintree/sanitize-url';
 import assert from 'node:assert';
-import { type MenuItem, type UI, type UIIpcPayload, uiIpcPayloadSchema } from '#domain/shared/infra/ui.js';
 
-export { UI_CHANNEL } from '#domain/shared/infra/ui.js';
+import {
+  type MenuItem,
+  type ElectronUI as IElectronUI,
+  type UIIpcPayload,
+  uiIpcPayloadSchema,
+  UI_CHANNEL,
+} from '#domain/shared/infra/ui/electron.js';
 
-export default class electronUI implements Partial<UI> {
+export default class ElectronUI implements IElectronUI {
   public ipcEvent?: IpcMainInvokeEvent;
 
   public openNewWindow(url: string) {
@@ -53,4 +58,6 @@ export default class electronUI implements Partial<UI> {
     const p = uiIpcPayloadSchema.safeParse(payload);
     return p.success;
   }
+
+  public static RPC_CHANNEL = UI_CHANNEL;
 }

@@ -11,7 +11,7 @@ import { token as loggerToken } from '#domain/shared/infra/logger.js';
 import FileService from '#domain/server/service/FileService/index.js';
 import { PROTOCOL, parseAppUrl } from '#domain/shared/infra/markdown/url.js';
 
-import UI, { UI_CHANNEL } from './UI.js';
+import ElectronUI from './UI.js';
 import { routers } from '../../api/index.js';
 import DesktopRuntime from '../Desktop.js';
 
@@ -22,7 +22,7 @@ export default class ElectronRuntime extends DesktopRuntime {
   public readonly appName = 'main-app';
   public readonly appVersion = '1.0.0'; // todo: 从某个构建变量里取
   private mainWindow?: BrowserWindow;
-  private readonly ui = new UI();
+  private readonly ui = new ElectronUI();
   protected readonly logger = container.resolve(loggerToken);
   private readonly fileService = container.resolve(FileService);
 
@@ -54,7 +54,7 @@ export default class ElectronRuntime extends DesktopRuntime {
         },
       },
     ]);
-    ipcMain.handle(UI_CHANNEL, this.handleUI);
+    ipcMain.handle(ElectronUI.RPC_CHANNEL, this.handleUI);
 
     await electronApp.whenReady();
     protocol.handle(PROTOCOL, this.protocolHandler); // 这个必须在 whenReady 后
@@ -77,10 +77,10 @@ export default class ElectronRuntime extends DesktopRuntime {
 
   private readonly handleUI = (e: IpcMainInvokeEvent, payload: unknown) => {
     this.ui.ipcEvent = e;
-    const isValid = (str: string): str is keyof UI => str in this.ui;
+    const isValidFuncName = (str: string): str is keyof ElectronUI => str in this.ui;
 
-    assert(UI.isValidPayload(payload));
-    assert(isValid(payload.funcName));
+    assert(ElectronUI.isValidPayload(payload));
+    assert(isValidFuncName(payload.funcName));
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (this.ui[payload.funcName] as any)(...payload.args);

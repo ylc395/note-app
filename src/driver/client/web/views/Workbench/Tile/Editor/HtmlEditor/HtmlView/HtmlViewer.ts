@@ -2,7 +2,7 @@ import { when, computed, makeObservable, observable, action } from 'mobx';
 import DOMPurify from 'dompurify';
 import getCssSelector from 'css-selector-generator';
 
-import { token as uiToken } from '#domain/shared/infra/ui';
+import { token as uiToken } from '#domain/shared/infra/ui/common';
 import type HtmlEditor from '#domain/client/app/model/material/editor/HtmlEditor';
 
 import SelectionManager, { type SelectionEvent } from '../../common/SelectionManager';

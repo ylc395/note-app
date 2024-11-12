@@ -1,6 +1,5 @@
 import { createServer } from 'vite';
 import path from 'node:path';
-import shell from 'shelljs';
 import { checker } from 'vite-plugin-checker';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import react from '@vitejs/plugin-react-swc';
@@ -33,8 +32,6 @@ export default async function createViteServer() {
 
   await server.listen();
   server.printUrls();
-  const viteUrl = server.resolvedUrls.local[0];
-  shell.env['VITE_SERVER_ENTRY_URL'] = viteUrl;
 
   return server;
 }

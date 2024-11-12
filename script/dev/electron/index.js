@@ -4,9 +4,12 @@ import buildMain from './build-main.js';
 
 await buildPreload();
 
-// const viteServer = await createViteServer();
-const electronProcess = await buildMain();
+const viteServer = await createViteServer();
+const viteUrl = viteServer.resolvedUrls.local[0];
 
-// if (!electronProcess) {
-//   await viteServer.close();
-// }
+try {
+  await buildMain(viteUrl);
+} catch (error) {
+  console.error(error);
+  await viteServer.close();
+}

@@ -2,6 +2,7 @@ import pdfjs from 'pdfjs-dist';
 import assert from 'node:assert';
 import { createCanvas } from 'canvas';
 import { container } from 'tsyringe';
+import type { RenderParameters } from 'pdfjs-dist/types/src/display/api.js';
 
 import type { Job } from './job.js';
 import ImageTextExtractor from './ImageTextExtractor.js';
@@ -44,7 +45,10 @@ export default class PDFTextExtractor {
     const page = await doc.getPage(pageNum);
     const viewport = page.getViewport({ scale });
     const canvas = createCanvas(viewport.width, viewport.height);
-    const renderTask = page.render({ viewport, canvasContext: canvas.getContext('2d') });
+    const renderTask = page.render({
+      viewport,
+      canvasContext: canvas.getContext('2d') as unknown as RenderParameters['canvasContext'],
+    });
 
     await renderTask.promise;
 

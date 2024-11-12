@@ -56,7 +56,7 @@ function createPackageJson() {
   );
 }
 
-export default async function buildMain() {
+export default async function buildMain(viteUrl) {
   const BUILD_COMMAND = `tsc --project ./tsconfig.electron.json`;
   const compileResult = shell.exec(BUILD_COMMAND);
 
@@ -67,6 +67,7 @@ export default async function buildMain() {
   createPackageJson();
   await downloadSqliteTokenizer();
 
+  shell.env['VITE_SERVER_ENTRY_URL'] = viteUrl;
   shell.env['DEV_CLEAN'] = process.argv.includes('--clean') ? '1' : '0';
   shell.env['NODE_ENV'] = ENV;
 

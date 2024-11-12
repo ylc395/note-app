@@ -1,8 +1,8 @@
 import { ipcRenderer } from 'electron';
-import { type UI, type UIIpcPayload, UI_CHANNEL } from '#domain/shared/infra/ui';
+import { type ElectronUI, type UIIpcPayload, UI_CHANNEL } from '#domain/shared/infra/ui/electron';
 
 const invoke =
-  (funcName: keyof UI) =>
+  (funcName: keyof ElectronUI) =>
   (...args: unknown[]) => {
     const payload: UIIpcPayload = { args, funcName };
     console.log('[electron-ui]', payload);
@@ -11,7 +11,7 @@ const invoke =
 
 // can not use Proxy here, so use a plain object instead
 // see https://www.electronjs.org/docs/latest/api/context-bridge#api
-const proxyUI: UI = {
+const proxyUI: ElectronUI = {
   openNewWindow: invoke('openNewWindow'),
   getActionFromMenu: invoke('getActionFromMenu'),
 };

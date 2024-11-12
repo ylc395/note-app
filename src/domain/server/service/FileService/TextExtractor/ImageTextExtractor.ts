@@ -127,7 +127,7 @@ export default class ImageTextExtractor {
     }
 
     this.isBusy = true;
-    const recognizeResult = await tesseract.recognize(data, lang.join('+'), {
+    const recognizeResult = await tesseract.recognize(Buffer.from(data), lang.join('+'), {
       corePath: path.join(process.cwd(), 'node_modules/tesseract.js-core'),
       cachePath: path.join(this.runtime.getAppDir(), 'ocr_cache'),
       workerBlobURL: false,

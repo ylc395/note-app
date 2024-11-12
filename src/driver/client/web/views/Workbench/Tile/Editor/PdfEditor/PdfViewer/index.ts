@@ -5,7 +5,7 @@ import { container } from 'tsyringe';
 import assert from 'assert';
 
 import type PdfEditor from '#domain/client/app/model/material/editor/PdfEditor';
-import { token as uiToken } from '#domain/shared/infra/ui';
+import { token as uiToken } from '#domain/shared/infra/ui/common';
 import { AnnotationEditorType, AnnotationMode } from 'pdfjs-dist';
 import AnnotationManager from './AnnotationManager';
 
