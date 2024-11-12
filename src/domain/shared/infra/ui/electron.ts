@@ -12,4 +12,4 @@ export type ElectronUI = Pick<UI, 'getActionFromMenu' | 'openNewWindow'>;
 
 export type UIIpcPayload = ZodInfer<typeof uiIpcPayloadSchema>;
 
-export * from './menu.js';
+export type { MenuItem } from './common.js';

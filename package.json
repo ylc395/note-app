@@ -107,6 +107,7 @@
     "mobx": "^6.12.3",
     "mobx-react-lite": "^4.0.7",
     "normalize.css": "^8.0.1",
+    "notyf": "^3.10.0",
     "page-lifecycle": "^0.1.2",
     "pdfjs-dist": "^3.11.174",
     "queue": "^7.0.0",
