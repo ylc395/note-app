@@ -7,14 +7,14 @@ import {
   type MaterialDirectoryVO,
   type NewMaterialEntityDTO,
   type MaterialVO,
-} from '@domain/model/material';
-import type { FileVO } from '@domain/model/file';
-import type { NoteBodyDTO, NewNoteDTO, NoteVO } from '@domain/model/note';
-import type { MemoDTO } from '@domain/model/memo';
-import { type EntityId, EntityTypes } from '@domain/model/entity';
-import NoteTree from '@domain/model/note/Tree';
-import MaterialTree from '@domain/model/material/Tree';
-import { Statuses, type Payload } from '@domain/model/mainApp';
+} from '#domain/model/material';
+import type { FileVO } from '#domain/model/file';
+import type { NoteBodyDTO, NewNoteDTO, NoteVO } from '#domain/model/note';
+import type { MemoDTO } from '#domain/model/memo';
+import { type EntityId, EntityTypes } from '#domain/model/entity';
+import NoteTree from '#domain/model/note/Tree';
+import MaterialTree from '#domain/model/material/Tree';
+import { Statuses, type Payload } from '#domain/model/mainApp';
 
 const HOST = 'http://localhost:3001';
 const TOKEN_KEY = 'token';

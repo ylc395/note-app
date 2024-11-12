@@ -2,7 +2,7 @@ import { observer } from 'mobx-react-lite';
 import assert from 'assert';
 
 import ListItem from './index';
-import MemoTreeNode from '@domain/client/app/model/memo/TreeNode';
+import MemoTreeNode from '#domain/client/app/model/memo/TreeNode';
 import Editor from '../../Editor';
 
 export default observer(function ChildrenList({ node }: { node: MemoTreeNode }) {

@@ -7,9 +7,9 @@ import path, { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import assert from 'node:assert';
 
-import { token as loggerToken } from '@domain/shared/infra/logger.js';
-import type { Database } from '@domain/server/infra/database.js';
-import { IS_TEST, IS_DEV } from '@domain/shared/infra/constants.js';
+import { token as loggerToken } from '#domain/shared/infra/logger.js';
+import type { Database } from '#domain/server/infra/database.js';
+import { IS_TEST, IS_DEV } from '#domain/shared/infra/constants.js';
 
 import { type Schemas, schemas } from './schema/index.js';
 

@@ -1,10 +1,10 @@
 import { container } from 'tsyringe';
-import { Workbench, type Tile } from '@domain/client/app/model/workbench';
-import { IS_DEV } from '@domain/shared/infra/constants';
+import { Workbench, type Tile } from '#domain/client/app/model/workbench';
+import { IS_DEV } from '#domain/shared/infra/constants';
 import { observer } from 'mobx-react-lite';
 import clsx from 'clsx';
 
-import Droppable from '@web/components/dnd/Droppable';
+import Droppable from '#web/components/dnd/Droppable';
 import TabBar from './TabBar';
 import Editor from './Editor';
 import Breadcrumb from './Breadcrumb';

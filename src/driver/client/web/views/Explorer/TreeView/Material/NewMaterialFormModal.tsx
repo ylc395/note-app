@@ -2,9 +2,9 @@ import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 import { useRef } from 'react';
 
-import Modal from '@web/components/Modal';
-import MaterialService from '@domain/client/app/service/MaterialService';
-import Field from '@web/components/form/Field';
+import Modal from '#web/components/Modal';
+import MaterialService from '#domain/client/app/service/MaterialService';
+import Field from '#web/components/form/Field';
 
 export default observer(function NewMaterialFormModal() {
   const inputRef = useRef<HTMLInputElement | null>(null);

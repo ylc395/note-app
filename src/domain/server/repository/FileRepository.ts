@@ -1,4 +1,4 @@
-import type { File, FileVO, FileTextRecord } from '@domain/server/model/file.js';
+import type { File, FileVO, FileTextRecord } from '#domain/server/model/file.js';
 
 export type FilePatch = Partial<Pick<File, 'isTextExtracted' | 'lang'>>;
 

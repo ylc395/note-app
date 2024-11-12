@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { useBoolean } from 'ahooks';
 
-import Button, { type Props as ButtonProps } from '@web/components/Button';
+import Button, { type Props as ButtonProps } from '#web/components/Button';
 import Menu, { type Props as MenuProps } from './Menu';
 import assert from 'assert';
 

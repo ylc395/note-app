@@ -3,7 +3,7 @@ import { observer } from 'mobx-react-lite';
 import { useEffect, useRef } from 'react';
 
 import type { SearchState } from './type';
-import Button from '@web/components/Button';
+import Button from '#web/components/Button';
 
 interface Props {
   onChange: (keyword: string) => void;

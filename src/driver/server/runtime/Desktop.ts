@@ -2,13 +2,13 @@ import path from 'node:path';
 import { hostname } from 'node:os';
 import { container } from 'tsyringe';
 
-import { APP_NAME, IS_DEV, IS_TEST } from '@domain/shared/infra/constants.js';
-import { Runtime, token as runtimeToken } from '@domain/server/infra/runtime.js';
-import { token as databaseToken } from '@domain/server/infra/database.js';
-import { token as kvDatabaseToken } from '@domain/server/infra/kvDatabase.js';
-import { token as searchEngineToken } from '@domain/server/infra/searchEngine.js';
-import { token as repositoriesToken } from '@domain/server/repository/index.js';
-import { token as loggerToken } from '@domain/shared/infra/logger.js';
+import { APP_NAME, IS_DEV, IS_TEST } from '#domain/shared/infra/constants.js';
+import { Runtime, token as runtimeToken } from '#domain/server/infra/runtime.js';
+import { token as databaseToken } from '#domain/server/infra/database.js';
+import { token as kvDatabaseToken } from '#domain/server/infra/kvDatabase.js';
+import { token as searchEngineToken } from '#domain/server/infra/searchEngine.js';
+import { token as repositoriesToken } from '#domain/server/repository/index.js';
+import { token as loggerToken } from '#domain/shared/infra/logger.js';
 
 import SqliteDb from '../sqlite/Database.js';
 import SqliteKvDatabase from '../sqlite/KvDatabase.js';

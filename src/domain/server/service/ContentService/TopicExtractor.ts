@@ -2,8 +2,8 @@ import assert from 'node:assert';
 import type { Node as UnistNode } from 'mdast';
 import { is } from 'unist-util-is';
 
-import type { Topic as TopicNode } from '@domain/shared/infra/markdown/syntax/topic.js';
-import type { TopicRecord } from '@domain/server/model/content.js';
+import type { Topic as TopicNode } from '#domain/shared/infra/markdown/syntax/topic.js';
+import type { TopicRecord } from '#domain/server/model/content.js';
 import Extractor from './Extractor.js';
 
 export default class TopicExtractor extends Extractor {

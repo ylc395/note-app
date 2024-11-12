@@ -10,8 +10,8 @@ import { getFragmentDirectives, parseFragmentDirectives } from 'text-fragments-p
 import {
   mdastExtension as topicExtension,
   tokenExtension as topicTokenExtension,
-} from '@domain/shared/infra/markdown/syntax/topic.js';
-import type { Entity, EntityId } from '@domain/shared/model/entity.js';
+} from '#domain/shared/infra/markdown/syntax/topic.js';
+import type { Entity, EntityId } from '#domain/shared/model/entity.js';
 import {
   type TopicVO,
   type Snippet,
@@ -20,7 +20,7 @@ import {
   type LinkVO,
   LinkTargetType,
   stringifyLocation,
-} from '@domain/server/model/content.js';
+} from '#domain/server/model/content.js';
 
 import BaseService from '../BaseService.js';
 import EntityService from '../EntityService.js';

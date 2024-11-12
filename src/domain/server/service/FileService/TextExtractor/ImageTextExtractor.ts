@@ -4,8 +4,8 @@ import path from 'node:path';
 import { container } from 'tsyringe';
 
 import type { Job } from './job.js';
-import { token as runtimeToken } from '@domain/server/infra/runtime.js';
-import { token as loggerToken } from '@domain/shared/infra/logger.js';
+import { token as runtimeToken } from '#domain/server/infra/runtime.js';
+import { token as loggerToken } from '#domain/shared/infra/logger.js';
 
 // @see https://tesseract-ocr.github.io/tessdoc/Data-Files#data-files-for-version-400-november-29-2016
 const SUPPORT_LANGS = {

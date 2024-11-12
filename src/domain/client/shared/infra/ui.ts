@@ -1,1 +1,1 @@
-export { token, type MenuItem } from '@domain/shared/infra/ui';
+export { token, type MenuItem } from '#domain/shared/infra/ui';

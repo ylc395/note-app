@@ -6,7 +6,7 @@ import {
   notePatchDTOSchema,
   noteSchema,
   noteBatchPatchDTOSchema,
-} from '@domain/shared/infra/schema/note.js';
+} from '#domain/shared/infra/schema/note.js';
 import { publicProcedure, router } from './trpc.js';
 
 export default router({

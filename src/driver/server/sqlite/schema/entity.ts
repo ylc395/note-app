@@ -1,5 +1,5 @@
 import { sql, type Kysely } from 'kysely';
-import { EntityTypes } from '@domain/shared/model/entity.js';
+import { EntityTypes } from '#domain/shared/model/entity.js';
 
 import type { Schemas } from './index.js';
 import { tableName as noteTableName } from './note.js';

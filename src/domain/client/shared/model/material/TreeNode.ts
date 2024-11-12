@@ -1,4 +1,4 @@
-import { type MaterialVO, normalizeTitle } from '@domain/shared/model/material';
+import { type MaterialVO, normalizeTitle } from '#domain/shared/model/material';
 import TreeNode from '../abstract/TreeNode';
 
 export default class MaterialTreeNode extends TreeNode<MaterialVO> {

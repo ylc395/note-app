@@ -2,12 +2,12 @@ import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 import { PlusIcon, ShrinkIcon, SortDescIcon } from 'lucide-react';
 
-import MaterialService from '@domain/client/app/service/MaterialService';
-import MaterialExplorer from '@domain/client/app/model/material/Explorer';
-import { MaterialTypes } from '@domain/shared/model/material';
-import { SortBy } from '@domain/client/app/model/abstract/Explorer/SortBehavior';
+import MaterialService from '#domain/client/app/service/MaterialService';
+import MaterialExplorer from '#domain/client/app/model/material/Explorer';
+import { MaterialTypes } from '#domain/shared/model/material';
+import { SortBy } from '#domain/client/app/model/abstract/Explorer/SortBehavior';
 import ExplorerHeader from '../common/Header';
-import MoveBehavior from '@domain/client/app/model/behavior/MoveBehavior';
+import MoveBehavior from '#domain/client/app/model/behavior/MoveBehavior';
 
 export default observer(function Header() {
   const {

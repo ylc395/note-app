@@ -1,9 +1,9 @@
 import type { Selectable } from 'kysely';
 
-import type { AnnotationRepository } from '@domain/server/repository/annotationRepository.js';
-import type { Annotation, AnnotationPatchDTO } from '@domain/shared/model/annotation.js';
-import type { EntityId } from '@domain/shared/model/entity.js';
-import { buildIndex } from '@utils/collection.js';
+import type { AnnotationRepository } from '#domain/server/repository/annotationRepository.js';
+import type { Annotation, AnnotationPatchDTO } from '#domain/shared/model/annotation.js';
+import type { EntityId } from '#domain/shared/model/entity.js';
+import { buildIndex } from '#utils/collection.js';
 
 import BaseRepository from './BaseRepository.js';
 import annotationSchema, { type Row } from '../schema/annotation.js';

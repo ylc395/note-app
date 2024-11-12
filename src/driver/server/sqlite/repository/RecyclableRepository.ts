@@ -1,9 +1,9 @@
 import BaseRepository from './BaseRepository.js';
 
 import schema from '../schema/recyclable.js';
-import type { RecyclablesRepository, Query } from '@domain/server/repository/recyclableRepository.js';
-import type { EntityId } from '@domain/shared/model/entity.js';
-import type { RecyclableRecord } from '@domain/server/model/recyclable.js';
+import type { RecyclablesRepository, Query } from '#domain/server/repository/recyclableRepository.js';
+import type { EntityId } from '#domain/shared/model/entity.js';
+import type { RecyclableRecord } from '#domain/server/model/recyclable.js';
 
 export default class SqliteRevisionRepository extends BaseRepository implements RecyclablesRepository {
   private readonly tableName = schema.tableName;

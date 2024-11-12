@@ -1,9 +1,9 @@
 import { mapValues, groupBy } from 'lodash-es';
-import { Entity, EntityId, EntityTypes } from '@domain/shared/model/entity.js';
-import type { EntityRepository, EntityQuery } from '@domain/server/repository/entityRepository.js';
+import { Entity, EntityId, EntityTypes } from '#domain/shared/model/entity.js';
+import type { EntityRepository, EntityQuery } from '#domain/server/repository/entityRepository.js';
 import assert from 'node:assert';
 
-import { arrayOf, buildIndex } from '@utils/collection.js';
+import { arrayOf, buildIndex } from '#utils/collection.js';
 import { tableName } from '../schema/entity.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
 import BaseRepository from './BaseRepository.js';

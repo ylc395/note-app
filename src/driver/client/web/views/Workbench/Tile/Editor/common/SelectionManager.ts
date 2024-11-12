@@ -1,4 +1,4 @@
-import { IS_DEV } from '@domain/shared/infra/constants';
+import { IS_DEV } from '#domain/shared/infra/constants';
 import { isTextNode, isVisible } from './domUtils';
 import assert from 'assert';
 import { debounce } from 'lodash-es';

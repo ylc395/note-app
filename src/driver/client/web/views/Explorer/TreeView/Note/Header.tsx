@@ -2,10 +2,10 @@ import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 import { PlusIcon, ShrinkIcon, SortDescIcon } from 'lucide-react';
 
-import NoteService from '@domain/client/app/service/NoteService';
-import NoteExplorer from '@domain/client/app/model/note/Explorer';
-import { SortBy } from '@domain/client/app/model/abstract/Explorer/SortBehavior';
-import MoveBehavior from '@domain/client/app/model/behavior/MoveBehavior';
+import NoteService from '#domain/client/app/service/NoteService';
+import NoteExplorer from '#domain/client/app/model/note/Explorer';
+import { SortBy } from '#domain/client/app/model/abstract/Explorer/SortBehavior';
+import MoveBehavior from '#domain/client/app/model/behavior/MoveBehavior';
 
 import ExplorerHeader from '../common/Header';
 

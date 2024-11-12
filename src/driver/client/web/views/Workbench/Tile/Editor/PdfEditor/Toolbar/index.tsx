@@ -1,8 +1,8 @@
 import { useContext } from 'react';
 import { AiOutlineOrderedList, AiOutlineHighlight } from 'react-icons/ai';
 
-import { Panels } from '@domain/client/app/model/material/editor/PdfEditor';
-import Button from '@web/components/Button';
+import { Panels } from '#domain/client/app/model/material/editor/PdfEditor';
+import Button from '#web/components/Button';
 import context from '../Context';
 import PageSwitcher from './PageSwitcher';
 import ScaleChanger from './ScaleChanger';

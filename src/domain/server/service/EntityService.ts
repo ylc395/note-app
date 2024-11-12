@@ -2,12 +2,12 @@ import { constant, mapValues, pick, uniq } from 'lodash-es';
 import { singleton } from 'tsyringe';
 import assert from 'assert';
 
-import { Entity, type EntityId, EntityTypes } from '@domain/shared/model/entity.js';
+import { Entity, type EntityId, EntityTypes } from '#domain/shared/model/entity.js';
 import BaseService from './BaseService.js';
-import { normalizeTitle as normalizeNoteTitle } from '@domain/shared/model/note.js';
-import { normalizeTitle as normalizeMaterialTitle } from '@domain/shared/model/material.js';
-import { normalizeTitle as normalizeMemoTitle } from '@domain/server/model/memo.js';
-import { buildIndex } from '@utils/collection.js';
+import { normalizeTitle as normalizeNoteTitle } from '#domain/shared/model/note.js';
+import { normalizeTitle as normalizeMaterialTitle } from '#domain/shared/model/material.js';
+import { normalizeTitle as normalizeMemoTitle } from '#domain/server/model/memo.js';
+import { buildIndex } from '#utils/collection.js';
 
 @singleton()
 export default class EntityService extends BaseService {

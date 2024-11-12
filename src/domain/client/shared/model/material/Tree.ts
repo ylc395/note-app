@@ -1,5 +1,5 @@
-import type { MaterialVO } from '@domain/shared/model/material';
-import { EntityTypes } from '@domain/shared/model/entity';
+import type { MaterialVO } from '#domain/shared/model/material';
+import { EntityTypes } from '#domain/shared/model/entity';
 import Tree from '../abstract/Tree';
 import MaterialTreeNode from './TreeNode';
 

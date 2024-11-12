@@ -5,8 +5,8 @@ import { container } from 'tsyringe';
 import { useMemoizedFn } from 'ahooks';
 
 import { coverElementMiddleware } from '../../../../components/floatingMiddleware';
-import { TaskTypes } from '@domain/model/task';
-import PageService from '@domain/service/PageService';
+import { TaskTypes } from '#domain/model/task';
+import PageService from '#domain/service/PageService';
 
 export default observer(function ElementSelector() {
   const clipService = container.resolve(PageService);

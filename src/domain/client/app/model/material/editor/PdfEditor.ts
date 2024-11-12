@@ -1,8 +1,8 @@
 import { action, computed, makeObservable, observable } from 'mobx';
 import assert from 'assert';
 
-import type Tile from '@domain/client/app/model/workbench/Tile';
-import { SelectorTypes, type AnnotationVO } from '@domain/shared/model/annotation';
+import type Tile from '#domain/client/app/model/workbench/Tile';
+import { SelectorTypes, type AnnotationVO } from '#domain/shared/model/annotation';
 import MaterialEditor from './MaterialEditor';
 import EditablePdf from '../editable/EditablePdf';
 

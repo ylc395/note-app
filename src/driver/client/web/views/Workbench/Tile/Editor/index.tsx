@@ -1,10 +1,10 @@
 import { observer } from 'mobx-react-lite';
 
-import type { Tile } from '@domain/client/app/model/workbench';
-import NoteEditor from '@domain/client/app/model/note/Editor';
-import ImageEditor from '@domain/client/app/model/material/editor/ImageEditor';
-import PdfEditor from '@domain/client/app/model/material/editor/PdfEditor';
-import HtmlEditor from '@domain/client/app/model/material/editor/HtmlEditor';
+import type { Tile } from '#domain/client/app/model/workbench';
+import NoteEditor from '#domain/client/app/model/note/Editor';
+import ImageEditor from '#domain/client/app/model/material/editor/ImageEditor';
+import PdfEditor from '#domain/client/app/model/material/editor/PdfEditor';
+import HtmlEditor from '#domain/client/app/model/material/editor/HtmlEditor';
 
 import NoteEditorView from './NoteEditor';
 import ImageEditorView from './ImageEditor';

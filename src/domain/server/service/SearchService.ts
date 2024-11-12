@@ -1,7 +1,7 @@
 import { container } from 'tsyringe';
 
-import { token as searchEngineToken } from '@domain/server/infra/searchEngine.js';
-import type { SearchRequest, SearchResultVO } from '@domain/shared/model/search.js';
+import { token as searchEngineToken } from '#domain/server/infra/searchEngine.js';
+import type { SearchRequest, SearchResultVO } from '#domain/shared/model/search.js';
 
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';

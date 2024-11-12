@@ -1,5 +1,5 @@
 import { $remark, $nodeSchema } from '@milkdown/utils';
-import { tokenExtension, mdastExtension, stringifyExtension } from '@domain/shared/infra/markdown/syntax/topic';
+import { tokenExtension, mdastExtension, stringifyExtension } from '#domain/shared/infra/markdown/syntax/topic';
 
 const topicRemark = $remark(
   'topic',

@@ -3,15 +3,15 @@ import { container } from 'tsyringe';
 import { observable, makeObservable, action } from 'mobx';
 import assert from 'assert';
 
-import Form from '@domain/client/common/model/abstract/Form';
-import Explorer from '@domain/client/app/model/material/Explorer';
-import { isEntityMaterial, type MaterialVO, type MaterialDTO } from '@domain/shared/model/material';
-import type { FileDTO, FileVO } from '@domain/shared/model/file';
-import { Workbench } from '@domain/client/app/model/workbench';
-import { token as rpcToken } from '@domain/client/common/infra/rpc';
-import { type EntityMaterialVO, MaterialTypes } from '@domain/shared/model/material';
-import { fileDTOSchema } from '@domain/shared/infra/schema/file';
-import { getHash } from '@utils/file';
+import Form from '#domain/client/common/model/abstract/Form';
+import Explorer from '#domain/client/app/model/material/Explorer';
+import { isEntityMaterial, type MaterialVO, type MaterialDTO } from '#domain/shared/model/material';
+import type { FileDTO, FileVO } from '#domain/shared/model/file';
+import { Workbench } from '#domain/client/app/model/workbench';
+import { token as rpcToken } from '#domain/client/common/infra/rpc';
+import { type EntityMaterialVO, MaterialTypes } from '#domain/shared/model/material';
+import { fileDTOSchema } from '#domain/shared/infra/schema/file';
+import { getHash } from '#utils/file';
 import { EntityTypes } from '../../../common/model/entity';
 
 export default class CreationBehavior {

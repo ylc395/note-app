@@ -1,4 +1,4 @@
-import { TileDirections, type TileParent } from '@domain/client/app/model/workbench';
+import { TileDirections, type TileParent } from '#domain/client/app/model/workbench';
 
 export interface BoundingBox {
   top: number;

@@ -1,4 +1,4 @@
-import type { UI } from '@domain/shared/infra/ui';
+import type { UI } from '#domain/shared/infra/ui';
 
 const ui: UI = {
   getActionFromMenu: window.electronUI?.getActionFromMenu || (() => Promise.resolve(null)),

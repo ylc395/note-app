@@ -2,7 +2,7 @@ import { action, computed, makeObservable, observable, reaction, runInAction } f
 import assert from 'assert';
 
 import Tree from './Tree';
-import type { EntityId, EntityParentId } from '@domain/shared/model/entity';
+import type { EntityId, EntityParentId } from '#domain/shared/model/entity';
 
 export interface HierarchyEntity {
   id: EntityId;

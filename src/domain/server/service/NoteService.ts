@@ -10,8 +10,8 @@ import {
   type DuplicatedNoteDTO,
   type NoteBatchPatchDTO,
   normalizeTitle,
-} from '@domain/shared/model/note.js';
-import { arrayOf, buildIndex } from '@utils/collection.js';
+} from '#domain/shared/model/note.js';
+import { arrayOf, buildIndex } from '#utils/collection.js';
 
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';

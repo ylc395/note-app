@@ -2,9 +2,9 @@ import { ArrowLeftIcon, ArrowRightIcon, SearchIcon, HistoryIcon } from 'lucide-r
 import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 
-import Button from '@web/components/Button';
-import { Workbench } from '@domain/client/app/model/workbench';
-import SearchService from '@domain/client/app/service/SearchService';
+import Button from '#web/components/Button';
+import { Workbench } from '#domain/client/app/model/workbench';
+import SearchService from '#domain/client/app/service/SearchService';
 
 export default observer(function BottomBar() {
   const { historyManager } = container.resolve(Workbench);

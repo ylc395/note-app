@@ -10,8 +10,8 @@ import {
   type MaterialPatchDTO,
   type MaterialBatchPatchDTO,
   isEntityMaterial,
-} from '@domain/shared/model/material.js';
-import { buildIndex } from '@utils/collection.js';
+} from '#domain/shared/model/material.js';
+import { buildIndex } from '#utils/collection.js';
 
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';

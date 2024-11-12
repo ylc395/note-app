@@ -3,9 +3,9 @@ import assert from 'assert';
 import { pull, pickBy } from 'lodash-es';
 import { container } from 'tsyringe';
 
-import type { EntityId, EntityParentId, EntityTypes, WithId } from '@domain/client/common/model/entity';
+import type { EntityId, EntityParentId, EntityTypes, WithId } from '#domain/client/common/model/entity';
 import type { default as TreeNode, HierarchyEntity } from './TreeNode';
-import { token as remoteToken } from '@domain/client/common/infra/rpc';
+import { token as remoteToken } from '#domain/client/common/infra/rpc';
 
 interface Options<T extends HierarchyEntity> {
   entityToNode?: (entity: T | null, tree: Tree<T>) => ReturnType<NonNullable<TreeNode<T>['entityToNode']>>;

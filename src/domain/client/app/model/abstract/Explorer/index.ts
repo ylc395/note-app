@@ -2,10 +2,10 @@ import { container } from 'tsyringe';
 import { groupBy, intersection, once } from 'lodash-es';
 import { action, computed, makeObservable, autorun } from 'mobx';
 
-import type Tree from '@domain/client/common/model/abstract/Tree';
-import type { EntityId, HierarchyEntity, EntityPath, UpdateEvent } from '@domain/client/app/model/entity';
-import { token as localStorage } from '@domain/client/app/infra/localStorage';
-import { token as rpcToken } from '@domain/client/common/infra/rpc';
+import type Tree from '#domain/client/common/model/abstract/Tree';
+import type { EntityId, HierarchyEntity, EntityPath, UpdateEvent } from '#domain/client/app/model/entity';
+import { token as localStorage } from '#domain/client/app/infra/localStorage';
+import { token as rpcToken } from '#domain/client/common/infra/rpc';
 import type RenameBehavior from './RenameBehavior';
 import SortBehavior from './SortBehavior';
 import MoveBehavior from '../../behavior/MoveBehavior';

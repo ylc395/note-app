@@ -1,8 +1,8 @@
 import { makeObservable, computed, observable, action } from 'mobx';
 
-import Editor from '@domain/client/app/model/abstract/Editor';
-import type Tile from '@domain/client/app/model/workbench/Tile';
-import { type NotePatchDTO, normalizeTitle } from '@domain/shared/model/note';
+import Editor from '#domain/client/app/model/abstract/Editor';
+import type Tile from '#domain/client/app/model/workbench/Tile';
+import { type NotePatchDTO, normalizeTitle } from '#domain/shared/model/note';
 
 import type EditableNote from './Editable';
 

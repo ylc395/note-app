@@ -1,9 +1,9 @@
 import { container } from 'tsyringe';
 import { makeObservable, observable } from 'mobx';
-import type { MemoVO } from '@domain/shared/model/memo';
+import type { MemoVO } from '#domain/shared/model/memo';
 import { action } from 'mobx';
 
-import { token as rpcToken } from '@domain/client/common/infra/rpc';
+import { token as rpcToken } from '#domain/client/common/infra/rpc';
 import type { EntityParentId } from '../../../common/model/entity';
 
 export default class Editor {

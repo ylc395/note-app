@@ -2,8 +2,8 @@ import { observer } from 'mobx-react-lite';
 import { useContext } from 'react';
 import { AiOutlineZoomIn, AiOutlineZoomOut } from 'react-icons/ai';
 
-import Button from '@web/components/Button';
-import Select from '@web/components/Select';
+import Button from '#web/components/Button';
+import Select from '#web/components/Select';
 import PdfViewer, { ScaleValues, SCALE_STEPS } from '../PdfViewer';
 import context from '../Context';
 

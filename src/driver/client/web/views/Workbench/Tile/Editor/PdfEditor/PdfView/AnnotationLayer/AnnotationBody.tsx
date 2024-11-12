@@ -1,4 +1,4 @@
-import type { AnnotationVO } from '@domain/shared/model/annotation';
+import type { AnnotationVO } from '#domain/shared/model/annotation';
 import { observer } from 'mobx-react-lite';
 
 export default observer(function AnnotationBody({ annotation }: { annotation: AnnotationVO }) {

@@ -1,7 +1,7 @@
 import { container } from 'tsyringe';
 import { PlusIcon, CalendarDaysIcon, SortDescIcon } from 'lucide-react';
 
-import MemoExplorer, { type Order } from '@domain/client/app/model/memo/Explorer';
+import MemoExplorer, { type Order } from '#domain/client/app/model/memo/Explorer';
 import ExplorerHeader from '../common/Header';
 
 // eslint-disable-next-line mobx/missing-observer

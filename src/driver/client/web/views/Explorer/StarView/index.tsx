@@ -3,9 +3,9 @@ import { useEffect } from 'react';
 import { container } from 'tsyringe';
 import { XIcon } from 'lucide-react';
 
-import StarManager from '@domain/client/app/model/StarManager';
-import { Workbench } from '@domain/client/app/model/workbench';
-import Button from '@web/components/Button';
+import StarManager from '#domain/client/app/model/StarManager';
+import { Workbench } from '#domain/client/app/model/workbench';
+import Button from '#web/components/Button';
 
 export default observer(function StarView() {
   const { filteredStars, load, reset, updateKeyword, unstar } = container.resolve(StarManager);

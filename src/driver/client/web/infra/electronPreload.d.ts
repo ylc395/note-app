@@ -1,4 +1,4 @@
-import type { UI } from '@domain/shared/infra/ui';
+import type { UI } from '#domain/shared/infra/ui';
 
 declare global {
   interface Window {

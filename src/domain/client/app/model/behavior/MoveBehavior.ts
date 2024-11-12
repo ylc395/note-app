@@ -3,14 +3,14 @@ import { action, observable, makeObservable, computed } from 'mobx';
 import { compact } from 'lodash-es';
 import { container, singleton } from 'tsyringe';
 
-import type { EntityParentId, EntityTypes, HierarchyEntity } from '@domain/shared/model/entity';
-import type { EntityLocator } from '@domain/client/app/model/entity';
-import Explorer from '@domain/client/app/model/abstract/Explorer';
-import Tree from '@domain/client/common/model/abstract/Tree';
-import ExplorerManager from '@domain/client/app/model/ExplorerManager';
-import TreeNode from '@domain/client/common/model/abstract/TreeNode';
-import Editor from '@domain/client/app/model/abstract/Editor';
-import EventBus from '@domain/client/app/infra/EventBus';
+import type { EntityParentId, EntityTypes, HierarchyEntity } from '#domain/shared/model/entity';
+import type { EntityLocator } from '#domain/client/app/model/entity';
+import Explorer from '#domain/client/app/model/abstract/Explorer';
+import Tree from '#domain/client/common/model/abstract/Tree';
+import ExplorerManager from '#domain/client/app/model/ExplorerManager';
+import TreeNode from '#domain/client/common/model/abstract/TreeNode';
+import Editor from '#domain/client/app/model/abstract/Editor';
+import EventBus from '#domain/client/app/infra/EventBus';
 
 export enum Events {
   Move = 'move',

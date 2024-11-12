@@ -1,10 +1,10 @@
 import { ReactNode, useEffect, useState } from 'react';
 import clsx from 'clsx';
 
-import Draggable from '@web/components/dnd/Draggable';
-import Droppable from '@web/components/dnd/Droppable';
-import type TreeNode from '@domain/client/common/model/abstract/TreeNode';
-import type { HierarchyEntity } from '@domain/shared/model/entity';
+import Draggable from '#web/components/dnd/Draggable';
+import Droppable from '#web/components/dnd/Droppable';
+import type TreeNode from '#domain/client/common/model/abstract/TreeNode';
+import type { HierarchyEntity } from '#domain/shared/model/entity';
 
 export interface Props<T extends HierarchyEntity> {
   children: ReactNode;

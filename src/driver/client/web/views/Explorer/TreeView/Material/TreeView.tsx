@@ -1,14 +1,14 @@
 import { container } from 'tsyringe';
 import { PlusIcon, FolderOpenIcon, FolderClosedIcon } from 'lucide-react';
 
-import MimeTypeIcon from '@web/components/icon/MimeTypeIcon';
-import { Workbench } from '@domain/client/app/model/workbench';
-import { isEntityMaterial, MaterialTypes, type MaterialVO } from '@domain/shared/model/material';
-import { EntityTypes } from '@domain/shared/model/entity';
-import type TreeNode from '@domain/client/common/model/abstract/TreeNode';
-import MaterialService from '@domain/client/app/service/MaterialService';
-import MenuButton from '@web/components/MenuButton';
-import MaterialExplorer from '@domain/client/app/model/material/Explorer';
+import MimeTypeIcon from '#web/components/icon/MimeTypeIcon';
+import { Workbench } from '#domain/client/app/model/workbench';
+import { isEntityMaterial, MaterialTypes, type MaterialVO } from '#domain/shared/model/material';
+import { EntityTypes } from '#domain/shared/model/entity';
+import type TreeNode from '#domain/client/common/model/abstract/TreeNode';
+import MaterialService from '#domain/client/app/service/MaterialService';
+import MenuButton from '#web/components/MenuButton';
+import MaterialExplorer from '#domain/client/app/model/material/Explorer';
 
 import ExplorerTreeView from '../common/ExplorerTree';
 import useContextmenu from './useContextmenu';

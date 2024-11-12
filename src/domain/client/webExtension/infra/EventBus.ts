@@ -11,7 +11,7 @@ import {
   type SubmitEvent,
   type FinishEvent,
   type CancelEvent,
-} from '@domain/model/task';
+} from '#domain/model/task';
 
 interface EventMap {
   [TaskEventNames.CancelTask]: CancelEvent;

@@ -1,13 +1,13 @@
 import { container, singleton } from 'tsyringe';
 
-import { token as rpcToken } from '@domain/client/common/infra/rpc';
-import type { NoteVO } from '@domain/shared/model/note';
-import { Workbench } from '@domain/client/app/model/workbench';
-import NoteEditor from '@domain/client/app/model/note/Editor';
-import NoteExplorer from '@domain/client/app/model/note/Explorer';
-import { EntityTypes } from '@domain/shared/model/entity';
-import { eventBus, Events } from '@domain/client/app/model/note/eventBus';
-import TreeNode from '@domain/client/common/model/abstract/TreeNode';
+import { token as rpcToken } from '#domain/client/common/infra/rpc';
+import type { NoteVO } from '#domain/shared/model/note';
+import { Workbench } from '#domain/client/app/model/workbench';
+import NoteEditor from '#domain/client/app/model/note/Editor';
+import NoteExplorer from '#domain/client/app/model/note/Explorer';
+import { EntityTypes } from '#domain/shared/model/entity';
+import { eventBus, Events } from '#domain/client/app/model/note/eventBus';
+import TreeNode from '#domain/client/common/model/abstract/TreeNode';
 import MoveBehavior, { Events as MoveEvents, type MoveEvent } from '../model/behavior/MoveBehavior';
 
 @singleton()

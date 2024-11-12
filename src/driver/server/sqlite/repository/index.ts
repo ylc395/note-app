@@ -1,4 +1,4 @@
-import type { Repositories } from '@domain/server/repository/index.js';
+import type { Repositories } from '#domain/server/repository/index.js';
 
 import notes from './NoteRepository.js';
 import stars from './StarRepository.js';

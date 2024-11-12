@@ -1,5 +1,5 @@
-import type { LinkRecord, LinkTargetType, TopicRecord } from '@domain/server/model/content.js';
-import type { EntityId } from '@domain/shared/model/entity.js';
+import type { LinkRecord, LinkTargetType, TopicRecord } from '#domain/server/model/content.js';
+import type { EntityId } from '#domain/shared/model/entity.js';
 
 export interface LinkQuery {
   entityId: EntityId | EntityId[];

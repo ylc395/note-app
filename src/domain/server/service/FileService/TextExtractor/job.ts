@@ -1,4 +1,4 @@
-import type { FileTextRecord, File, TextLocation } from '@domain/server/model/file.js';
+import type { FileTextRecord, File, TextLocation } from '#domain/server/model/file.js';
 
 export interface Job {
   fileId: File['id'];

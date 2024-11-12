@@ -1,6 +1,6 @@
 import { singleton, container } from 'tsyringe';
-import { SearchFields, type SearchParams } from '@domain/shared/model/search';
-import { token as remoteToken } from '@domain/client/common/infra/rpc';
+import { SearchFields, type SearchParams } from '#domain/shared/model/search';
+import { token as remoteToken } from '#domain/client/common/infra/rpc';
 
 @singleton()
 export default class SearchService {

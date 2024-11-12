@@ -5,17 +5,17 @@ import clsx from 'clsx';
 import assert from 'assert';
 import { container } from 'tsyringe';
 
-import type Editor from '@domain/client/app/model/abstract/Editor';
+import type Editor from '#domain/client/app/model/abstract/Editor';
 
-import IconTitle from '@web/components/IconTitle';
-import Button from '@web/components/Button';
-import Draggable from '@web/components/dnd/Draggable';
-import Droppable from '@web/components/dnd/Droppable';
-import MimeTypeIcon from '@web/components/icon/MimeTypeIcon';
-import TypeIcon from '@web/components/icon/TypeIcon';
+import IconTitle from '#web/components/IconTitle';
+import Button from '#web/components/Button';
+import Draggable from '#web/components/dnd/Draggable';
+import Droppable from '#web/components/dnd/Droppable';
+import MimeTypeIcon from '#web/components/icon/MimeTypeIcon';
+import TypeIcon from '#web/components/icon/TypeIcon';
 
 import useDrop from './useDrop';
-import MoveBehavior from '@domain/client/app/model/behavior/MoveBehavior';
+import MoveBehavior from '#domain/client/app/model/behavior/MoveBehavior';
 
 export default observer(function TabItem({ editor }: { editor: Editor }) {
   const { tile } = editor;

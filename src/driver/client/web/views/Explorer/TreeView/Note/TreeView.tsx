@@ -1,12 +1,12 @@
 import { container } from 'tsyringe';
 import { PlusIcon } from 'lucide-react';
 
-import Explorer from '@domain/client/app/model/note/Explorer';
-import { EntityTypes } from '@domain/shared/model/entity';
-import { Workbench } from '@domain/client/app/model/workbench';
-import NoteService from '@domain/client/app/service/NoteService';
+import Explorer from '#domain/client/app/model/note/Explorer';
+import { EntityTypes } from '#domain/shared/model/entity';
+import { Workbench } from '#domain/client/app/model/workbench';
+import NoteService from '#domain/client/app/service/NoteService';
 
-import Button from '@web/components/Button';
+import Button from '#web/components/Button';
 import TreeView from '../common/ExplorerTree';
 import useContextmenu from './useContextmenu';
 

@@ -1,7 +1,7 @@
 import { observable, runInAction, makeObservable } from 'mobx';
 
-import type { EntityMaterialVO } from '@domain/shared/model/material';
-import type { Tile } from '@domain/client/app/model/workbench';
+import type { EntityMaterialVO } from '#domain/shared/model/material';
+import type { Tile } from '#domain/client/app/model/workbench';
 import EditableMaterial from './EditableMaterial';
 import HtmlEditor from '../editor/HtmlEditor';
 

@@ -1,8 +1,8 @@
 import assert from 'assert';
 import { pick } from 'lodash-es';
-import type { Material } from '@domain/shared/model/material.js';
-import type { MaterialRepository, MaterialPatch, MaterialQuery } from '@domain/server/repository/materialRepository.js';
-import { buildIndex } from '@utils/collection.js';
+import type { Material } from '#domain/shared/model/material.js';
+import type { MaterialRepository, MaterialPatch, MaterialQuery } from '#domain/server/repository/materialRepository.js';
+import { buildIndex } from '#utils/collection.js';
 
 import schema from '../schema/material.js';
 import { tableName as fileTableName } from '../schema/file.js';

@@ -1,8 +1,8 @@
 import assert from 'node:assert';
 import { container, singleton } from 'tsyringe';
 
-import type { Annotation, AnnotationDTO, AnnotationPatchDTO } from '@domain/shared/model/annotation.js';
-import type { EntityId } from '@domain/shared/model/entity.js';
+import type { Annotation, AnnotationDTO, AnnotationPatchDTO } from '#domain/shared/model/annotation.js';
+import type { EntityId } from '#domain/shared/model/entity.js';
 
 import BaseService from './BaseService.js';
 import MaterialService from './MaterialService.js';

@@ -4,9 +4,9 @@ import { EllipsisIcon, PinIcon } from 'lucide-react';
 import { noop } from 'lodash-es';
 import dayjs from 'dayjs';
 
-import type MemoTreeNode from '@domain/client/app/model/memo/TreeNode';
-import MenuButton from '@web/components/MenuButton';
-import StarManager from '@domain/client/app/model/StarManager';
+import type MemoTreeNode from '#domain/client/app/model/memo/TreeNode';
+import MenuButton from '#web/components/MenuButton';
+import StarManager from '#domain/client/app/model/StarManager';
 import { container } from 'tsyringe';
 
 export default observer(function Header({ node }: { node: MemoTreeNode }) {

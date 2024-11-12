@@ -1,4 +1,4 @@
-import EventBus from '@domain/client/app/infra/EventBus';
+import EventBus from '#domain/client/app/infra/EventBus';
 import type { default as Tile, SwitchReasons } from './Tile';
 import Editor from '../abstract/Editor';
 

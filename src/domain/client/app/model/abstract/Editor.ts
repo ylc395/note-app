@@ -2,9 +2,9 @@ import { uniqueId } from 'lodash-es';
 import { action, computed, makeObservable, observable } from 'mobx';
 import { container } from 'tsyringe';
 
-import EventBus from '@domain/client/app/infra/EventBus';
-import { IS_DEV } from '@domain/shared/infra/constants';
-import { token as localStorageToken } from '@domain/client/app/infra/localStorage';
+import EventBus from '#domain/client/app/infra/EventBus';
+import { IS_DEV } from '#domain/shared/infra/constants';
+import { token as localStorageToken } from '#domain/client/app/infra/localStorage';
 import type { default as EditableEntity, EditableEntityLocator } from './EditableEntity';
 import type Tile from '../workbench/Tile';
 

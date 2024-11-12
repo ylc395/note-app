@@ -3,9 +3,9 @@ import { is } from 'unist-util-is';
 import assert from 'node:assert';
 import type { Link as MdAstLinkNode, Image as MdAstImageNode, Node as UnistNode } from 'mdast';
 
-import { type LinkRecord, LinkTargetType } from '@domain/server/model/content.js';
+import { type LinkRecord, LinkTargetType } from '#domain/server/model/content.js';
 import Extractor from './Extractor.js';
-import { parseAppUrl } from '@domain/shared/infra/markdown/url.js';
+import { parseAppUrl } from '#domain/shared/infra/markdown/url.js';
 
 export default class LinkExtractor extends Extractor {
   private readonly links: LinkRecord[] = [];

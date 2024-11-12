@@ -1,7 +1,7 @@
 import { action, makeObservable, observable } from 'mobx';
 import assert from 'assert';
 
-import type { AnnotationVO } from '@domain/shared/model/annotation';
+import type { AnnotationVO } from '#domain/shared/model/annotation';
 import type { SelectionEvent } from '../../common/SelectionManager';
 import AnnotationManager from './AnnotationManager';
 

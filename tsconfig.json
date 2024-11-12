@@ -12,16 +12,15 @@
     "allowJs": true,
     "esModuleInterop": true,
     "strict": true,
-    "baseUrl": ".",
     "noUncheckedIndexedAccess": true,
     "moduleResolution": "Bundler",
     "module": "ESNext",
     "skipLibCheck": true,
     "paths": {
-      "@domain/*": ["./src/domain/*"],
-      "@utils/*": ["./src/utils/*"],
-      "@api/*": ["./src/driver/server/api/*"],
-      "@web/*": ["./src/driver/client/web/*"]
+      "#domain/*": ["./src/domain/*"],
+      "#utils/*": ["./src/utils/*"],
+      "#api/*": ["./src/driver/server/api/*"],
+      "#web/*": ["./src/driver/client/web/*"]
     }
   },
   "ts-node": {

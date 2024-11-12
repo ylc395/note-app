@@ -2,9 +2,9 @@ import assert from 'assert';
 import { observer } from 'mobx-react-lite';
 import { AiOutlineRight } from 'react-icons/ai';
 
-import type { Tile } from '@domain/client/app/model/workbench';
-import IconTitle from '@web/components/IconTitle';
-import TypeIcon from '@web/components/icon/TypeIcon';
+import type { Tile } from '#domain/client/app/model/workbench';
+import IconTitle from '#web/components/IconTitle';
+import TypeIcon from '#web/components/icon/TypeIcon';
 
 export default observer(function Breadcrumb({ tile }: { tile: Tile }) {
   const editor = tile.currentEditor;

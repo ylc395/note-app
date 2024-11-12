@@ -2,10 +2,10 @@ import { container } from 'tsyringe';
 import assert from 'assert';
 import { compact } from 'lodash-es';
 
-import NoteExplorer from '@domain/client/app/model/note/Explorer';
-import { TileSplitDirections, Workbench } from '@domain/client/app/model/workbench';
-import StarManager from '@domain/client/app/model/StarManager';
-import MoveBehavior from '@domain/client/app/model/behavior/MoveBehavior';
+import NoteExplorer from '#domain/client/app/model/note/Explorer';
+import { TileSplitDirections, Workbench } from '#domain/client/app/model/workbench';
+import StarManager from '#domain/client/app/model/StarManager';
+import MoveBehavior from '#domain/client/app/model/behavior/MoveBehavior';
 
 export default function useContextmenu() {
   const explorer = container.resolve(NoteExplorer);

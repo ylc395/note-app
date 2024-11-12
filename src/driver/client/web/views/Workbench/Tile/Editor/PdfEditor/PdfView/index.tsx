@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { runInAction } from 'mobx';
 import { AiFillHighlight, AiOutlineComment } from 'react-icons/ai';
 
-import PdfEditor from '@domain/client/app/model/material/editor/PdfEditor';
+import PdfEditor from '#domain/client/app/model/material/editor/PdfEditor';
 import PdfViewer from '../PdfViewer';
 import SelectionTooltip from '../../common/SelectionTooltip';
 import Loading from './Loading';

@@ -3,9 +3,9 @@ import { compact } from 'lodash-es';
 import { container } from 'tsyringe';
 import assert from 'node:assert';
 
-import type { SearchEngine } from '@domain/server/infra/searchEngine.js';
-import { token as repositoriesToken } from '@domain/server/repository/index.js';
-import { SearchFields, SearchRequest, type SearchResult } from '@domain/shared/model/search.js';
+import type { SearchEngine } from '#domain/server/infra/searchEngine.js';
+import { token as repositoriesToken } from '#domain/server/repository/index.js';
+import { SearchFields, SearchRequest, type SearchResult } from '#domain/shared/model/search.js';
 
 import type SqliteDb from '../Database.js';
 import { tableName as recyclablesTableName } from '../schema/recyclable.js';
@@ -22,8 +22,8 @@ import {
   memosFTSTableName,
   fileTextsFTSTableName,
 } from './tables.js';
-import { type EntityId, EntityTypes } from '@domain/shared/model/entity.js';
-import { buildIndex } from '@utils/collection.js';
+import { type EntityId, EntityTypes } from '#domain/shared/model/entity.js';
+import { buildIndex } from '#utils/collection.js';
 
 export default class SqliteSearchEngine implements SearchEngine {
   constructor(readonly sqliteDb: SqliteDb) {

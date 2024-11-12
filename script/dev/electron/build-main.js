@@ -2,12 +2,9 @@ import path from 'node:path';
 import fs from 'fs-extra';
 import download from 'download';
 import shell from 'shelljs';
-import { replaceTscAliasPaths } from 'tsc-alias';
+import { get, mapValues, first } from 'lodash-es';
 
 import { OUTPUT, ENV } from './constants.js';
-
-const ELECTRON_TSCONFIG = './src/driver/server/runtime/Electron/tsconfig.json';
-const BUILD_ELECTRON_COMMAND = `tsc --project ${ELECTRON_TSCONFIG}`;
 
 async function downloadSqliteTokenizer() {
   const localPath = path.resolve('dist/driver/server/sqlite/simple-tokenizer');
@@ -43,29 +40,40 @@ async function downloadSqliteTokenizer() {
   console.log('[install] done');
 }
 
-export default async function buildElectron(options) {
-  // 1. compile
-  if (options?.compile) {
-    const result = shell.exec(BUILD_ELECTRON_COMMAND);
+function createPackageJson() {
+  const getImports = () => {
+    const tsconfig = fs.readJSONSync(path.resolve('tsconfig.json'));
+    const paths = get(tsconfig, 'compilerOptions.paths');
 
-    if (result.code > 0) {
-      throw new Error('compile electron error');
-    }
+    return mapValues(paths, (targets) => first(targets).replace('./src', '.'));
+  };
+
+  fs.outputJSONSync(
+    path.resolve('dist/package.json'),
+    {
+      type: 'module',
+      imports: getImports(),
+    },
+    { spaces: 2 },
+  );
+}
+
+export default async function buildMain() {
+  const BUILD_COMMAND = `tsc --project ./src/driver/server/runtime/Electron/tsconfig.json`;
+  const compileResult = shell.exec(BUILD_COMMAND);
+
+  if (compileResult.code > 0) {
+    throw new Error('compile electron error');
   }
 
-  // 2. replace ts path
-  await replaceTscAliasPaths({ configFile: ELECTRON_TSCONFIG, outDir: OUTPUT });
-
+  createPackageJson();
   await downloadSqliteTokenizer();
 
-  // 3. bootstrap electron process
-  if (options?.bootstrap) {
-    shell.env['DEV_CLEAN'] = process.argv.includes('--clean') ? '1' : '0';
-    shell.env['NODE_ENV'] = ENV;
-    const electronProcess = shell.exec(`electron ${OUTPUT}/driver/server/runtime/Electron/bootstrap.js`, {
-      async: true,
-    });
+  shell.env['DEV_CLEAN'] = process.argv.includes('--clean') ? '1' : '0';
+  shell.env['NODE_ENV'] = ENV;
 
-    return electronProcess;
-  }
+  const BOOTSTRAP_COMMAND = `electron ${OUTPUT}/driver/server/runtime/Electron/bootstrap.js`;
+  const electronProcess = shell.exec(BOOTSTRAP_COMMAND, { async: true });
+
+  return electronProcess;
 }

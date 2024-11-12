@@ -1,4 +1,4 @@
-import type { TextLocation } from '@domain/shared/model/file.js';
+import type { TextLocation } from '#domain/shared/model/file.js';
 
 export interface FileTextRecord {
   fileId: string;
@@ -6,4 +6,4 @@ export interface FileTextRecord {
   text: string;
 }
 
-export * from '@domain/shared/model/file.js';
+export * from '#domain/shared/model/file.js';

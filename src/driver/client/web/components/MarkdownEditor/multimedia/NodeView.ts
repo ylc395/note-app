@@ -1,9 +1,9 @@
 import type { NodeView } from '@milkdown/prose/view';
 import type { Node } from '@milkdown/prose/model';
-import { FileVO } from '@domain/shared/model/file';
+import { FileVO } from '#domain/shared/model/file';
 import { container } from 'tsyringe';
-import { token as remoteToken } from '@domain/client/common/infra/rpc';
-import { parseAppUrl } from '@domain/shared/infra/markdown/url';
+import { token as remoteToken } from '#domain/client/common/infra/rpc';
+import { parseAppUrl } from '#domain/shared/infra/markdown/url';
 
 export default class MultimediaNodeView implements NodeView {
   private remote = container.resolve(remoteToken);

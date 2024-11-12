@@ -3,7 +3,7 @@ import { useRef, useContext, useEffect, useState, ChangeEvent } from 'react';
 import { useKeyPress } from 'ahooks';
 import { AiOutlineArrowLeft, AiOutlineArrowRight } from 'react-icons/ai';
 
-import Button from '@web/components/Button';
+import Button from '#web/components/Button';
 import context from '../Context';
 import PdfViewer from '../PdfViewer';
 

@@ -3,7 +3,7 @@ import { useAsyncEffect } from 'ahooks';
 import { pick, get } from 'lodash-es';
 import assert from 'assert';
 
-import { token, type SeparatorItem, type CommonMenuItem, type MenuItem as BaseMenuItem } from '@domain/shared/infra/ui';
+import { token, type SeparatorItem, type CommonMenuItem, type MenuItem as BaseMenuItem } from '#domain/shared/infra/ui';
 
 type MenuItem = Pick<CommonMenuItem, 'checked' | 'disabled' | 'label'> & {
   onSelect?: () => void;

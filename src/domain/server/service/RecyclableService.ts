@@ -2,8 +2,8 @@ import { differenceWith, uniq } from 'lodash-es';
 import assert from 'node:assert';
 import { container, singleton } from 'tsyringe';
 
-import { RecyclablesDTO, RecyclableVO } from '@domain/server/model/recyclable.js';
-import type { EntityId } from '@domain/shared/model/entity.js';
+import { RecyclablesDTO, RecyclableVO } from '#domain/server/model/recyclable.js';
+import type { EntityId } from '#domain/shared/model/entity.js';
 
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';

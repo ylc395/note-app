@@ -2,8 +2,8 @@ import { observer } from 'mobx-react-lite';
 import { useContext } from 'react';
 import clsx from 'clsx';
 
-import type { OutlineItem } from '@domain/client/app/model/material/editable/EditablePdf';
-import Resizable from '@web/components/Resizable';
+import type { OutlineItem } from '#domain/client/app/model/material/editable/EditablePdf';
+import Resizable from '#web/components/Resizable';
 import context from './Context';
 import PdfViewer from './PdfViewer';
 

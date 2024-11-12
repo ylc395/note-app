@@ -4,8 +4,8 @@ import { makeObservable, observable, when, action, computed } from 'mobx';
 import { container } from 'tsyringe';
 import assert from 'assert';
 
-import type PdfEditor from '@domain/client/app/model/material/editor/PdfEditor';
-import { token as uiToken } from '@domain/shared/infra/ui';
+import type PdfEditor from '#domain/client/app/model/material/editor/PdfEditor';
+import { token as uiToken } from '#domain/shared/infra/ui';
 import { AnnotationEditorType, AnnotationMode } from 'pdfjs-dist';
 import AnnotationManager from './AnnotationManager';
 

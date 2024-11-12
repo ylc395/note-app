@@ -1,6 +1,6 @@
-import type { EntityId } from '@domain/shared/model/entity.js';
-import type { Annotation, AnnotationPatchDTO } from '@domain/shared/model/annotation.js';
-import type { EntityMaterial } from '@domain/shared/model/material.js';
+import type { EntityId } from '#domain/shared/model/entity.js';
+import type { Annotation, AnnotationPatchDTO } from '#domain/shared/model/annotation.js';
+import type { EntityMaterial } from '#domain/shared/model/material.js';
 
 export type AnnotationPatch = AnnotationPatchDTO & Partial<Pick<Annotation, 'updatedAt'>>;
 

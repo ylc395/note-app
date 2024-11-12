@@ -2,8 +2,8 @@ import { container } from 'tsyringe';
 import type { UploadOptions } from '@milkdown/plugin-upload';
 import { Decoration } from '@milkdown/prose/view';
 
-import { fromEntityId } from '@domain/shared/infra/markdown/url';
-import { token as remoteToken } from '@domain/client/common/infra/rpc';
+import { fromEntityId } from '#domain/shared/infra/markdown/url';
+import { token as remoteToken } from '#domain/client/common/infra/rpc';
 
 import { NODE_NAME as MULTIMEDIA_NODE_NAME } from './multimedia';
 

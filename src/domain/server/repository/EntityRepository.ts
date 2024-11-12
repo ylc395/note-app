@@ -1,4 +1,4 @@
-import type { EntityId, Entity } from '@domain/shared/model/entity.js';
+import type { EntityId, Entity } from '#domain/shared/model/entity.js';
 
 export interface EntityQuery {
   ids?: EntityId[];

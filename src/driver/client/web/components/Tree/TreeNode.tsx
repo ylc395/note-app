@@ -3,7 +3,7 @@ import { type MouseEventHandler, useEffect, useState } from 'react';
 import { TriangleIcon, LoaderIcon } from 'lucide-react';
 import clsx from 'clsx';
 
-import type { HierarchyEntity } from '@domain/shared/model/entity';
+import type { HierarchyEntity } from '#domain/shared/model/entity';
 import scrollIntoViewIfNeeded from './scrollIntoViewIfNeeded';
 import type { TreeNodeProps } from './types';
 

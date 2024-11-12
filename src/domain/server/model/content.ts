@@ -1,7 +1,7 @@
-import type { EntityId } from '@domain/shared/model/entity.js';
-import type { TextLocation } from '@domain/shared/model/content.js';
+import type { EntityId } from '#domain/shared/model/entity.js';
+import type { TextLocation } from '#domain/shared/model/content.js';
 
-export * from '@domain/shared/model/content.js';
+export * from '#domain/shared/model/content.js';
 
 export const stringifyLocation = ({ start, end }: TextLocation) => `${start},${end}`;
 

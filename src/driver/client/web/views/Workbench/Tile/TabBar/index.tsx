@@ -2,9 +2,9 @@ import { observer } from 'mobx-react-lite';
 import clsx from 'clsx';
 import { AiOutlineClose } from 'react-icons/ai';
 
-import type { Tile } from '@domain/client/app/model/workbench';
-import Droppable from '@web/components/dnd/Droppable';
-import Button from '@web/components/Button';
+import type { Tile } from '#domain/client/app/model/workbench';
+import Droppable from '#web/components/dnd/Droppable';
+import Button from '#web/components/Button';
 
 import TabItem from './TabItem';
 import useDrop from './useDrop';

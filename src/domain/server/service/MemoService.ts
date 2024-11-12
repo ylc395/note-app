@@ -3,8 +3,8 @@ import assert from 'assert';
 import { container, singleton } from 'tsyringe';
 import dayjs from 'dayjs';
 
-import { arrayOf, buildIndex } from '@utils/collection.js';
-import type { Memo, MemoDTO, ClientMemoQuery, MemoVO, MemoPatchDTO, Duration } from '@domain/server/model/memo.js';
+import { arrayOf, buildIndex } from '#utils/collection.js';
+import type { Memo, MemoDTO, ClientMemoQuery, MemoVO, MemoPatchDTO, Duration } from '#domain/server/model/memo.js';
 
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';

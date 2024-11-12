@@ -3,10 +3,10 @@ import { noop } from 'lodash-es';
 import { useState, type ReactNode, useEffect, useRef } from 'react';
 import { useKeyPress } from 'ahooks';
 
-import { IS_DEV } from '@domain/shared/infra/constants';
-import type TreeNode from '@domain/client/common/model/abstract/TreeNode';
-import type { HierarchyEntity } from '@domain/shared/model/entity';
-import Icon from '@web/components/icon/Icon';
+import { IS_DEV } from '#domain/shared/infra/constants';
+import type TreeNode from '#domain/client/common/model/abstract/TreeNode';
+import type { HierarchyEntity } from '#domain/shared/model/entity';
+import Icon from '#web/components/icon/Icon';
 import clsx from 'clsx';
 
 export interface Props<T extends HierarchyEntity> {

@@ -1,5 +1,5 @@
-import type { FileRepository, FilePatch } from '@domain/server/repository/fileRepository.js';
-import type { File, FileTextRecord } from '@domain/server/model/file.js';
+import type { FileRepository, FilePatch } from '#domain/server/repository/fileRepository.js';
+import type { File, FileTextRecord } from '#domain/server/model/file.js';
 
 import BaseRepository from './BaseRepository.js';
 import { tableName as fileTableName, type Row } from '../schema/file.js';

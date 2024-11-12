@@ -2,9 +2,9 @@ import { container, singleton } from 'tsyringe';
 import { observable, makeObservable, runInAction, computed, action } from 'mobx';
 import { debounce, groupBy, remove } from 'lodash-es';
 
-import { token as remoteToken } from '@domain/client/common/infra/rpc';
-import type { EntityId } from '@domain/client/app/model/entity';
-import type { StarVO } from '@domain/shared/model/star';
+import { token as remoteToken } from '#domain/client/common/infra/rpc';
+import type { EntityId } from '#domain/client/app/model/entity';
+import type { StarVO } from '#domain/shared/model/star';
 import EventBus from '../infra/EventBus';
 
 export enum Events {

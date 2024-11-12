@@ -1,9 +1,9 @@
 import { container, singleton } from 'tsyringe';
 
-import type { MaterialVO } from '@domain/shared/model/material';
-import MaterialTree from '@domain/client/common/model/material/Tree';
-import Explorer from '@domain/client/app/model/abstract/Explorer';
-import RenameBehavior from '@domain/client/app/model/abstract/Explorer/RenameBehavior';
+import type { MaterialVO } from '#domain/shared/model/material';
+import MaterialTree from '#domain/client/common/model/material/Tree';
+import Explorer from '#domain/client/app/model/abstract/Explorer';
+import RenameBehavior from '#domain/client/app/model/abstract/Explorer/RenameBehavior';
 import eventBus, { Events } from './eventBus';
 import StarManager, { Events as StarEvents } from '../StarManager';
 

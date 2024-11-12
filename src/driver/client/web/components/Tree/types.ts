@@ -1,8 +1,8 @@
 import type { CSSProperties, MouseEvent, ReactNode } from 'react';
 
-import type { HierarchyEntity } from '@domain/shared/model/entity';
-import type TreeModel from '@domain/client/common/model/abstract/Tree';
-import type TreeNode from '@domain/client/common/model/abstract/TreeNode';
+import type { HierarchyEntity } from '#domain/shared/model/entity';
+import type TreeModel from '#domain/client/common/model/abstract/Tree';
+import type TreeNode from '#domain/client/common/model/abstract/TreeNode';
 
 interface TreeBaseProps<T extends HierarchyEntity> {
   tree: TreeModel<T>;

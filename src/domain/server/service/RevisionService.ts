@@ -2,8 +2,8 @@ import { singleton } from 'tsyringe';
 import assert from 'assert';
 import { applyPatch, structuredPatch } from 'diff';
 
-import type { Revision, RevisionPatchDTO } from '@domain/shared/model/revision.js';
-import { buildIndex } from '@utils/collection.js';
+import type { Revision, RevisionPatchDTO } from '#domain/shared/model/revision.js';
+import { buildIndex } from '#utils/collection.js';
 import BaseService from './BaseService.js';
 
 @singleton()

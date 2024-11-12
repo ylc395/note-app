@@ -1,5 +1,5 @@
 import { BookIcon, DatabaseIcon, BlocksIcon } from 'lucide-react';
-import { EntityTypes } from '@domain/client/app/model/entity';
+import { EntityTypes } from '#domain/client/app/model/entity';
 
 const icons = {
   [EntityTypes.Note]: () => <BookIcon />,

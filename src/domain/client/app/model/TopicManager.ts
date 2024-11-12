@@ -1,9 +1,9 @@
 import { container, singleton } from 'tsyringe';
 import { observable, makeObservable, runInAction, action } from 'mobx';
 
-import { token as remoteToken } from '@domain/client/common/infra/rpc';
-import type { EntityLocator } from '@domain/client/app/model/entity';
-import type { TopicVO } from '@domain/shared/model/content/topic';
+import { token as remoteToken } from '#domain/client/common/infra/rpc';
+import type { EntityLocator } from '#domain/client/app/model/entity';
+import type { TopicVO } from '#domain/shared/model/content/topic';
 import { Workbench } from './workbench';
 
 @singleton()

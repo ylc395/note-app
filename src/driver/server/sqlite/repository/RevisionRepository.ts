@@ -1,7 +1,7 @@
 import type { ParsedDiff } from 'diff';
 
-import type { RevisionRepository, Query, EntitiesParams } from '@domain/server/repository/revisionRepository.js';
-import type { Revision, RevisionPatchDTO } from '@domain/shared/model/revision.js';
+import type { RevisionRepository, Query, EntitiesParams } from '#domain/server/repository/revisionRepository.js';
+import type { Revision, RevisionPatchDTO } from '#domain/shared/model/revision.js';
 import BaseRepository from './BaseRepository.js';
 
 import schema, { type Row } from '../schema/revision.js';

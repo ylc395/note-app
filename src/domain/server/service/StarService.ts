@@ -2,9 +2,9 @@ import assert from 'node:assert';
 import { container, singleton } from 'tsyringe';
 import { first } from 'lodash-es';
 
-import type { Star, StarDTO, StarVO } from '@domain/shared/model/star.js';
-import type { EntityId } from '@domain/shared/model/entity.js';
-import { arrayOf } from '@utils/collection.js';
+import type { Star, StarDTO, StarVO } from '#domain/shared/model/star.js';
+import type { EntityId } from '#domain/shared/model/entity.js';
+import { arrayOf } from '#utils/collection.js';
 
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';

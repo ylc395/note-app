@@ -2,11 +2,11 @@ import { StarIcon, HashIcon, RecycleIcon, SettingsIcon } from 'lucide-react';
 import { container } from 'tsyringe';
 import { observer } from 'mobx-react-lite';
 
-import TypeIcon from '@web/components/icon/TypeIcon';
-import Button from '@web/components/Button';
-import { EntityTypes } from '@domain/client/app/model/entity';
-import Popover from '@web/components/Popover';
-import ExplorerManager from '@domain/client/app/model/ExplorerManager';
+import TypeIcon from '#web/components/icon/TypeIcon';
+import Button from '#web/components/Button';
+import { EntityTypes } from '#domain/client/app/model/entity';
+import Popover from '#web/components/Popover';
+import ExplorerManager from '#domain/client/app/model/ExplorerManager';
 
 import StarView from '../StarView';
 import TopicView from '../TopicView';

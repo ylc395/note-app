@@ -1,5 +1,5 @@
-import type { NoteVO } from '@domain/shared/model/note';
-import { EntityTypes } from '@domain/shared/model/entity';
+import type { NoteVO } from '#domain/shared/model/note';
+import { EntityTypes } from '#domain/shared/model/entity';
 
 import Tree from '../abstract/Tree';
 import NoteTreeNode from './TreeNode';

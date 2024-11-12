@@ -3,10 +3,10 @@ import { useEffect, useState } from 'react';
 import { container } from 'tsyringe';
 import { isMatch } from 'lodash-es';
 
-import { type Tile, TileSplitDirections } from '@domain/client/app/model/workbench';
-import Editor from '@domain/client/app/model/abstract/Editor';
-import { Workbench } from '@domain/client/app/model/workbench';
-import TreeNode from '@domain/client/common/model/abstract/TreeNode';
+import { type Tile, TileSplitDirections } from '#domain/client/app/model/workbench';
+import Editor from '#domain/client/app/model/abstract/Editor';
+import { Workbench } from '#domain/client/app/model/workbench';
+import TreeNode from '#domain/client/common/model/abstract/TreeNode';
 
 interface Position {
   top: string;

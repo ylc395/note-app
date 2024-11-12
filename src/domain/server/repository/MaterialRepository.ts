@@ -1,5 +1,5 @@
-import type { Material, MaterialPatchDTO, ClientMaterialQuery } from '@domain/shared/model/material.js';
-import type { FileVO } from '@domain/shared/model/file.js';
+import type { Material, MaterialPatchDTO, ClientMaterialQuery } from '#domain/shared/model/material.js';
+import type { FileVO } from '#domain/shared/model/file.js';
 
 export interface MaterialQuery extends ClientMaterialQuery {
   id?: Material['id'][];

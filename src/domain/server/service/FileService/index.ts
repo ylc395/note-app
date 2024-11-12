@@ -3,8 +3,8 @@ import { singleton } from 'tsyringe';
 import fs from 'fs-extra';
 import assert from 'node:assert';
 
-import { getHash } from '@utils/file.js';
-import type { FileVO, FileDTO } from '@domain/server/model/file.js';
+import { getHash } from '#utils/file.js';
+import type { FileVO, FileDTO } from '#domain/server/model/file.js';
 
 import BaseService from '../BaseService.js';
 import EntityService from '../EntityService.js';

@@ -1,7 +1,7 @@
 import { type Placement, autoUpdate, offset, useFloating } from '@floating-ui/react';
 import type { ReactNode } from 'react';
 
-import Button from '@web/components/Button';
+import Button from '#web/components/Button';
 
 interface Props {
   reference: HTMLSpanElement | undefined;

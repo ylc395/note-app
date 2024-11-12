@@ -1,5 +1,5 @@
 import { BookOpenIcon, FileAudioIcon, FileVideoIcon, FileImageIcon, FileIcon } from 'lucide-react';
-import { MimeTypes } from '@domain/shared/model/file';
+import { MimeTypes } from '#domain/shared/model/file';
 
 export default function MimeTypeIcon({
   mimeType,

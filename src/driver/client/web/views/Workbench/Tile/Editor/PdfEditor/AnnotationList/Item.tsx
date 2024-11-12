@@ -3,8 +3,8 @@ import { useContext } from 'react';
 import assert from 'assert';
 import dayjs from 'dayjs';
 
-import { SelectorTypes, type AnnotationVO } from '@domain/shared/model/annotation';
-import EditablePdf from '@domain/client/app/model/material/editable/EditablePdf';
+import { SelectorTypes, type AnnotationVO } from '#domain/shared/model/annotation';
+import EditablePdf from '#domain/client/app/model/material/editable/EditablePdf';
 import context from '../Context';
 import PdfViewer from '../PdfViewer';
 

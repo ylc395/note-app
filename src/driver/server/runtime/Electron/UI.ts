@@ -7,9 +7,9 @@ import {
 } from 'electron';
 import { BLANK_URL, sanitizeUrl } from '@braintree/sanitize-url';
 import assert from 'node:assert';
-import { type MenuItem, type UI, type UIIpcPayload, uiIpcPayloadSchema } from '@domain/shared/infra/ui.js';
+import { type MenuItem, type UI, type UIIpcPayload, uiIpcPayloadSchema } from '#domain/shared/infra/ui.js';
 
-export { UI_CHANNEL } from '@domain/shared/infra/ui.js';
+export { UI_CHANNEL } from '#domain/shared/infra/ui.js';
 
 export default class electronUI implements Partial<UI> {
   public ipcEvent?: IpcMainInvokeEvent;

@@ -2,10 +2,10 @@ import { observer } from 'mobx-react-lite';
 import { useRef } from 'react';
 import { AiOutlineFileSearch, AiOutlineInfoCircle, AiOutlineSave } from 'react-icons/ai';
 
-import Switch from '@web/components/Switch';
-import Button from '@web/components/Button';
-import IconPicker from '@web/components/icon/PickerButton';
-import type NoteEditor from '@domain/client/app/model/note/Editor';
+import Switch from '#web/components/Switch';
+import Button from '#web/components/Button';
+import IconPicker from '#web/components/icon/PickerButton';
+import type NoteEditor from '#domain/client/app/model/note/Editor';
 
 export default observer(function NoteTitle({ editor }: { editor: NoteEditor }) {
   const inputRef = useRef<HTMLInputElement | null>(null);

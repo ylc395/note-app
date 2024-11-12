@@ -3,9 +3,9 @@ import { useEffect, useRef } from 'react';
 import { useMemoizedFn } from 'ahooks';
 import { container } from 'tsyringe';
 
-import { Workbench } from '@domain/client/app/model/workbench';
-import type NoteEditor from '@domain/client/app/model/note/Editor';
-import MarkdownEditor, { type EditorRef } from '@web/components/MarkdownEditor';
+import { Workbench } from '#domain/client/app/model/workbench';
+import type NoteEditor from '#domain/client/app/model/note/Editor';
+import MarkdownEditor, { type EditorRef } from '#web/components/MarkdownEditor';
 
 export default observer(function Body({ editor }: { editor: NoteEditor }) {
   const { currentTile } = container.resolve(Workbench);

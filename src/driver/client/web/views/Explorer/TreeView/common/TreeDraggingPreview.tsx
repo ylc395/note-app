@@ -2,16 +2,16 @@ import { observer } from 'mobx-react-lite';
 import { container } from 'tsyringe';
 import { createPortal } from 'react-dom';
 
-import Explorer from '@domain/client/app/model/abstract/Explorer';
-import { APP_NAME } from '@domain/shared/infra/constants';
-import ExplorerManager from '@domain/client/app/model/ExplorerManager';
-import TreeNode from '@domain/client/common/model/abstract/TreeNode';
-import { useDragItem } from '@web/components/dnd/hooks';
+import Explorer from '#domain/client/app/model/abstract/Explorer';
+import { APP_NAME } from '#domain/shared/infra/constants';
+import ExplorerManager from '#domain/client/app/model/ExplorerManager';
+import TreeNode from '#domain/client/common/model/abstract/TreeNode';
+import { useDragItem } from '#web/components/dnd/hooks';
 
-import Tree from '@web/components/Tree';
+import Tree from '#web/components/Tree';
 import NodeTitle from './ExplorerTree/NodeTitle';
 import { useMemo } from 'react';
-import MoveBehavior from '@domain/client/app/model/behavior/MoveBehavior';
+import MoveBehavior from '#domain/client/app/model/behavior/MoveBehavior';
 
 export default observer(function TreeDraggingPreview() {
   const { currentExplorer } = container.resolve(ExplorerManager);

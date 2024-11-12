@@ -2,7 +2,7 @@ import { useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { useCreation } from 'ahooks';
 
 import Editor, { type Options as EditorOptions } from './Editor';
-import { IS_DEV } from '@domain/shared/infra/constants';
+import { IS_DEV } from '#domain/shared/infra/constants';
 
 interface Options {
   onChange?: EditorOptions['onChange'];

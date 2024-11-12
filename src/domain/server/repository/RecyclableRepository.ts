@@ -1,5 +1,5 @@
-import type { RecyclableRecord } from '@domain/server/model/recyclable.js';
-import type { EntityId } from '@domain/shared/model/entity.js';
+import type { RecyclableRecord } from '#domain/server/model/recyclable.js';
+import type { EntityId } from '#domain/shared/model/entity.js';
 
 export interface Query {
   entityIds?: EntityId[];

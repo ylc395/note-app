@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { container } from 'tsyringe';
 import { observer } from 'mobx-react-lite';
 
-import TopicManager from '@domain/client/app/model/TopicManager';
+import TopicManager from '#domain/client/app/model/TopicManager';
 
 export default observer(function TopicView() {
   const { topics, load, reset } = container.resolve(TopicManager);

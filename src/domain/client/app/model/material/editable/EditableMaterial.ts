@@ -1,11 +1,11 @@
 import { computed, makeObservable, observable, runInAction } from 'mobx';
 import assert from 'assert';
 
-import { EntityTypes } from '@domain/shared/model/entity';
-import type { EntityMaterialVO } from '@domain/shared/model/material';
-import EditableEntity from '@domain/client/app/model/abstract/EditableEntity';
-import type { AnnotationDTO, AnnotationPatchDTO, AnnotationVO } from '@domain/shared/model/annotation';
-import { buildIndex } from '@utils/collection';
+import { EntityTypes } from '#domain/shared/model/entity';
+import type { EntityMaterialVO } from '#domain/shared/model/material';
+import EditableEntity from '#domain/client/app/model/abstract/EditableEntity';
+import type { AnnotationDTO, AnnotationPatchDTO, AnnotationVO } from '#domain/shared/model/annotation';
+import { buildIndex } from '#utils/collection';
 import eventBus, { Events, UpdateEvent } from '../eventBus';
 
 export default abstract class EditableMaterial extends EditableEntity<Required<EntityMaterialVO>> {

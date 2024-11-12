@@ -1,5 +1,5 @@
-import { starDTOSchema } from '@domain/shared/infra/schema/star.js';
-import { entityIdSchema } from '@domain/shared/infra/schema/entity.js';
+import { starDTOSchema } from '#domain/shared/infra/schema/star.js';
+import { entityIdSchema } from '#domain/shared/infra/schema/entity.js';
 import { publicProcedure, router } from './trpc.js';
 
 export default router({

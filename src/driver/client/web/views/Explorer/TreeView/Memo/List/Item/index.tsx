@@ -1,7 +1,7 @@
 import { observer } from 'mobx-react-lite';
 import assert from 'assert';
 
-import type MemoTreeNode from '@domain/client/app/model/memo/TreeNode';
+import type MemoTreeNode from '#domain/client/app/model/memo/TreeNode';
 import Body from './Body';
 import ChildrenList from './ChildrenList';
 import Header from './Header';

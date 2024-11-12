@@ -1,4 +1,4 @@
-import type { SearchRequest, SearchResult } from '@domain/shared/model/search.js';
+import type { SearchRequest, SearchResult } from '#domain/shared/model/search.js';
 import type { InjectionToken } from 'tsyringe';
 
 export interface SearchEngine {

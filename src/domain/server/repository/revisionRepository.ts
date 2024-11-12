@@ -1,5 +1,5 @@
-import type { Revision, RevisionPatchDTO } from '@domain/shared/model/revision.js';
-import type { Entity, EntityId } from '@domain/shared/model/entity.js';
+import type { Revision, RevisionPatchDTO } from '#domain/shared/model/revision.js';
+import type { Entity, EntityId } from '#domain/shared/model/entity.js';
 
 export interface Query {
   entityIds?: EntityId[];

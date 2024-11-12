@@ -1,11 +1,11 @@
-import type { EntityId } from '@domain/shared/model/entity.js';
-import type { ContentRepository, LinkQuery, TopicQuery } from '@domain/server/repository/contentRepository.js';
+import type { EntityId } from '#domain/shared/model/entity.js';
+import type { ContentRepository, LinkQuery, TopicQuery } from '#domain/server/repository/contentRepository.js';
 
 import BaseRepository from './BaseRepository.js';
 import { tableName as linkTableName } from '../schema/link.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
 import { tableName as topicTableName } from '../schema/topic.js';
-import type { LinkRecord, TopicRecord } from '@domain/server/model/content.js';
+import type { LinkRecord, TopicRecord } from '#domain/server/model/content.js';
 
 export default class SqliteContentRepository extends BaseRepository implements ContentRepository {
   public async createTopics(topics: TopicRecord[]) {

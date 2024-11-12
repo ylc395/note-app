@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite';
 
-import { type default as PdfEditor, Panels } from '@domain/client/app/model/material/editor/PdfEditor';
+import { type default as PdfEditor, Panels } from '#domain/client/app/model/material/editor/PdfEditor';
 import Toolbar from './Toolbar';
 import context from './Context';
 import Outline from './Outline';

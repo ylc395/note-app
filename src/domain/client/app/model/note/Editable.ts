@@ -4,11 +4,11 @@ import { debounce } from 'lodash-es';
 import assert from 'assert';
 import { applyPatch } from 'diff';
 
-import { EntityTypes } from '@domain/client/app/model/entity';
-import { token as localStorageToken } from '@domain/client/app/infra/localStorage';
-import type { NoteVO, NotePatchDTO } from '@domain/shared/model/note';
-import type { Tile } from '@domain/client/app/model/workbench';
-import EditableEntity from '@domain/client/app/model/abstract/EditableEntity';
+import { EntityTypes } from '#domain/client/app/model/entity';
+import { token as localStorageToken } from '#domain/client/app/infra/localStorage';
+import type { NoteVO, NotePatchDTO } from '#domain/shared/model/note';
+import type { Tile } from '#domain/client/app/model/workbench';
+import EditableEntity from '#domain/client/app/model/abstract/EditableEntity';
 import NoteEditor from './Editor';
 import { eventBus, Events as NoteEvents, type UpdateEvent } from './eventBus';
 

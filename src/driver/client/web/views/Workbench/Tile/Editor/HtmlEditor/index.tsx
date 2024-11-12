@@ -1,6 +1,6 @@
 import { useCreation } from 'ahooks';
 
-import type HtmlEditor from '@domain/client/app/model/material/editor/HtmlEditor';
+import type HtmlEditor from '#domain/client/app/model/material/editor/HtmlEditor';
 import HtmlViewer from './HtmlView';
 import Toolbar from './Toolbar';
 import Context, { getContext } from './Context';

@@ -2,11 +2,11 @@ import { action, computed, makeObservable, observable } from 'mobx';
 import { container, singleton } from 'tsyringe';
 import assert from 'assert';
 
-import { token as localStorageToken, KEY } from '@domain/client/app/infra/localStorage';
-import NoteExplorer from '@domain/client/app/model/note/Explorer';
-import MaterialExplorer from '@domain/client/app/model/material/Explorer';
-import MemoExplorer from '@domain/client/app/model/memo/Explorer';
-import { EntityLocator, EntityTypes } from '@domain/client/app/model/entity';
+import { token as localStorageToken, KEY } from '#domain/client/app/infra/localStorage';
+import NoteExplorer from '#domain/client/app/model/note/Explorer';
+import MaterialExplorer from '#domain/client/app/model/material/Explorer';
+import MemoExplorer from '#domain/client/app/model/memo/Explorer';
+import { EntityLocator, EntityTypes } from '#domain/client/app/model/entity';
 
 export type ExplorerTypes = EntityTypes.Note | EntityTypes.Material | EntityTypes.Memo;
 

@@ -1,7 +1,7 @@
 import { makeObservable, runInAction, observable, action } from 'mobx';
 import assert from 'assert';
 
-import type TreeNode from '@domain/client/common/model/abstract/TreeNode';
+import type TreeNode from '#domain/client/common/model/abstract/TreeNode';
 
 export default class RenameBehavior {
   constructor(

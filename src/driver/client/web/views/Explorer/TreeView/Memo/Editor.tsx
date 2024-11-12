@@ -2,7 +2,7 @@ import { observer } from 'mobx-react-lite';
 import { useRef, useEffect } from 'react';
 
 import assert from 'assert';
-import MemoTreeNode from '@domain/client/app/model/memo/TreeNode';
+import MemoTreeNode from '#domain/client/app/model/memo/TreeNode';
 
 export default observer(function MemoEditor({ node, isChild = false }: { node: MemoTreeNode; isChild?: boolean }) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);

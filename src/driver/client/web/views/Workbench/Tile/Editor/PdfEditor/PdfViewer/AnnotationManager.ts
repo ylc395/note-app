@@ -3,9 +3,9 @@ import type { PDFViewer, PDFPageView } from 'pdfjs-dist/web/pdf_viewer';
 import { compact, groupBy, intersection, range as numberRange } from 'lodash-es';
 import assert from 'assert';
 
-import PdfEditor from '@domain/client/app/model/material/editor/PdfEditor';
-import EditablePdf from '@domain/client/app/model/material/editable/EditablePdf';
-import { type FragmentSelector, SelectorTypes } from '@domain/shared/model/annotation';
+import PdfEditor from '#domain/client/app/model/material/editor/PdfEditor';
+import EditablePdf from '#domain/client/app/model/material/editable/EditablePdf';
+import { type FragmentSelector, SelectorTypes } from '#domain/shared/model/annotation';
 import SelectionManager, { type SelectionEvent } from '../../common/SelectionManager';
 import CommentArea from './CommentArea';
 

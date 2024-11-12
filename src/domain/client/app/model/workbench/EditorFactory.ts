@@ -1,18 +1,18 @@
 import assert from 'assert';
 import { singleton } from 'tsyringe';
 
-import { type EntityLocator, type EntityId, EntityTypes } from '@domain/client/app/model/entity';
+import { type EntityLocator, type EntityId, EntityTypes } from '#domain/client/app/model/entity';
 import type {
   default as EditableEntity,
   EditableEntityLocator,
-} from '@domain/client/app/model/abstract/EditableEntity';
-import { MimeTypes } from '@domain/shared/model/file';
-import EditableNote from '@domain/client/app/model/note/Editable';
-import EditablePdf from '@domain/client/app/model/material/editable/EditablePdf';
-import EditableHtml from '@domain/client/app/model/material/editable/EditableHtml';
-import EditableImage from '@domain/client/app/model/material/editable/EditableImage';
+} from '#domain/client/app/model/abstract/EditableEntity';
+import { MimeTypes } from '#domain/shared/model/file';
+import EditableNote from '#domain/client/app/model/note/Editable';
+import EditablePdf from '#domain/client/app/model/material/editable/EditablePdf';
+import EditableHtml from '#domain/client/app/model/material/editable/EditableHtml';
+import EditableImage from '#domain/client/app/model/material/editable/EditableImage';
 import type Tile from './Tile';
-import { Events } from '@domain/client/app/model/abstract/Editor';
+import { Events } from '#domain/client/app/model/abstract/Editor';
 
 @singleton()
 export default class EditorFactory {

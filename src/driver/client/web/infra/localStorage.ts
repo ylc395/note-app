@@ -1,4 +1,4 @@
-import type { LocalStorage } from '@domain/client/app/infra/localStorage';
+import type { LocalStorage } from '#domain/client/app/infra/localStorage';
 
 const webLocalStorage: LocalStorage = {
   get(key) {

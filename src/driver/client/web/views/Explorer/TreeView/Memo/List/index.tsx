@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 import { useEventListener } from 'ahooks';
 
 import ListItem from './Item';
-import MemoExplorer from '@domain/client/app/model/memo/Explorer';
+import MemoExplorer from '#domain/client/app/model/memo/Explorer';
 import assert from 'assert';
 
 export default observer(function List() {

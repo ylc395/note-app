@@ -1,5 +1,5 @@
-import Button, { type Props as ButtonProps } from '@web/components/Button';
-import MenuButton, { type Props as MenuButtonProps } from '@web/components/MenuButton';
+import Button, { type Props as ButtonProps } from '#web/components/Button';
+import MenuButton, { type Props as MenuButtonProps } from '#web/components/MenuButton';
 
 export interface Props {
   icon: ButtonProps['icon'];

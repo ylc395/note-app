@@ -1,4 +1,4 @@
-import { entityIdSchema } from '@domain/shared/infra/schema/entity.js';
+import { entityIdSchema } from '#domain/shared/infra/schema/entity.js';
 import { publicProcedure, router } from './trpc.js';
 
 export default router({

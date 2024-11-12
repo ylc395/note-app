@@ -6,7 +6,7 @@ import { useClickAway, useBoolean } from 'ahooks';
 import { container } from 'tsyringe';
 
 import Tree from '../../../../../../components/Tree';
-import ConfigService from '@domain/service/ConfigService';
+import ConfigService from '#domain/service/ConfigService';
 
 export default observer(function TargetPath() {
   const [isOpen, { setTrue: open, setFalse: close, set: setIsOpen }] = useBoolean(false);

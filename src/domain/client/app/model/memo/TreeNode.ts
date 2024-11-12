@@ -3,11 +3,11 @@ import { container } from 'tsyringe';
 import { first, last } from 'lodash-es';
 import assert from 'assert';
 
-import type { MemoVO } from '@domain/shared/model/memo';
-import { token } from '@domain/client/common/infra/rpc';
+import type { MemoVO } from '#domain/shared/model/memo';
+import { token } from '#domain/client/common/infra/rpc';
 import Editor from './Editor';
 import type MemoExplorer from './Explorer';
-import { buildIndex } from '@utils/collection';
+import { buildIndex } from '#utils/collection';
 
 export default class MemoTreeNode {
   private readonly remote = container.resolve(token);

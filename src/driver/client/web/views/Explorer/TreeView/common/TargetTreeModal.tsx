@@ -1,11 +1,11 @@
 import clsx from 'clsx';
 import { observer } from 'mobx-react-lite';
 
-import Modal from '@web/components/Modal';
-import Tree from '@web/components/Tree';
+import Modal from '#web/components/Modal';
+import Tree from '#web/components/Tree';
 import NodeTitle from './ExplorerTree/NodeTitle';
 import { container } from 'tsyringe';
-import MoveBehavior from '@domain/client/app/model/behavior/MoveBehavior';
+import MoveBehavior from '#domain/client/app/model/behavior/MoveBehavior';
 
 export default observer(function TargetTreeModal() {
   const { targetTree, moveTo, finishMoving } = container.resolve(MoveBehavior);

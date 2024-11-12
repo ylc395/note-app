@@ -6,10 +6,10 @@ import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-insta
 import { container } from 'tsyringe';
 import { createIPCHandler } from 'electron-trpc/main';
 
-import { IS_DEV } from '@domain/shared/infra/constants.js';
-import { token as loggerToken } from '@domain/shared/infra/logger.js';
-import FileService from '@domain/server/service/FileService/index.js';
-import { PROTOCOL, parseAppUrl } from '@domain/shared/infra/markdown/url.js';
+import { IS_DEV } from '#domain/shared/infra/constants.js';
+import { token as loggerToken } from '#domain/shared/infra/logger.js';
+import FileService from '#domain/server/service/FileService/index.js';
+import { PROTOCOL, parseAppUrl } from '#domain/shared/infra/markdown/url.js';
 
 import UI, { UI_CHANNEL } from './UI.js';
 import { routers } from '../../api/index.js';

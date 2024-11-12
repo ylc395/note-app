@@ -2,7 +2,7 @@ import { container } from 'tsyringe';
 import assert from 'node:assert';
 import { randomUUID } from 'node:crypto';
 
-import { token as databaseToken } from '@domain/server/infra/database.js';
+import { token as databaseToken } from '#domain/server/infra/database.js';
 import { token as repositoriesToken } from '../repository/index.js';
 import { token as runtimeToken } from '../infra/runtime.js';
 import { token as kvToken } from '../infra/kvDatabase.js';

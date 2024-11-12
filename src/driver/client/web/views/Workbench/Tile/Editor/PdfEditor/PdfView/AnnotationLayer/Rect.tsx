@@ -4,7 +4,7 @@ import { useContext } from 'react';
 import assert from 'assert';
 import { offset, useFloating, autoUpdate } from '@floating-ui/react';
 
-import type { AnnotationVO } from '@domain/shared/model/annotation';
+import type { AnnotationVO } from '#domain/shared/model/annotation';
 import context from '../../Context';
 import PdfViewer from '../../PdfViewer';
 import AnnotationBody from './AnnotationBody';

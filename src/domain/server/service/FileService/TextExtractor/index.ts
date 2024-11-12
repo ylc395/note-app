@@ -1,6 +1,6 @@
 import TaskQueue from 'queue';
 
-import { MimeTypes, type File } from '@domain/server/model/file.js';
+import { MimeTypes, type File } from '#domain/server/model/file.js';
 import type { JobResult, Job } from './job.js';
 
 import PDFTextExtractor from './PDFTextExtractor.js';

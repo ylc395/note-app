@@ -1,4 +1,4 @@
-import Droppable from '@web/components/dnd/Droppable';
+import Droppable from '#web/components/dnd/Droppable';
 import Button, { type Props as ButtonProps } from './Button';
 
 interface Props {

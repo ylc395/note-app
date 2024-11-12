@@ -6,9 +6,9 @@ import { mapValues } from 'lodash-es';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.min.js?worker';
 
-import type { EntityMaterialVO } from '@domain/shared/model/material';
-import type { AnnotationVO, FragmentSelector } from '@domain/shared/model/annotation';
-import type { Tile } from '@domain/client/app/model/workbench';
+import type { EntityMaterialVO } from '#domain/shared/model/material';
+import type { AnnotationVO, FragmentSelector } from '#domain/shared/model/annotation';
+import type { Tile } from '#domain/client/app/model/workbench';
 import EditableMaterial from './EditableMaterial';
 import PdfEditor from '../editor/PdfEditor';
 
