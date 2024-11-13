@@ -6,6 +6,9 @@ module.exports = {
   },
   root: true,
   ignorePatterns: ['dist'],
+  rules: {
+    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+  },
   overrides: [
     {
       files: ['*.ts', '*.tsx'],

@@ -1,4 +1,3 @@
-import 'reflect-metadata';
 import { IS_DEV } from '#domain/shared/infra/constants.js';
 import ElectronRuntime from './index.js';
 

@@ -1,20 +1,19 @@
 import assert from 'node:assert';
-import { container, singleton } from 'tsyringe';
 
 import type { Annotation, AnnotationDTO, AnnotationPatchDTO } from '#domain/shared/model/annotation.js';
 import type { EntityId } from '#domain/shared/model/entity.js';
+import { container } from '#domain/shared/infra/singletons.js';
 
 import BaseService from './BaseService.js';
 import MaterialService from './MaterialService.js';
 import EntityService from './EntityService.js';
 import ContentService from './ContentService/index.js';
 
-@singleton()
 export default class AnnotationService extends BaseService {
   private readonly materialService = container.resolve(MaterialService);
   private readonly content = container.resolve(ContentService);
 
-  @BaseService.transaction()
+  @BaseService.transaction
   public async create(annotation: AnnotationDTO) {
     const now = Date.now();
 
@@ -38,13 +37,13 @@ export default class AnnotationService extends BaseService {
     return created;
   }
 
-  @BaseService.transaction()
+  @BaseService.transaction
   public async queryByEntityId(entityId: EntityId) {
     await this.materialService.assertAvailableIds([entityId]);
     return this.repo.annotations.findAllByEntityId(entityId, { isAvailableOnly: true });
   }
 
-  @BaseService.transaction()
+  @BaseService.transaction
   public async updateOne(annotationId: Annotation['id'], patch: AnnotationPatchDTO) {
     const hasContentUpdated = typeof patch.body === 'string';
 

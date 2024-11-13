@@ -1,6 +1,5 @@
-import { container } from 'tsyringe';
-
 import { token as searchEngineToken } from '#domain/server/infra/searchEngine.js';
+import { container } from '#domain/shared/infra/singletons.js';
 import type { SearchRequest, SearchResultVO } from '#domain/shared/model/search.js';
 
 import BaseService from './BaseService.js';

@@ -1,6 +1,4 @@
-import type { InjectionToken } from 'tsyringe';
-
-export const token: InjectionToken<Logger> = Symbol('logger');
+import { Type } from 'di-wise';
 
 export interface Logger {
   debug: (content: unknown) => void;
@@ -8,3 +6,5 @@ export interface Logger {
   log: (content: unknown) => void;
   warn: (content: unknown) => void;
 }
+
+export const token = Type<Logger>('logger');

@@ -1,6 +1,5 @@
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { EXIT, SKIP, visit } from 'unist-util-visit';
-import { container, singleton } from 'tsyringe';
 import { compact, size, uniq } from 'lodash-es';
 import { is } from 'unist-util-is';
 import { toString } from 'mdast-util-to-string';
@@ -11,6 +10,7 @@ import {
   mdastExtension as topicExtension,
   tokenExtension as topicTokenExtension,
 } from '#domain/shared/infra/markdown/syntax/topic.js';
+import { container } from '#domain/shared/infra/singletons.js';
 import type { Entity, EntityId } from '#domain/shared/model/entity.js';
 import {
   type TopicVO,
@@ -27,7 +27,6 @@ import EntityService from '../EntityService.js';
 import LinkExtractor from './LinkExtractor.js';
 import TopicExtractor from './TopicExtractor.js';
 
-@singleton()
 export default class ContentService extends BaseService {
   private readonly entityService = container.resolve(EntityService);
 

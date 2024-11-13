@@ -1,6 +1,5 @@
 import path from 'node:path';
 import { hostname } from 'node:os';
-import { container } from 'tsyringe';
 
 import { APP_NAME, IS_DEV, IS_TEST } from '#domain/shared/infra/constants.js';
 import { Runtime, token as runtimeToken } from '#domain/server/infra/runtime.js';
@@ -9,6 +8,7 @@ import { token as kvDatabaseToken } from '#domain/server/infra/kvDatabase.js';
 import { token as searchEngineToken } from '#domain/server/infra/searchEngine.js';
 import { token as repositoriesToken } from '#domain/server/repository/index.js';
 import { token as loggerToken } from '#domain/shared/infra/logger.js';
+import { container } from '#domain/shared/infra/singletons.js';
 
 import SqliteDb from '../sqlite/Database.js';
 import SqliteKvDatabase from '../sqlite/KvDatabase.js';
@@ -18,14 +18,14 @@ import { getRepositories } from '../sqlite/repository/index.js';
 export default abstract class DesktopRuntime extends Runtime {
   constructor() {
     super();
-    container.registerInstance(loggerToken, console);
+    container.register(loggerToken, { useValue: console });
     const db = new SqliteDb({ dir: this.getAppDir() });
 
-    container.registerInstance(databaseToken, db);
-    container.registerInstance(repositoriesToken, getRepositories(db));
-    container.registerInstance(kvDatabaseToken, new SqliteKvDatabase(db));
-    container.registerInstance(searchEngineToken, new SqliteSearchEngine(db));
-    container.registerInstance(runtimeToken, this);
+    container.register(databaseToken, { useValue: db });
+    container.register(repositoriesToken, { useValue: getRepositories(db) });
+    container.register(kvDatabaseToken, { useValue: new SqliteKvDatabase(db) });
+    container.register(searchEngineToken, { useValue: new SqliteSearchEngine(db) });
+    container.register(runtimeToken, { useValue: this });
   }
 
   public getAppDir() {

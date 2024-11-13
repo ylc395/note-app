@@ -1,7 +1,7 @@
 import assert from 'node:assert';
-import { container, singleton } from 'tsyringe';
 import { first } from 'lodash-es';
 
+import { container } from '#domain/shared/infra/singletons.js';
 import type { Star, StarDTO, StarVO } from '#domain/shared/model/star.js';
 import type { EntityId } from '#domain/shared/model/entity.js';
 import { arrayOf } from '#utils/collection.js';
@@ -9,11 +9,10 @@ import { arrayOf } from '#utils/collection.js';
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
 
-@singleton()
 export default class StarService extends BaseService {
   private readonly entityService = container.resolve(EntityService);
 
-  @BaseService.transaction()
+  @BaseService.transaction
   public async create({ entityId }: StarDTO) {
     await this.entityService.assertAvailableIds([entityId]);
 
@@ -26,7 +25,7 @@ export default class StarService extends BaseService {
     return created;
   }
 
-  @BaseService.transaction()
+  @BaseService.transaction
   public async query() {
     const stars = await this.repo.stars.findAll({ isAvailableOnly: true });
 
@@ -60,7 +59,7 @@ export default class StarService extends BaseService {
     return Array.isArray(stars) ? result : first(result)!;
   }
 
-  @BaseService.transaction()
+  @BaseService.transaction
   public async remove(entityId: EntityId) {
     const star = await this.repo.stars.findOneByEntityId(entityId);
     assert(star, `star ${entityId} not exist`);

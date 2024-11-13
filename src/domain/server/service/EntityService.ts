@@ -1,5 +1,4 @@
 import { constant, mapValues, pick, uniq } from 'lodash-es';
-import { singleton } from 'tsyringe';
 import assert from 'assert';
 
 import { Entity, type EntityId, EntityTypes } from '#domain/shared/model/entity.js';
@@ -9,7 +8,6 @@ import { normalizeTitle as normalizeMaterialTitle } from '#domain/shared/model/m
 import { normalizeTitle as normalizeMemoTitle } from '#domain/server/model/memo.js';
 import { buildIndex } from '#utils/collection.js';
 
-@singleton()
 export default class EntityService extends BaseService {
   public static getReadableTitle(entity: Entity) {
     const mappers = {

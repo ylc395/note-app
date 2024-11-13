@@ -1,7 +1,6 @@
-import { container } from 'tsyringe';
-import assert from 'node:assert';
 import { randomUUID } from 'node:crypto';
 
+import { container } from '#domain/shared/infra/singletons.js';
 import { token as databaseToken } from '#domain/server/infra/database.js';
 import { token as repositoriesToken } from '../repository/index.js';
 import { token as runtimeToken } from '../infra/runtime.js';
@@ -17,18 +16,14 @@ export default abstract class BaseService {
     return this.db.transaction.bind(this.db);
   }
 
-  public static transaction() {
-    return function (target: unknown, propertyKey: string, descriptor: PropertyDescriptor) {
-      const originalMethod = descriptor.value;
-      assert(typeof originalMethod === 'function');
-
-      descriptor.value = function (...args: unknown[]) {
-        assert(this instanceof BaseService);
-
-        return this.transaction(() => {
-          return originalMethod.apply(this, args);
-        });
-      };
+  public static transaction<This extends BaseService, Args extends unknown[], Return>(
+    target: (this: This, ...args: Args) => Return,
+    _: ClassMethodDecoratorContext,
+  ) {
+    return function (this: This, ...args: Args) {
+      return this.transaction(() => {
+        return Promise.resolve(target.apply(this, args));
+      });
     };
   }
 

@@ -1,6 +1,5 @@
 import { type Kysely, sql } from 'kysely';
 import { compact } from 'lodash-es';
-import { container } from 'tsyringe';
 import assert from 'node:assert';
 
 import type { SearchEngine } from '#domain/server/infra/searchEngine.js';
@@ -23,6 +22,7 @@ import {
   fileTextsFTSTableName,
 } from './tables.js';
 import { type EntityId, EntityTypes } from '#domain/shared/model/entity.js';
+import { container } from '#domain/shared/infra/singletons.js';
 import { buildIndex } from '#utils/collection.js';
 
 export default class SqliteSearchEngine implements SearchEngine {

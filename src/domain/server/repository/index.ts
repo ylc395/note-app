@@ -1,4 +1,4 @@
-import { InjectionToken } from 'tsyringe';
+import { Type } from 'di-wise';
 import type { NoteRepository } from './noteRepository.js';
 import type { StarRepository } from './starRepository.js';
 import type { FileRepository } from './fileRepository.js';
@@ -23,4 +23,4 @@ export interface Repositories {
   revisions: RevisionRepository;
 }
 
-export const token: InjectionToken<Repositories> = Symbol('Repositories');
+export const token = Type<Repositories>('Repositories');

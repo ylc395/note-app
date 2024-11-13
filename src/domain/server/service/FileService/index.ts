@@ -1,5 +1,4 @@
 import { groupBy } from 'lodash-es';
-import { singleton } from 'tsyringe';
 import fs from 'fs-extra';
 import assert from 'node:assert';
 
@@ -10,7 +9,6 @@ import BaseService from '../BaseService.js';
 import EntityService from '../EntityService.js';
 import TextExtractor, { type JobResult } from './TextExtractor/index.js';
 
-@singleton()
 export default class FileService extends BaseService {
   constructor() {
     super();
@@ -78,7 +76,7 @@ export default class FileService extends BaseService {
     }
   }
 
-  @BaseService.transaction()
+  @BaseService.transaction
   private async handleTextExtracted({ isFinished, location, text, fileId }: JobResult) {
     await this.repo.files.createTextRecord({
       location: location,

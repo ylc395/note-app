@@ -1,5 +1,5 @@
 /// <reference lib="dom" />
-import type { InjectionToken } from 'tsyringe';
+import { Type } from 'di-wise';
 
 export type MenuItemKey = string | number;
 
@@ -30,4 +30,4 @@ export interface UI {
   toast: (config: ToastConfig) => void;
 }
 
-export const token: InjectionToken<UI> = Symbol();
+export const token = Type<UI>('ui');

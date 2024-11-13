@@ -1,6 +1,5 @@
 import { uniq, pick, first } from 'lodash-es';
 import assert from 'assert';
-import { container, singleton } from 'tsyringe';
 
 import {
   type MaterialDTO,
@@ -12,16 +11,16 @@ import {
   isEntityMaterial,
 } from '#domain/shared/model/material.js';
 import { buildIndex } from '#utils/collection.js';
+import { container } from '#domain/shared/infra/singletons.js';
 
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
 import ContentService from './ContentService/index.js';
 
-@singleton()
 export default class MaterialService extends BaseService {
   private readonly content = container.resolve(ContentService);
 
-  @BaseService.transaction()
+  @BaseService.transaction
   public async create(newMaterial: MaterialDTO) {
     if (newMaterial.parentId) {
       await this.assertAvailableIds([newMaterial.parentId]);
@@ -50,7 +49,7 @@ export default class MaterialService extends BaseService {
     return this.toVO(material, true);
   }
 
-  @BaseService.transaction()
+  @BaseService.transaction
   public async query(q: ClientMaterialQuery) {
     const materials = await this.repo.materials.findAll({
       ...q,
@@ -79,7 +78,7 @@ export default class MaterialService extends BaseService {
     return Array.isArray(materials) ? materialVOs : first(materialVOs)!;
   }
 
-  @BaseService.transaction()
+  @BaseService.transaction
   public async queryOne(id: Material['id']) {
     const material = await this.repo.materials.findOneById(id, { isAvailableOnly: true });
 
@@ -87,7 +86,7 @@ export default class MaterialService extends BaseService {
     return await this.toVO(material);
   }
 
-  @BaseService.transaction()
+  @BaseService.transaction
   public async batchUpdate(ids: Material['id'][], patch: MaterialBatchPatchDTO) {
     await this.assertAvailableIds(ids);
 
@@ -98,7 +97,7 @@ export default class MaterialService extends BaseService {
     await this.repo.materials.update(ids, patch);
   }
 
-  @BaseService.transaction()
+  @BaseService.transaction
   public async updateOne(materialId: Material['id'], patch: MaterialPatchDTO) {
     const isEntityPatch = typeof patch.body === 'string' || typeof patch.sourceUrl === 'string';
     await this.assertAvailableIds([materialId], { type: isEntityPatch ? 'entity' : undefined });
@@ -125,7 +124,7 @@ export default class MaterialService extends BaseService {
     }
   }
 
-  @BaseService.transaction()
+  @BaseService.transaction
   public async getBlob(materialId: MaterialVO['id']) {
     const blob = await this.repo.materials.findBlobById(materialId, { isAvailableOnly: true });
     assert(blob);

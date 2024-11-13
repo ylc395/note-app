@@ -1,4 +1,4 @@
-import type { InjectionToken } from 'tsyringe';
+import { Type } from 'di-wise';
 
 export interface KvDatabase {
   ready: Promise<void>;
@@ -7,4 +7,4 @@ export interface KvDatabase {
   set: (key: string, value: string) => Promise<void>;
 }
 
-export const token: InjectionToken<KvDatabase> = Symbol('KvDatabase');
+export const token = Type<KvDatabase>('KvDatabase');

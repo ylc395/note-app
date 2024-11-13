@@ -1,20 +1,19 @@
 import { groupBy, mapValues, size } from 'lodash-es';
 import assert from 'assert';
-import { container, singleton } from 'tsyringe';
 import dayjs from 'dayjs';
 
 import { arrayOf, buildIndex } from '#utils/collection.js';
 import type { Memo, MemoDTO, ClientMemoQuery, MemoVO, MemoPatchDTO, Duration } from '#domain/server/model/memo.js';
+import { container } from '#domain/shared/infra/singletons.js';
 
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
 import ContentService from './ContentService/index.js';
 
-@singleton()
 export default class MemoService extends BaseService {
   private readonly content = container.resolve(ContentService);
 
-  @BaseService.transaction()
+  @BaseService.transaction
   public async create(memo: MemoDTO) {
     if (memo.parentId) {
       assert(typeof memo.isPinned === 'undefined', 'can not pin/unpin a child memo');
@@ -40,7 +39,7 @@ export default class MemoService extends BaseService {
     return this.toVO(newMemo, true);
   }
 
-  @BaseService.transaction()
+  @BaseService.transaction
   public async updateOne(id: MemoVO['id'], patch: MemoPatchDTO) {
     await this.assertAvailableId(id, { isPinned: typeof patch.isPinned === 'boolean' ? !patch.isPinned : undefined });
 
@@ -56,7 +55,7 @@ export default class MemoService extends BaseService {
     }
   }
 
-  @BaseService.transaction()
+  @BaseService.transaction
   public async queryList(query: ClientMemoQuery) {
     assert(!(query.startIndex && query.startTime), 'startIndex can not be used together with startTime');
     assert(!(query.endIndex && query.endTime), 'endIndex can not be used together with endTime');
@@ -79,7 +78,7 @@ export default class MemoService extends BaseService {
     return await this.toVO(memos);
   }
 
-  @BaseService.transaction()
+  @BaseService.transaction
   public async queryAvailableDates(duration: Duration) {
     const memos = await this.repo.memos.findAll({
       ...duration,

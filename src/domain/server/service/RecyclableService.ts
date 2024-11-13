@@ -1,18 +1,17 @@
 import { differenceWith, uniq } from 'lodash-es';
 import assert from 'node:assert';
-import { container, singleton } from 'tsyringe';
 
+import { container } from '#domain/shared/infra/singletons.js';
 import { RecyclablesDTO, RecyclableVO } from '#domain/server/model/recyclable.js';
 import type { EntityId } from '#domain/shared/model/entity.js';
 
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
 
-@singleton()
 export default class RecyclableService extends BaseService {
   private readonly entityService = container.resolve(EntityService);
 
-  @BaseService.transaction()
+  @BaseService.transaction
   public async batchCreate(recyclables: RecyclablesDTO) {
     const entityIds = recyclables.map(({ entityId }) => entityId);
     await this.entityService.assertAvailableIds(entityIds);
@@ -35,7 +34,7 @@ export default class RecyclableService extends BaseService {
     await this.repo.recyclables.batchCreate(newRecyclables);
   }
 
-  @BaseService.transaction()
+  @BaseService.transaction
   public async recover(entityId: EntityId) {
     const recyclable = await this.repo.recyclables.findOneByEntityId(entityId);
     assert(recyclable, `invalid entity id: ${entityId}`);
@@ -48,7 +47,7 @@ export default class RecyclableService extends BaseService {
     await this.repo.recyclables.removeByEntityId(entityId);
   }
 
-  @BaseService.transaction()
+  @BaseService.transaction
   public async queryAll(): Promise<RecyclableVO[]> {
     const records = await this.repo.recyclables.findAll();
     const ids = records.map(({ entityId }) => entityId);

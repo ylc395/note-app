@@ -1,8 +1,8 @@
 import { container } from 'tsyringe';
 import { observable, makeObservable } from 'mobx';
 
-import { token as rpcToken } from '#domain/client/common/infra/rpc';
-import { type EntityId, type EntityLocator, EntityTypes, type EntityPath } from '../../../common/model/entity';
+import { token as rpcToken } from '#domain/client/shared/infra/rpc';
+import { type EntityId, type EntityLocator, EntityTypes, type EntityPath } from '#domain/shared/model/entity';
 import type { Tile } from '../workbench';
 import type Editor from './Editor';
 

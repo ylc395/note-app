@@ -1,4 +1,3 @@
-import { singleton } from 'tsyringe';
 import assert from 'assert';
 import { applyPatch, structuredPatch } from 'diff';
 
@@ -6,7 +5,6 @@ import type { Revision, RevisionPatchDTO } from '#domain/shared/model/revision.j
 import { buildIndex } from '#utils/collection.js';
 import BaseService from './BaseService.js';
 
-@singleton()
 export default class RevisionService extends BaseService {
   constructor() {
     super();
@@ -19,7 +17,7 @@ export default class RevisionService extends BaseService {
     setInterval(this.createRevisions.bind(this), 1 * 60 * 1000);
   }
 
-  @BaseService.transaction()
+  @BaseService.transaction
   private async createRevisions() {
     if (this.isBusy) {
       return;
@@ -79,7 +77,7 @@ export default class RevisionService extends BaseService {
     this.isBusy = false;
   }
 
-  @BaseService.transaction()
+  @BaseService.transaction
   public async update(id: Revision['id'], patch: RevisionPatchDTO) {
     const revision = await this.repo.revisions.findAll({ ids: [id], isAvailableOnly: true });
     assert(revision.length > 0, 'invalid revision id');

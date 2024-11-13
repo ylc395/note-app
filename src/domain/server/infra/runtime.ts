@@ -1,6 +1,4 @@
-import type { InjectionToken } from 'tsyringe';
-
-export const token: InjectionToken<Runtime> = Symbol('runtime');
+import { Type } from 'di-wise';
 
 export abstract class Runtime {
   public abstract getAppDir(): string;
@@ -9,3 +7,5 @@ export abstract class Runtime {
   public abstract readonly appVersion: string;
   public abstract ready(): Promise<void>;
 }
+
+export const token = Type<Runtime>('runtime');

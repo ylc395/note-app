@@ -1,4 +1,3 @@
-import { container, singleton } from 'tsyringe';
 import assert from 'node:assert';
 import { first, pick, uniq } from 'lodash-es';
 import {
@@ -12,16 +11,16 @@ import {
   normalizeTitle,
 } from '#domain/shared/model/note.js';
 import { arrayOf, buildIndex } from '#utils/collection.js';
+import { container } from '#domain/shared/infra/singletons.js';
 
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
 import ContentService from './ContentService/index.js';
 
-@singleton()
 export default class NoteService extends BaseService {
   private readonly content = container.resolve(ContentService);
 
-  @BaseService.transaction()
+  @BaseService.transaction
   public async create(note: NoteDTO | DuplicatedNoteDTO) {
     let newNote: Required<Note>;
 
@@ -67,7 +66,7 @@ export default class NoteService extends BaseService {
     });
   }
 
-  @BaseService.transaction()
+  @BaseService.transaction
   public async updateOne(noteId: Note['id'], notePatch: NotePatchDTO) {
     await this.assertAvailableIds([noteId]);
 
@@ -104,7 +103,7 @@ export default class NoteService extends BaseService {
     return Array.isArray(notes) ? result : first(result)!;
   }
 
-  @BaseService.transaction()
+  @BaseService.transaction
   public async batchUpdate(ids: Note['id'][], patch: NoteBatchPatchDTO) {
     await this.assertAvailableIds(ids);
 
@@ -132,7 +131,7 @@ export default class NoteService extends BaseService {
     }
   }
 
-  @BaseService.transaction()
+  @BaseService.transaction
   public async query(q: ClientNoteQuery) {
     const notes = await this.repo.notes.findAll({
       ...q,
@@ -143,7 +142,7 @@ export default class NoteService extends BaseService {
     return await this.toVO(notes);
   }
 
-  @BaseService.transaction()
+  @BaseService.transaction
   public async queryOne(id: Note['id']) {
     const note = await this.repo.notes.findOneById(id, { isAvailableOnly: true });
 

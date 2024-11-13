@@ -1,9 +1,9 @@
 import pdfjs from 'pdfjs-dist';
 import assert from 'node:assert';
 import { createCanvas } from 'canvas';
-import { container } from 'tsyringe';
 import type { RenderParameters } from 'pdfjs-dist/types/src/display/api.js';
 
+import { container } from '#domain/shared/infra/singletons.js';
 import type { Job } from './job.js';
 import ImageTextExtractor from './ImageTextExtractor.js';
 
