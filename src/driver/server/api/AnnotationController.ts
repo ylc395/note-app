@@ -1,18 +1,23 @@
-import { string, tuple } from 'zod';
+import { tuple } from 'zod';
 
 import { annotationDTOSchema, annotationPatchDTOSchema } from '#domain/shared/infra/apiSchema/annotation.js';
 import { publicProcedure, router } from './trpc.js';
+import { entityIdSchema } from '#domain/shared/infra/apiSchema/entity.js';
 
 export default router({
   queryByEntityId: publicProcedure
-    .input(string())
+    .input(entityIdSchema)
     .query(({ input: id, ctx: { annotationService } }) => annotationService.queryByEntityId(id)),
+
+  queryOne: publicProcedure
+    .input(entityIdSchema)
+    .query(({ input: id, ctx: { annotationService } }) => annotationService.queryOne(id)),
 
   create: publicProcedure
     .input(annotationDTOSchema)
     .mutation(({ input: dto, ctx: { annotationService } }) => annotationService.create(dto)),
 
   updateOne: publicProcedure
-    .input(tuple([string(), annotationPatchDTOSchema]))
+    .input(tuple([entityIdSchema, annotationPatchDTOSchema]))
     .mutation(({ input: [id, patch], ctx: { annotationService } }) => annotationService.updateOne(id, patch)),
 });

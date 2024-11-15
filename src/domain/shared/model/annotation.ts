@@ -6,7 +6,7 @@ interface HtmlSelector {
   selector: string; // CSS selector
 }
 
-type Selector = HtmlSelector | TextQuoteFragment | CommonFragment;
+export type Selector = HtmlSelector | TextQuoteFragment | CommonFragment;
 
 // This concept is inspired by https://www.w3.org/TR/annotation-model/
 export interface Annotation {

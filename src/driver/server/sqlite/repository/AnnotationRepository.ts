@@ -100,6 +100,31 @@ export default class SqliteAnnotationRepository extends BaseRepository implement
     return Boolean(updated);
   }
 
+  public async findOneById(annotationId: Annotation['id'], config?: { isAvailableOnly?: boolean }) {
+    let sql = this.db
+      .selectFrom(this.tableName)
+      .where('id', '=', annotationId)
+      .select([
+        `${this.tableName}.id`,
+        `${this.tableName}.targetId`,
+        `${this.tableName}.selectors`,
+        `${this.tableName}.body`,
+        `${this.tableName}.color`,
+        `${this.tableName}.createdAt`,
+        `${this.tableName}.updatedAt`,
+      ]);
+
+    if (config?.isAvailableOnly) {
+      sql = sql
+        .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.id`)
+        .where(`${recyclableTableName}.entityId`, 'is', null);
+    }
+
+    const row = await sql.executeTakeFirst();
+
+    return row ? SqliteAnnotationRepository.rowToVO(row) : null;
+  }
+
   private static rowToVO(row: Selectable<Row>): Annotation {
     return {
       ...row,

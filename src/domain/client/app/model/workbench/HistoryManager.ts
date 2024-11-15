@@ -3,7 +3,7 @@ import { last } from 'lodash-es';
 import assert from 'assert';
 
 import Editor from '../abstract/Editor';
-import { EditableEntityLocator } from '../abstract/EditableEntity';
+import { EditableEntityLocator } from '../abstract/Editable';
 import type Workbench from './Workbench';
 import { type default as Tile, SwitchReasons } from './Tile';
 import { eventBus, EventNames } from './eventBus';

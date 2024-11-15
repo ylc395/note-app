@@ -7,6 +7,7 @@ import {
   durationSchema,
   memoSchema,
 } from '#domain/shared/infra/apiSchema/memo.js';
+import { entityIdSchema } from '#domain/shared/infra/apiSchema/entity.js';
 
 import { publicProcedure, router } from './trpc.js';
 
@@ -14,6 +15,10 @@ export default router({
   queryList: publicProcedure
     .input(clientMemoQuerySchema)
     .query(({ input: query, ctx: { memoService } }) => memoService.queryList(query)),
+
+  queryOne: publicProcedure
+    .input(entityIdSchema)
+    .query(({ input: query, ctx: { memoService } }) => memoService.queryOne(query, true)),
 
   create: publicProcedure
     .input(memoDTOSchema)

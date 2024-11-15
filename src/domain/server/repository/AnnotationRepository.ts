@@ -7,6 +7,7 @@ export type AnnotationPatch = AnnotationPatchDTO & Partial<Pick<Annotation, 'upd
 export interface AnnotationRepository {
   create: (annotation: Annotation) => Promise<Annotation>;
   findAllByEntityId: (entityId: EntityId, config?: { isAvailableOnly?: boolean }) => Promise<Annotation[]>;
+  findOneById: (annotationId: Annotation['id'], config?: { isAvailableOnly?: boolean }) => Promise<Annotation | null>;
   findAllTargets: (ids: Annotation['id'][]) => Promise<Record<Annotation['id'], Omit<EntityMaterial, 'file'>>>;
   update: (annotationId: Annotation['id'], patch: AnnotationPatch) => Promise<boolean>;
 }

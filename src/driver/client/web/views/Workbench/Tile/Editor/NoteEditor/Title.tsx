@@ -12,18 +12,18 @@ export default observer(function NoteTitle({ editor }: { editor: NoteEditor }) {
 
   return (
     <div className="flex items-center border-0 border-b border-solid border-layout px-1 py-2">
-      <IconPicker icon={editor.info?.icon || null} onSelect={(icon) => editor.updateEntity({ icon })} />
+      <IconPicker icon={editor.entity?.icon || null} onSelect={(icon) => editor.update({ icon })} />
       <input
         spellCheck={false}
         ref={inputRef}
         className="grow border-none text-xl font-medium"
         placeholder={editor.tabView.title}
-        value={editor.info?.title || ''}
+        value={editor.entity?.title || ''}
         onChange={(e) => {
-          editor.updateEntity({ title: e.target.value });
+          editor.update({ title: e.target.value });
         }}
         readOnly={editor.isReadonly}
-        disabled={typeof editor.info?.title !== 'string'}
+        disabled={typeof editor.entity?.title !== 'string'}
       />
       <div className="mr-2 flex space-x-1">
         <Button>

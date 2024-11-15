@@ -29,8 +29,8 @@ export default class HtmlViewer {
 
   @computed
   get title() {
-    let text = this.editor.info?.sourceUrl || '未命名 HTML 文档';
-    let icon = this.editor.info?.icon || '';
+    let text = this.editor.entity?.sourceUrl || '未命名 HTML 文档';
+    let icon = this.editor.entity?.icon || '';
 
     if (this.editor.documentElement instanceof HTMLHtmlElement) {
       const titleContent = this.editor.documentElement.querySelector('title')?.innerText;

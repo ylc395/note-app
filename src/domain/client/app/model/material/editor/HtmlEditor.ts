@@ -1,8 +1,8 @@
-import { makeObservable, observable, action, computed } from 'mobx';
+import { observable, action, computed } from 'mobx';
 
-import MaterialEditor from '#domain/client/app/model/material/editor/MaterialEditor';
 import type Tile from '#domain/client/app/model/workbench/Tile';
-import type EditableHtml from '../editable/EditableHtml';
+import EditableMaterial from '../editable/EditableMaterial';
+import MaterialEditor from './MaterialEditor';
 
 interface State {
   scrollTop: number;
@@ -13,14 +13,12 @@ export enum Panels {
   AnnotationList,
 }
 
-export default class HtmlEditor extends MaterialEditor<EditableHtml, State> {
-  constructor(editor: EditableHtml, tile: Tile) {
-    super(editor, tile);
-    makeObservable(this);
+export default class HtmlEditor extends MaterialEditor<State> {
+  constructor(editable: EditableMaterial, tile: Tile) {
+    super(editable, tile);
   }
 
-  @observable.ref
-  public documentElement?: unknown;
+  @observable.ref public documentElement?: unknown;
 
   @observable
   public panelsVisibility = {
@@ -35,6 +33,11 @@ export default class HtmlEditor extends MaterialEditor<EditableHtml, State> {
 
   @computed
   public get html() {
-    return this.editable.html;
+    if (!this.editable.blob) {
+      return undefined;
+    }
+
+    const textDecoder = new TextDecoder();
+    return textDecoder.decode(this.editable.blob);
   }
 }

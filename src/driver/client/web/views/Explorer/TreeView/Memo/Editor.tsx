@@ -19,7 +19,7 @@ export default observer(function MemoEditor({ node, isChild = false }: { node: M
       <textarea ref={textareaRef} value={editor.content} onChange={(e) => editor.updateContent(e.target.value)} />
       <div>
         <button onClick={editor.submit}>提交</button>
-        {isChild ? <button onClick={editor.reset}>重置</button> : <button onClick={editor.cancel}>取消</button>}
+        {isChild ? <button onClick={editor.reset}>重置</button> : <button onClick={editor.destroy}>取消</button>}
       </div>
     </div>
   );

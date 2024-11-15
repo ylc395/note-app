@@ -4,7 +4,7 @@ import { uniqueId, isMatch } from 'lodash-es';
 import assert from 'assert';
 
 import Editor from '#domain/client/app/model/abstract/Editor';
-import type { EditableEntityLocator } from '#domain/client/app/model/abstract/EditableEntity';
+import type { EditableEntityLocator } from '#domain/client/app/model/abstract/Editable';
 import EditorFactory from './EditorFactory';
 import { eventBus, EventNames } from './eventBus';
 import type { EntityLocator } from '../../../common/model/entity';

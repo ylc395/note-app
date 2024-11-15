@@ -1,16 +1,20 @@
 import Emitter, { type EventName } from 'emittery';
 
-type Events = Record<EventName, unknown>;
+import { IS_PRODUCTION } from '#domain/shared/infra/constants';
+import { token } from '#domain/shared/infra/logger';
+import { container } from '#domain/shared/infra/singletons';
+
+export type Events = Record<EventName, unknown>;
 
 export default class EventBus<T extends Events> extends Emitter<T> {
+  private readonly logger = container.resolve(token);
   constructor(name: string) {
     super({
       debug: {
         name,
-        enabled: true,
-        // todo: add custom logger for production
+        enabled: !IS_PRODUCTION,
         logger: (type, debugName, eventName, eventData) => {
-          console.log(`[eventBus ${debugName}]: ${type} ${String(eventName)}`, eventData);
+          this.logger.debug(`[eventBus ${debugName}]: ${type} ${String(eventName)}`, eventData);
         },
       },
     });

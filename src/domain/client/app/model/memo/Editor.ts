@@ -1,51 +1,51 @@
-import { container } from 'tsyringe';
-import { makeObservable, observable } from 'mobx';
+import { action, observable } from 'mobx';
+import assert from 'assert';
+
 import type { MemoVO } from '#domain/shared/model/memo';
-import { action } from 'mobx';
+import { container } from '#domain/shared/infra/singletons';
+import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 
-import { token as rpcToken } from '#domain/client/common/infra/rpc';
-import type { EntityParentId } from '../../../common/model/entity';
+import EventBus from '../../infra/EventBus';
 
-export default class Editor {
+export enum EventNames {
+  Destroyed = 'destroyed',
+  Submitted = 'Submitted',
+}
+
+type Events = {
+  [EventNames.Destroyed]: undefined;
+  [EventNames.Submitted]: undefined;
+};
+
+export default class Editor extends EventBus<Events> {
   private readonly remote = container.resolve(rpcToken);
-  constructor(
-    private readonly options: {
-      onSubmit: (newMemo: MemoVO) => void;
-      onCancel?: () => void;
-      initial?: string;
-      memo?: MemoVO;
-      parentId?: EntityParentId;
-    },
-  ) {
-    this.content = options.initial || options.memo?.body || '';
-    makeObservable(this);
+
+  constructor(private readonly options: { memo?: MemoVO; parentId?: MemoVO['parentId'] }) {
+    assert(!(options.memo && options.parentId), 'can not specify both memo and parentId');
+    super(`memo-editor-${options.memo?.id ?? 'new'}`);
+    this.content = options.memo?.body ?? '';
   }
 
-  public readonly cancel = () => {
-    this.options.onCancel?.();
-  };
-
-  @observable
-  public content: string;
-
-  public get memoId() {
-    return this.options.memo?.id;
-  }
-
-  public readonly submit = async () => {
-    const newMemo = this.options.memo
-      ? await this.remote.memo.updateOne.mutate([this.options.memo.id, { body: this.content }])
-      : await this.remote.memo.create.mutate({ body: this.content, parentId: this.options.parentId || null });
-    this.options.onSubmit(newMemo);
-  };
+  @observable public accessor content: string;
 
   @action
   public updateContent(value: string) {
     this.content = value;
   }
 
-  @action.bound
-  public reset() {
-    this.updateContent('');
+  public async submit() {
+    if (this.options.memo) {
+      await this.remote.memo.updateOne.mutate([this.options.memo.id, { body: this.content }]);
+    } else {
+      await this.remote.memo.create.mutate({ body: this.content, parentId: this.options.parentId });
+    }
+
+    this.emit(EventNames.Submitted);
+    this.destroy();
+  }
+
+  public destroy() {
+    this.emit(EventNames.Destroyed);
+    this.clearListeners();
   }
 }

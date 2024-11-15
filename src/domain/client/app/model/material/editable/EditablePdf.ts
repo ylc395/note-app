@@ -1,79 +1,77 @@
-import { makeObservable, observable, runInAction } from 'mobx';
+import { computed, observable, runInAction } from 'mobx';
 import assert from 'assert';
 import { type PDFDocumentLoadingTask, type PDFDocumentProxy, getDocument, GlobalWorkerOptions } from 'pdfjs-dist';
-import dayjs from 'dayjs';
-import { mapValues } from 'lodash-es';
-import customParseFormat from 'dayjs/plugin/customParseFormat';
-import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.min.js?worker';
+import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?worker';
 
-import type { EntityMaterialVO } from '#domain/shared/model/material';
-import type { AnnotationVO, FragmentSelector } from '#domain/shared/model/annotation';
-import type { Tile } from '#domain/client/app/model/workbench';
+import type { AnnotationVO } from '#domain/shared/model/annotation';
 import EditableMaterial from './EditableMaterial';
-import PdfEditor from '../editor/PdfEditor';
 
 export interface OutlineItem {
   title: string;
   children: OutlineItem[];
   key: string;
+  dest: unknown; // 传给 pdfjs 的跳转函数用的，具体类型不明，我们也不用管
 }
 
-dayjs.extend(customParseFormat);
-
 export default class EditablePdf extends EditableMaterial {
-  constructor(materialId: EntityMaterialVO['id']) {
-    super(materialId);
-    makeObservable(this);
-  }
-
   @observable.ref public outline?: OutlineItem[];
   @observable.ref public nativeAnnotations?: AnnotationVO[];
   private loadingTask?: PDFDocumentLoadingTask;
-  private readonly outlineDestMap: Record<string, unknown> = {};
-
-  public getOutlineDest(key: string) {
-    return this.outlineDestMap[key];
-  }
 
   @observable.ref public doc?: PDFDocumentProxy; // this is view-independent
 
-  public createEditor(tile: Tile) {
-    return new PdfEditor(this, tile);
+  @computed
+  public get annotations() {
+    return super.annotations.toSorted(({ selectors: selectors1 }, { selectors: selectors2 }) => {
+      const firstSelector1 = selectors1[0];
+      const firstSelector2 = selectors2[0];
+
+      if (firstSelector1 && 'page' in firstSelector1 && firstSelector2 && 'page' in firstSelector2) {
+        return Number(firstSelector1.page) - Number(firstSelector2.page);
+      }
+
+      return 0;
+    });
   }
 
-  protected async load() {
-    await super.load();
+  protected async _load(abortSignal: AbortController['signal']) {
+    EditablePdf.activeCount += 1;
+
+    await super._load(abortSignal);
     assert(this.blob);
 
     if (!GlobalWorkerOptions.workerPort) {
-      // every PDFDocumentProxy will share one web worker when we do this
-      // see https://github.com/mozilla/pdf.js/issues/16429
-      GlobalWorkerOptions.workerPort = new PdfJsWorker();
+      // 一个 worker 与一个 PDFWorker 一一对应
+      // 多个 loadingTask（及其对应的 document） 可共用同一个 PDFWorker
+      // pdfjs 内部逻辑：当全局上存在 worker，则后续都不会再新建 PDFWorker，而是复用该全局 worker 对应的 PDFWorker
+      GlobalWorkerOptions.workerPort = new PdfJsWorker(); // 这里创建的是一个 worker，而非 PDFWorker
     }
+
     this.loadingTask = getDocument(this.blob.slice(0));
+
     const doc = await this.loadingTask.promise;
-    EditablePdf.activeCount += 1;
+    this.loadingTask = undefined;
 
     runInAction(() => {
       this.doc = doc;
     });
-
     this.initOutline(doc);
   }
 
   public async destroy() {
     super.destroy();
     EditablePdf.activeCount -= 1;
-    await this.loadingTask?.destroy();
 
-    runInAction(() => {
-      this.doc = undefined;
-    });
+    await this.loadingTask?.destroy();
 
     if (EditablePdf.activeCount === 0) {
       GlobalWorkerOptions.workerPort?.terminate();
       GlobalWorkerOptions.workerPort = null;
     }
+
+    runInAction(() => {
+      this.doc = undefined;
+    });
   }
 
   private async initOutline(doc: PDFDocumentProxy) {
@@ -81,16 +79,11 @@ export default class EditablePdf extends EditableMaterial {
     type RawOutlineItem = { title: string; items: RawOutlineItem[]; dest: unknown };
 
     const toOutlineItem = ({ items, dest, title }: RawOutlineItem, keys: number[]): OutlineItem => {
-      const key = keys.join('-');
-
-      if (dest) {
-        this.outlineDestMap[key] = dest;
-      }
-
       return {
         children: items.map((item, i) => toOutlineItem(item, [...keys, i])),
         title,
-        key,
+        key: keys.join('-'),
+        dest,
       };
     };
 
@@ -98,16 +91,6 @@ export default class EditablePdf extends EditableMaterial {
       const items = outline?.map((item, i) => toOutlineItem(item, [i])) || [];
       this.outline = items;
     });
-  }
-
-  public static parseFragment(fragment: FragmentSelector['value']) {
-    const query = new URLSearchParams(fragment);
-    const highlight = query.get('highlight');
-    const page = Number(query.get('page'));
-    assert(highlight);
-
-    const [left, right, top, bottom] = highlight.split(',');
-    return { page, highlight: mapValues({ left, right, top, bottom }, Number) };
   }
 
   private static activeCount = 0;

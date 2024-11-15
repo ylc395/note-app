@@ -109,10 +109,21 @@ export default class MemoService extends BaseService {
     return Array.isArray(memos) ? result : result[0]!;
   }
 
-  private readonly assertAvailableId = async (id: MemoVO['id'], config?: { isPinned?: boolean }) => {
+  public async queryOne(id: Memo['id'], isVO: true): Promise<MemoVO>;
+  public async queryOne(id: Memo['id']): Promise<Memo>;
+  public async queryOne(id: Memo['id'], isVO?: true) {
     const memo = await this.repo.memos.findOneById(id, { isAvailableOnly: true });
-
     assert(memo, 'invalid memo id');
+
+    if (isVO) {
+      return this.toVO(memo);
+    }
+
+    return memo;
+  }
+
+  private readonly assertAvailableId = async (id: MemoVO['id'], config?: { isPinned?: boolean }) => {
+    const memo = await this.queryOne(id);
 
     if (typeof config?.isPinned === 'boolean') {
       assert(memo.isPinned === config.isPinned, 'invalid pin status');

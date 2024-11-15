@@ -1,13 +1,14 @@
 import EventBus from '#domain/client/app/infra/EventBus';
-import type { MaterialVO } from '#domain/shared/model/material';
-import type { UpdateEvent as BaseUpdateEvent } from '../../../common/model/entity';
+import type { MaterialPatchDTO, MaterialVO } from '#domain/shared/model/material';
 
 export enum Events {
   Updated = 'updated',
 }
 
-export type UpdateEvent = BaseUpdateEvent<MaterialVO>;
+export interface UpdateEvent {
+  id: MaterialVO['id'];
+  payload: MaterialPatchDTO;
+  trigger: unknown;
+}
 
-export default new EventBus<{
-  [Events.Updated]: UpdateEvent;
-}>('material');
+export default new EventBus<{ [Events.Updated]: UpdateEvent }>('domain:material');

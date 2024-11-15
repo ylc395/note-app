@@ -15,11 +15,12 @@ export default class AnnotationService extends BaseService {
 
   @BaseService.transaction
   public async create(annotation: AnnotationDTO) {
-    const now = Date.now();
+    assert(annotation.selectors.length > 0, 'empty selectors of annotation');
 
     // only materials have annotations
     await this.materialService.assertAvailableIds([annotation.targetId], { type: 'entity' });
 
+    const now = Date.now();
     const created = await this.repo.annotations.create({
       id: EntityService.generateId(),
       targetId: annotation.targetId,
@@ -41,6 +42,14 @@ export default class AnnotationService extends BaseService {
   public async queryByEntityId(entityId: EntityId) {
     await this.materialService.assertAvailableIds([entityId]);
     return this.repo.annotations.findAllByEntityId(entityId, { isAvailableOnly: true });
+  }
+
+  @BaseService.transaction
+  public async queryOne(annotationId: EntityId) {
+    const annotation = await this.repo.annotations.findOneById(annotationId, { isAvailableOnly: true });
+    assert(annotation, 'invalid annotation id');
+
+    return annotation;
   }
 
   @BaseService.transaction

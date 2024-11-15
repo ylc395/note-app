@@ -8,8 +8,10 @@ export enum EventNames {
   EditorDestroyed = 'editor.destroyed',
 }
 
-export const eventBus = new EventBus<{
+type Events = {
   [EventNames.TileEmptied]: Tile;
   [EventNames.EditorSwitched]: [Editor | undefined, SwitchReasons | undefined];
   [EventNames.EditorDestroyed]: Editor;
-}>('workbench');
+};
+
+export const eventBus = new EventBus<Events>('workbench');

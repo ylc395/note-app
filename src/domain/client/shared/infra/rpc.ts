@@ -1,5 +1,5 @@
-import { InjectionToken } from 'tsyringe';
+import { Type } from 'di-wise';
 import type { inferRouterProxyClient } from '@trpc/client';
-import type { Routes } from '@api/index';
+import type { Routes } from '#api/index';
 
-export const token: InjectionToken<inferRouterProxyClient<Routes>> = Symbol('rpc');
+export const token = Type<inferRouterProxyClient<Routes>>('rpc');

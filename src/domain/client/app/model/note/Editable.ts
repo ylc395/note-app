@@ -1,121 +1,53 @@
-import { makeObservable, action, toJS, runInAction, observable, computed } from 'mobx';
-import { container } from 'tsyringe';
-import { debounce } from 'lodash-es';
-import assert from 'assert';
-import { applyPatch } from 'diff';
+import { runInAction, observable, computed } from 'mobx';
 
-import { EntityTypes } from '#domain/client/app/model/entity';
-import { token as localStorageToken } from '#domain/client/app/infra/localStorage';
-import type { NoteVO, NotePatchDTO } from '#domain/shared/model/note';
-import type { Tile } from '#domain/client/app/model/workbench';
-import EditableEntity from '#domain/client/app/model/abstract/EditableEntity';
-import NoteEditor from './Editor';
-import { eventBus, Events as NoteEvents, type UpdateEvent } from './eventBus';
+import { type NoteVO, type NotePatchDTO, normalizeTitle } from '#domain/shared/model/note';
+import EditableEntity from '#domain/client/app/model/abstract/Editable';
+import { type EntityPath, EntityTypes } from '#domain/shared/model/entity';
+
+import { eventBus, Events as NoteEvents } from './eventBus';
 
 export default class EditableNote extends EditableEntity<Required<NoteVO>> {
   constructor(noteId: NoteVO['id']) {
     super(noteId);
-    makeObservable(this);
-    eventBus.on(NoteEvents.Updated, this.refresh);
+
+    eventBus.on(NoteEvents.Updated, this.load);
   }
 
-  public readonly entityType = EntityTypes.Note;
-  private readonly localStorage = container.resolve(localStorageToken);
-  private get readonlyKey() {
-    return `${this.entityLocator.entityId}-readonly`;
-  }
+  @observable public accessor path: EntityPath | undefined;
 
-  @observable private isUploading = false;
-  @observable private latestVersionBody?: string;
-  @observable public entity?: Required<NoteVO>;
-  @observable public isReadonly = this.localStorage.get<boolean>(this.readonlyKey) || false;
+  protected readonly entityType = EntityTypes.Note;
 
-  @action.bound
-  public setReadonly(value: boolean) {
-    this.isReadonly = value;
-    this.localStorage.set(this.readonlyKey, value);
-  }
+  @observable public accessor entity: Required<NoteVO> | undefined;
 
   @computed
-  public get canSubmitVersion() {
-    if (!this.entity || this.isUploading) {
-      return false;
-    }
-
-    return this.entity.body !== this.latestVersionBody;
+  public get normalizedTitle() {
+    return this.entity ? normalizeTitle(this.entity) : '';
   }
 
-  public readonly submitNewVersion = async () => {
-    await this.remote.version.create.mutate({ entityId: this.entityLocator.entityId });
-
-    runInAction(() => {
-      assert(this.entity);
-      this.latestVersionBody = this.entity.body;
-    });
-  };
-
-  protected async load() {
+  protected async _load(signal: AbortController['signal']) {
     const [note, path] = await Promise.all([
-      this.remote.note.queryOne.query(this.entityLocator.entityId),
-      this.remote.note.queryPath.query(this.entityLocator.entityId),
+      this.remote.note.queryOne.query(this.entityLocator.entityId, { signal }),
+      this.remote.note.queryPath.query(this.entityLocator.entityId, { signal }),
     ]);
 
     runInAction(() => {
       this.entity = note;
       this.path = path;
-
-      const latestVersionBody = applyPatch(note.body, note.diff);
-
-      if (typeof latestVersionBody === 'string') {
-        this.latestVersionBody = latestVersionBody;
-      }
     });
   }
 
-  private readonly refresh = async ({ trigger, entity: { id } }: UpdateEvent) => {
-    if (trigger === this || this.entityLocator.entityId !== id) {
-      return;
-    }
-
-    await this.load();
-  };
-
-  public createEditor(tile: Tile) {
-    return new NoteEditor(this, tile);
-  }
-
-  @action
-  public update(note: NotePatchDTO) {
-    assert(this.entity);
-
-    this.entity = { ...this.entity, ...note, updatedAt: Date.now() };
-    this.isUploading = true;
-    this.upload(note);
-  }
-
-  private readonly upload = debounce(async (note: NotePatchDTO) => {
-    runInAction(() => {
-      this.isUploading = true;
-    });
-
-    const updatedNote = await this.remote.note.updateOne.mutate([this.entityLocator.entityId, toJS(note)]);
-
-    runInAction(() => {
-      this.isUploading = false;
-    });
+  public async update(note: NotePatchDTO) {
+    await this.remote.note.updateOne.mutate([this.entityLocator.entityId, note]);
 
     eventBus.emit(NoteEvents.Updated, {
+      id: this.entityLocator.entityId,
+      payload: note,
       trigger: this,
-      entity: {
-        id: this.entityLocator.entityId,
-        updatedAt: updatedNote.updatedAt,
-        ...note,
-      },
     });
-  }, 1000);
+  }
 
   public destroy(): void {
-    this.upload.flush();
-    eventBus.off(NoteEvents.Updated, this.refresh);
+    super.destroy();
+    eventBus.off(NoteEvents.Updated, this.load);
   }
 }

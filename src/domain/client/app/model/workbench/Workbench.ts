@@ -4,7 +4,7 @@ import { singleton } from 'tsyringe';
 import assert from 'assert';
 
 import Editor from '#domain/client/app/model/abstract/Editor';
-import EditableEntity from '#domain/client/app/model/abstract/EditableEntity';
+import EditableEntity from '#domain/client/app/model/abstract/Editable';
 import Tile, { type SwitchReasons } from './Tile';
 import { type TileNode, type TileParent, TileDirections, isTileLeaf } from './tileTree';
 import type { EntityLocator } from '../../../common/model/entity';
@@ -185,7 +185,7 @@ export default class Workbench {
 
   @action.bound
   public openEntity(entity: EntityLocator, options?: { dest?: Dest; forceNewTab?: true; reason?: SwitchReasons }) {
-    if (!EditableEntity.isEditable(entity)) {
+    if (!EditableEntity.is(entity)) {
       return;
     }
 
