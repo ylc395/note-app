@@ -10,8 +10,6 @@ import { EntityMaterialVO } from '#domain/shared/model/material';
 import EventBus from '../../../infra/EventBus';
 import { type Events, EventNames } from './events';
 
-export { EventNames } from './events';
-
 export default class Editor extends EventBus<Events> {
   private readonly remote = container.resolve(rpcToken);
 
@@ -77,4 +75,6 @@ export default class Editor extends EventBus<Events> {
     this.emit(EventNames.Destroyed);
     this.clearListeners();
   }
+
+  public static readonly events = EventNames;
 }

@@ -7,8 +7,6 @@ import type { EntityId, EntityTypes } from '#domain/shared/model/entity';
 
 import { EventNames, type Events } from './events';
 
-export { EventNames } from './events';
-
 // 一个 EditableEntity 可以被多个 Editor 引用
 export default abstract class Editable<T = unknown> extends EventBus<Events> {
   protected readonly remote = container.resolve(rpcToken);
@@ -61,4 +59,6 @@ export default abstract class Editable<T = unknown> extends EventBus<Events> {
   }
 
   private static cancelLoadingReason = Symbol('cancel');
+
+  public static readonly events = EventNames;
 }

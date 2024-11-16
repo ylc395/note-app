@@ -1,8 +1,8 @@
 import assert from 'assert';
 
 import { EntityId, EntityLocator, EntityTypes } from '#domain/shared/model/entity';
-import { EventNames as EditorEvents, default as Editor } from '#domain/client/app/model/abstract/Editor';
-import { EventNames as EditableEvents, type default as EditableEntity } from '../abstract/Editable';
+import Editor from '#domain/client/app/model/abstract/Editor';
+import EditableEntity from '../abstract/Editable';
 import { MimeTypes } from '#domain/shared/model/file';
 
 import EditableNote from '../note/Editable';
@@ -40,7 +40,7 @@ export default class EditorFactory {
         assert.fail(`unsupported entity type: ${entityType}`);
     }
 
-    editableEntity.on(EditableEvents.Destroyed, () => {
+    editableEntity.on(EditableEntity.events.Destroyed, () => {
       delete this.editablePool[entityId];
     });
 
@@ -48,7 +48,7 @@ export default class EditorFactory {
     return editableEntity;
   }
 
-  public createEditor(tile: Tile, locator: EntityLocator, mimeType?: string) {
+  public create(tile: Tile, locator: EntityLocator, mimeType?: string) {
     const editable = this.createEditableEntity(locator);
 
     let editor: Editor;
@@ -65,7 +65,7 @@ export default class EditorFactory {
     this.editorsPool[locator.entityId] ||= new Set();
     this.editorsPool[locator.entityId]!.add(editor);
 
-    editor.on(EditorEvents.Destroy, () => {
+    editor.on(Editor.events.Destroy, () => {
       this.handleEditorDestroyed(editor);
     });
 

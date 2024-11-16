@@ -7,7 +7,7 @@ import { AnnotationVO } from '#domain/shared/model/annotation';
 
 import Editor from '../../abstract/Editor';
 import type EditableMaterial from '../editable/EditableMaterial';
-import AnnotationEditor, { EventNames as AnnotationEditorEventNames } from '../../annotation/Editor';
+import AnnotationEditor from '../../annotation/Editor';
 
 export default abstract class MaterialEditor<S> extends Editor<EditableMaterial, S> {
   @observable.ref private accessor annotationEditorsMap: Record<AnnotationVO['id'] | symbol, AnnotationEditor> = {};
@@ -37,9 +37,9 @@ export default abstract class MaterialEditor<S> extends Editor<EditableMaterial,
       this.annotationEditorsMap[id] = editor;
     }
 
-    editor.on(AnnotationEditorEventNames.Submitted, this.editable.loadAnnotations.bind(this.editable));
+    editor.on(AnnotationEditor.events.Submitted, this.editable.loadAnnotations.bind(this.editable));
 
-    editor.on(AnnotationEditorEventNames.Destroyed, () => {
+    editor.on(AnnotationEditor.events.Destroyed, () => {
       const id = annotation?.id ?? MaterialEditor.NEW_ANNOTATION_EDITOR_ID;
       delete this.annotationEditorsMap[id];
     });

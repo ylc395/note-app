@@ -9,8 +9,6 @@ import SearchBox from './SearchBox';
 import { type EventsMap, EventNames } from './events';
 import UIState from './UIState';
 
-export { EventNames } from './events';
-
 export default class Editor<E extends Editable<unknown> = Editable<unknown>, S = unknown> extends EventBus<EventsMap> {
   public readonly searchBox = new SearchBox();
   public readonly uiState = new UIState<S>(this.entityLocator.entityId);
@@ -37,4 +35,6 @@ export default class Editor<E extends Editable<unknown> = Editable<unknown>, S =
   public get entity() {
     return this.editable.entity;
   }
+
+  public static readonly events = EventNames;
 }
