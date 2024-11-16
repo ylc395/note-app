@@ -1,5 +1,5 @@
 import type Editor from '../../abstract/Editor';
-import type { Direction } from '../HistoryStack';
+import type { Direction } from '../Workbench/HistoryStack';
 
 export enum EventNames {
   Destroyed = 'destroyed',

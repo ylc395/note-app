@@ -1,4 +1,4 @@
-import type Tile from './Tile';
+import type Tile from '../Tile';
 
 export type TileNode = TileParent | Tile['id'];
 

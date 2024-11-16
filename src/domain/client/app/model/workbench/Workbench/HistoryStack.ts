@@ -2,8 +2,8 @@ import { action, observable, computed } from 'mobx';
 import { last } from 'lodash-es';
 import assert from 'assert';
 
-import Editor from '../abstract/Editor';
-import type Tile from './Tile';
+import Editor from '../../abstract/Editor';
+import type Tile from '../Tile';
 import type { EntityLocator } from '#domain/shared/model/entity';
 
 interface Record extends EntityLocator {
@@ -59,7 +59,7 @@ export default class HistoryStack {
   }
 
   @action
-  public go(direction: Direction, step = 1) {
+  public pop(direction: Direction, step = 1) {
     const stack = direction === Direction.BACKWARD ? this.backwards : this.forwards;
     assert(stack[stack.length - step] && step >= 1, `can not go ${direction}`);
 

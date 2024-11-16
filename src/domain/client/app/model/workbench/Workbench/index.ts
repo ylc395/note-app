@@ -4,10 +4,12 @@ import assert from 'assert';
 
 import Editor from '#domain/client/app/model/abstract/Editor';
 import type { EntityLocator } from '#domain/shared/model/entity';
+import { container } from '#domain/shared/infra/singletons';
 
-import Tile from './Tile';
+import Tile from '../Tile';
 import { type TileNode, type TileParent, TileDirections, isTileLeaf } from './tileTree';
-import HistoryStack from './HistoryStack';
+import HistoryStack, { type Direction } from './HistoryStack';
+import EditorFactory from '../EditorFactory';
 
 export enum TileSplitDirections {
   Top,
@@ -19,7 +21,8 @@ export enum TileSplitDirections {
 type Dest = Tile | Editor | { from?: Tile; splitDirection: TileSplitDirections };
 
 export default class Workbench {
-  public readonly historyStack = new HistoryStack();
+  public readonly historyStack = container.resolve(HistoryStack);
+  private readonly editorFactory = container.resolve(EditorFactory);
   private readonly tilesMap: Record<Tile['id'], Tile> = {};
   @observable public accessor root: TileNode | undefined; // a binary tree
 
@@ -206,5 +209,12 @@ export default class Workbench {
     }
 
     targetTile.switchToEditor(editor);
+  }
+
+  public historyGo(direction: Direction, step = 1) {
+    const record = this.historyStack.pop(direction, step);
+    const dest = this.editorFactory.getEditorById(record.editorId) || this.tilesMap[record.tileId];
+
+    this.openEntity(record, { dest });
   }
 }

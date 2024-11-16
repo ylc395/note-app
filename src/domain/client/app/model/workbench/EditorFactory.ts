@@ -20,6 +20,7 @@ import type Tile from './Tile';
 export default class EditorFactory {
   private readonly editablePool: Record<EntityId, EditableEntity> = {};
   private readonly editorsPool: Record<EntityId, Set<Editor>> = {};
+  private readonly editorsMap: Record<Editor['id'], Editor> = {};
 
   private createEditableEntity({ entityId, entityType }: EntityLocator, mimeType?: string) {
     let editableEntity = this.editablePool[entityId];
@@ -64,6 +65,7 @@ export default class EditorFactory {
 
     this.editorsPool[locator.entityId] ||= new Set();
     this.editorsPool[locator.entityId]!.add(editor);
+    this.editorsMap[editor.id] = editor;
 
     editor.on(Editor.events.Destroy, () => {
       this.handleEditorDestroyed(editor);
@@ -78,6 +80,8 @@ export default class EditorFactory {
     assert(editors);
 
     editors.delete(editor);
+
+    delete this.editorsMap[editor.id];
 
     if (editors.size === 0) {
       delete this.editorsPool[entityId];
@@ -111,5 +115,9 @@ export default class EditorFactory {
     }
 
     return new UnknownEditor(editable, tile);
+  }
+
+  public getEditorById(id: Editor['id']) {
+    return this.editorsMap[id];
   }
 }

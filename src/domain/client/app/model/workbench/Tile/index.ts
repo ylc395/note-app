@@ -9,7 +9,7 @@ import type { EntityLocator } from '#domain/shared/model/entity';
 
 import EditorFactory from '../EditorFactory';
 import { type Events, EventNames } from './events';
-import type { Direction } from '../HistoryStack';
+import type { Direction } from '../Workbench/HistoryStack';
 
 export default class Tile extends EventBus<Events> {
   constructor() {
