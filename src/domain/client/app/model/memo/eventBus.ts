@@ -4,6 +4,7 @@ import type { MemoPatchDTO, MemoVO } from '#domain/shared/model/memo';
 export enum EventNames {
   Updated = 'updated',
   Created = 'created',
+  Removed = 'removed',
 }
 
 export interface UpdateEvent {
@@ -14,6 +15,7 @@ export interface UpdateEvent {
 type Events = {
   [EventNames.Updated]: UpdateEvent;
   [EventNames.Created]: MemoVO;
+  [EventNames.Removed]: MemoVO;
 };
 
-export default new EventBus<Events>('domain:memo');
+export const eventBus = new EventBus<Events>('domain:memo');

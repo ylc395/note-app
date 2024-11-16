@@ -1,8 +1,9 @@
 import EventBus from '#domain/client/app/infra/EventBus';
 import type { MaterialPatchDTO, MaterialVO } from '#domain/shared/model/material';
 
-export enum Events {
+export enum EventNames {
   Updated = 'updated',
+  Removed = 'removed',
 }
 
 export interface UpdateEvent {
@@ -11,4 +12,9 @@ export interface UpdateEvent {
   trigger: unknown;
 }
 
-export default new EventBus<{ [Events.Updated]: UpdateEvent }>('domain:material');
+type Events = {
+  [EventNames.Updated]: UpdateEvent;
+  [EventNames.Removed]: MaterialVO;
+};
+
+export const eventBus = new EventBus<Events>('domain:material');

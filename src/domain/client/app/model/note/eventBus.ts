@@ -1,8 +1,9 @@
 import EventBus from '#domain/client/app/infra/EventBus';
 import type { NotePatchDTO, NoteVO } from '#domain/shared/model/note';
 
-export enum Events {
+export enum EventNames {
   Updated = 'updated',
+  Removed = 'removed',
 }
 
 export interface UpdateEvent {
@@ -11,4 +12,9 @@ export interface UpdateEvent {
   trigger: unknown;
 }
 
-export const eventBus = new EventBus<{ [Events.Updated]: UpdateEvent }>('domain:notes');
+type Events = {
+  [EventNames.Updated]: UpdateEvent;
+  [EventNames.Removed]: NoteVO;
+};
+
+export const eventBus = new EventBus<Events>('domain:notes');

@@ -6,7 +6,7 @@ import { Workbench } from '#domain/client/app/model/workbench';
 import NoteEditor from '#domain/client/app/model/note/Editor';
 import NoteExplorer from '#domain/client/app/model/note/Explorer';
 import { EntityTypes } from '#domain/shared/model/entity';
-import { eventBus, Events } from '#domain/client/app/model/note/eventBus';
+import { eventBus, EventNames } from '#domain/client/app/model/note/eventBus';
 import TreeNode from '#domain/client/common/model/abstract/TreeNode';
 import MoveBehavior, { Events as MoveEvents, type MoveEvent } from '../model/behavior/MoveBehavior';
 
@@ -29,7 +29,7 @@ export default class NoteService {
     await this.remote.note.batchUpdate.mutate([items.map(({ entityId }) => entityId), { parentId: target.entityId }]);
 
     for (const note of items) {
-      eventBus.emit(Events.Updated, {
+      eventBus.emit(EventNames.Updated, {
         trigger: this.moveService,
         entity: { id: note.entityId, parentId: target.entityId },
       });

@@ -15,9 +15,20 @@ import HtmlEditor from '../material/editor/HtmlEditor';
 import ImageEditor from '../material/editor/ImageEditor';
 import UnknownEditor from '../material/editor/UnknownEditor';
 
+import { eventBus as noteEventBus, EventNames as NoteEventNames } from '../note/eventBus';
+import { eventBus as materialEventBus, EventNames as materialEventNames } from '../material/eventBus';
+
 import type Tile from './Tile';
 
 export default class EditorFactory {
+  constructor() {
+    noteEventBus.on(NoteEventNames.Removed, this.destroyWhenRemoved.bind(this));
+    noteEventBus.on(NoteEventNames.Updated, this.reloadWhenUpdated.bind(this));
+
+    materialEventBus.on(materialEventNames.Removed, this.destroyWhenRemoved.bind(this));
+    materialEventBus.on(materialEventNames.Updated, this.reloadWhenUpdated.bind(this));
+  }
+
   private readonly editablePool: Record<EntityId, EditableEntity> = {};
   private readonly editorsPool: Record<EntityId, Set<Editor>> = {};
   private readonly editorsMap: Record<Editor['id'], Editor> = {};
@@ -119,5 +130,27 @@ export default class EditorFactory {
 
   public getEditorById(id: Editor['id']) {
     return this.editorsMap[id];
+  }
+
+  private destroyWhenRemoved({ id }: { id: EntityId }) {
+    const editors = this.editorsPool[id];
+
+    if (!editors) {
+      return;
+    }
+
+    for (const editor of editors) {
+      editor.destroy();
+    }
+  }
+
+  private reloadWhenUpdated({ id }: { id: EntityId }) {
+    const editableEntity = this.editablePool[id];
+
+    if (!editableEntity) {
+      return;
+    }
+
+    editableEntity.load();
   }
 }

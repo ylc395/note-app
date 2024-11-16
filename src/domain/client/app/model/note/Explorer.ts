@@ -4,7 +4,7 @@ import NoteTree from '#domain/client/common/model/note/Tree';
 import type { NoteVO } from '#domain/shared/model/note';
 import Explorer from '#domain/client/app/model/abstract/Explorer';
 import RenameBehavior from '#domain/client/app/model/abstract/Explorer/RenameBehavior';
-import { eventBus, Events as NoteEvents } from './eventBus';
+import { eventBus, EventNames as NoteEvents } from './eventBus';
 import StarManager, { Events as StarEvents } from '../StarManager';
 
 @singleton()

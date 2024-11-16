@@ -4,7 +4,7 @@ import { token as rpcToken } from '#domain/client/common/infra/rpc';
 import { EntityTypes } from '../../../common/model/entity';
 import TreeNode from '#domain/client/common/model/abstract/TreeNode';
 import MaterialEditor from '../../model/material/editor/MaterialEditor';
-import eventBus, { Events } from '../../model/material/eventBus';
+import eventBus, { EventNames } from '../../model/material/eventBus';
 import CreationBehavior from './CreationBehavior';
 import MoveBehavior, { Events as MoveEvents, type MoveEvent } from '../../model/behavior/MoveBehavior';
 
@@ -29,7 +29,7 @@ export default class MaterialService {
     ]);
 
     for (const note of items) {
-      eventBus.emit(Events.Updated, {
+      eventBus.emit(EventNames.Updated, {
         trigger: this.moveService,
         entity: { id: note.entityId, parentId: target.entityId },
       });

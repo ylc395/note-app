@@ -5,14 +5,12 @@ import { type EntityPath, EntityTypes } from '#domain/shared/model/entity';
 import type { EntityMaterialVO, MaterialPatchDTO } from '#domain/shared/model/material';
 import EditableEntity from '#domain/client/app/model/abstract/Editable';
 import type { AnnotationDTO, AnnotationVO } from '#domain/shared/model/annotation';
-import eventBus, { Events } from '../eventBus';
+import { eventBus, EventNames } from '../eventBus';
 
 export default class EditableMaterial extends EditableEntity<EntityMaterialVO> {
   protected readonly entityType = EntityTypes.Material;
   constructor(materialId: EntityMaterialVO['id']) {
     super(materialId);
-
-    eventBus.on(Events.Updated, this.load);
     this.loadAnnotations();
   }
 
@@ -32,7 +30,7 @@ export default class EditableMaterial extends EditableEntity<EntityMaterialVO> {
   public async update(patch: MaterialPatchDTO) {
     await this.remote.material.updateOne.mutate([this.entityLocator.entityId, patch]);
 
-    eventBus.emit(Events.Updated, {
+    eventBus.emit(EventNames.Updated, {
       id: this.entityLocator.entityId,
       payload: patch,
       trigger: this,
@@ -73,10 +71,5 @@ export default class EditableMaterial extends EditableEntity<EntityMaterialVO> {
     runInAction(() => {
       this.annotationMap[newAnnotation.id] = newAnnotation;
     });
-  }
-
-  public destroy() {
-    super.destroy();
-    eventBus.off(Events.Updated, this.load);
   }
 }
