@@ -1,11 +1,14 @@
-import { computed, action } from 'mobx';
+import { flow } from 'lodash-es';
+import { computed, observable, runInAction } from 'mobx';
 
 import { IS_DEV } from '#domain/shared/infra/constants';
+import { onlyWhen } from '#utils/function';
 import Editor from '#domain/client/app/model/abstract/Editor';
 import type Tile from '#domain/client/app/model/workbench/Tile';
-import { normalizeTitle, type NotePatchDTO } from '#domain/shared/model/note';
-
-import type EditableNote from './Editable';
+import { notePatchDTOSchema } from '#domain/shared/infra/apiSchema/note';
+import { normalizeTitle, type NotePatchDTO, type NoteVO } from '#domain/shared/model/note';
+import { EntityTypes, type EntityPath } from '#domain/shared/model/entity';
+import { eventBus, EventNames as NoteEventNames } from './eventBus';
 
 interface UIState {
   isReadonly: boolean;
@@ -14,23 +17,54 @@ interface UIState {
   titleSelection: [number, number]; // todo: maintain this state
 }
 
-export default class NoteEditor extends Editor<EditableNote, UIState> {
-  constructor(editable: EditableNote, tile: Tile) {
-    super(editable, tile);
+type NotePatch = Pick<NotePatchDTO, 'body' | 'icon' | 'title'>;
+
+export default class NoteEditor extends Editor<Required<NoteVO>, NotePatch, UIState> {
+  private readonly _dispose: () => void;
+
+  constructor(noteId: NoteVO['id'], tile: Tile) {
+    super({ entityId: noteId, tile, schema: notePatchDTOSchema });
+
+    this._dispose = flow([
+      eventBus.on(
+        NoteEventNames.Updated,
+        onlyWhen((e) => e.id === noteId && e.trigger !== this, this.init.bind(this)),
+      ),
+      eventBus.on(
+        NoteEventNames.Removed,
+        onlyWhen(({ id }) => id === noteId, this.destroy.bind(this)),
+      ),
+    ]);
+  }
+
+  @observable private accessor path: EntityPath | undefined;
+
+  protected readonly entityType = EntityTypes.Note;
+
+  protected async load(signal: AbortController['signal']) {
+    const [note, path] = await Promise.all([
+      this.remote.note.queryOne.query(this.entityLocator.entityId, { signal }),
+      this.remote.note.queryPath.query(this.entityLocator.entityId, { signal }),
+    ]);
+
+    runInAction(() => {
+      this.entity = note;
+      this.path = path;
+    });
   }
 
   public toggleReadonly() {
     this.uiState.update({ isReadonly: !this.uiState.value?.isReadonly });
   }
 
-  @action.bound
-  public update(info: NotePatchDTO) {
-    this.editable.update(info);
-  }
+  protected async upload(patch: NotePatch, signal: AbortController['signal']) {
+    await this.remote.note.updateOne.mutate([this.entityLocator.entityId, patch], { signal });
 
-  @computed
-  public get body() {
-    return this.editable.entity?.body;
+    eventBus.emit(NoteEventNames.Updated, {
+      id: this.entityLocator.entityId,
+      payload: patch,
+      trigger: this,
+    });
   }
 
   @computed
@@ -38,9 +72,15 @@ export default class NoteEditor extends Editor<EditableNote, UIState> {
     const titlePrefix = IS_DEV ? `${this.id} ${this.entityLocator.entityId.slice(0, 3)} ` : '';
 
     return {
-      title: titlePrefix + (this.editable.entity ? normalizeTitle(this.editable.entity) : ''),
-      breadcrumbs: this.editable.path || [],
-      icon: this.editable.entity?.icon || null,
+      readableTitle: titlePrefix + (this.entity?.title ? normalizeTitle(this.entity) : ''),
+      title: this.entity?.title ?? '',
+      body: this.entity?.body ?? '',
+      icon: this.entity?.icon || null,
     };
+  }
+
+  public destroy(): void {
+    this._dispose();
+    super.destroy();
   }
 }

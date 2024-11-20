@@ -4,20 +4,23 @@ import { zipObject } from 'lodash-es';
 
 import { container } from '#domain/shared/infra/singletons';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
-import { AnnotationVO, Selector } from '#domain/shared/model/annotation';
+import { AnnotationVO, Selector, type AnnotationDTO } from '#domain/shared/model/annotation';
 import { EntityMaterialVO } from '#domain/shared/model/material';
+import { EventNames, eventBus } from './eventBus';
 
-import EventBus from '../../../infra/EventBus';
-import { type Events, EventNames } from './events';
-
-export default class Editor extends EventBus<Events> {
+export default class Editor {
   private readonly remote = container.resolve(rpcToken);
 
-  constructor(private readonly options: { annotation?: AnnotationVO; material?: EntityMaterialVO }) {
+  constructor(
+    private readonly options: {
+      annotation?: AnnotationVO;
+      material?: EntityMaterialVO;
+      onDestroyed?: () => void; // AnnotationEditor 的生命周期很简单，无需继承 EventBus 来获得完整的事件管理能力
+    },
+  ) {
     assert(!(options.annotation && options.material), 'can not specify both annotation and material');
-    super(`annotation-editor-${options.annotation?.id ?? 'new'}`);
 
-    this.content = options.annotation?.body ?? '';
+    this.value = options.annotation || { targetId: options.material!.id, selectors: [] };
     this.selectorsMap = {};
 
     if (options.annotation) {
@@ -28,7 +31,7 @@ export default class Editor extends EventBus<Events> {
     }
   }
 
-  @observable public accessor content: string;
+  @observable public accessor value: AnnotationDTO;
 
   @observable private accessor selectorsMap: Record<string, Selector>;
 
@@ -38,14 +41,13 @@ export default class Editor extends EventBus<Events> {
   }
 
   @action
-  public updateContent(value: string) {
-    this.content = value;
+  public update(value: Pick<AnnotationDTO, 'body' | 'color'>) {
+    this.value = { ...this.value, ...value };
   }
 
   @action
   public addSelector(value: Selector) {
     const maxId = Math.max(...this.selectors.map((id) => Number(id)));
-
     this.selectorsMap[maxId + 1] = value;
   }
 
@@ -56,25 +58,21 @@ export default class Editor extends EventBus<Events> {
 
   public async submit() {
     if (this.options.annotation) {
-      await this.remote.annotation.updateOne.mutate([this.options.annotation.id, { body: this.content }]);
-    } else {
-      assert(this.options.material, 'no material or annotation');
-
-      await this.remote.annotation.create.mutate({
-        body: this.content,
-        targetId: this.options.material.id,
-        selectors: this.selectors,
+      await this.remote.annotation.updateOne.mutate([this.options.annotation.id, this.value]);
+      eventBus.emit(EventNames.Updated, {
+        id: this.options.annotation.id,
+        payload: this.value,
+        trigger: this,
       });
+    } else {
+      const newAnnotation = await this.remote.annotation.create.mutate(this.value);
+      eventBus.emit(EventNames.Created, newAnnotation);
     }
 
-    this.emit(EventNames.Submitted);
     this.destroy();
   }
 
   public destroy() {
-    this.emit(EventNames.Destroyed);
-    this.clearListeners();
+    this.options.onDestroyed?.();
   }
-
-  public static readonly events = EventNames;
 }

@@ -1,32 +1,20 @@
-import { container, singleton } from 'tsyringe';
-import { observable, makeObservable, runInAction, action } from 'mobx';
+import { observable, runInAction, action } from 'mobx';
 
-import { token as remoteToken } from '#domain/client/common/infra/rpc';
-import type { EntityLocator } from '#domain/client/app/model/entity';
-import type { TopicVO } from '#domain/shared/model/content/topic';
-import { Workbench } from './workbench';
+import { container } from '#domain/shared/infra/singletons';
+import { token as remoteToken } from '#domain/client/shared/infra/rpc';
+import type { TopicVO } from '#domain/shared/model/content';
 
-@singleton()
 export default class TopicManager {
-  constructor() {
-    makeObservable(this);
-  }
-
   private readonly remote = container.resolve(remoteToken);
-  private readonly workbench = container.resolve(Workbench);
-  @observable public topics?: TopicVO[];
+  @observable public accessor topics: TopicVO[] | undefined;
 
-  public readonly load = async () => {
+  public async load() {
     const topics = await this.remote.content.queryTopics.query();
 
     runInAction(() => {
       this.topics = topics;
     });
-  };
-
-  public readonly open = (entity: EntityLocator) => {
-    this.workbench.openEntity(entity);
-  };
+  }
 
   @action.bound
   public reset() {

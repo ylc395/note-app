@@ -3,7 +3,6 @@ import path from 'node:path';
 import { checker } from 'vite-plugin-checker';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import react from '@vitejs/plugin-react-swc';
-import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import tailwindcss from 'tailwindcss';
 
 import { ENV } from './constants.js';
@@ -23,7 +22,6 @@ export default async function createViteServer() {
       react({ tsDecorators: true }), // use this plugin to speed up react compiling and enjoy "fast refresh"
       checker({ typescript: { tsconfigPath: WEB_TSCONFIG } }),
       tsconfigPaths(),
-      nodePolyfills(),
     ],
     define: {
       'process.env.NODE_ENV': JSON.stringify(ENV),

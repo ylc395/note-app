@@ -1,8 +1,12 @@
-// node modules will be polyfilled in web environment
-import { Buffer } from 'node:buffer';
-import { createHash } from 'node:crypto';
+export async function getHash(data: ArrayBuffer) {
+  // Web Crypto API is available on both browser and nodejs
+  // copy from https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API/Non-cryptographic_uses_of_subtle_crypto
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  const uint8ViewOfHash = new Uint8Array(hash);
 
-export function getHash(data: ArrayBuffer) {
-  const hash = createHash('md5').update(Buffer.from(data)).digest('base64');
-  return hash;
+  const hashAsString = Array.from(uint8ViewOfHash)
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+
+  return hashAsString;
 }

@@ -1,7 +1,5 @@
 import { observable, action, computed } from 'mobx';
 
-import type Tile from '#domain/client/app/model/workbench/Tile';
-import EditableMaterial from '../editable/EditableMaterial';
 import MaterialEditor from './MaterialEditor';
 
 interface State {
@@ -14,10 +12,6 @@ export enum Panels {
 }
 
 export default class HtmlEditor extends MaterialEditor<State> {
-  constructor(editable: EditableMaterial, tile: Tile) {
-    super(editable, tile);
-  }
-
   @observable.ref public documentElement?: unknown;
 
   @observable
@@ -33,11 +27,11 @@ export default class HtmlEditor extends MaterialEditor<State> {
 
   @computed
   public get html() {
-    if (!this.editable.blob) {
+    if (!this.blob) {
       return undefined;
     }
 
     const textDecoder = new TextDecoder();
-    return textDecoder.decode(this.editable.blob);
+    return textDecoder.decode(this.blob);
   }
 }

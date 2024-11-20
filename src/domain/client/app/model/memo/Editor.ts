@@ -5,24 +5,11 @@ import type { MemoVO } from '#domain/shared/model/memo';
 import { container } from '#domain/shared/infra/singletons';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 
-import EventBus from '../../infra/EventBus';
-
-export enum EventNames {
-  Destroyed = 'destroyed',
-  Submitted = 'Submitted',
-}
-
-type Events = {
-  [EventNames.Destroyed]: undefined;
-  [EventNames.Submitted]: undefined;
-};
-
-export default class Editor extends EventBus<Events> {
+export default class Editor {
   private readonly remote = container.resolve(rpcToken);
 
-  constructor(private readonly options: { memo?: MemoVO; parentId?: MemoVO['parentId'] }) {
+  constructor(private readonly options: { memo?: MemoVO; parentId?: MemoVO['parentId']; onDestroyed?: () => void }) {
     assert(!(options.memo && options.parentId), 'can not specify both memo and parentId');
-    super(`memo-editor-${options.memo?.id ?? 'new'}`);
     this.content = options.memo?.body ?? '';
   }
 
@@ -40,12 +27,10 @@ export default class Editor extends EventBus<Events> {
       await this.remote.memo.create.mutate({ body: this.content, parentId: this.options.parentId });
     }
 
-    this.emit(EventNames.Submitted);
     this.destroy();
   }
 
   public destroy() {
-    this.emit(EventNames.Destroyed);
-    this.clearListeners();
+    this.options.onDestroyed?.();
   }
 }
