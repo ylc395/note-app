@@ -1,106 +1,74 @@
-import { action, computed, observable, runInAction } from 'mobx';
-import { flow, keyBy } from 'lodash-es';
+import { flow } from 'lodash-es';
+import { action, observable } from 'mobx';
+import assert from 'assert';
 
-import { token as rpcToken } from '#domain/client/shared/infra/rpc';
-import { container } from '#domain/shared/infra/singletons';
 import type { EntityMaterialVO } from '#domain/shared/model/material';
 import type { AnnotationVO } from '#domain/shared/model/annotation';
+import { onlyWhen } from '#utils/function';
 
+import List from '../../../abstract/List';
 import { eventBus as annotationEventBus, EventNames as AnnotationEventNames } from '../../../annotation/eventBus';
+import Editor from '../../../annotation/Editor';
 
-export default class AnnotationList {
-  constructor(private readonly materialId: EntityMaterialVO['id']) {
-    this.loadAnnotations();
+export default class AnnotationList extends List<AnnotationVO> {
+  constructor(options: {
+    materialId: EntityMaterialVO['id'];
+    sort: (annotation1: AnnotationVO, annotation2: AnnotationVO) => number;
+  }) {
+    super();
 
+    this.materialId = options.materialId;
+    this.sort = options.sort;
     this.dispose = flow([
       annotationEventBus.on(AnnotationEventNames.Removed, ({ id }) => this.removeById(id)),
-      annotationEventBus.on(AnnotationEventNames.Created, this.add.bind(this)),
-      annotationEventBus.on(AnnotationEventNames.Updated, ({ id }) => this.loadOneById(id)),
+      annotationEventBus.on(AnnotationEventNames.Updated, ({ id }) => this.init(id)),
+      annotationEventBus.on(
+        AnnotationEventNames.Created,
+        onlyWhen(({ targetId }) => targetId === options.materialId, this.add.bind(this)),
+      ),
     ]);
   }
 
-  private isDestroyed = false;
+  private readonly materialId: EntityMaterialVO['id'];
+
+  protected readonly sort: (item1: AnnotationVO, it: AnnotationVO) => number;
 
   private readonly dispose: () => void;
 
-  private abortController?: AbortController;
-
-  @observable.ref public accessor error: unknown;
-
-  protected readonly remote = container.resolve(rpcToken);
-
-  @observable private accessor annotationMap: Record<AnnotationVO['id'], AnnotationVO> = {};
-
-  private async loadAnnotations() {
-    this.abortController?.abort();
-
-    const controller = new AbortController();
-    this.abortController = controller;
-
-    try {
-      const annotations = await this.remote.annotation.queryByEntityId.query(this.materialId, {
-        signal: controller.signal,
-      });
-
-      runInAction(() => {
-        this.annotationMap = keyBy(annotations, ({ id }) => id);
-      });
-    } catch (error) {
-      if (this.abortController === controller && !this.isDestroyed) {
-        runInAction(() => {
-          this.error = error;
-        });
-      }
-    }
-
-    if (this.abortController === controller) {
-      this.abortController = undefined;
-    }
+  protected load(signal: AbortController['signal']): Promise<AnnotationVO[]>;
+  protected load(signal: AbortController['signal'], id: AnnotationVO['id']): Promise<AnnotationVO>;
+  protected load(signal: AbortController['signal'], id?: AnnotationVO['id']) {
+    return id
+      ? this.remote.annotation.queryOne.query(id, { signal })
+      : this.remote.annotation.queryByEntityId.query(this.materialId, { signal });
   }
 
-  @computed
-  public get annotations() {
-    return Object.values(this.annotationMap);
+  @observable.ref private accessor annotationEditorsMap: Record<AnnotationVO['id'] | symbol, Editor> = {};
+
+  public getEditor(id?: AnnotationVO['id']) {
+    return this.annotationEditorsMap[id || AnnotationList.NEW_EDITOR_ID];
   }
 
-  private removeById(id: AnnotationVO['id']) {
-    delete this.annotationMap[id];
+  public initEditor(annotation?: AnnotationVO) {
+    assert(!annotation || this.itemsMap[annotation.id], 'invalid annotation');
+    const id = annotation?.id || AnnotationList.NEW_EDITOR_ID;
+
+    this.annotationEditorsMap[id] = new Editor({
+      annotation,
+      materialId: this.materialId,
+      onDestroyed: this.removeEditor.bind(this, id),
+    });
   }
 
   @action
-  private add(annotation: AnnotationVO) {
-    if (annotation.targetId === this.materialId) {
-      this.annotationMap[annotation.id] = annotation;
-    }
-  }
-
-  private async loadOneById(id: AnnotationVO['id']) {
-    if (!this.annotationMap[id]) {
-      return;
-    }
-
-    const controller = new AbortController();
-
-    this.abortController?.abort();
-    this.abortController = controller;
-
-    try {
-      const annotation = await this.remote.annotation.queryOne.query(id, { signal: this.abortController.signal });
-      runInAction(() => {
-        this.annotationMap[id] = annotation;
-      });
-    } catch (error) {
-      if (this.abortController === controller && !this.isDestroyed) {
-        runInAction(() => {
-          this.error = error;
-        });
-      }
-    }
+  private removeEditor(id: AnnotationVO['id'] | symbol) {
+    delete this.annotationEditorsMap[id];
   }
 
   public destroy() {
-    this.isDestroyed = true;
-    this.abortController?.abort();
     this.dispose();
+    super.destroy();
   }
+
+  private static readonly NEW_EDITOR_ID = Symbol();
 }

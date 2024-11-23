@@ -6,10 +6,10 @@ import type { EntityId } from '#domain/shared/model/entity';
 export default class UIState<S = unknown> {
   private readonly localStorage = container.resolve(localStorageToken);
 
-  constructor(private readonly entityId: EntityId) {}
+  constructor(private readonly id: EntityId) {}
 
   private get key() {
-    return `UI_STATE_${this.entityId}`;
+    return `UI_STATE_${this.id}`;
   }
 
   @observable public accessor value: Partial<S> | null = null;
@@ -18,5 +18,9 @@ export default class UIState<S = unknown> {
   public update(state: Partial<S>) {
     this.value = { ...this.value, ...state };
     this.localStorage.set(this.key, this.value);
+  }
+
+  public clear() {
+    this.localStorage.delete(this.key);
   }
 }

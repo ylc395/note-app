@@ -1,8 +1,8 @@
-import { groupBy, mapValues, size } from 'lodash-es';
-import assert from 'assert';
+import { groupBy, keyBy, mapValues, size } from 'lodash-es';
+import assert from 'node:assert';
 import dayjs from 'dayjs';
 
-import { arrayOf, buildIndex } from '#utils/collection.js';
+import { arrayOf } from '#utils/collection.js';
 import type { Memo, MemoDTO, ClientMemoQuery, MemoVO, MemoPatchDTO, Duration } from '#domain/server/model/memo.js';
 import { container } from '#domain/shared/infra/singletons.js';
 
@@ -17,7 +17,7 @@ export default class MemoService extends BaseService {
   public async create(memo: MemoDTO) {
     if (memo.parentId) {
       assert(typeof memo.isPinned === 'undefined', 'can not pin/unpin a child memo');
-      await this.assertAvailableId(memo.parentId);
+      await this.assertAvailableId(memo.parentId, { isTop: true });
     }
 
     const now = Date.now();
@@ -96,7 +96,7 @@ export default class MemoService extends BaseService {
   private async toVO(memos: Memo[] | Memo, isNew?: boolean): Promise<MemoVO[] | MemoVO> {
     const _memos = arrayOf(memos);
     const ids = _memos.map(({ id }) => id);
-    const stars = isNew ? {} : buildIndex(await this.repo.stars.findAll({ entityIds: ids }), 'entityId');
+    const stars = isNew ? {} : keyBy(await this.repo.stars.findAll({ entityIds: ids }), ({ entityId }) => entityId);
     const childrenIds = isNew ? {} : await this.repo.entities.findChildrenIds(ids, { isAvailableOnly: true });
 
     const result = _memos.map((memo) => ({
@@ -122,11 +122,15 @@ export default class MemoService extends BaseService {
     return memo;
   }
 
-  private readonly assertAvailableId = async (id: MemoVO['id'], config?: { isPinned?: boolean }) => {
+  private readonly assertAvailableId = async (id: MemoVO['id'], config?: { isPinned?: boolean; isTop?: boolean }) => {
     const memo = await this.queryOne(id);
 
     if (typeof config?.isPinned === 'boolean') {
       assert(memo.isPinned === config.isPinned, 'invalid pin status');
+    }
+
+    if (config?.isTop) {
+      assert(!memo.parentId, 'not a top memo');
     }
   };
 }

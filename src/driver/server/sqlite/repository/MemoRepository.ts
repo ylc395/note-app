@@ -86,6 +86,14 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
       sql = sql.where('isPinned', '=', q.isPinned ? 1 : 0);
     }
 
+    if (typeof q.startIndex === 'number') {
+      sql = sql.where('index', '>', q.startIndex);
+    }
+
+    if (typeof q.endIndex === 'number') {
+      sql = sql.where('index', '<', q.endIndex);
+    }
+
     if (q.orderBy?.by === 'index') {
       sql = sql.orderBy('index', q.orderBy.order);
     }

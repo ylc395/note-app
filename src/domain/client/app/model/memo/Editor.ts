@@ -1,36 +1,53 @@
-import { action, observable } from 'mobx';
+import { action, computed } from 'mobx';
 import assert from 'assert';
 
 import type { MemoVO } from '#domain/shared/model/memo';
 import { container } from '#domain/shared/infra/singletons';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
+import UIState from '../abstract/UIState';
+import { eventBus, EventNames } from './eventBus';
+import { unknown } from 'zod';
 
 export default class Editor {
   private readonly remote = container.resolve(rpcToken);
 
+  private readonly uiState: UIState<{ body: string }>;
+
   constructor(private readonly options: { memo?: MemoVO; parentId?: MemoVO['parentId']; onDestroyed?: () => void }) {
+    assert(options.memo || options.parentId, 'memo or parentId can not both be undefined');
     assert(!(options.memo && options.parentId), 'can not specify both memo and parentId');
-    this.content = options.memo?.body ?? '';
+
+    const id = options.parentId ? options.parentId : options.memo!.id;
+    this.uiState = new UIState(`${id}${options.parentId ? '-new-child' : ''}`);
+    this.updateBody(options.memo?.body ?? '');
   }
 
-  @observable public accessor content: string;
+  @computed
+  public get body() {
+    assert(typeof this.uiState.value?.body === 'string');
+    return this.uiState.value?.body;
+  }
 
   @action
-  public updateContent(value: string) {
-    this.content = value;
+  public updateBody(value: string) {
+    this.uiState.update({ body: value });
   }
 
   public async submit() {
     if (this.options.memo) {
-      await this.remote.memo.updateOne.mutate([this.options.memo.id, { body: this.content }]);
+      const payload = { body: this.body };
+      await this.remote.memo.updateOne.mutate([this.options.memo.id, payload]);
+      eventBus.emit(EventNames.Updated, { id: this.options.memo.id, payload, trigger: unknown });
     } else {
-      await this.remote.memo.create.mutate({ body: this.content, parentId: this.options.parentId });
+      const newMemo = await this.remote.memo.create.mutate({ body: this.body, parentId: this.options.parentId });
+      eventBus.emit(EventNames.Created, newMemo);
     }
 
     this.destroy();
   }
 
   public destroy() {
+    this.uiState.clear();
     this.options.onDestroyed?.();
   }
 }

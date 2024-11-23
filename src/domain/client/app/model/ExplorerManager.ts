@@ -5,7 +5,7 @@ import assert from 'assert';
 import { token as localStorageToken, KEY } from '#domain/client/app/infra/localStorage';
 import NoteExplorer from '#domain/client/app/model/note/Explorer';
 import MaterialExplorer from '#domain/client/app/model/material/Explorer';
-import MemoExplorer from '#domain/client/app/model/memo/Explorer';
+import ListView from '#domain/client/app/model/memo/ListView';
 import { EntityLocator, EntityTypes } from '#domain/client/app/model/entity';
 
 export type ExplorerTypes = EntityTypes.Note | EntityTypes.Material | EntityTypes.Memo;
@@ -27,7 +27,7 @@ export default class ExplorerManager {
   private readonly explorers = {
     [EntityTypes.Note]: container.resolve(NoteExplorer),
     [EntityTypes.Material]: container.resolve(MaterialExplorer),
-    [EntityTypes.Memo]: container.resolve(MemoExplorer),
+    [EntityTypes.Memo]: container.resolve(ListView),
   } as const;
 
   @computed

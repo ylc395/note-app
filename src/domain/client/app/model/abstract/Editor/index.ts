@@ -11,7 +11,7 @@ import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 
 import type Tile from '../../workbench/Tile';
 import { type EventsMap, EventNames } from './events';
-import UIState from './UIState';
+import UIState from '../UIState';
 import Backup from './Backup';
 
 export default abstract class Editor<E = unknown, P = Partial<E>, S = unknown> extends EventBus<EventsMap> {

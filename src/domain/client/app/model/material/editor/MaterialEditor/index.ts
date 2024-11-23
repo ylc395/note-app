@@ -9,7 +9,6 @@ import { materialPatchDTOSchema } from '#domain/shared/infra/apiSchema/material'
 import { onlyWhen } from '#utils/function';
 
 import Editor from '../../../abstract/Editor';
-import AnnotationEditor from '../../../annotation/Editor';
 import type Tile from '../../../workbench/Tile';
 import { eventBus, EventNames as MaterialEventNames } from '../../eventBus';
 import AnnotationList from './AnnotationList';
@@ -18,7 +17,11 @@ export default abstract class MaterialEditor<S> extends Editor<EntityMaterialVO,
   constructor(materialId: EntityMaterialVO['id'], tile: Tile) {
     super({ entityId: materialId, tile, schema: materialPatchDTOSchema });
 
-    this.annotationList = new AnnotationList(materialId);
+    this.annotationList = new AnnotationList({
+      materialId,
+      sort: this.sortAnnotations,
+    });
+
     this._dispose = flow([
       eventBus.on(
         MaterialEventNames.Updated,
@@ -31,6 +34,8 @@ export default abstract class MaterialEditor<S> extends Editor<EntityMaterialVO,
     ]);
   }
 
+  protected abstract sortAnnotations(annotation1: AnnotationVO, annotation2: AnnotationVO): number;
+
   protected readonly entityType = EntityTypes.Material;
 
   @observable public accessor path: EntityPath | undefined;
@@ -39,32 +44,7 @@ export default abstract class MaterialEditor<S> extends Editor<EntityMaterialVO,
 
   private readonly _dispose: () => void;
 
-  @observable.ref private accessor annotationEditorsMap: Record<AnnotationVO['id'] | symbol, AnnotationEditor> = {};
-
   public readonly annotationList: AnnotationList;
-
-  @computed
-  public get annotationEditors() {
-    return Object.values(this.annotationEditorsMap);
-  }
-
-  @computed
-  public get isCreatingNewAnnotation() {
-    return Boolean(this.annotationEditorsMap[MaterialEditor.NEW_ANNOTATION_EDITOR_ID]);
-  }
-
-  public startEditingAnnotation(annotation?: AnnotationVO) {
-    const id = annotation?.id || MaterialEditor.NEW_ANNOTATION_EDITOR_ID;
-
-    this.annotationEditorsMap[id] = new AnnotationEditor({
-      annotation,
-      material: this.entity,
-      onDestroyed: () => {
-        const id = annotation?.id ?? MaterialEditor.NEW_ANNOTATION_EDITOR_ID;
-        delete this.annotationEditorsMap[id];
-      },
-    });
-  }
 
   protected async upload(patch: MaterialPatchDTO, signal: AbortController['signal']) {
     await this.remote.material.updateOne.mutate([this.entityLocator.entityId, patch], { signal });
@@ -109,6 +89,4 @@ export default abstract class MaterialEditor<S> extends Editor<EntityMaterialVO,
     this._dispose();
     super.destroy();
   }
-
-  private static readonly NEW_ANNOTATION_EDITOR_ID = Symbol();
 }

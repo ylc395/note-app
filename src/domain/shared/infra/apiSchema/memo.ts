@@ -33,7 +33,7 @@ export const durationSchema = z.object({
   endTime: z.number()
 });
 export const clientMemoQuerySchema = z.object({
-  limit: z.number().optional(),
+  limit: z.number(),
   order: z.union([z.literal("asc"), z.literal("desc")]).optional(),
   parentId: entityParentIdSchema.optional(),
   isPinned: z.boolean().optional(),

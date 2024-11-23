@@ -2,7 +2,7 @@ import { observer } from 'mobx-react-lite';
 import { useRef, useEffect } from 'react';
 
 import assert from 'assert';
-import MemoTreeNode from '#domain/client/app/model/memo/TreeNode';
+import MemoTreeNode from '#domain/client/app/model/memo/ListView/TreeNode';
 
 export default observer(function MemoEditor({ node, isChild = false }: { node: MemoTreeNode; isChild?: boolean }) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -16,7 +16,7 @@ export default observer(function MemoEditor({ node, isChild = false }: { node: M
 
   return (
     <div>
-      <textarea ref={textareaRef} value={editor.content} onChange={(e) => editor.updateContent(e.target.value)} />
+      <textarea ref={textareaRef} value={editor.body} onChange={(e) => editor.updateBody(e.target.value)} />
       <div>
         <button onClick={editor.submit}>提交</button>
         {isChild ? <button onClick={editor.reset}>重置</button> : <button onClick={editor.destroy}>取消</button>}

@@ -9,7 +9,7 @@ import { entityMaterialSchema } from "./material.js";
 const htmlSelectorSchema = z.object({
   selector: z.string()
 });
-const selectorSchema = z.union([htmlSelectorSchema, textQuoteFragmentSchema, commonFragmentSchema]);
+export const selectorSchema = z.union([htmlSelectorSchema, textQuoteFragmentSchema, commonFragmentSchema]);
 export const annotationSchema = z.object({
   id: entityIdSchema,
   targetId: entityMaterialSchema.shape["id"],

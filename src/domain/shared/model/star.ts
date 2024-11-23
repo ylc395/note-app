@@ -12,4 +12,6 @@ export type StarVO = Pick<Star, 'createdAt'> & {
 /**
  * @api
  */
-export type StarDTO = Pick<Star, 'entityId'>;
+export interface StarDTO {
+  entityId: EntityId;
+}

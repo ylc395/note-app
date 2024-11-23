@@ -1,12 +1,12 @@
 import { container } from 'tsyringe';
 import { PlusIcon, CalendarDaysIcon, SortDescIcon } from 'lucide-react';
 
-import MemoExplorer, { type Order } from '#domain/client/app/model/memo/Explorer';
+import ListView, { type Order } from '#domain/client/app/model/memo/ListView';
 import ExplorerHeader from '../common/Header';
 
 // eslint-disable-next-line mobx/missing-observer
 export default (function Header() {
-  const { togglePanel, order: currentOrder, setOrder } = container.resolve(MemoExplorer);
+  const { togglePanel, order: currentOrder, setOrder } = container.resolve(ListView);
 
   function getMenuItem({ label, order }: { label: string; order: Order }) {
     return { label, onSelect: () => setOrder(order), checked: currentOrder === order };

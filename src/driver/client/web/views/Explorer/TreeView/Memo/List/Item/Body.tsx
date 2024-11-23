@@ -2,7 +2,7 @@ import { observer } from 'mobx-react-lite';
 
 import Editor from '../../Editor';
 import assert from 'assert';
-import type MemoTreeNode from '#domain/client/app/model/memo/TreeNode';
+import type MemoTreeNode from '#domain/client/app/model/memo/ListView/TreeNode';
 
 export default observer(function Body({ node }: { node: MemoTreeNode }) {
   assert(node.memo);

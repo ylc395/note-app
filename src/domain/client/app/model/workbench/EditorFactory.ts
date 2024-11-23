@@ -2,13 +2,7 @@ import assert from 'assert';
 
 import { EntityId, EntityLocator, EntityTypes } from '#domain/shared/model/entity';
 import Editor from '#domain/client/app/model/abstract/Editor';
-import EditableEntity from '../abstract/Editable';
 import { MimeTypes } from '#domain/shared/model/file';
-
-import EditableNote from '../note/Editable';
-import EditablePdf from '../material/editable/EditablePdf';
-import EditableMaterial from '../material/editable/EditableMaterial';
-import EditableAnnotation from '../annotation/Editable';
 
 import NoteEditor from '../note/Editor';
 import PdfEditor from '../material/editor/PdfEditor';
@@ -19,61 +13,27 @@ import UnknownEditor from '../material/editor/UnknownEditor';
 import type Tile from './Tile';
 
 export default class EditorFactory {
-  private readonly editablePool: Record<EntityId, EditableEntity> = {};
   private readonly editorsPool: Record<EntityId, Set<Editor>> = {};
+
   private readonly editorsMap: Record<Editor['id'], Editor> = {};
 
-  private createEditableEntity({ entityId, entityType }: EntityLocator, mimeType?: string) {
-    let editableEntity = this.editablePool[entityId];
-
-    if (editableEntity) {
-      return editableEntity;
-    }
-
-    switch (entityType) {
-      case EntityTypes.Note:
-        editableEntity = new EditableNote(entityId);
-        break;
-      case EntityTypes.Annotation:
-        editableEntity = new EditableAnnotation(entityId);
-        break;
-      case EntityTypes.Material:
-        assert(mimeType, 'mimeType must be specified when creating material editor');
-        editableEntity = this.createEditableMaterial({ entityId, mimeType });
-        break;
-      default:
-        assert.fail(`unsupported entity type: ${entityType}`);
-    }
-
-    editableEntity.on(EditableEntity.events.Destroyed, () => {
-      delete this.editablePool[entityId];
-    });
-
-    this.editablePool[entityId] = editableEntity;
-    return editableEntity;
-  }
-
-  public create(tile: Tile, locator: EntityLocator, mimeType?: string) {
-    const editable = this.createEditableEntity(locator);
-
+  public create(tile: Tile, { entityId, entityType }: EntityLocator, mimeType?: string) {
     let editor: Editor;
 
-    if (editable instanceof EditableNote) {
-      editor = new NoteEditor(editable, tile);
-    } else if (editable instanceof EditableMaterial) {
+    if (entityType === EntityTypes.Note) {
+      editor = new NoteEditor(entityId, tile);
+    } else if (entityType === EntityTypes.Material) {
       assert(mimeType, 'mimeType must be specified when creating material editor');
-      editor = this.createMaterialEditor(editable, tile, mimeType);
+      editor = this.createMaterialEditor(entityId, tile, mimeType);
     } else {
-      assert.fail(`can not create editor for ${locator}`);
+      assert.fail(`can not create editor for ${entityType}`);
     }
 
-    this.editorsPool[locator.entityId] ||= new Set();
-    this.editorsPool[locator.entityId]!.add(editor);
+    this.editorsPool[entityId] ||= new Set();
+    this.editorsPool[entityId]!.add(editor);
     this.editorsMap[editor.id] = editor;
 
-    editor.on(Editor.events.Destroy, () => {
-      this.handleEditorDestroyed(editor);
-    });
+    editor.on(Editor.events.Destroy, this.handleEditorDestroyed.bind(this, editor));
 
     return editor;
   }
@@ -84,41 +44,27 @@ export default class EditorFactory {
     assert(editors);
 
     editors.delete(editor);
-
     delete this.editorsMap[editor.id];
 
     if (editors.size === 0) {
       delete this.editorsPool[entityId];
-      this.editablePool[entityId]!.destroy();
     }
   }
 
-  private createEditableMaterial({ mimeType, entityId }: { entityId: EntityId; mimeType: string }) {
-    let editableEntity: EditableEntity | null = null;
-
+  private createMaterialEditor(entityId: EntityId, tile: Tile, mimeType: string) {
     if (mimeType === MimeTypes.PDF) {
-      editableEntity = new EditablePdf(entityId);
-    } else {
-      editableEntity = new EditableMaterial(entityId);
-    }
-
-    return editableEntity;
-  }
-
-  private createMaterialEditor(editable: EditableMaterial, tile: Tile, mimeType: string) {
-    if (editable instanceof EditablePdf) {
-      return new PdfEditor(editable, tile);
+      return new PdfEditor(entityId, tile);
     }
 
     if (mimeType === MimeTypes.HTML) {
-      return new HtmlEditor(editable, tile);
+      return new HtmlEditor(entityId, tile);
     }
 
     if (mimeType.startsWith('image')) {
-      return new ImageEditor(editable, tile);
+      return new ImageEditor(entityId, tile);
     }
 
-    return new UnknownEditor(editable, tile);
+    return new UnknownEditor(entityId, tile);
   }
 
   public getEditorById(id: Editor['id']) {

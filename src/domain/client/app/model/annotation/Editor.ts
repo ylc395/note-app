@@ -14,14 +14,14 @@ export default class Editor {
   constructor(
     private readonly options: {
       annotation?: AnnotationVO;
-      material?: EntityMaterialVO;
+      materialId?: EntityMaterialVO['id'];
       onDestroyed?: () => void; // AnnotationEditor 的生命周期很简单，无需继承 EventBus 来获得完整的事件管理能力
     },
   ) {
-    assert(!(options.annotation && options.material), 'can not specify both annotation and material');
+    assert(options.annotation || options.materialId, 'annotation and material can not both be omitted');
+    assert(!(options.annotation && options.materialId), 'can not specify both annotation and material');
 
-    this.value = options.annotation || { targetId: options.material!.id, selectors: [] };
-    this.selectorsMap = {};
+    this.value = options.annotation || { targetId: options.materialId!, selectors: [] };
 
     if (options.annotation) {
       this.selectorsMap = zipObject(
@@ -33,7 +33,7 @@ export default class Editor {
 
   @observable public accessor value: AnnotationDTO;
 
-  @observable private accessor selectorsMap: Record<string, Selector>;
+  @observable private accessor selectorsMap: Record<string, Selector> = {};
 
   @computed
   public get selectors() {

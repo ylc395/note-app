@@ -1,11 +1,12 @@
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import { action, computed, observable, runInAction, when } from 'mobx';
 import assert from 'assert';
+import { flow, isObject } from 'lodash-es';
 
+import type { AnnotationVO } from '#domain/shared/model/annotation';
 import { container } from '#domain/shared/infra/singletons';
 import MaterialEditor from '../MaterialEditor';
 import DocumentFactory from './DocumentFactory';
-import { flow } from 'lodash-es';
 
 interface UIState {
   hash: string | null; // pdfjs's hash, including page, scroll position, zoom etc; see https://datatracker.ietf.org/doc/html/rfc8118#section-3
@@ -67,6 +68,17 @@ export default class PdfEditor extends MaterialEditor<UIState> {
   @computed
   public get outlines() {
     return this.docFactory.getOutline(this.entityLocator.entityId);
+  }
+
+  protected sortAnnotations(annotation1: AnnotationVO, annotation2: AnnotationVO) {
+    const first1 = annotation1.selectors[0];
+    const first2 = annotation2.selectors[0];
+
+    if (isObject(first1) && isObject(first2) && 'page' in first1 && 'page' in first2) {
+      return Number(first1.page) - Number(first2.page);
+    }
+
+    return 0;
   }
 
   public destroy() {

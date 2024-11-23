@@ -4,11 +4,11 @@ import { useEffect, useRef } from 'react';
 import { useEventListener } from 'ahooks';
 
 import ListItem from './Item';
-import MemoExplorer from '#domain/client/app/model/memo/Explorer';
+import ListView from '#domain/client/app/model/memo/ListView';
 import assert from 'assert';
 
 export default observer(function List() {
-  const { root, uiState, updateUIState } = container.resolve(MemoExplorer);
+  const { root, uiState, updateUIState } = container.resolve(ListView);
   const divRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {

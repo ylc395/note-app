@@ -46,7 +46,7 @@ export interface Duration {
  * @api
  */
 export type ClientMemoQuery = {
-  limit?: number;
+  limit: number;
   order?: 'asc' | 'desc';
   parentId?: EntityParentId;
   isPinned?: boolean;

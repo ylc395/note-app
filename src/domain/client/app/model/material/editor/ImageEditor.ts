@@ -4,4 +4,8 @@ interface UIState {
   scrollOffset: 0;
 }
 
-export default class ImageEditor extends MaterialEditor<UIState> {}
+export default class ImageEditor extends MaterialEditor<UIState> {
+  protected sortAnnotations() {
+    return 0;
+  }
+}

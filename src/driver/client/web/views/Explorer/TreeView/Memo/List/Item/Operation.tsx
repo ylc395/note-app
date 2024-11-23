@@ -2,7 +2,7 @@ import { observer } from 'mobx-react-lite';
 import assert from 'assert';
 import { ArrowDownLeftFromSquare, MessageSquarePlusIcon } from 'lucide-react';
 
-import type MemoTreeNode from '#domain/client/app/model/memo/TreeNode';
+import type MemoTreeNode from '#domain/client/app/model/memo/ListView/TreeNode';
 import Button from '#web/components/Button';
 
 export default observer(function Operation({ node }: { node: MemoTreeNode }) {

@@ -25,6 +25,10 @@ export default class HtmlEditor extends MaterialEditor<State> {
     this.panelsVisibility[panel] = !this.panelsVisibility[panel];
   }
 
+  protected sortAnnotations() {
+    return 0;
+  }
+
   @computed
   public get html() {
     if (!this.blob) {

@@ -10,6 +10,7 @@ export enum EventNames {
 export interface UpdateEvent {
   id: MemoVO['id'];
   payload: MemoPatchDTO;
+  trigger: unknown;
 }
 
 type Events = {

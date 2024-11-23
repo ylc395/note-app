@@ -4,10 +4,6 @@
 */
 import { z } from "zod";
 import { entityIdSchema } from "./entity.js";
-export const starSchema = z.object({
-  entityId: entityIdSchema,
-  createdAt: z.number()
-});
-export const starDTOSchema = starSchema.pick({
-  "entityId": true
+export const starDTOSchema = z.object({
+  entityId: entityIdSchema
 });
