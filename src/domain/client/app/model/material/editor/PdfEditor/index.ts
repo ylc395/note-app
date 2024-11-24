@@ -7,10 +7,7 @@ import type { AnnotationVO } from '#domain/shared/model/annotation';
 import { container } from '#domain/shared/infra/singletons';
 import MaterialEditor from '../MaterialEditor';
 import DocumentFactory from './DocumentFactory';
-
-interface UIState {
-  hash: string | null; // pdfjs's hash, including page, scroll position, zoom etc; see https://datatracker.ietf.org/doc/html/rfc8118#section-3
-}
+import { create as createUIState } from './uiState';
 
 interface Viewer {
   init: (doc: PDFDocumentProxy) => void;
@@ -22,10 +19,14 @@ export enum Panels {
   AnnotationList,
 }
 
-export default class PdfEditor extends MaterialEditor<UIState> {
+export default class PdfEditor extends MaterialEditor {
   private readonly docFactory = container.resolve(DocumentFactory);
+
   private doc?: PDFDocumentProxy; // this is view-independent
+
   @observable.ref public accessor viewer: Viewer | undefined;
+
+  public readonly uiState = createUIState(this.entityLocator.entityId);
 
   protected async load(abortSignal: AbortController['signal']) {
     await super.load(abortSignal);

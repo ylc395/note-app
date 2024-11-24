@@ -1,6 +1,5 @@
 import { flow } from 'lodash-es';
 import { computed, observable, runInAction } from 'mobx';
-import { boolean, number, object, tuple, unknown } from 'zod';
 
 import { IS_DEV } from '#domain/shared/infra/constants';
 import { onlyWhen } from '#utils/function';
@@ -9,26 +8,20 @@ import type Tile from '#domain/client/app/model/workbench/Tile';
 import { notePatchDTOSchema } from '#domain/shared/infra/apiSchema/note';
 import { normalizeTitle, type NotePatchDTO, type NoteVO } from '#domain/shared/model/note';
 import { EntityTypes, type EntityPath } from '#domain/shared/model/entity';
-import { eventBus, EventNames as NoteEventNames } from './eventBus';
-import UIState from '../abstract/UIState';
-
-const uiStateSchema = object({
-  isReadonly: boolean(),
-  scrollTop: number(),
-  selection: unknown(),
-  titleSelection: tuple([number(), number()]),
-}).partial();
+import { eventBus, EventNames as NoteEventNames } from '../eventBus';
+import { create as createUIState } from './uiState';
 
 type NotePatch = Pick<NotePatchDTO, 'body' | 'icon' | 'title'>;
 
 export default class NoteEditor extends Editor<Required<NoteVO>, NotePatch> {
   private readonly _dispose: () => void;
 
-  public readonly uiState = new UIState(this.entityLocator.entityId, uiStateSchema);
+  public readonly uiState;
 
   constructor(noteId: NoteVO['id'], tile: Tile) {
     super({ entityId: noteId, tile, schema: notePatchDTOSchema });
 
+    this.uiState = createUIState(noteId);
     this._dispose = flow([
       eventBus.on(
         NoteEventNames.Updated,

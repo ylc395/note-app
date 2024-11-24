@@ -2,16 +2,12 @@ import { observable, action, computed } from 'mobx';
 
 import MaterialEditor from './MaterialEditor';
 
-interface State {
-  scrollTop: number;
-}
-
 export enum Panels {
   Outline,
   AnnotationList,
 }
 
-export default class HtmlEditor extends MaterialEditor<State> {
+export default class HtmlEditor extends MaterialEditor {
   @observable.ref public documentElement?: unknown;
 
   @observable

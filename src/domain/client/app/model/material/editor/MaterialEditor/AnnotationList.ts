@@ -21,7 +21,7 @@ export default class AnnotationList extends List<AnnotationVO> {
     this.sort = options.sort;
     this.dispose = flow([
       annotationEventBus.on(AnnotationEventNames.Removed, ({ id }) => this.removeById(id)),
-      annotationEventBus.on(AnnotationEventNames.Updated, ({ id }) => this.load(id)),
+      annotationEventBus.on(AnnotationEventNames.Updated, ({ id }) => this.init(id)),
       annotationEventBus.on(
         AnnotationEventNames.Created,
         onlyWhen(({ targetId }) => targetId === options.materialId, this.add.bind(this)),

@@ -13,7 +13,7 @@ import type Tile from '../../../workbench/Tile';
 import { eventBus, EventNames as MaterialEventNames } from '../../eventBus';
 import AnnotationList from './AnnotationList';
 
-export default abstract class MaterialEditor<S> extends Editor<EntityMaterialVO, MaterialPatchDTO, S> {
+export default abstract class MaterialEditor extends Editor<EntityMaterialVO, MaterialPatchDTO> {
   constructor(materialId: EntityMaterialVO['id'], tile: Tile) {
     super({ entityId: materialId, tile, schema: materialPatchDTOSchema });
 

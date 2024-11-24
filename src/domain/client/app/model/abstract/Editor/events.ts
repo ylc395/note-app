@@ -3,7 +3,7 @@ export enum EventNames {
   Error = 'error',
 }
 
-export type EventsMap = {
+export type Events = {
   [EventNames.Destroy]: undefined;
   [EventNames.Error]: unknown;
 };

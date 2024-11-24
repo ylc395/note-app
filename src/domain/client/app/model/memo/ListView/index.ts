@@ -1,39 +1,27 @@
 import { last, zipObject, flow } from 'lodash-es';
 import assert from 'assert';
 import { observable, action, runInAction } from 'mobx';
-import { boolean, literal, number, object, union, type infer as ZodInfer } from 'zod';
 
+import { onlyWhen } from '#utils/function';
 import type { MemoVO } from '#domain/shared/model/memo';
 import { container } from '#domain/shared/infra/singletons';
 
 import Calendar from './Calendar';
 import { eventBus, EventNames as MemoEventNames } from '../eventBus';
-import UIState from '../../abstract/UIState';
 import Editor from '../Editor';
 import List from '../../abstract/List';
-import { onlyWhen } from '#utils/function';
 import { createEventBus, EventNames } from './events';
-
-const uiStateSchema = object({
-  scrollTop: number(),
-  order: union([literal('asc'), literal('desc')]),
-  /* 一级列表有以下值 */
-  calendar: boolean(),
-}).partial();
-
-type ListViewUIState = ZodInfer<typeof uiStateSchema>;
-
-export type Order = NonNullable<ListViewUIState['order']>;
+import { create as createUIState, type Order } from './uiState';
 
 export default class ListView extends List<MemoVO> {
   constructor(private readonly parent?: MemoVO) {
     super();
     const id = this.parent?.id ?? 'ROOT';
-    this.uiState = new UIState(`UI_STATE_MEMO_LIST-${id}`, uiStateSchema);
+    this.uiState = createUIState(id);
     this.events = createEventBus(id);
 
     this.dispose = flow([
-      eventBus.on(MemoEventNames.Updated, ({ id }) => this.load(id)),
+      eventBus.on(MemoEventNames.Updated, ({ id }) => this.init(id)),
       eventBus.on(MemoEventNames.Removed, ({ id }) => this.removeById(id)),
       eventBus.on(
         MemoEventNames.Created,
@@ -44,11 +32,11 @@ export default class ListView extends List<MemoVO> {
 
   public readonly events;
 
+  public readonly uiState;
+
   private readonly dispose: () => void;
 
   private readonly calendar = container.resolve(Calendar);
-
-  public readonly uiState: UIState<ListViewUIState>;
 
   @observable.shallow public accessor memos: MemoVO[] | undefined;
 

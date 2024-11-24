@@ -1,33 +1,31 @@
 import { debounce, once } from 'lodash-es';
 import { action, computed, autorun } from 'mobx';
-import { number, object, string, infer as ZodInfer } from 'zod';
 
 import type Tree from '#domain/client/shared/model/abstract/Tree';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import type { EntityId, HierarchyEntity, UpdatedEvent } from '#domain/client/shared/model/entity';
 import { container } from '#domain/shared/infra/singletons';
-import EventBus from '#domain/client/app/infra/EventBus';
+import type EventBus from '#domain/client/app/infra/EventBus';
 
 import RenameBehavior from './RenameBehavior';
 import SortBehavior from './SortBehavior';
 import { type Events, EventNames } from './events';
-import UIState from '../UIState';
+import type { ExplorerUIState, create as createUIState } from './uiState';
 
-export const uiStateSchema = object({
-  scroll: object({ x: number(), y: number() }),
-  expanded: string().array(),
-  selected: string().array(),
-}).partial();
+export { create as createUIState } from './uiState';
 
-type ExplorerUIState = ZodInfer<typeof uiStateSchema>;
+export type { Events } from './events';
 
-export default abstract class Explorer<T extends HierarchyEntity> extends EventBus<Events> {
+export default abstract class Explorer<T extends HierarchyEntity> {
   protected readonly remote = container.resolve(rpcToken);
+
+  public abstract readonly events: EventBus<Events>;
+
   protected abstract submitRename(param: { id: EntityId; name: string }): Promise<void>;
   public readonly rename = new RenameBehavior({ onSubmit: this.submitRename.bind(this) });
   public readonly sorter = new SortBehavior();
   public abstract readonly tree: Tree<T>;
-  public abstract readonly uiState: UIState<ExplorerUIState>;
+  public abstract readonly uiState: ReturnType<typeof createUIState>;
 
   public readonly init = once(async () => {
     await this.tree.root.load();
@@ -74,6 +72,6 @@ export default abstract class Explorer<T extends HierarchyEntity> extends EventB
 
   public async reveal(id: EntityId) {
     await this.tree.reveal(id, { select: true });
-    this.emit(EventNames.Revealed, id);
+    this.events.emit(EventNames.Revealed, id);
   }
 }

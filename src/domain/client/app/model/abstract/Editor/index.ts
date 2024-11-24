@@ -10,21 +10,17 @@ import { container } from '#domain/shared/infra/singletons';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 
 import type Tile from '../../workbench/Tile';
-import { type EventsMap, EventNames } from './events';
-import UIState from '../UIState';
+import { type Events, EventNames } from './events';
 import Backup from './Backup';
 
-export default abstract class Editor<E = unknown, P = Partial<E>> extends EventBus<EventsMap> {
-  public abstract readonly uiState: UIState;
-
+export default abstract class Editor<E = unknown, P = Partial<E>> {
   @observable protected accessor entity: E | undefined;
 
   constructor({ entityId, tile, schema }: { entityId: EntityId; tile: Tile; schema: ZodSchema<P> }) {
-    super('editor');
-
     this.tile = tile;
     this.entityId = entityId;
     this.backup = new Backup(entityId, schema);
+    this.events = new EventBus<Events>(`editor-${entityId}`);
 
     this.init();
   }
@@ -32,6 +28,8 @@ export default abstract class Editor<E = unknown, P = Partial<E>> extends EventB
   protected readonly remote = container.resolve(rpcToken);
 
   private readonly backup: Backup<P>;
+
+  public readonly events;
 
   @observable.ref public accessor backupDiff: Change[] | undefined;
 
@@ -79,7 +77,7 @@ export default abstract class Editor<E = unknown, P = Partial<E>> extends EventB
       await this.load(abortController.signal);
     } catch (error) {
       if (this.processes.loading === abortController && !this.isDestroyed) {
-        this.emit(EventNames.Error, error);
+        this.events.emit(EventNames.Error, error);
       }
     }
 
@@ -129,7 +127,7 @@ export default abstract class Editor<E = unknown, P = Partial<E>> extends EventB
     } catch (error) {
       if (this.processes.uploading === controller) {
         isSuccess = false;
-        this.emit(EventNames.Error, error);
+        this.events.emit(EventNames.Error, error);
       }
     }
 
@@ -161,8 +159,8 @@ export default abstract class Editor<E = unknown, P = Partial<E>> extends EventB
   public destroy() {
     this.isDestroyed = true;
     this.debouncedUpload.flush();
-    this.emit(EventNames.Destroy);
-    this.clearListeners();
+    this.events.emit(EventNames.Destroy);
+    this.events.clearListeners();
   }
 
   public static readonly events = EventNames;

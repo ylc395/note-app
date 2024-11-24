@@ -1,26 +1,19 @@
 import { action, computed, observable } from 'mobx';
 import assert from 'assert';
-import { literal, object, union, infer as ZodInfer } from 'zod';
 
 import NoteExplorer from '#domain/client/app/model/note/Explorer';
 import MaterialExplorer from '#domain/client/app/model/material/Explorer';
 import ListView from '#domain/client/app/model/memo/ListView';
 import { EntityTypes, type EntityLocator } from '#domain/client/shared/model/entity';
-import UIState from './abstract/UIState';
 import { container } from '#domain/shared/infra/singletons';
-
-const uiStateSchema = object({
-  type: union([literal(EntityTypes.Note), literal(EntityTypes.Memo), literal(EntityTypes.Material)]),
-});
-
-export type ExplorerTypes = ZodInfer<typeof uiStateSchema>['type'];
+import { create as createUIState, type ExplorerTypes } from './uiState';
 
 export default class ExplorerManager {
   constructor() {
     this.switchTo(this.uiState.value?.type || EntityTypes.Note);
   }
 
-  private readonly uiState = new UIState('ExplorerManager', uiStateSchema);
+  private readonly uiState = createUIState();
 
   @observable private accessor currentExplorerType!: ExplorerTypes;
 
@@ -46,7 +39,7 @@ export default class ExplorerManager {
     }
 
     this.currentExplorerType = type;
-    this.currentExplorer.load();
+    this.currentExplorer.init();
     this.uiState.update({ type });
   }
 

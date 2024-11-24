@@ -33,7 +33,7 @@ export default class EditorFactory {
     this.editorsPool[entityId]!.add(editor);
     this.editorsMap[editor.id] = editor;
 
-    editor.on(Editor.events.Destroy, this.handleEditorDestroyed.bind(this, editor));
+    editor.events.on(Editor.events.Destroy, this.handleEditorDestroyed.bind(this, editor));
 
     return editor;
   }

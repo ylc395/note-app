@@ -7,7 +7,7 @@ import type { EntityId } from '#domain/shared/model/entity';
 
 export default abstract class List<T extends { id: EntityId }> {
   constructor() {
-    this.load();
+    this.init();
   }
 
   protected readonly remote = container.resolve(rpcToken);
@@ -30,7 +30,7 @@ export default abstract class List<T extends { id: EntityId }> {
   protected abstract query(signal: AbortController['signal'], id: T['id']): Promise<T>;
   protected abstract query(signal: AbortController['signal']): Promise<T[]>;
 
-  public async load(id?: T['id']) {
+  public async init(id?: T['id']) {
     if (id && !this.itemsMap[id]) {
       return;
     }

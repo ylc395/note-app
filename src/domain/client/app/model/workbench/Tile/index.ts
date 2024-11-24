@@ -11,13 +11,15 @@ import EditorFactory from '../EditorFactory';
 import { type Events, EventNames } from './events';
 import type { Direction } from '../Workbench/HistoryStack';
 
-export default class Tile extends EventBus<Events> {
+export default class Tile {
   constructor() {
     const id = uniqueId('tile-');
-    super(`tile-${id}`);
 
     this.id = id;
+    this.events = new EventBus<Events>(id);
   }
+
+  public readonly events;
 
   public readonly id: string;
   private readonly editorFactory = container.resolve(EditorFactory);
@@ -44,7 +46,7 @@ export default class Tile extends EventBus<Events> {
     }
 
     this.currentEditor = existedEditor;
-    this.emit(EventNames.EditorSwitched, { to: existedEditor, fromHistory: params?.fromHistory });
+    this.events.emit(EventNames.EditorSwitched, { to: existedEditor, fromHistory: params?.fromHistory });
 
     return true;
   }
@@ -93,7 +95,10 @@ export default class Tile extends EventBus<Events> {
       this.editors.push(newEditor);
     }
 
-    this.subscriptionMap[newEditor.id] = newEditor.on(Editor.events.Destroy, this.removeEditor.bind(this, newEditor));
+    this.subscriptionMap[newEditor.id] = newEditor.events.on(
+      Editor.events.Destroy,
+      this.removeEditor.bind(this, newEditor),
+    );
 
     return newEditor;
   }
@@ -134,8 +139,8 @@ export default class Tile extends EventBus<Events> {
       editor.destroy();
     }
 
-    this.emit(EventNames.Destroyed);
-    this.clearListeners();
+    this.events.emit(EventNames.Destroyed);
+    this.events.clearListeners();
   }
 
   public static readonly events = EventNames;

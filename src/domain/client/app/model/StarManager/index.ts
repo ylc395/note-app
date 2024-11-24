@@ -10,12 +10,10 @@ import { EventNames, type Events } from './events';
 
 export { EventNames } from './events';
 
-export default class StarManager extends EventBus<Events> {
+export default class StarManager {
   private readonly remote = container.resolve(remoteToken);
 
-  constructor() {
-    super('StarManager');
-  }
+  public readonly events = new EventBus<Events>('StarManager');
 
   @observable public accessor keyword = '';
 
@@ -45,7 +43,7 @@ export default class StarManager extends EventBus<Events> {
 
   public readonly star = async (entityId: EntityId) => {
     const newStar = await this.remote.star.create.mutate({ entityId });
-    this.emit(EventNames.Toggle, { id: entityId, isStar: true });
+    this.events.emit(EventNames.Toggle, { id: entityId, isStar: true });
 
     runInAction(() => {
       if (this.stars) {
@@ -56,7 +54,7 @@ export default class StarManager extends EventBus<Events> {
 
   public readonly unstar = async (entityId: EntityId) => {
     await this.remote.star.remove.mutate(entityId);
-    this.emit(EventNames.Toggle, { id: entityId, isStar: false });
+    this.events.emit(EventNames.Toggle, { id: entityId, isStar: false });
 
     runInAction(() => {
       if (this.stars) {

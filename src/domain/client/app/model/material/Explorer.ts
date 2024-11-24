@@ -1,19 +1,21 @@
 import { container } from '#domain/shared/infra/singletons';
 import type { MaterialVO } from '#domain/shared/model/material';
 import MaterialTree from '#domain/client/shared/model/material/Tree';
-import Explorer, { uiStateSchema } from '#domain/client/app/model/abstract/Explorer';
+import Explorer, { createUIState, type Events } from '#domain/client/app/model/abstract/Explorer';
 import { eventBus, EventNames } from './eventBus';
 import StarManager, { EventNames as StarEvents } from '../StarManager';
-import UIState from '../abstract/UIState';
+import EventBus from '../../infra/EventBus';
 
 export default class MaterialExplorer extends Explorer<MaterialVO> {
   public readonly tree = new MaterialTree({ sort: this.sorter.sort });
   private readonly starManager = container.resolve(StarManager);
-  public readonly uiState = new UIState('Material-Explorer', uiStateSchema);
+  public readonly uiState = createUIState('Material-Explorer');
+
+  public readonly events = new EventBus<Events>('note-explorer');
 
   constructor() {
     super();
-    this.starManager.on(StarEvents.Toggle, this.tree.update);
+    this.starManager.events.on(StarEvents.Toggle, this.tree.update);
     eventBus.on(EventNames.Updated, this.handleEntityUpdated.bind(this));
   }
 
