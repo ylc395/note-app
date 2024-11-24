@@ -3,8 +3,8 @@ import { observable, action, computed } from 'mobx';
 import assert from 'assert';
 
 import Editor from '#domain/client/app/model/abstract/Editor';
-import type { EntityLocator } from '#domain/shared/model/entity';
 import { container } from '#domain/shared/infra/singletons';
+import type { EntityLocator } from '#domain/client/shared/model/entity';
 
 import Tile from '../Tile';
 import { type TileNode, type TileParent, TileDirections, isTileLeaf } from './tileTree';

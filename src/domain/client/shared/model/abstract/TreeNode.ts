@@ -1,47 +1,89 @@
-import { action, computed, makeObservable, observable, reaction, runInAction } from 'mobx';
+import { action, computed, observable, runInAction } from 'mobx';
 import assert from 'assert';
 
-import Tree from './Tree';
-import type { EntityId, EntityParentId } from '#domain/shared/model/entity';
+import type { HierarchyEntity, EntityLocator } from '../entity';
 
-export interface HierarchyEntity {
-  id: EntityId;
-  parentId: EntityParentId;
-  childrenCount: number;
+export interface TreeNodeView {
+  title: string;
+  icon: string | null;
 }
 
-export default abstract class TreeNode<T extends HierarchyEntity = HierarchyEntity> {
-  constructor({ entity, tree }: { entity: T | null; tree: Tree<T> }) {
-    this.entity = entity || null;
-    this.tree = tree;
+export interface TreeNodeOptions<T extends HierarchyEntity> {
+  onError?: (e: unknown) => void;
+  sort?: (item1: T, item2: T) => number;
+  isDisabled?: (item: T | null) => boolean;
+  queryChildren: (signal: AbortController['signal']) => Promise<T[]>;
+  toEntityLocator: (entity: T) => EntityLocator;
+  toView?: (entity: T | null) => TreeNodeView;
+  onSelect?: () => void;
+  onNodeCreated?: (node: TreeNode<T>) => void;
+}
+
+export default class TreeNode<T extends HierarchyEntity = HierarchyEntity> {
+  constructor(private readonly options: TreeNodeOptions<T>, params?: { entity: T; parent: TreeNode<T> }) {
+    this.value = params?.entity;
+    this.parent = params?.parent;
+    this.entityLocator = params ? options.toEntityLocator(params.entity) : undefined;
 
     // this means it's a root node
-    if (!entity) {
+    if (this.isRoot) {
       this.isExpanded = true;
     }
 
-    makeObservable(this);
+    if (this.parent) {
+      this.parent.addChild(this);
+    }
 
-    // this can be gc-ed in theory, so we don't dispose it manually
-    reaction(
-      () => this.entity,
-      action((entity) => Object.assign(this, this._entityToNode(entity))),
-      { fireImmediately: true },
-    );
+    options.onNodeCreated?.(this);
   }
 
-  public tree: Tree<T>;
+  @observable private accessor value: T | undefined;
 
-  public get isRoot() {
-    return !this.entity;
+  @observable.ref public accessor parent: TreeNode<T> | undefined;
+
+  @computed
+  public get view() {
+    return this.options.toView?.(this.value ?? null) ?? { title: '', icon: null };
   }
+
+  @computed
+  public get isDisabled() {
+    return this.options.isDisabled?.(this.value || null) ?? false;
+  }
+
+  @computed
+  public get isExpandable() {
+    return (this._children?.size ?? this.value?.childrenCount ?? 0) > 0;
+  }
+
+  @observable public accessor isExpanded = false;
+
+  @observable public accessor isSelected = false;
+
+  public readonly entityLocator?: EntityLocator;
+
+  @observable.shallow private accessor _children: Set<TreeNode<T>> | undefined;
+
+  @observable.ref public accessor loadingController: AbortController | undefined;
+
+  private isDestroyed = false;
 
   public get id() {
-    return this.entity?.id || '__ROOT_ID';
+    return this.entityLocator?.entityId || '_ROOT_ID';
+  }
+
+  public get isRoot() {
+    return !this.parent;
+  }
+
+  @computed
+  public get isLoading() {
+    return Boolean(this.loadingController);
   }
 
   public get descendants(): TreeNode<T>[] {
-    return [...this.children, ...this.children.flatMap((child) => child.descendants)];
+    assert(this._children, 'can not get descendants');
+    return [...this._children, ...this._children.values().flatMap((child) => child.descendants)];
   }
 
   public get ancestors() {
@@ -56,108 +98,108 @@ export default abstract class TreeNode<T extends HierarchyEntity = HierarchyEnti
     return ancestors;
   }
 
-  public async loadChildren() {
-    if (this.isLoading) {
-      return;
-    }
+  public async load() {
+    this.loadingController?.abort();
+    const abortController = new AbortController();
 
     runInAction(() => {
-      this.isLoading = true;
+      this.loadingController = abortController;
     });
 
-    const entities = await this.tree.queryChildren(this.entity?.id || null);
+    let children: T[] | undefined;
 
-    runInAction(() => {
-      this.tree.updateTreeByEntity(entities);
-      this.isLoading = false;
-      this.isLoaded = true;
-    });
-  }
-
-  @action
-  public toggleExpand(config?: { value?: boolean; noLoad?: boolean }) {
-    let toggled: boolean;
-
-    if (typeof config?.value === 'boolean') {
-      toggled = this.isExpanded !== config.value;
-      this.isExpanded = config.value;
-    } else {
-      toggled = true;
-      this.isExpanded = !this.isExpanded;
-    }
-
-    if (this.isExpanded && toggled && !this.isLeaf && !config?.noLoad) {
-      this.loadChildren();
-    }
-
-    return this.isExpanded;
-  }
-
-  @action
-  public toggleSelect(options?: { isMultiple?: boolean; value?: boolean }) {
-    if (this.isDisabled) {
-      return;
-    }
-
-    const oldValue = this.isSelected;
-
-    if (oldValue === options?.value) {
-      return;
-    }
-
-    if (!options?.isMultiple) {
-      for (const selected of this.tree.selectedNodes) {
-        selected.isSelected = false;
+    try {
+      children = await this.options.queryChildren(abortController.signal);
+    } catch (e) {
+      if (this.loadingController === abortController && (!this.isDestroyed || this.isExpanded)) {
+        this.options.onError?.(e);
       }
     }
 
-    this.isSelected = !oldValue;
+    if (children) {
+      runInAction(() => {
+        this._children = new Set(children.map((child) => new TreeNode(this.options, { entity: child, parent: this })));
+      });
+    }
+
+    if (this.loadingController === abortController) {
+      runInAction(() => {
+        this.loadingController = undefined;
+      });
+    }
   }
 
-  public get entityLocator() {
-    assert(this.entity);
+  @action
+  public addChild(node: TreeNode<T>) {
+    assert(!this.isLoading && !this.isDestroyed, 'can not add child now');
 
-    return {
-      entityType: this.tree.entityType,
-      entityId: this.entity.id,
-      mimeType:
-        'mimeType' in this.entity && typeof this.entity.mimeType === 'string' ? this.entity.mimeType : undefined,
+    if (node.parent !== this) {
+      node.parent?.removeChild(node);
+      node.parent = this;
+    }
+
+    if (!this._children) {
+      this._children = new Set();
+    }
+
+    this._children.add(node);
+  }
+
+  @action
+  private removeChild(node: TreeNode<T>) {
+    assert(!this.isLoading && !this.isDestroyed && this._children, 'can not remove child now');
+    assert(node.parent === this, 'not a child to remove');
+
+    this._children.delete(node);
+    node.parent = undefined;
+  }
+
+  @computed
+  public get children() {
+    const nodes = Array.from(this._children || []);
+
+    return this.options.sort
+      ? nodes.toSorted(({ value: value1 }, { value: value2 }) => this.options.sort!(value1!, value2!))
+      : nodes;
+  }
+
+  @action
+  public toggleSelect(value?: boolean) {
+    assert(!this.isDisabled, 'can not select disabled node');
+    this.isSelected = value ?? !this.isSelected;
+  }
+
+  @action
+  public toggleExpand(value?: boolean, load = true) {
+    assert(this.isExpandable, 'can not expand node');
+    this.isExpanded = value ?? !this.isExpanded;
+
+    if (this.isExpanded) {
+      if (load) {
+        this.load();
+      }
+    } else {
+      this.loadingController?.abort();
+      this.loadingController = undefined;
+    }
+  }
+
+  @action
+  public update(value: Partial<T>) {
+    assert(this.value, 'can not update root node');
+    assert(!value.id || value.id === this.id, 'can not update id');
+
+    this.value = {
+      ...this.value,
+      ...value,
     };
   }
 
-  public get parent(): TreeNode<T> | null {
-    return this.entity ? this.tree.getNode(this.entity.parentId) : null;
+  @action
+  public remove() {
+    this.isDestroyed = true;
+    this.parent?.removeChild(this);
+    this.loadingController?.abort();
+    this.loadingController = undefined;
   }
-
-  public abstract readonly entityToNode?: (
-    entity: T | null,
-  ) => Partial<Pick<TreeNode, 'title' | 'isDisabled' | 'icon' | 'isExpanded'>>;
-
-  private _entityToNode(entity: T | null) {
-    return { ...this.entityToNode?.(entity), ...this.tree.options?.entityToNode?.(entity, this.tree) };
-  }
-
-  @observable public entity: T | null; // only root node has no entity;
-  @observable public isDisabled = false;
-  @observable public title = '';
-  @observable public icon: string | null = null;
-  @observable.shallow public children: TreeNode<T>[] = [];
-
-  @computed public get isLeaf() {
-    return this.entity?.childrenCount === 0;
-  }
-
-  @computed public get sortedChildren() {
-    const sort = this.tree.options?.sort;
-
-    if (!sort) {
-      return this.children;
-    }
-
-    return this.children.toSorted(({ entity: e1 }, { entity: e2 }) => sort(e1!, e2!));
-  }
-  @observable public isExpanded = false;
-  @observable public isSelected = false;
-  @observable public isLoading = false;
-  public isLoaded = false;
 }

@@ -1,28 +1,28 @@
-import { action, computed, makeObservable, observable } from 'mobx';
-import { container, singleton } from 'tsyringe';
+import { action, computed, observable } from 'mobx';
 import assert from 'assert';
+import { literal, object, union, infer as ZodInfer } from 'zod';
 
-import { token as localStorageToken, KEY } from '#domain/client/app/infra/localStorage';
 import NoteExplorer from '#domain/client/app/model/note/Explorer';
 import MaterialExplorer from '#domain/client/app/model/material/Explorer';
 import ListView from '#domain/client/app/model/memo/ListView';
-import { EntityLocator, EntityTypes } from '#domain/client/app/model/entity';
+import { EntityTypes, type EntityLocator } from '#domain/client/shared/model/entity';
+import UIState from './abstract/UIState';
+import { container } from '#domain/shared/infra/singletons';
 
-export type ExplorerTypes = EntityTypes.Note | EntityTypes.Material | EntityTypes.Memo;
+const uiStateSchema = object({
+  type: union([literal(EntityTypes.Note), literal(EntityTypes.Memo), literal(EntityTypes.Material)]),
+});
 
-@singleton()
+export type ExplorerTypes = ZodInfer<typeof uiStateSchema>['type'];
+
 export default class ExplorerManager {
-  private readonly localStorage = container.resolve(localStorageToken);
-
   constructor() {
-    makeObservable(this);
-
-    const initialExploreType = this.localStorage.get<ExplorerTypes>(KEY.EXPLORER.CURRENT_EXPLORER) || EntityTypes.Note;
-    this.switchTo(initialExploreType);
+    this.switchTo(this.uiState.value?.type || EntityTypes.Note);
   }
 
-  @observable.ref
-  private currentExplorerType!: ExplorerTypes;
+  private readonly uiState = new UIState('ExplorerManager', uiStateSchema);
+
+  @observable private accessor currentExplorerType!: ExplorerTypes;
 
   private readonly explorers = {
     [EntityTypes.Note]: container.resolve(NoteExplorer),
@@ -45,14 +45,15 @@ export default class ExplorerManager {
       return;
     }
 
-    this.localStorage.set(KEY.EXPLORER.CURRENT_EXPLORER, type);
     this.currentExplorerType = type;
-    this.currentExplorer.init();
+    this.currentExplorer.load();
+    this.uiState.update({ type });
   }
 
   public reveal({ entityId, entityType }: EntityLocator) {
     assert(entityType !== EntityTypes.Annotation, 'can not reveal');
+
     this.switchTo(entityType);
-    this.currentExplorer.reveal(entityId, { select: true });
+    this.currentExplorer.reveal(entityId);
   }
 }

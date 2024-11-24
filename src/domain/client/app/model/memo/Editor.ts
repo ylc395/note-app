@@ -1,24 +1,30 @@
 import { action, computed } from 'mobx';
 import assert from 'assert';
+import { object, string, infer as ZodInfer } from 'zod';
 
 import type { MemoVO } from '#domain/shared/model/memo';
 import { container } from '#domain/shared/infra/singletons';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import UIState from '../abstract/UIState';
 import { eventBus, EventNames } from './eventBus';
-import { unknown } from 'zod';
+
+const uiStateSchema = object({
+  body: string(),
+}).partial();
+
+type EditorUIState = ZodInfer<typeof uiStateSchema>;
 
 export default class Editor {
   private readonly remote = container.resolve(rpcToken);
 
-  private readonly uiState: UIState<{ body: string }>;
+  private readonly uiState: UIState<EditorUIState>;
 
   constructor(private readonly options: { memo?: MemoVO; parentId?: MemoVO['parentId']; onDestroyed?: () => void }) {
     assert(options.memo || options.parentId, 'memo or parentId can not both be undefined');
     assert(!(options.memo && options.parentId), 'can not specify both memo and parentId');
 
     const id = options.parentId ? options.parentId : options.memo!.id;
-    this.uiState = new UIState(`${id}${options.parentId ? '-new-child' : ''}`);
+    this.uiState = new UIState(`${id}${options.parentId ? '-new-child' : ''}`, uiStateSchema);
     this.updateBody(options.memo?.body ?? '');
   }
 
@@ -37,7 +43,7 @@ export default class Editor {
     if (this.options.memo) {
       const payload = { body: this.body };
       await this.remote.memo.updateOne.mutate([this.options.memo.id, payload]);
-      eventBus.emit(EventNames.Updated, { id: this.options.memo.id, payload, trigger: unknown });
+      eventBus.emit(EventNames.Updated, { id: this.options.memo.id, payload, trigger: this });
     } else {
       const newMemo = await this.remote.memo.create.mutate({ body: this.body, parentId: this.options.parentId });
       eventBus.emit(EventNames.Created, newMemo);

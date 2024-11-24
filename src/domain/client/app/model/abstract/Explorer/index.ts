@@ -1,82 +1,47 @@
-import { container } from 'tsyringe';
-import { groupBy, intersection, once } from 'lodash-es';
-import { action, computed, makeObservable, autorun } from 'mobx';
+import { debounce, once } from 'lodash-es';
+import { action, computed, autorun } from 'mobx';
+import { number, object, string, infer as ZodInfer } from 'zod';
 
-import type Tree from '#domain/client/common/model/abstract/Tree';
-import type { EntityId, HierarchyEntity, EntityPath, UpdateEvent } from '#domain/client/app/model/entity';
-import { token as localStorage } from '#domain/client/app/infra/localStorage';
-import { token as rpcToken } from '#domain/client/common/infra/rpc';
-import type RenameBehavior from './RenameBehavior';
+import type Tree from '#domain/client/shared/model/abstract/Tree';
+import { token as rpcToken } from '#domain/client/shared/infra/rpc';
+import type { EntityId, HierarchyEntity, UpdatedEvent } from '#domain/client/shared/model/entity';
+import { container } from '#domain/shared/infra/singletons';
+import EventBus from '#domain/client/app/infra/EventBus';
+
+import RenameBehavior from './RenameBehavior';
 import SortBehavior from './SortBehavior';
-import MoveBehavior from '../../behavior/MoveBehavior';
+import { type Events, EventNames } from './events';
+import UIState from '../UIState';
 
-interface ExplorerState {
-  scroll?: { x: number; y: number };
-  expanded?: EntityId[];
-  selected?: EntityId[];
-}
+export const uiStateSchema = object({
+  scroll: object({ x: number(), y: number() }),
+  expanded: string().array(),
+  selected: string().array(),
+}).partial();
 
-export default abstract class Explorer<T extends HierarchyEntity = HierarchyEntity> {
-  constructor() {
-    makeObservable(this);
-  }
+type ExplorerUIState = ZodInfer<typeof uiStateSchema>;
 
-  private readonly localStorage = container.resolve(localStorage);
+export default abstract class Explorer<T extends HierarchyEntity> extends EventBus<Events> {
   protected readonly remote = container.resolve(rpcToken);
-  public abstract readonly rename: RenameBehavior;
+  protected abstract submitRename(param: { id: EntityId; name: string }): Promise<void>;
+  public readonly rename = new RenameBehavior({ onSubmit: this.submitRename.bind(this) });
   public readonly sorter = new SortBehavior();
   public abstract readonly tree: Tree<T>;
-  public get entityType() {
-    return this.tree.entityType;
-  }
-
-  private get uiState() {
-    return this.localStorage.get<ExplorerState>(this.localStorageKey);
-  }
-
-  public get scrollInfo() {
-    return this.uiState?.scroll;
-  }
+  public abstract readonly uiState: UIState<ExplorerUIState>;
 
   public readonly init = once(async () => {
-    await this.tree.root.loadChildren();
+    await this.tree.root.load();
 
-    const { uiState } = this;
-
-    if (uiState?.expanded) {
-      await this.expandNodes(uiState.expanded);
+    if (this.uiState.value?.expanded) {
+      await this.tree.expand(this.uiState.value.expanded);
     }
 
-    if (uiState?.selected) {
-      this.tree.setSelected(uiState.selected);
+    if (this.uiState.value?.selected) {
+      this.tree.setSelected(this.uiState.value.selected);
     }
 
-    autorun(this.persistUIState);
+    autorun(this.persistUIState.bind(this));
   });
-
-  protected abstract queryPath(id: EntityId): Promise<EntityPath>;
-
-  public async reveal(id: T['id'], options?: { expand?: boolean; select?: boolean }) {
-    const nodeToReveal = this.tree.getNode(id, true);
-    let ids: EntityId[];
-
-    if (nodeToReveal) {
-      ids = nodeToReveal.ancestors.map(({ id }) => id);
-    } else {
-      const ancestors = await this.queryPath(id);
-      ids = ancestors.map(({ id }) => id);
-    }
-
-    if (options?.expand) {
-      ids.push(id);
-    }
-
-    await this.expandNodes(ids);
-
-    if (options?.select) {
-      this.tree.setSelected([id]);
-    }
-  }
 
   @computed
   public get canCollapse() {
@@ -86,75 +51,29 @@ export default abstract class Explorer<T extends HierarchyEntity = HierarchyEnti
   @action.bound
   public collapseAll() {
     for (const node of this.tree.expandedNodes) {
-      node.toggleExpand({ value: false });
+      node.toggleExpand(false);
     }
   }
 
-  private get localStorageKey() {
-    return `explorer-${this.entityType}-ui`;
-  }
-
-  private readonly persistUIState = () => {
-    this.localStorage.set<ExplorerState>(this.localStorageKey, {
-      selected: this.tree.getSelectedNodeIds(),
+  private persistUIState() {
+    this.uiState.update({
+      selected: this.tree.selectedNodes.map(({ id }) => id),
       expanded: this.tree.expandedNodes
-        .filter((node) => node.ancestors.every((ancestor) => ancestor.isExpanded))
-        .map((node) => node.id),
+        .filter((node) => node.ancestors.every(({ isExpanded }) => isExpanded))
+        .map(({ id }) => id),
     });
-  };
-
-  public readonly persistScrollInfo = (scrollInfo: NonNullable<ExplorerState['scroll']>) => {
-    this.localStorage.set<ExplorerState>(this.localStorageKey, { scroll: scrollInfo });
-  };
-
-  private readonly expandingNodes = new Set<EntityId>();
-  private async expandNodes(ids: EntityId[]) {
-    ids = ids.filter((id) => !this.tree.getNode(id, true)?.isLoaded && !this.expandingNodes.has(id));
-    ids.forEach((id) => this.expandingNodes.add(id));
-
-    if (ids.length > 0) {
-      const allNodeIds = this.tree.allNodes.map((node) => node.id);
-      const childrenMap = groupBy(await this.tree.queryChildren(ids), 'parentId');
-      const topoSorted = intersection(ids, allNodeIds).flatMap((id) => childrenMap[id] || []);
-      let i = 0;
-
-      while (topoSorted[i]) {
-        topoSorted.push(...(childrenMap[topoSorted[i]!.id] || []));
-        i++;
-      }
-
-      this.tree.updateTreeByEntity(topoSorted);
-    }
-
-    for (const id of ids) {
-      const node = this.tree.getNode(id, true);
-
-      if (node) {
-        node.toggleExpand({ value: true, noLoad: true });
-        node.isLoaded = true;
-      }
-
-      this.expandingNodes.delete(id);
-    }
   }
 
-  public getTreeFromSelectedNodes() {
-    if (this.tree.selectedNodes.length === 0) {
-      return null;
-    }
-
-    const tree = this.tree.clone();
-    tree.updateTreeByEntity(this.tree.selectedNodes.map(({ entity }) => ({ ...entity!, parentId: null })));
-
-    return tree;
+  protected handleEntityUpdated({ id, payload }: UpdatedEvent<Partial<T>>) {
+    this.tree.update({ id, ...payload });
   }
 
-  protected readonly handleEntityUpdate = async ({ trigger, entity }: UpdateEvent<T>) => {
-    this.tree.updateTree(entity);
+  public readonly updateScrollInfo = debounce((scrollInfo: NonNullable<ExplorerUIState['scroll']>) => {
+    this.uiState.update({ scroll: scrollInfo });
+  }, 500);
 
-    if (trigger instanceof MoveBehavior) {
-      await this.reveal(entity.id);
-      this.tree.getNode(entity.id).toggleSelect({ isMultiple: true, value: true });
-    }
-  };
+  public async reveal(id: EntityId) {
+    await this.tree.reveal(id, { select: true });
+    this.emit(EventNames.Revealed, id);
+  }
 }

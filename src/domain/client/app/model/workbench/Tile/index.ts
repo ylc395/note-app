@@ -5,7 +5,7 @@ import assert from 'assert';
 import Editor from '#domain/client/app/model/abstract/Editor';
 import EventBus from '#domain/client/app/infra/EventBus';
 import { container } from '#domain/shared/infra/singletons';
-import type { EntityLocator } from '#domain/shared/model/entity';
+import type { EntityLocator } from '#domain/client/shared/model/entity';
 
 import EditorFactory from '../EditorFactory';
 import { type Events, EventNames } from './events';

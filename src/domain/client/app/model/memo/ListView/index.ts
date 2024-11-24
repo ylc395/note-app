@@ -1,47 +1,59 @@
 import { last, zipObject, flow } from 'lodash-es';
 import assert from 'assert';
 import { observable, action, runInAction } from 'mobx';
+import { boolean, literal, number, object, union, type infer as ZodInfer } from 'zod';
 
 import type { MemoVO } from '#domain/shared/model/memo';
 import { container } from '#domain/shared/infra/singletons';
 
 import Calendar from './Calendar';
-import { eventBus, EventNames } from '../eventBus';
+import { eventBus, EventNames as MemoEventNames } from '../eventBus';
 import UIState from '../../abstract/UIState';
 import Editor from '../Editor';
 import List from '../../abstract/List';
 import { onlyWhen } from '#utils/function';
+import { createEventBus, EventNames } from './events';
 
-export type Order = 'asc' | 'desc';
-
-interface ListViewUIState {
-  scrollTop: number;
-  order: Order;
-
+const uiStateSchema = object({
+  scrollTop: number(),
+  order: union([literal('asc'), literal('desc')]),
   /* 一级列表有以下值 */
-  calendar: boolean;
-}
+  calendar: boolean(),
+}).partial();
+
+type ListViewUIState = ZodInfer<typeof uiStateSchema>;
+
+export type Order = NonNullable<ListViewUIState['order']>;
 
 export default class ListView extends List<MemoVO> {
   constructor(private readonly parent?: MemoVO) {
     super();
-    this.uiState = new UIState(`UI_STATE_MEMO_LIST-${this.parent?.id ?? 'ROOT'}`);
+    const id = this.parent?.id ?? 'ROOT';
+    this.uiState = new UIState(`UI_STATE_MEMO_LIST-${id}`, uiStateSchema);
+    this.events = createEventBus(id);
 
     this.dispose = flow([
-      eventBus.on(EventNames.Updated, ({ id }) => this.init(id)),
-      eventBus.on(EventNames.Removed, ({ id }) => this.removeById(id)),
+      eventBus.on(MemoEventNames.Updated, ({ id }) => this.load(id)),
+      eventBus.on(MemoEventNames.Removed, ({ id }) => this.removeById(id)),
       eventBus.on(
-        EventNames.Created,
+        MemoEventNames.Created,
         onlyWhen(({ parentId }) => parentId === (parent?.id || null), this.add.bind(this)),
       ),
     ]);
   }
 
+  public readonly events;
+
   private readonly dispose: () => void;
+
   private readonly calendar = container.resolve(Calendar);
+
   public readonly uiState: UIState<ListViewUIState>;
+
   @observable.shallow public accessor memos: MemoVO[] | undefined;
+
   @observable.shallow public accessor editorsMap: Record<MemoVO['id'] | symbol, Editor> = {};
+
   @observable.shallow private accessor subListsMap: Record<MemoVO['id'], ListView> = {};
 
   protected readonly sort = (item1: MemoVO, item2: MemoVO) => {
@@ -67,9 +79,9 @@ export default class ListView extends List<MemoVO> {
     }
   }
 
-  protected load(signal: AbortController['signal']): Promise<MemoVO[]>;
-  protected load(signal: AbortController['signal'], id: MemoVO['id']): Promise<MemoVO>;
-  protected load(signal: AbortController['signal'], id?: MemoVO['id']) {
+  protected query(signal: AbortController['signal']): Promise<MemoVO[]>;
+  protected query(signal: AbortController['signal'], id: MemoVO['id']): Promise<MemoVO>;
+  protected query(signal: AbortController['signal'], id?: MemoVO['id']) {
     if (id) {
       return this.remote.memo.queryOne.query(id, { signal });
     }
@@ -80,6 +92,7 @@ export default class ListView extends List<MemoVO> {
     );
   }
 
+  // todo: 向上滚动和向下滚动加载
   public async loadMore() {
     const lastMemo = last(this.value);
     const isPinned = lastMemo?.isPinned;
@@ -118,6 +131,8 @@ export default class ListView extends List<MemoVO> {
   @action.bound
   public initSubList(memo: MemoVO) {
     assert(memo.childrenCount > 0, 'can not init empty children');
+    assert(!this.parent, 'can not init on sub list');
+
     const newList = new ListView(memo);
 
     this.subListsMap[memo.id] = newList;
@@ -152,7 +167,27 @@ export default class ListView extends List<MemoVO> {
     delete this.editorsMap[id];
   }
 
+  public async reveal(id: MemoVO['id']) {
+    assert(!this.parent, 'only top list can reveal');
+
+    const target = await this.remote.memo.queryOne.query(id);
+    const list = this.itemsMap[id]
+      ? this
+      : target.parentId && this.subListsMap[target.parentId]?.itemsMap[id]
+      ? this.subListsMap[target.parentId]
+      : undefined;
+
+    if (list) {
+      this.events.emit(EventNames.Revealed, id);
+      return;
+    }
+
+    // todo: 加载尚未加载的 memo
+  }
+
   public destroy() {
+    assert(this.parent, 'can not destroy top list');
+
     this.dispose();
     super.destroy();
   }

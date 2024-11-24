@@ -8,6 +8,8 @@ import type { EntityId } from '#domain/shared/model/entity';
 import EventBus from '../../infra/EventBus';
 import { EventNames, type Events } from './events';
 
+export { EventNames } from './events';
+
 export default class StarManager extends EventBus<Events> {
   private readonly remote = container.resolve(remoteToken);
 

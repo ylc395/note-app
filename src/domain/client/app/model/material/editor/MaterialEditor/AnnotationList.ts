@@ -21,7 +21,7 @@ export default class AnnotationList extends List<AnnotationVO> {
     this.sort = options.sort;
     this.dispose = flow([
       annotationEventBus.on(AnnotationEventNames.Removed, ({ id }) => this.removeById(id)),
-      annotationEventBus.on(AnnotationEventNames.Updated, ({ id }) => this.init(id)),
+      annotationEventBus.on(AnnotationEventNames.Updated, ({ id }) => this.load(id)),
       annotationEventBus.on(
         AnnotationEventNames.Created,
         onlyWhen(({ targetId }) => targetId === options.materialId, this.add.bind(this)),
@@ -35,9 +35,9 @@ export default class AnnotationList extends List<AnnotationVO> {
 
   private readonly dispose: () => void;
 
-  protected load(signal: AbortController['signal']): Promise<AnnotationVO[]>;
-  protected load(signal: AbortController['signal'], id: AnnotationVO['id']): Promise<AnnotationVO>;
-  protected load(signal: AbortController['signal'], id?: AnnotationVO['id']) {
+  protected query(signal: AbortController['signal']): Promise<AnnotationVO[]>;
+  protected query(signal: AbortController['signal'], id: AnnotationVO['id']): Promise<AnnotationVO>;
+  protected query(signal: AbortController['signal'], id?: AnnotationVO['id']) {
     return id
       ? this.remote.annotation.queryOne.query(id, { signal })
       : this.remote.annotation.queryByEntityId.query(this.materialId, { signal });

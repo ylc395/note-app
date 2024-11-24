@@ -1,4 +1,5 @@
 import EventBus from '#domain/client/app/infra/EventBus';
+import type { UpdatedEvent as BaseUpdatedEvent } from '#domain/client/shared/model/entity';
 import type { MemoPatchDTO, MemoVO } from '#domain/shared/model/memo';
 
 export enum EventNames {
@@ -7,11 +8,7 @@ export enum EventNames {
   Removed = 'removed',
 }
 
-export interface UpdateEvent {
-  id: MemoVO['id'];
-  payload: MemoPatchDTO;
-  trigger: unknown;
-}
+export type UpdateEvent = BaseUpdatedEvent<MemoPatchDTO>;
 
 type Events = {
   [EventNames.Updated]: UpdateEvent;

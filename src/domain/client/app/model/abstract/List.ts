@@ -7,58 +7,65 @@ import type { EntityId } from '#domain/shared/model/entity';
 
 export default abstract class List<T extends { id: EntityId }> {
   constructor() {
-    this.init();
+    this.load();
   }
 
   protected readonly remote = container.resolve(rpcToken);
 
   protected abstract readonly sort: (item1: T, it: T) => number;
 
-  private isDestroyed = false;
-
-  private abortController?: AbortController;
+  @observable.ref private accessor loadingController: AbortController | undefined;
 
   @observable.ref public accessor error: unknown;
 
   @observable.shallow protected accessor itemsMap: Record<EntityId, T> = {};
 
-  protected abstract load(signal: AbortController['signal'], id: T['id']): Promise<T>;
-  protected abstract load(signal: AbortController['signal']): Promise<T[]>;
+  private isDestroyed = false;
 
-  public async init(id?: T['id']) {
+  @computed
+  public get isLoading() {
+    return Boolean(this.loadingController);
+  }
+
+  protected abstract query(signal: AbortController['signal'], id: T['id']): Promise<T>;
+  protected abstract query(signal: AbortController['signal']): Promise<T[]>;
+
+  public async load(id?: T['id']) {
     if (id && !this.itemsMap[id]) {
       return;
     }
 
-    this.abortController?.abort();
-
+    this.loadingController?.abort();
     const controller = new AbortController();
-    this.abortController = controller;
+
+    runInAction(() => {
+      this.loadingController = controller;
+    });
 
     try {
       if (id) {
-        const item = await this.load(controller.signal, id);
+        const item = await this.query(controller.signal, id);
 
         runInAction(() => {
           this.itemsMap[id] = item;
         });
       } else {
-        const items = await this.load(controller.signal);
+        const items = await this.query(controller.signal);
 
         runInAction(() => {
           this.itemsMap = keyBy(items, ({ id }) => id);
         });
       }
     } catch (error) {
-      if (this.abortController === controller && !this.isDestroyed) {
+      if (this.loadingController === controller && !this.isDestroyed) {
         runInAction(() => {
           this.error = error;
         });
       }
     }
 
-    if (this.abortController === controller) {
-      this.abortController = undefined;
+    if (this.loadingController === controller) {
+      this.loadingController = undefined;
     }
   }
 
@@ -78,6 +85,6 @@ export default abstract class List<T extends { id: EntityId }> {
 
   public destroy() {
     this.isDestroyed = true;
-    this.abortController?.abort();
+    this.loadingController?.abort();
   }
 }

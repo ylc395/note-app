@@ -1,30 +1,26 @@
-import { container, singleton } from 'tsyringe';
-
-import NoteTree from '#domain/client/common/model/note/Tree';
+import NoteTree from '#domain/client/shared/model/note/Tree';
 import type { NoteVO } from '#domain/shared/model/note';
-import Explorer from '#domain/client/app/model/abstract/Explorer';
-import RenameBehavior from '#domain/client/app/model/abstract/Explorer/RenameBehavior';
+import Explorer, { uiStateSchema } from '#domain/client/app/model/abstract/Explorer';
 import { eventBus, EventNames as NoteEvents } from './eventBus';
-import StarManager, { Events as StarEvents } from '../StarManager';
+import StarManager, { EventNames as StarEvents } from '../StarManager';
+import { container } from '#domain/shared/infra/singletons';
+import UIState from '../abstract/UIState';
 
-@singleton()
 export default class NoteExplorer extends Explorer<NoteVO> {
-  public readonly tree = new NoteTree({ sort: this.sorter.sort });
-  private readonly starManager = container.resolve(StarManager);
   constructor() {
     super();
-    this.starManager.on(StarEvents.Toggle, this.tree.updateTree);
-    eventBus.on(NoteEvents.Updated, this.handleEntityUpdate);
+    this.starManager.on(StarEvents.Toggle, this.tree.update);
+    eventBus.on(NoteEvents.Updated, this.handleEntityUpdated.bind(this));
   }
 
-  protected queryPath(id: NoteVO['id']) {
-    return this.remote.note.queryPath.query(id);
-  }
+  private readonly starManager = container.resolve(StarManager);
 
-  private readonly submitRename = async ({ id, name }: { id: string; name: string }) => {
+  public readonly tree = new NoteTree({ sort: this.sorter.sort });
+
+  public readonly uiState = new UIState('Note-Explorer', uiStateSchema);
+
+  protected async submitRename({ id, name }: { id: string; name: string }) {
     await this.remote.note.updateOne.mutate([id, { title: name }]);
-    eventBus.emit(NoteEvents.Updated, { trigger: this.rename, entity: { title: name, id } });
-  };
-
-  public readonly rename = new RenameBehavior({ onSubmit: this.submitRename });
+    eventBus.emit(NoteEvents.Updated, { trigger: this, payload: { title: name }, id });
+  }
 }

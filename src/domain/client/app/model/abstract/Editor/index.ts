@@ -1,10 +1,10 @@
 import { debounce, uniqueId } from 'lodash-es';
 import assert from 'assert';
-import { action, observable, runInAction } from 'mobx';
+import { action, computed, observable, runInAction } from 'mobx';
 import type { ZodSchema } from 'zod';
 import type { Change } from 'diff';
 
-import { EntityId, EntityTypes, type EntityLocator } from '#domain/shared/model/entity';
+import { EntityId, EntityTypes, type EntityLocator } from '#domain/client/shared/model/entity';
 import EventBus from '#domain/client/app/infra/EventBus';
 import { container } from '#domain/shared/infra/singletons';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
@@ -14,8 +14,8 @@ import { type EventsMap, EventNames } from './events';
 import UIState from '../UIState';
 import Backup from './Backup';
 
-export default abstract class Editor<E = unknown, P = Partial<E>, S = unknown> extends EventBus<EventsMap> {
-  public readonly uiState: UIState<S>;
+export default abstract class Editor<E = unknown, P = Partial<E>> extends EventBus<EventsMap> {
+  public abstract readonly uiState: UIState;
 
   @observable protected accessor entity: E | undefined;
 
@@ -24,7 +24,6 @@ export default abstract class Editor<E = unknown, P = Partial<E>, S = unknown> e
 
     this.tile = tile;
     this.entityId = entityId;
-    this.uiState = new UIState(entityId);
     this.backup = new Backup(entityId, schema);
 
     this.init();
@@ -40,8 +39,6 @@ export default abstract class Editor<E = unknown, P = Partial<E>, S = unknown> e
 
   @observable.ref public accessor tile: Tile;
 
-  @observable public accessor status: 'idle' | 'loading' | 'destroyed' | 'active' = 'idle';
-
   protected abstract readonly entityType: EntityTypes;
 
   private readonly entityId: EntityId;
@@ -50,10 +47,18 @@ export default abstract class Editor<E = unknown, P = Partial<E>, S = unknown> e
 
   protected abstract upload(patch: P, abortSignal: AbortController['signal']): Promise<void>;
 
-  @observable.ref private accessor processes: {
+  @observable.shallow private accessor processes: {
     loading?: AbortController;
     uploading?: AbortController;
   } = {};
+
+  private isDestroyed = false;
+
+  @observable public accessor isActive = false;
+
+  @computed public get isLoading() {
+    return Boolean(this.processes.loading);
+  }
 
   public get entityLocator(): EntityLocator {
     return {
@@ -68,13 +73,12 @@ export default abstract class Editor<E = unknown, P = Partial<E>, S = unknown> e
 
     runInAction(() => {
       this.processes.loading = abortController;
-      this.status = 'loading';
     });
 
     try {
       await this.load(abortController.signal);
     } catch (error) {
-      if (this.processes.loading === abortController && this.status !== 'destroyed') {
+      if (this.processes.loading === abortController && !this.isDestroyed) {
         this.emit(EventNames.Error, error);
       }
     }
@@ -84,10 +88,6 @@ export default abstract class Editor<E = unknown, P = Partial<E>, S = unknown> e
         this.processes.loading = undefined;
       });
     }
-
-    runInAction(() => {
-      this.status = 'idle';
-    });
 
     if (!this.entity) {
       return;
@@ -103,7 +103,7 @@ export default abstract class Editor<E = unknown, P = Partial<E>, S = unknown> e
   }
 
   public async update(patch: P) {
-    assert(this.status !== 'destroyed', 'can not update destroyed editor');
+    assert(!this.isDestroyed, 'can not update destroyed editor');
 
     runInAction(() => {
       assert(this.entity, 'can not update editor');
@@ -148,18 +148,18 @@ export default abstract class Editor<E = unknown, P = Partial<E>, S = unknown> e
 
   @action
   public activate() {
-    assert(this.status !== 'destroyed', 'can not activate a destroyed editor');
-    this.status = 'active';
+    assert(!this.isDestroyed, 'can not activate a destroyed editor');
+    this.isActive = true;
   }
 
   @action
   public deactivate() {
-    assert(this.status === 'active', 'can not deactivate');
-    this.status = 'idle';
+    assert(this.isActive, 'can not deactivate');
+    this.isActive = false;
   }
 
   public destroy() {
-    this.status = 'destroyed';
+    this.isDestroyed = true;
     this.debouncedUpload.flush();
     this.emit(EventNames.Destroy);
     this.clearListeners();

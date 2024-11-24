@@ -1,6 +1,6 @@
 import assert from 'assert';
 
-import { EntityId, EntityLocator, EntityTypes } from '#domain/shared/model/entity';
+import { EntityId, EntityLocator, EntityTypes } from '#domain/client/shared/model/entity';
 import Editor from '#domain/client/app/model/abstract/Editor';
 import { MimeTypes } from '#domain/shared/model/file';
 
@@ -17,7 +17,7 @@ export default class EditorFactory {
 
   private readonly editorsMap: Record<Editor['id'], Editor> = {};
 
-  public create(tile: Tile, { entityId, entityType }: EntityLocator, mimeType?: string) {
+  public create(tile: Tile, { entityId, entityType, mimeType }: EntityLocator) {
     let editor: Editor;
 
     if (entityType === EntityTypes.Note) {

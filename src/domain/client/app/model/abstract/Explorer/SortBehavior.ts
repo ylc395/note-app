@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { action, makeObservable, observable } from 'mobx';
+import { action, observable } from 'mobx';
 
 export enum SortBy {
   TitleAsc = 'titleAsc',
@@ -17,11 +17,7 @@ interface Sortable {
 }
 
 export default class SortBehavior {
-  constructor() {
-    makeObservable(this);
-  }
-
-  @observable public by = SortBy.CreatedAtDesc;
+  @observable public accessor by = SortBy.CreatedAtDesc;
 
   @action.bound
   public setBy(value: SortBy) {

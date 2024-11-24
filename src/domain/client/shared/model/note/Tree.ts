@@ -1,17 +1,32 @@
-import type { NoteVO } from '#domain/shared/model/note';
+import { normalizeTitle, type NoteVO } from '#domain/shared/model/note';
 import { EntityTypes } from '#domain/shared/model/entity';
 
 import Tree from '../abstract/Tree';
-import NoteTreeNode from './TreeNode';
+import { container } from '#domain/shared/infra/singletons';
+import { token as rpcToken } from '../../infra/rpc';
 
 export default class NoteTree extends Tree<NoteVO> {
-  public readonly entityType = EntityTypes.Note;
+  private readonly remote = container.resolve(rpcToken);
 
-  protected createNode(entity: NoteVO | null): NoteTreeNode {
-    return new NoteTreeNode({ entity, tree: this });
+  protected toEntityLocator(node: NoteVO) {
+    return {
+      entityId: node.id,
+      entityType: EntityTypes.Note,
+    };
   }
 
-  public queryChildren(id: NoteVO['parentId'] | NoteVO['id'][]) {
-    return this.remote.note.query.query({ parentId: id });
+  protected queryChildren(id: NoteVO['id'][] | NoteVO['parentId'], signal?: AbortController['signal']) {
+    return this.remote.note.query.query({ parentId: id }, { signal });
+  }
+
+  protected queryPath(id: NoteVO['id']) {
+    return this.remote.note.queryPath.query(id);
+  }
+
+  protected nodeToView(note: NoteVO | null) {
+    return {
+      title: note ? normalizeTitle(note) : '根',
+      icon: note?.icon ?? null,
+    };
   }
 }

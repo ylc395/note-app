@@ -11,11 +11,6 @@ export type EntityId = string;
 
 export type EntityParentId = EntityId | null;
 
-export interface EntityLocator {
-  entityId: EntityId;
-  entityType: EntityTypes;
-}
-
 interface StandaloneEntity {
   id: EntityId;
   type: EntityTypes;

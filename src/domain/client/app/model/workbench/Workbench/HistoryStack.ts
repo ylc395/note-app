@@ -2,9 +2,9 @@ import { action, observable, computed } from 'mobx';
 import { last } from 'lodash-es';
 import assert from 'assert';
 
+import type { EntityLocator } from '#domain/client/shared/model/entity';
 import Editor from '../../abstract/Editor';
 import type Tile from '../Tile';
-import type { EntityLocator } from '#domain/shared/model/entity';
 
 interface Record extends EntityLocator {
   tileId: Tile['id'];

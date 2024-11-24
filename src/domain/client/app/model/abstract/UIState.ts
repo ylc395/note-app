@@ -1,12 +1,16 @@
+import type { ZodType } from 'zod';
 import { action, observable } from 'mobx';
+
 import { container } from '#domain/shared/infra/singletons';
 import { token as localStorageToken } from '#domain/client/app/infra/localStorage';
-import type { EntityId } from '#domain/shared/model/entity';
 
 export default class UIState<S = unknown> {
-  private readonly localStorage = container.resolve(localStorageToken);
+  constructor(private readonly id: string, schema: ZodType<S>) {
+    const parsedResult = schema.safeParse(this.localStorage.get(id));
+    this.value = parsedResult.success ? parsedResult.data : null;
+  }
 
-  constructor(private readonly id: EntityId) {}
+  private readonly localStorage = container.resolve(localStorageToken);
 
   private get key() {
     return `UI_STATE_${this.id}`;

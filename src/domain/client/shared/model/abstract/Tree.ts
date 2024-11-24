@@ -1,71 +1,52 @@
-import { observable, action, computed, makeObservable } from 'mobx';
+import { observable, action, computed } from 'mobx';
 import assert from 'assert';
-import { pull, pickBy } from 'lodash-es';
-import { container } from 'tsyringe';
 
-import type { EntityId, EntityParentId, EntityTypes, WithId } from '#domain/client/common/model/entity';
-import type { default as TreeNode, HierarchyEntity } from './TreeNode';
-import { token as remoteToken } from '#domain/client/common/infra/rpc';
+import TreeNode, { type TreeNodeOptions, type TreeNodeView } from './TreeNode';
+import type { EntityId, EntityLocator, EntityParentId, EntityPath, HierarchyEntity } from '../entity';
+import type { MaybeArray } from '#utils/collection';
+import { differenceWith, intersection } from 'lodash-es';
 
-interface Options<T extends HierarchyEntity> {
-  entityToNode?: (entity: T | null, tree: Tree<T>) => ReturnType<NonNullable<TreeNode<T>['entityToNode']>>;
-  sort?: (e1: T, e2: T) => number;
-}
+export type TreeOptions<T extends HierarchyEntity> = Pick<
+  TreeNodeOptions<T>,
+  'isDisabled' | 'onSelect' | 'sort' | 'onError'
+>;
 
-export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity, O = Options<T>> {
-  constructor(public readonly options?: O) {
-    makeObservable(this);
+export default abstract class Tree<T extends HierarchyEntity> {
+  constructor(private readonly options?: TreeOptions<T>) {
+    this.root = this.createOrReplaceNode();
   }
 
-  public readonly root = this.createNode(null);
-  public abstract readonly entityType: EntityTypes;
-  public abstract queryChildren(id: EntityParentId | EntityId[]): Promise<T[]>;
-  protected readonly remote = container.resolve(remoteToken);
+  public readonly root: TreeNode<T>;
 
-  @observable.shallow
-  private nodes: Record<TreeNode<T>['id'], TreeNode<T>> = {};
+  protected abstract queryPath(id: EntityId): Promise<EntityPath>;
 
-  public get allNodes() {
-    return [...Object.values(this.nodes), this.root];
-  }
+  protected abstract queryChildren(id: EntityParentId | EntityId[], signal?: AbortController['signal']): Promise<T[]>;
+
+  protected abstract toEntityLocator(entity: T): EntityLocator;
+
+  protected abstract nodeToView(entity: T | null): TreeNodeView;
+
+  @observable.shallow private accessor nodesMap: Record<TreeNode<T>['id'], TreeNode<T>> = {};
 
   @computed
-  // root node included
   public get selectedNodes() {
-    return this.allNodes.filter((node) => node.isSelected);
+    return Object.values(this.nodesMap).filter((node) => node.isSelected);
   }
 
+  // 不包括根节点(根节点总是展开的，返回它意义不大)
   @computed
-  // root node not included
   public get expandedNodes() {
-    return Object.values(this.nodes).filter((node) => node.isExpanded);
-  }
-
-  protected abstract createNode(entity: T | null): TreeNode<T>;
-
-  public getSelectedNode() {
-    const node = this.selectedNodes[0];
-    assert(node);
-
-    return node;
-  }
-
-  public getSelectedNodeIds(): string[];
-  public getSelectedNodeIds(containRoot: true): (string | null)[];
-  public getSelectedNodeIds(containRoot?: true) {
-    return this.allNodes
-      .filter((node) => (containRoot ? node.isSelected : node.isSelected && node !== this.root))
-      .map((node) => (this.root === node ? null : node.id));
+    return Object.values(this.nodesMap).filter((node) => node.isExpanded && node !== this.root);
   }
 
   public getNode(id: TreeNode<T>['id'] | null): TreeNode<T>;
   public getNode(id: TreeNode<T>['id'] | null, safe: true): TreeNode<T> | undefined;
   public getNode(id: TreeNode<T>['id'] | null, safe?: true) {
-    if (id === this.root.id) {
+    if (id === this.root.id || !id) {
       return this.root;
     }
 
-    const node = id ? this.nodes[id] : this.root;
+    const node = this.nodesMap[id];
 
     if (!node && !safe) {
       assert.fail(`no node for id ${id}`);
@@ -75,108 +56,124 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity, 
   }
 
   @action
-  private addNode(entity: T, entityToNode?: TreeNode<T>['entityToNode']) {
-    assert(entity.id !== this.root.id, 'invalid id');
-    const parent = this.getNode(entity.parentId, true);
+  private addNode(node: TreeNode<T>) {
+    this.nodesMap[node.id] = node;
+  }
 
-    if (!parent) {
-      return;
+  @action
+  private removeNode(node: TreeNode<T>) {
+    assert(this.getNode(node.id, true), 'can not remove node');
+
+    node.remove();
+    delete this.nodesMap[node.id];
+  }
+
+  private createOrReplaceNode(options?: { entity: T; parent: TreeNode<T> }) {
+    const id = options?.entity.id ?? null;
+    const node = this.getNode(id, true);
+
+    if (node) {
+      node.remove();
     }
 
-    const node = this.createNode(entity);
+    const newNode = new TreeNode(
+      {
+        ...this.options,
+        queryChildren: this.queryChildren.bind(this, id),
+        toEntityLocator: this.toEntityLocator.bind(this),
+        onNodeCreated: this.addNode.bind(this),
+        toView: this.nodeToView.bind(this),
+      },
+      options,
+    );
+    this.addNode(newNode);
 
-    this.nodes[entity.id] = node;
-    parent.children.push(node);
-    Object.assign(node, entityToNode?.(entity));
+    return newNode;
+  }
 
-    return node;
+  @action
+  public addOrReplace(entities: MaybeArray<T>) {
+    for (const entity of Array.isArray(entities) ? entities : [entities]) {
+      const parentNode = this.getNode(entity.parentId, true);
+
+      if (parentNode) {
+        this.createOrReplaceNode({ entity, parent: parentNode });
+      }
+    }
   }
 
   @action.bound
-  public updateTree(entity: WithId<T> | WithId<T>[]) {
-    const entities = Array.isArray(entity) ? entity : [entity];
-    const newEntities: T[] = [];
-
-    for (const patch of entities) {
+  public update(entity: MaybeArray<Partial<T> & { id: EntityId }>) {
+    for (const patch of Array.isArray(entity) ? entity : [entity]) {
       const node = this.getNode(patch.id, true);
 
       if (!node) {
         continue;
       }
 
-      assert(node.entity, 'can not update root entity');
-      newEntities.push({ ...node.entity, ...patch });
-    }
+      const oldParent = node.parent;
+      assert(oldParent, 'can not update root node');
 
-    this.updateTreeByEntity(newEntities);
+      if (typeof patch.parentId !== 'undefined' && patch.parentId === (oldParent.isRoot ? null : oldParent.id)) {
+        const newParent = this.getNode(patch.parentId, true);
+
+        if (newParent) {
+          newParent.addChild(node);
+        } else {
+          this.removeNode(node);
+        }
+      }
+
+      node.update(patch);
+    }
   }
 
-  @action.bound
-  private updateTreeByEntity(entity: T | T[]) {
-    const entities = Array.isArray(entity) ? entity : [entity];
+  @action
+  public setSelected(ids: MaybeArray<TreeNode<T>['id']>) {
+    for (const selected of this.selectedNodes) {
+      selected.toggleSelect(false);
+    }
 
-    for (const entity of entities) {
-      const node = this.getNode(entity.id, true);
+    for (const id of Array.isArray(ids) ? ids : [ids]) {
+      this.getNode(id, true)?.toggleSelect(true);
+    }
+  }
+
+  // 展开任意个指定节点。任意一个节点必须跟随其祖先节点传入，否则无法展开
+  public async expand(nodeIds: TreeNode<T>['id'][]) {
+    const unexpandedNodeIds = differenceWith(nodeIds, this.expandedNodes, (id, node) => id === node.id);
+    const children = unexpandedNodeIds.length > 0 ? await this.queryChildren(unexpandedNodeIds) : [];
+    const childrenMap = Object.groupBy(children, ({ parentId }) => parentId!);
+    const allNodeIds = Object.values(this.nodesMap).map(({ id }) => id);
+
+    // 取出已在树中的节点
+    const topoSorted = intersection(nodeIds, allNodeIds).flatMap((id) => childrenMap[id] || []);
+
+    // 进行拓扑排序
+    for (let i = 0; i < topoSorted.length; i++) {
+      topoSorted.push(...(childrenMap[topoSorted[i]!.id] || []));
+    }
+
+    this.addOrReplace(topoSorted);
+
+    for (const nodeId of nodeIds) {
+      const node = this.getNode(nodeId, true);
 
       if (node) {
-        assert(node.entity, 'can not update root entity');
-        this.updateNode(pickBy(entity, (_, key) => key in node.entity!) as T);
-      } else {
-        this.addNode(entity as T);
+        node.toggleExpand(true, false);
       }
     }
   }
 
-  @action
-  private updateNode(entity: T | T[]) {
-    const entities = Array.isArray(entity) ? entity : [entity];
+  public async reveal(id: T['id'], options?: { select?: boolean }) {
+    const nodeToReveal = this.getNode(id, true);
+    const ancestors = nodeToReveal ? nodeToReveal.ancestors : await this.queryPath(id);
+    const ids = ancestors.map(({ id }) => id);
 
-    for (const entity of entities) {
-      const node = this.getNode(entity.id);
-      assert(node.entity && node.parent);
+    await this.expand(ids);
 
-      const oldParentId = node.parent.id || this.root.id;
-      const newParent = this.getNode(entity.parentId, true);
-
-      if (!newParent) {
-        continue;
-      }
-
-      node.entity = entity;
-
-      if (newParent.id !== oldParentId) {
-        newParent.children.push(node);
-
-        if (newParent.entity) {
-          newParent.entity.childrenCount += 1;
-        }
-
-        // reset parent-child relationship
-        const oldParent = this.getNode(oldParentId);
-        pull(oldParent.children, node);
-
-        if (oldParent.entity) {
-          oldParent.entity.childrenCount -= 1;
-        }
-      }
+    if (options?.select) {
+      this.setSelected([id]);
     }
-  }
-
-  @action
-  public setSelected(ids: TreeNode<T>['id'][]) {
-    for (const selected of this.selectedNodes) {
-      selected.isSelected = false;
-    }
-
-    for (const id of ids) {
-      this.getNode(id, true)?.toggleSelect({ isMultiple: true });
-    }
-  }
-
-  public clone(options?: O) {
-    return new (this.constructor as { new (...options: ConstructorParameters<typeof Tree<T>>): Tree<T> })({
-      ...this.options,
-      ...options,
-    });
   }
 }

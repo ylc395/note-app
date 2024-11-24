@@ -1,16 +1,33 @@
-import type { MaterialVO } from '#domain/shared/model/material';
+import { isEntityMaterial, normalizeTitle, type MaterialVO } from '#domain/shared/model/material';
 import { EntityTypes } from '#domain/shared/model/entity';
+
 import Tree from '../abstract/Tree';
-import MaterialTreeNode from './TreeNode';
+import { container } from '#domain/shared/infra/singletons';
+import { token as rpcToken } from '../../infra/rpc';
 
 export default class MaterialTree extends Tree<MaterialVO> {
-  public readonly entityType = EntityTypes.Material;
+  private readonly remote = container.resolve(rpcToken);
 
-  protected createNode(entity: MaterialVO | null): MaterialTreeNode {
-    return new MaterialTreeNode({ tree: this, entity });
+  protected toEntityLocator(node: MaterialVO) {
+    return {
+      entityId: node.id,
+      entityType: EntityTypes.Material,
+      mimeType: isEntityMaterial(node) ? node.file.mimeType : undefined,
+    };
   }
 
-  public queryChildren(id: MaterialVO['parentId'] | MaterialVO['id'][]) {
-    return this.remote.material.query.query({ parentId: id });
+  protected queryChildren(id: MaterialVO['parentId'] | MaterialVO['id'][], signal?: AbortController['signal']) {
+    return this.remote.material.query.query({ parentId: id }, { signal });
+  }
+
+  protected queryPath(id: MaterialVO['id']) {
+    return this.remote.note.queryPath.query(id);
+  }
+
+  protected nodeToView(material: MaterialVO | null) {
+    return {
+      title: material ? normalizeTitle(material) : '根',
+      icon: material?.icon ?? null,
+    };
   }
 }

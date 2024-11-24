@@ -1,18 +1,15 @@
-import { makeObservable, runInAction, observable, action } from 'mobx';
+import { runInAction, observable, action } from 'mobx';
 import assert from 'assert';
-
-import type TreeNode from '#domain/client/common/model/abstract/TreeNode';
+import type TreeNode from '#domain/client/shared/model/abstract/TreeNode';
 
 export default class RenameBehavior {
   constructor(
     private readonly options: {
       onSubmit: (e: { id: TreeNode['id']; name: string }) => Promise<void>;
     },
-  ) {
-    makeObservable(this);
-  }
+  ) {}
 
-  @observable id?: TreeNode['id'];
+  @observable public accessor id: TreeNode['id'] | undefined;
 
   @action
   public start(id: TreeNode['id']) {
