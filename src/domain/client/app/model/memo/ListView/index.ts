@@ -1,4 +1,4 @@
-import { last, zipObject, flow } from 'lodash-es';
+import { last, zipObject, flow, first } from 'lodash-es';
 import assert from 'assert';
 import { observable, action, runInAction } from 'mobx';
 
@@ -10,15 +10,14 @@ import Calendar from './Calendar';
 import { eventBus, EventNames as MemoEventNames } from '../eventBus';
 import Editor from '../Editor';
 import List from '../../abstract/List';
-import { createEventBus, EventNames } from './events';
 import { create as createUIState, type Order } from './uiState';
 
 export default class ListView extends List<MemoVO> {
   constructor(private readonly parent?: MemoVO) {
-    super();
-    const id = this.parent?.id ?? 'ROOT';
+    const id = parent?.id ?? 'ROOT';
+
+    super(id);
     this.uiState = createUIState(id);
-    this.events = createEventBus(id);
 
     this.dispose = flow([
       eventBus.on(MemoEventNames.Updated, ({ id }) => this.init(id)),
@@ -29,8 +28,6 @@ export default class ListView extends List<MemoVO> {
       ),
     ]);
   }
-
-  public readonly events;
 
   public readonly uiState;
 
@@ -80,17 +77,24 @@ export default class ListView extends List<MemoVO> {
     );
   }
 
-  // todo: 向上滚动和向下滚动加载
-  public async loadMore() {
-    const lastMemo = last(this.value);
+  public async loadMore(params?: { direction: 'up' | 'down'; limit?: number }) {
+    const lastMemo = params?.direction === 'down' ? last(this.value) : first(this.value);
     const isPinned = lastMemo?.isPinned;
+    const key =
+      params?.direction === 'down'
+        ? this.uiState.value?.order === 'asc'
+          ? 'startIndex'
+          : 'endIndex'
+        : this.uiState.value?.order === 'asc'
+        ? 'endIndex'
+        : 'startIndex';
 
     let memos = await this.remote.memo.queryList.query({
       order: this.uiState.value?.order,
       parentId: this.parent?.id || null,
       limit: ListView.LOAD_LIMIT,
       isPinned,
-      [this.uiState.value?.order === 'asc' ? 'startIndex' : 'endIndex']: lastMemo?.index,
+      [key]: lastMemo?.index,
     });
 
     if (memos.length < ListView.LOAD_LIMIT && isPinned) {
@@ -99,7 +103,7 @@ export default class ListView extends List<MemoVO> {
         parentId: this.parent?.id || null,
         limit: ListView.LOAD_LIMIT - memos.length,
         isPinned: false,
-        [this.uiState.value?.order === 'asc' ? 'startIndex' : 'endIndex']: lastMemo?.index,
+        [key]: lastMemo?.index,
       });
 
       memos = memos.concat(_memos);
@@ -159,18 +163,20 @@ export default class ListView extends List<MemoVO> {
     assert(!this.parent, 'only top list can reveal');
 
     const target = await this.remote.memo.queryOne.query(id);
-    const list = this.itemsMap[id]
-      ? this
-      : target.parentId && this.subListsMap[target.parentId]?.itemsMap[id]
-      ? this.subListsMap[target.parentId]
-      : undefined;
+    const found = target.parentId ? this.subListsMap[target.parentId]?.itemsMap[id] : this.itemsMap[id];
 
-    if (list) {
-      this.events.emit(EventNames.Revealed, id);
-      return;
+    if (!found) {
+      runInAction(() => {
+        this.itemsMap[id] = target;
+      });
+
+      await Promise.all([
+        this.loadMore({ direction: 'up', limit: 15 }),
+        this.loadMore({ direction: 'down', limit: 15 }),
+      ]);
     }
 
-    // todo: 加载尚未加载的 memo
+    this.events.emit(List.eventNames.Revealed, id);
   }
 
   public destroy() {

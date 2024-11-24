@@ -15,7 +15,7 @@ export default class AnnotationList extends List<AnnotationVO> {
     materialId: EntityMaterialVO['id'];
     sort: (annotation1: AnnotationVO, annotation2: AnnotationVO) => number;
   }) {
-    super();
+    super(`annotation-list-${options.materialId}`);
 
     this.materialId = options.materialId;
     this.sort = options.sort;

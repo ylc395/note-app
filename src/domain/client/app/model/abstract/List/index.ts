@@ -4,9 +4,12 @@ import { keyBy } from 'lodash-es';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import { container } from '#domain/shared/infra/singletons';
 import type { EntityId } from '#domain/shared/model/entity';
+import EventBus from '#domain/client/app/infra/EventBus';
+import { type Events, EventNames } from './events';
 
 export default abstract class List<T extends { id: EntityId }> {
-  constructor() {
+  constructor(private readonly id: string) {
+    this.events = new EventBus<Events>(`eventBus-${id}`);
     this.init();
   }
 
@@ -17,6 +20,8 @@ export default abstract class List<T extends { id: EntityId }> {
   @observable.ref private accessor loadingController: AbortController | undefined;
 
   @observable.ref public accessor error: unknown;
+
+  public readonly events;
 
   @observable.shallow protected accessor itemsMap: Record<EntityId, T> = {};
 
@@ -87,4 +92,6 @@ export default abstract class List<T extends { id: EntityId }> {
     this.isDestroyed = true;
     this.loadingController?.abort();
   }
+
+  public static readonly eventNames = EventNames;
 }

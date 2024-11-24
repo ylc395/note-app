@@ -13,10 +13,8 @@ import type { Direction } from '../Workbench/HistoryStack';
 
 export default class Tile {
   constructor() {
-    const id = uniqueId('tile-');
-
-    this.id = id;
-    this.events = new EventBus<Events>(id);
+    this.id = uniqueId('tile-');
+    this.events = new EventBus<Events>(this.id);
   }
 
   public readonly events;
@@ -96,7 +94,7 @@ export default class Tile {
     }
 
     this.subscriptionMap[newEditor.id] = newEditor.events.on(
-      Editor.events.Destroy,
+      Editor.eventNames.Destroy,
       this.removeEditor.bind(this, newEditor),
     );
 
@@ -143,5 +141,5 @@ export default class Tile {
     this.events.clearListeners();
   }
 
-  public static readonly events = EventNames;
+  public static readonly eventNames = EventNames;
 }

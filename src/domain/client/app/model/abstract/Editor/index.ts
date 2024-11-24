@@ -163,5 +163,5 @@ export default abstract class Editor<E = unknown, P = Partial<E>> {
     this.events.clearListeners();
   }
 
-  public static readonly events = EventNames;
+  public static readonly eventNames = EventNames;
 }

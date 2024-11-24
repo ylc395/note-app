@@ -34,8 +34,8 @@ export default class Workbench {
   private createTile() {
     const tile = new Tile();
 
-    tile.on(Tile.events.Destroyed, () => this.removeTile(tile));
-    tile.on(Tile.events.EditorSwitched, ({ to, fromHistory }) => this.historyStack.push(to, fromHistory));
+    tile.on(Tile.eventNames.Destroyed, () => this.removeTile(tile));
+    tile.on(Tile.eventNames.EditorSwitched, ({ to, fromHistory }) => this.historyStack.push(to, fromHistory));
 
     this.tilesMap[tile.id] = tile;
     return tile;
