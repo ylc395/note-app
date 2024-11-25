@@ -89,11 +89,11 @@ export default function ExplorerTreeView<T extends HierarchyEntity>({
             <NodeTitle
               onEditCancel={rename.cancel}
               onEditEnd={rename.submit}
-              isEditing={rename.id === node.id}
+              isEditing={rename.editingId === node.id}
               defaultIcon={defaultIcon}
               node={node}
             >
-              {!node.isDisabled && rename.id !== node.id && nodeOperation(node)}
+              {!node.isDisabled && rename.editingId !== node.id && nodeOperation(node)}
             </NodeTitle>
           )}
         />

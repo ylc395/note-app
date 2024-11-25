@@ -1,4 +1,4 @@
-import { runInAction, observable, action } from 'mobx';
+import { observable, action } from 'mobx';
 import assert from 'assert';
 import type TreeNode from '#domain/client/shared/model/abstract/TreeNode';
 
@@ -9,24 +9,21 @@ export default class RenameBehavior {
     },
   ) {}
 
-  @observable public accessor id: TreeNode['id'] | undefined;
+  @observable public accessor editingId: TreeNode['id'] | undefined;
 
   @action
   public start(id: TreeNode['id']) {
-    this.id = id;
+    this.editingId = id;
   }
 
   public readonly submit = async (value: string) => {
-    assert(this.id);
-    await this.options.onSubmit({ id: this.id, name: value });
-
-    runInAction(() => {
-      this.id = undefined;
-    });
+    assert(this.editingId);
+    await this.options.onSubmit({ id: this.editingId, name: value });
+    this.cancel();
   };
 
   @action.bound
   public cancel() {
-    this.id = undefined;
+    this.editingId = undefined;
   }
 }

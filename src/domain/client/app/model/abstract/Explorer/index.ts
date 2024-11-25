@@ -3,14 +3,17 @@ import { action, computed, autorun } from 'mobx';
 
 import type Tree from '#domain/client/shared/model/abstract/Tree';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
-import type { EntityId, HierarchyEntity, UpdatedEvent } from '#domain/client/shared/model/entity';
+import type { UpdatedEvent } from '#domain/client/app/model/entity/events';
+import type { EntityId, EntityTypes, HierarchyEntity } from '#domain/client/shared/model/entity';
 import { container } from '#domain/shared/infra/singletons';
+import type TreeNode from '#domain/client/shared/model/abstract/TreeNode';
 import type EventBus from '#domain/client/app/infra/EventBus';
 
 import RenameBehavior from './RenameBehavior';
 import SortBehavior from './SortBehavior';
 import { type Events, EventNames } from './events';
 import type { ExplorerUIState, create as createUIState } from './uiState';
+import MoveBehavior from '../../entity/MoveBehavior';
 
 export { create as createUIState } from './uiState';
 
@@ -19,13 +22,21 @@ export type { Events } from './events';
 export default abstract class Explorer<T extends HierarchyEntity> {
   protected readonly remote = container.resolve(rpcToken);
 
+  private readonly move = container.resolve(MoveBehavior);
+
   public abstract readonly events: EventBus<Events>;
 
-  protected abstract submitRename(param: { id: EntityId; name: string }): Promise<void>;
   public readonly rename = new RenameBehavior({ onSubmit: this.submitRename.bind(this) });
+
   public readonly sorter = new SortBehavior();
+
+  protected abstract readonly entityType: EntityTypes;
+
   public abstract readonly tree: Tree<T>;
+
   public abstract readonly uiState: ReturnType<typeof createUIState>;
+
+  protected abstract submitRename(param: { id: EntityId; name: string }): Promise<void>;
 
   public readonly init = once(async () => {
     await this.tree.root.load();
@@ -73,5 +84,25 @@ export default abstract class Explorer<T extends HierarchyEntity> {
   public async reveal(id: EntityId) {
     await this.tree.reveal(id, { select: true });
     this.events.emit(EventNames.Revealed, id);
+  }
+
+  protected isNodeDisabled(entity: T | null) {
+    const node = this.tree.getNode(entity?.id ?? null);
+    let ancestors: TreeNode<T>[] | undefined;
+
+    for (const { entityId, entityType } of this.move.movingItems || []) {
+      if (entityType !== this.entityType) {
+        return true;
+      }
+
+      ancestors ||= [node, ...node.ancestors];
+
+      // 移动中的任意 item 不能是当前节点的祖先（包括自身）
+      if (ancestors.find(({ id }) => id === entityId)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 }

@@ -81,11 +81,8 @@ export default class TreeNode<T extends HierarchyEntity = HierarchyEntity> {
     return Boolean(this.loadingController);
   }
 
-  public get descendants(): TreeNode<T>[] {
-    assert(this._children, 'can not get descendants');
-    return [...this._children, ...this._children.values().flatMap((child) => child.descendants)];
-  }
-
+  // 不含根节点
+  @computed
   public get ancestors() {
     let parent = this.parent;
     const ancestors: TreeNode<T>[] = [];

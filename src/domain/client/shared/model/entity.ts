@@ -13,9 +13,3 @@ export interface HierarchyEntity {
   parentId: EntityParentId;
   childrenCount: number;
 }
-
-export type UpdatedEvent<T> = {
-  id: EntityId;
-  payload: T;
-  trigger: unknown;
-};

@@ -7,8 +7,8 @@ import NoteEditor from '#domain/client/app/model/note/Editor';
 import NoteExplorer from '#domain/client/app/model/note/Explorer';
 import { EntityTypes } from '#domain/shared/model/entity';
 import { eventBus, EventNames } from '#domain/client/app/model/note/eventBus';
-import TreeNode from '#domain/client/common/model/abstract/TreeNode';
 import MoveBehavior, { Events as MoveEvents, type MoveEvent } from '../model/behavior/MoveBehavior';
+import type { EntityLocator } from '#domain/client/shared/model/entity';
 
 @singleton()
 export default class NoteService {
@@ -21,7 +21,7 @@ export default class NoteService {
     this.moveService.on(MoveEvents.Move, this.moveNotes);
   }
 
-  private readonly moveNotes = async ({ items, target }: MoveEvent) => {
+  private readonly moveNotes = async ({ items, target }: { items: EntityLocator[]; target: TargetE }) => {
     if (target.entityType !== EntityTypes.Note) {
       return;
     }

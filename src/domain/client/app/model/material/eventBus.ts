@@ -1,5 +1,5 @@
 import EventBus from '#domain/client/app/infra/EventBus';
-import type { UpdatedEvent as BaseUpdatedEvent } from '#domain/client/shared/model/entity';
+import type { UpdatedEvent as BaseUpdatedEvent } from '#domain/client/app/model/entity/events';
 import type { MaterialPatchDTO, MaterialVO } from '#domain/shared/model/material';
 
 export enum EventNames {

@@ -1,6 +1,6 @@
 import EventBus from '#domain/client/app/infra/EventBus';
+import type { UpdatedEvent as BaseUpdatedEvent } from '#domain/client/app/model/entity/events';
 import type { NotePatchDTO, NoteVO } from '#domain/shared/model/note';
-import type { UpdatedEvent as BaseUpdatedEvent } from '#domain/client/shared/model/entity';
 
 export enum EventNames {
   Updated = 'updated',

@@ -11,7 +11,7 @@ export type TreeOptions<T extends HierarchyEntity> = Pick<
   'isDisabled' | 'onSelect' | 'sort' | 'onError'
 >;
 
-export default abstract class Tree<T extends HierarchyEntity> {
+export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> {
   constructor(private readonly options?: TreeOptions<T>) {
     this.root = this.createOrReplaceNode();
   }
