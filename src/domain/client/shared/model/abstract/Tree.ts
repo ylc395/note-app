@@ -4,7 +4,7 @@ import assert from 'assert';
 import TreeNode, { type TreeNodeOptions, type TreeNodeView } from './TreeNode';
 import type { EntityId, EntityLocator, EntityParentId, EntityPath, HierarchyEntity } from '../entity';
 import type { MaybeArray } from '#utils/collection';
-import { differenceWith, intersection } from 'lodash-es';
+import { first, intersection } from 'lodash-es';
 
 export type TreeOptions<T extends HierarchyEntity> = Pick<
   TreeNodeOptions<T>,
@@ -13,7 +13,7 @@ export type TreeOptions<T extends HierarchyEntity> = Pick<
 
 export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> {
   constructor(private readonly options?: TreeOptions<T>) {
-    this.root = this.createOrReplaceNode();
+    this.root = this.createNode();
   }
 
   public readonly root: TreeNode<T>;
@@ -68,13 +68,9 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
     delete this.nodesMap[node.id];
   }
 
-  private createOrReplaceNode(options?: { entity: T; parent: TreeNode<T> }) {
+  private createNode(options?: { entity: T; parent: TreeNode<T> }) {
     const id = options?.entity.id ?? null;
-    const node = this.getNode(id, true);
-
-    if (node) {
-      node.remove();
-    }
+    assert(!this.getNode(id, true), 'can not create');
 
     const newNode = new TreeNode(
       {
@@ -92,12 +88,12 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
   }
 
   @action
-  public addOrReplace(entities: MaybeArray<T>) {
+  public add(entities: MaybeArray<T>) {
     for (const entity of Array.isArray(entities) ? entities : [entities]) {
       const parentNode = this.getNode(entity.parentId, true);
 
       if (parentNode) {
-        this.createOrReplaceNode({ entity, parent: parentNode });
+        this.createNode({ entity, parent: parentNode });
       }
     }
   }
@@ -139,37 +135,49 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
     }
   }
 
-  // 展开任意个指定节点。任意一个节点必须跟随其祖先节点传入，否则无法展开
+  // 展开任意个指定节点。若某个节点的祖先节点尚不存在，且没有被传入，则展开无效
   public async expand(nodeIds: TreeNode<T>['id'][]) {
-    const unexpandedNodeIds = differenceWith(nodeIds, this.expandedNodes, (id, node) => id === node.id);
-    const children = unexpandedNodeIds.length > 0 ? await this.queryChildren(unexpandedNodeIds) : [];
+    const unloadedNodeIds = nodeIds.filter((id) => !this.getNode(id, true)?.isLoaded);
+    const children = unloadedNodeIds.length > 0 ? await this.queryChildren(unloadedNodeIds) : [];
     const childrenMap = Object.groupBy(children, ({ parentId }) => parentId!);
     const allNodeIds = Object.values(this.nodesMap).map(({ id }) => id);
 
     // 取出已在树中的节点
-    const topoSorted = intersection(nodeIds, allNodeIds).flatMap((id) => childrenMap[id] || []);
+    const existedNodes = intersection(nodeIds, allNodeIds).flatMap((id) => childrenMap[id] || []);
+    const newEntities: T[] = [];
 
     // 进行拓扑排序
-    for (let i = 0; i < topoSorted.length; i++) {
-      topoSorted.push(...(childrenMap[topoSorted[i]!.id] || []));
+    for (let i = 0; i < existedNodes.length + newEntities.length; i++) {
+      const parent = existedNodes[i] || newEntities[i - existedNodes.length];
+      newEntities.push(...(childrenMap[parent!.id] || []));
     }
 
-    this.addOrReplace(topoSorted);
+    this.add(newEntities);
 
     for (const nodeId of nodeIds) {
       const node = this.getNode(nodeId, true);
 
       if (node) {
-        node.toggleExpand(true, false);
+        node.toggleExpand(true);
       }
     }
   }
 
   public async reveal(id: T['id'], options?: { select?: boolean }) {
-    const nodeToReveal = this.getNode(id, true);
-    const ancestors = nodeToReveal ? nodeToReveal.ancestors : await this.queryPath(id);
-    const ids = ancestors.map(({ id }) => id);
+    let ancestors: Array<{ id: EntityId }> | undefined = this.getNode(id, true)?.ancestors;
 
+    if (!ancestors) {
+      ancestors = await this.queryPath(id);
+
+      const parent = first(ancestors);
+
+      // 父节点存在，但目标节点却不存在的情况：重新加载一下目标父节点
+      if (parent) {
+        await this.getNode(parent.id).load();
+      }
+    }
+
+    const ids = ancestors.map(({ id }) => id);
     await this.expand(ids);
 
     if (options?.select) {

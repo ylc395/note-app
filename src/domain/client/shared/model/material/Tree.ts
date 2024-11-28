@@ -21,7 +21,7 @@ export default class MaterialTree extends Tree<MaterialVO> {
   }
 
   protected queryPath(id: MaterialVO['id']) {
-    return this.remote.note.queryPath.query(id);
+    return this.remote.material.queryPath.query(id);
   }
 
   protected nodeToView(material: MaterialVO | null) {

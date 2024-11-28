@@ -18,10 +18,9 @@ export const fileVOSchema = fileSchema.pick({
   "lang": true,
   "size": true
 });
-export const fileDTOSchema = z.intersection(fileSchema.pick({
-  "mimeType": true,
-  "lang": true
-}), z.object({
+export const fileDTOSchema = z.object({
+  mimeType: fileSchema.shape["mimeType"],
+  lang: fileSchema.shape["lang"].optional(),
   data: z.instanceof(ArrayBuffer).optional(),
   path: z.string().optional()
-}));
+});

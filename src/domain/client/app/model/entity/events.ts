@@ -6,6 +6,8 @@ export type UpdatedEvent<T> = {
   trigger: unknown;
 };
 
+export interface MoveTargetEvent {}
+
 export interface MoveEvent {
   items: EntityLocator[];
   target: {

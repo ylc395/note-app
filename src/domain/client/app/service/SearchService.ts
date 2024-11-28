@@ -1,14 +1,8 @@
-import { singleton, container } from 'tsyringe';
-import { SearchFields, type SearchParams } from '#domain/shared/model/search';
-import { token as remoteToken } from '#domain/client/common/infra/rpc';
+import { token as remoteToken } from '#domain/client/shared/infra/rpc';
+import { container } from '#domain/shared/infra/singletons';
 
-@singleton()
 export default class SearchService {
   private readonly remote = container.resolve(remoteToken);
-
-  readonly search = async (q: SearchParams) => {
-    this.remote.search.search.mutate({ ...q, fields: [SearchFields.Body, SearchFields.File] });
-  };
 
   // private static parseKeyword(q: string): SearchQuery | null {
   //   // we won't support AND / OR / NOT operators. so convert them into common content

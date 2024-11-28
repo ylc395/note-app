@@ -52,6 +52,11 @@ export default class TreeNode<T extends HierarchyEntity = HierarchyEntity> {
   }
 
   @computed
+  public get isLoaded() {
+    return Boolean(this._children);
+  }
+
+  @computed
   public get isExpandable() {
     return (this._children?.size ?? this.value?.childrenCount ?? 0) > 0;
   }
@@ -167,12 +172,12 @@ export default class TreeNode<T extends HierarchyEntity = HierarchyEntity> {
   }
 
   @action
-  public toggleExpand(value?: boolean, load = true) {
+  public toggleExpand(value?: boolean, forceLoad = false) {
     assert(this.isExpandable, 'can not expand node');
     this.isExpanded = value ?? !this.isExpanded;
 
     if (this.isExpanded) {
-      if (load) {
+      if (!this.isLoaded || forceLoad) {
         this.load();
       }
     } else {

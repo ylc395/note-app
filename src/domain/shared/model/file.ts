@@ -11,10 +11,12 @@ export interface File {
 /**
  * @api
  */
-export type FileDTO = Pick<File, 'mimeType' | 'lang'> & {
+export interface FileDTO {
+  mimeType: File['mimeType'];
+  lang?: File['lang'];
   data?: ArrayBuffer;
   path?: string;
-};
+}
 
 /**
  * @api

@@ -36,7 +36,7 @@ export default class FileService extends BaseService {
       id: EntityService.generateId(),
       hash,
       mimeType: file.mimeType,
-      lang: file.lang,
+      lang: file.lang || [],
       data,
       size: data.byteLength,
     });
