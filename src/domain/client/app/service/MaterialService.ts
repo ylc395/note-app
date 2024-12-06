@@ -2,7 +2,7 @@ import { container } from '#domain/shared/infra/singletons';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import { EntityTypes } from '#domain/client/shared/model/entity';
 
-import { eventBus, EventNames } from '../model/material/eventBus';
+import DomainEventBus from '../model/material/EventBus';
 import MoveBehavior from '../model/entity/MoveBehavior';
 import type { MoveEvent } from '../model/entity/events';
 import CreationProcess from '../model/material/CreationProcess';
@@ -15,6 +15,8 @@ export default class MaterialService {
   private readonly remote = container.resolve(rpcToken);
 
   private readonly moveBehavior = container.resolve(MoveBehavior);
+
+  private readonly domainEventBus = container.resolve(DomainEventBus);
 
   public readonly creation = new CreationProcess();
 
@@ -30,7 +32,7 @@ export default class MaterialService {
     await this.remote.material.batchUpdate.mutate([materialIds, { parentId: target.entityId }]);
 
     for (const material of items) {
-      eventBus.emit(EventNames.Updated, {
+      this.domainEventBus.emit(DomainEventBus.eventNames.Updated, {
         trigger: this.moveBehavior,
         id: material.entityId,
         payload: { parentId: target.entityId },

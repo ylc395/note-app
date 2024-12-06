@@ -2,7 +2,7 @@ import { groupBy } from 'lodash-es';
 import fs from 'fs-extra';
 import assert from 'node:assert';
 
-import { getHash } from '#utils/file.js';
+import { getHash, toArrayBuffer } from '#utils/file.js';
 import type { FileVO, FileDTO } from '#domain/server/model/file.js';
 
 import BaseService from '../BaseService.js';
@@ -22,7 +22,7 @@ export default class FileService extends BaseService {
   public async createFile(file: FileDTO) {
     assert(!(file.path && file.data), 'can not use both path and data');
 
-    const data = typeof file.path === 'string' ? await fs.readFile(file.path) : file.data;
+    const data = typeof file.path === 'string' ? toArrayBuffer(await fs.readFile(file.path)) : file.data;
     assert(data, 'no file data');
 
     const hash = await getHash(data);

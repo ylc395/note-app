@@ -5,9 +5,10 @@ import { observable, action, runInAction } from 'mobx';
 import { onlyWhen } from '#utils/function';
 import type { MemoVO } from '#domain/shared/model/memo';
 import { container } from '#domain/shared/infra/singletons';
+import { EntityTypes } from '#domain/shared/model/entity';
 
 import Calendar from './Calendar';
-import { eventBus, EventNames as MemoEventNames } from '../eventBus';
+import EventBus from '../EventBus';
 import Editor from '../Editor';
 import List from '../../abstract/List';
 import { create as createUIState, type Order } from './uiState';
@@ -20,20 +21,24 @@ export default class ListView extends List<MemoVO> {
     this.uiState = createUIState(id);
 
     this.dispose = flow([
-      eventBus.on(MemoEventNames.Updated, ({ id }) => this.init(id)),
-      eventBus.on(MemoEventNames.Removed, ({ id }) => this.removeById(id)),
-      eventBus.on(
-        MemoEventNames.Created,
+      this.eventBus.on(EventBus.eventNames.Updated, ({ id }) => this.init(id)),
+      this.eventBus.on(EventBus.eventNames.Removed, ({ id }) => this.removeById(id)),
+      this.eventBus.on(
+        EventBus.eventNames.Created,
         onlyWhen(({ parentId }) => parentId === (parent?.id || null), this.add.bind(this)),
       ),
     ]);
   }
+
+  private readonly eventBus = container.resolve(EventBus);
 
   public readonly uiState;
 
   private readonly dispose: () => void;
 
   private readonly calendar = container.resolve(Calendar);
+
+  public readonly entityType = EntityTypes.Memo;
 
   @observable.shallow public accessor memos: MemoVO[] | undefined;
 

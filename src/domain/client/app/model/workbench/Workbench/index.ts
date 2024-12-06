@@ -8,7 +8,7 @@ import type { EntityLocator } from '#domain/client/shared/model/entity';
 
 import Tile from '../Tile';
 import { type TileNode, type TileParent, TileDirections, isTileLeaf } from './tileTree';
-import HistoryStack, { type Direction } from './HistoryStack';
+import HistoryStack, { type Record as HistoryRecord } from './HistoryStack';
 import EditorFactory from '../EditorFactory';
 
 export enum TileSplitDirections {
@@ -21,6 +21,10 @@ export enum TileSplitDirections {
 type Dest = Tile | Editor | { from?: Tile; splitDirection: TileSplitDirections };
 
 export default class Workbench {
+  constructor() {
+    this.historyStack.events.on(HistoryStack.eventNames.Pop, this.handleHistoryPop.bind(this));
+  }
+
   public readonly historyStack = container.resolve(HistoryStack);
   private readonly editorFactory = container.resolve(EditorFactory);
   private readonly tilesMap: Record<Tile['id'], Tile> = {};
@@ -31,11 +35,18 @@ export default class Workbench {
     return this.historyStack.currentEditor?.tile;
   }
 
+  public getTileById(id: Tile['id']) {
+    const tile = this.tilesMap[id];
+    assert(tile, 'invalid tile id');
+
+    return tile;
+  }
+
   private createTile() {
     const tile = new Tile();
 
-    tile.on(Tile.eventNames.Destroyed, () => this.removeTile(tile));
-    tile.on(Tile.eventNames.EditorSwitched, ({ to, fromHistory }) => this.historyStack.push(to, fromHistory));
+    tile.events.on(Tile.eventNames.Destroyed, () => this.removeTile(tile));
+    tile.events.on(Tile.eventNames.EditorSwitched, ({ to, fromHistory }) => this.historyStack.push(to, fromHistory));
 
     this.tilesMap[tile.id] = tile;
     return tile;
@@ -211,10 +222,8 @@ export default class Workbench {
     targetTile.switchToEditor(editor);
   }
 
-  public historyGo(direction: Direction, step = 1) {
-    const record = this.historyStack.pop(direction, step);
+  private handleHistoryPop(record: HistoryRecord) {
     const dest = this.editorFactory.getEditorById(record.editorId) || this.tilesMap[record.tileId];
-
     this.openEntity(record, { dest });
   }
 }

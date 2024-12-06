@@ -70,7 +70,9 @@ export default abstract class List<T extends { id: EntityId }> {
     }
 
     if (this.loadingController === controller) {
-      this.loadingController = undefined;
+      runInAction(() => {
+        this.loadingController = undefined;
+      });
     }
   }
 

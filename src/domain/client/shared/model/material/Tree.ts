@@ -8,10 +8,12 @@ import { token as rpcToken } from '../../infra/rpc';
 export default class MaterialTree extends Tree<MaterialVO> {
   private readonly remote = container.resolve(rpcToken);
 
+  public readonly entityType = EntityTypes.Material;
+
   protected toEntityLocator(node: MaterialVO) {
     return {
       entityId: node.id,
-      entityType: EntityTypes.Material,
+      entityType: this.entityType,
       mimeType: isEntityMaterial(node) ? node.file.mimeType : undefined,
     };
   }

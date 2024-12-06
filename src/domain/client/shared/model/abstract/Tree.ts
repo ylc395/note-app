@@ -2,7 +2,7 @@ import { observable, action, computed } from 'mobx';
 import assert from 'assert';
 
 import TreeNode, { type TreeNodeOptions, type TreeNodeView } from './TreeNode';
-import type { EntityId, EntityLocator, EntityParentId, EntityPath, HierarchyEntity } from '../entity';
+import type { EntityId, EntityLocator, EntityParentId, EntityPath, EntityTypes, HierarchyEntity } from '../entity';
 import type { MaybeArray } from '#utils/collection';
 import { first, intersection } from 'lodash-es';
 
@@ -17,6 +17,8 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
   }
 
   public readonly root: TreeNode<T>;
+
+  public abstract readonly entityType: EntityTypes;
 
   protected abstract queryPath(id: EntityId): Promise<EntityPath>;
 
@@ -70,7 +72,10 @@ export default abstract class Tree<T extends HierarchyEntity = HierarchyEntity> 
 
   private createNode(options?: { entity: T; parent: TreeNode<T> }) {
     const id = options?.entity.id ?? null;
-    assert(!this.getNode(id, true), 'can not create');
+
+    if (this.root) {
+      assert(!this.getNode(id, true), 'can not create');
+    }
 
     const newNode = new TreeNode(
       {

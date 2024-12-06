@@ -1,12 +1,16 @@
+import assert from 'assert';
 import { BookIcon, DatabaseIcon, BlocksIcon } from 'lucide-react';
-import { EntityTypes } from '#domain/client/app/model/entity';
+import { EntityTypes } from '#domain/client/shared/model/entity';
 
-const icons = {
-  [EntityTypes.Note]: () => <BookIcon />,
-  [EntityTypes.Memo]: () => <BlocksIcon />,
-  [EntityTypes.Material]: () => <DatabaseIcon />,
-};
-
-export default function TypeIcon({ type }: { type: EntityTypes.Note | EntityTypes.Material | EntityTypes.Memo }) {
-  return icons[type]();
+export default function TypeIcon({ type }: { type: EntityTypes }) {
+  switch (type) {
+    case EntityTypes.Note:
+      return <BookIcon />;
+    case EntityTypes.Memo:
+      return <BlocksIcon />;
+    case EntityTypes.Material:
+      return <DatabaseIcon />;
+    default:
+      assert.fail('invalid type');
+  }
 }

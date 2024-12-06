@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { container } from 'tsyringe';
+import { container } from '#domain/shared/infra/singletons';
 import { observer } from 'mobx-react-lite';
 
 import TopicManager from '#domain/client/app/model/TopicManager';
@@ -17,7 +17,7 @@ export default observer(function TopicView() {
       {topics?.map((topic) => (
         <div key={topic.name}>
           <div> {topic.name} </div>
-          <div>{topic.entities.map((e) => e.title)}</div>
+          <div>{topic.entities.map((e) => e.entity.title)}</div>
         </div>
       ))}
     </div>

@@ -1,4 +1,4 @@
-import { container } from 'tsyringe';
+import { container } from '#domain/shared/infra/singletons';
 import { useEffect } from 'react';
 import { useBoolean, useResetState } from 'ahooks';
 import { CheckCircleFilled, CloseOutlined } from '@ant-design/icons';

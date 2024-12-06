@@ -1,5 +1,5 @@
 import { flow } from 'lodash-es';
-import { computed, observable, runInAction } from 'mobx';
+import { computed, runInAction } from 'mobx';
 
 import { IS_DEV } from '#domain/shared/infra/constants';
 import { onlyWhen } from '#utils/function';
@@ -7,14 +7,17 @@ import Editor from '#domain/client/app/model/abstract/Editor';
 import type Tile from '#domain/client/app/model/workbench/Tile';
 import { notePatchDTOSchema } from '#domain/shared/infra/apiSchema/note';
 import { normalizeTitle, type NotePatchDTO, type NoteVO } from '#domain/shared/model/note';
-import { EntityTypes, type EntityPath } from '#domain/shared/model/entity';
-import { eventBus, EventNames as NoteEventNames } from '../eventBus';
+import { EntityTypes } from '#domain/shared/model/entity';
+import { container } from '#domain/shared/infra/singletons';
+import EventBus from '../EventBus';
 import { create as createUIState } from './uiState';
 
 type NotePatch = Pick<NotePatchDTO, 'body' | 'icon' | 'title'>;
 
 export default class NoteEditor extends Editor<Required<NoteVO>, NotePatch> {
   private readonly _dispose: () => void;
+
+  private readonly eventBus = container.resolve(EventBus);
 
   public readonly uiState;
 
@@ -23,18 +26,16 @@ export default class NoteEditor extends Editor<Required<NoteVO>, NotePatch> {
 
     this.uiState = createUIState(noteId);
     this._dispose = flow([
-      eventBus.on(
-        NoteEventNames.Updated,
+      this.eventBus.on(
+        EventBus.eventNames.Updated,
         onlyWhen((e) => e.id === noteId && e.trigger !== this, this.init.bind(this)),
       ),
-      eventBus.on(
-        NoteEventNames.Removed,
+      this.eventBus.on(
+        EventBus.eventNames.Removed,
         onlyWhen(({ id }) => id === noteId, this.destroy.bind(this)),
       ),
     ]);
   }
-
-  @observable private accessor path: EntityPath | undefined;
 
   protected readonly entityType = EntityTypes.Note;
 
@@ -57,7 +58,7 @@ export default class NoteEditor extends Editor<Required<NoteVO>, NotePatch> {
   protected async upload(patch: NotePatch, signal: AbortController['signal']) {
     await this.remote.note.updateOne.mutate([this.entityLocator.entityId, patch], { signal });
 
-    eventBus.emit(NoteEventNames.Updated, {
+    this.eventBus.emit(EventBus.eventNames.Updated, {
       id: this.entityLocator.entityId,
       payload: patch,
       trigger: this,

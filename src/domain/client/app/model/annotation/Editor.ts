@@ -6,10 +6,12 @@ import { container } from '#domain/shared/infra/singletons';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import { AnnotationVO, Selector, type AnnotationDTO } from '#domain/shared/model/annotation';
 import { EntityMaterialVO } from '#domain/shared/model/material';
-import { EventNames, eventBus } from './eventBus';
+import DomainEventBus from './EventBus';
 
 export default class Editor {
   private readonly remote = container.resolve(rpcToken);
+
+  private readonly eventBus = container.resolve(DomainEventBus);
 
   constructor(
     private readonly options: {
@@ -59,14 +61,14 @@ export default class Editor {
   public async submit() {
     if (this.options.annotation) {
       await this.remote.annotation.updateOne.mutate([this.options.annotation.id, this.value]);
-      eventBus.emit(EventNames.Updated, {
+      this.eventBus.emit(DomainEventBus.eventNames.Updated, {
         id: this.options.annotation.id,
         payload: this.value,
         trigger: this,
       });
     } else {
       const newAnnotation = await this.remote.annotation.create.mutate(this.value);
-      eventBus.emit(EventNames.Created, newAnnotation);
+      this.eventBus.emit(DomainEventBus.eventNames.Created, newAnnotation);
     }
 
     this.destroy();

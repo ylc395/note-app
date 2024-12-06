@@ -1,10 +1,10 @@
 import { observer } from 'mobx-react-lite';
 import { useEffect } from 'react';
-import { container } from 'tsyringe';
+import { container } from '#domain/shared/infra/singletons';
 import { XIcon } from 'lucide-react';
 
 import StarManager from '#domain/client/app/model/StarManager';
-import { Workbench } from '#domain/client/app/model/workbench';
+import Workbench from '#domain/client/app/model/workbench/Workbench';
 import Button from '#web/components/Button';
 
 export default observer(function StarView() {
@@ -23,18 +23,18 @@ export default observer(function StarView() {
       {Object.values(filteredStars)
         .flat()
         .map((star) => (
-          <div key={star.entityId} className="flex items-center justify-between group mb-1 w-60">
+          <div key={star.entity.id} className="flex items-center justify-between group mb-1 w-60">
             <div
-              onClick={() => openEntity(star)}
+              onClick={() => openEntity({ entityType: star.entity.type, entityId: star.entity.id })}
               className="text-sm cursor-pointer text-ellipsis overflow-clip whitespace-nowrap"
             >
-              {star.title}
+              {star.entity.title}
             </div>
             <Button
               className="group-hover:visible invisible"
               size="small"
               icon={<XIcon />}
-              onClick={() => unstar(star.entityId)}
+              onClick={() => unstar(star.entity.id)}
             />
           </div>
         ))}

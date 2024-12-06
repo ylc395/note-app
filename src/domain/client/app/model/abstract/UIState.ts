@@ -1,5 +1,5 @@
 import type { ZodType } from 'zod';
-import { action, observable } from 'mobx';
+import { action, observable, runInAction } from 'mobx';
 
 import { container } from '#domain/shared/infra/singletons';
 import { token as localStorageToken } from '#domain/client/app/infra/localStorage';
@@ -7,7 +7,10 @@ import { token as localStorageToken } from '#domain/client/app/infra/localStorag
 export default class UIState<S = unknown> {
   constructor(private readonly id: string, schema: ZodType<S>) {
     const parsedResult = schema.safeParse(this.localStorage.get(id));
-    this.value = parsedResult.success ? parsedResult.data : null;
+
+    runInAction(() => {
+      this.value = parsedResult.success ? parsedResult.data : null;
+    });
   }
 
   private readonly localStorage = container.resolve(localStorageToken);

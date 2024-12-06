@@ -4,18 +4,23 @@ import MaterialTree from '#domain/client/shared/model/material/Tree';
 import Explorer, { createUIState, type Events } from '#domain/client/app/model/abstract/Explorer';
 import { EntityTypes } from '#domain/client/shared/model/entity';
 
-import { eventBus, EventNames } from './eventBus';
+import DomainEventBus from './EventBus';
 import StarManager, { EventNames as StarEvents } from '../StarManager';
 import EventBus from '../../infra/EventBus';
+import RenameBehavior from '../abstract/Explorer/RenameBehavior';
 
 export default class MaterialExplorer extends Explorer<MaterialVO> {
   constructor() {
     super();
     this.starManager.events.on(StarEvents.Toggle, this.tree.update);
-    eventBus.on(EventNames.Updated, this.handleEntityUpdated.bind(this));
+    this.domainEventBus.on(DomainEventBus.eventNames.Updated, this.handleEntityUpdated.bind(this));
+    this.rename = new RenameBehavior({ onSubmit: this.submitRename.bind(this) });
   }
+  public readonly rename: RenameBehavior;
 
-  protected readonly entityType = EntityTypes.Material;
+  private readonly domainEventBus = container.resolve(DomainEventBus);
+
+  public readonly entityType = EntityTypes.Material;
 
   public readonly tree = this.createTree();
 
@@ -25,9 +30,9 @@ export default class MaterialExplorer extends Explorer<MaterialVO> {
 
   public readonly events = new EventBus<Events>('note-explorer');
 
-  protected readonly submitRename = async ({ id, name }: { id: string; name: string }) => {
+  private readonly submitRename = async ({ id, name }: { id: string; name: string }) => {
     await this.remote.material.updateOne.mutate([id, { title: name }]);
-    eventBus.emit(EventNames.Updated, { trigger: this, payload: { title: name }, id });
+    this.domainEventBus.emit(DomainEventBus.eventNames.Updated, { trigger: this, payload: { title: name }, id });
   };
 
   public createTree() {

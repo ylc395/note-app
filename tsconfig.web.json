@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "./src/driver/client/web/**/*",
+    "./src/driver/client/electron/rpcClient.ts",
+    "./src/driver/client/electron/preload/global.d.ts",
+    "./src/domain/client/app/**/*",
+    "./src/domain/client/shared/**/*",
+    "./src/domain/shared/**/*",
+    "./src/vendors.d.ts",
+    "./src/driver/server/api/**/*"
+  ],
+  "compilerOptions": {
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx"
+  }
+}

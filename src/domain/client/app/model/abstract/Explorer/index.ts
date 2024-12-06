@@ -19,6 +19,8 @@ export { create as createUIState } from './uiState';
 
 export type { Events } from './events';
 
+export { SortBy } from './SortBehavior';
+
 export default abstract class Explorer<T extends HierarchyEntity> {
   protected readonly remote = container.resolve(rpcToken);
 
@@ -26,17 +28,15 @@ export default abstract class Explorer<T extends HierarchyEntity> {
 
   public abstract readonly events: EventBus<Events>;
 
-  public readonly rename = new RenameBehavior({ onSubmit: this.submitRename.bind(this) });
+  public abstract readonly rename: RenameBehavior;
 
   public readonly sorter = new SortBehavior();
 
-  protected abstract readonly entityType: EntityTypes;
+  public abstract readonly entityType: EntityTypes;
 
   public abstract readonly tree: Tree<T>;
 
   public abstract readonly uiState: ReturnType<typeof createUIState>;
-
-  protected abstract submitRename(param: { id: EntityId; name: string }): Promise<void>;
 
   public readonly init = once(async () => {
     await this.tree.root.load();
@@ -49,7 +49,7 @@ export default abstract class Explorer<T extends HierarchyEntity> {
       this.tree.setSelected(this.uiState.value.selected);
     }
 
-    autorun(this.persistUIState.bind(this));
+    autorun(this.updateUIState.bind(this));
   });
 
   @computed
@@ -64,7 +64,7 @@ export default abstract class Explorer<T extends HierarchyEntity> {
     }
   }
 
-  private persistUIState() {
+  private updateUIState() {
     this.uiState.update({
       selected: this.tree.selectedNodes.map(({ id }) => id),
       expanded: this.tree.expandedNodes
@@ -104,5 +104,9 @@ export default abstract class Explorer<T extends HierarchyEntity> {
     }
 
     return false;
+  }
+
+  public getActions() {
+    return [];
   }
 }

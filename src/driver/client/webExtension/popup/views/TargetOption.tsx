@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { container } from 'tsyringe';
+import { container } from '#domain/shared/infra/singletons';
 
 import TaskService from '#domain/service/TaskService';
 import { EntityTypes, type MainEntityTypes } from '#domain/model/entity';

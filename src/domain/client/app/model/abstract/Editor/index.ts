@@ -1,10 +1,10 @@
 import { debounce, uniqueId } from 'lodash-es';
 import assert from 'assert';
-import { action, computed, observable, runInAction } from 'mobx';
+import { computed, observable, runInAction } from 'mobx';
 import type { ZodSchema } from 'zod';
 import type { Change } from 'diff';
 
-import { EntityId, EntityTypes, type EntityLocator } from '#domain/client/shared/model/entity';
+import { EntityId, EntityTypes, type EntityLocator, type EntityPath } from '#domain/client/shared/model/entity';
 import EventBus from '#domain/client/app/infra/EventBus';
 import { container } from '#domain/shared/infra/singletons';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
@@ -14,7 +14,16 @@ import { type Events, EventNames } from './events';
 import Backup from './Backup';
 
 export default abstract class Editor<E = unknown, P = Partial<E>> {
-  @observable protected accessor entity: E | undefined;
+  @observable public accessor entity: E | undefined;
+
+  @observable public accessor path: EntityPath | undefined;
+
+  public abstract readonly view: {
+    readableTitle: string;
+    icon: string | null;
+    title: string;
+    body: string;
+  };
 
   constructor({ entityId, tile, schema }: { entityId: EntityId; tile: Tile; schema: ZodSchema<P> }) {
     this.tile = tile;
@@ -51,8 +60,6 @@ export default abstract class Editor<E = unknown, P = Partial<E>> {
   } = {};
 
   private isDestroyed = false;
-
-  @observable public accessor isActive = false;
 
   @computed public get isLoading() {
     return Boolean(this.processes.loading);
@@ -143,18 +150,6 @@ export default abstract class Editor<E = unknown, P = Partial<E>> {
       this.processes.uploading = undefined;
     });
   }, 1000);
-
-  @action
-  public activate() {
-    assert(!this.isDestroyed, 'can not activate a destroyed editor');
-    this.isActive = true;
-  }
-
-  @action
-  public deactivate() {
-    assert(this.isActive, 'can not deactivate');
-    this.isActive = false;
-  }
 
   public destroy() {
     this.isDestroyed = true;

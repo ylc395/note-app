@@ -21,14 +21,16 @@ export interface TreeNodeOptions<T extends HierarchyEntity> {
 
 export default class TreeNode<T extends HierarchyEntity = HierarchyEntity> {
   constructor(private readonly options: TreeNodeOptions<T>, params?: { entity: T; parent: TreeNode<T> }) {
-    this.value = params?.entity;
     this.parent = params?.parent;
     this.entityLocator = params ? options.toEntityLocator(params.entity) : undefined;
 
-    // this means it's a root node
-    if (this.isRoot) {
-      this.isExpanded = true;
-    }
+    runInAction(() => {
+      this.value = params?.entity;
+
+      if (this.isRoot) {
+        this.isExpanded = true;
+      }
+    });
 
     if (this.parent) {
       this.parent.addChild(this);
@@ -37,9 +39,9 @@ export default class TreeNode<T extends HierarchyEntity = HierarchyEntity> {
     options.onNodeCreated?.(this);
   }
 
-  @observable private accessor value: T | undefined;
+  @observable public accessor value: T | undefined;
 
-  @observable.ref public accessor parent: TreeNode<T> | undefined;
+  public parent?: TreeNode<T>;
 
   @computed
   public get view() {
@@ -57,7 +59,7 @@ export default class TreeNode<T extends HierarchyEntity = HierarchyEntity> {
   }
 
   @computed
-  public get isExpandable() {
+  public get isLeaf() {
     return (this._children?.size ?? this.value?.childrenCount ?? 0) > 0;
   }
 
@@ -173,7 +175,7 @@ export default class TreeNode<T extends HierarchyEntity = HierarchyEntity> {
 
   @action
   public toggleExpand(value?: boolean, forceLoad = false) {
-    assert(this.isExpandable, 'can not expand node');
+    assert(this.isLeaf, 'can not expand node');
     this.isExpanded = value ?? !this.isExpanded;
 
     if (this.isExpanded) {

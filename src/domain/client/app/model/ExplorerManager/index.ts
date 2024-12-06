@@ -8,6 +8,8 @@ import { EntityTypes, type EntityLocator } from '#domain/client/shared/model/ent
 import { container } from '#domain/shared/infra/singletons';
 import { create as createUIState, type ExplorerTypes } from './uiState';
 
+export type { ExplorerTypes } from './uiState';
+
 export default class ExplorerManager {
   constructor() {
     this.switchTo(this.uiState.value?.type || EntityTypes.Note);

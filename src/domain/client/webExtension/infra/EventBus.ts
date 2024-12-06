@@ -3,7 +3,7 @@ import { Emitter } from 'strict-event-emitter';
 import isObject from 'lodash-es/isObject';
 import noop from 'lodash-es/noop';
 
-import { singleton } from 'tsyringe';
+import { singleton } from '#domain/shared/infra/singletons';
 
 import {
   EventNames as TaskEventNames,

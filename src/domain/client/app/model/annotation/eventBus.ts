@@ -1,13 +1,13 @@
 import EventBus from '#domain/client/app/infra/EventBus';
 import type { AnnotationPatchDTO, AnnotationVO } from '#domain/shared/model/annotation';
 
-export enum EventNames {
+enum EventNames {
   Created = 'created',
   Updated = 'updated',
   Removed = 'removed',
 }
 
-export interface UpdateEvent {
+interface UpdateEvent {
   id: AnnotationVO['id'];
   payload: AnnotationPatchDTO;
   trigger: unknown;
@@ -19,4 +19,10 @@ type Events = {
   [EventNames.Created]: AnnotationVO;
 };
 
-export const eventBus = new EventBus<Events>('domain:annotation');
+export default class AnnotationEventBus extends EventBus<Events> {
+  constructor() {
+    super('domain:annotation');
+  }
+
+  public static readonly eventNames = EventNames;
+}

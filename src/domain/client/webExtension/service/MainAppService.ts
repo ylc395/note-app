@@ -1,6 +1,6 @@
 import { makeObservable, observable, runInAction } from 'mobx';
 import browser from 'webextension-polyfill';
-import { singleton } from 'tsyringe';
+import { singleton } from '#domain/shared/infra/singletons';
 
 import {
   MaterialTypes,

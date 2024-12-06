@@ -1,5 +1,5 @@
 import type { Tabs } from 'webextension-polyfill';
-import { singleton, container } from 'tsyringe';
+import { singleton, container } from '#domain/shared/infra/singletons';
 import { computed, action, makeObservable, observable, runInAction } from 'mobx';
 
 import { type Task, type CancelEvent, TaskTypes, EventNames } from '#domain/model/task';

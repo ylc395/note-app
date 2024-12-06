@@ -1,7 +1,7 @@
 import { useFloating } from '@floating-ui/react';
 import { observer } from 'mobx-react-lite';
 import { useEffect } from 'react';
-import { container } from 'tsyringe';
+import { container } from '#domain/shared/infra/singletons';
 import { useMemoizedFn } from 'ahooks';
 
 import { coverElementMiddleware } from '../../../../components/floatingMiddleware';

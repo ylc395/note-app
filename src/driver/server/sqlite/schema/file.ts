@@ -2,7 +2,7 @@ import { GeneratedAlways, sql, type Generated, type Kysely } from 'kysely';
 
 export interface Row {
   id: string;
-  data: ArrayBuffer | string;
+  data: Uint8Array | Buffer;
   lang: string;
   mimeType: string;
   size: number;

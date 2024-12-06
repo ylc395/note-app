@@ -4,6 +4,7 @@ import type { File, FileTextRecord } from '#domain/server/model/file.js';
 import BaseRepository from './BaseRepository.js';
 import { tableName as fileTableName, type Row } from '../schema/file.js';
 import { tableName as fileTextTableName } from '../schema/fileText.js';
+import { toArrayBuffer } from '#utils/file.js';
 
 export default class SqliteFileRepository extends BaseRepository implements FileRepository {
   public async findAllFileTextRecords(ids: File['id'][]) {
@@ -50,7 +51,7 @@ export default class SqliteFileRepository extends BaseRepository implements File
   }
 
   public static getBlob(row: Pick<Row, 'data'>) {
-    return (row.data as Uint8Array).buffer;
+    return toArrayBuffer(row.data);
   }
 
   public static rowToFileVO<T extends Partial<Row>>(row: T) {

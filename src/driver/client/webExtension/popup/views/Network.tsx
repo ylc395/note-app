@@ -1,4 +1,4 @@
-import { container } from 'tsyringe';
+import { container } from '#domain/shared/infra/singletons';
 import { observer } from 'mobx-react-lite';
 import { useState, useEffect } from 'react';
 

@@ -2,12 +2,12 @@ import { observer } from 'mobx-react-lite';
 import { noop } from 'lodash-es';
 import { useState, type ReactNode, useEffect, useRef } from 'react';
 import { useKeyPress } from 'ahooks';
+import clsx from 'clsx';
 
 import { IS_DEV } from '#domain/shared/infra/constants';
-import type TreeNode from '#domain/client/common/model/abstract/TreeNode';
-import type { HierarchyEntity } from '#domain/shared/model/entity';
+import type TreeNode from '#domain/client/shared/model/abstract/TreeNode';
 import Icon from '#web/components/icon/Icon';
-import clsx from 'clsx';
+import type { HierarchyEntity } from '#domain/client/shared/model/entity';
 
 export interface Props<T extends HierarchyEntity> {
   node: TreeNode<T>;
@@ -26,9 +26,9 @@ export default observer(function NodeTitle<T extends HierarchyEntity>({
   defaultIcon,
   isEditing,
 }: Props<T>) {
-  const [value, setValue] = useState(node.title);
+  const [value, setValue] = useState(node.view.title);
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const title = `${IS_DEV ? `${node.id.slice(0, 3)} ` : ''}${node.title}`;
+  const title = `${IS_DEV ? `${node.id.slice(0, 3)} ` : ''}${node.view.title}`;
   const submit = () => onEditEnd?.(value);
 
   useKeyPress('enter', isEditing ? submit : noop);
@@ -43,7 +43,7 @@ export default observer(function NodeTitle<T extends HierarchyEntity>({
   return (
     <span className="ml-1 flex min-w-0 w-full justify-between items-center">
       <span className="flex items-center min-w-0">
-        <Icon code={node.icon} fallback={defaultIcon?.(node)} />
+        <Icon code={node.view.icon} fallback={defaultIcon?.(node)} />
         {isEditing ? (
           <input
             className="h-4 outline-none"

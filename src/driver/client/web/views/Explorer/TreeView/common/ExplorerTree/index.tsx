@@ -1,70 +1,56 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { useBoolean, useEventListener } from 'ahooks';
+import { useRef, type ReactNode } from 'react';
+import { useEventListener, useMount } from 'ahooks';
 import clsx from 'clsx';
 
-import type TreeNode from '#domain/client/common/model/abstract/TreeNode';
-import type { HierarchyEntity } from '#domain/shared/model/entity';
 import Tree from '#web/components/Tree';
+import type { HierarchyEntity } from '#domain/client/shared/model/entity';
+import type TreeNode from '#domain/client/shared/model/abstract/TreeNode';
+import MoveBehavior from '#domain/client/app/model/entity/MoveBehavior';
 
 import NodeTitle, { type Props as NodeTitleProps } from './NodeTitle';
-import DndTreeNode from './DndTreeNode';
-import Menu, { type Props as MenuProps } from '#web/components/Menu';
-import { container } from 'tsyringe';
-import MoveBehavior from '#domain/client/app/model/behavior/MoveBehavior';
+import { container } from '#domain/shared/infra/singletons';
 import Explorer from '#domain/client/app/model/abstract/Explorer';
+import Dropdown from '#web/components/Dropdown';
+import DndTreeNode from './DndTreeNode';
 
 interface Props<T extends HierarchyEntity> {
   explorer: Explorer<T>;
-  getContextmenuItems: (node: TreeNode<T>) => MenuProps['items'];
-  nodeOperation: (node: TreeNode<T>) => ReactNode;
-  onClick: (node: TreeNode<T>, isMultiple: boolean) => void;
+  renderNodeOperation?: (node: TreeNode<T>) => ReactNode;
   defaultIcon?: NodeTitleProps<T>['defaultIcon'];
+  onClick?: (node: TreeNode<T>) => void;
+  onContextmenu?: (node: TreeNode<T>) => void;
 }
 
-// eslint-disable-next-line mobx/missing-observer
 export default function ExplorerTreeView<T extends HierarchyEntity>({
-  getContextmenuItems,
   explorer,
-  onClick,
-  nodeOperation,
+  renderNodeOperation,
   defaultIcon,
+  onClick,
+  onContextmenu,
 }: Props<T>) {
-  const [isContextmenuOpen, { setTrue: openContextmenu, setFalse: closeContextmenu }] = useBoolean(false);
-  const [contextmenuItems, setContextmenuItems] = useState<MenuProps['items']>();
   const divRef = useRef<HTMLDivElement | null>(null);
-  const { finishMoving, startMoving, moveTo } = container.resolve(MoveBehavior);
-  const { tree, rename, persistScrollInfo } = explorer;
-
-  function handleClick(node: TreeNode<T>, isMultiple: boolean) {
-    node.toggleSelect({ isMultiple });
-    onClick?.(node, isMultiple);
-  }
-
-  function handleContextmenu(node: TreeNode<T>) {
-    node.toggleSelect({ value: true });
-    setContextmenuItems(getContextmenuItems(node));
-    openContextmenu();
-  }
+  const { cancel: finishMoving, start: startMoving, perform: moveTo } = container.resolve(MoveBehavior);
+  const { tree, rename, updateScrollInfo } = explorer;
 
   useEventListener(
     'scroll',
-    (e) => persistScrollInfo({ y: (e.target as HTMLElement).scrollTop, x: (e.target as HTMLElement).scrollLeft }),
+    (e) => updateScrollInfo({ y: (e.target as HTMLElement).scrollTop, x: (e.target as HTMLElement).scrollLeft }),
     { target: divRef },
   );
 
-  useEffect(() => {
+  useMount(() => {
     if (divRef.current) {
-      const { x = 0, y = 0 } = explorer.scrollInfo || {};
+      const { x = 0, y = 0 } = explorer.uiState.value?.scroll || {};
       divRef.current.scrollTo(x, y);
     }
-  }, [explorer]);
+  });
 
   return (
     <div className="grow scroll-zone">
       <div ref={divRef} className="px-2">
         <Tree
-          onContextmenu={handleContextmenu}
-          onClick={handleClick}
+          onClick={onClick}
+          onContextmenu={onContextmenu}
           nodeClassName={(node) =>
             clsx(
               'group relative cursor-pointer py-1 rounded-md text-text-secondary text-sm hover:bg-tree-highlight',
@@ -74,16 +60,17 @@ export default function ExplorerTreeView<T extends HierarchyEntity>({
           }
           iconClassName="ml-1 w-[10px] h-[10px] opacity-80"
           tree={tree}
-          multiple
           renderNode={(node, originalNodeView) => (
-            <DndTreeNode
-              node={node}
-              onDrop={() => moveTo(node.entityLocator)}
-              onDragStart={() => startMoving({ mode: 'drag', item: node })}
-              onDragStop={finishMoving}
-            >
-              {originalNodeView}
-            </DndTreeNode>
+            <Dropdown items={explorer.getActions} trigger="contextmenu">
+              <DndTreeNode
+                node={node}
+                onDragStart={() => startMoving([node.entityLocator!])}
+                onDrop={moveTo}
+                onDragStop={finishMoving}
+              >
+                {originalNodeView}
+              </DndTreeNode>
+            </Dropdown>
           )}
           renderTitle={(node) => (
             <NodeTitle
@@ -93,11 +80,10 @@ export default function ExplorerTreeView<T extends HierarchyEntity>({
               defaultIcon={defaultIcon}
               node={node}
             >
-              {!node.isDisabled && rename.editingId !== node.id && nodeOperation(node)}
+              {!node.isDisabled && rename.editingId !== node.id && renderNodeOperation?.(node)}
             </NodeTitle>
           )}
         />
-        <Menu native items={contextmenuItems || []} isOpen={isContextmenuOpen} onClose={closeContextmenu} />
       </div>
     </div>
   );

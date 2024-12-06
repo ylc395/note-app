@@ -1,15 +1,4 @@
+// for vscode only
 {
-  "extends": "../../../../tsconfig.json",
-  "include": [
-    "./**/*",
-    "../electron/**/*",
-    "../../../domain/client/app/**/*",
-    "../../../domain/client/shared/**/*",
-    "../../../domain/shared/**/*",
-    "../../server/api/**/*"
-  ],
-  "compilerOptions": {
-    "lib": ["ESNext", "DOM", "DOM.Iterable"],
-    "jsx": "react-jsx"
-  }
+  "extends": "../../../../tsconfig.web.json"
 }

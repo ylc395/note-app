@@ -1,5 +1,5 @@
 import 'tailwindcss/tailwind.css';
-import { container } from 'tsyringe';
+import { container } from '#domain/shared/infra/singletons';
 import { observer } from 'mobx-react-lite';
 import { LoadingOutlined } from '@ant-design/icons';
 

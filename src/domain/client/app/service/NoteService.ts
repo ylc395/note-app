@@ -3,7 +3,7 @@ import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import type { NoteVO } from '#domain/shared/model/note';
 import NoteExplorer from '#domain/client/app/model/note/Explorer';
 import { EntityTypes } from '#domain/shared/model/entity';
-import { eventBus, EventNames } from '#domain/client/app/model/note/eventBus';
+import DomainEventBus from '#domain/client/app/model/note/EventBus';
 
 import Workbench from '../model/workbench/Workbench';
 import MoveBehavior from '../model/entity/MoveBehavior';
@@ -18,6 +18,7 @@ export default class NoteService {
   private readonly explorer = container.resolve(NoteExplorer);
   private readonly workbench = container.resolve(Workbench);
   private readonly moveBehavior = container.resolve(MoveBehavior);
+  private readonly domainEventBus = container.resolve(DomainEventBus);
 
   private readonly moveNotes = async ({ items, target }: MoveEvent) => {
     const noteIds = items.filter(({ entityType }) => entityType === EntityTypes.Note).map(({ entityId }) => entityId);
@@ -29,7 +30,7 @@ export default class NoteService {
     await this.remote.note.batchUpdate.mutate([noteIds, { parentId: target.entityId }]);
 
     for (const noteId of noteIds) {
-      eventBus.emit(EventNames.Updated, {
+      this.domainEventBus.emit(DomainEventBus.eventNames.Updated, {
         trigger: this.moveBehavior,
         id: noteId,
         payload: { parentId: target.entityId },

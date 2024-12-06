@@ -1,9 +1,10 @@
-import pdfjs from 'pdfjs-dist';
+import * as pdfjs from 'pdfjs-dist';
 import assert from 'node:assert';
 import { createCanvas } from 'canvas';
 import type { RenderParameters } from 'pdfjs-dist/types/src/display/api.js';
 
 import { container } from '#domain/shared/infra/singletons.js';
+import { toArrayBuffer } from '#utils/file.js';
 import type { Job } from './job.js';
 import ImageTextExtractor from './ImageTextExtractor.js';
 
@@ -52,7 +53,7 @@ export default class PDFTextExtractor {
 
     await renderTask.promise;
 
-    const image = canvas.toBuffer();
+    const image = toArrayBuffer(canvas.toBuffer());
     const result = await this.imageTextExtractor.extract({ data: image, lang });
 
     return result;

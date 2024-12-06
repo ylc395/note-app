@@ -5,15 +5,17 @@ import isBetween from 'dayjs/plugin/isBetween';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import { container } from '#domain/shared/infra/singletons';
 import type { MemoVO } from '#domain/shared/model/memo';
-import { eventBus, EventNames } from '../eventBus';
+import EventBus from '../EventBus';
 
 dayjs.extend(isBetween);
 
 export default class Calendar {
   constructor() {
     autorun(this.load.bind(this));
-    eventBus.on([EventNames.Created, EventNames.Removed], this.handleChanged.bind(this));
+    this.eventBus.on([EventBus.eventNames.Created, EventBus.eventNames.Removed], this.handleChanged.bind(this));
   }
+
+  private readonly eventBus = container.resolve(EventBus);
 
   @observable.ref public accessor error: unknown;
 

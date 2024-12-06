@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { observable } from 'mobx';
+import { action, observable } from 'mobx';
 
 import EventBus from '../../infra/EventBus';
 import type { EntityLocator } from '#domain/client/shared/model/entity';
@@ -12,6 +12,7 @@ export default class MoveBehavior {
 
   @observable.ref public accessor movingItems: EntityLocator[] | undefined;
 
+  @action.bound
   public start(items: EntityLocator[]) {
     assert(!this.movingItems, 'moving now');
     this.movingItems = items;
@@ -23,8 +24,8 @@ export default class MoveBehavior {
     this.cancel();
   }
 
+  @action.bound
   public cancel() {
-    assert(this.movingItems, 'can not stop');
     this.movingItems = undefined;
   }
 

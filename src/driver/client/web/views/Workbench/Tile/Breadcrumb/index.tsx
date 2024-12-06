@@ -2,9 +2,9 @@ import assert from 'assert';
 import { observer } from 'mobx-react-lite';
 import { AiOutlineRight } from 'react-icons/ai';
 
-import type { Tile } from '#domain/client/app/model/workbench';
 import IconTitle from '#web/components/IconTitle';
 import TypeIcon from '#web/components/icon/TypeIcon';
+import type Tile from '#domain/client/app/model/workbench/Tile';
 
 export default observer(function Breadcrumb({ tile }: { tile: Tile }) {
   const editor = tile.currentEditor;
@@ -17,14 +17,14 @@ export default observer(function Breadcrumb({ tile }: { tile: Tile }) {
           <TypeIcon type={editor.entityLocator.entityType} />
           <AiOutlineRight />
         </li>
-        {editor.tabView.breadcrumbs.map(({ id, title, icon }) => (
+        {editor.path!.map(({ id, title, icon }) => (
           <li key={id} className="flex cursor-pointer items-center">
             <IconTitle icon={icon} title={title} className="mr-1" />
             <AiOutlineRight />
           </li>
         ))}
         <li>
-          <IconTitle iconSize="1em" icon={editor.tabView.icon} title={editor.tabView.title} />
+          <IconTitle iconSize="1em" icon={editor.view.icon} title={editor.view.title} />
         </li>
       </ul>
     </div>

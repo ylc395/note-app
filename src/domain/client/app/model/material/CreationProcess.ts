@@ -1,3 +1,4 @@
+/// <reference lib="DOM" />
 import { action, observable } from 'mobx';
 import { string, z } from 'zod';
 import { constant, first } from 'lodash-es';

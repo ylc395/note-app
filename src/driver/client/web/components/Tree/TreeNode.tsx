@@ -3,32 +3,29 @@ import { type MouseEventHandler, useEffect, useState } from 'react';
 import { TriangleIcon, LoaderIcon } from 'lucide-react';
 import clsx from 'clsx';
 
-import type { HierarchyEntity } from '#domain/shared/model/entity';
+import type { HierarchyEntity } from '#domain/client/shared/model/entity';
 import scrollIntoViewIfNeeded from './scrollIntoViewIfNeeded';
 import type { TreeNodeProps } from './types';
-
-const INDENT = 25;
 
 // we should use an anonymous component to make <TreeNode> reactive
 const TreeNode = observer(function <T extends HierarchyEntity>({ node, level, ...ctx }: TreeNodeProps<T>) {
   const {
-    tree,
     nodeClassName,
     titleClassName,
     iconClassName,
-    multiple,
     onContextmenu,
     onClick,
     renderTitle,
     renderNode,
+    tree,
+    indent,
   } = ctx;
-
   const [rootEl, setRootEl] = useState<HTMLElement | null>(null);
 
   const expand: MouseEventHandler = (e) => {
     e.stopPropagation();
 
-    if (node.id === tree.root.id) {
+    if (node.isRoot) {
       return;
     }
 
@@ -36,26 +33,29 @@ const TreeNode = observer(function <T extends HierarchyEntity>({ node, level, ..
   };
 
   const handleClick: MouseEventHandler = (e) => {
-    e.stopPropagation();
-
-    const isMultiple = Boolean(multiple) && (e.metaKey || e.ctrlKey);
-
-    onClick?.(node, isMultiple);
-  };
-
-  const handleContextmenu: MouseEventHandler = (e) => {
-    e.stopPropagation();
-
-    if (node.isDisabled || !onContextmenu) {
+    if (node.isDisabled) {
       return;
     }
 
-    onContextmenu(node, e);
+    if (e.metaKey || e.ctrlKey) {
+      node.toggleSelect();
+    } else {
+      tree.setSelected([node.id]);
+      onClick?.(node);
+    }
+  };
+
+  const handleContextmenu: MouseEventHandler = (e) => {
+    if (node.isDisabled) {
+      return;
+    }
+
+    onContextmenu?.(node, e);
   };
 
   const treeNodeView = (
     <div
-      style={{ paddingLeft: `${level * INDENT}px` }}
+      style={{ paddingLeft: `${level * (indent ?? 25)}px` }}
       ref={setRootEl}
       onClick={handleClick}
       onContextMenu={handleContextmenu}
@@ -81,11 +81,9 @@ const TreeNode = observer(function <T extends HierarchyEntity>({ node, level, ..
             onClick={expand}
           />
         )}
-        {renderTitle ? (
-          renderTitle(node)
-        ) : (
+        {renderTitle?.(node) ?? (
           <span className={typeof titleClassName === 'function' ? titleClassName(node) : titleClassName}>
-            {node.title}
+            {node.view.title}
           </span>
         )}
       </div>
@@ -102,7 +100,7 @@ const TreeNode = observer(function <T extends HierarchyEntity>({ node, level, ..
     <>
       {renderNode ? renderNode(node, treeNodeView) : treeNodeView}
       {node.isExpanded &&
-        node.sortedChildren.map((child) => <TreeNode key={child.id} node={child} level={level + 1} {...ctx} />)}
+        node.children.map((child) => <TreeNode key={child.id} node={child} level={level + 1} {...ctx} />)}
     </>
   );
 });

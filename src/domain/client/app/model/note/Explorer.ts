@@ -1,22 +1,30 @@
 import NoteTree from '#domain/client/shared/model/note/Tree';
 import type { NoteVO } from '#domain/shared/model/note';
 import Explorer, { createUIState, type Events } from '#domain/client/app/model/abstract/Explorer';
-import { eventBus, EventNames as NoteEvents } from './eventBus';
-import StarManager, { EventNames as StarEvents } from '../StarManager';
 import { container } from '#domain/shared/infra/singletons';
-import EventBus from '../../infra/EventBus';
 import { EntityTypes } from '#domain/client/shared/model/entity';
+
+import EventBus from '../../infra/EventBus';
+import DomainEventBus from './EventBus';
+import StarManager, { EventNames as StarEvents } from '../StarManager';
+import NoteEventBus from './EventBus';
+import RenameBehavior from '../abstract/Explorer/RenameBehavior';
 
 export default class NoteExplorer extends Explorer<NoteVO> {
   constructor() {
     super();
     this.starManager.events.on(StarEvents.Toggle, this.tree.update);
-    eventBus.on(NoteEvents.Updated, this.handleEntityUpdated.bind(this));
+    this.domainEventBus.on(DomainEventBus.eventNames.Updated, this.handleEntityUpdated.bind(this));
+    this.rename = new RenameBehavior({ onSubmit: this.submitRename.bind(this) });
   }
 
-  protected readonly entityType = EntityTypes.Note;
+  public readonly rename: RenameBehavior;
+
+  public readonly entityType = EntityTypes.Note;
 
   public readonly events = new EventBus<Events>('note-explorer');
+
+  private readonly domainEventBus = container.resolve(NoteEventBus);
 
   private readonly starManager = container.resolve(StarManager);
 
@@ -24,9 +32,9 @@ export default class NoteExplorer extends Explorer<NoteVO> {
 
   public readonly uiState = createUIState('Note-Explorer');
 
-  protected async submitRename({ id, name }: { id: string; name: string }) {
+  private async submitRename({ id, name }: { id: string; name: string }) {
     await this.remote.note.updateOne.mutate([id, { title: name }]);
-    eventBus.emit(NoteEvents.Updated, { trigger: this, payload: { title: name }, id });
+    this.domainEventBus.emit(DomainEventBus.eventNames.Updated, { trigger: this, payload: { title: name }, id });
   }
 
   public createTree() {
@@ -35,4 +43,6 @@ export default class NoteExplorer extends Explorer<NoteVO> {
       isDisabled: this.isNodeDisabled.bind(this),
     });
   }
+
+  public getContextMenuItems() {}
 }

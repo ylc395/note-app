@@ -3,6 +3,7 @@ import { container } from '#domain/shared/infra/singletons';
 
 export default class SearchService {
   private readonly remote = container.resolve(remoteToken);
+  public readonly search = () => {};
 
   // private static parseKeyword(q: string): SearchQuery | null {
   //   // we won't support AND / OR / NOT operators. so convert them into common content

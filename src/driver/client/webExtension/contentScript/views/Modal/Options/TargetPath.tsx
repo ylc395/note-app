@@ -3,7 +3,7 @@ import { CaretDownFilled, LoadingOutlined } from '@ant-design/icons';
 import { useEffect } from 'react';
 import { useClick, useFloating, useInteractions, offset } from '@floating-ui/react';
 import { useClickAway, useBoolean } from 'ahooks';
-import { container } from 'tsyringe';
+import { container } from '#domain/shared/infra/singletons';
 
 import Tree from '../../../../../../components/Tree';
 import ConfigService from '#domain/service/ConfigService';

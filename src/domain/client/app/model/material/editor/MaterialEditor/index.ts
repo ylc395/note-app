@@ -4,14 +4,15 @@ import { flow } from 'lodash-es';
 import { IS_DEV } from '#domain/shared/infra/constants';
 import { normalizeTitle, type EntityMaterialVO, type MaterialPatchDTO } from '#domain/shared/model/material';
 import { AnnotationVO } from '#domain/shared/model/annotation';
-import { EntityTypes, type EntityPath } from '#domain/shared/model/entity';
+import { EntityTypes } from '#domain/shared/model/entity';
 import { materialPatchDTOSchema } from '#domain/shared/infra/apiSchema/material';
 import { onlyWhen } from '#utils/function';
 
 import Editor from '../../../abstract/Editor';
 import type Tile from '../../../workbench/Tile';
-import { eventBus, EventNames as MaterialEventNames } from '../../eventBus';
+import DomainEventBus from '../../EventBus';
 import AnnotationList from './AnnotationList';
+import { container } from '#domain/shared/infra/singletons';
 
 export default abstract class MaterialEditor extends Editor<EntityMaterialVO, MaterialPatchDTO> {
   constructor(materialId: EntityMaterialVO['id'], tile: Tile) {
@@ -23,22 +24,22 @@ export default abstract class MaterialEditor extends Editor<EntityMaterialVO, Ma
     });
 
     this._dispose = flow([
-      eventBus.on(
-        MaterialEventNames.Updated,
+      this.domainEventBus.on(
+        DomainEventBus.eventNames.Updated,
         onlyWhen((e) => e.id === materialId && e.trigger !== this, this.init.bind(this)),
       ),
-      eventBus.on(
-        MaterialEventNames.Removed,
+      this.domainEventBus.on(
+        DomainEventBus.eventNames.Removed,
         onlyWhen((e) => e.id === materialId, this.destroy.bind(this)),
       ),
     ]);
   }
 
+  private readonly domainEventBus = container.resolve(DomainEventBus);
+
   protected abstract sortAnnotations(annotation1: AnnotationVO, annotation2: AnnotationVO): number;
 
   protected readonly entityType = EntityTypes.Material;
-
-  @observable public accessor path: EntityPath | undefined;
 
   @observable.ref public accessor blob: ArrayBuffer | undefined;
 
@@ -49,7 +50,7 @@ export default abstract class MaterialEditor extends Editor<EntityMaterialVO, Ma
   protected async upload(patch: MaterialPatchDTO, signal: AbortController['signal']) {
     await this.remote.material.updateOne.mutate([this.entityLocator.entityId, patch], { signal });
 
-    eventBus.emit(MaterialEventNames.Updated, {
+    this.domainEventBus.emit(DomainEventBus.eventNames.Updated, {
       id: this.entityLocator.entityId,
       payload: patch,
       trigger: this,

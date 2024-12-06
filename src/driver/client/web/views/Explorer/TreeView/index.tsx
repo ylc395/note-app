@@ -1,14 +1,14 @@
 import { observer } from 'mobx-react-lite';
-import { container } from 'tsyringe';
 import type { ReactNode } from 'react';
 
 import ExplorerManager, { type ExplorerTypes } from '#domain/client/app/model/ExplorerManager';
-import { EntityTypes } from '#domain/client/app/model/entity';
+import { container } from '#domain/shared/infra/singletons';
 import Resizable from '#web/components/Resizable';
+import { EntityTypes } from '#domain/client/shared/model/entity';
+
 import Note from './Note';
 import Material from './Material';
 import Memo from './Memo';
-import TreeDraggingPreview from './common/TreeDraggingPreview';
 
 const explorerMap: Record<ExplorerTypes, () => ReactNode> = {
   [EntityTypes.Note]: () => <Note />,
@@ -29,7 +29,6 @@ export default observer(function TreeView() {
       resizable="right"
     >
       {explorerMap[entityType as ExplorerTypes]()}
-      <TreeDraggingPreview />
     </Resizable>
   );
 });

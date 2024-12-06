@@ -4,13 +4,15 @@ import assert from 'assert';
 import type { MemoVO } from '#domain/shared/model/memo';
 import { container } from '#domain/shared/infra/singletons';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
-import { eventBus, EventNames } from '../eventBus';
+import EventBus from '../EventBus';
 import { create as createUIState } from './uiState';
 
 export default class Editor {
   private readonly remote = container.resolve(rpcToken);
 
   private readonly uiState;
+
+  private eventBus = container.resolve(EventBus);
 
   constructor(private readonly options: { memo?: MemoVO; parentId?: MemoVO['parentId']; onDestroyed?: () => void }) {
     assert(options.memo || options.parentId, 'memo or parentId can not both be undefined');
@@ -36,10 +38,10 @@ export default class Editor {
     if (this.options.memo) {
       const payload = { body: this.body };
       await this.remote.memo.updateOne.mutate([this.options.memo.id, payload]);
-      eventBus.emit(EventNames.Updated, { id: this.options.memo.id, payload, trigger: this });
+      this.eventBus.emit(EventBus.eventNames.Updated, { id: this.options.memo.id, payload, trigger: this });
     } else {
       const newMemo = await this.remote.memo.create.mutate({ body: this.body, parentId: this.options.parentId });
-      eventBus.emit(EventNames.Created, newMemo);
+      this.eventBus.emit(EventBus.eventNames.Created, newMemo);
     }
 
     this.destroy();

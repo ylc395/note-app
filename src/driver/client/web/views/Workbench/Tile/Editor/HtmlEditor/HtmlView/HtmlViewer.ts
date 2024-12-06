@@ -2,11 +2,11 @@ import { when, computed, makeObservable, observable, action } from 'mobx';
 import DOMPurify from 'dompurify';
 import getCssSelector from 'css-selector-generator';
 
-import { token as uiToken } from '#domain/shared/infra/ui/common';
+import { token as uiToken } from '#domain/client/shared/infra/ui';
 import type HtmlEditor from '#domain/client/app/model/material/editor/HtmlEditor';
 
 import SelectionManager, { type SelectionEvent } from '../../common/SelectionManager';
-import { container } from 'tsyringe';
+import { container } from '#domain/shared/infra/singletons';
 
 interface Options {
   editor: HtmlEditor;
@@ -21,7 +21,7 @@ export default class HtmlViewer {
   private readonly ui = container.resolve(uiToken);
 
   @observable.ref
-  selection: SelectionEvent | null = null;
+  public accessor selection: SelectionEvent | null = null;
 
   get editor() {
     return this.options.editor;
@@ -65,7 +65,7 @@ export default class HtmlViewer {
 
   private readonly updateScrollState = action((e: Event) => {
     const { scrollTop } = e.target as HTMLElement;
-    this.editor.updateUIState({ scrollTop });
+    this.editor.uiState.update({ scrollTop });
   });
 
   private getUniqueSelector(el: HTMLElement) {
@@ -118,7 +118,7 @@ export default class HtmlViewer {
 
   private updateContent(html: HTMLHtmlElement) {
     this.shadowRoot.replaceChildren(html);
-    this.options.editorRootEl.scrollTop = this.editor.uiState?.scrollTop || 0;
+    this.options.editorRootEl.scrollTop = this.editor.uiState.value?.scrollTop || 0;
   }
 
   private static processStyles(root: HTMLHtmlElement) {

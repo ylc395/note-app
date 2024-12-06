@@ -2,13 +2,13 @@ import EventBus from '#domain/client/app/infra/EventBus';
 import type { UpdatedEvent as BaseUpdatedEvent } from '#domain/client/app/model/entity/events';
 import type { MemoPatchDTO, MemoVO } from '#domain/shared/model/memo';
 
-export enum EventNames {
+enum EventNames {
   Updated = 'updated',
   Created = 'created',
   Removed = 'removed',
 }
 
-export type UpdateEvent = BaseUpdatedEvent<MemoPatchDTO>;
+type UpdateEvent = BaseUpdatedEvent<MemoPatchDTO>;
 
 type Events = {
   [EventNames.Updated]: UpdateEvent;
@@ -16,4 +16,10 @@ type Events = {
   [EventNames.Removed]: MemoVO;
 };
 
-export const eventBus = new EventBus<Events>('domain:memo');
+export default class MemoEventBus extends EventBus<Events> {
+  constructor() {
+    super('domain:memo');
+  }
+
+  public static readonly eventNames = EventNames;
+}

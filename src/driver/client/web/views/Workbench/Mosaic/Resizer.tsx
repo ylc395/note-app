@@ -2,7 +2,7 @@ import { action } from 'mobx';
 import { useRef } from 'react';
 import { throttle, clamp, mapValues } from 'lodash-es';
 
-import { TileDirections, type TileParent } from '#domain/client/app/model/workbench';
+import { TileDirections, type TileParent } from '#domain/client/app/model/workbench/Workbench/tileTree';
 import BaseResizer from '#web/components/Resizable/Resizer';
 import { type BoundingBox, getAbsoluteSplitPercentage, getRelativeSplitPercentage } from './utils';
 

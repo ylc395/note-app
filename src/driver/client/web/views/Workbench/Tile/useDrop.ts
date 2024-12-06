@@ -1,12 +1,13 @@
 import { useMemoizedFn } from 'ahooks';
 import { useEffect, useState } from 'react';
-import { container } from 'tsyringe';
-import { isMatch } from 'lodash-es';
+import { container } from '#domain/shared/infra/singletons';
 
-import { type Tile, TileSplitDirections } from '#domain/client/app/model/workbench';
 import Editor from '#domain/client/app/model/abstract/Editor';
-import { Workbench } from '#domain/client/app/model/workbench';
-import TreeNode from '#domain/client/common/model/abstract/TreeNode';
+import Workbench from '#domain/client/app/model/workbench/Workbench';
+import TreeNode from '#domain/client/shared/model/abstract/TreeNode';
+import { TileSplitDirections } from '#domain/client/app/model/workbench/Workbench';
+import type Tile from '#domain/client/app/model/workbench/Tile';
+import type { EntityLocator } from '#domain/client/shared/model/entity';
 
 interface Position {
   top: string;
@@ -23,12 +24,12 @@ const directionMap = {
 };
 
 export default function useDrop(tile: Tile) {
-  const { moveEditor, openEntity } = container.resolve(Workbench);
+  const { moveEditor } = container.resolve(Workbench);
   const [dropArea, setDropArea] = useState<Position>();
   const [isOver, setIsOver] = useState(false);
   const [canDrop, setCanDrop] = useState(false);
 
-  const onDrop = useMemoizedFn((item: unknown) => {
+  const onDrop = useMemoizedFn((item: EntityLocator | Editor) => {
     if (!canDrop) {
       return;
     }
@@ -40,10 +41,6 @@ export default function useDrop(tile: Tile) {
 
     if (item instanceof Editor) {
       moveEditor(item, dest);
-    }
-
-    if (item instanceof TreeNode) {
-      openEntity(item.entityLocator, { dest, forceNewTab: true });
     }
   });
 
@@ -59,7 +56,7 @@ export default function useDrop(tile: Tile) {
       }
 
       const portion = 6;
-      let position: Position | undefined = { top: '0px', left: '0px', bottom: '0px', right: '0px' };
+      const position: Position | undefined = { top: '0px', left: '0px', bottom: '0px', right: '0px' };
       const isInLeftBoundary = cursor.x - dropRect.left < dropRect.width / portion;
       const isInRightBoundary = dropRect.right - cursor.x < dropRect.width / portion;
       const isInTopBoundary = cursor.y - dropRect.top < dropRect.height / portion;
@@ -73,8 +70,8 @@ export default function useDrop(tile: Tile) {
         position.bottom = `${dropRect.height / 2}px`;
       } else if (isInBottomBoundary && !isInLeftBoundary && !isInRightBoundary) {
         position.top = `${dropRect.height / 2}px`;
-      } else if (isMatch(item.entityLocator, tile.currentEditor?.entityLocator || {})) {
-        position = undefined;
+        // } else if (isMatch(item.entityLocator, tile.currentEditor?.entityLocator || {})) {
+        //   position = undefined;
       }
 
       setCanDrop(Boolean(position));

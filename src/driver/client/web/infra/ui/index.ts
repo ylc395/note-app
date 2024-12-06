@@ -1,11 +1,11 @@
-import type { UI } from '#domain/shared/infra/ui/common';
-import selectFiles from './selectFiles';
+import type { UI } from '#domain/client/shared/infra/ui';
+
+import selectFile from './selectFile';
 import toast from './toast';
 
 const ui: UI = {
-  getActionFromMenu: window.electronUI?.getActionFromMenu || (() => Promise.resolve(null)),
-  openNewWindow: window.electronUI?.openNewWindow || (window.open as (v: string) => void),
-  selectFiles,
+  openNewWindow: window.electronUI?.openNewWindow || window.open,
+  selectFile,
   toast,
 };
 

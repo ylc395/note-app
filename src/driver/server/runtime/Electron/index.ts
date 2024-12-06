@@ -11,8 +11,8 @@ import FileService from '#domain/server/service/FileService/index.js';
 import { PROTOCOL, parseAppUrl } from '#domain/shared/infra/markdown/url.js';
 import { container } from '#domain/shared/infra/singletons.js';
 
-import ElectronUI from './UI.js';
 import { routers } from '../../api/index.js';
+import ElectronUI from '../../../client/electron/UI.js';
 import DesktopRuntime from '../Desktop.js';
 
 const INDEX_URL = process.env.VITE_SERVER_ENTRY_URL!;
@@ -54,9 +54,9 @@ export default class ElectronRuntime extends DesktopRuntime {
         },
       },
     ]);
-    ipcMain.handle(ElectronUI.RPC_CHANNEL, this.handleUI);
 
     await electronApp.whenReady();
+    ipcMain.handle(ElectronUI.RPC_CHANNEL, this.handleUI);
     protocol.handle(PROTOCOL, this.protocolHandler); // 这个必须在 whenReady 后
 
     await Promise.all([this.installDevExtension(), this.ready()]);
@@ -75,12 +75,9 @@ export default class ElectronRuntime extends DesktopRuntime {
     return new Response(data);
   };
 
-  private readonly handleUI = (e: IpcMainInvokeEvent, payload: unknown) => {
-    this.ui.ipcEvent = e;
+  private readonly handleUI = async (e: IpcMainInvokeEvent, payload: unknown) => {
     const isValidFuncName = (str: string): str is keyof ElectronUI => str in this.ui;
-
-    assert(ElectronUI.isValidPayload(payload));
-    assert(isValidFuncName(payload.funcName));
+    assert(ElectronUI.isValidPayload(payload) && isValidFuncName(payload.funcName));
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (this.ui[payload.funcName] as any)(...payload.args);

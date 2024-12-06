@@ -2,12 +2,13 @@ import { flow } from 'lodash-es';
 import { action, observable } from 'mobx';
 import assert from 'assert';
 
+import { container } from '#domain/shared/infra/singletons';
 import type { EntityMaterialVO } from '#domain/shared/model/material';
 import type { AnnotationVO } from '#domain/shared/model/annotation';
 import { onlyWhen } from '#utils/function';
 
 import List from '../../../abstract/List';
-import { eventBus as annotationEventBus, EventNames as AnnotationEventNames } from '../../../annotation/eventBus';
+import DomainEventBus from '../../../annotation/EventBus';
 import Editor from '../../../annotation/Editor';
 
 export default class AnnotationList extends List<AnnotationVO> {
@@ -20,14 +21,16 @@ export default class AnnotationList extends List<AnnotationVO> {
     this.materialId = options.materialId;
     this.sort = options.sort;
     this.dispose = flow([
-      annotationEventBus.on(AnnotationEventNames.Removed, ({ id }) => this.removeById(id)),
-      annotationEventBus.on(AnnotationEventNames.Updated, ({ id }) => this.init(id)),
-      annotationEventBus.on(
-        AnnotationEventNames.Created,
+      this.domainEventBus.on(DomainEventBus.eventNames.Removed, ({ id }) => this.removeById(id)),
+      this.domainEventBus.on(DomainEventBus.eventNames.Updated, ({ id }) => this.init(id)),
+      this.domainEventBus.on(
+        DomainEventBus.eventNames.Created,
         onlyWhen(({ targetId }) => targetId === options.materialId, this.add.bind(this)),
       ),
     ]);
   }
+
+  private readonly domainEventBus = container.resolve(DomainEventBus);
 
   private readonly materialId: EntityMaterialVO['id'];
 

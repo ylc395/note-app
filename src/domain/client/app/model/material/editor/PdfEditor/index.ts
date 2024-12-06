@@ -61,7 +61,7 @@ export default class PdfEditor extends MaterialEditor {
   }
 
   @observable
-  public readonly panelsVisibility = {
+  public accessor panelsVisibility = {
     [Panels.Outline]: false,
     [Panels.AnnotationList]: true,
   };

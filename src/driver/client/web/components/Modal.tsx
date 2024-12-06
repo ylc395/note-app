@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useRef } from 'react';
+import { type ReactNode, useRef } from 'react';
 import { useClickAway, useKeyPress } from 'ahooks';
 import clsx from 'clsx';
 import { noop } from 'lodash-es';
@@ -6,7 +6,7 @@ import { createPortal } from 'react-dom';
 
 import { APP_NAME } from '#domain/shared/infra/constants';
 
-export interface Props {
+interface Props {
   children: ReactNode;
   title?: string;
   width?: number;
@@ -30,16 +30,10 @@ export default function Modal({
   canConfirm = true,
 }: Props) {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
+  const _onCancel = visible ? onCancel : noop;
 
-  useEffect(() => {
-    if (visible && dialogRef.current && !dialogRef.current.open) {
-      dialogRef.current.showModal();
-    }
-  }, [visible]);
-
-  onCancel = visible ? onCancel : noop;
-  useClickAway(onCancel, dialogRef);
-  useKeyPress('esc', onCancel);
+  useClickAway(_onCancel, dialogRef);
+  useKeyPress('esc', _onCancel);
 
   if (!visible) {
     return null;
@@ -47,11 +41,7 @@ export default function Modal({
 
   return createPortal(
     <div className={APP_NAME}>
-      <dialog
-        autoFocus
-        ref={dialogRef}
-        className="select-none overflow-visible rounded-lg border-0 backdrop:pointer-events-none"
-      >
+      <dialog autoFocus open className="select-none overflow-visible rounded-lg border-0 backdrop:pointer-events-none">
         {title && <h1 className="mt-0 text-lg">{title}</h1>}
         <div
           className={clsx('mb-4 overflow-auto', bodyClassName)}
@@ -67,12 +57,12 @@ export default function Modal({
           >
             确&ensp;认
           </button>
-          <button className="ml-2 h-8 w-16 cursor-pointer rounded border-0" onClick={onCancel}>
+          <button className="ml-2 h-8 w-16 cursor-pointer rounded border-0" onClick={_onCancel}>
             取&ensp;消
           </button>
         </div>
       </dialog>
     </div>,
     document.body,
-  ) as ReactNode;
+  );
 }

@@ -1,7 +1,7 @@
 import { Notyf } from 'notyf';
 import 'notyf/notyf.min.css';
 
-import type { ToastConfig } from '#domain/shared/infra/ui/common';
+import type { ToastConfig } from '#domain/client/shared/infra/ui';
 
 const notyf = new Notyf({
   ripple: false,

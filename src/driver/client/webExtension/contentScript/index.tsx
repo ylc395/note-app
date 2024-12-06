@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { container } from 'tsyringe';
+import { container } from '#domain/shared/infra/singletons';
 import { createRoot } from 'react-dom/client';
 import { wrap, expose } from 'comlink';
 import { chromeRuntimeMessageEndpoint } from 'comlink-adapters';

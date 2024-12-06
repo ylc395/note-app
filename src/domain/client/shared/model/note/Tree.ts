@@ -8,10 +8,12 @@ import { token as rpcToken } from '../../infra/rpc';
 export default class NoteTree extends Tree<NoteVO> {
   private readonly remote = container.resolve(rpcToken);
 
+  public readonly entityType = EntityTypes.Note;
+
   protected toEntityLocator(node: NoteVO) {
     return {
       entityId: node.id,
-      entityType: EntityTypes.Note,
+      entityType: this.entityType,
     };
   }
 

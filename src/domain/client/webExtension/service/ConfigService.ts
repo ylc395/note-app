@@ -1,6 +1,6 @@
 import browser from 'webextension-polyfill';
 import { observable, makeObservable, runInAction, action, computed } from 'mobx';
-import { singleton, container } from 'tsyringe';
+import { singleton, container } from '#domain/shared/infra/singletons';
 
 import { CONFIG_KEY, type Config } from '#domain/model/config';
 import { type EntityParentId, EntityTypes } from '#domain/model/entity';

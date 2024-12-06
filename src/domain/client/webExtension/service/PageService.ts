@@ -3,7 +3,7 @@ import Turndown from 'turndown';
 import type { Tabs } from 'webextension-polyfill';
 import { Readability } from '@mozilla/readability';
 import { action, makeObservable, observable, runInAction } from 'mobx';
-import { container, singleton } from 'tsyringe';
+import { container, singleton } from '#domain/shared/infra/singletons';
 import pageLifecycle from 'page-lifecycle';
 import { wrap } from 'comlink';
 import { chromeRuntimeMessageEndpoint } from 'comlink-adapters';

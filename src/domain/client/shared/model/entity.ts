@@ -8,6 +8,8 @@ export interface EntityLocator {
   mimeType?: string;
 }
 
+export const entityLocatorTypeId = Symbol();
+
 export interface HierarchyEntity {
   id: EntityId;
   parentId: EntityParentId;

@@ -1,17 +1,24 @@
 import { observable, action, computed } from 'mobx';
 
 import MaterialEditor from './MaterialEditor';
+import UIState from '../../abstract/UIState';
+import { number, object } from 'zod';
 
 export enum Panels {
   Outline,
   AnnotationList,
 }
 
-export default class HtmlEditor extends MaterialEditor {
-  @observable.ref public documentElement?: unknown;
+const uiStateSchema = object({
+  scrollTop: number().optional(),
+});
 
-  @observable
-  public panelsVisibility = {
+export default class HtmlEditor extends MaterialEditor {
+  public readonly uiState = new UIState(`editor-${this.entityLocator.entityId}`, uiStateSchema);
+
+  @observable.ref public accessor documentElement: unknown | undefined;
+
+  @observable public accessor panelsVisibility = {
     [Panels.Outline]: false,
     [Panels.AnnotationList]: true,
   };

@@ -1,6 +1,6 @@
 import { observable, runInAction, makeObservable, action } from 'mobx';
 import browser from 'webextension-polyfill';
-import { singleton } from 'tsyringe';
+import { singleton } from '#domain/shared/infra/singletons';
 import omit from 'lodash-es/omit';
 
 import type { Task } from '#domain/model/task';
