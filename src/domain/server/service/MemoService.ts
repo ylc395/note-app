@@ -26,7 +26,7 @@ export default class MemoService extends BaseService {
       id: EntityService.generateId(),
       updatedAt: now,
       createdAt: now,
-      index: latest?.index ?? 1,
+      orderIndex: latest?.orderIndex ?? 1,
       parentId: memo.parentId || null,
       isPinned: memo.isPinned || false,
       body: memo.body,

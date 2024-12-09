@@ -6,7 +6,7 @@ export interface Memo {
   parentId: EntityParentId;
   isPinned: boolean;
   body: string;
-  index: number;
+  orderIndex: number;
   updatedAt: number;
   createdAt: number;
 }
@@ -50,8 +50,8 @@ export type ClientMemoQuery = {
   order?: 'asc' | 'desc';
   parentId?: EntityParentId;
   isPinned?: boolean;
-  startIndex?: Memo['index'];
-  endIndex?: Memo['index'];
+  startIndex?: Memo['orderIndex'];
+  endIndex?: Memo['orderIndex'];
   startTime?: number;
   endTime?: number;
 };

@@ -62,7 +62,7 @@ export default class RevisionService extends BaseService {
       newRevisions.push({
         entityId: id,
         id: BaseService.generateId(),
-        time: entity.updatedAt,
+        createdAt: entity.updatedAt,
         titleDiff: titleUpdated ? structuredPatch('', '', oldText.title, entity.title) : null,
         bodyDiff: bodyUpdated ? structuredPatch('', '', oldText.body, body) : null,
         name: '',

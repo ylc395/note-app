@@ -11,7 +11,7 @@ export interface Row {
   appName: string;
   deviceName: string;
   name: string | null;
-  time: number;
+  createdAt: number;
   isAuto: 0 | 1;
 }
 

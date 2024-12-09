@@ -23,7 +23,7 @@ export default class SqliteRevisionRepository extends BaseRepository implements 
         `${this.tableName}.appName`,
         `${this.tableName}.deviceName`,
         `${this.tableName}.name`,
-        `${this.tableName}.time`,
+        `${this.tableName}.createdAt`,
         `${this.tableName}.isAuto`,
       ]);
 
@@ -83,7 +83,7 @@ export default class SqliteRevisionRepository extends BaseRepository implements 
       .where(({ eb, and }) =>
         and([
           eb(`${entityTableName}.updatedAt`, '<=', params.before),
-          eb(`${this.tableName}.time`, '>=', params.before),
+          eb(`${this.tableName}.createdAt`, '>=', params.before),
         ]),
       )
       .groupBy(`${entityTableName}.id`)

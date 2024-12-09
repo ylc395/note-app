@@ -11,7 +11,7 @@ export interface Revision {
   appName: string;
   deviceName: string;
   name: string | null;
-  time: number;
+  createdAt: number;
   isAuto: boolean;
 }
 

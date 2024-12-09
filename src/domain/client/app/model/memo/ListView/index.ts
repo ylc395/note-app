@@ -47,7 +47,7 @@ export default class ListView extends List<MemoVO> {
   @observable.shallow private accessor subListsMap: Record<MemoVO['id'], ListView> = {};
 
   protected readonly sort = (item1: MemoVO, item2: MemoVO) => {
-    return (item1.index - item2.index) * (this.uiState.value?.order === 'asc' ? 1 : -1);
+    return (item1.orderIndex - item2.orderIndex) * (this.uiState.value?.order === 'asc' ? 1 : -1);
   };
 
   @action.bound
@@ -99,7 +99,7 @@ export default class ListView extends List<MemoVO> {
       parentId: this.parent?.id || null,
       limit: ListView.LOAD_LIMIT,
       isPinned,
-      [key]: lastMemo?.index,
+      [key]: lastMemo?.orderIndex,
     });
 
     if (memos.length < ListView.LOAD_LIMIT && isPinned) {
@@ -108,7 +108,7 @@ export default class ListView extends List<MemoVO> {
         parentId: this.parent?.id || null,
         limit: ListView.LOAD_LIMIT - memos.length,
         isPinned: false,
-        [key]: lastMemo?.index,
+        [key]: lastMemo?.orderIndex,
       });
 
       memos = memos.concat(_memos);

@@ -15,7 +15,7 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
   }
 
   public async findLatest() {
-    const row = await this.db.selectFrom(this.tableName).selectAll().orderBy('index desc').limit(1).executeTakeFirst();
+    const row = await this.db.selectFrom(this.tableName).selectAll().orderBy('orderIndex').limit(1).executeTakeFirst();
 
     return row ? SqliteMemoRepository.rowToMemo(row) : null;
   }
@@ -87,15 +87,15 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
     }
 
     if (typeof q.startIndex === 'number') {
-      sql = sql.where('index', '>', q.startIndex);
+      sql = sql.where('orderIndex', '>', q.startIndex);
     }
 
     if (typeof q.endIndex === 'number') {
-      sql = sql.where('index', '<', q.endIndex);
+      sql = sql.where('orderIndex', '<', q.endIndex);
     }
 
     if (q.orderBy?.by === 'index') {
-      sql = sql.orderBy('index', q.orderBy.order);
+      sql = sql.orderBy('orderIndex', q.orderBy.order);
     }
 
     if (q.limit) {

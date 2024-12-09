@@ -26,4 +26,17 @@ export interface Schemas {
   [revision.tableName]: RevisionRow;
 }
 
-export const schemas = [note, recyclable, star, file, annotation, material, memo, topic, link, fileText, entity];
+export const schemas = [
+  note,
+  recyclable,
+  star,
+  file,
+  annotation,
+  material,
+  memo,
+  topic,
+  link,
+  fileText,
+  entity,
+  revision,
+];
