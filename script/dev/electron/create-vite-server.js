@@ -6,6 +6,8 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from 'tailwindcss';
 
 import { ENV } from './constants.js';
+import { APP_NAME, WEB_ROOT_ID } from '../../../src/domain/shared/infra/constants.js';
+
 const WEB_TSCONFIG = path.resolve('./tsconfig.web.json');
 
 export default async function createViteServer() {
@@ -23,10 +25,13 @@ export default async function createViteServer() {
       react(),
       checker({ typescript: { tsconfigPath: WEB_TSCONFIG } }),
       tsconfigPaths({ projects: [WEB_TSCONFIG] }),
+      // env(VITE_ENV, { defineOn: 'import.meta.env' }),
     ],
     define: {
+      'import.meta.env.VITE_APP_NAME': JSON.stringify(APP_NAME),
+      'import.meta.env.VITE_WEB_ROOT_ID': JSON.stringify(WEB_ROOT_ID),
+      'import.meta.env.VITE_WEB_ENV': JSON.stringify('electron'),
       'process.env.NODE_ENV': JSON.stringify(ENV),
-      __WEB_ENV__: JSON.stringify('electron'),
     },
   });
 

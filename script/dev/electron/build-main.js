@@ -2,7 +2,7 @@ import path from 'node:path';
 import fs from 'fs-extra';
 import download from 'download';
 import shell from 'shelljs';
-import { get, mapValues, first } from 'lodash-es';
+import { mapValues, first } from 'lodash-es';
 
 import { ENV, TSCONFIG } from './constants.js';
 
@@ -42,7 +42,7 @@ async function downloadSqliteTokenizer() {
 
 function createPackageJson() {
   const getImports = () => {
-    const paths = get(TSCONFIG, 'compilerOptions.paths');
+    const paths = TSCONFIG.compilerOptions.paths;
     return mapValues(paths, (targets) => first(targets).replace('./src', '.'));
   };
 
