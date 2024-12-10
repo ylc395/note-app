@@ -13,13 +13,17 @@ export default async function createViteServer() {
     configFile: false,
     clearScreen: false,
     root: path.resolve('./src/driver/client/web'),
-    esbuild: { target: 'es2023' },
+    esbuild: { target: 'es2023' }, // 用了 ES Decorator，编译到 ESNext 浏览器还不支持
     css: {
       postcss: {
         plugins: [tailwindcss({ config: path.resolve('./src/driver/client/web/tailwind.config.js') })],
       },
     },
-    plugins: [react(), checker({ typescript: { tsconfigPath: WEB_TSCONFIG } }), tsconfigPaths(WEB_TSCONFIG)],
+    plugins: [
+      react(),
+      checker({ typescript: { tsconfigPath: WEB_TSCONFIG } }),
+      tsconfigPaths({ projects: [WEB_TSCONFIG] }),
+    ],
     define: {
       'process.env.NODE_ENV': JSON.stringify(ENV),
       __WEB_ENV__: JSON.stringify('electron'),

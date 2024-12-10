@@ -4,7 +4,7 @@ import download from 'download';
 import shell from 'shelljs';
 import { get, mapValues, first } from 'lodash-es';
 
-import { OUTPUT, ENV, TSCONFIG } from './constants.js';
+import { ENV, TSCONFIG } from './constants.js';
 
 async function downloadSqliteTokenizer() {
   const localPath = path.resolve('dist/driver/server/sqlite/simple-tokenizer');
@@ -71,7 +71,7 @@ export default async function buildMain(viteUrl) {
   shell.env['DEV_CLEAN'] = process.argv.includes('--clean') ? '1' : '0';
   shell.env['NODE_ENV'] = ENV;
 
-  const BOOTSTRAP_COMMAND = `electron ${OUTPUT}/driver/server/runtime/Electron/bootstrap.js`;
+  const BOOTSTRAP_COMMAND = `electron ${TSCONFIG.compilerOptions.outDir}/driver/server/runtime/Electron/bootstrap.js`;
   const electronProcess = shell.exec(BOOTSTRAP_COMMAND, { async: true });
 
   return electronProcess;

@@ -1,4 +1,4 @@
-import { autorun, observable, runInAction } from 'mobx';
+import { observable, runInAction } from 'mobx';
 import dayjs from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
 
@@ -11,7 +11,6 @@ dayjs.extend(isBetween);
 
 export default class Calendar {
   constructor() {
-    autorun(this.load.bind(this));
     this.eventBus.on([EventBus.eventNames.Created, EventBus.eventNames.Removed], this.handleChanged.bind(this));
   }
 

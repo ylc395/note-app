@@ -1,7 +1,4 @@
-import path from 'node:path';
-import { get } from 'lodash-es';
-import fs from 'fs-extra';
+import { getTsconfig } from 'get-tsconfig';
 
-export const TSCONFIG = fs.readJSONSync(path.resolve('./tsconfig.json'));
-export const OUTPUT = get(TSCONFIG, 'compilerOptions.outDir');
+export const TSCONFIG = getTsconfig('./tsconfig.electron.json').config;
 export const ENV = 'development';

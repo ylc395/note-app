@@ -1,13 +1,12 @@
 {
   "compilerOptions": {
     "outDir": "./dist",
-    "target": "ES2023",
+    "target": "ES2023", // 用了 ES Decorator，如果编译到 ESNext，各个 runtime 还不支持
     "incremental": true,
     "types": [],
     "lib": ["ESNext"],
     "sourceMap": true,
     "importHelpers": true,
-    "allowJs": true,
     "esModuleInterop": true,
     "strict": true,
     "noUncheckedIndexedAccess": true,

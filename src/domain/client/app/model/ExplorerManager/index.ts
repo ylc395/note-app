@@ -6,7 +6,8 @@ import MaterialExplorer from '#domain/client/app/model/material/Explorer';
 import ListView from '#domain/client/app/model/memo/ListView';
 import { EntityTypes, type EntityLocator } from '#domain/client/shared/model/entity';
 import { container } from '#domain/shared/infra/singletons';
-import { create as createUIState, type ExplorerTypes } from './uiState';
+import { schema as uiStateSchema, type ExplorerTypes } from './uiState';
+import UIState from '../abstract/UIState';
 
 export type { ExplorerTypes } from './uiState';
 
@@ -15,7 +16,7 @@ export default class ExplorerManager {
     this.switchTo(this.uiState.value?.type || EntityTypes.Note);
   }
 
-  private readonly uiState = createUIState();
+  private readonly uiState = new UIState('explorer-manager', uiStateSchema);
 
   @observable private accessor currentExplorerType!: ExplorerTypes;
 

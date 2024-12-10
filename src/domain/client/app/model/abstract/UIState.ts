@@ -6,7 +6,7 @@ import { token as localStorageToken } from '#domain/client/app/infra/localStorag
 
 export default class UIState<S = unknown> {
   constructor(private readonly id: string, schema: ZodType<S>) {
-    const parsedResult = schema.safeParse(this.localStorage.get(id));
+    const parsedResult = schema.safeParse(this.localStorage.get(this.key));
 
     runInAction(() => {
       this.value = parsedResult.success ? parsedResult.data : null;
