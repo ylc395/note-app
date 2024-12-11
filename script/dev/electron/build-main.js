@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import download from 'download';
 import shell from 'shelljs';
 import { mapValues, first } from 'lodash-es';
+import { build } from 'esbuild';
 
 import { ENV, TSCONFIG } from './constants.js';
 
@@ -57,22 +58,30 @@ function createPackageJson() {
 }
 
 export default async function buildMain(viteUrl) {
-  const BUILD_COMMAND = `tsc --project ./tsconfig.electron.json`;
-  const compileResult = shell.exec(BUILD_COMMAND);
+  const TSCONFIG = './tsconfig.electron.json';
+  const typeCheckResult = shell.exec(`tsc --project ${TSCONFIG} --noEmit`);
 
-  if (compileResult.code > 0) {
-    throw new Error('compile electron error');
+  if (typeCheckResult.code > 0) {
+    return;
   }
+
+  await build({
+    tsconfig: TSCONFIG,
+    outdir: TSCONFIG.compilerOptions.outDir,
+    define: {
+      VITE_SERVER_ENTRY_URL: JSON.stringify(viteUrl),
+      DEV_CLEAN: JSON.stringify(process.argv.includes('--clean') ? '1' : '0'),
+      NODE_ENV: JSON.stringify(ENV),
+    },
+  });
 
   createPackageJson();
   await downloadSqliteTokenizer();
 
-  shell.env['VITE_SERVER_ENTRY_URL'] = viteUrl;
-  shell.env['DEV_CLEAN'] = process.argv.includes('--clean') ? '1' : '0';
-  shell.env['NODE_ENV'] = ENV;
-
-  const BOOTSTRAP_COMMAND = `electron ${TSCONFIG.compilerOptions.outDir}/driver/server/runtime/Electron/bootstrap.js`;
-  const electronProcess = shell.exec(BOOTSTRAP_COMMAND, { async: true });
+  const electronProcess = shell.exec(
+    `electron ${TSCONFIG.compilerOptions.outDir}/driver/server/runtime/Electron/bootstrap.js`,
+    { async: true },
+  );
 
   return electronProcess;
 }

@@ -25,13 +25,12 @@ export default async function createViteServer() {
       react(),
       checker({ typescript: { tsconfigPath: WEB_TSCONFIG } }),
       tsconfigPaths({ projects: [WEB_TSCONFIG] }),
-      // env(VITE_ENV, { defineOn: 'import.meta.env' }),
     ],
     define: {
       'import.meta.env.VITE_APP_NAME': JSON.stringify(APP_NAME),
       'import.meta.env.VITE_WEB_ROOT_ID': JSON.stringify(WEB_ROOT_ID),
       'import.meta.env.VITE_WEB_ENV': JSON.stringify('electron'),
-      'process.env.NODE_ENV': JSON.stringify(ENV),
+      'import.meta.env.NODE_ENV': JSON.stringify(ENV),
     },
   });
 
