@@ -8,12 +8,12 @@ import assert from 'node:assert';
 
 import { token as loggerToken } from '#domain/shared/infra/logger.js';
 import type { Database } from '#domain/server/infra/database.js';
-import { IS_TEST, IS_DEV } from '#domain/shared/infra/constants.js';
+import { IS_TEST, IS_DEV } from '#domain/shared/infra/env.js';
 import { container } from '#domain/shared/infra/singletons.js';
 
 import { type Schemas, schemas } from './schema/index.js';
 
-const CLEAN_DB = process.env.DEV_CLEAN === '1' && IS_DEV;
+const CLEAN_DB = import.meta.env.DEV_CLEAN === '1' && IS_DEV;
 
 export interface Db extends Schemas {
   sqlite_master: { name: string; type: string };

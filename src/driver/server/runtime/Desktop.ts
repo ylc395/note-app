@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { hostname } from 'node:os';
 
-import { APP_NAME, IS_DEV, IS_TEST } from '#domain/shared/infra/constants.js';
+import { APP_NAME, IS_DEV, IS_TEST } from '#domain/shared/infra/env.js';
 import { Runtime, token as runtimeToken } from '#domain/server/infra/runtime.js';
 import { token as databaseToken } from '#domain/server/infra/database.js';
 import { token as kvDatabaseToken } from '#domain/server/infra/kvDatabase.js';

@@ -1,5 +1,5 @@
 import type { EntityId } from '../../model/entity.js';
-import { APP_NAME } from '../constants.js';
+import { APP_NAME } from '../env.js';
 
 export const PROTOCOL = APP_NAME;
 

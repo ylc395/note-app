@@ -4,7 +4,7 @@ import clsx from 'clsx';
 import { noop } from 'lodash-es';
 import { createPortal } from 'react-dom';
 
-import { APP_NAME } from '#domain/shared/infra/constants';
+import { APP_NAME } from '#domain/shared/infra/env';
 
 interface Props {
   children: ReactNode;

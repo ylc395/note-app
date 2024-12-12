@@ -1,7 +1,7 @@
 import { flow } from 'lodash-es';
 import { computed, runInAction } from 'mobx';
 
-import { IS_DEV } from '#domain/shared/infra/constants';
+import { IS_DEV } from '#domain/shared/infra/env';
 import { onlyWhen } from '#utils/function';
 import Editor from '#domain/client/app/model/abstract/Editor';
 import type Tile from '#domain/client/app/model/workbench/Tile';

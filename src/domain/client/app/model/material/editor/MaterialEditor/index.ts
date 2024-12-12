@@ -1,7 +1,7 @@
 import { computed, observable, runInAction } from 'mobx';
 import { flow } from 'lodash-es';
 
-import { IS_DEV } from '#domain/shared/infra/constants';
+import { IS_DEV } from '#domain/shared/infra/env';
 import { normalizeTitle, type EntityMaterialVO, type MaterialPatchDTO } from '#domain/shared/model/material';
 import { AnnotationVO } from '#domain/shared/model/annotation';
 import { EntityTypes } from '#domain/shared/model/entity';

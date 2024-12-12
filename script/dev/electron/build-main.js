@@ -3,9 +3,8 @@ import fs from 'fs-extra';
 import download from 'download';
 import shell from 'shelljs';
 import { mapValues, first } from 'lodash-es';
-import { build } from 'esbuild';
 
-import { ENV, TSCONFIG } from './constants.js';
+import { RUNTIME_ENV, ELECTRON_TSCONFIG, ELECTRON_TSCONFIG_PATH } from './constants.js';
 
 async function downloadSqliteTokenizer() {
   const localPath = path.resolve('dist/driver/server/sqlite/simple-tokenizer');
@@ -43,7 +42,7 @@ async function downloadSqliteTokenizer() {
 
 function createPackageJson() {
   const getImports = () => {
-    const paths = TSCONFIG.compilerOptions.paths;
+    const paths = ELECTRON_TSCONFIG.compilerOptions.paths;
     return mapValues(paths, (targets) => first(targets).replace('./src', '.'));
   };
 
@@ -58,28 +57,26 @@ function createPackageJson() {
 }
 
 export default async function buildMain(viteUrl) {
-  const TSCONFIG = './tsconfig.electron.json';
-  const typeCheckResult = shell.exec(`tsc --project ${TSCONFIG} --noEmit`);
+  const compileResult = shell.exec(`tsc --project ${ELECTRON_TSCONFIG_PATH}`);
 
-  if (typeCheckResult.code > 0) {
-    return;
+  if (compileResult.code > 0) {
+    throw new Error('compile electron error');
   }
 
-  await build({
-    tsconfig: TSCONFIG,
-    outdir: TSCONFIG.compilerOptions.outDir,
-    define: {
-      VITE_SERVER_ENTRY_URL: JSON.stringify(viteUrl),
-      DEV_CLEAN: JSON.stringify(process.argv.includes('--clean') ? '1' : '0'),
-      NODE_ENV: JSON.stringify(ENV),
-    },
-  });
+  // 把 import.meta.env 批量换成 process.env
+  shell.exec(
+    `find ${ELECTRON_TSCONFIG.compilerOptions.outDir} -type f -name "*.js" -exec sed -i '' "s/import\\.meta\\.env/process.env/g" {} +`,
+  );
 
   createPackageJson();
   await downloadSqliteTokenizer();
 
+  shell.env['VITE_SERVER_ENTRY_URL'] = viteUrl;
+  shell.env['DEV_CLEAN'] = process.argv.includes('--clean') ? '1' : '0';
+  shell.env['RUNTIME_ENV'] = RUNTIME_ENV;
+
   const electronProcess = shell.exec(
-    `electron ${TSCONFIG.compilerOptions.outDir}/driver/server/runtime/Electron/bootstrap.js`,
+    `electron ${ELECTRON_TSCONFIG.compilerOptions.outDir}/driver/server/runtime/Electron/bootstrap.js --trace-warnings`,
     { async: true },
   );
 

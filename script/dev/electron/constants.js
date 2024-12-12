@@ -1,4 +1,5 @@
-import { getTsconfig } from 'get-tsconfig';
+import { parseTsconfig } from 'get-tsconfig';
 
-export const TSCONFIG = getTsconfig('./tsconfig.electron.json').config;
-export const ENV = 'development';
+export const ELECTRON_TSCONFIG_PATH = './tsconfig.electron.json';
+export const ELECTRON_TSCONFIG = parseTsconfig(ELECTRON_TSCONFIG_PATH);
+export const RUNTIME_ENV = 'development';

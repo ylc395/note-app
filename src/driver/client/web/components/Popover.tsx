@@ -12,7 +12,7 @@ import {
 import { type ReactNode, useRef, useState, forwardRef, useImperativeHandle, ReactElement } from 'react';
 import { createPortal } from 'react-dom';
 
-import { APP_NAME } from '#domain/shared/infra/constants';
+import { APP_NAME } from '#domain/shared/infra/env';
 
 export interface PopoverRef {
   dismiss: () => void;

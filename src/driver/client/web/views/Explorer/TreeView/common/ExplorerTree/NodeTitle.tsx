@@ -4,7 +4,7 @@ import { useState, type ReactNode, useEffect, useRef } from 'react';
 import { useKeyPress } from 'ahooks';
 import clsx from 'clsx';
 
-import { IS_DEV } from '#domain/shared/infra/constants';
+import { IS_DEV } from '#domain/shared/infra/env';
 import type TreeNode from '#domain/client/shared/model/abstract/TreeNode';
 import Icon from '#web/components/icon/Icon';
 import type { HierarchyEntity } from '#domain/client/shared/model/entity';

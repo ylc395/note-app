@@ -6,6 +6,8 @@ export abstract class Runtime {
   public abstract readonly appName: string;
   public abstract readonly appVersion: string;
   public abstract ready(): Promise<void>;
+
+  static {}
 }
 
 export const token = Type<Runtime>('runtime');

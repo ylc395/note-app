@@ -3,9 +3,10 @@ import path from 'node:path';
 import { checker } from 'vite-plugin-checker';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import react from '@vitejs/plugin-react';
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import tailwindcss from 'tailwindcss';
 
-import { ENV } from './constants.js';
+import { RUNTIME_ENV } from './constants.js';
 import { APP_NAME, WEB_ROOT_ID } from '../../../src/domain/shared/infra/constants.js';
 
 const WEB_TSCONFIG = path.resolve('./tsconfig.web.json');
@@ -25,12 +26,15 @@ export default async function createViteServer() {
       react(),
       checker({ typescript: { tsconfigPath: WEB_TSCONFIG } }),
       tsconfigPaths({ projects: [WEB_TSCONFIG] }),
+      nodePolyfills({
+        include: ['process'], // assert 库在依赖这个 polyfill
+      }),
     ],
     define: {
       'import.meta.env.VITE_APP_NAME': JSON.stringify(APP_NAME),
       'import.meta.env.VITE_WEB_ROOT_ID': JSON.stringify(WEB_ROOT_ID),
-      'import.meta.env.VITE_WEB_ENV': JSON.stringify('electron'),
-      'import.meta.env.NODE_ENV': JSON.stringify(ENV),
+      'import.meta.env.VITE_WEB_PLATFORM': JSON.stringify('electron'),
+      'import.meta.env.RUNTIME_ENV': JSON.stringify(RUNTIME_ENV),
     },
   });
 

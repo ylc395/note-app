@@ -3,7 +3,7 @@ import { container } from '#domain/shared/infra/singletons';
 import { createPortal } from 'react-dom';
 
 import Explorer from '#domain/client/app/model/abstract/Explorer';
-import { APP_NAME } from '#domain/shared/infra/constants';
+import { APP_NAME } from '#domain/shared/infra/env';
 import ExplorerManager from '#domain/client/app/model/ExplorerManager';
 
 import Tree from '#web/components/Tree';

@@ -1,6 +1,6 @@
 import Emitter, { type EventName } from 'emittery';
 
-import { IS_PRODUCTION } from '#domain/shared/infra/constants';
+import { IS_PRODUCTION } from '#domain/shared/infra/env';
 import { token } from '#domain/shared/infra/logger';
 import { container } from '#domain/shared/infra/singletons';
 

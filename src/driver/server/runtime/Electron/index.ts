@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import { createIPCHandler } from 'electron-trpc/main';
 
-import { IS_DEV } from '#domain/shared/infra/constants.js';
+import { IS_DEV } from '#domain/shared/infra/env.js';
 import { token as loggerToken } from '#domain/shared/infra/logger.js';
 import FileService from '#domain/server/service/FileService/index.js';
 import { PROTOCOL, parseAppUrl } from '#domain/shared/infra/markdown/url.js';
@@ -15,7 +15,7 @@ import { routers } from '../../api/index.js';
 import ElectronUI from '../../../client/electron/UI.js';
 import DesktopRuntime from '../Desktop.js';
 
-const INDEX_URL = process.env.VITE_SERVER_ENTRY_URL!;
+const INDEX_URL = import.meta.env.VITE_SERVER_ENTRY_URL!;
 const DIRNAME = path.dirname(fileURLToPath(import.meta.url));
 
 export default class ElectronRuntime extends DesktopRuntime {
