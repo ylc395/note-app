@@ -15,7 +15,8 @@ import RecyclableService from '#domain/server/service/RecyclableService.js';
 import RevisionService from '#domain/server/service/RevisionService.js';
 
 const t = initTRPC.context().create();
-const initServices = memoize(() => ({
+
+const createContext = memoize(() => ({
   fileService: container.resolve(FileService),
   entityService: container.resolve(EntityService),
   noteService: container.resolve(NoteService),
@@ -30,6 +31,12 @@ const initServices = memoize(() => ({
 }));
 
 export const router = t.router;
-export const publicProcedure = t.procedure.use(({ next }) => {
-  return next({ ctx: initServices() });
+
+export const publicProcedure = t.procedure.use(({ next, ctx }) => {
+  return next({
+    ctx: {
+      ...createContext(),
+      ...ctx,
+    },
+  });
 });
