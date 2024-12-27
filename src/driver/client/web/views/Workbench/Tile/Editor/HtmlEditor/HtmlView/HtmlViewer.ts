@@ -2,11 +2,10 @@ import { when, computed, makeObservable, observable, action } from 'mobx';
 import DOMPurify from 'dompurify';
 import getCssSelector from 'css-selector-generator';
 
-import { token as uiToken } from '#domain/client/shared/infra/ui';
+import shell from '#web/infra/shell';
 import type HtmlEditor from '#domain/client/app/model/material/editor/HtmlEditor';
 
 import SelectionManager, { type SelectionEvent } from '../../common/SelectionManager';
-import { container } from '#domain/shared/infra/singletons';
 
 interface Options {
   editor: HtmlEditor;
@@ -18,7 +17,6 @@ export default class HtmlViewer {
   readonly shadowRoot: ShadowRoot;
   private stopLoadingHtml?: ReturnType<typeof when>;
   private readonly rangeSelector: SelectionManager;
-  private readonly ui = container.resolve(uiToken);
 
   @observable.ref
   public accessor selection: SelectionEvent | null = null;
@@ -78,7 +76,7 @@ export default class HtmlViewer {
         const href = el.getAttribute('href');
 
         if (href && !href.startsWith('#')) {
-          this.ui.openNewWindow(href);
+          shell.openNewWindow(href);
         }
 
         e.preventDefault();

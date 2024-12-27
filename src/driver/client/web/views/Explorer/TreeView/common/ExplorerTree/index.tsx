@@ -10,7 +10,6 @@ import MoveBehavior from '#domain/client/app/model/entity/MoveBehavior';
 import NodeTitle, { type Props as NodeTitleProps } from './NodeTitle';
 import { container } from '#domain/shared/infra/singletons';
 import Explorer from '#domain/client/app/model/abstract/Explorer';
-import Dropdown from '#web/components/Dropdown';
 import DndTreeNode from './DndTreeNode';
 
 interface Props<T extends HierarchyEntity> {
@@ -61,7 +60,7 @@ export default function ExplorerTreeView<T extends HierarchyEntity>({
           iconClassName="ml-1 w-[10px] h-[10px] opacity-80"
           tree={tree}
           renderNode={(node, originalNodeView) => (
-            <Dropdown items={explorer.getActions} trigger="contextmenu">
+            <div>
               <DndTreeNode
                 node={node}
                 onDragStart={() => startMoving([node.entityLocator!])}
@@ -70,7 +69,7 @@ export default function ExplorerTreeView<T extends HierarchyEntity>({
               >
                 {originalNodeView}
               </DndTreeNode>
-            </Dropdown>
+            </div>
           )}
           renderTitle={(node) => (
             <NodeTitle

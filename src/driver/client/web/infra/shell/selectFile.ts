@@ -1,6 +1,4 @@
-import type { SelectFileConfig } from '#domain/client/shared/infra/ui';
-
-export default function selectFile(config?: SelectFileConfig) {
+export default function selectFile(config?: { multiple?: boolean; accept?: string }) {
   return new Promise<FileList | null>((resolve) => {
     const inputEl = document.createElement('input');
     inputEl.type = 'file';
