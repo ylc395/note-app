@@ -1,7 +1,8 @@
 import { createTRPCProxyClient, loggerLink } from '@trpc/client';
 import { ipcLink } from 'electron-trpc/renderer';
-import type { Routes } from '../../server/api/index.js';
 
-export default createTRPCProxyClient<Routes>({
+import type router from './router.js';
+
+export default createTRPCProxyClient<typeof router>({
   links: [loggerLink({ enabled: () => true }), ipcLink()],
 });

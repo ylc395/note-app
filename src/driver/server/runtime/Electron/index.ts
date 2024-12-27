@@ -1,6 +1,6 @@
-import { app as electronApp, ipcMain, BrowserWindow, type IpcMainInvokeEvent, protocol } from 'electron';
+import { app as electronApp, BrowserWindow, protocol } from 'electron';
+import { identity } from 'lodash-es';
 import path from 'node:path';
-import assert from 'node:assert';
 import { fileURLToPath } from 'node:url';
 import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import { createIPCHandler } from 'electron-trpc/main';
@@ -11,9 +11,8 @@ import FileService from '#domain/server/service/FileService/index.js';
 import { PROTOCOL, parseAppUrl } from '#domain/shared/infra/markdown/url.js';
 import { container } from '#domain/shared/infra/singletons.js';
 
-import { routers } from '../../api/index.js';
-import ElectronUI from '../../../client/electron/UI.js';
 import DesktopRuntime from '../Desktop.js';
+import router from '../../../client/electron/rpcClient/router.js';
 
 const INDEX_URL = import.meta.env.VITE_SERVER_ENTRY_URL!;
 const DIRNAME = path.dirname(fileURLToPath(import.meta.url));
@@ -22,7 +21,6 @@ export default class ElectronRuntime extends DesktopRuntime {
   public readonly appName = 'main-app';
   public readonly appVersion = '1.0.0'; // todo: 从某个构建变量里取
   private mainWindow?: BrowserWindow;
-  private readonly ui = new ElectronUI();
   protected readonly logger = container.resolve(loggerToken);
   private readonly fileService = container.resolve(FileService);
 
@@ -56,7 +54,6 @@ export default class ElectronRuntime extends DesktopRuntime {
     ]);
 
     await electronApp.whenReady();
-    ipcMain.handle(ElectronUI.RPC_CHANNEL, this.handleUI);
     protocol.handle(PROTOCOL, this.protocolHandler); // 这个必须在 whenReady 后
 
     await Promise.all([this.installDevExtension(), this.ready()]);
@@ -73,14 +70,6 @@ export default class ElectronRuntime extends DesktopRuntime {
     const data = await this.fileService.queryFileBlobById(parsed.id);
 
     return new Response(data);
-  };
-
-  private readonly handleUI = async (e: IpcMainInvokeEvent, payload: unknown) => {
-    const isValidFuncName = (str: string): str is keyof ElectronUI => str in this.ui;
-    assert(ElectronUI.isValidPayload(payload) && isValidFuncName(payload.funcName));
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (this.ui[payload.funcName] as any)(...payload.args);
   };
 
   private async installDevExtension() {
@@ -119,7 +108,11 @@ export default class ElectronRuntime extends DesktopRuntime {
       e.preventDefault();
     });
 
-    createIPCHandler({ windows: [this.mainWindow], router: routers });
+    createIPCHandler({
+      router,
+      windows: [this.mainWindow],
+      createContext: identity,
+    });
 
     if (IS_DEV) {
       await this.mainWindow.loadURL(INDEX_URL);

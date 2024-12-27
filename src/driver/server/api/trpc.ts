@@ -14,7 +14,7 @@ import SearchService from '#domain/server/service/SearchService.js';
 import RecyclableService from '#domain/server/service/RecyclableService.js';
 import RevisionService from '#domain/server/service/RevisionService.js';
 
-const t = initTRPC.context().create();
+export const t = initTRPC.create();
 
 const createContext = memoize(() => ({
   fileService: container.resolve(FileService),
