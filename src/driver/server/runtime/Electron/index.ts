@@ -2,7 +2,7 @@ import { app as electronApp, BrowserWindow, protocol } from 'electron';
 import { identity } from 'lodash-es';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
+import { installExtension, REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 import { createIPCHandler } from 'electron-trpc/main';
 
 import { IS_DEV } from '#domain/shared/infra/env.js';
@@ -14,7 +14,6 @@ import { container } from '#domain/shared/infra/singletons.js';
 import DesktopRuntime from '../Desktop.js';
 import router from '../../../client/electron/rpcClient/router.js';
 
-const INDEX_URL = import.meta.env.VITE_SERVER_ENTRY_URL!;
 const DIRNAME = path.dirname(fileURLToPath(import.meta.url));
 
 export default class ElectronRuntime extends DesktopRuntime {
@@ -78,8 +77,8 @@ export default class ElectronRuntime extends DesktopRuntime {
     }
 
     try {
-      const devToolName = await installExtension.default(REACT_DEVELOPER_TOOLS);
-      this.logger.debug(`${devToolName} installed`);
+      const devToolName = await installExtension(REACT_DEVELOPER_TOOLS);
+      this.logger.debug(`${devToolName.name} installed`);
     } catch (error) {
       this.logger.error(error);
     }
@@ -100,7 +99,7 @@ export default class ElectronRuntime extends DesktopRuntime {
 
     this.mainWindow.webContents.on('will-navigate', (e, url) => {
       // allow reload in dev env
-      if (IS_DEV && url === INDEX_URL) {
+      if (IS_DEV && url === import.meta.env.VITE_SERVER_ENTRY_URL) {
         return;
       }
 
@@ -115,7 +114,7 @@ export default class ElectronRuntime extends DesktopRuntime {
     });
 
     if (IS_DEV) {
-      await this.mainWindow.loadURL(INDEX_URL);
+      await this.mainWindow.loadURL(import.meta.env.VITE_SERVER_ENTRY_URL);
       this.mainWindow.webContents.openDevTools();
     }
   }

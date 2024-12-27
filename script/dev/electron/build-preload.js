@@ -3,8 +3,6 @@ import { build } from 'vite';
 import { checker } from 'vite-plugin-checker';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
-import { ELECTRON_TSCONFIG } from './constants.js';
-
 export default async function buildPreload() {
   const PRELOAD_TSCONFIG = path.resolve('./tsconfig.preload.json');
 
@@ -12,10 +10,11 @@ export default async function buildPreload() {
   // @see https://www.electronjs.org/docs/latest/tutorial/sandbox#preload-scripts
   await build({
     build: {
+      logLevel: 'warn',
       minify: false,
       sourcemap: true,
       emptyOutDir: false,
-      outDir: path.resolve(ELECTRON_TSCONFIG.compilerOptions.outDir, 'driver/client/electron'),
+      outDir: './dist/driver/client/electron',
       lib: {
         entry: path.resolve('./src/driver/client/electron/preload/index.ts'),
         fileName: () => 'preload.js',

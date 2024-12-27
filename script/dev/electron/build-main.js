@@ -1,10 +1,12 @@
 import path from 'node:path';
 import fs from 'fs-extra';
 import download from 'download';
-import shell from 'shelljs';
-import { mapValues, first } from 'lodash-es';
+import { build } from 'vite';
+import tsconfigPaths from 'vite-tsconfig-paths';
+import { checker } from 'vite-plugin-checker';
+import { externalizeDeps } from 'vite-plugin-externalize-deps';
 
-import { RUNTIME_ENV, ELECTRON_TSCONFIG, ELECTRON_TSCONFIG_PATH } from './constants.js';
+import { RUNTIME_ENV, ELECTRON_TSCONFIG_PATH } from './constants.js';
 
 async function downloadSqliteTokenizer() {
   const localPath = path.resolve('dist/driver/server/sqlite/simple-tokenizer');
@@ -40,45 +42,32 @@ async function downloadSqliteTokenizer() {
   console.log('[install] done');
 }
 
-function createPackageJson() {
-  const getImports = () => {
-    const paths = ELECTRON_TSCONFIG.compilerOptions.paths;
-    return mapValues(paths, (targets) => first(targets).replace('./src', '.'));
-  };
-
-  fs.outputJSONSync(
-    path.resolve('dist/package.json'),
-    {
-      type: 'module',
-      imports: getImports(),
-    },
-    { spaces: 2 },
-  );
-}
-
 export default async function buildMain(viteUrl) {
-  const compileResult = shell.exec(`tsc --project ${ELECTRON_TSCONFIG_PATH}`);
-
-  if (compileResult.code > 0) {
-    throw new Error('compile electron error');
-  }
-
-  // 把 import.meta.env 批量换成 process.env
-  shell.exec(
-    `find ${ELECTRON_TSCONFIG.compilerOptions.outDir} -type f -name "*.js" -exec sed -i '' "s/import\\.meta\\.env/process.env/g" {} +`,
-  );
-
-  createPackageJson();
   await downloadSqliteTokenizer();
-
-  shell.env['VITE_SERVER_ENTRY_URL'] = viteUrl;
-  shell.env['DEV_CLEAN'] = process.argv.includes('--clean') ? '1' : '0';
-  shell.env['RUNTIME_ENV'] = RUNTIME_ENV;
-
-  const electronProcess = shell.exec(
-    `electron ${ELECTRON_TSCONFIG.compilerOptions.outDir}/driver/server/runtime/Electron/bootstrap.js --trace-warnings`,
-    { async: true },
-  );
-
-  return electronProcess;
+  await build({
+    logLevel: 'warn',
+    build: {
+      emptyOutDir: false,
+      minify: false,
+      sourcemap: true,
+      outDir: './dist',
+      lib: {
+        fileName: (format, name) => `${name}.js`,
+        entry: path.resolve('./src/driver/server/runtime/Electron/bootstrap.ts'),
+        formats: ['es'],
+      },
+      rollupOptions: {
+        output: {
+          preserveModules: true,
+          preserveModulesRoot: 'src',
+        },
+      },
+    },
+    define: {
+      'import.meta.env.VITE_SERVER_ENTRY_URL': JSON.stringify(viteUrl),
+      'import.meta.env.DEV_CLEAN': JSON.stringify(process.argv.includes('--clean') ? '1' : '0'),
+      'import.meta.env.RUNTIME_ENV': JSON.stringify(RUNTIME_ENV),
+    },
+    plugins: [checker({ typescript: { tsconfigPath: ELECTRON_TSCONFIG_PATH } }), tsconfigPaths(), externalizeDeps()],
+  });
 }

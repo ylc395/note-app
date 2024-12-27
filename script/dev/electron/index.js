@@ -1,3 +1,4 @@
+import shell from 'shelljs';
 import createViteServer from './create-vite-server.js';
 import buildPreload from './build-preload.js';
 import buildMain from './build-main.js';
@@ -12,3 +13,5 @@ try {
   console.error(error);
   await viteServer.close();
 }
+
+shell.exec('electron ./dist/driver/server/runtime/Electron/bootstrap.js', { async: true });

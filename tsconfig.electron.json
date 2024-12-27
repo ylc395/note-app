@@ -11,9 +11,5 @@
     "./src/driver/server/runtime/Desktop.ts",
     "./src/vendors.d.ts"
   ],
-  "exclude": ["./src/driver/client/electron/preload/**/*"],
-  "compilerOptions": {
-    "moduleResolution": "NodeNext",
-    "module": "NodeNext"
-  }
+  "exclude": ["./src/driver/client/electron/preload/**/*"]
 }
