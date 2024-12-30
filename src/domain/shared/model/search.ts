@@ -1,7 +1,7 @@
 import type { TextLocation } from './file.js';
 import type { EntityTypes, EntityPath, Entity, EntityId } from './entity.js';
 
-export type SearchTypes = EntityTypes.Note | EntityTypes.Memo | EntityTypes.Material;
+export type SearchTypes = EntityTypes.Note | EntityTypes.Memo;
 
 export enum SearchFields {
   Title = 'title',

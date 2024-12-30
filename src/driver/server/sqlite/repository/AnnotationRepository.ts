@@ -1,14 +1,14 @@
 import type { Selectable } from 'kysely';
+import { keyBy } from 'lodash-es';
 
 import type { AnnotationRepository } from '#domain/server/repository/annotationRepository.js';
 import type { Annotation, AnnotationPatchDTO } from '#domain/shared/model/annotation.js';
 import type { EntityId } from '#domain/shared/model/entity.js';
-import { buildIndex } from '#utils/collection.js';
 
 import BaseRepository from './BaseRepository.js';
 import annotationSchema, { type Row } from '../schema/annotation.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
-import { tableName as materialTableName } from '../schema/material.js';
+import { tableName as noteTableName } from '../schema/note.js';
 import { tableName as fileTableName } from '../schema/file.js';
 
 export default class SqliteAnnotationRepository extends BaseRepository implements AnnotationRepository {
@@ -16,24 +16,24 @@ export default class SqliteAnnotationRepository extends BaseRepository implement
   public async findAllTargets(ids: Annotation['id'][]) {
     const rows = await this.db
       .selectFrom(this.tableName)
-      .innerJoin(materialTableName, `${materialTableName}.id`, `${this.tableName}.targetId`)
-      .innerJoin(fileTableName, `${fileTableName}.id`, `${materialTableName}.fileId`)
+      .innerJoin(noteTableName, `${noteTableName}.id`, `${this.tableName}.targetId`)
+      .innerJoin(fileTableName, `${fileTableName}.id`, `${noteTableName}.fileId`)
       .where(`${this.tableName}.targetId`, 'in', ids)
       .select([
         `${this.tableName}.id as annotationId`,
-        `${fileTableName}.mimeType`,
-        `${materialTableName}.id`,
-        `${materialTableName}.title`,
-        `${materialTableName}.icon`,
-        `${materialTableName}.parentId`,
-        `${materialTableName}.createdAt`,
-        `${materialTableName}.updatedAt`,
-        `${materialTableName}.body`,
-        `${materialTableName}.sourceUrl`,
+        `${fileTableName}.id as fileId`,
+        `${noteTableName}.id`,
+        `${noteTableName}.title`,
+        `${noteTableName}.icon`,
+        `${noteTableName}.parentId`,
+        `${noteTableName}.createdAt`,
+        `${noteTableName}.updatedAt`,
+        `${noteTableName}.body`,
+        `${noteTableName}.sourceUrl`,
       ])
       .execute();
 
-    return buildIndex(rows, 'annotationId');
+    return keyBy(rows, (row) => row.annotationId);
   }
 
   public async create(annotation: Annotation) {

@@ -4,7 +4,6 @@ import assert from 'assert';
 import { Entity, type EntityId, EntityTypes } from '#domain/shared/model/entity.js';
 import BaseService from './BaseService.js';
 import { normalizeTitle as normalizeNoteTitle } from '#domain/shared/model/note.js';
-import { normalizeTitle as normalizeMaterialTitle } from '#domain/shared/model/material.js';
 import { normalizeTitle as normalizeMemoTitle } from '#domain/server/model/memo.js';
 import { buildIndex } from '#utils/collection.js';
 
@@ -12,7 +11,6 @@ export default class EntityService extends BaseService {
   public static getReadableTitle(entity: Entity) {
     const mappers = {
       [EntityTypes.Note]: normalizeNoteTitle,
-      [EntityTypes.Material]: normalizeMaterialTitle,
       [EntityTypes.Memo]: normalizeMemoTitle,
       [EntityTypes.Annotation]: constant(''),
     };
@@ -32,24 +30,24 @@ export default class EntityService extends BaseService {
     const entitiesGroup = Object.groupBy(entities, ({ type }) => type);
     const annotationIds = entitiesGroup[EntityTypes.Annotation]?.map(({ id }) => id);
 
-    const materialsOfAnnotations = annotationIds ? await this.repo.annotations.findAllTargets(annotationIds) : {};
+    const notesOfAnnotations = annotationIds ? await this.repo.annotations.findAllTargets(annotationIds) : {};
 
-    const materialIds = [
-      ...(entitiesGroup[EntityTypes.Material]?.map(({ id }) => id) || []),
-      ...Object.values(materialsOfAnnotations).map(({ id }) => id),
+    const noteIds = [
+      ...(entitiesGroup[EntityTypes.Note]?.map(({ id }) => id) || []),
+      ...Object.values(notesOfAnnotations).map(({ id }) => id),
     ];
 
-    const files = materialIds ? await this.repo.materials.findFiles(materialIds) : {};
+    const files = noteIds ? await this.repo.notes.findFiles(noteIds) : {};
 
     const normalizedEntities: Entity[] = entities.map((entity) => {
-      const main = materialsOfAnnotations[entity.id];
+      const main = notesOfAnnotations[entity.id];
 
       return {
         ...entity,
         file: files[entity.id],
         main: main && {
           ...pick(main, ['id', 'icon', 'createdAt', 'updatedAt', 'title']),
-          type: EntityTypes.Material,
+          type: EntityTypes.Note,
           body: main.body,
           file: files[main.id],
         },

@@ -1,6 +1,6 @@
 import type { EntityId } from './entity.js';
 import type { CommonFragment, TextQuoteFragment } from './fragment.js';
-import type { EntityMaterial } from './material.js';
+import type { Note } from './note.js';
 
 interface HtmlSelector {
   selector: string; // CSS selector
@@ -11,7 +11,7 @@ export type Selector = HtmlSelector | TextQuoteFragment | CommonFragment;
 // This concept is inspired by https://www.w3.org/TR/annotation-model/
 export interface Annotation {
   id: EntityId;
-  targetId: EntityMaterial['id'];
+  targetId: Note['id'];
   selectors: Selector[];
   body: string;
   color: string;

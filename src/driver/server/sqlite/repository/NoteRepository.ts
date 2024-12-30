@@ -1,17 +1,20 @@
 import type { NoteRepository, NotePatch, NoteQuery } from '#domain/server/repository/noteRepository.js';
 import type { Note, NoteVO } from '#domain/shared/model/note.js';
+import { keyBy } from 'lodash-es';
 
 import schema from '../schema/note.js';
+import { tableName as fileTableName } from '../schema/file.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
 import BaseRepository from './BaseRepository.js';
+import FileRepository from './FileRepository.js';
 
 export default class SqliteNoteRepository extends BaseRepository implements NoteRepository {
   public readonly tableName = schema.tableName;
-  public async create(note: Note) {
+  public async create(note: Required<Note>) {
     const row = await this.db
       .insertInto(this.tableName)
       .values(note)
-      .returning(['id', 'icon', 'title', 'createdAt', 'updatedAt', 'parentId', 'body'])
+      .returning(['id', 'icon', 'title', 'createdAt', 'updatedAt', 'parentId', 'body', 'fileId', 'sourceUrl'])
       .executeTakeFirstOrThrow();
 
     return row;
@@ -30,7 +33,16 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
   public async findAll(q: NoteQuery) {
     let sql = this.db
       .selectFrom(this.tableName)
-      .select(['notes.id', 'notes.icon', 'notes.parentId', 'notes.title', 'notes.updatedAt', 'notes.createdAt']);
+      .select([
+        'notes.id',
+        'notes.icon',
+        'notes.parentId',
+        'notes.title',
+        'notes.updatedAt',
+        'notes.createdAt',
+        'notes.fileId',
+        'notes.sourceUrl',
+      ]);
 
     if (q.isAvailableOnly) {
       sql = sql
@@ -63,5 +75,39 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
 
     const row = await sql.selectAll().executeTakeFirst();
     return row || null;
+  }
+
+  public async findBlobById(id: Note['id'], config?: { isAvailableOnly?: boolean }) {
+    let sql = this.db
+      .selectFrom(this.tableName)
+      .innerJoin(fileTableName, `${this.tableName}.fileId`, `${fileTableName}.id`)
+      .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.id`)
+      .select([`${fileTableName}.data`])
+      .where(`${this.tableName}.id`, '=', id);
+
+    if (config?.isAvailableOnly) {
+      sql = sql.where(`${recyclableTableName}.entityId`, 'is', null);
+    }
+
+    const row = await sql.executeTakeFirst();
+
+    if (row) {
+      return FileRepository.getBlob(row);
+    }
+
+    return null;
+  }
+
+  public async findFiles(ids: Note['id'][]) {
+    const rows = await this.db
+      .selectFrom(fileTableName)
+      .innerJoin(this.tableName, `${fileTableName}.id`, `${this.tableName}.fileId`)
+      .where(`${fileTableName}.id`, 'in', ids)
+      .select([`${fileTableName}.id`, 'mimeType', 'lang', 'size', `${this.tableName}.id as materialId`])
+      .execute();
+
+    const fileVOs = rows.map(FileRepository.rowToFileVO);
+
+    return keyBy(fileVOs, (file) => file.materialId);
   }
 }

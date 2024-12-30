@@ -4,7 +4,6 @@ import notes from './NoteRepository.js';
 import stars from './StarRepository.js';
 import files from './FileRepository.js';
 import memos from './MemoRepository.js';
-import materials from './MaterialRepository.js';
 import annotations from './AnnotationRepository.js';
 import contents from './ContentRepository.js';
 import entities from './EntityRepository.js';
@@ -20,7 +19,6 @@ const repositories: {
   stars,
   files,
   memos,
-  materials,
   annotations,
   contents,
   entities,

@@ -5,14 +5,14 @@
 import { z } from "zod";
 import { textQuoteFragmentSchema, commonFragmentSchema } from "./fragment.js";
 import { entityIdSchema } from "./entity.js";
-import { entityMaterialSchema } from "./material.js";
+import { noteSchema } from "./note.js";
 const htmlSelectorSchema = z.object({
   selector: z.string()
 });
 export const selectorSchema = z.union([htmlSelectorSchema, textQuoteFragmentSchema, commonFragmentSchema]);
 export const annotationSchema = z.object({
   id: entityIdSchema,
-  targetId: entityMaterialSchema.shape["id"],
+  targetId: noteSchema.shape["id"],
   selectors: z.array(selectorSchema),
   body: z.string(),
   color: z.string(),

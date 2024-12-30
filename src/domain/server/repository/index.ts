@@ -3,7 +3,6 @@ import type { NoteRepository } from './noteRepository.js';
 import type { StarRepository } from './starRepository.js';
 import type { FileRepository } from './fileRepository.js';
 import type { MemoRepository } from './memoRepository.js';
-import type { MaterialRepository } from './materialRepository.js';
 import type { ContentRepository } from './contentRepository.js';
 import type { EntityRepository } from './entityRepository.js';
 import type { AnnotationRepository } from './annotationRepository.js';
@@ -15,7 +14,6 @@ export interface Repositories {
   stars: StarRepository;
   files: FileRepository;
   memos: MemoRepository;
-  materials: MaterialRepository;
   annotations: AnnotationRepository;
   entities: EntityRepository;
   contents: ContentRepository;

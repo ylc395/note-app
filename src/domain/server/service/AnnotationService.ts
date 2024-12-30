@@ -5,20 +5,20 @@ import type { EntityId } from '#domain/shared/model/entity.js';
 import { container } from '#domain/shared/infra/singletons.js';
 
 import BaseService from './BaseService.js';
-import MaterialService from './MaterialService.js';
+import NoteService from './NoteService.js';
 import EntityService from './EntityService.js';
 import ContentService from './ContentService/index.js';
 
 export default class AnnotationService extends BaseService {
-  private readonly materialService = container.resolve(MaterialService);
+  private readonly noteService = container.resolve(NoteService);
   private readonly content = container.resolve(ContentService);
 
   @BaseService.transaction
   public async create(annotation: AnnotationDTO) {
     assert(annotation.selectors.length > 0, 'empty selectors of annotation');
 
-    // only materials have annotations
-    await this.materialService.assertAvailableIds([annotation.targetId], { type: 'entity' });
+    // only notes have annotations
+    await this.noteService.assertAvailableIds([annotation.targetId], { withFile: true });
 
     const now = Date.now();
     const created = await this.repo.annotations.create({
@@ -40,7 +40,7 @@ export default class AnnotationService extends BaseService {
 
   @BaseService.transaction
   public async queryByEntityId(entityId: EntityId) {
-    await this.materialService.assertAvailableIds([entityId]);
+    await this.noteService.assertAvailableIds([entityId]);
     return this.repo.annotations.findAllByEntityId(entityId, { isAvailableOnly: true });
   }
 

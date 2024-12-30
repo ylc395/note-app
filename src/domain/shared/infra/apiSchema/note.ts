@@ -5,11 +5,13 @@
 import { z } from "zod";
 import { entityIdSchema, entityParentIdSchema } from "./entity.js";
 export const noteSchema = z.object({
-  title: z.string(),
   id: entityIdSchema,
+  title: z.string(),
   parentId: entityParentIdSchema,
   body: z.string().optional(),
   icon: z.union([z.string(), z.null()]),
+  fileId: z.union([z.string(), z.null()]),
+  sourceUrl: z.union([z.string(), z.null()]),
   updatedAt: z.number(),
   createdAt: z.number()
 });
@@ -23,10 +25,17 @@ export const duplicatedNoteDTOSchema = z.object({
   from: noteSchema.shape["id"]
 });
 export const noteBatchPatchDTOSchema = notePatchDTOSchema.pick({
-  "icon": true,
   "parentId": true
 });
-export const noteDTOSchema = z.union([notePatchDTOSchema, duplicatedNoteDTOSchema]);
+export const noteDTOSchema = z.union([noteSchema.pick({
+  "body": true,
+  "fileId": true,
+  "icon": true,
+  "parentId": true,
+  "sourceUrl": true,
+  "title": true
+}).partial(), duplicatedNoteDTOSchema]);
 export const clientNoteQuerySchema = z.object({
-  parentId: z.union([entityParentIdSchema, z.array(z.string())]).optional()
+  parentId: z.union([entityParentIdSchema, z.array(z.string())]).optional(),
+  fileHash: z.string().optional()
 });

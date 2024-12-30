@@ -3,7 +3,6 @@ import type { FileVO } from './file.js';
 export enum EntityTypes {
   Note = 1,
   Memo,
-  Material,
   Annotation,
 }
 

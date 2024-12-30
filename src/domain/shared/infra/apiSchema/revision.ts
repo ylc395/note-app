@@ -13,7 +13,7 @@ export const revisionSchema = z.object({
   appName: z.string(),
   deviceName: z.string(),
   name: z.union([z.string(), z.null()]),
-  time: z.number(),
+  createdAt: z.number(),
   isAuto: z.boolean()
 });
 export const revisionPatchDTOSchema = revisionSchema.pick({

@@ -3,7 +3,6 @@ import { EntityTypes } from '#domain/shared/model/entity.js';
 
 import type { Schemas } from './index.js';
 import { tableName as noteTableName } from './note.js';
-import { tableName as materialTableName } from './material.js';
 import { tableName as annotationTableName } from './annotation.js';
 import { tableName as memoTableName } from './memo.js';
 
@@ -36,20 +35,6 @@ export default {
           'createdAt',
           'updatedAt',
         ])
-        .union(
-          db
-            .selectFrom(materialTableName)
-            .select([
-              'id',
-              'icon',
-              'title',
-              'parentId',
-              'body',
-              sql.val(EntityTypes.Material).as('type'),
-              'createdAt',
-              'updatedAt',
-            ]),
-        )
         .union(
           db
             .selectFrom(memoTableName)

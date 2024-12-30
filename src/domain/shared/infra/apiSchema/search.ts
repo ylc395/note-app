@@ -6,7 +6,7 @@ import { z } from "zod";
 import { SearchFields } from "../../model/search.js";
 import { entityTypesSchema, entityIdSchema } from "./entity.js";
 export const searchFieldsSchema = z.nativeEnum(SearchFields);
-export const searchTypesSchema = z.union([z.literal(entityTypesSchema.enum.Note), z.literal(entityTypesSchema.enum.Memo), z.literal(entityTypesSchema.enum.Material)]);
+export const searchTypesSchema = z.union([z.literal(entityTypesSchema.enum.Note), z.literal(entityTypesSchema.enum.Memo)]);
 export const searchRequestSchema = z.object({
   keyword: z.string(),
   entityTypes: z.array(searchTypesSchema).optional(),

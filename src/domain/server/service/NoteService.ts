@@ -6,7 +6,6 @@ import {
   type NotePatchDTO,
   type Note,
   type ClientNoteQuery,
-  type DuplicatedNoteDTO,
   type NoteBatchPatchDTO,
   normalizeTitle,
 } from '#domain/shared/model/note.js';
@@ -21,7 +20,7 @@ export default class NoteService extends BaseService {
   private readonly content = container.resolve(ContentService);
 
   @BaseService.transaction
-  public async create(note: NoteDTO | DuplicatedNoteDTO) {
+  public async create(note: NoteDTO) {
     let newNote: Required<Note>;
 
     if ('from' in note) {
@@ -34,11 +33,13 @@ export default class NoteService extends BaseService {
       const now = Date.now();
 
       newNote = await this.repo.notes.create({
+        id: EntityService.generateId(),
         title: note.title || '',
         parentId: note.parentId || null,
         body: note.body || '',
         icon: note.icon || null,
-        id: EntityService.generateId(),
+        fileId: note.fileId || null,
+        sourceUrl: note.sourceUrl || null,
         updatedAt: now,
         createdAt: now,
       });
@@ -58,7 +59,7 @@ export default class NoteService extends BaseService {
     const now = Date.now();
 
     return await this.repo.notes.create({
-      ...pick(targetNote, ['body', 'icon', 'parentId']),
+      ...pick(targetNote, ['body', 'icon', 'parentId', 'sourceUrl', 'fileId']),
       title: `${normalizeTitle(targetNote)}-副本`,
       id: EntityService.generateId(),
       updatedAt: now,
@@ -115,11 +116,18 @@ export default class NoteService extends BaseService {
     assert(result);
   }
 
-  private async assertAvailableIds(ids: Note['id'][]) {
+  public async assertAvailableIds(ids: Note['id'][], params?: { withFile: boolean }) {
     ids = uniq(ids);
     const notes = await this.repo.notes.findAll({ id: ids, isAvailableOnly: true });
 
     assert(notes.length === ids.length, 'invalid note ids');
+
+    if (params) {
+      assert(
+        notes.every(({ fileId }) => Boolean(fileId) === params.withFile),
+        'invalid note file type',
+      );
+    }
   }
 
   private async assertValidParent(parentId: Note['id'], childrenIds: Note['id'][]) {
@@ -148,5 +156,13 @@ export default class NoteService extends BaseService {
 
     assert(note);
     return await this.toVO(note);
+  }
+
+  @BaseService.transaction
+  public async queryBlob(noteId: Note['id']) {
+    const blob = await this.repo.notes.findBlobById(noteId, { isAvailableOnly: true });
+    assert(blob);
+
+    return blob;
   }
 }

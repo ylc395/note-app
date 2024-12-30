@@ -2,7 +2,6 @@ import { sql } from 'kysely';
 
 import { type Row as FileTextRow, tableName as fileTextTableName } from '../schema/fileText.js';
 import { tableName as noteTableName, type Row as NoteRow } from '../schema/note.js';
-import { tableName as materialTableName, type Row as MaterialRow } from '../schema/material.js';
 import { tableName as memoTableName, type Row as MemoRow } from '../schema/memo.js';
 import { tableName as annotationTableName, type Row as AnnotationRow } from '../schema/annotation.js';
 import type { Db } from '../Database.js';
@@ -23,8 +22,7 @@ interface FtsRow {
 // prettier-ignore
 export interface SearchEngineDb extends Db {
   [fileTextsFTSTableName]: FtsRow & FileTextRow & { [fileTextsFTSTableName]: string };
-  [notesFTSTableName]: FtsRow & Pick<NoteRow, 'id' | 'title' | 'body'> & { [notesFTSTableName]: string };
-  [materialsFTSTableName]: FtsRow & Pick<MaterialRow, 'id' | 'title' | 'body' | 'fileId'> & { [materialsFTSTableName]: string };
+  [notesFTSTableName]: FtsRow & Pick<NoteRow, 'id' | 'title' | 'body' | 'fileId'> & { [notesFTSTableName]: string };
   [memosFTSTableName]: FtsRow & Pick<MemoRow, 'id' | 'body'> & { [memosFTSTableName]: string };
   [annotationsFTSTableName]: FtsRow & Pick<AnnotationRow, 'id' | 'targetId' | 'body'> & { [annotationsFTSTableName]: string };
 }
@@ -43,18 +41,6 @@ export const initialSqls =  [
         content=${sql.table(noteTableName)}
       )`,
 
-  sql`
-      CREATE VIRTUAL TABLE ${sql.table(materialsFTSTableName)} 
-      USING fts5(
-        id UNINDEXED, 
-        title, 
-        body, 
-        file_id UNINDEXED,
-        created_at UNINDEXED,
-        updated_at UNINDEXED,
-        tokenize="simple",
-        content=${sql.table(materialTableName)}
-      )`,
 
   sql`
       CREATE VIRTUAL TABLE ${sql.table(memosFTSTableName)} 
@@ -103,21 +89,6 @@ export const initialSqls =  [
         INSERT INTO ${sql.table(notesFTSTableName)}(rowid, title, body) VALUES (new.rowid, new.title, new.body);
       END`,
 
-  sql`CREATE TRIGGER materials_ai AFTER INSERT ON ${sql.table(materialTableName)}
-      BEGIN 
-        INSERT INTO ${sql.table(materialsFTSTableName)}(rowid, title, body) VALUES (new.rowid, new.title, new.body);
-      END`,
-
-  sql`CREATE TRIGGER materials_ad AFTER DELETE on ${sql.table(materialTableName)}
-      BEGIN
-        INSERT INTO ${sql.table(materialsFTSTableName)}(${sql.raw(materialsFTSTableName)}, rowid, title, body) VALUES ('delete', old.rowid, old.title, old.body);
-      END`,
-
-  sql`CREATE TRIGGER materials_au AFTER UPDATE on ${sql.table(materialTableName)}
-      BEGIN
-        INSERT INTO ${sql.table(materialsFTSTableName)}(${sql.raw(materialsFTSTableName)}, rowid, title, body) VALUES ('delete', old.rowid, old.title, old.body);
-        INSERT INTO ${sql.table(materialsFTSTableName)}(rowid, title, body) VALUES (new.rowid, new.title, new.body);
-      END`,
 
   sql`CREATE TRIGGER memos_ai AFTER INSERT ON ${sql.table(memoTableName)}
       BEGIN 

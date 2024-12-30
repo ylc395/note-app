@@ -10,7 +10,7 @@ export const memoSchema = z.object({
   parentId: entityParentIdSchema,
   isPinned: z.boolean(),
   body: z.string(),
-  index: z.number(),
+  orderIndex: z.number(),
   updatedAt: z.number(),
   createdAt: z.number()
 });
@@ -37,8 +37,8 @@ export const clientMemoQuerySchema = z.object({
   order: z.union([z.literal("asc"), z.literal("desc")]).optional(),
   parentId: entityParentIdSchema.optional(),
   isPinned: z.boolean().optional(),
-  startIndex: memoSchema.shape["index"].optional(),
-  endIndex: memoSchema.shape["index"].optional(),
+  startIndex: memoSchema.shape["orderIndex"].optional(),
+  endIndex: memoSchema.shape["orderIndex"].optional(),
   startTime: z.number().optional(),
   endTime: z.number().optional()
 });

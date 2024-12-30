@@ -28,6 +28,10 @@ export default router({
 
   create: publicProcedure.input(noteDTOSchema).mutation(({ input, ctx: { noteService } }) => noteService.create(input)),
 
+  getBlob: publicProcedure
+    .input(noteSchema.shape.id)
+    .query(({ input: id, ctx: { noteService } }) => noteService.queryBlob(id)),
+
   queryPath: publicProcedure
     .input(noteSchema.shape.id)
     .query(({ input: noteId, ctx: { entityService } }) => entityService.getPath(noteId)),

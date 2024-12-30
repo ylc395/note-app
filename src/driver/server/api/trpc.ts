@@ -3,7 +3,6 @@ import { container } from '#domain/shared/infra/singletons.js';
 import { memoize } from 'lodash-es';
 
 import NoteService from '#domain/server/service/NoteService.js';
-import MaterialService from '#domain/server/service/MaterialService.js';
 import StarService from '#domain/server/service/StarService.js';
 import FileService from '#domain/server/service/FileService/index.js';
 import MemoService from '#domain/server/service/MemoService.js';
@@ -22,7 +21,6 @@ const createContext = memoize(() => ({
   noteService: container.resolve(NoteService),
   memoService: container.resolve(MemoService),
   annotationService: container.resolve(AnnotationService),
-  materialService: container.resolve(MaterialService),
   starService: container.resolve(StarService),
   contentService: container.resolve(ContentService),
   searchService: container.resolve(SearchService),

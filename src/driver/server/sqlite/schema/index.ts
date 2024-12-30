@@ -3,7 +3,6 @@ import { default as recyclable, type Row as RecyclableRow } from './recyclable.j
 import { default as star, type Row as StarRow } from './star.js';
 import { default as file, type Row as FileRow } from './file.js';
 import { default as memo, type Row as MemoRow } from './memo.js';
-import { default as material, type Row as MaterialRow } from './material.js';
 import { default as annotation, type Row as AnnotationRow } from './annotation.js';
 import { default as topic, type Row as TopicRow } from './topic.js';
 import { default as link, type Row as LinkRow } from './link.js';
@@ -17,7 +16,6 @@ export interface Schemas {
   [star.tableName]: StarRow;
   [file.tableName]: FileRow;
   [annotation.tableName]: AnnotationRow;
-  [material.tableName]: MaterialRow;
   [memo.tableName]: MemoRow;
   [topic.tableName]: TopicRow;
   [link.tableName]: LinkRow;
@@ -26,17 +24,4 @@ export interface Schemas {
   [revision.tableName]: RevisionRow;
 }
 
-export const schemas = [
-  note,
-  recyclable,
-  star,
-  file,
-  annotation,
-  material,
-  memo,
-  topic,
-  link,
-  fileText,
-  entity,
-  revision,
-];
+export const schemas = [note, recyclable, star, file, annotation, memo, topic, link, fileText, entity, revision];

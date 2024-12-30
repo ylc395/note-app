@@ -2,11 +2,13 @@ import dayjs from 'dayjs';
 import type { Entity, EntityId, EntityParentId } from './entity.js';
 
 export interface Note {
-  title: string;
   id: EntityId;
+  title: string;
   parentId: EntityParentId;
   body?: string;
   icon: string | null;
+  fileId: string | null;
+  sourceUrl: string | null;
   updatedAt: number;
   createdAt: number;
 }
@@ -26,18 +28,21 @@ export interface DuplicatedNoteDTO {
 /**
  * @api
  */
-export type NoteBatchPatchDTO = Pick<NotePatchDTO, 'icon' | 'parentId'>;
+export type NoteBatchPatchDTO = Pick<NotePatchDTO, 'parentId'>;
 
 /**
  * @api
  */
-export type NoteDTO = NotePatchDTO | DuplicatedNoteDTO;
+export type NoteDTO =
+  | Partial<Pick<Note, 'body' | 'fileId' | 'icon' | 'parentId' | 'sourceUrl' | 'title'>>
+  | DuplicatedNoteDTO;
 
 /**
  * @api
  */
 export interface ClientNoteQuery {
   parentId?: EntityParentId | string[];
+  fileHash?: string;
 }
 
 export interface NoteVO extends Omit<Note, 'body'> {
