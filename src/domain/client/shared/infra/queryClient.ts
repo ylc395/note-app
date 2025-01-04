@@ -1,0 +1,13 @@
+import { queryClient } from 'mobx-tanstack-query/preset';
+
+const defaultOptions = queryClient.getDefaultOptions(); // default options: https://github.com/js2me/mobx-tanstack-query/blob/master/src/preset/configs/default-query-client-config.ts
+const networkMode = import.meta.env.VITE_WEB_PLATFORM === 'electron' ? 'always' : 'online';
+
+defaultOptions.queries!.staleTime = Infinity;
+defaultOptions.queries!.networkMode = networkMode;
+defaultOptions.queries!.retry = false;
+
+defaultOptions.mutations!.networkMode = networkMode;
+defaultOptions.mutations!.retry = false;
+
+queryClient.setDefaultOptions({ ...defaultOptions });

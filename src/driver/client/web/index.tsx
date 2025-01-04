@@ -1,11 +1,11 @@
-import { createRoot } from 'react-dom/client';
 import '#domain/client/shared/infra/mobx';
+import '#domain/client/shared/infra/queryClient';
+import { createRoot } from 'react-dom/client';
 
 import { token as loggerToken } from '#domain/shared/infra/logger';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import { token as localStorageToken } from '#domain/client/app/infra/localStorage';
 import { container } from '#domain/shared/infra/singletons';
-import { WEB_ROOT_ID } from '#domain/shared/infra/env';
 
 import webLocalStorage from './infra/localStorage';
 import App from './views/App';
@@ -19,6 +19,6 @@ if (import.meta.env.VITE_WEB_PLATFORM === 'electron') {
   container.register(rpcToken, { useValue: electronRpc });
 }
 
-const appEl = document.getElementById(WEB_ROOT_ID)!;
+const appEl = document.getElementById(import.meta.env.VITE_WEB_ROOT_ID)!;
 const root = createRoot(appEl);
 root.render(<App />);
