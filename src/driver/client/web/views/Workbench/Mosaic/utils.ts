@@ -1,4 +1,4 @@
-import { TileDirections, type TileParent } from '#domain/client/app/model/workbench/Workbench/tileTree';
+import { TileDirections, type TileParent } from '#domain/client/app/model/Workbench/tileTree';
 
 export interface BoundingBox {
   top: number;

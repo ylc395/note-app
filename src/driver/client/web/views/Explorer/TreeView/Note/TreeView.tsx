@@ -6,7 +6,7 @@ import NoteService from '#domain/client/app/service/NoteService';
 import Button from '#web/components/Button';
 import TreeView from '../common/ExplorerTree';
 import { container } from '#domain/shared/infra/singletons';
-import Workbench from '#domain/client/app/model/workbench/Workbench';
+import Workbench from '#domain/client/app/model/Workbench';
 
 // eslint-disable-next-line mobx/missing-observer
 export default (function NoteTreeView() {

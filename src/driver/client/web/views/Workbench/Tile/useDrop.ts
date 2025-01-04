@@ -2,11 +2,11 @@ import { useMemoizedFn } from 'ahooks';
 import { useEffect, useState } from 'react';
 import { container } from '#domain/shared/infra/singletons';
 
-import Editor from '#domain/client/app/model/abstract/Editor';
-import Workbench from '#domain/client/app/model/workbench/Workbench';
-import TreeNode from '#domain/client/shared/model/abstract/TreeNode';
-import { TileSplitDirections } from '#domain/client/app/model/workbench/Workbench';
-import type Tile from '#domain/client/app/model/workbench/Tile';
+import Editor from '#domain/client/app/model/note/editor/BaseEditor';
+import Workbench from '#domain/client/app/model/Workbench';
+import TreeNode from '#domain/client/shared/model/note/TreeNode';
+import { TileSplitDirections } from '#domain/client/app/model/Workbench';
+import type Tile from '#domain/client/app/model/Workbench/Tile';
 import type { EntityLocator } from '#domain/client/shared/model/entity';
 
 interface Position {

@@ -2,9 +2,9 @@ import { container } from '#domain/shared/infra/singletons';
 import { FolderOpenIcon, FolderClosedIcon } from 'lucide-react';
 
 import MimeTypeIcon from '#web/components/icon/MimeTypeIcon';
-import Workbench from '#domain/client/app/model/workbench/Workbench';
+import Workbench from '#domain/client/app/model/Workbench';
 import { isEntityMaterial, type MaterialVO } from '#domain/shared/model/material';
-import type TreeNode from '#domain/client/shared/model/abstract/TreeNode';
+import type TreeNode from '#domain/client/shared/model/note/TreeNode';
 import MaterialExplorer from '#domain/client/app/model/material/Explorer';
 
 import ExplorerTreeView from '../common/ExplorerTree';

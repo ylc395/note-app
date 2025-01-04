@@ -3,8 +3,8 @@ import { observer } from 'mobx-react-lite';
 import { container } from '#domain/shared/infra/singletons';
 
 import Button from '#web/components/Button';
-import Workbench from '#domain/client/app/model/workbench/Workbench';
-import { Direction } from '#domain/client/app/model/workbench/Workbench/HistoryStack';
+import Workbench from '#domain/client/app/model/Workbench';
+import { Direction } from '#domain/client/app/model/Workbench/HistoryStack';
 
 export default observer(function BottomBar() {
   const { historyStack } = container.resolve(Workbench);

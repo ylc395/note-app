@@ -1,5 +1,5 @@
-import type Editor from '../../abstract/Editor';
-import type { Direction } from '../Workbench/HistoryStack';
+import type Editor from '../../note/editor/BaseEditor';
+import type { Direction } from '../HistoryStack';
 
 export enum EventNames {
   Destroyed = 'destroyed',
@@ -8,5 +8,5 @@ export enum EventNames {
 
 export type Events = {
   [EventNames.Destroyed]: undefined;
-  [EventNames.EditorSwitched]: { to: Editor | null; fromHistory?: Direction };
+  [EventNames.EditorSwitched]: { editor: Editor | null; fromHistory?: Direction };
 };

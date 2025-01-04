@@ -1,7 +1,7 @@
 import { observer } from 'mobx-react-lite';
 import type { ReactNode } from 'react';
 
-import ExplorerManager, { type ExplorerTypes } from '#domain/client/app/model/ExplorerManager';
+import Sidebar, { type ExplorerTypes } from '#domain/client/app/model/Sidebar';
 import { container } from '#domain/shared/infra/singletons';
 import Resizable from '#web/components/Resizable';
 import { EntityTypes } from '#domain/client/shared/model/entity';
@@ -19,7 +19,7 @@ const explorerMap: Record<ExplorerTypes, () => ReactNode> = {
 export default observer(function TreeView() {
   const {
     currentExplorer: { entityType },
-  } = container.resolve(ExplorerManager);
+  } = container.resolve(Sidebar);
 
   return (
     <Resizable

@@ -1,7 +1,7 @@
 import { cloneElement, useEffect, type ReactElement } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 
-import type TreeNode from '#domain/client/shared/model/abstract/TreeNode';
+import type TreeNode from '#domain/client/shared/model/note/TreeNode';
 import { type EntityLocator, type HierarchyEntity, entityLocatorTypeId } from '#domain/client/shared/model/entity';
 import Preview from './Preview';
 

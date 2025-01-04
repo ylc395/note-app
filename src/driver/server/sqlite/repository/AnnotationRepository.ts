@@ -84,7 +84,10 @@ export default class SqliteAnnotationRepository extends BaseRepository implement
   public async update(annotationId: Annotation['id'], patch: AnnotationPatchDTO) {
     const updated = await this.db
       .updateTable(this.tableName)
-      .set(patch)
+      .set({
+        ...patch,
+        selectors: patch.selectors ? JSON.stringify(patch.selectors) : undefined,
+      })
       .where('id', '=', annotationId)
       .returning([
         `${this.tableName}.id`,

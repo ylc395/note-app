@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import { AiOutlineClose } from 'react-icons/ai';
 
 import Button from '#web/components/Button';
-import type Tile from '#domain/client/app/model/workbench/Tile';
+import type Tile from '#domain/client/app/model/Workbench/Tile';
 
 import TabItem from './TabItem';
 

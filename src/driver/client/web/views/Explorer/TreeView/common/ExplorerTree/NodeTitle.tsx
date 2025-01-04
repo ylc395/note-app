@@ -5,7 +5,7 @@ import { useKeyPress } from 'ahooks';
 import clsx from 'clsx';
 
 import { IS_DEV } from '#domain/shared/infra/env';
-import type TreeNode from '#domain/client/shared/model/abstract/TreeNode';
+import type TreeNode from '#domain/client/shared/model/note/TreeNode';
 import Icon from '#web/components/icon/Icon';
 import type { HierarchyEntity } from '#domain/client/shared/model/entity';
 

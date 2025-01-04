@@ -4,7 +4,7 @@ import { container } from '#domain/shared/infra/singletons';
 import { XIcon } from 'lucide-react';
 
 import StarManager from '#domain/client/app/model/StarManager';
-import Workbench from '#domain/client/app/model/workbench/Workbench';
+import Workbench from '#domain/client/app/model/Workbench';
 import Button from '#web/components/Button';
 
 export default observer(function StarView() {

@@ -1,4 +1,4 @@
-import type NoteEditor from '#domain/client/app/model/note/Editor';
+import type NoteEditor from '#domain/client/app/model/note/editor/BaseEditor';
 // import Modal from '#web/components/Modal';
 
 import Body from './Body';

@@ -35,4 +35,8 @@ export default router({
   queryPath: publicProcedure
     .input(noteSchema.shape.id)
     .query(({ input: noteId, ctx: { entityService } }) => entityService.getPath(noteId)),
+
+  queryPaths: publicProcedure
+    .input(noteSchema.shape.id.array())
+    .query(({ input: noteIds, ctx: { entityService } }) => entityService.getPaths(noteIds)),
 });

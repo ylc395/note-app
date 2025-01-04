@@ -3,10 +3,10 @@ import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import type { NoteVO } from '#domain/shared/model/note';
 import NoteExplorer from '#domain/client/app/model/note/Explorer';
 import { EntityTypes } from '#domain/shared/model/entity';
-import DomainEventBus from '#domain/client/app/model/note/EventBus';
+import DomainEventBus from '#domain/client/app/model/note/eventBus';
 
-import Workbench from '../model/workbench/Workbench';
-import MoveBehavior from '../model/entity/MoveBehavior';
+import Workbench from '../model/Workbench';
+import MoveBehavior from '../model/note/Explorer/MoveBehavior';
 import type { MoveEvent } from '../model/entity/events';
 
 export default class NoteService {

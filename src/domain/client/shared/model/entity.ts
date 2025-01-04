@@ -1,4 +1,4 @@
-import type { EntityId, EntityParentId, EntityTypes } from '#domain/shared/model/entity';
+import type { EntityId, EntityTypes } from '#domain/shared/model/entity';
 
 export * from '#domain/shared/model/entity';
 
@@ -9,9 +9,3 @@ export interface EntityLocator {
 }
 
 export const entityLocatorTypeId = Symbol();
-
-export interface HierarchyEntity {
-  id: EntityId;
-  parentId: EntityParentId;
-  childrenCount: number;
-}

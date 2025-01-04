@@ -2,8 +2,8 @@ import { observer } from 'mobx-react-lite';
 import clsx from 'clsx';
 
 import { container } from '#domain/shared/infra/singletons';
-import Workbench from '#domain/client/app/model/workbench/Workbench';
-import Tile from '#domain/client/app/model/workbench/Tile';
+import Workbench from '#domain/client/app/model/Workbench';
+import Tile from '#domain/client/app/model/Workbench/Tile';
 import { IS_DEV } from '#domain/shared/infra/env';
 
 import TabBar from './TabBar';

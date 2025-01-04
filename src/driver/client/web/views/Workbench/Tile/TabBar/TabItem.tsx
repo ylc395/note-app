@@ -4,7 +4,7 @@ import { useRef, useEffect } from 'react';
 import clsx from 'clsx';
 import assert from 'assert';
 
-import type Editor from '#domain/client/app/model/abstract/Editor';
+import type Editor from '#domain/client/app/model/note/editor/BaseEditor';
 
 import IconTitle from '#web/components/IconTitle';
 import Button from '#web/components/Button';

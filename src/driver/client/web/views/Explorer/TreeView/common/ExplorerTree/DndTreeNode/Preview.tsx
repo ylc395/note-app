@@ -2,9 +2,9 @@ import { observer } from 'mobx-react-lite';
 import { container } from '#domain/shared/infra/singletons';
 import { createPortal } from 'react-dom';
 
-import Explorer from '#domain/client/app/model/abstract/Explorer';
+import Explorer from '#domain/client/app/model/note/Explorer/index';
 import { APP_NAME } from '#domain/shared/infra/env';
-import ExplorerManager from '#domain/client/app/model/ExplorerManager';
+import Sidebar from '#domain/client/app/model/Sidebar';
 
 import Tree from '#web/components/Tree';
 import NodeTitle from '../NodeTitle';
@@ -12,7 +12,7 @@ import assert from 'assert';
 import { useMemo } from 'react';
 
 export default observer(function Preview() {
-  const { currentExplorer } = container.resolve(ExplorerManager);
+  const { currentExplorer } = container.resolve(Sidebar);
   assert(currentExplorer instanceof Explorer);
 
   const previewTree = useMemo(() => {

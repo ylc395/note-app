@@ -28,6 +28,7 @@ export const annotationDTOSchema = z.intersection(annotationSchema.pick({
 }).partial());
 export const annotationPatchDTOSchema = annotationSchema.pick({
   "body": true,
-  "color": true
+  "color": true,
+  "selectors": true
 }).partial();
 export const annotationVOSchema = annotationSchema;

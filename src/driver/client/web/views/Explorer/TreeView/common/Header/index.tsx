@@ -1,10 +1,10 @@
 import { useDrop } from 'react-dnd';
 import { entityLocatorTypeId, type HierarchyEntity } from '#domain/client/shared/model/entity';
 import { container } from '#domain/shared/infra/singletons';
-import MoveBehavior from '#domain/client/app/model/entity/MoveBehavior';
+import MoveBehavior from '#domain/client/app/model/abstract/Explorer/MoveBehavior';
 import { noop } from 'lodash-es';
 
-import type Tree from '#domain/client/shared/model/abstract/Tree';
+import type Tree from '#domain/client/shared/model/note/Tree';
 
 interface Props<T extends HierarchyEntity> {
   title: string;

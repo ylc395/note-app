@@ -27,7 +27,7 @@ export type AnnotationDTO = Pick<Annotation, 'selectors' | 'targetId'> & Partial
 /**
  * @api
  */
-export type AnnotationPatchDTO = Partial<Pick<Annotation, 'body' | 'color'>>;
+export type AnnotationPatchDTO = Partial<Pick<Annotation, 'body' | 'color' | 'selectors'>>;
 
 /**
  * @api

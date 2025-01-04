@@ -6,13 +6,13 @@ import { first } from 'lodash-es';
 import Modal from '#web/components/Modal';
 import Tree from '#web/components/Tree';
 import { container } from '#domain/shared/infra/singletons';
-import MoveBehavior from '#domain/client/app/model/entity/MoveBehavior';
-import ExplorerManager from '#domain/client/app/model/ExplorerManager';
+import MoveBehavior from '#domain/client/app/model/abstract/Explorer/MoveBehavior';
+import Sidebar from '#domain/client/app/model/Sidebar';
 
 import NodeTitle from './ExplorerTree/NodeTitle';
 
 export default observer(function TargetTreeModal() {
-  const { currentExplorer } = container.resolve(ExplorerManager);
+  const { currentExplorer } = container.resolve(Sidebar);
   const { perform, cancel } = container.resolve(MoveBehavior);
 
   assert('tree' in currentExplorer, 'invalid currentExplorer');

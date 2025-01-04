@@ -3,6 +3,7 @@
     "target": "ES2023", // 用了 ES Decorator，如果编译到 ESNext，各个 runtime 还不支持
     "allowJs": true,
     "types": [],
+    "outDir": "./dist",
     "lib": ["ESNext"],
     "sourceMap": true,
     "importHelpers": true,
@@ -12,6 +13,7 @@
     "moduleResolution": "Bundler",
     "module": "ESNext",
     "skipLibCheck": true,
+    "noImplicitOverride": true,
     "paths": {
       "#domain/*": ["./src/domain/*"],
       "#utils/*": ["./src/utils/*"],

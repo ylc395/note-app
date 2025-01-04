@@ -1,27 +1,22 @@
 import { action, observable } from 'mobx';
-import { uniqueId, isMatch } from 'lodash-es';
+import { uniqueId } from 'lodash-es';
 import assert from 'assert';
 
-import Editor from '#domain/client/app/model/abstract/Editor';
+import Editor from '#domain/client/app/model/note/editor/BaseEditor';
 import EventBus from '#domain/client/app/infra/EventBus';
 import { container } from '#domain/shared/infra/singletons';
 import type { EntityLocator } from '#domain/client/shared/model/entity';
 
 import EditorFactory from '../EditorFactory';
 import { type Events, EventNames } from './events';
-import type { Direction } from '../Workbench/HistoryStack';
+import type { Direction } from '../HistoryStack';
 
 export default class Tile {
-  constructor() {
-    this.id = uniqueId('tile-');
-    this.events = new EventBus<Events>(this.id);
-  }
+  public readonly id = uniqueId('tile-');
 
-  public readonly events;
-
-  public readonly id: string;
   private readonly editorFactory = container.resolve(EditorFactory);
-  private readonly subscriptionMap: Record<Editor['id'], () => void> = {};
+
+  public readonly events = new EventBus<Events>(this.id);
 
   @observable.ref public accessor currentEditor: Editor | undefined;
 
@@ -29,41 +24,47 @@ export default class Tile {
 
   public findEditor(locator: EntityLocator | Editor) {
     const existedEditor = this.editors.find((e) =>
-      locator instanceof Editor ? locator === e : isMatch(locator, e.entityLocator),
+      locator instanceof Editor ? locator === e : locator.entityId === e.entityId,
     );
 
     return existedEditor;
   }
 
+  // 将本 Tile 的当前 editor 切换为指定的 editor。fromHistory 表示本次的切换动作是否是浏览历史栈弹出导致的
+  // 切换有可能失败（当指定的 editor 不存在时）
   @action.bound
   public switchToEditor(editor: Editor | EntityLocator, params?: { fromHistory?: Direction }) {
-    const existedEditor = this.findEditor(editor);
+    const target = this.findEditor(editor);
+    assert(target || !(editor instanceof Editor), 'can not switch to an editor which not belong to this tile');
 
-    if (!existedEditor) {
+    if (!target) {
       return false;
     }
 
-    this.currentEditor = existedEditor;
-    this.events.emit(EventNames.EditorSwitched, { to: existedEditor, fromHistory: params?.fromHistory });
+    if (target === this.currentEditor) {
+      return true;
+    }
+
+    this.currentEditor = target;
+    this.events.emit(EventNames.EditorSwitched, { editor: target, fromHistory: params?.fromHistory });
 
     return true;
   }
 
-  @action
+  // 将一个 Editor 从该 Tile 中移除
+  @action.bound
   private removeEditor(editor: Editor) {
     const existedTabIndex = this.editors.indexOf(editor);
-    assert(existedTabIndex >= 0, 'editor not in this tile');
+    assert(existedTabIndex >= 0, 'editor to remove is not in this tile');
 
     this.editors.splice(existedTabIndex, 1);
-
-    this.subscriptionMap[editor.id]!();
-    delete this.subscriptionMap[editor.id];
+    editor.events.off(Editor.eventNames.Destroy, this.removeEditor);
 
     if (this.currentEditor === editor) {
-      this.currentEditor = this.editors[existedTabIndex] || this.editors[existedTabIndex - 1];
+      const newCurrentEditor = this.editors[existedTabIndex] || this.editors[existedTabIndex - 1];
 
-      if (this.currentEditor) {
-        this.switchToEditor(this.currentEditor);
+      if (newCurrentEditor) {
+        this.switchToEditor(newCurrentEditor);
       }
     }
 
@@ -72,60 +73,76 @@ export default class Tile {
     }
   }
 
+  // 在该 Tile 下创建一个 Editor。可以指定其位置
+  // 不能创建内容相同的 editor
   @action
-  public createEditor(entity: EntityLocator, options?: { dest?: Editor; replace?: boolean }) {
-    if (options?.dest) {
-      assert(options.dest.tile === this, 'tile of target editor is not this tile');
+  public createEditor(entity: EntityLocator, to?: { dest: Editor; replace?: boolean }) {
+    assert(
+      this.editors.findIndex((editor) => editor.entityId === entity.entityId) < 0,
+      'can not create duplicated editor',
+    );
+
+    if (to) {
+      assert(to.dest.tile === this, 'tile of target editor is not this tile');
     }
 
     const newEditor = this.editorFactory.create(this, entity);
+    newEditor.events.on(Editor.eventNames.Destroy, this.removeEditor);
 
-    if (options?.dest) {
-      const destIndex = this.editors.findIndex((editor) => editor === options.dest);
-      assert(destIndex >= 0, 'dest editor is not in this tile');
-
-      const [replaced] = this.editors.splice(destIndex, options.replace ? 1 : 0, newEditor);
-
-      if (replaced) {
-        replaced.destroy();
-      }
-    } else {
-      this.editors.push(newEditor);
-    }
-
-    this.subscriptionMap[newEditor.id] = newEditor.events.on(
-      Editor.eventNames.Destroy,
-      this.removeEditor.bind(this, newEditor),
-    );
+    this.addEditor(newEditor, to);
 
     return newEditor;
   }
 
+  // 将该 tile 内的一个 editor 移动到该 tile 内的另一个位置
+  public moveEditor(editor: Editor, { dest, replace }: { dest: Editor; replace?: boolean }) {
+    assert(this.findEditor(editor) && this.findEditor(dest), 'can not move');
+
+    if (editor === dest) {
+      return;
+    }
+
+    const index = this.editors.indexOf(editor);
+    this.editors.splice(index, 1);
+
+    const targetIndex = this.editors.indexOf(dest);
+    this.editors.splice(targetIndex, 0, editor);
+
+    if (replace) {
+      dest.destroy();
+    }
+  }
+
+  // 将一个 Editor 纳入该 Tile 中。将解除它和原 Tile 的关系
+  // 若已存在一个相同内容的 editor，则那个 editor 将被 destroy
   @action
-  public moveEditor(editor: Editor, to?: Editor) {
+  public addEditor(editor: Editor, to?: { dest: Editor; replace?: boolean }) {
+    assert(!this.findEditor(editor), 'can not add twice');
+
     if (to) {
-      const destIndex = this.editors.indexOf(to);
+      const destIndex = this.editors.indexOf(to.dest);
       assert(destIndex >= 0, 'target editor is not in this tile');
 
       this.editors.splice(destIndex, 0, editor);
+
+      if (to.replace) {
+        to.dest.destroy();
+      }
     } else {
-      assert(editor.tile !== this, 'target editor should be provided when moving editor existing in this tile');
       this.editors.push(editor);
     }
 
+    // 注意：新创建的 editor，其 tile === this 但又不在 this.editors 中。因此这里的 if 判断是有必要的
     if (editor.tile !== this) {
       editor.tile.removeEditor(editor);
       editor.tile = this;
     }
 
-    // 删掉属于同一个 entity 的原有 editor
-    const duplicatedIndex = this.editors.findIndex(
-      (e) => isMatch(e.entityLocator, editor.entityLocator) && e !== editor,
-    );
+    // 删掉属于同一个 entity 的原有 editor。因此一个 Tile 内不会有两个内容一致的 Editor
+    const duplicated = this.editors.find((e) => e.entityId === editor.entityId && e !== editor);
 
-    if (duplicatedIndex >= 0) {
-      const [duplicated] = this.editors.splice(duplicatedIndex, 1);
-      duplicated!.destroy();
+    if (duplicated) {
+      duplicated.destroy();
     }
   }
 

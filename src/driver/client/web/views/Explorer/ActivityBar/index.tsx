@@ -4,7 +4,7 @@ import { observer } from 'mobx-react-lite';
 import TypeIcon from '#web/components/icon/TypeIcon';
 import Button from '#web/components/Button';
 import Popover from '#web/components/Popover';
-import ExplorerManager from '#domain/client/app/model/ExplorerManager';
+import Sidebar from '#domain/client/app/model/Sidebar';
 import { EntityTypes } from '#domain/client/shared/model/entity';
 import { container } from '#domain/shared/infra/singletons';
 
@@ -15,7 +15,7 @@ export default observer(function ActivityBar() {
   const {
     currentExplorer: { entityType },
     switchTo,
-  } = container.resolve(ExplorerManager);
+  } = container.resolve(Sidebar);
   const types = [EntityTypes.Material, EntityTypes.Note, EntityTypes.Memo] as const;
 
   return (

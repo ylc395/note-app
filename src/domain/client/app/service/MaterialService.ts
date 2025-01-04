@@ -3,7 +3,7 @@ import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import { EntityTypes } from '#domain/client/shared/model/entity';
 
 import DomainEventBus from '../model/material/EventBus';
-import MoveBehavior from '../model/entity/MoveBehavior';
+import MoveBehavior from '../model/note/Explorer/MoveBehavior';
 import type { MoveEvent } from '../model/entity/events';
 import CreationProcess from '../model/material/CreationProcess';
 

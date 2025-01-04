@@ -1,39 +1,44 @@
 import assert from 'assert';
 import { action, computed, observable } from 'mobx';
-import { zipObject } from 'lodash-es';
+import { uniqueId, zipObject } from 'lodash-es';
 
 import { container } from '#domain/shared/infra/singletons';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
-import { AnnotationVO, Selector, type AnnotationDTO } from '#domain/shared/model/annotation';
-import { EntityMaterialVO } from '#domain/shared/model/material';
-import DomainEventBus from './EventBus';
+import { AnnotationVO, Selector, type AnnotationPatchDTO } from '#domain/shared/model/annotation';
+import type { NoteVO } from '#domain/shared/model/note';
+import { eventBus as domainEventBus, EventNames as DomainEventNames } from './eventBus';
 
 export default class Editor {
-  private readonly remote = container.resolve(rpcToken);
-
-  private readonly eventBus = container.resolve(DomainEventBus);
-
   constructor(
     private readonly options: {
       annotation?: AnnotationVO;
-      materialId?: EntityMaterialVO['id'];
-      onDestroyed?: () => void; // AnnotationEditor 的生命周期很简单，无需继承 EventBus 来获得完整的事件管理能力
+      noteId?: NoteVO['id'];
+      onDestroyed: (editor: Editor) => void; // AnnotationEditor 的生命周期很简单，无需继承 EventBus 来获得完整的事件管理能力
     },
   ) {
-    assert(options.annotation || options.materialId, 'annotation and material can not both be omitted');
-    assert(!(options.annotation && options.materialId), 'can not specify both annotation and material');
+    assert(options.annotation || options.noteId, 'annotation and note can not both be omitted');
+    assert(!(options.annotation && options.noteId), 'can not specify both annotation and note');
 
-    this.value = options.annotation || { targetId: options.materialId!, selectors: [] };
+    this.init();
+  }
 
-    if (options.annotation) {
+  public readonly id = uniqueId('annotation-editor-');
+
+  private readonly remote = container.resolve(rpcToken);
+
+  @action
+  private init() {
+    this.value = this.options.annotation || {};
+
+    if (this.options.annotation) {
       this.selectorsMap = zipObject(
-        options.annotation.selectors.map((_, i) => i),
-        options.annotation.selectors,
+        this.options.annotation.selectors.map((_, i) => i),
+        this.options.annotation.selectors,
       );
     }
   }
 
-  @observable public accessor value: AnnotationDTO;
+  @observable public accessor value!: Pick<AnnotationPatchDTO, 'body' | 'color'>;
 
   @observable private accessor selectorsMap: Record<string, Selector> = {};
 
@@ -43,7 +48,7 @@ export default class Editor {
   }
 
   @action
-  public update(value: Pick<AnnotationDTO, 'body' | 'color'>) {
+  public update(value: Pick<AnnotationPatchDTO, 'body' | 'color'>) {
     this.value = { ...this.value, ...value };
   }
 
@@ -61,20 +66,29 @@ export default class Editor {
   public async submit() {
     if (this.options.annotation) {
       await this.remote.annotation.updateOne.mutate([this.options.annotation.id, this.value]);
-      this.eventBus.emit(DomainEventBus.eventNames.Updated, {
+
+      domainEventBus.emit(DomainEventNames.Updated, {
         id: this.options.annotation.id,
         payload: this.value,
-        trigger: this,
       });
-    } else {
-      const newAnnotation = await this.remote.annotation.create.mutate(this.value);
-      this.eventBus.emit(DomainEventBus.eventNames.Created, newAnnotation);
+    }
+
+    if (this.options.noteId) {
+      assert(this.selectors.length > 0, 'no selector when creating');
+
+      const newAnnotation = await this.remote.annotation.create.mutate({
+        targetId: this.options.noteId,
+        ...this.value,
+        selectors: this.selectors,
+      });
+
+      domainEventBus.emit(DomainEventNames.Created, newAnnotation);
     }
 
     this.destroy();
   }
 
   public destroy() {
-    this.options.onDestroyed?.();
+    this.options.onDestroyed?.(this);
   }
 }

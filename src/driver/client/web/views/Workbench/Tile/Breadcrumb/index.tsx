@@ -4,7 +4,7 @@ import { AiOutlineRight } from 'react-icons/ai';
 
 import IconTitle from '#web/components/IconTitle';
 import TypeIcon from '#web/components/icon/TypeIcon';
-import type Tile from '#domain/client/app/model/workbench/Tile';
+import type Tile from '#domain/client/app/model/Workbench/Tile';
 
 export default observer(function Breadcrumb({ tile }: { tile: Tile }) {
   const editor = tile.currentEditor;

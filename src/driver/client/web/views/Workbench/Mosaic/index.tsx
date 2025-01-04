@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
-import type Tile from '#domain/client/app/model/workbench/Tile';
-import type { TileNode } from '#domain/client/app/model/workbench/Workbench/tileTree';
+import type Tile from '#domain/client/app/model/Workbench/Tile';
+import type { TileNode } from '#domain/client/app/model/Workbench/tileTree';
 import TileView from './TileView';
 
 interface Props {

@@ -4,7 +4,7 @@ import { AiOutlineFileSearch, AiOutlineInfoCircle } from 'react-icons/ai';
 
 import Button from '#web/components/Button';
 import IconPicker from '#web/components/icon/PickerButton';
-import type NoteEditor from '#domain/client/app/model/note/Editor';
+import type NoteEditor from '#domain/client/app/model/note/editor/BaseEditor';
 
 export default observer(function NoteTitle({ editor }: { editor: NoteEditor }) {
   const inputRef = useRef<HTMLInputElement | null>(null);

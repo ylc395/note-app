@@ -4,12 +4,12 @@ import clsx from 'clsx';
 
 import Tree from '#web/components/Tree';
 import type { HierarchyEntity } from '#domain/client/shared/model/entity';
-import type TreeNode from '#domain/client/shared/model/abstract/TreeNode';
-import MoveBehavior from '#domain/client/app/model/entity/MoveBehavior';
+import type TreeNode from '#domain/client/shared/model/note/TreeNode';
+import MoveBehavior from '#domain/client/app/model/abstract/Explorer/MoveBehavior';
 
 import NodeTitle, { type Props as NodeTitleProps } from './NodeTitle';
 import { container } from '#domain/shared/infra/singletons';
-import Explorer from '#domain/client/app/model/abstract/Explorer';
+import Explorer from '#domain/client/app/model/note/Explorer/index';
 import DndTreeNode from './DndTreeNode';
 
 interface Props<T extends HierarchyEntity> {
