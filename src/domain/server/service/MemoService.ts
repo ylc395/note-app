@@ -53,6 +53,8 @@ export default class MemoService extends BaseService {
     if (hasContentUpdated) {
       await this.content.extract({ id, body: patch.body });
     }
+
+    return this.queryOne(id);
   }
 
   @BaseService.transaction

@@ -85,6 +85,8 @@ export default class NoteService extends BaseService {
     if (typeof notePatch.body === 'string') {
       await this.content.extract({ id: noteId, body: notePatch.body });
     }
+
+    return this.queryOne(noteId);
   }
 
   private async toVO(notes: Note, isNew?: boolean): Promise<Required<NoteVO>>;

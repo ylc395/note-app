@@ -53,18 +53,20 @@ export default class AnnotationService extends BaseService {
   }
 
   @BaseService.transaction
-  public async updateOne(annotationId: Annotation['id'], patch: AnnotationPatchDTO) {
+  public async updateOne(id: Annotation['id'], patch: AnnotationPatchDTO) {
     const hasContentUpdated = typeof patch.body === 'string';
 
     const annotation = {
       ...patch,
       updatedAt: hasContentUpdated ? Date.now() : undefined,
     };
-    const updated = await this.repo.annotations.update(annotationId, annotation);
+    const updated = await this.repo.annotations.update(id, annotation);
     assert(updated, 'invalid id');
 
     if (hasContentUpdated) {
-      await this.content.extract({ id: annotationId, body: patch.body });
+      await this.content.extract({ id: id, body: patch.body });
     }
+
+    return this.queryOne(id);
   }
 }
