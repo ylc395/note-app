@@ -6,11 +6,11 @@ import Tree from '#domain/client/shared/model/note/Tree';
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import { container } from '#domain/shared/infra/singletons';
+import type { NoteVO } from '#domain/shared/model/note';
 
 import SortBehavior from './SortBehavior';
 import UIState from '../../common/UIState';
 import { type UpdatedEvent, eventBus as domainEventBus, EventNames } from '../eventBus';
-import type { NoteVO } from '#domain/shared/model/note';
 
 export default class Explorer {
   constructor() {

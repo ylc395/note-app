@@ -1,43 +1,72 @@
+import { action, observable } from 'mobx';
 import { diffJson, type Change } from 'diff';
-import type { ZodSchema } from 'zod';
-import { intersection, pick } from 'lodash-es';
+import { type ZodSchema, string, z } from 'zod';
+import { intersection, maxBy, pick, uniqueId } from 'lodash-es';
 
 import { token as lsToken } from '#domain/client/app/infra/localStorage';
 import { container } from '#domain/shared/infra/singletons';
 import type { EntityId } from '#domain/shared/model/entity';
-import { observable } from 'mobx';
 
 export default class Backup<T> {
-  constructor(private readonly entityId: EntityId, private readonly schema: ZodSchema<T>) {}
+  constructor(private readonly entityId: EntityId, schema: ZodSchema<T>) {
+    this.schema = z.record(
+      string(),
+      z.object({
+        value: schema,
+        timestamp: z.number(),
+      }),
+    );
+  }
+
+  private readonly id = uniqueId('backup-');
+
+  private readonly schema;
 
   private readonly localStorage = container.resolve(lsToken);
 
-  private get key() {
-    return `editor-backup-${this.entityId}`;
+  @observable.ref public accessor changes: Change[] | undefined;
+
+  private get storageKey() {
+    return `backup-${this.entityId}`;
   }
 
+  @action
   public diff(source: object) {
-    const backup = this.localStorage.get(this.key, this.schema);
+    const allBackups = this.localStorage.get(this.storageKey, this.schema);
+    const latest = maxBy(Object.values(allBackups || {}), ({ timestamp }) => timestamp);
 
-    if (!backup) {
+    if (!latest) {
       return;
     }
 
-    const commonKeys = intersection(Object.keys(backup), Object.keys(source));
-    const changes = diffJson(pick(source, commonKeys), pick(backup, commonKeys));
+    const commonKeys = intersection(Object.keys(latest), Object.keys(source));
+    const changes = diffJson(pick(source, commonKeys), pick(latest, commonKeys));
 
     if (changes.length > 0) {
       this.changes = changes;
     }
   }
 
-  @observable.ref public accessor changes: Change[] | undefined;
-
   public write(value: T) {
-    this.localStorage.set(this.key, value);
+    const allBackups = this.localStorage.get(this.storageKey, this.schema) || {};
+
+    allBackups[this.id] = {
+      value,
+      timestamp: Date.now(),
+    };
+
+    this.localStorage.set(this.storageKey, allBackups);
   }
 
   public clear() {
-    this.localStorage.delete(this.key);
+    const allBackups = this.localStorage.get(this.storageKey, this.schema) || {};
+
+    delete allBackups[this.id];
+
+    if (Object.keys(allBackups).length === 0) {
+      this.localStorage.delete(this.storageKey);
+    } else {
+      this.localStorage.set(this.storageKey, allBackups);
+    }
   }
 }

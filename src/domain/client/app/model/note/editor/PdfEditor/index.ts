@@ -1,12 +1,15 @@
 import type { PDFDocumentProxy } from 'pdfjs-dist';
-import { action, computed, observable, runInAction, when } from 'mobx';
+import { action, computed, observable, when } from 'mobx';
 import assert from 'assert';
 import { flow, isObject } from 'lodash-es';
 
 import type { AnnotationVO } from '#domain/shared/model/annotation';
 import { container } from '#domain/shared/infra/singletons';
+import type { NoteVO } from '#domain/shared/model/note';
+
 import BaseEditor from '../BaseEditor';
 import DocumentFactory from './DocumentFactory';
+import type Tile from '../../../Workbench/Tile';
 
 interface Viewer {
   init: (doc: PDFDocumentProxy) => void;
@@ -19,24 +22,26 @@ export enum Panels {
 }
 
 export default class PdfEditor extends BaseEditor {
+  constructor(options: { entityId: NoteVO['id']; tile: Tile }) {
+    super(options);
+    when(() => this.blob.result.isSuccess, this.init.bind(this), { signal: this.destroyController.signal });
+  }
+
   private readonly docFactory = container.resolve(DocumentFactory);
 
   private doc?: PDFDocumentProxy; // this is view-independent
 
   @observable.ref public accessor viewer: Viewer | undefined;
 
-  protected override async load() {
-    await super.load();
-    assert(this.blob);
+  private async init() {
+    assert(this.blob.result.data);
 
     const doc = await this.docFactory.create({
       noteId: this.entityId,
-      blob: this.blob,
+      blob: this.blob.result.data,
     });
 
-    runInAction(() => {
-      this.doc = doc;
-    });
+    this.doc = doc;
   }
 
   private disposeViewer?: () => void;

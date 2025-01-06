@@ -1,23 +1,26 @@
 import assert from 'assert';
-import { action, computed, observable } from 'mobx';
-import { uniqueId, zipObject } from 'lodash-es';
+import { action, observable } from 'mobx';
+import { uniqueId } from 'lodash-es';
+import { queryClient } from 'mobx-tanstack-query/preset';
 
 import { container } from '#domain/shared/infra/singletons';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
-import { AnnotationVO, Selector, type AnnotationPatchDTO } from '#domain/shared/model/annotation';
+import { AnnotationVO, Selector, type AnnotationDTO, type AnnotationPatchDTO } from '#domain/shared/model/annotation';
 import type { NoteVO } from '#domain/shared/model/note';
-import { eventBus as domainEventBus, EventNames as DomainEventNames } from './eventBus';
+
+import { getAnnotationListQueryKey } from './queryKeys';
+import type Collection from '../common/Collection';
 
 export default class Editor {
   constructor(
     private readonly options: {
-      annotation?: AnnotationVO;
+      initialValue?: AnnotationVO;
       noteId?: NoteVO['id'];
       onDestroyed: (editor: Editor) => void; // AnnotationEditor 的生命周期很简单，无需继承 EventBus 来获得完整的事件管理能力
     },
   ) {
-    assert(options.annotation || options.noteId, 'annotation and note can not both be omitted');
-    assert(!(options.annotation && options.noteId), 'can not specify both annotation and note');
+    assert(options.initialValue || options.noteId, 'annotation and note can not both be omitted');
+    assert(!(options.initialValue && options.noteId), 'can not specify both annotation and note');
 
     this.init();
   }
@@ -28,24 +31,10 @@ export default class Editor {
 
   @action
   private init() {
-    this.value = this.options.annotation || {};
-
-    if (this.options.annotation) {
-      this.selectorsMap = zipObject(
-        this.options.annotation.selectors.map((_, i) => i),
-        this.options.annotation.selectors,
-      );
-    }
+    this.value = this.options.initialValue || {};
   }
 
-  @observable public accessor value!: Pick<AnnotationPatchDTO, 'body' | 'color'>;
-
-  @observable private accessor selectorsMap: Record<string, Selector> = {};
-
-  @computed
-  public get selectors() {
-    return Object.entries(this.selectorsMap).map(([id, selector]) => ({ ...selector, id }));
-  }
+  @observable public accessor value!: AnnotationPatchDTO;
 
   @action
   public update(value: Pick<AnnotationPatchDTO, 'body' | 'color'>) {
@@ -54,37 +43,57 @@ export default class Editor {
 
   @action
   public addSelector(value: Selector) {
-    const maxId = Math.max(...this.selectors.map((id) => Number(id)));
-    this.selectorsMap[maxId + 1] = value;
+    (this.value.selectors ||= []).push(value);
   }
 
   @action
-  public removeSelector(id: string) {
-    delete this.selectorsMap[id];
+  public removeSelector(index: number) {
+    assert(this.value.selectors, 'can not remove');
+    this.value.selectors.splice(index, 1);
   }
 
-  public async submit() {
-    if (this.options.annotation) {
-      await this.remote.annotation.updateOne.mutate([this.options.annotation.id, this.value]);
+  @observable public accessor isSubmitting = false;
 
-      domainEventBus.emit(DomainEventNames.Updated, {
-        id: this.options.annotation.id,
-        payload: this.value,
-      });
+  public async submit() {
+    this.isSubmitting = true;
+
+    if (this.options.initialValue) {
+      const id = this.options.initialValue.id;
+
+      try {
+        await this.remote.annotation.updateOne.mutate([id, this.value]);
+      } catch {
+        this.isSubmitting = false;
+        return;
+      }
+
+      queryClient.setQueryData<Collection<AnnotationVO>>(
+        getAnnotationListQueryKey(this.options.initialValue.targetId),
+        (list) => list?.update(id, this.value),
+      );
     }
 
     if (this.options.noteId) {
-      assert(this.selectors.length > 0, 'no selector when creating');
+      assert((this.value.selectors?.length ?? 0) > 0, 'no selector when creating');
 
-      const newAnnotation = await this.remote.annotation.create.mutate({
-        targetId: this.options.noteId,
-        ...this.value,
-        selectors: this.selectors,
-      });
+      let newAnnotation;
 
-      domainEventBus.emit(DomainEventNames.Created, newAnnotation);
+      try {
+        newAnnotation = await this.remote.annotation.create.mutate({
+          targetId: this.options.noteId,
+          ...this.value,
+        } as AnnotationDTO);
+      } catch {
+        this.isSubmitting = false;
+        return;
+      }
+
+      queryClient.setQueryData<Collection<AnnotationVO>>(getAnnotationListQueryKey(this.options.noteId), (list) =>
+        list?.add(newAnnotation),
+      );
     }
 
+    this.isSubmitting = false;
     this.destroy();
   }
 
