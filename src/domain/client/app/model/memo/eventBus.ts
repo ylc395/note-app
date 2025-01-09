@@ -1,4 +1,4 @@
-import EventBus from '#domain/client/app/infra/EventBus';
+import EventBus from '#domain/client/shared/infra/EventBus';
 import type { MemoPatchDTO, MemoVO } from '#domain/shared/model/memo';
 
 export enum EventNames {

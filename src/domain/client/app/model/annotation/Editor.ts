@@ -1,15 +1,14 @@
 import assert from 'assert';
 import { action, observable } from 'mobx';
 import { uniqueId } from 'lodash-es';
-import { queryClient } from 'mobx-tanstack-query/preset';
+import { createMutation, queryClient } from 'mobx-tanstack-query/preset';
 
 import { container } from '#domain/shared/infra/singletons';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
-import { AnnotationVO, Selector, type AnnotationDTO, type AnnotationPatchDTO } from '#domain/shared/model/annotation';
+import type { AnnotationVO, Selector, AnnotationPatchDTO } from '#domain/shared/model/annotation';
 import type { NoteVO } from '#domain/shared/model/note';
 
 import { getAnnotationListQueryKey } from './queryKeys';
-import type Collection from '../common/Collection';
 
 export default class Editor {
   constructor(
@@ -52,50 +51,35 @@ export default class Editor {
     this.value.selectors.splice(index, 1);
   }
 
-  @observable public accessor isSubmitting = false;
-
-  public async submit() {
-    this.isSubmitting = true;
-
-    if (this.options.initialValue) {
-      const id = this.options.initialValue.id;
-
-      try {
-        await this.remote.annotation.updateOne.mutate([id, this.value]);
-      } catch {
-        this.isSubmitting = false;
-        return;
+  public readonly submit = createMutation(
+    async () => {
+      if (this.options.initialValue) {
+        return this.remote.annotation.updateOne.mutate([this.options.initialValue.id, this.value]);
       }
 
-      queryClient.setQueryData<Collection<AnnotationVO>>(
-        getAnnotationListQueryKey(this.options.initialValue.targetId),
-        (list) => list?.update(id, this.value),
-      );
-    }
+      if (this.options.noteId) {
+        assert(this.value.selectors && this.value.selectors.length > 0, 'no selectors when creating');
 
-    if (this.options.noteId) {
-      assert((this.value.selectors?.length ?? 0) > 0, 'no selector when creating');
-
-      let newAnnotation;
-
-      try {
-        newAnnotation = await this.remote.annotation.create.mutate({
+        return this.remote.annotation.create.mutate({
           targetId: this.options.noteId,
-          ...this.value,
-        } as AnnotationDTO);
-      } catch {
-        this.isSubmitting = false;
-        return;
+          color: this.value.color,
+          body: this.value.body,
+          selectors: this.value.selectors,
+        });
       }
 
-      queryClient.setQueryData<Collection<AnnotationVO>>(getAnnotationListQueryKey(this.options.noteId), (list) =>
-        list?.add(newAnnotation),
-      );
-    }
+      assert.fail('can not submit');
+    },
+    {
+      onSuccess: () => {
+        const id = this.options.initialValue?.targetId ?? this.options.noteId;
+        assert(id, 'invalid id');
 
-    this.isSubmitting = false;
-    this.destroy();
-  }
+        queryClient.invalidateQueries({ queryKey: getAnnotationListQueryKey(id) });
+        this.destroy();
+      },
+    },
+  );
 
   public destroy() {
     this.options.onDestroyed?.(this);

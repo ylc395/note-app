@@ -66,7 +66,5 @@ export default class AnnotationService extends BaseService {
     if (hasContentUpdated) {
       await this.content.extract({ id: id, body: patch.body });
     }
-
-    return this.queryOne(id);
   }
 }

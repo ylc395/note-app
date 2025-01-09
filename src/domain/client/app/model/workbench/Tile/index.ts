@@ -3,7 +3,7 @@ import { uniqueId } from 'lodash-es';
 import assert from 'assert';
 
 import Editor from '#domain/client/app/model/note/editor/BaseEditor';
-import EventBus from '#domain/client/app/infra/EventBus';
+import EventBus from '#domain/client/shared/infra/EventBus';
 import { container } from '#domain/shared/infra/singletons';
 import type { EntityLocator } from '#domain/client/shared/model/entity';
 

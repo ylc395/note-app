@@ -8,7 +8,7 @@ import type { NoteVO } from '#domain/shared/model/note';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 
 import Editor from './Editor';
-import Collection from '../common/Collection';
+import Collection from '../../../shared/model/abstract/Collection';
 import { getAnnotationListQueryKey } from './queryKeys';
 
 export default class AnnotationList {

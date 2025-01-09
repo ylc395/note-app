@@ -1,5 +1,4 @@
 import { action, computed, autorun } from 'mobx';
-import { compact } from 'lodash-es';
 import { z } from 'zod';
 
 import Tree from '#domain/client/shared/model/note/Tree';
@@ -10,7 +9,7 @@ import type { NoteVO } from '#domain/shared/model/note';
 
 import SortBehavior from './SortBehavior';
 import UIState from '../../common/UIState';
-import { type UpdatedEvent, eventBus as domainEventBus, EventNames } from '../eventBus';
+import { eventBus as domainEventBus, EventNames as DomainEventNames } from '../eventBus';
 
 export default class Explorer {
   constructor() {
@@ -21,7 +20,7 @@ export default class Explorer {
 
   public readonly sortBehavior = new SortBehavior();
 
-  public readonly tree = new Tree();
+  public readonly tree = new Tree({ sort: this.sortBehavior.sort.bind(this.sortBehavior) });
 
   public readonly uiState = new UIState(
     'explorer',
@@ -29,23 +28,14 @@ export default class Explorer {
       .object({
         scroll: z.object({ x: z.number(), y: z.number() }),
         expanded: z.string().array(),
-        loaded: z.string().array(),
         selected: z.string().array(),
       })
       .partial(),
   );
 
   private async init() {
-    domainEventBus.on(EventNames.Updated, this.handleNoteUpdated.bind(this));
-    domainEventBus.on(EventNames.Created, this.tree.addNode.bind(this));
-    domainEventBus.on(EventNames.Removed, this.tree.removeNode.bind(this));
+    domainEventBus.on(DomainEventNames.MoveStart, this.updateUnselectable);
     autorun(this.updateUIState.bind(this));
-
-    await this.tree.root.load();
-
-    if (this.uiState.value?.loaded) {
-      await this.tree.load(this.uiState.value.loaded);
-    }
 
     if (this.uiState.value?.expanded) {
       await this.tree.expand(this.uiState.value.expanded);
@@ -58,13 +48,15 @@ export default class Explorer {
 
   @computed
   public get canCollapse() {
-    return this.tree.expandedNodes.length > 0;
+    return this.tree.expandedNodes.size > 1; // 1 指 root 节点
   }
 
   @action.bound
   public collapseAll() {
     for (const node of this.tree.expandedNodes) {
-      node.toggleExpand(false);
+      if (!node.isRoot) {
+        node.isExpanded = false;
+      }
     }
   }
 
@@ -72,40 +64,23 @@ export default class Explorer {
     const getId = ({ id }: TreeNode) => id;
 
     this.uiState.update({
-      loaded: this.tree.loadedNodes.map(getId),
-      selected: this.tree.selectedNodes.map(getId),
-      expanded: this.tree.expandedNodes.map(getId),
+      selected: Array.from(this.tree.selectedNodes).map(getId),
+      expanded: Array.from(this.tree.expandedNodes).map(getId),
     });
   }
 
-  private handleNoteUpdated({ id, payload }: UpdatedEvent) {
-    this.tree.update({ id, ...payload });
-  }
-
-  public async updateUnselectable(from: NoteVO[]) {
+  private async updateUnselectable(movingNotes: NoteVO[]) {
     for (const node of this.tree.unselectableNodes) {
       node.isUnselectable = false;
     }
 
-    const noteIds = from.map(({ id }) => id);
-    const unknownNodes = noteIds.filter((id) => !this.tree.hasNode(id));
-    const unknownAncestors = unknownNodes.length > 0 ? await this.remote.note.queryPaths.query(unknownNodes) : {};
+    const noteIds = movingNotes.map(({ id }) => id);
+    const ancestors = noteIds.flatMap((id) => this.tree.get(id)?.ancestors || []);
+    const unknownNodes = noteIds.filter((id) => !this.tree.get(id));
+    const unknownAncestors =
+      unknownNodes.length > 0 ? Object.values(await this.remote.note.queryPaths.query(unknownNodes)).flat() : [];
 
-    for (const movingId of noteIds) {
-      let nodeToDisable: TreeNode[];
-
-      if (this.tree.hasNode(movingId)) {
-        const movingNode = this.tree.getNode(movingId);
-        nodeToDisable = [...movingNode.ancestors, movingNode];
-      } else {
-        nodeToDisable = compact(
-          unknownAncestors[movingId]?.map(({ id }) => this.tree.hasNode(id) && this.tree.getNode(id)) || [],
-        );
-      }
-
-      for (const ancestor of nodeToDisable) {
-        ancestor.isUnselectable = true;
-      }
-    }
+    const nodeIdToSetUnselect = [...noteIds, ...[...unknownAncestors, ...ancestors].map(({ id }) => id)];
+    this.tree.setUnselectable(nodeIdToSetUnselect);
   }
 }

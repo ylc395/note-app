@@ -1,7 +1,7 @@
 import { action, observable, computed } from 'mobx';
 import assert from 'assert';
 
-import EventBus from '#domain/client/app/infra/EventBus';
+import EventBus from '#domain/client/shared/infra/EventBus';
 import Editor from '../../note/editor/BaseEditor';
 import { type Record, Direction } from './types';
 import { EventNames, type Events } from './events';

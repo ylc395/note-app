@@ -1,20 +1,70 @@
-import { action, computed, observable } from 'mobx';
-import assert from 'assert';
+import { action, computed, observable, reaction } from 'mobx';
+import { createQuery } from 'mobx-tanstack-query/preset';
 
 import type { NoteVO } from '#domain/shared/model/note';
 import { container } from '#domain/shared/infra/singletons';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
+import { getChildrenNoteQueryKey } from './queryKeys';
 
 export default class TreeNode {
-  constructor(params?: { value: NoteVO; parent: TreeNode }) {
-    this.init(params);
+  constructor({
+    value,
+    parent,
+    ...options
+  }: {
+    value?: NoteVO;
+    parent?: TreeNode;
+    sort?: (note1: NoteVO, note2: NoteVO) => number;
+    onCreated: (node: TreeNode) => void;
+    onDestroyed: (node: TreeNode) => void;
+    onSelectToggle: (node: TreeNode, value: boolean) => void;
+    onExpandToggle: (node: TreeNode, value: boolean) => void;
+    onUnselectableToggle: (node: TreeNode, value: boolean) => void;
+  }) {
+    this.parent = parent;
+    this.value = value;
+    this.options = options;
+
+    this.childrenQuery = createQuery(
+      async () => {
+        return this.remote.note.query.query({ parentId: this.value?.id ?? null });
+      },
+      {
+        queryKey: getChildrenNoteQueryKey(this.value?.id ?? null),
+        abortSignal: this.removeController.signal,
+        onDone: this.setChildren.bind(this),
+        options: () => ({
+          enabled: this.isExpanded,
+        }),
+      },
+    );
+
+    reaction(
+      () => this.isSelected,
+      (value) => this.options.onSelectToggle(this, value),
+      { signal: this.removeController.signal },
+    );
+    reaction(
+      () => this.isExpanded,
+      (value) => this.options.onExpandToggle(this, value),
+      { signal: this.removeController.signal },
+    );
+    reaction(
+      () => this.isUnselectable,
+      (value) => this.options.onUnselectableToggle(this, value),
+      { signal: this.removeController.signal },
+    );
+
+    this.init();
   }
+
+  private readonly options;
 
   private readonly remote = container.resolve(rpcToken);
 
-  public parent?: TreeNode;
+  public readonly parent?: TreeNode;
 
-  @observable public accessor value: NoteVO | undefined;
+  public readonly value: NoteVO | undefined;
 
   @observable public accessor isUnselectable = false;
 
@@ -22,13 +72,42 @@ export default class TreeNode {
 
   @observable public accessor isSelected = false;
 
-  @observable public accessor isLoaded = false;
-
   @observable public accessor isLeaf = false;
 
-  @observable.shallow public accessor children: Set<TreeNode> | undefined;
+  private readonly childrenQuery;
 
-  @observable.ref private accessor loadingController: AbortController | undefined;
+  @observable.ref private accessor children: TreeNode[] | undefined;
+
+  @computed
+  public get isLoading() {
+    return this.childrenQuery.result.isLoading;
+  }
+
+  @computed
+  public get sortedChildren() {
+    if (this.options.sort) {
+      return this.children?.toSorted(({ value: note1 }, { value: note2 }) => this.options.sort!(note1!, note2!));
+    }
+
+    return this.children;
+  }
+
+  // 该节点是否“从未加载过，且并不正在加载”
+  @computed
+  public get isNeverLoaded() {
+    return this.childrenQuery.result.isPending && !this.childrenQuery.result.isFetching;
+  }
+
+  @action
+  private setChildren(notes: NoteVO[]) {
+    this.isLeaf = !this.isRoot && notes.length === 0;
+    this.children?.forEach((child) => child.destroy());
+
+    const children = notes.map((note) => new TreeNode({ value: note, parent: this, ...this.options }));
+    this.children = children;
+  }
+
+  private readonly removeController = new AbortController();
 
   public get id() {
     return this.value?.id || '_ROOT_ID';
@@ -36,11 +115,6 @@ export default class TreeNode {
 
   public get isRoot() {
     return !this.parent;
-  }
-
-  @computed
-  public get isLoading() {
-    return Boolean(this.loadingController);
   }
 
   // 不含根节点
@@ -57,123 +131,19 @@ export default class TreeNode {
   }
 
   @action
-  private init(params?: { value: NoteVO; parent: TreeNode }) {
-    this.parent = params?.parent;
-    this.value = params?.value;
-
-    if (this.isRoot) {
-      this.isExpanded = true;
-    }
-
-    if (this.parent) {
-      this.parent.addChild(this);
-    }
-
-    if (params?.value && params.value.childrenCount > 0) {
-      this.isLeaf = true;
-    }
-  }
-
-  public async load() {
-    if (this.isLoaded) {
-      return;
-    }
-
-    const abortController = new AbortController();
-
-    this.loadingController?.abort();
-    this.loadingController = abortController;
-    let children: NoteVO[] | undefined;
-
-    try {
-      children = await this.remote.note.query.query(
-        { parentId: this.isRoot ? null : this.id },
-        { signal: abortController.signal },
-      );
-    } catch (e) {
-      if (!abortController.signal.aborted) {
-        throw e;
-      }
-
-      return;
-    } finally {
-      if (this.loadingController === abortController) {
-        this.loadingController = undefined;
-      }
-    }
-
-    this.children = new Set(children.map((child) => new TreeNode({ value: child, parent: this })));
-    this.isLoaded = true;
-  }
-
-  // 将一个节点纳为自己的子节点。它与原父节点的关系将被解除
-  @action
-  public addChild(node: TreeNode) {
-    assert(!this.children?.has(node), 'can not add node twice');
-
-    this.isLeaf = true;
-    this.isLoaded = true;
-
-    if (node.parent !== this) {
-      node.parent?.removeChild(node);
-      node.parent = this;
-    }
-
-    if (!this.children) {
-      this.children = new Set();
-    }
-
-    this.children.add(node);
+  private init() {
+    this.isExpanded = this.isRoot; // 根节点总是被自动展开
+    this.isLeaf = this.value?.childrenCount === 0;
+    this.options.onCreated(this);
   }
 
   @action
-  private removeChild(node: TreeNode) {
-    assert(node.parent === this, 'not a child to remove');
-
-    this.children?.delete(node);
-    node.parent = undefined;
-
-    if (this.children?.size === 0) {
-      this.children = undefined;
-      this.isLeaf = true;
-    }
+  public toggleExpand() {
+    this.isExpanded = !this.isExpanded;
   }
 
-  @action
-  public toggleSelect(value?: boolean) {
-    assert(!this.isUnselectable, 'can not select disabled node');
-    this.isSelected = value ?? !this.isSelected;
-  }
-
-  @action
-  public toggleExpand(value?: boolean) {
-    assert(this.children, 'can not expand leaf');
-    assert(!this.isRoot, 'can not expand root');
-
-    this.isExpanded = value ?? !this.isExpanded;
-
-    if (this.isExpanded) {
-      this.load();
-    } else {
-      this.loadingController?.abort();
-    }
-  }
-
-  @action
-  public updateValue(value: Partial<NoteVO>) {
-    assert(this.value, 'can not update root node');
-    assert(!value.id || value.id === this.id, 'can not update id');
-
-    this.value = {
-      ...this.value,
-      ...value,
-    };
-  }
-
-  // 不要在 Tree 以外的地方用
-  @action
-  public remove() {
-    this.loadingController?.abort();
-    this.parent?.removeChild(this);
+  private destroy() {
+    this.removeController.abort();
+    this.options.onDestroyed(this);
   }
 }

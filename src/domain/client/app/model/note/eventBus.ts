@@ -1,19 +1,10 @@
-import EventBus from '#domain/client/app/infra/EventBus';
-import type { NotePatchDTO, NoteVO } from '#domain/shared/model/note';
-
-export interface UpdatedEvent {
-  id: NoteVO['id'];
-  payload: NotePatchDTO;
-}
+import EventBus from '#domain/client/shared/infra/EventBus';
+import type { NoteVO } from '#domain/shared/model/note';
 
 export enum EventNames {
-  Created = 'note.created',
-  Updated = 'note.updated',
-  Removed = 'note.removed',
+  MoveStart = 'move.start',
 }
 
 export const eventBus = new EventBus<{
-  [EventNames.Updated]: UpdatedEvent;
-  [EventNames.Created]: NoteVO;
-  [EventNames.Removed]: NoteVO['id'];
+  [EventNames.MoveStart]: NoteVO[];
 }>('domain:notes');
