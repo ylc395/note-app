@@ -5,6 +5,7 @@ import type { NoteVO } from '#domain/shared/model/note';
 import { container } from '#domain/shared/infra/singletons';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import { getChildrenNoteQueryKey } from './queryKeys';
+import { keyBy } from 'lodash-es';
 
 export default class TreeNode {
   constructor({
@@ -22,8 +23,8 @@ export default class TreeNode {
     onUnselectableToggle: (node: TreeNode, value: boolean) => void;
   }) {
     this.parent = parent;
-    this.value = value;
     this.options = options;
+    this.setValue(value);
 
     this.childrenQuery = createQuery(
       async () => {
@@ -32,7 +33,6 @@ export default class TreeNode {
       {
         queryKey: getChildrenNoteQueryKey(this.value?.id ?? null),
         abortSignal: this.removeController.signal,
-        onDone: this.setChildren.bind(this),
         options: () => ({
           enabled: this.isExpanded,
         }),
@@ -54,8 +54,13 @@ export default class TreeNode {
       (value) => this.options.onUnselectableToggle(this, value),
       { signal: this.removeController.signal },
     );
+    reaction(
+      () => this.childrenQuery.result.data,
+      (notes) => notes && this.setChildren(notes),
+      { signal: this.removeController.signal },
+    );
 
-    this.init();
+    this.options.onCreated(this);
   }
 
   private readonly options;
@@ -64,19 +69,17 @@ export default class TreeNode {
 
   public readonly parent?: TreeNode;
 
-  public readonly value: NoteVO | undefined;
+  @observable.ref public value: NoteVO | undefined;
 
-  @observable public accessor isUnselectable = false;
+  @observable public accessor isSelected = false;
 
   @observable public accessor isExpanded = false;
 
-  @observable public accessor isSelected = false;
+  @observable public accessor isUnselectable = false;
 
   @observable public accessor isLeaf = false;
 
   private readonly childrenQuery;
-
-  @observable.ref private accessor children: TreeNode[] | undefined;
 
   @computed
   public get isLoading() {
@@ -84,12 +87,14 @@ export default class TreeNode {
   }
 
   @computed
-  public get sortedChildren() {
+  public get children() {
+    const children = this.childrenMap ? Object.values(this.childrenMap) : [];
+
     if (this.options.sort) {
-      return this.children?.toSorted(({ value: note1 }, { value: note2 }) => this.options.sort!(note1!, note2!));
+      return children.sort(({ value: note1 }, { value: note2 }) => this.options.sort!(note1!, note2!));
     }
 
-    return this.children;
+    return children;
   }
 
   // 该节点是否“从未加载过，且并不正在加载”
@@ -98,13 +103,39 @@ export default class TreeNode {
     return this.childrenQuery.result.isPending && !this.childrenQuery.result.isFetching;
   }
 
+  @observable.shallow private childrenMap?: Record<TreeNode['id'], TreeNode>;
+
   @action
   private setChildren(notes: NoteVO[]) {
     this.isLeaf = !this.isRoot && notes.length === 0;
-    this.children?.forEach((child) => child.destroy());
 
-    const children = notes.map((note) => new TreeNode({ value: note, parent: this, ...this.options }));
-    this.children = children;
+    if (!this.childrenMap) {
+      this.childrenMap = keyBy(
+        notes.map((note) => new TreeNode({ value: note, parent: this, ...this.options })),
+        (node) => node.id,
+      );
+
+      return;
+    }
+
+    const notesMap = keyBy(notes, (note) => note.id);
+
+    for (const [id, node] of Object.entries(this.childrenMap)) {
+      if (!(id in notesMap)) {
+        node.destroy();
+        delete this.childrenMap[id];
+      }
+    }
+
+    for (const note of notes) {
+      const node = this.childrenMap[note.id];
+
+      if (node) {
+        node.setValue(note);
+      } else {
+        this.childrenMap[note.id] = new TreeNode({ value: note, parent: this, ...this.options });
+      }
+    }
   }
 
   private readonly removeController = new AbortController();
@@ -131,10 +162,14 @@ export default class TreeNode {
   }
 
   @action
-  private init() {
+  private setValue(value: TreeNode['value']) {
+    this.value = value;
     this.isExpanded = this.isRoot; // 根节点总是被自动展开
     this.isLeaf = this.value?.childrenCount === 0;
-    this.options.onCreated(this);
+
+    if (this.isLeaf) {
+      this.destroyChildren();
+    }
   }
 
   @action
@@ -142,7 +177,17 @@ export default class TreeNode {
     this.isExpanded = !this.isExpanded;
   }
 
+  @action
+  private destroyChildren() {
+    for (const child of this.children) {
+      child.destroy();
+    }
+
+    this.childrenMap = undefined;
+  }
+
   private destroy() {
+    this.destroyChildren();
     this.removeController.abort();
     this.options.onDestroyed(this);
   }

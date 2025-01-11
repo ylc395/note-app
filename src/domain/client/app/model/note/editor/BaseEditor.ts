@@ -1,5 +1,5 @@
 import { debounce, uniqueId } from 'lodash-es';
-import { computed } from 'mobx';
+import { computed, reaction } from 'mobx';
 import type { infer as ZodInfer } from 'zod';
 import assert from 'assert';
 import { createMutation, createQuery, queryClient } from 'mobx-tanstack-query/preset';
@@ -24,7 +24,6 @@ export default class BaseEditor {
 
     this.value = createQuery(({ signal }) => this.remote.note.queryOne.query(this.entityId, { signal }), {
       queryKey: this.valueQueryKey,
-      onDone: this.backup.diff.bind(this.backup),
       abortSignal: this.destroyController.signal,
     });
 
@@ -43,6 +42,12 @@ export default class BaseEditor {
           enabled: this.value.result.isSuccess,
         }),
       },
+    );
+
+    reaction(
+      () => this.value.result.data,
+      (data) => data && this.backup.diff(data),
+      { signal: this.destroyController.signal },
     );
   }
 

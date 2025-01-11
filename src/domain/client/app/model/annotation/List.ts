@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { computed } from 'mobx';
+import { action, computed, observable } from 'mobx';
 import { createQuery } from 'mobx-tanstack-query/preset';
 
 import { container } from '#domain/shared/infra/singletons';
@@ -8,7 +8,6 @@ import type { NoteVO } from '#domain/shared/model/note';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 
 import Editor from './Editor';
-import Collection from '../../../shared/model/abstract/Collection';
 import { getAnnotationListQueryKey } from './queryKeys';
 
 export default class AnnotationList {
@@ -21,7 +20,8 @@ export default class AnnotationList {
 
     this.annotations = createQuery(
       async ({ signal }) => {
-        return new Collection(await this.remote.annotation.queryByEntityId.query(this.noteId, { signal }));
+        const annotations = await this.remote.annotation.queryByEntityId.query(this.noteId, { signal });
+        return new Map(annotations.map((annotation) => [annotation.id, annotation]));
       },
       {
         queryKey: getAnnotationListQueryKey(this.noteId),
@@ -41,8 +41,8 @@ export default class AnnotationList {
   private readonly sort: (item1: AnnotationVO, it: AnnotationVO) => number;
 
   @computed
-  public get value() {
-    return this.annotations.result.data?.value.sort(this.sort);
+  public get sortedValue() {
+    return Array.from(this.annotations.result.data?.values() || []).sort(this.sort);
   }
 
   @computed
@@ -50,18 +50,19 @@ export default class AnnotationList {
     return this.annotations.result.isLoading;
   }
 
-  public readonly editors = new Collection<Editor>();
+  // 一次只能有一个 editor，无论是修改的还是新增的
+  @observable public accessor editor: Editor | undefined;
 
-  public initEditor(annotation?: AnnotationVO) {
-    assert(!annotation || this.annotations.result.data?.has(annotation), 'invalid annotation');
+  public addEditor(annotationId?: AnnotationVO['id']) {
+    assert(!annotationId || this.annotations.result.data?.has(annotationId), 'invalid annotation');
 
-    const newEditor = new Editor({
-      initialValue: annotation,
+    this.editor = new Editor({
+      initialValue: annotationId ? this.annotations.result.data?.get(annotationId) : undefined,
       noteId: this.noteId,
-      onDestroyed: this.editors.remove.bind(this.editors),
+      onDestroyed: action(() => {
+        this.editor = undefined;
+      }),
     });
-
-    this.editors.add(newEditor);
   }
 
   public destroy() {

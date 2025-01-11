@@ -1,42 +1,56 @@
-import { action, observable } from 'mobx';
-import assert from 'assert';
-
-import type { MemoVO } from '#domain/shared/model/memo';
-import { container } from '#domain/shared/infra/singletons';
-import { token as rpcToken } from '#domain/client/shared/infra/rpc';
-
-import { eventBus as domainEventBus, EventNames as DomainEventNames } from './eventBus';
+import { action, computed, observable } from 'mobx';
+import UIState from '../common/UIState';
+import { z } from 'zod';
 
 export default class Editor {
-  constructor(private readonly options: { memo?: MemoVO; parentId?: MemoVO['parentId']; onDestroyed?: () => void }) {
-    assert(options.memo || options.parentId, 'memo or parentId can not both be undefined');
-    assert(!(options.memo && options.parentId), 'can not specify both memo and parentId');
+  constructor(
+    private readonly options: {
+      id?: string;
+      initialValue?: string;
+      onDestroyed?: () => void;
+      onSubmit?: (value: string) => void;
+    },
+  ) {
+    if (options.id) {
+      this.uiState = new UIState(options.id, z.object({ value: z.string() }));
+    }
 
-    this.update(options.memo?.body ?? '');
+    this.init();
   }
 
-  private readonly remote = container.resolve(rpcToken);
+  private readonly uiState;
 
-  @observable public accessor value!: string;
+  @observable public accessor value = '';
 
   @action
   public update(value: string) {
     this.value = value;
   }
 
+  private init() {
+    const value = this.options.initialValue ?? this.uiState?.value?.value ?? '';
+    this.update(value);
+  }
+
+  @computed
+  public get canSubmit() {
+    return Boolean(this.value);
+  }
+
+  @action
+  public reset() {
+    this.value = '';
+    this.uiState?.clear();
+  }
+
   public async submit() {
-    if (this.options.memo) {
-      const payload = { body: this.value };
-      await this.remote.memo.updateOne.mutate([this.options.memo.id, payload]);
-      domainEventBus.emit(DomainEventNames.Updated, { id: this.options.memo.id, payload });
+    try {
+      await this.options.onSubmit?.(this.value);
+    } catch {
+      return;
     }
 
-    if (this.options.parentId !== undefined) {
-      const newMemo = await this.remote.memo.create.mutate({ body: this.value, parentId: this.options.parentId });
-      domainEventBus.emit(DomainEventNames.Created, newMemo);
-    }
-
-    this.destroy();
+    this.uiState?.clear();
   }
 
   public destroy() {

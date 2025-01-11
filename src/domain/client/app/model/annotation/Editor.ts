@@ -15,7 +15,7 @@ export default class Editor {
     private readonly options: {
       initialValue?: AnnotationVO;
       noteId?: NoteVO['id'];
-      onDestroyed: (editor: Editor) => void; // AnnotationEditor 的生命周期很简单，无需继承 EventBus 来获得完整的事件管理能力
+      onDestroyed: () => void;
     },
   ) {
     assert(options.initialValue || options.noteId, 'annotation and note can not both be omitted');
@@ -82,6 +82,6 @@ export default class Editor {
   );
 
   public destroy() {
-    this.options.onDestroyed?.(this);
+    this.options.onDestroyed?.();
   }
 }
