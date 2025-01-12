@@ -30,14 +30,14 @@ export default class Tree {
   @action
   public setUnselectable(ids: TreeNode['id'][]) {
     for (const node of this.unselectableNodes.values()) {
-      node.state.isUnselectable = false;
+      node.isUnselectable = false;
     }
 
     for (const id of ids) {
       const node = this.nodesMap.get(id);
 
       if (node) {
-        node.state.isUnselectable = true;
+        node.isUnselectable = true;
       }
     }
   }
@@ -46,7 +46,7 @@ export default class Tree {
   public select(ids: MaybeArray<TreeNode['id']>, isAppend?: boolean) {
     if (!isAppend) {
       for (const node of this.selectedNodes) {
-        node.state.isSelected = false;
+        node.isSelected = false;
       }
     }
 
@@ -54,7 +54,7 @@ export default class Tree {
       const node = this.nodesMap.get(id);
 
       if (node) {
-        node.state.isSelected = true;
+        node.isSelected = true;
       }
     }
   }
@@ -107,7 +107,7 @@ export default class Tree {
       const node = this.addNode(child);
 
       if (node) {
-        node.state.isExpanded = true;
+        node.isExpanded = true;
       }
     }
   }

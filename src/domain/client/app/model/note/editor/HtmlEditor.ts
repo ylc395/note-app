@@ -26,11 +26,11 @@ export default class HtmlEditor extends BaseEditor {
 
   @computed
   public get html() {
-    if (!this.blob) {
+    if (!this.blob.result.data) {
       return undefined;
     }
 
     const textDecoder = new TextDecoder();
-    return textDecoder.decode(this.blob);
+    return textDecoder.decode(this.blob.result.data);
   }
 }
