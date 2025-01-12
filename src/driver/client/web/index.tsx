@@ -1,6 +1,5 @@
 import '#domain/client/shared/infra/mobx';
 import '#domain/client/shared/infra/queryClient';
-import { createRoot } from 'react-dom/client';
 
 import { token as loggerToken } from '#domain/shared/infra/logger';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
@@ -8,7 +7,6 @@ import { token as localStorageToken } from '#domain/client/app/infra/localStorag
 import { container } from '#domain/shared/infra/singletons';
 
 import webLocalStorage from './infra/localStorage';
-import App from './views/App';
 import electronRpc from '../electron/rpcClient';
 
 container.register(loggerToken, { useValue: console });
@@ -20,5 +18,4 @@ if (import.meta.env.VITE_WEB_PLATFORM === 'electron') {
 }
 
 const appEl = document.getElementById(import.meta.env.VITE_WEB_ROOT_ID)!;
-const root = createRoot(appEl);
-root.render(<App />);
+console.log(appEl);

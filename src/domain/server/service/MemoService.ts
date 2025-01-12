@@ -21,12 +21,10 @@ export default class MemoService extends BaseService {
     }
 
     const now = Date.now();
-    const latest = await this.repo.memos.findLatest();
     const newMemo = await this.repo.memos.create({
       id: EntityService.generateId(),
       updatedAt: now,
       createdAt: now,
-      orderIndex: latest?.orderIndex ?? 1,
       parentId: memo.parentId || null,
       isPinned: memo.isPinned || false,
       body: memo.body,
@@ -57,20 +55,15 @@ export default class MemoService extends BaseService {
 
   @BaseService.transaction
   public async queryList(query: ClientMemoQuery) {
-    assert(!(query.startIndex && query.startTime), 'startIndex can not be used together with startTime');
-    assert(!(query.endIndex && query.endTime), 'endIndex can not be used together with endTime');
-
     const memos = await this.repo.memos.findAll({
       isAvailableOnly: true,
       limit: query.limit,
       startTime: query.startTime,
       endTime: query.endTime,
-      startIndex: query.startIndex,
-      endIndex: query.endIndex,
       parentId: query.parentId || null,
       isPinned: query.isPinned,
       orderBy: {
-        by: 'index',
+        by: 'createdAt',
         order: query.order ?? 'desc',
       },
     });

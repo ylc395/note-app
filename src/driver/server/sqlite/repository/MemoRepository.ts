@@ -14,12 +14,6 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
     return memo;
   }
 
-  public async findLatest() {
-    const row = await this.db.selectFrom(this.tableName).selectAll().orderBy('orderIndex').limit(1).executeTakeFirst();
-
-    return row ? SqliteMemoRepository.rowToMemo(row) : null;
-  }
-
   public async update(id: Memo['id'], patch: MemoPatchDTO) {
     const updatedRow = await this.db
       .updateTable(this.tableName)
@@ -67,11 +61,29 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
     }
 
     if (q.startTime) {
-      sql = sql.where('createdAt', '>=', q.startTime);
+      sql = sql.where(({ eb, and, or }) => {
+        if (!q.startId) {
+          return eb('createdAt', '>=', q.startTime!);
+        }
+
+        return or([
+          eb('createdAt', '>', q.startTime!),
+          and([eb('createdAt', '=', q.startTime!), eb('id', '>', q.startId)]),
+        ]);
+      });
     }
 
     if (q.endTime) {
-      sql = sql.where('createdAt', '<', q.endTime);
+      sql = sql.where(({ eb, and, or }) => {
+        if (!q.endId) {
+          return eb('createdAt', '<=', q.startTime!);
+        }
+
+        return or([
+          eb('createdAt', '<', q.startTime!),
+          and([eb('createdAt', '=', q.startTime!), eb('id', '<', q.endId)]),
+        ]);
+      });
     }
 
     if (q.id) {
@@ -86,16 +98,8 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
       sql = sql.where('isPinned', '=', q.isPinned ? 1 : 0);
     }
 
-    if (typeof q.startIndex === 'number') {
-      sql = sql.where('orderIndex', '>', q.startIndex);
-    }
-
-    if (typeof q.endIndex === 'number') {
-      sql = sql.where('orderIndex', '<', q.endIndex);
-    }
-
-    if (q.orderBy?.by === 'index') {
-      sql = sql.orderBy('orderIndex', q.orderBy.order);
+    if (q.orderBy?.by === 'createdAt') {
+      sql = sql.orderBy([`createdAt ${q.orderBy.order}`, `id ${q.orderBy.order}`]);
     }
 
     if (q.limit) {

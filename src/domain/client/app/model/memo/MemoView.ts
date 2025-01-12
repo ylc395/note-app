@@ -18,15 +18,29 @@ export default class MemoView {
       this.query = createInfiniteQuery(
         ({ signal, pageParam }) =>
           this.remote.memo.queryList.query(
-            { parentId: this.value.parentId, limit: LIMIT, endIndex: pageParam, order: 'desc' },
+            { parentId: this.value.parentId, limit: LIMIT, ...pageParam, order: 'desc' },
             { signal },
           ),
         {
           // 无限加载的列表就别 stale 了，refetch 的代价太大
           staleTime: Infinity,
           abortSignal: this.destroyController.signal,
-          getNextPageParam: (lastPage) => (lastPage.length < LIMIT ? undefined : last(lastPage)!.orderIndex),
-          initialPageParam: 0,
+          initialPageParam: {
+            endTime: undefined as number | undefined,
+            endId: undefined as MemoVO['id'] | undefined,
+          },
+          getNextPageParam: (lastPage) => {
+            const lastOne = last(lastPage);
+
+            if (lastPage.length < LIMIT || !lastOne) {
+              return;
+            }
+
+            return {
+              endTime: lastOne.createdAt,
+              endId: lastOne.id,
+            };
+          },
           options: () => ({
             enabled: this.isExpand,
           }),

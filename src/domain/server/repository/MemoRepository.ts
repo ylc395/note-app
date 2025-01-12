@@ -6,15 +6,15 @@ export type MemoPatch = MemoPatchDTO & Partial<Pick<Memo, 'updatedAt'>>;
 export interface MemoQuery {
   id?: string | string[];
   startTime?: number; // included
-  endTime?: number; // not included
-  startIndex?: number; // included
-  endIndex?: number; // not included
+  startId?: string;
+  endTime?: number; // included
+  endId?: string;
   isAvailableOnly?: boolean;
   isPinned?: boolean;
   limit?: number;
   parentId?: EntityParentId;
   orderBy?: {
-    by: 'index';
+    by: 'createdAt';
     order: 'desc' | 'asc';
   };
 }
@@ -24,5 +24,4 @@ export interface MemoRepository {
   update: (id: MemoVO['id'], patch: MemoPatch) => Promise<Memo | null>;
   findOneById: (id: MemoVO['id'], config?: { isAvailableOnly?: boolean }) => Promise<Memo | null>;
   findAll: (q: MemoQuery) => Promise<Memo[]>;
-  findLatest: () => Promise<Memo | null>;
 }
