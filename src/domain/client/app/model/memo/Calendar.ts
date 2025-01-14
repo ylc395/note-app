@@ -7,7 +7,7 @@ import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import { container } from '#domain/shared/infra/singletons';
 import type { MemoVO } from '#domain/shared/model/memo';
 
-import { eventBus as domainEventBus, EventNames as DomainEventNames } from './eventBus';
+import DomainEventBus from './EventBus';
 
 dayjs.extend(isBetween);
 
@@ -20,8 +20,13 @@ export default class Calendar {
       { queryKey: ['memos', 'calendar'] },
     );
 
-    domainEventBus.on([DomainEventNames.Created, DomainEventNames.Removed], this.handleChanged.bind(this));
+    this.domainEventBus.on(
+      [DomainEventBus.eventNames.Created, DomainEventBus.eventNames.Removed],
+      this.handleChanged.bind(this),
+    );
   }
+
+  private readonly domainEventBus = container.resolve(DomainEventBus);
 
   private readonly remote = container.resolve(rpcToken);
 

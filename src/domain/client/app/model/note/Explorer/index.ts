@@ -9,12 +9,14 @@ import type { NoteVO } from '#domain/shared/model/note';
 
 import SortBehavior from './SortBehavior';
 import UIState from '../../common/UIState';
-import { eventBus as domainEventBus, EventNames as DomainEventNames } from '../eventBus';
+import DomainEventBus from '../EventBus';
 
 export default class Explorer {
   constructor() {
     this.init();
   }
+
+  private domainEventBus = container.resolve(DomainEventBus);
 
   protected readonly remote = container.resolve(rpcToken);
 
@@ -34,7 +36,7 @@ export default class Explorer {
   );
 
   private async init() {
-    domainEventBus.on(DomainEventNames.MoveStart, this.updateUnselectable);
+    this.domainEventBus.on(DomainEventBus.eventNames.MoveStart, this.updateUnselectable);
     autorun(this.updateUIState.bind(this));
 
     if (this.uiState.value?.expanded) {

@@ -10,7 +10,10 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
   private readonly tableName = schema.tableName;
 
   public async create(memo: Memo) {
-    await this.db.insertInto(this.tableName).values({ ...memo, isPinned: memo.isPinned ? 1 : 0 });
+    await this.db
+      .insertInto(this.tableName)
+      .values({ ...memo, isPinned: memo.isPinned ? 1 : 0 })
+      .execute();
     return memo;
   }
 

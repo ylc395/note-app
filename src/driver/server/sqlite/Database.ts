@@ -37,6 +37,13 @@ export default class SqliteDb implements Database {
   }
 
   public transaction<T>(cb: () => Promise<T>) {
+    const currentTrx = this.als.getStore();
+
+    if (currentTrx) {
+      // 事务不能嵌套。当前已在事务里了，就直接调用
+      return cb();
+    }
+
     return this.db.transaction().execute((trx) => {
       return this.als.run(trx, cb);
     });

@@ -4,10 +4,10 @@ import { createQuery } from 'mobx-tanstack-query/preset';
 import type { NoteVO } from '#domain/shared/model/note';
 import { container } from '#domain/shared/infra/singletons';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
+import HierarchyEntity from '../abstract/HierarchyEntity';
 import { getChildrenNoteQueryKey } from './queryKeys';
-import { keyBy } from 'lodash-es';
 
-export default class TreeNode {
+export default class TreeNode extends HierarchyEntity<NoteVO> {
   constructor({
     value,
     parent,
@@ -22,6 +22,7 @@ export default class TreeNode {
     onExpandToggle: (node: TreeNode, value: boolean) => void;
     onUnselectableToggle: (node: TreeNode, value: boolean) => void;
   }) {
+    super();
     this.parent = parent;
     this.options = options;
     this.setValue(value);
@@ -57,7 +58,7 @@ export default class TreeNode {
     reaction(
       () => this.childrenQuery.result.data,
       (notes) => notes && this.setChildren(notes),
-      { signal: this.removeController.signal },
+      { signal: this.removeController.signal, fireImmediately: true },
     );
 
     this.options.onCreated(this);
@@ -68,8 +69,6 @@ export default class TreeNode {
   private readonly remote = container.resolve(rpcToken);
 
   public readonly parent?: TreeNode;
-
-  @observable.ref public value: NoteVO | undefined;
 
   @observable public accessor isSelected = false;
 
@@ -103,46 +102,13 @@ export default class TreeNode {
     return this.childrenQuery.result.isPending && !this.childrenQuery.result.isFetching;
   }
 
-  @observable.shallow private childrenMap?: Record<TreeNode['id'], TreeNode>;
-
   @action
-  private setChildren(notes: NoteVO[]) {
+  protected override setChildren(notes: NoteVO[]) {
     this.isLeaf = !this.isRoot && notes.length === 0;
-
-    if (!this.childrenMap) {
-      this.childrenMap = keyBy(
-        notes.map((note) => new TreeNode({ value: note, parent: this, ...this.options })),
-        (node) => node.id,
-      );
-
-      return;
-    }
-
-    const notesMap = keyBy(notes, (note) => note.id);
-
-    for (const [id, node] of Object.entries(this.childrenMap)) {
-      if (!(id in notesMap)) {
-        node.destroy();
-        delete this.childrenMap[id];
-      }
-    }
-
-    for (const note of notes) {
-      const node = this.childrenMap[note.id];
-
-      if (node) {
-        node.setValue(note);
-      } else {
-        this.childrenMap[note.id] = new TreeNode({ value: note, parent: this, ...this.options });
-      }
-    }
+    super.setChildren(notes, (note) => new TreeNode({ value: note, parent: this, ...this.options }));
   }
 
   private readonly removeController = new AbortController();
-
-  public get id() {
-    return this.value?.id || '_ROOT_ID';
-  }
 
   public get isRoot() {
     return !this.parent;
@@ -162,8 +128,8 @@ export default class TreeNode {
   }
 
   @action
-  private setValue(value: TreeNode['value']) {
-    this.value = value;
+  protected override setValue(value: TreeNode['value']) {
+    super.setValue(value);
     this.isExpanded = this.isRoot; // 根节点总是被自动展开
     this.isLeaf = this.value?.childrenCount === 0;
 
@@ -178,16 +144,8 @@ export default class TreeNode {
   }
 
   @action
-  private destroyChildren() {
-    for (const child of this.children) {
-      child.destroy();
-    }
-
-    this.childrenMap = undefined;
-  }
-
-  private destroy() {
-    this.destroyChildren();
+  public override destroy() {
+    super.destroy();
     this.removeController.abort();
     this.options.onDestroyed(this);
   }

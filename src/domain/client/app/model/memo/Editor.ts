@@ -34,7 +34,7 @@ export default class Editor {
 
   @computed
   public get canSubmit() {
-    return Boolean(this.value);
+    return this.value.length > 0;
   }
 
   @action
@@ -53,7 +53,11 @@ export default class Editor {
     this.uiState?.clear();
   }
 
-  public destroy() {
+  public destroy(reset?: boolean) {
+    if (reset) {
+      this.reset();
+    }
+
     this.options.onDestroyed?.();
   }
 }

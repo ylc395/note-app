@@ -1,10 +1,16 @@
 import EventBus from '#domain/client/shared/infra/EventBus';
 import type { NoteVO } from '#domain/shared/model/note';
 
-export enum EventNames {
+enum EventNames {
   MoveStart = 'move.start',
 }
 
-export const eventBus = new EventBus<{
+export default class DomainEventBus extends EventBus<{
   [EventNames.MoveStart]: NoteVO[];
-}>('domain:notes');
+}> {
+  constructor() {
+    super('domain:notes');
+  }
+
+  static eventNames = EventNames;
+}

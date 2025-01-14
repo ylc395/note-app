@@ -2,7 +2,7 @@ import { createServer } from 'vite';
 import path from 'node:path';
 import { checker } from 'vite-plugin-checker';
 import tsconfigPaths from 'vite-tsconfig-paths';
-import react from '@vitejs/plugin-react';
+import solid from 'vite-plugin-solid';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import tailwindcss from 'tailwindcss';
 
@@ -23,7 +23,7 @@ export default async function createViteServer() {
       },
     },
     plugins: [
-      react(),
+      solid(),
       checker({ typescript: { tsconfigPath: WEB_TSCONFIG } }),
       tsconfigPaths({ projects: [WEB_TSCONFIG] }),
       nodePolyfills({
