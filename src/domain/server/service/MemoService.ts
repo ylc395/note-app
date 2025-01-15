@@ -55,11 +55,31 @@ export default class MemoService extends BaseService {
 
   @BaseService.transaction
   public async queryList(query: ClientMemoQuery) {
+    assert(!(query.startId && query.startTime), 'can not use both startId and startTime');
+    assert(!(query.endId && query.endTime), 'can not use both endId and endTime');
+
+    let startTime = query.startTime;
+    let endTime = query.endTime;
+
+    if (query.startId) {
+      const startMemo = await this.repo.memos.findOneById(query.startId, { isAvailableOnly: true });
+      assert(startMemo, 'invalid start id');
+
+      startTime = startMemo.createdAt;
+    }
+
+    if (query.endId) {
+      const endMemo = await this.repo.memos.findOneById(query.endId, { isAvailableOnly: true });
+      assert(endMemo, 'invalid end id');
+
+      endTime = endMemo.createdAt;
+    }
+
     const memos = await this.repo.memos.findAll({
       isAvailableOnly: true,
       limit: query.limit,
-      startTime: query.startTime,
-      endTime: query.endTime,
+      startTime,
+      endTime,
       parentId: query.parentId || null,
       isPinned: query.isPinned,
       orderBy: {

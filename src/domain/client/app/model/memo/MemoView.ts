@@ -10,43 +10,57 @@ import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 
 import DomainEventBus from './EventBus';
 import Editor from './Editor';
+import UIState from '../common/UIState';
+import { z } from 'zod';
 
 export default class MemoView extends HierarchyEntity<MemoVO> {
-  constructor(value?: MemoVO) {
+  constructor(options?: { value: MemoVO; parent: MemoView }) {
     super();
-    this.setValue(value);
+    this.setValue(options?.value);
+    this.parent = options?.parent;
+
+    if (this.isRoot) {
+      console.log('create root');
+    }
 
     if (!this.isParent && !this.isRoot) {
       return;
     }
 
-    const LIMIT = 30;
+    this.uiState = new UIState(
+      `memo-view-${this.id}`,
+      z.object({
+        lastId: z.string(),
+        top: z.object({ id: z.string(), offset: z.number() }),
+      }),
+    );
+
     this.childrenQuery = createInfiniteQuery(
-      ({ signal, pageParam }) =>
+      ({ signal, pageParam: { endId, isPinned, limit } }) =>
         this.remote.memo.queryList.query(
-          { parentId: this.value?.id, limit: LIMIT, ...pageParam, order: 'desc' },
+          { parentId: this.value?.id, limit, endId, isPinned, order: 'desc' },
           { signal },
         ),
       {
-        queryKey: ['memos', { parentId: value?.id }],
+        queryKey: ['memos', { parentId: options?.value.id }],
         // 无限加载的列表就别 stale 了
         staleTime: Infinity,
         abortSignal: this.destroyController.signal,
         initialPageParam: {
-          endTime: undefined as number | undefined,
           endId: undefined as MemoVO['id'] | undefined,
+          isPinned: true,
+          limit: MemoView.PAGE_MAX_LENGTH,
         },
-        getNextPageParam: (lastPage) => {
-          const lastOne = last(lastPage);
-
-          if (lastPage.length < LIMIT || !lastOne) {
-            return;
+        getNextPageParam: (lastPage, _, lastPageParam) => MemoView.getNextPageParams(lastPage, lastPageParam),
+        onDone: (data) => {
+          const lastPage = last(data.pages);
+          if (
+            lastPage &&
+            lastPage.length < MemoView.PAGE_MAX_LENGTH &&
+            (last(data.pageParams) as { isPinned: boolean }).isPinned
+          ) {
+            this.loadMore();
           }
-
-          return {
-            endTime: lastOne.createdAt,
-            endId: lastOne.id,
-          };
         },
         options: () => ({
           enabled: this.isExpand,
@@ -61,6 +75,10 @@ export default class MemoView extends HierarchyEntity<MemoVO> {
     );
   }
 
+  private readonly parent?: MemoView;
+
+  @observable.shallow protected override accessor childrenMap: Record<string, MemoView> | undefined = undefined;
+
   private readonly domainEventBus = container.resolve(DomainEventBus);
 
   private readonly remote = container.resolve(rpcToken);
@@ -68,6 +86,8 @@ export default class MemoView extends HierarchyEntity<MemoVO> {
   private readonly childrenQuery;
 
   private readonly destroyController = new AbortController();
+
+  public readonly uiState;
 
   @observable.ref public accessor selfEditor: Editor | undefined; // 用于编辑自己的 editor
 
@@ -90,19 +110,24 @@ export default class MemoView extends HierarchyEntity<MemoVO> {
       return [];
     }
 
-    return Object.values(this.childrenMap).sort(
-      ({ value: memo1 }, { value: memo2 }) => memo2!.createdAt - memo1!.createdAt,
-    ) as MemoView[];
+    return Object.values(this.childrenMap).sort(({ value: memo1 }, { value: memo2 }) => {
+      return Number(memo2!.isPinned) - Number(memo1!.isPinned) || memo2!.createdAt - memo1!.createdAt;
+    });
   }
 
   @action
   protected override setChildren(pages: MemoVO[]) {
-    super.setChildren(pages, (memo) => new MemoView(memo));
+    super.setChildren(pages, (memo) => new MemoView({ value: memo, parent: this }));
   }
 
   @computed
   public get canLoadMore() {
-    return this.childrenQuery && (!this.childrenQuery?.result || this.childrenQuery.result.hasNextPage);
+    return Boolean(this.childrenQuery?.result.hasNextPage);
+  }
+
+  @computed
+  public get isLoading() {
+    return Boolean(this.childrenQuery?.result.isLoading);
   }
 
   public async loadMore() {
@@ -132,35 +157,43 @@ export default class MemoView extends HierarchyEntity<MemoVO> {
 
   private createNewEditor() {
     return new Editor({
-      onDestroyed: action(() => {
-        this.newEditor = undefined;
-      }),
       onSubmit: async (value) => {
         const newMemo = await this.remote.memo.create.mutate({ parentId: this.value?.id, body: value });
-        this.newEditor?.reset();
-
-        this.childrenMap![newMemo.id] = new MemoView(newMemo);
+        this.childrenMap![newMemo.id] = new MemoView({ value: newMemo, parent: this });
         this.domainEventBus.emit(DomainEventBus.eventNames.Created, newMemo);
+
+        return true;
+      },
+      onDestroyed: () => {
+        this.newEditor = this.isRoot ? this.createNewEditor() : undefined;
       },
     });
   }
 
   @action
   public startEditing() {
-    assert(this.value, 'can not edit');
-
-    const { id, body } = this.value;
+    const memo = this.value;
+    assert(memo, 'can not edit');
 
     this.selfEditor = new Editor({
-      initialValue: body,
+      initialValue: memo.body,
       onSubmit: async (value: string) => {
-        await this.remote.memo.updateOne.mutate([id, { body: value }]);
-        this.selfEditor?.destroy(true);
+        await this.remote.memo.updateOne.mutate([memo.id, { body: value }]);
+        this.setValue({ ...memo, body: value });
+
+        return true;
       },
       onDestroyed: action(() => {
         this.selfEditor = undefined;
       }),
     });
+  }
+
+  public async togglePin() {
+    assert(this.value && this.parent?.childrenQuery, 'can not pin root');
+
+    await this.remote.memo.updateOne.mutate([this.value.id, { isPinned: !this.value.isPinned }]);
+    this.parent.childrenQuery.invalidate();
   }
 
   @action
@@ -169,5 +202,30 @@ export default class MemoView extends HierarchyEntity<MemoVO> {
     this.selfEditor?.destroy();
     this.newEditor?.destroy();
     this.destroyController.abort();
+  }
+
+  private static readonly PAGE_MAX_LENGTH = 30;
+
+  private static getNextPageParams(lastPage: MemoVO[], lastPageParam: { limit: number; isPinned: boolean }) {
+    if (lastPage.length < lastPageParam.limit) {
+      if (lastPageParam.isPinned) {
+        return {
+          isPinned: false,
+          endId: undefined,
+          limit: MemoView.PAGE_MAX_LENGTH - lastPage.length,
+        };
+      }
+      return;
+    }
+
+    const lastOne = last(lastPage);
+
+    if (lastOne) {
+      return {
+        endId: lastOne.id,
+        isPinned: lastOne.isPinned,
+        limit: MemoView.PAGE_MAX_LENGTH,
+      };
+    }
   }
 }

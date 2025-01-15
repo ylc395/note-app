@@ -14,7 +14,6 @@ export default function Explorer() {
     <Tabs.Root
       orientation="vertical"
       lazyMount
-      unmountOnExit
       defaultValue={state.value?.value}
       onValueChange={({ value }) => state.update({ value })}
       class="flex"
@@ -23,7 +22,7 @@ export default function Explorer() {
       <Tabs.Content value="note">
         <NoteTree />
       </Tabs.Content>
-      <Tabs.Content class="flex-grow" value="memo">
+      <Tabs.Content class="flex-grow min-w-0" value="memo">
         <MemoList />
       </Tabs.Content>
     </Tabs.Root>

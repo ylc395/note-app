@@ -33,7 +33,10 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
   }
 
   public async findOneById(id: Memo['id'], config?: { isAvailableOnly?: boolean }) {
-    let sql = this.db.selectFrom(this.tableName).where('id', '=', id).selectAll();
+    let sql = this.db
+      .selectFrom(this.tableName)
+      .where('id', '=', id)
+      .select(['id', 'body', 'isPinned', 'parentId', `${this.tableName}.createdAt`, 'updatedAt']);
 
     if (config?.isAvailableOnly) {
       sql = sql
@@ -64,27 +67,29 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
     }
 
     if (q.startTime) {
+      const { startTime } = q;
       sql = sql.where(({ eb, and, or }) => {
         if (!q.startId) {
-          return eb('createdAt', '>=', q.startTime!);
+          return eb(`${this.tableName}.createdAt`, '>=', startTime);
         }
 
         return or([
-          eb('createdAt', '>', q.startTime!),
-          and([eb('createdAt', '=', q.startTime!), eb('id', '>', q.startId)]),
+          eb(`${this.tableName}.createdAt`, '>', startTime),
+          and([eb(`${this.tableName}.createdAt`, '=', startTime), eb('id', '>', q.startId)]),
         ]);
       });
     }
 
     if (q.endTime) {
+      const { endTime } = q;
       sql = sql.where(({ eb, and, or }) => {
         if (!q.endId) {
-          return eb('createdAt', '<=', q.startTime!);
+          return eb(`${this.tableName}.createdAt`, '<=', endTime);
         }
 
         return or([
-          eb('createdAt', '<', q.startTime!),
-          and([eb('createdAt', '=', q.startTime!), eb('id', '<', q.endId)]),
+          eb(`${this.tableName}.createdAt`, '<', endTime),
+          and([eb(`${this.tableName}.createdAt`, '=', endTime), eb('id', '<', q.endId)]),
         ]);
       });
     }

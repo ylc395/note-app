@@ -1,17 +1,15 @@
 import type Editor from '#domain/client/app/model/memo/Editor';
-import { Editable } from '@ark-ui/solid';
+import MarkdownEditor from '#web/components/MarkdownEditor';
 
 export default function EditorView({ editor }: { editor: Editor }) {
   return (
-    <Editable.Root edit submitMode="none" onValueChange={(e) => editor.update(e.value)}>
-      <Editable.Area>
-        <Editable.Input value={editor.value} />
-      </Editable.Area>
-      <Editable.Control>
-        <Editable.SubmitTrigger onClick={editor.submit.bind(editor)} disabled={!editor.canSubmit}>
+    <div class="w-full">
+      <MarkdownEditor defaultValue={editor.initialValue} onUpdate={editor.update.bind(editor)} />
+      <div>
+        <button disabled={!editor.canSubmit} onclick={editor.submit.bind(editor)}>
           submit
-        </Editable.SubmitTrigger>
-      </Editable.Control>
-    </Editable.Root>
+        </button>
+      </div>
+    </div>
   );
 }

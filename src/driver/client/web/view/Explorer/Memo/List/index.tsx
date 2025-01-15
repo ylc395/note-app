@@ -1,11 +1,42 @@
-import { For } from 'solid-js';
+import { For, onCleanup, Show } from 'solid-js';
+import { AiOutlineLoading } from 'solid-icons/ai';
+import { debounce } from 'lodash-es';
+
 import MemoView from '#domain/client/app/model/memo/MemoView';
 import Item from './Item';
 
 export default function MemoList({ node }: { node: MemoView }) {
+  function tryFetchNextPage(container: HTMLElement) {
+    if (!node.canLoadMore) {
+      return;
+    }
+
+    const bottom = container.scrollHeight - (container.scrollTop + container.clientHeight);
+
+    if (bottom <= 50) {
+      node.loadMore();
+    }
+  }
+
+  const handleScroll = debounce(({ target }: Event) => {
+    if (target instanceof HTMLElement) {
+      tryFetchNextPage(target);
+    }
+  }, 500);
+
+  onCleanup(() => {
+    handleScroll.cancel();
+    node.destroy();
+  });
+
   return (
-    <div class="space-y-6 px-4">
-      <For each={node.children || []}>{(item) => <Item value={item} />}</For>
+    <div class="px-4 flex-grow overflow-auto" onScroll={handleScroll}>
+      <div class="space-y-6 mb-10">
+        <For each={node.children || []}>{(item) => <Item value={item} />}</For>
+      </div>
+      <Show when={!node.canLoadMore} fallback={<AiOutlineLoading class="mx-auto mb-6" size={30} />}>
+        <div class="text-center text-gray-400 mb-10">没有更多了</div>
+      </Show>
     </div>
   );
 }

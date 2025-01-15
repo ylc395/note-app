@@ -3,20 +3,32 @@ import UIState from '../common/UIState';
 import { z } from 'zod';
 
 export default class Editor {
-  constructor(
-    private readonly options: {
-      id?: string;
-      initialValue?: string;
-      onDestroyed?: () => void;
-      onSubmit?: (value: string) => void;
-    },
-  ) {
+  constructor(options: {
+    id?: string;
+    initialValue?: string;
+    onDestroyed?: () => void;
+    onSubmit?: (value: string) => Promise<boolean | void>;
+  }) {
     if (options.id) {
       this.uiState = new UIState(options.id, z.object({ value: z.string() }));
     }
 
-    this.init();
+    this.options = {
+      onDestroyed: options.onDestroyed,
+      onSubmit: options.onSubmit,
+    };
+
+    this.initialValue = options.initialValue;
+    this.update(options.initialValue ?? this.uiState?.value?.value ?? '');
   }
+
+  public readonly initialValue?: string;
+
+  private readonly options: {
+    initialValue?: string;
+    onDestroyed?: () => void;
+    onSubmit?: (value: string) => Promise<boolean | void>;
+  };
 
   private readonly uiState;
 
@@ -27,37 +39,28 @@ export default class Editor {
     this.value = value;
   }
 
-  private init() {
-    const value = this.options.initialValue ?? this.uiState?.value?.value ?? '';
-    this.update(value);
-  }
-
   @computed
   public get canSubmit() {
     return this.value.length > 0;
   }
 
-  @action
-  public reset() {
-    this.value = '';
-    this.uiState?.clear();
-  }
-
   public async submit() {
+    let needToDestroy: boolean | void;
+
     try {
-      await this.options.onSubmit?.(this.value);
+      needToDestroy = await this.options.onSubmit?.(this.value);
     } catch {
       return;
     }
 
     this.uiState?.clear();
+
+    if (needToDestroy) {
+      this.destroy();
+    }
   }
 
-  public destroy(reset?: boolean) {
-    if (reset) {
-      this.reset();
-    }
-
+  public destroy() {
     this.options.onDestroyed?.();
   }
 }

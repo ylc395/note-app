@@ -9,7 +9,7 @@ export default class UIState<S = unknown> {
     const parsedResult = schema.safeParse(this.localStorage.get(this.key));
 
     runInAction(() => {
-      this.value = parsedResult.success ? parsedResult.data : null;
+      this.value = parsedResult.success ? parsedResult.data : {};
     });
   }
 
@@ -19,11 +19,17 @@ export default class UIState<S = unknown> {
     return `UI_STATE_${this.id}`;
   }
 
-  @observable public accessor value: Partial<S> | null = null;
+  @observable public accessor value: Partial<S> = {};
 
   @action
   public update(state: Partial<S>) {
-    this.value = { ...this.value, ...state };
+    Object.assign(this.value, state);
+
+    if (Object.values(this.value).every((value) => value === undefined)) {
+      this.clear();
+      return;
+    }
+
     this.localStorage.set(this.key, this.value);
   }
 

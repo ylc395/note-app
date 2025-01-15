@@ -1,24 +1,19 @@
-import assert from 'assert';
-import MemoView from '#domain/client/app/model/memo/MemoView';
 import { onCleanup } from 'solid-js';
+
+import MemoView from '#domain/client/app/model/memo/MemoView';
 
 import Editor from './Editor';
 import List from './List';
 
 export default function MemoList() {
   const memoView = new MemoView();
-  assert(memoView.newEditor, 'no newEditor');
-
-  onCleanup(() => {
-    memoView.destroy();
-  });
+  onCleanup(() => memoView.destroy());
 
   return (
-    <div class="flex flex-col h-screen">
-      <Editor editor={memoView.newEditor} />
-      <div class="flex-grow overflow-auto">
-        <List node={memoView} />
-      </div>
+    <div class="flex flex-col h-screen w-full">
+      {/** 这里不能 assert(memoVIew.newEditor)，因为一旦读了一下 memoView.newEditor，这整个组件都会受该值的变化的影响而重新渲染 */}
+      <Editor editor={memoView.newEditor!} />
+      <List node={memoView} />
     </div>
   );
 }

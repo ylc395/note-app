@@ -10,7 +10,6 @@ export const memoSchema = z.object({
   parentId: entityParentIdSchema,
   isPinned: z.boolean(),
   body: z.string(),
-  orderIndex: z.number(),
   updatedAt: z.number(),
   createdAt: z.number()
 });
@@ -34,11 +33,11 @@ export const durationSchema = z.object({
 });
 export const clientMemoQuerySchema = z.object({
   limit: z.number(),
-  order: z.union([z.literal("asc"), z.literal("desc")]).optional(),
+  order: z.union([z.literal("asc"), z.literal("desc")]),
   parentId: entityParentIdSchema.optional(),
   isPinned: z.boolean().optional(),
-  startIndex: memoSchema.shape["orderIndex"].optional(),
-  endIndex: memoSchema.shape["orderIndex"].optional(),
   startTime: z.number().optional(),
-  endTime: z.number().optional()
+  endTime: z.number().optional(),
+  endId: memoSchema.shape["id"].optional(),
+  startId: memoSchema.shape["id"].optional()
 });

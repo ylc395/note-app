@@ -9,6 +9,10 @@ import type { LinkRecord, TopicRecord } from '#domain/server/model/content.js';
 
 export default class SqliteContentRepository extends BaseRepository implements ContentRepository {
   public async createTopics(topics: TopicRecord[]) {
+    if (topics.length === 0) {
+      return;
+    }
+
     await this.db
       .insertInto(topicTableName)
       .values(topics.map((topic) => ({ ...topic, location: JSON.stringify(topic.location) })))
@@ -34,6 +38,10 @@ export default class SqliteContentRepository extends BaseRepository implements C
   }
 
   public async createLinks(links: LinkRecord[]) {
+    if (links.length === 0) {
+      return;
+    }
+
     await this.db.insertInto(linkTableName).values(
       links.map(({ sourceLocation, ...link }) => ({
         ...link,
