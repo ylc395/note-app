@@ -1,7 +1,7 @@
 import { Menu } from '@ark-ui/solid';
 import assert from 'assert';
 import { Show } from 'solid-js';
-import { AiOutlineEllipsis, AiOutlineEdit, AiOutlinePushpin, AiOutlineStar, AiFillStar } from 'solid-icons/ai';
+import { EllipsisIcon, EditIcon, PinIcon, PinOffIcon, HistoryIcon, StarIcon, StarOffIcon } from 'lucide-solid';
 
 import type MemoView from '#domain/client/app/model/memo/MemoView';
 
@@ -19,35 +19,51 @@ export default function ItemMenu({ node }: { node: MemoView }) {
     }
   }
 
+  const itemClass = 'flex items-center cursor-pointer';
+
   return (
     <Menu.Root onSelect={(e) => handleSelect(e.value)}>
       <Menu.Trigger disabled={Boolean(node.selfEditor)}>
-        <AiOutlineEllipsis size={24} />
+        <EllipsisIcon size={24} />
       </Menu.Trigger>
       <Menu.Positioner>
-        <Menu.Content>
-          <Menu.Item class="flex items-center cursor-pointer" value="edit">
-            <AiOutlineEdit />
+        <Menu.Content class="z-10">
+          <Menu.Item class={itemClass} value="edit">
+            <EditIcon />
             Edit
           </Menu.Item>
-          <Menu.Item class="flex items-center cursor-pointer" value="pin">
-            <AiOutlinePushpin />
-            {node.value?.isPinned ? 'Unpin' : 'Pin'}
+          <Menu.Item class={itemClass} value="pin">
+            <Show
+              when={node.value?.isPinned}
+              fallback={
+                <>
+                  <PinIcon />
+                  Pin
+                </>
+              }
+            >
+              <PinOffIcon />
+              Unpin
+            </Show>
           </Menu.Item>
-          <Show
-            when={node.value?.isStar}
-            fallback={
-              <Menu.Item class="flex items-center cursor-pointer" value="star">
-                <AiOutlineStar />
-                Star
-              </Menu.Item>
-            }
-          >
-            <Menu.Item class="flex items-center cursor-pointer" value="star">
-              <AiFillStar />
+          <Menu.Item class={itemClass} value="star">
+            <Show
+              when={node.value?.isStar}
+              fallback={
+                <>
+                  <StarIcon /> Star
+                </>
+              }
+            >
+              <StarOffIcon />
               UnStar
-            </Menu.Item>
-          </Show>
+            </Show>
+          </Menu.Item>
+          <Menu.Separator />
+          <Menu.Item class={itemClass} value="history">
+            <HistoryIcon />
+            History
+          </Menu.Item>
         </Menu.Content>
       </Menu.Positioner>
     </Menu.Root>

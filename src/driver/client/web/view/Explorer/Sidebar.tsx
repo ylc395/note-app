@@ -1,5 +1,5 @@
 import { Tabs } from '@ark-ui/solid/tabs';
-import { BsJournal, BsLightbulb } from 'solid-icons/bs';
+import { BookTextIcon, LightbulbIcon } from 'lucide-solid';
 
 export default function Sidebar() {
   return (
@@ -8,13 +8,13 @@ export default function Sidebar() {
         value="note"
         class="flex justify-center items-center h-14 w-14 border-0 bg-transparent cursor-pointer data-[selected]:bg-gray-200"
       >
-        <BsJournal size="24" />
+        <BookTextIcon size="24" />
       </Tabs.Trigger>
       <Tabs.Trigger
         value="memo"
         class="flex justify-center items-center h-14 w-14 border-0 bg-transparent cursor-pointer data-[selected]:bg-gray-200"
       >
-        <BsLightbulb size="24" />
+        <LightbulbIcon size="24" />
       </Tabs.Trigger>
     </Tabs.List>
   );

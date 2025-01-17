@@ -1,6 +1,5 @@
 import assert from 'assert';
 import { Crepe } from '@milkdown/crepe';
-import { listener, listenerCtx } from '@milkdown/kit/plugin/listener';
 import { editorViewCtx, editorViewOptionsCtx } from '@milkdown/kit/core';
 import { createEffect, createSignal, onCleanup, onMount } from 'solid-js';
 
@@ -27,11 +26,10 @@ export default function MarkdownEditor(props: {
       defaultValue,
       features: { [Crepe.Feature.BlockEdit]: false },
     });
-    crepe.editor.use(listener).config((ctx) => {
-      if (onUpdate) {
-        ctx.get(listenerCtx).markdownUpdated((_, markdown) => onUpdate(markdown));
-      }
-    });
+
+    if (onUpdate) {
+      crepe.on((listener) => listener.markdownUpdated((_, markdown) => onUpdate(markdown)));
+    }
 
     setCrepe(crepe);
   });

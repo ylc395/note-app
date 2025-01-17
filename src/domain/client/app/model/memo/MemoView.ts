@@ -201,6 +201,11 @@ export default class MemoView extends HierarchyEntity<MemoVO> {
     this.destroyController.abort();
   }
 
+  public reload() {
+    assert(this.childrenQuery, 'can not reload');
+    this.childrenQuery.refetch();
+  }
+
   private static readonly PAGE_MAX_LENGTH = 30;
 
   private static getNextPageParams(lastPage: MemoVO[], lastPageParam: { limit: number; isPinned: boolean }) {

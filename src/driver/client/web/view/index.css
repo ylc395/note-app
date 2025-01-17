@@ -5,3 +5,9 @@
     scrollbar-gutter: stable;
   }
 }
+
+.lucide {
+  width: 18px;
+  height: 18px;
+  stroke-width: 1.5;
+}

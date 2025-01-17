@@ -1,5 +1,5 @@
 import { createSignal } from 'solid-js';
-import { AiOutlineSend } from 'solid-icons/ai';
+import { SendHorizontalIcon } from 'lucide-solid';
 import type { Crepe } from '@milkdown/crepe';
 import { replaceAll } from '@milkdown/kit/utils';
 
@@ -22,7 +22,7 @@ export default function EditorView({ editor }: { editor: Editor }) {
         rootClass="!p-4 max-h-96 min-h-32 overflow-y-auto"
       />
       <div class="flex justify-between border-t">
-        <div>{editor.value.length}</div>
+        <div>字数{editor.value.length}</div>
         <div class="flex space-x-2">
           <button onclick={reset} class="text-gray-400">
             重置
@@ -32,7 +32,7 @@ export default function EditorView({ editor }: { editor: Editor }) {
             disabled={!editor.canSubmit}
             onclick={editor.submit.bind(editor)}
           >
-            <AiOutlineSend />
+            <SendHorizontalIcon />
           </button>
         </div>
       </div>
