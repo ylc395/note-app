@@ -1,1 +1,7 @@
 @import 'tailwindcss/tailwind.css';
+
+@layer utilities {
+  .scrollbar-stable {
+    scrollbar-gutter: stable;
+  }
+}

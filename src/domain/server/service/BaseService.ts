@@ -22,7 +22,12 @@ export default abstract class BaseService {
   ) {
     return function (this: This, ...args: Args) {
       return this.transaction(() => {
-        return Promise.resolve(target.apply(this, args));
+        try {
+          return Promise.resolve(target.apply(this, args));
+        } catch (e) {
+          console.error(e);
+          throw e;
+        }
       });
     };
   }

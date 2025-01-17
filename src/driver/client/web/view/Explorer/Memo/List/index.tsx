@@ -30,8 +30,10 @@ export default function MemoList({ node }: { node: MemoView }) {
   });
 
   return (
-    <div class="px-4 flex-grow overflow-auto" onScroll={handleScroll}>
-      <div class="space-y-6 mb-10">
+    // 值得注意：设置一个方向的 overflow 为 hidden 或 auto，则另一个方向的 overflow 会被强制设置为 auto
+    // 这会导致水平方向上超出该容器的内容（例如各种悬浮的 tooltip）均被强制 clip
+    <div class="mt-4 grow min-h-0 overflow-y-auto scrollbar-stable" onScroll={handleScroll}>
+      <div class="space-y-6 mb-10 mx-auto">
         <For each={node.children || []}>{(item) => <Item value={item} />}</For>
       </div>
       <Show when={!node.canLoadMore} fallback={<AiOutlineLoading class="mx-auto mb-6" size={30} />}>

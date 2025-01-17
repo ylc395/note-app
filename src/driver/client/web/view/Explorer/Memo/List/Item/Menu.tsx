@@ -11,6 +11,9 @@ export default function ItemMenu({ node }: { node: MemoView }) {
       case 'pin':
         node.togglePin();
         return;
+      case 'edit':
+        node.startEditing();
+        return;
       default:
         assert.fail('invalid select value');
     }
@@ -18,7 +21,7 @@ export default function ItemMenu({ node }: { node: MemoView }) {
 
   return (
     <Menu.Root onSelect={(e) => handleSelect(e.value)}>
-      <Menu.Trigger>
+      <Menu.Trigger disabled={Boolean(node.selfEditor)}>
         <AiOutlineEllipsis size={24} />
       </Menu.Trigger>
       <Menu.Positioner>

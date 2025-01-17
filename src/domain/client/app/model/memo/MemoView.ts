@@ -54,11 +54,7 @@ export default class MemoView extends HierarchyEntity<MemoVO> {
         getNextPageParam: (lastPage, _, lastPageParam) => MemoView.getNextPageParams(lastPage, lastPageParam),
         onDone: (data) => {
           const lastPage = last(data.pages);
-          if (
-            lastPage &&
-            lastPage.length < MemoView.PAGE_MAX_LENGTH &&
-            (last(data.pageParams) as { isPinned: boolean }).isPinned
-          ) {
+          if (lastPage && lastPage.length < MemoView.PAGE_MAX_LENGTH && last(data.pageParams)?.isPinned) {
             this.loadMore();
           }
         },
@@ -174,6 +170,7 @@ export default class MemoView extends HierarchyEntity<MemoVO> {
   public startEditing() {
     const memo = this.value;
     assert(memo, 'can not edit');
+    assert(!this.selfEditor, 'editing!');
 
     this.selfEditor = new Editor({
       initialValue: memo.body,

@@ -42,12 +42,15 @@ export default class SqliteContentRepository extends BaseRepository implements C
       return;
     }
 
-    await this.db.insertInto(linkTableName).values(
-      links.map(({ sourceLocation, ...link }) => ({
-        ...link,
-        sourceLocation: JSON.stringify(sourceLocation),
-      })),
-    );
+    await this.db
+      .insertInto(linkTableName)
+      .values(
+        links.map(({ sourceLocation, ...link }) => ({
+          ...link,
+          sourceLocation: JSON.stringify(sourceLocation),
+        })),
+      )
+      .execute();
   }
 
   public async removeLinksOf(entityId: EntityId, as: 'source' | 'all') {
