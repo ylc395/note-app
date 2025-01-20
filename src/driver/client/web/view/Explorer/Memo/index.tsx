@@ -5,17 +5,21 @@ import Editor from './Editor';
 import List from './List';
 import ListToolbar from './ListToolbar';
 import Sidebar from './Sidebar';
+import assert from 'assert';
 
-export default function MemoList() {
+export default function MemoExplorer() {
   const rootMemo = new MemoView();
-  onCleanup(() => rootMemo.destroy());
+  assert(rootMemo.newEditor, 'no new editor');
+
+  onCleanup(() => {
+    rootMemo.destroy();
+  });
 
   return (
-    <div class="flex h-screen px-4 max-w-3xl mx-auto justify-center">
+    <div class="flex h-screen px-4 mx-auto justify-center">
       <Sidebar />
-      <div class="flex flex-col h-full">
-        {/** 这里不能 assert(memoVIew.newEditor)，因为一旦读了一下 memoView.newEditor，这整个组件都会受该值的变化的影响而重新渲染 */}
-        <Editor editor={rootMemo.newEditor!} />
+      <div class="flex flex-col h-full pt-4 max-w-screen-md w-full lg:w-3/4">
+        <Editor editor={rootMemo.newEditor} />
         <ListToolbar rootMemo={rootMemo} />
         <List node={rootMemo} />
       </div>

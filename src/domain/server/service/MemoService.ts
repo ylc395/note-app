@@ -99,7 +99,7 @@ export default class MemoService extends BaseService {
     });
 
     return mapValues(
-      groupBy(memos, (memo) => dayjs(memo.createdAt).startOf('day').valueOf()),
+      groupBy(memos, (memo) => dayjs(memo.createdAt).startOf('day').format('YYYY-MM-DD')),
       size,
     );
   }

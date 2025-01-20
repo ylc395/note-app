@@ -2,6 +2,7 @@ import { createInfiniteQuery } from 'mobx-tanstack-query/preset';
 import { last } from 'lodash-es';
 import { action, computed, observable, reaction } from 'mobx';
 import assert from 'assert';
+import { z } from 'zod';
 
 import { container } from '#domain/shared/infra/singletons';
 import HierarchyEntity from '#domain/client/shared/model/abstract/HierarchyEntity';
@@ -11,7 +12,7 @@ import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import DomainEventBus from './EventBus';
 import Editor from './Editor';
 import UIState from '../common/UIState';
-import { z } from 'zod';
+import Calendar from './Calendar';
 
 export default class MemoView extends HierarchyEntity<MemoVO> {
   constructor(options?: { value: MemoVO; parent: MemoView }) {
@@ -19,12 +20,13 @@ export default class MemoView extends HierarchyEntity<MemoVO> {
     this.setValue(options?.value);
     this.parent = options?.parent;
 
-    if (this.isRoot) {
-      console.log('create root');
-    }
-
     if (!this.isParent && !this.isRoot) {
       return;
+    }
+
+    if (this.isRoot) {
+      this.newEditor = this.createNewEditor();
+      this.calendar = container.resolve(Calendar);
     }
 
     this.uiState = new UIState(
@@ -38,11 +40,18 @@ export default class MemoView extends HierarchyEntity<MemoVO> {
     this.childrenQuery = createInfiniteQuery(
       ({ signal, pageParam: { endId, isPinned, limit } }) =>
         this.remote.memo.queryList.query(
-          { parentId: this.value?.id, limit, endId, isPinned, order: 'desc' },
+          {
+            parentId: this.value?.id,
+            limit,
+            endId,
+            isPinned,
+            order: 'desc',
+            startTime: this.calendar?.selectedDate?.startOf('day').valueOf(),
+            endTime: endId ? undefined : this.calendar?.selectedDate?.endOf('day').valueOf(),
+          },
           { signal },
         ),
       {
-        queryKey: ['memos', { parentId: options?.value.id }],
         // 无限加载的列表就别 stale 了
         staleTime: Infinity,
         abortSignal: this.destroyController.signal,
@@ -59,6 +68,14 @@ export default class MemoView extends HierarchyEntity<MemoVO> {
           }
         },
         options: () => ({
+          queryKey: [
+            'memos',
+            {
+              parentId: options?.value.id,
+              startTime: this.calendar?.selectedDate?.startOf('day').valueOf(),
+              endTime: this.calendar?.selectedDate?.endOf('day').valueOf(),
+            },
+          ],
           enabled: this.isExpand,
         }),
       },
@@ -87,9 +104,11 @@ export default class MemoView extends HierarchyEntity<MemoVO> {
 
   @observable.ref public accessor selfEditor: Editor | undefined; // 用于编辑自己的 editor
 
-  @observable.ref public accessor newEditor = this.isRoot ? this.createNewEditor() : undefined; // 用于创建新的子 memo 的 editor
+  @observable.ref public accessor newEditor: Editor | undefined; // 用于创建新的子 memo 的 editor
 
   @observable public accessor isExpand = false;
+
+  private readonly calendar?: Calendar;
 
   @action
   protected override setValue(memo?: MemoVO) {
@@ -160,9 +179,9 @@ export default class MemoView extends HierarchyEntity<MemoVO> {
 
         return true;
       },
-      onDestroyed: () => {
+      onDestroyed: action(() => {
         this.newEditor = this.isRoot ? this.createNewEditor() : undefined;
-      },
+      }),
     });
   }
 

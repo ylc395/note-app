@@ -1,11 +1,11 @@
 import assert from 'assert';
 import { Show } from 'solid-js';
 import dayjs from 'dayjs';
+import { LinkIcon, MessageCircleIcon } from 'lucide-solid';
 
 import type MemoView from '#domain/client/app/model/memo/MemoView';
 import Menu from './Menu';
 import Body from './Body';
-import { LinkIcon, MessageCircleIcon } from 'lucide-solid';
 
 export default function Item({ node }: { node: MemoView }) {
   assert(node.value, 'no memo value');

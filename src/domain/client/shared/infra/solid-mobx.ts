@@ -1,5 +1,5 @@
 import { enableExternalSource } from 'solid-js';
-import { Reaction } from 'mobx';
+import { Reaction, untracked } from 'mobx';
 
 let id = 0;
 
@@ -17,4 +17,4 @@ enableExternalSource((fn, trigger) => {
       reaction.dispose();
     },
   };
-});
+}, untracked);

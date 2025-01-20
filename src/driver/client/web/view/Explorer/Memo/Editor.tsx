@@ -1,4 +1,4 @@
-import { createSignal } from 'solid-js';
+import { createSignal, onCleanup } from 'solid-js';
 import { SendHorizontalIcon } from 'lucide-solid';
 import type { Crepe } from '@milkdown/crepe';
 import { replaceAll } from '@milkdown/kit/utils';
@@ -6,12 +6,17 @@ import { replaceAll } from '@milkdown/kit/utils';
 import type Editor from '#domain/client/app/model/memo/Editor';
 import MarkdownEditor from '#web/components/MarkdownEditor';
 
-export default function EditorView({ editor }: { editor: Editor }) {
+export default function EditorView(props: { editor: Editor }) {
+  const editor = props.editor;
   const [getCrepe, setCrepe] = createSignal<Crepe>();
 
   function reset() {
     getCrepe()?.editor.action(replaceAll(''));
   }
+
+  onCleanup(() => {
+    getCrepe()?.destroy();
+  });
 
   return (
     <div class="w-full border mx-auto rounded-lg ">
