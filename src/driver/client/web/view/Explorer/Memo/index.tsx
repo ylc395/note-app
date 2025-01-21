@@ -1,26 +1,19 @@
-import { onCleanup } from 'solid-js';
-import MemoView from '#domain/client/app/model/memo/MemoView';
+import { Tabs } from '@ark-ui/solid';
 
-import Editor from './Editor';
-import List from './List';
-import ListToolbar from './ListToolbar';
 import Sidebar from './Sidebar';
+import Main from './Main';
 
 export default function MemoExplorer() {
-  const rootMemo = new MemoView();
-
-  onCleanup(() => {
-    rootMemo.destroy();
-  });
-
+  const tabClass = 'max-w-screen-md  w-full lg:w-3/4';
   return (
-    <div class="flex h-screen px-4 mx-auto justify-center">
+    <Tabs.Root orientation="vertical" lazyMount class="flex h-screen px-4 mx-auto justify-center" defaultValue="memos">
       <Sidebar />
-      <div class="flex flex-col h-full py-4 max-w-screen-md w-full lg:w-3/4">
-        <Editor editor={rootMemo.newEditor!} />
-        <ListToolbar rootMemo={rootMemo} />
-        <List node={rootMemo} />
-      </div>
-    </div>
+      <Tabs.Content value="memos" class={tabClass}>
+        <Main />
+      </Tabs.Content>
+      <Tabs.Content value="stats" class={tabClass}>
+        Stats
+      </Tabs.Content>
+    </Tabs.Root>
   );
 }

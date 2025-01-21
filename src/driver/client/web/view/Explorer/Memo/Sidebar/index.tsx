@@ -1,6 +1,7 @@
 import { action } from 'mobx';
 
 import Calender from './Calender';
+import Tabs from './Tabs';
 import uiState from '../uiState';
 
 export default function Sidebar() {
@@ -12,10 +13,11 @@ export default function Sidebar() {
     >
       <div
         onclick={(e) => e.stopPropagation()}
-        class="bg-white w-fit h-full border-r flex justify-center shadow-md pt-4 px-4
+        class="bg-white w-fit h-full border-r flex flex-col shadow-md pt-4 px-4
                 lg:border-0 lg:w-auto  lg:shadow-none"
       >
         <Calender />
+        <Tabs />
       </div>
     </div>
   );
