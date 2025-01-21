@@ -3,7 +3,7 @@ import MemoView from '#domain/client/app/model/memo/MemoView';
 
 import Editor from './Editor';
 import List from './List';
-import ListToolbar from './ListToolbar';
+import ListToolbar from './ListToolBar';
 
 export default function MemoMain() {
   const rootMemo = new MemoView();

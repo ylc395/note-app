@@ -1,7 +1,16 @@
 import { Menu } from '@ark-ui/solid';
 import assert from 'assert';
 import { Show } from 'solid-js';
-import { EllipsisIcon, EditIcon, PinIcon, PinOffIcon, HistoryIcon, StarIcon, StarOffIcon } from 'lucide-solid';
+import {
+  EllipsisIcon,
+  EditIcon,
+  PinIcon,
+  PinOffIcon,
+  HistoryIcon,
+  StarIcon,
+  StarOffIcon,
+  CopyIcon,
+} from 'lucide-solid';
 
 import type MemoView from '#domain/client/app/model/memo/MemoView';
 
@@ -63,6 +72,10 @@ export default function ItemMenu({ node }: { node: MemoView }) {
           <Menu.Item class={itemClass} value="history">
             <HistoryIcon />
             History
+          </Menu.Item>
+          <Menu.Item class={itemClass} value="copyUrl">
+            <CopyIcon />
+            复制 ID
           </Menu.Item>
         </Menu.Content>
       </Menu.Positioner>

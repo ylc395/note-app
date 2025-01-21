@@ -106,8 +106,12 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
       sql = sql.where('isPinned', '=', q.isPinned ? 1 : 0);
     }
 
-    if (q.orderBy?.by === 'createdAt') {
-      sql = sql.orderBy([`createdAt ${q.orderBy.order}`, `id ${q.orderBy.order}`]);
+    if (q.orderBy === 'createdAt') {
+      sql = sql.orderBy([`createdAt ${q.order ?? 'desc'}`, `id ${q.order ?? 'desc'}`]);
+    }
+
+    if (q.orderBy === 'updatedAt') {
+      sql = sql.orderBy([`updatedAt ${q.order ?? 'desc'}`, `id ${q.order ?? 'desc'}`]);
     }
 
     if (q.limit) {

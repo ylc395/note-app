@@ -13,10 +13,8 @@ export interface MemoQuery {
   isPinned?: boolean;
   limit?: number;
   parentId?: EntityParentId;
-  orderBy?: {
-    by: 'createdAt';
-    order: 'desc' | 'asc';
-  };
+  orderBy?: 'createdAt' | 'updatedAt';
+  order?: 'desc' | 'asc'; // 默认 desc
 }
 
 export interface MemoRepository {

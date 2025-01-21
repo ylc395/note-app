@@ -6,7 +6,7 @@ import { z } from 'zod';
 
 import { container } from '#domain/shared/infra/singletons';
 import HierarchyEntity from '#domain/client/shared/model/abstract/HierarchyEntity';
-import type { MemoVO } from '#domain/shared/model/memo';
+import type { ClientMemoQuery, MemoVO } from '#domain/shared/model/memo';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 
 import DomainEventBus from './EventBus';
@@ -20,13 +20,13 @@ export default class MemoView extends HierarchyEntity<MemoVO> {
     this.setValue(options?.value);
     this.parent = options?.parent;
 
-    if (!this.isParent && !this.isRoot) {
-      return;
-    }
-
     if (this.isRoot) {
       this.newEditor = this.createNewEditor();
       this.calendar = container.resolve(Calendar);
+    }
+
+    if (!this.isParent && !this.isRoot) {
+      return;
     }
 
     this.uiState = new UIState(
@@ -38,16 +38,16 @@ export default class MemoView extends HierarchyEntity<MemoVO> {
     );
 
     this.childrenQuery = createInfiniteQuery(
-      ({ signal, pageParam: { endId, isPinned, limit } }) =>
+      ({ signal, pageParam: { endId, startId, ...params } }) =>
         this.remote.memo.queryList.query(
           {
+            ...params,
             parentId: this.value?.id,
-            limit,
             endId,
-            isPinned,
-            order: 'desc',
-            startTime: this.calendar?.selectedDuration?.startTime,
+            startId,
+            startTime: startId ? undefined : this.calendar?.selectedDuration?.startTime,
             endTime: endId ? undefined : this.calendar?.selectedDuration?.endTime,
+            ...this.sortOptions,
           },
           { signal },
         ),
@@ -55,12 +55,8 @@ export default class MemoView extends HierarchyEntity<MemoVO> {
         // 无限加载的列表就别 stale 了
         staleTime: Infinity,
         abortSignal: this.destroyController.signal,
-        initialPageParam: {
-          endId: undefined as MemoVO['id'] | undefined,
-          isPinned: true,
-          limit: MemoView.PAGE_MAX_LENGTH,
-        },
-        getNextPageParam: (lastPage, _, lastPageParam) => MemoView.getNextPageParams(lastPage, lastPageParam),
+        initialPageParam: this.getNextPageParams(),
+        getNextPageParam: (lastPage, _, lastPageParam) => this.getNextPageParams({ lastPage, lastPageParam }),
         onDone: (data) => {
           const lastPage = last(data.pages);
           if (lastPage && lastPage.length < MemoView.PAGE_MAX_LENGTH && last(data.pageParams)?.isPinned) {
@@ -71,6 +67,7 @@ export default class MemoView extends HierarchyEntity<MemoVO> {
           queryKey: [
             'memos',
             {
+              ...this.sortOptions,
               parentId: options?.value.id,
               startTime: this.calendar?.selectedDuration?.startTime,
               endTime: this.calendar?.selectedDuration?.endTime,
@@ -108,6 +105,11 @@ export default class MemoView extends HierarchyEntity<MemoVO> {
 
   @observable public accessor isExpand = false;
 
+  @observable.ref public accessor sortOptions: Readonly<Pick<ClientMemoQuery, 'order' | 'orderBy'>> = {
+    orderBy: 'createdAt',
+    order: 'desc',
+  };
+
   private readonly calendar?: Calendar;
 
   @action
@@ -126,7 +128,9 @@ export default class MemoView extends HierarchyEntity<MemoVO> {
     }
 
     return Object.values(this.childrenMap).sort(({ value: memo1 }, { value: memo2 }) => {
-      return Number(memo2!.isPinned) - Number(memo1!.isPinned) || memo2!.createdAt - memo1!.createdAt;
+      const result = Number(memo2!.isPinned) - Number(memo1!.isPinned) || memo2!.createdAt - memo1!.createdAt;
+
+      return this.sortOptions.order === 'desc' ? result : -result;
     });
   }
 
@@ -231,14 +235,34 @@ export default class MemoView extends HierarchyEntity<MemoVO> {
     this.childrenQuery.refetch();
   }
 
+  @action
+  public setOrder(value: MemoView['sortOptions']) {
+    this.sortOptions = value;
+  }
+
   private static readonly PAGE_MAX_LENGTH = 30;
 
-  private static getNextPageParams(lastPage: MemoVO[], lastPageParam: { limit: number; isPinned: boolean }) {
+  private getNextPageParams(params?: { lastPage: MemoVO[]; lastPageParam: { limit: number; isPinned: boolean } }):
+    | {
+        isPinned: boolean;
+        endId?: string;
+        startId?: string;
+        limit: number;
+      }
+    | undefined {
+    if (!params) {
+      return {
+        isPinned: true,
+        limit: MemoView.PAGE_MAX_LENGTH,
+      };
+    }
+
+    const { lastPage, lastPageParam } = params;
+
     if (lastPage.length < lastPageParam.limit) {
       if (lastPageParam.isPinned) {
         return {
           isPinned: false,
-          endId: undefined,
           limit: MemoView.PAGE_MAX_LENGTH - lastPage.length,
         };
       }
@@ -248,11 +272,16 @@ export default class MemoView extends HierarchyEntity<MemoVO> {
     const lastOne = last(lastPage);
 
     if (lastOne) {
-      return {
-        endId: lastOne.id,
+      const params = {
         isPinned: lastOne.isPinned,
         limit: MemoView.PAGE_MAX_LENGTH,
       };
+
+      if (this.sortOptions.order === 'desc') {
+        return { ...params, endId: lastOne.id };
+      } else {
+        return { ...params, startId: lastOne.id };
+      }
     }
   }
 }

@@ -65,14 +65,14 @@ export default class MemoService extends BaseService {
       const startMemo = await this.repo.memos.findOneById(query.startId, { isAvailableOnly: true });
       assert(startMemo, 'invalid start id');
 
-      startTime = startMemo.createdAt;
+      startTime = query.orderBy === 'updatedAt' ? startMemo.updatedAt : startMemo.createdAt;
     }
 
     if (query.endId) {
       const endMemo = await this.repo.memos.findOneById(query.endId, { isAvailableOnly: true });
       assert(endMemo, 'invalid end id');
 
-      endTime = endMemo.createdAt;
+      endTime = query.orderBy === 'updatedAt' ? endMemo.updatedAt : endMemo.createdAt;
     }
 
     const memos = await this.repo.memos.findAll({
@@ -82,10 +82,8 @@ export default class MemoService extends BaseService {
       endTime,
       parentId: query.parentId || null,
       isPinned: query.isPinned,
-      orderBy: {
-        by: 'createdAt',
-        order: query.order ?? 'desc',
-      },
+      order: query.order,
+      orderBy: query.orderBy,
     });
 
     return await this.toVO(memos);
@@ -146,4 +144,6 @@ export default class MemoService extends BaseService {
       assert(!memo.parentId, 'not a top memo');
     }
   };
+
+  public queryCount() {}
 }

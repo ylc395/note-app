@@ -23,7 +23,7 @@ export default function EditorView(props: { editor: Editor }) {
   }
 
   return (
-    <div class="w-full border mx-auto rounded-lg ">
+    <div class="w-full border mx-auto rounded-lg">
       <MarkdownEditor
         defaultValue={editor.initialValue}
         onUpdate={editor.update.bind(editor)}
