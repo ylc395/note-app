@@ -8,7 +8,7 @@ export default function Body({ node }: { node: MemoView }) {
   let rootRef: HTMLDivElement | undefined;
 
   return (
-    <div class="mt-2 w-full relative" ref={rootRef} ondblclick={node.startEditing.bind(node)}>
+    <div class="w-full py-4 relative" ref={rootRef} ondblclick={node.startEditing.bind(node)}>
       <Show when={node.selfEditor} fallback={<div class="select-text" innerHTML={micromark(node.value!.body)} />}>
         <MarkdownEditor
           onUpdate={(value) => node.selfEditor!.update(value)}

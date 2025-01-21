@@ -5,11 +5,9 @@ import Editor from './Editor';
 import List from './List';
 import ListToolbar from './ListToolbar';
 import Sidebar from './Sidebar';
-import assert from 'assert';
 
 export default function MemoExplorer() {
   const rootMemo = new MemoView();
-  assert(rootMemo.newEditor, 'no new editor');
 
   onCleanup(() => {
     rootMemo.destroy();
@@ -18,8 +16,8 @@ export default function MemoExplorer() {
   return (
     <div class="flex h-screen px-4 mx-auto justify-center">
       <Sidebar />
-      <div class="flex flex-col h-full pt-4 max-w-screen-md w-full lg:w-3/4">
-        <Editor editor={rootMemo.newEditor} />
+      <div class="flex flex-col h-full py-4 max-w-screen-md w-full lg:w-3/4">
+        <Editor editor={rootMemo.newEditor!} />
         <ListToolbar rootMemo={rootMemo} />
         <List node={rootMemo} />
       </div>

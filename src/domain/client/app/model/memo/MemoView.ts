@@ -46,8 +46,8 @@ export default class MemoView extends HierarchyEntity<MemoVO> {
             endId,
             isPinned,
             order: 'desc',
-            startTime: this.calendar?.selectedDate?.startOf('day').valueOf(),
-            endTime: endId ? undefined : this.calendar?.selectedDate?.endOf('day').valueOf(),
+            startTime: this.calendar?.selectedDuration?.startTime,
+            endTime: endId ? undefined : this.calendar?.selectedDuration?.endTime,
           },
           { signal },
         ),
@@ -72,8 +72,8 @@ export default class MemoView extends HierarchyEntity<MemoVO> {
             'memos',
             {
               parentId: options?.value.id,
-              startTime: this.calendar?.selectedDate?.startOf('day').valueOf(),
-              endTime: this.calendar?.selectedDate?.endOf('day').valueOf(),
+              startTime: this.calendar?.selectedDuration?.startTime,
+              endTime: this.calendar?.selectedDuration?.endTime,
             },
           ],
           enabled: this.isExpand,
@@ -145,6 +145,10 @@ export default class MemoView extends HierarchyEntity<MemoVO> {
     return Boolean(this.childrenQuery?.result.isLoading);
   }
 
+  public get timeParams() {
+    return this.calendar?.selectedDuration;
+  }
+
   public async loadMore() {
     await this.childrenQuery?.fetchNextPage();
   }
@@ -167,20 +171,22 @@ export default class MemoView extends HierarchyEntity<MemoVO> {
       this.newEditor = this.createNewEditor();
     } else {
       this.newEditor?.destroy();
+      this.newEditor = undefined;
     }
   }
 
   private createNewEditor() {
+    assert(!this.newEditor, 'can not create again');
+
     return new Editor({
       onSubmit: async (value) => {
         const newMemo = await this.remote.memo.create.mutate({ parentId: this.value?.id, body: value });
         this.childrenMap![newMemo.id] = new MemoView({ value: newMemo, parent: this });
         this.domainEventBus.emit(DomainEventBus.eventNames.Created, newMemo);
-
-        return true;
+        this.newEditor?.reset();
       },
       onDestroyed: action(() => {
-        this.newEditor = this.isRoot ? this.createNewEditor() : undefined;
+        this.newEditor = undefined;
       }),
     });
   }

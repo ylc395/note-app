@@ -41,21 +41,26 @@ export default class Calendar {
 
   @observable.ref private accessor now = dayjs();
 
-  @observable.ref public accessor selectedDate: Dayjs | undefined;
+  @observable.ref public accessor selectedDuration: { startTime: number; endTime: number } | undefined;
 
   @computed
   public get duration() {
     const today = this.now.endOf('day');
 
     return {
-      startTime: dayjs().subtract(9, 'week').startOf('isoWeek'),
+      startTime: dayjs().subtract(11, 'week').startOf('isoWeek'),
       endTime: today,
     };
   }
 
-  @action.bound
-  public selectDate(value: Dayjs) {
-    this.selectedDate = value;
+  @action
+  public selectDate(value: Dayjs | null) {
+    this.selectedDuration = value
+      ? {
+          startTime: value.startOf('day').valueOf(),
+          endTime: value.endOf('day').valueOf(),
+        }
+      : undefined;
   }
 
   public readonly isFuture = (day: Dayjs) => {

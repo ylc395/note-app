@@ -1,7 +1,8 @@
-import { createSignal, onCleanup } from 'solid-js';
+import { createSignal } from 'solid-js';
 import { SendHorizontalIcon } from 'lucide-solid';
 import type { Crepe } from '@milkdown/crepe';
 import { replaceAll } from '@milkdown/kit/utils';
+import { editorViewCtx } from '@milkdown/kit/core';
 
 import type Editor from '#domain/client/app/model/memo/Editor';
 import MarkdownEditor from '#web/components/MarkdownEditor';
@@ -11,12 +12,15 @@ export default function EditorView(props: { editor: Editor }) {
   const [getCrepe, setCrepe] = createSignal<Crepe>();
 
   function reset() {
-    getCrepe()?.editor.action(replaceAll(''));
+    const crepe = getCrepe()!;
+    crepe.editor.action(replaceAll('', true));
+    crepe.editor.action((ctx) => ctx.get(editorViewCtx).focus());
   }
 
-  onCleanup(() => {
-    getCrepe()?.destroy();
-  });
+  async function onSubmit() {
+    await editor.submit();
+    reset();
+  }
 
   return (
     <div class="w-full border mx-auto rounded-lg ">
@@ -35,7 +39,7 @@ export default function EditorView(props: { editor: Editor }) {
           <button
             class="rounded-md cursor-pointer bg-blue-100 w-12 h-8 flex items-center justify-center"
             disabled={!editor.canSubmit}
-            onclick={editor.submit.bind(editor)}
+            onclick={onSubmit}
           >
             <SendHorizontalIcon />
           </button>

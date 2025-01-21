@@ -36,20 +36,21 @@ export default class Editor {
   }
 
   public async submit() {
-    let needToDestroy: boolean | void;
-
-    try {
-      needToDestroy = await this.options.onSubmit?.(this.value);
-    } catch {
-      return;
-    }
+    const needToDestroy = await this.options.onSubmit?.(this.value);
 
     if (needToDestroy) {
       this.destroy();
     }
   }
 
+  @action
+  public reset() {
+    this.value = '';
+  }
+
+  @action
   public destroy() {
     this.options.onDestroyed?.();
+    this.value = '';
   }
 }

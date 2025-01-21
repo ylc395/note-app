@@ -26,7 +26,7 @@ export default function Item({ node }: { node: MemoView }) {
       </div>
       <Body node={node} />
       <div class="flex border-t">
-        <button class="flex grow justify-center items-center">
+        <button class="flex grow justify-center items-center border-r">
           <LinkIcon />
           {node.value.referrers.length}
         </button>
