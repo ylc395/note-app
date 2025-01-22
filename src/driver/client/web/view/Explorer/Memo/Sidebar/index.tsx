@@ -2,6 +2,7 @@ import { action } from 'mobx';
 
 import Calender from './Calender';
 import Tabs from './Tabs';
+import DatePicker from './DatePicker';
 import uiState from '../uiState';
 
 export default function Sidebar() {
@@ -17,6 +18,7 @@ export default function Sidebar() {
                 lg:border-0 lg:w-auto  lg:shadow-none"
       >
         <Calender />
+        <DatePicker />
         <Tabs />
       </div>
     </div>

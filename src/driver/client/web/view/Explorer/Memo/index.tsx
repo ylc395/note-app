@@ -1,12 +1,20 @@
 import { Tabs } from '@ark-ui/solid';
+import { action } from 'mobx';
 
 import Sidebar from './Sidebar';
 import Main from './Main';
+import uiState from './uiState';
 
 export default function MemoExplorer() {
   const tabClass = 'max-w-screen-md  w-full lg:w-3/4';
   return (
-    <Tabs.Root orientation="vertical" lazyMount class="flex h-screen px-4 mx-auto justify-center" defaultValue="memos">
+    <Tabs.Root
+      orientation="vertical"
+      lazyMount
+      class="flex h-screen px-4 mx-auto justify-center"
+      defaultValue="memos"
+      onValueChange={action(() => (uiState.isMenuVisible = false))}
+    >
       <Sidebar />
       <Tabs.Content value="memos" class={tabClass}>
         <Main />

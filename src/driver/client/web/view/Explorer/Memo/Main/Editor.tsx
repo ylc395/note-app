@@ -8,7 +8,6 @@ import type Editor from '#domain/client/app/model/memo/Editor';
 import MarkdownEditor from '#web/components/MarkdownEditor';
 
 export default function EditorView(props: { editor: Editor }) {
-  const editor = props.editor;
   const [getCrepe, setCrepe] = createSignal<Crepe>();
 
   function reset() {
@@ -18,27 +17,27 @@ export default function EditorView(props: { editor: Editor }) {
   }
 
   async function onSubmit() {
-    await editor.submit();
+    await props.editor.submit();
     reset();
+  }
+
+  // 不能直接绑定 props.editor.update，如果那么做，如果 editor 更新，onUpdate 回调仍然是之前的 editor 的 update 方法
+  function onUpdate(text: string) {
+    props.editor.update(text);
   }
 
   return (
     <div class="w-full border mx-auto rounded-lg">
-      <MarkdownEditor
-        defaultValue={editor.initialValue}
-        onUpdate={editor.update.bind(editor)}
-        onCreated={setCrepe}
-        rootClass="!p-4 max-h-96 min-h-32 overflow-y-auto"
-      />
+      <MarkdownEditor onUpdate={onUpdate} onCreated={setCrepe} rootClass="!p-4 max-h-96 min-h-32 overflow-y-auto" />
       <div class="flex justify-between border-t">
-        <div>字数{editor.value.length}</div>
+        <div>字数{props.editor.value.length}</div>
         <div class="flex space-x-2">
           <button onclick={reset} class="text-gray-400">
             重置
           </button>
           <button
             class="rounded-md cursor-pointer bg-blue-100 w-12 h-8 flex items-center justify-center"
-            disabled={!editor.canSubmit}
+            disabled={!props.editor.canSubmit}
             onclick={onSubmit}
           >
             <SendHorizontalIcon />

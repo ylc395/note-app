@@ -180,17 +180,16 @@ export default class MemoView extends HierarchyEntity<MemoVO> {
   }
 
   private createNewEditor() {
-    assert(!this.newEditor, 'can not create again');
-
     return new Editor({
       onSubmit: async (value) => {
         const newMemo = await this.remote.memo.create.mutate({ parentId: this.value?.id, body: value });
         this.childrenMap![newMemo.id] = new MemoView({ value: newMemo, parent: this });
         this.domainEventBus.emit(DomainEventBus.eventNames.Created, newMemo);
-        this.newEditor?.reset();
+
+        return true;
       },
       onDestroyed: action(() => {
-        this.newEditor = undefined;
+        this.newEditor = this.createNewEditor();
       }),
     });
   }

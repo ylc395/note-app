@@ -44,11 +44,6 @@ export default class Editor {
   }
 
   @action
-  public reset() {
-    this.value = '';
-  }
-
-  @action
   public destroy() {
     this.options.onDestroyed?.();
     this.value = '';
