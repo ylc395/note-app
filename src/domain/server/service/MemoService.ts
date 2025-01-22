@@ -76,14 +76,11 @@ export default class MemoService extends BaseService {
     }
 
     const memos = await this.repo.memos.findAll({
+      ...query,
       isAvailableOnly: true,
-      limit: query.limit,
       startTime,
       endTime,
       parentId: query.parentId || null,
-      isPinned: query.isPinned,
-      order: query.order,
-      orderBy: query.orderBy,
     });
 
     return await this.toVO(memos);

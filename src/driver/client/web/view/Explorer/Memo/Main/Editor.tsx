@@ -12,7 +12,7 @@ export default function EditorView(props: { editor: Editor }) {
 
   function reset() {
     const crepe = getCrepe()!;
-    crepe.editor.action(replaceAll('', true));
+    crepe.editor.action(replaceAll(''));
     crepe.editor.action((ctx) => ctx.get(editorViewCtx).focus());
   }
 

@@ -1,11 +1,10 @@
 import { createInfiniteQuery } from 'mobx-tanstack-query/preset';
 import { last } from 'lodash-es';
-import { action, computed, observable, reaction } from 'mobx';
+import { action, computed, observable } from 'mobx';
 import assert from 'assert';
 import { z } from 'zod';
 
 import { container } from '#domain/shared/infra/singletons';
-import HierarchyEntity from '#domain/client/shared/model/abstract/HierarchyEntity';
 import type { ClientMemoQuery, MemoVO } from '#domain/shared/model/memo';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 
@@ -14,14 +13,13 @@ import Editor from './Editor';
 import UIState from '../common/UIState';
 import Calendar from './Calendar';
 
-export default class MemoView extends HierarchyEntity<MemoVO> {
+export default class MemoView {
   constructor(options?: { value: MemoVO; parent: MemoView }) {
-    super();
     this.setValue(options?.value);
     this.parent = options?.parent;
 
     if (this.isRoot) {
-      this.newEditor = this.createNewEditor();
+      this.initNewEditor();
       this.calendar = container.resolve(Calendar);
     }
 
@@ -30,7 +28,7 @@ export default class MemoView extends HierarchyEntity<MemoVO> {
     }
 
     this.uiState = new UIState(
-      `memo-view-${this.id}`,
+      `memo-view-${this.value?.id ?? 'root'}`,
       z.object({
         lastId: z.string(),
         top: z.object({ id: z.string(), offset: z.number() }),
@@ -77,17 +75,11 @@ export default class MemoView extends HierarchyEntity<MemoVO> {
         }),
       },
     );
-
-    reaction(
-      () => this.childrenQuery?.result.data,
-      (data) => data && this.setChildren(data.pages.flat()),
-      { fireImmediately: true, signal: this.destroyController.signal },
-    );
   }
 
   private readonly parent?: MemoView;
 
-  @observable.shallow protected override accessor childrenMap: Record<string, MemoView> | undefined = undefined;
+  @observable.ref public accessor value: MemoVO | undefined;
 
   private readonly domainEventBus = container.resolve(DomainEventBus);
 
@@ -113,8 +105,8 @@ export default class MemoView extends HierarchyEntity<MemoVO> {
   private readonly calendar?: Calendar;
 
   @action
-  protected override setValue(memo?: MemoVO) {
-    super.setValue(memo);
+  private setValue(memo?: MemoVO) {
+    this.value = memo;
 
     if (this.isRoot) {
       this.isExpand = true;
@@ -123,20 +115,7 @@ export default class MemoView extends HierarchyEntity<MemoVO> {
 
   @computed
   public get children() {
-    if (!this.childrenMap) {
-      return [];
-    }
-
-    return Object.values(this.childrenMap).sort(({ value: memo1 }, { value: memo2 }) => {
-      const result = Number(memo2!.isPinned) - Number(memo1!.isPinned) || memo2!.createdAt - memo1!.createdAt;
-
-      return this.sortOptions.order === 'desc' ? result : -result;
-    });
-  }
-
-  @action
-  protected override setChildren(pages: MemoVO[]) {
-    super.setChildren(pages, (memo) => new MemoView({ value: memo, parent: this }));
+    return this.childrenQuery?.result.data?.pages.flat();
   }
 
   @computed
@@ -172,25 +151,24 @@ export default class MemoView extends HierarchyEntity<MemoVO> {
     this.isExpand = !this.isExpand;
 
     if (this.isExpand) {
-      this.newEditor = this.createNewEditor();
+      this.initNewEditor();
     } else {
       this.newEditor?.destroy();
       this.newEditor = undefined;
     }
   }
 
-  private createNewEditor() {
-    return new Editor({
+  @action
+  private initNewEditor() {
+    this.newEditor = new Editor({
       onSubmit: async (value) => {
         const newMemo = await this.remote.memo.create.mutate({ parentId: this.value?.id, body: value });
-        this.childrenMap![newMemo.id] = new MemoView({ value: newMemo, parent: this });
+        this.childrenQuery?.invalidate();
         this.domainEventBus.emit(DomainEventBus.eventNames.Created, newMemo);
 
         return true;
       },
-      onDestroyed: action(() => {
-        this.newEditor = this.createNewEditor();
-      }),
+      onDestroyed: this.initNewEditor.bind(this),
     });
   }
 
@@ -222,8 +200,7 @@ export default class MemoView extends HierarchyEntity<MemoVO> {
   }
 
   @action
-  public override destroy() {
-    super.destroy();
+  public destroy() {
     this.selfEditor?.destroy();
     this.newEditor?.destroy();
     this.destroyController.abort();

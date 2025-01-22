@@ -14,14 +14,14 @@ import {
 
 import type MemoView from '#domain/client/app/model/memo/MemoView';
 
-export default function ItemMenu({ node }: { node: MemoView }) {
+export default function ItemMenu({ memoView }: { memoView: MemoView }) {
   function handleSelect(value: string) {
     switch (value) {
       case 'pin':
-        node.togglePin();
+        memoView.togglePin();
         return;
       case 'edit':
-        node.startEditing();
+        memoView.startEditing();
         return;
       default:
         assert.fail('invalid select value');
@@ -32,7 +32,7 @@ export default function ItemMenu({ node }: { node: MemoView }) {
 
   return (
     <Menu.Root onSelect={(e) => handleSelect(e.value)}>
-      <Menu.Trigger disabled={Boolean(node.selfEditor)}>
+      <Menu.Trigger disabled={Boolean(memoView.selfEditor)}>
         <EllipsisIcon size={24} />
       </Menu.Trigger>
       <Menu.Positioner>
@@ -43,7 +43,7 @@ export default function ItemMenu({ node }: { node: MemoView }) {
           </Menu.Item>
           <Menu.Item class={itemClass} value="pin">
             <Show
-              when={node.value?.isPinned}
+              when={memoView.value?.isPinned}
               fallback={
                 <>
                   <PinIcon />
@@ -57,7 +57,7 @@ export default function ItemMenu({ node }: { node: MemoView }) {
           </Menu.Item>
           <Menu.Item class={itemClass} value="star">
             <Show
-              when={node.value?.isStar}
+              when={memoView.value?.isStar}
               fallback={
                 <>
                   <StarIcon /> Star

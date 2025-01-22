@@ -16,7 +16,7 @@ export default function MemoMain() {
     <div class="flex flex-col max-h-full py-4">
       <Editor editor={rootMemo.newEditor!} />
       <ListToolbar rootMemo={rootMemo} />
-      <List node={rootMemo} />
+      <List memoView={rootMemo} />
     </div>
   );
 }
