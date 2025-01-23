@@ -31,4 +31,10 @@ export default router({
   queryDates: publicProcedure
     .input(durationSchema)
     .query(({ input: duration, ctx: { memoService } }) => memoService.queryAvailableDates(duration)),
+
+  queryCount: publicProcedure
+    .input(durationSchema.optional())
+    .query(({ input: duration, ctx: { memoService } }) => memoService.queryCount(duration)),
+
+  queryFirstTime: publicProcedure.query(({ ctx: { memoService } }) => memoService.queryFirstTime()),
 });

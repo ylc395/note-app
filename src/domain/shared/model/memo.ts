@@ -37,8 +37,8 @@ export type MemoPatchDTO = Partial<Pick<MemoDTO, 'body' | 'isPinned'>>;
  * @api
  */
 export interface Duration {
-  startTime: number;
-  endTime: number;
+  startTime?: number;
+  endTime?: number;
 }
 
 /**

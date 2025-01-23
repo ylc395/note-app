@@ -7,7 +7,7 @@ import { createQuery } from 'mobx-tanstack-query/preset';
 
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import { container } from '#domain/shared/infra/singletons';
-import type { MemoVO } from '#domain/shared/model/memo';
+import type { Duration, MemoVO } from '#domain/shared/model/memo';
 
 import DomainEventBus from './EventBus';
 
@@ -16,17 +16,6 @@ dayjs.extend(isoWeek);
 
 export default class Calendar {
   constructor() {
-    this.data = createQuery(
-      ({ signal }) => {
-        return this.remote.memo.queryDates.query(this.timeParams, { signal });
-      },
-      {
-        options: () => ({
-          queryKey: ['memos', 'calendar', this.timeParams],
-        }),
-      },
-    );
-
     this.domainEventBus.on(
       [DomainEventBus.eventNames.Created, DomainEventBus.eventNames.Removed],
       this.handleChanged.bind(this),
@@ -37,11 +26,29 @@ export default class Calendar {
 
   private readonly remote = container.resolve(rpcToken);
 
-  public readonly data;
-
   @observable.ref private accessor now = dayjs();
 
-  @observable.ref public accessor selectedDuration: { startTime: number; endTime: number } | undefined;
+  @observable.ref public accessor selectedDuration: Duration | undefined;
+
+  public readonly data = createQuery(
+    ({ signal }) => {
+      return this.remote.memo.queryDates.query(this.timeParams, { signal });
+    },
+    {
+      options: () => ({
+        queryKey: ['memos', 'calendar', this.timeParams],
+      }),
+    },
+  );
+
+  public readonly count = createQuery(
+    ({ signal }) => this.remote.memo.queryCount.query(this.selectedDuration, { signal }),
+    {
+      options: () => ({
+        queryKey: ['memos', 'count', this.selectedDuration],
+      }),
+    },
+  );
 
   @computed
   public get duration() {
@@ -54,7 +61,7 @@ export default class Calendar {
   }
 
   @action
-  public selectDate(value: Dayjs | null) {
+  public selectDay(value: Dayjs | null) {
     this.selectedDuration = value
       ? {
           startTime: value.startOf('day').valueOf(),
@@ -63,9 +70,9 @@ export default class Calendar {
       : undefined;
   }
 
-  public readonly isFuture = (day: Dayjs) => {
+  public isFuture(day: Dayjs) {
     return day.isAfter(this.now);
-  };
+  }
 
   @computed
   private get timeParams() {

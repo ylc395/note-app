@@ -1,7 +1,7 @@
 import { last, range } from 'lodash-es';
 import { For, Show } from 'solid-js';
 
-import MemoCalendar from '#domain/client/app/model/memo/Calendar';
+import MemoCalendar from '#domain/client/app/model/memo/TimeSelector';
 import { container } from '#domain/shared/infra/singletons';
 import Day from './Day';
 

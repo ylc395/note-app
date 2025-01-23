@@ -9,6 +9,9 @@ export default function Tabs() {
       <ArkTabs.Trigger value="stats" class="py-2 w-full text-start">
         统计
       </ArkTabs.Trigger>
+      <ArkTabs.Trigger value="review" class="py-2 w-full text-start">
+        回顾
+      </ArkTabs.Trigger>
     </ArkTabs.List>
   );
 }

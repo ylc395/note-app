@@ -3,7 +3,7 @@ import { createMemo } from 'solid-js';
 import { action } from 'mobx';
 
 import { container } from '#domain/shared/infra/singletons';
-import MemoCalendar from '#domain/client/app/model/memo/Calendar';
+import MemoCalendar from '#domain/client/app/model/memo/TimeSelector';
 import uiState from '../../uiState';
 
 function getColorClass(count: number) {
@@ -45,7 +45,7 @@ export default function Day({ day }: { day: Dayjs }) {
         if (count() === 0) {
           return;
         }
-        calendar.selectDate(isSelected() ? null : day);
+        calendar.selectDay(isSelected() ? null : day);
         uiState.isMenuVisible = false;
       })}
       title={`${key} ${count()}`}

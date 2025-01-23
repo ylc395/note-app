@@ -11,7 +11,7 @@ import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import DomainEventBus from './EventBus';
 import Editor from './Editor';
 import UIState from '../common/UIState';
-import Calendar from './Calendar';
+import Calendar from './TimeSelector';
 
 export default class MemoView {
   constructor(options?: { value: MemoVO; parent: MemoView }) {

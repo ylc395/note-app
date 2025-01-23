@@ -123,20 +123,27 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
     return rows.map(SqliteMemoRepository.rowToMemo);
   }
 
-  public async findAvailableBetween(q: Duration) {
-    const rows = await this.db
+  public async queryTotalCount(duration?: Duration) {
+    let sql = this.db
       .selectFrom(this.tableName)
       .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.id`)
-      .where((eb) =>
-        eb.and([
-          eb(`${this.tableName}.createdAt`, '>=', q.startTime),
-          eb(`${this.tableName}.createdAt`, '<', q.endTime),
-          eb(`${recyclableTableName}.entityId`, 'is', null),
-        ]),
-      )
-      .select(['createdAt'])
-      .execute();
+      .where(`${recyclableTableName}.entityId`, 'is', null);
 
-    return rows;
+    if (duration?.startTime) {
+      sql = sql.where(`${this.tableName}.createdAt`, '>=', duration.startTime);
+    }
+
+    if (duration?.endTime) {
+      sql = sql.where(`${this.tableName}.createdAt`, '<=', duration.endTime);
+    }
+
+    const { count, childrenCount } = await sql
+      .select(({ fn }) => [fn.countAll().as('count'), fn.count('parentId').as('childrenCount')])
+      .executeTakeFirstOrThrow();
+
+    return {
+      total: Number(count),
+      parent: Number(count) - Number(childrenCount),
+    };
   }
 }

@@ -28,8 +28,8 @@ export const memoPatchDTOSchema = memoDTOSchema.pick({
   "isPinned": true
 }).partial();
 export const durationSchema = z.object({
-  startTime: z.number(),
-  endTime: z.number()
+  startTime: z.number().optional(),
+  endTime: z.number().optional()
 });
 export const clientMemoQuerySchema = z.object({
   limit: z.number(),

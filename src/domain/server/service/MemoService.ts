@@ -142,5 +142,18 @@ export default class MemoService extends BaseService {
     }
   };
 
-  public queryCount() {}
+  public async queryCount(duration?: Duration) {
+    return this.repo.memos.queryTotalCount(duration);
+  }
+
+  public async queryFirstTime() {
+    const firstOne = await this.repo.memos.findAll({
+      limit: 1,
+      orderBy: 'createdAt',
+      order: 'asc',
+      isAvailableOnly: true,
+    });
+
+    return firstOne[0]?.createdAt ?? null;
+  }
 }
