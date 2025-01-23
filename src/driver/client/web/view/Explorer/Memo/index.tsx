@@ -1,12 +1,12 @@
 import { Tabs } from '@ark-ui/solid';
 import { action } from 'mobx';
+import { TriangleIcon } from 'lucide-solid';
 
 import Sidebar from './Sidebar';
 import Main from './Main';
 import uiState from './uiState';
 
 export default function MemoExplorer() {
-  const tabClass = 'max-w-screen-md  w-full lg:w-3/4';
   return (
     <Tabs.Root
       orientation="vertical"
@@ -16,12 +16,17 @@ export default function MemoExplorer() {
       onValueChange={action(() => (uiState.isMenuVisible = false))}
     >
       <Sidebar />
-      <Tabs.Content value="memos" class={tabClass}>
-        <Main />
-      </Tabs.Content>
-      <Tabs.Content value="stats" class={tabClass}>
-        Stats
-      </Tabs.Content>
+      <div class="flex max-w-screen-md w-full lg:w-3/4">
+        <button class="lg:hidden" onclick={action(() => (uiState.isMenuVisible = true))}>
+          <TriangleIcon class="rotate-90" />
+        </button>
+        <Tabs.Content class="grow" value="memos">
+          <Main />
+        </Tabs.Content>
+        <Tabs.Content class="grow" value="stats">
+          Stats
+        </Tabs.Content>
+      </div>
     </Tabs.Root>
   );
 }
