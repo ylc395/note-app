@@ -1,11 +1,13 @@
 import { onCleanup, Show } from 'solid-js';
 import dayjs from 'dayjs';
-import { LinkIcon, MessageCircleIcon } from 'lucide-solid';
+import { Link2Icon, ReplyIcon } from 'lucide-solid';
 
 import MemoView from '#domain/client/app/model/memo/MemoView';
 import type { MemoVO } from '#domain/shared/model/memo';
+
 import Menu from './Menu';
 import Body from './Body';
+import ChildrenList from './ChildrenList';
 
 export default function Item({ memo, parent }: { memo: MemoVO; parent: MemoView }) {
   const date = dayjs(memo.createdAt);
@@ -29,16 +31,21 @@ export default function Item({ memo, parent }: { memo: MemoVO; parent: MemoView 
         <Menu memoView={memoView} />
       </div>
       <Body memoView={memoView} />
-      <div class="flex border-t">
-        <button class="flex grow justify-center items-center border-r">
-          <LinkIcon />
-          {memo.referrers.length}
-        </button>
-        <button class="flex grow justify-center items-center">
-          <MessageCircleIcon />
-          {memo.childrenCount}
-        </button>
-      </div>
+      <Show when={memoView.isParent}>
+        <div class="flex border-t">
+          <button class="flex grow justify-center items-center border-r">
+            <Link2Icon />
+            {memo.referrers.length}
+          </button>
+          <button class="flex grow justify-center items-center" onclick={memoView.toggleExpand.bind(memoView)}>
+            <ReplyIcon />
+            {memo.childrenCount}
+          </button>
+        </div>
+      </Show>
+      <Show when={memoView.isExpand}>
+        <ChildrenList memoView={memoView} />
+      </Show>
     </div>
   );
 }

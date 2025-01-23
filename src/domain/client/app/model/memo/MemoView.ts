@@ -79,7 +79,7 @@ export default class MemoView {
 
   private readonly parent?: MemoView;
 
-  @observable.ref public accessor value: MemoVO | undefined;
+  @observable public accessor value: MemoVO | undefined;
 
   private readonly domainEventBus = container.resolve(DomainEventBus);
 
@@ -105,8 +105,9 @@ export default class MemoView {
   private readonly calendar?: Calendar;
 
   @action
-  private setValue(memo?: MemoVO) {
-    this.value = memo;
+  private setValue(memo?: MemoVO | ((oldValue: MemoVO | undefined) => MemoVO | undefined)) {
+    const newValue = typeof memo === 'function' ? memo(this.value) : memo;
+    this.value = newValue;
 
     if (this.isRoot) {
       this.isExpand = true;
@@ -136,11 +137,11 @@ export default class MemoView {
     await this.childrenQuery?.fetchNextPage();
   }
 
-  private get isParent() {
+  public get isParent() {
     return !this.isRoot && !this.value?.parentId;
   }
 
-  private get isRoot() {
+  public get isRoot() {
     return !this.value;
   }
 
@@ -165,6 +166,7 @@ export default class MemoView {
         const newMemo = await this.remote.memo.create.mutate({ parentId: this.value?.id, body: value });
         this.childrenQuery?.invalidate();
         this.domainEventBus.emit(DomainEventBus.eventNames.Created, newMemo);
+        this.value!.childrenCount += 1;
 
         return true;
       },
