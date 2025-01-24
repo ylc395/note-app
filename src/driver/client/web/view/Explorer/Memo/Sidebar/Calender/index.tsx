@@ -7,10 +7,10 @@ import Day from './Day';
 
 export default function Calendar() {
   const calendar = container.resolve(MemoCalendar);
-  const diffWeeks = calendar.duration.endTime.diff(calendar.duration.startTime, 'week');
+  const diffWeeks = calendar.recent.endTime.diff(calendar.recent.startTime, 'week');
 
   const weeks = range(0, diffWeeks + 1).map((weekOffset) => {
-    const weekStart = calendar.duration.startTime.add(weekOffset, 'week').startOf('isoWeek');
+    const weekStart = calendar.recent.startTime.add(weekOffset, 'week').startOf('isoWeek');
     return range(0, 7).map((dayOffset) => weekStart.add(dayOffset, 'day'));
   });
 

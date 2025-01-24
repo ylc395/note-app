@@ -6,6 +6,7 @@ import { tableName as linkTableName } from '../schema/link.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
 import { tableName as topicTableName } from '../schema/topic.js';
 import type { LinkRecord, TopicRecord } from '#domain/server/model/content.js';
+import { compact } from 'lodash-es';
 
 export default class SqliteContentRepository extends BaseRepository implements ContentRepository {
   public async createTopics(topics: TopicRecord[]) {
@@ -60,15 +61,17 @@ export default class SqliteContentRepository extends BaseRepository implements C
       .execute();
   }
 
-  public async findAllLinks({ entityId, types, isAvailableOnly }: LinkQuery) {
+  public async findAllLinks({ entityId, types, isAvailableOnly, direction }: LinkQuery) {
     let sql = this.db
       .selectFrom(linkTableName)
       .where(({ eb, or, and }) =>
         and([
-          or([
-            eb(`${linkTableName}.target`, Array.isArray(entityId) ? 'in' : '=', entityId),
-            eb(`${linkTableName}.sourceId`, Array.isArray(entityId) ? 'in' : '=', entityId),
-          ]),
+          or(
+            compact([
+              direction !== 'start' && eb(`${linkTableName}.target`, Array.isArray(entityId) ? 'in' : '=', entityId),
+              direction !== 'end' && eb(`${linkTableName}.sourceId`, Array.isArray(entityId) ? 'in' : '=', entityId),
+            ]),
+          ),
           eb(`${linkTableName}.targetType`, 'in', types),
         ]),
       )

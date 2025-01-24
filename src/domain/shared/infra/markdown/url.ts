@@ -30,7 +30,7 @@ export function parseAppUrl(url: string) {
   const [_type, id] = pathname.replace('//', '').split('/');
   const type = _type || host;
 
-  if (id && ['notes', 'materials', 'annotations', 'memos', 'files'].includes(type)) {
+  if (id && ['notes', 'annotations', 'memos', 'files'].includes(type)) {
     return { id, type: type as Type, hash: hash.slice(1) };
   }
 

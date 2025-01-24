@@ -7,30 +7,19 @@ import { createQuery } from 'mobx-tanstack-query/preset';
 
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import { container } from '#domain/shared/infra/singletons';
-import type { Duration, MemoVO } from '#domain/shared/model/memo';
-
-import DomainEventBus from './EventBus';
+import type { Duration } from '#domain/shared/model/memo';
 
 dayjs.extend(isBetween);
 dayjs.extend(isoWeek);
 
 export default class Calendar {
-  constructor() {
-    this.domainEventBus.on(
-      [DomainEventBus.eventNames.Created, DomainEventBus.eventNames.Removed],
-      this.handleChanged.bind(this),
-    );
-  }
-
-  private readonly domainEventBus = container.resolve(DomainEventBus);
-
   private readonly remote = container.resolve(rpcToken);
 
   @observable.ref private accessor now = dayjs();
 
   @observable.ref public accessor selectedDuration: Duration | undefined;
 
-  public readonly data = createQuery(
+  public readonly recentCounts = createQuery(
     ({ signal }) => {
       return this.remote.memo.queryDates.query(this.timeParams, { signal });
     },
@@ -51,7 +40,7 @@ export default class Calendar {
   );
 
   @computed
-  public get duration() {
+  public get recent() {
     const today = this.now.endOf('day');
 
     return {
@@ -74,17 +63,24 @@ export default class Calendar {
     return day.isAfter(this.now);
   }
 
+  public isRecent(time: number) {
+    const { startTime, endTime } = this.recent;
+    return dayjs(time).isBetween(startTime, endTime, undefined, '[]');
+  }
+
+  public isBetweenSelectedDuration(time: number) {
+    if (!this.selectedDuration) {
+      return true;
+    }
+
+    return dayjs(time).isBetween(this.selectedDuration.startTime, this.selectedDuration.endTime, undefined, '[]');
+  }
+
   @computed
   private get timeParams() {
     return {
-      startTime: this.duration.startTime.valueOf(),
-      endTime: this.duration.endTime.valueOf(),
+      startTime: this.recent.startTime.valueOf(),
+      endTime: this.recent.endTime.valueOf(),
     };
-  }
-
-  private handleChanged(memo: MemoVO) {
-    if (dayjs(memo.createdAt).isBetween(this.duration.startTime, this.duration.endTime, 'millisecond', '[]')) {
-      this.data.refetch();
-    }
   }
 }

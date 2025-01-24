@@ -1,4 +1,4 @@
-import { RefreshCcwIcon, SearchIcon } from 'lucide-solid';
+import { RefreshCcwIcon, SearchIcon, XIcon } from 'lucide-solid';
 import { Show } from 'solid-js';
 import dayjs from 'dayjs';
 
@@ -14,9 +14,15 @@ export default function ListToolbar({ rootMemo }: { rootMemo: MemoView }) {
   return (
     <div class="mt-4 flex justify-between">
       <div>
-        <Show when={timeSelector.selectedDuration && timeSelector.count.result.data}>
-          共计{timeSelector.count.result.data!.total}条 （
-          <time datetime="">{dayjs(timeSelector.selectedDuration!.startTime).format('YYYY-MM-DD')}</time> 期间）
+        <Show when={timeSelector.count.result.data}>
+          共计{timeSelector.count.result.data!.total}条
+          <Show when={timeSelector.selectedDuration}>
+            （<time datetime="">{dayjs(timeSelector.selectedDuration!.startTime).format('YYYY-MM-DD')}</time> 期间
+            <button onclick={() => timeSelector.selectDay(null)}>
+              <XIcon />
+            </button>
+            ）
+          </Show>
         </Show>
       </div>
       <div class="space-x-2 flex">

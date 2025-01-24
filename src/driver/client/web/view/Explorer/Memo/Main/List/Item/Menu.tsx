@@ -13,6 +13,7 @@ import {
 } from 'lucide-solid';
 
 import type MemoView from '#domain/client/app/model/memo/MemoView';
+import { getAppUrl } from '#domain/shared/infra/markdown/url';
 
 export default function ItemMenu({ memoView }: { memoView: MemoView }) {
   function handleSelect(value: string) {
@@ -22,6 +23,9 @@ export default function ItemMenu({ memoView }: { memoView: MemoView }) {
         return;
       case 'edit':
         memoView.startEditing();
+        return;
+      case 'copyId':
+        navigator.clipboard.writeText(getAppUrl(memoView.value!.id, 'memos'));
         return;
       default:
         assert.fail('invalid select value');
@@ -73,9 +77,9 @@ export default function ItemMenu({ memoView }: { memoView: MemoView }) {
             <HistoryIcon />
             History
           </Menu.Item>
-          <Menu.Item class={itemClass} value="copyUrl">
+          <Menu.Item class={itemClass} value="copyId">
             <CopyIcon />
-            复制 ID
+            复制 URL
           </Menu.Item>
         </Menu.Content>
       </Menu.Positioner>

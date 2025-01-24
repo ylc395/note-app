@@ -4,7 +4,7 @@ export default class Editor {
   constructor(options: {
     initialValue?: string;
     onDestroyed?: () => void;
-    onSubmit?: (value: string) => Promise<boolean | void>;
+    onSubmit?: (value: string) => Promise<'reset' | 'destroy'>;
   }) {
     this.options = {
       onDestroyed: options.onDestroyed,
@@ -20,7 +20,7 @@ export default class Editor {
   private readonly options: {
     initialValue?: string;
     onDestroyed?: () => void;
-    onSubmit?: (value: string) => Promise<boolean | void>;
+    onSubmit?: (value: string) => Promise<'reset' | 'destroy'>;
   };
 
   @observable public accessor value = '';
@@ -36,16 +36,24 @@ export default class Editor {
   }
 
   public async submit() {
-    const needToDestroy = await this.options.onSubmit?.(this.value);
+    const todo = await this.options.onSubmit?.(this.value);
 
-    if (needToDestroy) {
+    if (todo === 'destroy') {
       this.destroy();
     }
+
+    if (todo === 'reset') {
+      this.reset();
+    }
+  }
+
+  @action
+  public reset() {
+    this.value = '';
   }
 
   @action
   public destroy() {
     this.options.onDestroyed?.();
-    this.value = '';
   }
 }

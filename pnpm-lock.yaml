@@ -40,6 +40,9 @@ importers:
       '@mozilla/readability':
         specifier: ^0.4.4
         version: 0.4.4
+      '@solid-primitives/keyed':
+        specifier: ^1.5.0
+        version: 1.5.0(solid-js@1.9.4)
       '@tanstack/query-core':
         specifier: ^5.64.1
         version: 5.64.1
@@ -161,8 +164,8 @@ importers:
         specifier: ^4.0.7
         version: 4.0.7(mobx@6.13.5)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       mobx-tanstack-query:
-        specifier: ^3.3.5
-        version: 3.3.5(@tanstack/query-core@5.64.1)(disposer-util@1.0.12)(mobx@6.13.5)
+        specifier: ^3.3.8
+        version: 3.3.8(@tanstack/query-core@5.64.1)(disposer-util@1.0.12)(mobx@6.13.5)
       page-lifecycle:
         specifier: ^0.1.2
         version: 0.1.2
@@ -1450,6 +1453,11 @@ packages:
   '@sindresorhus/transliterate@1.6.0':
     resolution: {integrity: sha512-doH1gimEu3A46VX6aVxpHTeHrytJAG6HgdxntYnCFiIFHEM/ZGpG8KiZGBChchjQmG0XFIBL552kBTjVcMZXwQ==}
     engines: {node: '>=12'}
+
+  '@solid-primitives/keyed@1.5.0':
+    resolution: {integrity: sha512-g04CXywgWG/7L4sTxQP6q1gdiirItVBq6ZO9YuLTqPFlkX3uD4IEjeL9cLHP6waahrnO8yL3OZl64pcKGYN5Qw==}
+    peerDependencies:
+      solid-js: ^1.6.12
 
   '@swc/helpers@0.5.15':
     resolution: {integrity: sha512-JQ5TuMi45Owi4/BIMAJBoSQoOJu12oOk/gADqlcUL9JEdHB8vyjUSsxqeNXnmXHjYKMi2WcYtezGEEhqUI/E2g==}
@@ -3813,8 +3821,8 @@ packages:
       react-native:
         optional: true
 
-  mobx-tanstack-query@3.3.5:
-    resolution: {integrity: sha512-UODwNCr4Uz9sPW+fdqmVCQfDGMeChYjkEU6P7gpcmxMEAEEPM4VhXQD9sff0gkQmgYLvw2aby6LT8tUFlfJHaw==}
+  mobx-tanstack-query@3.3.8:
+    resolution: {integrity: sha512-row7tumxqUwxLt6NAXxnlzxZZa9r1QH82IM5VSGq2UMwVbNwhO/4CaF4Tp/PxKl3AlriASZVNV2ZLQfCTIsQsA==}
     peerDependencies:
       '@tanstack/query-core': '>=5.0.0'
       disposer-util: ^1.0.9
@@ -6779,6 +6787,10 @@ snapshots:
   '@sindresorhus/transliterate@1.6.0':
     dependencies:
       escape-string-regexp: 5.0.0
+
+  '@solid-primitives/keyed@1.5.0(solid-js@1.9.4)':
+    dependencies:
+      solid-js: 1.9.4
 
   '@swc/helpers@0.5.15':
     dependencies:
@@ -9896,7 +9908,7 @@ snapshots:
     optionalDependencies:
       react-dom: 18.2.0(react@18.2.0)
 
-  mobx-tanstack-query@3.3.5(@tanstack/query-core@5.64.1)(disposer-util@1.0.12)(mobx@6.13.5):
+  mobx-tanstack-query@3.3.8(@tanstack/query-core@5.64.1)(disposer-util@1.0.12)(mobx@6.13.5):
     dependencies:
       '@tanstack/query-core': 5.64.1
       disposer-util: 1.0.12

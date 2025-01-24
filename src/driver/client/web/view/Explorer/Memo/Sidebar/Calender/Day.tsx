@@ -1,6 +1,7 @@
 import type { Dayjs } from 'dayjs';
 import { createMemo } from 'solid-js';
 import { action } from 'mobx';
+import { Tooltip } from '@ark-ui/solid/tooltip';
 
 import { container } from '#domain/shared/infra/singletons';
 import MemoCalendar from '#domain/client/app/model/memo/TimeSelector';
@@ -30,25 +31,35 @@ export default function Day({ day }: { day: Dayjs }) {
   const calendar = container.resolve(MemoCalendar);
   const key = day.format('YYYY-MM-DD');
 
-  const count = createMemo(() => calendar.data.result.data?.[key] ?? 0);
+  const count = createMemo(() => calendar.recentCounts.result.data?.[key]);
   const isSelected = createMemo(
     () =>
       calendar.selectedDuration &&
       day.isBetween(calendar.selectedDuration.startTime, calendar.selectedDuration.endTime, null, '[]'),
   );
 
+  function handleClick() {
+    if ((count()?.total ?? 0) === 0) {
+      return;
+    }
+    calendar.selectDay(isSelected() ? null : day);
+    uiState.isMenuVisible = false;
+  }
+
   return (
-    <div
-      class={`h-4 w-4 rounded ${getColorClass(count())} 
-            ${count() > 0 ? 'cursor-pointer' : ''} ${isSelected() ? 'outline' : ''}`}
-      onclick={action(() => {
-        if (count() === 0) {
-          return;
-        }
-        calendar.selectDay(isSelected() ? null : day);
-        uiState.isMenuVisible = false;
-      })}
-      title={`${key} ${count()}`}
-    />
+    <Tooltip.Root openDelay={500} closeDelay={500}>
+      <Tooltip.Trigger>
+        <div
+          class={`h-4 w-4 rounded ${getColorClass(count()?.total ?? 0)} 
+            ${(count()?.total ?? 0) > 0 ? 'cursor-pointer' : ''} ${isSelected() ? 'outline' : ''}`}
+          onclick={action(handleClick)}
+        />
+      </Tooltip.Trigger>
+      <Tooltip.Positioner>
+        <Tooltip.Content class="bg-white">
+          {key} {count()?.total ?? 0}
+        </Tooltip.Content>
+      </Tooltip.Positioner>
+    </Tooltip.Root>
   );
 }

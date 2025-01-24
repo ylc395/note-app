@@ -5,6 +5,7 @@ export interface LinkQuery {
   entityId: EntityId | EntityId[];
   isAvailableOnly?: boolean;
   types: LinkTargetType[];
+  direction?: 'start' | 'end';
 }
 
 export interface TopicQuery {

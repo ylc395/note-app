@@ -26,6 +26,7 @@ import BaseService from '../BaseService.js';
 import EntityService from '../EntityService.js';
 import LinkExtractor from './LinkExtractor.js';
 import TopicExtractor from './TopicExtractor.js';
+import { arrayOf, type MaybeArray } from '#utils/collection.js';
 
 export default class ContentService extends BaseService {
   private readonly entityService = container.resolve(EntityService);
@@ -74,12 +75,13 @@ export default class ContentService extends BaseService {
     return topicVOs;
   }
 
-  public async queryLinksOf(entityId: EntityId) {
-    await this.entityService.assertAvailableIds([entityId]);
+  public async queryLinksOf(entityId: MaybeArray<EntityId>, params?: { direction: 'start' | 'end' }) {
+    await this.entityService.assertAvailableIds(arrayOf(entityId));
 
     const links = await this.repo.contents.findAllLinks({
       isAvailableOnly: true,
       entityId,
+      direction: params?.direction,
       types: [LinkTargetType.Entity, LinkTargetType.External],
     });
 

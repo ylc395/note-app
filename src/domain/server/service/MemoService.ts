@@ -1,4 +1,4 @@
-import { groupBy, keyBy, mapValues, size } from 'lodash-es';
+import { groupBy, keyBy, mapValues } from 'lodash-es';
 import assert from 'node:assert';
 import dayjs from 'dayjs';
 
@@ -95,7 +95,16 @@ export default class MemoService extends BaseService {
 
     return mapValues(
       groupBy(memos, (memo) => dayjs(memo.createdAt).startOf('day').format('YYYY-MM-DD')),
-      size,
+      (memos) =>
+        memos.reduce(
+          (count, memo) => {
+            return {
+              total: count.total + 1,
+              children: count.children + (memo.parentId ? 1 : 0),
+            };
+          },
+          { children: 0, total: 0 },
+        ),
     );
   }
 
@@ -106,11 +115,13 @@ export default class MemoService extends BaseService {
     const ids = _memos.map(({ id }) => id);
     const stars = isNew ? {} : keyBy(await this.repo.stars.findAll({ entityIds: ids }), ({ entityId }) => entityId);
     const childrenIds = isNew ? {} : await this.repo.entities.findChildrenIds(ids, { isAvailableOnly: true });
+    const { links: allReferrers } = await this.content.queryLinksOf(ids, { direction: 'end' });
+    const referrersMap = Object.groupBy(allReferrers, ({ targetEntity }) => targetEntity.id);
 
     const result = _memos.map((memo) => ({
       ...memo,
       childrenCount: childrenIds[memo.id]?.length || 0,
-      referrers: [], // todo: 从 ContentService 里取
+      referrers: referrersMap[memo.id] ?? [],
       isStar: Boolean(stars[memo.id]),
     }));
 

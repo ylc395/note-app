@@ -20,7 +20,7 @@ export default class MemoView {
 
     if (this.isRoot) {
       this.initNewEditor();
-      this.calendar = container.resolve(Calendar);
+      this.timeSelector = container.resolve(Calendar);
     }
 
     if (!this.isParent && !this.isRoot) {
@@ -43,15 +43,14 @@ export default class MemoView {
             parentId: this.value?.id,
             endId,
             startId,
-            startTime: startId ? undefined : this.calendar?.selectedDuration?.startTime,
-            endTime: endId ? undefined : this.calendar?.selectedDuration?.endTime,
+            startTime: startId ? undefined : this.timeSelector?.selectedDuration?.startTime,
+            endTime: endId ? undefined : this.timeSelector?.selectedDuration?.endTime,
             ...this.sortOptions,
           },
           { signal },
         ),
       {
-        // 无限加载的列表就别 stale 了
-        staleTime: Infinity,
+        refetchOnWindowFocus: false,
         abortSignal: this.destroyController.signal,
         initialPageParam: this.getNextPageParams(),
         getNextPageParam: (lastPage, _, lastPageParam) => this.getNextPageParams({ lastPage, lastPageParam }),
@@ -67,8 +66,8 @@ export default class MemoView {
             {
               ...this.sortOptions,
               parentId: options?.value.id,
-              startTime: this.calendar?.selectedDuration?.startTime,
-              endTime: this.calendar?.selectedDuration?.endTime,
+              startTime: this.timeSelector?.selectedDuration?.startTime,
+              endTime: this.timeSelector?.selectedDuration?.endTime,
             },
           ],
           enabled: this.isExpand,
@@ -102,10 +101,10 @@ export default class MemoView {
     order: 'desc',
   };
 
-  private readonly calendar?: Calendar;
+  private readonly timeSelector?: Calendar;
 
   @action
-  private setValue(memo?: MemoVO | ((oldValue: MemoVO | undefined) => MemoVO | undefined)) {
+  public setValue(memo?: MemoVO | ((oldValue: MemoVO | undefined) => MemoVO | undefined)) {
     const newValue = typeof memo === 'function' ? memo(this.value) : memo;
     this.value = newValue;
 
@@ -130,7 +129,7 @@ export default class MemoView {
   }
 
   public get timeParams() {
-    return this.calendar?.selectedDuration;
+    return this.timeSelector?.selectedDuration;
   }
 
   public async loadMore() {
@@ -164,13 +163,21 @@ export default class MemoView {
     this.newEditor = new Editor({
       onSubmit: async (value) => {
         const newMemo = await this.remote.memo.create.mutate({ parentId: this.value?.id, body: value });
-        this.childrenQuery?.invalidate();
-        this.domainEventBus.emit(DomainEventBus.eventNames.Created, newMemo);
-        this.value!.childrenCount += 1;
 
-        return true;
+        if (this.timeSelector?.isBetweenSelectedDuration(newMemo.createdAt)) {
+          this.childrenQuery?.invalidate();
+        }
+
+        if (this.timeSelector?.isRecent(newMemo.createdAt)) {
+          this.timeSelector.recentCounts.invalidate();
+        }
+
+        if (this.value) {
+          this.value.childrenCount += 1;
+        }
+
+        return 'reset';
       },
-      onDestroyed: this.initNewEditor.bind(this),
     });
   }
 
@@ -184,12 +191,13 @@ export default class MemoView {
       initialValue: memo.body,
       onSubmit: async (value: string) => {
         await this.remote.memo.updateOne.mutate([memo.id, { body: value }]);
-        this.setValue({ ...memo, body: value });
 
-        return true;
+        this.setValue({ ...memo, body: value }); // 先乐观更新一下
+        return 'destroy';
       },
       onDestroyed: action(() => {
         this.selfEditor = undefined;
+        this.parent?.childrenQuery?.invalidate();
       }),
     });
   }
