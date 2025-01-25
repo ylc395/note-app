@@ -141,8 +141,8 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
       sql = sql.where(`${this.tableName}.parentId`, q.parentId === null ? 'is' : '=', q.parentId);
     }
 
-    const { count } = await sql.select(({ fn }) => [fn.countAll().as('count')]).executeTakeFirstOrThrow();
+    const { count } = await sql.select(({ fn }) => [fn.countAll<number>().as('count')]).executeTakeFirstOrThrow();
 
-    return Number(count);
+    return count;
   }
 }

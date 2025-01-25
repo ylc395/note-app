@@ -11,9 +11,11 @@ import {
   StarOffIcon,
   CopyIcon,
 } from 'lucide-solid';
+import { action } from 'mobx';
 
 import type MemoView from '#domain/client/app/model/memo/MemoView';
 import { getAppUrl } from '#domain/shared/infra/markdown/url';
+import uiState from '../../../uiState';
 
 export default function ItemMenu({ memoView }: { memoView: MemoView }) {
   function handleSelect(value: string) {
@@ -27,6 +29,9 @@ export default function ItemMenu({ memoView }: { memoView: MemoView }) {
       case 'copyId':
         navigator.clipboard.writeText(getAppUrl(memoView.value!.id, 'memos'));
         return;
+      case 'history':
+        uiState.revisionViewId = memoView.value?.id;
+        return;
       default:
         assert.fail('invalid select value');
     }
@@ -35,7 +40,7 @@ export default function ItemMenu({ memoView }: { memoView: MemoView }) {
   const itemClass = 'flex items-center cursor-pointer';
 
   return (
-    <Menu.Root onSelect={(e) => handleSelect(e.value)}>
+    <Menu.Root onSelect={action((e) => handleSelect(e.value))} positioning={{ flip: false }}>
       <Menu.Trigger disabled={Boolean(memoView.selfEditor)}>
         <EllipsisIcon size={24} />
       </Menu.Trigger>

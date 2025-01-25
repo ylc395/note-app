@@ -67,7 +67,7 @@ export default class SqliteRevisionRepository extends BaseRepository implements 
     await this.db.insertInto(this.tableName).values(rows).execute();
   }
 
-  public async findEntitiesWithoutRevisionBefore(params: EntitiesParams) {
+  public async findEntitiesWithoutRevision({ updatedAfter, isAvailableOnly }: EntitiesParams) {
     let sql = this.db
       .selectFrom(entityTableName)
       .select([
@@ -80,16 +80,15 @@ export default class SqliteRevisionRepository extends BaseRepository implements 
         `${entityTableName}.updatedAt`,
       ])
       .leftJoin(this.tableName, `${entityTableName}.id`, `${this.tableName}.entityId`)
-      .where(({ eb, and }) =>
-        and([
-          eb(`${entityTableName}.updatedAt`, '<=', params.before),
-          eb(`${this.tableName}.createdAt`, '>=', params.before),
-        ]),
-      )
+      .where(`${entityTableName}.updatedAt`, '>=', updatedAfter)
       .groupBy(`${entityTableName}.id`)
-      .having((eb) => eb.fn.count(`${this.tableName}.id`), '=', 0);
+      .having(
+        (eb) => eb.fn.count(eb.case().when(`${this.tableName}.createdAt`, '>', updatedAfter).then(1).end()),
+        '=',
+        0,
+      );
 
-    if (params.isAvailableOnly) {
+    if (isAvailableOnly) {
       sql = sql
         .leftJoin(recyclableTableName, `${this.tableName}.entityId`, `${recyclableTableName}.entityId`)
         .where(`${recyclableTableName}.entityId`, 'is', null);

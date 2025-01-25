@@ -8,10 +8,14 @@ import BaseService from './BaseService.js';
 import NoteService from './NoteService.js';
 import EntityService from './EntityService.js';
 import ContentService from './ContentService/index.js';
+import RevisionService from './RevisionService.js';
 
 export default class AnnotationService extends BaseService {
   private readonly noteService = container.resolve(NoteService);
+
   private readonly content = container.resolve(ContentService);
+
+  private readonly revision = container.resolve(RevisionService);
 
   @BaseService.transaction
   public async create(annotation: AnnotationDTO) {
@@ -54,17 +58,18 @@ export default class AnnotationService extends BaseService {
 
   @BaseService.transaction
   public async updateOne(id: Annotation['id'], patch: AnnotationPatchDTO) {
-    const hasContentUpdated = typeof patch.body === 'string';
+    const updatedAt = typeof patch.body === 'string' ? Date.now() : undefined;
 
     const annotation = {
       ...patch,
-      updatedAt: hasContentUpdated ? Date.now() : undefined,
+      updatedAt,
     };
     const updated = await this.repo.annotations.update(id, annotation);
     assert(updated, 'invalid id');
 
-    if (hasContentUpdated) {
-      await this.content.extract({ id: id, body: patch.body });
+    if (updatedAt) {
+      await this.content.extract({ id, body: patch.body });
+      await this.revision.createOne(id, updatedAt, { body: patch.body });
     }
   }
 }

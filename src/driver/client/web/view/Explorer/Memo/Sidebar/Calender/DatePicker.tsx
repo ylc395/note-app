@@ -36,7 +36,7 @@ export default function DateRangePicker({ maxDate, minDate }: { minDate: Date; m
   );
 
   return (
-    <DatePicker.RootProvider value={datePicker}>
+    <DatePicker.RootProvider value={datePicker} lazyMount unmountOnExit>
       <DatePicker.Control class="flex">
         <DatePicker.Trigger class="flex">
           <CalendarDaysIcon class="mr-1" />

@@ -8,6 +8,7 @@ import starRouter from './star.js';
 import contentRouter from './content.js';
 import searchRouter from './search.js';
 import recyclableRouter from './recyclable.js';
+import revisionRouter from './revision.js';
 
 export const routers = router({
   note: noteRouter,
@@ -18,6 +19,7 @@ export const routers = router({
   content: contentRouter,
   search: searchRouter,
   recyclable: recyclableRouter,
+  revision: revisionRouter,
 });
 
 export type Routes = typeof routers;

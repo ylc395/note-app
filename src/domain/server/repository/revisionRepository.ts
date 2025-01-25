@@ -9,12 +9,12 @@ export interface Query {
 
 export interface EntitiesParams {
   isAvailableOnly?: boolean;
-  before: number;
+  updatedAfter: number;
 }
 
 export interface RevisionRepository {
   findAll: (params: Query) => Promise<Revision[]>;
   batchCreate: (revisions: Revision[]) => Promise<void>;
   updateOne: (id: Revision['id'], patch: RevisionPatchDTO) => Promise<boolean>;
-  findEntitiesWithoutRevisionBefore: (params: EntitiesParams) => Promise<Entity[]>;
+  findEntitiesWithoutRevision: (params: EntitiesParams) => Promise<Entity[]>;
 }

@@ -58,7 +58,7 @@ export default function Day({ day }: { day: Dayjs }) {
       </Tooltip.Trigger>
       <Tooltip.Positioner>
         <Tooltip.Content class="bg-white">
-          {key} {count() ?? 0}
+          {key} 周{day.isoWeekday()} {count() ?? 0}
         </Tooltip.Content>
       </Tooltip.Positioner>
     </Tooltip.Root>

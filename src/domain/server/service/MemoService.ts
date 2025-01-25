@@ -10,9 +10,12 @@ import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
 import ContentService from './ContentService/index.js';
 import type { LinkVO } from '../model/content.js';
+import RevisionService from './RevisionService.js';
 
 export default class MemoService extends BaseService {
   private readonly content = container.resolve(ContentService);
+
+  private readonly revision = container.resolve(RevisionService);
 
   @BaseService.transaction
   public async create(memo: MemoDTO) {
@@ -33,6 +36,7 @@ export default class MemoService extends BaseService {
 
     if (memo.body) {
       await this.content.extract(newMemo);
+      await this.revision.createOne(newMemo.id, now, newMemo);
     }
 
     return this.toVO(newMemo, true);
@@ -41,16 +45,16 @@ export default class MemoService extends BaseService {
   @BaseService.transaction
   public async updateOne(id: MemoVO['id'], patch: MemoPatchDTO) {
     await this.assertAvailableId(id, { isPinned: typeof patch.isPinned === 'boolean' ? !patch.isPinned : undefined });
-
-    const hasContentUpdated = typeof patch.body === 'string';
+    const updatedAt = typeof patch.body === 'string' ? Date.now() : undefined;
 
     await this.repo.memos.update(id, {
       ...patch,
-      updatedAt: hasContentUpdated ? Date.now() : undefined,
+      updatedAt,
     });
 
-    if (hasContentUpdated) {
+    if (updatedAt) {
       await this.content.extract({ id, body: patch.body });
+      await this.revision.createOne(id, updatedAt, { body: patch.body });
     }
   }
 

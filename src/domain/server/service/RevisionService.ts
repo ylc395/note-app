@@ -1,9 +1,13 @@
 import assert from 'assert';
 import { applyPatch, structuredPatch } from 'diff';
+import { keyBy } from 'lodash-es';
 
 import type { Revision, RevisionPatchDTO } from '#domain/shared/model/revision.js';
-import { buildIndex } from '#utils/collection.js';
+import type { EntityId } from '#domain/shared/model/entity.js';
+import { container } from '#domain/shared/infra/singletons.js';
+
 import BaseService from './BaseService.js';
+import EntityService from './EntityService.js';
 
 export default class RevisionService extends BaseService {
   constructor() {
@@ -13,22 +17,37 @@ export default class RevisionService extends BaseService {
 
   private isBusy = false;
 
+  private readonly entity = container.resolve(EntityService);
+
+  private interval?: number;
+
   private bootstrap() {
-    setInterval(this.createRevisions.bind(this), 1 * 60 * 1000);
+    this.interval = 1 * 60 * 1000; // todo: 从用户设置中取
+
+    if (this.interval) {
+      this.autoCreateRevisions();
+      setInterval(this.autoCreateRevisions.bind(this), this.interval);
+    }
   }
 
   @BaseService.transaction
-  private async createRevisions() {
-    if (this.isBusy) {
+  private async autoCreateRevisions() {
+    if (this.isBusy || !this.interval) {
       return;
     }
 
     this.isBusy = true;
-    const interval = 30 * 60 * 1000; // todo: 从用户设置中取
+    const KEY = 'revision.lastTime';
+    const lastTime = Number((await this.kv.get(KEY)) ?? 0);
+    const thisTime = Date.now();
 
-    const entities = await this.repo.revisions.findEntitiesWithoutRevisionBefore({
+    if (thisTime - lastTime < this.interval) {
+      return;
+    }
+
+    const entities = await this.repo.revisions.findEntitiesWithoutRevision({
       isAvailableOnly: true,
-      before: Date.now() - interval,
+      updatedAfter: lastTime,
     });
 
     if (entities.length === 0) {
@@ -37,11 +56,11 @@ export default class RevisionService extends BaseService {
     }
 
     const ids = entities.map(({ id }) => id);
-    const entitiesMap = buildIndex(entities);
+    const entitiesMap = keyBy(entities, ({ id }) => id);
 
     const revisionsMap = Object.groupBy(
       await this.repo.revisions.findAll({ entityIds: ids }),
-      (revision) => revision.entityId,
+      ({ entityId }) => entityId,
     );
 
     const contents = await this.repo.entities.findAllContents(ids);
@@ -62,7 +81,7 @@ export default class RevisionService extends BaseService {
       newRevisions.push({
         entityId: id,
         id: BaseService.generateId(),
-        createdAt: entity.updatedAt,
+        createdAt: thisTime,
         titleDiff: titleUpdated ? structuredPatch('', '', oldText.title, entity.title) : null,
         bodyDiff: bodyUpdated ? structuredPatch('', '', oldText.body, body) : null,
         name: '',
@@ -74,6 +93,7 @@ export default class RevisionService extends BaseService {
     }
 
     await this.repo.revisions.batchCreate(newRevisions);
+    await this.kv.set(KEY, String(thisTime));
     this.isBusy = false;
   }
 
@@ -85,49 +105,65 @@ export default class RevisionService extends BaseService {
     await this.repo.revisions.updateOne(id, patch);
   }
 
+  public async createOne(entityId: EntityId, time: number, latest: { body?: string; title?: string }) {
+    const revisions = await this.repo.revisions.findAll({ entityIds: [entityId] });
+    const oldText = RevisionService.getText(revisions);
+
+    await this.repo.revisions.batchCreate([
+      {
+        entityId,
+        id: BaseService.generateId(),
+        createdAt: time,
+        titleDiff: typeof latest.title === 'string' ? structuredPatch('', '', oldText.title, latest.title) : null,
+        bodyDiff: typeof latest.body === 'string' ? structuredPatch('', '', oldText.body, latest.body) : null,
+        name: '',
+        isAuto: false,
+        appName: this.runtime.appName,
+        deviceName: this.runtime.getDeviceName(),
+        previousId: oldText.previousId,
+      },
+    ]);
+  }
+
+  private static sort(r1: Revision, r2: Revision) {
+    if (r1.id === r2.previousId) return -1;
+    if (r2.id === r1.previousId) return 1;
+    return 0;
+  }
+
   private static getText(revisions: Revision[]) {
-    const revisionsMap = buildIndex(revisions, 'previousId');
-    let revision = revisions.find(({ previousId }) => !previousId);
+    const sortedRevisions = revisions.toSorted(RevisionService.sort);
 
-    const result: {
-      title: string;
-      body: string;
-      previousId: Revision['previousId'];
-    } = {
-      title: '',
-      body: '',
-      previousId: null,
-    };
+    return sortedRevisions.reduce(
+      (result, revision) => {
+        const newResult = { ...result, previousId: revision.id };
 
-    if (!revision) {
-      return result;
-    }
+        if (revision.titleDiff) {
+          const title = applyPatch(result.title, revision.titleDiff);
 
-    while (revision) {
-      if (revision.titleDiff) {
-        const title = applyPatch(result.title, revision.titleDiff);
-
-        if (typeof title === 'string') {
-          result.title = title;
-        } else {
-          break;
+          if (typeof title === 'string') {
+            newResult.title = title;
+          }
         }
-      }
 
-      if (revision.bodyDiff) {
-        const body = applyPatch(result.body, revision.bodyDiff);
+        if (revision.bodyDiff) {
+          const body = applyPatch(result.body, revision.bodyDiff);
 
-        if (typeof body === 'string') {
-          result.body = body;
-        } else {
-          break;
+          if (typeof body === 'string') {
+            newResult.body = body;
+          }
         }
-      }
 
-      result.previousId = revision.id;
-      revision = revisionsMap[revision.id];
-    }
+        return newResult;
+      },
+      { title: '', body: '', previousId: null as Revision['previousId'] },
+    );
+  }
 
-    return result;
+  public async queryRevisionsOf(entityId: EntityId) {
+    await this.entity.assertAvailableIds([entityId]);
+    const revisions = (await this.repo.revisions.findAll({ entityIds: [entityId] })).sort(RevisionService.sort);
+
+    return revisions;
   }
 }

@@ -1,9 +1,12 @@
 import { onCleanup } from 'solid-js';
-import MemoView from '#domain/client/app/model/memo/MemoView';
+import { action } from 'mobx';
 
+import MemoView from '#domain/client/app/model/memo/MemoView';
 import Editor from './Editor';
 import List from './List';
 import ListToolbar from './ListToolBar';
+import RevisionListModal from './RevisionListModal';
+import uiState from '../uiState';
 
 export default function MemoMain() {
   const rootMemo = new MemoView();
@@ -17,6 +20,10 @@ export default function MemoMain() {
       <Editor editor={rootMemo.newEditor!} />
       <ListToolbar rootMemo={rootMemo} />
       <List memoView={rootMemo} />
+      <RevisionListModal
+        entityId={uiState.revisionViewId}
+        onClose={action(() => (uiState.revisionViewId = undefined))}
+      />
     </div>
   );
 }
