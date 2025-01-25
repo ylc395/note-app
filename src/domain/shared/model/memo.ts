@@ -35,14 +35,6 @@ export type MemoPatchDTO = Partial<Pick<MemoDTO, 'body' | 'isPinned'>>;
 /**
  * @api
  */
-export interface Duration {
-  startTime?: number;
-  endTime?: number;
-}
-
-/**
- * @api
- */
 export type ClientMemoQuery = {
   limit: number;
   orderBy: 'createdAt' | 'updatedAt';
@@ -54,3 +46,8 @@ export type ClientMemoQuery = {
   endId?: Memo['id'];
   startId?: Memo['id'];
 };
+
+/**
+ * @api
+ */
+export type Duration = Pick<ClientMemoQuery, 'startTime' | 'endTime'>;

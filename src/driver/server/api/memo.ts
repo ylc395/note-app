@@ -36,7 +36,7 @@ export default router({
     .input(durationSchema.optional())
     .query(({ input: duration, ctx: { memoService } }) => memoService.queryCount(duration)),
 
-  queryFirstTime: publicProcedure.query(({ ctx: { memoService } }) => memoService.queryFirstTime()),
+  queryEdgeTime: publicProcedure.query(({ ctx: { memoService } }) => memoService.queryEdgeTime()),
 
   queryReferrers: publicProcedure
     .input(entityIdSchema)

@@ -2,7 +2,6 @@ import { action, computed, observable } from 'mobx';
 import dayjs, { type Dayjs } from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
 import isoWeek from 'dayjs/plugin/isoWeek';
-
 import { createQuery } from 'mobx-tanstack-query/preset';
 
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
@@ -12,7 +11,7 @@ import type { Duration } from '#domain/shared/model/memo';
 dayjs.extend(isBetween);
 dayjs.extend(isoWeek);
 
-export default class Calendar {
+export default class TimeSelector {
   private readonly remote = container.resolve(rpcToken);
 
   @observable.ref private accessor now = dayjs();
@@ -29,6 +28,10 @@ export default class Calendar {
       }),
     },
   );
+
+  public readonly edgeTime = createQuery(() => this.remote.memo.queryEdgeTime.query(), {
+    queryKey: ['memos', 'edgeTime'],
+  });
 
   public readonly count = createQuery(
     ({ signal }) => this.remote.memo.queryCount.query(this.selectedDuration, { signal }),
@@ -50,11 +53,11 @@ export default class Calendar {
   }
 
   @action
-  public selectDay(value: Dayjs | null) {
+  public selectDay(value: Dayjs | [Dayjs, Dayjs] | null) {
     this.selectedDuration = value
       ? {
-          startTime: value.startOf('day').valueOf(),
-          endTime: value.endOf('day').valueOf(),
+          startTime: (Array.isArray(value) ? value[0] : value).startOf('day').valueOf(),
+          endTime: (Array.isArray(value) ? value[1] : value).endOf('day').valueOf(),
         }
       : undefined;
   }
@@ -82,5 +85,10 @@ export default class Calendar {
       startTime: this.recent.startTime.valueOf(),
       endTime: this.recent.endTime.valueOf(),
     };
+  }
+
+  @action
+  public refresh() {
+    this.now = dayjs();
   }
 }

@@ -1,15 +1,44 @@
-import { DatePicker } from '@ark-ui/solid/date-picker';
-import { Index, createMemo } from 'solid-js';
+import { container } from '#domain/shared/infra/singletons';
+import { DatePicker, parseDate, useDatePicker, type DatePickerValueChangeDetails } from '@ark-ui/solid/date-picker';
+import { Index, createEffect, createMemo, on } from 'solid-js';
 import { Portal } from 'solid-js/web';
+import { CalendarDaysIcon } from 'lucide-solid';
 
-export default function DateRangePicker() {
+import TimeSelector from '#domain/client/app/model/memo/TimeSelector';
+import dayjs from 'dayjs';
+
+export default function DateRangePicker({ maxDate, minDate }: { minDate: Date; maxDate: Date }) {
+  const timeSelector = container.resolve(TimeSelector);
+  const datePicker = useDatePicker({
+    startOfWeek: 1,
+    min: parseDate(minDate),
+    max: parseDate(maxDate),
+    selectionMode: 'range',
+    numOfMonths: 2,
+    onValueChange: handleValueChange,
+  });
+
+  function handleValueChange({ valueAsString }: DatePickerValueChangeDetails) {
+    if (valueAsString.length === 2) {
+      const [startDate, endDate] = valueAsString;
+      timeSelector.selectDay([dayjs(startDate), dayjs(endDate)]);
+    }
+  }
+
+  createEffect(
+    on(
+      () => timeSelector.selectedDuration,
+      (value) => !value && datePicker().clearValue(),
+    ),
+  );
+
   return (
-    <DatePicker.Root selectionMode="range" numOfMonths={2} class="mt-8">
+    <DatePicker.RootProvider value={datePicker}>
       <DatePicker.Control class="flex">
-        <DatePicker.Input index={0} class="w-20 mr-2 text-sm" />
-        <DatePicker.Input index={1} class="w-20 text-sm" />
-        <DatePicker.Trigger>📅</DatePicker.Trigger>
-        <DatePicker.ClearTrigger>Clear</DatePicker.ClearTrigger>
+        <DatePicker.Trigger class="flex">
+          <CalendarDaysIcon class="mr-1" />
+          时间段
+        </DatePicker.Trigger>
       </DatePicker.Control>
       <Portal mount={document.getElementById(import.meta.env.VITE_WEB_ROOT_ID)!}>
         <DatePicker.Positioner>
@@ -84,6 +113,6 @@ export default function DateRangePicker() {
           </DatePicker.Content>
         </DatePicker.Positioner>
       </Portal>
-    </DatePicker.Root>
+    </DatePicker.RootProvider>
   );
 }

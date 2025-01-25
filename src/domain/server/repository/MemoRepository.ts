@@ -1,4 +1,4 @@
-import type { MemoVO, Memo, MemoPatchDTO, Duration } from '#domain/server/model/memo.js';
+import type { MemoVO, Memo, MemoPatchDTO } from '#domain/server/model/memo.js';
 import type { EntityParentId } from '#domain/shared/model/entity.js';
 
 export type MemoPatch = MemoPatchDTO & Partial<Pick<Memo, 'updatedAt'>>;
@@ -17,13 +17,12 @@ export interface MemoQuery {
   order?: 'desc' | 'asc'; // 默认 desc
 }
 
+export type CountQuery = Pick<MemoQuery, 'startTime' | 'endTime' | 'parentId'>;
+
 export interface MemoRepository {
   create: (memo: Memo) => Promise<Memo>;
   update: (id: MemoVO['id'], patch: MemoPatch) => Promise<Memo | null>;
   findOneById: (id: MemoVO['id'], config?: { isAvailableOnly?: boolean }) => Promise<Memo | null>;
   findAll: (q: MemoQuery) => Promise<Memo[]>;
-  queryTotalCount: (duration?: Duration) => Promise<{
-    total: number;
-    parent: number;
-  }>;
+  queryCount: (q?: CountQuery) => Promise<number>;
 }

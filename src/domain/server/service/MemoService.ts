@@ -1,4 +1,4 @@
-import { groupBy, keyBy, mapValues } from 'lodash-es';
+import { groupBy, keyBy, mapValues, size } from 'lodash-es';
 import assert from 'node:assert';
 import dayjs from 'dayjs';
 
@@ -91,21 +91,13 @@ export default class MemoService extends BaseService {
   public async queryAvailableDates(duration: Duration) {
     const memos = await this.repo.memos.findAll({
       ...duration,
+      parentId: null,
       isAvailableOnly: true,
     });
 
     return mapValues(
       groupBy(memos, (memo) => dayjs(memo.createdAt).startOf('day').format('YYYY-MM-DD')),
-      (memos) =>
-        memos.reduce(
-          (count, memo) => {
-            return {
-              total: count.total + 1,
-              children: count.children + (memo.parentId ? 1 : 0),
-            };
-          },
-          { children: 0, total: 0 },
-        ),
+      size,
     );
   }
 
@@ -159,18 +151,35 @@ export default class MemoService extends BaseService {
   };
 
   public async queryCount(duration?: Duration) {
-    return this.repo.memos.queryTotalCount(duration);
+    return this.repo.memos.queryCount({ ...duration, parentId: null });
   }
 
-  public async queryFirstTime() {
-    const firstOne = await this.repo.memos.findAll({
-      limit: 1,
-      orderBy: 'createdAt',
-      order: 'asc',
-      isAvailableOnly: true,
-    });
+  public async queryEdgeTime() {
+    const [firstOne, lastOne] = await Promise.all([
+      this.repo.memos.findAll({
+        limit: 1,
+        orderBy: 'createdAt',
+        order: 'asc',
+        parentId: null,
+        isAvailableOnly: true,
+      }),
+      this.repo.memos.findAll({
+        limit: 1,
+        orderBy: 'createdAt',
+        order: 'desc',
+        parentId: null,
+        isAvailableOnly: true,
+      }),
+    ]);
 
-    return firstOne[0]?.createdAt ?? null;
+    if (!firstOne[0] || !lastOne[0]) {
+      return null;
+    }
+
+    return {
+      first: firstOne[0].createdAt,
+      last: lastOne[0].createdAt,
+    };
   }
 
   public async queryReferrers(id: Memo['id']) {

@@ -35,11 +35,12 @@ export default function Day({ day }: { day: Dayjs }) {
   const isSelected = createMemo(
     () =>
       calendar.selectedDuration &&
-      day.isBetween(calendar.selectedDuration.startTime, calendar.selectedDuration.endTime, null, '[]'),
+      day.startOf('d').valueOf() === calendar.selectedDuration.startTime &&
+      day.endOf('d').valueOf() === calendar.selectedDuration.endTime,
   );
 
   function handleClick() {
-    if ((count()?.total ?? 0) === 0) {
+    if ((count() ?? 0) === 0) {
       return;
     }
     calendar.selectDay(isSelected() ? null : day);
@@ -50,14 +51,14 @@ export default function Day({ day }: { day: Dayjs }) {
     <Tooltip.Root openDelay={500} closeDelay={500}>
       <Tooltip.Trigger>
         <div
-          class={`h-4 w-4 rounded ${getColorClass(count()?.total ?? 0)} 
-            ${(count()?.total ?? 0) > 0 ? 'cursor-pointer' : ''} ${isSelected() ? 'outline' : ''}`}
+          class={`h-4 w-4 rounded ${getColorClass(count() ?? 0)} 
+            ${(count() ?? 0) > 0 ? 'cursor-pointer' : ''} ${isSelected() ? 'outline' : ''}`}
           onclick={action(handleClick)}
         />
       </Tooltip.Trigger>
       <Tooltip.Positioner>
         <Tooltip.Content class="bg-white">
-          {key} {count()?.total ?? 0}
+          {key} {count() ?? 0}
         </Tooltip.Content>
       </Tooltip.Positioner>
     </Tooltip.Root>

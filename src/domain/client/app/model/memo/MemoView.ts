@@ -8,7 +8,7 @@ import type { ClientMemoQuery, MemoVO } from '#domain/shared/model/memo';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 
 import Editor from './Editor';
-import Calendar from './TimeSelector';
+import TimeSelector from './TimeSelector';
 
 export default class MemoView {
   constructor(options?: { value: MemoVO; parent: MemoView }) {
@@ -17,7 +17,7 @@ export default class MemoView {
 
     if (this.isRoot) {
       this.initNewEditor();
-      this.timeSelector = container.resolve(Calendar);
+      this.timeSelector = container.resolve(TimeSelector);
     }
 
     if (this.isParent || this.isRoot) {
@@ -96,7 +96,7 @@ export default class MemoView {
     order: 'desc',
   };
 
-  private readonly timeSelector?: Calendar;
+  private readonly timeSelector?: TimeSelector;
 
   @action
   public setValue(memo?: MemoVO | ((oldValue: MemoVO | undefined) => MemoVO | undefined)) {
@@ -170,6 +170,11 @@ export default class MemoView {
 
         if (this.value) {
           this.value.followupsCount += 1;
+        }
+
+        if (this.isRoot) {
+          this.timeSelector?.edgeTime.invalidate();
+          this.timeSelector?.count.invalidate();
         }
 
         return 'reset';

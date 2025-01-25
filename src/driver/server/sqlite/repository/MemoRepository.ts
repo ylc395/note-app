@@ -1,6 +1,6 @@
 import type { Selectable } from 'kysely';
-import type { MemoPatchDTO, Memo, Duration } from '#domain/server/model/memo.js';
-import type { MemoRepository, MemoQuery } from '#domain/server/repository/memoRepository.js';
+import type { MemoPatchDTO, Memo } from '#domain/server/model/memo.js';
+import type { MemoRepository, MemoQuery, CountQuery } from '#domain/server/repository/memoRepository.js';
 
 import schema, { type Row } from '../schema/memo.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
@@ -123,27 +123,26 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
     return rows.map(SqliteMemoRepository.rowToMemo);
   }
 
-  public async queryTotalCount(duration?: Duration) {
+  public async queryCount(q?: CountQuery) {
     let sql = this.db
       .selectFrom(this.tableName)
       .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.id`)
       .where(`${recyclableTableName}.entityId`, 'is', null);
 
-    if (duration?.startTime) {
-      sql = sql.where(`${this.tableName}.createdAt`, '>=', duration.startTime);
+    if (q?.startTime) {
+      sql = sql.where(`${this.tableName}.createdAt`, '>=', q.startTime);
     }
 
-    if (duration?.endTime) {
-      sql = sql.where(`${this.tableName}.createdAt`, '<=', duration.endTime);
+    if (q?.endTime) {
+      sql = sql.where(`${this.tableName}.createdAt`, '<=', q.endTime);
     }
 
-    const { count, childrenCount } = await sql
-      .select(({ fn }) => [fn.countAll().as('count'), fn.count('parentId').as('childrenCount')])
-      .executeTakeFirstOrThrow();
+    if (typeof q?.parentId !== 'undefined') {
+      sql = sql.where(`${this.tableName}.parentId`, q.parentId === null ? 'is' : '=', q.parentId);
+    }
 
-    return {
-      total: Number(count),
-      parent: Number(count) - Number(childrenCount),
-    };
+    const { count } = await sql.select(({ fn }) => [fn.countAll().as('count')]).executeTakeFirstOrThrow();
+
+    return Number(count);
   }
 }

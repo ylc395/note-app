@@ -1,49 +1,30 @@
-import { last, range } from 'lodash-es';
-import { For, Show } from 'solid-js';
+import { RefreshCcwIcon } from 'lucide-solid';
+import { Show } from 'solid-js';
 
-import MemoCalendar from '#domain/client/app/model/memo/TimeSelector';
+import TimeSelector from '#domain/client/app/model/memo/TimeSelector';
 import { container } from '#domain/shared/infra/singletons';
-import Day from './Day';
+
+import Weeks from './Weeks';
+import DatePicker from './DatePicker';
 
 export default function Calendar() {
-  const calendar = container.resolve(MemoCalendar);
-  const diffWeeks = calendar.recent.endTime.diff(calendar.recent.startTime, 'week');
-
-  const weeks = range(0, diffWeeks + 1).map((weekOffset) => {
-    const weekStart = calendar.recent.startTime.add(weekOffset, 'week').startOf('isoWeek');
-    return range(0, 7).map((dayOffset) => weekStart.add(dayOffset, 'day'));
-  });
+  const timeSelector = container.resolve(TimeSelector);
 
   return (
-    <div class="flex space-x-1">
-      <For each={weeks}>
-        {(week, index) => {
-          const newMonth = week.some(
-            (day, i) => day.month() !== (week[i - 1] ?? last(weeks[index() - 1]) ?? day)!.month(),
-          )
-            ? last(week)!.month()
-            : undefined;
-
-          return (
-            <div>
-              <div class="flex flex-col space-y-1">
-                <For each={week}>
-                  {(day) => {
-                    return (
-                      <Show when={!calendar.isFuture(day)}>
-                        <Day day={day} />
-                      </Show>
-                    );
-                  }}
-                </For>
-              </div>
-              <Show when={typeof newMonth === 'number'}>
-                <span class="absolute text-xs">{newMonth! + 1}月</span>
-              </Show>
-            </div>
-          );
-        }}
-      </For>
+    <div>
+      <Weeks />
+      <div class="flex space-x-2 text-xs">
+        <button class="flex" onclick={timeSelector.refresh.bind(timeSelector)}>
+          <RefreshCcwIcon class="mr-1" />
+          刷新
+        </button>
+        <Show when={timeSelector.edgeTime.result.data} keyed>
+          <DatePicker
+            minDate={new Date(timeSelector.edgeTime.result.data!.first)}
+            maxDate={new Date(timeSelector.edgeTime.result.data!.last)}
+          />
+        </Show>
+      </div>
     </div>
   );
 }
