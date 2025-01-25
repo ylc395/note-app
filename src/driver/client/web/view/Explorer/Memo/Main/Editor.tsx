@@ -21,7 +21,6 @@ export default function EditorView(props: { editor: Editor }) {
     reset();
   }
 
-  // 不能直接绑定 props.editor.update，如果那么做，如果 editor 更新，onUpdate 回调仍然是之前的 editor 的 update 方法
   function onUpdate(text: string) {
     props.editor.update(text);
   }

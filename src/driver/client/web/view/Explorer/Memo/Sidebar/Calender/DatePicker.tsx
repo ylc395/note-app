@@ -1,11 +1,13 @@
-import { container } from '#domain/shared/infra/singletons';
 import { DatePicker, parseDate, useDatePicker, type DatePickerValueChangeDetails } from '@ark-ui/solid/date-picker';
 import { Index, createEffect, createMemo, on } from 'solid-js';
 import { Portal } from 'solid-js/web';
-import { CalendarDaysIcon } from 'lucide-solid';
-
-import TimeSelector from '#domain/client/app/model/memo/TimeSelector';
 import dayjs from 'dayjs';
+import { CalendarDaysIcon } from 'lucide-solid';
+import { action } from 'mobx';
+
+import { container } from '#domain/shared/infra/singletons';
+import TimeSelector from '#domain/client/app/model/memo/TimeSelector';
+import uiState from '../../uiState';
 
 export default function DateRangePicker({ maxDate, minDate }: { minDate: Date; maxDate: Date }) {
   const timeSelector = container.resolve(TimeSelector);
@@ -15,13 +17,14 @@ export default function DateRangePicker({ maxDate, minDate }: { minDate: Date; m
     max: parseDate(maxDate),
     selectionMode: 'range',
     numOfMonths: 2,
-    onValueChange: handleValueChange,
+    onValueChange: action(handleValueChange),
   });
 
   function handleValueChange({ valueAsString }: DatePickerValueChangeDetails) {
     if (valueAsString.length === 2) {
       const [startDate, endDate] = valueAsString;
       timeSelector.selectDay([dayjs(startDate), dayjs(endDate)]);
+      uiState.isMenuVisible = false;
     }
   }
 
