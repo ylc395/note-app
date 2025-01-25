@@ -12,15 +12,15 @@ export const fileSchema = z.object({
   mimeType: z.string(),
   isTextExtracted: z.boolean().optional()
 });
-export const fileVOSchema = fileSchema.pick({
-  "id": true,
-  "mimeType": true,
-  "lang": true,
-  "size": true
-});
 export const fileDTOSchema = z.object({
   mimeType: fileSchema.shape["mimeType"],
   lang: fileSchema.shape["lang"].optional(),
   data: z.instanceof(ArrayBuffer).optional(),
   path: z.string().optional()
+});
+export const fileVOSchema = fileSchema.pick({
+  "id": true,
+  "mimeType": true,
+  "lang": true,
+  "size": true
 });

@@ -115,13 +115,17 @@ export default class MemoService extends BaseService {
     const ids = _memos.map(({ id }) => id);
     const stars = isNew ? {} : keyBy(await this.repo.stars.findAll({ entityIds: ids }), ({ entityId }) => entityId);
     const childrenIds = isNew ? {} : await this.repo.entities.findChildrenIds(ids, { isAvailableOnly: true });
-    const { links: allReferrers } = await this.content.queryLinksOf(ids, { direction: 'end' });
-    const referrersMap = Object.groupBy(allReferrers, ({ targetEntity }) => targetEntity.id);
+    const referrers = await this.repo.contents.findAllLinks({
+      direction: 'end',
+      entityId: ids,
+      isAvailableOnly: true,
+    });
 
+    const referrersMap = Object.groupBy(referrers, ({ target }) => target);
     const result = _memos.map((memo) => ({
       ...memo,
       childrenCount: childrenIds[memo.id]?.length || 0,
-      referrers: referrersMap[memo.id] ?? [],
+      referrersCount: referrersMap[memo.id]?.length ?? 0,
       isStar: Boolean(stars[memo.id]),
     }));
 

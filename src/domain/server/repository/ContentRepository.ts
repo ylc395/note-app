@@ -4,7 +4,7 @@ import type { EntityId } from '#domain/shared/model/entity.js';
 export interface LinkQuery {
   entityId: EntityId | EntityId[];
   isAvailableOnly?: boolean;
-  types: LinkTargetType[];
+  types?: LinkTargetType[];
   direction?: 'start' | 'end';
 }
 

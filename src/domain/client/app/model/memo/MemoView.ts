@@ -70,7 +70,7 @@ export default class MemoView {
               endTime: this.timeSelector?.selectedDuration?.endTime,
             },
           ],
-          enabled: this.isExpand,
+          enabled: this.isFollowupVisible,
         }),
       },
     );
@@ -94,7 +94,7 @@ export default class MemoView {
 
   @observable.ref public accessor newEditor: Editor | undefined; // 用于创建新的子 memo 的 editor
 
-  @observable public accessor isExpand = false;
+  @observable public accessor isFollowupVisible = false;
 
   @observable.ref public accessor sortOptions: Readonly<Pick<ClientMemoQuery, 'order' | 'orderBy'>> = {
     orderBy: 'createdAt',
@@ -109,7 +109,7 @@ export default class MemoView {
     this.value = newValue;
 
     if (this.isRoot) {
-      this.isExpand = true;
+      this.isFollowupVisible = true;
     }
   }
 
@@ -145,12 +145,12 @@ export default class MemoView {
   }
 
   @action
-  public toggleExpand() {
+  public toggleFollowup() {
     assert(this.isParent, 'can not expand a child memo');
 
-    this.isExpand = !this.isExpand;
+    this.isFollowupVisible = !this.isFollowupVisible;
 
-    if (this.isExpand) {
+    if (this.isFollowupVisible) {
       this.initNewEditor();
     } else {
       this.newEditor?.destroy();
@@ -164,7 +164,7 @@ export default class MemoView {
       onSubmit: async (value) => {
         const newMemo = await this.remote.memo.create.mutate({ parentId: this.value?.id, body: value });
 
-        if (this.timeSelector?.isBetweenSelectedDuration(newMemo.createdAt)) {
+        if (this.isParent || this.timeSelector?.isBetweenSelectedDuration(newMemo.createdAt)) {
           this.childrenQuery?.invalidate();
         }
 

@@ -4,7 +4,6 @@
 */
 import { z } from "zod";
 import { entityParentIdSchema } from "./entity.js";
-import { linkVOSchema } from "./content.js";
 export const memoSchema = z.object({
   id: z.string(),
   parentId: entityParentIdSchema,
@@ -16,7 +15,7 @@ export const memoSchema = z.object({
 export const memoVOSchema = memoSchema.merge(z.object({
   isStar: z.boolean(),
   childrenCount: z.number(),
-  referrers: z.array(linkVOSchema)
+  referrersCount: z.number()
 }));
 export const memoDTOSchema = z.object({
   parentId: entityParentIdSchema.optional(),

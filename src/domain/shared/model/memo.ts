@@ -1,4 +1,3 @@
-import type { LinkVO } from './content.js';
 import type { EntityParentId } from './entity.js';
 
 export interface Memo {
@@ -16,7 +15,7 @@ export interface Memo {
 export interface MemoVO extends Memo {
   isStar: boolean;
   childrenCount: number;
-  referrers: LinkVO[];
+  referrersCount: number;
 }
 
 /**

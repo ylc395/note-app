@@ -64,17 +64,22 @@ export default class SqliteContentRepository extends BaseRepository implements C
   public async findAllLinks({ entityId, types, isAvailableOnly, direction }: LinkQuery) {
     let sql = this.db
       .selectFrom(linkTableName)
-      .where(({ eb, or, and }) =>
-        and([
-          or(
-            compact([
-              direction !== 'start' && eb(`${linkTableName}.target`, Array.isArray(entityId) ? 'in' : '=', entityId),
-              direction !== 'end' && eb(`${linkTableName}.sourceId`, Array.isArray(entityId) ? 'in' : '=', entityId),
-            ]),
-          ),
-          eb(`${linkTableName}.targetType`, 'in', types),
-        ]),
-      )
+      .where(({ eb, or, and }) => {
+        const idStatements = or(
+          compact([
+            direction !== 'start' && eb(`${linkTableName}.target`, Array.isArray(entityId) ? 'in' : '=', entityId),
+            direction !== 'end' && eb(`${linkTableName}.sourceId`, Array.isArray(entityId) ? 'in' : '=', entityId),
+          ]),
+        );
+
+        const typeStatements = types && eb(`${linkTableName}.targetType`, 'in', types);
+
+        if (typeStatements) {
+          return and([typeStatements, idStatements]);
+        }
+
+        return idStatements;
+      })
       .select([
         `${linkTableName}.sourceId`,
         `${linkTableName}.sourceLocation`,
