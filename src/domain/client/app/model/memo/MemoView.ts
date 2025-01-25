@@ -169,7 +169,7 @@ export default class MemoView {
         }
 
         if (this.value) {
-          this.value.childrenCount += 1;
+          this.value.followupsCount += 1;
         }
 
         return 'reset';

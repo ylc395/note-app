@@ -9,6 +9,7 @@ import { container } from '#domain/shared/infra/singletons.js';
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
 import ContentService from './ContentService/index.js';
+import type { LinkVO } from '../model/content.js';
 
 export default class MemoService extends BaseService {
   private readonly content = container.resolve(ContentService);
@@ -124,7 +125,7 @@ export default class MemoService extends BaseService {
     const referrersMap = Object.groupBy(referrers, ({ target }) => target);
     const result = _memos.map((memo) => ({
       ...memo,
-      childrenCount: childrenIds[memo.id]?.length || 0,
+      followupsCount: childrenIds[memo.id]?.length || 0,
       referrersCount: referrersMap[memo.id]?.length ?? 0,
       isStar: Boolean(stars[memo.id]),
     }));
@@ -174,6 +175,8 @@ export default class MemoService extends BaseService {
 
   public async queryReferrers(id: Memo['id']) {
     await this.assertAvailableId(id);
-    return this.content.queryLinksOf(id, { direction: 'end' });
+    const links = await this.content.queryLinksOf(id, { direction: 'end' });
+
+    return links as LinkVO[];
   }
 }

@@ -14,7 +14,7 @@ export default function Operation({ memoView }: { memoView: MemoView }) {
         <button class={buttonClassName} onclick={memoView.toggleFollowup.bind(memoView)}>
           <ReplyIcon class="ml-2" />
           Follow-up
-          <span class="ml-2">{memoView.value.childrenCount}</span>
+          <span class="ml-2">{memoView.value.followupsCount}</span>
         </button>
       </Show>
       <Show when={memoView.value.referrersCount > 0}>

@@ -14,7 +14,7 @@ export interface Memo {
  */
 export interface MemoVO extends Memo {
   isStar: boolean;
-  childrenCount: number;
+  followupsCount: number;
   referrersCount: number;
 }
 

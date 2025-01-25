@@ -119,10 +119,7 @@ export default class ContentService extends BaseService {
       targetSnippet: targetFragmentId ? snippetsFromFragmentId[target]![targetFragmentId]! : null,
     }));
 
-    return {
-      externals: externalLinks,
-      links: linkVOs,
-    };
+    return [...linkVOs, ...externalLinks];
   }
 
   private async getSnippetsByLocations(locations: Array<{ entityId: EntityId; location: TextLocation }>) {
