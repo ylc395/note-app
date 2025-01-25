@@ -14,15 +14,13 @@ export default function ListToolbar({ rootMemo }: { rootMemo: MemoView }) {
   return (
     <div class="mt-4 flex justify-between">
       <div>
-        <Show when={timeSelector.count.result.data}>
-          共计{timeSelector.count.result.data!.total}条
-          <Show when={timeSelector.selectedDuration}>
-            （<time datetime="">{dayjs(timeSelector.selectedDuration!.startTime).format('YYYY-MM-DD')}</time> 期间
-            <button onclick={() => timeSelector.selectDay(null)}>
-              <XIcon />
-            </button>
-            ）
-          </Show>
+        <Show when={timeSelector.count.result.data}>共计{timeSelector.count.result.data!.total}条</Show>
+        <Show when={timeSelector.selectedDuration}>
+          （<time datetime="">{dayjs(timeSelector.selectedDuration!.startTime).format('YYYY-MM-DD')}</time> 期间
+          <button onclick={() => timeSelector.selectDay(null)}>
+            <XIcon />
+          </button>
+          ）
         </Show>
       </div>
       <div class="space-x-2 flex">

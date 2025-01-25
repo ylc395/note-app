@@ -37,4 +37,8 @@ export default router({
     .query(({ input: duration, ctx: { memoService } }) => memoService.queryCount(duration)),
 
   queryFirstTime: publicProcedure.query(({ ctx: { memoService } }) => memoService.queryFirstTime()),
+
+  queryReferrers: publicProcedure
+    .input(entityIdSchema)
+    .query(({ input: memoId, ctx: { memoService } }) => memoService.queryReferrers(memoId)),
 });

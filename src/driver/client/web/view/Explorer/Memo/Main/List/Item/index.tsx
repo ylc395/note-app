@@ -8,6 +8,7 @@ import Menu from './Menu';
 import Body from './Body';
 import FollowupList from './FollowupList';
 import Operation from './Operation';
+import ReferrerList from './ReferrerList';
 
 export default function Item(props: { memo: MemoVO; parent: MemoView }) {
   const date = createMemo(() => dayjs(props.memo.createdAt));
@@ -35,11 +36,12 @@ export default function Item(props: { memo: MemoVO; parent: MemoView }) {
         <Menu memoView={memoView} />
       </div>
       <Body memoView={memoView} />
-      <Show when={memoView.isParent}>
-        <Operation memoView={memoView} />
-      </Show>
-      <Show when={memoView.isFollowupVisible}>
+      <Operation memoView={memoView} />
+      <Show when={memoView.visiblePanel === 'followup'}>
         <FollowupList memoView={memoView} />
+      </Show>
+      <Show when={memoView.visiblePanel === 'referrers'}>
+        <ReferrerList memoView={memoView} />
       </Show>
     </div>
   );

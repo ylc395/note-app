@@ -1,16 +1,13 @@
-import { createInfiniteQuery } from 'mobx-tanstack-query/preset';
+import { createInfiniteQuery, createQuery } from 'mobx-tanstack-query/preset';
 import { last } from 'lodash-es';
 import { action, computed, observable } from 'mobx';
 import assert from 'assert';
-import { z } from 'zod';
 
 import { container } from '#domain/shared/infra/singletons';
 import type { ClientMemoQuery, MemoVO } from '#domain/shared/model/memo';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 
-import DomainEventBus from './EventBus';
 import Editor from './Editor';
-import UIState from '../common/UIState';
 import Calendar from './TimeSelector';
 
 export default class MemoView {
@@ -23,78 +20,76 @@ export default class MemoView {
       this.timeSelector = container.resolve(Calendar);
     }
 
-    if (!this.isParent && !this.isRoot) {
-      return;
+    if (this.isParent || this.isRoot) {
+      this.childrenQuery = createInfiniteQuery(
+        ({ signal, pageParam: { endId, startId, ...params } }) =>
+          this.remote.memo.queryList.query(
+            {
+              ...params,
+              parentId: this.value?.id,
+              endId,
+              startId,
+              startTime: startId ? undefined : this.timeSelector?.selectedDuration?.startTime,
+              endTime: endId ? undefined : this.timeSelector?.selectedDuration?.endTime,
+              ...this.sortOptions,
+            },
+            { signal },
+          ),
+        {
+          refetchOnWindowFocus: false,
+          abortSignal: this.destroyController.signal,
+          initialPageParam: this.getNextPageParams(),
+          getNextPageParam: (lastPage, _, lastPageParam) => this.getNextPageParams({ lastPage, lastPageParam }),
+          onDone: (data) => {
+            const lastPage = last(data.pages);
+            if (lastPage && lastPage.length < MemoView.PAGE_MAX_LENGTH && last(data.pageParams)?.isPinned) {
+              this.loadMore();
+            }
+          },
+          options: () => ({
+            queryKey: [
+              'memos',
+              {
+                ...this.sortOptions,
+                parentId: options?.value.id,
+                startTime: this.timeSelector?.selectedDuration?.startTime,
+                endTime: this.timeSelector?.selectedDuration?.endTime,
+              },
+            ],
+            enabled: this.isRoot || this.visiblePanel === 'followup',
+          }),
+        },
+      );
     }
 
-    this.uiState = new UIState(
-      `memo-view-${this.value?.id ?? 'root'}`,
-      z.object({
-        lastId: z.string(),
-        top: z.object({ id: z.string(), offset: z.number() }),
-      }),
-    );
-
-    this.childrenQuery = createInfiniteQuery(
-      ({ signal, pageParam: { endId, startId, ...params } }) =>
-        this.remote.memo.queryList.query(
-          {
-            ...params,
-            parentId: this.value?.id,
-            endId,
-            startId,
-            startTime: startId ? undefined : this.timeSelector?.selectedDuration?.startTime,
-            endTime: endId ? undefined : this.timeSelector?.selectedDuration?.endTime,
-            ...this.sortOptions,
-          },
-          { signal },
-        ),
-      {
-        refetchOnWindowFocus: false,
-        abortSignal: this.destroyController.signal,
-        initialPageParam: this.getNextPageParams(),
-        getNextPageParam: (lastPage, _, lastPageParam) => this.getNextPageParams({ lastPage, lastPageParam }),
-        onDone: (data) => {
-          const lastPage = last(data.pages);
-          if (lastPage && lastPage.length < MemoView.PAGE_MAX_LENGTH && last(data.pageParams)?.isPinned) {
-            this.loadMore();
-          }
+    if (this.value) {
+      this.referrersQuery = createQuery(
+        ({ signal }) => this.remote.memo.queryReferrers.query(this.value!.id, { signal }),
+        {
+          queryKey: ['memos', 'referrers', this.value.id],
+          options: () => ({ enabled: this.visiblePanel === 'referrers' && this.value!.referrersCount > 0 }),
         },
-        options: () => ({
-          queryKey: [
-            'memos',
-            {
-              ...this.sortOptions,
-              parentId: options?.value.id,
-              startTime: this.timeSelector?.selectedDuration?.startTime,
-              endTime: this.timeSelector?.selectedDuration?.endTime,
-            },
-          ],
-          enabled: this.isFollowupVisible,
-        }),
-      },
-    );
+      );
+    }
   }
 
   private readonly parent?: MemoView;
 
   @observable public accessor value: MemoVO | undefined;
 
-  private readonly domainEventBus = container.resolve(DomainEventBus);
-
   private readonly remote = container.resolve(rpcToken);
 
   private readonly childrenQuery;
 
-  private readonly destroyController = new AbortController();
+  public readonly referrersQuery;
 
-  public readonly uiState;
+  private readonly destroyController = new AbortController();
 
   @observable.ref public accessor selfEditor: Editor | undefined; // 用于编辑自己的 editor
 
   @observable.ref public accessor newEditor: Editor | undefined; // 用于创建新的子 memo 的 editor
 
-  @observable public accessor isFollowupVisible = false;
+  @observable public accessor visiblePanel: 'followup' | 'referrers' | undefined;
 
   @observable.ref public accessor sortOptions: Readonly<Pick<ClientMemoQuery, 'order' | 'orderBy'>> = {
     orderBy: 'createdAt',
@@ -107,10 +102,6 @@ export default class MemoView {
   public setValue(memo?: MemoVO | ((oldValue: MemoVO | undefined) => MemoVO | undefined)) {
     const newValue = typeof memo === 'function' ? memo(this.value) : memo;
     this.value = newValue;
-
-    if (this.isRoot) {
-      this.isFollowupVisible = true;
-    }
   }
 
   @computed
@@ -147,15 +138,20 @@ export default class MemoView {
   @action
   public toggleFollowup() {
     assert(this.isParent, 'can not expand a child memo');
+    this.visiblePanel = this.visiblePanel === 'followup' ? undefined : 'followup';
 
-    this.isFollowupVisible = !this.isFollowupVisible;
-
-    if (this.isFollowupVisible) {
+    if (this.visiblePanel) {
       this.initNewEditor();
     } else {
       this.newEditor?.destroy();
       this.newEditor = undefined;
     }
+  }
+
+  @action
+  public toggleReferrers() {
+    assert(!this.isRoot, 'can not toggleReferrers');
+    this.visiblePanel = this.visiblePanel === 'referrers' ? undefined : 'referrers';
   }
 
   @action

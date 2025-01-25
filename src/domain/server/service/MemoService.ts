@@ -171,4 +171,9 @@ export default class MemoService extends BaseService {
 
     return firstOne[0]?.createdAt ?? null;
   }
+
+  public async queryReferrers(id: Memo['id']) {
+    await this.assertAvailableId(id);
+    return this.content.queryLinksOf(id, { direction: 'end' });
+  }
 }
