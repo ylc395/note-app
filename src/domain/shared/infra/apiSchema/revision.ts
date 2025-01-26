@@ -7,8 +7,8 @@ import { entityIdSchema } from "./entity.js";
 export const revisionSchema = z.object({
   id: entityIdSchema,
   entityId: entityIdSchema,
-  titleDiff: z.union([z.unknown() /*zodify can not transform type properly here*/, z.null()]),
-  bodyDiff: z.union([z.unknown() /*zodify can not transform type properly here*/, z.null()]),
+  titleDiff: z.union([z.string(), z.null()]),
+  bodyDiff: z.union([z.string(), z.null()]),
   previousId: z.union([entityIdSchema, z.null()]),
   appName: z.string(),
   deviceName: z.string(),

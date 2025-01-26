@@ -1,12 +1,10 @@
-import type { ParsedDiff } from 'diff';
-
 import { EntityId } from './entity.js';
 
 export interface Revision {
   id: EntityId;
   entityId: EntityId;
-  titleDiff: ParsedDiff | null;
-  bodyDiff: ParsedDiff | null;
+  titleDiff: string | null;
+  bodyDiff: string | null;
   previousId: EntityId | null;
   appName: string;
   deviceName: string;

@@ -14,7 +14,7 @@ export const memoSchema = z.object({
 });
 export const memoVOSchema = memoSchema.merge(z.object({
   isStar: z.boolean(),
-  childrenCount: z.number(),
+  followupsCount: z.number(),
   referrersCount: z.number()
 }));
 export const memoDTOSchema = z.object({
@@ -26,10 +26,6 @@ export const memoPatchDTOSchema = memoDTOSchema.pick({
   "body": true,
   "isPinned": true
 }).partial();
-export const durationSchema = z.object({
-  startTime: z.number().optional(),
-  endTime: z.number().optional()
-});
 export const clientMemoQuerySchema = z.object({
   limit: z.number(),
   orderBy: z.union([z.literal("createdAt"), z.literal("updatedAt")]),
@@ -40,4 +36,8 @@ export const clientMemoQuerySchema = z.object({
   endTime: z.number().optional(),
   endId: memoSchema.shape["id"].optional(),
   startId: memoSchema.shape["id"].optional()
+});
+export const durationSchema = clientMemoQuerySchema.pick({
+  "startTime": true,
+  "endTime": true
 });

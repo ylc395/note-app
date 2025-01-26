@@ -15,7 +15,6 @@ import { action } from 'mobx';
 
 import type MemoView from '#domain/client/app/model/memo/MemoView';
 import { getAppUrl } from '#domain/shared/infra/markdown/url';
-import uiState from '../../../uiState';
 
 export default function ItemMenu({ memoView }: { memoView: MemoView }) {
   function handleSelect(value: string) {
@@ -30,7 +29,7 @@ export default function ItemMenu({ memoView }: { memoView: MemoView }) {
         navigator.clipboard.writeText(getAppUrl(memoView.value!.id, 'memos'));
         return;
       case 'history':
-        uiState.revisionViewId = memoView.value?.id;
+        memoView.toggleRevisionList();
         return;
       default:
         assert.fail('invalid select value');

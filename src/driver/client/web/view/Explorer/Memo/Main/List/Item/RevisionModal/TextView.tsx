@@ -1,0 +1,5 @@
+import type RevisionList from '#domain/client/app/model/RevisionList';
+
+export default function TextView(props: { version: NonNullable<RevisionList['currentVersion']> }) {
+  return <div>{props.version.body.text}</div>;
+}

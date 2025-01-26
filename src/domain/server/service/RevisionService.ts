@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { applyPatch, structuredPatch } from 'diff';
+import { applyPatch, createPatch } from 'diff';
 import { keyBy } from 'lodash-es';
 
 import type { Revision, RevisionPatchDTO } from '#domain/shared/model/revision.js';
@@ -82,8 +82,8 @@ export default class RevisionService extends BaseService {
         entityId: id,
         id: BaseService.generateId(),
         createdAt: thisTime,
-        titleDiff: titleUpdated ? structuredPatch('', '', oldText.title, entity.title) : null,
-        bodyDiff: bodyUpdated ? structuredPatch('', '', oldText.body, body) : null,
+        titleDiff: titleUpdated ? createPatch('', oldText.title, entity.title) : null,
+        bodyDiff: bodyUpdated ? createPatch('', oldText.body, body) : null,
         name: '',
         isAuto: true,
         appName: this.runtime.appName,
@@ -114,8 +114,8 @@ export default class RevisionService extends BaseService {
         entityId,
         id: BaseService.generateId(),
         createdAt: time,
-        titleDiff: typeof latest.title === 'string' ? structuredPatch('', '', oldText.title, latest.title) : null,
-        bodyDiff: typeof latest.body === 'string' ? structuredPatch('', '', oldText.body, latest.body) : null,
+        titleDiff: typeof latest.title === 'string' ? createPatch('', oldText.title, latest.title) : null,
+        bodyDiff: typeof latest.body === 'string' ? createPatch('', oldText.body, latest.body) : null,
         name: '',
         isAuto: false,
         appName: this.runtime.appName,

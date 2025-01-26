@@ -1,5 +1,3 @@
-import type { ParsedDiff } from 'diff';
-
 import type { RevisionRepository, Query, EntitiesParams } from '#domain/server/repository/revisionRepository.js';
 import type { Revision, RevisionPatchDTO } from '#domain/shared/model/revision.js';
 import BaseRepository from './BaseRepository.js';
@@ -59,8 +57,6 @@ export default class SqliteRevisionRepository extends BaseRepository implements 
   public async batchCreate(revisions: Revision[]) {
     const rows: Row[] = revisions.map((revision) => ({
       ...revision,
-      titleDiff: revision.titleDiff ? JSON.stringify(revision.titleDiff) : null,
-      bodyDiff: revision.bodyDiff ? JSON.stringify(revision.bodyDiff) : null,
       isAuto: revision.isAuto ? 1 : 0,
     }));
 
@@ -102,8 +98,6 @@ export default class SqliteRevisionRepository extends BaseRepository implements 
     return {
       ...row,
       isAuto: Boolean(row.isAuto),
-      titleDiff: typeof row.titleDiff === 'string' ? (JSON.parse(row.titleDiff) as ParsedDiff) : null,
-      bodyDiff: typeof row.bodyDiff === 'string' ? (JSON.parse(row.bodyDiff) as ParsedDiff) : null,
     };
   }
 }

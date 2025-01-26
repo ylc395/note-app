@@ -9,6 +9,7 @@ import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 
 import Editor from './Editor';
 import TimeSelector from './TimeSelector';
+import RevisionList from '../RevisionList';
 
 export default class MemoView {
   constructor(options?: { value: MemoVO; parent: MemoView }) {
@@ -84,6 +85,8 @@ export default class MemoView {
   public readonly referrersQuery;
 
   private readonly destroyController = new AbortController();
+
+  @observable.ref public accessor revisionList: RevisionList | undefined;
 
   @observable.ref public accessor selfEditor: Editor | undefined; // 用于编辑自己的 editor
 
@@ -193,12 +196,14 @@ export default class MemoView {
       onSubmit: async (value: string) => {
         await this.remote.memo.updateOne.mutate([memo.id, { body: value }]);
 
+        this.parent?.childrenQuery?.invalidate();
+        this.revisionList?.data.invalidate();
         this.setValue({ ...memo, body: value }); // 先乐观更新一下
+
         return 'destroy';
       },
       onDestroyed: action(() => {
         this.selfEditor = undefined;
-        this.parent?.childrenQuery?.invalidate();
       }),
     });
   }
@@ -225,6 +230,17 @@ export default class MemoView {
   @action
   public setOrder(value: MemoView['sortOptions']) {
     this.sortOptions = value;
+  }
+
+  @action
+  public toggleRevisionList() {
+    if (this.revisionList) {
+      this.revisionList.destroy();
+      this.revisionList = undefined;
+    } else {
+      assert(this.value, 'no value');
+      this.revisionList = new RevisionList(this.value.id, this.destroyController.signal);
+    }
   }
 
   private static readonly PAGE_MAX_LENGTH = 30;

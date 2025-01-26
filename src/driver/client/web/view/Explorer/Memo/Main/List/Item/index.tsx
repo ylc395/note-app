@@ -9,6 +9,7 @@ import Body from './Body';
 import FollowupList from './FollowupList';
 import Operation from './Operation';
 import ReferrerList from './ReferrerList';
+import RevisionModal from './RevisionModal';
 
 export default function Item(props: { memo: MemoVO; parent: MemoView }) {
   const date = createMemo(() => dayjs(props.memo.createdAt));
@@ -43,6 +44,7 @@ export default function Item(props: { memo: MemoVO; parent: MemoView }) {
       <Show when={memoView.visiblePanel === 'referrers'}>
         <ReferrerList memoView={memoView} />
       </Show>
+      <RevisionModal memoView={memoView} />
     </div>
   );
 }
