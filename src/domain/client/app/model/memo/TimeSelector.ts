@@ -14,7 +14,7 @@ dayjs.extend(isoWeek);
 export default class TimeSelector {
   private readonly remote = container.resolve(rpcToken);
 
-  @observable.ref private accessor now = dayjs();
+  private readonly now = createQuery(() => dayjs().valueOf());
 
   @observable.ref public accessor selectedDuration: Duration | undefined;
 
@@ -44,7 +44,7 @@ export default class TimeSelector {
 
   @computed
   public get recent() {
-    const today = this.now.endOf('day');
+    const today = dayjs(this.now.result.data).endOf('day');
 
     return {
       startTime: dayjs().subtract(11, 'week').startOf('isoWeek'),
@@ -63,7 +63,7 @@ export default class TimeSelector {
   }
 
   public isFuture(day: Dayjs) {
-    return day.isAfter(this.now);
+    return day.isAfter(dayjs(this.now.result.data));
   }
 
   public isRecent(time: number) {
@@ -87,8 +87,7 @@ export default class TimeSelector {
     };
   }
 
-  @action
-  public refresh() {
-    this.now = dayjs();
+  public destroy() {
+    this.now.destroy();
   }
 }

@@ -21,7 +21,7 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
     const updatedRow = await this.db
       .updateTable(this.tableName)
       .where('id', '=', id)
-      .set({ ...patch, isPinned: patch.isPinned ? 1 : 0 })
+      .set({ ...patch, isPinned: typeof patch.isPinned === 'boolean' ? (patch.isPinned ? 1 : 0) : undefined })
       .returningAll()
       .executeTakeFirst();
 

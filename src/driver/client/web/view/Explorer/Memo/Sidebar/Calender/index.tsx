@@ -1,4 +1,3 @@
-import { RefreshCcwIcon } from 'lucide-solid';
 import { Show } from 'solid-js';
 
 import TimeSelector from '#domain/client/app/model/memo/TimeSelector';
@@ -14,10 +13,6 @@ export default function Calendar() {
     <div>
       <Weeks />
       <div class="flex space-x-2 text-xs">
-        <button class="flex" onclick={timeSelector.refresh.bind(timeSelector)}>
-          <RefreshCcwIcon class="mr-1" />
-          刷新
-        </button>
         <Show when={timeSelector.edgeTime.result.data} keyed>
           <DatePicker
             minDate={new Date(timeSelector.edgeTime.result.data!.first)}

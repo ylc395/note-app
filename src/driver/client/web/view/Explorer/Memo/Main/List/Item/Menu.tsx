@@ -47,7 +47,7 @@ export default function ItemMenu({ memoView }: { memoView: MemoView }) {
         <Menu.Content class="z-10">
           <Menu.Item class={itemClass} value="edit">
             <EditIcon />
-            Edit
+            编辑
           </Menu.Item>
           <Menu.Item class={itemClass} value="pin">
             <Show
@@ -55,12 +55,12 @@ export default function ItemMenu({ memoView }: { memoView: MemoView }) {
               fallback={
                 <>
                   <PinIcon />
-                  Pin
+                  置顶
                 </>
               }
             >
               <PinOffIcon />
-              Unpin
+              取消置顶
             </Show>
           </Menu.Item>
           <Menu.Item class={itemClass} value="star">
@@ -68,18 +68,19 @@ export default function ItemMenu({ memoView }: { memoView: MemoView }) {
               when={memoView.value?.isStar}
               fallback={
                 <>
-                  <StarIcon /> Star
+                  <StarIcon />
+                  收藏
                 </>
               }
             >
               <StarOffIcon />
-              UnStar
+              取消收藏
             </Show>
           </Menu.Item>
           <Menu.Separator />
           <Menu.Item class={itemClass} value="history">
             <HistoryIcon />
-            History
+            编辑历史
           </Menu.Item>
           <Menu.Item class={itemClass} value="copyId">
             <CopyIcon />
