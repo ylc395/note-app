@@ -1,4 +1,3 @@
-import { Dialog } from '@ark-ui/solid/dialog';
 import { Show, createMemo } from 'solid-js';
 import { action } from 'mobx';
 
@@ -16,23 +15,19 @@ export default function RevisionModal({ memoView }: { memoView: MemoView }) {
   }
 
   return (
-    <Modal open={Boolean(revisionList())} onClose={action(onClose)}>
-      <Dialog.Content class="w-[600px] h-80 overflow-auto bg-white">
-        <Dialog.Title>历史记录</Dialog.Title>
-        <Show when={revisionList()?.data.result.data?.toReversed()}>
-          {(revisions) => (
-            <div class="flex">
-              <List
-                revisions={revisions()}
-                onSelect={(id) => revisionList()?.setCurrentRevisionId(id)}
-                selectedId={revisionList()?.currentRevisionId}
-              />
-              <Show when={revisionList()?.currentVersion}>{(version) => <TextView version={version()} />}</Show>
-            </div>
-          )}
-        </Show>
-        <Dialog.CloseTrigger>Close</Dialog.CloseTrigger>
-      </Dialog.Content>
+    <Modal open={Boolean(revisionList())} onClose={action(onClose)} title="历史记录">
+      <Show when={revisionList()?.data.result.data?.toReversed()}>
+        {(revisions) => (
+          <div class="flex h-80 w-[600px] overflow-auto">
+            <List
+              revisions={revisions()}
+              onSelect={(id) => revisionList()?.setCurrentRevisionId(id)}
+              selectedId={revisionList()?.currentRevisionId}
+            />
+            <Show when={revisionList()?.currentVersion}>{(version) => <TextView version={version()} />}</Show>
+          </div>
+        )}
+      </Show>
     </Modal>
   );
 }

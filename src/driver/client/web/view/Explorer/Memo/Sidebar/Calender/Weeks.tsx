@@ -18,7 +18,8 @@ export default function Weeks() {
       <For each={weeks}>
         {(week, index) => {
           const newMonth = week.some(
-            (day, i) => day.month() !== (week[i - 1] ?? last(weeks[index() - 1]) ?? day)!.month(),
+            (day, i) =>
+              !timeSelector.isFuture(day) && day.month() !== (week[i - 1] ?? last(weeks[index() - 1]) ?? day)!.month(),
           )
             ? last(week)!.month()
             : undefined;
