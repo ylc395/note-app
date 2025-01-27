@@ -3,8 +3,6 @@ import type { TextLocation } from '#domain/shared/model/content.js';
 
 export * from '#domain/shared/model/content.js';
 
-export const stringifyLocation = ({ start, end }: TextLocation) => `${start},${end}`;
-
 export interface TopicRecord {
   entityId: EntityId;
   name: string;

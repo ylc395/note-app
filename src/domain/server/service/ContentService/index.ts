@@ -1,4 +1,5 @@
 import { fromMarkdown } from 'mdast-util-from-markdown';
+import type { Root } from 'mdast';
 import { EXIT, SKIP, visit } from 'unist-util-visit';
 import { compact, size, uniq } from 'lodash-es';
 import { is } from 'unist-util-is';
@@ -19,7 +20,6 @@ import {
   type ExternalReference,
   type LinkVO,
   LinkTargetType,
-  stringifyLocation,
 } from '#domain/server/model/content.js';
 
 import BaseService from '../BaseService.js';
@@ -104,7 +104,7 @@ export default class ContentService extends BaseService {
         url: target,
         location: sourceLocation,
         icon: null,
-        snippet: snippetsFromLocation[sourceId]![stringifyLocation(sourceLocation)]!,
+        snippet: snippetsFromLocation[sourceId]![ContentService.hashLocation(sourceLocation)]!,
       }));
 
     const entityIds = uniq(entityLinks.flatMap(({ sourceId, target }) => [sourceId, target]));
@@ -113,7 +113,7 @@ export default class ContentService extends BaseService {
     const linkVOs: LinkVO[] = entityLinks.map(({ sourceId, sourceLocation, target, targetFragmentId }) => ({
       sourceEntity: entities[sourceId]!,
       sourceLocation,
-      sourceSnippet: snippetsFromLocation[sourceId]![stringifyLocation(sourceLocation)]!,
+      sourceSnippet: snippetsFromLocation[sourceId]![ContentService.hashLocation(sourceLocation)]!,
       targetEntity: entities[target]!,
       targetFragmentId,
       targetSnippet: targetFragmentId ? snippetsFromFragmentId[target]![targetFragmentId]! : null,
@@ -129,19 +129,82 @@ export default class ContentService extends BaseService {
     const result: Record<EntityId, Record<string, Required<Snippet>>> = {};
 
     for await (const { body, id } of contents) {
-      const locations: Record<string, Required<Snippet>> = {};
+      const locations: Record<string, Snippet> = {};
+      const mdAst = ContentService.parseMarkdown(body);
 
       for (const { location } of locationGroups[id]!) {
-        locations[`${location.start},${location.end}`] = {
-          text: body.slice(location.start, location.end),
-          highlights: [{ start: 0, end: 0 }],
-        };
+        const snippet = this.getSnippetByLocation(mdAst, location);
+
+        if (snippet) {
+          locations[ContentService.hashLocation(location)] = snippet;
+        }
       }
 
       result[id] = locations;
     }
 
     return result;
+  }
+
+  private getSnippetByLocation(root: Root, location: TextLocation): Snippet | null {
+    const texts: string[] = [];
+    let textLength = 0;
+    let highlight: TextLocation | undefined;
+    let clipStart = false;
+    const maxTextLength = 50; // todo: 从用户配置中读取
+
+    visit(root, 'text', (node) => {
+      if (textLength >= maxTextLength) {
+        if (highlight) {
+          return EXIT;
+        }
+
+        clipStart = true;
+        const removedText = texts.shift();
+        textLength -= removedText?.length ?? 0;
+      }
+
+      if (!node.position) {
+        return;
+      }
+
+      if (node.position.start.offset! > location.end && !highlight) {
+        return EXIT;
+      }
+
+      const text = toString(node);
+
+      if (node.position.start.offset! >= location.start && node.position.end.offset! <= location.end) {
+        highlight = {
+          start: textLength + 1,
+          end: textLength + 1 + text.length,
+        };
+      }
+
+      texts.push(text);
+      textLength += text.length;
+    });
+
+    if (highlight) {
+      let text = texts.join('');
+
+      if (text.length > maxTextLength) {
+        text = `${text.slice(0, maxTextLength)}...`;
+      }
+
+      if (clipStart) {
+        text = `...${text}`;
+      }
+
+      highlight.end = Math.min(highlight.end, maxTextLength - 1);
+
+      return {
+        text,
+        highlights: highlight ? [highlight] : [],
+      };
+    }
+
+    return null;
   }
 
   private async getSnippetsByFragmentIds(fragmentIds: Array<{ entityId: EntityId; fragmentId: string | null }>) {
@@ -235,5 +298,9 @@ export default class ContentService extends BaseService {
       mdastExtensions: [topicExtension],
       extensions: [topicTokenExtension],
     });
+  }
+
+  private static hashLocation({ start, end }: TextLocation) {
+    return `${start},${end}`;
   }
 }

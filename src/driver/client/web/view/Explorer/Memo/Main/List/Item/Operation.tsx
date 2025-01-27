@@ -1,4 +1,4 @@
-import { Link2Icon, ReplyIcon } from 'lucide-solid';
+import { AtSignIcon, ReplyIcon } from 'lucide-solid';
 import assert from 'assert';
 import { Show } from 'solid-js';
 
@@ -13,15 +13,14 @@ export default function Operation({ memoView }: { memoView: MemoView }) {
       <Show when={memoView.isParent}>
         <button class={buttonClassName} onclick={memoView.toggleFollowup.bind(memoView)}>
           <ReplyIcon class="ml-2" />
-          Follow-up
+          后续
           <span class="ml-2">{memoView.value.followupsCount}</span>
         </button>
       </Show>
       <Show when={memoView.value.referrersCount > 0}>
         <button class={buttonClassName} onclick={memoView.toggleReferrers.bind(memoView)}>
-          <Link2Icon class="mr-1" />
-          Referrers
-          <span class="ml-2">{memoView.value.referrersCount}</span>
+          <AtSignIcon class="mr-1" />
+          被提及 <span class="ml-2">{memoView.value.referrersCount}</span>
         </button>
       </Show>
     </div>

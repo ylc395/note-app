@@ -10,7 +10,7 @@ export default function MemoList({ memoView }: { memoView: MemoView }) {
   let rootRef: HTMLDivElement | undefined;
 
   function tryFetchNextPage(container: HTMLElement) {
-    if (!memoView.canLoadMore || memoView.isLoading) {
+    if (!memoView.childrenQuery?.result.hasNextPage || memoView.childrenQuery.result.isLoading) {
       return;
     }
 
@@ -45,11 +45,14 @@ export default function MemoList({ memoView }: { memoView: MemoView }) {
       ref={rootRef}
     >
       <div class="space-y-6 mx-auto">
-        <Key each={memoView.children || []} by={(item) => item.id}>
+        <Key each={memoView.childrenQuery?.result.data?.pages.flat() || []} by={(item) => item.id}>
           {(item) => <Item memo={item()} parent={memoView} />}
         </Key>
       </div>
-      <Show when={!memoView.canLoadMore} fallback={<Loader2Icon class="mx-auto my-6" size={30} />}>
+      <Show
+        when={!memoView.childrenQuery?.result.hasNextPage}
+        fallback={<Loader2Icon class="mx-auto my-6" size={30} />}
+      >
         <Show when={memoView.isRoot}>
           <div class="text-center text-gray-400 my-6">没有更多了</div>
         </Show>

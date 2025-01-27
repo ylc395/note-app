@@ -1,6 +1,6 @@
 import { createInfiniteQuery, createQuery } from 'mobx-tanstack-query/preset';
 import { last } from 'lodash-es';
-import { action, computed, observable } from 'mobx';
+import { action, observable } from 'mobx';
 import assert from 'assert';
 
 import { container } from '#domain/shared/infra/singletons';
@@ -10,6 +10,7 @@ import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import Editor from './Editor';
 import TimeSelector from './TimeSelector';
 import RevisionList from '../RevisionList';
+import DomainEventBus from './EventBus';
 
 export default class MemoView {
   constructor(options?: { value: MemoVO; parent: MemoView }) {
@@ -68,8 +69,16 @@ export default class MemoView {
         ({ signal }) => this.remote.memo.queryReferrers.query(this.value!.id, { signal }),
         {
           queryKey: ['memos', 'referrers', this.value.id],
-          options: () => ({ enabled: this.visiblePanel === 'referrers' && this.value!.referrersCount > 0 }),
+          options: () => ({
+            enabled: this.visiblePanel === 'referrers' && this.value!.referrersCount > 0,
+          }),
         },
+      );
+
+      this.eventBus.on(
+        [DomainEventBus.eventNames.Created, DomainEventBus.eventNames.Removed, DomainEventBus.eventNames.Updated],
+        () => this.referrersQuery?.invalidate(),
+        { signal: this.destroyController.signal },
       );
     }
   }
@@ -78,9 +87,11 @@ export default class MemoView {
 
   @observable public accessor value: MemoVO | undefined;
 
+  private readonly eventBus = container.resolve(DomainEventBus);
+
   private readonly remote = container.resolve(rpcToken);
 
-  private readonly childrenQuery;
+  public readonly childrenQuery;
 
   public readonly referrersQuery;
 
@@ -105,21 +116,6 @@ export default class MemoView {
   public setValue(memo?: MemoVO | ((oldValue: MemoVO | undefined) => MemoVO | undefined)) {
     const newValue = typeof memo === 'function' ? memo(this.value) : memo;
     this.value = newValue;
-  }
-
-  @computed
-  public get children() {
-    return this.childrenQuery?.result.data?.pages.flat();
-  }
-
-  @computed
-  public get canLoadMore() {
-    return Boolean(this.childrenQuery?.result.hasNextPage);
-  }
-
-  @computed
-  public get isLoading() {
-    return Boolean(this.childrenQuery?.result.isLoading);
   }
 
   public get timeParams() {
@@ -162,6 +158,7 @@ export default class MemoView {
     this.newEditor = new Editor({
       onSubmit: async (value) => {
         const newMemo = await this.remote.memo.create.mutate({ parentId: this.value?.id, body: value });
+        this.eventBus.emit(DomainEventBus.eventNames.Created, newMemo);
 
         if (this.isParent || this.timeSelector?.isBetweenSelectedDuration(newMemo.createdAt)) {
           this.childrenQuery?.invalidate();
@@ -198,7 +195,8 @@ export default class MemoView {
 
         this.parent?.childrenQuery?.invalidate();
         this.revisionList?.data.invalidate();
-        this.setValue({ ...memo, body: value }); // 先乐观更新一下
+        this.setValue({ ...memo, body: value });
+        this.eventBus.emit(DomainEventBus.eventNames.Updated, this.value!);
 
         return 'destroy';
       },

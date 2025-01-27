@@ -14,7 +14,9 @@ export default class EventBus<T extends Events> extends Emitter<T> {
         name,
         enabled: !IS_PRODUCTION,
         logger: (type, debugName, eventName, eventData) => {
-          this.logger.debug(`[eventBus ${debugName}]: ${type} ${String(eventName)}`, eventData);
+          if (type === 'emit' && String(eventName) !== 'Symbol(listenerAdded)') {
+            this.logger.debug(`[eventBus ${debugName}]: ${type} ${String(eventName)}`, eventData);
+          }
         },
       },
     });
