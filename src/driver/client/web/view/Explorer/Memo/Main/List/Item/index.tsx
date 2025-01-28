@@ -24,7 +24,7 @@ export default function Item(props: { memo: MemoVO; parent: MemoView }) {
   });
 
   return (
-    <div class="shadow-md rounded-lg border p-4 relative" attr:data-memo-id={props.memo.id}>
+    <div class="shadow-md rounded-lg border p-4 relative bg-white" attr:data-memo-id={props.memo.id}>
       <div class="flex justify-between items-center">
         <div>
           <Show when={props.memo.isPinned}>

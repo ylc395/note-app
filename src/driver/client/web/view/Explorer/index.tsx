@@ -22,7 +22,7 @@ export default function Explorer() {
       <Tabs.Content value="note">
         <NoteTree />
       </Tabs.Content>
-      <Tabs.Content class="flex-grow min-w-0 relative" value="memo">
+      <Tabs.Content class="flex-grow min-w-0 relative bg-gray-50" value="memo">
         <MemoList />
       </Tabs.Content>
     </Tabs.Root>

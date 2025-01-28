@@ -13,11 +13,11 @@ function getColorClass(count: number) {
   }
 
   if (count <= 5) {
-    return 'bg-green-50';
+    return 'bg-green-100';
   }
 
   if (count <= 10) {
-    return 'bg-green-100';
+    return 'bg-green-200';
   }
 
   if (count <= 20) {
@@ -51,7 +51,7 @@ export default function Day({ day }: { day: Dayjs }) {
     <Tooltip.Root openDelay={500} closeDelay={500}>
       <Tooltip.Trigger>
         <div
-          class={`h-4 w-4 rounded ${getColorClass(count() ?? 0)} 
+          class={`h-5 w-5 rounded ${getColorClass(count() ?? 0)} 
             ${(count() ?? 0) > 0 ? 'cursor-pointer' : ''} ${isSelected() ? 'outline' : ''}`}
           onclick={action(handleClick)}
         />
