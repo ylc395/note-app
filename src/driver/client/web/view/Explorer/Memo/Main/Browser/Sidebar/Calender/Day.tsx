@@ -5,7 +5,7 @@ import { Tooltip } from '@ark-ui/solid/tooltip';
 
 import { container } from '#domain/shared/infra/singletons';
 import MemoCalendar from '#domain/client/app/model/memo/TimeSelector';
-import uiState from '../../uiState';
+import uiState from '../../../../uiState';
 
 function getColorClass(count: number) {
   if (count === 0) {

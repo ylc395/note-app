@@ -14,7 +14,7 @@ export default function Weeks() {
   });
 
   return (
-    <div class="flex space-x-1 mb-8">
+    <div class="flex space-x-1 mb-4">
       <For each={weeks}>
         {(week, index) => {
           const newMonth = week.some(

@@ -7,7 +7,7 @@ import { action } from 'mobx';
 
 import { container } from '#domain/shared/infra/singletons';
 import TimeSelector from '#domain/client/app/model/memo/TimeSelector';
-import uiState from '../uiState';
+import uiState from '../../../uiState';
 
 export default function DateRangePicker({ maxDate, minDate }: { minDate: Date; maxDate: Date }) {
   const timeSelector = container.resolve(TimeSelector);
@@ -39,7 +39,7 @@ export default function DateRangePicker({ maxDate, minDate }: { minDate: Date; m
     <Show when={timeSelector.edgeTime.result.data} keyed>
       <DatePicker.RootProvider value={datePicker} lazyMount unmountOnExit>
         <DatePicker.Control class="flex">
-          <DatePicker.Trigger class="flex items-center text-sm text-gray-500">
+          <DatePicker.Trigger class="flex items-center text-sm text-gray-400">
             <CalendarDaysIcon class="mr-1" />
             时间段
           </DatePicker.Trigger>

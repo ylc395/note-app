@@ -6,7 +6,7 @@ export default function Tabs() {
     'flex items-center py-2 rounded-md px-4 w-full text-start text-gray-500 data-[selected]:bg-gray-400 data-[selected]:text-white';
 
   return (
-    <ArkTabs.List class="flex flex-col mt-4 items-start round">
+    <ArkTabs.List class="flex flex-col mt-4 items-start round w-44 xl:w-64">
       <ArkTabs.Trigger value="memos" class={triggerClassName}>
         <ListIcon class="mr-2" />
         浏览

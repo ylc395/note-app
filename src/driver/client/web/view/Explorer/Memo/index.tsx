@@ -2,10 +2,12 @@ import { Tabs } from '@ark-ui/solid';
 import { action } from 'mobx';
 
 import Sidebar from './Sidebar';
-import Main from './Main';
+import Main from './Main/Browser';
 import uiState from './uiState';
 
 export default function MemoExplorer() {
+  const tabClassName = 'data-[state=open]:flex max-w-screen-md min-w-0 w-full lg:w-3/4 lg:max-w-screen-lg xl:w-4/5';
+
   return (
     <Tabs.Root
       orientation="vertical"
@@ -15,14 +17,12 @@ export default function MemoExplorer() {
       onValueChange={action(() => (uiState.isMenuVisible = 'visible'))}
     >
       <Sidebar />
-      <div class="flex max-w-screen-md min-w-0 w-full lg:w-3/4">
-        <Tabs.Content class="w-full" value="memos">
-          <Main />
-        </Tabs.Content>
-        <Tabs.Content class="w-full" value="stats">
-          Stats
-        </Tabs.Content>
-      </div>
+      <Tabs.Content class={tabClassName} value="memos">
+        <Main />
+      </Tabs.Content>
+      <Tabs.Content class={tabClassName} value="stats">
+        Stats
+      </Tabs.Content>
     </Tabs.Root>
   );
 }
