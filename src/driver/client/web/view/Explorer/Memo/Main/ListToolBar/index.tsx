@@ -8,6 +8,7 @@ import { container } from '#domain/shared/infra/singletons';
 import TimeSelector from '#domain/client/app/model/memo/TimeSelector';
 
 import SortMenu from './SortMenu';
+import CollapseButton from './CollapseButton';
 
 export default function ListToolbar({ rootMemo }: { rootMemo: MemoView }) {
   const timeSelector = container.resolve(TimeSelector);
@@ -28,7 +29,8 @@ export default function ListToolbar({ rootMemo }: { rootMemo: MemoView }) {
 
   return (
     <div class="mt-4 flex justify-between">
-      <div>
+      <div class="flex">
+        <CollapseButton />
         <Show when={typeof timeSelector.count.result.data === 'number'}>
           共计{timeSelector.count.result.data!}条
           <Tooltip.Root openDelay={200} positioning={{ placement: 'top' }}>

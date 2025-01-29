@@ -1,6 +1,5 @@
 import { Tabs } from '@ark-ui/solid';
 import { action } from 'mobx';
-import { TriangleIcon } from 'lucide-solid';
 
 import Sidebar from './Sidebar';
 import Main from './Main';
@@ -13,13 +12,10 @@ export default function MemoExplorer() {
       lazyMount
       class="flex h-screen px-4 mx-auto justify-center"
       defaultValue="memos"
-      onValueChange={action(() => (uiState.isMenuVisible = false))}
+      onValueChange={action(() => (uiState.isMenuVisible = 'visible'))}
     >
       <Sidebar />
       <div class="flex max-w-screen-md w-full lg:w-3/4">
-        <button class="lg:hidden" onclick={action(() => (uiState.isMenuVisible = true))}>
-          <TriangleIcon class="rotate-90" />
-        </button>
         <Tabs.Content class="grow" value="memos">
           <Main />
         </Tabs.Content>

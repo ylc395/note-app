@@ -14,9 +14,13 @@ export default function Sidebar() {
 
   return (
     <div
-      onClick={action(() => (uiState.isMenuVisible = false))}
-      class="z-10 inset-0 absolute lg:bg-transparent lg:static lg:block lg:mr-4"
-      classList={{ hidden: !uiState.isMenuVisible }}
+      onClick={action(() => (uiState.isMenuVisible = 'visible'))}
+      class="z-10 inset-0 absolute lg:bg-transparent lg:static lg:mr-4"
+      classList={{
+        hidden: uiState.isMenuVisible !== 'alwaysVisible',
+        'lg:hidden': uiState.isMenuVisible === 'invisible',
+        'lg:flex': uiState.isMenuVisible !== 'invisible',
+      }}
     >
       <div
         onclick={(e) => e.stopPropagation()}

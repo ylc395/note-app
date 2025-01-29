@@ -44,7 +44,7 @@ export default function Day({ day }: { day: Dayjs }) {
       return;
     }
     calendar.selectDay(isSelected() ? null : day);
-    uiState.isMenuVisible = false;
+    uiState.isMenuVisible = 'visible';
   }
 
   return (
