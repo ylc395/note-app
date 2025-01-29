@@ -5,6 +5,7 @@ import { container } from '#domain/shared/infra/singletons';
 
 import Calender from './Calender';
 import DatePicker from './DatePicker';
+import TopicList from './TopicList';
 
 export default function Sidebar() {
   const timeSelector = container.resolve(TimeSelector);
@@ -18,6 +19,7 @@ export default function Sidebar() {
           maxDate={new Date(timeSelector.edgeTime.result.data!.last)}
         />
       </Show>
+      <TopicList />
     </div>
   );
 }

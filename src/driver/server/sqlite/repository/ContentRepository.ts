@@ -1,12 +1,13 @@
 import type { EntityId } from '#domain/shared/model/entity.js';
 import type { ContentRepository, LinkQuery, TopicQuery } from '#domain/server/repository/contentRepository.js';
+import { compact } from 'lodash-es';
 
 import BaseRepository from './BaseRepository.js';
 import { tableName as linkTableName } from '../schema/link.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
 import { tableName as topicTableName } from '../schema/topic.js';
+import { tableName as entityTableName } from '../schema/entity.js';
 import type { LinkRecord, TopicRecord } from '#domain/server/model/content.js';
-import { compact } from 'lodash-es';
 
 export default class SqliteContentRepository extends BaseRepository implements ContentRepository {
   public async createTopics(topics: TopicRecord[]) {
@@ -28,6 +29,12 @@ export default class SqliteContentRepository extends BaseRepository implements C
     let sql = this.db
       .selectFrom(topicTableName)
       .select([`${topicTableName}.name`, `${topicTableName}.entityId`, `${topicTableName}.location`]);
+
+    if (config?.entityType) {
+      sql = sql
+        .innerJoin(entityTableName, `${topicTableName}.entityId`, `${entityTableName}.id`)
+        .where(`${entityTableName}.type`, '=', config.entityType);
+    }
 
     if (config?.isAvailableOnly) {
       sql = sql.leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${topicTableName}.entityId`);

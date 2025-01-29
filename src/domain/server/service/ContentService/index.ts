@@ -20,6 +20,7 @@ import {
   type ExternalReference,
   type LinkVO,
   LinkTargetType,
+  type TopicQuery,
 } from '#domain/server/model/content.js';
 
 import BaseService from '../BaseService.js';
@@ -51,22 +52,18 @@ export default class ContentService extends BaseService {
     }
   }
 
-  public async queryAllTopics() {
-    const topicRecords = await this.repo.contents.findAllTopics({ isAvailableOnly: true });
+  public async queryAllTopics(params?: TopicQuery) {
+    const topicRecords = await this.repo.contents.findAllTopics({ isAvailableOnly: true, entityType: params?.type });
     const allTopicsMap = Object.groupBy(topicRecords, ({ name }) => name);
 
     const entityIds = uniq(topicRecords.map(({ entityId }) => entityId));
     const entities = await this.entityService.getEntities(entityIds);
-    const snippets = await this.getSnippetsByLocations(topicRecords);
 
     const topicVOs: TopicVO[] = Object.entries(allTopicsMap).map(([name, topicRecords]) => {
       const topicGroupedByEntity = Object.groupBy(topicRecords || [], ({ entityId }) => entityId);
       const sourceEntities: TopicVO['entities'] = Object.entries(topicGroupedByEntity).map(([entityId, records]) => ({
         entity: entities[entityId]!,
-        sources: records!.map((record) => ({
-          location: record.location,
-          snippet: snippets[entityId]![`${record.location.start},${record.location.end}`]!,
-        })),
+        sources: records!.map((record) => record.location),
       }));
 
       return { entities: sourceEntities, name };

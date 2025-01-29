@@ -1,4 +1,4 @@
-import type { Entity } from './entity.js';
+import type { Entity, EntityTypes } from './entity.js';
 
 export interface TextLocation {
   start: number;
@@ -30,9 +30,13 @@ export interface TopicVO {
   name: string;
   entities: Array<{
     entity: Entity;
-    sources: Array<{
-      location: TextLocation;
-      snippet: Snippet;
-    }>;
+    sources: TextLocation[];
   }>;
+}
+
+/**
+ * @api
+ */
+export interface TopicQuery {
+  type?: EntityTypes;
 }
