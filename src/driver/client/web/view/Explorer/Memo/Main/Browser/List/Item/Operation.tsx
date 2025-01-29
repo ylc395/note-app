@@ -10,7 +10,7 @@ export default function Operation({ memoView }: { memoView: MemoView }) {
   const numberClassName = 'ml-1 bg-gray-200 px-1 rounded-md';
 
   return (
-    <div class="flex space-x-4 text-sm">
+    <div class="flex space-x-4 text-sm xl:mt-4">
       <Show when={memoView.isParent}>
         <button class={buttonClassName} onclick={memoView.toggleFollowup.bind(memoView)}>
           <ReplyIcon class="mr-1" />

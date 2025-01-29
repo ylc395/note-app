@@ -6,13 +6,13 @@ import Main from './Main/Browser';
 import uiState from './uiState';
 
 export default function MemoExplorer() {
-  const tabClassName = 'data-[state=open]:flex max-w-screen-md min-w-0 w-full lg:w-3/4 lg:max-w-screen-lg xl:w-4/5';
+  const tabClassName = 'data-[state=open]:flex min-w-0 w-full lg:w-4/5 ';
 
   return (
     <Tabs.Root
       orientation="vertical"
       lazyMount
-      class="flex h-screen px-4 mx-auto justify-center"
+      class="flex h-screen p-4 w-full mx-auto justify-center"
       defaultValue="memos"
       onValueChange={action(() => (uiState.isMenuVisible = 'visible'))}
     >

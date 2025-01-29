@@ -7,7 +7,7 @@ export default function Sidebar() {
   return (
     <div
       onClick={action(() => (uiState.isMenuVisible = 'visible'))}
-      class="z-10 inset-0 absolute lg:bg-transparent lg:static lg:mr-4"
+      class="z-10 inset-0 lg:grow absolute lg:bg-transparent lg:static lg:mr-4"
       classList={{
         hidden: uiState.isMenuVisible !== 'alwaysVisible',
         'lg:hidden': uiState.isMenuVisible === 'invisible',
@@ -16,7 +16,7 @@ export default function Sidebar() {
     >
       <div
         onclick={(e) => e.stopPropagation()}
-        class="w-fit bg-gray-50 h-full border-r flex flex-col shadow-md pt-4 px-4
+        class="w-36 lg:w-full bg-gray-50 h-full border-r flex flex-col shadow-md px-4
                 lg:border-0 lg:shadow-none "
       >
         <div class="flex items-center mb-4 justify-between">

@@ -11,7 +11,7 @@ export default function Sidebar() {
   const timeSelector = container.resolve(TimeSelector);
 
   return (
-    <div class="py-4">
+    <div>
       <Calender />
       <Show when={timeSelector.edgeTime.result.data} keyed>
         <DatePicker
