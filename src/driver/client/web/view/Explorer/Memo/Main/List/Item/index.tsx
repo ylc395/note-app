@@ -1,5 +1,6 @@
 import { onCleanup, Show, createEffect, createMemo } from 'solid-js';
 import dayjs from 'dayjs';
+import { PinIcon } from 'lucide-solid';
 
 import MemoView from '#domain/client/app/model/memo/MemoView';
 import type { MemoVO } from '#domain/shared/model/memo';
@@ -26,13 +27,14 @@ export default function Item(props: { memo: MemoVO; parent: MemoView }) {
   return (
     <div class="shadow-md rounded-lg border p-4 relative bg-white" attr:data-memo-id={props.memo.id}>
       <div class="flex justify-between items-center">
-        <div>
+        <div class="flex text-gray-400">
           <Show when={props.memo.isPinned}>
-            <span>Pinned</span>
+            <span class="flex items-center mr-2 text-red-300">
+              <PinIcon />
+              Pinned
+            </span>
           </Show>
-          <time datetime={date().toISOString()} class="text-gray-400">
-            {date().format('YYYY-MM-DD HH:mm:ss')}
-          </time>
+          <time datetime={date().toISOString()}>{date().format('YYYY-MM-DD HH:mm:ss')}</time>
         </div>
         <Menu memoView={memoView} />
       </div>

@@ -29,13 +29,13 @@ export default function EditorView(props: { editor: Editor }) {
     <div class="w-full border mx-auto rounded-lg">
       <MarkdownEditor onUpdate={onUpdate} onCreated={setCrepe} rootClass="!p-4 max-h-96 min-h-32 overflow-y-auto" />
       <div class="flex justify-between border-t">
-        <div>字数{props.editor.value.length}</div>
+        <div class="text-sm flex items-center px-2 text-gray-400">字数{props.editor.value.length}</div>
         <div class="flex space-x-2">
           <button onclick={reset} class="text-gray-400">
             重置
           </button>
           <button
-            class="rounded-md cursor-pointer bg-blue-100 w-12 h-8 flex items-center justify-center"
+            class="rounded-md cursor-pointer bg-gray-300 text-white w-12 h-8 flex items-center justify-center"
             disabled={!props.editor.canSubmit}
             onclick={onSubmit}
           >

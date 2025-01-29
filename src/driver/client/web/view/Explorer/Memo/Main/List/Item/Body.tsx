@@ -13,7 +13,7 @@ export default function Body({ memoView }: { memoView: MemoView }) {
         when={memoView.selfEditor}
         fallback={
           <div
-            class="select-text"
+            class="select-text text-gray-800"
             ondblclick={memoView.startEditing.bind(memoView)}
             innerHTML={micromark(memoView.value!.body)}
           />
@@ -22,12 +22,16 @@ export default function Body({ memoView }: { memoView: MemoView }) {
         <MarkdownEditor
           onUpdate={(value) => memoView.selfEditor!.update(value)}
           defaultValue={memoView.value!.body}
-          rootClass="!p-0"
+          rootClass="!p-0 max-h-60 overflow-auto w-full"
           focusWhenEditable
         />
-        <div>
-          <button onclick={() => memoView.selfEditor!.submit()}>submit</button>
-          <button onclick={() => memoView.selfEditor!.destroy()}>cancel</button>
+        <div class="flex justify-end space-x-2 mt-2">
+          <button class="text-sm text-gray-400" onclick={() => memoView.selfEditor!.destroy()}>
+            取消
+          </button>
+          <button class="text-sm text-gray-400" onclick={() => memoView.selfEditor!.submit()}>
+            提交
+          </button>
         </div>
       </Show>
     </div>

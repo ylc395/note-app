@@ -1,4 +1,4 @@
-import { RefreshCcwIcon, SearchIcon, XIcon, InfoIcon } from 'lucide-solid';
+import { RefreshCcwIcon, SearchIcon, XCircleIcon } from 'lucide-solid';
 import { createMemo, Show } from 'solid-js';
 import dayjs from 'dayjs';
 import { Tooltip } from '@ark-ui/solid';
@@ -28,34 +28,34 @@ export default function ListToolbar({ rootMemo }: { rootMemo: MemoView }) {
   });
 
   return (
-    <div class="mt-4 flex justify-between">
-      <div class="flex">
+    <div class="mt-4 flex justify-between text-gray-400">
+      <div class="flex text-sm">
         <CollapseButton />
         <Show when={typeof timeSelector.count.result.data === 'number'}>
-          共计{timeSelector.count.result.data!}条
-          <Tooltip.Root openDelay={200} positioning={{ placement: 'top' }}>
-            <Tooltip.Trigger>
-              <InfoIcon />
-            </Tooltip.Trigger>
-            <Tooltip.Positioner>
-              <Tooltip.Content>不包括 Follow-up</Tooltip.Content>
-            </Tooltip.Positioner>
-          </Tooltip.Root>
+          <span class="flex items-center">
+            <Tooltip.Root openDelay={200} positioning={{ placement: 'top' }}>
+              <Tooltip.Trigger>共计 {timeSelector.count.result.data!} 条</Tooltip.Trigger>
+              <Tooltip.Positioner>
+                <Tooltip.Content>不包括 Follow-up</Tooltip.Content>
+              </Tooltip.Positioner>
+            </Tooltip.Root>
+          </span>
         </Show>
         <Show when={timeSelector.selectedDuration}>
-          （<time datetime="">{durationText()}</time> 期间
-          <button onclick={() => timeSelector.selectDay(null)}>
-            <XIcon />
-          </button>
-          ）
+          <span class="flex items-center ml-2">
+            - <time class="ml-2">{durationText()}</time> 期间
+            <button class="ml-1" onclick={() => timeSelector.selectDay(null)}>
+              <XCircleIcon />
+            </button>
+          </span>
         </Show>
       </div>
-      <div class="space-x-2 flex">
-        <div class="flex border mr-4">
-          <input />
+      <div class="space-x-2 flex text-sm rounded">
+        <div class="flex border mr-4 py-1 px-2">
+          <input class="outline-none" />
           <SearchIcon />
         </div>
-        <button onclick={rootMemo.reload.bind(rootMemo)} class="flex ">
+        <button onclick={rootMemo.reload.bind(rootMemo)} class="flex items-center">
           <RefreshCcwIcon />
           刷新
         </button>

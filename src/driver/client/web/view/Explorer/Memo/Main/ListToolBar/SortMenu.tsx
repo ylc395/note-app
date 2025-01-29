@@ -5,7 +5,7 @@ import { SortDescIcon } from 'lucide-solid';
 export default function SortMenu({ rootMemo }: { rootMemo: MemoView }) {
   return (
     <Menu.Root>
-      <Menu.Trigger class="flex">
+      <Menu.Trigger class="flex items-center">
         <SortDescIcon />
         排序
       </Menu.Trigger>

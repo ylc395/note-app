@@ -44,7 +44,7 @@ export default function MemoList({ memoView }: { memoView: MemoView }) {
       onScroll={handleScroll}
       ref={rootRef}
     >
-      <div class="space-y-6 mx-auto">
+      <div class="space-y-6 mx-auto w-full">
         <Key each={memoView.childrenQuery?.result.data?.pages.flat() || []} by={(item) => item.id}>
           {(item) => <Item memo={item()} parent={memoView} />}
         </Key>
