@@ -3,14 +3,15 @@ import { createMemo, Show } from 'solid-js';
 import dayjs from 'dayjs';
 import { Tooltip } from '@ark-ui/solid';
 
-import type MemoView from '#domain/client/app/model/memo/MemoView';
 import { container } from '#domain/shared/infra/singletons';
 import TimeSelector from '#domain/client/app/model/memo/TimeSelector';
 
 import SortMenu from './SortMenu';
 import CollapseButton from './CollapseButton';
+import MemoService from '#domain/client/app/service/MemoService';
 
-export default function ListToolbar({ rootMemo }: { rootMemo: MemoView }) {
+export default function ListToolbar() {
+  const { rootMemo } = container.resolve(MemoService);
   const timeSelector = container.resolve(TimeSelector);
   const durationText = createMemo(() => {
     if (!timeSelector.selectedDuration) {
@@ -59,7 +60,7 @@ export default function ListToolbar({ rootMemo }: { rootMemo: MemoView }) {
           <RefreshCcwIcon />
           刷新
         </button>
-        <SortMenu rootMemo={rootMemo} />
+        <SortMenu />
       </div>
     </div>
   );

@@ -1,8 +1,12 @@
-import type MemoView from '#domain/client/app/model/memo/MemoView';
 import { Menu } from '@ark-ui/solid';
 import { SortDescIcon } from 'lucide-solid';
 
-export default function SortMenu({ rootMemo }: { rootMemo: MemoView }) {
+import { container } from '#domain/shared/infra/singletons';
+import MemoService from '#domain/client/app/service/MemoService';
+
+export default function SortMenu() {
+  const { rootMemo } = container.resolve(MemoService);
+
   return (
     <Menu.Root>
       <Menu.Trigger class="flex items-center">

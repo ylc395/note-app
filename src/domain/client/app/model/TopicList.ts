@@ -15,7 +15,7 @@ export default class TopicList {
 
   private readonly remote = container.resolve(rpcToken);
 
-  private readonly topicQuery;
+  public readonly topicQuery;
 
   public destroy() {
     this.topicQuery.destroy();

@@ -1,13 +1,15 @@
 import { onCleanup } from 'solid-js';
 
-import MemoView from '#domain/client/app/model/memo/MemoView';
+import { container } from '#domain/shared/infra/singletons';
+import MemoService from '#domain/client/app/service/MemoService';
+
 import Editor from './Editor';
 import List from './List';
 import ListToolbar from './ListToolBar';
 import Sidebar from './Sidebar';
 
 export default function MemoMain() {
-  const rootMemo = new MemoView();
+  const { rootMemo } = container.resolve(MemoService);
 
   onCleanup(() => {
     rootMemo.destroy();
@@ -17,7 +19,7 @@ export default function MemoMain() {
     <>
       <div class="flex flex-col py-4 mr-6 grow">
         <Editor editor={rootMemo.newEditor!} />
-        <ListToolbar rootMemo={rootMemo} />
+        <ListToolbar />
         <List memoView={rootMemo} />
       </div>
       <Sidebar />

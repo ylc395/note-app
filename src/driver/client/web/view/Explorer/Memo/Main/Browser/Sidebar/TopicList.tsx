@@ -1,9 +1,9 @@
-import TopicList from '#domain/client/app/model/TopicList';
-import { EntityTypes } from '#domain/shared/model/entity';
+import MemoService from '#domain/client/app/service/MemoService';
+import { container } from '#domain/shared/infra/singletons';
 import { For } from 'solid-js';
 
 export default function TopicListView() {
-  const topicList = new TopicList(EntityTypes.Memo);
+  const { topicList } = container.resolve(MemoService);
 
   return (
     <div>
