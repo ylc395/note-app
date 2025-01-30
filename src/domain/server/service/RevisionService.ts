@@ -125,14 +125,22 @@ export default class RevisionService extends BaseService {
     ]);
   }
 
-  private static sort(r1: Revision, r2: Revision) {
-    if (r1.id === r2.previousId) return -1;
-    if (r2.id === r1.previousId) return 1;
-    return 0;
+  private static sort(revisions: Revision[]) {
+    const revisionMap = keyBy(revisions, ({ id }) => id);
+    let node = revisions.find(({ previousId }) => previousId === null);
+
+    const sorted: Revision[] = [];
+
+    while (node) {
+      sorted.push(node);
+      node = node.previousId ? revisionMap[node.previousId] : undefined;
+    }
+
+    return sorted;
   }
 
   private static getText(revisions: Revision[]) {
-    const sortedRevisions = revisions.toSorted(RevisionService.sort);
+    const sortedRevisions = RevisionService.sort(revisions);
 
     return sortedRevisions.reduce(
       (result, revision) => {
@@ -162,8 +170,8 @@ export default class RevisionService extends BaseService {
 
   public async queryRevisionsOf(entityId: EntityId) {
     await this.entity.assertAvailableIds([entityId]);
-    const revisions = (await this.repo.revisions.findAll({ entityIds: [entityId] })).sort(RevisionService.sort);
+    const revisions = await this.repo.revisions.findAll({ entityIds: [entityId] });
 
-    return revisions;
+    return RevisionService.sort(revisions);
   }
 }

@@ -40,3 +40,5 @@ export interface TopicVO {
 export interface TopicQuery {
   type?: EntityTypes;
 }
+
+export const TOPIC_SEPARATOR = '/';

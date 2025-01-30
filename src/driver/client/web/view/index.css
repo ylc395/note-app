@@ -1,5 +1,11 @@
 @import 'tailwindcss/tailwind.css';
 
+@layer components {
+  .number-suffix {
+    @apply ml-1 bg-gray-200 px-1 rounded-md;
+  }
+}
+
 @layer utilities {
   .scrollbar-stable {
     scrollbar-gutter: stable;

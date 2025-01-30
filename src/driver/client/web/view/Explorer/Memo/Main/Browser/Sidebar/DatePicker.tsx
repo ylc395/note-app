@@ -39,7 +39,7 @@ export default function DateRangePicker({ maxDate, minDate }: { minDate: Date; m
     <Show when={timeSelector.edgeTime.result.data} keyed>
       <DatePicker.RootProvider value={datePicker} lazyMount unmountOnExit>
         <DatePicker.Control class="flex">
-          <DatePicker.Trigger class="flex items-center text-sm text-gray-400">
+          <DatePicker.Trigger class="flex mt-[5px] items-center text-sm text-gray-400">
             <CalendarDaysIcon class="mr-1" />
             时间段
           </DatePicker.Trigger>
