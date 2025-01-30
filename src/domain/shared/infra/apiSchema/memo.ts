@@ -35,7 +35,8 @@ export const clientMemoQuerySchema = z.object({
   startTime: z.number().optional(),
   endTime: z.number().optional(),
   endId: memoSchema.shape["id"].optional(),
-  startId: memoSchema.shape["id"].optional()
+  startId: memoSchema.shape["id"].optional(),
+  tags: z.array(z.string()).optional()
 });
 export const durationSchema = clientMemoQuerySchema.pick({
   "startTime": true,

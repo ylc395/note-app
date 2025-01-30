@@ -15,6 +15,7 @@ export interface MemoQuery {
   parentId?: EntityParentId;
   orderBy?: 'createdAt' | 'updatedAt';
   order?: 'desc' | 'asc'; // 默认 desc
+  tags?: string[];
 }
 
 export type CountQuery = Pick<MemoQuery, 'startTime' | 'endTime' | 'parentId'>;

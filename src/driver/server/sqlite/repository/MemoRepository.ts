@@ -4,6 +4,7 @@ import type { MemoRepository, MemoQuery, CountQuery } from '#domain/server/repos
 
 import schema, { type Row } from '../schema/memo.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
+import { tableName as topicTableName } from '../schema/topic.js';
 import BaseRepository from './BaseRepository.js';
 
 export default class SqliteMemoRepository extends BaseRepository implements MemoRepository {
@@ -58,12 +59,27 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
   }
 
   public async findAll(q: MemoQuery) {
-    let sql = this.db.selectFrom(this.tableName).selectAll(this.tableName);
+    let sql = this.db
+      .selectFrom(this.tableName)
+      .select([
+        `${this.tableName}.id`,
+        `${this.tableName}.body`,
+        `${this.tableName}.isPinned`,
+        `${this.tableName}.parentId`,
+        `${this.tableName}.createdAt`,
+        `${this.tableName}.updatedAt`,
+      ]);
 
     if (typeof q.isAvailableOnly === 'boolean') {
       sql = sql
         .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.id`)
         .where(`${recyclableTableName}.entityId`, q.isAvailableOnly ? 'is' : 'is not', null);
+    }
+
+    if (q.tags && q.tags.length > 0) {
+      sql = sql
+        .innerJoin(topicTableName, `${topicTableName}.entityId`, `${this.tableName}.id`)
+        .where(`${topicTableName}.name`, 'in', q.tags);
     }
 
     if (q.startTime) {
@@ -107,11 +123,11 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
     }
 
     if (q.orderBy === 'createdAt') {
-      sql = sql.orderBy([`createdAt ${q.order ?? 'desc'}`, `id ${q.order ?? 'desc'}`]);
+      sql = sql.orderBy([`${this.tableName}.createdAt ${q.order ?? 'desc'}`, `id ${q.order ?? 'desc'}`]);
     }
 
     if (q.orderBy === 'updatedAt') {
-      sql = sql.orderBy([`updatedAt ${q.order ?? 'desc'}`, `id ${q.order ?? 'desc'}`]);
+      sql = sql.orderBy([`${this.tableName}.updatedAt ${q.order ?? 'desc'}`, `id ${q.order ?? 'desc'}`]);
     }
 
     if (q.limit) {

@@ -1,12 +1,12 @@
 import { last, range } from 'lodash-es';
 import { For, Show } from 'solid-js';
 
-import TimeSelector from '#domain/client/app/model/memo/TimeSelector';
 import { container } from '#domain/shared/infra/singletons';
 import Day from './Day';
+import MemoService from '#domain/client/app/service/MemoService';
 
 export default function Weeks() {
-  const timeSelector = container.resolve(TimeSelector);
+  const { timeSelector } = container.resolve(MemoService);
   const diffWeeks = timeSelector.recent.endTime.diff(timeSelector.recent.startTime, 'week');
   const weeks = range(0, diffWeeks + 1).map((weekOffset) => {
     const weekStart = timeSelector.recent.startTime.add(weekOffset, 'week').startOf('isoWeek');

@@ -4,8 +4,8 @@ import { action } from 'mobx';
 import { Tooltip } from '@ark-ui/solid/tooltip';
 
 import { container } from '#domain/shared/infra/singletons';
-import MemoCalendar from '#domain/client/app/model/memo/TimeSelector';
 import uiState from '../../../../uiState';
+import MemoService from '#domain/client/app/service/MemoService';
 
 function getColorClass(count: number) {
   if (count === 0) {
@@ -28,22 +28,22 @@ function getColorClass(count: number) {
 }
 
 export default function Day({ day }: { day: Dayjs }) {
-  const calendar = container.resolve(MemoCalendar);
+  const { timeSelector } = container.resolve(MemoService);
   const key = day.format('YYYY-MM-DD');
 
-  const count = createMemo(() => calendar.recentCounts.result.data?.[key]);
+  const count = createMemo(() => timeSelector.recentCounts.result.data?.[key]);
   const isSelected = createMemo(
     () =>
-      calendar.selectedDuration &&
-      day.startOf('d').valueOf() === calendar.selectedDuration.startTime &&
-      day.endOf('d').valueOf() === calendar.selectedDuration.endTime,
+      timeSelector.selectedDuration &&
+      day.startOf('d').valueOf() === timeSelector.selectedDuration.startTime &&
+      day.endOf('d').valueOf() === timeSelector.selectedDuration.endTime,
   );
 
   function handleClick() {
     if ((count() ?? 0) === 0) {
       return;
     }
-    calendar.selectDay(isSelected() ? null : day);
+    timeSelector.selectDay(isSelected() ? null : day);
     uiState.isMenuVisible = 'visible';
   }
 

@@ -2,15 +2,23 @@ import { TriangleIcon } from 'lucide-solid';
 import { For, Show, createSignal } from 'solid-js';
 
 import type { TopicNode } from '#domain/client/app/model/TopicList';
+import { container } from '#domain/shared/infra/singletons';
+import MemoService from '#domain/client/app/service/MemoService';
 
 export default function Node({ node, level }: { node: TopicNode; level?: number }) {
   const [isExpanded, setIsExpanded] = createSignal(false);
+  const { topicList } = container.resolve(MemoService);
 
   return (
     <div>
-      <div class="flex items-center">
+      <div class="flex items-center" onclick={(e) => topicList.toggle(node, e.metaKey)}>
         <Show when={node.children.length > 0}>
-          <button onclick={() => setIsExpanded(!isExpanded())}>
+          <button
+            onclick={(e) => {
+              e.stopPropagation();
+              setIsExpanded(!isExpanded());
+            }}
+          >
             <TriangleIcon class="rotate-180 text-xs mr-1" />
           </button>
         </Show>

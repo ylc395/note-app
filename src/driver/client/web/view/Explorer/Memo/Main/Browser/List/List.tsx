@@ -32,7 +32,7 @@ export default function MemoList({ memoView }: { memoView: MemoView }) {
 
   createEffect(
     on(
-      () => memoView.timeParams,
+      () => memoView.params,
       () => rootRef!.scrollTo({ top: 0 }),
     ),
   );

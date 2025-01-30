@@ -1,6 +1,6 @@
 import { createInfiniteQuery, createQuery } from 'mobx-tanstack-query/preset';
 import { last } from 'lodash-es';
-import { action, observable } from 'mobx';
+import { action, computed, observable, toJS } from 'mobx';
 import assert from 'assert';
 
 import { container } from '#domain/shared/infra/singletons';
@@ -8,18 +8,20 @@ import type { ClientMemoQuery, MemoVO } from '#domain/shared/model/memo';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 
 import Editor from './Editor';
-import TimeSelector from './TimeSelector';
 import RevisionList from '../RevisionList';
 import DomainEventBus from './EventBus';
+import type TimeSelector from './TimeSelector';
+import type TopicList from '../TopicList';
 
 export default class MemoView {
-  constructor(options?: { value: MemoVO; parent: MemoView }) {
-    this.setValue(options?.value);
-    this.parent = options?.parent;
+  constructor(options: { value?: MemoVO; parent?: MemoView; timeSelector?: TimeSelector; topicList?: TopicList }) {
+    this.setValue(options.value);
+    this.parent = options.parent;
+    this.timeSelector = options.timeSelector;
+    this.topicList = options.topicList;
 
     if (this.isRoot) {
       this.initNewEditor();
-      this.timeSelector = container.resolve(TimeSelector);
     }
 
     if (this.isParent || this.isRoot) {
@@ -28,12 +30,11 @@ export default class MemoView {
           this.remote.memo.queryList.query(
             {
               ...params,
-              parentId: this.value?.id,
+              ...this.params,
               endId,
               startId,
               startTime: startId ? undefined : this.timeSelector?.selectedDuration?.startTime,
               endTime: endId ? undefined : this.timeSelector?.selectedDuration?.endTime,
-              ...this.sortOptions,
             },
             { signal },
           ),
@@ -49,15 +50,7 @@ export default class MemoView {
             }
           },
           options: () => ({
-            queryKey: [
-              'memos',
-              {
-                ...this.sortOptions,
-                parentId: options?.value.id,
-                startTime: this.timeSelector?.selectedDuration?.startTime,
-                endTime: this.timeSelector?.selectedDuration?.endTime,
-              },
-            ],
+            queryKey: ['memos', this.params],
             enabled: this.isRoot || this.visiblePanel === 'followup',
           }),
         },
@@ -87,6 +80,16 @@ export default class MemoView {
 
   @observable public accessor value: MemoVO | undefined;
 
+  @computed
+  public get params() {
+    return {
+      ...this.sortOptions,
+      ...this.timeSelector?.selectedDuration,
+      tags: toJS(this.topicList?.selectedTopics),
+      parentId: this.value?.id,
+    };
+  }
+
   private readonly eventBus = container.resolve(DomainEventBus);
 
   private readonly remote = container.resolve(rpcToken);
@@ -112,14 +115,12 @@ export default class MemoView {
 
   private readonly timeSelector?: TimeSelector;
 
+  private readonly topicList?: TopicList;
+
   @action
   public setValue(memo?: MemoVO | ((oldValue: MemoVO | undefined) => MemoVO | undefined)) {
     const newValue = typeof memo === 'function' ? memo(this.value) : memo;
     this.value = newValue;
-  }
-
-  public get timeParams() {
-    return this.timeSelector?.selectedDuration;
   }
 
   public async loadMore() {

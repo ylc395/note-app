@@ -45,6 +45,7 @@ export type ClientMemoQuery = {
   endTime?: number;
   endId?: Memo['id'];
   startId?: Memo['id'];
+  tags?: string[];
 };
 
 /**
