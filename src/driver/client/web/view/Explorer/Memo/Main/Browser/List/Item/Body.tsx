@@ -8,7 +8,7 @@ export default function Body({ memoView }: { memoView: MemoView }) {
   let rootRef: HTMLDivElement | undefined;
 
   return (
-    <div class="w-full py-4 relative" ref={rootRef}>
+    <div class="py-4 relative" ref={rootRef}>
       <Show
         when={memoView.selfEditor}
         fallback={

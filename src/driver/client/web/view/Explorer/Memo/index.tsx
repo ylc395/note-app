@@ -14,7 +14,7 @@ export default function MemoExplorer() {
       lazyMount
       class="flex h-screen p-4 w-full mx-auto justify-center"
       defaultValue="memos"
-      onValueChange={action(() => (uiState.isMenuVisible = 'visible'))}
+      onValueChange={action(() => (uiState.tabVisibility = 'visible'))}
     >
       <Sidebar />
       <Tabs.Content class={tabClassName} value="memos">

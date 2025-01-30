@@ -10,18 +10,18 @@ export default function () {
       <button
         class="mr-4 text-gray-400"
         classList={{
-          'lg:hidden': uiState.isMenuVisible !== 'invisible',
-          hidden: uiState.isMenuVisible === 'alwaysVisible',
+          'lg:hidden': uiState.tabVisibility !== 'invisible',
+          hidden: uiState.tabVisibility === 'alwaysVisible',
         }}
-        onclick={action(() => (uiState.isMenuVisible = 'alwaysVisible'))}
+        onclick={action(() => (uiState.tabVisibility = 'alwaysVisible'))}
       >
         <ArrowRightFromLineIcon />
       </button>
       {/** 收起侧边栏按钮 */}
       <button
         class="hidden mr-4 text-gray-400"
-        classList={{ 'lg:block': uiState.isMenuVisible !== 'invisible' }}
-        onclick={action(() => (uiState.isMenuVisible = 'invisible'))}
+        classList={{ 'lg:block': uiState.tabVisibility !== 'invisible' }}
+        onclick={action(() => (uiState.tabVisibility = 'invisible'))}
       >
         <ArrowLeftFromLineIcon />
       </button>

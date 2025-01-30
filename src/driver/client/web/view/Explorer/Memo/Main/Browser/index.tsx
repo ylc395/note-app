@@ -17,7 +17,7 @@ export default function MemoMain() {
 
   return (
     <>
-      <div class="flex flex-col mr-6 grow">
+      <div class="flex flex-col grow">
         <Editor editor={rootMemo.newEditor!} />
         <ListToolbar />
         <List memoView={rootMemo} />

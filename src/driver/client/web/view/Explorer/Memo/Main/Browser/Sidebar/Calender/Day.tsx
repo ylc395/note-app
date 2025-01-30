@@ -44,7 +44,7 @@ export default function Day({ day }: { day: Dayjs }) {
       return;
     }
     timeSelector.selectDay(isSelected() ? null : day);
-    uiState.isMenuVisible = 'visible';
+    uiState.tabVisibility = 'visible';
   }
 
   return (

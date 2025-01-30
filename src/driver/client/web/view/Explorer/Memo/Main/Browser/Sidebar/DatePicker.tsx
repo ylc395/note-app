@@ -24,7 +24,7 @@ export default function DateRangePicker({ maxDate, minDate }: { minDate: Date; m
     if (valueAsString.length === 2) {
       const [startDate, endDate] = valueAsString;
       timeSelector.selectDay([dayjs(startDate), dayjs(endDate)]);
-      uiState.isMenuVisible = 'visible';
+      uiState.tabVisibility = 'visible';
     }
   }
 

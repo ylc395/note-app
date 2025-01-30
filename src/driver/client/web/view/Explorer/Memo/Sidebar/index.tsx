@@ -6,12 +6,12 @@ import uiState from '../uiState';
 export default function Sidebar() {
   return (
     <div
-      onClick={action(() => (uiState.isMenuVisible = 'visible'))}
-      class="z-10 inset-0 lg:grow absolute lg:bg-transparent lg:static lg:mr-4"
+      onClick={action(() => (uiState.tabVisibility = 'visible'))}
+      class="z-10 inset-0 bg-transparent absolute lg:grow lg:static lg:mr-4"
       classList={{
-        hidden: uiState.isMenuVisible !== 'alwaysVisible',
-        'lg:hidden': uiState.isMenuVisible === 'invisible',
-        'lg:flex': uiState.isMenuVisible !== 'invisible',
+        hidden: uiState.tabVisibility !== 'alwaysVisible',
+        'lg:hidden': uiState.tabVisibility === 'invisible',
+        'lg:flex': uiState.tabVisibility !== 'invisible',
       }}
     >
       <div

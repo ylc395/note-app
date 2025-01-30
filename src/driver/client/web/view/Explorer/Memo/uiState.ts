@@ -1,7 +1,9 @@
 import { observable } from 'mobx';
 
 export default observable<{
-  isMenuVisible: 'alwaysVisible' | 'visible' | 'invisible';
+  tabVisibility: 'alwaysVisible' | 'visible' | 'invisible';
+  selectorVisibility: 'always' | 'visible';
 }>({
-  isMenuVisible: 'visible',
+  tabVisibility: 'visible',
+  selectorVisibility: 'visible',
 });

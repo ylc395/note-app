@@ -1,4 +1,4 @@
-import { RefreshCcwIcon, SearchIcon, XCircleIcon } from 'lucide-solid';
+import { RefreshCcwIcon, SearchIcon, XCircleIcon, ArrowLeftFromLine } from 'lucide-solid';
 import { createMemo, For, Show } from 'solid-js';
 import dayjs from 'dayjs';
 import { Tooltip } from '@ark-ui/solid';
@@ -8,6 +8,8 @@ import { container } from '#domain/shared/infra/singletons';
 import SortMenu from './SortMenu';
 import CollapseButton from './CollapseButton';
 import MemoService from '#domain/client/app/service/MemoService';
+import { action } from 'mobx';
+import uiState from '../../../uiState';
 
 export default function ListToolbar() {
   const { rootMemo, timeSelector, topicList } = container.resolve(MemoService);
@@ -60,6 +62,9 @@ export default function ListToolbar() {
           刷新
         </button>
         <SortMenu />
+        <button class="md:hidden" onclick={action(() => (uiState.selectorVisibility = 'always'))}>
+          <ArrowLeftFromLine />
+        </button>
       </div>
     </div>
   );
