@@ -6,12 +6,22 @@ import { createQuery } from 'mobx-tanstack-query/preset';
 
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import { container } from '#domain/shared/infra/singletons';
-import type { Duration } from '#domain/shared/model/memo';
+import type { Duration, MemoVO } from '#domain/shared/model/memo';
+import DomainEventBus from './EventBus';
 
 dayjs.extend(isBetween);
 dayjs.extend(isoWeek);
 
 export default class TimeSelector {
+  constructor() {
+    this.eventBus.on(
+      [DomainEventBus.eventNames.Created, DomainEventBus.eventNames.Removed],
+      this.handleMemoUpdate.bind(this),
+    );
+  }
+
+  private eventBus = container.resolve(DomainEventBus);
+
   private readonly remote = container.resolve(rpcToken);
 
   private readonly now = createQuery(() => dayjs().valueOf());
@@ -66,17 +76,9 @@ export default class TimeSelector {
     return day.isAfter(dayjs(this.now.result.data));
   }
 
-  public isRecent(time: number) {
+  private isRecent(time: number) {
     const { startTime, endTime } = this.recent;
     return dayjs(time).isBetween(startTime, endTime, undefined, '[]');
-  }
-
-  public isBetweenSelectedDuration(time: number) {
-    if (!this.selectedDuration) {
-      return true;
-    }
-
-    return dayjs(time).isBetween(this.selectedDuration.startTime, this.selectedDuration.endTime, undefined, '[]');
   }
 
   @computed
@@ -85,6 +87,15 @@ export default class TimeSelector {
       startTime: this.recent.startTime.valueOf(),
       endTime: this.recent.endTime.valueOf(),
     };
+  }
+
+  private handleMemoUpdate(memo: MemoVO) {
+    this.edgeTime.invalidate();
+    this.count.invalidate();
+
+    if (this.isRecent(memo.createdAt)) {
+      this.recentCounts.invalidate();
+    }
   }
 
   public destroy() {

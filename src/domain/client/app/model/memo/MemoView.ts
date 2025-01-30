@@ -159,22 +159,10 @@ export default class MemoView {
       onSubmit: async (value) => {
         const newMemo = await this.remote.memo.create.mutate({ parentId: this.value?.id, body: value });
         this.eventBus.emit(DomainEventBus.eventNames.Created, newMemo);
-
-        if (this.isParent || this.timeSelector?.isBetweenSelectedDuration(newMemo.createdAt)) {
-          this.childrenQuery?.invalidate();
-        }
-
-        if (this.timeSelector?.isRecent(newMemo.createdAt)) {
-          this.timeSelector.recentCounts.invalidate();
-        }
+        this.childrenQuery?.invalidate();
 
         if (this.value) {
           this.value.followupsCount += 1;
-        }
-
-        if (this.isRoot) {
-          this.timeSelector?.edgeTime.invalidate();
-          this.timeSelector?.count.invalidate();
         }
 
         return 'reset';
