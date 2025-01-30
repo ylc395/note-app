@@ -43,15 +43,6 @@ export default class TimeSelector {
     queryKey: ['memos', 'edgeTime'],
   });
 
-  public readonly count = createQuery(
-    ({ signal }) => this.remote.memo.queryCount.query(this.selectedDuration, { signal }),
-    {
-      options: () => ({
-        queryKey: ['memos', 'count', this.selectedDuration],
-      }),
-    },
-  );
-
   @computed
   public get recent() {
     const today = dayjs(this.now.result.data).endOf('day');
@@ -91,7 +82,6 @@ export default class TimeSelector {
 
   private handleMemoUpdate(memo: MemoVO) {
     this.edgeTime.invalidate();
-    this.count.invalidate();
 
     if (this.isRecent(memo.createdAt)) {
       this.recentCounts.invalidate();

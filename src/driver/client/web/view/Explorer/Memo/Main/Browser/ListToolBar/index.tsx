@@ -1,18 +1,16 @@
 import { RefreshCcwIcon, SearchIcon, XCircleIcon } from 'lucide-solid';
-import { createMemo, Show } from 'solid-js';
+import { createMemo, For, Show } from 'solid-js';
 import dayjs from 'dayjs';
 import { Tooltip } from '@ark-ui/solid';
 
 import { container } from '#domain/shared/infra/singletons';
-import TimeSelector from '#domain/client/app/model/memo/TimeSelector';
 
 import SortMenu from './SortMenu';
 import CollapseButton from './CollapseButton';
 import MemoService from '#domain/client/app/service/MemoService';
 
 export default function ListToolbar() {
-  const { rootMemo } = container.resolve(MemoService);
-  const timeSelector = container.resolve(TimeSelector);
+  const { rootMemo, timeSelector, topicList } = container.resolve(MemoService);
   const durationText = createMemo(() => {
     if (!timeSelector.selectedDuration) {
       return '';
@@ -30,21 +28,22 @@ export default function ListToolbar() {
 
   return (
     <div class="mt-4 flex justify-between text-gray-400">
-      <div class="flex text-sm">
+      <div class="flex text-sm items-center">
         <CollapseButton />
-        <Show when={typeof timeSelector.count.result.data === 'number'}>
+        <Show when={typeof rootMemo.countQuery!.result.data === 'number'}>
           <span class="flex items-center">
             <Tooltip.Root openDelay={200} positioning={{ placement: 'top' }}>
-              <Tooltip.Trigger>共计 {timeSelector.count.result.data!} 条</Tooltip.Trigger>
+              <Tooltip.Trigger>共计 {rootMemo.countQuery!.result.data!} 条</Tooltip.Trigger>
               <Tooltip.Positioner>
                 <Tooltip.Content>不包括 Follow-up</Tooltip.Content>
               </Tooltip.Positioner>
             </Tooltip.Root>
           </span>
         </Show>
+        <For each={topicList.selectedTopics}>{(topic) => <span>{topic}</span>}</For>
         <Show when={timeSelector.selectedDuration}>
           <span class="flex items-center ml-2">
-            - <time class="ml-2">{durationText()}</time> 期间
+            <time class="ml-2">{durationText()}</time> 期间
             <button class="ml-1" onclick={() => timeSelector.selectDay(null)}>
               <XCircleIcon />
             </button>

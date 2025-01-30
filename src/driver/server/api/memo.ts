@@ -6,6 +6,7 @@ import {
   memoDTOSchema,
   durationSchema,
   memoSchema,
+  countQuerySchema,
 } from '#domain/shared/infra/apiSchema/memo.js';
 import { entityIdSchema } from '#domain/shared/infra/apiSchema/entity.js';
 
@@ -33,8 +34,8 @@ export default router({
     .query(({ input: duration, ctx: { memoService } }) => memoService.queryAvailableDates(duration)),
 
   queryCount: publicProcedure
-    .input(durationSchema.optional())
-    .query(({ input: duration, ctx: { memoService } }) => memoService.queryCount(duration)),
+    .input(countQuerySchema.optional())
+    .query(({ input: CountQuery, ctx: { memoService } }) => memoService.queryCount(CountQuery)),
 
   queryEdgeTime: publicProcedure.query(({ ctx: { memoService } }) => memoService.queryEdgeTime()),
 

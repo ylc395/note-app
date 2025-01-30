@@ -1,5 +1,5 @@
 import { createInfiniteQuery, createQuery } from 'mobx-tanstack-query/preset';
-import { last } from 'lodash-es';
+import { last, pick } from 'lodash-es';
 import { action, computed, observable, toJS } from 'mobx';
 import assert from 'assert';
 
@@ -22,6 +22,16 @@ export default class MemoView {
 
     if (this.isRoot) {
       this.initNewEditor();
+
+      this.eventBus.on([DomainEventBus.eventNames.Created, DomainEventBus.eventNames.Removed], () =>
+        this.countQuery!.invalidate(),
+      );
+
+      this.countQuery = createQuery(({ signal }) => this.remote.memo.queryCount.query(this.countParams, { signal }), {
+        options: () => ({
+          queryKey: ['memos', 'count', this.countParams],
+        }),
+      });
     }
 
     if (this.isParent || this.isRoot) {
@@ -90,11 +100,18 @@ export default class MemoView {
     };
   }
 
+  @computed
+  private get countParams() {
+    return pick(this.params, ['startTime', 'endTime', 'tags']);
+  }
+
   private readonly eventBus = container.resolve(DomainEventBus);
 
   private readonly remote = container.resolve(rpcToken);
 
   public readonly childrenQuery;
+
+  public readonly countQuery;
 
   public readonly referrersQuery;
 

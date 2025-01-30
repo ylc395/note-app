@@ -3,7 +3,15 @@ import assert from 'node:assert';
 import dayjs from 'dayjs';
 
 import { arrayOf } from '#utils/collection.js';
-import type { Memo, MemoDTO, ClientMemoQuery, MemoVO, MemoPatchDTO, Duration } from '#domain/server/model/memo.js';
+import type {
+  Memo,
+  MemoDTO,
+  ClientMemoQuery,
+  MemoVO,
+  MemoPatchDTO,
+  Duration,
+  CountQuery,
+} from '#domain/server/model/memo.js';
 import { container } from '#domain/shared/infra/singletons.js';
 
 import BaseService from './BaseService.js';
@@ -154,8 +162,8 @@ export default class MemoService extends BaseService {
     }
   };
 
-  public async queryCount(duration?: Duration) {
-    return this.repo.memos.queryCount({ ...duration, parentId: null });
+  public async queryCount(query?: CountQuery) {
+    return this.repo.memos.queryCount({ ...query, parentId: null });
   }
 
   public async queryEdgeTime() {

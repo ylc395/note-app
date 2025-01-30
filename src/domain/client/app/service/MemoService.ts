@@ -13,6 +13,7 @@ export default class MemoService {
       () => this.topicList.topicQuery.invalidate(),
     );
   }
+
   public readonly timeSelector = new TimeSelector();
 
   public readonly topicList = new TopicList(EntityTypes.Memo);

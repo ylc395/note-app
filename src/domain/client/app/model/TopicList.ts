@@ -1,6 +1,6 @@
 import { createQuery } from 'mobx-tanstack-query/preset';
 import { action, computed, observable } from 'mobx';
-import { keyBy, pull } from 'lodash-es';
+import { keyBy, without } from 'lodash-es';
 
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import type { EntityTypes } from '#domain/shared/model/entity';
@@ -33,7 +33,8 @@ export default class TopicList {
   @action
   public toggle(topic: TopicNode, add?: boolean) {
     if (this.selectedTopics?.includes(topic.name)) {
-      pull(this.selectedTopics, topic.name);
+      const topics = without(this.selectedTopics, topic.name);
+      this.selectedTopics = topics.length > 0 ? topics : undefined;
     } else {
       this.selectedTopics = add ? [...(this.selectedTopics ?? []), topic.name] : [topic.name];
     }

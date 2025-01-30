@@ -52,3 +52,8 @@ export type ClientMemoQuery = {
  * @api
  */
 export type Duration = Pick<ClientMemoQuery, 'startTime' | 'endTime'>;
+
+/**
+ * @api
+ */
+export type CountQuery = Pick<ClientMemoQuery, 'startTime' | 'endTime' | 'tags'>;

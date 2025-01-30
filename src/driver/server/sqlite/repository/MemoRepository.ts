@@ -59,6 +59,29 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
   }
 
   public async findAll(q: MemoQuery) {
+    const rows = await this.getQueryListSql(q)
+      .select([
+        `${this.tableName}.id`,
+        `${this.tableName}.body`,
+        `${this.tableName}.isPinned`,
+        `${this.tableName}.parentId`,
+        `${this.tableName}.createdAt`,
+        `${this.tableName}.updatedAt`,
+      ])
+      .execute();
+
+    return rows.map(SqliteMemoRepository.rowToMemo);
+  }
+
+  public async queryCount(q?: CountQuery) {
+    const { count } = await this.getQueryListSql(q || {})
+      .select(({ fn }) => [fn.countAll<number>().as('count')])
+      .executeTakeFirstOrThrow();
+
+    return count;
+  }
+
+  private getQueryListSql(q: MemoQuery) {
     let sql = this.db
       .selectFrom(this.tableName)
       .select([
@@ -134,31 +157,6 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
       sql = sql.limit(q.limit);
     }
 
-    const rows = await sql.execute();
-
-    return rows.map(SqliteMemoRepository.rowToMemo);
-  }
-
-  public async queryCount(q?: CountQuery) {
-    let sql = this.db
-      .selectFrom(this.tableName)
-      .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.id`)
-      .where(`${recyclableTableName}.entityId`, 'is', null);
-
-    if (q?.startTime) {
-      sql = sql.where(`${this.tableName}.createdAt`, '>=', q.startTime);
-    }
-
-    if (q?.endTime) {
-      sql = sql.where(`${this.tableName}.createdAt`, '<=', q.endTime);
-    }
-
-    if (typeof q?.parentId !== 'undefined') {
-      sql = sql.where(`${this.tableName}.parentId`, q.parentId === null ? 'is' : '=', q.parentId);
-    }
-
-    const { count } = await sql.select(({ fn }) => [fn.countAll<number>().as('count')]).executeTakeFirstOrThrow();
-
-    return count;
+    return sql;
   }
 }

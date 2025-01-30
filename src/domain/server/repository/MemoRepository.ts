@@ -18,7 +18,7 @@ export interface MemoQuery {
   tags?: string[];
 }
 
-export type CountQuery = Pick<MemoQuery, 'startTime' | 'endTime' | 'parentId'>;
+export type CountQuery = Pick<MemoQuery, 'startTime' | 'endTime' | 'tags' | 'parentId'>;
 
 export interface MemoRepository {
   create: (memo: Memo) => Promise<Memo>;

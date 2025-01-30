@@ -42,3 +42,8 @@ export const durationSchema = clientMemoQuerySchema.pick({
   "startTime": true,
   "endTime": true
 });
+export const countQuerySchema = clientMemoQuerySchema.pick({
+  "startTime": true,
+  "endTime": true,
+  "tags": true
+});
