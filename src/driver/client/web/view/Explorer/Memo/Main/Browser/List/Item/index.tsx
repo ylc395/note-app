@@ -12,7 +12,7 @@ import Operation from './Operation';
 import ReferrerList from './ReferrerList';
 import RevisionModal from './RevisionModal';
 
-export default function Item(props: { memo: MemoVO; parent: MemoView }) {
+export default function Item(props: { memo: MemoVO; parent?: MemoView }) {
   const date = createMemo(() => dayjs(props.memo.createdAt));
   const memoView = new MemoView({ value: props.memo, parent: props.parent });
 

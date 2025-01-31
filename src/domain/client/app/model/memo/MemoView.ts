@@ -14,27 +14,43 @@ import type TimeSelector from './TimeSelector';
 import type TopicList from '../TopicList';
 
 export default class MemoView {
-  constructor(options: { value?: MemoVO; parent?: MemoView; timeSelector?: TimeSelector; topicList?: TopicList }) {
+  constructor(options: {
+    memoId?: MemoVO['id'];
+    value?: MemoVO;
+    parent?: MemoView;
+    timeSelector?: TimeSelector;
+    topicList?: TopicList;
+  }) {
     this.setValue(options.value);
     this.parent = options.parent;
     this.timeSelector = options.timeSelector;
     this.topicList = options.topicList;
 
+    if (options.memoId) {
+      this.valueQuery = createQuery(({ signal }) => this.remote.memo.queryOne.query(options.memoId!, { signal }), {
+        abortSignal: this.destroyController.signal,
+        queryKey: ['memo', options.memoId],
+      });
+    }
+
     if (this.isRoot) {
       this.initNewEditor();
 
-      this.eventBus.on([DomainEventBus.eventNames.Created, DomainEventBus.eventNames.Removed], () =>
-        this.countQuery!.invalidate(),
+      this.eventBus.on(
+        [DomainEventBus.eventNames.Created, DomainEventBus.eventNames.Removed],
+        () => this.countQuery!.invalidate(),
+        { signal: this.destroyController.signal },
       );
 
       this.countQuery = createQuery(({ signal }) => this.remote.memo.queryCount.query(this.countParams, { signal }), {
+        abortSignal: this.destroyController.signal,
         options: () => ({
           queryKey: ['memos', 'count', this.countParams],
         }),
       });
     }
 
-    if (this.isParent || this.isRoot) {
+    if (this.isParent || this.isRoot || this.valueQuery) {
       this.childrenQuery = createInfiniteQuery(
         ({ signal, pageParam: { endId, startId, ...params } }) =>
           this.remote.memo.queryList.query(
@@ -67,13 +83,17 @@ export default class MemoView {
       );
     }
 
-    if (this.value) {
+    if (this.value || this.valueQuery) {
       this.referrersQuery = createQuery(
         ({ signal }) => this.remote.memo.queryReferrers.query(this.value!.id, { signal }),
         {
-          queryKey: ['memos', 'referrers', this.value.id],
+          queryKey: ['memos', 'referrers', options.value?.id ?? options.memoId],
+          abortSignal: this.destroyController.signal,
           options: () => ({
-            enabled: this.visiblePanel === 'referrers' && this.value!.referrersCount > 0,
+            enabled:
+              this.visiblePanel === 'referrers' &&
+              ((this.value && this.value.referrersCount > 0) ||
+                (this.valueQuery?.result.data && this.valueQuery.result.data.referrersCount > 0)),
           }),
         },
       );
@@ -89,6 +109,8 @@ export default class MemoView {
   private readonly parent?: MemoView;
 
   @observable public accessor value: MemoVO | undefined;
+
+  public readonly valueQuery;
 
   @computed
   public get params() {
@@ -130,9 +152,9 @@ export default class MemoView {
     order: 'desc',
   };
 
-  private readonly timeSelector?: TimeSelector;
+  private readonly timeSelector?: TimeSelector; // root 才有
 
-  private readonly topicList?: TopicList;
+  private readonly topicList?: TopicList; // root 才有
 
   @action
   public setValue(memo?: MemoVO | ((oldValue: MemoVO | undefined) => MemoVO | undefined)) {
@@ -144,12 +166,17 @@ export default class MemoView {
     await this.childrenQuery?.fetchNextPage();
   }
 
+  @computed
   public get isParent() {
+    if (this.valueQuery) {
+      return Boolean(this.valueQuery.result.data && !this.valueQuery.result.data.parentId);
+    }
+
     return !this.isRoot && !this.value?.parentId;
   }
 
   public get isRoot() {
-    return !this.value;
+    return !this.value && !this.valueQuery;
   }
 
   @action
@@ -157,7 +184,7 @@ export default class MemoView {
     assert(this.isParent, 'can not expand a child memo');
     this.visiblePanel = this.visiblePanel === 'followup' ? undefined : 'followup';
 
-    if (this.visiblePanel) {
+    if (this.visiblePanel === 'followup') {
       this.initNewEditor();
     } else {
       this.newEditor?.destroy();

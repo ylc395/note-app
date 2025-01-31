@@ -19,7 +19,7 @@ export default function Sidebar() {
         z-10 inset-0 justify-end bg-transparent absolute ml-6 min-w-0 shrink-0
         md:static md:flex`}
     >
-      <div onclick={(e) => e.stopPropagation()} class="w-fit shadow-md bg-gray-50 p-4 md:shadow-none md:p-0">
+      <div onclick={(e) => e.stopPropagation()} class="shadow-md bg-gray-50 p-4 md:shadow-none md:p-0">
         <Calender />
         <Show when={timeSelector.edgeTime.result.data} keyed>
           <DatePicker
