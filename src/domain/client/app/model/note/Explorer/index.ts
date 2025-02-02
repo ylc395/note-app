@@ -2,14 +2,14 @@ import { action, computed, autorun } from 'mobx';
 import { z } from 'zod';
 
 import Tree from '#domain/client/shared/model/note/Tree';
-import TreeNode from '#domain/client/shared/model/note/TreeNode';
+// import TreeNode from '#domain/client/shared/model/note/TreeNode';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import { container } from '#domain/shared/infra/singletons';
 import type { NoteVO } from '#domain/shared/model/note';
 
 import SortBehavior from './SortBehavior';
 import UIState from '../../common/UIState';
-import DomainEventBus from '../EventBus';
+import DomainEventBus from '../../../../shared/model/note/EventBus';
 
 export default class Explorer {
   constructor() {
@@ -50,30 +50,35 @@ export default class Explorer {
 
   @computed
   public get canCollapse() {
-    return this.tree.expandedNodes.size > 1; // 1 指 root 节点
+    return this.tree.expandedNodeIds.size > 1; // 1 指 root 节点
   }
 
   @action.bound
   public collapseAll() {
-    for (const node of this.tree.expandedNodes) {
-      if (!node.isRoot) {
+    for (const nodeId of this.tree.expandedNodeIds) {
+      const node = this.tree.get(nodeId);
+
+      if (node && !node.isRoot) {
         node.isExpanded = false;
       }
     }
   }
 
   private updateUIState() {
-    const getId = ({ id }: TreeNode) => id;
-
-    this.uiState.update({
-      selected: Array.from(this.tree.selectedNodes).map(getId),
-      expanded: Array.from(this.tree.expandedNodes).map(getId),
-    });
+    // const getId = ({ id }: TreeNode) => id;
+    // this.uiState.update({
+    //   selected: Array.from(this.tree.selectedNodeIds).map(getId),
+    //   expanded: Array.from(this.tree.expandedNodeIds).map(getId),
+    // });
   }
 
   private async updateUnselectable(movingNotes: NoteVO[]) {
-    for (const node of this.tree.unselectableNodes) {
-      node.isUnselectable = false;
+    for (const nodeId of this.tree.unselectableNodeIds) {
+      const node = this.tree.get(nodeId);
+
+      if (node) {
+        node.isUnselectable = false;
+      }
     }
 
     const noteIds = movingNotes.map(({ id }) => id);

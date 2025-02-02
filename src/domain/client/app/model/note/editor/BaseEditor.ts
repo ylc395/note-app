@@ -1,8 +1,8 @@
-import { debounce, uniqueId } from 'lodash-es';
+import { uniqueId } from 'lodash-es';
 import { computed, reaction } from 'mobx';
-import type { infer as ZodInfer } from 'zod';
-import assert from 'assert';
-import { createMutation, createQuery, queryClient } from 'mobx-tanstack-query/preset';
+// import type { infer as ZodInfer } from 'zod';
+// import assert from 'assert';
+import { createQuery } from 'mobx-tanstack-query/preset';
 
 import { EntityTypes } from '#domain/client/shared/model/entity';
 import { notePatchDTOSchema } from '#domain/shared/infra/apiSchema/note';
@@ -10,7 +10,6 @@ import EventBus from '#domain/client/shared/infra/EventBus';
 import { container } from '#domain/shared/infra/singletons';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import type { NoteVO } from '#domain/shared/model/note';
-import { getChildrenNoteQueryKey } from '#domain/client/shared/model/note/queryKeys';
 
 import { EventNames, type Events } from './events';
 import Backup from './Backup';
@@ -82,31 +81,31 @@ export default class BaseEditor {
     return this.value.result.isLoading || this.blob.result.isLoading;
   }
 
-  public readonly update = debounce(
-    createMutation(
-      async (patch: ZodInfer<typeof BaseEditor.patchSchema>) => {
-        assert(!this.value.result.isLoading, 'can not update when loading');
-        return this.remote.note.updateOne.mutate([this.entityId, patch]);
-      },
-      {
-        abortSignal: this.destroyController.signal,
-        onSuccess: (_, patch) => {
-          assert(this.value.result.data);
+  // public readonly update = debounce(
+  //   createMutation(
+  //     async (patch: ZodInfer<typeof BaseEditor.patchSchema>) => {
+  //       assert(!this.value.result.isLoading, 'can not update when loading');
+  //       return this.remote.note.updateOne.mutate([this.entityId, patch]);
+  //     },
+  //     {
+  //       abortSignal: this.destroyController.signal,
+  //       onSuccess: (_, patch) => {
+  //         assert(this.value.result.data);
 
-          this.backup.clear();
-          queryClient.setQueryData<NoteVO>(this.valueQueryKey, (note) => note && { ...note, ...patch });
-          queryClient.invalidateQueries({ queryKey: getChildrenNoteQueryKey(this.value.result.data.parentId) });
-        },
-        onError: (_error, patch) => {
-          this.backup.write(patch);
-        },
-      },
-    ).mutate,
-    1000,
-  );
+  //         this.backup.clear();
+  //         queryClient.setQueryData<NoteVO>(this.valueQueryKey, (note) => note && { ...note, ...patch });
+  //         queryClient.invalidateQueries({ queryKey: getChildrenNoteQueryKey(this.value.result.data.parentId) });
+  //       },
+  //       onError: (_error, patch) => {
+  //         this.backup.write(patch);
+  //       },
+  //     },
+  //   ).mutate,
+  //   1000,
+  // );
 
   public destroy() {
-    this.update.flush();
+    // this.update.flush();
     this.events.clearListeners();
     this.destroyController.abort();
 
