@@ -1,37 +1,48 @@
-import { TriangleIcon } from 'lucide-solid';
-import { For, Show, createSignal } from 'solid-js';
+import { ChevronDownIcon, ChevronRightIcon } from 'lucide-solid';
+import { For, Show } from 'solid-js';
+import { TreeView } from '@ark-ui/solid';
 
 import type { TopicNode } from '#domain/client/app/model/TopicList';
 import { container } from '#domain/shared/infra/singletons';
 import MemoService from '#domain/client/app/service/MemoService';
 
-export default function Node({ node, level }: { node: TopicNode; level?: number }) {
-  const [isExpanded, setIsExpanded] = createSignal(false);
+export default function Node(props: { node: TopicNode; indexPath: number[] }) {
+  const paddingLeft = (props.indexPath.length - 1) * 20;
   const { topicList } = container.resolve(MemoService);
 
   return (
-    <div>
-      <div class="flex items-center" onclick={(e) => topicList.toggle(node, e.metaKey)}>
-        <Show when={node.children.length > 0}>
-          <button
-            onclick={(e) => {
-              e.stopPropagation();
-              setIsExpanded(!isExpanded());
-            }}
+    <TreeView.NodeProvider node={props.node} indexPath={props.indexPath}>
+      <Show
+        when={props.node.children.length > 0}
+        fallback={
+          <TreeView.Item
+            style={{ 'padding-left': `${paddingLeft}px` }}
+            classList={{ 'bg-gray-100': topicList.selectedTopics.includes(props.node.id) }}
           >
-            <TriangleIcon class="rotate-180 text-xs mr-1" />
-          </button>
-        </Show>
-        {node.name}
-        <Show when={node.entities.length > 0}>
-          <span class="number-suffix">{node.entities.length}</span>
-        </Show>
-      </div>
-      <Show when={node.children.length > 0 && isExpanded()}>
-        <div style={{ 'padding-left': `${(level ?? 1) * 5}px` }}>
-          <For each={node.children}>{(child) => <Node node={child} level={(level ?? 0) + 1} />}</For>
-        </div>
+            <TreeView.ItemText>{props.node.name}</TreeView.ItemText>
+          </TreeView.Item>
+        }
+      >
+        <TreeView.Branch style={{ 'padding-left': `${paddingLeft}px` }}>
+          <TreeView.BranchControl
+            class="flex cursor-default items-center -ml-5"
+            classList={{ 'bg-gray-100': topicList.selectedTopics.includes(props.node.id) }}
+          >
+            <TreeView.BranchTrigger class="hidden data-[state=closed]:block">
+              <ChevronRightIcon class="w-5" />
+            </TreeView.BranchTrigger>
+            <TreeView.BranchTrigger class="hidden data-[state=open]:block">
+              <ChevronDownIcon class="w-5" />
+            </TreeView.BranchTrigger>
+            <TreeView.BranchText>{props.node.name}</TreeView.BranchText>
+          </TreeView.BranchControl>
+          <TreeView.BranchContent class="flex data-[state=closed]:hidden">
+            <For each={props.node.children}>
+              {(child, index) => <Node node={child} indexPath={[...props.indexPath, index()]} />}
+            </For>
+          </TreeView.BranchContent>
+        </TreeView.Branch>
       </Show>
-    </div>
+    </TreeView.NodeProvider>
   );
 }

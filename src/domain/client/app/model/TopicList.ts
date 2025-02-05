@@ -1,6 +1,6 @@
 import { createQuery } from 'mobx-tanstack-query/preset';
 import { action, computed, observable } from 'mobx';
-import { keyBy, without } from 'lodash-es';
+import { keyBy } from 'lodash-es';
 
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import type { EntityTypes } from '#domain/shared/model/entity';
@@ -8,6 +8,7 @@ import { container } from '#domain/shared/infra/singletons';
 import { TOPIC_SEPARATOR, type TopicVO } from '#domain/shared/model/content';
 
 export interface TopicNode {
+  id: string;
   name: string;
   entities: TopicVO['entities'];
   children: TopicNode[];
@@ -28,15 +29,16 @@ export default class TopicList {
     this.topicQuery.destroy();
   }
 
-  @observable public accessor selectedTopics: string[] | undefined;
+  @observable public accessor selectedTopics: string[] = [];
 
   @action
-  public toggle(topic: TopicNode, add?: boolean) {
-    if (this.selectedTopics?.includes(topic.name)) {
-      const topics = without(this.selectedTopics, topic.name);
-      this.selectedTopics = topics.length > 0 ? topics : undefined;
-    } else {
-      this.selectedTopics = add ? [...(this.selectedTopics ?? []), topic.name] : [topic.name];
+  public setSelected(topicNames: string[]) {
+    const validNames = topicNames.filter((name) =>
+      this.topicQuery.result.data?.find((topic) => topic.name === name && topic.entities.length > 0),
+    );
+
+    if (validNames.length > 0) {
+      this.selectedTopics = validNames;
     }
   }
 
@@ -65,6 +67,7 @@ export default class TopicList {
         }
 
         node = nodesMap[path] = {
+          id: path,
           name,
           children: [],
           entities: topics[path]?.entities ?? [],
