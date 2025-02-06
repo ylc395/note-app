@@ -1,6 +1,5 @@
-import type { Extension, State, Tokenizer } from 'micromark-util-types';
+import type { Extension, State, Tokenizer, HtmlExtension } from 'micromark-util-types';
 import type { Extension as MdastExtension } from 'mdast-util-from-markdown';
-import type { Options } from 'mdast-util-to-markdown';
 import { codes } from 'micromark-util-symbol';
 import { markdownLineEnding, markdownSpace } from 'micromark-util-character';
 import type { Node } from 'mdast';
@@ -83,10 +82,13 @@ export const mdastExtension: MdastExtension = {
   },
 };
 
-export const stringifyExtension: Options = {
-  handlers: {
-    topic: (node: Topic) => {
-      return `#${node.value}#`;
+export const htmlExtension: HtmlExtension = {
+  enter: {
+    topic: function (token) {
+      const topic = this.sliceSerialize(token).slice(1, -1);
+      this.tag(`<span class="markdown-topic" data-markdown-topic="${topic}">`);
+      this.tag(topic);
+      this.tag('</span>');
     },
   },
 };
