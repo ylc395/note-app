@@ -27,13 +27,7 @@ export default function Weeks() {
           return (
             <div>
               <div class="flex flex-col space-y-1">
-                <For each={week}>
-                  {(day) => (
-                    <Show when={!timeSelector.isFuture(day)}>
-                      <Day day={day} />
-                    </Show>
-                  )}
-                </For>
+                <For each={week}>{(day) => <Day day={day} />}</For>
               </div>
               <Show when={typeof newMonth === 'number'}>
                 <span class="absolute text-sm text-gray-400">{newMonth! + 1}月</span>

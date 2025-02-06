@@ -49,7 +49,7 @@ export default function Day({ day }: { day: Dayjs }) {
 
   return (
     <Tooltip.Root openDelay={500} closeDelay={500}>
-      <Tooltip.Trigger>
+      <Tooltip.Trigger class={`${timeSelector.isFuture(day) ? 'invisible' : ''}`}>
         <div
           class={`h-5 w-5 rounded ${getColorClass(count() ?? 0)} 
             ${(count() ?? 0) > 0 ? 'cursor-pointer' : ''} ${isSelected() ? 'outline' : ''}`}
