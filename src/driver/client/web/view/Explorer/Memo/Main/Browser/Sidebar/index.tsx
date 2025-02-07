@@ -17,7 +17,7 @@ export default function Sidebar() {
       onclick={action(() => (uiState.selectorVisibility = 'visible'))}
       class={`${uiState.selectorVisibility === 'always' ? 'flex' : 'hidden'}
         z-10 inset-0 justify-end bg-transparent absolute ml-6 min-w-0 shrink-0
-        md:static md:flex`}
+        md:static md:z-0 md:flex`}
     >
       <div onclick={(e) => e.stopPropagation()} class="shadow-md bg-gray-50 p-4 md:shadow-none md:p-0">
         <Calender />
