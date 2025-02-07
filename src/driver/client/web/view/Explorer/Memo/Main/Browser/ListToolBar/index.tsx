@@ -2,13 +2,13 @@ import { RefreshCcwIcon, SearchIcon, XCircleIcon, ArrowLeftFromLine } from 'luci
 import { createMemo, For, Show } from 'solid-js';
 import dayjs from 'dayjs';
 import { Tooltip } from '@ark-ui/solid';
+import { action } from 'mobx';
 
 import { container } from '#domain/shared/infra/singletons';
+import MemoService from '#domain/client/app/service/MemoService';
 
 import SortMenu from './SortMenu';
 import CollapseButton from './CollapseButton';
-import MemoService from '#domain/client/app/service/MemoService';
-import { action } from 'mobx';
 import uiState from '../../../uiState';
 
 export default function ListToolbar() {
@@ -42,7 +42,16 @@ export default function ListToolbar() {
             </Tooltip.Root>
           </span>
         </Show>
-        <For each={topicList.selectedTopics}>{(topic) => <span>{topic}</span>}</For>
+        <For each={topicList.selectedTopics}>
+          {(topic) => (
+            <span class="flex items-center mr-2">
+              {topic}
+              <button class="ml-1" onClick={() => topicList.unselectTopic(topic)}>
+                <XCircleIcon />
+              </button>
+            </span>
+          )}
+        </For>
         <Show when={timeSelector.selectedDuration}>
           <span class="flex items-center ml-2">
             <time class="ml-2">{durationText()}</time> 期间

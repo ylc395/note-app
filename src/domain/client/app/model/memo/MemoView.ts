@@ -21,7 +21,10 @@ export default class MemoView {
     timeSelector?: TimeSelector;
     topicList?: TopicList;
   }) {
-    this.setValue(options.value);
+    if (options.value) {
+      this.setValue(options.value);
+    }
+
     this.parent = options.parent;
     this.timeSelector = options.timeSelector;
     this.topicList = options.topicList;
@@ -72,7 +75,7 @@ export default class MemoView {
           onDone: (data) => {
             const lastPage = last(data.pages);
             if (lastPage && lastPage.length < MemoView.PAGE_MAX_LENGTH && last(data.pageParams)?.isPinned) {
-              this.loadMore();
+              this.childrenQuery?.fetchNextPage();
             }
           },
           options: () => ({
@@ -157,13 +160,12 @@ export default class MemoView {
   private readonly topicList?: TopicList; // root 才有
 
   @action
-  public setValue(memo?: MemoVO | ((oldValue: MemoVO | undefined) => MemoVO | undefined)) {
-    const newValue = typeof memo === 'function' ? memo(this.value) : memo;
-    this.value = newValue;
-  }
+  public setValue(memo: MemoVO) {
+    if (this.value) {
+      assert(memo.id === this.value.id, 'can not setValue');
+    }
 
-  public async loadMore() {
-    await this.childrenQuery?.fetchNextPage();
+    this.value = memo;
   }
 
   @computed

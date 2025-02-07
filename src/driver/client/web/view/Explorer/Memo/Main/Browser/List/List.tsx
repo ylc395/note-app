@@ -14,8 +14,8 @@ export default function MemoList({ memoView }: { memoView: MemoView }) {
       return;
     }
 
-    if ((container.scrollTop + container.clientHeight) / container.scrollHeight > 0.25) {
-      memoView.loadMore();
+    if ((container.scrollTop + container.clientHeight) / container.scrollHeight > 0.75) {
+      memoView.childrenQuery.result.fetchNextPage();
     }
   }
 
@@ -45,7 +45,7 @@ export default function MemoList({ memoView }: { memoView: MemoView }) {
       ref={rootRef}
     >
       <div class="space-y-6 mx-auto w-full">
-        <Key each={memoView.childrenQuery?.result.data?.pages.flat() || []} by={(item) => item.id}>
+        <Key each={memoView.childrenQuery?.result.data?.pages.flat()} by="id">
           {(item) => <Item memo={item()} parent={memoView} />}
         </Key>
       </div>

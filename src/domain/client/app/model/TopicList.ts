@@ -1,6 +1,6 @@
 import { createQuery } from 'mobx-tanstack-query/preset';
 import { action, computed, observable } from 'mobx';
-import { keyBy } from 'lodash-es';
+import { keyBy, without } from 'lodash-es';
 
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import type { EntityTypes } from '#domain/shared/model/entity';
@@ -40,6 +40,11 @@ export default class TopicList {
     if (validNames.length > 0) {
       this.selectedTopics = validNames;
     }
+  }
+
+  @action
+  public unselectTopic(topic: string) {
+    this.selectedTopics = without(this.selectedTopics, topic);
   }
 
   @computed

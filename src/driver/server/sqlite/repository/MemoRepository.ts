@@ -59,17 +59,7 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
   }
 
   public async findAll(q: MemoQuery) {
-    const rows = await this.getQueryListSql(q)
-      .select([
-        `${this.tableName}.id`,
-        `${this.tableName}.body`,
-        `${this.tableName}.isPinned`,
-        `${this.tableName}.parentId`,
-        `${this.tableName}.createdAt`,
-        `${this.tableName}.updatedAt`,
-      ])
-      .execute();
-
+    const rows = await this.getQueryListSql(q).execute();
     return rows.map(SqliteMemoRepository.rowToMemo);
   }
 
@@ -91,7 +81,8 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
         `${this.tableName}.parentId`,
         `${this.tableName}.createdAt`,
         `${this.tableName}.updatedAt`,
-      ]);
+      ])
+      .distinct(); // 联 topic 表会导致查出同样的记录，需要去重
 
     if (typeof q.isAvailableOnly === 'boolean') {
       sql = sql
