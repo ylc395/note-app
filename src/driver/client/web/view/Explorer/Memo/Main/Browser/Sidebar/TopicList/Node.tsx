@@ -7,7 +7,6 @@ import { container } from '#domain/shared/infra/singletons';
 import MemoService from '#domain/client/app/service/MemoService';
 
 export default function Node(props: { node: TopicNode; indexPath: number[] }) {
-  const paddingLeft = (props.indexPath.length - 1) * 20;
   const { topicList } = container.resolve(MemoService);
 
   return (
@@ -16,25 +15,42 @@ export default function Node(props: { node: TopicNode; indexPath: number[] }) {
         when={props.node.children.length > 0}
         fallback={
           <TreeView.Item
-            style={{ 'padding-left': `${paddingLeft}px` }}
-            classList={{ 'bg-gray-100': topicList.selectedTopics.includes(props.node.id) }}
+            class="grow py-1 pl-5 rounded-md"
+            classList={{
+              'bg-gray-100': topicList.selectedTopics.includes(props.node.id),
+              'cursor-pointer': props.node.entities.length > 0,
+            }}
           >
-            <TreeView.ItemText>{props.node.name}</TreeView.ItemText>
+            <TreeView.ItemText class="flex justify-between px-2">
+              <span>{props.node.name}</span>
+              <Show when={props.node.entities.length > 0}>
+                <span class="number-suffix text-xs">{props.node.entities.length}</span>
+              </Show>
+            </TreeView.ItemText>
           </TreeView.Item>
         }
       >
-        <TreeView.Branch style={{ 'padding-left': `${paddingLeft}px` }}>
+        <TreeView.Branch class="grow pl-5 rounded-md">
           <TreeView.BranchControl
-            class="flex cursor-default items-center -ml-5"
-            classList={{ 'bg-gray-100': topicList.selectedTopics.includes(props.node.id) }}
+            class="relative flex items-center py-1"
+            classList={{
+              'bg-gray-100': topicList.selectedTopics.includes(props.node.id),
+              'cursor-pointer': props.node.entities.length > 0,
+              'cursor-default': props.node.entities.length === 0,
+            }}
           >
-            <TreeView.BranchTrigger class="hidden data-[state=closed]:block">
+            <TreeView.BranchTrigger class="hidden data-[state=closed]:block absolute -left-5">
               <ChevronRightIcon class="w-5" />
             </TreeView.BranchTrigger>
-            <TreeView.BranchTrigger class="hidden data-[state=open]:block">
+            <TreeView.BranchTrigger class="hidden data-[state=open]:block absolute -left-5">
               <ChevronDownIcon class="w-5" />
             </TreeView.BranchTrigger>
-            <TreeView.BranchText>{props.node.name}</TreeView.BranchText>
+            <TreeView.BranchText class="flex justify-between grow px-2">
+              <span>{props.node.name}</span>
+              <Show when={props.node.entities.length > 0}>
+                <span class="number-suffix text-xs">{props.node.entities.length}</span>
+              </Show>
+            </TreeView.BranchText>
           </TreeView.BranchControl>
           <TreeView.BranchContent class="flex data-[state=closed]:hidden">
             <For each={props.node.children}>
