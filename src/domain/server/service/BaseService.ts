@@ -5,12 +5,18 @@ import { token as databaseToken } from '#domain/server/infra/database.js';
 import { token as repositoriesToken } from '../repository/index.js';
 import { token as runtimeToken } from '../infra/runtime.js';
 import { token as kvToken } from '../infra/kvDatabase.js';
+import { token as searchEngineToken } from '../infra/searchEngine.js';
 
 export default abstract class BaseService {
   private readonly db = container.resolve(databaseToken);
+
   protected readonly kv = container.resolve(kvToken);
+
   protected readonly repo = container.resolve(repositoriesToken);
+
   protected readonly runtime = container.resolve(runtimeToken);
+
+  protected readonly searchEngine = container.resolve(searchEngineToken);
 
   protected get transaction() {
     return this.db.transaction.bind(this.db);

@@ -1,4 +1,3 @@
-import { token as searchEngineToken } from '#domain/server/infra/searchEngine.js';
 import { container } from '#domain/shared/infra/singletons.js';
 import type { SearchRequest, SearchResultVO } from '#domain/shared/model/search.js';
 
@@ -6,7 +5,6 @@ import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
 
 export default class SearchService extends BaseService {
-  private readonly searchEngine = container.resolve(searchEngineToken);
   private readonly entityService = container.resolve(EntityService);
 
   public async search(q: SearchRequest): Promise<SearchResultVO[]> {

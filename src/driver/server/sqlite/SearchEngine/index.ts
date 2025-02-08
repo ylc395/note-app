@@ -182,7 +182,9 @@ export default class SqliteSearchEngine implements SearchEngine {
 
   public async search(q: SearchRequest): Promise<SearchResult[]> {
     const types = q.entityTypes || [EntityTypes.Note, EntityTypes.Memo];
-    const descantIds = q.rootId ? await this.repo.entities.findDescendantIds(q.rootId) : [];
+    const descantIds = q.rootId ? await this.repo.entities.findDescendantIds(q.rootId) : undefined;
+    const fields = q.fields || [SearchFields.Body, SearchFields.Title, SearchFields.File];
+
     let results: SearchResult[] = [];
 
     if (types.includes(EntityTypes.Note)) {
@@ -196,7 +198,7 @@ export default class SqliteSearchEngine implements SearchEngine {
     const entityIds = results.map(({ entityId }) => entityId);
     let fileTextResult;
 
-    if (!q.fields || q.fields.includes(SearchFields.File)) {
+    if (fields.includes(SearchFields.File)) {
       fileTextResult = await this.searchFileText(q, descantIds);
 
       const fileEntityIds = fileTextResult.map(({ entityId, noteId }) => {

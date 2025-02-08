@@ -5,7 +5,7 @@ import { Tooltip } from '@ark-ui/solid/tooltip';
 
 import { container } from '#domain/shared/infra/singletons';
 import uiState from '../../../../uiState';
-import MemoService from '#domain/client/app/service/MemoService';
+import MemoList from '#domain/client/app/model/memo/List';
 
 function getColorClass(count: number) {
   if (count === 0) {
@@ -28,7 +28,9 @@ function getColorClass(count: number) {
 }
 
 export default function Day({ day }: { day: Dayjs }) {
-  const { timeSelector } = container.resolve(MemoService);
+  const {
+    filter: { timeSelector },
+  } = container.resolve(MemoList);
   const key = day.format('YYYY-MM-DD');
 
   const count = createMemo(() => timeSelector.recentCounts.result.data?.[key]);

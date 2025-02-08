@@ -2,6 +2,7 @@ import { onCleanup, Show, createEffect, createMemo } from 'solid-js';
 import dayjs from 'dayjs';
 import { PinIcon } from 'lucide-solid';
 
+import type MemoList from '#domain/client/app/model/memo/List';
 import MemoView from '#domain/client/app/model/memo/MemoView';
 import type { MemoVO } from '#domain/shared/model/memo';
 
@@ -12,7 +13,7 @@ import Operation from './Operation';
 import ReferrerList from './ReferrerList';
 import RevisionModal from './RevisionModal';
 
-export default function Item(props: { memo: MemoVO; parent?: MemoView }) {
+export default function Item(props: { memo: MemoVO; parent?: MemoView | MemoList }) {
   const date = createMemo(() => dayjs(props.memo.createdAt));
   const memoView = new MemoView({ value: props.memo, parent: props.parent });
 

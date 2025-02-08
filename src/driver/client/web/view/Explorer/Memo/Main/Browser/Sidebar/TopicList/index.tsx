@@ -1,13 +1,13 @@
 import { createMemo, For, Show } from 'solid-js';
 import { createTreeCollection, TreeView } from '@ark-ui/solid';
 
-import MemoService from '#domain/client/app/service/MemoService';
 import { container } from '#domain/shared/infra/singletons';
-import Node from './Node';
 import type { TopicNode } from '#domain/client/app/model/TopicList';
+import MemoList from '#domain/client/app/model/memo/List';
+import Node from './Node';
 
 export default function TopicListView() {
-  const { topicList } = container.resolve(MemoService);
+  const { topicList } = container.resolve(MemoList);
   const collection = createMemo(() =>
     topicList.tree
       ? createTreeCollection<TopicNode>({

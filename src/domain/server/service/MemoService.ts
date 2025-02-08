@@ -13,6 +13,8 @@ import type {
   CountQuery,
 } from '#domain/server/model/memo.js';
 import { container } from '#domain/shared/infra/singletons.js';
+import { EntityTypes } from '#domain/shared/model/entity.js';
+import { SearchFields } from '#domain/shared/model/search.js';
 
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
@@ -71,6 +73,11 @@ export default class MemoService extends BaseService {
     assert(!(query.startId && query.startTime), 'can not use both startId and startTime');
     assert(!(query.endId && query.endTime), 'can not use both endId and endTime');
 
+    assert(
+      !(query.keyword && (query.limit || typeof query.isPinned === 'boolean')),
+      'can not set limit / isPinned with keyword',
+    );
+
     let startTime = query.startTime;
     let endTime = query.endTime;
 
@@ -88,12 +95,28 @@ export default class MemoService extends BaseService {
       endTime = query.orderBy === 'updatedAt' ? endMemo.updatedAt : endMemo.createdAt;
     }
 
+    let ids: string[] | undefined;
+
+    if (query.keyword) {
+      const searchResult = await this.searchEngine.search({
+        entityTypes: [EntityTypes.Memo],
+        keyword: query.keyword,
+        fields: [SearchFields.Body],
+      });
+
+      ids = searchResult.map(({ entityId }) => entityId);
+    }
+
     const memos = await this.repo.memos.findAll({
       ...query,
+      id: ids,
       isAvailableOnly: true,
       startTime,
       endTime,
       parentId: query.parentId || null,
+      limit: query.limit ?? (query.keyword ? undefined : 30),
+      order: query.order ?? 'desc',
+      orderBy: query.orderBy ?? 'createdAt',
     });
 
     return await this.toVO(memos);

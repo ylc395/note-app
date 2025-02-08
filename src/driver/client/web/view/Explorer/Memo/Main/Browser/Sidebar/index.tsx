@@ -1,7 +1,7 @@
 import { Show } from 'solid-js';
 import { action } from 'mobx';
 
-import TimeSelector from '#domain/client/app/model/memo/TimeSelector';
+import TimeSelector from '#domain/client/app/model/memo/List/TimeSelector';
 import { container } from '#domain/shared/infra/singletons';
 
 import Calender from './Calender';

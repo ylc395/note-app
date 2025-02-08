@@ -36,9 +36,9 @@ export type MemoPatchDTO = Partial<Pick<MemoDTO, 'body' | 'isPinned'>>;
  * @api
  */
 export type ClientMemoQuery = {
-  limit: number;
-  orderBy: 'createdAt' | 'updatedAt';
-  order: 'asc' | 'desc';
+  limit?: number;
+  orderBy?: 'createdAt' | 'updatedAt';
+  order?: 'asc' | 'desc';
   parentId?: EntityParentId;
   isPinned?: boolean;
   startTime?: number;
@@ -46,6 +46,7 @@ export type ClientMemoQuery = {
   endId?: Memo['id'];
   startId?: Memo['id'];
   tags?: string[];
+  keyword?: string;
 };
 
 /**

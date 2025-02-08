@@ -7,7 +7,7 @@ import { createQuery } from 'mobx-tanstack-query/preset';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import { container } from '#domain/shared/infra/singletons';
 import type { Duration, MemoVO } from '#domain/shared/model/memo';
-import DomainEventBus from './EventBus';
+import DomainEventBus from '../EventBus';
 
 dayjs.extend(isBetween);
 dayjs.extend(isoWeek);

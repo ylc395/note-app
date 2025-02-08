@@ -2,10 +2,10 @@ import { Menu } from '@ark-ui/solid';
 import { SortDescIcon } from 'lucide-solid';
 
 import { container } from '#domain/shared/infra/singletons';
-import MemoService from '#domain/client/app/service/MemoService';
+import MemoList from '#domain/client/app/model/memo/List';
 
 export default function SortMenu() {
-  const { rootMemo } = container.resolve(MemoService);
+  const { filter } = container.resolve(MemoList);
 
   return (
     <Menu.Root>
@@ -16,10 +16,10 @@ export default function SortMenu() {
       <Menu.Positioner>
         <Menu.Content class="z-10 bg-white">
           <Menu.RadioItemGroup
-            value={`${rootMemo.sortOptions.orderBy}-${rootMemo.sortOptions.order}`}
+            value={`${filter.sortOptions.orderBy}-${filter.sortOptions.order}`}
             onValueChange={({ value }) => {
               const [orderBy, order] = value.split('-') as ['createdAt' | 'updatedAt', 'desc' | 'asc'];
-              rootMemo.setOrder({ order, orderBy });
+              filter.setOrder({ order, orderBy });
             }}
           >
             <Menu.RadioItem class="cursor-pointer" value="createdAt-desc">
