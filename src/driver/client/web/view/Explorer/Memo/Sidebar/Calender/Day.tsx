@@ -4,7 +4,7 @@ import { action } from 'mobx';
 import { Tooltip } from '@ark-ui/solid/tooltip';
 
 import { container } from '#domain/shared/infra/singletons';
-import uiState from '../../../../uiState';
+import uiState from '../../uiState';
 import MemoList from '#domain/client/app/model/memo/List';
 
 function getColorClass(count: number) {

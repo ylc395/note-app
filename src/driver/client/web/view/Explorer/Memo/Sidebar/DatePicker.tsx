@@ -7,7 +7,7 @@ import { action } from 'mobx';
 
 import { container } from '#domain/shared/infra/singletons';
 import TimeSelector from '#domain/client/app/model/memo/List/TimeSelector';
-import uiState from '../../../uiState';
+import uiState from '../uiState';
 
 export default function DateRangePicker({ maxDate, minDate }: { minDate: Date; maxDate: Date }) {
   const timeSelector = container.resolve(TimeSelector);

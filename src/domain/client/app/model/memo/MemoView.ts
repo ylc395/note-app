@@ -10,6 +10,7 @@ import Editor from './Editor';
 import RevisionList from '../RevisionList';
 import DomainEventBus from './EventBus';
 import type MemoList from './List';
+import { chunk } from 'lodash-es';
 
 export default class MemoView {
   constructor(options: { memoId?: MemoVO['id']; value?: MemoVO; parent?: MemoView | MemoList }) {
@@ -88,6 +89,11 @@ export default class MemoView {
   @observable.ref public accessor newEditor: Editor | undefined; // 用于创建新的子 memo 的 editor
 
   @observable public accessor visiblePanel: 'followup' | 'referrers' | undefined;
+
+  @computed
+  public get pages() {
+    return chunk(this.childrenQuery.result.data, 30);
+  }
 
   @action
   public setValue(memo: MemoVO) {
@@ -172,7 +178,6 @@ export default class MemoView {
     this.parent.childrenQuery.invalidate();
   }
 
-  @action
   public destroy() {
     this.selfEditor?.destroy();
     this.newEditor?.destroy();

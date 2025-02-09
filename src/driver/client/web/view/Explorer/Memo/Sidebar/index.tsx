@@ -1,28 +1,35 @@
+import { Show } from 'solid-js';
 import { action } from 'mobx';
 
-import Tabs from './Tabs';
+import TimeSelector from '#domain/client/app/model/memo/List/TimeSelector';
+import { container } from '#domain/shared/infra/singletons';
+
+import Calender from './Calender';
+import DatePicker from './DatePicker';
+import TopicList from './TopicList';
+import SearchBox from './SearchBox';
 import uiState from '../uiState';
 
 export default function Sidebar() {
+  const timeSelector = container.resolve(TimeSelector);
+
   return (
     <div
-      onClick={action(() => (uiState.tabVisibility = 'visible'))}
-      class="z-10 inset-0 bg-transparent absolute lg:grow lg:static lg:mr-4"
-      classList={{
-        hidden: uiState.tabVisibility !== 'alwaysVisible',
-        'lg:hidden': uiState.tabVisibility === 'invisible',
-        'lg:flex': uiState.tabVisibility !== 'invisible',
-      }}
+      onclick={action(() => (uiState.selectorVisibility = 'visible'))}
+      class={`${uiState.selectorVisibility === 'always' ? 'flex' : 'hidden'}
+        z-10 inset-0 justify-end bg-transparent absolute min-w-0 shrink-0 border-r pr-6 mr-4
+        md:static md:z-0 md:flex`}
     >
-      <div
-        onclick={(e) => e.stopPropagation()}
-        class="w-36 lg:w-full bg-gray-50 h-full border-r flex flex-col shadow-md px-4
-                lg:border-0 lg:shadow-none "
-      >
-        <div class="flex items-center mb-4 justify-between">
-          <h2 class="font-semibold text-lg">MEMOS</h2>
-        </div>
-        <Tabs />
+      <div onclick={(e) => e.stopPropagation()} class="shadow-md bg-gray-50 p-4 md:shadow-none md:p-0">
+        <SearchBox />
+        <Calender />
+        <Show when={timeSelector.edgeTime.result.data} keyed>
+          <DatePicker
+            minDate={new Date(timeSelector.edgeTime.result.data!.first)}
+            maxDate={new Date(timeSelector.edgeTime.result.data!.last)}
+          />
+        </Show>
+        <TopicList />
       </div>
     </div>
   );

@@ -103,7 +103,7 @@
     "micromark-util-types": "^2.0.1",
     "mobx": "^6.13.6",
     "mobx-react-lite": "^4.0.7",
-    "mobx-tanstack-query": "^3.3.13",
+    "mobx-tanstack-query": "^3.3.14",
     "page-lifecycle": "^0.1.2",
     "pdfjs-dist": "^4.10.38",
     "queue": "^7.0.0",

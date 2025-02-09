@@ -1,7 +1,7 @@
 import { ArrowRightFromLineIcon, ArrowLeftFromLineIcon } from 'lucide-solid';
 import { action } from 'mobx';
 
-import uiState from '../../../uiState';
+import uiState from '../../uiState';
 
 export default function () {
   return (

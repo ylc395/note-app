@@ -13,7 +13,7 @@ export default function SearchBox() {
   });
 
   return (
-    <div class="flex border mr-4 py-1 px-2">
+    <div class="flex border mr-4 py-1 px-2 mb-4">
       <input
         class="outline-none"
         onInput={(e) => (keyword = e.target.value)}

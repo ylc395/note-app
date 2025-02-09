@@ -5,7 +5,7 @@ import { action } from 'mobx';
 import MemoView from '#domain/client/app/model/memo/MemoView';
 
 import Item from './List/Item';
-import uiState from '../../uiState';
+import uiState from '../uiState';
 
 export default function FocusView() {
   const [getMemoView, setMemoView] = createSignal<MemoView>();

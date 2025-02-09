@@ -2,7 +2,7 @@ import { Tabs } from '@ark-ui/solid';
 import { action } from 'mobx';
 
 import Sidebar from './Sidebar';
-import Main from './Main/Browser';
+import Main from './Main';
 import uiState from './uiState';
 
 export default function MemoExplorer() {

@@ -158,8 +158,8 @@ importers:
         specifier: ^4.0.7
         version: 4.0.7(mobx@6.13.6)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       mobx-tanstack-query:
-        specifier: ^3.3.13
-        version: 3.3.13(@tanstack/query-core@5.66.0)(disposer-util@1.0.12)(mobx@6.13.6)
+        specifier: ^3.3.14
+        version: 3.3.14(@tanstack/query-core@5.66.0)(disposer-util@1.0.12)(mobx@6.13.6)
       page-lifecycle:
         specifier: ^0.1.2
         version: 0.1.2
@@ -2746,8 +2746,8 @@ packages:
     resolution: {integrity: sha512-XYfuKMvj4O35f/pOXLObndIRvyQ+/+6AhODh+OKWj9S9498pHHn/IMszH+gt0fBCRWMNfk1ZSp5x3AifmnI2vg==}
     engines: {node: '>=6'}
 
-  exponential-backoff@3.1.1:
-    resolution: {integrity: sha512-dX7e/LHVJ6W3DE1MHWi9S1EYzDESENfLrYohG2G++ovZrYOkm4Knwa0mc1cn84xJOR4KEU0WSchhLbd0UklbHw==}
+  exponential-backoff@3.1.2:
+    resolution: {integrity: sha512-8QxYTVXUkuy7fIIoitQkPwGonB8F3Zj8eEO8Sqg9Zv/bkI7RJAzowee4gr81Hak/dUTpA2Z7VfQgoijjPNlUZA==}
 
   ext-list@2.2.2:
     resolution: {integrity: sha512-u+SQgsubraE6zItfVA0tBuCBhfU9ogSRnsvygI7wht9TS510oLkBRXBsqopeUG/GBOIQyKZO9wjTqIu/sf5zFA==}
@@ -3804,8 +3804,8 @@ packages:
       react-native:
         optional: true
 
-  mobx-tanstack-query@3.3.13:
-    resolution: {integrity: sha512-0VQEZJoa98QGN+zCdhUKouT9IMKXtiI5cwHwojzO865dJfMYOT8rUZ6IfhEit9gTvdp9uMuCRivW59MNSxxI9w==}
+  mobx-tanstack-query@3.3.14:
+    resolution: {integrity: sha512-eC/D45vSJB8dKuNmpjKiG6z+sw+TnjzYk3HoOHJKba8IiS7cwipZ2Y8G/l8iqbU+XHhYPGcTe8lGYCCisNw87Q==}
     peerDependencies:
       '@tanstack/query-core': '>=5.0.0'
       disposer-util: ^1.0.9
@@ -6040,7 +6040,7 @@ snapshots:
   '@electron/node-gyp@https://codeload.github.com/electron/node-gyp/tar.gz/06b29aafb7708acef8b3669835c8a7857ebc92d2':
     dependencies:
       env-paths: 2.2.1
-      exponential-backoff: 3.1.1
+      exponential-backoff: 3.1.2
       glob: 8.1.0
       graceful-fs: 4.2.11
       make-fetch-happen: 10.2.1
@@ -8612,7 +8612,7 @@ snapshots:
 
   expand-template@2.0.3: {}
 
-  exponential-backoff@3.1.1: {}
+  exponential-backoff@3.1.2: {}
 
   ext-list@2.2.2:
     dependencies:
@@ -9898,7 +9898,7 @@ snapshots:
     optionalDependencies:
       react-dom: 18.2.0(react@18.2.0)
 
-  mobx-tanstack-query@3.3.13(@tanstack/query-core@5.66.0)(disposer-util@1.0.12)(mobx@6.13.6):
+  mobx-tanstack-query@3.3.14(@tanstack/query-core@5.66.0)(disposer-util@1.0.12)(mobx@6.13.6):
     dependencies:
       '@tanstack/query-core': 5.66.0
       disposer-util: 1.0.12

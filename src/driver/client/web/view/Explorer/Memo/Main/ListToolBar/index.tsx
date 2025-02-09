@@ -9,8 +9,7 @@ import MemoList from '#domain/client/app/model/memo/List';
 
 import SortMenu from './SortMenu';
 import CollapseButton from './CollapseButton';
-import SearchBox from './SearchBox';
-import uiState from '../../../uiState';
+import uiState from '../../uiState';
 
 export default function ListToolbar() {
   const memoList = container.resolve(MemoList);
@@ -48,6 +47,9 @@ export default function ListToolbar() {
             </Tooltip.Root>
           </span>
         </Show>
+        <Show when={memoList.filter.keyword}>
+          <span>关键词{memoList.filter.keyword}</span>
+        </Show>
         <For each={topicList.selectedTopics}>
           {(topic) => (
             <span class="flex items-center mr-2">
@@ -68,7 +70,6 @@ export default function ListToolbar() {
         </Show>
       </div>
       <div class="space-x-2 flex text-sm rounded">
-        <SearchBox />
         <button onclick={reload.bind(memoList)} class="flex items-center">
           <RefreshCcwIcon />
           刷新

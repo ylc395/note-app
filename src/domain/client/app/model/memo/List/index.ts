@@ -1,16 +1,16 @@
+import { computed } from 'mobx';
+import { first, last } from 'lodash-es';
+import assert from 'assert';
 import { createInfiniteQuery, createQuery } from 'mobx-tanstack-query/preset';
 
 import { container } from '#domain/shared/infra/singletons';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
+import { EntityTypes } from '#domain/shared/model/entity';
+import type { MemoVO } from '#domain/shared/model/memo';
 
 import DomainEventBus from '../EventBus';
 import Filter from './Filter';
 import TopicList from '../../TopicList';
-import { EntityTypes } from '#domain/shared/model/entity';
-import { computed } from 'mobx';
-import { first, last } from 'lodash-es';
-import type { MemoVO } from '#domain/shared/model/memo';
-import assert from 'assert';
 import Editor from '../Editor';
 
 export default class MemoList {
@@ -49,6 +49,16 @@ export default class MemoList {
             this.childrenQuery?.fetchNextPage();
           }
         },
+        select: (data) =>
+          this.isSearchMode
+            ? // 使用搜索功能时，“置顶”需要在前端进行
+              {
+                ...data,
+                pages: data.pages.map((page) =>
+                  page.toSorted((memo1, memo2) => Number(memo2.isPinned) - Number(memo1.isPinned)),
+                ),
+              }
+            : data,
         options: () => ({
           initialPageParam: this.getNextPageParams(),
           queryKey: ['memos', this.filter.params],
