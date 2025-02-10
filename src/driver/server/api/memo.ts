@@ -37,7 +37,7 @@ export default router({
     .input(countQuerySchema.optional())
     .query(({ input: CountQuery, ctx: { memoService } }) => memoService.queryCount(CountQuery)),
 
-  queryEdgeTime: publicProcedure.query(({ ctx: { memoService } }) => memoService.queryEdgeTime()),
+  queryAvailableDateRange: publicProcedure.query(({ ctx: { memoService } }) => memoService.queryAvailableDateRange()),
 
   queryReferrers: publicProcedure
     .input(entityIdSchema)

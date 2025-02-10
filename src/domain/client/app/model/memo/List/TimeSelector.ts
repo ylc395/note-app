@@ -1,4 +1,4 @@
-import { action, computed, observable } from 'mobx';
+import { action, observable } from 'mobx';
 import dayjs, { type Dayjs } from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
 import isoWeek from 'dayjs/plugin/isoWeek';
@@ -26,32 +26,32 @@ export default class TimeSelector {
 
   private readonly now = createQuery(() => dayjs().valueOf());
 
-  @observable.ref public accessor selectedDuration: Duration | undefined;
+  @observable.ref public accessor selectedDuration: Required<Duration> | undefined;
 
-  public readonly recentCounts = createQuery(
+  @observable.ref public accessor currentMonth = {
+    year: dayjs(this.now.result.data).year(),
+    month: dayjs(this.now.result.data).month(),
+  };
+
+  public readonly dateCounts = createQuery(
     ({ signal }) => {
-      return this.remote.memo.queryDates.query(this.timeParams, { signal });
+      const monthDate = new Date(this.currentMonth.year, this.currentMonth.month);
+
+      return this.remote.memo.queryDates.query(
+        { startTime: dayjs(monthDate).valueOf(), endTime: dayjs(monthDate).endOf('month').valueOf() },
+        { signal },
+      );
     },
     {
       options: () => ({
-        queryKey: ['memos', 'calendar', this.timeParams],
+        queryKey: ['memos', 'calendar', this.currentMonth],
       }),
     },
   );
 
-  public readonly edgeTime = createQuery(() => this.remote.memo.queryEdgeTime.query(), {
-    queryKey: ['memos', 'edgeTime'],
+  public readonly availableRange = createQuery(() => this.remote.memo.queryAvailableDateRange.query(), {
+    queryKey: ['memos', 'availableRange'],
   });
-
-  @computed
-  public get recent() {
-    const today = dayjs(this.now.result.data).endOf('day');
-
-    return {
-      startTime: dayjs().subtract(11, 'week').startOf('isoWeek'),
-      endTime: today,
-    };
-  }
 
   @action
   public selectDay(value: Dayjs | [Dayjs, Dayjs] | null) {
@@ -67,28 +67,13 @@ export default class TimeSelector {
     return day.isAfter(dayjs(this.now.result.data));
   }
 
-  private isRecent(time: number) {
-    const { startTime, endTime } = this.recent;
-    return dayjs(time).isBetween(startTime, endTime, undefined, '[]');
-  }
-
-  @computed
-  private get timeParams() {
-    return {
-      startTime: this.recent.startTime.valueOf(),
-      endTime: this.recent.endTime.valueOf(),
-    };
-  }
-
   private handleMemoUpdate(memo: MemoVO) {
-    this.edgeTime.invalidate();
+    this.availableRange.invalidate();
 
-    if (this.isRecent(memo.createdAt)) {
-      this.recentCounts.invalidate();
+    const date = dayjs(memo.createdAt);
+
+    if (date.year() === this.currentMonth.year && date.month() === this.currentMonth.month) {
+      this.dateCounts.invalidate();
     }
-  }
-
-  public destroy() {
-    this.now.destroy();
   }
 }

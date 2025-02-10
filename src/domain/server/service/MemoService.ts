@@ -194,7 +194,7 @@ export default class MemoService extends BaseService {
     return this.repo.memos.queryCount({ ...query, parentId: null });
   }
 
-  public async queryEdgeTime() {
+  public async queryAvailableDateRange() {
     const [firstOne, lastOne] = await Promise.all([
       this.repo.memos.findAll({
         limit: 1,
@@ -217,8 +217,8 @@ export default class MemoService extends BaseService {
     }
 
     return {
-      first: firstOne[0].createdAt,
-      last: lastOne[0].createdAt,
+      start: firstOne[0].createdAt,
+      end: lastOne[0].createdAt,
     };
   }
 

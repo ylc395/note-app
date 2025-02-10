@@ -13,9 +13,10 @@ export default function SearchBox() {
   });
 
   return (
-    <div class="flex border mr-4 py-1 px-2 mb-4">
+    <div class="flex border py-1 px-2 mb-4">
+      <SearchIcon />
       <input
-        class="outline-none"
+        class="outline-none grow"
         onInput={(e) => (keyword = e.target.value)}
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
@@ -23,7 +24,6 @@ export default function SearchBox() {
           }
         }}
       />
-      <SearchIcon />
     </div>
   );
 }

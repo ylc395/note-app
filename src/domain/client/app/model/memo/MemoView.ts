@@ -178,6 +178,7 @@ export default class MemoView {
     this.parent.childrenQuery.invalidate();
   }
 
+  @action
   public destroy() {
     this.selfEditor?.destroy();
     this.newEditor?.destroy();
