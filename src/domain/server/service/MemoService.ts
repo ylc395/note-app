@@ -70,29 +70,31 @@ export default class MemoService extends BaseService {
 
   @BaseService.transaction
   public async queryList(query: ClientMemoQuery) {
-    assert(!(query.startId && query.startTime), 'can not use both startId and startTime');
-    assert(!(query.endId && query.endTime), 'can not use both endId and endTime');
-
+    assert(
+      !((query.endId || query.startId) && query.durations && query.durations.length > 0),
+      'can not use both startId/endId and endTime',
+    ); // 用户不能这么传。但后端逻辑内部，可以同时使用这些属性
     assert(
       !(query.keyword && (query.limit || typeof query.isPinned === 'boolean')),
       'can not set limit / isPinned with keyword',
     );
 
-    let startTime = query.startTime;
-    let endTime = query.endTime;
+    let durations = query.durations;
 
     if (query.startId) {
       const startMemo = await this.repo.memos.findOneById(query.startId, { isAvailableOnly: true });
       assert(startMemo, 'invalid start id');
 
-      startTime = query.orderBy === 'updatedAt' ? startMemo.updatedAt : startMemo.createdAt;
+      durations = [{ startTime: query.orderBy === 'updatedAt' ? startMemo.updatedAt : startMemo.createdAt }];
     }
 
     if (query.endId) {
       const endMemo = await this.repo.memos.findOneById(query.endId, { isAvailableOnly: true });
       assert(endMemo, 'invalid end id');
 
-      endTime = query.orderBy === 'updatedAt' ? endMemo.updatedAt : endMemo.createdAt;
+      durations = [
+        { ...durations?.[0], endTime: query.orderBy === 'updatedAt' ? endMemo.updatedAt : endMemo.createdAt },
+      ];
     }
 
     let ids: string[] | undefined;
@@ -111,8 +113,7 @@ export default class MemoService extends BaseService {
       ...query,
       id: ids,
       isAvailableOnly: true,
-      startTime,
-      endTime,
+      durations,
       parentId: query.parentId || null,
       limit: query.limit ?? (query.keyword ? undefined : 30),
       order: query.order ?? 'desc',

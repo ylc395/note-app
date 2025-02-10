@@ -6,6 +6,7 @@ import schema, { type Row } from '../schema/memo.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
 import { tableName as topicTableName } from '../schema/topic.js';
 import BaseRepository from './BaseRepository.js';
+import { compact } from 'lodash-es';
 
 export default class SqliteMemoRepository extends BaseRepository implements MemoRepository {
   private readonly tableName = schema.tableName;
@@ -96,32 +97,41 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
         .where(`${topicTableName}.name`, 'in', q.tags);
     }
 
-    if (q.startTime) {
-      const { startTime } = q;
-      sql = sql.where(({ eb, and, or }) => {
-        if (!q.startId) {
-          return eb(`${this.tableName}.createdAt`, '>=', startTime);
-        }
+    if (q.durations && q.durations.length > 0) {
+      const { durations } = q;
+      sql = sql.where((eb) =>
+        eb.or(
+          durations.map(({ startTime, endTime }) => {
+            let start;
+            let end;
+            const field = q.orderBy ?? 'createdAt';
 
-        return or([
-          eb(`${this.tableName}.createdAt`, '>', startTime),
-          and([eb(`${this.tableName}.createdAt`, '=', startTime), eb('id', '>', q.startId)]),
-        ]);
-      });
-    }
+            if (startTime) {
+              if (!q.startId) {
+                start = eb(`${this.tableName}.${field}`, '>=', startTime);
+              } else {
+                start = eb.or([
+                  eb(`${this.tableName}.${field}`, '>', startTime),
+                  eb.and([eb(`${this.tableName}.${field}`, '=', startTime), eb('id', '>', q.startId)]),
+                ]);
+              }
+            }
 
-    if (q.endTime) {
-      const { endTime } = q;
-      sql = sql.where(({ eb, and, or }) => {
-        if (!q.endId) {
-          return eb(`${this.tableName}.createdAt`, '<=', endTime);
-        }
+            if (endTime) {
+              if (!q.endId) {
+                end = eb(`${this.tableName}.${field}`, '<=', endTime);
+              } else {
+                end = eb.or([
+                  eb(`${this.tableName}.${field}`, '<', endTime),
+                  eb.and([eb(`${this.tableName}.${field}`, '=', endTime), eb('id', '<', q.endId)]),
+                ]);
+              }
+            }
 
-        return or([
-          eb(`${this.tableName}.createdAt`, '<', endTime),
-          and([eb(`${this.tableName}.createdAt`, '=', endTime), eb('id', '<', q.endId)]),
-        ]);
-      });
+            return eb.and(compact([start, end]));
+          }),
+        ),
+      );
     }
 
     if (q.id) {

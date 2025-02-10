@@ -3,6 +3,7 @@ import dayjs, { type Dayjs } from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import { createQuery } from 'mobx-tanstack-query/preset';
+import { isEqual, maxBy, minBy } from 'lodash-es';
 
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import { container } from '#domain/shared/infra/singletons';
@@ -26,7 +27,7 @@ export default class TimeSelector {
 
   private readonly now = createQuery(() => dayjs().valueOf());
 
-  @observable.ref public accessor selectedDuration: Required<Duration> | undefined;
+  @observable.ref public accessor selectedDurations: Required<Duration>[] = [];
 
   @observable.ref public accessor currentMonth = {
     year: dayjs(this.now.result.data).year(),
@@ -54,13 +55,38 @@ export default class TimeSelector {
   });
 
   @action
-  public selectDay(value: Dayjs | [Dayjs, Dayjs] | null) {
-    this.selectedDuration = value
-      ? {
-          startTime: (Array.isArray(value) ? value[0] : value).startOf('day').valueOf(),
-          endTime: (Array.isArray(value) ? value[1] : value).endOf('day').valueOf(),
-        }
-      : undefined;
+  public selectDay(value: Dayjs | null, mode?: 'multiple' | 'range') {
+    if (!value) {
+      this.selectedDurations = [];
+      return;
+    }
+
+    if (mode === 'range' && this.selectedDurations.length > 0) {
+      const min = minBy(this.selectedDurations, ({ startTime }) => startTime)!.startTime;
+      const max = maxBy(this.selectedDurations, ({ endTime }) => endTime)!.endTime;
+
+      this.selectedDurations = [
+        {
+          startTime: dayjs(min > value.valueOf() ? value.valueOf() : min)
+            .startOf('day')
+            .valueOf(),
+          endTime: dayjs(max > value.valueOf() ? max : value.valueOf())
+            .endOf('day')
+            .valueOf(),
+        },
+      ];
+    } else {
+      const duration = {
+        startTime: value.startOf('day').valueOf(),
+        endTime: value.endOf('day').valueOf(),
+      };
+
+      if (this.selectedDurations.find((d) => isEqual(duration, d))) {
+        return;
+      }
+
+      this.selectedDurations = mode === 'multiple' ? [...this.selectedDurations, duration] : [duration];
+    }
   }
 
   public isFuture(day: Dayjs) {

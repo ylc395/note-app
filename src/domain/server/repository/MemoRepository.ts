@@ -1,4 +1,10 @@
-import type { MemoVO, Memo, MemoPatchDTO, ClientMemoQuery } from '#domain/server/model/memo.js';
+import type {
+  MemoVO,
+  Memo,
+  MemoPatchDTO,
+  ClientMemoQuery,
+  CountQuery as ClientCountQuery,
+} from '#domain/server/model/memo.js';
 import type { EntityParentId } from '#domain/shared/model/entity.js';
 
 export type MemoPatch = MemoPatchDTO & Partial<Pick<Memo, 'updatedAt'>>;
@@ -6,10 +12,11 @@ export type MemoPatch = MemoPatchDTO & Partial<Pick<Memo, 'updatedAt'>>;
 export interface MemoQuery extends ClientMemoQuery {
   id?: string | string[];
   isAvailableOnly?: boolean;
-  parentId?: EntityParentId;
 }
 
-export type CountQuery = Pick<MemoQuery, 'startTime' | 'endTime' | 'tags' | 'parentId'>;
+export interface CountQuery extends ClientCountQuery {
+  parentId?: EntityParentId;
+}
 
 export interface MemoRepository {
   create: (memo: Memo) => Promise<Memo>;

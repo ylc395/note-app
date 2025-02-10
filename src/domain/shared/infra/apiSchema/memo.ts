@@ -26,25 +26,23 @@ export const memoPatchDTOSchema = memoDTOSchema.pick({
   "body": true,
   "isPinned": true
 }).partial();
+export const durationSchema = z.object({
+  startTime: z.number().optional(),
+  endTime: z.number().optional()
+});
 export const clientMemoQuerySchema = z.object({
   limit: z.number().optional(),
   orderBy: z.union([z.literal("createdAt"), z.literal("updatedAt")]).optional(),
   order: z.union([z.literal("asc"), z.literal("desc")]).optional(),
   parentId: entityParentIdSchema.optional(),
   isPinned: z.boolean().optional(),
-  startTime: z.number().optional(),
-  endTime: z.number().optional(),
+  durations: z.array(durationSchema).optional(),
   endId: memoSchema.shape["id"].optional(),
   startId: memoSchema.shape["id"].optional(),
   tags: z.array(z.string()).optional(),
   keyword: z.string().optional()
 });
-export const durationSchema = clientMemoQuerySchema.pick({
-  "startTime": true,
-  "endTime": true
-});
 export const countQuerySchema = clientMemoQuerySchema.pick({
-  "startTime": true,
-  "endTime": true,
+  "durations": true,
   "tags": true
 });

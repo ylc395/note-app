@@ -2,6 +2,7 @@ import { RefreshCcwIcon, XCircleIcon } from 'lucide-solid';
 import { createMemo, For, Show } from 'solid-js';
 import dayjs from 'dayjs';
 import { Tooltip } from '@ark-ui/solid';
+import { action } from 'mobx';
 
 import { container } from '#domain/shared/infra/singletons';
 import MemoList from '#domain/client/app/model/memo/List';
@@ -16,18 +17,18 @@ export default function ListToolbar() {
   } = memoList;
 
   const durationText = createMemo(() => {
-    if (!timeSelector.selectedDuration) {
-      return '';
-    }
+    return timeSelector.selectedDurations
+      .map(({ startTime, endTime }) => {
+        const startText = dayjs(startTime).format('YYYY-MM-DD');
+        const endText = dayjs(endTime).format('YYYY-MM-DD');
 
-    const startText = dayjs(timeSelector.selectedDuration.startTime).format('YYYY-MM-DD');
-    const endText = dayjs(timeSelector.selectedDuration.endTime).format('YYYY-MM-DD');
+        if (startText === endText) {
+          return startText;
+        }
 
-    if (startText === endText) {
-      return startText;
-    }
-
-    return `${startText} ~ ${endText}`;
+        return `${startText} ~ ${endText}`;
+      })
+      .join(',');
   });
 
   return (
@@ -44,19 +45,15 @@ export default function ListToolbar() {
           </span>
         </Show>
         <Show when={memoList.filter.keyword}>
-          <span>关键词{memoList.filter.keyword}</span>
+          <span class="flex items-center">
+            关键词{memoList.filter.keyword}
+            <button class="ml-1" onClick={action(() => (memoList.filter.keyword = undefined))}>
+              <XCircleIcon />
+            </button>
+          </span>
         </Show>
-        <For each={topicList.selectedTopics}>
-          {(topic) => (
-            <span class="flex items-center mr-2">
-              {topic}
-              <button class="ml-1" onClick={() => topicList.unselectTopic(topic)}>
-                <XCircleIcon />
-              </button>
-            </span>
-          )}
-        </For>
-        <Show when={timeSelector.selectedDuration}>
+        <For each={topicList.selectedTopics}>{(topic) => <span class="flex items-center mr-2">{topic}</span>}</For>
+        <Show when={timeSelector.selectedDurations.length > 0}>
           <span class="flex items-center ml-2">
             <time class="ml-2">{durationText()}</time> 期间
             <button class="ml-1" onclick={() => timeSelector.selectDay(null)}>

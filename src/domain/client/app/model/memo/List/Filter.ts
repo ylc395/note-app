@@ -25,7 +25,7 @@ export default class Filter {
   public get params() {
     return {
       ...this.sortOptions,
-      ...this.timeSelector.selectedDuration,
+      durations: this.timeSelector.selectedDurations,
       keyword: this.keyword || undefined,
       tags: toJS(this.topicList.selectedTopics),
     };

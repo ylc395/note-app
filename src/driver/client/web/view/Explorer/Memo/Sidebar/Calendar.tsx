@@ -56,19 +56,8 @@ export default function Calendar() {
     },
   });
 
-  const selectDate = action((date: Date, isRange?: boolean) => {
-    const currentSelectedDate = timeSelector.selectedDuration;
-
-    if (isRange && currentSelectedDate) {
-      const _date = dayjs(date);
-      timeSelector.selectDay([
-        _date.isBefore(currentSelectedDate.startTime) ? _date : dayjs(currentSelectedDate.startTime),
-        _date.isAfter(currentSelectedDate.endTime) ? _date : dayjs(currentSelectedDate.endTime),
-      ]);
-    } else {
-      timeSelector.selectDay(dayjs(date));
-    }
-
+  const selectDate = action((date: Date, mode?: 'range' | 'multiple') => {
+    timeSelector.selectDay(dayjs(date), mode);
     uiState.tabVisibility = 'visible';
   });
 
@@ -108,7 +97,12 @@ export default function Calendar() {
                           class={`${getColorClass(timeSelector.dateCounts.result.data?.[key] ?? 0)} text-center 
                                   ${timeSelector.isFuture(date) ? 'text-gray-300' : ''}`}
                           value={day}
-                          onClick={(e) => selectDate(new Date(day.year, day.month - 1, day.day), e.shiftKey)}
+                          onClick={(e) =>
+                            selectDate(
+                              new Date(day.year, day.month - 1, day.day),
+                              e.shiftKey ? 'range' : e.metaKey ? 'multiple' : undefined,
+                            )
+                          }
                         >
                           {day.day}
                         </DatePicker.TableCell>
