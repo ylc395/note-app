@@ -27,6 +27,7 @@ export default class LinkExtractor extends Extractor {
       sourceId: this.entityId,
       sourceLocation: { start, end },
       target: appUrl ? appUrl.id : url,
+      targetDomain: appUrl ? null : URL.canParse(url) ? new URL(url).hostname : null,
       targetFragmentId: appUrl?.hash ?? null,
       targetType: appUrl
         ? appUrl.type === 'files'

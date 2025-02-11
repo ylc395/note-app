@@ -5,6 +5,7 @@ export interface Row {
   sourceLocation: string;
   target: string;
   targetType: number;
+  targetDomain: string | null;
   targetFragmentId: string | null;
 }
 
@@ -19,6 +20,7 @@ export default {
       .addColumn('sourceLocation', 'text', (col) => col.notNull())
       .addColumn('target', 'text', (col) => col.notNull())
       .addColumn('targetType', 'integer', (col) => col.notNull())
+      .addColumn('targetDomain', 'text')
       .addColumn('targetFragmentId', 'text');
   },
 } as const;

@@ -33,7 +33,7 @@ export default class Filter {
 
   @computed
   public get countParams() {
-    return pick(this.params, ['startTime', 'endTime', 'tags']);
+    return pick(this.params, ['durations', 'tags']);
   }
 
   @action

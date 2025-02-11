@@ -92,6 +92,7 @@ export default class SqliteContentRepository extends BaseRepository implements C
         `${linkTableName}.sourceLocation`,
         `${linkTableName}.target`,
         `${linkTableName}.targetType`,
+        `${linkTableName}.targetDomain`,
         `${linkTableName}.targetFragmentId`,
       ]);
 

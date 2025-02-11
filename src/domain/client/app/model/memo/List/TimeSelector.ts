@@ -55,12 +55,7 @@ export default class TimeSelector {
   });
 
   @action
-  public selectDay(value: Dayjs | null, mode?: 'multiple' | 'range') {
-    if (!value) {
-      this.selectedDurations = [];
-      return;
-    }
-
+  public selectDay(value: Dayjs, mode?: 'multiple' | 'range') {
     if (mode === 'range' && this.selectedDurations.length > 0) {
       const min = minBy(this.selectedDurations, ({ startTime }) => startTime)!.startTime;
       const max = maxBy(this.selectedDurations, ({ endTime }) => endTime)!.endTime;
@@ -87,6 +82,11 @@ export default class TimeSelector {
 
       this.selectedDurations = mode === 'multiple' ? [...this.selectedDurations, duration] : [duration];
     }
+  }
+
+  @action
+  public removeDate(index: number) {
+    this.selectedDurations = this.selectedDurations.toSpliced(index, 1);
   }
 
   public isFuture(day: Dayjs) {

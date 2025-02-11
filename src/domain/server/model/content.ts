@@ -20,5 +20,6 @@ export interface LinkRecord {
   sourceLocation: TextLocation;
   target: string; // entity id / file id / url
   targetType: LinkTargetType;
+  targetDomain: string | null; // 当且仅当 target 为 url 时有值
   targetFragmentId: string | null;
 }
