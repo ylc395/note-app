@@ -33,7 +33,5 @@ export default function Display(props: { memoView: MemoView }) {
     return doc.body.innerHTML;
   });
 
-  return (
-    <div class="select-text text-gray-800" ondblclick={() => props.memoView.startEditing()} innerHTML={markdown()} />
-  );
+  return <div class="select-text text-gray-800" innerHTML={markdown()} />;
 }

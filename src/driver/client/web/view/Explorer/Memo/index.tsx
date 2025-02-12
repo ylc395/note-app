@@ -6,7 +6,7 @@ import Main from './Main';
 import uiState from './uiState';
 
 export default function MemoExplorer() {
-  const tabClassName = 'data-[state=open]:flex min-w-0 w-full lg:w-4/5 ';
+  const tabClassName = 'data-[state=open]:flex min-w-0 w-full grow';
 
   return (
     <Tabs.Root

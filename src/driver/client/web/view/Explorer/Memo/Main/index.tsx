@@ -16,13 +16,13 @@ export default function MemoMain() {
   });
 
   return (
-    <div class="grow min-w-0">
-      <div class="flex flex-col max-w-screen-lg mx-auto h-full">
+    <>
+      <div class="flex flex-col max-w-screen-lg mx-auto h-full w-full">
         <Editor editor={memoList.newEditor} />
         <ListToolbar />
         <List />
       </div>
       <FocusView />
-    </div>
+    </>
   );
 }
