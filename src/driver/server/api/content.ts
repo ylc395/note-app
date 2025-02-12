@@ -5,7 +5,7 @@ import { publicProcedure, router } from './trpc.js';
 export default router({
   queryTopics: publicProcedure
     .input(topicQuerySchema.optional())
-    .query(({ ctx: { contentService } }) => contentService.queryAllTopics()),
+    .query(({ ctx: { contentService }, input }) => contentService.queryAllTopics(input)),
 
   queryLinksOf: publicProcedure
     .input(entityIdSchema)

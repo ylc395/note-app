@@ -28,6 +28,7 @@ export interface ExternalReference {
 
 export interface TopicVO {
   name: string;
+  level: 1 | 2; // 1 - 全局；2 - 模块
   entities: Array<{
     entity: Entity;
     sources: TextLocation[];

@@ -28,12 +28,19 @@ export default class SqliteContentRepository extends BaseRepository implements C
   public async findAllTopics(config?: TopicQuery) {
     let sql = this.db
       .selectFrom(topicTableName)
-      .select([`${topicTableName}.name`, `${topicTableName}.entityId`, `${topicTableName}.location`]);
+      .select([
+        `${topicTableName}.name`,
+        `${topicTableName}.entityId`,
+        `${topicTableName}.location`,
+        `${topicTableName}.level`,
+      ]);
 
     if (config?.entityType) {
       sql = sql
         .innerJoin(entityTableName, `${topicTableName}.entityId`, `${entityTableName}.id`)
         .where(`${entityTableName}.type`, '=', config.entityType);
+    } else {
+      sql = sql.where(`${topicTableName}.level`, '=', 1);
     }
 
     if (config?.isAvailableOnly) {

@@ -5,7 +5,6 @@ import { htmlExtension, tokenExtension } from '#domain/shared/infra/markdown/syn
 import type MemoView from '#domain/client/app/model/memo/MemoView';
 import MemoList from '#domain/client/app/model/memo/List';
 import { container } from '#domain/shared/infra/singletons';
-import './style.css';
 
 export default function Display(props: { memoView: MemoView }) {
   const { topicList } = container.resolve(MemoList);

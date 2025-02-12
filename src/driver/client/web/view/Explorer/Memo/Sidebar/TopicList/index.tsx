@@ -18,7 +18,7 @@ export default function TopicListView() {
   );
 
   return (
-    <div class="mt-4 text-gray-400">
+    <div class="mt-4 text-gray-400 flex flex-col min-h-0">
       <h3 class="font-semibold mb-2 text-sm">#话题一览</h3>
       <Show when={collection()}>
         {(tree) => (
@@ -28,6 +28,7 @@ export default function TopicListView() {
             collection={tree()}
             expandOnClick={false}
             selectionMode="multiple"
+            class="min-h-0 overflow-auto"
             selectedValue={topicList.selectedTopics}
             onSelectionChange={(e) => topicList.setSelected(e.selectedValue)}
           >

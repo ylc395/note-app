@@ -19,6 +19,7 @@ export default class TopicExtractor extends Extractor {
     assert(typeof start === 'number' && typeof end === 'number', 'invalid location');
 
     this.topics.push({
+      level: (node as TopicNode).level,
       name: (node as TopicNode).value,
       location: { start, end },
       entityId: this.entityId,

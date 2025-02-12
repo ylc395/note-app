@@ -1,7 +1,7 @@
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import type { Root } from 'mdast';
 import { EXIT, SKIP, visit } from 'unist-util-visit';
-import { compact, size, uniq } from 'lodash-es';
+import { compact, minBy, size, uniq } from 'lodash-es';
 import { is } from 'unist-util-is';
 import { toString } from 'mdast-util-to-string';
 import escapeStringRegexp from 'escape-string-regexp';
@@ -61,12 +61,14 @@ export default class ContentService extends BaseService {
 
     const topicVOs: TopicVO[] = Object.entries(allTopicsMap).map(([name, topicRecords]) => {
       const topicGroupedByEntity = Object.groupBy(topicRecords || [], ({ entityId }) => entityId);
+      const level = minBy(topicRecords, ({ level }) => level)?.level ?? 1;
+
       const sourceEntities: TopicVO['entities'] = Object.entries(topicGroupedByEntity).map(([entityId, records]) => ({
         entity: entities[entityId]!,
         sources: records!.map((record) => record.location),
       }));
 
-      return { entities: sourceEntities, name };
+      return { entities: sourceEntities, name, level };
     });
 
     return topicVOs;

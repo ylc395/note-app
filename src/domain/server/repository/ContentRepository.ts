@@ -9,7 +9,7 @@ export interface LinkQuery {
 }
 
 export interface TopicQuery {
-  entityType?: EntityTypes;
+  entityType?: EntityTypes; // 若不传该参数，仅查找 level 为全局的话题
   isAvailableOnly?: boolean;
 }
 
