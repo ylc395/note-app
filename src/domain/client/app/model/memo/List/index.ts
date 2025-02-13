@@ -1,4 +1,4 @@
-import { computed } from 'mobx';
+import { action, computed, reaction } from 'mobx';
 import { first, last } from 'lodash-es';
 import assert from 'assert';
 import { createInfiniteQuery, createQuery } from 'mobx-tanstack-query/preset';
@@ -12,6 +12,7 @@ import DomainEventBus from '../EventBus';
 import Filter from './Filter';
 import TopicList from '../../TopicList';
 import Editor from '../Editor';
+import type { MemoItem } from './item';
 
 export default class MemoList {
   constructor() {
@@ -27,7 +28,7 @@ export default class MemoList {
     );
 
     this.childrenQuery = createInfiniteQuery(
-      ({ signal, pageParam: { endId, startId, ...params } }) =>
+      ({ signal, pageParam: { endId, startId, ...params } }): Promise<MemoItem[]> =>
         this.remote.memo.queryList.query(
           {
             ...params,
@@ -48,21 +49,21 @@ export default class MemoList {
             this.childrenQuery?.fetchNextPage();
           }
         },
-        select: (data) =>
-          this.isSearchMode
-            ? // 使用搜索功能时，“置顶”需要在前端进行
-              {
-                ...data,
-                pages: data.pages.map((page) =>
-                  page.toSorted((memo1, memo2) => Number(memo2.isPinned) - Number(memo1.isPinned)),
-                ),
-              }
-            : data,
+        select: (data) => ({
+          ...data,
+          pages: this.handleFetchedData(data.pages),
+        }),
         options: () => ({
           initialPageParam: this.getNextPageParams(),
           queryKey: ['memos', this.filter.params],
         }),
       },
+    );
+
+    reaction(
+      () => this.filter.params,
+      () => this.justCreatedMemos.clear(),
+      { signal: this.destroyController.signal },
     );
 
     this.eventBus.on(
@@ -77,15 +78,78 @@ export default class MemoList {
     );
   }
 
-  public newEditor = new Editor({
+  public readonly newEditor = new Editor({
     onSubmit: async (value) => {
       const newMemo = await this.remote.memo.create.mutate({ body: value });
       this.eventBus.emit(DomainEventBus.eventNames.Created, newMemo);
-      this.childrenQuery?.invalidate();
+      this.childrenQuery?.invalidate().then(this.addNewItem.bind(this, newMemo));
 
       return 'reset';
     },
   });
+
+  private readonly justCreatedMemos = new Set<MemoVO['id']>();
+
+  private handleFetchedData(pages: MemoItem[][]) {
+    if (!this.isSearchMode && this.justCreatedMemos.size === 0) {
+      return pages;
+    }
+
+    return pages.map((page) => {
+      // 新创建的 memos 已经在特定的地方单独存在了（见 addNewItem 方法），这里不要再存在
+      if (this.justCreatedMemos.size > 0) {
+        page = page.filter(({ id }) => !this.justCreatedMemos.has(id));
+      }
+
+      // 对于关键字搜索模式，pinned 排序需要在前端进行
+      if (this.isSearchMode) {
+        return page.toSorted((memo1, memo2) => Number(memo2.isPinned) - Number(memo1.isPinned));
+      }
+
+      return page;
+    });
+  }
+
+  @action
+  private addNewItem(newItem: MemoVO) {
+    if (!this.childrenQuery.result.data) {
+      return;
+    }
+
+    this.childrenQuery.setData((data) => {
+      if (!data) {
+        return data;
+      }
+
+      let index: { page: number; item: number } | undefined;
+
+      // 理论上可以不用遍历列表的全部位置，只看 4 个位置（pinned 区的开头结尾、非 pinned 区的开头结尾）即可。但代码写起来太麻烦了
+      outer: for (let i = 0; i < data.pages.length; i++) {
+        const page = data.pages[i]!;
+        for (let j = 0; j < page.length; j++) {
+          const item = page[j]!;
+
+          if (item.id === newItem.id) {
+            index = { page: i, item: j };
+            break outer;
+          }
+        }
+      }
+
+      if (!index) {
+        const [firstPage = [], ...pages] = data.pages;
+        return { ...data, pages: [[{ ...newItem, justCreated: 'omit' }, ...firstPage], ...pages] };
+      }
+
+      return {
+        ...data,
+        pages: data.pages.with(
+          index.page,
+          data.pages[index.page]!.toSpliced(index.item, 1, { ...newItem, justCreated: 'keep' }),
+        ),
+      };
+    });
+  }
 
   @computed
   private get isSearchMode() {
