@@ -1,4 +1,4 @@
-import { DatePicker, parseDate, useDatePicker } from '@ark-ui/solid/date-picker';
+import { DatePicker, parseDate, useDatePicker, Tooltip } from '@ark-ui/solid';
 import { Index, For } from 'solid-js';
 import dayjs from 'dayjs';
 import { action } from 'mobx';
@@ -91,11 +91,12 @@ export default function Calendar() {
                     {(day) => {
                       const date = dayjs(new Date(day.year, day.month - 1, day.day));
                       const key = date.format('YYYY-MM-DD');
+                      const count = timeSelector.dateCounts.result.data?.[key] ?? 0;
 
                       return (
                         <DatePicker.TableCell
-                          class={`${getColorClass(timeSelector.dateCounts.result.data?.[key] ?? 0)} text-center 
-                                  ${timeSelector.isFuture(date) ? 'text-gray-300' : ''}`}
+                          class={`${getColorClass(count)} text-center 
+                            ${timeSelector.isFuture(date) ? 'text-gray-300' : ''}`}
                           value={day}
                           onClick={(e) =>
                             selectDate(
@@ -104,7 +105,14 @@ export default function Calendar() {
                             )
                           }
                         >
-                          {day.day}
+                          <Tooltip.Root disabled={count === 0}>
+                            <Tooltip.Trigger>{day.day}</Tooltip.Trigger>
+                            <Tooltip.Positioner>
+                              <Tooltip.Content>
+                                {`${day.year}-${day.month + 1}-${day.day}`} {count}条
+                              </Tooltip.Content>
+                            </Tooltip.Positioner>
+                          </Tooltip.Root>
                         </DatePicker.TableCell>
                       );
                     }}

@@ -48,7 +48,7 @@ export default function MemoListView() {
       </div>
       <Show
         when={!memoList.childrenQuery?.result.hasNextPage}
-        fallback={<Loader2Icon class="mx-auto my-6" size={30} />}
+        fallback={<Loader2Icon class="animate-spin mx-auto my-6" size={30} />}
       >
         <div class="text-center text-gray-400 my-6">没有更多了</div>
       </Show>

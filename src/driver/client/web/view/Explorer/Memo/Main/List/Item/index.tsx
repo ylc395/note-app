@@ -34,7 +34,7 @@ export default function Item(props: { memo: MemoItem; parent?: MemoView | MemoLi
     <div
       ref={divRef}
       class="shadow-md rounded-lg border p-4 relative bg-white before:con"
-      classList={{ 'animate__animated animate__slideInDown animate__fast': Boolean(props.memo.justCreated) }}
+      classList={{ 'animate-fade-down': Boolean(props.memo.justCreated) }}
     >
       <Show when={props.memo.justCreated === 'omit'}>
         <span class="absolute top-0 left-0">新</span>
