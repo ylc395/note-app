@@ -131,16 +131,6 @@ export default class SqliteEntityRepository extends BaseRepository implements En
   }
 
   public async findAll(params: EntityQuery) {
-    const fields = [
-      `${tableName}.id`,
-      `${tableName}.title`,
-      `${tableName}.type`,
-      `${tableName}.icon`,
-      `${tableName}.parentId`,
-      `${tableName}.createdAt`,
-      `${tableName}.updatedAt`,
-    ] as const;
-
     let sql = this.db.selectFrom(this.tableName);
 
     if (params.ids) {
@@ -157,14 +147,25 @@ export default class SqliteEntityRepository extends BaseRepository implements En
         .where(`${recyclableTableName}.entityId`, 'is', null);
     }
 
-    const rows = await sql.select(fields).execute();
+    const rows = await sql
+      .select((eb) => [
+        `${tableName}.id`,
+        eb
+          .case()
+          .when(`${tableName}.type`, '=', EntityTypes.Note)
+          .then('title')
+          .else(eb.fn<string>('substr', [`${tableName}.title`, eb.val(0), eb.val(30)]))
+          .end()
+          .as('title'),
+        `${tableName}.type`,
+        `${tableName}.icon`,
+        `${tableName}.parentId`,
+        `${tableName}.createdAt`,
+        `${tableName}.updatedAt`,
+      ])
+      .execute();
 
     return rows;
-  }
-
-  public async findOneById(id: EntityId) {
-    const fields = ['title', 'body'] as const;
-    return (await this.db.selectFrom(this.tableName).select(fields).where('id', '=', id).executeTakeFirst()) || null;
   }
 
   public async findAllContents(entities: EntityId[]) {

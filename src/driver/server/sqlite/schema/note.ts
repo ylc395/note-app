@@ -7,6 +7,7 @@ export interface Row {
   icon: string | null;
   title: string;
   body: string;
+  bodyPlainText: string;
   sourceUrl: string | null;
   parentId: string | null;
   fileId: string | null;
@@ -22,6 +23,7 @@ export default {
       .addColumn('id', 'text', (col) => col.primaryKey().notNull())
       .addColumn('title', 'text', (col) => col.notNull().defaultTo(''))
       .addColumn('body', 'text', (col) => col.notNull().defaultTo(''))
+      .addColumn('bodyPlainText', 'text', (col) => col.notNull().defaultTo(''))
       .addColumn('sourceUrl', 'text')
       .addColumn('fileId', 'text')
       .addColumn('icon', 'text')

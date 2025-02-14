@@ -1,11 +1,12 @@
-import type { Generated, Kysely } from 'kysely';
+import type { Kysely } from 'kysely';
 
 export const tableName = 'annotations';
 
 export interface Row {
   id: string;
   targetId: string;
-  body: Generated<string>;
+  body: string;
+  bodyPlainText: string;
   color: string;
   selectors: string;
   createdAt: number;
@@ -20,6 +21,7 @@ export default {
       .addColumn('id', 'text', (col) => col.primaryKey().notNull())
       .addColumn('targetId', 'text', (col) => col.notNull())
       .addColumn('body', 'text', (col) => col.notNull().defaultTo(''))
+      .addColumn('bodyPlainText', 'text', (col) => col.notNull().defaultTo(''))
       .addColumn('selectors', 'text', (col) => col.notNull())
       .addColumn('color', 'text', (col) => col.notNull())
       .addColumn('createdAt', 'integer', (col) => col.notNull())

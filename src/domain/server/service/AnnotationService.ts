@@ -29,6 +29,7 @@ export default class AnnotationService extends BaseService {
       id: EntityService.generateId(),
       targetId: annotation.targetId,
       body: annotation.body || '',
+      bodyPlainText: annotation.body ? ContentService.markdownToPlain(annotation.body) : '',
       selectors: annotation.selectors,
       color: annotation.color || 'yellow',
       createdAt: now,
@@ -59,9 +60,11 @@ export default class AnnotationService extends BaseService {
   @BaseService.transaction
   public async updateOne(id: Annotation['id'], patch: AnnotationPatchDTO) {
     const updatedAt = typeof patch.body === 'string' ? Date.now() : undefined;
+    const bodyPlainText = typeof patch.body === 'string' ? ContentService.markdownToPlain(patch.body) : undefined;
 
     const annotation = {
       ...patch,
+      bodyPlainText,
       updatedAt,
     };
     const updated = await this.repo.annotations.update(id, annotation);

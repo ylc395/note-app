@@ -3,8 +3,8 @@ import { action, computed, observable } from 'mobx';
 import { keyBy, without } from 'lodash-es';
 
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
-import type { EntityTypes } from '#domain/shared/model/entity';
 import { container } from '#domain/shared/infra/singletons';
+import type { EntityTypes } from '#domain/shared/model/entity';
 import { TOPIC_SEPARATOR, type TopicVO } from '#domain/shared/model/content';
 
 export interface TopicNode {

@@ -21,7 +21,7 @@ export default class TimeSelector {
     );
   }
 
-  private eventBus = container.resolve(DomainEventBus);
+  private readonly eventBus = container.resolve(DomainEventBus);
 
   private readonly remote = container.resolve(rpcToken);
 

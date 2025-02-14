@@ -6,6 +6,7 @@ export interface Note {
   title: string;
   parentId: EntityParentId;
   body?: string;
+  bodyPlainText?: string;
   icon: string | null;
   fileId: string | null;
   sourceUrl: string | null;
@@ -45,7 +46,7 @@ export interface ClientNoteQuery {
   fileHash?: string;
 }
 
-export interface NoteVO extends Omit<Note, 'body'> {
+export interface NoteVO extends Omit<Note, 'body' | 'bodyPlainText'> {
   body?: string;
   isStar: boolean;
   childrenCount: number;

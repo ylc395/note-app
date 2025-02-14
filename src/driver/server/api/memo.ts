@@ -42,4 +42,6 @@ export default router({
   queryReferrers: publicProcedure
     .input(entityIdSchema)
     .query(({ input: memoId, ctx: { memoService } }) => memoService.queryReferrers(memoId)),
+
+  queryLinkSet: publicProcedure.query(({ ctx: { memoService } }) => memoService.queryLinkSet()),
 });

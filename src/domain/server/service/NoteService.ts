@@ -37,6 +37,7 @@ export default class NoteService extends BaseService {
         title: note.title || '',
         parentId: note.parentId || null,
         body: note.body || '',
+        bodyPlainText: note.body ? ContentService.markdownToPlain(note.body) : '',
         icon: note.icon || null,
         fileId: note.fileId || null,
         sourceUrl: note.sourceUrl || null,
@@ -59,7 +60,7 @@ export default class NoteService extends BaseService {
     const now = Date.now();
 
     return await this.repo.notes.create({
-      ...pick(targetNote, ['body', 'icon', 'parentId', 'sourceUrl', 'fileId']),
+      ...pick(targetNote, ['body', 'bodyPlainText', 'icon', 'parentId', 'sourceUrl', 'fileId']),
       title: `${normalizeTitle(targetNote)}-副本`,
       id: EntityService.generateId(),
       updatedAt: now,
@@ -79,6 +80,7 @@ export default class NoteService extends BaseService {
 
     await this.repo.notes.update(noteId, {
       ...notePatch,
+      bodyPlainText: typeof notePatch.body === 'string' ? ContentService.markdownToPlain(notePatch.body) : undefined,
       updatedAt: hasContentUpdated ? Date.now() : undefined,
     });
 
@@ -95,7 +97,7 @@ export default class NoteService extends BaseService {
     const stars = isNew ? {} : buildIndex(await this.repo.stars.findAll({ entityIds: ids }), 'entityId');
     const children = isNew ? {} : await this.repo.entities.findChildrenIds(ids, { isAvailableOnly: true });
 
-    const result: NoteVO[] = _notes.map((note) => ({
+    const result: NoteVO[] = _notes.map(({ bodyPlainText: _, ...note }) => ({
       ...note,
       childrenCount: children[note.id]?.length || 0,
       isStar: Boolean(stars[note.id]),

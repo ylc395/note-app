@@ -7,7 +7,7 @@ export interface NoteQuery {
   isAvailableOnly?: boolean;
 }
 
-export type NotePatch = NotePatchDTO & Partial<Pick<Note, 'updatedAt'>>;
+export type NotePatch = NotePatchDTO & Partial<Pick<Note, 'updatedAt' | 'bodyPlainText'>>;
 
 export interface NoteRepository {
   create: (note: Required<Note>) => Promise<Required<Note>>;

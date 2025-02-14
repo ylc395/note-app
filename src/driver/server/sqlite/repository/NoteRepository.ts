@@ -14,7 +14,18 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
     const row = await this.db
       .insertInto(this.tableName)
       .values(note)
-      .returning(['id', 'icon', 'title', 'createdAt', 'updatedAt', 'parentId', 'body', 'fileId', 'sourceUrl'])
+      .returning([
+        'id',
+        'icon',
+        'title',
+        'createdAt',
+        'updatedAt',
+        'parentId',
+        'body',
+        'bodyPlainText',
+        'fileId',
+        'sourceUrl',
+      ])
       .executeTakeFirstOrThrow();
 
     return row;

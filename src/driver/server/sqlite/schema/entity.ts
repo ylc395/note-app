@@ -41,7 +41,7 @@ export default {
             .select([
               'id',
               sql.val(null).as('icon'),
-              sql.val('').as('title'),
+              'bodyPlainText as title',
               'parentId',
               'body',
               sql.val(EntityTypes.Memo).as('type'),
@@ -55,7 +55,7 @@ export default {
             .select([
               'id',
               sql.val(null).as('icon'),
-              sql.val('').as('title'),
+              'bodyPlainText as title',
               'targetId as parentId',
               'body',
               sql.val(EntityTypes.Annotation).as('type'),

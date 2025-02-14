@@ -14,6 +14,7 @@ export interface Annotation {
   targetId: Note['id'];
   selectors: Selector[];
   body: string;
+  bodyPlainText?: string;
   color: string;
   createdAt: number;
   updatedAt: number;

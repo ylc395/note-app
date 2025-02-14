@@ -53,7 +53,11 @@ export default class ContentService extends BaseService {
   }
 
   public async queryAllTopics(params?: TopicQuery) {
-    const topicRecords = await this.repo.contents.findAllTopics({ isAvailableOnly: true, entityType: params?.type });
+    const topicRecords = await this.repo.contents.findAllTopics({
+      isAvailableOnly: true,
+      entityType: params?.type,
+      level: params?.level,
+    });
     const allTopicsMap = Object.groupBy(topicRecords, ({ name }) => name);
 
     const entityIds = uniq(topicRecords.map(({ entityId }) => entityId));
@@ -81,7 +85,7 @@ export default class ContentService extends BaseService {
       isAvailableOnly: true,
       entityId,
       direction: params?.direction,
-      types: [LinkTargetType.Entity, LinkTargetType.External],
+      targetTypes: [LinkTargetType.Entity, LinkTargetType.External],
     });
 
     const entityLinks = links.filter(({ targetType }) => targetType === LinkTargetType.Entity);
@@ -301,5 +305,9 @@ export default class ContentService extends BaseService {
 
   private static hashLocation({ start, end }: TextLocation) {
     return `${start},${end}`;
+  }
+
+  public static markdownToPlain(md: string) {
+    return toString(this.parseMarkdown(md));
   }
 }

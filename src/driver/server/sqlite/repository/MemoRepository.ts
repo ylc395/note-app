@@ -1,4 +1,6 @@
 import type { Selectable } from 'kysely';
+import { compact } from 'lodash-es';
+
 import type { MemoPatchDTO, Memo } from '#domain/server/model/memo.js';
 import type { MemoRepository, MemoQuery, CountQuery } from '#domain/server/repository/memoRepository.js';
 
@@ -6,12 +8,11 @@ import schema, { type Row } from '../schema/memo.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
 import { tableName as topicTableName } from '../schema/topic.js';
 import BaseRepository from './BaseRepository.js';
-import { compact } from 'lodash-es';
 
 export default class SqliteMemoRepository extends BaseRepository implements MemoRepository {
   private readonly tableName = schema.tableName;
 
-  public async create(memo: Memo) {
+  public async create(memo: Required<Memo>) {
     await this.db
       .insertInto(this.tableName)
       .values({ ...memo, isPinned: memo.isPinned ? 1 : 0 })
@@ -55,7 +56,7 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
     return SqliteMemoRepository.rowToMemo(row);
   }
 
-  private static rowToMemo(row: Selectable<Row>): Memo {
+  private static rowToMemo(row: Omit<Selectable<Row>, 'bodyPlainText'>): Memo {
     return { ...row, isPinned: Boolean(row.isPinned) };
   }
 

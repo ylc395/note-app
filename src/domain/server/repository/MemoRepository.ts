@@ -7,7 +7,7 @@ import type {
 } from '#domain/server/model/memo.js';
 import type { EntityParentId } from '#domain/shared/model/entity.js';
 
-export type MemoPatch = MemoPatchDTO & Partial<Pick<Memo, 'updatedAt'>>;
+export type MemoPatch = MemoPatchDTO & Partial<Pick<Memo, 'updatedAt' | 'bodyPlainText'>>;
 
 export interface MemoQuery extends ClientMemoQuery {
   id?: string | string[];
@@ -19,7 +19,7 @@ export interface CountQuery extends ClientCountQuery {
 }
 
 export interface MemoRepository {
-  create: (memo: Memo) => Promise<Memo>;
+  create: (memo: Required<Memo>) => Promise<Memo>;
   update: (id: MemoVO['id'], patch: MemoPatch) => Promise<Memo | null>;
   findOneById: (id: MemoVO['id'], config?: { isAvailableOnly?: boolean }) => Promise<Memo | null>;
   findAll: (q: MemoQuery) => Promise<Memo[]>;

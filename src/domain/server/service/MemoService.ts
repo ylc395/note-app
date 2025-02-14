@@ -1,16 +1,19 @@
-import { groupBy, keyBy, mapValues, size } from 'lodash-es';
+import { groupBy, keyBy, mapValues, size, uniqBy } from 'lodash-es';
 import assert from 'node:assert';
 import dayjs from 'dayjs';
 
 import { arrayOf } from '#utils/collection.js';
-import type {
-  Memo,
-  MemoDTO,
-  ClientMemoQuery,
-  MemoVO,
-  MemoPatchDTO,
-  Duration,
-  CountQuery,
+import {
+  type Memo,
+  type MemoDTO,
+  type ClientMemoQuery,
+  type MemoVO,
+  type MemoPatchDTO,
+  type Duration,
+  type CountQuery,
+  getFileType,
+  type FileTypes,
+  type LinkSet,
 } from '#domain/server/model/memo.js';
 import { container } from '#domain/shared/infra/singletons.js';
 import { EntityTypes } from '#domain/shared/model/entity.js';
@@ -19,7 +22,7 @@ import { SearchFields } from '#domain/shared/model/search.js';
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
 import ContentService from './ContentService/index.js';
-import type { LinkVO } from '../model/content.js';
+import { LinkTargetType, type LinkVO } from '../model/content.js';
 import RevisionService from './RevisionService.js';
 
 export default class MemoService extends BaseService {
@@ -42,6 +45,7 @@ export default class MemoService extends BaseService {
       parentId: memo.parentId || null,
       isPinned: memo.isPinned || false,
       body: memo.body,
+      bodyPlainText: ContentService.markdownToPlain(memo.body),
     });
 
     if (memo.body) {
@@ -55,10 +59,14 @@ export default class MemoService extends BaseService {
   @BaseService.transaction
   public async updateOne(id: MemoVO['id'], patch: MemoPatchDTO) {
     await this.assertAvailableId(id, { isPinned: typeof patch.isPinned === 'boolean' ? !patch.isPinned : undefined });
-    const updatedAt = typeof patch.body === 'string' ? Date.now() : undefined;
+    const bodyUpdated = typeof patch.body === 'string';
+
+    const updatedAt = bodyUpdated ? Date.now() : undefined;
+    const bodyPlainText = bodyUpdated ? ContentService.markdownToPlain(patch.body!) : undefined;
 
     await this.repo.memos.update(id, {
       ...patch,
+      bodyPlainText,
       updatedAt,
     });
 
@@ -228,5 +236,72 @@ export default class MemoService extends BaseService {
     const links = await this.content.queryLinksOf(id, { direction: 'end' });
 
     return links as LinkVO[];
+  }
+
+  public async queryLinkSet() {
+    const links = uniqBy(
+      await this.repo.contents.findAllLinks({ isAvailableOnly: true, startEntityType: EntityTypes.Memo }),
+      ({ sourceId, target }) => `${sourceId}-${target}`,
+    );
+
+    const fileIds: string[] = [];
+    const entityIds: string[] = [];
+
+    for (const { target, targetType } of links) {
+      if (targetType === LinkTargetType.Entity) {
+        entityIds.push(target);
+      }
+
+      if (targetType === LinkTargetType.File) {
+        fileIds.push(target);
+      }
+    }
+
+    const files = keyBy(await this.repo.files.findAll({ ids: fileIds }), ({ id }) => id);
+    const entities = keyBy(await this.repo.entities.findAll({ isAvailableOnly: true, ids: entityIds }), ({ id }) => id);
+
+    const domainCount: Record<string, number> = {};
+    const domainMemoIds = new Set<string>();
+
+    const entityCount: Record<string, number> = {};
+    const entityMemoIds = new Set<string>();
+
+    const fileCount: Partial<Record<FileTypes, number>> = {};
+    const fileMemoIds = new Set<string>();
+
+    for (const link of links) {
+      if (link.targetType === LinkTargetType.External && link.targetDomain) {
+        domainCount[link.targetDomain] = (domainCount[link.targetDomain] ?? 0) + 1;
+        domainMemoIds.add(link.sourceId);
+      }
+
+      if (link.targetType === LinkTargetType.Entity && entities[link.target]) {
+        entityCount[entities[link.target]!.id] = (entityCount[entities[link.target]!.id] ?? 0) + 1;
+        entityMemoIds.add(link.sourceId);
+      }
+
+      if (link.targetType === LinkTargetType.File && files[link.target]) {
+        const fileType = getFileType(files[link.target]!.mimeType);
+        fileCount[fileType] = (fileCount[fileType] ?? 0) + 1;
+        fileMemoIds.add(link.sourceId);
+      }
+    }
+
+    const result: LinkSet = {
+      domains: {
+        total: domainMemoIds.size,
+        records: Object.entries(domainCount).map(([domain, count]) => ({ domain, count })),
+      },
+      files: {
+        total: fileMemoIds.size,
+        records: Object.entries(fileCount).map(([type, count]) => ({ type: Number(type) as FileTypes, count })),
+      },
+      entities: {
+        total: entityMemoIds.size,
+        records: Array.from(Object.entries(entityCount)).map(([id, count]) => ({ entity: entities[id]!, count })),
+      },
+    };
+
+    return result;
   }
 }

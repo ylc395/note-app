@@ -1,10 +1,11 @@
+import type { LinkTargetType } from '#domain/server/model/content';
 import type { Kysely } from 'kysely';
 
 export interface Row {
   sourceId: string;
   sourceLocation: string;
   target: string;
-  targetType: number;
+  targetType: LinkTargetType;
   targetDomain: string | null;
   targetFragmentId: string | null;
 }

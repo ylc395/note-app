@@ -3,6 +3,7 @@ import { action } from 'mobx';
 import Calender from './Calendar';
 import TopicList from './TopicList';
 import SearchBox from './SearchBox';
+import LinkFilter from './LinkFilter';
 import uiState from '../uiState';
 
 export default function Sidebar() {
@@ -16,6 +17,7 @@ export default function Sidebar() {
       <div onclick={(e) => e.stopPropagation()} class="shadow-md bg-gray-50 p-4 md:shadow-none md:p-0 flex flex-col">
         <SearchBox />
         <Calender />
+        <LinkFilter />
         <TopicList />
       </div>
     </div>

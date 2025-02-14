@@ -39,8 +39,10 @@ export default class SqliteContentRepository extends BaseRepository implements C
       sql = sql
         .innerJoin(entityTableName, `${topicTableName}.entityId`, `${entityTableName}.id`)
         .where(`${entityTableName}.type`, '=', config.entityType);
-    } else {
-      sql = sql.where(`${topicTableName}.level`, '=', 1);
+    }
+
+    if (config?.level) {
+      sql = sql.where(`${topicTableName}.level`, '=', config.level);
     }
 
     if (config?.isAvailableOnly) {
@@ -75,25 +77,10 @@ export default class SqliteContentRepository extends BaseRepository implements C
       .execute();
   }
 
-  public async findAllLinks({ entityId, types, isAvailableOnly, direction }: LinkQuery) {
+  public async findAllLinks({ entityId, targetTypes, isAvailableOnly, direction, startEntityType }: LinkQuery) {
     let sql = this.db
       .selectFrom(linkTableName)
-      .where(({ eb, or, and }) => {
-        const idStatements = or(
-          compact([
-            direction !== 'start' && eb(`${linkTableName}.target`, Array.isArray(entityId) ? 'in' : '=', entityId),
-            direction !== 'end' && eb(`${linkTableName}.sourceId`, Array.isArray(entityId) ? 'in' : '=', entityId),
-          ]),
-        );
 
-        const typeStatements = types && eb(`${linkTableName}.targetType`, 'in', types);
-
-        if (typeStatements) {
-          return and([typeStatements, idStatements]);
-        }
-
-        return idStatements;
-      })
       .select([
         `${linkTableName}.sourceId`,
         `${linkTableName}.sourceLocation`,
@@ -102,6 +89,29 @@ export default class SqliteContentRepository extends BaseRepository implements C
         `${linkTableName}.targetDomain`,
         `${linkTableName}.targetFragmentId`,
       ]);
+
+    if (targetTypes) {
+      sql = sql.where(`${linkTableName}.targetType`, 'in', targetTypes);
+    }
+
+    if (entityId) {
+      sql = sql.where(({ eb, or }) => {
+        const idStatements = or(
+          compact([
+            direction !== 'start' && eb(`${linkTableName}.target`, Array.isArray(entityId) ? 'in' : '=', entityId),
+            direction !== 'end' && eb(`${linkTableName}.sourceId`, Array.isArray(entityId) ? 'in' : '=', entityId),
+          ]),
+        );
+
+        return idStatements;
+      });
+    }
+
+    if (startEntityType) {
+      sql = sql
+        .innerJoin(entityTableName, `${entityTableName}.id`, `${linkTableName}.sourceId`)
+        .where(`${entityTableName}.type`, '=', startEntityType);
+    }
 
     if (isAvailableOnly) {
       sql = sql

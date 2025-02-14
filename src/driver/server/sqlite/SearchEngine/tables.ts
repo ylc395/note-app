@@ -10,7 +10,6 @@ export const WRAPPER_START_TEXT = '__%START%__';
 export const WRAPPER_END_TEXT = '__%END%__';
 
 export const notesFTSTableName = 'notes_fts';
-export const materialsFTSTableName = 'materials_fts';
 export const memosFTSTableName = 'memos_fts';
 export const annotationsFTSTableName = 'annotations_fts';
 export const fileTextsFTSTableName = 'file_texts_fts';
@@ -75,7 +74,7 @@ export const initialSqls =  [
 
   sql`CREATE TRIGGER notes_ai AFTER INSERT ON ${sql.table(noteTableName)}
       BEGIN 
-        INSERT INTO ${sql.table(notesFTSTableName)}(rowid, title, body) VALUES (new.rowid, new.title, new.body);
+        INSERT INTO ${sql.table(notesFTSTableName)}(rowid, title, body) VALUES (new.rowid, new.title, new.body_plain_text);
       END`,
 
   sql`CREATE TRIGGER notes_ad AFTER DELETE on ${sql.table(noteTableName)}
@@ -86,13 +85,13 @@ export const initialSqls =  [
   sql`CREATE TRIGGER notes_au AFTER UPDATE on ${sql.table(noteTableName)}
       BEGIN
         INSERT INTO ${sql.table(notesFTSTableName)}(${sql.raw(notesFTSTableName)}, rowid, title, body) VALUES ('delete', old.rowid, old.title, old.body);
-        INSERT INTO ${sql.table(notesFTSTableName)}(rowid, title, body) VALUES (new.rowid, new.title, new.body);
+        INSERT INTO ${sql.table(notesFTSTableName)}(rowid, title, body) VALUES (new.rowid, new.title, new.body_plain_text);
       END`,
 
 
   sql`CREATE TRIGGER memos_ai AFTER INSERT ON ${sql.table(memoTableName)}
       BEGIN 
-        INSERT INTO ${sql.table(memosFTSTableName)}(rowid, body) VALUES (new.rowid, new.body);
+        INSERT INTO ${sql.table(memosFTSTableName)}(rowid, body) VALUES (new.rowid, new.body_plain_text);
       END`,
 
   sql`CREATE TRIGGER memos_ad AFTER DELETE on ${sql.table(memoTableName)}
@@ -102,13 +101,13 @@ export const initialSqls =  [
 
   sql`CREATE TRIGGER memos_au AFTER UPDATE on ${sql.table(memoTableName)}
       BEGIN
-        INSERT INTO ${sql.table(memosFTSTableName)}(${sql.raw(memosFTSTableName)}, rowid, body) VALUES ('delete', old.rowid, new.body);
-        INSERT INTO ${sql.table(memosFTSTableName)}(rowid, body) VALUES (new.rowid, new.body);
+        INSERT INTO ${sql.table(memosFTSTableName)}(${sql.raw(memosFTSTableName)}, rowid, body) VALUES ('delete', old.rowid, new.body_plain_text);
+        INSERT INTO ${sql.table(memosFTSTableName)}(rowid, body) VALUES (new.rowid, new.body_plain_text);
       END`,
 
   sql`CREATE TRIGGER annotations_ai AFTER INSERT ON ${sql.table(annotationTableName)}
       BEGIN 
-        INSERT INTO ${sql.table(annotationsFTSTableName)}(rowid, body) VALUES (new.rowid, new.body);
+        INSERT INTO ${sql.table(annotationsFTSTableName)}(rowid, body) VALUES (new.rowid, new.body_plain_text);
       END`,
 
   sql`CREATE TRIGGER annotations_ad AFTER DELETE on ${sql.table(annotationTableName)}
@@ -118,8 +117,8 @@ export const initialSqls =  [
 
   sql`CREATE TRIGGER annotations_au AFTER UPDATE on ${sql.table(annotationTableName)}
       BEGIN
-        INSERT INTO ${sql.table(annotationsFTSTableName)}(${sql.raw(annotationsFTSTableName)}, rowid, body) VALUES ('delete', old.rowid, new.body);
-        INSERT INTO ${sql.table(annotationsFTSTableName)}(rowid, body) VALUES (new.rowid, new.body);
+        INSERT INTO ${sql.table(annotationsFTSTableName)}(${sql.raw(annotationsFTSTableName)}, rowid, body) VALUES ('delete', old.rowid, new.body_plain_text);
+        INSERT INTO ${sql.table(annotationsFTSTableName)}(rowid, body) VALUES (new.rowid, new.body_plain_text);
       END`,
 
   sql`CREATE TRIGGER file_texts_ai AFTER INSERT ON ${sql.table(fileTextTableName)}

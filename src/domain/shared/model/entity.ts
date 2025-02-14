@@ -13,7 +13,7 @@ export type EntityParentId = EntityId | null;
 interface StandaloneEntity {
   id: EntityId;
   type: EntityTypes;
-  title: string;
+  title: string; // 对于 memo / annotation，取其内容的前 30 个字符
   body?: string;
   icon: string | null;
   file?: FileVO;

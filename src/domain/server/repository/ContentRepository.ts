@@ -2,14 +2,16 @@ import type { LinkRecord, LinkTargetType, TopicRecord } from '#domain/server/mod
 import type { EntityId, EntityTypes } from '#domain/shared/model/entity.js';
 
 export interface LinkQuery {
-  entityId: EntityId | EntityId[];
+  entityId?: EntityId | EntityId[];
   isAvailableOnly?: boolean;
-  types?: LinkTargetType[];
+  targetTypes?: LinkTargetType[];
+  startEntityType?: EntityTypes;
   direction?: 'start' | 'end';
 }
 
 export interface TopicQuery {
-  entityType?: EntityTypes; // 若不传该参数，仅查找 level 为全局的话题
+  entityType?: EntityTypes;
+  level?: TopicRecord['level'];
   isAvailableOnly?: boolean;
 }
 

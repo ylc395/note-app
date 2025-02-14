@@ -36,7 +36,7 @@ export default class SqliteAnnotationRepository extends BaseRepository implement
     return keyBy(rows, (row) => row.annotationId);
   }
 
-  public async create(annotation: Annotation) {
+  public async create(annotation: Required<Annotation>) {
     const created = await this.db
       .insertInto(this.tableName)
       .values({
@@ -128,7 +128,7 @@ export default class SqliteAnnotationRepository extends BaseRepository implement
     return row ? SqliteAnnotationRepository.rowToVO(row) : null;
   }
 
-  private static rowToVO(row: Selectable<Row>): Annotation {
+  private static rowToVO(row: Omit<Selectable<Row>, 'bodyPlainText'>): Annotation {
     return {
       ...row,
       selectors: JSON.parse(row.selectors),

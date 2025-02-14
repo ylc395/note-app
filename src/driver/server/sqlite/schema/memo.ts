@@ -4,7 +4,8 @@ export const tableName = 'memos';
 
 export interface Row {
   id: string;
-  body: Generated<string>;
+  body: string;
+  bodyPlainText: string;
   parentId: string | null;
   isPinned: Generated<0 | 1>;
   createdAt: number;
@@ -17,7 +18,8 @@ export default {
     return db.schema
       .createTable(tableName)
       .addColumn('id', 'text', (col) => col.primaryKey().notNull())
-      .addColumn('body', 'text', (col) => col.notNull().defaultTo(''))
+      .addColumn('body', 'text', (col) => col.notNull())
+      .addColumn('bodyPlainText', 'text', (col) => col.notNull())
       .addColumn('parentId', 'text')
       .addColumn('isPinned', 'integer', (col) => col.notNull().defaultTo(0))
       .addColumn('createdAt', 'integer', (col) => col.notNull())

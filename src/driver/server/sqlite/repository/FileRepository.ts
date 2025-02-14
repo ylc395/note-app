@@ -1,4 +1,4 @@
-import type { FileRepository, FilePatch } from '#domain/server/repository/fileRepository.js';
+import type { FileRepository, FilePatch, Query } from '#domain/server/repository/fileRepository.js';
 import type { File, FileTextRecord } from '#domain/server/model/file.js';
 
 import BaseRepository from './BaseRepository.js';
@@ -100,5 +100,19 @@ export default class SqliteFileRepository extends BaseRepository implements File
       .executeTakeFirst();
 
     return Boolean(row.numUpdatedRows);
+  }
+
+  public async findAll(q: Query) {
+    if (q.ids.length === 0) {
+      return [];
+    }
+
+    const rows = await this.db
+      .selectFrom(fileTableName)
+      .select(['id', 'lang', 'mimeType', 'size'])
+      .where('id', 'in', q.ids)
+      .execute();
+
+    return rows.map(SqliteFileRepository.rowToFileVO);
   }
 }
