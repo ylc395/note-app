@@ -1,11 +1,12 @@
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import type { Root } from 'mdast';
 import { EXIT, SKIP, visit } from 'unist-util-visit';
-import { compact, minBy, size, uniq } from 'lodash-es';
+import { compact, memoize, minBy, size, uniq } from 'lodash-es';
 import { is } from 'unist-util-is';
 import { toString } from 'mdast-util-to-string';
 import escapeStringRegexp from 'escape-string-regexp';
 import { getFragmentDirectives, parseFragmentDirectives } from 'text-fragments-polyfill/text-fragment-utils';
+import TTLCache from '@isaacs/ttlcache';
 
 import {
   mdastExtension as topicExtension,
@@ -296,12 +297,12 @@ export default class ContentService extends BaseService {
     return result;
   }
 
-  private static parseMarkdown(content: string) {
+  private static readonly parseMarkdown = memoize((content: string) => {
     return fromMarkdown(content, {
       mdastExtensions: [topicExtension],
       extensions: [topicTokenExtension],
     });
-  }
+  });
 
   private static hashLocation({ start, end }: TextLocation) {
     return `${start},${end}`;
@@ -309,5 +310,9 @@ export default class ContentService extends BaseService {
 
   public static markdownToPlain(md: string) {
     return toString(this.parseMarkdown(md));
+  }
+
+  static {
+    this.parseMarkdown.cache = new TTLCache({ ttl: 5000 });
   }
 }

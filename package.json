@@ -61,6 +61,7 @@
     "@emoji-mart/react": "^1.1.1",
     "@floating-ui/dom": "^1.6.4",
     "@floating-ui/react": "^0.26.13",
+    "@isaacs/ttlcache": "^1.4.1",
     "@milkdown/crepe": "^7.6.1",
     "@milkdown/kit": "^7.6.1",
     "@mozilla/readability": "^0.4.4",
