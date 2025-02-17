@@ -1,5 +1,14 @@
 import { Tabs } from '@ark-ui/solid/tabs';
-import { BookTextIcon, LightbulbIcon, HashIcon, SearchIcon, StarIcon, RecycleIcon, SettingsIcon } from 'lucide-solid';
+import {
+  BookTextIcon,
+  LightbulbIcon,
+  HashIcon,
+  SearchIcon,
+  StarIcon,
+  RecycleIcon,
+  SettingsIcon,
+  ListTodoIcon,
+} from 'lucide-solid';
 
 export default function Sidebar() {
   const triggerClass =
@@ -13,6 +22,9 @@ export default function Sidebar() {
         </Tabs.Trigger>
         <Tabs.Trigger value="note" class={triggerClass}>
           <BookTextIcon size="24" />
+        </Tabs.Trigger>
+        <Tabs.Trigger value="todo" class={triggerClass}>
+          <ListTodoIcon size="24" />
         </Tabs.Trigger>
       </div>
       <div>

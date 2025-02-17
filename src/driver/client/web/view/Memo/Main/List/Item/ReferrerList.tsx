@@ -3,7 +3,7 @@ import { For, Show } from 'solid-js';
 import assert from 'assert';
 
 import type MemoView from '#domain/client/app/model/memo/MemoView';
-import uiState from '#web/view/Explorer/Memo/uiState';
+import uiState from '#web/view/Memo/uiState';
 
 export default function ReferrerList({ memoView }: { memoView: MemoView }) {
   assert(memoView.referrersQuery, 'no value');
