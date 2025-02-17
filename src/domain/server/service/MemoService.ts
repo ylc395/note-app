@@ -79,34 +79,58 @@ export default class MemoService extends BaseService {
   @BaseService.transaction
   public async queryList(query: ClientMemoQuery) {
     assert(
-      !((query.endId || query.startId) && query.durations && query.durations.length > 0),
-      'can not use both startId/endId and endTime',
-    ); // 用户不能这么传。但后端逻辑内部，可以同时使用这些属性
-    assert(
       !(query.keyword && (query.limit || typeof query.isPinned === 'boolean')),
       'can not set limit / isPinned with keyword',
     );
 
-    let durations = query.durations;
+    let durations;
+
+    if (query.durations && query.durations.length > 0) {
+      assert(
+        query.durations.every(({ endTime, startTime }) => !startTime || !endTime || endTime >= startTime),
+        'endTime must be greater than startTime',
+      );
+
+      durations = query.durations;
+    }
 
     if (query.startId) {
       const startMemo = await this.repo.memos.findOneById(query.startId, { isAvailableOnly: true });
       assert(startMemo, 'invalid start id');
 
-      durations = [{ startTime: query.orderBy === 'updatedAt' ? startMemo.updatedAt : startMemo.createdAt }];
+      const time = query.orderBy === 'updatedAt' ? startMemo.updatedAt : startMemo.createdAt;
+
+      durations = durations
+        ?.filter(({ endTime }) => !endTime || endTime >= time)
+        .map(({ startTime, endTime }) => {
+          if (startTime && startTime < time) {
+            return { startTime: time, endTime };
+          }
+
+          return { startTime, endTime };
+        }) ?? [{ startTime: time }];
     }
 
     if (query.endId) {
       const endMemo = await this.repo.memos.findOneById(query.endId, { isAvailableOnly: true });
       assert(endMemo, 'invalid end id');
+      const time = query.orderBy === 'updatedAt' ? endMemo.updatedAt : endMemo.createdAt;
 
-      durations = [
-        { ...durations?.[0], endTime: query.orderBy === 'updatedAt' ? endMemo.updatedAt : endMemo.createdAt },
-      ];
+      durations = durations
+        ?.filter(({ startTime }) => !startTime || startTime <= time)
+        .map(({ startTime, endTime }) => {
+          if (endTime && endTime > time) {
+            return { startTime, endTime: time };
+          }
+
+          return { startTime, endTime };
+        }) ?? [{ endTime: time }];
     }
 
     let ids: string[] | undefined;
 
+    // 对于有 keyword 的查询，单独使用 searchEngine 先查一下。
+    // 理论上也能在 repo.memo 里查，这里是考虑到全文搜索未必是用 sql 表来实现的，因此不放在 repo 里查了
     if (query.keyword) {
       const searchResult = await this.searchEngine.search({
         entityTypes: [EntityTypes.Memo],

@@ -7,7 +7,10 @@ import MemoList from '#domain/client/app/model/memo/List';
 import Node from './Node';
 
 export default function TopicListView() {
-  const { topicList } = container.resolve(MemoList);
+  const {
+    filter: { topicList },
+  } = container.resolve(MemoList);
+
   const collection = createMemo(() =>
     topicList.tree
       ? createTreeCollection<TopicNode>({

@@ -15,6 +15,7 @@ export const annotationSchema = z.object({
   targetId: noteSchema.shape["id"],
   selectors: z.array(selectorSchema),
   body: z.string(),
+  bodyPlainText: z.string().optional(),
   color: z.string(),
   createdAt: z.number(),
   updatedAt: z.number()

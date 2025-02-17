@@ -1,34 +1,17 @@
 import { action, computed, observable, toJS } from 'mobx';
-import { pick } from 'lodash-es';
-import { createQuery } from 'mobx-tanstack-query/preset';
+import { isEmpty, pick, pickBy } from 'lodash-es';
 
-import type { ClientMemoQuery } from '#domain/shared/model/memo';
-import { token as rpcToken } from '#domain/client/shared/infra/rpc';
-import { container } from '#domain/shared/infra/singletons';
+import type { ClientMemoQuery, CountQuery } from '#domain/shared/model/memo';
 import TimeSelector from './TimeSelector';
-import type TopicList from '../../TopicList';
-import DomainEventBus from '../EventBus';
+import LinkSelector from './LinkSelector';
+import TopicList from './TopicList';
 
 export default class Filter {
-  constructor(options: { topicList: TopicList }) {
-    this.topicList = options.topicList;
-
-    this.eventBus.on([DomainEventBus.eventNames.Created, DomainEventBus.eventNames.Removed], () =>
-      this.linkSetQuery.invalidate(),
-    );
-  }
-
-  private readonly eventBus = container.resolve(DomainEventBus);
-
-  private readonly remote = container.resolve(rpcToken);
-
   public readonly timeSelector = new TimeSelector();
 
-  public readonly topicList: TopicList;
+  public readonly topicList = new TopicList();
 
-  public readonly linkSetQuery = createQuery(() => this.remote.memo.queryLinkSet.query(), {
-    queryKey: ['memos', 'linkSet'],
-  });
+  public readonly linkSelector = new LinkSelector();
 
   @observable public accessor keyword: string | undefined;
 
@@ -38,18 +21,19 @@ export default class Filter {
   };
 
   @computed
-  public get params() {
+  public get params(): ClientMemoQuery {
     return {
-      ...this.sortOptions,
-      durations: this.timeSelector.selectedDurations,
+      ...toJS(this.sortOptions),
       keyword: this.keyword || undefined,
-      tags: toJS(this.topicList.selectedTopics),
+      durations: toJS(this.timeSelector.selectedDurations),
+      topics: toJS(this.topicList.selectedTopics),
+      links: pickBy(toJS(this.linkSelector.params), (value) => !isEmpty(value)),
     };
   }
 
   @computed
-  public get countParams() {
-    return pick(this.params, ['durations', 'tags']);
+  public get countParams(): CountQuery {
+    return pick(this.params, ['durations', 'topics', 'links']);
   }
 
   @action

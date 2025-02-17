@@ -7,7 +7,9 @@ import { container } from '#domain/shared/infra/singletons';
 import MemoList from '#domain/client/app/model/memo/List';
 
 export default function Node(props: { node: TopicNode; indexPath: number[] }) {
-  const { topicList } = container.resolve(MemoList);
+  const {
+    filter: { topicList },
+  } = container.resolve(MemoList);
 
   return (
     <TreeView.NodeProvider node={props.node} indexPath={props.indexPath}>

@@ -5,7 +5,9 @@ import { container } from '#domain/shared/infra/singletons';
 
 export default function LinkFilter() {
   const {
-    filter: { linkSetQuery },
+    filter: {
+      linkSelector: { linkSetQuery, update },
+    },
   } = container.resolve(MemoList);
 
   return (
@@ -19,7 +21,7 @@ export default function LinkFilter() {
               <ul>
                 <For each={linkSetQuery.result.data?.entities.records}>
                   {({ count, entity }) => (
-                    <li>
+                    <li onClick={() => update({ entityIds: [entity.id] })}>
                       {entity.title}
                       <span>{count}</span>
                     </li>
@@ -34,7 +36,7 @@ export default function LinkFilter() {
               <ul>
                 <For each={linkSetQuery.result.data?.domains.records}>
                   {({ domain, count }) => (
-                    <li class="flex justify-between">
+                    <li class="flex justify-between" onClick={() => update({ domains: [domain] })}>
                       {domain}
                       <span>{count}</span>
                     </li>

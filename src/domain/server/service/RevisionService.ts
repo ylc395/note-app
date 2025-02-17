@@ -21,11 +21,11 @@ export default class RevisionService extends BaseService {
 
   private interval?: number;
 
-  private bootstrap() {
+  private async bootstrap() {
     this.interval = 1 * 60 * 1000; // todo: 从用户设置中取
 
     if (this.interval) {
-      this.autoCreateRevisions();
+      await this.autoCreateRevisions();
       setInterval(this.autoCreateRevisions.bind(this), this.interval);
     }
   }

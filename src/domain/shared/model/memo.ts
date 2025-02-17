@@ -1,4 +1,5 @@
-import type { Entity, EntityParentId, EntityTypes } from './entity.js';
+import type { Entity, EntityId, EntityParentId } from './entity.js';
+import { MimeTypes } from './file.js';
 
 export interface Memo {
   id: string;
@@ -61,7 +62,7 @@ export function getFileType(mimeType: string) {
     return FileTypes.Audio;
   }
 
-  if (mimeType.includes('application/pdf')) {
+  if (mimeType === MimeTypes.PDF) {
     return FileTypes.Pdf;
   }
 
@@ -95,16 +96,16 @@ export type ClientMemoQuery = {
   durations?: Duration[];
   endId?: Memo['id'];
   startId?: Memo['id'];
-  tags?: string[];
+  topics?: string[];
   keyword?: string;
   links?: {
-    entityTypes?: EntityTypes[];
-    domains?: string[];
-    mimeTypes?: string[];
+    entityIds?: EntityId[] | 'all';
+    domains?: string[] | 'all';
+    fileTypes?: FileTypes[] | 'all';
   };
 };
 
 /**
  * @api
  */
-export type CountQuery = Pick<ClientMemoQuery, 'durations' | 'tags'>;
+export type CountQuery = Pick<ClientMemoQuery, 'durations' | 'topics' | 'links'>;

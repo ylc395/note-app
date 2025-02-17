@@ -5,12 +5,10 @@ import { createInfiniteQuery, createQuery } from 'mobx-tanstack-query/preset';
 
 import { container } from '#domain/shared/infra/singletons';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
-import { EntityTypes } from '#domain/shared/model/entity';
 import type { MemoVO } from '#domain/shared/model/memo';
 
 import DomainEventBus from '../EventBus';
 import Filter from './Filter';
-import TopicList from '../../TopicList';
 import Editor from '../Editor';
 import type { MemoItem } from './item';
 
@@ -70,11 +68,6 @@ export default class MemoList {
       [DomainEventBus.eventNames.Created, DomainEventBus.eventNames.Removed],
       () => this.countQuery!.invalidate(),
       { signal: this.destroyController.signal },
-    );
-
-    this.eventBus.on(
-      [DomainEventBus.eventNames.Created, DomainEventBus.eventNames.Updated, DomainEventBus.eventNames.Removed],
-      () => this.topicList.topicQuery.invalidate(),
     );
   }
 
@@ -156,9 +149,7 @@ export default class MemoList {
     return Boolean(this.filter.keyword);
   }
 
-  public readonly topicList = new TopicList(EntityTypes.Memo);
-
-  public readonly filter = new Filter({ topicList: this.topicList });
+  public readonly filter = new Filter();
 
   private readonly eventBus = container.resolve(DomainEventBus);
 

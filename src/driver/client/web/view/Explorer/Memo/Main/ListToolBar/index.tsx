@@ -50,23 +50,23 @@ export default function ListToolbar() {
             </button>
           </span>
         </Show>
-        <For each={topicList.selectedTopics}>
-          {(topic) => (
-            <span class="flex items-center mr-2">
-              <HashIcon />
-              话题：{topic}
-              <button onClick={() => topicList.unselectTopic(topic)}>
-                <XCircleIcon />
-              </button>
-            </span>
-          )}
-        </For>
         <For each={timeSelector.selectedDurations}>
           {(duration, i) => (
             <span class="flex items-center ml-2">
               <CalendarDaysIcon />
               日期：<time class="ml-2">{getDurationText(duration)}</time>
               <button class="ml-1" onclick={() => timeSelector.removeDate(i())}>
+                <XCircleIcon />
+              </button>
+            </span>
+          )}
+        </For>
+        <For each={topicList.selectedTopics}>
+          {(topic) => (
+            <span class="flex items-center mr-2">
+              <HashIcon />
+              话题：{topic}
+              <button onClick={() => topicList.unselectTopic(topic)}>
                 <XCircleIcon />
               </button>
             </span>

@@ -1,5 +1,5 @@
 import { DatePicker, parseDate, useDatePicker, Tooltip } from '@ark-ui/solid';
-import { Index, For } from 'solid-js';
+import { Index, For, createMemo } from 'solid-js';
 import dayjs from 'dayjs';
 import { action } from 'mobx';
 import { ArrowLeftIcon, ArrowRightIcon } from 'lucide-solid';
@@ -50,9 +50,10 @@ export default function Calendar() {
         : undefined;
     },
     get max() {
-      return timeSelector.availableRange.result.data
-        ? parseDate(new Date(timeSelector.availableRange.result.data?.end))
-        : undefined;
+      if (!timeSelector.now.result.data) {
+        return undefined;
+      }
+      return parseDate(new Date(timeSelector.now.result.data));
     },
   });
 
@@ -91,11 +92,11 @@ export default function Calendar() {
                     {(day) => {
                       const date = dayjs(new Date(day.year, day.month - 1, day.day));
                       const key = date.format('YYYY-MM-DD');
-                      const count = timeSelector.dateCounts.result.data?.[key] ?? 0;
+                      const count = createMemo(() => timeSelector.dateCounts.result.data?.[key] ?? 0);
 
                       return (
                         <DatePicker.TableCell
-                          class={`${getColorClass(count)} text-center 
+                          class={`${getColorClass(count())} text-center 
                             ${timeSelector.isFuture(date) ? 'text-gray-300' : ''}`}
                           value={day}
                           onClick={(e) =>
@@ -105,11 +106,11 @@ export default function Calendar() {
                             )
                           }
                         >
-                          <Tooltip.Root disabled={count === 0}>
+                          <Tooltip.Root disabled={count() === 0}>
                             <Tooltip.Trigger>{day.day}</Tooltip.Trigger>
                             <Tooltip.Positioner>
                               <Tooltip.Content>
-                                {`${day.year}-${day.month + 1}-${day.day}`} {count}条
+                                {`${day.year}-${day.month + 1}-${day.day}`} {count()}条
                               </Tooltip.Content>
                             </Tooltip.Positioner>
                           </Tooltip.Root>

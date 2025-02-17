@@ -7,7 +7,10 @@ import MemoList from '#domain/client/app/model/memo/List';
 import { container } from '#domain/shared/infra/singletons';
 
 export default function Display(props: { memoView: MemoView }) {
-  const { topicList } = container.resolve(MemoList);
+  const {
+    filter: { topicList },
+  } = container.resolve(MemoList);
+
   const markdown = createMemo(() => {
     const domParser = new DOMParser();
     const doc = domParser.parseFromString(

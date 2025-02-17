@@ -25,7 +25,7 @@ export default class TimeSelector {
 
   private readonly remote = container.resolve(rpcToken);
 
-  private readonly now = createQuery(() => dayjs().valueOf());
+  public readonly now = createQuery(() => dayjs().valueOf());
 
   @observable.ref public accessor selectedDurations: Required<Duration>[] = [];
 
@@ -94,8 +94,6 @@ export default class TimeSelector {
   }
 
   private handleMemoUpdate(memo: MemoVO) {
-    this.availableRange.invalidate();
-
     const date = dayjs(memo.createdAt);
 
     if (date.year() === this.currentMonth.year && date.month() === this.currentMonth.month) {
