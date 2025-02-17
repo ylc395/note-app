@@ -5,7 +5,6 @@ import { action } from 'mobx';
 import { ArrowLeftIcon, ArrowRightIcon } from 'lucide-solid';
 
 import { container } from '#domain/shared/infra/singletons';
-import uiState from '../uiState';
 import MemoList from '#domain/client/app/model/memo/List';
 
 function getColorClass(count: number) {
@@ -59,7 +58,6 @@ export default function Calendar() {
 
   const selectDate = action((date: Date, mode?: 'range' | 'multiple') => {
     timeSelector.selectDay(dayjs(date), mode);
-    uiState.tabVisibility = 'visible';
   });
 
   return (
