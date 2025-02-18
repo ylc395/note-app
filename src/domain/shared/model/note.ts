@@ -1,15 +1,21 @@
 import dayjs from 'dayjs';
 import type { Entity, EntityId, EntityParentId } from './entity.js';
 
+export enum NoteTypes {
+  Note = 1,
+  Material,
+}
+
 export interface Note {
   id: EntityId;
+  type?: NoteTypes;
   title: string;
   parentId: EntityParentId;
   body?: string;
   bodyPlainText?: string;
   icon: string | null;
-  fileId: string | null;
-  sourceUrl: string | null;
+  fileId: string | null; // material 有可能存在该属性
+  sourceUrl: string | null; // material 有可能存在该属性
   updatedAt: number;
   createdAt: number;
 }
@@ -35,19 +41,20 @@ export type NoteBatchPatchDTO = Pick<NotePatchDTO, 'parentId'>;
  * @api
  */
 export type NoteDTO =
-  | Partial<Pick<Note, 'body' | 'fileId' | 'icon' | 'parentId' | 'sourceUrl' | 'title'>>
+  | (Partial<Pick<Note, 'body' | 'fileId' | 'icon' | 'parentId' | 'sourceUrl' | 'title'>> &
+      Required<Pick<Note, 'type'>>)
   | DuplicatedNoteDTO;
 
 /**
  * @api
  */
 export interface ClientNoteQuery {
+  type?: Note['type'];
   parentId?: EntityParentId | string[];
   fileHash?: string;
 }
 
-export interface NoteVO extends Omit<Note, 'body' | 'bodyPlainText'> {
-  body?: string;
+export interface NoteVO extends Omit<Note, 'bodyPlainText' | 'type'> {
   isStar: boolean;
   childrenCount: number;
 }

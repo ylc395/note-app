@@ -2,7 +2,7 @@ import { app as electronApp, BrowserWindow, protocol } from 'electron';
 import { identity } from 'lodash-es';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { installExtension, REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
+import { installExtension } from 'electron-devtools-installer';
 import { createIPCHandler } from 'electron-trpc/main';
 
 import { IS_DEV } from '#domain/shared/infra/env.js';
@@ -77,7 +77,8 @@ export default class ElectronRuntime extends DesktopRuntime {
     }
 
     try {
-      const devToolName = await installExtension(REACT_DEVELOPER_TOOLS);
+      // solidjs dev tool, https://chromewebstore.google.com/detail/solid-devtools/kmcfjchnmmaeeagadbhoofajiopoceel
+      const devToolName = await installExtension('kmcfjchnmmaeeagadbhoofajiopoceel');
       this.logger.debug(`${devToolName.name} installed`);
     } catch (error) {
       this.logger.error(error);

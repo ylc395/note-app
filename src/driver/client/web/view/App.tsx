@@ -1,7 +1,7 @@
 import { Tabs } from '@ark-ui/solid/tabs';
 import { z } from 'zod';
 
-import UIState from '#domain/client/app/model/common/UIState';
+import UIState from '#domain/client/shared/model/abstract/PersistedObject';
 
 import Sidebar from './Sidebar';
 import NoteTab from './Note';

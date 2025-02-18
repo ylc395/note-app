@@ -1,10 +1,12 @@
 import type { Kysely } from 'kysely';
+import type { NoteTypes } from '#domain/shared/model/note';
 
 export const tableName = 'notes';
 
 export interface Row {
   id: string;
   icon: string | null;
+  type: NoteTypes;
   title: string;
   body: string;
   bodyPlainText: string;
@@ -22,6 +24,7 @@ export default {
       .createTable(tableName)
       .addColumn('id', 'text', (col) => col.primaryKey().notNull())
       .addColumn('title', 'text', (col) => col.notNull().defaultTo(''))
+      .addColumn('type', 'integer', (col) => col.notNull())
       .addColumn('body', 'text', (col) => col.notNull().defaultTo(''))
       .addColumn('bodyPlainText', 'text', (col) => col.notNull().defaultTo(''))
       .addColumn('sourceUrl', 'text')

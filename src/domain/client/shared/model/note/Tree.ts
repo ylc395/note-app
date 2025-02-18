@@ -2,22 +2,16 @@ import { difference } from 'lodash-es';
 import { queryClient } from 'mobx-tanstack-query/preset';
 import { action, observable, reaction } from 'mobx';
 
-import type { NoteVO } from '#domain/shared/model/note';
+import { NoteTypes, NoteVO } from '#domain/shared/model/note';
 import type { MaybeArray } from '#utils/collection';
 import { container } from '#domain/shared/infra/singletons';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import TreeNode from './TreeNode';
-import DomainEventBus from './EventBus';
 
 export default class Tree {
-  constructor(private readonly options?: { sort?: (note1: NoteVO, note2: NoteVO) => number }) {
+  constructor(private readonly options: { sort?: (note1: NoteVO, note2: NoteVO) => number; type: NoteTypes }) {
     this.root = this.createNode();
-    this.eventBus.on(DomainEventBus.eventNames.Created, ({ parentId }) => {
-      this.get(parentId)?.childrenQuery.invalidate();
-    });
   }
-
-  private readonly eventBus = container.resolve(DomainEventBus);
 
   public readonly root: TreeNode;
 
@@ -59,8 +53,8 @@ export default class Tree {
   }
 
   @action
-  public select(ids: MaybeArray<TreeNode['id']>, isAppend?: boolean) {
-    if (!isAppend) {
+  public select(ids: MaybeArray<TreeNode['id']>, options?: { append?: boolean; includingAbsence?: boolean }) {
+    if (!options?.append) {
       for (const nodeId of this.selectedNodeIds) {
         const node = this.nodesMap.get(nodeId);
 
@@ -75,46 +69,57 @@ export default class Tree {
 
       if (node) {
         node.isSelected = true;
+      } else if (options?.includingAbsence) {
+        this.selectedNodeIds.add(id);
       }
     }
   }
 
   public createNode(params?: { value: NoteVO; parent: TreeNode }) {
-    const destroyController = new AbortController();
     const newNode = new TreeNode({
+      type: this.options.type,
       value: params?.value,
       parent: params?.parent,
       sort: this.options?.sort,
-      onDestroyed: () => {
-        destroyController.abort();
-        this.handleNodeDestroyed(newNode);
-      },
+      onDestroyed: action(() => {
+        this.nodesMap.delete(newNode.id);
+        this.selectedNodeIds.delete(newNode.id);
+        this.expandedNodeIds.delete(newNode.id);
+        this.unselectableNodeIds.delete(newNode.id);
+      }),
     });
 
     this.nodesMap.set(newNode.id, newNode);
 
-    if (params?.value) {
-      if (this.expandedNodeIds.has(params.value.id)) {
-        newNode.toggleExpand();
-      }
+    if (newNode.isRoot || this.expandedNodeIds.has(newNode.id)) {
+      // https://github.com/js2me/mobx-tanstack-query/issues/10 等这个解决
+      Promise.resolve().then(() => {
+        newNode.toggleExpand(true);
+      });
     }
 
-    reaction(
-      () => newNode.isExpanded,
-      (isExpanded) => (isExpanded ? this.expandedNodeIds.add(newNode.id) : this.expandedNodeIds.delete(newNode.id)),
-      { signal: destroyController.signal },
-    );
+    if (this.selectedNodeIds.has(newNode.id)) {
+      newNode.toggleSelect(true);
+    }
+
+    if (!newNode.isRoot) {
+      reaction(
+        () => newNode.isExpanded,
+        (isExpanded) => (isExpanded ? this.expandedNodeIds.add(newNode.id) : this.expandedNodeIds.delete(newNode.id)),
+        { signal: newNode.destroyController.signal },
+      );
+    }
 
     reaction(
       () => newNode.isSelected,
       (isSelected) => (isSelected ? this.selectedNodeIds.add(newNode.id) : this.selectedNodeIds.delete(newNode.id)),
-      { signal: destroyController.signal },
+      { signal: newNode.destroyController.signal },
     );
 
     reaction(
       () => newNode.isUnselectable,
       (isSelected) => isSelected && this.selectedNodeIds.add(newNode.id),
-      { signal: destroyController.signal },
+      { signal: newNode.destroyController.signal },
     );
 
     return newNode;
@@ -122,8 +127,13 @@ export default class Tree {
 
   // 展开并加载任意个指定节点（“加载”指拉取其子节点）。若某个节点的祖先节点没有被传入或存在于树中，则该节点会被无视
   public async expand(ids: MaybeArray<TreeNode['id']>) {
+    if (ids.length === 0) {
+      return;
+    }
+
     const loadedIds = Array.from(this.nodesMap.values())
-      .filter((node) => !node.isNeverLoaded)
+      // 该节点是否“从未加载过，且并不正在加载”
+      .filter((node) => !(node.childrenQuery.result.isPending && !node.childrenQuery.result.isFetching))
       .map((node) => node.id);
 
     // 过滤出待展开 id 中，当前树中并未加载中/过的那些节点
@@ -134,19 +144,11 @@ export default class Tree {
     );
 
     for (const [parentId, children] of Object.entries(nodes)) {
-      queryClient.setQueryData(TreeNode.getChildrenQueryKey(parentId), children);
+      queryClient.setQueryData(TreeNode.getChildrenQueryKey({ parentId, type: this.options.type }), children);
     }
 
     for (const id of ids) {
       this.expandedNodeIds.add(id);
     }
-  }
-
-  @action
-  private handleNodeDestroyed(node: TreeNode) {
-    this.nodesMap.delete(node.id);
-    this.selectedNodeIds.delete(node.id);
-    this.expandedNodeIds.delete(node.id);
-    this.unselectableNodeIds.delete(node.id);
   }
 }

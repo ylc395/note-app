@@ -3,7 +3,7 @@ import type { NoteVO } from '#domain/shared/model/note';
 
 enum EventNames {
   Created = 'note.created',
-  MoveStart = 'move.start',
+  MoveStart = 'note.moveStart',
 }
 
 export default class DomainEventBus extends EventBus<{

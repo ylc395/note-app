@@ -5,7 +5,7 @@ import { render } from 'solid-js/web';
 
 import { token as loggerToken } from '#domain/shared/infra/logger';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
-import { token as localStorageToken } from '#domain/client/app/infra/localStorage';
+import { token as localStorageToken } from '#domain/client/shared/infra/localStorage';
 import { container } from '#domain/shared/infra/singletons';
 
 import webLocalStorage from './infra/localStorage';

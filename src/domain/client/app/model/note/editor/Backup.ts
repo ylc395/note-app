@@ -3,7 +3,7 @@ import { diffJson, type Change } from 'diff';
 import { type ZodSchema, string, z } from 'zod';
 import { intersection, maxBy, pick, uniqueId } from 'lodash-es';
 
-import { token as lsToken } from '#domain/client/app/infra/localStorage';
+import { token as lsToken } from '#domain/client/shared/infra/localStorage';
 import { container } from '#domain/shared/infra/singletons';
 import type { EntityId } from '#domain/shared/model/entity';
 

@@ -17,6 +17,7 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
       .returning([
         'id',
         'icon',
+        'type',
         'title',
         'createdAt',
         'updatedAt',
@@ -45,14 +46,14 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
     let sql = this.db
       .selectFrom(this.tableName)
       .select([
-        'notes.id',
-        'notes.icon',
-        'notes.parentId',
-        'notes.title',
-        'notes.updatedAt',
-        'notes.createdAt',
-        'notes.fileId',
-        'notes.sourceUrl',
+        `${this.tableName}.id`,
+        `${this.tableName}.icon`,
+        `${this.tableName}.parentId`,
+        `${this.tableName}.title`,
+        `${this.tableName}.updatedAt`,
+        `${this.tableName}.createdAt`,
+        `${this.tableName}.fileId`,
+        `${this.tableName}.sourceUrl`,
       ]);
 
     if (q.isAvailableOnly) {
@@ -69,6 +70,10 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
 
     if (q.id) {
       sql = sql.where('id', 'in', q.id);
+    }
+
+    if (q.type) {
+      sql.where('type', '=', q.type);
     }
 
     const rows = await sql.execute();

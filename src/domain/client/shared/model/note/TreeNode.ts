@@ -1,36 +1,41 @@
 import { action, computed, observable } from 'mobx';
 import { createQuery } from 'mobx-tanstack-query/preset';
 
-import type { NoteVO } from '#domain/shared/model/note';
+import type { NoteTypes, NoteVO } from '#domain/shared/model/note';
 import { container } from '#domain/shared/infra/singletons';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
+import assert from 'assert';
 
 export default class TreeNode {
   constructor({
     value,
     parent,
+    type,
     ...options
   }: {
     value?: NoteVO;
     parent?: TreeNode;
+    type: NoteTypes;
     sort?: (note1: NoteVO, note2: NoteVO) => number;
-    onDestroyed?: () => void;
+    onDestroyed: () => void;
   }) {
-    this.options = options;
-    this.parent = parent;
     this.setValue(value);
 
+    this.options = options;
+    this.parent = parent;
     this.childrenQuery = createQuery(
       ({ signal }) => {
-        return this.remote.note.query.query({ parentId: value?.id ?? null }, { signal });
+        return this.remote.note.query.query({ parentId: value?.id ?? null, type }, { signal });
       },
       {
-        queryKey: TreeNode.getChildrenQueryKey(value?.id ?? null),
         select: (notes) => notes.toSorted(options.sort),
         abortSignal: this.destroyController.signal,
-        options: () => ({
-          enabled: this.isExpanded,
-        }),
+        options: () => {
+          return {
+            queryKey: TreeNode.getChildrenQueryKey({ parentId: value?.id ?? null, type }),
+            enabled: this.isExpanded,
+          };
+        },
       },
     );
   }
@@ -41,7 +46,7 @@ export default class TreeNode {
 
   private readonly remote = container.resolve(rpcToken);
 
-  public readonly parent?: TreeNode;
+  private readonly parent?: TreeNode;
 
   private readonly options;
 
@@ -58,23 +63,13 @@ export default class TreeNode {
     return this.value?.childrenCount === 0;
   }
 
-  public readonly childrenQuery;
-
-  @computed
-  public get isLoading() {
-    return this.childrenQuery.result.isLoading;
-  }
-
-  // 该节点是否“从未加载过，且并不正在加载”
-  public get isNeverLoaded() {
-    return this.childrenQuery.result.isPending && !this.childrenQuery.result.isFetching;
-  }
-
-  private readonly destroyController = new AbortController();
-
   public get isRoot() {
     return !this.value;
   }
+
+  public readonly childrenQuery;
+
+  public readonly destroyController = new AbortController();
 
   // 不含根节点
   public get ancestors() {
@@ -90,22 +85,30 @@ export default class TreeNode {
   }
 
   @action
-  protected setValue(value: TreeNode['value']) {
+  public setValue(value: TreeNode['value']) {
+    if (this.value && value) {
+      assert(this.value.id === value.id, 'can not setValue');
+    }
+
     this.value = value;
-    this.isExpanded = this.isRoot; // 根节点总是被自动展开
   }
 
   @action
-  public toggleExpand() {
-    this.isExpanded = !this.isExpanded;
+  public toggleExpand(value?: boolean) {
+    this.isExpanded = value ?? !this.isExpanded;
+  }
+
+  @action
+  public toggleSelect(value?: boolean) {
+    this.isSelected = value ?? !this.isSelected;
   }
 
   public destroy() {
-    this.options.onDestroyed?.();
+    this.options.onDestroyed();
     this.destroyController.abort();
   }
 
-  public static getChildrenQueryKey(parentId: NoteVO['parentId']) {
-    return ['notes', { parentId }];
+  public static getChildrenQueryKey(params: { parentId: NoteVO['parentId']; type: NoteTypes }) {
+    return ['notes', params];
   }
 }
