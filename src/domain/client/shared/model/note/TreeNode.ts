@@ -1,10 +1,11 @@
 import { action, computed, observable } from 'mobx';
 import { createQuery } from 'mobx-tanstack-query/preset';
+import assert from 'assert';
 
 import type { NoteTypes, NoteVO } from '#domain/shared/model/note';
 import { container } from '#domain/shared/infra/singletons';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
-import assert from 'assert';
+import type Tree from './Tree';
 
 export default class TreeNode {
   constructor({
@@ -15,6 +16,7 @@ export default class TreeNode {
   }: {
     value?: NoteVO;
     parent?: TreeNode;
+    tree: Tree;
     type: NoteTypes;
     sort?: (note1: NoteVO, note2: NoteVO) => number;
     onDestroyed: () => void;
@@ -30,12 +32,10 @@ export default class TreeNode {
       {
         select: (notes) => notes.toSorted(options.sort),
         abortSignal: this.destroyController.signal,
-        options: () => {
-          return {
-            queryKey: TreeNode.getChildrenQueryKey({ parentId: value?.id ?? null, type }),
-            enabled: this.isExpanded,
-          };
-        },
+        options: () => ({
+          queryKey: TreeNode.getChildrenQueryKey({ parentId: value?.id ?? null, type }),
+          enabled: this.isExpanded && this.options.tree.isActive,
+        }),
       },
     );
   }

@@ -13,6 +13,8 @@ export default class Tree {
     this.root = this.createNode();
   }
 
+  @observable public accessor isActive = false;
+
   public readonly root: TreeNode;
 
   private readonly nodesMap = new Map<TreeNode['id'], TreeNode>();
@@ -24,6 +26,11 @@ export default class Tree {
   @observable public accessor expandedNodeIds = new Set<TreeNode['id']>();
 
   @observable public accessor unselectableNodeIds = new Set<TreeNode['id']>();
+
+  @action
+  public setActive(value: boolean) {
+    this.isActive = value;
+  }
 
   public get(id: string | null) {
     if (!id) {
@@ -81,6 +88,7 @@ export default class Tree {
       value: params?.value,
       parent: params?.parent,
       sort: this.options?.sort,
+      tree: this,
       onDestroyed: action(() => {
         this.nodesMap.delete(newNode.id);
         this.selectedNodeIds.delete(newNode.id);

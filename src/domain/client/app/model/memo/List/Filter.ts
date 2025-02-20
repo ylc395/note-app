@@ -13,6 +13,13 @@ export default class Filter {
 
   public readonly linkSelector = new LinkSelector();
 
+  @action
+  public setActive(value: boolean) {
+    this.timeSelector.setActive(value);
+    this.topicList.setActive(value);
+    this.linkSelector.setActive(value);
+  }
+
   @observable public accessor keyword: string | undefined;
 
   @observable.ref public accessor sortOptions: Readonly<Pick<ClientMemoQuery, 'order' | 'orderBy'>> = {

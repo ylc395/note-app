@@ -10,6 +10,8 @@ import {
   ListTodoIcon,
 } from 'lucide-solid';
 
+import { SidebarTabs } from './uiState';
+
 export default function Sidebar() {
   const triggerClass =
     'flex justify-center items-center h-14 w-14 border-0 bg-transparent cursor-pointer data-[selected]:bg-gray-200';
@@ -17,13 +19,13 @@ export default function Sidebar() {
   return (
     <Tabs.List class="flex flex-col h-screen bg-gray-100 relative">
       <div class="border-b">
-        <Tabs.Trigger value="memo" class={triggerClass}>
+        <Tabs.Trigger value={SidebarTabs.Memo} class={triggerClass}>
           <LightbulbIcon size="24" />
         </Tabs.Trigger>
-        <Tabs.Trigger value="note" class={triggerClass}>
+        <Tabs.Trigger value={SidebarTabs.Note} class={triggerClass}>
           <BookTextIcon size="24" />
         </Tabs.Trigger>
-        <Tabs.Trigger value="todo" class={triggerClass}>
+        <Tabs.Trigger value={SidebarTabs.Project} class={triggerClass}>
           <ListTodoIcon size="24" />
         </Tabs.Trigger>
       </div>

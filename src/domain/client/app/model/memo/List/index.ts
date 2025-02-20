@@ -18,6 +18,7 @@ export default class MemoList {
       ({ signal }) => this.remote.memo.queryCount.query(this.filter!.countParams, { signal }),
       {
         abortSignal: this.destroyController.signal,
+        refetchOnWindowFocus: false,
         options: () => ({
           enabled: !this.isSearchMode,
           queryKey: ['memos', 'count', this.filter.countParams],

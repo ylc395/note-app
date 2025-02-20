@@ -21,11 +21,13 @@ export default class TimeSelector {
     );
   }
 
+  @observable private accessor isActive = false;
+
   private readonly eventBus = container.resolve(DomainEventBus);
 
   private readonly remote = container.resolve(rpcToken);
 
-  public readonly now = createQuery(() => dayjs().valueOf());
+  public readonly now = createQuery(() => dayjs().valueOf(), { options: () => ({ enabled: this.isActive }) });
 
   @observable.ref public accessor selectedDurations: Required<Duration>[] = [];
 
@@ -33,6 +35,11 @@ export default class TimeSelector {
     year: dayjs(this.now.result.data).year(),
     month: dayjs(this.now.result.data).month(),
   };
+
+  @action
+  public setActive(value: boolean) {
+    this.isActive = value;
+  }
 
   public readonly dateCounts = createQuery(
     ({ signal }) => {
@@ -45,6 +52,7 @@ export default class TimeSelector {
     },
     {
       options: () => ({
+        enabled: this.isActive,
         queryKey: ['memos', 'calendar', this.currentMonth],
       }),
     },
@@ -52,6 +60,9 @@ export default class TimeSelector {
 
   public readonly availableRange = createQuery(() => this.remote.memo.queryAvailableDateRange.query(), {
     queryKey: ['memos', 'availableRange'],
+    options: () => ({
+      enabled: this.isActive,
+    }),
   });
 
   @action

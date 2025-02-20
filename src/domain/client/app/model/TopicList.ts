@@ -18,7 +18,17 @@ export default class TopicList {
   constructor(entityType?: EntityTypes) {
     this.topicQuery = createQuery(() => this.remote.content.queryTopics.query({ type: entityType }), {
       queryKey: ['topics', entityType],
+      options: () => ({
+        enabled: this.isActive,
+      }),
     });
+  }
+
+  @observable private accessor isActive = false;
+
+  @action
+  public setActive(value: boolean) {
+    this.isActive = value;
   }
 
   private readonly remote = container.resolve(rpcToken);

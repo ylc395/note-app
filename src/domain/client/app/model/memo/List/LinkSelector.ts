@@ -13,12 +13,20 @@ export default class LinkSelector {
     );
   }
 
+  @observable private accessor isActive = false;
+
+  @action
+  public setActive(value: boolean) {
+    this.isActive = value;
+  }
+
   private readonly eventBus = container.resolve(DomainEventBus);
 
   private readonly remote = container.resolve(rpcToken);
 
   public readonly linkSetQuery = createQuery(() => this.remote.memo.queryLinkSet.query(), {
     queryKey: ['memos', 'linkSet'],
+    options: () => ({ enabled: this.isActive }),
   });
 
   @observable public accessor params: ClientMemoQuery['links'];
