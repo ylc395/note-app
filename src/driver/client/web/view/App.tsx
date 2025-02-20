@@ -9,7 +9,7 @@ import './index.css';
 import { container } from '#domain/shared/infra/singletons';
 
 export default function App() {
-  const tabClassName = 'flex-grow min-w-0 relative bg-gray-50';
+  const tabClassName = 'flex-grow min-w-0 relative bg-gray-50 h-screen';
   const uiState = container.resolve(UIState);
 
   return (

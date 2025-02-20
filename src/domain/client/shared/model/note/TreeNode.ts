@@ -103,6 +103,7 @@ export default class TreeNode {
     this.isSelected = value ?? !this.isSelected;
   }
 
+  @action
   public destroy() {
     this.options.onDestroyed();
     this.destroyController.abort();

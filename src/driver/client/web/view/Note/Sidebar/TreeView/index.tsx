@@ -6,6 +6,7 @@ import UIState, { NoteTreeViewTabs } from '#web/view/uiState';
 
 import NoteTreeView from './NoteTree';
 import MaterialTreeView from './MaterialTree';
+import AddButton from './AddButton';
 
 export default function TreeView() {
   const uiState = container.resolve(UIState);
@@ -17,20 +18,23 @@ export default function TreeView() {
       defaultValue={uiState.value?.['note.treeView']}
       onValueChange={({ value }) => uiState.update({ 'note.treeView': value as NoteTreeViewTabs })}
     >
-      <Tabs.List class="flex">
-        <Tabs.Trigger class="flex items-center text-sm" value={NoteTreeViewTabs.Note}>
-          <NotepadTextIcon />
-          笔记
-        </Tabs.Trigger>
-        <Tabs.Trigger class="flex items-center text-sm" value={NoteTreeViewTabs.Material}>
-          <DatabaseIcon />
-          素材
-        </Tabs.Trigger>
-      </Tabs.List>
-      <Tabs.Content value="note">
+      <div class="flex items-center justify-between">
+        <Tabs.List class="flex">
+          <Tabs.Trigger class="flex items-center text-sm" value={NoteTreeViewTabs.Note}>
+            <NotepadTextIcon />
+            笔记
+          </Tabs.Trigger>
+          <Tabs.Trigger class="flex items-center text-sm" value={NoteTreeViewTabs.Material}>
+            <DatabaseIcon />
+            素材
+          </Tabs.Trigger>
+        </Tabs.List>
+        <AddButton />
+      </div>
+      <Tabs.Content value="note" class="overflow-auto">
         <NoteTreeView />
       </Tabs.Content>
-      <Tabs.Content value="material">
+      <Tabs.Content value="material" class="overflow-auto">
         <MaterialTreeView />
       </Tabs.Content>
     </Tabs.Root>

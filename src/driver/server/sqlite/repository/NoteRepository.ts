@@ -73,7 +73,7 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
     }
 
     if (q.type) {
-      sql.where('type', '=', q.type);
+      sql = sql.where('type', '=', q.type);
     }
 
     const rows = await sql.execute();

@@ -1,9 +1,10 @@
 import { TreeView } from '@ark-ui/solid';
-import { createEffect, For, on, onCleanup, Show } from 'solid-js';
+import { createEffect, on, onCleanup, Show } from 'solid-js';
 
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
 import { normalizeTitle, type NoteVO } from '#domain/shared/model/note';
 import type Tree from '#domain/client/shared/model/note/Tree';
+import { Key } from '@solid-primitives/keyed';
 
 function Node(props: { tree: Tree; note: NoteVO; parent: TreeNode; indexPath: number[] }) {
   const node = props.tree.createNode({ value: props.note, parent: props.parent });
@@ -34,11 +35,11 @@ function Node(props: { tree: Tree; note: NoteVO; parent: TreeNode; indexPath: nu
             <TreeView.BranchText>{normalizeTitle(node.value!)}</TreeView.BranchText>
           </TreeView.BranchControl>
           <TreeView.BranchContent>
-            <For each={node.childrenQuery.result.data}>
+            <Key each={node.childrenQuery.result.data} by="id">
               {(child, index) => (
-                <Node tree={props.tree} parent={node} note={child} indexPath={[...props.indexPath, index()]} />
+                <Node tree={props.tree} parent={node} note={child()} indexPath={[...props.indexPath, index()]} />
               )}
-            </For>
+            </Key>
           </TreeView.BranchContent>
         </TreeView.Branch>
       </Show>

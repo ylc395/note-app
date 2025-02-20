@@ -164,8 +164,8 @@ importers:
         specifier: ^4.0.7
         version: 4.0.7(mobx@6.13.6)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       mobx-tanstack-query:
-        specifier: ^3.3.14
-        version: 3.3.14(@tanstack/query-core@5.66.0)(disposer-util@1.0.12)(mobx@6.13.6)
+        specifier: ^3.3.18
+        version: 3.3.18(disposer-util@1.0.12)(mobx@6.13.6)
       page-lifecycle:
         specifier: ^0.1.2
         version: 0.1.2
@@ -3773,10 +3773,9 @@ packages:
       react-native:
         optional: true
 
-  mobx-tanstack-query@3.3.14:
-    resolution: {integrity: sha512-eC/D45vSJB8dKuNmpjKiG6z+sw+TnjzYk3HoOHJKba8IiS7cwipZ2Y8G/l8iqbU+XHhYPGcTe8lGYCCisNw87Q==}
+  mobx-tanstack-query@3.3.18:
+    resolution: {integrity: sha512-PnB9yl4qOi6emf/ZfQWK/cbQNpSvuO8vhIItgwoUK0OzspuUTO9vKeO0albUeRhSd2fId60zAxEziDcKEdo2oA==}
     peerDependencies:
-      '@tanstack/query-core': '>=5.0.0'
       disposer-util: ^1.0.9
       mobx: '>=6.12.4'
 
@@ -9810,7 +9809,7 @@ snapshots:
     optionalDependencies:
       react-dom: 18.2.0(react@18.2.0)
 
-  mobx-tanstack-query@3.3.14(@tanstack/query-core@5.66.0)(disposer-util@1.0.12)(mobx@6.13.6):
+  mobx-tanstack-query@3.3.18(disposer-util@1.0.12)(mobx@6.13.6):
     dependencies:
       '@tanstack/query-core': 5.66.0
       disposer-util: 1.0.12

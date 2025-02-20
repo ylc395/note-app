@@ -1,5 +1,5 @@
 import { createTreeCollection, TreeView } from '@ark-ui/solid';
-import { For } from 'solid-js';
+import { Key } from '@solid-primitives/keyed';
 
 import type TreeNode from '#domain/client/shared/model/note/TreeNode';
 import type Tree from '#domain/client/shared/model/note/Tree';
@@ -15,9 +15,9 @@ export default function NoteTree(props: { tree: Tree }) {
   return (
     <TreeView.Root collection={collection}>
       <TreeView.Tree>
-        <For each={collection.rootNode.childrenQuery.result.data}>
-          {(note, index) => <NodeView tree={props.tree} note={note} parent={props.tree.root} indexPath={[index()]} />}
-        </For>
+        <Key each={collection.rootNode.childrenQuery.result.data} by="id">
+          {(note, index) => <NodeView tree={props.tree} note={note()} parent={props.tree.root} indexPath={[index()]} />}
+        </Key>
       </TreeView.Tree>
     </TreeView.Root>
   );

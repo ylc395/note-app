@@ -100,10 +100,7 @@ export default class Tree {
     this.nodesMap.set(newNode.id, newNode);
 
     if (newNode.isRoot || this.expandedNodeIds.has(newNode.id)) {
-      // https://github.com/js2me/mobx-tanstack-query/issues/10 等这个解决
-      Promise.resolve().then(() => {
-        newNode.toggleExpand(true);
-      });
+      newNode.toggleExpand(true);
     }
 
     if (this.selectedNodeIds.has(newNode.id)) {
