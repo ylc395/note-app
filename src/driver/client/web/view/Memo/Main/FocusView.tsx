@@ -1,18 +1,19 @@
 import { createEffect, createSignal, on, onCleanup, Show } from 'solid-js';
 import { XIcon } from 'lucide-solid';
-import { action } from 'mobx';
 
 import MemoView from '#domain/client/app/model/memo/MemoView';
+import { container } from '#domain/shared/infra/singletons';
+import UIState from '#web/view/UIState';
 
 import Item from './List/Item';
-import uiState from '../uiState';
 
 export default function FocusView() {
   const [getMemoView, setMemoView] = createSignal<MemoView>();
+  const uiState = container.resolve(UIState);
 
   createEffect(
     on(
-      () => uiState.focusMemoId,
+      () => uiState.value?.['memo.focusId'],
       (id) => {
         if (!id) {
           setMemoView(undefined);
@@ -31,7 +32,7 @@ export default function FocusView() {
         <div class="bg-white absolute right-0 inset-y-0 z-20">
           <div class="flex justify-between">
             <h3>查看</h3>
-            <button onClick={action(() => (uiState.focusMemoId = undefined))}>
+            <button onClick={() => uiState.update({ 'memo.focusId': undefined })}>
               <XIcon />
             </button>
           </div>

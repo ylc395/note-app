@@ -14,12 +14,13 @@ import { action } from 'mobx';
 import { container } from '#domain/shared/infra/singletons';
 import type { Duration } from '#domain/shared/model/memo';
 import MemoList from '#domain/client/app/model/memo/List';
+import UIState from '#web/view/UIState';
 
 import SortMenu from './SortMenu';
-import uiState from '../../uiState';
 
 export default function ListToolbar() {
   const memoList = container.resolve(MemoList);
+  const uiState = container.resolve(UIState);
   const {
     filter: { timeSelector, topicList },
     reload,
@@ -40,8 +41,8 @@ export default function ListToolbar() {
     <div class="mt-4 flex justify-between text-gray-400">
       <div class="flex text-sm items-center">
         <button
-          class={`mr-2 ${uiState.sidebarVisibility === 'hidden' ? '' : 'md:hidden'}`}
-          onClick={action(() => (uiState.sidebarVisibility = 'always'))}
+          class={`mr-2 ${uiState.value?.['memo.sidebarVisibility'] === 'hidden' ? '' : 'md:hidden'}`}
+          onClick={() => uiState.update({ 'memo.sidebarVisibility': 'always' })}
         >
           <PanelLeftOpenIcon />
         </button>

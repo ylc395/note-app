@@ -1,5 +1,5 @@
 import { createQuery } from 'mobx-tanstack-query/preset';
-import { action, observable } from 'mobx';
+import { action, computed, observable } from 'mobx';
 
 import { container } from '#domain/shared/infra/singletons';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
@@ -37,5 +37,10 @@ export default class LinkSelector {
       this.params = value;
       return;
     }
+  }
+
+  @computed
+  public get hasContent() {
+    return Object.values(this.linkSetQuery.result.data || {}).some(({ records }) => records.length > 0);
   }
 }

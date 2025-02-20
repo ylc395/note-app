@@ -3,7 +3,7 @@ import { createEffect, on } from 'solid-js';
 import NoteService from '#domain/client/app/service/NoteService';
 import { container } from '#domain/shared/infra/singletons';
 import BaseTreeView from './Tree';
-import UIState, { NoteTreeViewTabs, SidebarTabs } from '#web/view/uiState';
+import UIState, { NoteTreeViewTabs, SidebarTabs } from '#web/view/UIState';
 
 export default function MaterialTree() {
   const { materialTreeView } = container.resolve(NoteService);

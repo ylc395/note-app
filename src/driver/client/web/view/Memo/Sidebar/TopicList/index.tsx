@@ -1,5 +1,5 @@
 import { createMemo, For, Show } from 'solid-js';
-import { createTreeCollection, TreeView } from '@ark-ui/solid';
+import { createTreeCollection, Splitter, TreeView } from '@ark-ui/solid';
 
 import { container } from '#domain/shared/infra/singletons';
 import type { TopicNode } from '#domain/client/app/model/TopicList';
@@ -21,26 +21,28 @@ export default function TopicListView() {
   );
 
   return (
-    <div class="mt-4 text-gray-400 flex flex-col min-h-0">
-      <h3 class="font-semibold mb-2 text-sm">#话题一览</h3>
-      <Show when={collection()}>
-        {(tree) => (
-          <TreeView.Root
-            lazyMount
-            unmountOnExit
-            collection={tree()}
-            expandOnClick={false}
-            selectionMode="multiple"
-            class="min-h-0 overflow-auto"
-            selectedValue={topicList.selectedTopics}
-            onSelectionChange={(e) => topicList.setSelected(e.selectedValue)}
-          >
-            <TreeView.Tree>
-              <For each={topicList.tree}>{(node, index) => <Node node={node} indexPath={[index()]} />}</For>
-            </TreeView.Tree>
-          </TreeView.Root>
-        )}
-      </Show>
-    </div>
+    <Show when={topicList.hasContent}>
+      <Splitter.Panel id="topicList" class="mt-4 text-gray-400 flex flex-col min-h-8">
+        <h3 class="font-semibold mb-2 text-sm">#话题一览</h3>
+        <Show when={collection()}>
+          {(tree) => (
+            <TreeView.Root
+              lazyMount
+              unmountOnExit
+              collection={tree()}
+              expandOnClick={false}
+              selectionMode="multiple"
+              class="min-h-0 overflow-auto"
+              selectedValue={topicList.selectedTopics}
+              onSelectionChange={(e) => topicList.setSelected(e.selectedValue)}
+            >
+              <TreeView.Tree>
+                <For each={topicList.tree}>{(node, index) => <Node node={node} indexPath={[index()]} />}</For>
+              </TreeView.Tree>
+            </TreeView.Root>
+          )}
+        </Show>
+      </Splitter.Panel>
+    </Show>
   );
 }

@@ -100,4 +100,9 @@ export default class TopicList {
 
     return nodes;
   }
+
+  @computed
+  public get hasContent() {
+    return Boolean(this.tree && this.tree.length > 0);
+  }
 }

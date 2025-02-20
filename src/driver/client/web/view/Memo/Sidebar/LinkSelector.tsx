@@ -2,19 +2,20 @@ import { For, Show } from 'solid-js';
 
 import MemoList from '#domain/client/app/model/memo/List';
 import { container } from '#domain/shared/infra/singletons';
+import { Splitter } from '@ark-ui/solid';
 
 export default function LinkFilter() {
   const {
-    filter: {
-      linkSelector: { linkSetQuery, update },
-    },
+    filter: { linkSelector },
   } = container.resolve(MemoList);
 
+  const { linkSetQuery, update } = linkSelector;
+
   return (
-    <Show when={Object.values(linkSetQuery.result.data || {}).some(({ records }) => records.length > 0)}>
-      <div>
+    <Show when={linkSelector.hasContent}>
+      <Splitter.Panel id="linkSelector" class="min-h-8 flex flex-col">
         <h3>内容包含</h3>
-        <div>
+        <div class="overflow-auto">
           <Show when={linkSetQuery.result.data!.entities.records.length > 0}>
             <div>
               <span>内链 {linkSetQuery.result.data!.entities.total}</span>
@@ -49,7 +50,7 @@ export default function LinkFilter() {
             <div>文件 {linkSetQuery.result.data!.files.total}</div>
           </Show>
         </div>
-      </div>
+      </Splitter.Panel>
     </Show>
   );
 }

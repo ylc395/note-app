@@ -2,7 +2,7 @@ import { Tabs } from '@ark-ui/solid';
 import { DatabaseIcon, NotepadTextIcon } from 'lucide-solid';
 
 import { container } from '#domain/shared/infra/singletons';
-import UIState, { NoteTreeViewTabs } from '#web/view/uiState';
+import UIState, { NoteTreeViewTabs } from '#web/view/UIState';
 
 import NoteTreeView from './NoteTree';
 import MaterialTreeView from './MaterialTree';

@@ -3,13 +3,12 @@ import { Tabs } from '@ark-ui/solid/tabs';
 import Sidebar from './Sidebar';
 import NoteTab from './Note';
 import MemoTab from './Memo';
-import UIState, { SidebarTabs } from './uiState';
+import UIState, { SidebarTabs } from './UIState';
 
 import './index.css';
 import { container } from '#domain/shared/infra/singletons';
 
 export default function App() {
-  const tabClassName = 'flex-grow min-w-0 relative bg-gray-50 h-screen';
   const uiState = container.resolve(UIState);
 
   return (
@@ -18,15 +17,11 @@ export default function App() {
       lazyMount
       defaultValue={uiState.value?.['app.sidebar']}
       onValueChange={({ value }) => uiState.update({ 'app.sidebar': value as SidebarTabs })}
-      class="flex"
+      class="flex h-screen"
     >
       <Sidebar />
-      <Tabs.Content class={tabClassName} value={SidebarTabs.Note}>
-        <NoteTab />
-      </Tabs.Content>
-      <Tabs.Content class={tabClassName} value={SidebarTabs.Memo}>
-        <MemoTab />
-      </Tabs.Content>
+      <NoteTab />
+      <MemoTab />
     </Tabs.Root>
   );
 }

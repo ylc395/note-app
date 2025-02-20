@@ -3,7 +3,7 @@ import { PlusIcon, FolderPlusIcon } from 'lucide-solid';
 
 import { container } from '#domain/shared/infra/singletons';
 import NoteService from '#domain/client/app/service/NoteService';
-import UIState, { NoteTreeViewTabs } from '#web/view/uiState';
+import UIState, { NoteTreeViewTabs } from '#web/view/UIState';
 import { NoteTypes } from '#domain/shared/model/note';
 
 export default function AddButton() {
