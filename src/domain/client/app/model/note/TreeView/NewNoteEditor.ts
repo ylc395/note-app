@@ -3,26 +3,33 @@ import assert from 'assert';
 
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import { container } from '#domain/shared/infra/singletons';
-import type { NoteVO } from '#domain/shared/model/note';
+import type { NewNoteDTO, NoteTypes } from '#domain/shared/model/note';
 import DomainEventBus from '../EventBus';
 
 export default class NewNoteEditor {
+  constructor(private readonly type: NoteTypes) {}
+
   private readonly remote = container.resolve(rpcToken);
 
   private readonly domainEventBus = container.resolve(DomainEventBus);
 
-  @observable.ref public accessor newNote: NoteVO | undefined;
+  @observable.ref public accessor newNote: Required<Pick<NewNoteDTO, 'parentId'>> | undefined;
 
   @action
-  public set(note: NoteVO) {
-    this.newNote = note;
+  public init(newNote: NonNullable<NewNoteEditor['newNote']>) {
+    this.newNote = newNote;
   }
 
   public async submit(title: string) {
     assert(this.newNote, 'can not submit');
 
-    await this.remote.note.updateOne.mutate([this.newNote.id, { title }]);
-    this.domainEventBus.emit(DomainEventBus.eventNames.Updated, { ...this.newNote, title });
+    const newNote = await this.remote.note.create.mutate({
+      title,
+      type: this.type,
+      ...this.newNote,
+    });
+
+    this.domainEventBus.emit(DomainEventBus.eventNames.Created, newNote);
     this.cancel();
   }
 

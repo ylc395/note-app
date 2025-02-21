@@ -5,11 +5,10 @@ import { container } from '#domain/shared/infra/singletons';
 import UIState, { NoteTreeViewTabs, SidebarTabs } from '#web/view/UIState';
 
 import BaseTreeView from './Tree';
-import { NoteTypes } from '#domain/shared/model/note';
 
 export default function NoteTree() {
   const {
-    treeViews: { [NoteTypes.Note]: noteTreeView },
+    treeViews: { note: noteTreeView },
   } = container.resolve(NoteService);
   const uiState = container.resolve(UIState);
 
@@ -22,5 +21,5 @@ export default function NoteTree() {
     ),
   );
 
-  return <BaseTreeView tree={noteTreeView.tree} />;
+  return <BaseTreeView treeView={noteTreeView} />;
 }

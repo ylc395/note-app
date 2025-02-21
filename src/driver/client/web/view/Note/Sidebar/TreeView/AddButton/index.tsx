@@ -4,18 +4,17 @@ import { PlusIcon } from 'lucide-solid';
 import { container } from '#domain/shared/infra/singletons';
 import NoteService from '#domain/client/app/service/NoteService';
 import UIState, { NoteTreeViewTabs } from '#web/view/UIState';
-import { NoteTypes } from '#domain/shared/model/note';
 
 import ButtonGroup from './ButtonGroup';
 
 export default function AddButton() {
   const uiState = container.resolve(UIState);
-  const { createNote } = container.resolve(NoteService);
+  const { treeViews } = container.resolve(NoteService);
 
   return (
     <div class="flex items-center">
       <Show when={uiState.get('note.treeView') === NoteTreeViewTabs.Note}>
-        <button class="flex" onClick={() => createNote({ type: NoteTypes.Note })}>
+        <button class="flex" onClick={() => treeViews.note.newNoteEditor.init({ parentId: null })}>
           <PlusIcon />
           新建
         </button>

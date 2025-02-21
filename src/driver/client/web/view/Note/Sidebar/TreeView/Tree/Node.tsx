@@ -1,20 +1,17 @@
 import { TreeView } from '@ark-ui/solid';
-import { createEffect, on, onCleanup, Show } from 'solid-js';
+import { createEffect, createMemo, on, onCleanup, Show } from 'solid-js';
 import { Key } from '@solid-primitives/keyed';
 
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
 import { normalizeTitle, type NoteVO } from '#domain/shared/model/note';
-import type Tree from '#domain/client/shared/model/note/Tree';
-import { container } from '#domain/shared/infra/singletons';
-import NoteService from '#domain/client/app/service/NoteService';
+import TreeViewModel from '#domain/client/app/model/note/TreeView';
 
 import TitleEditor from './TitleEditor';
 
-function Node(props: { tree: Tree; note: NoteVO; parent: TreeNode; indexPath: number[] }) {
-  const node = props.tree.createNode({ value: props.note, parent: props.parent });
-  const {
-    treeViews: { [props.tree.type]: treeView },
-  } = container.resolve(NoteService);
+function Node(props: { treeView: TreeViewModel; note: NoteVO; parent: TreeNode; indexPath: number[] }) {
+  const node = props.treeView.tree.createNode({ value: props.note, parent: props.parent });
+
+  const hasEditor = createMemo(() => node.id === props.treeView.newNoteEditor.newNote?.parentId);
 
   createEffect(
     on(
@@ -30,34 +27,32 @@ function Node(props: { tree: Tree; note: NoteVO; parent: TreeNode; indexPath: nu
   return (
     <TreeView.NodeProvider node={node} indexPath={props.indexPath}>
       <Show
-        when={node.isLeaf}
+        when={!node.isLeaf || hasEditor()}
         fallback={
           <TreeView.Item>
-            <Show when={treeView.newNoteEditor.newNote?.id === node.id}>
-              <TitleEditor editor={treeView.newNoteEditor} />
-            </Show>
             <TreeView.ItemText>{normalizeTitle(node.value!)}</TreeView.ItemText>
           </TreeView.Item>
         }
       >
         <TreeView.Branch>
           <TreeView.BranchControl>
-            <Show
-              when={treeView.newNoteEditor.newNote?.id === node.id}
-              fallback={<TreeView.BranchText>{normalizeTitle(node.value!)}</TreeView.BranchText>}
-            >
-              <TitleEditor editor={treeView.newNoteEditor} />
-            </Show>
+            <TreeView.BranchText>{normalizeTitle(node.value!)}</TreeView.BranchText>
           </TreeView.BranchControl>
-          <Show when={node.childrenQuery.result.data && node.childrenQuery.result.data.length > 0}>
-            <TreeView.BranchContent>
-              <Key each={node.childrenQuery.result.data} by="id">
-                {(child, index) => (
-                  <Node tree={props.tree} parent={node} note={child()} indexPath={[...props.indexPath, index()]} />
-                )}
-              </Key>
-            </TreeView.BranchContent>
-          </Show>
+          <TreeView.BranchContent>
+            <Show when={hasEditor()}>
+              <TitleEditor editor={props.treeView.newNoteEditor} />
+            </Show>
+            <Key each={node.childrenQuery.result.data} by="id">
+              {(child, index) => (
+                <Node
+                  treeView={props.treeView}
+                  parent={node}
+                  note={child()}
+                  indexPath={[...props.indexPath, index()]}
+                />
+              )}
+            </Key>
+          </TreeView.BranchContent>
         </TreeView.Branch>
       </Show>
     </TreeView.NodeProvider>

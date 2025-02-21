@@ -35,10 +35,6 @@ export default class Tree {
 
   @observable public accessor unselectableNodeIds = new Set<TreeNode['id']>();
 
-  public get type() {
-    return this.options.type;
-  }
-
   public init() {
     autorun(() => this.uiState.set('selected', Array.from(this.selectedNodeIds)));
     autorun(() => this.uiState.set('expanded', Array.from(this.expandedNodeIds)));

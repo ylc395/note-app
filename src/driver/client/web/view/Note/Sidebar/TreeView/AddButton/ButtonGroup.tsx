@@ -3,16 +3,15 @@ import { Menu, type MenuSelectionDetails } from '@ark-ui/solid';
 
 import { container } from '#domain/shared/infra/singletons';
 import NoteService from '#domain/client/app/service/NoteService';
-import { NoteTypes } from '#domain/shared/model/note';
 
 export default function ButtonGroup() {
-  const { createNote } = container.resolve(NoteService);
+  const { treeViews } = container.resolve(NoteService);
 
   function onSelect({ value }: MenuSelectionDetails) {
     switch (value) {
       case 'file':
       case 'directory':
-        return createNote({ type: NoteTypes.Material });
+        return treeViews.material.newNoteEditor.init({ parentId: null });
       default:
         throw new Error('invalid value');
     }

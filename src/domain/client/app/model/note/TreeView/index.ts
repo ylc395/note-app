@@ -16,6 +16,8 @@ export default class TreeView {
       type,
     });
 
+    this.newNoteEditor = new NewNoteEditor(type);
+
     this.domainEventBus.on(
       [DomainEventBus.eventNames.Created, DomainEventBus.eventNames.Updated],
       this.handleUpdated.bind(this),
@@ -28,7 +30,7 @@ export default class TreeView {
 
   public readonly sortBehavior = container.resolve(SortBehavior);
 
-  public readonly newNoteEditor = new NewNoteEditor();
+  public readonly newNoteEditor;
 
   public readonly tree;
 

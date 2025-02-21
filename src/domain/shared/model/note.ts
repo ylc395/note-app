@@ -37,13 +37,13 @@ export interface DuplicatedNoteDTO {
  */
 export type NoteBatchPatchDTO = Pick<NotePatchDTO, 'parentId'>;
 
+export type NewNoteDTO = Partial<Pick<Note, 'body' | 'fileId' | 'icon' | 'parentId' | 'sourceUrl' | 'title'>> &
+  Required<Pick<Note, 'type'>>;
+
 /**
  * @api
  */
-export type NoteDTO =
-  | (Partial<Pick<Note, 'body' | 'fileId' | 'icon' | 'parentId' | 'sourceUrl' | 'title'>> &
-      Required<Pick<Note, 'type'>>)
-  | DuplicatedNoteDTO;
+export type NoteDTO = NewNoteDTO | DuplicatedNoteDTO;
 
 /**
  * @api
