@@ -38,6 +38,14 @@ export default class TreeNode {
         }),
       },
     );
+
+    if (this.isRoot || this.options.tree.expandedNodeIds.has(this.id)) {
+      this.toggleExpand(true);
+    }
+
+    if (this.options.tree.selectedNodeIds.has(this.id)) {
+      this.toggleSelect(true);
+    }
   }
 
   public get id() {
@@ -96,11 +104,37 @@ export default class TreeNode {
   @action
   public toggleExpand(value?: boolean) {
     this.isExpanded = value ?? !this.isExpanded;
+
+    if (this.isRoot) {
+      return;
+    }
+
+    if (this.isExpanded) {
+      this.options.tree.expandedNodeIds.add(this.id);
+    } else {
+      this.options.tree.expandedNodeIds.delete(this.id);
+    }
   }
 
   @action
   public toggleSelect(value?: boolean) {
     this.isSelected = value ?? !this.isSelected;
+
+    if (this.isSelected) {
+      this.options.tree.selectedNodeIds.add(this.id);
+    } else {
+      this.options.tree.selectedNodeIds.delete(this.id);
+    }
+  }
+
+  public setIsUnselectable(value: boolean) {
+    this.isUnselectable = value;
+
+    if (this.isUnselectable) {
+      this.options.tree.unselectableNodeIds.add(this.id);
+    } else {
+      this.options.tree.unselectableNodeIds.delete(this.id);
+    }
   }
 
   @action

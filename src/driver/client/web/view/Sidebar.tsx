@@ -17,7 +17,7 @@ export default function Sidebar() {
     'flex justify-center items-center h-14 w-14 border-0 bg-transparent cursor-pointer data-[selected]:bg-gray-200';
 
   return (
-    <Tabs.List class="flex flex-col h-screen bg-gray-100 relative overflow-auto">
+    <Tabs.List class="flex flex-col h-screen bg-gray-100 relative overflow-auto flex-shrink-0">
       <div class="border-b">
         <Tabs.Trigger value={SidebarTabs.Memo} class={triggerClass}>
           <LightbulbIcon size="24" />

@@ -1,14 +1,13 @@
-import { action, computed, autorun } from 'mobx';
-import { z } from 'zod';
+import { action, computed } from 'mobx';
 
 import Tree from '#domain/client/shared/model/note/Tree';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import { container } from '#domain/shared/infra/singletons';
 import { NoteTypes, type NoteVO } from '#domain/shared/model/note';
-import DomainEventBus from '#domain/client/app/model/note/EventBus';
-import PersistedObject from '#domain/client/shared/model/abstract/PersistedObject';
+import DomainEventBus, { type UpdatedEvent } from '#domain/client/app/model/note/EventBus';
 
 import SortBehavior from './SortBehavior';
+import NewNoteEditor from './NewNoteEditor';
 
 export default class TreeView {
   constructor(type: NoteTypes) {
@@ -17,8 +16,10 @@ export default class TreeView {
       type,
     });
 
-    this.uiState = new PersistedObject(`note-explorer-${type}`, TreeView.schema);
-    this.init();
+    this.domainEventBus.on(
+      [DomainEventBus.eventNames.Created, DomainEventBus.eventNames.Updated],
+      this.handleUpdated.bind(this),
+    );
   }
 
   private readonly domainEventBus = container.resolve(DomainEventBus);
@@ -27,27 +28,20 @@ export default class TreeView {
 
   public readonly sortBehavior = container.resolve(SortBehavior);
 
+  public readonly newNoteEditor = new NewNoteEditor();
+
   public readonly tree;
 
-  private readonly uiState;
+  private handleUpdated({ parentId, id }: UpdatedEvent) {
+    if (parentId !== undefined) {
+      const node = this.tree.get(id);
 
-  private async init() {
-    autorun(this.updateUIState.bind(this));
+      if (node && node.value?.parentId !== parentId) {
+        node.childrenQuery.invalidate();
+      }
 
-    const selectedIds = this.uiState.get('selected');
-    const expandedIds = this.uiState.get('expanded');
-
-    if (selectedIds) {
-      this.tree.select(selectedIds, { includingAbsence: true });
-    }
-
-    if (expandedIds) {
-      this.tree.expand(expandedIds);
-    }
-
-    this.domainEventBus.on(DomainEventBus.eventNames.Created, ({ parentId }) => {
       this.tree.get(parentId)?.childrenQuery.invalidate();
-    });
+    }
   }
 
   @computed
@@ -64,11 +58,6 @@ export default class TreeView {
         node.isExpanded = false;
       }
     }
-  }
-
-  private updateUIState() {
-    this.uiState.set('selected', Array.from(this.tree.selectedNodeIds));
-    this.uiState.set('expanded', Array.from(this.tree.expandedNodeIds));
   }
 
   public async disableDescendantsBy(movingNotes: NoteVO[]) {
@@ -89,12 +78,4 @@ export default class TreeView {
     const nodeIdToSetUnselect = [...noteIds, ...[...unknownAncestors, ...ancestors].map(({ id }) => id)];
     this.tree.setUnselectable(nodeIdToSetUnselect);
   }
-
-  private static readonly schema = z
-    .object({
-      scroll: z.object({ x: z.number(), y: z.number() }),
-      expanded: z.string().array(),
-      selected: z.string().array(),
-    })
-    .partial();
 }

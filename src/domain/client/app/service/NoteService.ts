@@ -1,6 +1,6 @@
 import { container } from '#domain/shared/infra/singletons';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
-import { DuplicatedNoteDTO, NoteTypes, NoteVO } from '#domain/shared/model/note';
+import { type DuplicatedNoteDTO, NoteTypes, type NoteVO } from '#domain/shared/model/note';
 import { EntityTypes } from '#domain/shared/model/entity';
 
 import Workbench from '../model/Workbench';
@@ -12,21 +12,26 @@ export default class NoteService {
 
   public readonly workbench = container.resolve(Workbench);
 
-  public readonly noteTreeView = new TreeView(NoteTypes.Note);
-
-  public readonly materialTreeView = new TreeView(NoteTypes.Material);
+  public readonly treeViews = {
+    [NoteTypes.Note]: new TreeView(NoteTypes.Note),
+    [NoteTypes.Material]: new TreeView(NoteTypes.Material),
+  } as const;
 
   private readonly eventBus = container.resolve(DomainEventBus);
 
   public readonly createNote = async (
-    params: { parentId?: NoteVO['parentId']; type: NoteTypes } | DuplicatedNoteDTO,
-    open?: boolean,
+    params: {
+      type: NoteTypes;
+      open?: boolean;
+    },
+    note?: Pick<NoteVO, 'parentId'> | DuplicatedNoteDTO,
   ) => {
-    const note = await this.remote.note.create.mutate(params);
-    this.eventBus.emit(DomainEventBus.eventNames.Created, note);
+    const newNote = await this.remote.note.create.mutate({ ...note, type: params.type });
+    this.eventBus.emit(DomainEventBus.eventNames.Created, newNote);
+    this.treeViews[params.type].newNoteEditor.set(newNote);
 
-    if (open) {
-      this.workbench.openEntity({ entityType: EntityTypes.Note, entityId: note.id });
+    if (params.open) {
+      this.workbench.openEntity({ entityType: EntityTypes.Note, entityId: newNote.id });
     }
   };
 }

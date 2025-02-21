@@ -1,16 +1,22 @@
 import { difference } from 'lodash-es';
 import { queryClient } from 'mobx-tanstack-query/preset';
-import { action, observable, reaction } from 'mobx';
+import { z } from 'zod';
+import { action, autorun, observable, runInAction } from 'mobx';
 
 import { NoteTypes, NoteVO } from '#domain/shared/model/note';
 import type { MaybeArray } from '#utils/collection';
 import { container } from '#domain/shared/infra/singletons';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
+
+import PersistedObject from '../abstract/PersistedObject';
 import TreeNode from './TreeNode';
 
 export default class Tree {
   constructor(private readonly options: { sort?: (note1: NoteVO, note2: NoteVO) => number; type: NoteTypes }) {
     this.root = this.createNode();
+    this.uiState = new PersistedObject(`note-explorer-${options.type}`, Tree.schema);
+
+    this.init();
   }
 
   @observable public accessor isActive = false;
@@ -21,11 +27,33 @@ export default class Tree {
 
   private readonly remote = container.resolve(rpcToken);
 
+  private readonly uiState;
+
   @observable public accessor selectedNodeIds = new Set<TreeNode['id']>();
 
   @observable public accessor expandedNodeIds = new Set<TreeNode['id']>();
 
   @observable public accessor unselectableNodeIds = new Set<TreeNode['id']>();
+
+  public get type() {
+    return this.options.type;
+  }
+
+  public init() {
+    autorun(() => this.uiState.set('selected', Array.from(this.selectedNodeIds)));
+    autorun(() => this.uiState.set('expanded', Array.from(this.expandedNodeIds)));
+
+    const selectedIds = this.uiState.get('selected');
+    const expandedIds = this.uiState.get('expanded');
+
+    if (selectedIds) {
+      this.select(selectedIds, { includingAbsence: true });
+    }
+
+    if (expandedIds) {
+      this.expand(expandedIds);
+    }
+  }
 
   @action
   public setActive(value: boolean) {
@@ -99,34 +127,6 @@ export default class Tree {
 
     this.nodesMap.set(newNode.id, newNode);
 
-    if (newNode.isRoot || this.expandedNodeIds.has(newNode.id)) {
-      newNode.toggleExpand(true);
-    }
-
-    if (this.selectedNodeIds.has(newNode.id)) {
-      newNode.toggleSelect(true);
-    }
-
-    if (!newNode.isRoot) {
-      reaction(
-        () => newNode.isExpanded,
-        (isExpanded) => (isExpanded ? this.expandedNodeIds.add(newNode.id) : this.expandedNodeIds.delete(newNode.id)),
-        { signal: newNode.destroyController.signal },
-      );
-    }
-
-    reaction(
-      () => newNode.isSelected,
-      (isSelected) => (isSelected ? this.selectedNodeIds.add(newNode.id) : this.selectedNodeIds.delete(newNode.id)),
-      { signal: newNode.destroyController.signal },
-    );
-
-    reaction(
-      () => newNode.isUnselectable,
-      (isSelected) => isSelected && this.selectedNodeIds.add(newNode.id),
-      { signal: newNode.destroyController.signal },
-    );
-
     return newNode;
   }
 
@@ -143,6 +143,7 @@ export default class Tree {
 
     // 过滤出待展开 id 中，当前树中并未加载中/过的那些节点
     const parentsToLoad = difference(ids, loadedIds);
+
     const nodes = Object.groupBy(
       await this.remote.note.query.query({ parentId: parentsToLoad }),
       (note) => note.parentId!,
@@ -152,8 +153,18 @@ export default class Tree {
       queryClient.setQueryData(TreeNode.getChildrenQueryKey({ parentId, type: this.options.type }), children);
     }
 
-    for (const id of ids) {
-      this.expandedNodeIds.add(id);
-    }
+    runInAction(() => {
+      for (const id of ids) {
+        this.expandedNodeIds.add(id);
+      }
+    });
   }
+
+  private static readonly schema = z
+    .object({
+      scroll: z.object({ x: z.number(), y: z.number() }),
+      expanded: z.string().array(),
+      selected: z.string().array(),
+    })
+    .partial();
 }

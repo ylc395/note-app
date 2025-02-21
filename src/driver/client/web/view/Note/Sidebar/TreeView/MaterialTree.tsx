@@ -4,9 +4,13 @@ import NoteService from '#domain/client/app/service/NoteService';
 import { container } from '#domain/shared/infra/singletons';
 import BaseTreeView from './Tree';
 import UIState, { NoteTreeViewTabs, SidebarTabs } from '#web/view/UIState';
+import { NoteTypes } from '#domain/shared/model/note';
 
 export default function MaterialTree() {
-  const { materialTreeView } = container.resolve(NoteService);
+  const {
+    treeViews: { [NoteTypes.Material]: materialTreeView },
+  } = container.resolve(NoteService);
+
   const uiState = container.resolve(UIState);
 
   createEffect(
