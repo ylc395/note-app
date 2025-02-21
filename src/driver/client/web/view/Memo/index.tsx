@@ -10,13 +10,13 @@ import Main from './Main';
 import { mainTab } from '../classNames';
 
 export default function MemoExplorer() {
-  const { filter } = container.resolve(MemoList);
+  const memoList = container.resolve(MemoList);
   const uiState = container.resolve(UIState);
 
   createEffect(
     on(
-      () => uiState.value?.['app.sidebar'] === SidebarTabs.Memo,
-      (isActive) => filter.setActive(isActive),
+      () => uiState.get('app.sidebar') === SidebarTabs.Memo,
+      (isActive) => memoList.setActive(isActive),
     ),
   );
 

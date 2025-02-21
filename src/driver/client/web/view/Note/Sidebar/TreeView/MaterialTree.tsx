@@ -12,8 +12,7 @@ export default function MaterialTree() {
   createEffect(
     on(
       () =>
-        uiState.value?.['app.sidebar'] === SidebarTabs.Note &&
-        uiState.value['note.treeView'] === NoteTreeViewTabs.Material,
+        uiState.get('app.sidebar') === SidebarTabs.Note && uiState.get('note.treeView') === NoteTreeViewTabs.Material,
       (isActive) => materialTreeView.tree.setActive(isActive),
     ),
   );

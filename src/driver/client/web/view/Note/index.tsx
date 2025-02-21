@@ -17,12 +17,12 @@ export default function NoteTab() {
           {...props()}
           class={mainTab}
           defaultSize={
-            (uiState.value?.['note.sidebar.proportion'] as Splitter.RootProps['defaultSize']) ?? [
+            (uiState.get('note.sidebar.proportion') as Splitter.RootProps['defaultSize']) ?? [
               { id: 'sidebar', size: 20, maxSize: 60 },
               { id: 'workbench', size: 80 },
             ]
           }
-          onSizeChangeEnd={(e) => uiState.update({ 'note.sidebar.proportion': e.size })}
+          onSizeChangeEnd={(e) => uiState.set('note.sidebar.proportion', e.size)}
         >
           <Sidebar />
           <Splitter.ResizeTrigger id="sidebar:workbench" class="w-1" />

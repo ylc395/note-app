@@ -41,8 +41,8 @@ export default function ListToolbar() {
     <div class="mt-4 flex justify-between text-gray-400">
       <div class="flex text-sm items-center">
         <button
-          class={`mr-2 ${uiState.value?.['memo.sidebarVisibility'] === 'hidden' ? '' : 'md:hidden'}`}
-          onClick={() => uiState.update({ 'memo.sidebarVisibility': 'always' })}
+          class={`mr-2 ${uiState.get('memo.sidebarVisibility') === 'hidden' ? '' : 'md:hidden'}`}
+          onClick={() => uiState.set('memo.sidebarVisibility', 'always')}
         >
           <PanelLeftOpenIcon />
         </button>

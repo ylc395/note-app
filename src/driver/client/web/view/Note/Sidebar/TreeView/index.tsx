@@ -15,8 +15,8 @@ export default function TreeView() {
     <Tabs.Root
       orientation="horizontal"
       lazyMount
-      defaultValue={uiState.value?.['note.treeView']}
-      onValueChange={({ value }) => uiState.update({ 'note.treeView': value as NoteTreeViewTabs })}
+      defaultValue={uiState.get('note.treeView') ?? NoteTreeViewTabs.Note}
+      onValueChange={({ value }) => uiState.set('note.treeView', value as NoteTreeViewTabs)}
     >
       <div class="flex items-center justify-between">
         <Tabs.List class="flex">

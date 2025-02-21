@@ -1,5 +1,5 @@
 import { createMemo, For, Show } from 'solid-js';
-import { createTreeCollection, Splitter, TreeView } from '@ark-ui/solid';
+import { createTreeCollection, TreeView } from '@ark-ui/solid';
 
 import { container } from '#domain/shared/infra/singletons';
 import type { TopicNode } from '#domain/client/app/model/TopicList';
@@ -22,7 +22,7 @@ export default function TopicListView() {
 
   return (
     <Show when={topicList.hasContent}>
-      <Splitter.Panel id="topicList" class="mt-4 text-gray-400 flex flex-col min-h-8">
+      <div class="mt-4 text-gray-400 flex flex-col min-h-8">
         <h3 class="font-semibold mb-2 text-sm">#话题一览</h3>
         <Show when={collection()}>
           {(tree) => (
@@ -42,7 +42,7 @@ export default function TopicListView() {
             </TreeView.Root>
           )}
         </Show>
-      </Splitter.Panel>
+      </div>
     </Show>
   );
 }

@@ -12,12 +12,12 @@ export default function AddButton() {
 
   return (
     <div class="flex items-center">
-      <Show when={uiState.value?.['note.treeView'] === NoteTreeViewTabs.Note}>
+      <Show when={uiState.get('note.treeView') === NoteTreeViewTabs.Note}>
         <button onClick={() => createNote({ type: NoteTypes.Note })}>
           <PlusIcon />
         </button>
       </Show>
-      <Show when={uiState.value?.['note.treeView'] === NoteTreeViewTabs.Material}>
+      <Show when={uiState.get('note.treeView') === NoteTreeViewTabs.Material}>
         <button>
           <PlusIcon />
         </button>

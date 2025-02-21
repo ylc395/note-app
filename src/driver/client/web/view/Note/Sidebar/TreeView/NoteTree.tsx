@@ -12,9 +12,10 @@ export default function NoteTree() {
 
   createEffect(
     on(
-      () =>
-        uiState.value?.['app.sidebar'] === SidebarTabs.Note && uiState.value['note.treeView'] === NoteTreeViewTabs.Note,
-      (isActive) => noteTreeView.tree.setActive(isActive),
+      () => uiState.get('app.sidebar') === SidebarTabs.Note && uiState.get('note.treeView') === NoteTreeViewTabs.Note,
+      (isActive) => {
+        noteTreeView.tree.setActive(isActive);
+      },
     ),
   );
 

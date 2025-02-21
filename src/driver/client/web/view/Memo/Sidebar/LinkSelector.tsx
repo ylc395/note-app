@@ -2,7 +2,6 @@ import { For, Show } from 'solid-js';
 
 import MemoList from '#domain/client/app/model/memo/List';
 import { container } from '#domain/shared/infra/singletons';
-import { Splitter } from '@ark-ui/solid';
 
 export default function LinkFilter() {
   const {
@@ -13,7 +12,7 @@ export default function LinkFilter() {
 
   return (
     <Show when={linkSelector.hasContent}>
-      <Splitter.Panel id="linkSelector" class="min-h-8 flex flex-col">
+      <div class="min-h-8 flex flex-col">
         <h3>内容包含</h3>
         <div class="overflow-auto">
           <Show when={linkSetQuery.result.data!.entities.records.length > 0}>
@@ -50,7 +49,7 @@ export default function LinkFilter() {
             <div>文件 {linkSetQuery.result.data!.files.total}</div>
           </Show>
         </div>
-      </Splitter.Panel>
+      </div>
     </Show>
   );
 }

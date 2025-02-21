@@ -17,9 +17,7 @@ const schema = z
     'app.sidebar': z.nativeEnum(SidebarTabs),
     'note.treeView': z.nativeEnum(NoteTreeViewTabs),
     'note.sidebar.proportion': z.unknown(),
-    'memo.filter.proportion': z.unknown(),
     'memo.sidebarVisibility': z.union([z.literal('always'), z.literal('visible'), z.literal('hidden')]),
-    'memo.focusId': z.string(),
   })
   .partial();
 

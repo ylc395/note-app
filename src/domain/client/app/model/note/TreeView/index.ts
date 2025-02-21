@@ -44,12 +44,15 @@ export default class TreeView {
   private async init() {
     autorun(this.updateUIState.bind(this));
 
-    if (this.uiState.value?.selected) {
-      this.tree.select(this.uiState.value.selected, { includingAbsence: true });
+    const selectedIds = this.uiState.get('selected');
+    const expandedIds = this.uiState.get('expanded');
+
+    if (selectedIds) {
+      this.tree.select(selectedIds, { includingAbsence: true });
     }
 
-    if (this.uiState.value?.expanded) {
-      this.tree.expand(this.uiState.value.expanded);
+    if (expandedIds) {
+      this.tree.expand(expandedIds);
     }
 
     this.domainEventBus.on(DomainEventBus.eventNames.Created, ({ parentId }) => {
@@ -74,10 +77,8 @@ export default class TreeView {
   }
 
   private updateUIState() {
-    this.uiState.update({
-      selected: Array.from(this.tree.selectedNodeIds),
-      expanded: Array.from(this.tree.expandedNodeIds),
-    });
+    this.uiState.set('selected', Array.from(this.tree.selectedNodeIds));
+    this.uiState.set('expanded', Array.from(this.tree.expandedNodeIds));
   }
 
   public async disableDescendantsBy(movingNotes: NoteVO[]) {

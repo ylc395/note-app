@@ -1,4 +1,4 @@
-import { action, computed, reaction } from 'mobx';
+import { action, autorun, computed, observable, reaction } from 'mobx';
 import { first, last } from 'lodash-es';
 import assert from 'assert';
 import { createInfiniteQuery, createQuery } from 'mobx-tanstack-query/preset';
@@ -20,7 +20,7 @@ export default class MemoList {
         abortSignal: this.destroyController.signal,
         refetchOnWindowFocus: false,
         options: () => ({
-          enabled: !this.isSearchMode,
+          enabled: !this.isSearchMode && this.isActive,
           queryKey: ['memos', 'count', this.filter.countParams],
         }),
       },
@@ -53,15 +53,27 @@ export default class MemoList {
           pages: this.handleFetchedData(data.pages),
         }),
         options: () => ({
+          enabled: this.isActive,
           initialPageParam: this.getNextPageParams(),
           queryKey: ['memos', this.filter.params],
         }),
       },
     );
 
+    this.init();
+  }
+
+  private init() {
     reaction(
       () => this.filter.params,
       () => this.justCreatedMemos.clear(),
+      { signal: this.destroyController.signal },
+    );
+
+    autorun(
+      () => {
+        this.filter.setActive(this.isActive);
+      },
       { signal: this.destroyController.signal },
     );
 
@@ -150,6 +162,10 @@ export default class MemoList {
     return Boolean(this.filter.keyword);
   }
 
+  @observable private accessor isActive = false;
+
+  @observable public accessor focusedId: MemoVO['id'] | undefined;
+
   public readonly filter = new Filter();
 
   private readonly eventBus = container.resolve(DomainEventBus);
@@ -216,6 +232,16 @@ export default class MemoList {
     }
   }
   private destroyController = new AbortController();
+
+  @action
+  public setActive(value: boolean) {
+    this.isActive = value;
+  }
+
+  @action
+  public setFocusId(id: MemoVO['id'] | undefined) {
+    this.focusedId = id;
+  }
 
   public reload() {
     assert(this.childrenQuery, 'can not reload');

@@ -15,8 +15,8 @@ export default function App() {
     <Tabs.Root
       orientation="vertical"
       lazyMount
-      defaultValue={uiState.value?.['app.sidebar']}
-      onValueChange={({ value }) => uiState.update({ 'app.sidebar': value as SidebarTabs })}
+      defaultValue={uiState.get('app.sidebar')}
+      onValueChange={({ value }) => uiState.set('app.sidebar', value as SidebarTabs)}
       class="flex h-screen"
     >
       <Sidebar />

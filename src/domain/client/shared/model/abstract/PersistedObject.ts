@@ -19,11 +19,15 @@ export default class PersistedObject<S> {
     return `PERSISTENCE_OBJECT_${this.id}`;
   }
 
-  @observable public accessor value: Readonly<S> | undefined;
+  @observable private accessor value: Readonly<S> | undefined;
+
+  public get<T extends keyof S>(key: T) {
+    return this.value?.[key];
+  }
 
   @action
-  public update(state: S) {
-    this.value = { ...this.value, ...state };
+  public set<T extends keyof S>(key: T, value?: S[T]) {
+    this.value = { ...this.value, ...({ [key]: value } as S) };
     this.localStorage.set(this.key, this.value);
   }
 
