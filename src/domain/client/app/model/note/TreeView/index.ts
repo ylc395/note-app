@@ -17,17 +17,7 @@ export default class TreeView {
       type,
     });
 
-    this.uiState = new PersistedObject(
-      `note-explorer-${type}`,
-      z
-        .object({
-          scroll: z.object({ x: z.number(), y: z.number() }),
-          expanded: z.string().array(),
-          selected: z.string().array(),
-        })
-        .partial(),
-    );
-
+    this.uiState = new PersistedObject(`note-explorer-${type}`, TreeView.schema);
     this.init();
   }
 
@@ -99,4 +89,12 @@ export default class TreeView {
     const nodeIdToSetUnselect = [...noteIds, ...[...unknownAncestors, ...ancestors].map(({ id }) => id)];
     this.tree.setUnselectable(nodeIdToSetUnselect);
   }
+
+  private static readonly schema = z
+    .object({
+      scroll: z.object({ x: z.number(), y: z.number() }),
+      expanded: z.string().array(),
+      selected: z.string().array(),
+    })
+    .partial();
 }

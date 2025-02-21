@@ -48,7 +48,7 @@ export default class Backup<T> {
   }
 
   public write(value: T) {
-    const allBackups = this.localStorage.get(this.storageKey, this.schema) || {};
+    const allBackups = this.localStorage.getSync(this.storageKey, this.schema) || {};
 
     allBackups[this.id] = {
       value,
@@ -59,7 +59,7 @@ export default class Backup<T> {
   }
 
   public clear() {
-    const allBackups = this.localStorage.get(this.storageKey, this.schema) || {};
+    const allBackups = this.localStorage.getSync(this.storageKey, this.schema) || {};
 
     delete allBackups[this.id];
 

@@ -2,7 +2,7 @@ import type { LocalStorage } from '#domain/client/shared/infra/localStorage';
 import type { ZodSchema } from 'zod';
 
 const webLocalStorage: LocalStorage = {
-  get<T>(key: string, schema?: ZodSchema<T>) {
+  getSync<T>(key: string, schema?: ZodSchema<T>) {
     const json = localStorage.getItem(key);
 
     if (json === null) {
@@ -28,12 +28,18 @@ const webLocalStorage: LocalStorage = {
     return parsed;
   },
 
+  get() {
+    throw new Error('not impl');
+  },
+
   set(key, value) {
     localStorage.setItem(key, JSON.stringify(value));
+    return Promise.resolve();
   },
 
   delete(key) {
     localStorage.removeItem(key);
+    return Promise.resolve();
   },
 };
 
