@@ -21,5 +21,5 @@ export default function MaterialTree() {
     ),
   );
 
-  return <BaseTreeView treeView={materialTreeView} />;
+  return <BaseTreeView treeView={materialTreeView} useNewNoteEditor />;
 }

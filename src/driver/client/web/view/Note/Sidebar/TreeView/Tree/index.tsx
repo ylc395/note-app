@@ -8,16 +8,22 @@ import NodeView from './Node';
 import { Show } from 'solid-js';
 import TitleEditor from './TitleEditor';
 
-export default function NoteTree(props: { treeView: TreeViewModel }) {
+export default function NoteTree(props: { treeView: TreeViewModel; useNewNoteEditor?: boolean }) {
   const collection = createTreeCollection<TreeNode>({
     rootNode: props.treeView.tree.root,
     nodeToValue: (node) => node.id,
   });
 
   return (
-    <TreeView.Root collection={collection}>
+    <TreeView.Root class="overflow-auto min-h-0" collection={collection}>
       <TreeView.Tree>
-        <Show when={props.treeView.newNoteEditor.newNote && !props.treeView.newNoteEditor.newNote!.parentId}>
+        <Show
+          when={
+            props.useNewNoteEditor &&
+            props.treeView.newNoteEditor.newNote &&
+            !props.treeView.newNoteEditor.newNote!.parentId
+          }
+        >
           <TitleEditor editor={props.treeView.newNoteEditor} />
         </Show>
         <Key each={collection.rootNode.childrenQuery.result.data} by="id">

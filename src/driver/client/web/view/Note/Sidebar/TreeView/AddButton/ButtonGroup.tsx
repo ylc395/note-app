@@ -11,7 +11,7 @@ export default function ButtonGroup() {
     switch (value) {
       case 'file':
       case 'directory':
-        return treeViews.material.newNoteEditor.init({ parentId: null });
+        return treeViews.material.newNoteEditor.create({ parentId: null });
       default:
         throw new Error('invalid value');
     }

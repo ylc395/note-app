@@ -15,7 +15,7 @@ export default function TitleEditor(props: { editor: NewNoteEditor }) {
         <button onClick={() => props.editor.submit(inputRef!.value)}>
           <CheckIcon />
         </button>
-        <button onClick={() => props.editor.cancel()}>
+        <button onClick={() => props.editor.reset()}>
           <XIcon />
         </button>
       </div>

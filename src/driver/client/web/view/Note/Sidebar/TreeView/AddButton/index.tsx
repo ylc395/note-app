@@ -14,7 +14,7 @@ export default function AddButton() {
   return (
     <div class="flex items-center">
       <Show when={uiState.get('note.treeView') === NoteTreeViewTabs.Note}>
-        <button class="flex" onClick={() => treeViews.note.newNoteEditor.init({ parentId: null })}>
+        <button class="flex" onClick={() => treeViews.note.newNoteEditor.create({ parentId: null }, true)}>
           <PlusIcon />
           新建
         </button>

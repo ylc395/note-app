@@ -12,6 +12,7 @@ export default function TreeView() {
 
   return (
     <Tabs.Root
+      class="min-h-0 flex flex-col"
       orientation="horizontal"
       lazyMount
       defaultValue={uiState.get('note.treeView') ?? NoteTreeViewTabs.Note}
