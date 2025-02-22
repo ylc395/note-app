@@ -3,10 +3,10 @@ import { type JSXElement, Show } from 'solid-js';
 import { Portal } from 'solid-js/web';
 import { XIcon } from 'lucide-solid';
 
-export default function Modal(props: { open: boolean; onClose: () => void; children: JSXElement; title: string }) {
+export default function Modal(props: { open: boolean; onClose?: () => void; children: JSXElement; title: string }) {
   function handleOpenChange({ open }: DialogOpenChangeDetails) {
     if (!open) {
-      props.onClose();
+      props.onClose?.();
     }
   }
 

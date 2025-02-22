@@ -1,3 +1,4 @@
+import { observable } from 'mobx';
 import { container } from '#domain/shared/infra/singletons';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import { type DuplicatedNoteDTO, NoteTypes } from '#domain/shared/model/note';
@@ -6,11 +7,14 @@ import { EntityTypes } from '#domain/shared/model/entity';
 import Workbench from '../model/Workbench';
 import DomainEventBus from '../model/note/EventBus';
 import TreeView from '../model/note/TreeView';
+import MaterialForm from '../model/note/MaterialForm';
 
 export default class NoteService {
   private readonly remote = container.resolve(rpcToken);
 
   public readonly workbench = container.resolve(Workbench);
+
+  @observable.ref public accessor materialFrom: MaterialForm | undefined;
 
   public readonly treeViews = {
     note: new TreeView(NoteTypes.Note),
@@ -26,5 +30,9 @@ export default class NoteService {
     if (open) {
       this.workbench.openEntity({ entityType: EntityTypes.Note, entityId: newNote.id });
     }
+  };
+
+  public readonly toggleMaterialForm = () => {
+    this.materialFrom = this.materialFrom ? undefined : new MaterialForm();
   };
 }

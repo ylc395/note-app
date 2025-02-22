@@ -7,9 +7,8 @@ import UIState, { SidebarTabs } from '#web/view/UIState';
 
 import Sidebar from './Sidebar';
 import Main from './Main';
-import { mainTab } from '../classNames';
 
-export default function MemoExplorer() {
+export default function MemoExplorer(props: { className: string }) {
   const memoList = container.resolve(MemoList);
   const uiState = container.resolve(UIState);
 
@@ -21,7 +20,7 @@ export default function MemoExplorer() {
   );
 
   return (
-    <Tabs.Content value={SidebarTabs.Memo} class={`flex ${mainTab}`}>
+    <Tabs.Content value={SidebarTabs.Memo} class={`flex ${props.className}`}>
       <Sidebar />
       <Main />
     </Tabs.Content>

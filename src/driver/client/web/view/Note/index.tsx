@@ -4,18 +4,17 @@ import { container } from '#domain/shared/infra/singletons';
 import Sidebar from './Sidebar';
 import Workbench from './Workbench';
 import UIState, { SidebarTabs } from '../UIState';
-import { mainTab } from '../classNames';
 
-export default function NoteTab() {
+export default function NoteTab(props: { className: string }) {
   const uiState = container.resolve(UIState);
 
   return (
     <Tabs.Content
       value={SidebarTabs.Note}
-      asChild={(props) => (
+      asChild={(tabProps) => (
         <Splitter.Root
-          {...props()}
-          class={mainTab}
+          {...tabProps()}
+          class={props.className}
           defaultSize={
             (uiState.get('note.sidebar.proportion') as Splitter.RootProps['defaultSize']) ?? [
               { id: 'sidebar', size: 20, maxSize: 60 },

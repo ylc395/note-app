@@ -5,11 +5,12 @@ import { container } from '#domain/shared/infra/singletons';
 import NoteService from '#domain/client/app/service/NoteService';
 
 export default function ButtonGroup() {
-  const { treeViews } = container.resolve(NoteService);
+  const { treeViews, toggleMaterialForm } = container.resolve(NoteService);
 
   function onSelect({ value }: MenuSelectionDetails) {
     switch (value) {
       case 'file':
+        return toggleMaterialForm();
       case 'directory':
         return treeViews.material.newNoteEditor.create({ parentId: null });
       default:
