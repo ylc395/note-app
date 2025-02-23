@@ -21,7 +21,7 @@ export interface FileDTO {
 /**
  * @api
  */
-export type FileVO = Pick<File, 'id' | 'mimeType' | 'lang' | 'size'>;
+export type FileVO = Pick<File, 'id' | 'mimeType' | 'lang' | 'size' | 'hash'>;
 
 export enum MimeTypes {
   PDF = 'application/pdf',

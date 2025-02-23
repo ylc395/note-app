@@ -1,10 +1,11 @@
-import type { Note, NotePatchDTO } from '#domain/shared/model/note.js';
+import type { Note, NotePatchDTO, ClientNoteQuery } from '#domain/shared/model/note.js';
 import type { FileVO } from '../model/file';
 
 export interface NoteQuery {
   parentId?: Note['id'][] | Note['parentId'];
   id?: Note['id'][];
-  type?: Note['type'];
+  type?: ClientNoteQuery['type'];
+  fileHash?: ClientNoteQuery['fileHash'];
   isAvailableOnly?: boolean;
 }
 

@@ -76,6 +76,12 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
       sql = sql.where('type', '=', q.type);
     }
 
+    if (q.fileHash) {
+      sql = sql
+        .innerJoin(fileTableName, `${fileTableName}.id`, `${this.tableName}.fileId`)
+        .where(`${fileTableName}.hash`, '=', q.fileHash);
+    }
+
     const rows = await sql.execute();
     return rows;
   }
@@ -119,7 +125,7 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
       .selectFrom(fileTableName)
       .innerJoin(this.tableName, `${fileTableName}.id`, `${this.tableName}.fileId`)
       .where(`${fileTableName}.id`, 'in', ids)
-      .select([`${fileTableName}.id`, 'mimeType', 'lang', 'size', `${this.tableName}.id as materialId`])
+      .select([`${fileTableName}.id`, 'mimeType', 'lang', 'size', 'hash', `${this.tableName}.id as materialId`])
       .execute();
 
     const fileVOs = rows.map(FileRepository.rowToFileVO);

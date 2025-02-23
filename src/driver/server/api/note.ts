@@ -14,9 +14,9 @@ export default router({
     .input(clientNoteQuerySchema)
     .query(({ input: query, ctx: { noteService } }) => noteService.query(query)),
 
-  queryOne: publicProcedure
+  queryOneById: publicProcedure
     .input(string())
-    .query(({ input: noteId, ctx: { noteService } }) => noteService.queryOne(noteId)),
+    .query(({ input: noteId, ctx: { noteService } }) => noteService.queryOneById(noteId)),
 
   updateOne: publicProcedure
     .input(tuple([noteSchema.shape.id, notePatchDTOSchema]))

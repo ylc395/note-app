@@ -1,19 +1,16 @@
-import { identity } from 'lodash-es';
+import assert from 'assert';
 import { action, computed, observable, toJS } from 'mobx';
-import type { ZodError, ZodSchema } from 'zod';
 
 interface FormError {
+  type?: string | symbol;
   message: string;
   fatal: boolean;
 }
 
-interface FieldOption<T> {
+export interface FieldOption<T> {
   initialValue?: T;
   isRequired?: boolean;
-  transform?: (v: T) => T;
-  validate?:
-    | ((value: T) => FormError | undefined | Promise<FormError | undefined>)
-    | { schema: ZodSchema<T>; error?: (error: ZodError) => FormError };
+  validate?: (value: T) => FormError | undefined | Promise<FormError | undefined>;
 }
 
 type FieldOptions<T> = {
@@ -23,11 +20,11 @@ type FieldOptions<T> = {
 export default class Form<T> {
   constructor(private readonly options: FieldOptions<T>) {
     for (const [key, option] of Object.entries(this.options)) {
-      this.set(key as keyof T, (option as FieldOption<T[keyof T]>).initialValue);
+      this.set(key as keyof T, (option as FieldOptions<T>[keyof T]).initialValue);
     }
   }
 
-  @observable.shallow private accessor values: Partial<Record<keyof T, T[keyof T]>> = {};
+  @observable.shallow private accessor value: Partial<T> = {};
 
   @observable.shallow private accessor validatedErrors: Partial<Record<keyof T, FormError>> = {};
 
@@ -36,10 +33,14 @@ export default class Form<T> {
     const emptyErrors: Partial<Record<keyof T, FormError>> = {};
 
     for (const [key, option] of Object.entries(this.options)) {
-      const value = this.values[key as keyof T];
+      const value = this.value[key as keyof T];
 
-      if (value === undefined && (option as FieldOption<T[keyof T]>).isRequired) {
-        emptyErrors[key as keyof T] = { fatal: true, message: '不能为空' };
+      if (value === undefined && (option as FieldOption<unknown>).isRequired) {
+        emptyErrors[key as keyof T] = {
+          fatal: true,
+          message: '不能为空',
+          type: Form.REQUIRED_ERROR_TYPE,
+        };
       }
     }
 
@@ -56,65 +57,54 @@ export default class Form<T> {
 
   @computed
   public get isValid() {
-    if (Object.values(this.validatingCountMap).filter(identity).length > 0) {
+    if (this.validatingFields.size > 0) {
       return false;
     }
 
     return Object.values(this.errors).filter((err) => err && (err as FormError).fatal).length === 0;
   }
 
-  public getValues() {
-    return toJS(this.values as Partial<T>);
+  public get(): Partial<T>;
+  public get(key: keyof T): Partial<T>[keyof T];
+  public get(key?: keyof T) {
+    return key ? this.value[key] : toJS(this.value);
   }
 
-  @observable private accessor validatingCountMap: Partial<Record<keyof T, number>> = {};
+  @observable private accessor validatingFields = new Set<keyof T>();
 
   @action
   public set<K extends keyof T>(key: K, value: T[K] | undefined) {
+    assert(!this.validatingFields.has(key), `${String(key)} is validating`);
+
     if (typeof value === 'undefined') {
-      delete this.values[key];
+      delete this.value[key];
       return;
     }
 
     const fieldOption = this.options[key];
-    value = fieldOption.transform?.(value) ?? value;
-    this.values[key] = value;
+    this.value[key] = value;
 
     if (!fieldOption.validate) {
       return;
     }
 
-    this.validatingCountMap[key] = (this.validatingCountMap[key] ?? 0) + 1;
+    const validating = fieldOption.validate(value);
+    const handleValidated = (err: FormError | undefined) => {
+      this.validatedErrors[key] = err;
+      this.validatingFields.delete(key);
+    };
 
-    if (typeof fieldOption.validate !== 'function') {
-      const result = fieldOption.validate.schema.safeParseAsync(value);
-      const getError = fieldOption.validate.error;
-
-      result.then(
-        action((result) => {
-          if (!result.success && this.values[key] === value) {
-            this.validatedErrors[key] = getError?.(result.error) || { message: 'error', fatal: false };
-          }
-          this.validatingCountMap[key]! -= 1;
-        }),
-      );
+    if (validating instanceof Promise) {
+      this.validatingFields.add(key);
+      validating.then(action(handleValidated));
     } else {
-      Promise.resolve(fieldOption.validate(value)).then(
-        action((err) => {
-          if (this.values[key] === value) {
-            this.validatedErrors[key] = err;
-          }
-          this.validatingCountMap[key]! -= 1;
-        }),
-      );
+      handleValidated(validating);
     }
   }
 
-  public get(key: keyof T) {
-    return this.values[key];
+  public isValidating(key: keyof T) {
+    return this.validatingFields.has(key);
   }
 
-  public isValidating(key: keyof T) {
-    return !this.validatingCountMap[key];
-  }
+  public static REQUIRED_ERROR_TYPE = Symbol();
 }

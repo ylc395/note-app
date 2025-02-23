@@ -1,4 +1,4 @@
-import { observable } from 'mobx';
+import { action, observable } from 'mobx';
 import { container } from '#domain/shared/infra/singletons';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import { type DuplicatedNoteDTO, NoteTypes } from '#domain/shared/model/note';
@@ -14,7 +14,7 @@ export default class NoteService {
 
   public readonly workbench = container.resolve(Workbench);
 
-  @observable.ref public accessor materialFrom: MaterialForm | undefined;
+  @observable.ref public accessor materialForm: MaterialForm | undefined;
 
   public readonly treeViews = {
     note: new TreeView(NoteTypes.Note),
@@ -32,7 +32,8 @@ export default class NoteService {
     }
   };
 
+  @action
   public readonly toggleMaterialForm = () => {
-    this.materialFrom = this.materialFrom ? undefined : new MaterialForm();
+    this.materialForm = this.materialForm ? undefined : new MaterialForm({ onSubmit: this.toggleMaterialForm });
   };
 }

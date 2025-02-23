@@ -20,7 +20,7 @@ export default class SqliteFileRepository extends BaseRepository implements File
   public async findOneById(id: string) {
     const existedFile = await this.db
       .selectFrom(fileTableName)
-      .select(['id', 'lang', 'mimeType', 'size'])
+      .select(['id', 'lang', 'mimeType', 'size', 'hash'])
       .where('id', '=', id)
       .executeTakeFirst();
 
@@ -39,7 +39,7 @@ export default class SqliteFileRepository extends BaseRepository implements File
   public async findOneByHash(hash: string) {
     const existedFile = await this.db
       .selectFrom(fileTableName)
-      .select(['id', 'lang', 'mimeType', 'size'])
+      .select(['id', 'lang', 'mimeType', 'size', 'hash'])
       .where('hash', '=', hash)
       .executeTakeFirst();
 
@@ -66,7 +66,7 @@ export default class SqliteFileRepository extends BaseRepository implements File
         lang: JSON.stringify(lang),
         data: Buffer.from(data),
       })
-      .returning(['id', 'lang', 'mimeType', 'size'])
+      .returning(['id', 'lang', 'mimeType', 'size', 'hash'])
       .executeTakeFirstOrThrow();
 
     return SqliteFileRepository.rowToFileVO(row);
@@ -82,7 +82,7 @@ export default class SqliteFileRepository extends BaseRepository implements File
   public async findUnfinishedFile() {
     const rows = await this.db
       .selectFrom(fileTableName)
-      .select(['id', 'size', 'lang', 'mimeType'])
+      .select(['id', 'size', 'lang', 'mimeType', 'hash'])
       .where(`${fileTableName}.textExtracted`, '=', 0)
       .execute();
 
@@ -109,7 +109,7 @@ export default class SqliteFileRepository extends BaseRepository implements File
 
     const rows = await this.db
       .selectFrom(fileTableName)
-      .select(['id', 'lang', 'mimeType', 'size'])
+      .select(['id', 'lang', 'mimeType', 'size', 'hash'])
       .where('id', 'in', q.ids)
       .execute();
 

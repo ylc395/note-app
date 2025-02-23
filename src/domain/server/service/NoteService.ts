@@ -163,7 +163,7 @@ export default class NoteService extends BaseService {
   }
 
   @BaseService.transaction
-  public async queryOne(id: Note['id']) {
+  public async queryOneById(id: Note['id']) {
     const note = await this.repo.notes.findOneById(id, { isAvailableOnly: true });
 
     assert(note);

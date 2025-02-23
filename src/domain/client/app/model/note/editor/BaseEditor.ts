@@ -21,7 +21,7 @@ export default class BaseEditor {
     this.entityId = entityId;
     this.backup = new Backup(entityId, BaseEditor.patchSchema);
 
-    this.value = createQuery(({ signal }) => this.remote.note.queryOne.query(this.entityId, { signal }), {
+    this.value = createQuery(({ signal }) => this.remote.note.queryOneById.query(this.entityId, { signal }), {
       queryKey: this.valueQueryKey,
       abortSignal: this.destroyController.signal,
     });
