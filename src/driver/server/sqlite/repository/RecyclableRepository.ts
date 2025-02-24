@@ -30,6 +30,10 @@ export default class SqliteRevisionRepository extends BaseRepository implements 
   }
 
   public async batchCreate(records: RecyclableRecord[]) {
+    if (records.length === 0) {
+      return;
+    }
+
     await this.db.insertInto(this.tableName).values(records).execute();
   }
 

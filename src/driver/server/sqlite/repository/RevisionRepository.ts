@@ -55,6 +55,10 @@ export default class SqliteRevisionRepository extends BaseRepository implements 
   }
 
   public async batchCreate(revisions: Revision[]) {
+    if (revisions.length === 0) {
+      return;
+    }
+
     const rows: Row[] = revisions.map((revision) => ({
       ...revision,
       isAuto: revision.isAuto ? 1 : 0,
