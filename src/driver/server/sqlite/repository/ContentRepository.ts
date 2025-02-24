@@ -50,8 +50,7 @@ export default class SqliteContentRepository extends BaseRepository implements C
     }
 
     const rows = await sql.execute();
-
-    return rows.map((row) => ({ ...row, location: JSON.parse(row.location) }));
+    return rows;
   }
 
   public async createLinks(links: LinkRecord[]) {

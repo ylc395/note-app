@@ -1,12 +1,12 @@
 import type { TopicRecord } from '#domain/server/model/content';
-import type { Kysely } from 'kysely';
+import type { JSONColumnType, Kysely } from 'kysely';
 
 export const tableName = 'topics';
 
 export interface Row {
   name: string;
   entityId: string;
-  location: string;
+  location: JSONColumnType<TopicRecord['location']>;
   level: TopicRecord['level'];
 }
 
