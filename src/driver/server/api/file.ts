@@ -10,8 +10,4 @@ export default router({
   queryOne: publicProcedure
     .input(string())
     .query(({ ctx: { fileService }, input: fileId }) => fileService.queryFileBlobById(fileId)),
-
-  removeOne: publicProcedure
-    .input(string())
-    .mutation(({ ctx: { fileService }, input: fileId }) => fileService.removeTempFile(fileId)),
 });

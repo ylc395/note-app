@@ -1,4 +1,4 @@
-import { ipcRenderer } from 'electron';
+import { ipcRenderer, webUtils } from 'electron';
 import type { MenuClickEvent, MenuCloseEvent } from '../channels';
 
 export default {
@@ -13,5 +13,8 @@ export default {
     ipcRenderer.on('menu-closed', _handler);
 
     return () => ipcRenderer.off('menu-closed', _handler);
+  },
+  getFilePath(file: File) {
+    return webUtils.getPathForFile(file);
   },
 };

@@ -1,67 +1,79 @@
-import { observable, runInAction } from 'mobx';
+import { action, computed, observable, runInAction } from 'mobx';
 import assert from 'assert';
+import { createQuery } from 'mobx-tanstack-query/preset';
 
-import { NoteTypes, type NewNoteDTO, type NoteVO } from '#domain/shared/model/note';
+import { NoteTypes, type NewNoteDTO } from '#domain/shared/model/note';
 import Form from '#domain/client/shared/model/abstract/Form';
 import { container } from '#domain/shared/infra/singletons';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
-import type { FileDTO, FileVO } from '#domain/shared/model/file';
 
 import DomainEventBus from './EventBus';
+import type { FileDTO } from '#domain/shared/model/file';
+import { getHash } from '#utils/file';
 
-type MaterialFormField = Pick<NewNoteDTO, 'title' | 'body' | 'icon' | 'sourceUrl' | 'fileId'>;
+type MaterialFormField = Pick<NewNoteDTO, 'title' | 'body' | 'icon' | 'sourceUrl'>;
+
+type File = Pick<FileDTO, 'mimeType' | 'path'> & { data: ArrayBuffer };
 
 export default class MaterialForm extends Form<MaterialFormField> {
   constructor(private formOptions: { onSubmit: () => void }) {
-    super({
-      fileId: { isRequired: true },
-    });
+    super();
   }
 
   private readonly domainEventBus = container.resolve(DomainEventBus);
 
   public readonly remote = container.resolve(rpcToken);
 
-  @observable.ref public accessor duplicatedNotes: NoteVO[] | undefined;
+  @observable.ref private accessor file: (File & { hash: string }) | undefined;
 
-  private file?: FileVO;
+  public readonly duplicatedNotesQuery = createQuery(
+    () => this.remote.note.query.query({ fileHash: this.file!.hash }),
+    {
+      options: () => ({
+        queryKey: ['notes', { fileHash: this.file?.hash }],
+        enabled: Boolean(this.file),
+      }),
+    },
+  );
 
-  public async uploadFile(file: string | ArrayBuffer, mimeType: string) {
-    this.removeTempFile();
-    this.set('fileId', undefined);
+  @action
+  public async handleFileSelected(file?: File) {
+    if (!file) {
+      this.file = undefined;
+      return;
+    }
 
-    const newFile: FileDTO = { mimeType, isTemp: true };
-    this.file = await this.remote.file.upload.mutate(
-      typeof file === 'string' ? { path: file, ...newFile } : { data: file, ...newFile },
-    );
-
-    this.set('fileId', this.file.id);
-    const duplicatedNotes = await this.remote.note.query.query({ fileHash: this.file.hash });
+    const hash = await getHash(file.data);
 
     runInAction(() => {
-      this.duplicatedNotes = duplicatedNotes;
+      this.file = { ...file, hash };
     });
   }
 
-  private hasSubmit = false;
+  @computed
+  public override get isValid() {
+    return Boolean(this.file);
+  }
 
   public async submit() {
-    assert(this.isValid, 'can not submit');
-    const newNote = await this.remote.note.create.mutate({ type: NoteTypes.Material, ...this.get() });
+    assert(this.file, 'no file');
+
+    const newFile = await this.remote.file.upload.mutate({
+      ...this.file,
+      data: this.file.path ? undefined : this.file.data,
+    });
+
+    const newNote = await this.remote.note.create.mutate({
+      type: NoteTypes.Material,
+      fileId: newFile.id,
+      ...this.get(),
+    });
+
     this.domainEventBus.emit(DomainEventBus.eventNames.Created, newNote);
-    this.hasSubmit = true;
     this.formOptions.onSubmit();
   }
 
   public destroy() {
-    if (!this.hasSubmit) {
-      this.removeTempFile();
-    }
-  }
-
-  private removeTempFile() {
-    if (this.file?.isTemp) {
-      this.remote.file.removeOne.mutate(this.file.id);
-    }
+    this.duplicatedNotesQuery.destroy();
   }
 }

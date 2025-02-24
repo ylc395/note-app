@@ -28,8 +28,7 @@ export default class FileService extends BaseService {
     const hash = await getHash(data);
     const existingFile = await this.repo.files.findOneByHash(hash);
 
-    // 临时文件不能复用。因为临时文件随时会被删除
-    if (existingFile && !existingFile.isTemp) {
+    if (existingFile) {
       return existingFile;
     }
 
@@ -40,17 +39,14 @@ export default class FileService extends BaseService {
       lang: file.lang || [],
       data,
       size: data.byteLength,
-      isTemp: file.isTemp ?? false,
     });
 
-    if (!fileVO.isTemp) {
-      this.textExtractor.addJob({
-        fileId: fileVO.id,
-        lang: fileVO.lang,
-        mimeType: fileVO.mimeType,
-        getData: this.repo.files.findBlobById,
-      });
-    }
+    this.textExtractor.addJob({
+      fileId: fileVO.id,
+      lang: fileVO.lang,
+      mimeType: fileVO.mimeType,
+      getData: this.repo.files.findBlobById,
+    });
 
     return fileVO;
   }
@@ -60,14 +56,6 @@ export default class FileService extends BaseService {
     assert(data);
 
     return data;
-  }
-
-  @BaseService.transaction
-  public async removeTempFile(id: FileVO['id']) {
-    const target = await this.repo.files.findOneById(id);
-    assert(target?.isTemp, 'invalid id');
-
-    await this.repo.files.removeOneById(id);
   }
 
   private async resumeTextExtractor() {

@@ -20,15 +20,11 @@ export default class SqliteFileRepository extends BaseRepository implements File
   public async findOneById(id: string) {
     const existedFile = await this.db
       .selectFrom(fileTableName)
-      .select(['id', 'lang', 'mimeType', 'size', 'hash', 'isTemp'])
+      .select(['id', 'lang', 'mimeType', 'size', 'hash'])
       .where('id', '=', id)
       .executeTakeFirst();
 
-    if (!existedFile) {
-      return null;
-    }
-
-    return SqliteFileRepository.rowToFileVO(existedFile);
+    return existedFile || null;
   }
 
   public readonly findBlobById = async (id: string) => {
@@ -39,38 +35,29 @@ export default class SqliteFileRepository extends BaseRepository implements File
   public async findOneByHash(hash: string) {
     const existedFile = await this.db
       .selectFrom(fileTableName)
-      .select(['id', 'lang', 'mimeType', 'size', 'hash', 'isTemp'])
+      .select(['id', 'lang', 'mimeType', 'size', 'hash'])
       .where('hash', '=', hash)
       .executeTakeFirst();
 
-    if (!existedFile) {
-      return null;
-    }
-
-    return existedFile ? SqliteFileRepository.rowToFileVO(existedFile) : null;
+    return existedFile || null;
   }
 
   public static getBlob(row: Pick<Row, 'data'>) {
     return toArrayBuffer(row.data);
   }
 
-  public static rowToFileVO<T extends Pick<Row, 'isTemp'>>(row: T): T & { isTemp: boolean } {
-    return { ...row, isTemp: Boolean(row.isTemp) };
-  }
-
-  public async create({ data, lang, isTemp, ...file }: File) {
+  public async create({ data, lang, ...file }: File) {
     const row = await this.db
       .insertInto(fileTableName)
       .values({
         ...file,
-        isTemp: isTemp ? 1 : 0,
         lang: JSON.stringify(lang),
         data: Buffer.from(data),
       })
-      .returning(['id', 'lang', 'mimeType', 'size', 'hash', 'isTemp'])
+      .returning(['id', 'lang', 'mimeType', 'size', 'hash'])
       .executeTakeFirstOrThrow();
 
-    return SqliteFileRepository.rowToFileVO(row);
+    return row;
   }
 
   public async createTextRecord({ location, ...record }: FileTextRecord) {
@@ -83,11 +70,11 @@ export default class SqliteFileRepository extends BaseRepository implements File
   public async findUnfinishedFile() {
     const rows = await this.db
       .selectFrom(fileTableName)
-      .select(['id', 'size', 'lang', 'mimeType', 'hash', 'isTemp'])
-      .where((eb) => eb.and([eb(`${fileTableName}.textExtracted`, '=', 0), eb(`${fileTableName}.isTemp`, '=', 0)]))
+      .select(['id', 'size', 'lang', 'mimeType', 'hash'])
+      .where('textExtracted', '=', 0)
       .execute();
 
-    return rows.map(SqliteFileRepository.rowToFileVO);
+    return rows;
   }
 
   public async updateOne(id: File['id'], patch: FilePatch) {
@@ -110,11 +97,11 @@ export default class SqliteFileRepository extends BaseRepository implements File
 
     const rows = await this.db
       .selectFrom(fileTableName)
-      .select(['id', 'lang', 'mimeType', 'size', 'hash', 'isTemp'])
+      .select(['id', 'lang', 'mimeType', 'size', 'hash'])
       .where('id', 'in', q.ids)
       .execute();
 
-    return rows.map((row) => ({ ...row, isTemp: Boolean(row.isTemp) }));
+    return rows;
   }
 
   public async removeOneById(id: File['id']) {

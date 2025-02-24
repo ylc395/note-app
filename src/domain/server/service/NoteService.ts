@@ -52,10 +52,6 @@ export default class NoteService extends BaseService {
       });
     }
 
-    if (newNote.fileId) {
-      await this.repo.files.updateOne(newNote.fileId, { isTemp: false });
-    }
-
     if (newNote.body) {
       this.content.extract(newNote);
     }

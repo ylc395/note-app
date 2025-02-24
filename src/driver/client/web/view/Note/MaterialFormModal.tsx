@@ -9,11 +9,13 @@ export default function MaterialFormModal() {
   const noteService = container.resolve(NoteService);
 
   async function uploadFile(file?: File) {
-    if (!file) {
-      return;
-    }
-
-    noteService.materialForm?.uploadFile(file.path ?? (await file.arrayBuffer()), file.type);
+    noteService.materialForm?.handleFileSelected(
+      file && {
+        path: window.electronUtils?.getFilePath(file),
+        data: await file.arrayBuffer(),
+        mimeType: file.type,
+      },
+    );
   }
 
   return (
@@ -28,7 +30,7 @@ export default function MaterialFormModal() {
           <Field.Input />
         </Field.Root>
         <Field.Root>
-          <FileUpload.Root onFileAccept={({ files: [file] }) => uploadFile(file)}>
+          <FileUpload.Root onFileChange={({ acceptedFiles: [file] }) => uploadFile(file)}>
             <FileUpload.Label>上传本地文件</FileUpload.Label>
             <FileUpload.Dropzone>可拖拽至此</FileUpload.Dropzone>
             <FileUpload.Trigger>点击选择</FileUpload.Trigger>

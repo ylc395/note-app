@@ -5,7 +5,6 @@ export interface File {
   hash: string;
   lang: string[];
   mimeType: string;
-  isTemp: boolean;
   isTextExtracted?: boolean;
 }
 
@@ -14,7 +13,6 @@ export interface File {
  */
 export interface FileDTO {
   mimeType: File['mimeType'];
-  isTemp?: boolean;
   lang?: File['lang'];
   data?: ArrayBuffer;
   path?: string;
@@ -23,7 +21,7 @@ export interface FileDTO {
 /**
  * @api
  */
-export type FileVO = Pick<File, 'id' | 'mimeType' | 'lang' | 'size' | 'hash' | 'isTemp'>;
+export type FileVO = Pick<File, 'id' | 'mimeType' | 'lang' | 'size' | 'hash'>;
 
 export enum MimeTypes {
   PDF = 'application/pdf',

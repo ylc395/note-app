@@ -1,7 +1,6 @@
 import { contextBridge } from 'electron';
 import { exposeElectronTRPC } from 'electron-trpc/main';
-import electronUI from './electronUI';
+import electronUtils from './electronUtils';
 
-contextBridge.exposeInMainWorld('electronUI', electronUI);
-
+contextBridge.exposeInMainWorld('electronUtils', electronUtils);
 process.once('loaded', exposeElectronTRPC);

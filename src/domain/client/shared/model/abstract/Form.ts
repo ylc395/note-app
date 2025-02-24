@@ -18,8 +18,8 @@ type FieldOptions<T> = {
 };
 
 export default class Form<T> {
-  constructor(private readonly options: FieldOptions<T>) {
-    for (const [key, option] of Object.entries(this.options)) {
+  constructor(private readonly options?: FieldOptions<T>) {
+    for (const [key, option] of Object.entries(this.options || {})) {
       this.set(key as keyof T, (option as FieldOptions<T>[keyof T]).initialValue);
     }
   }
@@ -32,7 +32,7 @@ export default class Form<T> {
   private get emptyErrors() {
     const emptyErrors: Partial<Record<keyof T, FormError>> = {};
 
-    for (const [key, option] of Object.entries(this.options)) {
+    for (const [key, option] of Object.entries(this.options || {})) {
       const value = this.value[key as keyof T];
 
       if (value === undefined && (option as FieldOption<unknown>).isRequired) {
@@ -81,10 +81,10 @@ export default class Form<T> {
       return;
     }
 
-    const fieldOption = this.options[key];
+    const fieldOption = this.options?.[key];
     this.value[key] = value;
 
-    if (!fieldOption.validate) {
+    if (!fieldOption?.validate) {
       return;
     }
 
