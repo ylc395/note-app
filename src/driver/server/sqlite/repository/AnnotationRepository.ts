@@ -1,4 +1,3 @@
-import type { Selectable } from 'kysely';
 import { keyBy } from 'lodash-es';
 
 import type { AnnotationRepository } from '#domain/server/repository/annotationRepository.js';
@@ -6,7 +5,7 @@ import type { Annotation, AnnotationPatchDTO } from '#domain/shared/model/annota
 import type { EntityId } from '#domain/shared/model/entity.js';
 
 import BaseRepository from './BaseRepository.js';
-import annotationSchema, { type Row } from '../schema/annotation.js';
+import annotationSchema from '../schema/annotation.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
 import { tableName as noteTableName } from '../schema/note.js';
 import { tableName as fileTableName } from '../schema/file.js';
@@ -54,7 +53,7 @@ export default class SqliteAnnotationRepository extends BaseRepository implement
       ])
       .executeTakeFirstOrThrow();
 
-    return SqliteAnnotationRepository.rowToVO(created);
+    return created;
   }
 
   public async findAllByEntityId(entityId: EntityId, config?: { isAvailableOnly?: boolean }) {
@@ -78,7 +77,7 @@ export default class SqliteAnnotationRepository extends BaseRepository implement
     }
 
     const rows = await sql.execute();
-    return rows.map(SqliteAnnotationRepository.rowToVO);
+    return rows;
   }
 
   public async update(annotationId: Annotation['id'], patch: AnnotationPatchDTO) {
@@ -125,13 +124,6 @@ export default class SqliteAnnotationRepository extends BaseRepository implement
 
     const row = await sql.executeTakeFirst();
 
-    return row ? SqliteAnnotationRepository.rowToVO(row) : null;
-  }
-
-  private static rowToVO(row: Omit<Selectable<Row>, 'bodyPlainText'>): Annotation {
-    return {
-      ...row,
-      selectors: JSON.parse(row.selectors),
-    };
+    return row || null;
   }
 }

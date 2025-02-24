@@ -1,9 +1,9 @@
-import type { LinkTargetType } from '#domain/server/model/content';
-import type { Kysely } from 'kysely';
+import type { LinkRecord, LinkTargetType } from '#domain/server/model/content';
+import type { JSONColumnType, Kysely } from 'kysely';
 
 export interface Row {
   sourceId: string;
-  sourceLocation: string;
+  sourceLocation: JSONColumnType<LinkRecord['sourceLocation']>;
   target: string;
   targetType: LinkTargetType;
   targetDomain: string | null;

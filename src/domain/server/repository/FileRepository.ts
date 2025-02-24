@@ -1,6 +1,6 @@
 import type { File, FileVO, FileTextRecord } from '#domain/server/model/file.js';
 
-export type FilePatch = Partial<Pick<File, 'isTextExtracted' | 'lang'>>;
+export type FilePatch = Partial<Pick<File, 'isTextExtracted' | 'lang' | 'isTemp'>>;
 
 export interface Query {
   ids: File['id'][];
@@ -16,4 +16,5 @@ export interface FileRepository {
   createTextRecord: (fileText: FileTextRecord) => Promise<void>;
   findUnfinishedFile: () => Promise<FileVO[]>;
   findAllFileTextRecords: (ids: File['id'][]) => Promise<FileTextRecord[]>;
+  removeOneById: (id: File['id']) => Promise<void>;
 }

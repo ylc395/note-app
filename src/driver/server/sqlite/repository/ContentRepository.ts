@@ -132,9 +132,6 @@ export default class SqliteContentRepository extends BaseRepository implements C
 
     const rows = await sql.execute();
 
-    return rows.map(({ sourceLocation, ...row }) => ({
-      ...row,
-      sourceLocation: JSON.parse(sourceLocation),
-    }));
+    return rows;
   }
 }

@@ -31,7 +31,7 @@ export const duplicatedNoteDTOSchema = z.object({
 export const noteBatchPatchDTOSchema = notePatchDTOSchema.pick({
   "parentId": true
 });
-export const noteDTOSchema = z.union([z.intersection(noteSchema.pick({
+export const newNoteDTOSchema = z.intersection(noteSchema.pick({
   "body": true,
   "fileId": true,
   "icon": true,
@@ -40,7 +40,8 @@ export const noteDTOSchema = z.union([z.intersection(noteSchema.pick({
   "title": true
 }).partial(), noteSchema.pick({
   "type": true
-}).required()), duplicatedNoteDTOSchema]);
+}).required());
+export const noteDTOSchema = z.union([newNoteDTOSchema, duplicatedNoteDTOSchema]);
 export const clientNoteQuerySchema = z.object({
   type: noteSchema.shape["type"].optional(),
   parentId: z.union([entityParentIdSchema, z.array(z.string())]).optional(),

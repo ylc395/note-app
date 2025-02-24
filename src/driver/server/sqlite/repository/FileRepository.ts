@@ -14,13 +14,13 @@ export default class SqliteFileRepository extends BaseRepository implements File
       .where('fileId', 'in', ids)
       .execute();
 
-    return rows.map((row) => ({ ...row, location: JSON.parse(row.location) }));
+    return rows;
   }
 
   public async findOneById(id: string) {
     const existedFile = await this.db
       .selectFrom(fileTableName)
-      .select(['id', 'lang', 'mimeType', 'size', 'hash'])
+      .select(['id', 'lang', 'mimeType', 'size', 'hash', 'isTemp'])
       .where('id', '=', id)
       .executeTakeFirst();
 
@@ -28,7 +28,7 @@ export default class SqliteFileRepository extends BaseRepository implements File
       return null;
     }
 
-    return { ...existedFile, lang: JSON.parse(existedFile.lang) };
+    return SqliteFileRepository.rowToFileVO(existedFile);
   }
 
   public readonly findBlobById = async (id: string) => {
@@ -39,7 +39,7 @@ export default class SqliteFileRepository extends BaseRepository implements File
   public async findOneByHash(hash: string) {
     const existedFile = await this.db
       .selectFrom(fileTableName)
-      .select(['id', 'lang', 'mimeType', 'size', 'hash'])
+      .select(['id', 'lang', 'mimeType', 'size', 'hash', 'isTemp'])
       .where('hash', '=', hash)
       .executeTakeFirst();
 
@@ -54,19 +54,20 @@ export default class SqliteFileRepository extends BaseRepository implements File
     return toArrayBuffer(row.data);
   }
 
-  public static rowToFileVO<T extends Partial<Row>>(row: T) {
-    return { ...row, ...(row.lang ? { lang: JSON.parse(row.lang) as string[] } : null) };
+  public static rowToFileVO<T extends Pick<Row, 'isTemp'>>(row: T): T & { isTemp: boolean } {
+    return { ...row, isTemp: Boolean(row.isTemp) };
   }
 
-  public async create({ data, lang, ...file }: File) {
+  public async create({ data, lang, isTemp, ...file }: File) {
     const row = await this.db
       .insertInto(fileTableName)
       .values({
         ...file,
+        isTemp: isTemp ? 1 : 0,
         lang: JSON.stringify(lang),
         data: Buffer.from(data),
       })
-      .returning(['id', 'lang', 'mimeType', 'size', 'hash'])
+      .returning(['id', 'lang', 'mimeType', 'size', 'hash', 'isTemp'])
       .executeTakeFirstOrThrow();
 
     return SqliteFileRepository.rowToFileVO(row);
@@ -82,8 +83,8 @@ export default class SqliteFileRepository extends BaseRepository implements File
   public async findUnfinishedFile() {
     const rows = await this.db
       .selectFrom(fileTableName)
-      .select(['id', 'size', 'lang', 'mimeType', 'hash'])
-      .where(`${fileTableName}.textExtracted`, '=', 0)
+      .select(['id', 'size', 'lang', 'mimeType', 'hash', 'isTemp'])
+      .where((eb) => eb.and([eb(`${fileTableName}.textExtracted`, '=', 0), eb(`${fileTableName}.isTemp`, '=', 0)]))
       .execute();
 
     return rows.map(SqliteFileRepository.rowToFileVO);
@@ -109,10 +110,14 @@ export default class SqliteFileRepository extends BaseRepository implements File
 
     const rows = await this.db
       .selectFrom(fileTableName)
-      .select(['id', 'lang', 'mimeType', 'size', 'hash'])
+      .select(['id', 'lang', 'mimeType', 'size', 'hash', 'isTemp'])
       .where('id', 'in', q.ids)
       .execute();
 
-    return rows.map(SqliteFileRepository.rowToFileVO);
+    return rows.map((row) => ({ ...row, isTemp: Boolean(row.isTemp) }));
+  }
+
+  public async removeOneById(id: File['id']) {
+    await this.db.deleteFrom(fileTableName).where('id', '=', id).execute();
   }
 }

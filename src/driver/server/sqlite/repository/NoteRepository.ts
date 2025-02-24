@@ -1,12 +1,13 @@
 import type { NoteRepository, NotePatch, NoteQuery } from '#domain/server/repository/noteRepository.js';
 import type { Note, NoteVO } from '#domain/shared/model/note.js';
-import { keyBy } from 'lodash-es';
+import { keyBy, mapValues } from 'lodash-es';
 
 import schema from '../schema/note.js';
 import { tableName as fileTableName } from '../schema/file.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
 import BaseRepository from './BaseRepository.js';
 import FileRepository from './FileRepository.js';
+import SqliteFileRepository from './FileRepository.js';
 
 export default class SqliteNoteRepository extends BaseRepository implements NoteRepository {
   public readonly tableName = schema.tableName;
@@ -125,11 +126,20 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
       .selectFrom(fileTableName)
       .innerJoin(this.tableName, `${fileTableName}.id`, `${this.tableName}.fileId`)
       .where(`${fileTableName}.id`, 'in', ids)
-      .select([`${fileTableName}.id`, 'mimeType', 'lang', 'size', 'hash', `${this.tableName}.id as materialId`])
+      .select([
+        `${fileTableName}.id`,
+        'mimeType',
+        'lang',
+        'size',
+        'hash',
+        `${fileTableName}.isTemp`,
+        `${this.tableName}.id as noteId`,
+      ])
       .execute();
 
-    const fileVOs = rows.map(FileRepository.rowToFileVO);
-
-    return keyBy(fileVOs, (file) => file.materialId);
+    return mapValues(
+      keyBy(rows, (file) => file.noteId),
+      ({ noteId: _, ...file }) => SqliteFileRepository.rowToFileVO(file),
+    );
   }
 }

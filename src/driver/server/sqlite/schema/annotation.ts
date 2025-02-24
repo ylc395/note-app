@@ -1,4 +1,5 @@
-import type { Kysely } from 'kysely';
+import type { Annotation } from '#domain/shared/model/annotation';
+import type { JSONColumnType, Kysely } from 'kysely';
 
 export const tableName = 'annotations';
 
@@ -8,7 +9,7 @@ export interface Row {
   body: string;
   bodyPlainText: string;
   color: string;
-  selectors: string;
+  selectors: JSONColumnType<Annotation['selectors']>;
   createdAt: number;
   updatedAt: number;
 }

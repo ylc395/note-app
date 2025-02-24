@@ -1,9 +1,10 @@
-import type { Kysely } from 'kysely';
+import type { FileTextRecord } from '#domain/server/model/file';
+import type { JSONColumnType, Kysely } from 'kysely';
 
 export interface Row {
   fileId: string;
   text: string;
-  location: string;
+  location: JSONColumnType<FileTextRecord['location']>;
 }
 
 export const tableName = 'file_texts';

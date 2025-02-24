@@ -34,6 +34,11 @@ export default class NoteService {
 
   @action
   public readonly toggleMaterialForm = () => {
-    this.materialForm = this.materialForm ? undefined : new MaterialForm({ onSubmit: this.toggleMaterialForm });
+    if (this.materialForm) {
+      this.materialForm.destroy();
+      this.materialForm = undefined;
+    } else {
+      this.materialForm = new MaterialForm({ onSubmit: this.toggleMaterialForm });
+    }
   };
 }

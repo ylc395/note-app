@@ -1,4 +1,4 @@
-import { Kysely, SqliteDialect, CamelCasePlugin, type Transaction } from 'kysely';
+import { Kysely, SqliteDialect, CamelCasePlugin, ParseJSONResultsPlugin, type Transaction } from 'kysely';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import BetterSqlite3 from 'better-sqlite3';
 import fs from 'fs-extra';
@@ -78,7 +78,7 @@ export default class SqliteDb implements Database {
 
     return new Kysely<Db>({
       dialect: new SqliteDialect({ database: db }),
-      plugins: [new CamelCasePlugin()],
+      plugins: [new CamelCasePlugin(), new ParseJSONResultsPlugin()],
     });
   }
 
