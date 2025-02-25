@@ -1,5 +1,6 @@
+import { isPlainObject } from 'lodash-es';
 import type { ZodType } from 'zod';
-import { action, observable } from 'mobx';
+import { action, observable, runInAction, toJS } from 'mobx';
 import assert from 'assert';
 
 import { container } from '#domain/shared/infra/singletons';
@@ -15,11 +16,8 @@ export default class PersistedObject<S> {
 
   public readonly ready: Promise<void>;
 
-  private isReady = false;
-
-  @action
   private async init() {
-    let value;
+    let value: unknown;
 
     try {
       value = this.localStorage.getSync(this.key);
@@ -27,32 +25,30 @@ export default class PersistedObject<S> {
       value = await this.localStorage.get(this.key);
     }
 
-    const parsedResult = this.schema.safeParse(value);
-    this.value = parsedResult.success ? parsedResult.data : undefined;
-    this.isReady = true;
+    const parsedResult = this.schema.safeParse(isPlainObject(value) ? value : {});
+
+    runInAction(() => {
+      this.value = parsedResult.success ? parsedResult.data : undefined;
+    });
   }
 
   private readonly localStorage = container.resolve(localStorageToken);
+
+  @observable.shallow private accessor value: Readonly<S> | undefined;
 
   private get key() {
     return `PERSISTENCE_OBJECT_${this.id}`;
   }
 
-  @observable private accessor value: Readonly<S> | undefined;
-
   public get<T extends keyof S>(key: T) {
-    assert(this.isReady, 'not ready');
-    return this.value?.[key];
+    assert(this.value, 'not ready');
+    return toJS(this.value[key]);
   }
 
   @action
-  public set<T extends keyof S>(key: T, value?: S[T]) {
-    assert(this.isReady, 'not ready');
-    this.value = { ...this.value, ...({ [key]: value } as S) };
+  public set<T extends keyof S>(key: T, value: S[T]) {
+    assert(this.value, 'not ready');
+    this.value = { ...this.value, ...{ [key]: value } };
     this.localStorage.set(this.key, this.value);
-  }
-
-  public clear() {
-    this.localStorage.delete(this.key);
   }
 }

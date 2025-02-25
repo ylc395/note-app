@@ -10,12 +10,10 @@ export const fileSchema = z.object({
   hash: z.string(),
   lang: z.array(z.string()),
   mimeType: z.string(),
-  isTemp: z.boolean(),
   isTextExtracted: z.boolean().optional()
 });
 export const fileDTOSchema = z.object({
   mimeType: fileSchema.shape["mimeType"],
-  isTemp: z.boolean().optional(),
   lang: fileSchema.shape["lang"].optional(),
   data: z.instanceof(ArrayBuffer).optional(),
   path: z.string().optional()
@@ -25,6 +23,5 @@ export const fileVOSchema = fileSchema.pick({
   "mimeType": true,
   "lang": true,
   "size": true,
-  "hash": true,
-  "isTemp": true
+  "hash": true
 });

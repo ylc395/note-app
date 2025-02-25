@@ -8,7 +8,7 @@ export enum NoteTypes {
 
 export interface Note {
   id: EntityId;
-  type?: NoteTypes;
+  type: NoteTypes;
   title: string;
   parentId: EntityParentId;
   body?: string;
@@ -54,7 +54,7 @@ export interface ClientNoteQuery {
   fileHash?: string;
 }
 
-export interface NoteVO extends Omit<Note, 'bodyPlainText' | 'type'> {
+export interface NoteVO extends Omit<Note, 'bodyPlainText'> {
   isStar: boolean;
   childrenCount: number;
 }

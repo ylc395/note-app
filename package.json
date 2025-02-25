@@ -55,7 +55,7 @@
     "zodify": "^1.1.6"
   },
   "dependencies": {
-    "@ark-ui/solid": "^4.10.1",
+    "@ark-ui/solid": "^4.10.2",
     "@braintree/sanitize-url": "^6.0.4",
     "@emoji-mart/data": "^1.1.2",
     "@emoji-mart/react": "^1.1.1",
@@ -124,7 +124,7 @@
     "unist-util-is": "^6.0.0",
     "unist-util-visit": "^5.0.0",
     "webextension-polyfill": "^0.10.0",
-    "zod": "^3.24.1"
+    "zod": "^3.24.2"
   },
   "pnpm": {
     "patchedDependencies": {

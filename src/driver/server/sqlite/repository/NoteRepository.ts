@@ -48,6 +48,7 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
       .select([
         `${this.tableName}.id`,
         `${this.tableName}.icon`,
+        `${this.tableName}.type`,
         `${this.tableName}.parentId`,
         `${this.tableName}.title`,
         `${this.tableName}.updatedAt`,

@@ -9,13 +9,14 @@ import AddButton from './AddButton';
 
 export default function TreeView() {
   const uiState = container.resolve(UIState);
+  console.log(uiState.get('note.treeView'));
 
   return (
     <Tabs.Root
       class="min-h-0 flex flex-col"
       orientation="horizontal"
       lazyMount
-      defaultValue={uiState.get('note.treeView') ?? NoteTreeViewTabs.Note}
+      defaultValue={uiState.get('note.treeView')}
       onValueChange={({ value }) => uiState.set('note.treeView', value as NoteTreeViewTabs)}
     >
       <div class="flex items-center justify-between">
@@ -29,10 +30,10 @@ export default function TreeView() {
         </Tabs.List>
         <AddButton />
       </div>
-      <Tabs.Content value="note" class="overflow-auto">
+      <Tabs.Content value={NoteTreeViewTabs.Note} class="overflow-auto">
         <NoteTreeView />
       </Tabs.Content>
-      <Tabs.Content value="material" class="overflow-auto">
+      <Tabs.Content value={NoteTreeViewTabs.Material} class="overflow-auto">
         <MaterialTreeView />
       </Tabs.Content>
     </Tabs.Root>

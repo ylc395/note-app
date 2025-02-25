@@ -10,7 +10,7 @@ import SortBehavior from './SortBehavior';
 import NewNoteEditor from './NewNoteEditor';
 
 export default class TreeView {
-  constructor(type: NoteTypes) {
+  constructor(private readonly type: NoteTypes) {
     this.tree = new Tree({
       sort: this.sortBehavior.sort.bind(this.sortBehavior),
       type,
@@ -34,7 +34,11 @@ export default class TreeView {
 
   public readonly tree;
 
-  private handleUpdated({ parentId, id }: UpdatedEvent) {
+  private handleUpdated({ parentId, id, type }: UpdatedEvent) {
+    if (type !== this.type) {
+      return;
+    }
+
     if (parentId !== undefined) {
       const node = this.tree.get(id);
 

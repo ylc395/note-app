@@ -8,7 +8,7 @@ import { entityIdSchema, entityParentIdSchema } from "./entity.js";
 export const noteTypesSchema = z.nativeEnum(NoteTypes);
 export const noteSchema = z.object({
   id: entityIdSchema,
-  type: noteTypesSchema.optional(),
+  type: noteTypesSchema,
   title: z.string(),
   parentId: entityParentIdSchema,
   body: z.string().optional(),
