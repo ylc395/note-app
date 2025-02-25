@@ -10,7 +10,6 @@ import TitleEditor from './TitleEditor';
 
 function Node(props: { treeView: TreeViewModel; note: NoteVO; parent: TreeNode; indexPath: number[] }) {
   const node = props.treeView.tree.createNode({ value: props.note, parent: props.parent });
-
   const hasEditor = createMemo(() => node.id === props.treeView.newNoteEditor.newNote?.parentId);
 
   createEffect(
