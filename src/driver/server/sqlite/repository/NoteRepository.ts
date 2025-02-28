@@ -1,6 +1,7 @@
-import type { NoteRepository, NotePatch, NoteQuery } from '#domain/server/repository/noteRepository.js';
-import type { Note, NoteVO } from '#domain/shared/model/note.js';
 import { keyBy } from 'lodash-es';
+
+import type { NoteRepository } from '#domain/server/repository/noteRepository.js';
+import type { Note, NoteVO, NewNote, NotePatch, NoteQuery } from '#domain/server/model/note.js';
 
 import schema from '../schema/note.js';
 import { tableName as fileTableName } from '../schema/file.js';
@@ -10,7 +11,7 @@ import FileRepository from './FileRepository.js';
 
 export default class SqliteNoteRepository extends BaseRepository implements NoteRepository {
   public readonly tableName = schema.tableName;
-  public async create(note: Required<Note>) {
+  public async create(note: NewNote) {
     const row = await this.db
       .insertInto(this.tableName)
       .values(note)
@@ -45,6 +46,7 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
   public async findAll(q: NoteQuery) {
     let sql = this.db
       .selectFrom(this.tableName)
+      .leftJoin(fileTableName, `${this.tableName}.fileId`, `${fileTableName}.id`)
       .select([
         `${this.tableName}.id`,
         `${this.tableName}.icon`,
@@ -55,6 +57,7 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
         `${this.tableName}.createdAt`,
         `${this.tableName}.fileId`,
         `${this.tableName}.sourceUrl`,
+        `${fileTableName}.mimeType`,
       ]);
 
     if (q.isAvailableOnly) {
@@ -88,7 +91,10 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
   }
 
   public async findOneById(id: NoteVO['id'], config?: { isAvailableOnly?: boolean }) {
-    let sql = await this.db.selectFrom(this.tableName).where('id', '=', id);
+    let sql = this.db
+      .selectFrom(this.tableName)
+      .leftJoin(fileTableName, `${this.tableName}.fileId`, `${fileTableName}.id`)
+      .where(`${this.tableName}.id`, '=', id);
 
     if (config?.isAvailableOnly) {
       sql = sql
@@ -96,7 +102,23 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
         .where(`${recyclableTableName}.entityId`, 'is', null);
     }
 
-    const row = await sql.selectAll().executeTakeFirst();
+    const row = await sql
+      .select([
+        `${this.tableName}.id`,
+        `${this.tableName}.icon`,
+        `${this.tableName}.type`,
+        `${this.tableName}.parentId`,
+        `${this.tableName}.title`,
+        `${this.tableName}.updatedAt`,
+        `${this.tableName}.createdAt`,
+        `${this.tableName}.body`,
+        `${this.tableName}.bodyPlainText`,
+        `${this.tableName}.createdAt`,
+        `${this.tableName}.fileId`,
+        `${this.tableName}.sourceUrl`,
+        `${fileTableName}.mimeType`,
+      ])
+      .executeTakeFirst();
     return row || null;
   }
 

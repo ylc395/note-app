@@ -29,14 +29,22 @@ export default class SqliteEntityRepository extends BaseRepository implements En
   public async findAncestors(ids: EntityId[]): Promise<Record<string, Entity[]>>;
   public async findAncestors(id: EntityId): Promise<Entity[]>;
   public async findAncestors(ids: EntityId[] | EntityId) {
-    const fields = ['id', 'title', 'icon', 'type', 'parentId', 'createdAt', 'updatedAt'] as const;
+    const fields = [
+      `${this.tableName}.id`,
+      `${this.tableName}.title`,
+      `${this.tableName}.icon`,
+      `${this.tableName}.type`,
+      `${this.tableName}.parentId`,
+      `${this.tableName}.createdAt`,
+      `${this.tableName}.updatedAt`,
+    ] as const;
 
     const rows = await this.db
       .withRecursive('ancestors', (qb) =>
         qb
           .selectFrom(this.tableName)
           .select(fields)
-          .where('id', 'in', Array.isArray(ids) ? ids : [ids])
+          .where(`${this.tableName}.id`, 'in', Array.isArray(ids) ? ids : [ids])
           .union(
             qb
               .selectFrom('ancestors')

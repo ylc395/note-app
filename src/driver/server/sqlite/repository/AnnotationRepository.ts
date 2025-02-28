@@ -28,6 +28,7 @@ export default class SqliteAnnotationRepository extends BaseRepository implement
         `${noteTableName}.parentId`,
         `${noteTableName}.createdAt`,
         `${noteTableName}.updatedAt`,
+        `${fileTableName}.mimeType`,
         `${noteTableName}.body`,
         `${noteTableName}.sourceUrl`,
       ])

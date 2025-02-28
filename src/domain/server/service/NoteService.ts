@@ -1,5 +1,5 @@
 import assert from 'node:assert';
-import { first, pick, uniq } from 'lodash-es';
+import { first, omit, pick, uniq } from 'lodash-es';
 import {
   type NoteVO,
   type NoteDTO,
@@ -7,28 +7,36 @@ import {
   type Note,
   type ClientNoteQuery,
   type NoteBatchPatchDTO,
+  type NewNote,
   normalizeTitle,
   NoteTypes,
-} from '#domain/shared/model/note.js';
+} from '#domain/server/model/note.js';
 import { arrayOf, buildIndex } from '#utils/collection.js';
 import { container } from '#domain/shared/infra/singletons.js';
 
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
 import ContentService from './ContentService/index.js';
+import FileService from './FileService/index.js';
 
 export default class NoteService extends BaseService {
   private readonly content = container.resolve(ContentService);
 
+  private readonly file = container.resolve(FileService);
+
   @BaseService.transaction
   public async create(note: NoteDTO) {
-    let newNote: Required<Note>;
+    let newNote: NewNote;
 
     if ('from' in note) {
       newNote = await this.duplicate(note.from);
     } else {
       if (note.fileId || note.sourceUrl) {
         assert(note.type === NoteTypes.Material, 'invalid type');
+      }
+
+      if (note.fileId) {
+        await this.file.assertId(note.fileId);
       }
 
       if (note.parentId) {
@@ -56,7 +64,7 @@ export default class NoteService extends BaseService {
       this.content.extract(newNote);
     }
 
-    return await this.toVO(newNote, true);
+    return this.queryOneById(newNote.id);
   }
 
   private async duplicate(fromNoteId: Note['id']) {
@@ -103,8 +111,8 @@ export default class NoteService extends BaseService {
     const stars = isNew ? {} : buildIndex(await this.repo.stars.findAll({ entityIds: ids }), 'entityId');
     const children = isNew ? {} : await this.repo.entities.findChildrenIds(ids, { isAvailableOnly: true });
 
-    const result: NoteVO[] = _notes.map(({ bodyPlainText: _, ...note }) => ({
-      ...note,
+    const result: NoteVO[] = _notes.map((note) => ({
+      ...omit(note, ['bodyPlainText', 'fileId']),
       childrenCount: children[note.id]?.length || 0,
       isStar: Boolean(stars[note.id]),
     }));

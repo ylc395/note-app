@@ -9,7 +9,6 @@ import AddButton from './AddButton';
 
 export default function TreeView() {
   const uiState = container.resolve(UIState);
-  console.log(uiState.get('note.treeView'));
 
   return (
     <Tabs.Root

@@ -38,7 +38,7 @@ export default class BaseEditor {
         structuralSharing: false,
         abortSignal: this.destroyController.signal,
         options: () => ({
-          enabled: this.value.result.isSuccess,
+          enabled: Boolean(this.value.result.data?.mimeType),
         }),
       },
     );

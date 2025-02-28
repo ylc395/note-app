@@ -88,4 +88,9 @@ export default class FileService extends BaseService {
       await this.repo.files.updateOne(fileId, { isTextExtracted: true });
     }
   }
+
+  public async assertId(id: string) {
+    const file = await this.repo.files.findOneById(id);
+    assert(file, 'invalid id');
+  }
 }

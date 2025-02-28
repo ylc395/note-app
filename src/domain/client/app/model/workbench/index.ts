@@ -49,7 +49,7 @@ export default class Workbench {
     const tile = new Tile();
 
     tile.events.on(Tile.eventNames.Destroyed, this.removeTile.bind(this, tile));
-    tile.events.on(Tile.eventNames.EditorSwitched, this.historyStack.push.bind(this));
+    tile.events.on(Tile.eventNames.EditorSwitched, this.historyStack.push.bind(this.historyStack));
 
     this.tilesMap[tile.id] = tile;
     return tile;
@@ -191,7 +191,7 @@ export default class Workbench {
   }
 
   // 在指定位置打开一个 editor。该 editor 可能是新建的，也可能是复用已存在的。若已存在，则其会被移动到指定位置（若有指定）
-  @action.bound
+  @action
   public openEntity(entity: EntityLocator, options?: { dest: Editor | Tile | NewTile; replace?: boolean }) {
     if (options && !(options.dest instanceof Editor) && options.replace) {
       assert.fail('you can only replace an editor');
@@ -221,7 +221,6 @@ export default class Workbench {
         if (dest instanceof Editor) {
           destTile.moveEditor(existedEditor, { dest, replace: options?.replace });
         }
-        // 若 editor 已存在，且没指定打开的具体位置，则什么也不做
       } else {
         editor = destTile.createEditor(
           entity,

@@ -14,7 +14,8 @@ export interface Note {
   body?: string;
   bodyPlainText?: string;
   icon: string | null;
-  fileId: string | null; // material 有可能存在该属性
+  fileId?: string | null; // material 有可能存在该属性
+  mimeType: string | null; // material 有可能存在该属性
   sourceUrl: string | null; // material 有可能存在该属性
   updatedAt: number;
   createdAt: number;
@@ -54,7 +55,7 @@ export interface ClientNoteQuery {
   fileHash?: string;
 }
 
-export interface NoteVO extends Omit<Note, 'bodyPlainText'> {
+export interface NoteVO extends Omit<Note, 'bodyPlainText' | 'fileId'> {
   isStar: boolean;
   childrenCount: number;
 }

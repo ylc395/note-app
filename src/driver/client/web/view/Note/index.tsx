@@ -7,6 +7,8 @@ import UIState, { SidebarTabs } from '../UIState';
 
 export default function NoteTab(props: { className: string }) {
   const uiState = container.resolve(UIState);
+  const sideBarId = 'sidebar';
+  const workbenchId = 'workbench';
 
   return (
     <Tabs.Content
@@ -23,9 +25,9 @@ export default function NoteTab(props: { className: string }) {
           }
           onSizeChangeEnd={(e) => uiState.set('note.sidebar.proportion', e.size)}
         >
-          <Sidebar />
-          <Splitter.ResizeTrigger id="sidebar:workbench" class="w-1" />
-          <Workbench />
+          <Sidebar panelId={sideBarId} />
+          <Splitter.ResizeTrigger id={`${sideBarId}:${workbenchId}`} class="w-1" />
+          <Workbench panelId={workbenchId} />
         </Splitter.Root>
       )}
     />
