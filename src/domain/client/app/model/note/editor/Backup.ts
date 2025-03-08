@@ -32,7 +32,7 @@ export default class Backup<T> {
 
   @action
   public diff(source: object) {
-    const allBackups = this.localStorage.get(this.storageKey, this.schema);
+    const allBackups = this.localStorage.getSync(this.storageKey, this.schema);
     const latest = maxBy(Object.values(allBackups || {}), ({ timestamp }) => timestamp);
 
     if (!latest) {

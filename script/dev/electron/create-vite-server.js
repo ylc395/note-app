@@ -5,6 +5,7 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 import solid from 'vite-plugin-solid';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import tailwindcss from 'tailwindcss';
+import devtools from 'solid-devtools/vite';
 
 import { RUNTIME_ENV } from './constants.js';
 import { APP_NAME } from '../../../src/domain/shared/infra/constants.js';
@@ -23,6 +24,7 @@ export default async function createViteServer() {
       },
     },
     plugins: [
+      devtools(),
       solid(),
       checker({ typescript: { tsconfigPath: WEB_TSCONFIG } }),
       tsconfigPaths({ projects: [WEB_TSCONFIG] }),

@@ -1,7 +1,8 @@
+import { render } from 'solid-js/web';
+import 'solid-devtools';
 import '#domain/client/shared/infra/mobx';
 import '#domain/client/shared/infra/queryClient';
 import '#domain/client/shared/infra/solid-mobx';
-import { render } from 'solid-js/web';
 
 import { token as loggerToken } from '#domain/shared/infra/logger';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';

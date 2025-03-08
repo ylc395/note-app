@@ -17,7 +17,7 @@ export default function MemoMain() {
 
   return (
     <>
-      <div class="flex flex-col max-w-screen-lg mx-auto h-full w-full">
+      <div class="flex flex-col max-w-screen-lg mx-auto h-full w-full p-4">
         <Editor editor={memoList.newEditor} />
         <ListToolbar />
         <List />

@@ -1,5 +1,5 @@
 import { uniqueId } from 'lodash-es';
-import { computed, reaction } from 'mobx';
+import { action, computed, reaction } from 'mobx';
 // import type { infer as ZodInfer } from 'zod';
 // import assert from 'assert';
 import { createQuery } from 'mobx-tanstack-query/preset';
@@ -104,12 +104,14 @@ export default class BaseEditor {
   //   1000,
   // );
 
+  @action
   public destroy() {
     // this.update.flush();
-    this.events.clearListeners();
     this.destroyController.abort();
 
-    this.events.emit(EventNames.Destroy, this);
+    this.events.emit(EventNames.Destroy, this).then(() => {
+      this.events.clearListeners();
+    });
   }
 
   public static readonly eventNames = EventNames;

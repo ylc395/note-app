@@ -1,4 +1,3 @@
-import { action } from 'mobx';
 import { PanelLeftClose } from 'lucide-solid';
 
 import { container } from '#domain/shared/infra/singletons';
@@ -13,10 +12,10 @@ export default function Sidebar() {
 
   return (
     <div
-      onclick={action(() => uiState.set('memo.sidebarVisibility', 'visible'))}
+      onclick={() => uiState.set('memo.sidebarVisibility', 'visible')}
       class={`${uiState.get('memo.sidebarVisibility') === 'always' ? '' : 'hidden'}
         ${uiState.get('memo.sidebarVisibility') === 'hidden' ? 'md:hidden' : 'md:block'}
-        z-10 inset-0 bg-transparent absolute min-w-0 shrink-0 border-r pr-4 mr-4 opacity-80
+        z-10 inset-0 bg-transparent absolute min-w-0 shrink-0 border-r p-4 opacity-80
         md:static md:z-0 md:opacity-100`}
     >
       <div
@@ -25,7 +24,7 @@ export default function Sidebar() {
       >
         <div class="flex sticky z-10 bg-gray-50 top-0 items-center pb-4 justify-between">
           <h1 class="font-semibold">MEMO</h1>
-          <button class="text-gray-300" onClick={action(() => uiState.set('memo.sidebarVisibility', 'hidden'))}>
+          <button class="text-gray-300" onClick={() => uiState.set('memo.sidebarVisibility', 'hidden')}>
             <PanelLeftClose />
           </button>
         </div>
