@@ -1,34 +1,51 @@
 import { createTreeCollection, TreeView } from '@ark-ui/solid';
 import { Key } from '@solid-primitives/keyed';
+import { Show, type JSX } from 'solid-js';
 
 import type TreeNode from '#domain/client/shared/model/note/TreeNode';
 import TreeViewModel from '#domain/client/app/model/note/TreeView';
+import type { Note } from '#domain/shared/model/note';
 
 import NodeView from './Node';
-import { Show } from 'solid-js';
 import TitleEditor from './TitleEditor';
 
-export default function NoteTree(props: { treeView: TreeViewModel; useNewNoteEditor?: boolean }) {
+export default function NoteTree(props: {
+  treeView: TreeViewModel;
+  useNewNoteEditor?: boolean;
+  operation: (note: Note) => JSX.Element;
+}) {
   const collection = createTreeCollection<TreeNode>({
     rootNode: props.treeView.tree.root,
     nodeToValue: (node) => node.id,
+    nodeToChildren: (node) => node.childrenQuery.result.data?.map(({ id }) => props.treeView.tree.get(id)) ?? [],
   });
 
   return (
-    <TreeView.Root class="overflow-auto min-h-0" collection={collection}>
+    <TreeView.Root
+      class="overflow-auto min-h-0"
+      collection={collection}
+      expandOnClick={false}
+      expandedValue={Array.from(props.treeView.tree.expandedNodeIds)}
+    >
       <TreeView.Tree>
         <Show
           when={
             props.useNewNoteEditor &&
-            props.treeView.newNoteEditor.newNote &&
-            !props.treeView.newNoteEditor.newNote!.parentId
+            props.treeView.newNoteEditor?.value &&
+            !props.treeView.newNoteEditor.value.parentId
           }
         >
-          <TitleEditor editor={props.treeView.newNoteEditor} />
+          <TitleEditor editor={props.treeView.newNoteEditor!} />
         </Show>
         <Key each={collection.rootNode.childrenQuery.result.data} by="id">
           {(note, index) => (
-            <NodeView treeView={props.treeView} note={note()} parent={props.treeView.tree.root} indexPath={[index()]} />
+            <NodeView
+              operation={props.operation}
+              treeView={props.treeView}
+              note={note()}
+              parent={props.treeView.tree.root}
+              indexPath={[index()]}
+            />
           )}
         </Key>
       </TreeView.Tree>

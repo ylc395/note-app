@@ -1,6 +1,7 @@
 import { TreeView } from '@ark-ui/solid';
-import { createEffect, createMemo, on, onCleanup, Show } from 'solid-js';
+import { createEffect, createMemo, on, onCleanup, Show, type JSX } from 'solid-js';
 import { Key } from '@solid-primitives/keyed';
+import { ChevronDownIcon, ChevronRightIcon } from 'lucide-solid';
 
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
 import { normalizeTitle, type NoteVO } from '#domain/shared/model/note';
@@ -11,10 +12,16 @@ import Workbench from '#domain/client/app/model/Workbench';
 import TitleEditor from './TitleEditor';
 import { EntityTypes } from '#domain/shared/model/entity';
 
-function Node(props: { treeView: TreeViewModel; note: NoteVO; parent: TreeNode; indexPath: number[] }) {
+function Node(props: {
+  treeView: TreeViewModel;
+  note: NoteVO;
+  parent: TreeNode;
+  indexPath: number[];
+  operation: (note: NoteVO) => JSX.Element;
+}) {
   const workbench = container.resolve(Workbench);
   const node = props.treeView.tree.createNode({ value: props.note, parent: props.parent });
-  const hasEditor = createMemo(() => node.id === props.treeView.newNoteEditor.newNote?.parentId);
+  const hasEditor = createMemo(() => node.id === props.treeView.newNoteEditor?.value?.parentId);
 
   createEffect(
     on(
@@ -40,14 +47,27 @@ function Node(props: { treeView: TreeViewModel; note: NoteVO; parent: TreeNode; 
       <Show
         when={!node.isLeaf || hasEditor()}
         fallback={
-          <TreeView.Item onClick={() => openNote(node.value!)}>
+          <TreeView.Item
+            onClick={() => openNote(node.value!)}
+            class="flex items-center pl-5 cursor-pointer"
+            style={{ 'margin-left': `${(props.indexPath.length - 1) * 20}px` }}
+          >
             <TreeView.ItemText>{normalizeTitle(node.value!)}</TreeView.ItemText>
+            {props.operation(node.value!)}
           </TreeView.Item>
         }
       >
-        <TreeView.Branch>
-          <TreeView.BranchControl>
-            <TreeView.BranchText>{normalizeTitle(node.value!)}</TreeView.BranchText>
+        <TreeView.Branch style={{ 'margin-left': `${(props.indexPath.length - 1) * 20}px` }}>
+          <TreeView.BranchControl class="flex items-center relative pl-5">
+            <button class="absolute left-0" onClick={() => node.toggleExpand()}>
+              <Show when={node.isExpanded} fallback={<ChevronRightIcon />}>
+                <ChevronDownIcon />
+              </Show>
+            </button>
+            <TreeView.BranchText onClick={() => openNote(node.value!)}>
+              {normalizeTitle(node.value!)}
+            </TreeView.BranchText>
+            {props.operation(node.value!)}
           </TreeView.BranchControl>
           <TreeView.BranchContent>
             <Show when={hasEditor()}>
@@ -56,6 +76,7 @@ function Node(props: { treeView: TreeViewModel; note: NoteVO; parent: TreeNode; 
             <Key each={node.childrenQuery.result.data} by="id">
               {(child, index) => (
                 <Node
+                  operation={props.operation}
                   treeView={props.treeView}
                   parent={node}
                   note={child()}

@@ -56,7 +56,7 @@
     "zodify": "^1.1.6"
   },
   "dependencies": {
-    "@ark-ui/solid": "^4.10.2",
+    "@ark-ui/solid": "^5.0.0",
     "@braintree/sanitize-url": "^6.0.4",
     "@emoji-mart/data": "^1.1.2",
     "@emoji-mart/react": "^1.1.1",

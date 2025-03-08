@@ -5,6 +5,7 @@ import { last } from 'lodash-es';
 import type BaseEditor from '#domain/client/app/model/note/editor/BaseEditor';
 import { normalizeTitle } from '#domain/shared/model/note';
 import type Tile from '#domain/client/app/model/Workbench/Tile';
+import { isFullyVisible } from '#web/infra/domUtils';
 
 export default function Tab(props: { editor: BaseEditor; tile: Tile }) {
   let rootRef: HTMLDivElement | undefined;
@@ -12,8 +13,8 @@ export default function Tab(props: { editor: BaseEditor; tile: Tile }) {
 
   onMount(() => {
     createEffect(() => {
-      if (props.editor.value.result.isSuccess && isCurrent()) {
-        rootRef?.scrollIntoView({ behavior: 'smooth', inline: 'start' });
+      if (props.editor.value.result.isSuccess && isCurrent() && rootRef && !isFullyVisible(rootRef)) {
+        rootRef.scrollIntoView();
       }
     });
   });
@@ -21,7 +22,7 @@ export default function Tab(props: { editor: BaseEditor; tile: Tile }) {
   return (
     <div
       ref={rootRef}
-      class="shrink-0 h-12 flex items-center max-w-48 min-w-12 grow text-sm px-2 border-r cursor-pointer"
+      class="shrink-0 h-12 flex items-center max-w-48 min-w-12 grow text-sm px-2 border-r cursor-pointer group"
       classList={{ 'bg-white': isCurrent() }}
       onClick={() => props.tile.switchToEditor(props.editor)}
     >
@@ -41,7 +42,10 @@ export default function Tab(props: { editor: BaseEditor; tile: Tile }) {
         </span>
       </Show>
       <button
-        class="flex"
+        class="flex ml-2 group-hover:visible"
+        classList={{
+          invisible: !isCurrent(),
+        }}
         onClick={(e) => {
           e.stopPropagation();
           props.editor.destroy();

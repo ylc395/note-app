@@ -13,15 +13,15 @@ export default class NewNoteEditor {
 
   private readonly domainEventBus = container.resolve(DomainEventBus);
 
-  @observable.ref public accessor newNote: Pick<NewNoteDTO, 'parentId' | 'title'> | undefined;
+  @observable.ref public accessor value: Pick<NewNoteDTO, 'parentId' | 'title'> | undefined;
 
   @action
-  public async create(newNote: NonNullable<NewNoteEditor['newNote']>, submit?: boolean) {
-    if (this.newNote) {
+  public async create(newNote: NonNullable<NewNoteEditor['value']>, submit?: boolean) {
+    if (this.value) {
       await this.submit();
     }
 
-    this.newNote = newNote;
+    this.value = newNote;
 
     if (submit) {
       this.submit();
@@ -29,11 +29,11 @@ export default class NewNoteEditor {
   }
 
   public async submit(title?: string) {
-    assert(this.newNote, 'can not submit');
+    assert(this.value, 'can not submit');
 
     const newNote = await this.remote.note.create.mutate({
       type: this.type,
-      ...this.newNote,
+      ...this.value,
       title,
     });
 
@@ -43,6 +43,6 @@ export default class NewNoteEditor {
 
   @action
   public reset() {
-    this.newNote = undefined;
+    this.value = undefined;
   }
 }

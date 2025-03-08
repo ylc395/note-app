@@ -16,7 +16,7 @@ type MaterialFormField = Pick<NewNoteDTO, 'title' | 'body' | 'icon' | 'sourceUrl
 type File = Pick<FileDTO, 'mimeType' | 'path'> & { data: ArrayBuffer };
 
 export default class MaterialForm extends Form<MaterialFormField> {
-  constructor(private formOptions: { onSubmit: () => void }) {
+  constructor(private formOptions: { onSubmit: () => void; parentId?: NewNoteDTO['parentId'] }) {
     super();
   }
 
@@ -66,6 +66,7 @@ export default class MaterialForm extends Form<MaterialFormField> {
     const newNote = await this.remote.note.create.mutate({
       type: NoteTypes.Material,
       fileId: newFile.id,
+      parentId: this.formOptions.parentId,
       ...this.get(),
     });
 

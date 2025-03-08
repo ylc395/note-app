@@ -138,7 +138,7 @@ export default class NoteService extends BaseService {
 
     assert(notes.length === ids.length, 'invalid note ids');
 
-    if (params) {
+    if (params?.withFile) {
       assert(
         notes.every(({ fileId }) => Boolean(fileId) === params.withFile),
         'invalid note file type',

@@ -5,6 +5,7 @@ import { container } from '#domain/shared/infra/singletons';
 import UIState, { NoteTreeViewTabs, SidebarTabs } from '#web/view/UIState';
 
 import BaseTreeView from './Tree';
+import NoteAddButton from './AddButton/Note';
 
 export default function NoteTree() {
   const {
@@ -21,5 +22,5 @@ export default function NoteTree() {
     ),
   );
 
-  return <BaseTreeView treeView={noteTreeView} />;
+  return <BaseTreeView operation={(note) => <NoteAddButton iconOnly noteId={note.id} />} treeView={noteTreeView} />;
 }

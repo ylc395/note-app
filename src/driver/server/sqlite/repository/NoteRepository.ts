@@ -73,7 +73,7 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
     }
 
     if (q.id) {
-      sql = sql.where('id', 'in', q.id);
+      sql = sql.where(`${this.tableName}.id`, 'in', q.id);
     }
 
     if (q.type) {

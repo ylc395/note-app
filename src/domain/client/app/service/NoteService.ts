@@ -1,7 +1,7 @@
 import { action, observable } from 'mobx';
 import { container } from '#domain/shared/infra/singletons';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
-import { type DuplicatedNoteDTO, NoteTypes } from '#domain/shared/model/note';
+import { type DuplicatedNoteDTO, type NewNoteDTO, NoteTypes } from '#domain/shared/model/note';
 import { EntityTypes } from '#domain/shared/model/entity';
 
 import Workbench from '../model/Workbench';
@@ -33,12 +33,12 @@ export default class NoteService {
   };
 
   @action
-  public readonly toggleMaterialForm = () => {
+  public readonly toggleMaterialForm = (parentId?: NewNoteDTO['parentId']) => {
     if (this.materialForm) {
       this.materialForm.destroy();
       this.materialForm = undefined;
     } else {
-      this.materialForm = new MaterialForm({ onSubmit: this.toggleMaterialForm });
+      this.materialForm = new MaterialForm({ onSubmit: this.toggleMaterialForm, parentId });
     }
   };
 }
