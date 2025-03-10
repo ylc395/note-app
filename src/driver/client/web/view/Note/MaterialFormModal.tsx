@@ -19,7 +19,12 @@ export default function MaterialFormModal() {
   }
 
   return (
-    <Modal title="创建素材" open={Boolean(noteService.materialForm)} onClose={noteService.toggleMaterialForm}>
+    <Modal
+      title="创建素材"
+      open={Boolean(noteService.materialForm)}
+      onClose={noteService.toggleMaterialForm}
+      closeOnInteractOutside={false}
+    >
       <form>
         <Field.Root>
           <Field.Label>标题</Field.Label>

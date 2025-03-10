@@ -128,6 +128,8 @@ export default class Tree {
 
   // 展开并加载任意个指定节点（“加载”指拉取其子节点）。若某个节点的祖先节点没有被传入或存在于树中，则该节点会被无视
   public async expand(ids: MaybeArray<TreeNode['id']>) {
+    ids = Array.isArray(ids) ? ids : [ids];
+
     if (ids.length === 0) {
       return;
     }
@@ -140,18 +142,26 @@ export default class Tree {
     // 过滤出待展开 id 中，当前树中并未加载中/过的那些节点
     const parentsToLoad = difference(ids, loadedIds);
 
-    const nodes = Object.groupBy(
-      await this.remote.note.query.query({ parentId: parentsToLoad }),
-      (note) => note.parentId!,
-    );
+    if (parentsToLoad.length > 0) {
+      const nodes = Object.groupBy(
+        await this.remote.note.query.query({ parentId: parentsToLoad }),
+        (note) => note.parentId!,
+      );
 
-    for (const [parentId, children] of Object.entries(nodes)) {
-      queryClient.setQueryData(TreeNode.getChildrenQueryKey({ parentId, type: this.options.type }), children);
+      for (const [parentId, children] of Object.entries(nodes)) {
+        queryClient.setQueryData(TreeNode.getChildrenQueryKey({ parentId, type: this.options.type }), children);
+      }
     }
 
     runInAction(() => {
       for (const id of ids) {
-        this.expandedNodeIds.add(id);
+        const node = this.get(id);
+
+        if (node) {
+          node.toggleExpand(true);
+        } else {
+          this.expandedNodeIds.add(id); // 即使指定节点不存在，我们也把它加到“已展开”节点里。这样当那个节点被创建时，它会自动展开
+        }
       }
     });
   }

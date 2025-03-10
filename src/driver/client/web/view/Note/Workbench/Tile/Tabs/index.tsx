@@ -4,8 +4,15 @@ import Tile from '#domain/client/app/model/Workbench/Tile';
 import Tab from './Tab';
 
 export default function Tabs(props: { tile: Tile }) {
+  let rootRef: HTMLDivElement | undefined;
+
+  function handleOnWheel(e: WheelEvent) {
+    e.preventDefault();
+    rootRef?.scrollBy({ left: e.deltaY < 0 ? -30 : 30 });
+  }
+
   return (
-    <div class="flex overflow-auto border-b">
+    <div ref={rootRef} onWheel={handleOnWheel} class="flex overflow-auto border-b">
       <For each={props.tile.editors}>{(editor) => <Tab tile={props.tile} editor={editor} />}</For>
     </div>
   );

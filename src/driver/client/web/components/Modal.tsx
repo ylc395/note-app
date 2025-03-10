@@ -3,7 +3,13 @@ import { type JSXElement, Show } from 'solid-js';
 import { Portal } from 'solid-js/web';
 import { XIcon } from 'lucide-solid';
 
-export default function Modal(props: { open: boolean; onClose?: () => void; children: JSXElement; title: string }) {
+export default function Modal(props: {
+  open: boolean;
+  onClose?: () => void;
+  children: JSXElement;
+  title: string;
+  closeOnInteractOutside?: boolean;
+}) {
   function handleOpenChange({ open }: DialogOpenChangeDetails) {
     if (!open) {
       props.onClose?.();
@@ -11,7 +17,13 @@ export default function Modal(props: { open: boolean; onClose?: () => void; chil
   }
 
   return (
-    <Dialog.Root lazyMount unmountOnExit open={props.open} onOpenChange={handleOpenChange}>
+    <Dialog.Root
+      lazyMount
+      unmountOnExit
+      closeOnInteractOutside={props.closeOnInteractOutside}
+      open={props.open}
+      onOpenChange={handleOpenChange}
+    >
       <Show when={props.open}>
         <Portal mount={document.getElementById(import.meta.env.VITE_WEB_ROOT_ID)!}>
           <Dialog.Backdrop class="fixed inset-0 bg-black opacity-30 z-10" />

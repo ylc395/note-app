@@ -4,7 +4,6 @@ import { Show, type JSX } from 'solid-js';
 
 import type TreeNode from '#domain/client/shared/model/note/TreeNode';
 import TreeViewModel from '#domain/client/app/model/note/TreeView';
-import type { Note } from '#domain/shared/model/note';
 
 import NodeView from './Node';
 import TitleEditor from './TitleEditor';
@@ -12,7 +11,8 @@ import TitleEditor from './TitleEditor';
 export default function NoteTree(props: {
   treeView: TreeViewModel;
   useNewNoteEditor?: boolean;
-  operation: (note: Note) => JSX.Element;
+  operation: (node: TreeNode) => JSX.Element;
+  icon?: (node: TreeNode) => JSX.Element;
 }) {
   const collection = createTreeCollection<TreeNode>({
     rootNode: props.treeView.tree.root,
@@ -42,6 +42,7 @@ export default function NoteTree(props: {
             <NodeView
               operation={props.operation}
               treeView={props.treeView}
+              icon={props.icon}
               note={note()}
               parent={props.treeView.tree.root}
               indexPath={[index()]}

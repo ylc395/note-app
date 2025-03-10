@@ -1,6 +1,5 @@
-import { createEffect, createMemo, onMount, Show } from 'solid-js';
+import { createEffect, createMemo, onMount } from 'solid-js';
 import { XIcon } from 'lucide-solid';
-import { last } from 'lodash-es';
 
 import type BaseEditor from '#domain/client/app/model/note/editor/BaseEditor';
 import { normalizeTitle } from '#domain/shared/model/note';
@@ -22,25 +21,13 @@ export default function Tab(props: { editor: BaseEditor; tile: Tile }) {
   return (
     <div
       ref={rootRef}
-      class="shrink-0 h-12 flex items-center max-w-48 min-w-12 grow text-sm px-2 border-r cursor-pointer group"
+      class="shrink-0 h-12 flex justify-between items-center w-36 text-sm px-2 border-r cursor-pointer group"
       classList={{ 'bg-white': isCurrent() }}
       onClick={() => props.tile.switchToEditor(props.editor)}
     >
       <span class="whitespace-nowrap text-ellipsis overflow-hidden">
         {props.editor.value.result.data ? normalizeTitle(props.editor.value.result.data!) : ''}
       </span>
-      <Show
-        when={
-          props.tile.editorsWithDuplicatedTitle.has(props.editor) &&
-          props.editor.path.result.data &&
-          props.editor.path.result.data.length > 0
-        }
-      >
-        <span class="shrink-0">
-          <Show when={props.editor.path.result.data!.length > 1}>.../</Show>
-          {last(props.editor.path.result.data)!.title}
-        </span>
-      </Show>
       <button
         class="flex ml-2 group-hover:visible"
         classList={{

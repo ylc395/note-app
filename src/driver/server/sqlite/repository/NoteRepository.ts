@@ -81,9 +81,7 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
     }
 
     if (q.fileHash) {
-      sql = sql
-        .innerJoin(fileTableName, `${fileTableName}.id`, `${this.tableName}.fileId`)
-        .where(`${fileTableName}.hash`, '=', q.fileHash);
+      sql = sql.where(`${fileTableName}.hash`, '=', q.fileHash);
     }
 
     const rows = await sql.execute();

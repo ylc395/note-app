@@ -1,20 +1,29 @@
+import { Show } from 'solid-js';
 import { PlusIcon, FolderPlusIcon, FilePlus, ChevronDownIcon } from 'lucide-solid';
 import { Menu, type MenuSelectionDetails } from '@ark-ui/solid';
 
 import { container } from '#domain/shared/infra/singletons';
 import NoteService from '#domain/client/app/service/NoteService';
 import type { NoteVO } from '#domain/shared/model/note';
-import { Show } from 'solid-js';
 
-export default function ButtonGroup(props: { iconOnly?: boolean; noteId?: NoteVO['id'] }) {
-  const { treeViews, toggleMaterialForm } = container.resolve(NoteService);
+export default function ButtonGroup(props: { iconOnly?: boolean; noteId?: NoteVO['id']; triggerClassName?: string }) {
+  const {
+    treeViews: { material: treeView },
+    toggleMaterialForm,
+  } = container.resolve(NoteService);
+
+  function onFormSubmit() {
+    if (props.noteId) {
+      treeView.tree.expand(props.noteId);
+    }
+  }
 
   function onSelect({ value }: MenuSelectionDetails) {
     switch (value) {
       case 'file':
-        return toggleMaterialForm(props.noteId);
+        return toggleMaterialForm({ parentId: props.noteId, onSubmit: onFormSubmit });
       case 'directory':
-        return treeViews.material.newNoteEditor?.create({ parentId: props.noteId });
+        return treeView.newNoteEditor?.init({ parentId: props.noteId });
       default:
         throw new Error('invalid value');
     }
@@ -22,7 +31,7 @@ export default function ButtonGroup(props: { iconOnly?: boolean; noteId?: NoteVO
 
   return (
     <Menu.Root lazyMount unmountOnExit closeOnSelect onSelect={onSelect}>
-      <Menu.Trigger class="flex">
+      <Menu.Trigger class={`flex ${props.triggerClassName ?? ''}`} onClick={(e) => e.stopPropagation()}>
         <PlusIcon />
         <Show when={!props.iconOnly}>
           新建
@@ -30,8 +39,9 @@ export default function ButtonGroup(props: { iconOnly?: boolean; noteId?: NoteVO
         </Show>
       </Menu.Trigger>
       <Menu.Positioner>
-        <Menu.Content class="flex flex-col bg-white">
+        <Menu.Content class="flex flex-col bg-white z-50">
           <Menu.Item
+            onClick={(e) => e.stopPropagation()}
             value="file"
             asChild={(childProps) => (
               <button {...childProps()} class="flex items-center p-2">
@@ -42,6 +52,7 @@ export default function ButtonGroup(props: { iconOnly?: boolean; noteId?: NoteVO
           ></Menu.Item>
           <Menu.Item
             value="directory"
+            onClick={(e) => e.stopPropagation()}
             asChild={(childProps) => (
               <button {...childProps()} class="flex items-center p-2">
                 <FolderPlusIcon class="mr-1" />

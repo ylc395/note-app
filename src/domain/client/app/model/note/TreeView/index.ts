@@ -8,6 +8,7 @@ import DomainEventBus, { type UpdatedEvent } from '#domain/client/app/model/note
 
 import SortBehavior from './SortBehavior';
 import NewNoteEditor from './NewNoteEditor';
+import type TreeNode from '#domain/client/shared/model/note/TreeNode';
 
 export default class TreeView {
   constructor(private readonly type: NoteTypes) {
@@ -16,13 +17,32 @@ export default class TreeView {
       type,
     });
 
-    this.newNoteEditor = new NewNoteEditor(type);
-
-    this.domainEventBus.on(
-      [DomainEventBus.eventNames.Created, DomainEventBus.eventNames.Updated],
-      this.handleUpdated.bind(this),
-    );
+    this.newNoteEditor = this.createNewNoteEditor();
+    this.domainEventBus.on([DomainEventBus.eventNames.Created, DomainEventBus.eventNames.Updated], this.handleUpdated);
   }
+
+  private createNewNoteEditor = () => {
+    let isExpanded: boolean | undefined;
+    let parentNode: TreeNode | undefined;
+
+    return new NewNoteEditor({
+      type: this.type,
+      onInit: (value) => {
+        parentNode = value.parentId ? this.tree.get(value.parentId) : undefined;
+
+        if (parentNode) {
+          isExpanded = parentNode.isExpanded;
+          parentNode.toggleExpand(true);
+        }
+      },
+      onReset: (value) => {
+        // 如果取消了新建流程，则把父节点的展开状态弄回原样
+        if (!value && parentNode && typeof isExpanded === 'boolean') {
+          parentNode.toggleExpand(isExpanded);
+        }
+      },
+    });
+  };
 
   private readonly domainEventBus = container.resolve(DomainEventBus);
 
@@ -34,19 +54,30 @@ export default class TreeView {
 
   public readonly tree;
 
-  private handleUpdated({ parentId, id, type }: UpdatedEvent) {
-    if (type !== this.type) {
+  @action.bound
+  private handleUpdated({ parentId, id }: UpdatedEvent) {
+    if (typeof parentId === 'undefined') {
       return;
     }
 
-    if (parentId !== undefined) {
-      const node = this.tree.get(id);
+    const node = this.tree.get(id);
 
-      if (node && node.value?.parentId !== parentId) {
-        node.childrenQuery.invalidate();
+    if (node?.parent?.value && node.parent.value.id !== parentId) {
+      // 旧的父节点
+      node.parent.childrenQuery.invalidate();
+      node.parent.value.childrenCount -= 1;
+    }
+
+    const newParentNode = this.tree.get(parentId);
+
+    if (newParentNode) {
+      // 新的父节点
+      newParentNode.childrenQuery.invalidate();
+
+      // 根节点可能没有 value
+      if (newParentNode.value) {
+        newParentNode.value.childrenCount += 1;
       }
-
-      this.tree.get(parentId)?.childrenQuery.invalidate();
     }
   }
 

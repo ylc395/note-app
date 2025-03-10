@@ -22,5 +22,16 @@ export default function NoteTree() {
     ),
   );
 
-  return <BaseTreeView operation={(note) => <NoteAddButton iconOnly noteId={note.id} />} treeView={noteTreeView} />;
+  return (
+    <BaseTreeView
+      operation={(node) => (
+        <NoteAddButton
+          iconOnly
+          noteId={node.id}
+          triggerClassName="group-hover:visible invisible absolute right-0 bg-gray-200"
+        />
+      )}
+      treeView={noteTreeView}
+    />
+  );
 }

@@ -33,12 +33,18 @@ export default class NoteService {
   };
 
   @action
-  public readonly toggleMaterialForm = (parentId?: NewNoteDTO['parentId']) => {
+  public readonly toggleMaterialForm = (options?: { parentId?: NewNoteDTO['parentId']; onSubmit?: () => void }) => {
     if (this.materialForm) {
       this.materialForm.destroy();
       this.materialForm = undefined;
     } else {
-      this.materialForm = new MaterialForm({ onSubmit: this.toggleMaterialForm, parentId });
+      this.materialForm = new MaterialForm({
+        parentId: options?.parentId,
+        onSubmit: () => {
+          options?.onSubmit?.();
+          this.toggleMaterialForm();
+        },
+      });
     }
   };
 }

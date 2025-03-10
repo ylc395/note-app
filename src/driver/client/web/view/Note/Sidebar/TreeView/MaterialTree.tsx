@@ -1,4 +1,5 @@
 import { createEffect, on } from 'solid-js';
+import { FolderIcon, FolderOpenIcon } from 'lucide-solid';
 
 import NoteService from '#domain/client/app/service/NoteService';
 import { container } from '#domain/shared/infra/singletons';
@@ -24,9 +25,22 @@ export default function MaterialTree() {
 
   return (
     <BaseTreeView
-      operation={(note) => <MaterialAddButton iconOnly noteId={note.id} />}
+      operation={(node) => (
+        <MaterialAddButton
+          triggerClassName="group-hover:visible invisible absolute right-0 bg-gray-200"
+          iconOnly
+          noteId={node.id}
+        />
+      )}
       treeView={materialTreeView}
       useNewNoteEditor
+      icon={(node) =>
+        node.value?.mimeType ? null : node.isExpanded ? (
+          <FolderOpenIcon class="mr-1 shrink-0" />
+        ) : (
+          <FolderIcon class="mr-1 shrink-0" />
+        )
+      }
     />
   );
 }

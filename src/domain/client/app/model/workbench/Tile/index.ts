@@ -1,4 +1,4 @@
-import { action, computed, observable } from 'mobx';
+import { action, observable } from 'mobx';
 import { uniqueId } from 'lodash-es';
 import assert from 'assert';
 
@@ -10,7 +10,6 @@ import type { EntityLocator } from '#domain/client/shared/model/entity';
 import EditorFactory from '../EditorFactory';
 import { type Events, EventNames } from './events';
 import type { Direction } from '../HistoryStack';
-import { normalizeTitle } from '#domain/shared/model/note';
 
 export default class Tile {
   public readonly id = uniqueId('tile-');
@@ -158,18 +157,6 @@ export default class Tile {
     this.events.emit(EventNames.Destroyed).then(() => {
       this.events.clearListeners();
     });
-  }
-
-  @computed
-  public get editorsWithDuplicatedTitle() {
-    const loadedEditors = this.editors.filter(({ value }) => value.result.data);
-    const titleGroup = Object.groupBy(loadedEditors, ({ value }) => normalizeTitle(value.result.data!));
-
-    return new Set(
-      Object.values(titleGroup)
-        .filter((editors) => editors!.length > 1)
-        .flat(),
-    );
   }
 
   public static readonly eventNames = EventNames;

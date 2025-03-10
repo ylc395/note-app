@@ -25,19 +25,6 @@ export default class TreeNode {
 
     this.options = options;
     this.parent = parent;
-    this.childrenQuery = createQuery(
-      ({ signal }) => {
-        return this.remote.note.query.query({ parentId: value?.id ?? null, type }, { signal });
-      },
-      {
-        select: (notes) => notes.toSorted(options.sort),
-        abortSignal: this.destroyController.signal,
-        options: () => ({
-          queryKey: TreeNode.getChildrenQueryKey({ parentId: value?.id ?? null, type }),
-          enabled: this.isExpanded && this.options.tree.isActive,
-        }),
-      },
-    );
 
     if (this.isRoot || this.options.tree.expandedNodeIds.has(this.id)) {
       this.toggleExpand(true);
@@ -46,6 +33,22 @@ export default class TreeNode {
     if (this.options.tree.selectedNodeIds.has(this.id)) {
       this.toggleSelect(true);
     }
+
+    this.childrenQuery = createQuery(
+      ({ signal }) => {
+        return this.remote.note.query.query({ parentId: value?.id ?? null, type }, { signal });
+      },
+      {
+        refetchOnMount: false,
+        refetchOnWindowFocus: false,
+        select: (notes) => notes.toSorted(options.sort),
+        abortSignal: this.destroyController.signal,
+        options: () => ({
+          queryKey: TreeNode.getChildrenQueryKey({ parentId: value?.id ?? null, type }),
+          enabled: !this.isLeaf && this.isExpanded && this.options.tree.isActive,
+        }),
+      },
+    );
   }
 
   public get id() {
@@ -54,11 +57,11 @@ export default class TreeNode {
 
   private readonly remote = container.resolve(rpcToken);
 
-  private readonly parent?: TreeNode;
+  public readonly parent?: TreeNode;
 
   private readonly options;
 
-  @observable.ref public accessor value: NoteVO | undefined;
+  @observable public accessor value: NoteVO | undefined;
 
   @observable public accessor isSelected = false;
 
