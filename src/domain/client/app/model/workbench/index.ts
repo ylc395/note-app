@@ -4,7 +4,7 @@ import assert from 'assert';
 
 import Editor from '#domain/client/app/model/note/editor/BaseEditor';
 import { container } from '#domain/shared/infra/singletons';
-import type { EntityLocator } from '#domain/client/shared/model/entity';
+import { EntityTypes, type EntityLocator } from '#domain/client/shared/model/entity';
 
 import Tile from './Tile';
 import { type TileNode, type TileParent, TileDirections, isTileLeaf } from './tileTree';
@@ -245,7 +245,7 @@ export default class Workbench {
     if (dest instanceof Editor) {
       dest.tile.switchToEditor(dest, { fromHistory: direction });
     } else {
-      this.openEntity(record, dest ? { dest } : undefined);
+      this.openEntity({ ...record, entityType: EntityTypes.Note }, dest ? { dest } : undefined);
     }
   }
 }

@@ -1,7 +1,7 @@
-import { uniqueId } from 'lodash-es';
+import { uniqueId, debounce } from 'lodash-es';
 import { action, computed, reaction } from 'mobx';
-// import type { infer as ZodInfer } from 'zod';
-// import assert from 'assert';
+import type { infer as ZodInfer } from 'zod';
+import assert from 'assert';
 import { createQuery } from 'mobx-tanstack-query/preset';
 
 import { EntityTypes } from '#domain/client/shared/model/entity';
@@ -14,6 +14,7 @@ import type { NoteVO } from '#domain/shared/model/note';
 import { EventNames, type Events } from './events';
 import Backup from './Backup';
 import type Tile from '../../Workbench/Tile';
+import DomainEventBus from '../EventBus';
 
 export default class BaseEditor {
   constructor({ entityId, tile }: { entityId: NoteVO['id']; tile: Tile }) {
@@ -22,7 +23,7 @@ export default class BaseEditor {
     this.backup = new Backup(entityId, BaseEditor.patchSchema);
 
     this.value = createQuery(({ signal }) => this.remote.note.queryOneById.query(this.entityId, { signal }), {
-      queryKey: this.valueQueryKey,
+      queryKey: ['note', this.entityId],
       abortSignal: this.destroyController.signal,
     });
 
@@ -52,6 +53,8 @@ export default class BaseEditor {
 
   protected readonly remote = container.resolve(rpcToken);
 
+  private readonly domainEventBus = container.resolve(DomainEventBus);
+
   public readonly backup;
 
   public readonly id = uniqueId('editor-');
@@ -61,10 +64,6 @@ export default class BaseEditor {
   public readonly entityId: NoteVO['id'];
 
   public readonly entityType = EntityTypes.Note;
-
-  private get valueQueryKey() {
-    return ['note', this.entityId];
-  }
 
   protected readonly destroyController = new AbortController();
 
@@ -81,37 +80,23 @@ export default class BaseEditor {
     return this.value.result.isLoading || this.blob.result.isLoading;
   }
 
-  // public readonly update = debounce(
-  //   createMutation(
-  //     async (patch: ZodInfer<typeof BaseEditor.patchSchema>) => {
-  //       assert(!this.value.result.isLoading, 'can not update when loading');
-  //       return this.remote.note.updateOne.mutate([this.entityId, patch]);
-  //     },
-  //     {
-  //       abortSignal: this.destroyController.signal,
-  //       onSuccess: (_, patch) => {
-  //         assert(this.value.result.data);
+  public readonly update = debounce(async (patch: ZodInfer<typeof BaseEditor.patchSchema>) => {
+    assert(this.value.result.data, 'can not update when loading');
+    await this.remote.note.updateOne.mutate([this.entityId, patch]);
+    this.value.setData((note) => ({ ...note!, ...patch }));
+    this.domainEventBus.emit(DomainEventBus.eventNames.Updated, { id: this.entityId, ...patch });
+  }, 1000);
 
-  //         this.backup.clear();
-  //         queryClient.setQueryData<NoteVO>(this.valueQueryKey, (note) => note && { ...note, ...patch });
-  //         queryClient.invalidateQueries({ queryKey: getChildrenNoteQueryKey(this.value.result.data.parentId) });
-  //       },
-  //       onError: (_error, patch) => {
-  //         this.backup.write(patch);
-  //       },
-  //     },
-  //   ).mutate,
-  //   1000,
-  // );
-
-  @action
   public destroy() {
-    // this.update.flush();
-    this.destroyController.abort();
+    Promise.resolve(this.update.flush()).then(
+      action(() => {
+        this.destroyController.abort();
 
-    this.events.emit(EventNames.Destroy, this).then(() => {
-      this.events.clearListeners();
-    });
+        this.events.emit(EventNames.Destroy, this).then(() => {
+          this.events.clearListeners();
+        });
+      }),
+    );
   }
 
   public static readonly eventNames = EventNames;

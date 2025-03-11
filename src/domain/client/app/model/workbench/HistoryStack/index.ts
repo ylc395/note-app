@@ -40,7 +40,6 @@ export default class HistoryStack {
 
       stack.push({
         entityId: this.current.entityId,
-        entityType: this.current.entityType,
         tileId: this.current.tile.id,
         editorId: this.current.id,
       });

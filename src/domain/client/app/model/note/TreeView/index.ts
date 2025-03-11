@@ -55,29 +55,31 @@ export default class TreeView {
   public readonly tree;
 
   @action.bound
-  private handleUpdated({ parentId, id }: UpdatedEvent) {
-    if (typeof parentId === 'undefined') {
-      return;
-    }
-
+  private handleUpdated({ parentId, id, ...patch }: UpdatedEvent) {
     const node = this.tree.get(id);
 
-    if (node?.parent?.value && node.parent.value.id !== parentId) {
-      // 旧的父节点
-      node.parent.childrenQuery.invalidate();
-      node.parent.value.childrenCount -= 1;
+    if (parentId) {
+      if (node?.parent?.value && node.parent.value.id !== parentId) {
+        // 旧的父节点
+        node.parent.childrenQuery.invalidate();
+        node.parent.value.childrenCount -= 1;
+      }
+
+      const newParentNode = this.tree.get(parentId);
+
+      if (newParentNode) {
+        // 新的父节点
+        newParentNode.childrenQuery.invalidate();
+
+        // 根节点可能没有 value
+        if (newParentNode.value) {
+          newParentNode.value.childrenCount += 1;
+        }
+      }
     }
 
-    const newParentNode = this.tree.get(parentId);
-
-    if (newParentNode) {
-      // 新的父节点
-      newParentNode.childrenQuery.invalidate();
-
-      // 根节点可能没有 value
-      if (newParentNode.value) {
-        newParentNode.value.childrenCount += 1;
-      }
+    if (node?.value) {
+      node.setValue({ ...node.value, ...patch });
     }
   }
 

@@ -1,8 +1,9 @@
-import type { EntityLocator } from '#domain/client/shared/model/entity';
+import type { EntityId } from '#domain/client/shared/model/entity';
 import type Editor from '#domain/client/app/model/note/editor/BaseEditor';
 import type Tile from '../Tile';
 
-export interface Record extends EntityLocator {
+export interface Record {
+  entityId: EntityId;
   tileId: Tile['id'];
   editorId: Editor['id'];
 }
