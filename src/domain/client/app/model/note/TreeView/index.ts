@@ -58,11 +58,16 @@ export default class TreeView {
   private handleUpdated({ parentId, id, ...patch }: UpdatedEvent) {
     const node = this.tree.get(id);
 
-    if (parentId) {
-      if (node?.parent?.value && node.parent.value.id !== parentId) {
-        // 旧的父节点
-        node.parent.childrenQuery.invalidate();
-        node.parent.value.childrenCount -= 1;
+    if (parentId !== undefined) {
+      if (node?.parent) {
+        if ((node.parent.value?.id ?? null) !== parentId) {
+          // 旧的父节点
+          node.parent.childrenQuery.invalidate();
+
+          if (node.parent.value) {
+            node.parent.value.childrenCount -= 1;
+          }
+        }
       }
 
       const newParentNode = this.tree.get(parentId);

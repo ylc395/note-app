@@ -1,4 +1,4 @@
-import { action, observable } from 'mobx';
+import { action, observable, runInAction } from 'mobx';
 import assert from 'assert';
 
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
@@ -34,7 +34,7 @@ export default class NewNoteEditor {
   @observable public accessor isAutoSubmit = false;
 
   @action
-  public async init(newNote: NonNullable<NewNoteEditor['value']>, autoSubmit?: boolean) {
+  public init(newNote: NonNullable<NewNoteEditor['value']>, autoSubmit?: boolean) {
     this.isAutoSubmit = Boolean(autoSubmit);
     this.value = newNote;
     this.options.onInit(newNote);
@@ -45,7 +45,9 @@ export default class NewNoteEditor {
   }
 
   public async submit(title?: string) {
-    this.isSubmitting = true;
+    runInAction(() => {
+      this.isSubmitting = true;
+    });
     assert(this.value, 'can not submit');
 
     const newNote = await this.remote.note.create.mutate({
@@ -55,8 +57,11 @@ export default class NewNoteEditor {
     });
 
     this.domainEventBus.emit(DomainEventBus.eventNames.Created, newNote);
-    this.reset(newNote);
-    this.isSubmitting = false;
+
+    runInAction(() => {
+      this.reset(newNote);
+      this.isSubmitting = false;
+    });
   }
 
   @action

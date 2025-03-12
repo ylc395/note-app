@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createSignal, on } from 'solid-js';
+import { createEffect, createMemo, createSignal } from 'solid-js';
 import type BaseEditor from '#domain/client/app/model/note/editor/BaseEditor';
 import { normalizeTitle } from '#domain/shared/model/note';
 
@@ -21,8 +21,6 @@ export default function TitleInput(props: { editor: BaseEditor }) {
     }
   });
 
-  createEffect(on(title, (title) => props.editor.update({ title })));
-
   return (
     <input
       // @ts-expect-error -- solidjs 的问题
@@ -32,7 +30,10 @@ export default function TitleInput(props: { editor: BaseEditor }) {
       disabled={!props.editor.value.result.data}
       placeholder={placeholder()}
       value={title()} // solidjs 中,input 的 value 不受控。但在这里不影响程序的正确性 https://github.com/solidjs/solid/discussions/416
-      onInput={(e) => setTitle(e.target.value)}
+      onInput={(e) => {
+        setTitle(e.target.value);
+        props.editor.update({ title: e.target.value });
+      }}
     />
   );
 }

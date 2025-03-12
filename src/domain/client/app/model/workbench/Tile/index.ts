@@ -89,39 +89,24 @@ export default class Tile {
     const newEditor = this.editorFactory.create(this, entity);
     newEditor.events.on(Editor.eventNames.Destroy, this.removeEditor);
 
-    this.addEditor(newEditor, to);
+    this.moveEditor(newEditor, to);
 
     return newEditor;
   }
 
-  // 将该 tile 内的一个 editor 移动到该 tile 内的另一个位置
-  public moveEditor(editor: Editor, { dest, replace }: { dest: Editor; replace?: boolean }) {
-    assert(this.findEditor(editor) && this.findEditor(dest), 'can not move');
-
-    if (editor === dest) {
-      return;
-    }
-
-    const index = this.editors.indexOf(editor);
-    this.editors.splice(index, 1);
-
-    const targetIndex = this.editors.indexOf(dest);
-    this.editors.splice(targetIndex, 0, editor);
-
-    if (replace) {
-      dest.destroy();
-    }
-  }
-
   // 将一个 Editor 纳入该 Tile 中。将解除它和原 Tile 的关系
   // 若已存在一个相同内容的 editor，则那个 editor 将被 destroy
+  // 也可以用于将该 tile 内的一个 editor 移动到该 tile 内的另一个位置
   @action
-  public addEditor(editor: Editor, to?: { dest: Editor; replace?: boolean }) {
-    assert(!this.findEditor(editor), 'can not add twice');
-
+  public moveEditor(editor: Editor, to?: { dest: Editor; replace?: boolean }) {
     if (to) {
+      const oldIndex = this.editors.indexOf(editor);
       const destIndex = this.editors.indexOf(to.dest);
       assert(destIndex >= 0, 'target editor is not in this tile');
+
+      if (oldIndex >= 0) {
+        this.editors.splice(oldIndex, 1);
+      }
 
       this.editors.splice(destIndex, 0, editor);
 
@@ -129,6 +114,7 @@ export default class Tile {
         to.dest.destroy();
       }
     } else {
+      assert(!this.findEditor(editor), 'can not add twice');
       this.editors.push(editor);
     }
 

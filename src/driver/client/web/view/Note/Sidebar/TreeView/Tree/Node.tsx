@@ -1,16 +1,18 @@
 import { TreeView } from '@ark-ui/solid';
-import { createEffect, createMemo, on, onCleanup, Show, type JSX } from 'solid-js';
+import { createEffect, createMemo, createSignal, on, onCleanup, Show, untrack, type JSX } from 'solid-js';
 import { Key } from '@solid-primitives/keyed';
 import { ChevronDownIcon, ChevronRightIcon } from 'lucide-solid';
+import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
 import { normalizeTitle, NoteTypes, type NoteVO } from '#domain/shared/model/note';
 import TreeViewModel from '#domain/client/app/model/note/TreeView';
 import { container } from '#domain/shared/infra/singletons';
-import Workbench from '#domain/client/app/model/Workbench';
+import { EntityTypes } from '#domain/shared/model/entity';
+import NoteService from '#domain/client/app/service/NoteService';
 
 import TitleEditor from './TitleEditor';
-import { EntityTypes } from '#domain/shared/model/entity';
 
 function Node(props: {
   treeView: TreeViewModel;
@@ -20,11 +22,12 @@ function Node(props: {
   operation: (node: TreeNode) => JSX.Element;
   icon?: (node: TreeNode) => JSX.Element;
 }) {
-  const workbench = container.resolve(Workbench);
+  const { workbench, move } = container.resolve(NoteService);
   const node = props.treeView.tree.createNode({ value: props.note, parent: props.parent });
   const hasEditor = createMemo(
     () => node.id === props.treeView.newNoteEditor?.value?.parentId && !props.treeView.newNoteEditor.isAutoSubmit,
   );
+  const [rootRef, setRootRef] = createSignal<HTMLElement>();
   const itemClassName = 'flex items-center pl-5 cursor-pointer group relative hover:bg-gray-100 py-1';
   const itemTextClassName = 'whitespace-nowrap overflow-hidden text-ellipsis';
 
@@ -37,6 +40,42 @@ function Node(props: {
 
   onCleanup(() => {
     node.destroy();
+  });
+
+  createEffect(() => {
+    const element = rootRef();
+
+    if (!element) {
+      return;
+    }
+
+    const cleanup = untrack(() =>
+      combine(
+        draggable({
+          element,
+          canDrag: () => !node.isRoot,
+          getInitialData: () => node as unknown as Record<string, unknown>,
+        }),
+        dropTargetForElements({
+          element,
+          getData: () => node as unknown as Record<string, unknown>,
+          onDrop: ({ source, self, location }) => {
+            // 子节点处理过了，这里就不处理了
+            if (location.current.dropTargets[0]?.element !== self.element) {
+              return;
+            }
+
+            const note = NoteService.getNote(source.data);
+
+            if (note) {
+              move(note.id, props.note.id).then(() => node.toggleExpand(true));
+            }
+          },
+        }),
+      ),
+    );
+
+    onCleanup(cleanup);
   });
 
   function handleItemClick(node: TreeNode) {
@@ -75,6 +114,7 @@ function Node(props: {
           <TreeView.Item
             onClick={() => handleItemClick(node)}
             class={itemClassName}
+            ref={setRootRef}
             classList={{ 'ml-4': props.indexPath.length > 1 }}
           >
             {props.icon?.(node)}
@@ -83,7 +123,7 @@ function Node(props: {
           </TreeView.Item>
         }
       >
-        <TreeView.Branch classList={{ 'ml-4': props.indexPath.length > 1 }}>
+        <TreeView.Branch classList={{ 'ml-4': props.indexPath.length > 1 }} ref={setRootRef}>
           <TreeView.BranchControl class={`pl-5 ${itemClassName}`} onClick={() => handleItemClick(node)}>
             <button class="absolute left-0" disabled={hasEditor()} onClick={handleArrowClick}>
               <Show when={node.isExpanded || hasEditor()} fallback={<ChevronRightIcon />}>

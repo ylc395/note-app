@@ -1,14 +1,15 @@
-import { createEffect, createMemo, onMount } from 'solid-js';
+import { createEffect, createMemo, onCleanup, onMount } from 'solid-js';
 import { XIcon } from 'lucide-solid';
+import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 
-import type BaseEditor from '#domain/client/app/model/note/editor/BaseEditor';
+import BaseEditor from '#domain/client/app/model/note/editor/BaseEditor';
 import { normalizeTitle } from '#domain/shared/model/note';
-import type Tile from '#domain/client/app/model/Workbench/Tile';
 import { isFullyVisible } from '#web/infra/domUtils';
 
-export default function Tab(props: { editor: BaseEditor; tile: Tile }) {
+export default function Tab(props: { editor: BaseEditor }) {
   let rootRef: HTMLDivElement | undefined;
-  const isCurrent = createMemo(() => props.tile.currentEditor === props.editor);
+  const isCurrent = createMemo(() => props.editor.tile.currentEditor === props.editor);
 
   onMount(() => {
     createEffect(() => {
@@ -18,12 +19,28 @@ export default function Tab(props: { editor: BaseEditor; tile: Tile }) {
     });
   });
 
+  onMount(() => {
+    const cleanup = combine(
+      draggable({
+        element: rootRef!,
+        canDrag: () => props.editor.value.result.isSuccess,
+        getInitialData: () => props.editor as unknown as Record<string, unknown>,
+      }),
+      dropTargetForElements({
+        element: rootRef!,
+        getData: () => props.editor as unknown as Record<string, unknown>,
+      }),
+    );
+
+    onCleanup(cleanup);
+  });
+
   return (
     <div
       ref={rootRef}
       class="shrink-0 h-12 flex justify-between items-center w-36 text-sm px-2 border-r cursor-pointer group"
       classList={{ 'bg-white': isCurrent() }}
-      onClick={() => props.tile.switchToEditor(props.editor)}
+      onClick={() => props.editor.tile.switchToEditor(props.editor)}
     >
       <span class="whitespace-nowrap text-ellipsis overflow-hidden">
         {props.editor.value.result.data ? normalizeTitle(props.editor.value.result.data!) : ''}

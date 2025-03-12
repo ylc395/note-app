@@ -1,4 +1,4 @@
-import { last, memoize } from 'lodash-es';
+import { memoize } from 'lodash-es';
 import { createQuery } from 'mobx-tanstack-query/preset';
 import { action, computed, observable } from 'mobx';
 import { applyPatch, diffChars } from 'diff';
@@ -15,7 +15,7 @@ export default class RevisionList {
       queryKey: ['revisions', entityId],
       abortSignal,
       onDone: (data) => {
-        const lastOne = last(data);
+        const lastOne = data.at(-1);
 
         if (!this.currentRevisionId && lastOne) {
           this.setCurrentRevisionId(lastOne.id);

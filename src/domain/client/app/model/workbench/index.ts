@@ -184,7 +184,7 @@ export default class Workbench {
     if (dest instanceof Editor && destTile.findEditor(src)) {
       destTile.moveEditor(src, { dest, replace });
     } else {
-      destTile.addEditor(src, dest instanceof Editor ? { dest, replace } : undefined);
+      destTile.moveEditor(src, dest instanceof Editor ? { dest, replace } : undefined);
     }
 
     destTile.switchToEditor(src);

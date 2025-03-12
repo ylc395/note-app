@@ -1,5 +1,4 @@
 import assert from 'node:assert';
-import { first } from 'lodash-es';
 
 import { container } from '#domain/shared/infra/singletons.js';
 import type { Star, StarDTO, StarVO } from '#domain/shared/model/star.js';
@@ -56,7 +55,7 @@ export default class StarService extends BaseService {
       };
     });
 
-    return Array.isArray(stars) ? result : first(result)!;
+    return Array.isArray(stars) ? result : result[0]!;
   }
 
   @BaseService.transaction

@@ -1,5 +1,4 @@
 import { action, autorun, computed, observable, reaction } from 'mobx';
-import { first, last } from 'lodash-es';
 import assert from 'assert';
 import { createInfiniteQuery, createQuery } from 'mobx-tanstack-query/preset';
 
@@ -43,8 +42,8 @@ export default class MemoList {
         abortSignal: this.destroyController.signal,
         getNextPageParam: (lastPage, _, lastPageParam) => this.getNextPageParams({ lastPage, lastPageParam }),
         onDone: (data) => {
-          const lastPage = last(data.pages);
-          if (lastPage && this.pageLimit && lastPage.length < this.pageLimit && last(data.pageParams)?.isPinned) {
+          const lastPage = data.pages.at(-1);
+          if (lastPage && this.pageLimit && lastPage.length < this.pageLimit && data.pageParams.at(-1)?.isPinned) {
             this.childrenQuery?.fetchNextPage();
           }
         },
@@ -178,7 +177,7 @@ export default class MemoList {
 
   @computed
   public get count() {
-    return this.isSearchMode ? first(this.childrenQuery.result.data?.pages)?.length : this.countQuery.result.data;
+    return this.isSearchMode ? this.childrenQuery.result.data?.pages[0]?.length : this.countQuery.result.data;
   }
 
   private get pageLimit() {
@@ -216,7 +215,7 @@ export default class MemoList {
       return;
     }
 
-    const lastOne = last(lastPage);
+    const lastOne = lastPage.at(-1);
 
     if (lastOne) {
       const params = {

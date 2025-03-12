@@ -1,5 +1,5 @@
 import assert from 'node:assert';
-import { first, omit, pick, uniq } from 'lodash-es';
+import { omit, pick, uniq } from 'lodash-es';
 import {
   type NoteVO,
   type NoteDTO,
@@ -117,7 +117,7 @@ export default class NoteService extends BaseService {
       isStar: Boolean(stars[note.id]),
     }));
 
-    return Array.isArray(notes) ? result : first(result)!;
+    return Array.isArray(notes) ? result : result[0]!;
   }
 
   @BaseService.transaction
