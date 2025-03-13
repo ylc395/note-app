@@ -26,15 +26,15 @@ export default function Tabs(props: { tile: Tile }) {
       onDrop: ({ source, location }) => {
         const targetData = location.current.dropTargets[0]?.data;
         const note = NoteService.getNote(source.data);
-        assert(targetData instanceof Tile || targetData instanceof BaseEditor);
 
         if (!note) {
           return;
         }
 
+        assert(targetData instanceof Tile || targetData instanceof BaseEditor);
         workbench.openEntity(
           { entityId: note.id, mimeType: note.mimeType || undefined, entityType: EntityTypes.Note },
-          { dest: targetData },
+          targetData,
         );
       },
     });

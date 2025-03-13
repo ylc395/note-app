@@ -158,46 +158,11 @@ export default class Workbench {
     return newTile;
   }
 
-  // 将一个 Editor 移动到指定位置
-  @action.bound
-  public moveEditor(src: Editor, { dest, replace }: { dest: Editor | NewTile; replace?: boolean }) {
-    if (!(dest instanceof Editor) && replace) {
-      assert.fail('can not replace dest');
-    }
-
-    if (src === dest) {
-      return;
-    }
-
-    let destTile: Tile;
-
-    if (dest instanceof Editor) {
-      destTile = dest.tile;
-    } else if (dest instanceof Tile) {
-      destTile = dest;
-    } else {
-      const { from = this.currentTile, splitDirection } = dest;
-      assert(from, 'can not get dest tile');
-      destTile = this.splitTile(from.id, splitDirection);
-    }
-
-    if (dest instanceof Editor && destTile.findEditor(src)) {
-      destTile.moveEditor(src, { dest, replace });
-    } else {
-      destTile.moveEditor(src, dest instanceof Editor ? { dest, replace } : undefined);
-    }
-
-    destTile.switchToEditor(src);
-  }
-
-  // 在指定位置打开一个 editor。该 editor 可能是新建的，也可能是复用已存在的。若已存在，则其会被移动到指定位置（若有指定）
+  // 在指定位置打开一个 editor。该 editor 可能是新建的，也可能是复用已存在的
+  // 若已存在，则其会被移动到指定位置（若有指定）
   @action
-  public openEntity(entity: EntityLocator, options?: { dest: Editor | Tile | NewTile; replace?: boolean }) {
-    if (options && !(options.dest instanceof Editor) && options.replace) {
-      assert.fail('you can only replace an editor');
-    }
-
-    let dest = options?.dest || this.currentTile;
+  public openEntity(entity: EntityLocator, dest?: Editor | Tile | NewTile) {
+    dest = dest || this.currentTile;
 
     if (!dest) {
       // 说明当前工作区一个 tile 都没有，需要创建一个
@@ -219,13 +184,11 @@ export default class Workbench {
         editor = existedEditor;
 
         if (dest instanceof Editor) {
-          destTile.moveEditor(existedEditor, { dest, replace: options?.replace });
+          existedEditor.moveTo(dest);
         }
       } else {
-        editor = destTile.createEditor(
-          entity,
-          dest instanceof Editor ? { dest, replace: options?.replace } : undefined,
-        );
+        // 对应的 editor 不存在，则新建
+        editor = destTile.createEditor(entity, dest instanceof Editor ? dest : undefined);
       }
     } else {
       // 新建一个 tile，并打开至此
@@ -245,7 +208,7 @@ export default class Workbench {
     if (dest instanceof Editor) {
       dest.tile.switchToEditor(dest, { fromHistory: direction });
     } else {
-      this.openEntity({ ...record, entityType: EntityTypes.Note }, dest ? { dest } : undefined);
+      this.openEntity({ ...record, entityType: EntityTypes.Note }, dest);
     }
   }
 }

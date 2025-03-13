@@ -6,6 +6,7 @@ import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import BaseEditor from '#domain/client/app/model/note/editor/BaseEditor';
 import { normalizeTitle } from '#domain/shared/model/note';
 import { isFullyVisible } from '#web/infra/domUtils';
+import { IS_DEV } from '#domain/shared/infra/env';
 
 export default function Tab(props: { editor: BaseEditor }) {
   let rootRef: HTMLDivElement | undefined;
@@ -43,6 +44,7 @@ export default function Tab(props: { editor: BaseEditor }) {
       onClick={() => props.editor.tile.switchToEditor(props.editor)}
     >
       <span class="whitespace-nowrap text-ellipsis overflow-hidden">
+        {IS_DEV && props.editor.id}
         {props.editor.value.result.data ? normalizeTitle(props.editor.value.result.data!) : ''}
       </span>
       <button

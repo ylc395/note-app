@@ -76,60 +76,38 @@ export default class Tile {
   // 在该 Tile 下创建一个 Editor。可以指定其位置
   // 不能创建内容相同的 editor
   @action
-  public createEditor(entity: EntityLocator, to?: { dest: Editor; replace?: boolean }) {
+  public createEditor(entity: EntityLocator, dest?: Editor) {
     assert(
       this.editors.findIndex((editor) => editor.entityId === entity.entityId) < 0,
       'can not create duplicated editor',
     );
 
-    if (to) {
-      assert(to.dest.tile === this, 'tile of target editor is not this tile');
-    }
-
     const newEditor = this.editorFactory.create(this, entity);
-    newEditor.events.on(Editor.eventNames.Destroy, this.removeEditor);
 
-    this.moveEditor(newEditor, to);
+    newEditor.events.on(Editor.eventNames.Destroy, this.removeEditor);
+    this.addEditor(newEditor, dest);
 
     return newEditor;
   }
 
-  // 将一个 Editor 纳入该 Tile 中。将解除它和原 Tile 的关系
-  // 若已存在一个相同内容的 editor，则那个 editor 将被 destroy
-  // 也可以用于将该 tile 内的一个 editor 移动到该 tile 内的另一个位置
-  @action
-  public moveEditor(editor: Editor, to?: { dest: Editor; replace?: boolean }) {
-    if (to) {
-      const oldIndex = this.editors.indexOf(editor);
-      const destIndex = this.editors.indexOf(to.dest);
-      assert(destIndex >= 0, 'target editor is not in this tile');
+  public addEditor(editor: Editor, dest?: Editor) {
+    assert(this.editors.indexOf(editor) === -1, 'can not add twice');
 
-      if (oldIndex >= 0) {
-        this.editors.splice(oldIndex, 1);
-      }
+    // 刚刚创建出来的 editor，其 tile 还没将其纳入其中
+    if (editor.tile.editors.includes(editor)) {
+      editor.tile.removeEditor(editor);
+    }
 
-      this.editors.splice(destIndex, 0, editor);
-
-      if (to.replace) {
-        to.dest.destroy();
-      }
+    if (dest) {
+      const index = this.editors.indexOf(dest);
+      assert(index >= 0, 'dest editor is invalid');
+      this.editors.splice(index, 0, editor);
     } else {
-      assert(!this.findEditor(editor), 'can not add twice');
       this.editors.push(editor);
     }
 
-    // 注意：新创建的 editor，其 tile === this 但又不在 this.editors 中。因此这里的 if 判断是有必要的
-    if (editor.tile !== this) {
-      editor.tile.removeEditor(editor);
-      editor.tile = this;
-    }
-
-    // 删掉属于同一个 entity 的原有 editor。因此一个 Tile 内不会有两个内容一致的 Editor
-    const duplicated = this.editors.find((e) => e.entityId === editor.entityId && e !== editor);
-
-    if (duplicated) {
-      duplicated.destroy();
-    }
+    editor.tile = this;
+    editor.events.on(Editor.eventNames.Destroy, this.removeEditor);
   }
 
   @action

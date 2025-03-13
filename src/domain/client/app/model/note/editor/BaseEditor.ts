@@ -87,6 +87,24 @@ export default class BaseEditor {
     this.domainEventBus.emit(DomainEventBus.eventNames.Updated, { id: this.entityId, ...patch });
   }, 1000);
 
+  @action
+  public moveTo(dest: BaseEditor | Tile) {
+    const destTile = !(dest instanceof BaseEditor) ? dest : dest.tile;
+
+    if (destTile !== this.tile) {
+      destTile.addEditor(this, dest instanceof BaseEditor ? dest : undefined);
+    } else {
+      // 在同一个 tile 里移动
+      const index = destTile.editors.indexOf(this);
+      assert(index >= 0 && dest instanceof BaseEditor, 'invalid dest');
+
+      const newIndex = destTile.editors.indexOf(dest);
+
+      destTile.editors.splice(index, 1);
+      destTile.editors.splice(newIndex, 0, this);
+    }
+  }
+
   public destroy() {
     Promise.resolve(this.update.flush()).then(
       action(() => {
