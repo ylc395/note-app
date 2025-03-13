@@ -3,20 +3,23 @@ import { uniqueId } from 'lodash-es';
 import assert from 'assert';
 
 import Editor from '#domain/client/app/model/note/editor/BaseEditor';
-import EventBus from '#domain/client/shared/infra/EventBus';
 import { container } from '#domain/shared/infra/singletons';
-
-import EditorFactory from '../EditorFactory';
-import { type Events, EventNames } from './events';
-import type { Direction } from '../HistoryStack';
 import type { NoteVO } from '#domain/shared/model/note';
 
+import EditorFactory from './EditorFactory';
+import type { Direction } from './HistoryStack';
+
 export default class Tile {
+  constructor(
+    private readonly options: {
+      onDestroy: (tile: Tile) => void;
+      onEditorSwitch: (e: { editor: Editor; fromHistory?: Direction }) => void;
+    },
+  ) {}
+
   public readonly id = uniqueId('tile-');
 
   private readonly editorFactory = container.resolve(EditorFactory);
-
-  public readonly events = new EventBus<Events>(this.id);
 
   @observable.ref public accessor currentEditor: Editor | undefined;
 
@@ -46,7 +49,7 @@ export default class Tile {
     }
 
     this.currentEditor = target;
-    this.events.emit(EventNames.EditorSwitched, { editor: target, fromHistory: params?.fromHistory });
+    this.options.onEditorSwitch({ editor: target, fromHistory: params?.fromHistory });
 
     return true;
   }
@@ -115,10 +118,6 @@ export default class Tile {
       editor.destroy();
     }
 
-    this.events.emit(EventNames.Destroyed).then(() => {
-      this.events.clearListeners();
-    });
+    this.options.onDestroy(this);
   }
-
-  public static readonly eventNames = EventNames;
 }

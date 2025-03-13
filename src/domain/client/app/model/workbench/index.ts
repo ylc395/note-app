@@ -4,15 +4,15 @@ import assert from 'assert';
 
 import Editor from '#domain/client/app/model/note/editor/BaseEditor';
 import { container } from '#domain/shared/infra/singletons';
+import type { NoteVO } from '#domain/shared/model/note';
 
 import Tile from './Tile';
 import { type TileNode, type TileParent, TileDirections, isTileLeaf } from './tileTree';
 import HistoryStack, { type Direction, type Record as HistoryRecord } from './HistoryStack';
 import EditorFactory from './EditorFactory';
-import type { NoteVO } from '#domain/shared/model/note';
 
 export enum TileSplitDirections {
-  Top,
+  Top = 1,
   Bottom,
   Left,
   Right,
@@ -21,11 +21,9 @@ export enum TileSplitDirections {
 type NewTile = { from?: Tile; splitDirection: TileSplitDirections };
 
 export default class Workbench {
-  constructor() {
-    this.historyStack.events.on(HistoryStack.eventNames.Pop, this.handleHistoryPop.bind(this));
-  }
-
-  public readonly historyStack = container.resolve(HistoryStack);
+  public readonly historyStack = new HistoryStack({
+    onPop: this.handleHistoryPop.bind(this),
+  });
 
   private readonly editorFactory = container.resolve(EditorFactory);
 
@@ -46,10 +44,10 @@ export default class Workbench {
   }
 
   private createTile() {
-    const tile = new Tile();
-
-    tile.events.on(Tile.eventNames.Destroyed, this.removeTile.bind(this, tile));
-    tile.events.on(Tile.eventNames.EditorSwitched, this.historyStack.push.bind(this.historyStack));
+    const tile = new Tile({
+      onDestroy: this.removeTile.bind(this),
+      onEditorSwitch: this.historyStack.push.bind(this.historyStack),
+    });
 
     this.tilesMap[tile.id] = tile;
     return tile;
@@ -191,10 +189,9 @@ export default class Workbench {
         editor = destTile.createEditor(note, dest instanceof Editor ? dest : undefined);
       }
     } else {
-      // 新建一个 tile，并打开至此
       const { from = this.currentTile, splitDirection } = dest;
       assert(from, 'can not split tile');
-
+      // 新建一个 tile，并打开至此
       destTile = this.splitTile(from.id, splitDirection);
       editor = destTile.createEditor(note);
     }

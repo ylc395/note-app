@@ -101,9 +101,14 @@ export default class BaseEditor {
     if (destTile !== this.tile) {
       destTile.addEditor(this, dest instanceof BaseEditor ? dest : undefined);
     } else {
+      if (!(dest instanceof BaseEditor)) {
+        // 此时 dest 为 tile，且肯定是 this.tile
+        return;
+      }
+
       // 在同一个 tile 里移动
       const index = destTile.editors.indexOf(this);
-      assert(index >= 0 && dest instanceof BaseEditor, 'invalid dest');
+      assert(index >= 0, 'invalid dest');
 
       const newIndex = destTile.editors.indexOf(dest);
 

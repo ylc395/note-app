@@ -1,15 +1,24 @@
 import { action, observable, computed } from 'mobx';
 import assert from 'assert';
 
-import EventBus from '#domain/client/shared/infra/EventBus';
-import Editor from '../../note/editor/BaseEditor';
-import { type Record, Direction } from './types';
-import { EventNames, type Events } from './events';
+import type { EntityId } from '#domain/shared/model/entity';
+import Editor from '../note/editor/BaseEditor';
+import type Tile from './Tile';
 
-export * from './types';
+export interface Record {
+  entityId: EntityId;
+  tileId: Tile['id'];
+  editorId: Editor['id'];
+  mimeType: string | null;
+}
+
+export enum Direction {
+  BACKWARD,
+  FORWARD,
+}
 
 export default class HistoryStack {
-  public readonly events = new EventBus<Events>('historyStack');
+  constructor(private readonly options: { onPop: (e: { record: Record; direction: Direction }) => void }) {}
 
   @observable.ref public accessor current: Editor | undefined;
 
@@ -66,11 +75,9 @@ export default class HistoryStack {
       record = stack.pop()!;
     }
 
-    this.events.emit(EventNames.Pop, {
+    this.options.onPop({
       record: record!,
       direction,
     });
   }
-
-  public static readonly eventNames = EventNames;
 }

@@ -57,7 +57,6 @@ function Node(props: {
         }),
         dropTargetForElements({
           element,
-          getData: () => node as unknown as Record<string, unknown>,
           onDrop: ({ source, self, location }) => {
             // 子节点处理过了，这里就不处理了
             if (location.current.dropTargets[0]?.element !== self.element) {
