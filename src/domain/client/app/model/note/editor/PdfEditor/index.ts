@@ -10,6 +10,7 @@ import type { NoteVO } from '#domain/shared/model/note';
 import BaseEditor from '../BaseEditor';
 import DocumentFactory from './DocumentFactory';
 import type Tile from '../../../Workbench/Tile';
+import { MimeTypes } from '#domain/shared/model/file';
 
 interface Viewer {
   init: (doc: PDFDocumentProxy) => void;
@@ -30,6 +31,8 @@ export default class PdfEditor extends BaseEditor {
   private readonly docFactory = container.resolve(DocumentFactory);
 
   private doc?: PDFDocumentProxy; // this is view-independent
+
+  public override readonly mimeType = MimeTypes.PDF;
 
   @observable.ref public accessor viewer: Viewer | undefined;
 

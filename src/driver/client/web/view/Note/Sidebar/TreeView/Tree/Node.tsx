@@ -9,7 +9,6 @@ import TreeNode from '#domain/client/shared/model/note/TreeNode';
 import { normalizeTitle, NoteTypes, type NoteVO } from '#domain/shared/model/note';
 import TreeViewModel from '#domain/client/app/model/note/TreeView';
 import { container } from '#domain/shared/infra/singletons';
-import { EntityTypes } from '#domain/shared/model/entity';
 import NoteService from '#domain/client/app/service/NoteService';
 
 import TitleEditor from './TitleEditor';
@@ -90,11 +89,7 @@ function Node(props: {
         node.toggleExpand();
       }
     } else {
-      workbench.openEntity({
-        entityType: EntityTypes.Note,
-        entityId: note.id,
-        mimeType: note.mimeType || undefined,
-      });
+      workbench.open(note);
     }
   }
 

@@ -1,6 +1,3 @@
-import assert from 'assert';
-
-import { EntityLocator, EntityTypes } from '#domain/client/shared/model/entity';
 import Editor from '#domain/client/app/model/note/editor/BaseEditor';
 import { MimeTypes } from '#domain/shared/model/file';
 
@@ -10,13 +7,12 @@ import HtmlEditor from '../note/editor/HtmlEditor';
 import ImageEditor from '../note/editor/ImageEditor';
 import UnknownEditor from '../note/editor/UnknownEditor';
 import type Tile from './Tile';
+import type { NoteVO } from '#domain/shared/model/note';
 
 export default class EditorFactory {
   private readonly editorsMap: Record<Editor['id'], Editor> = {};
 
-  public create(tile: Tile, { entityId, entityType, mimeType }: EntityLocator) {
-    assert(entityType === EntityTypes.Note, `can not create editor for entityType: ${entityType}`);
-
+  public create(tile: Tile, { id: entityId, mimeType }: Pick<NoteVO, 'id' | 'mimeType'>) {
     let editor;
 
     if (!mimeType) {
@@ -26,9 +22,9 @@ export default class EditorFactory {
     } else if (mimeType === MimeTypes.HTML) {
       editor = new HtmlEditor({ entityId, tile });
     } else if (mimeType.startsWith('image')) {
-      editor = new ImageEditor({ entityId, tile });
+      editor = new ImageEditor({ entityId, tile, mimeType });
     } else {
-      editor = new UnknownEditor({ entityId, tile });
+      editor = new UnknownEditor({ entityId, tile, mimeType });
     }
 
     this.editorsMap[editor.id] = editor;

@@ -8,7 +8,6 @@ import NoteService from '#domain/client/app/service/NoteService';
 import { container } from '#domain/shared/infra/singletons';
 import Workbench from '#domain/client/app/model/Workbench';
 import Tab from './Tab';
-import { EntityTypes } from '#domain/shared/model/entity';
 
 export default function Tabs(props: { tile: Tile }) {
   let rootRef: HTMLDivElement | undefined;
@@ -32,10 +31,7 @@ export default function Tabs(props: { tile: Tile }) {
         }
 
         assert(targetData instanceof Tile || targetData instanceof BaseEditor);
-        workbench.openEntity(
-          { entityId: note.id, mimeType: note.mimeType || undefined, entityType: EntityTypes.Note },
-          targetData,
-        );
+        workbench.open(note, targetData);
       },
     });
 

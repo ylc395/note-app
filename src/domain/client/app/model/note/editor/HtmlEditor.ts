@@ -1,5 +1,6 @@
 import { observable, action, computed } from 'mobx';
 
+import { MimeTypes } from '#domain/shared/model/file';
 import BaseEditor from './BaseEditor';
 
 export enum Panels {
@@ -9,6 +10,8 @@ export enum Panels {
 
 export default class HtmlEditor extends BaseEditor {
   @observable.ref public accessor documentElement: unknown | undefined;
+
+  public override readonly mimeType = MimeTypes.HTML;
 
   @observable public accessor panelsVisibility = {
     [Panels.Outline]: false,

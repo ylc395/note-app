@@ -4,7 +4,7 @@ import type { infer as ZodInfer } from 'zod';
 import assert from 'assert';
 import { createQuery } from 'mobx-tanstack-query/preset';
 
-import { EntityTypes } from '#domain/client/shared/model/entity';
+import { EntityTypes } from '#domain/shared/model/entity';
 import { notePatchDTOSchema } from '#domain/shared/infra/apiSchema/note';
 import EventBus from '#domain/client/shared/infra/EventBus';
 import { container } from '#domain/shared/infra/singletons';
@@ -16,8 +16,13 @@ import Backup from './Backup';
 import type Tile from '../../Workbench/Tile';
 import DomainEventBus from '../EventBus';
 
+export interface Options {
+  entityId: NoteVO['id'];
+  tile: Tile;
+}
+
 export default class BaseEditor {
-  constructor({ entityId, tile }: { entityId: NoteVO['id']; tile: Tile }) {
+  constructor({ entityId, tile }: Options) {
     this.tile = tile;
     this.entityId = entityId;
     this.backup = new Backup(entityId, BaseEditor.patchSchema);
@@ -50,6 +55,8 @@ export default class BaseEditor {
       { signal: this.destroyController.signal },
     );
   }
+
+  public readonly mimeType: string | null = null;
 
   protected readonly remote = container.resolve(rpcToken);
 

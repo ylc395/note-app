@@ -5,11 +5,11 @@ import assert from 'assert';
 import Editor from '#domain/client/app/model/note/editor/BaseEditor';
 import EventBus from '#domain/client/shared/infra/EventBus';
 import { container } from '#domain/shared/infra/singletons';
-import type { EntityLocator } from '#domain/client/shared/model/entity';
 
 import EditorFactory from '../EditorFactory';
 import { type Events, EventNames } from './events';
 import type { Direction } from '../HistoryStack';
+import type { NoteVO } from '#domain/shared/model/note';
 
 export default class Tile {
   public readonly id = uniqueId('tile-');
@@ -22,9 +22,9 @@ export default class Tile {
 
   @observable.shallow public accessor editors: Editor[] = [];
 
-  public findEditor(locator: EntityLocator | Editor) {
+  public findEditor(locator: NoteVO['id'] | Editor) {
     const existedEditor = this.editors.find((e) =>
-      locator instanceof Editor ? locator === e : locator.entityId === e.entityId,
+      locator instanceof Editor ? locator === e : locator === e.entityId,
     );
 
     return existedEditor;
@@ -33,7 +33,7 @@ export default class Tile {
   // 将本 Tile 的当前 editor 切换为指定的 editor。fromHistory 表示本次的切换动作是否是浏览历史栈弹出导致的
   // 切换有可能失败（当指定的 editor 不存在时）
   @action.bound
-  public switchToEditor(editor: Editor | EntityLocator, params?: { fromHistory?: Direction }) {
+  public switchToEditor(editor: Editor | NoteVO['id'], params?: { fromHistory?: Direction }) {
     const target = this.findEditor(editor);
     assert(target || !(editor instanceof Editor), 'can not switch to an editor which not belong to this tile');
 
@@ -76,11 +76,8 @@ export default class Tile {
   // 在该 Tile 下创建一个 Editor。可以指定其位置
   // 不能创建内容相同的 editor
   @action
-  public createEditor(entity: EntityLocator, dest?: Editor) {
-    assert(
-      this.editors.findIndex((editor) => editor.entityId === entity.entityId) < 0,
-      'can not create duplicated editor',
-    );
+  public createEditor(entity: Pick<NoteVO, 'id' | 'mimeType'>, dest?: Editor) {
+    assert(this.editors.findIndex((editor) => editor.entityId === entity.id) < 0, 'can not create duplicated editor');
 
     const newEditor = this.editorFactory.create(this, entity);
 

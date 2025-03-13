@@ -36,12 +36,14 @@ export default class HistoryStack {
     }
 
     if (this.current) {
-      const stack = fromHistory === Direction.BACKWARD ? this.forwards : this.backwards;
+      assert(this.current.value.result.data);
 
+      const stack = fromHistory === Direction.BACKWARD ? this.forwards : this.backwards;
       stack.push({
         entityId: this.current.entityId,
         tileId: this.current.tile.id,
         editorId: this.current.id,
+        mimeType: this.current.mimeType,
       });
     }
 

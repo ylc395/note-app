@@ -4,12 +4,12 @@ import assert from 'assert';
 
 import Editor from '#domain/client/app/model/note/editor/BaseEditor';
 import { container } from '#domain/shared/infra/singletons';
-import { EntityTypes, type EntityLocator } from '#domain/client/shared/model/entity';
 
 import Tile from './Tile';
 import { type TileNode, type TileParent, TileDirections, isTileLeaf } from './tileTree';
 import HistoryStack, { type Direction, type Record as HistoryRecord } from './HistoryStack';
 import EditorFactory from './EditorFactory';
+import type { NoteVO } from '#domain/shared/model/note';
 
 export enum TileSplitDirections {
   Top,
@@ -161,7 +161,7 @@ export default class Workbench {
   // 在指定位置打开一个 editor。该 editor 可能是新建的，也可能是复用已存在的
   // 若已存在，则其会被移动到指定位置（若有指定）
   @action
-  public openEntity(entity: EntityLocator, dest?: Editor | Tile | NewTile) {
+  public open(note: Pick<NoteVO, 'id' | 'mimeType'>, dest?: Editor | Tile | NewTile) {
     dest = dest || this.currentTile;
 
     if (!dest) {
@@ -177,7 +177,7 @@ export default class Workbench {
     // 打开到指定 tile，或是指定 editor 旁边
     if (dest instanceof Tile || dest instanceof Editor) {
       destTile = dest instanceof Tile ? dest : dest.tile;
-      const existedEditor = destTile.findEditor(entity);
+      const existedEditor = destTile.findEditor(note.id);
 
       // 对应 editor 已存在：
       if (existedEditor) {
@@ -188,7 +188,7 @@ export default class Workbench {
         }
       } else {
         // 对应的 editor 不存在，则新建
-        editor = destTile.createEditor(entity, dest instanceof Editor ? dest : undefined);
+        editor = destTile.createEditor(note, dest instanceof Editor ? dest : undefined);
       }
     } else {
       // 新建一个 tile，并打开至此
@@ -196,7 +196,7 @@ export default class Workbench {
       assert(from, 'can not split tile');
 
       destTile = this.splitTile(from.id, splitDirection);
-      editor = destTile.createEditor(entity);
+      editor = destTile.createEditor(note);
     }
 
     destTile.switchToEditor(editor);
@@ -208,7 +208,7 @@ export default class Workbench {
     if (dest instanceof Editor) {
       dest.tile.switchToEditor(dest, { fromHistory: direction });
     } else {
-      this.openEntity({ ...record, entityType: EntityTypes.Note }, dest);
+      this.open({ id: record.entityId, mimeType: record.mimeType }, dest);
     }
   }
 }

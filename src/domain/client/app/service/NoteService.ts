@@ -8,7 +8,6 @@ import {
   NoteTypes,
   type NoteVO,
 } from '#domain/shared/model/note';
-import { EntityTypes } from '#domain/shared/model/entity';
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
 
 import Workbench from '../model/Workbench';
@@ -36,7 +35,7 @@ export default class NoteService {
     this.eventBus.emit(DomainEventBus.eventNames.Created, newNote);
 
     if (open) {
-      this.workbench.openEntity({ entityType: EntityTypes.Note, entityId: newNote.id });
+      this.workbench.open(newNote);
     }
   };
 
