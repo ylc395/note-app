@@ -27,7 +27,11 @@ export default function EditorView(props: { editor: Editor }) {
 
   return (
     <div class="border rounded-lg">
-      <MarkdownEditor onUpdate={onUpdate} onCreated={setCrepe} rootClass="!p-4 max-h-96 min-h-32 overflow-y-auto" />
+      <MarkdownEditor
+        onUpdate={onUpdate}
+        onCreated={setCrepe}
+        editorRootClass="!p-4 max-h-96 min-h-32 overflow-y-auto"
+      />
       <div class="flex justify-between border-t">
         <div class="text-sm flex items-center px-2 text-gray-400">字数{props.editor.value.length}</div>
         <div class="flex space-x-2">

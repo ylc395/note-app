@@ -8,13 +8,14 @@ import '@milkdown/crepe/theme/frame.css';
 
 export default function MarkdownEditor(props: {
   readonly?: boolean;
-  rootClass?: string;
-
+  editorRootClass?: string;
+  containerClass?: string;
+  focusWhenEditable?: boolean;
   /** 以下 prop 不具有响应性 */
   defaultValue?: string;
   onUpdate?: (md: string) => void;
   onCreated?: (editor: Crepe) => void;
-  focusWhenEditable?: boolean;
+  onStateUpdate?: () => void;
 }) {
   let rootRef: HTMLDivElement | undefined;
   const [getCrepe, setCrepe] = createSignal<Crepe>();
@@ -36,13 +37,11 @@ export default function MarkdownEditor(props: {
 
   createEffect(async () => {
     const crepe = getCrepe();
-    const { rootClass } = props;
-
     assert(crepe, 'no crepe');
 
-    if (rootClass) {
+    if (props.editorRootClass) {
       crepe.editor.config((ctx) => {
-        ctx.update(editorViewOptionsCtx, (prev) => ({ ...prev, attributes: { class: rootClass } }));
+        ctx.update(editorViewOptionsCtx, (prev) => ({ ...prev, attributes: { class: props.editorRootClass! } }));
       });
     }
 
@@ -61,5 +60,5 @@ export default function MarkdownEditor(props: {
     getCrepe()?.destroy();
   });
 
-  return <div ref={rootRef}></div>;
+  return <div class={props.containerClass} ref={rootRef}></div>;
 }

@@ -8,6 +8,7 @@ import { TileSplitDirections } from '#domain/client/app/model/Workbench';
 import Tabs from './Tabs';
 import TitleInput from './TitleInput';
 import Editor from './Editor';
+import DropIndicator from './DropIndicator';
 import dragHandler from './dragHandler';
 
 export default function TileView(props: {
@@ -41,25 +42,7 @@ export default function TileView(props: {
       <Show when={props.tile.currentEditor}>
         {(editor) => (
           <div class="flex flex-col grow relative" ref={setTileRef}>
-            <Show when={tileDirection()}>
-              {(_) => (
-                <div
-                  class="absolute bg-blue-100 opacity-30 flex justify-center items-center"
-                  classList={{
-                    'left-0': tileDirection() !== TileSplitDirections.Right,
-                    'right-0': tileDirection() !== TileSplitDirections.Left,
-                    'bottom-0': tileDirection() !== TileSplitDirections.Top,
-                    'top-0': tileDirection() !== TileSplitDirections.Bottom,
-                    'right-[80%]': tileDirection() === TileSplitDirections.Left,
-                    'left-[80%]': tileDirection() === TileSplitDirections.Right,
-                    'top-[80%]': tileDirection() === TileSplitDirections.Bottom,
-                    'bottom-[80%]': tileDirection() === TileSplitDirections.Top,
-                  }}
-                >
-                  放置以打开
-                </div>
-              )}
-            </Show>
+            <Show when={tileDirection()}>{(value) => <DropIndicator tileDirection={value()} />}</Show>
             <TitleInput editor={editor()} />
             <Editor editor={editor()} />
           </div>
