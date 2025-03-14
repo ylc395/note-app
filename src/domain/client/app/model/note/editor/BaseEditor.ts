@@ -15,6 +15,7 @@ import { EventNames, type Events } from './events';
 import Backup from './Backup';
 import type Tile from '../../Workbench/Tile';
 import DomainEventBus from '../EventBus';
+import type { Direction } from '../../Workbench/HistoryStack';
 
 export interface Options {
   entityId: NoteVO['id'];
@@ -119,6 +120,10 @@ export default class BaseEditor {
     if (switchTo) {
       destTile.switchToEditor(this);
     }
+  }
+
+  public focus(options?: { isFromHistory?: Direction }) {
+    this.events.emit(EventNames.Focus, { editor: this, fromHistory: options?.isFromHistory });
   }
 
   public destroy() {

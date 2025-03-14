@@ -6,20 +6,20 @@ import Editor from '#domain/client/app/model/note/editor/BaseEditor';
 import { container } from '#domain/shared/infra/singletons';
 import type { NoteVO } from '#domain/shared/model/note';
 
-import EditorFactory from './EditorFactory';
+import EditorManager from './EditorManager';
 import type { Direction } from './HistoryStack';
 
 export default class Tile {
   constructor(
     private readonly options: {
       onDestroy: (tile: Tile) => void;
-      onEditorSwitch: (e: { editor: Editor; fromHistory?: Direction }) => void;
+      onEditorFocus: (e: { editor: Editor; fromHistory?: Direction }) => void;
     },
   ) {}
 
   public readonly id = uniqueId('tile-');
 
-  private readonly editorFactory = container.resolve(EditorFactory);
+  private readonly editorManager = container.resolve(EditorManager);
 
   @observable.ref public accessor currentEditor: Editor | undefined;
 
@@ -34,24 +34,13 @@ export default class Tile {
   }
 
   // 将本 Tile 的当前 editor 切换为指定的 editor。fromHistory 表示本次的切换动作是否是浏览历史栈弹出导致的
-  // 切换有可能失败（当指定的 editor 不存在时）
   @action.bound
-  public switchToEditor(editor: Editor | NoteVO['id'], params?: { fromHistory?: Direction }) {
+  public switchToEditor(editor: Editor | NoteVO['id'], options?: { isFromHistory?: Direction }) {
     const target = this.findEditor(editor);
-    assert(target || !(editor instanceof Editor), 'can not switch to an editor which not belong to this tile');
-
-    if (!target) {
-      return false;
-    }
-
-    if (target === this.currentEditor) {
-      return true;
-    }
+    assert(target, 'can not switch to an editor which not belong to this tile');
 
     this.currentEditor = target;
-    this.options.onEditorSwitch({ editor: target, fromHistory: params?.fromHistory });
-
-    return true;
+    target.focus({ isFromHistory: options?.isFromHistory });
   }
 
   // 将一个 Editor 从该 Tile 中移除
@@ -62,6 +51,7 @@ export default class Tile {
 
     this.editors.splice(existedTabIndex, 1);
     editor.events.off(Editor.eventNames.Destroy, this.removeEditor);
+    editor.events.off(Editor.eventNames.Focus, this.options.onEditorFocus);
 
     if (this.currentEditor === editor) {
       const newCurrentEditor = this.editors[existedTabIndex] || this.editors[existedTabIndex - 1];
@@ -82,17 +72,16 @@ export default class Tile {
   public createEditor(entity: Pick<NoteVO, 'id' | 'mimeType'>, dest?: Editor) {
     assert(this.editors.findIndex((editor) => editor.entityId === entity.id) < 0, 'can not create duplicated editor');
 
-    const newEditor = this.editorFactory.create(this, entity);
+    const newEditor = this.editorManager.create(this, entity);
 
     newEditor.events.on(Editor.eventNames.Destroy, this.removeEditor);
+    newEditor.events.on(Editor.eventNames.Focus, this.options.onEditorFocus);
     this.addEditor(newEditor, dest);
 
     return newEditor;
   }
 
   public addEditor(editor: Editor, dest?: Editor) {
-    assert(this.editors.indexOf(editor) === -1, 'can not add twice');
-
     // 刚刚创建出来的 editor，其 tile 还没将其纳入其中
     if (editor.tile.editors.includes(editor)) {
       editor.tile.removeEditor(editor);

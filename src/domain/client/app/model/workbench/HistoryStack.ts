@@ -3,20 +3,19 @@ import assert from 'assert';
 
 import type { EntityId } from '#domain/shared/model/entity';
 import Editor from '../note/editor/BaseEditor';
-import type Tile from './Tile';
 
 export interface Record {
   entityId: EntityId;
-  tileId: Tile['id'];
   editorId: Editor['id'];
   mimeType: string | null;
 }
 
 export enum Direction {
-  BACKWARD,
+  BACKWARD = 1,
   FORWARD,
 }
 
+// 这里的历史管理，更类似于焦点历史管理
 export default class HistoryStack {
   constructor(private readonly options: { onPop: (e: { record: Record; direction: Direction }) => void }) {}
 
@@ -45,12 +44,10 @@ export default class HistoryStack {
     }
 
     if (this.current) {
-      assert(this.current.value.result.data);
-
       const stack = fromHistory === Direction.BACKWARD ? this.forwards : this.backwards;
+
       stack.push({
         entityId: this.current.entityId,
-        tileId: this.current.tile.id,
         editorId: this.current.id,
         mimeType: this.current.mimeType,
       });

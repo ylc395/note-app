@@ -6,7 +6,6 @@ import type Tile from '#domain/client/app/model/Workbench/Tile';
 import { TileSplitDirections } from '#domain/client/app/model/Workbench';
 
 import Tabs from './Tabs';
-import TitleInput from './TitleInput';
 import Editor from './Editor';
 import DropIndicator from './DropIndicator';
 import dragHandler from './dragHandler';
@@ -41,10 +40,9 @@ export default function TileView(props: {
       <Tabs tile={props.tile} />
       <Show when={props.tile.currentEditor}>
         {(editor) => (
-          <div class="flex flex-col grow relative" ref={setTileRef}>
-            <Show when={tileDirection()}>{(value) => <DropIndicator tileDirection={value()} />}</Show>
-            <TitleInput editor={editor()} />
+          <div class="h-full relative" ref={setTileRef}>
             <Editor editor={editor()} />
+            <Show when={tileDirection()}>{(value) => <DropIndicator tileDirection={value()} />}</Show>
           </div>
         )}
       </Show>

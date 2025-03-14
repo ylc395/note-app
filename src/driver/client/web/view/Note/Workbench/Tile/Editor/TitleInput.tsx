@@ -14,10 +14,6 @@ export default function TitleInput(props: { editor: BaseEditor }) {
   createEffect(() => {
     if (props.editor.value.result.data) {
       setTitle(props.editor.value.result.data.title);
-
-      if (props.editor.value.result.data.title === '') {
-        inputRef?.focus();
-      }
     }
   });
 

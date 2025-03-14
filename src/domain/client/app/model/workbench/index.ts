@@ -9,7 +9,7 @@ import type { NoteVO } from '#domain/shared/model/note';
 import Tile from './Tile';
 import { type TileNode, type TileParent, TileDirections, isTileLeaf } from './tileTree';
 import HistoryStack, { type Direction, type Record as HistoryRecord } from './HistoryStack';
-import EditorFactory from './EditorFactory';
+import EditorManager from './EditorManager';
 
 export enum TileSplitDirections {
   Top = 1,
@@ -25,7 +25,7 @@ export default class Workbench {
     onPop: this.handleHistoryPop.bind(this),
   });
 
-  private readonly editorFactory = container.resolve(EditorFactory);
+  private readonly editorManager = container.resolve(EditorManager);
 
   private readonly tilesMap: Record<Tile['id'], Tile> = {};
 
@@ -33,26 +33,34 @@ export default class Workbench {
 
   @computed
   public get currentTile() {
-    return this.historyStack.current?.tile;
+    return this.historyStack.current?.tile || this.latestTile;
   }
 
   public getTileById(id: Tile['id']) {
     return this.tilesMap[id];
   }
 
+  private latestTile?: Tile;
+
   private createTile() {
     const tile = new Tile({
       onDestroy: this.removeTile.bind(this),
-      onEditorSwitch: this.historyStack.push.bind(this.historyStack),
+      onEditorFocus: this.historyStack.push.bind(this.historyStack),
     });
 
     this.tilesMap[tile.id] = tile;
+    this.latestTile = tile;
+
     return tile;
   }
 
   @action.bound
   private removeTile(tile: Tile) {
     delete this.tilesMap[tile.id];
+
+    if (this.latestTile === tile) {
+      this.latestTile = undefined;
+    }
 
     const searchAndRemove = (node: TileNode, parentNode?: TileParent): TileNode | null => {
       if (isTileLeaf(node)) {
@@ -162,7 +170,11 @@ export default class Workbench {
   // 在指定位置打开一个 editor。该 editor 可能是新建的，也可能是复用已存在的
   // 若已存在，则其会被移动到指定位置（若有指定）
   @action
-  public open(note: Pick<NoteVO, 'id' | 'mimeType'>, dest?: Editor | Tile | NewTile) {
+  public open(
+    note: Pick<NoteVO, 'id' | 'mimeType'>,
+    dest?: Editor | Tile | NewTile,
+    options?: { isFromHistory?: Direction },
+  ) {
     dest = dest || this.currentTile;
 
     if (!dest) {
@@ -199,16 +211,17 @@ export default class Workbench {
       editor = destTile.createEditor(note);
     }
 
-    destTile.switchToEditor(editor);
+    destTile.switchToEditor(editor, { isFromHistory: options?.isFromHistory });
   }
 
   private handleHistoryPop({ record, direction }: { record: HistoryRecord; direction: Direction }) {
-    const dest = this.editorFactory.get(record.editorId) || this.tilesMap[record.tileId];
+    const dest = this.editorManager.get(record.editorId) || this.editorManager.getAndRemoveTileIdOf(record.editorId);
 
     if (dest instanceof Editor) {
-      dest.tile.switchToEditor(dest, { fromHistory: direction });
+      dest.tile.switchToEditor(dest, { isFromHistory: direction });
     } else {
-      this.open({ id: record.entityId, mimeType: record.mimeType }, dest);
+      const destTile = this.getTileById(dest);
+      this.open({ id: record.entityId, mimeType: record.mimeType }, destTile, { isFromHistory: direction });
     }
   }
 }
