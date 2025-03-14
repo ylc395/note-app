@@ -10,7 +10,11 @@ import TitleInput from './TitleInput';
 import Editor from './Editor';
 import dragHandler from './dragHandler';
 
-export default function TileView(props: { tile: Tile; panelId?: string }) {
+export default function TileView(props: {
+  tile: Tile;
+  panelId?: string;
+  position?: 'left' | 'right' | 'top' | 'bottom';
+}) {
   const [tileRef, setTileRef] = createSignal<HTMLElement>();
   const [tileDirection, setTileDirection] = createSignal<TileSplitDirections | 'middle'>();
 
@@ -65,7 +69,11 @@ export default function TileView(props: { tile: Tile; panelId?: string }) {
   );
 
   if (props.panelId) {
-    return <Splitter.Panel id={props.panelId}>{content}</Splitter.Panel>;
+    return (
+      <Splitter.Panel class="flex flex-col" id={props.panelId}>
+        {content}
+      </Splitter.Panel>
+    );
   }
 
   return <div class="h-full flex flex-col">{content}</div>;

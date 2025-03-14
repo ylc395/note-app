@@ -24,14 +24,17 @@ export default function Tabs(props: { tile: Tile }) {
       getData: () => props.tile as unknown as Record<string, unknown>,
       onDrop: ({ source, location }) => {
         const targetData = location.current.dropTargets[0]?.data;
-        const note = NoteService.getNote(source.data);
-
-        if (!note) {
-          return;
-        }
-
         assert(targetData instanceof Tile || targetData instanceof BaseEditor);
-        workbench.open(note, targetData);
+
+        if (source.data instanceof BaseEditor) {
+          source.data.moveTo(targetData);
+        } else {
+          const note = NoteService.getNote(source.data);
+
+          if (note) {
+            workbench.open(note, targetData);
+          }
+        }
       },
     });
 

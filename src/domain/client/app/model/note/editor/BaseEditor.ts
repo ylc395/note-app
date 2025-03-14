@@ -95,7 +95,7 @@ export default class BaseEditor {
   }, 1000);
 
   @action
-  public moveTo(dest: BaseEditor | Tile) {
+  public moveTo(dest: BaseEditor | Tile, switchTo?: boolean) {
     const destTile = !(dest instanceof BaseEditor) ? dest : dest.tile;
 
     if (destTile !== this.tile) {
@@ -114,6 +114,10 @@ export default class BaseEditor {
 
       destTile.editors.splice(index, 1);
       destTile.editors.splice(newIndex, 0, this);
+    }
+
+    if (switchTo) {
+      destTile.switchToEditor(this);
     }
   }
 

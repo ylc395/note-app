@@ -1,28 +1,65 @@
 import { Splitter } from '@ark-ui/solid';
+import { createMemo, Show } from 'solid-js';
 
-import { TileDirections, type TileNode } from '#domain/client/app/model/Workbench/tileTree';
+import { TileDirections, type TileNode, type TileParent } from '#domain/client/app/model/Workbench/tileTree';
 import { container } from '#domain/shared/infra/singletons';
 import Workbench from '#domain/client/app/model/Workbench';
 
 import Tile from './Tile';
 
-export default function TileNodeView(props: { tile: TileNode; panelId?: string }) {
-  const workbench = container.resolve(Workbench);
-  const tileNode = props.tile;
+function TileParentNode(props: { panelId?: string; tile: TileParent }) {
+  const content = (
+    <Splitter.Root
+      orientation={props.tile.direction === TileDirections.Horizontal ? 'horizontal' : 'vertical'}
+      defaultSize={[
+        { id: `${props.tile.id}-first`, size: 50, minSize: 20 },
+        { id: `${props.tile.id}-second`, size: 50, minSize: 20 },
+      ]}
+    >
+      <TileNodeView parent={props.tile} panelId={`${props.tile.id}-first`} tile={props.tile.first} />
+      <Splitter.ResizeTrigger
+        class="bg-gray-100"
+        classList={{
+          'h-1': props.tile.direction === TileDirections.Vertical,
+          'w-1': props.tile.direction === TileDirections.Horizontal,
+        }}
+        id={`${props.tile.id}-first:${props.tile.id}-second`}
+      />
+      <TileNodeView parent={props.tile} panelId={`${props.tile.id}-second`} tile={props.tile.second} />
+    </Splitter.Root>
+  );
 
-  if (typeof tileNode === 'string') {
-    const tile = workbench.getTileById(tileNode);
-
-    return <Tile tile={tile} panelId={props.panelId} />;
+  if (props.panelId) {
+    return <Splitter.Panel id={props.panelId!}>{content}</Splitter.Panel>;
   }
 
+  return content;
+}
+
+export default function TileNodeView(props: { tile: TileNode; panelId?: string; parent?: TileParent }) {
+  const workbench = container.resolve(Workbench);
+  const position = createMemo(() =>
+    props.parent
+      ? props.parent.direction === TileDirections.Horizontal
+        ? props.parent.first === props.tile
+          ? 'left'
+          : 'right'
+        : props.parent.first === props.tile
+        ? 'top'
+        : 'bottom'
+      : undefined,
+  );
+
   return (
-    <Splitter.Panel id={props.panelId!}>
-      <Splitter.Root orientation={tileNode.direction === TileDirections.Horizontal ? 'horizontal' : 'vertical'}>
-        <TileNodeView panelId={`${tileNode.id}-first`} tile={tileNode.first} />
-        <Splitter.ResizeTrigger id={`${tileNode.id}-first:${tileNode.id}-second`} />
-        <TileNodeView panelId={`${tileNode.id}-second`} tile={tileNode.second} />
-      </Splitter.Root>
-    </Splitter.Panel>
+    <Show
+      when={typeof props.tile !== 'string'}
+      fallback={
+        <Show when={workbench.getTileById(props.tile as string)}>
+          {(tile) => <Tile tile={tile()} position={position()} panelId={props.panelId} />}
+        </Show>
+      }
+    >
+      <TileParentNode panelId={props.panelId} tile={props.tile as TileParent} />
+    </Show>
   );
 }

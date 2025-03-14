@@ -16,10 +16,11 @@ export default function dragHandler({
   tile: Tile;
   onDirectionChange: (direction?: TileSplitDirections | 'middle') => void;
 }) {
+  const { workbench } = container.resolve(NoteService);
+
   let tileRect: DOMRect | undefined;
   let note: NoteVO | undefined;
   let tileDirection: TileSplitDirections | 'middle' | undefined;
-  const { workbench } = container.resolve(NoteService);
 
   function onDragLeave() {
     note = undefined;
@@ -72,6 +73,8 @@ export default function dragHandler({
     if (source.data instanceof BaseEditor) {
       if (_tileDirection === 'middle') {
         source.data.moveTo(tile);
+      } else {
+        workbench.splitTileWithEditor(tile.id, _tileDirection, source.data);
       }
       return;
     }

@@ -37,10 +37,7 @@ export default class Workbench {
   }
 
   public getTileById(id: Tile['id']) {
-    const tile = this.tilesMap[id];
-    assert(tile, 'invalid tile id');
-
-    return tile;
+    return this.tilesMap[id];
   }
 
   private createTile() {
@@ -154,6 +151,12 @@ export default class Workbench {
     }
 
     return newTile;
+  }
+
+  @action
+  public splitTileWithEditor(from: Tile['id'], direction: TileSplitDirections, editor: Editor) {
+    const newTile = this.splitTile(from, direction);
+    editor.moveTo(newTile, true);
   }
 
   // 在指定位置打开一个 editor。该 editor 可能是新建的，也可能是复用已存在的
