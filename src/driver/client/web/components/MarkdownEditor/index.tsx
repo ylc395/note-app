@@ -11,10 +11,10 @@ export default function MarkdownEditor(props: {
   editorRootClass?: string;
   containerClass?: string;
   focusWhenEditable?: boolean;
+  ref?: (value: Crepe) => void;
   /** 以下 prop 不具有响应性 */
   defaultValue?: string;
-  onUpdate?: (md: string) => void;
-  onCreated?: (editor: Crepe) => void;
+  onUpdate?: (md: string) => void; // 仅当焦点在该 editor 时触发
   onStateUpdate?: () => void;
 }) {
   let rootRef: HTMLDivElement | undefined;
@@ -29,7 +29,9 @@ export default function MarkdownEditor(props: {
     });
 
     if (onUpdate) {
-      crepe.on((listener) => listener.markdownUpdated((_, markdown) => onUpdate(markdown)));
+      crepe.on((listener) =>
+        listener.markdownUpdated((ctx, markdown) => ctx.get(editorViewCtx).hasFocus() && onUpdate(markdown)),
+      );
     }
 
     setCrepe(crepe);
@@ -49,7 +51,7 @@ export default function MarkdownEditor(props: {
     crepe.setReadonly(isReadonly ?? false);
 
     await crepe.create();
-    props.onCreated?.(crepe);
+    props.ref?.(crepe);
 
     if (props.focusWhenEditable && !isReadonly) {
       crepe.editor.action((ctx) => ctx.get(editorViewCtx).focus());

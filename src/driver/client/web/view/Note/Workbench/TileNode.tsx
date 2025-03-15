@@ -1,5 +1,5 @@
 import { Splitter } from '@ark-ui/solid';
-import { createMemo, Show } from 'solid-js';
+import { Show } from 'solid-js';
 
 import { TileDirections, type TileNode, type TileParent } from '#domain/client/app/model/Workbench/tileTree';
 import { container } from '#domain/shared/infra/singletons';
@@ -38,24 +38,13 @@ function TileParentNode(props: { panelId?: string; tile: TileParent }) {
 
 export default function TileNodeView(props: { tile: TileNode; panelId?: string; parent?: TileParent }) {
   const workbench = container.resolve(Workbench);
-  const position = createMemo(() =>
-    props.parent
-      ? props.parent.direction === TileDirections.Horizontal
-        ? props.parent.first === props.tile
-          ? 'left'
-          : 'right'
-        : props.parent.first === props.tile
-        ? 'top'
-        : 'bottom'
-      : undefined,
-  );
 
   return (
     <Show
       when={typeof props.tile !== 'string'}
       fallback={
         <Show when={workbench.getTileById(props.tile as string)}>
-          {(tile) => <Tile tile={tile()} position={position()} panelId={props.panelId} />}
+          {(tile) => <Tile tile={tile()} panelId={props.panelId} />}
         </Show>
       }
     >

@@ -1,9 +1,10 @@
+import { z } from 'zod';
 import BaseEditor, { type Options } from './BaseEditor';
 
-export default class UnknownEditor extends BaseEditor {
-  constructor(options: Options & { mimeType: string }) {
-    super(options);
-    this.mimeType = options.mimeType;
+export default class UnknownEditor extends BaseEditor<never> {
+  constructor({ mimeType, ...options }: Options & { mimeType: string }) {
+    super({ ...options, uiStateSchema: z.never() });
+    this.mimeType = mimeType;
   }
 
   public override readonly mimeType;

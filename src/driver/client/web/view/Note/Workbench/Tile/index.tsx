@@ -10,11 +10,7 @@ import Editor from './Editor';
 import DropIndicator from './DropIndicator';
 import dragHandler from './dragHandler';
 
-export default function TileView(props: {
-  tile: Tile;
-  panelId?: string;
-  position?: 'left' | 'right' | 'top' | 'bottom';
-}) {
+export default function TileView(props: { tile: Tile; panelId?: string }) {
   const [tileRef, setTileRef] = createSignal<HTMLElement>();
   const [tileDirection, setTileDirection] = createSignal<TileSplitDirections | 'middle'>();
 

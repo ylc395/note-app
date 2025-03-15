@@ -1,18 +1,16 @@
-import { uniqueId, debounce } from 'lodash-es';
+import { uniqueId, debounce, pick } from 'lodash-es';
 import { action, computed, reaction } from 'mobx';
-import type { infer as ZodInfer } from 'zod';
 import assert from 'assert';
 import { createQuery } from 'mobx-tanstack-query/preset';
+import type { ZodType } from 'zod';
 
-import { EntityTypes } from '#domain/shared/model/entity';
-import { notePatchDTOSchema } from '#domain/shared/infra/apiSchema/note';
 import EventBus from '#domain/client/shared/infra/EventBus';
 import { container } from '#domain/shared/infra/singletons';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
-import type { NoteVO } from '#domain/shared/model/note';
+import type { NotePatchDTO, NoteVO } from '#domain/shared/model/note';
+import PersistedObject from '#domain/client/shared/model/abstract/PersistedObject';
 
 import { EventNames, type Events } from './events';
-import Backup from './Backup';
 import type Tile from '../../Workbench/Tile';
 import DomainEventBus from '../EventBus';
 import type { Direction } from '../../Workbench/HistoryStack';
@@ -22,11 +20,15 @@ export interface Options {
   tile: Tile;
 }
 
-export default class BaseEditor {
-  constructor({ entityId, tile }: Options) {
+type Patch = Pick<NotePatchDTO, 'body' | 'icon' | 'title'>;
+
+export default abstract class BaseEditor<S = unknown> {
+  constructor({ entityId, tile, uiStateSchema }: Options & { uiStateSchema: ZodType<S> }) {
     this.tile = tile;
     this.entityId = entityId;
-    this.backup = new Backup(entityId, BaseEditor.patchSchema);
+
+    this.uiState = new PersistedObject(`uiEditorState-${this.entityId}`, uiStateSchema);
+    this.noteUIState = new PersistedObject(`uiState-${this.entityId}`, uiStateSchema);
 
     this.value = createQuery(({ signal }) => this.remote.note.queryOneById.query(this.entityId, { signal }), {
       queryKey: ['note', this.entityId],
@@ -50,28 +52,44 @@ export default class BaseEditor {
       },
     );
 
+    this.initUIState();
+  }
+
+  private async initUIState() {
+    await Promise.all([this.uiState.ready, this.noteUIState.ready]);
+
+    if (this.destroyController.signal.aborted) {
+      return;
+    }
+
+    const uiState = this.noteUIState.get();
+
+    if (uiState) {
+      this.uiState.set(uiState);
+    }
+
     reaction(
-      () => this.value.result.data,
-      (data) => data && this.backup.diff(data),
+      () => this.uiState.get(),
+      (value) => value && this.noteUIState.set(value),
       { signal: this.destroyController.signal },
     );
   }
 
-  public readonly mimeType: string | null = null;
+  public readonly uiState: PersistedObject<S>;
+
+  private readonly noteUIState: PersistedObject<S>;
+
+  public abstract readonly mimeType: string | null;
 
   protected readonly remote = container.resolve(rpcToken);
 
   private readonly domainEventBus = container.resolve(DomainEventBus);
-
-  public readonly backup;
 
   public readonly id = uniqueId('editor-');
 
   public readonly events = new EventBus<Events>(this.id);
 
   public readonly entityId: NoteVO['id'];
-
-  public readonly entityType = EntityTypes.Note;
 
   protected readonly destroyController = new AbortController();
 
@@ -88,11 +106,33 @@ export default class BaseEditor {
     return this.value.result.isLoading || this.blob.result.isLoading;
   }
 
-  public readonly update = debounce(async (patch: ZodInfer<typeof BaseEditor.patchSchema>) => {
-    assert(this.value.result.data, 'can not update when loading');
-    await this.remote.note.updateOne.mutate([this.entityId, patch]);
+  public readonly update = (patch: Patch) => {
+    const currentData: Required<Patch> | undefined = this.value.result.data
+      ? pick(this.value.result.data, ['title', 'body', 'icon'])
+      : undefined;
+
+    assert(currentData, 'can not update when loading');
+
+    // 这里采用乐观更新
     this.value.setData((note) => ({ ...note!, ...patch }));
     this.domainEventBus.emit(DomainEventBus.eventNames.Updated, { id: this.entityId, ...patch });
+
+    const promise = this._update(patch);
+
+    if (promise) {
+      // 若服务器更新失败，前端回退至之前的值
+      promise.catch(() => {
+        this.value.setData((note) => ({ ...note!, ...currentData }));
+        this.domainEventBus.emit(DomainEventBus.eventNames.Updated, {
+          id: this.entityId,
+          ...currentData,
+        });
+      });
+    }
+  };
+
+  private readonly _update = debounce((patch: Patch) => {
+    return this.remote.note.updateOne.mutate([this.entityId, patch]);
   }, 1000);
 
   @action
@@ -127,7 +167,8 @@ export default class BaseEditor {
   }
 
   public destroy() {
-    Promise.resolve(this.update.flush()).then(
+    this.uiState.clear();
+    Promise.resolve(this._update.flush()).then(
       action(() => {
         this.destroyController.abort();
 
@@ -139,6 +180,4 @@ export default class BaseEditor {
   }
 
   public static readonly eventNames = EventNames;
-
-  private static readonly patchSchema = notePatchDTOSchema.pick({ title: true, body: true });
 }

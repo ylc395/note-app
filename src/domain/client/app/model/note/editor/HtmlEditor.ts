@@ -1,14 +1,25 @@
+import { z } from 'zod';
 import { observable, action, computed } from 'mobx';
 
 import { MimeTypes } from '#domain/shared/model/file';
-import BaseEditor from './BaseEditor';
+import BaseEditor, { type Options } from './BaseEditor';
 
 export enum Panels {
   Outline,
   AnnotationList,
 }
 
-export default class HtmlEditor extends BaseEditor {
+const uiStateSchema = z.object({
+  titleSelection: z.tuple([z.number(), z.number()]).optional(),
+  bodySelection: z.tuple([z.number(), z.number()]).optional(),
+  scrollTop: z.number().optional(),
+});
+
+export default class HtmlEditor extends BaseEditor<z.infer<typeof uiStateSchema>> {
+  constructor(options: Options) {
+    super({ ...options, uiStateSchema });
+  }
+
   @observable.ref public accessor documentElement: unknown | undefined;
 
   public override readonly mimeType = MimeTypes.HTML;

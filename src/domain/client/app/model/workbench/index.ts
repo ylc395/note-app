@@ -32,8 +32,13 @@ export default class Workbench {
   @observable public accessor root: TileNode | undefined; // a binary tree
 
   @computed
+  public get currentEditor() {
+    return this.historyStack.current;
+  }
+
+  @computed
   public get currentTile() {
-    return this.historyStack.current?.tile || this.latestTile;
+    return this.currentEditor?.tile || this.latestTile;
   }
 
   public getTileById(id: Tile['id']) {

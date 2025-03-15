@@ -3,12 +3,12 @@ import Editor from '#domain/client/app/model/note/editor/BaseEditor';
 import { MimeTypes } from '#domain/shared/model/file';
 import type { NoteVO } from '#domain/shared/model/note';
 
-import BaseEditor from '../note/editor/BaseEditor';
 import PdfEditor from '../note/editor/PdfEditor';
 import HtmlEditor from '../note/editor/HtmlEditor';
 import ImageEditor from '../note/editor/ImageEditor';
 import UnknownEditor from '../note/editor/UnknownEditor';
 import type Tile from './Tile';
+import MarkdownEditor from '../note/editor/MarkdownEditor';
 
 export default class EditorManager {
   private readonly editorsMap: Record<Editor['id'], Editor> = {};
@@ -19,7 +19,7 @@ export default class EditorManager {
     let editor;
 
     if (!mimeType) {
-      editor = new BaseEditor({ entityId, tile });
+      editor = new MarkdownEditor({ entityId, tile });
     } else if (mimeType === MimeTypes.PDF) {
       editor = new PdfEditor({ entityId, tile });
     } else if (mimeType === MimeTypes.HTML) {

@@ -2,15 +2,14 @@ import type { PDFDocumentProxy } from 'pdfjs-dist';
 import { action, computed, observable, when } from 'mobx';
 import assert from 'assert';
 import { flow, isObject } from 'lodash-es';
+import { z } from 'zod';
 
 import type { AnnotationVO } from '#domain/shared/model/annotation';
 import { container } from '#domain/shared/infra/singletons';
-import type { NoteVO } from '#domain/shared/model/note';
-
-import BaseEditor from '../BaseEditor';
-import DocumentFactory from './DocumentFactory';
-import type Tile from '../../../Workbench/Tile';
 import { MimeTypes } from '#domain/shared/model/file';
+
+import BaseEditor, { type Options } from '../BaseEditor';
+import DocumentFactory from './DocumentFactory';
 
 interface Viewer {
   init: (doc: PDFDocumentProxy) => void;
@@ -22,9 +21,15 @@ export enum Panels {
   AnnotationList,
 }
 
-export default class PdfEditor extends BaseEditor {
-  constructor(options: { entityId: NoteVO['id']; tile: Tile }) {
-    super(options);
+const uiStateSchema = z.object({
+  titleSelection: z.tuple([z.number(), z.number()]).optional(),
+  bodySelection: z.tuple([z.number(), z.number()]).optional(),
+  scrollTop: z.number().optional(),
+});
+
+export default class PdfEditor extends BaseEditor<z.infer<typeof uiStateSchema>> {
+  constructor(options: Options) {
+    super({ ...options, uiStateSchema });
     when(() => this.blob.result.isSuccess, this.init.bind(this), { signal: this.destroyController.signal });
   }
 
