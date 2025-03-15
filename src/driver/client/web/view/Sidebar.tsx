@@ -1,14 +1,5 @@
 import { Tabs } from '@ark-ui/solid/tabs';
-import {
-  BookTextIcon,
-  LightbulbIcon,
-  HashIcon,
-  SearchIcon,
-  StarIcon,
-  RecycleIcon,
-  SettingsIcon,
-  ListTodoIcon,
-} from 'lucide-solid';
+import { BookTextIcon, LightbulbIcon, HashIcon, SearchIcon, StarIcon, RecycleIcon, SettingsIcon } from 'lucide-solid';
 
 import { SidebarTabs } from './UIState';
 
@@ -24,9 +15,6 @@ export default function Sidebar() {
         </Tabs.Trigger>
         <Tabs.Trigger value={SidebarTabs.Note} class={triggerClass}>
           <BookTextIcon size="24" />
-        </Tabs.Trigger>
-        <Tabs.Trigger value={SidebarTabs.Project} class={triggerClass}>
-          <ListTodoIcon size="24" />
         </Tabs.Trigger>
       </div>
       <div>

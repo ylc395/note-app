@@ -53,5 +53,5 @@ export default function TileView(props: { tile: Tile; panelId?: string }) {
     );
   }
 
-  return <div class="h-full flex flex-col">{content}</div>;
+  return <div class="grow flex flex-col">{content}</div>;
 }

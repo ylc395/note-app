@@ -1,5 +1,5 @@
 import { For, Show } from 'solid-js';
-import { ChevronRightIcon } from 'lucide-solid';
+import { BookTextIcon, ChevronRightIcon } from 'lucide-solid';
 import type BaseEditor from '#domain/client/app/model/note/editor/BaseEditor';
 
 export default function Breadcrumbs(props: { editor: BaseEditor }) {
@@ -9,7 +9,8 @@ export default function Breadcrumbs(props: { editor: BaseEditor }) {
     <Show when={props.editor.path.result.data && props.editor.value.result.data}>
       <div class="flex px-4 py-2 border-b overflow-auto">
         <div class={itemClassName}>
-          根<ChevronRightIcon />
+          <BookTextIcon />
+          <ChevronRightIcon />
         </div>
         <For each={props.editor.path.result.data}>
           {(path) => (
