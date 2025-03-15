@@ -7,6 +7,7 @@ import PdfEditor from '#domain/client/app/model/note/editor/PdfEditor';
 import MarkdownEditorView from './MarkdownEditor';
 import UnknownEditorView from './UnknownEditor';
 import PdfEditorView from './PdfEditor';
+import Breadcrumbs from './Breadcrumbs';
 import TitleInput from './TitleInput';
 
 export default function Editor(props: { editor: BaseEditor }) {
@@ -23,6 +24,7 @@ export default function Editor(props: { editor: BaseEditor }) {
   return (
     <div class="flex flex-col h-full" onFocusIn={() => props.editor.focus()}>
       <TitleInput editor={props.editor} />
+      <Breadcrumbs editor={props.editor} />
       {editor()}
     </div>
   );

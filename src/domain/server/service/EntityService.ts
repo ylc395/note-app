@@ -1,11 +1,10 @@
-import { constant, mapValues, pick, uniq } from 'lodash-es';
+import { constant, keyBy, mapValues, pick, uniq } from 'lodash-es';
 import assert from 'assert';
 
 import { Entity, type EntityId, EntityTypes } from '#domain/shared/model/entity.js';
 import BaseService from './BaseService.js';
 import { normalizeTitle as normalizeNoteTitle } from '#domain/shared/model/note.js';
 import { normalizeTitle as normalizeMemoTitle } from '#domain/server/model/memo.js';
-import { buildIndex } from '#utils/collection.js';
 
 export default class EntityService extends BaseService {
   public static getReadableTitle(entity: Entity) {
@@ -54,7 +53,7 @@ export default class EntityService extends BaseService {
       };
     });
 
-    return buildIndex(normalizedEntities);
+    return keyBy(normalizedEntities, ({ id }) => id);
   }
 
   public async getPath(id: EntityId) {
@@ -66,11 +65,16 @@ export default class EntityService extends BaseService {
 
   public async getPaths(ids: EntityId[]) {
     const ancestors = await this.repo.entities.findAncestors(ids);
+    const files = await this.repo.notes.findFiles(
+      Object.values(ancestors).flatMap((entities) => entities.map(({ id }) => id)),
+    );
+
     const paths = mapValues(ancestors, (entities) =>
       entities.map((entity) => ({
         id: entity.id,
         title: EntityService.getReadableTitle(entity),
         icon: entity.icon,
+        mimeType: files[entity.id]?.mimeType ?? null,
       })),
     );
 

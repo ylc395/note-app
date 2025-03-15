@@ -145,7 +145,7 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
     const rows = await this.db
       .selectFrom(fileTableName)
       .innerJoin(this.tableName, `${fileTableName}.id`, `${this.tableName}.fileId`)
-      .where(`${fileTableName}.id`, 'in', ids)
+      .where(`${this.tableName}.id`, 'in', ids)
       .select([`${fileTableName}.id`, 'mimeType', 'lang', 'size', 'hash', `${this.tableName}.id as noteId`])
       .execute();
 
