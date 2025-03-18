@@ -3,7 +3,9 @@ import { observable, runInAction } from 'mobx';
 import { getDocument, GlobalWorkerOptions, type PDFDocumentLoadingTask, type PDFDocumentProxy } from 'pdfjs-dist';
 import { isEmpty } from 'lodash-es';
 import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?worker';
+
 import type { NoteVO } from '#domain/shared/model/note';
+import { getAppUrl, RouteTypes } from '#domain/shared/infra/url';
 
 interface OutlineItem {
   title: string;
@@ -25,7 +27,13 @@ export default class DocumentFactory {
       GlobalWorkerOptions.workerPort = new PdfJsWorker(); // 这里创建的是一个 worker，而非 PDFWorker
     }
 
-    const task = (this.loadingTasksMap[noteId] ||= { task: getDocument(blob.slice(0)), activeCount: 0 });
+    const task = (this.loadingTasksMap[noteId] ||= {
+      task: getDocument({
+        data: blob.slice(0),
+        cMapUrl: import.meta.env.VITE_WEB_PLATFORM === 'electron' ? getAppUrl(RouteTypes.Static, 'cmaps/') : '',
+      }),
+      activeCount: 0,
+    });
 
     task.activeCount += 1;
     const doc = await task.task.promise;

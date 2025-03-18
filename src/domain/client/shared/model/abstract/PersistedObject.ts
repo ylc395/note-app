@@ -27,10 +27,10 @@ export default class PersistedObject<S> {
       value = await this.localStorage.get(this.key);
     }
 
-    const parsedResult = this.schema.safeParse(isPlainObject(value) ? value : null);
+    const parsedResult = this.schema.safeParse(isPlainObject(value) ? value : {});
 
     runInAction(() => {
-      this.value = parsedResult.success ? parsedResult.data : undefined;
+      this.value = parsedResult.success ? parsedResult.data : {};
     });
 
     this.isReady = true;
@@ -38,7 +38,7 @@ export default class PersistedObject<S> {
 
   private readonly localStorage = container.resolve(localStorageToken);
 
-  @observable.shallow private accessor value: Readonly<S> | undefined;
+  @observable.shallow private accessor value: Partial<Readonly<S>> | undefined;
 
   private get key() {
     return `PERSISTENCE_OBJECT_${this.id}`;

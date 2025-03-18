@@ -14,7 +14,7 @@ import {
 import { action } from 'mobx';
 
 import type MemoView from '#domain/client/app/model/memo/MemoView';
-import { getAppUrl } from '#domain/shared/infra/markdown/url';
+import { getAppUrl, RouteTypes } from '#domain/shared/infra/url';
 
 export default function ItemMenu({ memoView }: { memoView: MemoView }) {
   function handleSelect(value: string) {
@@ -26,7 +26,7 @@ export default function ItemMenu({ memoView }: { memoView: MemoView }) {
         memoView.startEditing();
         return;
       case 'copyId':
-        navigator.clipboard.writeText(getAppUrl(memoView.value!.id, 'memos'));
+        navigator.clipboard.writeText(getAppUrl(RouteTypes.Memo, memoView.value!.id));
         return;
       case 'history':
         memoView.toggleRevisionList();

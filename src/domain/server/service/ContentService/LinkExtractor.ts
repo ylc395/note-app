@@ -5,7 +5,7 @@ import type { Link as MdAstLinkNode, Image as MdAstImageNode, Node as UnistNode 
 
 import { type LinkRecord, LinkTargetType } from '#domain/server/model/content.js';
 import Extractor from './Extractor.js';
-import { parseAppUrl } from '#domain/shared/infra/markdown/url.js';
+import { parseAppUrl, RouteTypes } from '#domain/shared/infra/url.js';
 
 export default class LinkExtractor extends Extractor {
   private readonly links: LinkRecord[] = [];
@@ -23,14 +23,16 @@ export default class LinkExtractor extends Extractor {
     const { url } = node as MdAstImageNode | MdAstLinkNode;
     const appUrl = parseAppUrl(url);
 
+    assert(!appUrl || appUrl.type !== RouteTypes.Static, 'invalid url when extracting');
+
     this.links.push({
       sourceId: this.entityId,
       sourceLocation: { start, end },
       target: appUrl ? appUrl.id : url,
       targetDomain: appUrl ? null : URL.canParse(url) ? new URL(url).hostname : null,
-      targetFragmentId: appUrl?.hash ?? null,
+      targetFragmentId: appUrl?.hash || null,
       targetType: appUrl
-        ? appUrl.type === 'files'
+        ? appUrl.type === RouteTypes.File
           ? LinkTargetType.File
           : LinkTargetType.Entity
         : LinkTargetType.External,

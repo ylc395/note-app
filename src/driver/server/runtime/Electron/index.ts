@@ -5,13 +5,14 @@ import { fileURLToPath } from 'node:url';
 import { installExtension, MOBX_DEVTOOLS } from 'electron-devtools-installer';
 import { createIPCHandler } from 'electron-trpc/main';
 
+import { PROTOCOL } from '#domain/shared/infra/url.js';
 import { IS_DEV } from '#domain/shared/infra/env.js';
 import { token as loggerToken } from '#domain/shared/infra/logger.js';
 import FileService from '#domain/server/service/FileService/index.js';
-import { PROTOCOL, parseAppUrl } from '#domain/shared/infra/markdown/url.js';
 import { container } from '#domain/shared/infra/singletons.js';
 
 import DesktopRuntime from '../Desktop.js';
+import protocolHandler from './protocolHandler.js';
 import router from '../../../client/electron/rpcClient/router.js';
 
 const DIRNAME = path.dirname(fileURLToPath(import.meta.url));
@@ -53,23 +54,11 @@ export default class ElectronRuntime extends DesktopRuntime {
     ]);
 
     await electronApp.whenReady();
-    protocol.handle(PROTOCOL, this.protocolHandler); // 这个必须在 whenReady 后
+    protocol.handle(PROTOCOL, protocolHandler); // 这个必须在 whenReady 后
 
     await Promise.all([this.installDevExtension(), this.ready()]);
     this.initWindow();
   }
-
-  private readonly protocolHandler = async (req: GlobalRequest) => {
-    const parsed = parseAppUrl(req.url);
-
-    if (!parsed || parsed.type !== 'files') {
-      return new Response(null, { status: 404 });
-    }
-
-    const data = await this.fileService.queryFileBlobById(parsed.id);
-
-    return new Response(data);
-  };
 
   private async installDevExtension() {
     if (!IS_DEV) {

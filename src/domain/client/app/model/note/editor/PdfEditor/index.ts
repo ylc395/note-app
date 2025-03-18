@@ -1,7 +1,7 @@
 import type { PDFDocumentProxy } from 'pdfjs-dist';
-import { action, computed, observable, when } from 'mobx';
+import { action, computed, observable, runInAction, when } from 'mobx';
 import assert from 'assert';
-import { flow, isObject } from 'lodash-es';
+import { isObject } from 'lodash-es';
 import { z } from 'zod';
 
 import type { AnnotationVO } from '#domain/shared/model/annotation';
@@ -11,20 +11,13 @@ import { MimeTypes } from '#domain/shared/model/file';
 import BaseEditor, { type Options } from '../BaseEditor';
 import DocumentFactory from './DocumentFactory';
 
-interface Viewer {
-  init: (doc: PDFDocumentProxy) => void;
-  destroy: () => void;
-}
-
 export enum Panels {
   Outline,
   AnnotationList,
 }
 
 const uiStateSchema = z.object({
-  titleSelection: z.tuple([z.number(), z.number()]).optional(),
-  bodySelection: z.tuple([z.number(), z.number()]).optional(),
-  scrollTop: z.number().optional(),
+  hash: z.string().optional(),
 });
 
 export default class PdfEditor extends BaseEditor<z.infer<typeof uiStateSchema>> {
@@ -35,11 +28,9 @@ export default class PdfEditor extends BaseEditor<z.infer<typeof uiStateSchema>>
 
   private readonly docFactory = container.resolve(DocumentFactory);
 
-  private doc?: PDFDocumentProxy; // this is view-independent
+  @observable.ref public accessor doc: PDFDocumentProxy | undefined; // this is view-independent
 
   public override readonly mimeType = MimeTypes.PDF;
-
-  @observable.ref public accessor viewer: Viewer | undefined;
 
   private async init() {
     assert(this.blob.result.data);
@@ -49,20 +40,9 @@ export default class PdfEditor extends BaseEditor<z.infer<typeof uiStateSchema>>
       blob: this.blob.result.data,
     });
 
-    this.doc = doc;
-  }
-
-  private disposeViewer?: () => void;
-
-  public setViewer(viewer: NonNullable<PdfEditor['viewer']>) {
-    this.viewer = viewer;
-
-    const stopInitializing = when(
-      () => Boolean(this.doc),
-      () => viewer.init(this.doc!),
-    );
-
-    this.disposeViewer = flow([stopInitializing, viewer.destroy.bind(viewer)]);
+    runInAction(() => {
+      this.doc = doc;
+    });
   }
 
   @action
@@ -94,7 +74,6 @@ export default class PdfEditor extends BaseEditor<z.infer<typeof uiStateSchema>>
 
   public override destroy() {
     super.destroy();
-    this.disposeViewer?.();
     this.docFactory.revoke(this.entityId);
   }
 }
