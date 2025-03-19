@@ -56,7 +56,7 @@ export default class PersistedObject<S> {
     return toJS(this.value);
   }
 
-  public set(value: S): void;
+  public set(value: Partial<S>): void;
   public set<T extends keyof S>(key: T, value: S[T]): void;
 
   @action

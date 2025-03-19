@@ -1,13 +1,15 @@
-import { onCleanup, onMount } from 'solid-js';
+import { createSignal, onCleanup, onMount, Show } from 'solid-js';
 import assert from 'assert';
+import 'pdfjs-dist/web/pdf_viewer.css';
 
 import type PdfEditor from '#domain/client/app/model/note/editor/PdfEditor';
 import PDFViewer from './PDFViewer';
-import './style.css';
+import Toolbar from './Toolbar';
 
 export default function PdfEditorView(props: { editor: PdfEditor }) {
   let containerRef: HTMLDivElement | undefined;
   let viewRef: HTMLDivElement | undefined;
+  const [getPdfViewer, setPdfViewer] = createSignal<PDFViewer>();
 
   onMount(() => {
     assert(containerRef && viewRef);
@@ -18,13 +20,17 @@ export default function PdfEditorView(props: { editor: PdfEditor }) {
       editor: props.editor,
     });
 
+    setPdfViewer(viewer);
     onCleanup(() => viewer.destroy());
   });
 
   return (
-    <div class="relative grow overflow-hidden">
-      <div class="absolute inset-0 overflow-auto" ref={containerRef}>
-        <div ref={viewRef}></div>
+    <div class="grow flex flex-col">
+      <Show when={getPdfViewer()}>{(viewer) => <Toolbar viewer={viewer()} />}</Show>
+      <div class="relative grow">
+        <div class="absolute inset-0 overflow-auto pdfViewer" ref={containerRef}>
+          <div class="select-text" ref={viewRef}></div>
+        </div>
       </div>
     </div>
   );

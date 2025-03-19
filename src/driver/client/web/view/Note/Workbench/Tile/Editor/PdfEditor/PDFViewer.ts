@@ -1,6 +1,6 @@
 import { EventBus, PDFViewer, PDFLinkService, PDFPageView } from 'pdfjs-dist/web/pdf_viewer.mjs';
 import { AnnotationEditorType, AnnotationMode } from 'pdfjs-dist';
-import { memoize, range as numberRange } from 'lodash-es';
+import { debounce, memoize, range as numberRange } from 'lodash-es';
 import { observable, when, action, computed } from 'mobx';
 import assert from 'assert';
 
@@ -27,8 +27,8 @@ export const SCALE_STEPS = [
 
 export default class PdfViewer {
   private readonly pdfViewer: PDFViewer;
-  private readonly editor: PdfEditor;
-  private readonly cancelLoadingDoc: ReturnType<typeof when>;
+  public readonly editor: PdfEditor;
+  private readonly destroyController = new AbortController();
 
   @observable public accessor currentPage = 1;
   @observable public accessor scale = {
@@ -40,9 +40,10 @@ export default class PdfViewer {
   constructor(options: Options) {
     this.editor = options.editor;
     this.pdfViewer = this.createPDFViewer(options);
-    this.cancelLoadingDoc = when(
+    when(
       () => Boolean(this.editor.doc),
       () => this.init(),
+      { signal: this.destroyController.signal },
     );
   }
 
@@ -57,7 +58,7 @@ export default class PdfViewer {
 
   private createPDFViewer(options: Options) {
     const eventBus = new EventBus();
-    const linkService = new PDFLinkService({ eventBus });
+    const linkService = new PDFLinkService({ eventBus, ignoreDestinationZoom: true });
     const pdfViewer = new PDFViewer({
       ...options,
       annotationEditorMode: AnnotationEditorType.NONE, // disable build-in annotation editor
@@ -83,8 +84,41 @@ export default class PdfViewer {
       }),
     );
 
-    pdfViewer.eventBus.on('updateviewarea', ({ location }: { location: { pdfOpenParams: string } }) => {
-      this.editor.uiState.set('hash', location.pdfOpenParams);
+    const updateUIState = debounce(
+      action(({ location }: { location: { pdfOpenParams: string } }) => {
+        this.editor.uiState.hash = location.pdfOpenParams;
+      }),
+      500,
+    );
+
+    pdfViewer.eventBus.on('updateviewarea', updateUIState);
+
+    // 把 pdf 视图的位置移动到上一次离开的地方
+    pdfViewer.eventBus.on('pagesinit', () => {
+      // onePageRendered 仅在 setDocument 后才存在
+      pdfViewer.onePageRendered.then(
+        action(() => {
+          const hash = this.editor.uiState.hash
+            ?.replace('zoom=null', 'zoom=100') // zoom 为 null 传到 setHash 里会报错
+            .replace(/^#/, '');
+
+          if (hash) {
+            pdfViewer.linkService.setHash(hash);
+            // 这里有个 pdfjs 的 bug：第一次 setHash 后，由于 viewer 元素的高度未完全展开（目标页附近的元素都未渲染出来），视图被滚动到的位置不太对。需要二次 setHash
+            pdfViewer.eventBus.on('updateviewarea', function setHash() {
+              pdfViewer.linkService.setHash(hash);
+              pdfViewer.eventBus.off('updateviewarea', setHash);
+            });
+          }
+
+          this.isReady = true;
+        }),
+      );
+    });
+
+    this.destroyController.signal.addEventListener('abort', () => {
+      updateUIState.flush();
+      pdfViewer.cleanup();
     });
 
     return pdfViewer;
@@ -92,31 +126,8 @@ export default class PdfViewer {
 
   private async init() {
     assert(this.editor.doc);
-
-    const { doc } = this.editor;
-
-    this.pdfViewer.setDocument(doc);
-    (this.pdfViewer.linkService as PDFLinkService).setDocument(doc);
-    assert(this.pdfViewer.onePageRendered && this.pdfViewer.firstPagePromise);
-
-    this.pdfViewer.onePageRendered.then(
-      action(() => {
-        this.isReady = true;
-      }),
-    );
-
-    this.pdfViewer.firstPagePromise.then(() => {
-      const hash = this.editor.uiState.get('hash');
-
-      if (hash) {
-        const normalizedScaleValue =
-          parseFloat(this.pdfViewer.currentScaleValue) === this.pdfViewer.currentScale
-            ? Math.round(this.pdfViewer.currentScale * 10000) / 100
-            : this.pdfViewer.currentScaleValue || 100;
-
-        this.pdfViewer.linkService.setHash(hash.replace('zoom=null', `zoom=${normalizedScaleValue}`).replace(/^#/, ''));
-      }
-    });
+    this.pdfViewer.setDocument(this.editor.doc);
+    (this.pdfViewer.linkService as PDFLinkService).setDocument(this.editor.doc);
 
     this.hijackClick();
   }
@@ -135,10 +146,14 @@ export default class PdfViewer {
     if (typeof page === 'number') {
       if (page >= 1 && page <= this.totalPage) {
         this.pdfViewer.currentPageNumber = page;
+        return true;
       }
+
+      return false;
     } else {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       this.pdfViewer.linkService.goToDestination(page as any);
+      return true;
     }
   }
 
@@ -151,9 +166,7 @@ export default class PdfViewer {
   };
 
   public destroy() {
-    this.cancelLoadingDoc();
-    // this.annotationManager.destroy();
-    this.pdfViewer.cleanup();
+    this.destroyController.abort();
   }
 
   public setScale(value: string) {

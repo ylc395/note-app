@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { observable, runInAction } from 'mobx';
+import { action, observable, runInAction } from 'mobx';
 import { getDocument, GlobalWorkerOptions, type PDFDocumentLoadingTask, type PDFDocumentProxy } from 'pdfjs-dist';
 import { isEmpty } from 'lodash-es';
 import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?worker';
@@ -7,7 +7,7 @@ import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?worker';
 import type { NoteVO } from '#domain/shared/model/note';
 import { getAppUrl, RouteTypes } from '#domain/shared/infra/url';
 
-interface OutlineItem {
+export interface OutlineItem {
   title: string;
   children: OutlineItem[];
   key: string;
@@ -61,6 +61,7 @@ export default class DocumentFactory {
     });
   }
 
+  @action
   public revoke(noteId: NoteVO['id']) {
     const task = this.loadingTasksMap[noteId];
 
@@ -71,6 +72,7 @@ export default class DocumentFactory {
     if (task.activeCount === 0) {
       task.task.destroy();
       delete this.loadingTasksMap[noteId];
+      delete this.outlinesMap[noteId];
     }
 
     if (isEmpty(this.loadingTasksMap)) {

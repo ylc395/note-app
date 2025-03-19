@@ -1,5 +1,6 @@
 import { uniqueId, debounce, pick } from 'lodash-es';
-import { action, computed, reaction } from 'mobx';
+import { action, computed, observable, runInAction } from 'mobx';
+import { deepObserve } from 'mobx-utils';
 import assert from 'assert';
 import { createQuery } from 'mobx-tanstack-query/preset';
 import type { ZodType } from 'zod';
@@ -26,8 +27,6 @@ export default abstract class BaseEditor<S = unknown> {
   constructor({ entityId, tile, uiStateSchema }: Options & { uiStateSchema: ZodType<S> }) {
     this.tile = tile;
     this.entityId = entityId;
-
-    this.uiState = new PersistedObject(`uiEditorState-${this.entityId}`, uiStateSchema);
     this.noteUIState = new PersistedObject(`uiState-${this.entityId}`, uiStateSchema);
 
     this.value = createQuery(({ signal }) => this.remote.note.queryOneById.query(this.entityId, { signal }), {
@@ -56,7 +55,7 @@ export default abstract class BaseEditor<S = unknown> {
   }
 
   private async initUIState() {
-    await Promise.all([this.uiState.ready, this.noteUIState.ready]);
+    await this.noteUIState.ready;
 
     if (this.destroyController.signal.aborted) {
       return;
@@ -65,17 +64,16 @@ export default abstract class BaseEditor<S = unknown> {
     const uiState = this.noteUIState.get();
 
     if (uiState) {
-      this.uiState.set(uiState);
+      runInAction(() => {
+        this.uiState = uiState;
+      });
     }
 
-    reaction(
-      () => this.uiState.get(),
-      (value) => value && this.noteUIState.set(value),
-      { signal: this.destroyController.signal },
-    );
+    const dispose = deepObserve(this.uiState, () => this.noteUIState.set(this.uiState));
+    this.destroyController.signal.addEventListener('abort', dispose);
   }
 
-  public readonly uiState: PersistedObject<S>;
+  @observable public accessor uiState: Partial<S> = {};
 
   private readonly noteUIState: PersistedObject<S>;
 
@@ -167,7 +165,6 @@ export default abstract class BaseEditor<S = unknown> {
   }
 
   public destroy() {
-    this.uiState.clear();
     Promise.resolve(this._update.flush()).then(
       action(() => {
         this.destroyController.abort();
