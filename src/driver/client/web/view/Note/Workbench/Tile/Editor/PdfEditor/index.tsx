@@ -5,6 +5,7 @@ import 'pdfjs-dist/web/pdf_viewer.css';
 import type PdfEditor from '#domain/client/app/model/note/editor/PdfEditor';
 import PDFViewer from './PDFViewer';
 import Toolbar from './Toolbar';
+import Outline from './Outline';
 
 export default function PdfEditorView(props: { editor: PdfEditor }) {
   let containerRef: HTMLDivElement | undefined;
@@ -25,11 +26,16 @@ export default function PdfEditorView(props: { editor: PdfEditor }) {
   });
 
   return (
-    <div class="grow flex flex-col">
+    <div class="grow flex flex-col min-h-0">
       <Show when={getPdfViewer()}>{(viewer) => <Toolbar viewer={viewer()} />}</Show>
-      <div class="relative grow">
-        <div class="absolute inset-0 overflow-auto pdfViewer" ref={containerRef}>
-          <div class="select-text" ref={viewRef}></div>
+      <div class="grow flex min-h-0">
+        <Show when={props.editor.uiState.outlinePanel === 'text' && getPdfViewer()}>
+          {(viewer) => <Outline viewer={viewer()} />}
+        </Show>
+        <div class="relative grow">
+          <div class="absolute inset-0 overflow-auto pdfViewer" ref={containerRef}>
+            <div class="select-text" ref={viewRef}></div>
+          </div>
         </div>
       </div>
     </div>

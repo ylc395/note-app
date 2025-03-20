@@ -36,7 +36,7 @@ export default function TileView(props: { tile: Tile; panelId?: string }) {
       <Tabs tile={props.tile} />
       <Show when={props.tile.currentEditor}>
         {(editor) => (
-          <div class="h-full relative" ref={setTileRef}>
+          <div class="grow relative min-h-0" ref={setTileRef}>
             <Editor editor={editor()} />
             <Show when={tileDirection()}>{(value) => <DropIndicator tileDirection={value()} />}</Show>
           </div>
@@ -53,5 +53,5 @@ export default function TileView(props: { tile: Tile; panelId?: string }) {
     );
   }
 
-  return <div class="grow flex flex-col">{content}</div>;
+  return <div class="grow flex flex-col min-h-0">{content}</div>;
 }

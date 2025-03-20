@@ -28,7 +28,7 @@ export default function PageSwitcher(props: { viewer: PdfViewer }) {
     <div>
       <input
         class="w-8"
-        onBlur={() => setValue(undefined)}
+        onBlur={() => setValue(String(props.viewer.currentPage))}
         onKeyPress={handleKeyPress}
         onInput={handleInput}
         value={getValue()}

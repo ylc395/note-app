@@ -22,7 +22,7 @@ export default function TitleInput(props: { editor: BaseEditor }) {
       // @ts-expect-error -- solidjs 的问题
       attr:spellcheck={false}
       ref={inputRef}
-      class="block w-full outline-none h-12 px-4 text-lg border-b"
+      class="block w-full outline-none h-12 px-4 text-lg border-b shrink-0"
       disabled={!props.editor.value.result.data}
       placeholder={placeholder()}
       value={title()} // solidjs 中,input 的 value 不受控。但在这里不影响程序的正确性 https://github.com/solidjs/solid/discussions/416

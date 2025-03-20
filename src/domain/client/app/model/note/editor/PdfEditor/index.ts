@@ -1,5 +1,5 @@
 import type { PDFDocumentProxy } from 'pdfjs-dist';
-import { action, computed, observable, runInAction, when } from 'mobx';
+import { computed, observable, runInAction, when } from 'mobx';
 import assert from 'assert';
 import { isObject } from 'lodash-es';
 import { z } from 'zod';
@@ -11,13 +11,11 @@ import { MimeTypes } from '#domain/shared/model/file';
 import BaseEditor, { type Options } from '../BaseEditor';
 import DocumentFactory from './DocumentFactory';
 
-export enum Panels {
-  Outline,
-  AnnotationList,
-}
-
 const uiStateSchema = z.object({
   hash: z.string().optional(),
+  expandedOutlineItems: z.string().array().optional(),
+  outlinePanel: z.union([z.literal('text'), z.literal('image'), z.literal(null)]).optional(),
+  annotationPanel: z.boolean().optional(),
 });
 
 export default class PdfEditor extends BaseEditor<z.infer<typeof uiStateSchema>> {
@@ -44,17 +42,6 @@ export default class PdfEditor extends BaseEditor<z.infer<typeof uiStateSchema>>
       this.doc = doc;
     });
   }
-
-  @action
-  public togglePanel(panel: Panels) {
-    this.panelsVisibility[panel] = !this.panelsVisibility[panel];
-  }
-
-  @observable
-  public accessor panelsVisibility = {
-    [Panels.Outline]: false,
-    [Panels.AnnotationList]: true,
-  };
 
   @computed
   public get outlines() {

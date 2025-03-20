@@ -7,7 +7,7 @@ export default function Breadcrumbs(props: { editor: BaseEditor }) {
 
   return (
     <Show when={props.editor.path.result.data && props.editor.value.result.data}>
-      <div class="flex px-4 py-2 border-b overflow-auto">
+      <div class="flex px-4 py-2 border-b overflow-auto shrink-0">
         <div class={itemClassName}>
           <BookTextIcon />
           <ChevronRightIcon />

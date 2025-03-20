@@ -1,15 +1,15 @@
-import { MinusIcon, PlusIcon } from 'lucide-solid';
+import { ZoomInIcon, ZoomOutIcon } from 'lucide-solid';
 import type PdfViewer from '../PDFViewer';
 
 export default function Scale(props: { viewer: PdfViewer }) {
   return (
-    <div>
+    <div class="flex items-center">
       <button onClick={() => props.viewer.setScale('down')}>
-        <MinusIcon />
+        <ZoomOutIcon />
       </button>
-      {props.viewer.scale.text}
+      <span class="mx-2">{props.viewer.scale.text}</span>
       <button onClick={() => props.viewer.setScale('up')}>
-        <PlusIcon />
+        <ZoomInIcon />
       </button>
     </div>
   );
