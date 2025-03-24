@@ -29,7 +29,7 @@ export default function PdfEditorView(props: { editor: PdfEditor }) {
     <div class="grow flex flex-col min-h-0">
       <Show when={getPdfViewer()}>{(viewer) => <Toolbar viewer={viewer()} />}</Show>
       <div class="grow flex min-h-0">
-        <Show when={props.editor.uiState.outlinePanel === 'text' && getPdfViewer()}>
+        <Show when={props.editor.uiState?.outlinePanel === 'text' && getPdfViewer()}>
           {(viewer) => <Outline viewer={viewer()} />}
         </Show>
         <div class="relative grow">

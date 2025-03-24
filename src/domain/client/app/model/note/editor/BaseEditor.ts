@@ -14,7 +14,7 @@ import PersistedObject from '#domain/client/shared/model/abstract/PersistedObjec
 import { EventNames, type Events } from './events';
 import type Tile from '../../Workbench/Tile';
 import DomainEventBus from '../EventBus';
-import type { Direction } from '../../Workbench/HistoryStack';
+import type { Direction } from '../../base/HistoryStack';
 
 export interface Options {
   entityId: NoteVO['id'];
@@ -63,17 +63,15 @@ export default abstract class BaseEditor<S = unknown> {
 
     const uiState = this.noteUIState.get();
 
-    if (uiState) {
-      runInAction(() => {
-        this.uiState = uiState;
-      });
-    }
+    runInAction(() => {
+      this.uiState = uiState || {};
+    });
 
-    const dispose = deepObserve(this.uiState, () => this.noteUIState.set(this.uiState));
+    const dispose = deepObserve(this.uiState, () => this.noteUIState.set(this.uiState!));
     this.destroyController.signal.addEventListener('abort', dispose);
   }
 
-  @observable public accessor uiState: Partial<S> = {};
+  @observable public accessor uiState: Partial<S> | undefined;
 
   private readonly noteUIState: PersistedObject<S>;
 
@@ -115,18 +113,14 @@ export default abstract class BaseEditor<S = unknown> {
     this.value.setData((note) => ({ ...note!, ...patch }));
     this.domainEventBus.emit(DomainEventBus.eventNames.Updated, { id: this.entityId, ...patch });
 
-    const promise = this._update(patch);
-
-    if (promise) {
-      // 若服务器更新失败，前端回退至之前的值
-      promise.catch(() => {
-        this.value.setData((note) => ({ ...note!, ...currentData }));
-        this.domainEventBus.emit(DomainEventBus.eventNames.Updated, {
-          id: this.entityId,
-          ...currentData,
-        });
+    // 若服务器更新失败，前端回退至之前的值
+    this._update(patch)?.catch(() => {
+      this.value.setData((note) => ({ ...note!, ...currentData }));
+      this.domainEventBus.emit(DomainEventBus.eventNames.Updated, {
+        id: this.entityId,
+        ...currentData,
       });
-    }
+    });
   };
 
   private readonly _update = debounce((patch: Patch) => {

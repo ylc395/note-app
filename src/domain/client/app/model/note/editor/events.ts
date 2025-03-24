@@ -1,4 +1,4 @@
-import type { Direction } from '../../Workbench/HistoryStack';
+import type { Direction } from '../../base/HistoryStack';
 import type BaseEditor from './BaseEditor';
 
 export enum EventNames {

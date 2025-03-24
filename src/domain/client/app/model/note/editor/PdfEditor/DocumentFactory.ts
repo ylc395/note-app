@@ -11,7 +11,7 @@ export interface OutlineItem {
   title: string;
   children: OutlineItem[];
   key: string;
-  dest: unknown; // 传给 pdfjs 的跳转函数用的，具体类型不明，我们也不用管
+  dest: unknown[] | null | string; // 传给 pdfjs 的跳转函数用的，具体类型不明，我们也不用管
 }
 
 export default class DocumentFactory {
@@ -44,7 +44,7 @@ export default class DocumentFactory {
 
   private async initOutline({ noteId, doc }: { noteId: NoteVO['id']; doc: PDFDocumentProxy }) {
     const outline: Awaited<ReturnType<PDFDocumentProxy['getOutline']>> | undefined = await doc.getOutline();
-    type RawOutlineItem = { title: string; items: RawOutlineItem[]; dest: unknown };
+    type RawOutlineItem = { title: string; items: RawOutlineItem[]; dest: string | unknown[] | null };
 
     const toOutlineItem = ({ items, dest, title }: RawOutlineItem, keys: number[]): OutlineItem => {
       return {

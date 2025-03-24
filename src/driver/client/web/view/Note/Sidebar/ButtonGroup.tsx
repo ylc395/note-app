@@ -2,7 +2,7 @@ import { ArrowLeftIcon, ArrowRightIcon, PanelLeftClose } from 'lucide-solid';
 
 import Workbench from '#domain/client/app/model/Workbench';
 import { container } from '#domain/shared/infra/singletons';
-import { Direction } from '#domain/client/app/model/Workbench/HistoryStack';
+import { Direction } from '#domain/client/app/model/base/HistoryStack';
 
 export default function ButtonGroup() {
   const { historyStack } = container.resolve(Workbench);

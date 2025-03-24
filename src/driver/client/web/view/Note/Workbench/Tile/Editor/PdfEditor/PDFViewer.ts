@@ -5,6 +5,7 @@ import { observable, when, action, computed } from 'mobx';
 import assert from 'assert';
 
 import type PdfEditor from '#domain/client/app/model/note/editor/PdfEditor';
+import HistoryStack, { Direction, type HistoryRecord } from '#domain/client/app/model/base/HistoryStack';
 import shell from '#web/infra/shell';
 
 interface Options {
@@ -30,6 +31,19 @@ export default class PdfViewer {
   public readonly editor: PdfEditor;
   private readonly destroyController = new AbortController();
 
+  /*
+   * PDFLinkService 还能关联一个 PDFHistory 对象，其具有管理历史栈的功能。但它实际上在使用浏览器的 url 历史栈，这不是我们想要的
+   * 因此我们自己实现一个历史栈进行管理
+   *
+   * 以下位置会被我们保存：
+   * 1. 一进来时的位置
+   * 2. 通过跳转操作离开前的位置
+   * 3. 跳转来到的位置
+   */
+  public readonly historyStack = new HistoryStack({
+    onPop: this.handleHistoryPop.bind(this),
+  });
+
   @observable public accessor currentPage = 1;
   @observable public accessor scale = {
     value: 1,
@@ -41,7 +55,7 @@ export default class PdfViewer {
     this.editor = options.editor;
     this.pdfViewer = this.createPDFViewer(options);
     when(
-      () => Boolean(this.editor.doc),
+      () => Boolean(this.editor.doc && this.editor.uiState),
       () => this.init(),
       { signal: this.destroyController.signal },
     );
@@ -55,6 +69,14 @@ export default class PdfViewer {
   public getPageEl(page: number) {
     return (this.pdfViewer.getPageView(page - 1) as PDFPageView).div;
   }
+
+  private readonly updateUIState = debounce(
+    action(({ location }: { location: { pdfOpenParams: string } }) => {
+      assert(this.editor.uiState);
+      this.editor.uiState.hash = PdfViewer.normalizeHash(location.pdfOpenParams);
+    }),
+    500,
+  );
 
   private createPDFViewer(options: Options) {
     const eventBus = new EventBus();
@@ -84,40 +106,26 @@ export default class PdfViewer {
       }),
     );
 
-    const updateUIState = debounce(
-      action(({ location }: { location: { pdfOpenParams: string } }) => {
-        this.editor.uiState.hash = location.pdfOpenParams;
-      }),
-      500,
-    );
-
-    pdfViewer.eventBus.on('updateviewarea', updateUIState);
-
     // 把 pdf 视图的位置移动到上一次离开的地方
     pdfViewer.eventBus.on('pagesinit', () => {
+      assert(this.editor.uiState);
+      const hash = this.editor.uiState.hash;
+
+      if (hash) {
+        this.jumpTo({ hash });
+      }
+
       // onePageRendered 仅在 setDocument 后才存在
       pdfViewer.onePageRendered.then(
         action(() => {
-          const hash = this.editor.uiState.hash
-            ?.replace('zoom=null', 'zoom=100') // zoom 为 null 传到 setHash 里会报错
-            .replace(/^#/, '');
-
-          if (hash) {
-            pdfViewer.linkService.setHash(hash);
-            // 这里有个 pdfjs 的 bug：第一次 setHash 后，由于 viewer 元素的高度未完全展开（目标页附近的元素都未渲染出来），视图被滚动到的位置不太对。需要二次 setHash
-            pdfViewer.eventBus.on('updateviewarea', function setHash() {
-              pdfViewer.linkService.setHash(hash);
-              pdfViewer.eventBus.off('updateviewarea', setHash);
-            });
-          }
-
+          pdfViewer.eventBus.on('updateviewarea', this.updateUIState);
           this.isReady = true;
         }),
       );
     });
 
     this.destroyController.signal.addEventListener('abort', () => {
-      updateUIState.flush();
+      this.updateUIState.flush();
       pdfViewer.cleanup();
     });
 
@@ -142,19 +150,45 @@ export default class PdfViewer {
   }
 
   @action
-  public jumpTo(page: number | unknown) {
-    if (typeof page === 'number') {
-      if (page >= 1 && page <= this.totalPage) {
-        this.pdfViewer.currentPageNumber = page;
-        return true;
-      }
-
+  public jumpTo(page: number | unknown[] | string | { hash: string }, noHistory = false) {
+    if (typeof page === 'number' && (page < 1 || page > this.totalPage)) {
       return false;
-    } else {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      this.pdfViewer.linkService.goToDestination(page as any);
-      return true;
     }
+
+    this.updateUIState.flush(); // 在跳转之前，把最新的 UI 状态给保存下
+
+    if (typeof page === 'number') {
+      this.pdfViewer.currentPageNumber = page;
+    } else if (typeof page === 'object' && 'hash' in page) {
+      this.pdfViewer.linkService.setHash(page.hash);
+    } else {
+      this.pdfViewer.linkService.goToDestination(page);
+    }
+
+    if (!noHistory) {
+      assert(this.editor.uiState?.hash);
+      // 记录跳转前的位置
+      this.historyStack.push({ record: { key: this.editor.uiState.hash } });
+
+      // 记录跳转后的位置
+      this.pdfViewer.eventBus.on(
+        'updateviewarea',
+        ({ location }: { location: { pdfOpenParams: string } }) => {
+          this.historyStack.push({ record: { key: PdfViewer.normalizeHash(location.pdfOpenParams) } });
+        },
+        { once: true },
+      );
+    }
+
+    return true;
+  }
+
+  private handleHistoryPop(e: { record: HistoryRecord; direction: Direction }) {
+    assert(this.editor.uiState?.hash);
+
+    this.historyStack.push({ fromHistory: e.direction, record: { key: this.editor.uiState.hash } });
+    this.historyStack.push({ fromHistory: e.direction, record: e.record });
+    this.jumpTo({ hash: e.record.key }, true);
   }
 
   public readonly goToNextPage = () => {
@@ -224,5 +258,11 @@ export default class PdfViewer {
     const dataUrl = rectCanvas.toDataURL();
 
     return dataUrl;
+  }
+
+  private static normalizeHash(hash: string) {
+    return hash
+      .replace('zoom=null', 'zoom=100') // zoom 为 null 传到 setHash 里会报错
+      .replace(/^#/, '');
   }
 }

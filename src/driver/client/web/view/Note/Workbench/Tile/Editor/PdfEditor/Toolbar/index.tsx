@@ -1,5 +1,6 @@
 import { BlocksIcon, ListIcon, PenLineIcon } from 'lucide-solid';
 import { action } from 'mobx';
+import assert from 'assert';
 
 import type PdfViewer from '../PDFViewer';
 import PageSwitcher from './PageSwitcher';
@@ -8,10 +9,12 @@ import BackAndForward from './BackAndForward';
 
 export default function Toolbar(props: { viewer: PdfViewer }) {
   function toggleOutlinePanel(value: 'text' | 'image') {
+    assert(props.viewer.editor.uiState);
     props.viewer.editor.uiState.outlinePanel = props.viewer.editor.uiState.outlinePanel === value ? null : value;
   }
 
   function toggleAnnotationPanel() {
+    assert(props.viewer.editor.uiState);
     props.viewer.editor.uiState.annotationPanel = !props.viewer.editor.uiState.annotationPanel;
   }
 
@@ -27,7 +30,7 @@ export default function Toolbar(props: { viewer: PdfViewer }) {
           缩略图
         </button>
         <Scale viewer={props.viewer} />
-        <BackAndForward />
+        <BackAndForward viewer={props.viewer} />
       </div>
       <div class="space-x-6 flex absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 ">
         <PageSwitcher viewer={props.viewer} />

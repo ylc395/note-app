@@ -1,4 +1,5 @@
 import { createEffect, createSignal } from 'solid-js';
+import { StepBackIcon, StepForwardIcon } from 'lucide-solid';
 import type PdfViewer from '../PDFViewer';
 
 export default function PageSwitcher(props: { viewer: PdfViewer }) {
@@ -25,7 +26,10 @@ export default function PageSwitcher(props: { viewer: PdfViewer }) {
   });
 
   return (
-    <div>
+    <div class="flex space-x-2">
+      <button class="flex items-center" onClick={() => props.viewer.goToPreviousPage()}>
+        <StepBackIcon />
+      </button>
       <input
         class="w-8"
         onBlur={() => setValue(String(props.viewer.currentPage))}
@@ -34,6 +38,9 @@ export default function PageSwitcher(props: { viewer: PdfViewer }) {
         value={getValue()}
       />
       /{props.viewer.totalPage}
+      <button class="flex items-center" onClick={() => props.viewer.goToNextPage()}>
+        <StepForwardIcon />
+      </button>
     </div>
   );
 }

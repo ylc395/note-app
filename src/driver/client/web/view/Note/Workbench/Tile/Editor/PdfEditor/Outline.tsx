@@ -2,10 +2,11 @@ import { Collapsible } from '@ark-ui/solid';
 import { ChevronRightIcon, ChevronDownIcon } from 'lucide-solid';
 import { For, Show } from 'solid-js';
 import { pull } from 'lodash-es';
+import { action } from 'mobx';
+import assert from 'assert';
 
 import type { OutlineItem } from '#domain/client/app/model/note/editor/PdfEditor/DocumentFactory';
 import type PdfViewer from './PDFViewer';
-import { action } from 'mobx';
 
 function Item(props: {
   item: OutlineItem;
@@ -15,7 +16,10 @@ function Item(props: {
 }) {
   function handleClick(e: MouseEvent) {
     e.stopPropagation();
-    props.viewer.jumpTo(props.item.dest);
+
+    if (props.item.dest) {
+      props.viewer.jumpTo(props.item.dest);
+    }
   }
 
   return (
@@ -29,7 +33,7 @@ function Item(props: {
         }
       >
         <Collapsible.Root
-          open={props.viewer.editor.uiState.expandedOutlineItems?.includes(props.item.key)}
+          open={props.viewer.editor.uiState?.expandedOutlineItems?.includes(props.item.key)}
           lazyMount
           unmountOnExit
           onOpenChange={({ open }) => props.onToggle({ key: props.item.key, value: open })}
@@ -54,6 +58,8 @@ function Item(props: {
 
 export default function Outline(props: { viewer: PdfViewer }) {
   function onToggle({ key, value }: { key: string; value: boolean }) {
+    assert(props.viewer.editor.uiState);
+
     if (!props.viewer.editor.uiState.expandedOutlineItems) {
       props.viewer.editor.uiState.expandedOutlineItems = [];
     }

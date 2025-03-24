@@ -5,11 +5,18 @@ import assert from 'assert';
 import Editor from '#domain/client/app/model/note/editor/BaseEditor';
 import { container } from '#domain/shared/infra/singletons';
 import type { NoteVO } from '#domain/shared/model/note';
+import type { EntityId } from '#domain/shared/model/entity';
 
 import Tile from './Tile';
 import { type TileNode, type TileParent, TileDirections, isTileLeaf } from './tileTree';
-import HistoryStack, { type Direction, type Record as HistoryRecord } from './HistoryStack';
 import EditorManager from './EditorManager';
+import HistoryStack, { type Direction } from '../base/HistoryStack';
+
+export interface HistoryRecord {
+  key: EntityId;
+  editorId: Editor['id'];
+  mimeType: string | null;
+}
 
 export enum TileSplitDirections {
   Top = 1,
@@ -21,7 +28,8 @@ export enum TileSplitDirections {
 type NewTile = { from?: Tile; splitDirection: TileSplitDirections };
 
 export default class Workbench {
-  public readonly historyStack = new HistoryStack({
+  // 这里的历史管理，更类似于焦点历史管理
+  public readonly historyStack = new HistoryStack<HistoryRecord>({
     onPop: this.handleHistoryPop.bind(this),
   });
 
@@ -33,7 +41,7 @@ export default class Workbench {
 
   @computed
   public get currentEditor() {
-    return this.historyStack.current;
+    return this.historyStack.current && this.editorManager.get(this.historyStack.current.editorId);
   }
 
   @computed
@@ -50,7 +58,11 @@ export default class Workbench {
   private createTile() {
     const tile = new Tile({
       onDestroy: this.removeTile.bind(this),
-      onEditorFocus: this.historyStack.push.bind(this.historyStack),
+      onEditorFocus: ({ editor, fromHistory }) =>
+        this.historyStack.push({
+          fromHistory,
+          record: { key: editor.entityId, mimeType: editor.mimeType, editorId: editor.id },
+        }),
     });
 
     this.tilesMap[tile.id] = tile;
@@ -93,7 +105,7 @@ export default class Workbench {
 
     if (this.root === tile.id) {
       this.root = undefined;
-      this.historyStack.push({ editor: null });
+      this.historyStack.push({ record: null });
     } else {
       const keptTile = searchAndRemove(this.root);
       assert(keptTile, 'can not find tile');
@@ -102,7 +114,13 @@ export default class Workbench {
         const tile = this.tilesMap[keptTile];
         assert(tile?.currentEditor);
 
-        this.historyStack.push({ editor: tile.currentEditor });
+        this.historyStack.push({
+          record: {
+            key: tile.currentEditor.entityId,
+            editorId: tile.currentEditor.id,
+            mimeType: tile.currentEditor.mimeType,
+          },
+        });
       }
     }
   }
@@ -226,7 +244,7 @@ export default class Workbench {
       dest.tile.switchToEditor(dest, { isFromHistory: direction });
     } else {
       const destTile = this.getTileById(dest);
-      this.open({ id: record.entityId, mimeType: record.mimeType }, destTile, { isFromHistory: direction });
+      this.open({ id: record.key, mimeType: record.mimeType }, destTile, { isFromHistory: direction });
     }
   }
 }

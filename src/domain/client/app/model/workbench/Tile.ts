@@ -7,7 +7,7 @@ import { container } from '#domain/shared/infra/singletons';
 import type { NoteVO } from '#domain/shared/model/note';
 
 import EditorManager from './EditorManager';
-import type { Direction } from './HistoryStack';
+import type { Direction } from '../base/HistoryStack';
 
 export default class Tile {
   constructor(
@@ -82,7 +82,7 @@ export default class Tile {
   }
 
   public addEditor(editor: Editor, dest?: Editor) {
-    // 刚刚创建出来的 editor，其 tile 还没将其纳入其中
+    // 刚刚创建出来的 editor，其 tile 还没将其纳入其中。因此这个 if 判断是有意义的
     if (editor.tile.editors.includes(editor)) {
       editor.tile.removeEditor(editor);
     }
