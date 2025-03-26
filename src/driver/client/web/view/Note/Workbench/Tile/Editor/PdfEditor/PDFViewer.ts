@@ -1,10 +1,10 @@
 import { EventBus, PDFViewer, PDFLinkService, PDFPageView } from 'pdfjs-dist/web/pdf_viewer.mjs';
 import { AnnotationEditorType, AnnotationMode } from 'pdfjs-dist';
 import { debounce, memoize, range as numberRange } from 'lodash-es';
-import { observable, when, action, computed } from 'mobx';
+import { observable, when, action, computed, autorun } from 'mobx';
 import assert from 'assert';
 
-import type PdfEditor from '#domain/client/app/model/note/editor/PdfEditor';
+import type { default as PdfEditor, OutlineItem } from '#domain/client/app/model/note/editor/PdfEditor';
 import HistoryStack, { Direction, type HistoryRecord } from '#domain/client/app/model/base/HistoryStack';
 import shell from '#web/infra/shell';
 
@@ -137,6 +137,19 @@ export default class PdfViewer {
     this.pdfViewer.setDocument(this.editor.doc);
     (this.pdfViewer.linkService as PDFLinkService).setDocument(this.editor.doc);
 
+    this.pdfViewer.pagesPromise.then(() => {
+      // 必须在这个 promise 里初始化大纲，否则拿不到对应的页数
+      this.editor.initOutline().then(() => {
+        autorun(
+          () => {
+            if (this.editor.uiState?.['outline.type'] === 'text') {
+              this.editor.focusOutlineItem(this.currentPage);
+            }
+          },
+          { signal: this.destroyController.signal },
+        );
+      });
+    });
     this.hijackClick();
   }
 
@@ -150,7 +163,7 @@ export default class PdfViewer {
   }
 
   @action
-  public jumpTo(page: number | unknown[] | string | { hash: string }, noHistory = false) {
+  public jumpTo(page: number | OutlineItem | { hash: string }, noHistory = false) {
     if (typeof page === 'number' && (page < 1 || page > this.totalPage)) {
       return false;
     }
@@ -161,8 +174,9 @@ export default class PdfViewer {
       this.pdfViewer.currentPageNumber = page;
     } else if (typeof page === 'object' && 'hash' in page) {
       this.pdfViewer.linkService.setHash(page.hash);
-    } else {
-      this.pdfViewer.linkService.goToDestination(page);
+    } else if (page.dest) {
+      this.editor.focusedOutlineItemKey = page.key;
+      this.pdfViewer.linkService.goToDestination(page.dest);
     }
 
     if (!noHistory) {

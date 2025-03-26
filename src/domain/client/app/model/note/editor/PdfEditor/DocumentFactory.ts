@@ -1,23 +1,14 @@
 import assert from 'assert';
-import { action, observable, runInAction } from 'mobx';
-import { getDocument, GlobalWorkerOptions, type PDFDocumentLoadingTask, type PDFDocumentProxy } from 'pdfjs-dist';
+import { action } from 'mobx';
+import { getDocument, GlobalWorkerOptions, type PDFDocumentLoadingTask } from 'pdfjs-dist';
 import { isEmpty } from 'lodash-es';
 import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?worker';
 
 import type { NoteVO } from '#domain/shared/model/note';
 import { getAppUrl, RouteTypes } from '#domain/shared/infra/url';
 
-export interface OutlineItem {
-  title: string;
-  children: OutlineItem[];
-  key: string;
-  dest: unknown[] | null | string; // 传给 pdfjs 的跳转函数用的，具体类型不明，我们也不用管
-}
-
 export default class DocumentFactory {
   private readonly loadingTasksMap: Record<NoteVO['id'], { activeCount: number; task: PDFDocumentLoadingTask }> = {};
-
-  @observable.shallow private accessor outlinesMap: Record<NoteVO['id'], OutlineItem[]> = {};
 
   public async create({ noteId, blob }: { noteId: NoteVO['id']; blob: ArrayBuffer }) {
     if (!GlobalWorkerOptions.workerPort) {
@@ -38,27 +29,7 @@ export default class DocumentFactory {
     task.activeCount += 1;
     const doc = await task.task.promise;
 
-    this.initOutline({ doc, noteId });
     return doc;
-  }
-
-  private async initOutline({ noteId, doc }: { noteId: NoteVO['id']; doc: PDFDocumentProxy }) {
-    const outline: Awaited<ReturnType<PDFDocumentProxy['getOutline']>> | undefined = await doc.getOutline();
-    type RawOutlineItem = { title: string; items: RawOutlineItem[]; dest: string | unknown[] | null };
-
-    const toOutlineItem = ({ items, dest, title }: RawOutlineItem, keys: number[]): OutlineItem => {
-      return {
-        children: items.map((item, i) => toOutlineItem(item, [...keys, i])),
-        title,
-        key: keys.join('-'),
-        dest,
-      };
-    };
-
-    runInAction(() => {
-      const items = outline?.map((item, i) => toOutlineItem(item, [i])) || [];
-      this.outlinesMap[noteId] = items;
-    });
   }
 
   @action
@@ -72,16 +43,11 @@ export default class DocumentFactory {
     if (task.activeCount === 0) {
       task.task.destroy();
       delete this.loadingTasksMap[noteId];
-      delete this.outlinesMap[noteId];
     }
 
     if (isEmpty(this.loadingTasksMap)) {
       GlobalWorkerOptions.workerPort?.terminate();
       GlobalWorkerOptions.workerPort = null;
     }
-  }
-
-  public getOutline(noteId: NoteVO['id']) {
-    return this.outlinesMap[noteId];
   }
 }

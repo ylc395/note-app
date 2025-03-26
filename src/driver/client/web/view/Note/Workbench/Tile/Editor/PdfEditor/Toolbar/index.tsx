@@ -1,4 +1,4 @@
-import { BlocksIcon, ListIcon, PenLineIcon } from 'lucide-solid';
+import { ListIcon, PenLineIcon } from 'lucide-solid';
 import { action } from 'mobx';
 import assert from 'assert';
 
@@ -10,7 +10,7 @@ import BackAndForward from './BackAndForward';
 export default function Toolbar(props: { viewer: PdfViewer }) {
   function toggleOutlinePanel(value: 'text' | 'image') {
     assert(props.viewer.editor.uiState);
-    props.viewer.editor.uiState.outlinePanel = props.viewer.editor.uiState.outlinePanel === value ? null : value;
+    props.viewer.editor.uiState['outline.type'] = props.viewer.editor.uiState['outline.type'] === value ? null : value;
   }
 
   function toggleAnnotationPanel() {
@@ -24,10 +24,6 @@ export default function Toolbar(props: { viewer: PdfViewer }) {
         <button onClick={action(() => toggleOutlinePanel('text'))} class="flex items-center">
           <ListIcon class="mr-1" />
           大纲
-        </button>
-        <button onClick={action(() => toggleOutlinePanel('image'))} class="flex items-center">
-          <BlocksIcon class="mr-1" />
-          缩略图
         </button>
         <Scale viewer={props.viewer} />
         <BackAndForward viewer={props.viewer} />

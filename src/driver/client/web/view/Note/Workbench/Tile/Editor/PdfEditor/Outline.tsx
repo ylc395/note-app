@@ -1,11 +1,11 @@
 import { Collapsible } from '@ark-ui/solid';
-import { ChevronRightIcon, ChevronDownIcon } from 'lucide-solid';
-import { For, Show } from 'solid-js';
+import { ChevronRightIcon, ChevronDownIcon, Loader2Icon } from 'lucide-solid';
+import { createEffect, createMemo, For, on, Show } from 'solid-js';
 import { pull } from 'lodash-es';
 import { action } from 'mobx';
 import assert from 'assert';
 
-import type { OutlineItem } from '#domain/client/app/model/note/editor/PdfEditor/DocumentFactory';
+import type { OutlineItem } from '#domain/client/app/model/note/editor/PdfEditor';
 import type PdfViewer from './PDFViewer';
 
 function Item(props: {
@@ -18,22 +18,24 @@ function Item(props: {
     e.stopPropagation();
 
     if (props.item.dest) {
-      props.viewer.jumpTo(props.item.dest);
+      props.viewer.jumpTo(props.item);
     }
   }
+
+  const isFocused = createMemo(() => props.item.key === props.viewer.editor.focusedOutlineItemKey);
 
   return (
     <div classList={{ 'mb-1': props.item.children.length === 0 }} style={{ 'padding-left': `${props.level * 20}px` }}>
       <Show
         when={props.item.children.length > 0}
         fallback={
-          <span onClick={handleClick} class="pl-4 cursor-pointer">
+          <span onClick={handleClick} class="pl-4 cursor-pointer" classList={{ 'font-bold': isFocused() }}>
             {props.item.title}
           </span>
         }
       >
         <Collapsible.Root
-          open={props.viewer.editor.uiState?.expandedOutlineItems?.includes(props.item.key)}
+          open={props.viewer.editor.uiState?.['outline.expanded']?.includes(props.item.key)}
           lazyMount
           unmountOnExit
           onOpenChange={({ open }) => props.onToggle({ key: props.item.key, value: open })}
@@ -43,7 +45,9 @@ function Item(props: {
               <ChevronRightIcon class='group-data-[state="open"]:hidden w-4' />
               <ChevronDownIcon class='group-data-[state="closed"]:hidden w-4' />
             </Collapsible.Trigger>
-            <span onClick={handleClick}>{props.item.title}</span>
+            <span classList={{ 'font-bold': isFocused() }} onClick={handleClick}>
+              {props.item.title}
+            </span>
           </div>
           <Collapsible.Content>
             <For each={props.item.children}>
@@ -57,23 +61,53 @@ function Item(props: {
 }
 
 export default function Outline(props: { viewer: PdfViewer }) {
+  let listRef: HTMLDivElement | undefined;
+
   function onToggle({ key, value }: { key: string; value: boolean }) {
     assert(props.viewer.editor.uiState);
 
-    if (!props.viewer.editor.uiState.expandedOutlineItems) {
-      props.viewer.editor.uiState.expandedOutlineItems = [];
+    if (!props.viewer.editor.uiState['outline.expanded']) {
+      props.viewer.editor.uiState['outline.expanded'] = [];
     }
 
     if (value) {
-      props.viewer.editor.uiState.expandedOutlineItems.push(key);
+      props.viewer.editor.uiState['outline.expanded'].push(key);
     } else {
-      pull(props.viewer.editor.uiState.expandedOutlineItems, key);
+      pull(props.viewer.editor.uiState['outline.expanded'], key);
     }
   }
 
+  function handleScroll(e: Event) {
+    assert(e.target instanceof HTMLElement && props.viewer.editor.uiState);
+    props.viewer.editor.uiState['outline.scroll'] = {
+      x: e.target.scrollLeft,
+      y: e.target.scrollTop,
+    };
+  }
+
+  createEffect(
+    on(
+      () => props.viewer.editor.outlines,
+      () => {
+        if (props.viewer.editor.uiState?.['outline.scroll']) {
+          listRef!.scrollLeft = props.viewer.editor.uiState['outline.scroll'].x;
+          listRef!.scrollTop = props.viewer.editor.uiState['outline.scroll'].y;
+        }
+      },
+    ),
+  );
+
   return (
-    <div class="w-64 overflow-auto h-full border-r pb-12">
-      <For each={props.viewer.editor.outlines}>
+    <div class="w-64 overflow-auto h-full border-r pb-12" ref={listRef} onScrollEnd={action(handleScroll)}>
+      <For
+        each={props.viewer.editor.outlines}
+        fallback={
+          <div class="flex h-full justify-center items-center">
+            <Loader2Icon class="animate-spin mr-2" />
+            <span>加载中</span>
+          </div>
+        }
+      >
         {(outline) => <Item onToggle={action(onToggle)} viewer={props.viewer} item={outline} level={0} />}
       </For>
     </div>
