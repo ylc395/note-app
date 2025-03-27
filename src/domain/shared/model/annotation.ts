@@ -1,18 +1,35 @@
+import type { Selector } from '@apache-annotator/selector';
 import type { EntityId } from './entity.js';
-import type { CommonFragment, TextQuoteFragment } from './fragment.js';
 import type { Note } from './note.js';
 
-interface HtmlSelector {
-  selector: string; // CSS selector
+export const MAX_SELECTORS_COUNT = 5;
+
+export function isSelectors(value: unknown[]): value is Selector[] {
+  return (
+    value.length <= MAX_SELECTORS_COUNT &&
+    value.every((value) => {
+      return Boolean(
+        typeof value === 'object' &&
+          value &&
+          'type' in value &&
+          typeof value.type === 'string' &&
+          value.type.endsWith('Selector'),
+      );
+    })
+  );
 }
 
-export type Selector = HtmlSelector | TextQuoteFragment | CommonFragment;
+// https://www.w3.org/TR/annotation-model/#fragment-selector
+export interface FragmentSelector extends Selector {
+  type: 'FragmentSelector';
+  value: string;
+}
 
 // This concept is inspired by https://www.w3.org/TR/annotation-model/
 export interface Annotation {
   id: EntityId;
   targetId: Note['id'];
-  selectors: Selector[];
+  selectors: Array<Selector>;
   body: string;
   bodyPlainText?: string;
   color: string;

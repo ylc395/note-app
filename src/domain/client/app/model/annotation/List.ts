@@ -57,7 +57,7 @@ export default class AnnotationList {
     assert(!annotationId || this.annotations.result.data?.has(annotationId), 'invalid annotation');
 
     this.editor = new Editor({
-      initialValue: annotationId ? this.annotations.result.data?.get(annotationId) : undefined,
+      annotation: annotationId ? this.annotations.result.data?.get(annotationId) : undefined,
       noteId: this.noteId,
       onDestroyed: action(() => {
         this.editor = undefined;
