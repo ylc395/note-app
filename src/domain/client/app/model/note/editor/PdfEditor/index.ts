@@ -105,7 +105,7 @@ export default class PdfEditor extends BaseEditor<z.infer<typeof uiStateSchema>>
     const doc = this.doc;
     assert(doc);
 
-    const outline = await doc.getOutline();
+    const outline = (await doc.getOutline()) || [];
 
     type RawOutlineItem = { title: string; items: RawOutlineItem[]; dest: string | unknown[] | null };
 

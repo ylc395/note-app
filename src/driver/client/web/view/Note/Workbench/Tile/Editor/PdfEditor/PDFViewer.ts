@@ -1,5 +1,5 @@
 import { EventBus, PDFViewer, PDFLinkService, PDFPageView } from 'pdfjs-dist/web/pdf_viewer.mjs';
-import { AnnotationEditorType, AnnotationMode } from 'pdfjs-dist';
+import { AnnotationMode } from 'pdfjs-dist';
 import { debounce, memoize, range as numberRange } from 'lodash-es';
 import { observable, when, action, computed, autorun } from 'mobx';
 import assert from 'assert';
@@ -83,7 +83,6 @@ export default class PdfViewer {
     const linkService = new PDFLinkService({ eventBus, ignoreDestinationZoom: true });
     const pdfViewer = new PDFViewer({
       ...options,
-      annotationEditorMode: AnnotationEditorType.NONE, // disable build-in annotation editor
       annotationMode: AnnotationMode.ENABLE_STORAGE,
       eventBus,
       linkService,
@@ -150,6 +149,7 @@ export default class PdfViewer {
         );
       });
     });
+
     this.hijackClick();
   }
 

@@ -7,13 +7,13 @@ import Form from '#domain/client/shared/model/abstract/Form';
 import { container } from '#domain/shared/infra/singletons';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 
-import DomainEventBus from './EventBus';
 import type { FileDTO } from '#domain/shared/model/file';
 import { getHash } from '#utils/file';
+import DomainEventBus from './EventBus';
 
 type MaterialFormField = Pick<NewNoteDTO, 'title' | 'body' | 'icon' | 'sourceUrl'>;
 
-type File = Pick<FileDTO, 'mimeType' | 'path'> & { data: ArrayBuffer };
+type File = Pick<FileDTO, 'mimeType' | 'path'> & { data: ArrayBuffer; name: string };
 
 export default class MaterialForm extends Form<MaterialFormField> {
   constructor(private formOptions: { onSubmit: () => void; parentId?: NewNoteDTO['parentId'] }) {
@@ -39,6 +39,10 @@ export default class MaterialForm extends Form<MaterialFormField> {
   @action
   public async handleFileSelected(file?: File) {
     if (!file) {
+      if (this.get('title') === this.file?.name) {
+        this.set('title', undefined);
+      }
+
       this.file = undefined;
       return;
     }
@@ -46,7 +50,15 @@ export default class MaterialForm extends Form<MaterialFormField> {
     const hash = await getHash(file.data);
 
     runInAction(() => {
-      this.file = { ...file, hash };
+      this.file = {
+        ...file,
+        hash,
+        name: file.name.split('.')[0]!,
+      };
+
+      if (!this.get('title')) {
+        this.set('title', this.file.name);
+      }
     });
   }
 

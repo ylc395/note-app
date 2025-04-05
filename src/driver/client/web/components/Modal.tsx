@@ -28,9 +28,9 @@ export default function Modal(props: {
         <Portal mount={document.getElementById(import.meta.env.VITE_WEB_ROOT_ID)!}>
           <Dialog.Backdrop class="fixed inset-0 bg-black opacity-30 z-10" />
           <Dialog.Positioner class="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
-            <Dialog.Content class="bg-white">
-              <div class="flex justify-between">
-                <Dialog.Title>{props.title}</Dialog.Title>
+            <Dialog.Content class="bg-white p-4 rounded-lg">
+              <div class="flex justify-between pb-2 mb-4 border-b">
+                <Dialog.Title class="text-lg">{props.title}</Dialog.Title>
                 <Dialog.CloseTrigger>
                   <XIcon />
                 </Dialog.CloseTrigger>

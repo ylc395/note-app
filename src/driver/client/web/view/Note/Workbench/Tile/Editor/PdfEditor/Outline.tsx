@@ -99,17 +99,24 @@ export default function Outline(props: { viewer: PdfViewer }) {
 
   return (
     <div class="w-64 overflow-auto h-full border-r pb-12" ref={listRef} onScrollEnd={action(handleScroll)}>
-      <For
-        each={props.viewer.editor.outlines}
+      <Show
+        when={props.viewer.editor.outlines?.length === 0}
         fallback={
-          <div class="flex h-full justify-center items-center">
-            <Loader2Icon class="animate-spin mr-2" />
-            <span>加载中</span>
-          </div>
+          <For
+            each={props.viewer.editor.outlines}
+            fallback={
+              <div class="flex h-full justify-center items-center">
+                <Loader2Icon class="animate-spin mr-2" />
+                <span>加载中</span>
+              </div>
+            }
+          >
+            {(outline) => <Item onToggle={action(onToggle)} viewer={props.viewer} item={outline} level={0} />}
+          </For>
         }
       >
-        {(outline) => <Item onToggle={action(onToggle)} viewer={props.viewer} item={outline} level={0} />}
-      </For>
+        <div class="flex h-full justify-center items-center">无大纲</div>
+      </Show>
     </div>
   );
 }
