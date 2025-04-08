@@ -14,8 +14,4 @@ export default class ImageEditor extends BaseEditor<z.infer<typeof uiStateSchema
   }
 
   public override readonly mimeType;
-
-  protected sortAnnotations() {
-    return 0;
-  }
 }

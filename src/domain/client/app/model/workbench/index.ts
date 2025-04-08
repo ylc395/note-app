@@ -61,7 +61,7 @@ export default class Workbench {
       onEditorFocus: ({ editor, fromHistory }) =>
         this.historyStack.push({
           fromHistory,
-          record: { key: editor.entityId, mimeType: editor.mimeType, editorId: editor.id },
+          record: { key: editor.noteId, mimeType: editor.mimeType, editorId: editor.id },
         }),
     });
 
@@ -116,7 +116,7 @@ export default class Workbench {
 
         this.historyStack.push({
           record: {
-            key: tile.currentEditor.entityId,
+            key: tile.currentEditor.noteId,
             editorId: tile.currentEditor.id,
             mimeType: tile.currentEditor.mimeType,
           },

@@ -26,9 +26,7 @@ export default class Tile {
   @observable.shallow public accessor editors: Editor[] = [];
 
   public findEditor(locator: NoteVO['id'] | Editor) {
-    const existedEditor = this.editors.find((e) =>
-      locator instanceof Editor ? locator === e : locator === e.entityId,
-    );
+    const existedEditor = this.editors.find((e) => (locator instanceof Editor ? locator === e : locator === e.noteId));
 
     return existedEditor;
   }
@@ -70,7 +68,7 @@ export default class Tile {
   // 不能创建内容相同的 editor
   @action
   public createEditor(entity: Pick<NoteVO, 'id' | 'mimeType'>, dest?: Editor) {
-    assert(this.editors.findIndex((editor) => editor.entityId === entity.id) < 0, 'can not create duplicated editor');
+    assert(this.editors.findIndex((editor) => editor.noteId === entity.id) < 0, 'can not create duplicated editor');
 
     const newEditor = this.editorManager.create(this, entity);
 

@@ -1,5 +1,5 @@
 import { EventBus, PDFViewer, PDFLinkService, PDFPageView } from 'pdfjs-dist/web/pdf_viewer.mjs';
-import { AnnotationMode } from 'pdfjs-dist';
+import { AnnotationEditorType, AnnotationMode } from 'pdfjs-dist';
 import { debounce, memoize, range as numberRange } from 'lodash-es';
 import { observable, when, action, computed, autorun } from 'mobx';
 import assert from 'assert';
@@ -84,6 +84,7 @@ export default class PdfViewer {
     const pdfViewer = new PDFViewer({
       ...options,
       annotationMode: AnnotationMode.ENABLE_STORAGE,
+      annotationEditorMode: AnnotationEditorType.DISABLE, // annotationEditor 是什么不太清楚，不过这个东西如果启用，会和我们 App 的拖拽功能起冲突。先给它禁用了
       eventBus,
       linkService,
     });
@@ -132,17 +133,19 @@ export default class PdfViewer {
   }
 
   private async init() {
-    assert(this.editor.doc);
-    this.pdfViewer.setDocument(this.editor.doc);
-    (this.pdfViewer.linkService as PDFLinkService).setDocument(this.editor.doc);
+    const doc = this.editor.doc;
+    assert(doc);
+
+    this.pdfViewer.setDocument(doc);
+    (this.pdfViewer.linkService as PDFLinkService).setDocument(doc);
 
     this.pdfViewer.pagesPromise.then(() => {
       // 必须在这个 promise 里初始化大纲，否则拿不到对应的页数
-      this.editor.initOutline().then(() => {
+      this.editor.outline.init(doc).then(() => {
         autorun(
           () => {
             if (this.editor.uiState?.['outline.type'] === 'text') {
-              this.editor.focusOutlineItem(this.currentPage);
+              this.editor.outline.focus(this.currentPage);
             }
           },
           { signal: this.destroyController.signal },
@@ -175,7 +178,7 @@ export default class PdfViewer {
     } else if (typeof page === 'object' && 'hash' in page) {
       this.pdfViewer.linkService.setHash(page.hash);
     } else if (page.dest) {
-      this.editor.focusedOutlineItemKey = page.key;
+      this.editor.outline.focusedItemKey = page.key;
       this.pdfViewer.linkService.goToDestination(page.dest);
     }
 

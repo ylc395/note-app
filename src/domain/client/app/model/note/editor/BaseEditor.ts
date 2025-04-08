@@ -26,23 +26,23 @@ type Patch = Pick<NotePatchDTO, 'body' | 'icon' | 'title'>;
 export default abstract class BaseEditor<S = unknown> {
   constructor({ entityId, tile, uiStateSchema }: Options & { uiStateSchema: ZodType<S> }) {
     this.tile = tile;
-    this.entityId = entityId;
-    this.noteUIState = new PersistedObject(`uiState-${this.entityId}`, uiStateSchema);
+    this.noteId = entityId;
+    this.noteUIState = new PersistedObject(`uiState-${this.noteId}`, uiStateSchema);
 
-    this.value = createQuery(({ signal }) => this.remote.note.queryOneById.query(this.entityId, { signal }), {
-      queryKey: ['note', this.entityId],
+    this.value = createQuery(({ signal }) => this.remote.note.queryOneById.query(this.noteId, { signal }), {
+      queryKey: ['note', this.noteId],
       abortSignal: this.destroyController.signal,
     });
 
-    this.path = createQuery(({ signal }) => this.remote.note.queryPath.query(this.entityId, { signal }), {
-      queryKey: ['note.path', this.entityId],
+    this.path = createQuery(({ signal }) => this.remote.note.queryPath.query(this.noteId, { signal }), {
+      queryKey: ['note.path', this.noteId],
       abortSignal: this.destroyController.signal,
     });
 
     this.blob = createQuery(
-      ({ signal }) => this.remote.note.getBlob.query(this.entityId, { signal }) as Promise<ArrayBuffer>,
+      ({ signal }) => this.remote.note.getBlob.query(this.noteId, { signal }) as Promise<ArrayBuffer>,
       {
-        queryKey: ['note.blob', this.entityId],
+        queryKey: ['note.blob', this.noteId],
         structuralSharing: false,
         abortSignal: this.destroyController.signal,
         options: () => ({
@@ -85,7 +85,7 @@ export default abstract class BaseEditor<S = unknown> {
 
   public readonly events = new EventBus<Events>(this.id);
 
-  public readonly entityId: NoteVO['id'];
+  public readonly noteId: NoteVO['id'];
 
   protected readonly destroyController = new AbortController();
 
@@ -111,20 +111,20 @@ export default abstract class BaseEditor<S = unknown> {
 
     // 这里采用乐观更新
     this.value.setData((note) => ({ ...note!, ...patch }));
-    this.domainEventBus.emit(DomainEventBus.eventNames.Updated, { id: this.entityId, ...patch });
+    this.domainEventBus.emit(DomainEventBus.eventNames.Updated, { id: this.noteId, ...patch });
 
     // 若服务器更新失败，前端回退至之前的值
     this._update(patch)?.catch(() => {
       this.value.setData((note) => ({ ...note!, ...currentData }));
       this.domainEventBus.emit(DomainEventBus.eventNames.Updated, {
-        id: this.entityId,
+        id: this.noteId,
         ...currentData,
       });
     });
   };
 
   private readonly _update = debounce((patch: Patch) => {
-    return this.remote.note.updateOne.mutate([this.entityId, patch]);
+    return this.remote.note.updateOne.mutate([this.noteId, patch]);
   }, 1000);
 
   @action

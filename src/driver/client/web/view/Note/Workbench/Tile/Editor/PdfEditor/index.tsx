@@ -6,6 +6,7 @@ import type PdfEditor from '#domain/client/app/model/note/editor/PdfEditor';
 import PDFViewer from './PDFViewer';
 import Toolbar from './Toolbar';
 import Outline from './Outline';
+import AnnotationList from './AnnotationList';
 
 export default function PdfEditorView(props: { editor: PdfEditor }) {
   let containerRef: HTMLDivElement | undefined;
@@ -37,6 +38,9 @@ export default function PdfEditorView(props: { editor: PdfEditor }) {
             <div class="select-text" ref={viewRef}></div>
           </div>
         </div>
+        <Show when={props.editor.uiState?.['annotation.panel'] && getPdfViewer()}>
+          {(viewer) => <AnnotationList viewer={viewer()} />}
+        </Show>
       </div>
     </div>
   );

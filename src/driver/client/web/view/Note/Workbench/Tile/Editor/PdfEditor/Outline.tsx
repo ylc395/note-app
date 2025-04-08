@@ -22,7 +22,7 @@ function Item(props: {
     }
   }
 
-  const isFocused = createMemo(() => props.item.key === props.viewer.editor.focusedOutlineItemKey);
+  const isFocused = createMemo(() => props.item.key === props.viewer.editor.outline.focusedItemKey);
 
   return (
     <div classList={{ 'mb-1': props.item.children.length === 0 }} style={{ 'padding-left': `${props.level * 20}px` }}>
@@ -87,7 +87,7 @@ export default function Outline(props: { viewer: PdfViewer }) {
 
   createEffect(
     on(
-      () => props.viewer.editor.outlines,
+      () => props.viewer.editor.outline.items,
       () => {
         if (props.viewer.editor.uiState?.['outline.scroll']) {
           listRef!.scrollLeft = props.viewer.editor.uiState['outline.scroll'].x;
@@ -100,10 +100,10 @@ export default function Outline(props: { viewer: PdfViewer }) {
   return (
     <div class="w-64 overflow-auto h-full border-r pb-12" ref={listRef} onScrollEnd={action(handleScroll)}>
       <Show
-        when={props.viewer.editor.outlines?.length === 0}
+        when={props.viewer.editor.outline.items?.length === 0}
         fallback={
           <For
-            each={props.viewer.editor.outlines}
+            each={props.viewer.editor.outline.items}
             fallback={
               <div class="flex h-full justify-center items-center">
                 <Loader2Icon class="animate-spin mr-2" />

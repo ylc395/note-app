@@ -15,7 +15,7 @@ export default function Toolbar(props: { viewer: PdfViewer }) {
 
   function toggleAnnotationPanel() {
     assert(props.viewer.editor.uiState);
-    props.viewer.editor.uiState.annotationPanel = !props.viewer.editor.uiState.annotationPanel;
+    props.viewer.editor.uiState['annotation.panel'] = !props.viewer.editor.uiState['annotation.panel'];
   }
 
   return (
