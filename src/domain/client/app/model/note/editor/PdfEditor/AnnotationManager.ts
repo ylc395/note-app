@@ -1,13 +1,21 @@
 import { computed, observable, runInAction } from 'mobx';
 import { type PDFDocumentProxy, AnnotationType } from 'pdfjs-dist';
 import { createQuery } from 'mobx-tanstack-query/preset';
+import { z } from 'zod';
+import type { Selector } from '@apache-annotator/selector';
+import { compact } from 'lodash-es';
+import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
 
 import { container } from '#domain/shared/infra/singletons';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import type { NoteVO } from '#domain/shared/model/note';
-import type { AnnotationVO } from '#domain/shared/model/annotation';
+import type { FragmentSelector } from '#domain/shared/model/annotation';
 
-export interface NativeAnnotation {
+dayjs.extend(customParseFormat);
+
+interface NativeAnnotation {
+  page: number;
   annotationType: number;
   id: string;
   rect: [number, number, number, number];
@@ -15,6 +23,17 @@ export interface NativeAnnotation {
   contentsObj?: {
     str: string;
   };
+  creationDate: string; // 大概长这样D:20151230152231+01'00'
+  modificationDate: string; // 同上
+}
+
+export interface PDFAnnotation {
+  isNative: boolean;
+  page: number;
+  content: string;
+  createdAt: number;
+  updatedAt: number;
+  rect: [number, number, number, number];
 }
 
 export default class AnnotationManager {
@@ -37,7 +56,7 @@ export default class AnnotationManager {
     // see https://github.com/mozilla/pdf.js/issues/17509
     for (let i = 1; i <= doc.numPages; i++) {
       const page = await doc.getPage(i);
-      nativeAnnotations.push(...(await page.getAnnotations()));
+      nativeAnnotations.push(...(await page.getAnnotations()).map((value) => ({ ...value, page: i })));
     }
 
     runInAction(() => {
@@ -46,10 +65,42 @@ export default class AnnotationManager {
   }
 
   @computed
-  public get list() {
+  public get list(): PDFAnnotation[] {
     return [
-      ...(this.nativeAnnotations || []).filter(({ annotationType }) => annotationType === AnnotationType.HIGHLIGHT),
-      ...(this.annotations.result.data || []),
+      ...(this.nativeAnnotations || [])
+        .filter(({ annotationType }) => annotationType === AnnotationType.HIGHLIGHT)
+        .map((v) => {
+          const getTime = (time: string) =>
+            dayjs(`${time.slice(2, -7)}+${time.slice(-6, -4)}00`, 'YYYYMMDDHHmmssZZ').valueOf();
+
+          return {
+            isNative: true,
+            page: v.page,
+            content: v.contentsObj?.str || '',
+            createdAt: getTime(v.creationDate),
+            updatedAt: getTime(v.modificationDate),
+            rect: v.rect,
+          };
+        }),
+
+      ...compact(
+        (this.annotations.result.data || []).map((v) => {
+          const selector = v.selectors[0] ? AnnotationManager.parseSelector(v.selectors[0]) : null;
+
+          if (!selector) {
+            return null;
+          }
+
+          return {
+            isNative: false,
+            page: selector.page,
+            content: v.body,
+            createdAt: v.createdAt,
+            updatedAt: v.updatedAt,
+            rect: selector.viewrect,
+          };
+        }),
+      ),
     ];
   }
 
@@ -67,7 +118,32 @@ export default class AnnotationManager {
     return Boolean(this.nativeAnnotations && this.nativeAnnotations.length > 0);
   }
 
-  public static isNative(value: AnnotationVO | NativeAnnotation): value is NativeAnnotation {
-    return 'annotationType' in value;
+  public create({ selector, body }: { selector: Selector; body?: string }) {
+    return this.remote.annotation.create.mutate({
+      targetId: this.noteId,
+      selectors: [selector],
+      body,
+    });
+  }
+
+  public static parseSelector(selector: Selector) {
+    if (!('type' in selector && selector.type !== 'FragmentSelector')) {
+      return null;
+    }
+
+    const obj = Object.fromEntries(new URLSearchParams((selector as FragmentSelector).value));
+    // see https://datatracker.ietf.org/doc/html/rfc8118#section-3
+    const schema = z.object({
+      page: z.number(),
+      viewrect: z.tuple([z.number(), z.number(), z.number(), z.number()]),
+    });
+
+    const result = schema.safeParse(obj);
+
+    if (result.success) {
+      return result.data;
+    }
+
+    return null;
   }
 }

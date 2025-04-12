@@ -7,6 +7,7 @@ import PDFViewer from './PDFViewer';
 import Toolbar from './Toolbar';
 import Outline from './Outline';
 import AnnotationList from './AnnotationList';
+import SelectionTooltip from './SelectionTooltip';
 
 export default function PdfEditorView(props: { editor: PdfEditor }) {
   let containerRef: HTMLDivElement | undefined;
@@ -41,6 +42,7 @@ export default function PdfEditorView(props: { editor: PdfEditor }) {
         <Show when={props.editor.uiState?.['annotation.panel'] && getPdfViewer()}>
           {(viewer) => <AnnotationList viewer={viewer()} />}
         </Show>
+        <Show when={getPdfViewer()}>{(viewer) => <SelectionTooltip viewer={viewer()} />}</Show>
       </div>
     </div>
   );

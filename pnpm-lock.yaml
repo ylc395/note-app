@@ -8,6 +8,9 @@ patchedDependencies:
   electron-trpc@0.5.2:
     hash: 9b5d49a8ef2fe0eba79104cfb58a37e33a42ba1333ae712dfae66ca09798482d
     path: patches/electron-trpc@0.5.2.patch
+  optimal-select@4.0.1:
+    hash: 31adb0b7b0ce002a76c86fc9a4afc98872cd63992d7263e89242db5602855e1a
+    path: patches/optimal-select@4.0.1.patch
 
 importers:
 
@@ -5378,7 +5381,7 @@ snapshots:
   '@apache-annotator/dom@0.2.0':
     dependencies:
       '@babel/runtime-corejs3': 7.27.0
-      optimal-select: 4.0.1
+      optimal-select: 4.0.1(patch_hash=31adb0b7b0ce002a76c86fc9a4afc98872cd63992d7263e89242db5602855e1a)
 
   '@apache-annotator/selector@0.2.0':
     dependencies:
@@ -10379,7 +10382,7 @@ snapshots:
 
   opencollective-postinstall@2.0.3: {}
 
-  optimal-select@4.0.1: {}
+  optimal-select@4.0.1(patch_hash=31adb0b7b0ce002a76c86fc9a4afc98872cd63992d7263e89242db5602855e1a): {}
 
   optionator@0.9.3:
     dependencies:

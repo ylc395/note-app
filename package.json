@@ -131,7 +131,8 @@
   },
   "pnpm": {
     "patchedDependencies": {
-      "electron-trpc@0.5.2": "patches/electron-trpc@0.5.2.patch"
+      "electron-trpc@0.5.2": "patches/electron-trpc@0.5.2.patch",
+      "optimal-select@4.0.1": "patches/optimal-select@4.0.1.patch"
     },
     "onlyBuiltDependencies": [
       "electron"

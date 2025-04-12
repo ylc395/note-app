@@ -29,6 +29,7 @@ export const SCALE_STEPS = [
 export default class PdfViewer {
   private readonly pdfViewer: PDFViewer;
   public readonly editor: PdfEditor;
+  public readonly viewerElement: HTMLElement;
   private readonly destroyController = new AbortController();
 
   /*
@@ -53,6 +54,7 @@ export default class PdfViewer {
 
   constructor(options: Options) {
     this.editor = options.editor;
+    this.viewerElement = options.viewer;
     this.pdfViewer = this.createPDFViewer(options);
     when(
       () => Boolean(this.editor.doc && this.editor.uiState),
