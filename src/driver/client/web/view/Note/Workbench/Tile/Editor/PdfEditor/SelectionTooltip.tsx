@@ -2,7 +2,6 @@ import { debounce } from 'lodash-es';
 import { createEffect, createSignal, onCleanup, Show } from 'solid-js';
 import { MessageSquareMoreIcon, PaintbrushIcon } from 'lucide-solid';
 import { autoUpdate, computePosition, flip, offset } from '@floating-ui/dom';
-import { describeTextQuote } from '@apache-annotator/dom';
 
 import type PdfViewer from './PDFViewer';
 
@@ -86,8 +85,8 @@ export default function SelectionTooltip(props: { viewer: PdfViewer }) {
     }
 
     isBusy = true;
-    const selector = await describeTextQuote(range, props.viewer.viewerElement);
-    await props.viewer.editor.annotation.create({ selector });
+    // const selector = await describeTextQuote(range, props.viewer.viewerElement);
+    // await props.viewer.editor.annotation.create({ selector });
     setReference(undefined);
     isBusy = false;
   }

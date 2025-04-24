@@ -5,11 +5,13 @@
 import { z } from "zod";
 import { entityIdSchema } from "./entity.js";
 import { noteSchema } from "./note.js";
-export const fragmentSelectorSchema = z.unknown() /*zodify can not transform type properly here*/;
+export const selectorSchema = z.object({
+  refinedBy: z.unknown().optional()
+});
 export const annotationSchema = z.object({
   id: entityIdSchema,
   targetId: noteSchema.shape["id"],
-  selectors: z.array(z.union([z.unknown() /*zodify can not transform type properly here*/, z.unknown() /*zodify can not transform type properly here*/, fragmentSelectorSchema])),
+  selectors: z.array(selectorSchema),
   body: z.string(),
   bodyPlainText: z.string().optional(),
   color: z.string(),

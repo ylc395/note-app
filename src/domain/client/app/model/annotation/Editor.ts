@@ -2,11 +2,15 @@ import assert from 'assert';
 import { action, computed, observable, runInAction } from 'mobx';
 import { pick } from 'lodash-es';
 import { queryClient } from 'mobx-tanstack-query/preset';
-import type { Selector } from '@apache-annotator/selector';
 
 import { container } from '#domain/shared/infra/singletons';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
-import { type AnnotationVO, type AnnotationPatchDTO, MAX_SELECTORS_COUNT } from '#domain/shared/model/annotation';
+import {
+  type AnnotationVO,
+  type AnnotationPatchDTO,
+  MAX_SELECTORS_COUNT,
+  type Selector,
+} from '#domain/shared/model/annotation';
 import type { NoteVO } from '#domain/shared/model/note';
 
 import { getAnnotationListQueryKey } from './queryKeys';

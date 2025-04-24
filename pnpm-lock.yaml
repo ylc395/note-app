@@ -19,9 +19,6 @@ importers:
       '@apache-annotator/dom':
         specifier: ^0.2.0
         version: 0.2.0
-      '@apache-annotator/selector':
-        specifier: ^0.2.0
-        version: 0.2.0
       '@ark-ui/solid':
         specifier: ^5.0.0
         version: 5.0.0(solid-js@1.9.5)
@@ -355,10 +352,6 @@ packages:
 
   '@apache-annotator/dom@0.2.0':
     resolution: {integrity: sha512-zXVQl5jSMSpH1rf2Vyvd/jWE1H2gpSw5Jk0q0UgkWDxlLKqsg+4PiwAbBQU16x51tvH+wj7OjkfqrHeXAUcXig==}
-    engines: {node: ^12.20 || ^14.15 || ^15.4 || ^16.0}
-
-  '@apache-annotator/selector@0.2.0':
-    resolution: {integrity: sha512-Y8N0OKuq3cafRqaz/FBzcuAwzJIUjmjQaOPl0BC/RFgCnTm0bE27a4KFx9lL+oQVJOx3hLRdZ5iwDL1STfo0QQ==}
     engines: {node: ^12.20 || ^14.15 || ^15.4 || ^16.0}
 
   '@ark-ui/solid@5.0.0':
@@ -5382,10 +5375,6 @@ snapshots:
     dependencies:
       '@babel/runtime-corejs3': 7.27.0
       optimal-select: 4.0.1(patch_hash=31adb0b7b0ce002a76c86fc9a4afc98872cd63992d7263e89242db5602855e1a)
-
-  '@apache-annotator/selector@0.2.0':
-    dependencies:
-      '@babel/runtime-corejs3': 7.27.0
 
   '@ark-ui/solid@5.0.0(solid-js@1.9.5)':
     dependencies:

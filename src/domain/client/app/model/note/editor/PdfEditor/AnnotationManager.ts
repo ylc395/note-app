@@ -2,7 +2,6 @@ import { computed, observable, runInAction } from 'mobx';
 import { type PDFDocumentProxy, AnnotationType } from 'pdfjs-dist';
 import { createQuery } from 'mobx-tanstack-query/preset';
 import { z } from 'zod';
-import type { Selector } from '@apache-annotator/selector';
 import { compact } from 'lodash-es';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
@@ -10,7 +9,7 @@ import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { container } from '#domain/shared/infra/singletons';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import type { NoteVO } from '#domain/shared/model/note';
-import type { FragmentSelector } from '#domain/shared/model/annotation';
+import type { FragmentSelector, Selector } from '#domain/shared/model/annotation';
 
 dayjs.extend(customParseFormat);
 

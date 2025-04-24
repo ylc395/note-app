@@ -1,27 +1,28 @@
-import type { Selector } from '@apache-annotator/selector';
 import type { EntityId } from './entity.js';
 import type { Note } from './note.js';
 
 export const MAX_SELECTORS_COUNT = 5;
 
-export function isSelectors(value: unknown[]): value is Selector[] {
-  return (
-    value.length <= MAX_SELECTORS_COUNT &&
-    value.every((value) => {
-      return Boolean(
-        typeof value === 'object' &&
-          value &&
-          'type' in value &&
-          typeof value.type === 'string' &&
-          value.type.endsWith('Selector'),
-      );
-    })
-  );
+export interface Selector {
+  refinedBy?: unknown;
+}
+
+// https://www.w3.org/TR/annotation-model/#text-position-selector
+export interface TextPositionSelector extends Selector {
+  type: 'TextPositionSelector';
+  start: number;
+  end: number;
 }
 
 // https://www.w3.org/TR/annotation-model/#fragment-selector
 export interface FragmentSelector extends Selector {
   type: 'FragmentSelector';
+  value: string;
+}
+
+// https://www.w3.org/TR/annotation-model/#css-selector
+export interface CssSelector extends Selector {
+  type: 'CssSelector';
   value: string;
 }
 
