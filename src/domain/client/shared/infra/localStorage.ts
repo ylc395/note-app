@@ -1,5 +1,5 @@
-import { Type } from 'di-wise';
 import type { ZodSchema } from 'zod';
+import type { Token } from '#utils/singletonContainer';
 
 export interface LocalStorage {
   get(key: string): Promise<unknown>;
@@ -11,4 +11,4 @@ export interface LocalStorage {
   delete(key: string): Promise<void>;
 }
 
-export const token = Type<LocalStorage>('localStorage');
+export const token: Token<LocalStorage> = Symbol('localStorage');

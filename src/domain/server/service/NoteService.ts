@@ -12,7 +12,7 @@ import {
   NoteTypes,
 } from '#domain/server/model/note.js';
 import { arrayOf, buildIndex } from '#utils/collection.js';
-import { container } from '#domain/shared/infra/singletons.js';
+import container from '#utils/singletonContainer.js';
 
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';

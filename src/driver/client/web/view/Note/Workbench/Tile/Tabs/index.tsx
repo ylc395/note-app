@@ -5,7 +5,7 @@ import assert from 'assert';
 import Tile from '#domain/client/app/model/Workbench/Tile';
 import BaseEditor from '#domain/client/app/model/note/editor/BaseEditor';
 import NoteService from '#domain/client/app/service/NoteService';
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 import Workbench from '#domain/client/app/model/Workbench';
 import Tab from './Tab';
 

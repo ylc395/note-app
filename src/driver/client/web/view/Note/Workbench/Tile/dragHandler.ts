@@ -1,6 +1,6 @@
 import type { BaseEventPayload, ElementDragType } from '@atlaskit/pragmatic-drag-and-drop/types';
 
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 import NoteService from '#domain/client/app/service/NoteService';
 import { TileSplitDirections } from '#domain/client/app/model/Workbench';
 import type Tile from '#domain/client/app/model/Workbench/Tile';

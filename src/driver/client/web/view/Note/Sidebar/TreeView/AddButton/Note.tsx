@@ -2,7 +2,7 @@ import { Show } from 'solid-js';
 import { LoaderIcon, PlusIcon } from 'lucide-solid';
 
 import type { NoteVO } from '#domain/shared/model/note';
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 import NoteService from '#domain/client/app/service/NoteService';
 
 export default function (props: { iconOnly?: boolean; noteId?: NoteVO['id']; triggerClassName?: string }) {

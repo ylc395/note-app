@@ -8,7 +8,7 @@ import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
 import { normalizeTitle, NoteTypes, type NoteVO } from '#domain/shared/model/note';
 import TreeViewModel from '#domain/client/app/model/note/TreeView';
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 import NoteService from '#domain/client/app/service/NoteService';
 
 import TitleEditor from './TitleEditor';

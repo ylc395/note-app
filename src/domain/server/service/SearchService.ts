@@ -1,4 +1,4 @@
-import { container } from '#domain/shared/infra/singletons.js';
+import container from '#utils/singletonContainer.js';
 import type { SearchRequest, SearchResultVO } from '#domain/shared/model/search.js';
 
 import BaseService from './BaseService.js';

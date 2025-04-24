@@ -1,5 +1,5 @@
 import { Splitter, Tabs } from '@ark-ui/solid';
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 
 import Sidebar from './Sidebar';
 import Workbench from './Workbench';

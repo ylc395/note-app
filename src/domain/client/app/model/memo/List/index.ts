@@ -2,7 +2,7 @@ import { action, autorun, computed, observable, reaction } from 'mobx';
 import assert from 'assert';
 import { createInfiniteQuery, createQuery } from 'mobx-tanstack-query/preset';
 
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import type { MemoVO } from '#domain/shared/model/memo';
 

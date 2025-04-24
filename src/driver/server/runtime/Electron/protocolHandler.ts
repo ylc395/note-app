@@ -2,7 +2,7 @@ import { app, net } from 'electron';
 import { resolve } from 'node:path';
 
 import FileService from '#domain/server/service/FileService';
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 import { parseAppUrl, RouteTypes } from '#domain/shared/infra/url';
 
 async function queryFileBlob(id: string) {

@@ -5,7 +5,7 @@ import { isObject } from 'lodash-es';
 import { z } from 'zod';
 
 import type { AnnotationVO } from '#domain/shared/model/annotation';
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 import { MimeTypes } from '#domain/shared/model/file';
 
 import BaseEditor, { type Options } from '../BaseEditor';

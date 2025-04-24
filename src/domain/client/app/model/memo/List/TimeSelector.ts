@@ -6,7 +6,7 @@ import { createQuery } from 'mobx-tanstack-query/preset';
 import { isEqual, maxBy, minBy } from 'lodash-es';
 
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 import type { Duration, MemoVO } from '#domain/shared/model/memo';
 import DomainEventBus from '../EventBus';
 

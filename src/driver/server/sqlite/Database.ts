@@ -9,7 +9,7 @@ import assert from 'node:assert';
 import { token as loggerToken } from '#domain/shared/infra/logger.js';
 import type { Database } from '#domain/server/infra/database.js';
 import { IS_TEST, IS_DEV } from '#domain/shared/infra/env.js';
-import { container } from '#domain/shared/infra/singletons.js';
+import container from '#utils/singletonContainer.js';
 
 import { type Schemas, schemas } from './schema/index.js';
 

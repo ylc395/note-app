@@ -20,7 +20,7 @@ import {
   fileTextsFTSTableName,
 } from './tables.js';
 import { type EntityId, EntityTypes } from '#domain/shared/model/entity.js';
-import { container } from '#domain/shared/infra/singletons.js';
+import container from '#utils/singletonContainer.js';
 import { buildIndex } from '#utils/collection.js';
 
 export default class SqliteSearchEngine implements SearchEngine {

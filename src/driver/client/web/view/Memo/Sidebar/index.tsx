@@ -1,6 +1,6 @@
 import { PanelLeftClose } from 'lucide-solid';
 
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 import Calender from './Calendar';
 import TopicList from './TopicList';
 import SearchBox from './SearchBox';

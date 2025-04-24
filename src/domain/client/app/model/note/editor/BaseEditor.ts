@@ -6,7 +6,7 @@ import { createQuery } from 'mobx-tanstack-query/preset';
 import type { ZodType } from 'zod';
 
 import EventBus from '#domain/client/shared/infra/EventBus';
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import type { NotePatchDTO, NoteVO } from '#domain/shared/model/note';
 import PersistedObject from '#domain/client/shared/model/abstract/PersistedObject';

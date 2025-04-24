@@ -1,7 +1,7 @@
 import { For, Show } from 'solid-js';
 
 import MemoList from '#domain/client/app/model/memo/List';
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 
 export default function LinkFilter() {
   const {

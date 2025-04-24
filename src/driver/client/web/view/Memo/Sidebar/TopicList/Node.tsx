@@ -3,7 +3,7 @@ import { For, Show } from 'solid-js';
 import { TreeView } from '@ark-ui/solid';
 
 import type { TopicNode } from '#domain/client/app/model/TopicList';
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 import MemoList from '#domain/client/app/model/memo/List';
 
 export default function Node(props: { node: TopicNode; indexPath: number[] }) {

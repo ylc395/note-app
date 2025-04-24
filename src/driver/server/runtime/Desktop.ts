@@ -8,7 +8,7 @@ import { token as kvDatabaseToken } from '#domain/server/infra/kvDatabase.js';
 import { token as searchEngineToken } from '#domain/server/infra/searchEngine.js';
 import { token as repositoriesToken } from '#domain/server/repository/index.js';
 import { token as loggerToken } from '#domain/shared/infra/logger.js';
-import { container } from '#domain/shared/infra/singletons.js';
+import container from '#utils/singletonContainer.js';
 
 import SqliteDb from '../sqlite/Database.js';
 import SqliteKvDatabase from '../sqlite/KvDatabase.js';
@@ -18,14 +18,14 @@ import { getRepositories } from '../sqlite/repository/index.js';
 export default abstract class DesktopRuntime extends Runtime {
   constructor() {
     super();
-    container.register(loggerToken, { useValue: console });
+    container.register(loggerToken, console);
     const db = new SqliteDb({ dir: this.getAppDir() });
 
-    container.register(databaseToken, { useValue: db });
-    container.register(repositoriesToken, { useValue: getRepositories(db) });
-    container.register(kvDatabaseToken, { useValue: new SqliteKvDatabase(db) });
-    container.register(searchEngineToken, { useValue: new SqliteSearchEngine(db) });
-    container.register(runtimeToken, { useValue: this });
+    container.register(databaseToken, db);
+    container.register(repositoriesToken, getRepositories(db));
+    container.register(kvDatabaseToken, new SqliteKvDatabase(db));
+    container.register(searchEngineToken, new SqliteSearchEngine(db));
+    container.register(runtimeToken, this);
   }
 
   public getAppDir() {

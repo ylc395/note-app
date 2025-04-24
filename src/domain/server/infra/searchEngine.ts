@@ -1,4 +1,4 @@
-import { Type } from 'di-wise';
+import type { Token } from '#utils/singletonContainer';
 import type { SearchRequest, SearchResult } from '#domain/shared/model/search.js';
 
 export interface SearchEngine {
@@ -6,4 +6,4 @@ export interface SearchEngine {
   search: (q: SearchRequest) => Promise<SearchResult[]>;
 }
 
-export const token = Type<SearchEngine>('searchEngine');
+export const token: Token<SearchEngine> = Symbol('searchEngine');

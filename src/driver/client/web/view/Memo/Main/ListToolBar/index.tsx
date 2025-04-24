@@ -11,7 +11,7 @@ import dayjs from 'dayjs';
 import { Tooltip } from '@ark-ui/solid';
 import { action } from 'mobx';
 
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 import type { Duration } from '#domain/shared/model/memo';
 import MemoList from '#domain/client/app/model/memo/List';
 import UIState from '#web/view/UIState';

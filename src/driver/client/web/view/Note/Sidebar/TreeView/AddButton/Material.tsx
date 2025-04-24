@@ -2,7 +2,7 @@ import { Show } from 'solid-js';
 import { PlusIcon, FolderPlusIcon, FilePlus, ChevronDownIcon } from 'lucide-solid';
 import { Menu, type MenuSelectionDetails } from '@ark-ui/solid';
 
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 import NoteService from '#domain/client/app/service/NoteService';
 import type { NoteVO } from '#domain/shared/model/note';
 

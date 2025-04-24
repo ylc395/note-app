@@ -6,7 +6,7 @@ import { compact } from 'lodash-es';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import type { NoteVO } from '#domain/shared/model/note';
 import type { FragmentSelector, Selector } from '#domain/shared/model/annotation';

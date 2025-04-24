@@ -3,7 +3,7 @@ import type { ZodType } from 'zod';
 import { action, observable, runInAction, toJS } from 'mobx';
 import assert from 'assert';
 
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 import { token as localStorageToken } from '#domain/client/shared/infra/localStorage';
 
 export default class PersistedObject<S> {

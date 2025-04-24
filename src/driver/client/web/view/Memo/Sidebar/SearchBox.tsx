@@ -1,7 +1,7 @@
 import { SearchIcon } from 'lucide-solid';
 import { action } from 'mobx';
 
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 import MemoList from '#domain/client/app/model/memo/List';
 
 export default function SearchBox() {

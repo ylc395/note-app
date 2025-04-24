@@ -1,4 +1,4 @@
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 import { observer } from 'mobx-react-lite';
 import { LoadingOutlined } from '@ant-design/icons';
 import clsx from 'clsx';

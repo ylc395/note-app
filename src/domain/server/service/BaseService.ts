@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
-import { container } from '#domain/shared/infra/singletons.js';
+import container from '#utils/singletonContainer.js';
 import { token as databaseToken } from '#domain/server/infra/database.js';
 import { token as repositoriesToken } from '../repository/index.js';
 import { token as runtimeToken } from '../infra/runtime.js';

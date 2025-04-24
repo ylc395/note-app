@@ -3,7 +3,7 @@ import { createQuery } from 'mobx-tanstack-query/preset';
 import assert from 'assert';
 
 import type { NoteTypes, NoteVO } from '#domain/shared/model/note';
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import type Tree from './Tree';
 

@@ -3,7 +3,7 @@ import { observable, action, computed } from 'mobx';
 import assert from 'assert';
 
 import Editor from '#domain/client/app/model/note/editor/BaseEditor';
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 import type { NoteVO } from '#domain/shared/model/note';
 import type { EntityId } from '#domain/shared/model/entity';
 

@@ -3,7 +3,7 @@ import { For } from 'solid-js/web';
 import assert from 'assert';
 
 import NoteService from '#domain/client/app/service/NoteService';
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 import Modal from '#web/components/Modal';
 
 export default function MaterialFormModal() {

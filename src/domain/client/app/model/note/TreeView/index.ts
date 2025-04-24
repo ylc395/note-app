@@ -2,7 +2,7 @@ import { action, computed } from 'mobx';
 
 import Tree from '#domain/client/shared/model/note/Tree';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 import { NoteTypes, type NoteVO } from '#domain/shared/model/note';
 import DomainEventBus, { type UpdatedEvent } from '#domain/client/app/model/note/EventBus';
 

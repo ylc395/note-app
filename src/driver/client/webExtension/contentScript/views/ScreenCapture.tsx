@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { useFloating, offset } from '@floating-ui/react';
 import { observer } from 'mobx-react-lite';
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 import { useMemoizedFn } from 'ahooks';
 
 import PageService from '#domain/service/PageService';

@@ -2,7 +2,7 @@ import { Splitter } from '@ark-ui/solid';
 import { Show } from 'solid-js';
 
 import { TileDirections, type TileNode, type TileParent } from '#domain/client/app/model/Workbench/tileTree';
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 import Workbench from '#domain/client/app/model/Workbench';
 
 import Tile from './Tile';

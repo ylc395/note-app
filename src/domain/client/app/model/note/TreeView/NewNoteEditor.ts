@@ -2,7 +2,7 @@ import { action, observable, runInAction } from 'mobx';
 import assert from 'assert';
 
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 import type { NewNoteDTO, NoteTypes, NoteVO } from '#domain/shared/model/note';
 import DomainEventBus from '../EventBus';
 

@@ -1,4 +1,3 @@
-import { Type } from 'di-wise';
 import type { NoteRepository } from './noteRepository.js';
 import type { StarRepository } from './starRepository.js';
 import type { FileRepository } from './fileRepository.js';
@@ -8,6 +7,7 @@ import type { EntityRepository } from './entityRepository.js';
 import type { AnnotationRepository } from './annotationRepository.js';
 import type { RecyclablesRepository } from './recyclableRepository.js';
 import type { RevisionRepository } from './revisionRepository.js';
+import type { Token } from '#utils/singletonContainer.js';
 
 export interface Repositories {
   notes: NoteRepository;
@@ -21,4 +21,4 @@ export interface Repositories {
   revisions: RevisionRepository;
 }
 
-export const token = Type<Repositories>('Repositories');
+export const token: Token<Repositories> = Symbol('Repositories');

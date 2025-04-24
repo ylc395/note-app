@@ -4,7 +4,7 @@ import { createQuery } from 'mobx-tanstack-query/preset';
 
 import { NoteTypes, type NewNoteDTO } from '#domain/shared/model/note';
 import Form from '#domain/client/shared/model/abstract/Form';
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 
 import type { FileDTO } from '#domain/shared/model/file';

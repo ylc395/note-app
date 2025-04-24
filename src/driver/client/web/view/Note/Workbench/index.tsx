@@ -1,7 +1,7 @@
 import { Show } from 'solid-js';
 import { Splitter } from '@ark-ui/solid';
 import Workbench from '#domain/client/app/model/Workbench';
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 
 import TileNode from './TileNode';
 

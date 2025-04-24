@@ -3,7 +3,7 @@ import { action, computed, observable, runInAction } from 'mobx';
 import { pick } from 'lodash-es';
 import { queryClient } from 'mobx-tanstack-query/preset';
 
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import {
   type AnnotationVO,

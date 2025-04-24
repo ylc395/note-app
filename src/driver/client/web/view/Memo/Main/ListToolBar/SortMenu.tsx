@@ -1,7 +1,7 @@
 import { Menu } from '@ark-ui/solid';
 import { SortDescIcon } from 'lucide-solid';
 
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 import MemoList from '#domain/client/app/model/memo/List';
 
 export default function SortMenu() {

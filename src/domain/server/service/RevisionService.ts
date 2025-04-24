@@ -4,7 +4,7 @@ import { keyBy } from 'lodash-es';
 
 import type { Revision, RevisionPatchDTO } from '#domain/shared/model/revision.js';
 import type { EntityId } from '#domain/shared/model/entity.js';
-import { container } from '#domain/shared/infra/singletons.js';
+import container from '#utils/singletonContainer.js';
 
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';

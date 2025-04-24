@@ -1,6 +1,6 @@
 import { Tabs } from '@ark-ui/solid/tabs';
 
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 import Sidebar from './Sidebar';
 import NoteTab from './Note';
 import MaterialFormModal from './Note/MaterialFormModal';

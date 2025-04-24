@@ -2,7 +2,7 @@ import Emitter, { type EventName } from 'emittery';
 
 import { IS_PRODUCTION } from '#domain/shared/infra/env';
 import { token } from '#domain/shared/infra/logger';
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 
 export type Events = Record<EventName, unknown>;
 

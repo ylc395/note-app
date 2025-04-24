@@ -1,5 +1,5 @@
 import { token as remoteToken } from '#domain/client/shared/infra/rpc';
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 
 export default class SearchService {
   private readonly remote = container.resolve(remoteToken);

@@ -9,7 +9,7 @@ import { PROTOCOL } from '#domain/shared/infra/url.js';
 import { IS_DEV } from '#domain/shared/infra/env.js';
 import { token as loggerToken } from '#domain/shared/infra/logger.js';
 import FileService from '#domain/server/service/FileService/index.js';
-import { container } from '#domain/shared/infra/singletons.js';
+import container from '#utils/singletonContainer.js';
 
 import DesktopRuntime from '../Desktop.js';
 import protocolHandler from './protocolHandler.js';

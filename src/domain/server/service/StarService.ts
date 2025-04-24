@@ -1,6 +1,6 @@
 import assert from 'node:assert';
 
-import { container } from '#domain/shared/infra/singletons.js';
+import container from '#utils/singletonContainer.js';
 import type { Star, StarDTO, StarVO } from '#domain/shared/model/star.js';
 import type { EntityId } from '#domain/shared/model/entity.js';
 import { arrayOf } from '#utils/collection.js';

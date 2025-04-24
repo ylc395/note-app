@@ -1,4 +1,4 @@
-import { Type } from 'di-wise';
+import type { Token } from '#utils/singletonContainer';
 
 export interface KvDatabase {
   ready: Promise<void>;
@@ -7,4 +7,4 @@ export interface KvDatabase {
   set: (key: string, value: string) => Promise<void>;
 }
 
-export const token = Type<KvDatabase>('KvDatabase');
+export const token: Token<KvDatabase> = Symbol('KvDatabase');

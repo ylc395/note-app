@@ -1,6 +1,6 @@
 import browser, { type Tabs } from 'webextension-polyfill';
 import uniqueId from 'lodash-es/uniqueId';
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 
 import { EventNames as TaskEventNames, type TaskTypes, type Task, type SubmitEvent } from '#domain/model/task';
 import EventBus from '#domain/infra/EventBus';

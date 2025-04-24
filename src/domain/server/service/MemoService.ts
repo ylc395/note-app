@@ -15,7 +15,7 @@ import {
   type FileTypes,
   type LinkSet,
 } from '#domain/server/model/memo.js';
-import { container } from '#domain/shared/infra/singletons.js';
+import container from '#utils/singletonContainer.js';
 import { EntityTypes } from '#domain/shared/model/entity.js';
 import { SearchFields } from '#domain/shared/model/search.js';
 

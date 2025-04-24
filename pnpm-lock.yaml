@@ -8,17 +8,11 @@ patchedDependencies:
   electron-trpc@0.5.2:
     hash: 9b5d49a8ef2fe0eba79104cfb58a37e33a42ba1333ae712dfae66ca09798482d
     path: patches/electron-trpc@0.5.2.patch
-  optimal-select@4.0.1:
-    hash: 31adb0b7b0ce002a76c86fc9a4afc98872cd63992d7263e89242db5602855e1a
-    path: patches/optimal-select@4.0.1.patch
 
 importers:
 
   .:
     dependencies:
-      '@apache-annotator/dom':
-        specifier: ^0.2.0
-        version: 0.2.0
       '@ark-ui/solid':
         specifier: ^5.0.0
         version: 5.0.0(solid-js@1.9.5)
@@ -94,9 +88,6 @@ importers:
       dayjs:
         specifier: ^1.11.10
         version: 1.11.10
-      di-wise:
-        specifier: ^0.2.8
-        version: 0.2.8
       diff:
         specifier: ^7.0.0
         version: 7.0.0
@@ -349,10 +340,6 @@ packages:
   '@ampproject/remapping@2.3.0':
     resolution: {integrity: sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw==}
     engines: {node: '>=6.0.0'}
-
-  '@apache-annotator/dom@0.2.0':
-    resolution: {integrity: sha512-zXVQl5jSMSpH1rf2Vyvd/jWE1H2gpSw5Jk0q0UgkWDxlLKqsg+4PiwAbBQU16x51tvH+wj7OjkfqrHeXAUcXig==}
-    engines: {node: ^12.20 || ^14.15 || ^15.4 || ^16.0}
 
   '@ark-ui/solid@5.0.0':
     resolution: {integrity: sha512-Utf8wRr50WQc8iDsdNqRxzmCZ+3NdPh3dd/13Nb38JDrkk/EbOQZG7MTZoqCQcb5U7vLb1VNCj+Us2B589umqg==}
@@ -665,10 +652,6 @@ packages:
     engines: {node: '>=6.9.0'}
     peerDependencies:
       '@babel/core': ^7.0.0-0
-
-  '@babel/runtime-corejs3@7.27.0':
-    resolution: {integrity: sha512-UWjX6t+v+0ckwZ50Y5ShZLnlk95pP5MyW/pon9tiYzl3+18pkTHTFNTKr7rQbfRXPkowt2QAn30o1b6oswszew==}
-    engines: {node: '>=6.9.0'}
 
   '@babel/runtime@7.23.9':
     resolution: {integrity: sha512-0CX6F+BI2s9dkUqr08KFrAIZgNFj75rdBU/DjCyYLIaV/quFjkk6T+EJ2LkZHyZTbEV4L5p97mNkUsHl2wLFAw==}
@@ -2435,9 +2418,6 @@ packages:
   convert-source-map@2.0.0:
     resolution: {integrity: sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==}
 
-  core-js-pure@3.41.0:
-    resolution: {integrity: sha512-71Gzp96T9YPk63aUvE5Q5qP+DryB4ZloUZPSOebGM88VNw8VNfvdA7z6kGA8iGOTEzAomsRidp4jXSmUIJsL+Q==}
-
   core-util-is@1.0.3:
     resolution: {integrity: sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==}
 
@@ -2583,9 +2563,6 @@ packages:
 
   devlop@1.1.0:
     resolution: {integrity: sha512-RWmIqhcFf1lRYBvNmr7qTNuyCt/7/ns2jbpp1+PalgE/rDQcBT0fioSMUpJ93irlUhC5hrg4cYqe6U+0ImW0rA==}
-
-  di-wise@0.2.8:
-    resolution: {integrity: sha512-qFAbi4jFfNX4xTj7Hd/7OhpZpI4nvDJW6H73FoUYhGo89NUWtd50Hq8t6G9eYf/TKTrXS5q6xy/mBScZrnI0tQ==}
 
   didyoumean@1.2.2:
     resolution: {integrity: sha512-gxtyfqMg7GKyhQmb056K7M3xszy/myH8w+B4RT+QXBQsvAOdc3XymqDDPHx1BgPgsdAA5SIifona89YtRATDzw==}
@@ -4077,9 +4054,6 @@ packages:
     resolution: {integrity: sha512-8AV/sCtuzUeTo8gQK5qDZzARrulB3egtLzFgteqB2tcT4Mw7B8Kt7JcDHmltjz6FOAHsvTevk70gZEbhM4ZS9Q==}
     hasBin: true
 
-  optimal-select@4.0.1:
-    resolution: {integrity: sha512-WLLt4DicXXeI2zLU2OF85TNbtbk8zAyLLqqKTsSVBICeoo2dzdI0YKXfkmxlCz+fVqSAR7fQ5zrHsCdeoOBzAA==}
-
   optionator@0.9.3:
     resolution: {integrity: sha512-JjCoypp+jKn1ttEFExxhetCKeJt9zhAgAve5FXHixTvFDW/5aEktX9bufBKLRRMdU7bNtpLfcGu94B3cdEJgjg==}
     engines: {node: '>= 0.8.0'}
@@ -5371,11 +5345,6 @@ snapshots:
       '@jridgewell/gen-mapping': 0.3.5
       '@jridgewell/trace-mapping': 0.3.25
 
-  '@apache-annotator/dom@0.2.0':
-    dependencies:
-      '@babel/runtime-corejs3': 7.27.0
-      optimal-select: 4.0.1(patch_hash=31adb0b7b0ce002a76c86fc9a4afc98872cd63992d7263e89242db5602855e1a)
-
   '@ark-ui/solid@5.0.0(solid-js@1.9.5)':
     dependencies:
       '@internationalized/date': 3.7.0
@@ -5833,11 +5802,6 @@ snapshots:
     dependencies:
       '@babel/core': 7.26.0
       '@babel/helper-plugin-utils': 7.25.9
-
-  '@babel/runtime-corejs3@7.27.0':
-    dependencies:
-      core-js-pure: 3.41.0
-      regenerator-runtime: 0.14.1
 
   '@babel/runtime@7.23.9':
     dependencies:
@@ -8304,8 +8268,6 @@ snapshots:
 
   convert-source-map@2.0.0: {}
 
-  core-js-pure@3.41.0: {}
-
   core-util-is@1.0.3: {}
 
   create-ecdh@4.0.4:
@@ -8472,8 +8434,6 @@ snapshots:
   devlop@1.1.0:
     dependencies:
       dequal: 2.0.3
-
-  di-wise@0.2.8: {}
 
   didyoumean@1.2.2: {}
 
@@ -10370,8 +10330,6 @@ snapshots:
       mimic-fn: 2.1.0
 
   opencollective-postinstall@2.0.3: {}
-
-  optimal-select@4.0.1(patch_hash=31adb0b7b0ce002a76c86fc9a4afc98872cd63992d7263e89242db5602855e1a): {}
 
   optionator@0.9.3:
     dependencies:

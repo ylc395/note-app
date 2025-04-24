@@ -12,7 +12,7 @@ import {
   mdastExtension as topicExtension,
   tokenExtension as topicTokenExtension,
 } from '#domain/shared/infra/markdown/syntax/topic.js';
-import { container } from '#domain/shared/infra/singletons.js';
+import container from '#utils/singletonContainer.js';
 import type { Entity, EntityId } from '#domain/shared/model/entity.js';
 import {
   type TopicVO,

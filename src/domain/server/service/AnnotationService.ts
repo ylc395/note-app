@@ -2,7 +2,7 @@ import assert from 'node:assert';
 
 import type { Annotation, AnnotationDTO, AnnotationPatchDTO } from '#domain/shared/model/annotation.js';
 import type { EntityId } from '#domain/shared/model/entity.js';
-import { container } from '#domain/shared/infra/singletons.js';
+import container from '#utils/singletonContainer.js';
 
 import BaseService from './BaseService.js';
 import NoteService from './NoteService.js';

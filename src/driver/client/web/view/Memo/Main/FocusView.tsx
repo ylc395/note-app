@@ -1,7 +1,7 @@
 import { createEffect, createSignal, on, onCleanup, Show } from 'solid-js';
 import { XIcon } from 'lucide-solid';
 
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 import MemoView from '#domain/client/app/model/memo/MemoView';
 import MemoList from '#domain/client/app/model/memo/List';
 

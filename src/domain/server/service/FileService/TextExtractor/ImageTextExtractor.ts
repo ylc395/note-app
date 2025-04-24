@@ -4,7 +4,7 @@ import path from 'node:path';
 
 import { token as runtimeToken } from '#domain/server/infra/runtime.js';
 import { token as loggerToken } from '#domain/shared/infra/logger.js';
-import { container } from '#domain/shared/infra/singletons.js';
+import container from '#utils/singletonContainer.js';
 import type { Job } from './job.js';
 
 // @see https://tesseract-ocr.github.io/tessdoc/Data-Files#data-files-for-version-400-november-29-2016

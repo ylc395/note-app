@@ -1,5 +1,5 @@
 import { initTRPC } from '@trpc/server';
-import { container } from '#domain/shared/infra/singletons.js';
+import container from '#utils/singletonContainer.js';
 import { memoize } from 'lodash-es';
 
 import NoteService from '#domain/server/service/NoteService.js';

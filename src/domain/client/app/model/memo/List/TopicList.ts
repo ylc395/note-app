@@ -1,4 +1,4 @@
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 import { EntityTypes } from '#domain/shared/model/entity';
 import TopicList from '../../TopicList';
 import DomainEventBus from '../EventBus';

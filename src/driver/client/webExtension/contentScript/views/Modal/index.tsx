@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 
 import PageService from '#domain/service/PageService';
 

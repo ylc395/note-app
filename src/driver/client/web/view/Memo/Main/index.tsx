@@ -1,6 +1,6 @@
 import { onCleanup } from 'solid-js';
 
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 import MemoList from '#domain/client/app/model/memo/List';
 
 import Editor from './Editor';

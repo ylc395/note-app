@@ -1,7 +1,7 @@
 import { Tabs } from '@ark-ui/solid';
 import { Show } from 'solid-js';
 
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 import UIState, { NoteTreeViewTabs } from '#web/view/UIState';
 
 import NoteTreeView from './NoteTree';

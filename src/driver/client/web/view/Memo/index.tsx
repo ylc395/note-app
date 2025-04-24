@@ -1,7 +1,7 @@
 import { createEffect, on } from 'solid-js';
 import { Tabs } from '@ark-ui/solid';
 
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 import MemoList from '#domain/client/app/model/memo/List';
 import UIState, { SidebarTabs } from '#web/view/UIState';
 

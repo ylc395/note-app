@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import '#utils/mobx';
 
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 import { createRoot } from 'react-dom/client';
 import { wrap } from 'comlink';
 import { chromeRuntimeMessageEndpoint } from 'comlink-adapters';

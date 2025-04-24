@@ -4,7 +4,7 @@ import { createEffect, createSignal, on, Show } from 'solid-js';
 
 import type BaseEditor from '#domain/client/app/model/note/editor/BaseEditor';
 import Workbench from '#domain/client/app/model/Workbench';
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 import BaseMarkdownEditor from '#web/components/MarkdownEditor';
 
 export default function MarkdownEditor(props: { editor: BaseEditor }) {

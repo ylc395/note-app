@@ -4,7 +4,7 @@ import dayjs from 'dayjs';
 import { action } from 'mobx';
 import { ArrowLeftIcon, ArrowRightIcon } from 'lucide-solid';
 
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 import MemoList from '#domain/client/app/model/memo/List';
 
 function getColorClass(count: number) {

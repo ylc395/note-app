@@ -5,7 +5,7 @@ import { Key } from '@solid-primitives/keyed';
 
 import MemoList from '#domain/client/app/model/memo/List';
 import Item from './Item';
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 
 export default function MemoListView() {
   let rootRef: HTMLDivElement | undefined;

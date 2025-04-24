@@ -1,7 +1,7 @@
 import { differenceWith, uniq } from 'lodash-es';
 import assert from 'node:assert';
 
-import { container } from '#domain/shared/infra/singletons.js';
+import container from '#utils/singletonContainer.js';
 import { RecyclablesDTO, RecyclableVO } from '#domain/server/model/recyclable.js';
 import type { EntityId } from '#domain/shared/model/entity.js';
 

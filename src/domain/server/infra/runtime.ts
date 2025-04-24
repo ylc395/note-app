@@ -1,4 +1,4 @@
-import { Type } from 'di-wise';
+import type { Token } from '#utils/singletonContainer';
 
 export abstract class Runtime {
   public abstract getAppDir(): string;
@@ -10,4 +10,4 @@ export abstract class Runtime {
   static {}
 }
 
-export const token = Type<Runtime>('runtime');
+export const token: Token<Runtime> = Symbol('runtime');

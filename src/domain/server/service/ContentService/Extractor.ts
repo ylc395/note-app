@@ -1,7 +1,7 @@
 import type { Node as UnistNode } from 'mdast';
 
 import type { EntityId } from '#domain/shared/model/entity.js';
-import { container } from '#domain/shared/infra/singletons.js';
+import container from '#utils/singletonContainer.js';
 import { token as repositoriesToken } from '../../repository/index.js';
 
 export default abstract class Extractor {

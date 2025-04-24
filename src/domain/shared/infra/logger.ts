@@ -1,4 +1,4 @@
-import { Type } from 'di-wise';
+import type { Token } from '#utils/singletonContainer';
 
 export interface Logger {
   debug: (...content: unknown[]) => void;
@@ -7,4 +7,4 @@ export interface Logger {
   warn: (...content: unknown[]) => void;
 }
 
-export const token = Type<Logger>('logger');
+export const token: Token<Logger> = Symbol('logger');

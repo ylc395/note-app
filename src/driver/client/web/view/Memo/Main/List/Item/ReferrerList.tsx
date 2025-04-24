@@ -2,7 +2,7 @@ import { For, Show } from 'solid-js';
 import assert from 'assert';
 
 import type MemoView from '#domain/client/app/model/memo/MemoView';
-import { container } from '#domain/shared/infra/singletons';
+import container from '#utils/singletonContainer';
 import MemoList from '#domain/client/app/model/memo/List';
 
 export default function ReferrerList({ memoView }: { memoView: MemoView }) {
