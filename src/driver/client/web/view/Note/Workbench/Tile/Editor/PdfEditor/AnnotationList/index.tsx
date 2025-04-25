@@ -15,7 +15,7 @@ export default function AnnotationList(props: { viewer: PdfViewer }) {
   });
 
   return (
-    <div class="w-64 p-2 border-l flex flex-col">
+    <div class="w-64 p-2 border-l flex flex-col overflow-auto">
       <div class="flex justify-between mb-2">
         <Add />
         <Settings viewer={props.viewer} />

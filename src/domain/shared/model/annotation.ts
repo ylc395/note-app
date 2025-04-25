@@ -1,30 +1,39 @@
 import type { EntityId } from './entity.js';
 import type { Note } from './note.js';
 
-export const MAX_SELECTORS_COUNT = 5;
-
-export interface Selector {
-  refinedBy?: unknown;
+// https://developer.mozilla.org/en-US/docs/Web/URI/Reference/Fragment/Text_fragments
+export interface TextFragment {
+  textStart: string;
+  textEnd?: string;
+  suffix?: string;
+  prefix?: string;
 }
 
-// https://www.w3.org/TR/annotation-model/#text-position-selector
-export interface TextPositionSelector extends Selector {
-  type: 'TextPositionSelector';
-  start: number;
-  end: number;
+export interface PDFTextFragmentSelector extends TextFragment {
+  type: 'PDFTextFragmentSelector';
+  page: number;
+  fullText: string;
 }
 
-// https://www.w3.org/TR/annotation-model/#fragment-selector
-export interface FragmentSelector extends Selector {
-  type: 'FragmentSelector';
-  value: string;
+export interface PDFRectSelector {
+  type: 'PDFRectSelector';
+  page: number;
+  top: number;
+  left: number;
+  width: number;
+  height: number;
 }
 
-// https://www.w3.org/TR/annotation-model/#css-selector
-export interface CssSelector extends Selector {
-  type: 'CssSelector';
-  value: string;
+export interface HTMLTextFragmentSelector extends TextFragment {
+  type: 'HTMLTextFragmentSelector';
 }
+
+export interface HTMLCssSelector {
+  type: 'HTMLCssSelector';
+  value: string; // css selector
+}
+
+export type Selector = PDFTextFragmentSelector | PDFRectSelector | HTMLTextFragmentSelector | HTMLCssSelector;
 
 // This concept is inspired by https://www.w3.org/TR/annotation-model/
 export interface Annotation {

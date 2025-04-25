@@ -1,16 +1,11 @@
 import assert from 'assert';
-import { action, computed, observable, runInAction } from 'mobx';
+import { action, observable, runInAction } from 'mobx';
 import { pick } from 'lodash-es';
 import { queryClient } from 'mobx-tanstack-query/preset';
 
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
-import {
-  type AnnotationVO,
-  type AnnotationPatchDTO,
-  MAX_SELECTORS_COUNT,
-  type Selector,
-} from '#domain/shared/model/annotation';
+import { type AnnotationVO, type AnnotationPatchDTO, type Selector } from '#domain/shared/model/annotation';
 import type { NoteVO } from '#domain/shared/model/note';
 
 import { getAnnotationListQueryKey } from './queryKeys';
@@ -40,14 +35,8 @@ export default class Editor {
     this.value = { ...this.value, ...value };
   }
 
-  @computed
-  public get canAddSelector() {
-    return !this.value.selectors || this.value.selectors.length <= MAX_SELECTORS_COUNT;
-  }
-
   @action
   public addSelector(value: Selector) {
-    assert(this.canAddSelector, 'can not add selector');
     (this.value.selectors ||= []).push(value);
   }
 

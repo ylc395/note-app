@@ -1,15 +1,13 @@
 import { computed, observable, runInAction } from 'mobx';
 import { type PDFDocumentProxy, AnnotationType } from 'pdfjs-dist';
 import { createQuery } from 'mobx-tanstack-query/preset';
-import { z } from 'zod';
-import { compact } from 'lodash-es';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import type { NoteVO } from '#domain/shared/model/note';
-import type { FragmentSelector, Selector } from '#domain/shared/model/annotation';
+import type { AnnotationVO, PDFRectSelector, PDFTextFragmentSelector } from '#domain/shared/model/annotation';
 
 dayjs.extend(customParseFormat);
 
@@ -22,17 +20,12 @@ interface NativeAnnotation {
   contentsObj?: {
     str: string;
   };
-  creationDate: string; // 大概长这样D:20151230152231+01'00'
+  creationDate: string | null; // 大概长这样D:20151230152231+01'00'
   modificationDate: string; // 同上
 }
 
-export interface PDFAnnotation {
+export interface AnnotationItem extends AnnotationVO {
   isNative: boolean;
-  page: number;
-  content: string;
-  createdAt: number;
-  updatedAt: number;
-  rect: [number, number, number, number];
 }
 
 export default class AnnotationManager {
@@ -64,7 +57,7 @@ export default class AnnotationManager {
   }
 
   @computed
-  public get list(): PDFAnnotation[] {
+  public get list(): AnnotationItem[] {
     return [
       ...(this.nativeAnnotations || [])
         .filter(({ annotationType }) => annotationType === AnnotationType.HIGHLIGHT)
@@ -74,32 +67,25 @@ export default class AnnotationManager {
 
           return {
             isNative: true,
-            page: v.page,
-            content: v.contentsObj?.str || '',
-            createdAt: getTime(v.creationDate),
+            targetId: this.noteId,
+            selectors: [
+              {
+                type: 'PDFRectSelector' as const,
+                page: v.page,
+                left: v.rect[0],
+                top: v.rect[1],
+                width: v.rect[2],
+                height: v.rect[3],
+              },
+            ],
+            color: 'yellow',
+            id: `pdf-native-${v.id}`,
+            body: v.contentsObj?.str || '',
+            createdAt: getTime(v.creationDate || v.modificationDate),
             updatedAt: getTime(v.modificationDate),
-            rect: v.rect,
           };
         }),
-
-      ...compact(
-        (this.annotations.result.data || []).map((v) => {
-          const selector = v.selectors[0] ? AnnotationManager.parseSelector(v.selectors[0]) : null;
-
-          if (!selector) {
-            return null;
-          }
-
-          return {
-            isNative: false,
-            page: selector.page,
-            content: v.body,
-            createdAt: v.createdAt,
-            updatedAt: v.updatedAt,
-            rect: selector.viewrect,
-          };
-        }),
-      ),
+      ...(this.annotations.result.data || []).map((annotation) => ({ ...annotation, isNative: false })),
     ];
   }
 
@@ -117,32 +103,13 @@ export default class AnnotationManager {
     return Boolean(this.nativeAnnotations && this.nativeAnnotations.length > 0);
   }
 
-  public create({ selector, body }: { selector: Selector; body?: string }) {
-    return this.remote.annotation.create.mutate({
+  public async create({ selector, body }: { selector: PDFTextFragmentSelector | PDFRectSelector; body?: string }) {
+    await this.remote.annotation.create.mutate({
       targetId: this.noteId,
       selectors: [selector],
       body,
     });
-  }
 
-  public static parseSelector(selector: Selector) {
-    if (!('type' in selector && selector.type !== 'FragmentSelector')) {
-      return null;
-    }
-
-    const obj = Object.fromEntries(new URLSearchParams((selector as FragmentSelector).value));
-    // see https://datatracker.ietf.org/doc/html/rfc8118#section-3
-    const schema = z.object({
-      page: z.number(),
-      viewrect: z.tuple([z.number(), z.number(), z.number(), z.number()]),
-    });
-
-    const result = schema.safeParse(obj);
-
-    if (result.success) {
-      return result.data;
-    }
-
-    return null;
+    this.annotations.invalidate();
   }
 }

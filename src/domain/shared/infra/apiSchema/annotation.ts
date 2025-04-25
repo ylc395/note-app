@@ -5,9 +5,33 @@
 import { z } from "zod";
 import { entityIdSchema } from "./entity.js";
 import { noteSchema } from "./note.js";
-export const selectorSchema = z.object({
-  refinedBy: z.unknown().optional()
+export const hTMLCssSelectorSchema = z.object({
+  type: z.literal("HTMLCssSelector"),
+  value: z.string()
 });
+export const textFragmentSchema = z.object({
+  textStart: z.string(),
+  textEnd: z.string().optional(),
+  suffix: z.string().optional(),
+  prefix: z.string().optional()
+});
+export const hTMLTextFragmentSelectorSchema = textFragmentSchema.merge(z.object({
+  type: z.literal("HTMLTextFragmentSelector")
+}));
+export const pDFRectSelectorSchema = z.object({
+  type: z.literal("PDFRectSelector"),
+  page: z.number(),
+  top: z.number(),
+  left: z.number(),
+  width: z.number(),
+  height: z.number()
+});
+export const pDFTextFragmentSelectorSchema = textFragmentSchema.merge(z.object({
+  type: z.literal("PDFTextFragmentSelector"),
+  page: z.number(),
+  fullText: z.string()
+}));
+export const selectorSchema = z.union([pDFTextFragmentSelectorSchema, pDFRectSelectorSchema, hTMLTextFragmentSelectorSchema, hTMLCssSelectorSchema]);
 export const annotationSchema = z.object({
   id: entityIdSchema,
   targetId: noteSchema.shape["id"],
