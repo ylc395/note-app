@@ -238,12 +238,15 @@ export default class ContentService extends BaseService {
 
         for (const { suffix, prefix, textEnd, textStart } of directives.text) {
           const startRegexpStr = compact([
-            escapeStringRegexp(prefix),
+            prefix && escapeStringRegexp(prefix),
             escapeStringRegexp(textStart),
-            !textEnd && escapeStringRegexp(suffix),
+            suffix && !textEnd && escapeStringRegexp(suffix),
           ]).join('\\b.');
 
-          const endRegexpStr = compact([escapeStringRegexp(textEnd), escapeStringRegexp(suffix)]).join('\\b');
+          const endRegexpStr = compact([
+            textEnd && escapeStringRegexp(textEnd),
+            suffix && escapeStringRegexp(suffix),
+          ]).join('\\b');
 
           visit(mdast, (node) => {
             // prefix-、start、end 和 -suffix 各自只会与单个块级元素中的文本匹配

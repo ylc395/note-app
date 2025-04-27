@@ -200,8 +200,8 @@ importers:
         specifier: ^5.0.4
         version: 5.0.4(encoding@0.1.13)
       text-fragments-polyfill:
-        specifier: ^6.1.0
-        version: 6.1.0
+        specifier: ^6.4.0
+        version: 6.4.0
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
@@ -4864,8 +4864,8 @@ packages:
   tesseract.js@5.0.4:
     resolution: {integrity: sha512-GCIoSQMZlvTP2AaHrjUOH29/oyO7ZyHVe+BhTexEcO7/nDClRVDRjl2sYJLOWSSNbTDrm5q2m1+gfaf3lUrZ5Q==}
 
-  text-fragments-polyfill@6.1.0:
-    resolution: {integrity: sha512-Qx2qZmkqSA4hCn5904caRwLw5SHeEo/t9cziQxovlKnSCr4fGRQVhUQ7pZ91Bk8SLfqVPUZBf/7RVJkBy0B62Q==}
+  text-fragments-polyfill@6.4.0:
+    resolution: {integrity: sha512-7yCgb/ID0RYdw98kUP6051rUFcMZcJh2USlDysrRfBvao/KKowi+UynsrpCXpsjqUoed1YMw1w0E3OKSQkO+qw==}
 
   text-table@0.2.0:
     resolution: {integrity: sha512-N+8UisAXDGk8PFXP4HAzVR9nbfmVJ3zYLAWiTIoqC5v5isinhr+r5uaO8+7r3BMfuNIufIsA7RdpVgacC2cSpw==}
@@ -6150,7 +6150,7 @@ snapshots:
       make-fetch-happen: 10.2.1
       nopt: 6.0.0
       proc-log: 2.0.1
-      semver: 7.7.1
+      semver: 7.6.3
       tar: 6.2.1
       which: 2.0.2
     transitivePeerDependencies:
@@ -6831,7 +6831,7 @@ snapshots:
   '@npmcli/fs@2.1.2':
     dependencies:
       '@gar/promisify': 1.1.3
-      semver: 7.7.1
+      semver: 7.6.3
 
   '@npmcli/move-file@2.0.1':
     dependencies:
@@ -7773,7 +7773,7 @@ snapshots:
 
   agent-base@6.0.2:
     dependencies:
-      debug: 4.4.0
+      debug: 4.3.7
     transitivePeerDependencies:
       - supports-color
 
@@ -9210,7 +9210,7 @@ snapshots:
     dependencies:
       '@tootallnate/once': 2.0.0
       agent-base: 6.0.2
-      debug: 4.4.0
+      debug: 4.3.7
     transitivePeerDependencies:
       - supports-color
 
@@ -9224,7 +9224,7 @@ snapshots:
   https-proxy-agent@5.0.1:
     dependencies:
       agent-base: 6.0.2
-      debug: 4.4.0
+      debug: 4.3.7
     transitivePeerDependencies:
       - supports-color
 
@@ -11072,7 +11072,7 @@ snapshots:
   socks-proxy-agent@7.0.0:
     dependencies:
       agent-base: 6.0.2
-      debug: 4.4.0
+      debug: 4.3.7
       socks: 2.8.4
     transitivePeerDependencies:
       - supports-color
@@ -11326,7 +11326,7 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
-  text-fragments-polyfill@6.1.0: {}
+  text-fragments-polyfill@6.4.0: {}
 
   text-table@0.2.0: {}
 

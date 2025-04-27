@@ -44,7 +44,7 @@ export default function Tab(props: { editor: BaseEditor }) {
       onClick={() => props.editor.tile.switchToEditor(props.editor)}
     >
       <span class="whitespace-nowrap text-ellipsis overflow-hidden">
-        {IS_DEV && props.editor.id}
+        {IS_DEV && `${props.editor.id}-${props.editor.noteId.slice(0.3)} `}
         {props.editor.value.result.data ? normalizeTitle(props.editor.value.result.data!) : ''}
       </span>
       <button

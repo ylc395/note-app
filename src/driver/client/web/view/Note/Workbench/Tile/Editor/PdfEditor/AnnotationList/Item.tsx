@@ -42,7 +42,7 @@ export default function Item(props: { value: AnnotationItem }) {
       </div>
       <Show when={quotes().length > 0}>
         <div>
-          <For each={quotes()}>{(quote) => <blockquote>{quote}</blockquote>}</For>
+          <For each={quotes()}>{(quote) => <blockquote class="bg-gray-200 opacity-60">{quote}</blockquote>}</For>
         </div>
       </Show>
       <div class="my-2">{props.value.body}</div>

@@ -2,7 +2,6 @@ import { debounce } from 'lodash-es';
 import { createEffect, createSignal, onCleanup, Show } from 'solid-js';
 import { MessageSquareMoreIcon, PaintbrushIcon } from 'lucide-solid';
 import { autoUpdate, computePosition, flip, offset } from '@floating-ui/dom';
-import { generateFragmentFromRange } from 'text-fragments-polyfill/dist/fragment-generation-utils.js';
 
 import type PdfViewer from './PDFViewer';
 
@@ -10,7 +9,6 @@ export default function SelectionTooltip(props: { viewer: PdfViewer }) {
   let tooltipRef: HTMLDivElement | undefined;
   let referenceElement: HTMLSpanElement | undefined;
   let placement: 'top' | 'bottom' | undefined;
-  let isBusy = false;
   const [getReference, setReference] = createSignal<HTMLElement>();
   const debouncedSetReference = debounce(setReference, 500);
 
@@ -79,45 +77,8 @@ export default function SelectionTooltip(props: { viewer: PdfViewer }) {
   });
 
   async function highlight() {
-    const range = window.getSelection()?.getRangeAt(0);
-
-    if (!range || isBusy) {
-      return;
-    }
-
-    isBusy = true;
-    const { fragment } = generateFragmentFromRange(range);
-
-    if (!fragment) {
-      throw new Error('can not generate fragment');
-    }
-
-    let element = range.startContainer.parentElement;
-    let page: number | undefined;
-
-    while (element) {
-      if (element.dataset.pageNumber) {
-        page = Number(element.dataset.pageNumber);
-        break;
-      }
-      element = element.parentElement;
-    }
-
-    if (!page) {
-      throw new Error('can not get page');
-    }
-
-    await props.viewer.editor.annotation.create({
-      selector: {
-        type: 'PDFTextFragmentSelector',
-        ...fragment,
-        fullText: range.toString(),
-        page,
-      },
-    });
-
+    await props.viewer.highlight();
     setReference(undefined);
-    isBusy = false;
   }
 
   return (

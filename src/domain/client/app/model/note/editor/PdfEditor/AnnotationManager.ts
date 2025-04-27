@@ -34,6 +34,7 @@ export default class AnnotationManager {
   private readonly remote = container.resolve(rpcToken);
 
   private readonly annotations = createQuery(() => this.remote.annotation.queryByEntityId.query(this.noteId), {
+    queryKey: () => ['annotations', { noteId: this.noteId }],
     refetchOnWindowFocus: false,
     refetchOnMount: false,
   });
@@ -54,6 +55,21 @@ export default class AnnotationManager {
     runInAction(() => {
       this.nativeAnnotations = nativeAnnotations;
     });
+  }
+
+  @computed
+  public get pageAnnotations() {
+    const pages: Record<number, Set<AnnotationItem>> = {};
+
+    for (const annotation of this.list) {
+      for (const selector of annotation.selectors) {
+        if (selector.type === 'PDFRectSelector' || selector.type === 'PDFTextFragmentSelector') {
+          (pages[selector.page] ??= new Set()).add(annotation);
+        }
+      }
+    }
+
+    return pages;
   }
 
   @computed
@@ -78,7 +94,7 @@ export default class AnnotationManager {
                 height: v.rect[3],
               },
             ],
-            color: 'yellow',
+            color: '',
             id: `pdf-native-${v.id}`,
             body: v.contentsObj?.str || '',
             createdAt: getTime(v.creationDate || v.modificationDate),
@@ -110,6 +126,6 @@ export default class AnnotationManager {
       body,
     });
 
-    this.annotations.invalidate();
+    await this.annotations.invalidate();
   }
 }

@@ -1,9 +1,10 @@
-import { createMemo, For } from 'solid-js';
+import { createMemo, For, Show } from 'solid-js';
+import { Loader2Icon } from 'lucide-solid';
 
 import type PdfViewer from '../PDFViewer';
 import Item from './Item';
-import Settings from './Settings';
 import Add from './Add';
+import Settings from './Settings';
 
 export default function AnnotationList(props: { viewer: PdfViewer }) {
   const annotations = createMemo(() => {
@@ -20,9 +21,20 @@ export default function AnnotationList(props: { viewer: PdfViewer }) {
         <Add />
         <Settings viewer={props.viewer} />
       </div>
-      <For fallback={<div class="grow flex items-center justify-center">暂无标注</div>} each={annotations()}>
-        {(item) => <Item value={item} />}
-      </For>
+      <Show
+        when={props.viewer.editor.annotation.status === 'ok'}
+        fallback={
+          <div class="flex flex-col grow items-center justify-center">
+            <Loader2Icon class="animate-spin" /> 加载中
+          </div>
+        }
+      >
+        <div>
+          <For fallback={<div class="grow flex items-center justify-center">暂无标注</div>} each={annotations()}>
+            {(item) => <Item value={item} />}
+          </For>
+        </div>
+      </Show>
     </div>
   );
 }
