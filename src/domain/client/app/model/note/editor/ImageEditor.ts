@@ -9,7 +9,7 @@ const uiStateSchema = z.object({
 
 export default class ImageEditor extends BaseEditor<z.infer<typeof uiStateSchema>> {
   constructor({ mimeType, ...options }: Options & { mimeType: string }) {
-    super({ ...options, uiStateSchema });
+    super({ ...options, uiState: { schema: uiStateSchema, defaultValue: {} } });
     this.mimeType = mimeType;
   }
 

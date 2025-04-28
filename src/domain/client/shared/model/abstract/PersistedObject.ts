@@ -1,5 +1,4 @@
-import { isPlainObject } from 'lodash-es';
-import type { ZodType } from 'zod';
+import { type ZodType } from 'zod';
 import { action, observable, runInAction, toJS } from 'mobx';
 import assert from 'assert';
 
@@ -7,18 +6,18 @@ import container from '#utils/singletonContainer';
 import { token as localStorageToken } from '#domain/client/shared/infra/localStorage';
 
 export default class PersistedObject<S> {
-  constructor(private readonly id: string, private readonly schema: ZodType<S>) {
+  constructor(private readonly id: string, private readonly schema: ZodType<S>, defaultValue: S) {
     const { promise, resolve } = Promise.withResolvers<void>();
 
     this.ready = promise;
-    this.init().then(resolve);
+    this.init(defaultValue).then(resolve);
   }
 
   public readonly ready: Promise<void>;
 
   private isReady = false;
 
-  private async init() {
+  private async init(defaultValue: S) {
     let value: unknown;
 
     try {
@@ -27,10 +26,14 @@ export default class PersistedObject<S> {
       value = await this.localStorage.get(this.key);
     }
 
-    const parsedResult = this.schema.safeParse(isPlainObject(value) ? value : {});
+    if (typeof value === 'object') {
+      value = { ...defaultValue, ...value };
+    }
+
+    const parsedResult = this.schema.parse(value);
 
     runInAction(() => {
-      this.value = parsedResult.success ? parsedResult.data : {};
+      this.value = parsedResult;
     });
 
     this.isReady = true;
@@ -38,14 +41,14 @@ export default class PersistedObject<S> {
 
   private readonly localStorage = container.resolve(localStorageToken);
 
-  @observable.shallow private accessor value: Partial<Readonly<S>> | undefined;
+  @observable.shallow private accessor value: Readonly<S> | undefined;
 
   private get key() {
     return `PERSISTENCE_OBJECT_${this.id}`;
   }
 
   public get(): S | undefined;
-  public get<T extends keyof S>(key: T): S[T] | undefined;
+  public get<T extends keyof S>(key: T): S[T];
   public get<T extends keyof S>(key?: T) {
     assert(this.isReady, 'not ready');
 
@@ -56,7 +59,7 @@ export default class PersistedObject<S> {
     return toJS(this.value);
   }
 
-  public set(value: Partial<S>): void;
+  public set(value: S): void;
   public set<T extends keyof S>(key: T, value: S[T]): void;
 
   @action

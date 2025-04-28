@@ -24,10 +24,13 @@ export interface Options {
 type Patch = Pick<NotePatchDTO, 'body' | 'icon' | 'title'>;
 
 export default abstract class BaseEditor<S = unknown> {
-  constructor({ entityId, tile, uiStateSchema }: Options & { uiStateSchema: ZodType<S> }) {
+  constructor({ entityId, tile, uiState }: Options & { uiState?: { schema: ZodType<S>; defaultValue: S } }) {
     this.tile = tile;
     this.noteId = entityId;
-    this.noteUIState = new PersistedObject(`uiState-${this.noteId}`, uiStateSchema);
+
+    if (uiState) {
+      this.noteUIState = new PersistedObject(`uiState-${this.noteId}`, uiState.schema, uiState.defaultValue);
+    }
 
     this.value = createQuery(({ signal }) => this.remote.note.queryOneById.query(this.noteId, { signal }), {
       queryKey: ['note', this.noteId],
@@ -55,6 +58,10 @@ export default abstract class BaseEditor<S = unknown> {
   }
 
   private async initUIState() {
+    if (!this.noteUIState) {
+      return;
+    }
+
     await this.noteUIState.ready;
 
     if (this.destroyController.signal.aborted) {
@@ -64,16 +71,16 @@ export default abstract class BaseEditor<S = unknown> {
     const uiState = this.noteUIState.get();
 
     runInAction(() => {
-      this.uiState = uiState || {};
+      this.uiState = uiState;
     });
 
-    const dispose = deepObserve(this.uiState, () => this.noteUIState.set(this.uiState!));
+    const dispose = deepObserve(this.uiState, () => this.noteUIState?.set(this.uiState!));
     this.destroyController.signal.addEventListener('abort', dispose);
   }
 
-  @observable public accessor uiState: Partial<S> | undefined;
+  @observable public accessor uiState: S | undefined;
 
-  private readonly noteUIState: PersistedObject<S>;
+  private readonly noteUIState: PersistedObject<S> | undefined;
 
   public abstract readonly mimeType: string | null;
 

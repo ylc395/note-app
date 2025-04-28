@@ -14,7 +14,7 @@ import TreeNode from './TreeNode';
 export default class Tree {
   constructor(private readonly options: { sort?: (note1: NoteVO, note2: NoteVO) => number; type: NoteTypes }) {
     this.root = this.createNode();
-    this.uiState = new PersistedObject(`note-explorer-${options.type}`, Tree.schema);
+    this.uiState = new PersistedObject(`note-explorer-${options.type}`, Tree.schema, {});
 
     this.init();
   }

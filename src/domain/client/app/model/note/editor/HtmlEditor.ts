@@ -17,7 +17,7 @@ const uiStateSchema = z.object({
 
 export default class HtmlEditor extends BaseEditor<z.infer<typeof uiStateSchema>> {
   constructor(options: Options) {
-    super({ ...options, uiStateSchema });
+    super({ ...options, uiState: { schema: uiStateSchema, defaultValue: {} } });
   }
 
   @observable.ref public accessor documentElement: unknown | undefined;

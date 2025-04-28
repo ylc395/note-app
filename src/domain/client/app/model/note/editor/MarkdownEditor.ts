@@ -9,7 +9,7 @@ const uiStateSchema = z.object({
 
 export default class MarkdownEditor extends BaseEditor<z.infer<typeof uiStateSchema>> {
   constructor(options: Options) {
-    super({ ...options, uiStateSchema });
+    super({ ...options, uiState: { schema: uiStateSchema, defaultValue: {} } });
   }
 
   public override mimeType = null;

@@ -26,7 +26,7 @@ export type { OutlineItem } from './OutlineManager';
 
 export default class PdfEditor extends BaseEditor<z.infer<typeof uiStateSchema>> {
   constructor(options: Options) {
-    super({ ...options, uiStateSchema });
+    super({ ...options, uiState: { schema: uiStateSchema, defaultValue: {} } });
     when(() => this.blob.result.isSuccess, this.init.bind(this), { signal: this.destroyController.signal });
   }
 
