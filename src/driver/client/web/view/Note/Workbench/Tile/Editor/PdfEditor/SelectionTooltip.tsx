@@ -1,7 +1,9 @@
 import { debounce } from 'lodash-es';
-import { createEffect, createSignal, onCleanup, Show } from 'solid-js';
-import { MessageSquareMoreIcon, PaintbrushIcon } from 'lucide-solid';
+import { createEffect, createSignal, For, onCleanup, Show } from 'solid-js';
+import { ChevronDown, MessageSquareMoreIcon, PaintbrushIcon } from 'lucide-solid';
 import { autoUpdate, computePosition, flip, offset } from '@floating-ui/dom';
+import { Menu, type MenuSelectionDetails } from '@ark-ui/solid';
+import { action } from 'mobx';
 
 import type PdfViewer from './PDFViewer';
 import Selection from './Selection';
@@ -84,12 +86,34 @@ export default function SelectionTooltip(props: { viewer: PdfViewer }) {
     setReference(undefined);
   }
 
+  function handleColorSelect({ value }: MenuSelectionDetails) {
+    selection.uiState.set('color', value);
+  }
+
   return (
     <Show when={getReference()}>
       <div ref={tooltipRef} class="flex absolute space-x-2 bg-white py-2 px-1 rounded shadow-md z-50">
-        <button>
-          <span class="block w-4 h-4 border" style={{ 'background-color': selection.uiState.get('color') }}></span>
-        </button>
+        <Menu.Root lazyMount unmountOnExit positioning={{ placement: 'bottom' }} onSelect={action(handleColorSelect)}>
+          <Menu.Trigger>
+            <button class="flex">
+              <span class="w-4 h-4 border" style={{ 'background-color': selection.uiState.get('color') }}></span>
+              <ChevronDown />
+            </button>
+          </Menu.Trigger>
+          <Menu.Positioner>
+            <Menu.Content class="flex border">
+              <For each={['yellow', 'red', 'blue', 'green']}>
+                {(color) => (
+                  <Menu.Item
+                    class="w-4 h-4 cursor-pointer border"
+                    value={color}
+                    style={{ 'background-color': color }}
+                  />
+                )}
+              </For>
+            </Menu.Content>
+          </Menu.Positioner>
+        </Menu.Root>
         <button class="flex items-center" onClick={highlight}>
           <PaintbrushIcon />
         </button>
