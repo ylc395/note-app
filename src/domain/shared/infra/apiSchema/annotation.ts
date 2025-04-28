@@ -28,7 +28,8 @@ export const pDFRectSelectorSchema = z.object({
 });
 export const pDFTextFragmentSelectorSchema = textFragmentSchema.merge(z.object({
   type: z.literal("PDFTextFragmentSelector"),
-  page: z.number(),
+  startPage: z.number(),
+  endPage: z.number(),
   fullText: z.string()
 }));
 export const selectorSchema = z.union([pDFTextFragmentSelectorSchema, pDFRectSelectorSchema, hTMLTextFragmentSelectorSchema, hTMLCssSelectorSchema]);

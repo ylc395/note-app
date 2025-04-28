@@ -11,7 +11,8 @@ export interface TextFragment {
 
 export interface PDFTextFragmentSelector extends TextFragment {
   type: 'PDFTextFragmentSelector';
-  page: number;
+  startPage: number;
+  endPage: number;
   fullText: string;
 }
 

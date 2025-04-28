@@ -58,21 +58,6 @@ export default class AnnotationManager {
   }
 
   @computed
-  public get pageAnnotations() {
-    const pages: Record<number, Set<AnnotationItem>> = {};
-
-    for (const annotation of this.list) {
-      for (const selector of annotation.selectors) {
-        if (selector.type === 'PDFRectSelector' || selector.type === 'PDFTextFragmentSelector') {
-          (pages[selector.page] ??= new Set()).add(annotation);
-        }
-      }
-    }
-
-    return pages;
-  }
-
-  @computed
   public get list(): AnnotationItem[] {
     return [
       ...(this.nativeAnnotations || [])

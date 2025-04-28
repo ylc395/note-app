@@ -9,6 +9,7 @@ import type { default as PdfEditor, OutlineItem } from '#domain/client/app/model
 import HistoryStack, { Direction, type HistoryRecord } from '#domain/client/app/model/base/HistoryStack';
 import shell from '#web/infra/shell';
 import type { PDFTextFragmentSelector } from '#domain/shared/model/annotation';
+import { APP_NAME } from '#domain/shared/infra/constants';
 
 interface Options {
   container: HTMLDivElement;
@@ -31,7 +32,6 @@ export const SCALE_STEPS = [
 export default class PdfViewer {
   private readonly pdfViewer: PDFViewer;
   public readonly editor: PdfEditor;
-  public readonly viewerElement: HTMLElement;
   private readonly destroyController = new AbortController();
 
   /*
@@ -47,6 +47,10 @@ export default class PdfViewer {
     onPop: this.handleHistoryPop.bind(this),
   });
 
+  public get viewerElement() {
+    return this.pdfViewer.viewer;
+  }
+
   @observable public accessor currentPage = 1;
   @observable public accessor scale = {
     value: 1,
@@ -56,7 +60,6 @@ export default class PdfViewer {
 
   constructor(options: Options) {
     this.editor = options.editor;
-    this.viewerElement = options.viewer;
     this.pdfViewer = this.createPDFViewer(options);
     when(
       () => Boolean(this.editor.doc && this.editor.uiState),
@@ -145,29 +148,40 @@ export default class PdfViewer {
   }
 
   public renderAnnotation(page: number) {
-    const annotations = this.editor.annotation.pageAnnotations[page] ?? [];
-    const textLayerEl = (this.pdfViewer.getPageView(page - 1) as PDFPageView).textLayer?.div;
+    assert(this.viewerElement);
+    const MARK_CLASS_NAME = `${APP_NAME}-pdf-mark`;
 
-    console.log(annotations);
+    removeMarks(
+      Array.from(
+        this.viewerElement.querySelectorAll(
+          `.${MARK_CLASS_NAME}[data-start-page="${page}"], .${MARK_CLASS_NAME}[data-end-page="${page}"]`,
+        ),
+      ),
+    );
 
-    if (!textLayerEl) {
-      return;
-    }
-
-    removeMarks(Array.from(textLayerEl.querySelectorAll('.text-fragments-polyfill-target-text')));
-
-    for (const annotation of annotations) {
+    for (const annotation of this.editor.annotation.list) {
       const fragments = annotation.selectors.filter(
-        (s) => s.type === 'PDFTextFragmentSelector' && s.page === page,
+        (s) => s.type === 'PDFTextFragmentSelector' && (s.startPage === page || s.endPage === page),
       ) as PDFTextFragmentSelector[];
 
-      const { text } = processFragmentDirectives({ text: fragments }, document, textLayerEl);
+      for (const fragment of fragments) {
+        const root =
+          fragment.startPage === fragment.endPage
+            ? (this.pdfViewer.getPageView(page - 1) as PDFPageView).textLayer?.div
+            : this.viewerElement;
 
-      for (const mark of text) {
-        for (const el of mark) {
-          (el as HTMLElement).style.backgroundColor = annotation.color;
-          (el as HTMLElement).style.color = 'transparent';
-          (el as HTMLElement).style.opacity = '0.4';
+        assert(root);
+        const { text } = processFragmentDirectives({ text: [fragment] }, document, root);
+
+        for (const mark of text) {
+          for (const el of mark) {
+            (el as HTMLElement).style.backgroundColor = annotation.color;
+            (el as HTMLElement).style.color = 'transparent';
+            (el as HTMLElement).style.opacity = '0.4';
+            (el as HTMLElement).dataset.startPage = String(fragment.startPage);
+            (el as HTMLElement).dataset.endPage = String(fragment.endPage);
+            (el as HTMLElement).classList.add(MARK_CLASS_NAME);
+          }
         }
       }
     }

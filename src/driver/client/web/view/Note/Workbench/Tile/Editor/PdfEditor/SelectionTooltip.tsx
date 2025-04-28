@@ -22,7 +22,7 @@ export default function SelectionTooltip(props: { viewer: PdfViewer }) {
       !selection ||
       !selection.focusNode ||
       !selection.anchorNode ||
-      !props.viewer.viewerElement.contains(selection.anchorNode) ||
+      !props.viewer.viewerElement?.contains(selection.anchorNode) ||
       !props.viewer.viewerElement.contains(selection.focusNode) ||
       selection.isCollapsed ||
       selection.rangeCount !== 1

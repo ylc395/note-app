@@ -10,9 +10,10 @@ export default class Selection {
   public readonly uiState = new PersistedObject('pdf-selection', z.object({ color: z.string() }), { color: 'yellow' });
 
   public async highlight() {
-    const range = window.getSelection()?.getRangeAt(0);
+    const selection = window.getSelection();
+    const range = selection?.getRangeAt(0);
 
-    if (!range) {
+    if (!range || !selection?.focusNode) {
       return;
     }
 
@@ -22,20 +23,24 @@ export default class Selection {
       throw new Error('can not generate fragment');
     }
 
-    let element = range.startContainer.parentElement;
-    let page: number | undefined;
+    const findPage = (node: Node) => {
+      let element = node.parentElement;
+      let page: number | undefined;
 
-    while (element) {
-      if (element.dataset.pageNumber) {
-        page = Number(element.dataset.pageNumber);
-        break;
+      while (element) {
+        if (element.dataset.pageNumber) {
+          page = Number(element.dataset.pageNumber);
+          break;
+        }
+        element = element.parentElement;
       }
-      element = element.parentElement;
-    }
 
-    if (!page) {
-      throw new Error('can not get page');
-    }
+      if (!page) {
+        throw new Error('can not get page');
+      }
+
+      return page;
+    };
 
     await this.pdfViewer.editor.annotation.create({
       color: this.uiState.get('color'),
@@ -43,10 +48,11 @@ export default class Selection {
         type: 'PDFTextFragmentSelector',
         ...fragment,
         fullText: range.toString(),
-        page,
+        startPage: findPage(range.startContainer),
+        endPage: findPage(range.endContainer),
       },
     });
 
-    this.pdfViewer.renderAnnotation(page);
+    this.pdfViewer.renderAnnotation(findPage(selection.focusNode));
   }
 }

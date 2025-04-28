@@ -7,11 +7,12 @@ import { compact } from 'lodash-es';
 export default function Item(props: { value: AnnotationItem }) {
   const page = createMemo(() =>
     props.value.selectors.reduce((page, selector) => {
-      if (
-        (selector.type === 'PDFRectSelector' || selector.type === 'PDFTextFragmentSelector') &&
-        selector.page < page
-      ) {
+      if (selector.type === 'PDFRectSelector' && selector.page < page) {
         return selector.page;
+      }
+
+      if (selector.type === 'PDFTextFragmentSelector' && selector.startPage < page) {
+        return selector.startPage;
       }
 
       return page;
