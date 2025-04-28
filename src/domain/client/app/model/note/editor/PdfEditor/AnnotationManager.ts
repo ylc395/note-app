@@ -119,8 +119,17 @@ export default class AnnotationManager {
     return Boolean(this.nativeAnnotations && this.nativeAnnotations.length > 0);
   }
 
-  public async create({ selector, body }: { selector: PDFTextFragmentSelector | PDFRectSelector; body?: string }) {
+  public async create({
+    selector,
+    body,
+    color,
+  }: {
+    selector: PDFTextFragmentSelector | PDFRectSelector;
+    body?: string;
+    color: string;
+  }) {
     await this.remote.annotation.create.mutate({
+      color,
       targetId: this.noteId,
       selectors: [selector],
       body,

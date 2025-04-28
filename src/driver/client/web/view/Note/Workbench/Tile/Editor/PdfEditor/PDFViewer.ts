@@ -4,7 +4,6 @@ import { debounce, memoize, range as numberRange } from 'lodash-es';
 import { observable, when, action, computed, autorun } from 'mobx';
 import assert from 'assert';
 import { processFragmentDirectives, removeMarks } from 'text-fragments-polyfill/text-fragment-utils';
-import { generateFragmentFromRange } from 'text-fragments-polyfill/dist/fragment-generation-utils.js';
 
 import type { default as PdfEditor, OutlineItem } from '#domain/client/app/model/note/editor/PdfEditor';
 import HistoryStack, { Direction, type HistoryRecord } from '#domain/client/app/model/base/HistoryStack';
@@ -145,7 +144,7 @@ export default class PdfViewer {
     return pdfViewer;
   }
 
-  private renderAnnotation(page: number) {
+  public renderAnnotation(page: number) {
     const annotations = this.editor.annotation.pageAnnotations[page] ?? [];
     const textLayerEl = (this.pdfViewer.getPageView(page - 1) as PDFPageView).textLayer?.div;
 
@@ -290,46 +289,6 @@ export default class PdfViewer {
 
     return canvas;
   });
-
-  public async highlight() {
-    const range = window.getSelection()?.getRangeAt(0);
-
-    if (!range) {
-      return;
-    }
-
-    const { fragment } = generateFragmentFromRange(range);
-
-    if (!fragment) {
-      throw new Error('can not generate fragment');
-    }
-
-    let element = range.startContainer.parentElement;
-    let page: number | undefined;
-
-    while (element) {
-      if (element.dataset.pageNumber) {
-        page = Number(element.dataset.pageNumber);
-        break;
-      }
-      element = element.parentElement;
-    }
-
-    if (!page) {
-      throw new Error('can not get page');
-    }
-
-    await this.editor.annotation.create({
-      selector: {
-        type: 'PDFTextFragmentSelector',
-        ...fragment,
-        fullText: range.toString(),
-        page,
-      },
-    });
-
-    this.renderAnnotation(page);
-  }
 
   public async getViewrectDataUrl(
     page: number,
