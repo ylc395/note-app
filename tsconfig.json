@@ -16,6 +16,7 @@
     "noImplicitOverride": true,
     "paths": {
       "#domain/*": ["./src/domain/*"],
+      "#third-party/*": ["./src/third-party/*"],
       "#utils/*": ["./src/utils/*"],
       "#api/*": ["./src/driver/server/api/*"],
       "#web/*": ["./src/driver/client/web/*"]

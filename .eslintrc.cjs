@@ -5,7 +5,7 @@ module.exports = {
     sourceType: 'module',
   },
   root: true,
-  ignorePatterns: ['dist'],
+  ignorePatterns: ['dist', 'third-party'],
   rules: {
     '@typescript-eslint/no-unused-vars': [
       'error',

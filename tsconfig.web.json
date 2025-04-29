@@ -6,7 +6,7 @@
     "./src/domain/shared/**/*",
     "./src/driver/client/web/**/*",
     "./src/driver/client/electron/rpcClient/**/*",
-    "./src/vendors.d.ts",
+    "./src/third-party/**/*",
     "./src/driver/server/api/**/*"
   ],
   "compilerOptions": {

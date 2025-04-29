@@ -3,7 +3,7 @@ import { AnnotationEditorType, AnnotationMode } from 'pdfjs-dist';
 import { debounce, memoize, range as numberRange } from 'lodash-es';
 import { observable, when, action, computed, autorun } from 'mobx';
 import assert from 'assert';
-import { processFragmentDirectives, removeMarks } from 'text-fragments-polyfill/text-fragment-utils';
+import { processFragmentDirectives, removeMarks } from '#third-party/text-fragments-polyfill/text-fragment-utils';
 
 import type { default as PdfEditor, OutlineItem } from '#domain/client/app/model/note/editor/PdfEditor';
 import HistoryStack, { Direction, type HistoryRecord } from '#domain/client/app/model/base/HistoryStack';

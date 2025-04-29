@@ -1,4 +1,4 @@
-import { generateFragmentFromRange } from 'text-fragments-polyfill/dist/fragment-generation-utils.js';
+import { generateFragmentFromRange } from '#third-party/text-fragments-polyfill/fragment-generation-utils';
 import { z } from 'zod';
 
 import type PdfViewer from './PDFViewer';
