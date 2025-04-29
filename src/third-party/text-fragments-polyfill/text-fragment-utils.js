@@ -608,12 +608,17 @@ const isNodeVisible =
  * @param {Node} node - the Node to evaluate
  * @param {Range|Undefined} range - the range in which node must fall. Optional;
  *     if null, the range check is skipped.
+ * @param {Element} root
  * @return {NodeFilter} - FILTER_ACCEPT or FILTER_REJECT, to be passed along to
  *     a TreeWalker.
  */
-const acceptNodeIfVisibleInRange = (node, range) => {
+const acceptNodeIfVisibleInRange = (node, range, root) => {
   if (range != null && !range.intersectsNode(node))
     return NodeFilter.FILTER_REJECT;
+
+  if (root && !root.contains(node)) {
+    return NodeFilter.FILTER_REJECT;
+  }
 
   return isNodeVisible(node) ? NodeFilter.FILTER_ACCEPT :
                                NodeFilter.FILTER_REJECT;

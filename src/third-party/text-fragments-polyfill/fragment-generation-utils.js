@@ -73,12 +73,14 @@ export const generateFragment = (selection, startTime = Date.now()) => {
  * @param {Range} range
  * @param {Date} [startTime] - the time when generation began, for timeout
  *     purposes. Defaults to current timestamp.
+ * @param {root} [Element] - the time when generation began, for timeout
+ *     purposes. Defaults to current timestamp.
  * @return {GenerateFragmentResult}
  */
 export const generateFragmentFromRange =
-    (range, startTime = Date.now()) => {
+    (range, startTime = Date.now(), root) => {
       try {
-        return doGenerateFragmentFromRange(range, startTime);
+        return doGenerateFragmentFromRange(range, startTime, root);
       } catch (err) {
         if (err.isTimeout) {
           return {status: GenerateFragmentStatus.TIMEOUT};
@@ -171,13 +173,14 @@ const doGenerateFragment =
 /**
  * @param {Range} range
  * @param {Date} startTime
+ * @param {Element} root
  * @return {GenerateFragmentResult}
  * @see {@link doGenerateFragment}
  */
-const doGenerateFragmentFromRange = (range, startTime) => {
+const doGenerateFragmentFromRange = (range, startTime, root) => {
   recordStartTime(startTime);
-  expandRangeStartToWordBound(range);
-  expandRangeEndToWordBound(range);
+  expandRangeStartToWordBound(range, root);
+  expandRangeEndToWordBound(range, root);
   // Keep a copy of the range before we try to shrink it to make it start and
   // end in text nodes. We need to use the range edges as starting points
   // for context term building, so it makes sense to start from the original
@@ -194,7 +197,7 @@ const doGenerateFragmentFromRange = (range, startTime) => {
 
   let factory;
 
-  if (canUseExactMatch(range)) {
+  if (canUseExactMatch(range, root)) {
     const exactText = fragments.internal.normalizeString(range.toString());
     const fragment = {
       textStart: exactText,
@@ -214,8 +217,8 @@ const doGenerateFragmentFromRange = (range, startTime) => {
     // We have to use textStart and textEnd to identify a range. First, break
     // the range up based on block boundaries, as textStart/textEnd can't cross
     // these.
-    const startSearchSpace = getSearchSpaceForStart(range);
-    const endSearchSpace = getSearchSpaceForEnd(range);
+    const startSearchSpace = getSearchSpaceForStart(range, root);
+    const endSearchSpace = getSearchSpaceForEnd(range, root);
 
     if (startSearchSpace && endSearchSpace) {
       // If the search spaces are truthy, then there's a block boundary between
@@ -241,8 +244,8 @@ const doGenerateFragmentFromRange = (range, startTime) => {
   suffixRange.setStart(
       rangeBeforeShrinking.endContainer, rangeBeforeShrinking.endOffset);
 
-  const prefixSearchSpace = getSearchSpaceForEnd(prefixRange);
-  const suffixSearchSpace = getSearchSpaceForStart(suffixRange);
+  const prefixSearchSpace = getSearchSpaceForEnd(prefixRange, root);
+  const suffixSearchSpace = getSearchSpaceForStart(suffixRange, root);
 
   if (prefixSearchSpace || suffixSearchSpace) {
     factory.setPrefixAndSuffixSearchSpace(prefixSearchSpace, suffixSearchSpace);
@@ -303,9 +306,9 @@ const recordStartTime = (newStartTime) => {
  *     block boundaries are found inside this range, or if all the candidate
  *     ranges were empty (or included only whitespace characters).
  */
-const getSearchSpaceForStart = (range) => {
+const getSearchSpaceForStart = (range, root) => {
   let node = getFirstNodeForBlockSearch(range);
-  const walker = makeWalkerForNode(node, range.endContainer);
+  const walker = makeWalkerForNode(node, range.endContainer, root);
   if (!walker) {
     return undefined;
   }
@@ -313,8 +316,10 @@ const getSearchSpaceForStart = (range) => {
   const finishedSubtrees = new Set();
   // If the range starts after the last child of an element node
   // don't visit its subtree because it's not included in the range.
-  if (range.startContainer.nodeType === Node.ELEMENT_NODE &&
-      range.startOffset === range.startContainer.childNodes.length) {
+  if (
+    range.startContainer.nodeType === Node.ELEMENT_NODE &&
+    range.startOffset === range.startContainer.childNodes.length
+  ) {
     finishedSubtrees.add(range.startContainer);
   }
   const origin = node;
@@ -354,17 +359,16 @@ const getSearchSpaceForStart = (range) => {
  *     block boundaries are found inside this range, or if all the candidate
  *     ranges were empty (or included only whitespace characters).
  */
-const getSearchSpaceForEnd = (range) => {
+const getSearchSpaceForEnd = (range, root) => {
   let node = getLastNodeForBlockSearch(range);
-  const walker = makeWalkerForNode(node, range.startContainer);
+  const walker = makeWalkerForNode(node, range.startContainer, root);
   if (!walker) {
     return undefined;
   }
   const finishedSubtrees = new Set();
   // If the range ends before the first child of an element node
   // don't visit its subtree because it's not included in the range.
-  if (range.endContainer.nodeType === Node.ELEMENT_NODE &&
-      range.endOffset === 0) {
+  if (range.endContainer.nodeType === Node.ELEMENT_NODE && range.endOffset === 0) {
     finishedSubtrees.add(range.endContainer);
   }
 
@@ -1137,9 +1141,9 @@ const reverseString = (string) => {
  *     textStart) can be used; false if range matching (i.e., both textStart and
  *     textEnd) must be used.
  */
-const canUseExactMatch = (range) => {
+const canUseExactMatch = (range, root) => {
   if (range.toString().length > MAX_EXACT_MATCH_LENGTH) return false;
-  return !containsBlockBoundary(range);
+  return !containsBlockBoundary(range, root);
 };
 
 /**
@@ -1225,10 +1229,10 @@ const getLastTextNode = (range) => {
  * @return {boolean} - true if a block boundary was found,
  *     false if no such boundary was found.
  */
-const containsBlockBoundary = (range) => {
+const containsBlockBoundary = (range, root) => {
   const tempRange = range.cloneRange();
   let node = getFirstNodeForBlockSearch(tempRange);
-  const walker = makeWalkerForNode(node);
+  const walker = makeWalkerForNode(node, undefined, root);
   if (!walker) {
     return false;
   }
@@ -1321,7 +1325,7 @@ const findWordEndBoundInTextNode = (node, endOffset) => {
  *     currently pointing to |node|, which will traverse only visible text and
  *     element nodes.
  */
-const makeWalkerForNode = (node, endNode) => {
+const makeWalkerForNode = (node, endNode, root) => {
   if (!node) {
     return undefined;
   }
@@ -1336,10 +1340,9 @@ const makeWalkerForNode = (node, endNode) => {
     }
   }
 
-  const walker = document.createTreeWalker(
-      blockAncestor, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, (node) => {
-        return fragments.internal.acceptNodeIfVisibleInRange(node);
-      });
+  const walker = document.createTreeWalker(blockAncestor, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT, (node) => {
+    return fragments.internal.acceptNodeIfVisibleInRange(node, undefined, root);
+  });
 
   walker.currentNode = node;
   return walker;
@@ -1351,7 +1354,7 @@ const makeWalkerForNode = (node, endNode) => {
  * expand the range, not shrink it.
  * @param {Range} range - the range to be modified
  */
-const expandRangeStartToWordBound = (range) => {
+const expandRangeStartToWordBound = (range, root) => {
   const segmenter = fragments.internal.makeNewSegmenter();
   if (segmenter) {
     // Find the starting text node and offset (since the range may start with a
@@ -1379,7 +1382,7 @@ const expandRangeStartToWordBound = (range) => {
       return;
     }
 
-    const walker = makeWalkerForNode(range.startContainer);
+    const walker = makeWalkerForNode(range.startContainer, undefined, root);
     if (!walker) {
       return;
     }
@@ -1647,7 +1650,7 @@ const getTextNodesInSameBlock = (node) => {
  * expand the range, not shrink it.
  * @param {Range} range - the range to be modified
  */
-const expandRangeEndToWordBound = (range) => {
+const expandRangeEndToWordBound = (range, root) => {
   const segmenter = fragments.internal.makeNewSegmenter();
   if (segmenter) {
     // Find the ending text node and offset (since the range may end with a
@@ -1668,7 +1671,7 @@ const expandRangeEndToWordBound = (range) => {
       }
     }
 
-    const walker = makeWalkerForNode(node);
+    const walker = makeWalkerForNode(node, undefined, root);
     if (!walker) {
       return;
     }

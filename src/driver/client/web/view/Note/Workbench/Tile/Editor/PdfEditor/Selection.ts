@@ -1,8 +1,9 @@
-import { generateFragmentFromRange } from '#third-party/text-fragments-polyfill/fragment-generation-utils';
 import { z } from 'zod';
+import { generateFragmentFromRange } from '#third-party/text-fragments-polyfill/fragment-generation-utils';
 
-import type PdfViewer from './PDFViewer';
 import PersistedObject from '#domain/client/shared/model/abstract/PersistedObject';
+import { IS_DEV } from '#domain/shared/infra/env';
+import type PdfViewer from './PDFViewer';
 
 export default class Selection {
   constructor(private readonly pdfViewer: PdfViewer) {}
@@ -13,14 +14,19 @@ export default class Selection {
     const selection = window.getSelection();
     const range = selection?.getRangeAt(0);
 
-    if (!range || !selection?.focusNode) {
+    if (!range || !selection?.focusNode || !this.pdfViewer.viewerElement) {
       return;
     }
 
-    const { fragment } = generateFragmentFromRange(range);
+    const { fragment } = generateFragmentFromRange(
+      range,
+      IS_DEV ? new Date(8640000000000000) : undefined,
+      this.pdfViewer.viewerElement,
+    );
 
     if (!fragment) {
-      throw new Error('can not generate fragment');
+      // todo: add toast
+      return;
     }
 
     const findPage = (node: Node) => {
