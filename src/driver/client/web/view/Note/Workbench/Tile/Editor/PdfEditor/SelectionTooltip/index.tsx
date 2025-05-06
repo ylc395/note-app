@@ -17,7 +17,7 @@ export default function SelectionTooltip(props: { viewer: PdfViewer }) {
   let placement: 'top' | 'bottom' | undefined;
   const selection = new SelectionModel(props.viewer);
 
-  const setVisibleDebounced = debounce((s: Selection) => {
+  const showSelection = debounce((s: Selection) => {
     assert(s.focusNode && s.anchorNode);
 
     let toStart: boolean;
@@ -44,19 +44,10 @@ export default function SelectionTooltip(props: { viewer: PdfViewer }) {
       focusNode: s.focusNode,
     };
 
-    // if (selection.current.range.startContainer.nodeType === Node.ELEMENT_NODE) {
-    //   selection.current.range.setStartAfter(selection.current.range.startContainer);
-    // }
-
-    // if (selection.current.range.endContainer.nodeType === Node.ELEMENT_NODE) {
-    //   selection.current.range.setEndBefore(selection.current.range.endContainer);
-    // }
-
     const range = selection.current.range.cloneRange();
 
     range.collapse(toStart);
     range.insertNode(referenceElement);
-
     selection.setVisibility(true);
   }, 500);
 
@@ -79,26 +70,24 @@ export default function SelectionTooltip(props: { viewer: PdfViewer }) {
   }
 
   function handleSelection() {
-    if (selection.comment.isVisible) {
+    if (selection.commentEditor.isVisible) {
       return;
     }
 
     const s = getValidSelection();
 
-    if (!s) {
+    if (s) {
+      showSelection(s);
+    } else {
       selection.setVisibility(false);
-      setVisibleDebounced.cancel();
-      return;
+      showSelection.cancel();
     }
-
-    selection.setVisibility(false);
-    setVisibleDebounced(s);
   }
 
   document.addEventListener('selectionchange', handleSelection);
 
   createEffect(() => {
-    if (!(selection.isVisible || selection.comment.isVisible) || !referenceElement || !tooltipRef) {
+    if (!(selection.isVisible || selection.commentEditor.isVisible) || !referenceElement || !tooltipRef) {
       return;
     }
 
@@ -115,12 +104,13 @@ export default function SelectionTooltip(props: { viewer: PdfViewer }) {
   });
 
   createEffect(() => {
-    if (!selection.comment.isVisible && !selection.isVisible) {
+    if (!selection.commentEditor.isVisible && !selection.isVisible) {
       referenceElement?.remove();
     }
 
-    if (selection.comment.isVisible && selection.current?.range) {
+    if (selection.commentEditor.isVisible && selection.current?.range) {
       const marks = markRange(selection.current.range.cloneRange());
+      console.log(111);
 
       for (const mark of marks) {
         (mark as HTMLElement).style.backgroundColor = selection.color;
@@ -146,7 +136,7 @@ export default function SelectionTooltip(props: { viewer: PdfViewer }) {
 
   onCleanup(() => {
     referenceElement?.remove();
-    setVisibleDebounced.cancel();
+    showSelection.cancel();
     document.removeEventListener('selectionchange', handleSelection);
   });
 
@@ -188,7 +178,7 @@ export default function SelectionTooltip(props: { viewer: PdfViewer }) {
           </button>
         </div>
       </Show>
-      <Show when={selection.comment.isVisible}>
+      <Show when={selection.commentEditor.isVisible}>
         <CommentInput selection={selection} />
       </Show>
     </div>

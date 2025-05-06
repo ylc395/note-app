@@ -1,3 +1,4 @@
+import { render, createComponent } from 'solid-js/web';
 import { EventBus, PDFViewer, PDFLinkService, PDFPageView } from 'pdfjs-dist/web/pdf_viewer.mjs';
 import { AnnotationEditorType, AnnotationMode } from 'pdfjs-dist';
 import { debounce, memoize, range as numberRange } from 'lodash-es';
@@ -10,6 +11,7 @@ import HistoryStack, { Direction, type HistoryRecord } from '#domain/client/app/
 import shell from '#web/infra/shell';
 import type { PDFTextFragmentSelector } from '#domain/shared/model/annotation';
 import { APP_NAME } from '#domain/shared/infra/constants';
+import AnnotationMark from './AnnotationMark';
 
 interface Options {
   container: HTMLDivElement;
@@ -139,17 +141,34 @@ export default class PdfViewer {
       );
     });
 
-    this.destroyController.signal.addEventListener('abort', () => {
-      this.updateUIState.flush();
-      pdfViewer.cleanup();
-    });
+    this.destroyController.signal.addEventListener(
+      'abort',
+      () => {
+        this.updateUIState.flush();
+        pdfViewer.cleanup();
+      },
+      { once: true },
+    );
 
     return pdfViewer;
   }
 
+  private pageAnnotationMarkMap: Record<number, { root: HTMLElement; dispose: Array<() => void> }> = {};
+
   public renderAnnotation(page: number) {
     assert(this.viewerElement);
     const MARK_CLASS_NAME = `${APP_NAME}-pdf-mark`;
+
+    const pageAnnotationMark = this.pageAnnotationMarkMap[page];
+
+    if (pageAnnotationMark) {
+      for (const dispose of pageAnnotationMark.dispose) {
+        this.destroyController.signal.removeEventListener('abort', dispose);
+        dispose();
+      }
+      pageAnnotationMark.root.remove();
+      delete this.pageAnnotationMarkMap[page];
+    }
 
     removeMarks(
       Array.from(
@@ -164,7 +183,7 @@ export default class PdfViewer {
         (s) => s.type === 'PDFTextFragmentSelector' && (s.startPage === page || s.endPage === page),
       ) as PDFTextFragmentSelector[];
 
-      for (const fragment of fragments) {
+      for (const [i, fragment] of fragments.entries()) {
         const root =
           fragment.startPage === fragment.endPage
             ? (this.pdfViewer.getPageView(page - 1) as PDFPageView).textLayer?.div
@@ -173,14 +192,33 @@ export default class PdfViewer {
         assert(root);
         const { text } = processFragmentDirectives({ text: [fragment] }, document, root);
 
-        for (const mark of text) {
-          for (const el of mark) {
+        for (const [j, mark] of text.entries()) {
+          for (const [k, el] of mark.entries()) {
             (el as HTMLElement).style.backgroundColor = annotation.color;
             (el as HTMLElement).style.color = 'transparent';
             (el as HTMLElement).style.opacity = '0.4';
             (el as HTMLElement).dataset.startPage = String(fragment.startPage);
             (el as HTMLElement).dataset.endPage = String(fragment.endPage);
             (el as HTMLElement).classList.add(MARK_CLASS_NAME);
+
+            // 给带评论的 mark 元素搭配一个图标。仅第一个 mark 元素会搭配这个图标
+            if (annotation.body && i === 0 && j === 0 && k === mark.length - 1) {
+              const markContainer = document.createElement('div');
+              markContainer.classList.add('absolute', `${APP_NAME}-pdf-annotation-mark-container`);
+
+              const dispose = render(
+                () => createComponent(AnnotationMark, { annotation, markEl: el as HTMLElement }),
+                markContainer,
+              );
+
+              if (!this.pageAnnotationMarkMap[page]) {
+                this.pageAnnotationMarkMap[page] = { root: markContainer, dispose: [] };
+              }
+
+              this.pageAnnotationMarkMap[page].dispose.push(dispose);
+              this.destroyController.signal.addEventListener('abort', dispose, { once: true });
+              (this.pdfViewer.getPageView(page - 1) as PDFPageView).textLayer!.div.append(markContainer);
+            }
           }
         }
       }

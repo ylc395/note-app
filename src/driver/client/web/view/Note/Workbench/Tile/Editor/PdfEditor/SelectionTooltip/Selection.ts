@@ -8,6 +8,7 @@ import { action, observable } from 'mobx';
 import PersistedObject from '#domain/client/shared/model/abstract/PersistedObject';
 import { IS_DEV } from '#domain/shared/infra/env';
 import type PdfViewer from '../PDFViewer';
+import assert from 'assert';
 
 export default class Selection {
   constructor(private readonly pdfViewer: PdfViewer) {}
@@ -16,10 +17,13 @@ export default class Selection {
 
   private readonly uiState = new PersistedObject('pdf-selection', z.object({ color: z.string() }), { color: 'yellow' });
 
-  @observable public accessor comment = {
+  @observable public accessor commentEditor: {
+    isVisible: boolean;
+    content: string;
+    generateResult?: GenerateFragmentResult;
+  } = {
     isVisible: false,
     content: '',
-    generateResult: undefined as undefined | GenerateFragmentResult,
   };
 
   @observable public accessor isVisible = false;
@@ -34,24 +38,24 @@ export default class Selection {
 
   @action
   public setCommentVisibility(value: boolean, toggleVisibility?: boolean) {
-    this.comment.isVisible = value;
+    this.commentEditor.isVisible = value;
 
     if (toggleVisibility) {
-      this.setVisibility(!this.comment.isVisible);
+      this.setVisibility(!this.commentEditor.isVisible);
     }
 
-    if (!this.comment.isVisible) {
-      this.comment.content = '';
-      this.comment.generateResult = undefined;
-    } else {
+    if (this.commentEditor.isVisible) {
       // 需要提前生成一下。因为之后视图层会被 mark 标签搞乱，到时候再生成，生成的就不准了
-      this.comment.generateResult = this.generateFragment();
+      this.commentEditor.generateResult = this.generateFragment();
+    } else {
+      this.commentEditor.content = '';
+      this.commentEditor.generateResult = undefined;
     }
   }
 
   @action
-  public setComment(value: string) {
-    this.comment.content = value;
+  public setCommentContent(value: string) {
+    this.commentEditor.content = value;
   }
 
   @action
@@ -60,9 +64,7 @@ export default class Selection {
   }
 
   private generateFragment() {
-    if (!this.current || !this.pdfViewer.viewerElement) {
-      return;
-    }
+    assert(this.current && this.pdfViewer.viewerElement);
 
     return generateFragmentFromRange(
       this.current.range,
@@ -76,7 +78,7 @@ export default class Selection {
       return;
     }
 
-    const result = this.comment.isVisible ? this.comment.generateResult : this.generateFragment();
+    const result = this.commentEditor.isVisible ? this.commentEditor.generateResult : this.generateFragment();
 
     if (!result?.fragment) {
       // todo: add toast
@@ -104,7 +106,7 @@ export default class Selection {
 
     await this.pdfViewer.editor.annotation.create({
       color: this.uiState.get('color'),
-      body: this.comment.content,
+      body: this.commentEditor.content,
       selector: {
         type: 'PDFTextFragmentSelector',
         ...result.fragment,
@@ -115,7 +117,7 @@ export default class Selection {
     });
 
     this.setCommentVisibility(false);
-    this.isVisible = false;
+    this.setVisibility(false);
     this.pdfViewer.renderAnnotation(findPage(this.current.focusNode));
   }
 }
