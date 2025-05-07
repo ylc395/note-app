@@ -75,7 +75,7 @@ export default abstract class BaseEditor<S = unknown> {
     });
 
     const dispose = deepObserve(this.uiState, () => this.noteUIState?.set(this.uiState!));
-    this.destroyController.signal.addEventListener('abort', dispose);
+    this.destroyController.signal.addEventListener('abort', dispose, { once: true });
   }
 
   @observable public accessor uiState: S | undefined;

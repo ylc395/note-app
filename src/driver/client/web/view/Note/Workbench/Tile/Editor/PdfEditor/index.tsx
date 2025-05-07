@@ -42,7 +42,7 @@ export default function PdfEditorView(props: { editor: PdfEditor }) {
         <Show when={props.editor.uiState?.['annotation.panel'] && getPdfViewer()}>
           {(viewer) => <AnnotationList viewer={viewer()} />}
         </Show>
-        <Show when={getPdfViewer()}>{(viewer) => <SelectionTooltip viewer={viewer()} />}</Show>
+        <Show when={getPdfViewer()}>{(viewer) => <SelectionTooltip selection={viewer().selection} />}</Show>
       </div>
     </div>
   );

@@ -11,7 +11,9 @@ import HistoryStack, { Direction, type HistoryRecord } from '#domain/client/app/
 import shell from '#web/infra/shell';
 import type { PDFTextFragmentSelector } from '#domain/shared/model/annotation';
 import { APP_NAME } from '#domain/shared/infra/constants';
+
 import AnnotationMark from './AnnotationMark';
+import Selection from './SelectionTooltip/Selection';
 
 interface Options {
   container: HTMLDivElement;
@@ -53,6 +55,8 @@ export default class PdfViewer {
     return this.pdfViewer.viewer;
   }
 
+  public readonly selection = new Selection(this);
+
   @observable public accessor currentPage = 1;
   @observable public accessor scale = {
     value: 1,
@@ -73,10 +77,6 @@ export default class PdfViewer {
   @computed
   public get totalPage() {
     return this.editor.doc?.numPages || 0;
-  }
-
-  public getPageEl(page: number) {
-    return (this.pdfViewer.getPageView(page - 1) as PDFPageView).div;
   }
 
   private readonly updateUIState = debounce(
