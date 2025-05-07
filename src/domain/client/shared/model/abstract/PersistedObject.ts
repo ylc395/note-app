@@ -1,3 +1,4 @@
+import { get, set } from 'lodash-es';
 import { type ZodType } from 'zod';
 import { action, observable, runInAction, toJS } from 'mobx';
 import assert from 'assert';
@@ -26,14 +27,17 @@ export default class PersistedObject<S> {
       value = await this.localStorage.get(this.key);
     }
 
-    if (typeof value === 'object') {
-      value = { ...defaultValue, ...value };
-    }
-
-    const parsedResult = this.schema.parse(value);
+    const parsedResult = this.schema.safeParse(value);
 
     runInAction(() => {
-      this.value = parsedResult;
+      if (parsedResult.success) {
+        this.value = parsedResult.data;
+      } else if (typeof value === 'object' && value) {
+        for (const issue of parsedResult.error.errors) {
+          set(value, issue.path, get(defaultValue, issue.path));
+        }
+        this.value = value as S;
+      }
     });
 
     this.isReady = true;

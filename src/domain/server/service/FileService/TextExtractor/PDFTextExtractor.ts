@@ -1,4 +1,4 @@
-import * as pdfjs from 'pdfjs-dist';
+import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
 import assert from 'node:assert';
 import { createCanvas } from 'canvas';
 import type { RenderParameters } from 'pdfjs-dist/types/src/display/api.js';

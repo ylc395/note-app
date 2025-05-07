@@ -11,9 +11,10 @@ function TileParentNode(props: { panelId?: string; tile: TileParent }) {
   const content = (
     <Splitter.Root
       orientation={props.tile.direction === TileDirections.Horizontal ? 'horizontal' : 'vertical'}
-      defaultSize={[
-        { id: `${props.tile.id}-first`, size: 50, minSize: 20 },
-        { id: `${props.tile.id}-second`, size: 50, minSize: 20 },
+      defaultSize={[50, 50]}
+      panels={[
+        { id: `${props.tile.id}-first`, minSize: 20 },
+        { id: `${props.tile.id}-second`, minSize: 20 },
       ]}
     >
       <TileNodeView parent={props.tile} panelId={`${props.tile.id}-first`} tile={props.tile.first} />

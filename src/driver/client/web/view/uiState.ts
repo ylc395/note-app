@@ -15,7 +15,7 @@ export enum NoteTreeViewTabs {
 const schema = z.object({
   'app.sidebar': z.nativeEnum(SidebarTabs),
   'note.treeView': z.nativeEnum(NoteTreeViewTabs),
-  'note.sidebar.proportion': z.unknown(),
+  'note.sidebar.proportion': z.number().array(),
   'memo.sidebarVisibility': z.union([z.literal('always'), z.literal('visible'), z.literal('hidden')]),
 });
 
@@ -24,6 +24,7 @@ export default class UIState extends PersistedObject<z.infer<typeof schema>> {
     super('ui.state', schema, {
       'app.sidebar': SidebarTabs.Note,
       'note.treeView': NoteTreeViewTabs.Note,
+      'note.sidebar.proportion': [20, 80],
       'memo.sidebarVisibility': 'visible',
     });
   }
