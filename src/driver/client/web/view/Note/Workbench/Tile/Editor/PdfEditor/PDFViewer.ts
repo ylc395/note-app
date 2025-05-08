@@ -128,6 +128,7 @@ export default class PdfViewer {
       pdfViewer.onePageRendered.then(
         action(() => {
           pdfViewer.eventBus.on('updateviewarea', this.updateUIState);
+          pdfViewer.eventBus.on('updateviewarea', this.focusOutline.bind(this));
           this.isReady = true;
         }),
       );
@@ -154,6 +155,10 @@ export default class PdfViewer {
   }
 
   private pageAnnotationMarkMap: Record<number, { root: HTMLElement; dispose: Array<() => void> }> = {};
+
+  private focusOutline(e: { location: { pageNumber: number } }) {
+    this.editor.outline.focus(e.location.pageNumber);
+  }
 
   public renderAnnotation(page: number) {
     assert(this.viewerElement);
@@ -271,7 +276,6 @@ export default class PdfViewer {
     } else if (typeof page === 'object' && 'hash' in page) {
       this.pdfViewer.linkService.setHash(page.hash);
     } else if (page.dest) {
-      this.editor.outline.focusedItemKey = page.key;
       this.pdfViewer.linkService.goToDestination(page.dest);
     }
 

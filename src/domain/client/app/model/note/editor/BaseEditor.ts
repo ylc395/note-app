@@ -78,9 +78,11 @@ export default abstract class BaseEditor<S = unknown> {
     this.destroyController.signal.addEventListener('abort', dispose, { once: true });
   }
 
-  @observable public accessor uiState: S | undefined;
+  private readonly noteUIState: PersistedObject<S> | undefined; // 该 note 的 UI 状态，具备持久化能力
 
-  private readonly noteUIState: PersistedObject<S> | undefined;
+  // 该 editor 自己的 UI 状态，其初始状态来自 noteUIState
+  // 该对象的变化会同步到 noteUIState 里。该对象本身不具备持久化能力
+  @observable public accessor uiState: S | undefined;
 
   public abstract readonly mimeType: string | null;
 

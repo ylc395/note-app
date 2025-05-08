@@ -272,7 +272,11 @@ export default class Selection {
 
       this.isVisible = true;
       this.floating.dispose = autoUpdate(this.floating.referenceElement, this.rootEl, () => {
-        computePosition(this.floating!.referenceElement!, this.rootEl!, {
+        if (!this.floating?.referenceElement) {
+          return;
+        }
+
+        computePosition(this.floating.referenceElement, this.rootEl!, {
           placement: this.floating!.placement,
           middleware: [flip(), offset(5)],
         }).then(({ x, y }) => {

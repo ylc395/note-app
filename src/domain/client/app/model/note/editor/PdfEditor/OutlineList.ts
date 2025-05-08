@@ -5,16 +5,17 @@ import type { PDFDocumentProxy } from 'pdfjs-dist';
 export interface OutlineItem {
   title: string;
   children: OutlineItem[];
+  parent?: OutlineItem;
   key: string;
   dest: unknown[] | null | string; // 传给 pdfjs 的跳转函数用的，具体类型不明，我们也不用管
 }
 
-export default class OutlineManager {
+export default class OutlineList {
   @observable.ref public accessor items: OutlineItem[] | undefined;
 
   private readonly outlineItemsMap = new Map<number, OutlineItem>();
 
-  @observable public accessor focusedItemKey: OutlineItem['key'] | undefined;
+  @observable public accessor focusedPath: OutlineItem['key'][] | undefined;
 
   @action.bound
   public focus(page: number) {
@@ -23,15 +24,22 @@ export default class OutlineManager {
     }
 
     for (let i = page; i >= 0; i--) {
-      const item = this.outlineItemsMap.get(i);
+      let item = this.outlineItemsMap.get(i);
 
       if (item) {
-        this.focusedItemKey = item.key;
+        const path: OutlineItem['key'][] = [];
+
+        while (item) {
+          path.unshift(item.key);
+          item = item.parent;
+        }
+
+        this.focusedPath = path;
         return;
       }
     }
 
-    this.focusedItemKey = undefined;
+    this.focusedPath = undefined;
   }
 
   public async init(doc: PDFDocumentProxy) {
@@ -45,12 +53,16 @@ export default class OutlineManager {
 
     const toOutlineItem = ({ items, dest, title }: RawOutlineItem, keys: number[]): OutlineItem => {
       const page = Array.isArray(dest) && dest[0] ? doc.cachedPageNumber(dest[0] as RefProxy) : null;
-      const item = {
+      const item: OutlineItem = {
         children: items.map((item, i) => toOutlineItem(item, [...keys, i])),
         title,
         key: keys.join('-'),
         dest,
       };
+
+      for (const child of item.children) {
+        child.parent = item;
+      }
 
       if (page) {
         this.outlineItemsMap.set(page, item);

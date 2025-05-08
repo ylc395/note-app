@@ -1,9 +1,9 @@
 import { Collapsible } from '@ark-ui/solid';
-import { ChevronRightIcon, ChevronDownIcon, Loader2Icon } from 'lucide-solid';
+import { ChevronRightIcon, ChevronDownIcon, Loader2Icon, EyeIcon } from 'lucide-solid';
 import { createEffect, createMemo, For, on, Show } from 'solid-js';
-import { pull } from 'lodash-es';
 import { action } from 'mobx';
 import assert from 'assert';
+import { last, pull, uniq } from 'lodash-es';
 
 import type { OutlineItem } from '#domain/client/app/model/note/editor/PdfEditor';
 import type PdfViewer from './PDFViewer';
@@ -22,14 +22,19 @@ function Item(props: {
     }
   }
 
-  const isFocused = createMemo(() => props.item.key === props.viewer.editor.outline.focusedItemKey);
+  const isFocused = createMemo(() => props.item.key === last(props.viewer.editor.outline.focusedPath));
 
   return (
     <div classList={{ 'mb-1': props.item.children.length === 0 }} style={{ 'padding-left': `${props.level * 20}px` }}>
       <Show
         when={props.item.children.length > 0}
         fallback={
-          <span onClick={handleClick} class="pl-4 cursor-pointer" classList={{ 'font-bold': isFocused() }}>
+          <span
+            data-outline-item-key={props.item.key}
+            onClick={handleClick}
+            class="pl-4 cursor-pointer"
+            classList={{ 'font-bold': isFocused() }}
+          >
             {props.item.title}
           </span>
         }
@@ -40,7 +45,7 @@ function Item(props: {
           unmountOnExit
           onOpenChange={({ open }) => props.onToggle({ key: props.item.key, value: open })}
         >
-          <div class="flex mb-1 cursor-pointer">
+          <div class="flex mb-1 cursor-pointer" data-outline-item-key={props.item.key}>
             <Collapsible.Trigger class="group flex items-center">
               <ChevronRightIcon class='group-data-[state="open"]:hidden w-4' />
               <ChevronDownIcon class='group-data-[state="closed"]:hidden w-4' />
@@ -65,10 +70,6 @@ export default function Outline(props: { viewer: PdfViewer }) {
 
   function onToggle({ key, value }: { key: string; value: boolean }) {
     assert(props.viewer.editor.uiState);
-
-    if (!props.viewer.editor.uiState['outline.expanded']) {
-      props.viewer.editor.uiState['outline.expanded'] = [];
-    }
 
     if (value) {
       props.viewer.editor.uiState['outline.expanded'].push(key);
@@ -97,11 +98,40 @@ export default function Outline(props: { viewer: PdfViewer }) {
     ),
   );
 
+  function scrollToFocused() {
+    assert(props.viewer.editor.uiState && props.viewer.editor.outline.focusedPath);
+
+    props.viewer.editor.uiState['outline.expanded'] = uniq([
+      ...props.viewer.editor.uiState['outline.expanded'],
+      ...props.viewer.editor.outline.focusedPath,
+    ]);
+
+    const item = listRef?.querySelector(`[data-outline-item-key="${last(props.viewer.editor.outline.focusedPath)}"]`);
+
+    if (!item || !listRef) {
+      return;
+    }
+
+    item.scrollIntoView();
+  }
+
   return (
-    <div class="w-64 overflow-auto h-full border-r pb-12" ref={listRef} onScrollEnd={action(handleScroll)}>
+    <div
+      class="w-64 overflow-auto h-full border-r pb-12 flex flex-col"
+      ref={listRef}
+      onScrollEnd={action(handleScroll)}
+    >
+      <div class="top-0 bg-gray-50 flex justify-end">
+        <button class="flex items-center text-sm" onClick={scrollToFocused}>
+          <EyeIcon class="mr-1" />
+          当前浏览
+        </button>
+      </div>
       <Show
-        when={props.viewer.editor.outline.items?.length === 0}
-        fallback={
+        when={!props.viewer.editor.outline.items || props.viewer.editor.outline.items.length > 0}
+        fallback={<div class="flex h-full justify-center items-center">无大纲</div>}
+      >
+        <div class="min-h-0 overflow-auto">
           <For
             each={props.viewer.editor.outline.items}
             fallback={
@@ -113,9 +143,7 @@ export default function Outline(props: { viewer: PdfViewer }) {
           >
             {(outline) => <Item onToggle={action(onToggle)} viewer={props.viewer} item={outline} level={0} />}
           </For>
-        }
-      >
-        <div class="flex h-full justify-center items-center">无大纲</div>
+        </div>
       </Show>
     </div>
   );
