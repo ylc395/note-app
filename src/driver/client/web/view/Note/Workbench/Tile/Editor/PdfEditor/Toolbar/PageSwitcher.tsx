@@ -37,7 +37,7 @@ export default function PageSwitcher(props: { viewer: PdfViewer }) {
         onInput={handleInput}
         value={getValue()}
       />
-      /{props.viewer.totalPage}
+      /{props.viewer.totalPage || '-'}
       <button class="flex items-center" onClick={() => props.viewer.goToNextPage()}>
         <StepForwardIcon />
       </button>

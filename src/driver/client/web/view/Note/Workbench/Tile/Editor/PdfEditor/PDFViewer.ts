@@ -136,7 +136,7 @@ export default class PdfViewer {
 
     pdfViewer.eventBus.on('textlayerrendered', ({ pageNumber }: { pageNumber: 1 }) => {
       when(
-        () => this.editor.annotation.status === 'ok',
+        () => Boolean(this.editor.annotation.list),
         () => this.renderAnnotation(pageNumber),
         { signal: this.destroyController.signal },
       );
@@ -182,6 +182,8 @@ export default class PdfViewer {
         ),
       ),
     );
+
+    assert(this.editor.annotation.list);
 
     for (const annotation of this.editor.annotation.list) {
       const fragments = annotation.selectors.filter(

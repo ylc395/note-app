@@ -2,7 +2,7 @@ import { action, observable, runInAction } from 'mobx';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import type { RefProxy } from 'pdfjs-dist/types/src/display/api';
 
-import type AnnotationManager from './AnnotationManager';
+import type AnnotationList from './AnnotationList';
 import assert from 'assert';
 
 export interface OutlineItem {
@@ -15,7 +15,7 @@ export interface OutlineItem {
 }
 
 export default class OutlineList {
-  constructor(private readonly annotation: AnnotationManager) {}
+  constructor(private readonly annotation: AnnotationList) {}
 
   @observable.ref public accessor items: OutlineItem[] | undefined;
 
@@ -114,7 +114,7 @@ export default class OutlineList {
   }
 
   public getAnnotationCount(key: OutlineItem['key']) {
-    if (this.annotation.status !== 'ok') {
+    if (!this.annotation.list) {
       return 0;
     }
 

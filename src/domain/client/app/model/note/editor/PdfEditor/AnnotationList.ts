@@ -28,7 +28,7 @@ export interface AnnotationItem extends AnnotationVO {
   isNative: boolean;
 }
 
-export default class AnnotationManager {
+export default class AnnotationList {
   constructor(private readonly noteId: NoteVO['id']) {}
 
   private readonly remote = container.resolve(rpcToken);
@@ -58,45 +58,42 @@ export default class AnnotationManager {
   }
 
   @computed
-  public get list(): AnnotationItem[] {
-    return [
-      ...(this.nativeAnnotations || [])
-        .filter(({ annotationType }) => annotationType === AnnotationType.HIGHLIGHT)
-        .map((v) => {
-          const getTime = (time: string) =>
-            dayjs(`${time.slice(2, -7)}+${time.slice(-6, -4)}00`, 'YYYYMMDDHHmmssZZ').valueOf();
-
-          return {
-            isNative: true,
-            targetId: this.noteId,
-            selectors: [
-              {
-                type: 'PDFRectSelector' as const,
-                page: v.page,
-                left: v.rect[0],
-                top: v.rect[1],
-                width: v.rect[2],
-                height: v.rect[3],
-              },
-            ],
-            color: '',
-            id: `pdf-native-${v.id}`,
-            body: v.contentsObj?.str || '',
-            createdAt: getTime(v.creationDate || v.modificationDate),
-            updatedAt: getTime(v.modificationDate),
-          };
-        }),
-      ...(this.annotations.result.data || []).map((annotation) => ({ ...annotation, isNative: false })),
-    ];
-  }
-
-  @computed
-  public get status() {
-    if (this.annotations.result.isLoading || !this.nativeAnnotations) {
-      return 'loading';
+  public get list(): AnnotationItem[] | undefined {
+    if (!this.nativeAnnotations || !this.annotations.result.data) {
+      return undefined;
     }
 
-    return 'ok';
+    const toAnnotation = (v: NativeAnnotation) => {
+      const getTime = (time: string) =>
+        dayjs(`${time.slice(2, -7)}+${time.slice(-6, -4)}00`, 'YYYYMMDDHHmmssZZ').valueOf();
+
+      return {
+        isNative: true,
+        targetId: this.noteId,
+        selectors: [
+          {
+            type: 'PDFRectSelector' as const,
+            page: v.page,
+            left: v.rect[0],
+            top: v.rect[1],
+            width: v.rect[2],
+            height: v.rect[3],
+          },
+        ],
+        color: '',
+        id: `pdf-native-${v.id}`,
+        body: v.contentsObj?.str || '',
+        createdAt: getTime(v.creationDate || v.modificationDate),
+        updatedAt: getTime(v.modificationDate),
+      };
+    };
+
+    return [
+      ...this.nativeAnnotations
+        .filter(({ annotationType }) => annotationType === AnnotationType.HIGHLIGHT)
+        .map(toAnnotation),
+      ...this.annotations.result.data.map((annotation) => ({ ...annotation, isNative: false })),
+    ];
   }
 
   @computed
@@ -124,6 +121,10 @@ export default class AnnotationManager {
   }
 
   public getAnnotationCount(startPage: number, endPage: number) {
+    if (!this.list) {
+      return 0;
+    }
+
     return this.list.reduce((count, annotation) => {
       if (
         annotation.selectors.some(

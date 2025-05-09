@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import { createMemo, For, Show } from 'solid-js';
 import { MoreHorizontalIcon } from 'lucide-solid';
-import type { AnnotationItem } from '#domain/client/app/model/note/editor/PdfEditor/AnnotationManager';
+import type { AnnotationItem } from '#domain/client/app/model/note/editor/PdfEditor/AnnotationList';
 import { compact } from 'lodash-es';
 
 export default function Item(props: { value: AnnotationItem }) {

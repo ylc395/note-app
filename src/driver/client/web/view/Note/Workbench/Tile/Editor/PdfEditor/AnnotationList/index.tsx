@@ -9,7 +9,7 @@ import Settings from './Settings';
 export default function AnnotationList(props: { viewer: PdfViewer }) {
   const annotations = createMemo(() => {
     if (props.viewer.editor.uiState?.['annotation.native'] === false) {
-      return props.viewer.editor.annotation.list.filter(({ isNative }) => !isNative);
+      return props.viewer.editor.annotation.list?.filter(({ isNative }) => !isNative);
     }
 
     return props.viewer.editor.annotation.list;
@@ -22,7 +22,7 @@ export default function AnnotationList(props: { viewer: PdfViewer }) {
         <Settings viewer={props.viewer} />
       </div>
       <Show
-        when={props.viewer.editor.annotation.status === 'ok'}
+        when={props.viewer.editor.annotation.list}
         fallback={
           <div class="flex flex-col grow items-center justify-center">
             <Loader2Icon class="animate-spin" /> 加载中
