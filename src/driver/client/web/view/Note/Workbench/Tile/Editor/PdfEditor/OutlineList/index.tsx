@@ -1,69 +1,11 @@
-import { Collapsible } from '@ark-ui/solid';
-import { ChevronRightIcon, ChevronDownIcon, Loader2Icon, EyeIcon } from 'lucide-solid';
-import { createEffect, createMemo, For, on, Show } from 'solid-js';
+import { createEffect, For, on, Show } from 'solid-js';
+import { Loader2Icon, EyeIcon } from 'lucide-solid';
 import { action } from 'mobx';
 import assert from 'assert';
 import { last, pull, uniq } from 'lodash-es';
 
-import type { OutlineItem } from '#domain/client/app/model/note/editor/PdfEditor';
-import type PdfViewer from './PDFViewer';
-
-function Item(props: {
-  item: OutlineItem;
-  viewer: PdfViewer;
-  level: number;
-  onToggle: (e: { key: string; value: boolean }) => void;
-}) {
-  function handleClick(e: MouseEvent) {
-    e.stopPropagation();
-
-    if (props.item.dest) {
-      props.viewer.jumpTo(props.item);
-    }
-  }
-
-  const isFocused = createMemo(() => props.item.key === last(props.viewer.editor.outline.focusedPath));
-
-  return (
-    <div classList={{ 'mb-1': props.item.children.length === 0 }} style={{ 'padding-left': `${props.level * 20}px` }}>
-      <Show
-        when={props.item.children.length > 0}
-        fallback={
-          <span
-            data-outline-item-key={props.item.key}
-            onClick={handleClick}
-            class="pl-4 cursor-pointer"
-            classList={{ 'font-bold': isFocused() }}
-          >
-            {props.item.title}
-          </span>
-        }
-      >
-        <Collapsible.Root
-          open={props.viewer.editor.uiState?.['outline.expanded']?.includes(props.item.key)}
-          lazyMount
-          unmountOnExit
-          onOpenChange={({ open }) => props.onToggle({ key: props.item.key, value: open })}
-        >
-          <div class="flex mb-1 cursor-pointer" data-outline-item-key={props.item.key}>
-            <Collapsible.Trigger class="group flex items-center">
-              <ChevronRightIcon class='group-data-[state="open"]:hidden w-4' />
-              <ChevronDownIcon class='group-data-[state="closed"]:hidden w-4' />
-            </Collapsible.Trigger>
-            <span classList={{ 'font-bold': isFocused() }} onClick={handleClick}>
-              {props.item.title}
-            </span>
-          </div>
-          <Collapsible.Content>
-            <For each={props.item.children}>
-              {(item) => <Item item={item} viewer={props.viewer} level={props.level + 1} onToggle={props.onToggle} />}
-            </For>
-          </Collapsible.Content>
-        </Collapsible.Root>
-      </Show>
-    </div>
-  );
-}
+import type PdfViewer from '../PDFViewer';
+import Item from './Item';
 
 export default function Outline(props: { viewer: PdfViewer }) {
   let listRef: HTMLDivElement | undefined;
@@ -108,11 +50,9 @@ export default function Outline(props: { viewer: PdfViewer }) {
 
     const item = listRef?.querySelector(`[data-outline-item-key="${last(props.viewer.editor.outline.focusedPath)}"]`);
 
-    if (!item || !listRef) {
-      return;
+    if (item) {
+      item.scrollIntoView();
     }
-
-    item.scrollIntoView();
   }
 
   return (

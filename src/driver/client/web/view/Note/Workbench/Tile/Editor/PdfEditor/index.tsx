@@ -5,7 +5,7 @@ import 'pdfjs-dist/web/pdf_viewer.css';
 import type PdfEditor from '#domain/client/app/model/note/editor/PdfEditor';
 import PDFViewer from './PDFViewer';
 import Toolbar from './Toolbar';
-import Outline from './Outline';
+import Outline from './OutlineList';
 import AnnotationList from './AnnotationList';
 import SelectionTooltip from './SelectionTooltip';
 

@@ -38,9 +38,9 @@ export default class PdfEditor extends BaseEditor<z.infer<typeof uiStateSchema>>
 
   private readonly docFactory = container.resolve(DocumentFactory);
 
-  public readonly outline = new OutlineList();
-
   public readonly annotation = new AnnotationManager(this.noteId);
+
+  public readonly outline = new OutlineList(this.annotation);
 
   @observable.ref public accessor doc: PDFDocumentProxy | undefined; // this is view-independent
 

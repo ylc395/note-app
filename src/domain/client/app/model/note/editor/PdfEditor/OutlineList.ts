@@ -1,30 +1,38 @@
 import { action, observable, runInAction } from 'mobx';
-import type { RefProxy } from 'pdfjs-dist/types/src/display/api';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
+import type { RefProxy } from 'pdfjs-dist/types/src/display/api';
+
+import type AnnotationManager from './AnnotationManager';
+import assert from 'assert';
 
 export interface OutlineItem {
   title: string;
   children: OutlineItem[];
   parent?: OutlineItem;
   key: string;
+  page: number | null;
   dest: unknown[] | null | string; // 传给 pdfjs 的跳转函数用的，具体类型不明，我们也不用管
 }
 
 export default class OutlineList {
+  constructor(private readonly annotation: AnnotationManager) {}
+
   @observable.ref public accessor items: OutlineItem[] | undefined;
 
-  private readonly outlineItemsMap = new Map<number, OutlineItem>();
+  private readonly pageToOutlineItemsMap = new Map<number, OutlineItem>();
+
+  private readonly keyToOutlineItemsMap = new Map<OutlineItem['key'], OutlineItem>();
 
   @observable public accessor focusedPath: OutlineItem['key'][] | undefined;
 
   @action.bound
   public focus(page: number) {
-    if (this.outlineItemsMap.size === 0) {
+    if (this.pageToOutlineItemsMap.size === 0) {
       return;
     }
 
     for (let i = page; i >= 0; i--) {
-      let item = this.outlineItemsMap.get(i);
+      let item = this.pageToOutlineItemsMap.get(i);
 
       if (item) {
         const path: OutlineItem['key'][] = [];
@@ -57,6 +65,7 @@ export default class OutlineList {
         children: items.map((item, i) => toOutlineItem(item, [...keys, i])),
         title,
         key: keys.join('-'),
+        page,
         dest,
       };
 
@@ -64,8 +73,10 @@ export default class OutlineList {
         child.parent = item;
       }
 
+      this.keyToOutlineItemsMap.set(item.key, item);
+
       if (page) {
-        this.outlineItemsMap.set(page, item);
+        this.pageToOutlineItemsMap.set(page, item);
       }
 
       return item;
@@ -76,5 +87,43 @@ export default class OutlineList {
     runInAction(() => {
       this.items = items;
     });
+  }
+
+  public getPageRange(key: OutlineItem['key']) {
+    const outlineItem = this.keyToOutlineItemsMap.get(key);
+
+    assert(outlineItem && this.items);
+
+    if (!outlineItem.page) {
+      return null;
+    }
+
+    const siblings = outlineItem.parent?.children || this.items;
+    const parentSiblings = outlineItem.parent?.parent?.children || this.items;
+    const startPage = outlineItem.page;
+    const endPage = (
+      siblings[siblings.indexOf(outlineItem) + 1] ||
+      (outlineItem.parent && parentSiblings?.[parentSiblings.indexOf(outlineItem.parent) + 1])
+    )?.page;
+
+    if (startPage && endPage) {
+      return [startPage, endPage] as const;
+    }
+
+    return null;
+  }
+
+  public getAnnotationCount(key: OutlineItem['key']) {
+    if (this.annotation.status !== 'ok') {
+      return 0;
+    }
+
+    const range = this.getPageRange(key);
+
+    if (range) {
+      this.annotation.getAnnotationCount(range[0], range[1]);
+    }
+
+    return 0;
   }
 }

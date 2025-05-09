@@ -122,4 +122,20 @@ export default class AnnotationManager {
 
     await this.annotations.invalidate();
   }
+
+  public getAnnotationCount(startPage: number, endPage: number) {
+    return this.list.reduce((count, annotation) => {
+      if (
+        annotation.selectors.some(
+          (s) =>
+            (s.type === 'PDFRectSelector' && s.page >= startPage && s.page < endPage) ||
+            (s.type === 'PDFTextFragmentSelector' && (s.startPage >= startPage || s.endPage <= endPage)),
+        )
+      ) {
+        return count + 1;
+      }
+
+      return count;
+    }, 0);
+  }
 }
