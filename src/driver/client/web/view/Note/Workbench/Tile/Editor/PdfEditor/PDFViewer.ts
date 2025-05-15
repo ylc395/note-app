@@ -2,7 +2,7 @@ import { render, createComponent } from 'solid-js/web';
 import { EventBus, PDFViewer, PDFLinkService, PDFPageView } from 'pdfjs-dist/web/pdf_viewer.mjs';
 import { AnnotationEditorType, AnnotationMode } from 'pdfjs-dist';
 import { debounce, memoize, range as numberRange } from 'lodash-es';
-import { observable, when, action, computed, autorun, reaction } from 'mobx';
+import { observable, when, action, computed, autorun } from 'mobx';
 import assert from 'assert';
 import { processFragmentDirectives, removeMarks } from '#third-party/text-fragments-polyfill/text-fragment-utils';
 
@@ -251,7 +251,6 @@ export default class PdfViewer {
     });
 
     this.hijackClick();
-    this.autoJumpByTextSearcher();
   }
 
   @action
@@ -273,19 +272,7 @@ export default class PdfViewer {
     );
   }
 
-  private autoJumpByTextSearcher() {
-    reaction(
-      () => this.editor.textSearcher.current?.page,
-      (page) => {
-        if (typeof page === 'number') {
-          this.jumpTo(page);
-        }
-      },
-      { signal: this.destroyController.signal },
-    );
-  }
-
-  @action
+  @action.bound
   public jumpTo(page: number | OutlineItem | { hash: string }, noHistory = false) {
     if (typeof page === 'number' && (page < 1 || page > this.totalPage)) {
       return false;

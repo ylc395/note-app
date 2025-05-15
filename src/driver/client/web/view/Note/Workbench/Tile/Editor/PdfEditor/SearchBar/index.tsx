@@ -3,11 +3,15 @@ import { Show } from 'solid-js';
 import { Popover } from '@ark-ui/solid';
 
 import type TextSearcher from '#domain/client/app/model/note/editor/PdfEditor/TextSearcher';
+import type PdfViewer from '../PDFViewer';
+
 import ResultList from './ResultList';
 import Input from './Input';
 
-export default function SearchBar(props: { searcher: TextSearcher }) {
-  props.searcher.init();
+export default function SearchBar(props: { searcher: TextSearcher; pdfViewer: PdfViewer }) {
+  props.searcher.init({
+    jumpTo: props.pdfViewer.jumpTo,
+  });
 
   return (
     <div class="flex z-10 m-auto w-fit relative left-36">

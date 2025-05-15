@@ -14,11 +14,41 @@ export interface PageSearchResult {
 }
 
 export default class TextSearcher {
-  constructor(private readonly editor: PdfEditor) {}
+  constructor(private readonly editor: PdfEditor) {
+    reaction(
+      () => this.editor.textSearcher.current?.page,
+      (page) => {
+        if (typeof page === 'number' && page !== this.currentPage) {
+          this.jumpTo?.(page);
+        }
+      },
+      { signal: this.destroyController.signal },
+    );
+
+    when(
+      () => Boolean(this.editor.doc),
+      async () => {
+        this.texts = await TextSearcher.extractText(this.editor.doc!);
+      },
+      { signal: this.destroyController.signal },
+    );
+
+    const handlePageChanged = debounce(() => {
+      if (this.options.isCurrentPageOnly) {
+        this.search();
+      }
+    }, 500);
+
+    reaction(() => this.currentPage, handlePageChanged, { signal: this.destroyController.signal });
+    this.destroyController.signal.addEventListener('abort', handlePageChanged.cancel);
+  }
+
+  private jumpTo?: (page: number) => void;
 
   @observable private accessor currentIndex: number | undefined;
 
-  @computed public get currentPage() {
+  @computed
+  public get currentPage() {
     return this.editor.currentPage;
   }
 
@@ -68,27 +98,8 @@ export default class TextSearcher {
 
   private readonly destroyController = new AbortController();
 
-  public async init() {
-    if (this.texts) {
-      return;
-    }
-
-    when(
-      () => Boolean(this.editor.doc),
-      async () => {
-        this.texts = await TextSearcher.extractText(this.editor.doc!);
-      },
-      { signal: this.destroyController.signal },
-    );
-
-    const handlePageChanged = debounce(() => {
-      if (this.options.isCurrentPageOnly) {
-        this.search();
-      }
-    }, 500);
-
-    reaction(() => this.currentPage, handlePageChanged, { signal: this.destroyController.signal });
-    this.destroyController.signal.addEventListener('abort', handlePageChanged.cancel);
+  public async init(params: { jumpTo: (page: number) => void }) {
+    this.jumpTo = params.jumpTo;
   }
 
   @action
@@ -111,7 +122,7 @@ export default class TextSearcher {
 
   @action
   public search() {
-    if (!this.options.keyword) {
+    if (!this.options.keyword || typeof this.currentPage !== 'number') {
       return;
     }
 
@@ -150,7 +161,20 @@ export default class TextSearcher {
     }
 
     this.searchResult = result;
-    this.currentIndex = 0;
+
+    if (this.options.isCurrentPageOnly) {
+      this.currentIndex = 0;
+      return;
+    }
+
+    const currentPageResultIndex = result.findIndex(({ page }) => page >= (this.currentPage ?? 0));
+
+    if (currentPageResultIndex === -1 || typeof currentPageResultIndex !== 'number') {
+      this.currentIndex = undefined;
+      return;
+    }
+
+    this.currentIndex = sumBy(result.slice(0, currentPageResultIndex), ({ digests }) => digests.length);
   }
 
   @action

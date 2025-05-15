@@ -36,7 +36,9 @@ export default function PdfEditorView(props: { editor: PdfEditor }) {
           {(viewer) => <Outline viewer={viewer()} />}
         </Show>
         <div class="grow flex flex-col">
-          <SearchBar searcher={props.editor.textSearcher} />
+          <Show when={getPdfViewer()}>
+            {(pdfViewer) => <SearchBar searcher={props.editor.textSearcher} pdfViewer={pdfViewer()} />}
+          </Show>
           <div class="relative grow">
             <div
               class="absolute inset-0 overflow-auto pdfViewer" /* pdfViewer 这个类名来自 pdf_viewer.css */

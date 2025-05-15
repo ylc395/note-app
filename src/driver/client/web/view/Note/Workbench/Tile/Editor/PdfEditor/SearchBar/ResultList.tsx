@@ -25,7 +25,7 @@ function DigestView(props: { digest: Digest }) {
   return (
     <div
       ref={rootRef}
-      class="border"
+      class="border break-words"
       classList={{
         'before:content-["..."]': props.digest.hasLeading,
         'before:mr-1': props.digest.hasLeading,
@@ -44,8 +44,8 @@ export default function ResultList(props: { searchResult: PageSearchResult[] }) 
       <For each={props.searchResult}>
         {(pageResult) => (
           <div>
-            <div>
-              第{pageResult.page}页<span>{pageResult.digests.length}</span>
+            <div class="flex sticky top-0 bg-white">
+              第{pageResult.page}页<span class="ml-2 border bg-gray-200">{pageResult.digests.length}</span>
             </div>
             <div class="space-y-1">
               <For each={pageResult.digests}>{(digest) => <DigestView digest={digest} />}</For>
