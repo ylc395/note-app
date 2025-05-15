@@ -3,15 +3,15 @@ import {
   generateFragmentFromRange,
   type GenerateFragmentResult,
 } from '#third-party/text-fragments-polyfill/fragment-generation-utils';
+import { markRange, removeMarks } from '#third-party/text-fragments-polyfill/text-fragment-utils';
 import { action, autorun, observable } from 'mobx';
 import assert from 'assert';
 import { debounce } from 'lodash-es';
+import { autoUpdate, computePosition, flip, offset } from '@floating-ui/dom';
 
 import PersistedObject from '#domain/client/shared/model/abstract/PersistedObject';
 import { IS_DEV } from '#domain/shared/infra/env';
 import type PdfViewer from '../PDFViewer';
-import { autoUpdate, computePosition, flip, offset } from '@floating-ui/dom';
-import { markRange, removeMarks } from '#third-party/text-fragments-polyfill/text-fragment-utils';
 
 type ValidSelection = ReturnType<typeof window.getSelection> & { focusNode: Node };
 

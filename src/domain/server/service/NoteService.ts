@@ -1,5 +1,5 @@
 import assert from 'node:assert';
-import { omit, pick, uniq } from 'lodash-es';
+import { keyBy, omit, pick, uniq } from 'lodash-es';
 import {
   type NoteVO,
   type NoteDTO,
@@ -11,7 +11,7 @@ import {
   normalizeTitle,
   NoteTypes,
 } from '#domain/server/model/note.js';
-import { arrayOf, buildIndex } from '#utils/collection.js';
+import { arrayOf } from '#utils/collection.js';
 import container from '#utils/singletonContainer.js';
 
 import BaseService from './BaseService.js';
@@ -108,7 +108,7 @@ export default class NoteService extends BaseService {
   private async toVO(notes: Note[] | Note, isNew?: boolean): Promise<NoteVO | NoteVO[]> {
     const _notes = arrayOf(notes);
     const ids = _notes.map(({ id }) => id);
-    const stars = isNew ? {} : buildIndex(await this.repo.stars.findAll({ entityIds: ids }), 'entityId');
+    const stars = isNew ? {} : keyBy(await this.repo.stars.findAll({ entityIds: ids }), ({ entityId }) => entityId);
     const children = isNew ? {} : await this.repo.entities.findChildrenIds(ids, { isAvailableOnly: true });
 
     const result: NoteVO[] = _notes.map((note) => ({

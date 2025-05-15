@@ -2,7 +2,7 @@ import { render, createComponent } from 'solid-js/web';
 import { EventBus, PDFViewer, PDFLinkService, PDFPageView } from 'pdfjs-dist/web/pdf_viewer.mjs';
 import { AnnotationEditorType, AnnotationMode } from 'pdfjs-dist';
 import { debounce, memoize, range as numberRange } from 'lodash-es';
-import { observable, when, action, computed, autorun } from 'mobx';
+import { observable, when, action, computed, autorun, reaction } from 'mobx';
 import assert from 'assert';
 import { processFragmentDirectives, removeMarks } from '#third-party/text-fragments-polyfill/text-fragment-utils';
 
@@ -80,9 +80,10 @@ export default class PdfViewer {
   }
 
   private readonly updateUIState = debounce(
-    action(({ location }: { location: { pdfOpenParams: string } }) => {
+    action(({ location }: { location: { pdfOpenParams: string; pageNumber: number } }) => {
       assert(this.editor.uiState);
       this.editor.uiState.hash = PdfViewer.normalizeHash(location.pdfOpenParams);
+      this.updatePage(location.pageNumber);
     }),
     500,
   );
@@ -102,9 +103,7 @@ export default class PdfViewer {
 
     pdfViewer.eventBus.on(
       'pagechanging',
-      action(({ pageNumber }: { pageNumber: number }) => {
-        this.currentPage = pageNumber;
-      }),
+      action(({ pageNumber }: { pageNumber: number }) => this.updatePage(pageNumber)),
     );
 
     pdfViewer.eventBus.on(
@@ -254,15 +253,37 @@ export default class PdfViewer {
     });
 
     this.hijackClick();
+    this.autoJumpByTextSearcher();
+  }
+
+  private updatePage(pageNumber: number) {
+    this.currentPage = pageNumber;
+    this.editor.currentPage = pageNumber;
   }
 
   private hijackClick() {
-    this.pdfViewer.viewer?.addEventListener('click', (e) => {
-      if (e.target instanceof HTMLAnchorElement && e.target.href) {
-        shell.openNewWindow(e.target.href);
-        e.preventDefault();
-      }
-    });
+    this.pdfViewer.viewer?.addEventListener(
+      'click',
+      (e) => {
+        if (e.target instanceof HTMLAnchorElement && e.target.href) {
+          shell.openNewWindow(e.target.href);
+          e.preventDefault();
+        }
+      },
+      { signal: this.destroyController.signal },
+    );
+  }
+
+  private autoJumpByTextSearcher() {
+    reaction(
+      () => this.editor.textSearcher.current?.page,
+      (page) => {
+        if (typeof page === 'number') {
+          this.jumpTo(page);
+        }
+      },
+      { signal: this.destroyController.signal },
+    );
   }
 
   @action

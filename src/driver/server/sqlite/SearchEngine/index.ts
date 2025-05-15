@@ -1,5 +1,5 @@
 import { type Kysely, sql } from 'kysely';
-import { compact } from 'lodash-es';
+import { compact, keyBy } from 'lodash-es';
 import assert from 'node:assert';
 
 import type { SearchEngine } from '#domain/server/infra/searchEngine.js';
@@ -21,7 +21,6 @@ import {
 } from './tables.js';
 import { type EntityId, EntityTypes } from '#domain/shared/model/entity.js';
 import container from '#utils/singletonContainer.js';
-import { buildIndex } from '#utils/collection.js';
 
 export default class SqliteSearchEngine implements SearchEngine {
   constructor(readonly sqliteDb: SqliteDb) {
@@ -211,7 +210,7 @@ export default class SqliteSearchEngine implements SearchEngine {
     }
 
     if (fileTextResult) {
-      const resultMap = buildIndex(results, 'entityId');
+      const resultMap = keyBy(results, ({ entityId }) => entityId);
 
       for (const { noteId, entityId, contentResult, rank } of fileTextResult) {
         const result = (noteId && resultMap[noteId]) || (entityId && resultMap[entityId]);

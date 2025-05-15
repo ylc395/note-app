@@ -12,6 +12,7 @@ import BaseEditor, { type Options } from '../BaseEditor';
 import DocumentFactory from './DocumentFactory';
 import OutlineList from './OutlineList';
 import AnnotationList from './AnnotationList';
+import TextSearcher from './TextSearcher';
 
 const uiStateSchema = z.object({
   hash: z.string().optional(),
@@ -38,11 +39,15 @@ export default class PdfEditor extends BaseEditor<z.infer<typeof uiStateSchema>>
 
   private readonly docFactory = container.resolve(DocumentFactory);
 
+  public readonly textSearcher = new TextSearcher(this);
+
   public readonly annotation = new AnnotationList(this.noteId);
 
   public readonly outline = new OutlineList(this.annotation);
 
   @observable.ref public accessor doc: PDFDocumentProxy | undefined; // this is view-independent
+
+  @observable public accessor currentPage: number | undefined;
 
   public override readonly mimeType = MimeTypes.PDF;
 
@@ -75,5 +80,6 @@ export default class PdfEditor extends BaseEditor<z.infer<typeof uiStateSchema>>
   public override destroy() {
     super.destroy();
     this.docFactory.revoke(this.noteId);
+    this.textSearcher.destroy();
   }
 }

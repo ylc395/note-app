@@ -8,6 +8,7 @@ import Toolbar from './Toolbar';
 import Outline from './OutlineList';
 import AnnotationList from './AnnotationList';
 import SelectionTooltip from './SelectionTooltip';
+import SearchBar from './SearchBar';
 
 export default function PdfEditorView(props: { editor: PdfEditor }) {
   let containerRef: HTMLDivElement | undefined;
@@ -34,9 +35,12 @@ export default function PdfEditorView(props: { editor: PdfEditor }) {
         <Show when={props.editor.uiState?.['outline.type'] === 'text' && getPdfViewer()}>
           {(viewer) => <Outline viewer={viewer()} />}
         </Show>
-        <div class="relative grow">
-          <div class="absolute inset-0 overflow-auto pdfViewer" ref={containerRef}>
-            <div class="select-text" ref={viewRef}></div>
+        <div class="grow flex flex-col">
+          <SearchBar searcher={props.editor.textSearcher} />
+          <div class="relative grow">
+            <div class="absolute inset-0 pt-16 overflow-auto pdfViewer" ref={containerRef}>
+              <div class="select-text" ref={viewRef}></div>
+            </div>
           </div>
         </div>
         <Show when={props.editor.uiState?.['annotation.panel'] && getPdfViewer()}>

@@ -61,16 +61,16 @@ export default function Outline(props: { viewer: PdfViewer }) {
       ref={listRef}
       onScrollEnd={action(handleScroll)}
     >
-      <div class="top-0 bg-gray-50 flex justify-end">
-        <button class="flex items-center text-sm" onClick={scrollToFocused}>
-          <EyeIcon class="mr-1" />
-          当前浏览
-        </button>
-      </div>
       <Show
         when={!props.viewer.editor.outline.items || props.viewer.editor.outline.items.length > 0}
         fallback={<div class="flex h-full justify-center items-center">无大纲</div>}
       >
+        <div class="top-0 bg-gray-50 flex justify-end">
+          <button class="flex items-center text-sm" onClick={scrollToFocused}>
+            <EyeIcon class="mr-1" />
+            当前浏览
+          </button>
+        </div>
         <div class="min-h-0 overflow-auto">
           <For
             each={props.viewer.editor.outline.items}
