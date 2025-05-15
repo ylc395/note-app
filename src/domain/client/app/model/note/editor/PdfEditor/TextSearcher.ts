@@ -1,7 +1,7 @@
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import assert from 'assert';
-import { action, computed, observable, when } from 'mobx';
-import { pick, sumBy } from 'lodash-es';
+import { action, computed, observable, reaction, when } from 'mobx';
+import { debounce, pick, sumBy } from 'lodash-es';
 
 import type PdfEditor from './index';
 import { extractDigest } from '#utils/string';
@@ -10,7 +10,6 @@ export type Digest = NonNullable<ReturnType<typeof extractDigest>>;
 
 export interface PageSearchResult {
   page: number;
-  count: number;
   digests: Digest[];
 }
 
@@ -19,7 +18,9 @@ export default class TextSearcher {
 
   @observable private accessor currentIndex: number | undefined;
 
-  @observable public accessor keyword = '';
+  @computed public get currentPage() {
+    return this.editor.currentPage;
+  }
 
   @observable.ref public accessor searchResult: PageSearchResult[] | undefined;
 
@@ -29,10 +30,14 @@ export default class TextSearcher {
       return 0;
     }
 
-    return sumBy(this.searchResult, ({ count }) => count);
+    return sumBy(this.searchResult, ({ digests }) => digests.length);
   }
 
-  @observable.ref public accessor isCurrentPageOnly = false;
+  @observable public accessor options = {
+    keyword: '',
+    isCurrentPageOnly: false,
+    isCaseSensitive: false,
+  };
 
   @computed public get current() {
     const index = this.currentIndex;
@@ -41,7 +46,8 @@ export default class TextSearcher {
     if (this.searchResult && typeof index === 'number') {
       let totalCount = 0;
 
-      for (const { page: _page, count } of this.searchResult) {
+      for (const { page: _page, digests } of this.searchResult) {
+        const count = digests.length;
         if (index >= totalCount && index < totalCount + count) {
           page = Number(_page);
 
@@ -74,37 +80,62 @@ export default class TextSearcher {
       },
       { signal: this.destroyController.signal },
     );
+
+    const handlePageChanged = debounce(() => {
+      if (this.options.isCurrentPageOnly) {
+        this.search();
+      }
+    }, 500);
+
+    reaction(() => this.currentPage, handlePageChanged, { signal: this.destroyController.signal });
+    this.destroyController.signal.addEventListener('abort', handlePageChanged.cancel);
+  }
+
+  @action
+  public toggle(key: 'isCurrentPageOnly' | 'isCaseSensitive') {
+    this.options[key] = !this.options[key];
+    this.search();
+  }
+
+  @action
+  public setKeyword(value: string) {
+    this.options.keyword = value;
+
+    if (value) {
+      this.search();
+    } else {
+      this.searchResult = undefined;
+      this.currentIndex = undefined;
+    }
   }
 
   @action
   public search() {
-    if (!this.keyword) {
-      this.searchResult = undefined;
+    if (!this.options.keyword) {
       return;
     }
 
     assert(this.texts && typeof this.editor.currentPage === 'number');
 
     const result: PageSearchResult[] = [];
-    const texts = this.isCurrentPageOnly ? pick(this.texts, [this.editor.currentPage]) : this.texts;
+    const texts = this.options.isCurrentPageOnly ? pick(this.texts, [this.editor.currentPage]) : this.texts;
+    const keyword = this.options.isCaseSensitive ? this.options.keyword : this.options.keyword.toLocaleLowerCase();
 
-    for (const [page, text] of Object.entries(texts)) {
-      let count = 0;
+    for (const [page, _text] of Object.entries(texts)) {
       let index: number | undefined;
       const digests: Digest[] = [];
+      const text = this.options.isCaseSensitive ? _text : _text.toLocaleLowerCase();
 
       while (index !== -1) {
-        index = text.indexOf(this.keyword, typeof index === 'number' ? index + this.keyword.length : undefined);
+        index = text.indexOf(keyword, typeof index === 'number' ? index + keyword.length : undefined);
 
         if (index !== -1) {
-          count += 1;
-
           const digest = extractDigest({
-            fullText: text,
+            fullText: _text,
             matchIndex: index,
             maxLength: 100,
             prefixMaxLength: 30,
-            matchLength: this.keyword.length,
+            matchLength: keyword.length,
           });
 
           if (digest) {
@@ -113,18 +144,13 @@ export default class TextSearcher {
         }
       }
 
-      if (count > 0) {
-        result.push({ page: Number(page), count, digests });
+      if (digests.length > 0) {
+        result.push({ page: Number(page), digests });
       }
     }
 
     this.searchResult = result;
     this.currentIndex = 0;
-  }
-
-  @action
-  public reset() {
-    this.currentIndex = undefined;
   }
 
   @action

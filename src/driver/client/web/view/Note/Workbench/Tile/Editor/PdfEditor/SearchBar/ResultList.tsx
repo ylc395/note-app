@@ -45,7 +45,7 @@ export default function ResultList(props: { searchResult: PageSearchResult[] }) 
         {(pageResult) => (
           <div>
             <div>
-              第{pageResult.page}页<span>{pageResult.count}</span>
+              第{pageResult.page}页<span>{pageResult.digests.length}</span>
             </div>
             <div class="space-y-1">
               <For each={pageResult.digests}>{(digest) => <DigestView digest={digest} />}</For>

@@ -4,32 +4,26 @@ import { Popover } from '@ark-ui/solid';
 
 import type TextSearcher from '#domain/client/app/model/note/editor/PdfEditor/TextSearcher';
 import ResultList from './ResultList';
-import { action } from 'mobx';
+import Input from './Input';
 
 export default function SearchBar(props: { searcher: TextSearcher }) {
-  function handleKeyPress(e: KeyboardEvent) {
-    if (e.key === 'Enter') {
-      props.searcher.search();
-    }
-  }
-
-  function handleInput(e: InputEvent & { target: HTMLInputElement }) {
-    props.searcher.keyword = e.target.value;
-  }
-
   props.searcher.init();
 
   return (
     <div class="flex z-10 m-auto w-fit relative left-36">
-      <input value={props.searcher.keyword} onKeyPress={handleKeyPress} onInput={action(handleInput)} />
-      <Show when={props.searcher.searchResultCount > 0 && props.searcher.current} fallback={<div>没有结果</div>}>
+      <Input searcher={props.searcher} />
+      <Show when={props.searcher.searchResult && props.searcher.searchResultCount === 0}>
+        <div>没有结果{props.searcher.options.isCurrentPageOnly && `(第${props.searcher.currentPage}页)`}</div>
+      </Show>
+      <Show when={props.searcher.searchResultCount > 0 && props.searcher.current}>
         {(current) => (
           <div>
             {Number(current().index) + 1}/{props.searcher.searchResultCount}
+            {props.searcher.options.isCurrentPageOnly && `(第${props.searcher.currentPage}页)`}
           </div>
         )}
       </Show>
-      <div>
+      <div class="ml-6">
         <button
           disabled={!props.searcher.current || props.searcher.current.index === 0}
           onClick={() => props.searcher.goPrevious()}

@@ -38,7 +38,10 @@ export default function PdfEditorView(props: { editor: PdfEditor }) {
         <div class="grow flex flex-col">
           <SearchBar searcher={props.editor.textSearcher} />
           <div class="relative grow">
-            <div class="absolute inset-0 pt-16 overflow-auto pdfViewer" ref={containerRef}>
+            <div
+              class="absolute inset-0 overflow-auto pdfViewer" /* pdfViewer 这个类名来自 pdf_viewer.css */
+              ref={containerRef}
+            >
               <div class="select-text" ref={viewRef}></div>
             </div>
           </div>

@@ -57,7 +57,8 @@ export default class PdfViewer {
 
   public readonly selection = new Selection(this);
 
-  @observable public accessor currentPage = 1;
+  @observable public accessor currentPage: number | undefined;
+
   @observable public accessor scale = {
     value: 1,
     text: '100%',
@@ -66,9 +67,10 @@ export default class PdfViewer {
 
   constructor(options: Options) {
     this.editor = options.editor;
-    this.pdfViewer = this.createPDFViewer(options);
+    this.pdfViewer = this.createViewer(options);
+
     when(
-      () => Boolean(this.editor.doc && this.editor.uiState),
+      () => this.editor.isReady,
       () => this.init(),
       { signal: this.destroyController.signal },
     );
@@ -83,12 +85,11 @@ export default class PdfViewer {
     action(({ location }: { location: { pdfOpenParams: string; pageNumber: number } }) => {
       assert(this.editor.uiState);
       this.editor.uiState.hash = PdfViewer.normalizeHash(location.pdfOpenParams);
-      this.updatePage(location.pageNumber);
     }),
     500,
   );
 
-  private createPDFViewer(options: Options) {
+  private createViewer(options: Options) {
     const eventBus = new EventBus();
     const linkService = new PDFLinkService({ eventBus, ignoreDestinationZoom: true });
     const pdfViewer = new PDFViewer({
@@ -101,10 +102,8 @@ export default class PdfViewer {
 
     linkService.setViewer(pdfViewer);
 
-    pdfViewer.eventBus.on(
-      'pagechanging',
-      action(({ pageNumber }: { pageNumber: number }) => this.updatePage(pageNumber)),
-    );
+    pdfViewer.eventBus.on('pagechanging', ({ pageNumber }: { pageNumber: number }) => this.updatePage(pageNumber));
+    pdfViewer.eventBus.on('updateviewarea', this.focusOutline.bind(this));
 
     pdfViewer.eventBus.on(
       'scalechanging',
@@ -114,23 +113,21 @@ export default class PdfViewer {
       }),
     );
 
-    // 把 pdf 视图的位置移动到上一次离开的地方
     pdfViewer.eventBus.on('pagesinit', () => {
-      assert(this.editor.uiState);
-      const hash = this.editor.uiState.hash;
-
-      if (hash) {
-        this.jumpTo({ hash });
-      }
-
-      // onePageRendered 仅在 setDocument 后才存在
+      // onePageRendered 仅在初始化后才存在
       pdfViewer.onePageRendered.then(
         action(() => {
           pdfViewer.eventBus.on('updateviewarea', this.updateUIState);
-          pdfViewer.eventBus.on('updateviewarea', this.focusOutline.bind(this));
           this.isReady = true;
         }),
       );
+
+      assert(this.editor.uiState);
+      // 把 pdf 视图的位置移动到上一次离开的地方
+      const hash = this.editor.uiState.hash;
+      if (hash) {
+        this.jumpTo({ hash });
+      }
     });
 
     pdfViewer.eventBus.on('textlayerrendered', ({ pageNumber }: { pageNumber: 1 }) => {
@@ -235,6 +232,7 @@ export default class PdfViewer {
     const doc = this.editor.doc;
     assert(doc);
 
+    this.currentPage = (this.editor.uiState?.hash && PdfViewer.getPageFromHash(this.editor.uiState.hash)) || 1;
     this.pdfViewer.setDocument(doc);
     (this.pdfViewer.linkService as PDFLinkService).setDocument(doc);
 
@@ -243,7 +241,7 @@ export default class PdfViewer {
       this.editor.outline.init(doc).then(() => {
         autorun(
           () => {
-            if (this.editor.uiState?.['outline.type'] === 'text') {
+            if (this.editor.uiState?.['outline.type'] === 'text' && this.currentPage) {
               this.editor.outline.focus(this.currentPage);
             }
           },
@@ -256,6 +254,7 @@ export default class PdfViewer {
     this.autoJumpByTextSearcher();
   }
 
+  @action
   private updatePage(pageNumber: number) {
     this.currentPage = pageNumber;
     this.editor.currentPage = pageNumber;
@@ -401,5 +400,10 @@ export default class PdfViewer {
     return hash
       .replace('zoom=null', 'zoom=100') // zoom 为 null 传到 setHash 里会报错
       .replace(/^#/, '');
+  }
+
+  private static getPageFromHash(hash: string) {
+    const page = hash.match(/page=(\d+)/)?.[1];
+    return page ? Number(page) : null;
   }
 }

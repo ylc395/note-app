@@ -1,5 +1,5 @@
 import type { PDFDocumentProxy } from 'pdfjs-dist';
-import { observable, runInAction, when } from 'mobx';
+import { computed, observable, runInAction, when } from 'mobx';
 import assert from 'assert';
 import { isObject } from 'lodash-es';
 import { z } from 'zod';
@@ -35,6 +35,11 @@ export default class PdfEditor extends BaseEditor<z.infer<typeof uiStateSchema>>
       },
     });
     when(() => this.blob.result.isSuccess, this.init.bind(this), { signal: this.destroyController.signal });
+  }
+
+  @computed
+  public get isReady() {
+    return Boolean(this.uiState && this.doc);
   }
 
   private readonly docFactory = container.resolve(DocumentFactory);
