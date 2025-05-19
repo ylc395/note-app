@@ -1736,29 +1736,3 @@ const isBlock = (node) => {
 const isText = (node) => {
   return node.nodeType === Node.TEXT_NODE;
 };
-
-export const forTesting = {
-  containsBlockBoundary: containsBlockBoundary,
-  doGenerateFragment: doGenerateFragment,
-  expandRangeEndToWordBound: expandRangeEndToWordBound,
-  expandRangeStartToWordBound: expandRangeStartToWordBound,
-  findWordEndBoundInTextNode: findWordEndBoundInTextNode,
-  findWordStartBoundInTextNode: findWordStartBoundInTextNode,
-  FragmentFactory: FragmentFactory,
-  getSearchSpaceForEnd: getSearchSpaceForEnd,
-  getSearchSpaceForStart: getSearchSpaceForStart,
-  getTextNodesInSameBlock: getTextNodesInSameBlock,
-  recordStartTime: recordStartTime,
-  BlockTextAccumulator: BlockTextAccumulator,
-  getFirstTextNode: getFirstTextNode,
-  getLastTextNode: getLastTextNode,
-  moveRangeEdgesToTextNodes: moveRangeEdgesToTextNodes
-};
-
-// Allow importing module from closure-compiler projects that haven't migrated
-// to ES6 modules.
-if (typeof goog !== 'undefined') {
-  // clang-format off
-  goog.declareModuleId('googleChromeLabs.textFragmentPolyfill.fragmentGenerationUtils');
-  // clang-format on
-}

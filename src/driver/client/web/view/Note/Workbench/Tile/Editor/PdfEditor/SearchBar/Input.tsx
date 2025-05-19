@@ -1,4 +1,4 @@
-import { CaseSensitiveIcon } from 'lucide-solid';
+import { CaseSensitiveIcon, WholeWordIcon } from 'lucide-solid';
 import { action } from 'mobx';
 
 import type Searcher from './Searcher';
@@ -23,14 +23,20 @@ export default function Input(props: { searcher: Searcher }) {
         value={props.searcher.options.query}
         onInput={action(handleInput)}
       />
-      <div>
+      <div class="flex space-x-1 pr-1">
         <button
-          classList={{
-            outline: props.searcher.options.caseSensitive,
-          }}
+          class="flex items-center justify-center"
+          classList={{ outline: props.searcher.options.caseSensitive }}
           onClick={() => props.searcher.toggleOption('caseSensitive')}
         >
           <CaseSensitiveIcon />
+        </button>
+        <button
+          class="flex items-center justify-center"
+          classList={{ outline: props.searcher.options.entireWord }}
+          onClick={() => props.searcher.toggleOption('entireWord')}
+        >
+          <WholeWordIcon />
         </button>
       </div>
     </div>

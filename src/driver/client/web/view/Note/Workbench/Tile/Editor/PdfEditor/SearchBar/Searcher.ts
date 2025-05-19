@@ -34,7 +34,6 @@ export default class Searcher {
     query: '',
     caseSensitive: false,
     entireWord: false,
-    matchDiacritics: false,
   };
 
   @observable public accessor matchesCount: MatchesCount | undefined;
@@ -98,7 +97,8 @@ export default class Searcher {
     this.pdfViewer.eventBus.dispatch('find', {
       ...options,
       ...this.options,
-      highlightAll: true, // 高亮所有匹配，还是只高亮当前的匹配
+      highlightAll: true, // 高亮所有匹配/只高亮当前的匹配
+      matchDiacritics: false,
     });
   }
 
@@ -112,7 +112,7 @@ export default class Searcher {
   }
 
   @action
-  public toggleOption(key: 'caseSensitive' | 'entireWord' | 'matchDiacritics') {
+  public toggleOption(key: 'caseSensitive' | 'entireWord') {
     this.options[key] = !this.options[key];
   }
 
