@@ -26,6 +26,8 @@ export default class Searcher {
 
   private readonly destroyController = new AbortController();
 
+  @observable public accessor isEnabled = false;
+
   @observable.ref public accessor searchResult: PageSearchResult[] | undefined;
 
   @observable public accessor options = {
@@ -41,6 +43,7 @@ export default class Searcher {
   private handleUpdate(e: { matchesCount: MatchesCount; state?: number; source?: unknown }) {
     if (!this.options.query) {
       this.matchesCount = undefined;
+      this.searchResult = undefined;
       return;
     }
 
@@ -88,6 +91,10 @@ export default class Searcher {
       | ''; // 输入关键词，或者切换搜索选项
     findPrevious?: boolean;
   }) {
+    if (!this.isEnabled) {
+      return;
+    }
+
     this.pdfViewer.eventBus.dispatch('find', {
       ...options,
       ...this.options,
@@ -96,7 +103,16 @@ export default class Searcher {
   }
 
   @action
-  public toggle(key: 'caseSensitive' | 'entireWord' | 'matchDiacritics') {
+  public toggle() {
+    this.isEnabled = !this.isEnabled;
+
+    if (!this.isEnabled) {
+      this.close();
+    }
+  }
+
+  @action
+  public toggleOption(key: 'caseSensitive' | 'entireWord' | 'matchDiacritics') {
     this.options[key] = !this.options[key];
   }
 
@@ -108,7 +124,12 @@ export default class Searcher {
     this.search({ type: 'again', findPrevious: true });
   }
 
+  private close() {
+    this.pdfViewer.eventBus.dispatch('findbarclose', {});
+  }
+
   public destroy() {
+    this.close();
     this.destroyController.abort();
   }
 }

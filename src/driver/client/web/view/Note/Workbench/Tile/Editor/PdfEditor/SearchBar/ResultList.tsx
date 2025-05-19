@@ -1,9 +1,10 @@
 import { For, onMount } from 'solid-js';
 import assert from 'assert';
 
-import type { Digest, PageSearchResult } from './Searcher';
+import type { Digest } from './Searcher';
+import type PdfViewer from '../PDFViewer';
 
-function DigestView(props: { digest: Digest }) {
+function DigestView(props: { digest: Digest; pdfViewer: PdfViewer; page: number }) {
   let rootRef: HTMLDivElement | undefined;
 
   function highlight() {
@@ -26,6 +27,7 @@ function DigestView(props: { digest: Digest }) {
     <div
       ref={rootRef}
       class="border break-words"
+      onClick={() => props.pdfViewer.jumpTo(props.page)}
       classList={{
         'before:content-["..."]': props.digest.hasLeading,
         'before:mr-1': props.digest.hasLeading,
@@ -38,17 +40,19 @@ function DigestView(props: { digest: Digest }) {
   );
 }
 
-export default function ResultList(props: { searchResult: PageSearchResult[] }) {
+export default function ResultList(props: { pdfViewer: PdfViewer }) {
   return (
     <div class="w-64 max-h-72 overflow-auto bg-white">
-      <For each={props.searchResult}>
+      <For each={props.pdfViewer.searcher.searchResult}>
         {(pageResult) => (
           <div>
             <div class="flex sticky top-0 bg-white">
               第{pageResult.page}页<span class="ml-2 border bg-gray-200">{pageResult.digests.length}</span>
             </div>
             <div class="space-y-1">
-              <For each={pageResult.digests}>{(digest) => <DigestView digest={digest} />}</For>
+              <For each={pageResult.digests}>
+                {(digest) => <DigestView pdfViewer={props.pdfViewer} page={pageResult.page} digest={digest} />}
+              </For>
             </div>
           </div>
         )}

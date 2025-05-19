@@ -1,4 +1,4 @@
-import { ListIcon, PenLineIcon } from 'lucide-solid';
+import { ListIcon, PenLineIcon, TextSearchIcon } from 'lucide-solid';
 import { action } from 'mobx';
 import assert from 'assert';
 
@@ -30,6 +30,9 @@ export default function Toolbar(props: { viewer: PdfViewer }) {
       </div>
       <div class="space-x-6 flex absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 ">
         <PageSwitcher viewer={props.viewer} />
+        <button onClick={() => props.viewer.searcher.toggle()}>
+          <TextSearchIcon />
+        </button>
       </div>
       <button onClick={action(toggleAnnotationPanel)} class="flex items-center text-sm">
         <PenLineIcon class="mr-1" />

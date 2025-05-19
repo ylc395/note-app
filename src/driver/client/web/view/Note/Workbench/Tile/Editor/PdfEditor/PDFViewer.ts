@@ -14,6 +14,7 @@ import { APP_NAME } from '#domain/shared/infra/constants';
 
 import AnnotationMark from './AnnotationMark';
 import Selection from './SelectionTooltip/Selection';
+import Searcher from './SearchBar/Searcher';
 
 interface Options {
   container: HTMLDivElement;
@@ -34,8 +35,22 @@ export const SCALE_STEPS = [
 ] as const;
 
 export default class PdfViewer {
+  constructor(options: Options) {
+    this.editor = options.editor;
+    this.pdfViewer = this.createViewer(options);
+    this.searcher = new Searcher(this);
+
+    when(
+      () => this.editor.isReady,
+      () => this.init(),
+      { signal: this.destroyController.signal },
+    );
+  }
+
   private readonly pdfViewer: PDFViewer;
+
   public readonly editor: PdfEditor;
+
   private readonly destroyController = new AbortController();
 
   /*
@@ -69,16 +84,7 @@ export default class PdfViewer {
   };
   @observable public accessor isReady = false;
 
-  constructor(options: Options) {
-    this.editor = options.editor;
-    this.pdfViewer = this.createViewer(options);
-
-    when(
-      () => this.editor.isReady,
-      () => this.init(),
-      { signal: this.destroyController.signal },
-    );
-  }
+  public readonly searcher: Searcher;
 
   @computed
   public get totalPage() {
@@ -329,6 +335,7 @@ export default class PdfViewer {
   };
 
   public destroy() {
+    this.searcher.destroy();
     this.destroyController.abort();
   }
 
