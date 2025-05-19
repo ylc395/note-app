@@ -1,5 +1,5 @@
 import { render, createComponent } from 'solid-js/web';
-import { EventBus, PDFViewer, PDFLinkService, PDFPageView } from 'pdfjs-dist/web/pdf_viewer.mjs';
+import { EventBus, PDFViewer, PDFLinkService, PDFPageView, PDFFindController } from 'pdfjs-dist/web/pdf_viewer.mjs';
 import { AnnotationEditorType, AnnotationMode } from 'pdfjs-dist';
 import { debounce, memoize, range as numberRange } from 'lodash-es';
 import { observable, when, action, computed, autorun } from 'mobx';
@@ -55,6 +55,10 @@ export default class PdfViewer {
     return this.pdfViewer.viewer;
   }
 
+  public get eventBus() {
+    return this.pdfViewer.eventBus;
+  }
+
   public readonly selection = new Selection(this);
 
   @observable public accessor currentPage: number | undefined;
@@ -92,12 +96,15 @@ export default class PdfViewer {
   private createViewer(options: Options) {
     const eventBus = new EventBus();
     const linkService = new PDFLinkService({ eventBus, ignoreDestinationZoom: true });
+    const findController = new PDFFindController({ eventBus, linkService });
+
     const pdfViewer = new PDFViewer({
       ...options,
       annotationMode: AnnotationMode.ENABLE_STORAGE,
       annotationEditorMode: AnnotationEditorType.DISABLE, // annotationEditor 是什么不太清楚，不过这个东西如果启用，会和我们 App 的拖拽功能起冲突。先给它禁用了
       eventBus,
       linkService,
+      findController,
     });
 
     linkService.setViewer(pdfViewer);
@@ -256,7 +263,6 @@ export default class PdfViewer {
   @action
   private updatePage(pageNumber: number) {
     this.currentPage = pageNumber;
-    this.editor.currentPage = pageNumber;
   }
 
   private hijackClick() {

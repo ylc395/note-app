@@ -1,37 +1,24 @@
-import { CaseSensitiveIcon, StickyNoteIcon } from 'lucide-solid';
-import { debounce } from 'lodash-es';
+import { CaseSensitiveIcon } from 'lucide-solid';
+import { action } from 'mobx';
 
-import type TextSearcher from '#domain/client/app/model/note/editor/PdfEditor/TextSearcher';
-import { onCleanup } from 'solid-js';
+import type Searcher from './Searcher';
 
-export default function Input(props: { searcher: TextSearcher }) {
-  const handleInput = debounce((e: InputEvent & { target: HTMLInputElement }) => {
-    props.searcher.setKeyword(e.target.value);
-  }, 500);
-
-  onCleanup(() => {
-    handleInput.cancel();
-  });
+export default function Input(props: { searcher: Searcher }) {
+  function handleInput(e: InputEvent & { target: HTMLInputElement }) {
+    props.searcher.options.query = e.target.value;
+  }
 
   return (
     <div class="flex bg-white border mr-2">
-      <input class="outline-none bg-transparent" value={props.searcher.options.keyword} onInput={handleInput} />
+      <input class="outline-none bg-transparent" value={props.searcher.options.query} onInput={action(handleInput)} />
       <div>
         <button
           classList={{
-            outline: props.searcher.options.isCaseSensitive,
+            outline: props.searcher.options.caseSensitive,
           }}
-          onClick={() => props.searcher.toggle('isCaseSensitive')}
+          onClick={() => props.searcher.toggle('caseSensitive')}
         >
           <CaseSensitiveIcon />
-        </button>
-        <button
-          classList={{
-            outline: props.searcher.options.isCurrentPageOnly,
-          }}
-          onClick={() => props.searcher.toggle('isCurrentPageOnly')}
-        >
-          <StickyNoteIcon />
         </button>
       </div>
     </div>

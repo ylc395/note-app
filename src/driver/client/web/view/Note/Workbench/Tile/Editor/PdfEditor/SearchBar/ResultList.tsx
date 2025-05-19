@@ -1,7 +1,7 @@
 import { For, onMount } from 'solid-js';
 import assert from 'assert';
 
-import type { PageSearchResult, Digest } from '#domain/client/app/model/note/editor/PdfEditor/TextSearcher';
+import type { Digest, PageSearchResult } from './Searcher';
 
 function DigestView(props: { digest: Digest }) {
   let rootRef: HTMLDivElement | undefined;

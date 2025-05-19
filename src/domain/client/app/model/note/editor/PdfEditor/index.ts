@@ -12,7 +12,6 @@ import BaseEditor, { type Options } from '../BaseEditor';
 import DocumentFactory from './DocumentFactory';
 import OutlineList from './OutlineList';
 import AnnotationList from './AnnotationList';
-import TextSearcher from './TextSearcher';
 
 const uiStateSchema = z.object({
   hash: z.string().optional(),
@@ -44,17 +43,15 @@ export default class PdfEditor extends BaseEditor<z.infer<typeof uiStateSchema>>
 
   private readonly docFactory = container.resolve(DocumentFactory);
 
-  public readonly textSearcher = new TextSearcher(this);
-
   public readonly annotation = new AnnotationList(this.noteId);
 
   public readonly outline = new OutlineList(this.annotation);
 
   @observable.ref public accessor doc: PDFDocumentProxy | undefined; // this is view-independent
 
-  @observable public accessor currentPage: number | undefined;
-
   public override readonly mimeType = MimeTypes.PDF;
+
+  public texts?: Record<number, string>;
 
   private async init() {
     assert(this.blob.result.data);
@@ -69,6 +66,8 @@ export default class PdfEditor extends BaseEditor<z.infer<typeof uiStateSchema>>
     runInAction(() => {
       this.doc = doc;
     });
+
+    this.texts = await PdfEditor.extractTexts(doc);
   }
 
   protected sortAnnotations(annotation1: AnnotationVO, annotation2: AnnotationVO) {
@@ -85,6 +84,26 @@ export default class PdfEditor extends BaseEditor<z.infer<typeof uiStateSchema>>
   public override destroy() {
     super.destroy();
     this.docFactory.revoke(this.noteId);
-    this.textSearcher.destroy();
+  }
+
+  private static async extractTexts(doc: PDFDocumentProxy) {
+    const pageCount = doc.numPages;
+    const result: Record<number, string> = {};
+
+    for (let i = 0; i < pageCount; i++) {
+      const page = await doc.getPage(i + 1);
+      const text = await page.getTextContent({ disableNormalization: true });
+      const strBuf: string[] = [];
+
+      for (const textItem of text.items) {
+        if ('str' in textItem) {
+          strBuf.push(textItem.str);
+        }
+      }
+
+      result[i + 1] = strBuf.join('');
+    }
+
+    return result;
   }
 }

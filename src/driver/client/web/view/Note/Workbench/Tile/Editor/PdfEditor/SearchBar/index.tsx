@@ -1,52 +1,42 @@
 import { ArrowDownIcon, ArrowUpIcon, ListIcon } from 'lucide-solid';
-import { Show } from 'solid-js';
+import { onCleanup, Show } from 'solid-js';
 import { Popover } from '@ark-ui/solid';
 
-import type TextSearcher from '#domain/client/app/model/note/editor/PdfEditor/TextSearcher';
 import type PdfViewer from '../PDFViewer';
 
 import ResultList from './ResultList';
 import Input from './Input';
+import Searcher from './Searcher';
 
-export default function SearchBar(props: { searcher: TextSearcher; pdfViewer: PdfViewer }) {
-  props.searcher.init({
-    jumpTo: props.pdfViewer.jumpTo,
-  });
+export default function SearchBar(props: { pdfViewer: PdfViewer }) {
+  const searcher = new Searcher(props.pdfViewer);
+  onCleanup(() => searcher.destroy());
 
   return (
     <div class="flex z-10 m-auto w-fit relative left-36">
-      <Input searcher={props.searcher} />
-      <Show when={props.searcher.searchResult && props.searcher.searchResultCount === 0}>
-        <div>没有结果{props.searcher.options.isCurrentPageOnly && `(第${props.searcher.currentPage}页)`}</div>
+      <Input searcher={searcher} />
+      <Show when={searcher.matchesCount && !searcher.matchesCount.total}>
+        <div>没有结果</div>
       </Show>
-      <Show when={props.searcher.searchResultCount > 0 && props.searcher.current}>
-        {(current) => (
-          <div>
-            {Number(current().index) + 1}/{props.searcher.searchResultCount}
-            {props.searcher.options.isCurrentPageOnly && `(第${props.searcher.currentPage}页)`}
-          </div>
-        )}
+      <Show when={Number(searcher.matchesCount?.total) > 0}>
+        <div>
+          {searcher.matchesCount?.current}/{searcher.matchesCount?.total}
+        </div>
       </Show>
       <div class="ml-6">
-        <button
-          disabled={!props.searcher.current || props.searcher.current.index === 0}
-          onClick={() => props.searcher.goPrevious()}
-        >
+        <button disabled={!searcher.matchesCount?.total} onClick={() => searcher.previous()}>
           <ArrowUpIcon />
         </button>
-        <button
-          disabled={!props.searcher.current || props.searcher.current.index === props.searcher.searchResultCount - 1}
-          onClick={() => props.searcher.goNext()}
-        >
+        <button disabled={!searcher.matchesCount?.total} onClick={() => searcher.next()}>
           <ArrowDownIcon />
         </button>
         <Popover.Root>
-          <Popover.Trigger disabled={!props.searcher.searchResult}>
+          <Popover.Trigger disabled={!searcher.searchResult}>
             <ListIcon />
           </Popover.Trigger>
           <Popover.Positioner>
             <Popover.Content>
-              <ResultList searchResult={props.searcher.searchResult!} />
+              <ResultList searchResult={searcher.searchResult!} />
             </Popover.Content>
           </Popover.Positioner>
         </Popover.Root>

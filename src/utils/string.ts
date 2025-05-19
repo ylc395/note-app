@@ -6,6 +6,8 @@ export function extractDigest(params: {
   matchLength: number;
   prefixMaxLength?: number;
 }) {
+  console.log(params);
+
   // 第一个参数（locale）似乎不影响 Intl.Segmenter 分词的正确性
   // 没有明确的结论，初步的讨论见 https://stackoverflow.com/questions/75747868/how-exactly-locale-param-affects-the-result-of-intl-segmenter-execution-in-jav
   // AI 认为这是因为各个 JS 引擎的内部有类似智能识别语言种类的优化
