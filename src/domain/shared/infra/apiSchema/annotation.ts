@@ -36,7 +36,7 @@ export const selectorSchema = z.union([pDFTextFragmentSelectorSchema, pDFRectSel
 export const annotationSchema = z.object({
   id: entityIdSchema,
   targetId: noteSchema.shape["id"],
-  selectors: z.array(selectorSchema),
+  selector: selectorSchema,
   body: z.string(),
   bodyPlainText: z.string().optional(),
   color: z.string(),
@@ -44,7 +44,7 @@ export const annotationSchema = z.object({
   updatedAt: z.number()
 });
 export const annotationDTOSchema = z.intersection(annotationSchema.pick({
-  "selectors": true,
+  "selector": true,
   "targetId": true
 }), annotationSchema.pick({
   "body": true,
@@ -53,6 +53,6 @@ export const annotationDTOSchema = z.intersection(annotationSchema.pick({
 export const annotationPatchDTOSchema = annotationSchema.pick({
   "body": true,
   "color": true,
-  "selectors": true
+  "selector": true
 }).partial();
 export const annotationVOSchema = annotationSchema;

@@ -42,12 +42,12 @@ export default class SqliteAnnotationRepository extends BaseRepository implement
       .insertInto(this.tableName)
       .values({
         ...annotation,
-        selectors: JSON.stringify(annotation.selectors),
+        selector: JSON.stringify(annotation.selector),
       })
       .returning([
         `${this.tableName}.id`,
         `${this.tableName}.targetId`,
-        `${this.tableName}.selectors`,
+        `${this.tableName}.selector`,
         `${this.tableName}.body`,
         `${this.tableName}.color`,
         `${this.tableName}.createdAt`,
@@ -65,7 +65,7 @@ export default class SqliteAnnotationRepository extends BaseRepository implement
       .select([
         `${this.tableName}.id`,
         `${this.tableName}.targetId`,
-        `${this.tableName}.selectors`,
+        `${this.tableName}.selector`,
         `${this.tableName}.body`,
         `${this.tableName}.color`,
         `${this.tableName}.createdAt`,
@@ -87,13 +87,13 @@ export default class SqliteAnnotationRepository extends BaseRepository implement
       .updateTable(this.tableName)
       .set({
         ...patch,
-        selectors: patch.selectors ? JSON.stringify(patch.selectors) : undefined,
+        selector: patch.selector ? JSON.stringify(patch.selector) : undefined,
       })
       .where('id', '=', annotationId)
       .returning([
         `${this.tableName}.id`,
         `${this.tableName}.targetId`,
-        `${this.tableName}.selectors`,
+        `${this.tableName}.selector`,
         `${this.tableName}.body`,
         `${this.tableName}.color`,
         `${this.tableName}.createdAt`,
@@ -111,7 +111,7 @@ export default class SqliteAnnotationRepository extends BaseRepository implement
       .select([
         `${this.tableName}.id`,
         `${this.tableName}.targetId`,
-        `${this.tableName}.selectors`,
+        `${this.tableName}.selector`,
         `${this.tableName}.body`,
         `${this.tableName}.color`,
         `${this.tableName}.createdAt`,

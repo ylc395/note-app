@@ -70,16 +70,14 @@ export default class AnnotationList {
       return {
         isNative: true,
         targetId: this.noteId,
-        selectors: [
-          {
-            type: 'PDFRectSelector' as const,
-            page: v.page,
-            left: v.rect[0],
-            top: v.rect[1],
-            width: v.rect[2],
-            height: v.rect[3],
-          },
-        ],
+        selector: {
+          type: 'PDFRectSelector' as const,
+          page: v.page,
+          left: v.rect[0],
+          top: v.rect[1],
+          width: v.rect[2],
+          height: v.rect[3],
+        },
         color: '',
         id: `pdf-native-${v.id}`,
         body: v.contentsObj?.str || '',
@@ -93,7 +91,7 @@ export default class AnnotationList {
         .filter(({ annotationType }) => annotationType === AnnotationType.HIGHLIGHT)
         .map(toAnnotation),
       ...this.annotations.result.data.map((annotation) => ({ ...annotation, isNative: false })),
-    ];
+    ].sort(AnnotationList.sort);
   }
 
   @computed
@@ -113,7 +111,7 @@ export default class AnnotationList {
     await this.remote.annotation.create.mutate({
       color,
       targetId: this.noteId,
-      selectors: [selector],
+      selector,
       body,
     });
 
@@ -125,18 +123,29 @@ export default class AnnotationList {
       return 0;
     }
 
-    return this.list.reduce((count, annotation) => {
-      if (
-        annotation.selectors.some(
-          (s) =>
-            (s.type === 'PDFRectSelector' && s.page >= startPage && s.page < endPage) ||
-            (s.type === 'PDFTextFragmentSelector' && (s.startPage >= startPage || s.endPage <= endPage)),
-        )
-      ) {
-        return count + 1;
-      }
+    return this.list.filter(({ selector: s }) => {
+      return (
+        (s.type === 'PDFRectSelector' && s.page >= startPage && s.page < endPage) ||
+        (s.type === 'PDFTextFragmentSelector' && (s.startPage >= startPage || s.endPage <= endPage))
+      );
+    }).length;
+  }
 
-      return count;
-    }, 0);
+  public static sort(annotation1: AnnotationVO, annotation2: AnnotationVO) {
+    const page1 =
+      'page' in annotation1.selector
+        ? annotation1.selector.page
+        : 'startPage' in annotation1.selector
+        ? annotation1.selector.startPage
+        : 0;
+
+    const page2 =
+      'page' in annotation2.selector
+        ? annotation2.selector.page
+        : 'startPage' in annotation2.selector
+        ? annotation2.selector.startPage
+        : 0;
+
+    return page1 - page2;
   }
 }

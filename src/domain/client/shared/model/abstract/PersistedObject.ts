@@ -37,6 +37,8 @@ export default class PersistedObject<S> {
           set(value, issue.path, get(defaultValue, issue.path));
         }
         this.value = value as S;
+      } else {
+        this.value = defaultValue;
       }
     });
 

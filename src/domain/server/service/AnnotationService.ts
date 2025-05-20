@@ -19,8 +19,6 @@ export default class AnnotationService extends BaseService {
 
   @BaseService.transaction
   public async create(annotation: AnnotationDTO) {
-    assert(annotation.selectors.length > 0, 'empty selectors of annotation');
-
     // only notes have annotations
     await this.noteService.assertAvailableIds([annotation.targetId], { withFile: true });
 
@@ -30,7 +28,7 @@ export default class AnnotationService extends BaseService {
       targetId: annotation.targetId,
       body: annotation.body || '',
       bodyPlainText: annotation.body ? ContentService.markdownToPlain(annotation.body) : '',
-      selectors: annotation.selectors,
+      selector: annotation.selector,
       color: annotation.color || 'yellow',
       createdAt: now,
       updatedAt: now,

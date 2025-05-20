@@ -1,38 +1,31 @@
 import dayjs from 'dayjs';
-import { createMemo, For, Show } from 'solid-js';
+import { createMemo, Show } from 'solid-js';
 import { MoreHorizontalIcon } from 'lucide-solid';
 import type { AnnotationItem } from '#domain/client/app/model/note/editor/PdfEditor/AnnotationList';
-import { compact } from 'lodash-es';
 
 export default function Item(props: { value: AnnotationItem }) {
-  const page = createMemo(() =>
-    props.value.selectors.reduce((page, selector) => {
-      if (selector.type === 'PDFRectSelector' && selector.page < page) {
-        return selector.page;
-      }
+  const page = createMemo(() => {
+    const { selector } = props.value;
 
-      if (selector.type === 'PDFTextFragmentSelector' && selector.startPage < page) {
-        return selector.startPage;
-      }
+    if (selector.type === 'PDFRectSelector') {
+      return selector.page;
+    }
 
-      return page;
-    }, Infinity),
-  );
+    if (selector.type === 'PDFTextFragmentSelector') {
+      return selector.startPage;
+    }
+  });
 
-  const quotes = createMemo(() =>
-    compact(
-      props.value.selectors.map((s) => {
-        if (s.type === 'PDFTextFragmentSelector') {
-          return s.fullText;
-        }
-      }),
-    ),
-  );
+  const quote = createMemo(() => {
+    if (props.value.selector.type === 'PDFTextFragmentSelector') {
+      return props.value.selector.fullText;
+    }
+  });
 
   return (
     <div class="border p-2">
       <div class="flex text-sm justify-between items-center">
-        <Show when={Number.isFinite(page())}>
+        <Show when={typeof page() === 'number'}>
           <span>第{page()}页</span>
         </Show>
         <Show fallback={<span class="border px-1">内置</span>} when={!props.value.isNative}>
@@ -41,10 +34,8 @@ export default function Item(props: { value: AnnotationItem }) {
           </button>
         </Show>
       </div>
-      <Show when={quotes().length > 0}>
-        <div>
-          <For each={quotes()}>{(quote) => <blockquote class="bg-gray-200 opacity-60">{quote}</blockquote>}</For>
-        </div>
+      <Show when={quote()}>
+        <blockquote class="bg-gray-200 opacity-60">{quote()}</blockquote>
       </Show>
       <div class="my-2">{props.value.body}</div>
       <div class="text-sm text-right">

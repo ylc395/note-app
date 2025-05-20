@@ -1,10 +1,8 @@
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import { computed, observable, runInAction, when } from 'mobx';
 import assert from 'assert';
-import { isObject } from 'lodash-es';
 import { z } from 'zod';
 
-import type { AnnotationVO } from '#domain/shared/model/annotation';
 import container from '#utils/singletonContainer';
 import { MimeTypes } from '#domain/shared/model/file';
 
@@ -68,17 +66,6 @@ export default class PdfEditor extends BaseEditor<z.infer<typeof uiStateSchema>>
     });
 
     this.texts = await PdfEditor.extractTexts(doc);
-  }
-
-  protected sortAnnotations(annotation1: AnnotationVO, annotation2: AnnotationVO) {
-    const first1 = annotation1.selectors[0];
-    const first2 = annotation2.selectors[0];
-
-    if (isObject(first1) && isObject(first2) && 'page' in first1 && 'page' in first2) {
-      return Number(first1.page) - Number(first2.page);
-    }
-
-    return 0;
   }
 
   public override destroy() {

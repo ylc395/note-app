@@ -1,20 +1,22 @@
-import { render, createComponent } from 'solid-js/web';
-import { EventBus, PDFViewer, PDFLinkService, PDFPageView, PDFFindController } from 'pdfjs-dist/web/pdf_viewer.mjs';
+import {
+  EventBus,
+  PDFViewer,
+  PDFLinkService,
+  PDFFindController,
+  type PDFPageView,
+} from 'pdfjs-dist/web/pdf_viewer.mjs';
 import { AnnotationEditorType, AnnotationMode } from 'pdfjs-dist';
 import { debounce, memoize, range as numberRange } from 'lodash-es';
 import { observable, when, action, computed, autorun } from 'mobx';
 import assert from 'assert';
-import { processFragmentDirectives, removeMarks } from '#third-party/text-fragments-polyfill/text-fragment-utils';
 
 import type { default as PdfEditor, OutlineItem } from '#domain/client/app/model/note/editor/PdfEditor';
 import HistoryStack, { Direction, type HistoryRecord } from '#domain/client/app/model/base/HistoryStack';
 import shell from '#web/infra/shell';
-import type { PDFTextFragmentSelector } from '#domain/shared/model/annotation';
-import { APP_NAME } from '#domain/shared/infra/constants';
 
-import AnnotationMark from './AnnotationMark';
 import Selection from './SelectionTooltip/Selection';
 import Searcher from './SearchBar/Searcher';
+import AnnotationView from './AnnotationView';
 
 interface Options {
   container: HTMLDivElement;
@@ -39,6 +41,7 @@ export default class PdfViewer {
     this.editor = options.editor;
     this.pdfViewer = this.createViewer(options);
     this.searcher = new Searcher(this);
+    this.annotationView = new AnnotationView(this);
 
     when(
       () => this.editor.isReady,
@@ -49,9 +52,14 @@ export default class PdfViewer {
 
   private readonly pdfViewer: PDFViewer;
 
+  public readonly annotationView: AnnotationView;
+
   public readonly editor: PdfEditor;
 
   private readonly destroyController = new AbortController();
+
+  @observable.struct
+  public accessor renderedPages: number[] | undefined;
 
   /*
    * PDFLinkService 还能关联一个 PDFHistory 对象，其具有管理历史栈的功能。但它实际上在使用浏览器的 url 历史栈，这不是我们想要的
@@ -115,8 +123,11 @@ export default class PdfViewer {
 
     linkService.setViewer(pdfViewer);
 
-    pdfViewer.eventBus.on('pagechanging', ({ pageNumber }: { pageNumber: number }) => this.updatePage(pageNumber));
+    pdfViewer.eventBus.on('pagechanging', ({ pageNumber }: { pageNumber: number }) =>
+      this.updateCurrentPage(pageNumber),
+    );
     pdfViewer.eventBus.on('updateviewarea', this.focusOutline.bind(this));
+    pdfViewer.eventBus.on('updateviewarea', this.updateRenderedPage.bind(this));
 
     pdfViewer.eventBus.on(
       'scalechanging',
@@ -143,14 +154,6 @@ export default class PdfViewer {
       }
     });
 
-    pdfViewer.eventBus.on('textlayerrendered', ({ pageNumber }: { pageNumber: 1 }) => {
-      when(
-        () => Boolean(this.editor.annotation.list),
-        () => this.renderAnnotation(pageNumber),
-        { signal: this.destroyController.signal },
-      );
-    });
-
     this.destroyController.signal.addEventListener(
       'abort',
       () => {
@@ -163,82 +166,8 @@ export default class PdfViewer {
     return pdfViewer;
   }
 
-  private pageAnnotationMarkMap: Record<number, { root: HTMLElement; dispose: Array<() => void> }> = {};
-
   private focusOutline(e: { location: { pageNumber: number } }) {
     this.editor.outline.focus(e.location.pageNumber);
-  }
-
-  public renderAnnotation(page: number) {
-    assert(this.viewerElement);
-    const MARK_CLASS_NAME = `${APP_NAME}-pdf-mark`;
-
-    const pageAnnotationMark = this.pageAnnotationMarkMap[page];
-
-    if (pageAnnotationMark) {
-      for (const dispose of pageAnnotationMark.dispose) {
-        this.destroyController.signal.removeEventListener('abort', dispose);
-        dispose();
-      }
-      pageAnnotationMark.root.remove();
-      delete this.pageAnnotationMarkMap[page];
-    }
-
-    removeMarks(
-      Array.from(
-        this.viewerElement.querySelectorAll(
-          `.${MARK_CLASS_NAME}[data-start-page="${page}"], .${MARK_CLASS_NAME}[data-end-page="${page}"]`,
-        ),
-      ),
-    );
-
-    assert(this.editor.annotation.list);
-
-    for (const annotation of this.editor.annotation.list) {
-      const fragments = annotation.selectors.filter(
-        (s) => s.type === 'PDFTextFragmentSelector' && (s.startPage === page || s.endPage === page),
-      ) as PDFTextFragmentSelector[];
-
-      for (const [i, fragment] of fragments.entries()) {
-        const root =
-          fragment.startPage === fragment.endPage
-            ? (this.pdfViewer.getPageView(page - 1) as PDFPageView).textLayer?.div
-            : this.viewerElement;
-
-        assert(root);
-        const { text } = processFragmentDirectives({ text: [fragment] }, document, root);
-
-        for (const [j, mark] of text.entries()) {
-          for (const [k, el] of mark.entries()) {
-            (el as HTMLElement).style.backgroundColor = annotation.color;
-            (el as HTMLElement).style.color = 'transparent';
-            (el as HTMLElement).style.opacity = '0.4';
-            (el as HTMLElement).dataset.startPage = String(fragment.startPage);
-            (el as HTMLElement).dataset.endPage = String(fragment.endPage);
-            (el as HTMLElement).classList.add(MARK_CLASS_NAME);
-
-            // 给带评论的 mark 元素搭配一个图标。仅第一个 mark 元素会搭配这个图标
-            if (annotation.body && i === 0 && j === 0 && k === mark.length - 1) {
-              const markContainer = document.createElement('div');
-              markContainer.classList.add('absolute', `${APP_NAME}-pdf-annotation-mark-container`);
-
-              const dispose = render(
-                () => createComponent(AnnotationMark, { annotation, markEl: el as HTMLElement }),
-                markContainer,
-              );
-
-              if (!this.pageAnnotationMarkMap[page]) {
-                this.pageAnnotationMarkMap[page] = { root: markContainer, dispose: [] };
-              }
-
-              this.pageAnnotationMarkMap[page].dispose.push(dispose);
-              this.destroyController.signal.addEventListener('abort', dispose, { once: true });
-              (this.pdfViewer.getPageView(page - 1) as PDFPageView).textLayer!.div.append(markContainer);
-            }
-          }
-        }
-      }
-    }
   }
 
   private async init() {
@@ -267,8 +196,19 @@ export default class PdfViewer {
   }
 
   @action
-  private updatePage(pageNumber: number) {
+  private updateCurrentPage(pageNumber: number) {
     this.currentPage = pageNumber;
+  }
+
+  @action
+  private updateRenderedPage() {
+    this.renderedPages = (Array.from(this.pdfViewer.getCachedPageViews()) as PDFPageView[])
+      .map((view) => view.pdfPage.pageNumber as number)
+      .sort((a, b) => a - b);
+  }
+
+  public getPageTextLayerElement(page: number) {
+    return (this.pdfViewer.getPageView(page - 1) as PDFPageView).textLayer?.div;
   }
 
   private hijackClick() {
@@ -336,6 +276,7 @@ export default class PdfViewer {
 
   public destroy() {
     this.searcher.destroy();
+    this.annotationView.destroy();
     this.destroyController.abort();
   }
 

@@ -183,7 +183,6 @@ export default class Selection {
       },
     });
 
-    this.pdfViewer.renderAnnotation(findPage(this.floating.focusNode));
     this.closeCommentEditor();
     this.hide(true);
   }

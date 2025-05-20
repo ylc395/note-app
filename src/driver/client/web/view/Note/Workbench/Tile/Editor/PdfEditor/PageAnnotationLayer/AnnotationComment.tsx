@@ -3,9 +3,12 @@ import { onCleanup, onMount } from 'solid-js';
 import { autoUpdate, computePosition, offset } from '@floating-ui/dom';
 import { Popover, PopoverContent } from '@ark-ui/solid';
 
-import type { AnnotationVO } from '#domain/shared/model/annotation';
-
-export default function AnnotationMark(props: { annotation: AnnotationVO; markEl: HTMLElement }) {
+export default function AnnotationComment(props: {
+  text: string;
+  markEl: HTMLElement;
+  defaultOpen?: boolean;
+  onOpenChange?: (value: boolean) => void;
+}) {
   let buttonRef: HTMLButtonElement | undefined;
 
   onMount(() => {
@@ -23,6 +26,8 @@ export default function AnnotationMark(props: { annotation: AnnotationVO; markEl
 
   return (
     <Popover.Root
+      onOpenChange={({ open }) => props.onOpenChange?.(open)}
+      defaultOpen={props.defaultOpen}
       positioning={{
         placement: 'right-start',
       }}
@@ -31,7 +36,7 @@ export default function AnnotationMark(props: { annotation: AnnotationVO; markEl
         <MessageSquareIcon />
       </Popover.Trigger>
       <Popover.Positioner>
-        <PopoverContent class="w-64 bg-gray-200 ml-1 p-2">{props.annotation.body}</PopoverContent>
+        <PopoverContent class="w-64 bg-gray-200 ml-1 p-2">{props.text}</PopoverContent>
       </Popover.Positioner>
     </Popover.Root>
   );

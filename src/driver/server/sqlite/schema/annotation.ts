@@ -9,7 +9,7 @@ export interface Row {
   body: string;
   bodyPlainText: string;
   color: string;
-  selectors: JSONColumnType<Annotation['selectors']>;
+  selector: JSONColumnType<Annotation['selector']>;
   createdAt: number;
   updatedAt: number;
 }
@@ -23,7 +23,7 @@ export default {
       .addColumn('targetId', 'text', (col) => col.notNull())
       .addColumn('body', 'text', (col) => col.notNull().defaultTo(''))
       .addColumn('bodyPlainText', 'text', (col) => col.notNull().defaultTo(''))
-      .addColumn('selectors', 'text', (col) => col.notNull())
+      .addColumn('selector', 'text', (col) => col.notNull())
       .addColumn('color', 'text', (col) => col.notNull())
       .addColumn('createdAt', 'integer', (col) => col.notNull())
       .addColumn('updatedAt', 'integer', (col) => col.notNull());

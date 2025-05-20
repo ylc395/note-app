@@ -40,7 +40,7 @@ export type Selector = PDFTextFragmentSelector | PDFRectSelector | HTMLTextFragm
 export interface Annotation {
   id: EntityId;
   targetId: Note['id'];
-  selectors: Array<Selector>;
+  selector: Selector;
   body: string;
   bodyPlainText?: string;
   color: string;
@@ -51,12 +51,12 @@ export interface Annotation {
 /**
  * @api
  */
-export type AnnotationDTO = Pick<Annotation, 'selectors' | 'targetId'> & Partial<Pick<Annotation, 'body' | 'color'>>;
+export type AnnotationDTO = Pick<Annotation, 'selector' | 'targetId'> & Partial<Pick<Annotation, 'body' | 'color'>>;
 
 /**
  * @api
  */
-export type AnnotationPatchDTO = Partial<Pick<Annotation, 'body' | 'color' | 'selectors'>>;
+export type AnnotationPatchDTO = Partial<Pick<Annotation, 'body' | 'color' | 'selector'>>;
 
 /**
  * @api
