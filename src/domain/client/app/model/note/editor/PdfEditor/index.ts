@@ -9,7 +9,7 @@ import { MimeTypes } from '#domain/shared/model/file';
 import BaseEditor, { type Options } from '../BaseEditor';
 import DocumentFactory from './DocumentFactory';
 import OutlineList from './OutlineList';
-import AnnotationList from './AnnotationList';
+import AnnotationManager from './AnnotationManager';
 
 const uiStateSchema = z.object({
   hash: z.string().optional(),
@@ -41,7 +41,7 @@ export default class PdfEditor extends BaseEditor<z.infer<typeof uiStateSchema>>
 
   private readonly docFactory = container.resolve(DocumentFactory);
 
-  public readonly annotation = new AnnotationList(this.noteId);
+  public readonly annotation = new AnnotationManager(this.noteId);
 
   public readonly outline = new OutlineList(this.annotation);
 

@@ -9,7 +9,7 @@ export const hTMLCssSelectorSchema = z.object({
   type: z.literal("HTMLCssSelector"),
   value: z.string()
 });
-export const textFragmentSchema = z.object({
+const textFragmentSchema = z.object({
   textStart: z.string(),
   textEnd: z.string().optional(),
   suffix: z.string().optional(),
@@ -26,12 +26,14 @@ export const pDFRectSelectorSchema = z.object({
   width: z.number(),
   height: z.number()
 });
-export const pDFTextFragmentSelectorSchema = textFragmentSchema.merge(z.object({
-  type: z.literal("PDFTextFragmentSelector"),
-  startPage: z.number(),
-  endPage: z.number(),
-  fullText: z.string()
+const pdfTextFragmentSchema = textFragmentSchema.merge(z.object({
+  page: z.number()
 }));
+export const pDFTextFragmentSelectorSchema = z.object({
+  type: z.literal("PDFTextFragmentSelector"),
+  fullText: z.string(),
+  fragments: z.array(pdfTextFragmentSchema)
+});
 export const selectorSchema = z.union([pDFTextFragmentSelectorSchema, pDFRectSelectorSchema, hTMLTextFragmentSelectorSchema, hTMLCssSelectorSchema]);
 export const annotationSchema = z.object({
   id: entityIdSchema,

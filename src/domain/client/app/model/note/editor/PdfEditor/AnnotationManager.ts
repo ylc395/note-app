@@ -1,4 +1,5 @@
 import { computed, observable, runInAction } from 'mobx';
+import { max, min } from 'lodash-es';
 import { type PDFDocumentProxy, AnnotationType } from 'pdfjs-dist';
 import { createQuery } from 'mobx-tanstack-query/preset';
 import dayjs from 'dayjs';
@@ -28,7 +29,7 @@ export interface AnnotationItem extends AnnotationVO {
   isNative: boolean;
 }
 
-export default class AnnotationList {
+export default class AnnotationManager {
   constructor(private readonly noteId: NoteVO['id']) {}
 
   private readonly remote = container.resolve(rpcToken);
@@ -91,7 +92,7 @@ export default class AnnotationList {
         .filter(({ annotationType }) => annotationType === AnnotationType.HIGHLIGHT)
         .map(toAnnotation),
       ...this.annotations.result.data.map((annotation) => ({ ...annotation, isNative: false })),
-    ].sort(AnnotationList.sort);
+    ].sort(AnnotationManager.sort);
   }
 
   @computed
@@ -126,24 +127,29 @@ export default class AnnotationList {
     return this.list.filter(({ selector: s }) => {
       return (
         (s.type === 'PDFRectSelector' && s.page >= startPage && s.page < endPage) ||
-        (s.type === 'PDFTextFragmentSelector' && (s.startPage >= startPage || s.endPage <= endPage))
+        (s.type === 'PDFTextFragmentSelector' &&
+          (AnnotationManager.getPage(s, 'start') >= startPage || AnnotationManager.getPage(s, 'end') <= endPage))
       );
     }).length;
   }
 
-  public static sort(annotation1: AnnotationVO, annotation2: AnnotationVO) {
+  public static getPage(selector: PDFTextFragmentSelector, key: 'start' | 'end') {
+    return (key === 'start' ? min : max)(selector.fragments.map(({ page }) => page)) ?? 0;
+  }
+
+  private static sort(annotation1: AnnotationVO, annotation2: AnnotationVO) {
     const page1 =
-      'page' in annotation1.selector
+      annotation1.selector.type === 'PDFRectSelector'
         ? annotation1.selector.page
-        : 'startPage' in annotation1.selector
-        ? annotation1.selector.startPage
+        : annotation1.selector.type === 'PDFTextFragmentSelector'
+        ? AnnotationManager.getPage(annotation1.selector, 'start')
         : 0;
 
     const page2 =
-      'page' in annotation2.selector
+      annotation2.selector.type === 'PDFRectSelector'
         ? annotation2.selector.page
-        : 'startPage' in annotation2.selector
-        ? annotation2.selector.startPage
+        : annotation2.selector.type === 'PDFTextFragmentSelector'
+        ? AnnotationManager.getPage(annotation2.selector, 'end')
         : 0;
 
     return page1 - page2;

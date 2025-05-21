@@ -1,7 +1,10 @@
 import dayjs from 'dayjs';
 import { createMemo, Show } from 'solid-js';
 import { MoreHorizontalIcon } from 'lucide-solid';
-import type { AnnotationItem } from '#domain/client/app/model/note/editor/PdfEditor/AnnotationList';
+import {
+  type AnnotationItem,
+  default as AnnotationList,
+} from '#domain/client/app/model/note/editor/PdfEditor/AnnotationManager';
 
 export default function Item(props: { value: AnnotationItem }) {
   const page = createMemo(() => {
@@ -12,7 +15,7 @@ export default function Item(props: { value: AnnotationItem }) {
     }
 
     if (selector.type === 'PDFTextFragmentSelector') {
-      return selector.startPage;
+      return AnnotationList.getPage(selector, 'start');
     }
   });
 

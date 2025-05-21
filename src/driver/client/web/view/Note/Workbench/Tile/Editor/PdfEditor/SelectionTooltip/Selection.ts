@@ -152,34 +152,14 @@ export default class Selection {
       return;
     }
 
-    const findPage = (node: Node) => {
-      let element = node.parentElement;
-      let page: number | undefined;
-
-      while (element) {
-        if (element.dataset.pageNumber) {
-          page = Number(element.dataset.pageNumber);
-          break;
-        }
-        element = element.parentElement;
-      }
-
-      if (!page) {
-        throw new Error('can not get page');
-      }
-
-      return page;
-    };
-
     await this.pdfViewer.editor.annotation.create({
       color: this.uiState.get('color'),
       body: this.commentEditor?.content,
       selector: {
         type: 'PDFTextFragmentSelector',
-        ...result.fragment,
         fullText: this.floating.range.toString(),
-        startPage: findPage(this.floating.range.startContainer),
-        endPage: findPage(this.floating.range.endContainer),
+        fragments: [],
+        // fragments: Selection.generateTextFragments(this.floating.range),
       },
     });
 
@@ -292,5 +272,26 @@ export default class Selection {
     this.show.cancel();
     this.closeCommentEditor(true);
     document.removeEventListener('selectionchange', this.handleSelection);
+  }
+
+  private static generateTextFragments(range: Range) {
+    const findPage = (node: Node) => {
+      let element = node.parentElement;
+      let page: number | undefined;
+
+      while (element) {
+        if (element.dataset.pageNumber) {
+          page = Number(element.dataset.pageNumber);
+          break;
+        }
+        element = element.parentElement;
+      }
+
+      if (!page) {
+        throw new Error('can not get page');
+      }
+
+      return page;
+    };
   }
 }

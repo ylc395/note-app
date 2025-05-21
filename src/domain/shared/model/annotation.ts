@@ -2,18 +2,21 @@ import type { EntityId } from './entity.js';
 import type { Note } from './note.js';
 
 // https://developer.mozilla.org/en-US/docs/Web/URI/Reference/Fragment/Text_fragments
-export interface TextFragment {
+interface TextFragment {
   textStart: string;
   textEnd?: string;
   suffix?: string;
   prefix?: string;
 }
 
-export interface PDFTextFragmentSelector extends TextFragment {
+interface PdfTextFragment extends TextFragment {
+  page: number;
+}
+
+export interface PDFTextFragmentSelector {
   type: 'PDFTextFragmentSelector';
-  startPage: number;
-  endPage: number;
   fullText: string;
+  fragments: PdfTextFragment[]; // 我们假定每个 Fragment 的 page 总是不相同
 }
 
 export interface PDFRectSelector {

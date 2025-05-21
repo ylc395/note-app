@@ -1,6 +1,5 @@
 import { createSignal, onCleanup, onMount, Show } from 'solid-js';
 import assert from 'assert';
-import 'pdfjs-dist/web/pdf_viewer.css';
 
 import type PdfEditor from '#domain/client/app/model/note/editor/PdfEditor';
 import PDFViewer from './PDFViewer';
@@ -9,6 +8,7 @@ import Outline from './OutlineList';
 import AnnotationList from './AnnotationList';
 import SelectionTooltip from './SelectionTooltip';
 import SearchBar from './SearchBar';
+import './style.css';
 
 export default function PdfEditorView(props: { editor: PdfEditor }) {
   let containerRef: HTMLDivElement | undefined;
