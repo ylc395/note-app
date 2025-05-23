@@ -3,80 +3,97 @@ import {
   generateFragmentFromRange,
   type GenerateFragmentResult,
 } from '#third-party/text-fragments-polyfill/fragment-generation-utils';
-import { markRange, removeMarks } from '#third-party/text-fragments-polyfill/text-fragment-utils';
-import { action, autorun, observable } from 'mobx';
+import {
+  markRange,
+  processFragmentDirectives,
+  removeMarks,
+} from '#third-party/text-fragments-polyfill/text-fragment-utils';
+import { action, observable } from 'mobx';
 import assert from 'assert';
-import { debounce } from 'lodash-es';
+import { debounce, last } from 'lodash-es';
 import { autoUpdate, computePosition, flip, offset } from '@floating-ui/dom';
 
 import PersistedObject from '#domain/client/shared/model/abstract/PersistedObject';
 import { IS_DEV } from '#domain/shared/infra/env';
 import type PdfViewer from '../PDFViewer';
 
-type ValidSelection = ReturnType<typeof window.getSelection> & { focusNode: Node };
+interface CommentEditor {
+  content: string;
+  generateResult: GenerateFragmentResult;
+  marks: Element[];
+}
 
 export default class Selection {
   constructor(private readonly pdfViewer: PdfViewer) {}
 
   private rootEl?: HTMLElement;
 
-  @observable.ref private accessor floating:
-    | {
-        range: Range;
-        focusNode: Node;
-        placement: 'top' | 'bottom';
-        toStart: boolean;
-        referenceElement?: HTMLElement;
-        dispose?: () => void;
-      }
-    | undefined;
+  @observable public accessor isVisible = false;
 
-  @observable.shallow public accessor commentEditor:
-    | {
-        content: string;
-        generateResult: GenerateFragmentResult;
-        marks?: Element[];
+  private current?: {
+    range?: Range;
+    originRange?: { startNode: Node; endNode: Node; startOffset: number; endOffset: number };
+    referenceElement?: HTMLElement;
+    toStart: boolean;
+    dispose?: () => void;
+  };
+
+  private getCurrentRange() {
+    if (!this.current?.originRange?.startNode.firstChild || !this.current.originRange.endNode.lastChild) {
+      return null;
+    }
+
+    const range = new Range();
+    const setBoundary = (node: Node, totalOffset: number, isStart?: boolean) => {
+      let offset = 0;
+
+      for (const child of node.childNodes) {
+        // childNodes 中可能包含 referenceElement，需要通过 for 循环来跳过之
+        if (!(child instanceof Text)) {
+          continue;
+        }
+
+        if (child.length + offset >= totalOffset) {
+          range[isStart ? 'setStart' : 'setEnd'](child, totalOffset - offset);
+          return true;
+        } else {
+          offset += child.length;
+        }
       }
-    | undefined;
+      return false;
+    };
+
+    if (
+      setBoundary(this.current.originRange.startNode, this.current.originRange.startOffset, true) &&
+      setBoundary(this.current.originRange.endNode, this.current.originRange.endOffset)
+    ) {
+      return range;
+    }
+
+    return null;
+  }
+
+  @observable.ref public accessor commentEditor: CommentEditor | undefined;
 
   private readonly uiState = new PersistedObject('pdf-selection', z.object({ color: z.string() }), { color: 'yellow' });
 
-  private stopSelecting?: () => void;
-
-  public init(rootEl: HTMLElement) {
-    document.addEventListener('selectionchange', this.handleSelection);
-    this.stopSelecting = autorun(this.select.bind(this));
+  public activate(rootEl: HTMLElement) {
     this.rootEl = rootEl;
+    this.restoreCommentEditor();
+
+    document.addEventListener('selectionchange', this.handleSelection.bind(this));
   }
 
-  private select() {
-    if (!this.floating?.range) {
-      return;
+  public deactivate() {
+    if (this.current) {
+      this.current.dispose?.();
+      this.current.dispose = undefined;
+      this.current.referenceElement = undefined;
+      this.current.originRange = undefined;
     }
 
-    // 选中文字后，调起评论编辑框，则 mark 刚才选中的东西
-    if (this.commentEditor) {
-      const marks = markRange(this.floating.range.cloneRange());
-
-      for (const mark of marks) {
-        (mark as HTMLElement).style.backgroundColor = this.color;
-        (mark as HTMLElement).style.backgroundColor = this.color;
-        (mark as HTMLElement).style.color = 'transparent';
-        (mark as HTMLElement).style.opacity = '0.4';
-      }
-
-      this.commentEditor.marks = marks;
-    }
-
-    // 当前选区工具栏可见但又没选区，则选一下
-    if (this.isVisible && !this.getValidSelection()) {
-      const s = window.getSelection();
-
-      if (s) {
-        s.removeAllRanges();
-        s.addRange(this.floating.range);
-      }
-    }
+    this.show.cancel();
+    document.removeEventListener('selectionchange', this.handleSelection);
   }
 
   private readonly handleSelection = () => {
@@ -84,16 +101,22 @@ export default class Selection {
       return;
     }
 
-    const s = this.getValidSelection();
+    const s = window.getSelection();
 
-    if (s) {
-      this.show(s);
-    } else {
+    if (
+      !s ||
+      !s.focusNode ||
+      !s.anchorNode ||
+      !this.pdfViewer.viewerElement?.contains(s.anchorNode) ||
+      !this.pdfViewer.viewerElement.contains(s.focusNode) ||
+      s.isCollapsed ||
+      s.rangeCount !== 1
+    ) {
       this.hide();
+    } else {
+      this.show();
     }
   };
-
-  @observable public accessor isVisible = false;
 
   public get color() {
     return this.uiState.get('color');
@@ -104,24 +127,73 @@ export default class Selection {
   }
 
   @action
-  public initCommentEditor() {
+  public openCommentEditor() {
+    const currentRange = this.getCurrentRange();
+    assert(currentRange);
+
+    const marks = markRange(currentRange);
+
+    for (const mark of marks) {
+      (mark as HTMLElement).style.backgroundColor = this.color;
+      (mark as HTMLElement).style.color = 'transparent';
+      (mark as HTMLElement).style.opacity = '0.4';
+    }
+
     this.isVisible = false;
     this.commentEditor = {
       content: '',
-      generateResult: this.generateFragment(), // 需要提前生成一下。因为之后视图层会被 mark 标签搞乱，到时候再生成，生成的就不准了
+      generateResult: this.generateFragment(),
+      marks,
+    };
+  }
+
+  private restoreCommentEditor() {
+    if (!this.current || !this.commentEditor || !this.commentEditor.generateResult.fragment) {
+      return;
+    }
+
+    const marks = processFragmentDirectives({ text: this.commentEditor.generateResult.fragment }).text[0];
+    const firstMark = marks?.[0];
+    const lastMark = last(marks);
+
+    if (!firstMark || !lastMark) {
+      return;
+    }
+
+    const range = new Range(); // Range 对象是活的。当 DOM 变化时（例如 mark 元素被移除）它总是能映射到最新的 DOM 上
+    range.setStartAfter(firstMark);
+    range.setEndBefore(lastMark);
+
+    this.commentEditor.marks = marks;
+    this.current = {
+      ...this.current,
+      ...this.generateReferenceElement(range, this.current.toStart),
     };
   }
 
   @action
-  public closeCommentEditor(keep?: boolean) {
-    if (this.commentEditor?.marks) {
-      removeMarks(this.commentEditor.marks);
+  public closeCommentEditor(clearSelection?: boolean) {
+    assert(this.commentEditor);
+    removeMarks(this.commentEditor.marks);
+
+    const currentRange = this.getCurrentRange();
+    assert(currentRange);
+
+    if (!clearSelection) {
+      this.isVisible = true;
+
+      assert(this.current);
+      const s = window.getSelection();
+
+      if (s) {
+        // 这两行将立刻分别触发 handleSelection
+        // 因此我们把删除 commentEditor 放在最后，这样 handleSection 就会立刻 return
+        s.removeAllRanges();
+        s.addRange(currentRange);
+      }
     }
 
-    if (!keep) {
-      this.commentEditor = undefined;
-      this.isVisible = true;
-    }
+    this.commentEditor = undefined;
   }
 
   @action
@@ -131,20 +203,17 @@ export default class Selection {
   }
 
   private generateFragment() {
-    assert(this.floating && this.pdfViewer.viewerElement);
+    assert(this.current && this.pdfViewer.viewerElement && this.current.range);
 
     return generateFragmentFromRange(
-      this.floating.range,
+      this.current.range,
       IS_DEV ? new Date(8640000000000000) : undefined,
       this.pdfViewer.viewerElement,
     );
   }
 
   public async highlight() {
-    if (!this.floating) {
-      return;
-    }
-
+    assert(this.current && this.current.originRange);
     const result = this.commentEditor ? this.commentEditor.generateResult : this.generateFragment();
 
     if (!result?.fragment) {
@@ -157,141 +226,120 @@ export default class Selection {
       body: this.commentEditor?.content,
       selector: {
         type: 'PDFTextFragmentSelector',
-        fullText: this.floating.range.toString(),
+        fullText: this.current.originRange.toString(),
         fragments: [],
         // fragments: Selection.generateTextFragments(this.floating.range),
       },
     });
 
-    this.closeCommentEditor();
+    if (this.commentEditor) {
+      this.closeCommentEditor(true);
+    }
+
     this.hide(true);
   }
 
-  private getValidSelection() {
-    const s = window.getSelection();
-
-    if (
-      !s ||
-      !s.focusNode ||
-      !s.anchorNode ||
-      !this.pdfViewer.viewerElement?.contains(s.anchorNode) ||
-      !this.pdfViewer.viewerElement.contains(s.focusNode) ||
-      s.isCollapsed ||
-      s.rangeCount !== 1
-    ) {
-      return null;
-    }
-
-    return s as ValidSelection;
-  }
-
-  private disposeFloating() {
-    if (!this.floating) {
+  @action
+  private hide(removeSelection?: boolean) {
+    if (!this.current) {
       return;
     }
 
-    this.floating.dispose?.();
-    this.floating.dispose = undefined;
+    this.current.dispose?.();
+    this.current.dispose = undefined;
 
-    this.floating.referenceElement?.remove();
-    this.floating.referenceElement = undefined;
-  }
+    this.current.referenceElement?.remove();
+    this.current.referenceElement = undefined;
 
-  @action
-  private hide(removeRange?: boolean) {
-    this.disposeFloating();
     this.show.cancel();
-    this.isVisible = false;
-    this.floating = undefined;
 
-    if (removeRange) {
+    this.isVisible = false;
+    this.current = undefined;
+
+    if (removeSelection) {
       window.getSelection()?.removeAllRanges();
     }
   }
 
   private readonly show = debounce(
-    action((s?: ValidSelection) => {
-      if (s && s.focusNode && s.anchorNode) {
-        let toStart: boolean;
-        let placement: 'top' | 'bottom' = 'top';
-
-        if (s.anchorNode === s.focusNode) {
-          toStart = s.anchorOffset > s.focusOffset;
-          placement = toStart ? 'top' : 'bottom';
-        } else {
-          toStart = Boolean(s.focusNode.compareDocumentPosition(s.anchorNode) & Node.DOCUMENT_POSITION_FOLLOWING);
-          placement = toStart ? 'top' : 'bottom';
-        }
-
-        this.floating = {
-          range: s.getRangeAt(0),
-          focusNode: s.focusNode,
-          placement,
-          toStart,
-          referenceElement: document.createElement('span'),
-        };
+    action(() => {
+      if (this.current) {
+        this.current.dispose?.();
+        this.current.referenceElement?.remove();
       }
 
-      if (!this.floating) {
+      const s = window.getSelection();
+
+      if (!s || !s.focusNode || !s.anchorNode) {
         return;
       }
 
-      assert(this.rootEl, 'no rootEl');
-      this.floating.referenceElement = document.createElement('span');
-      this.floating.referenceElement.style.height = '1em';
+      const range = s.getRangeAt(0);
+      const startNode =
+        range.startContainer.nodeType === Node.TEXT_NODE ? range.startContainer : range.startContainer.firstChild;
+      const endNode =
+        range.endContainer.nodeType === Node.TEXT_NODE ? range.endContainer : range.endContainer.lastChild;
 
-      if (IS_DEV) {
-        this.floating.referenceElement.style.backgroundColor = 'black';
+      if (!startNode || !endNode || !startNode.parentElement || !endNode.parentElement) {
+        return;
       }
 
-      const range = this.floating.range.cloneRange();
+      startNode.parentElement.normalize();
+      endNode.parentElement.normalize();
 
-      range.collapse(this.floating.toStart);
-      range.insertNode(this.floating.referenceElement);
+      let toStart = this.current?.toStart;
+
+      if (typeof toStart !== 'boolean') {
+        if (s.anchorNode === s.focusNode) {
+          toStart = s.anchorOffset > s.focusOffset;
+        } else {
+          toStart = Boolean(s.focusNode.compareDocumentPosition(s.anchorNode) & Node.DOCUMENT_POSITION_FOLLOWING);
+        }
+      }
+
+      this.current = {
+        range,
+        originRange: {
+          startNode: startNode.parentElement,
+          startOffset: range.startOffset,
+          endNode: endNode.parentElement,
+          endOffset: range.endOffset,
+        },
+        toStart,
+        // 这个应当发生在读取 startOffset / endOffset 后，否则这两个数据就不准了（referenceElement 元素的插入会改变这两个值）
+        ...this.generateReferenceElement(range, toStart),
+      };
 
       this.isVisible = true;
-      this.floating.dispose = autoUpdate(this.floating.referenceElement, this.rootEl, () => {
-        if (!this.floating?.referenceElement) {
-          return;
-        }
-
-        computePosition(this.floating.referenceElement, this.rootEl!, {
-          placement: this.floating!.placement,
-          middleware: [flip(), offset(5)],
-        }).then(({ x, y }) => {
-          Object.assign(this.rootEl!.style, { left: `${x}px`, top: `${y}px` });
-        });
-      });
     }),
     500,
   );
 
-  public dispose() {
-    this.stopSelecting?.();
-    this.disposeFloating();
-    this.show.cancel();
-    this.closeCommentEditor(true);
-    document.removeEventListener('selectionchange', this.handleSelection);
-  }
+  private generateReferenceElement(range: Range, toStart: boolean) {
+    const referenceElement = document.createElement('span');
+    referenceElement.style.height = '1em';
 
-  private static generateTextFragments(range: Range) {
-    const findPage = (node: Node) => {
-      let element = node.parentElement;
-      let page: number | undefined;
+    if (IS_DEV) {
+      referenceElement.style.width = '1px';
+      referenceElement.style.backgroundColor = 'black';
+    }
 
-      while (element) {
-        if (element.dataset.pageNumber) {
-          page = Number(element.dataset.pageNumber);
-          break;
-        }
-        element = element.parentElement;
-      }
+    const clonedRange = range.cloneRange();
+    clonedRange.collapse(toStart);
+    clonedRange.insertNode(referenceElement);
 
-      if (!page) {
-        throw new Error('can not get page');
-      }
+    const { rootEl } = this;
+    assert(rootEl, 'no rootEl');
 
-      return page;
-    };
+    const dispose = autoUpdate(referenceElement, rootEl, () => {
+      computePosition(referenceElement, rootEl, {
+        placement: toStart ? 'top' : 'bottom',
+        middleware: [flip(), offset(5)],
+      }).then(({ x, y }) => {
+        Object.assign(rootEl.style, { left: `${x}px`, top: `${y}px` });
+      });
+    });
+
+    return { dispose, referenceElement };
   }
 }

@@ -14,7 +14,6 @@ import type { default as PdfEditor, OutlineItem } from '#domain/client/app/model
 import HistoryStack, { Direction, type HistoryRecord } from '#domain/client/app/model/base/HistoryStack';
 import shell from '#web/infra/shell';
 
-import Selection from './SelectionTooltip/Selection';
 import Searcher from './SearchBar/Searcher';
 import AnnotationView from './AnnotationView';
 
@@ -81,8 +80,6 @@ export default class PdfViewer {
   public get eventBus() {
     return this.pdfViewer.eventBus;
   }
-
-  public readonly selection = new Selection(this);
 
   @observable public accessor currentPage: number | undefined;
 

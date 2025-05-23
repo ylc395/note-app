@@ -30,23 +30,25 @@ export default function PageAnnotationLayer(props: { page: number; pdfViewer: Pd
       const root = props.pdfViewer.getPageTextLayerElement(props.page);
 
       assert(root && fragment);
-
       const { text } = processFragmentDirectives({ text: [fragment] }, document, root);
+      const marks = text[0];
 
-      for (const [i, marks] of text.entries()) {
-        for (const [j, el] of marks.entries()) {
-          (el as HTMLElement).style.backgroundColor = annotation.color;
-          (el as HTMLElement).style.color = 'transparent';
-          (el as HTMLElement).style.opacity = '0.4';
-          (el as HTMLElement).classList.add(`${APP_NAME}-pdf-mark`);
+      if (!marks) {
+        continue;
+      }
 
-          // 给带评论的 mark 元素搭配一个图标。仅第一个 mark 元素会搭配这个图标
-          if (annotation.body && i === 0 && j === marks.length - 1) {
-            result.push({
-              markEl: el as HTMLElement,
-              annotation,
-            });
-          }
+      for (const [i, el] of marks.entries()) {
+        (el as HTMLElement).style.backgroundColor = annotation.color;
+        (el as HTMLElement).style.color = 'transparent';
+        (el as HTMLElement).style.opacity = '0.4';
+        (el as HTMLElement).classList.add(`${APP_NAME}-pdf-mark`);
+
+        // 给带评论的 mark 元素搭配一个图标。仅第一个 mark 元素会搭配这个图标
+        if (annotation.body && i === marks.length - 1) {
+          result.push({
+            markEl: el as HTMLElement,
+            annotation,
+          });
         }
       }
     }

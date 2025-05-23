@@ -1,61 +1,38 @@
-import { For, onCleanup, onMount, Show } from 'solid-js';
-import { ChevronDown, MessageSquareMoreIcon, PaintbrushIcon } from 'lucide-solid';
-import { Menu } from '@ark-ui/solid';
+import { onCleanup, onMount, Show } from 'solid-js';
+import { MessageSquareMoreIcon, PaintbrushIcon } from 'lucide-solid';
 
-import SelectionModel from './Selection';
 import CommentInput from './CommentInput';
+import ColorPicker from './ColorPicker';
+import type PdfViewer from '../PDFViewer';
+import Selection from './Selection';
 
-export default function SelectionTooltip(props: { selection: SelectionModel }) {
+export default function SelectionTooltip(props: { pdfViewer: PdfViewer }) {
   let rootEl: HTMLDivElement | undefined;
+  const selection = new Selection(props.pdfViewer);
 
   onMount(() => {
-    props.selection.init(rootEl!);
+    selection.activate(rootEl!);
+  });
 
-    onCleanup(() => {
-      props.selection.dispose();
-    });
+  onCleanup(() => {
+    selection.deactivate();
   });
 
   return (
     <div ref={rootEl} class="absolute">
-      <Show when={props.selection.isVisible}>
+      <Show when={selection.isVisible}>
         <div class="flex space-x-2 bg-white py-2 px-1 rounded shadow-md z-50">
-          <Menu.Root
-            lazyMount
-            unmountOnExit
-            positioning={{ placement: 'bottom' }}
-            onSelect={(e) => props.selection.setColor(e.value)}
-          >
-            <Menu.Trigger>
-              <button class="flex">
-                <span class="w-4 h-4 border" style={{ 'background-color': props.selection.color }}></span>
-                <ChevronDown />
-              </button>
-            </Menu.Trigger>
-            <Menu.Positioner>
-              <Menu.Content class="flex border">
-                <For each={['yellow', 'red', 'blue', 'green']}>
-                  {(color) => (
-                    <Menu.Item
-                      class="w-4 h-4 cursor-pointer border"
-                      value={color}
-                      style={{ 'background-color': color }}
-                    />
-                  )}
-                </For>
-              </Menu.Content>
-            </Menu.Positioner>
-          </Menu.Root>
-          <button class="flex items-center" onClick={() => props.selection.highlight()}>
+          <ColorPicker selection={selection} />
+          <button class="flex items-center" onClick={() => selection.highlight()}>
             <PaintbrushIcon />
           </button>
-          <button onClick={() => props.selection.initCommentEditor()} class="flex items-center">
+          <button onClick={() => selection.openCommentEditor()} class="flex items-center">
             <MessageSquareMoreIcon />
           </button>
         </div>
       </Show>
-      <Show when={props.selection.commentEditor}>
-        <CommentInput selection={props.selection} />
+      <Show when={selection.commentEditor}>
+        <CommentInput selection={selection} />
       </Show>
     </div>
   );

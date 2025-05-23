@@ -6,23 +6,23 @@ import Item from './Item';
 import Add from './Add';
 import Settings from './Settings';
 
-export default function AnnotationList(props: { viewer: PdfViewer }) {
+export default function AnnotationList(props: { pdfViewer: PdfViewer }) {
   const annotations = createMemo(() => {
-    if (props.viewer.editor.uiState?.['annotation.native'] === false) {
-      return props.viewer.editor.annotation.list?.filter(({ isNative }) => !isNative);
+    if (props.pdfViewer.editor.uiState?.['annotation.native'] === false) {
+      return props.pdfViewer.editor.annotation.list?.filter(({ isNative }) => !isNative);
     }
 
-    return props.viewer.editor.annotation.list;
+    return props.pdfViewer.editor.annotation.list;
   });
 
   return (
     <div class="w-64 p-2 border-l flex flex-col overflow-auto">
       <div class="flex justify-between mb-2">
         <Add />
-        <Settings viewer={props.viewer} />
+        <Settings viewer={props.pdfViewer} />
       </div>
       <Show
-        when={props.viewer.editor.annotation.list}
+        when={props.pdfViewer.editor.annotation.list}
         fallback={
           <div class="flex flex-col grow items-center justify-center">
             <Loader2Icon class="animate-spin" /> 加载中

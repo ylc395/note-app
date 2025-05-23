@@ -1,13 +1,16 @@
 import { Collapsible, Tooltip } from '@ark-ui/solid';
 import { ChevronRightIcon, ChevronDownIcon } from 'lucide-solid';
 import { createMemo, For, Show } from 'solid-js';
-import { last } from 'lodash-es';
 
 import type { OutlineItem } from '#domain/client/app/model/note/editor/PdfEditor';
 import type PdfViewer from '../PDFViewer';
 
 function Title(props: { item: OutlineItem; viewer: PdfViewer; class?: string }) {
-  const isFocused = createMemo(() => props.item.key === last(props.viewer.editor.outline.focusedPath));
+  const isFocused = createMemo(
+    () =>
+      !props.viewer.editor.uiState?.['outline.expanded'].includes(props.item.key) &&
+      props.viewer.editor.outline.focusedPath?.includes(props.item.key),
+  );
   const annotationCount = createMemo(() => props.viewer.editor.outline.getAnnotationCount(props.item.key));
   const pageRange = props.viewer.editor.outline.getPageRange(props.item.key);
 
