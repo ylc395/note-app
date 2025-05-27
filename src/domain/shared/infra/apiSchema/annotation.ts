@@ -9,15 +9,11 @@ export const hTMLCssSelectorSchema = z.object({
   type: z.literal("HTMLCssSelector"),
   value: z.string()
 });
-const textFragmentSchema = z.object({
-  textStart: z.string(),
-  textEnd: z.string().optional(),
-  suffix: z.string().optional(),
-  prefix: z.string().optional()
-});
-export const hTMLTextFragmentSelectorSchema = textFragmentSchema.merge(z.object({
+export const hTMLTextPositionSelectorSchema = z.object({
+  start: z.string(),
+  end: z.string(),
   type: z.literal("HTMLTextFragmentSelector")
-}));
+});
 export const pDFRectSelectorSchema = z.object({
   type: z.literal("PDFRectSelector"),
   page: z.number(),
@@ -26,15 +22,18 @@ export const pDFRectSelectorSchema = z.object({
   width: z.number(),
   height: z.number()
 });
-const pdfTextFragmentSchema = textFragmentSchema.merge(z.object({
-  page: z.number()
-}));
-export const pDFTextFragmentSelectorSchema = z.object({
-  type: z.literal("PDFTextFragmentSelector"),
-  fullText: z.string(),
-  fragments: z.array(pdfTextFragmentSchema)
+const pdfTextPositionSchema = z.object({
+  startPage: z.number(),
+  startOffset: z.number(),
+  endPage: z.number(),
+  endOffset: z.number()
 });
-export const selectorSchema = z.union([pDFTextFragmentSelectorSchema, pDFRectSelectorSchema, hTMLTextFragmentSelectorSchema, hTMLCssSelectorSchema]);
+export const pDFTextPositionSelectorSchema = z.object({
+  type: z.literal("PDFTextPositionSelector"),
+  fullText: z.string(),
+  position: pdfTextPositionSchema
+});
+export const selectorSchema = z.union([pDFTextPositionSelectorSchema, pDFRectSelectorSchema, hTMLTextPositionSelectorSchema, hTMLCssSelectorSchema]);
 export const annotationSchema = z.object({
   id: entityIdSchema,
   targetId: noteSchema.shape["id"],

@@ -6,7 +6,7 @@ import {
   type PDFPageView,
 } from 'pdfjs-dist/web/pdf_viewer.mjs';
 import { AnnotationEditorType, AnnotationMode } from 'pdfjs-dist';
-import { debounce, memoize, range as numberRange } from 'lodash-es';
+import { debounce, intersection, memoize, range as numberRange } from 'lodash-es';
 import { observable, when, action, computed, autorun } from 'mobx';
 import assert from 'assert';
 
@@ -15,12 +15,19 @@ import HistoryStack, { Direction, type HistoryRecord } from '#domain/client/app/
 import shell from '#web/infra/shell';
 
 import Searcher from './SearchBar/Searcher';
-import AnnotationView from './AnnotationView';
 
 interface Options {
   container: HTMLDivElement;
   viewer: HTMLDivElement;
   editor: PdfEditor;
+}
+
+export interface Position {
+  startPage: number;
+  startOffset: number;
+  endPage: number;
+  endOffset: number;
+  toStart?: boolean;
 }
 
 export enum ScaleValues {
@@ -40,7 +47,6 @@ export default class PdfViewer {
     this.editor = options.editor;
     this.pdfViewer = this.createViewer(options);
     this.searcher = new Searcher(this);
-    this.annotationView = new AnnotationView(this);
 
     when(
       () => this.editor.isReady,
@@ -49,16 +55,16 @@ export default class PdfViewer {
     );
   }
 
-  private readonly pdfViewer: PDFViewer;
+  public readonly annotationOpenStatus: Record<string, boolean> = {};
 
-  public readonly annotationView: AnnotationView;
+  private readonly pdfViewer: PDFViewer;
 
   public readonly editor: PdfEditor;
 
   private readonly destroyController = new AbortController();
 
-  @observable.struct
-  public accessor renderedPages: number[] | undefined;
+  @observable
+  public accessor renderedPages: number[] = [];
 
   /*
    * PDFLinkService 还能关联一个 PDFHistory 对象，其具有管理历史栈的功能。但它实际上在使用浏览器的 url 历史栈，这不是我们想要的
@@ -123,8 +129,16 @@ export default class PdfViewer {
     pdfViewer.eventBus.on('pagechanging', ({ pageNumber }: { pageNumber: number }) =>
       this.updateCurrentPage(pageNumber),
     );
-    pdfViewer.eventBus.on('updateviewarea', this.focusOutline.bind(this));
-    pdfViewer.eventBus.on('updateviewarea', this.updateRenderedPage.bind(this));
+    pdfViewer.eventBus.on('updateviewarea', (e: { location: { pageNumber: number } }) => {
+      this.editor.outline.focus(e.location.pageNumber);
+    });
+
+    pdfViewer.eventBus.on(
+      'textlayerrendered',
+      action(({ pageNumber }: { pageNumber: number }) => {
+        this.renderedPages.push(pageNumber);
+      }),
+    );
 
     pdfViewer.eventBus.on(
       'scalechanging',
@@ -139,6 +153,7 @@ export default class PdfViewer {
       pdfViewer.onePageRendered.then(
         action(() => {
           pdfViewer.eventBus.on('updateviewarea', this.updateUIState);
+          pdfViewer.eventBus.on('updateviewarea', this.updateRenderedPage.bind(this));
           this.isReady = true;
         }),
       );
@@ -161,10 +176,6 @@ export default class PdfViewer {
     );
 
     return pdfViewer;
-  }
-
-  private focusOutline(e: { location: { pageNumber: number } }) {
-    this.editor.outline.focus(e.location.pageNumber);
   }
 
   private async init() {
@@ -199,13 +210,18 @@ export default class PdfViewer {
 
   @action
   private updateRenderedPage() {
-    this.renderedPages = (Array.from(this.pdfViewer.getCachedPageViews()) as PDFPageView[])
-      .map((view) => view.pdfPage.pageNumber as number)
-      .sort((a, b) => a - b);
+    const renderedPages = (Array.from(this.pdfViewer.getCachedPageViews()) as PDFPageView[]).map(
+      (view) => view.pdfPage.pageNumber as number,
+    );
+
+    this.renderedPages = intersection(this.renderedPages, renderedPages);
   }
 
   public getPageTextLayerElement(page: number) {
-    return (this.pdfViewer.getPageView(page - 1) as PDFPageView).textLayer?.div;
+    const div = (this.pdfViewer.getPageView(page - 1) as PDFPageView).textLayer?.div;
+    assert(div);
+
+    return div;
   }
 
   private hijackClick() {
@@ -273,7 +289,6 @@ export default class PdfViewer {
 
   public destroy() {
     this.searcher.destroy();
-    this.annotationView.destroy();
     this.destroyController.abort();
   }
 
@@ -332,6 +347,32 @@ export default class PdfViewer {
     const dataUrl = rectCanvas.toDataURL();
 
     return dataUrl;
+  }
+
+  public positionToRange(position: Position) {
+    const range = new Range();
+    const setBoundary = (page: number, totalOffset: number, isStart?: boolean) => {
+      const textLayer = this.getPageTextLayerElement(page);
+      const treeWalker = document.createTreeWalker(textLayer, NodeFilter.SHOW_TEXT);
+      let offset = 0;
+
+      let currentNode = treeWalker.nextNode() as Text | null;
+
+      while (currentNode) {
+        if (currentNode.length + offset >= totalOffset) {
+          range[isStart ? 'setStart' : 'setEnd'](currentNode, totalOffset - offset);
+          break;
+        } else {
+          offset += currentNode.length;
+          currentNode = treeWalker.nextNode() as Text | null;
+        }
+      }
+    };
+
+    setBoundary(position.startPage, position.startOffset, true);
+    setBoundary(position.endPage, position.endOffset);
+
+    return range;
   }
 
   private static normalizeHash(hash: string) {

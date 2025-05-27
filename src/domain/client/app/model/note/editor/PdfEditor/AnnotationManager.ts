@@ -1,5 +1,4 @@
 import { computed, observable, runInAction } from 'mobx';
-import { max, min } from 'lodash-es';
 import { type PDFDocumentProxy, AnnotationType } from 'pdfjs-dist';
 import { createQuery } from 'mobx-tanstack-query/preset';
 import dayjs from 'dayjs';
@@ -8,7 +7,7 @@ import customParseFormat from 'dayjs/plugin/customParseFormat';
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import type { NoteVO } from '#domain/shared/model/note';
-import type { AnnotationVO, PDFRectSelector, PDFTextFragmentSelector } from '#domain/shared/model/annotation';
+import type { AnnotationVO, PDFRectSelector, PDFTextPositionSelector } from '#domain/shared/model/annotation';
 
 dayjs.extend(customParseFormat);
 
@@ -105,7 +104,7 @@ export default class AnnotationManager {
     body,
     color,
   }: {
-    selector: PDFTextFragmentSelector | PDFRectSelector;
+    selector: PDFTextPositionSelector | PDFRectSelector;
     body?: string;
     color: string;
   }) {
@@ -127,29 +126,24 @@ export default class AnnotationManager {
     return this.list.filter(({ selector: s }) => {
       return (
         (s.type === 'PDFRectSelector' && s.page >= startPage && s.page < endPage) ||
-        (s.type === 'PDFTextFragmentSelector' &&
-          (AnnotationManager.getPage(s, 'start') >= startPage || AnnotationManager.getPage(s, 'end') <= endPage))
+        (s.type === 'PDFTextPositionSelector' && (s.position.startPage >= startPage || s.position.endPage <= endPage))
       );
     }).length;
-  }
-
-  public static getPage(selector: PDFTextFragmentSelector, key: 'start' | 'end') {
-    return (key === 'start' ? min : max)(selector.fragments.map(({ page }) => page)) ?? 0;
   }
 
   private static sort(annotation1: AnnotationVO, annotation2: AnnotationVO) {
     const page1 =
       annotation1.selector.type === 'PDFRectSelector'
         ? annotation1.selector.page
-        : annotation1.selector.type === 'PDFTextFragmentSelector'
-        ? AnnotationManager.getPage(annotation1.selector, 'start')
+        : annotation1.selector.type === 'PDFTextPositionSelector'
+        ? annotation1.selector.position.startPage
         : 0;
 
     const page2 =
       annotation2.selector.type === 'PDFRectSelector'
         ? annotation2.selector.page
-        : annotation2.selector.type === 'PDFTextFragmentSelector'
-        ? AnnotationManager.getPage(annotation2.selector, 'end')
+        : annotation2.selector.type === 'PDFTextPositionSelector'
+        ? annotation2.selector.position.startPage
         : 0;
 
     return page1 - page2;

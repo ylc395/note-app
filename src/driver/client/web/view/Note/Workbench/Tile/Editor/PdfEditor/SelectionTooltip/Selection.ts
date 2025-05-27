@@ -1,26 +1,17 @@
 import { z } from 'zod';
-import {
-  generateFragmentFromRange,
-  type GenerateFragmentResult,
-} from '#third-party/text-fragments-polyfill/fragment-generation-utils';
-import {
-  markRange,
-  processFragmentDirectives,
-  removeMarks,
-} from '#third-party/text-fragments-polyfill/text-fragment-utils';
+import { markRange, removeMarks } from '#third-party/text-fragments-polyfill/text-fragment-utils';
 import { action, observable } from 'mobx';
 import assert from 'assert';
-import { debounce, last } from 'lodash-es';
+import { debounce, omit } from 'lodash-es';
 import { autoUpdate, computePosition, flip, offset } from '@floating-ui/dom';
 
 import PersistedObject from '#domain/client/shared/model/abstract/PersistedObject';
 import { IS_DEV } from '#domain/shared/infra/env';
-import type PdfViewer from '../PDFViewer';
+import type { default as PdfViewer, Position } from '../PDFViewer';
 
 interface CommentEditor {
   content: string;
-  generateResult: GenerateFragmentResult;
-  marks: Element[];
+  marks?: Element[];
 }
 
 export default class Selection {
@@ -31,47 +22,11 @@ export default class Selection {
   @observable public accessor isVisible = false;
 
   private current?: {
-    range?: Range;
-    originRange?: { startNode: Node; endNode: Node; startOffset: number; endOffset: number };
+    text: string;
+    position: Required<Position>;
     referenceElement?: HTMLElement;
-    toStart: boolean;
     dispose?: () => void;
   };
-
-  private getCurrentRange() {
-    if (!this.current?.originRange?.startNode.firstChild || !this.current.originRange.endNode.lastChild) {
-      return null;
-    }
-
-    const range = new Range();
-    const setBoundary = (node: Node, totalOffset: number, isStart?: boolean) => {
-      let offset = 0;
-
-      for (const child of node.childNodes) {
-        // childNodes 中可能包含 referenceElement，需要通过 for 循环来跳过之
-        if (!(child instanceof Text)) {
-          continue;
-        }
-
-        if (child.length + offset >= totalOffset) {
-          range[isStart ? 'setStart' : 'setEnd'](child, totalOffset - offset);
-          return true;
-        } else {
-          offset += child.length;
-        }
-      }
-      return false;
-    };
-
-    if (
-      setBoundary(this.current.originRange.startNode, this.current.originRange.startOffset, true) &&
-      setBoundary(this.current.originRange.endNode, this.current.originRange.endOffset)
-    ) {
-      return range;
-    }
-
-    return null;
-  }
 
   @observable.ref public accessor commentEditor: CommentEditor | undefined;
 
@@ -79,7 +34,10 @@ export default class Selection {
 
   public activate(rootEl: HTMLElement) {
     this.rootEl = rootEl;
-    this.restoreCommentEditor();
+
+    if (this.commentEditor) {
+      this.openCommentEditor();
+    }
 
     document.addEventListener('selectionchange', this.handleSelection.bind(this));
   }
@@ -89,7 +47,10 @@ export default class Selection {
       this.current.dispose?.();
       this.current.dispose = undefined;
       this.current.referenceElement = undefined;
-      this.current.originRange = undefined;
+    }
+
+    if (this.commentEditor) {
+      this.commentEditor.marks = undefined;
     }
 
     this.show.cancel();
@@ -128,9 +89,8 @@ export default class Selection {
 
   @action
   public openCommentEditor() {
-    const currentRange = this.getCurrentRange();
-    assert(currentRange);
-
+    assert(this.current);
+    const currentRange = this.pdfViewer.positionToRange(this.current.position);
     const marks = markRange(currentRange);
 
     for (const mark of marks) {
@@ -141,45 +101,18 @@ export default class Selection {
 
     this.isVisible = false;
     this.commentEditor = {
-      content: '',
-      generateResult: this.generateFragment(),
+      content: this.commentEditor?.content || '',
       marks,
-    };
-  }
-
-  private restoreCommentEditor() {
-    if (!this.current || !this.commentEditor || !this.commentEditor.generateResult.fragment) {
-      return;
-    }
-
-    const marks = processFragmentDirectives({ text: this.commentEditor.generateResult.fragment }).text[0];
-    const firstMark = marks?.[0];
-    const lastMark = last(marks);
-
-    if (!firstMark || !lastMark) {
-      return;
-    }
-
-    const range = new Range(); // Range 对象是活的。当 DOM 变化时（例如 mark 元素被移除）它总是能映射到最新的 DOM 上
-    range.setStartAfter(firstMark);
-    range.setEndBefore(lastMark);
-
-    this.commentEditor.marks = marks;
-    this.current = {
-      ...this.current,
-      ...this.generateReferenceElement(range, this.current.toStart),
     };
   }
 
   @action
   public closeCommentEditor(clearSelection?: boolean) {
-    assert(this.commentEditor);
+    assert(this.commentEditor?.marks && this.current?.position);
     removeMarks(this.commentEditor.marks);
 
-    const currentRange = this.getCurrentRange();
-    assert(currentRange);
-
     if (!clearSelection) {
+      const currentRange = this.pdfViewer.positionToRange(this.current.position);
       this.isVisible = true;
 
       assert(this.current);
@@ -202,33 +135,16 @@ export default class Selection {
     this.commentEditor.content = value;
   }
 
-  private generateFragment() {
-    assert(this.current && this.pdfViewer.viewerElement && this.current.range);
-
-    return generateFragmentFromRange(
-      this.current.range,
-      IS_DEV ? new Date(8640000000000000) : undefined,
-      this.pdfViewer.viewerElement,
-    );
-  }
-
   public async highlight() {
-    assert(this.current && this.current.originRange);
-    const result = this.commentEditor ? this.commentEditor.generateResult : this.generateFragment();
-
-    if (!result?.fragment) {
-      // todo: add toast
-      return;
-    }
+    assert(this.current);
 
     await this.pdfViewer.editor.annotation.create({
       color: this.uiState.get('color'),
       body: this.commentEditor?.content,
       selector: {
-        type: 'PDFTextFragmentSelector',
-        fullText: this.current.originRange.toString(),
-        fragments: [],
-        // fragments: Selection.generateTextFragments(this.floating.range),
+        type: 'PDFTextPositionSelector',
+        fullText: this.current.text,
+        position: omit(this.current.position, ['toStart']),
       },
     });
 
@@ -287,7 +203,7 @@ export default class Selection {
       startNode.parentElement.normalize();
       endNode.parentElement.normalize();
 
-      let toStart = this.current?.toStart;
+      let toStart = this.current?.position.toStart;
 
       if (typeof toStart !== 'boolean') {
         if (s.anchorNode === s.focusNode) {
@@ -298,14 +214,11 @@ export default class Selection {
       }
 
       this.current = {
-        range,
-        originRange: {
-          startNode: startNode.parentElement,
-          startOffset: range.startOffset,
-          endNode: endNode.parentElement,
-          endOffset: range.endOffset,
+        text: range.toString(),
+        position: {
+          ...this.rangeToPosition(range),
+          toStart,
         },
-        toStart,
         // 这个应当发生在读取 startOffset / endOffset 后，否则这两个数据就不准了（referenceElement 元素的插入会改变这两个值）
         ...this.generateReferenceElement(range, toStart),
       };
@@ -341,5 +254,54 @@ export default class Selection {
     });
 
     return { dispose, referenceElement };
+  }
+
+  private rangeToPosition(range: Range) {
+    const findPage = (node: Node) => {
+      let current: Node | null = node;
+
+      while (current) {
+        if (current instanceof HTMLElement && current.dataset.pageNumber) {
+          return Number(current.dataset.pageNumber);
+        }
+        current = current.parentElement;
+      }
+
+      assert.fail('can not find page');
+    };
+
+    const findIndex = (page: number, node: Node, offset: number, isStart?: boolean) => {
+      let targetNextNode = node instanceof Text ? node : isStart ? node.firstChild : node.lastChild;
+
+      if (!(targetNextNode instanceof Text)) {
+        targetNextNode = null;
+      }
+
+      const textLayer = this.pdfViewer.getPageTextLayerElement(page);
+      const treeWalker = document.createTreeWalker(textLayer, NodeFilter.SHOW_TEXT);
+      let currentNode = treeWalker.nextNode() as Text | null;
+      let totalOffset = 0;
+
+      while (currentNode) {
+        if (targetNextNode ? currentNode === targetNextNode : node.contains(currentNode)) {
+          totalOffset += offset;
+          return totalOffset;
+        }
+        totalOffset += currentNode.length;
+        currentNode = treeWalker.nextNode() as Text | null;
+      }
+
+      assert.fail('can not find offset');
+    };
+
+    const startPage = findPage(range.startContainer);
+    const endPage = findPage(range.endContainer);
+
+    return {
+      startPage,
+      endPage,
+      startOffset: findIndex(startPage, range.startContainer, range.startOffset, true),
+      endOffset: findIndex(endPage, range.endContainer, range.endOffset),
+    };
   }
 }

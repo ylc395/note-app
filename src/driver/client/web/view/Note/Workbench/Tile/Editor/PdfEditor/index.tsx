@@ -8,6 +8,7 @@ import Outline from './OutlineList';
 import AnnotationList from './AnnotationList';
 import SelectionTooltip from './SelectionTooltip';
 import SearchBar from './SearchBar';
+import AnnotationLayer from './AnnotationLayer';
 import './style.css';
 
 export default function PdfEditorView(props: { editor: PdfEditor }) {
@@ -50,12 +51,19 @@ export default function PdfEditorView(props: { editor: PdfEditor }) {
             >
               <div class="select-text" ref={viewRef}></div>
             </div>
+            <Show when={getPdfViewer()}>
+              {(viewer) => (
+                <>
+                  <AnnotationLayer pdfViewer={viewer()} />
+                  <SelectionTooltip pdfViewer={viewer()} />
+                </>
+              )}
+            </Show>
           </div>
         </div>
         <Show when={props.editor.uiState?.['annotation.panel'] && getPdfViewer()}>
           {(viewer) => <AnnotationList pdfViewer={viewer()} />}
         </Show>
-        <Show when={getPdfViewer()}>{(viewer) => <SelectionTooltip pdfViewer={viewer()} />}</Show>
       </div>
     </div>
   );

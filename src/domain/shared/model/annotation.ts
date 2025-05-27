@@ -1,22 +1,17 @@
 import type { EntityId } from './entity.js';
 import type { Note } from './note.js';
 
-// https://developer.mozilla.org/en-US/docs/Web/URI/Reference/Fragment/Text_fragments
-interface TextFragment {
-  textStart: string;
-  textEnd?: string;
-  suffix?: string;
-  prefix?: string;
+interface PdfTextPosition {
+  startPage: number;
+  startOffset: number;
+  endPage: number;
+  endOffset: number;
 }
 
-interface PdfTextFragment extends TextFragment {
-  page: number;
-}
-
-export interface PDFTextFragmentSelector {
-  type: 'PDFTextFragmentSelector';
+export interface PDFTextPositionSelector {
+  type: 'PDFTextPositionSelector';
   fullText: string;
-  fragments: PdfTextFragment[]; // 我们假定每个 Fragment 的 page 总是不相同
+  position: PdfTextPosition;
 }
 
 export interface PDFRectSelector {
@@ -28,7 +23,9 @@ export interface PDFRectSelector {
   height: number;
 }
 
-export interface HTMLTextFragmentSelector extends TextFragment {
+export interface HTMLTextPositionSelector {
+  start: string;
+  end: string;
   type: 'HTMLTextFragmentSelector';
 }
 
@@ -37,7 +34,7 @@ export interface HTMLCssSelector {
   value: string; // css selector
 }
 
-export type Selector = PDFTextFragmentSelector | PDFRectSelector | HTMLTextFragmentSelector | HTMLCssSelector;
+export type Selector = PDFTextPositionSelector | PDFRectSelector | HTMLTextPositionSelector | HTMLCssSelector;
 
 // This concept is inspired by https://www.w3.org/TR/annotation-model/
 export interface Annotation {
