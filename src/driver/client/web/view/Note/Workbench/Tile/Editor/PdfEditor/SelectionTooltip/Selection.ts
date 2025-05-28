@@ -63,6 +63,7 @@ export default class Selection {
     }
 
     const s = window.getSelection();
+    const range = s?.rangeCount === 1 && s.getRangeAt(0);
 
     if (
       !s ||
@@ -71,7 +72,8 @@ export default class Selection {
       !this.pdfViewer.viewerElement?.contains(s.anchorNode) ||
       !this.pdfViewer.viewerElement.contains(s.focusNode) ||
       s.isCollapsed ||
-      s.rangeCount !== 1
+      !range ||
+      range.cloneContents().querySelector('mark')
     ) {
       this.hide();
     } else {
@@ -225,7 +227,7 @@ export default class Selection {
 
       this.isVisible = true;
     }),
-    500,
+    300,
   );
 
   private generateReferenceElement(range: Range, toStart: boolean) {

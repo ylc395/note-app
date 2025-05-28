@@ -1,13 +1,21 @@
 import { action, autorun, observable } from 'mobx';
 import { FindState, PDFFindController } from 'pdfjs-dist/web/pdf_viewer.mjs';
-import { compact } from 'lodash-es';
+import { compact, pick } from 'lodash-es';
 
 import { extractDigest } from '#utils/string';
+import type { TypedMapKey } from '#utils/collection';
 import type PdfViewer from '../PDFViewer';
 
 interface MatchesCount {
   current: number;
-  total?: number;
+  total: number;
+}
+
+interface Options {
+  isEnabled: boolean;
+  query: string;
+  caseSensitive: boolean;
+  entireWord: boolean;
 }
 
 export type Digest = NonNullable<ReturnType<typeof extractDigest>>;
@@ -21,20 +29,22 @@ export default class Searcher {
   constructor(private readonly pdfViewer: PdfViewer) {
     this.pdfViewer.eventBus.on('updatefindcontrolstate', this.handleUpdate.bind(this));
     this.pdfViewer.eventBus.on('updatefindmatchescount', this.handleUpdate.bind(this));
+    this.options = this.pdfViewer.editor.tempUIState.get(Searcher.stateKey) || {
+      isEnabled: false,
+      query: '',
+      caseSensitive: false,
+      entireWord: false,
+    };
+
+    this.pdfViewer.editor.tempUIState.set(Searcher.stateKey, this.options);
     autorun(() => this.search({ type: '' }), { signal: this.destroyController.signal });
   }
 
   private readonly destroyController = new AbortController();
 
-  @observable public accessor isEnabled = false;
-
   @observable.ref public accessor searchResult: PageSearchResult[] | undefined;
 
-  @observable public accessor options = {
-    query: '',
-    caseSensitive: false,
-    entireWord: false,
-  };
+  @observable public accessor options: Options;
 
   @observable public accessor matchesCount: MatchesCount | undefined;
 
@@ -90,13 +100,13 @@ export default class Searcher {
       | ''; // 输入关键词，或者切换搜索选项
     findPrevious?: boolean;
   }) {
-    if (!this.isEnabled) {
+    if (!this.options.isEnabled) {
       return;
     }
 
     this.pdfViewer.eventBus.dispatch('find', {
       ...options,
-      ...this.options,
+      ...pick(this.options, ['caseSensitive', 'entireWord', 'query']),
       highlightAll: true, // 高亮所有匹配/只高亮当前的匹配
       matchDiacritics: false,
     });
@@ -104,9 +114,9 @@ export default class Searcher {
 
   @action
   public toggle() {
-    this.isEnabled = !this.isEnabled;
+    this.options.isEnabled = !this.options.isEnabled;
 
-    if (!this.isEnabled) {
+    if (!this.options.isEnabled) {
       this.close();
     }
   }
@@ -125,11 +135,13 @@ export default class Searcher {
   }
 
   private close() {
-    this.pdfViewer.eventBus.dispatch('findbarclose', {});
+    this.pdfViewer.eventBus.dispatch('findbarclose', {}); // finder 用了定时器之类的资源，必须通过这个时间去清除
   }
 
   public destroy() {
     this.close();
     this.destroyController.abort();
   }
+
+  private static readonly stateKey: TypedMapKey<Options> = Symbol('searcher');
 }

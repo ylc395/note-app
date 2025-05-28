@@ -4,6 +4,7 @@ import assert from 'assert';
 import { z } from 'zod';
 
 import container from '#utils/singletonContainer';
+import { TypedMap } from '#utils/collection';
 import { MimeTypes } from '#domain/shared/model/file';
 
 import BaseEditor, { type Options } from '../BaseEditor';
@@ -38,6 +39,8 @@ export default class PdfEditor extends BaseEditor<z.infer<typeof uiStateSchema>>
   public get isReady() {
     return Boolean(this.uiState && this.doc);
   }
+
+  public readonly tempUIState = new TypedMap();
 
   private readonly docFactory = container.resolve(DocumentFactory);
 

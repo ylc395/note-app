@@ -11,7 +11,7 @@ export default function SearchBar(props: { pdfViewer: PdfViewer }) {
   return (
     <div class="flex z-10 m-auto w-fit relative left-36">
       <Input searcher={props.pdfViewer.searcher} />
-      <Show when={props.pdfViewer.searcher.matchesCount && !props.pdfViewer.searcher.matchesCount.total}>
+      <Show when={props.pdfViewer.searcher.matchesCount?.total === 0}>
         <div>没有结果</div>
       </Show>
       <Show when={Number(props.pdfViewer.searcher.matchesCount?.total) > 0}>
