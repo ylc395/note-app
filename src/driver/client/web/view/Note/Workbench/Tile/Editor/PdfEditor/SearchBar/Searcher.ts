@@ -1,7 +1,8 @@
-import { action, autorun, observable } from 'mobx';
+import { action, autorun, observable, runInAction } from 'mobx';
 import { FindState, PDFFindController } from 'pdfjs-dist/web/pdf_viewer.mjs';
 import { compact, pick } from 'lodash-es';
 
+import EventBus from '#domain/client/shared/infra/EventBus';
 import { extractDigest } from '#utils/string';
 import type { TypedMapKey } from '#utils/collection';
 import type PdfViewer from '../PDFViewer';
@@ -25,18 +26,24 @@ export interface PageSearchResult {
   digests: Digest[];
 }
 
-export default class Searcher {
+export default class Searcher extends EventBus<{ matchUpdated: { pages: number[] } }> {
   constructor(private readonly pdfViewer: PdfViewer) {
+    super('pdf-searcher');
     this.pdfViewer.eventBus.on('updatefindcontrolstate', this.handleUpdate.bind(this));
     this.pdfViewer.eventBus.on('updatefindmatchescount', this.handleUpdate.bind(this));
-    this.options = this.pdfViewer.editor.tempUIState.get(Searcher.stateKey) || {
-      isEnabled: false,
-      query: '',
-      caseSensitive: false,
-      entireWord: false,
-    };
+    this.pdfViewer.eventBus.on('updatetextlayermatches', this.emitMatchUpdated.bind(this));
 
-    this.pdfViewer.editor.tempUIState.set(Searcher.stateKey, this.options);
+    runInAction(() => {
+      this.options = this.pdfViewer.editor.tempUIState.get(Searcher.stateKey) || {
+        isEnabled: false,
+        query: '',
+        caseSensitive: false,
+        entireWord: false,
+      };
+
+      this.pdfViewer.editor.tempUIState.set(Searcher.stateKey, this.options);
+    });
+
     autorun(() => this.search({ type: '' }), { signal: this.destroyController.signal });
   }
 
@@ -44,9 +51,19 @@ export default class Searcher {
 
   @observable.ref public accessor searchResult: PageSearchResult[] | undefined;
 
-  @observable public accessor options: Options;
+  @observable public accessor options!: Options;
 
   @observable public accessor matchesCount: MatchesCount | undefined;
+
+  private emitMatchUpdated(e: { source: { pageMatches: number[][] } }) {
+    if (e.source.pageMatches.length) {
+      this.emit('matchUpdated', {
+        pages: Object.keys(e.source.pageMatches)
+          .filter((i) => e.source.pageMatches[Number(i)]?.length)
+          .map(Number),
+      });
+    }
+  }
 
   @action
   private handleUpdate(e: { matchesCount: MatchesCount; state?: number; source?: unknown }) {

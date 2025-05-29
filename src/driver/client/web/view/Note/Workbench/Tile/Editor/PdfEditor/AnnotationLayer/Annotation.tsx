@@ -2,7 +2,7 @@ import { createEffect, createSignal, onCleanup, Show } from 'solid-js';
 import { MessageSquareIcon } from 'lucide-solid';
 import { Popover } from '@ark-ui/solid';
 import { action } from 'mobx';
-import { markRange } from '#third-party/text-fragments-polyfill/text-fragment-utils';
+import { markRange, removeMarks } from '#third-party/text-fragments-polyfill/text-fragment-utils';
 import { autoUpdate, computePosition, offset } from '@floating-ui/dom';
 import assert from 'assert';
 
@@ -11,11 +11,21 @@ import type PdfViewer from '../PDFViewer';
 
 export default function Annotation(props: { annotation: AnnotationVO; page: number; pdfViewer: PdfViewer }) {
   let buttonRef: HTMLButtonElement | undefined;
-  const [markRef, setMarkRef] = createSignal<Element>();
+  const [marksRef, setMarksRef] = createSignal<Element[]>();
+  const [domUpdatedFlag, setDomUpdatedFlag] = createSignal<number>(0);
 
   function handleOpenChange(value: boolean) {
     props.pdfViewer.annotationOpenStatus[props.annotation.id] = value;
   }
+
+  function forceRender({ pages }: { pages: number[] }) {
+    if (pages.includes(props.page)) {
+      setDomUpdatedFlag(domUpdatedFlag() + 1);
+    }
+  }
+
+  props.pdfViewer.searcher.on('matchUpdated', forceRender);
+  onCleanup(() => props.pdfViewer.searcher.off('matchUpdated', forceRender));
 
   createEffect(() => {
     if (props.annotation.selector.type !== 'PDFTextPositionSelector') {
@@ -33,11 +43,9 @@ export default function Annotation(props: { annotation: AnnotationVO; page: numb
     }
 
     assert(range);
-
     const marks = markRange(range);
-    const firstMark = marks[0];
 
-    if (!firstMark) {
+    if (marks.length === 0) {
       return;
     }
 
@@ -45,11 +53,15 @@ export default function Annotation(props: { annotation: AnnotationVO; page: numb
       (markEl as HTMLElement).style.backgroundColor = props.annotation.color;
     }
 
-    setMarkRef(firstMark);
+    setMarksRef(marks);
+    domUpdatedFlag();
+    onCleanup(() => {
+      removeMarks(marks.filter(({ parentNode }) => parentNode)); // mark 元素可能已被移除。排除掉这些 mark 元素
+    });
   });
 
   createEffect(() => {
-    const markEl = markRef();
+    const markEl = marksRef()?.[0];
 
     if (markEl && buttonRef) {
       const stopAutoUpdate = autoUpdate(markEl, buttonRef, () => {
@@ -57,7 +69,7 @@ export default function Annotation(props: { annotation: AnnotationVO; page: numb
           placement: 'right-start',
           middleware: [offset(5)],
         }).then(({ x, y }) => {
-          Object.assign(buttonRef!.style, { left: `${x}px`, top: `${y}px` });
+          Object.assign(buttonRef.style, { left: `${x}px`, top: `${y}px` });
         });
       });
 
