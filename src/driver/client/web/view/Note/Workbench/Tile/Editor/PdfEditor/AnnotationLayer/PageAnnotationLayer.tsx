@@ -1,4 +1,5 @@
 import { createMemo, For } from 'solid-js';
+import { Portal } from 'solid-js/web';
 import type PdfViewer from '../PDFViewer';
 import Annotation from './Annotation';
 
@@ -16,8 +17,10 @@ export default function PageAnnotationLayer(props: { page: number; pdfViewer: Pd
   });
 
   return (
-    <For each={annotations()}>
-      {(annotation) => <Annotation page={props.page} annotation={annotation} pdfViewer={props.pdfViewer} />}
-    </For>
+    <Portal mount={props.pdfViewer.getPageTextLayerElement(props.page).parentElement!}>
+      <For each={annotations()}>
+        {(annotation) => <Annotation page={props.page} annotation={annotation} pdfViewer={props.pdfViewer} />}
+      </For>
+    </Portal>
   );
 }
