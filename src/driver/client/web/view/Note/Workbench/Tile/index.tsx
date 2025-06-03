@@ -8,7 +8,7 @@ import { TileSplitDirections } from '#domain/client/app/model/Workbench';
 import Tabs from './Tabs';
 import Editor from './Editor';
 import DropIndicator from './DropIndicator';
-import dragHandler from './dragHandler';
+import TileDropTarget from './TileDropTarget';
 
 export default function TileView(props: { tile: Tile; panelId?: string }) {
   const [tileRef, setTileRef] = createSignal<HTMLElement>();
@@ -21,13 +21,13 @@ export default function TileView(props: { tile: Tile; panelId?: string }) {
       return;
     }
 
-    const cleanup = dropTargetForElements(
-      dragHandler({
-        tileElement,
-        tile: props.tile,
-        onDirectionChange: setTileDirection,
-      }),
-    );
+    const dropTarget = new TileDropTarget({
+      tileElement,
+      tile: props.tile,
+      onDirectionChange: setTileDirection,
+    });
+
+    const cleanup = dropTargetForElements(dropTarget);
     onCleanup(cleanup);
   });
 

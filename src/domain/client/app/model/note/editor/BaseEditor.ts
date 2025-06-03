@@ -141,6 +141,13 @@ export default abstract class BaseEditor<S = unknown> {
     const destTile = !(dest instanceof BaseEditor) ? dest : dest.tile;
 
     if (destTile !== this.tile) {
+      const sameEditor = destTile.findEditor(this.noteId);
+
+      if (sameEditor) {
+        destTile.switchToEditor(sameEditor);
+        return;
+      }
+
       destTile.addEditor(this, dest instanceof BaseEditor ? dest : undefined);
     } else {
       if (!(dest instanceof BaseEditor)) {

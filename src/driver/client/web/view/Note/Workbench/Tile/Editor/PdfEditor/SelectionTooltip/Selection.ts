@@ -202,9 +202,6 @@ export default class Selection {
         return;
       }
 
-      startNode.parentElement.normalize();
-      endNode.parentElement.normalize();
-
       let toStart = this.current?.position.toStart;
 
       if (typeof toStart !== 'boolean') {
