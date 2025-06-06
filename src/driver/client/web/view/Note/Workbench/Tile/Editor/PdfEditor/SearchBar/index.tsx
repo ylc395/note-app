@@ -33,7 +33,7 @@ export default function SearchBar(props: { pdfViewer: PdfViewer }) {
           <ArrowDownIcon />
         </button>
         <Popover.Root lazyMount unmountOnExit>
-          <Popover.Trigger disabled={!props.pdfViewer.searcher.searchResult}>
+          <Popover.Trigger disabled={!props.pdfViewer.editor.textFinder.searchResult}>
             <ListIcon />
           </Popover.Trigger>
           <Popover.Positioner>

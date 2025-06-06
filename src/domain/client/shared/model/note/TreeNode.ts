@@ -39,13 +39,12 @@ export default class TreeNode {
         return this.remote.note.query.query({ parentId: value?.id ?? null, type }, { signal });
       },
       {
-        refetchOnMount: false,
         refetchOnWindowFocus: false,
         select: (notes) => notes.toSorted(options.sort),
         abortSignal: this.destroyController.signal,
+        queryKey: TreeNode.getChildrenQueryKey({ parentId: value?.id ?? null, type }),
         options: () => ({
-          queryKey: TreeNode.getChildrenQueryKey({ parentId: value?.id ?? null, type }),
-          enabled: !this.isLeaf && this.isExpanded && this.options.tree.isActive,
+          enabled: !this.isLeaf && this.isExpanded,
         }),
       },
     );

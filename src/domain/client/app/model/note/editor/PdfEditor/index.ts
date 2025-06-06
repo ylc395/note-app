@@ -1,52 +1,36 @@
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import { computed, observable, runInAction, when } from 'mobx';
 import assert from 'assert';
-import { z } from 'zod';
 
 import container from '#utils/singletonContainer';
-import { TypedMap } from '#utils/collection';
 import { MimeTypes } from '#domain/shared/model/file';
 
 import BaseEditor, { type Options } from '../BaseEditor';
 import DocumentFactory from './DocumentFactory';
 import OutlineList from './OutlineList';
 import AnnotationManager from './AnnotationManager';
-
-const uiStateSchema = z.object({
-  hash: z.string().optional(),
-  'annotation.panel': z.boolean().optional(),
-  'annotation.native': z.boolean().optional(),
-  'outline.expanded': z.string().array(),
-  'outline.type': z.union([z.literal('text'), z.literal('image'), z.literal(null)]).optional(),
-  'outline.scroll': z.object({ x: z.number(), y: z.number() }).optional(),
-});
+import TextFinder from './TextFinder';
 
 export type { OutlineItem } from './OutlineList';
 
-export default class PdfEditor extends BaseEditor<z.infer<typeof uiStateSchema>> {
+export default class PdfEditor extends BaseEditor {
   constructor(options: Options) {
-    super({
-      ...options,
-      uiState: {
-        schema: uiStateSchema,
-        defaultValue: { 'outline.expanded': [] },
-      },
-    });
+    super(options);
     when(() => this.blob.result.isSuccess, this.init.bind(this), { signal: this.destroyController.signal });
   }
 
   @computed
   public get isReady() {
-    return Boolean(this.uiState && this.doc);
+    return Boolean(this.doc);
   }
-
-  public readonly tempUIState = new TypedMap();
 
   private readonly docFactory = container.resolve(DocumentFactory);
 
   public readonly annotation = new AnnotationManager(this.noteId);
 
-  public readonly outline = new OutlineList(this.annotation);
+  public readonly outline = new OutlineList(this.noteId, this.annotation);
+
+  public readonly textFinder = new TextFinder();
 
   @observable.ref public accessor doc: PDFDocumentProxy | undefined; // this is view-independent
 

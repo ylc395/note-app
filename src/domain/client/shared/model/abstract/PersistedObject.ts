@@ -1,88 +1,70 @@
-import { get, set } from 'lodash-es';
+import { get, isObject, set } from 'lodash-es';
 import { type ZodType } from 'zod';
-import { action, observable, runInAction, toJS } from 'mobx';
 import assert from 'assert';
+import { action, observable, ObservableMap, runInAction } from 'mobx';
 
 import container from '#utils/singletonContainer';
 import { token as localStorageToken } from '#domain/client/shared/infra/localStorage';
+import { untrack } from 'solid-js/web';
 
-export default class PersistedObject<S> {
+export default class PersistedMap<S extends object> {
   constructor(private readonly id: string, private readonly schema: ZodType<S>, defaultValue: S) {
-    const { promise, resolve } = Promise.withResolvers<void>();
-
-    this.ready = promise;
-    this.init(defaultValue).then(resolve);
-  }
-
-  public readonly ready: Promise<void>;
-
-  private isReady = false;
-
-  private async init(defaultValue: S) {
-    let value: unknown;
-
-    try {
-      value = this.localStorage.getSync(this.key);
-    } catch {
-      value = await this.localStorage.get(this.key);
-    }
-
-    const parsedResult = this.schema.safeParse(value);
-
-    runInAction(() => {
-      if (parsedResult.success) {
-        this.value = parsedResult.data;
-      } else if (typeof value === 'object' && value) {
-        for (const issue of parsedResult.error.errors) {
-          set(value, issue.path, get(defaultValue, issue.path));
-        }
-        this.value = value as S;
-      } else {
-        this.value = defaultValue;
-      }
-    });
-
-    this.isReady = true;
+    this.init(defaultValue);
   }
 
   private readonly localStorage = container.resolve(localStorageToken);
 
-  @observable.shallow private accessor value: Readonly<S> | undefined;
+  private accessor map = new ObservableMap();
+
+  @observable public accessor isReady = false;
+
+  private async init(defaultValue: S) {
+    let value = await this.localStorage.get(this.key);
+    const parsedResult = this.schema.safeParse(value);
+
+    if (!isObject(value)) {
+      value = defaultValue;
+    }
+
+    if (parsedResult.error) {
+      for (const issue of parsedResult.error.errors) {
+        set(value as object, issue.path, get(defaultValue, issue.path));
+      }
+    }
+
+    runInAction(() => {
+      this.map.replace(value as object);
+      this.isReady = true;
+    });
+  }
 
   private get key() {
     return `PERSISTENCE_OBJECT_${this.id}`;
   }
 
-  public get(): S | undefined;
-  public get<T extends keyof S>(key: T): S[T];
-  public get<T extends keyof S>(key?: T) {
+  public get<T extends keyof S>(key: T): S[T] {
     assert(this.isReady, 'not ready');
-
-    if (key) {
-      return toJS(this.value?.[key]);
-    }
-
-    return toJS(this.value);
+    return this.map.get(key);
   }
 
-  public set(value: S): void;
-  public set<T extends keyof S>(key: T, value: S[T]): void;
-
   @action
-  public set<T extends keyof S>(key: T | S, value?: S[T]) {
+  public set<T extends keyof S>(key: T, value: S[T]) {
     assert(this.isReady, 'not ready');
+    this.map.set(key, value);
 
-    if (value !== undefined) {
-      assert(typeof key === 'string' && this.value);
-      this.value = { ...this.value, ...{ [key]: value } };
-    } else {
-      this.value = key as S;
-    }
+    untrack(() => {
+      this.localStorage.set(this.key, this.toObject());
+    });
 
-    this.localStorage.set(this.key, this.value);
+    return this;
+  }
+
+  public toObject() {
+    return Object.fromEntries(this.map) as S;
   }
 
   public clear() {
+    this.map.clear();
     this.localStorage.delete(this.key);
   }
 }

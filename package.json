@@ -106,7 +106,6 @@
     "mobx": "^6.13.6",
     "mobx-react-lite": "^4.0.7",
     "mobx-tanstack-query": "^4.2.1",
-    "mobx-utils": "^6.1.0",
     "page-lifecycle": "^0.1.2",
     "path-to-regexp": "^8.2.0",
     "pdfjs-dist": "^5.2.133",

@@ -17,6 +17,7 @@ export default function TreeView() {
       class="min-h-0 flex flex-col"
       orientation="horizontal"
       lazyMount
+      unmountOnExit
       defaultValue={uiState.get('note.treeView')}
       onValueChange={({ value }) => uiState.set('note.treeView', value as NoteTreeViewTabs)}
     >

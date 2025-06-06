@@ -4,6 +4,8 @@ import type { RefProxy } from 'pdfjs-dist/types/src/display/api';
 
 import type AnnotationManager from './AnnotationManager';
 import assert from 'assert';
+import PersistedMap from '#domain/client/shared/model/abstract/PersistedObject';
+import { z } from 'zod';
 
 export interface OutlineItem {
   title: string;
@@ -15,9 +17,21 @@ export interface OutlineItem {
 }
 
 export default class OutlineList {
-  constructor(private readonly annotation: AnnotationManager) {}
+  constructor(noteId: string, private readonly annotation: AnnotationManager) {
+    this.state = new PersistedMap(
+      `${noteId}-outlineList`,
+      z.object({
+        expanded: z.string().array(),
+        type: z.union([z.literal('text'), z.literal('image'), z.literal(null)]).optional(),
+        scroll: z.object({ x: z.number(), y: z.number() }).optional(),
+      }),
+      { expanded: [] },
+    );
+  }
 
   @observable.ref public accessor items: OutlineItem[] | undefined;
+
+  public readonly state;
 
   private readonly pageToOutlineItemsMap = new Map<number, OutlineItem>();
 

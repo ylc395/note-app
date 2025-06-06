@@ -15,6 +15,8 @@ import HistoryStack, { Direction, type HistoryRecord } from '#domain/client/app/
 import shell from '#web/infra/shell';
 
 import Searcher from './SearchBar/Searcher';
+import PersistedMap from '#domain/client/shared/model/abstract/PersistedObject';
+import { z } from 'zod';
 
 interface Options {
   container: HTMLDivElement;
@@ -47,9 +49,10 @@ export default class PdfViewer {
     this.editor = options.editor;
     this.pdfViewer = this.createViewer(options);
     this.searcher = new Searcher(this);
+    this.state = new PersistedMap(`${options.editor.noteId}-view`, z.object({ hash: z.string().optional() }), {});
 
     when(
-      () => this.editor.isReady,
+      () => this.editor.isReady && this.state.isReady,
       () => this.init(),
       { signal: this.destroyController.signal },
     );
@@ -62,6 +65,8 @@ export default class PdfViewer {
   public readonly editor: PdfEditor;
 
   private readonly destroyController = new AbortController();
+
+  private readonly state;
 
   @observable
   public accessor renderedPages: number[] = [];
@@ -104,8 +109,7 @@ export default class PdfViewer {
 
   private readonly updateUIState = debounce(
     action(({ location }: { location: { pdfOpenParams: string; pageNumber: number } }) => {
-      assert(this.editor.uiState);
-      this.editor.uiState.hash = PdfViewer.normalizeHash(location.pdfOpenParams);
+      this.state.set('hash', PdfViewer.normalizeHash(location.pdfOpenParams));
     }),
     500,
   );
@@ -158,9 +162,8 @@ export default class PdfViewer {
         }),
       );
 
-      assert(this.editor.uiState);
       // 把 pdf 视图的位置移动到上一次离开的地方
-      const hash = this.editor.uiState.hash;
+      const hash = this.state.get('hash');
       if (hash) {
         this.jumpTo({ hash });
       }
@@ -182,7 +185,9 @@ export default class PdfViewer {
     const doc = this.editor.doc;
     assert(doc);
 
-    this.currentPage = (this.editor.uiState?.hash && PdfViewer.getPageFromHash(this.editor.uiState.hash)) || 1;
+    const hash = this.state.get('hash');
+
+    this.currentPage = (hash && PdfViewer.getPageFromHash(hash)) || 1;
     this.pdfViewer.setDocument(doc);
     (this.pdfViewer.linkService as PDFLinkService).setDocument(doc);
 
@@ -191,7 +196,7 @@ export default class PdfViewer {
       this.editor.outline.init(doc).then(() => {
         autorun(
           () => {
-            if (this.editor.uiState?.['outline.type'] === 'text' && this.currentPage) {
+            if (this.editor.outline.state.get('type') === 'text' && this.currentPage) {
               this.editor.outline.focus(this.currentPage);
             }
           },
@@ -254,9 +259,10 @@ export default class PdfViewer {
     }
 
     if (!noHistory) {
-      assert(this.editor.uiState?.hash);
+      const hash = this.state.get('hash');
+      assert(hash);
       // 记录跳转前的位置
-      this.historyStack.push({ record: { key: this.editor.uiState.hash } });
+      this.historyStack.push({ record: { key: hash } });
 
       // 记录跳转后的位置
       this.pdfViewer.eventBus.on(
@@ -272,9 +278,10 @@ export default class PdfViewer {
   }
 
   private handleHistoryPop(e: { record: HistoryRecord; direction: Direction }) {
-    assert(this.editor.uiState?.hash);
+    const hash = this.state.get('hash');
+    assert(hash);
 
-    this.historyStack.push({ fromHistory: e.direction, record: { key: this.editor.uiState.hash } });
+    this.historyStack.push({ fromHistory: e.direction, record: { key: hash } });
     this.historyStack.push({ fromHistory: e.direction, record: e.record });
     this.jumpTo({ hash: e.record.key }, true);
   }

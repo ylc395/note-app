@@ -8,7 +8,7 @@ import type PdfViewer from '../PDFViewer';
 function Title(props: { item: OutlineItem; viewer: PdfViewer; class?: string }) {
   const isFocused = createMemo(
     () =>
-      !props.viewer.editor.uiState?.['outline.expanded'].includes(props.item.key) &&
+      !props.viewer.editor.outline.state.get('expanded').includes(props.item.key) &&
       props.viewer.editor.outline.focusedPath?.includes(props.item.key),
   );
   const annotationCount = createMemo(() => props.viewer.editor.outline.getAnnotationCount(props.item.key));
@@ -68,7 +68,7 @@ export default function Item(props: {
         fallback={<Title viewer={props.viewer} item={props.item} class="pl-4 cursor-pointer" />}
       >
         <Collapsible.Root
-          open={props.viewer.editor.uiState?.['outline.expanded']?.includes(props.item.key)}
+          open={props.viewer.editor.outline.state.get('expanded').includes(props.item.key)}
           lazyMount
           unmountOnExit
           onOpenChange={({ open }) => props.onToggle({ key: props.item.key, value: open })}

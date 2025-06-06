@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import PersistedObject from '#domain/client/shared/model/abstract/PersistedObject';
+import PersistedMap from '#domain/client/shared/model/abstract/PersistedObject';
 
 export enum SidebarTabs {
   Note = 'note',
@@ -19,7 +19,7 @@ const schema = z.object({
   'memo.sidebarVisibility': z.union([z.literal('always'), z.literal('visible'), z.literal('hidden')]),
 });
 
-export default class UIState extends PersistedObject<z.infer<typeof schema>> {
+export default class UIState extends PersistedMap<z.infer<typeof schema>> {
   constructor() {
     super('ui.state', schema, {
       'app.sidebar': SidebarTabs.Note,

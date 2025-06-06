@@ -1,29 +1,14 @@
-import { action, autorun, observable, runInAction } from 'mobx';
+import { action, autorun, observable } from 'mobx';
 import { FindState, PDFFindController } from 'pdfjs-dist/web/pdf_viewer.mjs';
 import { compact, pick } from 'lodash-es';
 
 import EventBus from '#domain/client/shared/infra/EventBus';
 import { extractDigest } from '#utils/string';
-import type { TypedMapKey } from '#utils/collection';
 import type PdfViewer from '../PDFViewer';
 
 interface MatchesCount {
   current: number;
   total: number;
-}
-
-interface Options {
-  isEnabled: boolean;
-  query: string;
-  caseSensitive: boolean;
-  entireWord: boolean;
-}
-
-export type Digest = NonNullable<ReturnType<typeof extractDigest>>;
-
-export interface PageSearchResult {
-  page: number;
-  digests: Digest[];
 }
 
 export default class Searcher extends EventBus<{ matchUpdated: { pages: number[] } }> {
@@ -32,26 +17,20 @@ export default class Searcher extends EventBus<{ matchUpdated: { pages: number[]
     this.pdfViewer.eventBus.on('updatefindcontrolstate', this.handleUpdate.bind(this));
     this.pdfViewer.eventBus.on('updatefindmatchescount', this.handleUpdate.bind(this));
     this.pdfViewer.eventBus.on('updatetextlayermatches', this.emitMatchUpdated.bind(this));
-
-    runInAction(() => {
-      this.options = this.pdfViewer.editor.tempUIState.get(Searcher.stateKey) || {
-        isEnabled: false,
-        query: '',
-        caseSensitive: false,
-        entireWord: false,
-      };
-
-      this.pdfViewer.editor.tempUIState.set(Searcher.stateKey, this.options);
-    });
-
     autorun(() => this.search({ type: '' }), { signal: this.destroyController.signal });
   }
 
   private readonly destroyController = new AbortController();
 
-  @observable.ref public accessor searchResult: PageSearchResult[] | undefined;
+  public get options() {
+    const { query, isEnabled, options } = this.pdfViewer.editor.textFinder;
 
-  @observable public accessor options!: Options;
+    return {
+      ...options.toObject(),
+      query,
+      isEnabled,
+    };
+  }
 
   @observable public accessor matchesCount: MatchesCount | undefined;
 
@@ -69,7 +48,7 @@ export default class Searcher extends EventBus<{ matchUpdated: { pages: number[]
   private handleUpdate(e: { matchesCount: MatchesCount; state?: number; source?: unknown }) {
     if (!this.options.query) {
       this.matchesCount = undefined;
-      this.searchResult = undefined;
+      this.pdfViewer.editor.textFinder.searchResult = undefined;
       return;
     }
 
@@ -92,7 +71,7 @@ export default class Searcher extends EventBus<{ matchUpdated: { pages: number[]
         return;
       }
 
-      this.searchResult = pageMatches
+      this.pdfViewer.editor.textFinder.searchResult = pageMatches
         .map((matchOffsets: number[], pageIndex) => ({
           page: pageIndex + 1,
           digests: compact(
@@ -140,7 +119,8 @@ export default class Searcher extends EventBus<{ matchUpdated: { pages: number[]
 
   @action
   public toggleOption(key: 'caseSensitive' | 'entireWord') {
-    this.options[key] = !this.options[key];
+    const options = this.pdfViewer.editor.textFinder.options;
+    options.set(key, options.get(key));
   }
 
   public next() {
@@ -159,6 +139,4 @@ export default class Searcher extends EventBus<{ matchUpdated: { pages: number[]
     this.close();
     this.destroyController.abort();
   }
-
-  private static readonly stateKey: TypedMapKey<Options> = Symbol('searcher');
 }

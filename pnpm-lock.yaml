@@ -163,9 +163,6 @@ importers:
       mobx-tanstack-query:
         specifier: ^4.2.1
         version: 4.2.1(disposer-util@1.0.12)(mobx@6.13.6)
-      mobx-utils:
-        specifier: ^6.1.0
-        version: 6.1.0(mobx@6.13.6)
       page-lifecycle:
         specifier: ^0.1.2
         version: 0.1.2
@@ -4077,11 +4074,6 @@ packages:
     peerDependencies:
       disposer-util: ^1.0.9
       mobx: ^6.12.4
-
-  mobx-utils@6.1.0:
-    resolution: {integrity: sha512-P3qUVDFp3Kv5HXD7EIGJn3zlgJJnN+/ZpFHWQ+u6YNN1xDxY53iMvsQ9fM8kauTVdDmt7ulDgDQtDrOxb1NS9Q==}
-    peerDependencies:
-      mobx: ^6.0.0
 
   mobx@6.13.6:
     resolution: {integrity: sha512-r19KNV0uBN4b+ER8Z0gA4y+MzDYIQ2SvOmn3fUrqPnWXdQfakd9yfbPBDBF/p5I+bd3N5Rk1fHONIvMay+bJGA==}
@@ -10631,10 +10623,6 @@ snapshots:
       '@tanstack/query-core': 5.66.0
       disposer-util: 1.0.12
       linked-abort-controller: 1.0.4
-      mobx: 6.13.6
-
-  mobx-utils@6.1.0(mobx@6.13.6):
-    dependencies:
       mobx: 6.13.6
 
   mobx@6.13.6: {}

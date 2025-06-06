@@ -1,15 +1,12 @@
 import { uniqueId, debounce, pick } from 'lodash-es';
-import { action, computed, observable, runInAction } from 'mobx';
-import { deepObserve } from 'mobx-utils';
+import { action, computed } from 'mobx';
 import assert from 'assert';
 import { createQuery } from 'mobx-tanstack-query/preset';
-import type { ZodType } from 'zod';
 
 import EventBus from '#domain/client/shared/infra/EventBus';
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import type { NotePatchDTO, NoteVO } from '#domain/shared/model/note';
-import PersistedObject from '#domain/client/shared/model/abstract/PersistedObject';
 
 import { EventNames, type Events } from './events';
 import type Tile from '../../Workbench/Tile';
@@ -23,14 +20,10 @@ export interface Options {
 
 type Patch = Pick<NotePatchDTO, 'body' | 'icon' | 'title'>;
 
-export default abstract class BaseEditor<S = unknown> {
-  constructor({ entityId, tile, uiState }: Options & { uiState?: { schema: ZodType<S>; defaultValue: S } }) {
+export default abstract class BaseEditor {
+  constructor({ entityId, tile }: Options) {
     this.tile = tile;
     this.noteId = entityId;
-
-    if (uiState) {
-      this.noteUIState = new PersistedObject(`uiState-${this.noteId}`, uiState.schema, uiState.defaultValue);
-    }
 
     this.value = createQuery(({ signal }) => this.remote.note.queryOneById.query(this.noteId, { signal }), {
       queryKey: ['note', this.noteId],
@@ -53,36 +46,7 @@ export default abstract class BaseEditor<S = unknown> {
         }),
       },
     );
-
-    this.initUIState();
   }
-
-  private async initUIState() {
-    if (!this.noteUIState) {
-      return;
-    }
-
-    await this.noteUIState.ready;
-
-    if (this.destroyController.signal.aborted) {
-      return;
-    }
-
-    const uiState = this.noteUIState.get();
-
-    runInAction(() => {
-      this.uiState = uiState;
-    });
-
-    const dispose = deepObserve(this.uiState, () => this.noteUIState?.set(this.uiState!));
-    this.destroyController.signal.addEventListener('abort', dispose, { once: true });
-  }
-
-  private readonly noteUIState: PersistedObject<S> | undefined; // 该 note 的 UI 状态，具备持久化能力
-
-  // 该 editor 自己的 UI 状态，其初始状态来自 noteUIState
-  // 该对象的变化会同步到 noteUIState 里。该对象本身不具备持久化能力
-  @observable public accessor uiState: S | undefined;
 
   public abstract readonly mimeType: string | null;
 

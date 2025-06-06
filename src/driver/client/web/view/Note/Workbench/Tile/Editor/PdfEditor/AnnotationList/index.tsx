@@ -8,7 +8,7 @@ import Settings from './Settings';
 
 export default function AnnotationList(props: { pdfViewer: PdfViewer }) {
   const annotations = createMemo(() => {
-    if (props.pdfViewer.editor.uiState?.['annotation.native'] === false) {
+    if (props.pdfViewer.editor.annotation.state.get('native') === false) {
       return props.pdfViewer.editor.annotation.list?.filter(({ isNative }) => !isNative);
     }
 

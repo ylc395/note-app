@@ -1,4 +1,4 @@
-import { createEffect, For, on, Show } from 'solid-js';
+import { createEffect, For, Show, untrack } from 'solid-js';
 import { Loader2Icon, EyeIcon } from 'lucide-solid';
 import { action } from 'mobx';
 import assert from 'assert';
@@ -11,42 +11,43 @@ export default function Outline(props: { viewer: PdfViewer }) {
   let listRef: HTMLDivElement | undefined;
 
   function onToggle({ key, value }: { key: string; value: boolean }) {
-    assert(props.viewer.editor.uiState);
+    const expanded = props.viewer.editor.outline.state.get('expanded');
 
     if (value) {
-      props.viewer.editor.uiState['outline.expanded'].push(key);
+      expanded.push(key);
     } else {
-      pull(props.viewer.editor.uiState['outline.expanded'], key);
+      pull(expanded, key);
     }
   }
 
   function handleScroll(e: Event) {
-    assert(e.target instanceof HTMLElement && props.viewer.editor.uiState);
-    props.viewer.editor.uiState['outline.scroll'] = {
+    assert(e.target instanceof HTMLElement);
+    props.viewer.editor.outline.state.set('scroll', {
       x: e.target.scrollLeft,
       y: e.target.scrollTop,
-    };
+    });
   }
 
-  createEffect(
-    on(
-      () => props.viewer.editor.outline.items,
-      () => {
-        if (props.viewer.editor.uiState?.['outline.scroll']) {
-          listRef!.scrollLeft = props.viewer.editor.uiState['outline.scroll'].x;
-          listRef!.scrollTop = props.viewer.editor.uiState['outline.scroll'].y;
+  createEffect(() => {
+    if (props.viewer.editor.outline.items && props.viewer.editor.outline.state.isReady) {
+      untrack(() => {
+        const scroll = props.viewer.editor.outline.state.get('scroll');
+
+        if (scroll && listRef) {
+          listRef.scrollLeft = scroll.x;
+          listRef.scrollTop = scroll.y;
         }
-      },
-    ),
-  );
+      });
+    }
+  });
 
   function scrollToFocused() {
-    assert(props.viewer.editor.uiState && props.viewer.editor.outline.focusedPath);
+    assert(props.viewer.editor.outline.focusedPath);
 
-    props.viewer.editor.uiState['outline.expanded'] = uniq([
-      ...props.viewer.editor.uiState['outline.expanded'],
-      ...props.viewer.editor.outline.focusedPath,
-    ]);
+    props.viewer.editor.outline.state.set(
+      'expanded',
+      uniq([...props.viewer.editor.outline.state.get('expanded'), ...props.viewer.editor.outline.focusedPath]),
+    );
 
     const item = listRef?.querySelector(`[data-outline-item-key="${last(props.viewer.editor.outline.focusedPath)}"]`);
 

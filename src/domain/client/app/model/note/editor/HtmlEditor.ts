@@ -1,4 +1,3 @@
-import { z } from 'zod';
 import { observable, action, computed } from 'mobx';
 
 import { MimeTypes } from '#domain/shared/model/file';
@@ -9,15 +8,9 @@ export enum Panels {
   AnnotationList,
 }
 
-const uiStateSchema = z.object({
-  titleSelection: z.tuple([z.number(), z.number()]).optional(),
-  bodySelection: z.tuple([z.number(), z.number()]).optional(),
-  scrollTop: z.number().optional(),
-});
-
-export default class HtmlEditor extends BaseEditor<z.infer<typeof uiStateSchema>> {
+export default class HtmlEditor extends BaseEditor {
   constructor(options: Options) {
-    super({ ...options, uiState: { schema: uiStateSchema, defaultValue: {} } });
+    super(options);
   }
 
   @observable.ref public accessor documentElement: unknown | undefined;

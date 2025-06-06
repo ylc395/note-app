@@ -1,25 +1,23 @@
 import { difference } from 'lodash-es';
 import { queryClient } from 'mobx-tanstack-query/preset';
 import { z } from 'zod';
-import { action, autorun, observable, runInAction } from 'mobx';
+import { action, autorun, observable, runInAction, when } from 'mobx';
 
 import { NoteTypes, NoteVO } from '#domain/shared/model/note';
 import type { MaybeArray } from '#utils/collection';
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 
-import PersistedObject from '../abstract/PersistedObject';
+import PersistedMap from '../abstract/PersistedObject';
 import TreeNode from './TreeNode';
 
 export default class Tree {
   constructor(private readonly options: { sort?: (note1: NoteVO, note2: NoteVO) => number; type: NoteTypes }) {
     this.root = this.createNode();
-    this.uiState = new PersistedObject(`note-explorer-${options.type}`, Tree.schema, {});
+    this.uiState = new PersistedMap(`note-explorer-tree-${options.type}`, Tree.schema, {});
 
-    this.init();
+    when(() => this.uiState.isReady, this.init.bind(this));
   }
-
-  @observable public accessor isActive = false;
 
   public readonly root: TreeNode;
 
@@ -35,7 +33,7 @@ export default class Tree {
 
   @observable public accessor unselectableNodeIds = new Set<TreeNode['id']>();
 
-  public init() {
+  private async init() {
     autorun(() => this.uiState.set('selected', Array.from(this.selectedNodeIds)));
     autorun(() => this.uiState.set('expanded', Array.from(this.expandedNodeIds)));
 
@@ -49,11 +47,6 @@ export default class Tree {
     if (expandedIds) {
       this.expand(expandedIds);
     }
-  }
-
-  @action
-  public setActive(value: boolean) {
-    this.isActive = value;
   }
 
   public get(id: string | null) {

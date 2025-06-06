@@ -1,7 +1,7 @@
 import { For, onMount } from 'solid-js';
 import assert from 'assert';
 
-import type { Digest } from './Searcher';
+import type { Digest } from '#domain/client/app/model/note/editor/PdfEditor/TextFinder';
 import type PdfViewer from '../PDFViewer';
 
 function DigestView(props: { digest: Digest; pdfViewer: PdfViewer; page: number }) {
@@ -43,7 +43,7 @@ function DigestView(props: { digest: Digest; pdfViewer: PdfViewer; page: number 
 export default function ResultList(props: { pdfViewer: PdfViewer }) {
   return (
     <div class="w-64 max-h-72 overflow-auto bg-white">
-      <For each={props.pdfViewer.searcher.searchResult}>
+      <For each={props.pdfViewer.editor.textFinder.searchResult}>
         {(pageResult) => (
           <div>
             <div class="flex sticky top-0 bg-white">

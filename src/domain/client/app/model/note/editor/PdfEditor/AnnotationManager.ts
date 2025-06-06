@@ -8,6 +8,8 @@ import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import type { NoteVO } from '#domain/shared/model/note';
 import type { AnnotationVO, PDFRectSelector, PDFTextPositionSelector } from '#domain/shared/model/annotation';
+import PersistedMap from '#domain/client/shared/model/abstract/PersistedObject';
+import { z } from 'zod';
 
 dayjs.extend(customParseFormat);
 
@@ -29,7 +31,18 @@ export interface AnnotationItem extends AnnotationVO {
 }
 
 export default class AnnotationManager {
-  constructor(private readonly noteId: NoteVO['id']) {}
+  constructor(private readonly noteId: NoteVO['id']) {
+    this.state = new PersistedMap(
+      `${noteId}-annotationManager`,
+      z.object({
+        panel: z.boolean().optional(),
+        native: z.boolean().optional(),
+      }),
+      {},
+    );
+  }
+
+  public readonly state;
 
   private readonly remote = container.resolve(rpcToken);
 

@@ -7,13 +7,14 @@ import MaterialFormModal from './Note/MaterialFormModal';
 import MemoTab from './Memo';
 import UIState, { SidebarTabs } from './UIState';
 import './index.css';
+import { Show } from 'solid-js';
 
 export default function App() {
   const uiState = container.resolve(UIState);
   const mainTabClassName = 'flex-grow min-w-0 relative bg-gray-50 h-full';
 
   return (
-    <>
+    <Show when={uiState.isReady}>
       <Tabs.Root
         orientation="vertical"
         lazyMount
@@ -26,6 +27,6 @@ export default function App() {
         <MemoTab className={mainTabClassName} />
       </Tabs.Root>
       <MaterialFormModal />
-    </>
+    </Show>
   );
 }
