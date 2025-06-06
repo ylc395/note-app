@@ -4,7 +4,7 @@ import type { RefProxy } from 'pdfjs-dist/types/src/display/api';
 
 import type AnnotationManager from './AnnotationManager';
 import assert from 'assert';
-import PersistedMap from '#domain/client/shared/model/abstract/PersistedObject';
+import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
 import { z } from 'zod';
 
 export interface OutlineItem {

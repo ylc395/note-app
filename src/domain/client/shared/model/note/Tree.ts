@@ -8,7 +8,7 @@ import type { MaybeArray } from '#utils/collection';
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 
-import PersistedMap from '../abstract/PersistedObject';
+import PersistedMap from '../abstract/PersistedMap';
 import TreeNode from './TreeNode';
 
 export default class Tree {

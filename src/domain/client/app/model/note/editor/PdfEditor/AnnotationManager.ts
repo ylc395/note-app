@@ -8,7 +8,7 @@ import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import type { NoteVO } from '#domain/shared/model/note';
 import type { AnnotationVO, PDFRectSelector, PDFTextPositionSelector } from '#domain/shared/model/annotation';
-import PersistedMap from '#domain/client/shared/model/abstract/PersistedObject';
+import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
 import { z } from 'zod';
 
 dayjs.extend(customParseFormat);

@@ -1,6 +1,6 @@
 import { observable } from 'mobx';
 import { z } from 'zod';
-import PersistedMap from '#domain/client/shared/model/abstract/PersistedObject';
+import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
 import type { extractDigest } from '#utils/string';
 
 export type Digest = NonNullable<ReturnType<typeof extractDigest>>;

@@ -5,7 +5,7 @@ import assert from 'assert';
 import { debounce, omit } from 'lodash-es';
 import { autoUpdate, computePosition, flip, offset } from '@floating-ui/dom';
 
-import PersistedMap from '#domain/client/shared/model/abstract/PersistedObject';
+import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
 import { IS_DEV } from '#domain/shared/infra/env';
 import type { default as PdfViewer, Position } from '../PDFViewer';
 

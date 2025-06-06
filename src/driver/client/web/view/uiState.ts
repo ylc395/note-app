@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import PersistedMap from '#domain/client/shared/model/abstract/PersistedObject';
+import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
 
 export enum SidebarTabs {
   Note = 'note',

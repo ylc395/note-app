@@ -15,7 +15,7 @@ import HistoryStack, { Direction, type HistoryRecord } from '#domain/client/app/
 import shell from '#web/infra/shell';
 
 import Searcher from './SearchBar/Searcher';
-import PersistedMap from '#domain/client/shared/model/abstract/PersistedObject';
+import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
 import { z } from 'zod';
 
 interface Options {
