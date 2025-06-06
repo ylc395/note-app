@@ -40,6 +40,7 @@ export default class TreeNode {
       },
       {
         refetchOnWindowFocus: false,
+        staleTime: Infinity,
         select: (notes) => notes.toSorted(options.sort),
         abortSignal: this.destroyController.signal,
         queryKey: TreeNode.getChildrenQueryKey({ parentId: value?.id ?? null, type }),
@@ -113,6 +114,10 @@ export default class TreeNode {
 
     if (this.isExpanded) {
       this.options.tree.expandedNodeIds.add(this.id);
+
+      if (value === undefined) {
+        this.childrenQuery.invalidate();
+      }
     } else {
       this.options.tree.expandedNodeIds.delete(this.id);
     }
