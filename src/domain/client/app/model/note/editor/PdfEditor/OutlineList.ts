@@ -1,11 +1,11 @@
-import { action, observable, runInAction } from 'mobx';
+import { observable, runInAction } from 'mobx';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import type { RefProxy } from 'pdfjs-dist/types/src/display/api';
+import assert from 'assert';
+import { z } from 'zod';
 
 import type AnnotationManager from './AnnotationManager';
-import assert from 'assert';
 import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
-import { z } from 'zod';
 
 export interface OutlineItem {
   title: string;
@@ -33,36 +33,9 @@ export default class OutlineList {
 
   public readonly state;
 
-  private readonly pageToOutlineItemsMap = new Map<number, OutlineItem>();
+  public readonly pageToOutlineItemsMap = new Map<number, OutlineItem>();
 
-  private readonly keyToOutlineItemsMap = new Map<OutlineItem['key'], OutlineItem>();
-
-  @observable public accessor focusedPath: OutlineItem['key'][] | undefined;
-
-  @action.bound
-  public focus(page: number) {
-    if (this.pageToOutlineItemsMap.size === 0) {
-      return;
-    }
-
-    for (let i = page; i >= 0; i--) {
-      let item = this.pageToOutlineItemsMap.get(i);
-
-      if (item) {
-        const path: OutlineItem['key'][] = [];
-
-        while (item) {
-          path.unshift(item.key);
-          item = item.parent;
-        }
-
-        this.focusedPath = path;
-        return;
-      }
-    }
-
-    this.focusedPath = undefined;
-  }
+  public readonly keyToOutlineItemsMap = new Map<OutlineItem['key'], OutlineItem>();
 
   public async init(doc: PDFDocumentProxy) {
     if (this.items) {

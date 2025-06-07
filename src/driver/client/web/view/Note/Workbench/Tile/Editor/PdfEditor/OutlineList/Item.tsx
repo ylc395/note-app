@@ -3,22 +3,17 @@ import { ChevronRightIcon, ChevronDownIcon } from 'lucide-solid';
 import { createMemo, For, Show } from 'solid-js';
 
 import type { OutlineItem } from '#domain/client/app/model/note/editor/PdfEditor';
-import type PdfViewer from '../PDFViewer';
+import type Outline from './Outline';
 
-function Title(props: { item: OutlineItem; viewer: PdfViewer; class?: string }) {
-  const isFocused = createMemo(
-    () =>
-      !props.viewer.editor.outline.state.get('expanded').includes(props.item.key) &&
-      props.viewer.editor.outline.focusedPath?.includes(props.item.key),
-  );
-  const annotationCount = createMemo(() => props.viewer.editor.outline.getAnnotationCount(props.item.key));
-  const pageRange = props.viewer.editor.outline.getPageRange(props.item.key);
+function Title(props: { item: OutlineItem; outline: Outline; isFocused: boolean; class?: string }) {
+  const annotationCount = createMemo(() => props.outline.pdfViewer.editor.outline.getAnnotationCount(props.item.key));
+  const pageRange = props.outline.pdfViewer.editor.outline.getPageRange(props.item.key);
 
   function handleClick(e: MouseEvent) {
     e.stopPropagation();
 
     if (props.item.dest) {
-      props.viewer.jumpTo(props.item);
+      props.outline.jumpTo(props.item);
     }
   }
 
@@ -32,7 +27,7 @@ function Title(props: { item: OutlineItem; viewer: PdfViewer; class?: string }) 
               data-outline-item-key={props.item.key}
               onClick={handleClick}
               class={props.class}
-              classList={{ 'font-bold': isFocused() }}
+              classList={{ 'font-bold': props.isFocused }}
             >
               {props.item.title}
             </span>
@@ -57,18 +52,24 @@ function Title(props: { item: OutlineItem; viewer: PdfViewer; class?: string }) 
 
 export default function Item(props: {
   item: OutlineItem;
-  viewer: PdfViewer;
+  outline: Outline;
   level: number;
   onToggle: (e: { key: string; value: boolean }) => void;
 }) {
+  const isFocused = createMemo(() => {
+    return props.outline.focusedKey === props.item.key;
+  });
+
   return (
     <div classList={{ 'mb-1': props.item.children.length === 0 }} style={{ 'padding-left': `${props.level * 20}px` }}>
       <Show
-        when={props.item.children.length > 0}
-        fallback={<Title viewer={props.viewer} item={props.item} class="pl-4 cursor-pointer" />}
+        when={props.item.children.length > 0 && props.outline.expandedKeys}
+        fallback={
+          <Title isFocused={isFocused()} outline={props.outline} item={props.item} class="pl-4 cursor-pointer" />
+        }
       >
         <Collapsible.Root
-          open={props.viewer.editor.outline.state.get('expanded').includes(props.item.key)}
+          open={props.outline.expandedKeys!.has(props.item.key)}
           lazyMount
           unmountOnExit
           onOpenChange={({ open }) => props.onToggle({ key: props.item.key, value: open })}
@@ -78,11 +79,11 @@ export default function Item(props: {
               <ChevronRightIcon class='group-data-[state="open"]:hidden w-4' />
               <ChevronDownIcon class='group-data-[state="closed"]:hidden w-4' />
             </Collapsible.Trigger>
-            <Title viewer={props.viewer} item={props.item} />
+            <Title isFocused={isFocused()} outline={props.outline} item={props.item} />
           </div>
           <Collapsible.Content>
             <For each={props.item.children}>
-              {(item) => <Item item={item} viewer={props.viewer} level={props.level + 1} onToggle={props.onToggle} />}
+              {(item) => <Item outline={props.outline} item={item} level={props.level + 1} onToggle={props.onToggle} />}
             </For>
           </Collapsible.Content>
         </Collapsible.Root>

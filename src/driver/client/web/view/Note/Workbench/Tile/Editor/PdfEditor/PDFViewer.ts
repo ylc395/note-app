@@ -7,7 +7,7 @@ import {
 } from 'pdfjs-dist/web/pdf_viewer.mjs';
 import { AnnotationEditorType, AnnotationMode } from 'pdfjs-dist';
 import { debounce, intersection, memoize, range as numberRange } from 'lodash-es';
-import { observable, when, action, computed, autorun } from 'mobx';
+import { observable, when, action, computed } from 'mobx';
 import assert from 'assert';
 
 import type { default as PdfEditor, OutlineItem } from '#domain/client/app/model/note/editor/PdfEditor';
@@ -133,9 +133,6 @@ export default class PdfViewer {
     pdfViewer.eventBus.on('pagechanging', ({ pageNumber }: { pageNumber: number }) =>
       this.updateCurrentPage(pageNumber),
     );
-    pdfViewer.eventBus.on('updateviewarea', (e: { location: { pageNumber: number } }) => {
-      this.editor.outline.focus(e.location.pageNumber);
-    });
 
     pdfViewer.eventBus.on(
       'textlayerrendered',
@@ -190,21 +187,6 @@ export default class PdfViewer {
     this.currentPage = (hash && PdfViewer.getPageFromHash(hash)) || 1;
     this.pdfViewer.setDocument(doc);
     (this.pdfViewer.linkService as PDFLinkService).setDocument(doc);
-
-    this.pdfViewer.pagesPromise.then(() => {
-      // 必须在这个 promise 里初始化大纲，否则拿不到对应的页数
-      this.editor.outline.init(doc).then(() => {
-        autorun(
-          () => {
-            if (this.editor.outline.state.get('type') === 'text' && this.currentPage) {
-              this.editor.outline.focus(this.currentPage);
-            }
-          },
-          { signal: this.destroyController.signal },
-        );
-      });
-    });
-
     this.hijackClick();
   }
 

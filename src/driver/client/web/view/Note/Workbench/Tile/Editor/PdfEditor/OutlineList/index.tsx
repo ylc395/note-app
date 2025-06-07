@@ -1,24 +1,20 @@
-import { createEffect, For, Show, untrack } from 'solid-js';
+import { createEffect, For, onCleanup, Show, untrack } from 'solid-js';
 import { Loader2Icon, EyeIcon } from 'lucide-solid';
 import { action } from 'mobx';
 import assert from 'assert';
-import { last, pull, uniq } from 'lodash-es';
 
 import type PdfViewer from '../PDFViewer';
 import Item from './Item';
+import OutlineModel from './Outline';
 
 export default function Outline(props: { viewer: PdfViewer }) {
   let listRef: HTMLDivElement | undefined;
 
-  function onToggle({ key, value }: { key: string; value: boolean }) {
-    const expanded = props.viewer.editor.outline.state.get('expanded');
+  const outline = new OutlineModel(props.viewer);
 
-    if (value) {
-      expanded.push(key);
-    } else {
-      pull(expanded, key);
-    }
-  }
+  onCleanup(() => {
+    outline.destroy();
+  });
 
   function handleScroll(e: Event) {
     assert(e.target instanceof HTMLElement);
@@ -29,7 +25,7 @@ export default function Outline(props: { viewer: PdfViewer }) {
   }
 
   createEffect(() => {
-    if (props.viewer.editor.outline.items && props.viewer.editor.outline.state.isReady) {
+    if (props.viewer.editor.outline.items && props.viewer.editor.outline.state.isReady && outline.expandedKeys) {
       untrack(() => {
         const scroll = props.viewer.editor.outline.state.get('scroll');
 
@@ -42,14 +38,8 @@ export default function Outline(props: { viewer: PdfViewer }) {
   });
 
   function scrollToFocused() {
-    assert(props.viewer.editor.outline.focusedPath);
-
-    props.viewer.editor.outline.state.set(
-      'expanded',
-      uniq([...props.viewer.editor.outline.state.get('expanded'), ...props.viewer.editor.outline.focusedPath]),
-    );
-
-    const item = listRef?.querySelector(`[data-outline-item-key="${last(props.viewer.editor.outline.focusedPath)}"]`);
+    const key = outline.expandToFocus();
+    const item = key && listRef?.querySelector(`[data-outline-item-key="${key}"]`);
 
     if (item) {
       item.scrollIntoView();
@@ -57,11 +47,7 @@ export default function Outline(props: { viewer: PdfViewer }) {
   }
 
   return (
-    <div
-      class="w-64 overflow-auto h-full border-r pb-12 flex flex-col"
-      ref={listRef}
-      onScrollEnd={action(handleScroll)}
-    >
+    <div class="w-64 overflow-auto h-full border-r pb-12 flex flex-col">
       <Show
         when={!props.viewer.editor.outline.items || props.viewer.editor.outline.items.length > 0}
         fallback={<div class="flex h-full justify-center items-center">无大纲</div>}
@@ -72,7 +58,7 @@ export default function Outline(props: { viewer: PdfViewer }) {
             当前浏览
           </button>
         </div>
-        <div class="min-h-0 overflow-auto">
+        <div class="min-h-0 overflow-auto" ref={listRef} onScrollEnd={action(handleScroll)}>
           <For
             each={props.viewer.editor.outline.items}
             fallback={
@@ -82,7 +68,7 @@ export default function Outline(props: { viewer: PdfViewer }) {
               </div>
             }
           >
-            {(outline) => <Item onToggle={action(onToggle)} viewer={props.viewer} item={outline} level={0} />}
+            {(item) => <Item outline={outline} onToggle={outline.toggleExpand} item={item} level={0} />}
           </For>
         </div>
       </Show>
