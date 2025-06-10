@@ -37,8 +37,8 @@ export default function PdfEditorView(props: { editor: PdfEditor }) {
         <div class="grow flex flex-col">
           <Show when={getPdfViewer()}>
             {(pdfViewer) => (
-              <Show when={pdfViewer().searcher.options.isEnabled}>
-                <SearchBar pdfViewer={pdfViewer()} />
+              <Show when={pdfViewer().searcher.textFinder.isEnabled}>
+                <SearchBar searcher={pdfViewer().searcher} />
               </Show>
             )}
           </Show>

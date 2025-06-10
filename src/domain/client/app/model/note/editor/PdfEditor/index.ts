@@ -30,7 +30,7 @@ export default class PdfEditor extends BaseEditor {
 
   public readonly outline = new OutlineList(this.noteId, this.annotation);
 
-  public readonly textFinder = new TextFinder();
+  public readonly textFinder = new TextFinder(this);
 
   @observable.ref public accessor doc: PDFDocumentProxy | undefined; // this is view-independent
 

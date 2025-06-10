@@ -1,9 +1,17 @@
-import { observable } from 'mobx';
+import { action, observable } from 'mobx';
 import { z } from 'zod';
+import { compact, debounce, isEqual } from 'lodash-es';
+
 import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
-import type { extractDigest } from '#utils/string';
+import { extractDigest } from '#utils/string';
+import type PdfEditor from './index';
 
 export type Digest = NonNullable<ReturnType<typeof extractDigest>>;
+
+export interface MatchesCount {
+  current: number;
+  total: number;
+}
 
 export interface PageSearchResult {
   page: number;
@@ -11,9 +19,12 @@ export interface PageSearchResult {
 }
 
 export default class TextFinder {
+  constructor(private readonly editor: PdfEditor) {}
   @observable public accessor isEnabled = false;
   @observable public accessor query = '';
-  public readonly options = new PersistedMap(
+  @observable public accessor matchesCount: MatchesCount | undefined;
+
+  private readonly persistedOptions = new PersistedMap(
     'pdf-textFinder',
     z.object({
       caseSensitive: z.boolean().optional(),
@@ -25,5 +36,92 @@ export default class TextFinder {
     },
   );
 
-  @observable.ref public accessor searchResult: PageSearchResult[] | undefined;
+  public get options() {
+    return {
+      ...this.persistedOptions.toObject(),
+      query: this.query,
+    } as const;
+  }
+
+  @observable.ref public accessor digests: PageSearchResult[] | undefined;
+
+  public readonly setQuery = debounce(
+    action((value: string) => {
+      this.query = value;
+    }),
+    500,
+  );
+
+  @action
+  public toggle() {
+    this.isEnabled = !this.isEnabled;
+  }
+
+  public toggleOption(key: 'caseSensitive' | 'entireWord') {
+    this.persistedOptions.set(key, this.persistedOptions.get(key));
+  }
+
+  @action
+  public updateResult({
+    pageMatchesLength,
+    pageMatches,
+    matchesCount,
+  }: {
+    pageMatches?: number[][];
+    pageMatchesLength?: number[][];
+    matchesCount: MatchesCount;
+  }) {
+    if (!this.options.query) {
+      this.clearResult();
+      return;
+    }
+
+    this.matchesCount = matchesCount;
+
+    if (pageMatchesLength && pageMatches) {
+      this.updateDigests({ pageMatches, pageMatchesLength });
+    }
+  }
+
+  private optionsSnapshot?: TextFinder['options'];
+
+  private readonly updateDigests = debounce(
+    action(({ pageMatchesLength, pageMatches }: { pageMatches: number[][]; pageMatchesLength: number[][] }) => {
+      const texts = this.editor.texts;
+
+      if (!texts || isEqual(this.options, this.optionsSnapshot)) {
+        return;
+      }
+
+      this.optionsSnapshot = this.options;
+      this.digests = pageMatches
+        .map((matchOffsets: number[], pageIndex) => ({
+          page: pageIndex + 1,
+          digests: compact(
+            matchOffsets.map((offset, index) =>
+              extractDigest({
+                fullText: texts[pageIndex + 1] || '',
+                matchIndex: offset,
+                maxLength: 100,
+                prefixMaxLength: 30,
+                matchLength: pageMatchesLength[pageIndex]![index]!,
+              }),
+            ),
+          ),
+        }))
+        .filter(({ digests }) => digests.length > 0);
+    }),
+    500,
+  );
+
+  @action
+  private clearResult() {
+    this.digests = undefined;
+    this.optionsSnapshot = undefined;
+    this.matchesCount = undefined;
+  }
+
+  public destroy() {
+    this.updateDigests.cancel();
+  }
 }

@@ -62,8 +62,8 @@ export default function Outline(props: { viewer: PdfViewer }) {
           <For
             each={props.viewer.editor.outline.items}
             fallback={
-              <div class="flex h-full justify-center items-center">
-                <Loader2Icon class="animate-spin mr-2" />
+              <div class="flex h-full justify-center items-center overflow-hidden space-x-1">
+                <Loader2Icon class="animate-spin" />
                 <span>加载中</span>
               </div>
             }

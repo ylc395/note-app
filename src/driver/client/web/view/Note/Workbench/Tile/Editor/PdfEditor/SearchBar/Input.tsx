@@ -8,7 +8,7 @@ export default function Input(props: { searcher: Searcher }) {
   let inputRef: HTMLInputElement | undefined;
 
   function handleInput(e: InputEvent & { target: HTMLInputElement }) {
-    props.searcher.options.query = e.target.value;
+    props.searcher.textFinder.setQuery(e.target.value);
   }
 
   onMount(() => {
@@ -20,21 +20,21 @@ export default function Input(props: { searcher: Searcher }) {
       <input
         ref={inputRef}
         class="outline-none bg-transparent"
-        value={props.searcher.options.query}
+        value={props.searcher.textFinder.options.query}
         onInput={action(handleInput)}
       />
       <div class="flex space-x-1 pr-1">
         <button
           class="flex items-center justify-center"
-          classList={{ outline: props.searcher.options.caseSensitive }}
-          onClick={() => props.searcher.toggleOption('caseSensitive')}
+          classList={{ outline: props.searcher.textFinder.options.caseSensitive }}
+          onClick={() => props.searcher.textFinder.toggleOption('caseSensitive')}
         >
           <CaseSensitiveIcon />
         </button>
         <button
           class="flex items-center justify-center"
-          classList={{ outline: props.searcher.options.entireWord }}
-          onClick={() => props.searcher.toggleOption('entireWord')}
+          classList={{ outline: props.searcher.textFinder.options.entireWord }}
+          onClick={() => props.searcher.textFinder.toggleOption('entireWord')}
         >
           <WholeWordIcon />
         </button>

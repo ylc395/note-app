@@ -1,38 +1,31 @@
-import { action, autorun, observable } from 'mobx';
+import { action, autorun, reaction } from 'mobx';
 import { FindState, PDFFindController } from 'pdfjs-dist/web/pdf_viewer.mjs';
-import { compact, pick } from 'lodash-es';
+import assert from 'assert';
 
 import EventBus from '#domain/client/shared/infra/EventBus';
-import { extractDigest } from '#utils/string';
 import type PdfViewer from '../PDFViewer';
-
-interface MatchesCount {
-  current: number;
-  total: number;
-}
+import type { MatchesCount } from '#domain/client/app/model/note/editor/PdfEditor/TextFinder';
 
 export default class Searcher extends EventBus<{ matchUpdated: { pages: number[] } }> {
   constructor(private readonly pdfViewer: PdfViewer) {
     super('pdf-searcher');
-    this.pdfViewer.eventBus.on('updatefindcontrolstate', this.handleUpdate.bind(this));
-    this.pdfViewer.eventBus.on('updatefindmatchescount', this.handleUpdate.bind(this));
+    this.pdfViewer.eventBus.on('updatefindcontrolstate', this.handleUpdate);
+    this.pdfViewer.eventBus.on('updatefindmatchescount', this.handleUpdate);
     this.pdfViewer.eventBus.on('updatetextlayermatches', this.emitMatchUpdated.bind(this));
     autorun(() => this.search({ type: '' }), { signal: this.destroyController.signal });
+
+    reaction(
+      () => this.textFinder.isEnabled,
+      (isEnabled) => !isEnabled && this.close(),
+      { signal: this.destroyController.signal },
+    );
   }
 
   private readonly destroyController = new AbortController();
 
-  public get options() {
-    const { query, isEnabled, options } = this.pdfViewer.editor.textFinder;
-
-    return {
-      ...options.toObject(),
-      query,
-      isEnabled,
-    };
+  public get textFinder() {
+    return this.pdfViewer.editor.textFinder;
   }
-
-  @observable public accessor matchesCount: MatchesCount | undefined;
 
   private emitMatchUpdated(e: { source: { pageMatches: number[][] } }) {
     if (e.source.pageMatches.length) {
@@ -44,51 +37,18 @@ export default class Searcher extends EventBus<{ matchUpdated: { pages: number[]
     }
   }
 
-  @action
-  private handleUpdate(e: { matchesCount: MatchesCount; state?: number; source?: unknown }) {
-    if (!this.options.query) {
-      this.matchesCount = undefined;
-      this.pdfViewer.editor.textFinder.searchResult = undefined;
-      return;
-    }
-
+  private handleUpdate = action((e: { matchesCount: MatchesCount; state?: number; source?: unknown }) => {
     if (
       e.state === undefined || // updatefindmatchescount 事件
       e.state === FindState.NOT_FOUND ||
-      ((e.state === FindState.FOUND || e.state === FindState.WRAPPED) && this.matchesCount) // updatefindcontrolstate 事件。该事件在初次触发时数据不准，后续的数据才准
+      ((e.state === FindState.FOUND || e.state === FindState.WRAPPED) && this.textFinder.matchesCount) // updatefindcontrolstate 事件。该事件在初次触发时数据不准，后续的数据才准
     ) {
-      this.matchesCount = e.matchesCount;
+      const pageMatches = e.source instanceof PDFFindController ? e.source.pageMatches : undefined;
+      const pageMatchesLength = e.source instanceof PDFFindController ? e.source.pageMatchesLength : undefined;
 
-      if (!(e.source instanceof PDFFindController)) {
-        return;
-      }
-
-      const source = e.source;
-      const { pageMatches, pageMatchesLength } = source;
-      const texts = this.pdfViewer.editor.texts;
-
-      if (!pageMatches || !pageMatchesLength || !texts) {
-        return;
-      }
-
-      this.pdfViewer.editor.textFinder.searchResult = pageMatches
-        .map((matchOffsets: number[], pageIndex) => ({
-          page: pageIndex + 1,
-          digests: compact(
-            matchOffsets.map((offset, index) =>
-              extractDigest({
-                fullText: texts[pageIndex + 1] || '',
-                matchIndex: offset,
-                maxLength: 100,
-                prefixMaxLength: 30,
-                matchLength: pageMatchesLength[pageIndex][index],
-              }),
-            ),
-          ),
-        }))
-        .filter(({ digests }) => digests.length > 0);
+      this.textFinder.updateResult({ pageMatches, pageMatchesLength, matchesCount: e.matchesCount });
     }
-  }
+  });
 
   private search(options: {
     type:
@@ -96,31 +56,31 @@ export default class Searcher extends EventBus<{ matchUpdated: { pages: number[]
       | ''; // 输入关键词，或者切换搜索选项
     findPrevious?: boolean;
   }) {
-    if (!this.options.isEnabled) {
+    if (!this.textFinder.isEnabled) {
       return;
     }
 
     this.pdfViewer.eventBus.dispatch('find', {
       ...options,
-      ...pick(this.options, ['caseSensitive', 'entireWord', 'query']),
+      ...this.textFinder.options,
       highlightAll: true, // 高亮所有匹配/只高亮当前的匹配
       matchDiacritics: false,
     });
   }
 
-  @action
-  public toggle() {
-    this.options.isEnabled = !this.options.isEnabled;
+  public jumpTo(index: number) {
+    assert(this.textFinder.matchesCount);
+    let offset = index - (this.textFinder.matchesCount.current - 1) + 1;
 
-    if (!this.options.isEnabled) {
-      this.close();
+    while (offset !== 0) {
+      if (offset > 0) {
+        this.next();
+        offset -= 1;
+      } else {
+        this.previous();
+        offset += 1;
+      }
     }
-  }
-
-  @action
-  public toggleOption(key: 'caseSensitive' | 'entireWord') {
-    const options = this.pdfViewer.editor.textFinder.options;
-    options.set(key, options.get(key));
   }
 
   public next() {
@@ -138,5 +98,6 @@ export default class Searcher extends EventBus<{ matchUpdated: { pages: number[]
   public destroy() {
     this.close();
     this.destroyController.abort();
+    this.textFinder.destroy();
   }
 }
