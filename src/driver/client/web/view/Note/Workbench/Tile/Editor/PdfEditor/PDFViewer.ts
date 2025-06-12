@@ -6,17 +6,17 @@ import {
   type PDFPageView,
 } from 'pdfjs-dist/web/pdf_viewer.mjs';
 import { AnnotationEditorType, AnnotationMode } from 'pdfjs-dist';
-import { debounce, intersection, memoize, range as numberRange } from 'lodash-es';
-import { observable, when, action, computed } from 'mobx';
+import { debounce, intersection, memoize, noop, range as numberRange } from 'lodash-es';
+import { observable, when, action, computed, runInAction } from 'mobx';
+import { z } from 'zod';
 import assert from 'assert';
 
 import type { default as PdfEditor, OutlineItem } from '#domain/client/app/model/note/editor/PdfEditor';
 import HistoryStack, { Direction, type HistoryRecord } from '#domain/client/app/model/base/HistoryStack';
+import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
 import shell from '#web/infra/shell';
 
 import Searcher from './SearchBar/Searcher';
-import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
-import { z } from 'zod';
 
 interface Options {
   container: HTMLDivElement;
@@ -104,7 +104,7 @@ export default class PdfViewer {
 
   @computed
   public get totalPage() {
-    return this.editor.doc?.numPages || 0;
+    return this.editor.doc?.numPages || 1;
   }
 
   private readonly updateUIState = debounce(
@@ -155,25 +155,9 @@ export default class PdfViewer {
         action(() => {
           pdfViewer.eventBus.on('updateviewarea', this.updateUIState);
           pdfViewer.eventBus.on('updateviewarea', this.updateRenderedPage.bind(this));
-          this.isReady = true;
         }),
       );
-
-      // 把 pdf 视图的位置移动到上一次离开的地方
-      const hash = this.state.get('hash');
-      if (hash) {
-        this.jumpTo({ hash });
-      }
     });
-
-    this.destroyController.signal.addEventListener(
-      'abort',
-      () => {
-        this.updateUIState.flush();
-        pdfViewer.cleanup();
-      },
-      { once: true },
-    );
 
     return pdfViewer;
   }
@@ -182,12 +166,33 @@ export default class PdfViewer {
     const doc = this.editor.doc;
     assert(doc);
 
+    (this.pdfViewer.linkService as PDFLinkService).setDocument(doc);
+    this.pdfViewer.setDocument(doc);
     const hash = this.state.get('hash');
 
-    this.currentPage = (hash && PdfViewer.getPageFromHash(hash)) || 1;
-    this.pdfViewer.setDocument(doc);
-    (this.pdfViewer.linkService as PDFLinkService).setDocument(doc);
+    if (hash) {
+      // pdf.js 里的 app.js 里有更完整的实现（setInitialView）
+      await Promise.all([
+        doc.loadingTask,
+        doc.getPageLayout().catch(noop),
+        this.pdfViewer.pagesPromise,
+        this.pdfViewer.onePageRendered,
+      ]);
+
+      requestAnimationFrame(() => {
+        this.jumpTo({ hash });
+      });
+    } else {
+      runInAction(() => {
+        this.currentPage = 1;
+      });
+    }
+
     this.hijackClick();
+
+    runInAction(() => {
+      this.isReady = true;
+    });
   }
 
   @action
@@ -226,7 +231,7 @@ export default class PdfViewer {
 
   @action.bound
   public jumpTo(page: number | OutlineItem | { hash: string }, noHistory = false) {
-    if (typeof page === 'number' && (page < 1 || page > this.totalPage)) {
+    if (typeof page === 'number' && (page < 1 || page > this.totalPage || Number.isNaN(page))) {
       return false;
     }
 
@@ -278,6 +283,8 @@ export default class PdfViewer {
 
   public destroy() {
     this.searcher.destroy();
+    this.updateUIState.flush();
+    this.pdfViewer.cleanup();
     this.destroyController.abort();
   }
 
@@ -368,10 +375,5 @@ export default class PdfViewer {
     return hash
       .replace('zoom=null', 'zoom=100') // zoom 为 null 传到 setHash 里会报错
       .replace(/^#/, '');
-  }
-
-  private static getPageFromHash(hash: string) {
-    const page = hash.match(/page=(\d+)/)?.[1];
-    return page ? Number(page) : null;
   }
 }

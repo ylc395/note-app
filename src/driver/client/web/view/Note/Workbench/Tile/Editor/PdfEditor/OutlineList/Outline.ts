@@ -37,14 +37,14 @@ export default class Outline {
         this.outlineList.init(doc).then(() => {
           reaction(
             () => pdfViewer.currentPage,
-            () => {
+            (page) => {
               if (this.jumpByItem) {
                 this.jumpByItem = false;
                 return;
               }
 
-              if (pdfViewer.currentPage) {
-                this.focus(pdfViewer.currentPage);
+              if (typeof page === 'number') {
+                this.focus(page);
               }
             },
             { signal: this.destroyController.signal, fireImmediately: true },

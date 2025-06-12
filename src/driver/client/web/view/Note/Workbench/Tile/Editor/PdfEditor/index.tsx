@@ -42,7 +42,7 @@ export default function PdfEditorView(props: { editor: PdfEditor }) {
               </Show>
             )}
           </Show>
-          <div class="relative grow">
+          <div class="relative grow" classList={{ invisible: !getPdfViewer()?.isReady }}>
             <div
               class="absolute inset-0 overflow-auto pdfViewer" /* pdfViewer 这个类名来自 pdf_viewer.css */
               ref={containerRef}
