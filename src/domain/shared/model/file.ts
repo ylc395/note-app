@@ -5,7 +5,7 @@ export interface File {
   hash: string;
   lang: string[];
   mimeType: string;
-  isTextExtracted?: boolean;
+  textUnitLength?: number; // 对于 PDF，指总页数
 }
 
 /**

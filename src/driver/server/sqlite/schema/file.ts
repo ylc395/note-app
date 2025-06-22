@@ -1,4 +1,4 @@
-import { GeneratedAlways, sql, type Generated, type JSONColumnType, type Kysely } from 'kysely';
+import { GeneratedAlways, sql, type JSONColumnType, type Kysely } from 'kysely';
 import type { File } from '#domain/shared/model/file';
 
 export interface Row {
@@ -9,7 +9,7 @@ export interface Row {
   size: number;
   hash: string;
   createdAt: GeneratedAlways<number>;
-  textExtracted: Generated<0 | 1>;
+  textUnitLength: number;
 }
 
 export const tableName = 'files';
@@ -24,7 +24,7 @@ export default {
       .addColumn('mimeType', 'text', (col) => col.notNull())
       .addColumn('lang', 'text', (col) => col.notNull())
       .addColumn('size', 'integer', (col) => col.notNull())
-      .addColumn('textExtracted', 'integer', (col) => col.notNull().defaultTo(0))
+      .addColumn('textUnitLength', 'integer', (col) => col.notNull())
       .addColumn('createdAt', 'integer', (col) => col.notNull().defaultTo(sql`(unixepoch('subsec') * 1000)`))
       .addColumn('hash', 'text', (col) => col.notNull());
   },

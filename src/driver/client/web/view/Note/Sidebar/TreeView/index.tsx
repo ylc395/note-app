@@ -23,10 +23,18 @@ export default function TreeView() {
     >
       <div class="flex items-center justify-between text-sm">
         <Tabs.List class="flex space-x-1">
-          <Tabs.Trigger class="flex items-center" value={NoteTreeViewTabs.Note}>
+          <Tabs.Trigger
+            class="flex items-center"
+            classList={{ 'font-bold': uiState.get('note.treeView') === NoteTreeViewTabs.Note }}
+            value={NoteTreeViewTabs.Note}
+          >
             笔记
           </Tabs.Trigger>
-          <Tabs.Trigger class="flex items-center" value={NoteTreeViewTabs.Material}>
+          <Tabs.Trigger
+            class="flex items-center "
+            classList={{ 'font-bold': uiState.get('note.treeView') === NoteTreeViewTabs.Material }}
+            value={NoteTreeViewTabs.Material}
+          >
             素材
           </Tabs.Trigger>
         </Tabs.List>

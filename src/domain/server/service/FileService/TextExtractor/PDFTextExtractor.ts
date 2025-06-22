@@ -1,62 +1,74 @@
 import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
-import assert from 'node:assert';
-import { createCanvas } from 'canvas';
-import type { RenderParameters } from 'pdfjs-dist/types/src/display/api.js';
+import path from 'node:path';
+import Queue from 'p-queue';
 
 import container from '#utils/singletonContainer.js';
-import { toArrayBuffer } from '#utils/file.js';
+import type { FileTextRecord } from '#domain/server/model/file.js';
 import type { Job } from './job.js';
 import ImageTextExtractor from './ImageTextExtractor.js';
 
 export default class PDFTextExtractor {
-  private imageTextExtractor = container.resolve(ImageTextExtractor);
+  private readonly imageTextExtractor = container.resolve(ImageTextExtractor);
+
+  private readonly queue = new Queue({ interval: 200, intervalCap: 1 });
+
   public async *extract(job: { data: ArrayBuffer; lang: Job['lang']; locationsToSkip: Job['locationsToSkip'] }) {
     // in nodejs, pdf.worker.js won't work
     // because it's a web worker, not a nodejs worker. see https://github.com/nodejs/node/issues/43583
     // so everything about pdf is done in main thread(so called "fake worker").
-    const doc = await pdfjs.getDocument(new Uint8Array(job.data)).promise;
-    const pagesToSkip =
-      job.locationsToSkip?.map(({ page }) => {
-        assert(typeof page === 'number');
-        return page;
-      }) || [];
-
+    const doc = await this.getDoc(job.data);
     const totalPages = doc.numPages;
+    const pagesToSkip = job.locationsToSkip?.map(({ page }) => page) || [];
 
     for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
       if (pagesToSkip.includes(pageNum)) {
         continue;
       }
 
-      const result =
-        (await PDFTextExtractor.getTextContent(doc, pageNum)) ||
-        (await this.getTextContentByOcr(doc, pageNum, job.lang));
+      const result = await this.queue.add(() => {
+        return PDFTextExtractor.getTextContent(doc, pageNum);
+      });
 
-      yield {
-        ...result,
-        isFinished: pageNum === totalPages,
-      };
+      if (result || !ImageTextExtractor.isValidLangs(job.lang)) {
+        yield result || { location: { page: pageNum }, text: '' };
+        continue;
+      }
+
+      const ocrResult = await this.getPageTextContentByOcr(doc, pageNum, job.lang);
+      yield ocrResult;
     }
 
     doc.destroy();
   }
 
-  private async getTextContentByOcr(doc: pdfjs.PDFDocumentProxy, pageNum: number, lang: string[]) {
-    const scale = 2;
+  private async getPageTextContentByOcr(doc: pdfjs.PDFDocumentProxy, pageNum: number, lang: string[]) {
+    // 从 https://github.com/mozilla/pdf.js/blob/master/examples/node/pdf2png/pdf2png.mjs 这里抄的
     const page = await doc.getPage(pageNum);
-    const viewport = page.getViewport({ scale });
-    const canvas = createCanvas(viewport.width, viewport.height);
-    const renderTask = page.render({
-      viewport,
-      canvasContext: canvas.getContext('2d') as unknown as RenderParameters['canvasContext'],
+    const viewport = page.getViewport({ scale: 1.0 });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const canvasAndContext = (doc.canvasFactory as any).create(viewport.width, viewport.height);
+    await page.render({ viewport, canvasContext: canvasAndContext.context }).promise;
+
+    const image: Uint8Array = canvasAndContext.canvas.toBuffer('image/png');
+    const result: Pick<FileTextRecord, 'location' | 'text'> = await this.imageTextExtractor.extract({
+      data: image.buffer as ArrayBuffer,
+      lang,
     });
 
-    await renderTask.promise;
-
-    const image = toArrayBuffer(canvas.toBuffer());
-    const result = await this.imageTextExtractor.extract({ data: image, lang });
+    result.location.page = pageNum;
+    page.cleanup();
 
     return result;
+  }
+
+  public getDoc(data: ArrayBuffer) {
+    return pdfjs.getDocument({
+      data: new Uint8Array(data.slice(0)),
+      cMapUrl: path.resolve('node_modules/pdfjs-dist/cmaps') + '/',
+      standardFontDataUrl: path.resolve('node_modules/pdfjs-dist/standard_fonts') + '/',
+      cMapPacked: true,
+    }).promise;
   }
 
   private static async getTextContent(doc: pdfjs.PDFDocumentProxy, pageNum: number) {
@@ -71,9 +83,6 @@ export default class PDFTextExtractor {
       }
     }
 
-    return {
-      text,
-      location: { page: pageNum },
-    };
+    return text ? { text, location: { page: pageNum } } : null;
   }
 }

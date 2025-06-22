@@ -121,10 +121,7 @@ export default class ImageTextExtractor {
   private isBusy = false;
   public async extract({ data, lang }: { data: ArrayBuffer; lang: Job['lang'] }) {
     assert(!this.isBusy, 'ImageTextExtractor is busy');
-
-    if (lang.length === 0 || !lang.every((lang) => SUPPORT_LANG_CODES.includes(lang))) {
-      return;
-    }
+    assert(ImageTextExtractor.isValidLangs(lang));
 
     this.isBusy = true;
     const recognizeResult = await tesseract.recognize(Buffer.from(data), lang.join('+'), {
@@ -147,5 +144,9 @@ export default class ImageTextExtractor {
     };
 
     return result;
+  }
+
+  public static isValidLangs(langs: string[]) {
+    return langs.length > 0 && langs.every((lang) => SUPPORT_LANG_CODES.includes(lang));
   }
 }

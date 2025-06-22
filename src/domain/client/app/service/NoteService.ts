@@ -17,6 +17,10 @@ import MaterialForm from '../model/note/MaterialForm';
 import BaseEditor from '../model/note/editor/BaseEditor';
 
 export default class NoteService {
+  constructor() {
+    this.eventBus.on(DomainEventBus.eventNames.Created, this.workbench.open.bind(this.workbench));
+  }
+
   private readonly remote = container.resolve(rpcToken);
 
   public readonly workbench = container.resolve(Workbench);
