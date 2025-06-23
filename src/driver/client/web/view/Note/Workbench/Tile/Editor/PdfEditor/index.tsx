@@ -1,4 +1,4 @@
-import { createSignal, onCleanup, onMount, Show } from 'solid-js';
+import { createMemo, createSignal, onCleanup, onMount, Show } from 'solid-js';
 import assert from 'assert';
 
 import type PdfEditor from '#domain/client/app/model/note/editor/PdfEditor';
@@ -15,6 +15,14 @@ export default function PdfEditorView(props: { editor: PdfEditor }) {
   let containerRef: HTMLDivElement | undefined;
   let viewRef: HTMLDivElement | undefined;
   const [getPdfViewer, setPdfViewer] = createSignal<PDFViewer>();
+
+  const isOutlineVisible = createMemo(() => {
+    return props.editor.outline.state.isReady && props.editor.outline.state.get('panelVisible');
+  });
+
+  const isAnnotationVisible = createMemo(() => {
+    return props.editor.annotation.state.isReady && props.editor.annotation.state.get('panelVisible');
+  });
 
   onMount(() => {
     assert(containerRef && viewRef);
@@ -33,7 +41,7 @@ export default function PdfEditorView(props: { editor: PdfEditor }) {
     <div class="grow flex flex-col min-h-0">
       <Show when={getPdfViewer()}>{(viewer) => <Toolbar viewer={viewer()} />}</Show>
       <div class="grow flex min-h-0">
-        <Show when={getPdfViewer()}>{(viewer) => <Outline viewer={viewer()} />}</Show>
+        <Show when={isOutlineVisible() && getPdfViewer()}>{(viewer) => <Outline viewer={viewer()} />}</Show>
         <div class="grow flex flex-col">
           <Show when={getPdfViewer()}>
             {(pdfViewer) => (
@@ -59,9 +67,7 @@ export default function PdfEditorView(props: { editor: PdfEditor }) {
             </Show>
           </div>
         </div>
-        <Show
-          when={props.editor.annotation.state.isReady && props.editor.annotation.state.get('panel') && getPdfViewer()}
-        >
+        <Show when={isAnnotationVisible() && getPdfViewer()}>
           {(viewer) => <AnnotationList pdfViewer={viewer()} />}
         </Show>
       </div>

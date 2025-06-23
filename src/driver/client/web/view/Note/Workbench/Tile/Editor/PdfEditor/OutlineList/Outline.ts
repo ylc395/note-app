@@ -11,9 +11,9 @@ export default class Outline {
     this.outlineList = pdfViewer.editor.outline;
 
     when(
-      () => pdfViewer.editor.outline.state.isReady,
+      () => this.pdfViewer.editor.outline.state.isReady,
       () => {
-        this.expandedKeys = new Set(pdfViewer.editor.outline.state.get('expanded'));
+        this.expandedKeys = new Set(this.pdfViewer.editor.outline.state.get('expanded'));
       },
       { signal: this.destroyController.signal },
     );
@@ -21,37 +21,38 @@ export default class Outline {
     autorun(
       () => {
         if (this.expandedKeys) {
-          pdfViewer.editor.outline.state.set('expanded', Array.from(this.expandedKeys));
+          this.pdfViewer.editor.outline.state.set('expanded', Array.from(this.expandedKeys));
         }
       },
       { signal: this.destroyController.signal },
     );
 
-    // 必须在这个事件里初始化大纲，否则拿不到对应的页数
-    pdfViewer.eventBus.on(
-      'pagesloaded',
-      () => {
-        const doc = pdfViewer.editor.doc;
-        assert(doc);
+    if (this.pdfViewer.pagesPromise) {
+      this.pdfViewer.pagesPromise.then(this.init.bind(this));
+    } else {
+      this.pdfViewer.eventBus.on('pagesloaded', this.init.bind(this));
+    }
+  }
 
-        this.outlineList.init(doc).then(() => {
-          reaction(
-            () => pdfViewer.currentPage,
-            (page) => {
-              if (this.jumpByItem) {
-                this.jumpByItem = false;
-                return;
-              }
+  private async init() {
+    const doc = this.pdfViewer.editor.doc;
+    assert(doc);
 
-              if (typeof page === 'number') {
-                this.focus(page);
-              }
-            },
-            { signal: this.destroyController.signal, fireImmediately: true },
-          );
-        });
+    await this.outlineList.init(doc);
+
+    reaction(
+      () => this.pdfViewer.currentPage,
+      (page) => {
+        if (this.jumpByItem) {
+          this.jumpByItem = false;
+          return;
+        }
+
+        if (typeof page === 'number') {
+          this.focus(page);
+        }
       },
-      { signal: this.destroyController.signal },
+      { signal: this.destroyController.signal, fireImmediately: true },
     );
   }
 
@@ -99,7 +100,7 @@ export default class Outline {
     }
 
     for (const key of this.focusedPath) {
-      const item = this.outlineList.keyToOutlineItemsMap.get(key);
+      const item = this.outlineList.keyToOutlineItemsMap?.get(key);
 
       if (item?.parent && this.expandedKeys.has(item.parent.key)) {
         return key;
@@ -111,7 +112,7 @@ export default class Outline {
 
   @action
   private focus(page: number) {
-    if (this.outlineList.pageToOutlineItemsMap.size === 0) {
+    if (!this.outlineList.pageToOutlineItemsMap || this.outlineList.pageToOutlineItemsMap.size === 0) {
       return;
     }
 

@@ -27,11 +27,13 @@ export default abstract class BaseEditor {
 
     this.value = createQuery(({ signal }) => this.remote.note.queryOneById.query(this.noteId, { signal }), {
       queryKey: ['note', this.noteId],
+      refetchOnWindowFocus: true,
       abortSignal: this.destroyController.signal,
     });
 
     this.path = createQuery(({ signal }) => this.remote.note.queryPath.query(this.noteId, { signal }), {
       queryKey: ['note.path', this.noteId],
+      refetchOnWindowFocus: true,
       abortSignal: this.destroyController.signal,
     });
 
@@ -39,7 +41,6 @@ export default abstract class BaseEditor {
       ({ signal }) => this.remote.note.getBlob.query(this.noteId, { signal }) as Promise<ArrayBuffer>,
       {
         queryKey: ['note.blob', this.noteId],
-        structuralSharing: false,
         abortSignal: this.destroyController.signal,
         options: () => ({
           enabled: Boolean(this.value.result.data?.mimeType),

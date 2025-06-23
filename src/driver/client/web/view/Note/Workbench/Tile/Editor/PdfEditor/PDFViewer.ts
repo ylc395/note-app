@@ -107,6 +107,10 @@ export default class PdfViewer {
     return this.editor.doc?.numPages || 1;
   }
 
+  public get pagesPromise() {
+    return this.pdfViewer.pagesPromise;
+  }
+
   private readonly updateUIState = debounce(
     action(({ location }: { location: { pdfOpenParams: string; pageNumber: number } }) => {
       this.state.set('hash', PdfViewer.normalizeHash(location.pdfOpenParams));

@@ -35,7 +35,7 @@ export default class AnnotationManager {
     this.state = new PersistedMap(
       `${noteId}-annotationManager`,
       z.object({
-        panel: z.boolean().optional(),
+        panelVisible: z.boolean().optional(),
         native: z.boolean().optional(),
       }),
       {},

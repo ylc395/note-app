@@ -1,8 +1,9 @@
-import { observable, runInAction } from 'mobx';
+import { action, computed, makeAutoObservable, observable, when } from 'mobx';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import type { RefProxy } from 'pdfjs-dist/types/src/display/api';
 import assert from 'assert';
 import { z } from 'zod';
+import { createQuery } from 'mobx-tanstack-query/preset';
 
 import type AnnotationManager from './AnnotationManager';
 import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
@@ -22,27 +23,54 @@ export default class OutlineList {
       `${noteId}-outlineList`,
       z.object({
         expanded: z.string().array(),
-        type: z.union([z.literal('text'), z.literal('image'), z.literal(null)]).optional(),
+        panelVisible: z.boolean().optional(),
         scroll: z.object({ x: z.number(), y: z.number() }).optional(),
       }),
       { expanded: [] },
     );
+
+    this._items = createQuery(this.createItems.bind(this), {
+      queryKey: ['pdfOutline', noteId],
+      options: () => ({ enabled: Boolean(this.doc) }),
+    });
   }
 
-  @observable.ref public accessor items: OutlineItem[] | undefined;
+  @observable.ref private accessor doc: PDFDocumentProxy | undefined;
+
+  private readonly _items;
+
+  @computed
+  public get items() {
+    return this._items.result.data?.items;
+  }
+
+  @computed
+  public get keyToOutlineItemsMap() {
+    return this._items.result.data?.keyToOutlineItemsMap;
+  }
+
+  @computed
+  public get pageToOutlineItemsMap() {
+    return this._items.result.data?.pageToOutlineItemsMap;
+  }
 
   public readonly state;
 
-  public readonly pageToOutlineItemsMap = new Map<number, OutlineItem>();
-
-  public readonly keyToOutlineItemsMap = new Map<OutlineItem['key'], OutlineItem>();
-
-  public async init(doc: PDFDocumentProxy) {
-    if (this.items) {
-      return;
+  @action
+  public init(doc: PDFDocumentProxy) {
+    if (!this.doc) {
+      this.doc = doc;
     }
 
+    return when(() => Boolean(this.items));
+  }
+
+  private async createItems() {
+    const doc = this.doc;
+    assert(doc);
     const outline = (await doc.getOutline()) || [];
+    const pageToOutlineItemsMap = new Map<number, OutlineItem>();
+    const keyToOutlineItemsMap = new Map<OutlineItem['key'], OutlineItem>();
 
     type RawOutlineItem = { title: string; items: RawOutlineItem[]; dest: string | unknown[] | null };
 
@@ -60,25 +88,26 @@ export default class OutlineList {
         child.parent = item;
       }
 
-      this.keyToOutlineItemsMap.set(item.key, item);
+      keyToOutlineItemsMap.set(item.key, item);
 
       if (page) {
-        this.pageToOutlineItemsMap.set(page, item);
+        pageToOutlineItemsMap.set(page, item);
       }
 
-      return item;
+      return makeAutoObservable(item, { parent: false }); // 特意标注一下 parent 不要弄成响应式的，不然会无限递归
     };
 
     const items = outline?.map((item, i) => toOutlineItem(item, [i])) || [];
 
-    runInAction(() => {
-      this.items = items;
-    });
+    return {
+      items,
+      keyToOutlineItemsMap,
+      pageToOutlineItemsMap,
+    };
   }
 
   public getPageRange(key: OutlineItem['key']) {
-    const outlineItem = this.keyToOutlineItemsMap.get(key);
-
+    const outlineItem = this.keyToOutlineItemsMap?.get(key);
     assert(outlineItem && this.items);
 
     if (!outlineItem.page) {
