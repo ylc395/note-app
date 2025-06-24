@@ -234,7 +234,10 @@ export default class PdfViewer {
   }
 
   @action.bound
-  public jumpTo(page: number | OutlineItem | { hash: string }, noHistory = false) {
+  public jumpTo(
+    page: number | OutlineItem | { hash: string },
+    options?: { noHistory?: boolean; onJump?: (e: { pageElement: HTMLElement }) => void },
+  ) {
     if (typeof page === 'number' && (page < 1 || page > this.totalPage || Number.isNaN(page))) {
       return false;
     }
@@ -249,7 +252,7 @@ export default class PdfViewer {
       this.pdfViewer.linkService.goToDestination(page.dest);
     }
 
-    if (!noHistory) {
+    if (!options?.noHistory) {
       const hash = this.state.get('hash');
       assert(hash);
       // 记录跳转前的位置
@@ -265,6 +268,16 @@ export default class PdfViewer {
       );
     }
 
+    if (options?.onJump) {
+      this.pdfViewer.eventBus.on(
+        'updateviewarea',
+        ({ location }: { location: { pageNumber: number } }) => {
+          options.onJump?.({ pageElement: this.pdfViewer.getPageView(location.pageNumber - 1).div });
+        },
+        { once: true },
+      );
+    }
+
     return true;
   }
 
@@ -274,7 +287,7 @@ export default class PdfViewer {
 
     this.historyStack.push({ fromHistory: e.direction, record: { key: hash } });
     this.historyStack.push({ fromHistory: e.direction, record: e.record });
-    this.jumpTo({ hash: e.record.key }, true);
+    this.jumpTo({ hash: e.record.key }, { noHistory: true });
   }
 
   public readonly goToNextPage = () => {

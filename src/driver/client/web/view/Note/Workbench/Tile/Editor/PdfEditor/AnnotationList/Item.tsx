@@ -3,8 +3,9 @@ import { createMemo, Show } from 'solid-js';
 import { MoreHorizontalIcon } from 'lucide-solid';
 
 import type { AnnotationItem } from '#domain/client/app/model/note/editor/PdfEditor/AnnotationManager';
+import type PdfViewer from '../PDFViewer';
 
-export default function Item(props: { value: AnnotationItem }) {
+export default function Item(props: { value: AnnotationItem; pdfViewer: PdfViewer }) {
   const page = createMemo(() => {
     const { selector } = props.value;
 
@@ -23,8 +24,23 @@ export default function Item(props: { value: AnnotationItem }) {
     }
   });
 
+  function jumpTo() {
+    const _page = page();
+
+    if (!_page) {
+      return;
+    }
+
+    props.pdfViewer.jumpTo(_page, {
+      onJump: ({ pageElement }) => {
+        const markEl = pageElement.querySelector(`[data-annotation-id="${props.value.id}"]`);
+        markEl?.scrollIntoView();
+      },
+    });
+  }
+
   return (
-    <div class="border p-2">
+    <div class="border p-2" onClick={jumpTo}>
       <div class="flex text-sm justify-between items-center">
         <Show when={typeof page() === 'number'}>
           <span>第{page()}页</span>

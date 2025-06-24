@@ -31,7 +31,7 @@ export default function AnnotationList(props: { pdfViewer: PdfViewer }) {
       >
         <div>
           <For fallback={<div class="grow flex items-center justify-center">暂无标注</div>} each={annotations()}>
-            {(item) => <Item value={item} />}
+            {(item) => <Item value={item} pdfViewer={props.pdfViewer} />}
           </For>
         </div>
       </Show>

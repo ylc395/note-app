@@ -51,6 +51,7 @@ export default function Annotation(props: { annotation: AnnotationVO; page: numb
 
     for (const markEl of marks) {
       (markEl as HTMLElement).style.backgroundColor = props.annotation.color;
+      (markEl as HTMLElement).dataset.annotationId = props.annotation.id;
     }
 
     setMarksRef(marks);
