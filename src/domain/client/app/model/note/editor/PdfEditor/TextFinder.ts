@@ -22,7 +22,7 @@ export default class TextFinder {
   constructor(private readonly editor: PdfEditor) {}
   @observable public accessor isEnabled = false;
   @observable public accessor query = '';
-  @observable public accessor matchesCount: MatchesCount | undefined;
+  @observable public accessor matchesCount: (MatchesCount & { options: TextFinder['options'] }) | undefined;
 
   private readonly persistedOptions = new PersistedMap(
     'pdf-textFinder',
@@ -76,7 +76,19 @@ export default class TextFinder {
       return;
     }
 
-    this.matchesCount = matchesCount;
+    const isSearchAgain =
+      this.matchesCount &&
+      isEqual(this.options, this.matchesCount.options) &&
+      this.matchesCount.total > matchesCount.total;
+
+    if (isSearchAgain) {
+      return;
+    }
+
+    this.matchesCount = {
+      ...matchesCount,
+      options: this.options,
+    };
 
     if (pageMatchesLength && pageMatches) {
       this.updateDigests({ pageMatches, pageMatchesLength });

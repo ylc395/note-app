@@ -211,9 +211,14 @@ export default class PdfViewer {
     this.renderedPages = intersection(this.renderedPages, renderedPages);
   }
 
-  public getPageTextLayerElement(page: number) {
+  public getPageTextLayerElement(page: number, safe: true): HTMLDivElement | undefined;
+  public getPageTextLayerElement(page: number): HTMLDivElement;
+  public getPageTextLayerElement(page: number, safe?: true) {
     const div = (this.pdfViewer.getPageView(page - 1) as PDFPageView).textLayer?.div;
-    assert(div);
+
+    if (!safe) {
+      assert(div);
+    }
 
     return div;
   }
@@ -364,6 +369,8 @@ export default class PdfViewer {
     const range = new Range();
     const setBoundary = (page: number, totalOffset: number, isStart?: boolean) => {
       const textLayer = this.getPageTextLayerElement(page);
+      assert(textLayer);
+
       const treeWalker = document.createTreeWalker(textLayer, NodeFilter.SHOW_TEXT);
       let offset = 0;
 

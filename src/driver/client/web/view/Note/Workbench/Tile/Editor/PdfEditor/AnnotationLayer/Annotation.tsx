@@ -35,7 +35,6 @@ export default function Annotation(props: { annotation: AnnotationVO; page: numb
   // 文本搜索高亮等功能可能会破坏我们渲染出的 mark 元素。我们需要在 mark 元素被破坏时重新渲染
   function autoRerender() {
     const pageElement = props.pdfViewer.getPageTextLayerElement(props.page);
-
     const domObserver = new MutationObserver(() => {
       if (marksRef()?.some((el) => !el.isConnected)) {
         forceRender();
@@ -71,8 +70,9 @@ export default function Annotation(props: { annotation: AnnotationVO; page: numb
   function render() {
     forceRenderFlag();
     const selector = props.annotation.selector;
+    const pageEl = props.pdfViewer.getPageTextLayerElement(props.page, true); // render 的时候可能整页的 DOM 都没了但视图层还没来得及销毁对应的 PageAnnotationLayer 组件，此时可能取不到 page 元素
 
-    if (selector.type !== 'PDFTextPositionSelector') {
+    if (selector.type !== 'PDFTextPositionSelector' || !pageEl) {
       return;
     }
 
@@ -98,7 +98,7 @@ export default function Annotation(props: { annotation: AnnotationVO; page: numb
     }
 
     assert(range);
-    const marker = new Mark(props.pdfViewer.getPageTextLayerElement(props.page));
+    const marker = new Mark(pageEl);
     const markEls: HTMLElement[] = [];
     const className = PdfViewer.getAnnotationMarkClassName(props.annotation.id);
     let observer: MutationObserver | undefined;
@@ -117,7 +117,6 @@ export default function Annotation(props: { annotation: AnnotationVO; page: numb
 
     onCleanup(() => {
       marker.unmark({ className });
-      setMarksRef(undefined);
       observer?.disconnect();
     });
   }
