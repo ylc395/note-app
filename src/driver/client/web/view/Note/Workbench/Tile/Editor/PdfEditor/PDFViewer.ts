@@ -58,8 +58,6 @@ export default class PdfViewer {
     );
   }
 
-  public readonly annotationOpenStatus: Record<string, boolean> = {};
-
   private readonly pdfViewer: PDFViewer;
 
   public readonly editor: PdfEditor;
@@ -392,5 +390,9 @@ export default class PdfViewer {
     return hash
       .replace('zoom=null', 'zoom=100') // zoom 为 null 传到 setHash 里会报错
       .replace(/^#/, '');
+  }
+
+  public static getAnnotationMarkClassName(id: string) {
+    return `mark-${id}`;
   }
 }

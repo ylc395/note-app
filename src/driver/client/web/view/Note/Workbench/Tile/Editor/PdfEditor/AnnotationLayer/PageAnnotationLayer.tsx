@@ -5,9 +5,8 @@ import Annotation from './Annotation';
 export default function PageAnnotationLayer(props: { page: number; pdfViewer: PdfViewer }) {
   const annotations = createMemo(() => {
     return (
-      props.pdfViewer.editor.annotation.list?.filter(
-        ({ selector, isNative }) =>
-          !isNative &&
+      props.pdfViewer.editor.annotation.items.result.data?.filter(
+        ({ selector }) =>
           selector.type === 'PDFTextPositionSelector' &&
           selector.position.startPage >= props.page &&
           selector.position.endPage <= props.page,

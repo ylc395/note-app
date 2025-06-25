@@ -1,5 +1,5 @@
-import { computed, observable, runInAction } from 'mobx';
-import { type PDFDocumentProxy, AnnotationType } from 'pdfjs-dist';
+import { action, observable } from 'mobx';
+import { type PDFDocumentProxy } from 'pdfjs-dist';
 import { createQuery } from 'mobx-tanstack-query/preset';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
@@ -12,23 +12,6 @@ import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
 import { z } from 'zod';
 
 dayjs.extend(customParseFormat);
-
-interface NativeAnnotation {
-  page: number;
-  annotationType: number;
-  id: string;
-  rect: [number, number, number, number];
-  popupRef?: string;
-  contentsObj?: {
-    str: string;
-  };
-  creationDate: string | null; // 大概长这样D:20151230152231+01'00'
-  modificationDate: string; // 同上
-}
-
-export interface AnnotationItem extends AnnotationVO {
-  isNative: boolean;
-}
 
 export default class AnnotationManager {
   constructor(private readonly noteId: NoteVO['id']) {
@@ -44,72 +27,20 @@ export default class AnnotationManager {
 
   public readonly state;
 
+  @observable.ref private accessor doc: PDFDocumentProxy | undefined;
+
+  public readonly openStatusMap: Record<string, boolean> = {};
+
   private readonly remote = container.resolve(rpcToken);
 
-  private readonly annotations = createQuery(() => this.remote.annotation.queryByEntityId.query(this.noteId), {
+  public readonly items = createQuery(() => this.remote.annotation.queryByEntityId.query(this.noteId), {
+    select: (data) => data.toSorted(AnnotationManager.sort),
     queryKey: () => ['annotations', { noteId: this.noteId }],
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
   });
 
-  @observable.ref private accessor nativeAnnotations: NativeAnnotation[] | undefined;
-
-  public async init(doc: PDFDocumentProxy) {
-    this.annotations.refetch();
-
-    const nativeAnnotations: NativeAnnotation[] = [];
-    // 想要获取所有 PDF 自带的 annotations，似乎只能通过遍历所有页来进行。而且这些 annotations 的信息未必完全
-    // see https://github.com/mozilla/pdf.js/issues/17509
-    for (let i = 1; i <= doc.numPages; i++) {
-      const page = await doc.getPage(i);
-      nativeAnnotations.push(...(await page.getAnnotations()).map((value) => ({ ...value, page: i })));
-    }
-
-    runInAction(() => {
-      this.nativeAnnotations = nativeAnnotations;
-    });
-  }
-
-  @computed
-  public get list(): AnnotationItem[] | undefined {
-    if (!this.nativeAnnotations || !this.annotations.result.data) {
-      return undefined;
-    }
-
-    const toAnnotation = (v: NativeAnnotation) => {
-      const getTime = (time: string) =>
-        dayjs(`${time.slice(2, -7)}+${time.slice(-6, -4)}00`, 'YYYYMMDDHHmmssZZ').valueOf();
-
-      return {
-        isNative: true,
-        targetId: this.noteId,
-        selector: {
-          type: 'PDFRectSelector' as const,
-          page: v.page,
-          left: v.rect[0],
-          top: v.rect[1],
-          width: v.rect[2],
-          height: v.rect[3],
-        },
-        color: '',
-        id: `pdf-native-${v.id}`,
-        body: v.contentsObj?.str || '',
-        createdAt: getTime(v.creationDate || v.modificationDate),
-        updatedAt: getTime(v.modificationDate),
-      };
-    };
-
-    return [
-      ...this.nativeAnnotations
-        .filter(({ annotationType }) => annotationType === AnnotationType.HIGHLIGHT)
-        .map(toAnnotation),
-      ...this.annotations.result.data.map((annotation) => ({ ...annotation, isNative: false })),
-    ].sort(AnnotationManager.sort);
-  }
-
-  @computed
-  public get hasNative() {
-    return Boolean(this.nativeAnnotations && this.nativeAnnotations.length > 0);
+  @action
+  public init(doc: PDFDocumentProxy) {
+    this.doc = doc;
   }
 
   public async create({
@@ -128,15 +59,15 @@ export default class AnnotationManager {
       body,
     });
 
-    await this.annotations.invalidate();
+    await this.items.invalidate();
   }
 
   public getAnnotationCount(startPage: number, endPage: number) {
-    if (!this.list) {
+    if (!this.items.result.data) {
       return 0;
     }
 
-    return this.list.filter(({ selector: s }) => {
+    return this.items.result.data.filter(({ selector: s }) => {
       return (
         (s.type === 'PDFRectSelector' && s.page >= startPage && s.page < endPage) ||
         (s.type === 'PDFTextPositionSelector' && (s.position.startPage >= startPage || s.position.endPage <= endPage))

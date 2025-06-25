@@ -8,13 +8,13 @@ import assert from 'assert';
 import { last } from 'lodash-es';
 
 import type { AnnotationVO } from '#domain/shared/model/annotation';
-import type PdfViewer from '../PDFViewer';
+import PdfViewer from '../PDFViewer';
 
 export default function Annotation(props: { annotation: AnnotationVO; page: number; pdfViewer: PdfViewer }) {
   let buttonRef: HTMLButtonElement | undefined;
   const [marksRef, setMarksRef] = createSignal<Element[]>();
-  const [domUpdatedFlag, setDomUpdatedFlag] = createSignal<number>(0);
-  const forceRender = () => setDomUpdatedFlag(domUpdatedFlag() + 1);
+  const [forceRenderFlag, setForceRenderFlag] = createSignal<number>(0);
+  const forceRender = () => setForceRenderFlag(forceRenderFlag() + 1);
 
   const shouldShowComment = createMemo(() => {
     if (!props.annotation.body) {
@@ -29,7 +29,7 @@ export default function Annotation(props: { annotation: AnnotationVO; page: numb
   });
 
   function handleOpenChange(value: boolean) {
-    props.pdfViewer.annotationOpenStatus[props.annotation.id] = value;
+    props.pdfViewer.editor.annotation.openStatusMap[props.annotation.id] = value;
   }
 
   // 文本搜索高亮等功能可能会破坏我们渲染出的 mark 元素。我们需要在 mark 元素被破坏时重新渲染
@@ -68,7 +68,7 @@ export default function Annotation(props: { annotation: AnnotationVO; page: numb
   }
 
   function render() {
-    domUpdatedFlag();
+    forceRenderFlag();
     const selector = props.annotation.selector;
 
     if (selector.type !== 'PDFTextPositionSelector') {
@@ -99,7 +99,7 @@ export default function Annotation(props: { annotation: AnnotationVO; page: numb
     assert(range);
     const marker = new Mark(props.pdfViewer.getPageTextLayerElement(props.page));
     const markEls: HTMLElement[] = [];
-    const className = `mark-${props.annotation.id}`;
+    const className = PdfViewer.getAnnotationMarkClassName(props.annotation.id);
     let observer: MutationObserver | undefined;
 
     marker.markRanges([range], {
@@ -129,7 +129,7 @@ export default function Annotation(props: { annotation: AnnotationVO; page: numb
     <Show when={shouldShowComment()}>
       <Popover.Root
         onOpenChange={action(({ open }) => handleOpenChange(open))}
-        defaultOpen={props.pdfViewer.annotationOpenStatus[props.annotation.id]}
+        defaultOpen={props.pdfViewer.editor.annotation.openStatusMap[props.annotation.id]}
         positioning={{ placement: 'right-start' }}
         unmountOnExit
         lazyMount

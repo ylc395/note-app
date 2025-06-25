@@ -5,7 +5,6 @@ const defaultOptions = queryClient.getDefaultOptions(); // default options: http
 defaultOptions.queries!.staleTime = 0;
 defaultOptions.queries!.refetchOnWindowFocus = false;
 defaultOptions.queries!.refetchOnReconnect = false;
-defaultOptions.queries!.refetchOnMount = false;
 defaultOptions.queries!.networkMode = import.meta.env.VITE_WEB_PLATFORM === 'electron' ? 'always' : 'online';
 defaultOptions.queries!.retry = false;
 defaultOptions.queries!.enableOnDemand = true;

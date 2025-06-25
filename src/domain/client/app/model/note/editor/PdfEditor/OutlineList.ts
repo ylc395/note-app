@@ -130,7 +130,7 @@ export default class OutlineList {
   }
 
   public getAnnotationCount(key: OutlineItem['key']) {
-    if (!this.annotation.list) {
+    if (!this.annotation.items.result.data) {
       return 0;
     }
 

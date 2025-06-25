@@ -2,10 +2,10 @@ import dayjs from 'dayjs';
 import { createMemo, Show } from 'solid-js';
 import { MoreHorizontalIcon } from 'lucide-solid';
 
-import type { AnnotationItem } from '#domain/client/app/model/note/editor/PdfEditor/AnnotationManager';
-import type PdfViewer from '../PDFViewer';
+import type { AnnotationVO } from '#domain/shared/model/annotation';
+import PdfViewer from '../PDFViewer';
 
-export default function Item(props: { value: AnnotationItem; pdfViewer: PdfViewer }) {
+export default function Item(props: { value: AnnotationVO; pdfViewer: PdfViewer }) {
   const page = createMemo(() => {
     const { selector } = props.value;
 
@@ -33,7 +33,7 @@ export default function Item(props: { value: AnnotationItem; pdfViewer: PdfViewe
 
     props.pdfViewer.jumpTo(_page, {
       onJump: ({ pageElement }) => {
-        const markEl = pageElement.querySelector(`.mark-${props.value.id}`);
+        const markEl = pageElement.querySelector(`.${PdfViewer.getAnnotationMarkClassName(props.value.id)}`);
         markEl?.scrollIntoView({ block: 'center' });
       },
     });
@@ -44,11 +44,6 @@ export default function Item(props: { value: AnnotationItem; pdfViewer: PdfViewe
       <div class="flex text-sm justify-between items-center">
         <Show when={typeof page() === 'number'}>
           <span>第{page()}页</span>
-        </Show>
-        <Show fallback={<span class="border px-1">内置</span>} when={!props.value.isNative}>
-          <button>
-            <MoreHorizontalIcon />
-          </button>
         </Show>
       </div>
       <Show when={quote()}>
