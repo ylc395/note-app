@@ -1,10 +1,11 @@
-import { createEffect, createSignal, onCleanup, Show } from 'solid-js';
+import { createEffect, createMemo, createSignal, onCleanup, Show } from 'solid-js';
 import { MessageSquareIcon } from 'lucide-solid';
 import { Popover } from '@ark-ui/solid';
 import { action } from 'mobx';
-import { markRange, removeMarks } from '#third-party/text-fragments-polyfill/text-fragment-utils';
-import { autoUpdate, computePosition, offset } from '@floating-ui/dom';
+import Mark from 'mark.js';
+import { autoUpdate, computePosition, hide, offset } from '@floating-ui/dom';
 import assert from 'assert';
+import { last } from 'lodash-es';
 
 import type { AnnotationVO } from '#domain/shared/model/annotation';
 import type PdfViewer from '../PDFViewer';
@@ -13,79 +14,119 @@ export default function Annotation(props: { annotation: AnnotationVO; page: numb
   let buttonRef: HTMLButtonElement | undefined;
   const [marksRef, setMarksRef] = createSignal<Element[]>();
   const [domUpdatedFlag, setDomUpdatedFlag] = createSignal<number>(0);
+  const forceRender = () => setDomUpdatedFlag(domUpdatedFlag() + 1);
+
+  const shouldShowComment = createMemo(() => {
+    if (!props.annotation.body) {
+      return false;
+    }
+
+    if (props.annotation.selector.type === 'PDFTextPositionSelector') {
+      return props.annotation.selector.position.startPage === props.page;
+    }
+
+    return false;
+  });
 
   function handleOpenChange(value: boolean) {
     props.pdfViewer.annotationOpenStatus[props.annotation.id] = value;
   }
 
-  function forceRender({ pages }: { pages: number[] }) {
-    if (pages.includes(props.page)) {
-      setDomUpdatedFlag(domUpdatedFlag() + 1);
-    }
+  // 文本搜索高亮等功能可能会破坏我们渲染出的 mark 元素。我们需要在 mark 元素被破坏时重新渲染
+  function autoRerender() {
+    const pageElement = props.pdfViewer.getPageTextLayerElement(props.page);
+
+    const domObserver = new MutationObserver(() => {
+      if (marksRef()?.some((el) => !el.isConnected)) {
+        forceRender();
+      }
+    });
+    domObserver.observe(pageElement, { subtree: true, childList: true });
+
+    return domObserver;
   }
 
-  props.pdfViewer.searcher.on('matchUpdated', forceRender);
-  onCleanup(() => props.pdfViewer.searcher.off('matchUpdated', forceRender));
-
-  createEffect(() => {
-    if (props.annotation.selector.type !== 'PDFTextPositionSelector') {
-      return;
-    }
-
-    let range: Range | undefined;
-
-    if (props.annotation.selector.position.startPage === props.annotation.selector.position.endPage) {
-      range = props.pdfViewer.positionToRange(props.annotation.selector.position);
-    } else if (props.annotation.selector.position.startPage === props.page) {
-      range = props.pdfViewer.positionToRange({ ...props.annotation.selector.position, endOffset: Infinity });
-    } else if (props.annotation.selector.position.endPage === props.page) {
-      range = props.pdfViewer.positionToRange({ ...props.annotation.selector.position, startOffset: 0 });
-    }
-
-    assert(range);
-    const marks = markRange(range);
-
-    if (marks.length === 0) {
-      return;
-    }
-
-    for (const markEl of marks) {
-      (markEl as HTMLElement).style.backgroundColor = props.annotation.color;
-      (markEl as HTMLElement).dataset.annotationId = props.annotation.id;
-    }
-
-    setMarksRef(marks);
-    domUpdatedFlag();
-    onCleanup(() => {
-      removeMarks(marks.filter(({ parentNode }) => parentNode)); // mark 元素可能已被移除。排除掉这些 mark 元素
-    });
-  });
-
-  createEffect(() => {
-    const markEl = marksRef()?.[0];
+  function autoUpdateButton() {
+    const markEl = last(marksRef());
 
     if (markEl && buttonRef) {
       const stopAutoUpdate = autoUpdate(markEl, buttonRef, () => {
         computePosition(markEl, buttonRef, {
           placement: 'right-start',
-          middleware: [offset(5)],
-        }).then(({ x, y }) => {
+          middleware: [offset(5), hide({ padding: 10 })],
+        }).then(({ x, y, middlewareData }) => {
           Object.assign(buttonRef.style, { left: `${x}px`, top: `${y}px` });
+
+          if (middlewareData.hide) {
+            buttonRef.style.visibility = middlewareData.hide.referenceHidden ? 'hidden' : 'visible';
+          }
         });
       });
 
       onCleanup(stopAutoUpdate);
     }
-  });
+  }
+
+  function render() {
+    domUpdatedFlag();
+    const selector = props.annotation.selector;
+
+    if (selector.type !== 'PDFTextPositionSelector') {
+      return;
+    }
+
+    let range: Mark.Range | undefined;
+
+    if (selector.position.startPage === selector.position.endPage) {
+      range = {
+        start: selector.position.startOffset,
+        length: selector.position.endOffset - selector.position.startOffset,
+      };
+    } else if (selector.position.startPage === props.page) {
+      range = {
+        start: selector.position.startOffset,
+        length: Infinity,
+      };
+    } else if (selector.position.endPage === props.page) {
+      range = {
+        start: 0,
+        length: selector.position.endOffset,
+      };
+    } else {
+      range = { start: 0, length: Infinity };
+    }
+
+    assert(range);
+    const marker = new Mark(props.pdfViewer.getPageTextLayerElement(props.page));
+    const markEls: HTMLElement[] = [];
+    const className = `mark-${props.annotation.id}`;
+    let observer: MutationObserver | undefined;
+
+    marker.markRanges([range], {
+      className,
+      each: (markEl) => {
+        (markEl as HTMLElement).style.backgroundColor = props.annotation.color;
+        markEls.push(markEl as HTMLElement);
+      },
+      done: () => {
+        setMarksRef(markEls);
+        observer = autoRerender();
+      },
+    });
+
+    onCleanup(() => {
+      marker.unmark({ className });
+      setMarksRef(undefined);
+      observer?.disconnect();
+    });
+  }
+
+  createEffect(render);
+  createEffect(autoUpdateButton);
+  createEffect(autoRerender);
 
   return (
-    <Show
-      when={
-        props.annotation.body &&
-        props.annotation.selector.type === 'PDFTextPositionSelector' &&
-        props.annotation.selector.position.startPage === props.page
-      }
-    >
+    <Show when={shouldShowComment()}>
       <Popover.Root
         onOpenChange={action(({ open }) => handleOpenChange(open))}
         defaultOpen={props.pdfViewer.annotationOpenStatus[props.annotation.id]}

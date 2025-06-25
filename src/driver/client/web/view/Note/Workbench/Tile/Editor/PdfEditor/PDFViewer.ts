@@ -16,7 +16,7 @@ import HistoryStack, { Direction, type HistoryRecord } from '#domain/client/app/
 import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
 import shell from '#web/infra/shell';
 
-import Searcher from './SearchBar/Searcher';
+import TextFinder from './SearchBar/TextFinder';
 
 interface Options {
   container: HTMLDivElement;
@@ -48,7 +48,7 @@ export default class PdfViewer {
   constructor(options: Options) {
     this.editor = options.editor;
     this.pdfViewer = this.createViewer(options);
-    this.searcher = new Searcher(this);
+    this.textFinder = new TextFinder(this);
     this.state = new PersistedMap(`${options.editor.noteId}-view`, z.object({ hash: z.string().optional() }), {});
 
     when(
@@ -100,7 +100,7 @@ export default class PdfViewer {
   };
   @observable public accessor isReady = false;
 
-  public readonly searcher: Searcher;
+  public readonly textFinder: TextFinder;
 
   @computed
   public get totalPage() {
@@ -299,7 +299,7 @@ export default class PdfViewer {
   };
 
   public destroy() {
-    this.searcher.destroy();
+    this.textFinder.destroy();
     this.updateUIState.flush();
     this.pdfViewer.cleanup();
     this.destroyController.abort();

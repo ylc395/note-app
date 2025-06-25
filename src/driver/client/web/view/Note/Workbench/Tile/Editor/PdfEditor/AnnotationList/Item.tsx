@@ -33,8 +33,8 @@ export default function Item(props: { value: AnnotationItem; pdfViewer: PdfViewe
 
     props.pdfViewer.jumpTo(_page, {
       onJump: ({ pageElement }) => {
-        const markEl = pageElement.querySelector(`[data-annotation-id="${props.value.id}"]`);
-        markEl?.scrollIntoView();
+        const markEl = pageElement.querySelector(`.mark-${props.value.id}`);
+        markEl?.scrollIntoView({ block: 'center' });
       },
     });
   }

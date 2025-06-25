@@ -46,7 +46,7 @@ export default function Outline(props: { viewer: PdfViewer }) {
     const item = key && listRef()?.querySelector(`[data-outline-item-key="${key}"]`);
 
     if (item) {
-      item.scrollIntoView();
+      item.scrollIntoView({ block: 'center' });
     }
   }
 

@@ -47,11 +47,14 @@ export default function TileView(props: { tile: Tile; panelId?: string }) {
 
   if (props.panelId) {
     return (
-      <Splitter.Panel class="flex flex-col" id={props.panelId}>
+      <Splitter.Panel
+        id={props.panelId}
+        class="flex flex-col !overflow-clip" // overflow-clip 的理由：https://stackoverflow.com/questions/11039885/scrollintoview-causing-the-whole-page-to-move
+      >
         {content}
       </Splitter.Panel>
     );
   }
 
-  return <div class="grow flex flex-col min-h-0">{content}</div>;
+  return content;
 }

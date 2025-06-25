@@ -26,7 +26,7 @@ export default function Toolbar(props: { viewer: PdfViewer }) {
       </div>
       <div class="space-x-6 flex absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 ">
         <PageSwitcher viewer={props.viewer} />
-        <button onClick={() => props.viewer.searcher.textFinder.toggle()}>
+        <button onClick={() => props.viewer.textFinder.model.toggle()}>
           <TextSearchIcon />
         </button>
       </div>

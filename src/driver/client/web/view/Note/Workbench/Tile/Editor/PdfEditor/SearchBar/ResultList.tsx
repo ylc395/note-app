@@ -3,9 +3,9 @@ import assert from 'assert';
 import { sumBy } from 'lodash-es';
 
 import type { Digest } from '#domain/client/app/model/note/editor/PdfEditor/TextFinder';
-import type Searcher from './Searcher';
+import type TextFinder from './TextFinder';
 
-function DigestView(props: { digest: Digest; searcher: Searcher; index: number }) {
+function DigestView(props: { digest: Digest; textFinder: TextFinder; index: number }) {
   let rootRef: HTMLDivElement | undefined;
 
   function highlight() {
@@ -25,7 +25,7 @@ function DigestView(props: { digest: Digest; searcher: Searcher; index: number }
   onMount(highlight);
 
   return (
-    <div class="border break-words" onClick={() => props.searcher.jumpTo(props.index)}>
+    <div class="border break-words" onClick={() => props.textFinder.jumpTo(props.index)}>
       <span>{props.index + 1}</span>
       <p
         ref={rootRef}
@@ -42,12 +42,12 @@ function DigestView(props: { digest: Digest; searcher: Searcher; index: number }
   );
 }
 
-export default function ResultList(props: { searcher: Searcher }) {
+export default function ResultList(props: { textFinder: TextFinder }) {
   return (
     <div class="w-64 max-h-72 overflow-auto bg-white">
-      <For each={props.searcher.textFinder.digests}>
+      <For each={props.textFinder.model.digests}>
         {(pageResult, index) => {
-          const totalCount = sumBy(props.searcher.textFinder.digests?.slice(0, index()), (page) => page.digests.length);
+          const totalCount = sumBy(props.textFinder.model.digests?.slice(0, index()), (page) => page.digests.length);
 
           return (
             <div>
@@ -57,7 +57,7 @@ export default function ResultList(props: { searcher: Searcher }) {
               <div class="space-y-1">
                 <For each={pageResult.digests}>
                   {(digest, index) => (
-                    <DigestView index={totalCount - 1 + index()} searcher={props.searcher} digest={digest} />
+                    <DigestView index={totalCount - 1 + index()} textFinder={props.textFinder} digest={digest} />
                   )}
                 </For>
               </div>

@@ -4,34 +4,34 @@ import { Popover } from '@ark-ui/solid';
 
 import ResultList from './ResultList';
 import Input from './Input';
-import type Searcher from './Searcher';
+import type TextFinder from './TextFinder';
 
-export default function SearchBar(props: { searcher: Searcher }) {
+export default function SearchBar(props: { textFinder: TextFinder }) {
   return (
     <div class="flex z-10 m-auto w-fit relative left-36">
-      <Input searcher={props.searcher} />
-      <Show when={props.searcher.textFinder.matchesCount?.total === 0}>
+      <Input textFinder={props.textFinder} />
+      <Show when={props.textFinder.model.matchesCount?.total === 0}>
         <div>没有结果</div>
       </Show>
-      <Show when={Number(props.searcher.textFinder.matchesCount?.total) > 0}>
+      <Show when={Number(props.textFinder.model.matchesCount?.total) > 0}>
         <div>
-          {props.searcher.textFinder.matchesCount?.current}/{props.searcher.textFinder.matchesCount?.total}
+          {props.textFinder.model.matchesCount?.current}/{props.textFinder.model.matchesCount?.total}
         </div>
       </Show>
       <div class="ml-6">
-        <button disabled={!props.searcher.textFinder.matchesCount?.total} onClick={() => props.searcher.previous()}>
+        <button disabled={!props.textFinder.model.matchesCount?.total} onClick={() => props.textFinder.previous()}>
           <ArrowUpIcon />
         </button>
-        <button disabled={!props.searcher.textFinder.matchesCount?.total} onClick={() => props.searcher.next()}>
+        <button disabled={!props.textFinder.model.matchesCount?.total} onClick={() => props.textFinder.next()}>
           <ArrowDownIcon />
         </button>
         <Popover.Root lazyMount unmountOnExit>
-          <Popover.Trigger disabled={!props.searcher.textFinder.digests}>
+          <Popover.Trigger disabled={!props.textFinder.model.digests}>
             <ListIcon />
           </Popover.Trigger>
           <Popover.Positioner>
             <Popover.Content>
-              <ResultList searcher={props.searcher} />
+              <ResultList textFinder={props.textFinder} />
             </Popover.Content>
           </Popover.Positioner>
         </Popover.Root>
