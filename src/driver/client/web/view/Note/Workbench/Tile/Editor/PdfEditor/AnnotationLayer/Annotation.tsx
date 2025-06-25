@@ -11,7 +11,7 @@ import type { AnnotationVO } from '#domain/shared/model/annotation';
 import PdfViewer from '../PDFViewer';
 
 export default function Annotation(props: { annotation: AnnotationVO; page: number; pdfViewer: PdfViewer }) {
-  let buttonRef: HTMLButtonElement | undefined;
+  const [buttonRef, setButtonRef] = createSignal<HTMLElement>();
   const [marksRef, setMarksRef] = createSignal<Element[]>();
   const [forceRenderFlag, setForceRenderFlag] = createSignal<number>(0);
   const forceRender = () => setForceRenderFlag(forceRenderFlag() + 1);
@@ -48,17 +48,18 @@ export default function Annotation(props: { annotation: AnnotationVO; page: numb
 
   function autoUpdateButton() {
     const markEl = last(marksRef());
+    const buttonEl = buttonRef();
 
-    if (markEl && buttonRef) {
-      const stopAutoUpdate = autoUpdate(markEl, buttonRef, () => {
-        computePosition(markEl, buttonRef, {
+    if (markEl && buttonEl) {
+      const stopAutoUpdate = autoUpdate(markEl, buttonEl, () => {
+        computePosition(markEl, buttonEl, {
           placement: 'right-start',
           middleware: [offset(5), hide({ padding: 10 })],
         }).then(({ x, y, middlewareData }) => {
-          Object.assign(buttonRef.style, { left: `${x}px`, top: `${y}px` });
+          Object.assign(buttonEl.style, { left: `${x}px`, top: `${y}px` });
 
           if (middlewareData.hide) {
-            buttonRef.style.visibility = middlewareData.hide.referenceHidden ? 'hidden' : 'visible';
+            buttonEl.style.visibility = middlewareData.hide.referenceHidden ? 'hidden' : 'visible';
           }
         });
       });
@@ -134,7 +135,7 @@ export default function Annotation(props: { annotation: AnnotationVO; page: numb
         unmountOnExit
         lazyMount
       >
-        <Popover.Trigger ref={buttonRef} class="absolute cursor-pointer flex">
+        <Popover.Trigger ref={setButtonRef} class="absolute cursor-pointer flex">
           <MessageSquareIcon />
         </Popover.Trigger>
         <Popover.Positioner>

@@ -17,7 +17,6 @@ export default class MemoList {
       ({ signal }) => this.remote.memo.queryCount.query(this.filter!.countParams, { signal }),
       {
         abortSignal: this.destroyController.signal,
-        refetchOnWindowFocus: false,
         options: () => ({
           enabled: !this.isSearchMode && this.isActive,
           queryKey: ['memos', 'count', this.filter.countParams],
@@ -38,7 +37,6 @@ export default class MemoList {
           { signal },
         ),
       {
-        refetchOnWindowFocus: false,
         abortSignal: this.destroyController.signal,
         getNextPageParam: (lastPage, _, lastPageParam) => this.getNextPageParams({ lastPage, lastPageParam }),
         onDone: (data) => {

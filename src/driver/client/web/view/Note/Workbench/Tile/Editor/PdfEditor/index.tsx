@@ -50,7 +50,10 @@ export default function PdfEditorView(props: { editor: PdfEditor }) {
               </Show>
             )}
           </Show>
-          <div class="relative grow" classList={{ invisible: !getPdfViewer()?.isReady }}>
+          <div
+            class="relative grow"
+            classList={{ invisible: !getPdfViewer()?.isReady }} // ready 后才渲染，防止自动滚动的过程破坏体验
+          >
             <div
               class="absolute inset-0 overflow-auto pdfViewer" /* pdfViewer 这个类名来自 pdf_viewer.css */
               ref={containerRef}
@@ -60,7 +63,9 @@ export default function PdfEditorView(props: { editor: PdfEditor }) {
             <Show when={getPdfViewer()}>
               {(viewer) => (
                 <>
-                  <AnnotationLayer pdfViewer={viewer()} />
+                  <Show when={viewer().isReady}>
+                    <AnnotationLayer pdfViewer={viewer()} />
+                  </Show>
                   <SelectionTooltip pdfViewer={viewer()} />
                 </>
               )}
