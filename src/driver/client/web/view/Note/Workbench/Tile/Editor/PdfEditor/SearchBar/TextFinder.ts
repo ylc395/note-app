@@ -9,11 +9,19 @@ export default class TextFinder {
   constructor(private readonly pdfViewer: PdfViewer) {
     this.pdfViewer.eventBus.on('updatefindcontrolstate', this.handleUpdate);
     this.pdfViewer.eventBus.on('updatefindmatchescount', this.handleUpdate);
-    autorun(() => this.search({ type: '' }), { signal: this.destroyController.signal });
 
     reaction(
-      () => this.model.isEnabled,
-      (isEnabled) => !isEnabled && this.close(),
+      () => this.model.options,
+      () => this.search({ type: '' }),
+      { signal: this.destroyController.signal },
+    );
+
+    autorun(
+      () => {
+        if (!this.model.isEnabled) {
+          this.close();
+        }
+      },
       { signal: this.destroyController.signal },
     );
   }
@@ -28,7 +36,7 @@ export default class TextFinder {
     if (
       e.state === undefined || // updatefindmatchescount 事件
       e.state === FindState.NOT_FOUND ||
-      ((e.state === FindState.FOUND || e.state === FindState.WRAPPED) && this.model.matchesCount) // updatefindcontrolstate 事件。该事件在初次触发时数据不准，后续的数据才准
+      ((e.state === FindState.FOUND || e.state === FindState.WRAPPED) && this.model.result) // updatefindcontrolstate 事件。该事件在初次触发时数据不准，后续的数据才准
     ) {
       const pageMatches = e.source instanceof PDFFindController ? e.source.pageMatches : undefined;
       const pageMatchesLength = e.source instanceof PDFFindController ? e.source.pageMatchesLength : undefined;
@@ -56,8 +64,8 @@ export default class TextFinder {
   }
 
   public jumpTo(index: number) {
-    assert(this.model.matchesCount);
-    let offset = index - (this.model.matchesCount.current - 1) + 1;
+    assert(this.model.result);
+    let offset = index - (this.model.result.current - 1) + 1;
 
     while (offset !== 0) {
       if (offset > 0) {
@@ -85,6 +93,5 @@ export default class TextFinder {
   public destroy() {
     this.close();
     this.destroyController.abort();
-    this.model.destroy();
   }
 }

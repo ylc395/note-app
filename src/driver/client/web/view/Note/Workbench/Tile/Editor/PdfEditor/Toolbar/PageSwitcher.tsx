@@ -22,7 +22,7 @@ export default function PageSwitcher(props: { viewer: PdfViewer }) {
   }
 
   createEffect(() => {
-    setValue(String(props.viewer.currentPage));
+    setValue(props.viewer.currentPage ? String(props.viewer.currentPage) : undefined);
   });
 
   return (
@@ -35,9 +35,10 @@ export default function PageSwitcher(props: { viewer: PdfViewer }) {
         onBlur={() => setValue(String(props.viewer.currentPage))}
         onKeyPress={handleKeyPress}
         onInput={handleInput}
-        value={getValue()}
+        readOnly={!getValue()}
+        value={getValue() ?? '-'}
       />
-      /{props.viewer.totalPage || '-'}
+      /{props.viewer.totalPage ?? '-'}
       <button class="flex items-center" onClick={() => props.viewer.goToNextPage()}>
         <StepForwardIcon />
       </button>

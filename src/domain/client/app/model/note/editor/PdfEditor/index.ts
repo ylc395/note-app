@@ -58,6 +58,7 @@ export default class PdfEditor extends BaseEditor {
   public override destroy() {
     super.destroy();
     this.docFactory.revoke(this.noteId);
+    this.textFinder.destroy();
   }
 
   private static async extractTexts(doc: PDFDocumentProxy) {

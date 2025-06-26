@@ -1,4 +1,4 @@
-import { action, observable } from 'mobx';
+import { action, computed, observable } from 'mobx';
 import { z } from 'zod';
 import { compact, debounce, isEqual } from 'lodash-es';
 
@@ -22,7 +22,7 @@ export default class TextFinder {
   constructor(private readonly editor: PdfEditor) {}
   @observable public accessor isEnabled = false;
   @observable public accessor query = '';
-  @observable public accessor matchesCount: (MatchesCount & { options: TextFinder['options'] }) | undefined;
+  @observable public accessor result: (MatchesCount & { options: TextFinder['options'] }) | undefined;
 
   private readonly persistedOptions = new PersistedMap(
     'pdf-textFinder',
@@ -36,6 +36,7 @@ export default class TextFinder {
     },
   );
 
+  @computed
   public get options() {
     return {
       ...this.persistedOptions.toObject(),
@@ -77,15 +78,13 @@ export default class TextFinder {
     }
 
     const isSearchAgain =
-      this.matchesCount &&
-      isEqual(this.options, this.matchesCount.options) &&
-      this.matchesCount.total > matchesCount.total;
+      this.result && isEqual(this.options, this.result.options) && this.result.total > matchesCount.total;
 
     if (isSearchAgain) {
       return;
     }
 
-    this.matchesCount = {
+    this.result = {
       ...matchesCount,
       options: this.options,
     };
@@ -95,17 +94,14 @@ export default class TextFinder {
     }
   }
 
-  private optionsSnapshot?: TextFinder['options'];
-
   private readonly updateDigests = debounce(
     action(({ pageMatchesLength, pageMatches }: { pageMatches: number[][]; pageMatchesLength: number[][] }) => {
       const texts = this.editor.texts;
 
-      if (!texts || isEqual(this.options, this.optionsSnapshot)) {
+      if (!texts || isEqual(this.options, this.result?.options)) {
         return;
       }
 
-      this.optionsSnapshot = this.options;
       this.digests = pageMatches
         .map((matchOffsets: number[], pageIndex) => ({
           page: pageIndex + 1,
@@ -129,8 +125,7 @@ export default class TextFinder {
   @action
   private clearResult() {
     this.digests = undefined;
-    this.optionsSnapshot = undefined;
-    this.matchesCount = undefined;
+    this.result = undefined;
   }
 
   public destroy() {

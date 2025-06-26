@@ -10,19 +10,19 @@ export default function SearchBar(props: { textFinder: TextFinder }) {
   return (
     <div class="flex z-10 m-auto w-fit relative left-36">
       <Input textFinder={props.textFinder} />
-      <Show when={props.textFinder.model.matchesCount?.total === 0}>
+      <Show when={props.textFinder.model.result?.total === 0}>
         <div>没有结果</div>
       </Show>
-      <Show when={Number(props.textFinder.model.matchesCount?.total) > 0}>
+      <Show when={Number(props.textFinder.model.result?.total) > 0}>
         <div>
-          {props.textFinder.model.matchesCount?.current}/{props.textFinder.model.matchesCount?.total}
+          {props.textFinder.model.result?.current}/{props.textFinder.model.result?.total}
         </div>
       </Show>
       <div class="ml-6">
-        <button disabled={!props.textFinder.model.matchesCount?.total} onClick={() => props.textFinder.previous()}>
+        <button disabled={!props.textFinder.model.result?.total} onClick={() => props.textFinder.previous()}>
           <ArrowUpIcon />
         </button>
-        <button disabled={!props.textFinder.model.matchesCount?.total} onClick={() => props.textFinder.next()}>
+        <button disabled={!props.textFinder.model.result?.total} onClick={() => props.textFinder.next()}>
           <ArrowDownIcon />
         </button>
         <Popover.Root lazyMount unmountOnExit>

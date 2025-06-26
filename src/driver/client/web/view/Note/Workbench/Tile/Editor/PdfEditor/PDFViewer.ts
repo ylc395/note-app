@@ -102,7 +102,7 @@ export default class PdfViewer {
 
   @computed
   public get totalPage() {
-    return this.editor.doc?.numPages || 1;
+    return this.editor.doc?.numPages;
   }
 
   public get pagesPromise() {
@@ -173,7 +173,7 @@ export default class PdfViewer {
     const hash = this.state.get('hash');
 
     if (hash) {
-      // pdf.js 里的 app.js 里有更完整的实现（setInitialView）
+      // pdf.js 里的 app.js 里有更完整的实现（见 setInitialView）
       await Promise.all([
         doc.loadingTask,
         doc.getPageLayout().catch(noop),
@@ -183,11 +183,15 @@ export default class PdfViewer {
 
       requestAnimationFrame(() => {
         this.jumpTo({ hash });
+
+        // 这里必须手动更新下，因为 jumpTo 方法很可能没有触发 pagechanging 事件
+        const page = Number(new URLSearchParams(hash).get('page'));
+        if (page) {
+          this.updateCurrentPage(page);
+        }
       });
     } else {
-      runInAction(() => {
-        this.currentPage = 1;
-      });
+      this.updateCurrentPage(1);
     }
 
     this.hijackClick();
@@ -241,7 +245,7 @@ export default class PdfViewer {
     page: number | OutlineItem | { hash: string },
     options?: { noHistory?: boolean; onJump?: (e: { pageElement: HTMLElement }) => void },
   ) {
-    if (typeof page === 'number' && (page < 1 || page > this.totalPage || Number.isNaN(page))) {
+    if (!this.totalPage || (typeof page === 'number' && (page < 1 || page > this.totalPage || Number.isNaN(page)))) {
       return false;
     }
 
