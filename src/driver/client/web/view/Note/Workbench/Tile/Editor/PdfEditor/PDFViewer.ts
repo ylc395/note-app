@@ -12,9 +12,11 @@ import { z } from 'zod';
 import assert from 'assert';
 
 import type { default as PdfEditor, OutlineItem } from '#domain/client/app/model/note/editor/PdfEditor';
+import { getPage, type AnnotationVO } from '#domain/client/app/model/annotation';
 import HistoryStack, { Direction, type HistoryRecord } from '#domain/client/app/model/base/HistoryStack';
 import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
 import shell from '#web/infra/shell';
+import { withAbortSignal } from '#utils/function';
 
 import TextFinder from './SearchBar/TextFinder';
 
@@ -128,7 +130,7 @@ export default class PdfViewer {
       this.updateCurrentPage(pageNumber),
     );
 
-    pdfViewer.eventBus.on('textlayerrendered', this.updateRenderedPage.bind(this));
+    pdfViewer.eventBus.on('textlayerrendered', this.updateRenderedPage.bind(this)); // 注意，这个事件发生时不能确保 textLayer 已经渲染了
 
     pdfViewer.eventBus.on(
       'scalechanging',
@@ -192,13 +194,16 @@ export default class PdfViewer {
     this.currentPage = pageNumber;
   }
 
-  @action
   private updateRenderedPage() {
     const renderedPages = (Array.from(this.pdfViewer.getCachedPageViews()) as PDFPageView[]).map(
       (view) => view.pdfPage.pageNumber as number,
     );
 
-    this.renderedPages = renderedPages;
+    requestAnimationFrame(
+      action(() => {
+        this.renderedPages = renderedPages;
+      }),
+    );
   }
 
   public getPageTextLayerElement(page: number, safe: true): HTMLDivElement | undefined;
@@ -227,10 +232,7 @@ export default class PdfViewer {
   }
 
   @action.bound
-  public jumpTo(
-    page: number | OutlineItem | { hash: string },
-    options?: { noHistory?: boolean; onJump?: (e: { pageElement: HTMLElement }) => void },
-  ) {
+  public jumpTo(page: number | OutlineItem | { hash: string }, options?: { noHistory?: boolean }) {
     if (!this.totalPage || (typeof page === 'number' && (page < 1 || page > this.totalPage || Number.isNaN(page)))) {
       return false;
     }
@@ -260,19 +262,28 @@ export default class PdfViewer {
         { once: true },
       );
     }
-
-    if (options?.onJump) {
-      this.pdfViewer.eventBus.on(
-        'updateviewarea',
-        ({ location }: { location: { pageNumber: number } }) => {
-          options.onJump?.({ pageElement: this.pdfViewer.getPageView(location.pageNumber - 1).div });
-        },
-        { once: true },
-      );
-    }
-
     return true;
   }
+
+  public readonly jumpToAnnotation = withAbortSignal((signal: AbortSignal, annotation: AnnotationVO) => {
+    assert(annotation.targetId === this.editor.noteId);
+
+    const page = getPage(annotation);
+    this.jumpTo(page);
+
+    when(
+      () => this.annotationElementMap.has(annotation.id),
+      () => {
+        const el = this.annotationElementMap.get(annotation.id);
+        assert(el);
+
+        el.scrollIntoView({ block: 'center' });
+      },
+      { signal },
+    );
+  }, this.destroyController.signal);
+
+  @observable.shallow public accessor annotationElementMap = new Map<AnnotationVO['id'], HTMLElement>();
 
   private handleHistoryPop(e: { record: HistoryRecord; direction: Direction }) {
     const hash = this.state.get('hash');
@@ -359,9 +370,5 @@ export default class PdfViewer {
     return hash
       .replace('zoom=null', 'zoom=100') // zoom 为 null 传到 setHash 里会报错
       .replace(/^#/, '');
-  }
-
-  public static getAnnotationMarkClassName(id: string) {
-    return `mark-${id}`;
   }
 }

@@ -1,22 +1,12 @@
 import dayjs from 'dayjs';
 import { createMemo, Show } from 'solid-js';
 
-import type { AnnotationVO } from '#domain/shared/model/annotation';
+import { getPage, type AnnotationVO } from '#domain/client/app/model/annotation';
 import PdfViewer from '../PDFViewer';
 
 export default function Item(props: { value: AnnotationVO; pdfViewer: PdfViewer }) {
-  const page = createMemo(() => {
-    const { selector } = props.value;
-
-    if (selector.type === 'PDFRectSelector') {
-      return selector.page;
-    }
-
-    if (selector.type === 'PDFTextPositionSelector') {
-      return selector.position.startPage;
-    }
-  });
-
+  const startPage = createMemo(() => getPage(props.value));
+  const endPage = createMemo(() => getPage(props.value, 'end'));
   const quote = createMemo(() => {
     if (props.value.selector.type === 'PDFTextPositionSelector') {
       return props.value.selector.fullText;
@@ -24,25 +14,14 @@ export default function Item(props: { value: AnnotationVO; pdfViewer: PdfViewer 
   });
 
   function jumpTo() {
-    const _page = page();
-
-    if (!_page) {
-      return;
-    }
-
-    props.pdfViewer.jumpTo(_page, {
-      onJump: ({ pageElement }) => {
-        const markEl = pageElement.querySelector(`.${PdfViewer.getAnnotationMarkClassName(props.value.id)}`);
-        markEl?.scrollIntoView({ block: 'center' });
-      },
-    });
+    props.pdfViewer.jumpToAnnotation(props.value);
   }
 
   return (
     <div class="border p-2" onClick={jumpTo}>
-      <div class="flex text-sm justify-between items-center">
-        <Show when={typeof page() === 'number'}>
-          <span>第{page()}页</span>
+      <div class="flex text-sm items-center">
+        <Show when={typeof startPage() === 'number'}>
+          第{startPage()}页<Show when={endPage() && endPage() !== startPage()}>- 第{endPage()}页</Show>
         </Show>
       </div>
       <Show when={quote()}>

@@ -3,14 +3,19 @@ import { type PDFDocumentProxy } from 'pdfjs-dist';
 import { createQuery } from 'mobx-tanstack-query/preset';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
+import { z } from 'zod';
+import type Mark from 'mark.js';
 
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import type { NoteVO } from '#domain/shared/model/note';
-import type { AnnotationVO, PDFRectSelector, PDFTextPositionSelector } from '#domain/shared/model/annotation';
+import {
+  type AnnotationVO,
+  type PDFRectSelector,
+  type PDFTextPositionSelector,
+  getPage,
+} from '#domain/client/app/model/annotation';
 import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
-import { z } from 'zod';
-import type Mark from 'mark.js';
 
 dayjs.extend(customParseFormat);
 
@@ -85,21 +90,7 @@ export default class AnnotationManager {
   }
 
   private static sort(annotation1: AnnotationVO, annotation2: AnnotationVO) {
-    const page1 =
-      annotation1.selector.type === 'PDFRectSelector'
-        ? annotation1.selector.page
-        : annotation1.selector.type === 'PDFTextPositionSelector'
-        ? annotation1.selector.position.startPage
-        : 0;
-
-    const page2 =
-      annotation2.selector.type === 'PDFRectSelector'
-        ? annotation2.selector.page
-        : annotation2.selector.type === 'PDFTextPositionSelector'
-        ? annotation2.selector.position.startPage
-        : 0;
-
-    return page1 - page2;
+    return getPage(annotation1) - getPage(annotation2);
   }
 
   public static positionToRange(position: Position, currentPage: number) {
