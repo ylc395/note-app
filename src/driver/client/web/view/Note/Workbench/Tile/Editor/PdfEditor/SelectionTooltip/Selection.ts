@@ -1,17 +1,21 @@
 import { z } from 'zod';
-import { markRange, removeMarks } from '#third-party/text-fragments-polyfill/text-fragment-utils';
 import { action, observable } from 'mobx';
 import assert from 'assert';
-import { debounce, omit } from 'lodash-es';
+import { debounce, omit, range, zip } from 'lodash-es';
 import { autoUpdate, computePosition, flip, offset } from '@floating-ui/dom';
+import Mark from 'mark.js';
 
 import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
+import {
+  default as AnnotationManager,
+  type Position,
+} from '#domain/client/app/model/note/editor/PdfEditor/AnnotationManager';
 import { IS_DEV } from '#domain/shared/infra/env';
-import type { default as PdfViewer, Position } from '../PDFViewer';
+import type PdfViewer from '../PDFViewer';
 
 interface CommentEditor {
   content: string;
-  marks?: Element[];
+  markers?: Mark[];
 }
 
 export default class Selection {
@@ -19,13 +23,13 @@ export default class Selection {
 
   private rootEl?: HTMLElement;
 
-  @observable public accessor isVisible = false;
+  @observable public accessor isTooltipVisible = false;
 
   private current?: {
     text: string;
     position: Required<Position>;
     referenceElement?: HTMLElement;
-    dispose?: () => void;
+    stopAutoUpdate?: () => void;
   };
 
   @observable.ref public accessor commentEditor: CommentEditor | undefined;
@@ -44,13 +48,13 @@ export default class Selection {
 
   public deactivate() {
     if (this.current) {
-      this.current.dispose?.();
-      this.current.dispose = undefined;
+      this.current.stopAutoUpdate?.();
+      this.current.stopAutoUpdate = undefined;
       this.current.referenceElement = undefined;
     }
 
     if (this.commentEditor) {
-      this.commentEditor.marks = undefined;
+      this.commentEditor.markers = undefined;
     }
 
     this.show.cancel();
@@ -91,31 +95,37 @@ export default class Selection {
 
   @action
   public openCommentEditor() {
-    assert(this.current);
-    const currentRange = this.pdfViewer.positionToRange(this.current.position);
-    const marks = markRange(currentRange);
+    const position = this.current?.position;
+    assert(position);
 
-    for (const mark of marks) {
-      (mark as HTMLElement).style.backgroundColor = this.color;
-      (mark as HTMLElement).style.color = 'transparent';
-      (mark as HTMLElement).style.opacity = '0.4';
+    const pageRange = range(position.startPage, position.endPage + 1);
+    const currentRanges = pageRange.map((page) => AnnotationManager.positionToRange(position, page));
+    const markers = pageRange.map((range) => new Mark(this.pdfViewer.getPageTextLayerElement(range)));
+
+    for (const [marker, range] of zip(markers, currentRanges)) {
+      marker!.markRanges([range!], {
+        className: `text-transparent opacity-40 ${Selection.TEMP_MARK_CLASS_NAME}`,
+        each: (el) => {
+          (el as HTMLElement).style.backgroundColor = this.color;
+        },
+      });
     }
 
-    this.isVisible = false;
+    this.isTooltipVisible = false;
     this.commentEditor = {
       content: this.commentEditor?.content || '',
-      marks,
+      markers,
     };
   }
 
   @action
   public closeCommentEditor(clearSelection?: boolean) {
-    assert(this.commentEditor?.marks && this.current?.position);
-    removeMarks(this.commentEditor.marks);
+    assert(this.commentEditor?.markers && this.current?.position);
+    this.commentEditor.markers.forEach((marker) => marker.unmark({ className: Selection.TEMP_MARK_CLASS_NAME }));
 
     if (!clearSelection) {
-      const currentRange = this.pdfViewer.positionToRange(this.current.position);
-      this.isVisible = true;
+      const currentRange = this.positionToRange(this.current.position);
+      this.isTooltipVisible = true;
 
       assert(this.current);
       const s = window.getSelection();
@@ -163,15 +173,15 @@ export default class Selection {
       return;
     }
 
-    this.current.dispose?.();
-    this.current.dispose = undefined;
+    this.current.stopAutoUpdate?.();
+    this.current.stopAutoUpdate = undefined;
 
     this.current.referenceElement?.remove();
     this.current.referenceElement = undefined;
 
     this.show.cancel();
 
-    this.isVisible = false;
+    this.isTooltipVisible = false;
     this.current = undefined;
 
     if (removeSelection) {
@@ -182,7 +192,7 @@ export default class Selection {
   private readonly show = debounce(
     action(() => {
       if (this.current) {
-        this.current.dispose?.();
+        this.current.stopAutoUpdate?.();
         this.current.referenceElement?.remove();
       }
 
@@ -218,11 +228,10 @@ export default class Selection {
           ...this.rangeToPosition(range),
           toStart,
         },
-        // 这个应当发生在读取 startOffset / endOffset 后，否则这两个数据就不准了（referenceElement 元素的插入会改变这两个值）
         ...this.generateReferenceElement(range, toStart),
       };
 
-      this.isVisible = true;
+      this.isTooltipVisible = true;
     }),
     300,
   );
@@ -303,4 +312,32 @@ export default class Selection {
       endOffset: findIndex(endPage, range.endContainer, range.endOffset),
     };
   }
+
+  private positionToRange(position: Position) {
+    const range = new Range();
+    const setBoundary = (page: number, totalOffset: number, isStart?: boolean) => {
+      const textLayer = this.pdfViewer.getPageTextLayerElement(page);
+      const treeWalker = document.createTreeWalker(textLayer, NodeFilter.SHOW_TEXT);
+      let offset = 0;
+
+      let currentNode = treeWalker.nextNode() as Text | null;
+
+      while (currentNode) {
+        if (currentNode.length + offset >= totalOffset) {
+          range[isStart ? 'setStart' : 'setEnd'](currentNode, totalOffset - offset);
+          break;
+        } else {
+          offset += currentNode.length;
+          currentNode = treeWalker.nextNode() as Text | null;
+        }
+      }
+    };
+
+    setBoundary(position.startPage, position.startOffset, true);
+    setBoundary(position.endPage, position.endOffset);
+
+    return range;
+  }
+
+  private static readonly TEMP_MARK_CLASS_NAME = 'temp-comment-editor-mark';
 }

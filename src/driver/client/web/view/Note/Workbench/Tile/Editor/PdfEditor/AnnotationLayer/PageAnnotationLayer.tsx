@@ -8,8 +8,8 @@ export default function PageAnnotationLayer(props: { page: number; pdfViewer: Pd
       props.pdfViewer.editor.annotation.items.result.data?.filter(
         ({ selector }) =>
           selector.type === 'PDFTextPositionSelector' &&
-          selector.position.startPage >= props.page &&
-          selector.position.endPage <= props.page,
+          props.page >= selector.position.startPage &&
+          props.page <= selector.position.endPage,
       ) || []
     );
   });

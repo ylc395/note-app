@@ -6,7 +6,7 @@ import {
   type PDFPageView,
 } from 'pdfjs-dist/web/pdf_viewer.mjs';
 import { AnnotationEditorType, AnnotationMode } from 'pdfjs-dist';
-import { debounce, intersection, memoize, noop, range as numberRange } from 'lodash-es';
+import { debounce, memoize, noop, range as numberRange } from 'lodash-es';
 import { observable, when, action, computed, runInAction } from 'mobx';
 import { z } from 'zod';
 import assert from 'assert';
@@ -22,14 +22,6 @@ interface Options {
   container: HTMLDivElement;
   viewer: HTMLDivElement;
   editor: PdfEditor;
-}
-
-export interface Position {
-  startPage: number;
-  startOffset: number;
-  endPage: number;
-  endOffset: number;
-  toStart?: boolean;
 }
 
 export enum ScaleValues {
@@ -136,12 +128,7 @@ export default class PdfViewer {
       this.updateCurrentPage(pageNumber),
     );
 
-    pdfViewer.eventBus.on(
-      'textlayerrendered',
-      action(({ pageNumber }: { pageNumber: number }) => {
-        this.renderedPages.push(pageNumber);
-      }),
-    );
+    pdfViewer.eventBus.on('textlayerrendered', this.updateRenderedPage.bind(this));
 
     pdfViewer.eventBus.on(
       'scalechanging',
@@ -156,7 +143,6 @@ export default class PdfViewer {
       pdfViewer.onePageRendered.then(
         action(() => {
           pdfViewer.eventBus.on('updateviewarea', this.updateUIState);
-          pdfViewer.eventBus.on('updateviewarea', this.updateRenderedPage.bind(this));
         }),
       );
     });
@@ -212,7 +198,7 @@ export default class PdfViewer {
       (view) => view.pdfPage.pageNumber as number,
     );
 
-    this.renderedPages = intersection(this.renderedPages, renderedPages);
+    this.renderedPages = renderedPages;
   }
 
   public getPageTextLayerElement(page: number, safe: true): HTMLDivElement | undefined;
@@ -367,34 +353,6 @@ export default class PdfViewer {
     const dataUrl = rectCanvas.toDataURL();
 
     return dataUrl;
-  }
-
-  public positionToRange(position: Position) {
-    const range = new Range();
-    const setBoundary = (page: number, totalOffset: number, isStart?: boolean) => {
-      const textLayer = this.getPageTextLayerElement(page);
-      assert(textLayer);
-
-      const treeWalker = document.createTreeWalker(textLayer, NodeFilter.SHOW_TEXT);
-      let offset = 0;
-
-      let currentNode = treeWalker.nextNode() as Text | null;
-
-      while (currentNode) {
-        if (currentNode.length + offset >= totalOffset) {
-          range[isStart ? 'setStart' : 'setEnd'](currentNode, totalOffset - offset);
-          break;
-        } else {
-          offset += currentNode.length;
-          currentNode = treeWalker.nextNode() as Text | null;
-        }
-      }
-    };
-
-    setBoundary(position.startPage, position.startOffset, true);
-    setBoundary(position.endPage, position.endOffset);
-
-    return range;
   }
 
   private static normalizeHash(hash: string) {

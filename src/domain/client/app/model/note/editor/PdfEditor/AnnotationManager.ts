@@ -10,8 +10,17 @@ import type { NoteVO } from '#domain/shared/model/note';
 import type { AnnotationVO, PDFRectSelector, PDFTextPositionSelector } from '#domain/shared/model/annotation';
 import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
 import { z } from 'zod';
+import type Mark from 'mark.js';
 
 dayjs.extend(customParseFormat);
+
+export interface Position {
+  startPage: number;
+  startOffset: number;
+  endPage: number;
+  endOffset: number;
+  toStart?: boolean;
+}
 
 export default class AnnotationManager {
   constructor(private readonly noteId: NoteVO['id']) {
@@ -91,5 +100,30 @@ export default class AnnotationManager {
         : 0;
 
     return page1 - page2;
+  }
+
+  public static positionToRange(position: Position, currentPage: number) {
+    let range: Mark.Range | undefined;
+
+    if (position.startPage === position.endPage) {
+      range = {
+        start: position.startOffset,
+        length: position.endOffset - position.startOffset,
+      };
+    } else if (position.startPage === currentPage) {
+      range = {
+        start: position.startOffset,
+        length: Number.MAX_SAFE_INTEGER, // mark.js 不接受 Infinity，用 MAX_SAFE_INTEGER 代替
+      };
+    } else if (position.endPage === currentPage) {
+      range = {
+        start: 0,
+        length: position.endOffset,
+      };
+    } else {
+      range = { start: 0, length: Number.MAX_SAFE_INTEGER };
+    }
+
+    return range;
   }
 }

@@ -1,6 +1,5 @@
 import dayjs from 'dayjs';
 import { createMemo, Show } from 'solid-js';
-import { MoreHorizontalIcon } from 'lucide-solid';
 
 import type { AnnotationVO } from '#domain/shared/model/annotation';
 import PdfViewer from '../PDFViewer';

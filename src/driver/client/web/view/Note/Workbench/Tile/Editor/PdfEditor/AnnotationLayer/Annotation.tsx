@@ -4,10 +4,10 @@ import { Popover } from '@ark-ui/solid';
 import { action } from 'mobx';
 import Mark from 'mark.js';
 import { autoUpdate, computePosition, hide, offset } from '@floating-ui/dom';
-import assert from 'assert';
 import { last } from 'lodash-es';
 
 import type { AnnotationVO } from '#domain/shared/model/annotation';
+import AnnotationManager from '#domain/client/app/model/note/editor/PdfEditor/AnnotationManager';
 import PdfViewer from '../PDFViewer';
 
 export default function Annotation(props: { annotation: AnnotationVO; page: number; pdfViewer: PdfViewer }) {
@@ -76,28 +76,7 @@ export default function Annotation(props: { annotation: AnnotationVO; page: numb
       return;
     }
 
-    let range: Mark.Range | undefined;
-
-    if (selector.position.startPage === selector.position.endPage) {
-      range = {
-        start: selector.position.startOffset,
-        length: selector.position.endOffset - selector.position.startOffset,
-      };
-    } else if (selector.position.startPage === props.page) {
-      range = {
-        start: selector.position.startOffset,
-        length: Infinity,
-      };
-    } else if (selector.position.endPage === props.page) {
-      range = {
-        start: 0,
-        length: selector.position.endOffset,
-      };
-    } else {
-      range = { start: 0, length: Infinity };
-    }
-
-    assert(range);
+    const range = AnnotationManager.positionToRange(selector.position, props.page);
     const marker = new Mark(pageEl);
     const markEls: HTMLElement[] = [];
     const className = PdfViewer.getAnnotationMarkClassName(props.annotation.id);
