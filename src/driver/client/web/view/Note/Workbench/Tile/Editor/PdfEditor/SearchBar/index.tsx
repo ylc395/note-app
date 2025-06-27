@@ -19,10 +19,10 @@ export default function SearchBar(props: { textFinder: TextFinder }) {
         </div>
       </Show>
       <div class="ml-6">
-        <button disabled={!props.textFinder.model.result?.total} onClick={() => props.textFinder.previous()}>
+        <button onClick={() => props.textFinder.previous()}>
           <ArrowUpIcon />
         </button>
-        <button disabled={!props.textFinder.model.result?.total} onClick={() => props.textFinder.next()}>
+        <button onClick={() => props.textFinder.next()}>
           <ArrowDownIcon />
         </button>
         <Popover.Root lazyMount unmountOnExit>

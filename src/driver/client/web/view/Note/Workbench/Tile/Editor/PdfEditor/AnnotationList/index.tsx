@@ -3,14 +3,15 @@ import { Loader2Icon } from 'lucide-solid';
 
 import type PdfViewer from '../PDFViewer';
 import Item from './Item';
-import Add from './Add';
 import Settings from './Settings';
 
 export default function AnnotationList(props: { pdfViewer: PdfViewer }) {
   return (
     <div class="w-64 p-2 border-l flex flex-col overflow-auto">
       <div class="flex justify-between mb-2">
-        <Add />
+        <Show when={props.pdfViewer.editor.annotation.items.result.data}>
+          {(items) => <div class="text-sm">共计 {items().length} 个</div>}
+        </Show>
         <Settings viewer={props.pdfViewer} />
       </div>
       <Show

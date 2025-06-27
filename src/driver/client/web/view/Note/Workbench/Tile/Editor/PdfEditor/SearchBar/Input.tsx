@@ -1,8 +1,7 @@
 import { CaseSensitiveIcon, WholeWordIcon } from 'lucide-solid';
-import { action } from 'mobx';
+import { onMount } from 'solid-js';
 
 import type TextFinder from './TextFinder';
-import { onMount } from 'solid-js';
 
 export default function Input(props: { textFinder: TextFinder }) {
   let inputRef: HTMLInputElement | undefined;
@@ -11,8 +10,14 @@ export default function Input(props: { textFinder: TextFinder }) {
     props.textFinder.model.setQuery(e.target.value);
   }
 
+  function handleKeyPress(e: KeyboardEvent) {
+    if (e.key === 'Enter') {
+      props.textFinder.next();
+    }
+  }
+
   onMount(() => {
-    inputRef?.focus();
+    inputRef?.select();
   });
 
   return (
@@ -20,8 +25,9 @@ export default function Input(props: { textFinder: TextFinder }) {
       <input
         ref={inputRef}
         class="outline-none bg-transparent"
-        value={props.textFinder.model.options.query}
-        onInput={action(handleInput)}
+        value={props.textFinder.model.options.query ?? ''}
+        onInput={handleInput}
+        onKeyPress={handleKeyPress}
       />
       <div class="flex space-x-1 pr-1">
         <button

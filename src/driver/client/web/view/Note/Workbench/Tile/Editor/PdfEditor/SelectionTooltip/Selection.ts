@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { action, observable } from 'mobx';
 import assert from 'assert';
 import { debounce, omit, range, zip } from 'lodash-es';
-import { autoUpdate, computePosition, flip, offset } from '@floating-ui/dom';
+import { autoUpdate, computePosition, flip, hide, offset } from '@floating-ui/dom';
 import Mark from 'mark.js';
 
 import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
@@ -255,9 +255,13 @@ export default class Selection {
     const dispose = autoUpdate(referenceElement, rootEl, () => {
       computePosition(referenceElement, rootEl, {
         placement: toStart ? 'top' : 'bottom',
-        middleware: [flip(), offset(5)],
-      }).then(({ x, y }) => {
+        middleware: [flip(), offset(5), hide({ padding: 10 })],
+      }).then(({ x, y, middlewareData }) => {
         Object.assign(rootEl.style, { left: `${x}px`, top: `${y}px` });
+
+        if (middlewareData.hide) {
+          rootEl.style.visibility = middlewareData.hide.referenceHidden ? 'hidden' : 'visible';
+        }
       });
     });
 

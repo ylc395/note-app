@@ -1,4 +1,4 @@
-import { action, autorun, reaction } from 'mobx';
+import { action, reaction } from 'mobx';
 import { FindState, PDFFindController } from 'pdfjs-dist/web/pdf_viewer.mjs';
 import assert from 'assert';
 
@@ -7,8 +7,8 @@ import type { MatchesCount } from '#domain/client/app/model/note/editor/PdfEdito
 
 export default class TextFinder {
   constructor(private readonly pdfViewer: PdfViewer) {
-    this.pdfViewer.eventBus.on('updatefindcontrolstate', this.handleUpdate);
-    this.pdfViewer.eventBus.on('updatefindmatchescount', this.handleUpdate);
+    this.pdfViewer.eventBus.on('updatefindcontrolstate', this.handleUpdate); // 切换当前选中的搜索结果时会触发
+    this.pdfViewer.eventBus.on('updatefindmatchescount', this.handleUpdate); // 更新搜索数量时会触发
 
     reaction(
       () => this.model.options,
@@ -16,9 +16,10 @@ export default class TextFinder {
       { signal: this.destroyController.signal },
     );
 
-    autorun(
-      () => {
-        if (!this.model.isEnabled) {
+    reaction(
+      () => this.model.isEnabled,
+      (isEnabled) => {
+        if (!isEnabled) {
           this.close();
         }
       },
@@ -34,15 +35,17 @@ export default class TextFinder {
 
   private handleUpdate = action((e: { matchesCount: MatchesCount; state?: number; source?: unknown }) => {
     if (
-      e.state === undefined || // updatefindmatchescount 事件
-      e.state === FindState.NOT_FOUND ||
-      ((e.state === FindState.FOUND || e.state === FindState.WRAPPED) && this.model.result) // updatefindcontrolstate 事件。该事件在初次触发时数据不准，后续的数据才准
+      !this.model.isEnabled ||
+      e.state === FindState.PENDING ||
+      (e.state === undefined && !this.model.result) // updatefindcontrolstate 事件的数据，只有在已存在搜索结果的情况下有意义
     ) {
-      const pageMatches = e.source instanceof PDFFindController ? e.source.pageMatches : undefined;
-      const pageMatchesLength = e.source instanceof PDFFindController ? e.source.pageMatchesLength : undefined;
-
-      this.model.updateResult({ pageMatches, pageMatchesLength, matchesCount: e.matchesCount });
+      return;
     }
+
+    const pageMatches = e.source instanceof PDFFindController ? e.source.pageMatches : undefined;
+    const pageMatchesLength = e.source instanceof PDFFindController ? e.source.pageMatchesLength : undefined;
+
+    this.model.updateResult({ pageMatches, pageMatchesLength, matchesCount: e.matchesCount });
   });
 
   private search(options: {
@@ -51,7 +54,7 @@ export default class TextFinder {
       | ''; // 输入关键词，或者切换搜索选项
     findPrevious?: boolean;
   }) {
-    if (!this.model.isEnabled) {
+    if (!this.model.isEnabled || !this.model.options.query) {
       return;
     }
 

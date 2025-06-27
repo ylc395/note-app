@@ -19,43 +19,44 @@ export interface PageSearchResult {
 }
 
 export default class TextFinder {
-  constructor(private readonly editor: PdfEditor) {}
+  constructor(private readonly editor: PdfEditor) {
+    this.persistedOptions = new PersistedMap(
+      `pdf-textFinder-${this.editor.noteId}`,
+      z.object({
+        caseSensitive: z.boolean().optional(),
+        entireWord: z.boolean().optional(),
+        query: z.string().optional(),
+      }),
+      {},
+    );
+  }
   @observable public accessor isEnabled = false;
-  @observable public accessor query = '';
   @observable public accessor result: (MatchesCount & { options: TextFinder['options'] }) | undefined;
 
-  private readonly persistedOptions = new PersistedMap(
-    'pdf-textFinder',
-    z.object({
-      caseSensitive: z.boolean().optional(),
-      entireWord: z.boolean().optional(),
-    }),
-    {
-      caseSensitive: false,
-      entireWord: false,
-    },
-  );
+  private readonly persistedOptions;
 
   @computed
   public get options() {
-    return {
-      ...this.persistedOptions.toObject(),
-      query: this.query,
-    } as const;
+    return this.persistedOptions.toObject();
   }
 
   @observable.ref public accessor digests: PageSearchResult[] | undefined;
 
-  public readonly setQuery = debounce(
-    action((value: string) => {
-      this.query = value;
-    }),
-    500,
-  );
+  public readonly setQuery = debounce((value: string) => {
+    this.persistedOptions.set('query', value);
+
+    if (!value) {
+      this.clearResult();
+    }
+  }, 500);
 
   @action
   public toggle() {
     this.isEnabled = !this.isEnabled;
+
+    if (!this.isEnabled) {
+      this.clearResult();
+    }
   }
 
   public toggleOption(key: 'caseSensitive' | 'entireWord') {
@@ -72,24 +73,14 @@ export default class TextFinder {
     pageMatchesLength?: number[][];
     matchesCount: MatchesCount;
   }) {
-    if (!this.options.query) {
-      this.clearResult();
-      return;
-    }
-
-    const isSearchAgain =
-      this.result && isEqual(this.options, this.result.options) && this.result.total > matchesCount.total;
-
-    if (isSearchAgain) {
-      return;
-    }
+    const oldOptions = this.result?.options;
 
     this.result = {
       ...matchesCount,
       options: this.options,
     };
 
-    if (pageMatchesLength && pageMatches) {
+    if (pageMatchesLength && pageMatches && !isEqual(this.options, oldOptions)) {
       this.updateDigests({ pageMatches, pageMatchesLength });
     }
   }
@@ -98,7 +89,7 @@ export default class TextFinder {
     action(({ pageMatchesLength, pageMatches }: { pageMatches: number[][]; pageMatchesLength: number[][] }) => {
       const texts = this.editor.texts;
 
-      if (!texts || isEqual(this.options, this.result?.options)) {
+      if (!texts) {
         return;
       }
 

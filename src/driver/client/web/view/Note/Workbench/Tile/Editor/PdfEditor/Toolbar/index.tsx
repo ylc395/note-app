@@ -30,10 +30,16 @@ export default function Toolbar(props: { viewer: PdfViewer }) {
           <TextSearchIcon />
         </button>
       </div>
-      <button onClick={toggleAnnotationPanel} class="flex items-center text-sm">
-        <PenLineIcon class="mr-1" />
-        标注
-      </button>
+      <div class="flex space-x-2">
+        <button onClick={toggleAnnotationPanel} class="flex items-center text-sm">
+          <PenLineIcon class="mr-1" />
+          开始标注
+        </button>
+        <button onClick={toggleAnnotationPanel} class="flex items-center text-sm">
+          <PenLineIcon class="mr-1" />
+          查看标注
+        </button>
+      </div>
     </div>
   );
 }
