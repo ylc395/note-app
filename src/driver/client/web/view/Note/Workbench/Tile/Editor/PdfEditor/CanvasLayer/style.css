@@ -1,0 +1,7 @@
+.imageEditorContainer.js-draw {
+  height: 100%;
+}
+
+:root .imageEditorContainer {
+  --background-color-1: transparent;
+}

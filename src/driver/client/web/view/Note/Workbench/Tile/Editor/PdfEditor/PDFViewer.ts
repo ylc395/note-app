@@ -218,6 +218,13 @@ export default class PdfViewer {
     return div;
   }
 
+  public getPageElement(page: number) {
+    const div = (this.pdfViewer.getPageView(page - 1) as PDFPageView).div;
+    assert(div);
+
+    return div;
+  }
+
   private hijackClick() {
     this.pdfViewer.viewer?.addEventListener(
       'click',

@@ -9,6 +9,7 @@ import AnnotationList from './AnnotationList';
 import SelectionTooltip from './SelectionTooltip';
 import SearchBar from './SearchBar';
 import AnnotationLayer from './AnnotationLayer';
+import CanvasLayer from './CanvasLayer';
 import './style.css';
 
 export default function PdfEditorView(props: { editor: PdfEditor }) {
@@ -40,7 +41,7 @@ export default function PdfEditorView(props: { editor: PdfEditor }) {
   return (
     <div class="grow flex flex-col min-h-0">
       <Show when={getPdfViewer()}>{(viewer) => <Toolbar viewer={viewer()} />}</Show>
-      <div class="grow flex min-h-0">
+      <div class="grow flex min-h-0 overflow-hidden">
         <Show when={isOutlineVisible() && getPdfViewer()}>{(viewer) => <Outline viewer={viewer()} />}</Show>
         <div class="grow flex flex-col">
           <Show when={getPdfViewer()}>
@@ -63,9 +64,8 @@ export default function PdfEditorView(props: { editor: PdfEditor }) {
             <Show when={getPdfViewer()}>
               {(viewer) => (
                 <>
-                  <Show when={viewer().isReady}>
-                    <AnnotationLayer pdfViewer={viewer()} />
-                  </Show>
+                  <AnnotationLayer pdfViewer={viewer()} />
+                  <CanvasLayer pdfViewer={viewer()} />
                   <SelectionTooltip pdfViewer={viewer()} />
                 </>
               )}

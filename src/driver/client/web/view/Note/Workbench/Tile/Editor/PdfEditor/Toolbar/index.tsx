@@ -31,7 +31,7 @@ export default function Toolbar(props: { viewer: PdfViewer }) {
         </button>
       </div>
       <div class="flex space-x-2">
-        <button onClick={toggleAnnotationPanel} class="flex items-center text-sm">
+        <button onClick={() => props.viewer.editor.canvas.toggle()} class="flex items-center text-sm">
           <PenLineIcon class="mr-1" />
           开始标注
         </button>

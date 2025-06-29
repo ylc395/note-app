@@ -3,7 +3,7 @@ import { MessageSquareIcon } from 'lucide-solid';
 import { Popover } from '@ark-ui/solid';
 import { action, runInAction } from 'mobx';
 import Mark from 'mark.js';
-import { autoUpdate, computePosition, hide, offset } from '@floating-ui/dom';
+import { autoUpdate, computePosition, offset } from '@floating-ui/dom';
 import { last } from 'lodash-es';
 
 import type { AnnotationVO } from '#domain/shared/model/annotation';
@@ -64,13 +64,9 @@ export default function Annotation(props: { annotation: AnnotationVO; page: numb
       const stopAutoUpdate = autoUpdate(markEl, buttonEl, () => {
         computePosition(markEl, buttonEl, {
           placement: 'right-start',
-          middleware: [offset(5), hide({ padding: 10 })],
-        }).then(({ x, y, middlewareData }) => {
+          middleware: [offset(5)],
+        }).then(({ x, y }) => {
           Object.assign(buttonEl.style, { left: `${x}px`, top: `${y}px` });
-
-          if (middlewareData.hide) {
-            buttonEl.style.visibility = middlewareData.hide.referenceHidden ? 'hidden' : 'visible';
-          }
         });
       });
 
