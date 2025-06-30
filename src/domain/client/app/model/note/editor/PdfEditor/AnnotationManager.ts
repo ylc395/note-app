@@ -11,7 +11,7 @@ import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import type { NoteVO } from '#domain/shared/model/note';
 import {
   type AnnotationVO,
-  type PDFRectSelector,
+  type PDFSvgSelector,
   type PDFTextPositionSelector,
   getPage,
 } from '#domain/client/app/model/annotation';
@@ -62,7 +62,7 @@ export default class AnnotationManager {
     body,
     color,
   }: {
-    selector: PDFTextPositionSelector | PDFRectSelector;
+    selector: PDFTextPositionSelector | PDFSvgSelector;
     body?: string;
     color: string;
   }) {
@@ -83,7 +83,7 @@ export default class AnnotationManager {
 
     return this.items.result.data.filter(({ selector: s }) => {
       return (
-        (s.type === 'PDFRectSelector' && s.page >= startPage && s.page < endPage) ||
+        (s.type === 'PDFSvgSelector' && s.page >= startPage && s.page < endPage) ||
         (s.type === 'PDFTextPositionSelector' && (s.position.startPage >= startPage || s.position.endPage <= endPage))
       );
     }).length;

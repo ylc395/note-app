@@ -6,7 +6,7 @@ export * from '#domain/shared/model/annotation';
 export function getPage(annotation: AnnotationVO, type: 'start' | 'end' = 'start') {
   const { selector } = annotation;
 
-  if (selector.type === 'PDFRectSelector') {
+  if (selector.type === 'PDFSvgSelector') {
     return selector.page;
   }
 

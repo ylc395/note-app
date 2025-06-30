@@ -10,7 +10,7 @@ import DocumentFactory from './DocumentFactory';
 import OutlineList from './OutlineList';
 import AnnotationManager from './AnnotationManager';
 import TextFinder from './TextFinder';
-import Canvas from './Canvas';
+import CanvasManager from './CanvasManager';
 
 export type { OutlineItem } from './OutlineList';
 
@@ -31,7 +31,7 @@ export default class PdfEditor extends BaseEditor {
 
   public readonly outline = new OutlineList(this.noteId, this.annotation);
 
-  public readonly canvas = new Canvas();
+  public readonly canvas = new CanvasManager(this.annotation);
 
   public readonly textFinder = new TextFinder(this);
 

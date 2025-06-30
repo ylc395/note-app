@@ -10,7 +10,7 @@ export const fileSchema = z.object({
   hash: z.string(),
   lang: z.array(z.string()),
   mimeType: z.string(),
-  isTextExtracted: z.boolean().optional()
+  textUnitLength: z.number().optional()
 });
 export const fileDTOSchema = z.object({
   mimeType: fileSchema.shape["mimeType"],

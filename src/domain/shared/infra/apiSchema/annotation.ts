@@ -14,33 +14,29 @@ export const hTMLTextPositionSelectorSchema = z.object({
   end: z.string(),
   type: z.literal("HTMLTextFragmentSelector")
 });
-export const pDFRectSelectorSchema = z.object({
-  type: z.literal("PDFRectSelector"),
+export const pDFSvgSelectorSchema = z.object({
+  type: z.literal("PDFSvgSelector"),
   page: z.number(),
-  top: z.number(),
-  left: z.number(),
-  width: z.number(),
-  height: z.number()
-});
-const pdfTextPositionSchema = z.object({
-  startPage: z.number(),
-  startOffset: z.number(),
-  endPage: z.number(),
-  endOffset: z.number()
+  svg: z.string()
 });
 export const pDFTextPositionSelectorSchema = z.object({
   type: z.literal("PDFTextPositionSelector"),
   fullText: z.string(),
-  position: pdfTextPositionSchema
+  color: z.string(),
+  position: z.object({
+    startPage: z.number(),
+    startOffset: z.number(),
+    endPage: z.number(),
+    endOffset: z.number()
+  })
 });
-export const selectorSchema = z.union([pDFTextPositionSelectorSchema, pDFRectSelectorSchema, hTMLTextPositionSelectorSchema, hTMLCssSelectorSchema]);
+export const selectorSchema = z.union([pDFTextPositionSelectorSchema, pDFSvgSelectorSchema, hTMLTextPositionSelectorSchema, hTMLCssSelectorSchema]);
 export const annotationSchema = z.object({
   id: entityIdSchema,
   targetId: noteSchema.shape["id"],
   selector: selectorSchema,
   body: z.string(),
   bodyPlainText: z.string().optional(),
-  color: z.string(),
   createdAt: z.number(),
   updatedAt: z.number()
 });
@@ -48,12 +44,10 @@ export const annotationDTOSchema = z.intersection(annotationSchema.pick({
   "selector": true,
   "targetId": true
 }), annotationSchema.pick({
-  "body": true,
-  "color": true
+  "body": true
 }).partial());
 export const annotationPatchDTOSchema = annotationSchema.pick({
   "body": true,
-  "color": true,
   "selector": true
 }).partial();
 export const annotationVOSchema = annotationSchema;

@@ -4,7 +4,7 @@ import { autoUpdate, computePosition } from '@floating-ui/dom';
 import type PdfViewer from '../PDFViewer';
 import './style.css';
 
-export default function Canvas(props: { page: number; pdfViewer: PdfViewer }) {
+export default function PageCanvas(props: { page: number; pdfViewer: PdfViewer }) {
   let divRef: HTMLDivElement | undefined;
   const pageElement = props.pdfViewer.getPageElement(props.page);
 
@@ -19,7 +19,7 @@ export default function Canvas(props: { page: number; pdfViewer: PdfViewer }) {
   return (
     <div
       data-page={props.page}
-      class="absolute"
+      class="absolute translate-y-full pointer-events-none"
       style={{ width: `${pageElement.clientWidth}px`, height: `${pageElement.clientHeight}px` }}
       ref={divRef}
     ></div>

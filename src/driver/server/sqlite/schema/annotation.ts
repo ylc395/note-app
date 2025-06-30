@@ -8,7 +8,6 @@ export interface Row {
   targetId: string;
   body: string;
   bodyPlainText: string;
-  color: string;
   selector: JSONColumnType<Annotation['selector']>;
   createdAt: number;
   updatedAt: number;

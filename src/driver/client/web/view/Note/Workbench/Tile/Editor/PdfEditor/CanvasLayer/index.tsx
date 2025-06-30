@@ -3,7 +3,7 @@ import { identity } from 'lodash-es';
 import { Show } from 'solid-js';
 
 import PdfViewer from '../PDFViewer';
-import Canvas from './Canvas';
+import PageCanvas from './PageCanvas';
 
 export default function CanvasLayer(props: { pdfViewer: PdfViewer }) {
   return (
@@ -12,7 +12,7 @@ export default function CanvasLayer(props: { pdfViewer: PdfViewer }) {
         data-layer-type="canvas" // 便于 debug 的，没什么实际用处
       >
         <Key each={props.pdfViewer.renderedPages} by={identity}>
-          {(page) => <Canvas page={page()} pdfViewer={props.pdfViewer} />}
+          {(page) => <PageCanvas page={page()} pdfViewer={props.pdfViewer} />}
         </Key>
       </div>
     </Show>

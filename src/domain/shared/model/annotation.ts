@@ -1,26 +1,22 @@
 import type { EntityId } from './entity.js';
 import type { Note } from './note.js';
 
-interface PdfTextPosition {
-  startPage: number;
-  startOffset: number;
-  endPage: number;
-  endOffset: number;
-}
-
 export interface PDFTextPositionSelector {
   type: 'PDFTextPositionSelector';
   fullText: string;
-  position: PdfTextPosition;
+  color: string;
+  position: {
+    startPage: number;
+    startOffset: number;
+    endPage: number;
+    endOffset: number;
+  };
 }
 
-export interface PDFRectSelector {
-  type: 'PDFRectSelector';
-  page: number;
-  top: number;
-  left: number;
-  width: number;
-  height: number;
+export interface PDFSvgSelector {
+  type: 'PDFSvgSelector';
+  page: number; // 我们不支持跨页的 SVG 绘制
+  svg: string;
 }
 
 export interface HTMLTextPositionSelector {
@@ -34,7 +30,7 @@ export interface HTMLCssSelector {
   value: string; // css selector
 }
 
-export type Selector = PDFTextPositionSelector | PDFRectSelector | HTMLTextPositionSelector | HTMLCssSelector;
+export type Selector = PDFTextPositionSelector | PDFSvgSelector | HTMLTextPositionSelector | HTMLCssSelector;
 
 // This concept is inspired by https://www.w3.org/TR/annotation-model/
 export interface Annotation {
@@ -43,7 +39,6 @@ export interface Annotation {
   selector: Selector;
   body: string;
   bodyPlainText?: string;
-  color: string;
   createdAt: number;
   updatedAt: number;
 }
@@ -51,12 +46,12 @@ export interface Annotation {
 /**
  * @api
  */
-export type AnnotationDTO = Pick<Annotation, 'selector' | 'targetId'> & Partial<Pick<Annotation, 'body' | 'color'>>;
+export type AnnotationDTO = Pick<Annotation, 'selector' | 'targetId'> & Partial<Pick<Annotation, 'body'>>;
 
 /**
  * @api
  */
-export type AnnotationPatchDTO = Partial<Pick<Annotation, 'body' | 'color' | 'selector'>>;
+export type AnnotationPatchDTO = Partial<Pick<Annotation, 'body' | 'selector'>>;
 
 /**
  * @api

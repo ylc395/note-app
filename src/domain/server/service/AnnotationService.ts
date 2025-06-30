@@ -29,7 +29,6 @@ export default class AnnotationService extends BaseService {
       body: annotation.body || '',
       bodyPlainText: annotation.body ? ContentService.markdownToPlain(annotation.body) : '',
       selector: annotation.selector,
-      color: annotation.color || 'yellow',
       createdAt: now,
       updatedAt: now,
     });

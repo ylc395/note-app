@@ -10,6 +10,7 @@ import SelectionTooltip from './SelectionTooltip';
 import SearchBar from './SearchBar';
 import AnnotationLayer from './AnnotationLayer';
 import CanvasLayer from './CanvasLayer';
+import CanvasEditorBar from './CanvasEditorBar';
 import './style.css';
 
 export default function PdfEditorView(props: { editor: PdfEditor }) {
@@ -46,9 +47,14 @@ export default function PdfEditorView(props: { editor: PdfEditor }) {
         <div class="grow flex flex-col">
           <Show when={getPdfViewer()}>
             {(pdfViewer) => (
-              <Show when={pdfViewer().textFinder.model.isEnabled}>
-                <SearchBar textFinder={pdfViewer().textFinder} />
-              </Show>
+              <>
+                <Show when={pdfViewer().textFinder.model.isEnabled}>
+                  <SearchBar textFinder={pdfViewer().textFinder} />
+                </Show>
+                <Show when={pdfViewer().editor.canvas.isEnabled}>
+                  <CanvasEditorBar canvas={pdfViewer().editor.canvas} />
+                </Show>
+              </>
             )}
           </Show>
           <div
