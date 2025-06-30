@@ -12,15 +12,18 @@ import { tableName as linkTableName } from '../schema/link.js';
 import { tableName as fileTableName } from '../schema/file.js';
 import BaseRepository from './BaseRepository.js';
 import { MimeTypes } from '#domain/shared/model/file.js';
+import ContentService from '#domain/server/service/ContentService/index.js';
 
 export default class SqliteMemoRepository extends BaseRepository implements MemoRepository {
   private readonly tableName = schema.tableName;
 
-  public async create(memo: Required<Memo>) {
+  public async create(memo: Memo) {
+    const bodyPlainText = ContentService.markdownToPlain(memo.body);
     await this.db
       .insertInto(this.tableName)
-      .values({ ...memo, isPinned: memo.isPinned ? 1 : 0 })
+      .values({ ...memo, bodyPlainText, isPinned: memo.isPinned ? 1 : 0 })
       .execute();
+
     return memo;
   }
 

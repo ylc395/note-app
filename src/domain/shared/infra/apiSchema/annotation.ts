@@ -36,7 +36,6 @@ export const annotationSchema = z.object({
   targetId: noteSchema.shape["id"],
   selector: selectorSchema,
   body: z.string(),
-  bodyPlainText: z.string().optional(),
   createdAt: z.number(),
   updatedAt: z.number()
 });

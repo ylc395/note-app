@@ -9,6 +9,7 @@ import annotationSchema from '../schema/annotation.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
 import { tableName as noteTableName } from '../schema/note.js';
 import { tableName as fileTableName } from '../schema/file.js';
+import ContentService from '#domain/server/service/ContentService/index.js';
 
 export default class SqliteAnnotationRepository extends BaseRepository implements AnnotationRepository {
   protected readonly tableName = annotationSchema.tableName;
@@ -37,11 +38,13 @@ export default class SqliteAnnotationRepository extends BaseRepository implement
     return keyBy(rows, (row) => row.annotationId);
   }
 
-  public async create(annotation: Required<Annotation>) {
+  public async create(annotation: Annotation) {
+    const bodyPlainText = ContentService.markdownToPlain(annotation.body);
     const created = await this.db
       .insertInto(this.tableName)
       .values({
         ...annotation,
+        bodyPlainText,
         selector: JSON.stringify(annotation.selector),
       })
       .returning([
@@ -49,7 +52,6 @@ export default class SqliteAnnotationRepository extends BaseRepository implement
         `${this.tableName}.targetId`,
         `${this.tableName}.selector`,
         `${this.tableName}.body`,
-        `${this.tableName}.color`,
         `${this.tableName}.createdAt`,
         `${this.tableName}.updatedAt`,
       ])
@@ -67,7 +69,6 @@ export default class SqliteAnnotationRepository extends BaseRepository implement
         `${this.tableName}.targetId`,
         `${this.tableName}.selector`,
         `${this.tableName}.body`,
-        `${this.tableName}.color`,
         `${this.tableName}.createdAt`,
         `${this.tableName}.updatedAt`,
       ]);
@@ -95,7 +96,6 @@ export default class SqliteAnnotationRepository extends BaseRepository implement
         `${this.tableName}.targetId`,
         `${this.tableName}.selector`,
         `${this.tableName}.body`,
-        `${this.tableName}.color`,
         `${this.tableName}.createdAt`,
         `${this.tableName}.updatedAt`,
       ])
@@ -113,7 +113,6 @@ export default class SqliteAnnotationRepository extends BaseRepository implement
         `${this.tableName}.targetId`,
         `${this.tableName}.selector`,
         `${this.tableName}.body`,
-        `${this.tableName}.color`,
         `${this.tableName}.createdAt`,
         `${this.tableName}.updatedAt`,
       ]);

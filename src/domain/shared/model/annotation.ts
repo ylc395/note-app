@@ -38,7 +38,6 @@ export interface Annotation {
   targetId: Note['id'];
   selector: Selector;
   body: string;
-  bodyPlainText?: string;
   createdAt: number;
   updatedAt: number;
 }

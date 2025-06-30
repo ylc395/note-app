@@ -6,7 +6,6 @@ export interface Memo {
   parentId: EntityParentId;
   isPinned: boolean;
   body: string;
-  bodyPlainText?: string; // 去掉 markdown 语法后的 body
   updatedAt: number;
   createdAt: number;
 }

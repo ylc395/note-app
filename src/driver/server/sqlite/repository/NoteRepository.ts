@@ -8,26 +8,16 @@ import { tableName as fileTableName } from '../schema/file.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
 import BaseRepository from './BaseRepository.js';
 import FileRepository from './FileRepository.js';
+import ContentService from '#domain/server/service/ContentService/index.js';
 
 export default class SqliteNoteRepository extends BaseRepository implements NoteRepository {
   public readonly tableName = schema.tableName;
   public async create(note: NewNote) {
+    const bodyPlainText = ContentService.markdownToPlain(note.body);
     const row = await this.db
       .insertInto(this.tableName)
-      .values(note)
-      .returning([
-        'id',
-        'icon',
-        'type',
-        'title',
-        'createdAt',
-        'updatedAt',
-        'parentId',
-        'body',
-        'bodyPlainText',
-        'fileId',
-        'sourceUrl',
-      ])
+      .values({ ...note, bodyPlainText })
+      .returning(['id', 'icon', 'type', 'title', 'createdAt', 'updatedAt', 'parentId', 'body', 'fileId', 'sourceUrl'])
       .executeTakeFirstOrThrow();
 
     return row;

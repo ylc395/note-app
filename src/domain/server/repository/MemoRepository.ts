@@ -7,7 +7,7 @@ import type {
 } from '#domain/server/model/memo.js';
 import type { EntityParentId } from '#domain/shared/model/entity.js';
 
-export type MemoPatch = MemoPatchDTO & Partial<Pick<Memo, 'updatedAt' | 'bodyPlainText'>>;
+export type MemoPatch = MemoPatchDTO & Partial<Pick<Memo, 'updatedAt'>>;
 
 export interface MemoQuery extends ClientMemoQuery {
   id?: string | string[];

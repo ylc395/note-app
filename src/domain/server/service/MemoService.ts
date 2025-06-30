@@ -45,7 +45,6 @@ export default class MemoService extends BaseService {
       parentId: memo.parentId || null,
       isPinned: memo.isPinned || false,
       body: memo.body,
-      bodyPlainText: ContentService.markdownToPlain(memo.body),
     });
 
     if (memo.body) {
@@ -62,11 +61,9 @@ export default class MemoService extends BaseService {
     const bodyUpdated = typeof patch.body === 'string';
 
     const updatedAt = bodyUpdated ? Date.now() : undefined;
-    const bodyPlainText = bodyUpdated ? ContentService.markdownToPlain(patch.body!) : undefined;
 
     await this.repo.memos.update(id, {
       ...patch,
-      bodyPlainText,
       updatedAt,
     });
 

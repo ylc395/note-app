@@ -10,7 +10,6 @@ export const memoSchema = z.object({
   parentId: entityParentIdSchema,
   isPinned: z.boolean(),
   body: z.string(),
-  bodyPlainText: z.string().optional(),
   updatedAt: z.number(),
   createdAt: z.number()
 });

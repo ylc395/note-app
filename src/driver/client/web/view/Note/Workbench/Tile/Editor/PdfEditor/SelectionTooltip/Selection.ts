@@ -151,12 +151,12 @@ export default class Selection {
     assert(this.current);
 
     await this.pdfViewer.editor.annotation.create({
-      color: this.uiState.get('color'),
       body: this.commentEditor?.content,
       selector: {
         type: 'PDFTextPositionSelector',
         fullText: this.current.text,
         position: omit(this.current.position, ['toStart']),
+        color: this.color,
       },
     });
 

@@ -12,4 +12,4 @@ export interface NoteQuery {
 
 export type NewNote = Required<Omit<Note, 'mimeType'>>;
 
-export type NotePatch = NotePatchDTO & Partial<Pick<Note, 'updatedAt' | 'bodyPlainText'>>;
+export type NotePatch = NotePatchDTO & Partial<Pick<Note, 'updatedAt'>>;

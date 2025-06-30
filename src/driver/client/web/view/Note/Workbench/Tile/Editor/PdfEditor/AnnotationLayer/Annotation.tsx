@@ -95,7 +95,7 @@ export default function Annotation(props: { annotation: AnnotationVO; page: numb
     marker.markRanges([range], {
       className,
       each: (markEl) => {
-        (markEl as HTMLElement).style.backgroundColor = props.annotation.color;
+        (markEl as HTMLElement).style.backgroundColor = selector.color;
         markEls.push(markEl as HTMLElement);
       },
       done: () => {

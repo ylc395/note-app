@@ -57,17 +57,8 @@ export default class AnnotationManager {
     this.doc = doc;
   }
 
-  public async create({
-    selector,
-    body,
-    color,
-  }: {
-    selector: PDFTextPositionSelector | PDFSvgSelector;
-    body?: string;
-    color: string;
-  }) {
+  public async create({ selector, body }: { selector: PDFTextPositionSelector | PDFSvgSelector; body?: string }) {
     await this.remote.annotation.create.mutate({
-      color,
       targetId: this.noteId,
       selector,
       body,
