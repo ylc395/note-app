@@ -23,7 +23,6 @@ export default {
       .addColumn('body', 'text', (col) => col.notNull().defaultTo(''))
       .addColumn('bodyPlainText', 'text', (col) => col.notNull().defaultTo(''))
       .addColumn('selector', 'text', (col) => col.notNull())
-      .addColumn('color', 'text', (col) => col.notNull())
       .addColumn('createdAt', 'integer', (col) => col.notNull())
       .addColumn('updatedAt', 'integer', (col) => col.notNull());
   },

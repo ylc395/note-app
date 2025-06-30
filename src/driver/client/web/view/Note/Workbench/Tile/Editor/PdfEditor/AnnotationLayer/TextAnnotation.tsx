@@ -5,12 +5,14 @@ import { action, runInAction } from 'mobx';
 import Mark from 'mark.js';
 import { autoUpdate, computePosition, offset } from '@floating-ui/dom';
 import { last } from 'lodash-es';
+import assert from 'assert';
 
 import type { AnnotationVO } from '#domain/shared/model/annotation';
 import AnnotationManager from '#domain/client/app/model/note/editor/PdfEditor/AnnotationManager';
 import PdfViewer from '../PDFViewer';
+import { getPage } from '#domain/client/app/model/annotation';
 
-export default function Annotation(props: { annotation: AnnotationVO; page: number; pdfViewer: PdfViewer }) {
+export default function TextAnnotation(props: { annotation: AnnotationVO; page: number; pdfViewer: PdfViewer }) {
   const [buttonRef, setButtonRef] = createSignal<HTMLElement>();
   const [marksRef, setMarksRef] = createSignal<Element[]>();
   const [forceRenderFlag, setForceRenderFlag] = createSignal<number>(0);
@@ -21,11 +23,7 @@ export default function Annotation(props: { annotation: AnnotationVO; page: numb
       return false;
     }
 
-    if (props.annotation.selector.type === 'PDFTextPositionSelector') {
-      return props.annotation.selector.position.startPage === props.page;
-    }
-
-    return false;
+    return getPage(props.annotation) === props.page;
   });
 
   function handleOpenChange(value: boolean) {
@@ -79,11 +77,10 @@ export default function Annotation(props: { annotation: AnnotationVO; page: numb
     const selector = props.annotation.selector;
     const pageEl = props.pdfViewer.getPageTextLayerElement(props.page, true); // render 的时候可能整页的 DOM 都没了但视图层还没来得及销毁对应的 PageAnnotationLayer 组件，此时可能取不到 page 元素
 
-    if (
-      selector.type !== 'PDFTextPositionSelector' ||
-      !pageEl ||
-      !pageEl.querySelector('.endOfContent') // 目前没有办法确保 render 调用时，textLayer 一定已经渲染好了。只能通过检查是否有 .endOfContent 元素来检查 textLayer 是否就绪
-    ) {
+    assert(selector.type === 'PDFTextPositionSelector');
+
+    // 目前没有办法确保 render 调用时，textLayer 一定已经渲染好了。只能通过检查是否有 .endOfContent 元素来检查 textLayer 是否就绪
+    if (!pageEl?.querySelector('.endOfContent')) {
       return;
     }
 

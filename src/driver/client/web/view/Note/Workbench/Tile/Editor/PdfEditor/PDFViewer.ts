@@ -219,10 +219,15 @@ export default class PdfViewer {
   }
 
   public getPageElement(page: number) {
-    const div = (this.pdfViewer.getPageView(page - 1) as PDFPageView).div;
-    assert(div);
+    const pageView: PDFPageView = this.pdfViewer.getPageView(page - 1);
+    const {
+      div: element,
+      viewport: { height, width },
+    } = pageView;
 
-    return div;
+    assert(element);
+
+    return { element, height, width };
   }
 
   private hijackClick() {

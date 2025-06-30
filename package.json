@@ -111,6 +111,7 @@
     "page-lifecycle": "^0.1.2",
     "path-to-regexp": "^8.2.0",
     "pdfjs-dist": "^5.3.31",
+    "perfect-freehand": "^1.2.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "search-expression-parser": "^1.0.2",

@@ -1,5 +1,6 @@
-import { For, Show } from 'solid-js';
+import { Show } from 'solid-js';
 import { Loader2Icon } from 'lucide-solid';
+import { Key } from '@solid-primitives/keyed';
 
 import type PdfViewer from '../PDFViewer';
 import Item from './Item';
@@ -24,9 +25,9 @@ export default function AnnotationList(props: { pdfViewer: PdfViewer }) {
       >
         {(items) => (
           <div>
-            <For fallback={<div class="grow flex items-center justify-center">暂无标注</div>} each={items()}>
-              {(item) => <Item value={item} pdfViewer={props.pdfViewer} />}
-            </For>
+            <Key each={items()} by="id" fallback={<div class="grow flex items-center justify-center">暂无标注</div>}>
+              {(item) => <Item value={item()} pdfViewer={props.pdfViewer} />}
+            </Key>
           </div>
         )}
       </Show>

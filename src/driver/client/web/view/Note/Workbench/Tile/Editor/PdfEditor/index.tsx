@@ -9,7 +9,6 @@ import AnnotationList from './AnnotationList';
 import SelectionTooltip from './SelectionTooltip';
 import SearchBar from './SearchBar';
 import AnnotationLayer from './AnnotationLayer';
-import CanvasLayer from './CanvasLayer';
 import CanvasEditorBar from './CanvasEditorBar';
 import './style.css';
 
@@ -71,7 +70,6 @@ export default function PdfEditorView(props: { editor: PdfEditor }) {
               {(viewer) => (
                 <>
                   <AnnotationLayer pdfViewer={viewer()} />
-                  <CanvasLayer pdfViewer={viewer()} />
                   <SelectionTooltip pdfViewer={viewer()} />
                 </>
               )}
