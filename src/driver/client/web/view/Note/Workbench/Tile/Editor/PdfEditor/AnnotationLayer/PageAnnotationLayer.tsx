@@ -1,14 +1,26 @@
-import { createMemo, onMount } from 'solid-js';
-import { autoUpdate, computePosition } from '@floating-ui/dom';
+import { createMemo, createSignal, onCleanup, onMount, Show } from 'solid-js';
+import { autoUpdate, computePosition, offset } from '@floating-ui/dom';
 import { Key } from '@solid-primitives/keyed';
+import { makeResizeObserver } from '@solid-primitives/resize-observer';
 
 import type PdfViewer from '../PDFViewer';
 import TextAnnotation from './TextAnnotation';
 import SvgAnnotation from './SvgAnnotation';
+import SvgEditor from './SvgEditor';
 
 export default function PageAnnotationLayer(props: { page: number; pdfViewer: PdfViewer }) {
   let divRef: HTMLDivElement | undefined;
-  const { element: pageElement } = props.pdfViewer.getPageElement(props.page);
+  const { height: pageHeight, width: pageWidth, element: pageElement } = props.pdfViewer.getPageInfo(props.page);
+  const resizeObserver = makeResizeObserver(updateElementSize, { box: 'content-box' });
+  const [getElementSize, setElementSize] = createSignal({
+    width: pageElement.clientWidth,
+    height: pageElement.clientHeight,
+  });
+
+  const pageScale = createMemo(() => ({
+    width: getElementSize().width / pageWidth,
+    height: getElementSize().height / pageHeight,
+  }));
 
   const textAnnotations = createMemo(
     () =>
@@ -27,27 +39,54 @@ export default function PageAnnotationLayer(props: { page: number; pdfViewer: Pd
       ) || [],
   );
 
+  updateElementSize();
+  resizeObserver.observe(pageElement);
+
+  function updateElementSize() {
+    setElementSize({ width: pageElement.clientWidth, height: pageElement.clientHeight });
+  }
+
   onMount(() => {
-    autoUpdate(pageElement, divRef!, () => {
-      computePosition(pageElement, divRef!, { placement: 'top' }).then(({ x, y }) => {
+    // 这里我们不考虑用其它元素做基准（例如 textLayer)，因为那些元素在此时很可能还没正确渲染出来
+    const stopAutoUpdate = autoUpdate(pageElement, divRef!, () => {
+      computePosition(pageElement, divRef!, {
+        middleware: [
+          offset(({ rects }) => {
+            return -rects.reference.height / 2 - rects.floating.height / 2;
+          }),
+        ],
+      }).then(({ x, y }) => {
         Object.assign(divRef!.style, { left: `${x}px`, top: `${y}px` });
       });
     });
+    onCleanup(stopAutoUpdate);
   });
 
   return (
     <div
       ref={divRef}
-      class="absolute translate-y-full pointer-events-none"
+      class="absolute pointer-events-none"
       data-page={props.page} // 便于 debug 的，没什么实际用处
-      style={{ width: `${pageElement.clientWidth}px`, height: `${pageElement.clientHeight}px` }}
+      style={{ width: `${getElementSize().width}px`, height: `${getElementSize().height}px` }}
     >
       <Key each={textAnnotations()} by="id">
         {(annotation) => <TextAnnotation page={props.page} annotation={annotation()} pdfViewer={props.pdfViewer} />}
       </Key>
-      <Key each={svgAnnotations()} by="id">
-        {(annotation) => <SvgAnnotation annotation={annotation()} />}
-      </Key>
+      <Show when={svgAnnotations().length > 0 || props.pdfViewer.editor.annotation.svgEditor.isEnabled}>
+        <svg viewBox={`0 0 ${pageWidth} ${pageHeight}`} preserveAspectRatio="xMidYMid meet" class="w-full h-full">
+          <Key each={svgAnnotations()} by="id">
+            {(annotation) => <SvgAnnotation annotation={annotation()} />}
+          </Key>
+          <Show when={props.pdfViewer.editor.annotation.svgEditor.isEnabled}>
+            <SvgEditor
+              viewBox={{ width: pageWidth, height: pageHeight }}
+              page={props.page}
+              pageScale={pageScale()}
+              pdfViewer={props.pdfViewer}
+            />
+          </Show>
+        </svg>
+      </Show>
     </div>
   );
 }

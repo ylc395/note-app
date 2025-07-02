@@ -1,4 +1,5 @@
 import { ListIcon, PenLineIcon, TextSearchIcon } from 'lucide-solid';
+import { Switch } from '@ark-ui/solid';
 
 import type PdfViewer from '../PDFViewer';
 import PageSwitcher from './PageSwitcher';
@@ -31,10 +32,18 @@ export default function Toolbar(props: { viewer: PdfViewer }) {
         </button>
       </div>
       <div class="flex space-x-2">
-        <button onClick={() => props.viewer.editor.canvas.toggle()} class="flex items-center text-sm">
-          <PenLineIcon class="mr-1" />
-          开始标注
-        </button>
+        <Switch.Root
+          checked={props.viewer.editor.annotation.svgEditor.isEnabled}
+          class="flex"
+          onCheckedChange={() => props.viewer.editor.annotation.svgEditor.toggle()}
+        >
+          <Switch.Label>浏览</Switch.Label>
+          <Switch.Control class="w-12 flex bg-gray-100">
+            <Switch.Thumb class="w-6 bg-white" />
+          </Switch.Control>
+          <Switch.Label>标注</Switch.Label>
+          <Switch.HiddenInput />
+        </Switch.Root>
         <button onClick={toggleAnnotationPanel} class="flex items-center text-sm">
           <PenLineIcon class="mr-1" />
           查看标注

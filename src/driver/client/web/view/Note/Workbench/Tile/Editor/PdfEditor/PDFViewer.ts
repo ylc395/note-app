@@ -5,7 +5,7 @@ import {
   PDFFindController,
   type PDFPageView,
 } from 'pdfjs-dist/web/pdf_viewer.mjs';
-import { AnnotationEditorType, AnnotationMode } from 'pdfjs-dist';
+import { AnnotationEditorType, AnnotationMode, type PDFPageProxy } from 'pdfjs-dist';
 import { debounce, memoize, noop, range as numberRange } from 'lodash-es';
 import { observable, when, action, computed, runInAction } from 'mobx';
 import { z } from 'zod';
@@ -206,6 +206,7 @@ export default class PdfViewer {
     );
   }
 
+  // 每一页总是会有 text layer，即使其中并没有文本
   public getPageTextLayerElement(page: number, safe: true): HTMLDivElement | undefined;
   public getPageTextLayerElement(page: number): HTMLDivElement;
   public getPageTextLayerElement(page: number, safe?: true) {
@@ -218,22 +219,25 @@ export default class PdfViewer {
     return div;
   }
 
-  public getPageElement(page: number) {
+  public getPageInfo(page: number) {
     const pageView: PDFPageView = this.pdfViewer.getPageView(page - 1);
-    const {
-      div: element,
-      viewport: { height, width },
-    } = pageView;
+    const pdfPage: PDFPageProxy = pageView.pdfPage;
+    const [_1, _2, width, height] = pdfPage.view;
 
-    assert(element);
+    const { div: element } = pageView;
 
-    return { element, height, width };
+    return { height: height!, width: width!, element };
   }
 
   private hijackClick() {
     this.pdfViewer.viewer?.addEventListener(
       'click',
       (e) => {
+        if (this.editor.annotation.svgEditor.isEnabled) {
+          e.preventDefault();
+          return;
+        }
+
         if (e.target instanceof HTMLAnchorElement && e.target.href) {
           shell.openNewWindow(e.target.href);
           e.preventDefault();

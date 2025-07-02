@@ -9,7 +9,7 @@ import AnnotationList from './AnnotationList';
 import SelectionTooltip from './SelectionTooltip';
 import SearchBar from './SearchBar';
 import AnnotationLayer from './AnnotationLayer';
-import CanvasEditorBar from './CanvasEditorBar';
+import SvgEditorBar from './SvgEditorBar';
 import './style.css';
 
 export default function PdfEditorView(props: { editor: PdfEditor }) {
@@ -50,21 +50,25 @@ export default function PdfEditorView(props: { editor: PdfEditor }) {
                 <Show when={pdfViewer().textFinder.model.isEnabled}>
                   <SearchBar textFinder={pdfViewer().textFinder} />
                 </Show>
-                <Show when={pdfViewer().editor.canvas.isEnabled}>
-                  <CanvasEditorBar canvas={pdfViewer().editor.canvas} />
+                <Show when={pdfViewer().editor.annotation.svgEditor.isEnabled}>
+                  <SvgEditorBar svgEditor={pdfViewer().editor.annotation.svgEditor} />
                 </Show>
               </>
             )}
           </Show>
           <div
             class="relative grow"
+            data-is-drawing={getPdfViewer()?.editor.annotation.svgEditor.isEnabled}
             classList={{ invisible: !getPdfViewer()?.isReady }} // ready 后才渲染，防止自动滚动的过程破坏体验
           >
             <div
               class="absolute inset-0 overflow-auto pdfViewer" /* pdfViewer 这个类名来自 pdf_viewer.css */
               ref={containerRef}
             >
-              <div class="select-text" ref={viewRef}></div>
+              <div
+                classList={{ 'select-text': !getPdfViewer()?.editor.annotation.svgEditor.isEnabled }}
+                ref={viewRef}
+              ></div>
             </div>
             <Show when={getPdfViewer()}>
               {(viewer) => (

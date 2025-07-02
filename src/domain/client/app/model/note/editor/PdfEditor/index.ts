@@ -10,7 +10,7 @@ import DocumentFactory from './DocumentFactory';
 import OutlineList from './OutlineList';
 import AnnotationManager from './AnnotationManager';
 import TextFinder from './TextFinder';
-import CanvasManager from './CanvasManager';
+import { createQuery } from 'mobx-tanstack-query/preset';
 
 export type { OutlineItem } from './OutlineList';
 
@@ -31,15 +31,22 @@ export default class PdfEditor extends BaseEditor {
 
   public readonly outline = new OutlineList(this.noteId, this.annotation);
 
-  public readonly canvas = new CanvasManager(this.annotation);
-
   public readonly textFinder = new TextFinder(this);
 
   @observable.ref public accessor doc: PDFDocumentProxy | undefined; // this is view-independent
 
   public override readonly mimeType = MimeTypes.PDF;
 
-  public texts?: Record<number, string>;
+  public readonly texts = createQuery(
+    () => {
+      assert(this.doc);
+      return PdfEditor.extractTexts(this.doc);
+    },
+    {
+      queryKey: ['pdf-texts', this.noteId],
+      options: () => ({ enabled: Boolean(this.doc) }),
+    },
+  );
 
   private async init() {
     assert(this.blob.result.data);
@@ -54,8 +61,6 @@ export default class PdfEditor extends BaseEditor {
     runInAction(() => {
       this.doc = doc;
     });
-
-    this.texts = await PdfEditor.extractTexts(doc);
   }
 
   public override destroy() {

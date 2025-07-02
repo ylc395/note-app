@@ -1,10 +1,10 @@
 import { Select, createListCollection } from '@ark-ui/solid';
 import { Index } from 'solid-js';
 import { ChevronDownIcon } from 'lucide-solid';
-import type CanvasManager from '#domain/client/app/model/note/editor/PdfEditor/CanvasManager';
-import { Shape } from '#domain/client/app/model/note/editor/PdfEditor/CanvasManager';
+import type svgEditor from '#domain/client/app/model/note/editor/PdfEditor/SvgAnnotationEditor';
+import { Shape } from '#domain/client/app/model/note/editor/PdfEditor/SvgAnnotationEditor';
 
-export default function ShapeSelector(props: { canvas: CanvasManager }) {
+export default function ShapeSelector(props: { svgEditor: svgEditor }) {
   const collection = createListCollection({
     items: [
       { label: '矩形', value: Shape.Rect },
@@ -19,8 +19,8 @@ export default function ShapeSelector(props: { canvas: CanvasManager }) {
       lazyMount
       unmountOnExit
       collection={collection}
-      value={[props.canvas.options.get('shape')]}
-      onValueChange={(e) => props.canvas.options.set('shape', e.value[0] as Shape)}
+      value={[props.svgEditor.options.get('shape')]}
+      onValueChange={(e) => props.svgEditor.options.set('shape', e.value[0] as Shape)}
     >
       <Select.Control>
         <Select.Trigger class="flex items-center">

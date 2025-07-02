@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { action, observable } from 'mobx';
+import { action, computed, observable } from 'mobx';
 import assert from 'assert';
 import { debounce, omit, range, zip } from 'lodash-es';
 import { autoUpdate, computePosition, flip, offset } from '@floating-ui/dom';
@@ -23,7 +23,11 @@ export default class Selection {
 
   private rootEl?: HTMLElement;
 
-  @observable public accessor isTooltipVisible = false;
+  @observable private accessor _isTooltipVisible = false;
+
+  @computed public get isTooltipVisible() {
+    return this._isTooltipVisible && !this.pdfViewer.editor.annotation.svgEditor.isEnabled;
+  }
 
   private current?: {
     text: string;
@@ -32,7 +36,11 @@ export default class Selection {
     stopAutoUpdate?: () => void;
   };
 
-  @observable.ref public accessor commentEditor: CommentEditor | undefined;
+  @observable.ref private accessor commentEditor: CommentEditor | undefined;
+
+  @computed public get isCommentEditorVisible() {
+    return Boolean(this.commentEditor) && !this.pdfViewer.editor.annotation.svgEditor.isEnabled;
+  }
 
   private readonly uiState = new PersistedMap('pdf-selection', z.object({ color: z.string() }), { color: 'yellow' });
 
@@ -111,7 +119,7 @@ export default class Selection {
       });
     }
 
-    this.isTooltipVisible = false;
+    this._isTooltipVisible = false;
     this.commentEditor = {
       content: this.commentEditor?.content || '',
       markers,
@@ -125,7 +133,7 @@ export default class Selection {
 
     if (!clearSelection) {
       const currentRange = this.positionToRange(this.current.position);
-      this.isTooltipVisible = true;
+      this._isTooltipVisible = true;
 
       assert(this.current);
       const s = window.getSelection();
@@ -181,7 +189,7 @@ export default class Selection {
 
     this.show.cancel();
 
-    this.isTooltipVisible = false;
+    this._isTooltipVisible = false;
     this.current = undefined;
 
     if (removeSelection) {
@@ -231,7 +239,7 @@ export default class Selection {
         ...this.generateReferenceElement(range, toStart),
       };
 
-      this.isTooltipVisible = true;
+      this._isTooltipVisible = true;
     }),
     300,
   );

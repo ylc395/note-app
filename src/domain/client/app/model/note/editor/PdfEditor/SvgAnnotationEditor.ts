@@ -16,7 +16,7 @@ export enum Mode {
   Erase = 'erase',
 }
 
-export default class CanvasManager {
+export default class SvgAnnotationEditor {
   constructor(private readonly annotationManager: AnnotationManager) {}
   @observable public accessor isEnabled = false;
   @observable public accessor mode = Mode.Draw;

@@ -87,7 +87,7 @@ export default class TextFinder {
 
   private readonly updateDigests = debounce(
     action(({ pageMatchesLength, pageMatches }: { pageMatches: number[][]; pageMatchesLength: number[][] }) => {
-      const texts = this.editor.texts;
+      const texts = this.editor.texts.result.data;
 
       if (!texts) {
         return;

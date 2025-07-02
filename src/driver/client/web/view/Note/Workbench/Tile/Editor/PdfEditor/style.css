@@ -3,3 +3,12 @@
 .pdfViewer * {
   box-sizing: content-box;
 }
+
+[data-is-drawing='true'] .textLayer,
+[data-is-drawing='true'] .annotationLayer section {
+  pointer-events: none;
+}
+
+[data-is-drawing='true'] .page {
+  cursor: crosshair;
+}

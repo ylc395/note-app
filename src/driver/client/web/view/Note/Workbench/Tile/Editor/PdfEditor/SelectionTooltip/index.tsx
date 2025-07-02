@@ -31,7 +31,7 @@ export default function SelectionTooltip(props: { pdfViewer: PdfViewer }) {
           </button>
         </div>
       </Show>
-      <Show when={selection.commentEditor}>
+      <Show when={selection.isCommentEditorVisible}>
         <CommentInput selection={selection} />
       </Show>
     </div>

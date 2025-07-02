@@ -16,6 +16,7 @@ import {
   getPage,
 } from '#domain/client/app/model/annotation';
 import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
+import SvgAnnotationEditor from './SvgAnnotationEditor';
 
 dayjs.extend(customParseFormat);
 
@@ -38,6 +39,8 @@ export default class AnnotationManager {
       {},
     );
   }
+
+  public readonly svgEditor = new SvgAnnotationEditor(this);
 
   public readonly state;
 
