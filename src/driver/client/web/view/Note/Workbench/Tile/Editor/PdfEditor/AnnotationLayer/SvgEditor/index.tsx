@@ -1,8 +1,9 @@
-import { createMemo, Show, type JSX } from 'solid-js';
-import { SVG } from '@svgdotjs/svg.js';
+import { createMemo, Show } from 'solid-js';
+import { SVG, type Element } from '@svgdotjs/svg.js';
 
 import { Shape } from '#domain/client/app/model/note/editor/PdfEditor/SvgAnnotationEditor';
 import FreeShape from './FreeShape';
+import RegularShape from './RegularShape';
 import type PdfViewer from '../../PDFViewer';
 
 export default function SvgEditor(props: {
@@ -10,16 +11,19 @@ export default function SvgEditor(props: {
   page: number;
   pageScale: { width: number; height: number };
   viewBox: { width: number; height: number };
+  svgElement: SVGAElement;
 }) {
   const shape = createMemo(() => props.pdfViewer.editor.annotation.svgEditor.options.get('shape'));
   const color = createMemo(() => props.pdfViewer.editor.annotation.svgEditor.options.get('color'));
+  const fillColor = createMemo(() => props.pdfViewer.editor.annotation.svgEditor.options.get('fillColor'));
   const thickness = createMemo(() => props.pdfViewer.editor.annotation.svgEditor.options.get('thickness'));
 
   const { element } = props.pdfViewer.getPageInfo(props.page);
 
-  function onCreate(value: JSX.PathSVGAttributes<SVGPathElement>) {
-    const draw = SVG().viewbox({ ...props.viewBox, x: 0, y: 0 });
-    draw.path().attr(value).addTo(draw);
+  function onCreate(value: Element) {
+    const draw = SVG()
+      .viewbox({ ...props.viewBox, x: 0, y: 0 })
+      .add(value);
 
     props.pdfViewer.editor.annotation.create({
       selector: { type: 'PDFSvgSelector', page: props.page, svg: draw.svg() },
@@ -27,7 +31,20 @@ export default function SvgEditor(props: {
   }
 
   return (
-    <Show when={shape() === Shape.Free}>
+    <Show
+      when={shape() === Shape.Free}
+      fallback={
+        <RegularShape
+          color={color()}
+          fillColor={fillColor()}
+          pageElement={element}
+          shape={shape()}
+          thickness={thickness()}
+          svgElement={props.svgElement}
+          onCreate={onCreate}
+        />
+      }
+    >
       <FreeShape
         pageScale={props.pageScale}
         thickness={thickness()}

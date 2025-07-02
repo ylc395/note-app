@@ -10,6 +10,7 @@ import SvgEditor from './SvgEditor';
 
 export default function PageAnnotationLayer(props: { page: number; pdfViewer: PdfViewer }) {
   let divRef: HTMLDivElement | undefined;
+  const [getSVGElement, setSVGElement] = createSignal<SVGAElement>();
   const { height: pageHeight, width: pageWidth, element: pageElement } = props.pdfViewer.getPageInfo(props.page);
   const resizeObserver = makeResizeObserver(updateElementSize, { box: 'content-box' });
   const [getElementSize, setElementSize] = createSignal({
@@ -73,17 +74,25 @@ export default function PageAnnotationLayer(props: { page: number; pdfViewer: Pd
         {(annotation) => <TextAnnotation page={props.page} annotation={annotation()} pdfViewer={props.pdfViewer} />}
       </Key>
       <Show when={svgAnnotations().length > 0 || props.pdfViewer.editor.annotation.svgEditor.isEnabled}>
-        <svg viewBox={`0 0 ${pageWidth} ${pageHeight}`} preserveAspectRatio="xMidYMid meet" class="w-full h-full">
+        <svg
+          ref={setSVGElement}
+          viewBox={`0 0 ${pageWidth} ${pageHeight}`}
+          preserveAspectRatio="xMidYMid meet"
+          class="w-full h-full"
+        >
           <Key each={svgAnnotations()} by="id">
             {(annotation) => <SvgAnnotation annotation={annotation()} />}
           </Key>
-          <Show when={props.pdfViewer.editor.annotation.svgEditor.isEnabled}>
-            <SvgEditor
-              viewBox={{ width: pageWidth, height: pageHeight }}
-              page={props.page}
-              pageScale={pageScale()}
-              pdfViewer={props.pdfViewer}
-            />
+          <Show when={props.pdfViewer.editor.annotation.svgEditor.isEnabled && getSVGElement()}>
+            {(svg) => (
+              <SvgEditor
+                svgElement={svg()}
+                viewBox={{ width: pageWidth, height: pageHeight }}
+                page={props.page}
+                pageScale={pageScale()}
+                pdfViewer={props.pdfViewer}
+              />
+            )}
           </Show>
         </svg>
       </Show>

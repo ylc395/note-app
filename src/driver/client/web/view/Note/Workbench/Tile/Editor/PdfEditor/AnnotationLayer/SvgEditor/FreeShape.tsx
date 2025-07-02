@@ -1,13 +1,14 @@
 import { getStroke } from 'perfect-freehand';
 import { createEventListener } from '@solid-primitives/event-listener';
 import { createMemo, createSignal, Show, type JSX } from 'solid-js';
+import { SVG, type Element } from '@svgdotjs/svg.js';
 
 export default function FreeShape(props: {
   pageElement: HTMLElement;
   pageScale: { width: number; height: number };
   color: string;
   thickness: number;
-  onCreate: (e: JSX.PathSVGAttributes<SVGPathElement>) => void;
+  onCreate: (e: Element) => void;
 }) {
   const [getPoints, setPoints] = createSignal<[number, number, number][]>();
 
@@ -37,7 +38,7 @@ export default function FreeShape(props: {
       const value = svgProps();
 
       if (value) {
-        props.onCreate(value);
+        props.onCreate(SVG('path').attr(value));
       }
 
       setPoints(undefined);

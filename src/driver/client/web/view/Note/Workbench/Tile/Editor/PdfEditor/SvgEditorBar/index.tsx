@@ -1,12 +1,14 @@
 import type svgEditor from '#domain/client/app/model/note/editor/PdfEditor/SvgAnnotationEditor';
-import EraseButton from './EraseButton';
+import { BoxSelectIcon } from 'lucide-solid';
 import ShapeSelector from './ShapeSelector';
 
 export default function SvgEditorBar(props: { svgEditor: svgEditor }) {
   return (
-    <div class="flex justify-center space-x-4 bg-white z-10">
+    <div class="flex justify-center items-center space-x-4 bg-white z-10">
       <ShapeSelector svgEditor={props.svgEditor} />
-      <EraseButton svgEditor={props.svgEditor} />
+      <button class="flex items-center">
+        <BoxSelectIcon />
+      </button>
     </div>
   );
 }
