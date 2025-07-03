@@ -6,7 +6,7 @@ import { installExtension, MOBX_DEVTOOLS } from 'electron-devtools-installer';
 import { createIPCHandler } from 'electron-trpc/main';
 
 import { PROTOCOL } from '#domain/shared/infra/url.js';
-import { IS_DEV } from '#domain/shared/infra/env.js';
+import { IS_CLEAN_DEV, IS_DEV } from '#domain/shared/infra/env.js';
 import { token as loggerToken } from '#domain/shared/infra/logger.js';
 import FileService from '#domain/server/service/FileService/index.js';
 import container from '#utils/singletonContainer.js';
@@ -65,14 +65,11 @@ export default class ElectronRuntime extends DesktopRuntime {
       return;
     }
 
-    const extensionIds = [
-      MOBX_DEVTOOLS,
-      'kmcfjchnmmaeeagadbhoofajiopoceel', // solidjs dev tool, https://chromewebstore.google.com/detail/solid-devtools/kmcfjchnmmaeeagadbhoofajiopoceel
-    ];
+    const extensionIds = [MOBX_DEVTOOLS];
 
     for (const id of extensionIds) {
       try {
-        const devToolName = await installExtension(id);
+        const devToolName = await installExtension(id, { forceDownload: IS_CLEAN_DEV });
         this.logger.debug(`${devToolName.name} installed`);
       } catch (error) {
         this.logger.error(error);

@@ -8,12 +8,10 @@ import assert from 'node:assert';
 
 import { token as loggerToken } from '#domain/shared/infra/logger.js';
 import type { Database } from '#domain/server/infra/database.js';
-import { IS_TEST, IS_DEV } from '#domain/shared/infra/env.js';
+import { IS_TEST, IS_CLEAN_DEV } from '#domain/shared/infra/env.js';
 import container from '#utils/singletonContainer.js';
 
 import { type Schemas, schemas } from './schema/index.js';
-
-const CLEAN_DB = import.meta.env.DEV_CLEAN === '1' && IS_DEV;
 
 export interface Db extends Schemas {
   sqlite_master: { name: string; type: string };
@@ -67,7 +65,7 @@ export default class SqliteDb implements Database {
   private connectToDb(dir: string) {
     const dbPath = join(dir, 'db.sqlite');
 
-    if (CLEAN_DB || IS_TEST) {
+    if (IS_CLEAN_DEV || IS_TEST) {
       fs.removeSync(dbPath);
     }
 

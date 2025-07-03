@@ -1,5 +1,4 @@
 import { render } from 'solid-js/web';
-import 'solid-devtools';
 import '#domain/client/shared/infra/mobx';
 import '#domain/client/shared/infra/queryClient';
 import '#domain/client/shared/infra/solid-mobx';
