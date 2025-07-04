@@ -1,5 +1,3 @@
-import { action, observable } from 'mobx';
-import { type PDFDocumentProxy } from 'pdfjs-dist';
 import { createQuery } from 'mobx-tanstack-query/preset';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
@@ -44,8 +42,6 @@ export default class AnnotationManager {
 
   public readonly state;
 
-  @observable.ref private accessor doc: PDFDocumentProxy | undefined;
-
   public readonly openStatusMap: Record<string, boolean> = {};
 
   private readonly remote = container.resolve(rpcToken);
@@ -55,11 +51,6 @@ export default class AnnotationManager {
     queryKey: () => ['annotations', { noteId: this.noteId }],
   });
 
-  @action
-  public init(doc: PDFDocumentProxy) {
-    this.doc = doc;
-  }
-
   public async create({ selector, body }: { selector: PDFTextPositionSelector | PDFSvgSelector; body?: string }) {
     await this.remote.annotation.create.mutate({
       targetId: this.noteId,
@@ -67,6 +58,14 @@ export default class AnnotationManager {
       body,
     });
 
+    await this.items.invalidate();
+  }
+
+  public async update(
+    id: AnnotationVO['id'],
+    patch: { selector: PDFTextPositionSelector | PDFSvgSelector; body?: string },
+  ) {
+    await this.remote.annotation.updateOne.mutate([id, patch]);
     await this.items.invalidate();
   }
 

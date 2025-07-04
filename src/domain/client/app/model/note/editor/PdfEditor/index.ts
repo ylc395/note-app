@@ -56,8 +56,6 @@ export default class PdfEditor extends BaseEditor {
       blob: this.blob.result.data,
     });
 
-    this.annotation.init(doc);
-
     runInAction(() => {
       this.doc = doc;
     });

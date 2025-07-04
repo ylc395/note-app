@@ -1,7 +1,6 @@
 import { createMemo, Show } from 'solid-js';
-import { SVG, type Element } from '@svgdotjs/svg.js';
 
-import { Shape } from '#domain/client/app/model/note/editor/PdfEditor/SvgAnnotationEditor';
+import SvgAnnotationEditor, { Shape } from '#domain/client/app/model/note/editor/PdfEditor/SvgAnnotationEditor';
 import FreeShape from './FreeShape';
 import RegularShape from './RegularShape';
 import type PdfViewer from '../../PDFViewer';
@@ -20,14 +19,8 @@ export default function SvgEditor(props: {
 
   const { element } = props.pdfViewer.getPageInfo(props.page);
 
-  function onCreate(value: Element) {
-    const draw = SVG()
-      .viewbox({ ...props.viewBox, x: 0, y: 0 })
-      .add(value);
-
-    props.pdfViewer.editor.annotation.create({
-      selector: { type: 'PDFSvgSelector', page: props.page, svg: draw.svg() },
-    });
+  function onCreate(value: string) {
+    props.pdfViewer.editor.annotation.create(SvgAnnotationEditor.toSvgSelector(props.viewBox, props.page, value));
   }
 
   return (

@@ -7,6 +7,7 @@ import type PdfViewer from '../PDFViewer';
 import TextAnnotation from './TextAnnotation';
 import SvgAnnotation from './SvgAnnotation';
 import SvgEditor from './SvgEditor';
+import { Mode } from '#domain/client/app/model/note/editor/PdfEditor/SvgAnnotationEditor';
 
 export default function PageAnnotationLayer(props: { page: number; pdfViewer: PdfViewer }) {
   let divRef: HTMLDivElement | undefined;
@@ -81,9 +82,22 @@ export default function PageAnnotationLayer(props: { page: number; pdfViewer: Pd
           class="w-full h-full"
         >
           <Key each={svgAnnotations()} by="id">
-            {(annotation) => <SvgAnnotation annotation={annotation()} />}
+            {(annotation) => (
+              <SvgAnnotation
+                viewBox={{ width: pageWidth, height: pageHeight }}
+                annotation={annotation()}
+                annotationManager={props.pdfViewer.editor.annotation}
+                page={props.page}
+              />
+            )}
           </Key>
-          <Show when={props.pdfViewer.editor.annotation.svgEditor.isEnabled && getSVGElement()}>
+          <Show
+            when={
+              props.pdfViewer.editor.annotation.svgEditor.isEnabled &&
+              props.pdfViewer.editor.annotation.svgEditor.mode === Mode.Draw &&
+              getSVGElement()
+            }
+          >
             {(svg) => (
               <SvgEditor
                 svgElement={svg()}

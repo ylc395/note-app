@@ -4,11 +4,38 @@
   box-sizing: content-box;
 }
 
-[data-is-drawing='true'] .textLayer,
-[data-is-drawing='true'] .annotationLayer section {
+[data-drawing-mode='draw'] .textLayer,
+[data-drawing-mode='draw'] .annotationLayer section {
   pointer-events: none;
 }
 
-[data-is-drawing='true'] .page {
+[data-drawing-mode='draw'] .page {
   cursor: crosshair;
+}
+
+[data-drawing-mode='select'] svg * {
+  pointer-events: auto;
+}
+
+[data-drawing-mode='select'] .svg_select_shape {
+  fill: transparent;
+  pointer-events: none; /** 把 svg select 给禁用掉，拖动才能生效 */
+}
+
+[data-drawing-mode='select'] [data-annotation-id] {
+  cursor: move;
+}
+
+.svg_select_handle_lt,
+.svg_select_handle_rb {
+  cursor: nwse-resize;
+}
+
+.svg_select_handle_rt,
+.svg_select_handle_lb {
+  cursor: nesw-resize;
+}
+
+.svg_select_handle_rot {
+  display: none;
 }

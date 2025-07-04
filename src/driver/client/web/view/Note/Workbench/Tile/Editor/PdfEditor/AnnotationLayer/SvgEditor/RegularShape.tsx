@@ -19,7 +19,7 @@ export default function RegularShape(props: {
   color: string;
   fillColor: string;
   pageElement: HTMLElement;
-  onCreate: (e: Element) => void;
+  onCreate: (e: string) => void;
 }) {
   const draw = SVG(props.svgElement);
   const method = createMemo(() => {
@@ -43,7 +43,7 @@ export default function RegularShape(props: {
       }
 
       shape.remove();
-      props.onCreate(shape);
+      props.onCreate(shape.svg());
     }
 
     forceReset(resetFlag() + 1);

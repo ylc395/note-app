@@ -1,7 +1,9 @@
 import { action, observable } from 'mobx';
 import { z } from 'zod';
+import { SVG } from '@svgdotjs/svg.js'; // 这个库理论上和环境无关，故放在 model 层了
 
 import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
+import type { AnnotationVO } from '#domain/shared/model/annotation';
 import type AnnotationManager from './AnnotationManager';
 
 export enum Shape {
@@ -13,7 +15,7 @@ export enum Shape {
 
 export enum Mode {
   Draw = 'draw',
-  Erase = 'erase',
+  Select = 'select',
 }
 
 export default class SvgAnnotationEditor {
@@ -42,13 +44,25 @@ export default class SvgAnnotationEditor {
   }
 
   @action
-  public toggleMode() {
-    this.mode = this.mode === Mode.Draw ? Mode.Erase : Mode.Draw;
+  public toggleMode(mode: Mode) {
+    this.mode = this.mode === mode ? Mode.Draw : mode;
   }
 
   public getAnnotations(page: number) {
     return this.annotationManager.items.result.data?.filter(
       (annotation) => annotation.selector.type === 'PDFSvgSelector' && annotation.selector.page === page,
     );
+  }
+
+  @observable public accessor selectedSvg = new Set<AnnotationVO['id']>();
+
+  public static toSvgSelector(viewBox: { width: number; height: number }, page: number, elementText: string) {
+    const draw = SVG()
+      .viewbox({ ...viewBox, x: 0, y: 0 })
+      .svg(elementText);
+
+    return {
+      selector: { type: 'PDFSvgSelector', page, svg: draw.svg() },
+    } as const;
   }
 }
