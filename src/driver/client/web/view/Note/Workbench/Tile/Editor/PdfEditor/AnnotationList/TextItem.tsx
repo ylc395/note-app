@@ -3,14 +3,14 @@ import { createMemo, Show } from 'solid-js';
 
 import { getPage, type AnnotationVO } from '#domain/client/app/model/annotation';
 import PdfViewer from '../PDFViewer';
+import assert from 'assert';
 
-export default function Item(props: { value: AnnotationVO; pdfViewer: PdfViewer }) {
+export default function TextItem(props: { value: AnnotationVO; pdfViewer: PdfViewer }) {
   const startPage = createMemo(() => getPage(props.value));
   const endPage = createMemo(() => getPage(props.value, 'end'));
   const quote = createMemo(() => {
-    if (props.value.selector.type === 'PDFTextPositionSelector') {
-      return props.value.selector.fullText;
-    }
+    assert(props.value.selector.type === 'PDFTextPositionSelector');
+    return props.value.selector.fullText;
   });
 
   function jumpTo() {
@@ -21,7 +21,7 @@ export default function Item(props: { value: AnnotationVO; pdfViewer: PdfViewer 
     <div class="border p-2" onClick={jumpTo}>
       <div class="flex text-sm items-center">
         <Show when={typeof startPage() === 'number'}>
-          第{startPage()}页<Show when={endPage() && endPage() !== startPage()}>- 第{endPage()}页</Show>
+          第{startPage()}页<Show when={endPage() && endPage() !== startPage()}>-第{endPage()}页</Show>
         </Show>
       </div>
       <Show when={quote()}>
