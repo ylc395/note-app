@@ -1,7 +1,9 @@
 import assert from 'node:assert';
-import tesseract from 'tesseract.js';
+import { createScheduler, createWorker, OEM, type Scheduler } from 'tesseract.js';
+import { memoize, range, xor } from 'lodash-es';
 import path from 'node:path';
 
+import { textLocationSchema } from '#domain/shared/infra/apiSchema/file.js';
 import { token as runtimeToken } from '#domain/server/infra/runtime.js';
 import { token as loggerToken } from '#domain/shared/infra/logger.js';
 import container from '#utils/singletonContainer.js';
@@ -116,35 +118,98 @@ const SUPPORT_LANGS = {
 const SUPPORT_LANG_CODES = Object.keys(SUPPORT_LANGS);
 
 export default class ImageTextExtractor {
+  constructor() {
+    this.createScheduler.cache = new Map();
+  }
   private readonly runtime = container.resolve(runtimeToken);
   private readonly logger = container.resolve(loggerToken);
-  private isBusy = false;
+  private scheduler?: {
+    lang: Job['lang']; // scheduler 里的所有 worker 参数必须相同
+    queue: Scheduler;
+    totalJobCount: number;
+    activeJobCount: number;
+  };
+
   public async extract({ data, lang }: { data: ArrayBuffer; lang: Job['lang'] }) {
-    assert(!this.isBusy, 'ImageTextExtractor is busy');
     assert(ImageTextExtractor.isValidLangs(lang));
 
-    this.isBusy = true;
-    const recognizeResult = await tesseract.recognize(Buffer.from(data), lang.join('+'), {
-      corePath: path.join(process.cwd(), 'node_modules/tesseract.js-core'),
-      cachePath: path.join(this.runtime.getAppDir(), 'ocr_cache'),
-      workerBlobURL: false,
-      logger: this.logger.debug,
-    });
+    if (this.scheduler && xor(lang, this.scheduler.lang).length > 0) {
+      assert(this.scheduler.activeJobCount === 0 && this.scheduler.queue.getQueueLen() === 0, 'queue is not empty');
+      await this.scheduler.queue.terminate();
+      this.scheduler = undefined;
+    }
 
-    this.isBusy = false;
+    if (!this.scheduler) {
+      this.scheduler = await this.createScheduler(lang);
+    }
 
-    const result = {
-      text: recognizeResult.data.text,
+    this.scheduler.totalJobCount += 1;
+    // 根据官方文档，job 到了一定数量要销毁 scheduler，重新创建一个
+    // https://github.com/naptha/tesseract.js/blob/f9dac0742374940f88100eb47838e902e3b51eb8/docs/workers_vs_schedulers.md#reusing-workers-in-nodejs-server-code
+    const shouldDestroy = this.scheduler.totalJobCount === 500;
+    const { scheduler } = this;
+
+    if (shouldDestroy) {
+      this.scheduler = undefined;
+    }
+
+    scheduler.activeJobCount += 1;
+    const result = await scheduler.queue.addJob(
+      'recognize',
+      Buffer.from(data),
+      {},
+      { text: true, blocks: true, layoutBlocks: true },
+    );
+    scheduler.activeJobCount -= 1;
+
+    if (shouldDestroy) {
+      scheduler.queue.terminate();
+    }
+
+    return {
+      text: result.data.text,
       location: {
-        words: recognizeResult.data.words.map((word) => ({
-          text: word.text,
-          box: word.bbox,
-        })),
+        confidence: result.data.confidence,
+        blocks: textLocationSchema.shape.blocks.parse(result.data.blocks || undefined),
       },
     };
-
-    return result;
   }
+
+  private readonly createScheduler = memoize(
+    (lang: Job['lang']) => {
+      assert((this.createScheduler.cache as Map<string, unknown>).size === 0, 'can not create');
+
+      const scheduler = createScheduler();
+      const result = Promise.all(
+        range(2).map(() => {
+          return createWorker(lang.join('+'), OEM.DEFAULT, {
+            corePath: path.join(process.cwd(), 'node_modules/tesseract.js-core'),
+            cachePath: path.join(this.runtime.getAppDir(), 'ocr_cache'),
+            workerBlobURL: false,
+            logger: this.logger.debug,
+          });
+        }),
+      ).then((workers) => {
+        for (const worker of workers) {
+          scheduler.addWorker(worker);
+        }
+
+        return {
+          lang,
+          queue: scheduler,
+          totalJobCount: 0,
+          activeJobCount: 0,
+        };
+      });
+
+      result.finally(() => {
+        this.createScheduler.cache.clear?.();
+      });
+
+      return result;
+    },
+    (lang) => lang.join('+'),
+  );
 
   public static isValidLangs(langs: string[]) {
     return langs.length > 0 && langs.every((lang) => SUPPORT_LANG_CODES.includes(lang));

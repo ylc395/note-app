@@ -12,39 +12,55 @@ export default class PDFTextExtractor {
 
   private readonly queue = new Queue({ interval: 200, intervalCap: 1 });
 
-  public async *extract(job: { data: ArrayBuffer; lang: Job['lang']; locationsToSkip: Job['locationsToSkip'] }) {
+  public async extract(job: {
+    data: ArrayBuffer;
+    locationsToSkip: Job['locationsToSkip'];
+    lang: Job['lang'];
+    onExtract: (e: Pick<FileTextRecord, 'location' | 'text'>) => void;
+  }) {
     // in nodejs, pdf.worker.js won't work
     // because it's a web worker, not a nodejs worker. see https://github.com/nodejs/node/issues/43583
     // so everything about pdf is done in main thread(so called "fake worker").
     const doc = await this.getDoc(job.data);
     const totalPages = doc.numPages;
     const pagesToSkip = job.locationsToSkip?.map(({ page }) => page) || [];
+    const tasks: Promise<void>[] = [];
 
     for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
       if (pagesToSkip.includes(pageNum)) {
         continue;
       }
 
-      const result = await this.queue.add(() => {
-        return PDFTextExtractor.getTextContent(doc, pageNum);
+      const task = this.queue.add(() => {
+        return PDFTextExtractor.getTextContent(doc, pageNum).then((result) => {
+          if (result || !ImageTextExtractor.isValidLangs(job.lang)) {
+            job.onExtract(result || { location: { page: pageNum }, text: '' });
+          } else {
+            return this.extractPageTextContentByOcr(doc, pageNum, job);
+          }
+        });
       });
 
-      if (result || !ImageTextExtractor.isValidLangs(job.lang)) {
-        yield result || { location: { page: pageNum }, text: '' };
-        continue;
-      }
-
-      const ocrResult = await this.getPageTextContentByOcr(doc, pageNum, job.lang);
-      yield ocrResult;
+      tasks.push(task);
     }
 
-    doc.destroy();
+    return Promise.all(tasks).then(() => doc.destroy());
   }
 
-  private async getPageTextContentByOcr(doc: pdfjs.PDFDocumentProxy, pageNum: number, lang: string[]) {
+  private async extractPageTextContentByOcr(
+    doc: pdfjs.PDFDocumentProxy,
+    pageNum: number,
+    {
+      lang,
+      onExtract,
+    }: {
+      lang: Job['lang'];
+      onExtract: (e: Pick<FileTextRecord, 'location' | 'text'>) => void;
+    },
+  ) {
     // 从 https://github.com/mozilla/pdf.js/blob/master/examples/node/pdf2png/pdf2png.mjs 这里抄的
     const page = await doc.getPage(pageNum);
-    const viewport = page.getViewport({ scale: 1.0 });
+    const viewport = page.getViewport({ scale: 3.0 });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const canvasAndContext = (doc.canvasFactory as any).create(viewport.width, viewport.height);
@@ -58,8 +74,7 @@ export default class PDFTextExtractor {
 
     result.location.page = pageNum;
     page.cleanup();
-
-    return result;
+    onExtract(result);
   }
 
   public getDoc(data: ArrayBuffer) {

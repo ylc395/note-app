@@ -25,3 +25,60 @@ export const fileVOSchema = fileSchema.pick({
   "size": true,
   "hash": true
 });
+export const textLocationSchema = z.object({
+  page: z.number().optional(),
+  scale: z.number().optional(),
+  confidence: z.number().optional(),
+  blocks: z.array(z.object({
+    bbox: z.object({
+      x0: z.number(),
+      x1: z.number(),
+      y0: z.number(),
+      y1: z.number()
+    }),
+    blocktype: z.union([z.number(), z.string()]),
+    paragraphs: z.array(z.object({
+      bbox: z.object({
+        x0: z.number(),
+        x1: z.number(),
+        y0: z.number(),
+        y1: z.number()
+      }),
+      is_ltr: z.union([z.literal(0), z.literal(1), z.boolean()]),
+      lines: z.array(z.object({
+        baseline: z.object({
+          x0: z.number(),
+          x1: z.number(),
+          y0: z.number(),
+          y1: z.number()
+        }),
+        bbox: z.object({
+          x0: z.number(),
+          x1: z.number(),
+          y0: z.number(),
+          y1: z.number()
+        }),
+        words: z.array(z.object({
+          bbox: z.object({
+            x0: z.number(),
+            x1: z.number(),
+            y0: z.number(),
+            y1: z.number()
+          }),
+          symbols: z.array(z.object({
+            bbox: z.object({
+              x0: z.number(),
+              x1: z.number(),
+              y0: z.number(),
+              y1: z.number()
+            }),
+            text: z.string(),
+            is_dropcap: z.union([z.literal(0), z.literal(1), z.boolean()]),
+            is_subscript: z.union([z.literal(0), z.literal(1), z.boolean()]),
+            is_superscript: z.union([z.literal(0), z.literal(1), z.boolean()])
+          }))
+        }))
+      }))
+    }))
+  })).optional()
+});

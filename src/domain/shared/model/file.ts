@@ -28,11 +28,33 @@ export enum MimeTypes {
   HTML = 'text/html',
 }
 
+/**
+ * @api
+ */
 export interface TextLocation {
   page?: number;
   scale?: number;
-  words?: {
-    text: string;
-    box: { x0: number; x1: number; y0: number; y1: number };
-  }[];
+  confidence?: number;
+  blocks?: Array<{
+    bbox: { x0: number; x1: number; y0: number; y1: number };
+    blocktype: number | string;
+    paragraphs: Array<{
+      bbox: { x0: number; x1: number; y0: number; y1: number };
+      is_ltr: 0 | 1 | boolean;
+      lines: Array<{
+        baseline: { x0: number; x1: number; y0: number; y1: number };
+        bbox: { x0: number; x1: number; y0: number; y1: number };
+        words: Array<{
+          bbox: { x0: number; x1: number; y0: number; y1: number };
+          symbols: Array<{
+            bbox: { x0: number; x1: number; y0: number; y1: number };
+            text: string;
+            is_dropcap: 0 | 1 | boolean;
+            is_subscript: 0 | 1 | boolean;
+            is_superscript: 0 | 1 | boolean;
+          }>;
+        }>;
+      }>;
+    }>;
+  }>;
 }
