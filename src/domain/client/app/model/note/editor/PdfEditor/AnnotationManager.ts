@@ -27,7 +27,7 @@ export interface Position {
 }
 
 export default class AnnotationManager {
-  constructor(private readonly noteId: NoteVO['id']) {
+  constructor(public readonly noteId: NoteVO['id']) {
     this.state = new PersistedMap(
       `${noteId}-annotationManager`,
       z.object({

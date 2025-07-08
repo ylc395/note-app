@@ -201,7 +201,7 @@ export default class PdfViewer {
       (view) => view.pdfPage.pageNumber as number,
     );
 
-    this.editor.initPageTexts(renderedPages);
+    this.editor.texts.setRenderedPages(renderedPages);
 
     requestAnimationFrame(
       action(() => {
@@ -343,7 +343,7 @@ export default class PdfViewer {
   private appendTextLayer() {
     for (const page of this.renderedPages) {
       const textLayerEl = this.getPageTextLayerElement(page);
-      const texts = this.editor.pageTexts.get(page);
+      const texts = this.editor.texts.pageTexts.get(page);
       const endOfContent = textLayerEl.querySelector('.endOfContent');
 
       if (!texts?.blocks || textLayerEl.querySelector(':not(.endOfContent)') || !endOfContent) {

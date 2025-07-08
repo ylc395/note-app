@@ -18,9 +18,9 @@ export interface OutlineItem {
 }
 
 export default class OutlineList {
-  constructor(noteId: string, private readonly annotation: AnnotationManager) {
+  constructor(private readonly annotation: AnnotationManager) {
     this.state = new PersistedMap(
-      `${noteId}-outlineList`,
+      `${annotation.noteId}-outlineList`,
       z.object({
         expanded: z.string().array(),
         panelVisible: z.boolean().optional(),
@@ -30,7 +30,7 @@ export default class OutlineList {
     );
 
     this._items = createQuery(this.createItems.bind(this), {
-      queryKey: ['pdfOutline', noteId],
+      queryKey: ['pdfOutline', annotation.noteId],
       options: () => ({ enabled: Boolean(this.doc) }),
     });
   }

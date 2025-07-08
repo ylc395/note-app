@@ -46,10 +46,8 @@ export interface TextLocation {
         text: string;
         words: Array<{
           bbox: { x0: number; x1: number; y0: number; y1: number };
-          text: string;
           symbols: Array<{
             bbox: { x0: number; x1: number; y0: number; y1: number };
-            text: string;
             is_dropcap: 0 | 1 | boolean;
             is_subscript: 0 | 1 | boolean;
             is_superscript: 0 | 1 | boolean;

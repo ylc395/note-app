@@ -65,7 +65,6 @@ export const textLocationSchema = z.object({
             y0: z.number(),
             y1: z.number()
           }),
-          text: z.string(),
           symbols: z.array(z.object({
             bbox: z.object({
               x0: z.number(),
@@ -73,7 +72,6 @@ export const textLocationSchema = z.object({
               y0: z.number(),
               y1: z.number()
             }),
-            text: z.string(),
             is_dropcap: z.union([z.literal(0), z.literal(1), z.boolean()]),
             is_subscript: z.union([z.literal(0), z.literal(1), z.boolean()]),
             is_superscript: z.union([z.literal(0), z.literal(1), z.boolean()])

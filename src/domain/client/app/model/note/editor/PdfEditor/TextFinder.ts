@@ -4,7 +4,7 @@ import { compact, debounce, isEqual } from 'lodash-es';
 
 import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
 import { extractDigest } from '#utils/string';
-import type PdfEditor from './index';
+import type PageTextManager from './PageTextManager';
 
 export type Digest = NonNullable<ReturnType<typeof extractDigest>>;
 
@@ -19,9 +19,9 @@ export interface PageSearchResult {
 }
 
 export default class TextFinder {
-  constructor(private readonly editor: PdfEditor) {
+  constructor(private readonly textManager: PageTextManager) {
     this.persistedOptions = new PersistedMap(
-      `pdf-textFinder-${this.editor.noteId}`,
+      `pdf-textFinder-${this.textManager.noteId}`,
       z.object({
         caseSensitive: z.boolean().optional(),
         entireWord: z.boolean().optional(),
@@ -87,7 +87,7 @@ export default class TextFinder {
 
   private readonly updateDigests = debounce(
     action(({ pageMatchesLength, pageMatches }: { pageMatches: number[][]; pageMatchesLength: number[][] }) => {
-      const texts = this.editor.texts.result.data;
+      const texts = this.textManager.nativeTexts.result.data;
 
       if (!texts) {
         return;
