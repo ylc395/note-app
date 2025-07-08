@@ -81,7 +81,7 @@ export default class FileService extends BaseService {
     }
   }
 
-  private async handleTextExtracted(record: FileTextRecord) {
+  private async handleTextExtracted(record: Required<FileTextRecord>) {
     await this.repo.files.createTextRecord(record);
   }
 

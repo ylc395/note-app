@@ -6,6 +6,7 @@ import {
   notePatchDTOSchema,
   noteSchema,
   noteBatchPatchDTOSchema,
+  fileTextQuerySchema,
 } from '#domain/shared/infra/apiSchema/note.js';
 import { publicProcedure, router } from './trpc.js';
 
@@ -39,4 +40,8 @@ export default router({
   queryPaths: publicProcedure
     .input(noteSchema.shape.id.array())
     .query(({ input: noteIds, ctx: { entityService } }) => entityService.getPaths(noteIds)),
+
+  queryFileTextRecord: publicProcedure
+    .input(fileTextQuerySchema)
+    .query(({ ctx: { noteService }, input: query }) => noteService.queryFileText(query)),
 });

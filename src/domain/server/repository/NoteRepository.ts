@@ -1,5 +1,5 @@
 import type { Note, NewNote, NoteQuery, NotePatch } from '#domain/server/model/note.js';
-import type { FileVO } from '../model/file';
+import type { FileVO, TextLocation } from '../model/file';
 
 export interface NoteRepository {
   create: (note: NewNote) => Promise<NewNote>;
@@ -8,4 +8,5 @@ export interface NoteRepository {
   findOneById: (id: Note['id'], config?: { isAvailableOnly?: boolean }) => Promise<Required<Note> | null>;
   findBlobById: (id: Note['id'], config?: { isAvailableOnly?: boolean }) => Promise<ArrayBuffer | null>;
   findFiles: (ids: Note['id'][]) => Promise<Record<Note['id'], FileVO>>;
+  findFileTextLocation: (id: Note['id'], q: { pages?: number[] }) => Promise<TextLocation[]>;
 }

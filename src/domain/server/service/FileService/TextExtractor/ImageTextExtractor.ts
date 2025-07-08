@@ -130,7 +130,7 @@ export default class ImageTextExtractor {
     activeJobCount: number;
   };
 
-  public async extract({ data, lang }: { data: ArrayBuffer; lang: Job['lang'] }) {
+  public async extract({ data, lang, scale }: { data: ArrayBuffer; lang: Job['lang']; scale: number }) {
     assert(ImageTextExtractor.isValidLangs(lang));
 
     if (this.scheduler && xor(lang, this.scheduler.lang).length > 0) {

@@ -14,7 +14,7 @@ export interface FileRepository {
   findAll: (q: Query) => Promise<FileVO[]>;
   create: (file: Required<File>) => Promise<FileVO>;
   updateOne: (id: File['id'], patch: FilePatch) => Promise<boolean>;
-  createTextRecord: (fileText: FileTextRecord) => Promise<void>;
+  createTextRecord: (fileText: Required<FileTextRecord>) => Promise<void>;
   findUnfinishedFile: (mimeTypes: string[]) => Promise<FileVO[]>;
   findAllFileTextRecords: (ids: MaybeArray<File['id']>) => Promise<FileTextRecord[]>;
 }

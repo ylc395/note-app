@@ -33,7 +33,6 @@ export enum MimeTypes {
  */
 export interface TextLocation {
   page?: number;
-  scale?: number;
   confidence?: number;
   blocks?: Array<{
     bbox: { x0: number; x1: number; y0: number; y1: number };

@@ -16,7 +16,7 @@ export default class PDFTextExtractor {
     data: ArrayBuffer;
     locationsToSkip: Job['locationsToSkip'];
     lang: Job['lang'];
-    onExtract: (e: Pick<FileTextRecord, 'location' | 'text'>) => void;
+    onExtract: (e: Pick<Required<FileTextRecord>, 'location' | 'text'>) => void;
   }) {
     // in nodejs, pdf.worker.js won't work
     // because it's a web worker, not a nodejs worker. see https://github.com/nodejs/node/issues/43583
@@ -55,19 +55,21 @@ export default class PDFTextExtractor {
       onExtract,
     }: {
       lang: Job['lang'];
-      onExtract: (e: Pick<FileTextRecord, 'location' | 'text'>) => void;
+      onExtract: (e: Pick<Required<FileTextRecord>, 'location' | 'text'>) => void;
     },
   ) {
     // 从 https://github.com/mozilla/pdf.js/blob/master/examples/node/pdf2png/pdf2png.mjs 这里抄的
     const page = await doc.getPage(pageNum);
-    const viewport = page.getViewport({ scale: 3.0 });
+    const scale = 3;
+    const viewport = page.getViewport({ scale });
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const canvasAndContext = (doc.canvasFactory as any).create(viewport.width, viewport.height);
     await page.render({ viewport, canvasContext: canvasAndContext.context }).promise;
 
     const image: Uint8Array = canvasAndContext.canvas.toBuffer('image/png');
-    const result: Pick<FileTextRecord, 'location' | 'text'> = await this.imageTextExtractor.extract({
+    const result: Pick<Required<FileTextRecord>, 'location' | 'text'> = await this.imageTextExtractor.extract({
+      scale,
       data: image.buffer as ArrayBuffer,
       lang,
     });

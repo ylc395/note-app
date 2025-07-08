@@ -59,6 +59,14 @@ export interface NoteVO extends Omit<Note, 'fileId'> {
   childrenCount: number;
 }
 
+/**
+ * @api
+ */
+export interface FileTextQuery {
+  id: Note['id'];
+  pages?: number[];
+}
+
 export function normalizeTitle(note: Note | NoteVO | Entity) {
   return note.title || `未命名笔记-${dayjs(note.createdAt).format('YYYYMMDD-HHmm')}`;
 }

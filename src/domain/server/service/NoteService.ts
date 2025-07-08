@@ -8,6 +8,7 @@ import {
   type ClientNoteQuery,
   type NoteBatchPatchDTO,
   type NewNote,
+  type FileTextQuery,
   normalizeTitle,
   NoteTypes,
 } from '#domain/server/model/note.js';
@@ -182,5 +183,10 @@ export default class NoteService extends BaseService {
     assert(blob);
 
     return blob;
+  }
+
+  public async queryFileText(q: FileTextQuery) {
+    await this.assertAvailableIds([q.id]);
+    return this.repo.notes.findFileTextLocation(q.id, q);
   }
 }

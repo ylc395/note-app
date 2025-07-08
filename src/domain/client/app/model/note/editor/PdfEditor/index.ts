@@ -3,7 +3,7 @@ import { computed, observable, runInAction, when } from 'mobx';
 import assert from 'assert';
 
 import container from '#utils/singletonContainer';
-import { MimeTypes } from '#domain/shared/model/file';
+import { MimeTypes, type TextLocation } from '#domain/shared/model/file';
 
 import BaseEditor, { type Options } from '../BaseEditor';
 import DocumentFactory from './DocumentFactory';
@@ -22,7 +22,7 @@ export default class PdfEditor extends BaseEditor {
 
   @computed
   public get isReady() {
-    return Boolean(this.doc);
+    return Boolean(this.doc) && this.texts.result.isSuccess;
   }
 
   private readonly docFactory = container.resolve(DocumentFactory);
@@ -47,6 +47,41 @@ export default class PdfEditor extends BaseEditor {
       options: () => ({ enabled: Boolean(this.doc) }),
     },
   );
+
+  @observable
+  public accessor pageTexts = new Map<number, TextLocation>();
+
+  private readonly loadingPageTexts = new Set<number>();
+
+  public async initPageTexts(pages: number[]) {
+    const texts = this.texts.result.data;
+    assert(texts);
+
+    const pagesToQuery = pages.filter(
+      (page) => !this.pageTexts.has(page) && !texts[page] && !this.loadingPageTexts.has(page),
+    );
+
+    if (pagesToQuery.length === 0) {
+      return;
+    }
+
+    for (const page of pagesToQuery) {
+      this.loadingPageTexts.add(page);
+    }
+
+    const pageTexts = await this.remote.note.queryFileTextRecord.query({ id: this.noteId, pages: pagesToQuery });
+
+    for (const page of pagesToQuery) {
+      this.loadingPageTexts.delete(page);
+    }
+
+    runInAction(() => {
+      for (const location of pageTexts) {
+        assert(location.page);
+        this.pageTexts.set(location.page, location);
+      }
+    });
+  }
 
   private async init() {
     assert(this.blob.result.data);

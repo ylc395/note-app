@@ -47,3 +47,7 @@ export const clientNoteQuerySchema = z.object({
   parentId: z.union([entityParentIdSchema, z.array(z.string())]).optional(),
   fileHash: z.string().optional()
 });
+export const fileTextQuerySchema = z.object({
+  id: noteSchema.shape["id"],
+  pages: z.array(z.number()).optional()
+});

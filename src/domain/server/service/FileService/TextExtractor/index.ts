@@ -51,7 +51,7 @@ export default class TextExtractor {
     }
 
     if (mimeType.startsWith('image')) {
-      const imageResult = await this.imageTextExtractor.extract(job);
+      const imageResult = await this.imageTextExtractor.extract({ ...job, scale: 1 });
 
       if (imageResult) {
         onExtract({ ...imageResult, fileId });

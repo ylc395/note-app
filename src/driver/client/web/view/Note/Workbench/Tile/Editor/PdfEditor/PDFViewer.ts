@@ -199,6 +199,8 @@ export default class PdfViewer {
       (view) => view.pdfPage.pageNumber as number,
     );
 
+    this.editor.initPageTexts(renderedPages);
+
     requestAnimationFrame(
       action(() => {
         this.renderedPages = renderedPages;
@@ -222,11 +224,10 @@ export default class PdfViewer {
   public getPageInfo(page: number) {
     const pageView: PDFPageView = this.pdfViewer.getPageView(page - 1);
     const pdfPage: PDFPageProxy = pageView.pdfPage;
-    const [_1, _2, width, height] = pdfPage.view;
+    const [x0, y0, x1, y1] = pdfPage.view;
 
     const { div: element } = pageView;
-
-    return { height: height!, width: width!, element };
+    return { height: y1! - y0!, width: x1! - x0!, element };
   }
 
   private hijackClick() {

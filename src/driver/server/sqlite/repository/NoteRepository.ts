@@ -1,4 +1,5 @@
 import { keyBy } from 'lodash-es';
+import { sql } from 'kysely';
 
 import type { NoteRepository } from '#domain/server/repository/noteRepository.js';
 import type { Note, NoteVO, NewNote, NotePatch, NoteQuery } from '#domain/server/model/note.js';
@@ -6,6 +7,7 @@ import type { Note, NoteVO, NewNote, NotePatch, NoteQuery } from '#domain/server
 import schema from '../schema/note.js';
 import { tableName as fileTableName } from '../schema/file.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
+import { tableName as fileTextTableName } from '../schema/fileText.js';
 import BaseRepository from './BaseRepository.js';
 import FileRepository from './FileRepository.js';
 import ContentService from '#domain/server/service/ContentService/index.js';
@@ -140,5 +142,21 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
       .execute();
 
     return keyBy(rows, (file) => file.noteId);
+  }
+
+  public async findFileTextLocation(id: Note['id'], q: { pages?: number[] }) {
+    let s = this.db
+      .selectFrom(this.tableName)
+      .innerJoin(fileTextTableName, `${this.tableName}.fileId`, `${fileTextTableName}.fileId`)
+      .select([`${fileTextTableName}.location`])
+      .where(`${this.tableName}.id`, '=', id);
+
+    if (q.pages) {
+      s = s.where((eb) => eb(sql`json_extract(location, '$.page')`, 'in', q.pages));
+    }
+
+    const rows = await s.execute();
+
+    return rows.map((row) => row.location);
   }
 }

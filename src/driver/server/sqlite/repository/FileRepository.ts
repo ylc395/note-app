@@ -12,7 +12,7 @@ export default class SqliteFileRepository extends BaseRepository implements File
   public async findAllFileTextRecords(ids: MaybeArray<File['id']>) {
     const rows = await this.db
       .selectFrom(fileTextTableName)
-      .select(['fileId', 'location', 'text'])
+      .select(['fileId', 'location'])
       .where('fileId', Array.isArray(ids) ? 'in' : '=', ids)
       .execute();
 
@@ -62,7 +62,7 @@ export default class SqliteFileRepository extends BaseRepository implements File
     return row;
   }
 
-  public async createTextRecord(record: FileTextRecord) {
+  public async createTextRecord(record: Required<FileTextRecord>) {
     await this.db
       .insertInto(fileTextTableName)
       .values({ ...record, location: JSON.stringify(record.location) })
