@@ -27,7 +27,6 @@ export const fileVOSchema = fileSchema.pick({
 });
 export const textLocationSchema = z.object({
   page: z.number().optional(),
-  scale: z.number().optional(),
   confidence: z.number().optional(),
   blocks: z.array(z.object({
     bbox: z.object({
@@ -58,6 +57,7 @@ export const textLocationSchema = z.object({
           y0: z.number(),
           y1: z.number()
         }),
+        text: z.string(),
         words: z.array(z.object({
           bbox: z.object({
             x0: z.number(),
@@ -65,6 +65,7 @@ export const textLocationSchema = z.object({
             y0: z.number(),
             y1: z.number()
           }),
+          text: z.string(),
           symbols: z.array(z.object({
             bbox: z.object({
               x0: z.number(),

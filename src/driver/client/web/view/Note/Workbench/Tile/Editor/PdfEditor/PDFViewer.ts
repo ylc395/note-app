@@ -6,8 +6,8 @@ import {
   type PDFPageView,
 } from 'pdfjs-dist/web/pdf_viewer.mjs';
 import { AnnotationEditorType, AnnotationMode, type PDFPageProxy } from 'pdfjs-dist';
-import { debounce, memoize, noop, range as numberRange } from 'lodash-es';
-import { observable, when, action, computed, runInAction } from 'mobx';
+import { debounce, noop, range as numberRange } from 'lodash-es';
+import { observable, when, action, computed, runInAction, autorun } from 'mobx';
 import { z } from 'zod';
 import assert from 'assert';
 
@@ -50,6 +50,8 @@ export default class PdfViewer {
       () => this.init(),
       { signal: this.destroyController.signal },
     );
+
+    autorun(this.appendTextLayer.bind(this));
   }
 
   private readonly pdfViewer: PDFViewer;
@@ -338,49 +340,54 @@ export default class PdfViewer {
     }
   }
 
-  private readonly createPageCanvas = memoize(async (page: number) => {
-    assert(this.pdfViewer.pdfDocument);
-    const pageView = await this.pdfViewer.pdfDocument.getPage(page);
-    const viewport = pageView.getViewport({ scale: 1 });
-    const canvas = document.createElement('canvas');
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
-    const renderTask = pageView.render({
-      annotationMode: AnnotationMode.DISABLE,
-      viewport,
-      canvasContext: canvas.getContext('2d')!,
-    });
-    await renderTask.promise;
+  private appendTextLayer() {
+    for (const page of this.renderedPages) {
+      const textLayerEl = this.getPageTextLayerElement(page);
+      const texts = this.editor.pageTexts.get(page);
+      const endOfContent = textLayerEl.querySelector('.endOfContent');
 
-    return canvas;
-  });
+      if (!texts?.blocks || textLayerEl.querySelector(':not(.endOfContent)') || !endOfContent) {
+        continue;
+      }
 
-  public async getViewrectDataUrl(
-    page: number,
-    viewrect: { left: number; top: number; width: number; height: number },
-  ) {
-    const pageCanvas = await this.createPageCanvas(page);
-    const rectCanvas = document.createElement('canvas');
+      const { width: pageWidth, height: pageHeight } = this.getPageInfo(page);
+      const dom = document.createDocumentFragment();
 
-    rectCanvas.width = viewrect.width;
-    rectCanvas.height = viewrect.height;
+      for (const { paragraphs } of texts.blocks) {
+        for (const { lines } of paragraphs) {
+          for (const { bbox, text } of lines) {
+            // let lastTextDom: HTMLSpanElement | undefined;
 
-    rectCanvas
-      .getContext('2d')!
-      .drawImage(
-        pageCanvas,
-        viewrect.left,
-        viewrect.top,
-        viewrect.width,
-        viewrect.height,
-        0,
-        0,
-        viewrect.width,
-        viewrect.height,
-      );
-    const dataUrl = rectCanvas.toDataURL();
+            // for (const { text, bbox } of words) {
+            const top = `${(bbox.y0 / pageHeight) * 100}%`;
+            const height = `${((bbox.y1 - bbox.y0) / pageHeight) * 100}%`;
 
-    return dataUrl;
+            const textDom =
+              // lastTextDom?.style.top === top && lastTextDom.style.height === height
+              //   ? lastTextDom
+              //   : document.createElement('span');
+              document.createElement('span');
+
+            textDom.innerText = `${textDom.innerText}${text}`;
+
+            // if (textDom !== lastTextDom) {
+            textDom.style.left = `${(bbox.x0 / pageWidth) * 100}%`;
+            textDom.style.top = top;
+            textDom.style.height = height;
+            textDom.style.width = `${((bbox.x1 - bbox.x0) / pageWidth) * 100}%`;
+            // } else {
+            // const oldWidth = Number(textDom.style.width.slice(-1));
+            // textDom.style.width = `${((bbox.x1 - bbox.x0) / pageWidth) * 100 + oldWidth}%`;
+            // }
+            // lastTextDom = textDom;
+            dom.append(textDom);
+            // }
+          }
+        }
+      }
+
+      textLayerEl.insertBefore(dom, endOfContent);
+    }
   }
 
   private static normalizeHash(hash: string) {

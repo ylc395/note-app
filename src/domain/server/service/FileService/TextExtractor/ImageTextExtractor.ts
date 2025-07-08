@@ -1,6 +1,6 @@
 import assert from 'node:assert';
 import { createScheduler, createWorker, OEM, type Scheduler } from 'tesseract.js';
-import { memoize, range, xor } from 'lodash-es';
+import { cloneDeepWith, mapValues, memoize, range, xor } from 'lodash-es';
 import path from 'node:path';
 
 import { textLocationSchema } from '#domain/shared/infra/apiSchema/file.js';
@@ -124,7 +124,7 @@ export default class ImageTextExtractor {
   private readonly runtime = container.resolve(runtimeToken);
   private readonly logger = container.resolve(loggerToken);
   private scheduler?: {
-    lang: Job['lang']; // scheduler 里的所有 worker 参数必须相同
+    lang: Job['lang'];
     queue: Scheduler;
     totalJobCount: number;
     activeJobCount: number;
@@ -133,6 +133,7 @@ export default class ImageTextExtractor {
   public async extract({ data, lang, scale }: { data: ArrayBuffer; lang: Job['lang']; scale: number }) {
     assert(ImageTextExtractor.isValidLangs(lang));
 
+    // scheduler 里的所有 worker 参数必须相同
     if (this.scheduler && xor(lang, this.scheduler.lang).length > 0) {
       assert(this.scheduler.activeJobCount === 0 && this.scheduler.queue.getQueueLen() === 0, 'queue is not empty');
       await this.scheduler.queue.terminate();
@@ -170,7 +171,11 @@ export default class ImageTextExtractor {
       text: result.data.text,
       location: {
         confidence: result.data.confidence,
-        blocks: textLocationSchema.shape.blocks.parse(result.data.blocks || undefined),
+        blocks: cloneDeepWith(textLocationSchema.shape.blocks.parse(result.data.blocks || undefined), (value, key) => {
+          if (key === 'bbox' || key === 'baseline') {
+            return mapValues(value, (v) => v / scale);
+          }
+        }),
       },
     };
   }
