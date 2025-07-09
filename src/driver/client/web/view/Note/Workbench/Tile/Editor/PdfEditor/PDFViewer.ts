@@ -16,6 +16,7 @@ import { getPage, type AnnotationVO } from '#domain/client/app/model/annotation'
 import HistoryStack, { Direction, type HistoryRecord } from '#domain/client/app/model/base/HistoryStack';
 import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
 import shell from '#web/infra/shell';
+import { APP_NAME } from '#domain/shared/infra/constants';
 import { withAbortSignal } from '#utils/function';
 
 import TextFinder from './SearchBar/TextFinder';
@@ -38,6 +39,10 @@ export const SCALE_STEPS = [
   ...numberRange(12, 30, 2).map((i) => i / 10),
 ] as const;
 
+export enum Events {
+  CustomTextLayerRendered = `${APP_NAME}_customTextLayerRendered`,
+}
+
 export default class PdfViewer {
   constructor(options: Options) {
     this.editor = options.editor;
@@ -51,7 +56,15 @@ export default class PdfViewer {
       { signal: this.destroyController.signal },
     );
 
-    autorun(this.appendTextLayer.bind(this));
+    autorun(this.appendTextLayer.bind(this), { signal: this.destroyController.signal });
+    autorun(
+      () => {
+        if (this.renderedPages) {
+          this.editor.texts.setRenderedPages(this.renderedPages);
+        }
+      },
+      { signal: this.destroyController.signal },
+    );
   }
 
   private readonly pdfViewer: PDFViewer;
@@ -62,8 +75,10 @@ export default class PdfViewer {
 
   private readonly state;
 
-  @observable
-  public accessor renderedPages: number[] = [];
+  // 1. 这个数组里的页面未必存在于 DOM 里（异步更新的，和 DOM 实际情况存在时间差）
+  // 2. 我们确保若页面确实存在，则其原生 textLayer 都是已经渲染完毕的。
+  @observable.ref
+  public accessor renderedPages: number[] | undefined;
 
   /*
    * PDFLinkService 还能关联一个 PDFHistory 对象，其具有管理历史栈的功能。但它实际上在使用浏览器的 url 历史栈，这不是我们想要的
@@ -179,16 +194,19 @@ export default class PdfViewer {
         if (page) {
           this.updateCurrentPage(page);
         }
+        runInAction(() => {
+          this.isReady = true;
+        });
       });
     } else {
       this.updateCurrentPage(1);
+
+      runInAction(() => {
+        this.isReady = true;
+      });
     }
 
     this.hijackClick();
-
-    runInAction(() => {
-      this.isReady = true;
-    });
   }
 
   @action
@@ -196,30 +214,60 @@ export default class PdfViewer {
     this.currentPage = pageNumber;
   }
 
+  private pageElementObserver?: MutationObserver;
+
   private updateRenderedPage() {
-    const renderedPages = (Array.from(this.pdfViewer.getCachedPageViews()) as PDFPageView[]).map(
-      (view) => view.pdfPage.pageNumber as number,
-    );
+    this.pageElementObserver?.disconnect();
 
-    this.editor.texts.setRenderedPages(renderedPages);
+    const pageViews = Array.from(this.pdfViewer.getCachedPageViews()) as PDFPageView[];
+    const elementsToObserve = pageViews
+      .map((view) => view.textLayer?.div)
+      .filter((div) => !div?.querySelector('.endOfContent')) as HTMLDivElement[];
 
-    requestAnimationFrame(
-      action(() => {
+    const renderedPages = pageViews.map((view) => view.pdfPage.pageNumber as number);
+
+    if (elementsToObserve.length > 0) {
+      // 此时 textLayer 很可能还没就绪，而是在之后的某个时刻就绪（以 endOfContent 元素的出现为标志）
+      let readyCount = 0;
+      const observer = new MutationObserver((e) => {
+        if (
+          e.some(({ addedNodes }) =>
+            Array.from(addedNodes).find(
+              (node) => node instanceof HTMLElement && node.classList.contains('endOfContent'),
+            ),
+          )
+        ) {
+          readyCount += 1;
+
+          if (readyCount === elementsToObserve.length) {
+            runInAction(() => {
+              this.renderedPages = renderedPages;
+            });
+            observer.disconnect();
+
+            if (this.pageElementObserver === observer) {
+              this.pageElementObserver = undefined;
+            }
+          }
+        }
+      });
+
+      for (const el of elementsToObserve) {
+        observer.observe(el, { childList: true });
+      }
+
+      this.pageElementObserver = observer;
+    } else {
+      runInAction(() => {
         this.renderedPages = renderedPages;
-      }),
-    );
+      });
+      this.pageElementObserver = undefined;
+    }
   }
 
   // 每一页总是会有 text layer，即使其中并没有文本
-  public getPageTextLayerElement(page: number, safe: true): HTMLDivElement | undefined;
-  public getPageTextLayerElement(page: number): HTMLDivElement;
-  public getPageTextLayerElement(page: number, safe?: true) {
-    const div = (this.pdfViewer.getPageView(page - 1) as PDFPageView).textLayer?.div;
-
-    if (!safe) {
-      assert(div);
-    }
-
+  public getPageTextLayerElement(page: number) {
+    const div = (this.pdfViewer.getPageView(page - 1) as PDFPageView | undefined)?.textLayer?.div;
     return div;
   }
 
@@ -298,9 +346,9 @@ export default class PdfViewer {
 
         el.scrollIntoView({ block: 'center' });
       },
-      { signal },
+      { signal: AbortSignal.any([signal, this.destroyController.signal]) },
     );
-  }, this.destroyController.signal);
+  });
 
   @observable.shallow public accessor annotationElementMap = new Map<AnnotationVO['id'], HTMLElement>();
 
@@ -326,6 +374,7 @@ export default class PdfViewer {
     this.updateUIState.flush();
     this.pdfViewer.cleanup();
     this.destroyController.abort();
+    this.pageElementObserver?.disconnect();
   }
 
   public setScale(value: string) {
@@ -341,12 +390,25 @@ export default class PdfViewer {
   }
 
   private appendTextLayer() {
+    if (!this.renderedPages) {
+      return;
+    }
+
+    const attributeName = 'data-ocr-text-loaded';
+
     for (const page of this.renderedPages) {
       const textLayerEl = this.getPageTextLayerElement(page);
+
+      if (!textLayerEl) {
+        continue;
+      }
+
       const texts = this.editor.texts.pageTexts.get(page);
       const endOfContent = textLayerEl.querySelector('.endOfContent');
 
-      if (!texts?.blocks || textLayerEl.querySelector(':not(.endOfContent)') || !endOfContent) {
+      assert(endOfContent);
+
+      if (!texts?.blocks || textLayerEl.hasAttribute(attributeName)) {
         continue;
       }
 
@@ -355,38 +417,27 @@ export default class PdfViewer {
 
       for (const { paragraphs } of texts.blocks) {
         for (const { lines } of paragraphs) {
-          for (const { bbox, text } of lines) {
-            // let lastTextDom: HTMLSpanElement | undefined;
+          for (const { bbox, text, confidence } of lines) {
+            if (confidence < 40) {
+              continue;
+            }
 
-            // for (const { text, bbox } of words) {
-            const top = `${(bbox.y0 / pageHeight) * 100}%`;
-            const height = `${((bbox.y1 - bbox.y0) / pageHeight) * 100}%`;
-
-            const textDom =
-              // lastTextDom?.style.top === top && lastTextDom.style.height === height
-              //   ? lastTextDom
-              //   : document.createElement('span');
-              document.createElement('span');
+            const textDom = document.createElement('span');
 
             textDom.innerText = `${textDom.innerText}${text}`;
-
-            // if (textDom !== lastTextDom) {
             textDom.style.left = `${(bbox.x0 / pageWidth) * 100}%`;
-            textDom.style.top = top;
-            textDom.style.height = height;
+            textDom.style.top = `${(bbox.y0 / pageHeight) * 100}%`;
+            textDom.style.height = `${((bbox.y1 - bbox.y0) / pageHeight) * 100}%`;
             textDom.style.width = `${((bbox.x1 - bbox.x0) / pageWidth) * 100}%`;
-            // } else {
-            // const oldWidth = Number(textDom.style.width.slice(-1));
-            // textDom.style.width = `${((bbox.x1 - bbox.x0) / pageWidth) * 100 + oldWidth}%`;
-            // }
-            // lastTextDom = textDom;
+
             dom.append(textDom);
-            // }
           }
         }
       }
 
       textLayerEl.insertBefore(dom, endOfContent);
+      textLayerEl.setAttribute(attributeName, 'true');
+      this.eventBus.dispatch(Events.CustomTextLayerRendered, { page });
     }
   }
 

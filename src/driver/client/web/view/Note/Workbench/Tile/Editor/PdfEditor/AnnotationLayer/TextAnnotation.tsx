@@ -9,8 +9,8 @@ import assert from 'assert';
 
 import type { AnnotationVO } from '#domain/shared/model/annotation';
 import AnnotationManager from '#domain/client/app/model/note/editor/PdfEditor/AnnotationManager';
-import PdfViewer from '../PDFViewer';
 import { getPage } from '#domain/client/app/model/annotation';
+import PdfViewer, { Events } from '../PDFViewer';
 
 export default function TextAnnotation(props: { annotation: AnnotationVO; page: number; pdfViewer: PdfViewer }) {
   const [buttonRef, setButtonRef] = createSignal<HTMLElement>();
@@ -32,19 +32,14 @@ export default function TextAnnotation(props: { annotation: AnnotationVO; page: 
 
   function autoRerender() {
     const pageElement = props.pdfViewer.getPageTextLayerElement(props.page);
-    const domObserver = new MutationObserver((e) => {
+
+    if (!pageElement) {
+      return;
+    }
+
+    const domObserver = new MutationObserver(() => {
       // 文本搜索高亮等功能可能会破坏我们渲染出的 mark 元素。我们需要在 mark 元素被破坏时重新渲染
       if (marksRef()?.some((el) => !el.isConnected)) {
-        forceRender();
-        return;
-      }
-
-      // 该组件被渲染时，textLayer 很可能还没就绪，而是在之后的某个时刻就绪（以 endOfContent 元素的出现为标志）。在那时我们触发一次重新渲染
-      if (
-        e.some(({ addedNodes }) =>
-          Array.from(addedNodes).find((node) => node instanceof HTMLElement && node.classList.contains('endOfContent')),
-        )
-      ) {
         forceRender();
         return;
       }
@@ -75,15 +70,14 @@ export default function TextAnnotation(props: { annotation: AnnotationVO; page: 
   function render() {
     forceRenderFlag();
     const selector = props.annotation.selector;
-    const pageEl = props.pdfViewer.getPageTextLayerElement(props.page, true); // render 的时候可能整页的 DOM 都没了但视图层还没来得及销毁对应的 PageAnnotationLayer 组件，此时可能取不到 page 元素
+    const pageEl = props.pdfViewer.getPageTextLayerElement(props.page);
 
-    assert(selector.type === 'PDFTextPositionSelector');
-
-    // 目前没有办法确保 render 调用时，textLayer 一定已经渲染好了。只能通过检查是否有 .endOfContent 元素来检查 textLayer 是否就绪
-    if (!pageEl?.querySelector('.endOfContent')) {
+    // render 的时候可能整页的 DOM 都没了但视图层还没来得及销毁对应的 PageAnnotationLayer 组件，此时可能取不到 page 元素
+    if (!pageEl) {
       return;
     }
 
+    assert(selector.type === 'PDFTextPositionSelector');
     const range = AnnotationManager.positionToRange(selector.position, props.page);
     const marker = new Mark(pageEl);
     const markEls: HTMLElement[] = [];
@@ -110,9 +104,21 @@ export default function TextAnnotation(props: { annotation: AnnotationVO; page: 
     });
   }
 
+  function handleCustomTextLayerRendered({ page }: { page: number }) {
+    if (page === props.page) {
+      forceRender();
+    }
+  }
+
   createEffect(render);
   createEffect(autoUpdateButton);
   createEffect(autoRerender);
+
+  createEffect(() => {
+    const pdfViewer = props.pdfViewer;
+    pdfViewer.eventBus.on(Events.CustomTextLayerRendered, handleCustomTextLayerRendered);
+    onCleanup(() => pdfViewer.eventBus.off(Events.CustomTextLayerRendered, handleCustomTextLayerRendered));
+  });
 
   onCleanup(
     action(() => {

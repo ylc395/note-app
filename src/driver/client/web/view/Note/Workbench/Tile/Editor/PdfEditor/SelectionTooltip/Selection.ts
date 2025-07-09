@@ -108,7 +108,13 @@ export default class Selection {
 
     const pageRange = range(position.startPage, position.endPage + 1);
     const currentRanges = pageRange.map((page) => AnnotationManager.positionToRange(position, page));
-    const markers = pageRange.map((range) => new Mark(this.pdfViewer.getPageTextLayerElement(range)));
+
+    const markers = pageRange.map((range) => {
+      const textLayer = this.pdfViewer.getPageTextLayerElement(range);
+
+      assert(textLayer);
+      return new Mark(textLayer);
+    });
 
     for (const [marker, range] of zip(markers, currentRanges)) {
       marker!.markRanges([range!], {
@@ -294,6 +300,8 @@ export default class Selection {
       }
 
       const textLayer = this.pdfViewer.getPageTextLayerElement(page);
+      assert(textLayer);
+
       const treeWalker = document.createTreeWalker(textLayer, NodeFilter.SHOW_TEXT);
       let currentNode = treeWalker.nextNode() as Text | null;
       let totalOffset = 0;
@@ -325,6 +333,8 @@ export default class Selection {
     const range = new Range();
     const setBoundary = (page: number, totalOffset: number, isStart?: boolean) => {
       const textLayer = this.pdfViewer.getPageTextLayerElement(page);
+      assert(textLayer);
+
       const treeWalker = document.createTreeWalker(textLayer, NodeFilter.SHOW_TEXT);
       let offset = 0;
 

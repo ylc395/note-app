@@ -1,7 +1,8 @@
-import { action, autorun, computed, observable, runInAction } from 'mobx';
+import { action, computed, observable, reaction, runInAction, when } from 'mobx';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import { createQuery } from 'mobx-tanstack-query/preset';
 import assert from 'assert';
+import { debounce } from 'lodash-es';
 
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
@@ -21,16 +22,15 @@ export default class PageTextManager {
       },
     );
 
-    autorun(this.initPageTexts.bind(this), { signal: this.destroyController.signal });
+    reaction(() => this.renderedPages, this.initPageTexts.bind(this), { signal: this.destroyController.signal });
 
-    const timerId = setInterval(this.initPageTexts.bind(this), 30 * 1000);
-
-    this.destroyController.signal.addEventListener(
-      'abort',
+    when(
+      () => Boolean(this.renderedPages),
       () => {
-        clearInterval(timerId);
+        const timerId = setInterval(this.initPageTexts.bind(this), 30 * 1000);
+        this.destroyController.signal.addEventListener('abort', () => clearInterval(timerId), { once: true });
       },
-      { once: true },
+      { signal: this.destroyController.signal },
     );
   }
 
@@ -52,6 +52,7 @@ export default class PageTextManager {
     return this.nativeTexts.result.isSuccess;
   }
 
+  @action
   public init(doc: PDFDocumentProxy) {
     this.doc = doc;
   }
@@ -61,13 +62,9 @@ export default class PageTextManager {
     this.renderedPages = pages;
   }
 
-  private async initPageTexts() {
-    if (!this.renderedPages) {
-      return;
-    }
-
+  private initPageTexts = debounce(async () => {
     const texts = this.nativeTexts.result.data;
-    assert(texts);
+    assert(texts && this.renderedPages);
 
     const pagesToQuery = new Set(
       this.renderedPages.filter((page) => !this.pageTexts.has(page) && !texts[page] && !this.loadingPages.has(page)),
@@ -93,14 +90,14 @@ export default class PageTextManager {
     runInAction(() => {
       for (const location of pageTexts) {
         assert(location.page);
-        pagesToQuery.delete(location.page);
         this.pageTexts.set(location.page, location);
       }
     });
-  }
+  }, 500);
 
   public destroy() {
     this.destroyController.abort();
+    this.initPageTexts.cancel();
   }
 
   private static async extractTexts(doc: PDFDocumentProxy) {

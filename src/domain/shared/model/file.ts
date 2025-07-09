@@ -44,15 +44,7 @@ export interface TextLocation {
         baseline: { x0: number; x1: number; y0: number; y1: number };
         bbox: { x0: number; x1: number; y0: number; y1: number };
         text: string;
-        words: Array<{
-          bbox: { x0: number; x1: number; y0: number; y1: number };
-          symbols: Array<{
-            bbox: { x0: number; x1: number; y0: number; y1: number };
-            is_dropcap: 0 | 1 | boolean;
-            is_subscript: 0 | 1 | boolean;
-            is_superscript: 0 | 1 | boolean;
-          }>;
-        }>;
+        confidence: number;
       }>;
     }>;
   }>;
