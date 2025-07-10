@@ -168,12 +168,16 @@ export default class ImageTextExtractor {
     }
 
     return {
-      text: result.data.text,
+      text: ImageTextExtractor.postProcessText(result.data.text),
       location: {
         confidence: result.data.confidence,
         blocks: cloneDeepWith(textLocationSchema.shape.blocks.parse(result.data.blocks || undefined), (value, key) => {
           if (key === 'bbox' || key === 'baseline') {
             return mapValues(value, (v) => v / scale);
+          }
+
+          if (key === 'text') {
+            return ImageTextExtractor.postProcessText(value);
           }
         }),
       },
@@ -215,6 +219,15 @@ export default class ImageTextExtractor {
     },
     (lang) => lang.join('+'),
   );
+
+  private static postProcessText(text: string) {
+    // 这些文字系统不使用空格分割
+    const group =
+      '[\\p{Script=Han}\\p{Script=Hiragana}\\p{Script=Katakana}\\p{Script=Hangul}\\p{Script=Myanmar}\\p{Punctuation}]';
+    const regex = new RegExp(`(?<=(${group}))\\s(?=(${group}))`, 'ug');
+
+    return text.replaceAll(regex, '');
+  }
 
   public static isValidLangs(langs: string[]) {
     return langs.length > 0 && langs.every((lang) => SUPPORT_LANG_CODES.includes(lang));

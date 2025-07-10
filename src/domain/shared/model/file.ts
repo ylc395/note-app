@@ -35,16 +35,24 @@ export interface TextLocation {
   page?: number;
   confidence?: number;
   blocks?: Array<{
-    bbox: { x0: number; x1: number; y0: number; y1: number };
     blocktype: number | string;
     paragraphs: Array<{
-      bbox: { x0: number; x1: number; y0: number; y1: number };
       is_ltr: 0 | 1 | boolean;
       lines: Array<{
         baseline: { x0: number; x1: number; y0: number; y1: number };
         bbox: { x0: number; x1: number; y0: number; y1: number };
         text: string;
         confidence: number;
+        words: Array<{
+          symbols: Array<{
+            confidence: number;
+            text: string;
+            bbox: { x0: number; x1: number; y0: number; y1: number };
+            is_dropcap: 0 | 1 | boolean;
+            is_subscript: 0 | 1 | boolean;
+            is_superscript: 0 | 1 | boolean;
+          }>;
+        }>;
       }>;
     }>;
   }>;

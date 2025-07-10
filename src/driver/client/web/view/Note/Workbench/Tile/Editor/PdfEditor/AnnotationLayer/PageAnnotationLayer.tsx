@@ -41,8 +41,7 @@ export default function PageAnnotationLayer(props: { page: number; pdfViewer: Pd
       ) || [],
   );
 
-  updateElementSize();
-  resizeObserver.observe(pageElement);
+  resizeObserver.observe(pageElement); // observe 的时候回调函数就会被调用一次，而不必等尺寸真的发生变化
 
   function updateElementSize() {
     setElementSize({ width: pageElement.clientWidth, height: pageElement.clientHeight });

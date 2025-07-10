@@ -6,8 +6,8 @@ import {
   type PDFPageView,
 } from 'pdfjs-dist/web/pdf_viewer.mjs';
 import { AnnotationEditorType, AnnotationMode, type PDFPageProxy } from 'pdfjs-dist';
-import { debounce, noop, range as numberRange } from 'lodash-es';
-import { observable, when, action, computed, runInAction, autorun } from 'mobx';
+import { debounce, difference, noop, range as numberRange } from 'lodash-es';
+import { observable, when, action, computed, runInAction, autorun, reaction } from 'mobx';
 import { z } from 'zod';
 import assert from 'assert';
 
@@ -56,15 +56,26 @@ export default class PdfViewer {
       { signal: this.destroyController.signal },
     );
 
-    autorun(this.appendTextLayer.bind(this), { signal: this.destroyController.signal });
-    autorun(
-      () => {
-        if (this.renderedPages) {
-          this.editor.texts.setRenderedPages(this.renderedPages);
+    reaction(
+      () => this.renderedPages,
+      (pages) => {
+        if (!pages) {
+          return;
+        }
+
+        this.editor.texts.setRenderedPages(pages);
+
+        const unmountedPages = difference(Array.from(this.pageSizeObserverMap.keys()), pages);
+
+        for (const page of unmountedPages) {
+          this.pageSizeObserverMap.get(page)?.disconnect();
+          this.pageSizeObserverMap.delete(page);
         }
       },
       { signal: this.destroyController.signal },
     );
+
+    autorun(this.buildTextLayer.bind(this), { signal: this.destroyController.signal });
   }
 
   private readonly pdfViewer: PDFViewer;
@@ -79,6 +90,8 @@ export default class PdfViewer {
   // 2. 我们确保若页面确实存在，则其原生 textLayer 都是已经渲染完毕的。
   @observable.ref
   public accessor renderedPages: number[] | undefined;
+
+  private readonly pageSizeObserverMap = new Map<number, ResizeObserver>();
 
   /*
    * PDFLinkService 还能关联一个 PDFHistory 对象，其具有管理历史栈的功能。但它实际上在使用浏览器的 url 历史栈，这不是我们想要的
@@ -375,6 +388,7 @@ export default class PdfViewer {
     this.pdfViewer.cleanup();
     this.destroyController.abort();
     this.pageElementObserver?.disconnect();
+    this.pageSizeObserverMap.values().forEach((v) => v.disconnect());
   }
 
   public setScale(value: string) {
@@ -389,55 +403,62 @@ export default class PdfViewer {
     }
   }
 
-  private appendTextLayer() {
+  private buildTextLayer() {
     if (!this.renderedPages) {
       return;
     }
 
-    const attributeName = 'data-ocr-text-loaded';
-
     for (const page of this.renderedPages) {
       const textLayerEl = this.getPageTextLayerElement(page);
-
-      if (!textLayerEl) {
-        continue;
-      }
-
       const texts = this.editor.texts.pageTexts.get(page);
-      const endOfContent = textLayerEl.querySelector('.endOfContent');
 
-      assert(endOfContent);
-
-      if (!texts?.blocks || textLayerEl.hasAttribute(attributeName)) {
+      if (!textLayerEl || this.pageSizeObserverMap.has(page) || !texts?.blocks) {
         continue;
       }
 
       const { width: pageWidth, height: pageHeight } = this.getPageInfo(page);
-      const dom = document.createDocumentFragment();
+      const lineDoms: Array<{ el: HTMLElement; baseline: number }> = [];
 
       for (const { paragraphs } of texts.blocks) {
         for (const { lines } of paragraphs) {
-          for (const { bbox, text, confidence } of lines) {
+          for (const { bbox, text, confidence, baseline } of lines) {
             if (confidence < 40) {
               continue;
             }
 
-            const textDom = document.createElement('span');
+            const lineDom = document.createElement('span');
+            const baselineRatio = (bbox.y1 - (baseline.y1 + baseline.y0) / 2) / (bbox.y1 - bbox.y0);
 
-            textDom.innerText = `${textDom.innerText}${text}`;
-            textDom.style.left = `${(bbox.x0 / pageWidth) * 100}%`;
-            textDom.style.top = `${(bbox.y0 / pageHeight) * 100}%`;
-            textDom.style.height = `${((bbox.y1 - bbox.y0) / pageHeight) * 100}%`;
-            textDom.style.width = `${((bbox.x1 - bbox.x0) / pageWidth) * 100}%`;
+            lineDom.innerText = text.trim();
+            lineDom.style.left = `${(bbox.x0 / pageWidth) * 100}%`;
+            lineDom.style.top = `${(bbox.y0 / pageHeight) * 100}%`;
+            lineDom.style.height = `${((bbox.y1 - bbox.y0) / pageHeight) * 100}%`;
+            lineDom.style.width = `${((bbox.x1 - bbox.x0) / pageWidth) * 100}%`;
+            lineDom.style.textAlignLast = 'justify';
 
-            dom.append(textDom);
+            lineDoms.push({ el: lineDom, baseline: baselineRatio });
           }
         }
       }
 
-      textLayerEl.insertBefore(dom, endOfContent);
-      textLayerEl.setAttribute(attributeName, 'true');
+      const endOfContent = textLayerEl.querySelector('.endOfContent');
+      assert(endOfContent);
+
+      for (const { el } of lineDoms) {
+        textLayerEl.insertBefore(el, endOfContent);
+      }
+
       this.eventBus.dispatch(Events.CustomTextLayerRendered, { page });
+
+      const resizeObserver = new ResizeObserver(() => {
+        for (const { el, baseline } of lineDoms) {
+          assert(el instanceof HTMLElement);
+          el.style.fontSize = `${el.clientHeight * (1 - baseline)}px`;
+        }
+      });
+
+      resizeObserver.observe(textLayerEl);
+      this.pageSizeObserverMap.set(page, resizeObserver);
     }
   }
 
