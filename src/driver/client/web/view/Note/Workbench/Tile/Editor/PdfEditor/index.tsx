@@ -1,5 +1,7 @@
 import { createEffect, createMemo, createSignal, onCleanup, Show } from 'solid-js';
 import assert from 'assert';
+import { Key } from '@solid-primitives/keyed';
+import { identity } from 'lodash-es';
 
 import type PdfEditor from '#domain/client/app/model/note/editor/PdfEditor';
 import PDFViewer from './PDFViewer';
@@ -10,6 +12,7 @@ import SearchBar from './SearchBar';
 import SvgEditorBar from './SvgEditorBar';
 import SelectionTooltip from './SelectionTooltip';
 import AnnotationLayer from './AnnotationLayer';
+import TextLayer from './TextLayer';
 import './style.css';
 
 export default function PdfEditorView(props: { editor: PdfEditor }) {
@@ -62,12 +65,17 @@ export default function PdfEditorView(props: { editor: PdfEditor }) {
               ref={containerRef}
             >
               <div classList={{ 'select-text': !props.editor.annotation.svgEditor.isEnabled }} ref={viewRef}></div>
-              <Show when={getPdfViewer()}>
-                {(viewer) => (
-                  <>
-                    <AnnotationLayer pdfViewer={viewer()} />
-                    <SelectionTooltip pdfViewer={viewer()} />
-                  </>
+              <Show when={getPdfViewer()}>{(viewer) => <SelectionTooltip pdfViewer={viewer()} />}</Show>
+              <Show when={getPdfViewer()?.isReady && getPdfViewer()}>
+                {(pdfViewer) => (
+                  <Key each={pdfViewer().renderedPages} by={identity}>
+                    {(page) => (
+                      <>
+                        <AnnotationLayer page={page()} pdfViewer={pdfViewer()} />
+                        <TextLayer page={page()} pdfViewer={pdfViewer()} />
+                      </>
+                    )}
+                  </Key>
                 )}
               </Show>
             </div>
