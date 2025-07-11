@@ -17,7 +17,7 @@ export default function MaterialTree() {
         <MaterialAddButton
           triggerClassName="group-hover:visible data-[state='open']:visible invisible absolute right-0 bg-gray-200"
           iconOnly
-          noteId={node.id}
+          note={node.value}
         />
       )}
       treeView={materialTreeView}

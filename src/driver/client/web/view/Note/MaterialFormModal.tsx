@@ -28,6 +28,9 @@ export default function MaterialFormModal() {
       onClose={noteService.toggleMaterialForm}
       closeOnInteractOutside={false}
     >
+      <div>
+        位于<span class="italic">{noteService.materialForm?.parent?.title ?? '根目录'}</span>下
+      </div>
       <form class="space-y-4">
         <Field.Root>
           <Field.Label>标题</Field.Label>
@@ -42,8 +45,8 @@ export default function MaterialFormModal() {
           <Field.Input class="border" />
         </Field.Root>
         <Field.Root>
-          <Field.Label>备注</Field.Label>
-          <Field.Textarea class="border" />
+          <Field.Label>语言</Field.Label>
+          <Field.Input class="border" />
         </Field.Root>
         <Field.Root>
           <FileUpload.Root class="border text-center" onFileChange={({ acceptedFiles: [file] }) => uploadFile(file)}>

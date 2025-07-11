@@ -8,24 +8,24 @@ import type { NoteVO } from '#domain/shared/model/note';
 import { Portal } from 'solid-js/web';
 import shell from '#web/infra/shell';
 
-export default function ButtonGroup(props: { iconOnly?: boolean; noteId?: NoteVO['id']; triggerClassName?: string }) {
+export default function ButtonGroup(props: { iconOnly?: boolean; note?: NoteVO; triggerClassName?: string }) {
   const {
     treeViews: { material: treeView },
     toggleMaterialForm,
   } = container.resolve(NoteService);
 
   function onFormSubmit() {
-    if (props.noteId) {
-      treeView.tree.expand(props.noteId);
+    if (props.note) {
+      treeView.tree.expand(props.note.id);
     }
   }
 
   function onSelect({ value }: MenuSelectionDetails) {
     switch (value) {
       case 'file':
-        return toggleMaterialForm({ parentId: props.noteId, onSubmit: onFormSubmit });
+        return toggleMaterialForm({ parent: props.note, onSubmit: onFormSubmit });
       case 'directory':
-        return treeView.newNoteEditor?.init({ parentId: props.noteId });
+        return treeView.newNoteEditor?.init({ parentId: props.note?.id });
       default:
         throw new Error('invalid value');
     }

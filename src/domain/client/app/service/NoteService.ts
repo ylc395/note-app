@@ -1,13 +1,7 @@
 import { action, observable } from 'mobx';
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
-import {
-  type DuplicatedNoteDTO,
-  type NewNoteDTO,
-  type NotePatchDTO,
-  NoteTypes,
-  type NoteVO,
-} from '#domain/shared/model/note';
+import { type DuplicatedNoteDTO, type NotePatchDTO, NoteTypes, type NoteVO } from '#domain/shared/model/note';
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
 
 import Workbench from '../model/Workbench';
@@ -49,13 +43,13 @@ export default class NoteService {
   };
 
   @action
-  public readonly toggleMaterialForm = (options?: { parentId?: NewNoteDTO['parentId']; onSubmit?: () => void }) => {
+  public readonly toggleMaterialForm = (options?: { parent?: NoteVO; onSubmit?: () => void }) => {
     if (this.materialForm) {
       this.materialForm.destroy();
       this.materialForm = undefined;
     } else {
       this.materialForm = new MaterialForm({
-        parentId: options?.parentId,
+        parent: options?.parent,
         onSubmit: () => {
           options?.onSubmit?.();
           this.toggleMaterialForm();

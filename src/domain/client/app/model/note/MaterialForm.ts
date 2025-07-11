@@ -2,7 +2,7 @@ import { action, computed, observable, runInAction } from 'mobx';
 import assert from 'assert';
 import { createQuery } from 'mobx-tanstack-query/preset';
 
-import { NoteTypes, type NewNoteDTO } from '#domain/shared/model/note';
+import { NoteTypes, type NewNoteDTO, type NoteVO } from '#domain/shared/model/note';
 import Form from '#domain/client/shared/model/abstract/Form';
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
@@ -16,13 +16,17 @@ type MaterialFormField = Pick<NewNoteDTO, 'title' | 'body' | 'icon' | 'sourceUrl
 type File = Pick<FileDTO, 'mimeType' | 'path'> & { data: ArrayBuffer; name: string };
 
 export default class MaterialForm extends Form<MaterialFormField> {
-  constructor(private formOptions: { onSubmit: () => void; parentId?: NewNoteDTO['parentId'] }) {
+  constructor(private formOptions: { onSubmit: () => void; parent?: NoteVO }) {
     super();
   }
 
   private readonly domainEventBus = container.resolve(DomainEventBus);
 
   public readonly remote = container.resolve(rpcToken);
+
+  public get parent() {
+    return this.formOptions.parent;
+  }
 
   @observable.ref private accessor file: (File & { hash: string }) | undefined;
 
@@ -78,7 +82,7 @@ export default class MaterialForm extends Form<MaterialFormField> {
     const newNote = await this.remote.note.create.mutate({
       type: NoteTypes.Material,
       fileId: newFile.id,
-      parentId: this.formOptions.parentId,
+      parentId: this.formOptions.parent?.id,
       ...this.get(),
     });
 
