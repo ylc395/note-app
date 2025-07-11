@@ -39,3 +39,8 @@
 .svg_select_handle_rot {
   display: none;
 }
+
+[data-markjs='true'] {
+  color: inherit;
+  opacity: 0.4;
+}

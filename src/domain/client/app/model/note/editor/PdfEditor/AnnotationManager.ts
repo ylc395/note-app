@@ -36,7 +36,13 @@ export default class AnnotationManager {
       }),
       {},
     );
+
+    this.items = createQuery(() => this.remote.annotation.queryByEntityId.query(this.noteId), {
+      select: (data) => data.toSorted(AnnotationManager.sort),
+      queryKey: ['annotations', { noteId }],
+    });
   }
+  public readonly items;
 
   public readonly svgEditor = new SvgAnnotationEditor(this);
 
@@ -45,11 +51,6 @@ export default class AnnotationManager {
   public readonly openStatusMap: Record<string, boolean> = {};
 
   private readonly remote = container.resolve(rpcToken);
-
-  public readonly items = createQuery(() => this.remote.annotation.queryByEntityId.query(this.noteId), {
-    select: (data) => data.toSorted(AnnotationManager.sort),
-    queryKey: () => ['annotations', { noteId: this.noteId }],
-  });
 
   public async create({ selector, body }: { selector: PDFTextPositionSelector | PDFSvgSelector; body?: string }) {
     await this.remote.annotation.create.mutate({

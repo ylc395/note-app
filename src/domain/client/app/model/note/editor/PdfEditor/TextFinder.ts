@@ -13,7 +13,7 @@ export interface MatchesCount {
   total: number;
 }
 
-export interface PageSearchResult {
+interface PageDigests {
   page: number;
   digests: Digest[];
 }
@@ -30,17 +30,15 @@ export default class TextFinder {
       {},
     );
   }
+  private readonly persistedOptions;
   @observable public accessor isEnabled = false;
   @observable public accessor result: (MatchesCount & { options: TextFinder['options'] }) | undefined;
-
-  private readonly persistedOptions;
+  @observable.ref public accessor digests: PageDigests[] | undefined;
 
   @computed
   public get options() {
     return this.persistedOptions.toObject();
   }
-
-  @observable.ref public accessor digests: PageSearchResult[] | undefined;
 
   public readonly setQuery = debounce((value: string) => {
     this.persistedOptions.set('query', value);

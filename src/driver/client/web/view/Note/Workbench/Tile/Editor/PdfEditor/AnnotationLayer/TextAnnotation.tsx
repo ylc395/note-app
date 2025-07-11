@@ -8,6 +8,7 @@ import { last } from 'lodash-es';
 import assert from 'assert';
 
 import type { AnnotationVO } from '#domain/shared/model/annotation';
+import { APP_NAME } from '#domain/shared/infra/constants';
 import AnnotationManager from '#domain/client/app/model/note/editor/PdfEditor/AnnotationManager';
 import { getPage } from '#domain/client/app/model/annotation';
 import PdfViewer, { Events } from '../PDFViewer';
@@ -81,7 +82,7 @@ export default function TextAnnotation(props: { annotation: AnnotationVO; page: 
     const range = AnnotationManager.positionToRange(selector.position, props.page);
     const marker = new Mark(pageEl);
     const markEls: HTMLElement[] = [];
-    const className = `mark-${props.annotation.id}`;
+    const className = `${APP_NAME}-pdf-annotation-mark-${props.annotation.id}`;
 
     marker.markRanges([range], {
       className,
