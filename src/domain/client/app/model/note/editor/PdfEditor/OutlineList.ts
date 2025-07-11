@@ -30,12 +30,15 @@ export default class OutlineList {
     );
 
     this._items = createQuery(this.createItems.bind(this), {
+      abortSignal: this.destroyController.signal,
       queryKey: ['pdfOutline', annotation.noteId],
       options: () => ({ enabled: Boolean(this.doc) }),
     });
   }
 
   @observable.ref private accessor doc: PDFDocumentProxy | undefined;
+
+  private readonly destroyController = new AbortController();
 
   private readonly _items;
 
@@ -141,5 +144,9 @@ export default class OutlineList {
     }
 
     return 0;
+  }
+
+  public destroy() {
+    this.destroyController.abort();
   }
 }

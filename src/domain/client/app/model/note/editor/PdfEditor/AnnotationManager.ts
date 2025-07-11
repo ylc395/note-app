@@ -40,8 +40,12 @@ export default class AnnotationManager {
     this.items = createQuery(() => this.remote.annotation.queryByEntityId.query(this.noteId), {
       select: (data) => data.toSorted(AnnotationManager.sort),
       queryKey: ['annotations', { noteId }],
+      abortSignal: this.destroyController.signal,
     });
   }
+
+  private readonly destroyController = new AbortController();
+
   public readonly items;
 
   public readonly svgEditor = new SvgAnnotationEditor(this);
@@ -110,5 +114,9 @@ export default class AnnotationManager {
     }
 
     return range;
+  }
+
+  public destroy() {
+    this.destroyController.abort();
   }
 }

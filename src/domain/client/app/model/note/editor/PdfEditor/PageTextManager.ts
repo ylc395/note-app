@@ -17,6 +17,7 @@ export default class PageTextManager {
         return PageTextManager.extractTexts(this.doc);
       },
       {
+        abortSignal: this.destroyController.signal,
         queryKey: ['pdf-texts', this.noteId],
         options: () => ({ enabled: Boolean(this.doc) }),
       },

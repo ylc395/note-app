@@ -59,5 +59,7 @@ export default class PdfEditor extends BaseEditor {
     this.docFactory.revoke(this.noteId);
     this.textFinder.destroy();
     this.texts.destroy();
+    this.outline.destroy();
+    this.annotation.destroy();
   }
 }
