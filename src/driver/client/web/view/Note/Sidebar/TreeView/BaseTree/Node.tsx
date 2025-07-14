@@ -6,7 +6,7 @@ import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-d
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
-import { normalizeTitle, NoteTypes, type NoteVO } from '#domain/shared/model/note';
+import { normalizeTitle, type NoteVO } from '#domain/shared/model/note';
 import TreeViewModel from '#domain/client/app/model/note/TreeView';
 import container from '#utils/singletonContainer';
 import NoteService from '#domain/client/app/service/NoteService';
@@ -20,12 +20,12 @@ function Node(props: {
   indexPath: number[];
   operation: (node: TreeNode) => JSX.Element;
   icon?: (node: TreeNode) => JSX.Element;
+  onItemTitleClick: (node: TreeNode) => void;
 }) {
-  const { workbench, move } = container.resolve(NoteService);
+  const { move } = container.resolve(NoteService);
   const node = props.treeView.tree.createNode({ value: props.note, parent: props.parent });
-  const hasEditor = createMemo(
-    () => node.id === props.treeView.newNoteEditor?.value?.parentId && !props.treeView.newNoteEditor.isAutoSubmit,
-  );
+  const newNoteForm = createMemo(() => props.treeView.newNoteFormMap.get(node.id));
+
   const [rootRef, setRootRef] = createSignal<HTMLElement>();
   const itemClassName = 'flex items-center pl-5 cursor-pointer group relative hover:bg-gray-100 py-1';
   const itemTextClassName = 'whitespace-nowrap overflow-hidden text-ellipsis';
@@ -77,25 +77,13 @@ function Node(props: {
   });
 
   function handleItemClick(node: TreeNode) {
-    const note = node.value;
-
-    if (!note) {
-      return;
-    }
-
-    if (note.type === NoteTypes.Material && !note.mimeType) {
-      if (!node.isLeaf) {
-        node.toggleExpand();
-      }
-    } else {
-      workbench.open(note);
-    }
+    props.onItemTitleClick?.(node);
   }
 
   function handleArrowClick(e: MouseEvent) {
     e.stopPropagation();
 
-    if (!hasEditor()) {
+    if (!newNoteForm()) {
       node.toggleExpand();
     }
   }
@@ -103,7 +91,7 @@ function Node(props: {
   return (
     <TreeView.NodeProvider node={node} indexPath={props.indexPath}>
       <Show
-        when={!node.isLeaf || hasEditor()}
+        when={!node.isLeaf || newNoteForm()}
         fallback={
           <TreeView.Item
             onClick={() => handleItemClick(node)}
@@ -119,8 +107,8 @@ function Node(props: {
       >
         <TreeView.Branch classList={{ 'ml-4': props.indexPath.length > 1 }} ref={setRootRef}>
           <TreeView.BranchControl class={`pl-5 ${itemClassName}`} onClick={() => handleItemClick(node)}>
-            <button class="absolute left-0" disabled={hasEditor()} onClick={handleArrowClick}>
-              <Show when={node.isExpanded || hasEditor()} fallback={<ChevronRightIcon />}>
+            <button class="absolute left-0" disabled={Boolean(newNoteForm())} onClick={handleArrowClick}>
+              <Show when={node.isExpanded || newNoteForm()} fallback={<ChevronRightIcon />}>
                 <ChevronDownIcon />
               </Show>
             </button>
@@ -129,9 +117,7 @@ function Node(props: {
             {props.operation(node)}
           </TreeView.BranchControl>
           <TreeView.BranchContent>
-            <Show when={hasEditor()}>
-              <TitleEditor editor={props.treeView.newNoteEditor} />
-            </Show>
+            <Show when={newNoteForm()}>{(form) => <TitleEditor editor={form()} />}</Show>
             <Key each={node.childrenQuery.result.data} by="id">
               {(child, index) => (
                 <Node {...props} parent={node} note={child()} indexPath={[...props.indexPath, index()]} />

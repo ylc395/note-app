@@ -1,14 +1,14 @@
 import { action, observable } from 'mobx';
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
-import { type DuplicatedNoteDTO, type NotePatchDTO, NoteTypes, type NoteVO } from '#domain/shared/model/note';
+import { NoteTypes, type DuplicatedNoteDTO, type NotePatchDTO, type NoteVO } from '#domain/shared/model/note';
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
 
 import Workbench from '../model/Workbench';
 import DomainEventBus from '../model/note/EventBus';
-import TreeView from '../model/note/TreeView';
 import MaterialForm from '../model/note/MaterialForm';
 import BaseEditor from '../model/note/editor/BaseEditor';
+import TreeView from '../model/note/TreeView';
 
 export default class NoteService {
   constructor() {
@@ -21,10 +21,19 @@ export default class NoteService {
 
   @observable.ref public accessor materialForm: MaterialForm | undefined;
 
-  public readonly treeViews = {
-    note: new TreeView(NoteTypes.Note),
-    material: new TreeView(NoteTypes.Material),
-  } as const;
+  @observable.shallow public accessor treeViews: {
+    [NoteTypes.Note]: TreeView | null;
+    [NoteTypes.Material]: TreeView | null;
+  } = {
+    [NoteTypes.Note]: null,
+    [NoteTypes.Material]: null,
+  };
+
+  @action
+  public readonly initTreeView = (type: NoteTypes) => {
+    this.treeViews[type] = new TreeView(type);
+    return this.treeViews[type];
+  };
 
   private readonly eventBus = container.resolve(DomainEventBus);
 

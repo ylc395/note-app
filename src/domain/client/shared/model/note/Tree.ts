@@ -1,7 +1,7 @@
 import { difference } from 'lodash-es';
 import { queryClient } from 'mobx-tanstack-query/preset';
 import { z } from 'zod';
-import { action, autorun, observable, runInAction, when } from 'mobx';
+import { action, autorun, observable, reaction, runInAction, when } from 'mobx';
 
 import { NoteTypes, NoteVO } from '#domain/shared/model/note';
 import type { MaybeArray } from '#utils/collection';
@@ -11,10 +11,18 @@ import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import PersistedMap from '../abstract/PersistedMap';
 import TreeNode from './TreeNode';
 
+const schema = z
+  .object({
+    scroll: z.object({ x: z.number(), y: z.number() }),
+    expanded: z.string().array(),
+    selected: z.string().array(),
+  })
+  .partial();
+
 export default class Tree {
   constructor(private readonly options: { sort?: (note1: NoteVO, note2: NoteVO) => number; type: NoteTypes }) {
     this.root = this.createNode();
-    this.uiState = new PersistedMap(`note-explorer-tree-${options.type}`, Tree.schema, {});
+    this.uiState = new PersistedMap(`note-explorer-tree-${options.type}`, schema, {});
 
     when(() => this.uiState.isReady, this.init.bind(this));
   }
@@ -50,7 +58,7 @@ export default class Tree {
   }
 
   public get(id: string | null) {
-    if (!id) {
+    if (id === null) {
       return this.root;
     }
 
@@ -100,19 +108,41 @@ export default class Tree {
   }
 
   public createNode(params?: { value: NoteVO; parent: TreeNode }) {
+    const abortController = new AbortController();
     const newNode = new TreeNode({
       type: this.options.type,
       value: params?.value,
       parent: params?.parent,
       sort: this.options?.sort,
+      isSelected: params ? this.selectedNodeIds.has(params.value.id) : false,
+      isExpanded: params ? this.expandedNodeIds.has(params.value.id) : false,
       tree: this,
-      onDestroyed: action(() => {
-        this.nodesMap.delete(newNode.id);
-        this.selectedNodeIds.delete(newNode.id);
-        this.expandedNodeIds.delete(newNode.id);
-        this.unselectableNodeIds.delete(newNode.id);
-      }),
+      onDestroyed: () => {
+        abortController.abort();
+
+        if (params) {
+          this.nodesMap.delete(params.parent.id);
+        }
+      },
     });
+
+    reaction(
+      () => newNode.isExpanded,
+      (v) => (v ? this.expandedNodeIds.add(newNode.id) : this.expandedNodeIds.delete(newNode.id)),
+      { signal: abortController.signal },
+    );
+
+    reaction(
+      () => newNode.isSelected,
+      (v) => (v ? this.selectedNodeIds.add(newNode.id) : this.selectedNodeIds.delete(newNode.id)),
+      { signal: abortController.signal },
+    );
+
+    reaction(
+      () => newNode.isUnselectable,
+      (v) => (v ? this.unselectableNodeIds.add(newNode.id) : this.unselectableNodeIds.delete(newNode.id)),
+      { signal: abortController.signal },
+    );
 
     this.nodesMap.set(newNode.id, newNode);
 
@@ -159,11 +189,7 @@ export default class Tree {
     });
   }
 
-  private static readonly schema = z
-    .object({
-      scroll: z.object({ x: z.number(), y: z.number() }),
-      expanded: z.string().array(),
-      selected: z.string().array(),
-    })
-    .partial();
+  public destroy() {
+    this.root.destroy();
+  }
 }

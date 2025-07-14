@@ -13,7 +13,7 @@ export const noteSchema = z.object({
   parentId: entityParentIdSchema,
   body: z.string().optional(),
   icon: z.union([z.string(), z.null()]),
-  fileId: z.union([z.string(), z.null()]).optional(),
+  fileId: z.union([z.string(), z.null()]),
   mimeType: z.union([z.string(), z.null()]),
   sourceUrl: z.union([z.string(), z.null()]),
   updatedAt: z.number(),

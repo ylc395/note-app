@@ -13,7 +13,7 @@ export interface Note {
   parentId: EntityParentId;
   body?: string;
   icon: string | null;
-  fileId?: string | null; // material 有可能存在该属性
+  fileId: string | null; // material 有可能存在该属性
   mimeType: string | null; // material 有可能存在该属性
   sourceUrl: string | null; // material 有可能存在该属性
   updatedAt: number;

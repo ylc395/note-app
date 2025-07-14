@@ -1,31 +1,35 @@
-import { Show } from 'solid-js';
+import { createMemo, Show } from 'solid-js';
+import { Portal } from 'solid-js/web';
 import { PlusIcon, FolderPlusIcon, FilePlus, ChevronDownIcon } from 'lucide-solid';
 import { Menu, type MenuSelectionDetails } from '@ark-ui/solid';
 
 import container from '#utils/singletonContainer';
 import NoteService from '#domain/client/app/service/NoteService';
-import type { NoteVO } from '#domain/shared/model/note';
-import { Portal } from 'solid-js/web';
 import shell from '#web/infra/shell';
+import type TreeNode from '#domain/client/shared/model/note/TreeNode';
+import { NoteTypes } from '#domain/shared/model/note';
 
-export default function ButtonGroup(props: { iconOnly?: boolean; note?: NoteVO; triggerClassName?: string }) {
-  const {
-    treeViews: { material: treeView },
-    toggleMaterialForm,
-  } = container.resolve(NoteService);
+export default function ButtonGroup(props: { iconOnly?: boolean; triggerClassName?: string; node?: TreeNode }) {
+  const { toggleMaterialForm, treeViews } = container.resolve(NoteService);
+  const node = createMemo(() => props.node ?? treeViews[NoteTypes.Material]?.tree.root);
 
   function onFormSubmit() {
-    if (props.note) {
-      treeView.tree.expand(props.note.id);
+    const _node = node();
+
+    if (_node) {
+      _node.toggleExpand(true);
     }
   }
 
   function onSelect({ value }: MenuSelectionDetails) {
     switch (value) {
       case 'file':
-        return toggleMaterialForm({ parent: props.note, onSubmit: onFormSubmit });
+        return toggleMaterialForm({
+          parent: node()?.value,
+          onSubmit: onFormSubmit,
+        });
       case 'directory':
-        return treeView.newNoteEditor?.init({ parentId: props.note?.id });
+        return treeViews[NoteTypes.Material]?.initNewNoteForm({ parentId: node()?.value?.id });
       default:
         throw new Error('invalid value');
     }

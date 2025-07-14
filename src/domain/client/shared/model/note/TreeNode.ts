@@ -12,12 +12,16 @@ export default class TreeNode {
     value,
     parent,
     type,
+    isExpanded,
+    isSelected,
     ...options
   }: {
     value?: NoteVO;
     parent?: TreeNode;
     tree: Tree;
     type: NoteTypes;
+    isExpanded: boolean;
+    isSelected: boolean;
     sort?: (note1: NoteVO, note2: NoteVO) => number;
     onDestroyed: () => void;
   }) {
@@ -26,11 +30,11 @@ export default class TreeNode {
     this.options = options;
     this.parent = parent;
 
-    if (this.isRoot || this.options.tree.expandedNodeIds.has(this.id)) {
+    if (this.isRoot || isExpanded) {
       this.toggleExpand(true);
     }
 
-    if (this.options.tree.selectedNodeIds.has(this.id)) {
+    if (isSelected) {
       this.toggleSelect(true);
     }
 
@@ -39,8 +43,7 @@ export default class TreeNode {
         return this.remote.note.query.query({ parentId: value?.id ?? null, type }, { signal });
       },
       {
-        refetchOnWindowFocus: false,
-        staleTime: Infinity,
+        refetchOnWindowFocus: true,
         select: (notes) => notes.toSorted(options.sort),
         abortSignal: this.destroyController.signal,
         queryKey: TreeNode.getChildrenQueryKey({ parentId: value?.id ?? null, type }),
@@ -49,6 +52,8 @@ export default class TreeNode {
         }),
       },
     );
+
+    this.destroyController.signal.addEventListener('abort', options.onDestroyed, { once: true });
   }
 
   public get id() {
@@ -98,6 +103,7 @@ export default class TreeNode {
   @action
   public setValue(value: TreeNode['value']) {
     if (this.value && value) {
+      // 确保是对同一个 note 的更新
       assert(this.value.id === value.id, 'can not setValue');
     }
 
@@ -108,46 +114,24 @@ export default class TreeNode {
   public toggleExpand(value?: boolean) {
     this.isExpanded = value ?? !this.isExpanded;
 
-    if (this.isRoot) {
-      return;
-    }
-
-    if (this.isExpanded) {
-      this.options.tree.expandedNodeIds.add(this.id);
-
-      if (value === undefined) {
-        this.childrenQuery.invalidate();
-      }
-    } else {
-      this.options.tree.expandedNodeIds.delete(this.id);
+    // value 为 undefined 说明是用户正常触发的，这种情况下获取最新数据
+    if (this.isExpanded && value === undefined) {
+      this.childrenQuery.invalidate();
     }
   }
 
   @action
   public toggleSelect(value?: boolean) {
     this.isSelected = value ?? !this.isSelected;
-
-    if (this.isSelected) {
-      this.options.tree.selectedNodeIds.add(this.id);
-    } else {
-      this.options.tree.selectedNodeIds.delete(this.id);
-    }
   }
 
   public setIsUnselectable(value: boolean) {
     this.isUnselectable = value;
-
-    if (this.isUnselectable) {
-      this.options.tree.unselectableNodeIds.add(this.id);
-    } else {
-      this.options.tree.unselectableNodeIds.delete(this.id);
-    }
   }
 
   @action
   public destroy() {
     this.options.onDestroyed();
-    this.destroyController.abort();
   }
 
   public static getChildrenQueryKey(params: { parentId: NoteVO['parentId']; type: NoteTypes }) {

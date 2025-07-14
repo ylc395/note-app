@@ -1,14 +1,14 @@
-import { action, computed } from 'mobx';
+import { action, computed, observable } from 'mobx';
 
 import Tree from '#domain/client/shared/model/note/Tree';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import container from '#utils/singletonContainer';
-import { NoteTypes, type NoteVO } from '#domain/shared/model/note';
+import { NoteTypes, type NewNoteDTO, type NoteVO } from '#domain/shared/model/note';
 import DomainEventBus, { type UpdatedEvent } from '#domain/client/app/model/note/EventBus';
 
 import SortBehavior from './SortBehavior';
-import NewNoteEditor from './NewNoteEditor';
-import type TreeNode from '#domain/client/shared/model/note/TreeNode';
+import NewNoteForm from './NewNoteForm';
+import assert from 'assert';
 
 export default class TreeView {
   constructor(private readonly type: NoteTypes) {
@@ -17,32 +17,8 @@ export default class TreeView {
       type,
     });
 
-    this.newNoteEditor = this.createNewNoteEditor();
     this.domainEventBus.on([DomainEventBus.eventNames.Created, DomainEventBus.eventNames.Updated], this.handleUpdated);
   }
-
-  private createNewNoteEditor = () => {
-    let isExpanded: boolean | undefined;
-    let parentNode: TreeNode | undefined;
-
-    return new NewNoteEditor({
-      type: this.type,
-      onInit: (value) => {
-        parentNode = value.parentId ? this.tree.get(value.parentId) : undefined;
-
-        if (parentNode) {
-          isExpanded = parentNode.isExpanded;
-          parentNode.toggleExpand(true);
-        }
-      },
-      onReset: (value) => {
-        // 如果取消了新建流程，则把父节点的展开状态弄回原样
-        if (!value && parentNode && typeof isExpanded === 'boolean') {
-          parentNode.toggleExpand(isExpanded);
-        }
-      },
-    });
-  };
 
   private readonly domainEventBus = container.resolve(DomainEventBus);
 
@@ -50,9 +26,32 @@ export default class TreeView {
 
   public readonly sortBehavior = container.resolve(SortBehavior);
 
-  public readonly newNoteEditor;
+  @observable.shallow public accessor newNoteFormMap = new Map<string, NewNoteForm>();
 
   public readonly tree;
+
+  public initNewNoteForm(value: Pick<NewNoteDTO, 'parentId' | 'title'> & { isAutoSubmit?: boolean }) {
+    const parentNode = this.tree.get(value.parentId ?? null);
+    assert(parentNode);
+
+    const isExpanded = parentNode.isExpanded;
+    const newNoteForm = new NewNoteForm({
+      ...value,
+      type: this.type,
+      onCancel: () => {
+        // 如果取消了新建流程，则把父节点的展开状态弄回原样
+        if (typeof isExpanded === 'boolean') {
+          parentNode.toggleExpand(isExpanded);
+        }
+      },
+      onFinish: action(() => {
+        this.newNoteFormMap.delete(parentNode.id);
+      }),
+    });
+
+    this.newNoteFormMap.set(parentNode.id, newNoteForm);
+    parentNode.toggleExpand(true);
+  }
 
   @action.bound
   private handleUpdated({ parentId, id, ...patch }: UpdatedEvent) {
@@ -121,5 +120,9 @@ export default class TreeView {
 
     const nodeIdToSetUnselect = [...noteIds, ...[...unknownAncestors, ...ancestors].map(({ id }) => id)];
     this.tree.setUnselectable(nodeIdToSetUnselect);
+  }
+
+  public destroy() {
+    this.tree.destroy();
   }
 }

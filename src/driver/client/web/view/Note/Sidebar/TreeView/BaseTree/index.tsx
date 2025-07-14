@@ -13,6 +13,7 @@ export default function NoteTree(props: {
   useNewNoteEditor?: boolean;
   operation: (node: TreeNode) => JSX.Element;
   icon?: (node: TreeNode) => JSX.Element;
+  onItemTitleClick: (node: TreeNode) => void;
 }) {
   const collection = createTreeCollection<TreeNode>({
     rootNode: props.treeView.tree.root,
@@ -28,18 +29,13 @@ export default function NoteTree(props: {
       expandedValue={Array.from(props.treeView.tree.expandedNodeIds)}
     >
       <TreeView.Tree>
-        <Show
-          when={
-            props.useNewNoteEditor &&
-            props.treeView.newNoteEditor?.value &&
-            !props.treeView.newNoteEditor.value.parentId
-          }
-        >
-          <TitleEditor editor={props.treeView.newNoteEditor!} />
+        <Show when={props.useNewNoteEditor && props.treeView.newNoteFormMap.get(props.treeView.tree.root.id)}>
+          {(form) => <TitleEditor editor={form()} />}
         </Show>
         <Key each={collection.rootNode.childrenQuery.result.data} by="id">
           {(note, index) => (
             <NodeView
+              onItemTitleClick={props.onItemTitleClick}
               operation={props.operation}
               treeView={props.treeView}
               icon={props.icon}

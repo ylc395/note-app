@@ -6,8 +6,8 @@ import UIState, { NoteTreeViewTabs } from '#web/view/UIState';
 
 import NoteTreeView from './NoteTree';
 import MaterialTreeView from './MaterialTree';
-import ButtonGroup from './AddButton/Material';
-import Button from './AddButton/Note';
+import MaterialAddButtonGroup from './AddButton/Material';
+import NoteAddButton from './AddButton/Note';
 
 export default function TreeView() {
   const uiState = container.resolve(UIState);
@@ -40,10 +40,10 @@ export default function TreeView() {
         </Tabs.List>
         <div class="flex items-center">
           <Show when={uiState.get('note.treeView') === NoteTreeViewTabs.Note}>
-            <Button />
+            <NoteAddButton />
           </Show>
           <Show when={uiState.get('note.treeView') === NoteTreeViewTabs.Material}>
-            <ButtonGroup />
+            <MaterialAddButtonGroup />
           </Show>
         </div>
       </div>
