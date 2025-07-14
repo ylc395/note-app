@@ -14,13 +14,16 @@ export default function TitleInput(props: { editor: BaseEditor }) {
   createEffect(() => {
     if (props.editor.value.result.data) {
       setTitle(props.editor.value.result.data.title);
+
+      if (!props.editor.value.result.data.body && !props.editor.value.result.data.title) {
+        inputRef?.focus();
+      }
     }
   });
 
   return (
     <input
-      // @ts-expect-error -- solidjs 的问题
-      attr:spellcheck={false}
+      spellcheck={false}
       ref={inputRef}
       class="block w-full outline-none h-12 px-4 text-lg border-b shrink-0"
       disabled={!props.editor.value.result.data}

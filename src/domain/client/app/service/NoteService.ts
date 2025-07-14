@@ -15,6 +15,8 @@ export default class NoteService {
     this.eventBus.on(DomainEventBus.eventNames.Created, this.workbench.open.bind(this.workbench));
   }
 
+  private readonly eventBus = container.resolve(DomainEventBus);
+
   private readonly remote = container.resolve(rpcToken);
 
   public readonly workbench = container.resolve(Workbench);
@@ -34,8 +36,6 @@ export default class NoteService {
     this.treeViews[type] = new TreeView(type);
     return this.treeViews[type];
   };
-
-  private readonly eventBus = container.resolve(DomainEventBus);
 
   public readonly duplicate = async (params: DuplicatedNoteDTO, open?: boolean) => {
     const newNote = await this.remote.note.create.mutate(params);
