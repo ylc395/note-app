@@ -26,10 +26,11 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
   }
 
   public async update(id: NoteVO['id'] | NoteVO['id'][], note: NotePatch) {
+    const bodyPlainText = typeof note.body === 'string' ? ContentService.markdownToPlain(note.body) : undefined;
     const { numUpdatedRows } = await this.db
       .updateTable(this.tableName)
       .where('id', Array.isArray(id) ? 'in' : '=', id)
-      .set(note)
+      .set({ ...note, bodyPlainText })
       .executeTakeFirst();
 
     return Array.isArray(id) ? id.length === Number(numUpdatedRows) : Number(numUpdatedRows) === 1;

@@ -28,10 +28,15 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
   }
 
   public async update(id: Memo['id'], patch: MemoPatchDTO) {
+    const bodyPlainText = typeof patch.body === 'string' ? ContentService.markdownToPlain(patch.body) : undefined;
     const updatedRow = await this.db
       .updateTable(this.tableName)
       .where('id', '=', id)
-      .set({ ...patch, isPinned: typeof patch.isPinned === 'boolean' ? (patch.isPinned ? 1 : 0) : undefined })
+      .set({
+        ...patch,
+        bodyPlainText,
+        isPinned: typeof patch.isPinned === 'boolean' ? (patch.isPinned ? 1 : 0) : undefined,
+      })
       .returningAll()
       .executeTakeFirst();
 
