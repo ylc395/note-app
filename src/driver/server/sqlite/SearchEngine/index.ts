@@ -70,7 +70,7 @@ export default class SqliteSearchEngine implements SearchEngine {
       ])
       .where((eb) => {
         const titleCondition = eb(notesFTSTableName, 'match', `title : ${q.keyword}`);
-        const contentCondition = eb(notesFTSTableName, 'match', `body : ${q.keyword}`);
+        const contentCondition = eb(notesFTSTableName, 'match', `body_plain_text : ${q.keyword}`);
 
         const fieldsStatements = compact([
           q.fields?.includes(SearchFields.Title) && titleCondition,

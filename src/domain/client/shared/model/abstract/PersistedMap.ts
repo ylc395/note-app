@@ -27,7 +27,7 @@ export default class PersistedMap<S extends object> {
     }
 
     if (parsedResult.error) {
-      for (const issue of parsedResult.error.errors) {
+      for (const issue of parsedResult.error.issues) {
         set(value as object, issue.path, get(defaultValue, issue.path));
       }
     }
