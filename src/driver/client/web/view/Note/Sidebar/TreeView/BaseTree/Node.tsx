@@ -106,8 +106,8 @@ function Node(props: {
         }
       >
         <TreeView.Branch classList={{ 'ml-4': props.indexPath.length > 1 }} ref={setRootRef}>
-          <TreeView.BranchControl class={`pl-5 ${itemClassName}`} onClick={() => handleItemClick(node)}>
-            <button class="absolute left-0" disabled={Boolean(newNoteForm())} onClick={handleArrowClick}>
+          <TreeView.BranchControl class={itemClassName} onClick={() => handleItemClick(node)}>
+            <button disabled={Boolean(newNoteForm())} onClick={handleArrowClick}>
               <Show when={node.isExpanded || newNoteForm()} fallback={<ChevronRightIcon />}>
                 <ChevronDownIcon />
               </Show>

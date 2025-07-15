@@ -1,41 +1,70 @@
 import { Tabs } from '@ark-ui/solid/tabs';
 import { BookTextIcon, LightbulbIcon, HashIcon, SearchIcon, StarIcon, RecycleIcon, SettingsIcon } from 'lucide-solid';
 
-import { SidebarTabs } from './UIState';
+import container from '#utils/singletonContainer';
+import UIState, { SidebarTabs } from './UIState';
+import { createMemo } from 'solid-js';
 
 export default function Sidebar() {
-  const triggerClass =
-    'flex justify-center items-center h-14 w-14 border-0 bg-transparent cursor-pointer data-[selected]:bg-gray-200';
+  const uiState = container.resolve(UIState);
+  const selectedTab = createMemo(() => uiState.get('app.sidebar'));
+
+  const menuClassName = 'menu space-y-1';
+  const iconClassName = 'w-5';
 
   return (
-    <Tabs.List class="flex flex-col h-screen bg-gray-100 relative overflow-auto flex-shrink-0">
-      <div class="border-b">
-        <Tabs.Trigger value={SidebarTabs.Memo} class={triggerClass}>
-          <LightbulbIcon size="24" />
-        </Tabs.Trigger>
-        <Tabs.Trigger value={SidebarTabs.Note} class={triggerClass}>
-          <BookTextIcon size="24" />
-        </Tabs.Trigger>
-      </div>
-      <div>
-        <button class={triggerClass}>
-          <StarIcon />
-        </button>
-        <button class={triggerClass}>
-          <HashIcon />
-        </button>
-        <button class={triggerClass}>
-          <SearchIcon />
-        </button>
-      </div>
-      <div class="mt-auto">
-        <button class={triggerClass}>
-          <RecycleIcon />
-        </button>
-        <button class={triggerClass}>
-          <SettingsIcon />
-        </button>
-      </div>
+    <Tabs.List class="flex flex-col h-screen bg-base-300 relative overflow-auto flex-shrink-0">
+      <ul class={menuClassName}>
+        <Tabs.Trigger
+          value={SidebarTabs.Memo}
+          asChild={(props) => (
+            <li>
+              <a {...props()} classList={{ 'menu-active': selectedTab() === SidebarTabs.Memo }}>
+                <LightbulbIcon class={iconClassName} />
+              </a>
+            </li>
+          )}
+        />
+        <Tabs.Trigger
+          value={SidebarTabs.Note}
+          asChild={(props) => (
+            <li>
+              <a {...props()} classList={{ 'menu-active': selectedTab() === SidebarTabs.Note }}>
+                <BookTextIcon class={iconClassName} />
+              </a>
+            </li>
+          )}
+        />
+      </ul>
+      <ul class={menuClassName}>
+        <li>
+          <a>
+            <StarIcon class={iconClassName} />
+          </a>
+        </li>
+        <li>
+          <a>
+            <HashIcon class={iconClassName} />
+          </a>
+        </li>
+        <li>
+          <a>
+            <SearchIcon class={iconClassName} />
+          </a>
+        </li>
+      </ul>
+      <ul class={`mt-auto w- ${menuClassName}`}>
+        <li>
+          <a>
+            <RecycleIcon class={iconClassName} />
+          </a>
+        </li>
+        <li>
+          <a>
+            <SettingsIcon class={iconClassName} />
+          </a>
+        </li>
+      </ul>
     </Tabs.List>
   );
 }

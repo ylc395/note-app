@@ -12,6 +12,7 @@ export default function NoteTab(props: { className: string }) {
 
   return (
     <Tabs.Content
+      class="bg-base-200"
       value={SidebarTabs.Note}
       asChild={(tabProps) => (
         <Splitter.Root

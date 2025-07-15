@@ -4,7 +4,7 @@ import { checker } from 'vite-plugin-checker';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import solid from 'vite-plugin-solid';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
-import tailwindcss from 'tailwindcss';
+import tailwindcss from '@tailwindcss/vite';
 
 import { RUNTIME_ENV } from './constants.js';
 import { APP_NAME } from '../../../src/domain/shared/infra/constants.js';
@@ -17,15 +17,11 @@ export default async function createViteServer() {
     clearScreen: false,
     root: path.resolve('./src/driver/client/web'),
     esbuild: { target: 'es2023' }, // 用了 ES Decorator，编译到 ESNext 浏览器还不支持
-    css: {
-      postcss: {
-        plugins: [tailwindcss({ config: path.resolve('./src/driver/client/web/tailwind.config.js') })],
-      },
-    },
     plugins: [
       solid(),
       checker({ typescript: { tsconfigPath: WEB_TSCONFIG } }),
       tsconfigPaths({ projects: [WEB_TSCONFIG] }),
+      tailwindcss(),
       nodePolyfills({
         include: ['process'], // assert 库在依赖这个 polyfill
       }),

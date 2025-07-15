@@ -20,7 +20,7 @@ export default function NoteTree() {
         <NoteAddButton
           iconOnly
           node={node}
-          triggerClassName="group-hover:visible invisible absolute right-0 bg-gray-200"
+          buttonClassName="btn-xs bg-inherit group-hover:visible invisible absolute right-0"
         />
       )}
     />

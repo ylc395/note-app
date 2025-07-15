@@ -23,7 +23,7 @@ export default function NoteTree(props: {
 
   return (
     <TreeView.Root
-      class="overflow-auto min-h-0"
+      class="overflow-auto h-full"
       collection={collection}
       expandOnClick={false}
       expandedValue={Array.from(props.treeView.tree.expandedNodeIds)}

@@ -7,10 +7,10 @@ import SearchBox from './SearchBox';
 
 export default function Sidebar(props: { panelId: string }) {
   return (
-    <Splitter.Panel id={props.panelId} class="border-r h-full flex flex-col min-w-60 py-4 pl-4">
-      <div class="flex items-center mb-2 pr-2">
-        <h1>NOTE</h1>
-        <div class="relative grow h-full flex">
+    <Splitter.Panel id={props.panelId} class="border-r h-full flex flex-col min-w-60 p-3">
+      <div class="flex items-center mb-3">
+        <h1 class="font-bold">笔记</h1>
+        <div class="relative grow h-full flex justify-end">
           <ButtonGroup />
           <DropArea />
         </div>

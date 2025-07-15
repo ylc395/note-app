@@ -1,4 +1,6 @@
-@import 'tailwindcss/tailwind.css';
+@import 'tailwindcss';
+@import 'tailwindcss-animated';
+@plugin "daisyui";
 
 @layer components {
   .number-suffix {
@@ -13,9 +15,12 @@
 }
 
 .lucide {
+  stroke-width: 1.5;
+}
+
+.btn .lucide {
   width: 18px;
   height: 18px;
-  stroke-width: 1.5;
 }
 
 [hidden]:where(:not([hidden='until-found'])) {

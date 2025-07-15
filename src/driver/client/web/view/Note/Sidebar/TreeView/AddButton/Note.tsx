@@ -7,7 +7,7 @@ import container from '#utils/singletonContainer';
 import NoteService from '#domain/client/app/service/NoteService';
 import { NoteTypes } from '#domain/shared/model/note';
 
-export default function NoteAddButton(props: { iconOnly?: boolean; triggerClassName?: string; node?: TreeNode }) {
+export default function NoteAddButton(props: { iconOnly?: boolean; buttonClassName?: string; node?: TreeNode }) {
   const { treeViews } = container.resolve(NoteService);
   const node = createMemo(() => props.node ?? treeViews[NoteTypes.Note]?.tree.root);
 
@@ -32,7 +32,7 @@ export default function NoteAddButton(props: { iconOnly?: boolean; triggerClassN
   }
 
   return (
-    <button class={`flex ${props.triggerClassName || ''}`} onClick={handleClick}>
+    <button class={`btn btn-ghost ${props.buttonClassName || ''}`} onClick={handleClick}>
       <Show when={newEditorForm()?.isSubmitting} fallback={<PlusIcon />}>
         <LoaderIcon class="animate-spin" />
       </Show>
