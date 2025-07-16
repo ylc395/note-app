@@ -27,7 +27,7 @@ export default function Node(props: {
   const newNoteForm = createMemo(() => props.treeView.newNoteFormMap.get(node.id));
 
   const [rootRef, setRootRef] = createSignal<HTMLElement>();
-  const itemTextClassName = 'whitespace-nowrap overflow-hidden text-ellipsis';
+  const itemTextClassName = 'whitespace-nowrap overflow-hidden text-ellipsis py-0.5';
 
   createEffect(
     on(
@@ -96,10 +96,17 @@ export default function Node(props: {
             onClick={() => handleItemClick(node)}
             ref={setRootRef}
             asChild={(childProps) => (
-              <li {...childProps()}>
-                {props.icon?.(node)}
-                <TreeView.ItemText class={itemTextClassName}>{normalizeTitle(node.value!)}</TreeView.ItemText>
-                {props.operation(node)}
+              <li {...childProps()} class="w-full">
+                <div class="px-0 flex justify-between w-full group pl-5">
+                  <TreeView.ItemText
+                    class={itemTextClassName}
+                    style={{ 'padding-left': 'calc((var(--depth) - 1) * 18px)' }}
+                  >
+                    {props.icon?.(node)}
+                    {normalizeTitle(node.value!)}
+                  </TreeView.ItemText>
+                  {props.operation(node)}
+                </div>
               </li>
             )}
           />
@@ -107,12 +114,17 @@ export default function Node(props: {
       >
         <TreeView.Branch
           ref={setRootRef}
-          asChild={() => (
-            <li>
-              <TreeView.BranchControl onClick={() => handleItemClick(node)}>
-                <button class="absolute" disabled={Boolean(newNoteForm())} onClick={handleArrowClick}>
-                  <Show when={node.isExpanded || newNoteForm()} fallback={<ChevronRightIcon />}>
-                    <ChevronDownIcon />
+          asChild={(childProps) => (
+            <li {...childProps()} class="w-full">
+              <TreeView.BranchControl class="gap-0 group px-0" onClick={() => handleItemClick(node)}>
+                <button
+                  class="cursor-pointer"
+                  style={{ 'padding-left': 'calc((var(--depth) - 1) * 18px)' }}
+                  disabled={Boolean(newNoteForm())}
+                  onClick={handleArrowClick}
+                >
+                  <Show when={node.isExpanded || newNoteForm()} fallback={<ChevronRightIcon class="w-5 h-5" />}>
+                    <ChevronDownIcon class="w-5 h-5" />
                   </Show>
                 </button>
                 <TreeView.BranchText class={itemTextClassName}>
@@ -123,7 +135,7 @@ export default function Node(props: {
               </TreeView.BranchControl>
               <TreeView.BranchContent
                 asChild={(childProps) => (
-                  <ul {...childProps()}>
+                  <ul {...childProps()} class="ml-0 pl-0 w-full before:content-none">
                     <Show when={newNoteForm()}>
                       {(form) => (
                         <li>

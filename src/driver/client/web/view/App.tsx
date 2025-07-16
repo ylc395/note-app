@@ -11,7 +11,7 @@ import { Show } from 'solid-js';
 
 export default function App() {
   const uiState = container.resolve(UIState);
-  const mainTabClassName = 'flex-grow min-w-0 relative bg-gray-50 h-full';
+  const mainTabClassName = 'flex-grow min-w-0 relative bg-base-100 h-full';
 
   return (
     <Show when={uiState.isReady}>

@@ -21,8 +21,11 @@ export default class NewNoteForm {
     onCancel?: () => void;
     onFinish?: () => void;
   }) {
-    this.value = { parentId, title, type };
-    this.isAutoSubmit = isAutoSubmit ?? false;
+    runInAction(() => {
+      this.value = { parentId, title, type };
+      this.isAutoSubmit = isAutoSubmit ?? false;
+    });
+
     this.options = options;
 
     if (isAutoSubmit) {
@@ -36,7 +39,7 @@ export default class NewNoteForm {
 
   private readonly domainEventBus = container.resolve(DomainEventBus);
 
-  @observable public accessor value: Pick<NewNoteDTO, 'parentId' | 'title' | 'type'>;
+  @observable public accessor value!: Pick<NewNoteDTO, 'parentId' | 'title' | 'type'>;
 
   @observable public accessor isSubmitting = false;
 

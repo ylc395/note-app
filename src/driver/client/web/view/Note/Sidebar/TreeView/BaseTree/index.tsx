@@ -23,14 +23,14 @@ export default function NoteTree(props: {
 
   return (
     <TreeView.Root
-      class="overflow-y-auto overflow-x-hidden h-full"
+      class="overflow-auto h-full scrollbar-stable"
       collection={collection}
       expandOnClick={false}
       expandedValue={Array.from(props.treeView.tree.expandedNodeIds)}
     >
       <TreeView.Tree
         asChild={(childProps) => (
-          <ul {...childProps()} class="w-full">
+          <ul {...childProps()} class="menu p-0 w-full">
             <Show when={props.useNewNoteEditor && props.treeView.newNoteFormMap.get(props.treeView.tree.root.id)}>
               {(form) => (
                 <li>

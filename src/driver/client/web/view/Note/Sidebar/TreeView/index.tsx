@@ -43,7 +43,7 @@ export default function TreeView() {
         <div class="flex items-center">
           <Switch>
             <Match when={uiState.get('note.treeView') === NoteTreeViewTabs.Note}>
-              <NoteAddButton />
+              <NoteAddButton buttonClassName="btn btn-ghost" />
             </Match>
             <Match when={uiState.get('note.treeView') === NoteTreeViewTabs.Material}>
               <MaterialAddButtonGroup />

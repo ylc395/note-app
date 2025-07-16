@@ -6,7 +6,7 @@ import { Direction } from '#domain/client/app/model/base/HistoryStack';
 
 export default function ButtonGroup() {
   const { historyStack } = container.resolve(Workbench);
-  const buttonClassName = 'join-item btn btn-xs btn-ghost';
+  const buttonClassName = 'join-item btn btn-xs btn-ghost btn-square';
 
   return (
     <div class="join">

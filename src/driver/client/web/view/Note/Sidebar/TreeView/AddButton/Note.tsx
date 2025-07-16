@@ -32,7 +32,7 @@ export default function NoteAddButton(props: { iconOnly?: boolean; buttonClassNa
   }
 
   return (
-    <button class={`btn btn-ghost ${props.buttonClassName || ''}`} onClick={handleClick}>
+    <button class={props.buttonClassName} onClick={handleClick}>
       <Show when={newEditorForm()?.isSubmitting} fallback={<PlusIcon />}>
         <LoaderIcon class="animate-spin" />
       </Show>

@@ -116,14 +116,14 @@ importers:
         specifier: ^3.1.0
         version: 3.1.0
       electron:
-        specifier: 37.2.1
-        version: 37.2.1
+        specifier: 37.2.2
+        version: 37.2.2
       electron-devtools-installer:
         specifier: ^4.0.0
         version: 4.0.0
       electron-trpc:
         specifier: ^0.5.2
-        version: 0.5.2(patch_hash=9b5d49a8ef2fe0eba79104cfb58a37e33a42ba1333ae712dfae66ca09798482d)(@trpc/client@10.45.2(@trpc/server@10.45.2))(@trpc/server@10.45.2)(electron@37.2.1)
+        version: 0.5.2(patch_hash=9b5d49a8ef2fe0eba79104cfb58a37e33a42ba1333ae712dfae66ca09798482d)(@trpc/client@10.45.2(@trpc/server@10.45.2))(@trpc/server@10.45.2)(electron@37.2.2)
       emittery:
         specifier: ^1.1.0
         version: 1.1.0
@@ -1934,8 +1934,8 @@ packages:
   '@types/node@20.11.19':
     resolution: {integrity: sha512-7xMnVEcZFu0DikYjWOlRq7NTPETrm7teqUT2WkQjrTIkEgUyyGdWsj/Zg8bEJt5TNklzbPD1X3fqfsHw3SpapQ==}
 
-  '@types/node@22.16.3':
-    resolution: {integrity: sha512-sr4Xz74KOUeYadexo1r8imhRtlVXcs+j3XK3TcoiYk7B1t3YRVJgtaD3cwX73NYb71pmVuMLNRhJ9XKdoDB74g==}
+  '@types/node@22.16.4':
+    resolution: {integrity: sha512-PYRhNtZdm2wH/NT2k/oAJ6/f2VD2N2Dag0lGlx2vWgMSJXGNmlce5MiTQzoWAiIJtso30mjnfQCOKVH+kAQC/g==}
 
   '@types/parse-json@4.0.2':
     resolution: {integrity: sha512-dISoDXWWQwUquiKsyZ4Ng+HX2KsPL7LyHKHQwgGFEA3IaKac4Obd+h2a/a6waisAoepJlBcx9paWqjA8/HVjCw==}
@@ -2905,8 +2905,8 @@ packages:
       '@trpc/server': '>10.0.0'
       electron: '>19.0.0'
 
-  electron@37.2.1:
-    resolution: {integrity: sha512-ae2EbzRNqIAHlftfCHtbbt6EgJUW8+zxWLONqNnn2iSrLF0O/pbxbff3xcpZYPpmFBs4uqjoi+s4QS7DQ+zZ/w==}
+  electron@37.2.2:
+    resolution: {integrity: sha512-qEIUs+3elu7wOfzLEtLz4Innfe+8nQyhLh9qjrJY0d0MxdRolLMDUD9QwAQ743vDZ+bUg+gqwigzP7kV78S3hA==}
     engines: {node: '>= 12.20.55'}
     hasBin: true
 
@@ -7767,7 +7767,7 @@ snapshots:
     dependencies:
       undici-types: 5.26.5
 
-  '@types/node@22.16.3':
+  '@types/node@22.16.4':
     dependencies:
       undici-types: 6.21.0
 
@@ -9128,19 +9128,19 @@ snapshots:
 
   electron-to-chromium@1.5.71: {}
 
-  electron-trpc@0.5.2(patch_hash=9b5d49a8ef2fe0eba79104cfb58a37e33a42ba1333ae712dfae66ca09798482d)(@trpc/client@10.45.2(@trpc/server@10.45.2))(@trpc/server@10.45.2)(electron@37.2.1):
+  electron-trpc@0.5.2(patch_hash=9b5d49a8ef2fe0eba79104cfb58a37e33a42ba1333ae712dfae66ca09798482d)(@trpc/client@10.45.2(@trpc/server@10.45.2))(@trpc/server@10.45.2)(electron@37.2.2):
     dependencies:
       '@trpc/client': 10.45.2(@trpc/server@10.45.2)
       '@trpc/server': 10.45.2
       debug: 4.3.4(supports-color@8.1.1)
-      electron: 37.2.1
+      electron: 37.2.2
     transitivePeerDependencies:
       - supports-color
 
-  electron@37.2.1:
+  electron@37.2.2:
     dependencies:
       '@electron/get': 2.0.3
-      '@types/node': 22.16.3
+      '@types/node': 22.16.4
       extract-zip: 2.0.1
     transitivePeerDependencies:
       - supports-color
