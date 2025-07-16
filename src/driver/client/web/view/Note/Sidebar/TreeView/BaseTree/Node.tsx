@@ -10,9 +10,10 @@ import { normalizeTitle, type NoteVO } from '#domain/shared/model/note';
 import TreeViewModel from '#domain/client/app/model/note/TreeView';
 import container from '#utils/singletonContainer';
 import NoteService from '#domain/client/app/service/NoteService';
+import type NewNoteForm from '#domain/client/app/model/note/TreeView/NewNoteForm';
+import { IS_DEV } from '#domain/shared/infra/env';
 
 import TitleEditor from './TitleEditor';
-import { IS_DEV } from '#domain/shared/infra/env';
 
 export default function Node(props: {
   treeView: TreeViewModel;
@@ -20,7 +21,7 @@ export default function Node(props: {
   parent: TreeNode;
   indexPath: number[];
   operation: (node: TreeNode) => JSX.Element;
-  icon?: (node: TreeNode) => JSX.Element;
+  icon?: (node: TreeNode | NewNoteForm) => JSX.Element;
   onItemTitleClick: (node: TreeNode) => void;
 }) {
   const { move } = container.resolve(NoteService);
@@ -28,7 +29,7 @@ export default function Node(props: {
   const newNoteForm = createMemo(() => props.treeView.newNoteFormMap.get(node.id));
 
   const [rootRef, setRootRef] = createSignal<HTMLElement>();
-  const itemTextClassName = 'whitespace-nowrap overflow-hidden text-ellipsis py-0.5';
+  const itemTextClassName = 'whitespace-nowrap overflow-hidden text-ellipsis py-0.5'; // 别弄成 flex，否则文字截断无法生效（只对 inline / block 有效）
 
   createEffect(
     on(
@@ -95,16 +96,18 @@ export default function Node(props: {
         fallback={
           <TreeView.Item
             onClick={() => handleItemClick(node)}
-            ref={setRootRef}
             asChild={(childProps) => (
-              <li {...childProps()} class="w-full">
-                <div class="px-0 flex justify-between w-full group pl-5">
+              <li {...childProps()} ref={setRootRef} class="w-full">
+                <div
+                  class="px-0 flex justify-between w-full group pl-5"
+                  classList={{ 'menu-active': node.isHighlighted }}
+                >
                   <TreeView.ItemText
                     class={itemTextClassName}
                     style={{ 'padding-left': 'calc((var(--depth) - 1) * 18px)' }}
                   >
                     {props.icon?.(node)}
-                    {IS_DEV && node.value!.id.slice(0, 4)}
+                    {IS_DEV && `${node.value!.id.slice(0, 4)}+`}
                     {normalizeTitle(node.value!)}
                   </TreeView.ItemText>
                   {props.operation(node)}
@@ -115,10 +118,13 @@ export default function Node(props: {
         }
       >
         <TreeView.Branch
-          ref={setRootRef}
           asChild={(childProps) => (
-            <li {...childProps()} class="w-full">
-              <TreeView.BranchControl class="gap-0 group px-0" onClick={() => handleItemClick(node)}>
+            <li {...childProps()} class="w-full" ref={setRootRef}>
+              <TreeView.BranchControl
+                onClick={() => handleItemClick(node)}
+                classList={{ 'menu-active': node.isHighlighted }}
+                class="gap-0 group px-0"
+              >
                 <button
                   class="cursor-pointer"
                   style={{ 'padding-left': 'calc((var(--depth) - 1) * 18px)' }}
@@ -131,7 +137,7 @@ export default function Node(props: {
                 </button>
                 <TreeView.BranchText class={itemTextClassName}>
                   {props.icon?.(node)}
-                  {IS_DEV && node.value!.id.slice(0, 4)}
+                  {IS_DEV && `${node.value!.id.slice(0, 4)}+`}
                   {normalizeTitle(node.value!)}
                 </TreeView.BranchText>
                 {props.operation(node)}
@@ -141,8 +147,12 @@ export default function Node(props: {
                   <ul {...childProps()} class="ml-0 pl-0 w-full before:content-none">
                     <Show when={newNoteForm()}>
                       {(form) => (
-                        <li>
-                          <TitleEditor editor={form()} />
+                        <li
+                          class="w-full pl-5 pr-0 flex flex-row items-center"
+                          style={{ 'margin-left': 'calc(var(--depth) * 18px)' }}
+                        >
+                          {props.icon?.(form())}
+                          <TitleEditor className="p-0" editor={form()} />
                         </li>
                       )}
                     </Show>

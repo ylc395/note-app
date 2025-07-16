@@ -7,6 +7,13 @@ import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import type Tree from './Tree';
 
+enum TreeNodeStates {
+  Expanded = 1 << 0,
+  Selected = 1 << 1,
+  Unselectable = 1 << 2,
+  Highlighted = 1 << 3,
+}
+
 export default class TreeNode {
   constructor({
     value,
@@ -48,7 +55,7 @@ export default class TreeNode {
         abortSignal: this.destroyController.signal,
         queryKey: ['notes', { parentId: value?.id ?? null, type }],
         options: () => ({
-          enabled: this.isExpanded,
+          enabled: Boolean(this.state & TreeNodeStates.Expanded),
         }),
       },
     );
@@ -62,17 +69,17 @@ export default class TreeNode {
 
   private readonly remote = container.resolve(rpcToken);
 
-  public readonly parent?: TreeNode;
+  public parent?: TreeNode;
 
   private readonly options;
 
   @observable public accessor value: NoteVO | undefined;
 
-  @observable public accessor isSelected = false;
+  @observable private accessor state = 0;
 
-  @observable public accessor isExpanded = false;
+  public readonly childrenQuery;
 
-  @observable public accessor isUnselectable = false;
+  public readonly destroyController = new AbortController();
 
   @computed
   public get childrenCount() {
@@ -88,9 +95,25 @@ export default class TreeNode {
     return !this.value;
   }
 
-  public readonly childrenQuery;
+  @computed
+  public get isExpanded() {
+    return Boolean(this.state & TreeNodeStates.Expanded);
+  }
 
-  public readonly destroyController = new AbortController();
+  @computed
+  public get isSelected() {
+    return Boolean(this.state & TreeNodeStates.Selected);
+  }
+
+  @computed
+  public get isUnselectable() {
+    return Boolean(this.state & TreeNodeStates.Unselectable);
+  }
+
+  @computed
+  public get isHighlighted() {
+    return Boolean(this.state & TreeNodeStates.Highlighted);
+  }
 
   // 不含根节点
   public get ancestors() {
@@ -116,22 +139,37 @@ export default class TreeNode {
   }
 
   @action
+  private toggleState(flag: TreeNodeStates, value?: boolean) {
+    if (typeof value === 'boolean') {
+      if (value) {
+        this.state |= flag;
+      } else {
+        this.state &= ~flag;
+      }
+    } else {
+      this.state ^= flag;
+    }
+  }
+
   public toggleExpand(value?: boolean) {
-    this.isExpanded = value ?? !this.isExpanded;
+    this.toggleState(TreeNodeStates.Expanded, value);
 
     // value 为 undefined 说明是用户正常触发的，这种情况下获取最新数据
-    if (this.isExpanded && value === undefined) {
+    if (this.state & TreeNodeStates.Expanded && value === undefined) {
       this.childrenQuery.invalidate();
     }
   }
 
-  @action
   public toggleSelect(value?: boolean) {
-    this.isSelected = value ?? !this.isSelected;
+    this.toggleState(TreeNodeStates.Selected, value);
   }
 
   public setIsUnselectable(value: boolean) {
-    this.isUnselectable = value;
+    this.toggleState(TreeNodeStates.Unselectable, value);
+  }
+
+  public setIsHighlighted(value: boolean) {
+    this.toggleState(TreeNodeStates.Highlighted, value);
   }
 
   @action

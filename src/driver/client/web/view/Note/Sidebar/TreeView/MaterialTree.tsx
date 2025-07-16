@@ -4,7 +4,8 @@ import { onCleanup } from 'solid-js';
 import { NoteTypes } from '#domain/shared/model/note';
 import NoteService from '#domain/client/app/service/NoteService';
 import container from '#utils/singletonContainer';
-import type TreeNode from '#domain/client/shared/model/note/TreeNode';
+import TreeNode from '#domain/client/shared/model/note/TreeNode';
+import type NewNoteForm from '#domain/client/app/model/note/TreeView/NewNoteForm';
 
 import BaseTreeView from './BaseTree';
 import MaterialAddButton from './AddButton/Material';
@@ -27,11 +28,12 @@ export default function MaterialTree() {
     }
   }
 
-  function getIcon(node: TreeNode) {
-    return node.value?.mimeType ? null : node.isExpanded ? (
-      <FolderOpenIcon class="mr-1 shrink-0" />
+  function getIcon(node: TreeNode | NewNoteForm) {
+    const className = 'mr-2 p-0 shrink-0 w-4 h-4 inline align-text-bottom';
+    return node instanceof TreeNode && (node.value?.mimeType ? null : node.isExpanded) ? (
+      <FolderOpenIcon class={className} />
     ) : (
-      <FolderIcon class="mr-1 shrink-0" />
+      <FolderIcon class={className} />
     );
   }
 
@@ -43,7 +45,7 @@ export default function MaterialTree() {
       icon={getIcon}
       operation={(node) => (
         <MaterialAddButton
-          triggerClassName="group-hover:visible data-[state='open']:visible invisible absolute right-0 bg-gray-200"
+          buttonClassName="btn btn-xs btn-square mr-1 data-[state='open']:inline-flex group-hover:inline-flex hidden"
           iconOnly
           node={node}
         />

@@ -1,4 +1,5 @@
-import { action, computed, observable } from 'mobx';
+import { action, autorun, computed, observable } from 'mobx';
+import assert from 'assert';
 
 import Tree from '#domain/client/shared/model/note/Tree';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
@@ -8,7 +9,7 @@ import DomainEventBus, { type UpdatedEvent } from '#domain/client/app/model/note
 
 import SortBehavior from './SortBehavior';
 import NewNoteForm from './NewNoteForm';
-import assert from 'assert';
+import Workbench from '../../Workbench';
 
 export default class TreeView {
   constructor(private readonly type: NoteTypes) {
@@ -17,10 +18,18 @@ export default class TreeView {
       type,
     });
 
-    this.domainEventBus.on([DomainEventBus.eventNames.Created, DomainEventBus.eventNames.Updated], this.handleUpdated);
+    this.domainEventBus.on([DomainEventBus.eventNames.Created, DomainEventBus.eventNames.Updated], this.handleUpdated, {
+      signal: this.destroyController.signal,
+    });
+
+    autorun(this.autoHighlight.bind(this), { signal: this.destroyController.signal });
   }
 
+  private destroyController = new AbortController();
+
   private readonly domainEventBus = container.resolve(DomainEventBus);
+
+  private readonly workbench = container.resolve(Workbench);
 
   private readonly remote = container.resolve(rpcToken);
 
@@ -65,7 +74,7 @@ export default class TreeView {
       node.setValue({ ...node.value, ...patch, ...(parentId !== undefined ? { parentId } : null) });
     }
 
-    if (oldParentNode && oldParentNode.id !== parentId) {
+    if (parentId !== undefined && oldParentNode && oldParentNode.id !== parentId) {
       oldParentNode.childrenQuery.invalidate();
     }
 
@@ -85,9 +94,13 @@ export default class TreeView {
       const node = this.tree.get(nodeId);
 
       if (node && !node.isRoot) {
-        node.isExpanded = false;
+        node.toggleExpand(false);
       }
     }
+  }
+
+  private autoHighlight() {
+    this.tree.highlight(this.workbench.currentEditor?.noteId ?? null);
   }
 
   public async disableDescendantsBy(movingNotes: NoteVO[]) {
@@ -95,7 +108,7 @@ export default class TreeView {
       const node = this.tree.get(nodeId);
 
       if (node) {
-        node.isUnselectable = false;
+        node.setIsUnselectable(false);
       }
     }
 
@@ -111,6 +124,6 @@ export default class TreeView {
 
   public destroy() {
     this.tree.destroy();
-    this.domainEventBus.off([DomainEventBus.eventNames.Created, DomainEventBus.eventNames.Updated], this.handleUpdated);
+    this.destroyController.abort();
   }
 }

@@ -43,10 +43,10 @@ export default function TreeView() {
         <div class="flex items-center">
           <Switch>
             <Match when={uiState.get('note.treeView') === NoteTreeViewTabs.Note}>
-              <NoteAddButton buttonClassName="btn btn-ghost" />
+              <NoteAddButton buttonClassName="btn btn-ghost btn-sm" />
             </Match>
             <Match when={uiState.get('note.treeView') === NoteTreeViewTabs.Material}>
-              <MaterialAddButtonGroup />
+              <MaterialAddButtonGroup buttonClassName="btn btn-ghost btn-sm" />
             </Match>
           </Switch>
         </div>

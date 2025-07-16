@@ -4,8 +4,9 @@ import assert from 'assert';
 
 import type NewNoteForm from '#domain/client/app/model/note/TreeView/NewNoteForm';
 
-export default function TitleEditor(props: { editor: NewNoteForm }) {
+export default function TitleEditor(props: { className?: string; editor: NewNoteForm }) {
   let inputRef: HTMLInputElement | undefined;
+  const btnClassName = 'btn btn-square btn-ghost btn-xs';
 
   onMount(() => {
     assert(inputRef);
@@ -15,13 +16,13 @@ export default function TitleEditor(props: { editor: NewNoteForm }) {
   });
 
   return (
-    <div class="flex">
+    <div class={`flex ${props.className ?? ''}`}>
       <input onInput={(e) => props.editor.setTitle(e.target.value)} ref={inputRef} />
       <div>
-        <button onClick={() => props.editor.submit()}>
+        <button class={btnClassName} onClick={() => props.editor.submit()}>
           <CheckIcon />
         </button>
-        <button onClick={() => props.editor.cancel()}>
+        <button class={btnClassName} onClick={() => props.editor.cancel()}>
           <XIcon />
         </button>
       </div>

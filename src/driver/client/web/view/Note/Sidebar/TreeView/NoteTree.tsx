@@ -20,7 +20,7 @@ export default function NoteTree() {
         <NoteAddButton
           iconOnly
           node={node}
-          buttonClassName="btn btn-xs btn-square mr-1 group-hover:inline-flex hidden"
+          buttonClassName="btn btn-xs btn-square mx-1 group-hover:inline-flex hidden"
         />
       )}
     />
