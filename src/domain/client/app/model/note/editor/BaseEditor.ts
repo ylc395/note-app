@@ -29,12 +29,18 @@ export default abstract class BaseEditor {
       queryKey: ['note', this.noteId],
       refetchOnWindowFocus: true,
       abortSignal: this.destroyController.signal,
+      options: () => ({
+        enabled: this.isCurrent,
+      }),
     });
 
     this.path = createQuery(({ signal }) => this.remote.note.queryPath.query(this.noteId, { signal }), {
       queryKey: ['note.path', this.noteId],
       refetchOnWindowFocus: true,
       abortSignal: this.destroyController.signal,
+      options: () => ({
+        enabled: this.isCurrent,
+      }),
     });
 
     this.blob = createQuery(
@@ -43,7 +49,7 @@ export default abstract class BaseEditor {
         queryKey: ['note.blob', this.noteId],
         abortSignal: this.destroyController.signal,
         options: () => ({
-          enabled: Boolean(this.value.result.data?.mimeType),
+          enabled: Boolean(this.value.result.data?.mimeType) && this.isCurrent,
         }),
       },
     );
@@ -74,6 +80,11 @@ export default abstract class BaseEditor {
   @computed
   public get isLoading() {
     return this.value.result.isLoading || this.blob.result.isLoading;
+  }
+
+  @computed
+  private get isCurrent() {
+    return this.tile.currentEditor === this;
   }
 
   public readonly update = (patch: Patch) => {

@@ -1,7 +1,5 @@
-import { difference } from 'lodash-es';
-import { queryClient } from 'mobx-tanstack-query/preset';
 import { z } from 'zod';
-import { action, autorun, observable, reaction, runInAction, when } from 'mobx';
+import { action, autorun, observable, reaction, when } from 'mobx';
 
 import { NoteTypes, NoteVO } from '#domain/shared/model/note';
 import type { MaybeArray } from '#utils/collection';
@@ -49,11 +47,15 @@ export default class Tree {
     const expandedIds = this.uiState.get('expanded');
 
     if (selectedIds) {
-      this.select(selectedIds, { includingAbsence: true });
+      for (const selectedId of selectedIds) {
+        this.selectedNodeIds.add(selectedId);
+      }
     }
 
     if (expandedIds) {
-      this.expand(expandedIds);
+      for (const expandedId of expandedIds) {
+        this.expandedNodeIds.add(expandedId);
+      }
     }
   }
 
@@ -85,7 +87,7 @@ export default class Tree {
   }
 
   @action
-  public select(ids: MaybeArray<TreeNode['id']>, options?: { append?: boolean; includingAbsence?: boolean }) {
+  public select(ids: MaybeArray<TreeNode['id']>, options?: { append?: boolean }) {
     if (!options?.append) {
       for (const nodeId of this.selectedNodeIds) {
         const node = this.nodesMap.get(nodeId);
@@ -101,8 +103,6 @@ export default class Tree {
 
       if (node) {
         node.isSelected = true;
-      } else if (options?.includingAbsence) {
-        this.selectedNodeIds.add(id);
       }
     }
   }
@@ -147,46 +147,6 @@ export default class Tree {
     this.nodesMap.set(newNode.id, newNode);
 
     return newNode;
-  }
-
-  // 展开并加载任意个指定节点（“加载”指拉取其子节点）。若某个节点的祖先节点没有被传入或存在于树中，则该节点会被无视
-  public async expand(ids: MaybeArray<TreeNode['id']>) {
-    ids = Array.isArray(ids) ? ids : [ids];
-
-    if (ids.length === 0) {
-      return;
-    }
-
-    const loadedIds = Array.from(this.nodesMap.values())
-      // 该节点是否“从未加载过，且并不正在加载”
-      .filter((node) => !(node.childrenQuery.result.isPending && !node.childrenQuery.result.isFetching))
-      .map((node) => node.id);
-
-    // 过滤出待展开 id 中，当前树中并未加载中/过的那些节点
-    const parentsToLoad = difference(ids, loadedIds);
-
-    if (parentsToLoad.length > 0) {
-      const nodes = Object.groupBy(
-        await this.remote.note.query.query({ parentId: parentsToLoad }),
-        (note) => note.parentId!,
-      );
-
-      for (const [parentId, children] of Object.entries(nodes)) {
-        queryClient.setQueryData(TreeNode.getChildrenQueryKey({ parentId, type: this.options.type }), children);
-      }
-    }
-
-    runInAction(() => {
-      for (const id of ids) {
-        const node = this.get(id);
-
-        if (node) {
-          node.toggleExpand(true);
-        } else {
-          this.expandedNodeIds.add(id); // 即使指定节点不存在，我们也把它加到“已展开”节点里。这样当那个节点被创建时，它会自动展开
-        }
-      }
-    });
   }
 
   public destroy() {

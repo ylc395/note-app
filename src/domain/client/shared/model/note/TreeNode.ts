@@ -46,9 +46,9 @@ export default class TreeNode {
         refetchOnWindowFocus: true,
         select: (notes) => notes.toSorted(options.sort),
         abortSignal: this.destroyController.signal,
-        queryKey: TreeNode.getChildrenQueryKey({ parentId: value?.id ?? null, type }),
+        queryKey: ['notes', { parentId: value?.id ?? null, type }],
         options: () => ({
-          enabled: !this.isLeaf && this.isExpanded,
+          enabled: this.isExpanded,
         }),
       },
     );
@@ -75,8 +75,13 @@ export default class TreeNode {
   @observable public accessor isUnselectable = false;
 
   @computed
+  public get childrenCount() {
+    return this.childrenQuery.result.data?.length ?? this.value?.childrenCount;
+  }
+
+  @computed
   public get isLeaf() {
-    return this.value?.childrenCount === 0;
+    return this.childrenCount === 0;
   }
 
   public get isRoot() {
@@ -132,9 +137,5 @@ export default class TreeNode {
   @action
   public destroy() {
     this.options.onDestroyed();
-  }
-
-  public static getChildrenQueryKey(params: { parentId: NoteVO['parentId']; type: NoteTypes }) {
-    return ['notes', params];
   }
 }

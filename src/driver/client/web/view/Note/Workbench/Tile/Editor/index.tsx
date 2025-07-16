@@ -1,6 +1,7 @@
 import { createMemo } from 'solid-js';
 
 import type BaseEditor from '#domain/client/app/model/note/editor/BaseEditor';
+import MarkdownEditor from '#domain/client/app/model/note/editor/MarkdownEditor';
 import UnknownEditor from '#domain/client/app/model/note/editor/UnknownEditor';
 import PdfEditor from '#domain/client/app/model/note/editor/PdfEditor';
 
@@ -9,6 +10,7 @@ import UnknownEditorView from './UnknownEditor';
 import PdfEditorView from './PdfEditor';
 import Breadcrumbs from './Breadcrumbs';
 import TitleInput from './TitleInput';
+import assert from 'assert';
 
 export default function Editor(props: { editor: BaseEditor }) {
   const editor = createMemo(() => {
@@ -16,8 +18,10 @@ export default function Editor(props: { editor: BaseEditor }) {
       return <UnknownEditorView />;
     } else if (props.editor instanceof PdfEditor) {
       return <PdfEditorView editor={props.editor} />;
-    } else {
+    } else if (props.editor instanceof MarkdownEditor) {
       return <MarkdownEditorView editor={props.editor} />;
+    } else {
+      assert('invalid editor');
     }
   });
 

@@ -30,6 +30,7 @@ export default class TreeView {
 
   public readonly tree;
 
+  @action
   public initNewNoteForm(value: Pick<NewNoteDTO, 'parentId' | 'title'> & { isAutoSubmit?: boolean }) {
     const parentNode = this.tree.get(value.parentId ?? null);
     assert(parentNode);
@@ -56,34 +57,20 @@ export default class TreeView {
   @action.bound
   private handleUpdated({ parentId, id, ...patch }: UpdatedEvent) {
     const node = this.tree.get(id);
+    const oldParentNode = node?.parent;
+    const newParentNode = parentId !== undefined && this.tree.get(parentId);
 
-    if (parentId !== undefined) {
-      if (node?.parent) {
-        if ((node.parent.value?.id ?? null) !== parentId) {
-          // 旧的父节点
-          node.parent.childrenQuery.invalidate();
-
-          if (node.parent.value) {
-            node.parent.value.childrenCount -= 1;
-          }
-        }
-      }
-
-      const newParentNode = this.tree.get(parentId);
-
-      if (newParentNode) {
-        // 新的父节点
-        newParentNode.childrenQuery.invalidate();
-
-        // 根节点可能没有 value
-        if (newParentNode.value) {
-          newParentNode.value.childrenCount += 1;
-        }
-      }
+    if (node) {
+      assert(node.value);
+      node.setValue({ ...node.value, ...patch, ...(parentId !== undefined ? { parentId } : null) });
     }
 
-    if (node?.value) {
-      node.setValue({ ...node.value, ...patch });
+    if (oldParentNode && oldParentNode.id !== parentId) {
+      oldParentNode.childrenQuery.invalidate();
+    }
+
+    if (newParentNode && newParentNode !== oldParentNode) {
+      newParentNode.childrenQuery.invalidate();
     }
   }
 
@@ -124,5 +111,6 @@ export default class TreeView {
 
   public destroy() {
     this.tree.destroy();
+    this.domainEventBus.off([DomainEventBus.eventNames.Created, DomainEventBus.eventNames.Updated], this.handleUpdated);
   }
 }

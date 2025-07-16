@@ -12,6 +12,7 @@ import container from '#utils/singletonContainer';
 import NoteService from '#domain/client/app/service/NoteService';
 
 import TitleEditor from './TitleEditor';
+import { IS_DEV } from '#domain/shared/infra/env';
 
 export default function Node(props: {
   treeView: TreeViewModel;
@@ -103,6 +104,7 @@ export default function Node(props: {
                     style={{ 'padding-left': 'calc((var(--depth) - 1) * 18px)' }}
                   >
                     {props.icon?.(node)}
+                    {IS_DEV && node.value!.id.slice(0, 4)}
                     {normalizeTitle(node.value!)}
                   </TreeView.ItemText>
                   {props.operation(node)}
@@ -129,6 +131,7 @@ export default function Node(props: {
                 </button>
                 <TreeView.BranchText class={itemTextClassName}>
                   {props.icon?.(node)}
+                  {IS_DEV && node.value!.id.slice(0, 4)}
                   {normalizeTitle(node.value!)}
                 </TreeView.BranchText>
                 {props.operation(node)}
