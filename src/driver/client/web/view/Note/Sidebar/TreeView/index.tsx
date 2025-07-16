@@ -12,11 +12,11 @@ import NoteAddButton from './AddButton/Note';
 export default function TreeView() {
   const uiState = container.resolve(UIState);
   const tabClassName = 'tab font-bold [--tab-p:0px]';
-  const tabContentClassName = 'overflow-auto min-h-0';
+  const tabContentClassName = 'min-h-0 grow';
 
   return (
     <Tabs.Root
-      class="min-h-0 flex flex-col"
+      class="min-h-0 flex flex-col grow"
       orientation="horizontal"
       lazyMount
       unmountOnExit

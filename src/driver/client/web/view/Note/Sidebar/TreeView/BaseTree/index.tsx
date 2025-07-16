@@ -23,29 +23,37 @@ export default function NoteTree(props: {
 
   return (
     <TreeView.Root
-      class="overflow-auto h-full"
+      class="overflow-y-auto overflow-x-hidden h-full"
       collection={collection}
       expandOnClick={false}
       expandedValue={Array.from(props.treeView.tree.expandedNodeIds)}
     >
-      <TreeView.Tree>
-        <Show when={props.useNewNoteEditor && props.treeView.newNoteFormMap.get(props.treeView.tree.root.id)}>
-          {(form) => <TitleEditor editor={form()} />}
-        </Show>
-        <Key each={collection.rootNode.childrenQuery.result.data} by="id">
-          {(note, index) => (
-            <NodeView
-              onItemTitleClick={props.onItemTitleClick}
-              operation={props.operation}
-              treeView={props.treeView}
-              icon={props.icon}
-              note={note()}
-              parent={props.treeView.tree.root}
-              indexPath={[index()]}
-            />
-          )}
-        </Key>
-      </TreeView.Tree>
+      <TreeView.Tree
+        asChild={(childProps) => (
+          <ul {...childProps()} class="w-full">
+            <Show when={props.useNewNoteEditor && props.treeView.newNoteFormMap.get(props.treeView.tree.root.id)}>
+              {(form) => (
+                <li>
+                  <TitleEditor editor={form()} />
+                </li>
+              )}
+            </Show>
+            <Key each={collection.rootNode.childrenQuery.result.data} by="id">
+              {(note, index) => (
+                <NodeView
+                  onItemTitleClick={props.onItemTitleClick}
+                  operation={props.operation}
+                  treeView={props.treeView}
+                  icon={props.icon}
+                  note={note()}
+                  parent={props.treeView.tree.root}
+                  indexPath={[index()]}
+                />
+              )}
+            </Key>
+          </ul>
+        )}
+      />
     </TreeView.Root>
   );
 }

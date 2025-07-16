@@ -13,7 +13,7 @@ import NoteService from '#domain/client/app/service/NoteService';
 
 import TitleEditor from './TitleEditor';
 
-function Node(props: {
+export default function Node(props: {
   treeView: TreeViewModel;
   note: NoteVO;
   parent: TreeNode;
@@ -27,7 +27,6 @@ function Node(props: {
   const newNoteForm = createMemo(() => props.treeView.newNoteFormMap.get(node.id));
 
   const [rootRef, setRootRef] = createSignal<HTMLElement>();
-  const itemClassName = 'flex items-center pl-5 cursor-pointer group relative hover:bg-gray-100 py-1';
   const itemTextClassName = 'whitespace-nowrap overflow-hidden text-ellipsis';
 
   createEffect(
@@ -95,39 +94,55 @@ function Node(props: {
         fallback={
           <TreeView.Item
             onClick={() => handleItemClick(node)}
-            class={itemClassName}
             ref={setRootRef}
-            classList={{ 'ml-4': props.indexPath.length > 1 }}
-          >
-            {props.icon?.(node)}
-            <TreeView.ItemText class={itemTextClassName}>{normalizeTitle(node.value!)}</TreeView.ItemText>
-            {props.operation(node)}
-          </TreeView.Item>
+            asChild={(childProps) => (
+              <li {...childProps()}>
+                {props.icon?.(node)}
+                <TreeView.ItemText class={itemTextClassName}>{normalizeTitle(node.value!)}</TreeView.ItemText>
+                {props.operation(node)}
+              </li>
+            )}
+          />
         }
       >
-        <TreeView.Branch classList={{ 'ml-4': props.indexPath.length > 1 }} ref={setRootRef}>
-          <TreeView.BranchControl class={itemClassName} onClick={() => handleItemClick(node)}>
-            <button disabled={Boolean(newNoteForm())} onClick={handleArrowClick}>
-              <Show when={node.isExpanded || newNoteForm()} fallback={<ChevronRightIcon />}>
-                <ChevronDownIcon />
-              </Show>
-            </button>
-            {props.icon?.(node)}
-            <TreeView.BranchText class={itemTextClassName}>{normalizeTitle(node.value!)}</TreeView.BranchText>
-            {props.operation(node)}
-          </TreeView.BranchControl>
-          <TreeView.BranchContent>
-            <Show when={newNoteForm()}>{(form) => <TitleEditor editor={form()} />}</Show>
-            <Key each={node.childrenQuery.result.data} by="id">
-              {(child, index) => (
-                <Node {...props} parent={node} note={child()} indexPath={[...props.indexPath, index()]} />
-              )}
-            </Key>
-          </TreeView.BranchContent>
-        </TreeView.Branch>
+        <TreeView.Branch
+          ref={setRootRef}
+          asChild={() => (
+            <li>
+              <TreeView.BranchControl onClick={() => handleItemClick(node)}>
+                <button class="absolute" disabled={Boolean(newNoteForm())} onClick={handleArrowClick}>
+                  <Show when={node.isExpanded || newNoteForm()} fallback={<ChevronRightIcon />}>
+                    <ChevronDownIcon />
+                  </Show>
+                </button>
+                <TreeView.BranchText class={itemTextClassName}>
+                  {props.icon?.(node)}
+                  {normalizeTitle(node.value!)}
+                </TreeView.BranchText>
+                {props.operation(node)}
+              </TreeView.BranchControl>
+              <TreeView.BranchContent
+                asChild={(childProps) => (
+                  <ul {...childProps()}>
+                    <Show when={newNoteForm()}>
+                      {(form) => (
+                        <li>
+                          <TitleEditor editor={form()} />
+                        </li>
+                      )}
+                    </Show>
+                    <Key each={node.childrenQuery.result.data} by="id">
+                      {(child, index) => (
+                        <Node {...props} parent={node} note={child()} indexPath={[...props.indexPath, index()]} />
+                      )}
+                    </Key>
+                  </ul>
+                )}
+              />
+            </li>
+          )}
+        />
       </Show>
     </TreeView.NodeProvider>
   );
 }
-
-export default Node;
