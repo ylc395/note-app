@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { action, observable, reaction, runInAction, when } from 'mobx';
+import { action, computed, observable, reaction, runInAction, when } from 'mobx';
 import assert from 'assert';
 
 import { NoteTypes, NoteVO, type NotePatchDTO } from '#domain/shared/model/note';
@@ -35,6 +35,11 @@ export default class Tree {
   @observable public accessor expandedNodeIds = new Set<TreeNode['id']>();
 
   @observable public accessor unselectableNodeIds = new Set<TreeNode['id']>();
+
+  @computed
+  public get allNodes() {
+    return Array.from(this.nodesMap.values());
+  }
 
   private async init() {
     await when(() => this.uiState.isReady);

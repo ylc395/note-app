@@ -9,6 +9,7 @@ import DomainEventBus from '../model/note/EventBus';
 import MaterialForm from '../model/note/MaterialForm';
 import BaseEditor from '../model/note/editor/BaseEditor';
 import TreeView from '../model/note/TreeView';
+import type { MaybeArray } from '#utils/collection';
 
 export default class NoteService {
   constructor() {
@@ -49,9 +50,13 @@ export default class NoteService {
     }
   };
 
-  public readonly move = async (sourceId: NoteVO['id'], targetId: NotePatchDTO['parentId']) => {
-    await this.remote.note.updateOne.mutate([sourceId, { parentId: targetId }]);
-    this.eventBus.emit(DomainEventBus.eventNames.Updated, { id: sourceId, parentId: targetId });
+  public readonly move = async (sourceId: MaybeArray<NoteVO['id']>, targetId: NotePatchDTO['parentId']) => {
+    const ids = Array.isArray(sourceId) ? sourceId : [sourceId];
+    await this.remote.note.batchUpdate.mutate([ids, { parentId: targetId }]);
+
+    for (const id of ids) {
+      this.eventBus.emit(DomainEventBus.eventNames.Updated, { id, parentId: targetId });
+    }
   };
 
   @action

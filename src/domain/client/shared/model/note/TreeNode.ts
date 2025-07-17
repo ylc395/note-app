@@ -115,19 +115,6 @@ export default class TreeNode {
     return Boolean(this.state & TreeNodeStates.Highlighted);
   }
 
-  // 不含根节点
-  public get ancestors() {
-    let parent = this.parent;
-    const ancestors: TreeNode[] = [];
-
-    while (parent && parent.parent) {
-      ancestors.unshift(parent);
-      parent = parent.parent;
-    }
-
-    return ancestors;
-  }
-
   @action
   public setValue(value: TreeNode['value']) {
     if (this.value && value) {

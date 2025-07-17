@@ -1,6 +1,9 @@
 import { createTreeCollection, TreeView } from '@ark-ui/solid';
 import { Key } from '@solid-primitives/keyed';
 import { createMemo, Show, type JSX } from 'solid-js';
+import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { onCleanup } from 'solid-js';
+import NoteService from '#domain/client/app/service/NoteService';
 
 import type TreeNode from '#domain/client/shared/model/note/TreeNode';
 import type NewNoteForm from '#domain/client/app/model/note/TreeView/NewNoteForm';
@@ -30,6 +33,21 @@ export default function NoteTree(props: {
       );
     }
   });
+
+  onCleanup(
+    monitorForElements({
+      onDragStart: ({ source }) => {
+        const note = NoteService.getNote(source.data);
+
+        if (note) {
+          props.treeView.disableDescendantsBy([note]);
+        }
+      },
+      onDrop: () => {
+        props.treeView.disableDescendantsBy([]);
+      },
+    }),
+  );
 
   return (
     <Show when={collection()}>

@@ -57,7 +57,7 @@
   },
   "dependencies": {
     "@ark-ui/solid": "^5.9.1",
-    "@atlaskit/pragmatic-drag-and-drop": "^1.7.0",
+    "@atlaskit/pragmatic-drag-and-drop": "^1.7.4",
     "@braintree/sanitize-url": "^6.0.4",
     "@emoji-mart/data": "^1.1.2",
     "@emoji-mart/react": "^1.1.1",

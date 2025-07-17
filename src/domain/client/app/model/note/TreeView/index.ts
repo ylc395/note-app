@@ -12,10 +12,10 @@ import NewNoteForm from './NewNoteForm';
 import Workbench from '../../Workbench';
 
 export default class TreeView {
-  constructor(private readonly type: NoteTypes) {
+  constructor(private readonly noteType: NoteTypes) {
     this.tree = new Tree({
       sort: this.sortBehavior.sort.bind(this.sortBehavior),
-      type,
+      type: noteType,
     });
 
     this.domainEventBus.on(
@@ -46,7 +46,7 @@ export default class TreeView {
     const isExpanded = parentNode.isExpanded;
     const newNoteForm = new NewNoteForm({
       ...value,
-      type: this.type,
+      type: this.noteType,
       onCancel: () => {
         // 如果取消了新建流程，则把父节点的展开状态弄回原样
         if (typeof isExpanded === 'boolean') {
@@ -83,21 +83,30 @@ export default class TreeView {
   }
 
   public async disableDescendantsBy(movingNotes: NoteVO[]) {
-    for (const nodeId of this.tree.unselectableNodeIds) {
-      const node = this.tree.get(nodeId);
-
-      if (node) {
-        node.setIsUnselectable(false);
-      }
+    if (movingNotes.some(({ type }) => type !== this.noteType)) {
+      this.tree.setUnselectable(this.tree.allNodes.map(({ id }) => id));
+      return;
     }
 
     const noteIds = movingNotes.map(({ id }) => id);
-    const ancestors = noteIds.flatMap((id) => this.tree.get(id)?.ancestors || []);
-    const unknownNodes = noteIds.filter((id) => !this.tree.get(id));
-    const unknownAncestors =
-      unknownNodes.length > 0 ? Object.values(await this.remote.note.queryPaths.query(unknownNodes)).flat() : [];
+    const nodeIdToSetUnselect = new Set<string>();
+    const collectDescendantIds = (nodeId: string) => {
+      const node = this.tree.get(nodeId);
 
-    const nodeIdToSetUnselect = [...noteIds, ...[...unknownAncestors, ...ancestors].map(({ id }) => id)];
-    this.tree.setUnselectable(nodeIdToSetUnselect);
+      if (node) {
+        nodeIdToSetUnselect.add(node.id);
+        const childIds = node.childrenQuery.result.data?.map(({ id }) => id) ?? [];
+
+        for (const childId of childIds) {
+          collectDescendantIds(childId);
+        }
+      }
+    };
+
+    for (const noteId of noteIds) {
+      collectDescendantIds(noteId);
+    }
+
+    this.tree.setUnselectable(Array.from(nodeIdToSetUnselect));
   }
 }

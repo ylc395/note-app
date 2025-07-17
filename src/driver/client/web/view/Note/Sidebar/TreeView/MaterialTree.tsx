@@ -8,7 +8,6 @@ import type NewNoteForm from '#domain/client/app/model/note/TreeView/NewNoteForm
 
 import BaseTreeView from './BaseTree';
 import MaterialAddButton from './AddButton/Material';
-
 export default function MaterialTree() {
   const { workbench, getOrCreateTreeView } = container.resolve(NoteService);
   const tree = getOrCreateTreeView(NoteTypes.Material);

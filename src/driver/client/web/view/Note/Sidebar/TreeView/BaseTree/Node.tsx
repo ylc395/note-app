@@ -28,7 +28,7 @@ export default function Node(props: {
   const node = props.treeView.tree.getOrCreateNode({ value: props.note, parent: props.parent });
   const newNoteForm = createMemo(() => props.treeView.newNoteFormMap.get(node.id));
 
-  const [rootRef, setRootRef] = createSignal<HTMLElement>();
+  const [dropElementRef, setDropElementRef] = createSignal<HTMLElement>();
   const itemTextClassName = 'whitespace-nowrap overflow-hidden text-ellipsis py-0.5'; // 别弄成 flex，否则文字截断无法生效（只对 inline / block 有效）
 
   createEffect(
@@ -39,7 +39,7 @@ export default function Node(props: {
   );
 
   createEffect(() => {
-    const element = rootRef();
+    const element = dropElementRef();
 
     if (!element) {
       return;
@@ -55,8 +55,10 @@ export default function Node(props: {
         dropTargetForElements({
           element,
           onDrop: ({ source, self, location }) => {
-            // 子节点处理过了，这里就不处理了
-            if (location.current.dropTargets[0]?.element !== self.element) {
+            if (
+              node.isUnselectable ||
+              location.current.dropTargets[0]?.element !== self.element // 子节点处理过了，这里就不处理了
+            ) {
               return;
             }
 
@@ -93,7 +95,12 @@ export default function Node(props: {
           <TreeView.Item
             onClick={() => handleItemClick(node)}
             asChild={(childProps) => (
-              <li {...childProps()} ref={setRootRef} class="w-full">
+              <li
+                {...childProps()}
+                ref={setDropElementRef}
+                class="w-full"
+                classList={{ 'menu-disabled': node.isUnselectable }}
+              >
                 <div
                   class="px-0 flex justify-between w-full group pl-5"
                   classList={{ 'menu-active': node.isHighlighted }}
@@ -115,11 +122,12 @@ export default function Node(props: {
       >
         <TreeView.Branch
           asChild={(childProps) => (
-            <li {...childProps()} class="w-full" ref={setRootRef}>
+            <li {...childProps()} class="w-full" classList={{ 'menu-disabled': node.isUnselectable }}>
               <TreeView.BranchControl
                 onClick={() => handleItemClick(node)}
                 classList={{ 'menu-active': node.isHighlighted }}
                 class="gap-0 group px-0"
+                ref={setDropElementRef} // dropElement 不能是上一层的 <li> 元素
               >
                 <button
                   class="cursor-pointer"
