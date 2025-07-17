@@ -2,7 +2,7 @@ import dayjs from 'dayjs';
 import type { Entity, EntityId, EntityParentId } from './entity.js';
 
 export enum NoteTypes {
-  Note = 1,
+  Document = 1,
   Material,
 }
 

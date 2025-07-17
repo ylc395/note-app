@@ -69,7 +69,7 @@ export default class NoteService extends BaseService {
 
   private async duplicate(fromNoteId: Note['id']) {
     const targetNote = await this.repo.notes.findOneById(fromNoteId, { isAvailableOnly: true });
-    assert(targetNote && targetNote.type === NoteTypes.Note);
+    assert(targetNote && targetNote.type === NoteTypes.Document);
 
     const now = Date.now();
 

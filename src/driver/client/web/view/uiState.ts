@@ -19,7 +19,7 @@ export default class UIState extends PersistedMap<z.infer<typeof schema>> {
   constructor() {
     super('ui.state', schema, {
       'app.sidebar': SidebarTabs.Note,
-      'note.treeView': NoteTypes.Note,
+      'note.treeView': NoteTypes.Document,
       'note.sidebar.proportion': [20, 80],
       'memo.sidebarVisibility': 'visible',
     });

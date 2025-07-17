@@ -7,7 +7,7 @@ import NoteAddButton from './AddButton/Note';
 
 export default function NoteTree() {
   const { workbench, getOrCreateTreeView } = container.resolve(NoteService);
-  const tree = getOrCreateTreeView(NoteTypes.Note);
+  const tree = getOrCreateTreeView(NoteTypes.Document);
 
   return (
     <BaseTreeView

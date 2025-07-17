@@ -9,7 +9,7 @@ import { NoteTypes } from '#domain/shared/model/note';
 
 export default function NoteAddButton(props: { iconOnly?: boolean; buttonClassName?: string; node?: TreeNode }) {
   const { getOrCreateTreeView } = container.resolve(NoteService);
-  const treeView = getOrCreateTreeView(NoteTypes.Note);
+  const treeView = getOrCreateTreeView(NoteTypes.Document);
   const node = createMemo(() => props.node ?? treeView.tree.root);
 
   const newEditorForm = createMemo(() => {

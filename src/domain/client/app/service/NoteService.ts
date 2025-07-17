@@ -25,10 +25,10 @@ export default class NoteService {
   @observable.ref public accessor materialForm: MaterialForm | undefined;
 
   @observable.shallow private accessor treeViews: {
-    [NoteTypes.Note]: TreeView | null;
+    [NoteTypes.Document]: TreeView | null;
     [NoteTypes.Material]: TreeView | null;
   } = {
-    [NoteTypes.Note]: null,
+    [NoteTypes.Document]: null,
     [NoteTypes.Material]: null,
   };
 

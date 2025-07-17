@@ -1,4 +1,4 @@
-import { ArrowLeftIcon, ArrowRightIcon, PanelLeftClose } from 'lucide-solid';
+import { ArrowLeftIcon, ArrowRightIcon } from 'lucide-solid';
 
 import Workbench from '#domain/client/app/model/Workbench';
 import container from '#utils/singletonContainer';
@@ -23,9 +23,6 @@ export default function ButtonGroup() {
         onClick={() => historyStack.pop(Direction.FORWARD)}
       >
         <ArrowRightIcon />
-      </button>
-      <button class={buttonClassName}>
-        <PanelLeftClose />
       </button>
     </div>
   );

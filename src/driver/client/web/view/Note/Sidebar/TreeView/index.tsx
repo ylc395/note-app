@@ -28,10 +28,10 @@ export default function TreeView() {
         <Tabs.List class="tabs space-x-2">
           <Tabs.Trigger
             class={tabClassName}
-            classList={{ 'tab-active': uiState.get('note.treeView') === NoteTypes.Note }}
-            value={String(NoteTypes.Note)}
+            classList={{ 'tab-active': uiState.get('note.treeView') === NoteTypes.Document }}
+            value={String(NoteTypes.Document)}
           >
-            普通笔记
+            文档
           </Tabs.Trigger>
           <Tabs.Trigger
             class={tabClassName}
@@ -43,7 +43,7 @@ export default function TreeView() {
         </Tabs.List>
         <div class="flex items-center">
           <Switch>
-            <Match when={uiState.get('note.treeView') === NoteTypes.Note}>
+            <Match when={uiState.get('note.treeView') === NoteTypes.Document}>
               <NoteAddButton buttonClassName="btn btn-ghost btn-sm" />
             </Match>
             <Match when={uiState.get('note.treeView') === NoteTypes.Material}>
@@ -52,7 +52,7 @@ export default function TreeView() {
           </Switch>
         </div>
       </div>
-      <Tabs.Content value={String(NoteTypes.Note)} class={tabContentClassName}>
+      <Tabs.Content value={String(NoteTypes.Document)} class={tabContentClassName}>
         <NoteTreeView />
       </Tabs.Content>
       <Tabs.Content value={String(NoteTypes.Material)} class={tabContentClassName}>
