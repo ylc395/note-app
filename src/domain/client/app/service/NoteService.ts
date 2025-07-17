@@ -23,7 +23,7 @@ export default class NoteService {
 
   @observable.ref public accessor materialForm: MaterialForm | undefined;
 
-  @observable.shallow public accessor treeViews: {
+  @observable.shallow private accessor treeViews: {
     [NoteTypes.Note]: TreeView | null;
     [NoteTypes.Material]: TreeView | null;
   } = {
@@ -32,8 +32,11 @@ export default class NoteService {
   };
 
   @action
-  public readonly initTreeView = (type: NoteTypes) => {
-    this.treeViews[type] = new TreeView(type);
+  public readonly getOrCreateTreeView = (type: NoteTypes) => {
+    if (!this.treeViews[type]) {
+      this.treeViews[type] = new TreeView(type);
+    }
+
     return this.treeViews[type];
   };
 

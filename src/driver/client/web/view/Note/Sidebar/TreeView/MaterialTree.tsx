@@ -1,5 +1,4 @@
 import { FolderIcon, FolderOpenIcon } from 'lucide-solid';
-import { onCleanup } from 'solid-js';
 
 import { NoteTypes } from '#domain/shared/model/note';
 import NoteService from '#domain/client/app/service/NoteService';
@@ -11,10 +10,8 @@ import BaseTreeView from './BaseTree';
 import MaterialAddButton from './AddButton/Material';
 
 export default function MaterialTree() {
-  const { workbench, initTreeView } = container.resolve(NoteService);
-  const tree = initTreeView(NoteTypes.Material);
-
-  onCleanup(() => tree.destroy());
+  const { workbench, getOrCreateTreeView } = container.resolve(NoteService);
+  const tree = getOrCreateTreeView(NoteTypes.Material);
 
   function handleItemClick(node: TreeNode) {
     if (!node.value) {

@@ -25,7 +25,7 @@ export default function Node(props: {
   onItemTitleClick: (node: TreeNode) => void;
 }) {
   const { move } = container.resolve(NoteService);
-  const node = props.treeView.tree.createNode({ value: props.note, parent: props.parent });
+  const node = props.treeView.tree.getOrCreateNode({ value: props.note, parent: props.parent });
   const newNoteForm = createMemo(() => props.treeView.newNoteFormMap.get(node.id));
 
   const [rootRef, setRootRef] = createSignal<HTMLElement>();
@@ -37,10 +37,6 @@ export default function Node(props: {
       (note) => node.setValue(note),
     ),
   );
-
-  onCleanup(() => {
-    node.destroy();
-  });
 
   createEffect(() => {
     const element = rootRef();

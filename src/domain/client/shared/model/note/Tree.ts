@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import { action, observable, reaction, runInAction, when } from 'mobx';
+import assert from 'assert';
 
-import { NoteTypes, NoteVO } from '#domain/shared/model/note';
+import { NoteTypes, NoteVO, type NotePatchDTO } from '#domain/shared/model/note';
 import type { MaybeArray } from '#utils/collection';
 
 import PersistedMap from '../abstract/PersistedMap';
@@ -25,8 +26,6 @@ export default class Tree {
 
   @observable.shallow private accessor nodesMap = new Map<TreeNode['id'], TreeNode>();
 
-  private readonly destroyController = new AbortController();
-
   private readonly uiState;
 
   @observable private accessor selectedNodeIds = new Set<TreeNode['id']>();
@@ -38,7 +37,7 @@ export default class Tree {
   @observable public accessor unselectableNodeIds = new Set<TreeNode['id']>();
 
   private async init() {
-    await when(() => this.uiState.isReady, { signal: this.destroyController.signal });
+    await when(() => this.uiState.isReady);
 
     const selectedIds = this.uiState.get('selected');
     const expandedIds = this.uiState.get('expanded');
@@ -58,19 +57,17 @@ export default class Tree {
     });
 
     runInAction(() => {
-      this.root = this.createNode();
+      this.root = this.getOrCreateNode();
     });
 
     reaction(
       () => Array.from(this.selectedNodeIds),
       (ids) => this.uiState.set('selected', ids),
-      { signal: this.destroyController.signal },
     );
 
     reaction(
       () => Array.from(this.expandedNodeIds),
       (ids) => this.uiState.set('expanded', ids),
-      { signal: this.destroyController.signal },
     );
   }
 
@@ -130,7 +127,19 @@ export default class Tree {
   }
 
   @action
-  public createNode(params?: { value: NoteVO; parent: TreeNode }) {
+  public getOrCreateNode(params?: { value: NoteVO; parent: TreeNode }) {
+    const oldNode = this.get(params?.value.id ?? null);
+
+    if (oldNode) {
+      oldNode.parent = params?.parent;
+
+      if (params?.value) {
+        oldNode.setValue(params.value);
+      }
+
+      return oldNode;
+    }
+
     const abortController = new AbortController();
     const newNode = new TreeNode({
       type: this.options.type,
@@ -169,8 +178,26 @@ export default class Tree {
     return newNode;
   }
 
-  public destroy() {
-    this.destroyController.abort();
-    this.root?.destroy();
+  public updateNode({ id, parentId, ...patch }: NotePatchDTO & { id: NoteVO['id'] }) {
+    const node = this.get(id);
+    const oldParentNode = node?.parent;
+    const newParentNode = parentId !== undefined ? this.get(parentId) : undefined;
+
+    if (node) {
+      assert(node.value);
+      node.setValue({ ...node.value, ...patch, ...(parentId !== undefined ? { parentId } : null) });
+    }
+
+    if (parentId !== undefined && oldParentNode && oldParentNode.id !== parentId) {
+      oldParentNode.childrenQuery.invalidate();
+    }
+
+    if (newParentNode !== oldParentNode) {
+      if (node) {
+        node.parent = newParentNode;
+      }
+
+      newParentNode?.childrenQuery.invalidate();
+    }
   }
 }

@@ -1,4 +1,3 @@
-import { onCleanup } from 'solid-js';
 import { NoteTypes } from '#domain/shared/model/note';
 import NoteService from '#domain/client/app/service/NoteService';
 import container from '#utils/singletonContainer';
@@ -7,10 +6,8 @@ import BaseTreeView from './BaseTree';
 import NoteAddButton from './AddButton/Note';
 
 export default function NoteTree() {
-  const { workbench, initTreeView } = container.resolve(NoteService);
-  const tree = initTreeView(NoteTypes.Note);
-
-  onCleanup(() => tree.destroy());
+  const { workbench, getOrCreateTreeView } = container.resolve(NoteService);
+  const tree = getOrCreateTreeView(NoteTypes.Note);
 
   return (
     <BaseTreeView

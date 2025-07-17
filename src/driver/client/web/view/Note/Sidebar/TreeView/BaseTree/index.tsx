@@ -25,7 +25,7 @@ export default function NoteTree(props: {
         createTreeCollection<TreeNode>({
           rootNode: root,
           nodeToValue: (node) => node.id,
-          nodeToChildren: (node) => node?.childrenQuery.result.data?.map(({ id }) => props.treeView.tree.get(id)) ?? [],
+          nodeToChildren: (node) => node.childrenQuery.result.data?.map(({ id }) => props.treeView.tree.get(id)) ?? [],
         }),
       );
     }

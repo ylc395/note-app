@@ -10,8 +10,9 @@ import type TreeNode from '#domain/client/shared/model/note/TreeNode';
 import { NoteTypes } from '#domain/shared/model/note';
 
 export default function ButtonGroup(props: { iconOnly?: boolean; buttonClassName?: string; node?: TreeNode }) {
-  const { toggleMaterialForm, treeViews } = container.resolve(NoteService);
-  const node = createMemo(() => props.node ?? treeViews[NoteTypes.Material]?.tree.root);
+  const { toggleMaterialForm, getOrCreateTreeView } = container.resolve(NoteService);
+  const treeView = getOrCreateTreeView(NoteTypes.Material);
+  const node = createMemo(() => props.node ?? treeView.tree.root);
 
   function onFormSubmit() {
     const _node = node();
@@ -29,7 +30,7 @@ export default function ButtonGroup(props: { iconOnly?: boolean; buttonClassName
           onSubmit: onFormSubmit,
         });
       case 'directory':
-        return treeViews[NoteTypes.Material]?.initNewNoteForm({ parentId: node()?.value?.id });
+        return treeView.initNewNoteForm({ parentId: node()?.value?.id });
       default:
         throw new Error('invalid value');
     }

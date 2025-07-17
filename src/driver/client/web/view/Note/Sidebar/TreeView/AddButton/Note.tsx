@@ -8,22 +8,23 @@ import NoteService from '#domain/client/app/service/NoteService';
 import { NoteTypes } from '#domain/shared/model/note';
 
 export default function NoteAddButton(props: { iconOnly?: boolean; buttonClassName?: string; node?: TreeNode }) {
-  const { treeViews } = container.resolve(NoteService);
-  const node = createMemo(() => props.node ?? treeViews[NoteTypes.Note]?.tree.root);
+  const { getOrCreateTreeView } = container.resolve(NoteService);
+  const treeView = getOrCreateTreeView(NoteTypes.Note);
+  const node = createMemo(() => props.node ?? treeView.tree.root);
 
   const newEditorForm = createMemo(() => {
     const nodeId = node()?.id;
 
     if (nodeId) {
-      return treeViews[NoteTypes.Note]?.newNoteFormMap.get(nodeId);
+      return treeView.newNoteFormMap.get(nodeId);
     }
   });
 
   function handleClick(e: MouseEvent) {
     const _node = node();
-    assert(_node && treeViews[NoteTypes.Note]);
+    assert(_node);
 
-    treeViews[NoteTypes.Note].initNewNoteForm({
+    treeView.initNewNoteForm({
       parentId: _node.value?.id,
       isAutoSubmit: true,
     });

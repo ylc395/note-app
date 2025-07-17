@@ -5,7 +5,7 @@ import Tree from '#domain/client/shared/model/note/Tree';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import container from '#utils/singletonContainer';
 import { NoteTypes, type NewNoteDTO, type NoteVO } from '#domain/shared/model/note';
-import DomainEventBus, { type UpdatedEvent } from '#domain/client/app/model/note/EventBus';
+import DomainEventBus from '#domain/client/app/model/note/EventBus';
 
 import SortBehavior from './SortBehavior';
 import NewNoteForm from './NewNoteForm';
@@ -18,14 +18,13 @@ export default class TreeView {
       type,
     });
 
-    this.domainEventBus.on([DomainEventBus.eventNames.Created, DomainEventBus.eventNames.Updated], this.handleUpdated, {
-      signal: this.destroyController.signal,
-    });
+    this.domainEventBus.on(
+      [DomainEventBus.eventNames.Created, DomainEventBus.eventNames.Updated],
+      this.tree.updateNode.bind(this.tree),
+    );
 
-    autorun(this.autoHighlight.bind(this), { signal: this.destroyController.signal });
+    autorun(this.autoHighlight.bind(this));
   }
-
-  private destroyController = new AbortController();
 
   private readonly domainEventBus = container.resolve(DomainEventBus);
 
@@ -61,26 +60,6 @@ export default class TreeView {
 
     this.newNoteFormMap.set(parentNode.id, newNoteForm);
     parentNode.toggleExpand(true);
-  }
-
-  @action.bound
-  private handleUpdated({ parentId, id, ...patch }: UpdatedEvent) {
-    const node = this.tree.get(id);
-    const oldParentNode = node?.parent;
-    const newParentNode = parentId !== undefined && this.tree.get(parentId);
-
-    if (node) {
-      assert(node.value);
-      node.setValue({ ...node.value, ...patch, ...(parentId !== undefined ? { parentId } : null) });
-    }
-
-    if (parentId !== undefined && oldParentNode && oldParentNode.id !== parentId) {
-      oldParentNode.childrenQuery.invalidate();
-    }
-
-    if (newParentNode && newParentNode !== oldParentNode) {
-      newParentNode.childrenQuery.invalidate();
-    }
   }
 
   @computed
@@ -120,10 +99,5 @@ export default class TreeView {
 
     const nodeIdToSetUnselect = [...noteIds, ...[...unknownAncestors, ...ancestors].map(({ id }) => id)];
     this.tree.setUnselectable(nodeIdToSetUnselect);
-  }
-
-  public destroy() {
-    this.tree.destroy();
-    this.destroyController.abort();
   }
 }
