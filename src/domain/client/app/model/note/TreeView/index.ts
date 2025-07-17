@@ -2,7 +2,6 @@ import { action, autorun, computed, observable } from 'mobx';
 import assert from 'assert';
 
 import Tree from '#domain/client/shared/model/note/Tree';
-import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import container from '#utils/singletonContainer';
 import { NoteTypes, type NewNoteDTO, type NoteVO } from '#domain/shared/model/note';
 import DomainEventBus from '#domain/client/app/model/note/EventBus';
@@ -29,8 +28,6 @@ export default class TreeView {
   private readonly domainEventBus = container.resolve(DomainEventBus);
 
   private readonly workbench = container.resolve(Workbench);
-
-  private readonly remote = container.resolve(rpcToken);
 
   public readonly sortBehavior = container.resolve(SortBehavior);
 

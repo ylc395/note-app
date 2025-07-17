@@ -116,7 +116,6 @@ export default class Tree {
     }
   }
 
-  @action
   public highlight(ids: MaybeArray<TreeNode['id']> | null) {
     for (const nodeId of this.highlightedNodeIds) {
       this.get(nodeId)?.setIsHighlighted(false);
