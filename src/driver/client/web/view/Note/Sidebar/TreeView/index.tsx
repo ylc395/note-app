@@ -1,5 +1,5 @@
 import { Tabs } from '@ark-ui/solid';
-import { Match, Switch } from 'solid-js';
+import { createMemo, Match, Switch } from 'solid-js';
 
 import container from '#utils/singletonContainer';
 import { NoteTypes } from '#domain/shared/model/note';
@@ -12,8 +12,9 @@ import NoteAddButton from './AddButton/Note';
 
 export default function TreeView() {
   const uiState = container.resolve(UIState);
-  const tabClassName = 'tab font-bold [--tab-p:0px]';
+  const tabClassName = 'tab font-bold';
   const tabContentClassName = 'min-h-0 grow';
+  const currentView = createMemo(() => uiState.get('note.treeView'));
 
   return (
     <Tabs.Root
@@ -21,21 +22,21 @@ export default function TreeView() {
       orientation="horizontal"
       lazyMount
       unmountOnExit
-      defaultValue={String(uiState.get('note.treeView'))}
+      defaultValue={String(currentView())}
       onValueChange={({ value }) => uiState.set('note.treeView', Number(value) as NoteTypes)}
     >
       <div class="flex items-center justify-between text-sm">
-        <Tabs.List class="tabs space-x-2">
+        <Tabs.List class="tabs space-x-2 [--tab-p:0px]">
           <Tabs.Trigger
             class={tabClassName}
-            classList={{ 'tab-active': uiState.get('note.treeView') === NoteTypes.Document }}
+            classList={{ 'tab-active': currentView() === NoteTypes.Document }}
             value={String(NoteTypes.Document)}
           >
             文档
           </Tabs.Trigger>
           <Tabs.Trigger
             class={tabClassName}
-            classList={{ 'tab-active': uiState.get('note.treeView') === NoteTypes.Material }}
+            classList={{ 'tab-active': currentView() === NoteTypes.Material }}
             value={String(NoteTypes.Material)}
           >
             素材
@@ -43,10 +44,10 @@ export default function TreeView() {
         </Tabs.List>
         <div class="flex items-center">
           <Switch>
-            <Match when={uiState.get('note.treeView') === NoteTypes.Document}>
+            <Match when={currentView() === NoteTypes.Document}>
               <NoteAddButton buttonClassName="btn btn-ghost btn-sm" />
             </Match>
-            <Match when={uiState.get('note.treeView') === NoteTypes.Material}>
+            <Match when={currentView() === NoteTypes.Material}>
               <MaterialAddButtonGroup buttonClassName="btn btn-ghost btn-sm" />
             </Match>
           </Switch>

@@ -87,15 +87,19 @@ export default abstract class BaseEditor {
   }
 
   public readonly update = (patch: Patch) => {
-    const currentData: Required<Patch> | undefined = this.value.result.data
-      ? pick(this.value.result.data, ['title', 'body', 'icon'])
+    const currentData = this.value.result.data
+      ? pick(this.value.result.data, ['title', 'body', 'icon', 'type'])
       : undefined;
 
     assert(currentData, 'can not update when loading');
 
     // 这里采用乐观更新
     this.value.setData((note) => ({ ...note!, ...patch }));
-    this.domainEventBus.emit(DomainEventBus.eventNames.Updated, { id: this.noteId, ...patch });
+    this.domainEventBus.emit(DomainEventBus.eventNames.Updated, {
+      id: this.noteId,
+      type: currentData.type,
+      ...patch,
+    });
 
     // 若服务器更新失败，前端回退至之前的值
     this._update(patch)?.catch(() => {

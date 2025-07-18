@@ -1,5 +1,5 @@
 import EventBus from '#domain/client/shared/infra/EventBus';
-import type { NotePatchDTO, NoteVO } from '#domain/shared/model/note';
+import type { NotePatchDTO, NoteTypes, NoteVO } from '#domain/shared/model/note';
 
 enum EventNames {
   Created = 'note.created',
@@ -10,6 +10,7 @@ enum EventNames {
 export type CreatedEvent = NoteVO;
 
 export interface UpdatedEvent extends NotePatchDTO {
+  type: NoteTypes;
   id: NoteVO['id'];
 }
 

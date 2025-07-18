@@ -1,6 +1,7 @@
 import { ChevronDownIcon, ChevronRightIcon } from 'lucide-solid';
-import { For, Show } from 'solid-js';
+import { Show } from 'solid-js';
 import { TreeView } from '@ark-ui/solid';
+import { Key } from '@solid-primitives/keyed';
 
 import type { TopicNode } from '#domain/client/app/model/TopicList';
 import container from '#utils/singletonContainer';
@@ -55,9 +56,9 @@ export default function Node(props: { node: TopicNode; indexPath: number[] }) {
             </TreeView.BranchText>
           </TreeView.BranchControl>
           <TreeView.BranchContent class="flex data-[state=closed]:hidden">
-            <For each={props.node.children}>
-              {(child, index) => <Node node={child} indexPath={[...props.indexPath, index()]} />}
-            </For>
+            <Key each={props.node.children} by="id">
+              {(child, index) => <Node node={child()} indexPath={[...props.indexPath, index()]} />}
+            </Key>
           </TreeView.BranchContent>
         </TreeView.Branch>
       </Show>

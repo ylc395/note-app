@@ -28,13 +28,13 @@ export default class Tree {
 
   private readonly uiState;
 
-  @observable private accessor selectedNodeIds = new Set<TreeNode['id']>();
+  private readonly selectedNodeIds = new Set<TreeNode['id']>();
 
-  @observable private accessor highlightedNodeIds = new Set<TreeNode['id']>();
+  private readonly highlightedNodeIds = new Set<TreeNode['id']>();
+
+  private readonly unselectableNodeIds = new Set<TreeNode['id']>();
 
   @observable public accessor expandedNodeIds = new Set<TreeNode['id']>();
-
-  @observable public accessor unselectableNodeIds = new Set<TreeNode['id']>();
 
   @computed
   public get allNodes() {
@@ -152,7 +152,6 @@ export default class Tree {
       sort: this.options?.sort,
       isSelected: params ? this.selectedNodeIds.has(params.value.id) : false,
       isExpanded: params ? this.expandedNodeIds.has(params.value.id) : false,
-      tree: this,
       onDestroyed: action(() => {
         abortController.abort();
 
@@ -182,7 +181,11 @@ export default class Tree {
     return newNode;
   }
 
-  public updateNode({ id, parentId, ...patch }: NotePatchDTO & { id: NoteVO['id'] }) {
+  public updateNode({ id, parentId, type, ...patch }: NotePatchDTO & { id: NoteVO['id']; type: NoteTypes }) {
+    if (type !== this.options.type) {
+      return;
+    }
+
     const node = this.get(id);
     const oldParentNode = node?.parent;
     const newParentNode = parentId !== undefined ? this.get(parentId) : undefined;

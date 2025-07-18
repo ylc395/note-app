@@ -50,12 +50,13 @@ export default class NoteService {
     }
   };
 
-  public readonly move = async (sourceId: MaybeArray<NoteVO['id']>, targetId: NotePatchDTO['parentId']) => {
-    const ids = Array.isArray(sourceId) ? sourceId : [sourceId];
+  public readonly move = async (notes: MaybeArray<NoteVO>, targetId: NotePatchDTO['parentId']) => {
+    notes = Array.isArray(notes) ? notes : [notes];
+    const ids = notes.map(({ id }) => id);
     await this.remote.note.batchUpdate.mutate([ids, { parentId: targetId }]);
 
-    for (const id of ids) {
-      this.eventBus.emit(DomainEventBus.eventNames.Updated, { id, parentId: targetId });
+    for (const { id, type } of notes) {
+      this.eventBus.emit(DomainEventBus.eventNames.Updated, { id, type, parentId: targetId });
     }
   };
 

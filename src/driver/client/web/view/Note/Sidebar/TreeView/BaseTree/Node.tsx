@@ -65,7 +65,7 @@ export default function Node(props: {
             const note = NoteService.getNote(source.data);
 
             if (note) {
-              move(note.id, props.note.id).then(() => node.toggleExpand(true));
+              move(note, props.note.id).then(() => node.toggleExpand(true));
             }
           },
         }),

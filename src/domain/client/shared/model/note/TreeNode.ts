@@ -5,7 +5,6 @@ import assert from 'assert';
 import type { NoteTypes, NoteVO } from '#domain/shared/model/note';
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
-import type Tree from './Tree';
 
 enum TreeNodeStates {
   Expanded = 1 << 0,
@@ -25,7 +24,6 @@ export default class TreeNode {
   }: {
     value?: NoteVO;
     parent?: TreeNode;
-    tree: Tree;
     type: NoteTypes;
     isExpanded: boolean;
     isSelected: boolean;
@@ -55,7 +53,7 @@ export default class TreeNode {
         abortSignal: this.destroyController.signal,
         queryKey: ['notes', { parentId: value?.id ?? null, type }],
         options: () => ({
-          enabled: Boolean(this.state & TreeNodeStates.Expanded),
+          enabled: this.isExpanded,
         }),
       },
     );
@@ -140,11 +138,6 @@ export default class TreeNode {
 
   public toggleExpand(value?: boolean) {
     this.toggleState(TreeNodeStates.Expanded, value);
-
-    // value 为 undefined 说明是用户正常触发的，这种情况下获取最新数据
-    if (this.state & TreeNodeStates.Expanded && value === undefined) {
-      this.childrenQuery.invalidate();
-    }
   }
 
   public toggleSelect(value?: boolean) {

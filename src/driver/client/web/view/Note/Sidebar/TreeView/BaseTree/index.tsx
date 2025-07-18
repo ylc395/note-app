@@ -28,7 +28,10 @@ export default function NoteTree(props: {
         createTreeCollection<TreeNode>({
           rootNode: root,
           nodeToValue: (node) => node.id,
-          nodeToChildren: (node) => node.childrenQuery.result.data?.map(({ id }) => props.treeView.tree.get(id)) ?? [],
+          nodeToChildren: (node) => {
+            // 这个 node 的类型和标注的不一致，有可能为 undefined
+            return node?.childrenQuery.result.data?.map(({ id }) => props.treeView.tree.get(id)) ?? [];
+          },
         }),
       );
     }

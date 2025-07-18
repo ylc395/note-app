@@ -32,7 +32,7 @@ export default function DropArea() {
           const note = NoteService.getNote(source.data);
 
           if (note) {
-            move(note.id, null);
+            move(note, null);
           }
         },
       });
