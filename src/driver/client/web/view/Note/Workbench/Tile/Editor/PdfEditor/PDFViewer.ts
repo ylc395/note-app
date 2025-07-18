@@ -314,13 +314,13 @@ export default class PdfViewer {
       const hash = this.state.get('hash');
       assert(hash);
       // 记录跳转前的位置
-      this.historyStack.push({ record: { key: hash } });
+      this.historyStack.push({ key: hash });
 
       // 记录跳转后的位置
       this.pdfViewer.eventBus.on(
         'updateviewarea',
         ({ location }: { location: { pdfOpenParams: string } }) => {
-          this.historyStack.push({ record: { key: PdfViewer.normalizeHash(location.pdfOpenParams) } });
+          this.historyStack.push({ key: PdfViewer.normalizeHash(location.pdfOpenParams) });
         },
         { once: true },
       );
@@ -352,8 +352,7 @@ export default class PdfViewer {
     const hash = this.state.get('hash');
     assert(hash);
 
-    this.historyStack.push({ fromHistory: e.direction, record: { key: hash } });
-    this.historyStack.push({ fromHistory: e.direction, record: e.record });
+    this.historyStack.push({ key: hash });
     this.jumpTo({ hash: e.record.key }, { noHistory: true });
   }
 

@@ -13,7 +13,7 @@ import MarkdownEditor from '../note/editor/MarkdownEditor';
 export default class EditorManager {
   private readonly editorsMap: Record<Editor['id'], Editor> = {};
 
-  private readonly editorTileMap: Record<Editor['id'], Tile['id']> = {};
+  private readonly editorTileMap: Record<Editor['id'], Tile['id']> = {}; // 当一个 editor 销毁后，记录一下它生前的 tileId。该信息可用于恢复已被关闭的 editor
 
   public create(tile: Tile, { id: entityId, mimeType }: Pick<NoteVO, 'id' | 'mimeType'>) {
     let editor;
@@ -45,7 +45,7 @@ export default class EditorManager {
     return this.editorsMap[id];
   }
 
-  public getAndRemoveTileIdOf(editorId: Editor['id']) {
+  public restoreTileId(editorId: Editor['id']) {
     const tileId = this.editorTileMap[editorId];
     assert(tileId, 'can not get tileId');
 

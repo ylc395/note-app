@@ -1,4 +1,3 @@
-import type { Direction } from '../../base/HistoryStack';
 import type BaseEditor from './BaseEditor';
 
 export enum EventNames {
@@ -8,5 +7,5 @@ export enum EventNames {
 
 export type Events = {
   [EventNames.Destroy]: BaseEditor;
-  [EventNames.Focus]: { editor: BaseEditor; fromHistory?: Direction };
+  [EventNames.Focus]: BaseEditor;
 };

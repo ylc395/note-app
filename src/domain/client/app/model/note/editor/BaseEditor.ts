@@ -11,7 +11,6 @@ import type { NotePatchDTO, NoteVO } from '#domain/shared/model/note';
 import { EventNames, type Events } from './events';
 import type Tile from '../../Workbench/Tile';
 import DomainEventBus from '../EventBus';
-import type { Direction } from '../../base/HistoryStack';
 
 export interface Options {
   entityId: NoteVO['id'];
@@ -146,8 +145,8 @@ export default abstract class BaseEditor {
     }
   }
 
-  public focus(options?: { isFromHistory?: Direction }) {
-    this.events.emit(EventNames.Focus, { editor: this, fromHistory: options?.isFromHistory });
+  public focus() {
+    this.events.emit(EventNames.Focus, this);
   }
 
   public destroy() {

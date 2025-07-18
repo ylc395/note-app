@@ -7,13 +7,12 @@ import container from '#utils/singletonContainer';
 import type { NoteVO } from '#domain/shared/model/note';
 
 import EditorManager from './EditorManager';
-import type { Direction } from '../base/HistoryStack';
 
 export default class Tile {
   constructor(
     private readonly options: {
       onDestroy: (tile: Tile) => void;
-      onEditorFocus: (e: { editor: Editor; fromHistory?: Direction }) => void;
+      onEditorFocus: (editor: Editor) => void;
     },
   ) {}
 
@@ -33,12 +32,12 @@ export default class Tile {
 
   // 将本 Tile 的当前 editor 切换为指定的 editor。fromHistory 表示本次的切换动作是否是浏览历史栈弹出导致的
   @action.bound
-  public switchToEditor(editor: Editor | NoteVO['id'], options?: { isFromHistory?: Direction }) {
+  public switchToEditor(editor: Editor | NoteVO['id']) {
     const target = this.findEditor(editor);
     assert(target, 'can not switch to an editor which not belong to this tile');
 
     this.currentEditor = target;
-    target.focus({ isFromHistory: options?.isFromHistory });
+    target.focus();
   }
 
   // 将一个 Editor 从该 Tile 中移除

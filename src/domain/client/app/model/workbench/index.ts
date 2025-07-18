@@ -10,7 +10,7 @@ import type { EntityId } from '#domain/shared/model/entity';
 import Tile from './Tile';
 import { type TileNode, type TileParent, TileDirections, isTileLeaf } from './tileTree';
 import EditorManager from './EditorManager';
-import HistoryStack, { type Direction } from '../base/HistoryStack';
+import HistoryStack from '../base/HistoryStack';
 
 export interface HistoryRecord {
   key: EntityId;
@@ -58,11 +58,7 @@ export default class Workbench {
   private createTile() {
     const tile = new Tile({
       onDestroy: this.removeTile.bind(this),
-      onEditorFocus: ({ editor, fromHistory }) =>
-        this.historyStack.push({
-          fromHistory,
-          record: { key: editor.noteId, mimeType: editor.mimeType, editorId: editor.id },
-        }),
+      onEditorFocus: ({ noteId: key, mimeType, id: editorId }) => this.historyStack.push({ key, mimeType, editorId }),
     });
 
     this.tilesMap[tile.id] = tile;
@@ -105,7 +101,7 @@ export default class Workbench {
 
     if (this.root === tile.id) {
       this.root = undefined;
-      this.historyStack.push({ record: null });
+      this.historyStack.push(null);
     } else {
       const keptTile = searchAndRemove(this.root);
       assert(keptTile, 'can not find tile');
@@ -115,11 +111,9 @@ export default class Workbench {
         assert(tile?.currentEditor);
 
         this.historyStack.push({
-          record: {
-            key: tile.currentEditor.noteId,
-            editorId: tile.currentEditor.id,
-            mimeType: tile.currentEditor.mimeType,
-          },
+          key: tile.currentEditor.noteId,
+          editorId: tile.currentEditor.id,
+          mimeType: tile.currentEditor.mimeType,
         });
       }
     }
@@ -193,11 +187,7 @@ export default class Workbench {
   // 在指定位置打开一个 editor。该 editor 可能是新建的，也可能是复用已存在的
   // 若已存在，则其会被移动到指定位置（若有指定）
   @action
-  public open(
-    note: Pick<NoteVO, 'id' | 'mimeType'>,
-    dest?: Editor | Tile | NewTile,
-    options?: { isFromHistory?: Direction },
-  ) {
+  public open(note: Pick<NoteVO, 'id' | 'mimeType'>, dest?: Editor | Tile | NewTile) {
     dest = dest || this.currentTile;
 
     if (!dest) {
@@ -234,17 +224,17 @@ export default class Workbench {
       editor = destTile.createEditor(note);
     }
 
-    destTile.switchToEditor(editor, { isFromHistory: options?.isFromHistory });
+    destTile.switchToEditor(editor);
   }
 
-  private handleHistoryPop({ record, direction }: { record: HistoryRecord; direction: Direction }) {
-    const dest = this.editorManager.get(record.editorId) || this.editorManager.getAndRemoveTileIdOf(record.editorId);
+  private handleHistoryPop({ record }: { record: HistoryRecord }) {
+    const dest = this.editorManager.get(record.editorId) || this.editorManager.restoreTileId(record.editorId);
 
     if (dest instanceof Editor) {
-      dest.tile.switchToEditor(dest, { isFromHistory: direction });
+      dest.tile.switchToEditor(dest);
     } else {
       const destTile = this.getTileById(dest);
-      this.open({ id: record.key, mimeType: record.mimeType }, destTile, { isFromHistory: direction });
+      this.open({ id: record.key, mimeType: record.mimeType }, destTile);
     }
   }
 }

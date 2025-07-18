@@ -11,7 +11,7 @@ export interface HistoryRecord {
 }
 
 export default class HistoryStack<T extends HistoryRecord = HistoryRecord> {
-  constructor(private readonly options?: { onPop?: (e: { record: T; direction: Direction }) => void }) {}
+  constructor(private readonly options: { onPop: (e: { record: T; direction: Direction }) => void }) {}
   @observable.ref public accessor current: T | undefined;
   @observable.shallow private accessor backwards: T[] = [];
   @observable.shallow private accessor forwards: T[] = [];
@@ -26,10 +26,14 @@ export default class HistoryStack<T extends HistoryRecord = HistoryRecord> {
     return this.backwards.length > 0;
   }
 
+  public push(record: T | null) {
+    this._push({ record });
+  }
+
   // 将当前的浏览记录压入前进/后退栈中。传入的 record 将成为当前的浏览记录
   // fromHistory 表示此浏览记录来自前进/后退栈弹出的记录
   @action
-  public push({ record, fromHistory }: { record: T | null; fromHistory?: Direction }) {
+  private _push({ record, fromHistory }: { record: T | null; fromHistory?: Direction }) {
     if (record?.key === this.current?.key) {
       return;
     }
@@ -46,21 +50,23 @@ export default class HistoryStack<T extends HistoryRecord = HistoryRecord> {
     }
   }
 
-  // 将一个浏览记录从前进/后退栈中弹出。该方法仅仅负责弹出，不维护其他状态
+  // 将一个浏览记录从前进/后退栈中弹出
   @action
   public pop(direction: Direction, step = 1) {
     const stack = direction === Direction.BACKWARD ? this.backwards : this.forwards;
     assert(stack[stack.length - step], 'invalid step');
 
-    let record;
-
     for (let i = 0; i < step; i++) {
-      record = stack.pop()!;
-    }
+      const record = stack.pop()!;
 
-    this.options?.onPop?.({
-      record: record!,
-      direction,
-    });
+      if (i === step - 1) {
+        this.options.onPop({
+          record: record!,
+          direction,
+        });
+      }
+
+      this._push({ fromHistory: direction, record });
+    }
   }
 }
