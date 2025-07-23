@@ -1,4 +1,3 @@
-import { TreeView } from '@ark-ui/solid';
 import { createEffect, createMemo, createSignal, on, onCleanup, Show, untrack, type JSX } from 'solid-js';
 import { Key } from '@solid-primitives/keyed';
 import { ChevronDownIcon, ChevronRightIcon } from 'lucide-solid';
@@ -88,90 +87,71 @@ export default function Node(props: {
   }
 
   return (
-    <TreeView.NodeProvider node={node} indexPath={props.indexPath}>
-      <Show
-        when={!node.isLeaf || newNoteForm()}
-        fallback={
-          <TreeView.Item
-            onClick={() => handleItemClick(node)}
-            asChild={(childProps) => (
-              <li
-                {...childProps()}
-                ref={setDropElementRef}
-                class="w-full"
-                classList={{ 'menu-disabled': node.isUnselectable }}
-              >
-                <div
-                  class="px-0 flex justify-between w-full group pl-5"
-                  classList={{ 'menu-active': node.isHighlighted }}
+    <Show
+      when={!node.isLeaf || newNoteForm()}
+      fallback={
+        <li
+          onClick={() => handleItemClick(node)}
+          ref={setDropElementRef}
+          class="w-full"
+          classList={{ 'menu-disabled': node.isUnselectable }}
+        >
+          <div class="px-0 flex justify-between w-full group pl-5" classList={{ 'menu-active': node.isHighlighted }}>
+            <div class={itemTextClassName} style={{ 'padding-left': 'calc(var(--depth) * 18px)' }}>
+              {props.icon?.(node)}
+              {IS_DEV && `${node.value!.id.slice(0, 4)}+`}
+              {normalizeTitle(node.value!)}
+            </div>
+            {props.operation(node)}
+          </div>
+        </li>
+      }
+    >
+      <li class="w-full" classList={{ 'menu-disabled': node.isUnselectable }}>
+        <div
+          onClick={() => handleItemClick(node)}
+          classList={{ 'menu-active': node.isHighlighted }}
+          class="gap-0 group px-0"
+          ref={setDropElementRef} // dropElement 不能是上一层的 <li> 元素
+        >
+          <button
+            class="cursor-pointer"
+            style={{ 'padding-left': 'calc(var(--depth) * 18px)' }}
+            disabled={Boolean(newNoteForm())}
+            onClick={handleArrowClick}
+          >
+            <Show when={node.isExpanded || newNoteForm()} fallback={<ChevronRightIcon class="w-5 h-5" />}>
+              <ChevronDownIcon class="w-5 h-5" />
+            </Show>
+          </button>
+          <div class={itemTextClassName}>
+            {props.icon?.(node)}
+            {IS_DEV && `${node.value!.id.slice(0, 4)}+`}
+            {normalizeTitle(node.value!)}
+          </div>
+          {props.operation(node)}
+        </div>
+        <Show when={node.isExpanded}>
+          <ul class="ml-0 pl-0 w-full before:content-none" style={{ '--depth': props.indexPath.length }}>
+            <Show when={newNoteForm()}>
+              {(form) => (
+                <li
+                  class="w-full pl-5 pr-0 flex flex-row items-center"
+                  style={{ 'margin-left': 'calc(var(--depth) * 18px)' }}
                 >
-                  <TreeView.ItemText
-                    class={itemTextClassName}
-                    style={{ 'padding-left': 'calc((var(--depth) - 1) * 18px)' }}
-                  >
-                    {props.icon?.(node)}
-                    {IS_DEV && `${node.value!.id.slice(0, 4)}+`}
-                    {normalizeTitle(node.value!)}
-                  </TreeView.ItemText>
-                  {props.operation(node)}
-                </div>
-              </li>
-            )}
-          />
-        }
-      >
-        <TreeView.Branch
-          asChild={(childProps) => (
-            <li {...childProps()} class="w-full" classList={{ 'menu-disabled': node.isUnselectable }}>
-              <TreeView.BranchControl
-                onClick={() => handleItemClick(node)}
-                classList={{ 'menu-active': node.isHighlighted }}
-                class="gap-0 group px-0"
-                ref={setDropElementRef} // dropElement 不能是上一层的 <li> 元素
-              >
-                <button
-                  class="cursor-pointer"
-                  style={{ 'padding-left': 'calc((var(--depth) - 1) * 18px)' }}
-                  disabled={Boolean(newNoteForm())}
-                  onClick={handleArrowClick}
-                >
-                  <Show when={node.isExpanded || newNoteForm()} fallback={<ChevronRightIcon class="w-5 h-5" />}>
-                    <ChevronDownIcon class="w-5 h-5" />
-                  </Show>
-                </button>
-                <TreeView.BranchText class={itemTextClassName}>
-                  {props.icon?.(node)}
-                  {IS_DEV && `${node.value!.id.slice(0, 4)}+`}
-                  {normalizeTitle(node.value!)}
-                </TreeView.BranchText>
-                {props.operation(node)}
-              </TreeView.BranchControl>
-              <TreeView.BranchContent
-                asChild={(childProps) => (
-                  <ul {...childProps()} class="ml-0 pl-0 w-full before:content-none">
-                    <Show when={newNoteForm()}>
-                      {(form) => (
-                        <li
-                          class="w-full pl-5 pr-0 flex flex-row items-center"
-                          style={{ 'margin-left': 'calc(var(--depth) * 18px)' }}
-                        >
-                          {props.icon?.(form())}
-                          <TitleEditor className="p-0" editor={form()} />
-                        </li>
-                      )}
-                    </Show>
-                    <Key each={node.childrenQuery.result.data} by="id">
-                      {(child, index) => (
-                        <Node {...props} parent={node} note={child()} indexPath={[...props.indexPath, index()]} />
-                      )}
-                    </Key>
-                  </ul>
-                )}
-              />
-            </li>
-          )}
-        />
-      </Show>
-    </TreeView.NodeProvider>
+                  {props.icon?.(form())}
+                  <TitleEditor className="p-0" editor={form()} />
+                </li>
+              )}
+            </Show>
+            <Key each={node.childrenQuery.result.data} by="id">
+              {(child, index) => (
+                <Node {...props} parent={node} note={child()} indexPath={[...props.indexPath, index()]} />
+              )}
+            </Key>
+          </ul>
+        </Show>
+      </li>
+    </Show>
   );
 }

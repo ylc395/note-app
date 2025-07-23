@@ -1,6 +1,5 @@
-import { createTreeCollection, TreeView } from '@ark-ui/solid';
 import { Key } from '@solid-primitives/keyed';
-import { createMemo, Show, type JSX } from 'solid-js';
+import { Show, type JSX } from 'solid-js';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { onCleanup } from 'solid-js';
 import NoteService from '#domain/client/app/service/NoteService';
@@ -11,7 +10,6 @@ import TreeViewModel from '#domain/client/app/model/note/TreeView';
 
 import NodeView from './Node';
 import TitleEditor from './TitleEditor';
-import { untrack } from 'solid-js';
 
 export default function NoteTree(props: {
   treeView: TreeViewModel;
@@ -20,23 +18,6 @@ export default function NoteTree(props: {
   icon?: (node: TreeNode | NewNoteForm) => JSX.Element;
   onItemTitleClick: (node: TreeNode) => void;
 }) {
-  const collection = createMemo(() => {
-    const root = props.treeView.tree.root;
-
-    if (root) {
-      return untrack(() =>
-        createTreeCollection<TreeNode>({
-          rootNode: root,
-          nodeToValue: (node) => node.id,
-          nodeToChildren: (node) => {
-            // 这个 node 的类型和标注的不一致，有可能为 undefined
-            return node?.childrenQuery.result.data?.map(({ id }) => props.treeView.tree.get(id)) ?? [];
-          },
-        }),
-      );
-    }
-  });
-
   onCleanup(
     monitorForElements({
       onDragStart: ({ source }) => {
@@ -52,42 +33,32 @@ export default function NoteTree(props: {
     }),
   );
 
+  // 这里不使用 arkui 提供的 Tree 组件，因为它实现得有问题，性能很差
   return (
-    <Show when={collection()}>
-      {(_collection) => (
-        <TreeView.Root
-          class="overflow-auto h-full scrollbar-stable"
-          collection={_collection()}
-          expandOnClick={false}
-          expandedValue={Array.from(props.treeView.tree.expandedNodeIds)}
-        >
-          <TreeView.Tree
-            asChild={(childProps) => (
-              <ul {...childProps()} class="menu p-0 w-full">
-                <Show when={props.useNewNoteEditor && props.treeView.newNoteFormMap.get(_collection().rootNode.id)}>
-                  {(form) => (
-                    <li>
-                      <TitleEditor editor={form()} />
-                    </li>
-                  )}
-                </Show>
-                <Key each={_collection().rootNode.childrenQuery.result.data} by="id">
-                  {(note, index) => (
-                    <NodeView
-                      onItemTitleClick={props.onItemTitleClick}
-                      operation={props.operation}
-                      treeView={props.treeView}
-                      icon={props.icon}
-                      note={note()}
-                      parent={_collection().rootNode}
-                      indexPath={[index()]}
-                    />
-                  )}
-                </Key>
-              </ul>
+    <Show when={props.treeView.tree.root}>
+      {(rootNode) => (
+        <ul class="menu p-0 w-full" style={{ '--depth': 0 }}>
+          <Show when={props.useNewNoteEditor && props.treeView.newNoteFormMap.get(rootNode().id)}>
+            {(form) => (
+              <li>
+                <TitleEditor editor={form()} />
+              </li>
             )}
-          />
-        </TreeView.Root>
+          </Show>
+          <Key each={rootNode().childrenQuery.result.data} by="id">
+            {(note, index) => (
+              <NodeView
+                onItemTitleClick={props.onItemTitleClick}
+                operation={props.operation}
+                treeView={props.treeView}
+                icon={props.icon}
+                note={note()}
+                parent={rootNode()}
+                indexPath={[index()]}
+              />
+            )}
+          </Key>
+        </ul>
       )}
     </Show>
   );

@@ -13,7 +13,7 @@ import NoteAddButton from './AddButton/Note';
 export default function TreeView() {
   const uiState = container.resolve(UIState);
   const tabClassName = 'tab font-bold';
-  const tabContentClassName = 'min-h-0 grow';
+  const tabContentClassName = 'min-h-0 grow overflow-auto';
   const currentView = createMemo(() => uiState.get('note.treeView'));
 
   return (
