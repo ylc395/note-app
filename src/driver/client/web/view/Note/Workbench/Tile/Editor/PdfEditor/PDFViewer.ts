@@ -328,7 +328,7 @@ export default class PdfViewer {
     return true;
   }
 
-  public readonly jumpToAnnotation = withAbortSignal((signal: AbortSignal, annotation: AnnotationVO) => {
+  public readonly jumpToAnnotation = withAbortSignal((signal, annotation: AnnotationVO) => {
     assert(annotation.targetId === this.editor.noteId);
 
     const page = getPage(annotation);
@@ -346,7 +346,7 @@ export default class PdfViewer {
     );
   });
 
-  @observable.shallow public accessor annotationElementMap = new Map<AnnotationVO['id'], HTMLElement>();
+  @observable.shallow public accessor annotationElementMap = new Map<AnnotationVO['id'], HTMLElement | SVGElement>();
 
   private handleHistoryPop(e: { record: HistoryRecord; direction: Direction }) {
     const hash = this.state.get('hash');

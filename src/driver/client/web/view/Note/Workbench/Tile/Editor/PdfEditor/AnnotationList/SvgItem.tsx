@@ -4,6 +4,7 @@ import dayjs from 'dayjs';
 import type { AnnotationVO } from '#domain/shared/model/annotation';
 
 import type PdfViewer from '../PDFViewer';
+import { maxBy } from 'lodash-es';
 
 export default function SvgItem(props: { pdfViewer: PdfViewer; value: AnnotationVO[] }) {
   const page = createMemo(() => {
@@ -12,10 +13,10 @@ export default function SvgItem(props: { pdfViewer: PdfViewer; value: Annotation
     return annotation.selector.page;
   });
 
-  const createdAt = createMemo(() => Math.max(...props.value.map(({ createdAt }) => createdAt)));
+  const latestAnnotation = createMemo(() => maxBy(props.value, ({ createdAt }) => createdAt)!);
 
   function jumpTo() {
-    props.pdfViewer.jumpTo(page());
+    props.pdfViewer.jumpToAnnotation(latestAnnotation());
   }
 
   return (
@@ -25,7 +26,7 @@ export default function SvgItem(props: { pdfViewer: PdfViewer; value: Annotation
         <span>共{props.value.length}个标记</span>
       </div>
       <div class="text-sm text-left">
-        <time>最近标记于{dayjs(createdAt()).format('YYYY年MM月DD日 HH:mm:ss')}</time>
+        <time>最近标记于{dayjs(latestAnnotation().createdAt).format('YYYY年MM月DD日 HH:mm:ss')}</time>
       </div>
     </div>
   );

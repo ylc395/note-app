@@ -3,6 +3,7 @@ import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { z } from 'zod';
 import type Mark from 'mark.js';
+import { action } from 'mobx';
 
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
@@ -116,6 +117,7 @@ export default class AnnotationManager {
     return range;
   }
 
+  @action
   public destroy() {
     this.destroyController.abort();
   }

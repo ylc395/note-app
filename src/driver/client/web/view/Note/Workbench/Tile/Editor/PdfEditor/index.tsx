@@ -66,18 +66,20 @@ export default function PdfEditorView(props: { editor: PdfEditor }) {
             >
               <div classList={{ 'select-text': !props.editor.annotation.svgEditor.isEnabled }} ref={viewRef}></div>
               <Show when={getPdfViewer()}>{(viewer) => <SelectionTooltip pdfViewer={viewer()} />}</Show>
-              <Show when={getPdfViewer()?.isReady && getPdfViewer()}>
-                {(pdfViewer) => (
-                  <Key each={pdfViewer().renderedPages} by={identity}>
-                    {(page) => (
-                      <>
-                        <AnnotationLayer page={page()} pdfViewer={pdfViewer()} />
-                        <TextLayer page={page()} pdfViewer={pdfViewer()} />
-                      </>
-                    )}
-                  </Key>
-                )}
-              </Show>
+              <div data-custom-layer>
+                <Show when={getPdfViewer()?.isReady && getPdfViewer()}>
+                  {(pdfViewer) => (
+                    <Key each={pdfViewer().renderedPages} by={identity}>
+                      {(page) => (
+                        <>
+                          <AnnotationLayer page={page()} pdfViewer={pdfViewer()} />
+                          <TextLayer page={page()} pdfViewer={pdfViewer()} />
+                        </>
+                      )}
+                    </Key>
+                  )}
+                </Show>
+              </div>
             </div>
           </div>
         </div>

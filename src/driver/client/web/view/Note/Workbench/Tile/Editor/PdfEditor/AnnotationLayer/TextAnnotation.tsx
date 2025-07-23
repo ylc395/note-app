@@ -136,10 +136,10 @@ export default function TextAnnotation(props: { annotation: AnnotationVO; page: 
         unmountOnExit
         lazyMount
       >
-        <Popover.Trigger ref={setButtonRef} class="absolute cursor-pointer flex">
+        <Popover.Trigger ref={setButtonRef} class="absolute cursor-pointer flex pointer-events-auto">
           <MessageSquareIcon />
         </Popover.Trigger>
-        <Popover.Positioner>
+        <Popover.Positioner class="pointer-events-auto">
           <Popover.Content class="w-64 bg-gray-200 ml-1 p-2">{props.annotation.body}</Popover.Content>
         </Popover.Positioner>
       </Popover.Root>
