@@ -9,19 +9,19 @@ export enum SidebarTabs {
 }
 
 const schema = z.object({
-  'app.sidebar': z.enum(SidebarTabs),
-  'note.treeView': z.enum(NoteTypes),
-  'note.sidebar.proportion': z.number().array(),
-  'memo.sidebarVisibility': z.union([z.literal('always'), z.literal('visible'), z.literal('hidden')]),
+  'app.sidebar': z.enum(SidebarTabs).default(SidebarTabs.Note),
+  'note.treeView': z.enum(NoteTypes).default(NoteTypes.Document),
+  'note.sidebar.proportion': z
+    .number()
+    .array()
+    .default(() => [20, 80]),
+  'memo.sidebarVisibility': z
+    .union([z.literal('always'), z.literal('visible'), z.literal('hidden')])
+    .default('visible'),
 });
 
 export default class UIState extends PersistedMap<z.infer<typeof schema>> {
   constructor() {
-    super('ui.state', schema, {
-      'app.sidebar': SidebarTabs.Note,
-      'note.treeView': NoteTypes.Document,
-      'note.sidebar.proportion': [20, 80],
-      'memo.sidebarVisibility': 'visible',
-    });
+    super('ui.state', schema);
   }
 }

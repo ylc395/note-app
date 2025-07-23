@@ -1,4 +1,3 @@
-import { get, isObject, set } from 'lodash-es';
 import { type ZodType } from 'zod';
 import assert from 'assert';
 import { action, observable, ObservableMap, runInAction } from 'mobx';
@@ -6,10 +5,11 @@ import { action, observable, ObservableMap, runInAction } from 'mobx';
 import container from '#utils/singletonContainer';
 import { token as localStorageToken } from '#domain/client/shared/infra/localStorage';
 import { untrack } from 'solid-js/web';
+import { isObject } from 'lodash-es';
 
 export default class PersistedMap<S extends object> {
-  constructor(private readonly id: string, private readonly schema: ZodType<S>, defaultValue: S) {
-    this.init(defaultValue);
+  constructor(private readonly id: string, private readonly schema: ZodType<S>) {
+    this.init();
   }
 
   private readonly localStorage = container.resolve(localStorageToken);
@@ -18,22 +18,17 @@ export default class PersistedMap<S extends object> {
 
   @observable public accessor isReady = false;
 
-  private async init(defaultValue: S) {
+  private async init() {
     let value = await this.localStorage.get(this.key);
-    const parsedResult = this.schema.safeParse(value);
 
     if (!isObject(value)) {
-      value = defaultValue;
+      value = {};
     }
 
-    if (parsedResult.error) {
-      for (const issue of parsedResult.error.issues) {
-        set(value as object, issue.path, get(defaultValue, issue.path));
-      }
-    }
+    const parsedResult = this.schema.parse(value);
 
     runInAction(() => {
-      this.map.replace(value as object);
+      this.map.replace(parsedResult);
       this.isReady = true;
     });
   }

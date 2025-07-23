@@ -48,7 +48,10 @@ export default class PdfViewer {
     this.editor = options.editor;
     this.pdfViewer = this.createViewer(options);
     this.textFinder = new TextFinder(this);
-    this.state = new PersistedMap(`${options.editor.noteId}-view`, z.object({ hash: z.string().optional() }), {});
+    this.state = new PersistedMap(
+      `${options.editor.noteId}-view`,
+      z.object({ hash: z.string().optional().default(undefined) }),
+    );
 
     when(
       () => this.editor.isReady && this.state.isReady,

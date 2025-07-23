@@ -17,15 +17,19 @@ export interface OutlineItem {
   dest: unknown[] | null | string; // 传给 pdfjs 的跳转函数用的，具体类型不明，我们也不用管
 }
 
-const schema = z.object({
-  expanded: z.string().array(),
-  panelVisible: z.boolean().optional(),
-  scroll: z.object({ x: z.number(), y: z.number() }).optional(),
-});
-
 export default class OutlineList {
   constructor(private readonly annotation: AnnotationManager) {
-    this.state = new PersistedMap(`${annotation.noteId}-outlineList`, schema, { expanded: [] });
+    this.state = new PersistedMap(
+      `${annotation.noteId}-outlineList`,
+      z.object({
+        expanded: z
+          .string()
+          .array()
+          .default(() => []),
+        panelVisible: z.boolean().optional(),
+        scroll: z.object({ x: z.number(), y: z.number() }).optional(),
+      }),
+    );
 
     this._items = createQuery(this.createItems.bind(this), {
       abortSignal: this.destroyController.signal,

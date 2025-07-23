@@ -35,7 +35,6 @@ export default class AnnotationManager {
         panelVisible: z.boolean().optional(),
         native: z.boolean().optional(),
       }),
-      {},
     );
 
     this.items = createQuery(() => this.remote.annotation.queryByEntityId.query(this.noteId), {

@@ -23,11 +23,10 @@ export default class TextFinder {
     this.persistedOptions = new PersistedMap(
       `pdf-textFinder-${this.textManager.noteId}`,
       z.object({
-        caseSensitive: z.boolean().optional(),
-        entireWord: z.boolean().optional(),
-        query: z.string().optional(),
+        caseSensitive: z.boolean().default(false),
+        entireWord: z.boolean().default(false),
+        query: z.string().default(''),
       }),
-      {},
     );
   }
   private readonly persistedOptions;

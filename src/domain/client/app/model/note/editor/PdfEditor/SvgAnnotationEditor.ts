@@ -25,17 +25,11 @@ export default class SvgAnnotationEditor {
   public readonly options = new PersistedMap(
     'pdf-canvas-options',
     z.object({
-      color: z.string(),
-      fillColor: z.string(),
-      thickness: z.number(),
-      shape: z.nativeEnum(Shape),
+      color: z.string().default('red'),
+      fillColor: z.string().default('transparent'),
+      thickness: z.number().default(5),
+      shape: z.enum(Shape).default(Shape.Rect),
     }),
-    {
-      color: 'red',
-      fillColor: 'transparent',
-      thickness: 5,
-      shape: Shape.Rect,
-    },
   );
 
   @action

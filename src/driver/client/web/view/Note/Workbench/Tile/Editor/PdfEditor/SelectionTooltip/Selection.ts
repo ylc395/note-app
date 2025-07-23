@@ -42,7 +42,7 @@ export default class Selection {
     return Boolean(this.commentEditor) && !this.pdfViewer.editor.annotation.svgEditor.isEnabled;
   }
 
-  private readonly uiState = new PersistedMap('pdf-selection', z.object({ color: z.string() }), { color: 'yellow' });
+  private readonly uiState = new PersistedMap('pdf-selection', z.object({ color: z.string().default('yellow') }));
 
   public activate(rootEl: HTMLElement) {
     this.rootEl = rootEl;

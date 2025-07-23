@@ -8,17 +8,21 @@ import type { MaybeArray } from '#utils/collection';
 import PersistedMap from '../abstract/PersistedMap';
 import TreeNode from './TreeNode';
 
-const schema = z
-  .object({
-    scroll: z.object({ x: z.number(), y: z.number() }),
-    expanded: z.string().array(),
-    selected: z.string().array(),
-  })
-  .partial();
+const schema = z.object({
+  scroll: z.object({ x: z.number(), y: z.number() }).optional().default(undefined),
+  expanded: z
+    .string()
+    .array()
+    .default(() => []),
+  selected: z
+    .string()
+    .array()
+    .default(() => []),
+});
 
 export default class Tree {
   constructor(private readonly options: { sort?: (note1: NoteVO, note2: NoteVO) => number; type: NoteTypes }) {
-    this.uiState = new PersistedMap(`note-explorer-tree-${options.type}`, schema, {});
+    this.uiState = new PersistedMap(`note-explorer-tree-${options.type}`, schema);
     this.init();
   }
 
