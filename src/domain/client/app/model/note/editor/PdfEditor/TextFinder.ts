@@ -3,19 +3,19 @@ import { z } from 'zod';
 import { compact, debounce, isEqual } from 'lodash-es';
 
 import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
-import { extractDigest } from '#utils/string';
 import type PageTextManager from './PageTextManager';
 
-export type Digest = NonNullable<ReturnType<typeof extractDigest>>;
+export interface Digest {
+  text: string;
+  hasLeading: boolean;
+  hasTrailing: boolean;
+  matchIndex: number;
+  matchLength: number;
+}
 
 export interface MatchesCount {
   current: number;
   total: number;
-}
-
-interface PageDigests {
-  page: number;
-  digests: Digest[];
 }
 
 export default class TextFinder {
@@ -32,7 +32,7 @@ export default class TextFinder {
   private readonly persistedOptions;
   @observable public accessor isEnabled = false;
   @observable public accessor result: (MatchesCount & { options: TextFinder['options'] }) | undefined;
-  @observable.ref public accessor digests: PageDigests[] | undefined;
+  @observable.ref public accessor digests: Array<{ page: number; digests: Digest[] }> | undefined;
 
   @computed
   public get options() {
@@ -95,7 +95,7 @@ export default class TextFinder {
           page: pageIndex + 1,
           digests: compact(
             matchOffsets.map((offset, index) =>
-              extractDigest({
+              TextFinder.extractDigest({
                 fullText: texts[pageIndex + 1] || '',
                 matchIndex: offset,
                 maxLength: 100,
@@ -118,5 +118,61 @@ export default class TextFinder {
 
   public destroy() {
     this.updateDigests.cancel();
+  }
+
+  private static extractDigest(params: {
+    lang?: string;
+    fullText: string;
+    matchIndex: number;
+    maxLength: number;
+    matchLength: number;
+    prefixMaxLength?: number;
+  }) {
+    // 第一个参数（locale）似乎不影响 Intl.Segmenter 分词的正确性
+    // 没有明确的结论，初步的讨论见 https://stackoverflow.com/questions/75747868/how-exactly-locale-param-affects-the-result-of-intl-segmenter-execution-in-jav
+    // AI 认为这是因为各个 JS 引擎的内部有类似智能识别语言种类的优化
+    const segmenter = new Intl.Segmenter(params.lang, { granularity: 'word' });
+    const digest = {
+      text: '',
+      hasLeading: false,
+      hasTrailing: false,
+      matchIndex: -1,
+      matchLength: params.matchLength,
+    };
+    const prefixMaxLength = params.prefixMaxLength ?? Math.floor(params.maxLength / 2);
+
+    let i = 0;
+    let isFirstSegmentInDigest = true;
+
+    for (const segment of segmenter.segment(params.fullText)) {
+      if (segment.index <= params.matchIndex && segment.index + segment.segment.length > params.matchIndex) {
+        digest.matchIndex = digest.text.length + (params.matchIndex - segment.index);
+      }
+
+      if (digest.text.length + segment.segment.length > params.maxLength) {
+        digest.hasTrailing = true;
+        break;
+      }
+
+      if (params.matchIndex - segment.index <= prefixMaxLength) {
+        if (digest.text || segment.isWordLike) {
+          digest.text += segment.segment;
+        }
+
+        if (i > 0 && isFirstSegmentInDigest) {
+          digest.hasLeading = true;
+        }
+
+        isFirstSegmentInDigest = false;
+      }
+
+      i++;
+    }
+
+    if (digest.text) {
+      return digest;
+    }
+
+    return undefined;
   }
 }
