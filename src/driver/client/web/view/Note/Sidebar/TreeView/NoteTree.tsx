@@ -13,7 +13,7 @@ export default function NoteTree() {
     <BaseTreeView
       treeView={tree}
       onItemTitleClick={(node) => node.value && workbench.open(node.value)}
-      operation={(node) => (
+      renderOperation={(node) => (
         <NoteAddButton
           iconOnly
           node={node}

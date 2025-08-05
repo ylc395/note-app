@@ -14,8 +14,8 @@ import TitleEditor from './TitleEditor';
 export default function NoteTree(props: {
   treeView: TreeViewModel;
   useNewNoteEditor?: boolean;
-  operation: (node: TreeNode) => JSX.Element;
-  icon?: (node: TreeNode | NewNoteForm) => JSX.Element;
+  renderOperation: (node: TreeNode) => JSX.Element;
+  renderIcon?: (node: TreeNode | NewNoteForm) => JSX.Element;
   onItemTitleClick: (node: TreeNode) => void;
 }) {
   onCleanup(
@@ -49,9 +49,9 @@ export default function NoteTree(props: {
             {(note, index) => (
               <NodeView
                 onItemTitleClick={props.onItemTitleClick}
-                operation={props.operation}
+                renderOperation={props.renderOperation}
+                renderIcon={props.renderIcon}
                 treeView={props.treeView}
-                icon={props.icon}
                 note={note()}
                 parent={rootNode()}
                 indexPath={[index()]}

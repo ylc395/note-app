@@ -19,8 +19,8 @@ export default function Node(props: {
   note: NoteVO;
   parent: TreeNode;
   indexPath: number[];
-  operation: (node: TreeNode) => JSX.Element;
-  icon?: (node: TreeNode | NewNoteForm) => JSX.Element;
+  renderOperation: (node: TreeNode) => JSX.Element;
+  renderIcon?: (node: TreeNode | NewNoteForm) => JSX.Element;
   onItemTitleClick: (node: TreeNode) => void;
 }) {
   const { move } = container.resolve(NoteService);
@@ -98,11 +98,11 @@ export default function Node(props: {
         >
           <div class="px-0 flex justify-between w-full group pl-5" classList={{ 'menu-active': node.isHighlighted }}>
             <div class={itemTextClassName} style={{ 'padding-left': 'calc(var(--depth) * 18px)' }}>
-              {props.icon?.(node)}
+              {props.renderIcon?.(node)}
               {IS_DEV && `${node.value!.id.slice(0, 4)}+`}
               {normalizeTitle(node.value!)}
             </div>
-            {props.operation(node)}
+            {props.renderOperation(node)}
           </div>
         </li>
       }
@@ -125,11 +125,11 @@ export default function Node(props: {
             </Show>
           </button>
           <div class={itemTextClassName}>
-            {props.icon?.(node)}
+            {props.renderIcon?.(node)}
             {IS_DEV && `${node.value!.id.slice(0, 4)}+`}
             {normalizeTitle(node.value!)}
           </div>
-          {props.operation(node)}
+          {props.renderOperation(node)}
         </div>
         <Show when={node.isExpanded}>
           <ul class="ml-0 pl-0 w-full before:content-none" style={{ '--depth': props.indexPath.length }}>
@@ -139,7 +139,7 @@ export default function Node(props: {
                   class="w-full pl-5 pr-0 flex flex-row items-center"
                   style={{ 'margin-left': 'calc(var(--depth) * 18px)' }}
                 >
-                  {props.icon?.(form())}
+                  {props.renderIcon?.(form())}
                   <TitleEditor className="p-0" editor={form()} />
                 </li>
               )}

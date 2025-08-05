@@ -1,10 +1,11 @@
-import { FolderIcon, FolderOpenIcon } from 'lucide-solid';
+import { FolderIcon, FolderOpenIcon, FileTextIcon } from 'lucide-solid';
 
 import { NoteTypes } from '#domain/shared/model/note';
 import NoteService from '#domain/client/app/service/NoteService';
 import container from '#utils/singletonContainer';
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
 import type NewNoteForm from '#domain/client/app/model/note/TreeView/NewNoteForm';
+import { MimeTypes } from '#domain/shared/model/file';
 
 import BaseTreeView from './BaseTree';
 import MaterialAddButton from './AddButton/Material';
@@ -24,13 +25,27 @@ export default function MaterialTree() {
     }
   }
 
-  function getIcon(node: TreeNode | NewNoteForm) {
+  function renderIcon(node: TreeNode | NewNoteForm) {
     const className = 'mr-2 p-0 shrink-0 w-4 h-4 inline align-text-bottom';
-    return node instanceof TreeNode && (node.value?.mimeType ? null : node.isExpanded) ? (
-      <FolderOpenIcon class={className} />
-    ) : (
-      <FolderIcon class={className} />
-    );
+
+    if (!(node instanceof TreeNode)) {
+      return null;
+    }
+
+    if (node.value?.icon) {
+      return null; // todo: 改成图标
+    }
+
+    if (!node.value?.mimeType) {
+      return node.isExpanded ? <FolderOpenIcon class={className} /> : <FolderIcon class={className} />;
+    }
+
+    switch (node.value.mimeType) {
+      case MimeTypes.PDF:
+        return <FileTextIcon class={className} />;
+      default:
+        break;
+    }
   }
 
   return (
@@ -38,8 +53,8 @@ export default function MaterialTree() {
       onItemTitleClick={handleItemClick}
       treeView={tree}
       useNewNoteEditor
-      icon={getIcon}
-      operation={(node) => (
+      renderIcon={renderIcon}
+      renderOperation={(node) => (
         <MaterialAddButton
           buttonClassName="btn btn-xs btn-square mr-1 data-[state='open']:inline-flex group-hover:inline-flex hidden"
           iconOnly
