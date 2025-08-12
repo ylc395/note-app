@@ -4,11 +4,12 @@ import container from '#utils/singletonContainer';
 import Sidebar from './Sidebar';
 import Workbench from './Workbench';
 import UIState, { SidebarTabs } from '../UIState';
+import { uniqueId } from 'lodash-es';
 
 export default function NoteTab(props: { className: string }) {
   const uiState = container.resolve(UIState);
-  const sideBarId = 'sidebar';
-  const workbenchId = 'workbench';
+  const sideBarId = uniqueId();
+  const workbenchId = uniqueId();
 
   return (
     <Tabs.Content
@@ -20,7 +21,7 @@ export default function NoteTab(props: { className: string }) {
           onResize={undefined}
           class={props.className}
           defaultSize={uiState.get('note.sidebar.proportion')}
-          panels={[{ id: 'sidebar', maxSize: 60 }, { id: 'workbench' }]}
+          panels={[{ id: sideBarId, maxSize: 60 }, { id: workbenchId }]}
           onResizeEnd={(e) => uiState.set('note.sidebar.proportion', e.size)}
         >
           <Sidebar panelId={sideBarId} />

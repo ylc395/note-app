@@ -14,20 +14,14 @@ export default function ButtonGroup(props: { iconOnly?: boolean; buttonClassName
   const treeView = getOrCreateTreeView(NoteTypes.Material);
   const node = createMemo(() => props.node ?? treeView.tree.root);
 
-  function onFormSubmit() {
-    const _node = node();
-
-    if (_node) {
-      _node.toggleExpand(true);
-    }
-  }
-
   function onSelect({ value }: MenuSelectionDetails) {
     switch (value) {
       case 'file':
         return toggleMaterialForm({
           parent: node()?.value,
-          onSubmit: onFormSubmit,
+          onSubmit: () => {
+            node()?.toggleExpand(true);
+          },
         });
       case 'directory':
         return treeView.initNewNoteForm({ parentId: node()?.value?.id });
@@ -46,37 +40,29 @@ export default function ButtonGroup(props: { iconOnly?: boolean; buttonClassName
         </Show>
       </Menu.Trigger>
       <Portal mount={shell.appRoot}>
-        <Menu.Positioner>
-          <Menu.Content
-            asChild={(childProps) => (
-              <ul {...childProps()} class="p-0 menu bg-base-200 rounded-lg">
-                <Menu.Item
-                  onClick={(e) => e.stopPropagation()}
-                  value="file"
-                  asChild={(childProps) => (
-                    <li {...childProps()}>
-                      <button class="btn btn-ghost btn-sm">
-                        <FilePlus class="mr-1" />
-                        新增文件
-                      </button>
-                    </li>
-                  )}
-                />
-                <Menu.Item
-                  value="directory"
-                  onClick={(e) => e.stopPropagation()}
-                  asChild={(childProps) => (
-                    <li {...childProps()}>
-                      <button class="btn btn-ghost btn-sm">
-                        <FolderPlusIcon class="mr-1" />
-                        新增目录
-                      </button>
-                    </li>
-                  )}
-                />
-              </ul>
-            )}
-          />
+        <Menu.Positioner class="absolute">
+          <Menu.Content class="rounded border-border-primary border p-inset-square-s bg-brand-secondary shadow">
+            <Menu.Item
+              value="directory"
+              onClick={(e) => e.stopPropagation()}
+              asChild={(props) => (
+                <button {...props()} class="button button-md">
+                  <FolderPlusIcon class="mr-1" />
+                  新增目录
+                </button>
+              )}
+            />
+            <Menu.Item
+              onClick={(e) => e.stopPropagation()}
+              value="file"
+              asChild={(props) => (
+                <button {...props()} class="button button-md">
+                  <FilePlus class="mr-1" />
+                  新增文件
+                </button>
+              )}
+            />
+          </Menu.Content>
         </Menu.Positioner>
       </Portal>
     </Menu.Root>

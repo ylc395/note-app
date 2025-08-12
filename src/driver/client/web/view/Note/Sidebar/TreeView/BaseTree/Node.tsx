@@ -28,7 +28,9 @@ export default function Node(props: {
   const newNoteForm = createMemo(() => props.treeView.newNoteFormMap.get(node.id));
 
   const [dropElementRef, setDropElementRef] = createSignal<HTMLElement>();
-  const itemTextClassName = 'whitespace-nowrap overflow-hidden text-ellipsis py-0.5'; // 别弄成 flex，否则文字截断无法生效（只对 inline / block 有效）
+  const itemClassName = 'rounded cursor-pointer flex group items-center hover:bg-surface-tertiary px-inset-square-s';
+  const itemTextClassName = 'whitespace-nowrap overflow-hidden text-ellipsis py-inset-square-md grow'; // 别弄成 flex，否则文字截断无法生效（只对 inline / block 有效）
+  const paddingLeft = createMemo(() => (props.indexPath.length - 1) * 18);
 
   createEffect(
     on(
@@ -80,10 +82,7 @@ export default function Node(props: {
 
   function handleArrowClick(e: MouseEvent) {
     e.stopPropagation();
-
-    if (!newNoteForm()) {
-      node.toggleExpand();
-    }
+    node.toggleExpand();
   }
 
   return (
@@ -93,17 +92,18 @@ export default function Node(props: {
         <li
           onClick={() => handleItemClick(node)}
           ref={setDropElementRef}
-          class="w-full"
+          class={itemClassName}
           classList={{ 'menu-disabled': node.isUnselectable }}
         >
-          <div class="px-0 flex justify-between w-full group pl-5" classList={{ 'menu-active': node.isHighlighted }}>
-            <div class={itemTextClassName} style={{ 'padding-left': 'calc(var(--depth) * 18px)' }}>
-              {props.renderIcon?.(node)}
-              {IS_DEV && `${node.value!.id.slice(0, 4)}+`}
-              {normalizeTitle(node.value!)}
-            </div>
-            {props.renderOperation(node)}
+          <div
+            class={`${itemTextClassName} ml-5`} // ml 和展开图标的尺寸一致
+            style={{ 'padding-left': `${paddingLeft()}px` }}
+          >
+            {props.renderIcon?.(node)}
+            {IS_DEV && `${node.value!.id.slice(0, 4)}+`}
+            {normalizeTitle(node.value!)}
           </div>
+          {props.renderOperation(node)}
         </li>
       }
     >
@@ -111,15 +111,11 @@ export default function Node(props: {
         <div
           onClick={() => handleItemClick(node)}
           classList={{ 'menu-active': node.isHighlighted }}
-          class="gap-0 group px-0"
+          class={itemClassName}
           ref={setDropElementRef} // dropElement 不能是上一层的 <li> 元素
         >
-          <button
-            class="cursor-pointer"
-            style={{ 'padding-left': 'calc(var(--depth) * 18px)' }}
-            disabled={Boolean(newNoteForm())}
-            onClick={handleArrowClick}
-          >
+          {/** 展开/收起图标 */}
+          <button class="cursor-pointer" style={{ 'padding-left': `${paddingLeft()}px` }} onClick={handleArrowClick}>
             <Show when={node.isExpanded || newNoteForm()} fallback={<ChevronRightIcon class="w-5 h-5" />}>
               <ChevronDownIcon class="w-5 h-5" />
             </Show>
@@ -129,18 +125,20 @@ export default function Node(props: {
             {IS_DEV && `${node.value!.id.slice(0, 4)}+`}
             {normalizeTitle(node.value!)}
           </div>
+          {/** 行操作区 */}
           {props.renderOperation(node)}
         </div>
+        {/** 子树 */}
         <Show when={node.isExpanded}>
-          <ul class="ml-0 pl-0 w-full before:content-none" style={{ '--depth': props.indexPath.length }}>
+          <ul>
+            {/** 新笔记编辑器 */}
             <Show when={newNoteForm()}>
               {(form) => (
-                <li
-                  class="w-full pl-5 pr-0 flex flex-row items-center"
-                  style={{ 'margin-left': 'calc(var(--depth) * 18px)' }}
-                >
-                  {props.renderIcon?.(form())}
-                  <TitleEditor className="p-0" editor={form()} />
+                <li class="px-inset-square-s ml-5 ">
+                  <div class="w-full flex items-center" style={{ 'padding-left': `${props.indexPath.length * 18}px` }}>
+                    {props.renderIcon?.(form())}
+                    <TitleEditor newNoteForm={form()} />
+                  </div>
                 </li>
               )}
             </Show>

@@ -7,7 +7,7 @@ import TreeNode from '#domain/client/shared/model/note/TreeNode';
 import type NewNoteForm from '#domain/client/app/model/note/TreeView/NewNoteForm';
 import { MimeTypes } from '#domain/shared/model/file';
 
-import BaseTreeView from './BaseTree';
+import BaseTreeView, { addButtonClassName } from './BaseTree';
 import MaterialAddButton from './AddButton/Material';
 export default function MaterialTree() {
   const { workbench, getOrCreateTreeView } = container.resolve(NoteService);
@@ -29,7 +29,7 @@ export default function MaterialTree() {
     const className = 'mr-2 p-0 shrink-0 w-4 h-4 inline align-text-bottom';
 
     if (!(node instanceof TreeNode)) {
-      return null;
+      return <FolderIcon class={className} />;
     }
 
     if (node.value?.icon) {
@@ -54,13 +54,7 @@ export default function MaterialTree() {
       treeView={tree}
       useNewNoteEditor
       renderIcon={renderIcon}
-      renderOperation={(node) => (
-        <MaterialAddButton
-          buttonClassName="btn btn-xs btn-square mr-1 data-[state='open']:inline-flex group-hover:inline-flex hidden"
-          iconOnly
-          node={node}
-        />
-      )}
+      renderOperation={(node) => <MaterialAddButton buttonClassName={addButtonClassName} iconOnly node={node} />}
     />
   );
 }

@@ -1,17 +1,17 @@
 import { Tabs } from '@ark-ui/solid/tabs';
+import { Show } from 'solid-js';
 
 import container from '#utils/singletonContainer';
-import Sidebar from './Sidebar';
+import MainSidebar from './MainSidebar';
 import NoteTab from './Note';
 import MaterialFormModal from './Note/MaterialFormModal';
 import MemoTab from './Memo';
 import UIState, { SidebarTabs } from './UIState';
 import './index.css';
-import { Show } from 'solid-js';
 
 export default function App() {
   const uiState = container.resolve(UIState);
-  const mainTabClassName = 'flex-grow min-w-0 relative bg-base-100 h-full';
+  const mainTabClassName = 'flex-grow min-w-0 relative h-full';
 
   return (
     <Show when={uiState.isReady}>
@@ -22,7 +22,7 @@ export default function App() {
         onValueChange={({ value }) => uiState.set('app.sidebar', value as SidebarTabs)}
         class="flex h-screen"
       >
-        <Sidebar />
+        <MainSidebar />
         <NoteTab className={mainTabClassName} />
         <MemoTab className={mainTabClassName} />
       </Tabs.Root>

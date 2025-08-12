@@ -12,8 +12,8 @@ import NoteAddButton from './AddButton/Note';
 
 export default function TreeView() {
   const uiState = container.resolve(UIState);
-  const tabClassName = 'tab font-bold';
-  const tabContentClassName = 'min-h-0 grow overflow-auto';
+  const tabClassName = 'data-[selected]:font-bold cursor-pointer';
+  const tabContentClassName = 'min-h-0 grow overflow-auto scrollbar-stable scrollbar-thin';
   const currentView = createMemo(() => uiState.get('note.treeView'));
 
   return (
@@ -25,30 +25,22 @@ export default function TreeView() {
       defaultValue={String(currentView())}
       onValueChange={({ value }) => uiState.set('note.treeView', Number(value) as NoteTypes)}
     >
-      <div class="flex items-center justify-between text-sm">
-        <Tabs.List class="tabs space-x-2 [--tab-p:0px]">
-          <Tabs.Trigger
-            class={tabClassName}
-            classList={{ 'tab-active': currentView() === NoteTypes.Document }}
-            value={String(NoteTypes.Document)}
-          >
+      <div class="flex items-center justify-between text-sm mb-stack-s">
+        <Tabs.List class="space-x-stack-s">
+          <Tabs.Trigger class={tabClassName} value={String(NoteTypes.Document)}>
             文档
           </Tabs.Trigger>
-          <Tabs.Trigger
-            class={tabClassName}
-            classList={{ 'tab-active': currentView() === NoteTypes.Material }}
-            value={String(NoteTypes.Material)}
-          >
+          <Tabs.Trigger class={tabClassName} value={String(NoteTypes.Material)}>
             素材
           </Tabs.Trigger>
         </Tabs.List>
         <div class="flex items-center">
           <Switch>
             <Match when={currentView() === NoteTypes.Document}>
-              <NoteAddButton buttonClassName="btn btn-ghost btn-sm" />
+              <NoteAddButton buttonClassName="button button-md button-primary" />
             </Match>
             <Match when={currentView() === NoteTypes.Material}>
-              <MaterialAddButtonGroup buttonClassName="btn btn-ghost btn-sm" />
+              <MaterialAddButtonGroup buttonClassName="button button-md button-primary" />
             </Match>
           </Switch>
         </div>

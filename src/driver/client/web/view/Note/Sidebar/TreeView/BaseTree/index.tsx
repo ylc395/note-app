@@ -11,7 +11,10 @@ import TreeViewModel from '#domain/client/app/model/note/TreeView';
 import NodeView from './Node';
 import TitleEditor from './TitleEditor';
 
-export default function NoteTree(props: {
+export const addButtonClassName =
+  'button button-primary button-square-tiny text-brand-secondary h-full ml-inset-squish group-hover:flex data-[state="open"]:flex hidden';
+
+export default function BaseTree(props: {
   treeView: TreeViewModel;
   useNewNoteEditor?: boolean;
   renderOperation: (node: TreeNode) => JSX.Element;
@@ -37,11 +40,14 @@ export default function NoteTree(props: {
   return (
     <Show when={props.treeView.tree.root}>
       {(rootNode) => (
-        <ul class="menu p-0 w-full" style={{ '--depth': 0 }}>
+        <ul class="text-sm w-full">
           <Show when={props.useNewNoteEditor && props.treeView.newNoteFormMap.get(rootNode().id)}>
             {(form) => (
-              <li>
-                <TitleEditor editor={form()} />
+              <li class="ml-5 px-inset-square-s">
+                <div class="flex items-center">
+                  {props.renderIcon?.(form())}
+                  <TitleEditor newNoteForm={form()} />
+                </div>
               </li>
             )}
           </Show>

@@ -4,12 +4,12 @@ import Workbench from '#domain/client/app/model/Workbench';
 import container from '#utils/singletonContainer';
 import { Direction } from '#domain/client/app/model/base/HistoryStack';
 
-export default function ButtonGroup() {
+export default function HistoryNavigationButtonGroup() {
   const { historyStack } = container.resolve(Workbench);
-  const buttonClassName = 'join-item btn btn-xs btn-ghost btn-square';
+  const buttonClassName = 'button button-square-md';
 
   return (
-    <div class="join">
+    <div class="space-x-1 flex items-center">
       <button
         class={`${buttonClassName} ml-auto`}
         disabled={!historyStack.canBackward}

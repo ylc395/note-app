@@ -1,28 +1,110 @@
 @import 'tailwindcss';
 @import 'tailwindcss-animated';
-@plugin "daisyui";
+
+@theme inline {
+  /** 品牌色。定义应用个性的核心颜色，用于关键操作和视觉焦点 */
+  --color-brand-primary: var(--color-black); /** 主要品牌色。用于应用的主按钮、加载指示器、当前激活的导航项、焦点输入框的外发光等最需要强调的地方 */
+  --color-brand-secondary: var(--color-white); /** 辅助品牌色。当需要在品牌色背景上放置文本或图标时使用，确保对比度。例如，主要按钮上的文字颜色 */
+  --color-brand-subtle: var(--color-gray-600); /** 品牌色背景（弱）。品牌色的一个非常淡的变体。用于不太重要的状态，如选中列表项的背景、需要轻微品牌暗示的区域背景 */
+
+  /** 表面/背景色。构成应用界面的“画布”，为内容提供层次感。*/
+  --color-surface-primary: var(--color-white); /* 主背景色。应用的“纸张”颜色 */
+  --color-surface-secondary: var(--color-neutral-50); /** 二级背景色。 用于创建视觉层级，如侧边栏、卡片、模态框的背景，与主背景形成微妙区分 */
+  --color-surface-tertiary: var(--color-neutral-200); /** 三级背景色。 用于更深层级的界面元素，如悬停时的背景颜色。提供更细微的深度感 */
+
+  /** 边框与分隔线。用于构建界面结构，区分不同区域 */
+  --color-border-primary: var(--color-neutral-300); /** 主要边框色。 用于卡片、输入框、按钮等组件的默认边框 */
+  --color-border-secondary: var(--color-neutral-200); /** 次要边框/分隔线色。 用于列表项之间的分隔线、组件内部的分隔线，比主要边框更微妙 */
+
+  /** 内容/文本色。 用于显示所有文本内容，可读性是第一要务 */
+  --color-text-primary: var(--color-gray-900); /** 主要文本色。 用于正文、标题等最重要的文本内容。与 color-surface-primary 对比度最高。 */
+  --color-text-secondary: var(--color-gray-600); /** 次要文本色。 用于辅助性文本，如笔记摘要、元数据（创建日期、字数）、副标题等。对比度稍低 */
+  --color-text-tertiary: var(--color-gray-400); /** 三级/提示文本色。 用于最低优先级的文本，如输入框的占位符（Placeholder）、禁用状态的文本。对比度最低但仍需可读 */
+  --color-text-link: var(--color-blue-300); /** 链接文本色。 用于超链接 */
+
+  /** 向用户传达具有特定含义的反馈或提示 */
+  --color-feedback-success: var(--color-green-200);
+  --color-feedback-warning: var(--color-yellow-200);
+  --color-feedback-error: var(--color-red-200);
+  --color-feedback-info: var(--color-blue-200);
+
+  /** 内边距。用于组件内部，内容与容器边缘之间的空间 */
+  --spacing-inset-squish: calc(var(--spacing)); /** 扁平元素的内边距 */
+  --spacing-inset-square-s: calc(var(--spacing)* 1); /** 小型方形容器的内边距 */
+  --spacing-inset-square-md: calc(var(--spacing) * 2); /** 标准方形容器的内边距 */
+  --spacing-inset-square-lg: calc(var(--spacing) * 3); /** 大型方形容器的内边距 */
+
+  /** 堆叠间距。用于并列或堆叠的同级元素之间的空间 */
+  --spacing-stack-xs: calc(var(--spacing)); /** 紧凑元素间 */
+  --spacing-stack-s: calc(var(--spacing) * 2); /** 相关内容块间 */ 
+  --spacing-stack-md: calc(var(--spacing) * 4); /** 独立元素间的标准间距 */ 
+  --spacing-stack-lg: calc(var(--spacing)); /** 不同组块间的间距 */ 
+  --spacing-stack-xl: calc(var(--spacing)); /** 主要内容块的间距 */ 
+
+}
+
+@utility scrollbar-stable {
+  scrollbar-gutter: stable;
+}
+
+@utility scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+@layer base {
+  input {
+    outline: none;
+  }
+
+}
 
 @layer components {
-  .number-suffix {
-    @apply flex items-center ml-1 bg-gray-200 px-1 rounded-md;
+  .button {
+    @apply flex items-center justify-center cursor-pointer rounded text-sm;
+  }
+
+  .button:hover {
+    @apply bg-surface-tertiary;
+  }
+
+  /** ===== 语义维度 ======== */
+  .button-primary {
+    @apply bg-brand-primary text-brand-secondary;
+  }
+
+  .button-primary:hover {
+    @apply bg-brand-subtle;
+  }
+
+  /** ===== 尺寸维度 ======== */
+  .button-square-tiny {
+    @apply p-inset-square-s;
+  }
+
+  .button-square-tiny .lucide-icon {
+    @apply w-4 h-4;
+    stroke-width: 2.6;
+  }
+
+  .button-md {
+    @apply py-inset-square-s px-inset-square-md
+  }
+
+  .button-md .lucide-icon {
+    @apply w-4 h-4 
+  }
+
+  .button-square-md {
+    @apply p-inset-square-s
+  }
+
+  .button-square-md .lucide-icon {
+    @apply w-5 h-5 
+  }
+
+  .input {
+    @apply border border-border-primary rounded-md p-inset-square-s text-sm;
   }
 }
 
-@layer utilities {
-  .scrollbar-stable {
-    scrollbar-gutter: stable;
-  }
-}
 
-.lucide {
-  stroke-width: 1.5;
-}
-
-.btn .lucide {
-  width: 18px;
-  height: 18px;
-}
-
-[hidden]:where(:not([hidden='until-found'])) {
-  display: none !important;
-}
