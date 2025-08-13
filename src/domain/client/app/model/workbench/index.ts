@@ -15,6 +15,7 @@ import HistoryStack from '../base/HistoryStack';
 export interface HistoryRecord {
   key: EntityId;
   editorId: Editor['id'];
+  tileId: Tile['id'];
   mimeType: string | null;
 }
 
@@ -45,7 +46,7 @@ export default class Workbench {
   }
 
   @computed
-  public get currentTile() {
+  private get currentTile() {
     return this.currentEditor?.tile || this.latestTile;
   }
 
@@ -58,7 +59,8 @@ export default class Workbench {
   private createTile() {
     const tile = new Tile({
       onDestroy: this.removeTile.bind(this),
-      onEditorFocus: ({ noteId: key, mimeType, id: editorId }) => this.historyStack.push({ key, mimeType, editorId }),
+      onEditorFocus: ({ noteId, mimeType, id: editorId }) =>
+        this.historyStack.push({ key: noteId, mimeType, editorId, tileId: tile.id }),
     });
 
     this.tilesMap[tile.id] = tile;
@@ -114,6 +116,7 @@ export default class Workbench {
           key: tile.currentEditor.noteId,
           editorId: tile.currentEditor.id,
           mimeType: tile.currentEditor.mimeType,
+          tileId: tile.id,
         });
       }
     }
@@ -228,7 +231,10 @@ export default class Workbench {
   }
 
   private handleHistoryPop({ record }: { record: HistoryRecord }) {
-    const dest = this.editorManager.get(record.editorId) || this.editorManager.restoreTileId(record.editorId);
+    const dest =
+      this.editorManager.get(record.editorId) ||
+      this.getTileById(record.tileId)?.findEditor(record.key) ||
+      record.tileId;
 
     if (dest instanceof Editor) {
       dest.tile.switchToEditor(dest);

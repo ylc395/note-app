@@ -1,4 +1,3 @@
-import assert from 'assert';
 import Editor from '#domain/client/app/model/note/editor/BaseEditor';
 import { MimeTypes } from '#domain/shared/model/file';
 import type { NoteVO } from '#domain/shared/model/note';
@@ -12,8 +11,6 @@ import MarkdownEditor from '../note/editor/MarkdownEditor';
 
 export default class EditorManager {
   private readonly editorsMap: Record<Editor['id'], Editor> = {};
-
-  private readonly editorTileMap: Record<Editor['id'], Tile['id']> = {}; // 当一个 editor 销毁后，记录一下它生前的 tileId。该信息可用于恢复已被关闭的 editor
 
   public create(tile: Tile, { id: entityId, mimeType }: Pick<NoteVO, 'id' | 'mimeType'>) {
     let editor;
@@ -38,18 +35,9 @@ export default class EditorManager {
 
   private handleEditorDestroyed(editor: Editor) {
     delete this.editorsMap[editor.id];
-    this.editorTileMap[editor.id] = editor.tile.id;
   }
 
   public get(id: Editor['id']) {
     return this.editorsMap[id];
-  }
-
-  public restoreTileId(editorId: Editor['id']) {
-    const tileId = this.editorTileMap[editorId];
-    assert(tileId, 'can not get tileId');
-
-    delete this.editorTileMap[editorId];
-    return tileId;
   }
 }

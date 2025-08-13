@@ -63,6 +63,10 @@
     @apply flex items-center justify-center cursor-pointer rounded text-sm;
   }
 
+  .button:disabled {
+    @apply opacity-30 cursor-not-allowed;
+  }
+
   .button:hover {
     @apply bg-surface-tertiary;
   }

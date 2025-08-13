@@ -25,7 +25,7 @@ export default function NoteTab(props: { className: string }) {
           onResizeEnd={(e) => uiState.set('note.sidebar.proportion', e.size)}
         >
           <Sidebar panelId={sideBarId} />
-          <Splitter.ResizeTrigger id={`${sideBarId}:${workbenchId}`} class="w-1" />
+          <Splitter.ResizeTrigger id={`${sideBarId}:${workbenchId}`} class="z-10 w-1 -mr-1 bg-transparent" />
           <Workbench panelId={workbenchId} />
         </Splitter.Root>
       )}
