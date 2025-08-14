@@ -30,7 +30,7 @@ export default class Tile {
     return existedEditor;
   }
 
-  // 将本 Tile 的当前 editor 切换为指定的 editor。fromHistory 表示本次的切换动作是否是浏览历史栈弹出导致的
+  // 将本 Tile 的当前 editor 切换为指定的 editor
   @action.bound
   public switchToEditor(editor: Editor | NoteVO['id']) {
     const target = this.findEditor(editor);

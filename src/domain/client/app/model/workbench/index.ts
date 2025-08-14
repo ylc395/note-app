@@ -11,6 +11,7 @@ import Tile from './Tile';
 import { type TileNode, type TileParent, TileDirections, isTileLeaf } from './tileTree';
 import EditorManager from './EditorManager';
 import HistoryStack from '../base/HistoryStack';
+import RecentManager from './RecentManager';
 
 export interface HistoryRecord {
   key: EntityId;
@@ -36,6 +37,8 @@ export default class Workbench {
 
   private readonly editorManager = container.resolve(EditorManager);
 
+  public readonly recentManager = container.resolve(RecentManager);
+
   private readonly tilesMap: Record<Tile['id'], Tile> = {};
 
   @observable public accessor root: TileNode | undefined; // a binary tree
@@ -45,16 +48,11 @@ export default class Workbench {
     return this.historyStack.current && this.editorManager.get(this.historyStack.current.editorId);
   }
 
-  @computed
-  private get currentTile() {
-    return this.currentEditor?.tile || this.latestTile;
-  }
-
   public getTileById(id: Tile['id']) {
     return this.tilesMap[id];
   }
 
-  private latestTile?: Tile;
+  private latestTile?: Tile; // 最新一个被创建的 Tile
 
   private createTile() {
     const tile = new Tile({
@@ -189,9 +187,10 @@ export default class Workbench {
 
   // 在指定位置打开一个 editor。该 editor 可能是新建的，也可能是复用已存在的
   // 若已存在，则其会被移动到指定位置（若有指定）
-  @action
+  @action.bound
   public open(note: Pick<NoteVO, 'id' | 'mimeType'>, dest?: Editor | Tile | NewTile) {
-    dest = dest || this.currentTile;
+    const currentTile = this.currentEditor?.tile || this.latestTile;
+    dest = dest || currentTile;
 
     if (!dest) {
       // 说明当前工作区一个 tile 都没有，需要创建一个
@@ -220,7 +219,7 @@ export default class Workbench {
         editor = destTile.createEditor(note, dest instanceof Editor ? dest : undefined);
       }
     } else {
-      const { from = this.currentTile, splitDirection } = dest;
+      const { from = currentTile, splitDirection } = dest;
       assert(from, 'can not split tile');
       // 新建一个 tile，并打开至此
       destTile = this.splitTile(from.id, splitDirection);
@@ -228,6 +227,7 @@ export default class Workbench {
     }
 
     destTile.switchToEditor(editor);
+    this.recentManager.add(note.id);
   }
 
   private handleHistoryPop({ record }: { record: HistoryRecord }) {

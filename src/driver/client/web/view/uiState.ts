@@ -9,15 +9,13 @@ export enum SidebarTabs {
 }
 
 const schema = z.object({
-  'app.sidebar': z.enum(SidebarTabs).default(SidebarTabs.Note),
-  'note.treeView': z.enum(NoteTypes).default(NoteTypes.Document),
+  'app.sidebar': z.enum(SidebarTabs).catch(SidebarTabs.Note),
+  'note.treeView': z.enum(NoteTypes).catch(NoteTypes.Document),
   'note.sidebar.proportion': z
     .number()
     .array()
-    .default(() => [20, 80]),
-  'memo.sidebarVisibility': z
-    .union([z.literal('always'), z.literal('visible'), z.literal('hidden')])
-    .default('visible'),
+    .catch(() => [20, 80]),
+  'memo.sidebarVisibility': z.union([z.literal('always'), z.literal('visible'), z.literal('hidden')]).catch('visible'),
 });
 
 export default class UIState extends PersistedMap<z.infer<typeof schema>> {

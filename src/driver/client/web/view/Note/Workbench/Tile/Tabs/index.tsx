@@ -42,7 +42,11 @@ export default function Tabs(props: { tile: Tile }) {
   });
 
   return (
-    <div ref={rootRef} onWheel={handleOnWheel} class="flex overflow-auto border-b shrink-0">
+    <div
+      ref={rootRef}
+      onWheel={handleOnWheel}
+      class="flex overflow-auto border-b border-border-secondary shrink-0 bg-surface-secondary"
+    >
       <For each={props.tile.editors}>{(editor) => <Tab editor={editor} />}</For>
     </div>
   );

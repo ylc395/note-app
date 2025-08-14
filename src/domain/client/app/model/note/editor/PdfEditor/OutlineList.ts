@@ -25,7 +25,7 @@ export default class OutlineList {
         expanded: z
           .string()
           .array()
-          .default(() => []),
+          .catch(() => []),
         panelVisible: z.boolean().optional(),
         scroll: z.object({ x: z.number(), y: z.number() }).optional(),
       }),

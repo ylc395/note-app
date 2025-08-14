@@ -49,6 +49,7 @@ export type NoteDTO = NewNoteDTO | DuplicatedNoteDTO;
  * @api
  */
 export interface ClientNoteQuery {
+  id?: Note['id'][];
   type?: Note['type'];
   parentId?: EntityParentId | string[];
   fileHash?: string;

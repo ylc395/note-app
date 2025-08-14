@@ -9,15 +9,15 @@ import PersistedMap from '../abstract/PersistedMap';
 import TreeNode from './TreeNode';
 
 const schema = z.object({
-  scroll: z.object({ x: z.number(), y: z.number() }).optional().default(undefined),
+  scroll: z.object({ x: z.number(), y: z.number() }).optional().catch(undefined),
   expanded: z
     .string()
     .array()
-    .default(() => []),
+    .catch(() => []),
   selected: z
     .string()
     .array()
-    .default(() => []),
+    .catch(() => []),
 });
 
 export default class Tree {

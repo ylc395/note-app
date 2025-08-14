@@ -39,7 +39,7 @@ export default function Tab(props: { editor: BaseEditor }) {
   return (
     <div
       ref={rootRef}
-      class="shrink-0 h-12 flex justify-between items-center w-36 text-sm px-2 border-r cursor-pointer group"
+      class="shrink-0 h-12 flex justify-between items-center w-36 text-sm px-2 border-r border-border-secondary cursor-pointer group"
       classList={{ 'bg-white': isCurrent() }}
       onClick={() => props.editor.tile.switchToEditor(props.editor)}
     >

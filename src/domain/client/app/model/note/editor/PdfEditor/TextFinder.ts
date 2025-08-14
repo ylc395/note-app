@@ -23,9 +23,9 @@ export default class TextFinder {
     this.persistedOptions = new PersistedMap(
       `pdf-textFinder-${this.textManager.noteId}`,
       z.object({
-        caseSensitive: z.boolean().default(false),
-        entireWord: z.boolean().default(false),
-        query: z.string().default(''),
+        caseSensitive: z.boolean().catch(false),
+        entireWord: z.boolean().catch(false),
+        query: z.string().catch(''),
       }),
     );
   }
