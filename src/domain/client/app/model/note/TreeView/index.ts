@@ -40,22 +40,25 @@ export default class TreeView {
     const parentNode = this.tree.get(value.parentId ?? null);
     assert(parentNode);
 
-    const isExpanded = parentNode.isExpanded;
-    const newNoteForm = new NewNoteForm({
-      ...value,
-      type: this.noteType,
-      onCancel: () => {
-        // 如果取消了新建流程，则把父节点的展开状态弄回原样
-        if (typeof isExpanded === 'boolean') {
-          parentNode.toggleExpand(isExpanded);
-        }
-      },
-      onFinish: action(() => {
-        this.newNoteFormMap.delete(parentNode.id);
-      }),
-    });
+    if (!this.newNoteFormMap.get(parentNode.id)) {
+      const isExpanded = parentNode.isExpanded;
+      const newNoteForm = new NewNoteForm({
+        ...value,
+        type: this.noteType,
+        onCancel: () => {
+          // 如果取消了新建流程，则把父节点的展开状态弄回原样
+          if (typeof isExpanded === 'boolean') {
+            parentNode.toggleExpand(isExpanded);
+          }
+        },
+        onFinish: action(() => {
+          this.newNoteFormMap.delete(parentNode.id);
+        }),
+      });
 
-    this.newNoteFormMap.set(parentNode.id, newNoteForm);
+      this.newNoteFormMap.set(parentNode.id, newNoteForm);
+    }
+
     parentNode.toggleExpand(true);
   }
 

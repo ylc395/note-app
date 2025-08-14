@@ -12,7 +12,7 @@ export default function TitleEditor(props: { newNoteForm: NewNoteForm }) {
     assert(inputRef);
 
     inputRef.value = props.newNoteForm.value.title || '';
-    inputRef?.focus();
+    setTimeout(() => inputRef?.focus()); // ark-ui menu 在被关闭的时候会 focus 一下 trigger button。我们需要重新 focus 下这个
   });
 
   return (

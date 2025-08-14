@@ -14,7 +14,6 @@ export default function Tabs(props: { tile: Tile }) {
   const workbench = container.resolve(Workbench);
 
   function handleOnWheel(e: WheelEvent) {
-    e.preventDefault();
     rootRef?.scrollBy({ left: e.deltaY < 0 ? -30 : 30 });
   }
 
@@ -45,7 +44,7 @@ export default function Tabs(props: { tile: Tile }) {
     <div
       ref={rootRef}
       onWheel={handleOnWheel}
-      class="flex overflow-auto border-b border-border-secondary shrink-0 bg-surface-secondary"
+      class="flex overflow-auto scrollbar-thin border-b border-border-secondary shrink-0 bg-surface-secondary"
     >
       <For each={props.tile.editors}>{(editor) => <Tab editor={editor} />}</For>
     </div>

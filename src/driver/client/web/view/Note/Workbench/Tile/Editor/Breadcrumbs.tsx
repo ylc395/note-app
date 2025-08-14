@@ -3,7 +3,7 @@ import { BookTextIcon, ChevronRightIcon } from 'lucide-solid';
 import type BaseEditor from '#domain/client/app/model/note/editor/BaseEditor';
 
 export default function Breadcrumbs(props: { editor: BaseEditor }) {
-  const itemClassName = 'text-text-secondary flex items-center shrink-0';
+  const itemClassName = 'text-text-secondary flex items-center shrink-0 text-sm';
   const iconClassName = 'w-4 h-4 text-text-secondary';
 
   return (

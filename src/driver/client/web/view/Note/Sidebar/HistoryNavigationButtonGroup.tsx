@@ -11,7 +11,7 @@ export default function HistoryNavigationButtonGroup() {
   return (
     <div class="space-x-1 flex items-center">
       <button
-        class={`${buttonClassName} ml-auto`}
+        class={buttonClassName}
         disabled={!historyStack.canBackward}
         onClick={() => historyStack.pop(Direction.BACKWARD)}
       >

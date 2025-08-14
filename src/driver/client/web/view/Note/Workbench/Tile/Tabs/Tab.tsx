@@ -48,7 +48,7 @@ export default function Tab(props: { editor: BaseEditor }) {
         {props.editor.value.result.data ? normalizeTitle(props.editor.value.result.data!) : ''}
       </span>
       <button
-        class="flex ml-2 group-hover:visible"
+        class="ml-2 group-hover:visible button button-square-md"
         classList={{
           invisible: !isCurrent(),
         }}
