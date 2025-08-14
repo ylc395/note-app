@@ -9,28 +9,24 @@ import { normalizeTitle, type NoteVO } from '#domain/shared/model/note';
 import TreeViewModel from '#domain/client/app/model/note/TreeView';
 import container from '#utils/singletonContainer';
 import NoteService from '#domain/client/app/service/NoteService';
-import type NewNoteForm from '#domain/client/app/model/note/TreeView/NewNoteForm';
 import { IS_DEV } from '#domain/shared/infra/env';
-
-import TitleEditor from './TitleEditor';
 
 export default function Node(props: {
   treeView: TreeViewModel;
   note: NoteVO;
   parent: TreeNode;
   indexPath: number[];
-  renderOperation: (node: TreeNode) => JSX.Element;
-  renderIcon?: (node: TreeNode | NewNoteForm) => JSX.Element;
+  renderOperation?: (node: TreeNode) => JSX.Element;
+  renderIcon?: (node: TreeNode) => JSX.Element;
   onItemTitleClick: (node: TreeNode) => void;
 }) {
   const { move } = container.resolve(NoteService);
   const node = props.treeView.tree.getOrCreateNode({ value: props.note, parent: props.parent });
-  const newNoteForm = createMemo(() => props.treeView.newNoteFormMap.get(node.id));
 
   const [dropElementRef, setDropElementRef] = createSignal<HTMLElement>();
   const itemClassName = 'rounded cursor-pointer flex group items-center hover:bg-surface-tertiary px-inset-square-s';
   const itemTextClassName = 'whitespace-nowrap overflow-hidden text-ellipsis py-inset-square-md grow'; // 别弄成 flex，否则文字截断无法生效（只对 inline / block 有效）
-  const paddingLeft = createMemo(() => (props.indexPath.length - 1) * 18);
+  const paddingLeft = createMemo(() => (props.indexPath.length - 1) * 28);
 
   createEffect(
     on(
@@ -87,7 +83,7 @@ export default function Node(props: {
 
   return (
     <Show
-      when={!node.isLeaf || newNoteForm()}
+      when={!node.isLeaf}
       fallback={
         <li
           onClick={() => handleItemClick(node)}
@@ -103,7 +99,7 @@ export default function Node(props: {
             {IS_DEV && `${node.value!.id.slice(0, 4)}+`}
             {normalizeTitle(node.value!)}
           </div>
-          {props.renderOperation(node)}
+          {props.renderOperation?.(node)}
         </li>
       }
     >
@@ -116,7 +112,7 @@ export default function Node(props: {
         >
           {/** 展开/收起图标 */}
           <button class="cursor-pointer" style={{ 'padding-left': `${paddingLeft()}px` }} onClick={handleArrowClick}>
-            <Show when={node.isExpanded || newNoteForm()} fallback={<ChevronRightIcon class="w-5 h-5" />}>
+            <Show when={node.isExpanded} fallback={<ChevronRightIcon class="w-5 h-5" />}>
               <ChevronDownIcon class="w-5 h-5" />
             </Show>
           </button>
@@ -126,22 +122,11 @@ export default function Node(props: {
             {normalizeTitle(node.value!)}
           </div>
           {/** 行操作区 */}
-          {props.renderOperation(node)}
+          {props.renderOperation?.(node)}
         </div>
         {/** 子树 */}
         <Show when={node.isExpanded}>
           <ul>
-            {/** 新笔记编辑器 */}
-            <Show when={newNoteForm()}>
-              {(form) => (
-                <li class="px-inset-square-s ml-5 ">
-                  <div class="w-full flex items-center" style={{ 'padding-left': `${props.indexPath.length * 18}px` }}>
-                    {props.renderIcon?.(form())}
-                    <TitleEditor newNoteForm={form()} />
-                  </div>
-                </li>
-              )}
-            </Show>
             <Key each={node.childrenQuery.result.data} by="id">
               {(child, index) => (
                 <Node {...props} parent={node} note={child()} indexPath={[...props.indexPath, index()]} />

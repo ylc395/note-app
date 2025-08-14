@@ -97,7 +97,6 @@ export default abstract class BaseEditor {
     this.value.setData((note) => ({ ...note!, ...patch }));
     this.domainEventBus.emit(DomainEventBus.eventNames.Updated, {
       id: this.noteId,
-      type: currentData.type,
       ...patch,
     });
 

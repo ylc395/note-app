@@ -1,20 +1,17 @@
-import { action, autorun, computed, observable } from 'mobx';
-import assert from 'assert';
+import { action, autorun, computed } from 'mobx';
 
 import Tree from '#domain/client/shared/model/note/Tree';
 import container from '#utils/singletonContainer';
-import { NoteTypes, type NewNoteDTO, type NoteVO } from '#domain/shared/model/note';
+import type { NoteVO } from '#domain/shared/model/note';
 import DomainEventBus from '#domain/client/app/model/note/EventBus';
 
 import SortBehavior from './SortBehavior';
-import NewNoteForm from './NewNoteForm';
 import Workbench from '../../Workbench';
 
 export default class TreeView {
-  constructor(private readonly noteType: NoteTypes) {
+  constructor() {
     this.tree = new Tree({
       sort: this.sortBehavior.sort.bind(this.sortBehavior),
-      type: noteType,
     });
 
     this.domainEventBus.on(
@@ -31,36 +28,7 @@ export default class TreeView {
 
   public readonly sortBehavior = container.resolve(SortBehavior);
 
-  @observable.shallow public accessor newNoteFormMap = new Map<string, NewNoteForm>();
-
   public readonly tree;
-
-  @action
-  public initNewNoteForm(value: Pick<NewNoteDTO, 'parentId' | 'title'> & { isAutoSubmit?: boolean }) {
-    const parentNode = this.tree.get(value.parentId ?? null);
-    assert(parentNode);
-
-    if (!this.newNoteFormMap.get(parentNode.id)) {
-      const isExpanded = parentNode.isExpanded;
-      const newNoteForm = new NewNoteForm({
-        ...value,
-        type: this.noteType,
-        onCancel: () => {
-          // 如果取消了新建流程，则把父节点的展开状态弄回原样
-          if (typeof isExpanded === 'boolean') {
-            parentNode.toggleExpand(isExpanded);
-          }
-        },
-        onFinish: action(() => {
-          this.newNoteFormMap.delete(parentNode.id);
-        }),
-      });
-
-      this.newNoteFormMap.set(parentNode.id, newNoteForm);
-    }
-
-    parentNode.toggleExpand(true);
-  }
 
   @computed
   public get canCollapse() {
@@ -83,11 +51,6 @@ export default class TreeView {
   }
 
   public async disableDescendantsBy(movingNotes: NoteVO[]) {
-    if (movingNotes.some(({ type }) => type !== this.noteType)) {
-      this.tree.setUnselectable(this.tree.allNodes.map(({ id }) => id));
-      return;
-    }
-
     const noteIds = movingNotes.map(({ id }) => id);
     const nodeIdToSetUnselect = new Set<string>();
     const collectDescendantIds = (nodeId: string) => {

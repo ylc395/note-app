@@ -5,7 +5,6 @@ import type { Note, ClientNoteQuery, NotePatchDTO } from '#domain/shared/model/n
 export interface NoteQuery {
   parentId?: Note['id'][] | Note['parentId'];
   id?: Note['id'][];
-  type?: ClientNoteQuery['type'];
   fileHash?: ClientNoteQuery['fileHash'];
   isAvailableOnly?: boolean;
 }

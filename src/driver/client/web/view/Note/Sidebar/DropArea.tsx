@@ -1,17 +1,14 @@
-import { createEffect, createMemo, createSignal, onCleanup, Show } from 'solid-js';
+import { createEffect, createSignal, onCleanup, Show } from 'solid-js';
 import { monitorForElements, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 
 import NoteService from '#domain/client/app/service/NoteService';
 import container from '#utils/singletonContainer';
-import UIState from '#web/view/UIState';
 import { TargetIcon } from 'lucide-solid';
 
 export default function DropArea() {
-  const { move, getOrCreateTreeView } = container.resolve(NoteService);
+  const { move, exploreTreeView: treeView } = container.resolve(NoteService);
   const [isDragging, setIsDragging] = createSignal(false);
   const [dropAreaRef, setDropArea] = createSignal<HTMLDivElement>();
-  const uiState = container.resolve(UIState);
-  const treeView = createMemo(() => getOrCreateTreeView(uiState.get('note.treeView')));
 
   const cleanup = monitorForElements({
     onDragStart: ({ source }) => {
@@ -43,7 +40,7 @@ export default function DropArea() {
   onCleanup(cleanup);
 
   return (
-    <Show when={isDragging() && !treeView().tree.root?.isUnselectable}>
+    <Show when={isDragging() && !treeView.tree.root?.isUnselectable}>
       <div
         ref={setDropArea}
         class="border border-black rounded border-dashed text-xs text-center flex items-center justify-center absolute top-0 right-0 bottom-0 left-2 bg-inherit"

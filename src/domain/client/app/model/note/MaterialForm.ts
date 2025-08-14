@@ -2,25 +2,22 @@ import { action, computed, observable, runInAction } from 'mobx';
 import assert from 'assert';
 import { createQuery } from 'mobx-tanstack-query/preset';
 
-import { NoteTypes, type NewNoteDTO, type NoteVO } from '#domain/shared/model/note';
+import type { NewNoteDTO, NoteVO } from '#domain/shared/model/note';
 import Form from '#domain/client/shared/model/abstract/Form';
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 
 import type { FileDTO } from '#domain/shared/model/file';
 import { getHash } from '#utils/file';
-import DomainEventBus from './EventBus';
 
 type MaterialFormField = Pick<NewNoteDTO, 'title' | 'body' | 'icon' | 'sourceUrl'>;
 
 type File = Pick<FileDTO, 'mimeType' | 'path'> & { data: ArrayBuffer; name: string };
 
 export default class MaterialForm extends Form<MaterialFormField> {
-  constructor(private formOptions: { onSubmit: () => void; parent?: NoteVO }) {
+  constructor(private formOptions: { onSubmit: (note: NewNoteDTO) => void; parent?: NoteVO }) {
     super();
   }
-
-  private readonly domainEventBus = container.resolve(DomainEventBus);
 
   public readonly remote = container.resolve(rpcToken);
 
@@ -79,15 +76,11 @@ export default class MaterialForm extends Form<MaterialFormField> {
       data: this.file.path ? undefined : this.file.data,
     });
 
-    const newNote = await this.remote.note.create.mutate({
-      type: NoteTypes.Material,
+    this.formOptions.onSubmit({
       fileId: newFile.id,
       parentId: this.formOptions.parent?.id,
       ...this.get(),
     });
-
-    this.domainEventBus.emit(DomainEventBus.eventNames.Created, newNote);
-    this.formOptions.onSubmit();
   }
 
   public destroy() {

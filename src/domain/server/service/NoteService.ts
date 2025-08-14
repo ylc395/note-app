@@ -10,7 +10,6 @@ import {
   type NewNote,
   type FileTextQuery,
   normalizeTitle,
-  NoteTypes,
 } from '#domain/server/model/note.js';
 import { arrayOf } from '#utils/collection.js';
 import container from '#utils/singletonContainer.js';
@@ -32,23 +31,18 @@ export default class NoteService extends BaseService {
     if ('from' in note) {
       newNote = await this.duplicate(note.from);
     } else {
-      if (note.fileId || note.sourceUrl) {
-        assert(note.type === NoteTypes.Material, 'invalid type');
-      }
-
       if (note.fileId) {
         await this.file.assertId(note.fileId);
       }
 
       if (note.parentId) {
-        await this.assertAvailableIds([note.parentId], { type: note.type });
+        await this.assertAvailableIds([note.parentId]);
       }
 
       const now = Date.now();
 
       newNote = await this.repo.notes.create({
         id: EntityService.generateId(),
-        type: note.type,
         title: note.title || '',
         parentId: note.parentId || null,
         body: note.body || '',
@@ -69,12 +63,12 @@ export default class NoteService extends BaseService {
 
   private async duplicate(fromNoteId: Note['id']) {
     const targetNote = await this.repo.notes.findOneById(fromNoteId, { isAvailableOnly: true });
-    assert(targetNote && targetNote.type === NoteTypes.Document);
+    assert(targetNote);
 
     const now = Date.now();
 
     return await this.repo.notes.create({
-      ...pick(targetNote, ['body', 'icon', 'parentId', 'sourceUrl', 'fileId', 'type']),
+      ...pick(targetNote, ['body', 'icon', 'parentId', 'sourceUrl', 'fileId']),
       title: `${normalizeTitle(targetNote)}-副本`,
       id: EntityService.generateId(),
       updatedAt: now,
@@ -131,9 +125,9 @@ export default class NoteService extends BaseService {
     assert(result);
   }
 
-  public async assertAvailableIds(ids: Note['id'][], params?: { withFile?: boolean; type?: NoteTypes }) {
+  public async assertAvailableIds(ids: Note['id'][], params?: { withFile?: boolean }) {
     ids = uniq(ids);
-    const notes = await this.repo.notes.findAll({ id: ids, isAvailableOnly: true, type: params?.type });
+    const notes = await this.repo.notes.findAll({ id: ids, isAvailableOnly: true });
 
     assert(notes.length === ids.length, 'invalid note ids');
 
@@ -146,16 +140,12 @@ export default class NoteService extends BaseService {
   }
 
   private async assertValidParent(parentId: Note['id'], childrenIds: Note['id'][]) {
+    await this.assertAvailableIds([parentId]);
     const descantIds = await this.repo.entities.findDescendantIds(childrenIds);
 
     for (const id of childrenIds) {
       assert(parentId !== id && !descantIds[id]?.includes(parentId));
     }
-
-    const parent = await this.repo.notes.findOneById(parentId, { isAvailableOnly: true });
-    const children = await this.repo.notes.findAll({ id: childrenIds, isAvailableOnly: true });
-
-    assert(parent && children.every(({ type }) => type === parent.type));
   }
 
   @BaseService.transaction

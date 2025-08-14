@@ -1,25 +1,20 @@
 import { Key } from '@solid-primitives/keyed';
-import { Show, type JSX } from 'solid-js';
+import { Show, type JSX, onCleanup } from 'solid-js';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { onCleanup } from 'solid-js';
-import NoteService from '#domain/client/app/service/NoteService';
+import { FolderIcon, FileTextIcon } from 'lucide-solid';
 
-import type TreeNode from '#domain/client/shared/model/note/TreeNode';
-import type NewNoteForm from '#domain/client/app/model/note/TreeView/NewNoteForm';
+import { MimeTypes } from '#domain/shared/model/file';
+import NoteService from '#domain/client/app/service/NoteService';
+import TreeNode from '#domain/client/shared/model/note/TreeNode';
 import TreeViewModel from '#domain/client/app/model/note/TreeView';
 
 import NodeView from './Node';
-import TitleEditor from './TitleEditor';
-
-export const addButtonClassName =
-  'button button-primary button-square-tiny text-brand-secondary h-full ml-inset-squish group-hover:flex data-[state="open"]:flex hidden';
 
 export default function BaseTree(props: {
   treeView: TreeViewModel;
-  useNewNoteEditor?: boolean;
-  renderOperation: (node: TreeNode) => JSX.Element;
-  renderIcon?: (node: TreeNode | NewNoteForm) => JSX.Element;
+  renderOperation?: (node: TreeNode) => JSX.Element;
   onItemTitleClick: (node: TreeNode) => void;
+  className?: string;
 }) {
   onCleanup(
     monitorForElements({
@@ -36,27 +31,40 @@ export default function BaseTree(props: {
     }),
   );
 
+  function renderIcon(node: TreeNode) {
+    const className = 'mr-2 p-0 shrink-0 w-4 h-4 inline align-text-bottom';
+
+    if (!(node instanceof TreeNode)) {
+      return <FolderIcon class={className} />;
+    }
+
+    if (node.value?.icon) {
+      return null; // todo: 改成图标
+    }
+
+    if (!node.value?.mimeType) {
+      return <FileTextIcon class={className} />;
+    }
+
+    switch (node.value.mimeType) {
+      case MimeTypes.PDF:
+        return <FileTextIcon class={className} />;
+      default:
+        break;
+    }
+  }
+
   // 这里不使用 arkui 提供的 Tree 组件，因为它实现得有问题，性能很差
   return (
     <Show when={props.treeView.tree.root}>
       {(rootNode) => (
-        <ul class="text-sm w-full">
-          <Show when={props.useNewNoteEditor && props.treeView.newNoteFormMap.get(rootNode().id)}>
-            {(form) => (
-              <li class="ml-5 px-inset-square-s">
-                <div class="flex items-center">
-                  {props.renderIcon?.(form())}
-                  <TitleEditor newNoteForm={form()} />
-                </div>
-              </li>
-            )}
-          </Show>
+        <ul class={props.className}>
           <Key each={rootNode().childrenQuery.result.data} by="id">
             {(note, index) => (
               <NodeView
                 onItemTitleClick={props.onItemTitleClick}
                 renderOperation={props.renderOperation}
-                renderIcon={props.renderIcon}
+                renderIcon={renderIcon}
                 treeView={props.treeView}
                 note={note()}
                 parent={rootNode()}

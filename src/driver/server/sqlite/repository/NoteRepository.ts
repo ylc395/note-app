@@ -19,7 +19,7 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
     const row = await this.db
       .insertInto(this.tableName)
       .values({ ...note, bodyPlainText })
-      .returning(['id', 'icon', 'type', 'title', 'createdAt', 'updatedAt', 'parentId', 'body', 'fileId', 'sourceUrl'])
+      .returning(['id', 'icon', 'title', 'createdAt', 'updatedAt', 'parentId', 'body', 'fileId', 'sourceUrl'])
       .executeTakeFirstOrThrow();
 
     return row;
@@ -43,7 +43,6 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
       .select([
         `${this.tableName}.id`,
         `${this.tableName}.icon`,
-        `${this.tableName}.type`,
         `${this.tableName}.parentId`,
         `${this.tableName}.title`,
         `${this.tableName}.updatedAt`,
@@ -67,10 +66,6 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
 
     if (q.id) {
       sql = sql.where(`${this.tableName}.id`, 'in', q.id);
-    }
-
-    if (q.type) {
-      sql = sql.where('type', '=', q.type);
     }
 
     if (q.fileHash) {
@@ -97,7 +92,6 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
       .select([
         `${this.tableName}.id`,
         `${this.tableName}.icon`,
-        `${this.tableName}.type`,
         `${this.tableName}.parentId`,
         `${this.tableName}.title`,
         `${this.tableName}.updatedAt`,

@@ -216,14 +216,14 @@ export default class Workbench {
         }
       } else {
         // 对应的 editor 不存在，则新建
-        editor = destTile.createEditor(note, dest instanceof Editor ? dest : undefined);
+        editor = destTile.createAndAddEditor(note, dest instanceof Editor ? dest : undefined);
       }
     } else {
       const { from = currentTile, splitDirection } = dest;
       assert(from, 'can not split tile');
       // 新建一个 tile，并打开至此
       destTile = this.splitTile(from.id, splitDirection);
-      editor = destTile.createEditor(note);
+      editor = destTile.createAndAddEditor(note);
     }
 
     destTile.switchToEditor(editor);

@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
-import { NoteTypes } from '#domain/shared/model/note';
 
 export enum SidebarTabs {
   Note = 'note',
@@ -10,7 +9,6 @@ export enum SidebarTabs {
 
 const schema = z.object({
   'app.sidebar': z.enum(SidebarTabs).catch(SidebarTabs.Note),
-  'note.treeView': z.enum(NoteTypes).catch(NoteTypes.Document),
   'note.sidebar.proportion': z
     .number()
     .array()

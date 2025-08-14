@@ -2,7 +2,7 @@ import { action, computed, observable } from 'mobx';
 import { createQuery } from 'mobx-tanstack-query/preset';
 import assert from 'assert';
 
-import type { NoteTypes, NoteVO } from '#domain/shared/model/note';
+import type { NoteVO } from '#domain/shared/model/note';
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 
@@ -17,14 +17,12 @@ export default class TreeNode {
   constructor({
     value,
     parent,
-    type,
     isExpanded,
     isSelected,
     ...options
   }: {
     value?: NoteVO;
     parent?: TreeNode;
-    type: NoteTypes;
     isExpanded: boolean;
     isSelected: boolean;
     sort?: (note1: NoteVO, note2: NoteVO) => number;
@@ -45,13 +43,13 @@ export default class TreeNode {
 
     this.childrenQuery = createQuery(
       ({ signal }) => {
-        return this.remote.note.query.query({ parentId: value?.id ?? null, type }, { signal });
+        return this.remote.note.query.query({ parentId: value?.id ?? null }, { signal });
       },
       {
         refetchOnWindowFocus: true,
         select: (notes) => notes.toSorted(options.sort),
         abortSignal: this.destroyController.signal,
-        queryKey: ['notes', { parentId: value?.id ?? null, type }],
+        queryKey: ['notes', { parentId: value?.id ?? null }],
         options: () => ({
           enabled: this.isExpanded,
         }),

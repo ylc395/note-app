@@ -66,7 +66,7 @@ export default class Tile {
   // 在该 Tile 下创建一个 Editor。可以指定其位置
   // 不能创建内容相同的 editor
   @action
-  public createEditor(entity: Pick<NoteVO, 'id' | 'mimeType'>, dest?: Editor) {
+  public createAndAddEditor(entity: Pick<NoteVO, 'id' | 'mimeType'>, dest?: Editor) {
     assert(this.editors.findIndex((editor) => editor.noteId === entity.id) < 0, 'can not create duplicated editor');
 
     const newEditor = this.editorManager.create(this, entity);

@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { action, computed, observable, reaction, runInAction, when } from 'mobx';
 import assert from 'assert';
 
-import { NoteTypes, NoteVO, type NotePatchDTO } from '#domain/shared/model/note';
+import type { NoteVO, NotePatchDTO } from '#domain/shared/model/note';
 import type { MaybeArray } from '#utils/collection';
 
 import PersistedMap from '../abstract/PersistedMap';
@@ -21,8 +21,8 @@ const schema = z.object({
 });
 
 export default class Tree {
-  constructor(private readonly options: { sort?: (note1: NoteVO, note2: NoteVO) => number; type: NoteTypes }) {
-    this.uiState = new PersistedMap(`note-explorer-tree-${options.type}`, schema);
+  constructor(private readonly options: { sort?: (note1: NoteVO, note2: NoteVO) => number }) {
+    this.uiState = new PersistedMap(`note-explorer-tree`, schema);
     this.init();
   }
 
@@ -150,7 +150,6 @@ export default class Tree {
 
     const abortController = new AbortController();
     const newNode = new TreeNode({
-      type: this.options.type,
       value: params?.value,
       parent: params?.parent,
       sort: this.options?.sort,
@@ -185,11 +184,7 @@ export default class Tree {
     return newNode;
   }
 
-  public updateNode({ id, parentId, type, ...patch }: NotePatchDTO & { id: NoteVO['id']; type: NoteTypes }) {
-    if (type !== this.options.type) {
-      return;
-    }
-
+  public updateNode({ id, parentId, ...patch }: NotePatchDTO & { id: NoteVO['id'] }) {
     const node = this.get(id);
     const oldParentNode = node?.parent;
     const newParentNode = parentId !== undefined ? this.get(parentId) : undefined;

@@ -1,21 +1,15 @@
 import dayjs from 'dayjs';
 import type { Entity, EntityId, EntityParentId } from './entity.js';
 
-export enum NoteTypes {
-  Document = 1,
-  Material,
-}
-
 export interface Note {
   id: EntityId;
-  type: NoteTypes;
   title: string;
   parentId: EntityParentId;
   body?: string;
   icon: string | null;
-  fileId: string | null; // material 有可能存在该属性
-  mimeType: string | null; // material 有可能存在该属性
-  sourceUrl: string | null; // material 有可能存在该属性
+  fileId: string | null;
+  mimeType: string | null;
+  sourceUrl: string | null;
   updatedAt: number;
   createdAt: number;
 }
@@ -37,8 +31,7 @@ export interface DuplicatedNoteDTO {
  */
 export type NoteBatchPatchDTO = Pick<NotePatchDTO, 'parentId'>;
 
-export type NewNoteDTO = Partial<Pick<Note, 'body' | 'fileId' | 'icon' | 'parentId' | 'sourceUrl' | 'title'>> &
-  Required<Pick<Note, 'type'>>;
+export type NewNoteDTO = Partial<Pick<Note, 'body' | 'fileId' | 'icon' | 'parentId' | 'sourceUrl' | 'title'>>;
 
 /**
  * @api
@@ -50,7 +43,6 @@ export type NoteDTO = NewNoteDTO | DuplicatedNoteDTO;
  */
 export interface ClientNoteQuery {
   id?: Note['id'][];
-  type?: Note['type'];
   parentId?: EntityParentId | string[];
   fileHash?: string;
 }

@@ -1,15 +1,15 @@
 import { action, observable } from 'mobx';
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
-import { NoteTypes, type DuplicatedNoteDTO, type NotePatchDTO, type NoteVO } from '#domain/shared/model/note';
+import type { DuplicatedNoteDTO, NewNoteDTO, NotePatchDTO, NoteVO } from '#domain/shared/model/note';
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
+import type { MaybeArray } from '#utils/collection';
 
 import Workbench from '../model/Workbench';
 import DomainEventBus from '../model/note/EventBus';
 import MaterialForm from '../model/note/MaterialForm';
 import BaseEditor from '../model/note/editor/BaseEditor';
 import TreeView from '../model/note/TreeView';
-import type { MaybeArray } from '#utils/collection';
 
 export default class NoteService {
   constructor() {
@@ -24,23 +24,15 @@ export default class NoteService {
 
   @observable.ref public accessor materialForm: MaterialForm | undefined;
 
-  @observable.shallow private accessor treeViews: {
-    [NoteTypes.Document]: TreeView | null;
-    [NoteTypes.Material]: TreeView | null;
-  } = {
-    [NoteTypes.Document]: null,
-    [NoteTypes.Material]: null,
+  public readonly exploreTreeView = new TreeView();
+
+  public readonly createNote = async (note: NewNoteDTO) => {
+    const newNote = await this.remote.note.create.mutate(note);
+    this.eventBus.emit(DomainEventBus.eventNames.Created, newNote);
+    this.workbench.open(newNote);
   };
 
   @action
-  public readonly getOrCreateTreeView = (type: NoteTypes) => {
-    if (!this.treeViews[type]) {
-      this.treeViews[type] = new TreeView(type);
-    }
-
-    return this.treeViews[type];
-  };
-
   public readonly duplicate = async (params: DuplicatedNoteDTO, open?: boolean) => {
     const newNote = await this.remote.note.create.mutate(params);
     this.eventBus.emit(DomainEventBus.eventNames.Created, newNote);
@@ -55,8 +47,8 @@ export default class NoteService {
     const ids = notes.map(({ id }) => id);
     await this.remote.note.batchUpdate.mutate([ids, { parentId: targetId }]);
 
-    for (const { id, type } of notes) {
-      this.eventBus.emit(DomainEventBus.eventNames.Updated, { id, type, parentId: targetId });
+    for (const { id } of notes) {
+      this.eventBus.emit(DomainEventBus.eventNames.Updated, { id, parentId: targetId });
     }
   };
 
@@ -68,9 +60,10 @@ export default class NoteService {
     } else {
       this.materialForm = new MaterialForm({
         parent: options?.parent,
-        onSubmit: () => {
-          options?.onSubmit?.();
+        onSubmit: async (newNote) => {
+          await this.createNote(newNote);
           this.toggleMaterialForm();
+          options?.onSubmit?.();
         },
       });
     }
