@@ -76,6 +76,8 @@ export default abstract class BaseEditor {
 
   public tile: Tile;
 
+  public hasEdited = false;
+
   @computed
   public get isLoading() {
     return this.value.result.isLoading || this.blob.result.isLoading;
@@ -91,6 +93,7 @@ export default abstract class BaseEditor {
       ? pick(this.value.result.data, ['title', 'body', 'icon', 'type'])
       : undefined;
 
+    this.hasEdited = true;
     assert(currentData, 'can not update when loading');
 
     // 这里采用乐观更新

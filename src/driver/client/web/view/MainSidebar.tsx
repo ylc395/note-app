@@ -1,10 +1,19 @@
 import { Tabs } from '@ark-ui/solid';
-import { BookTextIcon, LightbulbIcon, HashIcon, SearchIcon, StarIcon, SettingsIcon, Trash2Icon } from 'lucide-solid';
+import {
+  BookTextIcon,
+  ChartColumnIcon,
+  LightbulbIcon,
+  HashIcon,
+  SearchIcon,
+  StarIcon,
+  SettingsIcon,
+  Trash2Icon,
+} from 'lucide-solid';
 import { SidebarTabs } from './UIState';
 
 export default function Sidebar() {
   const menuClassName = 'space-y-stack-s';
-  const iconClassName = 'w-7 h-7 stroke-[1.5]';
+  const iconClassName = 'w-6 h-6 stroke-[1.5]';
   const buttonClassName =
     'relative p-inset-square-md flex justify-center items-center cursor-pointer rounded-lg text-brand-primary opacity-40 data-[selected]:opacity-100';
 
@@ -50,6 +59,11 @@ export default function Sidebar() {
         <li>
           <a class={buttonClassName}>
             <SearchIcon class={iconClassName} />
+          </a>
+        </li>
+        <li>
+          <a class={buttonClassName}>
+            <ChartColumnIcon class={iconClassName} />
           </a>
         </li>
       </ul>

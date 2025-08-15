@@ -4,6 +4,7 @@ import TreeNode from '#domain/client/shared/model/note/TreeNode';
 
 import BaseTreeView from '#web/components/NoteTree';
 import AddButton from './AddButton';
+import SettingButton from './SettingButton';
 
 export default function TreeView() {
   const { workbench, exploreTreeView: tree } = container.resolve(NoteService);
@@ -18,11 +19,12 @@ export default function TreeView() {
 
   return (
     <div class="grow min-h-0 flex flex-col">
-      <div class="mb-stack-s">
+      <div class="mb-stack-s flex justify-between items-center">
         <AddButton buttonClassName="button button-primary button-md" menuPlacement="bottom-start" />
+        <SettingButton />
       </div>
       <BaseTreeView
-        className="min-h-0 grow overflow-auto scrollbar-stable scrollbar-thin"
+        className="min-h-0 grow overflow-auto scrollbar-stable text-sm scrollbar-thin text-text-secondary"
         onItemTitleClick={handleItemClick}
         treeView={tree}
         renderOperation={(node) => (

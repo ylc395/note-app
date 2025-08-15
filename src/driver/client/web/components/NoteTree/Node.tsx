@@ -24,9 +24,16 @@ export default function Node(props: {
   const node = props.treeView.tree.getOrCreateNode({ value: props.note, parent: props.parent });
 
   const [dropElementRef, setDropElementRef] = createSignal<HTMLElement>();
-  const itemClassName = 'rounded cursor-pointer flex group items-center hover:bg-surface-tertiary px-inset-square-s';
+  const [isDropHovering, setIsDropHovering] = createSignal(false);
+  const itemClassName =
+    'mb-stack-xs rounded cursor-pointer flex group items-center hover:bg-surface-tertiary hover:text-text-secondary px-inset-square-s';
   const itemTextClassName = 'whitespace-nowrap overflow-hidden text-ellipsis py-inset-square-md grow'; // 别弄成 flex，否则文字截断无法生效（只对 inline / block 有效）
   const paddingLeft = createMemo(() => (props.indexPath.length - 1) * 28);
+  const itemClassList = createMemo(() => ({
+    'bg-brand-subtle text-brand-secondary': node.isHighlighted,
+    'opacity-30': node.isUnselectable,
+    'bg-surface-tertiary': isDropHovering() && !node.isUnselectable,
+  }));
 
   createEffect(
     on(
@@ -51,7 +58,15 @@ export default function Node(props: {
         }),
         dropTargetForElements({
           element,
+          onDragEnter: () => {
+            setIsDropHovering(true);
+          },
+          onDragLeave: () => {
+            setIsDropHovering(false);
+          },
           onDrop: ({ source, self, location }) => {
+            setIsDropHovering(false);
+
             if (
               node.isUnselectable ||
               location.current.dropTargets[0]?.element !== self.element // 子节点处理过了，这里就不处理了
@@ -89,7 +104,7 @@ export default function Node(props: {
           onClick={() => handleItemClick(node)}
           ref={setDropElementRef}
           class={itemClassName}
-          classList={{ 'menu-disabled': node.isUnselectable }}
+          classList={itemClassList()}
         >
           <div
             class={`${itemTextClassName} ml-5`} // ml 和展开图标的尺寸一致
@@ -103,11 +118,11 @@ export default function Node(props: {
         </li>
       }
     >
-      <li class="w-full" classList={{ 'menu-disabled': node.isUnselectable }}>
+      <li class="w-full">
         <div
           onClick={() => handleItemClick(node)}
-          classList={{ 'menu-active': node.isHighlighted }}
           class={itemClassName}
+          classList={itemClassList()}
           ref={setDropElementRef} // dropElement 不能是上一层的 <li> 元素
         >
           {/** 展开/收起图标 */}

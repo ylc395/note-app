@@ -32,7 +32,7 @@ export default function BaseTree(props: {
   );
 
   function renderIcon(node: TreeNode) {
-    const className = 'mr-2 p-0 shrink-0 w-4 h-4 inline align-text-bottom';
+    const className = 'mr-stack-xs p-0 shrink-0 w-4 h-4 inline align-text-bottom';
 
     if (!(node instanceof TreeNode)) {
       return <FolderIcon class={className} />;

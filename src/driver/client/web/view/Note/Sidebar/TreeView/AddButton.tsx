@@ -1,6 +1,6 @@
 import { createMemo, Show } from 'solid-js';
 import { Portal } from 'solid-js/web';
-import { PlusIcon, FolderPlusIcon, FilePlus, ChevronDownIcon } from 'lucide-solid';
+import { PlusIcon, FilePlusIcon, Grid2x2PlusIcon, ChevronDownIcon } from 'lucide-solid';
 import { Menu, type MenuSelectionDetails } from '@ark-ui/solid';
 import type { Placement } from '@floating-ui/dom';
 
@@ -55,22 +55,22 @@ export default function ButtonGroup(props: {
         <Menu.Positioner class="absolute">
           <Menu.Content class="rounded border-border-primary border p-inset-square-s bg-brand-secondary shadow">
             <Menu.Item
-              value="file"
-              onClick={(e) => e.stopPropagation()}
-              asChild={(props) => (
-                <button {...props()} class="button button-md">
-                  <FolderPlusIcon class="mr-1" />
-                  新增素材
-                </button>
-              )}
-            />
-            <Menu.Item
               onClick={(e) => e.stopPropagation()}
               value="text"
               asChild={(props) => (
                 <button {...props()} class="button button-md">
-                  <FilePlus class="mr-1" />
+                  <FilePlusIcon class="mr-1" />
                   新增文本
+                </button>
+              )}
+            />
+            <Menu.Item
+              value="file"
+              onClick={(e) => e.stopPropagation()}
+              asChild={(props) => (
+                <button {...props()} class="button button-md">
+                  <Grid2x2PlusIcon class="mr-1" />
+                  新增素材
                 </button>
               )}
             />

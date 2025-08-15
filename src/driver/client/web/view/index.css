@@ -5,7 +5,7 @@
   /** 品牌色。定义应用个性的核心颜色，用于关键操作和视觉焦点 */
   --color-brand-primary: var(--color-black); /** 主要品牌色。用于应用的主按钮、加载指示器、当前激活的导航项、焦点输入框的外发光等最需要强调的地方 */
   --color-brand-secondary: var(--color-white); /** 辅助品牌色。当需要在品牌色背景上放置文本或图标时使用，确保对比度。例如，主要按钮上的文字颜色 */
-  --color-brand-subtle: var(--color-gray-600); /** 品牌色背景（弱）。品牌色的一个非常淡的变体。用于不太重要的状态，如选中列表项的背景、需要轻微品牌暗示的区域背景 */
+  --color-brand-subtle: var(--color-slate-600); /** 品牌色背景（弱）。品牌色的一个非常淡的变体。用于不太重要的状态，如选中列表项的背景、需要轻微品牌暗示的区域背景 */
 
   /** 表面/背景色。构成应用界面的“画布”，为内容提供层次感。*/
   --color-surface-primary: var(--color-white); /* 主背景色。应用的“纸张”颜色 */
@@ -33,6 +33,7 @@
   --spacing-inset-square-s: calc(var(--spacing)* 1); /** 小型方形容器的内边距 */
   --spacing-inset-square-md: calc(var(--spacing) * 2); /** 标准方形容器的内边距 */
   --spacing-inset-square-lg: calc(var(--spacing) * 3); /** 大型方形容器的内边距 */
+  --spacing-inset-square-xl: calc(var(--spacing) * 6); /** 大型方形容器的内边距 */
 
   /** 堆叠间距。用于并列或堆叠的同级元素之间的空间 */
   --spacing-stack-xs: calc(var(--spacing)); /** 紧凑元素间 */
@@ -108,6 +109,26 @@
 
   .input {
     @apply border border-border-primary rounded-md p-inset-square-s text-sm;
+  }
+
+  .menu-item {
+    @apply flex rounded items-center p-inset-square-s cursor-pointer
+  }
+
+  .menu-item:hover {
+    @apply bg-surface-tertiary
+  }
+
+  .menu-item > .lucide-icon {
+    @apply w-4 h-4
+  }
+
+  .menu-item > .lucide-icon:first-child {
+    @apply mr-stack-s
+  }
+
+  .menu-item > .lucide-icon:last-child {
+    @apply ml-stack-s;
   }
 }
 

@@ -15,7 +15,7 @@ export default function TitleInput(props: { editor: BaseEditor }) {
     if (props.editor.value.result.data) {
       setTitle(props.editor.value.result.data.title);
 
-      if (!props.editor.value.result.data.body && !props.editor.value.result.data.title) {
+      if (!props.editor.value.result.data.body && !props.editor.value.result.data.title && !props.editor.hasEdited) {
         inputRef?.focus();
       }
     }
