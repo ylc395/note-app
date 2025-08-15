@@ -42,10 +42,17 @@ export default class PersistedMap<S extends object> {
     return this.map.get(key);
   }
 
+  public set<T extends keyof S>(key: T, value: S[T]): this;
+  public set(values: Partial<S>): this;
   @action
-  public set<T extends keyof S>(key: T, value: S[T]) {
+  public set<T extends keyof S>(key: T | Partial<S>, value?: S[T]) {
     assert(this.isReady, 'not ready');
-    this.map.set(key, value);
+
+    if (typeof key === 'string' || typeof key === 'number' || typeof key === 'symbol') {
+      this.map.set(key, value);
+    } else {
+      this.map.merge(key);
+    }
 
     untrack(() => {
       this.localStorage.set(this.key, this.toObject());

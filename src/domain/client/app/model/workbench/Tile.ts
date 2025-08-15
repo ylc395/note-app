@@ -18,6 +18,8 @@ export default class Tile {
 
   public readonly id = uniqueId('tile-');
 
+  private isRestoring = false;
+
   private readonly editorManager = container.resolve(EditorManager);
 
   @observable.ref public accessor currentEditor: Editor | undefined;
@@ -37,7 +39,10 @@ export default class Tile {
     assert(target, 'can not switch to an editor which not belong to this tile');
 
     this.currentEditor = target;
-    target.focus();
+
+    if (!this.isRestoring) {
+      target.focus();
+    }
   }
 
   // 将一个 Editor 从该 Tile 中移除
@@ -105,5 +110,30 @@ export default class Tile {
     }
 
     this.options.onDestroy(this);
+  }
+
+  public toObject() {
+    assert(this.currentEditor);
+
+    return {
+      editors: this.editors.map((e) => ({ noteId: e.noteId, mimeType: e.mimeType })),
+      current: this.currentEditor.noteId,
+    };
+  }
+
+  public restore({
+    editors,
+    current,
+  }: {
+    editors: Array<{ noteId: NoteVO['id']; mimeType: NoteVO['mimeType'] }>;
+    current: NoteVO['id'];
+  }) {
+    this.isRestoring = true;
+    for (const { noteId: id, mimeType } of editors) {
+      this.createAndAddEditor({ id, mimeType });
+    }
+
+    this.switchToEditor(current);
+    this.isRestoring = false;
   }
 }

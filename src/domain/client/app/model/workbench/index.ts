@@ -1,14 +1,16 @@
-import { uniqueId } from 'lodash-es';
-import { observable, action, computed } from 'mobx';
+import { mapValues, uniqueId } from 'lodash-es';
+import { observable, action, computed, when } from 'mobx';
 import assert from 'assert';
+import z from 'zod';
 
 import Editor from '#domain/client/app/model/note/editor/BaseEditor';
+import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
 import container from '#utils/singletonContainer';
 import type { NoteVO } from '#domain/shared/model/note';
 import type { EntityId } from '#domain/shared/model/entity';
 
 import Tile from './Tile';
-import { type TileNode, type TileParent, TileDirections, isTileLeaf } from './tileTree';
+import { type TileNode, type TileParent, TileDirections, isTileLeaf, tileNodeSchema } from './tileTree';
 import EditorManager from './EditorManager';
 import HistoryStack from '../base/HistoryStack';
 import RecentManager from './RecentManager';
@@ -30,6 +32,32 @@ export enum TileSplitDirections {
 type NewTile = { from?: Tile; splitDirection: TileSplitDirections };
 
 export default class Workbench {
+  constructor() {
+    this.restore();
+  }
+
+  private readonly state = new PersistedMap(
+    'workbench',
+    z.object({
+      root: tileNodeSchema.optional().catch(undefined),
+      tiles: z
+        .object({
+          focusedId: z.string().optional().catch(undefined),
+          map: z.record(
+            z.string(),
+            z.object({
+              editors: z.array(z.object({ noteId: z.string(), mimeType: z.string().nullable() })),
+              current: z.string(),
+            }),
+          ),
+        })
+        .optional()
+        .catch(undefined),
+    }),
+  );
+
+  private latestTile?: Tile; // 最新一个被创建的 Tile
+
   // 这里的历史管理，更类似于焦点历史管理
   public readonly historyStack = new HistoryStack<HistoryRecord>({
     onPop: this.handleHistoryPop.bind(this),
@@ -52,19 +80,29 @@ export default class Workbench {
     return this.tilesMap[id];
   }
 
-  private latestTile?: Tile; // 最新一个被创建的 Tile
-
   private createTile() {
     const tile = new Tile({
       onDestroy: this.removeTile.bind(this),
-      onEditorFocus: ({ noteId, mimeType, id: editorId }) =>
-        this.historyStack.push({ key: noteId, mimeType, editorId, tileId: tile.id }),
+      onEditorFocus: this.handleEditorFocus.bind(this),
     });
 
     this.tilesMap[tile.id] = tile;
     this.latestTile = tile;
 
     return tile;
+  }
+
+  private handleEditorFocus({ noteId, mimeType, id: editorId, tile }: Editor) {
+    this.historyStack.push({ key: noteId, mimeType, editorId, tileId: tile.id });
+
+    assert(this.root);
+    this.state.set({
+      root: this.root,
+      tiles: {
+        focusedId: tile.id,
+        map: mapValues(this.tilesMap, (tile) => tile.toObject()),
+      },
+    });
   }
 
   @action.bound
@@ -101,6 +139,7 @@ export default class Workbench {
 
     if (this.root === tile.id) {
       this.root = undefined;
+      this.state.set('tiles', undefined);
       this.historyStack.push(null);
     } else {
       const keptTile = searchAndRemove(this.root);
@@ -241,6 +280,53 @@ export default class Workbench {
     } else {
       const destTile = this.getTileById(dest);
       this.open({ id: record.key, mimeType: record.mimeType }, destTile);
+    }
+  }
+
+  @action.bound
+  public setTilePercentage(tileParent: TileParent, percentage: number | undefined) {
+    tileParent.splitPercentage = percentage;
+    this.state.set('root', this.root);
+  }
+
+  private async restore() {
+    await when(() => this.state.isReady);
+    const tiles = this.state.get('tiles');
+    const root = this.state.get('root');
+
+    if (!tiles || !root) {
+      return;
+    }
+
+    let focusedTile: Tile | undefined;
+
+    const iterate = (tileNode: TileNode): TileNode => {
+      if (typeof tileNode !== 'string') {
+        return {
+          ...tileNode,
+          id: uniqueId('tileParent-'),
+          first: iterate(tileNode.first),
+          second: iterate(tileNode.second),
+        };
+      }
+
+      const tileData = tiles.map[tileNode];
+      assert(tileData);
+
+      const tile = this.createTile();
+      tile.restore(tileData);
+
+      if (tiles.focusedId === tileNode) {
+        focusedTile = tile;
+      }
+
+      return tile.id;
+    };
+
+    this.root = iterate(root);
+
+    if (focusedTile) {
+      focusedTile.currentEditor?.focus();
     }
   }
 }

@@ -8,10 +8,15 @@ import Workbench from '#domain/client/app/model/Workbench';
 import Tile from './Tile';
 
 function TileParentNode(props: { panelId?: string; tile: TileParent }) {
+  const { setTilePercentage } = container.resolve(Workbench);
+
   const content = (
     <Splitter.Root
+      onResizeEnd={(e) => setTilePercentage(props.tile, e.size[0])}
       orientation={props.tile.direction === TileDirections.Horizontal ? 'horizontal' : 'vertical'}
-      defaultSize={[50, 50]}
+      defaultSize={
+        props.tile.splitPercentage ? [props.tile.splitPercentage, 100 - props.tile.splitPercentage] : [50, 50]
+      }
       panels={[
         { id: `${props.tile.id}-first`, minSize: 20 },
         { id: `${props.tile.id}-second`, minSize: 20 },
