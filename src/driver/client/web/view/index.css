@@ -25,7 +25,7 @@
   /** 向用户传达具有特定含义的反馈或提示 */
   --color-feedback-success: var(--color-green-200);
   --color-feedback-warning: var(--color-yellow-200);
-  --color-feedback-error: var(--color-red-200);
+  --color-feedback-danger: var(--color-red-400);
   --color-feedback-info: var(--color-blue-200);
 
   /** 内边距。用于组件内部，内容与容器边缘之间的空间 */

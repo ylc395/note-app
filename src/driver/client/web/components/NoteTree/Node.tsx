@@ -1,6 +1,16 @@
-import { createEffect, createMemo, createSignal, on, onCleanup, Show, untrack, type JSX } from 'solid-js';
+import {
+  createEffect,
+  createMemo,
+  createSignal,
+  on,
+  onCleanup,
+  Show,
+  untrack,
+  type JSX,
+  type JSXElement,
+} from 'solid-js';
 import { Key } from '@solid-primitives/keyed';
-import { ChevronDownIcon, ChevronRightIcon } from 'lucide-solid';
+import { ChevronDownIcon, ChevronRightIcon, FolderIcon, FileTextIcon } from 'lucide-solid';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 
@@ -8,8 +18,13 @@ import TreeNode from '#domain/client/shared/model/note/TreeNode';
 import { normalizeTitle, type NoteVO } from '#domain/shared/model/note';
 import TreeViewModel from '#domain/client/app/model/note/TreeView';
 import container from '#utils/singletonContainer';
+import { MimeTypes } from '#domain/shared/model/file';
 import NoteService from '#domain/client/app/service/NoteService';
 import { IS_DEV } from '#domain/shared/infra/env';
+
+function call(fn: (props: JSX.HTMLAttributes<HTMLDivElement>) => JSX.Element) {
+  return fn({});
+}
 
 export default function Node(props: {
   treeView: TreeViewModel;
@@ -17,7 +32,7 @@ export default function Node(props: {
   parent: TreeNode;
   indexPath: number[];
   renderOperation?: (node: TreeNode) => JSX.Element;
-  renderIcon?: (node: TreeNode) => JSX.Element;
+  renderItem?: (original: (props: JSX.HTMLAttributes<HTMLDivElement>) => JSXElement) => JSXElement;
   onItemTitleClick: (node: TreeNode) => void;
 }) {
   const { move } = container.resolve(NoteService);
@@ -96,6 +111,29 @@ export default function Node(props: {
     node.toggleExpand();
   }
 
+  function renderIcon(node: TreeNode) {
+    const className = 'mr-stack-xs p-0 shrink-0 w-4 h-4 inline align-text-bottom';
+
+    if (!(node instanceof TreeNode)) {
+      return <FolderIcon class={className} />;
+    }
+
+    if (node.value?.icon) {
+      return null; // todo: 改成图标
+    }
+
+    if (!node.value?.mimeType) {
+      return <FileTextIcon class={className} />;
+    }
+
+    switch (node.value.mimeType) {
+      case MimeTypes.PDF:
+        return <FileTextIcon class={className} />;
+      default:
+        break;
+    }
+  }
+
   return (
     <Show
       when={!node.isLeaf}
@@ -106,14 +144,17 @@ export default function Node(props: {
           class={itemClassName}
           classList={itemClassList()}
         >
-          <div
-            class={`${itemTextClassName} ml-5`} // ml 和展开图标的尺寸一致
-            style={{ 'padding-left': `${paddingLeft()}px` }}
-          >
-            {props.renderIcon?.(node)}
-            {IS_DEV && `${node.value!.id.slice(0, 4)}+`}
-            {normalizeTitle(node.value!)}
-          </div>
+          {(props.renderItem || call)((renderProps) => (
+            <div
+              {...renderProps}
+              class={`${itemTextClassName} ml-5`} // ml 和展开图标的尺寸一致
+              style={{ 'padding-left': `${paddingLeft()}px` }}
+            >
+              {renderIcon(node)}
+              {IS_DEV && `${node.value!.id.slice(0, 4)}+`}
+              {normalizeTitle(node.value!)}
+            </div>
+          ))}
           {props.renderOperation?.(node)}
         </li>
       }
@@ -131,11 +172,13 @@ export default function Node(props: {
               <ChevronDownIcon class="w-5 h-5" />
             </Show>
           </button>
-          <div class={itemTextClassName}>
-            {props.renderIcon?.(node)}
-            {IS_DEV && `${node.value!.id.slice(0, 4)}+`}
-            {normalizeTitle(node.value!)}
-          </div>
+          {(props.renderItem || call)((renderProps) => (
+            <div {...renderProps} class={itemTextClassName}>
+              {renderIcon(node)}
+              {IS_DEV && `${node.value!.id.slice(0, 4)}+`}
+              {normalizeTitle(node.value!)}
+            </div>
+          ))}
           {/** 行操作区 */}
           {props.renderOperation?.(node)}
         </div>

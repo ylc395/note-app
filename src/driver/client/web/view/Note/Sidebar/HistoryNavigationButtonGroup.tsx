@@ -36,7 +36,7 @@ function HistoryNavigationButton(props: {
       <Portal mount={shell.appRoot}>
         <Menu.Positioner class="absolute">
           <Menu.Content class="menu">
-            <For each={props.records}>
+            <For each={props.records.slice(0, 10)}>
               {({ title, key }, index) => (
                 <Menu.Item
                   value={key}

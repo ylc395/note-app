@@ -1,4 +1,5 @@
-import { createMemo } from 'solid-js';
+import { createMemo, Show } from 'solid-js';
+import assert from 'assert';
 
 import type BaseEditor from '#domain/client/app/model/note/editor/BaseEditor';
 import MarkdownEditor from '#domain/client/app/model/note/editor/MarkdownEditor';
@@ -10,10 +11,15 @@ import UnknownEditorView from './UnknownEditor';
 import PdfEditorView from './PdfEditor';
 import Breadcrumbs from './Breadcrumbs';
 import TitleInput from './TitleInput';
-import assert from 'assert';
+import ErrorEditor from './ErrorEditor';
 
 export default function Editor(props: { editor: BaseEditor }) {
+  const isError = createMemo(() => props.editor.value.result.isError);
   const editor = createMemo(() => {
+    if (isError()) {
+      return <ErrorEditor editor={props.editor} />;
+    }
+
     if (props.editor instanceof UnknownEditor) {
       return <UnknownEditorView />;
     } else if (props.editor instanceof PdfEditor) {
@@ -27,8 +33,10 @@ export default function Editor(props: { editor: BaseEditor }) {
 
   return (
     <div class="flex flex-col h-full" onFocusIn={() => props.editor.focus()}>
-      <TitleInput editor={props.editor} />
-      <Breadcrumbs editor={props.editor} />
+      <Show when={!isError()}>
+        <TitleInput editor={props.editor} />
+        <Breadcrumbs editor={props.editor} />
+      </Show>
       {editor()}
     </div>
   );
