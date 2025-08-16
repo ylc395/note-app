@@ -32,6 +32,7 @@ export default class HistoryStack<T extends HistoryRecord = HistoryRecord> {
 
   // 将当前的浏览记录压入前进/后退栈中。传入的 record 将成为当前的浏览记录
   // fromHistory 表示此浏览记录来自前进/后退栈弹出的记录
+  // record 为 null 表示将当前的记录放到栈里，同时将当前的记录直为空
   @action
   private _push({ record, fromHistory }: { record: T | null; fromHistory?: Direction }) {
     if (record?.key === this.current?.key) {

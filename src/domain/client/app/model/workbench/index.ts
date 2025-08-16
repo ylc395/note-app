@@ -148,13 +148,7 @@ export default class Workbench {
       if (isTileLeaf(keptTile)) {
         const tile = this.tilesMap[keptTile];
         assert(tile?.currentEditor);
-
-        this.historyStack.push({
-          key: tile.currentEditor.noteId,
-          editorId: tile.currentEditor.id,
-          mimeType: tile.currentEditor.mimeType,
-          tileId: tile.id,
-        });
+        tile.currentEditor.focus();
       }
     }
   }
