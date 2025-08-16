@@ -13,8 +13,8 @@ export interface HistoryRecord {
 export default class HistoryStack<T extends HistoryRecord = HistoryRecord> {
   constructor(private readonly options: { onPop: (e: { record: T; direction: Direction }) => void }) {}
   @observable.ref public accessor current: T | undefined;
-  @observable.shallow private accessor backwards: T[] = [];
-  @observable.shallow private accessor forwards: T[] = [];
+  @observable.shallow public accessor backwards: T[] = [];
+  @observable.shallow public accessor forwards: T[] = [];
 
   @computed
   public get canForward() {

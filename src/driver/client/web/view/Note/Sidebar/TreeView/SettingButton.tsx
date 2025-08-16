@@ -12,7 +12,7 @@ export default function SettingButton() {
       </Menu.Trigger>
       <Portal mount={shell.appRoot}>
         <Menu.Positioner class="absolute">
-          <Menu.Content class="rounded border-border-primary border p-inset-square-s bg-brand-secondary shadow text-sm z-50">
+          <Menu.Content class="menu">
             <Menu.Item class="menu-item" value="file" onClick={(e) => e.stopPropagation()}>
               <SortDescIcon />
               排序

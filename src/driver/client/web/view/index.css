@@ -111,6 +111,10 @@
     @apply border border-border-primary rounded-md p-inset-square-s text-sm;
   }
 
+  .menu {
+    @apply rounded border-border-primary border p-inset-square-s bg-brand-secondary shadow text-sm z-50 outline-none
+  }
+
   .menu-item {
     @apply flex rounded items-center p-inset-square-s cursor-pointer
   }

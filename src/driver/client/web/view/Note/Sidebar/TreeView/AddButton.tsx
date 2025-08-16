@@ -53,7 +53,7 @@ export default function ButtonGroup(props: {
       </Menu.Trigger>
       <Portal mount={shell.appRoot}>
         <Menu.Positioner class="absolute">
-          <Menu.Content class="rounded border-border-primary border p-inset-square-s bg-brand-secondary shadow">
+          <Menu.Content class="menu">
             <Menu.Item
               onClick={(e) => e.stopPropagation()}
               value="text"

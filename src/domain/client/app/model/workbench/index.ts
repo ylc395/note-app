@@ -6,7 +6,7 @@ import z from 'zod';
 import Editor from '#domain/client/app/model/note/editor/BaseEditor';
 import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
 import container from '#utils/singletonContainer';
-import type { NoteVO } from '#domain/shared/model/note';
+import { normalizeTitle, type NoteVO } from '#domain/shared/model/note';
 import type { EntityId } from '#domain/shared/model/entity';
 
 import Tile from './Tile';
@@ -18,6 +18,7 @@ import RecentManager from './RecentManager';
 export interface HistoryRecord {
   key: EntityId;
   editorId: Editor['id'];
+  title: string | null;
   tileId: Tile['id'];
   mimeType: string | null;
 }
@@ -92,9 +93,7 @@ export default class Workbench {
     return tile;
   }
 
-  private handleEditorFocus({ noteId, mimeType, id: editorId, tile }: Editor) {
-    this.historyStack.push({ key: noteId, mimeType, editorId, tileId: tile.id });
-
+  private async handleEditorFocus({ noteId, mimeType, id: editorId, tile, value }: Editor) {
     assert(this.root);
     this.state.set({
       root: this.root,
@@ -102,6 +101,15 @@ export default class Workbench {
         focusedId: tile.id,
         map: mapValues(this.tilesMap, (tile) => tile.toObject()),
       },
+    });
+
+    await when(() => value.result.isLoadingError || value.result.isSuccess);
+    this.historyStack.push({
+      key: noteId,
+      mimeType,
+      editorId,
+      tileId: tile.id,
+      title: value.result.data ? normalizeTitle(value.result.data) : null,
     });
   }
 
