@@ -6,12 +6,12 @@ import shell from '#web/infra/shell';
 
 export default function SettingButton() {
   return (
-    <Menu.Root lazyMount unmountOnExit closeOnSelect positioning={{ placement: 'bottom-start' }}>
+    <Menu.Root lazyMount unmountOnExit positioning={{ placement: 'bottom-start' }}>
       <Menu.Trigger class="button button-square-md">
         <SettingsIcon />
       </Menu.Trigger>
       <Portal mount={shell.appRoot}>
-        <Menu.Positioner class="absolute">
+        <Menu.Positioner>
           <Menu.Content class="menu">
             <Menu.Item class="menu-item" value="file" onClick={(e) => e.stopPropagation()}>
               <SortDescIcon />

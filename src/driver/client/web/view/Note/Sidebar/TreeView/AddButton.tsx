@@ -52,7 +52,7 @@ export default function ButtonGroup(props: {
         </Show>
       </Menu.Trigger>
       <Portal mount={shell.appRoot}>
-        <Menu.Positioner class="absolute">
+        <Menu.Positioner>
           <Menu.Content class="menu">
             <Menu.Item
               onClick={(e) => e.stopPropagation()}

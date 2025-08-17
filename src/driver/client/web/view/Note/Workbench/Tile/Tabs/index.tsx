@@ -14,7 +14,10 @@ export default function Tabs(props: { tile: Tile }) {
   const workbench = container.resolve(Workbench);
 
   function handleOnWheel(e: WheelEvent) {
-    rootRef?.scrollBy({ left: e.deltaY < 0 ? -30 : 30 });
+    if (e.deltaX === 0) {
+      const delta = 20;
+      rootRef?.scrollBy({ left: e.deltaY < 0 ? -delta : delta });
+    }
   }
 
   onMount(() => {
@@ -43,7 +46,7 @@ export default function Tabs(props: { tile: Tile }) {
   return (
     <div
       ref={rootRef}
-      onWheel={handleOnWheel}
+      on:wheel={{ passive: true, handleEvent: handleOnWheel }}
       class="flex overflow-auto scrollbar-thin border-b border-border-secondary shrink-0 bg-surface-secondary text-text-secondary"
     >
       <For each={props.tile.editors}>{(editor) => <Tab editor={editor} />}</For>

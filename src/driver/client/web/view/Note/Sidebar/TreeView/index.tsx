@@ -27,7 +27,7 @@ export default function TreeView() {
       <Menu.Root unmountOnExit lazyMount>
         <Menu.ContextTrigger asChild={(childProps) => original(childProps())} />
         <Portal mount={shell.appRoot}>
-          <Menu.Positioner class="absolute">
+          <Menu.Positioner onClick={(e) => e.stopPropagation()}>
             <Menu.Content class="menu text-text-secondary">
               <Menu.Item class="menu-item" value="delete">
                 移动至...

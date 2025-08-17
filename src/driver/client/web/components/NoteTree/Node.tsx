@@ -138,12 +138,7 @@ export default function Node(props: {
     <Show
       when={!node.isLeaf}
       fallback={
-        <li
-          onClick={() => handleItemClick(node)}
-          ref={setDropElementRef}
-          class={itemClassName}
-          classList={itemClassList()}
-        >
+        <li onClick={[handleItemClick, node]} ref={setDropElementRef} class={itemClassName} classList={itemClassList()}>
           {(props.renderItem || call)((renderProps) => (
             <div
               {...renderProps}
@@ -161,7 +156,7 @@ export default function Node(props: {
     >
       <li class="w-full">
         <div
-          onClick={() => handleItemClick(node)}
+          onClick={[handleItemClick, node]}
           class={itemClassName}
           classList={itemClassList()}
           ref={setDropElementRef} // dropElement 不能是上一层的 <li> 元素

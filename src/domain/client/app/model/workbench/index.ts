@@ -1,5 +1,5 @@
 import { mapValues, uniqueId } from 'lodash-es';
-import { observable, action, computed, when } from 'mobx';
+import { observable, action, computed, when, runInAction } from 'mobx';
 import assert from 'assert';
 import z from 'zod';
 
@@ -325,7 +325,9 @@ export default class Workbench {
       return tile.id;
     };
 
-    this.root = iterate(root);
+    runInAction(() => {
+      this.root = iterate(root);
+    });
 
     if (focusedTile) {
       focusedTile.currentEditor?.focus();
