@@ -3,8 +3,9 @@ import { Key } from '@solid-primitives/keyed';
 import { ChevronDownIcon, ChevronRightIcon, FolderIcon, FileTextIcon } from 'lucide-solid';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
+import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import { Menu } from '@ark-ui/solid';
-import { Portal } from 'solid-js/web';
+import { Portal, render } from 'solid-js/web';
 
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
 import { normalizeTitle, type NoteVO } from '#domain/shared/model/note';
@@ -14,6 +15,7 @@ import { MimeTypes } from '#domain/shared/model/file';
 import NoteService from '#domain/client/app/service/NoteService';
 import { IS_DEV } from '#domain/shared/infra/env';
 import shell from '#web/infra/shell';
+import DragPreview from './DragPreview';
 
 export interface Props {
   treeView: TreeViewModel;
@@ -61,7 +63,26 @@ export default function Node(props: Props) {
         draggable({
           element,
           canDrag: () => !node.isRoot,
-          getInitialData: () => node as unknown as Record<string, unknown>,
+          onGenerateDragPreview: ({ nativeSetDragImage }) => {
+            setCustomNativeDragPreview({
+              nativeSetDragImage,
+              render: ({ container }) => {
+                return render(() => <DragPreview treeView={props.treeView} node={node} />, container);
+              },
+            });
+          },
+          onDragStart: () => {
+            if (!props.treeView.tree.selectedNodeIds.has(node.id)) {
+              props.treeView.tree.select(node.id);
+            }
+          },
+          getInitialData: () => {
+            const selectedIds = Array.from(props.treeView.tree.selectedNodeIds);
+
+            return selectedIds.includes(node.id)
+              ? { nodes: props.treeView.tree.get(selectedIds) }
+              : (node as unknown as Record<string, unknown>);
+          },
         }),
         dropTargetForElements({
           element,
@@ -153,7 +174,7 @@ export default function Node(props: Props) {
             <Menu.Positioner onClick={(e) => e.stopPropagation()}>
               <Menu.Content class="menu text-text-secondary">
                 <Show when={props.treeView.tree.selectedNodeIds.size > 1}>
-                  <div class="font-bold p-inset-square-s">共选中 {props.treeView.tree.selectedNodeIds.size} 个笔记</div>
+                  <div class="font-bold p-inset-square-s">共选中 {props.treeView.tree.selectedNodeIds.size} 项</div>
                 </Show>
                 <For each={props.contextMenu(node)}>
                   {(item) => (
@@ -180,6 +201,7 @@ export default function Node(props: Props) {
           {renderItem((renderProps) => (
             <div
               {...renderProps}
+              data-item-id={node.id}
               class={`${itemTextClassName} ml-5`} // ml 和展开图标的尺寸一致
               style={{ 'padding-left': `${paddingLeft()}px` }}
             >
@@ -197,6 +219,7 @@ export default function Node(props: Props) {
           onClick={[handleItemClick, node]}
           class={itemClassName}
           classList={itemClassList()}
+          data-item-id={node.id}
           ref={setDropElementRef} // dropElement 不能是上一层的 <li> 元素
         >
           {/** 展开/收起图标 */}

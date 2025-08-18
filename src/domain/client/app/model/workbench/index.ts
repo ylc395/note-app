@@ -14,6 +14,8 @@ import { type TileNode, type TileParent, TileDirections, isTileLeaf, tileNodeSch
 import EditorManager from './EditorManager';
 import HistoryStack from '../base/HistoryStack';
 import RecentManager from './RecentManager';
+import { arrayOf, type MaybeArray } from '#utils/collection';
+import type BaseEditor from '#domain/client/app/model/note/editor/BaseEditor';
 
 export interface HistoryRecord {
   key: EntityId;
@@ -226,10 +228,18 @@ export default class Workbench {
     editor.moveTo(newTile, true);
   }
 
+  public open(note: MaybeArray<Pick<NoteVO, 'id' | 'mimeType'>>, dest?: Editor | Tile | NewTile) {
+    let editor: BaseEditor | undefined;
+
+    for (const n of arrayOf(note)) {
+      editor = this._open(n, editor?.tile ?? dest);
+    }
+  }
+
   // 在指定位置打开一个 editor。该 editor 可能是新建的，也可能是复用已存在的
   // 若已存在，则其会被移动到指定位置（若有指定）
   @action.bound
-  public open(note: Pick<NoteVO, 'id' | 'mimeType'>, dest?: Editor | Tile | NewTile) {
+  private _open(note: Pick<NoteVO, 'id' | 'mimeType'>, dest?: Editor | Tile | NewTile) {
     const currentTile = this.currentEditor?.tile || this.latestTile;
     dest = dest || currentTile;
 
@@ -269,6 +279,8 @@ export default class Workbench {
 
     destTile.switchToEditor(editor);
     this.recentManager.add(note.id);
+
+    return editor;
   }
 
   private handleHistoryPop({ record }: { record: HistoryRecord }) {

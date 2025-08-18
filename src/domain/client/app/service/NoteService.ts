@@ -1,9 +1,11 @@
 import { action, observable } from 'mobx';
+import { compact, isObject } from 'lodash-es';
+
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import type { DuplicatedNoteDTO, NewNoteDTO, NotePatchDTO, NoteVO } from '#domain/shared/model/note';
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
-import type { MaybeArray } from '#utils/collection';
+import { arrayOf, type MaybeArray } from '#utils/collection';
 
 import Workbench from '../model/Workbench';
 import DomainEventBus from '../model/note/EventBus';
@@ -43,7 +45,7 @@ export default class NoteService {
   };
 
   public readonly move = async (notes: MaybeArray<NoteVO>, targetId: NotePatchDTO['parentId']) => {
-    notes = Array.isArray(notes) ? notes : [notes];
+    notes = arrayOf(notes);
     const ids = notes.map(({ id }) => id);
     await this.remote.note.batchUpdate.mutate([ids, { parentId: targetId }]);
 
@@ -76,6 +78,10 @@ export default class NoteService {
 
     if (value instanceof BaseEditor) {
       return value.value.result.data;
+    }
+
+    if (isObject(value) && 'nodes' in value && Array.isArray(value.nodes)) {
+      return compact(value.nodes.map((node) => (node instanceof TreeNode ? node.value : undefined)));
     }
 
     return undefined;

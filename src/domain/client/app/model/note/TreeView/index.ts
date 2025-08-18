@@ -7,6 +7,7 @@ import DomainEventBus from '#domain/client/app/model/note/EventBus';
 
 import SortBehavior from './SortBehavior';
 import Workbench from '../../Workbench';
+import { arrayOf, type MaybeArray } from '#utils/collection';
 
 export default class TreeView {
   constructor() {
@@ -50,8 +51,9 @@ export default class TreeView {
     this.tree.highlight(this.workbench.currentEditor?.noteId ?? null);
   }
 
-  public async disableDescendantsBy(movingNotes: NoteVO[]) {
-    const noteIds = movingNotes.map(({ id }) => id);
+  public async disableDescendantsBy(movingNotes: MaybeArray<NoteVO>) {
+    const notes = arrayOf(movingNotes);
+    const noteIds = notes.map(({ id }) => id);
     const nodeIdToSetUnselect = new Set<string>();
     const collectDescendantIds = (nodeId: string) => {
       const node = this.tree.get(nodeId);

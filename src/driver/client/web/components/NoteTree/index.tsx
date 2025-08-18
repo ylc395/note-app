@@ -18,7 +18,7 @@ export default function BaseTree(props: {
         const note = NoteService.getNote(source.data);
 
         if (note) {
-          props.treeView.disableDescendantsBy([note]);
+          props.treeView.disableDescendantsBy(note);
         }
       },
       onDrop: () => {
@@ -31,7 +31,7 @@ export default function BaseTree(props: {
   return (
     <Show when={props.treeView.tree.root}>
       {(rootNode) => (
-        <ul class={props.className}>
+        <ul class={props.className} data-tree>
           <Key each={rootNode().childrenQuery.result.data} by="id">
             {(note, index) => (
               <NodeView

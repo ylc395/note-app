@@ -1,9 +1,9 @@
 import { createEffect, createSignal, onCleanup, Show } from 'solid-js';
 import { monitorForElements, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { HandIcon } from 'lucide-solid';
 
 import NoteService from '#domain/client/app/service/NoteService';
 import container from '#utils/singletonContainer';
-import { TargetIcon } from 'lucide-solid';
 
 export default function DropArea() {
   const { move, exploreTreeView: treeView } = container.resolve(NoteService);
@@ -43,9 +43,9 @@ export default function DropArea() {
     <Show when={isDragging() && !treeView.tree.root?.isUnselectable}>
       <div
         ref={setDropArea}
-        class="border border-black rounded border-dashed text-xs text-center flex items-center justify-center absolute top-0 right-0 bottom-0 left-2 bg-inherit"
+        class="border border-border-primary text-text-secondary rounded border-dashed text-xs text-center flex items-center justify-center absolute top-0 right-0 bottom-0 left-2 bg-surface-secondary z-20"
       >
-        <TargetIcon class="w-3 h-3 mr-1" />
+        <HandIcon class="w-3 h-3 mr-1" />
         拖拽至此以移动至根节点
       </div>
     </Show>

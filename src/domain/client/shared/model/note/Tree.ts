@@ -1,9 +1,10 @@
 import { z } from 'zod';
 import { action, computed, observable, reaction, runInAction, when } from 'mobx';
 import assert from 'assert';
+import { compact } from 'lodash-es';
 
 import type { NoteVO, NotePatchDTO } from '#domain/shared/model/note';
-import type { MaybeArray } from '#utils/collection';
+import { arrayOf, type MaybeArray } from '#utils/collection';
 
 import PersistedMap from '../abstract/PersistedMap';
 import TreeNode from './TreeNode';
@@ -11,10 +12,6 @@ import TreeNode from './TreeNode';
 const schema = z.object({
   scroll: z.object({ x: z.number(), y: z.number() }).optional().catch(undefined),
   expanded: z
-    .string()
-    .array()
-    .catch(() => []),
-  selected: z
     .string()
     .array()
     .catch(() => []),
@@ -48,16 +45,9 @@ export default class Tree {
   private async init() {
     await when(() => this.uiState.isReady);
 
-    const selectedIds = this.uiState.get('selected');
     const expandedIds = this.uiState.get('expanded');
 
     runInAction(() => {
-      if (selectedIds) {
-        for (const selectedId of selectedIds) {
-          this.selectedNodeIds.add(selectedId);
-        }
-      }
-
       if (expandedIds) {
         for (const expandedId of expandedIds) {
           this.expandedNodeIds.add(expandedId);
@@ -70,17 +60,18 @@ export default class Tree {
     });
 
     reaction(
-      () => Array.from(this.selectedNodeIds),
-      (ids) => this.uiState.set('selected', ids),
-    );
-
-    reaction(
       () => Array.from(this.expandedNodeIds),
       (ids) => this.uiState.set('expanded', ids),
     );
   }
 
-  public get(id: string | null) {
+  public get(id: string | null): TreeNode | undefined;
+  public get(id: string[]): TreeNode[];
+  public get(id: string | null | string[]) {
+    if (Array.isArray(id)) {
+      return compact(id.map((v) => this.nodesMap.get(v)));
+    }
+
     if (id === null) {
       return this.root;
     }
@@ -113,7 +104,7 @@ export default class Tree {
       this.get(nodeId)?.toggleSelect(false);
     }
 
-    for (const id of Array.isArray(ids) ? ids : [ids]) {
+    for (const id of arrayOf(ids)) {
       this.get(id)?.toggleSelect(true);
     }
   }
@@ -127,7 +118,7 @@ export default class Tree {
       return;
     }
 
-    for (const id of Array.isArray(ids) ? ids : [ids]) {
+    for (const id of arrayOf(ids)) {
       this.get(id)?.setIsHighlighted(true);
     }
   }
