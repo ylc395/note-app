@@ -32,7 +32,7 @@ export default class Tree {
 
   private readonly uiState;
 
-  private readonly selectedNodeIds = new Set<TreeNode['id']>();
+  @observable public accessor selectedNodeIds = new Set<TreeNode['id']>();
 
   private readonly highlightedNodeIds = new Set<TreeNode['id']>();
 
@@ -108,11 +108,9 @@ export default class Tree {
   }
 
   @action
-  public select(ids: MaybeArray<TreeNode['id']>, options?: { append?: boolean }) {
-    if (!options?.append) {
-      for (const nodeId of this.selectedNodeIds) {
-        this.get(nodeId)?.toggleSelect(false);
-      }
+  public select(ids: MaybeArray<TreeNode['id']>) {
+    for (const nodeId of this.selectedNodeIds) {
+      this.get(nodeId)?.toggleSelect(false);
     }
 
     for (const id of Array.isArray(ids) ? ids : [ids]) {

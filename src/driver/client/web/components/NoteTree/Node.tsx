@@ -1,18 +1,10 @@
-import {
-  createEffect,
-  createMemo,
-  createSignal,
-  on,
-  onCleanup,
-  Show,
-  untrack,
-  type JSX,
-  type JSXElement,
-} from 'solid-js';
+import { createEffect, createMemo, createSignal, For, JSX, on, onCleanup, Show, untrack } from 'solid-js';
 import { Key } from '@solid-primitives/keyed';
 import { ChevronDownIcon, ChevronRightIcon, FolderIcon, FileTextIcon } from 'lucide-solid';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
+import { Menu } from '@ark-ui/solid';
+import { Portal } from 'solid-js/web';
 
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
 import { normalizeTitle, type NoteVO } from '#domain/shared/model/note';
@@ -21,20 +13,20 @@ import container from '#utils/singletonContainer';
 import { MimeTypes } from '#domain/shared/model/file';
 import NoteService from '#domain/client/app/service/NoteService';
 import { IS_DEV } from '#domain/shared/infra/env';
+import shell from '#web/infra/shell';
 
-function call(fn: (props: JSX.HTMLAttributes<HTMLDivElement>) => JSX.Element) {
-  return fn({});
-}
-
-export default function Node(props: {
+export interface Props {
   treeView: TreeViewModel;
   note: NoteVO;
   parent: TreeNode;
   indexPath: number[];
   renderOperation?: (node: TreeNode) => JSX.Element;
-  renderItem?: (original: (props: JSX.HTMLAttributes<HTMLDivElement>) => JSXElement) => JSXElement;
+  contextMenu?: (node: TreeNode) => Array<{ label: string; key: string; className?: string }>;
   onItemTitleClick: (node: TreeNode) => void;
-}) {
+  onContextMenuClick?: (key: string) => void;
+}
+
+export default function Node(props: Props) {
   const { move } = container.resolve(NoteService);
   const node = props.treeView.tree.getOrCreateNode({ value: props.note, parent: props.parent });
 
@@ -45,9 +37,9 @@ export default function Node(props: {
   const itemTextClassName = 'whitespace-nowrap overflow-hidden text-ellipsis py-inset-square-md grow'; // 别弄成 flex，否则文字截断无法生效（只对 inline / block 有效）
   const paddingLeft = createMemo(() => (props.indexPath.length - 1) * 28);
   const itemClassList = createMemo(() => ({
-    'bg-brand-subtle text-brand-secondary': node.isHighlighted,
+    'bg-brand-subtle text-brand-secondary': node.isHighlighted && !node.isSelected,
     'opacity-30': node.isUnselectable,
-    'bg-surface-tertiary': isDropHovering() && !node.isUnselectable,
+    'bg-surface-tertiary': (isDropHovering() && !node.isUnselectable) || node.isSelected,
   }));
 
   createEffect(
@@ -102,8 +94,13 @@ export default function Node(props: {
     onCleanup(cleanup);
   });
 
-  function handleItemClick(node: TreeNode) {
-    props.onItemTitleClick?.(node);
+  function handleItemClick(node: TreeNode, e: MouseEvent) {
+    if (e.metaKey) {
+      node.toggleSelect();
+    } else {
+      props.treeView.tree.select([]);
+      props.onItemTitleClick?.(node);
+    }
   }
 
   function handleArrowClick(e: MouseEvent) {
@@ -134,12 +131,53 @@ export default function Node(props: {
     }
   }
 
+  function renderItem(render: (props: JSX.HTMLAttributes<HTMLDivElement>) => JSX.Element) {
+    function handleOpenChange({ open }: { open: boolean }) {
+      if (!open && node.isSelected && props.treeView.tree.selectedNodeIds.size === 1) {
+        node.toggleSelect(false);
+        return;
+      }
+
+      if (!open || node.isSelected) {
+        return;
+      }
+
+      props.treeView.tree.select([node.id]);
+    }
+
+    if (props.contextMenu) {
+      return (
+        <Menu.Root unmountOnExit lazyMount onOpenChange={handleOpenChange}>
+          <Menu.ContextTrigger asChild={(childProps) => render(childProps())} />
+          <Portal mount={shell.appRoot}>
+            <Menu.Positioner onClick={(e) => e.stopPropagation()}>
+              <Menu.Content class="menu text-text-secondary">
+                <Show when={props.treeView.tree.selectedNodeIds.size > 1}>
+                  <div class="font-bold p-inset-square-s">共选中 {props.treeView.tree.selectedNodeIds.size} 个笔记</div>
+                </Show>
+                <For each={props.contextMenu(node)}>
+                  {(item) => (
+                    <Menu.Item class={`menu-item ${item.className || ''}`} value={item.key}>
+                      {item.label}
+                    </Menu.Item>
+                  )}
+                </For>
+              </Menu.Content>
+            </Menu.Positioner>
+          </Portal>
+        </Menu.Root>
+      );
+    }
+
+    return render({});
+  }
+
   return (
     <Show
       when={!node.isLeaf}
       fallback={
         <li onClick={[handleItemClick, node]} ref={setDropElementRef} class={itemClassName} classList={itemClassList()}>
-          {(props.renderItem || call)((renderProps) => (
+          {renderItem((renderProps) => (
             <div
               {...renderProps}
               class={`${itemTextClassName} ml-5`} // ml 和展开图标的尺寸一致
@@ -167,7 +205,7 @@ export default function Node(props: {
               <ChevronDownIcon class="w-5 h-5" />
             </Show>
           </button>
-          {(props.renderItem || call)((renderProps) => (
+          {renderItem((renderProps) => (
             <div {...renderProps} class={itemTextClassName}>
               {renderIcon(node)}
               {IS_DEV && `${node.value!.id.slice(0, 4)}+`}

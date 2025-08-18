@@ -1,17 +1,15 @@
 import { Key } from '@solid-primitives/keyed';
-import { Show, type JSX, onCleanup, type JSXElement } from 'solid-js';
+import { Show, onCleanup } from 'solid-js';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import NoteService from '#domain/client/app/service/NoteService';
-import TreeNode from '#domain/client/shared/model/note/TreeNode';
-import TreeViewModel from '#domain/client/app/model/note/TreeView';
-
-import NodeView from './Node';
+import NodeView, { type Props as NodeProps } from './Node';
 
 export default function BaseTree(props: {
-  treeView: TreeViewModel;
-  renderOperation?: (node: TreeNode) => JSX.Element;
-  renderItem?: (original: (props: JSX.HTMLAttributes<HTMLDivElement>) => JSXElement) => JSXElement;
-  onItemTitleClick: (node: TreeNode) => void;
+  treeView: NodeProps['treeView'];
+  renderOperation?: NodeProps['renderOperation'];
+  onItemTitleClick: NodeProps['onItemTitleClick'];
+  onContextMenuClick?: NodeProps['onContextMenuClick'];
+  contextMenu?: NodeProps['contextMenu'];
   className?: string;
 }) {
   onCleanup(
@@ -38,7 +36,8 @@ export default function BaseTree(props: {
             {(note, index) => (
               <NodeView
                 onItemTitleClick={props.onItemTitleClick}
-                renderItem={props.renderItem}
+                onContextMenuClick={props.onContextMenuClick}
+                contextMenu={props.contextMenu}
                 renderOperation={props.renderOperation}
                 treeView={props.treeView}
                 note={note()}
