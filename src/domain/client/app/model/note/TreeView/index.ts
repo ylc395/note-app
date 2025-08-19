@@ -1,15 +1,15 @@
 import { action, autorun, computed } from 'mobx';
+import z from 'zod';
+import assert from 'assert';
 
 import Tree from '#domain/client/shared/model/note/Tree';
 import container from '#utils/singletonContainer';
 import type { NoteVO } from '#domain/shared/model/note';
 import DomainEventBus from '#domain/client/app/model/note/EventBus';
 
-import SortBehavior from './SortBehavior';
-import Workbench from '../../Workbench';
 import { arrayOf, type MaybeArray } from '#utils/collection';
 import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
-import z from 'zod';
+import Workbench from '../../Workbench';
 
 export enum SortBy {
   TitleAsc = 'titleAsc',
@@ -29,7 +29,7 @@ export enum IconDisplayMode {
 export default class TreeView {
   constructor() {
     this.tree = new Tree({
-      sort: this.sortBehavior.sort.bind(this.sortBehavior),
+      sort: this.sort.bind(this),
     });
 
     this.domainEventBus.on(
@@ -43,8 +43,6 @@ export default class TreeView {
   private readonly domainEventBus = container.resolve(DomainEventBus);
 
   private readonly workbench = container.resolve(Workbench);
-
-  public readonly sortBehavior = container.resolve(SortBehavior);
 
   public readonly settings = new PersistedMap(
     'note-tree-settings',
@@ -98,5 +96,24 @@ export default class TreeView {
     }
 
     this.tree.setUnselectable(Array.from(nodeIdToSetUnselect));
+  }
+
+  private sort(entity1: NoteVO, entity2: NoteVO) {
+    const sortBy = this.settings.get('sortBy');
+    const FLAG = [SortBy.CreatedAtAsc, SortBy.TitleAsc, SortBy.UpdatedAtAsc].includes(sortBy) ? 1 : -1;
+
+    if ([SortBy.TitleAsc, SortBy.TitleDesc].includes(sortBy)) {
+      return entity1.title > entity2.title ? FLAG : -FLAG;
+    }
+
+    if ([SortBy.CreatedAtAsc, SortBy.CreatedAtDesc].includes(sortBy)) {
+      return entity1.createdAt > entity2.createdAt ? FLAG : -FLAG;
+    }
+
+    if ([SortBy.UpdatedAtAsc, SortBy.UpdatedAtDesc].includes(sortBy)) {
+      return entity1.updatedAt > entity2.updatedAt ? FLAG : -FLAG;
+    }
+
+    assert.fail('invalid sortBy');
   }
 }

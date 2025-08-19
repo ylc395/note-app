@@ -111,7 +111,7 @@
     @apply w-5 h-5 
   }
 
-  .button[data-state="open"] {
+  .button[data-part="trigger"][data-state="open"] {
     @apply bg-surface-tertiary
   }
 

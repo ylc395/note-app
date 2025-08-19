@@ -1,13 +1,9 @@
-import { createEffect, createMemo, createSignal, onCleanup } from 'solid-js';
+import { createEffect, createMemo, createSignal } from 'solid-js';
 import type BaseEditor from '#domain/client/app/model/note/editor/BaseEditor';
-import { EventNames } from '#domain/client/app/model/note/editor/events';
 import { normalizeTitle } from '#domain/shared/model/note';
-import container from '#utils/singletonContainer';
-import Workbench from '#domain/client/app/model/Workbench';
 
 export default function TitleInput(props: { editor: BaseEditor }) {
   let inputRef: HTMLInputElement | undefined;
-  const workbench = container.resolve(Workbench);
   const [title, setTitle] = createSignal('');
   const placeholder = createMemo(() =>
     title() || !props.editor.value.result.data
@@ -15,33 +11,20 @@ export default function TitleInput(props: { editor: BaseEditor }) {
       : normalizeTitle({ ...props.editor.value.result.data, title: '' }),
   );
 
-  const shouldFocus = createMemo(
-    () =>
-      workbench.currentEditor === props.editor &&
-      document.activeElement !== inputRef &&
-      !props.editor.hasEdited &&
-      props.editor.value.result.data &&
-      !props.editor.value.result.data.body &&
-      !props.editor.value.result.data.title,
-  );
-
   createEffect(() => {
     if (props.editor.value.result.data) {
       setTitle(props.editor.value.result.data.title);
     }
 
-    if (shouldFocus()) {
+    if (
+      !props.editor.hasEdited &&
+      props.editor.value.result.data &&
+      !props.editor.value.result.data.body &&
+      !props.editor.value.result.data.title
+    ) {
       inputRef?.focus();
     }
   });
-
-  onCleanup(
-    props.editor.events.on(EventNames.Focus, () => {
-      if (shouldFocus()) {
-        inputRef?.focus();
-      }
-    }),
-  );
 
   return (
     <input

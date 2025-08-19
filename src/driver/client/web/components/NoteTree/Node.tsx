@@ -1,6 +1,6 @@
 import { createEffect, createMemo, createSignal, For, JSX, on, onCleanup, Show, untrack } from 'solid-js';
 import { Key } from '@solid-primitives/keyed';
-import { ChevronDownIcon, ChevronRightIcon, FolderIcon, FileTextIcon } from 'lucide-solid';
+import { ChevronDownIcon, ChevronRightIcon, FileTextIcon } from 'lucide-solid';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
@@ -26,6 +26,7 @@ export interface Props {
   contextMenu?: (node: TreeNode) => Array<{ label: string; key: string; className?: string }>;
   onItemTitleClick: (node: TreeNode) => void;
   onContextMenuClick?: (key: string) => void;
+  shouldRenderIcon?: (node: TreeNode) => boolean;
 }
 
 export default function Node(props: Props) {
@@ -130,11 +131,11 @@ export default function Node(props: Props) {
   }
 
   function renderIcon(node: TreeNode) {
-    const className = 'mr-stack-xs p-0 shrink-0 w-4 h-4 inline align-text-bottom';
-
-    if (!(node instanceof TreeNode)) {
-      return <FolderIcon class={className} />;
+    if (props.shouldRenderIcon?.(node) === false) {
+      return null;
     }
+
+    const className = 'mr-stack-xs p-0 shrink-0 w-4 h-4 inline align-text-bottom';
 
     if (node.value?.icon) {
       return null; // todo: 改成图标
@@ -241,7 +242,7 @@ export default function Node(props: Props) {
         {/** 子树 */}
         <Show when={node.isExpanded}>
           <ul>
-            <Key each={node.childrenQuery.result.data} by="id">
+            <Key each={node.children} by="id">
               {(child, index) => (
                 <Node {...props} parent={node} note={child()} indexPath={[...props.indexPath, index()]} />
               )}

@@ -6,6 +6,8 @@ import TreeNode from '#domain/client/shared/model/note/TreeNode';
 import BaseTreeView from '#web/components/NoteTree';
 import AddButton from './AddButton';
 import SettingButton from './SettingButton';
+import { IconDisplayMode } from '#domain/client/app/model/note/TreeView';
+import { Show } from 'solid-js';
 
 export default function TreeView() {
   const { workbench, exploreTreeView: tree } = container.resolve(NoteService);
@@ -16,6 +18,16 @@ export default function TreeView() {
     }
 
     workbench.open(node.value);
+  }
+
+  function shouldRenderIcon(node: TreeNode) {
+    const iconMode = tree.settings.get('iconDisplayMode');
+
+    if (iconMode === IconDisplayMode.Custom) {
+      return Boolean(node.value?.icon);
+    }
+
+    return iconMode === IconDisplayMode.All;
   }
 
   return (
@@ -29,24 +41,27 @@ export default function TreeView() {
           <SettingButton />
         </div>
       </div>
-      <BaseTreeView
-        className="min-h-0 grow overflow-auto scrollbar-stable text-sm text-text-secondary"
-        onItemTitleClick={handleItemClick}
-        treeView={tree}
-        contextMenu={() => [
-          { label: '移动至...', key: 'move' },
-          { label: '更改图标', key: 'icon' },
-          { label: '删除', key: 'delete' },
-        ]}
-        renderOperation={(node) => (
-          <AddButton
-            buttonClassName='button button-primary button-square-tiny text-brand-secondary h-full ml-inset-squish group-hover:flex data-[state="open"]:flex hidden'
-            iconOnly
-            node={node}
-            menuPlacement="bottom-end"
-          />
-        )}
-      />
+      <Show when={tree.settings.isReady}>
+        <BaseTreeView
+          className="min-h-0 grow overflow-auto scrollbar-stable text-sm text-text-secondary"
+          onItemTitleClick={handleItemClick}
+          treeView={tree}
+          shouldRenderIcon={shouldRenderIcon}
+          contextMenu={() => [
+            { label: '移动至...', key: 'move' },
+            { label: '更改图标', key: 'icon' },
+            { label: '删除', key: 'delete' },
+          ]}
+          renderOperation={(node) => (
+            <AddButton
+              buttonClassName='button button-primary button-square-tiny text-brand-secondary h-full ml-inset-squish group-hover:flex data-[state="open"]:flex hidden'
+              iconOnly
+              node={node}
+              menuPlacement="bottom-end"
+            />
+          )}
+        />
+      </Show>
     </div>
   );
 }

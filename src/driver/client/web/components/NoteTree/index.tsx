@@ -10,6 +10,7 @@ export default function BaseTree(props: {
   onItemTitleClick: NodeProps['onItemTitleClick'];
   onContextMenuClick?: NodeProps['onContextMenuClick'];
   contextMenu?: NodeProps['contextMenu'];
+  shouldRenderIcon?: NodeProps['shouldRenderIcon'];
   className?: string;
 }) {
   onCleanup(
@@ -32,7 +33,7 @@ export default function BaseTree(props: {
     <Show when={props.treeView.tree.root}>
       {(rootNode) => (
         <ul class={props.className} data-tree>
-          <Key each={rootNode().childrenQuery.result.data} by="id">
+          <Key each={rootNode().children} by="id">
             {(note, index) => (
               <NodeView
                 onItemTitleClick={props.onItemTitleClick}
@@ -40,6 +41,7 @@ export default function BaseTree(props: {
                 contextMenu={props.contextMenu}
                 renderOperation={props.renderOperation}
                 treeView={props.treeView}
+                shouldRenderIcon={props.shouldRenderIcon}
                 note={note()}
                 parent={rootNode()}
                 indexPath={[index()]}

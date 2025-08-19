@@ -83,6 +83,11 @@ export default class TreeNode {
   }
 
   @computed
+  public get children() {
+    return this.childrenQuery.result.data?.toSorted(this.options.sort);
+  }
+
+  @computed
   public get isLeaf() {
     return this.childrenCount === 0;
   }
