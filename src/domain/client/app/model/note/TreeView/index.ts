@@ -8,6 +8,23 @@ import DomainEventBus from '#domain/client/app/model/note/EventBus';
 import SortBehavior from './SortBehavior';
 import Workbench from '../../Workbench';
 import { arrayOf, type MaybeArray } from '#utils/collection';
+import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
+import z from 'zod';
+
+export enum SortBy {
+  TitleAsc = 'titleAsc',
+  TitleDesc = 'titleDesc',
+  UpdatedAtAsc = 'updatedAtAsc',
+  UpdatedAtDesc = 'updatedAtDesc',
+  CreatedAtAsc = 'createdAtAsc',
+  CreatedAtDesc = 'createdAtDesc',
+}
+
+export enum IconDisplayMode {
+  All = 'all',
+  None = 'none',
+  Custom = 'custom',
+}
 
 export default class TreeView {
   constructor() {
@@ -28,6 +45,14 @@ export default class TreeView {
   private readonly workbench = container.resolve(Workbench);
 
   public readonly sortBehavior = container.resolve(SortBehavior);
+
+  public readonly settings = new PersistedMap(
+    'note-tree-settings',
+    z.object({
+      sortBy: z.enum(SortBy).catch(SortBy.TitleAsc),
+      iconDisplayMode: z.enum(IconDisplayMode).catch(IconDisplayMode.All),
+    }),
+  );
 
   public readonly tree;
 

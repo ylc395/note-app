@@ -53,6 +53,10 @@
     scrollbar-width: thin;
   }
 
+  button {
+    outline: none;
+  }
+
   input {
     outline: none;
   }
@@ -107,32 +111,40 @@
     @apply w-5 h-5 
   }
 
+  .button[data-state="open"] {
+    @apply bg-surface-tertiary
+  }
+
   .input {
     @apply border border-border-primary rounded-md p-inset-square-s text-sm;
   }
 
   .menu {
-    @apply rounded border-border-primary border p-inset-square-s bg-brand-secondary shadow text-sm z-50 outline-none
+    @apply rounded border-border-primary border p-inset-square-s bg-brand-secondary shadow text-sm z-50 outline-none;
   }
 
   .menu-item {
-    @apply flex rounded items-center p-inset-square-s cursor-pointer
+    @apply flex rounded items-center p-inset-square-s cursor-pointer data-[state='open']:bg-surface-tertiary;
   }
 
   .menu-item:hover {
     @apply bg-surface-tertiary
   }
 
-  .menu-item > .lucide-icon {
+  .menu-item .lucide-icon {
     @apply w-4 h-4
   }
 
   .menu-item > .lucide-icon:first-child {
-    @apply mr-stack-s
+    @apply mr-stack-s;
   }
 
-  .menu-item > .lucide-icon:last-child {
+  .menu-item [data-part="indicator"] {
     @apply ml-stack-s;
+  }
+
+  .menu-item-text {
+    @apply grow text-start;
   }
 }
 

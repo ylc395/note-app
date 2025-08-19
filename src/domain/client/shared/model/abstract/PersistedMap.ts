@@ -7,6 +7,8 @@ import { token as localStorageToken } from '#domain/client/shared/infra/localSto
 import { untrack } from 'solid-js/web';
 import { isObject } from 'lodash-es';
 
+export type DataType<T> = T extends PersistedMap<infer Data> ? Data : unknown;
+
 export default class PersistedMap<S extends object> {
   constructor(private readonly id: string, private readonly schema: ZodType<S>) {
     this.init();
