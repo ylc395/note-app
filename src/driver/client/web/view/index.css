@@ -48,11 +48,11 @@
   scrollbar-gutter: stable;
 }
 
-@utility scrollbar-thin {
-  scrollbar-width: thin;
-}
-
 @layer base {
+  * {
+    scrollbar-width: thin;
+  }
+
   input {
     outline: none;
   }

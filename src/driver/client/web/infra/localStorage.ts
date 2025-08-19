@@ -1,4 +1,5 @@
 import type { LocalStorage } from '#domain/client/shared/infra/localStorage';
+import { IS_CLEAN_DEV } from '#domain/shared/infra/env';
 
 const webLocalStorage: LocalStorage = {
   get(key: string) {
@@ -29,5 +30,9 @@ const webLocalStorage: LocalStorage = {
     return Promise.resolve();
   },
 };
+
+if (IS_CLEAN_DEV) {
+  localStorage.clear();
+}
 
 export default webLocalStorage;

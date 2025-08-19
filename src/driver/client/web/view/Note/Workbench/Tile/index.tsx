@@ -34,10 +34,10 @@ export default function TileView(props: { tile: Tile; panelId?: string }) {
   const content = (
     <>
       <Tabs tile={props.tile} />
-      <Show when={props.tile.currentEditor}>
+      <Show when={props.tile.currentEditor} keyed>
         {(editor) => (
           <div class="grow relative min-h-0" ref={setTileRef}>
-            <Editor editor={editor()} />
+            <Editor editor={editor} />
             <Show when={tileDirection()}>{(value) => <DropIndicator tileDirection={value()} />}</Show>
           </div>
         )}

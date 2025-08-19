@@ -33,7 +33,7 @@ export default class TreeView {
 
   @computed
   public get canCollapse() {
-    return this.tree.expandedNodeIds.size > 1; // 1 指 root 节点
+    return this.tree.expandedNodeIds.size > 0;
   }
 
   @action.bound

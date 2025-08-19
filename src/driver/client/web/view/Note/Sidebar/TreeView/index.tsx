@@ -1,3 +1,4 @@
+import { ShrinkIcon } from 'lucide-solid';
 import NoteService from '#domain/client/app/service/NoteService';
 import container from '#utils/singletonContainer';
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
@@ -21,10 +22,15 @@ export default function TreeView() {
     <div class="grow min-h-0 flex flex-col">
       <div class="mb-stack-s flex justify-between items-center">
         <AddButton buttonClassName="button button-primary button-md" menuPlacement="bottom-start" />
-        <SettingButton />
+        <div class="flex">
+          <button disabled={!tree.canCollapse} onClick={tree.collapseAll} class="button button-square-md">
+            <ShrinkIcon />
+          </button>
+          <SettingButton />
+        </div>
       </div>
       <BaseTreeView
-        className="min-h-0 grow overflow-auto scrollbar-stable text-sm scrollbar-thin text-text-secondary"
+        className="min-h-0 grow overflow-auto scrollbar-stable text-sm text-text-secondary"
         onItemTitleClick={handleItemClick}
         treeView={tree}
         contextMenu={() => [
