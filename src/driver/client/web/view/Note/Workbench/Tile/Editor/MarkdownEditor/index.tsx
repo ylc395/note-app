@@ -27,8 +27,7 @@ export default function MarkdownEditor(props: { editor: BaseEditor }) {
       {(note) => (
         <BaseMarkdownEditor
           ref={setCrepe}
-          containerClass="grow *:h-full"
-          editorRootClass="h-full !p-inset-square-xl"
+          containerClass="grow min-h-0 overflow-auto"
           defaultValue={note().body}
           onUpdate={(text) => props.editor.update({ body: text })}
         />

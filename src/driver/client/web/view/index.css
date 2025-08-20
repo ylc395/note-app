@@ -25,7 +25,7 @@
   /** 向用户传达具有特定含义的反馈或提示 */
   --color-feedback-success: var(--color-green-200);
   --color-feedback-warning: var(--color-yellow-200);
-  --color-feedback-danger: var(--color-red-400);
+  --color-feedback-danger: var(--color-red-700);
   --color-feedback-info: var(--color-blue-200);
 
   /** 内边距。用于组件内部，内容与容器边缘之间的空间 */
@@ -39,7 +39,7 @@
   --spacing-stack-xs: calc(var(--spacing)); /** 紧凑元素间 */
   --spacing-stack-s: calc(var(--spacing) * 2); /** 相关内容块间 */ 
   --spacing-stack-md: calc(var(--spacing) * 4); /** 独立元素间的标准间距 */ 
-  --spacing-stack-lg: calc(var(--spacing)); /** 不同组块间的间距 */ 
+  --spacing-stack-lg: calc(var(--spacing) * 6); /** 不同组块间的间距 */ 
   --spacing-stack-xl: calc(var(--spacing)); /** 主要内容块的间距 */ 
 
 }
@@ -76,12 +76,20 @@
     @apply bg-surface-tertiary;
   }
 
+  .button[data-part="trigger"][data-state="open"] {
+    @apply bg-surface-tertiary
+  }
+
   /** ===== 语义维度 ======== */
   .button-primary {
     @apply bg-brand-primary text-brand-secondary;
   }
 
   .button-primary:hover {
+    @apply bg-brand-subtle;
+  }
+
+  .button-primary[data-part="trigger"][data-state="open"] {
     @apply bg-brand-subtle;
   }
 
@@ -99,6 +107,10 @@
     @apply py-inset-square-s px-inset-square-md
   }
 
+  .button-lg {
+    @apply py-inset-square-md px-inset-square-lg
+  }
+
   .button-md .lucide-icon {
     @apply w-4 h-4 
   }
@@ -111,9 +123,6 @@
     @apply w-5 h-5 
   }
 
-  .button[data-part="trigger"][data-state="open"] {
-    @apply bg-surface-tertiary
-  }
 
   .input {
     @apply border border-border-primary rounded-md p-inset-square-s text-sm;
@@ -123,8 +132,16 @@
     @apply rounded border-border-primary border p-inset-square-s bg-brand-secondary shadow text-sm z-50 outline-none;
   }
 
+  .menu hr[data-part="separator"] {
+    @apply border-border-secondary my-stack-xl
+  }
+
   .menu-item {
     @apply flex rounded items-center p-inset-square-s cursor-pointer data-[state='open']:bg-surface-tertiary;
+  }
+
+  .menu-item[data-disabled] {
+    @apply cursor-not-allowed opacity-60;
   }
 
   .menu-item:hover {
@@ -145,6 +162,28 @@
 
   .menu-item-text {
     @apply grow text-start;
+  }
+
+  .form {
+    @apply text-text-primary grid gap-inset-square-lg;
+    grid-template-columns: max-content 1fr;
+    align-items: center;
+  }
+
+  .form [data-scope="field"][data-part="root"] {
+    @apply contents
+  }
+
+  .form [data-scope="field"][data-part="label"] {
+    @apply text-end text-sm;
+  }
+
+  .form .required[data-part="label"]::after {
+    content: "*";
+  }
+
+  .form [data-scope="field"][data-part="helper-text"] {
+    @apply text-sm text-text-tertiary;
   }
 }
 

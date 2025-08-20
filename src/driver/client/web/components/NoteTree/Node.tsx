@@ -8,7 +8,7 @@ import { Menu } from '@ark-ui/solid';
 import { Portal, render } from 'solid-js/web';
 
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
-import { normalizeTitle, type NoteVO } from '#domain/shared/model/note';
+import type { NoteVO } from '#domain/shared/model/note';
 import TreeViewModel from '#domain/client/app/model/note/TreeView';
 import container from '#utils/singletonContainer';
 import { MimeTypes } from '#domain/shared/model/file';
@@ -23,7 +23,9 @@ export interface Props {
   parent: TreeNode;
   indexPath: number[];
   renderOperation?: (node: TreeNode) => JSX.Element;
-  contextMenu?: (node: TreeNode) => Array<{ label: string; key: string; className?: string }>;
+  contextMenu?: (
+    node: TreeNode,
+  ) => Array<{ label: string; key: string; className?: string; disabled?: boolean } | 'separator'>;
   onItemTitleClick: (node: TreeNode) => void;
   onContextMenuClick?: (key: string) => void;
   shouldRenderIcon?: (node: TreeNode) => boolean;
@@ -137,7 +139,7 @@ export default function Node(props: Props) {
 
     const className = 'mr-stack-xs p-0 shrink-0 w-4 h-4 inline align-text-bottom';
 
-    if (node.value?.icon) {
+    if (node.icon) {
       return null; // todo: 改成图标
     }
 
@@ -169,7 +171,12 @@ export default function Node(props: Props) {
 
     if (props.contextMenu) {
       return (
-        <Menu.Root unmountOnExit lazyMount onOpenChange={handleOpenChange}>
+        <Menu.Root
+          unmountOnExit
+          lazyMount
+          onOpenChange={handleOpenChange}
+          onSelect={(e) => props.onContextMenuClick?.(e.value)}
+        >
           <Menu.ContextTrigger asChild={(childProps) => render(childProps())} />
           <Portal mount={shell.appRoot}>
             <Menu.Positioner onClick={(e) => e.stopPropagation()}>
@@ -178,11 +185,15 @@ export default function Node(props: Props) {
                   <div class="font-bold p-inset-square-s">共选中 {props.treeView.tree.selectedNodeIds.size} 项</div>
                 </Show>
                 <For each={props.contextMenu(node)}>
-                  {(item) => (
-                    <Menu.Item class={`menu-item ${item.className || ''}`} value={item.key}>
-                      {item.label}
-                    </Menu.Item>
-                  )}
+                  {(item) => {
+                    return item === 'separator' ? (
+                      <Menu.Separator />
+                    ) : (
+                      <Menu.Item disabled={item.disabled} class={`menu-item ${item.className || ''}`} value={item.key}>
+                        {item.label}
+                      </Menu.Item>
+                    );
+                  }}
                 </For>
               </Menu.Content>
             </Menu.Positioner>
@@ -208,7 +219,7 @@ export default function Node(props: Props) {
             >
               {renderIcon(node)}
               {IS_DEV && `${node.value!.id.slice(0, 4)}+`}
-              {normalizeTitle(node.value!)}
+              {node.title}
             </div>
           ))}
           {props.renderOperation?.(node)}
@@ -233,7 +244,7 @@ export default function Node(props: Props) {
             <div {...renderProps} class={itemTextClassName}>
               {renderIcon(node)}
               {IS_DEV && `${node.value!.id.slice(0, 4)}+`}
-              {normalizeTitle(node.value!)}
+              {node.title}
             </div>
           ))}
           {/** 行操作区 */}

@@ -2,43 +2,47 @@ import { action, computed, observable, runInAction } from 'mobx';
 import assert from 'assert';
 import { createQuery } from 'mobx-tanstack-query/preset';
 
-import type { NewNoteDTO, NoteVO } from '#domain/shared/model/note';
+import type { NewNoteDTO } from '#domain/shared/model/note';
 import Form from '#domain/client/shared/model/abstract/Form';
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 
 import type { FileDTO } from '#domain/shared/model/file';
 import { getHash } from '#utils/file';
+import type { EntityPath } from '#domain/shared/model/entity';
+import { last } from 'lodash-es';
 
 type MaterialFormField = Pick<NewNoteDTO, 'title' | 'body' | 'icon' | 'sourceUrl'>;
 
 type File = Pick<FileDTO, 'mimeType' | 'path'> & { data: ArrayBuffer; name: string };
 
 export default class MaterialForm extends Form<MaterialFormField> {
-  constructor(private formOptions: { onSubmit: (note: NewNoteDTO) => void; parent?: NoteVO }) {
+  constructor(private formOptions: { onSubmit: (note: NewNoteDTO) => void; path?: EntityPath }) {
     super();
   }
 
   public readonly remote = container.resolve(rpcToken);
 
-  public get parent() {
-    return this.formOptions.parent;
+  public get path() {
+    return this.formOptions.path;
   }
 
   @observable.ref private accessor file: (File & { hash: string }) | undefined;
 
+  @observable public accessor hasFile = false;
+
   public readonly duplicatedNotesQuery = createQuery(
     () => this.remote.note.query.query({ fileHash: this.file!.hash }),
     {
-      options: () => ({
-        queryKey: ['notes', { fileHash: this.file?.hash }],
-        enabled: Boolean(this.file),
-      }),
+      queryKey: () => ['notes', { fileHash: this.file?.hash }],
+      options: () => ({ enabled: Boolean(this.file) }),
     },
   );
 
   @action
-  public async handleFileSelected(file?: File) {
+  public async setFile(file?: File) {
+    this.hasFile = Boolean(file);
+
     if (!file) {
       if (this.get('title') === this.file?.name) {
         this.set('title', undefined);
@@ -78,7 +82,7 @@ export default class MaterialForm extends Form<MaterialFormField> {
 
     this.formOptions.onSubmit({
       fileId: newFile.id,
-      parentId: this.formOptions.parent?.id,
+      parentId: last(this.formOptions.path)?.id,
       ...this.get(),
     });
   }

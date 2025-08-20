@@ -47,10 +47,13 @@ export default function TreeView() {
           onItemTitleClick={handleItemClick}
           treeView={tree}
           shouldRenderIcon={shouldRenderIcon}
-          contextMenu={() => [
+          contextMenu={(node) => [
             { label: '移动至...', key: 'move' },
             { label: '更改图标', key: 'icon' },
-            { label: '删除', key: 'delete' },
+            'separator',
+            { label: node.value?.isStar ? '取消收藏' : '收藏', key: 'star' },
+            'separator',
+            { label: '删除', key: 'delete', className: 'text-feedback-danger' },
           ]}
           renderOperation={(node) => (
             <AddButton

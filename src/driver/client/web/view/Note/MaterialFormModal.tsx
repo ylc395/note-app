@@ -1,6 +1,9 @@
 import { FileUpload, Field } from '@ark-ui/solid';
-import { For } from 'solid-js/web';
+import { For, Show } from 'solid-js/web';
 import assert from 'assert';
+import { last } from 'lodash-es';
+import { FileIcon, FilePlusIcon, XIcon } from 'lucide-solid';
+import { createMemo } from 'solid-js';
 
 import NoteService from '#domain/client/app/service/NoteService';
 import container from '#utils/singletonContainer';
@@ -8,10 +11,11 @@ import Modal from '#web/components/Modal';
 
 export default function MaterialFormModal() {
   const noteService = container.resolve(NoteService);
+  const duplicatedNotes = createMemo(() => noteService.materialForm?.duplicatedNotesQuery.result.data || []);
 
-  async function uploadFile(file?: File) {
+  async function handleFileSelected(file?: File) {
     assert(noteService.materialForm);
-    noteService.materialForm.handleFileSelected(
+    noteService.materialForm.setFile(
       file && {
         path: window.electronUtils?.getFilePath(file),
         data: await file.arrayBuffer(),
@@ -28,58 +32,98 @@ export default function MaterialFormModal() {
       onClose={noteService.toggleMaterialForm}
       closeOnInteractOutside={false}
     >
-      <div>
-        位于<span class="italic">{noteService.materialForm?.parent?.title ?? '根目录'}</span>下
-      </div>
-      <form class="space-y-4">
+      <form class="space-y-4 form">
+        <Field.Root>
+          <Field.Label>位于</Field.Label>
+          <span class="text-sm" title={noteService.materialForm?.path?.map(({ title }) => title).join('/')}>
+            {last(noteService.materialForm?.path)?.title || '根目录'}
+          </span>
+        </Field.Root>
         <Field.Root>
           <Field.Label>标题</Field.Label>
           <Field.Input
-            class="border"
+            class="input"
             value={noteService.materialForm?.get('title') ?? ''}
             onInput={(e) => noteService.materialForm?.set('title', e.target.value)}
           />
         </Field.Root>
         <Field.Root>
-          <Field.Label>来源（URL）</Field.Label>
-          <Field.Input class="border" />
+          <Field.Label>来源 URL </Field.Label>
+          <Field.Input class="input" />
         </Field.Root>
         <Field.Root>
           <Field.Label>语言</Field.Label>
-          <Field.Input class="border" />
+          <Field.Input class="input" />
         </Field.Root>
         <Field.Root>
-          <FileUpload.Root class="border text-center" onFileChange={({ acceptedFiles: [file] }) => uploadFile(file)}>
-            <FileUpload.Label>上传本地文件</FileUpload.Label>
-            <FileUpload.Dropzone>可拖拽至此</FileUpload.Dropzone>
-            <FileUpload.Trigger>点击选择</FileUpload.Trigger>
-            <FileUpload.ItemGroup>
-              <FileUpload.Context>
-                {(context) => (
-                  <For each={context().acceptedFiles}>
+          <Field.Label class="self-start required">文件</Field.Label>
+          <div>
+            <FileUpload.Root
+              class="border border-border-primary rounded-lg h-36 flex items-center justify-center flex-col text-text-secondary"
+              onFileChange={({ acceptedFiles: [file] }) => handleFileSelected(file)}
+            >
+              <Show
+                when={noteService.materialForm?.hasFile}
+                fallback={
+                  <FileUpload.Dropzone class="text-sm w-full h-full flex flex-col items-center justify-center cursor-pointer">
+                    <FilePlusIcon class="w-10 h-10 mb-stack-s stroke-1" />
+                    <p>点击上传文件</p>
+                    <p>可拖拽至此</p>
+                  </FileUpload.Dropzone>
+                }
+              >
+                <FileUpload.ItemGroup class="text-sm">
+                  <FileUpload.Context>
                     {(file) => (
-                      <FileUpload.Item file={file}>
-                        <FileUpload.ItemPreview type="image/*">
-                          <FileUpload.ItemPreviewImage />
-                        </FileUpload.ItemPreview>
-                        <FileUpload.ItemPreview type=".*">Any Icon</FileUpload.ItemPreview>
-                        <FileUpload.ItemName />
-                        <FileUpload.ItemSizeText />
-                        <FileUpload.ItemDeleteTrigger>X</FileUpload.ItemDeleteTrigger>
-                      </FileUpload.Item>
+                      <For each={file().acceptedFiles}>
+                        {(item) => (
+                          <FileUpload.Item file={item}>
+                            <FileUpload.ItemPreview type="image/*">
+                              <FileUpload.ItemPreviewImage />
+                            </FileUpload.ItemPreview>
+                            <FileUpload.ItemPreview class="mb-stack-md">
+                              <FileIcon class="mx-auto w-10 h-10 stroke-1" />
+                            </FileUpload.ItemPreview>
+                            <div class="flex items-center space-x-stack-s">
+                              <div class="flex items-center">
+                                <FileUpload.ItemName
+                                  title={item.name}
+                                  class="max-w-42 whitespace-nowrap overflow-hidden text-ellipsis"
+                                />
+                                <FileUpload.ItemSizeText class="text-text-tertiary" />
+                              </div>
+                              <FileUpload.ItemDeleteTrigger class="button button-square-tiny">
+                                <XIcon />
+                              </FileUpload.ItemDeleteTrigger>
+                            </div>
+                          </FileUpload.Item>
+                        )}
+                      </For>
                     )}
-                  </For>
-                )}
-              </FileUpload.Context>
-            </FileUpload.ItemGroup>
-            <FileUpload.HiddenInput />
-          </FileUpload.Root>
+                  </FileUpload.Context>
+                </FileUpload.ItemGroup>
+              </Show>
+              <FileUpload.HiddenInput />
+            </FileUpload.Root>
+            <Field.HelperText
+              aria-hidden={duplicatedNotes().length === 0}
+              class={`flex mt-stack-s ${duplicatedNotes().length === 0 ? 'invisible' : ''}`}
+            >
+              该文件已在库中
+            </Field.HelperText>
+          </div>
         </Field.Root>
       </form>
-      <div class="mt-4 text-right space-x-4">
-        <button onClick={() => noteService.toggleMaterialForm()}>取消</button>
-        <button disabled={!noteService.materialForm?.isValid} onClick={() => noteService.materialForm?.submit()}>
-          创建
+      <div class="mt-stack-lg text-right space-x-stack-md flex justify-end">
+        <button class="button  button-lg" onClick={() => noteService.toggleMaterialForm()}>
+          取 消
+        </button>
+        <button
+          class="button button-primary button-lg"
+          disabled={!noteService.materialForm?.isValid}
+          onClick={() => noteService.materialForm?.submit()}
+        >
+          创 建
         </button>
       </div>
     </Modal>

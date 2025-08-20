@@ -22,7 +22,7 @@ export default function ButtonGroup(props: {
     switch (value) {
       case 'file':
         return toggleMaterialForm({
-          parent: node()?.value,
+          path: node()?.ancestors,
           onSubmit: () => {
             node()?.toggleExpand(true);
           },

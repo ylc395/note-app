@@ -12,6 +12,7 @@ import DomainEventBus from '../model/note/EventBus';
 import MaterialForm from '../model/note/MaterialForm';
 import BaseEditor from '../model/note/editor/BaseEditor';
 import TreeView from '../model/note/TreeView';
+import type { EntityPath } from '#domain/shared/model/entity';
 
 export default class NoteService {
   constructor() {
@@ -55,13 +56,13 @@ export default class NoteService {
   };
 
   @action
-  public readonly toggleMaterialForm = (options?: { parent?: NoteVO; onSubmit?: () => void }) => {
+  public readonly toggleMaterialForm = (options?: { path?: EntityPath; onSubmit?: () => void }) => {
     if (this.materialForm) {
       this.materialForm.destroy();
       this.materialForm = undefined;
     } else {
       this.materialForm = new MaterialForm({
-        parent: options?.parent,
+        path: options?.path,
         onSubmit: async (newNote) => {
           await this.createNote(newNote);
           this.toggleMaterialForm();

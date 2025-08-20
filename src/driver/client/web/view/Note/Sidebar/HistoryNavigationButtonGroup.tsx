@@ -58,7 +58,7 @@ export default function HistoryNavigationButtonGroup() {
   const { historyStack } = container.resolve(Workbench);
 
   return (
-    <div class="space-x-1 flex items-center">
+    <div class="flex items-center">
       <HistoryNavigationButton
         disabled={!historyStack.canBackward}
         onClick={() => historyStack.pop(Direction.BACKWARD)}

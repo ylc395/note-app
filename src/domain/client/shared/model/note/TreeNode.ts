@@ -2,7 +2,7 @@ import { action, computed, observable } from 'mobx';
 import { createQuery } from 'mobx-tanstack-query/preset';
 import assert from 'assert';
 
-import type { NoteVO } from '#domain/shared/model/note';
+import { normalizeTitle, type NoteVO } from '#domain/shared/model/note';
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 
@@ -66,6 +66,28 @@ export default class TreeNode {
   private readonly remote = container.resolve(rpcToken);
 
   public parent?: TreeNode;
+
+  public get ancestors() {
+    const nodes: TreeNode[] = [];
+    let current = this.parent;
+
+    while (current) {
+      nodes.unshift(current);
+      current = current.parent;
+    }
+
+    return nodes;
+  }
+
+  @computed
+  public get title() {
+    return this.value ? normalizeTitle(this.value) : '';
+  }
+
+  @computed
+  public get icon() {
+    return this.value?.icon ?? null;
+  }
 
   private readonly options;
 
