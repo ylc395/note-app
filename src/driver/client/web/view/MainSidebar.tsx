@@ -1,21 +1,15 @@
-import { Tabs } from '@ark-ui/solid';
-import {
-  BookTextIcon,
-  ChartColumnIcon,
-  LightbulbIcon,
-  HashIcon,
-  SearchIcon,
-  StarIcon,
-  SettingsIcon,
-  Trash2Icon,
-} from 'lucide-solid';
+import { Tabs, Popover } from '@ark-ui/solid';
+import { Portal } from 'solid-js/web';
+import shell from '#web/infra/shell';
+import { BookTextIcon, LightbulbIcon, HashIcon, SearchIcon, StarIcon, SettingsIcon, Trash2Icon } from 'lucide-solid';
+import Star from './Star';
 import { SidebarTabs } from './UIState';
 
 export default function Sidebar() {
   const menuClassName = 'space-y-stack-s';
   const iconClassName = 'w-6 h-6 stroke-[1.5]';
   const buttonClassName =
-    'relative p-inset-square-md flex justify-center items-center cursor-pointer rounded-lg text-brand-primary opacity-40 data-[selected]:opacity-100';
+    'relative p-inset-square-md flex justify-center items-center cursor-pointer rounded-lg text-brand-primary opacity-40 data-[selected]:opacity-100 data-[state="open"]:opacity-100';
 
   return (
     <div class="flex flex-col h-screen bg-surface-secondary relative overflow-auto flex-shrink-0 border-r-border-secondary border-r py-inset-square-md">
@@ -47,9 +41,22 @@ export default function Sidebar() {
       />
       <ul class={`${menuClassName} mt-stack-md pt-stack-md border-t border-t-border-secondary`}>
         <li>
-          <a class={buttonClassName}>
-            <StarIcon class={iconClassName} />
-          </a>
+          <Popover.Root lazyMount unmountOnExit positioning={{ placement: 'right-start' }}>
+            <Popover.Trigger
+              asChild={(childProps) => (
+                <a class={buttonClassName} {...childProps()}>
+                  <StarIcon class={iconClassName} />
+                </a>
+              )}
+            />
+            <Portal mount={shell.appRoot}>
+              <Popover.Positioner>
+                <Popover.Content>
+                  <Star />
+                </Popover.Content>
+              </Popover.Positioner>
+            </Portal>
+          </Popover.Root>
         </li>
         <li>
           <a class={buttonClassName}>
@@ -59,11 +66,6 @@ export default function Sidebar() {
         <li>
           <a class={buttonClassName}>
             <SearchIcon class={iconClassName} />
-          </a>
-        </li>
-        <li>
-          <a class={buttonClassName}>
-            <ChartColumnIcon class={iconClassName} />
           </a>
         </li>
       </ul>

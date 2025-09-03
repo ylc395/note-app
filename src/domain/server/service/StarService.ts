@@ -28,7 +28,9 @@ export default class StarService extends BaseService {
   public async query() {
     const stars = await this.repo.stars.findAll({ isAvailableOnly: true });
 
-    return this.toVO(stars);
+    return (await this.toVO(stars)).sort(
+      ({ createdAt: createdAt1 }, { createdAt: createdAt2 }) => createdAt2 - createdAt1,
+    );
   }
 
   private async queryOne(entityId: EntityId) {

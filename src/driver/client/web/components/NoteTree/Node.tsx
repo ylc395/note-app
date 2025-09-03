@@ -1,6 +1,6 @@
 import { createEffect, createMemo, createSignal, For, JSX, on, onCleanup, Show, untrack } from 'solid-js';
 import { Key } from '@solid-primitives/keyed';
-import { ChevronDownIcon, ChevronRightIcon, FileTextIcon } from 'lucide-solid';
+import { ChevronDownIcon, ChevronRightIcon, FileTextIcon, StarIcon } from 'lucide-solid';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
@@ -46,6 +46,7 @@ export default function Node(props: Props) {
     'opacity-30': node.isUnselectable,
     'bg-surface-tertiary': (isDropHovering() && !node.isUnselectable) || node.isSelected,
   }));
+  const iconClassName = 'mr-stack-xs p-0 shrink-0 w-4 h-4 inline align-text-bottom';
 
   createEffect(
     on(
@@ -132,29 +133,6 @@ export default function Node(props: Props) {
     node.toggleExpand();
   }
 
-  function renderIcon(node: TreeNode) {
-    if (props.shouldRenderIcon?.(node) === false) {
-      return null;
-    }
-
-    const className = 'mr-stack-xs p-0 shrink-0 w-4 h-4 inline align-text-bottom';
-
-    if (node.icon) {
-      return null; // todo: 改成图标
-    }
-
-    if (!node.value?.mimeType) {
-      return <FileTextIcon class={className} />;
-    }
-
-    switch (node.value.mimeType) {
-      case MimeTypes.PDF:
-        return <FileTextIcon class={className} />;
-      default:
-        break;
-    }
-  }
-
   function renderItem(render: (props: JSX.HTMLAttributes<HTMLDivElement>) => JSX.Element) {
     function handleOpenChange({ open }: { open: boolean }) {
       if (!open && node.isSelected && props.treeView.tree.selectedNodeIds.size === 1) {
@@ -180,7 +158,7 @@ export default function Node(props: Props) {
           <Menu.ContextTrigger asChild={(childProps) => render(childProps())} />
           <Portal mount={shell.appRoot}>
             <Menu.Positioner onClick={(e) => e.stopPropagation()}>
-              <Menu.Content class="menu text-text-secondary">
+              <Menu.Content class="menu min-w-28 text-text-secondary">
                 <Show when={props.treeView.tree.selectedNodeIds.size > 1}>
                   <div class="font-bold p-inset-square-s">共选中 {props.treeView.tree.selectedNodeIds.size} 项</div>
                 </Show>
@@ -205,6 +183,38 @@ export default function Node(props: Props) {
     return render({});
   }
 
+  function renderInline() {
+    function renderIcon(node: TreeNode) {
+      if (props.shouldRenderIcon?.(node) === false) {
+        return null;
+      }
+
+      if (node.icon) {
+        return null; // todo: 改成图标
+      }
+
+      if (!node.value?.mimeType) {
+        return <FileTextIcon class={iconClassName} />;
+      }
+
+      switch (node.value.mimeType) {
+        case MimeTypes.PDF:
+          return <FileTextIcon class={iconClassName} />;
+        default:
+          break;
+      }
+    }
+
+    return (
+      <>
+        {renderIcon(node)}
+        {node.value?.isStar && <StarIcon stroke-width={0} fill="yellow" class={iconClassName} />}
+        {IS_DEV && `${node.value!.id.slice(0, 4)}+`}
+        {node.title}
+      </>
+    );
+  }
+
   return (
     <Show
       when={!node.isLeaf}
@@ -217,9 +227,7 @@ export default function Node(props: Props) {
               class={`${itemTextClassName} ml-5`} // ml 和展开图标的尺寸一致
               style={{ 'padding-left': `${paddingLeft()}px` }}
             >
-              {renderIcon(node)}
-              {IS_DEV && `${node.value!.id.slice(0, 4)}+`}
-              {node.title}
+              {renderInline()}
             </div>
           ))}
           {props.renderOperation?.(node)}
@@ -242,9 +250,7 @@ export default function Node(props: Props) {
           </button>
           {renderItem((renderProps) => (
             <div {...renderProps} class={itemTextClassName}>
-              {renderIcon(node)}
-              {IS_DEV && `${node.value!.id.slice(0, 4)}+`}
-              {node.title}
+              {renderInline()}
             </div>
           ))}
           {/** 行操作区 */}

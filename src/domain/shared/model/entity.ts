@@ -17,12 +17,13 @@ interface StandaloneEntity {
   body?: string;
   icon: string | null;
   file?: FileVO;
+  path?: EntityPath;
   createdAt: number;
   updatedAt: number;
 }
 
 export interface Entity extends StandaloneEntity {
-  main?: StandaloneEntity; // Example: the material of an annotation;
+  main?: StandaloneEntity; // Example: the note of an annotation;
 }
 
 export type EntityPath = Array<Pick<Entity, 'id' | 'title' | 'icon'>>;

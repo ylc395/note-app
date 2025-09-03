@@ -10,7 +10,7 @@ export default class SqliteStarRepository extends BaseRepository implements Star
   private readonly tableName = schema.tableName;
 
   public async createOne(star: Star) {
-    await this.db.insertInto(this.tableName).values(star);
+    await this.db.insertInto(this.tableName).values(star).execute();
   }
 
   public async findAll(q?: StarQuery) {

@@ -1,16 +1,18 @@
 import { ShrinkIcon } from 'lucide-solid';
+import { Show } from 'solid-js';
 import NoteService from '#domain/client/app/service/NoteService';
+import StarService from '#domain/client/app/service/StarService';
 import container from '#utils/singletonContainer';
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
-
 import BaseTreeView from '#web/components/NoteTree';
+import { IconDisplayMode } from '#domain/client/app/model/note/TreeView';
+
 import AddButton from './AddButton';
 import SettingButton from './SettingButton';
-import { IconDisplayMode } from '#domain/client/app/model/note/TreeView';
-import { Show } from 'solid-js';
 
 export default function TreeView() {
   const { workbench, exploreTreeView: tree } = container.resolve(NoteService);
+  const { star, unstar } = container.resolve(StarService);
 
   function handleItemClick(node: TreeNode) {
     if (!node.value) {
@@ -30,6 +32,16 @@ export default function TreeView() {
     return iconMode === IconDisplayMode.All;
   }
 
+  function handleContextMenuClick(key: string) {
+    const { selectedNode } = tree.tree;
+    switch (key) {
+      case 'star':
+        return selectedNode.value?.isStar ? unstar(selectedNode.id) : star(selectedNode.id);
+      default:
+        break;
+    }
+  }
+
   return (
     <div class="grow min-h-0 flex flex-col">
       <div class="mb-stack-s flex justify-between items-center">
@@ -47,11 +59,13 @@ export default function TreeView() {
           onItemTitleClick={handleItemClick}
           treeView={tree}
           shouldRenderIcon={shouldRenderIcon}
+          onContextMenuClick={handleContextMenuClick}
           contextMenu={(node) => [
             { label: '移动至...', key: 'move' },
             { label: '更改图标', key: 'icon' },
-            'separator',
-            { label: node.value?.isStar ? '取消收藏' : '收藏', key: 'star' },
+            ...(tree.tree.selectedNodeIds.size === 1
+              ? (['separator', { label: node.value?.isStar ? '取消收藏' : '收藏', key: 'star' }] as const)
+              : []),
             'separator',
             { label: '删除', key: 'delete', className: 'text-feedback-danger' },
           ]}

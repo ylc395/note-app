@@ -7,7 +7,7 @@ import { normalizeTitle as normalizeNoteTitle } from '#domain/shared/model/note.
 import { normalizeTitle as normalizeMemoTitle } from '#domain/server/model/memo.js';
 
 export default class EntityService extends BaseService {
-  public static getReadableTitle(entity: Entity) {
+  private static getReadableTitle(entity: Entity) {
     const mappers = {
       [EntityTypes.Note]: normalizeNoteTitle,
       [EntityTypes.Memo]: normalizeMemoTitle,
@@ -36,16 +36,20 @@ export default class EntityService extends BaseService {
       ...Object.values(notesOfAnnotations).map(({ id }) => id),
     ];
 
-    const files = noteIds ? await this.repo.notes.findFiles(noteIds) : {};
+    const files = await this.repo.notes.findFiles(noteIds);
+    const paths = await this.getPaths(noteIds);
 
     const normalizedEntities: Entity[] = entities.map((entity) => {
       const main = notesOfAnnotations[entity.id];
 
       return {
         ...entity,
+        title: EntityService.getReadableTitle(entity),
         file: files[entity.id],
+        path: paths[entity.id],
         main: main && {
-          ...pick(main, ['id', 'icon', 'createdAt', 'updatedAt', 'title']),
+          ...pick(main, ['id', 'icon', 'createdAt', 'updatedAt']),
+          title: normalizeNoteTitle(main),
           type: EntityTypes.Note,
           body: main.body,
           file: files[main.id],
@@ -65,16 +69,11 @@ export default class EntityService extends BaseService {
 
   public async getPaths(ids: EntityId[]) {
     const ancestors = await this.repo.entities.findAncestors(ids);
-    const files = await this.repo.notes.findFiles(
-      Object.values(ancestors).flatMap((entities) => entities.map(({ id }) => id)),
-    );
-
     const paths = mapValues(ancestors, (entities) =>
       entities.map((entity) => ({
         id: entity.id,
         title: EntityService.getReadableTitle(entity),
         icon: entity.icon,
-        mimeType: files[entity.id]?.mimeType ?? null,
       })),
     );
 

@@ -3,7 +3,7 @@ import { action, computed, observable, reaction, runInAction, when } from 'mobx'
 import assert from 'assert';
 import { compact } from 'lodash-es';
 
-import type { NoteVO, NotePatchDTO } from '#domain/shared/model/note';
+import type { NoteVO } from '#domain/shared/model/note';
 import { arrayOf, type MaybeArray } from '#utils/collection';
 
 import PersistedMap from '../abstract/PersistedMap';
@@ -30,6 +30,14 @@ export default class Tree {
   private readonly uiState;
 
   @observable public accessor selectedNodeIds = new Set<TreeNode['id']>();
+
+  @computed public get selectedNode() {
+    const id = Array.from(this.selectedNodeIds)[0];
+    const node = id && this.get(id);
+    assert(node);
+
+    return node;
+  }
 
   private readonly highlightedNodeIds = new Set<TreeNode['id']>();
 
@@ -173,7 +181,7 @@ export default class Tree {
     return newNode;
   }
 
-  public updateNode({ id, parentId, ...patch }: NotePatchDTO & { id: NoteVO['id'] }) {
+  public updateNode({ id, parentId, ...patch }: Partial<NoteVO> & { id: NoteVO['id'] }) {
     const node = this.get(id);
     const oldParentNode = node?.parent;
     const newParentNode = parentId !== undefined ? this.get(parentId) : undefined;

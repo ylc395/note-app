@@ -161,7 +161,7 @@ export default class SqliteEntityRepository extends BaseRepository implements En
         eb
           .case()
           .when(`${tableName}.type`, '=', EntityTypes.Note)
-          .then('title')
+          .then(eb.ref('title'))
           .else(eb.fn<string>('substr', [`${tableName}.title`, eb.val(0), eb.val(30)]))
           .end()
           .as('title'),

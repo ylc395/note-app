@@ -6,20 +6,27 @@ import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import type { DuplicatedNoteDTO, NewNoteDTO, NotePatchDTO, NoteVO } from '#domain/shared/model/note';
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
 import { arrayOf, type MaybeArray } from '#utils/collection';
+import type { EntityPath } from '#domain/shared/model/entity';
 
 import Workbench from '../model/Workbench';
 import DomainEventBus from '../model/note/EventBus';
 import MaterialForm from '../model/note/MaterialForm';
 import BaseEditor from '../model/note/editor/BaseEditor';
 import TreeView from '../model/note/TreeView';
-import type { EntityPath } from '#domain/shared/model/entity';
+import StarEventBus from '../model/star/EventBus';
 
 export default class NoteService {
   constructor() {
     this.eventBus.on(DomainEventBus.eventNames.Created, this.workbench.open.bind(this.workbench));
+
+    this.starEventBus.on(StarEventBus.eventNames.Changed, ({ entityId, isStar }) =>
+      this.exploreTreeView.tree.updateNode({ id: entityId, isStar }),
+    );
   }
 
   private readonly eventBus = container.resolve(DomainEventBus);
+
+  private readonly starEventBus = container.resolve(StarEventBus);
 
   private readonly remote = container.resolve(rpcToken);
 
