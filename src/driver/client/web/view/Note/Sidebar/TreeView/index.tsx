@@ -9,9 +9,10 @@ import { IconDisplayMode } from '#domain/client/app/model/note/TreeView';
 
 import AddButton from './AddButton';
 import SettingButton from './SettingButton';
+import assert from 'assert';
 
 export default function TreeView() {
-  const { workbench, exploreTreeView: tree } = container.resolve(NoteService);
+  const { workbench, exploreTreeView: tree, createNote } = container.resolve(NoteService);
   const { star, unstar } = container.resolve(StarService);
 
   function handleItemClick(node: TreeNode) {
@@ -34,9 +35,13 @@ export default function TreeView() {
 
   function handleContextMenuClick(key: string) {
     const { selectedNode } = tree.tree;
+    assert(selectedNode.value);
+
     switch (key) {
       case 'star':
-        return selectedNode.value?.isStar ? unstar(selectedNode.id) : star(selectedNode.id);
+        return selectedNode.value.isStar ? unstar(selectedNode.id) : star(selectedNode.id);
+      case 'duplicate':
+        return createNote({ from: selectedNode.value.id });
       default:
         break;
     }
@@ -64,7 +69,11 @@ export default function TreeView() {
             { label: '移动至...', key: 'move' },
             { label: '更改图标', key: 'icon' },
             ...(tree.tree.selectedNodeIds.size === 1
-              ? (['separator', { label: node.value?.isStar ? '取消收藏' : '收藏', key: 'star' }] as const)
+              ? [
+                  { label: '复制', key: 'duplicate' },
+                  'separator' as const,
+                  { label: node.value?.isStar ? '取消收藏' : '收藏', key: 'star' },
+                ]
               : []),
             'separator',
             { label: '删除', key: 'delete', className: 'text-feedback-danger' },

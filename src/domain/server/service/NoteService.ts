@@ -69,7 +69,7 @@ export default class NoteService extends BaseService {
 
     return await this.repo.notes.create({
       ...pick(targetNote, ['body', 'icon', 'parentId', 'sourceUrl', 'fileId']),
-      title: `${normalizeTitle(targetNote)}-副本`,
+      title: targetNote.title ? `${targetNote.title}-副本` : `${normalizeTitle(targetNote)}-副本`,
       id: EntityService.generateId(),
       updatedAt: now,
       createdAt: now,

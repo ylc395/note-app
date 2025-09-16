@@ -36,20 +36,10 @@ export default class NoteService {
 
   public readonly exploreTreeView = new TreeView();
 
-  public readonly createNote = async (note: NewNoteDTO) => {
+  public readonly createNote = async (note: NewNoteDTO | DuplicatedNoteDTO) => {
     const newNote = await this.remote.note.create.mutate(note);
     this.eventBus.emit(DomainEventBus.eventNames.Created, newNote);
     this.workbench.open(newNote);
-  };
-
-  @action
-  public readonly duplicate = async (params: DuplicatedNoteDTO, open?: boolean) => {
-    const newNote = await this.remote.note.create.mutate(params);
-    this.eventBus.emit(DomainEventBus.eventNames.Created, newNote);
-
-    if (open) {
-      this.workbench.open(newNote);
-    }
   };
 
   public readonly move = async (notes: MaybeArray<NoteVO>, targetId: NotePatchDTO['parentId']) => {

@@ -36,7 +36,7 @@ export type NewNoteDTO = Partial<Pick<Note, 'body' | 'fileId' | 'icon' | 'parent
 /**
  * @api
  */
-export type NoteDTO = NewNoteDTO | DuplicatedNoteDTO;
+export type NoteDTO = DuplicatedNoteDTO | NewNoteDTO; // 这两个类型的顺序必须这样安排。NewNoteDTO 若在前，任何对象传过来都会满足，并被 strip 为一个 {} 对象
 
 /**
  * @api

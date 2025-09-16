@@ -36,7 +36,7 @@ export const newNoteDTOSchema = noteSchema.pick({
   "sourceUrl": true,
   "title": true
 }).partial();
-export const noteDTOSchema = z.union([newNoteDTOSchema, duplicatedNoteDTOSchema]);
+export const noteDTOSchema = z.union([duplicatedNoteDTOSchema, newNoteDTOSchema]);
 export const clientNoteQuerySchema = z.object({
   id: z.array(noteSchema.shape["id"]).optional(),
   parentId: z.union([entityParentIdSchema, z.array(z.string())]).optional(),
