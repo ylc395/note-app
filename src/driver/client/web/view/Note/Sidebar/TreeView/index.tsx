@@ -1,7 +1,11 @@
 import { ShrinkIcon } from 'lucide-solid';
 import { Show } from 'solid-js';
+import assert from 'assert';
 import NoteService from '#domain/client/app/service/NoteService';
 import StarService from '#domain/client/app/service/StarService';
+import RecyclableService from '#domain/client/app/service/RecyclableService';
+
+import { EntityTypes } from '#domain/shared/model/entity';
 import container from '#utils/singletonContainer';
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
 import BaseTreeView from '#web/components/NoteTree';
@@ -9,11 +13,11 @@ import { IconDisplayMode } from '#domain/client/app/model/note/TreeView';
 
 import AddButton from './AddButton';
 import SettingButton from './SettingButton';
-import assert from 'assert';
 
 export default function TreeView() {
   const { workbench, exploreTreeView: tree, createNote } = container.resolve(NoteService);
   const { star, unstar } = container.resolve(StarService);
+  const { put } = container.resolve(RecyclableService);
 
   function handleItemClick(node: TreeNode) {
     if (!node.value) {
@@ -34,7 +38,7 @@ export default function TreeView() {
   }
 
   function handleContextMenuClick(key: string) {
-    const { selectedNode } = tree.tree;
+    const { selectedNode, selectedNodeIds } = tree.tree;
     assert(selectedNode.value);
 
     switch (key) {
@@ -42,6 +46,8 @@ export default function TreeView() {
         return selectedNode.value.isStar ? unstar(selectedNode.id) : star(selectedNode.id);
       case 'duplicate':
         return createNote({ from: selectedNode.value.id });
+      case 'delete':
+        return put(Array.from(selectedNodeIds), EntityTypes.Note);
       default:
         break;
     }
@@ -70,9 +76,9 @@ export default function TreeView() {
             { label: '更改图标', key: 'icon' },
             ...(tree.tree.selectedNodeIds.size === 1
               ? [
-                  { label: '复制', key: 'duplicate' },
-                  'separator' as const,
                   { label: node.value?.isStar ? '取消收藏' : '收藏', key: 'star' },
+                  'separator' as const,
+                  { label: '复制', key: 'duplicate' },
                 ]
               : []),
             'separator',

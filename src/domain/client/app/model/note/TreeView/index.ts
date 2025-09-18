@@ -6,10 +6,13 @@ import Tree from '#domain/client/shared/model/note/Tree';
 import container from '#utils/singletonContainer';
 import type { NoteVO } from '#domain/shared/model/note';
 import DomainEventBus from '#domain/client/app/model/note/EventBus';
+import StarEventBus from '../../star/EventBus';
+import RecyclableEventBus, { type PutEvent } from '../../recyclable/EventBus';
 
 import { arrayOf, type MaybeArray } from '#utils/collection';
 import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
 import Workbench from '../../Workbench';
+import { EntityTypes } from '#domain/shared/model/entity';
 
 export enum SortBy {
   TitleAsc = 'titleAsc',
@@ -37,8 +40,18 @@ export default class TreeView {
       this.tree.updateNode.bind(this.tree),
     );
 
+    this.starEventBus.on(StarEventBus.eventNames.Changed, ({ entityId, isStar }) =>
+      this.tree.updateNode({ id: entityId, isStar }),
+    );
+
+    this.recyclableEventBus.on(RecyclableEventBus.eventNames.Put, this.handleRecyclablePut);
+
     autorun(this.autoHighlight.bind(this));
   }
+
+  private readonly starEventBus = container.resolve(StarEventBus);
+
+  private readonly recyclableEventBus = container.resolve(RecyclableEventBus);
 
   private readonly domainEventBus = container.resolve(DomainEventBus);
 
@@ -69,6 +82,16 @@ export default class TreeView {
       }
     }
   }
+
+  private readonly handleRecyclablePut = ({ entityType, entityId }: PutEvent) => {
+    if (entityType !== EntityTypes.Note) {
+      return;
+    }
+
+    for (const id of entityId) {
+      this.tree.remove(id);
+    }
+  };
 
   private autoHighlight() {
     this.tree.highlight(this.workbench.currentEditor?.noteId ?? null);

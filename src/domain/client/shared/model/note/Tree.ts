@@ -203,4 +203,20 @@ export default class Tree {
       newParentNode?.childrenQuery.invalidate();
     }
   }
+
+  public remove(id: TreeNode['id']) {
+    const node = this.get(id);
+
+    if (!node) {
+      return;
+    }
+
+    node.destroy();
+    this.selectedNodeIds.delete(id);
+    this.expandedNodeIds.delete(id);
+    this.highlightedNodeIds.delete(id);
+    this.unselectableNodeIds.delete(id);
+
+    node.parent?.childrenQuery.refetch();
+  }
 }
