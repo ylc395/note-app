@@ -1,14 +1,7 @@
 import type { EntityId } from '#domain/shared/model/entity.js';
-import type { TextLocation, TopicVO } from '#domain/shared/model/content.js';
+import type { TextLocation } from '#domain/shared/model/content.js';
 
 export * from '#domain/shared/model/content.js';
-
-export interface TopicRecord {
-  entityId: EntityId;
-  name: string;
-  location: TextLocation;
-  level: TopicVO['level'];
-}
 
 export enum LinkTargetType {
   Entity,

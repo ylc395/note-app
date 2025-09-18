@@ -4,6 +4,6 @@
 */
 import { z } from "zod";
 import { EntityTypes } from "../../model/entity.js";
-export const entityIdSchema = z.string();
 export const entityTypesSchema = z.nativeEnum(EntityTypes);
+export const entityIdSchema = z.string();
 export const entityParentIdSchema = z.union([entityIdSchema, z.null()]);

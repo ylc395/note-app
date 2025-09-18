@@ -8,8 +8,18 @@ export default function Star() {
 
   return (
     <div class="bg-surface-secondary shadow-2xl rounded-xl p-inset-square-md text-sm w-48 border-border-primary border">
-      <h2>收藏</h2>
-      <For each={starList.result.data}>{(star) => <div>{star.entity.title}</div>}</For>
+      <h2 class="font-bold mb-stack-s">收藏夹</h2>
+      <Show when={starList.result.data}>
+        {(data) => (
+          <Show when={data().length > 0} fallback={<div>暂无收藏</div>}>
+            <div class="max-h-48 overflow-auto space-y-stack-s">
+              <For each={data()}>
+                {(star) => <div class="overflow-hidden text-ellipsis whitespace-nowrap">{star.entity.title}</div>}
+              </For>
+            </div>
+          </Show>
+        )}
+      </Show>
     </div>
   );
 }

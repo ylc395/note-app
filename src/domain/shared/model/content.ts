@@ -1,4 +1,4 @@
-import type { Entity, EntityTypes } from './entity.js';
+import type { Entity } from './entity.js';
 
 export interface TextLocation {
   start: number;
@@ -25,22 +25,3 @@ export interface ExternalReference {
   url: string;
   icon: string | null;
 }
-
-export interface TopicVO {
-  name: string;
-  level: 1 | 2; // 1 - 全局；2 - 模块
-  entities: Array<{
-    entity: Entity;
-    sources: TextLocation[];
-  }>;
-}
-
-/**
- * @api
- */
-export interface TopicQuery {
-  type?: EntityTypes;
-  level?: 1 | 2;
-}
-
-export const TOPIC_SEPARATOR = '/';

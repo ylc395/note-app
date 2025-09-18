@@ -5,7 +5,7 @@ import { keyBy, without } from 'lodash-es';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import container from '#utils/singletonContainer';
 import type { EntityTypes } from '#domain/shared/model/entity';
-import { TOPIC_SEPARATOR, type TopicVO } from '#domain/shared/model/content';
+import { TOPIC_SEPARATOR, type TopicVO } from '#domain/shared/model/topic';
 
 export interface TopicNode {
   id: string;

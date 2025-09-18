@@ -1,9 +1,12 @@
 import { Tabs, Popover } from '@ark-ui/solid';
-import { Portal } from 'solid-js/web';
-import shell from '#web/infra/shell';
 import { BookTextIcon, LightbulbIcon, HashIcon, SearchIcon, StarIcon, SettingsIcon, Trash2Icon } from 'lucide-solid';
-import Star from './Star';
+import { Portal } from 'solid-js/web';
+
+import shell from '#web/infra/shell';
+
 import { SidebarTabs } from './UIState';
+import Star from './Star';
+import Topic from './Topic';
 
 export default function Sidebar() {
   const menuClassName = 'space-y-stack-s';
@@ -59,9 +62,22 @@ export default function Sidebar() {
           </Popover.Root>
         </li>
         <li>
-          <a class={buttonClassName}>
-            <HashIcon class={iconClassName} />
-          </a>
+          <Popover.Root lazyMount unmountOnExit positioning={{ placement: 'right-start' }}>
+            <Popover.Trigger
+              asChild={(childProps) => (
+                <a {...childProps()} class={buttonClassName}>
+                  <HashIcon class={iconClassName} />
+                </a>
+              )}
+            />
+            <Portal mount={shell.appRoot}>
+              <Popover.Positioner>
+                <Popover.Content>
+                  <Topic />
+                </Popover.Content>
+              </Popover.Positioner>
+            </Portal>
+          </Popover.Root>
         </li>
         <li>
           <a class={buttonClassName}>

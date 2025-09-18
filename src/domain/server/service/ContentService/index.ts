@@ -1,7 +1,7 @@
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import type { Root } from 'mdast';
 import { EXIT, SKIP, visit } from 'unist-util-visit';
-import { compact, memoize, minBy, size, uniq } from 'lodash-es';
+import { compact, memoize, size, uniq, uniqBy } from 'lodash-es';
 import { is } from 'unist-util-is';
 import { toString } from 'mdast-util-to-string';
 import escapeStringRegexp from 'escape-string-regexp';
@@ -9,7 +9,6 @@ import {
   getFragmentDirectives,
   parseFragmentDirectives,
 } from '#third-party/text-fragments-polyfill/text-fragment-utils';
-import TTLCache from '@isaacs/ttlcache';
 
 import {
   mdastExtension as topicExtension,
@@ -18,14 +17,13 @@ import {
 import container from '#utils/singletonContainer.js';
 import type { Entity, EntityId } from '#domain/shared/model/entity.js';
 import {
-  type TopicVO,
   type Snippet,
   type TextLocation,
   type ExternalReference,
   type LinkVO,
   LinkTargetType,
-  type TopicQuery,
 } from '#domain/server/model/content.js';
+import type { TopicQuery, TopicVO } from '#domain/shared/model/topic.js';
 
 import BaseService from '../BaseService.js';
 import EntityService from '../EntityService.js';
@@ -60,7 +58,6 @@ export default class ContentService extends BaseService {
     const topicRecords = await this.repo.contents.findAllTopics({
       isAvailableOnly: true,
       entityType: params?.type,
-      level: params?.level,
     });
     const allTopicsMap = Object.groupBy(topicRecords, ({ name }) => name);
 
@@ -68,15 +65,12 @@ export default class ContentService extends BaseService {
     const entities = await this.entityService.getEntities(entityIds);
 
     const topicVOs: TopicVO[] = Object.entries(allTopicsMap).map(([name, topicRecords]) => {
-      const topicGroupedByEntity = Object.groupBy(topicRecords || [], ({ entityId }) => entityId);
-      const level = minBy(topicRecords, ({ level }) => level)?.level ?? 1;
+      const uniqEntityRecord = uniqBy(topicRecords, ({ entityId }) => entityId);
 
-      const sourceEntities: TopicVO['entities'] = Object.entries(topicGroupedByEntity).map(([entityId, records]) => ({
-        entity: entities[entityId]!,
-        sources: records!.map((record) => record.location),
-      }));
-
-      return { entities: sourceEntities, name, level };
+      return {
+        name,
+        entities: compact(uniqEntityRecord.map((record) => entities[record.entityId])),
+      };
     });
 
     return topicVOs;
@@ -316,9 +310,5 @@ export default class ContentService extends BaseService {
 
   public static markdownToPlain(md: string) {
     return toString(this.parseMarkdown(md));
-  }
-
-  static {
-    this.parseMarkdown.cache = new TTLCache({ ttl: 5000 });
   }
 }

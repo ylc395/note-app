@@ -53,6 +53,10 @@
     scrollbar-width: thin;
   }
 
+  *:focus {
+    outline: none;
+  }
+
   button {
     outline: none;
   }

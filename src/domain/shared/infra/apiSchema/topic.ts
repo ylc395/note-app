@@ -6,5 +6,5 @@ import { z } from "zod";
 import { entityTypesSchema } from "./entity.js";
 export const topicQuerySchema = z.object({
   type: entityTypesSchema.optional(),
-  level: z.union([z.literal(1), z.literal(2)]).optional()
+  name: z.string().optional()
 });

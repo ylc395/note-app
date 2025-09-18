@@ -3,7 +3,7 @@ import type { Node as UnistNode } from 'mdast';
 import { is } from 'unist-util-is';
 
 import type { Topic as TopicNode } from '#domain/shared/infra/markdown/syntax/topic.js';
-import type { TopicRecord } from '#domain/server/model/content.js';
+import type { TopicRecord } from '#domain/server/model/topic.js';
 import Extractor from './Extractor.js';
 
 export default class TopicExtractor extends Extractor {
@@ -19,7 +19,6 @@ export default class TopicExtractor extends Extractor {
     assert(typeof start === 'number' && typeof end === 'number', 'invalid location');
 
     this.topics.push({
-      level: (node as TopicNode).level,
       name: (node as TopicNode).value,
       location: { start, end },
       entityId: this.entityId,

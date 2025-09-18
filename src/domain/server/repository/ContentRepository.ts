@@ -1,4 +1,5 @@
-import type { LinkRecord, LinkTargetType, TopicRecord } from '#domain/server/model/content.js';
+import type { LinkRecord, LinkTargetType } from '#domain/server/model/content.js';
+import type { TopicRecord } from '#domain/server/model/topic.js';
 import type { EntityId, EntityTypes } from '#domain/shared/model/entity.js';
 
 export interface LinkQuery {
@@ -11,7 +12,6 @@ export interface LinkQuery {
 
 export interface TopicQuery {
   entityType?: EntityTypes;
-  level?: TopicRecord['level'];
   isAvailableOnly?: boolean;
 }
 
