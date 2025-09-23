@@ -4,7 +4,7 @@ import { normalizeTitle } from '#domain/shared/model/note';
 import { Show } from 'solid-js';
 
 export default function DragPreview(props: { treeView: TreeView; node: TreeNode }) {
-  const count = props.treeView.tree.selectedNodeIds.has(props.node.id) ? props.treeView.tree.selectedNodeIds.size : 1;
+  const count = props.treeView.treeNodeSets.selected.has(props.node.id) ? props.treeView.treeNodeSets.selected.size : 1;
 
   return (
     <div class="text-text-secondary bg-surface-tertiary p-inset-square-md text-sm">

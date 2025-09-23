@@ -4,6 +4,7 @@ import { HandIcon } from 'lucide-solid';
 
 import NoteService from '#domain/client/app/service/NoteService';
 import container from '#utils/singletonContainer';
+import { TreeNodeStates } from '#domain/client/app/model/note/TreeView';
 
 export default function DropArea() {
   const { move, exploreTreeView: treeView } = container.resolve(NoteService);
@@ -40,7 +41,7 @@ export default function DropArea() {
   onCleanup(cleanup);
 
   return (
-    <Show when={isDragging() && !treeView.tree.root?.isUnselectable}>
+    <Show when={isDragging() && !treeView.tree?.root.is(TreeNodeStates.Unselectable)}>
       <div
         ref={setDropArea}
         class="border border-border-primary text-text-secondary rounded border-dashed text-xs text-center flex items-center justify-center absolute top-0 right-0 bottom-0 left-2 bg-surface-secondary z-20"

@@ -1,5 +1,5 @@
 import { action, observable } from 'mobx';
-import { compact, isObject } from 'lodash-es';
+import { compact } from 'lodash-es';
 
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
@@ -71,8 +71,8 @@ export default class NoteService {
       return value.value.result.data;
     }
 
-    if (isObject(value) && 'nodes' in value && Array.isArray(value.nodes)) {
-      return compact(value.nodes.map((node) => (node instanceof TreeNode ? node.value : undefined)));
+    if (Array.isArray(value)) {
+      return compact(value.map((node) => (node instanceof TreeNode ? node.value : undefined)));
     }
 
     return undefined;

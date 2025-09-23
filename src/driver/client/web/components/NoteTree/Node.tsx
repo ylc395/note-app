@@ -1,25 +1,22 @@
-import { createEffect, createMemo, createSignal, For, JSX, on, onCleanup, Show, untrack } from 'solid-js';
-import { Key } from '@solid-primitives/keyed';
+import { createMemo, For, JSX, Show } from 'solid-js';
 import { ChevronDownIcon, ChevronRightIcon, FileTextIcon, StarIcon } from 'lucide-solid';
-import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
-import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import { Menu } from '@ark-ui/solid';
-import { Portal, render } from 'solid-js/web';
+import { Portal } from 'solid-js/web';
+import { Key } from '@solid-primitives/keyed';
 
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
-import type { NoteVO } from '#domain/shared/model/note';
-import TreeViewModel from '#domain/client/app/model/note/TreeView';
+import TreeViewModel, { TreeNodeStates } from '#domain/client/app/model/note/TreeView';
 import container from '#utils/singletonContainer';
 import { MimeTypes } from '#domain/shared/model/file';
-import NoteService from '#domain/client/app/service/NoteService';
 import { IS_DEV } from '#domain/shared/infra/env';
 import shell from '#web/infra/shell';
-import DragPreview from './DragPreview';
+import Workbench from '#domain/client/app/model/Workbench';
+
+import useDnd from './useDnd';
 
 export interface Props {
   treeView: TreeViewModel;
-  note: NoteVO;
+  node: TreeNode;
   parent: TreeNode;
   indexPath: number[];
   renderOperation?: (node: TreeNode) => JSX.Element;
@@ -32,119 +29,48 @@ export interface Props {
 }
 
 export default function Node(props: Props) {
-  const { move } = container.resolve(NoteService);
-  const node = props.treeView.tree.getOrCreateNode({ value: props.note, parent: props.parent });
+  const workbench = container.resolve(Workbench);
+  const { isDropHovering, setDropElementRef } = useDnd(props);
 
-  const [dropElementRef, setDropElementRef] = createSignal<HTMLElement>();
-  const [isDropHovering, setIsDropHovering] = createSignal(false);
   const itemClassName =
     'mb-stack-xs rounded cursor-pointer flex group items-center hover:bg-surface-tertiary hover:text-text-secondary px-inset-square-s';
   const itemTextClassName = 'whitespace-nowrap overflow-hidden text-ellipsis py-inset-square-md grow'; // 别弄成 flex，否则文字截断无法生效（只对 inline / block 有效）
   const paddingLeft = createMemo(() => (props.indexPath.length - 1) * 28);
   const itemClassList = createMemo(() => ({
-    'bg-brand-subtle text-brand-secondary': node.isHighlighted && !node.isSelected,
-    'opacity-30': node.isUnselectable,
-    'bg-surface-tertiary': (isDropHovering() && !node.isUnselectable) || node.isSelected,
+    'bg-brand-subtle text-brand-secondary':
+      workbench.currentEditor?.noteId === props.node.id && !props.node.is(TreeNodeStates.Selected),
+    'opacity-30': props.node.is(TreeNodeStates.Unselectable),
+    'bg-surface-tertiary':
+      (isDropHovering() && !props.node.is(TreeNodeStates.Unselectable)) || props.node.is(TreeNodeStates.Selected),
   }));
   const iconClassName = 'mr-stack-xs p-0 shrink-0 w-4 h-4 inline align-text-bottom';
 
-  createEffect(
-    on(
-      () => props.note,
-      (note) => node.setValue(note),
-    ),
-  );
-
-  createEffect(() => {
-    const element = dropElementRef();
-
-    if (!element) {
-      return;
-    }
-
-    const cleanup = untrack(() =>
-      combine(
-        draggable({
-          element,
-          canDrag: () => !node.isRoot,
-          onGenerateDragPreview: ({ nativeSetDragImage }) => {
-            setCustomNativeDragPreview({
-              nativeSetDragImage,
-              render: ({ container }) => {
-                return render(() => <DragPreview treeView={props.treeView} node={node} />, container);
-              },
-            });
-          },
-          onDragStart: () => {
-            if (!props.treeView.tree.selectedNodeIds.has(node.id)) {
-              props.treeView.tree.select(node.id);
-            }
-          },
-          getInitialData: () => {
-            const selectedIds = Array.from(props.treeView.tree.selectedNodeIds);
-
-            return selectedIds.includes(node.id)
-              ? { nodes: props.treeView.tree.get(selectedIds) }
-              : (node as unknown as Record<string, unknown>);
-          },
-        }),
-        dropTargetForElements({
-          element,
-          onDragEnter: () => {
-            setIsDropHovering(true);
-          },
-          onDragLeave: () => {
-            setIsDropHovering(false);
-          },
-          onDrop: ({ source, self, location }) => {
-            setIsDropHovering(false);
-
-            if (
-              node.isUnselectable ||
-              location.current.dropTargets[0]?.element !== self.element // 子节点处理过了，这里就不处理了
-            ) {
-              return;
-            }
-
-            const note = NoteService.getNote(source.data);
-
-            if (note) {
-              move(note, props.note.id).then(() => node.toggleExpand(true));
-            }
-          },
-        }),
-      ),
-    );
-
-    onCleanup(cleanup);
-  });
-
   function handleItemClick(node: TreeNode, e: MouseEvent) {
     if (e.metaKey) {
-      node.toggleSelect();
+      node.toggleState(TreeNodeStates.Selected);
     } else {
-      props.treeView.tree.select([]);
+      props.treeView.select([]);
       props.onItemTitleClick?.(node);
     }
   }
 
   function handleArrowClick(e: MouseEvent) {
     e.stopPropagation();
-    node.toggleExpand();
+    props.node.toggleExpand();
   }
 
   function renderItem(render: (props: JSX.HTMLAttributes<HTMLDivElement>) => JSX.Element) {
     function handleOpenChange({ open }: { open: boolean }) {
-      if (!open && node.isSelected && props.treeView.tree.selectedNodeIds.size === 1) {
-        node.toggleSelect(false);
+      if (!open && props.node.is(TreeNodeStates.Selected) && props.treeView.treeNodeSets.selected.size === 1) {
+        props.node.toggleState(TreeNodeStates.Selected, false);
         return;
       }
 
-      if (!open || node.isSelected) {
+      if (!open || props.node.is(TreeNodeStates.Selected)) {
         return;
       }
 
-      props.treeView.tree.select([node.id]);
+      props.treeView.select([props.node.id]);
     }
 
     if (props.contextMenu) {
@@ -159,10 +85,10 @@ export default function Node(props: Props) {
           <Portal mount={shell.appRoot}>
             <Menu.Positioner onClick={(e) => e.stopPropagation()}>
               <Menu.Content class="menu min-w-28 text-text-secondary">
-                <Show when={props.treeView.tree.selectedNodeIds.size > 1}>
-                  <div class="font-bold p-inset-square-s">共选中 {props.treeView.tree.selectedNodeIds.size} 项</div>
+                <Show when={props.treeView.treeNodeSets.selected.size > 1}>
+                  <div class="font-bold p-inset-square-s">共选中 {props.treeView.treeNodeSets.selected.size} 项</div>
                 </Show>
-                <For each={props.contextMenu(node)}>
+                <For each={props.contextMenu(props.node)}>
                   {(item) => {
                     return item === 'separator' ? (
                       <Menu.Separator />
@@ -207,44 +133,49 @@ export default function Node(props: Props) {
 
     return (
       <>
-        {renderIcon(node)}
-        {node.value?.isStar && <StarIcon stroke-width={0} fill="yellow" class={iconClassName} />}
-        {IS_DEV && `${node.value!.id.slice(0, 4)}+`}
-        {node.title}
+        {renderIcon(props.node)}
+        {props.node.value?.isStar && <StarIcon stroke-width={0} fill="yellow" class={iconClassName} />}
+        {IS_DEV && `${props.node.value!.id.slice(0, 4)}+`}
+        {props.node.title}
       </>
     );
   }
 
   return (
     <Show
-      when={!node.isLeaf}
+      when={!props.node.isLeaf}
       fallback={
-        <li onClick={[handleItemClick, node]} ref={setDropElementRef} class={itemClassName} classList={itemClassList()}>
+        <li
+          onClick={[handleItemClick, props.node]}
+          ref={setDropElementRef}
+          class={itemClassName}
+          classList={itemClassList()}
+        >
           {renderItem((renderProps) => (
             <div
               {...renderProps}
-              data-item-id={node.id}
+              data-item-id={props.node.id}
               class={`${itemTextClassName} ml-5`} // ml 和展开图标的尺寸一致
               style={{ 'padding-left': `${paddingLeft()}px` }}
             >
               {renderInline()}
             </div>
           ))}
-          {props.renderOperation?.(node)}
+          {props.renderOperation?.(props.node)}
         </li>
       }
     >
       <li class="w-full">
         <div
-          onClick={[handleItemClick, node]}
+          onClick={[handleItemClick, props.node]}
           class={itemClassName}
           classList={itemClassList()}
-          data-item-id={node.id}
+          data-item-id={props.node.id}
           ref={setDropElementRef} // dropElement 不能是上一层的 <li> 元素
         >
           {/** 展开/收起图标 */}
           <button class="cursor-pointer" style={{ 'padding-left': `${paddingLeft()}px` }} onClick={handleArrowClick}>
-            <Show when={node.isExpanded} fallback={<ChevronRightIcon class="w-5 h-5" />}>
+            <Show when={props.node.isExpanded} fallback={<ChevronRightIcon class="w-5 h-5" />}>
               <ChevronDownIcon class="w-5 h-5" />
             </Show>
           </button>
@@ -254,17 +185,19 @@ export default function Node(props: Props) {
             </div>
           ))}
           {/** 行操作区 */}
-          {props.renderOperation?.(node)}
+          {props.renderOperation?.(props.node)}
         </div>
         {/** 子树 */}
-        <Show when={node.isExpanded}>
-          <ul>
-            <Key each={node.children} by="id">
-              {(child, index) => (
-                <Node {...props} parent={node} note={child()} indexPath={[...props.indexPath, index()]} />
-              )}
-            </Key>
-          </ul>
+        <Show when={props.node.isExpanded}>
+          <Show when={props.node.sortedChildren && props.node.sortedChildren.length > 0}>
+            <ul>
+              <Key each={props.node.sortedChildren} by="id">
+                {(child, index) => (
+                  <Node {...props} parent={props.node} node={child()} indexPath={[...props.indexPath, index()]} />
+                )}
+              </Key>
+            </ul>
+          </Show>
         </Show>
       </li>
     </Show>

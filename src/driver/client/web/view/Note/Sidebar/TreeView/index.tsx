@@ -38,8 +38,11 @@ export default function TreeView() {
   }
 
   function handleContextMenuClick(key: string) {
-    const { selectedNode, selectedNodeIds } = tree.tree;
-    assert(selectedNode.value);
+    const {
+      treeNodeSets: { selected },
+      selectedNode,
+    } = tree;
+    assert(selectedNode?.value);
 
     switch (key) {
       case 'star':
@@ -47,7 +50,7 @@ export default function TreeView() {
       case 'duplicate':
         return createNote({ from: selectedNode.value.id });
       case 'delete':
-        return put(Array.from(selectedNodeIds), EntityTypes.Note);
+        return put(Array.from(selected), EntityTypes.Note);
       default:
         break;
     }
@@ -74,7 +77,7 @@ export default function TreeView() {
           contextMenu={(node) => [
             { label: '移动至...', key: 'move' },
             { label: '更改图标', key: 'icon' },
-            ...(tree.tree.selectedNodeIds.size === 1
+            ...(tree.treeNodeSets.selected.size === 1
               ? [
                   { label: node.value?.isStar ? '取消收藏' : '收藏', key: 'star' },
                   'separator' as const,

@@ -14,7 +14,7 @@ export default function ButtonGroup(props: {
   menuPlacement: Placement;
 }) {
   const { toggleMaterialForm, exploreTreeView: treeView, createNote } = container.resolve(NoteService);
-  const node = createMemo(() => props.node ?? treeView.tree.root);
+  const node = createMemo(() => props.node ?? treeView.tree?.root);
 
   async function onSelect({ value }: MenuSelectionDetails) {
     switch (value) {

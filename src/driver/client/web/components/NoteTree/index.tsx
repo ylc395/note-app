@@ -1,6 +1,7 @@
-import { Key } from '@solid-primitives/keyed';
 import { Show, onCleanup } from 'solid-js';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { Key } from '@solid-primitives/keyed';
+
 import NoteService from '#domain/client/app/service/NoteService';
 import NodeView, { type Props as NodeProps } from './Node';
 
@@ -28,13 +29,13 @@ export default function BaseTree(props: {
     }),
   );
 
-  // 这里不使用 arkui 提供的 Tree 组件，因为它实现得有问题，性能很差
+  // 这里不使用 arkui 提供的 Tree 组件，因为对于动态加载节的场景，它实现得有问题，性能很差
   return (
-    <Show when={props.treeView.tree.root}>
+    <Show when={props.treeView.tree?.root}>
       {(rootNode) => (
         <ul class={props.className} data-tree>
-          <Key each={rootNode().children} by="id">
-            {(note, index) => (
+          <Key each={rootNode().sortedChildren} by="id">
+            {(node, index) => (
               <NodeView
                 onItemTitleClick={props.onItemTitleClick}
                 onContextMenuClick={props.onContextMenuClick}
@@ -42,7 +43,7 @@ export default function BaseTree(props: {
                 renderOperation={props.renderOperation}
                 treeView={props.treeView}
                 shouldRenderIcon={props.shouldRenderIcon}
-                note={note()}
+                node={node()}
                 parent={rootNode()}
                 indexPath={[index()]}
               />

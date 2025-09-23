@@ -1,44 +1,32 @@
-import { action, computed, observable } from 'mobx';
+import { action, computed, observable, reaction } from 'mobx';
 import { createQuery } from 'mobx-tanstack-query/preset';
 import assert from 'assert';
 
 import { normalizeTitle, type NoteVO } from '#domain/shared/model/note';
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
-
-enum TreeNodeStates {
-  Expanded = 1 << 0,
-  Selected = 1 << 1,
-  Unselectable = 1 << 2,
-  Highlighted = 1 << 3,
-}
+import { differenceBy, without } from 'lodash-es';
 
 export default class TreeNode {
   constructor({
     value,
     parent,
-    isExpanded,
-    isSelected,
     ...options
   }: {
     value?: NoteVO;
     parent?: TreeNode;
-    isExpanded: boolean;
-    isSelected: boolean;
     sort?: (note1: NoteVO, note2: NoteVO) => number;
-    onDestroyed: () => void;
+    onDestroyed?: (node: TreeNode) => void;
+    onCreated?: (node: TreeNode) => void;
+    onExpandedChanged?: (node: TreeNode) => void;
+    onStateChanged?: (node: TreeNode, state: number) => void;
   }) {
     this.setValue(value);
-
-    this.options = options;
     this.parent = parent;
+    this.options = options;
 
-    if (this.isRoot || isExpanded) {
+    if (this.isRoot) {
       this.toggleExpand(true);
-    }
-
-    if (isSelected) {
-      this.toggleSelect(true);
     }
 
     this.childrenQuery = createQuery(
@@ -47,7 +35,7 @@ export default class TreeNode {
       },
       {
         refetchOnWindowFocus: true,
-        select: (notes) => notes.toSorted(options.sort),
+        refetchOnMount: false,
         abortSignal: this.destroyController.signal,
         queryKey: ['notes', { parentId: value?.id ?? null }],
         options: () => ({
@@ -56,16 +44,37 @@ export default class TreeNode {
       },
     );
 
-    this.destroyController.signal.addEventListener('abort', options.onDestroyed, { once: true });
+    if (options.onDestroyed) {
+      this.destroyController.signal.addEventListener('abort', options.onDestroyed.bind(null, this), { once: true });
+    }
+
+    options.onCreated?.(this);
+    reaction(() => this.childrenQuery.result.data, this.setChildren, { signal: this.destroyController.signal });
   }
 
-  public get id() {
-    return this.value?.id ?? '__ROOT_ID__';
-  }
+  private readonly options;
 
   private readonly remote = container.resolve(rpcToken);
 
   public parent?: TreeNode;
+
+  @observable public accessor isExpanded = false;
+
+  @observable public accessor value: NoteVO | undefined;
+
+  @observable private accessor state = 0;
+
+  private readonly childrenQuery;
+
+  private readonly destroyController = new AbortController();
+
+  @observable.shallow public accessor children: TreeNode[] | undefined; // 对 children 必须采用整体替换的方式，而不能使用 push / splice 等原地更改的方式。因为 <Key> 组件检测不到这样的变动
+
+  private childrenMap?: Map<TreeNode['id'], TreeNode>;
+
+  public get id() {
+    return this.value?.id ?? '__ROOT_ID__';
+  }
 
   public get ancestors() {
     const nodes: TreeNode[] = [];
@@ -89,24 +98,9 @@ export default class TreeNode {
     return this.value?.icon ?? null;
   }
 
-  private readonly options;
-
-  @observable public accessor value: NoteVO | undefined;
-
-  @observable private accessor state = 0;
-
-  public readonly childrenQuery;
-
-  public readonly destroyController = new AbortController();
-
   @computed
   public get childrenCount() {
-    return this.childrenQuery.result.data?.length ?? this.value?.childrenCount;
-  }
-
-  @computed
-  public get children() {
-    return this.childrenQuery.result.data?.toSorted(this.options.sort);
+    return this.children?.length ?? this.value?.childrenCount;
   }
 
   @computed
@@ -119,23 +113,22 @@ export default class TreeNode {
   }
 
   @computed
-  public get isExpanded() {
-    return Boolean(this.state & TreeNodeStates.Expanded);
+  public get sortedChildren() {
+    if (!this.options.sort) {
+      return this.children;
+    }
+
+    return this.children?.toSorted(({ value: value1 }, { value: value2 }) => this.options.sort!(value1!, value2!));
   }
 
-  @computed
-  public get isSelected() {
-    return Boolean(this.state & TreeNodeStates.Selected);
+  @action
+  public toggleExpand(value?: boolean) {
+    this.isExpanded = value ?? !this.isExpanded;
+    this.options.onExpandedChanged?.(this);
   }
 
-  @computed
-  public get isUnselectable() {
-    return Boolean(this.state & TreeNodeStates.Unselectable);
-  }
-
-  @computed
-  public get isHighlighted() {
-    return Boolean(this.state & TreeNodeStates.Highlighted);
+  public is(state: number) {
+    return Boolean(this.state & state);
   }
 
   @action
@@ -146,10 +139,36 @@ export default class TreeNode {
     }
 
     this.value = value;
+    return this;
   }
 
   @action
-  private toggleState(flag: TreeNodeStates, value?: boolean) {
+  public moveTo(targetParent: TreeNode) {
+    this.remove(false);
+    targetParent.addChild(this);
+  }
+
+  @action
+  public remove(destroyed = true) {
+    assert(this.parent?.children);
+    this.parent.children = without(this.parent.children, this);
+    this.parent.childrenMap?.delete(this.id);
+
+    if (destroyed) {
+      this.destroy();
+    }
+  }
+
+  @action
+  public addChild(node: TreeNode) {
+    assert(this.children && this.childrenMap);
+    this.children = [...this.children, node];
+    this.childrenMap.set(node.id, node);
+    node.parent = this;
+  }
+
+  @action
+  public toggleState(flag: number, value?: boolean) {
     if (typeof value === 'boolean') {
       if (value) {
         this.state |= flag;
@@ -159,26 +178,49 @@ export default class TreeNode {
     } else {
       this.state ^= flag;
     }
-  }
 
-  public toggleExpand(value?: boolean) {
-    this.toggleState(TreeNodeStates.Expanded, value);
-  }
-
-  public toggleSelect(value?: boolean) {
-    this.toggleState(TreeNodeStates.Selected, value);
-  }
-
-  public setIsUnselectable(value: boolean) {
-    this.toggleState(TreeNodeStates.Unselectable, value);
-  }
-
-  public setIsHighlighted(value: boolean) {
-    this.toggleState(TreeNodeStates.Highlighted, value);
+    this.options.onStateChanged?.(this, flag);
+    return this;
   }
 
   @action
-  public destroy() {
-    this.options.onDestroyed();
+  private readonly setChildren = (children?: NoteVO[]) => {
+    if (!children) {
+      return;
+    }
+
+    let newChildren: TreeNode[];
+
+    if (!this.children) {
+      newChildren = children.map((note) => new TreeNode({ value: note, parent: this, ...this.options }));
+    } else {
+      newChildren = [];
+
+      for (const note of children) {
+        const node =
+          this.childrenMap?.get(note.id)?.setValue(note) ||
+          new TreeNode({ value: note, parent: this, ...this.options });
+
+        newChildren.push(node);
+      }
+
+      const childrenToRemove = differenceBy(this.children, newChildren, (child) => child.id);
+
+      for (const child of childrenToRemove) {
+        child.destroy();
+      }
+    }
+
+    this.children = newChildren;
+    this.childrenMap = new Map(this.children.map((child) => [child.id, child]));
+  };
+
+  @action
+  private destroy() {
+    for (const child of this.children || []) {
+      child.destroy();
+    }
+
+    this.childrenQuery.destroy();
   }
 }

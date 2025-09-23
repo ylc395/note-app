@@ -1,18 +1,19 @@
-import { action, autorun, computed } from 'mobx';
+import { action, autorun, computed, observable, when } from 'mobx';
 import z from 'zod';
 import assert from 'assert';
 
 import Tree from '#domain/client/shared/model/note/Tree';
+import type TreeNode from '#domain/client/shared/model/note/TreeNode';
 import container from '#utils/singletonContainer';
 import type { NoteVO } from '#domain/shared/model/note';
 import DomainEventBus from '#domain/client/app/model/note/EventBus';
-import StarEventBus from '../../star/EventBus';
-import RecyclableEventBus, { type PutEvent } from '../../recyclable/EventBus';
 
 import { arrayOf, type MaybeArray } from '#utils/collection';
 import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
-import Workbench from '../../Workbench';
 import { EntityTypes } from '#domain/shared/model/entity';
+
+import StarEventBus from '../../star/EventBus';
+import RecyclableEventBus, { type PutEvent } from '../../recyclable/EventBus';
 
 export enum SortBy {
   TitleAsc = 'titleAsc',
@@ -29,25 +30,41 @@ export enum IconDisplayMode {
   Custom = 'custom',
 }
 
+export enum TreeNodeStates {
+  Selected = 1 << 1,
+  Unselectable = 1 << 2,
+}
+
 export default class TreeView {
   constructor() {
-    this.tree = new Tree({
-      sort: this.sort.bind(this),
-    });
+    this.domainEventBus.on(DomainEventBus.eventNames.Updated, (e) => this.tree?.updateNode(e));
 
-    this.domainEventBus.on(
-      [DomainEventBus.eventNames.Created, DomainEventBus.eventNames.Updated],
-      this.tree.updateNode.bind(this.tree),
-    );
+    this.domainEventBus.on(DomainEventBus.eventNames.Created, (e) => this.tree?.addNode(e));
 
     this.starEventBus.on(StarEventBus.eventNames.Changed, ({ entityId, isStar }) =>
-      this.tree.updateNode({ id: entityId, isStar }),
+      this.tree?.updateNode({ id: entityId, isStar }),
     );
 
     this.recyclableEventBus.on(RecyclableEventBus.eventNames.Put, this.handleRecyclablePut);
 
-    autorun(this.autoHighlight.bind(this));
+    when(() => this.uiState.isReady, this.init.bind(this));
   }
+
+  private init() {
+    this.tree = new Tree({
+      expanded: this.uiState.get('expanded'),
+      sort: this.sort.bind(this),
+      onStateChanged: this.handleNodeStateChanged,
+    });
+
+    autorun(() => {
+      if (this.tree) {
+        this.uiState.set('expanded', Array.from(this.tree.expandedNodeIds));
+      }
+    });
+  }
+
+  @observable.ref public accessor tree: Tree | undefined;
 
   private readonly starEventBus = container.resolve(StarEventBus);
 
@@ -55,25 +72,51 @@ export default class TreeView {
 
   private readonly domainEventBus = container.resolve(DomainEventBus);
 
-  private readonly workbench = container.resolve(Workbench);
+  private readonly uiState = new PersistedMap(
+    'note-explorer-tree',
+    z.object({
+      scroll: z.object({ x: z.number(), y: z.number() }).optional().catch(undefined),
+      expanded: z
+        .string()
+        .array()
+        .catch(() => []),
+    }),
+  );
+
+  public readonly treeNodeSets = {
+    selected: observable(new Set<TreeNode['id']>()),
+    disabled: observable(new Set<TreeNode['id']>()),
+  } as const;
+
+  @computed
+  public get selectedNode() {
+    const id = Array.from(this.treeNodeSets.selected)[0];
+
+    if (id) {
+      const node = this.tree?.get(id);
+      return node;
+    }
+  }
 
   public readonly settings = new PersistedMap(
-    'note-tree-settings',
+    'note-explorer-setting',
     z.object({
       sortBy: z.enum(SortBy).catch(SortBy.TitleAsc),
       iconDisplayMode: z.enum(IconDisplayMode).catch(IconDisplayMode.All),
     }),
   );
 
-  public readonly tree;
-
   @computed
   public get canCollapse() {
-    return this.tree.expandedNodeIds.size > 0;
+    return Boolean(this.tree && this.tree.expandedNodeIds.size > 0);
   }
 
   @action.bound
   public collapseAll() {
+    if (!this.tree) {
+      return;
+    }
+
     for (const nodeId of this.tree.expandedNodeIds) {
       const node = this.tree.get(nodeId);
 
@@ -84,29 +127,42 @@ export default class TreeView {
   }
 
   private readonly handleRecyclablePut = ({ entityType, entityId }: PutEvent) => {
-    if (entityType !== EntityTypes.Note) {
+    if (!this.tree || entityType !== EntityTypes.Note) {
       return;
     }
 
     for (const id of entityId) {
-      this.tree.remove(id);
+      this.tree.get(id)?.remove();
     }
   };
 
-  private autoHighlight() {
-    this.tree.highlight(this.workbench.currentEditor?.noteId ?? null);
-  }
+  private readonly handleNodeStateChanged = (node: TreeNode, state: number) => {
+    if (state === TreeNodeStates.Selected) {
+      if (node.is(TreeNodeStates.Selected)) {
+        this.treeNodeSets.selected.add(node.id);
+      } else {
+        this.treeNodeSets.selected.delete(node.id);
+      }
+    }
+  };
 
-  public async disableDescendantsBy(movingNotes: MaybeArray<NoteVO>) {
+  @action
+  public disableDescendantsBy(movingNotes: MaybeArray<NoteVO>) {
+    const tree = this.tree;
+
+    if (!tree) {
+      return;
+    }
+
     const notes = arrayOf(movingNotes);
     const noteIds = notes.map(({ id }) => id);
     const nodeIdToSetUnselect = new Set<string>();
     const collectDescendantIds = (nodeId: string) => {
-      const node = this.tree.get(nodeId);
+      const node = tree.get(nodeId);
 
       if (node) {
         nodeIdToSetUnselect.add(node.id);
-        const childIds = node.childrenQuery.result.data?.map(({ id }) => id) ?? [];
+        const childIds = node.children?.map(({ id }) => id) ?? [];
 
         for (const childId of childIds) {
           collectDescendantIds(childId);
@@ -118,7 +174,34 @@ export default class TreeView {
       collectDescendantIds(noteId);
     }
 
-    this.tree.setUnselectable(Array.from(nodeIdToSetUnselect));
+    for (const id of this.treeNodeSets.disabled) {
+      tree.toggle(id, TreeNodeStates.Unselectable, false);
+    }
+
+    this.treeNodeSets.disabled.clear();
+
+    for (const id of nodeIdToSetUnselect) {
+      tree.toggle(id, TreeNodeStates.Unselectable, true);
+      this.treeNodeSets.disabled.add(id);
+    }
+  }
+
+  @action
+  public select(ids: MaybeArray<TreeNode['id']>) {
+    if (!this.tree) {
+      return;
+    }
+
+    for (const nodeId of this.treeNodeSets.selected) {
+      this.tree.toggle(nodeId, TreeNodeStates.Selected, false);
+    }
+
+    this.treeNodeSets.selected.clear();
+
+    for (const id of arrayOf(ids)) {
+      this.tree.toggle(id, TreeNodeStates.Selected, true);
+      this.treeNodeSets.selected.add(id);
+    }
   }
 
   private sort(entity1: NoteVO, entity2: NoteVO) {

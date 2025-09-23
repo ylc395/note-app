@@ -1,77 +1,58 @@
-import { z } from 'zod';
-import { action, computed, observable, reaction, runInAction, when } from 'mobx';
+import { action, observable } from 'mobx';
 import assert from 'assert';
 import { compact } from 'lodash-es';
 
 import type { NoteVO } from '#domain/shared/model/note';
-import { arrayOf, type MaybeArray } from '#utils/collection';
-
-import PersistedMap from '../abstract/PersistedMap';
 import TreeNode from './TreeNode';
 
-const schema = z.object({
-  scroll: z.object({ x: z.number(), y: z.number() }).optional().catch(undefined),
-  expanded: z
-    .string()
-    .array()
-    .catch(() => []),
-});
-
 export default class Tree {
-  constructor(private readonly options: { sort?: (note1: NoteVO, note2: NoteVO) => number }) {
-    this.uiState = new PersistedMap(`note-explorer-tree`, schema);
-    this.init();
+  constructor({
+    expanded,
+    ...options
+  }: {
+    expanded: TreeNode['id'][];
+    sort?: (value1: NoteVO, value2: NoteVO) => number;
+    onStateChanged?: (node: TreeNode, state: number) => void;
+  }) {
+    this.expandedNodeIds = observable(new Set(expanded));
+
+    this.nodeOptions = {
+      ...options,
+      onCreated: (node: TreeNode) => {
+        this.nodesMap.set(node.id, node);
+
+        if (this.expandedNodeIds.has(node.id)) {
+          node.toggleExpand(true);
+        }
+      },
+      onDestroyed: action(({ id }: TreeNode) => {
+        this.nodesMap.delete(id);
+        this.expandedNodeIds.delete(id);
+      }),
+
+      onExpandedChanged: (node: TreeNode) => {
+        if (node.isRoot) {
+          return;
+        }
+
+        if (node.isExpanded) {
+          this.expandedNodeIds.add(node.id);
+        } else {
+          this.expandedNodeIds.delete(node.id);
+        }
+      },
+    };
+
+    this.root = new TreeNode(this.nodeOptions);
   }
 
-  @observable.ref public accessor root: TreeNode | undefined;
+  private readonly nodeOptions;
 
   @observable.shallow private accessor nodesMap = new Map<TreeNode['id'], TreeNode>();
 
-  private readonly uiState;
+  public readonly expandedNodeIds;
 
-  @observable public accessor selectedNodeIds = new Set<TreeNode['id']>();
-
-  @computed public get selectedNode() {
-    const id = Array.from(this.selectedNodeIds)[0];
-    const node = id && this.get(id);
-    assert(node);
-
-    return node;
-  }
-
-  private readonly highlightedNodeIds = new Set<TreeNode['id']>();
-
-  private readonly unselectableNodeIds = new Set<TreeNode['id']>();
-
-  @observable public accessor expandedNodeIds = new Set<TreeNode['id']>();
-
-  @computed
-  public get allNodes() {
-    return Array.from(this.nodesMap.values());
-  }
-
-  private async init() {
-    await when(() => this.uiState.isReady);
-
-    const expandedIds = this.uiState.get('expanded');
-
-    runInAction(() => {
-      if (expandedIds) {
-        for (const expandedId of expandedIds) {
-          this.expandedNodeIds.add(expandedId);
-        }
-      }
-    });
-
-    runInAction(() => {
-      this.root = this.getOrCreateNode();
-    });
-
-    reaction(
-      () => Array.from(this.expandedNodeIds),
-      (ids) => this.uiState.set('expanded', ids),
-    );
-  }
+  public readonly root: TreeNode;
 
   public get(id: string | null): TreeNode | undefined;
   public get(id: string[]): TreeNode[];
@@ -87,136 +68,47 @@ export default class Tree {
     return this.nodesMap.get(id);
   }
 
-  @action
-  public setUnselectable(ids: TreeNode['id'][]) {
-    for (const nodeId of this.unselectableNodeIds.values()) {
-      const node = this.get(nodeId);
+  public addNode(value: NoteVO) {
+    const parentNode = this.get(value.parentId);
 
-      if (node) {
-        node.setIsUnselectable(false);
-      }
-    }
-
-    for (const id of ids) {
-      const node = this.get(id);
-
-      if (node) {
-        node.setIsUnselectable(true);
-      }
-    }
-  }
-
-  @action
-  public select(ids: MaybeArray<TreeNode['id']>) {
-    for (const nodeId of this.selectedNodeIds) {
-      this.get(nodeId)?.toggleSelect(false);
-    }
-
-    for (const id of arrayOf(ids)) {
-      this.get(id)?.toggleSelect(true);
-    }
-  }
-
-  public highlight(ids: MaybeArray<TreeNode['id']> | null) {
-    for (const nodeId of this.highlightedNodeIds) {
-      this.get(nodeId)?.setIsHighlighted(false);
-    }
-
-    if (!ids) {
+    if (!parentNode) {
       return;
     }
 
-    for (const id of arrayOf(ids)) {
-      this.get(id)?.setIsHighlighted(true);
-    }
-  }
-
-  @action
-  public getOrCreateNode(params?: { value: NoteVO; parent: TreeNode }) {
-    const oldNode = this.get(params?.value.id ?? null);
-
-    if (oldNode) {
-      oldNode.parent = params?.parent;
-
-      if (params?.value) {
-        oldNode.setValue(params.value);
-      }
-
-      return oldNode;
-    }
-
-    const abortController = new AbortController();
-    const newNode = new TreeNode({
-      value: params?.value,
-      parent: params?.parent,
-      sort: this.options?.sort,
-      isSelected: params ? this.selectedNodeIds.has(params.value.id) : false,
-      isExpanded: params ? this.expandedNodeIds.has(params.value.id) : false,
-      onDestroyed: action(() => {
-        abortController.abort();
-
-        if (params) {
-          this.nodesMap.delete(params.parent.id);
-        }
-      }),
-    });
-
-    (
-      [
-        ['isExpanded', this.expandedNodeIds],
-        ['isSelected', this.selectedNodeIds],
-        ['isUnselectable', this.unselectableNodeIds],
-        ['isHighlighted', this.highlightedNodeIds],
-      ] as const
-    ).forEach(([attr, set]) => {
-      reaction(
-        () => newNode[attr],
-        (v) => (v ? set.add(newNode.id) : set.delete(newNode.id)),
-        { signal: abortController.signal },
-      );
-    });
-
-    this.nodesMap.set(newNode.id, newNode);
-
-    return newNode;
+    const node = new TreeNode({ value, parent: parentNode, ...this.nodeOptions });
+    parentNode.addChild(node);
   }
 
   public updateNode({ id, parentId, ...patch }: Partial<NoteVO> & { id: NoteVO['id'] }) {
     const node = this.get(id);
     const oldParentNode = node?.parent;
-    const newParentNode = parentId !== undefined ? this.get(parentId) : undefined;
+    const newParentNode = parentId !== undefined && this.get(parentId);
 
-    if (node) {
-      assert(node.value);
-      node.setValue({ ...node.value, ...patch, ...(parentId !== undefined ? { parentId } : null) });
+    if (!node) {
+      return;
     }
 
-    if (parentId !== undefined && oldParentNode && oldParentNode.id !== parentId) {
-      oldParentNode.childrenQuery.invalidate();
+    assert(node.value);
+    node.setValue({ ...node.value, ...patch, ...(parentId !== undefined ? { parentId } : null) });
+
+    if (parentId === undefined || oldParentNode?.id === parentId) {
+      return;
     }
 
-    if (newParentNode !== oldParentNode) {
-      if (node) {
-        node.parent = newParentNode;
-      }
-
-      newParentNode?.childrenQuery.invalidate();
+    if (newParentNode && newParentNode.children) {
+      node.moveTo(newParentNode);
+    } else {
+      node.remove();
     }
   }
 
-  public remove(id: TreeNode['id']) {
+  public toggle(id: TreeNode['id'] | null, state: number, value?: boolean) {
     const node = this.get(id);
 
     if (!node) {
       return;
     }
 
-    node.destroy();
-    this.selectedNodeIds.delete(id);
-    this.expandedNodeIds.delete(id);
-    this.highlightedNodeIds.delete(id);
-    this.unselectableNodeIds.delete(id);
-
-    node.parent?.childrenQuery.refetch();
+    node.toggleState(state, value);
   }
 }
