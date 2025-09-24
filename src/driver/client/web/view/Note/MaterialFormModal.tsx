@@ -7,7 +7,7 @@ import { createMemo } from 'solid-js';
 
 import NoteService from '#domain/client/app/service/NoteService';
 import container from '#utils/singletonContainer';
-import Modal from '#web/components/Modal';
+import Modal from '#web/components/common/Modal';
 
 export default function MaterialFormModal() {
   const noteService = container.resolve(NoteService);

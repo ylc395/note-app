@@ -47,7 +47,7 @@ export default class TreeView {
 
     this.recyclableEventBus.on(RecyclableEventBus.eventNames.Put, this.handleRecyclablePut);
 
-    when(() => this.uiState.isReady, this.init.bind(this));
+    when(() => this.uiState.isReady && this.settings.isReady, this.init.bind(this));
   }
 
   private init() {
@@ -72,17 +72,6 @@ export default class TreeView {
 
   private readonly domainEventBus = container.resolve(DomainEventBus);
 
-  private readonly uiState = new PersistedMap(
-    'note-explorer-tree',
-    z.object({
-      scroll: z.object({ x: z.number(), y: z.number() }).optional().catch(undefined),
-      expanded: z
-        .string()
-        .array()
-        .catch(() => []),
-    }),
-  );
-
   public readonly treeNodeSets = {
     selected: observable(new Set<TreeNode['id']>()),
     disabled: observable(new Set<TreeNode['id']>()),
@@ -97,6 +86,17 @@ export default class TreeView {
       return node;
     }
   }
+
+  private readonly uiState = new PersistedMap(
+    'note-explorer-tree',
+    z.object({
+      scroll: z.object({ x: z.number(), y: z.number() }).optional().catch(undefined),
+      expanded: z
+        .string()
+        .array()
+        .catch(() => []),
+    }),
+  );
 
   public readonly settings = new PersistedMap(
     'note-explorer-setting',

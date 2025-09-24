@@ -1,7 +1,5 @@
-import { createMemo, For, JSX, Show } from 'solid-js';
+import { createMemo, JSX, Show } from 'solid-js';
 import { ChevronDownIcon, ChevronRightIcon, FileTextIcon, StarIcon } from 'lucide-solid';
-import { Menu } from '@ark-ui/solid';
-import { Portal } from 'solid-js/web';
 import { Key } from '@solid-primitives/keyed';
 
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
@@ -9,10 +7,10 @@ import TreeViewModel, { TreeNodeStates } from '#domain/client/app/model/note/Tre
 import container from '#utils/singletonContainer';
 import { MimeTypes } from '#domain/shared/model/file';
 import { IS_DEV } from '#domain/shared/infra/env';
-import shell from '#web/infra/shell';
 import Workbench from '#domain/client/app/model/Workbench';
 
 import useDnd from './useDnd';
+import ContextMenu from '../common/ContextMenu';
 
 export interface Props {
   treeView: TreeViewModel;
@@ -73,40 +71,21 @@ export default function Node(props: Props) {
       props.treeView.select([props.node.id]);
     }
 
-    if (props.contextMenu) {
-      return (
-        <Menu.Root
-          unmountOnExit
-          lazyMount
-          onOpenChange={handleOpenChange}
-          onSelect={(e) => props.onContextMenuClick?.(e.value)}
-        >
-          <Menu.ContextTrigger asChild={(childProps) => render(childProps())} />
-          <Portal mount={shell.appRoot}>
-            <Menu.Positioner onClick={(e) => e.stopPropagation()}>
-              <Menu.Content class="menu min-w-28 text-text-secondary">
-                <Show when={props.treeView.treeNodeSets.selected.size > 1}>
-                  <div class="font-bold p-inset-square-s">共选中 {props.treeView.treeNodeSets.selected.size} 项</div>
-                </Show>
-                <For each={props.contextMenu(props.node)}>
-                  {(item) => {
-                    return item === 'separator' ? (
-                      <Menu.Separator />
-                    ) : (
-                      <Menu.Item disabled={item.disabled} class={`menu-item ${item.className || ''}`} value={item.key}>
-                        {item.label}
-                      </Menu.Item>
-                    );
-                  }}
-                </For>
-              </Menu.Content>
-            </Menu.Positioner>
-          </Portal>
-        </Menu.Root>
-      );
-    }
-
-    return render({});
+    return (
+      <ContextMenu
+        onOpenChange={handleOpenChange}
+        onItemClick={props.onContextMenuClick}
+        contextMenu={props.contextMenu}
+        seed={props.node}
+        topExtraContent={() => (
+          <Show when={props.treeView.treeNodeSets.selected.size > 1}>
+            <div class="font-bold p-inset-square-s">共选中 {props.treeView.treeNodeSets.selected.size} 项</div>
+          </Show>
+        )}
+      >
+        {(childProps) => render(childProps)}
+      </ContextMenu>
+    );
   }
 
   function renderInline() {

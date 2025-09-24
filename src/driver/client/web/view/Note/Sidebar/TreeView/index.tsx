@@ -1,5 +1,4 @@
 import { ShrinkIcon } from 'lucide-solid';
-import { Show } from 'solid-js';
 import assert from 'assert';
 import NoteService from '#domain/client/app/service/NoteService';
 import StarService from '#domain/client/app/service/StarService';
@@ -67,36 +66,34 @@ export default function TreeView() {
           <SettingButton />
         </div>
       </div>
-      <Show when={tree.settings.isReady}>
-        <BaseTreeView
-          className="min-h-0 grow overflow-auto scrollbar-stable text-sm text-text-secondary"
-          onItemTitleClick={handleItemClick}
-          treeView={tree}
-          shouldRenderIcon={shouldRenderIcon}
-          onContextMenuClick={handleContextMenuClick}
-          contextMenu={(node) => [
-            { label: '移动至...', key: 'move' },
-            { label: '更改图标', key: 'icon' },
-            ...(tree.treeNodeSets.selected.size === 1
-              ? [
-                  { label: node.value?.isStar ? '取消收藏' : '收藏', key: 'star' },
-                  'separator' as const,
-                  { label: '复制', key: 'duplicate' },
-                ]
-              : []),
-            'separator',
-            { label: '删除', key: 'delete', className: 'text-feedback-danger' },
-          ]}
-          renderOperation={(node) => (
-            <AddButton
-              buttonClassName='button button-primary button-square-tiny text-brand-secondary h-full ml-inset-squish group-hover:flex data-[state="open"]:flex hidden'
-              iconOnly
-              node={node}
-              menuPlacement="bottom-end"
-            />
-          )}
-        />
-      </Show>
+      <BaseTreeView
+        className="min-h-0 grow overflow-auto scrollbar-stable text-sm text-text-secondary"
+        onItemTitleClick={handleItemClick}
+        treeView={tree}
+        shouldRenderIcon={shouldRenderIcon}
+        onContextMenuClick={handleContextMenuClick}
+        contextMenu={(node) => [
+          { label: '移动至...', key: 'move' },
+          { label: '更改图标', key: 'icon' },
+          ...(tree.treeNodeSets.selected.size === 1
+            ? [
+                { label: node.value?.isStar ? '取消收藏' : '收藏', key: 'star' },
+                'separator' as const,
+                { label: '复制', key: 'duplicate' },
+              ]
+            : []),
+          'separator',
+          { label: '删除', key: 'delete', className: 'text-feedback-danger' },
+        ]}
+        renderOperation={(node) => (
+          <AddButton
+            buttonClassName='button button-primary button-square-tiny text-brand-secondary h-full ml-inset-squish group-hover:flex data-[state="open"]:flex hidden'
+            iconOnly
+            node={node}
+            menuPlacement="bottom-end"
+          />
+        )}
+      />
     </div>
   );
 }

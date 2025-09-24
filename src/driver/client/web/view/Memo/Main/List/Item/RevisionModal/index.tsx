@@ -1,7 +1,7 @@
 import { Show, createMemo } from 'solid-js';
 import { action } from 'mobx';
 
-import Modal from '#web/components/Modal';
+import Modal from '#web/components/common/Modal';
 
 import List from './List';
 import TextView from './TextView';
