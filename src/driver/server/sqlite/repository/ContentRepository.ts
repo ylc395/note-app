@@ -38,7 +38,9 @@ export default class SqliteContentRepository extends BaseRepository implements C
     }
 
     if (config?.isAvailableOnly) {
-      sql = sql.leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${topicTableName}.entityId`);
+      sql = sql
+        .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${topicTableName}.entityId`)
+        .where(`${recyclableTableName}.entityId`, 'is', null);
     }
 
     const rows = await sql.execute();
