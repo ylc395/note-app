@@ -221,6 +221,6 @@ export default class TreeNode {
       child.destroy();
     }
 
-    this.childrenQuery.destroy();
+    this.destroyController.abort();
   }
 }

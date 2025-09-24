@@ -14,14 +14,12 @@ export default class Tree {
     sort?: (value1: NoteVO, value2: NoteVO) => number;
     onStateChanged?: (node: TreeNode, state: number) => void;
   }) {
-    this.expandedNodeIds = observable(new Set(expanded));
-
     this.nodeOptions = {
       ...options,
       onCreated: (node: TreeNode) => {
         this.nodesMap.set(node.id, node);
 
-        if (this.expandedNodeIds.has(node.id)) {
+        if (expanded.includes(node.id)) {
           node.toggleExpand(true);
         }
       },
@@ -50,7 +48,7 @@ export default class Tree {
 
   @observable.shallow private accessor nodesMap = new Map<TreeNode['id'], TreeNode>();
 
-  public readonly expandedNodeIds;
+  public readonly expandedNodeIds = observable(new Set<TreeNode['id']>());
 
   public readonly root: TreeNode;
 
@@ -71,7 +69,7 @@ export default class Tree {
   public addNode(value: NoteVO) {
     const parentNode = this.get(value.parentId);
 
-    if (!parentNode) {
+    if (!parentNode?.children) {
       return;
     }
 
