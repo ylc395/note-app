@@ -13,7 +13,10 @@ export default class RecyclableService {
 
   public readonly put = async (entityId: MaybeArray<EntityId>, entityType: EntityTypes) => {
     await this.remote.recyclable.batchCreate.mutate(arrayOf(entityId).map((id) => ({ entityId: id })));
-    this.eventBus.emit(EventBus.eventNames.Put, { entityId: arrayOf(entityId), entityType });
+
+    for (const id of arrayOf(entityId)) {
+      this.eventBus.emit(EventBus.eventNames.Put, { entityId: id, entityType });
+    }
   };
 
   public readonly recover = async (record: RecyclableVO) => {

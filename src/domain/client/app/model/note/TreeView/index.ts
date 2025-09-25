@@ -10,10 +10,8 @@ import DomainEventBus from '#domain/client/app/model/note/EventBus';
 
 import { arrayOf, type MaybeArray } from '#utils/collection';
 import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
-import { EntityTypes } from '#domain/shared/model/entity';
 
 import StarEventBus from '../../star/EventBus';
-import RecyclableEventBus, { type PutEvent } from '../../recyclable/EventBus';
 
 export enum SortBy {
   TitleAsc = 'titleAsc',
@@ -37,15 +35,13 @@ export enum TreeNodeStates {
 
 export default class TreeView {
   constructor() {
-    this.domainEventBus.on(DomainEventBus.eventNames.Updated, (e) => this.tree?.updateNode(e));
-
+    this.domainEventBus.on(DomainEventBus.eventNames.Updated, ({ id, payload }) => this.tree?.updateNode(id, payload));
     this.domainEventBus.on(DomainEventBus.eventNames.Created, (e) => this.tree?.addNode(e));
+    this.domainEventBus.on(DomainEventBus.eventNames.Deleted, (e) => this.removeNode(e.noteId));
 
     this.starEventBus.on(StarEventBus.eventNames.Changed, ({ entityId, isStar }) =>
-      this.tree?.updateNode({ id: entityId, isStar }),
+      this.tree?.updateNode(entityId, { isStar }),
     );
-
-    this.recyclableEventBus.on(RecyclableEventBus.eventNames.Put, this.handleRecyclablePut);
 
     when(() => this.uiState.isReady && this.settings.isReady, this.init.bind(this));
   }
@@ -67,8 +63,6 @@ export default class TreeView {
   @observable.ref public accessor tree: Tree | undefined;
 
   private readonly starEventBus = container.resolve(StarEventBus);
-
-  private readonly recyclableEventBus = container.resolve(RecyclableEventBus);
 
   private readonly domainEventBus = container.resolve(DomainEventBus);
 
@@ -126,15 +120,9 @@ export default class TreeView {
     }
   }
 
-  private readonly handleRecyclablePut = ({ entityType, entityId }: PutEvent) => {
-    if (!this.tree || entityType !== EntityTypes.Note) {
-      return;
-    }
-
-    for (const id of entityId) {
-      this.tree.get(id)?.remove();
-    }
-  };
+  private removeNode(id: NoteVO['id']) {
+    this.tree?.get(id)?.remove();
+  }
 
   private readonly handleNodeStateChanged = (node: TreeNode, state: number) => {
     if (state === TreeNodeStates.Selected) {

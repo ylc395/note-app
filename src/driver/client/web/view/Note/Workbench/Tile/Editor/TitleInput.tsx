@@ -1,15 +1,10 @@
 import { createEffect, createMemo, createSignal } from 'solid-js';
 import type BaseEditor from '#domain/client/app/model/note/editor/BaseEditor';
-import { normalizeTitle } from '#domain/shared/model/note';
 
 export default function TitleInput(props: { editor: BaseEditor }) {
   let inputRef: HTMLInputElement | undefined;
   const [title, setTitle] = createSignal('');
-  const placeholder = createMemo(() =>
-    title() || !props.editor.value.result.data
-      ? undefined
-      : normalizeTitle({ ...props.editor.value.result.data, title: '' }),
-  );
+  const placeholder = createMemo(() => title() || props.editor.title || '');
 
   createEffect(() => {
     if (props.editor.value.result.data) {

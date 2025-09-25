@@ -6,7 +6,7 @@ import Editor from '#domain/client/app/model/note/editor/BaseEditor';
 import container from '#utils/singletonContainer';
 import type { NoteVO } from '#domain/shared/model/note';
 
-import EditorManager from './EditorManager';
+import EditorManager, { type EditorDTO } from './EditorManager';
 
 export default class Tile {
   constructor(
@@ -71,8 +71,11 @@ export default class Tile {
   // 在该 Tile 下创建一个 Editor。可以指定其位置
   // 不能创建内容相同的 editor
   @action
-  public createAndAddEditor(entity: Pick<NoteVO, 'id' | 'mimeType'>, dest?: Editor) {
-    assert(this.editors.findIndex((editor) => editor.noteId === entity.id) < 0, 'can not create duplicated editor');
+  public createAndAddEditor(entity: EditorDTO, dest?: Editor) {
+    assert(
+      this.editors.findIndex((editor) => editor.noteId === entity.entityId) < 0,
+      'can not create duplicated editor',
+    );
 
     const newEditor = this.editorManager.create(this, entity);
 
@@ -116,21 +119,15 @@ export default class Tile {
     assert(this.currentEditor);
 
     return {
-      editors: this.editors.map((e) => ({ noteId: e.noteId, mimeType: e.mimeType })),
+      editors: this.editors.map((e) => ({ entityId: e.noteId, mimeType: e.mimeType, title: e.title || '' })),
       current: this.currentEditor.noteId,
     };
   }
 
-  public restore({
-    editors,
-    current,
-  }: {
-    editors: Array<{ noteId: NoteVO['id']; mimeType: NoteVO['mimeType'] }>;
-    current: NoteVO['id'];
-  }) {
+  public restore({ editors, current }: { editors: Array<EditorDTO>; current: NoteVO['id'] }) {
     this.isRestoring = true;
-    for (const { noteId: id, mimeType } of editors) {
-      this.createAndAddEditor({ id, mimeType });
+    for (const editor of editors) {
+      this.createAndAddEditor(editor);
     }
 
     this.switchToEditor(current);

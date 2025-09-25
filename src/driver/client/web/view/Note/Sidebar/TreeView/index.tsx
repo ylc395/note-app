@@ -23,7 +23,7 @@ export default function TreeView() {
       return;
     }
 
-    workbench.open(node.value);
+    workbench.open({ entityId: node.value.id, mimeType: node.value.mimeType });
   }
 
   function shouldRenderIcon(node: TreeNode) {

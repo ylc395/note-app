@@ -77,7 +77,7 @@ export default class Tree {
     parentNode.addChild(node);
   }
 
-  public updateNode({ id, parentId, ...patch }: Partial<NoteVO> & { id: NoteVO['id'] }) {
+  public updateNode(id: NoteVO['id'], { parentId, ...patch }: Partial<NoteVO>) {
     const node = this.get(id);
     const oldParentNode = node?.parent;
     const newParentNode = parentId !== undefined && this.get(parentId);

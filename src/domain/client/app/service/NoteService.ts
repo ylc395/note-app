@@ -16,7 +16,10 @@ import TreeView from '../model/note/TreeView';
 
 export default class NoteService {
   constructor() {
-    this.eventBus.on(DomainEventBus.eventNames.Created, this.workbench.open.bind(this.workbench));
+    this.eventBus.on(
+      DomainEventBus.eventNames.Created,
+      (note) => void this.workbench.open({ entityId: note.id, mimeType: note.mimeType }),
+    );
   }
 
   private readonly eventBus = container.resolve(DomainEventBus);
@@ -32,7 +35,7 @@ export default class NoteService {
   public readonly createNote = async (note: NewNoteDTO | DuplicatedNoteDTO) => {
     const newNote = await this.remote.note.create.mutate(note);
     this.eventBus.emit(DomainEventBus.eventNames.Created, newNote);
-    this.workbench.open(newNote);
+    this.workbench.open({ entityId: newNote.id, mimeType: newNote.mimeType });
   };
 
   public readonly move = async (notes: MaybeArray<NoteVO>, targetId: NotePatchDTO['parentId']) => {
@@ -41,7 +44,7 @@ export default class NoteService {
     await this.remote.note.batchUpdate.mutate([ids, { parentId: targetId }]);
 
     for (const { id } of notes) {
-      this.eventBus.emit(DomainEventBus.eventNames.Updated, { id, parentId: targetId });
+      this.eventBus.emit(DomainEventBus.eventNames.Updated, { id, payload: { parentId: targetId } });
     }
   };
 

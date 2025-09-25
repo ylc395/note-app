@@ -4,7 +4,6 @@ import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-d
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 
 import BaseEditor from '#domain/client/app/model/note/editor/BaseEditor';
-import { normalizeTitle } from '#domain/shared/model/note';
 import { isFullyVisible } from '#web/infra/domUtils';
 import { IS_DEV } from '#domain/shared/infra/env';
 
@@ -45,7 +44,7 @@ export default function Tab(props: { editor: BaseEditor }) {
     >
       <span class="whitespace-nowrap text-ellipsis overflow-hidden">
         {IS_DEV && `${props.editor.id}-${props.editor.noteId.slice(0.3)} `}
-        {props.editor.value.result.data ? normalizeTitle(props.editor.value.result.data!) : ''}
+        {props.editor.title}
       </span>
       <button
         class="ml-2 group-hover:visible button button-square-md"

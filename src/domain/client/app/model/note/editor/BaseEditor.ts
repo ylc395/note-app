@@ -6,7 +6,7 @@ import { createQuery } from 'mobx-tanstack-query/preset';
 import EventBus from '#domain/client/shared/infra/EventBus';
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
-import type { NotePatchDTO, NoteVO } from '#domain/shared/model/note';
+import { normalizeTitle, type NotePatchDTO, type NoteVO } from '#domain/shared/model/note';
 
 import { EventNames, type Events } from './events';
 import type Tile from '../../Workbench/Tile';
@@ -15,14 +15,16 @@ import DomainEventBus from '../EventBus';
 export interface Options {
   entityId: NoteVO['id'];
   tile: Tile;
+  title?: string;
 }
 
 type Patch = Pick<NotePatchDTO, 'body' | 'icon' | 'title'>;
 
 export default abstract class BaseEditor {
-  constructor({ entityId, tile }: Options) {
+  constructor({ entityId, tile, title }: Options) {
     this.tile = tile;
     this.noteId = entityId;
+    this.initialTitle = title;
 
     this.value = createQuery(({ signal }) => this.remote.note.queryOneById.query(this.noteId, { signal }), {
       queryKey: ['note', this.noteId],
@@ -55,6 +57,13 @@ export default abstract class BaseEditor {
   }
 
   public abstract readonly mimeType: string | null;
+
+  private readonly initialTitle?: string;
+
+  @computed
+  public get title() {
+    return this.value.result.data ? normalizeTitle(this.value.result.data) : this.initialTitle ?? null;
+  }
 
   protected readonly remote = container.resolve(rpcToken);
 
@@ -97,10 +106,11 @@ export default abstract class BaseEditor {
     assert(currentData, 'can not update when loading');
 
     // 这里采用乐观更新
-    this.value.setData((note) => ({ ...note!, ...patch }));
+    this.value.setData((note) => note && { ...note, ...patch });
     this.domainEventBus.emit(DomainEventBus.eventNames.Updated, {
       id: this.noteId,
-      ...patch,
+      payload: patch,
+      source: this,
     });
 
     // 若服务器更新失败，前端回退至之前的值
@@ -108,7 +118,8 @@ export default abstract class BaseEditor {
       this.value.setData((note) => ({ ...note!, ...currentData }));
       this.domainEventBus.emit(DomainEventBus.eventNames.Updated, {
         id: this.noteId,
-        ...currentData,
+        payload: currentData,
+        source: this,
       });
     });
   };

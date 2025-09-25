@@ -5,6 +5,7 @@ import NoteService from '#domain/client/app/service/NoteService';
 import { TileSplitDirections } from '#domain/client/app/model/Workbench';
 import type Tile from '#domain/client/app/model/Workbench/Tile';
 import BaseEditor from '#domain/client/app/model/note/editor/BaseEditor';
+import { arrayOf } from '#utils/collection';
 
 type DropTarget = Parameters<typeof dropTargetForElements>[0];
 
@@ -86,10 +87,12 @@ export default class TileDropTarget implements DropTarget {
     const note = NoteService.getNote(source.data);
 
     if (note) {
-      this.workbench.open(
-        note,
-        newTileDirection === 'middle' ? this.tile : { splitDirection: newTileDirection, from: this.tile },
-      );
+      for (const { id: entityId, mimeType } of arrayOf(note)) {
+        this.workbench.open(
+          { entityId, mimeType },
+          newTileDirection === 'middle' ? this.tile : { splitDirection: newTileDirection, from: this.tile },
+        );
+      }
     }
   };
 

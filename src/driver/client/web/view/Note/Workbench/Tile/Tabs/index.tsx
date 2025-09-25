@@ -8,6 +8,7 @@ import NoteService from '#domain/client/app/service/NoteService';
 import container from '#utils/singletonContainer';
 import Workbench from '#domain/client/app/model/Workbench';
 import Tab from './Tab';
+import { arrayOf } from '#utils/collection';
 
 export default function Tabs(props: { tile: Tile }) {
   let rootRef: HTMLDivElement | undefined;
@@ -34,7 +35,9 @@ export default function Tabs(props: { tile: Tile }) {
           const note = NoteService.getNote(source.data);
 
           if (note) {
-            workbench.open(note, targetData);
+            for (const { id: entityId, mimeType } of arrayOf(note)) {
+              workbench.open({ entityId, mimeType }, targetData);
+            }
           }
         }
       },

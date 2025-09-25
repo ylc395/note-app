@@ -1,21 +1,18 @@
 import { mapValues, uniqueId } from 'lodash-es';
-import { observable, action, computed, when, runInAction } from 'mobx';
+import { observable, action, computed, when, runInAction, autorun } from 'mobx';
 import assert from 'assert';
 import z from 'zod';
 
 import Editor from '#domain/client/app/model/note/editor/BaseEditor';
 import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
 import container from '#utils/singletonContainer';
-import { normalizeTitle, type NoteVO } from '#domain/shared/model/note';
 import type { EntityId } from '#domain/shared/model/entity';
 
 import Tile from './Tile';
 import { type TileNode, type TileParent, TileDirections, isTileLeaf, tileNodeSchema } from './tileTree';
-import EditorManager from './EditorManager';
+import EditorManager, { type EditorDTO } from './EditorManager';
 import HistoryStack from '../base/HistoryStack';
 import RecentManager from './RecentManager';
-import { arrayOf, type MaybeArray } from '#utils/collection';
-import type BaseEditor from '#domain/client/app/model/note/editor/BaseEditor';
 
 export interface HistoryRecord {
   key: EntityId;
@@ -36,7 +33,13 @@ type NewTile = { from?: Tile; splitDirection: TileSplitDirections };
 
 export default class Workbench {
   constructor() {
-    this.restore();
+    when(
+      () => this.state.isReady,
+      () => {
+        this.restore();
+        autorun(this.persistTiles.bind(this), { delay: 1000 });
+      },
+    );
   }
 
   private readonly state = new PersistedMap(
@@ -49,7 +52,7 @@ export default class Workbench {
           map: z.record(
             z.string(),
             z.object({
-              editors: z.array(z.object({ noteId: z.string(), mimeType: z.string().nullable() })),
+              editors: z.array(z.object({ entityId: z.string(), title: z.string(), mimeType: z.string().nullable() })),
               current: z.string(),
             }),
           ),
@@ -95,23 +98,28 @@ export default class Workbench {
     return tile;
   }
 
-  private async handleEditorFocus({ noteId, mimeType, id: editorId, tile, value }: Editor) {
-    assert(this.root);
+  private persistTiles() {
+    const currentEditor = this.currentEditor;
+
     this.state.set({
       root: this.root,
-      tiles: {
-        focusedId: tile.id,
+      tiles: currentEditor && {
+        focusedId: currentEditor.tile.id,
         map: mapValues(this.tilesMap, (tile) => tile.toObject()),
       },
     });
+  }
 
-    await when(() => value.result.isLoadingError || value.result.isSuccess);
+  private async handleEditorFocus(editor: Editor) {
+    assert(this.root);
+    await when(() => editor.value.result.isLoadingError || editor.value.result.isSuccess); // 确保 editor 的信息（如 title / mimeType）加载好了
+
     this.historyStack.push({
-      key: noteId,
-      mimeType,
-      editorId,
-      tileId: tile.id,
-      title: value.result.data ? normalizeTitle(value.result.data) : null,
+      key: editor.noteId,
+      mimeType: editor.mimeType,
+      editorId: editor.id,
+      tileId: editor.tile.id,
+      title: editor.title,
     });
   }
 
@@ -149,7 +157,6 @@ export default class Workbench {
 
     if (this.root === tile.id) {
       this.root = undefined;
-      this.state.set('tiles', undefined);
       this.historyStack.push(null);
     } else {
       const keptTile = searchAndRemove(this.root);
@@ -228,18 +235,10 @@ export default class Workbench {
     editor.moveTo(newTile, true);
   }
 
-  public open(note: MaybeArray<Pick<NoteVO, 'id' | 'mimeType'>>, dest?: Editor | Tile | NewTile) {
-    let editor: BaseEditor | undefined;
-
-    for (const n of arrayOf(note)) {
-      editor = this._open(n, editor?.tile ?? dest);
-    }
-  }
-
   // 在指定位置打开一个 editor。该 editor 可能是新建的，也可能是复用已存在的
   // 若已存在，则其会被移动到指定位置（若有指定）
   @action.bound
-  private _open(note: Pick<NoteVO, 'id' | 'mimeType'>, dest?: Editor | Tile | NewTile) {
+  public open(note: EditorDTO, dest?: Editor | Tile | NewTile) {
     const currentTile = this.currentEditor?.tile || this.latestTile;
     dest = dest || currentTile;
 
@@ -256,7 +255,7 @@ export default class Workbench {
     // 打开到指定 tile，或是指定 editor 旁边
     if (dest instanceof Tile || dest instanceof Editor) {
       destTile = dest instanceof Tile ? dest : dest.tile;
-      const existedEditor = destTile.findEditor(note.id);
+      const existedEditor = destTile.findEditor(note.entityId);
 
       // 对应 editor 已存在：
       if (existedEditor) {
@@ -278,7 +277,7 @@ export default class Workbench {
     }
 
     destTile.switchToEditor(editor);
-    this.recentManager.add(note.id);
+    this.recentManager.add(note.entityId);
 
     return editor;
   }
@@ -293,18 +292,16 @@ export default class Workbench {
       dest.tile.switchToEditor(dest);
     } else {
       const destTile = this.getTileById(dest);
-      this.open({ id: record.key, mimeType: record.mimeType }, destTile);
+      this.open({ entityId: record.key, mimeType: record.mimeType }, destTile);
     }
   }
 
   @action.bound
   public setTilePercentage(tileParent: TileParent, percentage: number | undefined) {
     tileParent.splitPercentage = percentage;
-    this.state.set('root', this.root);
   }
 
   private async restore() {
-    await when(() => this.state.isReady);
     const tiles = this.state.get('tiles');
     const root = this.state.get('root');
 

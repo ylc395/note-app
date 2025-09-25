@@ -8,11 +8,11 @@ enum EventNames {
 }
 
 export interface PutEvent {
-  entityId: EntityId[];
+  entityId: EntityId;
   entityType: EntityTypes;
 }
 
-export default class StarEventBus extends EventBus<{
+export default class RecyclableEventBus extends EventBus<{
   [EventNames.Put]: PutEvent;
   [EventNames.Recover]: RecyclableVO;
 }> {
