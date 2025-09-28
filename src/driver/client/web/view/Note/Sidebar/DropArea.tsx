@@ -4,7 +4,7 @@ import { HandIcon } from 'lucide-solid';
 
 import NoteService from '#domain/client/app/service/NoteService';
 import container from '#utils/singletonContainer';
-import { TreeNodeStates } from '#domain/client/app/model/note/TreeView';
+import { TreeNodeStates } from '#domain/client/app/model/note/TreeExplorer';
 
 export default function DropArea() {
   const { move, exploreTreeView: treeView } = container.resolve(NoteService);

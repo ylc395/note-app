@@ -6,7 +6,7 @@ import { createMemo } from 'solid-js';
 import container from '#utils/singletonContainer';
 import shell from '#web/infra/shell';
 import NoteService from '#domain/client/app/service/NoteService';
-import { IconDisplayMode, SortBy } from '#domain/client/app/model/note/TreeView';
+import { IconDisplayMode, SortBy } from '#domain/client/app/model/note/TreeExplorer';
 import type { DataType } from '#domain/client/shared/model/abstract/PersistedMap';
 
 export default function SettingButton() {

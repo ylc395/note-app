@@ -6,7 +6,7 @@ import { render } from 'solid-js/web';
 
 import container from '#utils/singletonContainer';
 import NoteService from '#domain/client/app/service/NoteService';
-import TreeViewModel, { TreeNodeStates } from '#domain/client/app/model/note/TreeView';
+import TreeViewModel, { TreeNodeStates } from '#domain/client/app/model/note/TreeExplorer';
 import type TreeNode from '#domain/client/shared/model/note/TreeNode';
 
 import DragPreview from './DragPreview';

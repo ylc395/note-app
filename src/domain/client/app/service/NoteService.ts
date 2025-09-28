@@ -12,7 +12,7 @@ import Workbench from '../model/Workbench';
 import DomainEventBus from '../model/note/EventBus';
 import MaterialForm from '../model/note/MaterialForm';
 import BaseEditor from '../model/note/editor/BaseEditor';
-import TreeView from '../model/note/TreeView';
+import TreeExplorer from '../model/note/TreeExplorer';
 
 export default class NoteService {
   constructor() {
@@ -30,7 +30,7 @@ export default class NoteService {
 
   @observable.ref public accessor materialForm: MaterialForm | undefined;
 
-  public readonly exploreTreeView = new TreeView();
+  public readonly exploreTreeView = new TreeExplorer();
 
   public readonly createNote = async (note: NewNoteDTO | DuplicatedNoteDTO) => {
     const newNote = await this.remote.note.create.mutate(note);

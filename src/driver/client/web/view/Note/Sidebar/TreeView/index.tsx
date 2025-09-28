@@ -1,22 +1,17 @@
 import { ShrinkIcon } from 'lucide-solid';
-import assert from 'assert';
 import NoteService from '#domain/client/app/service/NoteService';
-import StarService from '#domain/client/app/service/StarService';
-import RecyclableService from '#domain/client/app/service/RecyclableService';
-
-import { EntityTypes } from '#domain/shared/model/entity';
 import container from '#utils/singletonContainer';
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
 import BaseTreeView from '#web/components/NoteTree';
-import { IconDisplayMode } from '#domain/client/app/model/note/TreeView';
+import { IconDisplayMode } from '#domain/client/app/model/note/TreeExplorer';
 
 import AddButton from './AddButton';
 import SettingButton from './SettingButton';
+import useContextmenu from './useContextmenu';
 
 export default function TreeView() {
-  const { workbench, exploreTreeView: tree, createNote } = container.resolve(NoteService);
-  const { star, unstar } = container.resolve(StarService);
-  const { put } = container.resolve(RecyclableService);
+  const { workbench, exploreTreeView: tree } = container.resolve(NoteService);
+  const { contextmenu, handleContextMenuClick } = useContextmenu();
 
   function handleItemClick(node: TreeNode) {
     if (!node.value) {
@@ -36,25 +31,6 @@ export default function TreeView() {
     return iconMode === IconDisplayMode.All;
   }
 
-  function handleContextMenuClick(key: string) {
-    const {
-      treeNodeSets: { selected },
-      selectedNode,
-    } = tree;
-    assert(selectedNode?.value);
-
-    switch (key) {
-      case 'star':
-        return selectedNode.value.isStar ? unstar(selectedNode.id) : star(selectedNode.id);
-      case 'duplicate':
-        return createNote({ from: selectedNode.value.id });
-      case 'delete':
-        return put(Array.from(selected), EntityTypes.Note);
-      default:
-        break;
-    }
-  }
-
   return (
     <div class="grow min-h-0 flex flex-col">
       <div class="mb-stack-s flex justify-between items-center">
@@ -72,19 +48,7 @@ export default function TreeView() {
         treeView={tree}
         shouldRenderIcon={shouldRenderIcon}
         onContextMenuClick={handleContextMenuClick}
-        contextMenu={(node) => [
-          { label: '移动至...', key: 'move' },
-          { label: '更改图标', key: 'icon' },
-          ...(tree.treeNodeSets.selected.size === 1
-            ? [
-                { label: node.value?.isStar ? '取消收藏' : '收藏', key: 'star' },
-                'separator' as const,
-                { label: '复制', key: 'duplicate' },
-              ]
-            : []),
-          'separator',
-          { label: '删除', key: 'delete', className: 'text-feedback-danger' },
-        ]}
+        contextMenu={contextmenu}
         renderOperation={(node) => (
           <AddButton
             buttonClassName='button button-primary button-square-tiny text-brand-secondary h-full ml-inset-squish group-hover:flex data-[state="open"]:flex hidden'

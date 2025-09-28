@@ -33,7 +33,7 @@ export enum TreeNodeStates {
   Unselectable = 1 << 2,
 }
 
-export default class TreeView {
+export default class TreeExplorer {
   constructor() {
     this.domainEventBus.on(DomainEventBus.eventNames.Updated, ({ id, payload }) => this.tree?.updateNode(id, payload));
     this.domainEventBus.on(DomainEventBus.eventNames.Created, (e) => this.tree?.addNode(e));

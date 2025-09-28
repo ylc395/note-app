@@ -3,14 +3,14 @@ import { ChevronDownIcon, ChevronRightIcon, FileTextIcon, StarIcon } from 'lucid
 import { Key } from '@solid-primitives/keyed';
 
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
-import TreeViewModel, { TreeNodeStates } from '#domain/client/app/model/note/TreeView';
+import TreeViewModel, { TreeNodeStates } from '#domain/client/app/model/note/TreeExplorer';
 import container from '#utils/singletonContainer';
 import { MimeTypes } from '#domain/shared/model/file';
 import { IS_DEV } from '#domain/shared/infra/env';
 import Workbench from '#domain/client/app/model/Workbench';
 
 import useDnd from './useDnd';
-import ContextMenu from '../common/ContextMenu';
+import ContextMenu, { type MenuItem } from '../common/ContextMenu';
 
 export interface Props {
   treeView: TreeViewModel;
@@ -18,9 +18,7 @@ export interface Props {
   parent: TreeNode;
   indexPath: number[];
   renderOperation?: (node: TreeNode) => JSX.Element;
-  contextMenu?: (
-    node: TreeNode,
-  ) => Array<{ label: string; key: string; className?: string; disabled?: boolean } | 'separator'>;
+  contextMenu?: (node: TreeNode) => Array<MenuItem | 'separator'>;
   onItemTitleClick: (node: TreeNode) => void;
   onContextMenuClick?: (key: string) => void;
   shouldRenderIcon?: (node: TreeNode) => boolean;

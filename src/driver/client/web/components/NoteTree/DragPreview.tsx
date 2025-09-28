@@ -1,9 +1,9 @@
-import type TreeView from '#domain/client/app/model/note/TreeView';
+import type TreeExplorer from '#domain/client/app/model/note/TreeExplorer';
 import type TreeNode from '#domain/client/shared/model/note/TreeNode';
 import { normalizeTitle } from '#domain/shared/model/note';
 import { Show } from 'solid-js';
 
-export default function DragPreview(props: { treeView: TreeView; node: TreeNode }) {
+export default function DragPreview(props: { treeView: TreeExplorer; node: TreeNode }) {
   const count = props.treeView.treeNodeSets.selected.has(props.node.id) ? props.treeView.treeNodeSets.selected.size : 1;
 
   return (

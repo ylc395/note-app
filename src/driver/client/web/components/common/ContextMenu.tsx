@@ -4,15 +4,21 @@ import { Menu } from '@ark-ui/solid';
 
 import shell from '#web/infra/shell';
 
+export interface MenuItem {
+  label: string;
+  key: string;
+  className?: string;
+  disabled?: boolean;
+  content?: () => JSX.Element;
+}
+
 export default function ContextMenu<T = void>(props: {
   children: (props: JSX.HTMLAttributes<HTMLDivElement>) => JSX.Element;
   onOpenChange?: (e: { open: boolean }) => void;
   onItemClick?: (value: string) => void;
   topExtraContent?: (seed: T) => JSX.Element;
   seed: T;
-  contextMenu?: (
-    data: T,
-  ) => Array<{ label: string; key: string; className?: string; disabled?: boolean } | 'separator'>;
+  contextMenu?: (data: T) => Array<MenuItem | 'separator'>;
 }) {
   const items = createMemo(() => props.contextMenu?.(props.seed));
 
@@ -33,6 +39,15 @@ export default function ContextMenu<T = void>(props: {
                 {(item) => {
                   return item === 'separator' ? (
                     <Menu.Separator />
+                  ) : item.content ? (
+                    <Menu.Root lazyMount unmountOnExit>
+                      <Menu.TriggerItem>{item.label}</Menu.TriggerItem>
+                      <Portal mount={shell.appRoot}>
+                        <Menu.Positioner>
+                          <Menu.Content>{item.content()}</Menu.Content>
+                        </Menu.Positioner>
+                      </Portal>
+                    </Menu.Root>
                   ) : (
                     <Menu.Item disabled={item.disabled} class={`menu-item ${item.className || ''}`} value={item.key}>
                       {item.label}

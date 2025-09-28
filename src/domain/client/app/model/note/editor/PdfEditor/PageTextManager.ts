@@ -96,6 +96,7 @@ export default class PageTextManager {
     });
   }, 500);
 
+  @action
   public destroy() {
     this.destroyController.abort();
     this.initPageTexts.cancel();

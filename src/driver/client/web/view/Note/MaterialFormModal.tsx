@@ -59,16 +59,18 @@ export default function MaterialFormModal() {
           <Field.Label class="self-start required">文件</Field.Label>
           <div>
             <FileUpload.Root
-              class="border border-border-primary rounded-lg h-36 flex items-center justify-center flex-col text-text-secondary"
+              class="border border-border-primary rounded-lg h-36  text-text-secondary"
               onFileChange={({ acceptedFiles: [file] }) => handleFileSelected(file)}
             >
               <Show
                 when={noteService.materialForm?.hasFile}
                 fallback={
                   <FileUpload.Dropzone class="text-sm w-full h-full flex flex-col items-center justify-center cursor-pointer">
-                    <FilePlusIcon class="w-10 h-10 mb-stack-s stroke-1" />
-                    <p>点击上传文件</p>
-                    <p>可拖拽至此</p>
+                    <FileUpload.Trigger class="flex items-center justify-center flex-col">
+                      <FilePlusIcon class="w-10 h-10 mb-stack-s stroke-1" />
+                      <p>点击上传文件</p>
+                      <p>可拖拽至此</p>
+                    </FileUpload.Trigger>
                   </FileUpload.Dropzone>
                 }
               >
