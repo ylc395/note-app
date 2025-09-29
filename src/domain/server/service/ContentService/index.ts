@@ -5,10 +5,7 @@ import { compact, memoize, size, uniq, uniqBy } from 'lodash-es';
 import { is } from 'unist-util-is';
 import { toString } from 'mdast-util-to-string';
 import escapeStringRegexp from 'escape-string-regexp';
-import {
-  getFragmentDirectives,
-  parseFragmentDirectives,
-} from '#third-party/text-fragments-polyfill/text-fragment-utils';
+import { getFragmentDirectives, parseFragmentDirectives } from 'text-fragments-polyfill/text-fragment-utils';
 
 import {
   mdastExtension as topicExtension,

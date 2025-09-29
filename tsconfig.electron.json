@@ -9,7 +9,7 @@
     "./src/driver/server/runtime/Electron/**/*",
     "./src/driver/server/sqlite/**/*",
     "./src/driver/server/runtime/Desktop.ts",
-    "./src/third-party/**/*"
+    "./src/vendors.d.ts"
   ],
   "exclude": ["./src/driver/client/electron/preload/**/*"]
 }

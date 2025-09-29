@@ -6,8 +6,8 @@
     "./src/domain/shared/**/*",
     "./src/driver/client/web/**/*",
     "./src/driver/client/electron/rpcClient/**/*",
-    "./src/third-party/**/*",
-    "./src/driver/server/api/**/*"
+    "./src/driver/server/api/**/*",
+    "./src/vendors.d.ts"
   ],
   "compilerOptions": {
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
