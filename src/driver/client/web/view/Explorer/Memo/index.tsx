@@ -1,28 +1,21 @@
 import { createEffect, on } from 'solid-js';
-import { Tabs } from '@ark-ui/solid';
 
 import container from '#utils/singletonContainer';
 import MemoList from '#domain/client/app/model/memo/List';
 import UIState, { SidebarTabs } from '#web/view/UIState';
 
-import Sidebar from './Sidebar';
 import Main from './Main';
 
-export default function MemoExplorer(props: { className: string }) {
+export default function MemoExplorer() {
   const memoList = container.resolve(MemoList);
   const uiState = container.resolve(UIState);
 
   createEffect(
     on(
-      () => uiState.get('app.sidebar') === SidebarTabs.Memo,
+      () => uiState.get('app.explorer') === SidebarTabs.Memo,
       (isActive) => memoList.setActive(isActive),
     ),
   );
 
-  return (
-    <Tabs.Content value={SidebarTabs.Memo} class={`flex ${props.className}`}>
-      <Sidebar />
-      <Main />
-    </Tabs.Content>
-  );
+  return <Main />;
 }

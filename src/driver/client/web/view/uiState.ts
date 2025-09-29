@@ -8,8 +8,8 @@ export enum SidebarTabs {
 }
 
 const schema = z.object({
-  'app.sidebar': z.enum(SidebarTabs).catch(SidebarTabs.Note),
-  'note.sidebar.proportion': z
+  'app.explorer': z.enum(SidebarTabs).catch(SidebarTabs.Note),
+  'app.explorer.proportion': z
     .number()
     .array()
     .catch(() => [20, 80]),
