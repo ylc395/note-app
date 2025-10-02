@@ -1,16 +1,16 @@
 import { createMemo, JSX, Show } from 'solid-js';
-import { ChevronDownIcon, ChevronRightIcon, FileTextIcon, StarIcon } from 'lucide-solid';
+import { ChevronDownIcon, ChevronRightIcon, StarIcon } from 'lucide-solid';
 import { Key } from '@solid-primitives/keyed';
 
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
 import TreeViewModel, { TreeNodeStates } from '#domain/client/app/model/note/TreeExplorer';
 import container from '#utils/singletonContainer';
-import { MimeTypes } from '#domain/shared/model/file';
 import { IS_DEV } from '#domain/shared/infra/env';
 import Workbench from '#domain/client/app/model/Workbench';
 
 import useDnd from './useDnd';
 import ContextMenu, { type MenuItem } from '../common/ContextMenu';
+import Icon from '../common/Icon';
 
 export interface Props {
   treeView: TreeViewModel;
@@ -87,30 +87,11 @@ export default function Node(props: Props) {
   }
 
   function renderInline() {
-    function renderIcon(node: TreeNode) {
-      if (props.shouldRenderIcon?.(node) === false) {
-        return null;
-      }
-
-      if (node.icon) {
-        return null; // todo: 改成图标
-      }
-
-      if (!node.value?.mimeType) {
-        return <FileTextIcon class={iconClassName} />;
-      }
-
-      switch (node.value.mimeType) {
-        case MimeTypes.PDF:
-          return <FileTextIcon class={iconClassName} />;
-        default:
-          break;
-      }
-    }
-
     return (
       <>
-        {renderIcon(props.node)}
+        <Show when={props.shouldRenderIcon?.(props.node)}>
+          <Icon {...props.node.value} iconClassName={iconClassName} />
+        </Show>
         {props.node.value?.isStar && <StarIcon stroke-width={0} fill="yellow" class={iconClassName} />}
         {IS_DEV && `${props.node.value!.id.slice(0, 4)}+`}
         {props.node.title}
