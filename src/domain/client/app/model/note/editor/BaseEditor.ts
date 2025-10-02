@@ -60,13 +60,6 @@ export default abstract class BaseEditor {
 
   private readonly initialTitle?: string;
 
-  @computed
-  public get title() {
-    return this.value.result.data ? normalizeTitle(this.value.result.data) : this.initialTitle ?? null;
-  }
-
-  protected readonly remote = container.resolve(rpcToken);
-
   private readonly domainEventBus = container.resolve(DomainEventBus);
 
   public readonly id = uniqueId('editor-');
@@ -88,12 +81,24 @@ export default abstract class BaseEditor {
   public hasEdited = false;
 
   @computed
+  public get title() {
+    return this.value.result.data ? normalizeTitle(this.value.result.data) : this.initialTitle ?? null;
+  }
+
+  @computed
+  public get index() {
+    return this.tile.editors.indexOf(this);
+  }
+
+  protected readonly remote = container.resolve(rpcToken);
+
+  @computed
   public get isLoading() {
     return this.value.result.isLoading || this.blob.result.isLoading;
   }
 
   @computed
-  private get isCurrent() {
+  public get isCurrent() {
     return this.tile.currentEditor === this;
   }
 

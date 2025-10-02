@@ -18,9 +18,11 @@ export default function ContextMenu<T = void>(props: {
   onItemClick?: (value: string) => void;
   topExtraContent?: (seed: T) => JSX.Element;
   seed: T;
-  contextMenu?: (data: T) => Array<MenuItem | 'separator'>;
+  contextMenu?: Array<MenuItem | 'separator'> | ((data: T) => Array<MenuItem | 'separator'>);
 }) {
-  const items = createMemo(() => props.contextMenu?.(props.seed));
+  const items = createMemo(() =>
+    typeof props.contextMenu === 'function' ? props.contextMenu?.(props.seed) : props.contextMenu,
+  );
 
   return (
     <Show when={items()} fallback={props.children({})}>

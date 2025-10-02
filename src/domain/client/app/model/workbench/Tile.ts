@@ -1,5 +1,5 @@
 import { action, observable } from 'mobx';
-import { uniqueId } from 'lodash-es';
+import { uniqueId, without } from 'lodash-es';
 import assert from 'assert';
 
 import Editor from '#domain/client/app/model/note/editor/BaseEditor';
@@ -78,9 +78,6 @@ export default class Tile {
     );
 
     const newEditor = this.editorManager.create(this, entity);
-
-    newEditor.events.on(Editor.eventNames.Destroy, this.removeEditor);
-    newEditor.events.on(Editor.eventNames.Focus, this.options.onEditorFocus);
     this.addEditor(newEditor, dest);
 
     return newEditor;
@@ -102,6 +99,7 @@ export default class Tile {
 
     editor.tile = this;
     editor.events.on(Editor.eventNames.Destroy, this.removeEditor);
+    editor.events.on(Editor.eventNames.Focus, this.options.onEditorFocus);
   }
 
   @action
@@ -113,6 +111,31 @@ export default class Tile {
     }
 
     this.options.onDestroy(this);
+  }
+
+  @action
+  public closeEditors(target: Editor, type: 'left' | 'right' | 'others') {
+    let editorsToClose;
+    const index = this.editors.indexOf(target);
+    assert(index > -1);
+
+    switch (type) {
+      case 'others':
+        editorsToClose = without(this.editors, target);
+        break;
+      case 'left':
+        editorsToClose = this.editors.slice(0, index);
+        break;
+      case 'right':
+        editorsToClose = this.editors.slice(index + 1);
+        break;
+      default:
+        throw new Error('invalid type');
+    }
+
+    for (const editor of editorsToClose) {
+      editor.destroy();
+    }
   }
 
   public toObject() {
