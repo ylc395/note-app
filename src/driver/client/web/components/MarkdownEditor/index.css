@@ -1,0 +1,9 @@
+@import '@milkdown/kit/prose/view/style/prosemirror.css';
+
+.markdown-body ul {
+  list-style: disc;
+}
+
+.markdown-body ol {
+  list-style: decimal;
+}

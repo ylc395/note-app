@@ -1,19 +1,17 @@
 import { createSignal } from 'solid-js';
 import { SendHorizontalIcon } from 'lucide-solid';
-import type { Crepe } from '@milkdown/crepe';
-import { replaceAll } from '@milkdown/kit/utils';
-import { editorViewCtx } from '@milkdown/kit/core';
 
 import type Editor from '#domain/client/app/model/memo/Editor';
 import MarkdownEditor from '#web/components/MarkdownEditor';
+import MarkdownEditorModel from '#web/components/MarkdownEditor/Editor';
 
 export default function EditorView(props: { editor: Editor }) {
-  const [getCrepe, setCrepe] = createSignal<Crepe>();
+  const [getCrepe, setCrepe] = createSignal<MarkdownEditorModel>();
 
   function reset() {
     const crepe = getCrepe()!;
-    crepe.editor.action(replaceAll(''));
-    crepe.editor.action((ctx) => ctx.get(editorViewCtx).focus());
+    crepe.replaceContent('');
+    crepe.focus();
   }
 
   async function onSubmit() {
