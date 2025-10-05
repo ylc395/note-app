@@ -5,7 +5,6 @@ import MemoList from '#domain/client/app/model/memo/List';
 
 import Editor from './Editor';
 import ListToolbar from './ListToolBar';
-import FocusView from './FocusView';
 import List from './List';
 
 export default function MemoMain() {
@@ -16,13 +15,10 @@ export default function MemoMain() {
   });
 
   return (
-    <>
-      <div class="flex flex-col max-w-screen-lg mx-auto h-full w-full p-4">
-        <Editor editor={memoList.newEditor} />
-        <ListToolbar />
-        <List />
-      </div>
-      <FocusView />
-    </>
+    <div class="flex flex-col grow min-h-0">
+      <Editor editor={memoList.newEditor} />
+      <ListToolbar />
+      <List />
+    </div>
   );
 }

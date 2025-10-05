@@ -28,7 +28,7 @@ export default function App() {
           onResize={undefined}
           class="flex-grow min-w-0 relative h-full"
           defaultSize={uiState.get('app.explorer.proportion')}
-          panels={[{ id: explorerPanelId, maxSize: 60 }, { id: workbenchPanelId }]}
+          panels={[{ id: explorerPanelId, maxSize: 60, minSize: 10 }, { id: workbenchPanelId }]}
           onResizeEnd={(e) => uiState.set('app.explorer.proportion', e.size)}
         >
           <Explorer panelId={explorerPanelId} />

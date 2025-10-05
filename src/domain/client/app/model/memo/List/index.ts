@@ -85,7 +85,8 @@ export default class MemoList {
     onSubmit: async (value) => {
       const newMemo = await this.remote.memo.create.mutate({ body: value });
       this.eventBus.emit(DomainEventBus.eventNames.Created, newMemo);
-      this.childrenQuery?.invalidate().then(this.addNewItem.bind(this, newMemo));
+      this.childrenQuery.invalidate();
+      // .then(this.addNewItem.bind(this, newMemo));
 
       return 'reset';
     },
