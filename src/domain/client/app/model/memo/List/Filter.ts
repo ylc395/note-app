@@ -1,23 +1,15 @@
 import { action, computed, observable, toJS } from 'mobx';
-import { isEmpty, pick, pickBy } from 'lodash-es';
+import { pick } from 'lodash-es';
 
 import type { ClientMemoQuery, CountQuery } from '#domain/shared/model/memo';
 import TimeSelector from './TimeSelector';
-import LinkSelector from './LinkSelector';
-import TopicList from './TopicList';
 
 export default class Filter {
   public readonly timeSelector = new TimeSelector();
 
-  public readonly topicList = new TopicList();
-
-  public readonly linkSelector = new LinkSelector();
-
   @action
   public setActive(value: boolean) {
     this.timeSelector.setActive(value);
-    this.topicList.setActive(value);
-    this.linkSelector.setActive(value);
   }
 
   @observable public accessor keyword: string | undefined;
@@ -33,8 +25,6 @@ export default class Filter {
       ...toJS(this.sortOptions),
       keyword: this.keyword || undefined,
       durations: toJS(this.timeSelector.selectedDurations),
-      topics: toJS(this.topicList.selectedTopics),
-      links: pickBy(toJS(this.linkSelector.params), (value) => !isEmpty(value)),
     };
   }
 

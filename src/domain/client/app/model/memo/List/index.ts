@@ -9,7 +9,6 @@ import type { MemoVO } from '#domain/shared/model/memo';
 import DomainEventBus from '../EventBus';
 import Filter from './Filter';
 import Editor from '../Editor';
-import type { MemoItem } from './item';
 
 export default class MemoList {
   constructor() {
@@ -25,7 +24,7 @@ export default class MemoList {
     );
 
     this.childrenQuery = createInfiniteQuery(
-      ({ signal, pageParam: { endId, startId, ...params } }): Promise<MemoItem[]> =>
+      ({ signal, pageParam: { endId, startId, ...params } }): Promise<MemoVO[]> =>
         this.remote.memo.queryList.query(
           {
             ...params,
@@ -94,7 +93,7 @@ export default class MemoList {
 
   private readonly justCreatedMemos = new Set<MemoVO['id']>();
 
-  private handleFetchedData(pages: MemoItem[][]) {
+  private handleFetchedData(pages: MemoVO[][]) {
     if (!this.isSearchMode && this.justCreatedMemos.size === 0) {
       return pages;
     }
@@ -147,10 +146,7 @@ export default class MemoList {
 
       return {
         ...data,
-        pages: data.pages.with(
-          index.page,
-          data.pages[index.page]!.toSpliced(index.item, 1, { ...newItem, justCreated: 'keep' }),
-        ),
+        pages: data.pages.with(index.page, data.pages[index.page]!.toSpliced(index.item, 1, newItem)),
       };
     });
   }

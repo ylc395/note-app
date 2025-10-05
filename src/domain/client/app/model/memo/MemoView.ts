@@ -10,7 +10,6 @@ import Editor from './Editor';
 import RevisionList from '../RevisionList';
 import DomainEventBus from './EventBus';
 import type MemoList from './List';
-import type { MemoItem } from './List/item';
 
 export default class MemoView {
   constructor(options: { memoId?: MemoVO['id']; value?: MemoVO; parent?: MemoView | MemoList }) {
@@ -67,7 +66,7 @@ export default class MemoView {
   private readonly parent?: MemoView | MemoList;
 
   /** 以下两个属性，存在且仅存在一个*/
-  @observable public accessor value: MemoItem | undefined;
+  @observable public accessor value: MemoVO | undefined;
 
   public readonly valueQuery;
   /************/

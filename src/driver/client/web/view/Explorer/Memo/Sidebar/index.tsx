@@ -2,8 +2,6 @@ import { PanelLeftClose } from 'lucide-solid';
 
 import container from '#utils/singletonContainer';
 import Calender from './Calendar';
-import TopicList from './TopicList';
-import LinkSelector from './LinkSelector';
 import UIState from '#web/view/UIState';
 
 export default function Sidebar() {
@@ -28,8 +26,6 @@ export default function Sidebar() {
           </button>
         </div>
         {/* <Calender /> */}
-        <LinkSelector />
-        <TopicList />
       </div>
     </div>
   );

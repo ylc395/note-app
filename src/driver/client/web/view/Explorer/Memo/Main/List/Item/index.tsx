@@ -3,8 +3,8 @@ import dayjs from 'dayjs';
 import { PinIcon } from 'lucide-solid';
 
 import type MemoList from '#domain/client/app/model/memo/List';
+import type { MemoVO } from '#domain/shared/model/memo';
 import MemoView from '#domain/client/app/model/memo/MemoView';
-import type { MemoItem } from '#domain/client/app/model/memo/List/item';
 
 import Menu from './Menu';
 import Body from './Body';
@@ -13,17 +13,13 @@ import Operation from './Operation';
 import ReferrerList from './ReferrerList';
 import RevisionModal from './RevisionModal';
 
-export default function Item(props: { memo: MemoItem; parent?: MemoView | MemoList }) {
+export default function Item(props: { memo: MemoVO; parent?: MemoView | MemoList }) {
   const date = createMemo(() => dayjs(props.memo.createdAt));
   let divRef: HTMLDivElement | undefined;
   const memoView = new MemoView({ value: props.memo, parent: props.parent });
 
   createEffect(() => {
     memoView.setValue(props.memo);
-
-    if (props.memo.justCreated) {
-      divRef?.scrollIntoView();
-    }
   });
 
   onCleanup(() => {
@@ -31,14 +27,7 @@ export default function Item(props: { memo: MemoItem; parent?: MemoView | MemoLi
   });
 
   return (
-    <div
-      ref={divRef}
-      class="shadow-md rounded-lg border p-4 relative bg-white before:con"
-      classList={{ 'animate-fade-down': Boolean(props.memo.justCreated) }}
-    >
-      <Show when={props.memo.justCreated === 'omit'}>
-        <span class="absolute top-0 left-0">新</span>
-      </Show>
+    <div ref={divRef} class="shadow-md rounded-lg border p-4 relative bg-white before:con">
       <div class="flex justify-between items-center">
         <div class="flex text-gray-400">
           <Show when={props.memo.isPinned}>

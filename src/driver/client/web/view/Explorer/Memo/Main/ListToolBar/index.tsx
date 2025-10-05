@@ -1,11 +1,4 @@
-import {
-  CalendarDaysIcon,
-  HashIcon,
-  PanelLeftOpenIcon,
-  RefreshCcwIcon,
-  SearchCheckIcon,
-  XCircleIcon,
-} from 'lucide-solid';
+import { CalendarDaysIcon, PanelLeftOpenIcon, RefreshCcwIcon, SearchCheckIcon, XCircleIcon } from 'lucide-solid';
 import { For, Show } from 'solid-js';
 import dayjs from 'dayjs';
 import { Tooltip } from '@ark-ui/solid';
@@ -22,7 +15,7 @@ export default function ListToolbar() {
   const memoList = container.resolve(MemoList);
   const uiState = container.resolve(UIState);
   const {
-    filter: { timeSelector, topicList },
+    filter: { timeSelector },
     reload,
   } = memoList;
 
@@ -71,17 +64,6 @@ export default function ListToolbar() {
               <CalendarDaysIcon />
               日期：<time class="ml-2">{getDurationText(duration)}</time>
               <button class="ml-1" onclick={() => timeSelector.removeDate(i())}>
-                <XCircleIcon />
-              </button>
-            </span>
-          )}
-        </For>
-        <For each={topicList.selectedTopics}>
-          {(topic) => (
-            <span class="flex items-center mr-2">
-              <HashIcon />
-              话题：{topic}
-              <button onClick={() => topicList.unselectTopic(topic)}>
                 <XCircleIcon />
               </button>
             </span>

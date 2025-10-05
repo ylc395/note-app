@@ -1,4 +1,4 @@
-import type { Entity, EntityId, EntityParentId } from './entity.js';
+import type { EntityId, EntityParentId } from './entity.js';
 import { MimeTypes } from './file.js';
 
 export interface Memo {
@@ -66,21 +66,6 @@ export function getFileType(mimeType: string) {
   }
 
   return FileTypes.Other;
-}
-
-export interface LinkSet {
-  domains: {
-    total: number;
-    records: Array<{ domain: string; count: number }>;
-  };
-  files: {
-    total: number;
-    records: Array<{ type: FileTypes; count: number }>;
-  };
-  entities: {
-    total: number;
-    records: Array<{ entity: Entity; count: number }>;
-  };
 }
 
 /**
