@@ -59,7 +59,7 @@ export default function MaterialFormModal() {
           <Field.Label class="self-start required">文件</Field.Label>
           <div>
             <FileUpload.Root
-              class="border border-border-primary rounded-lg h-36  text-text-secondary"
+              class="border border-border-primary rounded-lg h-36  text-text-secondary flex items-center justify-center"
               onFileChange={({ acceptedFiles: [file] }) => handleFileSelected(file)}
             >
               <Show
@@ -86,7 +86,7 @@ export default function MaterialFormModal() {
                             <FileUpload.ItemPreview class="mb-stack-md">
                               <FileIcon class="mx-auto w-10 h-10 stroke-1" />
                             </FileUpload.ItemPreview>
-                            <div class="flex items-center space-x-stack-s">
+                            <div class="flex items-center justify-center space-x-stack-s">
                               <div class="flex items-center">
                                 <FileUpload.ItemName
                                   title={item.name}

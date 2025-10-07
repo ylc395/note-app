@@ -16,7 +16,7 @@ export default function ListToolbar() {
   const uiState = container.resolve(UIState);
   const {
     filter: { timeSelector },
-    reload,
+    childrenQuery,
   } = memoList;
 
   function getDurationText({ startTime, endTime }: Required<Duration>) {
@@ -71,7 +71,7 @@ export default function ListToolbar() {
         </For>
       </div>
       <div class="space-x-2 flex text-sm rounded">
-        <button onclick={reload.bind(memoList)} class="flex items-center">
+        <button onclick={() => childrenQuery.refetch()} class="flex items-center">
           <RefreshCcwIcon />
           刷新
         </button>

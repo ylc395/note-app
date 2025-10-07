@@ -1,18 +1,14 @@
 import type { Selectable } from 'kysely';
-import { compact, isEmpty } from 'lodash-es';
+import { compact } from 'lodash-es';
 
-import { type MemoPatchDTO, type Memo, FileTypes } from '#domain/server/model/memo.js';
-import type { MemoRepository, MemoQuery, CountQuery } from '#domain/server/repository/memoRepository.js';
-import { LinkTargetType } from '#domain/server/model/content.js';
-
-import schema, { type Row } from '../schema/memo.js';
-import { tableName as recyclableTableName } from '../schema/recyclable.js';
-import { tableName as topicTableName } from '../schema/topic.js';
-import { tableName as linkTableName } from '../schema/link.js';
-import { tableName as fileTableName } from '../schema/file.js';
-import BaseRepository from './BaseRepository.js';
-import { MimeTypes } from '#domain/shared/model/file.js';
+import type { MemoPatchDTO, Memo, ClientMemoQuery } from '#domain/server/model/memo.js';
+import type { MemoRepository, MemoQuery } from '#domain/server/repository/memoRepository.js';
 import ContentService from '#domain/server/service/ContentService/index.js';
+
+import BaseRepository from './BaseRepository.js';
+import schema, { type Row } from '../schema/memo.js';
+import { tableName as topicTableName } from '../schema/topic.js';
+import { tableName as recyclableTableName } from '../schema/recyclable.js';
 
 export default class SqliteMemoRepository extends BaseRepository implements MemoRepository {
   private readonly tableName = schema.tableName;
@@ -77,7 +73,7 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
     return rows.map(SqliteMemoRepository.rowToMemo);
   }
 
-  public async queryCount(q?: CountQuery) {
+  public async queryCount(q?: ClientMemoQuery) {
     const { count } = await this.getQueryListSql(q || {})
       .select(({ fn }) => [fn.countAll<number>().as('count')])
       .executeTakeFirstOrThrow();
@@ -104,64 +100,6 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
         .where(`${recyclableTableName}.entityId`, q.isAvailableOnly ? 'is' : 'is not', null);
     }
 
-    if (q.links && Object.values(q.links).some((list) => !isEmpty(list))) {
-      sql = sql
-        .innerJoin(linkTableName, `${linkTableName}.sourceId`, `${this.tableName}.id`)
-        .leftJoin(fileTableName, (eb) =>
-          eb
-            .on(`${linkTableName}.targetType`, '=', LinkTargetType.File)
-            .onRef(`${linkTableName}.target`, '=', `${fileTableName}.id`),
-        )
-        .where((eb) =>
-          eb.or(
-            compact([
-              q.links?.domains === 'all' && eb(`${linkTableName}.targetDomain`, 'is not', null),
-              q.links?.entityIds === 'all' &&
-                eb.and([
-                  eb(`${linkTableName}.target`, 'is not', null),
-                  eb(`${linkTableName}.targetType`, '=', LinkTargetType.Entity),
-                ]),
-              q.links?.fileTypes === 'all' && eb(`${fileTableName}.id`, 'is not', null),
-
-              Array.isArray(q.links?.domains) &&
-                q.links.domains.length > 0 &&
-                eb(`${linkTableName}.targetDomain`, 'in', q.links.domains),
-
-              Array.isArray(q.links?.entityIds) &&
-                q.links.entityIds.length > 0 &&
-                eb.and([
-                  eb(`${linkTableName}.targetType`, '=', LinkTargetType.Entity),
-                  eb(`${linkTableName}.target`, 'in', q.links.entityIds),
-                ]),
-
-              Array.isArray(q.links?.fileTypes) &&
-                q.links.fileTypes.length > 0 &&
-                eb.or(
-                  q.links.fileTypes.map((fileType) => {
-                    switch (fileType) {
-                      case FileTypes.Image:
-                        return eb(`${fileTableName}.mimeType`, 'like', 'image%');
-                      case FileTypes.Video:
-                        return eb(`${fileTableName}.mimeType`, 'like', 'video%');
-                      case FileTypes.Audio:
-                        return eb(`${fileTableName}.mimeType`, 'like', 'audio%');
-                      case FileTypes.Pdf:
-                        return eb(`${fileTableName}.mimeType`, '=', MimeTypes.PDF);
-                      case FileTypes.Other:
-                        return eb.and([
-                          eb(`${fileTableName}.mimeType`, 'not like', 'image%'),
-                          eb(`${fileTableName}.mimeType`, 'not like', 'video%'),
-                          eb(`${fileTableName}.mimeType`, 'not like', 'audio%'),
-                          eb(`${fileTableName}.mimeType`, '!=', MimeTypes.PDF),
-                        ]);
-                    }
-                  }),
-                ),
-            ]),
-          ),
-        );
-    }
-
     if (q.topics && q.topics.length > 0) {
       sql = sql
         .innerJoin(topicTableName, `${topicTableName}.entityId`, `${this.tableName}.id`)
@@ -175,26 +113,25 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
           durations.map(({ startTime, endTime }) => {
             let start;
             let end;
-            const field = q.orderBy ?? 'createdAt';
 
             if (startTime) {
               if (!q.startId) {
-                start = eb(`${this.tableName}.${field}`, '>=', startTime);
+                start = eb(`${this.tableName}.createdAt`, '>=', startTime);
               } else {
                 start = eb.or([
-                  eb(`${this.tableName}.${field}`, '>', startTime),
-                  eb.and([eb(`${this.tableName}.${field}`, '=', startTime), eb('id', '>', q.startId)]),
+                  eb(`${this.tableName}.createdAt`, '>', startTime),
+                  eb.and([eb(`${this.tableName}.createdAt`, '=', startTime), eb('id', '>', q.startId)]),
                 ]);
               }
             }
 
             if (endTime) {
               if (!q.endId) {
-                end = eb(`${this.tableName}.${field}`, '<=', endTime);
+                end = eb(`${this.tableName}.createdAt`, '<=', endTime);
               } else {
                 end = eb.or([
-                  eb(`${this.tableName}.${field}`, '<', endTime),
-                  eb.and([eb(`${this.tableName}.${field}`, '=', endTime), eb('id', '<', q.endId)]),
+                  eb(`${this.tableName}.createdAt`, '<', endTime),
+                  eb.and([eb(`${this.tableName}.createdAt`, '=', endTime), eb('id', '<', q.endId)]),
                 ]);
               }
             }
@@ -217,19 +154,9 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
       sql = sql.where('isPinned', '=', q.isPinned ? 1 : 0);
     }
 
-    if (q.orderBy === 'createdAt') {
-      sql = sql.orderBy([
-        `${this.tableName}.createdAt ${q.order ?? 'desc'}`,
-        `${this.tableName}.id ${q.order ?? 'desc'}`,
-      ]);
-    }
-
-    if (q.orderBy === 'updatedAt') {
-      sql = sql.orderBy([
-        `${this.tableName}.updatedAt ${q.order ?? 'desc'}`,
-        `${this.tableName}.id ${q.order ?? 'desc'}`,
-      ]);
-    }
+    sql = sql
+      .orderBy(`${this.tableName}.createdAt`, q.order ?? 'desc')
+      .orderBy(`${this.tableName}.id`, q.order ?? 'desc');
 
     if (q.limit) {
       sql = sql.limit(q.limit);

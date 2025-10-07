@@ -8,6 +8,7 @@ import { IconDisplayMode } from '#domain/client/app/model/note/TreeExplorer';
 import AddButton from './AddButton';
 import SettingButton from './SettingButton';
 import useContextmenu from './useContextmenu';
+import { createEffect, onCleanup } from 'solid-js';
 
 export default function TreeView() {
   const { workbench, exploreTreeView: tree } = container.resolve(NoteService);
@@ -30,6 +31,14 @@ export default function TreeView() {
 
     return iconMode === IconDisplayMode.All;
   }
+
+  createEffect(() => {
+    tree.tree?.root.setActive(true);
+  });
+
+  onCleanup(() => {
+    tree.tree?.root.setActive(false);
+  });
 
   return (
     <div class="grow min-h-0 flex flex-col">

@@ -1,7 +1,8 @@
-import { createEffect, on, onCleanup, Show } from 'solid-js';
+import { createEffect, on, onCleanup, onMount, Show } from 'solid-js';
 import { Loader2Icon } from 'lucide-solid';
 import { debounce } from 'lodash-es';
 import { Key } from '@solid-primitives/keyed';
+import assert from 'assert';
 
 import MemoList from '#domain/client/app/model/memo/List';
 import Item from './Item';
@@ -11,25 +12,27 @@ export default function MemoListView() {
   let rootRef: HTMLDivElement | undefined;
   const memoList = container.resolve(MemoList);
 
-  function tryFetchNextPage(container: HTMLElement) {
+  async function tryFetchNextPage() {
+    assert(rootRef);
+
     if (!memoList.childrenQuery.result.hasNextPage || memoList.childrenQuery.result.isLoading) {
       return;
     }
 
-    if ((container.scrollTop + container.clientHeight) / container.scrollHeight > 0.75) {
-      memoList.childrenQuery.result.fetchNextPage();
+    if ((rootRef.scrollTop + rootRef.clientHeight) / rootRef.scrollHeight > 0.75) {
+      await memoList.childrenQuery.result.fetchNextPage();
     }
   }
 
-  const handleScroll = debounce(({ target }: Event) => {
-    if (target instanceof HTMLElement) {
-      tryFetchNextPage(target);
-    }
-  }, 500);
+  const handleScroll = debounce(tryFetchNextPage, 500);
+
+  onMount(async () => {
+    await memoList.childrenQuery.result.fetchNextPage();
+    tryFetchNextPage();
+  });
 
   onCleanup(() => {
     handleScroll.cancel();
-    memoList.destroy();
   });
 
   createEffect(

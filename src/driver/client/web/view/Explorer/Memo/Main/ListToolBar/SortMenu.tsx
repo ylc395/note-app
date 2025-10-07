@@ -16,10 +16,9 @@ export default function SortMenu() {
       <Menu.Positioner>
         <Menu.Content class="z-10 bg-white">
           <Menu.RadioItemGroup
-            value={`${filter.sortOptions.orderBy}-${filter.sortOptions.order}`}
+            value={filter.order}
             onValueChange={({ value }) => {
-              const [orderBy, order] = value.split('-') as ['createdAt' | 'updatedAt', 'desc' | 'asc'];
-              filter.setOrder({ order, orderBy });
+              filter.setOrder(value as 'desc' | 'asc');
             }}
           >
             <Menu.RadioItem class="cursor-pointer" value="createdAt-desc">

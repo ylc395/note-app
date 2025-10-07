@@ -3,15 +3,7 @@ import assert from 'node:assert';
 import dayjs from 'dayjs';
 
 import { arrayOf } from '#utils/collection.js';
-import type {
-  Memo,
-  MemoDTO,
-  ClientMemoQuery,
-  MemoVO,
-  MemoPatchDTO,
-  Duration,
-  CountQuery,
-} from '#domain/server/model/memo.js';
+import type { Memo, MemoDTO, ClientMemoQuery, MemoVO, MemoPatchDTO, Duration } from '#domain/server/model/memo.js';
 import container from '#utils/singletonContainer.js';
 import { EntityTypes } from '#domain/shared/model/entity.js';
 import { SearchFields } from '#domain/shared/model/search.js';
@@ -92,7 +84,7 @@ export default class MemoService extends BaseService {
       const startMemo = await this.repo.memos.findOneById(query.startId, { isAvailableOnly: true });
       assert(startMemo, 'invalid start id');
 
-      const time = query.orderBy === 'updatedAt' ? startMemo.updatedAt : startMemo.createdAt;
+      const time = startMemo.createdAt;
 
       durations = durations
         ?.filter(({ endTime }) => !endTime || endTime >= time)
@@ -108,7 +100,7 @@ export default class MemoService extends BaseService {
     if (query.endId) {
       const endMemo = await this.repo.memos.findOneById(query.endId, { isAvailableOnly: true });
       assert(endMemo, 'invalid end id');
-      const time = query.orderBy === 'updatedAt' ? endMemo.updatedAt : endMemo.createdAt;
+      const time = endMemo.createdAt;
 
       durations = durations
         ?.filter(({ startTime }) => !startTime || startTime <= time)
@@ -143,7 +135,6 @@ export default class MemoService extends BaseService {
       parentId: query.parentId || null,
       limit: query.limit ?? (query.keyword ? undefined : 30),
       order: query.order ?? 'desc',
-      orderBy: query.orderBy ?? 'createdAt',
     });
 
     return await this.toVO(memos);
@@ -217,22 +208,20 @@ export default class MemoService extends BaseService {
     }
   };
 
-  public async queryCount(query?: CountQuery) {
-    return this.repo.memos.queryCount({ ...query, parentId: null });
+  public async queryCount(query: ClientMemoQuery) {
+    return this.repo.memos.queryCount(query);
   }
 
   public async queryAvailableDateRange() {
     const [firstOne, lastOne] = await Promise.all([
       this.repo.memos.findAll({
         limit: 1,
-        orderBy: 'createdAt',
         order: 'asc',
         parentId: null,
         isAvailableOnly: true,
       }),
       this.repo.memos.findAll({
         limit: 1,
-        orderBy: 'createdAt',
         order: 'desc',
         parentId: null,
         isAvailableOnly: true,

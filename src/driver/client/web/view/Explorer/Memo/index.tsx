@@ -1,8 +1,7 @@
-import { createEffect, on } from 'solid-js';
+import { onCleanup } from 'solid-js';
 
 import container from '#utils/singletonContainer';
 import MemoList from '#domain/client/app/model/memo/List';
-import UIState, { SidebarTabs } from '#web/view/UIState';
 
 import Main from './Main';
 import SearchBox from './SearchBox';
@@ -10,14 +9,11 @@ import Header from '../Header';
 
 export default function MemoExplorer(props: { className: string }) {
   const memoList = container.resolve(MemoList);
-  const uiState = container.resolve(UIState);
+  memoList.setActive(true);
 
-  createEffect(
-    on(
-      () => uiState.get('app.explorer') === SidebarTabs.Memo,
-      (isActive) => memoList.setActive(isActive),
-    ),
-  );
+  onCleanup(() => {
+    memoList.setActive(false);
+  });
 
   return (
     <div class={props.className}>

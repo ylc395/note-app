@@ -28,10 +28,7 @@ export default class MemoView {
 
     this.childrenQuery = createQuery(
       ({ signal }) =>
-        this.remote.memo.queryList.query(
-          { parentId: options.memoId || this.value!.id, order: 'desc', orderBy: 'createdAt' },
-          { signal },
-        ),
+        this.remote.memo.queryList.query({ parentId: options.memoId || this.value!.id, order: 'desc' }, { signal }),
       {
         refetchOnWindowFocus: false,
         abortSignal: this.destroyController.signal,

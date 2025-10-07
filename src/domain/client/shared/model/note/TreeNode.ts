@@ -22,6 +22,7 @@ export default class TreeNode {
     onStateChanged?: (node: TreeNode, state: number) => void;
   }) {
     this.setValue(value);
+    this.isActive = parent?.isActive ?? false;
     this.parent = parent;
     this.options = options;
 
@@ -35,11 +36,10 @@ export default class TreeNode {
       },
       {
         refetchOnWindowFocus: true,
-        refetchOnMount: false,
         abortSignal: this.destroyController.signal,
         queryKey: ['notes', { parentId: value?.id ?? null }],
         options: () => ({
-          enabled: this.isExpanded,
+          enabled: this.isExpanded && this.isActive,
         }),
       },
     );
@@ -55,6 +55,8 @@ export default class TreeNode {
   private readonly options;
 
   private readonly remote = container.resolve(rpcToken);
+
+  @observable private accessor isActive;
 
   public parent?: TreeNode;
 
@@ -140,6 +142,19 @@ export default class TreeNode {
 
     this.value = value;
     return this;
+  }
+
+  @action
+  public setActive(value: boolean) {
+    this.isActive = value;
+
+    if (!this.children) {
+      return;
+    }
+
+    for (const child of this.children) {
+      child.setActive(value);
+    }
   }
 
   @action

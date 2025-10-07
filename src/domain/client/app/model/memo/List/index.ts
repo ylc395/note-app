@@ -1,5 +1,4 @@
-import { action, autorun, computed, observable, reaction } from 'mobx';
-import assert from 'assert';
+import { action, autorun, computed, observable } from 'mobx';
 import { createInfiniteQuery, createQuery } from 'mobx-tanstack-query/preset';
 
 import container from '#utils/singletonContainer';
@@ -12,46 +11,26 @@ import Editor from '../Editor';
 
 export default class MemoList {
   constructor() {
-    this.countQuery = createQuery(
-      ({ signal }) => this.remote.memo.queryCount.query(this.filter!.countParams, { signal }),
-      {
-        abortSignal: this.destroyController.signal,
-        options: () => ({
-          enabled: !this.isSearchMode && this.isActive,
-          queryKey: ['memos', 'count', this.filter.countParams],
-        }),
-      },
-    );
+    this.countQuery = createQuery(({ signal }) => this.remote.memo.queryCount.query({ parentId: null }, { signal }), {
+      options: () => ({
+        enabled: this.filter.isEmpty && this.isActive,
+        queryKey: ['memos', 'count'] as const,
+      }),
+    });
 
     this.childrenQuery = createInfiniteQuery(
-      ({ signal, pageParam: { endId, startId, ...params } }): Promise<MemoVO[]> =>
-        this.remote.memo.queryList.query(
-          {
-            ...params,
-            ...this.filter.params,
-            endId,
-            startId,
-            durations: this.filter.params.durations,
-          },
-          { signal },
-        ),
+      ({ signal, pageParam, queryKey: [_, params] }): Promise<MemoVO[]> =>
+        this.remote.memo.queryList.query({ ...pageParam, ...params }, { signal }),
       {
-        abortSignal: this.destroyController.signal,
         getNextPageParam: (lastPage, _, lastPageParam) => this.getNextPageParams({ lastPage, lastPageParam }),
-        onDone: (data) => {
-          const lastPage = data.pages.at(-1);
-          if (lastPage && this.pageLimit && lastPage.length < this.pageLimit && data.pageParams.at(-1)?.isPinned) {
-            this.childrenQuery?.fetchNextPage();
-          }
-        },
         select: (data) => ({
           ...data,
           pages: this.handleFetchedData(data.pages),
         }),
+        initialPageParam: this.getNextPageParams(),
         options: () => ({
-          enabled: this.isActive,
-          initialPageParam: this.getNextPageParams(),
-          queryKey: ['memos', this.filter.params],
+          enabled: false,
+          queryKey: ['memos', this.filter.params] as const,
         }),
       },
     );
@@ -60,23 +39,12 @@ export default class MemoList {
   }
 
   private init() {
-    reaction(
-      () => this.filter.params,
-      () => this.justCreatedMemos.clear(),
-      { signal: this.destroyController.signal },
-    );
+    autorun(() => {
+      this.filter.timeSelector.setActive(this.isActive);
+    });
 
-    autorun(
-      () => {
-        this.filter.setActive(this.isActive);
-      },
-      { signal: this.destroyController.signal },
-    );
-
-    this.eventBus.on(
-      [DomainEventBus.eventNames.Created, DomainEventBus.eventNames.Removed],
-      () => this.countQuery!.invalidate(),
-      { signal: this.destroyController.signal },
+    this.eventBus.on([DomainEventBus.eventNames.Created, DomainEventBus.eventNames.Removed], () =>
+      this.countQuery!.invalidate(),
     );
   }
 
@@ -84,76 +52,21 @@ export default class MemoList {
     onSubmit: async (value) => {
       const newMemo = await this.remote.memo.create.mutate({ body: value });
       this.eventBus.emit(DomainEventBus.eventNames.Created, newMemo);
-      this.childrenQuery.invalidate();
-      // .then(this.addNewItem.bind(this, newMemo));
+      this.childrenQuery.refetch();
 
       return 'reset';
     },
   });
 
-  private readonly justCreatedMemos = new Set<MemoVO['id']>();
-
   private handleFetchedData(pages: MemoVO[][]) {
-    if (!this.isSearchMode && this.justCreatedMemos.size === 0) {
+    if (this.filter.isEmpty) {
       return pages;
     }
 
+    // 对于过滤模式，pinned 排序需要在前端进行
     return pages.map((page) => {
-      // 新创建的 memos 已经在特定的地方单独存在了（见 addNewItem 方法），这里不要再存在
-      if (this.justCreatedMemos.size > 0) {
-        page = page.filter(({ id }) => !this.justCreatedMemos.has(id));
-      }
-
-      // 对于关键字搜索模式，pinned 排序需要在前端进行
-      if (this.isSearchMode) {
-        return page.toSorted((memo1, memo2) => Number(memo2.isPinned) - Number(memo1.isPinned));
-      }
-
-      return page;
+      return page.toSorted((memo1, memo2) => Number(memo2.isPinned) - Number(memo1.isPinned));
     });
-  }
-
-  @action
-  private addNewItem(newItem: MemoVO) {
-    if (!this.childrenQuery.result.data) {
-      return;
-    }
-
-    this.childrenQuery.setData((data) => {
-      if (!data) {
-        return data;
-      }
-
-      let index: { page: number; item: number } | undefined;
-
-      // 理论上可以不用遍历列表的全部位置，只看 4 个位置（pinned 区的开头结尾、非 pinned 区的开头结尾）即可。但代码写起来太麻烦了
-      outer: for (let i = 0; i < data.pages.length; i++) {
-        const page = data.pages[i]!;
-        for (let j = 0; j < page.length; j++) {
-          const item = page[j]!;
-
-          if (item.id === newItem.id) {
-            index = { page: i, item: j };
-            break outer;
-          }
-        }
-      }
-
-      if (!index) {
-        const [firstPage = [], ...pages] = data.pages;
-        return { ...data, pages: [[{ ...newItem, justCreated: 'omit' }, ...firstPage], ...pages] };
-      }
-
-      return {
-        ...data,
-        pages: data.pages.with(index.page, data.pages[index.page]!.toSpliced(index.item, 1, newItem)),
-      };
-    });
-  }
-
-  @computed
-  private get isSearchMode() {
-    return Boolean(this.filter.keyword);
   }
 
   @observable private accessor isActive = false;
@@ -172,39 +85,39 @@ export default class MemoList {
 
   @computed
   public get count() {
-    return this.isSearchMode ? this.childrenQuery.result.data?.pages[0]?.length : this.countQuery.result.data;
-  }
-
-  private get pageLimit() {
-    return this.isSearchMode ? undefined : 30;
+    return !this.filter.isEmpty ? this.childrenQuery.result.data?.pages[0]?.length : this.countQuery.result.data;
   }
 
   private getNextPageParams(params?: { lastPage: MemoVO[]; lastPageParam: { limit?: number; isPinned?: boolean } }):
     | {
         isPinned?: boolean;
+        limit?: number;
         endId?: string;
         startId?: string;
-        limit?: number;
       }
     | undefined {
+    const pageLimit = this.filter.isEmpty ? 20 : undefined;
+
+    // 第一次请求
     if (!params) {
       return {
-        isPinned: this.isSearchMode ? undefined : true,
-        limit: this.pageLimit,
+        isPinned: this.filter.isEmpty ? true : undefined,
+        limit: pageLimit,
       };
     }
 
     const { lastPage, lastPageParam } = params;
 
-    if (!this.pageLimit || !lastPageParam.limit) {
+    if (!pageLimit || !lastPageParam.limit) {
       return;
     }
 
     if (lastPage.length < lastPageParam.limit) {
+      // pinned + 非 pinned，补足 limit 个
       if (lastPageParam.isPinned) {
         return {
           isPinned: false,
-          limit: this.pageLimit - lastPage.length,
+          limit: pageLimit - lastPage.length,
         };
       }
       return;
@@ -215,17 +128,16 @@ export default class MemoList {
     if (lastOne) {
       const params = {
         isPinned: lastOne.isPinned,
-        limit: this.pageLimit,
+        limit: pageLimit,
       };
 
-      if (this.filter?.sortOptions.order === 'asc') {
+      if (this.filter?.order === 'asc') {
         return { ...params, startId: lastOne.id };
       } else {
         return { ...params, endId: lastOne.id };
       }
     }
   }
-  private destroyController = new AbortController();
 
   @action
   public setActive(value: boolean) {
@@ -235,14 +147,5 @@ export default class MemoList {
   @action
   public setFocusId(id: MemoVO['id'] | undefined) {
     this.focusedId = id;
-  }
-
-  public reload() {
-    assert(this.childrenQuery, 'can not reload');
-    this.childrenQuery.refetch();
-  }
-
-  public destroy() {
-    this.destroyController.abort();
   }
 }

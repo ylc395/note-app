@@ -1,4 +1,4 @@
-import type { EntityId, EntityParentId } from './entity.js';
+import type { EntityParentId } from './entity.js';
 import { MimeTypes } from './file.js';
 
 export interface Memo {
@@ -73,7 +73,6 @@ export function getFileType(mimeType: string) {
  */
 export type ClientMemoQuery = {
   limit?: number;
-  orderBy?: 'createdAt' | 'updatedAt';
   order?: 'asc' | 'desc';
   parentId?: EntityParentId;
   isPinned?: boolean;
@@ -82,14 +81,4 @@ export type ClientMemoQuery = {
   startId?: Memo['id'];
   topics?: string[];
   keyword?: string;
-  links?: {
-    entityIds?: EntityId[] | 'all';
-    domains?: string[] | 'all';
-    fileTypes?: FileTypes[] | 'all';
-  };
 };
-
-/**
- * @api
- */
-export type CountQuery = Pick<ClientMemoQuery, 'durations' | 'topics' | 'links'>;

@@ -1,40 +1,31 @@
 import { action, computed, observable, toJS } from 'mobx';
-import { pick } from 'lodash-es';
 
-import type { ClientMemoQuery, CountQuery } from '#domain/shared/model/memo';
+import type { ClientMemoQuery } from '#domain/shared/model/memo';
 import TimeSelector from './TimeSelector';
 
 export default class Filter {
   public readonly timeSelector = new TimeSelector();
 
-  @action
-  public setActive(value: boolean) {
-    this.timeSelector.setActive(value);
-  }
-
   @observable public accessor keyword: string | undefined;
 
-  @observable.ref public accessor sortOptions: Readonly<Pick<ClientMemoQuery, 'order' | 'orderBy'>> = {
-    orderBy: 'createdAt',
-    order: 'desc',
-  };
+  @observable public accessor order: ClientMemoQuery['order'] = 'desc';
 
   @computed
-  public get params(): ClientMemoQuery {
+  public get params() {
     return {
-      ...toJS(this.sortOptions),
+      order: this.order,
       keyword: this.keyword || undefined,
       durations: toJS(this.timeSelector.selectedDurations),
     };
   }
 
   @computed
-  public get countParams(): CountQuery {
-    return pick(this.params, ['durations', 'topics', 'links']);
+  public get isEmpty() {
+    return !this.params.keyword && this.params.durations.length === 0;
   }
 
   @action
-  public setOrder(value: Filter['sortOptions']) {
-    this.sortOptions = value;
+  public setOrder(value: Filter['order']) {
+    this.order = value;
   }
 }
