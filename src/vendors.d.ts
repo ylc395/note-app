@@ -1,4 +1,5 @@
 /// <reference types="vite/client" />
+/// <reference types="solid-js" />
 
 declare module 'single-file-core/single-file';
 declare module 'page-lifecycle';
@@ -12,4 +13,17 @@ declare module 'text-fragments-polyfill/text-fragment-utils' {
       suffix?: string;
     }>;
   };
+}
+
+declare global {
+  declare module 'solid-js' {
+    namespace JSX {
+      interface IntrinsicElements {
+        'em-emoji': {
+          'attr:shortcodes'?: string;
+          class?: string;
+        };
+      }
+    }
+  }
 }

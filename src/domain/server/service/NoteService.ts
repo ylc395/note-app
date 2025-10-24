@@ -6,7 +6,6 @@ import {
   type NotePatchDTO,
   type Note,
   type ClientNoteQuery,
-  type NoteBatchPatchDTO,
   type NewNote,
   type FileTextQuery,
   normalizeTitle,
@@ -114,7 +113,7 @@ export default class NoteService extends BaseService {
   }
 
   @BaseService.transaction
-  public async batchUpdate(ids: Note['id'][], patch: NoteBatchPatchDTO) {
+  public async batchUpdate(ids: Note['id'][], patch: NotePatchDTO) {
     await this.assertAvailableIds(ids);
 
     if (patch.parentId) {

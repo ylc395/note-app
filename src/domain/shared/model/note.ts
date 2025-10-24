@@ -26,11 +26,6 @@ export interface DuplicatedNoteDTO {
   from: Note['id'];
 }
 
-/**
- * @api
- */
-export type NoteBatchPatchDTO = Pick<NotePatchDTO, 'parentId'>;
-
 export type NewNoteDTO = Partial<Pick<Note, 'body' | 'fileId' | 'icon' | 'parentId' | 'sourceUrl' | 'title'>>;
 
 /**

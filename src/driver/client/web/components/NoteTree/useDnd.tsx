@@ -12,7 +12,7 @@ import type TreeNode from '#domain/client/shared/model/note/TreeNode';
 import DragPreview from './DragPreview';
 
 export default function useDnd(props: { treeView: TreeViewModel; node: TreeNode }) {
-  const { move } = container.resolve(NoteService);
+  const { updateNote } = container.resolve(NoteService);
   const [dropElementRef, setDropElementRef] = createSignal<HTMLElement>();
   const [isDropHovering, setIsDropHovering] = createSignal(false);
 
@@ -70,7 +70,7 @@ export default function useDnd(props: { treeView: TreeViewModel; node: TreeNode 
             const note = NoteService.getNote(source.data);
 
             if (note) {
-              move(note, props.node.id).then(() => props.node.toggleExpand(true));
+              updateNote(note, { parentId: props.node.id }).then(() => props.node.toggleExpand(true));
             }
           },
         }),

@@ -5,7 +5,6 @@ import {
   clientNoteQuerySchema,
   notePatchDTOSchema,
   noteSchema,
-  noteBatchPatchDTOSchema,
   fileTextQuerySchema,
 } from '#domain/shared/infra/apiSchema/note.js';
 import { publicProcedure, router } from './trpc.js';
@@ -24,7 +23,7 @@ export default router({
     .mutation(({ input: [id, patch], ctx: { noteService } }) => noteService.updateOne(id, patch)),
 
   batchUpdate: publicProcedure
-    .input(tuple([noteSchema.shape.id.array(), noteBatchPatchDTOSchema]))
+    .input(tuple([noteSchema.shape.id.array(), notePatchDTOSchema]))
     .mutation(({ input: [ids, note], ctx: { noteService } }) => noteService.batchUpdate(ids, note)),
 
   create: publicProcedure.input(noteDTOSchema).mutation(({ input, ctx: { noteService } }) => noteService.create(input)),

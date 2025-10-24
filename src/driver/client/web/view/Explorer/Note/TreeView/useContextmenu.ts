@@ -5,8 +5,10 @@ import container from '#utils/singletonContainer';
 import StarService from '#domain/client/app/service/StarService';
 import RecyclableService from '#domain/client/app/service/RecyclableService';
 
-import { EntityTypes } from '#domain/shared/model/entity';
 import type TreeNode from '#domain/client/shared/model/note/TreeNode';
+import { EntityTypes } from '#domain/shared/model/entity';
+import type { MenuItem } from '#web/components/common/ContextMenu';
+import IconSelector from './IconSelector';
 
 export default function useContextmenu() {
   const { exploreTreeView: tree, createNote } = container.resolve(NoteService);
@@ -32,10 +34,10 @@ export default function useContextmenu() {
     }
   }
 
-  function contextmenu(node: TreeNode) {
+  function contextmenu(node: TreeNode): Array<MenuItem | 'separator'> {
     return [
       { label: '移动至...', key: 'move' },
-      { label: '更改图标', key: 'icon' },
+      { label: '更改图标', key: 'icon', content: ({ closeMenu }) => IconSelector({ onUpdated: closeMenu }) },
       ...(tree.treeNodeSets.selected.size === 1
         ? [
             { label: node.value?.isStar ? '取消收藏' : '收藏', key: 'star' },

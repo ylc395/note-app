@@ -38,13 +38,13 @@ export default class NoteService {
     this.workbench.open({ entityId: newNote.id, mimeType: newNote.mimeType });
   };
 
-  public readonly move = async (notes: MaybeArray<NoteVO>, targetId: NotePatchDTO['parentId']) => {
+  public readonly updateNote = async (notes: MaybeArray<NoteVO | NoteVO['id']>, patch: NotePatchDTO) => {
     notes = arrayOf(notes);
-    const ids = notes.map(({ id }) => id);
-    await this.remote.note.batchUpdate.mutate([ids, { parentId: targetId }]);
+    const ids = notes.map((note) => (typeof note === 'string' ? note : note.id));
+    await this.remote.note.batchUpdate.mutate([ids, patch]);
 
-    for (const { id } of notes) {
-      this.eventBus.emit(DomainEventBus.eventNames.Updated, { id, payload: { parentId: targetId } });
+    for (const id of ids) {
+      this.eventBus.emit(DomainEventBus.eventNames.Updated, { id, payload: patch });
     }
   };
 

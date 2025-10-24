@@ -1,6 +1,7 @@
 import { createMemo, For, JSX, Show } from 'solid-js';
 import { Portal } from 'solid-js/web';
-import { Menu } from '@ark-ui/solid';
+import { Menu, useMenu } from '@ark-ui/solid';
+import { ChevronRightIcon } from 'lucide-solid';
 
 import shell from '#web/infra/shell';
 
@@ -9,7 +10,7 @@ export interface MenuItem {
   key: string;
   className?: string;
   disabled?: boolean;
-  content?: () => JSX.Element;
+  content?: (e: { closeMenu: () => void }) => JSX.Element;
 }
 
 export default function ContextMenu<T = void>(props: {
@@ -20,18 +21,22 @@ export default function ContextMenu<T = void>(props: {
   seed: T;
   contextMenu?: Array<MenuItem | 'separator'> | ((data: T) => Array<MenuItem | 'separator'>);
 }) {
+  const menu = useMenu({
+    onOpenChange: props.onOpenChange,
+    onSelect: (e) => props.onItemClick?.(e.value),
+  });
+
   const items = createMemo(() =>
     typeof props.contextMenu === 'function' ? props.contextMenu?.(props.seed) : props.contextMenu,
   );
 
+  function closeMenu() {
+    menu.api().setOpen(false);
+  }
+
   return (
     <Show when={items()} fallback={props.children({})}>
-      <Menu.Root
-        unmountOnExit
-        lazyMount
-        onOpenChange={props.onOpenChange}
-        onSelect={(e) => props.onItemClick?.(e.value)}
-      >
+      <Menu.RootProvider unmountOnExit lazyMount value={menu}>
         <Menu.ContextTrigger asChild={(childProps) => props.children(childProps())} />
         <Portal mount={shell.appRoot}>
           <Menu.Positioner onClick={(e) => e.stopPropagation()}>
@@ -43,12 +48,15 @@ export default function ContextMenu<T = void>(props: {
                     <Menu.Separator />
                   ) : item.content ? (
                     <Menu.Root lazyMount unmountOnExit>
-                      <Menu.TriggerItem>{item.label}</Menu.TriggerItem>
-                      <Portal mount={shell.appRoot}>
-                        <Menu.Positioner>
-                          <Menu.Content>{item.content()}</Menu.Content>
-                        </Menu.Positioner>
-                      </Portal>
+                      <Menu.TriggerItem class={`menu-item ${item.className}`}>
+                        <span class="grow">{item.label}</span>
+                        <Menu.Indicator>
+                          <ChevronRightIcon />
+                        </Menu.Indicator>
+                      </Menu.TriggerItem>
+                      <Menu.Positioner>
+                        <Menu.Content>{item.content({ closeMenu })}</Menu.Content>
+                      </Menu.Positioner>
                     </Menu.Root>
                   ) : (
                     <Menu.Item disabled={item.disabled} class={`menu-item ${item.className || ''}`} value={item.key}>
@@ -60,7 +68,7 @@ export default function ContextMenu<T = void>(props: {
             </Menu.Content>
           </Menu.Positioner>
         </Portal>
-      </Menu.Root>
+      </Menu.RootProvider>
     </Show>
   );
 }

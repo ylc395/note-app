@@ -1,0 +1,32 @@
+import data from '@emoji-mart/data';
+import { Picker } from 'emoji-mart';
+import { onMount } from 'solid-js';
+
+import container from '#utils/singletonContainer';
+import NoteService from '#domain/client/app/service/NoteService';
+import { encodeIcon } from '#domain/client/app/model/note/icon';
+
+export default function IconSelector(props?: { onUpdated?: () => void }) {
+  let rootRef: HTMLDivElement | undefined;
+  const { updateNote, exploreTreeView } = container.resolve(NoteService);
+
+  function onEmojiSelect(e: { shortcodes: string }) {
+    updateNote(Array.from(exploreTreeView.treeNodeSets.selected), { icon: encodeIcon('emoji', e.shortcodes) });
+    props?.onUpdated?.();
+  }
+
+  onMount(() => {
+    // https://github.com/missive/emoji-mart?tab=readme-ov-file#options--props
+    const picker = new Picker({
+      data,
+      previewPosition: 'none',
+      emojiButtonSize: 24,
+      emojiSize: 18,
+      onEmojiSelect,
+      maxFrequentRows: 1,
+    });
+    rootRef!.append(picker as unknown as HTMLElement);
+  });
+
+  return <div class="-mt-10" ref={rootRef}></div>;
+}

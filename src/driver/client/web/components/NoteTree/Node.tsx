@@ -39,7 +39,9 @@ export default function Node(props: Props) {
     'bg-surface-tertiary':
       (isDropHovering() && !props.node.is(TreeNodeStates.Unselectable)) || props.node.is(TreeNodeStates.Selected),
   }));
-  const iconClassName = 'mr-stack-xs p-0 shrink-0 w-4 h-4 inline align-text-bottom';
+  const iconClassName = createMemo(
+    () => `mr-stack-xs p-0 shrink-0 w-4 h-4 inline ${props.node.icon ? '' : 'align-text-bottom'}`,
+  );
 
   function handleItemClick(node: TreeNode, e: MouseEvent) {
     if (e.metaKey) {
@@ -90,9 +92,9 @@ export default function Node(props: Props) {
     return (
       <>
         <Show when={props.shouldRenderIcon?.(props.node)}>
-          <Icon {...props.node.value} iconClassName={iconClassName} />
+          <Icon {...props.node.value} iconClassName={iconClassName()} />
         </Show>
-        {props.node.value?.isStar && <StarIcon stroke-width={0} fill="yellow" class={iconClassName} />}
+        {props.node.value?.isStar && <StarIcon stroke-width={0} fill="yellow" class={iconClassName()} />}
         {IS_DEV && `${props.node.value!.id.slice(0, 4)}+`}
         {props.node.title}
       </>
