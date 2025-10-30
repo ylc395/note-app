@@ -154,6 +154,7 @@ export default class ImageTextExtractor implements TextExtractor {
 
     const transformedResult: ExtractResult = {
       text: ImageTextExtractor.postProcessText(result.data.text),
+      lang: this.actualLangs,
       location: {
         confidence: result.data.confidence,
         blocks: cloneDeepWith(textLocationSchema.shape.blocks.parse(result.data.blocks || undefined), (value, key) => {
@@ -174,8 +175,12 @@ export default class ImageTextExtractor implements TextExtractor {
     return transformedResult;
   }
 
+  private get actualLangs() {
+    return this.lang.length > 0 ? this.lang : DEFAULT_LANG_CODES;
+  }
+
   private async createScheduler() {
-    const langs = (this.lang.length > 0 ? this.lang : DEFAULT_LANG_CODES).join('+');
+    const langs = this.actualLangs.join('+');
     const scheduler = createScheduler();
 
     const workers = await Promise.all(

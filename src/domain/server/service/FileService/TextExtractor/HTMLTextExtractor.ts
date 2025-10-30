@@ -14,6 +14,10 @@ export default class HTMLTextExtractor implements TextExtractor {
     const html = textDecoder.decode(data);
     const bodyEl = findOne((el) => el.tagName.toLowerCase() === 'body', [parseDocument(html)], true);
 
-    return Promise.resolve({ text: bodyEl ? textContent(bodyEl) : '', location: {} });
+    return Promise.resolve({
+      text: bodyEl ? textContent(bodyEl) : '',
+      location: {},
+      lang: [], // 网页文字记录的语言不重要
+    });
   }
 }

@@ -52,11 +52,13 @@ export default class PDFTextExtractor implements TextExtractor {
         .map((n, _, arr) => Math.ceil((pages.length / (arr.length + 1)) * (n + 1)))
         .flatMap((page) => [
           PDFTextExtractor.getTextContent(doc, Number(page)).then((result) => {
-            pagesToCheck[Number(page)] = { extract: result };
+            pagesToCheck[Number(page)] ??= {};
+            pagesToCheck[Number(page)]!.extract = result;
           }),
 
           this.extractPageTextContentByOcr(doc, Number(page)).then((result) => {
-            pagesToCheck[Number(page)] = { ocr: result };
+            pagesToCheck[Number(page)] ??= {};
+            pagesToCheck[Number(page)]!.ocr = result;
           }),
         ]),
     );

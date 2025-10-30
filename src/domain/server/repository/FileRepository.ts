@@ -1,4 +1,4 @@
-import type { File, FileVO, FileTextRecord } from '#domain/server/model/file.js';
+import type { File, FileVO, FileTextRecord, NewFileTextRecord } from '#domain/server/model/file.js';
 import type { MaybeArray } from '#utils/collection';
 
 export type FilePatch = Partial<Pick<File, 'lang'>>;
@@ -14,7 +14,7 @@ export interface FileRepository {
   findAll: (q: Query) => Promise<FileVO[]>;
   create: (file: Required<File>) => Promise<FileVO>;
   updateOne: (id: File['id'], patch: FilePatch) => Promise<boolean>;
-  createTextRecord: (fileText: Required<FileTextRecord>) => Promise<void>;
+  createTextRecord: (fileText: NewFileTextRecord) => Promise<void>;
   findUnfinishedFile: (mimeTypes: string[]) => Promise<FileVO[]>;
   findAllFileTextRecords: (ids: MaybeArray<File['id']>) => Promise<FileTextRecord[]>;
 }

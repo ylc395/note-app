@@ -1,5 +1,5 @@
 import type { FileRepository, FilePatch, Query } from '#domain/server/repository/fileRepository.js';
-import type { File, FileTextRecord } from '#domain/server/model/file.js';
+import type { File, NewFileTextRecord } from '#domain/server/model/file.js';
 
 import { toArrayBuffer } from '#utils/file.js';
 import type { MaybeArray } from '#utils/collection.js';
@@ -62,10 +62,14 @@ export default class SqliteFileRepository extends BaseRepository implements File
     return row;
   }
 
-  public async createTextRecord(record: Required<FileTextRecord>) {
+  public async createTextRecord(record: NewFileTextRecord) {
     await this.db
       .insertInto(fileTextTableName)
-      .values({ ...record, location: JSON.stringify(record.location) })
+      .values({
+        ...record,
+        location: JSON.stringify(record.location),
+        lang: record.lang ? JSON.stringify(record.lang) : null,
+      })
       .execute();
   }
 
@@ -73,7 +77,7 @@ export default class SqliteFileRepository extends BaseRepository implements File
     const rows = await this.db
       .selectFrom(fileTableName)
       .leftJoin(fileTextTableName, `${fileTableName}.id`, `${fileTextTableName}.fileId`)
-      .select(['id', 'size', 'lang', 'mimeType', 'hash'])
+      .select(['id', 'size', `${fileTableName}.lang`, 'mimeType', 'hash'])
       .groupBy('fileId')
       .where('mimeType', 'in', mimeTypes)
       .havingRef((eb) => eb.fn.count('location'), '<', `${fileTableName}.textUnitLength`)

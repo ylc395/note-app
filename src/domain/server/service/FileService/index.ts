@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import assert from 'node:assert';
 
 import { getHash, toArrayBuffer } from '#utils/file.js';
-import type { FileVO, FileDTO, FileTextRecord } from '#domain/server/model/file.js';
+import type { FileVO, FileDTO, NewFileTextRecord } from '#domain/server/model/file.js';
 
 import BaseService from '../BaseService.js';
 import EntityService from '../EntityService.js';
@@ -86,7 +86,7 @@ export default class FileService extends BaseService {
     }
   }
 
-  private async handleTextExtracted(record: Required<FileTextRecord>) {
+  private async handleTextExtracted(record: NewFileTextRecord) {
     // todo: 把提取的文本存在数据库以外的地方。因为归根结底这是冗余数据
     await this.repo.files.createTextRecord(record);
   }

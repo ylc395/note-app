@@ -1,9 +1,10 @@
-import type { FileTextRecord } from '#domain/server/model/file';
 import type { JSONColumnType, Kysely } from 'kysely';
+import type { FileTextRecord } from '#domain/server/model/file';
 
 export interface Row {
   fileId: string;
   text: string;
+  lang: JSONColumnType<NonNullable<FileTextRecord['lang']>> | null;
   location: JSONColumnType<FileTextRecord['location']>;
 }
 
@@ -16,6 +17,7 @@ export default {
       .createTable(tableName)
       .addColumn('fileId', 'text', (col) => col.notNull())
       .addColumn('text', 'text', (col) => col.notNull())
+      .addColumn('lang', 'text')
       .addColumn('location', 'text', (col) => col.notNull());
   },
 } as const;
