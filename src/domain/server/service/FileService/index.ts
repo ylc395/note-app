@@ -6,7 +6,7 @@ import type { FileVO, FileDTO, FileTextRecord } from '#domain/server/model/file.
 
 import BaseService from '../BaseService.js';
 import EntityService from '../EntityService.js';
-import TextExtractor from './TextExtractor/index.js';
+import JobQueue from './textExtractor/JobQueue.js';
 
 export default class FileService extends BaseService {
   constructor() {
@@ -14,7 +14,7 @@ export default class FileService extends BaseService {
     this.runtime.ready().then(this.resumeTextExtractor.bind(this));
   }
 
-  private readonly textExtractor = new TextExtractor();
+  private readonly textExtractJobQueue = new JobQueue();
 
   public async createFile(file: FileDTO) {
     assert(!(file.path && file.data), 'can not use both path and data');
@@ -29,20 +29,25 @@ export default class FileService extends BaseService {
       return existingFile;
     }
 
+    const params = {
+      mimeType: file.mimeType,
+      lang: file.lang || [],
+      data,
+    };
+
+    const textExtractor = JobQueue.getExtractor(params);
     const fileVO = await this.repo.files.create({
       id: EntityService.generateId(),
+      ...params,
       hash,
-      mimeType: file.mimeType,
-      lang: file.lang || ['chi_sim'],
-      data,
       size: data.byteLength,
-      textUnitLength: await this.textExtractor.getTextUnitLength(data, file.mimeType),
+      textUnitLength: textExtractor ? await textExtractor.getTextUnitLength(data) : 0,
     });
 
-    this.textExtractor.addJob({
+    this.textExtractJobQueue.addJob({
       fileId: fileVO.id,
-      lang: fileVO.lang,
-      mimeType: fileVO.mimeType,
+      lang: params.lang,
+      mimeType: params.mimeType,
       getData: this.repo.files.findBlobById,
       onExtract: this.handleTextExtracted.bind(this),
     });
@@ -58,7 +63,7 @@ export default class FileService extends BaseService {
   }
 
   private async resumeTextExtractor() {
-    const unfinishedFiles = await this.repo.files.findUnfinishedFile(TextExtractor.SUPPORT_MIME_TYPES);
+    const unfinishedFiles = await this.repo.files.findUnfinishedFile(JobQueue.SUPPORT_MIME_TYPES);
 
     if (unfinishedFiles.length === 0) {
       return;
@@ -70,7 +75,7 @@ export default class FileService extends BaseService {
     );
 
     for (const { id, mimeType, lang } of unfinishedFiles) {
-      this.textExtractor.addJob({
+      this.textExtractJobQueue.addJob({
         fileId: id,
         mimeType,
         lang,
@@ -82,6 +87,7 @@ export default class FileService extends BaseService {
   }
 
   private async handleTextExtracted(record: Required<FileTextRecord>) {
+    // todo: 把提取的文本存在数据库以外的地方。因为归根结底这是冗余数据
     await this.repo.files.createTextRecord(record);
   }
 

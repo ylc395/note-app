@@ -1,14 +1,14 @@
 import assert from 'node:assert';
-import { createScheduler, createWorker, OEM, type Scheduler } from 'tesseract.js';
-import { cloneDeepWith, mapValues, memoize, range, xor } from 'lodash-es';
+import { createScheduler, createWorker, OEM } from 'tesseract.js';
+import { cloneDeepWith, difference, mapValues, range } from 'lodash-es';
 import path from 'node:path';
+import { cpus } from 'node:os';
 
 import { textLocationSchema } from '#domain/shared/infra/apiSchema/file.js';
 import { token as runtimeToken } from '#domain/server/infra/runtime.js';
 import { token as loggerToken } from '#domain/shared/infra/logger.js';
 import container from '#utils/singletonContainer.js';
-import type { Job } from './job.js';
-
+import type { ExtractResult, Job, TextExtractor } from './extractor.js';
 // @see https://tesseract-ocr.github.io/tessdoc/Data-Files#data-files-for-version-400-november-29-2016
 const SUPPORT_LANGS = {
   afr: 'Afrikaans',
@@ -116,109 +116,93 @@ const SUPPORT_LANGS = {
 };
 
 const SUPPORT_LANG_CODES = Object.keys(SUPPORT_LANGS);
+const DEFAULT_LANG_CODES: Array<keyof typeof SUPPORT_LANGS> = ['chi_sim', 'eng'];
 
-export default class ImageTextExtractor {
-  constructor() {
-    this.createScheduler.cache = new Map();
+export default class ImageTextExtractor implements TextExtractor {
+  constructor(private readonly lang: Job['lang'], private readonly isMultiple = false) {
+    assert(difference(lang, SUPPORT_LANG_CODES).length === 0, 'invalid langs');
   }
+
   private readonly runtime = container.resolve(runtimeToken);
+
   private readonly logger = container.resolve(loggerToken);
-  private scheduler?: {
-    lang: Job['lang'];
-    queue: Scheduler;
-    totalJobCount: number;
-    activeJobCount: number;
-  };
 
-  public async extract({ data, lang, scale }: { data: ArrayBuffer; lang: Job['lang']; scale: number }) {
-    assert(ImageTextExtractor.isValidLangs(lang));
+  public getTextUnitLength() {
+    return Promise.resolve(1);
+  }
 
-    // scheduler 里的所有 worker 参数必须相同
-    if (this.scheduler && xor(lang, this.scheduler.lang).length > 0) {
-      assert(this.scheduler.activeJobCount === 0 && this.scheduler.queue.getQueueLen() === 0, 'queue is not empty');
-      await this.scheduler.queue.terminate();
-      this.scheduler = undefined;
-    }
+  private scheduler?: Awaited<ReturnType<ImageTextExtractor['createScheduler']>>;
 
-    if (!this.scheduler) {
-      this.scheduler = await this.createScheduler(lang);
-    }
-
-    this.scheduler.totalJobCount += 1;
+  public async extract({ data, scale }: { data: ArrayBuffer; scale?: number }) {
     // 根据官方文档，job 到了一定数量要销毁 scheduler，重新创建一个
     // https://github.com/naptha/tesseract.js/blob/f9dac0742374940f88100eb47838e902e3b51eb8/docs/workers_vs_schedulers.md#reusing-workers-in-nodejs-server-code
-    const shouldDestroy = this.scheduler.totalJobCount === 500;
-    const { scheduler } = this;
+    const JOB_LIMIT = 500;
 
-    if (shouldDestroy) {
-      this.scheduler = undefined;
+    if (this.scheduler && this.scheduler.jobCount > JOB_LIMIT) {
+      this.scheduler = await this.createScheduler();
     }
 
-    scheduler.activeJobCount += 1;
+    this.scheduler ??= await this.createScheduler();
+
+    const scheduler = this.scheduler;
     const result = await scheduler.queue.addJob(
       'recognize',
       Buffer.from(data),
       {},
       { text: true, blocks: true, layoutBlocks: true },
     );
-    scheduler.activeJobCount -= 1;
 
-    if (shouldDestroy) {
-      scheduler.queue.terminate();
-    }
-
-    return {
+    const transformedResult: ExtractResult = {
       text: ImageTextExtractor.postProcessText(result.data.text),
       location: {
         confidence: result.data.confidence,
         blocks: cloneDeepWith(textLocationSchema.shape.blocks.parse(result.data.blocks || undefined), (value, key) => {
-          if (key === 'bbox' || key === 'baseline') {
+          if ((key === 'bbox' || key === 'baseline') && scale) {
             return mapValues(value, (v) => v / scale);
           }
-
           if (key === 'text') {
             return ImageTextExtractor.postProcessText(value);
           }
         }),
       },
     };
+
+    if (scheduler.jobCount >= JOB_LIMIT && scheduler.queue.getQueueLen() === 0) {
+      scheduler.queue.terminate();
+    }
+
+    return transformedResult;
   }
 
-  private readonly createScheduler = memoize(
-    (lang: Job['lang']) => {
-      assert((this.createScheduler.cache as Map<string, unknown>).size === 0, 'can not create');
+  private async createScheduler() {
+    const langs = (this.lang.length > 0 ? this.lang : DEFAULT_LANG_CODES).join('+');
+    const scheduler = createScheduler();
 
-      const scheduler = createScheduler();
-      const result = Promise.all(
-        range(2).map(() => {
-          return createWorker(lang.join('+'), OEM.DEFAULT, {
-            corePath: path.join(process.cwd(), 'node_modules/tesseract.js-core'),
-            cachePath: path.join(this.runtime.getAppDir(), 'ocr_cache'),
-            workerBlobURL: false,
-            logger: this.logger.debug,
-          });
-        }),
-      ).then((workers) => {
-        for (const worker of workers) {
-          scheduler.addWorker(worker);
-        }
+    const workers = await Promise.all(
+      // 最多使用四分之一数量的 CPU
+      range(this.isMultiple ? Math.max(Math.ceil(cpus().length / 4), 1) : 1).map(() => {
+        return createWorker(langs, OEM.DEFAULT, {
+          corePath: path.join(process.cwd(), 'node_modules/tesseract.js-core'),
+          cachePath: path.join(this.runtime.getAppDir(), 'ocr_cache'),
+          workerBlobURL: false,
+          logger: this.logger.debug,
+        });
+      }),
+    );
 
-        return {
-          lang,
-          queue: scheduler,
-          totalJobCount: 0,
-          activeJobCount: 0,
-        };
-      });
+    for (const worker of workers) {
+      scheduler.addWorker(worker);
+    }
 
-      result.finally(() => {
-        this.createScheduler.cache.clear?.();
-      });
+    return {
+      queue: scheduler,
+      jobCount: 0,
+    };
+  }
 
-      return result;
-    },
-    (lang) => lang.join('+'),
-  );
+  public destroy() {
+    this.scheduler?.queue.terminate();
+  }
 
   private static postProcessText(text: string) {
     // 这些文字系统不使用空格分割
@@ -227,9 +211,5 @@ export default class ImageTextExtractor {
     const regex = new RegExp(`(?<=(${group}))\\s(?=(${group}))`, 'ug');
 
     return text.replaceAll(regex, '');
-  }
-
-  public static isValidLangs(langs: string[]) {
-    return langs.length > 0 && langs.every((lang) => SUPPORT_LANG_CODES.includes(lang));
   }
 }

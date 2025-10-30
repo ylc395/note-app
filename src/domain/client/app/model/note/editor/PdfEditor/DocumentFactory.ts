@@ -1,4 +1,3 @@
-import assert from 'assert';
 import { action } from 'mobx';
 import { getDocument, GlobalWorkerOptions, type PDFDocumentLoadingTask } from 'pdfjs-dist';
 import { isEmpty } from 'lodash-es';
@@ -36,7 +35,9 @@ export default class DocumentFactory {
   public revoke(noteId: NoteVO['id']) {
     const task = this.loadingTasksMap[noteId];
 
-    assert(task, 'invalid materialId');
+    if (!task) {
+      return;
+    }
 
     task.activeCount -= 1;
 

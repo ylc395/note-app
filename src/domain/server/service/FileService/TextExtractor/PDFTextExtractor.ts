@@ -1,63 +1,103 @@
 import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';
 import path from 'node:path';
-import Queue from 'p-queue';
+import { setTimeout } from 'node:timers/promises';
+import { from, mergeMap, Observable, Subscriber } from 'rxjs';
+import { compact, difference, range } from 'lodash-es';
 
-import container from '#utils/singletonContainer.js';
-import type { FileTextRecord } from '#domain/server/model/file.js';
-import type { Job } from './job.js';
+import type { ExtractResult, Job, TextExtractor } from './extractor.js';
 import ImageTextExtractor from './ImageTextExtractor.js';
+import assert from 'node:assert';
 
-export default class PDFTextExtractor {
-  private readonly imageTextExtractor = container.resolve(ImageTextExtractor);
-
-  private readonly queue = new Queue({ interval: 200, intervalCap: 1 });
-
-  public async extract(job: {
-    data: ArrayBuffer;
-    locationsToSkip: Job['locationsToSkip'];
-    lang: Job['lang'];
-    onExtract: (e: Pick<Required<FileTextRecord>, 'location' | 'text'>) => void;
-  }) {
-    // in nodejs, pdf.worker.js won't work
-    // because it's a web worker, not a nodejs worker. see https://github.com/nodejs/node/issues/43583
-    // so everything about pdf is done in main thread(so called "fake worker").
-    const doc = await this.getDoc(job.data);
-    const totalPages = doc.numPages;
-    const pagesToSkip = job.locationsToSkip?.map(({ page }) => page) || [];
-    const tasks: Promise<void>[] = [];
-
-    for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
-      if (pagesToSkip.includes(pageNum)) {
-        continue;
-      }
-
-      const task = this.queue.add(() => {
-        return PDFTextExtractor.getTextContent(doc, pageNum).then((result) => {
-          if (result || !ImageTextExtractor.isValidLangs(job.lang)) {
-            job.onExtract(result || { location: { page: pageNum }, text: '' });
-          } else {
-            return this.extractPageTextContentByOcr(doc, pageNum, job);
-          }
-        });
-      });
-
-      tasks.push(task);
-    }
-
-    return Promise.all(tasks).then(() => doc.destroy());
+export default class PDFTextExtractor implements TextExtractor {
+  constructor(lang: Job['lang']) {
+    this.imageTextExtractor = new ImageTextExtractor(lang, true);
   }
 
-  private async extractPageTextContentByOcr(
-    doc: pdfjs.PDFDocumentProxy,
-    pageNum: number,
-    {
-      lang,
-      onExtract,
-    }: {
-      lang: Job['lang'];
-      onExtract: (e: Pick<Required<FileTextRecord>, 'location' | 'text'>) => void;
-    },
+  private readonly imageTextExtractor: ImageTextExtractor;
+
+  public async getTextUnitLength(data: ArrayBuffer) {
+    const doc = await PDFTextExtractor.getDoc(data);
+    const num = doc.numPages;
+    await doc.destroy();
+
+    return num;
+  }
+
+  public extract(job: { data: ArrayBuffer; locationsToSkip?: Job['locationsToSkip'] }) {
+    return new Observable<ExtractResult>((subscriber) => {
+      this.startExtracting(job, subscriber);
+    });
+  }
+
+  public destroy() {
+    this.imageTextExtractor.destroy();
+  }
+
+  private async startExtracting(
+    { data, locationsToSkip }: { data: ArrayBuffer; locationsToSkip?: Job['locationsToSkip'] },
+    subscriber: Subscriber<ExtractResult>,
   ) {
+    const doc = await PDFTextExtractor.getDoc(data);
+    const totalPages = doc.numPages;
+
+    // 去掉已经识别过的页码
+    const pages = difference(range(1, totalPages + 1), compact(locationsToSkip?.map(({ page }) => page)));
+
+    let strategy: 'ocr' | 'extract' = 'extract';
+    const pagesToCheck: Record<number, { ocr?: ExtractResult; extract?: ExtractResult }> = {};
+
+    await Promise.all(
+      // 我们最多取 2 页，对它们“直接提取”和 OCR 都用一遍，看下结果，决定整个文档用哪种策略
+      range(Math.min(pages.length, 2))
+        .map((n, _, arr) => Math.ceil((pages.length / (arr.length + 1)) * (n + 1)))
+        .flatMap((page) => [
+          PDFTextExtractor.getTextContent(doc, Number(page)).then((result) => {
+            pagesToCheck[Number(page)] = { extract: result };
+          }),
+
+          this.extractPageTextContentByOcr(doc, Number(page)).then((result) => {
+            pagesToCheck[Number(page)] = { ocr: result };
+          }),
+        ]),
+    );
+
+    if (
+      // 如果每个 OCR 结果的字数都至少是直接提取的 1.3 倍，就用 OCR
+      Object.values(pagesToCheck).every(
+        ({ ocr, extract }) => (ocr?.text.length ?? 0) / (extract?.text.length ?? 1) > 1.3,
+      )
+    ) {
+      strategy = 'ocr';
+    }
+
+    const extract = async (page: number) => {
+      const checked = pagesToCheck[Number(page)]?.[strategy];
+
+      if (checked) {
+        return checked;
+      }
+
+      if (strategy === 'extract') {
+        await setTimeout(500); // 避免在一瞬间完成所有页面的文字提取和保存，那样会很卡
+        return PDFTextExtractor.getTextContent(doc, page);
+      }
+
+      if (strategy === 'ocr') {
+        return this.extractPageTextContentByOcr(doc, page);
+      }
+
+      assert.fail('no strategy');
+    };
+
+    from(pages)
+      .pipe(mergeMap(extract, strategy === 'extract' ? 1 : undefined))
+      .subscribe(subscriber)
+      .add(() => {
+        doc.destroy();
+      });
+  }
+
+  private async extractPageTextContentByOcr(doc: pdfjs.PDFDocumentProxy, pageNum: number) {
     // 从 https://github.com/mozilla/pdf.js/blob/master/examples/node/pdf2png/pdf2png.mjs 这里抄的
     const page = await doc.getPage(pageNum);
     const scale = 3;
@@ -68,18 +108,20 @@ export default class PDFTextExtractor {
     await page.render({ viewport, canvasContext: canvasAndContext.context }).promise;
 
     const image: Uint8Array = canvasAndContext.canvas.toBuffer('image/png');
-    const result: Pick<Required<FileTextRecord>, 'location' | 'text'> = await this.imageTextExtractor.extract({
+
+    const result = await this.imageTextExtractor.extract({
       scale,
       data: image.buffer as ArrayBuffer,
-      lang,
     });
 
     result.location.page = pageNum;
     page.cleanup();
-    onExtract(result);
+
+    return result;
   }
 
-  public getDoc(data: ArrayBuffer) {
+  private static getDoc(data: ArrayBuffer) {
+    // warning: pdf.js 在 node 环境里没有多线程解析 PDF 文档的能力，一切都发生在主线程里（所谓的 fake worker）
     return pdfjs.getDocument({
       data: new Uint8Array(data.slice(0)),
       cMapUrl: path.resolve('node_modules/pdfjs-dist/cmaps') + '/',
@@ -100,6 +142,7 @@ export default class PDFTextExtractor {
       }
     }
 
-    return text ? { text, location: { page: pageNum } } : null;
+    page.cleanup();
+    return { text, location: { page: pageNum } };
   }
 }
