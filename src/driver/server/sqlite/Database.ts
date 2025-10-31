@@ -13,14 +13,12 @@ import container from '#utils/singletonContainer.js';
 
 import { type Schemas, schemas } from './schema/index.js';
 
-export interface Db extends Schemas {
-  sqlite_master: { name: string; type: string };
-}
+type Db = Schemas;
 
 export default class SqliteDb implements Database {
   constructor({ dir }: { dir: string }) {
     this.db = this.connectToDb(dir);
-    this.ready = this.init();
+    this.ready = this.initTables();
   }
 
   private readonly logger = container.resolve(loggerToken);
@@ -47,7 +45,7 @@ export default class SqliteDb implements Database {
     });
   }
 
-  private async init() {
+  private async initTables() {
     const tables = await this.db
       .selectFrom('sqlite_master')
       .select('name')
@@ -55,7 +53,12 @@ export default class SqliteDb implements Database {
       .execute();
 
     this.tableNames = tables.map(({ name }) => name);
-    await this.createTables();
+
+    for (const schema of schemas) {
+      if (!this.hasTable(schema.tableName)) {
+        await schema.builder(this.db as never).execute();
+      }
+    }
   }
 
   public getDb() {
@@ -78,13 +81,5 @@ export default class SqliteDb implements Database {
       dialect: new SqliteDialect({ database: db }),
       plugins: [new CamelCasePlugin(), new ParseJSONResultsPlugin()],
     });
-  }
-
-  private async createTables() {
-    for (const schema of schemas) {
-      if (!this.hasTable(schema.tableName)) {
-        await schema.builder(this.db as never).execute();
-      }
-    }
   }
 }

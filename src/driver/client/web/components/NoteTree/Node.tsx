@@ -59,11 +59,6 @@ export default function Node(props: Props) {
 
   function renderItem(render: (props: JSX.HTMLAttributes<HTMLDivElement>) => JSX.Element) {
     function handleOpenChange({ open }: { open: boolean }) {
-      if (!open && props.node.is(TreeNodeStates.Selected) && props.treeView.treeNodeSets.selected.size === 1) {
-        props.node.toggleState(TreeNodeStates.Selected, false);
-        return;
-      }
-
       if (!open || props.node.is(TreeNodeStates.Selected)) {
         return;
       }

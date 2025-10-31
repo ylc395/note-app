@@ -11,6 +11,7 @@ import { default as entity, type Row as EntityRow } from './entity.js';
 import { default as revision, type Row as RevisionRow } from './revision.js';
 
 export interface Schemas {
+  sqlite_master: { name: string; type: string }; // 这个是 sqlite 自带的
   [note.tableName]: NoteRow;
   [recyclable.tableName]: RecyclableRow;
   [star.tableName]: StarRow;

@@ -6,12 +6,12 @@ import container from '#utils/singletonContainer';
 import NoteService from '#domain/client/app/service/NoteService';
 import { encodeIcon } from '#domain/client/app/model/note/icon';
 
-export default function IconSelector(props?: { onUpdated?: () => void }) {
+export default function IconPicker(props?: { onUpdated?: () => void }) {
   let rootRef: HTMLDivElement | undefined;
   const { updateNote, exploreTreeView } = container.resolve(NoteService);
 
-  function onEmojiSelect(e: { shortcodes: string }) {
-    updateNote(Array.from(exploreTreeView.treeNodeSets.selected), { icon: encodeIcon('emoji', e.shortcodes) });
+  async function onEmojiSelect(e: { shortcodes: string }) {
+    await updateNote(Array.from(exploreTreeView.treeNodeSets.selected), { icon: encodeIcon('emoji', e.shortcodes) });
     props?.onUpdated?.();
   }
 
@@ -24,6 +24,7 @@ export default function IconSelector(props?: { onUpdated?: () => void }) {
       emojiSize: 18,
       onEmojiSelect,
       maxFrequentRows: 1,
+      onAddCustomEmoji: () => {},
     });
     rootRef!.append(picker as unknown as HTMLElement);
   });

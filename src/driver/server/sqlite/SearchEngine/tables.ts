@@ -4,7 +4,7 @@ import { type Row as FileTextRow, tableName as fileTextTableName } from '../sche
 import { tableName as noteTableName, type Row as NoteRow } from '../schema/note.js';
 import { tableName as memoTableName, type Row as MemoRow } from '../schema/memo.js';
 import { tableName as annotationTableName, type Row as AnnotationRow } from '../schema/annotation.js';
-import type { Db } from '../Database.js';
+import type { Schemas } from '../schema/index.js';
 
 export const WRAPPER_START_TEXT = '__%START%__';
 export const WRAPPER_END_TEXT = '__%END%__';
@@ -19,7 +19,7 @@ interface FtsRow {
 }
 
 // prettier-ignore
-export interface SearchEngineDb extends Db {
+export interface SearchEngineDb extends Schemas {
   [fileTextsFTSTableName]: FtsRow & FileTextRow & { [fileTextsFTSTableName]: string };
   [notesFTSTableName]: FtsRow & Pick<NoteRow, 'id' | 'title' | 'body' | 'fileId'> & { [notesFTSTableName]: string };
   [memosFTSTableName]: FtsRow & Pick<MemoRow, 'id' | 'body'> & { [memosFTSTableName]: string };
