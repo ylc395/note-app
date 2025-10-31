@@ -3,7 +3,7 @@ import { from } from 'rxjs';
 
 import { MimeTypes } from '#domain/server/model/file.js';
 
-import PDFTextExtractor from './PDFTextExtractor.js';
+import PDFTextExtractor from './PDFTextExtractor/index.js';
 import ImageTextExtractor from './ImageTextExtractor.js';
 import HTMLTextExtractor from './HTMLTextExtractor.js';
 import type { Job, TextExtractor } from './extractor.js';

@@ -87,7 +87,6 @@ export default class FileService extends BaseService {
   }
 
   private async handleTextExtracted(record: NewFileTextRecord) {
-    // todo: 把提取的文本存在数据库以外的地方。因为归根结底这是冗余数据
     await this.repo.files.createTextRecord(record);
   }
 

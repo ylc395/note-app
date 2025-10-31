@@ -1,5 +1,6 @@
 /// <reference types="vite/client" />
 /// <reference types="solid-js" />
+/// <reference types="node" />
 
 declare module 'single-file-core/single-file';
 declare module 'page-lifecycle';
@@ -13,6 +14,11 @@ declare module 'text-fragments-polyfill/text-fragment-utils' {
       suffix?: string;
     }>;
   };
+}
+
+declare module '*?nodeWorker' {
+  import type { Worker, WorkerOptions } from 'node:worker_threads';
+  export default function (options?: WorkerOptions): Worker;
 }
 
 declare global {

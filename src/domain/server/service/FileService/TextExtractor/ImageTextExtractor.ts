@@ -179,13 +179,17 @@ export default class ImageTextExtractor implements TextExtractor {
     return this.lang.length > 0 ? this.lang : DEFAULT_LANG_CODES;
   }
 
+  public get concurrency() {
+    // 最多使用四分之一数量的 CPU
+    return this.isMultiple ? Math.max(Math.ceil(cpus().length / 4), 1) : 1;
+  }
+
   private async createScheduler() {
     const langs = this.actualLangs.join('+');
     const scheduler = createScheduler();
 
     const workers = await Promise.all(
-      // 最多使用四分之一数量的 CPU
-      range(this.isMultiple ? Math.max(Math.ceil(cpus().length / 4), 1) : 1).map(() => {
+      range(this.concurrency).map(() => {
         return createWorker(langs, OEM.DEFAULT, {
           corePath: path.join(process.cwd(), 'node_modules/tesseract.js-core'),
           cachePath: path.join(this.runtime.getAppDir(), 'ocr_cache'),

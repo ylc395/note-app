@@ -5,6 +5,7 @@ import { build } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 import { checker } from 'vite-plugin-checker';
 import { externalizeDeps } from 'vite-plugin-externalize-deps';
+import workerPlugin from './worker-plugin.js';
 
 import { RUNTIME_ENV, ELECTRON_TSCONFIG_PATH } from './constants.js';
 
@@ -68,6 +69,11 @@ export default async function buildMain(viteUrl) {
       'import.meta.env.DEV_CLEAN': JSON.stringify(process.argv.includes('--clean') ? '1' : '0'),
       'import.meta.env.RUNTIME_ENV': JSON.stringify(RUNTIME_ENV),
     },
-    plugins: [checker({ typescript: { tsconfigPath: ELECTRON_TSCONFIG_PATH } }), tsconfigPaths(), externalizeDeps()],
+    plugins: [
+      checker({ typescript: { tsconfigPath: ELECTRON_TSCONFIG_PATH } }),
+      tsconfigPaths(),
+      externalizeDeps(),
+      workerPlugin(), // https://github.com/vitejs/vite/pull/3932 等这个 PR 被合并，就无需引入此插件了。到时候顺便把该插件的依赖也移除
+    ],
   });
 }
