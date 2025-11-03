@@ -11,7 +11,7 @@ import type { MenuItem } from '#web/components/common/ContextMenu';
 import IconPicker from './IconPicker';
 
 export default function useContextmenu() {
-  const { exploreTreeView: tree, createNote } = container.resolve(NoteService);
+  const { exploreTreeView: tree, createNote, toggleIconPicker } = container.resolve(NoteService);
   const { star, unstar } = container.resolve(StarService);
   const { put } = container.resolve(RecyclableService);
 
@@ -20,7 +20,9 @@ export default function useContextmenu() {
       treeNodeSets: { selected },
       selectedNode,
     } = tree;
+
     assert(selectedNode?.value);
+    console.log(key);
 
     switch (key) {
       case 'star':
@@ -29,6 +31,8 @@ export default function useContextmenu() {
         return createNote({ from: selectedNode.value.id });
       case 'delete':
         return put(Array.from(selected), EntityTypes.Note);
+      case 'icon-create':
+        return toggleIconPicker();
       default:
         break;
     }

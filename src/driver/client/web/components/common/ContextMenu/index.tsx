@@ -1,6 +1,6 @@
 import { createMemo, For, JSX, Show } from 'solid-js';
 import { Portal } from 'solid-js/web';
-import { Menu, useMenu } from '@ark-ui/solid';
+import { Menu, useMenu, type MenuSelectionDetails } from '@ark-ui/solid';
 
 import shell from '#web/infra/shell';
 import Item, { type MenuItem } from './Item';
@@ -15,9 +15,11 @@ export default function ContextMenu<T = void>(props: {
   seed: T;
   contextMenu?: Array<MenuItem | 'separator'> | ((data: T) => Array<MenuItem | 'separator'>);
 }) {
+  const onSelect = (e: MenuSelectionDetails) => props.onItemClick?.(e.value);
+
   const menu = useMenu({
     onOpenChange: props.onOpenChange,
-    onSelect: (e) => props.onItemClick?.(e.value),
+    onSelect,
   });
 
   const items = createMemo(() =>
@@ -34,7 +36,9 @@ export default function ContextMenu<T = void>(props: {
           <Menu.Positioner onClick={(e) => e.stopPropagation()}>
             <Menu.Content class={contentClassName}>
               {props.topExtraContent?.(props.seed)}
-              <For each={items()}>{(item) => <Item item={item} menu={menu} contentClassName={contentClassName} />}</For>
+              <For each={items()}>
+                {(item) => <Item onMenuSelect={onSelect} item={item} menu={menu} contentClassName={contentClassName} />}
+              </For>
             </Menu.Content>
           </Menu.Positioner>
         </Portal>

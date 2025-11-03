@@ -4,7 +4,7 @@ import { onMount } from 'solid-js';
 
 import container from '#utils/singletonContainer';
 import NoteService from '#domain/client/app/service/NoteService';
-import { encodeIcon } from '#domain/client/app/model/note/icon';
+import { encodeIcon } from '#domain/client/shared/model/note/icon';
 
 export default function IconPicker(props?: { onUpdated?: () => void }) {
   let rootRef: HTMLDivElement | undefined;

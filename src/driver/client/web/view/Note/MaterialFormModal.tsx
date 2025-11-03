@@ -11,11 +11,11 @@ import Modal from '#web/components/common/Modal';
 
 export default function MaterialFormModal() {
   const noteService = container.resolve(NoteService);
-  const duplicatedNotes = createMemo(() => noteService.materialForm?.duplicatedNotesQuery.result.data || []);
+  const duplicatedNotes = createMemo(() => noteService.newMaterialForm?.duplicatedNotesQuery.result.data || []);
 
   async function handleFileSelected(file?: File) {
-    assert(noteService.materialForm);
-    noteService.materialForm.setFile(
+    assert(noteService.newMaterialForm);
+    noteService.newMaterialForm.setFile(
       file && {
         path: window.electronUtils?.getFilePath(file),
         data: await file.arrayBuffer(),
@@ -28,23 +28,23 @@ export default function MaterialFormModal() {
   return (
     <Modal
       title="创建素材"
-      open={Boolean(noteService.materialForm)}
+      open={Boolean(noteService.newMaterialForm)}
       onClose={noteService.toggleMaterialForm}
       closeOnInteractOutside={false}
     >
       <form class="space-y-4 form">
         <Field.Root>
           <Field.Label>位于</Field.Label>
-          <span class="text-sm" title={noteService.materialForm?.path?.map(({ title }) => title).join('/')}>
-            {last(noteService.materialForm?.path)?.title || '根目录'}
+          <span class="text-sm" title={noteService.newMaterialForm?.path?.map(({ title }) => title).join('/')}>
+            {last(noteService.newMaterialForm?.path)?.title || '根目录'}
           </span>
         </Field.Root>
         <Field.Root>
           <Field.Label>标题</Field.Label>
           <Field.Input
             class="input"
-            value={noteService.materialForm?.get('title') ?? ''}
-            onInput={(e) => noteService.materialForm?.set('title', e.target.value)}
+            value={noteService.newMaterialForm?.get('title') ?? ''}
+            onInput={(e) => noteService.newMaterialForm?.set('title', e.target.value)}
           />
         </Field.Root>
         <Field.Root>
@@ -63,7 +63,7 @@ export default function MaterialFormModal() {
               onFileChange={({ acceptedFiles: [file] }) => handleFileSelected(file)}
             >
               <Show
-                when={noteService.materialForm?.hasFile}
+                when={noteService.newMaterialForm?.hasFile}
                 fallback={
                   <FileUpload.Dropzone class="text-sm w-full h-full flex flex-col items-center justify-center cursor-pointer">
                     <FileUpload.Trigger class="flex items-center justify-center flex-col">
@@ -122,8 +122,8 @@ export default function MaterialFormModal() {
         </button>
         <button
           class="button button-primary button-lg"
-          disabled={!noteService.materialForm?.isValid}
-          onClick={() => noteService.materialForm?.submit()}
+          disabled={!noteService.newMaterialForm?.isValid}
+          onClick={() => noteService.newMaterialForm?.submit()}
         >
           创 建
         </button>

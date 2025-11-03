@@ -1,4 +1,4 @@
-import { Menu, type UseMenuReturn } from '@ark-ui/solid';
+import { Menu, type MenuSelectionDetails, type UseMenuReturn } from '@ark-ui/solid';
 import { ChevronRightIcon } from 'lucide-solid';
 import type { JSX } from 'solid-js';
 
@@ -12,7 +12,12 @@ export interface MenuItem {
 }
 
 // 这个组件没有响应性
-export default function Item(props: { item: MenuItem | 'separator'; menu: UseMenuReturn; contentClassName?: string }) {
+export default function Item(props: {
+  item: MenuItem | 'separator';
+  onMenuSelect: (e: MenuSelectionDetails) => void; // 这玩意没法从 menu（下一行）里取到也是醉了
+  menu: UseMenuReturn;
+  contentClassName?: string;
+}) {
   function closeMenu() {
     props.menu.api().setOpen(false);
   }
@@ -34,7 +39,7 @@ export default function Item(props: { item: MenuItem | 'separator'; menu: UseMen
   }
 
   return (
-    <Menu.Root lazyMount unmountOnExit>
+    <Menu.Root lazyMount unmountOnExit onSelect={props.onMenuSelect}>
       <Menu.TriggerItem class={`menu-item ${props.item.className}`}>
         <span class="grow">{props.item.label}</span>
         <Menu.Indicator>
@@ -44,7 +49,9 @@ export default function Item(props: { item: MenuItem | 'separator'; menu: UseMen
       <Menu.Positioner>
         <Menu.Content class={props.contentClassName}>
           {props.item.content?.({ closeMenu }) ||
-            props.item.children?.map((child) => <Item item={child} menu={props.menu} />)}
+            props.item.children?.map((child) => (
+              <Item onMenuSelect={props.onMenuSelect} item={child} menu={props.menu} />
+            ))}
         </Menu.Content>
       </Menu.Positioner>
     </Menu.Root>

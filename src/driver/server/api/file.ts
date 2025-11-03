@@ -7,7 +7,7 @@ export default router({
     .input(fileDTOSchema)
     .mutation(({ ctx: { fileService }, input: file }) => fileService.createFile(file)),
 
-  queryOne: publicProcedure
+  queryOneByHash: publicProcedure
     .input(string())
-    .query(({ ctx: { fileService }, input: fileId }) => fileService.queryFileBlobById(fileId)),
+    .query(({ ctx: { fileService }, input: hash }) => fileService.queryFileByHash(hash)),
 });

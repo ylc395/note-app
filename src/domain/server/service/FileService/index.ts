@@ -55,6 +55,11 @@ export default class FileService extends BaseService {
     return fileVO;
   }
 
+  public async queryFileByHash(hash: string) {
+    const file = await this.repo.files.findOneByHash(hash);
+    return file;
+  }
+
   public async queryFileBlobById(id: FileVO['id']) {
     const data = await this.repo.files.findBlobById(id);
     assert(data);

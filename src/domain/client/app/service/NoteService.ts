@@ -8,9 +8,10 @@ import TreeNode from '#domain/client/shared/model/note/TreeNode';
 import { arrayOf, type MaybeArray } from '#utils/collection';
 import type { EntityPath } from '#domain/shared/model/entity';
 
+import CustomIconPicker from '#domain/client/shared/model/note/CustomIconPicker';
 import Workbench from '../model/Workbench';
 import DomainEventBus from '../model/note/EventBus';
-import MaterialForm from '../model/note/MaterialForm';
+import NewMaterialForm from '../model/note/NewMaterialForm';
 import BaseEditor from '../model/note/editor/BaseEditor';
 import TreeExplorer from '../model/note/TreeExplorer';
 
@@ -28,14 +29,15 @@ export default class NoteService {
 
   public readonly workbench = container.resolve(Workbench);
 
-  @observable.ref public accessor materialForm: MaterialForm | undefined;
+  @observable.ref public accessor newMaterialForm: NewMaterialForm | undefined;
+
+  @observable.ref public accessor customIconPicker: CustomIconPicker | undefined;
 
   public readonly exploreTreeView = new TreeExplorer();
 
   public readonly createNote = async (note: NewNoteDTO | DuplicatedNoteDTO) => {
     const newNote = await this.remote.note.create.mutate(note);
     this.eventBus.emit(DomainEventBus.eventNames.Created, newNote);
-    this.workbench.open({ entityId: newNote.id, mimeType: newNote.mimeType });
   };
 
   public readonly updateNote = async (notes: MaybeArray<NoteVO | NoteVO['id']>, patch: NotePatchDTO) => {
@@ -49,17 +51,30 @@ export default class NoteService {
   };
 
   @action
-  public readonly toggleMaterialForm = (options?: { path?: EntityPath; onSubmit?: () => void }) => {
-    if (this.materialForm) {
-      this.materialForm.destroy();
-      this.materialForm = undefined;
+  public readonly toggleIconPicker = () => {
+    if (this.customIconPicker) {
+      this.customIconPicker.destroy();
+      this.customIconPicker = undefined;
     } else {
-      this.materialForm = new MaterialForm({
+      this.customIconPicker = new CustomIconPicker({
+        noteIds: Array.from(this.exploreTreeView.treeNodeSets.selected),
+        onSubmit: this.toggleIconPicker,
+      });
+    }
+  };
+
+  @action
+  public readonly toggleMaterialForm = (options?: { path?: EntityPath; onSubmit?: () => void }) => {
+    if (this.newMaterialForm) {
+      this.newMaterialForm.destroy();
+      this.newMaterialForm = undefined;
+    } else {
+      this.newMaterialForm = new NewMaterialForm({
         path: options?.path,
         onSubmit: async (newNote) => {
-          await this.createNote(newNote);
           this.toggleMaterialForm();
           options?.onSubmit?.();
+          this.workbench.open({ entityId: newNote.id, mimeType: newNote.mimeType });
         },
       });
     }
