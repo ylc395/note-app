@@ -10,12 +10,17 @@ export type EntityId = string;
 
 export type EntityParentId = EntityId | null;
 
+export interface Icon {
+  type: 'emoji' | 'file';
+  code: string;
+}
+
 interface StandaloneEntity {
   id: EntityId;
   type: EntityTypes;
   title: string; // 对于 memo / annotation，取其内容的前 30 个字符
   body?: string;
-  icon: string | null;
+  icon: Icon | null;
   file?: FileVO;
   path?: EntityPath;
   createdAt: number;

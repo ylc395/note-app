@@ -10,7 +10,6 @@ import DomainEventBus from '#domain/client/app/model/note/EventBus';
 import { getHash } from '#utils/file';
 import type { FileDTO } from '#domain/shared/model/file';
 import type { NoteVO } from '#domain/shared/model/note';
-import { encodeIcon } from './icon';
 
 type Icon = Required<Pick<FileDTO, 'data' | 'mimeType'>>;
 
@@ -63,7 +62,7 @@ export default class CustomIconPicker {
   public async submit() {
     assert(this.canSubmit);
     const file = await this.remote.file.upload.mutate(this.icon!);
-    const icon = encodeIcon('file', file.id);
+    const icon = { type: 'file', code: file.id } as const;
     await this.remote.note.batchUpdate.mutate([this.options.noteIds, { icon }]);
 
     for (const noteId of this.options.noteIds) {

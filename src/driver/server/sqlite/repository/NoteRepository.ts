@@ -18,7 +18,7 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
     const bodyPlainText = ContentService.markdownToPlain(note.body);
     const row = await this.db
       .insertInto(this.tableName)
-      .values({ ...note, bodyPlainText })
+      .values({ ...note, icon: note.icon && JSON.stringify(note.icon), bodyPlainText })
       .returning(['id', 'icon', 'title', 'createdAt', 'updatedAt', 'parentId', 'body', 'fileId', 'sourceUrl'])
       .executeTakeFirstOrThrow();
 
@@ -30,7 +30,7 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
     const { numUpdatedRows } = await this.db
       .updateTable(this.tableName)
       .where('id', Array.isArray(id) ? 'in' : '=', id)
-      .set({ ...note, bodyPlainText })
+      .set({ ...note, icon: note.icon && JSON.stringify(note.icon), bodyPlainText })
       .executeTakeFirst();
 
     return Array.isArray(id) ? id.length === Number(numUpdatedRows) : Number(numUpdatedRows) === 1;

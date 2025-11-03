@@ -1,12 +1,12 @@
 import dayjs from 'dayjs';
-import type { Entity, EntityId, EntityParentId } from './entity.js';
+import type { Entity, EntityId, EntityParentId, Icon } from './entity.js';
 
 export interface Note {
   id: EntityId;
   title: string;
   parentId: EntityParentId;
   body?: string;
-  icon: string | null;
+  icon: Icon | null;
   fileId: string | null;
   mimeType: string | null;
   sourceUrl: string | null;

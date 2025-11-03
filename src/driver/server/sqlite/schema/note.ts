@@ -1,10 +1,11 @@
-import type { Kysely } from 'kysely';
+import type { Icon } from '#domain/shared/model/entity';
+import type { JSONColumnType, Kysely } from 'kysely';
 
 export const tableName = 'notes';
 
 export interface Row {
   id: string;
-  icon: string | null;
+  icon: JSONColumnType<Icon> | null;
   title: string;
   body: string;
   bodyPlainText: string;

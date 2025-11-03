@@ -65,7 +65,7 @@ export default class Form<T> {
   }
 
   public get(): Partial<T>;
-  public get(key: keyof T): Partial<T>[keyof T];
+  public get<K extends keyof T>(key: K): T[K] | undefined;
   public get(key?: keyof T) {
     return key ? this.value[key] : toJS(this.value);
   }

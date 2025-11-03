@@ -1,5 +1,5 @@
 import { sql, type Kysely } from 'kysely';
-import { EntityTypes } from '#domain/shared/model/entity.js';
+import { EntityTypes, type Icon } from '#domain/shared/model/entity.js';
 
 import type { Schemas } from './index.js';
 import { tableName as noteTableName } from './note.js';
@@ -9,7 +9,7 @@ import { tableName as memoTableName } from './memo.js';
 export interface Row {
   id: string;
   title: string;
-  icon: string | null;
+  icon: Icon | null;
   type: EntityTypes;
   parentId: string;
   body: string;

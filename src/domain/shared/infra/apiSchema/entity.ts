@@ -6,4 +6,8 @@ import { z } from "zod";
 import { EntityTypes } from "../../model/entity.js";
 export const entityTypesSchema = z.nativeEnum(EntityTypes);
 export const entityIdSchema = z.string();
+export const iconSchema = z.object({
+  type: z.union([z.literal("emoji"), z.literal("file")]),
+  code: z.string()
+});
 export const entityParentIdSchema = z.union([entityIdSchema, z.null()]);

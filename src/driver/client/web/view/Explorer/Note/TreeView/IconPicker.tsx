@@ -4,14 +4,15 @@ import { onMount } from 'solid-js';
 
 import container from '#utils/singletonContainer';
 import NoteService from '#domain/client/app/service/NoteService';
-import { encodeIcon } from '#domain/client/shared/model/note/icon';
 
 export default function IconPicker(props?: { onUpdated?: () => void }) {
   let rootRef: HTMLDivElement | undefined;
   const { updateNote, exploreTreeView } = container.resolve(NoteService);
 
   async function onEmojiSelect(e: { shortcodes: string }) {
-    await updateNote(Array.from(exploreTreeView.treeNodeSets.selected), { icon: encodeIcon('emoji', e.shortcodes) });
+    await updateNote(Array.from(exploreTreeView.treeNodeSets.selected), {
+      icon: { code: e.shortcodes, type: 'emoji' },
+    });
     props?.onUpdated?.();
   }
 

@@ -1,22 +1,20 @@
-import { createMemo, Match, Show, Switch } from 'solid-js';
+import { Match, Switch } from 'solid-js';
 import { FileTextIcon, LayoutGridIcon, GlobeIcon } from 'lucide-solid';
 import data from '@emoji-mart/data';
 import { init } from 'emoji-mart';
 import { observable } from 'mobx';
 
 import { MimeTypes } from '#domain/shared/model/file';
-import { decodeIcon } from '#domain/client/shared/model/note/icon';
 import { getAppUrl, RouteTypes } from '#domain/shared/infra/url';
+import type { Icon } from '#domain/shared/model/entity';
 
 const dataLoaded = observable.box(false);
 init({ data }).then(() => dataLoaded.set(true));
 
-export default function Icon(props: { icon?: string | null; mimeType?: string | null; iconClassName?: string }) {
-  const icon = createMemo(() => (typeof props.icon === 'string' ? decodeIcon(props.icon) : null));
-
+export default function Icon(props: { icon?: Icon | null; mimeType?: string | null; iconClassName?: string }) {
   return (
     <Switch fallback={<FileTextIcon class={props.iconClassName} />}>
-      <Match when={dataLoaded.get() && icon()}>
+      <Match when={dataLoaded.get() && props.icon}>
         {(icon) => (
           <Switch>
             <Match when={icon().type === 'emoji'}>
