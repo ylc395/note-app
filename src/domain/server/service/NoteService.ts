@@ -153,6 +153,10 @@ export default class NoteService extends BaseService {
     return this.repo.notes.findFileTextLocation(q.id, q);
   }
 
+  public queryAllCustomIcons() {
+    return this.repo.notes.findAllCustomIcons();
+  }
+
   private async assertValidPatch(patch: NewNoteDTO, targetIds?: Note['id'][]) {
     if (patch.parentId) {
       assert(targetIds);

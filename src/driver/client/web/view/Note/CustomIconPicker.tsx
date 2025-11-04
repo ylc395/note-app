@@ -22,7 +22,7 @@ export default function CustomIconPicker() {
       onClose={noteService.toggleIconPicker}
       confirmText="创建并使用"
       canConfirm={!noteService.customIconPicker?.canSubmit}
-      onConfirm={() => noteService.newMaterialForm?.submit()}
+      onConfirm={() => noteService.customIconPicker?.submit()}
       onCancel={() => noteService.toggleIconPicker()}
     >
       <div class="mt-stack-lg text-right space-x-stack-md flex justify-end">

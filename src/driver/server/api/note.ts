@@ -43,4 +43,6 @@ export default router({
   queryFileTextRecord: publicProcedure
     .input(fileTextQuerySchema)
     .query(({ ctx: { noteService }, input: query }) => noteService.queryFileText(query)),
+
+  queryAllCustomIcons: publicProcedure.query(({ ctx: { noteService } }) => noteService.queryAllCustomIcons()),
 });

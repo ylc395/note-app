@@ -147,11 +147,22 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
       .where(`${this.tableName}.id`, '=', id);
 
     if (q.pages) {
-      s = s.where((eb) => eb(sql`json_extract(location, '$.page')`, 'in', q.pages));
+      s = s.where((eb) => eb(sql`location ->> page`, 'in', q.pages));
     }
 
     const rows = await s.execute();
 
     return rows.map((row) => row.location);
+  }
+
+  public async findAllCustomIcons() {
+    const rows = await this.db
+      .selectFrom(this.tableName)
+      .where(sql`icon ->> 'type'`, '=', 'file')
+      .select(sql<string>`icon ->> 'code'`.as('code'))
+      .distinct()
+      .execute();
+
+    return rows.map(({ code }) => ({ type: 'file' as const, code }));
   }
 }

@@ -1,13 +1,29 @@
 import data from '@emoji-mart/data';
 import { Picker } from 'emoji-mart';
-import { onMount } from 'solid-js';
+import { createEffect, createMemo, onCleanup } from 'solid-js';
 
 import container from '#utils/singletonContainer';
 import NoteService from '#domain/client/app/service/NoteService';
+import { getAppUrl, RouteTypes } from '#domain/shared/infra/url';
 
 export default function IconPicker(props?: { onFinish?: () => void }) {
   let rootRef: HTMLDivElement | undefined;
-  const { updateNote, exploreTreeView, toggleIconPicker } = container.resolve(NoteService);
+  const { updateNote, exploreTreeView, toggleIconPicker, customIcons } = container.resolve(NoteService);
+  const allCustomIcons = createMemo(
+    () =>
+      customIcons.result.data && [
+        {
+          id: 'custom',
+          name: 'Custom',
+          emojis: customIcons.result.data.map(({ code }) => ({
+            id: code,
+            name: '',
+            keyword: [],
+            skins: [{ src: getAppUrl(RouteTypes.File, code) }],
+          })),
+        },
+      ],
+  );
 
   async function onEmojiSelect(e: { shortcodes: string }) {
     await updateNote(Array.from(exploreTreeView.treeNodeSets.selected), {
@@ -16,7 +32,13 @@ export default function IconPicker(props?: { onFinish?: () => void }) {
     props?.onFinish?.();
   }
 
-  onMount(() => {
+  createEffect(() => {
+    const customIcons = allCustomIcons();
+
+    if (!customIcons || !rootRef) {
+      return;
+    }
+
     // https://github.com/missive/emoji-mart?tab=readme-ov-file#options--props
     const picker = new Picker({
       data,
@@ -25,12 +47,18 @@ export default function IconPicker(props?: { onFinish?: () => void }) {
       emojiSize: 18,
       onEmojiSelect,
       maxFrequentRows: 1,
+      custom: customIcons[0]?.emojis?.length ? customIcons : undefined,
       onAddCustomEmoji: () => {
         toggleIconPicker();
         props?.onFinish?.();
       },
+    }) as unknown as HTMLElement;
+
+    rootRef.append(picker);
+
+    onCleanup(() => {
+      picker.remove();
     });
-    rootRef!.append(picker as unknown as HTMLElement);
   });
 
   return <div class="-mt-10" ref={rootRef}></div>;

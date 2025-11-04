@@ -1,5 +1,6 @@
 import { action, observable } from 'mobx';
 import { compact } from 'lodash-es';
+import { createQuery } from 'mobx-tanstack-query/preset';
 
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
@@ -35,6 +36,10 @@ export default class NoteService {
 
   public readonly exploreTreeView = new TreeExplorer();
 
+  public readonly customIcons = createQuery(() => this.remote.note.queryAllCustomIcons.query(), {
+    queryKey: ['customIcon'],
+  });
+
   public readonly createNote = async (note: NewNoteDTO | DuplicatedNoteDTO) => {
     const newNote = await this.remote.note.create.mutate(note);
     this.eventBus.emit(DomainEventBus.eventNames.Created, newNote);
@@ -58,7 +63,13 @@ export default class NoteService {
     } else {
       this.customIconPicker = new CustomIconPicker({
         noteIds: Array.from(this.exploreTreeView.treeNodeSets.selected),
-        onSubmit: this.toggleIconPicker,
+        onSubmit: () => {
+          this.toggleIconPicker();
+
+          if (!this.customIconPicker?.duplicatedIconFile) {
+            this.customIcons.invalidate();
+          }
+        },
       });
     }
   };
