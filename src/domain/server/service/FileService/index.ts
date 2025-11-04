@@ -95,8 +95,16 @@ export default class FileService extends BaseService {
     await this.repo.files.createTextRecord(record);
   }
 
-  public async assertId(id: string) {
+  public async assertId(id: string, mimeType?: string | ((mimeType: string) => boolean)) {
     const file = await this.repo.files.findOneById(id);
     assert(file, 'invalid id');
+
+    if (mimeType) {
+      if (typeof mimeType === 'string') {
+        assert(file.mimeType === mimeType);
+      } else {
+        assert(mimeType(file.mimeType));
+      }
+    }
   }
 }

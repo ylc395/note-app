@@ -9,6 +9,7 @@ import {
   type NewNote,
   type FileTextQuery,
   normalizeTitle,
+  type NewNoteDTO,
 } from '#domain/server/model/note.js';
 import { arrayOf } from '#utils/collection.js';
 import container from '#utils/singletonContainer.js';
@@ -30,14 +31,7 @@ export default class NoteService extends BaseService {
     if ('from' in note) {
       newNote = await this.duplicate(note.from);
     } else {
-      if (note.fileId) {
-        await this.file.assertId(note.fileId);
-      }
-
-      if (note.parentId) {
-        await this.assertAvailableIds([note.parentId]);
-      }
-
+      await this.assertValidPatch(note);
       const now = Date.now();
 
       newNote = await this.repo.notes.create({
@@ -77,14 +71,9 @@ export default class NoteService extends BaseService {
 
   @BaseService.transaction
   public async updateOne(noteId: Note['id'], notePatch: NotePatchDTO) {
-    await this.assertAvailableIds([noteId]);
-
-    if (notePatch.parentId) {
-      await this.assertValidParent(notePatch.parentId, [noteId]);
-    }
+    await this.assertValidPatch(notePatch, [noteId]);
 
     const hasContentUpdated = typeof notePatch.title === 'string' || typeof notePatch.body === 'string';
-
     await this.repo.notes.update(noteId, {
       ...notePatch,
       updatedAt: hasContentUpdated ? Date.now() : undefined,
@@ -114,12 +103,7 @@ export default class NoteService extends BaseService {
 
   @BaseService.transaction
   public async batchUpdate(ids: Note['id'][], patch: NotePatchDTO) {
-    await this.assertAvailableIds(ids);
-
-    if (patch.parentId) {
-      await this.assertValidParent(patch.parentId, ids);
-    }
-
+    await this.assertValidPatch(patch, ids);
     const result = await this.repo.notes.update(ids, patch);
     assert(result);
   }
@@ -135,15 +119,6 @@ export default class NoteService extends BaseService {
         notes.every(({ fileId }) => Boolean(fileId) === params.withFile),
         'invalid note file type',
       );
-    }
-  }
-
-  private async assertValidParent(parentId: Note['id'], childrenIds: Note['id'][]) {
-    await this.assertAvailableIds([parentId]);
-    const descantIds = await this.repo.entities.findDescendantIds(childrenIds);
-
-    for (const id of childrenIds) {
-      assert(parentId !== id && !descantIds[id]?.includes(parentId));
     }
   }
 
@@ -176,5 +151,27 @@ export default class NoteService extends BaseService {
   public async queryFileText(q: FileTextQuery) {
     await this.assertAvailableIds([q.id]);
     return this.repo.notes.findFileTextLocation(q.id, q);
+  }
+
+  private async assertValidPatch(patch: NewNoteDTO, targetIds?: Note['id'][]) {
+    if (patch.parentId) {
+      assert(targetIds);
+    }
+
+    await Promise.all([
+      targetIds && this.assertAvailableIds(targetIds),
+      patch.icon?.type === 'file' && this.file.assertId(patch.icon.code, (mimeType) => mimeType.startsWith('image')),
+      patch.parentId && this.assertValidParent(patch.parentId, targetIds!),
+      patch.fileId && this.file.assertId(patch.fileId),
+    ]);
+  }
+
+  private async assertValidParent(parentId: Note['id'], childrenIds: Note['id'][]) {
+    await this.assertAvailableIds([parentId]);
+    const descantIds = await this.repo.entities.findDescendantIds(childrenIds);
+
+    for (const id of childrenIds) {
+      assert(parentId !== id && !descantIds[id]?.includes(parentId));
+    }
   }
 }
