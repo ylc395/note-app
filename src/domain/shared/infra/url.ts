@@ -4,7 +4,7 @@ import { APP_NAME } from './constants';
 
 export const PROTOCOL = APP_NAME;
 
-const HOST_NAME = 'localhost'; // 这个没什么意义，纯占位符。随便给一个值
+const HOST_NAME = 'app'; // 这个没什么意义，纯占位符。随便给一个值
 
 export enum RouteTypes {
   Static = 'static',
@@ -15,7 +15,7 @@ export enum RouteTypes {
 }
 
 const routes = {
-  [RouteTypes.Static]: '/static/*id', // 这里的 id 实际上是路径（包含 /）
+  [RouteTypes.Static]: '/static/*id', // 这里的 id 实际上是路径（id 应包含结尾的 /）
   [RouteTypes.File]: '/files/:id',
   [RouteTypes.Note]: '/notes/:id',
   [RouteTypes.Memo]: '/memos/:id',

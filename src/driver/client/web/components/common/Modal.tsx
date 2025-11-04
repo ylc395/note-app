@@ -9,6 +9,12 @@ export default function Modal(props: {
   onClose?: () => void;
   children: JSXElement;
   title: string;
+  bottom?: JSXElement;
+  onConfirm?: () => void;
+  canConfirm?: boolean;
+  confirmText?: string;
+  onCancel?: () => void;
+  cancelText?: string;
   closeOnInteractOutside?: boolean;
 }) {
   function handleOpenChange({ open }: DialogOpenChangeDetails) {
@@ -37,6 +43,25 @@ export default function Modal(props: {
                 </Dialog.CloseTrigger>
               </div>
               {props.children}
+              <Show
+                when={props.bottom}
+                fallback={
+                  <div class="mt-stack-lg text-right space-x-stack-md flex justify-end">
+                    <button class="button  button-lg" onClick={props.onCancel}>
+                      {props.cancelText ?? '取 消'}
+                    </button>
+                    <button
+                      class="button button-primary button-lg"
+                      disabled={props.canConfirm}
+                      onClick={props.onConfirm}
+                    >
+                      {props.confirmText ?? '确 认'}
+                    </button>
+                  </div>
+                }
+              >
+                {props.bottom}
+              </Show>
             </Dialog.Content>
           </Dialog.Positioner>
         </Portal>

@@ -16,7 +16,15 @@ export default function CustomIconPicker() {
   }
 
   return (
-    <Modal title="新建图标" open={Boolean(noteService.customIconPicker)} onClose={noteService.toggleIconPicker}>
+    <Modal
+      title="新建图标"
+      open={Boolean(noteService.customIconPicker)}
+      onClose={noteService.toggleIconPicker}
+      confirmText="创建并使用"
+      canConfirm={!noteService.customIconPicker?.canSubmit}
+      onConfirm={() => noteService.newMaterialForm?.submit()}
+      onCancel={() => noteService.toggleIconPicker()}
+    >
       <div class="mt-stack-lg text-right space-x-stack-md flex justify-end">
         <FileUpload.Root
           class="border border-border-primary rounded-lg h-36  text-text-secondary flex items-center justify-center"
@@ -67,16 +75,6 @@ export default function CustomIconPicker() {
           </Show>
           <FileUpload.HiddenInput />
         </FileUpload.Root>
-        <button class="button  button-lg" onClick={() => noteService.toggleIconPicker()}>
-          取 消
-        </button>
-        <button
-          class="button button-primary button-lg"
-          disabled={!noteService.customIconPicker?.canSubmit}
-          onClick={() => noteService.customIconPicker?.submit()}
-        >
-          创 建
-        </button>
       </div>
     </Modal>
   );

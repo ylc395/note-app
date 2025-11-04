@@ -31,6 +31,10 @@ export default function MaterialFormModal() {
       open={Boolean(noteService.newMaterialForm)}
       onClose={noteService.toggleMaterialForm}
       closeOnInteractOutside={false}
+      confirmText="创 建"
+      canConfirm={!noteService.newMaterialForm?.isValid}
+      onConfirm={() => noteService.newMaterialForm?.submit()}
+      onCancel={() => noteService.toggleMaterialForm()}
     >
       <form class="space-y-4 form">
         <Field.Root>
@@ -116,18 +120,6 @@ export default function MaterialFormModal() {
           </div>
         </Field.Root>
       </form>
-      <div class="mt-stack-lg text-right space-x-stack-md flex justify-end">
-        <button class="button  button-lg" onClick={() => noteService.toggleMaterialForm()}>
-          取 消
-        </button>
-        <button
-          class="button button-primary button-lg"
-          disabled={!noteService.newMaterialForm?.isValid}
-          onClick={() => noteService.newMaterialForm?.submit()}
-        >
-          创 建
-        </button>
-      </div>
     </Modal>
   );
 }
