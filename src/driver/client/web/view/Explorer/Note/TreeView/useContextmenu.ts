@@ -48,7 +48,7 @@ export default function useContextmenu() {
           {
             label: '选择图标',
             key: 'icon-choose',
-            content: ({ closeMenu }) => IconPicker({ onUpdated: closeMenu }),
+            content: ({ closeMenu }) => IconPicker({ onFinish: closeMenu }),
           },
           { label: '新建图标', key: 'icon-create' },
         ],

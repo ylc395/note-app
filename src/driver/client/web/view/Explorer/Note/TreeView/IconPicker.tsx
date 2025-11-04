@@ -5,15 +5,15 @@ import { onMount } from 'solid-js';
 import container from '#utils/singletonContainer';
 import NoteService from '#domain/client/app/service/NoteService';
 
-export default function IconPicker(props?: { onUpdated?: () => void }) {
+export default function IconPicker(props?: { onFinish?: () => void }) {
   let rootRef: HTMLDivElement | undefined;
-  const { updateNote, exploreTreeView } = container.resolve(NoteService);
+  const { updateNote, exploreTreeView, toggleIconPicker } = container.resolve(NoteService);
 
   async function onEmojiSelect(e: { shortcodes: string }) {
     await updateNote(Array.from(exploreTreeView.treeNodeSets.selected), {
       icon: { code: e.shortcodes, type: 'emoji' },
     });
-    props?.onUpdated?.();
+    props?.onFinish?.();
   }
 
   onMount(() => {
@@ -25,7 +25,10 @@ export default function IconPicker(props?: { onUpdated?: () => void }) {
       emojiSize: 18,
       onEmojiSelect,
       maxFrequentRows: 1,
-      onAddCustomEmoji: () => {},
+      onAddCustomEmoji: () => {
+        toggleIconPicker();
+        props?.onFinish?.();
+      },
     });
     rootRef!.append(picker as unknown as HTMLElement);
   });

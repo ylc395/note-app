@@ -26,16 +26,16 @@ export default class CustomIconPicker {
 
   @observable.ref public accessor icon: Icon | undefined = undefined;
 
-  public readonly isDuplicated = createQuery(
+  public readonly duplicatedIconFile = createQuery(
     async () => {
       const iconHash = await getHash(this.icon!.data);
-      return Boolean(await this.remote.file.queryOneByHash.query(iconHash));
+      return this.remote.file.queryOneByHash.query(iconHash);
     },
     { queryKey: ['icon', this.icon], options: () => ({ enabled: Boolean(this.icon) }) },
   );
 
   @computed public get canSubmit() {
-    return Boolean(this.icon) && this.isDuplicated.result.data === false;
+    return Boolean(this.icon) && !this.duplicatedIconFile.result.isFetching;
   }
 
   public async set(file: Icon | undefined) {
@@ -61,7 +61,7 @@ export default class CustomIconPicker {
 
   public async submit() {
     assert(this.canSubmit);
-    const file = await this.remote.file.upload.mutate(this.icon!);
+    const file = this.duplicatedIconFile.result.data ?? (await this.remote.file.upload.mutate(this.icon!));
     const icon = { type: 'file', code: file.id } as const;
     await this.remote.note.batchUpdate.mutate([this.options.noteIds, { icon }]);
 
@@ -74,6 +74,6 @@ export default class CustomIconPicker {
 
   @action
   public destroy() {
-    this.isDuplicated.destroy();
+    this.duplicatedIconFile.destroy();
   }
 }
