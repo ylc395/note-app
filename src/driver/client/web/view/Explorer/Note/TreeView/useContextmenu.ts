@@ -11,7 +11,7 @@ import type { MenuItem } from '#web/components/common/ContextMenu';
 import IconPicker from './IconPicker';
 
 export default function useContextmenu() {
-  const { exploreTreeView: tree, createNote, toggleIconPicker } = container.resolve(NoteService);
+  const { exploreTreeView: tree, createNote, iconPicker } = container.resolve(NoteService);
   const { star, unstar } = container.resolve(StarService);
   const { put } = container.resolve(RecyclableService);
 
@@ -32,7 +32,7 @@ export default function useContextmenu() {
       case 'delete':
         return put(Array.from(selected), EntityTypes.Note);
       case 'icon-create':
-        return toggleIconPicker();
+        return iconPicker.customIconPickerState.toggle();
       default:
         break;
     }

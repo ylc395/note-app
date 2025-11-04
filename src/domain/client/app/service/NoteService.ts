@@ -1,15 +1,14 @@
 import { action, observable } from 'mobx';
 import { compact } from 'lodash-es';
-import { createQuery } from 'mobx-tanstack-query/preset';
 
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import type { DuplicatedNoteDTO, NewNoteDTO, NotePatchDTO, NoteVO } from '#domain/shared/model/note';
+import IconManager from '#domain/client/app/model/note/IconManager';
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
 import { arrayOf, type MaybeArray } from '#utils/collection';
 import type { EntityPath } from '#domain/shared/model/entity';
 
-import CustomIconPicker from '#domain/client/shared/model/note/CustomIconPicker';
 import Workbench from '../model/Workbench';
 import DomainEventBus from '../model/note/EventBus';
 import NewMaterialForm from '../model/note/NewMaterialForm';
@@ -30,15 +29,13 @@ export default class NoteService {
 
   public readonly workbench = container.resolve(Workbench);
 
+  public readonly iconPicker = new IconManager({
+    noteIds: () => Array.from(this.exploreTreeView.treeNodeSets.selected),
+  });
+
   @observable.ref public accessor newMaterialForm: NewMaterialForm | undefined;
 
-  @observable.ref public accessor customIconPicker: CustomIconPicker | undefined;
-
   public readonly exploreTreeView = new TreeExplorer();
-
-  public readonly customIcons = createQuery(() => this.remote.note.queryAllCustomIcons.query(), {
-    queryKey: ['customIcon'],
-  });
 
   public readonly createNote = async (note: NewNoteDTO | DuplicatedNoteDTO) => {
     const newNote = await this.remote.note.create.mutate(note);
@@ -52,25 +49,6 @@ export default class NoteService {
 
     for (const id of ids) {
       this.eventBus.emit(DomainEventBus.eventNames.Updated, { id, payload: patch });
-    }
-  };
-
-  @action
-  public readonly toggleIconPicker = () => {
-    if (this.customIconPicker) {
-      this.customIconPicker.destroy();
-      this.customIconPicker = undefined;
-    } else {
-      this.customIconPicker = new CustomIconPicker({
-        noteIds: Array.from(this.exploreTreeView.treeNodeSets.selected),
-        onSubmit: () => {
-          this.toggleIconPicker();
-
-          if (!this.customIconPicker?.duplicatedIconFile) {
-            this.customIcons.invalidate();
-          }
-        },
-      });
     }
   };
 

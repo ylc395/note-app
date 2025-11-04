@@ -1,5 +1,4 @@
-import assert from 'assert';
-import { For, Show } from 'solid-js';
+import { createMemo, For, onCleanup, Show, untrack } from 'solid-js';
 import { FileUpload } from '@ark-ui/solid';
 import { FileIcon, FilePlusIcon, XIcon } from 'lucide-solid';
 
@@ -8,22 +7,32 @@ import NoteService from '#domain/client/app/service/NoteService';
 import container from '#utils/singletonContainer';
 
 export default function CustomIconPicker() {
-  const noteService = container.resolve(NoteService);
+  const { iconPicker } = container.resolve(NoteService);
+
+  const customIconPickerModel = createMemo(() => {
+    if (!iconPicker.customIconPickerState.isEnabled) {
+      return null;
+    }
+
+    const result = untrack(() => iconPicker.createCustomIconPicker());
+
+    onCleanup(() => result.destroy());
+    return result;
+  });
 
   async function handleFileSelected(file?: File) {
-    assert(noteService.customIconPicker);
-    noteService.customIconPicker.set(file && { mimeType: file.type, data: await file.arrayBuffer() });
+    customIconPickerModel()?.set(file && { mimeType: file.type, data: await file.arrayBuffer() });
   }
 
   return (
     <Modal
       title="新建图标"
-      open={Boolean(noteService.customIconPicker)}
-      onClose={noteService.toggleIconPicker}
+      open={iconPicker.customIconPickerState.isEnabled}
       confirmText="创建并使用"
-      canConfirm={!noteService.customIconPicker?.canSubmit}
-      onConfirm={() => noteService.customIconPicker?.submit()}
-      onCancel={() => noteService.toggleIconPicker()}
+      canConfirm={!customIconPickerModel()?.canSubmit}
+      onConfirm={() => customIconPickerModel()?.submit()}
+      onCancel={iconPicker.customIconPickerState.toggle}
+      onClose={iconPicker.customIconPickerState.toggle}
     >
       <div class="mt-stack-lg text-right space-x-stack-md flex justify-end">
         <FileUpload.Root
@@ -31,7 +40,7 @@ export default function CustomIconPicker() {
           onFileChange={({ acceptedFiles: [file] }) => handleFileSelected(file)}
         >
           <Show
-            when={noteService.customIconPicker?.icon}
+            when={customIconPickerModel()?.icon}
             fallback={
               <FileUpload.Dropzone class="text-sm w-full h-full flex flex-col items-center justify-center cursor-pointer">
                 <FileUpload.Trigger class="flex items-center justify-center flex-col">

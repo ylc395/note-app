@@ -8,14 +8,14 @@ import { getAppUrl, RouteTypes } from '#domain/shared/infra/url';
 
 export default function IconPicker(props?: { onFinish?: () => void }) {
   let rootRef: HTMLDivElement | undefined;
-  const { updateNote, exploreTreeView, toggleIconPicker, customIcons } = container.resolve(NoteService);
+  const { iconPicker } = container.resolve(NoteService);
   const allCustomIcons = createMemo(
     () =>
-      customIcons.result.data && [
+      iconPicker.customIcons.result.data && [
         {
           id: 'custom',
           name: 'Custom',
-          emojis: customIcons.result.data.map(({ code }) => ({
+          emojis: iconPicker.customIcons.result.data.map(({ code }) => ({
             id: code,
             name: '',
             keyword: [],
@@ -26,9 +26,7 @@ export default function IconPicker(props?: { onFinish?: () => void }) {
   );
 
   async function onEmojiSelect(e: { shortcodes: string }) {
-    await updateNote(Array.from(exploreTreeView.treeNodeSets.selected), {
-      icon: { code: e.shortcodes, type: 'emoji' },
-    });
+    await iconPicker.submit({ code: e.shortcodes, type: 'emoji' });
     props?.onFinish?.();
   }
 
@@ -49,7 +47,7 @@ export default function IconPicker(props?: { onFinish?: () => void }) {
       maxFrequentRows: 1,
       custom: customIcons[0]?.emojis?.length ? customIcons : undefined,
       onAddCustomEmoji: () => {
-        toggleIconPicker();
+        iconPicker.customIconPickerState.toggle();
         props?.onFinish?.();
       },
     }) as unknown as HTMLElement;

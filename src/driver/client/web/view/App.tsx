@@ -6,7 +6,7 @@ import MainSidebar from './MainSidebar';
 import Explorer from './Explorer';
 import Workbench from './Workbench';
 import MaterialFormModal from './note/MaterialFormModal';
-import CustomIconPicker from './note/CustomIconPicker';
+import CustomIconPicker from './note/CustomIconPickerModal';
 import UIState, { SidebarTabs } from './UIState';
 import './index.css';
 
