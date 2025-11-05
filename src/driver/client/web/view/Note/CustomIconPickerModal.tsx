@@ -1,4 +1,4 @@
-import { createMemo, For, onCleanup, Show, untrack } from 'solid-js';
+import { createMemo, For, Show } from 'solid-js';
 import { FileUpload } from '@ark-ui/solid';
 import { FileIcon, FilePlusIcon, XIcon } from 'lucide-solid';
 
@@ -10,14 +10,7 @@ export default function CustomIconPicker() {
   const { iconPicker } = container.resolve(NoteService);
 
   const customIconPickerModel = createMemo(() => {
-    if (!iconPicker.customIconPickerState.isEnabled) {
-      return null;
-    }
-
-    const result = untrack(() => iconPicker.createCustomIconPicker());
-
-    onCleanup(() => result.destroy());
-    return result;
+    return iconPicker.customIconPicker;
   });
 
   async function handleFileSelected(file?: File) {
@@ -27,12 +20,12 @@ export default function CustomIconPicker() {
   return (
     <Modal
       title="新建图标"
-      open={iconPicker.customIconPickerState.isEnabled}
+      open={Boolean(iconPicker.customIconPicker)}
       confirmText="创建并使用"
       canConfirm={!customIconPickerModel()?.canSubmit}
       onConfirm={() => customIconPickerModel()?.submit()}
-      onCancel={iconPicker.customIconPickerState.toggle}
-      onClose={iconPicker.customIconPickerState.toggle}
+      onCancel={() => iconPicker.customIconPicker?.destroy()}
+      onClose={() => iconPicker.customIconPicker?.destroy()}
     >
       <div class="mt-stack-lg text-right space-x-stack-md flex justify-end">
         <FileUpload.Root

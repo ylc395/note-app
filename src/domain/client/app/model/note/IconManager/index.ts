@@ -1,7 +1,7 @@
 import { createQuery } from 'mobx-tanstack-query/preset';
+import { action, observable } from 'mobx';
 
 import container from '#utils/singletonContainer';
-import { togglable } from '#domain/client/shared/model/abstract/togglable';
 import type { NoteVO } from '#domain/shared/model/note';
 import type { Icon } from '#domain/shared/model/entity';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
@@ -16,11 +16,29 @@ export default class IconManager {
 
   private readonly eventBus = container.resolve(DomainEventBus);
 
+  @observable.ref public accessor customIconPicker: CustomIconPicker | undefined = undefined;
+
   public readonly customIcons = createQuery(() => this.remote.note.queryAllCustomIcons.query(), {
     queryKey: ['customIcon'],
   });
 
-  public readonly customIconPickerState = togglable();
+  @action
+  public readonly initCustomIconPicker = () => {
+    this.customIconPicker = new CustomIconPicker({
+      onDestroy: action(() => {
+        this.customIconPicker = undefined;
+      }),
+
+      onSubmit: async ({ isNewIcon, fileId }) => {
+        await this.submit({ type: 'file', code: fileId });
+        this.customIconPicker?.destroy();
+
+        if (isNewIcon) {
+          this.customIcons.invalidate();
+        }
+      },
+    });
+  };
 
   public readonly submit = async (icon: Icon) => {
     const noteIds = this.options.noteIds();
@@ -29,19 +47,5 @@ export default class IconManager {
     for (const noteId of noteIds) {
       this.eventBus.emit(DomainEventBus.eventNames.Updated, { id: noteId, payload: { icon } });
     }
-  };
-
-  public readonly createCustomIconPicker = () => {
-    return new CustomIconPicker({
-      onSubmit: async ({ isNewIcon, fileId }) => {
-        await this.submit({ type: 'file', code: fileId });
-
-        this.customIconPickerState.toggle();
-
-        if (isNewIcon) {
-          this.customIcons.invalidate();
-        }
-      },
-    });
   };
 }

@@ -13,7 +13,12 @@ type Icon = Required<Pick<FileDTO, 'data' | 'mimeType'>>;
 
 // 新建并设置图标
 export default class CustomIconPicker {
-  constructor(private readonly options: { onSubmit?: (e: { isNewIcon: boolean; fileId: FileVO['id'] }) => void }) {}
+  constructor(
+    private readonly options: {
+      onDestroy?: () => void;
+      onSubmit?: (e: { isNewIcon: boolean; fileId: FileVO['id'] }) => void;
+    },
+  ) {}
 
   private readonly remote = container.resolve(rpcToken);
 
@@ -68,5 +73,6 @@ export default class CustomIconPicker {
   @action
   public destroy() {
     this.duplicatedIconFile.destroy();
+    this.options.onDestroy?.();
   }
 }

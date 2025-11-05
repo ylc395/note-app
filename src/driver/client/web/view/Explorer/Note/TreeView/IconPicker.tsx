@@ -47,7 +47,7 @@ export default function IconPicker(props?: { onFinish?: () => void }) {
       maxFrequentRows: 1,
       custom: customIcons[0]?.emojis?.length ? customIcons : undefined,
       onAddCustomEmoji: () => {
-        iconPicker.customIconPickerState.toggle();
+        iconPicker.initCustomIconPicker();
         props?.onFinish?.();
       },
     }) as unknown as HTMLElement;

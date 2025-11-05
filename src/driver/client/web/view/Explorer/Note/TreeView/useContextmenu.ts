@@ -32,7 +32,7 @@ export default function useContextmenu() {
       case 'delete':
         return put(Array.from(selected), EntityTypes.Note);
       case 'icon-create':
-        return iconPicker.customIconPickerState.toggle();
+        return iconPicker.initCustomIconPicker();
       default:
         break;
     }
