@@ -31,7 +31,7 @@ export default class NoteService extends BaseService {
     if ('from' in note) {
       newNote = await this.duplicate(note.from);
     } else {
-      await this.assertValidPatch(note);
+      await this.assertValidDto(note);
       const now = Date.now();
 
       newNote = await this.repo.notes.create({
@@ -71,7 +71,7 @@ export default class NoteService extends BaseService {
 
   @BaseService.transaction
   public async updateOne(noteId: Note['id'], notePatch: NotePatchDTO) {
-    await this.assertValidPatch(notePatch, [noteId]);
+    await this.assertValidDto(notePatch, [noteId]);
 
     const hasContentUpdated = typeof notePatch.title === 'string' || typeof notePatch.body === 'string';
     await this.repo.notes.update(noteId, {
@@ -103,7 +103,7 @@ export default class NoteService extends BaseService {
 
   @BaseService.transaction
   public async batchUpdate(ids: Note['id'][], patch: NotePatchDTO) {
-    await this.assertValidPatch(patch, ids);
+    await this.assertValidDto(patch, ids);
     const result = await this.repo.notes.update(ids, patch);
     assert(result);
   }
@@ -157,15 +157,11 @@ export default class NoteService extends BaseService {
     return this.repo.notes.findAllCustomIcons();
   }
 
-  private async assertValidPatch(patch: NewNoteDTO, targetIds?: Note['id'][]) {
-    if (patch.parentId) {
-      assert(targetIds);
-    }
-
+  private async assertValidDto(patch: NewNoteDTO, noteIds?: Note['id'][]) {
     await Promise.all([
-      targetIds && this.assertAvailableIds(targetIds),
+      noteIds && this.assertAvailableIds(noteIds),
       patch.icon?.type === 'file' && this.file.assertId(patch.icon.code, (mimeType) => mimeType.startsWith('image')),
-      patch.parentId && this.assertValidParent(patch.parentId, targetIds!),
+      patch.parentId && noteIds && this.assertValidParent(patch.parentId, noteIds),
       patch.fileId && this.file.assertId(patch.fileId),
     ]);
   }

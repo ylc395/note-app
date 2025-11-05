@@ -1,4 +1,3 @@
-import { action, observable } from 'mobx';
 import { compact } from 'lodash-es';
 
 import container from '#utils/singletonContainer';
@@ -7,13 +6,12 @@ import type { DuplicatedNoteDTO, NewNoteDTO, NotePatchDTO, NoteVO } from '#domai
 import IconManager from '#domain/client/app/model/note/IconManager';
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
 import { arrayOf, type MaybeArray } from '#utils/collection';
-import type { EntityPath } from '#domain/shared/model/entity';
 
 import Workbench from '../model/Workbench';
 import DomainEventBus from '../model/note/EventBus';
-import NewMaterialForm from '../model/note/NewMaterialForm';
 import BaseEditor from '../model/note/editor/BaseEditor';
 import TreeExplorer from '../model/note/TreeExplorer';
+import NewMaterialManager from '../model/note/NewMaterialManager';
 
 export default class NoteService {
   constructor() {
@@ -29,13 +27,13 @@ export default class NoteService {
 
   public readonly workbench = container.resolve(Workbench);
 
+  public readonly newMaterialForm = new NewMaterialManager();
+
+  public readonly exploreTreeView = new TreeExplorer();
+
   public readonly iconPicker = new IconManager({
     noteIds: () => Array.from(this.exploreTreeView.treeNodeSets.selected),
   });
-
-  @observable.ref public accessor newMaterialForm: NewMaterialForm | undefined;
-
-  public readonly exploreTreeView = new TreeExplorer();
 
   public readonly createNote = async (note: NewNoteDTO | DuplicatedNoteDTO) => {
     const newNote = await this.remote.note.create.mutate(note);
@@ -49,23 +47,6 @@ export default class NoteService {
 
     for (const id of ids) {
       this.eventBus.emit(DomainEventBus.eventNames.Updated, { id, payload: patch });
-    }
-  };
-
-  @action
-  public readonly toggleMaterialForm = (options?: { path?: EntityPath; onSubmit?: () => void }) => {
-    if (this.newMaterialForm) {
-      this.newMaterialForm.destroy();
-      this.newMaterialForm = undefined;
-    } else {
-      this.newMaterialForm = new NewMaterialForm({
-        path: options?.path,
-        onSubmit: async (newNote) => {
-          this.toggleMaterialForm();
-          options?.onSubmit?.();
-          this.workbench.open({ entityId: newNote.id, mimeType: newNote.mimeType });
-        },
-      });
     }
   };
 

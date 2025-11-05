@@ -11,14 +11,14 @@ import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import type { FileDTO } from '#domain/shared/model/file';
 import { getHash } from '#utils/file';
 import type { EntityPath } from '#domain/shared/model/entity';
-import DomainEventBus from './EventBus';
+import DomainEventBus from '../EventBus';
 
 type MaterialFormField = Pick<NewNoteDTO, 'title' | 'body' | 'icon' | 'sourceUrl'>;
 
 type File = Pick<FileDTO, 'mimeType' | 'path'> & { data: ArrayBuffer; name: string };
 
 export default class NewMaterialForm extends Form<MaterialFormField> {
-  constructor(private formOptions: { onSubmit: (note: NoteVO) => void; path?: EntityPath }) {
+  constructor(private formOptions: { onDestroy?: () => void; onSubmit: (note: NoteVO) => void; path?: EntityPath }) {
     super();
   }
 
@@ -26,19 +26,18 @@ export default class NewMaterialForm extends Form<MaterialFormField> {
 
   public readonly remote = container.resolve(rpcToken);
 
-  public get path() {
-    return this.formOptions.path;
-  }
-
   @observable.ref private accessor file: (File & { hash: string }) | undefined;
 
   @observable public accessor hasFile = false;
 
+  public get path() {
+    return this.formOptions.path;
+  }
+
   public readonly duplicatedNotesQuery = createQuery(
-    () => this.remote.note.query.query({ fileHash: this.file!.hash }),
+    () => this.file && this.remote.note.query.query({ fileHash: this.file.hash }),
     {
       queryKey: () => ['notes', { fileHash: this.file?.hash }],
-      options: () => ({ enabled: Boolean(this.file) }),
     },
   );
 
@@ -93,7 +92,9 @@ export default class NewMaterialForm extends Form<MaterialFormField> {
     this.formOptions.onSubmit(newNote);
   }
 
+  @action
   public destroy() {
     this.duplicatedNotesQuery.destroy();
+    this.formOptions.onDestroy?.();
   }
 }
