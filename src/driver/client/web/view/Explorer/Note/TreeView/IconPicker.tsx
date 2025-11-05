@@ -4,7 +4,8 @@ import { createEffect, createMemo, onCleanup } from 'solid-js';
 
 import container from '#utils/singletonContainer';
 import NoteService from '#domain/client/app/service/NoteService';
-import { getAppUrl, RouteTypes } from '#domain/shared/infra/url';
+import { getAppUrl, parseAppUrl, RouteTypes } from '#domain/shared/infra/url';
+import type { Icon } from '#domain/shared/model/entity';
 
 export default function IconPicker(props?: { onFinish?: () => void }) {
   let rootRef: HTMLDivElement | undefined;
@@ -25,8 +26,9 @@ export default function IconPicker(props?: { onFinish?: () => void }) {
       ],
   );
 
-  async function onEmojiSelect(e: { shortcodes: string }) {
-    await iconPicker.submit({ code: e.shortcodes, type: 'emoji' });
+  async function onEmojiSelect(e: { shortcodes: string; src?: string }) {
+    const icon: Icon = e.src ? { code: parseAppUrl(e.src)!.id, type: 'file' } : { code: e.shortcodes, type: 'emoji' };
+    await iconPicker.submit(icon);
     props?.onFinish?.();
   }
 
