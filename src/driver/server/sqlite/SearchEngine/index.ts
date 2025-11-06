@@ -79,7 +79,17 @@ export default class SqliteSearchEngine implements SearchEngine {
           q.fields?.includes(SearchFields.Body) && contentCondition,
         ]);
 
-        return fieldsStatements.length === 0 ? eb(notesFTSTableName, 'match', q.keyword) : eb.or(fieldsStatements);
+        return fieldsStatements.length === 0
+          ? /* simple_query 对传入的关键字做了以下处理：
+            1. 如果查数字，我们要把搜索词当作前缀来用，比如用户搜索 123， query 就需要换成 123*，这样如果索引里面有 12345 也能被搜索出来
+            2. 对于英文，除了要当作前缀，还需要把搜索词转成小写，比如用护搜索 Hello，query 就需要换成 hello*, 这样如果索引里面有 HelloWorld 也能被命中
+            3. 对于中文和其他字符，拆出词汇（jieba 分词）或单字
+            4. 最后对于拼音（其实我们没办法区分英文和拼音，统一当作拼音处理就行），需要把拼音按照规则拆分，因为我们的拼音索引是单字建立的。这样如果用户搜索 “zhangliangy”，拼音就可以被拆成 ‘zhang AND liang AND y*’，从而命中"张靓颖"。具体规则微信的文章中也有详述。
+          
+            来源：https://www.wangfenjin.com/posts/simple-tokenizer/#query-%E6%8B%86%E5%88%86 以及 https://www.wangfenjin.com/posts/simple-jieba-tokenizer/#%E5%AE%9E%E7%8E%B0
+          */
+            eb(notesFTSTableName, 'match', eb.fn<string>('jieba_query', [eb.val(q.keyword)]))
+          : eb.or(fieldsStatements);
       })
       .where((eb) => {
         return eb.and(
@@ -89,6 +99,7 @@ export default class SqliteSearchEngine implements SearchEngine {
           ]),
         );
       })
+      .orderBy((eb) => eb.fn('bm25', [notesFTSTableName, sql.val(1), sql.val(10), sql.val(5)]))
       .execute();
 
     const searchResult: SearchResult[] = rows.map((row) => ({

@@ -74,8 +74,12 @@ export default class SqliteDb implements Database {
 
     this.logger.debug(dbPath);
 
-    const extensionPath = join(path.dirname(fileURLToPath(import.meta.url)), 'simple-tokenizer/libsimple');
-    const db = new BetterSqlite3(dbPath, { verbose: this.logger.debug }).loadExtension(extensionPath); // sqlite's built-in tokenizer can not handle CJK. so we use `simple tokenizer`
+    // sqlite 内置的 tokenizer 无法为 CJK 字符或词汇建立索引（只能为一整片连续的 CJK 建立索引）。因此必须使用 simple tokenizer
+    const extensionPath = join(path.dirname(fileURLToPath(import.meta.url)), 'simple-tokenizer');
+    const db = new BetterSqlite3(dbPath, { verbose: this.logger.debug }).loadExtension(
+      join(extensionPath, 'libsimple'),
+    );
+    db.prepare('select jieba_dict(?)').run(join(extensionPath, 'dict'));
 
     return new Kysely<Db>({
       dialect: new SqliteDialect({ database: db }),
