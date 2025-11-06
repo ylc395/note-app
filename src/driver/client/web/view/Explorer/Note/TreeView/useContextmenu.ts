@@ -39,6 +39,8 @@ export default function useContextmenu() {
   }
 
   function contextmenu(node: TreeNode): Array<MenuItem | 'separator'> {
+    const isSingle = tree.treeNodeSets.selected.size === 1;
+
     return [
       { label: '移动至...', key: 'move' },
       {
@@ -53,7 +55,7 @@ export default function useContextmenu() {
           { label: '新建图标', key: 'icon-create' },
         ],
       },
-      ...(tree.treeNodeSets.selected.size === 1
+      ...(isSingle
         ? [
             { label: node.value?.isStar ? '取消收藏' : '收藏', key: 'star' },
             'separator' as const,

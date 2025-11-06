@@ -8,6 +8,10 @@ export default class SearchService extends BaseService {
   private readonly entityService = container.resolve(EntityService);
 
   public async search(q: SearchRequest): Promise<SearchResultVO[]> {
+    if (!q.keyword) {
+      return [];
+    }
+
     const results = await this.searchEngine.search(q);
 
     const ids = results.map(({ entityId: id }) => id);

@@ -17,13 +17,12 @@ export interface SearchRequest {
   entityTypes?: SearchTypes[];
   fields?: SearchFields[];
   rootId?: EntityId;
-  includingRecyclables?: boolean;
 }
 
 interface MatchRecord {
   text: string;
   highlights: { start: number; end: number }[];
-  location?: TextLocation;
+  location?: TextLocation; // 搜索文件中的文本时
 }
 
 export interface SearchResult {

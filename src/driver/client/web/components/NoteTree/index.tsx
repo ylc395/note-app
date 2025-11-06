@@ -29,7 +29,7 @@ export default function BaseTree(props: {
     }),
   );
 
-  // 这里不使用 arkui 提供的 Tree 组件，因为对于动态加载节的场景，它实现得有问题，性能很差
+  // 这里不使用 arkui 提供的 Tree 组件，因为对于动态加载节点的场景，它实现得有问题，性能很差
   return (
     <Show when={props.treeView.tree?.root}>
       {(rootNode) => (

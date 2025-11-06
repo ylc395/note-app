@@ -37,13 +37,15 @@ export default class SqliteSearchEngine implements SearchEngine {
   private async createTables() {
     await this.sqliteDb.ready;
 
-    if (this.sqliteDb.hasTable(notesFTSTableName)) {
-      return;
-    }
-
     this.sqliteDb.transaction(async () => {
-      for (const sql of initialSqls) {
-        await sql.execute(this.db);
+      for (const { tableName, sql } of initialSqls) {
+        if (this.sqliteDb.hasTable(tableName)) {
+          continue;
+        }
+
+        for (const s of sql) {
+          await s.execute(this.db);
+        }
       }
     });
   }
@@ -55,13 +57,13 @@ export default class SqliteSearchEngine implements SearchEngine {
       .select(({ fn, val }) => [
         `${notesFTSTableName}.id as entityId`,
         'rank',
-        fn<string>('highlight', [
+        fn<string | null>('highlight', [
           sql.raw(notesFTSTableName),
           val(1),
           val(WRAPPER_START_TEXT),
           val(WRAPPER_END_TEXT),
         ]).as('titleResult'),
-        fn<string>('highlight', [
+        fn<string | null>('highlight', [
           sql.raw(notesFTSTableName),
           val(2),
           val(WRAPPER_START_TEXT),
@@ -82,7 +84,7 @@ export default class SqliteSearchEngine implements SearchEngine {
       .where((eb) => {
         return eb.and(
           compact([
-            !q.includingRecyclables && eb(`${recyclablesTableName}.entityId`, 'is', null),
+            eb(`${recyclablesTableName}.entityId`, 'is', null),
             ids && ids.length > 0 && eb(`${notesFTSTableName}.id`, 'in', ids),
           ]),
         );
@@ -94,8 +96,8 @@ export default class SqliteSearchEngine implements SearchEngine {
       rank: row.rank,
       entityType: EntityTypes.Note as const,
       matches: {
-        [SearchFields.Title]: SqliteSearchEngine.parseSearchResult(row.titleResult),
-        [SearchFields.Body]: SqliteSearchEngine.parseSearchResult(row.contentResult),
+        [SearchFields.Title]: row.titleResult ? SqliteSearchEngine.parseSearchResult(row.titleResult) : undefined,
+        [SearchFields.Body]: row.contentResult ? SqliteSearchEngine.parseSearchResult(row.contentResult) : undefined,
       },
     }));
 
@@ -121,7 +123,7 @@ export default class SqliteSearchEngine implements SearchEngine {
       .where((eb) => {
         return eb.and(
           compact([
-            !q.includingRecyclables && eb(`${recyclablesTableName}.entityId`, 'is', null),
+            eb(`${recyclablesTableName}.entityId`, 'is', null),
             ids && ids.length > 0 && eb(`${memosFTSTableName}.id`, 'in', ids),
           ]),
         );
@@ -158,7 +160,7 @@ export default class SqliteSearchEngine implements SearchEngine {
         return eb.and(
           compact([
             eb(fileTextsFTSTableName, 'match', q.keyword),
-            !q.includingRecyclables && eb(`${recyclablesTableName}.entityId`, 'is', null),
+            eb(`${recyclablesTableName}.entityId`, 'is', null),
             entityIds &&
               entityIds.length > 0 &&
               eb.or([eb(`${notesFTSTableName}.id`, 'in', entityIds), eb(`${linkTableName}.sourceId`, 'in', entityIds)]),
