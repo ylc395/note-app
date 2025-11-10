@@ -10,7 +10,7 @@ import workerPlugin from './worker-plugin.js';
 import { RUNTIME_ENV, ELECTRON_TSCONFIG_PATH } from './constants.js';
 
 async function downloadSqliteTokenizer() {
-  const localPath = path.resolve('dist/driver/server/sqlite/simple-tokenizer');
+  const localPath = path.resolve('dist/driver/server/sqlite/SearchEngine/simple-tokenizer');
   if (fs.pathExistsSync(localPath)) {
     return;
   }

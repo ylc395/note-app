@@ -101,7 +101,7 @@ export default class TreeNode {
   }
 
   @computed
-  public get childrenCount() {
+  private get childrenCount() {
     return this.children?.length ?? this.value?.childrenCount;
   }
 

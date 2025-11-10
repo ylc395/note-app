@@ -11,6 +11,5 @@ export const searchRequestSchema = z.object({
   keyword: z.string(),
   entityTypes: z.array(searchTypesSchema).optional(),
   fields: z.array(searchFieldsSchema).optional(),
-  rootId: entityIdSchema.optional(),
-  includingRecyclables: z.boolean().optional()
+  rootId: z.array(entityIdSchema).optional()
 });

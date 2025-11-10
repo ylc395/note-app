@@ -1,10 +1,14 @@
 import { type Kysely, sql } from 'kysely';
 import { compact, keyBy } from 'lodash-es';
 import assert from 'node:assert';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import type { SearchEngine } from '#domain/server/infra/searchEngine.js';
 import { token as repositoriesToken } from '#domain/server/repository/index.js';
 import { SearchFields, SearchRequest, type SearchResult } from '#domain/shared/model/search.js';
+import { type EntityId, EntityTypes } from '#domain/shared/model/entity.js';
+import container from '#utils/singletonContainer.js';
 
 import type SqliteDb from '../Database.js';
 import { tableName as recyclablesTableName } from '../schema/recyclable.js';
@@ -19,8 +23,6 @@ import {
   memosFTSTableName,
   fileTextsFTSTableName,
 } from './tables.js';
-import { type EntityId, EntityTypes } from '#domain/shared/model/entity.js';
-import container from '#utils/singletonContainer.js';
 
 export default class SqliteSearchEngine implements SearchEngine {
   constructor(readonly sqliteDb: SqliteDb) {
@@ -36,6 +38,13 @@ export default class SqliteSearchEngine implements SearchEngine {
 
   private async createTables() {
     await this.sqliteDb.ready;
+
+    // sqlite 内置的 tokenizer 无法为 CJK 字符或词汇建立索引（只能为一整片连续的 CJK 建立索引）。因此必须使用 simple tokenizer
+    const extensionPath = join(dirname(fileURLToPath(import.meta.url)), 'simple-tokenizer');
+    this.sqliteDb.rawDb.loadExtension(join(extensionPath, 'libsimple'));
+
+    // 使用 jieba 之后，可为汉语词汇建立索引，从而增加查询速度和准确度
+    this.sqliteDb.rawDb.prepare('select jieba_dict(?)').run(join(extensionPath, 'dict'));
 
     this.sqliteDb.transaction(async () => {
       for (const { tableName, sql } of initialSqls) {
@@ -57,17 +66,21 @@ export default class SqliteSearchEngine implements SearchEngine {
       .select(({ fn, val }) => [
         `${notesFTSTableName}.id as entityId`,
         'rank',
-        fn<string | null>('highlight', [
+        fn<string | null>('simple_snippet', [
           sql.raw(notesFTSTableName),
           val(1),
           val(WRAPPER_START_TEXT),
           val(WRAPPER_END_TEXT),
+          val('...'),
+          val('64'),
         ]).as('titleResult'),
-        fn<string | null>('highlight', [
+        fn<string | null>('simple_snippet', [
           sql.raw(notesFTSTableName),
           val(2),
           val(WRAPPER_START_TEXT),
           val(WRAPPER_END_TEXT),
+          val('...'),
+          val('64'),
         ]).as('contentResult'),
       ])
       .where((eb) => {
@@ -82,7 +95,7 @@ export default class SqliteSearchEngine implements SearchEngine {
         return fieldsStatements.length === 0
           ? /* simple_query 对传入的关键字做了以下处理：
             1. 如果查数字，我们要把搜索词当作前缀来用，比如用户搜索 123， query 就需要换成 123*，这样如果索引里面有 12345 也能被搜索出来
-            2. 对于英文，除了要当作前缀，还需要把搜索词转成小写，比如用护搜索 Hello，query 就需要换成 hello*, 这样如果索引里面有 HelloWorld 也能被命中
+            2. 对于英文，除了要当作前缀，还需要把搜索词转成小写，比如用户搜索 Hello，query 就需要换成 hello*, 这样如果索引里面有 HelloWorld 也能被命中
             3. 对于中文和其他字符，拆出词汇（jieba 分词）或单字
             4. 最后对于拼音（其实我们没办法区分英文和拼音，统一当作拼音处理就行），需要把拼音按照规则拆分，因为我们的拼音索引是单字建立的。这样如果用户搜索 “zhangliangy”，拼音就可以被拆成 ‘zhang AND liang AND y*’，从而命中"张靓颖"。具体规则微信的文章中也有详述。
           
@@ -123,11 +136,13 @@ export default class SqliteSearchEngine implements SearchEngine {
         `${memosFTSTableName}.id as entityId`,
         sql.val('').as('titleResult'),
         `${memosFTSTableName}.rank as rank`,
-        fn<string>('highlight', [
+        fn<string>('simple_snippet', [
           sql.raw(memosFTSTableName),
           val(1),
           val(WRAPPER_START_TEXT),
           val(WRAPPER_END_TEXT),
+          val('...'),
+          val('64'),
         ]).as('contentResult'),
       ])
       .where(memosFTSTableName, 'match', q.keyword)
@@ -182,11 +197,13 @@ export default class SqliteSearchEngine implements SearchEngine {
         `${notesFTSTableName}.id as noteId`,
         `${linkTableName}.sourceId as entityId`,
         `${fileTextsFTSTableName}.rank`,
-        fn<string>('highlight', [
+        fn<string>('simple_snippet', [
           sql.raw(fileTextsFTSTableName),
           val(1),
           val(WRAPPER_START_TEXT),
           val(WRAPPER_END_TEXT),
+          val('...'),
+          val('64'),
         ]).as('contentResult'),
       ])
       .execute();
@@ -194,7 +211,9 @@ export default class SqliteSearchEngine implements SearchEngine {
 
   public async search(q: SearchRequest): Promise<SearchResult[]> {
     const types = q.entityTypes || [EntityTypes.Note, EntityTypes.Memo];
-    const descantIds = q.rootId ? await this.repo.entities.findDescendantIds(q.rootId) : undefined;
+    const descantIds = q.rootId
+      ? Object.values(await this.repo.entities.findDescendantIds(q.rootId)).flat()
+      : undefined;
     const fields = q.fields || [SearchFields.Body, SearchFields.Title, SearchFields.File];
 
     let results: SearchResult[] = [];
@@ -268,7 +287,7 @@ export default class SqliteSearchEngine implements SearchEngine {
 
       highlights.push({
         start: index - (WRAPPER_START_TEXT.length + WRAPPER_END_TEXT.length) * i,
-        end: endIndex - (WRAPPER_START_TEXT.length * (i + 1) + WRAPPER_END_TEXT.length * i) - 1,
+        end: endIndex - (WRAPPER_START_TEXT.length * (i + 1) + WRAPPER_END_TEXT.length * i),
       });
 
       i += 1;

@@ -40,7 +40,7 @@ export const initialSqls =  [
             file_id UNINDEXED,
             created_at UNINDEXED,
             updated_at UNINDEXED,
-            tokenize="simple",
+            tokenize="simple 0",
             content=${sql.table(noteTableName)}
           )`,
       sql`CREATE TRIGGER notes_ai AFTER INSERT ON ${sql.table(noteTableName)}
@@ -100,9 +100,9 @@ export const initialSqls =  [
             body_plain_text,
             created_at UNINDEXED,
             updated_at UNINDEXED,
-            tokenize="simple",
+            tokenize="simple 0",
             content=${sql.table(fileTextTableName)}
-        )`,
+        )`, // 关闭拼音功能 https://github.com/wangfenjin/simple/issues/94
       sql`CREATE TRIGGER annotations_ai AFTER INSERT ON ${sql.table(annotationTableName)}
           BEGIN 
             INSERT INTO ${sql.table(annotationsFTSTableName)}(rowid, body_plain_text) VALUES (new.rowid, new.body_plain_text);
@@ -129,7 +129,7 @@ export const initialSqls =  [
             file_id UNINDEXED,
             text,
             location UNINDEXED,
-            tokenize="simple",
+            tokenize="simple 0",
             content=${sql.table(fileTextTableName)}
           )`,
 

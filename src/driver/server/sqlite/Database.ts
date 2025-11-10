@@ -2,8 +2,7 @@ import { Kysely, SqliteDialect, CamelCasePlugin, ParseJSONResultsPlugin, type Tr
 import { AsyncLocalStorage } from 'node:async_hooks';
 import BetterSqlite3 from 'better-sqlite3';
 import fs from 'fs-extra';
-import path, { join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
 import assert from 'node:assert';
 
 import { token as loggerToken } from '#domain/shared/infra/logger.js';
@@ -17,12 +16,16 @@ type Db = Schemas;
 
 export default class SqliteDb implements Database {
   constructor({ dir }: { dir: string }) {
-    this.db = this.connectToDb(dir);
+    const { db, rawDb } = this.connectToDb(dir);
+
+    this.rawDb = rawDb;
+    this.db = db;
     this.ready = this.initTables();
   }
 
   private readonly logger = container.resolve(loggerToken);
-  private db: Kysely<Db>;
+  private readonly db: Kysely<Db>;
+  public readonly rawDb: BetterSqlite3.Database;
   private readonly als = new AsyncLocalStorage<Transaction<Db>>();
   public readonly ready: Promise<void>;
   private tableNames?: string[];
@@ -74,16 +77,14 @@ export default class SqliteDb implements Database {
 
     this.logger.debug(dbPath);
 
-    // sqlite 内置的 tokenizer 无法为 CJK 字符或词汇建立索引（只能为一整片连续的 CJK 建立索引）。因此必须使用 simple tokenizer
-    const extensionPath = join(path.dirname(fileURLToPath(import.meta.url)), 'simple-tokenizer');
-    const db = new BetterSqlite3(dbPath, { verbose: this.logger.debug }).loadExtension(
-      join(extensionPath, 'libsimple'),
-    );
-    db.prepare('select jieba_dict(?)').run(join(extensionPath, 'dict'));
+    const db = new BetterSqlite3(dbPath, { verbose: this.logger.debug });
 
-    return new Kysely<Db>({
-      dialect: new SqliteDialect({ database: db }),
-      plugins: [new CamelCasePlugin(), new ParseJSONResultsPlugin()],
-    });
+    return {
+      rawDb: db,
+      db: new Kysely<Db>({
+        dialect: new SqliteDialect({ database: db }),
+        plugins: [new CamelCasePlugin(), new ParseJSONResultsPlugin()],
+      }),
+    };
   }
 }

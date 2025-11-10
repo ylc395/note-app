@@ -6,7 +6,6 @@ import type { DuplicatedNoteDTO, NewNoteDTO, NotePatchDTO, NoteVO } from '#domai
 import IconManager from '#domain/client/app/model/note/IconManager';
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
 import { arrayOf, type MaybeArray } from '#utils/collection';
-import { EntityTypes } from '#domain/shared/model/entity';
 
 import Workbench from '../model/Workbench';
 import DomainEventBus from '../model/note/EventBus';
@@ -49,10 +48,6 @@ export default class NoteService {
     for (const id of ids) {
       this.eventBus.emit(DomainEventBus.eventNames.Updated, { id, payload: patch });
     }
-  };
-
-  public readonly search = ({ keyword, rootId }: { keyword: string; rootId?: NoteVO['id'] }) => {
-    this.remote.search.search.mutate({ keyword, entityTypes: [EntityTypes.Note], rootId });
   };
 
   public static getNote(value: unknown) {
