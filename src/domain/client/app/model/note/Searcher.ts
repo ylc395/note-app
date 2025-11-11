@@ -11,7 +11,7 @@ import type { SearchResultVO } from '#domain/shared/model/search';
 
 export default class Searcher {
   constructor() {
-    reaction(() => this.keyword, debounce(this.search, 500));
+    reaction(() => this.keyword, this.debouncedSearch);
   }
 
   private readonly remote = container.resolve(rpcToken);
@@ -36,9 +36,13 @@ export default class Searcher {
     this.root = v;
   };
 
-  public readonly search = withAbortSignal(async (signal) => {
+  public readonly search = withAbortSignal(async (signal, immediate?: boolean) => {
     if (!this.keyword) {
       return;
+    }
+
+    if (immediate) {
+      this.debouncedSearch.cancel();
     }
 
     runInAction(() => {
@@ -58,4 +62,6 @@ export default class Searcher {
       this.result = result;
     });
   });
+
+  private readonly debouncedSearch = debounce(this.search.bind(this, false), 500);
 }

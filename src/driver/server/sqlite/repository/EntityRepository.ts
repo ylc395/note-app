@@ -170,7 +170,13 @@ export default class SqliteEntityRepository extends BaseRepository implements En
         `${tableName}.parentId`,
         `${tableName}.createdAt`,
         `${tableName}.updatedAt`,
-        eb.fn<string>('substr', [`${tableName}.body`, eb.val(0), eb.val(64)]).as('bodyPreview'),
+        eb
+          .case()
+          .when(eb.fn('LENGTH', [`${tableName}.body`]), '<=', 64)
+          .then(eb.ref(`${tableName}.body`))
+          .else(eb(eb.fn<string>('substr', [`${tableName}.body`, eb.val(0), eb.val(64)]), '||', '...'))
+          .end()
+          .as('bodyPreview'),
       ])
       .execute();
 
