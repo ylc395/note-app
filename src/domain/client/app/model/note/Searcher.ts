@@ -41,6 +41,10 @@ export default class Searcher {
       return;
     }
 
+    runInAction(() => {
+      this.result = undefined;
+    });
+
     const result = await this.remote.search.search.mutate(
       {
         entityTypes: [EntityTypes.Note],

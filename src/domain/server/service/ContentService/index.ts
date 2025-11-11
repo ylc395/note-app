@@ -12,7 +12,7 @@ import {
   tokenExtension as topicTokenExtension,
 } from '#domain/shared/infra/markdown/syntax/topic.js';
 import container from '#utils/singletonContainer.js';
-import type { Entity, EntityId } from '#domain/shared/model/entity.js';
+import type { EntityId } from '#domain/shared/model/entity.js';
 import {
   type Snippet,
   type TextLocation,
@@ -31,7 +31,7 @@ import { arrayOf, type MaybeArray } from '#utils/collection.js';
 export default class ContentService extends BaseService {
   private readonly entityService = container.resolve(EntityService);
 
-  public async extract({ body, id }: Pick<Entity, 'id' | 'body'>) {
+  public async extract({ body, id }: { body?: string; id: EntityId }) {
     if (typeof body !== 'string') {
       return;
     }

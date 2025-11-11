@@ -19,7 +19,7 @@ export interface SearchRequest {
   rootId?: EntityId[];
 }
 
-interface MatchRecord {
+export interface MatchRecord {
   text: string;
   highlights: { start: number; end: number }[];
   location?: TextLocation; // 搜索文件中的文本时

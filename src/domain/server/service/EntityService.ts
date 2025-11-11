@@ -51,7 +51,6 @@ export default class EntityService extends BaseService {
           ...pick(main, ['id', 'icon', 'createdAt', 'updatedAt']),
           title: normalizeNoteTitle(main),
           type: EntityTypes.Note,
-          body: main.body,
           file: files[main.id],
         },
       };

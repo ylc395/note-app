@@ -19,7 +19,7 @@ interface StandaloneEntity {
   id: EntityId;
   type: EntityTypes;
   title: string; // 对于 memo / annotation，取其内容的前 30 个字符
-  body?: string;
+  bodyPreview?: string;
   icon: Icon | null;
   file?: FileVO;
   path?: EntityPath;

@@ -185,6 +185,7 @@ export default class SqliteSearchEngine implements SearchEngine {
       .where((eb) => {
         return eb.and(
           compact([
+            eb.or([eb(`${notesFTSTableName}.fileId`, 'is not', null), eb(`${linkTableName}.target`, 'is not', null)]),
             eb(fileTextsFTSTableName, 'match', q.keyword),
             eb(`${recyclablesTableName}.entityId`, 'is', null),
             entityIds &&
