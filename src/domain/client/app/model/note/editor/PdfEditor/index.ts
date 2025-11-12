@@ -11,12 +11,13 @@ import OutlineList from './OutlineList';
 import AnnotationManager from './AnnotationManager';
 import TextFinder from './TextFinder';
 import PageTextManager from './PageTextManager';
+import type Tile from '../../../Workbench/Tile';
 
 export type { OutlineItem } from './OutlineList';
 
 export default class PdfEditor extends BaseEditor {
-  constructor(options: Options) {
-    super(options);
+  constructor(tile: Tile, options: Options) {
+    super(tile, options);
     when(() => this.blob.result.isSuccess, this.init.bind(this), { signal: this.destroyController.signal });
   }
 

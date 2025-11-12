@@ -1,4 +1,4 @@
-import type { TextLocation } from './file.js';
+import type { TextLocation, File } from './file.js';
 import type { EntityTypes, EntityPath, Entity, EntityId } from './entity.js';
 
 export type SearchTypes = EntityTypes.Note | EntityTypes.Memo;
@@ -22,7 +22,11 @@ export interface SearchRequest {
 export interface MatchRecord {
   text: string;
   highlights: { start: number; end: number }[];
-  location?: TextLocation; // 搜索文件中的文本时
+}
+
+export interface FileMatchRecord extends MatchRecord {
+  id: File['id'];
+  location: TextLocation;
 }
 
 export interface SearchResult {
@@ -31,7 +35,7 @@ export interface SearchResult {
   matches: {
     [SearchFields.Title]?: MatchRecord;
     [SearchFields.Body]?: MatchRecord;
-    [SearchFields.File]?: MatchRecord[];
+    [SearchFields.File]?: FileMatchRecord[];
   };
 }
 

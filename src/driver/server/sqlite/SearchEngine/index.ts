@@ -1,12 +1,12 @@
 import { type Kysely, sql } from 'kysely';
-import { compact, keyBy } from 'lodash-es';
+import { compact, keyBy, sortBy } from 'lodash-es';
 import assert from 'node:assert';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import type { SearchEngine } from '#domain/server/infra/searchEngine.js';
 import { token as repositoriesToken } from '#domain/server/repository/index.js';
-import { SearchFields, SearchRequest, type SearchResult } from '#domain/shared/model/search.js';
+import { SearchFields, SearchRequest, type FileMatchRecord, type SearchResult } from '#domain/shared/model/search.js';
 import { type EntityId, EntityTypes } from '#domain/shared/model/entity.js';
 import container from '#utils/singletonContainer.js';
 
@@ -198,6 +198,8 @@ export default class SqliteSearchEngine implements SearchEngine {
         `${notesFTSTableName}.id as noteId`,
         `${linkTableName}.sourceId as entityId`,
         `${fileTextsFTSTableName}.rank`,
+        `${fileTextsFTSTableName}.fileId`,
+        `${fileTextsFTSTableName}.location`,
         fn<string>('simple_snippet', [
           sql.raw(fileTextsFTSTableName),
           val(1),
@@ -245,7 +247,7 @@ export default class SqliteSearchEngine implements SearchEngine {
     if (fileTextResult) {
       const resultMap = keyBy(results, ({ entityId }) => entityId);
 
-      for (const { noteId, entityId, contentResult, rank } of fileTextResult) {
+      for (const { noteId, entityId, contentResult, rank, fileId, location } of fileTextResult) {
         const result = (noteId && resultMap[noteId]) || (entityId && resultMap[entityId]);
         const id = noteId || entityId;
         const parsed = SqliteSearchEngine.parseSearchResult(contentResult);
@@ -254,24 +256,34 @@ export default class SqliteSearchEngine implements SearchEngine {
           continue;
         }
 
+        const fileMatchRecord: FileMatchRecord = {
+          ...parsed,
+          id: fileId,
+          location,
+        };
+
         if (result) {
           if (!result.matches[SearchFields.File]) {
             result.matches[SearchFields.File] = [];
           }
 
-          result.matches[SearchFields.File].push(parsed);
+          result.matches[SearchFields.File].push(fileMatchRecord);
+
+          if (rank > result.rank) {
+            result.rank = rank;
+          }
         } else if (id) {
           resultMap[id] = {
             entityId: id,
             rank,
             matches: {
-              [SearchFields.File]: [parsed],
+              [SearchFields.File]: [fileMatchRecord],
             },
           };
         }
       }
 
-      results = Object.values(resultMap);
+      results = sortBy(Object.values(resultMap), ({ rank }) => rank);
     }
 
     return results;

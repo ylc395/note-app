@@ -3,6 +3,7 @@ import { MimeTypes } from '#domain/shared/model/file';
 import type { NoteVO } from '#domain/shared/model/note';
 import container from '#utils/singletonContainer';
 
+import type { Options } from '../note/editor/BaseEditor';
 import PdfEditor from '../note/editor/PdfEditor';
 import HtmlEditor from '../note/editor/HtmlEditor';
 import ImageEditor from '../note/editor/ImageEditor';
@@ -11,10 +12,8 @@ import MarkdownEditor from '../note/editor/MarkdownEditor';
 import DomainEventBus, { type UpdatedEvent } from '../note/EventBus';
 import type Tile from './Tile';
 
-export interface EditorDTO {
-  entityId: NoteVO['id'];
+export interface EditorDTO extends Options {
   mimeType: NoteVO['mimeType'];
-  title?: NoteVO['title'];
 }
 
 export default class EditorManager {
@@ -28,24 +27,25 @@ export default class EditorManager {
 
   private readonly noteEditorsMap = new Map<NoteVO['id'], Editor[]>();
 
-  public create(tile: Tile, { entityId, mimeType }: EditorDTO) {
+  public create(tile: Tile, config: EditorDTO) {
     let editor;
+    const { mimeType } = config;
 
     if (!mimeType) {
-      editor = new MarkdownEditor({ entityId, tile });
+      editor = new MarkdownEditor(tile, config);
     } else if (mimeType === MimeTypes.PDF) {
-      editor = new PdfEditor({ entityId, tile });
+      editor = new PdfEditor(tile, config);
     } else if (mimeType === MimeTypes.HTML) {
-      editor = new HtmlEditor({ entityId, tile });
+      editor = new HtmlEditor(tile, config);
     } else if (mimeType.startsWith('image')) {
-      editor = new ImageEditor({ entityId, tile, mimeType });
+      editor = new ImageEditor(tile, { ...config, mimeType });
     } else {
-      editor = new UnknownEditor({ entityId, tile, mimeType });
+      editor = new UnknownEditor(tile, { ...config, mimeType });
     }
 
-    const noteEditors = this.noteEditorsMap.get(entityId) || [];
+    const noteEditors = this.noteEditorsMap.get(config.entityId) || [];
     noteEditors.push(editor);
-    this.noteEditorsMap.set(entityId, noteEditors);
+    this.noteEditorsMap.set(config.entityId, noteEditors);
     this.editorsMap.set(editor.id, editor);
 
     editor.events.on(Editor.eventNames.Destroy, this.handleEditorDestroyed.bind(this));

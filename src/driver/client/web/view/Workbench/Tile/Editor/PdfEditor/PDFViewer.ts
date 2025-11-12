@@ -64,6 +64,12 @@ export default class PdfViewer {
       (pages) => pages && this.editor.texts.setRenderedPages(pages),
       { signal: this.destroyController.signal },
     );
+
+    reaction(
+      () => this.editor.params?.page,
+      (page) => typeof page === 'number' && this.jumpTo(page),
+      { signal: this.destroyController.signal },
+    );
   }
 
   private readonly pdfViewer: PDFViewer;
@@ -175,6 +181,7 @@ export default class PdfViewer {
     (this.pdfViewer.linkService as PDFLinkService).setDocument(doc);
     this.pdfViewer.setDocument(doc);
     const hash = this.state.get('hash');
+    const targetPage = typeof this.editor.params?.page === 'number' ? this.editor.params.page : null;
 
     if (hash) {
       // pdf.js 里的 app.js 里有更完整的实现（见 setInitialView）
@@ -186,10 +193,10 @@ export default class PdfViewer {
       ]);
 
       requestAnimationFrame(() => {
-        this.jumpTo({ hash });
+        this.jumpTo(targetPage ?? { hash });
 
         // 这里必须手动更新下，因为 jumpTo 方法很可能没有触发 pagechanging 事件
-        const page = Number(new URLSearchParams(hash).get('page'));
+        const page = targetPage ?? Number(new URLSearchParams(hash).get('page'));
         if (page) {
           this.updateCurrentPage(page);
         }

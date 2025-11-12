@@ -35,9 +35,10 @@ export default function NoteExplorer(props: { className: string }) {
       <Header title="笔记">
         <DropArea />
       </Header>
-      <SearchBox />
+      <SearchBox onSearchManually={() => setTabValue(TabsValue.SearchResult)} />
       <Tabs.Root
         unmountOnExit
+        class="min-h-0 flex flex-col"
         lazyMount
         onValueChange={(e) => setTabValue(e.value as TabsValue)}
         value={searcher.keyword ? tabValue() : TabsValue.All}
@@ -55,10 +56,10 @@ export default function NoteExplorer(props: { className: string }) {
             </Tabs.Trigger>
           </Tabs.List>
         </Show>
-        <Tabs.Content class="mt-stack-md" value={TabsValue.All}>
+        <Tabs.Content class="mt-stack-md min-h-0 flex flex-col" value={TabsValue.All}>
           <TreeView />
         </Tabs.Content>
-        <Tabs.Content class="mt-stack-md" value={TabsValue.SearchResult}>
+        <Tabs.Content class="mt-stack-md min-h-0 flex flex-col" value={TabsValue.SearchResult}>
           <SearchResult />
         </Tabs.Content>
       </Tabs.Root>

@@ -35,7 +35,7 @@ export default class NewMaterialForm extends Form<MaterialFormField> {
   }
 
   public readonly duplicatedNotesQuery = createQuery(
-    () => this.file && this.remote.note.query.query({ fileHash: this.file.hash }),
+    () => (this.file ? this.remote.note.query.query({ fileHash: this.file.hash }) : null),
     {
       queryKey: () => ['notes', { fileHash: this.file?.hash }],
     },

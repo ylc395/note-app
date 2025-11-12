@@ -1,5 +1,5 @@
 import { uniqueId, debounce, pick } from 'lodash-es';
-import { action, computed } from 'mobx';
+import { action, computed, observable } from 'mobx';
 import assert from 'assert';
 import { createQuery } from 'mobx-tanstack-query/preset';
 
@@ -14,17 +14,18 @@ import DomainEventBus from '../EventBus';
 
 export interface Options {
   entityId: NoteVO['id'];
-  tile: Tile;
-  title?: string;
+  title?: NoteVO['title'];
+  params?: Record<string, unknown>;
 }
 
 type Patch = Pick<NotePatchDTO, 'body' | 'icon' | 'title'>;
 
 export default abstract class BaseEditor {
-  constructor({ entityId, tile, title }: Options) {
+  constructor(tile: Tile, { entityId, title, params }: Options) {
     this.tile = tile;
     this.noteId = entityId;
     this.initialTitle = title;
+    this.params = params;
 
     this.value = createQuery(({ signal }) => this.remote.note.queryOneById.query(this.noteId, { signal }), {
       queryKey: ['note', this.noteId],
@@ -55,6 +56,8 @@ export default abstract class BaseEditor {
       },
     );
   }
+
+  @observable.ref public accessor params;
 
   public abstract readonly mimeType: string | null;
 
@@ -132,6 +135,11 @@ export default abstract class BaseEditor {
   private readonly _update = debounce((patch: Patch) => {
     return this.remote.note.updateOne.mutate([this.noteId, patch]);
   }, 1000);
+
+  @action
+  public setParams(params: Record<string, unknown>) {
+    this.params = params;
+  }
 
   @action
   public moveTo(dest: BaseEditor | Tile, switchTo?: boolean) {

@@ -9,6 +9,8 @@ import type TreeNode from '#domain/client/shared/model/note/TreeNode';
 import { EntityTypes } from '#domain/shared/model/entity';
 import type { MenuItem } from '#web/components/common/ContextMenu';
 import IconPicker from './IconPicker';
+import { IconDisplayMode } from '#domain/client/app/model/note/TreeExplorer';
+import { compact } from 'lodash-es';
 
 export default function useContextmenu() {
   const { exploreTreeView: tree, createNote, iconPicker } = container.resolve(NoteService);
@@ -40,10 +42,11 @@ export default function useContextmenu() {
 
   function contextmenu(node: TreeNode): Array<MenuItem | 'separator'> {
     const isSingle = tree.treeNodeSets.selected.size === 1;
+    const shouldShowIcon = tree.settings.get('iconDisplayMode') !== IconDisplayMode.None;
 
-    return [
+    return compact([
       { label: '移动至...', key: 'move' },
-      {
+      shouldShowIcon && {
         label: '更改图标',
         key: 'icon',
         children: [
@@ -64,7 +67,7 @@ export default function useContextmenu() {
         : []),
       'separator' as const,
       { label: '删除', key: 'delete', className: 'text-feedback-danger' },
-    ];
+    ]);
   }
 
   return {

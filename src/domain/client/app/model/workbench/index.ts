@@ -264,6 +264,10 @@ export default class Workbench {
         if (dest instanceof Editor) {
           existedEditor.moveTo(dest);
         }
+
+        if (note.params) {
+          existedEditor.setParams(note.params);
+        }
       } else {
         // 对应的 editor 不存在，则新建
         editor = destTile.createAndAddEditor(note, dest instanceof Editor ? dest : undefined);

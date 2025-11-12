@@ -1,4 +1,4 @@
-import { keyBy } from 'lodash-es';
+import { keyBy, mapValues } from 'lodash-es';
 import { sql } from 'kysely';
 
 import type { NoteRepository } from '#domain/server/repository/noteRepository.js';
@@ -136,7 +136,10 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
       .select([`${fileTableName}.id`, 'mimeType', 'lang', 'size', 'hash', `${this.tableName}.id as noteId`])
       .execute();
 
-    return keyBy(rows, (file) => file.noteId);
+    return mapValues(
+      keyBy(rows, (file) => file.noteId),
+      ({ noteId: _, ...file }) => file,
+    );
   }
 
   public async findFileTextLocation(id: Note['id'], q: { pages?: number[] }) {
