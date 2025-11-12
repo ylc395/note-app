@@ -16,7 +16,7 @@ export interface EditorDTO extends Options {
   mimeType: NoteVO['mimeType'];
 }
 
-export default class EditorManager {
+export default class EditorFactory {
   constructor() {
     this.domainEventBus.on(DomainEventBus.eventNames.Updated, this.handleNoteUpdate.bind(this));
     // this.domainEventBus.on(DomainEventBus.eventNames.Deleted, this.handleNoteDeleted.bind(this));

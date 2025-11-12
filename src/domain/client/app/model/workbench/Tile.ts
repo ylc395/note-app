@@ -6,7 +6,7 @@ import Editor from '#domain/client/app/model/note/editor/BaseEditor';
 import container from '#utils/singletonContainer';
 import type { NoteVO } from '#domain/shared/model/note';
 
-import EditorManager, { type EditorDTO } from './EditorManager';
+import EditorFactory, { type EditorDTO } from './EditorFactory';
 
 export default class Tile {
   constructor(
@@ -20,7 +20,7 @@ export default class Tile {
 
   private isRestoring = false;
 
-  private readonly editorManager = container.resolve(EditorManager);
+  private readonly editorFactory = container.resolve(EditorFactory);
 
   @observable.ref public accessor currentEditor: Editor | undefined;
 
@@ -77,7 +77,7 @@ export default class Tile {
       'can not create duplicated editor',
     );
 
-    const newEditor = this.editorManager.create(this, entity);
+    const newEditor = this.editorFactory.create(this, entity);
     this.addEditor(newEditor, dest);
 
     return newEditor;

@@ -10,7 +10,7 @@ import type { EntityId } from '#domain/shared/model/entity';
 
 import Tile from './Tile';
 import { type TileNode, type TileParent, TileDirections, isTileLeaf, tileNodeSchema } from './tileTree';
-import EditorManager, { type EditorDTO } from './EditorManager';
+import EditorFactory, { type EditorDTO } from './EditorFactory';
 import HistoryStack from '../base/HistoryStack';
 import RecentManager from './RecentManager';
 
@@ -69,7 +69,7 @@ export default class Workbench {
     onPop: this.handleHistoryPop.bind(this),
   });
 
-  private readonly editorManager = container.resolve(EditorManager);
+  private readonly editorManager = container.resolve(EditorFactory);
 
   public readonly recentManager = container.resolve(RecentManager);
 
