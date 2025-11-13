@@ -23,7 +23,7 @@ export interface SearchEngineDb extends Schemas {
   [fileTextsFTSTableName]: FtsRow & FileTextRow & { [fileTextsFTSTableName]: string };
   [notesFTSTableName]: FtsRow & Pick<NoteRow, 'id' | 'title' | 'body' | 'fileId'> & { [notesFTSTableName]: string };
   [memosFTSTableName]: FtsRow & Pick<MemoRow, 'id' | 'body'> & { [memosFTSTableName]: string };
-  [annotationsFTSTableName]: FtsRow & Pick<AnnotationRow, 'id' | 'targetId' | 'body'> & { [annotationsFTSTableName]: string };
+  [annotationsFTSTableName]: FtsRow & Pick<AnnotationRow, 'id' | 'targetId' | 'body' | 'selector'> & { [annotationsFTSTableName]: string };
 }
 
 // prettier-ignore
@@ -98,10 +98,11 @@ export const initialSqls =  [
             id UNINDEXED,
             target_id UNINDEXED,
             body_plain_text,
+            selector UNINDEXED,
             created_at UNINDEXED,
             updated_at UNINDEXED,
             tokenize="simple 0",
-            content=${sql.table(fileTextTableName)}
+            content=${sql.table(annotationTableName)}
         )`, // 关闭拼音功能 https://github.com/wangfenjin/simple/issues/94
       sql`CREATE TRIGGER annotations_ai AFTER INSERT ON ${sql.table(annotationTableName)}
           BEGIN 

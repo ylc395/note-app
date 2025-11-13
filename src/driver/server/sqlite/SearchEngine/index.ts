@@ -1,6 +1,5 @@
 import { type Kysely, sql } from 'kysely';
 import { compact, keyBy, sortBy } from 'lodash-es';
-import assert from 'node:assert';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -22,6 +21,7 @@ import {
   notesFTSTableName,
   memosFTSTableName,
   fileTextsFTSTableName,
+  annotationsFTSTableName,
 } from './tables.js';
 
 export default class SqliteSearchEngine implements SearchEngine {
@@ -59,7 +59,7 @@ export default class SqliteSearchEngine implements SearchEngine {
     });
   }
 
-  private async searchNotes(q: SearchRequest, ids?: EntityId[]) {
+  private async searchNotes(q: { keyword: string; title: boolean; body: boolean; ids?: EntityId[] }) {
     const rows = await this.db
       .selectFrom(notesFTSTableName)
       .leftJoin(recyclablesTableName, `${recyclablesTableName}.entityId`, `${notesFTSTableName}.id`)
@@ -84,16 +84,8 @@ export default class SqliteSearchEngine implements SearchEngine {
         ]).as('contentResult'),
       ])
       .where((eb) => {
-        const titleCondition = eb(notesFTSTableName, 'match', `title : ${q.keyword}`);
-        const contentCondition = eb(notesFTSTableName, 'match', `body_plain_text : ${q.keyword}`);
-
-        const fieldsStatements = compact([
-          q.fields?.includes(SearchFields.Title) && titleCondition,
-          q.fields?.includes(SearchFields.Body) && contentCondition,
-        ]);
-
-        return fieldsStatements.length === 0
-          ? /* simple_query 对传入的关键字做了以下处理：
+        if (q.title && q.body) {
+          /* simple_query 对传入的关键字做了以下处理：
             1. 如果查数字，我们要把搜索词当作前缀来用，比如用户搜索 123， query 就需要换成 123*，这样如果索引里面有 12345 也能被搜索出来
             2. 对于英文，除了要当作前缀，还需要把搜索词转成小写，比如用户搜索 Hello，query 就需要换成 hello*, 这样如果索引里面有 HelloWorld 也能被命中
             3. 对于中文和其他字符，拆出词汇（jieba 分词）或单字
@@ -101,14 +93,21 @@ export default class SqliteSearchEngine implements SearchEngine {
           
             来源：https://www.wangfenjin.com/posts/simple-tokenizer/#query-%E6%8B%86%E5%88%86 以及 https://www.wangfenjin.com/posts/simple-jieba-tokenizer/#%E5%AE%9E%E7%8E%B0
           */
-            eb(notesFTSTableName, 'match', eb.fn<string>('jieba_query', [eb.val(q.keyword)]))
-          : eb.or(fieldsStatements);
+          return eb(notesFTSTableName, 'match', eb.fn<string>('jieba_query', [eb.val(q.keyword)]));
+        }
+
+        if (q.title) {
+          // 这种单列过滤的 hack 写法来自 https://github.com/wangfenjin/simple/issues/139#issuecomment-1833147609
+          return eb(notesFTSTableName, 'match', sql<string>`'title : ' || jieba_query(${sql.lit(q.keyword)})`);
+        }
+
+        return eb(notesFTSTableName, 'match', sql<string>`'body_plain_text : ' || jieba_query(${sql.lit(q.keyword)})`);
       })
       .where((eb) => {
         return eb.and(
           compact([
             eb(`${recyclablesTableName}.entityId`, 'is', null),
-            ids && ids.length > 0 && eb(`${notesFTSTableName}.id`, 'in', ids),
+            q.ids && q.ids.length > 0 && eb(`${notesFTSTableName}.id`, 'in', q.ids),
           ]),
         );
       })
@@ -128,7 +127,7 @@ export default class SqliteSearchEngine implements SearchEngine {
     return searchResult;
   }
 
-  private async searchMemos(q: SearchRequest, ids?: EntityId[]) {
+  private async searchMemos({ keyword, ids }: { keyword: string; ids?: EntityId[] }) {
     const rows = await this.db
       .selectFrom(memosFTSTableName)
       .leftJoin(recyclablesTableName, `${recyclablesTableName}.entityId`, `${memosFTSTableName}.id`)
@@ -145,7 +144,7 @@ export default class SqliteSearchEngine implements SearchEngine {
           val('64'),
         ]).as('contentResult'),
       ])
-      .where(memosFTSTableName, 'match', q.keyword)
+      .where(memosFTSTableName, 'match', keyword)
       .where((eb) => {
         return eb.and(
           compact([
@@ -168,7 +167,7 @@ export default class SqliteSearchEngine implements SearchEngine {
     return searchResult;
   }
 
-  private async searchFileText(q: SearchRequest, entityIds?: EntityId[]) {
+  private async searchFileText({ keyword, entityIds }: { keyword: string; entityIds?: EntityId[] }) {
     return this.db
       .selectFrom(fileTextsFTSTableName)
       .innerJoin(filesTableName, `${fileTextsFTSTableName}.fileId`, `${filesTableName}.id`)
@@ -186,7 +185,7 @@ export default class SqliteSearchEngine implements SearchEngine {
         return eb.and(
           compact([
             eb.or([eb(`${notesFTSTableName}.fileId`, 'is not', null), eb(`${linkTableName}.target`, 'is not', null)]),
-            eb(fileTextsFTSTableName, 'match', q.keyword),
+            eb(fileTextsFTSTableName, 'match', keyword),
             eb(`${recyclablesTableName}.entityId`, 'is', null),
             entityIds &&
               entityIds.length > 0 &&
@@ -212,42 +211,108 @@ export default class SqliteSearchEngine implements SearchEngine {
       .execute();
   }
 
-  public async search(q: SearchRequest): Promise<SearchResult[]> {
-    const types = q.entityTypes || [EntityTypes.Note, EntityTypes.Memo];
-    const descantIds = q.rootId
-      ? Object.values(await this.repo.entities.findDescendantIds(q.rootId)).flat()
-      : undefined;
-    const fields = q.fields || [SearchFields.Body, SearchFields.Title, SearchFields.File];
+  private async searchAnnotations({ keyword, entityIds }: { keyword: string; entityIds?: EntityId[] }) {
+    return this.db
+      .selectFrom(annotationsFTSTableName)
+      .innerJoin(notesFTSTableName, `${annotationsFTSTableName}.targetId`, `${notesFTSTableName}.id`)
+      .leftJoin(recyclablesTableName, (join) =>
+        join.on((eb) =>
+          eb.or([
+            eb(`${annotationsFTSTableName}.id`, '=', `${recyclablesTableName}.entityId`),
+            eb(`${annotationsFTSTableName}.targetId`, '=', `${recyclablesTableName}.entityId`),
+          ]),
+        ),
+      )
+      .where((eb) => {
+        return eb.and(
+          compact([
+            eb(`${recyclablesTableName}.entityId`, 'is', null),
+            eb(annotationsFTSTableName, 'match', keyword),
+            entityIds &&
+              entityIds.length > 0 &&
+              eb.or([
+                eb(`${notesFTSTableName}.id`, 'in', entityIds),
+                eb(`${annotationsFTSTableName}.targetId`, 'in', entityIds),
+              ]),
+          ]),
+        );
+      })
+      .select(({ fn, val }) => [
+        `${annotationsFTSTableName}.targetId as noteId`,
+        `${annotationsFTSTableName}.rank`,
+        `${annotationsFTSTableName}.id`,
+        `${annotationsFTSTableName}.selector`,
+        fn<string>('simple_snippet', [
+          sql.raw(annotationsFTSTableName),
+          val(2),
+          val(WRAPPER_START_TEXT),
+          val(WRAPPER_END_TEXT),
+          val('...'),
+          val('64'),
+        ]).as('contentResult'),
+      ])
+      .execute();
+  }
+
+  public async search(q: Required<SearchRequest>): Promise<SearchResult[]> {
+    const descantIds =
+      q.rootId.length > 0 ? Object.values(await this.repo.entities.findDescendantIds(q.rootId)).flat() : undefined;
 
     let results: SearchResult[] = [];
 
-    if (types.includes(EntityTypes.Note)) {
-      results.push(...(await this.searchNotes(q, descantIds)));
-    }
-
-    if (types.includes(EntityTypes.Memo)) {
-      results.push(...(await this.searchMemos(q, descantIds)));
-    }
-
-    const entityIds = results.map(({ entityId }) => entityId);
-    let fileTextResult;
-
-    if (fields.includes(SearchFields.File)) {
-      fileTextResult = await this.searchFileText(q, descantIds);
-
-      const fileEntityIds = fileTextResult.map(({ entityId, noteId }) => {
-        const id = entityId || noteId;
-        assert(id, 'no entityId or materialId');
-        return id;
+    if (q.entityTypes.includes(EntityTypes.Note)) {
+      const noteResult = await this.searchNotes({
+        keyword: q.keyword,
+        title: q.fields.includes(SearchFields.Title),
+        body: q.fields.includes(SearchFields.Body),
+        ids: descantIds,
       });
 
-      entityIds.push(...fileEntityIds);
+      results.push(...noteResult);
     }
 
-    if (fileTextResult) {
-      const resultMap = keyBy(results, ({ entityId }) => entityId);
+    if (q.entityTypes.includes(EntityTypes.Memo)) {
+      const memoResult = await this.searchMemos({ keyword: q.keyword, ids: descantIds });
+      results.push(...memoResult);
+    }
 
-      for (const { noteId, entityId, contentResult, rank, fileId, location } of fileTextResult) {
+    const resultMap = keyBy(results, ({ entityId }) => entityId);
+
+    if (q.fields.includes(SearchFields.Annotation)) {
+      const annotationResult = await this.searchAnnotations({ keyword: q.keyword, entityIds: descantIds });
+
+      for (const { noteId, contentResult, rank, selector, id } of annotationResult) {
+        const result = resultMap[noteId];
+        const parsed = SqliteSearchEngine.parseSearchResult(contentResult);
+
+        if (!parsed) {
+          continue;
+        }
+
+        const record = { ...parsed, id, selector };
+
+        if (result) {
+          (result.matches[SearchFields.Annotation] ??= []).push(record);
+
+          if (rank > result.rank) {
+            result.rank = rank;
+          }
+        } else {
+          const newResult = {
+            entityId: noteId,
+            rank,
+            matches: { [SearchFields.Annotation]: [record] },
+          };
+          resultMap[noteId] = newResult;
+          results.push(newResult);
+        }
+      }
+    }
+
+    if (q.fields.includes(SearchFields.File)) {
+      const fileTextResult = await this.searchFileText({ keyword: q.keyword, entityIds: descantIds });
+
+      for (const { noteId, entityId, contentResult, rank, location } of fileTextResult) {
         const result = (noteId && resultMap[noteId]) || (entityId && resultMap[entityId]);
         const id = noteId || entityId;
         const parsed = SqliteSearchEngine.parseSearchResult(contentResult);
@@ -258,34 +323,28 @@ export default class SqliteSearchEngine implements SearchEngine {
 
         const fileMatchRecord: FileMatchRecord = {
           ...parsed,
-          id: fileId,
           location,
         };
 
         if (result) {
-          if (!result.matches[SearchFields.File]) {
-            result.matches[SearchFields.File] = [];
-          }
-
-          result.matches[SearchFields.File].push(fileMatchRecord);
+          (result.matches[SearchFields.File] ??= []).push(fileMatchRecord);
 
           if (rank > result.rank) {
             result.rank = rank;
           }
         } else if (id) {
-          resultMap[id] = {
+          const newResult = {
             entityId: id,
             rank,
-            matches: {
-              [SearchFields.File]: [fileMatchRecord],
-            },
+            matches: { [SearchFields.File]: [fileMatchRecord] },
           };
+          resultMap[id] = newResult;
+          results.push(newResult);
         }
       }
-
-      results = sortBy(Object.values(resultMap), ({ rank }) => rank);
     }
 
+    results = sortBy(Object.values(resultMap), ({ rank }) => rank);
     return results;
   }
 

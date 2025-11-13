@@ -265,8 +265,8 @@ export default class Workbench {
           existedEditor.moveTo(dest);
         }
 
-        if (note.params) {
-          existedEditor.setParams(note.params);
+        if (note.initialCommand) {
+          existedEditor.command$.next(note.initialCommand);
         }
       } else {
         // 对应的 editor 不存在，则新建

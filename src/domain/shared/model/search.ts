@@ -1,5 +1,6 @@
-import type { TextLocation, File } from './file.js';
+import type { TextLocation } from './file.js';
 import type { EntityTypes, EntityPath, Entity, EntityId } from './entity.js';
+import type { Annotation, Selector } from './annotation.js';
 
 export type SearchTypes = EntityTypes.Note | EntityTypes.Memo;
 
@@ -7,6 +8,7 @@ export enum SearchFields {
   Title = 'title',
   Body = 'body',
   File = 'file',
+  Annotation = 'annotation',
 }
 
 /**
@@ -25,8 +27,12 @@ export interface MatchRecord {
 }
 
 export interface FileMatchRecord extends MatchRecord {
-  id: File['id'];
   location: TextLocation;
+}
+
+export interface AnnotationMatchRecord extends MatchRecord {
+  id: Annotation['id'];
+  selector: Selector;
 }
 
 export interface SearchResult {
@@ -35,6 +41,7 @@ export interface SearchResult {
   matches: {
     [SearchFields.Title]?: MatchRecord;
     [SearchFields.Body]?: MatchRecord;
+    [SearchFields.Annotation]?: AnnotationMatchRecord[];
     [SearchFields.File]?: FileMatchRecord[];
   };
 }

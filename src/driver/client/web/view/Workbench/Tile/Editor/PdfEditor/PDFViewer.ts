@@ -15,6 +15,7 @@ import type { default as PdfEditor, OutlineItem } from '#domain/client/app/model
 import { getPage, type AnnotationVO } from '#domain/client/app/model/annotation';
 import HistoryStack, { Direction, type HistoryRecord } from '#domain/client/app/model/base/HistoryStack';
 import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
+import { goToAnnotationCommand, goToPageCommand } from '#domain/client/app/model/note/editor/command';
 import shell from '#web/infra/shell';
 import { APP_NAME } from '#domain/shared/infra/constants';
 import { withAbortSignal } from '#utils/function';
@@ -62,12 +63,6 @@ export default class PdfViewer {
     reaction(
       () => this.renderedPages,
       (pages) => pages && this.editor.texts.setRenderedPages(pages),
-      { signal: this.destroyController.signal },
-    );
-
-    reaction(
-      () => this.editor.params?.page,
-      (page) => typeof page === 'number' && this.jumpTo(page),
       { signal: this.destroyController.signal },
     );
   }
@@ -181,7 +176,6 @@ export default class PdfViewer {
     (this.pdfViewer.linkService as PDFLinkService).setDocument(doc);
     this.pdfViewer.setDocument(doc);
     const hash = this.state.get('hash');
-    const targetPage = typeof this.editor.params?.page === 'number' ? this.editor.params.page : null;
 
     if (hash) {
       // pdf.js 里的 app.js 里有更完整的实现（见 setInitialView）
@@ -193,10 +187,10 @@ export default class PdfViewer {
       ]);
 
       requestAnimationFrame(() => {
-        this.jumpTo(targetPage ?? { hash });
+        this.jumpTo({ hash });
 
         // 这里必须手动更新下，因为 jumpTo 方法很可能没有触发 pagechanging 事件
-        const page = targetPage ?? Number(new URLSearchParams(hash).get('page'));
+        const page = Number(new URLSearchParams(hash).get('page'));
         if (page) {
           this.updateCurrentPage(page);
         }
@@ -213,6 +207,21 @@ export default class PdfViewer {
     }
 
     this.hijackClick();
+    when(() => this.isReady, this.initCommandHandler.bind(this), { signal: this.destroyController.signal });
+  }
+
+  private initCommandHandler() {
+    const subscription = this.editor.command$.subscribe((command) => {
+      if (goToPageCommand.is(command)) {
+        this.jumpTo(command.payload);
+      }
+
+      if (goToAnnotationCommand.is(command)) {
+        this.jumpToAnnotation(command.payload);
+      }
+    });
+
+    this.destroyController.signal.addEventListener('abort', subscription.unsubscribe.bind(subscription));
   }
 
   @action
@@ -338,22 +347,27 @@ export default class PdfViewer {
     return true;
   }
 
-  public readonly jumpToAnnotation = withAbortSignal((signal, annotation: AnnotationVO) => {
-    assert(annotation.targetId === this.editor.noteId);
+  public readonly jumpToAnnotation = withAbortSignal(async (signal, annotation: AnnotationVO | AnnotationVO['id']) => {
+    let _annotation;
+    const _signal = AbortSignal.any([signal, this.destroyController.signal]);
 
-    const page = getPage(annotation);
+    if (typeof annotation === 'string') {
+      await when(() => this.editor.annotation.items.result.isSuccess, { signal: _signal });
+      _annotation = this.editor.annotation.items.result.data?.find(({ id }) => id === annotation);
+    } else {
+      _annotation = annotation;
+    }
+
+    assert(_annotation?.targetId === this.editor.noteId);
+
+    const page = getPage(_annotation);
     this.jumpTo(page);
 
-    when(
-      () => this.annotationElementMap.has(annotation.id),
-      () => {
-        const el = this.annotationElementMap.get(annotation.id);
-        assert(el);
+    await when(() => this.annotationElementMap.has(_annotation.id), { signal: _signal });
+    const el = this.annotationElementMap.get(_annotation.id);
+    assert(el);
 
-        el.scrollIntoView({ block: 'center' });
-      },
-      { signal: AbortSignal.any([signal, this.destroyController.signal]) },
-    );
+    el.scrollIntoView({ block: 'center' });
   });
 
   @observable.shallow public accessor annotationElementMap = new Map<AnnotationVO['id'], HTMLElement | SVGElement>();

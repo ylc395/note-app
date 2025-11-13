@@ -115,13 +115,12 @@ export default class MemoService extends BaseService {
 
     let ids: string[] | undefined;
 
-    // 对于有 keyword 的查询，单独使用 searchEngine 先查一下。
-    // 理论上也能在 repo.memo 里查，这里是考虑到全文搜索未必是用 sql 表来实现的，因此不放在 repo 里查了
     if (query.keyword) {
       const searchResult = await this.searchEngine.search({
         entityTypes: [EntityTypes.Memo],
         keyword: query.keyword,
         fields: [SearchFields.Body],
+        rootId: [],
       });
 
       ids = searchResult.map(({ entityId }) => entityId);

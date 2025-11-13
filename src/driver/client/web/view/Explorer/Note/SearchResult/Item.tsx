@@ -1,10 +1,18 @@
 import { createMemo, For, Show, type JSX } from 'solid-js';
 import { Collapsible } from '@ark-ui/solid';
+import { ChevronRightIcon } from 'lucide-solid';
 
 import container from '#utils/singletonContainer';
-import { SearchFields, type FileMatchRecord, type MatchRecord, type SearchResultVO } from '#domain/shared/model/search';
-import { ChevronRightIcon } from 'lucide-solid';
+import {
+  SearchFields,
+  type AnnotationMatchRecord,
+  type FileMatchRecord,
+  type MatchRecord,
+  type SearchResultVO,
+} from '#domain/shared/model/search';
 import Workbench from '#domain/client/app/model/Workbench';
+import type { PDFTextPositionSelector } from '#domain/shared/model/annotation';
+import { goToAnnotationCommand, goToPageCommand } from '#domain/client/app/model/note/editor/command';
 
 function highlight({ text, highlights }: MatchRecord) {
   const htmls: JSX.Element[] = [];
@@ -22,7 +30,12 @@ function highlight({ text, highlights }: MatchRecord) {
 
 function FileMatchRecordView(props: { record: FileMatchRecord; entityId: string; mimeType: string }) {
   const { open } = container.resolve(Workbench);
-  const target = { entityId: props.entityId, mimeType: props.mimeType, params: { page: props.record.location.page } };
+  const target = {
+    entityId: props.entityId,
+    mimeType: props.mimeType,
+    initialCommand:
+      typeof props.record.location.page === 'number' ? goToPageCommand.create(props.record.location.page) : undefined,
+  };
 
   return (
     <div class="mt-stack-s" onClick={() => open(target)}>
@@ -35,11 +48,36 @@ function FileMatchRecordView(props: { record: FileMatchRecord; entityId: string;
   );
 }
 
+function AnnotationMatchRecordView(props: { record: AnnotationMatchRecord; mimeType: string; entityId: string }) {
+  const { open } = container.resolve(Workbench);
+  const target = {
+    entityId: props.entityId,
+    mimeType: props.mimeType,
+    initialCommand: goToAnnotationCommand.create(props.record.id),
+  };
+
+  return (
+    <div class="mt-stack-s" onClick={() => open(target)}>
+      <div class="flex justify-between mb-stack-s text-text-tertiary">
+        <div>标注</div>
+        <Show when={props.record.selector.type === 'PDFTextPositionSelector'}>
+          <div>第 {(props.record.selector as PDFTextPositionSelector).position.startPage} 页</div>
+        </Show>
+      </div>
+      <p class="text-text-secondary ">{highlight(props.record)}</p>
+    </div>
+  );
+}
+
 export default function Item(props: { ref?: HTMLDetailsElement; onToggle: (v: boolean) => void; row: SearchResultVO }) {
   const fileTextMatches = createMemo(() => {
     const [first, ...rest] = props.row.matches[SearchFields.File] || [];
     return { first, rest };
   });
+
+  const bodySnippet = createMemo(() =>
+    props.row.matches[SearchFields.Body] ? highlight(props.row.matches[SearchFields.Body]) : props.row.bodyPreview,
+  );
 
   return (
     <details
@@ -59,11 +97,22 @@ export default function Item(props: { ref?: HTMLDetailsElement; onToggle: (v: bo
         </div>
       </summary>
       <div class="pl-stack-md">
-        <p class="text-text-secondary">
-          {props.row.matches[SearchFields.Body]
-            ? highlight(props.row.matches[SearchFields.Body])
-            : props.row.bodyPreview}
-        </p>
+        <Show when={bodySnippet()}>
+          <p class="text-text-secondary">{bodySnippet()}</p>
+        </Show>
+        <Show when={props.row.matches[SearchFields.Annotation]}>
+          {(records) => (
+            <For each={records()}>
+              {(record) => (
+                <AnnotationMatchRecordView
+                  record={record}
+                  entityId={props.row.id}
+                  mimeType={props.row.file!.mimeType}
+                />
+              )}
+            </For>
+          )}
+        </Show>
         <Show when={fileTextMatches().first}>
           {(record) => (
             <FileMatchRecordView record={record()} entityId={props.row.id} mimeType={props.row.file!.mimeType} />

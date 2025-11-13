@@ -7,7 +7,7 @@ import assert from 'node:assert';
 
 import { token as loggerToken } from '#domain/shared/infra/logger.js';
 import type { Database } from '#domain/server/infra/database.js';
-import { IS_TEST, IS_CLEAN_DEV } from '#domain/shared/infra/env.js';
+import { IS_TEST, IS_CLEAN_DEV, IS_DEV } from '#domain/shared/infra/env.js';
 import container from '#utils/singletonContainer.js';
 
 import { type Schemas, schemas } from './schema/index.js';
@@ -82,6 +82,7 @@ export default class SqliteDb implements Database {
     return {
       rawDb: db,
       db: new Kysely<Db>({
+        log: IS_DEV ? ['error'] : undefined,
         dialect: new SqliteDialect({ database: db }),
         plugins: [new CamelCasePlugin(), new ParseJSONResultsPlugin()],
       }),

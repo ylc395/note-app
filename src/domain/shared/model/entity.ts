@@ -15,7 +15,7 @@ export interface Icon {
   code: string;
 }
 
-interface StandaloneEntity {
+export interface Entity {
   id: EntityId;
   type: EntityTypes;
   title: string; // 对于 memo / annotation，取其内容的前 30 个字符
@@ -25,10 +25,6 @@ interface StandaloneEntity {
   path?: EntityPath;
   createdAt: number;
   updatedAt: number;
-}
-
-export interface Entity extends StandaloneEntity {
-  main?: StandaloneEntity; // Example: the note of an annotation;
 }
 
 export type EntityPath = Array<Pick<Entity, 'id' | 'title' | 'icon'>>;

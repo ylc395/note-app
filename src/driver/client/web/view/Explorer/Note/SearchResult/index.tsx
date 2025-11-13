@@ -11,7 +11,7 @@ import Item from './Item';
 export default function SearchResult() {
   const searcher = container.resolve(Searcher);
   const [openCount, setOpenCount] = createSignal(0);
-  const totalNoteCount = createMemo(() => new Set(searcher.result?.map(({ id, main }) => main?.id ?? id)).size);
+  const totalNoteCount = createMemo(() => searcher.result?.length);
   let detailElements: HTMLDetailsElement[] | undefined;
 
   createEffect(
