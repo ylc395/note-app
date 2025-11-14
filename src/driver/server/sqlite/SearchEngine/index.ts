@@ -344,6 +344,7 @@ export default class SqliteSearchEngine implements SearchEngine {
       }
     }
 
+    // todo: rank 值在不同表间没有可比性，这里的排序意义不大
     results = sortBy(Object.values(resultMap), ({ rank }) => rank);
     return results;
   }

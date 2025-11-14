@@ -347,7 +347,7 @@ export default class PdfViewer {
     return true;
   }
 
-  public readonly jumpToAnnotation = withAbortSignal(async (signal, annotation: AnnotationVO | AnnotationVO['id']) => {
+  private readonly jumpToAnnotation = withAbortSignal(async (signal, annotation: AnnotationVO | AnnotationVO['id']) => {
     let _annotation;
     const _signal = AbortSignal.any([signal, this.destroyController.signal]);
 

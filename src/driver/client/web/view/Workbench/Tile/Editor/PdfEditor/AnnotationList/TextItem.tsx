@@ -2,10 +2,11 @@ import dayjs from 'dayjs';
 import { createMemo, Show } from 'solid-js';
 
 import { getPage, type AnnotationVO } from '#domain/client/app/model/annotation';
-import PdfViewer from '../PDFViewer';
 import assert from 'assert';
+import type PdfEditor from '#domain/client/app/model/note/editor/PdfEditor';
+import { goToAnnotationCommand } from '#domain/client/app/model/note/editor/command';
 
-export default function TextItem(props: { value: AnnotationVO; pdfViewer: PdfViewer }) {
+export default function TextItem(props: { value: AnnotationVO; editor: PdfEditor }) {
   const startPage = createMemo(() => getPage(props.value));
   const endPage = createMemo(() => getPage(props.value, 'end'));
   const quote = createMemo(() => {
@@ -14,7 +15,7 @@ export default function TextItem(props: { value: AnnotationVO; pdfViewer: PdfVie
   });
 
   function jumpTo() {
-    props.pdfViewer.jumpToAnnotation(props.value);
+    props.editor.command$.next(goToAnnotationCommand.create(props.value.id));
   }
 
   return (

@@ -1,12 +1,13 @@
 import assert from 'assert';
 import { createMemo } from 'solid-js';
 import dayjs from 'dayjs';
-import type { AnnotationVO } from '#domain/shared/model/annotation';
-
-import type PdfViewer from '../PDFViewer';
 import { maxBy } from 'lodash-es';
 
-export default function SvgItem(props: { pdfViewer: PdfViewer; value: AnnotationVO[] }) {
+import type { AnnotationVO } from '#domain/shared/model/annotation';
+import type PdfEditor from '#domain/client/app/model/note/editor/PdfEditor';
+import { goToAnnotationCommand } from '#domain/client/app/model/note/editor/command';
+
+export default function SvgItem(props: { editor: PdfEditor; value: AnnotationVO[] }) {
   const page = createMemo(() => {
     const annotation = props.value[0];
     assert(annotation?.selector.type === 'PDFSvgSelector');
@@ -16,7 +17,7 @@ export default function SvgItem(props: { pdfViewer: PdfViewer; value: Annotation
   const latestAnnotation = createMemo(() => maxBy(props.value, ({ createdAt }) => createdAt)!);
 
   function jumpTo() {
-    props.pdfViewer.jumpToAnnotation(latestAnnotation());
+    props.editor.command$.next(goToAnnotationCommand.create(latestAnnotation().id));
   }
 
   return (

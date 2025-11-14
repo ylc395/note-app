@@ -124,7 +124,7 @@ export default abstract class BaseEditor {
     });
 
     // 若服务器更新失败，前端回退至之前的值
-    this._update(patch)?.catch(() => {
+    this.upload(patch)?.catch(() => {
       this.value.setData((note) => ({ ...note!, ...currentData }));
       this.domainEventBus.emit(DomainEventBus.eventNames.Updated, {
         id: this.noteId,
@@ -134,7 +134,7 @@ export default abstract class BaseEditor {
     });
   };
 
-  private readonly _update = debounce((patch: Patch) => {
+  private readonly upload = debounce((patch: Patch) => {
     return this.remote.note.updateOne.mutate([this.noteId, patch]);
   }, 1000);
 
@@ -177,7 +177,7 @@ export default abstract class BaseEditor {
   }
 
   public destroy() {
-    Promise.resolve(this._update.flush()).then(
+    Promise.resolve(this.upload.flush()).then(
       action(() => {
         this.destroyController.abort();
 
