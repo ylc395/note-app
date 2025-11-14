@@ -1,6 +1,5 @@
 import { createEffect, createMemo, createSignal, For, on, Show } from 'solid-js';
 import { ShrinkIcon, ExpandIcon } from 'lucide-solid';
-import { Refs } from '@solid-primitives/refs';
 
 import container from '#utils/singletonContainer';
 import Searcher from '#domain/client/app/model/note/Searcher';
@@ -10,20 +9,21 @@ import Item from './Item';
 
 export default function SearchResult() {
   const searcher = container.resolve(Searcher);
-  const [openCount, setOpenCount] = createSignal(0);
+  const [closeCount, setCloseCount] = createSignal(0);
+  const [allOpen, setAllOpen] = createSignal<boolean>();
   const totalNoteCount = createMemo(() => searcher.result?.length);
-  let detailElements: HTMLDetailsElement[] | undefined;
+
+  function onToggle(v: boolean) {
+    setAllOpen(undefined);
+    setCloseCount((count) => count + (v ? -1 : 1));
+  }
 
   createEffect(
     on(
       () => searcher.result,
-      () => setOpenCount(0),
+      () => setCloseCount(0),
     ),
   );
-
-  function toggleAll(value: boolean) {
-    detailElements?.forEach((el) => (el.open = value));
-  }
 
   return (
     <>
@@ -32,26 +32,26 @@ export default function SearchResult() {
           <div class="flex justify-between">
             <div>共 {totalNoteCount()} 个相关项</div>
             <div class="flex">
-              <button
-                disabled={openCount() === totalNoteCount()}
-                onClick={() => toggleAll(true)}
-                class="button button-square-md"
-              >
+              <button disabled={closeCount() === 0} onClick={() => setAllOpen(true)} class="button button-square-md">
                 <ExpandIcon />
               </button>
-              <button disabled={openCount() === 0} onClick={() => toggleAll(false)} class="button button-square-md">
+              <button
+                disabled={closeCount() === totalNoteCount()}
+                onClick={() => setAllOpen(false)}
+                class="button button-square-md"
+              >
                 <ShrinkIcon />
               </button>
             </div>
           </div>
         </Show>
-        <div class="flex flex-col min-h-0 overflow-auto scrollbar-stable">
-          <Refs ref={detailElements}>
+        <Show when={searcher.result} keyed>
+          <div class="flex flex-col min-h-0 overflow-auto scrollbar-stable">
             <For each={searcher.result} fallback={<Empty />}>
-              {(row) => <Item row={row} onToggle={(v) => setOpenCount((count) => count + (v ? 1 : -1))} />}
+              {(row) => <Item row={row} open={allOpen()} onToggle={onToggle} />}
             </For>
-          </Refs>
-        </div>
+          </div>
+        </Show>
       </Show>
     </>
   );

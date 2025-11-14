@@ -1,5 +1,5 @@
-import { createMemo, For, Show, type JSX } from 'solid-js';
-import { Collapsible } from '@ark-ui/solid';
+import { createEffect, createMemo, For, Show, type JSX } from 'solid-js';
+import { Collapsible, useCollapsible } from '@ark-ui/solid';
 import { ChevronRightIcon } from 'lucide-solid';
 
 import container from '#utils/singletonContainer';
@@ -38,12 +38,12 @@ function FileMatchRecordView(props: { record: FileMatchRecord; entityId: string;
   };
 
   return (
-    <div class="mt-stack-s" onClick={() => open(target)}>
+    <div class="mt-stack-s w-full" onClick={() => open(target)}>
       <div class="flex justify-between mb-stack-s text-text-tertiary">
         <div>关联文件</div>
         <div>第 {props.record.location.page} 页</div>
       </div>
-      <p class="text-text-secondary ">{highlight(props.record)}</p>
+      <p class="text-text-secondary break-all break-words">{highlight(props.record)}</p>
     </div>
   );
 }
@@ -69,37 +69,46 @@ function AnnotationMatchRecordView(props: { record: AnnotationMatchRecord; mimeT
   );
 }
 
-export default function Item(props: { ref?: HTMLDetailsElement; onToggle: (v: boolean) => void; row: SearchResultVO }) {
+export default function Item(props: { open?: boolean; row: SearchResultVO; onToggle: (value: boolean) => void }) {
+  const { open } = container.resolve(Workbench);
   const fileTextMatches = createMemo(() => {
     const [first, ...rest] = props.row.matches[SearchFields.File] || [];
     return { first, rest };
   });
 
-  const bodySnippet = createMemo(() =>
-    props.row.matches[SearchFields.Body] ? highlight(props.row.matches[SearchFields.Body]) : props.row.bodyPreview,
-  );
+  const collapsible = useCollapsible({
+    defaultOpen: true,
+    onOpenChange: (e) => props.onToggle(e.open),
+  });
+
+  createEffect(() => {
+    if (typeof props.open === 'boolean') {
+      collapsible().setOpen(props.open);
+    }
+  });
 
   return (
-    <details
-      open
-      class="text-sm mb-stack-s group"
-      ref={props.ref}
-      // 这个方法在初始化的时候就会被调用一次
-      onToggle={(e) => props.onToggle((e.target as HTMLDetailsElement).open)}
-    >
-      <summary class="flex space-x-inset-square-md items-center">
-        <ChevronRightIcon class="group-open:rotate-90" />
+    <Collapsible.RootProvider class="text-sm mb-stack-s group" value={collapsible}>
+      <div
+        class="flex space-x-inset-square-md items-center"
+        onClick={() => open({ entityId: props.row.id, mimeType: props.row.file?.mimeType || null })}
+      >
+        <Collapsible.Trigger onClick={(e) => e.stopPropagation()}>
+          <ChevronRightIcon class="group-data-[state=open]:rotate-90" />
+        </Collapsible.Trigger>
         <div class="shrink-0">
           {props.row.matches[SearchFields.Title] ? highlight(props.row.matches[SearchFields.Title]) : props.row.title}
         </div>
         <div class="whitespace-pre text-xs text-text-tertiary">
           /{props.row.path.map(({ title }) => title).join('/')}
         </div>
-      </summary>
-      <div class="pl-stack-md">
-        <Show when={bodySnippet()}>
-          <p class="text-text-secondary">{bodySnippet()}</p>
-        </Show>
+      </div>
+      <Collapsible.Content class="pl-stack-md">
+        <p class="text-text-secondary">
+          {(props.row.matches[SearchFields.Body]
+            ? highlight(props.row.matches[SearchFields.Body])
+            : props.row.bodyPreview) || '无内容'}
+        </p>
         <Show when={props.row.matches[SearchFields.Annotation]}>
           {(records) => (
             <For each={records()}>
@@ -119,11 +128,10 @@ export default function Item(props: { ref?: HTMLDetailsElement; onToggle: (v: bo
           )}
         </Show>
         <Show when={fileTextMatches().rest.length > 0}>
-          {/* 这里就不用 details 元素了，避免被折叠元素真的被渲染出来 */}
           <Collapsible.Root unmountOnExit lazyMount>
-            <Collapsible.Trigger class="flex items-center mt-stack-s">
-              <Collapsible.Indicator class="group">
-                <ChevronRightIcon class='group-data-[state="open"]:rotate-90' />
+            <Collapsible.Trigger class="flex items-center mt-stack-s w-full">
+              <Collapsible.Indicator class="group/others">
+                <ChevronRightIcon class='group-data-[state="open"]/others:rotate-90' />
               </Collapsible.Indicator>
               其它{fileTextMatches().rest.length}页
             </Collapsible.Trigger>
@@ -136,7 +144,7 @@ export default function Item(props: { ref?: HTMLDetailsElement; onToggle: (v: bo
             </Collapsible.Content>
           </Collapsible.Root>
         </Show>
-      </div>
-    </details>
+      </Collapsible.Content>
+    </Collapsible.RootProvider>
   );
 }
