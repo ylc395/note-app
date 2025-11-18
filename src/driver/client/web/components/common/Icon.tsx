@@ -2,14 +2,14 @@ import { Match, Switch } from 'solid-js';
 import { FileTextIcon, LayoutGridIcon, GlobeIcon } from 'lucide-solid';
 import data from '@emoji-mart/data';
 import { init } from 'emoji-mart';
-import { observable } from 'mobx';
+import { action, observable } from 'mobx';
 
 import { MimeTypes } from '#domain/shared/model/file';
 import { getAppUrl, RouteTypes } from '#domain/shared/infra/url';
 import type { Icon } from '#domain/shared/model/entity';
 
 const dataLoaded = observable.box(false);
-init({ data }).then(() => dataLoaded.set(true));
+init({ data }).then(action(() => dataLoaded.set(true)));
 
 export default function Icon(props: { icon?: Icon | null; mimeType?: string | null; iconClassName?: string }) {
   return (

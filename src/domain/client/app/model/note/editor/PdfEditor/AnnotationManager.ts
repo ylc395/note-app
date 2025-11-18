@@ -3,7 +3,7 @@ import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import { z } from 'zod';
 import type Mark from 'mark.js';
-import { action } from 'mobx';
+import { action, observable } from 'mobx';
 
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
@@ -32,7 +32,6 @@ export default class AnnotationManager {
     this.state = new PersistedMap(
       `${noteId}-annotationManager`,
       z.object({
-        panelVisible: z.boolean().optional(),
         native: z.boolean().optional(),
       }),
     );
@@ -41,8 +40,11 @@ export default class AnnotationManager {
       select: (data) => data.toSorted(AnnotationManager.sort),
       queryKey: ['annotations', { noteId }],
       abortSignal: this.destroyController.signal,
+      options: () => ({ enabled: this.isEnabled }),
     });
   }
+
+  @observable public accessor isEnabled = false;
 
   private readonly destroyController = new AbortController();
 

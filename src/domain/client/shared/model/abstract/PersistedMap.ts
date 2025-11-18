@@ -1,11 +1,11 @@
 import { type ZodType } from 'zod';
 import assert from 'assert';
 import { action, observable, ObservableMap, runInAction } from 'mobx';
+import { untrack } from 'solid-js/web';
+import { debounce, isObject } from 'lodash-es';
 
 import container from '#utils/singletonContainer';
 import { token as localStorageToken } from '#domain/client/shared/infra/localStorage';
-import { untrack } from 'solid-js/web';
-import { isObject } from 'lodash-es';
 
 export type DataType<T> = T extends PersistedMap<infer Data> ? Data : unknown;
 
@@ -39,9 +39,13 @@ export default class PersistedMap<S extends object> {
     return `PERSISTENCE_OBJECT_${this.id}`;
   }
 
-  public get<T extends keyof S>(key: T): S[T] {
-    assert(this.isReady, 'not ready');
-    return this.map.get(key);
+  public get<T extends keyof S>(key: T): S[T];
+  public get<T extends keyof S>(key: T, defaultValue: NonNullable<S[T]>): NonNullable<S[T]>;
+  public get<T extends keyof S>(key: T, defaultValue?: S[T]): S[T] {
+    if (typeof defaultValue === 'undefined') {
+      assert(this.isReady, 'not ready');
+    }
+    return this.map.get(key) ?? defaultValue;
   }
 
   public set<T extends keyof S>(key: T, value: S[T]): this;
@@ -62,6 +66,10 @@ export default class PersistedMap<S extends object> {
 
     return this;
   }
+
+  public readonly save = debounce(() => {
+    this.localStorage.set(this.key, this.toObject());
+  }, 500);
 
   public toObject() {
     return Object.fromEntries(this.map) as S;

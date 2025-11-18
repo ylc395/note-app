@@ -1,48 +1,76 @@
-import { createEffect, createMemo, Show } from 'solid-js';
-import { Splitter, useSplitter } from '@ark-ui/solid';
+import { createMemo, Show } from 'solid-js';
+import { Splitter, type SplitterResizeDetails } from '@ark-ui/solid';
+import { action } from 'mobx';
+import { compact, sum, zipObject } from 'lodash-es';
 
-import type PdfEditor from '#domain/client/app/model/note/editor/PdfEditor';
+import PdfEditor from '#domain/client/app/model/note/editor/PdfEditor';
+import { Panel } from '#domain/client/app/model/note/editor/PdfEditor';
 
 import AnnotationList from './AnnotationList';
 import PdfView from './PdfView';
 import BodyEditor from './BodyEditor';
 
-enum Panel {
-  Body = 'body',
-  Pdf = 'pdf',
-  Annotation = 'annotation',
-}
-
 export default function PdfEditorView(props: { editor: PdfEditor }) {
-  const isAnnotationVisible = createMemo(() => {
-    return props.editor.annotation.state.isReady && props.editor.annotation.state.get('panelVisible');
-  });
-
-  const splitter = useSplitter({ panels: [{ id: Panel.Body }, { id: Panel.Pdf }, { id: Panel.Annotation }] });
-
-  createEffect(() => {
-    if (!isAnnotationVisible()) {
-      const sizes = splitter().getSizes();
-      splitter().setSizes([...sizes.slice(0, 2), 0]);
+  const panels = createMemo(() => {
+    if (!props.editor.uiState.isReady) {
+      return { panels: [] };
     }
+
+    const sizes = props.editor.uiState.get('panelsSize');
+    const totalSize = sum(Object.values(sizes).map((p) => (p?.isVisible && p.size) ?? 0));
+
+    const panels = compact([
+      sizes[Panel.Body]?.isVisible && { id: Panel.Body },
+      { id: Panel.Pdf },
+      sizes[Panel.Annotation]?.isVisible && { id: Panel.Annotation },
+    ]);
+
+    const size = panels.map(({ id }) => (id === Panel.Pdf ? 100 - totalSize : sizes[id]!.size));
+
+    return { panels, size };
   });
+
+  function handleResize({ size, resizeTriggerId }: SplitterResizeDetails) {
+    if (!resizeTriggerId) {
+      return;
+    }
+
+    const currentSizes = props.editor.uiState.get('panelsSize');
+    const sizeMap = zipObject(
+      panels().panels.map(({ id }) => id),
+      size,
+    );
+
+    for (const id of resizeTriggerId.split(':')) {
+      if (PdfEditor.isTogglablePanel(id)) {
+        currentSizes[id]!.size = sizeMap[id]!;
+      }
+    }
+  }
 
   return (
-    <Splitter.RootProvider value={splitter} class="grow flex min-h-0">
-      <Splitter.Panel id={Panel.Body}>
-        <BodyEditor editor={props.editor} />
-      </Splitter.Panel>
-      <Splitter.ResizeTrigger class="w-1" id={`${Panel.Body}:${Panel.Pdf}`} />
-      <Splitter.Panel id={Panel.Pdf} asChild={(childProps) => <PdfView editor={props.editor} {...childProps()} />} />
-      <Splitter.ResizeTrigger class="w-1" id={`${Panel.Pdf}:${Panel.Annotation}`} />
-      <Splitter.Panel
-        id={Panel.Annotation}
-        asChild={(childProps) => (
-          <Show when={isAnnotationVisible()}>
-            <AnnotationList editor={props.editor} {...childProps()} />
-          </Show>
-        )}
-      />
-    </Splitter.RootProvider>
+    <Show when={props.editor.uiState.isReady}>
+      <Splitter.Root
+        {...panels()}
+        class="grow flex min-h-0"
+        onResize={action(handleResize)}
+        onResizeEnd={() => props.editor.uiState.save()}
+      >
+        <Show when={props.editor.uiState.get('panelsSize')[Panel.Body]?.isVisible}>
+          <Splitter.Panel id={Panel.Body}>
+            <BodyEditor editor={props.editor} />
+          </Splitter.Panel>
+          <Splitter.ResizeTrigger class="w-1" id={`${Panel.Body}:${Panel.Pdf}`} />
+        </Show>
+        <Splitter.Panel id={Panel.Pdf} asChild={(childProps) => <PdfView editor={props.editor} {...childProps()} />} />
+        <Show when={props.editor.uiState.get('panelsSize')[Panel.Annotation]?.isVisible}>
+          <Splitter.ResizeTrigger class="w-1" id={`${Panel.Pdf}:${Panel.Annotation}`} />
+          <Splitter.Panel
+            id={Panel.Annotation}
+            asChild={(childProps) => <AnnotationList editor={props.editor} {...childProps()} />}
+          />
+        </Show>
+      </Splitter.Root>
+    </Show>
   );
 }

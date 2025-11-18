@@ -25,7 +25,7 @@ export default function Settings(props: { editor: PdfEditor }) {
           <Menu.CheckboxItem
             class="group flex items-center"
             value="toggleNative"
-            checked={props.editor.annotation.state.get('native') ?? true}
+            checked={props.editor.annotation.state.get('native', true)}
           >
             <SquareIcon class='hidden mr-1 group-data-[state="unchecked"]:block' />
             <CheckSquare2Icon class='hidden mr-1 group-data-[state="checked"]:block' />

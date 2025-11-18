@@ -1,6 +1,7 @@
-import { ListIcon, PenLineIcon, TextSearchIcon } from 'lucide-solid';
+import { ListIcon, NotepadTextIcon, PenLineIcon, TextSearchIcon } from 'lucide-solid';
 import { Switch } from '@ark-ui/solid';
 
+import { Panel } from '#domain/client/app/model/note/editor/PdfEditor';
 import type PdfViewer from '../PDFViewer';
 import PageSwitcher from './PageSwitcher';
 import Scale from './Scale';
@@ -8,7 +9,11 @@ import BackAndForward from './BackAndForward';
 
 export default function Toolbar(props: { viewer: PdfViewer }) {
   function toggleAnnotationPanel() {
-    props.viewer.editor.annotation.state.set('panelVisible', !props.viewer.editor.annotation.state.get('panelVisible'));
+    props.viewer.editor.togglePanel(Panel.Annotation);
+  }
+
+  function toggleBodyPanel() {
+    props.viewer.editor.togglePanel(Panel.Body);
   }
 
   function toggleOutlinePanel() {
@@ -18,6 +23,10 @@ export default function Toolbar(props: { viewer: PdfViewer }) {
   return (
     <div class="flex justify-between py-2 border-b px-2 relative">
       <div class="space-x-4 flex text-sm">
+        <button class="flex items-center" onClick={toggleBodyPanel}>
+          <NotepadTextIcon class="mr-1" />
+          笔记
+        </button>
         <button class="flex items-center" onClick={toggleOutlinePanel}>
           <ListIcon class="mr-1" />
           大纲
