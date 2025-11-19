@@ -5,12 +5,12 @@ import { untrack } from 'solid-js/web';
 import { debounce, isObject } from 'lodash-es';
 
 import container from '#utils/singletonContainer';
-import { token as localStorageToken } from '#domain/client/shared/infra/localStorage';
+import { token as localStorageToken } from '#domain/client/shared/infra/kvStorage';
 
 export type DataType<T> = T extends PersistedMap<infer Data> ? Data : unknown;
 
 export default class PersistedMap<S extends object> {
-  constructor(private readonly id: string, private readonly schema: ZodType<S>) {
+  constructor(private readonly key: string, private readonly schema: ZodType<S>) {
     this.init();
   }
 
@@ -33,10 +33,6 @@ export default class PersistedMap<S extends object> {
       this.map.replace(parsedResult);
       this.isReady = true;
     });
-  }
-
-  private get key() {
-    return `PERSISTENCE_OBJECT_${this.id}`;
   }
 
   public get<T extends keyof S>(key: T): S[T];

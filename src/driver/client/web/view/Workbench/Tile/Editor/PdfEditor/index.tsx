@@ -4,7 +4,7 @@ import { action } from 'mobx';
 import { compact, sum, zipObject } from 'lodash-es';
 
 import PdfEditor from '#domain/client/app/model/note/editor/PdfEditor';
-import { Panel } from '#domain/client/app/model/note/editor/PdfEditor';
+import PdfEditorUIState, { Panel } from '#domain/client/app/model/note/editor/PdfEditor/UIState';
 
 import AnnotationList from './AnnotationList';
 import PdfView from './PdfView';
@@ -16,7 +16,7 @@ export default function PdfEditorView(props: { editor: PdfEditor }) {
       return { panels: [] };
     }
 
-    const sizes = props.editor.uiState.get('panelsSize');
+    const sizes = props.editor.uiState.panels;
     const totalSize = sum(Object.values(sizes).map((p) => (p?.isVisible && p.size) ?? 0));
 
     const panels = compact([
@@ -35,14 +35,14 @@ export default function PdfEditorView(props: { editor: PdfEditor }) {
       return;
     }
 
-    const currentSizes = props.editor.uiState.get('panelsSize');
+    const currentSizes = props.editor.uiState.panels || {};
     const sizeMap = zipObject(
       panels().panels.map(({ id }) => id),
       size,
     );
 
     for (const id of resizeTriggerId.split(':')) {
-      if (PdfEditor.isTogglablePanel(id)) {
+      if (PdfEditorUIState.isTogglablePanel(id)) {
         currentSizes[id]!.size = sizeMap[id]!;
       }
     }
@@ -56,14 +56,14 @@ export default function PdfEditorView(props: { editor: PdfEditor }) {
         onResize={action(handleResize)}
         onResizeEnd={() => props.editor.uiState.save()}
       >
-        <Show when={props.editor.uiState.get('panelsSize')[Panel.Body]?.isVisible}>
+        <Show when={props.editor.uiState.panels[Panel.Body]?.isVisible}>
           <Splitter.Panel id={Panel.Body}>
             <BodyEditor editor={props.editor} />
           </Splitter.Panel>
           <Splitter.ResizeTrigger class="w-1" id={`${Panel.Body}:${Panel.Pdf}`} />
         </Show>
         <Splitter.Panel id={Panel.Pdf} asChild={(childProps) => <PdfView editor={props.editor} {...childProps()} />} />
-        <Show when={props.editor.uiState.get('panelsSize')[Panel.Annotation]?.isVisible}>
+        <Show when={props.editor.uiState.panels[Panel.Annotation]?.isVisible}>
           <Splitter.ResizeTrigger class="w-1" id={`${Panel.Pdf}:${Panel.Annotation}`} />
           <Splitter.Panel
             id={Panel.Annotation}

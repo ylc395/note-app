@@ -1,7 +1,7 @@
-import type { LocalStorage } from '#domain/client/shared/infra/localStorage';
+import type { KvStorage } from '#domain/client/shared/infra/kvStorage';
 import { IS_CLEAN_DEV } from '#domain/shared/infra/env';
 
-const webLocalStorage: LocalStorage = {
+const webKvlStorage: KvStorage = {
   get(key: string) {
     const json = localStorage.getItem(key);
 
@@ -35,4 +35,4 @@ if (IS_CLEAN_DEV) {
   localStorage.clear();
 }
 
-export default webLocalStorage;
+export default webKvlStorage;
