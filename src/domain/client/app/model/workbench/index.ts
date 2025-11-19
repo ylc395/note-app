@@ -1,18 +1,17 @@
 import { mapValues, uniqueId } from 'lodash-es';
 import { observable, action, computed, when, runInAction, autorun } from 'mobx';
 import assert from 'assert';
-import z from 'zod';
 
 import Editor from '#domain/client/app/model/note/editor/BaseEditor';
-import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
 import container from '#utils/singletonContainer';
 import type { EntityId } from '#domain/shared/model/entity';
 
 import Tile from './Tile';
-import { type TileNode, type TileParent, TileDirections, isTileLeaf, tileNodeSchema } from './tileTree';
+import { type TileNode, type TileParent, TileDirections, isTileLeaf } from './tileTree';
 import EditorFactory, { type EditorDTO } from './EditorFactory';
 import HistoryStack from '../base/HistoryStack';
 import RecentManager from './RecentManager';
+import UIState from './UIState';
 
 export interface HistoryRecord {
   key: EntityId;
@@ -42,25 +41,7 @@ export default class Workbench {
     );
   }
 
-  private readonly state = new PersistedMap(
-    'workbench',
-    z.object({
-      root: tileNodeSchema.optional().catch(undefined),
-      tiles: z
-        .object({
-          focusedId: z.string().optional().catch(undefined),
-          map: z.record(
-            z.string(),
-            z.object({
-              editors: z.array(z.object({ entityId: z.string(), title: z.string(), mimeType: z.string().nullable() })),
-              current: z.string(),
-            }),
-          ),
-        })
-        .optional()
-        .catch(undefined),
-    }),
-  );
+  private readonly state = new UIState('workbench-UI-state');
 
   private latestTile?: Tile; // 最新一个被创建的 Tile
 
@@ -101,12 +82,10 @@ export default class Workbench {
   private persistTiles() {
     const currentEditor = this.currentEditor;
 
-    this.state.set({
+    this.state.update({
       root: this.root,
-      tiles: currentEditor && {
-        focusedId: currentEditor.tile.id,
-        map: mapValues(this.tilesMap, (tile) => tile.toObject()),
-      },
+      focusedId: currentEditor?.tile.id,
+      tiles: mapValues(this.tilesMap, (tile) => tile.toObject()),
     });
   }
 
@@ -306,10 +285,9 @@ export default class Workbench {
   }
 
   private async restore() {
-    const tiles = this.state.get('tiles');
-    const root = this.state.get('root');
+    const { tiles, root, focusedId } = this.state;
 
-    if (!tiles || !root) {
+    if (!tiles || !root || !focusedId) {
       return;
     }
 
@@ -325,13 +303,13 @@ export default class Workbench {
         };
       }
 
-      const tileData = tiles.map[tileNode];
+      const tileData = tiles[tileNode];
       assert(tileData);
 
       const tile = this.createTile();
       tile.restore(tileData);
 
-      if (tiles.focusedId === tileNode) {
+      if (focusedId === tileNode) {
         focusedTile = tile;
       }
 

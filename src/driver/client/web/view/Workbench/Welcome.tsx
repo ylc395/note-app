@@ -1,25 +1,27 @@
-import { For, Show } from 'solid-js';
+import { createEffect, For, Show } from 'solid-js';
 import dayjs from 'dayjs';
 
 import Workbench from '#domain/client/app/model/Workbench';
 import container from '#utils/singletonContainer';
 
 export default function Welcome() {
-  const {
-    recentManager: { notes, ready },
-    open,
-  } = container.resolve(Workbench);
-  ready(() => notes.refetch());
+  const { recentManager, open } = container.resolve(Workbench);
+
+  createEffect(() => {
+    if (recentManager.isReady) {
+      recentManager.notes.refetch();
+    }
+  });
 
   return (
     <div class="w-full h-full bg-surface-secondary flex flex-col items-center justify-center">
       <p class="text-text-secondary text-2xl">在左侧边栏中打开或新建笔记</p>
-      <Show when={notes.result.data && notes.result.data.length > 0}>
+      <Show when={recentManager.notes.result.data && recentManager.notes.result.data.length > 0}>
         <h2 class="relative flex items-center justify-center mt-16 w-52 text-text-tertiary whitespace-nowrap before:content-[''] before:flex-1 before:border-t before:border-text-tertiary before:opacity-30 before:mr-4 after:content-[''] after:flex-1 after:border-t after:border-text-tertiary after:opacity-30 after:ml-4">
           最近打开
         </h2>
         <ul class="pt-6">
-          <For each={notes.result.data}>
+          <For each={recentManager.notes.result.data}>
             {({ time, title, id, mimeType }) => (
               <li
                 title={title}

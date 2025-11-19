@@ -35,7 +35,7 @@ export default function PdfEditorView(props: { editor: PdfEditor }) {
       return;
     }
 
-    const currentSizes = props.editor.uiState.panels || {};
+    const currentSizes = props.editor.uiState.panels;
     const sizeMap = zipObject(
       panels().panels.map(({ id }) => id),
       size,

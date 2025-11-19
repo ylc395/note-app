@@ -1,9 +1,13 @@
 import type { KvStorage } from '#domain/client/shared/infra/kvStorage';
-import { IS_CLEAN_DEV } from '#domain/shared/infra/env';
+import { APP_NAME, IS_CLEAN_DEV } from '#domain/shared/infra/env';
+
+function addPrefix(key: string) {
+  return `${APP_NAME}:${key}`;
+}
 
 const webKvlStorage: KvStorage = {
   get(key: string) {
-    const json = localStorage.getItem(key);
+    const json = localStorage.getItem(addPrefix(key));
 
     if (json === null) {
       return Promise.resolve(null);
@@ -21,12 +25,12 @@ const webKvlStorage: KvStorage = {
   },
 
   set(key, value) {
-    localStorage.setItem(key, JSON.stringify(value));
+    localStorage.setItem(addPrefix(key), JSON.stringify(value));
     return Promise.resolve();
   },
 
   delete(key) {
-    localStorage.removeItem(key);
+    localStorage.removeItem(addPrefix(key));
     return Promise.resolve();
   },
 };

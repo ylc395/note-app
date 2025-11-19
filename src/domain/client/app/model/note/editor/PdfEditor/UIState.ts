@@ -27,7 +27,6 @@ export default class PdfEditorUIState extends EditorUIState {
   public accessor panels: z.infer<typeof panelsSchema> = {};
 
   @action
-  @Odm.autoSave()
   public togglePanel(id: TogglablePanel) {
     const panel = this.panels?.[id];
     this.panels ||= {};
@@ -37,6 +36,8 @@ export default class PdfEditorUIState extends EditorUIState {
     } else {
       panel.isVisible = !panel.isVisible;
     }
+
+    this.debouncedSave();
   }
 
   public static isTogglablePanel(id: string): id is TogglablePanel {
