@@ -35,6 +35,7 @@ const uiStateSchema = z.object({
     .optional()
     .catch(undefined),
   outline: outlineSchema.optional().catch(undefined),
+  progress: z.unknown(), // 当前浏览的进度。通常是一个 pdf hash
 });
 
 export default class PdfEditor extends BaseEditor {
@@ -63,9 +64,13 @@ export default class PdfEditor extends BaseEditor {
 
   public override readonly mimeType = MimeTypes.PDF;
 
+  @observable public accessor progress: unknown | undefined;
+
+  @observable private accessor isUIStateReady = false;
+
   @computed
   public get isReady() {
-    return Boolean(this.doc) && this.texts.isReady;
+    return Boolean(this.doc) && this.texts.isReady && this.isUIStateReady;
   }
 
   private async init() {
@@ -90,7 +95,10 @@ export default class PdfEditor extends BaseEditor {
       this.annotation.initUIState(uiState.panels?.[Panel.Annotation]);
       this.body.initUIState(uiState.panels?.[Panel.Body]);
       this.outline.initUIState(uiState.outline);
+      this.progress = uiState.progress;
     }
+
+    this.isUIStateReady = true;
 
     autorun(
       () => {
@@ -100,6 +108,7 @@ export default class PdfEditor extends BaseEditor {
             [Panel.Body]: this.body.uiState,
           },
           outline: this.outline.uiState,
+          progress: this.progress,
         });
       },
       { signal: this.destroyController.signal },

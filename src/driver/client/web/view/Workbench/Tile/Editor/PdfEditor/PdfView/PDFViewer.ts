@@ -8,13 +8,11 @@ import {
 import { AnnotationEditorType, AnnotationMode, type PDFPageProxy } from 'pdfjs-dist';
 import { debounce, noop, range as numberRange } from 'lodash-es';
 import { observable, when, action, computed, runInAction, reaction } from 'mobx';
-import { z } from 'zod';
 import assert from 'assert';
 
 import type { default as PdfEditor, OutlineItem } from '#domain/client/app/model/note/editor/PdfEditor';
 import { getPage, type AnnotationVO } from '#domain/client/app/model/annotation';
 import HistoryStack, { Direction, type HistoryRecord } from '#domain/client/app/model/base/HistoryStack';
-import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
 import { goToAnnotationCommand, goToPageCommand } from '#domain/client/app/model/note/editor/command';
 import shell from '#web/infra/shell';
 import { APP_NAME } from '#domain/shared/infra/constants';
@@ -49,13 +47,9 @@ export default class PdfViewer {
     this.editor = options.editor;
     this.pdfViewer = this.createViewer(options);
     this.textFinder = new TextFinder(this);
-    this.state = new PersistedMap(
-      `${options.editor.noteId}-view`,
-      z.object({ hash: z.string().optional().catch(undefined) }),
-    );
 
     when(
-      () => this.editor.isReady && this.state.isReady,
+      () => this.editor.isReady,
       () => this.init(),
       { signal: this.destroyController.signal },
     );
@@ -72,8 +66,6 @@ export default class PdfViewer {
   public readonly editor: PdfEditor;
 
   private readonly destroyController = new AbortController();
-
-  private readonly state;
 
   // 1. 这个数组里的页面未必存在于 DOM 里（异步更新的，和 DOM 实际情况存在时间差）
   // 2. 我们确保若页面确实存在，则其原生 textLayer 都是已经渲染完毕的。
@@ -122,7 +114,7 @@ export default class PdfViewer {
 
   private readonly updateUIState = debounce(
     action(({ location }: { location: { pdfOpenParams: string; pageNumber: number } }) => {
-      this.state.set('hash', PdfViewer.normalizeHash(location.pdfOpenParams));
+      this.editor.progress = PdfViewer.normalizeHash(location.pdfOpenParams);
     }),
     500,
   );
@@ -175,9 +167,9 @@ export default class PdfViewer {
 
     (this.pdfViewer.linkService as PDFLinkService).setDocument(doc);
     this.pdfViewer.setDocument(doc);
-    const hash = this.state.get('hash');
+    const hash = this.editor.progress;
 
-    if (hash) {
+    if (typeof hash === 'string') {
       // pdf.js 里的 app.js 里有更完整的实现（见 setInitialView）
       await Promise.all([
         doc.loadingTask,
@@ -330,8 +322,8 @@ export default class PdfViewer {
     }
 
     if (!options?.noHistory) {
-      const hash = this.state.get('hash');
-      assert(hash);
+      const hash = this.editor.progress;
+      assert(typeof hash === 'string');
       // 记录跳转前的位置
       this.historyStack.push({ key: hash });
 
@@ -373,8 +365,8 @@ export default class PdfViewer {
   @observable.shallow public accessor annotationElementMap = new Map<AnnotationVO['id'], HTMLElement | SVGElement>();
 
   private handleHistoryPop(e: { record: HistoryRecord; direction: Direction }) {
-    const hash = this.state.get('hash');
-    assert(hash);
+    const hash = this.editor.progress;
+    assert(typeof hash === 'string');
 
     this.historyStack.push({ key: hash });
     this.jumpTo({ hash: e.record.key }, { noHistory: true });
