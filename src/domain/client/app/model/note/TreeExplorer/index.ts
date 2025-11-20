@@ -1,5 +1,4 @@
 import { action, autorun, computed, observable, when } from 'mobx';
-import z from 'zod';
 import assert from 'assert';
 
 import Tree from '#domain/client/shared/model/note/Tree';
@@ -9,10 +8,10 @@ import type { NoteVO } from '#domain/shared/model/note';
 import DomainEventBus from '#domain/client/app/model/note/EventBus';
 
 import { arrayOf, type MaybeArray } from '#utils/collection';
-import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
 
 import StarEventBus from '../../star/EventBus';
 import Setting, { SortBy } from './Setting';
+import UIState from './UIState';
 
 export enum TreeNodeStates {
   Selected = 1 << 1,
@@ -34,14 +33,14 @@ export default class TreeExplorer {
 
   private init() {
     this.tree = new Tree({
-      expanded: this.uiState.get('expanded'),
+      expanded: this.uiState.expanded,
       sort: this.sort.bind(this),
       onStateChanged: this.handleNodeStateChanged,
     });
 
     autorun(() => {
       if (this.tree) {
-        this.uiState.set('expanded', Array.from(this.tree.expandedNodeIds));
+        this.uiState.expanded = Array.from(this.tree.expandedNodeIds);
       }
     });
   }
@@ -67,16 +66,7 @@ export default class TreeExplorer {
     }
   }
 
-  private readonly uiState = new PersistedMap(
-    'note-explorer-tree',
-    z.object({
-      scroll: z.object({ x: z.number(), y: z.number() }).optional().catch(undefined),
-      expanded: z
-        .string()
-        .array()
-        .catch(() => []),
-    }),
-  );
+  private readonly uiState = new UIState();
 
   public readonly settings = new Setting();
 
