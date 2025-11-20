@@ -12,21 +12,7 @@ import { arrayOf, type MaybeArray } from '#utils/collection';
 import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
 
 import StarEventBus from '../../star/EventBus';
-
-export enum SortBy {
-  TitleAsc = 'titleAsc',
-  TitleDesc = 'titleDesc',
-  UpdatedAtAsc = 'updatedAtAsc',
-  UpdatedAtDesc = 'updatedAtDesc',
-  CreatedAtAsc = 'createdAtAsc',
-  CreatedAtDesc = 'createdAtDesc',
-}
-
-export enum IconDisplayMode {
-  All = 'all',
-  None = 'none',
-  Custom = 'custom',
-}
+import Setting, { SortBy } from './Setting';
 
 export enum TreeNodeStates {
   Selected = 1 << 1,
@@ -92,13 +78,7 @@ export default class TreeExplorer {
     }),
   );
 
-  public readonly settings = new PersistedMap(
-    'note-explorer-setting',
-    z.object({
-      sortBy: z.enum(SortBy).catch(SortBy.TitleAsc),
-      iconDisplayMode: z.enum(IconDisplayMode).catch(IconDisplayMode.All),
-    }),
-  );
+  public readonly settings = new Setting();
 
   @computed
   public get canCollapse() {
@@ -193,18 +173,17 @@ export default class TreeExplorer {
   }
 
   private sort(entity1: NoteVO, entity2: NoteVO) {
-    const sortBy = this.settings.get('sortBy');
-    const FLAG = [SortBy.CreatedAtAsc, SortBy.TitleAsc, SortBy.UpdatedAtAsc].includes(sortBy) ? 1 : -1;
+    const FLAG = [SortBy.CreatedAtAsc, SortBy.TitleAsc, SortBy.UpdatedAtAsc].includes(this.settings.sortBy) ? 1 : -1;
 
-    if ([SortBy.TitleAsc, SortBy.TitleDesc].includes(sortBy)) {
+    if ([SortBy.TitleAsc, SortBy.TitleDesc].includes(this.settings.sortBy)) {
       return entity1.title > entity2.title ? FLAG : -FLAG;
     }
 
-    if ([SortBy.CreatedAtAsc, SortBy.CreatedAtDesc].includes(sortBy)) {
+    if ([SortBy.CreatedAtAsc, SortBy.CreatedAtDesc].includes(this.settings.sortBy)) {
       return entity1.createdAt > entity2.createdAt ? FLAG : -FLAG;
     }
 
-    if ([SortBy.UpdatedAtAsc, SortBy.UpdatedAtDesc].includes(sortBy)) {
+    if ([SortBy.UpdatedAtAsc, SortBy.UpdatedAtDesc].includes(this.settings.sortBy)) {
       return entity1.updatedAt > entity2.updatedAt ? FLAG : -FLAG;
     }
 

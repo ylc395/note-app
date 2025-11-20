@@ -11,6 +11,8 @@ const tilesSchema = z.record(
 );
 
 export default class UIState extends KvActiveRecord {
+  protected readonly key = 'workbench-ui-state';
+
   @KvActiveRecord.bidi(tileNodeSchema.optional())
   public accessor root: TileNode | undefined = undefined;
 

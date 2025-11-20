@@ -6,23 +6,22 @@ import { createMemo } from 'solid-js';
 import container from '#utils/singletonContainer';
 import shell from '#web/infra/shell';
 import NoteService from '#domain/client/app/service/NoteService';
-import { IconDisplayMode, SortBy } from '#domain/client/app/model/note/TreeExplorer';
-import type { DataType } from '#domain/client/shared/model/abstract/PersistedMap';
+import { IconDisplayMode, SortBy } from '#domain/client/app/model/note/TreeExplorer/Setting';
 
 export default function SettingButton() {
   const {
     exploreTreeView: { settings },
   } = container.resolve(NoteService);
 
-  function CheckableItem<K extends keyof DataType<typeof settings>>(props: {
-    value: DataType<typeof settings>[K];
+  function CheckableItem<K extends keyof typeof settings>(props: {
+    value: (typeof settings)[K];
     key: K;
     title: string;
   }) {
-    const isChecked = createMemo(() => props.value === settings.get(props.key));
+    const isChecked = createMemo(() => props.value === settings[props.key]);
 
     function handleClick() {
-      settings.set(props.key, props.value);
+      settings[props.key] = props.value;
     }
 
     return (

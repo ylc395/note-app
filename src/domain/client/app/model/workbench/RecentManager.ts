@@ -14,9 +14,7 @@ const historySchema = z
   .transform((ids) => ids.slice(0, MAX_LENGTH));
 
 export default class RecentManager extends KvActiveRecord {
-  constructor() {
-    super('recently-open');
-  }
+  protected readonly key = 'recently-open';
 
   private readonly remote = container.resolve(token);
 

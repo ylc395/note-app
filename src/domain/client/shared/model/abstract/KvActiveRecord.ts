@@ -3,9 +3,7 @@ import ActiveRecord from './ActiveRecord';
 import { token } from '../../infra/kvStorage';
 
 export default abstract class KvActiveRecord extends ActiveRecord {
-  constructor(private readonly key: string) {
-    super();
-  }
+  protected abstract readonly key: string;
 
   private readonly db = singletonContainer.resolve(token);
 

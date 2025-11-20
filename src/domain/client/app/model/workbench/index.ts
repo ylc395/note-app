@@ -41,7 +41,7 @@ export default class Workbench {
     );
   }
 
-  private readonly state = new UIState('workbench-UI-state');
+  private readonly state = new UIState();
 
   private latestTile?: Tile; // 最新一个被创建的 Tile
 

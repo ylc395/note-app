@@ -3,7 +3,7 @@ import NoteService from '#domain/client/app/service/NoteService';
 import container from '#utils/singletonContainer';
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
 import BaseTreeView from '#web/components/NoteTree';
-import { IconDisplayMode } from '#domain/client/app/model/note/TreeExplorer';
+import { IconDisplayMode } from '#domain/client/app/model/note/TreeExplorer/Setting';
 
 import AddButton from './AddButton';
 import SettingButton from './SettingButton';
@@ -23,7 +23,7 @@ export default function TreeView() {
   }
 
   function shouldRenderIcon(node: TreeNode) {
-    const iconMode = tree.settings.get('iconDisplayMode');
+    const iconMode = tree.settings.iconDisplayMode;
 
     if (iconMode === IconDisplayMode.Custom) {
       return Boolean(node.value?.icon);
