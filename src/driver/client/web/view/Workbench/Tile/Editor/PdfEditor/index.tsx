@@ -4,30 +4,32 @@ import { action } from 'mobx';
 import { compact, sum, zipObject } from 'lodash-es';
 
 import PdfEditor from '#domain/client/app/model/note/editor/PdfEditor';
-import PdfEditorUIState, { Panel } from '#domain/client/app/model/note/editor/PdfEditor/UIState';
+import { Panel } from '#domain/client/app/model/note/editor/PdfEditor/uiState';
 
 import AnnotationList from './AnnotationList';
 import PdfView from './PdfView';
 import BodyEditor from './BodyEditor';
 
 export default function PdfEditorView(props: { editor: PdfEditor }) {
-  const panels = createMemo(() => {
-    if (!props.editor.uiState.isReady) {
-      return { panels: [] };
-    }
+  const { body, annotation } = props.editor;
+  const panelMap = {
+    [Panel.Annotation]: props.editor.annotation,
+    [Panel.Body]: props.editor.body,
+  };
 
-    const sizes = props.editor.uiState.panels;
-    const totalSize = sum(Object.values(sizes).map((p) => (p?.isVisible && p.size) ?? 0));
+  const panels = createMemo(() => {
+    const totalSize = sum([body, annotation].map(({ width, isEnabled }) => (isEnabled ? width : 0)));
 
     const panels = compact([
-      sizes[Panel.Body]?.isVisible && { id: Panel.Body },
-      { id: Panel.Pdf },
-      sizes[Panel.Annotation]?.isVisible && { id: Panel.Annotation },
+      body.isEnabled && { id: Panel.Body, size: body.width },
+      { id: Panel.Pdf, size: 100 - totalSize },
+      annotation.isEnabled && { id: Panel.Annotation, size: annotation.width },
     ]);
 
-    const size = panels.map(({ id }) => (id === Panel.Pdf ? 100 - totalSize : sizes[id]!.size));
-
-    return { panels, size };
+    return {
+      panels: panels.map(({ id }) => ({ id })),
+      size: panels.map(({ size }) => size),
+    };
   });
 
   function handleResize({ size, resizeTriggerId }: SplitterResizeDetails) {
@@ -35,42 +37,34 @@ export default function PdfEditorView(props: { editor: PdfEditor }) {
       return;
     }
 
-    const currentSizes = props.editor.uiState.panels;
     const sizeMap = zipObject(
       panels().panels.map(({ id }) => id),
       size,
     );
 
     for (const id of resizeTriggerId.split(':')) {
-      if (PdfEditorUIState.isTogglablePanel(id)) {
-        currentSizes[id]!.size = sizeMap[id]!;
+      if (id in panelMap) {
+        panelMap[id as keyof typeof panelMap].width = sizeMap[id]!;
       }
     }
   }
 
   return (
-    <Show when={props.editor.uiState.isReady}>
-      <Splitter.Root
-        {...panels()}
-        class="grow flex min-h-0"
-        onResize={action(handleResize)}
-        onResizeEnd={() => props.editor.uiState.save()}
-      >
-        <Show when={props.editor.uiState.panels[Panel.Body]?.isVisible}>
-          <Splitter.Panel id={Panel.Body}>
-            <BodyEditor editor={props.editor} />
-          </Splitter.Panel>
-          <Splitter.ResizeTrigger class="w-1" id={`${Panel.Body}:${Panel.Pdf}`} />
-        </Show>
-        <Splitter.Panel id={Panel.Pdf} asChild={(childProps) => <PdfView editor={props.editor} {...childProps()} />} />
-        <Show when={props.editor.uiState.panels[Panel.Annotation]?.isVisible}>
-          <Splitter.ResizeTrigger class="w-1" id={`${Panel.Pdf}:${Panel.Annotation}`} />
-          <Splitter.Panel
-            id={Panel.Annotation}
-            asChild={(childProps) => <AnnotationList editor={props.editor} {...childProps()} />}
-          />
-        </Show>
-      </Splitter.Root>
-    </Show>
+    <Splitter.Root {...panels()} class="grow flex min-h-0" onResize={action(handleResize)}>
+      <Show when={props.editor.body.isEnabled}>
+        <Splitter.Panel id={Panel.Body}>
+          <BodyEditor editor={props.editor} />
+        </Splitter.Panel>
+        <Splitter.ResizeTrigger class="w-1" id={`${Panel.Body}:${Panel.Pdf}`} />
+      </Show>
+      <Splitter.Panel id={Panel.Pdf} asChild={(childProps) => <PdfView editor={props.editor} {...childProps()} />} />
+      <Show when={props.editor.annotation.isEnabled}>
+        <Splitter.ResizeTrigger class="w-1" id={`${Panel.Pdf}:${Panel.Annotation}`} />
+        <Splitter.Panel
+          id={Panel.Annotation}
+          asChild={(childProps) => <AnnotationList editor={props.editor} {...childProps()} />}
+        />
+      </Show>
+    </Splitter.Root>
   );
 }

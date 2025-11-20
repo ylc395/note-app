@@ -1,9 +1,8 @@
 import singletonContainer from '#utils/singletonContainer';
-import PersistableModel from './PersistableModel';
+import ActiveRecord from './ActiveRecord';
 import { token } from '../../infra/kvStorage';
 
-// Object Key-Value Mapping（效仿 ORM、ODM 的自创命名）
-export default abstract class Okvm extends PersistableModel {
+export default abstract class KvActiveRecord extends ActiveRecord {
   constructor(private readonly key: string) {
     super();
   }

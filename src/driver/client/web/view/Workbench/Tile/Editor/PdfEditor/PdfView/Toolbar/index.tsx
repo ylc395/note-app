@@ -1,7 +1,7 @@
 import { ListIcon, NotepadTextIcon, PenLineIcon, TextSearchIcon } from 'lucide-solid';
 import { Switch } from '@ark-ui/solid';
+import assert from 'assert';
 
-import { Panel } from '#domain/client/app/model/note/editor/PdfEditor/UIState';
 import type PdfViewer from '../PDFViewer';
 import PageSwitcher from './PageSwitcher';
 import Scale from './Scale';
@@ -9,15 +9,16 @@ import BackAndForward from './BackAndForward';
 
 export default function Toolbar(props: { viewer: PdfViewer }) {
   function toggleAnnotationPanel() {
-    props.viewer.editor.uiState.togglePanel(Panel.Annotation);
+    props.viewer.editor.annotation.toggle();
   }
 
   function toggleBodyPanel() {
-    props.viewer.editor.uiState.togglePanel(Panel.Body);
+    props.viewer.editor.body.toggle();
   }
 
   function toggleOutlinePanel() {
-    props.viewer.editor.outline.state.set('panelVisible', !props.viewer.editor.outline.state.get('panelVisible'));
+    assert(props.viewer.editor.outline.uiState);
+    props.viewer.editor.outline.uiState.panelVisible = !props.viewer.editor.outline.uiState.panelVisible;
   }
 
   return (

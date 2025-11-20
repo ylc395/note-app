@@ -15,11 +15,12 @@ export default function Outline(props: { viewer: PdfViewer }) {
   });
 
   function handleScroll(e: Event) {
-    assert(e.target instanceof HTMLElement);
-    props.viewer.editor.outline.state.set('scroll', {
+    assert(e.target instanceof HTMLElement && props.viewer.editor.outline.uiState);
+
+    props.viewer.editor.outline.uiState.scroll = {
       x: e.target.scrollLeft,
       y: e.target.scrollTop,
-    });
+    };
   }
 
   createEffect(() => {
@@ -29,9 +30,9 @@ export default function Outline(props: { viewer: PdfViewer }) {
       listElement &&
       props.viewer.editor.outline.items &&
       outline.expandedKeys && // 确保已完成展开
-      props.viewer.editor.outline.state.isReady
+      props.viewer.editor.outline.uiState
     ) {
-      const scroll = untrack(() => props.viewer.editor.outline.state.get('scroll'));
+      const scroll = untrack(() => props.viewer.editor.outline.uiState?.scroll);
 
       if (scroll) {
         assert(listRef, 'no listRef');

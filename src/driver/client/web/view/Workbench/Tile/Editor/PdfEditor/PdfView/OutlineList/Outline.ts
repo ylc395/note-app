@@ -11,19 +11,8 @@ export default class Outline {
     this.outlineList = pdfViewer.editor.outline;
 
     when(
-      () => this.pdfViewer.editor.outline.state.isReady,
-      () => {
-        this.expandedKeys = new Set(this.pdfViewer.editor.outline.state.get('expanded'));
-      },
-      { signal: this.destroyController.signal },
-    );
-
-    autorun(
-      () => {
-        if (this.expandedKeys) {
-          this.pdfViewer.editor.outline.state.set('expanded', Array.from(this.expandedKeys));
-        }
-      },
+      () => Boolean(this.pdfViewer.editor.outline.uiState),
+      () => this.initUIState(),
       { signal: this.destroyController.signal },
     );
 
@@ -32,6 +21,20 @@ export default class Outline {
     } else {
       this.pdfViewer.eventBus.on('pagesloaded', this.init.bind(this));
     }
+  }
+
+  private initUIState() {
+    const expanded = this.pdfViewer.editor.outline.uiState?.expanded;
+    this.expandedKeys = new Set(expanded);
+
+    autorun(
+      () => {
+        if (this.expandedKeys) {
+          this.pdfViewer.editor.outline.uiState!.expanded = Array.from(this.expandedKeys);
+        }
+      },
+      { signal: this.destroyController.signal },
+    );
   }
 
   private async init() {

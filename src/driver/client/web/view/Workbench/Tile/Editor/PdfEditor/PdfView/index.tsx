@@ -21,7 +21,7 @@ export default function PdfEditorView(props: { editor: PdfEditor; [key: string]:
   const [getPdfViewer, setPdfViewer] = createSignal<PDFViewer>();
 
   const isOutlineVisible = createMemo(() => {
-    return props.editor.outline.state.isReady && props.editor.outline.state.get('panelVisible');
+    return props.editor.outline.uiState?.panelVisible;
   });
 
   createEffect(() => {

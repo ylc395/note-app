@@ -1,11 +1,11 @@
 import { createQuery } from 'mobx-tanstack-query/preset';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
-import { z } from 'zod';
 import type Mark from 'mark.js';
-import { action, observable } from 'mobx';
+import { action, computed, observable } from 'mobx';
 
 import container from '#utils/singletonContainer';
+import { expose, instanceToPlain, plainToClassFromExist } from '#utils/classTransformer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import type { NoteVO } from '#domain/shared/model/note';
 import {
@@ -14,7 +14,6 @@ import {
   type PDFTextPositionSelector,
   getPage,
 } from '#domain/client/app/model/annotation';
-import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
 import SvgAnnotationEditor from './SvgAnnotationEditor';
 
 dayjs.extend(customParseFormat);
@@ -29,13 +28,6 @@ export interface Position {
 
 export default class AnnotationManager {
   constructor(public readonly noteId: NoteVO['id']) {
-    this.state = new PersistedMap(
-      `${noteId}-annotationManager`,
-      z.object({
-        native: z.boolean().optional(),
-      }),
-    );
-
     this.items = createQuery(() => this.remote.annotation.queryByEntityId.query(this.noteId), {
       select: (data) => data.toSorted(AnnotationManager.sort),
       queryKey: ['annotations', { noteId }],
@@ -44,15 +36,17 @@ export default class AnnotationManager {
     });
   }
 
-  @observable public accessor isEnabled = false;
+  @observable @expose() public accessor isEnabled = false;
+
+  @observable @expose() public accessor shouldShowNative = false;
+
+  @observable @expose() public accessor width = 30;
 
   private readonly destroyController = new AbortController();
 
   public readonly items;
 
   public readonly svgEditor = new SvgAnnotationEditor(this);
-
-  public readonly state;
 
   public readonly openStatusMap: Record<string, boolean> = {};
 
@@ -116,6 +110,26 @@ export default class AnnotationManager {
     }
 
     return range;
+  }
+
+  @computed
+  public get uiState() {
+    return instanceToPlain(this);
+  }
+
+  @action
+  public initUIState(value: unknown) {
+    plainToClassFromExist(this, value);
+  }
+
+  @action
+  public toggle() {
+    this.isEnabled = !this.isEnabled;
+  }
+
+  @action
+  public toggleNative() {
+    this.shouldShowNative = !this.shouldShowNative;
   }
 
   @action

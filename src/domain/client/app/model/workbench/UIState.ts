@@ -1,4 +1,4 @@
-import Okvm from '#domain/client/shared/model/abstract/Okvm';
+import KvActiveRecord from '#domain/client/shared/model/abstract/KvActiveRecord';
 import z from 'zod';
 import { tileNodeSchema, type TileNode } from './tileTree';
 
@@ -10,18 +10,17 @@ const tilesSchema = z.record(
   }),
 );
 
-export default class UIState extends Okvm {
-  @Okvm.expose(tileNodeSchema.optional())
+export default class UIState extends KvActiveRecord {
+  @KvActiveRecord.bidi(tileNodeSchema.optional())
   public accessor root: TileNode | undefined = undefined;
 
-  @Okvm.expose(z.string().optional())
+  @KvActiveRecord.bidi(z.string().optional())
   public accessor focusedId: string | undefined = undefined;
 
-  @Okvm.expose(tilesSchema.optional())
+  @KvActiveRecord.bidi(tilesSchema.optional())
   public accessor tiles: z.infer<typeof tilesSchema> | undefined = undefined;
 
   public update(params: Pick<UIState, 'root' | 'focusedId' | 'tiles'>) {
     Object.assign(this, params);
-    this.debouncedSave();
   }
 }

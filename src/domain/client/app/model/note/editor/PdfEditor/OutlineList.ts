@@ -6,7 +6,6 @@ import { z } from 'zod';
 import { createQuery } from 'mobx-tanstack-query/preset';
 
 import type AnnotationManager from './AnnotationManager';
-import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
 
 export interface OutlineItem {
   title: string;
@@ -17,20 +16,14 @@ export interface OutlineItem {
   dest: unknown[] | null | string; // 传给 pdfjs 的跳转函数用的，具体类型不明，我们也不用管
 }
 
+const uiStateSchema = z.object({
+  expanded: z.string().array().optional(),
+  panelVisible: z.boolean().optional(),
+  scroll: z.object({ x: z.number(), y: z.number() }).optional(),
+});
+
 export default class OutlineList {
   constructor(private readonly annotation: AnnotationManager) {
-    this.state = new PersistedMap(
-      `${annotation.noteId}-outlineList`,
-      z.object({
-        expanded: z
-          .string()
-          .array()
-          .catch(() => []),
-        panelVisible: z.boolean().optional(),
-        scroll: z.object({ x: z.number(), y: z.number() }).optional(),
-      }),
-    );
-
     this._items = createQuery(this.createItems.bind(this), {
       abortSignal: this.destroyController.signal,
       queryKey: ['pdfOutline', annotation.noteId],
@@ -59,7 +52,7 @@ export default class OutlineList {
     return this._items.result.data?.pageToOutlineItemsMap;
   }
 
-  public readonly state;
+  @observable public accessor uiState: z.infer<typeof uiStateSchema> | undefined;
 
   @action
   public init(doc: PDFDocumentProxy) {

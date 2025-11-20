@@ -1,9 +1,8 @@
 import singletonContainer from '#utils/singletonContainer';
-import PersistableModel from './PersistableModel';
+import ActiveRecord from './ActiveRecord';
 import { token } from '../../infra/documentDb';
 
-// 基于文档型数据库的 ODM （Object-Document Mapping）
-export default abstract class Odm extends PersistableModel {
+export default abstract class DocumentActiveRecord extends ActiveRecord {
   constructor(private readonly storeName: string, private readonly id: unknown) {
     super();
   }

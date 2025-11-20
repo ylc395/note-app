@@ -5,7 +5,7 @@ import { createQuery } from 'mobx-tanstack-query/preset';
 import container from '#utils/singletonContainer';
 import { normalizeTitle, type NoteVO } from '#domain/shared/model/note';
 import { token } from '#domain/client/shared/infra/rpc';
-import Okvm from '#domain/client/shared/model/abstract/Okvm';
+import KvActiveRecord from '#domain/client/shared/model/abstract/KvActiveRecord';
 
 const MAX_LENGTH = 6;
 
@@ -13,19 +13,18 @@ const historySchema = z
   .array(z.object({ id: z.string(), time: z.number() }))
   .transform((ids) => ids.slice(0, MAX_LENGTH));
 
-export default class RecentManager extends Okvm {
+export default class RecentManager extends KvActiveRecord {
   constructor() {
     super('recently-open');
   }
 
   private readonly remote = container.resolve(token);
 
-  @Okvm.expose(historySchema)
+  @KvActiveRecord.bidi(historySchema)
   private accessor history: z.infer<typeof historySchema> = [];
 
   public add(id: NoteVO['id']) {
     this.history = uniqBy([{ id, time: Date.now() }, ...this.history], ({ id }) => id).slice(0, MAX_LENGTH);
-    this.debouncedSave();
   }
 
   public readonly notes = createQuery(
