@@ -10,13 +10,13 @@ import { token as documentDbToken } from '#domain/client/shared/infra/documentDb
 
 import BaseEditor, { type Options } from '../BaseEditor';
 import DocumentFactory from './DocumentFactory';
-import TextFinder from './TextFinder';
 import PageTextManager from './PageTextManager';
-import type Tile from '../../../Workbench/Tile';
+import TextFinder, { optionsSchema as textFinderSchema } from './TextFinder';
 import BodyEditor, { schema as bodyEditorSchema } from './BodyEditor';
 import AnnotationManager, { schema as annotationSchema } from './AnnotationManager';
 import OutlineList, { uiStateSchema as outlineSchema } from './OutlineList';
 import { storeName } from '../uiState';
+import type Tile from '../../../Workbench/Tile';
 
 export type { OutlineItem } from './OutlineList';
 
@@ -27,6 +27,7 @@ export enum Panel {
 }
 
 const uiStateSchema = z.object({
+  progress: z.unknown(), // 当前浏览的进度。通常是一个 pdf hash
   panels: z
     .object({
       [Panel.Body]: bodyEditorSchema.optional().catch(undefined),
@@ -34,8 +35,8 @@ const uiStateSchema = z.object({
     })
     .optional()
     .catch(undefined),
-  outline: outlineSchema.optional().catch(undefined),
-  progress: z.unknown(), // 当前浏览的进度。通常是一个 pdf hash
+  outline: outlineSchema,
+  textFinder: textFinderSchema,
 });
 
 export default class PdfEditor extends BaseEditor {
@@ -95,6 +96,7 @@ export default class PdfEditor extends BaseEditor {
       this.annotation.initUIState(uiState.panels?.[Panel.Annotation]);
       this.body.initUIState(uiState.panels?.[Panel.Body]);
       this.outline.initUIState(uiState.outline);
+      this.textFinder.initOptions(uiState.textFinder);
       this.progress = uiState.progress;
     }
 
@@ -109,6 +111,7 @@ export default class PdfEditor extends BaseEditor {
           },
           outline: this.outline.uiState,
           progress: this.progress,
+          textFinder: this.textFinder.options,
         });
       },
       { signal: this.destroyController.signal },

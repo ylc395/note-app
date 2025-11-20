@@ -54,7 +54,7 @@ export default class TextFinder {
       | ''; // 输入关键词，或者切换搜索选项
     findPrevious?: boolean;
   }) {
-    if (!this.model.isEnabled || !this.model.options.query) {
+    if (!this.model.isEnabled || !this.model.options?.query) {
       return;
     }
 

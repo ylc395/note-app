@@ -16,11 +16,14 @@ export interface OutlineItem {
   dest: unknown[] | null | string; // 传给 pdfjs 的跳转函数用的，具体类型不明，我们也不用管
 }
 
-export const uiStateSchema = z.object({
-  expanded: z.string().array().optional(),
-  panelVisible: z.boolean().optional(),
-  scroll: z.object({ x: z.number(), y: z.number() }).optional(),
-});
+export const uiStateSchema = z
+  .object({
+    expanded: z.string().array().optional(),
+    panelVisible: z.boolean().optional(),
+    scroll: z.object({ x: z.number(), y: z.number() }).optional(),
+  })
+  .optional()
+  .catch(undefined);
 
 export default class OutlineList {
   constructor(private readonly annotation: AnnotationManager) {
@@ -52,7 +55,7 @@ export default class OutlineList {
     return this._items.result.data?.pageToOutlineItemsMap;
   }
 
-  @observable public accessor uiState: z.infer<typeof uiStateSchema> | undefined;
+  @observable public accessor uiState: z.infer<typeof uiStateSchema>;
 
   @action
   public initUIState(v: OutlineList['uiState']) {

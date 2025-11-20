@@ -1,9 +1,9 @@
-import { action, computed, observable } from 'mobx';
+import { action, observable } from 'mobx';
 import { z } from 'zod';
 import { compact, debounce, isEqual } from 'lodash-es';
 
-import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
 import type PageTextManager from './PageTextManager';
+import assert from 'assert';
 
 export interface Digest {
   text: string;
@@ -18,34 +18,41 @@ export interface MatchesCount {
   total: number;
 }
 
+export const optionsSchema = z
+  .object({
+    caseSensitive: z.boolean().catch(false),
+    entireWord: z.boolean().catch(false),
+    query: z.string().catch(''),
+  })
+  .optional();
+
 export default class TextFinder {
-  constructor(private readonly textManager: PageTextManager) {
-    this.persistedOptions = new PersistedMap(
-      `pdf-textFinder-${this.textManager.noteId}`,
-      z.object({
-        caseSensitive: z.boolean().catch(false),
-        entireWord: z.boolean().catch(false),
-        query: z.string().catch(''),
-      }),
-    );
-  }
-  private readonly persistedOptions;
+  constructor(private readonly textManager: PageTextManager) {}
+
   @observable public accessor isEnabled = false;
+
   @observable public accessor result: (MatchesCount & { options: TextFinder['options'] }) | undefined;
+
   @observable.ref public accessor digests: Array<{ page: number; digests: Digest[] }> | undefined;
 
-  @computed
-  public get options() {
-    return this.persistedOptions.toObject();
+  public accessor options: z.infer<typeof optionsSchema>;
+
+  @action
+  public initOptions(v: TextFinder['options']) {
+    this.options = v;
   }
 
-  public readonly setQuery = debounce((value: string) => {
-    this.persistedOptions.set('query', value);
+  public readonly setQuery = debounce(
+    action((value: string) => {
+      assert(this.options);
+      this.options.query = value;
 
-    if (!value) {
-      this.clearResult();
-    }
-  }, 500);
+      if (!value) {
+        this.clearResult();
+      }
+    }),
+    500,
+  );
 
   @action
   public toggle() {
@@ -56,8 +63,10 @@ export default class TextFinder {
     }
   }
 
+  @action
   public toggleOption(key: 'caseSensitive' | 'entireWord') {
-    this.persistedOptions.set(key, this.persistedOptions.get(key));
+    assert(this.options);
+    this.options[key] = !this.options[key];
   }
 
   @action

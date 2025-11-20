@@ -25,21 +25,21 @@ export default function Input(props: { textFinder: TextFinder }) {
       <input
         ref={inputRef}
         class="outline-none bg-transparent"
-        value={props.textFinder.model.options.query ?? ''}
+        value={props.textFinder.model.options?.query ?? ''}
         onInput={handleInput}
         onKeyPress={handleKeyPress}
       />
       <div class="flex space-x-1 pr-1">
         <button
           class="flex items-center justify-center"
-          classList={{ outline: props.textFinder.model.options.caseSensitive }}
+          classList={{ outline: props.textFinder.model.options?.caseSensitive }}
           onClick={() => props.textFinder.model.toggleOption('caseSensitive')}
         >
           <CaseSensitiveIcon />
         </button>
         <button
           class="flex items-center justify-center"
-          classList={{ outline: props.textFinder.model.options.entireWord }}
+          classList={{ outline: props.textFinder.model.options?.entireWord }}
           onClick={() => props.textFinder.model.toggleOption('entireWord')}
         >
           <WholeWordIcon />
