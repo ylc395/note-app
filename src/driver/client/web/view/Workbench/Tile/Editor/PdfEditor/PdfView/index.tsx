@@ -46,21 +46,19 @@ export default function PdfEditorView(props: { editor: PdfEditor; [key: string]:
           <Show when={props.editor.textFinder.isEnabled && getPdfViewer()}>
             {(pdfViewer) => <SearchBar textFinder={pdfViewer().textFinder} />}
           </Show>
-          <Show when={props.editor.annotation.svgEditor.isEnabled}>
-            <SvgEditorBar svgEditor={props.editor.annotation.svgEditor} />
+          <Show when={props.editor.svgEditor.isEnabled}>
+            <SvgEditorBar svgEditor={props.editor.svgEditor} />
           </Show>
           <div
             class="relative grow overflow-hidden"
             classList={{ invisible: !getPdfViewer()?.isReady }} // ready 后才渲染，防止自动滚动的过程破坏体验
-            data-drawing-mode={
-              props.editor.annotation.svgEditor.isEnabled ? props.editor.annotation.svgEditor.mode : ''
-            }
+            data-drawing-mode={props.editor.svgEditor.isEnabled ? props.editor.svgEditor.mode : ''}
           >
             <div
               class="absolute inset-0 overflow-auto pdfViewer" /* pdfViewer 这个类名来自 pdf_viewer.css */
               ref={containerRef}
             >
-              <div classList={{ 'select-text': !props.editor.annotation.svgEditor.isEnabled }} ref={viewRef}></div>
+              <div classList={{ 'select-text': !props.editor.svgEditor.isEnabled }} ref={viewRef}></div>
               <Show when={getPdfViewer()}>{(viewer) => <SelectionTooltip pdfViewer={viewer()} />}</Show>
               <div data-custom-layer>
                 <Show when={getPdfViewer()?.isReady && getPdfViewer()}>

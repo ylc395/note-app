@@ -11,7 +11,7 @@ export default abstract class KvActiveRecord extends ActiveRecord {
     return this.db.get(this.key);
   }
 
-  public save() {
+  protected save() {
     return this.db.set(this.key, this.toJSON());
   }
 }

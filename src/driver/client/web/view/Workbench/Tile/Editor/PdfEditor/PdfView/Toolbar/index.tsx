@@ -43,9 +43,9 @@ export default function Toolbar(props: { viewer: PdfViewer }) {
       </div>
       <div class="flex space-x-2">
         <Switch.Root
-          checked={props.viewer.editor.annotation.svgEditor.isEnabled}
+          checked={props.viewer.editor.svgEditor.isEnabled}
           class="flex"
-          onCheckedChange={() => props.viewer.editor.annotation.svgEditor.toggle()}
+          onCheckedChange={() => props.viewer.editor.svgEditor.toggle()}
         >
           <Switch.Label>浏览</Switch.Label>
           <Switch.Control class="w-12 flex bg-gray-100">

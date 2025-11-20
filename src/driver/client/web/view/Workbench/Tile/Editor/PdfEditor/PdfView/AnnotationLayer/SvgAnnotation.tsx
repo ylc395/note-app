@@ -38,11 +38,7 @@ export default function SvgAnnotation(props: {
 
   createEffect(
     on(
-      [
-        () => props.pdfViewer.editor.annotation.svgEditor.isEnabled,
-        () => props.pdfViewer.editor.annotation.svgEditor.mode,
-        svg,
-      ],
+      [() => props.pdfViewer.editor.svgEditor.isEnabled, () => props.pdfViewer.editor.svgEditor.mode, svg],
       ([isEnabled, mode]) => {
         const _$el = groupRef?.children[0] && SVG(groupRef.children[0]);
         $el = _$el;
@@ -51,7 +47,7 @@ export default function SvgAnnotation(props: {
           return;
         }
 
-        const svgEditor = props.pdfViewer.editor.annotation.svgEditor;
+        const svgEditor = props.pdfViewer.editor.svgEditor;
         let timerId: ReturnType<typeof setTimeout> | undefined;
         let isDragging = false;
 
@@ -101,7 +97,7 @@ export default function SvgAnnotation(props: {
   );
 
   createEffect(() => {
-    if (!props.pdfViewer.editor.annotation.svgEditor.selectedSvg.has(props.annotation.id)) {
+    if (!props.pdfViewer.editor.svgEditor.selectedSvg.has(props.annotation.id)) {
       $el?.select(false).resize(false);
     }
   });

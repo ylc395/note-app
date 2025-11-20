@@ -73,7 +73,7 @@ export default function PageAnnotationLayer(props: { page: number; pdfViewer: Pd
       <Key each={textAnnotations()} by="id">
         {(annotation) => <TextAnnotation page={props.page} annotation={annotation()} pdfViewer={props.pdfViewer} />}
       </Key>
-      <Show when={svgAnnotations().length > 0 || props.pdfViewer.editor.annotation.svgEditor.isEnabled}>
+      <Show when={svgAnnotations().length > 0 || props.pdfViewer.editor.svgEditor.isEnabled}>
         {/* 一个占据整个页面的 svg 元素，充当画布 */}
         <svg
           ref={setSVGElement}
@@ -93,8 +93,8 @@ export default function PageAnnotationLayer(props: { page: number; pdfViewer: Pd
           </Key>
           <Show
             when={
-              props.pdfViewer.editor.annotation.svgEditor.isEnabled &&
-              props.pdfViewer.editor.annotation.svgEditor.mode === Mode.Draw &&
+              props.pdfViewer.editor.svgEditor.isEnabled &&
+              props.pdfViewer.editor.svgEditor.mode === Mode.Draw &&
               getSVGElement()
             }
           >

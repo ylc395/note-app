@@ -15,6 +15,8 @@ import TextFinder, { optionsSchema as textFinderSchema } from './TextFinder';
 import BodyEditor, { schema as bodyEditorSchema } from './BodyEditor';
 import AnnotationManager, { schema as annotationSchema } from './AnnotationManager';
 import OutlineList, { uiStateSchema as outlineSchema } from './OutlineList';
+import SvgAnnotationEditor, { optionsSchema as svgAnnotationEditorSchema } from './SvgAnnotationEditor';
+
 import { storeName } from '../uiState';
 import type Tile from '../../../Workbench/Tile';
 
@@ -37,6 +39,7 @@ const uiStateSchema = z.object({
     .catch(undefined),
   outline: outlineSchema,
   textFinder: textFinderSchema,
+  svgEditor: svgAnnotationEditorSchema,
 });
 
 export default class PdfEditor extends BaseEditor {
@@ -60,6 +63,8 @@ export default class PdfEditor extends BaseEditor {
   public readonly body = new BodyEditor();
 
   public readonly textFinder = new TextFinder(this.texts);
+
+  public readonly svgEditor = new SvgAnnotationEditor(this.annotation);
 
   @observable.ref public accessor doc: PDFDocumentProxy | undefined; // this is view-independent
 
@@ -97,6 +102,7 @@ export default class PdfEditor extends BaseEditor {
       this.body.initUIState(uiState.panels?.[Panel.Body]);
       this.outline.initUIState(uiState.outline);
       this.textFinder.initOptions(uiState.textFinder);
+      this.svgEditor.initOptions(uiState.svgEditor);
       this.progress = uiState.progress;
     }
 
@@ -112,6 +118,7 @@ export default class PdfEditor extends BaseEditor {
           outline: this.outline.uiState,
           progress: this.progress,
           textFinder: this.textFinder.options,
+          svgEditor: this.svgEditor.options,
         });
       },
       { signal: this.destroyController.signal },

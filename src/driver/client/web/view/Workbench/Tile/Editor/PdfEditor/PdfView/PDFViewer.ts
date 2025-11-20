@@ -291,7 +291,7 @@ export default class PdfViewer {
     this.pdfViewer.viewer?.addEventListener(
       'click',
       (e) => {
-        if (this.editor.annotation.svgEditor.isEnabled) {
+        if (this.editor.svgEditor.isEnabled) {
           e.preventDefault();
           return;
         }

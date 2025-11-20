@@ -19,8 +19,8 @@ export default function ShapeSelector(props: { svgEditor: svgEditor }) {
       lazyMount
       unmountOnExit
       collection={collection}
-      value={[props.svgEditor.options.get('shape')]}
-      onValueChange={(e) => props.svgEditor.options.set('shape', e.value[0] as Shape)}
+      value={[props.svgEditor.options?.shape]}
+      onValueChange={(e) => (props.svgEditor.options.shape = e.value[0] as Shape)}
     >
       <Select.Control>
         <Select.Trigger class="flex items-center">

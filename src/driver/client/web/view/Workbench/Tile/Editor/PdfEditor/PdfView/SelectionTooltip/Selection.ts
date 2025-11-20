@@ -26,7 +26,7 @@ export default class Selection {
   @observable private accessor _isTooltipVisible = false;
 
   @computed public get isTooltipVisible() {
-    return this._isTooltipVisible && !this.pdfViewer.editor.annotation.svgEditor.isEnabled;
+    return this._isTooltipVisible && !this.pdfViewer.editor.svgEditor.isEnabled;
   }
 
   private current?: {
@@ -39,7 +39,7 @@ export default class Selection {
   @observable.ref private accessor commentEditor: CommentEditor | undefined;
 
   @computed public get isCommentEditorVisible() {
-    return Boolean(this.commentEditor) && !this.pdfViewer.editor.annotation.svgEditor.isEnabled;
+    return Boolean(this.commentEditor) && !this.pdfViewer.editor.svgEditor.isEnabled;
   }
 
   private readonly uiState = new PersistedMap('pdf-selection', z.object({ color: z.string().catch('yellow') }));

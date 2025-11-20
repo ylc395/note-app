@@ -15,7 +15,6 @@ import {
   type PDFTextPositionSelector,
   getPage,
 } from '#domain/client/app/model/annotation';
-import SvgAnnotationEditor from './SvgAnnotationEditor';
 
 dayjs.extend(customParseFormat);
 
@@ -52,8 +51,6 @@ export default class AnnotationManager {
   private readonly destroyController = new AbortController();
 
   public readonly items;
-
-  public readonly svgEditor = new SvgAnnotationEditor(this);
 
   public readonly openStatusMap: Record<string, boolean> = {};
 

@@ -2,7 +2,6 @@ import { action, observable } from 'mobx';
 import { z } from 'zod';
 import { SVG } from '@svgdotjs/svg.js'; // 这个库理论上和环境无关，故放在 model 层了
 
-import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
 import type { AnnotationVO } from '#domain/shared/model/annotation';
 import type AnnotationManager from './AnnotationManager';
 
@@ -18,19 +17,26 @@ export enum Mode {
   Select = 'select',
 }
 
+export const optionsSchema = z.object({
+  color: z.string().catch('red'),
+  fillColor: z.string().catch('transparent'),
+  thickness: z.number().catch(5),
+  shape: z.enum(Shape).catch(Shape.Rect),
+});
+
 export default class SvgAnnotationEditor {
   constructor(private readonly annotationManager: AnnotationManager) {}
+
   @observable public accessor isEnabled = false;
+
   @observable public accessor mode = Mode.Draw;
-  public readonly options = new PersistedMap(
-    'pdf-canvas-options',
-    z.object({
-      color: z.string().catch('red'),
-      fillColor: z.string().catch('transparent'),
-      thickness: z.number().catch(5),
-      shape: z.enum(Shape).catch(Shape.Rect),
-    }),
-  );
+
+  @observable public accessor options: z.infer<typeof optionsSchema> = optionsSchema.parse({});
+
+  @action
+  public initOptions(v: SvgAnnotationEditor['options']) {
+    this.options = v;
+  }
 
   @action
   public toggle() {

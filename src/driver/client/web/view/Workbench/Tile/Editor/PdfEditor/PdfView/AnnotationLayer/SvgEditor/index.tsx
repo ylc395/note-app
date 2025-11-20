@@ -1,4 +1,4 @@
-import { createMemo, Show } from 'solid-js';
+import { Show } from 'solid-js';
 
 import SvgAnnotationEditor, { Shape } from '#domain/client/app/model/note/editor/PdfEditor/SvgAnnotationEditor';
 import FreeShape from './FreeShape';
@@ -12,11 +12,6 @@ export default function SvgEditor(props: {
   viewBox: { width: number; height: number };
   svgElement: SVGAElement;
 }) {
-  const shape = createMemo(() => props.pdfViewer.editor.annotation.svgEditor.options.get('shape'));
-  const color = createMemo(() => props.pdfViewer.editor.annotation.svgEditor.options.get('color'));
-  const fillColor = createMemo(() => props.pdfViewer.editor.annotation.svgEditor.options.get('fillColor'));
-  const thickness = createMemo(() => props.pdfViewer.editor.annotation.svgEditor.options.get('thickness'));
-
   const { element } = props.pdfViewer.getPageInfo(props.page);
 
   function onCreate(value: string) {
@@ -25,14 +20,14 @@ export default function SvgEditor(props: {
 
   return (
     <Show
-      when={shape() === Shape.Free}
+      when={props.pdfViewer.editor.svgEditor.options.shape === Shape.Free}
       fallback={
         <RegularShape
-          color={color()}
-          fillColor={fillColor()}
+          color={props.pdfViewer.editor.svgEditor.options.color}
+          fillColor={props.pdfViewer.editor.svgEditor.options.fillColor}
           pageElement={element}
-          shape={shape()}
-          thickness={thickness()}
+          shape={props.pdfViewer.editor.svgEditor.options.shape}
+          thickness={props.pdfViewer.editor.svgEditor.options.thickness}
           svgElement={props.svgElement}
           onCreate={onCreate}
         />
@@ -40,9 +35,9 @@ export default function SvgEditor(props: {
     >
       <FreeShape
         pageScale={props.pageScale}
-        thickness={thickness()}
+        thickness={props.pdfViewer.editor.svgEditor.options.thickness}
         pageElement={element}
-        color={color()}
+        color={props.pdfViewer.editor.svgEditor.options.color}
         onCreate={onCreate}
       />
     </Show>
