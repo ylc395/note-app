@@ -49,11 +49,3 @@ export function instanceToPlain(obj: object, tag?: string | symbol) {
 
   return pick(obj, Array.from(exposedKeys));
 }
-
-export function plainToClassFromExist(target: object, obj: unknown, tag?: string | symbol) {
-  const keys = (target.constructor as SerializableConstructor)[SERIALIZABLE_KEY]?.[tag ?? DEFAULT_TAG_KEY];
-
-  if (keys) {
-    Object.assign(target, pick(obj, Array.from(keys)));
-  }
-}

@@ -1,12 +1,13 @@
 import type { KvStorage } from '#domain/client/shared/infra/kvStorage';
 import { APP_NAME, IS_CLEAN_DEV } from '#domain/shared/infra/env';
+import type { ZodType } from 'zod';
 
 function addPrefix(key: string) {
   return `${APP_NAME}:${key}`;
 }
 
 const webKvlStorage: KvStorage = {
-  get(key: string) {
+  get(key: string, schema?: ZodType) {
     const json = localStorage.getItem(addPrefix(key));
 
     if (json === null) {
@@ -17,6 +18,10 @@ const webKvlStorage: KvStorage = {
 
     try {
       parsed = JSON.parse(json);
+
+      if (schema) {
+        parsed = schema.parse(parsed);
+      }
     } catch (error) {
       return Promise.resolve(null);
     }

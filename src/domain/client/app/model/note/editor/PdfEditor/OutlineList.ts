@@ -16,7 +16,7 @@ export interface OutlineItem {
   dest: unknown[] | null | string; // 传给 pdfjs 的跳转函数用的，具体类型不明，我们也不用管
 }
 
-const uiStateSchema = z.object({
+export const uiStateSchema = z.object({
   expanded: z.string().array().optional(),
   panelVisible: z.boolean().optional(),
   scroll: z.object({ x: z.number(), y: z.number() }).optional(),
@@ -53,6 +53,12 @@ export default class OutlineList {
   }
 
   @observable public accessor uiState: z.infer<typeof uiStateSchema> | undefined;
+
+  @action
+  public initUIState(v: OutlineList['uiState']) {
+    assert(!this.uiState, 'can not init');
+    this.uiState = v;
+  }
 
   @action
   public init(doc: PDFDocumentProxy) {

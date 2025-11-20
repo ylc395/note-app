@@ -3,9 +3,10 @@ import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import type Mark from 'mark.js';
 import { action, computed, observable } from 'mobx';
+import z from 'zod';
 
 import container from '#utils/singletonContainer';
-import { expose, instanceToPlain, plainToClassFromExist } from '#utils/classTransformer';
+import { expose, instanceToPlain } from '#utils/classTransformer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import type { NoteVO } from '#domain/shared/model/note';
 import {
@@ -25,6 +26,12 @@ export interface Position {
   endOffset: number;
   toStart?: boolean;
 }
+
+export const schema = z.object({
+  isEnabled: z.boolean(),
+  shouldShowNative: z.boolean(),
+  width: z.number(),
+});
 
 export default class AnnotationManager {
   constructor(public readonly noteId: NoteVO['id']) {
@@ -118,8 +125,8 @@ export default class AnnotationManager {
   }
 
   @action
-  public initUIState(value: unknown) {
-    plainToClassFromExist(this, value);
+  public initUIState(value?: z.infer<typeof schema>) {
+    Object.assign(this, value);
   }
 
   @action

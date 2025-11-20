@@ -2,6 +2,7 @@ import type { PDFDocumentProxy } from 'pdfjs-dist';
 import { autorun, computed, observable, runInAction, when } from 'mobx';
 import assert from 'assert';
 import { debounce } from 'lodash-es';
+import z from 'zod';
 
 import container from '#utils/singletonContainer';
 import { MimeTypes } from '#domain/shared/model/file';
@@ -9,15 +10,32 @@ import { token as documentDbToken } from '#domain/client/shared/infra/documentDb
 
 import BaseEditor, { type Options } from '../BaseEditor';
 import DocumentFactory from './DocumentFactory';
-import OutlineList from './OutlineList';
-import AnnotationManager from './AnnotationManager';
 import TextFinder from './TextFinder';
 import PageTextManager from './PageTextManager';
 import type Tile from '../../../Workbench/Tile';
-import { Panel, schema as uiSchema, storeName, type UIState } from './uiState';
-import BodyEditor from './BodyEditor';
+import BodyEditor, { schema as bodyEditorSchema } from './BodyEditor';
+import AnnotationManager, { schema as annotationSchema } from './AnnotationManager';
+import OutlineList, { uiStateSchema as outlineSchema } from './OutlineList';
+import { storeName } from '../uiState';
 
 export type { OutlineItem } from './OutlineList';
+
+export enum Panel {
+  Body = 'body',
+  Pdf = 'pdf',
+  Annotation = 'annotation',
+}
+
+const uiStateSchema = z.object({
+  panels: z
+    .object({
+      [Panel.Body]: bodyEditorSchema.optional().catch(undefined),
+      [Panel.Annotation]: annotationSchema.optional().catch(undefined),
+    })
+    .optional()
+    .catch(undefined),
+  outline: outlineSchema.optional().catch(undefined),
+});
 
 export default class PdfEditor extends BaseEditor {
   constructor(tile: Tile, options: Options) {
@@ -66,11 +84,12 @@ export default class PdfEditor extends BaseEditor {
   }
 
   private async initUIState() {
-    const uiState = await this.db.getByKey(storeName, this.noteId, uiSchema);
+    const uiState = await this.db.getByKey(storeName, this.noteId, uiStateSchema);
 
     if (uiState) {
-      this.annotation.initUIState(uiState.panels[Panel.Annotation]);
-      this.body.initUIState(uiState.panels[Panel.Body]);
+      this.annotation.initUIState(uiState.panels?.[Panel.Annotation]);
+      this.body.initUIState(uiState.panels?.[Panel.Body]);
+      this.outline.initUIState(uiState.outline);
     }
 
     autorun(
@@ -80,14 +99,15 @@ export default class PdfEditor extends BaseEditor {
             [Panel.Annotation]: this.annotation.uiState,
             [Panel.Body]: this.body.uiState,
           },
+          outline: this.outline.uiState,
         });
       },
       { signal: this.destroyController.signal },
     );
   }
 
-  private readonly saveUIState = debounce((value: UIState) => {
-    this.db.put(storeName, { id: this.noteId, ...value });
+  private readonly saveUIState = debounce((value: Record<string, unknown>) => {
+    this.db.put(storeName, { ...value, id: this.noteId });
   }, 500);
 
   public override destroy() {

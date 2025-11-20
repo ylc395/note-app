@@ -1,5 +1,11 @@
-import { expose, instanceToPlain, plainToClassFromExist } from '#utils/classTransformer';
 import { action, computed, observable } from 'mobx';
+import z from 'zod';
+import { expose, instanceToPlain } from '#utils/classTransformer';
+
+export const schema = z.object({
+  isEnabled: z.boolean(),
+  width: z.number(),
+});
 
 export default class BodyEditor {
   @observable @expose() public accessor isEnabled = false;
@@ -17,7 +23,7 @@ export default class BodyEditor {
   }
 
   @action
-  public initUIState(value: unknown) {
-    plainToClassFromExist(this, value);
+  public initUIState(value?: z.infer<typeof schema>) {
+    Object.assign(this, value);
   }
 }

@@ -3,8 +3,7 @@ import { Splitter, type SplitterResizeDetails } from '@ark-ui/solid';
 import { action } from 'mobx';
 import { compact, sum, zipObject } from 'lodash-es';
 
-import PdfEditor from '#domain/client/app/model/note/editor/PdfEditor';
-import { Panel } from '#domain/client/app/model/note/editor/PdfEditor/uiState';
+import PdfEditor, { Panel } from '#domain/client/app/model/note/editor/PdfEditor';
 
 import AnnotationList from './AnnotationList';
 import PdfView from './PdfView';
