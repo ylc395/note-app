@@ -20,14 +20,14 @@ export default function SvgEditor(props: {
 
   return (
     <Show
-      when={props.pdfViewer.editor.svgEditor.options.shape === Shape.Free}
+      when={props.pdfViewer.editor.svgEditor.shape === Shape.Free}
       fallback={
         <RegularShape
-          color={props.pdfViewer.editor.svgEditor.options.color}
-          fillColor={props.pdfViewer.editor.svgEditor.options.fillColor}
+          color={props.pdfViewer.editor.svgEditor.color}
+          fillColor={props.pdfViewer.editor.svgEditor.fillColor}
           pageElement={element}
-          shape={props.pdfViewer.editor.svgEditor.options.shape}
-          thickness={props.pdfViewer.editor.svgEditor.options.thickness}
+          shape={props.pdfViewer.editor.svgEditor.shape}
+          thickness={props.pdfViewer.editor.svgEditor.thickness}
           svgElement={props.svgElement}
           onCreate={onCreate}
         />
@@ -35,9 +35,9 @@ export default function SvgEditor(props: {
     >
       <FreeShape
         pageScale={props.pageScale}
-        thickness={props.pdfViewer.editor.svgEditor.options.thickness}
+        thickness={props.pdfViewer.editor.svgEditor.thickness}
         pageElement={element}
-        color={props.pdfViewer.editor.svgEditor.options.color}
+        color={props.pdfViewer.editor.svgEditor.color}
         onCreate={onCreate}
       />
     </Show>

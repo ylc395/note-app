@@ -1,5 +1,5 @@
 import type { PDFDocumentProxy } from 'pdfjs-dist';
-import { autorun, computed, observable, runInAction, when } from 'mobx';
+import { autorun, computed, observable, runInAction, toJS, when } from 'mobx';
 import assert from 'assert';
 import { debounce } from 'lodash-es';
 import z from 'zod';
@@ -28,19 +28,22 @@ export enum Panel {
   Annotation = 'annotation',
 }
 
-const uiStateSchema = z.object({
-  progress: z.unknown(), // 当前浏览的进度。通常是一个 pdf hash
-  panels: z
-    .object({
-      [Panel.Body]: bodyEditorSchema.optional().catch(undefined),
-      [Panel.Annotation]: annotationSchema.optional().catch(undefined),
-    })
-    .optional()
-    .catch(undefined),
-  outline: outlineSchema,
-  textFinder: textFinderSchema,
-  svgEditor: svgAnnotationEditorSchema,
-});
+const uiStateSchema = z
+  .object({
+    progress: z.unknown().optional().catch(undefined), // 当前浏览的进度。通常是一个 pdf hash
+    panels: z
+      .object({
+        [Panel.Body]: bodyEditorSchema.optional().catch(undefined),
+        [Panel.Annotation]: annotationSchema.optional().catch(undefined),
+      })
+      .optional()
+      .catch(undefined),
+    outline: outlineSchema,
+    textFinder: textFinderSchema,
+    svgEditor: svgAnnotationEditorSchema,
+    annotationColor: z.string().optional().catch(undefined),
+  })
+  .catch({});
 
 export default class PdfEditor extends BaseEditor {
   constructor(tile: Tile, options: Options) {
@@ -71,6 +74,8 @@ export default class PdfEditor extends BaseEditor {
   public override readonly mimeType = MimeTypes.PDF;
 
   @observable public accessor progress: unknown | undefined;
+
+  @observable public accessor annotationColor = 'yellow';
 
   @observable private accessor isUIStateReady = false;
 
@@ -104,9 +109,15 @@ export default class PdfEditor extends BaseEditor {
       this.textFinder.initOptions(uiState.textFinder);
       this.svgEditor.initOptions(uiState.svgEditor);
       this.progress = uiState.progress;
+
+      if (uiState.annotationColor) {
+        this.annotationColor = uiState.annotationColor;
+      }
     }
 
-    this.isUIStateReady = true;
+    runInAction(() => {
+      this.isUIStateReady = true;
+    });
 
     autorun(
       () => {
@@ -115,10 +126,10 @@ export default class PdfEditor extends BaseEditor {
             [Panel.Annotation]: this.annotation.uiState,
             [Panel.Body]: this.body.uiState,
           },
-          outline: this.outline.uiState,
+          outline: toJS(this.outline.uiState),
           progress: this.progress,
-          textFinder: this.textFinder.options,
-          svgEditor: this.svgEditor.options,
+          textFinder: toJS(this.textFinder.options),
+          svgEditor: toJS(this.svgEditor.options),
         });
       },
       { signal: this.destroyController.signal },

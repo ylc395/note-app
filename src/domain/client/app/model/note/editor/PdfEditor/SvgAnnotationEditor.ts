@@ -1,9 +1,10 @@
-import { action, observable } from 'mobx';
+import { action, computed, observable } from 'mobx';
 import { z } from 'zod';
 import { SVG } from '@svgdotjs/svg.js'; // 这个库理论上和环境无关，故放在 model 层了
 
 import type { AnnotationVO } from '#domain/shared/model/annotation';
 import type AnnotationManager from './AnnotationManager';
+import { expose, instanceToPlain } from '#utils/classTransformer';
 
 export enum Shape {
   Rect = 'rect',
@@ -17,12 +18,15 @@ export enum Mode {
   Select = 'select',
 }
 
-export const optionsSchema = z.object({
-  color: z.string().catch('red'),
-  fillColor: z.string().catch('transparent'),
-  thickness: z.number().catch(5),
-  shape: z.enum(Shape).catch(Shape.Rect),
-});
+export const optionsSchema = z
+  .object({
+    color: z.string().optional().catch(undefined).catch('red'),
+    fillColor: z.string().optional().catch(undefined).catch('transparent'),
+    thickness: z.number().optional().catch(undefined).catch(5),
+    shape: z.enum(Shape).optional().catch(undefined).catch(Shape.Rect),
+  })
+  .optional()
+  .catch(undefined);
 
 export default class SvgAnnotationEditor {
   constructor(private readonly annotationManager: AnnotationManager) {}
@@ -31,11 +35,30 @@ export default class SvgAnnotationEditor {
 
   @observable public accessor mode = Mode.Draw;
 
-  @observable public accessor options: z.infer<typeof optionsSchema> = optionsSchema.parse({});
+  @observable
+  @expose()
+  public accessor shape = Shape.Rect;
+
+  @observable
+  @expose()
+  public accessor color = 'red';
+
+  @observable
+  @expose()
+  public accessor fillColor = 'transparent';
+
+  @observable
+  @expose()
+  public accessor thickness = 5;
 
   @action
-  public initOptions(v: SvgAnnotationEditor['options']) {
-    this.options = v;
+  public initOptions(v: z.infer<typeof optionsSchema>) {
+    Object.assign(this, v);
+  }
+
+  @computed
+  public get options() {
+    return instanceToPlain(this);
   }
 
   @action

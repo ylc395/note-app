@@ -1,5 +1,6 @@
 import { Splitter, Tabs } from '@ark-ui/solid';
 import { Show } from 'solid-js';
+import { action } from 'mobx';
 
 import container from '#utils/singletonContainer';
 import MainSidebar from './MainSidebar';
@@ -20,17 +21,17 @@ export default function App() {
       <Tabs.Root
         orientation="vertical"
         lazyMount
-        defaultValue={uiState.get('app.explorer')}
-        onValueChange={({ value }) => uiState.set('app.explorer', value as SidebarTabs)}
+        defaultValue={uiState.explorer.type}
+        onValueChange={action(({ value }) => (uiState.explorer.type = value as SidebarTabs))}
         class="flex h-screen"
       >
         <MainSidebar />
         <Splitter.Root
           onResize={undefined}
           class="flex-grow min-w-0 relative h-full"
-          defaultSize={uiState.get('app.explorer.proportion')}
+          defaultSize={uiState.explorer.proportion}
           panels={[{ id: explorerPanelId, maxSize: 60, minSize: 10 }, { id: workbenchPanelId }]}
-          onResizeEnd={(e) => uiState.set('app.explorer.proportion', e.size)}
+          onResizeEnd={action((e) => (uiState.explorer.proportion = e.size))}
         >
           <Explorer panelId={explorerPanelId} />
           <Splitter.ResizeTrigger id={`${explorerPanelId}:${workbenchPanelId}`} class="z-10 w-1 -mr-1 bg-transparent" />

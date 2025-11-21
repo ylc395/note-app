@@ -17,7 +17,7 @@ export default abstract class DocumentActiveRecord extends ActiveRecord {
     return this.db.getByKey(this.storeName, this.id);
   }
 
-  protected save() {
+  protected override save() {
     return this.db.put(this.storeName, this.toJSON());
   }
 }

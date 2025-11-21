@@ -35,7 +35,7 @@ export default class TextFinder {
 
   @observable.ref public accessor digests: Array<{ page: number; digests: Digest[] }> | undefined;
 
-  public accessor options: z.infer<typeof optionsSchema>;
+  @observable public accessor options: z.infer<typeof optionsSchema>;
 
   @action
   public initOptions(v: TextFinder['options']) {

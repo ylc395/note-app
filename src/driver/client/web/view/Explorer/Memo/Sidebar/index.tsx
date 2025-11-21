@@ -5,15 +5,10 @@ import Calender from './Calendar';
 import UIState from '#web/view/UIState';
 
 export default function Sidebar() {
-  const uiState = container.resolve(UIState);
-
   return (
     <div
-      onclick={() => uiState.set('memo.sidebarVisibility', 'visible')}
-      class={`${uiState.get('memo.sidebarVisibility') === 'always' ? '' : 'hidden'}
-        ${uiState.get('memo.sidebarVisibility') === 'hidden' ? 'md:hidden' : 'md:block'}
-        z-10 inset-0 bg-transparent absolute min-w-0 shrink-0 border-r p-4 opacity-80
-        md:static md:z-0 md:opacity-100`}
+      class="z-10 inset-0 bg-transparent absolute min-w-0 shrink-0 border-r p-4 opacity-80
+        md:static md:z-0 md:opacity-100"
     >
       <div
         onclick={(e) => e.stopPropagation()}
@@ -21,7 +16,7 @@ export default function Sidebar() {
       >
         <div class="flex sticky z-10 bg-gray-50 top-0 items-center pb-4 justify-between">
           <h1 class="font-semibold">MEMO</h1>
-          <button class="text-gray-300" onClick={() => uiState.set('memo.sidebarVisibility', 'hidden')}>
+          <button class="text-gray-300">
             <PanelLeftClose />
           </button>
         </div>

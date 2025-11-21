@@ -1,5 +1,7 @@
-import KvActiveRecord from '#domain/client/shared/model/abstract/KvActiveRecord';
 import z from 'zod';
+import { action } from 'mobx';
+
+import KvActiveRecord from '#domain/client/shared/model/abstract/KvActiveRecord';
 import { tileNodeSchema, type TileNode } from './tileTree';
 
 const tilesSchema = z.record(
@@ -22,6 +24,7 @@ export default class UIState extends KvActiveRecord {
   @KvActiveRecord.bidi(tilesSchema.optional())
   public accessor tiles: z.infer<typeof tilesSchema> | undefined = undefined;
 
+  @action
   public update(params: Pick<UIState, 'root' | 'focusedId' | 'tiles'>) {
     Object.assign(this, params);
   }

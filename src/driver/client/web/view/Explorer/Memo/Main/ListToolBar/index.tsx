@@ -7,13 +7,11 @@ import { action } from 'mobx';
 import container from '#utils/singletonContainer';
 import type { Duration } from '#domain/shared/model/memo';
 import MemoList from '#domain/client/app/model/memo/List';
-import UIState from '#web/view/UIState';
 
 import SortMenu from './SortMenu';
 
 export default function ListToolbar() {
   const memoList = container.resolve(MemoList);
-  const uiState = container.resolve(UIState);
   const {
     filter: { timeSelector },
     childrenQuery,
@@ -33,10 +31,7 @@ export default function ListToolbar() {
   return (
     <div class="mt-4 flex justify-between text-gray-400">
       <div class="flex text-sm items-center">
-        <button
-          class={`mr-2 ${uiState.get('memo.sidebarVisibility') === 'hidden' ? '' : 'md:hidden'}`}
-          onClick={() => uiState.set('memo.sidebarVisibility', 'always')}
-        >
+        <button class="mr-2">
           <PanelLeftOpenIcon />
         </button>
         <Show when={typeof memoList.count === 'number'}>

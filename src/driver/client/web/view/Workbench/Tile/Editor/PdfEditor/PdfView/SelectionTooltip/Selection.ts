@@ -1,11 +1,9 @@
-import { z } from 'zod';
 import { action, computed, observable } from 'mobx';
 import assert from 'assert';
 import { debounce, omit, range, zip } from 'lodash-es';
 import { autoUpdate, computePosition, flip, offset } from '@floating-ui/dom';
 import Mark from 'mark.js';
 
-import PersistedMap from '#domain/client/shared/model/abstract/PersistedMap';
 import {
   default as AnnotationManager,
   type Position,
@@ -41,8 +39,6 @@ export default class Selection {
   @computed public get isCommentEditorVisible() {
     return Boolean(this.commentEditor) && !this.pdfViewer.editor.svgEditor.isEnabled;
   }
-
-  private readonly uiState = new PersistedMap('pdf-selection', z.object({ color: z.string().catch('yellow') }));
 
   public activate(rootEl: HTMLElement) {
     this.rootEl = rootEl;
@@ -94,11 +90,12 @@ export default class Selection {
   };
 
   public get color() {
-    return this.uiState.get('color');
+    return this.pdfViewer.editor.annotationColor;
   }
 
+  @action
   public setColor(color: string) {
-    this.uiState.set('color', color);
+    this.pdfViewer.editor.annotationColor = color;
   }
 
   @action

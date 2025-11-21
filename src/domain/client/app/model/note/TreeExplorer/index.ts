@@ -1,4 +1,4 @@
-import { action, autorun, computed, observable, when } from 'mobx';
+import { action, autorun, computed, observable, runInAction, when } from 'mobx';
 import assert from 'assert';
 
 import Tree from '#domain/client/shared/model/note/Tree';
@@ -40,7 +40,12 @@ export default class TreeExplorer {
 
     autorun(() => {
       if (this.tree) {
-        this.uiState.expanded = Array.from(this.tree.expandedNodeIds);
+        // action 里无法追踪对响应式数据的读取，因此读操作必须写在 action 外
+        const expanded = Array.from(this.tree.expandedNodeIds);
+
+        runInAction(() => {
+          this.uiState.expanded = expanded;
+        });
       }
     });
   }
