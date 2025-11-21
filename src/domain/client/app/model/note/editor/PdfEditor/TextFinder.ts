@@ -1,9 +1,9 @@
 import { action, observable } from 'mobx';
 import { z } from 'zod';
 import { compact, debounce, isEqual } from 'lodash-es';
+import assert from 'assert';
 
 import type PageTextManager from './PageTextManager';
-import assert from 'assert';
 
 export interface Digest {
   text: string;
@@ -18,13 +18,11 @@ export interface MatchesCount {
   total: number;
 }
 
-export const optionsSchema = z
-  .object({
-    caseSensitive: z.boolean().catch(false),
-    entireWord: z.boolean().catch(false),
-    query: z.string().catch(''),
-  })
-  .optional();
+export const optionsSchema = z.object({
+  caseSensitive: z.boolean().optional().catch(undefined),
+  entireWord: z.boolean().optional().catch(undefined),
+  query: z.string().optional().catch(undefined),
+});
 
 export default class TextFinder {
   constructor(private readonly textManager: PageTextManager) {}
@@ -35,11 +33,13 @@ export default class TextFinder {
 
   @observable.ref public accessor digests: Array<{ page: number; digests: Digest[] }> | undefined;
 
-  @observable public accessor options: z.infer<typeof optionsSchema>;
+  @observable public accessor options: z.infer<typeof optionsSchema> = {};
 
   @action
-  public initOptions(v: TextFinder['options']) {
-    this.options = v;
+  public initOptions(v?: TextFinder['options']) {
+    if (v) {
+      this.options = v;
+    }
   }
 
   public readonly setQuery = debounce(

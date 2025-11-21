@@ -38,9 +38,9 @@ const uiStateSchema = z
       })
       .optional()
       .catch(undefined),
-    outline: outlineSchema,
-    textFinder: textFinderSchema,
-    svgEditor: svgAnnotationEditorSchema,
+    outline: outlineSchema.optional().catch(undefined),
+    textFinder: textFinderSchema.optional().catch(undefined),
+    svgEditor: svgAnnotationEditorSchema.optional().catch(undefined),
     annotationColor: z.string().optional().catch(undefined),
   })
   .catch({});

@@ -18,15 +18,12 @@ export enum Mode {
   Select = 'select',
 }
 
-export const optionsSchema = z
-  .object({
-    color: z.string().optional().catch(undefined).catch('red'),
-    fillColor: z.string().optional().catch(undefined).catch('transparent'),
-    thickness: z.number().optional().catch(undefined).catch(5),
-    shape: z.enum(Shape).optional().catch(undefined).catch(Shape.Rect),
-  })
-  .optional()
-  .catch(undefined);
+export const optionsSchema = z.object({
+  color: z.string().optional().catch(undefined).catch('red'),
+  fillColor: z.string().optional().catch(undefined).catch('transparent'),
+  thickness: z.number().optional().catch(undefined).catch(5),
+  shape: z.enum(Shape).optional().catch(undefined).catch(Shape.Rect),
+});
 
 export default class SvgAnnotationEditor {
   constructor(private readonly annotationManager: AnnotationManager) {}
@@ -52,7 +49,7 @@ export default class SvgAnnotationEditor {
   public accessor thickness = 5;
 
   @action
-  public initOptions(v: z.infer<typeof optionsSchema>) {
+  public initOptions(v?: z.infer<typeof optionsSchema>) {
     Object.assign(this, v);
   }
 
