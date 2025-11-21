@@ -1,6 +1,8 @@
-import type PdfEditor from '#domain/client/app/model/note/editor/PdfEditor';
 import MarkdownEditor from '#web/components/MarkdownEditor';
+import { useContext } from '../context';
 
-export default function BodyEditor(props: { editor: PdfEditor }) {
-  return <MarkdownEditor onUpdate={(md) => props.editor.update({ body: md })} />;
+export default function BodyEditor() {
+  const ctx = useContext()!;
+
+  return <MarkdownEditor onUpdate={(md) => ctx.editor.update({ body: md })} />;
 }

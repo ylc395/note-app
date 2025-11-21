@@ -1,7 +1,9 @@
 import { FileXIcon } from 'lucide-solid';
-import type BaseEditor from '#domain/client/app/model/note/editor/BaseEditor';
+import { useContext } from './context';
 
-export default function ErrorEditor(props: { editor: BaseEditor }) {
+export default function ErrorEditor() {
+  const ctx = useContext()!;
+
   return (
     <div class="flex flex-col justify-center items-center h-full text-text-secondary">
       <FileXIcon class="w-16 h-16 mb-2" />
@@ -9,7 +11,7 @@ export default function ErrorEditor(props: { editor: BaseEditor }) {
       <div class="text-sm text-center">
         <p>该笔记可能已经不再存在</p>
         <p>可尝试在回收站中查找</p>
-        <p class="mt-6">ID: {props.editor.noteId}</p>
+        <p class="mt-6">ID: {ctx.editor.noteId}</p>
       </div>
     </div>
   );

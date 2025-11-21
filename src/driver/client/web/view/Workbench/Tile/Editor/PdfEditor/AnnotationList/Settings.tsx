@@ -1,14 +1,23 @@
 import { Menu, type MenuSelectionDetails } from '@ark-ui/solid';
 import { CheckSquare2Icon, SettingsIcon, SquareIcon } from 'lucide-solid';
 import { action } from 'mobx';
+import { createMemo } from 'solid-js';
+import assert from 'assert';
 
-import type PdfEditor from '#domain/client/app/model/note/editor/PdfEditor';
+import PdfEditor from '#domain/client/app/model/note/editor/PdfEditor';
+import { useContext } from '../../context';
 
-export default function Settings(props: { editor: PdfEditor }) {
+export default function Settings() {
+  const ctx = useContext()!;
+  const editor = createMemo(() => {
+    assert(ctx.editor instanceof PdfEditor);
+    return ctx.editor;
+  });
+
   function handleSelect({ value }: MenuSelectionDetails) {
     switch (value) {
       case 'toggleNative':
-        props.editor.annotation.toggleNative();
+        editor().annotation.toggleNative();
         break;
       default:
         break;
@@ -25,7 +34,7 @@ export default function Settings(props: { editor: PdfEditor }) {
           <Menu.CheckboxItem
             class="group flex items-center"
             value="toggleNative"
-            checked={props.editor.annotation.shouldShowNative}
+            checked={editor().annotation.shouldShowNative}
           >
             <SquareIcon class='hidden mr-1 group-data-[state="unchecked"]:block' />
             <CheckSquare2Icon class='hidden mr-1 group-data-[state="checked"]:block' />

@@ -2,27 +2,35 @@ import { createMemo, Show } from 'solid-js';
 import { Splitter, type SplitterResizeDetails } from '@ark-ui/solid';
 import { action } from 'mobx';
 import { compact, sum, zipObject } from 'lodash-es';
+import assert from 'assert';
 
 import PdfEditor, { Panel } from '#domain/client/app/model/note/editor/PdfEditor';
 
 import AnnotationList from './AnnotationList';
 import PdfView from './PdfView';
 import BodyEditor from './BodyEditor';
+import { useContext } from '../context';
 
-export default function PdfEditorView(props: { editor: PdfEditor }) {
-  const { body, annotation } = props.editor;
+export default function PdfEditorView() {
+  const ctx = useContext()!;
+  const editor = createMemo(() => {
+    assert(ctx.editor instanceof PdfEditor);
+    return ctx.editor;
+  });
+
   const panelMap = {
-    [Panel.Annotation]: props.editor.annotation,
-    [Panel.Body]: props.editor.body,
+    [Panel.Annotation]: editor().annotation,
+    [Panel.Body]: editor().body,
   };
 
   const panels = createMemo(() => {
-    const totalSize = sum([body, annotation].map(({ width, isEnabled }) => (isEnabled ? width : 0)));
+    assert(ctx.editor instanceof PdfEditor);
+    const totalSize = sum([editor().body, editor().annotation].map(({ width, isEnabled }) => (isEnabled ? width : 0)));
 
     const panels = compact([
-      body.isEnabled && { id: Panel.Body, size: body.width },
+      ctx.editor.body.isEnabled && { id: Panel.Body, size: ctx.editor.body.width },
       { id: Panel.Pdf, size: 100 - totalSize },
-      annotation.isEnabled && { id: Panel.Annotation, size: annotation.width },
+      ctx.editor.annotation.isEnabled && { id: Panel.Annotation, size: ctx.editor.annotation.width },
     ]);
 
     return {
@@ -50,19 +58,16 @@ export default function PdfEditorView(props: { editor: PdfEditor }) {
 
   return (
     <Splitter.Root {...panels()} class="grow flex min-h-0" onResize={action(handleResize)}>
-      <Show when={props.editor.body.isEnabled}>
+      <Show when={editor().body.isEnabled}>
         <Splitter.Panel id={Panel.Body}>
-          <BodyEditor editor={props.editor} />
+          <BodyEditor />
         </Splitter.Panel>
         <Splitter.ResizeTrigger class="w-1" id={`${Panel.Body}:${Panel.Pdf}`} />
       </Show>
-      <Splitter.Panel id={Panel.Pdf} asChild={(childProps) => <PdfView editor={props.editor} {...childProps()} />} />
-      <Show when={props.editor.annotation.isEnabled}>
+      <Splitter.Panel id={Panel.Pdf} asChild={(childProps) => <PdfView {...childProps()} />} />
+      <Show when={editor().annotation.isEnabled}>
         <Splitter.ResizeTrigger class="w-1" id={`${Panel.Pdf}:${Panel.Annotation}`} />
-        <Splitter.Panel
-          id={Panel.Annotation}
-          asChild={(childProps) => <AnnotationList editor={props.editor} {...childProps()} />}
-        />
+        <Splitter.Panel id={Panel.Annotation} asChild={(childProps) => <AnnotationList {...childProps()} />} />
       </Show>
     </Splitter.Root>
   );

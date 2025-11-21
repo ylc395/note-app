@@ -1,12 +1,19 @@
 import dayjs from 'dayjs';
 import { createMemo, Show } from 'solid-js';
+import assert from 'assert';
 
 import { getPage, type AnnotationVO } from '#domain/client/app/model/annotation';
-import assert from 'assert';
-import type PdfEditor from '#domain/client/app/model/note/editor/PdfEditor';
+import PdfEditor from '#domain/client/app/model/note/editor/PdfEditor';
 import { goToAnnotationCommand } from '#domain/client/app/model/note/editor/command';
+import { useContext } from '../../context';
 
-export default function TextItem(props: { value: AnnotationVO; editor: PdfEditor }) {
+export default function TextItem(props: { value: AnnotationVO }) {
+  const ctx = useContext()!;
+  const editor = createMemo(() => {
+    assert(ctx.editor instanceof PdfEditor);
+    return ctx.editor;
+  });
+
   const startPage = createMemo(() => getPage(props.value));
   const endPage = createMemo(() => getPage(props.value, 'end'));
   const quote = createMemo(() => {
@@ -15,7 +22,7 @@ export default function TextItem(props: { value: AnnotationVO; editor: PdfEditor
   });
 
   function jumpTo() {
-    props.editor.command$.next(goToAnnotationCommand.create(props.value.id));
+    editor().command$.next(goToAnnotationCommand.create(props.value.id));
   }
 
   return (

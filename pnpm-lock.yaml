@@ -37,6 +37,9 @@ importers:
       '@mozilla/readability':
         specifier: ^0.4.4
         version: 0.4.4
+      '@solid-primitives/context':
+        specifier: ^0.3.2
+        version: 0.3.2(solid-js@1.9.9)
       '@solid-primitives/event-listener':
         specifier: ^2.4.3
         version: 2.4.3(solid-js@1.9.9)
@@ -1184,6 +1187,11 @@ packages:
   '@sindresorhus/is@4.6.0':
     resolution: {integrity: sha512-t09vSN3MdfsyCHoFcTRCH/iUtG7OJ0CsjzB8cjAmKc/va/kIgeDI/TxsigdncE/4be734m0cvIYwNaV4i2XqAw==}
     engines: {node: '>=10'}
+
+  '@solid-primitives/context@0.3.2':
+    resolution: {integrity: sha512-6fvTtpK17PFHnUf/UOc1TzBjd+kLFjtA62aRFEm1kDP9ufTo7FYW2kUzQAWbfbRHi30yjBJtopbR8qd6nShwyg==}
+    peerDependencies:
+      solid-js: ^1.6.12
 
   '@solid-primitives/event-listener@2.4.3':
     resolution: {integrity: sha512-h4VqkYFv6Gf+L7SQj+Y6puigL/5DIi7x5q07VZET7AWcS+9/G3WfIE9WheniHWJs51OEkRB43w6lDys5YeFceg==}
@@ -6224,6 +6232,10 @@ snapshots:
   '@sindresorhus/is@0.7.0': {}
 
   '@sindresorhus/is@4.6.0': {}
+
+  '@solid-primitives/context@0.3.2(solid-js@1.9.9)':
+    dependencies:
+      solid-js: 1.9.9
 
   '@solid-primitives/event-listener@2.4.3(solid-js@1.9.9)':
     dependencies:

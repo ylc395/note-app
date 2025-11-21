@@ -66,6 +66,7 @@
     "@floating-ui/react": "^0.26.13",
     "@milkdown/kit": "^7.16.0",
     "@mozilla/readability": "^0.4.4",
+    "@solid-primitives/context": "^0.3.2",
     "@solid-primitives/event-listener": "^2.4.3",
     "@solid-primitives/keyed": "^1.5.2",
     "@solid-primitives/resize-observer": "^2.1.3",

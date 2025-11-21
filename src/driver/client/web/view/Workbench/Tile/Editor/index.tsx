@@ -1,5 +1,4 @@
-import { createMemo, Show } from 'solid-js';
-import assert from 'assert';
+import { createMemo, Match, Show, Switch } from 'solid-js';
 
 import type BaseEditor from '#domain/client/app/model/note/editor/BaseEditor';
 import MarkdownEditor from '#domain/client/app/model/note/editor/MarkdownEditor';
@@ -11,33 +10,34 @@ import UnknownEditorView from './UnknownEditor';
 import PdfEditorView from './PdfEditor';
 import Breadcrumbs from './Breadcrumbs';
 import TitleInput from './TitleInput';
-import ErrorEditor from './ErrorEditor';
+import Error from './Error';
+import { ContextProvider } from './context';
 
 export default function Editor(props: { editor: BaseEditor }) {
   const isError = createMemo(() => props.editor.value.result.isError);
-  const editor = createMemo(() => {
-    if (isError()) {
-      return <ErrorEditor editor={props.editor} />;
-    }
-
-    if (props.editor instanceof UnknownEditor) {
-      return <UnknownEditorView />;
-    } else if (props.editor instanceof PdfEditor) {
-      return <PdfEditorView editor={props.editor} />;
-    } else if (props.editor instanceof MarkdownEditor) {
-      return <MarkdownEditorView editor={props.editor} />;
-    } else {
-      assert('invalid editor');
-    }
-  });
 
   return (
-    <div class="flex flex-col h-full" onFocusIn={() => props.editor.focus()}>
-      <Show when={!isError()}>
-        <TitleInput editor={props.editor} />
-        <Breadcrumbs editor={props.editor} />
-      </Show>
-      {editor()}
-    </div>
+    <ContextProvider editor={props.editor}>
+      <div class="flex flex-col h-full" onFocusIn={() => props.editor.focus()}>
+        <Show when={!isError()}>
+          <TitleInput />
+          <Breadcrumbs />
+        </Show>
+        <Switch>
+          <Match when={isError()}>
+            <Error />
+          </Match>
+          <Match when={props.editor instanceof UnknownEditor}>
+            <UnknownEditorView />
+          </Match>
+          <Match when={props.editor instanceof PdfEditor}>
+            <PdfEditorView />
+          </Match>
+          <Match when={props.editor instanceof MarkdownEditor}>
+            <MarkdownEditorView />;
+          </Match>
+        </Switch>
+      </div>
+    </ContextProvider>
   );
 }

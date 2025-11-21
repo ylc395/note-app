@@ -1,12 +1,12 @@
 import { createEffect, on, onCleanup, onMount, Show } from 'solid-js';
-import { Loader2Icon } from 'lucide-solid';
+import { LoaderCircleIcon } from 'lucide-solid';
 import { debounce } from 'lodash-es';
 import { Key } from '@solid-primitives/keyed';
 import assert from 'assert';
 
 import MemoList from '#domain/client/app/model/memo/List';
-import Item from './Item';
 import container from '#utils/singletonContainer';
+import Item from './Item';
 
 export default function MemoListView() {
   let rootRef: HTMLDivElement | undefined;
@@ -51,7 +51,7 @@ export default function MemoListView() {
       </div>
       <Show
         when={!memoList.childrenQuery?.result.hasNextPage}
-        fallback={<Loader2Icon class="animate-spin mx-auto my-6" size={30} />}
+        fallback={<LoaderCircleIcon class="animate-spin mx-auto my-6" size={30} />}
       >
         <div class="text-center text-gray-400 my-6">没有更多了</div>
       </Show>

@@ -1,5 +1,5 @@
 import { createEffect, createSignal, For, onCleanup, Show, untrack } from 'solid-js';
-import { Loader2Icon, EyeIcon } from 'lucide-solid';
+import { LoaderCircleIcon, EyeIcon } from 'lucide-solid';
 import assert from 'assert';
 
 import type PdfViewer from '../PDFViewer';
@@ -68,7 +68,7 @@ export default function Outline(props: { viewer: PdfViewer }) {
             each={props.viewer.editor.outline.items}
             fallback={
               <div class="flex h-full justify-center items-center overflow-hidden space-x-1">
-                <Loader2Icon class="animate-spin" />
+                <LoaderCircleIcon class="animate-spin" />
                 <span>加载中</span>
               </div>
             }

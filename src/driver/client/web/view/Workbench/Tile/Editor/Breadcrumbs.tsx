@@ -1,19 +1,21 @@
 import { For, Show } from 'solid-js';
 import { BookTextIcon, ChevronRightIcon } from 'lucide-solid';
-import type BaseEditor from '#domain/client/app/model/note/editor/BaseEditor';
 
-export default function Breadcrumbs(props: { editor: BaseEditor }) {
+import { useContext } from './context';
+
+export default function Breadcrumbs() {
   const itemClassName = 'text-text-secondary flex items-center shrink-0 text-sm';
   const iconClassName = 'w-4 h-4 text-text-secondary';
+  const ctx = useContext()!;
 
   return (
-    <Show when={props.editor.path.result.data && props.editor.value.result.data}>
+    <Show when={ctx.editor.path.result.data && ctx.editor.value.result.data}>
       <div class="flex px-4 py-2 border-b border-border-secondary overflow-auto shrink-0">
         <div class={itemClassName}>
           <BookTextIcon class={iconClassName} />
           <ChevronRightIcon class={iconClassName} />
         </div>
-        <For each={props.editor.path.result.data}>
+        <For each={ctx.editor.path.result.data}>
           {(path) => (
             <div class={itemClassName}>
               {path.title}
