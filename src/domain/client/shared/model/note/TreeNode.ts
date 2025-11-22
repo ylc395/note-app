@@ -1,11 +1,11 @@
 import { action, computed, observable, reaction } from 'mobx';
 import { createQuery } from 'mobx-tanstack-query/preset';
 import assert from 'assert';
+import { differenceBy, without } from 'lodash-es';
 
 import { normalizeTitle, type NoteVO } from '#domain/shared/model/note';
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
-import { differenceBy, without } from 'lodash-es';
 
 export default class TreeNode {
   constructor({
@@ -15,6 +15,7 @@ export default class TreeNode {
   }: {
     value?: NoteVO;
     parent?: TreeNode;
+    children?: NoteVO[] | ((node: TreeNode) => NoteVO[] | undefined);
     sort?: (note1: NoteVO, note2: NoteVO) => number;
     onDestroyed?: (node: TreeNode) => void;
     onCreated?: (node: TreeNode) => void;
@@ -22,7 +23,6 @@ export default class TreeNode {
     onStateChanged?: (node: TreeNode, state: number) => void;
   }) {
     this.setValue(value);
-    this.setActive(parent?.isActive ?? false);
     this.parent = parent;
     this.options = options;
 
@@ -30,16 +30,18 @@ export default class TreeNode {
       this.toggleExpand(true);
     }
 
+    options.onCreated?.(this);
+
     this.childrenQuery = createQuery(
-      ({ signal }) => {
-        return this.remote.note.query.query({ parentId: value?.id ?? null }, { signal });
-      },
+      ({ signal }) => this.remote.note.query.query({ parentId: value?.id ?? null }, { signal }),
       {
+        initialData: typeof options.children === 'function' ? options.children(this) : options.children,
+        staleTime: 1000, // 设置一个很短的过期时间，防止即使了提供了 initialData，仍然重新请求的情况
         refetchOnWindowFocus: true,
         abortSignal: this.destroyController.signal,
         queryKey: ['notes', { parentId: value?.id ?? null }],
         options: () => ({
-          enabled: this.isExpanded && this.isActive,
+          enabled: this.isExpanded,
         }),
       },
     );
@@ -48,15 +50,15 @@ export default class TreeNode {
       this.destroyController.signal.addEventListener('abort', options.onDestroyed.bind(null, this), { once: true });
     }
 
-    options.onCreated?.(this);
-    reaction(() => this.childrenQuery.result.data, this.setChildren, { signal: this.destroyController.signal });
+    reaction(() => this.childrenQuery.result.data, this.setChildren.bind(this), {
+      signal: this.destroyController.signal,
+      fireImmediately: true,
+    });
   }
 
   private readonly options;
 
   private readonly remote = container.resolve(rpcToken);
-
-  @observable private accessor isActive!: boolean; // 通常负责由视图层激活
 
   public parent?: TreeNode;
 
@@ -75,7 +77,7 @@ export default class TreeNode {
   private childrenMap?: Map<TreeNode['id'], TreeNode>;
 
   public get id() {
-    return this.value?.id ?? '__ROOT_ID__';
+    return this.value?.id ?? TreeNode.ROOT_ID;
   }
 
   public get ancestors() {
@@ -145,19 +147,6 @@ export default class TreeNode {
   }
 
   @action
-  public setActive(value: boolean) {
-    this.isActive = value;
-
-    if (!this.children) {
-      return;
-    }
-
-    for (const child of this.children) {
-      child.setActive(value);
-    }
-  }
-
-  @action
   public moveTo(targetParent: TreeNode) {
     this.remove(false);
     targetParent.addChild(this);
@@ -199,7 +188,7 @@ export default class TreeNode {
   }
 
   @action
-  private readonly setChildren = (children?: NoteVO[]) => {
+  private setChildren = (children?: NoteVO[]) => {
     if (!children) {
       return;
     }
@@ -238,4 +227,6 @@ export default class TreeNode {
 
     this.destroyController.abort();
   }
+
+  public static readonly ROOT_ID = '__ROOT_ID__';
 }

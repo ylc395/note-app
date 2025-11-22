@@ -8,11 +8,12 @@ import { IconDisplayMode } from '#domain/client/app/model/note/TreeExplorer/Sett
 import AddButton from './AddButton';
 import SettingButton from './SettingButton';
 import useContextmenu from './useContextmenu';
-import { createEffect, onCleanup } from 'solid-js';
 
 export default function TreeView() {
-  const { workbench, exploreTreeView: tree } = container.resolve(NoteService);
+  const { workbench, explorer } = container.resolve(NoteService);
   const { contextmenu, handleContextMenuClick } = useContextmenu();
+
+  explorer.init();
 
   function handleItemClick(node: TreeNode) {
     if (!node.value) {
@@ -23,7 +24,7 @@ export default function TreeView() {
   }
 
   function shouldRenderIcon(node: TreeNode) {
-    const iconMode = tree.settings.iconDisplayMode;
+    const iconMode = explorer.settings.iconDisplayMode;
 
     if (iconMode === IconDisplayMode.Custom) {
       return Boolean(node.value?.icon);
@@ -32,20 +33,12 @@ export default function TreeView() {
     return iconMode === IconDisplayMode.All;
   }
 
-  createEffect(() => {
-    tree.tree?.root.setActive(true);
-  });
-
-  onCleanup(() => {
-    tree.tree?.root.setActive(false);
-  });
-
   return (
     <div class="grow min-h-0 flex flex-col">
       <div class="mb-stack-s flex justify-between items-center">
         <AddButton buttonClassName="button button-primary button-md" menuPlacement="bottom-start" />
         <div class="flex">
-          <button disabled={!tree.canCollapse} onClick={tree.collapseAll} class="button button-square-md">
+          <button disabled={!explorer.canCollapse} onClick={explorer.collapseAll} class="button button-square-md">
             <ShrinkIcon />
           </button>
           <SettingButton />
@@ -54,7 +47,7 @@ export default function TreeView() {
       <BaseTreeView
         className="min-h-0 grow overflow-auto scrollbar-stable text-sm text-text-secondary"
         onItemTitleClick={handleItemClick}
-        treeView={tree}
+        treeView={explorer}
         shouldRenderIcon={shouldRenderIcon}
         onContextMenuClick={handleContextMenuClick}
         contextMenu={contextmenu}

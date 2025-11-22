@@ -38,7 +38,7 @@ export type NoteDTO = DuplicatedNoteDTO | NewNoteDTO; // 这两个类型的顺�
  */
 export interface ClientNoteQuery {
   id?: Note['id'][];
-  parentId?: EntityParentId | string[];
+  parentId?: EntityParentId | EntityParentId[];
   fileHash?: string;
 }
 

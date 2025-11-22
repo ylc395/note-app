@@ -7,7 +7,7 @@ import container from '#utils/singletonContainer';
 import { TreeNodeStates } from '#domain/client/app/model/note/TreeExplorer';
 
 export default function DropArea() {
-  const { updateNote: move, exploreTreeView: treeView } = container.resolve(NoteService);
+  const { updateNote: move, explorer: treeView } = container.resolve(NoteService);
   const [isDragging, setIsDragging] = createSignal(false);
   const [dropAreaRef, setDropArea] = createSignal<HTMLDivElement>();
 

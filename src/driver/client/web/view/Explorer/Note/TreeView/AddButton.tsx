@@ -13,7 +13,7 @@ export default function ButtonGroup(props: {
   node?: TreeNode;
   menuPlacement: Placement;
 }) {
-  const { newMaterialForm, exploreTreeView: treeView, createNote } = container.resolve(NoteService);
+  const { newMaterialForm, explorer: treeView, createNote } = container.resolve(NoteService);
   const node = createMemo(() => props.node ?? treeView.tree?.root);
 
   async function onSelect({ value }: MenuSelectionDetails) {

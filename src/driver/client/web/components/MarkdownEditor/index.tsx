@@ -4,7 +4,7 @@ import Editor from './Editor';
 
 export default function MarkdownEditor(props: {
   readonly?: boolean;
-  containerClass?: string;
+  className?: string;
   ref?: (value: Editor) => void;
   /** 以下 prop 不具有响应性 */
   defaultValue?: string;
@@ -56,5 +56,5 @@ export default function MarkdownEditor(props: {
     getEditor()?.destroy();
   });
 
-  return <div class={props.containerClass} spellcheck={false} ref={rootRef}></div>;
+  return <div class={props.className} spellcheck={false} ref={rootRef}></div>;
 }

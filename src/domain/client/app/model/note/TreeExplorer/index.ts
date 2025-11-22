@@ -1,12 +1,13 @@
-import { action, autorun, computed, observable, runInAction, when } from 'mobx';
+import { action, computed, observable, reaction, runInAction, when } from 'mobx';
 import assert from 'assert';
+import { once } from 'lodash-es';
 
 import Tree from '#domain/client/shared/model/note/Tree';
+import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import type TreeNode from '#domain/client/shared/model/note/TreeNode';
 import container from '#utils/singletonContainer';
 import type { NoteVO } from '#domain/shared/model/note';
 import DomainEventBus from '#domain/client/app/model/note/EventBus';
-
 import { arrayOf, type MaybeArray } from '#utils/collection';
 
 import StarEventBus from '../../star/EventBus';
@@ -27,28 +28,29 @@ export default class TreeExplorer {
     this.starEventBus.on(StarEventBus.eventNames.Changed, ({ entityId, isStar }) =>
       this.tree?.updateNode(entityId, { isStar }),
     );
-
-    when(() => this.uiState.isReady && this.settings.isReady, this.init.bind(this));
   }
 
-  private init() {
-    this.tree = new Tree({
-      expanded: this.uiState.expanded,
-      sort: this.sort.bind(this),
-      onStateChanged: this.handleNodeStateChanged,
+  public readonly init = once(async () => {
+    await when(() => this.uiState.isReady && this.settings.isReady);
+    const expanded = this.uiState.expanded;
+    const notes = await this.remote.note.query.query({ parentId: [null, ...expanded] });
+
+    runInAction(() => {
+      this.tree = new Tree({
+        expanded,
+        initialValues: notes,
+        sort: this.sort.bind(this),
+        onStateChanged: this.handleNodeStateChanged,
+      });
     });
 
-    autorun(() => {
-      if (this.tree) {
-        // action 里无法追踪对响应式数据的读取，因此读操作必须写在 action 外
-        const expanded = Array.from(this.tree.expandedNodeIds);
+    reaction(
+      () => Array.from(this.tree!.expandedNodeIds),
+      (expanded) => (this.uiState.expanded = expanded),
+    );
+  });
 
-        runInAction(() => {
-          this.uiState.expanded = expanded;
-        });
-      }
-    });
-  }
+  private readonly remote = container.resolve(rpcToken);
 
   @observable.ref public accessor tree: Tree | undefined;
 

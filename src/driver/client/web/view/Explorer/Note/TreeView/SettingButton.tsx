@@ -10,7 +10,7 @@ import { IconDisplayMode, SortBy } from '#domain/client/app/model/note/TreeExplo
 
 export default function SettingButton() {
   const {
-    exploreTreeView: { settings },
+    explorer: { settings },
   } = container.resolve(NoteService);
 
   function CheckableItem<K extends keyof typeof settings>(props: {

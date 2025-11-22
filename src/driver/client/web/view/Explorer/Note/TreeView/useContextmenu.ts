@@ -13,7 +13,7 @@ import { IconDisplayMode } from '#domain/client/app/model/note/TreeExplorer/Sett
 import IconPicker from './IconPicker';
 
 export default function useContextmenu() {
-  const { exploreTreeView: tree, createNote, iconPicker } = container.resolve(NoteService);
+  const { explorer: tree, createNote, iconPicker } = container.resolve(NoteService);
   const { star, unstar } = container.resolve(StarService);
   const { put } = container.resolve(RecyclableService);
 

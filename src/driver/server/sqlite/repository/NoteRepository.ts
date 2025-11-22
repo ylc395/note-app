@@ -1,4 +1,4 @@
-import { keyBy, mapValues } from 'lodash-es';
+import { keyBy, mapValues, compact } from 'lodash-es';
 import { sql } from 'kysely';
 
 import type { NoteRepository } from '#domain/server/repository/noteRepository.js';
@@ -59,7 +59,13 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
     }
 
     if (Array.isArray(q.parentId)) {
-      sql = sql.where('parentId', 'in', q.parentId);
+      const parentIds = q.parentId;
+
+      sql = sql.where((eb) => {
+        return eb.or(
+          compact([eb('parentId', 'in', parentIds), parentIds.includes(null) && eb('parentId', 'is', null)]),
+        );
+      });
     } else if (typeof q.parentId !== 'undefined') {
       sql = sql.where('parentId', q.parentId === null ? 'is' : '=', q.parentId);
     }

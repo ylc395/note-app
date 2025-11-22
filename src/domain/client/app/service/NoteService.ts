@@ -29,10 +29,10 @@ export default class NoteService {
 
   public readonly newMaterialForm = new NewMaterialManager();
 
-  public readonly exploreTreeView = new TreeExplorer();
+  public readonly explorer = new TreeExplorer();
 
   public readonly iconPicker = new IconManager({
-    noteIds: () => Array.from(this.exploreTreeView.treeNodeSets.selected),
+    noteIds: () => Array.from(this.explorer.treeNodeSets.selected),
   });
 
   public readonly createNote = async (note: NewNoteDTO | DuplicatedNoteDTO) => {

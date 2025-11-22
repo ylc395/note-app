@@ -36,7 +36,7 @@ export const newNoteDTOSchema = noteSchema.pick({
 export const noteDTOSchema = z.union([duplicatedNoteDTOSchema, newNoteDTOSchema]);
 export const clientNoteQuerySchema = z.object({
   id: z.array(noteSchema.shape["id"]).optional(),
-  parentId: z.union([entityParentIdSchema, z.array(z.string())]).optional(),
+  parentId: z.union([entityParentIdSchema, z.array(entityParentIdSchema)]).optional(),
   fileHash: z.string().optional()
 });
 export const fileTextQuerySchema = z.object({

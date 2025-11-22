@@ -122,7 +122,6 @@ export default class NoteService extends BaseService {
     }
   }
 
-  @BaseService.transaction
   public async query(q: ClientNoteQuery) {
     const notes = await this.repo.notes.findAll({
       ...q,
@@ -132,7 +131,6 @@ export default class NoteService extends BaseService {
     return await this.toVO(notes);
   }
 
-  @BaseService.transaction
   public async queryOneById(id: Note['id']) {
     const note = await this.repo.notes.findOneById(id, { isAvailableOnly: true });
 
@@ -140,7 +138,6 @@ export default class NoteService extends BaseService {
     return await this.toVO(note);
   }
 
-  @BaseService.transaction
   public async queryBlob(noteId: Note['id']) {
     const blob = await this.repo.notes.findBlobById(noteId, { isAvailableOnly: true });
     assert(blob);

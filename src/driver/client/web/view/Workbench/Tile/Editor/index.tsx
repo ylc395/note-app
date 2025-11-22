@@ -34,7 +34,7 @@ export default function Editor(props: { editor: BaseEditor }) {
             <PdfEditorView />
           </Match>
           <Match when={props.editor instanceof MarkdownEditor}>
-            <MarkdownEditorView />;
+            <MarkdownEditorView />
           </Match>
         </Switch>
       </div>

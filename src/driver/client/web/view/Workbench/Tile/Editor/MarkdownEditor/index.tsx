@@ -28,7 +28,7 @@ export default function MarkdownEditor() {
       {(note) => (
         <BaseMarkdownEditor
           ref={setCrepe}
-          containerClass="grow min-h-0 overflow-auto border-16 border-surface-primary"
+          className="grow min-h-0 overflow-auto border-16 border-surface-primary"
           defaultValue={note().body}
           onUpdate={(text) => ctx.editor.update({ body: text })}
         />

@@ -1,9 +1,10 @@
 export * from '#domain/shared/model/note';
 
 import type { Note, ClientNoteQuery, NotePatchDTO } from '#domain/shared/model/note';
+import type { MaybeArray } from '#utils/collection';
 
 export interface NoteQuery {
-  parentId?: Note['id'][] | Note['parentId'];
+  parentId?: MaybeArray<Note['parentId']>;
   id?: Note['id'][];
   fileHash?: ClientNoteQuery['fileHash'];
   isAvailableOnly?: boolean;
