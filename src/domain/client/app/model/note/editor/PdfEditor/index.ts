@@ -102,20 +102,20 @@ export default class PdfEditor extends BaseEditor {
   private async initUIState() {
     const uiState = await this.db.getByKey(storeName, this.noteId, uiStateSchema);
 
-    if (uiState) {
-      this.annotation.initUIState(uiState.panels?.[Panel.Annotation]);
-      this.body.initUIState(uiState.panels?.[Panel.Body]);
-      this.outline.initUIState(uiState.outline);
-      this.textFinder.initOptions(uiState.textFinder);
-      this.svgEditor.initOptions(uiState.svgEditor);
-      this.progress = uiState.progress;
-
-      if (uiState.annotationColor) {
-        this.annotationColor = uiState.annotationColor;
-      }
-    }
-
     runInAction(() => {
+      if (uiState) {
+        this.annotation.initUIState(uiState.panels?.[Panel.Annotation]);
+        this.body.initUIState(uiState.panels?.[Panel.Body]);
+        this.outline.initUIState(uiState.outline);
+        this.textFinder.initOptions(uiState.textFinder);
+        this.svgEditor.initOptions(uiState.svgEditor);
+        this.progress = uiState.progress;
+
+        if (uiState.annotationColor) {
+          this.annotationColor = uiState.annotationColor;
+        }
+      }
+
       this.isUIStateReady = true;
     });
 

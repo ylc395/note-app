@@ -22,7 +22,7 @@ export default class TreeNode {
     onStateChanged?: (node: TreeNode, state: number) => void;
   }) {
     this.setValue(value);
-    this.isActive = parent?.isActive ?? false;
+    this.setActive(parent?.isActive ?? false);
     this.parent = parent;
     this.options = options;
 
@@ -56,7 +56,7 @@ export default class TreeNode {
 
   private readonly remote = container.resolve(rpcToken);
 
-  @observable private accessor isActive;
+  @observable private accessor isActive!: boolean; // 通常负责由视图层激活
 
   public parent?: TreeNode;
 
