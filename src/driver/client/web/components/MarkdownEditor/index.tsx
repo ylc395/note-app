@@ -9,7 +9,6 @@ export default function MarkdownEditor(props: {
   /** 以下 prop 不具有响应性 */
   defaultValue?: string;
   editorRootClass?: string;
-  focusWhenEditable?: boolean;
   onUpdate?: (md: string) => void; // 仅当焦点在该 editor 时触发
 }) {
   let rootRef: HTMLDivElement | undefined;
@@ -44,10 +43,6 @@ export default function MarkdownEditor(props: {
         }
 
         editor.setReadonly(isReadonly);
-
-        if (!isReadonly && props.focusWhenEditable) {
-          editor.focus();
-        }
       },
     ),
   );

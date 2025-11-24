@@ -1,9 +1,5 @@
-@import '@milkdown/kit/prose/view/style/prosemirror.css';
+@plugin "@tailwindcss/typography";
 
-.markdown-body ul {
-  list-style: disc;
-}
-
-.markdown-body ol {
-  list-style: decimal;
+.milkdown .editor {
+  @apply prose max-w-none
 }

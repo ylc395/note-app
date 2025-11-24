@@ -8,7 +8,6 @@ export default function Editor(props: { memoView: MemoView }) {
         onUpdate={(value) => props.memoView.selfEditor!.update(value)}
         defaultValue={props.memoView.value!.body}
         editorRootClass="!p-0 max-h-60 overflow-auto w-full"
-        focusWhenEditable
       />
       <div class="flex justify-end space-x-2 mt-2">
         <button class="text-sm text-gray-400" onclick={() => props.memoView.selfEditor!.destroy()}>
