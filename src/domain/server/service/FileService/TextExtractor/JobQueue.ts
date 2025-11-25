@@ -60,5 +60,15 @@ export default class JobQueue {
     return null;
   }
 
-  public static SUPPORT_MIME_TYPES: string[] = [MimeTypes.PDF, MimeTypes.HTML];
+  public static SUPPORT_MIME_TYPES: string[] = [
+    MimeTypes.PDF,
+    MimeTypes.HTML,
+    // 支持 OCR 的图片格式： https://github.com/naptha/tesseract.js/blob/master/docs/image-format.md
+    'image/png',
+    'image/bmp',
+    'image/jpeg',
+    'image/portable-bitmap',
+    'image/x-portable-bitmap',
+    'image/webp',
+  ];
 }

@@ -145,15 +145,26 @@ export default class ImageTextExtractor implements TextExtractor {
     this.scheduler ??= await this.createScheduler();
 
     const scheduler = this.scheduler;
-    const result = await scheduler.queue.addJob(
-      'recognize',
-      Buffer.from(data),
-      {},
-      { text: true, blocks: true, layoutBlocks: true },
-    );
+    let result;
+
+    try {
+      result = await scheduler.queue.addJob(
+        'recognize',
+        Buffer.from(data),
+        {},
+        { text: true, blocks: true, layoutBlocks: true },
+      );
+    } catch (error) {
+      // 常见的异常如读取图片失败
+      result = {
+        data: { confidence: 0, text: '' },
+      };
+    }
 
     const transformedResult: ExtractResult = {
-      text: ImageTextExtractor.postProcessText(result.data.text),
+      // 总体置信度不足 60 的，不要入库了
+      // 理论上我们应当排除页面各部分中极端低值的干扰。但是总体置信度的算法，在 js 侧不透明，因此我们没法优化总体置信度。故暂时先一刀切
+      text: result.data.confidence > 60 ? ImageTextExtractor.postProcessText(result.data.text) : '',
       lang: this.actualLangs,
       location: {
         confidence: result.data.confidence,

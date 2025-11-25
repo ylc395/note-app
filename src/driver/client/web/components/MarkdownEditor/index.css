@@ -1,5 +1,21 @@
 @plugin "@tailwindcss/typography";
 
-.milkdown .editor {
-  @apply prose max-w-none
+@import "@milkdown/kit/prose/view/style/prosemirror.css";
+@import '@milkdown/kit/prose/gapcursor/style/gapcursor.css';
+
+.milkdown .editor  { 
+  @apply prose;
+  max-width: none;
+
+  /** 这些元素在 tailwind preflight 里被设置为 block 了（https://tailwindcss.com/docs/preflight#images-are-block-level)
+   ** 这会干扰编辑器的功能。因此必须设置回来
+   */ 
+  svg,video,canvas,audio,img {
+    display: inline;
+    max-width: none;
+  }
+}
+
+.milkdown-drop-indicator {
+  background-color: gray  ;
 }

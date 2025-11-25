@@ -11,7 +11,12 @@ import { gfm } from '@milkdown/kit/preset/gfm';
 import { history } from '@milkdown/kit/plugin/history';
 import { listener, listenerCtx, type ListenerManager } from '@milkdown/kit/plugin/listener';
 import { replaceAll } from '@milkdown/kit/utils';
+import { upload, uploadConfig } from '@milkdown/kit/plugin/upload';
+import { cursor } from '@milkdown/kit/plugin/cursor';
+
 import { deleteEmptyNode } from './deleteEmptyNode';
+import { multimedia } from './node/multimedia';
+import { uploader } from './uploader';
 import './index.css';
 
 /** 一些关于 milkdown 的知识
@@ -37,22 +42,24 @@ import './index.css';
 export default class Editor {
   private readonly core: MilkdownEditor;
 
-  constructor(props: { editable?: boolean; root: HTMLElement; defaultValue?: string; editorRootClassName?: string }) {
+  constructor(props: { editable?: boolean; root: HTMLElement; defaultValue?: string }) {
     this.core = MilkdownEditor.make()
       .config((ctx) => {
         ctx.set(rootCtx, props.root);
         ctx.set(defaultValueCtx, props.defaultValue || '');
         ctx.set(editorViewOptionsCtx, {
           editable: () => props.editable ?? true,
-          attributes: {
-            class: props.editorRootClassName || '',
-          },
         });
+
+        ctx.update(uploadConfig.key, (config) => ({ ...config, uploader }));
       })
       .use(commonmark)
       .use(gfm)
       .use(history)
       .use(deleteEmptyNode)
+      .use(upload)
+      .use(cursor) // 这个必须放在 upload 之后，否则 upload 插件无法处理 drop 事件了
+      .use(multimedia)
       .use(listener);
   }
 

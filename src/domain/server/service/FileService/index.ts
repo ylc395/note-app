@@ -67,6 +67,13 @@ export default class FileService extends BaseService {
     return data;
   }
 
+  public async queryFileById(id: FileVO['id']) {
+    const data = await this.repo.files.findOneById(id);
+    assert(data);
+
+    return data;
+  }
+
   private async resumeTextExtractor() {
     const unfinishedFiles = await this.repo.files.findUnfinishedFile(JobQueue.SUPPORT_MIME_TYPES);
 
@@ -96,8 +103,7 @@ export default class FileService extends BaseService {
   }
 
   public async assertId(id: string, mimeType?: string | ((mimeType: string) => boolean)) {
-    const file = await this.repo.files.findOneById(id);
-    assert(file, 'invalid id');
+    const file = await this.queryFileById(id);
 
     if (mimeType) {
       if (typeof mimeType === 'string') {

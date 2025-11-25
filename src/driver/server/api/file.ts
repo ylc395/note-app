@@ -10,4 +10,8 @@ export default router({
   queryOneByHash: publicProcedure
     .input(string())
     .query(({ ctx: { fileService }, input: hash }) => fileService.queryFileByHash(hash)),
+
+  queryOneById: publicProcedure
+    .input(string())
+    .query(({ ctx: { fileService }, input: id }) => fileService.queryFileById(id)),
 });

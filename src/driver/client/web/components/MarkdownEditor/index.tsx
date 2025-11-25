@@ -8,7 +8,6 @@ export default function MarkdownEditor(props: {
   ref?: (value: Editor) => void;
   /** 以下 prop 不具有响应性 */
   defaultValue?: string;
-  editorRootClass?: string;
   onUpdate?: (md: string) => void; // 仅当焦点在该 editor 时触发
 }) {
   let rootRef: HTMLDivElement | undefined;
@@ -20,7 +19,6 @@ export default function MarkdownEditor(props: {
       defaultValue,
       root: rootRef!,
       editable: !props.readonly,
-      editorRootClassName: props.editorRootClass,
     });
 
     if (onUpdate) {
