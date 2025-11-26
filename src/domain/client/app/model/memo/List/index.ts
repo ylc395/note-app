@@ -22,7 +22,8 @@ export default class MemoList {
       ({ signal, pageParam, queryKey: [_, params] }): Promise<MemoVO[]> =>
         this.remote.memo.queryList.query({ ...pageParam, ...params }, { signal }),
       {
-        getNextPageParam: (lastPage, _, lastPageParam) => this.getNextPageParams({ lastPage, lastPageParam }),
+        getNextPageParam: (lastPage, _, lastPageParam) =>
+          this.getNextPageParams({ lastPage, lastPageParam: lastPageParam! }),
         select: (data) => ({
           ...data,
           pages: this.handleFetchedData(data.pages),

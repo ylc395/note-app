@@ -68,8 +68,8 @@ importers:
         specifier: ^0.5.19
         version: 0.5.19(tailwindcss@4.1.11)
       '@tanstack/query-core':
-        specifier: ^5.66.0
-        version: 5.66.0
+        specifier: ^5.90.11
+        version: 5.90.11
       '@trpc/client':
         specifier: ^10.45.2
         version: 10.45.2(@trpc/server@10.45.2)
@@ -179,8 +179,8 @@ importers:
         specifier: ^4.0.7
         version: 4.0.7(mobx@6.13.7)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       mobx-tanstack-query:
-        specifier: ^4.2.1
-        version: 4.2.1(disposer-util@1.0.12)(mobx@6.13.7)
+        specifier: 6.0.11
+        version: 6.0.11(@tanstack/query-core@5.90.11)(mobx@6.13.7)
       mobx-utils:
         specifier: ^6.1.1
         version: 6.1.1(mobx@6.13.7)
@@ -1359,8 +1359,8 @@ packages:
     peerDependencies:
       vite: ^5.2.0 || ^6 || ^7
 
-  '@tanstack/query-core@5.66.0':
-    resolution: {integrity: sha512-J+JeBtthiKxrpzUu7rfIPDzhscXF2p5zE/hVdrqkACBP8Yu0M96mwJ5m/8cPPYQE9aRNvXztXHlNwIh4FEeMZw==}
+  '@tanstack/query-core@5.90.11':
+    resolution: {integrity: sha512-f9z/nXhCgWDF4lHqgIE30jxLe4sYv15QodfdPDKYAk7nAEjNcndy4dHz3ezhdUaR23BpWa4I2EH4/DZ0//Uf8A==}
 
   '@trpc/client@10.45.2':
     resolution: {integrity: sha512-ykALM5kYWTLn1zYuUOZ2cPWlVfrXhc18HzBDyRhoPYN0jey4iQHEFSEowfnhg1RvYnrAVjNBgHNeSAXjrDbGwg==}
@@ -2375,9 +2375,6 @@ packages:
     resolution: {integrity: sha512-WkrWp9GR4KXfKGYzOLmTuGVi1UWFfws377n9cc55/tb6DuqyF6pcQ5AbiHEshaDpY9v6oaSr2XCDidGmMwdzIA==}
     engines: {node: '>=8'}
 
-  disposer-util@1.0.12:
-    resolution: {integrity: sha512-xEjd2pBpbyUjB5gmR688KGak2+S6u7thKHMSwPnuWBIAtY0r4vWZntKywJk4mMxUmp7GXHtAr7262VQ65Tfiqg==}
-
   doctrine@2.1.0:
     resolution: {integrity: sha512-35mSku4ZXK0vfCuHEDAwt55dg2jNajHZ1odvF+8SSr82EsZY4QmXfuWso8oEd8zRhVObSN18aM0CjSdoBX7zIw==}
     engines: {node: '>=0.10.0'}
@@ -3374,8 +3371,8 @@ packages:
     resolution: {integrity: sha512-xi6IyHML+c9+Q3W0S4fCQJOym42pyurFiJUHEcEyHS0CeKzia4yZDEsLlqOFykxOdHpNy0NmvVO31vcSqAxJCg==}
     engines: {node: '>= 12.0.0'}
 
-  linked-abort-controller@1.0.4:
-    resolution: {integrity: sha512-yzZFM8ZlqhCH7z9fqfOva2trCVP7RDftCAj6YCJuzucMHhcuFBtcThsQNgGEDZbtH0tnPaMuTgMxKa8Pc3zepw==}
+  linked-abort-controller@1.1.1:
+    resolution: {integrity: sha512-jx6n22UPonBx9KsGcsDv580+EDI0LQ22iLQCx/WOuqQ44Wx7sQ12AgrbV74LYYzkYce2v7FlVPVLDl//zxfDBA==}
 
   locate-path@6.0.0:
     resolution: {integrity: sha512-iPZK6eYjbxRu3uB4/WZ3EsEIMJFMqAoopl3R+zuq0UjcAm/MO6KCweDgPfP3elTztoKP3KtnVHxTn2NHBSDVUw==}
@@ -3758,10 +3755,10 @@ packages:
       react-native:
         optional: true
 
-  mobx-tanstack-query@4.2.1:
-    resolution: {integrity: sha512-An089k9sW2jR5UEbjLPuFxF60rslGChUrCjqbGUfb1aB5uadc7osHsYabclBHmli7qOyLwK7oegLJt/XQH/ruA==}
+  mobx-tanstack-query@6.0.11:
+    resolution: {integrity: sha512-4W7T1OX18QcOmuRsNSmAf+J6rirMWgXc1yCInvLunWK3K04mT/hlNF4nGQdPsfKm/CxotVJmMY7xeyJ2AjjT8w==}
     peerDependencies:
-      disposer-util: ^1.0.9
+      '@tanstack/query-core': ^5.81.5
       mobx: ^6.12.4
 
   mobx-utils@6.1.1:
@@ -6401,7 +6398,7 @@ snapshots:
       tailwindcss: 4.1.11
       vite: 7.1.11(@types/node@22.17.0)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1)(yaml@2.7.0)
 
-  '@tanstack/query-core@5.66.0': {}
+  '@tanstack/query-core@5.90.11': {}
 
   '@trpc/client@10.45.2(@trpc/server@10.45.2)':
     dependencies:
@@ -7858,8 +7855,6 @@ snapshots:
     dependencies:
       path-type: 4.0.0
 
-  disposer-util@1.0.12: {}
-
   doctrine@2.1.0:
     dependencies:
       esutils: 2.0.3
@@ -8987,7 +8982,7 @@ snapshots:
       lightningcss-win32-arm64-msvc: 1.30.1
       lightningcss-win32-x64-msvc: 1.30.1
 
-  linked-abort-controller@1.0.4: {}
+  linked-abort-controller@1.1.1: {}
 
   locate-path@6.0.0:
     dependencies:
@@ -9575,11 +9570,10 @@ snapshots:
     optionalDependencies:
       react-dom: 18.2.0(react@18.2.0)
 
-  mobx-tanstack-query@4.2.1(disposer-util@1.0.12)(mobx@6.13.7):
+  mobx-tanstack-query@6.0.11(@tanstack/query-core@5.90.11)(mobx@6.13.7):
     dependencies:
-      '@tanstack/query-core': 5.66.0
-      disposer-util: 1.0.12
-      linked-abort-controller: 1.0.4
+      '@tanstack/query-core': 5.90.11
+      linked-abort-controller: 1.1.1
       mobx: 6.13.7
 
   mobx-utils@6.1.1(mobx@6.13.7):

@@ -83,6 +83,7 @@ export default class Tile {
     return newEditor;
   }
 
+  @action
   public addEditor(editor: Editor, dest?: Editor) {
     // 刚刚创建出来的 editor，其 tile 还没将其纳入其中。因此这个 if 判断是有意义的
     if (editor.tile.editors.includes(editor)) {

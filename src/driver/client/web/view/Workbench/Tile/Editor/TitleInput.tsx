@@ -22,6 +22,12 @@ export default function TitleInput() {
     }
   });
 
+  createEffect(() => {
+    if (ctx.editor.value.result.data && title() !== ctx.editor.value.result.data.title) {
+      ctx.editor.update({ title: title() });
+    }
+  });
+
   return (
     <input
       spellcheck={false}
@@ -30,10 +36,7 @@ export default function TitleInput() {
       disabled={!ctx.editor.value.result.data}
       placeholder={placeholder()}
       value={title()} // solidjs 中,input 的 value 不受控。但在这里不影响程序的正确性 https://github.com/solidjs/solid/discussions/416
-      onInput={(e) => {
-        setTitle(e.target.value);
-        ctx.editor.update({ title: e.target.value });
-      }}
+      onInput={(e) => setTitle(e.target.value)}
     />
   );
 }

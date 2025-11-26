@@ -1,5 +1,5 @@
 import { uniqueId, debounce, pick } from 'lodash-es';
-import { action, computed } from 'mobx';
+import { action, computed, observable, runInAction } from 'mobx';
 import assert from 'assert';
 import { createQuery } from 'mobx-tanstack-query/preset';
 import { BehaviorSubject } from 'rxjs';
@@ -24,10 +24,13 @@ type Patch = Pick<NotePatchDTO, 'body' | 'icon' | 'title'>;
 
 export default abstract class BaseEditor {
   constructor(tile: Tile, { entityId, title, initialCommand }: Options) {
-    this.tile = tile;
     this.noteId = entityId;
     this.initialTitle = title;
     this.command$ = new BehaviorSubject(initialCommand);
+
+    runInAction(() => {
+      this.tile = tile;
+    });
 
     this.value = createQuery(({ signal }) => this.remote.note.queryOneById.query(this.noteId, { signal }), {
       queryKey: ['note', this.noteId],
@@ -81,7 +84,7 @@ export default abstract class BaseEditor {
 
   public readonly path;
 
-  public tile: Tile;
+  @observable.ref public accessor tile!: Tile;
 
   public hasEdited = false;
 
