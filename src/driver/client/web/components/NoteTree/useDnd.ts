@@ -1,4 +1,4 @@
-import { createEffect, createSignal, onCleanup, untrack } from 'solid-js';
+import { createComponent, createEffect, createSignal, onCleanup, untrack } from 'solid-js';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
@@ -32,7 +32,10 @@ export default function useDnd(props: { treeView: TreeViewModel; node: TreeNode 
             setCustomNativeDragPreview({
               nativeSetDragImage,
               render: ({ container }) => {
-                return render(() => <DragPreview treeView={props.treeView} node={props.node} />, container);
+                return render(
+                  () => createComponent(DragPreview, { treeView: props.treeView, node: props.node }),
+                  container,
+                );
               },
             });
           },

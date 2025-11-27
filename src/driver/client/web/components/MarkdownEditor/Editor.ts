@@ -15,7 +15,7 @@ import { upload, uploadConfig } from '@milkdown/kit/plugin/upload';
 import { cursor } from '@milkdown/kit/plugin/cursor';
 
 import { deleteEmptyNode } from './deleteEmptyNode';
-import { multimedia } from './node/multimedia';
+import multimedia from './multimedia';
 import { uploader } from './uploader';
 import './index.css';
 
@@ -78,10 +78,6 @@ export default class Editor {
 
   public focus() {
     this.core.action((ctx) => ctx.get(editorViewCtx).focus());
-  }
-
-  public hasFocus() {
-    return this.core.ctx.get(editorViewCtx).hasFocus();
   }
 
   public on(fn: (api: ListenerManager) => void) {

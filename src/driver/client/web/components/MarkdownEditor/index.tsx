@@ -22,7 +22,7 @@ export default function MarkdownEditor(props: {
     });
 
     if (onUpdate) {
-      editor.on((listener) => listener.markdownUpdated((_, markdown) => editor.hasFocus() && onUpdate(markdown)));
+      editor.on((listener) => listener.markdownUpdated((_, markdown) => onUpdate(markdown)));
     }
 
     editor.init();

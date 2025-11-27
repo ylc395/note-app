@@ -1,0 +1,120 @@
+import { Show, createMemo, Switch, Match, type Accessor } from 'solid-js';
+import clsx from 'clsx';
+import { FileIcon } from 'lucide-solid';
+import z from 'zod';
+import type { EditorView } from '@milkdown/kit/prose/view';
+
+import { parseAppUrl } from '#domain/shared/infra/url';
+import useFile from './useFile';
+import useResizable from './useResizable';
+
+interface Props {
+  figure?: boolean;
+  attrs: Accessor<Record<string, unknown>>;
+  editorView: EditorView;
+  getNodePos: () => number | undefined;
+}
+
+const stripQuery = (url: string) => {
+  if (!URL.canParse(url)) {
+    return '';
+  }
+
+  const urlObj = new URL(url);
+  urlObj.search = '';
+
+  return urlObj.toString();
+};
+
+export default function MultimediaView(props: Props) {
+  const attrs = createMemo(() =>
+    z
+      .object({
+        src: z.string().catch(''),
+        title: z.string().optional().catch(undefined),
+        alt: z.string().optional().catch(undefined),
+      })
+      .parse(props.attrs()),
+  );
+
+  const parsedUrl = createMemo(() => parseAppUrl(attrs().src));
+  const fileId = createMemo(() => parsedUrl()?.id);
+  const mediaClassName = 'not-prose w-full h-full';
+
+  const initialSize = createMemo(() => ({
+    width: Number(parsedUrl()?.query.get('width')) || undefined,
+    height: Number(parsedUrl()?.query.get('height')) ?? undefined,
+  }));
+
+  const { handleMouseDown, setMediaRef, containerStyle, naturalSize } = useResizable({
+    initialSize,
+    onResized: ({ width, height }) => {
+      const nodePos = props.getNodePos();
+
+      if (typeof nodePos === 'number') {
+        const url = new URL(attrs().src);
+        url.searchParams.set('width', String(width));
+        url.searchParams.set('height', String(height));
+        props.editorView.dispatch(props.editorView.state.tr.setNodeAttribute(nodePos, 'src', url.toString()));
+      }
+    },
+  });
+
+  const fileQuery = useFile(fileId);
+
+  return (
+    <>
+      <div class={clsx('relative text-center', props.figure ? 'mx-auto' : 'inline-block')} style={containerStyle()}>
+        <Switch>
+          <Match when={fileQuery.isError}>
+            <FileIcon />
+            {fileId()?.slice(0, 6)}不存在
+          </Match>
+          <Match when={!fileQuery.data}>
+            <FileIcon />
+            {fileId()?.slice(0, 6)}加载中
+          </Match>
+          <Match when={fileQuery.data?.mimeType.startsWith('image')}>
+            <img
+              class={mediaClassName}
+              ref={setMediaRef}
+              src={stripQuery(attrs().src)}
+              alt={attrs().alt}
+              title={attrs().title}
+            />
+          </Match>
+          <Match when={fileQuery.data?.mimeType.startsWith('video')}>
+            <video
+              class={mediaClassName}
+              ref={setMediaRef}
+              src={stripQuery(attrs().src)}
+              controls
+              title={attrs().title}
+            />
+          </Match>
+        </Switch>
+        <Show when={naturalSize()}>
+          <div
+            class="absolute w-3 h-3 -top-1.5 -left-1.5 bg-white border-2 border-blue-500 rounded-full cursor-nw-resize hover:bg-blue-500 transition-colors z-10"
+            onMouseDown={(e) => handleMouseDown(e, 'nw')}
+          />
+          <div
+            class="absolute w-3 h-3 -top-1.5 -right-1.5 bg-white border-2 border-blue-500 rounded-full cursor-ne-resize hover:bg-blue-500 transition-colors z-10"
+            onMouseDown={(e) => handleMouseDown(e, 'ne')}
+          />
+          <div
+            class="absolute w-3 h-3 -bottom-1.5 -left-1.5 bg-white border-2 border-blue-500 rounded-full cursor-sw-resize hover:bg-blue-500 transition-colors z-10"
+            onMouseDown={(e) => handleMouseDown(e, 'sw')}
+          />
+          <div
+            class="absolute w-3 h-3 -bottom-1.5 -right-1.5 bg-white border-2 border-blue-500 rounded-full cursor-se-resize hover:bg-blue-500 transition-colors z-10"
+            onMouseDown={(e) => handleMouseDown(e, 'se')}
+          />
+        </Show>
+      </div>
+      <Show when={props.figure && attrs().title}>
+        <caption>{attrs().title}</caption>
+      </Show>
+    </>
+  );
+}

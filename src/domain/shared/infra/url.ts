@@ -35,7 +35,7 @@ export function parseAppUrl(url: string) {
     return null;
   }
 
-  const { hostname, pathname, protocol, hash } = new URL(url);
+  const { hostname, pathname, protocol, hash, searchParams } = new URL(url);
 
   if (protocol !== `${PROTOCOL}:` || hostname !== HOST_NAME) {
     return null;
@@ -49,6 +49,7 @@ export function parseAppUrl(url: string) {
         type: type as RouteTypes,
         id: matchResult.params.id,
         hash,
+        query: searchParams,
       };
     }
   }
