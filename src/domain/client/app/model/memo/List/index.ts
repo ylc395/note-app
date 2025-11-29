@@ -24,10 +24,6 @@ export default class MemoList {
       {
         getNextPageParam: (lastPage, _, lastPageParam) =>
           this.getNextPageParams({ lastPage, lastPageParam: lastPageParam! }),
-        select: (data) => ({
-          ...data,
-          pages: this.handleFetchedData(data.pages),
-        }),
         initialPageParam: this.getNextPageParams(),
         options: () => ({
           enabled: false,
@@ -58,17 +54,6 @@ export default class MemoList {
       return 'reset';
     },
   });
-
-  private handleFetchedData(pages: MemoVO[][]) {
-    if (this.filter.isEmpty) {
-      return pages;
-    }
-
-    // 对于过滤模式，pinned 排序需要在前端进行
-    return pages.map((page) => {
-      return page.toSorted((memo1, memo2) => Number(memo2.isPinned) - Number(memo1.isPinned));
-    });
-  }
 
   @observable private accessor isActive = false;
 
@@ -128,7 +113,6 @@ export default class MemoList {
 
     if (lastOne) {
       const params = {
-        isPinned: lastOne.isPinned,
         limit: pageLimit,
       };
 

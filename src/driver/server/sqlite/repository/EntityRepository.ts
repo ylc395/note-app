@@ -4,12 +4,12 @@ import type { EntityRepository, EntityQuery } from '#domain/server/repository/en
 import assert from 'node:assert';
 
 import { arrayOf } from '#utils/collection.js';
-import { tableName } from '../schema/entity.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
+import { tableName as noteTableName } from '../schema/note.js';
 import BaseRepository from './BaseRepository.js';
 
 export default class SqliteEntityRepository extends BaseRepository implements EntityRepository {
-  protected readonly tableName = tableName;
+  protected readonly tableName = noteTableName;
 
   public async findChildrenIds(ids: EntityId[], options?: { isAvailableOnly?: boolean }) {
     let qb = this.db.selectFrom(this.tableName).selectAll(this.tableName);
@@ -157,24 +157,24 @@ export default class SqliteEntityRepository extends BaseRepository implements En
 
     const rows = await sql
       .select((eb) => [
-        `${tableName}.id`,
+        `${this.tableName}.id`,
         eb
           .case()
-          .when(`${tableName}.type`, '=', EntityTypes.Note)
+          .when(`${this.tableName}.type`, '=', EntityTypes.Note)
           .then(eb.ref('title'))
-          .else(eb.fn<string>('substr', [`${tableName}.title`, eb.val(0), eb.val(30)]))
+          .else(eb.fn<string>('substr', [`${this.tableName}.title`, eb.val(0), eb.val(30)]))
           .end()
           .as('title'),
-        `${tableName}.type`,
-        `${tableName}.icon`,
-        `${tableName}.parentId`,
-        `${tableName}.createdAt`,
-        `${tableName}.updatedAt`,
+        `${this.tableName}.type`,
+        `${this.tableName}.icon`,
+        `${this.tableName}.parentId`,
+        `${this.tableName}.createdAt`,
+        `${this.tableName}.updatedAt`,
         eb
           .case()
-          .when(eb.fn('LENGTH', [`${tableName}.body`]), '<=', 64)
-          .then(eb.ref(`${tableName}.body`))
-          .else(eb(eb.fn<string>('substr', [`${tableName}.body`, eb.val(0), eb.val(64)]), '||', '...'))
+          .when(eb.fn('LENGTH', [`${this.tableName}.body`]), '<=', 64)
+          .then(eb.ref(`${this.tableName}.body`))
+          .else(eb(eb.fn<string>('substr', [`${this.tableName}.body`, eb.val(0), eb.val(64)]), '||', '...'))
           .end()
           .as('bodyPreview'),
       ])

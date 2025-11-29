@@ -8,7 +8,7 @@ import BaseRepository from './BaseRepository.js';
 import { tableName as linkTableName } from '../schema/link.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
 import { tableName as topicTableName } from '../schema/topic.js';
-import { tableName as entityTableName } from '../schema/entity.js';
+import { tableName as noteTableName } from '../schema/note.js';
 
 export default class SqliteContentRepository extends BaseRepository implements ContentRepository {
   public async createTopics(topics: TopicRecord[]) {
@@ -33,8 +33,8 @@ export default class SqliteContentRepository extends BaseRepository implements C
 
     if (config?.entityType) {
       sql = sql
-        .innerJoin(entityTableName, `${topicTableName}.entityId`, `${entityTableName}.id`)
-        .where(`${entityTableName}.type`, '=', config.entityType);
+        .innerJoin(noteTableName, `${topicTableName}.entityId`, `${noteTableName}.id`)
+        .where(`${noteTableName}.type`, '=', config.entityType);
     }
 
     if (config?.isAvailableOnly) {
@@ -102,8 +102,8 @@ export default class SqliteContentRepository extends BaseRepository implements C
 
     if (startEntityType) {
       sql = sql
-        .innerJoin(entityTableName, `${entityTableName}.id`, `${linkTableName}.sourceId`)
-        .where(`${entityTableName}.type`, '=', startEntityType);
+        .innerJoin(noteTableName, `${noteTableName}.id`, `${linkTableName}.sourceId`)
+        .where(`${noteTableName}.type`, '=', startEntityType);
     }
 
     if (isAvailableOnly) {

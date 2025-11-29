@@ -4,7 +4,7 @@ import BaseRepository from './BaseRepository.js';
 
 import schema, { type Row } from '../schema/revision.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
-import { tableName as entityTableName } from '../schema/entity.js';
+import { tableName as noteTableName } from '../schema/note.js';
 
 export default class SqliteRevisionRepository extends BaseRepository implements RevisionRepository {
   private readonly tableName = schema.tableName;
@@ -69,19 +69,19 @@ export default class SqliteRevisionRepository extends BaseRepository implements 
 
   public async findEntitiesWithoutRevision({ updatedAfter, isAvailableOnly }: EntitiesParams) {
     let sql = this.db
-      .selectFrom(entityTableName)
+      .selectFrom(noteTableName)
       .select([
-        `${entityTableName}.id`,
-        `${entityTableName}.title`,
-        `${entityTableName}.icon`,
-        `${entityTableName}.type`,
-        `${entityTableName}.parentId`,
-        `${entityTableName}.createdAt`,
-        `${entityTableName}.updatedAt`,
+        `${noteTableName}.id`,
+        `${noteTableName}.title`,
+        `${noteTableName}.icon`,
+        `${noteTableName}.type`,
+        `${noteTableName}.parentId`,
+        `${noteTableName}.createdAt`,
+        `${noteTableName}.updatedAt`,
       ])
-      .leftJoin(this.tableName, `${entityTableName}.id`, `${this.tableName}.entityId`)
-      .where(`${entityTableName}.updatedAt`, '>=', updatedAfter)
-      .groupBy(`${entityTableName}.id`)
+      .leftJoin(this.tableName, `${noteTableName}.id`, `${this.tableName}.entityId`)
+      .where(`${noteTableName}.updatedAt`, '>=', updatedAfter)
+      .groupBy(`${noteTableName}.id`)
       .having(
         (eb) => eb.fn.count(eb.case().when(`${this.tableName}.createdAt`, '>', updatedAfter).then(1).end()),
         '=',

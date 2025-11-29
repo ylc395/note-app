@@ -1,16 +1,7 @@
 import { Menu } from '@ark-ui/solid';
 import assert from 'assert';
 import { Show } from 'solid-js';
-import {
-  EllipsisIcon,
-  EditIcon,
-  PinIcon,
-  PinOffIcon,
-  HistoryIcon,
-  StarIcon,
-  StarOffIcon,
-  CopyIcon,
-} from 'lucide-solid';
+import { EllipsisIcon, EditIcon, HistoryIcon, StarIcon, StarOffIcon, CopyIcon } from 'lucide-solid';
 import { action } from 'mobx';
 
 import type MemoView from '#domain/client/app/model/memo/MemoView';
@@ -19,9 +10,6 @@ import { getAppUrl, RouteTypes } from '#domain/shared/infra/url';
 export default function ItemMenu({ memoView }: { memoView: MemoView }) {
   function handleSelect(value: string) {
     switch (value) {
-      case 'pin':
-        memoView.togglePin();
-        return;
       case 'edit':
         memoView.startEditing();
         return;
@@ -48,20 +36,6 @@ export default function ItemMenu({ memoView }: { memoView: MemoView }) {
           <Menu.Item class={itemClass} value="edit">
             <EditIcon />
             编辑
-          </Menu.Item>
-          <Menu.Item class={itemClass} value="pin">
-            <Show
-              when={memoView.value?.isPinned}
-              fallback={
-                <>
-                  <PinIcon />
-                  置顶
-                </>
-              }
-            >
-              <PinOffIcon />
-              取消置顶
-            </Show>
           </Menu.Item>
           <Menu.Item class={itemClass} value="star">
             <Show

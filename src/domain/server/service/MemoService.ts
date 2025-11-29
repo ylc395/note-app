@@ -22,7 +22,6 @@ export default class MemoService extends BaseService {
   @BaseService.transaction
   public async create(memo: MemoDTO) {
     if (memo.parentId) {
-      assert(typeof memo.isPinned === 'undefined', 'can not pin/unpin a child memo');
       await this.assertAvailableId(memo.parentId, { isTop: true });
     }
 
@@ -32,7 +31,6 @@ export default class MemoService extends BaseService {
       updatedAt: now,
       createdAt: now,
       parentId: memo.parentId || null,
-      isPinned: memo.isPinned || false,
       body: memo.body,
     });
 
@@ -46,7 +44,7 @@ export default class MemoService extends BaseService {
 
   @BaseService.transaction
   public async updateOne(id: MemoVO['id'], patch: MemoPatchDTO) {
-    await this.assertAvailableId(id, { isPinned: typeof patch.isPinned === 'boolean' ? !patch.isPinned : undefined });
+    await this.assertAvailableId(id);
     const bodyUpdated = typeof patch.body === 'string';
 
     const updatedAt = bodyUpdated ? Date.now() : undefined;
@@ -64,10 +62,7 @@ export default class MemoService extends BaseService {
 
   @BaseService.transaction
   public async queryList(query: ClientMemoQuery) {
-    assert(
-      !(query.keyword && (query.limit || typeof query.isPinned === 'boolean')),
-      'can not set limit / isPinned with keyword',
-    );
+    assert(!(query.keyword && query.limit), 'can not set limit / isPinned with keyword');
 
     let durations;
 
@@ -195,12 +190,8 @@ export default class MemoService extends BaseService {
     return memo;
   }
 
-  private readonly assertAvailableId = async (id: MemoVO['id'], config?: { isPinned?: boolean; isTop?: boolean }) => {
+  private readonly assertAvailableId = async (id: MemoVO['id'], config?: { isTop?: boolean }) => {
     const memo = await this.queryOne(id);
-
-    if (typeof config?.isPinned === 'boolean') {
-      assert(memo.isPinned === config.isPinned, 'invalid pin status');
-    }
 
     if (config?.isTop) {
       assert(!memo.parentId, 'not a top memo');

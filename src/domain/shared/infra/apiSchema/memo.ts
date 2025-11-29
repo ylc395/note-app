@@ -7,7 +7,6 @@ import { entityParentIdSchema } from "./entity.js";
 export const memoSchema = z.object({
   id: z.string(),
   parentId: entityParentIdSchema,
-  isPinned: z.boolean(),
   body: z.string(),
   updatedAt: z.number(),
   createdAt: z.number()
@@ -19,12 +18,10 @@ export const memoVOSchema = memoSchema.merge(z.object({
 }));
 export const memoDTOSchema = z.object({
   parentId: entityParentIdSchema.optional(),
-  body: z.string(),
-  isPinned: z.boolean().optional()
+  body: z.string()
 });
 export const memoPatchDTOSchema = memoDTOSchema.pick({
-  "body": true,
-  "isPinned": true
+  "body": true
 }).partial();
 export const durationSchema = z.object({
   startTime: z.number().optional(),
@@ -34,7 +31,6 @@ export const clientMemoQuerySchema = z.object({
   limit: z.number().optional(),
   order: z.union([z.literal("asc"), z.literal("desc")]).optional(),
   parentId: entityParentIdSchema.optional(),
-  isPinned: z.boolean().optional(),
   durations: z.array(durationSchema).optional(),
   endId: memoSchema.shape["id"].optional(),
   startId: memoSchema.shape["id"].optional(),

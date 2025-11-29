@@ -4,7 +4,6 @@ import { MimeTypes } from './file.js';
 export interface Memo {
   id: string;
   parentId: EntityParentId;
-  isPinned: boolean;
   body: string;
   updatedAt: number;
   createdAt: number;
@@ -25,13 +24,12 @@ export interface MemoVO extends Memo {
 export interface MemoDTO {
   parentId?: EntityParentId;
   body: string;
-  isPinned?: boolean;
 }
 
 /**
  * @api
  */
-export type MemoPatchDTO = Partial<Pick<MemoDTO, 'body' | 'isPinned'>>;
+export type MemoPatchDTO = Partial<Pick<MemoDTO, 'body'>>;
 
 /**
  * @api
@@ -75,7 +73,6 @@ export type ClientMemoQuery = {
   limit?: number;
   order?: 'asc' | 'desc';
   parentId?: EntityParentId;
-  isPinned?: boolean;
   durations?: Duration[];
   endId?: Memo['id'];
   startId?: Memo['id'];

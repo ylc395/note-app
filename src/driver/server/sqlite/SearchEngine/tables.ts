@@ -2,16 +2,12 @@ import { sql } from 'kysely';
 
 import { type Row as FileTextRow, tableName as fileTextTableName } from '../schema/fileText.js';
 import { tableName as noteTableName, type Row as NoteRow } from '../schema/note.js';
-import { tableName as memoTableName, type Row as MemoRow } from '../schema/memo.js';
-import { tableName as annotationTableName, type Row as AnnotationRow } from '../schema/annotation.js';
 import type { Schemas } from '../schema/index.js';
 
 export const WRAPPER_START_TEXT = '__%START%__';
 export const WRAPPER_END_TEXT = '__%END%__';
 
 export const notesFTSTableName = 'notes_fts';
-export const memosFTSTableName = 'memos_fts';
-export const annotationsFTSTableName = 'annotations_fts';
 export const fileTextsFTSTableName = 'file_texts_fts';
 
 interface FtsRow {
@@ -21,9 +17,7 @@ interface FtsRow {
 // prettier-ignore
 export interface SearchEngineDb extends Schemas {
   [fileTextsFTSTableName]: FtsRow & FileTextRow & { [fileTextsFTSTableName]: string };
-  [notesFTSTableName]: FtsRow & Pick<NoteRow, 'id' | 'title' | 'body' | 'fileId'> & { [notesFTSTableName]: string };
-  [memosFTSTableName]: FtsRow & Pick<MemoRow, 'id' | 'body'> & { [memosFTSTableName]: string };
-  [annotationsFTSTableName]: FtsRow & Pick<AnnotationRow, 'id' | 'targetId' | 'body' | 'selector'> & { [annotationsFTSTableName]: string };
+  [notesFTSTableName]: FtsRow & Pick<NoteRow, 'id' | 'title' | 'body' | 'fileId' | 'type' | 'details' | 'parentId'> & { [notesFTSTableName]: string };
 }
 
 // prettier-ignore
@@ -38,6 +32,9 @@ export const initialSqls =  [
             title, 
             body_plain_text, 
             file_id UNINDEXED,
+            type UNINDEXED,
+            details UNINDEXED,
+            parentId UNINDEXED,
             created_at UNINDEXED,
             updated_at UNINDEXED,
             tokenize="simple 0",
@@ -59,68 +56,6 @@ export const initialSqls =  [
             INSERT INTO ${sql.table(notesFTSTableName)}(rowid, title, body_plain_text) VALUES (new.rowid, new.title, new.body_plain_text);
           END`,
     ],
-  },
-  {
-    tableName: memosFTSTableName,
-    sql: [
-      sql`
-          CREATE VIRTUAL TABLE ${sql.table(memosFTSTableName)} 
-          USING fts5(
-            id UNINDEXED, 
-            body_plain_text, 
-            created_at UNINDEXED,
-            updated_at UNINDEXED,
-            tokenize="simple",
-            content=${sql.table(memoTableName)}
-          )`,
-      sql`CREATE TRIGGER memos_ai AFTER INSERT ON ${sql.table(memoTableName)}
-          BEGIN 
-            INSERT INTO ${sql.table(memosFTSTableName)}(rowid, body_plain_text) VALUES (new.rowid, new.body_plain_text);
-          END`,
-
-      sql`CREATE TRIGGER memos_ad AFTER DELETE on ${sql.table(memoTableName)}
-          BEGIN
-            INSERT INTO ${sql.table(memosFTSTableName)}(${sql.table(memosFTSTableName)}, rowid, body_plain_text) VALUES ('delete', old.rowid, old.body_plain_text);
-          END`,
-
-      sql`CREATE TRIGGER memos_au AFTER UPDATE on ${sql.table(memoTableName)}
-          BEGIN
-            INSERT INTO ${sql.table(memosFTSTableName)}(${sql.raw(memosFTSTableName)}, rowid, body_plain_text) VALUES ('delete', old.rowid, new.body_plain_text);
-            INSERT INTO ${sql.table(memosFTSTableName)}(rowid, body_plain_text) VALUES (new.rowid, new.body_plain_text);
-          END`,
-    ],
-  },
-  {
-    tableName: annotationsFTSTableName,
-    sql: [
-      sql`CREATE VIRTUAL TABLE ${sql.table(annotationsFTSTableName)} 
-          USING fts5(
-            id UNINDEXED,
-            target_id UNINDEXED,
-            body_plain_text,
-            selector UNINDEXED,
-            created_at UNINDEXED,
-            updated_at UNINDEXED,
-            tokenize="simple 0",
-            content=${sql.table(annotationTableName)}
-        )`, // 关闭拼音功能 https://github.com/wangfenjin/simple/issues/94
-      sql`CREATE TRIGGER annotations_ai AFTER INSERT ON ${sql.table(annotationTableName)}
-          BEGIN 
-            INSERT INTO ${sql.table(annotationsFTSTableName)}(rowid, body_plain_text) VALUES (new.rowid, new.body_plain_text);
-          END`,
-
-      sql`CREATE TRIGGER annotations_ad AFTER DELETE on ${sql.table(annotationTableName)}
-          BEGIN
-            INSERT INTO ${sql.table(annotationsFTSTableName)}(${sql.table(annotationsFTSTableName)}, rowid, body_plain_text) VALUES ('delete', old.rowid, old.body_plain_text);
-          END`,
-
-      sql`CREATE TRIGGER annotations_au AFTER UPDATE on ${sql.table(annotationTableName)}
-          BEGIN
-            INSERT INTO ${sql.table(annotationsFTSTableName)}(${sql.raw(annotationsFTSTableName)}, rowid, body_plain_text) VALUES ('delete', old.rowid, new.body_plain_text);
-            INSERT INTO ${sql.table(annotationsFTSTableName)}(rowid, body_plain_text) VALUES (new.rowid, new.body_plain_text);
-          END`,
-
-        ],
   },
   {
     tableName: fileTextsFTSTableName,

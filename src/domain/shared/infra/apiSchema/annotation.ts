@@ -30,10 +30,10 @@ export const pDFTextPositionSelectorSchema = z.object({
     endOffset: z.number()
   })
 });
-export const selectorSchema = z.union([pDFTextPositionSelectorSchema, pDFSvgSelectorSchema, hTMLTextPositionSelectorSchema, hTMLCssSelectorSchema]);
+const selectorSchema = z.union([pDFTextPositionSelectorSchema, pDFSvgSelectorSchema, hTMLTextPositionSelectorSchema, hTMLCssSelectorSchema]);
 export const annotationSchema = z.object({
   id: entityIdSchema,
-  targetId: noteSchema.shape["id"],
+  parentId: noteSchema.shape["id"],
   selector: selectorSchema,
   body: z.string(),
   createdAt: z.number(),
@@ -41,12 +41,11 @@ export const annotationSchema = z.object({
 });
 export const annotationDTOSchema = z.intersection(annotationSchema.pick({
   "selector": true,
-  "targetId": true
+  "parentId": true
 }), annotationSchema.pick({
   "body": true
 }).partial());
 export const annotationPatchDTOSchema = annotationSchema.pick({
-  "body": true,
-  "selector": true
+  "body": true
 }).partial();
 export const annotationVOSchema = annotationSchema;

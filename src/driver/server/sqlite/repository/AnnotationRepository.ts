@@ -1,24 +1,29 @@
-import { keyBy } from 'lodash-es';
+import { compact, keyBy, pick } from 'lodash-es';
+import z from 'zod';
 
 import type { AnnotationRepository } from '#domain/server/repository/annotationRepository.js';
+import ContentService from '#domain/server/service/ContentService/index.js';
 import type { Annotation, AnnotationPatchDTO } from '#domain/shared/model/annotation.js';
-import type { EntityId } from '#domain/shared/model/entity.js';
+import { EntityTypes, type EntityId } from '#domain/shared/model/entity.js';
+import { annotationSchema } from '#domain/shared/infra/apiSchema/annotation.js';
 
 import BaseRepository from './BaseRepository.js';
-import annotationSchema from '../schema/annotation.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
 import { tableName as noteTableName } from '../schema/note.js';
 import { tableName as fileTableName } from '../schema/file.js';
-import ContentService from '#domain/server/service/ContentService/index.js';
+
+const detailsSchema = z.object({
+  selector: annotationSchema.shape.selector,
+});
 
 export default class SqliteAnnotationRepository extends BaseRepository implements AnnotationRepository {
-  protected readonly tableName = annotationSchema.tableName;
+  protected readonly tableName = noteTableName;
   public async findAllTargets(ids: Annotation['id'][]) {
     const rows = await this.db
       .selectFrom(this.tableName)
-      .innerJoin(noteTableName, `${noteTableName}.id`, `${this.tableName}.targetId`)
       .innerJoin(fileTableName, `${fileTableName}.id`, `${noteTableName}.fileId`)
-      .where(`${this.tableName}.targetId`, 'in', ids)
+      .where(`${this.tableName}.parentId`, 'in', ids)
+      .where(`${this.tableName}.type`, '=', EntityTypes.Annotation)
       .select([
         `${this.tableName}.id as annotationId`,
         `${fileTableName}.id as fileId`,
@@ -38,37 +43,34 @@ export default class SqliteAnnotationRepository extends BaseRepository implement
 
   public async create(annotation: Annotation) {
     const bodyPlainText = ContentService.markdownToPlain(annotation.body);
-    const created = await this.db
+    await this.db
       .insertInto(this.tableName)
       .values({
-        ...annotation,
+        ...pick(annotation, ['body', 'id', 'parentId', 'body', 'createdAt', 'updatedAt']),
         bodyPlainText,
-        selector: JSON.stringify(annotation.selector),
+        type: EntityTypes.Annotation,
+        details: JSON.stringify({
+          selector: annotation.selector,
+        }),
       })
-      .returning([
-        `${this.tableName}.id`,
-        `${this.tableName}.targetId`,
-        `${this.tableName}.selector`,
-        `${this.tableName}.body`,
-        `${this.tableName}.createdAt`,
-        `${this.tableName}.updatedAt`,
-      ])
+      .returning([`id`, 'parentId', 'body', 'createdAt', 'updatedAt', 'details'])
       .executeTakeFirstOrThrow();
 
-    return created;
+    return annotation;
   }
 
   public async findAllByEntityId(entityId: EntityId, config?: { isAvailableOnly?: boolean }) {
     let sql = this.db
       .selectFrom(this.tableName)
-      .where('targetId', '=', entityId)
+      .where('parentId', '=', entityId)
+      .where('type', '=', EntityTypes.Annotation)
       .select([
         `${this.tableName}.id`,
-        `${this.tableName}.targetId`,
-        `${this.tableName}.selector`,
+        `${this.tableName}.parentId`,
         `${this.tableName}.body`,
         `${this.tableName}.createdAt`,
         `${this.tableName}.updatedAt`,
+        `${this.tableName}.details`,
       ]);
 
     if (config?.isAvailableOnly) {
@@ -78,7 +80,7 @@ export default class SqliteAnnotationRepository extends BaseRepository implement
     }
 
     const rows = await sql.execute();
-    return rows;
+    return compact(rows.map(SqliteAnnotationRepository.toAnnotation));
   }
 
   public async update(annotationId: Annotation['id'], patch: AnnotationPatchDTO) {
@@ -86,19 +88,11 @@ export default class SqliteAnnotationRepository extends BaseRepository implement
     const updated = await this.db
       .updateTable(this.tableName)
       .set({
-        ...patch,
+        body: patch.body,
         bodyPlainText,
-        selector: patch.selector ? JSON.stringify(patch.selector) : undefined,
       })
       .where('id', '=', annotationId)
-      .returning([
-        `${this.tableName}.id`,
-        `${this.tableName}.targetId`,
-        `${this.tableName}.selector`,
-        `${this.tableName}.body`,
-        `${this.tableName}.createdAt`,
-        `${this.tableName}.updatedAt`,
-      ])
+      .where('type', '=', EntityTypes.Annotation)
       .executeTakeFirst();
 
     return Boolean(updated);
@@ -108,11 +102,12 @@ export default class SqliteAnnotationRepository extends BaseRepository implement
     let sql = this.db
       .selectFrom(this.tableName)
       .where('id', '=', annotationId)
+      .where('type', '=', EntityTypes.Annotation)
       .select([
         `${this.tableName}.id`,
-        `${this.tableName}.targetId`,
-        `${this.tableName}.selector`,
+        `${this.tableName}.parentId`,
         `${this.tableName}.body`,
+        `${this.tableName}.details`,
         `${this.tableName}.createdAt`,
         `${this.tableName}.updatedAt`,
       ]);
@@ -124,7 +119,15 @@ export default class SqliteAnnotationRepository extends BaseRepository implement
     }
 
     const row = await sql.executeTakeFirst();
+    return SqliteAnnotationRepository.toAnnotation(row);
+  }
 
-    return row || null;
+  private static toAnnotation<T extends { details: unknown; parentId: unknown }>(
+    data: T | undefined,
+  ): (T & Pick<Annotation, 'parentId' | 'selector'>) | null {
+    const details = detailsSchema.safeParse(data?.details).data;
+    const parentId = annotationSchema.shape.parentId.safeParse(data?.parentId).data;
+
+    return details && parentId ? { ...data!, parentId, selector: details.selector } : null;
   }
 }

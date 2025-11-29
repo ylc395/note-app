@@ -30,12 +30,12 @@ export interface HTMLCssSelector {
   value: string; // css selector
 }
 
-export type Selector = PDFTextPositionSelector | PDFSvgSelector | HTMLTextPositionSelector | HTMLCssSelector;
+type Selector = PDFTextPositionSelector | PDFSvgSelector | HTMLTextPositionSelector | HTMLCssSelector;
 
 // This concept is inspired by https://www.w3.org/TR/annotation-model/
 export interface Annotation {
   id: EntityId;
-  targetId: Note['id'];
+  parentId: Note['id'];
   selector: Selector;
   body: string;
   createdAt: number;
@@ -45,12 +45,12 @@ export interface Annotation {
 /**
  * @api
  */
-export type AnnotationDTO = Pick<Annotation, 'selector' | 'targetId'> & Partial<Pick<Annotation, 'body'>>;
+export type AnnotationDTO = Pick<Annotation, 'selector' | 'parentId'> & Partial<Pick<Annotation, 'body'>>;
 
 /**
  * @api
  */
-export type AnnotationPatchDTO = Partial<Pick<Annotation, 'body' | 'selector'>>;
+export type AnnotationPatchDTO = Partial<Pick<Annotation, 'body'>>;
 
 /**
  * @api

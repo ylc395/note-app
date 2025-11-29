@@ -162,13 +162,6 @@ export default class MemoView {
     });
   }
 
-  public async togglePin() {
-    assert(this.value && this.parent?.childrenQuery, 'can not pin root');
-
-    await this.remote.memo.updateOne.mutate([this.value.id, { isPinned: !this.value.isPinned }]);
-    this.parent.childrenQuery.invalidate();
-  }
-
   @action
   public destroy() {
     this.selfEditor?.destroy();

@@ -1,12 +1,12 @@
-import type { Selectable } from 'kysely';
 import { compact } from 'lodash-es';
 
 import type { MemoPatchDTO, Memo, ClientMemoQuery } from '#domain/server/model/memo.js';
 import type { MemoRepository, MemoQuery } from '#domain/server/repository/memoRepository.js';
 import ContentService from '#domain/server/service/ContentService/index.js';
+import { EntityTypes } from '#domain/shared/model/entity.js';
 
 import BaseRepository from './BaseRepository.js';
-import schema, { type Row } from '../schema/memo.js';
+import schema from '../schema/note.js';
 import { tableName as topicTableName } from '../schema/topic.js';
 import { tableName as recyclableTableName } from '../schema/recyclable.js';
 
@@ -17,7 +17,7 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
     const bodyPlainText = ContentService.markdownToPlain(memo.body);
     await this.db
       .insertInto(this.tableName)
-      .values({ ...memo, bodyPlainText, isPinned: memo.isPinned ? 1 : 0 })
+      .values({ ...memo, bodyPlainText, type: EntityTypes.Memo })
       .execute();
 
     return memo;
@@ -27,27 +27,23 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
     const bodyPlainText = typeof patch.body === 'string' ? ContentService.markdownToPlain(patch.body) : undefined;
     const updatedRow = await this.db
       .updateTable(this.tableName)
-      .where('id', '=', id)
+      .where((eb) => eb.and([eb('id', '=', id), eb('type', '=', EntityTypes.Memo)]))
       .set({
         ...patch,
         bodyPlainText,
-        isPinned: typeof patch.isPinned === 'boolean' ? (patch.isPinned ? 1 : 0) : undefined,
       })
       .returningAll()
       .executeTakeFirst();
 
-    if (!updatedRow) {
-      return null;
-    }
-
-    return SqliteMemoRepository.rowToMemo(updatedRow);
+    return updatedRow ?? null;
   }
 
   public async findOneById(id: Memo['id'], config?: { isAvailableOnly?: boolean }) {
     let sql = this.db
       .selectFrom(this.tableName)
       .where('id', '=', id)
-      .select(['id', 'body', 'isPinned', 'parentId', `${this.tableName}.createdAt`, 'updatedAt']);
+      .where('type', '=', EntityTypes.Memo)
+      .select(['id', 'body', 'parentId', `${this.tableName}.createdAt`, 'updatedAt']);
 
     if (config?.isAvailableOnly) {
       sql = sql
@@ -57,20 +53,12 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
 
     const row = await sql.executeTakeFirst();
 
-    if (!row) {
-      return null;
-    }
-
-    return SqliteMemoRepository.rowToMemo(row);
-  }
-
-  private static rowToMemo(row: Omit<Selectable<Row>, 'bodyPlainText'>): Memo {
-    return { ...row, isPinned: Boolean(row.isPinned) };
+    return row ?? null;
   }
 
   public async findAll(q: MemoQuery) {
     const rows = await this.getQueryListSql(q).execute();
-    return rows.map(SqliteMemoRepository.rowToMemo);
+    return rows;
   }
 
   public async queryCount(q?: ClientMemoQuery) {
@@ -87,11 +75,11 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
       .select([
         `${this.tableName}.id`,
         `${this.tableName}.body`,
-        `${this.tableName}.isPinned`,
         `${this.tableName}.parentId`,
         `${this.tableName}.createdAt`,
         `${this.tableName}.updatedAt`,
       ])
+      .where(`${this.tableName}.type`, '=', EntityTypes.Memo)
       .distinct(); // 联 topic 表会导致查出同样的记录，需要去重
 
     if (typeof q.isAvailableOnly === 'boolean') {
@@ -148,10 +136,6 @@ export default class SqliteMemoRepository extends BaseRepository implements Memo
 
     if (typeof q.parentId !== 'undefined') {
       sql = sql.where('parentId', q.parentId === null ? 'is' : '=', q.parentId);
-    }
-
-    if (typeof q.isPinned === 'boolean') {
-      sql = sql.where('isPinned', '=', q.isPinned ? 1 : 0);
     }
 
     sql = sql

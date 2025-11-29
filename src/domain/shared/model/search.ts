@@ -1,6 +1,6 @@
 import type { TextLocation } from './file.js';
 import type { EntityTypes, EntityPath, Entity, EntityId } from './entity.js';
-import type { Annotation, Selector } from './annotation.js';
+import type { Annotation } from './annotation.js';
 
 export type SearchTypes = EntityTypes.Note | EntityTypes.Memo;
 
@@ -32,12 +32,11 @@ export interface FileMatchRecord extends MatchRecord {
 
 export interface AnnotationMatchRecord extends MatchRecord {
   id: Annotation['id'];
-  selector: Selector;
+  selector: Annotation['selector'];
 }
 
 export interface SearchResult {
   entityId: EntityId;
-  rank: number;
   matches: {
     [SearchFields.Title]?: MatchRecord;
     [SearchFields.Body]?: MatchRecord;

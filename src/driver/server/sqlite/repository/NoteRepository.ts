@@ -1,7 +1,9 @@
 import { keyBy, mapValues, compact } from 'lodash-es';
 import { sql } from 'kysely';
 
+import ContentService from '#domain/server/service/ContentService/index.js';
 import type { NoteRepository } from '#domain/server/repository/noteRepository.js';
+import { EntityTypes } from '#domain/shared/model/entity.js';
 import type { Note, NoteVO, NewNote, NotePatch, NoteQuery } from '#domain/server/model/note.js';
 
 import schema from '../schema/note.js';
@@ -10,7 +12,6 @@ import { tableName as recyclableTableName } from '../schema/recyclable.js';
 import { tableName as fileTextTableName } from '../schema/fileText.js';
 import BaseRepository from './BaseRepository.js';
 import FileRepository from './FileRepository.js';
-import ContentService from '#domain/server/service/ContentService/index.js';
 
 export default class SqliteNoteRepository extends BaseRepository implements NoteRepository {
   public readonly tableName = schema.tableName;
@@ -18,7 +19,7 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
     const bodyPlainText = ContentService.markdownToPlain(note.body);
     const row = await this.db
       .insertInto(this.tableName)
-      .values({ ...note, icon: note.icon && JSON.stringify(note.icon), bodyPlainText })
+      .values({ ...note, icon: note.icon && JSON.stringify(note.icon), bodyPlainText, type: EntityTypes.Note })
       .returning(['id', 'icon', 'title', 'createdAt', 'updatedAt', 'parentId', 'body', 'fileId', 'sourceUrl'])
       .executeTakeFirstOrThrow();
 
@@ -30,6 +31,7 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
     const { numUpdatedRows } = await this.db
       .updateTable(this.tableName)
       .where('id', Array.isArray(id) ? 'in' : '=', id)
+      .where('type', '=', EntityTypes.Note)
       .set({ ...note, icon: note.icon && JSON.stringify(note.icon), bodyPlainText })
       .executeTakeFirst();
 
@@ -50,7 +52,8 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
         `${this.tableName}.fileId`,
         `${this.tableName}.sourceUrl`,
         `${fileTableName}.mimeType`,
-      ]);
+      ])
+      .where(`${this.tableName}.type`, '=', EntityTypes.Note);
 
     if (q.isAvailableOnly) {
       sql = sql
@@ -86,7 +89,8 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
     let sql = this.db
       .selectFrom(this.tableName)
       .leftJoin(fileTableName, `${this.tableName}.fileId`, `${fileTableName}.id`)
-      .where(`${this.tableName}.id`, '=', id);
+      .where(`${this.tableName}.id`, '=', id)
+      .where(`${this.tableName}.type`, '=', EntityTypes.Note);
 
     if (config?.isAvailableOnly) {
       sql = sql
@@ -119,7 +123,8 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
       .innerJoin(fileTableName, `${this.tableName}.fileId`, `${fileTableName}.id`)
       .leftJoin(recyclableTableName, `${recyclableTableName}.entityId`, `${this.tableName}.id`)
       .select([`${fileTableName}.data`])
-      .where(`${this.tableName}.id`, '=', id);
+      .where(`${this.tableName}.id`, '=', id)
+      .where(`${this.tableName}.type`, '=', EntityTypes.Note);
 
     if (config?.isAvailableOnly) {
       sql = sql.where(`${recyclableTableName}.entityId`, 'is', null);
@@ -139,6 +144,7 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
       .selectFrom(fileTableName)
       .innerJoin(this.tableName, `${fileTableName}.id`, `${this.tableName}.fileId`)
       .where(`${this.tableName}.id`, 'in', ids)
+      .where(`${this.tableName}.type`, '=', EntityTypes.Note)
       .select([`${fileTableName}.id`, 'mimeType', 'lang', 'size', 'hash', `${this.tableName}.id as noteId`])
       .execute();
 
@@ -153,7 +159,8 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
       .selectFrom(this.tableName)
       .innerJoin(fileTextTableName, `${this.tableName}.fileId`, `${fileTextTableName}.fileId`)
       .select([`${fileTextTableName}.location`])
-      .where(`${this.tableName}.id`, '=', id);
+      .where(`${this.tableName}.id`, '=', id)
+      .where(`${this.tableName}.type`, '=', EntityTypes.Note);
 
     if (q.pages) {
       s = s.where((eb) => eb(sql`location ->> page`, 'in', q.pages));
@@ -168,6 +175,7 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
     const rows = await this.db
       .selectFrom(this.tableName)
       .where(sql`icon ->> 'type'`, '=', 'file')
+      .where(`${this.tableName}.type`, '=', EntityTypes.Note)
       .select(sql<string>`icon ->> 'code'`.as('code'))
       .distinct()
       .execute();

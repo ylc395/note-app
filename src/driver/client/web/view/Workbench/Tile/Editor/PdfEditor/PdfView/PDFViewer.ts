@@ -350,7 +350,7 @@ export default class PdfViewer {
       _annotation = annotation;
     }
 
-    assert(_annotation?.targetId === this.editor.noteId);
+    assert(_annotation?.parentId === this.editor.noteId);
 
     const page = getPage(_annotation);
     this.jumpTo(page);

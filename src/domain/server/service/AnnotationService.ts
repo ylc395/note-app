@@ -20,12 +20,12 @@ export default class AnnotationService extends BaseService {
   @BaseService.transaction
   public async create(annotation: AnnotationDTO) {
     // only notes have annotations
-    await this.noteService.assertAvailableIds([annotation.targetId], { withFile: true });
+    await this.noteService.assertAvailableIds([annotation.parentId], { withFile: true });
 
     const now = Date.now();
     const created = await this.repo.annotations.create({
       id: EntityService.generateId(),
-      targetId: annotation.targetId,
+      parentId: annotation.parentId,
       body: annotation.body || '',
       selector: annotation.selector,
       createdAt: now,
