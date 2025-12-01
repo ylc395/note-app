@@ -1,4 +1,4 @@
-import { action, computed, observable, reaction, runInAction, when } from 'mobx';
+import { action, computed, observable, reaction, runInAction } from 'mobx';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import { createQuery } from 'mobx-tanstack-query/preset';
 import assert from 'assert';
@@ -23,16 +23,7 @@ export default class PageTextManager {
       },
     );
 
-    reaction(() => this.renderedPages, this.initPageTexts.bind(this), { signal: this.destroyController.signal });
-
-    when(
-      () => Boolean(this.renderedPages),
-      () => {
-        const timerId = setInterval(this.initPageTexts.bind(this), 30 * 1000);
-        this.destroyController.signal.addEventListener('abort', () => clearInterval(timerId), { once: true });
-      },
-      { signal: this.destroyController.signal },
-    );
+    reaction(() => this.renderedPages, this.loadPageTexts.bind(this), { signal: this.destroyController.signal });
   }
 
   private readonly destroyController = new AbortController();
@@ -63,12 +54,16 @@ export default class PageTextManager {
     this.renderedPages = pages;
   }
 
-  private initPageTexts = debounce(async () => {
-    const texts = this.nativeTexts.result.data;
-    assert(texts && this.renderedPages);
+  private loadingTimer?: ReturnType<typeof setTimeout>;
+
+  private loadPageTexts = debounce(async () => {
+    clearTimeout(this.loadingTimer);
+
+    const nativeTexts = this.nativeTexts.result.data;
+    assert(nativeTexts && this.renderedPages);
 
     const pagesToQuery = new Set(
-      this.renderedPages.filter((page) => !this.pageTexts.has(page) && !texts[page] && !this.loadingPages.has(page)),
+      this.renderedPages.filter((page) => !this.pageTexts.has(page) && !this.loadingPages.has(page)),
     );
 
     if (pagesToQuery.size === 0) {
@@ -94,12 +89,16 @@ export default class PageTextManager {
         this.pageTexts.set(location.page, location);
       }
     });
+
+    if (pageTexts.length !== pagesToQuery.size) {
+      this.loadingTimer = setTimeout(this.loadPageTexts, 60 * 1000);
+    }
   }, 500);
 
   @action
   public destroy() {
     this.destroyController.abort();
-    this.initPageTexts.cancel();
+    this.loadPageTexts.cancel();
   }
 
   private static async extractTexts(doc: PDFDocumentProxy) {

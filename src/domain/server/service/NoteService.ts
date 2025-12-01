@@ -18,6 +18,7 @@ import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
 import ContentService from './ContentService/index.js';
 import FileService from './FileService/index.js';
+import type { FileDTO } from '../model/file.js';
 
 export default class NoteService extends BaseService {
   private readonly content = container.resolve(ContentService);
@@ -152,6 +153,23 @@ export default class NoteService extends BaseService {
 
   public queryAllCustomIcons() {
     return this.repo.notes.findAllCustomIcons();
+  }
+
+  @BaseService.transaction
+  public async setFile(noteId: Note['id'], file: FileDTO) {
+    const note = await this.repo.notes.findOneById(noteId);
+    assert(note && !note.fileId);
+
+    const { id: fileId } = await this.file.createFile(file);
+    await this.repo.notes.update(noteId, { fileId });
+
+    if (!note.title && file.name) {
+      const title = file.name.split('.')[0];
+
+      if (title) {
+        await this.repo.notes.update(noteId, { title });
+      }
+    }
   }
 
   private async assertValidDto(patch: NewNoteDTO, noteIds?: Note['id'][]) {

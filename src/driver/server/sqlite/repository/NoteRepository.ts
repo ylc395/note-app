@@ -163,7 +163,7 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
       .where(`${this.tableName}.type`, '=', EntityTypes.Note);
 
     if (q.pages) {
-      s = s.where((eb) => eb(sql`location ->> page`, 'in', q.pages));
+      s = s.where((eb) => eb(sql`location ->> 'page'`, 'in', q.pages));
     }
 
     const rows = await s.execute();

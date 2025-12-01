@@ -18,7 +18,7 @@ export default function Editor(props: { editor: BaseEditor }) {
 
   return (
     <ContextProvider editor={props.editor}>
-      <div class="flex flex-col h-full" onFocusIn={() => props.editor.focus()}>
+      <div class="flex flex-col h-full relative" onFocusIn={() => props.editor.focus()}>
         <Show when={!isError()}>
           <TitleInput />
           <Breadcrumbs />

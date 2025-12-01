@@ -11,7 +11,6 @@ import Workbench from '../model/Workbench';
 import DomainEventBus from '../model/note/EventBus';
 import BaseEditor from '../model/note/editor/BaseEditor';
 import TreeExplorer from '../model/note/TreeExplorer';
-import NewMaterialManager from '../model/note/NewMaterialManager';
 
 export default class NoteService {
   constructor() {
@@ -26,8 +25,6 @@ export default class NoteService {
   private readonly remote = container.resolve(rpcToken);
 
   public readonly workbench = container.resolve(Workbench);
-
-  public readonly newMaterialForm = new NewMaterialManager();
 
   public readonly explorer = new TreeExplorer();
 

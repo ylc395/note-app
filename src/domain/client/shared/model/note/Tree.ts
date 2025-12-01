@@ -23,13 +23,13 @@ export default class Tree {
       children: (node: TreeNode) => {
         return initialMap[node.id];
       },
-      onCreated: (node: TreeNode) => {
+      onCreated: action((node: TreeNode) => {
         this.nodesMap.set(node.id, node);
 
         if (expanded.includes(node.id)) {
           node.toggleExpand(true);
         }
-      },
+      }),
       onDestroyed: action(({ id }: TreeNode) => {
         this.nodesMap.delete(id);
         this.expandedNodeIds.delete(id);

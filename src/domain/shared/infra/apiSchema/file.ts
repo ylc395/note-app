@@ -15,8 +15,8 @@ export const fileSchema = z.object({
 export const fileDTOSchema = z.object({
   mimeType: fileSchema.shape["mimeType"],
   lang: fileSchema.shape["lang"].optional(),
-  data: z.instanceof(ArrayBuffer).optional(),
-  path: z.string().optional()
+  data: z.instanceof(ArrayBuffer),
+  name: z.string().optional()
 });
 export const fileVOSchema = fileSchema.pick({
   "id": true,

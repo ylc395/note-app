@@ -8,6 +8,7 @@ import {
   fileTextQuerySchema,
 } from '#domain/shared/infra/apiSchema/note.js';
 import { publicProcedure, router } from './trpc.js';
+import { fileDTOSchema } from '#domain/shared/infra/apiSchema/file.js';
 
 export default router({
   query: publicProcedure
@@ -21,6 +22,10 @@ export default router({
   updateOne: publicProcedure
     .input(tuple([noteSchema.shape.id, notePatchDTOSchema]))
     .mutation(({ input: [id, patch], ctx: { noteService } }) => noteService.updateOne(id, patch)),
+
+  setFile: publicProcedure
+    .input(tuple([noteSchema.shape.id, fileDTOSchema]))
+    .mutation(({ input: [id, file], ctx: { noteService } }) => noteService.setFile(id, file)),
 
   batchUpdate: publicProcedure
     .input(tuple([noteSchema.shape.id.array(), notePatchDTOSchema]))

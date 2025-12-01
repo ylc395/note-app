@@ -1,7 +1,6 @@
-import fs from 'fs-extra';
 import assert from 'node:assert';
 
-import { getHash, toArrayBuffer } from '#utils/file.js';
+import { getHash } from '#utils/file.js';
 import type { FileVO, FileDTO, NewFileTextRecord } from '#domain/server/model/file.js';
 
 import BaseService from '../BaseService.js';
@@ -17,12 +16,7 @@ export default class FileService extends BaseService {
   private readonly textExtractJobQueue = new JobQueue();
 
   public async createFile(file: FileDTO) {
-    assert(!(file.path && file.data), 'can not use both path and data');
-
-    const data = typeof file.path === 'string' ? toArrayBuffer(await fs.readFile(file.path)) : file.data;
-    assert(data, 'no file data');
-
-    const hash = await getHash(data);
+    const hash = await getHash(file.data);
     const existingFile = await this.repo.files.findOneByHash(hash);
 
     if (existingFile) {
@@ -32,7 +26,7 @@ export default class FileService extends BaseService {
     const params = {
       mimeType: file.mimeType,
       lang: file.lang || [],
-      data,
+      data: file.data,
     };
 
     const textExtractor = JobQueue.getExtractor(params);
@@ -40,8 +34,8 @@ export default class FileService extends BaseService {
       id: EntityService.generateId(),
       ...params,
       hash,
-      size: data.byteLength,
-      textUnitLength: textExtractor ? await textExtractor.getTextUnitLength(data) : 0,
+      size: file.data.byteLength,
+      textUnitLength: textExtractor ? await textExtractor.getTextUnitLength(file.data) : 0,
     });
 
     this.textExtractJobQueue.addJob({

@@ -64,6 +64,8 @@ export default abstract class BaseEditor {
 
   public readonly command$;
 
+  protected readonly remote = container.resolve(rpcToken);
+
   public abstract readonly mimeType: string | null;
 
   private readonly initialTitle?: string;
@@ -96,13 +98,6 @@ export default abstract class BaseEditor {
   @computed
   public get index() {
     return this.tile.editors.indexOf(this);
-  }
-
-  protected readonly remote = container.resolve(rpcToken);
-
-  @computed
-  public get isLoading() {
-    return this.value.result.isLoading || this.blob.result.isLoading;
   }
 
   @computed

@@ -1,3 +1,5 @@
+import type { NotePatchDTO } from '#domain/shared/model/note';
+
 export interface Command<T = unknown> {
   type: symbol;
   payload: T;
@@ -19,3 +21,5 @@ function create<P, T = Command<P>>() {
 export const goToPageCommand = create<number>();
 
 export const goToAnnotationCommand = create<string>();
+
+export const updateCommand = create<NotePatchDTO>();

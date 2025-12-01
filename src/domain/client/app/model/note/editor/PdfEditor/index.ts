@@ -141,12 +141,12 @@ export default class PdfEditor extends BaseEditor {
   }, 500);
 
   public override destroy() {
-    super.destroy();
     this.docFactory.revoke(this.noteId);
     this.textFinder.destroy();
     this.texts.destroy();
     this.outline.destroy();
     this.annotation.destroy();
     this.saveUIState.flush();
+    super.destroy();
   }
 }

@@ -14,8 +14,8 @@ export interface File {
 export interface FileDTO {
   mimeType: File['mimeType'];
   lang?: File['lang'];
-  data?: ArrayBuffer;
-  path?: string;
+  data: ArrayBuffer;
+  name?: string;
 }
 
 /**

@@ -69,11 +69,11 @@ export default class Tile {
   }
 
   // 在该 Tile 下创建一个 Editor。可以指定其位置
-  // 不能创建内容相同的 editor
+  // 不能创建 noteId-mimeType 均相同的两个 editor
   @action
-  public createAndAddEditor(entity: EditorDTO, dest?: Editor) {
+  public createAndAddEditor(entity: EditorDTO, dest?: Editor | number) {
     assert(
-      this.editors.findIndex((editor) => editor.noteId === entity.entityId) < 0,
+      this.editors.findIndex((editor) => editor.noteId === entity.entityId && editor.mimeType === entity.mimeType) < 0,
       'can not create duplicated editor',
     );
 
@@ -83,15 +83,24 @@ export default class Tile {
     return newEditor;
   }
 
+  public replace(editor: Editor, newEditorDTO: EditorDTO) {
+    const index = editor.index;
+    assert(editor.tile === this);
+    editor.destroy();
+
+    const newEditor = this.createAndAddEditor(newEditorDTO, index);
+    this.switchToEditor(newEditor);
+  }
+
   @action
-  public addEditor(editor: Editor, dest?: Editor) {
+  public addEditor(editor: Editor, dest?: Editor | number) {
     // 刚刚创建出来的 editor，其 tile 还没将其纳入其中。因此这个 if 判断是有意义的
     if (editor.tile.editors.includes(editor)) {
       editor.tile.removeEditor(editor);
     }
 
     if (dest) {
-      const index = this.editors.indexOf(dest);
+      const index = typeof dest === 'number' ? dest : this.editors.indexOf(dest);
       assert(index >= 0, 'dest editor is invalid');
       this.editors.splice(index, 0, editor);
     } else {

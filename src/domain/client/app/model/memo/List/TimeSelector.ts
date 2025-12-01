@@ -27,7 +27,10 @@ export default class TimeSelector {
 
   private readonly remote = container.resolve(rpcToken);
 
-  public readonly now = createQuery(() => dayjs().valueOf(), { options: () => ({ enabled: this.isActive }) });
+  public readonly now = createQuery(() => dayjs().valueOf(), {
+    queryKey: ['now'],
+    options: () => ({ enabled: this.isActive }),
+  });
 
   @observable.ref public accessor selectedDurations: Required<Duration>[] = [];
 
