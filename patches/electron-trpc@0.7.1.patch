@@ -1,0 +1,36 @@
+diff --git a/dist/main.mjs b/dist/main.mjs
+index f42095434a813accb30c1e86b83797636e329996..449f16f30a885ee12aaa9f89e0ac35e6db5376b4 100644
+--- a/dist/main.mjs
++++ b/dist/main.mjs
+@@ -8,7 +8,7 @@ var F = (n, r, e) => (S(n, r, "read from private field"), e ? e.call(n) : r.get(
+   r instanceof WeakSet ? r.add(n) : r.set(n, e);
+ }, L = (n, r, e, i) => (S(n, r, "write to private field"), i ? i.call(n, e) : r.set(n, e), e);
+ var v = (n, r, e) => (S(n, r, "access private method"), e);
+-import { ipcMain as ee, contextBridge as re, ipcRenderer as U } from "electron";
++import * as electron from "electron";
+ const T = "electron-trpc";
+ function ne(n) {
+   return !!n && !Array.isArray(n) && typeof n == "object";
+@@ -523,7 +523,7 @@ class be {
+     y(this, N);
+     y(this, w, []);
+     y(this, E, /* @__PURE__ */ new Map());
+-    i.forEach((a) => this.attachWindow(a)), ee.on(T, (a, C) => {
++    i.forEach((a) => this.attachWindow(a)), electron.ipcMain.on(T, (a, C) => {
+       ge({
+         router: e,
+         createContext: r,
+@@ -570,10 +570,10 @@ const ye = ({
+   windows: e = []
+ }) => new be({ createContext: n, router: r, windows: e }), me = () => {
+   const n = {
+-    sendMessage: (r) => U.send(T, r),
+-    onMessage: (r) => U.on(T, (e, i) => r(i))
++    sendMessage: (r) => electron.ipcRenderer.send(T, r),
++    onMessage: (r) => electron.ipcRenderer.on(T, (e, i) => r(i))
+   };
+-  re.exposeInMainWorld("electronTRPC", n);
++  electron.contextBridge.exposeInMainWorld("electronTRPC", n);
+ };
+ export {
+   T as ELECTRON_TRPC_CHANNEL,
