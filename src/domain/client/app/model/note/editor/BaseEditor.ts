@@ -70,7 +70,7 @@ export default abstract class BaseEditor {
 
   private readonly initialTitle?: string;
 
-  private readonly domainEventBus = container.resolve(DomainEventBus);
+  protected readonly domainEventBus = container.resolve(DomainEventBus);
 
   public readonly id = uniqueId('editor-');
 

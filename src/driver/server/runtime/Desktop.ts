@@ -8,12 +8,14 @@ import { token as kvDatabaseToken } from '#domain/server/infra/kvDatabase.js';
 import { token as searchEngineToken } from '#domain/server/infra/searchEngine.js';
 import { token as repositoriesToken } from '#domain/server/repository/index.js';
 import { token as loggerToken } from '#domain/shared/infra/logger.js';
+import { token as downloaderToken } from '#domain/server/infra/downloader.js';
 import container from '#utils/singletonContainer.js';
 
 import SqliteDb from '../sqlite/Database.js';
 import SqliteKvDatabase from '../sqlite/KvDatabase.js';
 import SqliteSearchEngine from '../sqlite/SearchEngine/index.js';
 import { getRepositories } from '../sqlite/repository/index.js';
+import simpleDownloader from '../downloader/simple.js';
 
 export default abstract class DesktopRuntime extends Runtime {
   constructor() {
@@ -25,6 +27,7 @@ export default abstract class DesktopRuntime extends Runtime {
     container.register(repositoriesToken, getRepositories(db));
     container.register(kvDatabaseToken, new SqliteKvDatabase(db));
     container.register(searchEngineToken, new SqliteSearchEngine(db));
+    container.register(downloaderToken, simpleDownloader);
     container.register(runtimeToken, this);
   }
 

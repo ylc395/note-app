@@ -66,7 +66,7 @@ export default function LocalFileUploader(props: { className?: string }) {
                   )}
                 </For>
               </FileUpload.ItemGroup>
-              <Show when={editor.localUploader?.duplicatedNotes && editor.localUploader?.duplicatedNotes.length > 0}>
+              <Show when={editor.localUploader?.duplicatedNotes}>
                 <p>
                   该资源已经存在于<a>{normalizeTitle(editor.localUploader!.duplicatedNotes![0]!)}</a>
                   {editor.localUploader!.duplicatedNotes!.length > 1 &&

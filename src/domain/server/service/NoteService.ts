@@ -163,12 +163,11 @@ export default class NoteService extends BaseService {
     const { id: fileId } = await this.file.createFile(file);
     await this.repo.notes.update(noteId, { fileId });
 
-    if (!note.title && file.name) {
-      const title = file.name.split('.')[0];
+    const title = note.title ? undefined : file.name;
+    const sourceUrl = file.sourceUrl;
 
-      if (title) {
-        await this.repo.notes.update(noteId, { title });
-      }
+    if (title || sourceUrl) {
+      await this.repo.notes.update(noteId, { title, sourceUrl });
     }
   }
 

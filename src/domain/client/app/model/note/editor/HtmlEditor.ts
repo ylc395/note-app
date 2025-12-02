@@ -1,6 +1,7 @@
 import { observable, action, computed } from 'mobx';
 
 import { MimeTypes } from '#domain/shared/model/file';
+import { toText } from '#utils/file';
 import BaseEditor from './BaseEditor';
 
 export enum Panels {
@@ -29,7 +30,6 @@ export default class HtmlEditor extends BaseEditor {
       return undefined;
     }
 
-    const textDecoder = new TextDecoder();
-    return textDecoder.decode(this.blob.result.data);
+    return toText(this.blob.result.data);
   }
 }

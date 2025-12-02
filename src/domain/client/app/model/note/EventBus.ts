@@ -16,7 +16,7 @@ export type CreatedEvent = NoteVO;
 export interface UpdatedEvent {
   id: NoteVO['id'];
   source?: unknown;
-  payload: NotePatchDTO;
+  payload: NotePatchDTO & { mimeType?: NoteVO['mimeType'] };
 }
 
 export default class DomainEventBus extends EventBus<{

@@ -9,7 +9,7 @@ import { token as imageResizerToken } from '#domain/shared/infra/imageResizer';
 import { getHash } from '#utils/file';
 import type { FileDTO, FileVO } from '#domain/shared/model/file';
 
-type Icon = Required<Pick<FileDTO, 'data' | 'mimeType'>>;
+type CustomIcon = Required<Pick<FileDTO, 'data' | 'mimeType'>>;
 
 // 新建并设置图标
 export default class CustomIconPicker {
@@ -24,7 +24,7 @@ export default class CustomIconPicker {
 
   private readonly imageResizer = container.resolve(imageResizerToken);
 
-  @observable.ref public accessor icon: Icon | undefined = undefined;
+  @observable.ref public accessor icon: CustomIcon | undefined = undefined;
 
   public readonly duplicatedIconFile = createQuery(
     async () => {
@@ -42,7 +42,7 @@ export default class CustomIconPicker {
     return Boolean(this.icon) && !this.duplicatedIconFile.result.isFetching;
   }
 
-  public async set(file: Icon | undefined) {
+  public async set(file: CustomIcon | undefined) {
     runInAction(() => {
       this.icon = undefined;
     });

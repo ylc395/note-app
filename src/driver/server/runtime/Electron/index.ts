@@ -8,7 +8,6 @@ import { createIPCHandler } from 'electron-trpc/main';
 import { PROTOCOL } from '#domain/shared/infra/url.js';
 import { IS_CLEAN_DEV, IS_DEV } from '#domain/shared/infra/env.js';
 import { token as loggerToken } from '#domain/shared/infra/logger.js';
-import FileService from '#domain/server/service/FileService/index.js';
 import container from '#utils/singletonContainer.js';
 
 import DesktopRuntime from '../Desktop.js';
@@ -22,7 +21,6 @@ export default class ElectronRuntime extends DesktopRuntime {
   public readonly appVersion = '1.0.0'; // todo: 从某个构建变量里取
   private mainWindow?: BrowserWindow;
   protected readonly logger = container.resolve(loggerToken);
-  private readonly fileService = container.resolve(FileService);
 
   public async bootstrap() {
     if (IS_DEV) {

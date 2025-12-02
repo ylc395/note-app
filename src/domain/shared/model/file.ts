@@ -8,6 +8,11 @@ export interface File {
   textUnitLength?: number; // 对于 PDF，指总页数
 }
 
+export interface RemoteFileMetadata {
+  mimeType: File['mimeType'];
+  size: number | null;
+}
+
 /**
  * @api
  */
@@ -16,6 +21,7 @@ export interface FileDTO {
   lang?: File['lang'];
   data: ArrayBuffer;
   name?: string;
+  sourceUrl?: string;
 }
 
 /**

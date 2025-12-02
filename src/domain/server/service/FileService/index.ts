@@ -2,6 +2,8 @@ import assert from 'node:assert';
 
 import { getHash } from '#utils/file.js';
 import type { FileVO, FileDTO, NewFileTextRecord } from '#domain/server/model/file.js';
+import { token as downloaderToken } from '#domain/server/infra/downloader.js';
+import container from '#utils/singletonContainer.js';
 
 import BaseService from '../BaseService.js';
 import EntityService from '../EntityService.js';
@@ -12,6 +14,8 @@ export default class FileService extends BaseService {
     super();
     this.runtime.ready().then(this.resumeTextExtractor.bind(this));
   }
+
+  private readonly downloader = container.resolve(downloaderToken);
 
   private readonly textExtractJobQueue = new JobQueue();
 
@@ -66,6 +70,10 @@ export default class FileService extends BaseService {
     assert(data);
 
     return data;
+  }
+
+  public download(url: string) {
+    return this.downloader.download(url);
   }
 
   private async resumeTextExtractor() {
