@@ -1,7 +1,7 @@
-import { TextDecoder } from 'node:util';
-import { parseDocument } from 'htmlparser2';
-import { textContent, findOne } from 'domutils';
+import { JSDOM } from 'jsdom';
+import { Readability } from '@mozilla/readability';
 
+import { toText } from '#utils/file';
 import type { TextExtractor } from './extractor';
 
 export default class HTMLTextExtractor implements TextExtractor {
@@ -10,12 +10,12 @@ export default class HTMLTextExtractor implements TextExtractor {
   }
 
   public extract({ data }: { data: ArrayBuffer }) {
-    const textDecoder = new TextDecoder();
-    const html = textDecoder.decode(data);
-    const bodyEl = findOne((el) => el.tagName.toLowerCase() === 'body', [parseDocument(html)], true);
+    const html = toText(data);
+    const dom = new JSDOM(html);
+    const reader = new Readability(dom.window.document);
 
     return Promise.resolve({
-      text: bodyEl ? textContent(bodyEl) : '',
+      text: reader.parse()?.textContent ?? '',
       location: {},
       lang: [], // 网页文字记录的语言不重要
     });
