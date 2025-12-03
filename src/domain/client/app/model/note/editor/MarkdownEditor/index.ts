@@ -5,6 +5,7 @@ import BaseEditor from '../BaseEditor';
 import LocalUploader, { type File } from './LocalUploader';
 import RemoteUploader from './RemoteUploader';
 import DomainEventBus from '../../EventBus';
+import type { FileDTO } from '#domain/shared/model/file';
 
 export default class MarkdownEditor extends BaseEditor {
   public override mimeType = null;
@@ -18,14 +19,16 @@ export default class MarkdownEditor extends BaseEditor {
     return Boolean(this.localUploader || this.remoteUploader);
   }
 
-  private upgradeTo(mimeType: string) {
-    this.domainEventBus.emit(DomainEventBus.eventNames.Updated, {
-      id: this.noteId,
-      source: this,
-      payload: { mimeType },
-    });
+  private upgradeTo(isPreview = false, file: FileDTO) {
+    this.tile.replace(this, { entityId: this.noteId, ...file });
 
-    this.tile.replace(this, { entityId: this.noteId, mimeType });
+    if (!isPreview) {
+      this.domainEventBus.emit(DomainEventBus.eventNames.Updated, {
+        id: this.noteId,
+        source: this,
+        payload: { mimeType: file.mimeType },
+      });
+    }
   }
 
   @action
@@ -37,7 +40,7 @@ export default class MarkdownEditor extends BaseEditor {
       noteId: this.noteId,
 
       onUploaded: () => {
-        this.upgradeTo(file.mimeType);
+        this.upgradeTo(false, file);
       },
     });
   }
@@ -48,9 +51,7 @@ export default class MarkdownEditor extends BaseEditor {
 
     this.remoteUploader = new RemoteUploader({
       noteId: this.noteId,
-      onUploaded: ({ mimeType }) => {
-        this.upgradeTo(mimeType);
-      },
+      onDownloaded: this.upgradeTo.bind(this, true),
     });
   }
 

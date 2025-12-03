@@ -19,6 +19,10 @@ export default router({
     .input(z.string())
     .query(({ ctx: { fileService }, input: id }) => fileService.queryFileById(id)),
 
+  queryRemoteMetadata: publicProcedure
+    .input(z.string())
+    .query(({ ctx: { fileService }, input: url }) => fileService.queryRemoteMetadata(url)),
+
   download: publicProcedure.input(z.url()).subscription(({ ctx: { fileService }, input: url }) => {
     return observable<ObservedValueOf<ReturnType<FileService['download']>>>((subscriber) => {
       const subscription = fileService.download(url).subscribe(subscriber);

@@ -152,7 +152,11 @@ export default class Tile {
     assert(this.currentEditor);
 
     return {
-      editors: this.editors.map((e) => ({ entityId: e.noteId, mimeType: e.mimeType, title: e.title || '' })),
+      editors: this.editors.map((e) => ({
+        entityId: e.noteId,
+        mimeType: e.value.data?.mimeType || null, // 不能读取 editor.mimeType，因为它可能是一个预览用的
+        title: e.title || '',
+      })),
       current: this.currentEditor.noteId,
     };
   }

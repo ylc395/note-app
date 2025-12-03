@@ -76,6 +76,10 @@ export default class FileService extends BaseService {
     return this.downloader.download(url);
   }
 
+  public queryRemoteMetadata(url: string) {
+    return this.downloader.getMetadata(url);
+  }
+
   private async resumeTextExtractor() {
     const unfinishedFiles = await this.repo.files.findUnfinishedFile(JobQueue.SUPPORT_MIME_TYPES);
 

@@ -2,9 +2,9 @@ import assert from 'assert';
 import { Show } from 'solid-js';
 import MarkdownEditor from '#domain/client/app/model/note/editor/MarkdownEditor';
 
-import { useContext } from '../../context';
 import LocalFileUploader from './LocalFileUploader';
 import RemoteFileUploader from './RemoteFileUploader';
+import { useContext } from '../../context';
 
 export default function Empty() {
   const buttonClassName = 'pointer-events-auto border-border-primary border border-dashed p-18 rounded-3xl';

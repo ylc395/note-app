@@ -8,6 +8,7 @@ import EventBus from '#domain/client/shared/infra/EventBus';
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import { normalizeTitle, type NotePatchDTO, type NoteVO } from '#domain/shared/model/note';
+import type { FileDTO } from '#domain/shared/model/file';
 
 import { EventNames, type Events } from './events';
 import type Tile from '../../Workbench/Tile';
@@ -18,15 +19,17 @@ export interface Options {
   entityId: NoteVO['id'];
   title?: NoteVO['title'];
   initialCommand?: Command;
+  data?: FileDTO['data'];
+  sourceUrl?: FileDTO['sourceUrl'];
 }
 
 type Patch = Pick<NotePatchDTO, 'body' | 'icon' | 'title'>;
 
 export default abstract class BaseEditor {
-  constructor(tile: Tile, { entityId, title, initialCommand }: Options) {
+  constructor(tile: Tile, { entityId, initialCommand, ...options }: Options) {
     this.noteId = entityId;
-    this.initialTitle = title;
     this.command$ = new BehaviorSubject(initialCommand);
+    this.options = options;
 
     runInAction(() => {
       this.tile = tile;
@@ -51,12 +54,18 @@ export default abstract class BaseEditor {
     });
 
     this.blob = createQuery(
-      ({ signal }) => this.remote.note.getBlob.query(this.noteId, { signal }) as Promise<ArrayBuffer>,
+      ({ signal }) => {
+        if (this.options.data) {
+          return this.options.data;
+        }
+
+        return this.remote.note.getBlob.query(this.noteId, { signal }) as Promise<ArrayBuffer>;
+      },
       {
         queryKey: ['note.blob', this.noteId],
         abortSignal: this.destroyController.signal,
         options: () => ({
-          enabled: Boolean(this.value.result.data?.mimeType) && this.isCurrent,
+          enabled: (this.options.data || Boolean(this.value.result.data?.mimeType)) && this.isCurrent,
         }),
       },
     );
@@ -64,11 +73,11 @@ export default abstract class BaseEditor {
 
   public readonly command$;
 
+  private readonly options;
+
   protected readonly remote = container.resolve(rpcToken);
 
   public abstract readonly mimeType: string | null;
-
-  private readonly initialTitle?: string;
 
   protected readonly domainEventBus = container.resolve(DomainEventBus);
 
@@ -92,7 +101,7 @@ export default abstract class BaseEditor {
 
   @computed
   public get title() {
-    return this.value.result.data ? normalizeTitle(this.value.result.data) : this.initialTitle ?? null;
+    return this.value.result.data ? normalizeTitle(this.value.result.data) : this.options.title ?? null;
   }
 
   @computed
@@ -103,6 +112,14 @@ export default abstract class BaseEditor {
   @computed
   public get isCurrent() {
     return this.tile.currentEditor === this;
+  }
+
+  public get isPreview() {
+    return Boolean(this.options.data);
+  }
+
+  public get sourceUrl() {
+    return this.options.sourceUrl;
   }
 
   public readonly update = (patch: Patch) => {
@@ -175,6 +192,10 @@ export default abstract class BaseEditor {
   }
 
   public destroy() {
+    if (this.options.data) {
+      this.blob.remove();
+    }
+
     Promise.resolve(this.upload.flush()).then(
       action(() => {
         this.destroyController.abort();
