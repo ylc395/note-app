@@ -1,7 +1,8 @@
 import assert from 'node:assert';
+import { parse, serialize } from 'parse5';
 
-import { getHash } from '#utils/file.js';
-import type { FileVO, FileDTO, NewFileTextRecord } from '#domain/server/model/file.js';
+import { getHash, toArrayBuffer, toText } from '#utils/file.js';
+import { type FileVO, type FileDTO, type NewFileTextRecord } from '#domain/server/model/file.js';
 import { token as downloaderToken } from '#domain/server/infra/downloader.js';
 import container from '#utils/singletonContainer.js';
 
@@ -78,6 +79,13 @@ export default class FileService extends BaseService {
 
   public queryRemoteMetadata(url: string) {
     return this.downloader.getMetadata(url);
+  }
+
+  public async inlineHtml({ html, url }: { html: ArrayBuffer; url: string }) {
+    const htmlText = serialize(parse(toText(html))); // 规范化 HTML 文档，修复错误的标签匹配、丢失的双引号等等问题
+    const inlined = await this.downloader.inlineHtml(htmlText, url);
+
+    return toArrayBuffer(inlined);
   }
 
   private async resumeTextExtractor() {

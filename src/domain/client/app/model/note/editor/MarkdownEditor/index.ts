@@ -7,6 +7,7 @@ import RemoteUploader from './RemoteUploader';
 import DomainEventBus from '../../EventBus';
 import type { FileDTO } from '#domain/shared/model/file';
 
+// todo: 把这里的方法移到父类上
 export default class MarkdownEditor extends BaseEditor {
   public override mimeType = null;
 

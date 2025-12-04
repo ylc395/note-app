@@ -11,7 +11,12 @@ export async function getHash(data: ArrayBuffer) {
   return hashAsString;
 }
 
-export function toArrayBuffer(buffer: Buffer | Uint8Array) {
+export function toArrayBuffer(buffer: Buffer | Uint8Array | string) {
+  if (typeof buffer === 'string') {
+    const encoder = new TextEncoder();
+    return encoder.encode(buffer).buffer;
+  }
+
   return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength) as ArrayBuffer;
 }
 

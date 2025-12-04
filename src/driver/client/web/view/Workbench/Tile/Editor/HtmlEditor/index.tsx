@@ -1,47 +1,30 @@
-import { createEffect, createMemo, createSignal, onMount } from 'solid-js';
-import { createLazyMemo } from '@solid-primitives/memo';
-import { Readability } from '@mozilla/readability';
-import DOMPurify from 'dompurify';
+import { createEffect, createMemo, onMount } from 'solid-js';
 import assert from 'assert';
 
 import HtmlEditor from '#domain/client/app/model/note/editor/HtmlEditor';
+import useHtml from './useHtml';
 import { useContext } from '../context';
 
 export default function HtmlEditorView() {
   const { editor } = useContext()!;
-  const [pageType, setPageType] = createSignal<'complete' | 'simple'>('complete');
-  let htmlRendererRef: HTMLDivElement | undefined;
-
-  const simpleHtml = createLazyMemo(() => {
-    assert(editor instanceof HtmlEditor);
-
-    if (!editor.html) {
-      return null;
-    }
-
-    const doc = new DOMParser().parseFromString(editor.html, 'text/html');
-    return new Readability(doc).parse();
-  });
-
   const html = createMemo(() => {
-    if (pageType() === 'simple') {
-      return simpleHtml()?.content;
-    }
-
     assert(editor instanceof HtmlEditor);
     return editor.html || null;
   });
+
+  let htmlRendererRef: HTMLDivElement | undefined;
+  const { dom, setPageType } = useHtml(html);
 
   onMount(() => {
     htmlRendererRef!.attachShadow({ mode: 'open' });
   });
 
   createEffect(() => {
-    const htmlValue = html();
+    const domValue = dom();
 
-    if (htmlValue) {
-      const dom = DOMPurify.sanitize(htmlValue, { RETURN_DOM_FRAGMENT: true, WHOLE_DOCUMENT: true });
-      htmlRendererRef!.shadowRoot!.replaceChildren(dom);
+    if (domValue) {
+      // 这里必须 clone 下文档片段。因为文档片段一旦被置入 DOM 树中，该文档片段将被清空
+      htmlRendererRef!.shadowRoot!.replaceChildren(domValue.cloneNode(true));
     }
   });
 

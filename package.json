@@ -33,6 +33,7 @@
     "@types/react": "^18.2.57",
     "@types/react-dom": "^18.2.19",
     "@types/turndown": "^5.0.4",
+    "@types/web-resource-inliner": "^4.2.5",
     "@types/webextension-polyfill": "^0.10.7",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
@@ -119,6 +120,7 @@
     "mobx-utils": "^6.1.1",
     "p-queue": "^8.1.0",
     "page-lifecycle": "^0.1.2",
+    "parse5": "^8.0.0",
     "path-to-regexp": "^8.2.0",
     "pdfjs-dist": "^5.3.93",
     "perfect-freehand": "^1.2.2",
@@ -136,6 +138,7 @@
     "turndown": "^7.1.2",
     "unist-util-is": "^6.0.0",
     "unist-util-visit": "^5.0.0",
+    "web-resource-inliner": "^8.0.0",
     "webextension-polyfill": "^0.10.0",
     "zod": "^4.1.12"
   },

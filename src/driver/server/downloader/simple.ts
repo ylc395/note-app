@@ -1,5 +1,7 @@
 import { Observable } from 'rxjs';
 import { noop } from 'lodash-es';
+import inliner from 'web-resource-inliner';
+import { promisify } from 'node:util';
 import type { Downloader } from '#domain/server/infra/downloader';
 
 // @types/jsdom 中引用了 lib.dom.d.ts，其中 ReadableStream 的定义是错的，导致全局 ReadableStream 被错误的定义覆盖
@@ -12,7 +14,7 @@ declare global {
 }
 
 const simpleDownloader: Downloader = {
-  download(url: string) {
+  download(url) {
     const abortController = new AbortController();
 
     return new Observable((subscriber) => {
@@ -44,7 +46,7 @@ const simpleDownloader: Downloader = {
       };
     });
   },
-  getMetadata: async (url: string) => {
+  async getMetadata(url) {
     function processResponse(res: Response) {
       if (res.ok) {
         const contentType = res.headers.get('Content-Type')?.split(';')[0]?.trim();
@@ -95,6 +97,16 @@ const simpleDownloader: Downloader = {
       mimeType: null,
       size: null,
     };
+  },
+  async inlineHtml(htmlText, url: string) {
+    const result = await promisify(inliner.html)({
+      fileContent: htmlText,
+      scripts: false,
+      images: Infinity,
+      relativeTo: url,
+    });
+
+    return result;
   },
 };
 

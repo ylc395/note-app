@@ -23,6 +23,10 @@ export default router({
     .input(z.string())
     .query(({ ctx: { fileService }, input: url }) => fileService.queryRemoteMetadata(url)),
 
+  inlineHTML: publicProcedure
+    .input(z.object({ html: z.instanceof(ArrayBuffer), url: z.url() }))
+    .query(({ ctx: { fileService }, input }) => fileService.inlineHtml(input)),
+
   download: publicProcedure.input(z.url()).subscription(({ ctx: { fileService }, input: url }) => {
     return observable<ObservedValueOf<ReturnType<FileService['download']>>>((subscriber) => {
       const subscription = fileService.download(url).subscribe(subscriber);

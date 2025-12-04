@@ -5,7 +5,7 @@ import { last } from 'lodash-es';
 
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
-import { type FileDTO, type RemoteFileMetadata } from '#domain/shared/model/file';
+import { MimeTypes, type FileDTO, type RemoteFileMetadata } from '#domain/shared/model/file';
 import type { NoteVO } from '#domain/shared/model/note';
 
 const urlSchema = z.url();
@@ -55,8 +55,17 @@ export default class RemoteUploader {
           offset += chunk.length;
         }
 
-        const loadedData = result.buffer as ArrayBuffer;
+        let loadedData = result.buffer;
         assert(this.metadata?.mimeType && this.url);
+
+        if (this.metadata.mimeType === MimeTypes.HTML) {
+          loadedData = (await this.remote.file.inlineHTML.query({
+            html: loadedData,
+            url: this.url,
+          })) as ArrayBuffer;
+        }
+
+        this.isDownloading = false;
 
         this.options.onDownloaded({
           data: loadedData,
@@ -65,7 +74,7 @@ export default class RemoteUploader {
           sourceUrl: this.url,
         });
       },
-      onStopped: action(() => {
+      onError: action(() => {
         this.isDownloading = false;
       }),
       signal: this.destroyController.signal,
