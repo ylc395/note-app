@@ -1,72 +1,65 @@
-import { action, computed, observable } from 'mobx';
+import { action, computed, reaction } from 'mobx';
 import assert from 'assert';
+import { debounce } from 'lodash-es';
 
-import BaseEditor from '../BaseEditor';
-import LocalUploader, { type File } from './LocalUploader';
-import RemoteUploader from './RemoteUploader';
-import DomainEventBus from '../../EventBus';
-import type { FileDTO } from '#domain/shared/model/file';
+import BaseEditor, { type Options } from '../BaseEditor';
+import type Tile from '../../../Workbench/Tile';
+import Uploader from '../Uploader';
 
-// todo: 把这里的方法移到父类上
 export default class MarkdownEditor extends BaseEditor {
+  constructor(tile: Tile, options: Options) {
+    super(tile, options);
+
+    reaction(
+      () => this.isEmptyBody,
+      debounce((isEmptyBody) => (isEmptyBody ? this.initUploader() : this.removeUploader()), 800),
+      { signal: this.destroyController.signal, fireImmediately: true },
+    );
+  }
+
   public override mimeType = null;
 
-  @observable public accessor remoteUploader: RemoteUploader | undefined;
+  private uploaderController?: AbortController;
 
-  @observable.ref public accessor localUploader: LocalUploader | undefined;
+  private get isEmptyBody() {
+    return this.value.data?.body === '';
+  }
 
   @computed
   public get isUploading() {
-    return Boolean(this.localUploader || this.remoteUploader);
-  }
-
-  private upgradeTo(isPreview = false, file: FileDTO) {
-    this.tile.replace(this, { entityId: this.noteId, ...file });
-
-    if (!isPreview) {
-      this.domainEventBus.emit(DomainEventBus.eventNames.Updated, {
-        id: this.noteId,
-        source: this,
-        payload: { mimeType: file.mimeType },
-      });
-    }
+    return Boolean(this.fileUploader?.file || this.fileUploader?.downloader);
   }
 
   @action
-  public initFileUploader(file: File) {
-    assert(!this.localUploader);
+  private removeUploader() {
+    this.fileUploader = undefined;
+    this.uploaderController?.abort();
+  }
 
-    this.localUploader = new LocalUploader({
-      file,
-      noteId: this.noteId,
+  @action
+  private initUploader() {
+    this.fileUploader = new Uploader({ noteId: this.noteId });
+    this.uploaderController = new AbortController();
+    const signal = AbortSignal.any([this.uploaderController.signal, this.destroyController.signal]);
 
-      onUploaded: () => {
-        this.upgradeTo(false, file);
-      },
+    this.fileUploader.eventBus.on('downloaded', this.upgrade.bind(this, true), { signal });
+    this.fileUploader.eventBus.on('uploaded', this.upgrade.bind(this), { signal });
+  }
+
+  @action
+  private upgrade(isPreview = false) {
+    const { fileUploader } = this;
+    const mimeType = fileUploader?.file?.mimeType;
+    assert(fileUploader && mimeType);
+
+    this.removeUploader(); // 提前移除 uploader，免得随后该编辑器 destroy 影响了 uploader
+
+    this.tile.replace(this, {
+      entityId: this.noteId,
+      mimeType,
+      value: this.value.data,
+      uploader: isPreview ? fileUploader : undefined,
+      path: this.path.data,
     });
-  }
-
-  @action.bound
-  public initRemoteUploader() {
-    assert(!this.remoteUploader);
-
-    this.remoteUploader = new RemoteUploader({
-      noteId: this.noteId,
-      onDownloaded: this.upgradeTo.bind(this, true),
-    });
-  }
-
-  public override destroy() {
-    this.resetUploader();
-    super.destroy();
-  }
-
-  @action.bound
-  public resetUploader() {
-    this.localUploader?.destroy();
-    this.localUploader = undefined;
-
-    this.remoteUploader?.destroy();
-    this.remoteUploader = undefined;
   }
 }

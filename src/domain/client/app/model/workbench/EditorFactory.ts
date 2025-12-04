@@ -68,7 +68,8 @@ export default class EditorFactory {
         editor.value.setData((origin) => origin && { ...origin, ...note });
       }
 
-      if (note.parentId !== undefined) {
+      // todo: 要重新获取路径的，似乎不止这些
+      if (note.parentId !== undefined && editor.value.data && note.parentId !== editor.value.data.parentId) {
         editor.path.invalidate();
       }
     }

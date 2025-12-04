@@ -1,31 +1,52 @@
+import assert from 'assert';
 import { action, computed, observable, runInAction } from 'mobx';
 import z from 'zod';
-import assert from 'assert';
 import { last } from 'lodash-es';
 
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import { MimeTypes, type FileDTO, type RemoteFileMetadata } from '#domain/shared/model/file';
-import type { NoteVO } from '#domain/shared/model/note';
 
 const urlSchema = z.url();
 
-export default class RemoteUploader {
-  constructor(
-    private readonly options: {
-      noteId: NoteVO['id'];
-      onDownloaded: (metadata: FileDTO) => void;
-    },
-  ) {}
-  private readonly remote = container.resolve(rpcToken);
+export default class Downloader {
+  constructor(private readonly options: { onDownloaded: (file: Required<Omit<FileDTO, 'lang'>>) => void }) {}
 
   private readonly destroyController = new AbortController();
+
+  private readonly remote = container.resolve(rpcToken);
+
+  @observable private accessor url: string | undefined;
 
   @observable.ref public accessor metadata: Readonly<RemoteFileMetadata> | undefined;
 
   @observable public accessor loadedSize = 0;
 
   @observable public accessor isDownloading = false;
+
+  @action
+  public setUrl(url: string) {
+    this.url = url;
+  }
+
+  @computed
+  public get isValidUrl() {
+    return urlSchema.safeParse(this.url).success;
+  }
+
+  @computed
+  public get isEmptyUrl() {
+    return !this.url;
+  }
+
+  private getFileNameFromUrl() {
+    assert(this.url);
+
+    const url = new URL(this.url);
+    const lastPathname = last(url.pathname.split('/'))?.split('.')[0];
+
+    return lastPathname || url.hostname;
+  }
 
   public async download() {
     assert(this.isValidUrl && !this.isDownloading && this.url);
@@ -65,7 +86,9 @@ export default class RemoteUploader {
           })) as ArrayBuffer;
         }
 
-        this.isDownloading = false;
+        runInAction(() => {
+          this.isDownloading = false;
+        });
 
         this.options.onDownloaded({
           data: loadedData,
@@ -81,34 +104,7 @@ export default class RemoteUploader {
     });
   }
 
-  private getFileNameFromUrl() {
-    assert(this.url);
-
-    const url = new URL(this.url);
-    const lastPathname = last(url.pathname.split('/'))?.split('.')[0];
-
-    return lastPathname || url.hostname;
-  }
-
-  @observable
-  private accessor url: string | undefined;
-
-  @action
-  public setUrl(url: string) {
-    this.url = url;
-  }
-
-  @computed
-  public get isValidUrl() {
-    return urlSchema.safeParse(this.url).success;
-  }
-
-  @computed
-  public get isEmptyUrl() {
-    return !this.url;
-  }
-
-  public destroy() {
+  public cancel() {
     this.destroyController.abort();
   }
 }

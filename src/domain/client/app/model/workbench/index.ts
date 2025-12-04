@@ -14,8 +14,8 @@ import RecentManager from './RecentManager';
 import UIState from './UIState';
 
 export interface HistoryRecord {
-  key: EntityId;
-  editorId: Editor['id'];
+  key: Editor['id'];
+  noteId: EntityId;
   title: string | null;
   tileId: Tile['id'];
   mimeType: string | null;
@@ -60,7 +60,7 @@ export default class Workbench {
 
   @computed
   public get currentEditor() {
-    return this.historyStack.current && this.editorManager.get(this.historyStack.current.editorId);
+    return this.historyStack.current && this.editorManager.get(this.historyStack.current.key);
   }
 
   public getTileById(id: Tile['id']) {
@@ -94,9 +94,9 @@ export default class Workbench {
     await when(() => editor.value.result.isLoadingError || editor.value.result.isSuccess); // 确保 editor 的信息（如 title / mimeType）加载好了
 
     this.historyStack.push({
-      key: editor.noteId,
       mimeType: editor.mimeType,
-      editorId: editor.id,
+      key: editor.id,
+      noteId: editor.noteId,
       tileId: editor.tile.id,
       title: editor.title,
     });
@@ -267,9 +267,7 @@ export default class Workbench {
 
   private handleHistoryPop({ record }: { record: HistoryRecord }) {
     const dest =
-      this.editorManager.get(record.editorId) ||
-      this.getTileById(record.tileId)?.findEditor(record.key) ||
-      record.tileId;
+      this.editorManager.get(record.key) || this.getTileById(record.tileId)?.findEditor(record.noteId) || record.tileId;
 
     if (dest instanceof Editor) {
       dest.tile.switchToEditor(dest);

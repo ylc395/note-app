@@ -1,7 +1,7 @@
 import { Show } from 'solid-js';
-import type RemoteUploader from '#domain/client/app/model/note/editor/MarkdownEditor/RemoteUploader';
+import type Downloader from '#domain/client/app/model/note/editor/Uploader/Downloader';
 
-export default function UrlInput(props: { remoteUploader: RemoteUploader }) {
+export default function UrlInput(props: { remoteUploader: Downloader }) {
   return (
     <div>
       <input class="border" onInput={(e) => props.remoteUploader.setUrl(e.target.value)} />

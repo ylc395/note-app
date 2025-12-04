@@ -72,12 +72,13 @@ export default class Tile {
   // 不能创建 noteId-mimeType 均相同的两个 editor
   @action
   public createAndAddEditor(entity: EditorDTO, dest?: Editor | number) {
+    const newEditor = this.editorFactory.create(this, entity);
+
     assert(
-      this.editors.findIndex((editor) => editor.noteId === entity.entityId && editor.mimeType === entity.mimeType) < 0,
+      !this.editors.find((editor) => editor.noteId === entity.entityId && editor.isPreview === newEditor.isPreview),
       'can not create duplicated editor',
     );
 
-    const newEditor = this.editorFactory.create(this, entity);
     this.addEditor(newEditor, dest);
 
     return newEditor;

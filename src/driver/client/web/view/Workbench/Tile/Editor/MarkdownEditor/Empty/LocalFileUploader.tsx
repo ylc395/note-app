@@ -12,17 +12,18 @@ export default function LocalFileUploader(props: { className?: string }) {
   assert(editor instanceof MarkdownEditor);
 
   async function handleFileChange(file: File) {
-    assert(editor instanceof MarkdownEditor);
-    editor.initFileUploader({
+    assert(editor.fileUploader);
+    editor.fileUploader?.setFile({
       mimeType: file.type,
       name: file.name,
       data: await file.arrayBuffer(),
     });
   }
 
-  function handleCancel(ctx: UseFileUploadContext) {
-    assert(editor instanceof MarkdownEditor);
-    editor.resetUploader();
+  function cancel(ctx: UseFileUploadContext) {
+    assert(editor.fileUploader);
+
+    editor.fileUploader.clearFile();
     ctx().clearFiles();
   }
 
@@ -32,7 +33,7 @@ export default function LocalFileUploader(props: { className?: string }) {
       onFileChange={({ acceptedFiles: [file] }) => file && handleFileChange(file)}
     >
       <Show
-        when={editor.localUploader}
+        when={editor.fileUploader?.file}
         fallback={
           <FileUpload.Dropzone class="text-sm w-full h-full flex flex-col items-center justify-center cursor-pointer">
             <FileUpload.Trigger class="flex items-center justify-center flex-col">
@@ -66,18 +67,21 @@ export default function LocalFileUploader(props: { className?: string }) {
                   )}
                 </For>
               </FileUpload.ItemGroup>
-              <Show when={editor.localUploader?.duplicatedNotes}>
-                <p>
-                  该资源已经存在于<a>{normalizeTitle(editor.localUploader!.duplicatedNotes![0]!)}</a>
-                  {editor.localUploader!.duplicatedNotes!.length > 1 &&
-                    `等${editor.localUploader!.duplicatedNotes!.length}个笔记`}
-                  中。
-                </p>
-                <p>是否仍然创建？</p>
-                <div>
-                  <button onClick={editor.localUploader!.upload}>继续创建</button>
-                  <button onClick={() => handleCancel(ctx)}>取消</button>
-                </div>
+              <Show when={editor.fileUploader?.duplicatedNotes.result.data?.length}>
+                {(num) => (
+                  <>
+                    <p>
+                      该资源已经存在于<a>{normalizeTitle(editor.fileUploader!.duplicatedNotes.result.data![0]!)}</a>
+                      {num() > 1 && `等${num()}个笔记`}
+                      中。
+                    </p>
+                    <p>是否仍然创建？</p>
+                    <div>
+                      <button onClick={() => editor.fileUploader?.upload()}>继续创建</button>
+                      <button onClick={() => cancel(ctx)}>取消</button>
+                    </div>
+                  </>
+                )}
               </Show>
             </>
           )}

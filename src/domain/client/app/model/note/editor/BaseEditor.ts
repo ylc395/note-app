@@ -8,64 +8,68 @@ import EventBus from '#domain/client/shared/infra/EventBus';
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import { normalizeTitle, type NotePatchDTO, type NoteVO } from '#domain/shared/model/note';
-import type { FileDTO } from '#domain/shared/model/file';
+import type { EntityPath } from '#domain/shared/model/entity';
 
 import { EventNames, type Events } from './events';
 import type Tile from '../../Workbench/Tile';
 import DomainEventBus from '../EventBus';
 import type { Command } from './command';
+import type Uploader from './Uploader';
 
 export interface Options {
   entityId: NoteVO['id'];
   title?: NoteVO['title'];
   initialCommand?: Command;
-  data?: FileDTO['data'];
-  sourceUrl?: FileDTO['sourceUrl'];
+  value?: NoteVO;
+  path?: EntityPath;
+  uploader?: Uploader;
 }
 
 type Patch = Pick<NotePatchDTO, 'body' | 'icon' | 'title'>;
 
 export default abstract class BaseEditor {
-  constructor(tile: Tile, { entityId, initialCommand, ...options }: Options) {
+  constructor(tile: Tile, { entityId, initialCommand, uploader, value, path, ...options }: Options) {
     this.noteId = entityId;
     this.command$ = new BehaviorSubject(initialCommand);
     this.options = options;
+    this.isPreview = Boolean(uploader); // 若初始化时就带了 uploader，说明是预览编辑器
 
     runInAction(() => {
       this.tile = tile;
+      this.fileUploader = uploader;
     });
+
+    this.fileUploader?.eventBus.on('uploaded', this.reload.bind(this, true));
 
     this.value = createQuery(({ signal }) => this.remote.note.queryOneById.query(this.noteId, { signal }), {
       queryKey: ['note', this.noteId],
       refetchOnWindowFocus: true,
       abortSignal: this.destroyController.signal,
+      initialData: value,
       options: () => ({
-        enabled: this.isCurrent,
+        enabled: this.isCurrent && !this.isPreview,
       }),
     });
 
     this.path = createQuery(({ signal }) => this.remote.note.queryPath.query(this.noteId, { signal }), {
       queryKey: ['note.path', this.noteId],
       refetchOnWindowFocus: true,
+      initialData: path,
       abortSignal: this.destroyController.signal,
       options: () => ({
-        enabled: this.isCurrent,
+        enabled: this.isCurrent && !this.isPreview,
       }),
     });
 
     this.blob = createQuery(
-      ({ signal }) => {
-        if (this.options.data) {
-          return this.options.data;
-        }
-
-        return this.remote.note.getBlob.query(this.noteId, { signal }) as Promise<ArrayBuffer>;
-      },
+      ({ signal }) => this.remote.note.getBlob.query(this.noteId, { signal }) as Promise<ArrayBuffer>,
       {
+        initialData: this.fileUploader?.file?.data,
         queryKey: ['note.blob', this.noteId],
+        staleTime: Infinity,
         abortSignal: this.destroyController.signal,
         options: () => ({
-          enabled: (this.options.data || Boolean(this.value.result.data?.mimeType)) && this.isCurrent,
+          enabled: this.isCurrent && !this.isPreview,
         }),
       },
     );
@@ -73,7 +77,11 @@ export default abstract class BaseEditor {
 
   public readonly command$;
 
+  @observable.ref public accessor fileUploader: Uploader | undefined;
+
   private readonly options;
+
+  public readonly isPreview: boolean;
 
   protected readonly remote = container.resolve(rpcToken);
 
@@ -112,14 +120,6 @@ export default abstract class BaseEditor {
   @computed
   public get isCurrent() {
     return this.tile.currentEditor === this;
-  }
-
-  public get isPreview() {
-    return Boolean(this.options.data);
-  }
-
-  public get sourceUrl() {
-    return this.options.sourceUrl;
   }
 
   public readonly update = (patch: Patch) => {
@@ -191,10 +191,23 @@ export default abstract class BaseEditor {
     this.events.emit(EventNames.Focus, this);
   }
 
+  public reload(hard = false) {
+    assert(this.isPreview, 'can not reload a non-preview editor');
+    assert(this.value.data);
+
+    this.tile.replace(this, {
+      entityId: this.noteId,
+      mimeType: hard ? this.mimeType : this.value.data.mimeType,
+      value: hard ? undefined : this.value.data,
+      path: this.path.data,
+    });
+  }
+
   public destroy() {
-    if (this.options.data) {
+    if (this.isPreview) {
       this.blob.remove();
     }
+    this.fileUploader?.destroy();
 
     Promise.resolve(this.upload.flush()).then(
       action(() => {

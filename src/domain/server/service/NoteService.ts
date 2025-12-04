@@ -1,5 +1,5 @@
 import assert from 'node:assert';
-import { keyBy, omit, pick, uniq } from 'lodash-es';
+import { defaults, keyBy, omit, pick, uniq } from 'lodash-es';
 import {
   type NoteVO,
   type NoteDTO,
@@ -160,15 +160,14 @@ export default class NoteService extends BaseService {
     const note = await this.repo.notes.findOneById(noteId);
     assert(note && !note.fileId);
 
-    const { id: fileId } = await this.file.createFile(file);
-    await this.repo.notes.update(noteId, { fileId });
-
     const title = note.title ? undefined : file.name;
     const sourceUrl = file.sourceUrl;
 
-    if (title || sourceUrl) {
-      await this.repo.notes.update(noteId, { title, sourceUrl });
-    }
+    const { id: fileId } = await this.file.createFile(file);
+    const patch = { fileId, title, sourceUrl };
+    await this.repo.notes.update(noteId, patch);
+
+    return this.toVO(defaults(patch, note));
   }
 
   private async assertValidDto(patch: NewNoteDTO, noteIds?: Note['id'][]) {

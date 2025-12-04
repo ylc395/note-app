@@ -11,23 +11,30 @@ export default function RemoteFileUploader(props: { className?: string }) {
   const { editor } = useContext()!;
   assert(editor instanceof MarkdownEditor);
 
+  function initDownloader() {
+    if (editor.fileUploader?.downloader) {
+      return;
+    }
+    editor.fileUploader?.initDownloader();
+  }
+
   return (
     <div class={props.className}>
-      <div onClick={() => !editor.remoteUploader && editor.initRemoteUploader()}>上传在线资源</div>
-      <Show when={editor.remoteUploader}>
-        {(remoteUploader) => (
+      <div onClick={initDownloader}>上传在线资源</div>
+      <Show when={editor.fileUploader?.downloader}>
+        {(downloader) => (
           <>
-            <Show when={remoteUploader().isDownloading} fallback={<UrlInput remoteUploader={remoteUploader()} />}>
-              <DownloadingProgress remoteUploader={remoteUploader()} />
+            <Show when={downloader().isDownloading} fallback={<UrlInput remoteUploader={downloader()} />}>
+              <DownloadingProgress downloader={downloader()} />
             </Show>
             <div>
               <button
-                disabled={!remoteUploader().isValidUrl || remoteUploader().isDownloading}
-                onClick={() => remoteUploader().download()}
+                disabled={!downloader().isValidUrl || downloader().isDownloading}
+                onClick={() => downloader().download()}
               >
-                {remoteUploader().isDownloading ? '下载中...' : '下载'}
+                {downloader().isDownloading ? '下载中...' : '下载'}
               </button>
-              <button onClick={editor.resetUploader}>取消</button>
+              <button onClick={() => editor.fileUploader?.clearDownloader()}>取消</button>
             </div>
           </>
         )}
