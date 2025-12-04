@@ -80,13 +80,13 @@ export default class Uploader {
 
   public async upload() {
     assert(this.file);
-    const newFile = await this.remote.note.setFile.mutate([this.options.noteId, this.file]);
+    const { mimeType, title, sourceUrl } = await this.remote.note.setFile.mutate([this.options.noteId, this.file]);
 
     this.eventBus.emit('uploaded');
     this.domainEventBus.emit(DomainEventBus.eventNames.Updated, {
       id: this.options.noteId,
       source: this,
-      payload: newFile,
+      payload: { mimeType, title, sourceUrl },
     });
   }
 

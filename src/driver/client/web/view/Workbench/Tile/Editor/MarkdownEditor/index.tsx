@@ -37,7 +37,7 @@ export default function MarkdownEditorView() {
             className="grow min-h-0 overflow-auto border-16 border-surface-primary"
             defaultValue={note().body}
             readonly={editor.isUploading}
-            onUpdate={(text) => editor.isCurrent && editor.update({ body: text })}
+            onUpdate={(text) => workbench.currentEditor === editor && editor.update({ body: text })}
           />
           <Show when={!note().body}>
             <Empty />

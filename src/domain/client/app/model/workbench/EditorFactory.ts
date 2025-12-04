@@ -8,7 +8,6 @@ import HtmlEditor from '../note/editor/HtmlEditor';
 import ImageEditor from '../note/editor/ImageEditor';
 import UnknownEditor from '../note/editor/UnknownEditor';
 import MarkdownEditor from '../note/editor/MarkdownEditor';
-import DomainEventBus, { type UpdatedEvent } from '../note/EventBus';
 import type Tile from './Tile';
 
 export interface EditorDTO extends Options {
@@ -17,10 +16,8 @@ export interface EditorDTO extends Options {
 
 export default class EditorFactory {
   constructor() {
-    this.domainEventBus.on(DomainEventBus.eventNames.Updated, this.handleNoteUpdate.bind(this));
     // this.domainEventBus.on(DomainEventBus.eventNames.Deleted, this.handleNoteDeleted.bind(this));
   }
-  private readonly domainEventBus = container.resolve(DomainEventBus);
 
   private readonly editorsMap = new Map<Editor['id'], Editor>();
 
@@ -54,25 +51,6 @@ export default class EditorFactory {
 
   private handleEditorDestroyed(editor: Editor) {
     this.editorsMap.delete(editor.id);
-  }
-
-  private handleNoteUpdate({ id, payload: note, source }: UpdatedEvent) {
-    const editors = this.noteEditorsMap.get(id);
-
-    if (!editors) {
-      return;
-    }
-
-    for (const editor of editors) {
-      if (!(source instanceof Editor)) {
-        editor.value.setData((origin) => origin && { ...origin, ...note });
-      }
-
-      // todo: 要重新获取路径的，似乎不止这些
-      if (note.parentId !== undefined && editor.value.data && note.parentId !== editor.value.data.parentId) {
-        editor.path.invalidate();
-      }
-    }
   }
 
   public get(id: Editor['id']) {

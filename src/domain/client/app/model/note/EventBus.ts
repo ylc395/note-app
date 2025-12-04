@@ -1,6 +1,6 @@
 import EventBus from '#domain/client/shared/infra/EventBus';
 import { EntityTypes } from '#domain/shared/model/entity';
-import type { NotePatchDTO, NoteVO } from '#domain/shared/model/note';
+import type { NoteVO } from '#domain/shared/model/note';
 import container from '#utils/singletonContainer';
 import RecyclableEventBus, { type PutEvent } from '../recyclable/EventBus';
 
@@ -16,7 +16,7 @@ export type CreatedEvent = NoteVO;
 export interface UpdatedEvent {
   id: NoteVO['id'];
   source?: unknown;
-  payload: NotePatchDTO & { mimeType?: NoteVO['mimeType'] };
+  payload: Partial<NoteVO>;
 }
 
 export default class DomainEventBus extends EventBus<{

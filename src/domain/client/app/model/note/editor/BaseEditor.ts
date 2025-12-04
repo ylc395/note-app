@@ -1,4 +1,4 @@
-import { uniqueId, debounce, pick } from 'lodash-es';
+import { uniqueId, debounce, pick, defaults } from 'lodash-es';
 import { action, computed, observable, runInAction } from 'mobx';
 import assert from 'assert';
 import { createQuery } from 'mobx-tanstack-query/preset';
@@ -12,7 +12,7 @@ import type { EntityPath } from '#domain/shared/model/entity';
 
 import { EventNames, type Events } from './events';
 import type Tile from '../../Workbench/Tile';
-import DomainEventBus from '../EventBus';
+import DomainEventBus, { type UpdatedEvent } from '../EventBus';
 import type { Command } from './command';
 import type Uploader from './Uploader';
 
@@ -73,6 +73,10 @@ export default abstract class BaseEditor {
         }),
       },
     );
+
+    this.domainEventBus.on(DomainEventBus.eventNames.Updated, this.handleNoteUpdated.bind(this), {
+      signal: this.destroyController.signal,
+    });
   }
 
   public readonly command$;
@@ -218,6 +222,20 @@ export default abstract class BaseEditor {
         });
       }),
     );
+  }
+
+  private handleNoteUpdated(e: UpdatedEvent) {
+    if (e.source === this) {
+      return;
+    }
+
+    if (e.id === this.noteId) {
+      this.value.setData((v) => defaults(e.payload, v));
+    }
+
+    if (e.payload.parentId !== undefined && this.path.data?.some(({ id }) => id === e.id)) {
+      this.path.invalidate();
+    }
   }
 
   public static readonly eventNames = EventNames;
