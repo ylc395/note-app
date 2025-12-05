@@ -1,8 +1,9 @@
 import { Observable } from 'rxjs';
 import { noop } from 'lodash-es';
-import inliner from 'web-resource-inliner';
-import { promisify } from 'node:util';
+
 import type { Downloader } from '#domain/server/infra/downloader';
+import { toText } from '#utils/file';
+import { inline } from './inliner';
 
 // @types/jsdom 中引用了 lib.dom.d.ts，其中 ReadableStream 的定义是错的，导致全局 ReadableStream 被错误的定义覆盖
 // 这里做个修复
@@ -99,12 +100,8 @@ const simpleDownloader: Downloader = {
     };
   },
   async inlineHtml(htmlText, url: string) {
-    const result = await promisify(inliner.html)({
-      fileContent: htmlText,
-      scripts: false,
-      images: Infinity,
-      relativeTo: url,
-    });
+    htmlText = typeof htmlText === 'string' ? htmlText : toText(htmlText);
+    const result = await inline(htmlText, url);
 
     return result;
   },

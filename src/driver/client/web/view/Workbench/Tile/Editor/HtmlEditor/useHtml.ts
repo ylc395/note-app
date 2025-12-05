@@ -6,7 +6,7 @@ import DOMPurify from 'dompurify';
 const dompurifyOptions = {
   RETURN_DOM_FRAGMENT: true,
   WHOLE_DOCUMENT: true,
-  SAFE_FOR_XML: false, // 这个选项容易误杀 <style>
+  SAFE_FOR_XML: false, // 这个选项会把包含 svg 图像的 <style> 给误杀掉
 } as const;
 
 export default function useHtml(html: Accessor<string | null>) {

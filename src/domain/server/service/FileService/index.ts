@@ -1,5 +1,4 @@
 import assert from 'node:assert';
-import { parse, serialize } from 'parse5';
 
 import { getHash, toArrayBuffer, toText } from '#utils/file.js';
 import { type FileVO, type FileDTO, type NewFileTextRecord } from '#domain/server/model/file.js';
@@ -82,9 +81,7 @@ export default class FileService extends BaseService {
   }
 
   public async inlineHtml({ html, url }: { html: ArrayBuffer; url: string }) {
-    const htmlText = serialize(parse(toText(html))); // 规范化 HTML 文档，修复错误的标签匹配、丢失的双引号等等问题
-    const inlined = await this.downloader.inlineHtml(htmlText, url);
-
+    const inlined = await this.downloader.inlineHtml(html, url);
     return toArrayBuffer(inlined);
   }
 
