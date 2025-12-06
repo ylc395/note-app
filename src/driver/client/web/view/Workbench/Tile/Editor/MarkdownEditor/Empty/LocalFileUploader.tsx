@@ -13,11 +13,14 @@ export default function LocalFileUploader(props: { className?: string }) {
 
   async function handleFileChange(file: File) {
     assert(editor.fileUploader);
-    editor.fileUploader?.setFile({
-      mimeType: file.type,
-      name: file.name,
-      data: await file.arrayBuffer(),
-    });
+    editor.fileUploader?.setFile(
+      {
+        mimeType: file.type,
+        name: file.name,
+        data: await file.arrayBuffer(),
+      },
+      true,
+    );
   }
 
   function cancel(ctx: UseFileUploadContext) {

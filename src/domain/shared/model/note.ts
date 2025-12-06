@@ -40,6 +40,7 @@ export interface ClientNoteQuery {
   id?: Note['id'][];
   parentId?: EntityParentId | EntityParentId[];
   fileHash?: string;
+  sourceUrl?: string;
 }
 
 export interface NoteVO extends Omit<Note, 'fileId'> {

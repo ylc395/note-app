@@ -30,15 +30,15 @@ export default function HtmlEditorView() {
 
   return (
     <div class="grow min-h-0 relative flex flex-col">
-      <div class="absolute top-0 left-0 right-0 flex z-10">
+      <div class="flex">
         <small>网页中的 JS 脚本不会被运行</small>
         <div>
           <button onClick={() => setPageType('simple')}>精简版</button>
           <button onClick={() => setPageType('complete')}>完整版</button>
         </div>
       </div>
-      <div class="min-h-0 grow overflow-auto px-inset-square-xl pt-inset-square-xl pb-40 select-text">
-        <div ref={htmlRendererRef} class="all-initial"></div>
+      <div class="min-h-0 grow overflow-auto select-text">
+        <div ref={htmlRendererRef} class="all-initial contain-strict!"></div>
       </div>
     </div>
   );

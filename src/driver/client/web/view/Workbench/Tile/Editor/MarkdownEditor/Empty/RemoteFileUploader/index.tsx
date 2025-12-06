@@ -29,7 +29,7 @@ export default function RemoteFileUploader(props: { className?: string }) {
             </Show>
             <div>
               <button
-                disabled={!downloader().isValidUrl || downloader().isDownloading}
+                disabled={!downloader().isValidUrl || downloader().isDownloading || downloader().isChecking}
                 onClick={() => downloader().download()}
               >
                 {downloader().isDownloading ? '下载中...' : '下载'}

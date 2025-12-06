@@ -3,7 +3,7 @@ import { openDB, type IDBPDatabase } from 'idb';
 import type { ZodType } from 'zod';
 
 import { APP_NAME } from '#domain/shared/infra/constants';
-import { storeName as editorUIStoreName } from '#domain/client/app/model/note/editor/uiState';
+import { storeName as editorUIStoreName } from '#domain/client/app/model/note/editor/BaseEditor';
 import type { DocumentDb } from '#domain/client/shared/infra/documentDb';
 
 class IndexedDb implements DocumentDb {

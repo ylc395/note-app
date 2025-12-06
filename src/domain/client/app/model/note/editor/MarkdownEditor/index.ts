@@ -2,13 +2,12 @@ import { action, computed, reaction } from 'mobx';
 import assert from 'assert';
 import { debounce } from 'lodash-es';
 
-import BaseEditor, { type Options } from '../BaseEditor';
-import type Tile from '../../../Workbench/Tile';
+import BaseEditor from '../BaseEditor';
 import Uploader from '../Uploader';
 
 export default class MarkdownEditor extends BaseEditor {
-  constructor(tile: Tile, options: Options) {
-    super(tile, options);
+  constructor(...args: ConstructorParameters<typeof BaseEditor>) {
+    super(...args);
 
     reaction(
       () => this.isEmptyBody,

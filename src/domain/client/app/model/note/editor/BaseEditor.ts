@@ -3,18 +3,22 @@ import { action, computed, observable, runInAction } from 'mobx';
 import assert from 'assert';
 import { createQuery } from 'mobx-tanstack-query/preset';
 import { BehaviorSubject } from 'rxjs';
+import type { ZodType } from 'zod';
 
 import EventBus from '#domain/client/shared/infra/EventBus';
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import { normalizeTitle, type NotePatchDTO, type NoteVO } from '#domain/shared/model/note';
 import type { EntityPath } from '#domain/shared/model/entity';
+import { token as documentDbToken } from '#domain/client/shared/infra/documentDb';
 
 import { EventNames, type Events } from './events';
 import type Tile from '../../Workbench/Tile';
 import DomainEventBus, { type UpdatedEvent } from '../EventBus';
 import type { Command } from './command';
 import type Uploader from './Uploader';
+
+export const storeName = 'editor_UI_state';
 
 export interface Options {
   entityId: NoteVO['id'];
@@ -81,6 +85,8 @@ export default abstract class BaseEditor {
 
   public readonly command$;
 
+  private readonly db = container.resolve(documentDbToken);
+
   @observable.ref public accessor fileUploader: Uploader | undefined;
 
   private readonly options;
@@ -92,6 +98,14 @@ export default abstract class BaseEditor {
   public abstract readonly mimeType: string | null;
 
   protected readonly domainEventBus = container.resolve(DomainEventBus);
+
+  protected readonly saveUIState = debounce((value: Record<string, unknown>) => {
+    this.db.put(storeName, { ...value, id: this.noteId });
+  }, 500);
+
+  protected getUIState<T>(schema: ZodType<T>) {
+    return this.db.getByKey(storeName, this.noteId, schema);
+  }
 
   public readonly id = uniqueId('editor-');
 

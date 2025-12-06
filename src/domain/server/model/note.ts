@@ -7,6 +7,7 @@ export interface NoteQuery {
   parentId?: MaybeArray<Note['parentId']>;
   id?: Note['id'][];
   fileHash?: ClientNoteQuery['fileHash'];
+  sourceUrl?: ClientNoteQuery['sourceUrl'];
   isAvailableOnly?: boolean;
 }
 

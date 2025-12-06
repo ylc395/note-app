@@ -1,4 +1,4 @@
-import { observable, action, computed } from 'mobx';
+import { observable, computed } from 'mobx';
 
 import { MimeTypes } from '#domain/shared/model/file';
 import { toText } from '#utils/file';
@@ -14,22 +14,8 @@ export default class HtmlEditor extends BaseEditor {
 
   public override readonly mimeType = MimeTypes.HTML;
 
-  @observable public accessor panelsVisibility = {
-    [Panels.Outline]: false,
-    [Panels.AnnotationList]: true,
-  };
-
-  @action
-  public togglePanel(panel: Panels) {
-    this.panelsVisibility[panel] = !this.panelsVisibility[panel];
-  }
-
   @computed
   public get html() {
-    if (!this.blob.result.data) {
-      return undefined;
-    }
-
-    return toText(this.blob.result.data);
+    return this.blob.result.data && toText(this.blob.result.data);
   }
 }

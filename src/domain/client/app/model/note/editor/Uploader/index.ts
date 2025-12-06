@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { action, computed, observable, runInAction } from 'mobx';
+import { action, observable, runInAction } from 'mobx';
 import { createQuery } from 'mobx-tanstack-query/preset';
 
 import { getHash } from '#utils/file';
@@ -8,7 +8,7 @@ import type { NoteVO } from '#domain/shared/model/note';
 import type { FileDTO } from '#domain/shared/model/file';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 
-import Downloader from './Downloader';
+import Downloader, { type DownloadedFile } from './Downloader';
 import EventBus from '#domain/client/shared/infra/EventBus';
 import DomainEventBus from '../../EventBus';
 
@@ -32,7 +32,7 @@ export default class Uploader {
   @action
   public initDownloader() {
     this.downloader = new Downloader({
-      onDownloaded: (file) => this.setFile(file, true),
+      onDownloaded: this.handleDownloaded.bind(this),
     });
   }
 
@@ -43,13 +43,13 @@ export default class Uploader {
   }
 
   public readonly duplicatedNotes = createQuery(
-    async ({ queryKey: [_, { hash }] }) =>
-      this.remote.note.query.query({ fileHash: hash! }, { signal: this.destroyController.signal }),
+    async ({ queryKey: [_, { hash }], signal }) => this.remote.note.query.query({ fileHash: hash! }, { signal }),
     {
       options: () => ({
         enabled: Boolean(this.file?.hash),
         queryKey: ['duplicatedNotes', { hash: this.file?.hash }] as const,
       }),
+      abortSignal: this.destroyController.signal,
     },
   );
 
@@ -58,20 +58,25 @@ export default class Uploader {
     this.file = undefined;
   }
 
-  public async setFile(file: Omit<FileToUpload, 'hash'>, isDownload = false) {
+  private async handleDownloaded(file: DownloadedFile) {
+    await this.setFile(file, false);
+    this.eventBus.emit('downloaded');
+  }
+
+  public async setFile(file: Omit<FileToUpload, 'hash'>, tryUpload = true) {
     const hash = await getHash(file.data);
 
     runInAction(() => {
       this.file = { ...file, hash };
     });
 
-    if (isDownload) {
-      this.eventBus.emit('downloaded');
+    if (!tryUpload) {
+      return;
     }
 
     const duplicated = await this.duplicatedNotes.start();
 
-    if (duplicated.data!.length > 0 || isDownload) {
+    if (duplicated.data!.length > 0) {
       return;
     }
 

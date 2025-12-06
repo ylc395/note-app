@@ -1,14 +1,12 @@
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import { autorun, computed, observable, runInAction, toJS, when } from 'mobx';
 import assert from 'assert';
-import { debounce } from 'lodash-es';
 import z from 'zod';
 
 import container from '#utils/singletonContainer';
 import { MimeTypes } from '#domain/shared/model/file';
-import { token as documentDbToken } from '#domain/client/shared/infra/documentDb';
 
-import BaseEditor, { type Options } from '../BaseEditor';
+import BaseEditor from '../BaseEditor';
 import DocumentFactory from './DocumentFactory';
 import PageTextManager from './PageTextManager';
 import TextFinder, { optionsSchema as textFinderSchema } from './TextFinder';
@@ -16,9 +14,6 @@ import BodyEditor, { schema as bodyEditorSchema } from './BodyEditor';
 import AnnotationManager, { schema as annotationSchema } from './AnnotationManager';
 import OutlineList, { uiStateSchema as outlineSchema } from './OutlineList';
 import SvgAnnotationEditor, { optionsSchema as svgAnnotationEditorSchema } from './SvgAnnotationEditor';
-
-import { storeName } from '../uiState';
-import type Tile from '../../../Workbench/Tile';
 
 export type { OutlineItem } from './OutlineList';
 
@@ -46,14 +41,12 @@ const uiStateSchema = z
   .catch({});
 
 export default class PdfEditor extends BaseEditor {
-  constructor(tile: Tile, options: Options) {
-    super(tile, options);
+  constructor(...args: ConstructorParameters<typeof BaseEditor>) {
+    super(...args);
     when(() => this.blob.result.isSuccess, this.init.bind(this), { signal: this.destroyController.signal });
 
     this.initUIState();
   }
-
-  private readonly db = container.resolve(documentDbToken);
 
   private readonly docFactory = container.resolve(DocumentFactory);
 
@@ -100,7 +93,7 @@ export default class PdfEditor extends BaseEditor {
   }
 
   private async initUIState() {
-    const uiState = await this.db.getByKey(storeName, this.noteId, uiStateSchema);
+    const uiState = await this.getUIState(uiStateSchema);
 
     runInAction(() => {
       if (uiState) {
@@ -135,10 +128,6 @@ export default class PdfEditor extends BaseEditor {
       { signal: this.destroyController.signal },
     );
   }
-
-  private readonly saveUIState = debounce((value: Record<string, unknown>) => {
-    this.db.put(storeName, { ...value, id: this.noteId });
-  }, 500);
 
   public override destroy() {
     this.docFactory.revoke(this.noteId);

@@ -81,6 +81,10 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
       sql = sql.where(`${fileTableName}.hash`, '=', q.fileHash);
     }
 
+    if (q.sourceUrl) {
+      sql = sql.where(`${this.tableName}.sourceUrl`, '=', q.sourceUrl);
+    }
+
     const rows = await sql.execute();
     return rows;
   }

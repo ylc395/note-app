@@ -1,7 +1,8 @@
 import assert from 'assert';
 import { action, computed, observable, runInAction } from 'mobx';
 import z from 'zod';
-import { last } from 'lodash-es';
+import { debounce, last } from 'lodash-es';
+import { createQuery } from 'mobx-tanstack-query/preset';
 
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
@@ -9,8 +10,10 @@ import { MimeTypes, type FileDTO, type RemoteFileMetadata } from '#domain/shared
 
 const urlSchema = z.url();
 
+export type DownloadedFile = Required<Omit<FileDTO, 'lang'>>;
+
 export default class Downloader {
-  constructor(private readonly options: { onDownloaded: (file: Required<Omit<FileDTO, 'lang'>>) => void }) {}
+  constructor(private readonly options: { onDownloaded: (file: DownloadedFile) => void }) {}
 
   private readonly destroyController = new AbortController();
 
@@ -24,9 +27,41 @@ export default class Downloader {
 
   @observable public accessor isDownloading = false;
 
+  @observable private accessor isWaitingToCheck = false;
+
+  @computed public get isChecking() {
+    return this.isWaitingToCheck || this.duplicatedNotes.isFetching;
+  }
+
+  private readonly troToCheck = debounce(
+    action(() => {
+      this.isWaitingToCheck = false;
+      this.duplicatedNotes.refetch(); // 当前正在进行的请求会被 cancel
+      return true;
+    }),
+    1000,
+  );
+
+  public readonly duplicatedNotes = createQuery(
+    async ({ queryKey: [_, { sourceUrl }], signal }) =>
+      this.remote.note.query.query({ sourceUrl: sourceUrl! }, { signal }),
+    {
+      abortSignal: this.destroyController.signal,
+      enabled: false,
+      options: () => ({
+        queryKey: ['duplicatedNotes', { sourceUrl: this.url }] as const,
+      }),
+    },
+  );
+
   @action
   public setUrl(url: string) {
     this.url = url;
+
+    if (this.isValidUrl) {
+      this.isWaitingToCheck = true;
+      this.troToCheck();
+    }
   }
 
   @computed

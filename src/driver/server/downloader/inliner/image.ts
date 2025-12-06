@@ -3,23 +3,24 @@ import { parseSrcset, stringifySrcset } from 'srcset';
 
 import { isLocalUrl, als } from './utils';
 
-export async function processMedia($: CheerioAPI) {
+export async function parseImage($: CheerioAPI) {
   const images = $(
-    'img[src],img[srcset],video[src],audio[src],source[srcset],embed[src],track[src],input[src][type="image"],object[data]',
+    // 暂时先只管图片，video[src],audio[src],embed[src],track[src],object[data] 先不管
+    'img[src],img[srcset],source[srcset],input[src][type="image"]',
   );
   const { urlToDataUrl } = als.getStore()!;
 
   await Promise.all(
     images.map(async (_, el) => {
       const $el = $(el);
-      const src = el.tagName.toUpperCase() === 'OBJECT' ? $el.attr('data') : $el.attr('src');
+      const src = $el.attr('src');
       const srcset = $el.attr('srcset');
 
       if (src && !isLocalUrl(src)) {
         const resolvedUrl = $el.prop('src')!;
         const dataUrl = await urlToDataUrl(resolvedUrl);
 
-        $el.attr('src', dataUrl);
+        $el.attr('src', dataUrl).attr('data-origin-src', resolvedUrl);
       }
 
       if (srcset) {
@@ -29,7 +30,10 @@ export async function processMedia($: CheerioAPI) {
             .map(async ({ url, ...rest }) => ({ ...rest, url: await urlToDataUrl(url) })),
         );
 
-        $el.attr('srcset', stringifySrcset(newSet));
+        $el.attr({
+          srcset: stringifySrcset(newSet),
+          'data-origin-srcset': srcset,
+        });
       }
     }),
   );
@@ -48,8 +52,13 @@ export async function processFavicon($: CheerioAPI) {
         return;
       }
 
-      const dataUrl = await urlToDataUrl($el.prop('href')!, $el.attr('type'));
-      $el.attr('href', dataUrl);
+      const resolvedUrl = $el.prop('href')!;
+      const dataUrl = await urlToDataUrl(resolvedUrl, $el.attr('type'));
+
+      $el.attr({
+        href: dataUrl,
+        'data-origin-href': resolvedUrl,
+      });
     }),
   );
 }
