@@ -34,6 +34,7 @@ export default class FileService extends BaseService {
     };
 
     const textExtractor = JobQueue.getExtractor(params);
+
     const fileVO = await this.repo.files.create({
       id: EntityService.generateId(),
       ...params,
@@ -42,13 +43,14 @@ export default class FileService extends BaseService {
       textUnitLength: textExtractor ? await textExtractor.getTextUnitLength(file.data) : 0,
     });
 
-    this.textExtractJobQueue.addJob({
-      fileId: fileVO.id,
-      lang: params.lang,
-      mimeType: params.mimeType,
-      getData: this.repo.files.findBlobById,
-      onExtract: this.handleTextExtracted.bind(this),
-    });
+    if (textExtractor) {
+      this.textExtractJobQueue.addJob({
+        textExtractor,
+        fileId: fileVO.id,
+        getData: this.repo.files.findBlobById,
+        onExtract: this.handleTextExtracted.bind(this),
+      });
+    }
 
     return fileVO;
   }
@@ -100,8 +102,7 @@ export default class FileService extends BaseService {
     for (const { id, mimeType, lang } of unfinishedFiles) {
       this.textExtractJobQueue.addJob({
         fileId: id,
-        mimeType,
-        lang,
+        textExtractor: { mimeType, lang },
         getData: this.repo.files.findBlobById,
         locationsToSkip: textRecords[id]?.map(({ location }) => location),
         onExtract: this.handleTextExtracted.bind(this),

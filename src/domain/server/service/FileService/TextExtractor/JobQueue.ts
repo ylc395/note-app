@@ -15,18 +15,23 @@ export default class JobQueue {
   private readonly tasks = new Queue({ concurrency: 1 });
 
   public addJob(job: Job) {
-    if (!JobQueue.SUPPORT_MIME_TYPES.includes(job.mimeType) || this.tasks.sizeBy({ id: job.fileId }) !== 0) {
+    if (this.tasks.sizeBy({ id: job.fileId }) !== 0) {
       return;
     }
 
-    this.tasks.add(this.extract.bind(this, job), { id: job.fileId });
+    return this.tasks.add(this.extract.bind(this, job), { id: job.fileId });
   }
 
-  private async extract({ fileId, getData, lang, mimeType, locationsToSkip, onExtract }: Job) {
-    const data = await getData(fileId);
-    const extractor = JobQueue.getExtractor({ mimeType, lang });
+  private async extract({ fileId, getData, textExtractor, locationsToSkip, onExtract }: Job) {
+    const extractor = 'mimeType' in textExtractor ? JobQueue.getExtractor(textExtractor) : textExtractor;
 
-    if (!data || !extractor) {
+    if (!extractor) {
+      return;
+    }
+
+    const data = await getData(fileId);
+
+    if (!data) {
       return;
     }
 
@@ -43,7 +48,7 @@ export default class JobQueue {
     });
   }
 
-  public static getExtractor(params: { mimeType: string; lang: Job['lang'] }): TextExtractor | null {
+  public static getExtractor(params: { mimeType: string; lang: string[] }): TextExtractor | null {
     const mimeType = typeof params === 'string' ? params : params.mimeType;
     if (mimeType === MimeTypes.PDF) {
       return new PDFTextExtractor(params.lang);

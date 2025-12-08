@@ -11,7 +11,7 @@ import createWorker from './worker.js?nodeWorker';
 import type WorkerApi from './workerApi.js';
 
 export default class PDFTextExtractor implements TextExtractor {
-  constructor(lang: Job['lang']) {
+  constructor(lang: string[]) {
     this.imageTextExtractor = new ImageTextExtractor(lang, true);
   }
 

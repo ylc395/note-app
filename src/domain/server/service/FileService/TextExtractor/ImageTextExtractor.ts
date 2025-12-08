@@ -119,7 +119,7 @@ const SUPPORT_LANG_CODES = Object.keys(SUPPORT_LANGS);
 const DEFAULT_LANG_CODES: Array<keyof typeof SUPPORT_LANGS> = ['chi_sim', 'eng'];
 
 export default class ImageTextExtractor implements TextExtractor {
-  constructor(private readonly lang: Job['lang'], private readonly isMultiple = false) {
+  constructor(private readonly lang: string[], private readonly isMultiple = false) {
     assert(difference(lang, SUPPORT_LANG_CODES).length === 0, 'invalid langs');
   }
 
@@ -138,11 +138,9 @@ export default class ImageTextExtractor implements TextExtractor {
     // https://github.com/naptha/tesseract.js/blob/f9dac0742374940f88100eb47838e902e3b51eb8/docs/workers_vs_schedulers.md#reusing-workers-in-nodejs-server-code
     const JOB_LIMIT = 500;
 
-    if (this.scheduler && this.scheduler.jobCount > JOB_LIMIT) {
+    if (!this.scheduler || this.scheduler.jobCount > JOB_LIMIT) {
       this.scheduler = await this.createScheduler();
     }
-
-    this.scheduler ??= await this.createScheduler();
 
     const scheduler = this.scheduler;
     let result;
