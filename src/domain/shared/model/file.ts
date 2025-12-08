@@ -9,7 +9,6 @@ export interface File {
 }
 
 export interface RemoteFileMetadata {
-  isAccessible: boolean;
   mimeType: File['mimeType'] | null;
   size: number | null;
 }

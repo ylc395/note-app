@@ -5,7 +5,7 @@ import { createQuery } from 'mobx-tanstack-query/preset';
 import { getHash } from '#utils/file';
 import container from '#utils/singletonContainer';
 import type { NoteVO } from '#domain/shared/model/note';
-import type { FileDTO } from '#domain/shared/model/file';
+import { FileDTO } from '#domain/shared/model/file';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 
 import Downloader, { type DownloadedFile } from './Downloader';

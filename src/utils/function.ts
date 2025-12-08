@@ -1,3 +1,6 @@
+import { debounce } from 'lodash-es';
+import { action, extendObservable, makeObservable, observable, runInAction } from 'mobx';
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function withAbortSignal<F extends (signal: AbortSignal, ...args: any[]) => any>(
   func: F,
@@ -13,4 +16,34 @@ export function withAbortSignal<F extends (signal: AbortSignal, ...args: any[]) 
 
     return func(abortController.signal, ...args);
   };
+}
+
+export function debounceAction<T extends unknown[]>(fn: (...args: T) => unknown, timeout: number) {
+  let debounced = debounce(run, timeout);
+
+  function run(...args: T) {
+    runInAction(() => {
+      fn(...args);
+      reactiveDebounced.isPending = false;
+    });
+  }
+
+  const reactiveDebounced = Object.assign(
+    action(function (...args: T) {
+      reactiveDebounced.isPending = true;
+      debounced(...args);
+    }),
+    {
+      isPending: false,
+      flush: debounced.flush,
+      cancel: action(() => {
+        debounced.cancel();
+        reactiveDebounced.isPending = false;
+      }),
+    },
+  );
+
+  makeObservable(reactiveDebounced, { isPending: true });
+
+  return reactiveDebounced;
 }

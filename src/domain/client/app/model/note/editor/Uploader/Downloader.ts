@@ -2,11 +2,12 @@ import assert from 'assert';
 import { action, computed, observable, runInAction } from 'mobx';
 import z from 'zod';
 import { debounce, last } from 'lodash-es';
-import { createQuery } from 'mobx-tanstack-query/preset';
+import { createMutation, createQuery } from 'mobx-tanstack-query/preset';
 
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
-import { MimeTypes, type FileDTO, type RemoteFileMetadata } from '#domain/shared/model/file';
+import { MimeTypes, type FileDTO } from '#domain/shared/model/file';
+import { debounceAction } from '#utils/function';
 
 const urlSchema = z.url();
 
@@ -21,26 +22,11 @@ export default class Downloader {
 
   @observable private accessor url: string | undefined;
 
-  @observable.ref public accessor metadata: Readonly<RemoteFileMetadata> | undefined;
-
   @observable public accessor loadedSize = 0;
 
-  @observable public accessor isDownloading = false;
-
-  @observable private accessor isWaitingToCheck = false;
-
   @computed public get isChecking() {
-    return this.isWaitingToCheck || this.duplicatedNotes.isFetching;
+    return this.setUrl.isPending || this.duplicatedNotes.isFetching;
   }
-
-  private readonly troToCheck = debounce(
-    action(() => {
-      this.isWaitingToCheck = false;
-      this.duplicatedNotes.refetch(); // 当前正在进行的请求会被 cancel
-      return true;
-    }),
-    1000,
-  );
 
   public readonly duplicatedNotes = createQuery(
     async ({ queryKey: [_, { sourceUrl }], signal }) =>
@@ -54,15 +40,9 @@ export default class Downloader {
     },
   );
 
-  @action
-  public setUrl(url: string) {
+  public readonly setUrl = debounceAction((url: string) => {
     this.url = url;
-
-    if (this.isValidUrl) {
-      this.isWaitingToCheck = true;
-      this.troToCheck();
-    }
-  }
+  }, 500);
 
   @computed
   public get isValidUrl() {
@@ -83,61 +63,65 @@ export default class Downloader {
     return lastPathname || url.hostname;
   }
 
-  public async download() {
-    assert(this.isValidUrl && !this.isDownloading && this.url);
-
-    runInAction(() => {
-      this.isDownloading = true;
-    });
-    const metadata = await this.remote.file.queryRemoteMetadata.query(this.url);
-
-    runInAction(() => {
-      this.metadata = metadata;
-    });
-
-    const chunks: Uint8Array[] = [];
-
-    this.remote.file.download.subscribe(this.url!, {
-      onData: action((chunk) => {
-        this.loadedSize += chunk.length;
-        chunks.push(chunk as Uint8Array);
+  public readonly metadata = createQuery(
+    ({ queryKey: [_, { url }], signal }) => {
+      return this.remote.file.queryRemoteMetadata.query(url!, { signal });
+    },
+    {
+      abortSignal: this.destroyController.signal,
+      enabled: false,
+      options: () => ({
+        queryKey: ['remote.metadata', { url: this.url }] as const,
       }),
-      onComplete: async () => {
-        const result = new Uint8Array(this.loadedSize);
-        let offset = 0;
+    },
+  );
 
-        for (const chunk of chunks) {
-          result.set(chunk, offset);
-          offset += chunk.length;
-        }
+  public readonly download = createMutation(
+    async () => {
+      await this.metadata.refetch();
 
-        let loadedData = result.buffer;
-        assert(this.metadata?.mimeType && this.url);
+      return new Promise<DownloadedFile>((resolve, reject) => {
+        const chunks: Uint8Array[] = [];
 
-        if (this.metadata.mimeType === MimeTypes.HTML) {
-          loadedData = (await this.remote.file.inlineHTML.query({
-            html: loadedData,
-            url: this.url,
-          })) as ArrayBuffer;
-        }
+        this.remote.file.download.subscribe(this.url!, {
+          onData: action((chunk) => {
+            this.loadedSize += chunk.length;
+            chunks.push(chunk as Uint8Array);
+          }),
 
-        runInAction(() => {
-          this.isDownloading = false;
+          onComplete: async () => {
+            const result = new Uint8Array(this.loadedSize);
+            let offset = 0;
+
+            for (const chunk of chunks) {
+              result.set(chunk, offset);
+              offset += chunk.length;
+            }
+
+            let loadedData = result.buffer;
+            assert(this.metadata.result.data?.mimeType && this.url);
+
+            if (this.metadata.result.data.mimeType === MimeTypes.HTML) {
+              loadedData = (await this.remote.file.inlineHTML.query({
+                html: loadedData,
+                url: this.url,
+              })) as ArrayBuffer;
+            }
+
+            resolve({
+              data: loadedData,
+              name: this.getFileNameFromUrl(),
+              mimeType: this.metadata.result.data.mimeType,
+              sourceUrl: this.url,
+            });
+          },
+          onError: reject,
+          signal: this.destroyController.signal,
         });
-
-        this.options.onDownloaded({
-          data: loadedData,
-          name: this.getFileNameFromUrl(),
-          mimeType: this.metadata.mimeType,
-          sourceUrl: this.url,
-        });
-      },
-      onError: action(() => {
-        this.isDownloading = false;
-      }),
-      signal: this.destroyController.signal,
-    });
-  }
+      });
+    },
+    { onSuccess: (e) => this.options.onDownloaded(e) },
+  );
 
   public cancel() {
     this.destroyController.abort();

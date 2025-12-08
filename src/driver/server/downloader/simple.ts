@@ -55,7 +55,6 @@ const simpleDownloader: Downloader = {
 
         if (contentType) {
           return {
-            isAccessible: true,
             mimeType: contentType,
             size: contentLength ? Number(contentLength) : null,
           };
@@ -89,15 +88,11 @@ const simpleDownloader: Downloader = {
 
     ctl.abort();
 
-    if (metadata) {
-      return metadata;
+    if (!metadata) {
+      throw new Error('can not get metadata');
     }
 
-    return {
-      isAccessible: false,
-      mimeType: null,
-      size: null,
-    };
+    return metadata;
   },
   async inlineHtml(htmlText, url: string) {
     htmlText = typeof htmlText === 'string' ? htmlText : toText(htmlText);

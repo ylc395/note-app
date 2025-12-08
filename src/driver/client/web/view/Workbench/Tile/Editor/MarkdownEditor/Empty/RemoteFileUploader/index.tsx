@@ -24,15 +24,15 @@ export default function RemoteFileUploader(props: { className?: string }) {
       <Show when={editor.fileUploader?.downloader}>
         {(downloader) => (
           <>
-            <Show when={downloader().isDownloading} fallback={<UrlInput remoteUploader={downloader()} />}>
+            <Show when={downloader().download.isPending} fallback={<UrlInput remoteUploader={downloader()} />}>
               <DownloadingProgress downloader={downloader()} />
             </Show>
             <div>
               <button
-                disabled={!downloader().isValidUrl || downloader().isDownloading || downloader().isChecking}
-                onClick={() => downloader().download()}
+                disabled={!downloader().isValidUrl || downloader().download.isPending || downloader().isChecking}
+                onClick={() => downloader().download.mutate()}
               >
-                {downloader().isDownloading ? '下载中...' : '下载'}
+                {downloader().download.isPending ? '下载中...' : '下载'}
               </button>
               <button onClick={() => editor.fileUploader?.clearDownloader()}>取消</button>
             </div>
