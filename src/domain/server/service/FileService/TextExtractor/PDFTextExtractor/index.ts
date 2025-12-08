@@ -1,14 +1,16 @@
 import { from, mergeMap, Observable, Subscriber } from 'rxjs';
 import { compact, difference, range } from 'lodash-es';
-import { wrap, proxy } from 'comlink';
+import { wrap, proxy, releaseProxy } from 'comlink';
 import nodeEndpoint from 'comlink/dist/umd/node-adapter.js';
 import assert from 'node:assert';
 
 import type { ExtractResult, Job, TextExtractor } from '../extractor.js';
 import ImageTextExtractor from '../ImageTextExtractor.js';
 import { getDoc } from './utils.js';
-import createWorker from './worker.js?nodeWorker';
-import type WorkerApi from './workerApi.js';
+import type workerApi from './extractor.js';
+import createWorker from './extractor.js?nodeWorker';
+
+type WorkerApi = typeof workerApi;
 
 export default class PDFTextExtractor implements TextExtractor {
   constructor(lang: string[]) {
@@ -99,7 +101,7 @@ export default class PDFTextExtractor implements TextExtractor {
     }
 
     assert(subscription);
-    subscription.add(workerApi.destroy);
+    subscription.add(workerApi[releaseProxy]); // rxjs 会在流结束后自动 unsubscribe 从而触发 releaseProxy
   }
 
   private async extractPageTextContentByOcr(workerApi: WorkerApi, pageNum: number) {

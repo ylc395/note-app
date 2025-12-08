@@ -3,7 +3,7 @@ import { noop } from 'lodash-es';
 
 import type { Downloader } from '#domain/server/infra/downloader';
 import { toText } from '#utils/file';
-import { inline } from './inliner';
+import { inline } from './inlineHtml';
 
 // @types/jsdom 中引用了 lib.dom.d.ts，其中 ReadableStream 的定义是错的，导致全局 ReadableStream 被错误的定义覆盖
 // 这里做个修复

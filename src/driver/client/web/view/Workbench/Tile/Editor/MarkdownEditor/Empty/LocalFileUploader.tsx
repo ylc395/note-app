@@ -80,7 +80,7 @@ export default function LocalFileUploader(props: { className?: string }) {
                     </p>
                     <p>是否仍然创建？</p>
                     <div>
-                      <button onClick={() => editor.fileUploader?.upload()}>继续创建</button>
+                      <button onClick={() => editor.fileUploader?.upload.mutate()}>继续创建</button>
                       <button onClick={() => cancel(ctx)}>取消</button>
                     </div>
                   </>

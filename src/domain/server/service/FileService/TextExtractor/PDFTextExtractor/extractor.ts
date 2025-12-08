@@ -5,16 +5,16 @@ import type { PDFDocumentProxy } from 'pdfjs-dist';
 import assert from 'node:assert';
 
 import { getDoc } from './utils';
-import type Api from './workerApi';
+import type { ExtractResult } from '../extractor';
 
-class WorkerApi implements Api {
+export class WorkerApi {
   private doc?: PDFDocumentProxy;
 
-  public readonly extract: Api['extract'] = async (pages, onExtract, onComplete) => {
+  public async extract(pages: number[], onExtract: (result: ExtractResult) => void, onComplete: () => void) {
     Promise.all(pages.map((page) => this.getTextContent(page).then(onExtract))).then(onComplete);
-  };
+  }
 
-  public readonly getTextContent: Api['getTextContent'] = async (pageNum) => {
+  public async getTextContent(pageNum: number) {
     assert(this.doc);
 
     const page = await this.doc.getPage(pageNum);
@@ -30,18 +30,18 @@ class WorkerApi implements Api {
 
     page.cleanup();
     return { text, location: { page: pageNum } };
-  };
+  }
 
-  public readonly init: Api['init'] = async (data) => {
+  public async init(data: ArrayBuffer) {
     this.doc = await getDoc(data);
-  };
+  }
 
-  public readonly getPagesCount: Api['getPagesCount'] = () => {
+  public getPagesCount() {
     assert(this.doc);
     return Promise.resolve(this.doc.numPages);
-  };
+  }
 
-  public readonly getPageImage: Api['getPageImage'] = async (pageNum) => {
+  public async getPageImage(pageNum: number) {
     assert(this.doc);
     // 从 https://github.com/mozilla/pdf.js/blob/master/examples/node/pdf2png/pdf2png.mjs 这里抄的
     const page = await this.doc.getPage(pageNum);
@@ -56,12 +56,11 @@ class WorkerApi implements Api {
     const data: Uint8Array = canvasAndContext.canvas.toBuffer('image/png');
 
     return transfer({ data, scale }, [data.buffer]);
-  };
-
-  public readonly destroy: Api['destroy'] = async () => {
-    await this.doc?.destroy();
-    parentPort?.close();
-  };
+  }
 }
 
-expose(new WorkerApi(), nodeEndpoint(parentPort!));
+const api = new WorkerApi();
+
+expose(api, nodeEndpoint(parentPort!));
+
+export default api;

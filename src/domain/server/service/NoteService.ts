@@ -163,11 +163,12 @@ export default class NoteService extends BaseService {
     const title = note.title ? undefined : file.name;
     const sourceUrl = file.sourceUrl;
 
-    const { id: fileId } = await this.file.createFile(file);
+    const { id: fileId, mimeType } = await this.file.createFile(file);
     const patch = { fileId, title, sourceUrl };
+
     await this.repo.notes.update(noteId, patch);
 
-    return this.toVO(defaults(patch, note));
+    return this.toVO(defaults({ ...patch, mimeType }, note));
   }
 
   private async assertValidDto(patch: NewNoteDTO, noteIds?: Note['id'][]) {

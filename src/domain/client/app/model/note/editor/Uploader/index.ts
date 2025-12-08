@@ -1,6 +1,6 @@
 import assert from 'assert';
 import { action, observable, runInAction } from 'mobx';
-import { createQuery } from 'mobx-tanstack-query/preset';
+import { createMutation, createQuery } from 'mobx-tanstack-query/preset';
 
 import { getHash } from '#utils/file';
 import container from '#utils/singletonContainer';
@@ -80,20 +80,25 @@ export default class Uploader {
       return;
     }
 
-    await this.upload();
+    await this.upload.mutate();
   }
 
-  public async upload() {
-    assert(this.file);
-    const { mimeType, title, sourceUrl } = await this.remote.note.setFile.mutate([this.options.noteId, this.file]);
-
-    this.eventBus.emit('uploaded');
-    this.domainEventBus.emit(DomainEventBus.eventNames.Updated, {
-      id: this.options.noteId,
-      source: this,
-      payload: { mimeType, title, sourceUrl },
-    });
-  }
+  public readonly upload = createMutation(
+    () => {
+      assert(this.file);
+      return this.remote.note.setFile.mutate([this.options.noteId, this.file]);
+    },
+    {
+      onSuccess: ({ mimeType, title, sourceUrl }) => {
+        this.eventBus.emit('uploaded');
+        this.domainEventBus.emit(DomainEventBus.eventNames.Updated, {
+          id: this.options.noteId,
+          source: this,
+          payload: { mimeType, title, sourceUrl },
+        });
+      },
+    },
+  );
 
   public destroy() {
     this.destroyController.abort();

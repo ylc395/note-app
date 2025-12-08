@@ -5,7 +5,7 @@ import { MimeTypes } from '#domain/server/model/file.js';
 
 import PDFTextExtractor from './PDFTextExtractor/index.js';
 import ImageTextExtractor from './ImageTextExtractor.js';
-import HTMLTextExtractor from './HTMLTextExtractor.js';
+import HTMLTextExtractor from './HTMLTextExtractor/index.js';
 import type { Job, TextExtractor } from './extractor.js';
 
 export default class JobQueue {

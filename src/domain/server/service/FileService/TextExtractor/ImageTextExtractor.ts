@@ -8,7 +8,7 @@ import { textLocationSchema } from '#domain/shared/infra/apiSchema/file.js';
 import { token as runtimeToken } from '#domain/server/infra/runtime.js';
 import { token as loggerToken } from '#domain/shared/infra/logger.js';
 import container from '#utils/singletonContainer.js';
-import type { ExtractResult, Job, TextExtractor } from './extractor.js';
+import type { ExtractResult, TextExtractor } from './extractor.js';
 // @see https://tesseract-ocr.github.io/tessdoc/Data-Files#data-files-for-version-400-november-29-2016
 const SUPPORT_LANGS = {
   afr: 'Afrikaans',
