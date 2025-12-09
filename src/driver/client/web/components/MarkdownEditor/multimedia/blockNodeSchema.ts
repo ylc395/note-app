@@ -31,7 +31,7 @@ export const multimediaBlockNodeSchema = imageBlockSchema.extendSchema((originSc
         return div;
       },
       parseDOM: [
-        // 从其它应用里复制过来的 HTML，一律不识别为 multiple-block（后续可以考虑解析下 figure 元素之类的），因此我们只关心 toDOM 的特征
+        // 从其它应用里复制过来的 HTML，一律不识别为 multiple-block（后续可以考虑解析下 figure 元素之类的），因此我们只关心 toDOM 的特征（应用内互相复制内容）
         {
           tag: `div[data-type="${DATA_TYPE}"]`,
           getAttrs: (dom) => {

@@ -1,4 +1,4 @@
-import { Splitter, Tabs } from '@ark-ui/solid';
+import { Splitter } from '@ark-ui/solid';
 import { Show } from 'solid-js';
 import { action } from 'mobx';
 
@@ -7,7 +7,7 @@ import MainSidebar from './MainSidebar';
 import Explorer from './Explorer';
 import Workbench from './Workbench';
 import CustomIconPicker from './note/CustomIconPickerModal';
-import UIState, { SidebarTabs } from './UIState';
+import UIState from './UIState';
 import './index.css';
 
 export default function App() {
@@ -17,13 +17,7 @@ export default function App() {
 
   return (
     <Show when={uiState.isReady}>
-      <Tabs.Root
-        orientation="vertical"
-        lazyMount
-        defaultValue={uiState.explorer.type}
-        onValueChange={action(({ value }) => (uiState.explorer.type = value as SidebarTabs))}
-        class="flex h-screen"
-      >
+      <div class="flex h-screen">
         <MainSidebar />
         <Splitter.Root
           onResize={undefined}
@@ -36,7 +30,7 @@ export default function App() {
           <Splitter.ResizeTrigger id={`${explorerPanelId}:${workbenchPanelId}`} class="z-10 w-1 -mr-1 bg-transparent" />
           <Workbench panelId={workbenchPanelId} />
         </Splitter.Root>
-      </Tabs.Root>
+      </div>
       <CustomIconPicker />
     </Show>
   );

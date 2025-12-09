@@ -1,3 +1,4 @@
+import { without } from 'lodash-es';
 import {
   defaultValueCtx,
   EditorStatus,
@@ -6,8 +7,8 @@ import {
   Editor as MilkdownEditor,
   rootCtx,
 } from '@milkdown/kit/core';
-import { commonmark } from '@milkdown/kit/preset/commonmark';
-import { gfm } from '@milkdown/kit/preset/gfm';
+import { commonmark, keymap as commonmarkKeymap } from '@milkdown/kit/preset/commonmark';
+import { gfm, keymap as gfmKeymap } from '@milkdown/kit/preset/gfm';
 import { history } from '@milkdown/kit/plugin/history';
 import { listener, listenerCtx, type ListenerManager } from '@milkdown/kit/plugin/listener';
 import { replaceAll } from '@milkdown/kit/utils';
@@ -44,6 +45,14 @@ export default class Editor {
 
   constructor(props: { editable?: boolean; root: HTMLElement; defaultValue?: string }) {
     this.core = MilkdownEditor.make()
+      .use(without(commonmark, ...commonmarkKeymap)) // 不要引入快捷键。我们自己定制
+      .use(without(gfm, ...gfmKeymap))
+      .use(history)
+      .use(deleteEmptyNode)
+      .use(upload)
+      .use(cursor) // 这个必须放在 upload 之后，否则 upload 插件无法处理 drop 事件了
+      .use(multimedia)
+      .use(listener)
       .config((ctx) => {
         ctx.set(rootCtx, props.root);
         ctx.set(defaultValueCtx, props.defaultValue || '');
@@ -52,15 +61,7 @@ export default class Editor {
         });
 
         ctx.update(uploadConfig.key, (config) => ({ ...config, uploader }));
-      })
-      .use(commonmark)
-      .use(gfm)
-      .use(history)
-      .use(deleteEmptyNode)
-      .use(upload)
-      .use(cursor) // 这个必须放在 upload 之后，否则 upload 插件无法处理 drop 事件了
-      .use(multimedia)
-      .use(listener);
+      });
   }
 
   public setReadonly(value: boolean) {

@@ -1,39 +1,48 @@
 import { $prose } from '@milkdown/kit/utils';
-import { Plugin, PluginKey } from '@milkdown/kit/prose/state';
-import { Mapping } from '@milkdown/kit/prose/transform';
+import { Plugin, PluginKey, TextSelection } from '@milkdown/kit/prose/state';
+import { Mapping, ReplaceAroundStep, ReplaceStep } from '@milkdown/kit/prose/transform';
+import { paragraphSchema } from '@milkdown/kit/preset/commonmark';
 
-// 该插件实现：当用户删掉了特殊元素内的所有文本后，该特殊元素也被一并删除。否则用户的后续输入会被视为发生在该特殊元素内，这不符合用户的直觉
-// 例子（不符合直觉的情况）：用户输入 **aaa**，得到一个 <strong>aaa</strong> 元素，随后用户按3次退格键（删光了aaa），接着又进行输入，这个新输入被标记为 strong
-export const deleteEmptyNode = $prose(() => {
+/* 该插件实现：
+1. 当用户删掉了特殊行内元素内的所有文本后，该特殊元素也被一并删除。否则用户的后续输入会被视为发生在该特殊元素内，这不符合用户的直觉。
+  例子（不符合直觉的情况）：用户输入 **aaa**，得到一个 <strong>aaa</strong> 元素，随后用户按3次退格键（删光了aaa），接着又进行输入，这个新输入被标记为 strong
+
+2. 当用户删掉了一个块状节点后，用段落节点替换之。否则光标会突然去到上一个块状节点的尾部，不符合直觉
+*/
+export const deleteEmptyNode = $prose((ctx) => {
   return new Plugin({
     key: new PluginKey('DELETE_EMPTY_NODE'),
     appendTransaction: (transactions, oldState, newState) => {
-      if (!transactions.some((tr) => tr.docChanged)) {
+      if (!newState.selection.empty || !transactions.some((tr) => tr.docChanged)) {
         return null;
       }
 
-      if (!newState.selection.empty) return null;
+      const steps = transactions.filter((tr) => tr.isGeneric).flatMap((tr) => tr.steps);
+      const step = steps[0];
+
+      if (!step || steps.length > 1) {
+        return null;
+      }
 
       const mapping = new Mapping(transactions.toReversed().flatMap((tr) => tr.mapping.invert().maps));
       const oldPos = oldState.doc.resolve(mapping.map(newState.selection.$anchor.pos));
 
-      // 前后的内容都是空，这意味着我们在一个空的文本块元素内
-      if (!newState.selection.$anchor.nodeBefore && !newState.selection.$anchor.nodeAfter) {
-        const { parent } = newState.selection.$anchor;
+      // 若此前光标在一个空的非段落块元素内，并执行了删除操作
+      if (
+        !oldPos.nodeBefore &&
+        !oldPos.nodeAfter &&
+        (step instanceof ReplaceStep || step instanceof ReplaceAroundStep) &&
+        step.slice.size === 0 &&
+        oldPos.parent.isBlock &&
+        oldPos.parent.type.name !== 'paragraph'
+      ) {
+        const newTr = newState.tr.replaceWith(
+          newState.selection.$anchor.pos,
+          newState.selection.$anchor.pos,
+          paragraphSchema.type(ctx).createAndFill()!,
+        );
 
-        // 这个空的块级元素如果只是段落之类的，空着就空着，不管了
-        if (!parent.isTextblock || parent.type.name === 'paragraph') {
-          return null;
-        }
-
-        const oldNode = oldPos.parent;
-
-        // 该块级元素是刚创建出来的，此前并不存在
-        if (oldNode.type !== parent.type || oldNode.content.size === 0) {
-          return null;
-        }
-
-        return newState.tr.setNodeMarkup(newState.selection.$anchor.before(), newState.schema.nodes.paragraph);
+        return newTr.setSelection(TextSelection.create(newTr.doc, oldPos.start()));
       }
 
       // 行内元素，满足：之前有标记，之后没有标记（或者标记的内容全是空格）
