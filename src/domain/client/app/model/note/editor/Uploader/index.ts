@@ -14,6 +14,11 @@ import DomainEventBus from '../../EventBus';
 
 export type FileToUpload = Required<Pick<FileDTO, 'mimeType' | 'data' | 'name'>> & { hash: string; sourceUrl?: string };
 
+enum EventNames {
+  Downloaded = 'uploader.downloaded',
+  Uploaded = 'uploader.uploaded',
+}
+
 export default class Uploader {
   constructor(private readonly options: { noteId: NoteVO['id'] }) {}
 
@@ -21,7 +26,10 @@ export default class Uploader {
 
   private readonly domainEventBus = container.resolve(DomainEventBus);
 
-  public readonly eventBus = new EventBus<{ downloaded: never; uploaded: never }>('uploader');
+  public readonly eventBus = new EventBus<{
+    [EventNames.Downloaded]: never;
+    [EventNames.Uploaded]: never;
+  }>('uploader');
 
   private readonly destroyController = new AbortController();
 
@@ -60,7 +68,7 @@ export default class Uploader {
 
   private async handleDownloaded(file: DownloadedFile) {
     await this.setFile(file, false);
-    this.eventBus.emit('downloaded');
+    this.eventBus.emit(EventNames.Downloaded);
   }
 
   public async setFile(file: Omit<FileToUpload, 'hash'>, tryUpload = true) {
@@ -90,7 +98,7 @@ export default class Uploader {
     },
     {
       onSuccess: ({ mimeType, title, sourceUrl }) => {
-        this.eventBus.emit('uploaded');
+        this.eventBus.emit(EventNames.Uploaded);
         this.domainEventBus.emit(DomainEventBus.eventNames.Updated, {
           id: this.options.noteId,
           source: this,
@@ -105,4 +113,6 @@ export default class Uploader {
     this.downloader?.cancel();
     this.eventBus.clearListeners();
   }
+
+  public static readonly EventNames = EventNames;
 }

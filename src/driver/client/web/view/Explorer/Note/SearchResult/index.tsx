@@ -46,7 +46,7 @@ export default function SearchResult() {
           </div>
         </Show>
         <Show when={searcher.result} keyed>
-          <div class="flex flex-col min-h-0 overflow-auto scrollbar-stable">
+          <div class="flex flex-col min-h-0 overflow-auto scrollbar-stable grow">
             <For each={searcher.result} fallback={<Empty />}>
               {(row) => <Item row={row} open={allOpen()} onToggle={onToggle} />}
             </For>

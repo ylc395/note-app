@@ -31,7 +31,7 @@ export default function MarkdownEditorView() {
   return (
     <Show when={editor.value.result.data}>
       {(note) => (
-        <div class="relative min-h-0 grow">
+        <div class="relative min-h-0 grow overflow-auto">
           <BaseMarkdownEditor
             ref={setCrepe}
             className="grow min-h-0 overflow-auto border-16 border-surface-primary"

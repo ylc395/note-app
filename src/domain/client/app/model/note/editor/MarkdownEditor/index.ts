@@ -41,8 +41,8 @@ export default class MarkdownEditor extends BaseEditor {
     this.uploaderController = new AbortController();
     const signal = AbortSignal.any([this.uploaderController.signal, this.destroyController.signal]);
 
-    this.fileUploader.eventBus.on('downloaded', this.upgrade.bind(this, true), { signal });
-    this.fileUploader.eventBus.on('uploaded', this.upgrade.bind(this), { signal });
+    this.fileUploader.eventBus.on(Uploader.EventNames.Downloaded, this.upgrade.bind(this, true), { signal });
+    this.fileUploader.eventBus.on(Uploader.EventNames.Uploaded, this.upgrade.bind(this), { signal });
   }
 
   @action

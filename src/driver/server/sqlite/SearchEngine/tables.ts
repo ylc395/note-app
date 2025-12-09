@@ -34,7 +34,7 @@ export const initialSqls =  [
             file_id UNINDEXED,
             type UNINDEXED,
             details UNINDEXED,
-            parentId UNINDEXED,
+            parent_id UNINDEXED,
             created_at UNINDEXED,
             updated_at UNINDEXED,
             tokenize="simple 0",

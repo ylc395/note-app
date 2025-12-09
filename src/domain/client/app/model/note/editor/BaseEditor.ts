@@ -16,7 +16,7 @@ import { EventNames, type Events } from './events';
 import type Tile from '../../Workbench/Tile';
 import DomainEventBus, { type UpdatedEvent } from '../EventBus';
 import type { Command } from './command';
-import type Uploader from './Uploader';
+import Uploader from './Uploader';
 
 export const storeName = 'editor_UI_state';
 
@@ -43,7 +43,7 @@ export default abstract class BaseEditor {
       this.fileUploader = uploader;
     });
 
-    this.fileUploader?.eventBus.on('uploaded', this.reload.bind(this, true));
+    this.fileUploader?.eventBus.on(Uploader.EventNames.Uploaded, this.reload.bind(this, true));
 
     this.value = createQuery(({ signal }) => this.remote.note.queryOneById.query(this.noteId, { signal }), {
       queryKey: ['note', this.noteId],
