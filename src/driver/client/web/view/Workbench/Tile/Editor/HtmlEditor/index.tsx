@@ -13,14 +13,14 @@ export default function HtmlEditorView() {
   });
 
   let htmlRendererRef: HTMLDivElement | undefined;
-  const { dom, setPageType } = useHtml(html);
+  const { safeDom, setPageType } = useHtml(html);
 
   onMount(() => {
     htmlRendererRef!.attachShadow({ mode: 'open' });
   });
 
   createEffect(() => {
-    const domValue = dom();
+    const domValue = safeDom();
 
     if (domValue) {
       // 这里必须 clone 下文档片段。因为文档片段一旦被置入 DOM 树中，该文档片段将被清空

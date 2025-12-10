@@ -17,6 +17,7 @@ import { cursor } from '@milkdown/kit/plugin/cursor';
 
 import { deleteEmptyNode } from './deleteEmptyNode';
 import multimedia from './multimedia';
+import placeholder from './placeholder';
 import { uploader } from './uploader';
 import './index.css';
 
@@ -47,8 +48,9 @@ export default class Editor {
     this.core = MilkdownEditor.make()
       .use(without(commonmark, ...commonmarkKeymap)) // 不要引入快捷键。我们自己定制
       .use(without(gfm, ...gfmKeymap))
-      .use(history)
       .use(deleteEmptyNode)
+      .use(placeholder)
+      .use(history)
       .use(upload)
       .use(cursor) // 这个必须放在 upload 之后，否则 upload 插件无法处理 drop 事件了
       .use(multimedia)

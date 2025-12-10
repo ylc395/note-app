@@ -27,7 +27,7 @@ export const deleteEmptyNode = $prose((ctx) => {
       const mapping = new Mapping(transactions.toReversed().flatMap((tr) => tr.mapping.invert().maps));
       const oldPos = oldState.doc.resolve(mapping.map(newState.selection.$anchor.pos));
 
-      // 若此前光标在一个空的非段落块元素内，并执行了删除操作
+      // 若此前光标在一个空的非段落的块元素内，并执行了删除操作
       if (
         !oldPos.nodeBefore &&
         !oldPos.nodeAfter &&

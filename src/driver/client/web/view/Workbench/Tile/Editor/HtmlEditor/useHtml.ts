@@ -61,7 +61,7 @@ export default function useHtml(html: Accessor<string | null>) {
     return doc;
   });
 
-  const dom = createMemo(() => {
+  const safeDom = createMemo(() => {
     if (pageType() === 'simple') {
       return simpleHtmlText();
     }
@@ -69,5 +69,5 @@ export default function useHtml(html: Accessor<string | null>) {
     return completeHtmlText();
   });
 
-  return { dom, setPageType, title };
+  return { safeDom, setPageType, title };
 }
