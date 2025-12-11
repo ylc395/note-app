@@ -15,10 +15,11 @@ import { replaceAll } from '@milkdown/kit/utils';
 import { upload, uploadConfig } from '@milkdown/kit/plugin/upload';
 import { cursor } from '@milkdown/kit/plugin/cursor';
 
-import { deleteEmptyNode } from './deleteEmptyNode';
+import inputUserExperience from './inputUserExperience';
 import multimedia from './multimedia';
 import placeholder from './placeholder';
 import { uploader } from './uploader';
+import { tooltip, plugin as tooltipPlugin } from './tooltip';
 import './index.css';
 
 /** 一些关于 milkdown 的知识
@@ -47,21 +48,20 @@ export default class Editor {
   constructor(props: { editable?: boolean; root: HTMLElement; defaultValue?: string }) {
     this.core = MilkdownEditor.make()
       .use(without(commonmark, ...commonmarkKeymap)) // 不要引入快捷键。我们自己定制
-      .use(without(gfm, ...gfmKeymap))
-      .use(deleteEmptyNode)
-      .use(placeholder)
+      .use(without(gfm, ...gfmKeymap)) // 同上
+      .use(multimedia) // 把图片节点转化成能展示各种文件的“多媒体节点”
+      .use(inputUserExperience) // 改善一些输入时的用户体验
+      .use(placeholder) // 在某些块级文本为空时给出一些提示
+      .use(tooltip)
       .use(history)
       .use(upload)
       .use(cursor) // 这个必须放在 upload 之后，否则 upload 插件无法处理 drop 事件了
-      .use(multimedia)
       .use(listener)
       .config((ctx) => {
         ctx.set(rootCtx, props.root);
         ctx.set(defaultValueCtx, props.defaultValue || '');
-        ctx.set(editorViewOptionsCtx, {
-          editable: () => props.editable ?? true,
-        });
-
+        ctx.set(editorViewOptionsCtx, { editable: () => props.editable ?? true });
+        ctx.set(tooltip.key, tooltipPlugin(ctx));
         ctx.update(uploadConfig.key, (config) => ({ ...config, uploader }));
       });
   }

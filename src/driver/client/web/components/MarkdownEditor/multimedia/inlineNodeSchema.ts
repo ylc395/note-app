@@ -59,15 +59,17 @@ export const multimediaNodeView = $view(multimediaNodeSchema.node, (): NodeViewC
     rootNode.className = 'mx-stack-xs';
 
     const [attrs, setAttrs] = createSignal(initialNode.attrs);
-    const dispose = render(
-      () =>
-        createComponent(View, {
-          attrs,
-          editorView,
-          getNodePos,
-        }),
-      rootNode,
-    );
+    const props = {
+      editorView,
+      get attrs() {
+        return attrs();
+      },
+      get nodePos() {
+        return getNodePos();
+      },
+    };
+
+    const dispose = render(() => createComponent(View, props), rootNode);
 
     // https://prosemirror.net/docs/ref/#view.NodeView
     return {
@@ -78,6 +80,7 @@ export const multimediaNodeView = $view(multimediaNodeSchema.node, (): NodeViewC
       },
       destroy: () => {
         dispose();
+        rootNode.remove();
       },
     };
   };

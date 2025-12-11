@@ -6,6 +6,7 @@ import { createComponent, createSignal } from 'solid-js';
 import { render } from 'solid-js/web';
 import View from './View';
 
+// image-block 这个库，我们不取其中的视图实现，而是由我们自己实现
 export { remarkImageBlockPlugin } from '@milkdown/kit/component/image-block';
 
 const DATA_TYPE = 'multimedia-block';
@@ -55,16 +56,16 @@ export const multimediaBlockNodeView = $view(multimediaBlockNodeSchema.node, ():
     rootNode.className = 'flex flex-col';
 
     const [attrs, setAttrs] = createSignal(initialNode.attrs);
-    const dispose = render(
-      () =>
-        createComponent(View, {
-          attrs,
-          figure: true,
-          editorView,
-          getNodePos,
-        }),
-      rootNode,
-    );
+    const props = {
+      editorView,
+      get attrs() {
+        return attrs();
+      },
+      get nodePos() {
+        return getNodePos();
+      },
+    };
+    const dispose = render(() => createComponent(View, props), rootNode);
 
     // https://prosemirror.net/docs/ref/#view.NodeView
     return {
@@ -75,6 +76,7 @@ export const multimediaBlockNodeView = $view(multimediaBlockNodeSchema.node, ():
       },
       destroy: () => {
         dispose();
+        rootNode.remove();
       },
     };
   };

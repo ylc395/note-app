@@ -1,4 +1,4 @@
-import { Show, createMemo, Switch, Match, type Accessor } from 'solid-js';
+import { Show, createMemo, Switch, Match } from 'solid-js';
 import clsx from 'clsx';
 import { FileIcon } from 'lucide-solid';
 import z from 'zod';
@@ -10,9 +10,9 @@ import useResizable from './useResizable';
 
 interface Props {
   figure?: boolean;
-  attrs: Accessor<Record<string, unknown>>;
+  attrs: Record<string, unknown>;
   editorView: EditorView;
-  getNodePos: () => number | undefined;
+  nodePos: number | undefined;
 }
 
 const stripQuery = (url: string) => {
@@ -34,7 +34,7 @@ export default function MultimediaView(props: Props) {
         title: z.string().optional().catch(undefined),
         alt: z.string().optional().catch(undefined),
       })
-      .parse(props.attrs()),
+      .parse(props.attrs),
   );
 
   const parsedUrl = createMemo(() => parseAppUrl(attrs().src));
@@ -49,7 +49,7 @@ export default function MultimediaView(props: Props) {
   const { handleMouseDown, setMediaRef, containerStyle, naturalSize } = useResizable({
     initialSize,
     onResized: ({ width, height }) => {
-      const nodePos = props.getNodePos();
+      const nodePos = props.nodePos;
 
       if (typeof nodePos === 'number') {
         const url = new URL(attrs().src);

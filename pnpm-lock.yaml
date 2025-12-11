@@ -6308,7 +6308,7 @@ snapshots:
 
   '@milkdown/plugin-tooltip@7.17.3':
     dependencies:
-      '@floating-ui/dom': 1.7.2
+      '@floating-ui/dom': 1.7.4
       '@milkdown/ctx': 7.17.3
       '@milkdown/prose': 7.17.3
       '@milkdown/utils': 7.17.3
