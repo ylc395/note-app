@@ -31,17 +31,19 @@ export default function MarkdownEditorView() {
   return (
     <Show when={editor.value.result.data}>
       {(note) => (
-        <div class="relative min-h-0 grow overflow-auto">
-          <BaseMarkdownEditor
-            ref={setCrepe}
-            className="grow min-h-0 overflow-auto border-16 border-surface-primary"
-            defaultValue={note().body}
-            readonly={editor.isUploading}
-            onUpdate={(text) => workbench.currentEditor === editor && editor.update({ body: text })}
-          />
-          <Show when={!note().body}>
-            <Empty />
-          </Show>
+        <div class="min-h-0 grow overflow-hidden">
+          <div class="relative h-full overflow-auto">
+            <BaseMarkdownEditor
+              ref={setCrepe}
+              className="h-full border-16 border-surface-primary"
+              defaultValue={note().body}
+              readonly={editor.isUploading}
+              onUpdate={(text) => workbench.currentEditor === editor && editor.update({ body: text })}
+            />
+            <Show when={!note().body}>
+              <Empty />
+            </Show>
+          </div>
         </div>
       )}
     </Show>

@@ -61,7 +61,7 @@
   "dependencies": {
     "@ark-ui/solid": "^5.26.2",
     "@atlaskit/pragmatic-drag-and-drop": "^1.7.7",
-    "@braintree/sanitize-url": "^6.0.4",
+    "@braintree/sanitize-url": "^7.1.1",
     "@emoji-mart/data": "^1.2.1",
     "@floating-ui/dom": "^1.7.2",
     "@floating-ui/react": "^0.26.13",

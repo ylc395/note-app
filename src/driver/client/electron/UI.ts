@@ -1,5 +1,6 @@
 import { Menu, shell, type MenuItemConstructorOptions } from 'electron';
-import { BLANK_URL, sanitizeUrl } from '@braintree/sanitize-url';
+import { sanitizeUrl } from '@braintree/sanitize-url';
+import { BLANK_URL } from '@braintree/sanitize-url/dist/constants.js';
 import { uniqueId } from 'lodash-es';
 import type { IpcMainInvokeEvent } from 'electron/renderer';
 

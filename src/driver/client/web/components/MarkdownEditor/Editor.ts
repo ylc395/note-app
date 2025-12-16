@@ -18,6 +18,7 @@ import { cursor } from '@milkdown/kit/plugin/cursor';
 import inputUserExperience from './inputUserExperience';
 import multimedia from './multimedia';
 import placeholder from './placeholder';
+import link from './link';
 import { uploader } from './uploader';
 import { tooltip, plugin as tooltipPlugin } from './tooltip';
 import './index.css';
@@ -52,6 +53,7 @@ export default class Editor {
       .use(multimedia) // 把图片节点转化成能展示各种文件的“多媒体节点”
       .use(inputUserExperience) // 改善一些输入时的用户体验
       .use(placeholder) // 在某些块级文本为空时给出一些提示
+      .use(link) // 为超链接设计的 tooltip
       .use(tooltip)
       .use(history)
       .use(upload)

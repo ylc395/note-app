@@ -21,7 +21,7 @@ export default function App() {
         <MainSidebar />
         <Splitter.Root
           onResize={undefined}
-          class="flex-grow min-w-0 relative h-full"
+          class="grow min-w-0 relative h-full"
           defaultSize={uiState.explorer.proportion}
           panels={[{ id: explorerPanelId, maxSize: 60, minSize: 10 }, { id: workbenchPanelId }]}
           onResizeEnd={action((e) => (uiState.explorer.proportion = e.size))}
