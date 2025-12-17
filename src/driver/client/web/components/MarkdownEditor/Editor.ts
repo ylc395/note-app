@@ -20,8 +20,9 @@ import multimedia from './multimedia';
 import placeholder from './placeholder';
 import link from './link';
 import { uploader } from './uploader';
-import { tooltip, plugin as tooltipPlugin } from './tooltip';
+import { tooltip } from './tooltip';
 import './index.css';
+import TooltipManager from './shared/TooltipManager';
 
 /** 一些关于 milkdown 的知识
  *
@@ -63,8 +64,9 @@ export default class Editor {
         ctx.set(rootCtx, props.root);
         ctx.set(defaultValueCtx, props.defaultValue || '');
         ctx.set(editorViewOptionsCtx, { editable: () => props.editable ?? true });
-        ctx.set(tooltip.key, tooltipPlugin(ctx));
         ctx.update(uploadConfig.key, (config) => ({ ...config, uploader }));
+
+        TooltipManager.init(ctx);
       });
   }
 

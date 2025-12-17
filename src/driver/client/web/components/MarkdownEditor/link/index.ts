@@ -1,4 +1,4 @@
-import { $view } from '@milkdown/kit/utils';
+import { $command, $view } from '@milkdown/kit/utils';
 import { linkSchema } from '@milkdown/kit/preset/commonmark';
 import type { MarkView } from '@milkdown/kit/prose/view';
 import { render, createComponent } from 'solid-js/web';
@@ -7,6 +7,9 @@ import { debounce } from 'lodash-es';
 
 import shell from '#web/infra/shell';
 import View, { Mode } from './View';
+import TooltipManager from '../shared/TooltipManager';
+
+export const createLinkCommand = $command('createLink', () => () => () => false);
 
 export const linkNodeView = $view(linkSchema.mark, (ctx) => {
   return (mark): MarkView => {
@@ -16,6 +19,7 @@ export const linkNodeView = $view(linkSchema.mark, (ctx) => {
     let isTooltipHover = false;
     let mode: Mode | undefined;
     const debouncedDestroy = debounce(() => destroyTooltip(), 600);
+    const tooltipManager = ctx.get(TooltipManager.slice);
 
     dom.href = sanitizeUrl(mark.attrs.href);
 
@@ -54,6 +58,8 @@ export const linkNodeView = $view(linkSchema.mark, (ctx) => {
           }),
         container,
       );
+
+      tooltipManager.add(dom);
     }
 
     function destroyTooltip(force = false) {
@@ -67,6 +73,7 @@ export const linkNodeView = $view(linkSchema.mark, (ctx) => {
         return;
       }
 
+      tooltipManager.delete(dom);
       dispose?.();
       container?.remove();
 
@@ -91,4 +98,4 @@ export const linkNodeView = $view(linkSchema.mark, (ctx) => {
   };
 });
 
-export default [linkNodeView].flat();
+export default [linkNodeView, createLinkCommand].flat();
