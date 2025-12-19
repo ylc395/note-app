@@ -1,12 +1,14 @@
-import { TooltipProvider } from '@milkdown/kit/plugin/tooltip';
+import { posToDOMRect } from '@milkdown/kit/prose';
 import { Plugin, type PluginView } from '@milkdown/kit/prose/state';
 import { Ctx } from '@milkdown/kit/ctx';
+import type { EditorView } from '@milkdown/kit/prose/view';
+import { $prose } from '@milkdown/kit/utils';
+import { rootCtx } from '@milkdown/kit/core';
 import { createComponent } from 'solid-js';
 import { render } from 'solid-js/web';
 import { debounce } from 'lodash-es';
-import type { EditorView } from '@milkdown/kit/prose/view';
-import { $prose } from '@milkdown/kit/utils';
 import { reaction } from 'mobx';
+import { autoUpdate, computePosition, hide as floatingUIHide } from '@floating-ui/dom';
 
 import shell from '#web/infra/shell';
 import View from './View';
@@ -17,61 +19,78 @@ export const tooltip = $prose(
     new Plugin({
       view: (): PluginView => {
         const tooltipManager = ctx.get(TooltipManager.slice);
-        const tooltipRoot = document.createElement('div');
-        tooltipRoot.className = 'absolute flex';
 
         let dispose: undefined | (() => void);
-
-        function show() {
-          if (dispose) {
-            return;
-          }
-
-          dispose = render(() => createComponent(View, { ctx }), tooltipRoot);
-        }
-
-        function hide() {
-          dispose?.();
-          dispose = undefined;
-        }
 
         function shouldShow(view: EditorView) {
           return view.state.selection.content().size > 0;
         }
 
-        const provider = new TooltipProvider({
-          content: tooltipRoot,
-          debounce: 0, // 名为 debounce，内部的实现却是 throttle。这里填个 0 禁用掉 throttle，我们自己 debounce
-          offset: 16,
-          root: shell.appRoot as HTMLElement,
-          shouldShow,
-        });
+        const show = debounce((view: EditorView) => {
+          const { ranges } = view.state.selection;
+          const tooltipRoot = document.createElement('div');
 
-        const debouncedUpdate = debounce(provider.update, 500);
-        provider.onShow = show;
-        provider.onHide = hide;
+          tooltipRoot.className = 'absolute flex';
+          shell.appRoot.append(tooltipRoot);
 
-        const stopAutoHide = reaction(
-          () => tooltipManager.isEmpty,
-          (isEmpty) => tooltipRoot.classList.toggle('hidden', !isEmpty),
-        );
+          const disposeSolidApp = render(() => createComponent(View, { ctx }), tooltipRoot);
+
+          const from = Math.min(...ranges.map((range) => range.$from.pos));
+          const to = Math.max(...ranges.map((range) => range.$to.pos));
+          const virtualElement = {
+            getBoundingClientRect: () => posToDOMRect(view, from, to),
+            contextElement: view.dom,
+          };
+
+          const stopAutoUpdate = autoUpdate(virtualElement, tooltipRoot, async () => {
+            const { x, y, middlewareData } = await computePosition(virtualElement, tooltipRoot, {
+              placement: 'top',
+              middleware: [floatingUIHide({ strategy: 'escaped', boundary: ctx.get(rootCtx) as HTMLElement })],
+            });
+
+            tooltipRoot.classList.toggle('hidden', middlewareData.hide?.escaped);
+
+            Object.assign(tooltipRoot.style, {
+              left: `${x}px`,
+              top: `${y}px`,
+            });
+          });
+
+          const stopAutoHide = reaction(
+            () => tooltipManager.isEmpty,
+            (isEmpty) => tooltipRoot.classList.toggle('invisible', !isEmpty),
+            { fireImmediately: true },
+          );
+
+          dispose = () => {
+            disposeSolidApp();
+            stopAutoHide();
+            stopAutoUpdate();
+            tooltipRoot.remove();
+            dispose = undefined;
+          };
+        }, 500);
+
+        const hide = () => {
+          dispose?.();
+          show.cancel();
+        };
 
         return {
           update: (view, prevState) => {
+            const isSame = prevState && prevState.selection.eq(view.state.selection);
+
+            if (view.composing || isSame) {
+              return;
+            }
+
+            dispose?.();
+
             if (shouldShow(view)) {
-              debouncedUpdate(view, prevState);
-            } else {
-              debouncedUpdate.cancel();
-              provider.update(view, prevState);
+              show(view);
             }
           },
-          destroy: () => {
-            dispose?.();
-            provider.destroy();
-            tooltipRoot.remove();
-            debouncedUpdate.cancel();
-            stopAutoHide();
-          },
+          destroy: hide,
         };
       },
     }),
