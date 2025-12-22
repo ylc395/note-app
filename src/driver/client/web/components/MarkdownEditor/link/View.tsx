@@ -1,10 +1,12 @@
-import { autoUpdate, computePosition, hide, inline } from '@floating-ui/dom';
-import { editorCtx, editorViewCtx } from '@milkdown/kit/core';
+import shell from '#web/infra/shell';
+import { autoUpdate, computePosition, hide, inline, type VirtualElement } from '@floating-ui/dom';
+import { editorCtx, editorViewCtx, rootCtx } from '@milkdown/kit/core';
 import type { Ctx } from '@milkdown/kit/ctx';
 import { linkSchema, toggleLinkCommand, updateLinkCommand } from '@milkdown/kit/preset/commonmark';
 import { TextSelection } from '@milkdown/kit/prose/state';
 import { callCommand, type $Command } from '@milkdown/kit/utils';
-import { createEffect, createMemo, createSignal, onCleanup, Show, type JSX } from 'solid-js';
+import { createEffect, createMemo, createSignal, onCleanup, Show } from 'solid-js';
+import { Portal } from 'solid-js/web';
 import z from 'zod';
 
 export enum Mode {
@@ -49,115 +51,142 @@ function selectLink(ctx: Ctx, linkDom: HTMLElement) {
     return null;
   }
 
-  const current = editorView.state.selection.getBookmark();
-
   editorView.dispatch(
     editorView.state.tr.setSelection(TextSelection.create(editorView.state.doc, markPos.start, markPos.end)),
   );
 
-  return current;
+  return markPos;
 }
 
 const urlSchema = z.url();
 
 export default function View(props: {
   ctx: Ctx;
-  mousePosition: { x: number; y: number };
-  targetDom: HTMLElement;
-  initialHref?: string;
-  onModeChange: (mode: Mode) => void;
-  onUpdate: () => void;
+  targetDom: HTMLAnchorElement | VirtualElement;
+  mousePosition?: { x: number; y: number };
+  close: () => void;
+  initialMode?: Mode;
+  onLeave?: () => void;
+  onEnter?: () => void;
 }) {
-  const [href, setHref] = createSignal(props.initialHref ?? '');
-  const [mode, setMode] = createSignal<Mode>(Mode.Preview);
-  const [tooltipStyle, setTooltipStyle] = createSignal<JSX.CSSProperties>();
+  const initialHref = props.targetDom instanceof HTMLAnchorElement ? props.targetDom.href : '';
+  const [href, setHref] = createSignal(initialHref);
+  const [mode, setMode] = createSignal(props.initialMode ?? Mode.Preview);
+
+  const editorView = createMemo(() => props.ctx.get(editorViewCtx));
   const isValidHref = createMemo(() => urlSchema.safeParse(href()).success);
 
-  let tooltipRef: HTMLDivElement | undefined;
   let inputRef: HTMLInputElement | undefined;
-
-  createEffect(() => {
-    props.onModeChange(mode());
-  });
-
-  createEffect(() => {
-    if (!tooltipRef) {
-      return;
-    }
-
-    const cleanup = autoUpdate(props.targetDom, tooltipRef, async () => {
-      const { x, y, middlewareData } = await computePosition(props.targetDom, tooltipRef, {
-        middleware: [hide(), inline(props.mousePosition)],
-        placement: 'top',
-      });
-
-      setTooltipStyle({
-        left: `${x}px`,
-        top: `${y}px`,
-        visibility: middlewareData.hide?.referenceHidden ? 'hidden' : 'visible',
-      });
-    });
-
-    onCleanup(cleanup);
-  });
+  let rootRef: HTMLDivElement | undefined;
 
   function action<T>(command: $Command<T>, payload?: T) {
-    const originSelection = selectLink(props.ctx, props.targetDom);
+    const markPos =
+      props.targetDom instanceof HTMLElement
+        ? selectLink(props.ctx, props.targetDom)
+        : { start: editorView().state.selection.from, end: editorView().state.selection.to };
 
-    if (!originSelection) {
+    if (!markPos) {
       return;
     }
 
     props.ctx.get(editorCtx).action(callCommand(command.key, payload));
 
-    const editorView = props.ctx.get(editorViewCtx);
-    editorView.dispatch(editorView.state.tr.setSelection(originSelection.resolve(editorView.state.doc)));
+    editorView().dispatch(
+      editorView().state.tr.setSelection(TextSelection.create(editorView().state.doc, markPos.start, markPos.end)),
+    );
 
-    props.onUpdate();
-  }
-
-  function reset() {
-    setHref(props.initialHref ?? '');
-    setMode(Mode.Preview);
+    editorView().focus();
+    props.close();
   }
 
   function remove() {
     action(toggleLinkCommand);
   }
 
+  function cancel() {
+    if (props.initialMode === Mode.Edit) {
+      props.close();
+    } else {
+      setHref(initialHref);
+      setMode(Mode.Preview);
+    }
+  }
+
   function update() {
-    if (!href()) {
-      remove();
+    if (!isValidHref()) {
       return;
     }
 
-    action(updateLinkCommand, { href: href() });
+    action(props.targetDom instanceof HTMLElement ? updateLinkCommand : toggleLinkCommand, { href: href() });
   }
 
-  function edit() {
-    setMode(Mode.Edit);
-    inputRef?.focus();
+  createEffect(() => {
+    if (mode() === Mode.Edit) {
+      inputRef?.focus();
+    }
+  });
+
+  createEffect(() => {
+    if (!rootRef) {
+      return;
+    }
+
+    const stopAutoUpdate = autoUpdate(props.targetDom, rootRef, async () => {
+      const { x, y, middlewareData } = await computePosition(props.targetDom, rootRef, {
+        middleware: [
+          hide({ strategy: 'escaped', boundary: props.ctx.get(rootCtx) as HTMLElement }),
+          props.mousePosition && inline(props.mousePosition),
+        ],
+        placement: 'top',
+      });
+
+      Object.assign(rootRef!.style, {
+        left: `${x}px`,
+        top: `${y}px`,
+        visibility: middlewareData.hide?.escaped ? 'hidden' : 'visible',
+      });
+    });
+
+    onCleanup(() => {
+      stopAutoUpdate();
+    });
+  });
+
+  function reportLeave() {
+    if (mode() === Mode.Edit) {
+      return;
+    }
+
+    props.onLeave?.();
   }
 
   return (
-    <div class="absolute" ref={tooltipRef} style={tooltipStyle()}>
-      <input ref={inputRef} readOnly={mode() !== Mode.Edit} onInput={(e) => setHref(e.target.value)} value={href()} />
-      <Show
-        when={mode() === Mode.Edit}
-        fallback={
-          <div>
-            <button onClick={remove}>删除</button>
-            <button onClick={edit}>编辑</button>
-          </div>
-        }
+    <Portal mount={shell.appRoot}>
+      <div
+        ref={rootRef}
+        onFocusOut={reportLeave}
+        onMouseLeave={reportLeave}
+        onMouseEnter={props.onEnter}
+        class="absolute"
       >
-        <div>
-          <button disabled={!isValidHref()} onClick={update}>
-            保存
-          </button>
-          <button onClick={reset}>取消</button>
-        </div>
-      </Show>
-    </div>
+        <input ref={inputRef} readOnly={mode() !== Mode.Edit} onInput={(e) => setHref(e.target.value)} value={href()} />
+        <Show
+          when={mode() === Mode.Edit}
+          fallback={
+            <div>
+              <button onClick={remove}>删除</button>
+              <button onClick={() => setMode(Mode.Edit)}>编辑</button>
+            </div>
+          }
+        >
+          <div>
+            <button disabled={!isValidHref()} onClick={update}>
+              保存
+            </button>
+            <button onClick={cancel}>取消</button>
+          </div>
+        </Show>
+      </div>
+    </Portal>
   );
 }

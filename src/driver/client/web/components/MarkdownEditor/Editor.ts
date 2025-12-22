@@ -20,9 +20,9 @@ import multimedia from './multimedia';
 import placeholder from './placeholder';
 import link from './link';
 import { uploader } from './uploader';
-import { tooltip } from './tooltip';
-import './index.css';
+import selectionTooltip from './selectionTooltip';
 import TooltipManager from './shared/TooltipManager';
+import './index.css';
 
 /** 一些关于 milkdown 的知识
  *
@@ -55,7 +55,7 @@ export default class Editor {
       .use(inputUserExperience) // 改善一些输入时的用户体验
       .use(placeholder) // 在某些块级文本为空时给出一些提示
       .use(link) // 为超链接设计的 tooltip
-      .use(tooltip)
+      .use(selectionTooltip)
       .use(history)
       .use(upload)
       .use(cursor) // 这个必须放在 upload 之后，否则 upload 插件无法处理 drop 事件了

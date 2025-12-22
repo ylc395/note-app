@@ -1,5 +1,5 @@
 import assert from 'assert';
-import { createEffect, createMemo, Show } from 'solid-js';
+import { createMemo, Show } from 'solid-js';
 import MarkdownEditor from '#domain/client/app/model/note/editor/MarkdownEditor';
 
 import LocalFileUploader from './LocalFileUploader';
