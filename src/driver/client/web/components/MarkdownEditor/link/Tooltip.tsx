@@ -1,5 +1,5 @@
 import shell from '#web/infra/shell';
-import { autoUpdate, computePosition, hide, inline, type VirtualElement } from '@floating-ui/dom';
+import { autoUpdate, computePosition, flip, hide, inline, type VirtualElement } from '@floating-ui/dom';
 import { editorCtx, editorViewCtx, rootCtx } from '@milkdown/kit/core';
 import type { Ctx } from '@milkdown/kit/ctx';
 import { linkSchema, toggleLinkCommand, updateLinkCommand } from '@milkdown/kit/preset/commonmark';
@@ -60,7 +60,7 @@ function selectLink(ctx: Ctx, linkDom: HTMLElement) {
 
 const urlSchema = z.url();
 
-export default function View(props: {
+export default function Tooltip(props: {
   ctx: Ctx;
   targetDom: HTMLAnchorElement | VirtualElement;
   mousePosition?: { x: number; y: number };
@@ -68,6 +68,7 @@ export default function View(props: {
   initialMode?: Mode;
   onLeave?: () => void;
   onEnter?: () => void;
+  onModeChange?: (mode: Mode) => void;
 }) {
   const initialHref = props.targetDom instanceof HTMLAnchorElement ? props.targetDom.href : '';
   const [href, setHref] = createSignal(initialHref);
@@ -121,6 +122,8 @@ export default function View(props: {
   }
 
   createEffect(() => {
+    props.onModeChange?.(mode());
+
     if (mode() === Mode.Edit) {
       inputRef?.focus();
     }
@@ -132,18 +135,16 @@ export default function View(props: {
     }
 
     const stopAutoUpdate = autoUpdate(props.targetDom, rootRef, async () => {
+      const boundary = props.ctx.get(rootCtx) as HTMLElement;
       const { x, y, middlewareData } = await computePosition(props.targetDom, rootRef, {
-        middleware: [
-          hide({ strategy: 'escaped', boundary: props.ctx.get(rootCtx) as HTMLElement }),
-          props.mousePosition && inline(props.mousePosition),
-        ],
+        middleware: [hide({ boundary }), flip({ boundary }), props.mousePosition && inline(props.mousePosition)],
         placement: 'top',
       });
 
       Object.assign(rootRef!.style, {
         left: `${x}px`,
         top: `${y}px`,
-        visibility: middlewareData.hide?.escaped ? 'hidden' : 'visible',
+        display: middlewareData.hide?.referenceHidden ? 'none' : '',
       });
     });
 
@@ -152,20 +153,12 @@ export default function View(props: {
     });
   });
 
-  function reportLeave() {
-    if (mode() === Mode.Edit) {
-      return;
-    }
-
-    props.onLeave?.();
-  }
-
   return (
     <Portal mount={shell.appRoot}>
       <div
         ref={rootRef}
-        onFocusOut={reportLeave}
-        onMouseLeave={reportLeave}
+        onFocusOut={props.onLeave}
+        onMouseLeave={props.onLeave}
         onMouseEnter={props.onEnter}
         class="absolute"
       >

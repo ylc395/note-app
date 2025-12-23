@@ -4,19 +4,19 @@ import type { MarkView } from '@milkdown/kit/prose/view';
 import { render, createComponent } from 'solid-js/web';
 import { sanitizeUrl } from '@braintree/sanitize-url';
 import { debounce } from 'lodash-es';
+import assert from 'assert';
 
 import shell from '#web/infra/shell';
-import View from './View';
-import assert from 'assert';
+import Tooltip, { Mode } from './Tooltip';
 
 export const linkNodeView = $view(linkSchema.mark, (ctx) => {
   return (mark): MarkView => {
     const dom = document.createElement('a');
     let dispose: (() => void) | undefined;
     let stopAutoUpdate: (() => void) | undefined;
-    let container: DocumentFragment | undefined;
+    let mode: Mode | undefined;
 
-    const delayHideTooltip = debounce(hideTooltip, 600);
+    const delayHideTooltip = debounce(hideTooltip.bind(null, false), 600);
 
     dom.href = sanitizeUrl(mark.attrs.href);
     dom.addEventListener('mouseenter', showTooltip);
@@ -25,33 +25,40 @@ export const linkNodeView = $view(linkSchema.mark, (ctx) => {
     function showTooltip(e?: MouseEvent) {
       delayHideTooltip.cancel();
 
-      if (container) {
+      if (dispose) {
         return;
       }
 
       assert(e);
-      container = document.createDocumentFragment();
-      shell.appRoot.append(container);
+      const container = document.createDocumentFragment();
 
       dispose = render(
         () =>
-          createComponent(View, {
+          createComponent(Tooltip, {
             ctx,
             targetDom: dom,
             mousePosition: { x: e.clientX, y: e.clientY },
-            close: hideTooltip,
+            close: hideTooltip.bind(null, true),
             onLeave: delayHideTooltip,
             onEnter: showTooltip,
+            onModeChange: (v) => {
+              mode = v;
+            },
           }),
         container,
       );
+
+      shell.appRoot.append(container);
     }
 
-    function hideTooltip() {
+    function hideTooltip(destroy: boolean) {
+      if (!destroy && mode === Mode.Edit) {
+        return;
+      }
+
       dispose?.();
       stopAutoUpdate?.();
 
-      container = undefined;
       dispose = undefined;
       stopAutoUpdate = undefined;
     }
@@ -59,7 +66,7 @@ export const linkNodeView = $view(linkSchema.mark, (ctx) => {
     return {
       dom,
       destroy: () => {
-        hideTooltip();
+        hideTooltip(true);
         delayHideTooltip.cancel();
         dom.remove();
       },

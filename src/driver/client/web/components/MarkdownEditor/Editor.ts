@@ -21,6 +21,7 @@ import placeholder from './placeholder';
 import link from './link';
 import { uploader } from './uploader';
 import selectionTooltip from './selectionTooltip';
+import selectionHighlight from './selectionHighlight';
 import TooltipManager from './shared/TooltipManager';
 import './index.css';
 
@@ -56,6 +57,7 @@ export default class Editor {
       .use(placeholder) // 在某些块级文本为空时给出一些提示
       .use(link) // 为超链接设计的 tooltip
       .use(selectionTooltip)
+      .use(selectionHighlight) // 使得编辑器失去焦点时，选区仍然能高亮（浏览器的原生行为是使得选区失去高亮效果）
       .use(history)
       .use(upload)
       .use(cursor) // 这个必须放在 upload 之后，否则 upload 插件无法处理 drop 事件了

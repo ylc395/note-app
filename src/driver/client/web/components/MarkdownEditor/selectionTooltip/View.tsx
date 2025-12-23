@@ -13,10 +13,10 @@ import { callCommand, type $Command } from '@milkdown/kit/utils';
 import { Portal } from 'solid-js/web';
 import { createEffect, createMemo, createSignal, onCleanup, Show } from 'solid-js';
 import { posToDOMRect } from '@milkdown/kit/prose';
-import { autoUpdate, computePosition, hide } from '@floating-ui/dom';
+import { autoUpdate, computePosition, flip, hide } from '@floating-ui/dom';
 
 import shell from '#web/infra/shell';
-import LinkView, { Mode } from '../link/View';
+import LinkView, { Mode } from '../link/Tooltip';
 
 export default function View(props: { ctx: Ctx; close: () => void }) {
   const editor = createMemo(() => props.ctx.get(editorCtx));
@@ -60,15 +60,16 @@ export default function View(props: { ctx: Ctx; close: () => void }) {
     }
 
     const stopAutoUpdate = autoUpdate(virtualElement(), rootRef, async () => {
+      const boundary = props.ctx.get(rootCtx) as HTMLElement;
       const { x, y, middlewareData } = await computePosition(virtualElement(), rootRef, {
         placement: 'top',
-        middleware: [hide({ strategy: 'escaped', boundary: props.ctx.get(rootCtx) as HTMLElement })],
+        middleware: [hide({ boundary }), flip({ boundary })],
       });
 
       Object.assign(rootRef.style, {
         left: `${x}px`,
         top: `${y}px`,
-        display: middlewareData.hide?.escaped ? 'none' : '',
+        display: middlewareData.hide?.referenceHidden ? 'none' : '',
       });
     });
 
