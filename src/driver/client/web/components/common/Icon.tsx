@@ -29,9 +29,6 @@ export default function Icon(props: { icon?: Icon | null; mimeType?: string | nu
       <Match when={props.mimeType === MimeTypes.HTML}>
         <GlobeIcon class={props.iconClassName} />
       </Match>
-      <Match when={props.mimeType === MimeTypes.HTML}>
-        <GlobeIcon class={props.iconClassName} />
-      </Match>
       <Match when={props.mimeType}>
         <LayoutGridIcon class={props.iconClassName} />
       </Match>

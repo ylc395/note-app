@@ -33,4 +33,6 @@ export default router({
       return () => subscription.unsubscribe();
     });
   }),
+
+  queryIcon: publicProcedure.input(z.url()).query(({ ctx: { fileService }, input }) => fileService.queryIcon(input)),
 });

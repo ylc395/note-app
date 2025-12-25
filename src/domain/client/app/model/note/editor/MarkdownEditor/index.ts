@@ -45,6 +45,7 @@ export default class MarkdownEditor extends BaseEditor {
     this.fileUploader.eventBus.on(Uploader.EventNames.Uploaded, this.upgrade.bind(this), { signal });
   }
 
+  // 从 markdown 编辑器升级为另一种专用编辑器
   @action
   private upgrade(isPreview = false) {
     const { fileUploader } = this;
@@ -54,7 +55,7 @@ export default class MarkdownEditor extends BaseEditor {
     this.removeUploader(); // 提前移除 uploader，免得随后该编辑器 destroy 影响了 uploader
 
     this.tile.replace(this, {
-      entityId: this.noteId,
+      noteId: this.noteId,
       mimeType,
       value: this.value.data,
       uploader: isPreview ? fileUploader : undefined,

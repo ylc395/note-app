@@ -16,7 +16,7 @@ export default class NoteService {
   constructor() {
     this.eventBus.on(
       DomainEventBus.eventNames.Created,
-      (note) => void this.workbench.open({ entityId: note.id, mimeType: note.mimeType }),
+      (note) => void this.workbench.open({ noteId: note.id, mimeType: note.mimeType }),
     );
   }
 

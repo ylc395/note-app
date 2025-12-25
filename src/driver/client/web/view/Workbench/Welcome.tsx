@@ -26,7 +26,7 @@ export default function Welcome() {
               <li
                 title={title}
                 class="cursor-pointer flex items-center space-x-4 py-2"
-                onClick={() => open({ entityId: id, mimeType })}
+                onClick={() => open({ noteId: id, mimeType })}
               >
                 <div class="text-text-link w-52 overflow-hidden text-ellipsis whitespace-nowrap">{title}</div>
                 <time class="text-xs text-text-tertiary">{dayjs(time).format('M月DD日')}</time>

@@ -4,7 +4,7 @@ import { isEmpty } from 'lodash-es';
 import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?worker';
 
 import type { NoteVO } from '#domain/shared/model/note';
-import { getAppUrl, RouteTypes } from '#domain/shared/infra/url';
+import { getStaticUrl } from '#domain/shared/infra/url';
 
 export default class DocumentFactory {
   private readonly loadingTasksMap: Record<NoteVO['id'], { activeCount: number; task: PDFDocumentLoadingTask }> = {};
@@ -20,7 +20,7 @@ export default class DocumentFactory {
     const task = (this.loadingTasksMap[noteId] ||= {
       task: getDocument({
         data: blob.slice(0),
-        cMapUrl: import.meta.env.VITE_WEB_PLATFORM === 'electron' ? getAppUrl(RouteTypes.Static, 'cmaps/') : '',
+        cMapUrl: import.meta.env.VITE_WEB_PLATFORM === 'electron' ? getStaticUrl('cmaps/') : '',
       }),
       activeCount: 0,
     });

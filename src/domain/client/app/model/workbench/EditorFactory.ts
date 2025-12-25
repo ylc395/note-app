@@ -39,9 +39,9 @@ export default class EditorFactory {
       editor = new UnknownEditor(tile, { ...config, mimeType });
     }
 
-    const noteEditors = this.noteEditorsMap.get(config.entityId) || [];
+    const noteEditors = this.noteEditorsMap.get(config.noteId) || [];
     noteEditors.push(editor);
-    this.noteEditorsMap.set(config.entityId, noteEditors);
+    this.noteEditorsMap.set(config.noteId, noteEditors);
     this.editorsMap.set(editor.id, editor);
 
     editor.events.on(Editor.eventNames.Destroy, this.handleEditorDestroyed.bind(this));

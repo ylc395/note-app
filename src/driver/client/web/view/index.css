@@ -54,6 +54,10 @@
 
 
 @layer base {
+  :root {
+    overflow: hidden;
+  }
+
   * {
     scrollbar-width: thin;
   }

@@ -7,7 +7,7 @@ import { tileNodeSchema, type TileNode } from './tileTree';
 const tilesSchema = z.record(
   z.string(),
   z.object({
-    editors: z.array(z.object({ entityId: z.string(), title: z.string(), mimeType: z.string().nullable() })),
+    editors: z.array(z.object({ noteId: z.string(), title: z.string(), mimeType: z.string().nullable() })),
     current: z.string(),
   }),
 );

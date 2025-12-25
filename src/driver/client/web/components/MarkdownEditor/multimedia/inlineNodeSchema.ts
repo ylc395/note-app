@@ -71,7 +71,6 @@ export const multimediaNodeView = $view(multimediaNodeSchema.node, (): NodeViewC
 
     const dispose = render(() => createComponent(View, props), rootNode);
 
-    // https://prosemirror.net/docs/ref/#view.NodeView
     return {
       dom: rootNode,
       update: (_node) => {

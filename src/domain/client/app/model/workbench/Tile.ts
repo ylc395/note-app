@@ -75,7 +75,12 @@ export default class Tile {
     const newEditor = this.editorFactory.create(this, entity);
 
     assert(
-      !this.editors.find((editor) => editor.noteId === entity.entityId && editor.isPreview === newEditor.isPreview),
+      !this.editors.find(
+        (editor) =>
+          editor.noteId === entity.noteId &&
+          editor.mimeType === newEditor.mimeType &&
+          editor.isPreview === newEditor.isPreview,
+      ),
       'can not create duplicated editor',
     );
 
@@ -154,7 +159,7 @@ export default class Tile {
 
     return {
       editors: this.editors.map((e) => ({
-        entityId: e.noteId,
+        noteId: e.noteId,
         mimeType: e.value.data?.mimeType || null, // 不能读取 editor.mimeType，因为它可能是一个预览用的
         title: e.title || '',
       })),

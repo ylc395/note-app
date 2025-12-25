@@ -234,7 +234,7 @@ export default class Workbench {
     // 打开到指定 tile，或是指定 editor 旁边
     if (dest instanceof Tile || dest instanceof Editor) {
       destTile = dest instanceof Tile ? dest : dest.tile;
-      const existedEditor = destTile.findEditor(note.entityId);
+      const existedEditor = destTile.findEditor(note.noteId);
 
       // 对应 editor 已存在：
       if (existedEditor) {
@@ -260,7 +260,7 @@ export default class Workbench {
     }
 
     destTile.switchToEditor(editor);
-    this.recentManager.add(note.entityId);
+    this.recentManager.add(note.noteId);
 
     return editor;
   }
@@ -273,7 +273,7 @@ export default class Workbench {
       dest.tile.switchToEditor(dest);
     } else {
       const destTile = this.getTileById(dest);
-      this.open({ entityId: record.key, mimeType: record.mimeType }, destTile);
+      this.open({ noteId: record.key, mimeType: record.mimeType }, destTile);
     }
   }
 

@@ -89,7 +89,7 @@ export default class TileDropTarget implements DropTarget {
     if (note) {
       for (const { id: entityId, mimeType } of arrayOf(note)) {
         this.workbench.open(
-          { entityId, mimeType },
+          { noteId: entityId, mimeType },
           newTileDirection === 'middle' ? this.tile : { splitDirection: newTileDirection, from: this.tile },
         );
       }

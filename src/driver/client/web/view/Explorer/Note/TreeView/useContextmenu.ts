@@ -1,5 +1,6 @@
 import assert from 'assert';
 import { compact } from 'lodash-es';
+import { writeClipboard } from '@solid-primitives/clipboard';
 
 import NoteService from '#domain/client/app/service/NoteService';
 import container from '#utils/singletonContainer';
@@ -9,6 +10,7 @@ import type TreeNode from '#domain/client/shared/model/note/TreeNode';
 import { EntityTypes } from '#domain/shared/model/entity';
 import type { MenuItem } from '#web/components/common/ContextMenu';
 import { IconDisplayMode } from '#domain/client/app/model/note/TreeExplorer/Setting';
+import { getAppUrl, RouteTypes } from '#domain/shared/infra/url';
 
 import IconPicker from './IconPicker';
 
@@ -24,7 +26,6 @@ export default function useContextmenu() {
     } = tree;
 
     assert(selectedNode?.value);
-    console.log(key);
 
     switch (key) {
       case 'star':
@@ -33,8 +34,10 @@ export default function useContextmenu() {
         return createNote({ from: selectedNode.value.id });
       case 'delete':
         return put(Array.from(selected), EntityTypes.Note);
-      case 'icon-create':
+      case 'createIcon':
         return iconPicker.initCustomIconPicker();
+      case 'copyUrl':
+        return writeClipboard(getAppUrl(RouteTypes.Note, selectedNode.value.id));
       default:
         break;
     }
@@ -55,12 +58,13 @@ export default function useContextmenu() {
             key: 'icon-choose',
             content: ({ closeMenu }) => IconPicker({ onFinish: closeMenu }),
           },
-          { label: '新建图标', key: 'icon-create' },
+          { label: '新建图标', key: 'createIcon' },
         ],
       },
       ...(isSingle
         ? [
             { label: node.value?.isStar ? '取消收藏' : '收藏', key: 'star' },
+            { label: '复制 URL', key: 'copyUrl' },
             'separator' as const,
             { label: '复制', key: 'duplicate' },
           ]

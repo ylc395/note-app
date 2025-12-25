@@ -16,9 +16,9 @@ export default router({
     .input(clientMemoQuerySchema)
     .query(({ input: query, ctx: { memoService } }) => memoService.queryList(query)),
 
-  queryOne: publicProcedure
+  queryOneById: publicProcedure
     .input(entityIdSchema)
-    .query(({ input: query, ctx: { memoService } }) => memoService.queryOne(query, true)),
+    .query(({ input: query, ctx: { memoService } }) => memoService.queryOneById(query, true)),
 
   create: publicProcedure
     .input(memoDTOSchema)

@@ -1,6 +1,6 @@
 import assert from 'node:assert';
 
-import { getHash, toArrayBuffer, toText } from '#utils/file.js';
+import { getHash, toArrayBuffer } from '#utils/file.js';
 import { type FileVO, type FileDTO, type NewFileTextRecord } from '#domain/server/model/file.js';
 import { token as downloaderToken } from '#domain/server/infra/downloader.js';
 import container from '#utils/singletonContainer.js';
@@ -124,5 +124,9 @@ export default class FileService extends BaseService {
         assert(mimeType(file.mimeType));
       }
     }
+  }
+
+  public async queryIcon(_url: string) {
+    return null;
   }
 }

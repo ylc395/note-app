@@ -177,9 +177,9 @@ export default class MemoService extends BaseService {
     return Array.isArray(memos) ? result : result[0]!;
   }
 
-  public async queryOne(id: Memo['id'], isVO: true): Promise<MemoVO>;
-  public async queryOne(id: Memo['id']): Promise<Memo>;
-  public async queryOne(id: Memo['id'], isVO?: true) {
+  public async queryOneById(id: Memo['id'], isVO: true): Promise<MemoVO>;
+  public async queryOneById(id: Memo['id']): Promise<Memo>;
+  public async queryOneById(id: Memo['id'], isVO?: true) {
     const memo = await this.repo.memos.findOneById(id, { isAvailableOnly: true });
     assert(memo, 'invalid memo id');
 
@@ -191,7 +191,7 @@ export default class MemoService extends BaseService {
   }
 
   private readonly assertAvailableId = async (id: MemoVO['id'], config?: { isTop?: boolean }) => {
-    const memo = await this.queryOne(id);
+    const memo = await this.queryOneById(id);
 
     if (config?.isTop) {
       assert(!memo.parentId, 'not a top memo');

@@ -63,13 +63,13 @@ export default function View(props: { ctx: Ctx; close: () => void }) {
       const boundary = props.ctx.get(rootCtx) as HTMLElement;
       const { x, y, middlewareData } = await computePosition(virtualElement(), rootRef, {
         placement: 'top',
-        middleware: [hide({ boundary }), flip({ boundary })],
+        middleware: [hide({ boundary, strategy: 'escaped' }), flip({ boundary })],
       });
 
       Object.assign(rootRef.style, {
         left: `${x}px`,
         top: `${y}px`,
-        display: middlewareData.hide?.referenceHidden ? 'none' : '',
+        display: middlewareData.hide?.escaped ? 'none' : '',
       });
     });
 

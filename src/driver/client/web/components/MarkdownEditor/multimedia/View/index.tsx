@@ -3,10 +3,13 @@ import clsx from 'clsx';
 import { FileIcon } from 'lucide-solid';
 import z from 'zod';
 import type { EditorView } from '@milkdown/kit/prose/view';
+import { useQuery } from '@tanstack/solid-query';
 
+import container from '#utils/singletonContainer';
+import { token } from '#domain/client/shared/infra/rpc';
 import { parseAppUrl } from '#domain/shared/infra/url';
-import useFile from './useFile';
 import useResizable from './useResizable';
+import queryClient from '../../shared/queryClient';
 
 interface Props {
   figure?: boolean;
@@ -27,6 +30,7 @@ const stripQuery = (url: string) => {
 };
 
 export default function MultimediaView(props: Props) {
+  const remote = container.resolve(token);
   const attrs = createMemo(() =>
     z
       .object({
@@ -60,7 +64,14 @@ export default function MultimediaView(props: Props) {
     },
   });
 
-  const fileQuery = useFile(fileId);
+  const fileQuery = useQuery(
+    () => ({
+      queryFn: ({ queryKey: [_, { id }], signal }) => remote.file.queryOneById.query(id, { signal }),
+      enabled: Boolean(fileId()),
+      queryKey: ['files', { id: fileId()! }] as const,
+    }),
+    () => queryClient,
+  );
 
   return (
     <>

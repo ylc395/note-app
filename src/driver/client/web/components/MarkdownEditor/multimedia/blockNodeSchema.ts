@@ -58,6 +58,7 @@ export const multimediaBlockNodeView = $view(multimediaBlockNodeSchema.node, ():
     const [attrs, setAttrs] = createSignal(initialNode.attrs);
     const props = {
       editorView,
+      figure: true,
       get attrs() {
         return attrs();
       },

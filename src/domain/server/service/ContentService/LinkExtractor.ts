@@ -23,8 +23,6 @@ export default class LinkExtractor extends Extractor {
     const { url } = node as MdAstImageNode | MdAstLinkNode;
     const appUrl = parseAppUrl(url);
 
-    assert(!appUrl || appUrl.type !== RouteTypes.Static, 'invalid url when extracting');
-
     this.links.push({
       sourceId: this.entityId,
       sourceLocation: { start, end },

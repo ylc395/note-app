@@ -20,7 +20,7 @@ export default class MemoView {
     this.parent = options.parent;
 
     if (options.memoId) {
-      this.valueQuery = createQuery(({ signal }) => this.remote.memo.queryOne.query(options.memoId!, { signal }), {
+      this.valueQuery = createQuery(({ signal }) => this.remote.memo.queryOneById.query(options.memoId!, { signal }), {
         abortSignal: this.destroyController.signal,
         queryKey: ['memo', options.memoId],
       });

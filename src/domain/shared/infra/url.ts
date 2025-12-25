@@ -7,7 +7,6 @@ export const PROTOCOL = APP_NAME;
 const HOST_NAME = 'app'; // 这个没什么意义，纯占位符。随便给一个值
 
 export enum RouteTypes {
-  Static = 'static',
   File = 'file',
   Note = 'note',
   Memo = 'memo',
@@ -15,7 +14,6 @@ export enum RouteTypes {
 }
 
 const routes = {
-  [RouteTypes.Static]: '/static/*id', // 这里的 id 实际上是路径（id 应包含结尾的 /）
   [RouteTypes.File]: '/files/:id',
   [RouteTypes.Note]: '/notes/:id',
   [RouteTypes.Memo]: '/memos/:id',
@@ -26,20 +24,54 @@ const matcher = mapValues(routes, (v) => match(v, { decode: false }));
 
 const generator = mapValues(routes, (v) => compile(v, { encode: false }));
 
-export function getAppUrl(type: RouteTypes, id: string) {
+const matchStatic = match('/static/*path', { decode: false });
+
+export function getAppUrl(type: keyof typeof generator, id: string) {
   return `${PROTOCOL}://${HOST_NAME}${generator[type]({ id })}`;
 }
 
-export function parseAppUrl(url: string) {
+export function getStaticUrl(path: string) {
+  return `${PROTOCOL}://${HOST_NAME}/static/${path}`;
+}
+
+function parseUrl(url: string) {
   if (!URL.canParse(url)) {
     return null;
   }
 
-  const { hostname, pathname, protocol, hash, searchParams } = new URL(url);
+  const parsed = new URL(url);
 
-  if (protocol !== `${PROTOCOL}:` || hostname !== HOST_NAME) {
+  if (parsed.protocol !== `${PROTOCOL}:` || parsed.hostname !== HOST_NAME) {
     return null;
   }
+
+  return parsed;
+}
+
+export function parseStaticUrl(url: string) {
+  const parsed = parseUrl(url);
+
+  if (!parsed) {
+    return;
+  }
+
+  const result = matchStatic(parsed.pathname);
+
+  if (result && typeof result.params.path === 'string') {
+    return result.params.path;
+  }
+
+  return null;
+}
+
+export function parseAppUrl(url: string) {
+  const parsed = parseUrl(url);
+
+  if (!parsed) {
+    return;
+  }
+
+  const { pathname, hash, searchParams } = parsed;
 
   for (const [type, matchFn] of Object.entries(matcher)) {
     const matchResult = matchFn(pathname);

@@ -31,7 +31,7 @@ function highlight({ text, highlights }: MatchRecord) {
 function FileMatchRecordView(props: { record: FileMatchRecord; entityId: string; mimeType: string }) {
   const { open } = container.resolve(Workbench);
   const target = {
-    entityId: props.entityId,
+    noteId: props.entityId,
     mimeType: props.mimeType,
     initialCommand:
       typeof props.record.location.page === 'number' ? goToPageCommand.create(props.record.location.page) : undefined,
@@ -51,7 +51,7 @@ function FileMatchRecordView(props: { record: FileMatchRecord; entityId: string;
 function AnnotationMatchRecordView(props: { record: AnnotationMatchRecord; mimeType: string; entityId: string }) {
   const { open } = container.resolve(Workbench);
   const target = {
-    entityId: props.entityId,
+    noteId: props.entityId,
     mimeType: props.mimeType,
     initialCommand: goToAnnotationCommand.create(props.record.id),
   };
@@ -91,7 +91,7 @@ export default function Item(props: { open?: boolean; row: SearchResultVO; onTog
     <Collapsible.RootProvider class="text-sm mb-stack-s group" value={collapsible}>
       <div
         class="flex space-x-inset-square-md items-center"
-        onClick={() => open({ entityId: props.row.id, mimeType: props.row.file?.mimeType || null })}
+        onClick={() => open({ noteId: props.row.id, mimeType: props.row.file?.mimeType || null })}
       >
         <Collapsible.Trigger onClick={(e) => e.stopPropagation()}>
           <ChevronRightIcon class="group-data-[state=open]:rotate-90" />

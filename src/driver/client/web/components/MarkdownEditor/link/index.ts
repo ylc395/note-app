@@ -8,31 +8,38 @@ import assert from 'assert';
 
 import shell from '#web/infra/shell';
 import Tooltip, { Mode } from './Tooltip';
+import Icon from './Icon';
 
 export const linkNodeView = $view(linkSchema.mark, (ctx) => {
   return (mark): MarkView => {
     const dom = document.createElement('a');
-    let dispose: (() => void) | undefined;
+    const contentDOM = document.createElement('span');
+    const iconContainer = document.createElement('span');
+
+    dom.href = sanitizeUrl(mark.attrs.href);
+
+    let disposeTooltip: (() => void) | undefined;
     let stopAutoUpdate: (() => void) | undefined;
     let mode: Mode | undefined;
+    const disposeIcon = render(() => createComponent(Icon, { url: dom.href }), iconContainer);
 
     const delayHideTooltip = debounce(hideTooltip.bind(null, false), 600);
 
-    dom.href = sanitizeUrl(mark.attrs.href);
     dom.addEventListener('mouseenter', showTooltip);
     dom.addEventListener('mouseleave', delayHideTooltip);
+    dom.append(iconContainer, contentDOM);
 
     function showTooltip(e?: MouseEvent) {
       delayHideTooltip.cancel();
 
-      if (dispose) {
+      if (disposeTooltip) {
         return;
       }
 
       assert(e);
       const container = document.createDocumentFragment();
 
-      dispose = render(
+      disposeTooltip = render(
         () =>
           createComponent(Tooltip, {
             ctx,
@@ -56,16 +63,18 @@ export const linkNodeView = $view(linkSchema.mark, (ctx) => {
         return;
       }
 
-      dispose?.();
+      disposeTooltip?.();
       stopAutoUpdate?.();
 
-      dispose = undefined;
+      disposeTooltip = undefined;
       stopAutoUpdate = undefined;
     }
 
     return {
       dom,
+      contentDOM,
       destroy: () => {
+        disposeIcon();
         hideTooltip(true);
         delayHideTooltip.cancel();
         dom.remove();

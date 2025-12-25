@@ -18,10 +18,12 @@ import DomainEventBus, { type UpdatedEvent } from '../EventBus';
 import type { Command } from './command';
 import Uploader from './Uploader';
 
-export const storeName = 'editor_UI_state';
+export const uiStateStoreName = 'editor_UI_state';
+
+export const remoteIconStoreName = 'remote_icon';
 
 export interface Options {
-  entityId: NoteVO['id'];
+  noteId: NoteVO['id'];
   title?: NoteVO['title'];
   initialCommand?: Command;
   value?: NoteVO;
@@ -32,8 +34,8 @@ export interface Options {
 type Patch = Pick<NotePatchDTO, 'body' | 'icon' | 'title'>;
 
 export default abstract class BaseEditor {
-  constructor(tile: Tile, { entityId, initialCommand, uploader, value, path, ...options }: Options) {
-    this.noteId = entityId;
+  constructor(tile: Tile, { noteId, initialCommand, uploader, value, path, ...options }: Options) {
+    this.noteId = noteId;
     this.command$ = new BehaviorSubject(initialCommand);
     this.options = options;
     this.isPreview = Boolean(uploader); // 若初始化时就带了 uploader，说明是预览编辑器
@@ -95,16 +97,16 @@ export default abstract class BaseEditor {
 
   protected readonly remote = container.resolve(rpcToken);
 
-  public abstract readonly mimeType: string | null;
+  public abstract readonly mimeType: string | null; // 当处于预览模式时，有可能和 value.mimeType 不一致
 
   protected readonly domainEventBus = container.resolve(DomainEventBus);
 
   protected readonly saveUIState = debounce((value: Record<string, unknown>) => {
-    this.db.put(storeName, { ...value, id: this.noteId });
+    this.db.put(uiStateStoreName, { ...value, id: this.noteId });
   }, 500);
 
   protected getUIState<T>(schema: ZodType<T>) {
-    return this.db.getByKey(storeName, this.noteId, schema);
+    return this.db.getByKey(uiStateStoreName, this.noteId, schema);
   }
 
   public readonly id = uniqueId('editor-');
@@ -214,7 +216,7 @@ export default abstract class BaseEditor {
     assert(this.value.data);
 
     this.tile.replace(this, {
-      entityId: this.noteId,
+      noteId: this.noteId,
       mimeType: hard ? this.mimeType : this.value.data.mimeType,
       value: hard ? undefined : this.value.data,
       path: this.path.data,
