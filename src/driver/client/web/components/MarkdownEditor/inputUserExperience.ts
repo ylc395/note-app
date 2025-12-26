@@ -24,7 +24,7 @@ const removeMarkIfEmpty = $prose(() => {
       if (
         oldPos.marks().length > 0 &&
         [newState.selection.$anchor.nodeBefore, newState.selection.$anchor.nodeAfter].every(
-          (node) => !node?.marks || node.marks.length === 0 || !node.text?.trim(),
+          (node) => !node?.marks || node.marks.length === 0 || (node.isText && !node.text?.trim()),
         )
       ) {
         return newState.tr.setStoredMarks(null);

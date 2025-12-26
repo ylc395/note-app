@@ -15,14 +15,16 @@ export const linkNodeView = $view(linkSchema.mark, (ctx) => {
     const dom = document.createElement('a');
     const contentDOM = document.createElement('span');
     const iconContainer = document.createElement('span');
+    iconContainer.dataset.linkIcon = 'true';
+    iconContainer.contentEditable = 'false';
 
     dom.href = sanitizeUrl(mark.attrs.href);
 
     let disposeTooltip: (() => void) | undefined;
     let stopAutoUpdate: (() => void) | undefined;
     let mode: Mode | undefined;
-    const disposeIcon = render(() => createComponent(Icon, { url: dom.href }), iconContainer);
 
+    const disposeIcon = render(() => createComponent(Icon, { url: dom.href, container: iconContainer }), iconContainer);
     const delayHideTooltip = debounce(hideTooltip.bind(null, false), 600);
 
     dom.addEventListener('mouseenter', showTooltip);

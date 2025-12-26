@@ -126,7 +126,7 @@ export default class FileService extends BaseService {
     }
   }
 
-  public async queryIcon(_url: string) {
-    return null;
+  public async queryIcon(url: string) {
+    return this.downloader.getIcon(url);
   }
 }

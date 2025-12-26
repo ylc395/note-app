@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/solid-query';
 import z from 'zod';
-import { createEffect, createSignal, Match, onCleanup, Switch } from 'solid-js';
+import { createEffect, Match, onCleanup, Switch } from 'solid-js';
 
 import container from '#utils/singletonContainer';
 import { token as remoteToken } from '#domain/client/shared/infra/rpc';
@@ -14,8 +14,7 @@ import type { NoteVO } from '#domain/shared/model/note';
 
 type Icon = Partial<Pick<NoteVO, 'icon' | 'mimeType'>> & { type: RouteTypes };
 
-export default function LinkIcon(props: { url: string }) {
-  const [blobUrl, setBlobUrl] = createSignal<string>();
+export default function LinkIcon(props: { url: string; container: HTMLElement }) {
   const remote = container.resolve(remoteToken);
   const db = container.resolve(documentDbToken);
 
@@ -34,15 +33,9 @@ export default function LinkIcon(props: { url: string }) {
           return { type: parsed.type };
         }
 
-        const origin = URL.canParse(props.url) ? new URL(props.url).origin : '';
-
-        if (!origin) {
-          return null;
-        }
-
         const localResult = await db.getByKey(
           remoteIconStoreName,
-          origin,
+          props.url,
           z.object({ data: z.instanceof(Blob), createdAt: z.number() }),
         );
 
@@ -56,9 +49,9 @@ export default function LinkIcon(props: { url: string }) {
           return null;
         }
 
-        const blob = new Blob([result]);
+        const blob = new Blob([result as ArrayBuffer]);
         await db.put(remoteIconStoreName, {
-          origin,
+          url: props.url,
           data: blob,
           createdAt: Date.now(),
         });
@@ -72,7 +65,8 @@ export default function LinkIcon(props: { url: string }) {
   createEffect(() => {
     if (icon.data instanceof Blob) {
       const blobUrl = URL.createObjectURL(icon.data);
-      setBlobUrl(blobUrl);
+      // 试过直接用 <img /> 元素渲染，但是该元素会卡住光标，因此改用伪元素渲染
+      props.container.style.setProperty('--icon-url', `url(${blobUrl})`);
 
       onCleanup(() => {
         URL.revokeObjectURL(blobUrl);
@@ -82,7 +76,6 @@ export default function LinkIcon(props: { url: string }) {
 
   return (
     <Switch>
-      <Match when={blobUrl()}>{(url) => <img src={url()} />}</Match>
       <Match when={icon.data?.type === RouteTypes.Note}>
         <Icon {...(icon.data as Icon)} />
       </Match>
