@@ -15,9 +15,10 @@
     max-width: none;
   }
 
-  [data-link-icon]::after {
-    content: var(--icon-url);
+  [data-link-icon]::before {
+    content: var(--icon-content);
     display: inline;
+    user-select: none;
   }
 }
 

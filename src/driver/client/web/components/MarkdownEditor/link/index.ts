@@ -3,73 +3,27 @@ import { linkSchema } from '@milkdown/kit/preset/commonmark';
 import type { MarkView } from '@milkdown/kit/prose/view';
 import { render, createComponent } from 'solid-js/web';
 import { sanitizeUrl } from '@braintree/sanitize-url';
-import { debounce } from 'lodash-es';
-import assert from 'assert';
-
-import shell from '#web/infra/shell';
-import Tooltip, { Mode } from './Tooltip';
+import Tooltip from './Tooltip';
 import Icon from './Icon';
 
 export const linkNodeView = $view(linkSchema.mark, (ctx) => {
   return (mark): MarkView => {
     const dom = document.createElement('a');
     const contentDOM = document.createElement('span');
-    const iconContainer = document.createElement('span');
-    iconContainer.dataset.linkIcon = 'true';
-    iconContainer.contentEditable = 'false';
+    const iconContainer = document.createDocumentFragment();
 
+    dom.dataset.linkIcon = 'true';
     dom.href = sanitizeUrl(mark.attrs.href);
+    dom.append(contentDOM);
 
-    let disposeTooltip: (() => void) | undefined;
-    let stopAutoUpdate: (() => void) | undefined;
-    let mode: Mode | undefined;
+    const disposeIcon = render(
+      () => createComponent(Icon, { url: dom.href, linkDom: dom, onLoad: mountIcon }),
+      iconContainer,
+    );
+    const disposeTooltip = render(() => createComponent(Tooltip, { ctx, targetDom: dom }), dom);
 
-    const disposeIcon = render(() => createComponent(Icon, { url: dom.href, container: iconContainer }), iconContainer);
-    const delayHideTooltip = debounce(hideTooltip.bind(null, false), 600);
-
-    dom.addEventListener('mouseenter', showTooltip);
-    dom.addEventListener('mouseleave', delayHideTooltip);
-    dom.append(iconContainer, contentDOM);
-
-    function showTooltip(e?: MouseEvent) {
-      delayHideTooltip.cancel();
-
-      if (disposeTooltip) {
-        return;
-      }
-
-      assert(e);
-      const container = document.createDocumentFragment();
-
-      disposeTooltip = render(
-        () =>
-          createComponent(Tooltip, {
-            ctx,
-            targetDom: dom,
-            mousePosition: { x: e.clientX, y: e.clientY },
-            close: hideTooltip.bind(null, true),
-            onLeave: delayHideTooltip,
-            onEnter: showTooltip,
-            onModeChange: (v) => {
-              mode = v;
-            },
-          }),
-        container,
-      );
-
-      shell.appRoot.append(container);
-    }
-
-    function hideTooltip(destroy: boolean) {
-      if (!destroy && mode === Mode.Edit) {
-        return;
-      }
-
-      disposeTooltip?.();
-      stopAutoUpdate?.();
-
-      disposeTooltip = undefined;
-      stopAutoUpdate = undefined;
+    function mountIcon() {
+      dom.prepend(iconContainer);
     }
 
     return {
@@ -77,8 +31,7 @@ export const linkNodeView = $view(linkSchema.mark, (ctx) => {
       contentDOM,
       destroy: () => {
         disposeIcon();
-        hideTooltip(true);
-        delayHideTooltip.cancel();
+        disposeTooltip();
         dom.remove();
       },
     };

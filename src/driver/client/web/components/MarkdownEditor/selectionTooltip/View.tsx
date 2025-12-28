@@ -106,7 +106,7 @@ export default function View(props: { ctx: Ctx; close: () => void }) {
           </Show>
         </Show>
         <Show when={menu() === 'link'}>
-          <LinkView initialMode={Mode.Edit} close={returnToMain} ctx={props.ctx} targetDom={virtualElement()} />
+          <LinkView initialMode={Mode.Edit} onClose={returnToMain} ctx={props.ctx} targetDom={virtualElement()} />
         </Show>
       </div>
     </Portal>

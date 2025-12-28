@@ -39,6 +39,7 @@ export default $prose(() => {
       handleDOMEvents: {
         focusout: (view) => {
           selectionRange = selectionToDOMRange(view);
+          console.log(document.activeElement);
 
           if (selectionRange) {
             selectionHighlight.add(selectionRange);

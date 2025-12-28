@@ -1,5 +1,5 @@
 import shell from '#web/infra/shell';
-import { autoUpdate, computePosition, flip, hide, inline, type VirtualElement } from '@floating-ui/dom';
+import { autoUpdate, computePosition, flip, hide as hideFloating, inline, type VirtualElement } from '@floating-ui/dom';
 import { editorCtx, editorViewCtx, rootCtx } from '@milkdown/kit/core';
 import type { Ctx } from '@milkdown/kit/ctx';
 import { linkSchema, toggleLinkCommand, updateLinkCommand } from '@milkdown/kit/preset/commonmark';
@@ -7,45 +7,19 @@ import { TextSelection } from '@milkdown/kit/prose/state';
 import { callCommand, type $Command } from '@milkdown/kit/utils';
 import { createEffect, createMemo, createSignal, onCleanup, Show } from 'solid-js';
 import { Portal } from 'solid-js/web';
+import { makeEventListener } from '@solid-primitives/event-listener';
 import z from 'zod';
+import { debounce } from 'lodash-es';
+import { findMarkPosition } from '../shared/prosemirrorUtils';
 
 export enum Mode {
   Preview = 'preview',
   Edit = 'edit',
 }
 
-// 从 milkdown 仓库里复制的
-function findMarkPosition(ctx: Ctx, linkDom: HTMLElement) {
-  const editorView = ctx.get(editorViewCtx);
-  const pos = editorView.posAtDOM(linkDom, 0);
-  const node = editorView.state.doc.nodeAt(pos);
-  const $pos = editorView.state.doc.resolve(pos);
-  const mark = node?.marks.find((mark) => mark.type === linkSchema.mark.type(ctx));
-
-  if (!mark || !node) {
-    return;
-  }
-
-  let markPos = { start: -1, end: -1 };
-  editorView.state.doc.nodesBetween($pos.before(), $pos.after(), (n, pos) => {
-    if (markPos.start > -1) return false;
-
-    if (markPos.start === -1 && mark.isInSet(n.marks) && node === n) {
-      markPos = {
-        start: pos,
-        end: pos + Math.max(n.textContent.length, 1),
-      };
-    }
-
-    return undefined;
-  });
-
-  return markPos;
-}
-
 function selectLink(ctx: Ctx, linkDom: HTMLElement) {
   const editorView = ctx.get(editorViewCtx);
-  const markPos = findMarkPosition(ctx, linkDom);
+  const markPos = findMarkPosition(editorView.state, linkSchema.type(ctx), editorView.posAtDOM(linkDom, 0) + 1);
 
   if (!markPos) {
     return null;
@@ -63,22 +37,36 @@ const urlSchema = z.url();
 export default function Tooltip(props: {
   ctx: Ctx;
   targetDom: HTMLAnchorElement | VirtualElement;
-  mousePosition?: { x: number; y: number };
-  close: () => void;
   initialMode?: Mode;
-  onLeave?: () => void;
-  onEnter?: () => void;
-  onModeChange?: (mode: Mode) => void;
+  onClose?: () => void;
 }) {
   const initialHref = props.targetDom instanceof HTMLAnchorElement ? props.targetDom.href : '';
   const [href, setHref] = createSignal(initialHref);
   const [mode, setMode] = createSignal(props.initialMode ?? Mode.Preview);
+  const [shouldShow, setShouldShow] = createSignal(!(props.targetDom instanceof HTMLElement));
+  const [mousePosition, setMousePosition] = createSignal<{ x: number; y: number }>();
 
   const editorView = createMemo(() => props.ctx.get(editorViewCtx));
   const isValidHref = createMemo(() => urlSchema.safeParse(href()).success);
 
   let inputRef: HTMLInputElement | undefined;
-  let rootRef: HTMLDivElement | undefined;
+  const [rootRef, setRootRef] = createSignal<HTMLDivElement>();
+
+  const hideDelay = debounce(hide, 600);
+
+  const show = (e: MouseEvent) => {
+    hideDelay.cancel();
+    setMousePosition({ x: e.clientX, y: e.clientY });
+    setShouldShow(true);
+  };
+
+  const onClose = () => {
+    if (props.onClose) {
+      props.onClose();
+    } else {
+      hide();
+    }
+  };
 
   function action<T>(command: $Command<T>, payload?: T) {
     const markPos =
@@ -97,7 +85,7 @@ export default function Tooltip(props: {
     );
 
     editorView().focus();
-    props.close();
+    onClose();
   }
 
   function remove() {
@@ -106,7 +94,7 @@ export default function Tooltip(props: {
 
   function cancel() {
     if (props.initialMode === Mode.Edit) {
-      props.close();
+      onClose();
     } else {
       setHref(initialHref);
       setMode(Mode.Preview);
@@ -121,31 +109,37 @@ export default function Tooltip(props: {
     action(props.targetDom instanceof HTMLElement ? updateLinkCommand : toggleLinkCommand, { href: href() });
   }
 
-  createEffect(() => {
-    props.onModeChange?.(mode());
+  function hide() {
+    if (mode() !== Mode.Edit) {
+      setShouldShow(false);
+    }
+  }
 
-    if (mode() === Mode.Edit) {
+  createEffect(() => {
+    if (mode() === Mode.Edit && shouldShow()) {
       inputRef?.focus();
     }
   });
 
   createEffect(() => {
-    if (!rootRef) {
+    const root = rootRef();
+
+    if (!root) {
       return;
     }
 
-    const stopAutoUpdate = autoUpdate(props.targetDom, rootRef, async () => {
+    const stopAutoUpdate = autoUpdate(props.targetDom, root, async () => {
       const boundary = props.ctx.get(rootCtx) as HTMLElement;
-      const { x, y, middlewareData } = await computePosition(props.targetDom, rootRef, {
+      const { x, y, middlewareData } = await computePosition(props.targetDom, root, {
         middleware: [
-          hide({ boundary, strategy: 'escaped' }),
+          hideFloating({ boundary, strategy: 'escaped' }),
           flip({ boundary }),
-          props.mousePosition && inline(props.mousePosition),
+          mousePosition() && inline(mousePosition()),
         ],
         placement: 'top',
       });
 
-      Object.assign(rootRef!.style, {
+      Object.assign(root.style, {
         left: `${x}px`,
         top: `${y}px`,
         display: middlewareData.hide?.escaped ? 'none' : '',
@@ -157,33 +151,43 @@ export default function Tooltip(props: {
     });
   });
 
+  if (props.targetDom instanceof HTMLElement) {
+    makeEventListener(props.targetDom, 'mouseenter', show);
+    makeEventListener(props.targetDom, 'mouseleave', hideDelay);
+  }
+
+  onCleanup(() => {
+    hideDelay.cancel();
+  });
+
   return (
-    <Portal mount={shell.appRoot}>
-      <div
-        ref={rootRef}
-        onFocusOut={props.onLeave}
-        onMouseLeave={props.onLeave}
-        onMouseEnter={props.onEnter}
-        class="absolute"
-      >
-        <input ref={inputRef} readOnly={mode() !== Mode.Edit} onInput={(e) => setHref(e.target.value)} value={href()} />
-        <Show
-          when={mode() === Mode.Edit}
-          fallback={
+    <Show when={shouldShow()}>
+      <Portal mount={shell.appRoot}>
+        <div ref={setRootRef} onFocusOut={hideDelay} onMouseLeave={hideDelay} onMouseEnter={show} class="absolute">
+          <input
+            ref={inputRef}
+            readOnly={mode() !== Mode.Edit}
+            onInput={(e) => setHref(e.target.value)}
+            value={href()}
+          />
+          <Show
+            when={mode() === Mode.Edit}
+            fallback={
+              <div>
+                <button onClick={remove}>删除</button>
+                <button onClick={() => setMode(Mode.Edit)}>编辑</button>
+              </div>
+            }
+          >
             <div>
-              <button onClick={remove}>删除</button>
-              <button onClick={() => setMode(Mode.Edit)}>编辑</button>
+              <button disabled={!isValidHref()} onClick={update}>
+                保存
+              </button>
+              <button onClick={cancel}>取消</button>
             </div>
-          }
-        >
-          <div>
-            <button disabled={!isValidHref()} onClick={update}>
-              保存
-            </button>
-            <button onClick={cancel}>取消</button>
-          </div>
-        </Show>
-      </div>
-    </Portal>
+          </Show>
+        </div>
+      </Portal>
+    </Show>
   );
 }

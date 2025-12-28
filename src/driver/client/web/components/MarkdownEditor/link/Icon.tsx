@@ -14,7 +14,7 @@ import type { NoteVO } from '#domain/shared/model/note';
 
 type Icon = Partial<Pick<NoteVO, 'icon' | 'mimeType'>> & { type: RouteTypes };
 
-export default function LinkIcon(props: { url: string; container: HTMLElement }) {
+export default function LinkIcon(props: { url: string; linkDom: HTMLElement; onLoad: () => void }) {
   const remote = container.resolve(remoteToken);
   const db = container.resolve(documentDbToken);
 
@@ -63,14 +63,18 @@ export default function LinkIcon(props: { url: string; container: HTMLElement })
   );
 
   createEffect(() => {
-    if (icon.data instanceof Blob) {
-      const blobUrl = URL.createObjectURL(icon.data);
-      // 试过直接用 <img /> 元素渲染，但是该元素会卡住光标，因此改用伪元素渲染
-      props.container.style.setProperty('--icon-url', `url(${blobUrl})`);
+    if (icon.data) {
+      if (icon.data instanceof Blob) {
+        const blobUrl = URL.createObjectURL(icon.data);
+        props.linkDom.style.setProperty('--icon-content', `url(${blobUrl})`);
 
-      onCleanup(() => {
-        URL.revokeObjectURL(blobUrl);
-      });
+        onCleanup(() => {
+          URL.revokeObjectURL(blobUrl);
+        });
+        return;
+      }
+
+      props.onLoad();
     }
   });
 
