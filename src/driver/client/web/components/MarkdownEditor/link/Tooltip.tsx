@@ -1,5 +1,5 @@
 import shell from '#web/infra/shell';
-import { autoUpdate, computePosition, flip, hide as hideFloating, inline, type VirtualElement } from '@floating-ui/dom';
+import { autoUpdate, computePosition, flip, hide as hideFloating, inline } from '@floating-ui/dom';
 import { editorCtx, editorViewCtx, rootCtx } from '@milkdown/kit/core';
 import type { Ctx } from '@milkdown/kit/ctx';
 import { linkSchema, toggleLinkCommand, updateLinkCommand } from '@milkdown/kit/preset/commonmark';
@@ -36,14 +36,16 @@ const urlSchema = z.url();
 
 export default function Tooltip(props: {
   ctx: Ctx;
-  targetDom: HTMLAnchorElement | VirtualElement;
+  targetDom?: HTMLAnchorElement;
   initialMode?: Mode;
   onClose?: () => void;
 }) {
   const initialHref = props.targetDom instanceof HTMLAnchorElement ? props.targetDom.href : '';
+  const isFloating = Boolean(props.targetDom);
+
   const [href, setHref] = createSignal(initialHref);
   const [mode, setMode] = createSignal(props.initialMode ?? Mode.Preview);
-  const [shouldShow, setShouldShow] = createSignal(!(props.targetDom instanceof HTMLElement));
+  const [shouldShow, setShouldShow] = createSignal(!isFloating);
   const [mousePosition, setMousePosition] = createSignal<{ x: number; y: number }>();
 
   const editorView = createMemo(() => props.ctx.get(editorViewCtx));
@@ -124,13 +126,13 @@ export default function Tooltip(props: {
   createEffect(() => {
     const root = rootRef();
 
-    if (!root) {
+    if (!root || !shouldShow() || !props.targetDom) {
       return;
     }
 
     const stopAutoUpdate = autoUpdate(props.targetDom, root, async () => {
       const boundary = props.ctx.get(rootCtx) as HTMLElement;
-      const { x, y, middlewareData } = await computePosition(props.targetDom, root, {
+      const { x, y, middlewareData } = await computePosition(props.targetDom!, root, {
         middleware: [
           hideFloating({ boundary, strategy: 'escaped' }),
           flip({ boundary }),
@@ -151,7 +153,7 @@ export default function Tooltip(props: {
     });
   });
 
-  if (props.targetDom instanceof HTMLElement) {
+  if (props.targetDom) {
     makeEventListener(props.targetDom, 'mouseenter', show);
     makeEventListener(props.targetDom, 'mouseleave', hideDelay);
   }
@@ -160,34 +162,35 @@ export default function Tooltip(props: {
     hideDelay.cancel();
   });
 
-  return (
-    <Show when={shouldShow()}>
-      <Portal mount={shell.appRoot}>
-        <div ref={setRootRef} onFocusOut={hideDelay} onMouseLeave={hideDelay} onMouseEnter={show} class="absolute">
-          <input
-            ref={inputRef}
-            readOnly={mode() !== Mode.Edit}
-            onInput={(e) => setHref(e.target.value)}
-            value={href()}
-          />
-          <Show
-            when={mode() === Mode.Edit}
-            fallback={
-              <div>
-                <button onClick={remove}>删除</button>
-                <button onClick={() => setMode(Mode.Edit)}>编辑</button>
-              </div>
-            }
-          >
-            <div>
-              <button disabled={!isValidHref()} onClick={update}>
-                保存
-              </button>
-              <button onClick={cancel}>取消</button>
-            </div>
-          </Show>
+  const content = (
+    <div
+      ref={setRootRef}
+      onFocusOut={hideDelay}
+      onMouseLeave={hideDelay}
+      onMouseEnter={show}
+      classList={{ absolute: Boolean(props.targetDom) }}
+    >
+      <input ref={inputRef} readOnly={mode() !== Mode.Edit} onInput={(e) => setHref(e.target.value)} value={href()} />
+      <Show
+        when={mode() === Mode.Edit}
+        fallback={
+          <div>
+            <button onClick={remove}>删除</button>
+            <button onClick={() => setMode(Mode.Edit)}>编辑</button>
+          </div>
+        }
+      >
+        <div>
+          <button disabled={!isValidHref()} onClick={update}>
+            保存
+          </button>
+          <button onClick={cancel}>取消</button>
         </div>
-      </Portal>
-    </Show>
+      </Show>
+    </div>
+  );
+
+  return (
+    <Show when={shouldShow()}>{props.targetDom ? <Portal mount={shell.appRoot}>{content}</Portal> : content}</Show>
   );
 }

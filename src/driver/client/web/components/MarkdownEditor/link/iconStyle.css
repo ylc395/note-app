@@ -1,0 +1,15 @@
+.milkdown .editor [data-link-icon]::before {
+  content: '';
+  display: inline-block;
+  user-select: none;
+  height: 1em;
+  width: 1em;
+  vertical-align: middle;
+  margin-inline-start: 0.2em;
+  margin-inline-end: 0.1em;
+
+  background-image: var(--icon-content);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}

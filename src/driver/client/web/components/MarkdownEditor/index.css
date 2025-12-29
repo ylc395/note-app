@@ -14,12 +14,6 @@
     display: inline;
     max-width: none;
   }
-
-  [data-link-icon]::before {
-    content: var(--icon-content);
-    display: inline;
-    user-select: none;
-  }
 }
 
 .milkdown-drop-indicator {

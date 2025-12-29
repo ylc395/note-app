@@ -160,6 +160,9 @@ importers:
       lodash-es:
         specifier: ^4.17.21
         version: 4.17.21
+      lucide:
+        specifier: ^0.562.0
+        version: 0.562.0
       lucide-solid:
         specifier: ^0.539.0
         version: 0.539.0(solid-js@1.9.9)
@@ -3592,6 +3595,9 @@ packages:
     resolution: {integrity: sha512-fdvf68Qb2ggi4szaVSCJI11MkJw4pqOf8tmVcAEKpUvW9CQ1mZnq8FjAeWkI2mxhbqP8jNCfJq9ybeRxerlTWg==}
     peerDependencies:
       solid-js: ^1.4.7
+
+  lucide@0.562.0:
+    resolution: {integrity: sha512-k1Fb8ZMnRQovWRlea7Jr0b9UKA29IM7/cu79+mJrhVohvA2YC/Ti3Sk+G+h/SIu3IlrKT4RAbWMHUBBQd1O6XA==}
 
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
@@ -9466,6 +9472,8 @@ snapshots:
   lucide-solid@0.539.0(solid-js@1.9.9):
     dependencies:
       solid-js: 1.9.9
+
+  lucide@0.562.0: {}
 
   magic-string@0.30.21:
     dependencies:

@@ -1,5 +1,5 @@
 import { Match, Switch } from 'solid-js';
-import { FileTextIcon, LayoutGridIcon, GlobeIcon } from 'lucide-solid';
+import { LayoutGridIcon, GlobeIcon, NotebookTextIcon } from 'lucide-solid';
 import data from '@emoji-mart/data';
 import { init } from 'emoji-mart';
 import { action, observable } from 'mobx';
@@ -13,7 +13,7 @@ init({ data }).then(action(() => dataLoaded.set(true)));
 
 export default function Icon(props: { icon?: Icon | null; mimeType?: string | null; iconClassName?: string }) {
   return (
-    <Switch fallback={<FileTextIcon class={props.iconClassName} />}>
+    <Switch fallback={<NotebookTextIcon class={props.iconClassName} />}>
       <Match when={dataLoaded.get() && props.icon}>
         {(icon) => (
           <Switch>
