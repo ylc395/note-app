@@ -15,10 +15,12 @@ import { replaceAll } from '@milkdown/kit/utils';
 import { upload, uploadConfig } from '@milkdown/kit/plugin/upload';
 import { cursor } from '@milkdown/kit/plugin/cursor';
 
-import inputUserExperience from './inputUserExperience';
 import multimedia from './multimedia';
-import placeholder from './placeholder';
 import link from './link';
+import topic from './topic';
+
+import inputUserExperience from './inputUserExperience';
+import placeholder from './placeholder';
 import { uploader } from './uploader';
 import selectionTooltip from './selectionTooltip';
 import selectionHighlight from './selectionHighlight';
@@ -56,6 +58,7 @@ export default class Editor {
       .use(inputUserExperience) // 改善一些输入时的用户体验
       .use(placeholder) // 在某些块级文本为空时给出一些提示
       .use(link) // 为超链接设计的 tooltip
+      .use(topic)
       .use(selectionTooltip)
       .use(selectionHighlight) // 使得编辑器失去焦点时，选区仍然能高亮（浏览器的原生行为是使得选区失去高亮效果）
       .use(history)

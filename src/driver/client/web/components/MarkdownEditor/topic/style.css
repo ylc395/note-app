@@ -1,0 +1,4 @@
+.milkdown .editor [data-topic]::before,
+.milkdown .editor [data-topic]::after {
+  content: '#'
+}

@@ -1,5 +1,6 @@
-import type { Extension, State, Tokenizer, HtmlExtension } from 'micromark-util-types';
+import type { Extension, State, Tokenizer } from 'micromark-util-types';
 import type { Extension as MdastExtension } from 'mdast-util-from-markdown';
+import type { Options as ToMarkdownExtension } from 'mdast-util-to-markdown';
 import { codes } from 'micromark-util-symbol';
 import { markdownLineEnding, markdownSpace } from 'micromark-util-character';
 import type { Node } from 'mdast';
@@ -20,6 +21,12 @@ declare module 'micromark-util-types' {
 declare module 'mdast' {
   interface RootContentMap {
     topic: Topic;
+  }
+}
+
+declare module 'mdast-util-to-markdown' {
+  interface ConstructNameMap {
+    topic: 'topic';
   }
 }
 
@@ -98,14 +105,21 @@ export const mdastExtension: MdastExtension = {
   },
 };
 
-export const htmlExtension: HtmlExtension = {
-  enter: {
-    topic: function (token) {
-      const topic = this.sliceSerialize(token).slice(1, -1);
-
-      this.tag('<span class="markdown-topic"');
-      this.tag(topic);
-      this.tag('</span>');
+// 咱也不懂 toMarkdownExtension 怎么实现。照着官方的 strikethrough 语法抄的
+export const toMarkdownExtension: ToMarkdownExtension = {
+  handlers: {
+    topic: (node, parent, state, info) => {
+      const tracker = state.createTracker(info);
+      const exit = state.enter('topic');
+      let value = tracker.move('#');
+      value += state.containerPhrasing(node, {
+        ...tracker.current(),
+        before: value,
+        after: '#',
+      });
+      value += tracker.move('#');
+      exit();
+      return value;
     },
   },
 };

@@ -6,6 +6,7 @@ import { sanitizeUrl } from '@braintree/sanitize-url';
 
 import Tooltip from './Tooltip';
 import { addIcon } from './icon';
+import './style.css';
 
 export const linkNodeView = $view(linkSchema.mark, (ctx) => {
   return (mark): MarkView => {

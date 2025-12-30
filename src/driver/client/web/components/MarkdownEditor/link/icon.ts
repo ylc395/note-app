@@ -11,8 +11,6 @@ import Icon from '#web/components/common/Icon';
 import { remoteIconStoreName } from '#domain/client/app/model/note/editor/BaseEditor';
 import type { NoteVO } from '#domain/shared/model/note';
 
-import './iconStyle.css';
-
 type Icon = Partial<Pick<NoteVO, 'icon' | 'mimeType'>> & { type: RouteTypes };
 
 export function addIcon(linkDom: HTMLAnchorElement) {
