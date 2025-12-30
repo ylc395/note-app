@@ -7,6 +7,8 @@ import { render } from 'solid-js/web';
 import { debounce } from 'lodash-es';
 
 import shell from '#web/infra/shell';
+import { multimediaBlockNodeSchema } from '../multimedia/blockNodeSchema';
+import { multimediaNodeSchema } from '../multimedia/inlineNodeSchema';
 import View from './View';
 
 export default $prose(
@@ -38,6 +40,19 @@ export default $prose(
           destroy();
 
           if (view.composing || view.state.selection.empty) {
+            return;
+          }
+
+          const content = view.state.selection.content();
+
+          // 仅选中多媒体元素
+          if (
+            content.size === 1 &&
+            content.content.firstChild &&
+            [multimediaBlockNodeSchema.type(ctx), multimediaNodeSchema.type(ctx)].includes(
+              content.content.firstChild.type,
+            )
+          ) {
             return;
           }
 

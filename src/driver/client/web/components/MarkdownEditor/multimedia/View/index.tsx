@@ -9,6 +9,7 @@ import container from '#utils/singletonContainer';
 import { token } from '#domain/client/shared/infra/rpc';
 import { parseAppUrl } from '#domain/shared/infra/url';
 import useResizable from './useResizable';
+import FileCard from './FileCard';
 import queryClient from '../../shared/queryClient';
 
 interface Props {
@@ -76,7 +77,7 @@ export default function MultimediaView(props: Props) {
   return (
     <>
       <div class={clsx('relative text-center', props.figure ? 'mx-auto' : 'inline-block')} style={containerStyle()}>
-        <Switch>
+        <Switch fallback={<FileCard file={fileQuery.data!} />}>
           <Match when={fileQuery.isError}>
             <FileIcon />
             {fileId()?.slice(0, 6)}不存在
