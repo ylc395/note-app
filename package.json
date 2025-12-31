@@ -129,6 +129,7 @@
     "pdfjs-dist": "^5.3.93",
     "perfect-freehand": "^1.2.2",
     "pica": "^9.0.1",
+    "prosemirror-virtual-cursor": "^0.4.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "rxjs": "^7.8.2",
@@ -156,7 +157,8 @@
       "tesseract.js"
     ],
     "patchedDependencies": {
-      "electron-trpc@0.7.1": "patches/electron-trpc@0.7.1.patch"
+      "electron-trpc@0.7.1": "patches/electron-trpc@0.7.1.patch",
+      "prosemirror-virtual-cursor": "patches/prosemirror-virtual-cursor.patch"
     }
   }
 }

@@ -1,0 +1,65 @@
+diff --git a/dist/index.cjs b/dist/index.cjs
+index cc0e78d930944dc4bbf9a6a0a8230cda66fcbfff..dd8889958a1cbe0c039ef68031b453969e8f2c96 100644
+--- a/dist/index.cjs
++++ b/dist/index.cjs
+@@ -150,7 +150,7 @@ function updateCursor(view, cursor) {
+   const $pos = state.selection.$head;
+   const [marksBefore, marksAfter] = getMarksAround($pos);
+   const marks = state.storedMarks || $pos.marks();
+-  if (selection.$cursor && marksBefore && marksAfter && marks && !import_prosemirror_model.Mark.sameSet(marksBefore, marksAfter)) {
++  if (selection.$cursor && (marksBefore || marksAfter) && marks && ((marksAfter && marksBefore) ? !import_prosemirror_model.Mark.sameSet(marksBefore, marksAfter): true)) {
+     if (import_prosemirror_model.Mark.sameSet(marksBefore, marks))
+       className += " prosemirror-virtual-cursor-left";
+     else if (import_prosemirror_model.Mark.sameSet(marksAfter, marks))
+diff --git a/dist/index.js b/dist/index.js
+index ed6886dc84ffed004bbfac43fa99ff7a744ad09a..cbff7734b26e9e9d0416345f681b24da70809971 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -45,7 +45,7 @@ function createVirtualCursor(options) {
+         const $pos = selection.$head;
+         const [marksBefore, marksAfter] = getMarksAround($pos);
+         const marks = view.state.storedMarks || $pos.marks();
+-        if (marksBefore && marksAfter && !Mark.sameSet(marksBefore, marksAfter)) {
++        if (!Mark.sameSet(marksBefore, marksAfter)) {
+           if (event.key === "ArrowLeft" && !Mark.sameSet(marksBefore, marks)) {
+             view.dispatch(view.state.tr.setStoredMarks(marksBefore));
+             return true;
+@@ -106,7 +106,7 @@ function getMarksAround($pos) {
+   let before = $pos.textOffset ? after : null;
+   if (!before && index > 0)
+     before = $pos.parent.maybeChild(index - 1);
+-  return [before == null ? void 0 : before.marks, after == null ? void 0 : after.marks];
++  return [before == null ? [] : before.marks, after == null ? [] : after.marks];
+ }
+ function isTextSelection(selection) {
+   return selection && typeof selection === "object" && "$cursor" in selection;
+@@ -122,21 +122,24 @@ function updateCursor(view, cursor) {
+   if (!cursorRect)
+     return cursor;
+   const editorRect = dom.getBoundingClientRect();
++  const left = cursorRect.left - editorRect.left;
++
++  cursor.style.height = `${cursorRect.bottom - cursorRect.top}px`;
++  cursor.style.left = `${left}px`;
++  cursor.style.top = `${cursorRect.top - editorRect.top}px`;
++
+   let className = "prosemirror-virtual-cursor";
+   const $pos = state.selection.$head;
+   const [marksBefore, marksAfter] = getMarksAround($pos);
+   const marks = state.storedMarks || $pos.marks();
+-  if (selection.$cursor && marksBefore && marksAfter && marks && !Mark.sameSet(marksBefore, marksAfter)) {
+-    if (Mark.sameSet(marksBefore, marks))
++  if (selection.$cursor && marks && !Mark.sameSet(marksBefore, marksAfter)) {
++    if (left > 0 && Mark.sameSet(marksBefore, marks))
+       className += " prosemirror-virtual-cursor-left";
+     else if (Mark.sameSet(marksAfter, marks))
+       className += " prosemirror-virtual-cursor-right";
+   }
+   cursor.className = className;
+   restartAnimation(cursor, "prosemirror-virtual-cursor-animation");
+-  cursor.style.height = `${cursorRect.bottom - cursorRect.top}px`;
+-  cursor.style.left = `${cursorRect.left - editorRect.left}px`;
+-  cursor.style.top = `${cursorRect.top - editorRect.top}px`;
+ }
+ function restartAnimation(element, className) {
+   element.classList.remove(className);

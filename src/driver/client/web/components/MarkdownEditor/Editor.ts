@@ -13,7 +13,6 @@ import { history } from '@milkdown/kit/plugin/history';
 import { listener, listenerCtx, type ListenerManager } from '@milkdown/kit/plugin/listener';
 import { replaceAll } from '@milkdown/kit/utils';
 import { upload, uploadConfig } from '@milkdown/kit/plugin/upload';
-import { cursor } from '@milkdown/kit/plugin/cursor';
 
 import multimedia from './multimedia';
 import link from './link';
@@ -23,6 +22,7 @@ import inputUserExperience from './inputUserExperience';
 import placeholder from './placeholder';
 import { uploader } from './uploader';
 import selectionTooltip from './selectionTooltip';
+import cursor from './cursor';
 import selectionHighlight from './selectionHighlight';
 import TooltipManager from './shared/TooltipManager';
 import './index.css';
