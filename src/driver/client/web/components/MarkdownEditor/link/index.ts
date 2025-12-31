@@ -1,14 +1,13 @@
 import { $view } from '@milkdown/kit/utils';
 import { linkSchema } from '@milkdown/kit/preset/commonmark';
 import type { MarkView } from '@milkdown/kit/prose/view';
-import { render, createComponent } from 'solid-js/web';
 import { sanitizeUrl } from '@braintree/sanitize-url';
 
-import Tooltip from './Tooltip';
 import { addIcon } from './icon';
+import tooltipPlugin from './tooltip';
 import './style.css';
 
-export const linkNodeView = $view(linkSchema.mark, (ctx) => {
+export const linkNodeView = $view(linkSchema.mark, () => {
   return (mark): MarkView => {
     const dom = document.createElement('a');
 
@@ -17,20 +16,14 @@ export const linkNodeView = $view(linkSchema.mark, (ctx) => {
 
     const disposeIcon = addIcon(dom);
 
-    const disposeTooltip = render(
-      () => createComponent(Tooltip, { ctx, targetDom: dom }),
-      document.createDocumentFragment(),
-    );
-
     return {
       dom,
       destroy: () => {
         disposeIcon();
-        disposeTooltip();
         dom.remove();
       },
     };
   };
 });
 
-export default linkNodeView;
+export default [linkNodeView, tooltipPlugin].flat();

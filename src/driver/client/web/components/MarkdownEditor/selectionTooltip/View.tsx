@@ -16,7 +16,7 @@ import { posToDOMRect } from '@milkdown/kit/prose';
 import { autoUpdate, computePosition, flip, hide } from '@floating-ui/dom';
 
 import shell from '#web/infra/shell';
-import LinkView, { Mode } from '../link/Tooltip';
+import LinkView, { Mode } from '../link/tooltip/View';
 
 export default function View(props: { ctx: Ctx; close: () => void }) {
   const editor = createMemo(() => props.ctx.get(editorCtx));

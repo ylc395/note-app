@@ -1,11 +1,13 @@
 import { PluginKey, Plugin } from '@milkdown/kit/prose/state';
 import { Decoration, DecorationSet } from '@milkdown/kit/prose/view';
-import { findParent } from '@milkdown/kit/prose';
 import { $prose } from '@milkdown/kit/utils';
 import type { Node } from '@milkdown/kit/prose/model';
 
+import { SLASH_KEY } from './slashMenu';
+import { isInEmptyParagraph } from './shared/prosemirrorUtils';
+
 const nodeTypeToPlaceholder: Record<string, (node: Node) => string> = {
-  paragraph: () => '按 / 呼出菜单',
+  paragraph: () => `按 ${SLASH_KEY} 呼出菜单`,
   heading: (node: Node) => `正在输入${node.attrs.level}级标题`,
 };
 
@@ -22,11 +24,7 @@ export default $prose(() => {
         const node = $pos.parent;
         const getText = nodeTypeToPlaceholder[node.type.name];
 
-        if (
-          node.content.size > 0 ||
-          !getText ||
-          (node.type.name === 'paragraph' && findParent((n) => n !== node && n.isBlock)($pos))
-        ) {
+        if (!getText || !isInEmptyParagraph($pos)) {
           return null;
         }
 

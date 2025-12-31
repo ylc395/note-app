@@ -1,4 +1,5 @@
-import type { MarkType, Mark, Node } from '@milkdown/kit/prose/model';
+import { findParent } from '@milkdown/kit/prose';
+import type { MarkType, Mark, Node, ResolvedPos } from '@milkdown/kit/prose/model';
 import type { EditorState } from '@milkdown/kit/prose/state';
 
 export function findMarkPosition(state: EditorState, markType: MarkType, pos: number) {
@@ -43,4 +44,9 @@ export function findMarkPosition(state: EditorState, markType: MarkType, pos: nu
 
 function markIsInNode(node: Node, targetMark: Mark): boolean {
   return !!node.marks.find((m: Mark) => m.eq(targetMark));
+}
+
+export function isInEmptyParagraph($pos: ResolvedPos) {
+  const node = $pos.parent;
+  return node.content.size === 0 && node.type.name === 'paragraph' && !findParent((n) => n !== node && n.isBlock)($pos);
 }

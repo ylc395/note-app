@@ -22,6 +22,7 @@ import inputUserExperience from './inputUserExperience';
 import placeholder from './placeholder';
 import { uploader } from './uploader';
 import selectionTooltip from './selectionTooltip';
+import slashMenu from './slashMenu';
 import cursor from './cursor';
 import selectionHighlight from './selectionHighlight';
 import TooltipManager from './shared/TooltipManager';
@@ -39,7 +40,8 @@ import './index.css';
  * 这个行为通常只发生在：1. 编辑器被提供了初始值时 2. 编辑器被 replaceAll 全文替换时。总之可以认为只发生在某种“初始化”操作的过程中。
  * 用户在编辑器中的输入操作，不涉及这一行为，而完全只涉及 prosemirror 的相关能力（使用 automd 插件时是个例外，但我们不特别介绍该插件）
  *
- * 3. 把 prosemirror node tree 映射到 mdast 再转化为 markdown 文本的能力（与 2 的方向相反）也不在话下。该行为仅发生于程序员显式要求获取 markdown 文本时。同样地，用户在编辑器中的输入操作不涉及这一行为
+ * 3. 把 prosemirror node tree 映射到 mdast 再转化为 markdown 文本的能力（与 2 的方向相反）也不在话下。该行为仅发生于程序员显式要求获取 markdown 文本，或是与 markdown 有关的事件中。
+ *    同样地，用户在编辑器中的输入操作不涉及这一行为
  *
  * 综上，当需要自定义扩展一个 node type 时，需要为该 node type 提供以上 3 个能力的实现，即：prosemirror node schema 的定义 / remark 序列化/ 反序列化相关实现
  *
@@ -63,6 +65,7 @@ export default class Editor {
       .use(selectionHighlight) // 使得编辑器失去焦点时，选区仍然能高亮（浏览器的原生行为是使得选区失去高亮效果）
       .use(history)
       .use(upload)
+      .use(slashMenu)
       .use(cursor) // 这个必须放在 upload 之后，否则 upload 插件无法处理 drop 事件了
       .use(listener)
       .config((ctx) => {

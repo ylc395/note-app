@@ -1,9 +1,10 @@
-import { $prose, $shortcut } from '@milkdown/kit/utils';
+import { $prose, $shortcut, $useKeymap } from '@milkdown/kit/utils';
 import { Plugin, PluginKey, TextSelection, type Command } from '@milkdown/kit/prose/state';
 import { liftEmptyBlock } from '@milkdown/kit/prose/commands';
 import type { Ctx } from '@milkdown/kit/ctx';
 import { Mapping } from '@milkdown/kit/prose/transform';
-import { paragraphSchema } from '@milkdown/kit/preset/commonmark';
+import { liftFirstListItemCommand, paragraphSchema, splitListItemCommand } from '@milkdown/kit/preset/commonmark';
+import { commandsCtx } from '@milkdown/kit/core';
 
 /* 
 当用户删掉了特殊行内元素内的所有文本后，该特殊元素也被一并删除。否则用户的后续输入会被视为发生在该特殊元素内，这不符合用户的直觉。
@@ -67,4 +68,19 @@ const deleteShortcut = $shortcut((ctx) => {
   };
 });
 
-export default [removeMarkIfEmpty, deleteShortcut].flat();
+const commonmarkKeymap = $useKeymap('commonmarkKeymap', {
+  NextListItem: {
+    shortcuts: 'Enter',
+    command: (ctx) => {
+      return () => ctx.get(commandsCtx).call(splitListItemCommand.key);
+    },
+  },
+  LiftFirstListItem: {
+    shortcuts: ['Backspace', 'Delete'],
+    command: (ctx) => {
+      return () => ctx.get(commandsCtx).call(liftFirstListItemCommand.key);
+    },
+  },
+});
+
+export default [removeMarkIfEmpty, commonmarkKeymap, deleteShortcut].flat();
