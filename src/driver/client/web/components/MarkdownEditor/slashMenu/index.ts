@@ -1,6 +1,7 @@
 import { Plugin, type EditorState } from '@milkdown/kit/prose/state';
 import { $prose } from '@milkdown/kit/utils';
 import { render, createComponent } from 'solid-js/web';
+import { editorViewCtx } from '@milkdown/kit/core';
 
 import shell from '#web/infra/shell';
 import View from './View';
@@ -16,15 +17,20 @@ export default $prose((ctx) => {
     hide();
 
     menuRoot = document.createElement('div');
-    dispose = render(() => createComponent(View, { ctx }), menuRoot);
+    dispose = render(() => createComponent(View, { ctx, onClose: hide.bind(null, true) }), menuRoot);
     shell.appRoot.append(menuRoot);
   }
 
-  function hide() {
+  function hide(focus = false) {
     dispose?.();
     menuRoot?.remove();
     dispose = undefined;
     menuRoot = undefined;
+
+    if (focus) {
+      const editorView = ctx.get(editorViewCtx);
+      editorView.focus();
+    }
   }
 
   function shouldShow(state: EditorState) {

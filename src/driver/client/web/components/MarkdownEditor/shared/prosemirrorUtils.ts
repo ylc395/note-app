@@ -50,3 +50,8 @@ export function isInEmptyParagraph($pos: ResolvedPos) {
   const node = $pos.parent;
   return node.content.size === 0 && node.type.name === 'paragraph' && !findParent((n) => n !== node && n.isBlock)($pos);
 }
+
+export function isInEmptyHeading($pos: ResolvedPos) {
+  const node = $pos.parent;
+  return node.content.size === 0 && node.type.name === 'heading';
+}

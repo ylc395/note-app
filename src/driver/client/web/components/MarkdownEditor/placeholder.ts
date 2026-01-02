@@ -4,7 +4,7 @@ import { $prose } from '@milkdown/kit/utils';
 import type { Node } from '@milkdown/kit/prose/model';
 
 import { SLASH_KEY } from './slashMenu';
-import { isInEmptyParagraph } from './shared/prosemirrorUtils';
+import { isInEmptyHeading, isInEmptyParagraph } from './shared/prosemirrorUtils';
 
 const nodeTypeToPlaceholder: Record<string, (node: Node) => string> = {
   paragraph: () => `按 ${SLASH_KEY} 呼出菜单`,
@@ -24,7 +24,7 @@ export default $prose(() => {
         const node = $pos.parent;
         const getText = nodeTypeToPlaceholder[node.type.name];
 
-        if (!getText || !isInEmptyParagraph($pos)) {
+        if (!getText || (!isInEmptyHeading($pos) && !isInEmptyParagraph($pos))) {
           return null;
         }
 

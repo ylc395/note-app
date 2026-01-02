@@ -23,7 +23,7 @@ export const multimediaNodeSchema = imageSchema.extendSchema((imageSchema) => {
 
         Object.assign(span.dataset, {
           ...node.attrs,
-          type: DATA_TYPE,
+          [DATA_TYPE]: true,
         });
 
         return span;
@@ -43,7 +43,7 @@ export const multimediaNodeSchema = imageSchema.extendSchema((imageSchema) => {
           },
         },
         {
-          tag: `span[type="${DATA_TYPE}"]`,
+          tag: `span[data-${DATA_TYPE}"]`,
           getAttrs: (dom) => {
             return omit(dom.dataset, ['type']);
           },

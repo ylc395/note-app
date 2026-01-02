@@ -3,7 +3,12 @@ import { Plugin, PluginKey, TextSelection, type Command } from '@milkdown/kit/pr
 import { liftEmptyBlock } from '@milkdown/kit/prose/commands';
 import type { Ctx } from '@milkdown/kit/ctx';
 import { Mapping } from '@milkdown/kit/prose/transform';
-import { liftFirstListItemCommand, paragraphSchema, splitListItemCommand } from '@milkdown/kit/preset/commonmark';
+import {
+  liftFirstListItemCommand,
+  paragraphSchema,
+  sinkListItemCommand,
+  splitListItemCommand,
+} from '@milkdown/kit/preset/commonmark';
 import { commandsCtx } from '@milkdown/kit/core';
 
 /* 
@@ -79,6 +84,12 @@ const commonmarkKeymap = $useKeymap('commonmarkKeymap', {
     shortcuts: ['Backspace', 'Delete'],
     command: (ctx) => {
       return () => ctx.get(commandsCtx).call(liftFirstListItemCommand.key);
+    },
+  },
+  SinkListItem: {
+    shortcuts: ['Tab'],
+    command: (ctx) => {
+      return () => ctx.get(commandsCtx).call(sinkListItemCommand.key);
     },
   },
 });
