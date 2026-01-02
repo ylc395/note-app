@@ -6,7 +6,7 @@ import { TextSelection } from '@milkdown/kit/prose/state';
 import { callCommand, type $Command } from '@milkdown/kit/utils';
 import { createEffect, createMemo, createSignal, onCleanup, Show } from 'solid-js';
 import z from 'zod';
-import { findMarkPosition } from '../../shared/prosemirrorUtils';
+import { findMarkPosition } from '../../../shared/prosemirrorUtils';
 
 export enum Mode {
   Preview = 'preview',

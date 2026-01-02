@@ -14,9 +14,9 @@ import { listener, listenerCtx, type ListenerManager } from '@milkdown/kit/plugi
 import { replaceAll } from '@milkdown/kit/utils';
 import { upload, uploadConfig } from '@milkdown/kit/plugin/upload';
 
-import multimedia from './multimedia';
-import link from './link';
-import topic from './topic';
+import multimedia from './nodes/multimedia';
+import link from './nodes/link';
+import topic from './nodes/topic';
 
 import inputUserExperience from './inputUserExperience';
 import placeholder from './placeholder';
@@ -26,7 +26,7 @@ import slashMenu from './slashMenu';
 import cursor from './cursor';
 import selectionHighlight from './selectionHighlight';
 import TooltipManager from './shared/TooltipManager';
-import { wrapInTaskListCommand } from './shared/commands';
+import todoListItem from './nodes/todoListItem';
 import './index.css';
 
 /** 一些关于 milkdown 的知识
@@ -61,7 +61,7 @@ export default class Editor {
       .use(inputUserExperience) // 改善一些输入时的用户体验
       .use(placeholder) // 在某些块级文本为空时给出一些提示
       .use(link) // 为超链接设计的 tooltip
-      .use(wrapInTaskListCommand)
+      .use(todoListItem)
       .use(topic)
       .use(selectionTooltip)
       .use(selectionHighlight) // 使得编辑器失去焦点时，选区仍然能高亮（浏览器的原生行为是使得选区失去高亮效果）

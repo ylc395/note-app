@@ -10,7 +10,7 @@ import { token } from '#domain/client/shared/infra/rpc';
 import { parseAppUrl } from '#domain/shared/infra/url';
 import useResizable from './useResizable';
 import FileCard from './FileCard';
-import queryClient from '../../shared/queryClient';
+import queryClient from '../../../shared/queryClient';
 
 interface Props {
   figure?: boolean;

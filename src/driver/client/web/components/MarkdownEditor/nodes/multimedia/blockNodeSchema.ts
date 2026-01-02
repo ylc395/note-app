@@ -6,7 +6,7 @@ import { createComponent, createSignal } from 'solid-js';
 import { render } from 'solid-js/web';
 import View from './View';
 
-// image-block 这个库，我们不取其中的视图实现，而是由我们自己实现
+// image-block 这个库，我们只取对 ast 的处理，不取其中的视图实现（而是由我们自己实现)
 export { remarkImageBlockPlugin } from '@milkdown/kit/component/image-block';
 
 const DATA_TYPE = 'multimedia-block';

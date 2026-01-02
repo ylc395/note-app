@@ -13,7 +13,8 @@ import {
   insertHrCommand,
 } from '@milkdown/kit/preset/commonmark';
 import { callCommand } from '@milkdown/kit/utils';
-import { wrapInTaskListCommand } from '../shared/commands';
+
+import { wrapInTodoListItem } from '../nodes/todoListItem';
 
 export default function View(props: { ctx: Ctx; onClose: () => void }) {
   let menuRoot: HTMLDivElement | undefined;
@@ -69,10 +70,10 @@ export default function View(props: { ctx: Ctx; onClose: () => void }) {
         editor.action(callCommand(insertHrCommand.key));
         break;
       case 'ordered-todo':
-        editor.action(callCommand(wrapInTaskListCommand.key, { listType: 'ordered' }));
+        editor.action(callCommand(wrapInTodoListItem.key, { listType: 'ordered' }));
         break;
       case 'bullet-todo':
-        editor.action(callCommand(wrapInTaskListCommand.key, { listType: 'bullet' }));
+        editor.action(callCommand(wrapInTodoListItem.key, { listType: 'bullet' }));
         break;
       default:
         break;

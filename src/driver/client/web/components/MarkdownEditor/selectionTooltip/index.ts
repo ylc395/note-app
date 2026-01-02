@@ -7,8 +7,8 @@ import { render } from 'solid-js/web';
 import { debounce } from 'lodash-es';
 
 import shell from '#web/infra/shell';
-import { multimediaBlockNodeSchema } from '../multimedia/blockNodeSchema';
-import { multimediaNodeSchema } from '../multimedia/inlineNodeSchema';
+import { multimediaBlockNodeSchema } from '../nodes/multimedia/blockNodeSchema';
+import { multimediaNodeSchema } from '../nodes/multimedia/inlineNodeSchema';
 import View from './View';
 
 export default $prose(
