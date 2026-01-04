@@ -93,13 +93,13 @@ export const tokenExtension: Extension = {
 
 export const mdastExtension: MdastExtension = {
   enter: {
-    topic: function (token) {
+    topicName: function (token) {
       const value = this.sliceSerialize(token);
-      this.enter({ type: 'topic', value: value.slice(1, -1) }, token);
+      this.enter({ type: 'topic', value }, token);
     },
   },
   exit: {
-    topic: function (token) {
+    topicName: function (token) {
       this.exit(token);
     },
   },
@@ -111,13 +111,7 @@ export const toMarkdownExtension: ToMarkdownExtension = {
     topic: (node, parent, state, info) => {
       const tracker = state.createTracker(info);
       const exit = state.enter('topic');
-      let value = tracker.move('#');
-      value += state.containerPhrasing(node, {
-        ...tracker.current(),
-        before: value,
-        after: '#',
-      });
-      value += tracker.move('#');
+      const value = tracker.move(`#${node.value}#`);
       exit();
       return value;
     },

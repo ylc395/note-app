@@ -5,7 +5,6 @@ import { editorViewCtx } from '@milkdown/kit/core';
 
 import shell from '#web/infra/shell';
 import View from './View';
-import { isInEmptyParagraph } from '../shared/prosemirrorUtils';
 
 export const SLASH_KEY = '/';
 
@@ -34,7 +33,7 @@ export default $prose((ctx) => {
   }
 
   function shouldShow(state: EditorState) {
-    return state.selection.empty && isInEmptyParagraph(state.selection.$anchor);
+    return state.selection.empty;
   }
 
   return new Plugin({

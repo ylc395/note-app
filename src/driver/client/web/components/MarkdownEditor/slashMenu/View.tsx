@@ -2,7 +2,7 @@ import { autoUpdate, computePosition, flip, hide, type VirtualElement } from '@f
 import { editorCtx, editorViewCtx, rootCtx } from '@milkdown/kit/core';
 import type { Ctx } from '@milkdown/kit/ctx';
 import { posToDOMRect } from '@milkdown/kit/prose';
-import { createEffect, onCleanup } from 'solid-js';
+import { createEffect, onCleanup, Show } from 'solid-js';
 import { Menu } from '@ark-ui/solid';
 import {
   wrapInHeadingCommand,
@@ -15,16 +15,19 @@ import {
 import { callCommand } from '@milkdown/kit/utils';
 
 import { wrapInTodoListItem } from '../nodes/todoListItem';
+import { isInEmptyParagraph } from '../shared/prosemirrorUtils';
+import { editTopicCommand } from '../nodes/topic/commands';
 
 export default function View(props: { ctx: Ctx; onClose: () => void }) {
   let menuRoot: HTMLDivElement | undefined;
+  const editorView = props.ctx.get(editorViewCtx);
+  const isBlock = isInEmptyParagraph(editorView.state.selection.$anchor);
 
   createEffect(() => {
     if (!menuRoot) {
       return;
     }
 
-    const editorView = props.ctx.get(editorViewCtx);
     const pos = editorView.state.selection.anchor;
     const virtualElement: VirtualElement = {
       contextElement: editorView.dom,
@@ -69,11 +72,11 @@ export default function View(props: { ctx: Ctx; onClose: () => void }) {
       case 'hr':
         editor.action(callCommand(insertHrCommand.key));
         break;
-      case 'ordered-todo':
-        editor.action(callCommand(wrapInTodoListItem.key, { listType: 'ordered' }));
-        break;
       case 'bullet-todo':
         editor.action(callCommand(wrapInTodoListItem.key, { listType: 'bullet' }));
+        break;
+      case 'topic':
+        editor.action(callCommand(editTopicCommand.key));
         break;
       default:
         break;
@@ -84,14 +87,19 @@ export default function View(props: { ctx: Ctx; onClose: () => void }) {
   return (
     <Menu.Root onSelect={onSelect} open loopFocus onEscapeKeyDown={props.onClose}>
       <Menu.Content ref={menuRoot} class="absolute">
-        <Menu.Item value="heading">标题</Menu.Item>
-        <Menu.Item value="code">代码块</Menu.Item>
-        <Menu.Item value="quote">引用块</Menu.Item>
-        <Menu.Item value="orderList">有序列表</Menu.Item>
-        <Menu.Item value="unorderedList">无序列表</Menu.Item>
-        <Menu.Item value="hr">分隔线</Menu.Item>
-        <Menu.Item value="ordered-todo">有序 Todo</Menu.Item>
-        <Menu.Item value="bullet-todo">无序 Todo</Menu.Item>
+        <Menu.Item value="time">时间</Menu.Item>
+        <Menu.Item value="topic">话题</Menu.Item>
+        <Menu.Item value="link">超链接</Menu.Item>
+        <Show when={isBlock}>
+          <Menu.Item value="heading">标题</Menu.Item>
+          <Menu.Item value="code">代码块</Menu.Item>
+          <Menu.Item value="quote">引用块</Menu.Item>
+          <Menu.Item value="orderList">有序列表</Menu.Item>
+          <Menu.Item value="unorderedList">无序列表</Menu.Item>
+          <Menu.Item value="table">表格</Menu.Item>
+          <Menu.Item value="hr">分隔线</Menu.Item>
+          <Menu.Item value="bullet-todo">Todo</Menu.Item>
+        </Show>
       </Menu.Content>
     </Menu.Root>
   );
