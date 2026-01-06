@@ -230,4 +230,14 @@ export default class ImageTextExtractor implements TextExtractor {
 
     return text.replaceAll(regex, '');
   }
+
+  public static SUPPORT_MIME_TYPES = [
+    // 支持 OCR 的图片格式： https://github.com/naptha/tesseract.js/blob/master/docs/image-format.md
+    'image/png',
+    'image/bmp',
+    'image/jpeg',
+    'image/portable-bitmap',
+    'image/x-portable-bitmap',
+    'image/webp',
+  ];
 }

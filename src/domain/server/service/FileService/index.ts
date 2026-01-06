@@ -102,7 +102,7 @@ export default class FileService extends BaseService {
     for (const { id, mimeType, lang } of unfinishedFiles) {
       this.textExtractJobQueue.addJob({
         fileId: id,
-        textExtractor: { mimeType, lang },
+        textExtractor: () => JobQueue.getExtractor({ mimeType, lang }),
         getData: this.repo.files.findBlobById,
         locationsToSkip: textRecords[id]?.map(({ location }) => location),
         onExtract: this.handleTextExtracted.bind(this),

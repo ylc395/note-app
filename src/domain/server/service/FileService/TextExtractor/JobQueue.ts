@@ -23,7 +23,7 @@ export default class JobQueue {
   }
 
   private async extract({ fileId, getData, textExtractor, locationsToSkip, onExtract }: Job) {
-    const extractor = 'mimeType' in textExtractor ? JobQueue.getExtractor(textExtractor) : textExtractor;
+    const extractor = typeof textExtractor === 'function' ? textExtractor() : textExtractor;
 
     if (!extractor) {
       return;
@@ -49,16 +49,18 @@ export default class JobQueue {
   }
 
   public static getExtractor(params: { mimeType: string; lang: string[] }): TextExtractor | null {
-    const mimeType = typeof params === 'string' ? params : params.mimeType;
-    if (mimeType === MimeTypes.PDF) {
+    if (!JobQueue.SUPPORT_MIME_TYPES.includes(params.mimeType)) {
+      return null;
+    }
+    if (params.mimeType === MimeTypes.PDF) {
       return new PDFTextExtractor(params.lang);
     }
 
-    if (mimeType === MimeTypes.HTML) {
+    if (params.mimeType === MimeTypes.HTML) {
       return new HTMLTextExtractor();
     }
 
-    if (mimeType.startsWith('image/')) {
+    if (params.mimeType.startsWith('image/')) {
       return new ImageTextExtractor(params.lang);
     }
 
@@ -68,12 +70,6 @@ export default class JobQueue {
   public static SUPPORT_MIME_TYPES: string[] = [
     MimeTypes.PDF,
     MimeTypes.HTML,
-    // 支持 OCR 的图片格式： https://github.com/naptha/tesseract.js/blob/master/docs/image-format.md
-    'image/png',
-    'image/bmp',
-    'image/jpeg',
-    'image/portable-bitmap',
-    'image/x-portable-bitmap',
-    'image/webp',
+    ...ImageTextExtractor.SUPPORT_MIME_TYPES,
   ];
 }
