@@ -3,14 +3,13 @@ import clsx from 'clsx';
 import { FileIcon } from 'lucide-solid';
 import z from 'zod';
 import type { EditorView } from '@milkdown/kit/prose/view';
-import { useQuery } from '@tanstack/solid-query';
+import { createQuery } from 'mobx-tanstack-query/preset';
 
 import container from '#utils/singletonContainer';
 import { token } from '#domain/client/shared/infra/rpc';
 import { parseAppUrl } from '#domain/shared/infra/url';
 import useResizable from './useResizable';
 import FileCard from './FileCard';
-import queryClient from '../../../shared/queryClient';
 
 interface Props {
   figure?: boolean;
@@ -65,14 +64,12 @@ export default function MultimediaView(props: Props) {
     },
   });
 
-  const fileQuery = useQuery(
-    () => ({
-      queryFn: ({ queryKey: [_, { id }], signal }) => remote.file.queryOneById.query(id, { signal }),
+  const fileQuery = createQuery(({ queryKey: [_, { id }], signal }) => remote.file.queryOneById.query(id, { signal }), {
+    queryKey: ['files', { id: fileId()! }] as const,
+    options: () => ({
       enabled: Boolean(fileId()),
-      queryKey: ['files', { id: fileId()! }] as const,
     }),
-    () => queryClient,
-  );
+  });
 
   return (
     <>

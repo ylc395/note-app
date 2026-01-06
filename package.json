@@ -81,7 +81,6 @@
     "@svgdotjs/svg.select.js": "^4.0.3",
     "@tailwindcss/typography": "^0.5.19",
     "@tanstack/query-core": "^5.90.11",
-    "@tanstack/solid-query": "^5.90.14",
     "@trpc/client": "^10.45.2",
     "@trpc/server": "^10.45.2",
     "@types/mdast": "^4.0.4",

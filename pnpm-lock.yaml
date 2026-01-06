@@ -85,9 +85,6 @@ importers:
       '@tanstack/query-core':
         specifier: ^5.90.11
         version: 5.90.11
-      '@tanstack/solid-query':
-        specifier: ^5.90.14
-        version: 5.90.14(solid-js@1.9.9)
       '@trpc/client':
         specifier: ^10.45.2
         version: 10.45.2(@trpc/server@10.45.2)
@@ -1456,11 +1453,6 @@ packages:
 
   '@tanstack/query-core@5.90.11':
     resolution: {integrity: sha512-f9z/nXhCgWDF4lHqgIE30jxLe4sYv15QodfdPDKYAk7nAEjNcndy4dHz3ezhdUaR23BpWa4I2EH4/DZ0//Uf8A==}
-
-  '@tanstack/solid-query@5.90.14':
-    resolution: {integrity: sha512-e/TP+92mOFoQtInffcYKvAExgbQoBSDrarKnGwnindQBItp0ne1VdIg88K2U8rNwwM/wdj15V5azpXIkZkNQDw==}
-    peerDependencies:
-      solid-js: ^1.6.0
 
   '@trpc/client@10.45.2':
     resolution: {integrity: sha512-ykALM5kYWTLn1zYuUOZ2cPWlVfrXhc18HzBDyRhoPYN0jey4iQHEFSEowfnhg1RvYnrAVjNBgHNeSAXjrDbGwg==}
@@ -6751,11 +6743,6 @@ snapshots:
       vite: 7.1.11(@types/node@22.19.1)(jiti@2.4.2)(lightningcss@1.30.1)(terser@5.43.1)(yaml@2.7.0)
 
   '@tanstack/query-core@5.90.11': {}
-
-  '@tanstack/solid-query@5.90.14(solid-js@1.9.9)':
-    dependencies:
-      '@tanstack/query-core': 5.90.11
-      solid-js: 1.9.9
 
   '@trpc/client@10.45.2(@trpc/server@10.45.2)':
     dependencies:
