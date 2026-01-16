@@ -1,11 +1,13 @@
 import { autoUpdate, computePosition, flip, hide } from '@floating-ui/dom';
-import { editorViewCtx, rootCtx } from '@milkdown/kit/core';
+import { editorCtx, editorViewCtx, rootCtx } from '@milkdown/kit/core';
 import type { Ctx } from '@milkdown/kit/ctx';
 import { posToDOMRect } from '@milkdown/kit/prose';
 import { createEffect, For, onCleanup } from 'solid-js';
 import { CheckIcon, XIcon } from 'lucide-solid';
 import { Combobox, useListCollection } from '@ark-ui/solid';
 import { createQuery } from 'mobx-tanstack-query/preset';
+import { listenerCtx } from '@milkdown/kit/plugin/listener';
+import { pull } from 'lodash-es';
 
 import { TopicVO } from '#domain/shared/model/topic';
 import singletonContainer from '#utils/singletonContainer';
@@ -15,6 +17,7 @@ import { topicNode } from './node';
 
 export default function Tooltip(props: { targetDom?: HTMLElement; ctx: Ctx; onClose: () => void }) {
   const remote = singletonContainer.resolve(remoteToken);
+  const editor = props.ctx.get(editorCtx);
   let root: HTMLDivElement | undefined;
   let inputRef: HTMLInputElement | undefined;
   let value = '';
@@ -29,6 +32,16 @@ export default function Tooltip(props: { targetDom?: HTMLElement; ctx: Ctx; onCl
     queryKey: ['topics'],
   });
 
+  editor.action(() => {
+    const listener = props.ctx.get(listenerCtx);
+    listener.selectionUpdated(props.onClose);
+  });
+
+  onCleanup(() => {
+    const listener = props.ctx.get(listenerCtx);
+    pull(listener.listeners.selectionUpdated, props.onClose);
+  });
+
   createEffect(() => {
     if (topics.data) {
       collection.set(topics.data);
@@ -41,8 +54,11 @@ export default function Tooltip(props: { targetDom?: HTMLElement; ctx: Ctx; onCl
     }
 
     const editorView = props.ctx.get(editorViewCtx);
-    const { anchor } = editorView.state.selection;
-    const reference = props.targetDom || { getBoundingClientRect: () => posToDOMRect(editorView, anchor, anchor) };
+    const reference = props.targetDom || {
+      contextElement: editorView.dom,
+      getBoundingClientRect: () =>
+        posToDOMRect(editorView, editorView.state.selection.anchor, editorView.state.selection.anchor),
+    };
 
     const dispose = autoUpdate(reference, root, async () => {
       const boundary = props.ctx.get(rootCtx) as HTMLElement;

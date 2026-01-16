@@ -17,21 +17,35 @@ import { callCommand } from '@milkdown/kit/utils';
 import { wrapInTodoListItem } from '../nodes/todoListItem';
 import { isInEmptyParagraph } from '../shared/prosemirrorUtils';
 import { editNewTopicCommand } from '../nodes/topic/commands';
+import { editNewLinkCommand } from '../nodes/link/commands';
+import { listenerCtx } from '@milkdown/kit/plugin/listener';
+import { pull } from 'lodash-es';
 
 export default function View(props: { ctx: Ctx; onClose: () => void }) {
   let menuRoot: HTMLDivElement | undefined;
+  const editor = props.ctx.get(editorCtx);
   const editorView = props.ctx.get(editorViewCtx);
   const isBlock = isInEmptyParagraph(editorView.state.selection.$anchor);
+
+  editor.action(() => {
+    const listener = props.ctx.get(listenerCtx);
+    listener.selectionUpdated(props.onClose);
+  });
+
+  onCleanup(() => {
+    const listener = props.ctx.get(listenerCtx);
+    pull(listener.listeners.selectionUpdated, props.onClose);
+  });
 
   createEffect(() => {
     if (!menuRoot) {
       return;
     }
 
-    const pos = editorView.state.selection.anchor;
     const virtualElement: VirtualElement = {
       contextElement: editorView.dom,
-      getBoundingClientRect: () => posToDOMRect(editorView, pos, pos),
+      getBoundingClientRect: () =>
+        posToDOMRect(editorView, editorView.state.selection.anchor, editorView.state.selection.anchor),
     };
 
     const stopAutoUpdate = autoUpdate(virtualElement, menuRoot, async () => {
@@ -77,6 +91,9 @@ export default function View(props: { ctx: Ctx; onClose: () => void }) {
         break;
       case 'topic':
         editor.action(callCommand(editNewTopicCommand.key));
+        break;
+      case 'link':
+        editor.action(callCommand(editNewLinkCommand.key));
         break;
       default:
         break;

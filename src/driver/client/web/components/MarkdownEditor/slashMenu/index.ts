@@ -46,11 +46,6 @@ export default $prose((ctx) => {
       },
     },
     view: () => ({
-      update: (view, prevState) => {
-        if (menuRoot && (!shouldShow(view.state) || !view.state.selection.eq(prevState.selection))) {
-          hide();
-        }
-      },
       destroy: hide,
     }),
   });
