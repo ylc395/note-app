@@ -87,7 +87,8 @@ export default function Tooltip(props: {
       return;
     }
 
-    action(props.targetDom instanceof HTMLElement ? updateLinkCommand : toggleLinkCommand, { href: href() });
+    const command = props.targetDom instanceof HTMLElement ? updateLinkCommand : toggleLinkCommand;
+    action(command, { href: href(), title: 'ddd' });
   }
 
   createEffect(() => {

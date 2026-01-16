@@ -13,7 +13,7 @@ import { token as remoteToken } from '#domain/client/shared/infra/rpc';
 
 import { topicNode } from './node';
 
-export default function Tooltip(props: { targetDom?: HTMLElement; ctx: Ctx; onDestroy: () => void }) {
+export default function Tooltip(props: { targetDom?: HTMLElement; ctx: Ctx; onClose: () => void }) {
   const remote = singletonContainer.resolve(remoteToken);
   let root: HTMLDivElement | undefined;
   let inputRef: HTMLInputElement | undefined;
@@ -82,7 +82,7 @@ export default function Tooltip(props: { targetDom?: HTMLElement; ctx: Ctx; onDe
     );
 
     editorView.focus();
-    props.onDestroy?.();
+    props.onClose?.();
   }
 
   return (
@@ -101,7 +101,7 @@ export default function Tooltip(props: { targetDom?: HTMLElement; ctx: Ctx; onDe
             <button onClick={submit}>
               <CheckIcon />
             </button>
-            <button onClick={props.onDestroy}>
+            <button onClick={props.onClose}>
               <XIcon />
             </button>
           </div>

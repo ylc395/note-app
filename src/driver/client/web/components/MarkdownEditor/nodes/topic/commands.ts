@@ -5,10 +5,10 @@ import { editorViewCtx } from '@milkdown/kit/core';
 import shell from '#web/infra/shell';
 import Tooltip from './Tooltip';
 
-export const editTopicCommand = $command('editTopicCommand', (ctx) => (topicDom?: HTMLElement) => () => {
+export const editNewTopicCommand = $command('editTopicCommand', (ctx) => (topicDom?: HTMLElement) => () => {
   const container = document.createElement('div');
   shell.appRoot.append(container);
-  const dispose = render(() => createComponent(Tooltip, { onDestroy: destroy, ctx, targetDom: topicDom }), container);
+  const dispose = render(() => createComponent(Tooltip, { onClose: destroy, ctx, targetDom: topicDom }), container);
 
   function destroy() {
     const editorView = ctx.get(editorViewCtx);

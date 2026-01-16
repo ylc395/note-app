@@ -13,8 +13,8 @@ export default $prose((ctx) => {
   let mode: Mode | undefined;
   let targetDom: HTMLAnchorElement | undefined;
 
-  function hide(destroy = false) {
-    if (mode === Mode.Edit && !destroy) {
+  function hide(forced = false) {
+    if (mode === Mode.Edit && !forced) {
       return false;
     }
 
@@ -23,6 +23,7 @@ export default $prose((ctx) => {
     tooltipRoot = undefined;
     dispose = undefined;
     targetDom = undefined;
+    mode = undefined;
     return true;
   }
 
@@ -51,7 +52,7 @@ export default $prose((ctx) => {
           mousePosition: { x: e.clientX, y: e.clientY },
           onModeChange: (v) => (mode = v),
           onLeave: hideDelay,
-          onClose: hide,
+          onClose: hide.bind(null, true),
           onEnter: hideDelay.cancel,
         }),
       tooltipRoot,

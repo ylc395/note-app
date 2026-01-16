@@ -16,7 +16,7 @@ import { callCommand } from '@milkdown/kit/utils';
 
 import { wrapInTodoListItem } from '../nodes/todoListItem';
 import { isInEmptyParagraph } from '../shared/prosemirrorUtils';
-import { editTopicCommand } from '../nodes/topic/commands';
+import { editNewTopicCommand } from '../nodes/topic/commands';
 
 export default function View(props: { ctx: Ctx; onClose: () => void }) {
   let menuRoot: HTMLDivElement | undefined;
@@ -76,7 +76,7 @@ export default function View(props: { ctx: Ctx; onClose: () => void }) {
         editor.action(callCommand(wrapInTodoListItem.key, { listType: 'bullet' }));
         break;
       case 'topic':
-        editor.action(callCommand(editTopicCommand.key));
+        editor.action(callCommand(editNewTopicCommand.key));
         break;
       default:
         break;
@@ -87,9 +87,6 @@ export default function View(props: { ctx: Ctx; onClose: () => void }) {
   return (
     <Menu.Root onSelect={onSelect} open loopFocus onEscapeKeyDown={props.onClose}>
       <Menu.Content ref={menuRoot} class="absolute">
-        <Menu.Item value="time">时间</Menu.Item>
-        <Menu.Item value="topic">话题</Menu.Item>
-        <Menu.Item value="link">超链接</Menu.Item>
         <Show when={isBlock}>
           <Menu.Item value="heading">标题</Menu.Item>
           <Menu.Item value="code">代码块</Menu.Item>
@@ -99,7 +96,11 @@ export default function View(props: { ctx: Ctx; onClose: () => void }) {
           <Menu.Item value="table">表格</Menu.Item>
           <Menu.Item value="hr">分隔线</Menu.Item>
           <Menu.Item value="bullet-todo">Todo</Menu.Item>
+          <Menu.Separator />
         </Show>
+        <Menu.Item value="time">时间</Menu.Item>
+        <Menu.Item value="topic">话题</Menu.Item>
+        <Menu.Item value="link">超链接</Menu.Item>
       </Menu.Content>
     </Menu.Root>
   );
