@@ -49,7 +49,7 @@ export default function Tab(props: { editor: BaseEditor }) {
           classList={{ 'bg-white': props.editor.isCurrent }}
           onClick={() => props.editor.tile.switchToEditor(props.editor)}
         >
-          <Icon {...props.editor.value.result.data} iconClassName="shrink-0 w-4 h-4 mr-1" />
+          <Icon icon={props.editor.icon} mimeType={props.editor.mimeType} iconClassName="shrink-0 w-4 h-4 mr-1" />
           <span class="whitespace-nowrap text-ellipsis overflow-hidden">
             {IS_DEV && `${props.editor.id}-${props.editor.noteId.slice(0.3)} `}
             {props.editor.title}

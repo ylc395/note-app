@@ -1,7 +1,6 @@
 import Editor, { type Options } from '#domain/client/app/model/note/editor/BaseEditor';
 import { MimeTypes } from '#domain/shared/model/file';
 import type { NoteVO } from '#domain/shared/model/note';
-import container from '#utils/singletonContainer';
 
 import PdfEditor from '../note/editor/PdfEditor';
 import HtmlEditor from '../note/editor/HtmlEditor';

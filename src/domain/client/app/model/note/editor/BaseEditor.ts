@@ -25,6 +25,7 @@ export const remoteIconStoreName = 'remote_icon';
 export interface Options {
   noteId: NoteVO['id'];
   title?: NoteVO['title'];
+  icon?: NoteVO['icon'];
   initialCommand?: Command;
   value?: NoteVO;
   path?: EntityPath;
@@ -133,6 +134,11 @@ export default abstract class BaseEditor {
   }
 
   @computed
+  public get icon() {
+    return this.value.result.data ? this.value.result.data.icon : this.options.icon ?? null;
+  }
+
+  @computed
   public get index() {
     return this.tile.editors.indexOf(this);
   }
@@ -221,6 +227,15 @@ export default abstract class BaseEditor {
       value: hard ? undefined : this.value.data,
       path: this.path.data,
     });
+  }
+
+  public toObject() {
+    return {
+      noteId: this.noteId,
+      mimeType: this.value.data?.mimeType || null, // 不能读取 editor.mimeType，因为它可能是一个预览用的
+      title: this.title || '',
+      icon: this.icon,
+    };
   }
 
   public destroy() {
