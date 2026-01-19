@@ -8,7 +8,7 @@ import {
   rootCtx,
 } from '@milkdown/kit/core';
 import { commonmark, keymap as commonmarkKeymap } from '@milkdown/kit/preset/commonmark';
-import { gfm, keymap as gfmKeymap } from '@milkdown/kit/preset/gfm';
+import { gfm, keymap as gfmKeymap, tableKeymap } from '@milkdown/kit/preset/gfm';
 import { history } from '@milkdown/kit/plugin/history';
 import { listener, listenerCtx, type ListenerManager } from '@milkdown/kit/plugin/listener';
 import { replaceAll } from '@milkdown/kit/utils';
@@ -55,7 +55,10 @@ export default class Editor {
   constructor(props: { editable?: boolean; root: HTMLElement; defaultValue?: string }) {
     this.core = MilkdownEditor.make()
       .use(without(commonmark, ...commonmarkKeymap)) // 不要引入快捷键。我们自己定制
-      .use(without(gfm, ...gfmKeymap)) // 同上
+      .use([
+        ...without(gfm, ...gfmKeymap), // 同上
+        ...tableKeymap, // 表格快捷键全部引入
+      ])
       .use(multimedia) // 把图片节点转化成能展示各种文件的“多媒体节点”
       .use(inputUserExperience) // 改善一些输入时的用户体验
       .use(placeholder) // 在某些块级文本为空时给出一些提示
