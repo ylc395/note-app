@@ -1,8 +1,7 @@
 import { editorCtx, editorViewCtx } from '@milkdown/kit/core';
 import type { Ctx } from '@milkdown/kit/ctx';
-import { posToDOMRect } from '@milkdown/kit/prose';
 import { Show } from 'solid-js';
-import { useSelectionChanged, useTooltip } from '../shared/useTooltip';
+import { showFloating, useSelectionChanged, useTooltip } from '../shared/useTooltip';
 import { Menu } from '@ark-ui/solid';
 import {
   wrapInHeadingCommand,
@@ -16,8 +15,9 @@ import { callCommand } from '@milkdown/kit/utils';
 
 import { wrapInTodoListItem } from '../nodes/todoListItem';
 import { isInEmptyParagraph } from '../shared/prosemirrorUtils';
-import { editNewTopicCommand } from '../nodes/topic/commands';
-import { editNewLinkCommand } from '../nodes/link/commands';
+import TopicTooltip from '../nodes/topic/Tooltip';
+import LinkTooltip, { Mode } from '../nodes/link/tooltip/View';
+import TableCreator from '../nodes/table/TableCreator';
 
 export default function View(props: { ctx: Ctx; onClose: () => void }) {
   const editorView = props.ctx.get(editorViewCtx);
@@ -30,11 +30,7 @@ export default function View(props: { ctx: Ctx; onClose: () => void }) {
 
   const { setTooltipEl } = useTooltip({
     ctx: props.ctx,
-    reference: {
-      contextElement: editorView.dom,
-      getBoundingClientRect: () =>
-        posToDOMRect(editorView, editorView.state.selection.anchor, editorView.state.selection.anchor),
-    },
+    reference: 'cursor',
     placement: 'bottom-start',
   });
 
@@ -63,11 +59,18 @@ export default function View(props: { ctx: Ctx; onClose: () => void }) {
       case 'bullet-todo':
         editor.action(callCommand(wrapInTodoListItem.key, { listType: 'bullet' }));
         break;
+      case 'table':
+        showFloating(props.ctx, TableCreator, ({ destroy }) => ({ ctx: props.ctx, onClose: destroy }));
+        break;
       case 'topic':
-        editor.action(callCommand(editNewTopicCommand.key));
+        showFloating(props.ctx, TopicTooltip, ({ destroy }) => ({ ctx: props.ctx, onClose: destroy }));
         break;
       case 'link':
-        editor.action(callCommand(editNewLinkCommand.key));
+        showFloating(props.ctx, LinkTooltip, ({ destroy }) => ({
+          onClose: destroy,
+          ctx: props.ctx,
+          initialMode: Mode.Add,
+        }));
         break;
       default:
         break;
@@ -77,7 +80,7 @@ export default function View(props: { ctx: Ctx; onClose: () => void }) {
 
   return (
     <Menu.Root onSelect={onSelect} open loopFocus onEscapeKeyDown={props.onClose}>
-      <Menu.Content ref={setTooltipEl} class="absolute">
+      <Menu.Content ref={setTooltipEl}>
         <Show when={isBlock}>
           <Menu.Item value="heading">标题</Menu.Item>
           <Menu.Item value="code">代码块</Menu.Item>
@@ -89,7 +92,6 @@ export default function View(props: { ctx: Ctx; onClose: () => void }) {
           <Menu.Item value="bullet-todo">Todo</Menu.Item>
           <Menu.Separator />
         </Show>
-        <Menu.Item value="time">时间</Menu.Item>
         <Menu.Item value="topic">话题</Menu.Item>
         <Menu.Item value="link">超链接</Menu.Item>
       </Menu.Content>

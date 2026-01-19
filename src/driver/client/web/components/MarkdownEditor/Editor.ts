@@ -25,7 +25,6 @@ import selectionTooltip from './selectionTooltip';
 import slashMenu from './slashMenu';
 import cursor from './cursor';
 import selectionHighlight from './selectionHighlight';
-import TooltipManager from './shared/TooltipManager';
 import todoListItem from './nodes/todoListItem';
 import './index.css';
 
@@ -75,8 +74,6 @@ export default class Editor {
         ctx.set(defaultValueCtx, props.defaultValue || '');
         ctx.set(editorViewOptionsCtx, { editable: () => props.editable ?? true });
         ctx.update(uploadConfig.key, (config) => ({ ...config, uploader }));
-
-        TooltipManager.init(ctx);
       });
   }
 

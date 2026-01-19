@@ -4,11 +4,10 @@ import type { MarkView } from '@milkdown/kit/prose/view';
 import { sanitizeUrl } from '@braintree/sanitize-url';
 
 import { addIcon } from './icon';
-import { editNewLinkCommand } from './commands';
 import tooltipPlugin from './tooltip';
 import './style.css';
 
-export const linkNodeView = $view(linkSchema.mark, () => {
+const linkNodeView = $view(linkSchema.mark, () => {
   return (mark): MarkView => {
     const dom = document.createElement('a');
 
@@ -27,4 +26,4 @@ export const linkNodeView = $view(linkSchema.mark, () => {
   };
 });
 
-export default [linkNodeView, tooltipPlugin, editNewLinkCommand].flat();
+export default [linkNodeView, tooltipPlugin].flat();

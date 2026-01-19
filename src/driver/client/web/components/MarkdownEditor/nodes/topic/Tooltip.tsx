@@ -1,7 +1,6 @@
 import { editorViewCtx } from '@milkdown/kit/core';
 import type { Ctx } from '@milkdown/kit/ctx';
-import { posToDOMRect } from '@milkdown/kit/prose';
-import { createEffect, For } from 'solid-js';
+import { createEffect, For, onMount } from 'solid-js';
 import { CheckIcon, XIcon } from 'lucide-solid';
 import { Combobox, useListCollection } from '@ark-ui/solid';
 import { createQuery } from 'mobx-tanstack-query/preset';
@@ -13,9 +12,8 @@ import { token as remoteToken } from '#domain/client/shared/infra/rpc';
 import { topicNode } from './node';
 import { useSelectionChanged, useTooltip } from '../../shared/useTooltip';
 
-export default function Tooltip(props: { targetDom?: HTMLElement; ctx: Ctx; onClose: () => void }) {
+export default function Tooltip(props: { ctx: Ctx; onClose: () => void }) {
   const remote = singletonContainer.resolve(remoteToken);
-  const editorView = props.ctx.get(editorViewCtx);
   let inputRef: HTMLInputElement | undefined;
   let value = '';
 
@@ -35,7 +33,7 @@ export default function Tooltip(props: { targetDom?: HTMLElement; ctx: Ctx; onCl
     }
   });
 
-  createEffect(() => {
+  onMount(() => {
     requestAnimationFrame(() => {
       inputRef?.focus();
     });
@@ -43,11 +41,7 @@ export default function Tooltip(props: { targetDom?: HTMLElement; ctx: Ctx; onCl
 
   const { setTooltipEl } = useTooltip({
     ctx: props.ctx,
-    reference: props.targetDom || {
-      contextElement: editorView.dom,
-      getBoundingClientRect: () =>
-        posToDOMRect(editorView, editorView.state.selection.anchor, editorView.state.selection.anchor),
-    },
+    reference: 'cursor',
     placement: 'bottom-start',
   });
 
@@ -75,7 +69,7 @@ export default function Tooltip(props: { targetDom?: HTMLElement; ctx: Ctx; onCl
   }
 
   return (
-    <div class="absolute border" ref={setTooltipEl}>
+    <div class="border" ref={setTooltipEl}>
       <Combobox.Root
         allowCustomValue
         alwaysSubmitOnEnter

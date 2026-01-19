@@ -2,7 +2,6 @@ import { inline } from '@floating-ui/dom';
 import { editorCtx, editorViewCtx } from '@milkdown/kit/core';
 import type { Ctx } from '@milkdown/kit/ctx';
 import { linkSchema, toggleLinkCommand, updateLinkCommand } from '@milkdown/kit/preset/commonmark';
-import { posToDOMRect } from '@milkdown/kit/prose';
 import { TextSelection } from '@milkdown/kit/prose/state';
 import { callCommand, type $Command } from '@milkdown/kit/utils';
 import { createEffect, createMemo, createSignal, Show } from 'solid-js';
@@ -136,24 +135,15 @@ export default function Tooltip(props: {
   });
 
   const { setTooltipEl } = useTooltip({
-    reference: props.targetDom || {
-      contextElement: editorView.dom,
-      getBoundingClientRect: () =>
-        posToDOMRect(editorView, editorView.state.selection.anchor, editorView.state.selection.anchor),
-    },
+    disabled: !props.targetDom && mode() !== Mode.Add,
+    reference: props.targetDom || 'cursor',
     ctx: props.ctx,
     placement: props.targetDom ? 'top' : 'bottom-start',
     middleware: [props.mousePosition && inline(props.mousePosition)],
   });
 
   return (
-    <div
-      ref={setTooltipEl}
-      onFocusOut={props.onLeave}
-      onMouseLeave={props.onLeave}
-      onMouseEnter={props.onEnter}
-      classList={{ absolute: Boolean(props.targetDom) || mode() === Mode.Add }} //
-    >
+    <div ref={setTooltipEl} onFocusOut={props.onLeave} onMouseLeave={props.onLeave} onMouseEnter={props.onEnter}>
       <div>
         <input
           placeholder="URL"
