@@ -1,24 +1,21 @@
-import { autoUpdate, computePosition, flip, hide } from '@floating-ui/dom';
-import { editorCtx, editorViewCtx, rootCtx } from '@milkdown/kit/core';
+import { editorViewCtx } from '@milkdown/kit/core';
 import type { Ctx } from '@milkdown/kit/ctx';
 import { posToDOMRect } from '@milkdown/kit/prose';
-import { createEffect, For, onCleanup } from 'solid-js';
+import { createEffect, For } from 'solid-js';
 import { CheckIcon, XIcon } from 'lucide-solid';
 import { Combobox, useListCollection } from '@ark-ui/solid';
 import { createQuery } from 'mobx-tanstack-query/preset';
-import { listenerCtx } from '@milkdown/kit/plugin/listener';
-import { pull } from 'lodash-es';
 
 import { TopicVO } from '#domain/shared/model/topic';
 import singletonContainer from '#utils/singletonContainer';
 import { token as remoteToken } from '#domain/client/shared/infra/rpc';
 
 import { topicNode } from './node';
+import { useSelectionChanged, useTooltip } from '../../shared/useTooltip';
 
 export default function Tooltip(props: { targetDom?: HTMLElement; ctx: Ctx; onClose: () => void }) {
   const remote = singletonContainer.resolve(remoteToken);
-  const editor = props.ctx.get(editorCtx);
-  let root: HTMLDivElement | undefined;
+  const editorView = props.ctx.get(editorViewCtx);
   let inputRef: HTMLInputElement | undefined;
   let value = '';
 
@@ -32,16 +29,6 @@ export default function Tooltip(props: { targetDom?: HTMLElement; ctx: Ctx; onCl
     queryKey: ['topics'],
   });
 
-  editor.action(() => {
-    const listener = props.ctx.get(listenerCtx);
-    listener.selectionUpdated(props.onClose);
-  });
-
-  onCleanup(() => {
-    const listener = props.ctx.get(listenerCtx);
-    pull(listener.listeners.selectionUpdated, props.onClose);
-  });
-
   createEffect(() => {
     if (topics.data) {
       collection.set(topics.data);
@@ -49,38 +36,24 @@ export default function Tooltip(props: { targetDom?: HTMLElement; ctx: Ctx; onCl
   });
 
   createEffect(() => {
-    if (!root) {
-      return;
-    }
-
-    const editorView = props.ctx.get(editorViewCtx);
-    const reference = props.targetDom || {
-      contextElement: editorView.dom,
-      getBoundingClientRect: () =>
-        posToDOMRect(editorView, editorView.state.selection.anchor, editorView.state.selection.anchor),
-    };
-
-    const dispose = autoUpdate(reference, root, async () => {
-      const boundary = props.ctx.get(rootCtx) as HTMLElement;
-      const { x, y, middlewareData } = await computePosition(reference, root, {
-        middleware: [hide({ boundary, strategy: 'escaped' }), flip({ boundary })],
-        placement: 'bottom-start',
-      });
-
-      Object.assign(root.style, {
-        left: `${x}px`,
-        top: `${y}px`,
-        display: middlewareData.hide?.escaped ? 'none' : '',
-      });
-    });
-
-    onCleanup(dispose);
-  });
-
-  createEffect(() => {
     requestAnimationFrame(() => {
       inputRef?.focus();
     });
+  });
+
+  const { setTooltipEl } = useTooltip({
+    ctx: props.ctx,
+    reference: props.targetDom || {
+      contextElement: editorView.dom,
+      getBoundingClientRect: () =>
+        posToDOMRect(editorView, editorView.state.selection.anchor, editorView.state.selection.anchor),
+    },
+    placement: 'bottom-start',
+  });
+
+  useSelectionChanged({
+    ctx: props.ctx,
+    fn: props.onClose,
   });
 
   function submit() {
@@ -102,7 +75,7 @@ export default function Tooltip(props: { targetDom?: HTMLElement; ctx: Ctx; onCl
   }
 
   return (
-    <div class="absolute border" ref={root}>
+    <div class="absolute border" ref={setTooltipEl}>
       <Combobox.Root
         allowCustomValue
         alwaysSubmitOnEnter

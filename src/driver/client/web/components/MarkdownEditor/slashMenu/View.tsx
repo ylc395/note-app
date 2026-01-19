@@ -1,8 +1,8 @@
-import { autoUpdate, computePosition, flip, hide, type VirtualElement } from '@floating-ui/dom';
-import { editorCtx, editorViewCtx, rootCtx } from '@milkdown/kit/core';
+import { editorCtx, editorViewCtx } from '@milkdown/kit/core';
 import type { Ctx } from '@milkdown/kit/ctx';
 import { posToDOMRect } from '@milkdown/kit/prose';
-import { createEffect, onCleanup, Show } from 'solid-js';
+import { Show } from 'solid-js';
+import { useSelectionChanged, useTooltip } from '../shared/useTooltip';
 import { Menu } from '@ark-ui/solid';
 import {
   wrapInHeadingCommand,
@@ -18,50 +18,24 @@ import { wrapInTodoListItem } from '../nodes/todoListItem';
 import { isInEmptyParagraph } from '../shared/prosemirrorUtils';
 import { editNewTopicCommand } from '../nodes/topic/commands';
 import { editNewLinkCommand } from '../nodes/link/commands';
-import { listenerCtx } from '@milkdown/kit/plugin/listener';
-import { pull } from 'lodash-es';
 
 export default function View(props: { ctx: Ctx; onClose: () => void }) {
-  let menuRoot: HTMLDivElement | undefined;
-  const editor = props.ctx.get(editorCtx);
   const editorView = props.ctx.get(editorViewCtx);
   const isBlock = isInEmptyParagraph(editorView.state.selection.$anchor);
 
-  editor.action(() => {
-    const listener = props.ctx.get(listenerCtx);
-    listener.selectionUpdated(props.onClose);
+  useSelectionChanged({
+    ctx: props.ctx,
+    fn: props.onClose,
   });
 
-  onCleanup(() => {
-    const listener = props.ctx.get(listenerCtx);
-    pull(listener.listeners.selectionUpdated, props.onClose);
-  });
-
-  createEffect(() => {
-    if (!menuRoot) {
-      return;
-    }
-
-    const virtualElement: VirtualElement = {
+  const { setTooltipEl } = useTooltip({
+    ctx: props.ctx,
+    reference: {
       contextElement: editorView.dom,
       getBoundingClientRect: () =>
         posToDOMRect(editorView, editorView.state.selection.anchor, editorView.state.selection.anchor),
-    };
-
-    const stopAutoUpdate = autoUpdate(virtualElement, menuRoot, async () => {
-      const boundary = props.ctx.get(rootCtx) as HTMLElement;
-      const { x, y, middlewareData } = await computePosition(virtualElement, menuRoot, {
-        middleware: [hide({ boundary, strategy: 'escaped' }), flip({ boundary })],
-        placement: 'bottom-start',
-      });
-
-      Object.assign(menuRoot.style, {
-        left: `${x}px`,
-        top: `${y}px`,
-        display: middlewareData.hide?.escaped ? 'none' : '',
-      });
-    });
-    onCleanup(stopAutoUpdate);
+    },
+    placement: 'bottom-start',
   });
 
   function onSelect({ value }: { value: string }) {
@@ -103,7 +77,7 @@ export default function View(props: { ctx: Ctx; onClose: () => void }) {
 
   return (
     <Menu.Root onSelect={onSelect} open loopFocus onEscapeKeyDown={props.onClose}>
-      <Menu.Content ref={menuRoot} class="absolute">
+      <Menu.Content ref={setTooltipEl} class="absolute">
         <Show when={isBlock}>
           <Menu.Item value="heading">标题</Menu.Item>
           <Menu.Item value="code">代码块</Menu.Item>

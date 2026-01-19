@@ -1,13 +1,12 @@
-import { autoUpdate, computePosition, flip, hide, inline } from '@floating-ui/dom';
-import { editorCtx, editorViewCtx, rootCtx } from '@milkdown/kit/core';
+import { inline } from '@floating-ui/dom';
+import { editorCtx, editorViewCtx } from '@milkdown/kit/core';
 import type { Ctx } from '@milkdown/kit/ctx';
 import { linkSchema, toggleLinkCommand, updateLinkCommand } from '@milkdown/kit/preset/commonmark';
 import { posToDOMRect } from '@milkdown/kit/prose';
 import { TextSelection } from '@milkdown/kit/prose/state';
 import { callCommand, type $Command } from '@milkdown/kit/utils';
-import { createEffect, createMemo, createSignal, onCleanup, Show } from 'solid-js';
-import { listenerCtx } from '@milkdown/kit/plugin/listener';
-import { pull } from 'lodash-es';
+import { createEffect, createMemo, createSignal, Show } from 'solid-js';
+import { useSelectionChanged, useTooltip } from '../../../shared/useTooltip';
 import z from 'zod';
 
 import { findMarkPosition } from '../../../shared/prosemirrorUtils';
@@ -55,16 +54,10 @@ export default function Tooltip(props: {
   const isValidHref = createMemo(() => urlSchema.safeParse(href()).success);
 
   let inputRef: HTMLInputElement | undefined;
-  const [rootRef, setRootRef] = createSignal<HTMLDivElement>();
 
-  editor.action(() => {
-    const listener = props.ctx.get(listenerCtx);
-    listener.selectionUpdated(props.onClose);
-  });
-
-  onCleanup(() => {
-    const listener = props.ctx.get(listenerCtx);
-    pull(listener.listeners.selectionUpdated, props.onClose);
+  useSelectionChanged({
+    ctx: props.ctx,
+    fn: props.onClose,
   });
 
   function action<T>(command: $Command<T>, payload?: T) {
@@ -142,45 +135,20 @@ export default function Tooltip(props: {
     }
   });
 
-  createEffect(() => {
-    const root = rootRef();
-
-    if (!root) {
-      return;
-    }
-
-    const reference = props.targetDom || {
+  const { setTooltipEl } = useTooltip({
+    reference: props.targetDom || {
       contextElement: editorView.dom,
       getBoundingClientRect: () =>
         posToDOMRect(editorView, editorView.state.selection.anchor, editorView.state.selection.anchor),
-    };
-
-    const stopAutoUpdate = autoUpdate(reference, root, async () => {
-      const boundary = props.ctx.get(rootCtx) as HTMLElement;
-      const { x, y, middlewareData } = await computePosition(reference, root, {
-        middleware: [
-          hide({ boundary, strategy: 'escaped' }),
-          flip({ boundary }),
-          props.mousePosition && inline(props.mousePosition),
-        ],
-        placement: props.targetDom ? 'top' : 'bottom-start',
-      });
-
-      Object.assign(root.style, {
-        left: `${x}px`,
-        top: `${y}px`,
-        display: middlewareData.hide?.escaped ? 'none' : '',
-      });
-    });
-
-    onCleanup(() => {
-      stopAutoUpdate();
-    });
+    },
+    ctx: props.ctx,
+    placement: props.targetDom ? 'top' : 'bottom-start',
+    middleware: [props.mousePosition && inline(props.mousePosition)],
   });
 
   return (
     <div
-      ref={setRootRef}
+      ref={setTooltipEl}
       onFocusOut={props.onLeave}
       onMouseLeave={props.onLeave}
       onMouseEnter={props.onEnter}
