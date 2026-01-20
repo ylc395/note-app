@@ -28,6 +28,12 @@ export default function MarkdownEditorView() {
     ),
   );
 
+  function onUpdate(text: string) {
+    if (workbench.currentEditor === editor) {
+      editor.update({ body: text });
+    }
+  }
+
   return (
     <Show when={editor.value.result.data}>
       {(note) => (
@@ -37,7 +43,7 @@ export default function MarkdownEditorView() {
             className="h-full overflow-auto border-16 border-surface-primary"
             defaultValue={note().body}
             readonly={editor.isUploading}
-            onUpdate={(text) => workbench.currentEditor === editor && editor.update({ body: text })}
+            onUpdate={onUpdate}
           />
           <Show when={!note().body}>
             <Empty />

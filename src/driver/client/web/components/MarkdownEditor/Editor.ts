@@ -52,7 +52,7 @@ import './index.css';
 export default class Editor {
   private readonly core: MilkdownEditor;
 
-  constructor(props: { editable?: boolean; root: HTMLElement; defaultValue?: string }) {
+  constructor(props: { readonly?: boolean; root: HTMLElement; defaultValue?: string }) {
     this.core = MilkdownEditor.make()
       .use(without(commonmark, ...commonmarkKeymap)) // 不要引入快捷键。我们自己定制
       .use([
@@ -75,7 +75,7 @@ export default class Editor {
       .config((ctx) => {
         ctx.set(rootCtx, props.root);
         ctx.set(defaultValueCtx, props.defaultValue || '');
-        ctx.set(editorViewOptionsCtx, { editable: () => props.editable ?? true });
+        ctx.set(editorViewOptionsCtx, { editable: () => !props.readonly });
         ctx.update(uploadConfig.key, (config) => ({ ...config, uploader }));
       });
   }

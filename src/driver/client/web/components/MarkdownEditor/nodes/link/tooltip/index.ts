@@ -4,8 +4,10 @@ import { debounce } from 'lodash-es';
 import { render } from 'solid-js/web';
 import { createComponent } from 'solid-js';
 
-import View, { Mode } from './View';
 import shell from '#web/infra/shell';
+import { parseAppUrl } from '#domain/shared/infra/url';
+import ExternalLinkView, { Mode } from './ExternalLinkView';
+import AppLinkView from './AppLinkView';
 
 export default $prose((ctx) => {
   let dispose: (() => void) | undefined;
@@ -44,19 +46,30 @@ export default $prose((ctx) => {
 
     targetDom = e.target as HTMLAnchorElement;
     tooltipRoot = document.createElement('div');
-    dispose = render(
-      () =>
-        createComponent(View, {
-          ctx,
-          targetDom,
-          mousePosition: { x: e.clientX, y: e.clientY },
-          onModeChange: (v) => (mode = v),
-          onLeave: hideDelay,
-          onClose: hide.bind(null, true),
-          onEnter: hideDelay.cancel,
-        }),
-      tooltipRoot,
-    );
+    const appUrl = parseAppUrl(targetDom.href);
+
+    const props = {
+      onLeave: hideDelay,
+      onClose: hide.bind(null, true),
+      onEnter: hideDelay.cancel,
+      targetDom,
+      mousePosition: { x: e.clientX, y: e.clientY },
+    };
+
+    if (appUrl) {
+      dispose = render(() => createComponent(AppLinkView, { appUrl, ...props }), tooltipRoot);
+    } else {
+      dispose = render(
+        () =>
+          createComponent(ExternalLinkView, {
+            ctx,
+            onModeChange: (v) => (mode = v),
+            ...props,
+          }),
+        tooltipRoot,
+      );
+    }
+
     shell.appRoot.append(tooltipRoot);
   };
 

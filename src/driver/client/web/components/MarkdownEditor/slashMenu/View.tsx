@@ -16,7 +16,7 @@ import { callCommand } from '@milkdown/kit/utils';
 import { wrapInTodoListItem } from '../nodes/listItem';
 import { isInEmptyParagraph } from '../shared/prosemirrorUtils';
 import TopicTooltip from '../nodes/topic/Tooltip';
-import LinkTooltip, { Mode } from '../nodes/link/tooltip/View';
+import LinkTooltip, { Mode } from '../nodes/link/tooltip/ExternalLinkView';
 import TableCreator from '../nodes/table/TableCreator';
 
 export default function View(props: { ctx: Ctx; onClose: () => void }) {

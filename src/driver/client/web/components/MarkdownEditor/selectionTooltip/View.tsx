@@ -16,7 +16,7 @@ import { posToDOMRect } from '@milkdown/kit/prose';
 import { useTooltip } from '../shared/useTooltip';
 
 import shell from '#web/infra/shell';
-import LinkView, { Mode } from '../nodes/link/tooltip/View';
+import LinkView, { Mode } from '../nodes/link/tooltip/ExternalLinkView';
 
 export default function View(props: { ctx: Ctx; close: () => void }) {
   const editor = createMemo(() => props.ctx.get(editorCtx));

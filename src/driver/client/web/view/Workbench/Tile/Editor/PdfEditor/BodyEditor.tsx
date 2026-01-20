@@ -4,5 +4,11 @@ import { useContext } from '../context';
 export default function BodyEditor() {
   const ctx = useContext()!;
 
-  return <MarkdownEditor onUpdate={(md) => ctx.editor.isCurrent && ctx.editor.update({ body: md })} />;
+  function onUpdated(md: string) {
+    if (ctx.editor.isCurrent) {
+      ctx.editor.update({ body: md });
+    }
+  }
+
+  return <MarkdownEditor onUpdate={onUpdated} />;
 }

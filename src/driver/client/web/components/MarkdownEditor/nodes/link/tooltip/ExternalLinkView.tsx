@@ -7,11 +7,10 @@ import { callCommand, type $Command } from '@milkdown/kit/utils';
 import { createEffect, createMemo, createSignal, Show } from 'solid-js';
 import { useSelectionChanged, useTooltip } from '../../../shared/useTooltip';
 import z from 'zod';
-
-import { findMarkPosition } from '../../../shared/prosemirrorUtils';
 import { SquareArrowOutUpRightIcon } from 'lucide-solid';
+
 import shell from '#web/infra/shell';
-import { parseAppUrl } from '#domain/shared/infra/url';
+import { findMarkPosition } from '../../../shared/prosemirrorUtils';
 
 export enum Mode {
   Preview = 'preview',
@@ -136,7 +135,7 @@ export default function Tooltip(props: {
   }
 
   function handleInputClick() {
-    if (mode() !== Mode.Preview || parseAppUrl(href())) {
+    if (mode() !== Mode.Preview) {
       return;
     }
 
