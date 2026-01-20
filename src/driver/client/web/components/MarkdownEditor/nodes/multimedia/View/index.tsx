@@ -43,7 +43,7 @@ export default function MultimediaView(props: Props) {
 
   const parsedUrl = createMemo(() => parseAppUrl(attrs().src));
   const fileId = createMemo(() => parsedUrl()?.id);
-  const mediaClassName = 'not-prose w-full h-full';
+  const mediaClassName = 'block w-full h-full';
 
   const initialSize = createMemo(() => ({
     width: Number(parsedUrl()?.query.get('width')) || undefined,

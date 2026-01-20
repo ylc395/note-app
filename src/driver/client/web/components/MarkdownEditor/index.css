@@ -1,21 +1,250 @@
-@plugin "@tailwindcss/typography";
-
 @import "@milkdown/kit/prose/view/style/prosemirror.css";
 @import '@milkdown/kit/prose/gapcursor/style/gapcursor.css';
 
 .milkdown .editor  { 
-  @apply prose;
   max-width: none;
+  
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  font-size: 16px;
+  line-height: 1.5;
+  color: #24292e;
+  background-color: #ffffff;
+  
+  /* 标题 */
+  h1 {
+    font-size: 2em;
+    font-weight: 600;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+    padding-bottom: 0.3em;
+    border-bottom: 1px solid #eaecef;
+  }
+  
+  h2 {
+    font-size: 1.5em;
+    font-weight: 600;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+    padding-bottom: 0.3em;
+    border-bottom: 1px solid #eaecef;
+  }
+  
+  h3 {
+    font-size: 1.25em;
+    font-weight: 600;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+  }
+  
+  h4 {
+    font-size: 1em;
+    font-weight: 600;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+  }
+  
+  h5 {
+    font-size: 0.875em;
+    font-weight: 600;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+  }
+  
+  h6 {
+    font-size: 0.85em;
+    font-weight: 600;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+    color: #6a737d;
+  }
+  
+  /* 段落 */
+  p {
+    margin-top: 0;
+    margin-bottom: 1em;
+  }
+  
+  /* 链接 */
+  a {
+    color: #0969da;
+    text-decoration: none;
+    background-color: transparent;
+    
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+  
+  /* 粗体 */
+  strong, b {
+    font-weight: 600;
+  }
+  
+  /* 斜体 */
+  em, i {
+    font-style: italic;
+  }
+  
+  /* 删除线 */
+  del, s {
+    text-decoration: line-through;
+  }
+  
+  /* 内联代码 */
+  code:not(pre code) {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 0.9em;
+    background-color: #f6f8fa;
+    border: 1px solid #e1e4e8;
+    border-radius: 3px;
+    padding: 0.2em 0.4em;
+    color: #24292e;
+  }
+  
+  /* 代码块 */
+  pre {
+    background-color: #f6f8fa;
+    border: 1px solid #e1e4e8;
+    border-radius: 6px;
+    padding: 1em;
+    overflow: auto;
+    margin-top: 0;
+    margin-bottom: 1em;
+    
+    code {
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: 0.9em;
+      background-color: transparent;
+      border: none;
+      padding: 0;
+      color: inherit;
+    }
+  }
+  
+  /* 引用块 */
+  blockquote {
+    border-left: 4px solid #dfe2e5;
+    margin-left: 0;
+    margin-right: 0;
+    margin-bottom: 1em;
+    padding-left: 1em;
+    padding-right: 1em;
+    color: #6a737d;
+    
+    & > :first-child {
+      margin-top: 0;
+    }
+    
+    & > :last-child {
+      margin-bottom: 0;
+    }
+  }
+  
+  /* 列表 */
+  ul, ol {
+    margin-top: 0;
+    margin-bottom: 1em;
+    padding-left: 2em;
+  }
 
-  /** 这些元素在 tailwind preflight 里被设置为 block 了（https://tailwindcss.com/docs/preflight#images-are-block-level)
-   ** 这会干扰编辑器的功能。因此必须设置回来
-   */ 
-  svg,video,canvas,audio,img {
-    display: inline;
-    max-width: none;
+  ul {
+    list-style: disc;
+  }
+
+  ol {
+    list-style: decimal;
+  }
+  
+  li {
+    margin-top: 0.25em;
+    margin-bottom: 0.25em;
+    
+    & p {
+      margin-top: 0.25em;
+      margin-bottom: 0.25em;
+    }
+  }
+
+
+  
+  ul ul, ul ol, ol ul, ol ol {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+  
+  /* 任务列表 */
+  input[type="checkbox"] {
+    margin: 0 0.2em 0.2em 0;
+  }
+  
+  /* 表格 */
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-top: 0;
+    margin-bottom: 1em;
+    border: 1px solid #e1e4e8;
+  }
+  
+  th, td {
+    border: 1px solid #e1e4e8;
+    padding: 0.5em 1em;
+  }
+  
+  th {
+    font-weight: 600;
+    background-color: #f6f8fa;
+  }
+  
+  
+  /* 图片 */
+  img {
+    max-width: 100%;
+    height: auto;
+    border-style: none;
+  }
+  
+  /* 水平线 */
+  hr {
+    border: 0;
+    border-top: 1px solid #eaecef;
+    margin: 2em 0;
+  }
+  
+  /* 其他内联元素 */
+  sup, sub {
+    font-size: 0.75em;
+    line-height: 0;
+    position: relative;
+    vertical-align: baseline;
+  }
+  
+  sup {
+    top: -0.5em;
+  }
+  
+  sub {
+    bottom: -0.25em;
+  }
+  
+  /* 键盘输入 */
+  kbd {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    font-size: 0.9em;
+    background-color: #f6f8fa;
+    border: 1px solid #d1d5da;
+    border-radius: 3px;
+    box-shadow: inset 0 -1px 0 #d1d5da;
+    padding: 0.2em 0.4em;
+    color: #24292e;
+  }
+  
+  /* 确保所有元素都正确显示 */
+  * {
+    box-sizing: border-box;
   }
 }
 
 .milkdown-drop-indicator {
-  background-color: gray  ;
+  background-color: gray;
 }

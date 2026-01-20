@@ -25,7 +25,7 @@ import selectionTooltip from './selectionTooltip';
 import slashMenu from './slashMenu';
 import cursor from './cursor';
 import selectionHighlight from './selectionHighlight';
-import todoListItem from './nodes/todoListItem';
+import todoListItem from './nodes/listItem';
 import './index.css';
 
 /** 一些关于 milkdown 的知识

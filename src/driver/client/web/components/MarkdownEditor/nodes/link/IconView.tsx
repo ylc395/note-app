@@ -78,7 +78,7 @@ export default function LinkIcon(props: { url: string }) {
 
   return (
     <Switch>
-      <Match when={blobUrl()}>{(url) => <img class="not-prose" src={url()} />}</Match>
+      <Match when={blobUrl()}>{(url) => <img src={url()} />}</Match>
       <Match when={icon.data?.type === RouteTypes.Note}>
         <Icon {...(icon.data as Icon)} />
       </Match>

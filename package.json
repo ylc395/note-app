@@ -79,7 +79,6 @@
     "@svgdotjs/svg.js": "^3.2.4",
     "@svgdotjs/svg.resize.js": "^2.0.5",
     "@svgdotjs/svg.select.js": "^4.0.3",
-    "@tailwindcss/typography": "^0.5.19",
     "@tanstack/query-core": "^5.90.11",
     "@trpc/client": "^10.45.2",
     "@trpc/server": "^10.45.2",
