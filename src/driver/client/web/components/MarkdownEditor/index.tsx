@@ -1,6 +1,7 @@
 import { createEffect, createSignal, on, onCleanup, onMount } from 'solid-js';
 
 import Editor from './Editor';
+import clsx from 'clsx';
 
 export default function MarkdownEditor(props: {
   readonly?: boolean;
@@ -49,5 +50,5 @@ export default function MarkdownEditor(props: {
     getEditor()?.destroy();
   });
 
-  return <div class={props.className} spellcheck={false} ref={rootRef}></div>;
+  return <div class={clsx(props.className, 'select-text')} spellcheck={false} ref={rootRef}></div>;
 }

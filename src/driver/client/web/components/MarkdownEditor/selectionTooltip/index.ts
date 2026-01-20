@@ -37,7 +37,7 @@ export default $prose(
         const update = (view: EditorView, prevState: EditorState) => {
           destroy();
 
-          if (view.composing || view.state.selection.empty) {
+          if (view.composing || view.state.selection.empty || !view.editable) {
             return;
           }
 
