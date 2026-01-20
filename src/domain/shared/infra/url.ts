@@ -24,8 +24,6 @@ const matcher = mapValues(routes, (v) => match(v, { decode: false }));
 
 const generator = mapValues(routes, (v) => compile(v, { encode: false }));
 
-const matchStatic = match('/static/*path', { decode: false });
-
 export function getAppUrl(type: keyof typeof generator, id: string) {
   return `${PROTOCOL}://${HOST_NAME}${generator[type]({ id })}`;
 }
@@ -34,7 +32,7 @@ export function getStaticUrl(path: string) {
   return `${PROTOCOL}://${HOST_NAME}/static/${path}`;
 }
 
-function parseUrl(url: string) {
+export function parseUrl(url: string) {
   if (!URL.canParse(url)) {
     return null;
   }
@@ -48,27 +46,11 @@ function parseUrl(url: string) {
   return parsed;
 }
 
-export function parseStaticUrl(url: string) {
-  const parsed = parseUrl(url);
-
-  if (!parsed) {
-    return;
-  }
-
-  const result = matchStatic(parsed.pathname);
-
-  if (result && typeof result.params.path === 'string') {
-    return result.params.path;
-  }
-
-  return null;
-}
-
 export function parseAppUrl(url: string) {
   const parsed = parseUrl(url);
 
   if (!parsed) {
-    return;
+    return null;
   }
 
   const { pathname, hash, searchParams } = parsed;

@@ -1,9 +1,12 @@
 import { app, net } from 'electron';
 import { resolve } from 'node:path';
+import { match } from 'path-to-regexp';
 
 import FileService from '#domain/server/service/FileService';
 import container from '#utils/singletonContainer';
-import { parseAppUrl, parseStaticUrl, RouteTypes } from '#domain/shared/infra/url';
+import { parseAppUrl, parseUrl, RouteTypes } from '#domain/shared/infra/url';
+
+const matchStatic = match('/static/*path', { decode: false });
 
 async function queryFileBlob(id: string) {
   const fileService = container.resolve(FileService);
@@ -14,6 +17,22 @@ async function queryFileBlob(id: string) {
 async function loadStatic(p: string) {
   const path = resolve(app.getAppPath(), '../../../../static', p);
   return net.fetch(`file://${path}`);
+}
+
+function parseStaticUrl(url: string) {
+  const parsed = parseUrl(url);
+
+  if (!parsed) {
+    return;
+  }
+
+  const result = matchStatic(parsed.pathname);
+
+  if (result && typeof result.params.path === 'string') {
+    return result.params.path;
+  }
+
+  return null;
 }
 
 export default function protocolHandler(req: Request) {

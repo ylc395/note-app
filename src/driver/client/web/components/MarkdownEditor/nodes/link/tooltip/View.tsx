@@ -9,6 +9,9 @@ import { useSelectionChanged, useTooltip } from '../../../shared/useTooltip';
 import z from 'zod';
 
 import { findMarkPosition } from '../../../shared/prosemirrorUtils';
+import { SquareArrowOutUpRightIcon } from 'lucide-solid';
+import shell from '#web/infra/shell';
+import { parseAppUrl } from '#domain/shared/infra/url';
 
 export enum Mode {
   Preview = 'preview',
@@ -53,6 +56,14 @@ export default function Tooltip(props: {
   const isValidHref = createMemo(() => urlSchema.safeParse(href()).success);
 
   let inputRef: HTMLInputElement | undefined;
+
+  const { setTooltipEl } = useTooltip({
+    disabled: !props.targetDom && mode() !== Mode.Add,
+    reference: props.targetDom || 'cursor',
+    ctx: props.ctx,
+    placement: props.targetDom ? 'top' : 'bottom-start',
+    middleware: [props.mousePosition && inline(props.mousePosition)],
+  });
 
   useSelectionChanged({
     ctx: props.ctx,
@@ -124,6 +135,14 @@ export default function Tooltip(props: {
     action(command, { href: href() });
   }
 
+  function handleInputClick() {
+    if (mode() !== Mode.Preview || parseAppUrl(href())) {
+      return;
+    }
+
+    shell.openNewWindow(href());
+  }
+
   createEffect(() => {
     props.onModeChange?.(mode());
 
@@ -134,30 +153,27 @@ export default function Tooltip(props: {
     }
   });
 
-  const { setTooltipEl } = useTooltip({
-    disabled: !props.targetDom && mode() !== Mode.Add,
-    reference: props.targetDom || 'cursor',
-    ctx: props.ctx,
-    placement: props.targetDom ? 'top' : 'bottom-start',
-    middleware: [props.mousePosition && inline(props.mousePosition)],
-  });
-
   return (
     <div ref={setTooltipEl} onFocusOut={props.onLeave} onMouseLeave={props.onLeave} onMouseEnter={props.onEnter}>
-      <div>
-        <input
-          placeholder="URL"
-          ref={inputRef}
-          readOnly={mode() !== Mode.Edit && mode() !== Mode.Add}
-          onInput={(e) => setHref(e.target.value)}
-          value={href()}
-        />
-      </div>
-      <Show when={mode() === Mode.Add}>
-        <div>
-          <input placeholder="文字" value={text()} onInput={(e) => setText(e.target.value)} />
+      <div class="flex flex-col">
+        <div class="flex items-center" classList={{ 'cursor-pointer': mode() === Mode.Preview }}>
+          <input
+            placeholder="URL"
+            ref={inputRef}
+            readOnly={mode() === Mode.Preview}
+            onInput={(e) => setHref(e.target.value)}
+            value={href()}
+            class={mode() === Mode.Preview ? 'cursor-pointer hover:underline' : ''}
+            onClick={handleInputClick}
+          />
+          <Show when={mode() === Mode.Preview}>
+            <SquareArrowOutUpRightIcon class="ml-1 h-4 w-4" />
+          </Show>
         </div>
-      </Show>
+        <Show when={mode() === Mode.Add}>
+          <input placeholder="文字" value={text()} onInput={(e) => setText(e.target.value)} />
+        </Show>
+      </div>
       <Show
         when={mode() === Mode.Edit || mode() === Mode.Add}
         fallback={
