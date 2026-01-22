@@ -50,23 +50,26 @@ export const multimediaBlockNodeSchema = imageBlockSchema.extendSchema((originSc
   };
 });
 
-export const multimediaBlockNodeView = $view(multimediaBlockNodeSchema.node, (): NodeViewConstructor => {
+export const multimediaBlockNodeView = $view(multimediaBlockNodeSchema.node, (ctx): NodeViewConstructor => {
   return (initialNode, editorView, getNodePos) => {
     const rootNode = document.createElement('figure');
     rootNode.className = 'flex flex-col';
 
     const [attrs, setAttrs] = createSignal(initialNode.attrs);
-    const props = {
-      editorView,
-      figure: true,
-      get attrs() {
-        return attrs();
-      },
-      get nodePos() {
-        return getNodePos();
-      },
-    };
-    const dispose = render(() => createComponent(View, props), rootNode);
+    const dispose = render(
+      () =>
+        createComponent(View, {
+          ctx,
+          figure: true,
+          get attrs() {
+            return attrs();
+          },
+          get nodePos() {
+            return getNodePos();
+          },
+        }),
+      rootNode,
+    );
 
     // https://prosemirror.net/docs/ref/#view.NodeView
     return {

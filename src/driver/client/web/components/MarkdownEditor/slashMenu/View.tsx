@@ -1,7 +1,7 @@
 import { editorCtx, editorViewCtx } from '@milkdown/kit/core';
 import type { Ctx } from '@milkdown/kit/ctx';
 import { Show } from 'solid-js';
-import { showFloating, useSelectionChanged, useTooltip } from '../shared/useTooltip';
+import { showFloating, useTooltip } from '../shared/useTooltip';
 import { Menu } from '@ark-ui/solid';
 import {
   wrapInHeadingCommand,
@@ -14,7 +14,7 @@ import {
 import { callCommand } from '@milkdown/kit/utils';
 
 import { wrapInTodoListItem } from '../nodes/listItem';
-import { isInEmptyParagraph } from '../shared/prosemirrorUtils';
+import { isInEmptyParagraph, useMilkdownEvent } from '../shared/prosemirrorUtils';
 import TopicTooltip from '../nodes/topic/Tooltip';
 import LinkTooltip, { Mode } from '../nodes/link/tooltip/ExternalLinkView';
 import TableCreator from '../nodes/table/TableCreator';
@@ -23,7 +23,8 @@ export default function View(props: { ctx: Ctx; onClose: () => void }) {
   const editorView = props.ctx.get(editorViewCtx);
   const isBlock = isInEmptyParagraph(editorView.state.selection.$anchor);
 
-  useSelectionChanged({
+  useMilkdownEvent({
+    event: 'selectionUpdated',
     ctx: props.ctx,
     fn: props.onClose,
   });

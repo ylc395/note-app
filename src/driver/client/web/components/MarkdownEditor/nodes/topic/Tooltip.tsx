@@ -10,7 +10,8 @@ import singletonContainer from '#utils/singletonContainer';
 import { token as remoteToken } from '#domain/client/shared/infra/rpc';
 
 import { topicNode } from './node';
-import { useSelectionChanged, useTooltip } from '../../shared/useTooltip';
+import { useTooltip } from '../../shared/useTooltip';
+import { useMilkdownEvent } from '../../shared/prosemirrorUtils';
 
 export default function Tooltip(props: { ctx: Ctx; onClose: () => void }) {
   const remote = singletonContainer.resolve(remoteToken);
@@ -45,7 +46,8 @@ export default function Tooltip(props: { ctx: Ctx; onClose: () => void }) {
     placement: 'bottom-start',
   });
 
-  useSelectionChanged({
+  useMilkdownEvent({
+    event: 'selectionUpdated',
     ctx: props.ctx,
     fn: props.onClose,
   });

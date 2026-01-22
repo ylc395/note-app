@@ -1,21 +1,24 @@
-import { Show, createMemo, Switch, Match } from 'solid-js';
+import { Show, createMemo, Switch, Match, createSignal } from 'solid-js';
 import clsx from 'clsx';
 import { FileIcon } from 'lucide-solid';
 import z from 'zod';
-import type { EditorView } from '@milkdown/kit/prose/view';
 import { createQuery } from 'mobx-tanstack-query/preset';
+import type { Ctx } from '@milkdown/kit/ctx';
+import { editorViewCtx } from '@milkdown/kit/core';
 
 import container from '#utils/singletonContainer';
 import { token } from '#domain/client/shared/infra/rpc';
 import { parseAppUrl } from '#domain/shared/infra/url';
+import { useMilkdownEvent } from '#web/components/MarkdownEditor/shared/prosemirrorUtils';
+
 import useResizable from './useResizable';
 import FileCard from './FileCard';
 
 interface Props {
   figure?: boolean;
   attrs: Record<string, unknown>;
-  editorView: EditorView;
   nodePos: number | undefined;
+  ctx: Ctx;
 }
 
 const stripQuery = (url: string) => {
@@ -31,6 +34,9 @@ const stripQuery = (url: string) => {
 
 export default function MultimediaView(props: Props) {
   const remote = container.resolve(token);
+  const editorView = props.ctx.get(editorViewCtx);
+  const [isEditable, setIsEditable] = createSignal(editorView.editable);
+
   const attrs = createMemo(() =>
     z
       .object({
@@ -59,7 +65,7 @@ export default function MultimediaView(props: Props) {
         const url = new URL(attrs().src);
         url.searchParams.set('width', String(width));
         url.searchParams.set('height', String(height));
-        props.editorView.dispatch(props.editorView.state.tr.setNodeAttribute(nodePos, 'src', url.toString()));
+        editorView.dispatch(editorView.state.tr.setNodeAttribute(nodePos, 'src', url.toString()));
       }
     },
   });
@@ -69,6 +75,14 @@ export default function MultimediaView(props: Props) {
     options: () => ({
       enabled: Boolean(fileId()),
     }),
+  });
+
+  useMilkdownEvent({
+    event: 'updated',
+    ctx: props.ctx,
+    fn: () => {
+      setIsEditable(editorView.editable);
+    },
   });
 
   return (
@@ -102,7 +116,7 @@ export default function MultimediaView(props: Props) {
             />
           </Match>
         </Switch>
-        <Show when={naturalSize()}>
+        <Show when={naturalSize() && isEditable()}>
           <div
             class="absolute w-3 h-3 -top-1.5 -left-1.5 bg-white border-2 border-blue-500 rounded-full cursor-nw-resize hover:bg-blue-500 transition-colors z-10"
             onMouseDown={(e) => handleMouseDown(e, 'nw')}

@@ -53,23 +53,25 @@ export const multimediaNodeSchema = imageSchema.extendSchema((imageSchema) => {
   };
 });
 
-export const multimediaNodeView = $view(multimediaNodeSchema.node, (): NodeViewConstructor => {
+export const multimediaNodeView = $view(multimediaNodeSchema.node, (ctx): NodeViewConstructor => {
   return (initialNode, editorView, getNodePos) => {
     const rootNode = document.createElement('span');
     rootNode.className = 'mx-stack-xs';
 
     const [attrs, setAttrs] = createSignal(initialNode.attrs);
-    const props = {
-      editorView,
-      get attrs() {
-        return attrs();
-      },
-      get nodePos() {
-        return getNodePos();
-      },
-    };
-
-    const dispose = render(() => createComponent(View, props), rootNode);
+    const dispose = render(
+      () =>
+        createComponent(View, {
+          ctx,
+          get attrs() {
+            return attrs();
+          },
+          get nodePos() {
+            return getNodePos();
+          },
+        }),
+      rootNode,
+    );
 
     return {
       dom: rootNode,

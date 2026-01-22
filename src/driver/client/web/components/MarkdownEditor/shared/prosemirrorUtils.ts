@@ -1,6 +1,11 @@
+import { editorCtx } from '@milkdown/kit/core';
+import type { Ctx } from '@milkdown/kit/ctx';
+import { listenerCtx, type Subscribers } from '@milkdown/kit/plugin/listener';
 import { findParent } from '@milkdown/kit/prose';
 import type { MarkType, Mark, Node, ResolvedPos } from '@milkdown/kit/prose/model';
 import type { EditorState } from '@milkdown/kit/prose/state';
+import { pull } from 'lodash-es';
+import { onCleanup } from 'solid-js';
 
 export function findMarkPosition(state: EditorState, markType: MarkType, pos: number) {
   const $pos = state.doc.resolve(pos);
@@ -54,4 +59,28 @@ export function isInEmptyParagraph($pos: ResolvedPos) {
 export function isInEmptyHeading($pos: ResolvedPos) {
   const node = $pos.parent;
   return node.content.size === 0 && node.type.name === 'heading';
+}
+
+export function useMilkdownEvent<T extends keyof Subscribers>({
+  ctx,
+  fn,
+  event,
+}: {
+  ctx: Ctx;
+  fn: Subscribers[T][0];
+  event: T;
+}) {
+  const editor = ctx.get(editorCtx);
+
+  editor.action(() => {
+    const listener = ctx.get(listenerCtx);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (listener[event] as any)(fn);
+  });
+
+  onCleanup(() => {
+    const listener = ctx.get(listenerCtx);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    pull(listener.listeners[event] as any, fn);
+  });
 }

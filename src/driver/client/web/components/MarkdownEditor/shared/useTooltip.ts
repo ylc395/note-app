@@ -8,11 +8,9 @@ import {
   type Placement,
   type Middleware,
 } from '@floating-ui/dom';
-import { editorCtx, editorViewCtx, rootCtx } from '@milkdown/kit/core';
+import { editorViewCtx, rootCtx } from '@milkdown/kit/core';
 import type { Ctx } from '@milkdown/kit/ctx';
-import { listenerCtx } from '@milkdown/kit/plugin/listener';
 import { posToDOMRect } from '@milkdown/kit/prose';
-import { pull } from 'lodash-es';
 import { createEffect, createSignal, onCleanup, type JSX } from 'solid-js';
 import { createComponent, render } from 'solid-js/web';
 
@@ -78,20 +76,6 @@ export function useTooltip(options: {
   });
 
   return { setTooltipEl };
-}
-
-export function useSelectionChanged({ ctx, fn }: { ctx: Ctx; fn: () => void }) {
-  const editor = ctx.get(editorCtx);
-
-  editor.action(() => {
-    const listener = ctx.get(listenerCtx);
-    listener.selectionUpdated(fn);
-  });
-
-  onCleanup(() => {
-    const listener = ctx.get(listenerCtx);
-    pull(listener.listeners.selectionUpdated, fn);
-  });
 }
 
 export function showFloating<T>(
