@@ -9,8 +9,8 @@ import { IS_DEV } from '#domain/shared/infra/env';
 import Workbench from '#domain/client/app/model/Workbench';
 
 import useDnd from './useDnd';
-import ContextMenu, { type MenuItem } from '../common/ContextMenu';
-import Icon from '../common/Icon';
+import ContextMenu, { type MenuItem } from '../ContextMenu';
+import Icon from '../Icon';
 
 export interface Props {
   treeView: TreeViewModel;

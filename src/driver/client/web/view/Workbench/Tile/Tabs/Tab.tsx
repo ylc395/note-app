@@ -6,8 +6,8 @@ import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import BaseEditor from '#domain/client/app/model/note/editor/BaseEditor';
 import { isFullyVisible } from '#web/infra/domUtils';
 import { IS_DEV } from '#domain/shared/infra/env';
-import ContextMenu from '#web/components/common/ContextMenu';
-import Icon from '#web/components/common/Icon';
+import ContextMenu from '#web/components/ContextMenu';
+import Icon from '#web/components/Icon';
 
 import useContextmenu from './useContextmenu';
 

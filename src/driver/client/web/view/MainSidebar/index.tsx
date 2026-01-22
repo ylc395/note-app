@@ -6,7 +6,7 @@ import { Portal } from 'solid-js/web';
 import shell from '#web/infra/shell';
 
 import container from '#utils/singletonContainer';
-import UIState, { SidebarTabs } from './UIState';
+import UIState, { SidebarTabs } from '../UIState';
 import Star from './Star';
 import Topic from './Topic';
 

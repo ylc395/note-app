@@ -7,7 +7,7 @@ import container from '#utils/singletonContainer';
 import { token as remoteToken } from '#domain/client/shared/infra/rpc';
 import { parseAppUrl, RouteTypes } from '#domain/shared/infra/url';
 import { token as documentDbToken } from '#domain/client/shared/infra/documentDb';
-import Icon from '#web/components/common/Icon';
+import Icon from '#web/components/Icon';
 import { remoteIconStoreName } from '#domain/client/app/model/note/editor/BaseEditor';
 import type { NoteVO } from '#domain/shared/model/note';
 

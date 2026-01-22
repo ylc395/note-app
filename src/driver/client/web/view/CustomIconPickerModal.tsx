@@ -2,7 +2,7 @@ import { createMemo, For, Show } from 'solid-js';
 import { FileUpload } from '@ark-ui/solid';
 import { FileIcon, FilePlusIcon, XIcon } from 'lucide-solid';
 
-import Modal from '#web/components/common/Modal';
+import Modal from '#web/components/Modal';
 import NoteService from '#domain/client/app/service/NoteService';
 import container from '#utils/singletonContainer';
 

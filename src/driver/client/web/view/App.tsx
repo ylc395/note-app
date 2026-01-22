@@ -6,7 +6,7 @@ import container from '#utils/singletonContainer';
 import MainSidebar from './MainSidebar';
 import Explorer from './Explorer';
 import Workbench from './Workbench';
-import CustomIconPicker from './note/CustomIconPickerModal';
+import CustomIconPicker from './CustomIconPickerModal';
 import UIState from './UIState';
 import './index.css';
 

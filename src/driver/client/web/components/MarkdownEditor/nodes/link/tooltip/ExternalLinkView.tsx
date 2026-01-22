@@ -5,12 +5,12 @@ import { linkSchema, toggleLinkCommand, updateLinkCommand } from '@milkdown/kit/
 import { TextSelection } from '@milkdown/kit/prose/state';
 import { callCommand, type $Command } from '@milkdown/kit/utils';
 import { createEffect, createMemo, createSignal, Show } from 'solid-js';
-import { useSelectionChanged, useTooltip } from '../../../shared/useTooltip';
 import z from 'zod';
 import { SquareArrowOutUpRightIcon } from 'lucide-solid';
 
 import shell from '#web/infra/shell';
-import { findMarkPosition } from '../../../shared/prosemirrorUtils';
+import { useTooltip } from '../../../shared/useTooltip';
+import { findMarkPosition, useMilkdownEvent } from '../../../shared/prosemirrorUtils';
 
 export enum Mode {
   Preview = 'preview',
@@ -64,7 +64,8 @@ export default function Tooltip(props: {
     middleware: [props.mousePosition && inline(props.mousePosition)],
   });
 
-  useSelectionChanged({
+  useMilkdownEvent({
+    event: 'selectionUpdated',
     ctx: props.ctx,
     fn: props.onClose,
   });
