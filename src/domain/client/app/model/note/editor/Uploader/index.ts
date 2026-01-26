@@ -19,6 +19,7 @@ enum EventNames {
   Uploaded = 'uploader.uploaded',
 }
 
+// 上传一个本地或在线资源（需先下载）
 export default class Uploader {
   constructor(private readonly options: { noteId: NoteVO['id'] }) {}
 

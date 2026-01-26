@@ -76,7 +76,7 @@ export default abstract class BaseEditor {
         staleTime: Infinity,
         abortSignal: this.destroyController.signal,
         options: () => ({
-          enabled: this.isCurrent && !this.isPreview,
+          enabled: Boolean(this.isCurrent && !this.isPreview && this.mimeType),
         }),
       },
     );
@@ -240,7 +240,7 @@ export default abstract class BaseEditor {
 
   public destroy() {
     if (this.isPreview) {
-      this.blob.remove();
+      this.blob.remove(); // 从缓存中移除。因为这是一个
     }
     this.fileUploader?.destroy();
 
