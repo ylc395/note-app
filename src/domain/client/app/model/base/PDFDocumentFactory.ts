@@ -3,13 +3,13 @@ import { getDocument, GlobalWorkerOptions, type PDFDocumentLoadingTask } from 'p
 import { isEmpty } from 'lodash-es';
 import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?worker';
 
-import type { NoteVO } from '#domain/shared/model/note';
 import { getStaticUrl } from '#domain/shared/infra/url';
+import assert from 'assert';
 
-export default class DocumentFactory {
-  private readonly loadingTasksMap: Record<NoteVO['id'], { activeCount: number; task: PDFDocumentLoadingTask }> = {};
+export default class PDFDocumentFactory {
+  private readonly loadingTasksMap: Record<string, { activeCount: number; task: PDFDocumentLoadingTask }> = {};
 
-  public async create({ noteId, blob }: { noteId: NoteVO['id']; blob: ArrayBuffer }) {
+  public async create({ key, blob }: { key: string; blob: ArrayBuffer }) {
     if (!GlobalWorkerOptions.workerPort) {
       // 一个 worker 与一个 PDFWorker 一一对应
       // 多个 loadingTask（及其对应的 document） 可共用同一个 PDFWorker
@@ -17,7 +17,7 @@ export default class DocumentFactory {
       GlobalWorkerOptions.workerPort = new PdfJsWorker(); // 这里创建的是一个 worker，而非 PDFWorker
     }
 
-    const task = (this.loadingTasksMap[noteId] ||= {
+    const task = (this.loadingTasksMap[key] ||= {
       task: getDocument({
         data: blob.slice(0),
         cMapUrl: import.meta.env.VITE_WEB_PLATFORM === 'electron' ? getStaticUrl('cmaps/') : '',
@@ -32,18 +32,15 @@ export default class DocumentFactory {
   }
 
   @action
-  public revoke(noteId: NoteVO['id']) {
-    const task = this.loadingTasksMap[noteId];
+  public revoke(key: string) {
+    const task = this.loadingTasksMap[key];
 
-    if (!task) {
-      return;
-    }
-
+    assert(task);
     task.activeCount -= 1;
 
     if (task.activeCount === 0) {
       task.task.destroy();
-      delete this.loadingTasksMap[noteId];
+      delete this.loadingTasksMap[key];
     }
 
     if (isEmpty(this.loadingTasksMap)) {

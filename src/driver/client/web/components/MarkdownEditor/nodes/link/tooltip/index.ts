@@ -53,6 +53,7 @@ export default $prose((ctx) => {
       onClose: hide.bind(null, true),
       onEnter: hideDelay.cancel,
       targetDom,
+      ctx,
       mousePosition: { x: e.clientX, y: e.clientY },
     };
 
@@ -62,7 +63,6 @@ export default $prose((ctx) => {
       dispose = render(
         () =>
           createComponent(ExternalLinkView, {
-            ctx,
             onModeChange: (v) => (mode = v),
             ...props,
           }),

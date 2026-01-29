@@ -7,7 +7,7 @@ import container from '#utils/singletonContainer';
 import { MimeTypes } from '#domain/shared/model/file';
 
 import BaseEditor from '../BaseEditor';
-import DocumentFactory from './DocumentFactory';
+import PDFDocumentFactory from '../../../base/PDFDocumentFactory';
 import PageTextManager from './PageTextManager';
 import TextFinder, { optionsSchema as textFinderSchema } from './TextFinder';
 import BodyEditor, { schema as bodyEditorSchema } from './BodyEditor';
@@ -25,7 +25,7 @@ export enum Panel {
 
 const uiStateSchema = z
   .object({
-    progress: z.unknown().optional().catch(undefined), // 当前浏览的进度。通常是一个 pdf hash
+    progress: z.string().optional().catch(undefined), // 当前浏览的进度。通常是一个 pdf hash
     panels: z
       .object({
         [Panel.Body]: bodyEditorSchema.optional().catch(undefined),
@@ -48,7 +48,7 @@ export default class PdfEditor extends BaseEditor {
     this.initUIState();
   }
 
-  private readonly docFactory = container.resolve(DocumentFactory);
+  private readonly docFactory = container.resolve(PDFDocumentFactory);
 
   public readonly texts = new PageTextManager(this.noteId);
 
@@ -66,7 +66,7 @@ export default class PdfEditor extends BaseEditor {
 
   public override readonly mimeType = MimeTypes.PDF;
 
-  @observable public accessor progress: unknown | undefined;
+  @observable public accessor progress: string | undefined;
 
   @observable public accessor annotationColor = 'yellow';
 
@@ -81,7 +81,7 @@ export default class PdfEditor extends BaseEditor {
     assert(this.blob.result.data);
 
     const doc = await this.docFactory.create({
-      noteId: this.noteId,
+      key: this.noteId,
       blob: this.blob.result.data,
     });
 

@@ -43,7 +43,7 @@ export const multimediaNodeSchema = imageSchema.extendSchema((imageSchema) => {
           },
         },
         {
-          tag: `span[data-${DATA_TYPE}"]`,
+          tag: `span[data-${DATA_TYPE}]`,
           getAttrs: (dom) => {
             return omit(dom.dataset, ['type']);
           },
