@@ -36,7 +36,9 @@ export default function PDFPreviewer(props: { title: string; id: string }) {
 
   return (
     <>
-      <Show when={doc()}>{(doc) => <PDFViewer doc={doc()} />}</Show>
+      <Show when={doc()}>
+        {(doc) => <PDFViewer doc={doc()} containerClassName="w-64 h-64 overflow-auto" initialScale="page-fit" />}
+      </Show>
     </>
   );
 }

@@ -43,7 +43,7 @@ export default function Tooltip(props: {
   onClose: () => void;
   onEnter?: () => void;
   onLeave?: () => void;
-  onModeChange?: (mode: Mode) => void;
+  onFixedChange?: (isFixed: boolean) => void;
 }) {
   const initialHref = props.targetDom instanceof HTMLAnchorElement ? props.targetDom.href : '';
   const editor = props.ctx.get(editorCtx);
@@ -144,7 +144,7 @@ export default function Tooltip(props: {
   }
 
   createEffect(() => {
-    props.onModeChange?.(mode());
+    props.onFixedChange?.(mode() === Mode.Edit);
 
     if (mode() === Mode.Edit || mode() === Mode.Add) {
       requestAnimationFrame(() => {

@@ -17,6 +17,7 @@ export default function PDFViewer(props: { containerClassName?: string; viewClas
       view: viewRef,
       doc: props.doc,
       initialProgress: props.initialProgress,
+      initialScale: props.initialScale,
       onProgressUpdated: props.onProgressUpdated,
     });
 

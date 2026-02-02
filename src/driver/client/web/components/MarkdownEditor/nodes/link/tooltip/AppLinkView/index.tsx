@@ -1,18 +1,18 @@
 import { RouteTypes, type parseAppUrl } from '#domain/shared/infra/url';
 import { createMemo, createSignal, Match, Switch } from 'solid-js';
 import { createQuery } from 'mobx-tanstack-query/preset';
+import { inline } from '@floating-ui/dom';
+import type { Ctx } from '@milkdown/kit/ctx';
 
 import container from '#utils/singletonContainer';
 import { normalizeTitle, type NoteVO } from '#domain/shared/model/note';
 import type { MemoVO } from '#domain/shared/model/memo';
 import { MimeTypes } from '#domain/shared/model/file';
 import { token as remoteToken } from '#domain/client/shared/infra/rpc';
-
-import PDFPreviewer from './PDFPreviewer';
 import { useMilkdownEvent } from '#web/components/MarkdownEditor/shared/prosemirrorUtils';
 import { useTooltip } from '#web/components/MarkdownEditor/shared/useTooltip';
-import { inline } from '@floating-ui/dom';
-import type { Ctx } from '@milkdown/kit/ctx';
+
+import PDFPreviewer from './PDFPreviewer';
 
 export default function AppLinkView(props: {
   appUrl: NonNullable<ReturnType<typeof parseAppUrl>>;
@@ -22,6 +22,7 @@ export default function AppLinkView(props: {
   onLeave: () => void;
   onEnter: () => void;
   onClose: () => void;
+  onFixedChange?: (isFixed: boolean) => void;
 }) {
   const remote = container.resolve(remoteToken);
   const [isFixed, setIsFixed] = createSignal(false);
@@ -58,29 +59,28 @@ export default function AppLinkView(props: {
     middleware: [props.mousePosition && inline(props.mousePosition)],
   });
 
-  function onClose() {
-    if (!isFixed()) {
-      props.onClose();
-    }
-  }
-
   function onLeave() {
     if (!isFixed()) {
       props.onLeave();
     }
   }
 
+  function toggleFix() {
+    setIsFixed(!isFixed());
+    props.onFixedChange?.(isFixed());
+  }
+
   useMilkdownEvent({
     event: 'selectionUpdated',
     ctx: props.ctx,
-    fn: onClose,
+    fn: () => !isFixed() && props.onClose(),
   });
 
   return (
-    <div ref={setTooltipEl} onMouseLeave={onLeave} onMouseEnter={props.onEnter} onFocusOut={props.onLeave}>
+    <div ref={setTooltipEl} onMouseLeave={onLeave} onMouseEnter={props.onEnter} onFocusOut={onLeave}>
       <div class="flex justify-around">
         <h2>{title()}</h2>
-        <button onClick={() => setIsFixed(!isFixed())}>固定</button>
+        <button onClick={toggleFix}>固定</button>
       </div>
       <Switch>
         <Match when={mimeType() === MimeTypes.PDF}>

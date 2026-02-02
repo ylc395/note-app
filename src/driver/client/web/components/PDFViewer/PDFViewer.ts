@@ -10,6 +10,7 @@ import {
 export interface Options {
   doc: PDFDocumentProxy;
   initialProgress?: string; // hash
+  initialScale?: string;
   onProgressUpdated?: () => void;
 }
 
@@ -80,6 +81,10 @@ export default class PDFViewer {
           }
         })
         .then(() => {
+          if (this.options.initialScale) {
+            pdfViewer.currentScaleValue = this.options.initialScale;
+          }
+
           pdfViewer.update();
         });
     });

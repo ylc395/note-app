@@ -6,17 +6,17 @@ import { createComponent } from 'solid-js';
 
 import shell from '#web/infra/shell';
 import { parseAppUrl } from '#domain/shared/infra/url';
-import ExternalLinkView, { Mode } from './ExternalLinkView';
+import ExternalLinkView from './ExternalLinkView';
 import AppLinkView from './AppLinkView';
 
 export default $prose((ctx) => {
   let dispose: (() => void) | undefined;
   let tooltipRoot: HTMLElement | undefined;
-  let mode: Mode | undefined;
+  let isTooltipFixed = false;
   let targetDom: HTMLAnchorElement | undefined;
 
   function hide(forced = false) {
-    if (mode === Mode.Edit && !forced) {
+    if (isTooltipFixed && !forced) {
       return false;
     }
 
@@ -25,7 +25,7 @@ export default $prose((ctx) => {
     tooltipRoot = undefined;
     dispose = undefined;
     targetDom = undefined;
-    mode = undefined;
+    isTooltipFixed = false;
     return true;
   }
 
@@ -55,19 +55,13 @@ export default $prose((ctx) => {
       targetDom,
       ctx,
       mousePosition: { x: e.clientX, y: e.clientY },
+      onFixedChange: (isFixed: boolean) => (isTooltipFixed = isFixed),
     };
 
     if (appUrl) {
       dispose = render(() => createComponent(AppLinkView, { appUrl, ...props }), tooltipRoot);
     } else {
-      dispose = render(
-        () =>
-          createComponent(ExternalLinkView, {
-            onModeChange: (v) => (mode = v),
-            ...props,
-          }),
-        tooltipRoot,
-      );
+      dispose = render(() => createComponent(ExternalLinkView, props), tooltipRoot);
     }
 
     shell.appRoot.append(tooltipRoot);
