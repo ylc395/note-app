@@ -1,11 +1,18 @@
 import clsx from 'clsx';
-import { onCleanup, onMount } from 'solid-js';
+import { onCleanup, onMount, type JSX } from 'solid-js';
 import assert from 'assert';
 
-import PDFViewerModel, { type Options } from './PDFViewer';
+import PDFViewerModel, { type Options } from './PDFViewerModel';
 import './style.css';
 
-export default function PDFViewer(props: { containerClassName?: string; viewClassName?: string } & Options) {
+export default function PDFViewer(
+  props: {
+    containerClassName?: string;
+    viewClassName?: string;
+    children?: JSX.Element;
+    onReady?: (pdfViewer: PDFViewerModel) => void;
+  } & Options,
+) {
   let containerRef: HTMLDivElement | undefined;
   let viewRef: HTMLDivElement | undefined;
 
@@ -21,6 +28,8 @@ export default function PDFViewer(props: { containerClassName?: string; viewClas
       onProgressUpdated: props.onProgressUpdated,
     });
 
+    props.onReady?.(pdfViewer);
+
     onCleanup(() => {
       pdfViewer.destroy();
     });
@@ -35,6 +44,7 @@ export default function PDFViewer(props: { containerClassName?: string; viewClas
       )}
     >
       <div ref={viewRef} class={props.viewClassName}></div>
+      {props.children}
     </div>
   );
 }

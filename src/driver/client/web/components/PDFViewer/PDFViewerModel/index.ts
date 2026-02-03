@@ -4,14 +4,29 @@ import {
   LinkTarget,
   PDFFindController,
   PDFLinkService,
-  PDFViewer as _PDFViewer,
+  PDFViewer as BasePDFViewer,
+  ScrollMode,
+  SpreadMode,
 } from 'pdfjs-dist/web/pdf_viewer.mjs';
+import PDFHistory from './PDFHistory';
 
 export interface Options {
   doc: PDFDocumentProxy;
   initialProgress?: string; // hash
   initialScale?: string;
   onProgressUpdated?: () => void;
+}
+
+function isValidRotation(angle: unknown): angle is number {
+  return Number.isInteger(angle) && (angle as number) % 90 === 0;
+}
+
+function isValidScrollMode(mode: unknown): mode is number {
+  return Number.isInteger(mode) && Object.values(ScrollMode).includes(mode as number) && mode !== ScrollMode.UNKNOWN;
+}
+
+function isValidSpreadMode(mode: unknown): mode is number {
+  return Number.isInteger(mode) && Object.values(SpreadMode).includes(mode as number) && mode !== SpreadMode.UNKNOWN;
 }
 
 export default class PDFViewer {
@@ -24,7 +39,9 @@ export default class PDFViewer {
     this.viewer = this.init();
   }
 
-  private readonly viewer: _PDFViewer;
+  private readonly viewer: BasePDFViewer;
+
+  private history?: PDFHistory;
 
   private readonly abortController = new AbortController();
 
@@ -41,7 +58,7 @@ export default class PDFViewer {
       eventBus,
     });
 
-    const pdfViewer = new _PDFViewer({
+    const pdfViewer = new BasePDFViewer({
       container: this.options.container,
       viewer: this.options.view,
       linkService,
@@ -49,6 +66,9 @@ export default class PDFViewer {
       findController,
       annotationEditorMode: AnnotationEditorType.DISABLE, // annotationEditor 是什么不太清楚，不过这个东西如果启用，会和我们 App 的拖拽功能起冲突。先给它禁用了
     });
+
+    this.history = new PDFHistory({ linkService, eventBus });
+    linkService.setHistory(this.history);
 
     const pdfDocument = this.options.doc;
 
@@ -69,22 +89,28 @@ export default class PDFViewer {
     pdfViewer.firstPagePromise.then(() => {
       Promise.all([pageLayoutPromise, pageModePromise, openActionPromise, new Promise(requestAnimationFrame)])
         .then(async () => {
-          if (!this.options.initialProgress) {
+          this.history!.initialize({
+            fingerprint: pdfDocument.fingerprints[0]!,
+            resetHistory: true,
+          });
+
+          const hash = this.options.initialProgress || 'zoom=page-fit';
+          this.setInitialView(hash);
+
+          await Promise.race([
+            this.viewer.pagesPromise,
+            new Promise((resolve) => {
+              setTimeout(resolve, 1000);
+            }),
+          ]);
+
+          if (pdfViewer.hasEqualPageSizes) {
             return;
           }
 
-          linkService.setHash(this.options.initialProgress);
-          await pdfViewer.pagesPromise;
-
-          if (pdfViewer.hasEqualPageSizes) {
-            linkService.setHash(this.options.initialProgress);
-          }
+          this.setInitialView(hash);
         })
         .then(() => {
-          if (this.options.initialScale) {
-            pdfViewer.currentScaleValue = this.options.initialScale;
-          }
-
           pdfViewer.update();
         });
     });
@@ -106,6 +132,37 @@ export default class PDFViewer {
     return pdfViewer;
   }
 
+  private setInitialView(
+    storedHash: string,
+    { rotation, scrollMode, spreadMode }: { rotation?: unknown; scrollMode?: unknown; spreadMode?: unknown } = {},
+  ) {
+    const setRotation = (angle: unknown) => {
+      if (isValidRotation(angle)) {
+        this.viewer.pagesRotation = angle;
+      }
+    };
+    const setViewerModes = (scroll: unknown, spread: unknown) => {
+      if (isValidScrollMode(scroll)) {
+        this.viewer.scrollMode = scroll;
+      }
+      if (isValidSpreadMode(spread)) {
+        this.viewer.spreadMode = spread;
+      }
+    };
+
+    setViewerModes(scrollMode, spreadMode);
+
+    if (storedHash) {
+      setRotation(rotation);
+
+      this.viewer.linkService.setHash(storedHash);
+    }
+
+    if (!this.viewer.currentScaleValue) {
+      this.viewer.currentScaleValue = this.options.initialScale ?? 'auto';
+    }
+  }
+
   private onResize() {
     const currentScaleValue = this.viewer.currentScaleValue;
     if (currentScaleValue === 'auto' || currentScaleValue === 'page-fit' || currentScaleValue === 'page-width') {
@@ -115,9 +172,9 @@ export default class PDFViewer {
     this.viewer.update();
   }
 
-  public cleanup() {
+  public destroy() {
     this.viewer.cleanup();
+    this.history?.reset();
+    this.abortController.abort();
   }
-
-  public destroy() {}
 }
