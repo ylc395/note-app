@@ -1,15 +1,17 @@
 import { createQuery } from 'mobx-tanstack-query/preset';
+import { createEffect, onCleanup } from 'solid-js';
 
-import PDFViewer from '#web/components/PDFViewer';
 import container from '#utils/singletonContainer';
 import PDFDocumentFactory from '#domain/client/app/model/base/PDFDocumentFactory';
 import { token as remoteToken } from '#domain/client/shared/infra/rpc';
-import { createEffect, createSignal, onCleanup, Show } from 'solid-js';
-import type { PDFDocumentProxy } from 'pdfjs-dist';
+import PDFViewer from '#web/infra/PDFViewer';
 
 export default function PDFPreviewer(props: { title: string; id: string }) {
   const remote = container.resolve(remoteToken);
   const factory = container.resolve(PDFDocumentFactory);
+  let containerRef: HTMLDivElement | undefined;
+  let viewRef: HTMLDivElement | undefined;
+  let pdfViewer: PDFViewer | undefined;
 
   const file = createQuery(
     ({ signal, queryKey: [_, id] }) => {
@@ -20,25 +22,36 @@ export default function PDFPreviewer(props: { title: string; id: string }) {
     },
   );
 
-  const [doc, setDoc] = createSignal<PDFDocumentProxy>();
-
   createEffect(() => {
-    if (!file.data) {
+    if (!file.data || !containerRef || !viewRef || pdfViewer) {
       return;
     }
 
-    factory.create({ key: props.id, blob: file.data as ArrayBuffer }).then(setDoc);
+    factory.create({ key: props.id, blob: file.data as ArrayBuffer }).then((doc) => {
+      pdfViewer = new PDFViewer({
+        container: containerRef,
+        view: viewRef,
+        doc,
+        initialScale: 'page-fit',
+        disableTextLayer: true,
+      });
+    });
 
     onCleanup(() => {
       factory.revoke(props.id);
     });
   });
 
+  onCleanup(() => {
+    pdfViewer?.destroy();
+  });
+
   return (
-    <>
-      <Show when={doc()}>
-        {(doc) => <PDFViewer doc={doc()} containerClassName="w-64 h-64 overflow-auto" initialScale="page-fit" />}
-      </Show>
-    </>
+    <div
+      ref={containerRef}
+      class=" bg-red-100 w-64 h-64 overflow-auto absolute pdfViewer" // pdfViewer 这个类名来自 pdf_viewer.css
+    >
+      <div ref={viewRef}></div>
+    </div>
   );
 }

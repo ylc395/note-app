@@ -8,12 +8,15 @@ import {
   ScrollMode,
   SpreadMode,
 } from 'pdfjs-dist/web/pdf_viewer.mjs';
+
 import PDFHistory from './PDFHistory';
+import './style.css';
 
 export interface Options {
   doc: PDFDocumentProxy;
   initialProgress?: string; // hash
   initialScale?: string;
+  disableTextLayer?: boolean;
   onProgressUpdated?: () => void;
 }
 
@@ -64,6 +67,7 @@ export default class PDFViewer {
       linkService,
       eventBus,
       findController,
+      textLayerMode: this.options.disableTextLayer ? 0 : 1,
       annotationEditorMode: AnnotationEditorType.DISABLE, // annotationEditor 是什么不太清楚，不过这个东西如果启用，会和我们 App 的拖拽功能起冲突。先给它禁用了
     });
 
@@ -94,7 +98,7 @@ export default class PDFViewer {
             resetHistory: true,
           });
 
-          const hash = this.options.initialProgress || 'zoom=page-fit';
+          const hash = this.options.initialProgress || `zoom=${this.options.initialScale ?? 'auto'}`;
           this.setInitialView(hash);
 
           await Promise.race([
@@ -115,6 +119,8 @@ export default class PDFViewer {
         });
     });
 
+    this.initPageLabels();
+
     eventBus._on(
       'resize',
       this.onResize.bind(this),
@@ -130,6 +136,36 @@ export default class PDFViewer {
     );
 
     return pdfViewer;
+  }
+
+  private async initPageLabels() {
+    const labels = await this.options.doc.getPageLabels();
+
+    if (!labels) {
+      return;
+    }
+
+    const numLabels = labels.length;
+
+    let standardLabels = 0;
+    let emptyLabels = 0;
+
+    for (let i = 0; i < numLabels; i++) {
+      const label = labels[i];
+      if (label === (i + 1).toString()) {
+        standardLabels++;
+      } else if (label === '') {
+        emptyLabels++;
+      } else {
+        break;
+      }
+    }
+
+    if (standardLabels >= numLabels || emptyLabels >= numLabels) {
+      return;
+    }
+
+    this.viewer.setPageLabels(labels);
   }
 
   private setInitialView(
