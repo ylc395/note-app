@@ -14,9 +14,12 @@ import { listener, listenerCtx, type ListenerManager } from '@milkdown/kit/plugi
 import { replaceAll } from '@milkdown/kit/utils';
 import { upload, uploadConfig } from '@milkdown/kit/plugin/upload';
 
+import type { AppUrlParams } from '#domain/shared/infra/url';
+
 import multimedia from './nodes/multimedia';
 import link from './nodes/link';
 import topic from './nodes/topic';
+import todoListItem from './nodes/listItem';
 
 import inputUserExperience from './inputUserExperience';
 import placeholder from './placeholder';
@@ -25,8 +28,8 @@ import selectionTooltip from './selectionTooltip';
 import slashMenu from './slashMenu';
 import cursor from './cursor';
 import selectionHighlight from './selectionHighlight';
-import todoListItem from './nodes/listItem';
 import './index.css';
+import { customCtx } from './customCtx';
 
 /** 一些关于 milkdown 的知识
  *
@@ -62,7 +65,7 @@ export default class Editor {
       .use(multimedia) // 把图片节点转化成能展示各种文件的“多媒体节点”
       .use(inputUserExperience) // 改善一些输入时的用户体验
       .use(placeholder) // 在某些块级文本为空时给出一些提示
-      .use(link) // 为超链接设计的 tooltip
+      .use(link)
       .use(todoListItem)
       .use(topic)
       .use(selectionTooltip)
@@ -73,6 +76,7 @@ export default class Editor {
       .use(cursor) // 这个必须放在 upload 之后，否则 upload 插件无法处理 drop 事件了
       .use(listener)
       .config((ctx) => {
+        ctx.inject(customCtx, { onJump: this.jump.bind(this) });
         ctx.set(rootCtx, props.root);
         ctx.set(defaultValueCtx, props.defaultValue || '');
         ctx.set(editorViewOptionsCtx, { editable: () => !props.readonly });
@@ -124,5 +128,9 @@ export default class Editor {
 
   public init() {
     return this.core.create();
+  }
+
+  private jump(params: AppUrlParams) {
+    console.log(params);
   }
 }

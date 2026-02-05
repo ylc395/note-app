@@ -1,4 +1,4 @@
-import { Show, createMemo, Switch, Match, createSignal } from 'solid-js';
+import { Show, createMemo, Switch, Match } from 'solid-js';
 import clsx from 'clsx';
 import { FileIcon } from 'lucide-solid';
 import z from 'zod';
@@ -9,7 +9,6 @@ import { editorViewCtx } from '@milkdown/kit/core';
 import container from '#utils/singletonContainer';
 import { token } from '#domain/client/shared/infra/rpc';
 import { parseAppUrl } from '#domain/shared/infra/url';
-import { useMilkdownEvent } from '#web/components/MarkdownEditor/shared/prosemirrorUtils';
 
 import useResizable from './useResizable';
 import FileCard from './FileCard';
@@ -35,7 +34,6 @@ const stripQuery = (url: string) => {
 export default function MultimediaView(props: Props) {
   const remote = container.resolve(token);
   const editorView = props.ctx.get(editorViewCtx);
-  const [isEditable, setIsEditable] = createSignal(editorView.editable);
 
   const attrs = createMemo(() =>
     z
@@ -77,14 +75,6 @@ export default function MultimediaView(props: Props) {
     }),
   });
 
-  useMilkdownEvent({
-    event: 'updated',
-    ctx: props.ctx,
-    fn: () => {
-      setIsEditable(editorView.editable);
-    },
-  });
-
   return (
     <>
       <div class={clsx('relative text-center', props.figure ? 'mx-auto' : 'inline-block')} style={containerStyle()}>
@@ -116,7 +106,7 @@ export default function MultimediaView(props: Props) {
             />
           </Match>
         </Switch>
-        <Show when={naturalSize() && isEditable()}>
+        <Show when={naturalSize() && editorView.editable}>
           <div
             class="absolute w-3 h-3 -top-1.5 -left-1.5 bg-white border-2 border-blue-500 rounded-full cursor-nw-resize hover:bg-blue-500 transition-colors z-10"
             onMouseDown={(e) => handleMouseDown(e, 'nw')}

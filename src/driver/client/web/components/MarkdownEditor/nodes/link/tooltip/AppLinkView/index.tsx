@@ -1,4 +1,4 @@
-import { RouteTypes, type parseAppUrl } from '#domain/shared/infra/url';
+import { RouteTypes, type AppUrlParams } from '#domain/shared/infra/url';
 import { createMemo, createSignal, Match, Switch } from 'solid-js';
 import { createQuery } from 'mobx-tanstack-query/preset';
 import { inline } from '@floating-ui/dom';
@@ -11,11 +11,13 @@ import { MimeTypes } from '#domain/shared/model/file';
 import { token as remoteToken } from '#domain/client/shared/infra/rpc';
 import { useMilkdownEvent } from '#web/components/MarkdownEditor/shared/prosemirrorUtils';
 import { useTooltip } from '#web/components/MarkdownEditor/shared/useTooltip';
+import { customCtx } from '#web/components/MarkdownEditor/customCtx';
 
 import PDFPreviewer from './PDFPreviewer';
+import MarkdownPreviewer from './MarkdownPreviewer';
 
 export default function AppLinkView(props: {
-  appUrl: NonNullable<ReturnType<typeof parseAppUrl>>;
+  appUrl: AppUrlParams;
   targetDom: HTMLAnchorElement;
   ctx: Ctx;
   mousePosition: { x: number; y: number };
@@ -43,6 +45,7 @@ export default function AppLinkView(props: {
   );
 
   const mimeType = createMemo(() => entity.data && 'mimeType' in entity.data && entity.data.mimeType);
+
   const title = createMemo(() => {
     if (!entity.data) {
       return '';
@@ -53,9 +56,14 @@ export default function AppLinkView(props: {
     }
   });
 
+  const body = createMemo(() => {
+    return entity.data?.body;
+  });
+
   const { setTooltipEl } = useTooltip({
     reference: props.targetDom,
     ctx: props.ctx,
+    placement: 'bottom',
     middleware: [props.mousePosition && inline(props.mousePosition)],
   });
 
@@ -70,6 +78,10 @@ export default function AppLinkView(props: {
     props.onFixedChange?.(isFixed());
   }
 
+  function jump() {
+    props.ctx.get(customCtx).onJump?.(props.appUrl);
+  }
+
   useMilkdownEvent({
     event: 'selectionUpdated',
     ctx: props.ctx,
@@ -79,12 +91,15 @@ export default function AppLinkView(props: {
   return (
     <div ref={setTooltipEl} onMouseLeave={onLeave} onMouseEnter={props.onEnter} onFocusOut={onLeave}>
       <div class="flex justify-around">
-        <h2>{title()}</h2>
+        <h2 onClick={jump}>{title()}</h2>
         <button onClick={toggleFix}>固定</button>
       </div>
       <Switch>
         <Match when={mimeType() === MimeTypes.PDF}>
           <PDFPreviewer id={entity.data!.id} title={(entity.data as NoteVO).title} />
+        </Match>
+        <Match when={typeof body() === 'string'}>
+          <MarkdownPreviewer body={body()!} onJump={props.ctx.get(customCtx).onJump} />
         </Match>
       </Switch>
     </div>

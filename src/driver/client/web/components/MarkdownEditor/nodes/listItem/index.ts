@@ -7,7 +7,7 @@ import { render } from 'solid-js/web';
 
 import View from './TogglerView';
 
-const listNodeView = $view(extendListItemSchemaForTask.node, (ctx): NodeViewConstructor => {
+export const listNodeView = $view(extendListItemSchemaForTask.node, (ctx): NodeViewConstructor => {
   return (initialNode, editorView, getNodePos) => {
     const dom = document.createElement('li');
     const containerDOM = document.createElement('div');

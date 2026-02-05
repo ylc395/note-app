@@ -46,6 +46,8 @@ export function parseUrl(url: string) {
   return parsed;
 }
 
+export type AppUrlParams = NonNullable<ReturnType<typeof parseAppUrl>>;
+
 export function parseAppUrl(url: string) {
   const parsed = parseUrl(url);
 
