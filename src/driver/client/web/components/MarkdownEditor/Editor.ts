@@ -14,8 +14,6 @@ import { listener, listenerCtx, type ListenerManager } from '@milkdown/kit/plugi
 import { replaceAll } from '@milkdown/kit/utils';
 import { upload, uploadConfig } from '@milkdown/kit/plugin/upload';
 
-import type { AppUrlParams } from '#domain/shared/infra/url';
-
 import multimedia from './nodes/multimedia';
 import link from './nodes/link';
 import topic from './nodes/topic';
@@ -29,7 +27,10 @@ import slashMenu from './slashMenu';
 import cursor from './cursor';
 import selectionHighlight from './selectionHighlight';
 import './index.css';
-import { customCtx } from './customCtx';
+import { customCtx, type CustomContext } from './customCtx';
+import singletonContainer from '#utils/singletonContainer';
+import Workbench from '#domain/client/app/model/Workbench';
+import { RouteTypes } from '#domain/shared/infra/url';
 
 /** 一些关于 milkdown 的知识
  *
@@ -130,7 +131,15 @@ export default class Editor {
     return this.core.create();
   }
 
-  private jump(params: AppUrlParams) {
-    console.log(params);
-  }
+  private readonly jump: NonNullable<CustomContext['onJump']> = ({ type, id, mimeType }) => {
+    const workbench = singletonContainer.resolve(Workbench);
+    console.log(mimeType);
+
+    if (type === RouteTypes.Note) {
+      workbench.open({
+        noteId: id,
+        mimeType: mimeType || null,
+      });
+    }
+  };
 }

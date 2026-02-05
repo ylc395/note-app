@@ -6,7 +6,7 @@ import PDFDocumentFactory from '#domain/client/app/model/base/PDFDocumentFactory
 import { token as remoteToken } from '#domain/client/shared/infra/rpc';
 import PDFViewer from '#web/infra/PDFViewer';
 
-export default function PDFPreviewer(props: { title: string; id: string }) {
+export default function PDFPreviewer(props: { id: string }) {
   const remote = container.resolve(remoteToken);
   const factory = container.resolve(PDFDocumentFactory);
   let containerRef: HTMLDivElement | undefined;

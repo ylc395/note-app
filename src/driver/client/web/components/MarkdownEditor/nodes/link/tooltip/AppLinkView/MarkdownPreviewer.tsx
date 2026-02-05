@@ -4,15 +4,14 @@ import { without } from 'lodash-es';
 import { commonmark, keymap as commonmarkKeymap } from '@milkdown/kit/preset/commonmark';
 import { gfm, keymap as gfmKeymap } from '@milkdown/kit/preset/gfm';
 
-import { customCtx } from '#web/components/MarkdownEditor/customCtx';
-import type { AppUrlParams } from '#domain/shared/infra/url';
+import { customCtx, type CustomContext } from '#web/components/MarkdownEditor/customCtx';
 
 import multimedia from '../../../multimedia';
 import topic from '../../../topic';
 import { listNodeView } from '../../../listItem';
 import { linkNodeView } from '../../nodeView';
 
-export default function MarkdownPreviewer(props: { body: string; onJump?: (params: AppUrlParams) => void }) {
+export default function MarkdownPreviewer(props: { body: string; onJump?: CustomContext['onJump'] }) {
   let rootRef: HTMLDivElement | undefined;
   let editor: MilkdownEditor | undefined;
 

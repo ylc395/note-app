@@ -5,7 +5,7 @@ import { when } from 'mobx';
 
 import container from '#utils/singletonContainer';
 import { token as remoteToken } from '#domain/client/shared/infra/rpc';
-import { parseAppUrl, RouteTypes } from '#domain/shared/infra/url';
+import { RouteTypes } from '#domain/shared/infra/url';
 import { token as documentDbToken } from '#domain/client/shared/infra/documentDb';
 import Icon from '#web/components/Icon';
 import { remoteIconStoreName } from '#domain/client/app/model/note/editor/BaseEditor';
@@ -13,7 +13,7 @@ import type { NoteVO } from '#domain/shared/model/note';
 
 type Icon = Partial<Pick<NoteVO, 'icon' | 'mimeType'>> & { type: RouteTypes };
 
-export function addIcon(linkDom: HTMLAnchorElement) {
+export function addIcon(linkDom: HTMLAnchorElement, localIcon?: Icon | null) {
   const remote = container.resolve(remoteToken);
   const db = container.resolve(documentDbToken);
   const url = linkDom.href;
@@ -21,15 +21,8 @@ export function addIcon(linkDom: HTMLAnchorElement) {
 
   const icon = createQuery<Icon | Blob | null>(
     async ({ signal }) => {
-      const parsed = parseAppUrl(url);
-
-      if (parsed) {
-        if (parsed.type === RouteTypes.Note) {
-          const note = await remote.note.queryOneById.query(parsed.id, { signal });
-          return { type: RouteTypes.Note, icon: note.icon, mimeType: note.mimeType } as const;
-        }
-
-        return { type: parsed.type };
+      if (localIcon) {
+        return localIcon;
       }
 
       const localResult = await db.getByKey(
@@ -58,7 +51,7 @@ export function addIcon(linkDom: HTMLAnchorElement) {
 
       return blob;
     },
-    { queryKey: ['remote-icon', { url }], abortSignal: abortController.signal },
+    { queryKey: ['link-icon', { url }], abortSignal: abortController.signal },
   );
 
   let blobUrl: string | undefined;
