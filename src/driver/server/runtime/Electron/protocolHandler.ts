@@ -1,12 +1,8 @@
-import { app, net } from 'electron';
-import { resolve } from 'node:path';
-import { match } from 'path-to-regexp';
+import type { MatchFunction } from 'path-to-regexp';
 
 import FileService from '#domain/server/service/FileService';
 import container from '#utils/singletonContainer';
-import { parseAppUrl, parseUrl, RouteTypes } from '#domain/shared/infra/url';
-
-const matchStatic = match('/static/*path', { decode: false });
+import { matcher, RouteTypes } from '#domain/shared/infra/url';
 
 async function queryFileBlob(id: string) {
   const fileService = container.resolve(FileService);
@@ -14,39 +10,21 @@ async function queryFileBlob(id: string) {
   return new Response(data);
 }
 
-async function loadStatic(p: string) {
-  const path = resolve(app.getAppPath(), '../../../../static', p);
-  return net.fetch(`file://${path}`);
-}
-
-function parseStaticUrl(url: string) {
-  const parsed = parseUrl(url);
-
-  if (!parsed) {
-    return;
-  }
-
-  const result = matchStatic(parsed.pathname);
-
-  if (result && typeof result.params.path === 'string') {
-    return result.params.path;
-  }
-
-  return null;
-}
+const routers: Array<{
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  matcher: MatchFunction<any>;
+  handler: (params: { params: Record<string, string>; query: URLSearchParams }) => Promise<Response>;
+}> = [{ matcher: matcher[RouteTypes.File], handler: ({ params: { id } }) => queryFileBlob(id!) }];
 
 export default function protocolHandler(req: Request) {
-  const staticPath = parseStaticUrl(req.url);
+  const { pathname, searchParams } = new URL(req.url);
 
-  if (staticPath) {
-    return loadStatic(staticPath);
-  }
+  for (const { matcher, handler } of routers) {
+    const matched = matcher(pathname);
 
-  const match = parseAppUrl(req.url);
-
-  if (match?.type === RouteTypes.File) {
-    // 只有 file 会被网络请求的形式获取（例如 iconPicker 中获取自定义图标）
-    return queryFileBlob(match.id);
+    if (matched) {
+      return handler({ params: matched.params, query: searchParams });
+    }
   }
 
   return new Response(null, { status: 404 });

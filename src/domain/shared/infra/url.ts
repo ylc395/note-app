@@ -20,7 +20,7 @@ const routes = {
   [RouteTypes.Annotation]: '/annotations/:id',
 };
 
-const matcher = mapValues(routes, (v) => match(v, { decode: false }));
+export const matcher = mapValues(routes, (v) => match(v, { decode: false }));
 
 const generator = mapValues(routes, (v) => compile(v, { encode: false }));
 
@@ -28,11 +28,9 @@ export function getAppUrl(type: keyof typeof generator, id: string) {
   return `${PROTOCOL}://${HOST_NAME}${generator[type]({ id })}`;
 }
 
-export function getStaticUrl(path: string) {
-  return `${PROTOCOL}://${HOST_NAME}/static/${path}`;
-}
+export type AppUrlParams = NonNullable<ReturnType<typeof parseAppUrl>>;
 
-export function parseUrl(url: string) {
+export function parseAppUrl(url: string) {
   if (!URL.canParse(url)) {
     return null;
   }
@@ -40,18 +38,6 @@ export function parseUrl(url: string) {
   const parsed = new URL(url);
 
   if (parsed.protocol !== `${PROTOCOL}:` || parsed.hostname !== HOST_NAME) {
-    return null;
-  }
-
-  return parsed;
-}
-
-export type AppUrlParams = NonNullable<ReturnType<typeof parseAppUrl>>;
-
-export function parseAppUrl(url: string) {
-  const parsed = parseUrl(url);
-
-  if (!parsed) {
     return null;
   }
 

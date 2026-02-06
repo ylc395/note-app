@@ -16,6 +16,7 @@ export default async function createViteServer() {
     configFile: false,
     clearScreen: false,
     root: path.resolve('./src/driver/client/web'),
+    publicDir: path.resolve('./dist/static'),
     esbuild: { target: 'es2023' }, // 用了 ES Decorator，编译到 ESNext 浏览器还不支持
     plugins: [
       solid(),

@@ -23,16 +23,16 @@ export const linkNodeView = $view(linkSchema.mark, (ctx) => {
     dom.href = sanitizeUrl(mark.attrs.href);
 
     const abortController = new AbortController();
-    const parsed = parseAppUrl(dom.href);
+    const appUrl = parseAppUrl(dom.href);
 
     const entity = createQuery(
       async () => {
-        if (!parsed) {
+        if (!appUrl) {
           return null;
         }
 
-        if (parsed.type === RouteTypes.Note) {
-          const note = await remote.note.queryOneById.query(parsed.id);
+        if (appUrl.type === RouteTypes.Note) {
+          const note = await remote.note.queryOneById.query(appUrl.id);
 
           return {
             type: RouteTypes.Note,
@@ -41,7 +41,7 @@ export const linkNodeView = $view(linkSchema.mark, (ctx) => {
           };
         }
 
-        return { type: parsed.type };
+        return { type: appUrl.type };
       },
       { queryKey: ['link', dom.href], abortSignal: abortController.signal },
     );
@@ -52,11 +52,11 @@ export const linkNodeView = $view(linkSchema.mark, (ctx) => {
         (e) => {
           e.preventDefault();
 
-          if (!parsed) {
+          if (!appUrl) {
             shell.openNewWindow(dom.href);
           } else if (entity.data) {
             ctx.get(customCtx).onJump?.({
-              ...parsed,
+              ...appUrl,
               mimeType: entity.data.mimeType,
             });
           }
@@ -64,7 +64,7 @@ export const linkNodeView = $view(linkSchema.mark, (ctx) => {
         { signal: abortController.signal },
       );
 
-      if (!parsed) {
+      if (!appUrl) {
         dom.title = dom.href;
       }
     }
