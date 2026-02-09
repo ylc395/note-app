@@ -103,19 +103,6 @@ export default class PDFViewer {
             return;
           }
 
-          this.setInitialView(hash, { scale: options.initialScale });
-
-          await Promise.race([
-            pdfViewer.pagesPromise,
-            new Promise((resolve) => {
-              setTimeout(resolve, 1000);
-            }),
-          ]);
-
-          if (pdfViewer.hasEqualPageSizes) {
-            return;
-          }
-
           this.setInitialView(hash);
         })
         .then(() => {

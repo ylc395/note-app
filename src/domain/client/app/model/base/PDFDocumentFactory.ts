@@ -5,6 +5,7 @@ import PdfJsWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?worker';
 import assert from 'assert';
 
 import { IS_DEV } from '#domain/shared/infra/env';
+import { getAppUrl, RouteTypes } from '#domain/shared/infra/url';
 
 export default class PDFDocumentFactory {
   private readonly loadingTasksMap: Record<string, { activeCount: number; task: PDFDocumentLoadingTask }> = {};
@@ -20,7 +21,7 @@ export default class PDFDocumentFactory {
     const task = (this.loadingTasksMap[key] ||= {
       task: getDocument({
         data: blob.slice(0),
-        cMapUrl: IS_DEV ? '/cmaps/' : '',
+        cMapUrl: IS_DEV ? '/cmaps/' : getAppUrl(RouteTypes.Static, 'cmaps/'),
       }),
       activeCount: 0,
     });

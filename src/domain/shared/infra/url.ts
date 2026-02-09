@@ -11,6 +11,7 @@ export enum RouteTypes {
   Note = 'note',
   Memo = 'memo',
   Annotation = 'annotation',
+  Static = 'static',
 }
 
 const routes = {
@@ -18,6 +19,7 @@ const routes = {
   [RouteTypes.Note]: '/notes/:id',
   [RouteTypes.Memo]: '/memos/:id',
   [RouteTypes.Annotation]: '/annotations/:id',
+  [RouteTypes.Static]: '/static/*path',
 };
 
 export const matcher = mapValues(routes, (v) => match(v, { decode: false }));
