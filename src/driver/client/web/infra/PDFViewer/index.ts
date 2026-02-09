@@ -8,16 +8,18 @@ import {
   ScrollMode,
   SpreadMode,
 } from 'pdfjs-dist/web/pdf_viewer.mjs';
+import assert from 'assert';
 
 import PDFHistory from './PDFHistory';
 import './style.css';
 
-export interface Options {
-  doc: PDFDocumentProxy;
+interface Options {
   initialProgress?: string; // hash
   initialScale?: string;
   disableTextLayer?: boolean;
   onProgressUpdated?: () => void;
+  view: HTMLDivElement;
+  container: HTMLDivElement;
 }
 
 function isValidRotation(angle: unknown): angle is number {
@@ -33,22 +35,13 @@ function isValidSpreadMode(mode: unknown): mode is number {
 }
 
 export default class PDFViewer {
-  constructor(
-    private readonly options: Options & {
-      view: HTMLDivElement;
-      container: HTMLDivElement;
-    },
-  ) {
-    this.viewer = this.init();
-  }
-
-  private readonly viewer: BasePDFViewer;
+  private viewer?: BasePDFViewer;
 
   private history?: PDFHistory;
 
   private readonly abortController = new AbortController();
 
-  private init() {
+  public init(doc: PDFDocumentProxy, options: Options) {
     const eventBus = new EventBus();
 
     const linkService = new PDFLinkService({
@@ -62,31 +55,29 @@ export default class PDFViewer {
     });
 
     const pdfViewer = new BasePDFViewer({
-      container: this.options.container,
-      viewer: this.options.view,
+      container: options.container,
+      viewer: options.view,
       linkService,
       eventBus,
       findController,
-      textLayerMode: this.options.disableTextLayer ? 0 : 1,
+      textLayerMode: options.disableTextLayer ? 0 : 1,
       annotationEditorMode: AnnotationEditorType.DISABLE, // annotationEditor 是什么不太清楚，不过这个东西如果启用，会和我们 App 的拖拽功能起冲突。先给它禁用了
     });
 
     this.history = new PDFHistory({ linkService, eventBus });
     linkService.setHistory(this.history);
 
-    const pdfDocument = this.options.doc;
-
     linkService.setViewer(pdfViewer);
-    linkService.setDocument(pdfDocument);
-    pdfViewer.setDocument(pdfDocument);
+    linkService.setDocument(doc);
+    pdfViewer.setDocument(doc);
 
-    const pageLayoutPromise = pdfDocument.getPageLayout().catch(() => {
+    const pageLayoutPromise = doc.getPageLayout().catch(() => {
       /* Avoid breaking initial rendering; ignoring errors. */
     });
-    const pageModePromise = pdfDocument.getPageMode().catch(() => {
+    const pageModePromise = doc.getPageMode().catch(() => {
       /* Avoid breaking initial rendering; ignoring errors. */
     });
-    const openActionPromise = pdfDocument.getOpenAction().catch(() => {
+    const openActionPromise = doc.getOpenAction().catch(() => {
       /* Avoid breaking initial rendering; ignoring errors. */
     });
 
@@ -94,15 +85,28 @@ export default class PDFViewer {
       Promise.all([pageLayoutPromise, pageModePromise, openActionPromise, new Promise(requestAnimationFrame)])
         .then(async () => {
           this.history!.initialize({
-            fingerprint: pdfDocument.fingerprints[0]!,
+            fingerprint: doc.fingerprints[0]!,
             resetHistory: true,
           });
 
-          const hash = this.options.initialProgress || `zoom=${this.options.initialScale ?? 'auto'}`;
-          this.setInitialView(hash);
+          const hash = options.initialProgress || `zoom=${options.initialScale ?? 'auto'}`;
+          this.setInitialView(hash, { scale: options.initialScale });
 
           await Promise.race([
-            this.viewer.pagesPromise,
+            pdfViewer.pagesPromise,
+            new Promise((resolve) => {
+              setTimeout(resolve, 1000);
+            }),
+          ]);
+
+          if (pdfViewer.hasEqualPageSizes) {
+            return;
+          }
+
+          this.setInitialView(hash, { scale: options.initialScale });
+
+          await Promise.race([
+            pdfViewer.pagesPromise,
             new Promise((resolve) => {
               setTimeout(resolve, 1000);
             }),
@@ -119,8 +123,6 @@ export default class PDFViewer {
         });
     });
 
-    this.initPageLabels();
-
     eventBus._on(
       'resize',
       this.onResize.bind(this),
@@ -135,11 +137,13 @@ export default class PDFViewer {
       { signal: this.abortController.signal },
     );
 
-    return pdfViewer;
+    this.viewer = pdfViewer;
+    this.initPageLabels();
   }
 
   private async initPageLabels() {
-    const labels = await this.options.doc.getPageLabels();
+    assert(this.viewer);
+    const labels = await this.viewer.pdfDocument?.getPageLabels();
 
     if (!labels) {
       return;
@@ -170,19 +174,27 @@ export default class PDFViewer {
 
   private setInitialView(
     storedHash: string,
-    { rotation, scrollMode, spreadMode }: { rotation?: unknown; scrollMode?: unknown; spreadMode?: unknown } = {},
+    {
+      rotation,
+      scrollMode,
+      spreadMode,
+      scale,
+    }: { scale?: string; rotation?: unknown; scrollMode?: unknown; spreadMode?: unknown } = {},
   ) {
+    const viewer = this.viewer;
+    assert(viewer);
+
     const setRotation = (angle: unknown) => {
       if (isValidRotation(angle)) {
-        this.viewer.pagesRotation = angle;
+        viewer.pagesRotation = angle;
       }
     };
     const setViewerModes = (scroll: unknown, spread: unknown) => {
       if (isValidScrollMode(scroll)) {
-        this.viewer.scrollMode = scroll;
+        viewer.scrollMode = scroll;
       }
       if (isValidSpreadMode(spread)) {
-        this.viewer.spreadMode = spread;
+        viewer.spreadMode = spread;
       }
     };
 
@@ -191,15 +203,16 @@ export default class PDFViewer {
     if (storedHash) {
       setRotation(rotation);
 
-      this.viewer.linkService.setHash(storedHash);
+      viewer.linkService.setHash(storedHash);
     }
 
-    if (!this.viewer.currentScaleValue) {
-      this.viewer.currentScaleValue = this.options.initialScale ?? 'auto';
+    if (!viewer.currentScaleValue) {
+      viewer.currentScaleValue = scale ?? 'auto';
     }
   }
 
   private onResize() {
+    assert(this.viewer);
     const currentScaleValue = this.viewer.currentScaleValue;
     if (currentScaleValue === 'auto' || currentScaleValue === 'page-fit' || currentScaleValue === 'page-width') {
       // Note: the scale is constant for 'page-actual'.
@@ -209,7 +222,7 @@ export default class PDFViewer {
   }
 
   public destroy() {
-    this.viewer.cleanup();
+    this.viewer?.cleanup();
     this.history?.reset();
     this.abortController.abort();
   }

@@ -28,10 +28,11 @@ export default function PDFPreviewer(props: { id: string }) {
     }
 
     factory.create({ key: props.id, blob: file.data as ArrayBuffer }).then((doc) => {
-      pdfViewer = new PDFViewer({
+      pdfViewer = new PDFViewer();
+
+      pdfViewer.init(doc, {
         container: containerRef,
         view: viewRef,
-        doc,
         initialScale: 'page-fit',
         disableTextLayer: true,
       });
