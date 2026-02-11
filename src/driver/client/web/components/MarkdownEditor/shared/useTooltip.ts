@@ -68,6 +68,7 @@ export function useTooltip(options: {
         left: `${x}px`,
         top: `${y}px`,
         position: 'absolute',
+        zIndex: '10',
         display: middlewareData.hide?.escaped ? 'none' : '',
       });
     });

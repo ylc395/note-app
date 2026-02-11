@@ -60,7 +60,9 @@ export default function AppLinkView(props: {
     middleware: [props.mousePosition && inline(props.mousePosition)],
   });
 
-  function onLeave() {
+  function onLeave(e: Event) {
+    console.log(e.type, e.target);
+
     if (!isFixed()) {
       props.onLeave();
     }
@@ -85,7 +87,7 @@ export default function AppLinkView(props: {
   });
 
   return (
-    <div ref={setTooltipEl} onMouseLeave={onLeave} onMouseEnter={props.onEnter} onFocusOut={onLeave}>
+    <div ref={setTooltipEl} onMouseLeave={onLeave} onMouseEnter={props.onEnter}>
       <div>
         <Show when={title()}>
           <h2 class="cursor-pointer hover:underline" onClick={jump}>

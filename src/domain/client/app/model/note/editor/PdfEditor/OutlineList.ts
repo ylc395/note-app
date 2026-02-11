@@ -6,15 +6,9 @@ import { z } from 'zod';
 import { createQuery } from 'mobx-tanstack-query/preset';
 
 import type AnnotationManager from './AnnotationManager';
+import type { OutlineItem } from '#web/infra/PDFViewer';
 
-export interface OutlineItem {
-  title: string;
-  children: OutlineItem[];
-  parent?: OutlineItem;
-  key: string;
-  page: number | null;
-  dest: unknown[] | null | string; // 传给 pdfjs 的跳转函数用的，具体类型不明，我们也不用管
-}
+export type { OutlineItem } from '#web/infra/PDFViewer';
 
 export const uiStateSchema = z.object({
   expanded: z.string().array().optional(),
