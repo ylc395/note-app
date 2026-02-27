@@ -23,7 +23,7 @@ export default class BodyEditor {
   }
 
   @action
-  public initUIState(value?: z.infer<typeof schema>) {
+  public init(value?: z.infer<typeof schema>) {
     Object.assign(this, value);
   }
 }

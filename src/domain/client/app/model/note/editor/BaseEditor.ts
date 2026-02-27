@@ -2,7 +2,6 @@ import { uniqueId, debounce, pick, defaults } from 'lodash-es';
 import { action, computed, observable, runInAction } from 'mobx';
 import assert from 'assert';
 import { createQuery } from 'mobx-tanstack-query/preset';
-import { BehaviorSubject } from 'rxjs';
 import type { ZodType } from 'zod';
 
 import EventBus from '#domain/client/shared/infra/EventBus';
@@ -15,8 +14,9 @@ import { token as documentDbToken } from '#domain/client/shared/infra/documentDb
 import { EventNames, type Events } from './events';
 import type Tile from '../../Workbench/Tile';
 import DomainEventBus, { type UpdatedEvent } from '../EventBus';
-import type { Command } from './command';
 import Uploader from './Uploader';
+
+export type Action = (editor: BaseEditor) => void;
 
 export const uiStateStoreName = 'editor_UI_state';
 
@@ -26,7 +26,6 @@ export interface Options {
   noteId: NoteVO['id'];
   title?: NoteVO['title'];
   icon?: NoteVO['icon'];
-  initialCommand?: Command;
   value?: NoteVO;
   path?: EntityPath;
   uploader?: Uploader;
@@ -35,9 +34,8 @@ export interface Options {
 type Patch = Pick<NotePatchDTO, 'body' | 'icon' | 'title'>;
 
 export default abstract class BaseEditor {
-  constructor(tile: Tile, { noteId, initialCommand, uploader, value, path, ...options }: Options) {
+  constructor(tile: Tile, { noteId, uploader, value, path, ...options }: Options) {
     this.noteId = noteId;
-    this.command$ = new BehaviorSubject(initialCommand);
     this.options = options;
     this.isPreview = Boolean(uploader); // 若初始化时就带了 uploader，说明是预览编辑器
 
@@ -85,8 +83,6 @@ export default abstract class BaseEditor {
       signal: this.destroyController.signal,
     });
   }
-
-  public readonly command$;
 
   private readonly db = container.resolve(documentDbToken);
 
@@ -149,15 +145,13 @@ export default abstract class BaseEditor {
   }
 
   public readonly update = (patch: Patch) => {
-    const currentData = this.value.result.data
-      ? pick(this.value.result.data, ['title', 'body', 'icon', 'type'])
-      : undefined;
+    assert(this.value.data, 'can not update when loading');
+    const currentData = pick(this.value.data, ['title', 'body', 'icon', 'type']);
 
     this.hasEdited = true;
-    assert(currentData, 'can not update when loading');
 
     // 这里采用乐观更新
-    this.value.setData((note) => note && { ...note, ...patch });
+    this.value.setData((note) => ({ ...note!, ...patch }));
     this.domainEventBus.emit(DomainEventBus.eventNames.Updated, {
       id: this.noteId,
       payload: patch,
@@ -240,8 +234,9 @@ export default abstract class BaseEditor {
 
   public destroy() {
     if (this.isPreview) {
-      this.blob.remove(); // 从缓存中移除。因为这是一个
+      this.blob.remove(); // 从缓存中移除。因为这是一个临时的 blob
     }
+
     this.fileUploader?.destroy();
 
     Promise.resolve(this.upload.flush()).then(

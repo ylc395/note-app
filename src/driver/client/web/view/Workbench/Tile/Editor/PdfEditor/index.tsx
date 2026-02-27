@@ -4,12 +4,18 @@ import { action } from 'mobx';
 import { compact, sum, zipObject } from 'lodash-es';
 import assert from 'assert';
 
-import PdfEditor, { Panel } from '#domain/client/app/model/note/editor/PdfEditor';
+import PdfEditor from '#domain/client/app/model/note/editor/PdfEditor';
 
 import AnnotationList from './AnnotationList';
 import PdfView from './PdfView';
 import BodyEditor from './BodyEditor';
 import { useContext } from '../context';
+
+enum Panel {
+  Body = 'body',
+  Pdf = 'pdf',
+  Annotation = 'annotation',
+}
 
 export default function PdfEditorView() {
   const ctx = useContext()!;
@@ -17,11 +23,6 @@ export default function PdfEditorView() {
     assert(ctx.editor instanceof PdfEditor);
     return ctx.editor;
   });
-
-  const panelMap = {
-    [Panel.Annotation]: editor().annotation,
-    [Panel.Body]: editor().body,
-  };
 
   const panels = createMemo(() => {
     assert(ctx.editor instanceof PdfEditor);
@@ -44,6 +45,11 @@ export default function PdfEditorView() {
       return;
     }
 
+    const panelMap = {
+      [Panel.Annotation]: editor().annotation,
+      [Panel.Body]: editor().body,
+    };
+
     const sizeMap = zipObject(
       panels().panels.map(({ id }) => id),
       size,
@@ -51,7 +57,7 @@ export default function PdfEditorView() {
 
     for (const id of resizeTriggerId.split(':')) {
       if (id in panelMap) {
-        panelMap[id as keyof typeof panelMap].width = sizeMap[id]!;
+        panelMap[id as keyof typeof panelMap]!.width = sizeMap[id]!;
       }
     }
   }

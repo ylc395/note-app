@@ -37,11 +37,11 @@ export default class Outline {
     );
   }
 
-  private async init() {
+  private init() {
     const doc = this.pdfViewer.editor.doc;
     assert(doc);
 
-    await this.outlineList.init(doc);
+    this.outlineList.setDoc(doc);
 
     reaction(
       () => this.pdfViewer.currentPage,

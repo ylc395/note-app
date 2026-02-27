@@ -90,12 +90,12 @@ export default class Selection {
   };
 
   public get color() {
-    return this.pdfViewer.editor.annotationColor;
+    return this.pdfViewer.editor.newAnnotationColor;
   }
 
   @action
   public setColor(color: string) {
-    this.pdfViewer.editor.annotationColor = color;
+    this.pdfViewer.editor.newAnnotationColor = color;
   }
 
   @action

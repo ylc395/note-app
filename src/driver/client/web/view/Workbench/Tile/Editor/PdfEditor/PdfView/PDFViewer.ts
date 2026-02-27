@@ -13,7 +13,6 @@ import assert from 'assert';
 import type { default as PdfEditor, OutlineItem } from '#domain/client/app/model/note/editor/PdfEditor';
 import { getPage, type AnnotationVO } from '#domain/client/app/model/annotation';
 import HistoryStack, { Direction, type HistoryRecord } from '#domain/client/app/model/base/HistoryStack';
-import { goToAnnotationCommand, goToPageCommand } from '#domain/client/app/model/note/editor/command';
 import shell from '#web/infra/shell';
 import { APP_NAME } from '#domain/shared/infra/constants';
 import { withAbortSignal } from '#utils/function';
@@ -199,21 +198,6 @@ export default class PdfViewer {
     }
 
     this.hijackClick();
-    when(() => this.isReady, this.initCommandHandler.bind(this), { signal: this.destroyController.signal });
-  }
-
-  private initCommandHandler() {
-    const subscription = this.editor.command$.subscribe((command) => {
-      if (goToPageCommand.is(command)) {
-        this.jumpTo(command.payload);
-      }
-
-      if (goToAnnotationCommand.is(command)) {
-        this.jumpToAnnotation(command.payload);
-      }
-    });
-
-    this.destroyController.signal.addEventListener('abort', subscription.unsubscribe.bind(subscription));
   }
 
   @action

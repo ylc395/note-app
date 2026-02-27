@@ -244,9 +244,7 @@ export default class Workbench {
           existedEditor.moveTo(dest);
         }
 
-        if (note.initialCommand) {
-          existedEditor.command$.next(note.initialCommand);
-        }
+        note.initialAction?.(existedEditor);
       } else {
         // 对应的 editor 不存在，则新建
         editor = destTile.createAndAddEditor(note, dest instanceof Editor ? dest : undefined);

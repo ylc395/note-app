@@ -49,7 +49,7 @@ export default class SvgAnnotationEditor {
   public accessor thickness = 5;
 
   @action
-  public initOptions(v?: z.infer<typeof optionsSchema>) {
+  public init(v?: z.infer<typeof optionsSchema>) {
     Object.assign(this, v);
   }
 

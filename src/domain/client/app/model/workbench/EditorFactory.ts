@@ -1,4 +1,4 @@
-import Editor, { type Options } from '#domain/client/app/model/note/editor/BaseEditor';
+import Editor, { type Options, type Action } from '#domain/client/app/model/note/editor/BaseEditor';
 import { MimeTypes } from '#domain/shared/model/file';
 import type { NoteVO } from '#domain/shared/model/note';
 
@@ -11,6 +11,7 @@ import type Tile from './Tile';
 
 export interface EditorDTO extends Options {
   mimeType: NoteVO['mimeType'];
+  initialAction?: Action;
 }
 
 export default class EditorFactory {

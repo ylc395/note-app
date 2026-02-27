@@ -12,7 +12,7 @@ import {
 } from '#domain/shared/model/search';
 import Workbench from '#domain/client/app/model/Workbench';
 import type { PDFTextPositionSelector } from '#domain/shared/model/annotation';
-import { goToAnnotationCommand, goToPageCommand } from '#domain/client/app/model/note/editor/command';
+import type { EditorDTO } from '#domain/client/app/model/Workbench/EditorFactory';
 
 function highlight({ text, highlights }: MatchRecord) {
   const htmls: JSX.Element[] = [];
@@ -30,11 +30,9 @@ function highlight({ text, highlights }: MatchRecord) {
 
 function FileMatchRecordView(props: { record: FileMatchRecord; entityId: string; mimeType: string }) {
   const { open } = container.resolve(Workbench);
-  const target = {
+  const target: EditorDTO = {
     noteId: props.entityId,
     mimeType: props.mimeType,
-    initialCommand:
-      typeof props.record.location.page === 'number' ? goToPageCommand.create(props.record.location.page) : undefined,
   };
 
   return (
@@ -50,10 +48,9 @@ function FileMatchRecordView(props: { record: FileMatchRecord; entityId: string;
 
 function AnnotationMatchRecordView(props: { record: AnnotationMatchRecord; mimeType: string; entityId: string }) {
   const { open } = container.resolve(Workbench);
-  const target = {
+  const target: EditorDTO = {
     noteId: props.entityId,
     mimeType: props.mimeType,
-    initialCommand: goToAnnotationCommand.create(props.record.id),
   };
 
   return (

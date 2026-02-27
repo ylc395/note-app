@@ -9,19 +9,14 @@ import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import type { TextLocation } from '#domain/shared/model/file';
 import type { NoteVO } from '#domain/shared/model/note';
 
+// 从文档本体或是后端（OCR）获取 PDF 页面的文本
 export default class PageTextManager {
   constructor(public readonly noteId: NoteVO['id']) {
-    this.nativeTexts = createQuery(
-      () => {
-        assert(this.doc);
-        return PageTextManager.extractTexts(this.doc);
-      },
-      {
-        abortSignal: this.destroyController.signal,
-        queryKey: ['pdf-texts', this.noteId],
-        options: () => ({ enabled: Boolean(this.doc) }),
-      },
-    );
+    this.nativeTexts = createQuery(() => PageTextManager.extractTexts(this.doc!), {
+      abortSignal: this.destroyController.signal,
+      queryKey: ['pdf-texts', this.noteId],
+      options: () => ({ enabled: Boolean(this.doc) }),
+    });
 
     reaction(() => this.renderedPages, this.loadPageTexts.bind(this), { signal: this.destroyController.signal });
   }
@@ -45,7 +40,7 @@ export default class PageTextManager {
   }
 
   @action
-  public init(doc: PDFDocumentProxy) {
+  public setDoc(doc: PDFDocumentProxy) {
     this.doc = doc;
   }
 
@@ -58,9 +53,7 @@ export default class PageTextManager {
 
   private loadPageTexts = debounce(async () => {
     clearTimeout(this.loadingTimer);
-
-    const nativeTexts = this.nativeTexts.result.data;
-    assert(nativeTexts && this.renderedPages);
+    assert(this.renderedPages);
 
     const pagesToQuery = new Set(
       this.renderedPages.filter((page) => !this.pageTexts.has(page) && !this.loadingPages.has(page)),
@@ -90,6 +83,7 @@ export default class PageTextManager {
       }
     });
 
+    // 加载出的 pages 不完全，则反复重试
     if (pageTexts.length !== pagesToQuery.size) {
       this.loadingTimer = setTimeout(this.loadPageTexts, 60 * 1000);
     }

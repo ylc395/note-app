@@ -36,7 +36,7 @@ export default class TextFinder {
   @observable public accessor options: z.infer<typeof optionsSchema> = {};
 
   @action
-  public initOptions(v?: TextFinder['options']) {
+  public init(v?: TextFinder['options']) {
     if (v) {
       this.options = v;
     }

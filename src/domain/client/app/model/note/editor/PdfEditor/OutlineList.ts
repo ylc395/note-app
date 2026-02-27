@@ -1,4 +1,4 @@
-import { action, computed, makeAutoObservable, observable, when } from 'mobx';
+import { action, computed, makeAutoObservable, observable } from 'mobx';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import type { RefProxy } from 'pdfjs-dist/types/src/display/api';
 import assert from 'assert';
@@ -7,6 +7,7 @@ import { createQuery } from 'mobx-tanstack-query/preset';
 
 import type AnnotationManager from './AnnotationManager';
 import type { OutlineItem } from '#web/infra/PDFViewer';
+import type { NoteVO } from '#domain/shared/model/note';
 
 export type { OutlineItem } from '#web/infra/PDFViewer';
 
@@ -17,10 +18,10 @@ export const uiStateSchema = z.object({
 });
 
 export default class OutlineList {
-  constructor(private readonly annotation: AnnotationManager) {
+  constructor(noteId: NoteVO['id'], private readonly annotation: AnnotationManager) {
     this._items = createQuery(this.createItems.bind(this), {
       abortSignal: this.destroyController.signal,
-      queryKey: ['pdfOutline', annotation.noteId],
+      queryKey: ['pdfOutline', noteId],
       options: () => ({ enabled: Boolean(this.doc) }),
     });
   }
@@ -49,24 +50,23 @@ export default class OutlineList {
   @observable public accessor uiState: z.infer<typeof uiStateSchema> = {};
 
   @action
-  public initUIState(v?: OutlineList['uiState']) {
+  public init(v?: OutlineList['uiState']) {
     if (v) {
       this.uiState = v;
     }
   }
 
   @action
-  public init(doc: PDFDocumentProxy) {
+  public setDoc(doc: PDFDocumentProxy) {
     if (!this.doc) {
       this.doc = doc;
     }
-
-    return when(() => Boolean(this.items));
   }
 
   private async createItems() {
     const doc = this.doc;
     assert(doc);
+
     const outline = (await doc.getOutline()) || [];
     const pageToOutlineItemsMap = new Map<number, OutlineItem>();
     const keyToOutlineItemsMap = new Map<OutlineItem['key'], OutlineItem>();

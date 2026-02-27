@@ -4,7 +4,6 @@ import assert from 'assert';
 
 import { getPage, type AnnotationVO } from '#domain/client/app/model/annotation';
 import PdfEditor from '#domain/client/app/model/note/editor/PdfEditor';
-import { goToAnnotationCommand } from '#domain/client/app/model/note/editor/command';
 import { useContext } from '../../context';
 
 export default function TextItem(props: { value: AnnotationVO }) {
@@ -22,7 +21,7 @@ export default function TextItem(props: { value: AnnotationVO }) {
   });
 
   function jumpTo() {
-    editor().command$.next(goToAnnotationCommand.create(props.value.id));
+    editor();
   }
 
   return (

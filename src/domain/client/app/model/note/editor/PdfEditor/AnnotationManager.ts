@@ -28,12 +28,11 @@ export interface Position {
 
 export const schema = z.object({
   isEnabled: z.boolean(),
-  shouldShowNative: z.boolean(),
   width: z.number(),
 });
 
 export default class AnnotationManager {
-  constructor(public readonly noteId: NoteVO['id']) {
+  constructor(private readonly noteId: NoteVO['id']) {
     this.items = createQuery(() => this.remote.annotation.queryByEntityId.query(this.noteId), {
       select: (data) => data.toSorted(AnnotationManager.sort),
       queryKey: ['annotations', { noteId }],
@@ -43,8 +42,6 @@ export default class AnnotationManager {
   }
 
   @observable @expose() public accessor isEnabled = false;
-
-  @observable @expose() public accessor shouldShowNative = false;
 
   @observable @expose() public accessor width = 30;
 
@@ -122,18 +119,13 @@ export default class AnnotationManager {
   }
 
   @action
-  public initUIState(value?: z.infer<typeof schema>) {
+  public init(value?: z.infer<typeof schema>) {
     Object.assign(this, value);
   }
 
   @action
   public toggle() {
     this.isEnabled = !this.isEnabled;
-  }
-
-  @action
-  public toggleNative() {
-    this.shouldShowNative = !this.shouldShowNative;
   }
 
   @action

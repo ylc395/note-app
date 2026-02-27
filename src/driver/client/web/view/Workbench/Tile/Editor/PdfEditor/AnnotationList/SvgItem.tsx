@@ -5,7 +5,6 @@ import { maxBy } from 'lodash-es';
 
 import type { AnnotationVO } from '#domain/shared/model/annotation';
 import PdfEditor from '#domain/client/app/model/note/editor/PdfEditor';
-import { goToAnnotationCommand } from '#domain/client/app/model/note/editor/command';
 import { useContext } from '../../context';
 
 export default function SvgItem(props: { value: AnnotationVO[] }) {
@@ -24,7 +23,7 @@ export default function SvgItem(props: { value: AnnotationVO[] }) {
   const latestAnnotation = createMemo(() => maxBy(props.value, ({ createdAt }) => createdAt)!);
 
   function jumpTo() {
-    editor().command$.next(goToAnnotationCommand.create(latestAnnotation().id));
+    editor();
   }
 
   return (

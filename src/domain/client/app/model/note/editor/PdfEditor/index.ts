@@ -17,50 +17,27 @@ import SvgAnnotationEditor, { optionsSchema as svgAnnotationEditorSchema } from 
 
 export type { OutlineItem } from './OutlineList';
 
-export enum Panel {
-  Body = 'body',
-  Pdf = 'pdf',
-  Annotation = 'annotation',
-}
-
 const uiStateSchema = z
   .object({
     progress: z.string().optional().catch(undefined), // 当前浏览的进度。通常是一个 pdf hash
-    panels: z
-      .object({
-        [Panel.Body]: bodyEditorSchema.optional().catch(undefined),
-        [Panel.Annotation]: annotationSchema.optional().catch(undefined),
-      })
-      .optional()
-      .catch(undefined),
+    body: bodyEditorSchema.optional().catch(undefined),
+    annotations: annotationSchema.optional().catch(undefined),
     outline: outlineSchema.optional().catch(undefined),
     textFinder: textFinderSchema.optional().catch(undefined),
     svgEditor: svgAnnotationEditorSchema.optional().catch(undefined),
-    annotationColor: z.string().optional().catch(undefined),
+    newAnnotationColor: z.string().optional().catch(undefined),
   })
   .catch({});
 
 export default class PdfEditor extends BaseEditor {
   constructor(...args: ConstructorParameters<typeof BaseEditor>) {
     super(...args);
-    when(() => this.blob.result.isSuccess, this.init.bind(this), { signal: this.destroyController.signal });
 
+    when(() => this.blob.result.isSuccess, this.init.bind(this), { signal: this.destroyController.signal });
     this.initUIState();
   }
 
   private readonly docFactory = container.resolve(PDFDocumentFactory);
-
-  public readonly texts = new PageTextManager(this.noteId);
-
-  public readonly annotation = new AnnotationManager(this.noteId);
-
-  public readonly outline = new OutlineList(this.annotation);
-
-  public readonly body = new BodyEditor();
-
-  public readonly textFinder = new TextFinder(this.texts);
-
-  public readonly svgEditor = new SvgAnnotationEditor(this.annotation);
 
   @observable.ref public accessor doc: PDFDocumentProxy | undefined; // this is view-independent
 
@@ -68,9 +45,21 @@ export default class PdfEditor extends BaseEditor {
 
   @observable public accessor progress: string | undefined;
 
-  @observable public accessor annotationColor = 'yellow';
+  @observable public accessor newAnnotationColor = 'yellow';
 
   @observable private accessor isUIStateReady = false;
+
+  public readonly texts = new PageTextManager(this.noteId);
+
+  public readonly annotation = new AnnotationManager(this.noteId);
+
+  public readonly outline = new OutlineList(this.noteId, this.annotation);
+
+  public readonly body = new BodyEditor();
+
+  public readonly textFinder = new TextFinder(this.texts);
+
+  public readonly svgEditor = new SvgAnnotationEditor(this.annotation);
 
   @computed
   public get isReady() {
@@ -85,7 +74,8 @@ export default class PdfEditor extends BaseEditor {
       blob: this.blob.result.data,
     });
 
-    this.texts.init(doc);
+    this.texts.setDoc(doc);
+    this.outline.setDoc(doc);
 
     runInAction(() => {
       this.doc = doc;
@@ -97,15 +87,15 @@ export default class PdfEditor extends BaseEditor {
 
     runInAction(() => {
       if (uiState) {
-        this.annotation.initUIState(uiState.panels?.[Panel.Annotation]);
-        this.body.initUIState(uiState.panels?.[Panel.Body]);
-        this.outline.initUIState(uiState.outline);
-        this.textFinder.initOptions(uiState.textFinder);
-        this.svgEditor.initOptions(uiState.svgEditor);
+        this.annotation.init(uiState.annotations);
+        this.body.init(uiState.body);
+        this.outline.init(uiState.outline);
+        this.textFinder.init(uiState.textFinder);
+        this.svgEditor.init(uiState.svgEditor);
         this.progress = uiState.progress;
 
-        if (uiState.annotationColor) {
-          this.annotationColor = uiState.annotationColor;
+        if (uiState.newAnnotationColor) {
+          this.newAnnotationColor = uiState.newAnnotationColor;
         }
       }
 
@@ -115,10 +105,8 @@ export default class PdfEditor extends BaseEditor {
     autorun(
       () => {
         this.saveUIState({
-          panels: {
-            [Panel.Annotation]: this.annotation.uiState,
-            [Panel.Body]: this.body.uiState,
-          },
+          body: this.body.uiState,
+          annotations: this.annotation.uiState,
           outline: toJS(this.outline.uiState),
           progress: this.progress,
           textFinder: toJS(this.textFinder.options),
