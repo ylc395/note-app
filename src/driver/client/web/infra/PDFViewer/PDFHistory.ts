@@ -14,11 +14,11 @@
  */
 
 import type { EventBus } from 'pdfjs-dist/types/web/event_utils';
-import type { IPDFLinkService } from 'pdfjs-dist/types/web/interfaces';
+import type { PDFLinkService } from 'pdfjs-dist/web/pdf_viewer.mjs';
 
 interface PDFHistoryOptions {
   /** 导航/链接服务 */
-  linkService: IPDFLinkService;
+  linkService: PDFLinkService;
   /** 应用事件总线 */
   eventBus: EventBus;
 }
@@ -129,7 +129,7 @@ function isDestArraysEqual(firstDest: unknown[], secondDest: unknown[]): boolean
 
 export default class PDFHistory {
   // 依赖服务
-  private linkService: IPDFLinkService;
+  private linkService: PDFLinkService;
   private eventBus: EventBus;
 
   // 初始化状态

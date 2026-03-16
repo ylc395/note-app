@@ -1,0 +1,17 @@
+diff --git a/web/pdf_viewer.mjs b/web/pdf_viewer.mjs
+index 640c0f50a01694c9d70beeb8cac0796aab0f2116..fbc553a48b0fc764dadbde995b4e8d96e6c99be9 100644
+--- a/web/pdf_viewer.mjs
++++ b/web/pdf_viewer.mjs
+@@ -1969,10 +1969,8 @@ class AnnotationLayerBuilder {
+     return !!this.annotationLayer?.hasEditableAnnotations();
+   }
+   async injectLinkAnnotations(inferredLinks) {
+-    if (this.#annotations === null) {
+-      throw new Error("`render` method must be called before `injectLinkAnnotations`.");
+-    }
+-    if (this._cancelled || this.#linksInjected) {
++    // 参考 https://github.com/stephanrauh/pdf.js/commit/553f69ea96cf829c98f24ecc487bdf1e5f66fb4f
++    if (this.#annotations === null || this._cancelled || this.#linksInjected) {
+       return;
+     }
+     this.#linksInjected = true;

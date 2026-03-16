@@ -1,68 +1,71 @@
-import { createEffect, onCleanup, untrack } from 'solid-js';
-import assert from 'assert';
-import type PdfViewer from './PDFViewer';
-import { Events } from './PDFViewer';
+// import { createEffect, onCleanup, untrack } from 'solid-js';
+// import assert from 'assert';
+// import { useContext } from './context';
 
-export default function TextLayer(props: { pdfViewer: PdfViewer; page: number }) {
-  createEffect(() => {
-    const textLayerEl = props.pdfViewer.getPageTextLayerElement(props.page);
-    const texts = props.pdfViewer.editor.texts.pageTexts.get(props.page);
+// export default function TextLayer(props: { page: number }) {
+//   const {
+//     viewer: { viewer, editor },
+//   } = useContext()!;
 
-    if (!textLayerEl || !texts?.blocks || textLayerEl.dataset.ocrText) {
-      return;
-    }
+//   createEffect(() => {
+//     const textLayerEl = viewer.getPageTextLayerElement(props.page);
+//     const texts = editor.texts.pageTexts.get(props.page);
 
-    const { width: pageWidth, height: pageHeight } = props.pdfViewer.getPageInfo(props.page);
-    const lineDoms: Array<{ el: HTMLElement; baseline: number }> = [];
+//     if (!textLayerEl || !texts?.blocks || textLayerEl.dataset.ocrText) {
+//       return;
+//     }
 
-    for (const { paragraphs } of texts.blocks) {
-      for (const { lines } of paragraphs) {
-        for (const { bbox, text, confidence, baseline } of lines) {
-          if (confidence < 40) {
-            continue;
-          }
+//     const { width: pageWidth, height: pageHeight } = viewer.getPageInfo(props.page);
+//     const lineDoms: Array<{ el: HTMLElement; baseline: number }> = [];
 
-          const lineDom = document.createElement('span');
-          const baselineRatio = (bbox.y1 - (baseline.y1 + baseline.y0) / 2) / (bbox.y1 - bbox.y0);
+//     for (const { paragraphs } of texts.blocks) {
+//       for (const { lines } of paragraphs) {
+//         for (const { bbox, text, confidence, baseline } of lines) {
+//           if (confidence < 40) {
+//             continue;
+//           }
 
-          lineDom.innerText = text.trim();
-          lineDom.style.left = `${(bbox.x0 / pageWidth) * 100}%`;
-          lineDom.style.top = `${(bbox.y0 / pageHeight) * 100}%`;
-          lineDom.style.height = `${((bbox.y1 - bbox.y0) / pageHeight) * 100}%`;
-          lineDom.style.width = `${((bbox.x1 - bbox.x0) / pageWidth) * 100}%`;
-          lineDom.style.textAlignLast = 'justify';
+//           const lineDom = document.createElement('span');
+//           const baselineRatio = (bbox.y1 - (baseline.y1 + baseline.y0) / 2) / (bbox.y1 - bbox.y0);
 
-          lineDoms.push({ el: lineDom, baseline: baselineRatio });
-        }
-      }
-    }
+//           lineDom.innerText = text.trim();
+//           lineDom.style.left = `${(bbox.x0 / pageWidth) * 100}%`;
+//           lineDom.style.top = `${(bbox.y0 / pageHeight) * 100}%`;
+//           lineDom.style.height = `${((bbox.y1 - bbox.y0) / pageHeight) * 100}%`;
+//           lineDom.style.width = `${((bbox.x1 - bbox.x0) / pageWidth) * 100}%`;
+//           lineDom.style.textAlignLast = 'justify';
 
-    const endOfContent = textLayerEl.querySelector('.endOfContent');
-    assert(endOfContent);
+//           lineDoms.push({ el: lineDom, baseline: baselineRatio });
+//         }
+//       }
+//     }
 
-    for (const { el } of lineDoms) {
-      textLayerEl.insertBefore(el, endOfContent);
-    }
+//     const endOfContent = textLayerEl.querySelector('.endOfContent');
+//     assert(endOfContent);
 
-    const resizeObserver = new ResizeObserver(() => {
-      for (const { el, baseline } of lineDoms) {
-        assert(el instanceof HTMLElement);
-        el.style.fontSize = `${el.clientHeight * (1 - baseline)}px`;
-      }
-    });
+//     for (const { el } of lineDoms) {
+//       textLayerEl.insertBefore(el, endOfContent);
+//     }
 
-    resizeObserver.observe(textLayerEl);
-    textLayerEl.dataset.ocrText = 'true';
+//     const resizeObserver = new ResizeObserver(() => {
+//       for (const { el, baseline } of lineDoms) {
+//         assert(el instanceof HTMLElement);
+//         el.style.fontSize = `${el.clientHeight * (1 - baseline)}px`;
+//       }
+//     });
 
-    untrack(() => {
-      props.pdfViewer.eventBus.dispatch(Events.CustomTextLayerRendered, { page: props.page });
-    });
+//     resizeObserver.observe(textLayerEl);
+//     textLayerEl.dataset.ocrText = 'true';
 
-    onCleanup(() => {
-      resizeObserver.disconnect();
-    });
-  });
+//     untrack(() => {
+//       viewer.eventBus.dispatch(Events.CustomTextLayerRendered, { page: props.page });
+//     });
 
-  // 复用 pdfjs 自己渲染的 textLayer 元素，我们就不渲染实际的元素了
-  return null;
-}
+//     onCleanup(() => {
+//       resizeObserver.disconnect();
+//     });
+//   });
+
+//   // 复用 pdfjs 自己渲染的 textLayer 元素，我们就不渲染实际的元素了
+//   return null;
+// }

@@ -1,7 +1,6 @@
 import { action, observable } from 'mobx';
 import { z } from 'zod';
-import { compact, debounce, isEqual } from 'lodash-es';
-import assert from 'assert';
+import { compact, debounce } from 'lodash-es';
 
 import type PageTextManager from './PageTextManager';
 
@@ -13,7 +12,9 @@ export interface Digest {
   matchLength: number;
 }
 
-export interface MatchesCount {
+interface SearchResult {
+  pageMatches?: number[][];
+  pageMatchesLength?: number[][];
   current: number;
   total: number;
 }
@@ -24,12 +25,16 @@ export const optionsSchema = z.object({
   query: z.string().optional().catch(undefined),
 });
 
+/*
+ * 记录用户的搜索条件，并保存搜索结果（含摘要）
+ * 其中，搜索结果由外部提供。该类本身没有搜索能力，只负责从 pageTextManager 中，根据搜索结果的位置信息等提取摘要
+ */
 export default class TextFinder {
   constructor(private readonly textManager: PageTextManager) {}
 
   @observable public accessor isEnabled = false;
 
-  @observable public accessor result: (MatchesCount & { options: TextFinder['options'] }) | undefined;
+  @observable public accessor result: SearchResult | undefined;
 
   @observable.ref public accessor digests: Array<{ page: number; digests: Digest[] }> | undefined;
 
@@ -42,14 +47,14 @@ export default class TextFinder {
     }
   }
 
-  public readonly setQuery = debounce(
+  public readonly setKeyword = debounce(
     action((value: string) => {
-      assert(this.options);
-      this.options.query = value;
-
-      if (!value) {
-        this.clearResult();
+      if (value === this.options.query) {
+        return;
       }
+
+      this.clearResult();
+      this.options.query = value;
     }),
     500,
   );
@@ -57,37 +62,24 @@ export default class TextFinder {
   @action
   public toggle() {
     this.isEnabled = !this.isEnabled;
-
-    if (!this.isEnabled) {
-      this.clearResult();
-    }
+    this.clearResult();
   }
 
   @action
   public toggleOption(key: 'caseSensitive' | 'entireWord') {
-    assert(this.options);
+    this.clearResult();
     this.options[key] = !this.options[key];
   }
 
   @action
-  public updateResult({
-    pageMatchesLength,
-    pageMatches,
-    matchesCount,
-  }: {
-    pageMatches?: number[][];
-    pageMatchesLength?: number[][];
-    matchesCount: MatchesCount;
-  }) {
-    const oldOptions = this.result?.options;
+  public updateResult(result: SearchResult) {
+    this.result = result;
 
-    this.result = {
-      ...matchesCount,
-      options: this.options,
-    };
-
-    if (pageMatchesLength && pageMatches && !isEqual(this.options, oldOptions)) {
-      this.updateDigests({ pageMatches, pageMatchesLength });
+    if (result.pageMatchesLength && result.pageMatches) {
+      this.updateDigests({
+        pageMatches: result.pageMatches,
+        pageMatchesLength: result.pageMatchesLength,
+      });
     }
   }
 

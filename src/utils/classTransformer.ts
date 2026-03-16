@@ -49,3 +49,7 @@ export function instanceToPlain(obj: object, tag?: string | symbol) {
 
   return pick(obj, Array.from(exposedKeys));
 }
+
+export function assign<T extends object>(target: T, patch: Partial<T>) {
+  Object.assign(target, patch);
+}

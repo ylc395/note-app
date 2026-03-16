@@ -4,10 +4,10 @@ import { last } from 'lodash-es';
 
 import type { OutlineItem } from '#domain/client/app/model/note/editor/PdfEditor/OutlineList';
 
-import type PdfViewer from '../PDFViewer';
+import type PDFEditorViewer from '../PDFEditorViewer';
 
 export default class Outline {
-  constructor(public readonly pdfViewer: PdfViewer) {
+  constructor(public readonly pdfViewer: PDFEditorViewer) {
     this.outlineList = pdfViewer.editor.outline;
 
     when(
@@ -16,10 +16,10 @@ export default class Outline {
       { signal: this.destroyController.signal },
     );
 
-    if (this.pdfViewer.pagesPromise) {
-      this.pdfViewer.pagesPromise.then(this.init.bind(this));
+    if (this.pdfViewer.viewer.pagesPromise) {
+      this.pdfViewer.viewer.pagesPromise.then(this.init.bind(this));
     } else {
-      this.pdfViewer.eventBus.on('pagesloaded', this.init.bind(this));
+      this.pdfViewer.viewer.eventBus.on('pagesloaded', this.init.bind(this));
     }
   }
 
@@ -44,7 +44,7 @@ export default class Outline {
     this.outlineList.setDoc(doc);
 
     reaction(
-      () => this.pdfViewer.currentPage,
+      () => this.pdfViewer.viewer.currentPage,
       (page) => {
         if (this.jumpByItem) {
           this.jumpByItem = false;
@@ -70,7 +70,7 @@ export default class Outline {
   @action
   public jumpTo(dest: OutlineItem) {
     this.jumpByItem = true;
-    this.pdfViewer.jumpTo(dest);
+    this.pdfViewer.viewer.jumpTo(dest);
 
     // 这里需要手动维护下 focusedPath。自动维护的 focusedPath 总是去找同一页的最后一个 outline
     const focusedPath: OutlineItem['key'][] = [];

@@ -50,7 +50,7 @@ export class WorkerApi {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const canvasAndContext = (this.doc.canvasFactory as any).create(viewport.width, viewport.height);
-    await page.render({ viewport, canvasContext: canvasAndContext.context }).promise;
+    await page.render({ viewport, canvasContext: canvasAndContext.context, canvas: canvasAndContext.canvas }).promise;
 
     page.cleanup();
     const data: Uint8Array = canvasAndContext.canvas.toBuffer('image/png');

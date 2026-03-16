@@ -10,8 +10,7 @@ import BaseEditor from '../BaseEditor';
 import PDFDocumentFactory from '../../../base/PDFDocumentFactory';
 import PageTextManager from './PageTextManager';
 import TextFinder, { optionsSchema as textFinderSchema } from './TextFinder';
-import BodyEditor, { schema as bodyEditorSchema } from './BodyEditor';
-import AnnotationManager, { schema as annotationSchema } from './AnnotationManager';
+import AnnotationManager, { uiStateSchema as annotationSchema } from './AnnotationManager';
 import OutlineList, { uiStateSchema as outlineSchema } from './OutlineList';
 import SvgAnnotationEditor, { optionsSchema as svgAnnotationEditorSchema } from './SvgAnnotationEditor';
 
@@ -20,12 +19,19 @@ export type { OutlineItem } from './OutlineList';
 const uiStateSchema = z
   .object({
     progress: z.string().optional().catch(undefined), // 当前浏览的进度。通常是一个 pdf hash
-    body: bodyEditorSchema.optional().catch(undefined),
+    newAnnotationColor: z.string().optional().catch(undefined),
+    body: z
+      .object({
+        isEnabled: z.boolean(),
+        width: z.number(),
+      })
+      .optional()
+      .catch(undefined),
+
     annotations: annotationSchema.optional().catch(undefined),
     outline: outlineSchema.optional().catch(undefined),
     textFinder: textFinderSchema.optional().catch(undefined),
     svgEditor: svgAnnotationEditorSchema.optional().catch(undefined),
-    newAnnotationColor: z.string().optional().catch(undefined),
   })
   .catch({});
 
@@ -55,7 +61,10 @@ export default class PdfEditor extends BaseEditor {
 
   public readonly outline = new OutlineList(this.noteId, this.annotation);
 
-  public readonly body = new BodyEditor();
+  @observable public accessor body = {
+    isEnabled: false,
+    width: 30,
+  };
 
   public readonly textFinder = new TextFinder(this.texts);
 
@@ -88,10 +97,11 @@ export default class PdfEditor extends BaseEditor {
     runInAction(() => {
       if (uiState) {
         this.annotation.init(uiState.annotations);
-        this.body.init(uiState.body);
         this.outline.init(uiState.outline);
         this.textFinder.init(uiState.textFinder);
         this.svgEditor.init(uiState.svgEditor);
+
+        this.body = uiState.body || this.body;
         this.progress = uiState.progress;
 
         if (uiState.newAnnotationColor) {
@@ -105,8 +115,8 @@ export default class PdfEditor extends BaseEditor {
     autorun(
       () => {
         this.saveUIState({
-          body: this.body.uiState,
-          annotations: this.annotation.uiState,
+          body: toJS(this.body),
+          annotations: toJS(this.annotation.uiState),
           outline: toJS(this.outline.uiState),
           progress: this.progress,
           textFinder: toJS(this.textFinder.options),

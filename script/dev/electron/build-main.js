@@ -21,7 +21,7 @@ async function downloadSqliteTokenizer() {
   let downloadUrl = `https://github.com/wangfenjin/simple/releases/latest/download/libsimple-linux-ubuntu-18.04.zip`;
   if (platform === 'darwin') {
     platform = 'osx';
-    downloadUrl = `https://github.com/wangfenjin/simple/releases/latest/download/libsimple-osx-x64.zip`;
+    downloadUrl = `https://github.com/wangfenjin/simple/releases/latest/download/libsimple-osx-${arch}.zip`;
   } else if (platform === 'win32') {
     platform = 'windows';
     if (arch === 'x64') {

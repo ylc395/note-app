@@ -13,8 +13,8 @@ export type { OutlineItem } from '#web/infra/PDFViewer';
 
 export const uiStateSchema = z.object({
   expanded: z.string().array().optional(),
-  panelVisible: z.boolean().optional(),
-  scroll: z.object({ x: z.number(), y: z.number() }).optional(),
+  isEnabled: z.boolean().optional(),
+  scroll: z.object({ x: z.number(), y: z.number() }).optional().catch(undefined),
 });
 
 export default class OutlineList {

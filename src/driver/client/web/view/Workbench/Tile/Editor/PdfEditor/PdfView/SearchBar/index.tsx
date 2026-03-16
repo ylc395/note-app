@@ -4,34 +4,38 @@ import { Popover } from '@ark-ui/solid';
 
 import ResultList from './ResultList';
 import Input from './Input';
-import type TextFinder from './TextFinder';
+import { useContext } from '../context';
 
-export default function SearchBar(props: { textFinder: TextFinder }) {
+export default function SearchBar() {
+  const {
+    viewer: { editor, viewer },
+  } = useContext()!;
+
   return (
     <div class="flex z-10 m-auto w-fit relative left-36">
-      <Input textFinder={props.textFinder} />
-      <Show when={props.textFinder.model.result?.total === 0}>
+      <Input />
+      <Show when={editor.textFinder.result?.total === 0}>
         <div>没有结果</div>
       </Show>
-      <Show when={Number(props.textFinder.model.result?.total) > 0}>
+      <Show when={Number(editor.textFinder.result?.total) > 0}>
         <div>
-          {props.textFinder.model.result?.current}/{props.textFinder.model.result?.total}
+          {editor.textFinder.result?.current}/{editor.textFinder.result?.total}
         </div>
       </Show>
       <div class="ml-6">
-        <button onClick={() => props.textFinder.previous()}>
+        <button onClick={() => viewer.textFinder.prev()}>
           <ArrowUpIcon />
         </button>
-        <button onClick={() => props.textFinder.next()}>
+        <button onClick={() => viewer.textFinder.next()}>
           <ArrowDownIcon />
         </button>
         <Popover.Root lazyMount unmountOnExit>
-          <Popover.Trigger disabled={!props.textFinder.model.digests}>
+          <Popover.Trigger disabled={!editor.textFinder.digests}>
             <ListIcon />
           </Popover.Trigger>
           <Popover.Positioner>
             <Popover.Content>
-              <ResultList textFinder={props.textFinder} />
+              <ResultList />
             </Popover.Content>
           </Popover.Positioner>
         </Popover.Root>

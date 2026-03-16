@@ -1,5 +1,5 @@
 import { debounce } from 'lodash-es';
-import { action, extendObservable, makeObservable, observable, runInAction } from 'mobx';
+import { action, makeObservable, runInAction } from 'mobx';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function withAbortSignal<F extends (signal: AbortSignal, ...args: any[]) => any>(
@@ -19,7 +19,7 @@ export function withAbortSignal<F extends (signal: AbortSignal, ...args: any[]) 
 }
 
 export function debounceAction<T extends unknown[]>(fn: (...args: T) => unknown, timeout: number) {
-  let debounced = debounce(run, timeout);
+  const debounced = debounce(run, timeout);
 
   function run(...args: T) {
     runInAction(() => {

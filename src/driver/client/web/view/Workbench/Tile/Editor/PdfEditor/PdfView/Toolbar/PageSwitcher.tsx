@@ -1,8 +1,12 @@
 import { createEffect, createSignal } from 'solid-js';
 import { StepBackIcon, StepForwardIcon } from 'lucide-solid';
-import type PdfViewer from '../PDFViewer';
+import { useContext } from '../context';
 
-export default function PageSwitcher(props: { viewer: PdfViewer }) {
+export default function PageSwitcher() {
+  const {
+    viewer: { viewer },
+  } = useContext()!;
+
   const [getValue, setValue] = createSignal<string>();
 
   function handleKeyPress(e: KeyboardEvent) {
@@ -10,10 +14,10 @@ export default function PageSwitcher(props: { viewer: PdfViewer }) {
       return;
     }
 
-    const result = props.viewer.jumpTo(Number(getValue()));
+    const result = viewer.jumpTo(Number(getValue()));
 
     if (!result) {
-      setValue(String(props.viewer.currentPage));
+      setValue(String(viewer.currentPage));
     }
   }
 
@@ -22,24 +26,24 @@ export default function PageSwitcher(props: { viewer: PdfViewer }) {
   }
 
   createEffect(() => {
-    setValue(props.viewer.currentPage ? String(props.viewer.currentPage) : undefined);
+    setValue(viewer.currentPage ? String(viewer.currentPage) : undefined);
   });
 
   return (
     <div class="flex space-x-2">
-      <button class="flex items-center" onClick={() => props.viewer.goToPreviousPage()}>
+      <button class="flex items-center" onClick={() => viewer.goToPreviousPage()}>
         <StepBackIcon />
       </button>
       <input
         class="w-8"
-        onBlur={() => setValue(String(props.viewer.currentPage))}
+        onBlur={() => setValue(String(viewer.currentPage))}
         onKeyPress={handleKeyPress}
         onInput={handleInput}
         readOnly={!getValue()}
         value={getValue() ?? '-'}
       />
-      /{props.viewer.totalPage ?? '-'}
-      <button class="flex items-center" onClick={() => props.viewer.goToNextPage()}>
+      /{viewer.totalPage ?? '-'}
+      <button class="flex items-center" onClick={() => viewer.goToNextPage()}>
         <StepForwardIcon />
       </button>
     </div>

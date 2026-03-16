@@ -3,12 +3,13 @@ import { MessageSquareMoreIcon, PaintbrushIcon } from 'lucide-solid';
 
 import CommentInput from './CommentInput';
 import ColorPicker from './ColorPicker';
-import type PdfViewer from '../PDFViewer';
 import Selection from './Selection';
+import { useContext } from '../context';
 
-export default function SelectionTooltip(props: { pdfViewer: PdfViewer }) {
+export default function SelectionTooltip() {
+  const { viewer } = useContext()!;
   let rootEl: HTMLDivElement | undefined;
-  const selection = new Selection(props.pdfViewer);
+  const selection = new Selection(viewer);
 
   onMount(() => {
     selection.activate(rootEl!);

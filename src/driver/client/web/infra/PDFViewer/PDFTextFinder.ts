@@ -1,5 +1,6 @@
+import assert from 'assert';
 import { action, observable, reaction } from 'mobx';
-import type { EventBus } from 'pdfjs-dist/web/pdf_viewer.mjs';
+import { FindState, type EventBus } from 'pdfjs-dist/web/pdf_viewer.mjs';
 
 type Action =
   | '' // 更新关键词
@@ -8,6 +9,16 @@ type Action =
   | 'casesensitivitychange'
   | 'entirewordchange'
   | 'diacriticmatchingchange';
+
+interface MatchesCount {
+  current: number;
+  total: number;
+}
+
+interface SearchResult extends MatchesCount {
+  pageMatches?: number[][];
+  pageMatchesLength?: number[][];
+}
 
 const actionMap: Record<keyof PDFTextFinder['config'], Action> = {
   query: '',
@@ -19,8 +30,12 @@ const actionMap: Record<keyof PDFTextFinder['config'], Action> = {
 
 export default class PDFTextFinder {
   constructor(private readonly eventBus: EventBus) {
-    eventBus.on('updatefindmatchescount', this.updateResultsCount.bind(this), { signal: this.abortController.signal });
+    // 更新搜索数量时会触发
+    eventBus.on('updatefindmatchescount', this.updateResult.bind(this), { signal: this.abortController.signal });
+
+    // 切换当前选中的搜索结果时会触发
     eventBus.on('updatefindcontrolstate', this.updateState.bind(this), { signal: this.abortController.signal });
+    eventBus.on('updatefindcontrolstate', this.updateResult.bind(this), { signal: this.abortController.signal });
 
     for (const key of Object.keys(this.config)) {
       reaction(
@@ -33,18 +48,21 @@ export default class PDFTextFinder {
 
   private readonly abortController = new AbortController();
 
-  @observable public accessor result: { current: number; total: number } | undefined;
+  @observable public accessor result: SearchResult | undefined;
 
   @observable public accessor status: 'pending' | 'notFound' | 'reachedTop' | 'reachedBottom' | undefined;
 
   @action
-  private updateResultsCount(result: PDFTextFinder['result']) {
-    this.result = result;
+  private updateResult(result: { matchesCount: MatchesCount; state?: number }) {
+    if (result.state === FindState.PENDING) {
+      return;
+    }
+
+    this.result = result.matchesCount;
   }
 
   @action
   private updateState({
-    matchesCount,
     state,
     previous,
   }: {
@@ -66,8 +84,6 @@ export default class PDFTextFinder {
         this.status = undefined;
         break;
     }
-
-    this.updateResultsCount(matchesCount);
   }
 
   @observable public accessor config = {
@@ -79,7 +95,11 @@ export default class PDFTextFinder {
   };
 
   @action
-  public set<T extends keyof PDFTextFinder['config']>(key: T, value: PDFTextFinder['config'][T]) {
+  public set<T extends keyof PDFTextFinder['config']>(key: T, value: PDFTextFinder['config'][T] | undefined) {
+    if (value === undefined) {
+      return;
+    }
+
     this.config[key] = value;
   }
 
@@ -98,6 +118,21 @@ export default class PDFTextFinder {
       findPrevious: findPrev,
       ...this.config,
     });
+  }
+
+  public jumpTo(index: number) {
+    assert(this.result);
+    let offset = index - (this.result.current - 1) + 1;
+
+    while (offset !== 0) {
+      if (offset > 0) {
+        this.next();
+        offset -= 1;
+      } else {
+        this.prev();
+        offset += 1;
+      }
+    }
   }
 
   public destroy() {

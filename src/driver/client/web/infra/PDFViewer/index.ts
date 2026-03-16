@@ -1,4 +1,4 @@
-import { AnnotationEditorType, type PDFDocumentProxy } from 'pdfjs-dist';
+import { AnnotationEditorType, type PDFDocumentProxy, type PDFPageProxy } from 'pdfjs-dist';
 import {
   EventBus,
   LinkTarget,
@@ -7,6 +7,7 @@ import {
   PDFViewer as BasePDFViewer,
   ScrollMode,
   SpreadMode,
+  type PDFPageView,
 } from 'pdfjs-dist/web/pdf_viewer.mjs';
 import assert from 'assert';
 import { range } from 'lodash-es';
@@ -62,13 +63,13 @@ function isValidSpreadMode(mode: unknown): mode is number {
 }
 
 export default class PDFViewer {
-  private history?: PDFHistory;
+  public history?: PDFHistory;
 
   protected readonly abortController = new AbortController();
 
-  @observable.ref public accessor viewer: BasePDFViewer | undefined;
+  @observable.ref private accessor core: BasePDFViewer | undefined;
 
-  private readonly eventBus = new EventBus();
+  public readonly eventBus = new EventBus();
 
   public readonly textFinder = new PDFTextFinder(this.eventBus);
 
@@ -76,9 +77,17 @@ export default class PDFViewer {
 
   @observable public accessor currentPage: number | undefined;
 
+  public get pagesPromise() {
+    return this.core?.pagesPromise;
+  }
+
+  public get viewerElement() {
+    return this.core?.viewer;
+  }
+
   @computed
   public get totalPage() {
-    return this.viewer?.pagesCount;
+    return this.core?.pagesCount;
   }
 
   public async init(doc: PDFDocumentProxy, options: Options) {
@@ -149,7 +158,7 @@ export default class PDFViewer {
     }
 
     runInAction(() => {
-      this.viewer = pdfViewer;
+      this.core = pdfViewer;
     });
 
     await Promise.all([
@@ -183,8 +192,8 @@ export default class PDFViewer {
   }
 
   private async initPageLabels() {
-    assert(this.viewer);
-    const labels = await this.viewer.pdfDocument?.getPageLabels();
+    assert(this.core);
+    const labels = await this.core.pdfDocument?.getPageLabels();
 
     if (!labels) {
       return;
@@ -210,7 +219,7 @@ export default class PDFViewer {
       return;
     }
 
-    this.viewer.setPageLabels(labels);
+    this.core.setPageLabels(labels);
   }
 
   private setInitialView(
@@ -222,7 +231,7 @@ export default class PDFViewer {
       scale,
     }: { scale?: string; rotation?: unknown; scrollMode?: unknown; spreadMode?: unknown } = {},
   ) {
-    const viewer = this.viewer;
+    const viewer = this.core;
     assert(viewer);
 
     const setRotation = (angle: unknown) => {
@@ -253,17 +262,17 @@ export default class PDFViewer {
   }
 
   private onResize() {
-    assert(this.viewer);
-    const currentScaleValue = this.viewer.currentScaleValue;
+    assert(this.core);
+    const currentScaleValue = this.core.currentScaleValue;
     if (
       currentScaleValue === ScaleValues.Auto ||
       currentScaleValue === ScaleValues.PageFit ||
       currentScaleValue === ScaleValues.PageWidth
     ) {
       // Note: the scale is constant for 'page-actual'.
-      this.viewer.currentScaleValue = currentScaleValue;
+      this.core.currentScaleValue = currentScaleValue;
     }
-    this.viewer.update();
+    this.core.update();
   }
 
   private hijackClick(e: MouseEvent) {
@@ -272,20 +281,34 @@ export default class PDFViewer {
       e.preventDefault();
     }
   }
+  public getPageInfo(page: number) {
+    const pageView: PDFPageView = this.core?.getPageView(page - 1);
+    const pdfPage: PDFPageProxy = pageView.pdfPage;
+    const [x0, y0, x1, y1] = pdfPage.view;
+
+    const { div: element } = pageView;
+    return { height: y1! - y0!, width: x1! - x0!, element };
+  }
 
   public setScale(value: number | ScaleValues | 'up' | 'down') {
-    assert(this.viewer);
-    const { currentScale } = this.viewer;
+    assert(this.core);
+    const { currentScale } = this.core;
 
     if (value === 'up') {
-      this.viewer.currentScale = SCALE_STEPS.find((step) => step > currentScale) || currentScale;
+      this.core.currentScale = SCALE_STEPS.find((step) => step > currentScale) || currentScale;
     } else if (value === 'down') {
-      this.viewer.currentScale = SCALE_STEPS.findLast((step) => step < currentScale) || currentScale;
+      this.core.currentScale = SCALE_STEPS.findLast((step) => step < currentScale) || currentScale;
     } else if (typeof value === 'number') {
-      this.viewer.currentScale = value;
+      this.core.currentScale = value;
     } else {
-      this.viewer.currentScaleValue = value;
+      this.core.currentScaleValue = value;
     }
+  }
+
+  // 每一页总是会有 text layer，即使其中并没有文本
+  public getPageTextLayerElement(page: number) {
+    const div = (this.core?.getPageView(page - 1) as PDFPageView | undefined)?.textLayer?.div;
+    return div;
   }
 
   @action
@@ -294,34 +317,34 @@ export default class PDFViewer {
   }
 
   public readonly goToNextPage = () => {
-    assert(this.viewer);
-    return this.viewer.nextPage();
+    assert(this.core);
+    return this.core.nextPage();
   };
 
   public readonly goToPreviousPage = () => {
-    assert(this.viewer);
-    return this.viewer.previousPage();
+    assert(this.core);
+    return this.core.previousPage();
   };
 
   public jumpTo(page: number | OutlineItem | string) {
-    assert(this.viewer?.pdfDocument);
-    const totalPage = this.viewer.pdfDocument.numPages;
+    assert(this.core?.pdfDocument);
+    const totalPage = this.core.pdfDocument.numPages;
 
     if (!totalPage || (typeof page === 'number' && (page < 1 || page > totalPage || !Number.isInteger(page)))) {
       return false;
     }
 
     if (typeof page === 'number') {
-      this.viewer.currentPageNumber = page;
+      this.core.currentPageNumber = page;
     } else if (typeof page === 'string') {
-      this.viewer.linkService.setHash(page);
+      this.core.linkService.setHash(page);
     } else if (page.dest) {
-      this.viewer.linkService.goToDestination(page.dest);
+      this.core.linkService.goToDestination(page.dest);
     }
   }
 
   public destroy() {
-    this.viewer?.cleanup();
+    this.core?.cleanup();
     this.history?.reset();
     this.textFinder.destroy();
     this.abortController.abort();

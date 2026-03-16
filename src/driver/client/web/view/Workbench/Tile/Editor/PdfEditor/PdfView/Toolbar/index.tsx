@@ -2,23 +2,27 @@ import { ListIcon, NotepadTextIcon, PenLineIcon, TextSearchIcon } from 'lucide-s
 import { Switch } from '@ark-ui/solid';
 import assert from 'assert';
 
-import type PdfViewer from '../PDFViewer';
 import PageSwitcher from './PageSwitcher';
 import Scale from './Scale';
 import BackAndForward from './BackAndForward';
+import { useContext } from '../context';
 
-export default function Toolbar(props: { viewer: PdfViewer }) {
+export default function Toolbar() {
+  const {
+    viewer: { editor },
+  } = useContext()!;
+
   function toggleAnnotationPanel() {
-    props.viewer.editor.annotation.toggle();
+    editor.annotation.uiState.isEnabled = !editor.annotation.uiState.isEnabled;
   }
 
   function toggleBodyPanel() {
-    props.viewer.editor.body.toggle();
+    editor.body.isEnabled = !editor.body.isEnabled;
   }
 
   function toggleOutlinePanel() {
-    assert(props.viewer.editor.outline.uiState);
-    props.viewer.editor.outline.uiState.panelVisible = !props.viewer.editor.outline.uiState.panelVisible;
+    assert(editor.outline.uiState);
+    editor.outline.uiState.isEnabled = !editor.outline.uiState.isEnabled;
   }
 
   return (
@@ -32,20 +36,20 @@ export default function Toolbar(props: { viewer: PdfViewer }) {
           <ListIcon class="mr-1" />
           大纲
         </button>
-        <Scale viewer={props.viewer} />
-        <BackAndForward viewer={props.viewer} />
+        <Scale />
+        <BackAndForward />
       </div>
       <div class="space-x-6 flex absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 ">
-        <PageSwitcher viewer={props.viewer} />
-        <button onClick={() => props.viewer.textFinder.model.toggle()}>
+        <PageSwitcher />
+        <button onClick={() => editor.textFinder.toggle()}>
           <TextSearchIcon />
         </button>
       </div>
       <div class="flex space-x-2">
         <Switch.Root
-          checked={props.viewer.editor.svgEditor.isEnabled}
+          checked={editor.svgEditor.isEnabled}
           class="flex"
-          onCheckedChange={() => props.viewer.editor.svgEditor.toggle()}
+          onCheckedChange={() => editor.svgEditor.toggle()}
         >
           <Switch.Label>浏览</Switch.Label>
           <Switch.Control class="w-12 flex bg-gray-100">

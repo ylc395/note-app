@@ -1,14 +1,18 @@
 import { ZoomInIcon, ZoomOutIcon } from 'lucide-solid';
-import type PdfViewer from '../PDFViewer';
+import { useContext } from '../context';
 
-export default function Scale(props: { viewer: PdfViewer }) {
+export default function Scale() {
+  const {
+    viewer: { viewer },
+  } = useContext()!;
+
   return (
     <div class="flex items-center">
-      <button onClick={() => props.viewer.setScale('down')}>
+      <button onClick={() => viewer.setScale('down')}>
         <ZoomOutIcon />
       </button>
-      <span class="mx-2">{props.viewer.scale.text}</span>
-      <button onClick={() => props.viewer.setScale('up')}>
+      <span class="mx-2">{viewer.scale?.text}</span>
+      <button onClick={() => viewer.setScale('up')}>
         <ZoomInIcon />
       </button>
     </div>

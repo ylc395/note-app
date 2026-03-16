@@ -4,7 +4,7 @@ import { SVG } from '@svgdotjs/svg.js'; // 这个库理论上和环境无关，�
 
 import type { AnnotationVO } from '#domain/shared/model/annotation';
 import type AnnotationManager from './AnnotationManager';
-import { expose, instanceToPlain } from '#utils/classTransformer';
+import { assign, expose, instanceToPlain } from '#utils/classTransformer';
 
 export enum Shape {
   Rect = 'rect',
@@ -50,7 +50,9 @@ export default class SvgAnnotationEditor {
 
   @action
   public init(v?: z.infer<typeof optionsSchema>) {
-    Object.assign(this, v);
+    if (v) {
+      assign<SvgAnnotationEditor>(this, v);
+    }
   }
 
   @computed

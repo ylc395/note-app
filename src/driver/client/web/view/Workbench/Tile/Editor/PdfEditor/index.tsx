@@ -26,12 +26,14 @@ export default function PdfEditorView() {
 
   const panels = createMemo(() => {
     assert(ctx.editor instanceof PdfEditor);
-    const totalSize = sum([editor().body, editor().annotation].map(({ width, isEnabled }) => (isEnabled ? width : 0)));
+    const totalSize = sum(
+      [editor().body, editor().annotation.uiState].map(({ width, isEnabled }) => (isEnabled ? width : 0)),
+    );
 
     const panels = compact([
       ctx.editor.body.isEnabled && { id: Panel.Body, size: ctx.editor.body.width },
       { id: Panel.Pdf, size: 100 - totalSize },
-      ctx.editor.annotation.isEnabled && { id: Panel.Annotation, size: ctx.editor.annotation.width },
+      ctx.editor.annotation.uiState.isEnabled && { id: Panel.Annotation, size: ctx.editor.annotation.uiState.width },
     ]);
 
     return {
@@ -46,7 +48,7 @@ export default function PdfEditorView() {
     }
 
     const panelMap = {
-      [Panel.Annotation]: editor().annotation,
+      [Panel.Annotation]: editor().annotation.uiState,
       [Panel.Body]: editor().body,
     };
 
@@ -71,7 +73,7 @@ export default function PdfEditorView() {
         <Splitter.ResizeTrigger class="w-1" id={`${Panel.Body}:${Panel.Pdf}`} />
       </Show>
       <Splitter.Panel id={Panel.Pdf} asChild={(childProps) => <PdfView {...childProps()} />} />
-      <Show when={editor().annotation.isEnabled}>
+      <Show when={editor().annotation.uiState.isEnabled}>
         <Splitter.ResizeTrigger class="w-1" id={`${Panel.Pdf}:${Panel.Annotation}`} />
         <Splitter.Panel id={Panel.Annotation} asChild={(childProps) => <AnnotationList {...childProps()} />} />
       </Show>

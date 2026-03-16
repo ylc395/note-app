@@ -9,7 +9,7 @@ import {
   type Position,
 } from '#domain/client/app/model/note/editor/PdfEditor/AnnotationManager';
 import { IS_DEV } from '#domain/shared/infra/env';
-import type PdfViewer from '../PDFViewer';
+import type PDFEditorViewer from '../PDFEditorViewer';
 
 interface CommentEditor {
   content: string;
@@ -17,7 +17,7 @@ interface CommentEditor {
 }
 
 export default class Selection {
-  constructor(private readonly pdfViewer: PdfViewer) {}
+  constructor(private readonly pdfViewer: PDFEditorViewer) {}
 
   private rootEl?: HTMLElement;
 
@@ -77,8 +77,8 @@ export default class Selection {
       !s ||
       !s.focusNode ||
       !s.anchorNode ||
-      !this.pdfViewer.viewerElement?.contains(s.anchorNode) ||
-      !this.pdfViewer.viewerElement.contains(s.focusNode) ||
+      !this.pdfViewer.viewer.viewerElement?.contains(s.anchorNode) ||
+      !this.pdfViewer.viewer.viewerElement.contains(s.focusNode) ||
       s.isCollapsed ||
       !range ||
       range.cloneContents().querySelector('mark')
@@ -107,7 +107,7 @@ export default class Selection {
     const currentRanges = pageRange.map((page) => AnnotationManager.positionToRange(position, page));
 
     const markers = pageRange.map((range) => {
-      const textLayer = this.pdfViewer.getPageTextLayerElement(range);
+      const textLayer = this.pdfViewer.viewer.getPageTextLayerElement(range);
 
       assert(textLayer);
       return new Mark(textLayer);
@@ -296,7 +296,7 @@ export default class Selection {
         targetNextNode = null;
       }
 
-      const textLayer = this.pdfViewer.getPageTextLayerElement(page);
+      const textLayer = this.pdfViewer.viewer.getPageTextLayerElement(page);
       assert(textLayer);
 
       const treeWalker = document.createTreeWalker(textLayer, NodeFilter.SHOW_TEXT);
@@ -329,7 +329,7 @@ export default class Selection {
   private positionToRange(position: Position) {
     const range = new Range();
     const setBoundary = (page: number, totalOffset: number, isStart?: boolean) => {
-      const textLayer = this.pdfViewer.getPageTextLayerElement(page);
+      const textLayer = this.pdfViewer.viewer.getPageTextLayerElement(page);
       assert(textLayer);
 
       const treeWalker = document.createTreeWalker(textLayer, NodeFilter.SHOW_TEXT);

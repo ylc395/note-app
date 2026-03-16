@@ -2,11 +2,10 @@ import { createQuery } from 'mobx-tanstack-query/preset';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import type Mark from 'mark.js';
-import { action, computed, observable } from 'mobx';
+import { action, observable } from 'mobx';
 import z from 'zod';
 
 import container from '#utils/singletonContainer';
-import { expose, instanceToPlain } from '#utils/classTransformer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import type { NoteVO } from '#domain/shared/model/note';
 import {
@@ -26,9 +25,10 @@ export interface Position {
   toStart?: boolean;
 }
 
-export const schema = z.object({
-  isEnabled: z.boolean(),
-  width: z.number(),
+export const uiStateSchema = z.object({
+  isEnabled: z.boolean().optional().catch(undefined),
+  width: z.number().catch(30),
+  scroll: z.object({ x: z.number(), y: z.number() }).optional().catch(undefined),
 });
 
 export default class AnnotationManager {
@@ -37,13 +37,9 @@ export default class AnnotationManager {
       select: (data) => data.toSorted(AnnotationManager.sort),
       queryKey: ['annotations', { noteId }],
       abortSignal: this.destroyController.signal,
-      options: () => ({ enabled: this.isEnabled }),
+      options: () => ({ enabled: this.uiState.isEnabled }),
     });
   }
-
-  @observable @expose() public accessor isEnabled = false;
-
-  @observable @expose() public accessor width = 30;
 
   private readonly destroyController = new AbortController();
 
@@ -113,19 +109,16 @@ export default class AnnotationManager {
     return range;
   }
 
-  @computed
-  public get uiState() {
-    return instanceToPlain(this);
-  }
+  @observable
+  public accessor uiState: z.infer<typeof uiStateSchema> = {
+    width: 30,
+  };
 
   @action
-  public init(value?: z.infer<typeof schema>) {
-    Object.assign(this, value);
-  }
-
-  @action
-  public toggle() {
-    this.isEnabled = !this.isEnabled;
+  public init(value?: AnnotationManager['uiState']) {
+    if (value) {
+      this.uiState = value;
+    }
   }
 
   @action
