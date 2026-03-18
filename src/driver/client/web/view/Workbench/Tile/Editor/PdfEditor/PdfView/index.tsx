@@ -48,6 +48,7 @@ export default function PdfEditorView(props: Record<string, unknown>) {
             </Show>
             <div
               class="relative grow overflow-hidden"
+              classList={{ invisible: !pdfViewer.viewer.isReady }}
               data-drawing-mode={pdfViewer.editor.svgEditor.isEnabled ? pdfViewer.editor.svgEditor.mode : ''}
             >
               <div

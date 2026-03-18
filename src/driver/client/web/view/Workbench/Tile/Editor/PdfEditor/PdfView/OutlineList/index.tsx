@@ -1,6 +1,7 @@
 import { createEffect, createSignal, For, onCleanup, Show, untrack } from 'solid-js';
 import { LoaderCircleIcon, EyeIcon } from 'lucide-solid';
 import assert from 'assert';
+import { action } from 'mobx';
 
 import Item from './Item';
 import OutlineViewModel from './Outline';
@@ -64,7 +65,7 @@ export default function Outline() {
             当前浏览
           </button>
         </div>
-        <div class="min-h-0 overflow-auto" ref={setListRef} onScrollEnd={handleScroll}>
+        <div class="min-h-0 overflow-auto" ref={setListRef} onScrollEnd={action(handleScroll)}>
           <For
             each={viewer.editor.outline.items}
             fallback={

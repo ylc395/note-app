@@ -1,6 +1,7 @@
 import { ListIcon, NotepadTextIcon, PenLineIcon, TextSearchIcon } from 'lucide-solid';
 import { Switch } from '@ark-ui/solid';
 import assert from 'assert';
+import { action } from 'mobx';
 
 import PageSwitcher from './PageSwitcher';
 import Scale from './Scale';
@@ -28,11 +29,11 @@ export default function Toolbar() {
   return (
     <div class="flex justify-between py-2 border-b px-2 relative">
       <div class="space-x-4 flex text-sm">
-        <button class="flex items-center" onClick={toggleBodyPanel}>
+        <button class="flex items-center" onClick={action(toggleBodyPanel)}>
           <NotepadTextIcon class="mr-1" />
           笔记
         </button>
-        <button class="flex items-center" onClick={toggleOutlinePanel}>
+        <button class="flex items-center" onClick={action(toggleOutlinePanel)}>
           <ListIcon class="mr-1" />
           大纲
         </button>

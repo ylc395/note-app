@@ -85,9 +85,12 @@ export default class PDFViewer {
     return this.core?.viewer;
   }
 
+  @observable
+  public accessor isReady = false;
+
   @computed
   public get totalPage() {
-    return this.core?.pagesCount;
+    return this.isReady ? this.core?.pagesCount : undefined;
   }
 
   public async init(doc: PDFDocumentProxy, options: Options) {
@@ -189,6 +192,10 @@ export default class PDFViewer {
         pdfViewer.update();
       }),
     ]);
+
+    runInAction(() => {
+      this.isReady = true;
+    });
   }
 
   private async initPageLabels() {

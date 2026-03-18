@@ -1,4 +1,4 @@
-import { action, autorun, computed, observable, reaction, when } from 'mobx';
+import { action, computed, observable, reaction, when } from 'mobx';
 import assert from 'assert';
 import { last } from 'lodash-es';
 
@@ -27,12 +27,11 @@ export default class Outline {
     const expanded = this.pdfViewer.editor.outline.uiState?.expanded;
     this.expandedKeys = new Set(expanded);
 
-    autorun(
-      () => {
-        if (this.expandedKeys) {
-          this.pdfViewer.editor.outline.uiState!.expanded = Array.from(this.expandedKeys);
-        }
-      },
+    reaction(
+      () => Array.from(this.expandedKeys!),
+      action((keys) => {
+        this.pdfViewer.editor.outline.uiState!.expanded = Array.from(keys);
+      }),
       { signal: this.destroyController.signal },
     );
   }

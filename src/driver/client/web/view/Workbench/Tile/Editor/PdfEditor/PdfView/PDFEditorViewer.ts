@@ -1,4 +1,4 @@
-import { reaction, when } from 'mobx';
+import { action, reaction, when } from 'mobx';
 import PDFViewer, { type Options } from '#web/infra/PDFViewer';
 import type PdfEditor from '#domain/client/app/model/note/editor/PdfEditor';
 
@@ -13,8 +13,17 @@ export default class PDFEditorViewer {
 
   public async init(options: Pick<Options, 'container' | 'view'>) {
     await when(() => this.editor.isReady, { signal: this.abortController.signal });
-    return this.viewer.init(this.editor.doc!, options);
+
+    return this.viewer.init(this.editor.doc!, {
+      ...options,
+      initialProgress: this.editor.progress,
+      onProgressUpdated: this.updateProgress,
+    });
   }
+
+  private readonly updateProgress: Options['onProgressUpdated'] = action(({ location: { pdfOpenParams } }) => {
+    this.editor.progress = pdfOpenParams.replace(/^#/, '');
+  });
 
   private bindTextFinder() {
     const fields = ['query', 'caseSensitive', 'entireWord'] as const;
