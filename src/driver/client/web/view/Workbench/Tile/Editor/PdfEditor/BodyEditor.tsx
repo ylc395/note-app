@@ -10,5 +10,5 @@ export default function BodyEditor() {
     }
   }
 
-  return <MarkdownEditor onUpdate={onUpdated} />;
+  return <MarkdownEditor className="border-r-border-primary border-r h-full" onUpdate={onUpdated} />;
 }

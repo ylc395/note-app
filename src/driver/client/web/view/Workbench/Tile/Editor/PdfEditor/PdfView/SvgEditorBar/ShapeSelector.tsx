@@ -2,7 +2,7 @@ import { Select, createListCollection } from '@ark-ui/solid';
 import { Index } from 'solid-js';
 import { ChevronDownIcon } from 'lucide-solid';
 import { Shape } from '#domain/client/app/model/note/editor/PdfEditor/SvgAnnotationEditor';
-import { useContext } from '../context';
+import { useContext } from '../../context';
 
 export default function ShapeSelector() {
   const {

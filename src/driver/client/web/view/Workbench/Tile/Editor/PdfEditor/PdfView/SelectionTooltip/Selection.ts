@@ -9,7 +9,7 @@ import {
   type Position,
 } from '#domain/client/app/model/note/editor/PdfEditor/AnnotationManager';
 import { IS_DEV } from '#domain/shared/infra/env';
-import type PDFEditorViewer from '../PDFEditorViewer';
+import type PDFEditorViewer from '../../PDFEditorViewer';
 
 interface CommentEditor {
   content: string;

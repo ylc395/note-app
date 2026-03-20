@@ -3,7 +3,7 @@ import { Show } from 'solid-js';
 import SvgAnnotationEditor, { Shape } from '#domain/client/app/model/note/editor/PdfEditor/SvgAnnotationEditor';
 import FreeShape from './FreeShape';
 import RegularShape from './RegularShape';
-import { useContext } from '../../context';
+import { useContext } from '../../../context';
 
 export default function SvgEditor(props: {
   page: number;

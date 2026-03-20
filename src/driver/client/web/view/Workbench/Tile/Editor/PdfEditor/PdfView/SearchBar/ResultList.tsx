@@ -3,7 +3,7 @@ import assert from 'assert';
 import { sumBy } from 'lodash-es';
 
 import type { Digest } from '#domain/client/app/model/note/editor/PdfEditor/TextFinder';
-import { useContext } from '../context';
+import { useContext } from '../../context';
 
 function DigestView(props: { digest: Digest; index: number }) {
   let rootRef: HTMLDivElement | undefined;

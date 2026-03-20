@@ -11,12 +11,6 @@ import type { NoteVO } from '#domain/shared/model/note';
 
 export type { OutlineItem } from '#web/infra/PDFViewer';
 
-export const uiStateSchema = z.object({
-  expanded: z.string().array().optional(),
-  isEnabled: z.boolean().optional(),
-  scroll: z.object({ x: z.number(), y: z.number() }).optional().catch(undefined),
-});
-
 export default class OutlineList {
   constructor(noteId: NoteVO['id'], private readonly annotation: AnnotationManager) {
     this._items = createQuery(this.createItems.bind(this), {
@@ -47,7 +41,7 @@ export default class OutlineList {
     return this._items.result.data?.pageToOutlineItemsMap;
   }
 
-  @observable public accessor uiState: z.infer<typeof uiStateSchema> = {};
+  @observable public accessor uiState: z.infer<typeof OutlineList.schema> = {};
 
   @action
   public init(v?: OutlineList['uiState']) {
@@ -145,4 +139,12 @@ export default class OutlineList {
   public destroy() {
     this.destroyController.abort();
   }
+
+  public static readonly schema = z.object({
+    expanded: z.string().array().optional().catch(undefined),
+    isEnabled: z.boolean().optional().catch(undefined),
+    width: z.number().optional().catch(undefined),
+    scroll: z.object({ x: z.number(), y: z.number() }).optional().catch(undefined),
+    floatingPos: z.object({ x: z.number(), y: z.number() }).nullish().catch(undefined),
+  });
 }

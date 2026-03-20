@@ -4,7 +4,7 @@ import { Popover } from '@ark-ui/solid';
 
 import ResultList from './ResultList';
 import Input from './Input';
-import { useContext } from '../context';
+import { useContext } from '../../context';
 
 export default function SearchBar() {
   const {

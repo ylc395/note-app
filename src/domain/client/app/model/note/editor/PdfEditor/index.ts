@@ -9,10 +9,11 @@ import { MimeTypes } from '#domain/shared/model/file';
 import BaseEditor from '../BaseEditor';
 import PDFDocumentFactory from '../../../base/PDFDocumentFactory';
 import PageTextManager from './PageTextManager';
-import TextFinder, { optionsSchema as textFinderSchema } from './TextFinder';
-import AnnotationManager, { uiStateSchema as annotationSchema } from './AnnotationManager';
-import OutlineList, { uiStateSchema as outlineSchema } from './OutlineList';
-import SvgAnnotationEditor, { optionsSchema as svgAnnotationEditorSchema } from './SvgAnnotationEditor';
+import TextFinder from './TextFinder';
+import AnnotationManager from './AnnotationManager';
+import OutlineList from './OutlineList';
+import SvgAnnotationEditor from './SvgAnnotationEditor';
+import BodyEditor from './BodyEditor';
 
 export type { OutlineItem } from './OutlineList';
 
@@ -20,18 +21,11 @@ const uiStateSchema = z
   .object({
     progress: z.string().optional().catch(undefined), // 当前浏览的进度。通常是一个 pdf hash
     newAnnotationColor: z.string().optional().catch(undefined),
-    body: z
-      .object({
-        isEnabled: z.boolean(),
-        width: z.number(),
-      })
-      .optional()
-      .catch(undefined),
-
-    annotations: annotationSchema.optional().catch(undefined),
-    outline: outlineSchema.optional().catch(undefined),
-    textFinder: textFinderSchema.optional().catch(undefined),
-    svgEditor: svgAnnotationEditorSchema.optional().catch(undefined),
+    body: BodyEditor.schema.optional().catch(undefined),
+    annotations: AnnotationManager.schema.optional().catch(undefined),
+    outline: OutlineList.schema.optional().catch(undefined),
+    textFinder: TextFinder.schema.optional().catch(undefined),
+    svgEditor: SvgAnnotationEditor.schema.optional().catch(undefined),
   })
   .catch({});
 
@@ -61,10 +55,7 @@ export default class PdfEditor extends BaseEditor {
 
   public readonly outline = new OutlineList(this.noteId, this.annotation);
 
-  @observable public accessor body = {
-    isEnabled: false,
-    width: 30,
-  };
+  public readonly body = new BodyEditor();
 
   public readonly textFinder = new TextFinder(this.texts);
 
@@ -100,8 +91,7 @@ export default class PdfEditor extends BaseEditor {
         this.outline.init(uiState.outline);
         this.textFinder.init(uiState.textFinder);
         this.svgEditor.init(uiState.svgEditor);
-
-        this.body = uiState.body || this.body;
+        this.body.init(uiState.body);
         this.progress = uiState.progress;
 
         if (uiState.newAnnotationColor) {
@@ -115,7 +105,7 @@ export default class PdfEditor extends BaseEditor {
     autorun(
       () => {
         this.saveUIState({
-          body: toJS(this.body),
+          body: toJS(this.body.uiState),
           annotations: toJS(this.annotation.uiState),
           outline: toJS(this.outline.uiState),
           progress: this.progress,
@@ -128,7 +118,10 @@ export default class PdfEditor extends BaseEditor {
   }
 
   public override destroy() {
-    this.docFactory.revoke(this.noteId);
+    if (this.doc) {
+      this.docFactory.revoke(this.noteId);
+    }
+
     this.textFinder.destroy();
     this.texts.destroy();
     this.outline.destroy();

@@ -1,7 +1,7 @@
 import { CaseSensitiveIcon, WholeWordIcon } from 'lucide-solid';
 import { onMount } from 'solid-js';
 
-import { useContext } from '../context';
+import { useContext } from '../../context';
 
 export default function Input() {
   let inputRef: HTMLInputElement | undefined;

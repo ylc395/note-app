@@ -25,12 +25,6 @@ export interface Position {
   toStart?: boolean;
 }
 
-export const uiStateSchema = z.object({
-  isEnabled: z.boolean().optional().catch(undefined),
-  width: z.number().catch(30),
-  scroll: z.object({ x: z.number(), y: z.number() }).optional().catch(undefined),
-});
-
 export default class AnnotationManager {
   constructor(private readonly noteId: NoteVO['id']) {
     this.items = createQuery(() => this.remote.annotation.queryByEntityId.query(this.noteId), {
@@ -110,9 +104,7 @@ export default class AnnotationManager {
   }
 
   @observable
-  public accessor uiState: z.infer<typeof uiStateSchema> = {
-    width: 30,
-  };
+  public accessor uiState: z.infer<typeof AnnotationManager.schema> = {};
 
   @action
   public init(value?: AnnotationManager['uiState']) {
@@ -125,4 +117,11 @@ export default class AnnotationManager {
   public destroy() {
     this.destroyController.abort();
   }
+
+  public static readonly schema = z.object({
+    isEnabled: z.boolean().optional().catch(undefined),
+    width: z.number().optional().catch(undefined),
+    scroll: z.object({ x: z.number(), y: z.number() }).optional().catch(undefined),
+    floatingPos: z.object({ x: z.number(), y: z.number() }).nullish().catch(undefined),
+  });
 }

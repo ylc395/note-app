@@ -4,7 +4,7 @@ import { MessageSquareMoreIcon, PaintbrushIcon } from 'lucide-solid';
 import CommentInput from './CommentInput';
 import ColorPicker from './ColorPicker';
 import Selection from './Selection';
-import { useContext } from '../context';
+import { useContext } from '../../context';
 
 export default function SelectionTooltip() {
   const { viewer } = useContext()!;

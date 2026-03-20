@@ -17,14 +17,6 @@ export enum Mode {
   Draw = 'draw',
   Select = 'select',
 }
-
-export const optionsSchema = z.object({
-  color: z.string().optional().catch(undefined).catch('red'),
-  fillColor: z.string().optional().catch(undefined).catch('transparent'),
-  thickness: z.number().optional().catch(undefined).catch(5),
-  shape: z.enum(Shape).optional().catch(undefined).catch(Shape.Rect),
-});
-
 export default class SvgAnnotationEditor {
   constructor(private readonly annotationManager: AnnotationManager) {}
 
@@ -49,7 +41,7 @@ export default class SvgAnnotationEditor {
   public accessor thickness = 5;
 
   @action
-  public init(v?: z.infer<typeof optionsSchema>) {
+  public init(v?: z.infer<typeof SvgAnnotationEditor.schema>) {
     if (v) {
       assign<SvgAnnotationEditor>(this, v);
     }
@@ -87,4 +79,11 @@ export default class SvgAnnotationEditor {
       selector: { type: 'PDFSvgSelector', page, svg: draw.svg() },
     } as const;
   }
+
+  public static readonly schema = z.object({
+    color: z.string().optional().catch(undefined).catch('red'),
+    fillColor: z.string().optional().catch(undefined).catch('transparent'),
+    thickness: z.number().optional().catch(undefined).catch(5),
+    shape: z.enum(Shape).optional().catch(undefined).catch(Shape.Rect),
+  });
 }

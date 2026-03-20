@@ -1,4 +1,4 @@
-import { createMemo, Show } from 'solid-js';
+import { createEffect, createMemo, Show } from 'solid-js';
 import { Splitter, type SplitterResizeDetails } from '@ark-ui/solid';
 import { action } from 'mobx';
 import { compact, sum, zipObject } from 'lodash-es';
@@ -9,12 +9,22 @@ import PdfEditor from '#domain/client/app/model/note/editor/PdfEditor';
 import AnnotationList from './AnnotationList';
 import PdfView from './PdfView';
 import BodyEditor from './BodyEditor';
+import Toolbar from './Toolbar';
+import PDFEditorViewer from './PDFEditorViewer';
+import OutlineList from './OutlineList';
+
+import { ContextProvider } from './context';
 import { useContext } from '../context';
 
 enum Panel {
   Body = 'body',
+  Outline = 'outline',
   Pdf = 'pdf',
   Annotation = 'annotation',
+}
+
+function isStatic(state: { isEnabled?: boolean; floatingPos?: unknown }) {
+  return Boolean(state.isEnabled && !state.floatingPos);
 }
 
 export default function PdfEditorView() {
@@ -24,21 +34,26 @@ export default function PdfEditorView() {
     return ctx.editor;
   });
 
+  const pdfViewer = new PDFEditorViewer(editor());
+
   const panels = createMemo(() => {
     assert(ctx.editor instanceof PdfEditor);
-    const totalSize = sum(
-      [editor().body, editor().annotation.uiState].map(({ width, isEnabled }) => (isEnabled ? width : 0)),
-    );
 
     const panels = compact([
-      ctx.editor.body.isEnabled && { id: Panel.Body, size: ctx.editor.body.width },
-      { id: Panel.Pdf, size: 100 - totalSize },
-      ctx.editor.annotation.uiState.isEnabled && { id: Panel.Annotation, size: ctx.editor.annotation.uiState.width },
+      isStatic(ctx.editor.body.uiState) && { id: Panel.Body, size: ctx.editor.body.uiState.width ?? 20 },
+      isStatic(ctx.editor.outline.uiState) && { id: Panel.Outline, size: ctx.editor.outline.uiState.width ?? 20 },
+      { id: Panel.Pdf },
+      isStatic(ctx.editor.annotation.uiState) && {
+        id: Panel.Annotation,
+        size: ctx.editor.annotation.uiState.width ?? 20,
+      },
     ]);
+
+    const totalSize = sum(panels.map(({ size }) => size));
 
     return {
       panels: panels.map(({ id }) => ({ id })),
-      size: panels.map(({ size }) => size),
+      size: panels.map(({ size }) => size ?? 100 - totalSize),
     };
   });
 
@@ -48,8 +63,9 @@ export default function PdfEditorView() {
     }
 
     const panelMap = {
-      [Panel.Annotation]: editor().annotation.uiState,
+      [Panel.Annotation]: editor().annotation,
       [Panel.Body]: editor().body,
+      [Panel.Outline]: editor().outline,
     };
 
     const sizeMap = zipObject(
@@ -59,24 +75,34 @@ export default function PdfEditorView() {
 
     for (const id of resizeTriggerId.split(':')) {
       if (id in panelMap) {
-        panelMap[id as keyof typeof panelMap]!.width = sizeMap[id]!;
+        panelMap[id as keyof typeof panelMap]!.uiState.width = sizeMap[id]!;
       }
     }
   }
 
   return (
-    <Splitter.Root {...panels()} class="grow flex min-h-0" onResize={action(handleResize)}>
-      <Show when={editor().body.isEnabled}>
-        <Splitter.Panel id={Panel.Body}>
-          <BodyEditor />
-        </Splitter.Panel>
-        <Splitter.ResizeTrigger class="w-1" id={`${Panel.Body}:${Panel.Pdf}`} />
-      </Show>
-      <Splitter.Panel id={Panel.Pdf} asChild={(childProps) => <PdfView {...childProps()} />} />
-      <Show when={editor().annotation.uiState.isEnabled}>
-        <Splitter.ResizeTrigger class="w-1" id={`${Panel.Pdf}:${Panel.Annotation}`} />
-        <Splitter.Panel id={Panel.Annotation} asChild={(childProps) => <AnnotationList {...childProps()} />} />
-      </Show>
-    </Splitter.Root>
+    <ContextProvider viewer={pdfViewer}>
+      <Toolbar />
+      <Splitter.Root {...panels()} class="grow flex min-h-0" onResize={action(handleResize)}>
+        <Show when={isStatic(editor().body.uiState)}>
+          <Splitter.Panel id={Panel.Body}>
+            <BodyEditor />
+          </Splitter.Panel>
+          <Splitter.ResizeTrigger
+            class="w-1"
+            id={`${Panel.Body}:${isStatic(pdfViewer.editor.outline.uiState) ? Panel.Outline : Panel.Pdf}`}
+          />
+        </Show>
+        <Show when={isStatic(pdfViewer.editor.outline.uiState)}>
+          <Splitter.Panel id={Panel.Outline} asChild={(childProps) => <OutlineList {...childProps()} />} />
+          <Splitter.ResizeTrigger class="w-1" id={`${Panel.Outline}:${Panel.Pdf}`} />
+        </Show>
+        <Splitter.Panel id={Panel.Pdf} asChild={(childProps) => <PdfView {...childProps()} />} />
+        <Show when={isStatic(editor().annotation.uiState)}>
+          <Splitter.ResizeTrigger class="w-1" id={`${Panel.Pdf}:${Panel.Annotation}`} />
+          <Splitter.Panel id={Panel.Annotation} asChild={(childProps) => <AnnotationList {...childProps()} />} />
+        </Show>
+      </Splitter.Root>
+    </ContextProvider>
   );
 }

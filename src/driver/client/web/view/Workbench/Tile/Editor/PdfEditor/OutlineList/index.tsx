@@ -7,7 +7,7 @@ import Item from './Item';
 import OutlineViewModel from './Outline';
 import { useContext } from '../context';
 
-export default function Outline() {
+export default function Outline(props: Record<string, unknown>) {
   const { viewer } = useContext()!;
   const [listRef, setListRef] = createSignal<HTMLDivElement>();
   const outline = new OutlineViewModel(viewer);
@@ -54,7 +54,7 @@ export default function Outline() {
   }
 
   return (
-    <div class="w-64 overflow-auto h-full border-r pb-4 flex flex-col">
+    <div class="overflow-auto h-full border-r pb-4 flex flex-col" {...props}>
       <Show
         when={!viewer.editor.outline.items || viewer.editor.outline.items.length > 0}
         fallback={<div class="flex h-full justify-center items-center">无大纲</div>}

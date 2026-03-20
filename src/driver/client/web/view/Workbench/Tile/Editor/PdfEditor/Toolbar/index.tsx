@@ -18,7 +18,7 @@ export default function Toolbar() {
   }
 
   function toggleBodyPanel() {
-    editor.body.isEnabled = !editor.body.isEnabled;
+    editor.body.uiState.isEnabled = !editor.body.uiState.isEnabled;
   }
 
   function toggleOutlinePanel() {

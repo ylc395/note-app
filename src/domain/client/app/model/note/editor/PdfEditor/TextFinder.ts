@@ -19,12 +19,6 @@ interface SearchResult {
   total: number;
 }
 
-export const optionsSchema = z.object({
-  caseSensitive: z.boolean().optional().catch(undefined),
-  entireWord: z.boolean().optional().catch(undefined),
-  query: z.string().optional().catch(undefined),
-});
-
 /*
  * 记录用户的搜索条件，并保存搜索结果（含摘要）
  * 其中，搜索结果由外部提供。该类本身没有搜索能力，只负责从 pageTextManager 中，根据搜索结果的位置信息等提取摘要
@@ -38,7 +32,7 @@ export default class TextFinder {
 
   @observable.ref public accessor digests: Array<{ page: number; digests: Digest[] }> | undefined;
 
-  @observable public accessor options: z.infer<typeof optionsSchema> = {};
+  @observable public accessor options: z.infer<typeof TextFinder.schema> = {};
 
   @action
   public init(v?: TextFinder['options']) {
@@ -176,4 +170,10 @@ export default class TextFinder {
 
     return undefined;
   }
+
+  public static readonly schema = z.object({
+    caseSensitive: z.boolean().optional().catch(undefined),
+    entireWord: z.boolean().optional().catch(undefined),
+    query: z.string().optional().catch(undefined),
+  });
 }
