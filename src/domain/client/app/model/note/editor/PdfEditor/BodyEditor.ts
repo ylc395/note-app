@@ -13,6 +13,7 @@ export default class BodyEditor {
   public static schema = z.object({
     isEnabled: z.boolean().optional().catch(undefined),
     width: z.number().optional().catch(undefined),
+    isFloating: z.boolean().optional().catch(undefined),
     floatingPos: z.object({ x: z.number(), y: z.number() }).nullish().catch(undefined),
   });
 }

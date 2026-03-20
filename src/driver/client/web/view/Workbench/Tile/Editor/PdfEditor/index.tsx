@@ -1,4 +1,4 @@
-import { createEffect, createMemo, Show } from 'solid-js';
+import { createMemo, Show } from 'solid-js';
 import { Splitter, type SplitterResizeDetails } from '@ark-ui/solid';
 import { action } from 'mobx';
 import { compact, sum, zipObject } from 'lodash-es';
@@ -23,8 +23,8 @@ enum Panel {
   Annotation = 'annotation',
 }
 
-function isStatic(state: { isEnabled?: boolean; floatingPos?: unknown }) {
-  return Boolean(state.isEnabled && !state.floatingPos);
+function isStatic(state: { isEnabled?: boolean; isFloating?: boolean }) {
+  return Boolean(state.isEnabled && !state.isFloating);
 }
 
 export default function PdfEditorView() {
@@ -83,23 +83,29 @@ export default function PdfEditorView() {
   return (
     <ContextProvider viewer={pdfViewer}>
       <Toolbar />
-      <Splitter.Root {...panels()} class="grow flex min-h-0" onResize={action(handleResize)}>
-        <Show when={isStatic(editor().body.uiState)}>
+      <Splitter.Root {...panels()} class="grow flex min-h-0 relative" onResize={action(handleResize)}>
+        <Show when={editor().body.uiState.isEnabled}>
           <Splitter.Panel id={Panel.Body}>
             <BodyEditor />
           </Splitter.Panel>
-          <Splitter.ResizeTrigger
-            class="w-1"
-            id={`${Panel.Body}:${isStatic(pdfViewer.editor.outline.uiState) ? Panel.Outline : Panel.Pdf}`}
-          />
+          <Show when={!editor().body.uiState.isFloating}>
+            <Splitter.ResizeTrigger
+              class="w-1"
+              id={`${Panel.Body}:${isStatic(editor().outline.uiState) ? Panel.Outline : Panel.Pdf}`}
+            />
+          </Show>
         </Show>
-        <Show when={isStatic(pdfViewer.editor.outline.uiState)}>
+        <Show when={editor().outline.uiState.isEnabled}>
           <Splitter.Panel id={Panel.Outline} asChild={(childProps) => <OutlineList {...childProps()} />} />
-          <Splitter.ResizeTrigger class="w-1" id={`${Panel.Outline}:${Panel.Pdf}`} />
+          <Show when={!editor().outline.uiState.isFloating}>
+            <Splitter.ResizeTrigger class="w-1" id={`${Panel.Outline}:${Panel.Pdf}`} />
+          </Show>
         </Show>
         <Splitter.Panel id={Panel.Pdf} asChild={(childProps) => <PdfView {...childProps()} />} />
-        <Show when={isStatic(editor().annotation.uiState)}>
-          <Splitter.ResizeTrigger class="w-1" id={`${Panel.Pdf}:${Panel.Annotation}`} />
+        <Show when={editor().annotation.uiState.isEnabled}>
+          <Show when={!editor().annotation.uiState.isFloating}>
+            <Splitter.ResizeTrigger class="w-1" id={`${Panel.Pdf}:${Panel.Annotation}`} />
+          </Show>
           <Splitter.Panel id={Panel.Annotation} asChild={(childProps) => <AnnotationList {...childProps()} />} />
         </Show>
       </Splitter.Root>

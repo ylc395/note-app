@@ -1,4 +1,4 @@
-import { createEffect, createSignal, For, onCleanup, Show, untrack } from 'solid-js';
+import { createEffect, createMemo, createSignal, For, onCleanup, Show, untrack } from 'solid-js';
 import { LoaderCircleIcon, EyeIcon } from 'lucide-solid';
 import assert from 'assert';
 import { action } from 'mobx';
@@ -11,15 +11,19 @@ export default function Outline(props: Record<string, unknown>) {
   const { viewer } = useContext()!;
   const [listRef, setListRef] = createSignal<HTMLDivElement>();
   const outline = new OutlineViewModel(viewer);
+  const uiState = viewer.editor.outline.uiState;
+  const styles = createMemo(
+    () => uiState.isFloating && { left: `${uiState.floatingPos?.x || 0}px`, top: `${uiState.floatingPos?.y || 0}px` },
+  );
 
   onCleanup(() => {
     outline.destroy();
   });
 
   function handleScroll(e: Event) {
-    assert(e.target instanceof HTMLElement && viewer.editor.outline.uiState);
+    assert(e.target instanceof HTMLElement);
 
-    viewer.editor.outline.uiState.scroll = {
+    uiState.scroll = {
       x: e.target.scrollLeft,
       y: e.target.scrollTop,
     };
@@ -31,8 +35,7 @@ export default function Outline(props: Record<string, unknown>) {
     if (
       listElement &&
       viewer.editor.outline.items &&
-      outline.expandedKeys && // 确保已完成展开
-      viewer.editor.outline.uiState
+      outline.expandedKeys // 确保已完成展开
     ) {
       const scroll = untrack(() => viewer.editor.outline.uiState?.scroll);
 
@@ -53,8 +56,17 @@ export default function Outline(props: Record<string, unknown>) {
     }
   }
 
+  function toggleFloating() {
+    uiState.isFloating = !uiState.isFloating;
+  }
+
   return (
-    <div class="overflow-auto h-full border-r pb-4 flex flex-col" {...props}>
+    <div
+      class="overflow-auto h-full border-r pb-4 flex flex-col"
+      classList={{ absolute: uiState.isFloating }}
+      {...props}
+      style={{ ...(props.style || {}), ...styles() }}
+    >
       <Show
         when={!viewer.editor.outline.items || viewer.editor.outline.items.length > 0}
         fallback={<div class="flex h-full justify-center items-center">无大纲</div>}
@@ -63,6 +75,10 @@ export default function Outline(props: Record<string, unknown>) {
           <button class="flex items-center text-sm" onClick={scrollToFocused}>
             <EyeIcon class="mr-1" />
             当前浏览
+          </button>
+          <button class="flex items-center text-sm" onClick={action(toggleFloating)}>
+            <EyeIcon class="mr-1" />
+            悬浮
           </button>
         </div>
         <div class="min-h-0 overflow-auto" ref={setListRef} onScrollEnd={action(handleScroll)}>
