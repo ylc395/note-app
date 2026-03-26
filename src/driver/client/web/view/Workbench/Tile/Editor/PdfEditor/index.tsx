@@ -85,9 +85,7 @@ export default function PdfEditorView() {
       <Toolbar />
       <Splitter.Root {...panels()} class="grow flex min-h-0 relative" onResize={action(handleResize)}>
         <Show when={editor().body.uiState.isEnabled}>
-          <Splitter.Panel id={Panel.Body}>
-            <BodyEditor />
-          </Splitter.Panel>
+          <BodyEditor id={Panel.Body} />
           <Show when={!editor().body.uiState.isFloating}>
             <Splitter.ResizeTrigger
               class="w-1"
@@ -96,7 +94,7 @@ export default function PdfEditorView() {
           </Show>
         </Show>
         <Show when={editor().outline.uiState.isEnabled}>
-          <Splitter.Panel id={Panel.Outline} asChild={(childProps) => <OutlineList {...childProps()} />} />
+          <OutlineList id={Panel.Outline} />
           <Show when={!editor().outline.uiState.isFloating}>
             <Splitter.ResizeTrigger class="w-1" id={`${Panel.Outline}:${Panel.Pdf}`} />
           </Show>
@@ -106,7 +104,7 @@ export default function PdfEditorView() {
           <Show when={!editor().annotation.uiState.isFloating}>
             <Splitter.ResizeTrigger class="w-1" id={`${Panel.Pdf}:${Panel.Annotation}`} />
           </Show>
-          <Splitter.Panel id={Panel.Annotation} asChild={(childProps) => <AnnotationList {...childProps()} />} />
+          <AnnotationList id={Panel.Annotation} />
         </Show>
       </Splitter.Root>
     </ContextProvider>

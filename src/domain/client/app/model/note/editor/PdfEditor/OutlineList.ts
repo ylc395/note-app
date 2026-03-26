@@ -146,6 +146,13 @@ export default class OutlineList {
     width: z.number().optional().catch(undefined),
     scroll: z.object({ x: z.number(), y: z.number() }).optional().catch(undefined),
     isFloating: z.boolean().optional().catch(undefined),
-    floatingPos: z.object({ x: z.number(), y: z.number() }).nullish().catch(undefined),
+    floatingPos: z
+      .object({
+        x: z.number(),
+        y: z.number(),
+        width: z.number().optional(),
+      })
+      .optional()
+      .catch(undefined),
   });
 }

@@ -94,6 +94,10 @@ export default class PDFViewer {
   }
 
   public async init(doc: PDFDocumentProxy, options: Options) {
+    if (this.abortController.signal.aborted) {
+      return;
+    }
+
     const linkService = new PDFLinkService({
       eventBus: this.eventBus,
       externalLinkTarget: LinkTarget.BLANK,

@@ -13,3 +13,16 @@ export function isFullyVisible(dom: HTMLElement) {
     domRect.bottom <= parentRect.bottom
   );
 }
+
+export function findAncestor(element: HTMLElement, until: (el: HTMLElement) => boolean) {
+  let parent: HTMLElement | null = element;
+
+  // eslint-disable-next-line no-cond-assign
+  while ((parent = parent.parentElement)) {
+    if (until(parent)) {
+      return parent;
+    }
+  }
+
+  return null;
+}

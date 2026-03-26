@@ -1,4 +1,4 @@
-import { createMemo, For, Show, splitProps } from 'solid-js';
+import { createMemo, For, Show } from 'solid-js';
 import { LoaderCircleIcon } from 'lucide-solid';
 import assert from 'assert';
 
@@ -8,9 +8,10 @@ import TextItem from './TextItem';
 import Settings from './Settings';
 import SvgItem from './SvgItem';
 import { useContext } from '../../context';
+import { useSplitterContext } from '@ark-ui/solid';
 
-export default function AnnotationList(props: Record<string, unknown>) {
-  const [_, restProps] = splitProps(props, ['editor']);
+export default function AnnotationList(props: { id: string }) {
+  const splitter = useSplitterContext();
   const ctx = useContext()!;
   const editor = createMemo(() => {
     assert(ctx.editor instanceof PdfEditor);
@@ -45,7 +46,10 @@ export default function AnnotationList(props: Record<string, unknown>) {
   });
 
   return (
-    <div class="w-64 p-2 border-l flex flex-col overflow-auto" {...restProps}>
+    <div
+      class="w-64 p-2 border-l flex flex-col overflow-auto"
+      {...(editor().annotation.uiState.isFloating ? null : splitter().getPanelProps({ id: props.id }))}
+    >
       <div class="flex justify-between mb-2">
         <Show when={items()}>{(items) => <div class="text-sm">共计 {items().length} 个</div>}</Show>
         <Settings />
