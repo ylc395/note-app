@@ -13,6 +13,7 @@ import { history } from '@milkdown/kit/plugin/history';
 import { listener, listenerCtx, type ListenerManager } from '@milkdown/kit/plugin/listener';
 import { replaceAll } from '@milkdown/kit/utils';
 import { upload, uploadConfig } from '@milkdown/kit/plugin/upload';
+import assert from 'assert';
 
 import multimedia from './nodes/multimedia';
 import link from './nodes/link';
@@ -118,13 +119,20 @@ export default class Editor {
   }
 
   public replaceContent(body: string) {
-    if (this.core.status === EditorStatus.Created) {
-      this.core.action(replaceAll(body));
-    }
+    assert(this.isCreated);
+    this.core.action(replaceAll(body));
   }
 
   public async destroy() {
     await this.core.destroy(true);
+  }
+
+  public get isCreated() {
+    return this.core.status === EditorStatus.Created;
+  }
+
+  public onStatusChange(cb: () => void) {
+    this.core.onStatusChange(cb);
   }
 
   public init() {

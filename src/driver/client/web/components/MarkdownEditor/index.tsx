@@ -6,9 +6,11 @@ import clsx from 'clsx';
 export default function MarkdownEditor(props: {
   readonly?: boolean;
   className?: string;
+  onScrollEnd?: (e: { x: number; y: number }) => void;
   ref?: (value: Editor) => void;
   /** 以下 prop 不具有响应性 */
   defaultValue?: string;
+  initialScroll?: { x: number; y: number };
   onUpdate?: (md: string) => void;
 }) {
   let rootRef: HTMLDivElement | undefined;
@@ -25,6 +27,12 @@ export default function MarkdownEditor(props: {
     if (onUpdate) {
       editor.on((listener) => listener.markdownUpdated((_, markdown) => onUpdate(markdown)));
     }
+
+    editor.onStatusChange(() => {
+      if (editor.isCreated && props.initialScroll) {
+        rootRef!.scrollTo(props.initialScroll.x, props.initialScroll.y);
+      }
+    });
 
     editor.init();
     setEditor(editor);
@@ -50,5 +58,12 @@ export default function MarkdownEditor(props: {
     getEditor()?.destroy();
   });
 
-  return <div class={clsx(props.className, 'select-text')} spellcheck={false} ref={rootRef}></div>;
+  return (
+    <div
+      class={clsx(props.className, 'select-text')}
+      spellcheck={false}
+      ref={rootRef}
+      onScrollEnd={props.onScrollEnd && (() => props.onScrollEnd?.({ x: rootRef!.scrollLeft, y: rootRef!.scrollTop }))}
+    ></div>
+  );
 }

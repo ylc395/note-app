@@ -1,9 +1,15 @@
-import { action, computed, reaction } from 'mobx';
+import { action, autorun, computed, observable, reaction, toJS } from 'mobx';
 import assert from 'assert';
 import { debounce } from 'lodash-es';
 
 import BaseEditor from '../BaseEditor';
 import Uploader from '../Uploader';
+import z from 'zod';
+
+const uiStateSchema = z.object({
+  scroll: z.object({ x: z.number(), y: z.number() }).optional().catch(undefined),
+  cursorPos: z.number().optional().catch(undefined),
+});
 
 export default class MarkdownEditor extends BaseEditor {
   constructor(...args: ConstructorParameters<typeof BaseEditor>) {
@@ -13,6 +19,30 @@ export default class MarkdownEditor extends BaseEditor {
       () => this.isEmptyBody,
       debounce((isEmptyBody) => (isEmptyBody ? this.initUploader() : this.removeUploader()), 800),
       { signal: this.destroyController.signal, fireImmediately: true },
+    );
+
+    this.initUIState();
+  }
+
+  @observable
+  public accessor uiState: z.infer<typeof uiStateSchema> | undefined;
+
+  @computed
+  public get isReady() {
+    return Boolean(this.value.data && this.uiState);
+  }
+
+  private async initUIState() {
+    const uiState = await this.getUIState(uiStateSchema);
+    this.uiState = uiState || {};
+
+    autorun(
+      () => {
+        if (this.uiState) {
+          this.saveUIState(toJS(this.uiState));
+        }
+      },
+      { signal: this.destroyController.signal },
     );
   }
 

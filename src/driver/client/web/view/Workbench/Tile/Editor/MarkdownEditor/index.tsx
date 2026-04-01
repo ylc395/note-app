@@ -1,5 +1,6 @@
 import { createEffect, createSignal, on, Show } from 'solid-js';
 import assert from 'assert';
+import { action } from 'mobx';
 
 import Workbench from '#domain/client/app/model/Workbench';
 import container from '#utils/singletonContainer';
@@ -17,12 +18,19 @@ export default function MarkdownEditorView() {
 
   assert(editor instanceof MarkdownEditor);
 
+  // 其他编辑器改动内容时，本编辑器同步更新
   createEffect(
     on(
       () => editor.value.result.data?.body,
       (body) => {
-        if (typeof body === 'string' && workbench.currentEditor && workbench.currentEditor !== editor) {
-          getCrepe()?.replaceContent(body);
+        const mdEditor = getCrepe();
+        if (
+          mdEditor?.isCreated &&
+          typeof body === 'string' &&
+          workbench.currentEditor &&
+          workbench.currentEditor !== editor
+        ) {
+          mdEditor.replaceContent(body);
         }
       },
     ),
@@ -34,22 +42,30 @@ export default function MarkdownEditorView() {
     }
   }
 
+  function handleScrollEnd(e: { x: number; y: number }) {
+    assert(editor instanceof MarkdownEditor);
+
+    if (editor.uiState) {
+      editor.uiState.scroll = e;
+    }
+  }
+
   return (
-    <Show when={editor.value.result.data}>
-      {(note) => (
-        <div class="min-h-0 grow overflow-hidden">
-          <BaseMarkdownEditor
-            ref={setCrepe}
-            className="h-full overflow-auto border-16 border-surface-primary"
-            defaultValue={note().body}
-            readonly={editor.isUploading}
-            onUpdate={onUpdate}
-          />
-          <Show when={!note().body}>
-            <Empty />
-          </Show>
-        </div>
-      )}
+    <Show when={editor.isReady}>
+      <div class="min-h-0 grow overflow-hidden">
+        <BaseMarkdownEditor
+          ref={setCrepe}
+          className="h-full overflow-auto border-16 border-surface-primary"
+          defaultValue={editor.value.result.data!.body}
+          initialScroll={editor.uiState!.scroll}
+          readonly={editor.isUploading}
+          onUpdate={onUpdate}
+          onScrollEnd={action(handleScrollEnd)}
+        />
+        <Show when={!editor.value.result.data!.body}>
+          <Empty />
+        </Show>
+      </div>
     </Show>
   );
 }
