@@ -226,7 +226,7 @@ export default abstract class BaseEditor {
   public toObject() {
     return {
       noteId: this.noteId,
-      mimeType: this.value.data?.mimeType || null, // 不能读取 editor.mimeType，因为它可能是一个预览用的
+      mimeType: this.isPreview ? null : this.mimeType,
       title: this.title || '',
       icon: this.icon,
     };

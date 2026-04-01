@@ -36,7 +36,7 @@ export default class Workbench {
       () => this.state.isReady,
       () => {
         this.restore();
-        autorun(this.persistTiles.bind(this), { delay: 1000 });
+        autorun(this.persistTiles.bind(this));
       },
     );
   }
