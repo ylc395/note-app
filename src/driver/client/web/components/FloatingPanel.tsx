@@ -1,7 +1,23 @@
-import { createEffect, createSignal, onCleanup, type Accessor } from 'solid-js';
+import { createEffect, createSignal, onCleanup, type Accessor, type JSX } from 'solid-js';
+import { Ref } from '@solid-primitives/refs';
+import { createContextProvider } from '@solid-primitives/context';
 import { findAncestor } from '#web/infra/domUtils';
 
 const containerMap = new WeakMap<HTMLElement, Set<HTMLElement>>();
+
+const [ContextProvider, useContext] = createContextProvider(
+  (props: {
+    isEnabled: boolean;
+    onMoveEnd: (e: { x: number; y: number }) => void;
+    onMove: (e: { x: number; y: number }) => void;
+    panelRef: Accessor<HTMLElement | undefined>;
+  }) => ({
+    isEnabled: () => props.isEnabled,
+    onMoveEnd: props.onMoveEnd,
+    onMove: props.onMove,
+    panelRef: props.panelRef,
+  }),
+);
 
 function getMaxZIndex(element: HTMLElement | HTMLElement[]) {
   let siblings: Iterable<HTMLElement> | undefined;
@@ -32,45 +48,50 @@ function getMaxZIndex(element: HTMLElement | HTMLElement[]) {
     : 0;
 }
 
-export default function useFloatingPanel(params: {
-  isEnabled: Accessor<boolean>;
-  initialPos?: () => { x: number; y: number; width?: number } | undefined;
+function Main(props: {
+  children: JSX.Element;
+  isEnabled: boolean;
+  pos: { x?: number; y?: number; left?: number; top?: number; right?: number; bottom?: number };
+  onMove: (e: { x: number; y: number }) => void;
   onMoveEnd: (e: { x: number; y: number }) => void;
 }) {
-  const [panelRef, setPanelRef] = createSignal<HTMLElement>();
-  const [handlerRef, setHandlerRef] = createSignal<HTMLElement>();
-
-  let startX = 0;
-  let startY = 0;
-  let startLeft = 0;
-  let startTop = 0;
-  let isDragging = false;
-  const abortController = new AbortController();
+  const [ref, setRef] = createSignal<HTMLElement>();
 
   createEffect(() => {
-    const panel = panelRef();
+    const panel = ref();
 
-    if (!params.isEnabled() || !panel) {
+    if (!props.isEnabled || !panel) {
       return;
     }
 
-    if (params.initialPos?.()) {
-      panel.style.left = `${params.initialPos()?.x}px`;
-      panel.style.top = `${params.initialPos()?.y}px`;
-      panel.style.width = `${params.initialPos()?.width}px`;
-
-      onCleanup(() => {
-        panel.style.top = '';
-        panel.style.left = '';
-        panel.style.width = '';
-      });
+    if (typeof props.pos.left === 'number' || typeof props.pos.x === 'number') {
+      panel.style.left = `${props.pos.left ?? props.pos.x}px`;
     }
+
+    if (typeof props.pos.top === 'number' || typeof props.pos.y === 'number') {
+      panel.style.top = `${props.pos.top ?? props.pos.y}px`;
+    }
+
+    if (typeof props.pos.right === 'number') {
+      panel.style.right = `${props.pos.right}px`;
+    }
+
+    if (typeof props.pos.bottom === 'number') {
+      panel.style.bottom = `${props.pos.bottom}px`;
+    }
+
+    onCleanup(() => {
+      panel.style.top = '';
+      panel.style.left = '';
+      panel.style.right = '';
+      panel.style.bottom = '';
+    });
   });
 
   createEffect(() => {
-    const panel = panelRef();
+    const panel = ref();
 
-    if (!params.isEnabled() || !panel) {
+    if (!props.isEnabled || !panel) {
       return;
     }
 
@@ -102,26 +123,40 @@ export default function useFloatingPanel(params: {
     });
   });
 
+  return (
+    <ContextProvider {...props} panelRef={ref}>
+      <Ref ref={setRef}>{props.children}</Ref>
+    </ContextProvider>
+  );
+}
+
+function Handler(props: { children: JSX.Element }) {
+  let startX = 0;
+  let startY = 0;
+  let startLeft = 0;
+  let startTop = 0;
+  let isDragging = false;
+  const [handlerRef, setHandlerRef] = createSignal<HTMLElement>();
+  const { panelRef, isEnabled, onMoveEnd, onMove } = useContext()!;
+
   createEffect(() => {
     const handler = handlerRef();
     const panel = panelRef();
 
-    if (!handler || !panel) {
+    if (!handler || !panel || !isEnabled()) {
       return;
     }
+
+    const abortController = new AbortController();
 
     handler.addEventListener(
       'pointerdown',
       (e) => {
-        if (!params.isEnabled()) {
-          return;
-        }
-
         const maxZIndex = getMaxZIndex(panel);
         const zIndex = Number(getComputedStyle(panel).zIndex);
 
         if (Number.isNaN(zIndex) || zIndex < maxZIndex) {
-          panel.style.zIndex = `${maxZIndex} + 1`;
+          panel.style.zIndex = `${maxZIndex + 1}`;
         }
 
         isDragging = true;
@@ -145,8 +180,7 @@ export default function useFloatingPanel(params: {
         const deltaX = e.clientX - startX;
         const deltaY = e.clientY - startY;
 
-        panel.style.left = startLeft + deltaX + 'px';
-        panel.style.top = startTop + deltaY + 'px';
+        onMove({ x: startLeft + deltaX, y: startTop + deltaY });
         handler.setPointerCapture(e.pointerId);
       },
       { signal: abortController.signal },
@@ -159,7 +193,7 @@ export default function useFloatingPanel(params: {
           return;
         }
 
-        params.onMoveEnd({ x: parseFloat(panel.style.left), y: parseFloat(panel.style.top) });
+        onMoveEnd({ x: parseFloat(panel.style.left), y: parseFloat(panel.style.top) });
         handler.style.cursor = '';
         isDragging = false;
         handler.releasePointerCapture(e.pointerId);
@@ -172,5 +206,7 @@ export default function useFloatingPanel(params: {
     });
   });
 
-  return { setHandlerRef, setPanelRef };
+  return <Ref ref={setHandlerRef}>{props.children}</Ref>;
 }
+
+export default { Main, Handler };

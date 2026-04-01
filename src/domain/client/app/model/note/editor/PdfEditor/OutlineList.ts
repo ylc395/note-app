@@ -150,7 +150,13 @@ export default class OutlineList {
       .object({
         x: z.number(),
         y: z.number(),
-        width: z.number().optional(),
+      })
+      .optional()
+      .catch(undefined),
+    floatingSize: z
+      .object({
+        width: z.number(),
+        height: z.number(),
       })
       .optional()
       .catch(undefined),

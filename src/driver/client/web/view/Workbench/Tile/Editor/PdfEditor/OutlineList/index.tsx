@@ -4,30 +4,33 @@ import assert from 'assert';
 import { action } from 'mobx';
 import { useSplitterContext } from '@ark-ui/solid';
 
+import FloatingPanel from '#web/components/FloatingPanel';
 import Item from './Item';
+import Resizable from '#web/components/Resizable';
 import OutlineViewModel from './Outline';
 import { useContext } from '../context';
-import useFloatingPanel from '#web/components/useFloatingPanel';
 
 export default function Outline(props: { id: string }) {
   const { viewer } = useContext()!;
   const splitter = useSplitterContext();
   const [listRef, setListRef] = createSignal<HTMLDivElement>();
-
-  const outline = new OutlineViewModel(viewer);
   const uiState = viewer.editor.outline.uiState;
 
-  const { setHandlerRef, setPanelRef } = useFloatingPanel({
-    isEnabled: () => Boolean(uiState.isFloating),
-    initialPos: () => uiState.floatingPos,
-    onMoveEnd: action(({ x, y }) => {
-      uiState.floatingPos = { ...uiState.floatingPos, x, y };
-    }),
-  });
+  const [floatingSize, setFloatingSize] = createSignal(uiState.floatingSize || { width: 300, height: 500 });
+  const [floatingPos, setFloatingPos] = createSignal(uiState.floatingPos || { x: 20, y: 20 });
+  const outline = new OutlineViewModel(viewer);
 
   onCleanup(() => {
     outline.destroy();
   });
+
+  function handleResizeEnd(size: { width: number; height: number }) {
+    uiState.floatingSize = size;
+  }
+
+  function handleMoveEnd(pos: { x: number; y: number }) {
+    uiState.floatingPos = pos;
+  }
 
   function handleScroll(e: Event) {
     assert(e.target instanceof HTMLElement);
@@ -70,42 +73,61 @@ export default function Outline(props: { id: string }) {
   }
 
   return (
-    <div
-      ref={setPanelRef}
-      class="overflow-auto h-full border-r pb-4 flex flex-col"
-      {...(uiState.isFloating ? null : splitter().getPanelProps({ id: props.id }))}
+    <FloatingPanel.Main
+      isEnabled={Boolean(uiState.isFloating)}
+      pos={floatingPos()}
+      onMove={setFloatingPos}
+      onMoveEnd={action(handleMoveEnd)}
     >
-      <div ref={setHandlerRef} class="top-0 bg-gray-50 flex">
-        <h4>大纲</h4>
-        <div class="flex items-center justify-end grow">
-          <button class="flex items-center text-sm" onClick={scrollToFocused}>
-            <EyeIcon class="mr-1" />
-            当前浏览
-          </button>
-          <button class="flex items-center text-sm" onClick={action(toggleFloating)}>
-            <EyeIcon class="mr-1" />
-            悬浮
-          </button>
-        </div>
-      </div>
-      <Show
-        when={!viewer.editor.outline.items || viewer.editor.outline.items.length > 0}
-        fallback={<div class="flex h-full justify-center items-center">无大纲</div>}
+      <Resizable
+        isEnabled={Boolean(uiState.isFloating)}
+        className="absolute"
+        size={floatingSize()}
+        onResize={setFloatingSize}
+        onResizeEnd={action(handleResizeEnd)}
       >
-        <div class="min-h-0 overflow-auto" ref={setListRef} onScrollEnd={action(handleScroll)}>
-          <For
-            each={viewer.editor.outline.items}
-            fallback={
-              <div class="flex h-full justify-center items-center overflow-hidden space-x-1">
-                <LoaderCircleIcon class="animate-spin" />
-                <span>加载中</span>
+        <div
+          class="overflow-auto border-r pb-4 flex flex-col"
+          classList={{ 'overflow-auto h-full': !uiState.isFloating }}
+          {...(uiState.isFloating
+            ? { style: { width: `${floatingSize().width}px`, height: `${floatingSize().height}px` } }
+            : splitter().getPanelProps({ id: props.id }))}
+        >
+          <FloatingPanel.Handler>
+            <div class="top-0 bg-gray-50 flex">
+              <h4>大纲</h4>
+              <div class="flex items-center justify-end grow">
+                <button class="flex items-center text-sm" onClick={scrollToFocused}>
+                  <EyeIcon class="mr-1" />
+                  当前浏览
+                </button>
+                <button class="flex items-center text-sm" onClick={action(toggleFloating)}>
+                  <EyeIcon class="mr-1" />
+                  悬浮
+                </button>
               </div>
-            }
+            </div>
+          </FloatingPanel.Handler>
+          <Show
+            when={!viewer.editor.outline.items || viewer.editor.outline.items.length > 0}
+            fallback={<div class="flex h-full justify-center items-center">无大纲</div>}
           >
-            {(item) => <Item outline={outline} onToggle={outline.toggleExpand} item={item} level={0} />}
-          </For>
+            <div class="min-h-0 overflow-auto" ref={setListRef} onScrollEnd={action(handleScroll)}>
+              <For
+                each={viewer.editor.outline.items}
+                fallback={
+                  <div class="flex h-full justify-center items-center overflow-hidden space-x-1">
+                    <LoaderCircleIcon class="animate-spin" />
+                    <span>加载中</span>
+                  </div>
+                }
+              >
+                {(item) => <Item outline={outline} onToggle={outline.toggleExpand} item={item} level={0} />}
+              </For>
+            </div>
+          </Show>
         </div>
-      </Show>
-    </div>
+      </Resizable>
+    </FloatingPanel.Main>
   );
 }

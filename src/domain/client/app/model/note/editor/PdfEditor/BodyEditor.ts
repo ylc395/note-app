@@ -15,5 +15,12 @@ export default class BodyEditor {
     width: z.number().optional().catch(undefined),
     isFloating: z.boolean().optional().catch(undefined),
     floatingPos: z.object({ x: z.number(), y: z.number() }).nullish().catch(undefined),
+    floatingSize: z
+      .object({
+        width: z.number(),
+        height: z.number(),
+      })
+      .optional()
+      .catch(undefined),
   });
 }
