@@ -8,7 +8,7 @@ import z from 'zod';
 
 const uiStateSchema = z.object({
   scroll: z.object({ x: z.number(), y: z.number() }).optional().catch(undefined),
-  cursorPos: z.number().optional().catch(undefined),
+  cursorPos: z.object({ anchor: z.number(), head: z.number() }).optional().catch(undefined),
 });
 
 export default class MarkdownEditor extends BaseEditor {

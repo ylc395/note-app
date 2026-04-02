@@ -32,6 +32,7 @@ import { customCtx, type CustomContext } from './customCtx';
 import singletonContainer from '#utils/singletonContainer';
 import Workbench from '#domain/client/app/model/Workbench';
 import { RouteTypes } from '#domain/shared/infra/url';
+import { TextSelection } from '@milkdown/kit/prose/state';
 
 /** 一些关于 milkdown 的知识
  *
@@ -101,6 +102,22 @@ export default class Editor {
 
   public focus() {
     this.core.action((ctx) => ctx.get(editorViewCtx).focus());
+  }
+
+  public setSelection(pos: { anchor: number; head: number } | number) {
+    this.core.action((ctx) => {
+      const editorView = ctx.get(editorViewCtx);
+
+      editorView.dispatch(
+        editorView.state.tr.setSelection(
+          TextSelection.create(
+            editorView.state.doc,
+            typeof pos === 'number' ? pos : pos.anchor,
+            typeof pos !== 'number' ? pos.head : undefined,
+          ),
+        ),
+      );
+    });
   }
 
   public on(fn: (api: ListenerManager) => void) {

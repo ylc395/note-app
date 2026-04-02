@@ -11,13 +11,15 @@ export default function MarkdownEditor(props: {
   /** 以下 prop 不具有响应性 */
   defaultValue?: string;
   initialScroll?: { x: number; y: number };
+  initialCursorPos?: { anchor: number; head: number };
   onUpdate?: (md: string) => void;
+  onSelectionUpdate?: (pos: { anchor: number; head: number }) => void;
 }) {
   let rootRef: HTMLDivElement | undefined;
   const [getEditor, setEditor] = createSignal<Editor>();
 
   onMount(() => {
-    const { defaultValue, onUpdate } = props;
+    const { defaultValue, onUpdate, onSelectionUpdate } = props;
     const editor = new Editor({
       defaultValue,
       root: rootRef!,
@@ -28,9 +30,28 @@ export default function MarkdownEditor(props: {
       editor.on((listener) => listener.markdownUpdated((_, markdown) => onUpdate(markdown)));
     }
 
+    if (onSelectionUpdate) {
+      editor.on((listener) =>
+        listener.selectionUpdated((_, { anchor, head }) => {
+          if (editor.isCreated) {
+            onSelectionUpdate({ anchor, head });
+          }
+        }),
+      );
+    }
+
     editor.onStatusChange(() => {
-      if (editor.isCreated && props.initialScroll) {
+      if (!editor.isCreated) {
+        return;
+      }
+
+      if (props.initialScroll) {
         rootRef!.scrollTo(props.initialScroll.x, props.initialScroll.y);
+      }
+
+      if (props.initialCursorPos) {
+        editor.setSelection(props.initialCursorPos);
+        editor.focus();
       }
     });
 

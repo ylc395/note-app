@@ -50,6 +50,14 @@ export default function MarkdownEditorView() {
     }
   }
 
+  function handleSelectionUpdate(pos: { anchor: number; head: number }) {
+    assert(editor instanceof MarkdownEditor);
+
+    if (editor.uiState) {
+      editor.uiState.cursorPos = pos;
+    }
+  }
+
   return (
     <Show when={editor.isReady}>
       <div class="min-h-0 grow overflow-hidden">
@@ -58,9 +66,11 @@ export default function MarkdownEditorView() {
           className="h-full overflow-auto border-16 border-surface-primary"
           defaultValue={editor.value.result.data!.body}
           initialScroll={editor.uiState!.scroll}
+          initialCursorPos={editor.uiState!.cursorPos}
           readonly={editor.isUploading}
           onUpdate={onUpdate}
           onScrollEnd={action(handleScrollEnd)}
+          onSelectionUpdate={action(handleSelectionUpdate)}
         />
         <Show when={!editor.value.result.data!.body}>
           <Empty />
