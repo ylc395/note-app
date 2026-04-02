@@ -106,7 +106,7 @@ export default class TextFinder {
   );
 
   @action
-  private clearResult() {
+  public clearResult() {
     this.digests = undefined;
     this.result = undefined;
   }

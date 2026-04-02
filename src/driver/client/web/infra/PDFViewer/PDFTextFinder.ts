@@ -1,6 +1,6 @@
 import assert from 'assert';
 import { action, observable, reaction } from 'mobx';
-import { FindState, type EventBus } from 'pdfjs-dist/web/pdf_viewer.mjs';
+import { FindState, type EventBus, type PDFFindController } from 'pdfjs-dist/web/pdf_viewer.mjs';
 
 type Action =
   | '' // 更新关键词
@@ -36,7 +36,11 @@ export default class PDFTextFinder {
     // 切换当前选中的搜索结果时会触发
     eventBus.on('updatefindcontrolstate', this.updateState.bind(this), { signal: this.abortController.signal });
     eventBus.on('updatefindcontrolstate', this.updateResult.bind(this), { signal: this.abortController.signal });
+  }
 
+  private readonly abortController = new AbortController();
+
+  public init() {
     for (const key of Object.keys(this.config)) {
       reaction(
         () => this.config[key as keyof PDFTextFinder['config']],
@@ -46,19 +50,21 @@ export default class PDFTextFinder {
     }
   }
 
-  private readonly abortController = new AbortController();
-
   @observable public accessor result: SearchResult | undefined;
 
   @observable public accessor status: 'pending' | 'notFound' | 'reachedTop' | 'reachedBottom' | undefined;
 
   @action
-  private updateResult(result: { matchesCount: MatchesCount; state?: number }) {
+  private updateResult(result: { matchesCount: MatchesCount; state?: number; source: PDFFindController }) {
     if (result.state === FindState.PENDING) {
       return;
     }
 
-    this.result = result.matchesCount;
+    this.result = {
+      ...result.matchesCount,
+      pageMatches: result.source.pageMatches,
+      pageMatchesLength: result.source.pageMatchesLength,
+    };
   }
 
   @action
@@ -71,13 +77,13 @@ export default class PDFTextFinder {
     matchesCount: PDFTextFinder['result'];
   }) {
     switch (state) {
-      case 3:
+      case FindState.PENDING:
         this.status = 'pending';
         break;
-      case 1:
+      case FindState.NOT_FOUND:
         this.status = 'notFound';
         break;
-      case 2:
+      case FindState.WRAPPED:
         this.status = previous ? 'reachedTop' : 'reachedBottom';
         break;
       default:

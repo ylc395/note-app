@@ -1,4 +1,4 @@
-import { action, autorun, computed, observable, reaction, toJS } from 'mobx';
+import { action, autorun, computed, observable, reaction, runInAction, toJS } from 'mobx';
 import assert from 'assert';
 import { debounce } from 'lodash-es';
 
@@ -34,7 +34,10 @@ export default class MarkdownEditor extends BaseEditor {
 
   private async initUIState() {
     const uiState = await this.getUIState(uiStateSchema);
-    this.uiState = uiState || {};
+
+    runInAction(() => {
+      this.uiState = uiState || {};
+    });
 
     autorun(
       () => {
