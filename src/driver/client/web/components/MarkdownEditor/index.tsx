@@ -57,7 +57,14 @@ export default function MarkdownEditor(props: {
 
     editor.init();
     setEditor(editor);
-    props.ref?.(editor);
+  });
+
+  createEffect(() => {
+    const editor = getEditor();
+
+    if (editor) {
+      props.ref?.(editor);
+    }
   });
 
   createEffect(

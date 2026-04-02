@@ -11,7 +11,13 @@ export default class PDFEditorViewer {
   public readonly viewer = new PDFViewer();
 
   public async init(options: Pick<Options, 'container' | 'view'>) {
-    await when(() => this.editor.isReady, { signal: this.abortController.signal });
+    try {
+      await when(() => this.editor.isReady, { signal: this.abortController.signal });
+    } catch (error) {
+      if (error instanceof Error && error.message === 'WHEN_ABORTED') {
+        return;
+      }
+    }
 
     await this.viewer.init(this.editor.doc!, {
       ...options,
@@ -27,6 +33,10 @@ export default class PDFEditorViewer {
   });
 
   private initTextFinder() {
+    if (this.abortController.signal.aborted) {
+      return;
+    }
+
     const fields = ['query', 'caseSensitive', 'entireWord'] as const;
 
     for (const field of fields) {
