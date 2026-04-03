@@ -26,7 +26,7 @@ export interface Props {
 
 export default function Node(props: Props) {
   const workbench = container.resolve(Workbench);
-  const { isDropHovering, setDropElementRef } = useDnd(props);
+  const { isDropHovering, setDndElementRef } = useDnd(props);
 
   const itemClassName =
     'mb-stack-xs rounded cursor-pointer flex group items-center hover:bg-surface-tertiary hover:text-text-secondary px-inset-square-s';
@@ -102,7 +102,7 @@ export default function Node(props: Props) {
       fallback={
         <li
           onClick={[handleItemClick, props.node]}
-          ref={setDropElementRef}
+          ref={setDndElementRef}
           class={itemClassName}
           classList={itemClassList()}
         >
@@ -126,7 +126,7 @@ export default function Node(props: Props) {
           class={itemClassName}
           classList={itemClassList()}
           data-item-id={props.node.id}
-          ref={setDropElementRef} // dropElement 不能是上一层的 <li> 元素
+          ref={setDndElementRef} // dropElement 不能是上一层的 <li> 元素
         >
           {/** 展开/收起图标 */}
           <button class="cursor-pointer" style={{ 'padding-left': `${paddingLeft()}px` }} onClick={handleArrowClick}>

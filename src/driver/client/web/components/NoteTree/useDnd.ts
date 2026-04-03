@@ -1,4 +1,4 @@
-import { createComponent, createEffect, createSignal, onCleanup, untrack } from 'solid-js';
+import { createComponent, createEffect, createSignal, onCleanup } from 'solid-js';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
@@ -13,78 +13,76 @@ import DragPreview from './DragPreview';
 
 export default function useDnd(props: { treeView: TreeViewModel; node: TreeNode }) {
   const { updateNote } = container.resolve(NoteService);
-  const [dropElementRef, setDropElementRef] = createSignal<HTMLElement>();
+  const [dndElementRef, setDndElementRef] = createSignal<HTMLElement>();
   const [isDropHovering, setIsDropHovering] = createSignal(false);
 
   createEffect(() => {
-    const element = dropElementRef();
+    const element = dndElementRef();
 
     if (!element) {
       return;
     }
 
-    const cleanup = untrack(() =>
-      combine(
-        draggable({
-          element,
-          canDrag: () => !props.node.isRoot,
-          onGenerateDragPreview: ({ nativeSetDragImage }) => {
-            setCustomNativeDragPreview({
-              nativeSetDragImage,
-              render: ({ container }) => {
-                return render(
-                  () => createComponent(DragPreview, { treeView: props.treeView, node: props.node }),
-                  container,
-                );
-              },
-            });
-          },
-          onDragStart: () => {
-            if (!props.treeView.treeNodeSets.selected.has(props.node.id)) {
-              props.treeView.select(props.node.id);
-            }
-          },
-          getInitialData: () => {
-            const selectedIds = Array.from(props.treeView.treeNodeSets.selected);
+    const cleanup = combine(
+      draggable({
+        element,
+        canDrag: () => !props.node.isRoot,
+        onGenerateDragPreview: ({ nativeSetDragImage }) => {
+          setCustomNativeDragPreview({
+            nativeSetDragImage,
+            render: ({ container }) => {
+              return render(
+                () => createComponent(DragPreview, { treeView: props.treeView, node: props.node }),
+                container,
+              );
+            },
+          });
+        },
+        onDragStart: () => {
+          if (!props.treeView.treeNodeSets.selected.has(props.node.id)) {
+            props.treeView.select(props.node.id);
+          }
+        },
+        getInitialData: () => {
+          const selectedIds = Array.from(props.treeView.treeNodeSets.selected);
 
-            return (selectedIds.includes(props.node.id)
-              ? props.treeView.tree?.get(selectedIds)
-              : props.node) as unknown as Record<string, unknown>;
-          },
-        }),
-        dropTargetForElements({
-          element,
-          onDragEnter: () => {
-            setIsDropHovering(true);
-          },
-          onDragLeave: () => {
-            setIsDropHovering(false);
-          },
-          onDrop: ({ source, self, location }) => {
-            setIsDropHovering(false);
+          return (selectedIds.includes(props.node.id)
+            ? props.treeView.tree?.get(selectedIds)
+            : props.node) as unknown as Record<string, unknown>;
+        },
+      }),
+      dropTargetForElements({
+        element,
+        onDragEnter: () => {
+          setIsDropHovering(true);
+        },
+        onDragLeave: () => {
+          setIsDropHovering(false);
+        },
+        onDrop: ({ source, self, location }) => {
+          setIsDropHovering(false);
 
-            if (
-              props.node.is(TreeNodeStates.Unselectable) ||
-              location.current.dropTargets[0]?.element !== self.element // 子节点处理过了，这里就不处理了
-            ) {
-              return;
-            }
+          if (
+            props.node.is(TreeNodeStates.Unselectable) ||
+            location.current.dropTargets[0]?.element !== self.element // 子节点处理过了，这里就不处理了
+          ) {
+            return;
+          }
 
-            const note = NoteService.getNote(source.data);
+          const note = NoteService.getNote(source.data);
 
-            if (note) {
-              updateNote(note, { parentId: props.node.id }).then(() => props.node.toggleExpand(true));
-            }
-          },
-        }),
-      ),
+          if (note) {
+            updateNote(note, { parentId: props.node.id }).then(() => props.node.toggleExpand(true));
+          }
+        },
+      }),
     );
 
     onCleanup(cleanup);
   });
 
   return {
-    setDropElementRef,
+    setDndElementRef,
     isDropHovering,
   };
 }
