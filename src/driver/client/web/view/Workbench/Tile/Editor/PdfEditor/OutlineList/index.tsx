@@ -46,10 +46,10 @@ export default function Outline(props: { id: string }) {
 
     if (
       listElement &&
-      viewer.editor.outline.items &&
-      outline.expandedKeys // 确保已完成展开
+      outline.model.items &&
+      outline.model.uiState.expanded // 确保已完成展开
     ) {
-      const scroll = untrack(() => viewer.editor.outline.uiState?.scroll);
+      const scroll = untrack(() => outline.model.uiState?.scroll);
 
       if (scroll) {
         assert(listRef, 'no listRef');
@@ -60,7 +60,7 @@ export default function Outline(props: { id: string }) {
   });
 
   function scrollToFocused() {
-    const key = outline.expandToFocus();
+    const key = viewer.editor.outline.expandToFocus();
     const item = key && listRef()?.querySelector(`[data-outline-item-key="${key}"]`);
 
     if (item) {
@@ -109,12 +109,12 @@ export default function Outline(props: { id: string }) {
             </div>
           </FloatingPanel.Handler>
           <Show
-            when={!viewer.editor.outline.items || viewer.editor.outline.items.length > 0}
+            when={!outline.model.items || outline.model.items.length > 0}
             fallback={<div class="flex h-full justify-center items-center">无大纲</div>}
           >
             <div class="min-h-0 overflow-auto" ref={setListRef} onScrollEnd={action(handleScroll)}>
               <For
-                each={viewer.editor.outline.items}
+                each={outline.model.items}
                 fallback={
                   <div class="flex h-full justify-center items-center overflow-hidden space-x-1">
                     <LoaderCircleIcon class="animate-spin" />
@@ -122,7 +122,7 @@ export default function Outline(props: { id: string }) {
                   </div>
                 }
               >
-                {(item) => <Item outline={outline} onToggle={outline.toggleExpand} item={item} level={0} />}
+                {(item) => <Item outline={outline} onToggle={outline.model.toggleExpand} item={item} level={0} />}
               </For>
             </div>
           </Show>

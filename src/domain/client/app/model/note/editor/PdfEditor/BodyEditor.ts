@@ -1,4 +1,4 @@
-import { observable } from 'mobx';
+import { observable, toJS } from 'mobx';
 import z from 'zod';
 
 export default class BodyEditor {
@@ -8,6 +8,10 @@ export default class BodyEditor {
     if (state) {
       this.uiState = state;
     }
+  }
+
+  public toJSON() {
+    return toJS(this.uiState);
   }
 
   public static schema = z.object({

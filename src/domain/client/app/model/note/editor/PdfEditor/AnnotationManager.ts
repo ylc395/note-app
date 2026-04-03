@@ -2,7 +2,7 @@ import { createQuery } from 'mobx-tanstack-query/preset';
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import type Mark from 'mark.js';
-import { action, observable } from 'mobx';
+import { action, observable, toJS } from 'mobx';
 import z from 'zod';
 
 import container from '#utils/singletonContainer';
@@ -105,6 +105,10 @@ export default class AnnotationManager {
 
   @observable
   public accessor uiState: z.infer<typeof AnnotationManager.schema> = {};
+
+  public toJSON() {
+    return toJS(this.uiState);
+  }
 
   @action
   public init(value?: AnnotationManager['uiState']) {

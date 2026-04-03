@@ -6,8 +6,8 @@ import type { OutlineItem } from '#domain/client/app/model/note/editor/PdfEditor
 import type Outline from './Outline';
 
 function Title(props: { item: OutlineItem; outline: Outline; isFocused: boolean; class?: string }) {
-  const annotationCount = createMemo(() => props.outline.pdfViewer.editor.outline.getAnnotationCount(props.item.key));
-  const pageRange = props.outline.pdfViewer.editor.outline.getPageRange(props.item.key);
+  const annotationCount = createMemo(() => props.outline.model.getAnnotationCount(props.item.key));
+  const pageRange = props.outline.model.getPageRange(props.item.key);
 
   function handleClick(e: MouseEvent) {
     e.stopPropagation();
@@ -57,19 +57,19 @@ export default function Item(props: {
   onToggle: (e: { key: string; value: boolean }) => void;
 }) {
   const isFocused = createMemo(() => {
-    return props.outline.focusedKey === props.item.key;
+    return props.outline.model.focusedKey === props.item.key;
   });
 
   return (
     <div classList={{ 'mb-1': props.item.children.length === 0 }} style={{ 'padding-left': `${props.level * 20}px` }}>
       <Show
-        when={props.item.children.length > 0 && props.outline.expandedKeys}
+        when={props.item.children.length > 0}
         fallback={
           <Title isFocused={isFocused()} outline={props.outline} item={props.item} class="pl-4 cursor-pointer" />
         }
       >
         <Collapsible.Root
-          open={props.outline.expandedKeys!.has(props.item.key)}
+          open={props.outline.model.uiState.expanded?.has(props.item.key)}
           lazyMount
           unmountOnExit
           onOpenChange={({ open }) => props.onToggle({ key: props.item.key, value: open })}

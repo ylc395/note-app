@@ -1,4 +1,4 @@
-import { action, observable } from 'mobx';
+import { action, observable, toJS } from 'mobx';
 import { z } from 'zod';
 import { compact, debounce } from 'lodash-es';
 
@@ -113,6 +113,10 @@ export default class TextFinder {
 
   public destroy() {
     this.updateDigests.cancel();
+  }
+
+  public toJSON() {
+    return toJS(this.options);
   }
 
   private static extractDigest(params: {

@@ -1,5 +1,5 @@
 import type { PDFDocumentProxy } from 'pdfjs-dist';
-import { autorun, computed, observable, runInAction, toJS, when } from 'mobx';
+import { autorun, computed, observable, runInAction, untracked, when } from 'mobx';
 import assert from 'assert';
 import z from 'zod';
 
@@ -98,23 +98,31 @@ export default class PdfEditor extends BaseEditor {
           this.newAnnotationColor = uiState.newAnnotationColor;
         }
       }
-
-      this.isUIStateReady = true;
     });
 
     autorun(
       () => {
-        this.saveUIState({
-          body: toJS(this.body.uiState),
-          annotations: toJS(this.annotation.uiState),
-          outline: toJS(this.outline.uiState),
+        const data = {
+          body: this.body.toJSON(),
+          annotations: this.annotation.toJSON(),
+          outline: this.outline.toJSON(),
           progress: this.progress,
-          textFinder: toJS(this.textFinder.options),
-          svgEditor: toJS(this.svgEditor.options),
+          textFinder: this.textFinder.toJSON(),
+          svgEditor: this.svgEditor.toJSON(),
+        };
+
+        untracked(() => {
+          if (this.isUIStateReady) {
+            this.saveUIState(data);
+          }
         });
       },
       { signal: this.destroyController.signal },
     );
+
+    runInAction(() => {
+      this.isUIStateReady = true;
+    });
   }
 
   public override destroy() {

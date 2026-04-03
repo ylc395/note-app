@@ -1,4 +1,4 @@
-import { action, computed, observable } from 'mobx';
+import { action, computed, observable, toJS } from 'mobx';
 import { z } from 'zod';
 import { SVG } from '@svgdotjs/svg.js'; // 这个库理论上和环境无关，故放在 model 层了
 
@@ -60,6 +60,10 @@ export default class SvgAnnotationEditor {
   @action
   public toggleMode(mode: Mode) {
     this.mode = this.mode === mode ? Mode.Draw : mode;
+  }
+
+  public toJSON() {
+    return toJS(this.options);
   }
 
   public getAnnotations(page: number) {
