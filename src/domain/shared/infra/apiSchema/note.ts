@@ -4,6 +4,7 @@
 */
 import { z } from "zod";
 import { entityIdSchema, entityParentIdSchema, iconSchema } from "./entity.js";
+import { fileDTOSchema } from "./file.js";
 export const noteSchema = z.object({
   id: entityIdSchema,
   title: z.string(),
@@ -25,14 +26,15 @@ export const notePatchDTOSchema = noteSchema.pick({
 export const duplicatedNoteDTOSchema = z.object({
   from: noteSchema.shape["id"]
 });
-export const newNoteDTOSchema = noteSchema.pick({
+export const newNoteDTOSchema = z.intersection(noteSchema.pick({
   "body": true,
-  "fileId": true,
   "icon": true,
   "parentId": true,
   "sourceUrl": true,
   "title": true
-}).partial();
+}).partial(), z.object({
+  file: fileDTOSchema.optional()
+}));
 export const noteDTOSchema = z.union([duplicatedNoteDTOSchema, newNoteDTOSchema]);
 export const clientNoteQuerySchema = z.object({
   id: z.array(noteSchema.shape["id"]).optional(),

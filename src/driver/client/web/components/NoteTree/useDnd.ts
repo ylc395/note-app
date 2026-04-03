@@ -2,7 +2,9 @@ import { createComponent, createEffect, createSignal, onCleanup } from 'solid-js
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
+import { dropTargetForExternal } from '@atlaskit/pragmatic-drag-and-drop/external/adapter';
 import { render } from 'solid-js/web';
+import { compact } from 'lodash-es';
 
 import container from '#utils/singletonContainer';
 import NoteService from '#domain/client/app/service/NoteService';
@@ -12,7 +14,7 @@ import type TreeNode from '#domain/client/shared/model/note/TreeNode';
 import DragPreview from './DragPreview';
 
 export default function useDnd(props: { treeView: TreeViewModel; node: TreeNode }) {
-  const { updateNote } = container.resolve(NoteService);
+  const { updateNote, getDuplicatedNoteByFiles, createNotesWithFile } = container.resolve(NoteService);
   const [dndElementRef, setDndElementRef] = createSignal<HTMLElement>();
   const [isDropHovering, setIsDropHovering] = createSignal(false);
 
@@ -74,6 +76,41 @@ export default function useDnd(props: { treeView: TreeViewModel; node: TreeNode 
           if (note) {
             updateNote(note, { parentId: props.node.id }).then(() => props.node.toggleExpand(true));
           }
+        },
+      }),
+      dropTargetForExternal({
+        element,
+        onDragEnter: () => {
+          setIsDropHovering(true);
+        },
+        onDragLeave: () => {
+          setIsDropHovering(false);
+        },
+        onDrop: async ({ source }) => {
+          setIsDropHovering(false);
+
+          const files = compact(
+            await Promise.all(
+              source.items.map(async (item) => {
+                const file = item.getAsFile();
+
+                if (!file) {
+                  return null;
+                }
+
+                return {
+                  name: file.name,
+                  data: await file.arrayBuffer(),
+                  mimeType: file.type,
+                };
+              }),
+            ),
+          );
+
+          const duplicatedMap = await getDuplicatedNoteByFiles(files.map(({ data }) => data));
+          const notesToCreate = files.filter(({ data }) => !duplicatedMap.has(data));
+          await createNotesWithFile(notesToCreate, props.node.id);
+          props.node.toggleExpand(true);
         },
       }),
     );

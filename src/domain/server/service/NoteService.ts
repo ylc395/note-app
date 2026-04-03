@@ -18,7 +18,7 @@ import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
 import ContentService from './ContentService/index.js';
 import FileService from './FileService/index.js';
-import type { FileDTO } from '../model/file.js';
+import type { FileDTO, FileVO } from '../model/file.js';
 
 export default class NoteService extends BaseService {
   private readonly content = container.resolve(ContentService);
@@ -33,6 +33,12 @@ export default class NoteService extends BaseService {
       newNote = await this.duplicate(note.from);
     } else {
       await this.assertValidDto(note);
+      let fileVO: FileVO | undefined;
+
+      if (note.file) {
+        fileVO = await this.file.createFile(note.file);
+      }
+
       const now = Date.now();
 
       newNote = await this.repo.notes.create({
@@ -41,7 +47,7 @@ export default class NoteService extends BaseService {
         parentId: note.parentId || null,
         body: note.body || '',
         icon: note.icon || null,
-        fileId: note.fileId || null,
+        fileId: fileVO?.id || null,
         sourceUrl: note.sourceUrl || null,
         updatedAt: now,
         createdAt: now,
@@ -176,7 +182,6 @@ export default class NoteService extends BaseService {
       noteIds && this.assertAvailableIds(noteIds),
       patch.icon?.type === 'file' && this.file.assertId(patch.icon.code, (mimeType) => mimeType.startsWith('image')),
       patch.parentId && noteIds && this.assertValidParent(patch.parentId, noteIds),
-      patch.fileId && this.file.assertId(patch.fileId),
     ]);
   }
 

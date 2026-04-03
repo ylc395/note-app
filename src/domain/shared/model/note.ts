@@ -1,5 +1,6 @@
 import dayjs from 'dayjs';
 import type { Entity, EntityId, EntityParentId, Icon } from './entity.js';
+import type { FileDTO } from './file.js';
 
 export interface Note {
   id: EntityId;
@@ -26,7 +27,9 @@ export interface DuplicatedNoteDTO {
   from: Note['id'];
 }
 
-export type NewNoteDTO = Partial<Pick<Note, 'body' | 'fileId' | 'icon' | 'parentId' | 'sourceUrl' | 'title'>>;
+export type NewNoteDTO = Partial<Pick<Note, 'body' | 'icon' | 'parentId' | 'sourceUrl' | 'title'>> & {
+  file?: FileDTO;
+};
 
 /**
  * @api

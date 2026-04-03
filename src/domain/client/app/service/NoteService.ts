@@ -11,6 +11,8 @@ import Workbench from '../model/Workbench';
 import DomainEventBus from '../model/note/EventBus';
 import BaseEditor from '../model/note/editor/BaseEditor';
 import TreeExplorer from '../model/note/TreeExplorer';
+import { getHash } from '#utils/file';
+import type { FileDTO } from '#domain/shared/model/file';
 
 export default class NoteService {
   constructor() {
@@ -62,4 +64,39 @@ export default class NoteService {
 
     return undefined;
   }
+
+  public readonly createNotesWithFile = (files: FileDTO[], parentId?: NoteVO['parentId']) => {
+    return Promise.all(
+      files.map(async (file) =>
+        this.createNote({
+          file,
+          title: file.name,
+          parentId,
+        }),
+      ),
+    );
+  };
+
+  public readonly getDuplicatedNoteByFiles = async (files: Array<ArrayBuffer>) => {
+    const fileNotes = await Promise.all(
+      files.map(async (file) => {
+        const hash = await getHash(file);
+        const notes = await this.remote.note.query.query({ fileHash: hash });
+
+        return {
+          file,
+          notes,
+        };
+      }),
+    );
+    const result = new Map<ArrayBuffer, NoteVO[]>();
+
+    for (const { file, notes } of fileNotes) {
+      if (notes.length > 0) {
+        result.set(file, notes);
+      }
+    }
+
+    return result;
+  };
 }
