@@ -65,22 +65,24 @@ export default class NoteService {
     return undefined;
   }
 
-  public readonly createNotesWithFile = (files: FileDTO[], parentId?: NoteVO['parentId']) => {
-    return Promise.all(
-      files.map(async (file) =>
-        this.createNote({
-          file,
-          title: file.name,
-          parentId,
-        }),
-      ),
-    );
-  };
+  public readonly createNotesWithFile = async ({
+    files,
+    parentId,
+    onDuplicated,
+    onCreated,
+  }: {
+    files: FileDTO[];
+    parentId?: NoteVO['parentId'];
+    onDuplicated: (next: () => Promise<void>, data: { duplicated: Map<FileDTO, NoteVO[]> }) => void;
+    onCreated?: () => void;
+  }) => {
+    if (files.length === 0) {
+      return;
+    }
 
-  public readonly getDuplicatedNoteByFiles = async (files: Array<ArrayBuffer>) => {
     const fileNotes = await Promise.all(
       files.map(async (file) => {
-        const hash = await getHash(file);
+        const hash = await getHash(file.data);
         const notes = await this.remote.note.query.query({ fileHash: hash });
 
         return {
@@ -89,14 +91,30 @@ export default class NoteService {
         };
       }),
     );
-    const result = new Map<ArrayBuffer, NoteVO[]>();
+    const duplicatedMap = new Map<FileDTO, NoteVO[]>();
 
     for (const { file, notes } of fileNotes) {
       if (notes.length > 0) {
-        result.set(file, notes);
+        duplicatedMap.set(file, notes);
       }
     }
 
-    return result;
+    const notesToCreate = files.filter((file) => !duplicatedMap.has(file));
+    const upload = async () =>
+      Promise.all(
+        notesToCreate.map(async (file) =>
+          this.createNote({
+            file,
+            title: file.name,
+            parentId,
+          }),
+        ),
+      ).then(onCreated);
+
+    if (duplicatedMap.size > 0) {
+      onDuplicated(upload, { duplicated: duplicatedMap });
+    } else {
+      upload();
+    }
   };
 }

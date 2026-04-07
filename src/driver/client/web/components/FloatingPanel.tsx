@@ -1,7 +1,7 @@
 import { createEffect, createSignal, onCleanup, type Accessor, type JSX } from 'solid-js';
 import { Ref } from '@solid-primitives/refs';
 import { createContextProvider } from '@solid-primitives/context';
-import { findAncestor } from '#web/infra/domUtils';
+import { findAncestor } from '#web/utils/dom';
 
 const containerMap = new WeakMap<HTMLElement, Set<HTMLElement>>();
 

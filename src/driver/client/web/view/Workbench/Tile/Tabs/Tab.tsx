@@ -4,7 +4,7 @@ import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-d
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 
 import BaseEditor from '#domain/client/app/model/note/editor/BaseEditor';
-import { isFullyVisible } from '#web/infra/domUtils';
+import { isFullyVisible } from '#web/utils/dom';
 import { IS_DEV } from '#domain/shared/infra/env';
 import ContextMenu from '#web/components/ContextMenu';
 import Icon from '#web/components/Icon';

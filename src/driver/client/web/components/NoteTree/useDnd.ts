@@ -10,11 +10,12 @@ import container from '#utils/singletonContainer';
 import NoteService from '#domain/client/app/service/NoteService';
 import TreeViewModel, { TreeNodeStates } from '#domain/client/app/model/note/TreeExplorer';
 import type TreeNode from '#domain/client/shared/model/note/TreeNode';
+import { transferItemToFileDTO } from '#web/utils/file';
 
 import DragPreview from './DragPreview';
 
 export default function useDnd(props: { treeView: TreeViewModel; node: TreeNode }) {
-  const { updateNote, getDuplicatedNoteByFiles, createNotesWithFile } = container.resolve(NoteService);
+  const { updateNote, createNotesWithFile } = container.resolve(NoteService);
   const [dndElementRef, setDndElementRef] = createSignal<HTMLElement>();
   const [isDropHovering, setIsDropHovering] = createSignal(false);
 
@@ -88,29 +89,13 @@ export default function useDnd(props: { treeView: TreeViewModel; node: TreeNode 
         },
         onDrop: async ({ source }) => {
           setIsDropHovering(false);
+          const files = compact(await Promise.all(source.items.map(transferItemToFileDTO)));
 
-          const files = compact(
-            await Promise.all(
-              source.items.map(async (item) => {
-                const file = item.getAsFile();
-
-                if (!file) {
-                  return null;
-                }
-
-                return {
-                  name: file.name,
-                  data: await file.arrayBuffer(),
-                  mimeType: file.type,
-                };
-              }),
-            ),
-          );
-
-          const duplicatedMap = await getDuplicatedNoteByFiles(files.map(({ data }) => data));
-          const notesToCreate = files.filter(({ data }) => !duplicatedMap.has(data));
-          await createNotesWithFile(notesToCreate, props.node.id);
-          props.node.toggleExpand(true);
+          createNotesWithFile({
+            files,
+            onDuplicated: (upload) => upload(),
+            onCreated: () => props.node.toggleExpand(true),
+          });
         },
       }),
     );
