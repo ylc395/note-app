@@ -22,7 +22,7 @@ export default function SelectionTooltip() {
   return (
     <div ref={rootEl} class="absolute">
       <Show when={selection.isTooltipVisible}>
-        <div class="flex space-x-2 bg-white py-2 px-1 rounded shadow-md z-50">
+        <div class="flex space-x-2 bg-bg-primary py-2 px-1 rounded shadow-md z-50">
           <ColorPicker selection={selection} />
           <button class="flex items-center" onClick={() => selection.highlight()}>
             <PaintbrushIcon />

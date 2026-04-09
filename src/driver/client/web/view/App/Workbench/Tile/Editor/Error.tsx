@@ -5,7 +5,7 @@ export default function ErrorEditor() {
   const ctx = useContext()!;
 
   return (
-    <div class="flex flex-col justify-center items-center h-full text-text-secondary">
+    <div class="flex flex-col justify-center items-center h-full text-fg-secondary">
       <FileXIcon class="w-16 h-16 mb-2" />
       <h1 class="mb-16">加载失败</h1>
       <div class="text-sm text-center">

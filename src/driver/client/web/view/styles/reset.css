@@ -1,0 +1,25 @@
+@layer base {
+  :root {
+    overflow: hidden;
+  }
+
+  * {
+    scrollbar-width: thin;
+  }
+
+  *:focus {
+    outline: none;
+  }
+
+  main {
+    user-select: none;
+  }
+
+  button {
+    outline: none;
+  }
+
+  input {
+    outline: none;
+  }
+}

@@ -35,8 +35,8 @@ export default function Modal(props: {
         <Portal mount={shell.appRoot}>
           <Dialog.Backdrop class="fixed inset-0 bg-black opacity-30 z-10" />
           <Dialog.Positioner class="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20">
-            <Dialog.Content class="bg-surface-primary p-inset-square-xl rounded-lg w-md">
-              <div class="flex justify-between pb-inset-square-lg mb-stack-md border-b border-border-secondary">
+            <Dialog.Content class="bg-bg-primary p-6 rounded-lg w-md">
+              <div class="flex justify-between pb-3 mb-4 border-b border-border-secondary">
                 <Dialog.Title class="text-lg">{props.title}</Dialog.Title>
                 <Dialog.CloseTrigger class="button">
                   <XIcon />
@@ -46,7 +46,7 @@ export default function Modal(props: {
               <Show
                 when={props.bottom}
                 fallback={
-                  <div class="mt-stack-lg text-right space-x-stack-md flex justify-end">
+                  <div class="mt-6 text-right space-x-4 flex justify-end">
                     <button class="button  button-lg" onClick={props.onCancel}>
                       {props.cancelText ?? '取 消'}
                     </button>

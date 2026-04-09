@@ -32,7 +32,7 @@ export default function TextItem(props: { value: AnnotationVO }) {
         </Show>
       </div>
       <Show when={quote()}>
-        <blockquote class="bg-gray-200 opacity-60">{quote()}</blockquote>
+        <blockquote class="bg-bg-tertiary opacity-60">{quote()}</blockquote>
       </Show>
       <div class="my-2">{props.value.body}</div>
       <div class="text-sm text-right">

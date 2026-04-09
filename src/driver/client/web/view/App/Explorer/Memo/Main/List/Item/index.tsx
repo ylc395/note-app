@@ -26,9 +26,9 @@ export default function Item(props: { memo: MemoVO; parent?: MemoView | MemoList
   });
 
   return (
-    <div ref={divRef} class="shadow-md rounded-lg border p-4 relative bg-white before:con">
+    <div ref={divRef} class="shadow-md rounded-lg border p-4 relative bg-bg-primary">
       <div class="flex justify-between items-center">
-        <div class="flex text-gray-400">
+        <div class="flex text-fg-tertiary">
           <time datetime={date().toISOString()}>{date().format('YYYY-MM-DD HH:mm:ss')}</time>
         </div>
         <Menu memoView={memoView} />

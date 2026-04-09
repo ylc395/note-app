@@ -70,7 +70,7 @@ export default function useContextmenu() {
           ]
         : []),
       'separator' as const,
-      { label: '删除', key: 'delete', className: 'text-feedback-danger' },
+      { label: '删除', key: 'delete', className: 'text-fg-danger' },
     ]);
   }
 

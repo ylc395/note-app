@@ -63,7 +63,7 @@ export default function MarkdownEditorView() {
       <div class="min-h-0 grow overflow-hidden">
         <BaseMarkdownEditor
           ref={setCrepe}
-          className="h-full overflow-auto border-16 border-surface-primary"
+          className="h-full overflow-auto border-16 border-bg-primary"
           defaultValue={editor.value.result.data!.body}
           initialScroll={editor.uiState!.scroll}
           initialCursorPos={editor.uiState!.cursorPos}

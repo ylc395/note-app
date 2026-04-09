@@ -7,12 +7,12 @@ export default function Star() {
   starList.refetch();
 
   return (
-    <div class="bg-surface-secondary shadow-2xl rounded-xl p-inset-square-md text-sm w-48 border-border-primary border">
-      <h2 class="font-bold mb-stack-s">收藏夹</h2>
+    <div class="bg-bg-secondary shadow-2xl rounded-xl p-2 text-sm w-48 border-border-primary border">
+      <h2 class="font-bold mb-2">收藏夹</h2>
       <Show when={starList.result.data}>
         {(data) => (
           <Show when={data().length > 0} fallback={<div>暂无收藏</div>}>
-            <div class="max-h-48 overflow-auto space-y-stack-s">
+            <div class="max-h-48 overflow-auto space-y-2">
               <For each={data()}>
                 {(star) => <div class="overflow-hidden text-ellipsis whitespace-nowrap">{star.entity.title}</div>}
               </For>

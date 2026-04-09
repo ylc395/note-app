@@ -8,8 +8,7 @@ import UIState, { SidebarTabs } from '../UIState';
 
 export default function Explorer(props: { panelId: string }) {
   const uiState = container.resolve(UIState);
-  const explorerClassName =
-    'border-r border-r-border-secondary h-full flex flex-col p-inset-square-lg bg-surface-secondary';
+  const explorerClassName = 'border-r border-r-border-primary h-full flex flex-col p-3 bg-bg-secondary';
 
   return (
     <Splitter.Panel id={props.panelId}>

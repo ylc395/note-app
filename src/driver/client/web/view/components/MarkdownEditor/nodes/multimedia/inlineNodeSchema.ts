@@ -56,7 +56,7 @@ export const multimediaNodeSchema = imageSchema.extendSchema((imageSchema) => {
 export const multimediaNodeView = $view(multimediaNodeSchema.node, (ctx): NodeViewConstructor => {
   return (initialNode, editorView, getNodePos) => {
     const rootNode = document.createElement('span');
-    rootNode.className = 'mx-stack-xs';
+    rootNode.className = 'mx-1';
 
     const [attrs, setAttrs] = createSignal(initialNode.attrs);
     const dispose = render(

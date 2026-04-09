@@ -6,7 +6,7 @@ import type MemoView from '#domain/client/app/model/memo/MemoView';
 
 export default function Operation({ memoView }: { memoView: MemoView }) {
   assert(memoView.value, 'no value');
-  const buttonClassName = 'flex justify-center items-center text-sm text-gray-400';
+  const buttonClassName = 'flex justify-center items-center text-sm text-fg-tertiary';
 
   return (
     <div class="flex space-x-4 text-sm xl:mt-4">

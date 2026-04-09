@@ -34,7 +34,7 @@ export default function ShapeSelector() {
           </Select.Indicator>
         </Select.Trigger>
       </Select.Control>
-      <Select.Positioner class="bg-white">
+      <Select.Positioner class="bg-bg-primary">
         <Select.Content class="z-10">
           <Select.ItemGroup>
             <Index each={collection.items}>

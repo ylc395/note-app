@@ -4,8 +4,8 @@ import { BookTextIcon, ChevronRightIcon } from 'lucide-solid';
 import { useContext } from './context';
 
 export default function Breadcrumbs() {
-  const itemClassName = 'text-text-secondary flex items-center shrink-0 text-sm';
-  const iconClassName = 'w-4 h-4 text-text-secondary';
+  const itemClassName = 'text-fg-secondary flex items-center shrink-0 text-sm';
+  const iconClassName = 'w-4 h-4 text-fg-secondary';
   const ctx = useContext()!;
 
   return (

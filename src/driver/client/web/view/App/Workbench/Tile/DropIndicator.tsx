@@ -3,7 +3,7 @@ import { TileSplitDirections } from '#domain/client/app/model/Workbench';
 export default function DropIndicator(props: { tileDirection: TileSplitDirections | 'middle' }) {
   return (
     <div
-      class="absolute bg-blue-100 opacity-30 flex justify-center items-center z-10"
+      class="absolute bg-bg-info opacity-30 flex justify-center items-center z-10"
       classList={{
         'left-0': props.tileDirection !== TileSplitDirections.Right,
         'right-0': props.tileDirection !== TileSplitDirections.Left,

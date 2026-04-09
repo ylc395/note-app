@@ -9,10 +9,10 @@ export default function Editor(props: { memoView: MemoView }) {
         defaultValue={props.memoView.value!.body}
       />
       <div class="flex justify-end space-x-2 mt-2">
-        <button class="text-sm text-gray-400" onclick={() => props.memoView.selfEditor!.destroy()}>
+        <button class="text-sm text-fg-tertiary" onclick={() => props.memoView.selfEditor!.destroy()}>
           取消
         </button>
-        <button class="text-sm text-gray-400" onclick={() => props.memoView.selfEditor!.submit()}>
+        <button class="text-sm text-fg-tertiary" onclick={() => props.memoView.selfEditor!.submit()}>
           提交
         </button>
       </div>

@@ -40,7 +40,7 @@ export default function LocalFileUploader(props: { className?: string }) {
         fallback={
           <FileUpload.Dropzone class="text-sm w-full h-full flex flex-col items-center justify-center cursor-pointer">
             <FileUpload.Trigger class="flex items-center justify-center flex-col">
-              <FilePlusIcon class="w-10 h-10 mb-stack-s stroke-1" />
+              <FilePlusIcon class="w-10 h-10 mb-2 stroke-1" />
               <p>上传本地资源</p>
               <p>可拖拽至此</p>
             </FileUpload.Trigger>
@@ -54,16 +54,16 @@ export default function LocalFileUploader(props: { className?: string }) {
                 <For each={ctx().acceptedFiles}>
                   {(item) => (
                     <FileUpload.Item file={item}>
-                      <FileUpload.ItemPreview class="mb-stack-md">
+                      <FileUpload.ItemPreview class="mb-4">
                         <FileIcon class="mx-auto w-10 h-10 stroke-1" />
                       </FileUpload.ItemPreview>
-                      <div class="flex items-center justify-center space-x-stack-s">
+                      <div class="flex items-center justify-center space-x-2">
                         <div class="flex items-center">
                           <FileUpload.ItemName
                             title={item.name}
                             class="max-w-42 whitespace-nowrap overflow-hidden text-ellipsis"
                           />
-                          <FileUpload.ItemSizeText class="text-text-tertiary" />
+                          <FileUpload.ItemSizeText class="text-fg-tertiary" />
                         </div>
                       </div>
                     </FileUpload.Item>

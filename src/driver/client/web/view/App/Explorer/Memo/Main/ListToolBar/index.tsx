@@ -29,7 +29,7 @@ export default function ListToolbar() {
   }
 
   return (
-    <div class="mt-4 flex justify-between text-gray-400">
+    <div class="mt-4 flex justify-between text-fg-tertiary">
       <div class="flex text-sm items-center">
         <button class="mr-2">
           <PanelLeftOpenIcon />

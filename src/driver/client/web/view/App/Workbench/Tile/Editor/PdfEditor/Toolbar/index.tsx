@@ -53,8 +53,8 @@ export default function Toolbar() {
           onCheckedChange={() => editor.svgEditor.toggle()}
         >
           <Switch.Label>浏览</Switch.Label>
-          <Switch.Control class="w-12 flex bg-gray-100">
-            <Switch.Thumb class="w-6 bg-white" />
+          <Switch.Control class="w-12 flex bg-bg-tertiary">
+            <Switch.Thumb class="w-6 bg-bg-primary" />
           </Switch.Control>
           <Switch.Label>标注</Switch.Label>
           <Switch.HiddenInput />

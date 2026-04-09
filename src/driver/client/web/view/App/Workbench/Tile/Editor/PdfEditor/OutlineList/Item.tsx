@@ -35,7 +35,7 @@ function Title(props: { item: OutlineItem; outline: Outline; isFocused: boolean;
         />
         <Show when={pageRange}>
           {(value) => (
-            <Tooltip.Positioner class="bg-gray-200">
+            <Tooltip.Positioner class="bg-bg-tertiary">
               <Tooltip.Content>
                 {value()[0]} - {value()[1]}
               </Tooltip.Content>

@@ -26,7 +26,7 @@ export default function ContextMenu<T = void>(props: {
     typeof props.contextMenu === 'function' ? props.contextMenu?.(props.seed) : props.contextMenu,
   );
 
-  const contentClassName = 'menu min-w-28 text-text-secondary';
+  const contentClassName = 'menu min-w-28 text-fg-secondary';
 
   return (
     <Show when={items()} fallback={props.children({})}>

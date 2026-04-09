@@ -36,7 +36,7 @@ export default function Empty() {
   return (
     <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-40">
       <Show when={mode() === null}>
-        <h1 class="mb-stack-lg">直接开始输入，或...</h1>
+        <h1 class="mb-6">直接开始输入，或...</h1>
       </Show>
       <div class="flex space-x-12">
         <Show when={shouldShow(Mode.Local)}>

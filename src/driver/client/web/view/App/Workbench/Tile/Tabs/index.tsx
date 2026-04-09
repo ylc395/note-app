@@ -50,7 +50,7 @@ export default function Tabs(props: { tile: Tile }) {
     <div
       ref={rootRef}
       on:wheel={{ passive: true, handleEvent: handleOnWheel }}
-      class="flex overflow-auto border-b border-border-secondary shrink-0 bg-surface-secondary text-text-secondary scrollbar-stable"
+      class="flex overflow-auto border-b border-border-primary shrink-0 bg-bg-primary text-fg-secondary scrollbar-stable"
     >
       <For each={props.tile.editors}>{(editor) => <Tab editor={editor} />}</For>
     </div>

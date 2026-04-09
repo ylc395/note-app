@@ -27,7 +27,7 @@ export default function Input() {
   });
 
   return (
-    <div class="flex bg-white border mr-2">
+    <div class="flex bg-bg-primary border mr-2">
       <input
         ref={inputRef}
         class="outline-none bg-transparent"

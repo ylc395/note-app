@@ -95,7 +95,7 @@ export default function Calendar() {
                       return (
                         <DatePicker.TableCell
                           class={`${getColorClass(count())} text-center 
-                            ${timeSelector.isFuture(date) ? 'text-gray-300' : ''}`}
+                            ${timeSelector.isFuture(date) ? 'text-fg-tertiary' : ''}`}
                           value={day}
                           onClick={(e) =>
                             selectDate(

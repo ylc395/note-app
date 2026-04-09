@@ -51,15 +51,15 @@ export default function ResultList() {
   } = useContext()!;
 
   return (
-    <div class="w-64 max-h-72 overflow-auto bg-white">
+    <div class="w-64 max-h-72 overflow-auto bg-bg-primary">
       <For each={editor.textFinder.digests}>
         {(pageResult, index) => {
           const totalCount = sumBy(editor.textFinder.digests?.slice(0, index()), (page) => page.digests.length);
 
           return (
             <div>
-              <div class="flex sticky top-0 bg-white">
-                第{pageResult.page}页<span class="ml-2 border bg-gray-200">{pageResult.digests.length}</span>
+              <div class="flex sticky top-0 bg-bg-primary">
+                第{pageResult.page}页<span class="ml-2 border bg-bg-tertiary">{pageResult.digests.length}</span>
               </div>
               <div class="space-y-1">
                 <For each={pageResult.digests}>

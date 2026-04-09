@@ -108,19 +108,19 @@ export default function MultimediaView(props: Props) {
         </Switch>
         <Show when={naturalSize() && editorView.editable}>
           <div
-            class="absolute w-3 h-3 -top-1.5 -left-1.5 bg-white border-2 border-blue-500 rounded-full cursor-nw-resize hover:bg-blue-500 transition-colors z-10"
+            class="absolute w-3 h-3 -top-1.5 -left-1.5 bg-bg-primary border-2 border-border-accent rounded-full cursor-nw-resize hover:bg-bg-accent transition-colors z-10"
             onMouseDown={(e) => handleMouseDown(e, 'nw')}
           />
           <div
-            class="absolute w-3 h-3 -top-1.5 -right-1.5 bg-white border-2 border-blue-500 rounded-full cursor-ne-resize hover:bg-blue-500 transition-colors z-10"
+            class="absolute w-3 h-3 -top-1.5 -right-1.5 bg-bg-primary border-2 border-border-accent rounded-full cursor-ne-resize hover:bg-bg-accent transition-colors z-10"
             onMouseDown={(e) => handleMouseDown(e, 'ne')}
           />
           <div
-            class="absolute w-3 h-3 -bottom-1.5 -left-1.5 bg-white border-2 border-blue-500 rounded-full cursor-sw-resize hover:bg-blue-500 transition-colors z-10"
+            class="absolute w-3 h-3 -bottom-1.5 -left-1.5 bg-bg-primary border-2 border-border-accent rounded-full cursor-sw-resize hover:bg-bg-accent transition-colors z-10"
             onMouseDown={(e) => handleMouseDown(e, 'sw')}
           />
           <div
-            class="absolute w-3 h-3 -bottom-1.5 -right-1.5 bg-white border-2 border-blue-500 rounded-full cursor-se-resize hover:bg-blue-500 transition-colors z-10"
+            class="absolute w-3 h-3 -bottom-1.5 -right-1.5 bg-bg-primary border-2 border-border-accent rounded-full cursor-se-resize hover:bg-bg-accent transition-colors z-10"
             onMouseDown={(e) => handleMouseDown(e, 'se')}
           />
         </Show>

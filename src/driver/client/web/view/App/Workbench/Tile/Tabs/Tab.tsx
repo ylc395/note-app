@@ -46,7 +46,7 @@ export default function Tab(props: { editor: BaseEditor }) {
           {...childProps}
           ref={rootRef}
           class="shrink-0 h-12 flex justify-between items-center w-36 text-sm px-2 border-r border-border-secondary cursor-pointer group"
-          classList={{ 'bg-white': props.editor.isCurrent }}
+          classList={{ 'bg-bg-accent-subtle': props.editor.isCurrent }}
           onClick={() => props.editor.tile.switchToEditor(props.editor)}
         >
           <Icon icon={props.editor.icon} mimeType={props.editor.mimeType} iconClassName="shrink-0 w-4 h-4 mr-1" />

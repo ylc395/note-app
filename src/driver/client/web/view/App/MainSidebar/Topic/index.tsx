@@ -20,7 +20,7 @@ export default function Topic() {
   globalTopicTree.data.refetch();
 
   return (
-    <div class="bg-surface-primary">
+    <div class="bg-bg-primary">
       <h2>话题</h2>
       <Show when={collection()}>
         {(tree) => (

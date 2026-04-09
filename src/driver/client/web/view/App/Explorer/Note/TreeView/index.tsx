@@ -35,7 +35,7 @@ export default function TreeView() {
 
   return (
     <div class="grow min-h-0 flex flex-col">
-      <div class="mb-stack-s flex justify-between items-center">
+      <div class="mb-2 flex justify-between items-center">
         <AddButton buttonClassName="button button-primary button-md" menuPlacement="bottom-start" />
         <div class="flex">
           <button disabled={!explorer.canCollapse} onClick={explorer.collapseAll} class="button button-square-md">
@@ -45,7 +45,7 @@ export default function TreeView() {
         </div>
       </div>
       <BaseTreeView
-        className="min-h-0 grow overflow-auto scrollbar-stable text-sm text-text-secondary"
+        className="min-h-0 grow overflow-auto scrollbar-stable text-sm text-fg-secondary"
         onItemTitleClick={handleItemClick}
         treeView={explorer}
         shouldRenderIcon={shouldRenderIcon}
@@ -53,7 +53,7 @@ export default function TreeView() {
         contextMenu={contextmenu}
         renderOperation={(node) => (
           <AddButton
-            buttonClassName='button button-primary button-square-tiny text-brand-secondary h-full ml-inset-squish group-hover:flex data-[state="open"]:flex hidden'
+            buttonClassName='button button-primary button-square-tiny text-fg-accent h-full ml-1 group-hover:flex data-[state="open"]:flex hidden'
             iconOnly
             node={node}
             menuPlacement="bottom-end"

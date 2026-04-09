@@ -1,0 +1,120 @@
+@import 'tailwindcss';
+@import 'tailwindcss-animated';
+
+@theme {
+  /* --- Background --- */
+  --color-bg-primary:            var(--color-white);        /* 主画布：编辑区、主内容区 */
+  --color-bg-secondary:          var(--color-zinc-50);      /* 次级面板：侧边栏、工具栏底 */
+  --color-bg-tertiary:           var(--color-zinc-100);     /* 三级嵌套：卡片、代码块背景 */
+  --color-bg-overlay:            var(--color-zinc-950);     /* 模态遮罩，配合 opacity 使用 */
+
+  --color-bg-accent:             var(--color-zinc-900);     /* 品牌强调背景：主按钮、active 导航 */
+  --color-bg-accent-subtle:      var(--color-zinc-100);     /* 轻量品牌背景：选中行、hover 高亮 */
+  --color-bg-accent-hover:       var(--color-zinc-800);     /* 品牌背景 hover 态 */
+
+  --color-bg-success:            var(--color-emerald-50);   /* 成功状态背景 */
+  --color-bg-warning:            var(--color-amber-50);     /* 警告状态背景 */
+  --color-bg-danger:             var(--color-red-50);       /* 危险/错误状态背景 */
+  --color-bg-info:               var(--color-sky-50);       /* 信息提示背景 */
+
+  --color-bg-hover:              var(--color-zinc-100);     /* 通用 hover 背景（非品牌交互元素）*/
+  --color-bg-active:             var(--color-zinc-200);     /* 通用 active/pressed 背景 */
+  --color-bg-disabled:           var(--color-zinc-100);     /* 禁用态背景 */
+  --color-bg-selected:           var(--color-zinc-900);     /* 列表/树节点选中背景 */
+
+  /* --- Foreground (text & icon) --- */
+  --color-fg-primary:            var(--color-zinc-950);     /* 主要正文、标题 */
+  --color-fg-secondary:          var(--color-zinc-600);     /* 次要文本：描述、元信息 */
+  --color-fg-tertiary:           var(--color-zinc-400);     /* 三级文本：占位符、辅助提示 */
+  --color-fg-disabled:           var(--color-zinc-300);     /* 禁用态文字 */
+
+  --color-fg-accent:             var(--color-white);        /* 品牌背景上的文字/图标 */
+  --color-fg-accent-subtle:      var(--color-zinc-900);     /* 轻量品牌背景上的文字 */
+
+  --color-fg-link:               var(--color-zinc-700);     /* 超链接默认色 */
+  --color-fg-link-hover:         var(--color-zinc-950);     /* 超链接 hover 色 */
+
+  --color-fg-success:            var(--color-emerald-700);  /* 成功状态文字/图标 */
+  --color-fg-warning:            var(--color-amber-700);    /* 警告状态文字/图标 */
+  --color-fg-danger:             var(--color-red-700);      /* 危险/错误状态文字/图标 */
+  --color-fg-info:               var(--color-sky-700);      /* 信息提示文字/图标 */
+
+  /* --- Border --- */
+  --color-border-primary:        var(--color-zinc-300);     /* 默认边框：输入框、卡片、分割线 */
+  --color-border-secondary:      var(--color-zinc-200);     /* 轻量分割：列表项间距 */
+  --color-border-accent:         var(--color-zinc-900);     /* 强调边框：focus ring、选中轮廓 */
+  --color-border-accent-subtle:  var(--color-zinc-300);     /* 次级强调边框 */
+
+  --color-border-success:        var(--color-emerald-200);  /* 成功状态边框 */
+  --color-border-warning:        var(--color-amber-200);    /* 警告状态边框 */
+  --color-border-danger:         var(--color-red-200);      /* 危险/错误状态边框 */
+  --color-border-info:           var(--color-sky-200);      /* 信息提示边框 */
+
+  --color-border-hover:          var(--color-zinc-300);     /* hover 态边框 */
+  --color-border-disabled:       var(--color-zinc-100);     /* 禁用态边框 */
+
+  /* --- Surface (浮层/容器，区别于 bg 在于它有阴影/层叠语义) --- */
+  --color-surface-raised:        var(--color-white);        /* 浮起面：下拉菜单、tooltip、popover */
+  --color-surface-overlay:       var(--color-white);        /* 模态对话框内容区 */
+  --color-surface-sunken:        var(--color-zinc-50);      /* 下沉面：引用块、代码块内嵌区域 */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* --- Background --- */
+    --color-bg-primary:            var(--color-zinc-950);
+    --color-bg-secondary:          var(--color-zinc-900);
+    --color-bg-tertiary:           var(--color-zinc-800);
+    --color-bg-overlay:            var(--color-black);
+
+    --color-bg-accent:             var(--color-zinc-100);
+    --color-bg-accent-subtle:      var(--color-zinc-800);
+    --color-bg-accent-hover:       var(--color-zinc-200);
+
+    --color-bg-success:            oklch(from var(--color-emerald-950) l c h);
+    --color-bg-warning:            oklch(from var(--color-amber-950) l c h);
+    --color-bg-danger:             oklch(from var(--color-red-950) l c h);
+    --color-bg-info:               oklch(from var(--color-sky-950) l c h);
+
+    --color-bg-hover:              var(--color-zinc-800);
+    --color-bg-active:             var(--color-zinc-700);
+    --color-bg-disabled:           var(--color-zinc-900);
+    --color-bg-selected:           var(--color-zinc-100);
+
+    /* --- Foreground --- */
+    --color-fg-primary:            var(--color-zinc-50);
+    --color-fg-secondary:          var(--color-zinc-400);
+    --color-fg-tertiary:           var(--color-zinc-600);
+    --color-fg-disabled:           var(--color-zinc-700);
+
+    --color-fg-accent:             var(--color-zinc-950);
+    --color-fg-accent-subtle:      var(--color-zinc-100);
+
+    --color-fg-link:               var(--color-zinc-300);
+    --color-fg-link-hover:         var(--color-zinc-50);
+
+    --color-fg-success:            var(--color-emerald-400);
+    --color-fg-warning:            var(--color-amber-400);
+    --color-fg-danger:             var(--color-red-400);
+    --color-fg-info:               var(--color-sky-400);
+
+    /* --- Border --- */
+    --color-border-primary:        var(--color-zinc-800);
+    --color-border-secondary:      var(--color-zinc-900);
+    --color-border-accent:         var(--color-zinc-100);
+    --color-border-accent-subtle:  var(--color-zinc-600);
+
+    --color-border-success:        var(--color-emerald-800);
+    --color-border-warning:        var(--color-amber-800);
+    --color-border-danger:         var(--color-red-800);
+    --color-border-info:           var(--color-sky-800);
+
+    --color-border-hover:          var(--color-zinc-600);
+    --color-border-disabled:       var(--color-zinc-800);
+
+    /* --- Surface --- */
+    --color-surface-raised:        var(--color-zinc-900);
+    --color-surface-overlay:       var(--color-zinc-900);
+    --color-surface-sunken:        var(--color-zinc-950);
+  }
+}

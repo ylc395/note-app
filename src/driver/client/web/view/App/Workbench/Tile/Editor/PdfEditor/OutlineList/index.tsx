@@ -94,7 +94,7 @@ export default function Outline(props: { id: string }) {
             : splitter().getPanelProps({ id: props.id }))}
         >
           <FloatingPanel.Handler>
-            <div class="top-0 bg-gray-50 flex">
+            <div class="top-0 bg-bg-secondary flex">
               <h4>大纲</h4>
               <div class="flex items-center justify-end grow">
                 <button class="flex items-center text-sm" onClick={scrollToFocused}>

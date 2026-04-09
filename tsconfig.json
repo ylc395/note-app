@@ -5,6 +5,7 @@
     "types": [],
     "outDir": "./dist",
     "lib": ["ESNext"],
+    "rootDir": "./src",
     "sourceMap": true,
     "importHelpers": true,
     "esModuleInterop": true,

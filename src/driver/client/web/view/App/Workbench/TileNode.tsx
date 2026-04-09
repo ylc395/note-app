@@ -24,7 +24,7 @@ function TileParentNode(props: { panelId?: string; tile: TileParent }) {
     >
       <TileNodeView parent={props.tile} panelId={`${props.tile.id}-first`} tile={props.tile.first} />
       <Splitter.ResizeTrigger
-        class="bg-gray-100"
+        class="bg-bg-tertiary"
         classList={{
           'h-1': props.tile.direction === TileDirections.Vertical,
           'w-1': props.tile.direction === TileDirections.Horizontal,

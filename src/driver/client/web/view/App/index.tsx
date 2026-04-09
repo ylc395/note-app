@@ -8,7 +8,6 @@ import Explorer from './Explorer';
 import Workbench from './Workbench';
 import CustomIconPicker from './CustomIconPickerModal';
 import UIState from './UIState';
-import '../design/index.css';
 
 export default function App() {
   const uiState = container.resolve(UIState);

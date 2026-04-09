@@ -9,7 +9,7 @@ export default function SvgEditorBar() {
   } = useContext()!;
 
   return (
-    <div class="flex justify-center items-center space-x-4 bg-white z-10">
+    <div class="flex justify-center items-center space-x-4 bg-bg-primary z-10">
       <ShapeSelector />
       <button class="flex items-center" onClick={() => editor.svgEditor.toggleMode(Mode.Select)}>
         <MousePointerSquareDashedIcon />

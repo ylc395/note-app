@@ -14,7 +14,7 @@ export default function SortMenu() {
         排序
       </Menu.Trigger>
       <Menu.Positioner>
-        <Menu.Content class="z-10 bg-white">
+        <Menu.Content class="z-10 bg-bg-primary">
           <Menu.RadioItemGroup
             value={filter.order}
             onValueChange={({ value }) => {

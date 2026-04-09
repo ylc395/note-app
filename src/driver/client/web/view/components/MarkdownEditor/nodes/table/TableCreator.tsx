@@ -49,8 +49,8 @@ export default function TableCreator(props: { ctx: Ctx; onClose: () => void }) {
   }
 
   function getCellBgColor(row: number, col: number) {
-    if (isCellHighlighted(row, col)) return 'bg-blue-300';
-    return 'bg-gray-200';
+    if (isCellHighlighted(row, col)) return 'bg-bg-accent-subtle';
+    return 'bg-bg-tertiary';
   }
 
   function submit() {
@@ -81,7 +81,7 @@ export default function TableCreator(props: { ctx: Ctx; onClose: () => void }) {
         >
           {({ row, col }) => (
             <div
-              class={`w-5 h-5 border border-gray-300 rounded-sm cursor-pointer ${getCellBgColor(row, col)}`}
+              class={`w-5 h-5 border border-border-primary rounded-sm cursor-pointer ${getCellBgColor(row, col)}`}
               onMouseEnter={() => setHoverCell({ row, col })}
               onClick={() => handleCellClick(row, col)}
             />
@@ -95,7 +95,7 @@ export default function TableCreator(props: { ctx: Ctx; onClose: () => void }) {
           min="1"
           max={maxSize}
           onInput={(e) => handleInputChange(e, 'row')}
-          class="w-12 px-2 py-1 border border-gray-300 rounded"
+          class="w-12 px-2 py-1 border border-border-primary rounded"
         />
         <span>×</span>
         <input
@@ -104,7 +104,7 @@ export default function TableCreator(props: { ctx: Ctx; onClose: () => void }) {
           min="1"
           max={maxSize}
           onInput={(e) => handleInputChange(e, 'col')}
-          class="w-12 px-2 py-1 border border-gray-300 rounded"
+          class="w-12 px-2 py-1 border border-border-primary rounded"
         />
         <span>表格</span>
       </div>

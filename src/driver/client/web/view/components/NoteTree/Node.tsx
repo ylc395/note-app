@@ -29,18 +29,18 @@ export default function Node(props: Props) {
   const { isDropHovering, setDndElementRef } = useDnd(props);
 
   const itemClassName =
-    'mb-stack-xs rounded cursor-pointer flex group items-center hover:bg-surface-tertiary hover:text-text-secondary px-inset-square-s';
-  const itemTextClassName = 'whitespace-nowrap overflow-hidden text-ellipsis py-inset-square-md grow'; // 别弄成 flex，否则文字截断无法生效（只对 inline / block 有效）
+    'mb-1 rounded cursor-pointer flex group items-center hover:bg-bg-tertiary hover:text-fg-secondary px-1';
+  const itemTextClassName = 'whitespace-nowrap overflow-hidden text-ellipsis py-2 grow'; // 别弄成 flex，否则文字截断无法生效（只对 inline / block 有效）
   const paddingLeft = createMemo(() => (props.indexPath.length - 1) * 28);
   const itemClassList = createMemo(() => ({
-    'bg-brand-subtle text-brand-secondary':
+    'bg-bg-accent-subtle text-fg-accent-subtle':
       workbench.currentEditor?.noteId === props.node.id && !props.node.is(TreeNodeStates.Selected),
     'opacity-30': props.node.is(TreeNodeStates.Unselectable),
-    'bg-surface-tertiary':
+    'bg-bg-tertiary':
       (isDropHovering() && !props.node.is(TreeNodeStates.Unselectable)) || props.node.is(TreeNodeStates.Selected),
   }));
   const iconClassName = createMemo(
-    () => `mr-stack-xs p-0 shrink-0 w-4 h-4 inline ${props.node.icon ? '' : 'align-text-bottom'}`,
+    () => `mr-1 p-0 shrink-0 w-4 h-4 inline ${props.node.icon ? '' : 'align-text-bottom'}`,
   );
 
   function handleItemClick(node: TreeNode, e: MouseEvent) {
@@ -74,7 +74,7 @@ export default function Node(props: Props) {
         seed={props.node}
         topExtraContent={() => (
           <Show when={props.treeView.treeNodeSets.selected.size > 1}>
-            <div class="font-bold p-inset-square-s">共选中 {props.treeView.treeNodeSets.selected.size} 项</div>
+            <div class="font-bold p-1">共选中 {props.treeView.treeNodeSets.selected.size} 项</div>
           </Show>
         )}
       >
