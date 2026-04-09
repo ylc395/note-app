@@ -50,8 +50,12 @@ export default function MarkdownEditor(props: {
       }
 
       if (props.initialCursorPos) {
-        editor.setSelection(props.initialCursorPos);
-        editor.focus();
+        try {
+          editor.setSelection(props.initialCursorPos);
+          editor.focus();
+        } catch {
+          return;
+        }
       }
     });
 
