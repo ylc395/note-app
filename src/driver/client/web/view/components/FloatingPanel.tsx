@@ -9,11 +9,13 @@ const [ContextProvider, useContext] = createContextProvider(
   (props: {
     isEnabled: boolean;
     onMoveEnd: (e: { x: number; y: number }) => void;
+    // onMoveStart: (e: { x: number; y: number }) => void;
     onMove: (e: { x: number; y: number }) => void;
     panelRef: Accessor<HTMLElement | undefined>;
   }) => ({
     isEnabled: () => props.isEnabled,
     onMoveEnd: props.onMoveEnd,
+    // onMoveStart: props.onMoveStart,
     onMove: props.onMove,
     panelRef: props.panelRef,
   }),
@@ -54,6 +56,7 @@ function Main(props: {
   pos: { x?: number; y?: number; left?: number; top?: number; right?: number; bottom?: number };
   onMove: (e: { x: number; y: number }) => void;
   onMoveEnd: (e: { x: number; y: number }) => void;
+  // onMoveStart: (e: { x: number; y: number }) => void;
 }) {
   const [ref, setRef] = createSignal<HTMLElement>();
 
@@ -131,11 +134,6 @@ function Main(props: {
 }
 
 function Handler(props: { children: JSX.Element }) {
-  let startX = 0;
-  let startY = 0;
-  let startLeft = 0;
-  let startTop = 0;
-  let isDragging = false;
   const [handlerRef, setHandlerRef] = createSignal<HTMLElement>();
   const { panelRef, isEnabled, onMoveEnd, onMove } = useContext()!;
 
@@ -149,6 +147,9 @@ function Handler(props: { children: JSX.Element }) {
 
     const abortController = new AbortController();
 
+    let startPos: { mouse: { x: number; y: number }; panel: { left: number; top: number } } | undefined;
+    const currentPos = { x: 0, y: 0 };
+
     handler.addEventListener(
       'pointerdown',
       (e) => {
@@ -159,12 +160,10 @@ function Handler(props: { children: JSX.Element }) {
           panel.style.zIndex = `${maxZIndex + 1}`;
         }
 
-        isDragging = true;
-        startX = e.clientX;
-        startY = e.clientY;
-
-        startLeft = panel.offsetLeft;
-        startTop = panel.offsetTop;
+        startPos = {
+          mouse: { x: e.clientX, y: e.clientY },
+          panel: { left: panel.offsetLeft, top: panel.offsetTop },
+        };
         handler.style.cursor = 'grabbing';
       },
       { signal: abortController.signal },
@@ -173,14 +172,14 @@ function Handler(props: { children: JSX.Element }) {
     document.addEventListener(
       'pointermove',
       (e) => {
-        if (!isDragging) {
+        if (!startPos) {
           return;
         }
 
-        const deltaX = e.clientX - startX;
-        const deltaY = e.clientY - startY;
+        currentPos.x = startPos.panel.left + e.clientX - startPos.mouse.x;
+        currentPos.y = startPos.panel.top + e.clientY - startPos.mouse.y;
 
-        onMove({ x: startLeft + deltaX, y: startTop + deltaY });
+        onMove({ x: currentPos.x, y: currentPos.y });
         handler.setPointerCapture(e.pointerId);
       },
       { signal: abortController.signal },
@@ -189,13 +188,13 @@ function Handler(props: { children: JSX.Element }) {
     document.addEventListener(
       'pointerup',
       (e) => {
-        if (!panel || !isDragging) {
+        if (!panel || !startPos) {
           return;
         }
 
-        onMoveEnd({ x: parseFloat(panel.style.left), y: parseFloat(panel.style.top) });
+        onMoveEnd({ x: currentPos.x, y: currentPos.y });
         handler.style.cursor = '';
-        isDragging = false;
+        startPos = undefined;
         handler.releasePointerCapture(e.pointerId);
       },
       { signal: abortController.signal, capture: true },
