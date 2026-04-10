@@ -21,7 +21,8 @@ export default class PDFDocumentFactory {
     const task = (this.loadingTasksMap[key] ||= {
       task: getDocument({
         data: blob.slice(0),
-        cMapUrl: IS_DEV ? '/cmaps/' : getAppUrl(RouteTypes.Static, 'cmaps/'),
+        cMapUrl: IS_DEV ? '/pdf/cmaps/' : getAppUrl(RouteTypes.Static, 'pdf/cmaps/'),
+        wasmUrl: IS_DEV ? '/pdf/wasm/' : getAppUrl(RouteTypes.Static, 'pdf/wasm/'),
       }),
       activeCount: 0,
     });

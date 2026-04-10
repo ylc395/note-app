@@ -4,7 +4,8 @@ import createViteServer from './create-vite-server.js';
 import buildPreload from './build-preload.js';
 import buildMain from './build-main.js';
 
-await copy('./node_modules/pdfjs-dist/cmaps', './dist/static/cmaps');
+await copy('./node_modules/pdfjs-dist/cmaps', './dist/static/pdf/cmaps');
+await copy('./node_modules/pdfjs-dist/wasm', './dist/static/pdf/wasm');
 
 const viteServer = await createViteServer();
 const viteUrl = viteServer.resolvedUrls.local[0];
