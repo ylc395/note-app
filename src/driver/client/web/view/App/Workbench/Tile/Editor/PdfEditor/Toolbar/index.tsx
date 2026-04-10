@@ -3,9 +3,9 @@ import { Switch } from '@ark-ui/solid';
 import assert from 'assert';
 import { action } from 'mobx';
 
+import Button from '#web/view/components/Button';
 import PageSwitcher from './PageSwitcher';
 import Scale from './Scale';
-import BackAndForward from './BackAndForward';
 import { useContext } from '../context';
 
 export default function Toolbar() {
@@ -27,24 +27,25 @@ export default function Toolbar() {
   }
 
   return (
-    <div class="flex justify-between py-2 border-b px-2 relative">
-      <div class="space-x-4 flex text-sm">
-        <button class="flex items-center" onClick={action(toggleBodyPanel)}>
+    <div class="flex justify-between py-2 border-b border-border-secondary px-2 relative">
+      <div class="flex text-sm">
+        <Button class="flex items-center" onClick={action(toggleBodyPanel)}>
           <NotepadTextIcon class="mr-1" />
           笔记
-        </button>
-        <button class="flex items-center" onClick={action(toggleOutlinePanel)}>
+        </Button>
+        <Button class="flex items-center" onClick={action(toggleOutlinePanel)}>
           <ListIcon class="mr-1" />
           大纲
-        </button>
-        <Scale />
-        <BackAndForward />
+        </Button>
+        <Button onClick={() => editor.textFinder.toggle()}>
+          <TextSearchIcon class="mr-1" />
+          搜索全文
+        </Button>
       </div>
       <div class="space-x-6 flex absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 ">
         <PageSwitcher />
-        <button onClick={() => editor.textFinder.toggle()}>
-          <TextSearchIcon />
-        </button>
+
+        <Scale />
       </div>
       <div class="flex space-x-2">
         <Switch.Root
@@ -59,10 +60,10 @@ export default function Toolbar() {
           <Switch.Label>标注</Switch.Label>
           <Switch.HiddenInput />
         </Switch.Root>
-        <button onClick={toggleAnnotationPanel} class="flex items-center text-sm">
+        <Button onClick={toggleAnnotationPanel} class="flex items-center text-sm">
           <PenLineIcon class="mr-1" />
           查看标注
-        </button>
+        </Button>
       </div>
     </div>
   );

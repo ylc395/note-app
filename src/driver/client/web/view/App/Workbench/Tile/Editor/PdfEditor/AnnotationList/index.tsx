@@ -10,6 +10,7 @@ import { useContext } from '../context';
 import FloatingPanel from '#web/view/components/FloatingPanel';
 import { action } from 'mobx';
 import Resizable from '#web/view/components/Resizable';
+import Button from '#web/view/components/Button';
 
 export default function AnnotationList(props: { id: string }) {
   const splitter = useSplitterContext();
@@ -83,10 +84,10 @@ export default function AnnotationList(props: { id: string }) {
               <Show when={items()}>{(items) => <div class="text-sm">共计 {items().length} 个</div>}</Show>
               <div class="flex">
                 <Settings />
-                <button class="flex items-center text-sm" onClick={action(toggleFloating)}>
+                <Button size="small" onClick={action(toggleFloating)}>
                   <EyeIcon class="mr-1" />
                   悬浮
-                </button>
+                </Button>
               </div>
             </div>
           </FloatingPanel.Handler>

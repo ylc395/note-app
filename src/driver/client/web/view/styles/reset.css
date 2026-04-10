@@ -22,4 +22,8 @@
   input {
     outline: none;
   }
+
+  .lucide-icon {
+    stroke-width: 2.4;
+  }
 }

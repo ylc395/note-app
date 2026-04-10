@@ -8,6 +8,7 @@ import { IconDisplayMode } from '#domain/client/app/model/note/TreeExplorer/Sett
 import AddButton from './AddButton';
 import SettingButton from './SettingButton';
 import useContextmenu from './useContextmenu';
+import Button from '#web/view/components/Button';
 
 export default function TreeView() {
   const { workbench, explorer } = container.resolve(NoteService);
@@ -36,11 +37,11 @@ export default function TreeView() {
   return (
     <div class="grow min-h-0 flex flex-col">
       <div class="mb-2 flex justify-between items-center">
-        <AddButton buttonClassName="button button-primary button-md" menuPlacement="bottom-start" />
+        <AddButton />
         <div class="flex">
-          <button disabled={!explorer.canCollapse} onClick={explorer.collapseAll} class="button button-square-md">
+          <Button disabled={!explorer.canCollapse} onClick={explorer.collapseAll} square>
             <ShrinkIcon />
-          </button>
+          </Button>
           <SettingButton />
         </div>
       </div>
@@ -51,14 +52,7 @@ export default function TreeView() {
         shouldRenderIcon={shouldRenderIcon}
         onContextMenuClick={handleContextMenuClick}
         contextMenu={contextmenu}
-        renderOperation={(node) => (
-          <AddButton
-            buttonClassName='button button-primary button-square-tiny text-fg-accent h-full ml-1 group-hover:flex data-[state="open"]:flex hidden'
-            iconOnly
-            node={node}
-            menuPlacement="bottom-end"
-          />
-        )}
+        renderOperation={(node) => <AddButton iconOnly node={node} class="hidden group-hover:flex ml-2" />}
       />
     </div>
   );

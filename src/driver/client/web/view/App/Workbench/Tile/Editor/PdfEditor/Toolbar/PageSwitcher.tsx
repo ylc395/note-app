@@ -1,5 +1,6 @@
 import { createEffect, createSignal } from 'solid-js';
 import { StepBackIcon, StepForwardIcon } from 'lucide-solid';
+import Button from '#web/view/components/Button';
 import { useContext } from '../context';
 
 export default function PageSwitcher() {
@@ -30,22 +31,25 @@ export default function PageSwitcher() {
   });
 
   return (
-    <div class="flex space-x-2">
-      <button class="flex items-center" onClick={() => viewer.goToPreviousPage()}>
+    <div class="flex">
+      <Button square onClick={() => viewer.goToPreviousPage()}>
         <StepBackIcon />
-      </button>
-      <input
-        class="w-8"
-        onBlur={() => setValue(String(viewer.currentPage))}
-        onKeyPress={handleKeyPress}
-        onInput={handleInput}
-        readOnly={!getValue()}
-        value={getValue() ?? '-'}
-      />
-      /{viewer.totalPage ?? '-'}
-      <button class="flex items-center" onClick={() => viewer.goToNextPage()}>
+      </Button>
+      <div class="flex items-center mx-1">
+        <input
+          class="w-8 text-end"
+          onBlur={() => setValue(String(viewer.currentPage))}
+          onKeyPress={handleKeyPress}
+          onInput={handleInput}
+          readOnly={!getValue()}
+          value={getValue() ?? '-'}
+        />
+        <span class="mx-1">/</span>
+        {viewer.totalPage ?? '-'}
+      </div>
+      <Button square onClick={() => viewer.goToNextPage()}>
         <StepForwardIcon />
-      </button>
+      </Button>
     </div>
   );
 }

@@ -9,6 +9,7 @@ import Item from './Item';
 import Resizable from '#web/view/components/Resizable';
 import OutlineViewModel from './Outline';
 import { useContext } from '../context';
+import Button from '#web/view/components/Button';
 
 export default function Outline(props: { id: string }) {
   const { viewer } = useContext()!;
@@ -94,17 +95,17 @@ export default function Outline(props: { id: string }) {
             : splitter().getPanelProps({ id: props.id }))}
         >
           <FloatingPanel.Handler>
-            <div class="top-0 bg-bg-secondary flex">
+            <div class="top-0 bg-bg-secondary flex items-center">
               <h4>大纲</h4>
               <div class="flex items-center justify-end grow">
-                <button class="flex items-center text-sm" onClick={scrollToFocused}>
+                <Button size="small" onClick={scrollToFocused}>
                   <EyeIcon class="mr-1" />
                   当前浏览
-                </button>
-                <button class="flex items-center text-sm" onClick={action(toggleFloating)}>
+                </Button>
+                <Button size="small" onClick={action(toggleFloating)}>
                   <EyeIcon class="mr-1" />
                   悬浮
-                </button>
+                </Button>
               </div>
             </div>
           </FloatingPanel.Handler>

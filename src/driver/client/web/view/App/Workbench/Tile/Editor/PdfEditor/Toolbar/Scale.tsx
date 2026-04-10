@@ -1,4 +1,5 @@
 import { ZoomInIcon, ZoomOutIcon } from 'lucide-solid';
+import Button from '#web/view/components/Button';
 import { useContext } from '../context';
 
 export default function Scale() {
@@ -8,13 +9,13 @@ export default function Scale() {
 
   return (
     <div class="flex items-center">
-      <button onClick={() => viewer.setScale('down')}>
+      <Button square onClick={() => viewer.setScale('down')}>
         <ZoomOutIcon />
-      </button>
-      <span class="mx-2">{viewer.scale?.text}</span>
-      <button onClick={() => viewer.setScale('up')}>
+      </Button>
+      <span class="mx-1">{viewer.scale?.text}</span>
+      <Button square onClick={() => viewer.setScale('up')}>
         <ZoomInIcon />
-      </button>
+      </Button>
     </div>
   );
 }

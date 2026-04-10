@@ -7,6 +7,7 @@ import FloatingPanel from '#web/view/components/FloatingPanel';
 import MarkdownEditor from '#web/view/components/MarkdownEditor';
 import Resizable from '#web/view/components/Resizable';
 import { useContext } from './context';
+import Button from '#web/view/components/Button';
 
 export default function BodyEditor(props: { id: string }) {
   const { viewer } = useContext()!;
@@ -54,13 +55,13 @@ export default function BodyEditor(props: { id: string }) {
           {...(!editor.body.uiState.isFloating ? splitter().getPanelProps({ id: props.id }) : null)}
         >
           <FloatingPanel.Handler>
-            <div class="flex justify-between">
+            <div class="flex justify-between items-center">
               <h4>笔记</h4>
               <div>
-                <button class="flex items-center text-sm" onClick={action(toggleFloating)}>
+                <Button size="small" onClick={action(toggleFloating)}>
                   <EyeIcon class="mr-1" />
                   悬浮
-                </button>
+                </Button>
               </div>
             </div>
           </FloatingPanel.Handler>

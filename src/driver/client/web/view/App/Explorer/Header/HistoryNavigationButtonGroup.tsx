@@ -2,12 +2,13 @@ import { ArrowLeftIcon, ArrowRightIcon } from 'lucide-solid';
 import { For, type JSXElement } from 'solid-js';
 import { Menu } from '@ark-ui/solid';
 import type { Placement } from '@floating-ui/dom';
+import { Portal } from 'solid-js/web';
 
 import Workbench from '#domain/client/app/model/Workbench';
 import container from '#utils/singletonContainer';
 import { Direction } from '#domain/client/app/model/base/HistoryStack';
-import { Portal } from 'solid-js/web';
 import shell from '#web/infra/shell';
+import Button from '#web/view/components/Button';
 
 function HistoryNavigationButton(props: {
   disabled: boolean;
@@ -23,14 +24,9 @@ function HistoryNavigationButton(props: {
         class="button button-square-md"
         disabled={props.disabled}
         asChild={(childProps) => (
-          <button
-            {...childProps()}
-            class="button button-square-md"
-            onClick={props.onClick}
-            onContextMenu={childProps().onClick}
-          >
+          <Button {...childProps()} square onClick={props.onClick} onContextMenu={childProps().onClick}>
             {props.children}
-          </button>
+          </Button>
         )}
       />
       <Portal mount={shell.appRoot}>

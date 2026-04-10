@@ -7,6 +7,7 @@ import container from '#utils/singletonContainer';
 import shell from '#web/infra/shell';
 import NoteService from '#domain/client/app/service/NoteService';
 import { IconDisplayMode, SortBy } from '#domain/client/app/model/note/TreeExplorer/Setting';
+import Button from '#web/view/components/Button';
 
 export default function SettingButton() {
   const {
@@ -41,9 +42,13 @@ export default function SettingButton() {
 
   return (
     <Menu.Root lazyMount unmountOnExit positioning={{ placement: 'bottom-start' }}>
-      <Menu.Trigger class="button button-square-md">
-        <SettingsIcon />
-      </Menu.Trigger>
+      <Menu.Trigger
+        asChild={(props) => (
+          <Button {...props()} square>
+            <SettingsIcon />
+          </Button>
+        )}
+      ></Menu.Trigger>
       <Show when={settings.isReady}>
         <Portal mount={shell.appRoot}>
           <Menu.Positioner>
