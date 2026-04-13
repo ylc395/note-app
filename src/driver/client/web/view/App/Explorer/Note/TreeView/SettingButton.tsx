@@ -18,7 +18,7 @@ export default function SettingButton() {
 
     return [
       {
-        icon: () => <ArrowDownWideNarrowIcon />,
+        icon: ArrowDownWideNarrowIcon,
         label: '排序',
         key: 'sort',
         children: [
@@ -47,7 +47,7 @@ export default function SettingButton() {
         ],
       },
       {
-        icon: () => <SmileIcon />,
+        icon: SmileIcon,
         label: '图标显示',
         key: 'iconDisplay',
         children: [

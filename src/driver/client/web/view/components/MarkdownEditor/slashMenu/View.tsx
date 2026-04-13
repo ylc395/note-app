@@ -1,8 +1,7 @@
 import { editorCtx, editorViewCtx } from '@milkdown/kit/core';
 import type { Ctx } from '@milkdown/kit/ctx';
-import { Show } from 'solid-js';
+import { createMemo } from 'solid-js';
 import { showFloating, useTooltip } from '../shared/useTooltip';
-import { Menu } from '@ark-ui/solid';
 import {
   wrapInHeadingCommand,
   createCodeBlockCommand,
@@ -12,12 +11,25 @@ import {
   insertHrCommand,
 } from '@milkdown/kit/preset/commonmark';
 import { callCommand } from '@milkdown/kit/utils';
+import Menu, { type MenuItem } from '#web/view/components/Menu';
 
 import { wrapInTodoListItem } from '../nodes/listItem';
 import { isInEmptyParagraph, useMilkdownEvent } from '../shared/prosemirrorUtils';
 import TopicTooltip from '../nodes/topic/Tooltip';
 import LinkTooltip, { Mode } from '../nodes/link/tooltip/ExternalLinkView';
 import TableCreator from '../nodes/table/TableCreator';
+import {
+  CodeIcon,
+  HeadingIcon,
+  QuoteIcon,
+  ListIcon,
+  ListOrderedIcon,
+  TableIcon,
+  CheckCheckIcon,
+  HashIcon,
+  LinkIcon,
+  SeparatorHorizontalIcon,
+} from 'lucide-solid';
 
 export default function View(props: { ctx: Ctx; onClose: () => void }) {
   const editorView = props.ctx.get(editorViewCtx);
@@ -35,7 +47,7 @@ export default function View(props: { ctx: Ctx; onClose: () => void }) {
     placement: 'bottom-start',
   });
 
-  function onSelect({ value }: { value: string }) {
+  function onSelect(value: string) {
     const editor = props.ctx.get(editorCtx);
 
     switch (value) {
@@ -76,26 +88,34 @@ export default function View(props: { ctx: Ctx; onClose: () => void }) {
       default:
         break;
     }
-    props.onClose();
   }
 
+  const menu = createMemo<Array<MenuItem | 'separator'>>(() => [
+    ...(isBlock
+      ? [
+          { icon: HeadingIcon, label: '标题', key: 'heading' },
+          { icon: CodeIcon, label: '代码块', key: 'code' },
+          { icon: QuoteIcon, label: '引用块', key: 'quote' },
+          { icon: ListIcon, label: '有序列表', key: 'orderList' },
+          { icon: ListOrderedIcon, label: '无序列表', key: 'unorderedList' },
+          { icon: TableIcon, label: '表格', key: 'table' },
+          { icon: SeparatorHorizontalIcon, label: '分隔线', key: 'hr' },
+          { icon: CheckCheckIcon, label: 'Todo', key: 'bullet-todo' },
+          'separator' as const,
+        ]
+      : []),
+    { icon: HashIcon, label: '话题', key: 'topic' },
+    { icon: LinkIcon, label: '超链接', key: 'link' },
+  ]);
+
   return (
-    <Menu.Root onSelect={onSelect} open loopFocus onEscapeKeyDown={props.onClose}>
-      <Menu.Content ref={setTooltipEl}>
-        <Show when={isBlock}>
-          <Menu.Item value="heading">标题</Menu.Item>
-          <Menu.Item value="code">代码块</Menu.Item>
-          <Menu.Item value="quote">引用块</Menu.Item>
-          <Menu.Item value="orderList">有序列表</Menu.Item>
-          <Menu.Item value="unorderedList">无序列表</Menu.Item>
-          <Menu.Item value="table">表格</Menu.Item>
-          <Menu.Item value="hr">分隔线</Menu.Item>
-          <Menu.Item value="bullet-todo">Todo</Menu.Item>
-          <Menu.Separator />
-        </Show>
-        <Menu.Item value="topic">话题</Menu.Item>
-        <Menu.Item value="link">超链接</Menu.Item>
-      </Menu.Content>
-    </Menu.Root>
+    <Menu
+      onOpenChange={props.onClose}
+      open
+      dataForItems={undefined}
+      ref={setTooltipEl}
+      onSelect={onSelect}
+      menu={menu()}
+    />
   );
 }

@@ -1,10 +1,10 @@
 import { Menu, type MenuSelectionDetails, type UseMenuReturn } from '@ark-ui/solid';
 import clsx from 'clsx';
-import { CheckIcon, ChevronRightIcon } from 'lucide-solid';
+import { CheckIcon, ChevronRightIcon, type LucideProps } from 'lucide-solid';
 import { Show, type JSX } from 'solid-js';
 
 export interface MenuItem {
-  icon?: () => JSX.Element;
+  icon?: (props: LucideProps) => JSX.Element;
   label: string;
   key: string;
   className?: string;
@@ -46,7 +46,7 @@ export default function Item(props: {
         <Show when={props.item.checked}>
           <CheckIcon class="size-4 mr-2" />
         </Show>
-        {props.item.icon?.()}
+        {props.item.icon?.({ class: 'size-4 mr-2' })}
         {props.item.label}
       </Menu.Item>
     );
@@ -54,8 +54,9 @@ export default function Item(props: {
 
   // 子菜单
   return (
-    <Menu.Root lazyMount unmountOnExit onSelect={props.onMenuSelect}>
+    <Menu.Root loopFocus lazyMount unmountOnExit onSelect={props.onMenuSelect}>
       <Menu.TriggerItem class={itemClassName}>
+        {props.item.icon?.({ class: 'size-4 mr-2' })}
         <span class="grow">{props.item.label}</span>
         <Menu.Indicator>
           <ChevronRightIcon class="size-4" />
