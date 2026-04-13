@@ -8,7 +8,8 @@ import Item, { type MenuItem } from './Item';
 export type { MenuItem } from './Item';
 
 export default function Menu<T = void>(props: {
-  children: (props: JSX.HTMLAttributes<HTMLDivElement>) => JSX.Element;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  children: (props: JSX.HTMLAttributes<any>) => JSX.Element;
   onOpenChange?: (e: { open: boolean }) => void;
   onSelect?: (value: string) => void;
   topContent?: (seed: T) => JSX.Element;

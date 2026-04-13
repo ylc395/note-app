@@ -1,6 +1,7 @@
 import { Menu, type MenuSelectionDetails, type UseMenuReturn } from '@ark-ui/solid';
-import { ChevronRightIcon } from 'lucide-solid';
-import type { JSX } from 'solid-js';
+import clsx from 'clsx';
+import { CheckIcon, ChevronRightIcon } from 'lucide-solid';
+import { Show, type JSX } from 'solid-js';
 
 export interface MenuItem {
   icon?: () => JSX.Element;
@@ -8,6 +9,7 @@ export interface MenuItem {
   key: string;
   className?: string;
   disabled?: boolean;
+  checked?: boolean;
   children?: Array<MenuItem | 'separator'>;
   content?: (e: { closeMenu: () => void }) => JSX.Element;
 }
@@ -36,7 +38,14 @@ export default function Item(props: {
   if (!props.item.children && !props.item.content) {
     // 简单的菜单项
     return (
-      <Menu.Item disabled={props.item.disabled} class={itemClassName} value={props.item.key}>
+      <Menu.Item
+        disabled={props.item.disabled}
+        class={clsx(itemClassName, props.item.checked === false && 'pl-8')}
+        value={props.item.key}
+      >
+        <Show when={props.item.checked}>
+          <CheckIcon class="size-4 mr-2" />
+        </Show>
         {props.item.icon?.()}
         {props.item.label}
       </Menu.Item>

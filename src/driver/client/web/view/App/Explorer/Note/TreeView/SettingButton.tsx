@@ -1,101 +1,91 @@
-import { Menu } from '@ark-ui/solid';
-import { SettingsIcon, ArrowDownWideNarrowIcon, SmileIcon, ChevronRightIcon, CheckIcon } from 'lucide-solid';
-import { Portal, Show } from 'solid-js/web';
+import { SettingsIcon, ArrowDownWideNarrowIcon, SmileIcon } from 'lucide-solid';
 import { createMemo } from 'solid-js';
+import { action } from 'mobx';
 
 import container from '#utils/singletonContainer';
-import shell from '#web/infra/shell';
 import NoteService from '#domain/client/app/service/NoteService';
 import { IconDisplayMode, SortBy } from '#domain/client/app/model/note/TreeExplorer/Setting';
 import Button from '#web/view/components/Button';
+import Menu, { type MenuItem } from '#web/view/components/Menu';
 
 export default function SettingButton() {
   const {
     explorer: { settings },
   } = container.resolve(NoteService);
 
-  function CheckableItem<K extends keyof typeof settings>(props: {
-    value: (typeof settings)[K];
-    key: K;
-    title: string;
-  }) {
-    const isChecked = createMemo(() => props.value === settings[props.key]);
+  const menu = createMemo<Array<MenuItem | 'separator'>>(() => {
+    if (!settings.isReady) return [];
 
-    function handleClick() {
-      settings[props.key] = props.value;
+    return [
+      {
+        icon: () => <ArrowDownWideNarrowIcon />,
+        label: '排序',
+        key: 'sort',
+        children: [
+          { label: '标题 - 升序', key: `sortBy-${SortBy.TitleAsc}`, checked: settings.sortBy === SortBy.TitleAsc },
+          { label: '标题 - 降序', key: `sortBy-${SortBy.TitleDesc}`, checked: settings.sortBy === SortBy.TitleDesc },
+          {
+            label: '创建时间 - 升序',
+            key: `sortBy-${SortBy.CreatedAtAsc}`,
+            checked: settings.sortBy === SortBy.CreatedAtAsc,
+          },
+          {
+            label: '创建时间 - 降序',
+            key: `sortBy-${SortBy.CreatedAtDesc}`,
+            checked: settings.sortBy === SortBy.CreatedAtDesc,
+          },
+          {
+            label: '更新时间 - 升序',
+            key: `sortBy-${SortBy.UpdatedAtAsc}`,
+            checked: settings.sortBy === SortBy.UpdatedAtAsc,
+          },
+          {
+            label: '更新时间 - 降序',
+            key: `sortBy-${SortBy.UpdatedAtDesc}`,
+            checked: settings.sortBy === SortBy.UpdatedAtDesc,
+          },
+        ],
+      },
+      {
+        icon: () => <SmileIcon />,
+        label: '图标显示',
+        key: 'iconDisplay',
+        children: [
+          {
+            label: '不显示',
+            key: `iconDisplayMode-${IconDisplayMode.None}`,
+            checked: settings.iconDisplayMode === IconDisplayMode.None,
+          },
+          {
+            label: '仅显示自定义图标',
+            key: `iconDisplayMode-${IconDisplayMode.Custom}`,
+            checked: settings.iconDisplayMode === IconDisplayMode.Custom,
+          },
+          {
+            label: '全部显示',
+            key: `iconDisplayMode-${IconDisplayMode.All}`,
+            checked: settings.iconDisplayMode === IconDisplayMode.All,
+          },
+        ],
+      },
+    ];
+  });
+
+  function handleSelect(key: string) {
+    if (key.startsWith('sortBy-')) {
+      settings.sortBy = key.replace('sortBy-', '') as SortBy;
+    } else if (key.startsWith('iconDisplayMode-')) {
+      settings.iconDisplayMode = key.replace('iconDisplayMode-', '') as IconDisplayMode;
     }
-
-    return (
-      <Menu.Item
-        onClick={handleClick}
-        class="menu-item"
-        classList={{ 'pl-7': !isChecked() }}
-        value={`${props.key}-${props.value}`}
-      >
-        <Show when={isChecked()}>
-          <CheckIcon />
-        </Show>
-        {props.title}
-      </Menu.Item>
-    );
   }
 
   return (
-    <Menu.Root lazyMount unmountOnExit positioning={{ placement: 'bottom-start' }}>
-      <Menu.Trigger
-        asChild={(props) => (
-          <Button {...props()} square>
-            <SettingsIcon />
-          </Button>
-        )}
-      ></Menu.Trigger>
-      <Show when={settings.isReady}>
-        <Portal mount={shell.appRoot}>
-          <Menu.Positioner>
-            <Menu.Content class="menu">
-              <Menu.Root lazyMount unmountOnExit>
-                <Menu.TriggerItem class="menu-item">
-                  <ArrowDownWideNarrowIcon />
-                  <span class="menu-item-text">排序</span>
-                  <Menu.Indicator>
-                    <ChevronRightIcon />
-                  </Menu.Indicator>
-                </Menu.TriggerItem>
-                <Portal mount={shell.appRoot}>
-                  <Menu.Positioner>
-                    <Menu.Content class="menu">
-                      <CheckableItem title="标题 - 升序" value={SortBy.TitleAsc} key="sortBy" />
-                      <CheckableItem title="标题 - 降序" value={SortBy.TitleDesc} key="sortBy" />
-                      <CheckableItem title="创建时间 - 升序" value={SortBy.CreatedAtAsc} key="sortBy" />
-                      <CheckableItem title="创建时间 - 降序" value={SortBy.CreatedAtDesc} key="sortBy" />
-                      <CheckableItem title="更新时间 - 升序" value={SortBy.UpdatedAtAsc} key="sortBy" />
-                      <CheckableItem title="更新时间 - 降序" value={SortBy.UpdatedAtDesc} key="sortBy" />
-                    </Menu.Content>
-                  </Menu.Positioner>
-                </Portal>
-              </Menu.Root>
-              <Menu.Root lazyMount unmountOnExit>
-                <Menu.TriggerItem class="menu-item">
-                  <SmileIcon />
-                  <span class="menu-item-text">图标显示</span>
-                  <Menu.Indicator>
-                    <ChevronRightIcon />
-                  </Menu.Indicator>
-                </Menu.TriggerItem>
-                <Portal mount={shell.appRoot}>
-                  <Menu.Positioner>
-                    <Menu.Content class="menu">
-                      <CheckableItem title="不显示" value={IconDisplayMode.None} key="iconDisplayMode" />
-                      <CheckableItem title="仅显示自定义图标" value={IconDisplayMode.Custom} key="iconDisplayMode" />
-                      <CheckableItem title="全部显示" value={IconDisplayMode.All} key="iconDisplayMode" />
-                    </Menu.Content>
-                  </Menu.Positioner>
-                </Portal>
-              </Menu.Root>
-            </Menu.Content>
-          </Menu.Positioner>
-        </Portal>
-      </Show>
-    </Menu.Root>
+    <Menu dataForItems={null} menu={menu()} onSelect={action(handleSelect)}>
+      {(childProps) => (
+        <Button {...childProps} square>
+          <SettingsIcon />
+        </Button>
+      )}
+    </Menu>
   );
 }

@@ -57,7 +57,8 @@ export default function Node(props: Props) {
     props.node.toggleExpand();
   }
 
-  function renderItem(render: (props: JSX.HTMLAttributes<HTMLDivElement>) => JSX.Element) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function renderItem(render: (props: JSX.HTMLAttributes<any>) => JSX.Element) {
     function handleOpenChange({ open }: { open: boolean }) {
       if (!open || props.node.is(TreeNodeStates.Selected)) {
         return;
