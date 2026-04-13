@@ -6,9 +6,9 @@ export default function useContextmenu({ editor }: { editor: BaseEditor }) {
 
   function getContextmenu() {
     return [
-      { label: '关闭其余 tab', key: 'close-others', disabled: tile().editors.length === 1 },
-      { label: '关闭左侧 tab', key: 'close-left', disabled: editor.index === 0 },
-      { label: '关闭右侧 tab', key: 'close-right', disabled: editor.index === tile().editors.length - 1 },
+      { label: '关闭其余标签页', key: 'close-others', disabled: tile().editors.length === 1 },
+      { label: '关闭左侧标签页', key: 'close-left', disabled: editor.index === 0 },
+      { label: '关闭右侧标签页', key: 'close-right', disabled: editor.index === tile().editors.length - 1 },
     ];
   }
 

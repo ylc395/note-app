@@ -6,7 +6,7 @@ import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import BaseEditor from '#domain/client/app/model/note/editor/BaseEditor';
 import { isFullyVisible } from '#web/utils/dom';
 import { IS_DEV } from '#domain/shared/infra/env';
-import ContextMenu from '#web/view/components/ContextMenu';
+import Menu from '#web/view/components/Menu';
 import Icon from '#web/view/components/Icon';
 
 import useContextmenu from './useContextmenu';
@@ -40,7 +40,7 @@ export default function Tab(props: { editor: BaseEditor }) {
   });
 
   return (
-    <ContextMenu seed={props.editor} contextMenu={getContextmenu} onItemClick={handleContextmenuClick}>
+    <Menu contextmenu dataForItems={props.editor} menu={getContextmenu} onSelect={handleContextmenuClick}>
       {(childProps) => (
         <div
           {...childProps}
@@ -68,6 +68,6 @@ export default function Tab(props: { editor: BaseEditor }) {
           </button>
         </div>
       )}
-    </ContextMenu>
+    </Menu>
   );
 }

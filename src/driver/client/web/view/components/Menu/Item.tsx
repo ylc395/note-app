@@ -3,6 +3,7 @@ import { ChevronRightIcon } from 'lucide-solid';
 import type { JSX } from 'solid-js';
 
 export interface MenuItem {
+  icon?: () => JSX.Element;
   label: string;
   key: string;
   className?: string;
@@ -14,7 +15,7 @@ export interface MenuItem {
 // 这个组件没有响应性
 export default function Item(props: {
   item: MenuItem | 'separator';
-  onMenuSelect: (e: MenuSelectionDetails) => void; // 这玩意没法从 menu（下一行）里取到也是醉了
+  onMenuSelect: (e: MenuSelectionDetails) => void;
   menu: UseMenuReturn;
   contentClassName?: string;
 }) {
@@ -23,27 +24,32 @@ export default function Item(props: {
   }
 
   if (props.item === 'separator') {
-    return <Menu.Separator />;
+    // 分割线
+    return <Menu.Separator class="-mx-1 my-1 h-px border-0 bg-border-secondary" />;
   }
 
+  const itemClassName =
+    `flex cursor-default items-center rounded-sm px-2 py-1.5 text-sm text-fg-primary data-[highlighted]:bg-bg-hover data-[disabled]:text-fg-disabled ${
+      props.item.className || ''
+    }`.trim();
+
   if (!props.item.children && !props.item.content) {
+    // 简单的菜单项
     return (
-      <Menu.Item
-        disabled={props.item.disabled}
-        class={`menu-item ${props.item.className || ''}`}
-        value={props.item.key}
-      >
+      <Menu.Item disabled={props.item.disabled} class={itemClassName} value={props.item.key}>
+        {props.item.icon?.()}
         {props.item.label}
       </Menu.Item>
     );
   }
 
+  // 子菜单
   return (
     <Menu.Root lazyMount unmountOnExit onSelect={props.onMenuSelect}>
-      <Menu.TriggerItem class={`menu-item ${props.item.className}`}>
+      <Menu.TriggerItem class={itemClassName}>
         <span class="grow">{props.item.label}</span>
         <Menu.Indicator>
-          <ChevronRightIcon />
+          <ChevronRightIcon class="size-4" />
         </Menu.Indicator>
       </Menu.TriggerItem>
       <Menu.Positioner>

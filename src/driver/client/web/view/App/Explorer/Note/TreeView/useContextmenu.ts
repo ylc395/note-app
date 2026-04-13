@@ -8,7 +8,7 @@ import StarService from '#domain/client/app/service/StarService';
 import RecyclableService from '#domain/client/app/service/RecyclableService';
 import type TreeNode from '#domain/client/shared/model/note/TreeNode';
 import { EntityTypes } from '#domain/shared/model/entity';
-import type { MenuItem } from '#web/view/components/ContextMenu';
+import type { MenuItem } from '#web/view/components/Menu';
 import { IconDisplayMode } from '#domain/client/app/model/note/TreeExplorer/Setting';
 import { getAppUrl, RouteTypes } from '#domain/shared/infra/url';
 

@@ -9,7 +9,7 @@ import { IS_DEV } from '#domain/shared/infra/env';
 import Workbench from '#domain/client/app/model/Workbench';
 
 import useDnd from './useDnd';
-import ContextMenu, { type MenuItem } from '../ContextMenu';
+import Menu, { type MenuItem } from '../Menu';
 import Icon from '../Icon';
 
 export interface Props {
@@ -67,19 +67,20 @@ export default function Node(props: Props) {
     }
 
     return (
-      <ContextMenu
+      <Menu
+        contextmenu
         onOpenChange={handleOpenChange}
-        onItemClick={props.onContextMenuClick}
-        contextMenu={props.contextMenu}
-        seed={props.node}
-        topExtraContent={() => (
+        onSelect={props.onContextMenuClick}
+        menu={props.contextMenu}
+        dataForItems={props.node}
+        topContent={() => (
           <Show when={props.treeView.treeNodeSets.selected.size > 1}>
             <div class="font-bold p-1">共选中 {props.treeView.treeNodeSets.selected.size} 项</div>
           </Show>
         )}
       >
         {(childProps) => render(childProps)}
-      </ContextMenu>
+      </Menu>
     );
   }
 
