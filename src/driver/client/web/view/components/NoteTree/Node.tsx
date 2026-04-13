@@ -1,6 +1,7 @@
 import { createMemo, JSX, Show } from 'solid-js';
 import { ChevronDownIcon, ChevronRightIcon, StarIcon } from 'lucide-solid';
 import { Key } from '@solid-primitives/keyed';
+import clsx from 'clsx';
 
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
 import TreeViewModel, { TreeNodeStates } from '#domain/client/app/model/note/TreeExplorer';
@@ -112,7 +113,7 @@ export default function Node(props: Props) {
             <div
               {...renderProps}
               data-item-id={props.node.id}
-              class={`${itemTextClassName} ml-5`} // ml 和展开图标的尺寸一致
+              class={clsx(itemTextClassName, 'ml-5')}
               style={{ 'padding-left': `${paddingLeft()}px` }}
             >
               {renderInline()}

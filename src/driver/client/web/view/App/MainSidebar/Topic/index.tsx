@@ -1,11 +1,11 @@
 import { createMemo, For, Show } from 'solid-js';
+import { createTreeCollection, TreeView } from '@ark-ui/solid';
 
 import TopicService, { type TopicNode } from '#domain/client/app/service/TopicService';
 import container from '#utils/singletonContainer';
 import Node from './Node';
-import { createTreeCollection, TreeView } from '@ark-ui/solid';
 
-export default function Topic() {
+export default function Topic(props: { onOpen: () => void }) {
   const { globalTopicTree } = container.resolve(TopicService);
 
   const collection = createMemo(() =>

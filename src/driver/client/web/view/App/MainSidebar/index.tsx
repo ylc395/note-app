@@ -1,5 +1,5 @@
 import { action } from 'mobx';
-import { Popover } from '@ark-ui/solid';
+import { Popover, usePopover } from '@ark-ui/solid';
 import { BookTextIcon, LightbulbIcon, HashIcon, SearchIcon, StarIcon, SettingsIcon, Trash2Icon } from 'lucide-solid';
 import { Portal } from 'solid-js/web';
 
@@ -9,6 +9,38 @@ import container from '#utils/singletonContainer';
 import UIState, { SidebarTabs } from '../UIState';
 import Star from './Star';
 import Topic from './Topic';
+import type { JSX } from 'solid-js';
+
+function IconPopover(props: {
+  buttonClassName: string;
+  icon: JSX.Element;
+  children: (ctx: { closePopover: () => void }) => JSX.Element;
+}) {
+  const popover = usePopover({
+    positioning: { placement: 'right-start' },
+  });
+
+  const ctx = {
+    closePopover: () => popover().setOpen(false),
+  };
+
+  return (
+    <Popover.RootProvider lazyMount unmountOnExit value={popover}>
+      <Popover.Trigger
+        asChild={(childProps) => (
+          <a class={props.buttonClassName} {...childProps()}>
+            {props.icon}
+          </a>
+        )}
+      />
+      <Portal mount={shell.appRoot}>
+        <Popover.Positioner>
+          <Popover.Content>{props.children(ctx)}</Popover.Content>
+        </Popover.Positioner>
+      </Portal>
+    </Popover.RootProvider>
+  );
+}
 
 export default function Sidebar() {
   const uiState = container.resolve(UIState);
@@ -41,40 +73,14 @@ export default function Sidebar() {
       </ul>
       <ul class={`${menuClassName} mt-4 pt-4 border-t border-t-border-secondary`}>
         <li>
-          <Popover.Root lazyMount unmountOnExit positioning={{ placement: 'right-start' }}>
-            <Popover.Trigger
-              asChild={(childProps) => (
-                <a class={buttonClassName} {...childProps()}>
-                  <StarIcon class={iconClassName} />
-                </a>
-              )}
-            />
-            <Portal mount={shell.appRoot}>
-              <Popover.Positioner>
-                <Popover.Content>
-                  <Star />
-                </Popover.Content>
-              </Popover.Positioner>
-            </Portal>
-          </Popover.Root>
+          <IconPopover buttonClassName={buttonClassName} icon={<StarIcon class={iconClassName} />}>
+            {({ closePopover }) => <Star onOpen={closePopover} />}
+          </IconPopover>
         </li>
         <li>
-          <Popover.Root lazyMount unmountOnExit positioning={{ placement: 'right-start' }}>
-            <Popover.Trigger
-              asChild={(childProps) => (
-                <a class={buttonClassName} {...childProps()}>
-                  <HashIcon class={iconClassName} />
-                </a>
-              )}
-            />
-            <Portal mount={shell.appRoot}>
-              <Popover.Positioner>
-                <Popover.Content>
-                  <Topic />
-                </Popover.Content>
-              </Popover.Positioner>
-            </Portal>
-          </Popover.Root>
+          <IconPopover buttonClassName={buttonClassName} icon={<HashIcon class={iconClassName} />}>
+            {({ closePopover }) => <Topic onOpen={closePopover} />}
+          </IconPopover>
         </li>
         <li>
           <a class={buttonClassName} data-state="closed">
