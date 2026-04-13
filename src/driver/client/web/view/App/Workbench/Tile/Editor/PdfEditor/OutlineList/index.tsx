@@ -1,5 +1,5 @@
 import { createEffect, createSignal, For, onCleanup, Show, untrack } from 'solid-js';
-import { LoaderCircleIcon, EyeIcon } from 'lucide-solid';
+import { LoaderCircleIcon, EyeIcon, PinOffIcon } from 'lucide-solid';
 import assert from 'assert';
 import { action } from 'mobx';
 import { useSplitterContext } from '@ark-ui/solid';
@@ -10,6 +10,8 @@ import Resizable from '#web/view/components/Resizable';
 import OutlineViewModel from './Outline';
 import { useContext } from '../context';
 import Button from '#web/view/components/Button';
+import { partialRight } from 'lodash-es';
+import clsx from 'clsx';
 
 export default function Outline(props: { id: string }) {
   const { viewer } = useContext()!;
@@ -69,8 +71,15 @@ export default function Outline(props: { id: string }) {
     }
   }
 
-  function toggleFloating() {
-    uiState.isFloating = !uiState.isFloating;
+  function handleMove(pos: { x: number; y: number }, start?: boolean) {
+    if (start) {
+      uiState.isFloating = true;
+    }
+    setFloatingPos(pos);
+  }
+
+  function cancelFloating() {
+    uiState.isFloating = false;
   }
 
   return (
@@ -78,6 +87,7 @@ export default function Outline(props: { id: string }) {
       isEnabled={Boolean(uiState.isFloating)}
       pos={floatingPos()}
       onMove={setFloatingPos}
+      onMoveStart={action(partialRight(handleMove, true))}
       onMoveEnd={action(handleMoveEnd)}
     >
       <Resizable
@@ -88,7 +98,10 @@ export default function Outline(props: { id: string }) {
         onResizeEnd={action(handleResizeEnd)}
       >
         <div
-          class="overflow-auto border-r pb-4 flex flex-col"
+          class={clsx(
+            'overflow-auto border-border-primary pb-4 flex flex-col bg-surface-raised',
+            uiState.isFloating ? 'border' : 'border-r',
+          )}
           classList={{ 'overflow-auto h-full': !uiState.isFloating }}
           {...(uiState.isFloating
             ? { style: { width: `${floatingSize().width}px`, height: `${floatingSize().height}px` } }
@@ -102,10 +115,12 @@ export default function Outline(props: { id: string }) {
                   <EyeIcon class="mr-1" />
                   当前浏览
                 </Button>
-                <Button size="small" onClick={action(toggleFloating)}>
-                  <EyeIcon class="mr-1" />
-                  悬浮
-                </Button>
+                <Show when={uiState.isFloating}>
+                  <Button size="small" onClick={action(cancelFloating)}>
+                    <PinOffIcon class="mr-1" />
+                    取消悬浮
+                  </Button>
+                </Show>
               </div>
             </div>
           </FloatingPanel.Handler>

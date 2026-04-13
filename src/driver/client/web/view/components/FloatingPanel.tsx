@@ -9,17 +9,21 @@ const [ContextProvider, useContext] = createContextProvider(
   (props: {
     isEnabled: boolean;
     onMoveEnd: (e: { x: number; y: number }) => void;
-    // onMoveStart: (e: { x: number; y: number }) => void;
+    onMoveStart: (e: { x: number; y: number }) => void;
     onMove: (e: { x: number; y: number }) => void;
     panelRef: Accessor<HTMLElement | undefined>;
   }) => ({
     isEnabled: () => props.isEnabled,
     onMoveEnd: props.onMoveEnd,
-    // onMoveStart: props.onMoveStart,
+    onMoveStart: props.onMoveStart,
     onMove: props.onMove,
     panelRef: props.panelRef,
   }),
 );
+
+function getContainer(element: HTMLElement) {
+  return findAncestor(element, (el) => getComputedStyle(el).position !== 'static');
+}
 
 function getMaxZIndex(element: HTMLElement | HTMLElement[]) {
   let siblings: Iterable<HTMLElement> | undefined;
@@ -31,7 +35,7 @@ function getMaxZIndex(element: HTMLElement | HTMLElement[]) {
 
     siblings = element;
   } else {
-    const container = findAncestor(element, (el) => getComputedStyle(el).position !== 'static');
+    const container = getContainer(element);
 
     if (!container) {
       return 0;
@@ -56,7 +60,7 @@ function Main(props: {
   pos: { x?: number; y?: number; left?: number; top?: number; right?: number; bottom?: number };
   onMove: (e: { x: number; y: number }) => void;
   onMoveEnd: (e: { x: number; y: number }) => void;
-  // onMoveStart: (e: { x: number; y: number }) => void;
+  onMoveStart: (e: { x: number; y: number }) => void;
 }) {
   const [ref, setRef] = createSignal<HTMLElement>();
 
@@ -98,7 +102,7 @@ function Main(props: {
       return;
     }
 
-    const container = findAncestor(panel, (el) => getComputedStyle(el).position !== 'static');
+    const container = getContainer(panel);
 
     if (!container) {
       return;
@@ -135,69 +139,114 @@ function Main(props: {
 
 function Handler(props: { children: JSX.Element }) {
   const [handlerRef, setHandlerRef] = createSignal<HTMLElement>();
-  const { panelRef, isEnabled, onMoveEnd, onMove } = useContext()!;
+  const { panelRef, isEnabled, onMoveEnd, onMove, onMoveStart } = useContext()!;
+  const [startPos, setStartPos] = createSignal<{
+    mouse: { x: number; y: number };
+    panel: { x: number; y: number };
+  }>();
+
+  // 开始拖动时，初始化 panel 的一些样式
+  createEffect(() => {
+    const panel = panelRef();
+    const handler = handlerRef();
+
+    if (isEnabled() && startPos() && panel && handler) {
+      const maxZIndex = getMaxZIndex(panel);
+      const zIndex = Number(getComputedStyle(panel).zIndex);
+
+      if (Number.isNaN(zIndex) || zIndex < maxZIndex) {
+        panel.style.zIndex = `${maxZIndex + 1}`;
+      }
+    }
+  });
 
   createEffect(() => {
     const handler = handlerRef();
     const panel = panelRef();
+    const startPosValue = startPos();
 
-    if (!handler || !panel || !isEnabled()) {
+    if (!handler || !panel || !startPosValue) {
+      return;
+    }
+
+    const container = getContainer(panel);
+
+    if (!container) {
       return;
     }
 
     const abortController = new AbortController();
-
-    let startPos: { mouse: { x: number; y: number }; panel: { left: number; top: number } } | undefined;
     const currentPos = { x: 0, y: 0 };
-
-    handler.addEventListener(
-      'pointerdown',
-      (e) => {
-        const maxZIndex = getMaxZIndex(panel);
-        const zIndex = Number(getComputedStyle(panel).zIndex);
-
-        if (Number.isNaN(zIndex) || zIndex < maxZIndex) {
-          panel.style.zIndex = `${maxZIndex + 1}`;
-        }
-
-        startPos = {
-          mouse: { x: e.clientX, y: e.clientY },
-          panel: { left: panel.offsetLeft, top: panel.offsetTop },
-        };
-        handler.style.cursor = 'grabbing';
-      },
-      { signal: abortController.signal },
-    );
 
     document.addEventListener(
       'pointermove',
       (e) => {
-        if (!startPos) {
-          return;
+        const deltaX = e.clientX - startPosValue.mouse.x;
+        const deltaY = e.clientY - startPosValue.mouse.y;
+
+        let newX = startPosValue.panel.x + deltaX;
+        let newY = startPosValue.panel.y + deltaY;
+
+        // 限制拖动范围不超过定位容器的边界
+        if (container) {
+          const containerRect = container.getBoundingClientRect();
+          const panelRect = panel.getBoundingClientRect();
+          const maxX = containerRect.width - panelRect.width;
+          const maxY = containerRect.height - panelRect.height;
+
+          newX = Math.max(0, Math.min(maxX, newX));
+          newY = Math.max(0, Math.min(maxY, newY));
         }
 
-        currentPos.x = startPos.panel.left + e.clientX - startPos.mouse.x;
-        currentPos.y = startPos.panel.top + e.clientY - startPos.mouse.y;
+        currentPos.x = newX;
+        currentPos.y = newY;
 
-        onMove({ x: currentPos.x, y: currentPos.y });
-        handler.setPointerCapture(e.pointerId);
+        if (isEnabled()) {
+          onMove({ x: currentPos.x, y: currentPos.y });
+        } else if (deltaX >= 3 || deltaY >= 3) {
+          onMoveStart({ x: currentPos.x, y: currentPos.y });
+        }
       },
       { signal: abortController.signal },
     );
 
     document.addEventListener(
       'pointerup',
-      (e) => {
+      () => {
         if (!panel || !startPos) {
           return;
         }
 
-        onMoveEnd({ x: currentPos.x, y: currentPos.y });
-        handler.style.cursor = '';
-        startPos = undefined;
-        handler.releasePointerCapture(e.pointerId);
+        if (isEnabled()) {
+          onMoveEnd({ x: currentPos.x, y: currentPos.y });
+        }
+
+        setStartPos(undefined);
+        abortController.abort();
       },
-      { signal: abortController.signal, capture: true },
+      { signal: abortController.signal },
+    );
+  });
+
+  createEffect(() => {
+    const handler = handlerRef();
+    const panel = panelRef();
+
+    if (!handler || !panel) {
+      return;
+    }
+
+    const abortController = new AbortController();
+
+    handler.addEventListener(
+      'pointerdown',
+      (e) => {
+        setStartPos({
+          mouse: { x: e.clientX, y: e.clientY },
+          panel: { x: panel.offsetLeft, y: panel.offsetTop },
+        });
+      },
+      { signal: abortController.signal },
     );
 
     onCleanup(() => {

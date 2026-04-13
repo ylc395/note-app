@@ -1,6 +1,7 @@
 import { createMemo, createSignal, For, Show } from 'solid-js';
-import { EyeIcon, LoaderCircleIcon } from 'lucide-solid';
+import { LoaderCircleIcon, PinOffIcon } from 'lucide-solid';
 import { useSplitterContext } from '@ark-ui/solid';
+import { partialRight } from 'lodash-es';
 
 import type { AnnotationVO } from '#domain/shared/model/annotation';
 import TextItem from './TextItem';
@@ -11,6 +12,7 @@ import FloatingPanel from '#web/view/components/FloatingPanel';
 import { action } from 'mobx';
 import Resizable from '#web/view/components/Resizable';
 import Button from '#web/view/components/Button';
+import clsx from 'clsx';
 
 export default function AnnotationList(props: { id: string }) {
   const splitter = useSplitterContext();
@@ -57,14 +59,22 @@ export default function AnnotationList(props: { id: string }) {
     uiState.floatingSize = e;
   }
 
-  function toggleFloating() {
-    uiState.isFloating = !uiState.isFloating;
+  function handleMove(pos: { x: number; y: number }, start?: boolean) {
+    if (start) {
+      uiState.isFloating = true;
+    }
+    setFloatingPos(pos);
+  }
+
+  function cancelFloating() {
+    uiState.isFloating = false;
   }
 
   return (
     <FloatingPanel.Main
       pos={floatingPos()}
-      onMove={setFloatingPos}
+      onMoveStart={action(partialRight(handleMove, true))}
+      onMove={action(handleMove)}
       isEnabled={Boolean(editor.annotation.uiState.isFloating)}
       onMoveEnd={action(handleMoveEnd)}
     >
@@ -76,7 +86,10 @@ export default function AnnotationList(props: { id: string }) {
         onResizeEnd={action(handleResizeEnd)}
       >
         <div
-          class="w-64 p-2 border-l flex flex-col overflow-auto"
+          class={clsx(
+            'w-64 p-2 border-border-primary flex flex-col overflow-auto bg-surface-raised',
+            uiState.isFloating ? 'border' : 'border-l',
+          )}
           {...(editor.annotation.uiState.isFloating ? null : splitter().getPanelProps({ id: props.id }))}
         >
           <FloatingPanel.Handler>
@@ -84,10 +97,11 @@ export default function AnnotationList(props: { id: string }) {
               <Show when={items()}>{(items) => <div class="text-sm">共计 {items().length} 个</div>}</Show>
               <div class="flex">
                 <Settings />
-                <Button size="small" onClick={action(toggleFloating)}>
-                  <EyeIcon class="mr-1" />
-                  悬浮
-                </Button>
+                <Show when={uiState.isFloating}>
+                  <Button size="small" onClick={action(cancelFloating)}>
+                    <PinOffIcon class="mr-1" />
+                  </Button>
+                </Show>
               </div>
             </div>
           </FloatingPanel.Handler>

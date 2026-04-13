@@ -1,13 +1,15 @@
 import { useSplitterContext } from '@ark-ui/solid';
 import { createSignal, Show } from 'solid-js';
-import { EyeIcon } from 'lucide-solid';
+import { PinOffIcon } from 'lucide-solid';
 import { action } from 'mobx';
+import { partialRight } from 'lodash-es';
 
 import FloatingPanel from '#web/view/components/FloatingPanel';
 import MarkdownEditor from '#web/view/components/MarkdownEditor';
 import Resizable from '#web/view/components/Resizable';
 import { useContext } from './context';
 import Button from '#web/view/components/Button';
+import clsx from 'clsx';
 
 export default function BodyEditor(props: { id: string }) {
   const { viewer } = useContext()!;
@@ -32,13 +34,21 @@ export default function BodyEditor(props: { id: string }) {
     uiState.floatingSize = e;
   }
 
-  function toggleFloating() {
-    uiState.isFloating = !uiState.isFloating;
+  function handleMove(pos: { x: number; y: number }, start?: boolean) {
+    if (start) {
+      uiState.isFloating = true;
+    }
+    setFloatingPos(pos);
+  }
+
+  function cancelFloating() {
+    uiState.isFloating = false;
   }
 
   return (
     <FloatingPanel.Main
       pos={floatingPos()}
+      onMoveStart={action(partialRight(handleMove, true))}
       onMove={setFloatingPos}
       isEnabled={Boolean(editor.body.uiState.isFloating)}
       onMoveEnd={action(handleMoveEnd)}
@@ -51,17 +61,22 @@ export default function BodyEditor(props: { id: string }) {
         onResizeEnd={action(handleResizeEnd)}
       >
         <div
-          class="w-64 p-2 border-r flex flex-col overflow-auto"
+          class={clsx(
+            'w-64 p-2 border-border-primary flex flex-col overflow-auto bg-surface-raised',
+            uiState.isFloating ? 'border' : 'border-r',
+          )}
           {...(!editor.body.uiState.isFloating ? splitter().getPanelProps({ id: props.id }) : null)}
         >
           <FloatingPanel.Handler>
             <div class="flex justify-between items-center">
               <h4>笔记</h4>
               <div>
-                <Button size="small" onClick={action(toggleFloating)}>
-                  <EyeIcon class="mr-1" />
-                  悬浮
-                </Button>
+                <Show when={uiState.isFloating}>
+                  <Button size="small" onClick={action(cancelFloating)}>
+                    <PinOffIcon class="mr-1" />
+                    取消悬浮
+                  </Button>
+                </Show>
               </div>
             </div>
           </FloatingPanel.Handler>
