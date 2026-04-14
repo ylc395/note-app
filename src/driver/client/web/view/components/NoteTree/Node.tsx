@@ -23,6 +23,7 @@ export interface Props {
   onItemTitleClick: (node: TreeNode) => void;
   onContextMenuClick?: (key: string) => void;
   shouldRenderIcon?: (node: TreeNode) => boolean;
+  groupKey?: symbol;
 }
 
 export default function Node(props: Props) {
@@ -71,6 +72,7 @@ export default function Node(props: Props) {
     return (
       <Menu
         contextmenu
+        menuGroupKey={props.groupKey}
         onOpenChange={handleOpenChange}
         onSelect={props.onContextMenuClick}
         menu={props.contextMenu}

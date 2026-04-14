@@ -14,6 +14,8 @@ export default function BaseTree(props: {
   shouldRenderIcon?: NodeProps['shouldRenderIcon'];
   className?: string;
 }) {
+  const nodeGroupKey = Symbol();
+
   onCleanup(
     monitorForElements({
       onDragStart: ({ source }) => {
@@ -37,6 +39,7 @@ export default function BaseTree(props: {
           <Key each={rootNode().sortedChildren} by="id">
             {(node, index) => (
               <NodeView
+                groupKey={nodeGroupKey}
                 onItemTitleClick={props.onItemTitleClick}
                 onContextMenuClick={props.onContextMenuClick}
                 contextMenu={props.contextMenu}
