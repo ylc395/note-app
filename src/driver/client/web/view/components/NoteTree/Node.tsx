@@ -38,7 +38,7 @@ export default function Node(props: Props) {
     'bg-bg-accent-subtle text-fg-accent-subtle':
       workbench.currentEditor?.noteId === props.node.id && !props.node.is(TreeNodeStates.Selected),
     'opacity-30': props.node.is(TreeNodeStates.Unselectable),
-    'bg-bg-tertiary':
+    'bg-bg-hover':
       (isDropHovering() && !props.node.is(TreeNodeStates.Unselectable)) || props.node.is(TreeNodeStates.Selected),
   }));
   const iconClassName = createMemo(

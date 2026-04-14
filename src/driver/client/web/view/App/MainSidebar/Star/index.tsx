@@ -18,8 +18,8 @@ export default function Star(props: { onOpen: () => void }) {
   }
 
   return (
-    <div class="bg-bg-secondary shadow-2xl rounded-xl px-1 py-4 text-sm w-64 border-border-primary border">
-      <h2 class="font-bold mb-4 text-base pl-2">收藏夹</h2>
+    <div class="bg-bg-secondary shadow-2xl rounded-xl px-2 py-4 text-sm w-64 border-border-primary border">
+      <h2 class="font-bold pb-2 mb-2 text-base pl-2 border-b border-border-secondary">收藏夹</h2>
       <Show when={starList.result.data}>
         {(data) => (
           <Show when={data().length > 0} fallback={<div>暂无收藏</div>}>

@@ -9,7 +9,7 @@
   --color-bg-overlay:            var(--color-zinc-950);     /* 模态遮罩，配合 opacity 使用 */
 
   --color-bg-accent:             var(--color-zinc-900);     /* 品牌强调背景：主按钮、active 导航 */
-  --color-bg-accent-subtle:      var(--color-zinc-100);     /* 轻量品牌背景：选中行、hover 高亮 */
+  --color-bg-accent-subtle:      var(--color-zinc-200);     /* 轻量品牌背景：选中行、hover 高亮 */
   --color-bg-accent-hover:       var(--color-zinc-800);     /* 品牌背景 hover 态 */
 
   --color-bg-success:            var(--color-emerald-50);   /* 成功状态背景 */

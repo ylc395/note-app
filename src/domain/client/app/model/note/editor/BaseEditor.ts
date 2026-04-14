@@ -256,7 +256,7 @@ export default abstract class BaseEditor {
     }
 
     if (e.id === this.noteId) {
-      this.value.setData((v) => defaults(e.payload, v));
+      this.value.setData((v) => defaults({}, e.payload, v));
     }
 
     if (e.payload.parentId !== undefined && this.path.data?.some(({ id }) => id === e.id)) {
