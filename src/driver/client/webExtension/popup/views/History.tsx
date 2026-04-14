@@ -1,7 +1,7 @@
 import container from '#utils/singletonContainer';
 import { observer } from 'mobx-react-lite';
 import { HistoryOutlined } from '@ant-design/icons';
-import clsx from 'clsx';
+import { cx } from 'class-variance-authority';
 import { useState } from 'react';
 
 import HistoryService from '#domain/service/HistoryService';
@@ -16,7 +16,7 @@ export default observer(function History() {
         <HistoryOutlined className="mr-1" />
         历史
       </button>
-      <div className={clsx('absolute right-0 top-0', !visible && 'hidden')}>
+      <div className={cx('absolute right-0 top-0', !visible && 'hidden')}>
         <ul>
           {historyRecords.map((task) => (
             <li key={task.time}>{task.title}</li>

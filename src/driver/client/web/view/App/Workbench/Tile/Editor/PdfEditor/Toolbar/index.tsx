@@ -28,16 +28,16 @@ export default function Toolbar() {
 
   return (
     <div class="flex justify-between py-2 border-b border-border-secondary px-2 relative">
-      <div class="flex text-sm">
-        <Button class="flex items-center" onClick={action(toggleBodyPanel)}>
+      <div class="flex text-sm space-x-2">
+        <Button selected={editor.body.uiState.isEnabled} onClick={action(toggleBodyPanel)}>
           <NotepadTextIcon class="mr-1" />
           笔记
         </Button>
-        <Button class="flex items-center" onClick={action(toggleOutlinePanel)}>
+        <Button selected={editor.outline.uiState.isEnabled} onClick={action(toggleOutlinePanel)}>
           <ListIcon class="mr-1" />
           大纲
         </Button>
-        <Button onClick={() => editor.textFinder.toggle()}>
+        <Button selected={editor.textFinder.isEnabled} onClick={() => editor.textFinder.toggle()}>
           <TextSearchIcon class="mr-1" />
           搜索全文
         </Button>
@@ -60,7 +60,11 @@ export default function Toolbar() {
           <Switch.Label>标注</Switch.Label>
           <Switch.HiddenInput />
         </Switch.Root>
-        <Button onClick={toggleAnnotationPanel} class="flex items-center text-sm">
+        <Button
+          selected={editor.annotation.uiState.isEnabled}
+          onClick={toggleAnnotationPanel}
+          class="flex items-center text-sm"
+        >
           <PenLineIcon class="mr-1" />
           查看标注
         </Button>

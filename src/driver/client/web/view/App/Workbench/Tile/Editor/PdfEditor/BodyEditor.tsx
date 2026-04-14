@@ -9,7 +9,7 @@ import MarkdownEditor from '#web/view/components/MarkdownEditor';
 import Resizable from '#web/view/components/Resizable';
 import { useContext } from './context';
 import Button from '#web/view/components/Button';
-import clsx from 'clsx';
+import { cx } from 'class-variance-authority';
 
 export default function BodyEditor(props: { id: string }) {
   const { viewer } = useContext()!;
@@ -61,7 +61,7 @@ export default function BodyEditor(props: { id: string }) {
         onResizeEnd={action(handleResizeEnd)}
       >
         <div
-          class={clsx(
+          class={cx(
             'w-64 p-2 border-border-primary flex flex-col overflow-auto bg-surface-raised',
             uiState.isFloating ? 'border' : 'border-r',
           )}

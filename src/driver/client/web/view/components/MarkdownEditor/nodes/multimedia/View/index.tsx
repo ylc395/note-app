@@ -1,5 +1,5 @@
 import { Show, createMemo, Switch, Match } from 'solid-js';
-import clsx from 'clsx';
+import { cx } from 'class-variance-authority';
 import { FileIcon } from 'lucide-solid';
 import z from 'zod';
 import { createQuery } from 'mobx-tanstack-query/preset';
@@ -77,7 +77,7 @@ export default function MultimediaView(props: Props) {
 
   return (
     <>
-      <div class={clsx('relative text-center', props.figure ? 'mx-auto' : 'inline-block')} style={containerStyle()}>
+      <div class={cx('relative text-center', props.figure ? 'mx-auto' : 'inline-block')} style={containerStyle()}>
         <Switch fallback={<FileCard file={fileQuery.data!} />}>
           <Match when={fileQuery.isError}>
             <FileIcon />

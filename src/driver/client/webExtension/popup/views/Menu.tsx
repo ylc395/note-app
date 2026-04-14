@@ -1,7 +1,7 @@
 import container from '#utils/singletonContainer';
 import { observer } from 'mobx-react-lite';
 import { LoadingOutlined } from '@ant-design/icons';
-import clsx from 'clsx';
+import { cx } from 'class-variance-authority';
 
 import TaskService from '#domain/service/TaskService';
 import { TaskTypes } from '#domain/model/task';
@@ -37,7 +37,7 @@ export default observer(function Menu() {
           return visible === 'all' || visible === config.get('targetEntityType') ? (
             <li key={action}>
               <button
-                className={clsx(
+                className={cx(
                   'mb-3 flex h-9 w-full items-center justify-center rounded-md bg-gray-800 text-sm text-gray-100',
                   isDisabled && 'cursor-not-allowed opacity-60',
                 )}

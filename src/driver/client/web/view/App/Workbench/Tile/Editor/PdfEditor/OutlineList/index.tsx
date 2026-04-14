@@ -11,7 +11,7 @@ import OutlineViewModel from './Outline';
 import { useContext } from '../context';
 import Button from '#web/view/components/Button';
 import { partialRight } from 'lodash-es';
-import clsx from 'clsx';
+import { cx } from 'class-variance-authority';
 
 export default function Outline(props: { id: string }) {
   const { viewer } = useContext()!;
@@ -98,7 +98,7 @@ export default function Outline(props: { id: string }) {
         onResizeEnd={action(handleResizeEnd)}
       >
         <div
-          class={clsx(
+          class={cx(
             'overflow-auto border-border-primary pb-4 flex flex-col bg-surface-raised',
             uiState.isFloating ? 'border' : 'border-r',
           )}

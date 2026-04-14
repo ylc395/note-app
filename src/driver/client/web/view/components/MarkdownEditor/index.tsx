@@ -1,7 +1,7 @@
 import { createEffect, createSignal, on, onCleanup, onMount } from 'solid-js';
 
 import Editor from './Editor';
-import clsx from 'clsx';
+import { cx } from 'class-variance-authority';
 
 export default function MarkdownEditor(props: {
   readonly?: boolean;
@@ -92,7 +92,7 @@ export default function MarkdownEditor(props: {
 
   return (
     <div
-      class={clsx(props.className, 'select-text')}
+      class={cx(props.className, 'select-text')}
       spellcheck={false}
       ref={rootRef}
       onScrollEnd={props.onScrollEnd && (() => props.onScrollEnd?.({ x: rootRef!.scrollLeft, y: rootRef!.scrollTop }))}

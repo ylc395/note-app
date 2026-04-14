@@ -1,5 +1,5 @@
 import { Menu, type MenuSelectionDetails, type UseMenuReturn } from '@ark-ui/solid';
-import clsx from 'clsx';
+import { cx } from 'class-variance-authority';
 import { CheckIcon, ChevronRightIcon, type LucideProps } from 'lucide-solid';
 import { Show, type JSX } from 'solid-js';
 
@@ -40,7 +40,7 @@ export default function Item(props: {
     return (
       <Menu.Item
         disabled={props.item.disabled}
-        class={clsx(itemClassName, props.item.checked === false && 'pl-8')}
+        class={cx(itemClassName, props.item.checked === false && 'pl-8')}
         value={props.item.key}
       >
         <Show when={props.item.checked}>

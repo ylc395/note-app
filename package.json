@@ -88,7 +88,7 @@
     "assert": "^2.1.0",
     "better-sqlite3": "^12.8.0",
     "cheerio": "^1.1.2",
-    "clsx": "^1.2.1",
+    "class-variance-authority": "^0.7.1",
     "comlink": "^4.4.2",
     "comlink-adapters": "^0.0.3",
     "css-tree": "^3.1.0",

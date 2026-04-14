@@ -1,7 +1,7 @@
 import { createMemo, JSX, Show } from 'solid-js';
 import { ChevronDownIcon, ChevronRightIcon, StarIcon } from 'lucide-solid';
 import { Key } from '@solid-primitives/keyed';
-import clsx from 'clsx';
+import { cx } from 'class-variance-authority';
 
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
 import TreeViewModel, { TreeNodeStates } from '#domain/client/app/model/note/TreeExplorer';
@@ -115,7 +115,7 @@ export default function Node(props: Props) {
             <div
               {...renderProps}
               data-item-id={props.node.id}
-              class={clsx(itemTextClassName, 'ml-5')}
+              class={cx(itemTextClassName, 'ml-5')}
               style={{ 'padding-left': `${paddingLeft()}px` }}
             >
               {renderInline()}

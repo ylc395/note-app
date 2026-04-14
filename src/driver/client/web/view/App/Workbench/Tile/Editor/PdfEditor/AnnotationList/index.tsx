@@ -12,7 +12,7 @@ import FloatingPanel from '#web/view/components/FloatingPanel';
 import { action } from 'mobx';
 import Resizable from '#web/view/components/Resizable';
 import Button from '#web/view/components/Button';
-import clsx from 'clsx';
+import { cx } from 'class-variance-authority';
 
 export default function AnnotationList(props: { id: string }) {
   const splitter = useSplitterContext();
@@ -86,7 +86,7 @@ export default function AnnotationList(props: { id: string }) {
         onResizeEnd={action(handleResizeEnd)}
       >
         <div
-          class={clsx(
+          class={cx(
             'w-64 p-2 border-border-primary flex flex-col overflow-auto bg-surface-raised',
             uiState.isFloating ? 'border' : 'border-l',
           )}
