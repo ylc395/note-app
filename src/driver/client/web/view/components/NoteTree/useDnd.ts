@@ -93,6 +93,7 @@ export default function useDnd(props: { treeView: TreeViewModel; node: TreeNode 
 
           createNotesWithFile({
             files,
+            parentId: props.node.id,
             onDuplicated: (upload) => upload(),
             onCreated: () => props.node.toggleExpand(true),
           });
