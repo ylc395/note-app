@@ -20,17 +20,14 @@ export default function Topic(props: { onOpen: () => void }) {
   globalTopicTree.data.refetch();
 
   return (
-    <div class="bg-bg-primary">
-      <h2>话题</h2>
-      <Show when={collection()}>
-        {(tree) => (
-          <TreeView.Root lazyMount unmountOnExit collection={tree()} class="min-h-0 overflow-auto">
-            <TreeView.Tree>
-              <For each={tree().rootNode.children}>{(node) => <Node node={node} />}</For>
-            </TreeView.Tree>
-          </TreeView.Root>
-        )}
-      </Show>
-    </div>
+    <Show when={collection()}>
+      {(tree) => (
+        <TreeView.Root lazyMount unmountOnExit collection={tree()} class="min-h-0 overflow-auto">
+          <TreeView.Tree>
+            <For each={tree().rootNode.children}>{(node) => <Node node={node} />}</For>
+          </TreeView.Tree>
+        </TreeView.Root>
+      )}
+    </Show>
   );
 }

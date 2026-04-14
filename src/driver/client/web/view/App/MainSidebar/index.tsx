@@ -2,6 +2,7 @@ import { action } from 'mobx';
 import { Popover, usePopover } from '@ark-ui/solid';
 import { BookTextIcon, LightbulbIcon, HashIcon, SearchIcon, StarIcon, SettingsIcon, Trash2Icon } from 'lucide-solid';
 import { Portal } from 'solid-js/web';
+import type { JSX } from 'solid-js';
 
 import shell from '#web/infra/shell';
 
@@ -9,7 +10,7 @@ import container from '#utils/singletonContainer';
 import UIState, { SidebarTabs } from '../UIState';
 import Star from './Star';
 import Topic from './Topic';
-import type { JSX } from 'solid-js';
+import PopoverContainer from './Popover';
 
 function IconPopover(props: {
   buttonClassName: string;
@@ -45,7 +46,7 @@ function IconPopover(props: {
 export default function Sidebar() {
   const uiState = container.resolve(UIState);
   const menuClassName = 'space-y-2';
-  const iconClassName = 'w-6 h-6 stroke-[1.5]';
+  const iconClassName = 'size-6 stroke-[1.5]';
   const buttonClassName =
     'relative p-2 flex justify-center items-center cursor-pointer rounded-lg text-fg-primary data-[state="closed"]:opacity-40';
 
@@ -74,12 +75,20 @@ export default function Sidebar() {
       <ul class={`${menuClassName} mt-4 pt-4 border-t border-t-border-secondary`}>
         <li>
           <IconPopover buttonClassName={buttonClassName} icon={<StarIcon class={iconClassName} />}>
-            {({ closePopover }) => <Star onOpen={closePopover} />}
+            {({ closePopover }) => (
+              <PopoverContainer title="收藏">
+                <Star onOpen={closePopover} />
+              </PopoverContainer>
+            )}
           </IconPopover>
         </li>
         <li>
           <IconPopover buttonClassName={buttonClassName} icon={<HashIcon class={iconClassName} />}>
-            {({ closePopover }) => <Topic onOpen={closePopover} />}
+            {({ closePopover }) => (
+              <PopoverContainer title="话题">
+                <Topic onOpen={closePopover} />
+              </PopoverContainer>
+            )}
           </IconPopover>
         </li>
         <li>
