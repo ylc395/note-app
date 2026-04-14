@@ -3,7 +3,7 @@ import { createQuery } from 'mobx-tanstack-query/preset';
 import assert from 'assert';
 import { differenceBy, without } from 'lodash-es';
 
-import { normalizeTitle, type NoteVO } from '#domain/shared/model/note';
+import { getFakeNote, normalizeTitle, type NoteVO } from '#domain/shared/model/note';
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 
@@ -15,6 +15,7 @@ export default class TreeNode {
   }: {
     value?: NoteVO;
     parent?: TreeNode;
+    isFake?: boolean; // 该节点是个占位符，不代表真实 note
     children?: NoteVO[] | ((node: TreeNode) => NoteVO[] | undefined);
     sort?: (note1: NoteVO, note2: NoteVO) => number;
     onDestroyed?: (node: TreeNode) => void;
@@ -64,6 +65,10 @@ export default class TreeNode {
 
   @observable public accessor isExpanded = false;
 
+  public get isFake() {
+    return this.options.isFake;
+  }
+
   @observable public accessor value: NoteVO | undefined;
 
   @observable private accessor state = 0;
@@ -72,7 +77,9 @@ export default class TreeNode {
 
   private readonly destroyController = new AbortController();
 
-  @observable.shallow public accessor children: TreeNode[] | undefined; // 对 children 必须采用整体替换的方式，而不能使用 push / splice 等原地更改的方式。因为 <Key> 组件检测不到这样的变动
+  @observable.shallow public accessor children: Readonly<TreeNode[]> | undefined; // 对 children 必须采用整体替换的方式，而不能使用 push / splice 等原地更改的方式。因为 <Key> 组件检测不到这样的变动
+
+  @observable.shallow private accessor fakeChildren: Readonly<TreeNode[]> | undefined;
 
   private childrenMap?: Map<TreeNode['id'], TreeNode>;
 
@@ -118,11 +125,13 @@ export default class TreeNode {
 
   @computed
   public get sortedChildren() {
+    const children = this.children?.concat(this.fakeChildren || []);
+
     if (!this.options.sort) {
-      return this.children;
+      return children;
     }
 
-    return this.children?.toSorted(({ value: value1 }, { value: value2 }) => this.options.sort!(value1!, value2!));
+    return children?.toSorted(({ value: value1 }, { value: value2 }) => this.options.sort!(value1!, value2!));
   }
 
   @action
@@ -185,6 +194,23 @@ export default class TreeNode {
 
     this.options.onStateChanged?.(this, flag);
     return this;
+  }
+
+  @action
+  public setFakeChildren(fakeNotes: Array<Pick<NoteVO, 'title' | 'mimeType'>>) {
+    this.fakeChildren = fakeNotes.map(
+      ({ title, mimeType }, i) =>
+        new TreeNode({
+          parent: this,
+          isFake: true,
+          value: getFakeNote({
+            id: `${this.id}-fake-child-${i}`,
+            mimeType,
+            parentId: this.id,
+            title,
+          }),
+        }),
+    );
   }
 
   @action

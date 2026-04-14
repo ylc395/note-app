@@ -5,100 +5,124 @@ import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/el
 import { dropTargetForExternal } from '@atlaskit/pragmatic-drag-and-drop/external/adapter';
 import { render } from 'solid-js/web';
 import { compact } from 'lodash-es';
+import { runInAction, when } from 'mobx';
 
 import container from '#utils/singletonContainer';
 import NoteService from '#domain/client/app/service/NoteService';
 import TreeViewModel, { TreeNodeStates } from '#domain/client/app/model/note/TreeExplorer';
 import type TreeNode from '#domain/client/shared/model/note/TreeNode';
-import { transferItemToFileDTO } from '#web/utils/file';
+import FileNoteUploader from '#domain/client/app/model/note/FileNoteUploader';
 
 import DragPreview from './DragPreview';
 
-export default function useDnd(props: { treeView: TreeViewModel; node: TreeNode }) {
-  const { updateNote, createNotesWithFile } = container.resolve(NoteService);
+export async function transferItemToFileDTO(item: DataTransferItem) {
+  const file = item.getAsFile();
+
+  if (!file) {
+    return null;
+  }
+
+  return {
+    name: file.name,
+    data: await file.arrayBuffer(),
+    mimeType: file.type,
+  };
+}
+
+export default function useDnd(props: { treeView: TreeViewModel; node?: TreeNode; draggable?: boolean }) {
+  const noteService = container.resolve(NoteService);
+  const { updateNote } = noteService;
   const [dndElementRef, setDndElementRef] = createSignal<HTMLElement>();
   const [isDropHovering, setIsDropHovering] = createSignal(false);
+  const isDraggable = props.draggable ?? true;
 
   createEffect(() => {
     const element = dndElementRef();
+    const node = props.node ?? props.treeView.tree?.root;
 
-    if (!element) {
+    if (!element || !node) {
       return;
     }
 
+    const parentId = node.isRoot ? null : node.id;
+
     const cleanup = combine(
-      draggable({
-        element,
-        canDrag: () => !props.node.isRoot,
-        onGenerateDragPreview: ({ nativeSetDragImage }) => {
-          setCustomNativeDragPreview({
-            nativeSetDragImage,
-            render: ({ container }) => {
-              return render(
-                () => createComponent(DragPreview, { treeView: props.treeView, node: props.node }),
-                container,
-              );
+      ...compact([
+        isDraggable &&
+          draggable({
+            element,
+            canDrag: () => !node.isRoot,
+            onGenerateDragPreview: ({ nativeSetDragImage }) => {
+              setCustomNativeDragPreview({
+                nativeSetDragImage,
+                render: ({ container }) => {
+                  return render(
+                    () => createComponent(DragPreview, { treeView: props.treeView, node: node }),
+                    container,
+                  );
+                },
+              });
             },
-          });
-        },
-        onDragStart: () => {
-          if (!props.treeView.treeNodeSets.selected.has(props.node.id)) {
-            props.treeView.select(props.node.id);
-          }
-        },
-        getInitialData: () => {
-          const selectedIds = Array.from(props.treeView.treeNodeSets.selected);
+            onDragStart: () => {
+              if (!props.treeView.treeNodeSets.selected.has(node.id)) {
+                props.treeView.select(node.id);
+              }
+            },
+            getInitialData: () => {
+              const selectedIds = Array.from(props.treeView.treeNodeSets.selected);
 
-          return (selectedIds.includes(props.node.id)
-            ? props.treeView.tree?.get(selectedIds)
-            : props.node) as unknown as Record<string, unknown>;
-        },
-      }),
-      dropTargetForElements({
-        element,
-        onDragEnter: () => {
-          setIsDropHovering(true);
-        },
-        onDragLeave: () => {
-          setIsDropHovering(false);
-        },
-        onDrop: ({ source, self, location }) => {
-          setIsDropHovering(false);
+              return (selectedIds.includes(node.id)
+                ? props.treeView.tree?.get(selectedIds)
+                : node) as unknown as Record<string, unknown>;
+            },
+          }),
+        dropTargetForElements({
+          element,
+          onDragEnter: () => {
+            setIsDropHovering(true);
+          },
+          onDragLeave: () => {
+            setIsDropHovering(false);
+          },
+          onDrop: ({ source, self, location }) => {
+            setIsDropHovering(false);
 
-          if (
-            props.node.is(TreeNodeStates.Unselectable) ||
-            location.current.dropTargets[0]?.element !== self.element // 子节点处理过了，这里就不处理了
-          ) {
-            return;
-          }
+            if (
+              node.is(TreeNodeStates.Unselectable) ||
+              location.current.dropTargets[0]?.element !== self.element // 子节点处理过了，这里就不处理了
+            ) {
+              return;
+            }
 
-          const note = NoteService.getNote(source.data);
+            const note = NoteService.getNote(source.data);
 
-          if (note) {
-            updateNote(note, { parentId: props.node.id }).then(() => props.node.toggleExpand(true));
-          }
-        },
-      }),
-      dropTargetForExternal({
-        element,
-        onDragEnter: () => {
-          setIsDropHovering(true);
-        },
-        onDragLeave: () => {
-          setIsDropHovering(false);
-        },
-        onDrop: async ({ source }) => {
-          setIsDropHovering(false);
-          const files = compact(await Promise.all(source.items.map(transferItemToFileDTO)));
+            if (note) {
+              updateNote(note, { parentId }).then(() => node.toggleExpand(true));
+            }
+          },
+        }),
+        dropTargetForExternal({
+          element,
+          onDragEnter: () => {
+            setIsDropHovering(true);
+          },
+          onDragLeave: () => {
+            setIsDropHovering(false);
+          },
+          onDrop: async ({ source }) => {
+            setIsDropHovering(false);
+            const files = compact(await Promise.all(source.items.map(transferItemToFileDTO)));
+            const fileNoteUploader = new FileNoteUploader(files, { parentId });
 
-          createNotesWithFile({
-            files,
-            parentId: props.node.id,
-            onDuplicated: (upload) => upload(),
-            onCreated: () => props.node.toggleExpand(true),
-          });
-        },
-      }),
+            runInAction(() => {
+              noteService.fileUploader = fileNoteUploader;
+            });
+
+            await when(() => fileNoteUploader.isReady);
+            fileNoteUploader.upload();
+          },
+        }),
+      ]),
     );
 
     onCleanup(cleanup);

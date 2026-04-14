@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 import type { Entity, EntityId, EntityParentId, Icon } from './entity.js';
-import type { FileDTO } from './file.js';
+import type { FileDTO, FileVO } from './file.js';
 
 export interface Note {
   id: EntityId;
@@ -28,6 +28,7 @@ export interface DuplicatedNoteDTO {
 }
 
 export type NewNoteDTO = Partial<Pick<Note, 'body' | 'icon' | 'parentId' | 'sourceUrl' | 'title'>> & {
+  fileHash?: FileVO['hash'];
   file?: FileDTO;
 };
 
@@ -61,4 +62,16 @@ export interface FileTextQuery {
 
 export function normalizeTitle(note: Note | NoteVO | Entity) {
   return note.title || `未命名笔记-${dayjs(note.createdAt).format('YYYYMMDD-HHmm')}`;
+}
+
+export function getFakeNote(note: Pick<NoteVO, 'mimeType' | 'title' | 'parentId' | 'id'>) {
+  return {
+    ...note,
+    sourceUrl: null,
+    icon: null,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    isStar: false,
+    childrenCount: 0,
+  };
 }

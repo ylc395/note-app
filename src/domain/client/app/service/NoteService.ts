@@ -1,4 +1,5 @@
 import { compact } from 'lodash-es';
+import { autorun, observable } from 'mobx';
 
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
@@ -11,8 +12,7 @@ import Workbench from '../model/Workbench';
 import DomainEventBus from '../model/note/EventBus';
 import BaseEditor from '../model/note/editor/BaseEditor';
 import TreeExplorer from '../model/note/TreeExplorer';
-import { getHash } from '#utils/file';
-import type { FileDTO } from '#domain/shared/model/file';
+import FileNoteUploader from '../model/note/FileNoteUploader';
 
 export default class NoteService {
   constructor() {
@@ -20,6 +20,8 @@ export default class NoteService {
       DomainEventBus.eventNames.Created,
       (note) => void this.workbench.open({ noteId: note.id, mimeType: note.mimeType }),
     );
+
+    autorun(this.syncFileUploaderToTree.bind(this));
   }
 
   private readonly eventBus = container.resolve(DomainEventBus);
@@ -65,56 +67,21 @@ export default class NoteService {
     return undefined;
   }
 
-  public readonly createNotesWithFile = async ({
-    files,
-    parentId,
-    onDuplicated,
-    onCreated,
-  }: {
-    files: FileDTO[];
-    parentId?: NoteVO['parentId'];
-    onDuplicated: (next: () => Promise<void>, data: { duplicated: Map<FileDTO, NoteVO[]> }) => void;
-    onCreated?: () => void;
-  }) => {
-    if (files.length === 0) {
+  @observable.ref
+  public accessor fileUploader: FileNoteUploader | undefined;
+
+  private syncFileUploaderToTree() {
+    if (!this.fileUploader) {
       return;
     }
 
-    const fileNotes = await Promise.all(
-      files.map(async (file) => {
-        const hash = await getHash(file.data);
-        const notes = await this.remote.note.query.query({ fileHash: hash });
+    const placeholders = Array.from(this.fileUploader.fileUploadingMap)
+      .filter(([_, uploading]) => uploading.isPending)
+      .map(([file]) => ({
+        title: file.name ?? '',
+        mimeType: file.mimeType,
+      }));
 
-        return {
-          file,
-          notes,
-        };
-      }),
-    );
-    const duplicatedMap = new Map<FileDTO, NoteVO[]>();
-
-    for (const { file, notes } of fileNotes) {
-      if (notes.length > 0) {
-        duplicatedMap.set(file, notes);
-      }
-    }
-
-    const notesToCreate = files.filter((file) => !duplicatedMap.has(file));
-    const upload = async () =>
-      Promise.all(
-        notesToCreate.map(async (file) =>
-          this.createNote({
-            file,
-            title: file.name,
-            parentId,
-          }),
-        ),
-      ).then(onCreated);
-
-    if (duplicatedMap.size > 0) {
-      onDuplicated(upload, { duplicated: duplicatedMap });
-    } else {
-      upload();
-    }
-  };
+    this.explorer.tree?.get(this.fileUploader.params.parentId || null)?.setFakeChildren(placeholders);
+  }
 }

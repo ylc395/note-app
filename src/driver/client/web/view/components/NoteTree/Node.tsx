@@ -1,5 +1,5 @@
 import { createMemo, JSX, Show } from 'solid-js';
-import { ChevronDownIcon, ChevronRightIcon, StarIcon } from 'lucide-solid';
+import { ChevronDownIcon, ChevronRightIcon, LoaderIcon, StarIcon } from 'lucide-solid';
 import { Key } from '@solid-primitives/keyed';
 import { cx } from 'class-variance-authority';
 
@@ -60,7 +60,7 @@ export default function Node(props: Props) {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function renderItem(render: (props: JSX.HTMLAttributes<any>) => JSX.Element) {
+  function wrapContextmenu(render: (props: JSX.HTMLAttributes<any>) => JSX.Element) {
     function handleOpenChange({ open }: { open: boolean }) {
       if (!open || props.node.is(TreeNodeStates.Selected)) {
         return;
@@ -91,6 +91,9 @@ export default function Node(props: Props) {
   function renderInline() {
     return (
       <>
+        <Show when={props.node.isFake}>
+          <LoaderIcon class={iconClassName()} />
+        </Show>
         <Show when={props.shouldRenderIcon?.(props.node)}>
           <Icon {...props.node.value} iconClassName={iconClassName()} />
         </Show>
@@ -111,7 +114,7 @@ export default function Node(props: Props) {
           class={itemClassName}
           classList={itemClassList()}
         >
-          {renderItem((renderProps) => (
+          {wrapContextmenu((renderProps) => (
             <div
               {...renderProps}
               data-item-id={props.node.id}
@@ -139,7 +142,7 @@ export default function Node(props: Props) {
               <ChevronDownIcon class="w-5 h-5" />
             </Show>
           </button>
-          {renderItem((renderProps) => (
+          {wrapContextmenu((renderProps) => (
             <div {...renderProps} class={itemTextClassName}>
               {renderInline()}
             </div>

@@ -33,10 +33,16 @@ export default class NoteService extends BaseService {
       newNote = await this.duplicate(note.from);
     } else {
       await this.assertValidDto(note);
-      let fileVO: FileVO | undefined;
+      let fileId: FileVO['id'] | undefined;
 
       if (note.file) {
-        fileVO = await this.file.createFile(note.file);
+        const file = await this.file.createFile(note.file);
+        fileId = file.id;
+      } else if (note.fileHash) {
+        const file = await this.file.queryFileByHash(note.fileHash);
+        assert(file);
+
+        fileId = file.id;
       }
 
       const now = Date.now();
@@ -47,7 +53,7 @@ export default class NoteService extends BaseService {
         parentId: note.parentId || null,
         body: note.body || '',
         icon: note.icon || null,
-        fileId: fileVO?.id || null,
+        fileId: fileId || null,
         sourceUrl: note.sourceUrl || null,
         updatedAt: now,
         createdAt: now,
