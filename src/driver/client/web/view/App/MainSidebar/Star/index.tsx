@@ -1,5 +1,6 @@
 import { For, Show } from 'solid-js';
 import clsx from 'clsx';
+import { LoaderIcon } from 'lucide-solid';
 
 import StarService from '#domain/client/app/service/StarService';
 import container from '#utils/singletonContainer';
@@ -20,7 +21,7 @@ export default function Star(props: { onOpen: () => void }) {
   return (
     <div class="bg-bg-secondary shadow-2xl rounded-xl px-2 py-4 text-sm w-64 border-border-primary border">
       <h2 class="font-bold pb-2 mb-2 text-base pl-2 border-b border-border-secondary">收藏夹</h2>
-      <Show when={starList.result.data}>
+      <Show when={starList.result.data} fallback={<LoaderIcon class="mx-auto" />}>
         {(data) => (
           <Show when={data().length > 0} fallback={<div>暂无收藏</div>}>
             <div class="max-h-96 overflow-auto space-y-2">

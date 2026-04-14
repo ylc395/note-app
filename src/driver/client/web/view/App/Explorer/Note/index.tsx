@@ -7,7 +7,6 @@ import Searcher from '#domain/client/app/model/note/Searcher';
 import TreeView from './TreeView';
 import DropArea from './DropArea';
 import Header from '../Header';
-import SearchBox from './SearchBox';
 import SearchResult from './SearchResult';
 
 enum TabsValue {
@@ -35,7 +34,6 @@ export default function NoteExplorer(props: { className: string }) {
       <Header title="笔记">
         <DropArea />
       </Header>
-      <SearchBox onSearchManually={() => setTabValue(TabsValue.SearchResult)} />
       <Tabs.Root
         unmountOnExit
         class="min-h-0 flex flex-col grow"
@@ -44,22 +42,19 @@ export default function NoteExplorer(props: { className: string }) {
         value={searcher.keyword ? tabValue() : TabsValue.All}
       >
         <Show when={searcher.keyword}>
-          <Tabs.List class="text-sm mt-4 rounded-lg w-fit mx-auto bg-bg-primary text-fg-secondary">
+          <Tabs.List class="text-sm rounded-lg w-fit mx-auto bg-bg-primary text-fg-secondary">
             <Tabs.Trigger class="w-[5em] py-1 data-[selected]:text-fg-primary" value={TabsValue.All}>
               全部
             </Tabs.Trigger>
-            <Tabs.Trigger
-              class="w-[5em] py-1 data-[selected]:text-fg-primary"
-              value={TabsValue.SearchResult}
-            >
+            <Tabs.Trigger class="w-[5em] py-1 data-[selected]:text-fg-primary" value={TabsValue.SearchResult}>
               搜索结果
             </Tabs.Trigger>
           </Tabs.List>
         </Show>
-        <Tabs.Content class="mt-4 min-h-0 flex flex-col grow" value={TabsValue.All}>
+        <Tabs.Content class="min-h-0 flex flex-col grow" value={TabsValue.All}>
           <TreeView />
         </Tabs.Content>
-        <Tabs.Content class="mt-4 min-h-0 flex flex-col grow" value={TabsValue.SearchResult}>
+        <Tabs.Content class="min-h-0 flex flex-col grow" value={TabsValue.SearchResult}>
           <SearchResult />
         </Tabs.Content>
       </Tabs.Root>

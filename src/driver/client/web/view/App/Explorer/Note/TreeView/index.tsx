@@ -36,7 +36,7 @@ export default function TreeView() {
 
   return (
     <div class="grow min-h-0 flex flex-col">
-      <div class="mb-2 flex justify-between items-center">
+      <div class="mb-4 flex justify-between items-center">
         <AddButton />
         <div class="flex">
           <Button disabled={!explorer.canCollapse} onClick={explorer.collapseAll} square>
