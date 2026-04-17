@@ -3,7 +3,6 @@ import { compact } from 'lodash-es';
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import type { DuplicatedNoteDTO, NewNoteDTO, NotePatchDTO, NoteVO } from '#domain/shared/model/note';
-import IconManager from '#domain/client/app/model/note/IconManager';
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
 import { arrayOf, type MaybeArray } from '#utils/collection';
 import { EntityTypes } from '#domain/shared/model/entity';
@@ -22,10 +21,6 @@ export default class NoteService {
   private readonly remote = container.resolve(rpcToken);
 
   public readonly explorer = new TreeExplorer();
-
-  public readonly iconPicker = new IconManager({
-    noteIds: () => Array.from(this.explorer.treeNodeSets.selected),
-  });
 
   public readonly createNote = async (note: NewNoteDTO | DuplicatedNoteDTO) => {
     const newNote = await this.remote.note.create.mutate(note);

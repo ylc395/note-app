@@ -12,6 +12,7 @@ import { arrayOf, type MaybeArray } from '#utils/collection';
 import type { FileDTO } from '#domain/shared/model/file';
 
 import FileNoteUploader from '../FileNoteUploader';
+import IconManager from '../IconManager';
 import StarEventBus from '../../star/EventBus';
 import Setting, { SortBy } from './Setting';
 import UIState from './UIState';
@@ -78,6 +79,10 @@ export default class TreeExplorer {
   private readonly uiState = new UIState();
 
   public readonly settings = new Setting();
+
+  public readonly iconPicker = new IconManager({
+    noteIds: () => Array.from(this.treeNodeSets.selected),
+  });
 
   @computed
   public get canCollapse() {

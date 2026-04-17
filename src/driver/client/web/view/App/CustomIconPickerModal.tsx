@@ -7,7 +7,8 @@ import NoteService from '#domain/client/app/service/NoteService';
 import container from '#utils/singletonContainer';
 
 export default function CustomIconPicker() {
-  const { iconPicker } = container.resolve(NoteService);
+  const { explorer } = container.resolve(NoteService);
+  const iconPicker = explorer.iconPicker;
 
   const customIconPickerModel = createMemo(() => {
     return iconPicker.customIconPicker;

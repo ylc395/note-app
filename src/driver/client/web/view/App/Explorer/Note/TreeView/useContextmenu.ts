@@ -15,7 +15,7 @@ import { getAppUrl, RouteTypes } from '#domain/shared/infra/url';
 import IconPicker from './IconPicker';
 
 export default function useContextmenu() {
-  const { explorer: tree, createNote, iconPicker } = container.resolve(NoteService);
+  const { explorer: tree, createNote } = container.resolve(NoteService);
   const { star, unstar } = container.resolve(StarService);
   const { put } = container.resolve(RecyclableService);
 
@@ -23,6 +23,7 @@ export default function useContextmenu() {
     const {
       treeNodeSets: { selected },
       selectedNode,
+      iconPicker,
     } = tree;
 
     assert(selectedNode?.value);

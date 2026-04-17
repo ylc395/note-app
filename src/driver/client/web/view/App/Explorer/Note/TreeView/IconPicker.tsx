@@ -9,7 +9,10 @@ import type { Icon } from '#domain/shared/model/entity';
 
 export default function IconPicker(props?: { onFinish?: () => void }) {
   let rootRef: HTMLDivElement | undefined;
-  const { iconPicker } = container.resolve(NoteService);
+  const {
+    explorer: { iconPicker },
+  } = container.resolve(NoteService);
+
   const allCustomIcons = createMemo(
     () =>
       iconPicker.customIcons.result.data && [
