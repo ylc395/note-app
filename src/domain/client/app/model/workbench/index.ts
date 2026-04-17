@@ -1,4 +1,4 @@
-import { mapValues, uniqueId } from 'lodash-es';
+import { mapValues, pick, uniqueId } from 'lodash-es';
 import { observable, action, computed, when, runInAction, autorun } from 'mobx';
 import assert from 'assert';
 
@@ -12,7 +12,6 @@ import HistoryStack from '../base/HistoryStack';
 import RecentManager from './RecentManager';
 import UIState from './UIState';
 import Editor from './BaseEditor';
-import { EventNames } from './BaseEditor/events';
 
 export interface HistoryRecord {
   key: Editor['id'];
@@ -260,15 +259,15 @@ export default class Workbench {
 
     destTile.switchToEditor(editor);
 
-    editor.events.once(EventNames.Ready).then(({ entityId, title, mimeType, entityType }) => {
-      assert(typeof title === 'string');
-      this.recentManager.add({
-        entityId,
-        entityType,
-        title,
-        mimeType,
-      });
-    });
+    when(
+      () => editor.value.isSuccess,
+      () => {
+        this.recentManager.add({
+          ...pick(editor, ['entityId', 'entityType', 'mimeType']),
+          title: editor.title!,
+        });
+      },
+    );
 
     return editor;
   }
