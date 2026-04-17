@@ -14,7 +14,11 @@ export default function Star(props: { onOpen: () => void }) {
   starList.refetch();
 
   function handleOpen(star: StarVO) {
-    open({ entityId: star.entity.id, mimeType: star.entity.file?.mimeType || null });
+    open({
+      entityId: star.entity.id,
+      mimeType: star.entity.file?.mimeType || null,
+      entityType: star.entity.type,
+    });
     props.onOpen();
   }
 

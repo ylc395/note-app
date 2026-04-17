@@ -36,7 +36,7 @@ export default function Node(props: Props) {
   const paddingLeft = createMemo(() => (props.indexPath.length - 1) * 28);
   const itemClassList = createMemo(() => ({
     'bg-bg-accent-subtle text-fg-accent-subtle':
-      workbench.currentEditor?.noteId === props.node.id && !props.node.is(TreeNodeStates.Selected),
+      workbench.currentEditor?.entityId === props.node.id && !props.node.is(TreeNodeStates.Selected),
     'opacity-30': props.node.is(TreeNodeStates.Unselectable),
     'bg-bg-hover':
       (isDropHovering() && !props.node.is(TreeNodeStates.Unselectable)) || props.node.is(TreeNodeStates.Selected),

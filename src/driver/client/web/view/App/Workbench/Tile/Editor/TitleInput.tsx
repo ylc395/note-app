@@ -1,4 +1,6 @@
 import { createEffect, createMemo, createSignal } from 'solid-js';
+import assert from 'assert';
+import NoteBaseEditor from '#domain/client/app/model/note/editor/BaseEditor';
 import { useContext } from './context';
 
 export default function TitleInput() {
@@ -8,6 +10,8 @@ export default function TitleInput() {
   const placeholder = createMemo(() => title() || ctx.editor.title || '');
 
   createEffect(() => {
+    assert(ctx.editor instanceof NoteBaseEditor);
+
     if (ctx.editor.value.result.data) {
       setTitle(ctx.editor.value.result.data.title);
     }
@@ -23,6 +27,8 @@ export default function TitleInput() {
   });
 
   createEffect(() => {
+    assert(ctx.editor instanceof NoteBaseEditor);
+
     if (ctx.editor.value.result.data && title() !== ctx.editor.value.result.data.title) {
       ctx.editor.update({ title: title() });
     }

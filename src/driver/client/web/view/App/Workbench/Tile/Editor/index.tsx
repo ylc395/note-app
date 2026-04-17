@@ -1,6 +1,6 @@
 import { createMemo, Match, Show, Switch } from 'solid-js';
 
-import type BaseEditor from '#domain/client/app/model/note/editor/BaseEditor';
+import type BaseEditor from '#domain/client/app/model/Workbench/BaseEditor';
 import MarkdownEditor from '#domain/client/app/model/note/editor/MarkdownEditor';
 import UnknownEditor from '#domain/client/app/model/note/editor/UnknownEditor';
 import PdfEditor from '#domain/client/app/model/note/editor/PdfEditor';
@@ -39,7 +39,7 @@ export default function Editor(props: { editor: BaseEditor }) {
               <MarkdownEditorView />
             </Match>
           </Switch>
-          <Show when={props.editor.isPreview}>
+          <Show when={props.editor.isTemp}>
             <PreviewTip />
           </Show>
         </Show>

@@ -2,7 +2,7 @@ import { action, observable } from 'mobx';
 import { uniqueId, without } from 'lodash-es';
 import assert from 'assert';
 
-import Editor from '#domain/client/app/model/note/editor/BaseEditor';
+import Editor from './BaseEditor';
 import container from '#utils/singletonContainer';
 
 import EditorFactory, { type EditorDTO } from './EditorFactory';
@@ -27,7 +27,9 @@ export default class Tile {
   @observable.shallow public accessor editors: Editor[] = [];
 
   public findEditor(locator: EntityId | Editor) {
-    const existedEditor = this.editors.find((e) => (locator instanceof Editor ? locator === e : locator === e.noteId));
+    const existedEditor = this.editors.find((e) =>
+      locator instanceof Editor ? locator === e : locator === e.entityId,
+    );
 
     return existedEditor;
   }
@@ -77,9 +79,9 @@ export default class Tile {
     assert(
       !this.editors.find(
         (editor) =>
-          editor.noteId === entity.entityId &&
+          editor.entityId === entity.entityId &&
           editor.mimeType === newEditor.mimeType &&
-          editor.isPreview === newEditor.isPreview,
+          editor.isTemp === newEditor.isTemp,
       ),
       'can not create duplicated editor',
     );
@@ -89,7 +91,8 @@ export default class Tile {
     return newEditor;
   }
 
-  public replace(editor: Editor, newEditorDTO: EditorDTO) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public replace(editor: Editor<any>, newEditorDTO: EditorDTO) {
     const index = editor.index;
     assert(editor.tile === this);
     editor.destroy();
@@ -159,7 +162,7 @@ export default class Tile {
 
     return {
       editors: this.editors.map((e) => e.toObject()),
-      current: this.currentEditor.noteId,
+      current: this.currentEditor.entityId,
     };
   }
 

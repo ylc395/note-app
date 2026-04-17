@@ -1,6 +1,6 @@
 import { FileUpload, type UseFileUploadContext } from '@ark-ui/solid';
 import { FileIcon, FilePlusIcon } from 'lucide-solid';
-import { For, Show } from 'solid-js';
+import { createMemo, For, Show } from 'solid-js';
 import assert from 'assert';
 
 import MarkdownEditor from '#domain/client/app/model/note/editor/MarkdownEditor';
@@ -8,12 +8,15 @@ import { normalizeTitle } from '#domain/shared/model/note';
 import { useContext } from '../../context';
 
 export default function LocalFileUploader(props: { className?: string }) {
-  const { editor } = useContext()!;
-  assert(editor instanceof MarkdownEditor);
+  const editor = createMemo(() => {
+    const { editor } = useContext()!;
+    assert(editor instanceof MarkdownEditor);
+
+    return editor;
+  });
 
   async function handleFileChange(file: File) {
-    assert(editor.fileUploader);
-    editor.fileUploader?.setFile(
+    editor().fileUploader?.setFile(
       {
         mimeType: file.type,
         name: file.name,
@@ -24,9 +27,10 @@ export default function LocalFileUploader(props: { className?: string }) {
   }
 
   function cancel(ctx: UseFileUploadContext) {
-    assert(editor.fileUploader);
+    const { fileUploader } = editor();
+    assert(fileUploader);
 
-    editor.fileUploader.clearFile();
+    fileUploader.clearFile();
     ctx().clearFiles();
   }
 
@@ -36,7 +40,7 @@ export default function LocalFileUploader(props: { className?: string }) {
       onFileChange={({ acceptedFiles: [file] }) => file && handleFileChange(file)}
     >
       <Show
-        when={editor.fileUploader?.file}
+        when={editor().fileUploader?.file}
         fallback={
           <FileUpload.Dropzone class="text-sm w-full h-full flex flex-col items-center justify-center cursor-pointer">
             <FileUpload.Trigger class="flex items-center justify-center flex-col">
@@ -70,17 +74,17 @@ export default function LocalFileUploader(props: { className?: string }) {
                   )}
                 </For>
               </FileUpload.ItemGroup>
-              <Show when={editor.fileUploader?.duplicatedNotes.result.data?.length}>
+              <Show when={editor().fileUploader?.duplicatedNotes.result.data?.length}>
                 {(num) => (
                   <>
                     <p>
-                      该资源已经存在于<a>{normalizeTitle(editor.fileUploader!.duplicatedNotes.result.data![0]!)}</a>
+                      该资源已经存在于<a>{normalizeTitle(editor().fileUploader!.duplicatedNotes.result.data![0]!)}</a>
                       {num() > 1 && `等${num()}个笔记`}
                       中。
                     </p>
                     <p>是否仍然创建？</p>
                     <div>
-                      <button onClick={() => editor.fileUploader?.upload.mutate()}>继续创建</button>
+                      <button onClick={() => editor().fileUploader?.upload.mutate()}>继续创建</button>
                       <button onClick={() => cancel(ctx)}>取消</button>
                     </div>
                   </>

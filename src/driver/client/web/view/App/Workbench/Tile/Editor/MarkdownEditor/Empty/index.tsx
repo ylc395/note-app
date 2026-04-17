@@ -13,14 +13,19 @@ enum Mode {
 
 export default function Empty() {
   const buttonClassName = 'pointer-events-auto border-border-primary border border-dashed p-18 rounded-3xl';
-  const { editor } = useContext()!;
+  const editor = createMemo(() => {
+    const { editor } = useContext()!;
+    assert(editor instanceof MarkdownEditor);
+
+    return editor;
+  });
 
   const mode = createMemo(() => {
-    if (editor.fileUploader?.downloader) {
+    if (editor().fileUploader?.downloader) {
       return Mode.Remote;
     }
 
-    if (editor.fileUploader?.file) {
+    if (editor().fileUploader?.file) {
       return Mode.Local;
     }
 
@@ -30,8 +35,6 @@ export default function Empty() {
   function shouldShow(v: Mode) {
     return !mode() || mode() === v;
   }
-
-  assert(editor instanceof MarkdownEditor);
 
   return (
     <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-40">

@@ -3,7 +3,7 @@ import { XIcon } from 'lucide-solid';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 
-import BaseEditor from '#domain/client/app/model/note/editor/BaseEditor';
+import BaseEditor from '#domain/client/app/model/Workbench/BaseEditor';
 import { isFullyVisible } from '#web/utils/dom';
 import { IS_DEV } from '#domain/shared/infra/env';
 import Menu from '#web/view/components/Menu';
@@ -51,7 +51,7 @@ export default function Tab(props: { editor: BaseEditor }) {
         >
           <Icon icon={props.editor.icon} mimeType={props.editor.mimeType} iconClassName="shrink-0 w-4 h-4 mr-1" />
           <span class="whitespace-nowrap text-ellipsis overflow-hidden">
-            {IS_DEV && `${props.editor.id}-${props.editor.noteId.slice(0.3)} `}
+            {IS_DEV && `${props.editor.id}-${props.editor.entityId.slice(0.3)} `}
             {props.editor.title}
           </span>
           <button

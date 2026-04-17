@@ -11,7 +11,7 @@ export default function ErrorEditor() {
       <div class="text-sm text-center">
         <p>该笔记可能已经不再存在</p>
         <p>可尝试在回收站中查找</p>
-        <p class="mt-6">ID: {ctx.editor.noteId}</p>
+        <p class="mt-6">ID: {ctx.editor.entityId}</p>
       </div>
     </div>
   );

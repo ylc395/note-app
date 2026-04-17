@@ -1,5 +1,5 @@
-import type BaseEditor from '#domain/client/app/model/note/editor/BaseEditor';
 import { createMemo } from 'solid-js';
+import type BaseEditor from '#domain/client/app/model/Workbench/BaseEditor';
 
 export default function useContextmenu({ editor }: { editor: BaseEditor }) {
   const tile = createMemo(() => editor.tile);

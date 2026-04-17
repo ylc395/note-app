@@ -70,7 +70,7 @@ export default class MarkdownEditor extends BaseEditor {
 
   @action
   private initUploader() {
-    this.fileUploader = new Uploader({ noteId: this.noteId });
+    this.fileUploader = new Uploader({ noteId: this.entityId });
     this.uploaderController = new AbortController();
     const signal = AbortSignal.any([this.uploaderController.signal, this.destroyController.signal]);
 
@@ -88,7 +88,8 @@ export default class MarkdownEditor extends BaseEditor {
     this.removeUploader(); // 提前移除 uploader，免得随后该编辑器 destroy 影响了 uploader
 
     this.tile.replace(this, {
-      entityId: this.noteId,
+      entityId: this.entityId,
+      entityType: this.entityType,
       mimeType,
       value: this.value.data,
       uploader: isPreview ? fileUploader : undefined,

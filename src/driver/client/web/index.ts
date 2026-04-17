@@ -10,6 +10,8 @@ import { token as localStorageToken } from '#domain/client/shared/infra/kvStorag
 import { token as imageResizerToken } from '#domain/shared/infra/imageResizer';
 import container from '#utils/singletonContainer';
 
+import NoteService from '#domain/client/app/service/NoteService';
+
 import webKvlStorage from './infra/kvStorage';
 import webImageResizer from './infra/imageResizer';
 import indexedDb from './infra/indexedDb';
@@ -25,6 +27,9 @@ if (import.meta.env.VITE_WEB_PLATFORM === 'electron') {
   container.register(rpcToken, electronRpc);
   container.register(imageResizerToken, webImageResizer);
 }
+
+// 领域编排
+NoteService.boot();
 
 await indexedDb.init();
 const appEl = document.getElementById(import.meta.env.VITE_WEB_ROOT_ID)!;

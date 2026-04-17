@@ -2,14 +2,16 @@ import z from 'zod';
 import { uniqBy } from 'lodash-es';
 
 import KvActiveRecord from '#domain/client/shared/model/abstract/KvActiveRecord';
+import { entityIdSchema, entityTypesSchema } from '#domain/shared/infra/apiSchema/entity';
 
 const MAX_LENGTH = 6;
 
 const recordSchema = z.object({
-  entityId: z.string(),
+  entityId: entityIdSchema,
+  entityType: entityTypesSchema,
   time: z.number(),
   title: z.string(),
-  mimeType: z.string().nullish(),
+  mimeType: z.string().nullable(),
 });
 
 const historySchema = z.array(recordSchema).transform((records) => records.slice(0, MAX_LENGTH));

@@ -6,25 +6,20 @@ import type { DuplicatedNoteDTO, NewNoteDTO, NotePatchDTO, NoteVO } from '#domai
 import IconManager from '#domain/client/app/model/note/IconManager';
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
 import { arrayOf, type MaybeArray } from '#utils/collection';
+import { EntityTypes } from '#domain/shared/model/entity';
 
-import Workbench from '../model/Workbench';
 import DomainEventBus from '../model/note/EventBus';
 import BaseEditor from '../model/note/editor/BaseEditor';
 import TreeExplorer from '../model/note/TreeExplorer';
+import factory from '../model/note/editor/factory';
+
+import Workbench from '../model/Workbench';
+import EditorFactory from '../model/Workbench/EditorFactory';
 
 export default class NoteService {
-  constructor() {
-    this.eventBus.on(
-      DomainEventBus.eventNames.Created,
-      (note) => void this.workbench.open({ entityId: note.id, mimeType: note.mimeType }),
-    );
-  }
-
   private readonly eventBus = container.resolve(DomainEventBus);
 
   private readonly remote = container.resolve(rpcToken);
-
-  public readonly workbench = container.resolve(Workbench);
 
   public readonly explorer = new TreeExplorer();
 
@@ -61,5 +56,20 @@ export default class NoteService {
     }
 
     return undefined;
+  }
+
+  public static boot() {
+    const eventBus = container.resolve(DomainEventBus);
+
+    eventBus.on(DomainEventBus.eventNames.Created, (note) => {
+      const workbench = container.resolve(Workbench);
+      workbench.open({
+        entityId: note.id,
+        entityType: EntityTypes.Note,
+        mimeType: note.mimeType,
+      });
+    });
+
+    EditorFactory.registryFactory(EntityTypes.Note, factory);
   }
 }

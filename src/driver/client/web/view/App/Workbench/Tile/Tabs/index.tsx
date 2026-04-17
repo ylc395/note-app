@@ -3,12 +3,13 @@ import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element
 import assert from 'assert';
 
 import Tile from '#domain/client/app/model/Workbench/Tile';
-import BaseEditor from '#domain/client/app/model/note/editor/BaseEditor';
+import BaseEditor from '#domain/client/app/model/Workbench/BaseEditor';
 import NoteService from '#domain/client/app/service/NoteService';
 import container from '#utils/singletonContainer';
 import Workbench from '#domain/client/app/model/Workbench';
-import Tab from './Tab';
 import { arrayOf } from '#utils/collection';
+import { EntityTypes } from '#domain/shared/model/entity';
+import Tab from './Tab';
 
 export default function Tabs(props: { tile: Tile }) {
   let rootRef: HTMLDivElement | undefined;
@@ -36,7 +37,7 @@ export default function Tabs(props: { tile: Tile }) {
 
           if (note) {
             for (const { id: entityId, mimeType } of arrayOf(note)) {
-              workbench.open({ entityId: entityId, mimeType }, targetData);
+              workbench.open({ entityId: entityId, mimeType, entityType: EntityTypes.Note }, targetData);
             }
           }
         }

@@ -1,47 +1,28 @@
-import Editor, { type Options, type Action } from '#domain/client/app/model/note/editor/BaseEditor';
-import { MimeTypes } from '#domain/shared/model/file';
-import type { NoteVO } from '#domain/shared/model/note';
-
-import PdfEditor from '../note/editor/PdfEditor';
-import HtmlEditor from '../note/editor/HtmlEditor';
-import ImageEditor from '../note/editor/ImageEditor';
-import UnknownEditor from '../note/editor/UnknownEditor';
-import MarkdownEditor from '../note/editor/MarkdownEditor';
 import type Tile from './Tile';
+import Editor, { Options } from './BaseEditor';
+import { EntityId, EntityTypes } from '#domain/shared/model/entity';
+import assert from 'assert';
 
-export interface EditorDTO extends Options {
-  mimeType: NoteVO['mimeType'];
-  initialAction?: Action;
+export interface EditorDTO<T = unknown> extends Options<T> {
+  mimeType: string | null;
+  entityType: EntityTypes;
 }
 
-export default class EditorFactory {
-  constructor() {
-    // this.domainEventBus.on(DomainEventBus.eventNames.Deleted, this.handleNoteDeleted.bind(this));
-  }
+export type Factory<T = unknown> = (editor: EditorDTO, tile: Tile) => Editor<T>;
 
+export default class EditorFactory {
   private readonly editorsMap = new Map<Editor['id'], Editor>();
 
-  private readonly noteEditorsMap = new Map<NoteVO['id'], Editor[]>();
+  private readonly entityEditorMap = new Map<EntityId, Editor[]>();
 
   public create(tile: Tile, config: EditorDTO) {
-    let editor;
-    const { mimeType } = config;
+    const factory = EditorFactory.factories.get(config.entityType);
+    assert(factory);
 
-    if (!mimeType) {
-      editor = new MarkdownEditor(tile, config);
-    } else if (mimeType === MimeTypes.PDF) {
-      editor = new PdfEditor(tile, config);
-    } else if (mimeType === MimeTypes.HTML) {
-      editor = new HtmlEditor(tile, config);
-    } else if (mimeType.startsWith('image')) {
-      editor = new ImageEditor(tile, { ...config, mimeType });
-    } else {
-      editor = new UnknownEditor(tile, { ...config, mimeType });
-    }
-
-    const noteEditors = this.noteEditorsMap.get(config.entityId) || [];
-    noteEditors.push(editor);
-    this.noteEditorsMap.set(config.entityId, noteEditors);
+    const editor = factory(config, tile);
+    const entityEditors = this.entityEditorMap.get(config.entityId) || [];
+    entityEditors.push(editor);
+    this.entityEditorMap.set(config.entityId, entityEditors);
     this.editorsMap.set(editor.id, editor);
 
     editor.events.on(Editor.eventNames.Destroy, this.handleEditorDestroyed.bind(this));
@@ -55,5 +36,12 @@ export default class EditorFactory {
 
   public get(id: Editor['id']) {
     return this.editorsMap.get(id);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private static readonly factories = new Map<EntityTypes, Factory<any>>();
+
+  public static registryFactory<T>(type: EntityTypes, factory: Factory<T>) {
+    EditorFactory.factories.set(type, factory);
   }
 }

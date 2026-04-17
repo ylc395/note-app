@@ -13,6 +13,7 @@ import { history } from '@milkdown/kit/plugin/history';
 import { listener, listenerCtx, type ListenerManager } from '@milkdown/kit/plugin/listener';
 import { replaceAll } from '@milkdown/kit/utils';
 import { upload, uploadConfig } from '@milkdown/kit/plugin/upload';
+import { TextSelection } from '@milkdown/kit/prose/state';
 import assert from 'assert';
 
 import multimedia from './nodes/multimedia';
@@ -32,7 +33,7 @@ import { customCtx, type CustomContext } from './customCtx';
 import singletonContainer from '#utils/singletonContainer';
 import Workbench from '#domain/client/app/model/Workbench';
 import { RouteTypes } from '#domain/shared/infra/url';
-import { TextSelection } from '@milkdown/kit/prose/state';
+import { EntityTypes } from '#domain/shared/model/entity';
 
 /** 一些关于 milkdown 的知识
  *
@@ -163,6 +164,7 @@ export default class Editor {
     if (type === RouteTypes.Note) {
       workbench.open({
         entityId: id,
+        entityType: EntityTypes.Note,
         mimeType: mimeType || null,
       });
     }

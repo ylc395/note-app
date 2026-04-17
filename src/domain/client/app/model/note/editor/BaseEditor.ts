@@ -1,20 +1,17 @@
-import { uniqueId, debounce, pick, defaults } from 'lodash-es';
-import { action, computed, observable, runInAction } from 'mobx';
+import { debounce, pick, defaults } from 'lodash-es';
+import { computed, observable, runInAction } from 'mobx';
 import assert from 'assert';
 import { createQuery } from 'mobx-tanstack-query/preset';
-import type { ZodType } from 'zod';
 
-import EventBus from '#domain/client/shared/infra/EventBus';
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import { normalizeTitle, type NotePatchDTO, type NoteVO } from '#domain/shared/model/note';
-import type { EntityPath } from '#domain/shared/model/entity';
-import { token as documentDbToken } from '#domain/client/shared/infra/documentDb';
+import { EntityTypes } from '#domain/shared/model/entity';
 
-import { EventNames, type Events } from './events';
 import type Tile from '../../Workbench/Tile';
 import DomainEventBus, { type UpdatedEvent } from '../EventBus';
 import Uploader from './Uploader';
+import BaseEditor, { Options as BaseOptions } from '../../Workbench/BaseEditor';
 
 export type Action = (editor: BaseEditor) => void;
 
@@ -22,59 +19,31 @@ export const uiStateStoreName = 'editor_UI_state';
 
 export const remoteIconStoreName = 'remote_icon';
 
-export interface Options {
-  entityId: NoteVO['id'];
-  title?: NoteVO['title'];
-  icon?: NoteVO['icon'];
-  value?: NoteVO;
-  path?: EntityPath;
+export interface Options extends BaseOptions<NoteVO> {
   uploader?: Uploader;
 }
 
 type Patch = Pick<NotePatchDTO, 'body' | 'icon' | 'title'>;
 
-export default abstract class BaseEditor {
-  constructor(tile: Tile, { entityId: noteId, uploader, value, path, ...options }: Options) {
-    this.noteId = noteId;
-    this.options = options;
-    this.isPreview = Boolean(uploader); // 若初始化时就带了 uploader，说明是预览编辑器
+export default abstract class NoteBaseEditor extends BaseEditor<NoteVO> {
+  constructor(tile: Tile, { uploader, ...options }: Options) {
+    super(tile, options);
 
     runInAction(() => {
-      this.tile = tile;
       this.fileUploader = uploader;
     });
 
     this.fileUploader?.eventBus.on(Uploader.EventNames.Uploaded, this.reload.bind(this, true));
 
-    this.value = createQuery(({ signal }) => this.remote.note.queryOneById.query(this.noteId, { signal }), {
-      queryKey: ['note', this.noteId],
-      refetchOnWindowFocus: true,
-      abortSignal: this.destroyController.signal,
-      initialData: value,
-      options: () => ({
-        enabled: this.isCurrent && !this.isPreview,
-      }),
-    });
-
-    this.path = createQuery(({ signal }) => this.remote.note.queryPath.query(this.noteId, { signal }), {
-      queryKey: ['note.path', this.noteId],
-      refetchOnWindowFocus: true,
-      initialData: path,
-      abortSignal: this.destroyController.signal,
-      options: () => ({
-        enabled: this.isCurrent && !this.isPreview,
-      }),
-    });
-
     this.blob = createQuery(
-      ({ signal }) => this.remote.note.getBlob.query(this.noteId, { signal }) as Promise<ArrayBuffer>,
+      ({ signal }) => this.remote.note.getBlob.query(this.entityId, { signal }) as Promise<ArrayBuffer>,
       {
         initialData: this.fileUploader?.file?.data,
-        queryKey: ['note.blob', this.noteId],
+        queryKey: ['note.blob', this.entityId],
         staleTime: Infinity,
         abortSignal: this.destroyController.signal,
         options: () => ({
-          enabled: Boolean(this.isCurrent && !this.isPreview && this.mimeType),
+          enabled: Boolean(this.isCurrent && !this.isTemp && this.mimeType),
         }),
       },
     );
@@ -84,43 +53,23 @@ export default abstract class BaseEditor {
     });
   }
 
-  private readonly db = container.resolve(documentDbToken);
-
   @observable.ref public accessor fileUploader: Uploader | undefined;
-
-  private readonly options;
-
-  public readonly isPreview: boolean;
 
   protected readonly remote = container.resolve(rpcToken);
 
-  public abstract readonly mimeType: string | null; // 当处于预览模式时，有可能和 value.mimeType 不一致
+  public override readonly entityType = EntityTypes.Note;
+
+  protected override fetchValue(params: { signal: AbortSignal }) {
+    return this.remote.note.queryOneById.query(this.entityId, { signal: params.signal });
+  }
+
+  protected override fetchPath(params: { signal: AbortSignal }) {
+    return this.remote.note.queryPath.query(this.entityId, { signal: params.signal });
+  }
 
   protected readonly domainEventBus = container.resolve(DomainEventBus);
 
-  protected readonly saveUIState = debounce((value: Record<string, unknown>) => {
-    this.db.put(uiStateStoreName, { ...value, id: this.noteId });
-  }, 500);
-
-  protected getUIState<T>(schema: ZodType<T>) {
-    return this.db.getByKey(uiStateStoreName, this.noteId, schema);
-  }
-
-  public readonly id = uniqueId('editor-');
-
-  public readonly events = new EventBus<Events>(this.id);
-
-  public readonly noteId: NoteVO['id'];
-
-  protected readonly destroyController = new AbortController();
-
-  public readonly value;
-
   public readonly blob;
-
-  public readonly path;
-
-  @observable.ref public accessor tile!: Tile;
 
   public hasEdited = false;
 
@@ -134,16 +83,6 @@ export default abstract class BaseEditor {
     return this.value.result.data ? this.value.result.data.icon : this.options.icon ?? null;
   }
 
-  @computed
-  public get index() {
-    return this.tile.editors.indexOf(this);
-  }
-
-  @computed
-  public get isCurrent() {
-    return this.tile.currentEditor === this;
-  }
-
   public readonly update = (patch: Patch) => {
     assert(this.value.data, 'can not update when loading');
     const currentData = pick(this.value.data, ['title', 'body', 'icon', 'type']);
@@ -153,7 +92,7 @@ export default abstract class BaseEditor {
     // 这里采用乐观更新
     this.value.setData((note) => ({ ...note!, ...patch }));
     this.domainEventBus.emit(DomainEventBus.eventNames.Updated, {
-      id: this.noteId,
+      id: this.entityId,
       payload: patch,
       source: this,
     });
@@ -162,7 +101,7 @@ export default abstract class BaseEditor {
     this.upload(patch)?.catch(() => {
       this.value.setData((note) => ({ ...note!, ...currentData }));
       this.domainEventBus.emit(DomainEventBus.eventNames.Updated, {
-        id: this.noteId,
+        id: this.entityId,
         payload: currentData,
         source: this,
       });
@@ -170,84 +109,29 @@ export default abstract class BaseEditor {
   };
 
   private readonly upload = debounce((patch: Patch) => {
-    return this.remote.note.updateOne.mutate([this.noteId, patch]);
+    return this.remote.note.updateOne.mutate([this.entityId, patch]);
   }, 1000);
 
-  @action
-  public moveTo(dest: BaseEditor | Tile, switchTo?: boolean) {
-    const destTile = !(dest instanceof BaseEditor) ? dest : dest.tile;
-
-    if (destTile !== this.tile) {
-      const sameEditor = destTile.findEditor(this.noteId);
-
-      if (sameEditor) {
-        destTile.switchToEditor(sameEditor);
-        return;
-      }
-
-      destTile.addEditor(this, dest instanceof BaseEditor ? dest : undefined);
-    } else {
-      if (!(dest instanceof BaseEditor)) {
-        // 此时 dest 为 tile，且肯定是 this.tile
-        return;
-      }
-
-      // 在同一个 tile 里移动
-      const index = destTile.editors.indexOf(this);
-      assert(index >= 0, 'invalid dest');
-
-      const newIndex = destTile.editors.indexOf(dest);
-
-      destTile.editors.splice(index, 1);
-      destTile.editors.splice(newIndex, 0, this);
-    }
-
-    if (switchTo) {
-      destTile.switchToEditor(this);
-    }
-  }
-
-  public focus() {
-    this.events.emit(EventNames.Focus, this);
-  }
-
   public reload(hard = false) {
-    assert(this.isPreview, 'can not reload a non-preview editor');
+    assert(this.isTemp, 'can not reload a non-preview editor');
     assert(this.value.data);
 
     this.tile.replace(this, {
-      entityId: this.noteId,
+      entityId: this.entityId,
+      entityType: this.entityType,
       mimeType: hard ? this.mimeType : this.value.data.mimeType,
       value: hard ? undefined : this.value.data,
       path: this.path.data,
     });
   }
 
-  public toObject() {
-    return {
-      entityId: this.noteId,
-      mimeType: this.isPreview ? null : this.mimeType,
-      title: this.title || '',
-      icon: this.icon,
-    };
-  }
-
-  public destroy() {
-    if (this.isPreview) {
+  public override destroy() {
+    if (this.isTemp) {
       this.blob.remove(); // 从缓存中移除。因为这是一个临时的 blob
     }
 
     this.fileUploader?.destroy();
-
-    Promise.resolve(this.upload.flush()).then(
-      action(() => {
-        this.destroyController.abort();
-
-        this.events.emit(EventNames.Destroy, this).then(() => {
-          this.events.clearListeners();
-        });
-      }),
-    );
+    Promise.resolve(this.upload.flush()).then(() => super.destroy());
   }
 
   private handleNoteUpdated(e: UpdatedEvent) {
@@ -255,7 +139,7 @@ export default abstract class BaseEditor {
       return;
     }
 
-    if (e.id === this.noteId) {
+    if (e.id === this.entityId) {
       this.value.setData((v) => defaults({}, e.payload, v));
     }
 
@@ -263,6 +147,4 @@ export default abstract class BaseEditor {
       this.path.invalidate();
     }
   }
-
-  public static readonly eventNames = EventNames;
 }

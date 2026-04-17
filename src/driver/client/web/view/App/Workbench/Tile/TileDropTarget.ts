@@ -2,10 +2,11 @@ import type { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/el
 
 import container from '#utils/singletonContainer';
 import NoteService from '#domain/client/app/service/NoteService';
-import { TileSplitDirections } from '#domain/client/app/model/Workbench';
+import Workbench, { TileSplitDirections } from '#domain/client/app/model/Workbench';
 import type Tile from '#domain/client/app/model/Workbench/Tile';
-import BaseEditor from '#domain/client/app/model/note/editor/BaseEditor';
+import BaseEditor from '#domain/client/app/model/Workbench/BaseEditor';
 import { arrayOf } from '#utils/collection';
+import { EntityTypes } from '#domain/shared/model/entity';
 
 type DropTarget = Parameters<typeof dropTargetForElements>[0];
 
@@ -13,7 +14,7 @@ export default class TileDropTarget implements DropTarget {
   public readonly element: HTMLElement;
   private readonly tile: Tile;
   private readonly onDirectionChange: (direction?: TileSplitDirections | 'middle') => void;
-  private readonly workbench = container.resolve(NoteService).workbench;
+  private readonly workbench = container.resolve(Workbench);
   private newTileRect: DOMRect | undefined;
   private newTileDirection: TileSplitDirections | 'middle' | undefined;
 
@@ -87,9 +88,9 @@ export default class TileDropTarget implements DropTarget {
     const note = NoteService.getNote(source.data);
 
     if (note) {
-      for (const { id: entityId, mimeType } of arrayOf(note)) {
+      for (const { id, mimeType } of arrayOf(note)) {
         this.workbench.open(
-          { entityId: entityId, mimeType },
+          { entityId: id, mimeType, entityType: EntityTypes.Note },
           newTileDirection === 'middle' ? this.tile : { splitDirection: newTileDirection, from: this.tile },
         );
       }

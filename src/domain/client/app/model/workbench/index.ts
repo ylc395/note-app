@@ -2,9 +2,8 @@ import { mapValues, uniqueId } from 'lodash-es';
 import { observable, action, computed, when, runInAction, autorun } from 'mobx';
 import assert from 'assert';
 
-import Editor from '#domain/client/app/model/note/editor/BaseEditor';
 import container from '#utils/singletonContainer';
-import type { EntityId } from '#domain/shared/model/entity';
+import type { EntityId, EntityTypes } from '#domain/shared/model/entity';
 
 import Tile from './Tile';
 import { type TileNode, type TileParent, TileDirections, isTileLeaf } from './tileTree';
@@ -12,11 +11,13 @@ import EditorFactory, { type EditorDTO } from './EditorFactory';
 import HistoryStack from '../base/HistoryStack';
 import RecentManager from './RecentManager';
 import UIState from './UIState';
-import { EventNames } from '../note/editor/events';
+import Editor from './BaseEditor';
+import { EventNames } from './BaseEditor/events';
 
 export interface HistoryRecord {
   key: Editor['id'];
-  noteId: EntityId;
+  entityId: EntityId;
+  entityType: EntityTypes;
   title: string | null;
   tileId: Tile['id'];
   mimeType: string | null;
@@ -96,8 +97,9 @@ export default class Workbench {
 
     this.historyStack.push({
       mimeType: editor.mimeType,
+      entityType: editor.entityType,
       key: editor.id,
-      noteId: editor.noteId,
+      entityId: editor.entityId,
       tileId: editor.tile.id,
       title: editor.title,
     });
@@ -244,8 +246,6 @@ export default class Workbench {
         if (dest instanceof Editor) {
           existedEditor.moveTo(dest);
         }
-
-        note.initialAction?.(existedEditor);
       } else {
         // 对应的 editor 不存在，则新建
         editor = destTile.createAndAddEditor(note, dest instanceof Editor ? dest : undefined);
@@ -260,10 +260,11 @@ export default class Workbench {
 
     destTile.switchToEditor(editor);
 
-    editor.events.once(EventNames.Ready).then(({ noteId, title, mimeType }) => {
+    editor.events.once(EventNames.Ready).then(({ entityId, title, mimeType, entityType }) => {
       assert(typeof title === 'string');
       this.recentManager.add({
-        entityId: noteId,
+        entityId,
+        entityType,
         title,
         mimeType,
       });
@@ -274,13 +275,22 @@ export default class Workbench {
 
   private handleHistoryPop({ record }: { record: HistoryRecord }) {
     const dest =
-      this.editorManager.get(record.key) || this.getTileById(record.tileId)?.findEditor(record.noteId) || record.tileId;
+      this.editorManager.get(record.key) ||
+      this.getTileById(record.tileId)?.findEditor(record.entityId) ||
+      record.tileId;
 
     if (dest instanceof Editor) {
       dest.tile.switchToEditor(dest);
     } else {
       const destTile = this.getTileById(dest);
-      this.open({ entityId: record.key, mimeType: record.mimeType }, destTile);
+      this.open(
+        {
+          entityId: record.key,
+          mimeType: record.mimeType,
+          entityType: record.entityType,
+        },
+        destTile,
+      );
     }
   }
 

@@ -49,11 +49,11 @@ export default class PdfEditor extends BaseEditor {
 
   @observable private accessor isUIStateReady = false;
 
-  public readonly texts = new PageTextManager(this.noteId);
+  public readonly texts = new PageTextManager(this.entityId);
 
-  public readonly annotation = new AnnotationManager(this.noteId);
+  public readonly annotation = new AnnotationManager(this.entityId);
 
-  public readonly outline = new OutlineList(this.noteId, this.annotation);
+  public readonly outline = new OutlineList(this.entityId, this.annotation);
 
   public readonly body = new BodyEditor();
 
@@ -70,7 +70,7 @@ export default class PdfEditor extends BaseEditor {
     assert(this.blob.result.data);
 
     const doc = await this.docFactory.create({
-      key: this.noteId,
+      key: this.entityId,
       blob: this.blob.result.data,
     });
 
@@ -127,7 +127,7 @@ export default class PdfEditor extends BaseEditor {
 
   public override destroy() {
     if (this.doc) {
-      this.docFactory.revoke(this.noteId);
+      this.docFactory.revoke(this.entityId);
     }
 
     this.textFinder.destroy();

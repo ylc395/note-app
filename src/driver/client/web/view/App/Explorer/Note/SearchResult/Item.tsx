@@ -13,6 +13,7 @@ import {
 import Workbench from '#domain/client/app/model/Workbench';
 import type { PDFTextPositionSelector } from '#domain/shared/model/annotation';
 import type { EditorDTO } from '#domain/client/app/model/Workbench/EditorFactory';
+import { EntityTypes } from '#domain/shared/model/entity';
 
 function highlight({ text, highlights }: MatchRecord) {
   const htmls: JSX.Element[] = [];
@@ -33,6 +34,7 @@ function FileMatchRecordView(props: { record: FileMatchRecord; entityId: string;
   const target: EditorDTO = {
     entityId: props.entityId,
     mimeType: props.mimeType,
+    entityType: EntityTypes.Note,
   };
 
   return (
@@ -51,6 +53,7 @@ function AnnotationMatchRecordView(props: { record: AnnotationMatchRecord; mimeT
   const target: EditorDTO = {
     entityId: props.entityId,
     mimeType: props.mimeType,
+    entityType: EntityTypes.Note,
   };
 
   return (
@@ -88,7 +91,13 @@ export default function Item(props: { open?: boolean; row: SearchResultVO; onTog
     <Collapsible.RootProvider class="text-sm mb-2 group" value={collapsible}>
       <div
         class="flex space-x-2 items-center"
-        onClick={() => open({ entityId: props.row.id, mimeType: props.row.file?.mimeType || null })}
+        onClick={() =>
+          open({
+            entityType: EntityTypes.Note,
+            entityId: props.row.id,
+            mimeType: props.row.file?.mimeType || null,
+          })
+        }
       >
         <Collapsible.Trigger onClick={(e) => e.stopPropagation()}>
           <ChevronRightIcon class="group-data-[state=open]:rotate-90" />

@@ -16,14 +16,14 @@ export default function Welcome() {
         </h2>
         <ul class="pt-6">
           <For each={recentManager.history}>
-            {({ time, title, entityId: id, mimeType }) => (
+            {(record) => (
               <li
-                title={title}
+                title={record.title}
                 class="cursor-pointer flex items-center space-x-4 py-2"
-                onClick={() => open({ entityId: id, mimeType: mimeType || null })}
+                onClick={() => open(record)}
               >
-                <div class="text-fg-link w-52 overflow-hidden text-ellipsis whitespace-nowrap">{title}</div>
-                <time class="text-xs text-fg-tertiary">{dayjs(time).format('M月DD日')}</time>
+                <div class="text-fg-link w-52 overflow-hidden text-ellipsis whitespace-nowrap">{record.title}</div>
+                <time class="text-xs text-fg-tertiary">{dayjs(record.time).format('M月DD日')}</time>
               </li>
             )}
           </For>

@@ -3,15 +3,18 @@ import NoteService from '#domain/client/app/service/NoteService';
 import container from '#utils/singletonContainer';
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
 import BaseTreeView from '#web/view/components/NoteTree';
+import { EntityTypes } from '#domain/shared/model/entity';
+import Workbench from '#domain/client/app/model/Workbench';
 import { IconDisplayMode } from '#domain/client/app/model/note/TreeExplorer/Setting';
 
+import Button from '#web/view/components/Button';
 import AddButton from './AddButton';
 import SettingButton from './SettingButton';
 import useContextmenu from './useContextmenu';
-import Button from '#web/view/components/Button';
 
 export default function TreeView() {
-  const { workbench, explorer } = container.resolve(NoteService);
+  const { explorer } = container.resolve(NoteService);
+  const workbench = container.resolve(Workbench);
   const { contextmenu, handleContextMenuClick } = useContextmenu();
 
   explorer.init();
@@ -21,7 +24,11 @@ export default function TreeView() {
       return;
     }
 
-    workbench.open({ entityId: node.value.id, mimeType: node.value.mimeType });
+    workbench.open({
+      entityId: node.value.id,
+      entityType: EntityTypes.Note,
+      mimeType: node.value.mimeType,
+    });
   }
 
   function shouldRenderIcon(node: TreeNode) {
