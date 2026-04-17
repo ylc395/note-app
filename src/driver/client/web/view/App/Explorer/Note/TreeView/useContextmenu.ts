@@ -1,6 +1,7 @@
 import assert from 'assert';
 import { compact } from 'lodash-es';
 import { writeClipboard } from '@solid-primitives/clipboard';
+import { createMemo } from 'solid-js';
 
 import NoteService from '#domain/client/app/service/NoteService';
 import container from '#utils/singletonContainer';
@@ -13,18 +14,20 @@ import { IconDisplayMode } from '#domain/client/app/model/note/TreeExplorer/Sett
 import { getAppUrl, RouteTypes } from '#domain/shared/infra/url';
 
 import IconPicker from './IconPicker';
+import { useContext } from '../context';
 
 export default function useContextmenu() {
-  const { explorer: tree, createNote } = container.resolve(NoteService);
+  const { createNote } = container.resolve(NoteService);
   const { star, unstar } = container.resolve(StarService);
   const { put } = container.resolve(RecyclableService);
+  const explorer = createMemo(() => useContext()!.treeExplorer);
 
   function handleContextMenuClick(key: string) {
     const {
       treeNodeSets: { selected },
       selectedNode,
       iconPicker,
-    } = tree;
+    } = explorer();
 
     assert(selectedNode?.value);
 
@@ -45,8 +48,8 @@ export default function useContextmenu() {
   }
 
   function contextmenu(node: TreeNode): Array<MenuItem | 'separator'> {
-    const isSingle = tree.treeNodeSets.selected.size === 1;
-    const shouldShowIcon = tree.settings.iconDisplayMode !== IconDisplayMode.None;
+    const isSingle = explorer().treeNodeSets.selected.size === 1;
+    const shouldShowIcon = explorer().settings.iconDisplayMode !== IconDisplayMode.None;
 
     return compact([
       { label: '移动至...', key: 'move' },

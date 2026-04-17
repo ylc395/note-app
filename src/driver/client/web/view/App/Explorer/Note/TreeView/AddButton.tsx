@@ -1,15 +1,16 @@
 import { createMemo, Show } from 'solid-js';
 import { PlusIcon } from 'lucide-solid';
+import { cx } from 'class-variance-authority';
 
 import container from '#utils/singletonContainer';
 import NoteService from '#domain/client/app/service/NoteService';
 import type TreeNode from '#domain/client/shared/model/note/TreeNode';
 import Button from '#web/view/components/Button';
-import { cx } from 'class-variance-authority';
+import { useContext } from '../context';
 
 export default function AddButton(props: { iconOnly?: boolean; node?: TreeNode; class?: string }) {
-  const { explorer: treeView, createNote } = container.resolve(NoteService);
-  const node = createMemo(() => props.node ?? treeView.tree?.root);
+  const { createNote } = container.resolve(NoteService);
+  const node = createMemo(() => props.node ?? useContext()!.treeExplorer.tree?.root);
 
   async function onClick(e: MouseEvent) {
     e.preventDefault();

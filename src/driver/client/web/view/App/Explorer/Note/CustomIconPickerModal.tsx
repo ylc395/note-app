@@ -3,15 +3,13 @@ import { FileUpload } from '@ark-ui/solid';
 import { FileIcon, FilePlusIcon, XIcon } from 'lucide-solid';
 
 import Modal from '#web/view/components/Modal';
-import NoteService from '#domain/client/app/service/NoteService';
-import container from '#utils/singletonContainer';
+import { useContext } from './context';
 
 export default function CustomIconPicker() {
-  const { explorer } = container.resolve(NoteService);
-  const iconPicker = explorer.iconPicker;
+  const iconPicker = createMemo(() => useContext()!.treeExplorer.iconPicker);
 
   const customIconPickerModel = createMemo(() => {
-    return iconPicker.customIconPicker;
+    return iconPicker().customIconPicker;
   });
 
   async function handleFileSelected(file?: File) {
@@ -21,12 +19,12 @@ export default function CustomIconPicker() {
   return (
     <Modal
       title="新建图标"
-      open={Boolean(iconPicker.customIconPicker)}
+      open={Boolean(iconPicker().customIconPicker)}
       confirmText="创建并使用"
       canConfirm={!customIconPickerModel()?.canSubmit}
       onConfirm={() => customIconPickerModel()?.submit()}
-      onCancel={() => iconPicker.customIconPicker?.destroy()}
-      onClose={() => iconPicker.customIconPicker?.destroy()}
+      onCancel={() => iconPicker().customIconPicker?.destroy()}
+      onClose={() => iconPicker().customIconPicker?.destroy()}
     >
       <div class="mt-6 text-right space-x-4 flex justify-end">
         <FileUpload.Root

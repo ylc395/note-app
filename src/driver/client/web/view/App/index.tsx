@@ -6,7 +6,6 @@ import container from '#utils/singletonContainer';
 import MainSidebar from './MainSidebar';
 import Explorer from './Explorer';
 import Workbench from './Workbench';
-import CustomIconPicker from './CustomIconPickerModal';
 import UIState from './UIState';
 
 export default function App() {
@@ -30,7 +29,6 @@ export default function App() {
           <Workbench panelId={workbenchPanelId} />
         </Splitter.Root>
       </div>
-      <CustomIconPicker />
     </Show>
   );
 }

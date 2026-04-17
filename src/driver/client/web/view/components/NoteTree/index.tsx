@@ -6,7 +6,7 @@ import NoteService from '#domain/client/app/service/NoteService';
 import NodeView, { type Props as NodeProps } from './Node';
 
 export default function BaseTree(props: {
-  treeView: NodeProps['treeView'];
+  treeView: NodeProps['treeExplorer'];
   renderOperation?: NodeProps['renderOperation'];
   onItemTitleClick: NodeProps['onItemTitleClick'];
   onContextMenuClick?: NodeProps['onContextMenuClick'];
@@ -44,7 +44,7 @@ export default function BaseTree(props: {
                 onContextMenuClick={props.onContextMenuClick}
                 contextMenu={props.contextMenu}
                 renderOperation={props.renderOperation}
-                treeView={props.treeView}
+                treeExplorer={props.treeView}
                 shouldRenderIcon={props.shouldRenderIcon}
                 node={node()}
                 parent={rootNode()}

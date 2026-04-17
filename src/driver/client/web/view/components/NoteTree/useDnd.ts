@@ -8,7 +8,7 @@ import { compact } from 'lodash-es';
 
 import container from '#utils/singletonContainer';
 import NoteService from '#domain/client/app/service/NoteService';
-import TreeViewModel, { TreeNodeStates } from '#domain/client/app/model/note/TreeExplorer';
+import TreeExplorer, { TreeNodeStates } from '#domain/client/app/model/note/TreeExplorer';
 import type TreeNode from '#domain/client/shared/model/note/TreeNode';
 
 import DragPreview from './DragPreview';
@@ -27,15 +27,15 @@ export async function transferItemToFileDTO(item: DataTransferItem) {
   };
 }
 
-export default function useDnd(props: { treeView: TreeViewModel; node?: TreeNode; draggable?: boolean }) {
-  const { updateNote, explorer } = container.resolve(NoteService);
+export default function useDnd(props: { treeExplorer: TreeExplorer; node?: TreeNode; draggable?: boolean }) {
+  const { updateNote } = container.resolve(NoteService);
   const [dndElementRef, setDndElementRef] = createSignal<HTMLElement>();
   const [isDropHovering, setIsDropHovering] = createSignal(false);
   const isDraggable = props.draggable ?? true;
 
   createEffect(() => {
     const element = dndElementRef();
-    const node = props.node ?? props.treeView.tree?.root;
+    const node = props.node ?? props.treeExplorer.tree?.root;
 
     if (!element || !node) {
       return;
@@ -54,22 +54,22 @@ export default function useDnd(props: { treeView: TreeViewModel; node?: TreeNode
                 nativeSetDragImage,
                 render: ({ container }) => {
                   return render(
-                    () => createComponent(DragPreview, { treeView: props.treeView, node: node }),
+                    () => createComponent(DragPreview, { treeView: props.treeExplorer, node: node }),
                     container,
                   );
                 },
               });
             },
             onDragStart: () => {
-              if (!props.treeView.treeNodeSets.selected.has(node.id)) {
-                props.treeView.select(node.id);
+              if (!props.treeExplorer.treeNodeSets.selected.has(node.id)) {
+                props.treeExplorer.select(node.id);
               }
             },
             getInitialData: () => {
-              const selectedIds = Array.from(props.treeView.treeNodeSets.selected);
+              const selectedIds = Array.from(props.treeExplorer.treeNodeSets.selected);
 
               return (selectedIds.includes(node.id)
-                ? props.treeView.tree?.get(selectedIds)
+                ? props.treeExplorer.tree?.get(selectedIds)
                 : node) as unknown as Record<string, unknown>;
             },
           }),
@@ -109,7 +109,7 @@ export default function useDnd(props: { treeView: TreeViewModel; node?: TreeNode
           onDrop: async ({ source }) => {
             setIsDropHovering(false);
             const files = compact(await Promise.all(source.items.map(transferItemToFileDTO)));
-            explorer.uploadFiles(files, { parentId: props.node?.id });
+            props.treeExplorer.uploadFiles(files, { parentId: props.node?.id });
           },
         }),
       ]),

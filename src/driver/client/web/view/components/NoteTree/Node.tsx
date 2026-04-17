@@ -4,7 +4,7 @@ import { Key } from '@solid-primitives/keyed';
 import { cx } from 'class-variance-authority';
 
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
-import TreeViewModel, { TreeNodeStates } from '#domain/client/app/model/note/TreeExplorer';
+import TreeExplorer, { TreeNodeStates } from '#domain/client/app/model/note/TreeExplorer';
 import container from '#utils/singletonContainer';
 import { IS_DEV } from '#domain/shared/infra/env';
 import Workbench from '#domain/client/app/model/Workbench';
@@ -14,7 +14,7 @@ import Menu, { type MenuItem } from '../Menu';
 import Icon from '../Icon';
 
 export interface Props {
-  treeView: TreeViewModel;
+  treeExplorer: TreeExplorer;
   node: TreeNode;
   parent: TreeNode;
   indexPath: number[];
@@ -49,7 +49,7 @@ export default function Node(props: Props) {
     if (e.metaKey) {
       node.toggleState(TreeNodeStates.Selected);
     } else {
-      props.treeView.select([]);
+      props.treeExplorer.select([]);
       props.onItemTitleClick?.(node);
     }
   }
@@ -66,7 +66,7 @@ export default function Node(props: Props) {
         return;
       }
 
-      props.treeView.select([props.node.id]);
+      props.treeExplorer.select([props.node.id]);
     }
 
     return (
@@ -78,8 +78,8 @@ export default function Node(props: Props) {
         menu={props.contextMenu}
         dataForItems={props.node}
         topContent={() => (
-          <Show when={props.treeView.treeNodeSets.selected.size > 1}>
-            <div class="font-bold p-1">共选中 {props.treeView.treeNodeSets.selected.size} 项</div>
+          <Show when={props.treeExplorer.treeNodeSets.selected.size > 1}>
+            <div class="font-bold p-1">共选中 {props.treeExplorer.treeNodeSets.selected.size} 项</div>
           </Show>
         )}
       >

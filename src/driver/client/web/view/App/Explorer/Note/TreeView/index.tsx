@@ -1,5 +1,6 @@
+import { createEffect, createMemo } from 'solid-js';
 import { ShrinkIcon } from 'lucide-solid';
-import NoteService from '#domain/client/app/service/NoteService';
+
 import container from '#utils/singletonContainer';
 import TreeNode from '#domain/client/shared/model/note/TreeNode';
 import BaseTreeView from '#web/view/components/NoteTree';
@@ -11,13 +12,16 @@ import Button from '#web/view/components/Button';
 import AddButton from './AddButton';
 import SettingButton from './SettingButton';
 import useContextmenu from './useContextmenu';
+import { useContext } from '../context';
 
 export default function TreeView() {
-  const { explorer } = container.resolve(NoteService);
+  const explorer = createMemo(() => useContext()!.treeExplorer);
   const workbench = container.resolve(Workbench);
   const { contextmenu, handleContextMenuClick } = useContextmenu();
 
-  explorer.init();
+  createEffect(() => {
+    explorer().init();
+  });
 
   function handleItemClick(node: TreeNode) {
     if (!node.value) {
@@ -32,7 +36,7 @@ export default function TreeView() {
   }
 
   function shouldRenderIcon(node: TreeNode) {
-    const iconMode = explorer.settings.iconDisplayMode;
+    const iconMode = explorer().settings.iconDisplayMode;
 
     if (iconMode === IconDisplayMode.Custom) {
       return Boolean(node.value?.icon);
@@ -46,7 +50,7 @@ export default function TreeView() {
       <div class="mb-4 flex justify-between items-center">
         <AddButton />
         <div class="flex">
-          <Button disabled={!explorer.canCollapse} onClick={explorer.collapseAll} square>
+          <Button disabled={!explorer().canCollapse} onClick={explorer().collapseAll} square>
             <ShrinkIcon />
           </Button>
           <SettingButton />
@@ -55,7 +59,7 @@ export default function TreeView() {
       <BaseTreeView
         className="min-h-0 grow overflow-auto scrollbar-stable text-sm text-fg-secondary"
         onItemTitleClick={handleItemClick}
-        treeView={explorer}
+        treeView={explorer()}
         shouldRenderIcon={shouldRenderIcon}
         onContextMenuClick={handleContextMenuClick}
         contextMenu={contextmenu}

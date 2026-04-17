@@ -2,24 +2,22 @@ import data from '@emoji-mart/data';
 import { Picker } from 'emoji-mart';
 import { createEffect, createMemo, onCleanup } from 'solid-js';
 
-import container from '#utils/singletonContainer';
-import NoteService from '#domain/client/app/service/NoteService';
 import { getAppUrl, parseAppUrl, RouteTypes } from '#domain/shared/infra/url';
 import type { Icon } from '#domain/shared/model/entity';
 
+import { useContext } from '../context';
+
 export default function IconPicker(props?: { onFinish?: () => void }) {
   let rootRef: HTMLDivElement | undefined;
-  const {
-    explorer: { iconPicker },
-  } = container.resolve(NoteService);
+  const iconPicker = createMemo(() => useContext()!.treeExplorer.iconPicker);
 
   const allCustomIcons = createMemo(
     () =>
-      iconPicker.customIcons.result.data && [
+      iconPicker().customIcons.result.data && [
         {
           id: 'custom',
           name: 'Custom',
-          emojis: iconPicker.customIcons.result.data.map(({ code }) => ({
+          emojis: iconPicker().customIcons.result.data!.map(({ code }) => ({
             id: code,
             name: '',
             keyword: [],
@@ -31,7 +29,7 @@ export default function IconPicker(props?: { onFinish?: () => void }) {
 
   async function onEmojiSelect(e: { shortcodes: string; src?: string }) {
     const icon: Icon = e.src ? { code: parseAppUrl(e.src)!.id, type: 'file' } : { code: e.shortcodes, type: 'emoji' };
-    await iconPicker.submit(icon);
+    await iconPicker().submit(icon);
     props?.onFinish?.();
   }
 
@@ -52,7 +50,7 @@ export default function IconPicker(props?: { onFinish?: () => void }) {
       maxFrequentRows: 1,
       custom: customIcons[0]?.emojis?.length ? customIcons : undefined,
       onAddCustomEmoji: () => {
-        iconPicker.initCustomIconPicker();
+        iconPicker().initCustomIconPicker();
         props?.onFinish?.();
       },
     }) as unknown as HTMLElement;
