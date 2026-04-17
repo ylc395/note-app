@@ -4,9 +4,9 @@ import assert from 'assert';
 
 import Editor from '#domain/client/app/model/note/editor/BaseEditor';
 import container from '#utils/singletonContainer';
-import type { NoteVO } from '#domain/shared/model/note';
 
 import EditorFactory, { type EditorDTO } from './EditorFactory';
+import type { EntityId } from '#domain/shared/model/entity';
 
 export default class Tile {
   constructor(
@@ -26,7 +26,7 @@ export default class Tile {
 
   @observable.shallow public accessor editors: Editor[] = [];
 
-  public findEditor(locator: NoteVO['id'] | Editor) {
+  public findEditor(locator: EntityId | Editor) {
     const existedEditor = this.editors.find((e) => (locator instanceof Editor ? locator === e : locator === e.noteId));
 
     return existedEditor;
@@ -34,7 +34,7 @@ export default class Tile {
 
   // 将本 Tile 的当前 editor 切换为指定的 editor
   @action.bound
-  public switchToEditor(editor: Editor | NoteVO['id']) {
+  public switchToEditor(editor: Editor | EntityId) {
     const target = this.findEditor(editor);
     assert(target, 'can not switch to an editor which not belong to this tile');
 
@@ -77,7 +77,7 @@ export default class Tile {
     assert(
       !this.editors.find(
         (editor) =>
-          editor.noteId === entity.noteId &&
+          editor.noteId === entity.entityId &&
           editor.mimeType === newEditor.mimeType &&
           editor.isPreview === newEditor.isPreview,
       ),
@@ -163,7 +163,7 @@ export default class Tile {
     };
   }
 
-  public restore({ editors, current }: { editors: Array<EditorDTO>; current: NoteVO['id'] }) {
+  public restore({ editors, current }: { editors: Array<EditorDTO>; current: EntityId }) {
     this.isRestoring = true;
     for (const editor of editors) {
       this.createAndAddEditor(editor);

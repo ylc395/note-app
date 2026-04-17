@@ -162,7 +162,7 @@ export default class Editor {
 
     if (type === RouteTypes.Note) {
       workbench.open({
-        noteId: id,
+        entityId: id,
         mimeType: mimeType || null,
       });
     }

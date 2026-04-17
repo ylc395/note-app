@@ -23,7 +23,7 @@ export const uiStateStoreName = 'editor_UI_state';
 export const remoteIconStoreName = 'remote_icon';
 
 export interface Options {
-  noteId: NoteVO['id'];
+  entityId: NoteVO['id'];
   title?: NoteVO['title'];
   icon?: NoteVO['icon'];
   value?: NoteVO;
@@ -34,7 +34,7 @@ export interface Options {
 type Patch = Pick<NotePatchDTO, 'body' | 'icon' | 'title'>;
 
 export default abstract class BaseEditor {
-  constructor(tile: Tile, { noteId, uploader, value, path, ...options }: Options) {
+  constructor(tile: Tile, { entityId: noteId, uploader, value, path, ...options }: Options) {
     this.noteId = noteId;
     this.options = options;
     this.isPreview = Boolean(uploader); // 若初始化时就带了 uploader，说明是预览编辑器
@@ -216,7 +216,7 @@ export default abstract class BaseEditor {
     assert(this.value.data);
 
     this.tile.replace(this, {
-      noteId: this.noteId,
+      entityId: this.noteId,
       mimeType: hard ? this.mimeType : this.value.data.mimeType,
       value: hard ? undefined : this.value.data,
       path: this.path.data,
@@ -225,7 +225,7 @@ export default abstract class BaseEditor {
 
   public toObject() {
     return {
-      noteId: this.noteId,
+      entityId: this.noteId,
       mimeType: this.isPreview ? null : this.mimeType,
       title: this.title || '',
       icon: this.icon,

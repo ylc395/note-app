@@ -31,7 +31,7 @@ function highlight({ text, highlights }: MatchRecord) {
 function FileMatchRecordView(props: { record: FileMatchRecord; entityId: string; mimeType: string }) {
   const { open } = container.resolve(Workbench);
   const target: EditorDTO = {
-    noteId: props.entityId,
+    entityId: props.entityId,
     mimeType: props.mimeType,
   };
 
@@ -49,7 +49,7 @@ function FileMatchRecordView(props: { record: FileMatchRecord; entityId: string;
 function AnnotationMatchRecordView(props: { record: AnnotationMatchRecord; mimeType: string; entityId: string }) {
   const { open } = container.resolve(Workbench);
   const target: EditorDTO = {
-    noteId: props.entityId,
+    entityId: props.entityId,
     mimeType: props.mimeType,
   };
 
@@ -88,7 +88,7 @@ export default function Item(props: { open?: boolean; row: SearchResultVO; onTog
     <Collapsible.RootProvider class="text-sm mb-2 group" value={collapsible}>
       <div
         class="flex space-x-2 items-center"
-        onClick={() => open({ noteId: props.row.id, mimeType: props.row.file?.mimeType || null })}
+        onClick={() => open({ entityId: props.row.id, mimeType: props.row.file?.mimeType || null })}
       >
         <Collapsible.Trigger onClick={(e) => e.stopPropagation()}>
           <ChevronRightIcon class="group-data-[state=open]:rotate-90" />
@@ -96,9 +96,7 @@ export default function Item(props: { open?: boolean; row: SearchResultVO; onTog
         <div class="shrink-0">
           {props.row.matches[SearchFields.Title] ? highlight(props.row.matches[SearchFields.Title]) : props.row.title}
         </div>
-        <div class="whitespace-pre text-xs text-fg-tertiary">
-          /{props.row.path.map(({ title }) => title).join('/')}
-        </div>
+        <div class="whitespace-pre text-xs text-fg-tertiary">/{props.row.path.map(({ title }) => title).join('/')}</div>
       </div>
       <Collapsible.Content class="pl-4">
         <p class="text-fg-secondary">

@@ -3,14 +3,14 @@ import { action } from 'mobx';
 
 import KvActiveRecord from '#domain/client/shared/model/abstract/KvActiveRecord';
 import { tileNodeSchema, type TileNode } from './tileTree';
-import { iconSchema } from '#domain/shared/infra/apiSchema/entity';
+import { entityIdSchema, iconSchema } from '#domain/shared/infra/apiSchema/entity';
 
 const tilesSchema = z.record(
   z.string(),
   z.object({
     editors: z.array(
       z.object({
-        noteId: z.string(),
+        entityId: entityIdSchema,
         title: z.string(),
         mimeType: z.string().nullable(),
         icon: iconSchema.nullable(),

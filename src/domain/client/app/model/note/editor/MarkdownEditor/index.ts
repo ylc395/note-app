@@ -88,7 +88,7 @@ export default class MarkdownEditor extends BaseEditor {
     this.removeUploader(); // 提前移除 uploader，免得随后该编辑器 destroy 影响了 uploader
 
     this.tile.replace(this, {
-      noteId: this.noteId,
+      entityId: this.noteId,
       mimeType,
       value: this.value.data,
       uploader: isPreview ? fileUploader : undefined,

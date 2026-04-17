@@ -12,6 +12,7 @@ import EditorFactory, { type EditorDTO } from './EditorFactory';
 import HistoryStack from '../base/HistoryStack';
 import RecentManager from './RecentManager';
 import UIState from './UIState';
+import { EventNames } from '../note/editor/events';
 
 export interface HistoryRecord {
   key: Editor['id'];
@@ -234,7 +235,7 @@ export default class Workbench {
     // 打开到指定 tile，或是指定 editor 旁边
     if (dest instanceof Tile || dest instanceof Editor) {
       destTile = dest instanceof Tile ? dest : dest.tile;
-      const existedEditor = destTile.findEditor(note.noteId);
+      const existedEditor = destTile.findEditor(note.entityId);
 
       // 对应 editor 已存在：
       if (existedEditor) {
@@ -258,7 +259,15 @@ export default class Workbench {
     }
 
     destTile.switchToEditor(editor);
-    this.recentManager.add(note.noteId);
+
+    editor.events.once(EventNames.Ready).then(({ noteId, title, mimeType }) => {
+      assert(typeof title === 'string');
+      this.recentManager.add({
+        entityId: noteId,
+        title,
+        mimeType,
+      });
+    });
 
     return editor;
   }
@@ -271,7 +280,7 @@ export default class Workbench {
       dest.tile.switchToEditor(dest);
     } else {
       const destTile = this.getTileById(dest);
-      this.open({ noteId: record.key, mimeType: record.mimeType }, destTile);
+      this.open({ entityId: record.key, mimeType: record.mimeType }, destTile);
     }
   }
 
