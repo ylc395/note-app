@@ -1,6 +1,6 @@
 import { createMutation, createQuery } from 'mobx-tanstack-query/preset';
 import assert from 'assert';
-import { computed, when } from 'mobx';
+import { action, computed, observable, when } from 'mobx';
 
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
@@ -18,11 +18,11 @@ export default class FileNoteUploader {
       params: Partial<NewNoteDTO>;
     },
   ) {
-    for (const file of options.files) {
-      this.fileNoteMap.set(file, this.getDuplicatedNotes(file));
-      this.fileUploadingMap.set(file, this.uploadFile(file));
-    }
+    this.init();
   }
+
+  @observable
+  private accessor isReady = false;
 
   private readonly destroyController = new AbortController();
 
@@ -30,18 +30,42 @@ export default class FileNoteUploader {
 
   private readonly remote = container.resolve(rpcToken);
 
-  public readonly fileNoteMap = new Map<FileDTO, ReturnType<FileNoteUploader['getDuplicatedNotes']>>();
+  private readonly fileNoteMap = observable(new Map<FileDTO, ReturnType<FileNoteUploader['getDuplicatedNotes']>>());
 
-  public readonly fileUploadingMap = new Map<FileDTO, ReturnType<FileNoteUploader['uploadFile']>>();
+  private readonly fileUploadingMap = new Map<FileDTO, ReturnType<FileNoteUploader['uploadFile']>>();
+
+  public get files() {
+    return this.options.files;
+  }
 
   @computed
-  private get isReady() {
-    return this.fileNoteMap.values().every(({ isSuccess }) => isSuccess);
+  public get duplicatedFiles() {
+    return this.fileNoteMap
+      .entries()
+      .filter(([_, query]) => query.data?.notes.length)
+      .map(([file, query]) => ({ file, notes: query.data!.notes }))
+      .toArray();
   }
 
   @computed
   public get hasDuplicated() {
     return this.fileNoteMap.values().some(({ data }) => data?.notes.length);
+  }
+
+  private async init() {
+    await Promise.all(
+      this.options.files.map(async (file) => {
+        const hash = await getHash(file.data);
+        this.fileNoteMap.set(file, this.getDuplicatedNotes(hash));
+        this.fileUploadingMap.set(file, this.uploadFile(file));
+      }),
+    );
+
+    when(() => this.fileNoteMap.values().every(({ isSuccess }) => isSuccess)).then(
+      action(() => {
+        this.isReady = true;
+      }),
+    );
   }
 
   public async canUpload() {
@@ -82,17 +106,15 @@ export default class FileNoteUploader {
     this.destroyController.abort();
   }
 
-  private getDuplicatedNotes(file: FileDTO) {
+  private getDuplicatedNotes(hash: string) {
     return createQuery(
       async ({ signal }) => {
-        const hash = await getHash(file.data);
         const notes = await this.remote.note.query.query({ fileHash: hash }, { signal });
-
         return { hash, notes };
       },
       {
         options: () => ({
-          queryKey: ['duplicatedNotes', { data: file.data }] as const,
+          queryKey: ['duplicatedNotes', { hash }] as const,
         }),
         abortSignal: this.destroyController.signal,
       },

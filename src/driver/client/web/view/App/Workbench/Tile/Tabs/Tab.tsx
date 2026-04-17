@@ -49,7 +49,7 @@ export default function Tab(props: { editor: BaseEditor }) {
           classList={{ 'bg-bg-accent-subtle': props.editor.isCurrent }}
           onClick={() => props.editor.tile.switchToEditor(props.editor)}
         >
-          <Icon icon={props.editor.icon} mimeType={props.editor.mimeType} iconClassName="shrink-0 w-4 h-4 mr-1" />
+          <Icon icon={props.editor.icon} mimeType={props.editor.mimeType} className="shrink-0 w-4 h-4 mr-1" />
           <span class="whitespace-nowrap text-ellipsis overflow-hidden">
             {IS_DEV && `${props.editor.id}-${props.editor.entityId.slice(0.3)} `}
             {props.editor.title}

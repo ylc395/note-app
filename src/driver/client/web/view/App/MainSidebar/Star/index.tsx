@@ -31,7 +31,7 @@ export default function Star(props: { onOpen: () => void }) {
               {(star) => (
                 <div class={cx('flex items-center px-2 py-2', 'hover:bg-bg-hover')} onClick={[handleOpen, star]}>
                   <Icon
-                    iconClassName="size-4 shrink-0 mr-1"
+                    className="size-4 shrink-0 mr-1"
                     icon={star.entity.icon}
                     mimeType={star.entity.file?.mimeType}
                   />

@@ -11,6 +11,7 @@ import { IconDisplayMode } from '#domain/client/app/model/note/TreeExplorer/Sett
 import Button from '#web/view/components/Button';
 import AddButton from './AddButton';
 import SettingButton from './SettingButton';
+import DndDuplicatedModal from './DndDuplicatedModal';
 import useContextmenu from './useContextmenu';
 import { useContext } from '../context';
 
@@ -65,6 +66,7 @@ export default function TreeView() {
         contextMenu={contextmenu}
         renderOperation={(node) => <AddButton iconOnly node={node} class="hidden group-hover:flex ml-2" />}
       />
+      <DndDuplicatedModal />
     </div>
   );
 }

@@ -95,7 +95,7 @@ export default function Node(props: Props) {
           <LoaderIcon class={iconClassName()} />
         </Show>
         <Show when={props.shouldRenderIcon?.(props.node)}>
-          <Icon {...props.node.value} iconClassName={iconClassName()} />
+          <Icon {...props.node.value} className={iconClassName()} />
         </Show>
         {props.node.value?.isStar && <StarIcon stroke-width={0} fill="yellow" class={iconClassName()} />}
         {IS_DEV && `${props.node.value!.id.slice(0, 4)}+`}

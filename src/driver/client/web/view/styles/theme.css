@@ -6,7 +6,7 @@
   --color-bg-primary:            var(--color-white);        /* 主画布：编辑区、主内容区 */
   --color-bg-secondary:          var(--color-zinc-50);      /* 次级面板：侧边栏、工具栏底 */
   --color-bg-tertiary:           var(--color-zinc-100);     /* 三级嵌套：卡片、代码块背景 */
-  --color-bg-overlay:            var(--color-zinc-950);     /* 模态遮罩，配合 opacity 使用 */
+  --color-bg-overlay:            oklch(from var(--color-zinc-950) l c h / 0.5);     /* 模态遮罩 */
 
   --color-bg-accent:             var(--color-zinc-900);     /* 品牌强调背景：主按钮、active 导航 */
   --color-bg-accent-subtle:      var(--color-zinc-200);     /* 轻量品牌背景：选中行、hover 高亮 */
@@ -71,10 +71,10 @@
     --color-bg-accent-subtle:      var(--color-zinc-800);
     --color-bg-accent-hover:       var(--color-zinc-200);
 
-    --color-bg-success:            oklch(from var(--color-emerald-950) l c h);
-    --color-bg-warning:            oklch(from var(--color-amber-950) l c h);
-    --color-bg-danger:             oklch(from var(--color-red-950) l c h);
-    --color-bg-info:               oklch(from var(--color-sky-950) l c h);
+    --color-bg-success:            var(--color-emerald-950);
+    --color-bg-warning:            var(--color-amber-950);
+    --color-bg-danger:             var(--color-red-950);
+    --color-bg-info:               var(--color-sky-950);
 
     --color-bg-hover:              var(--color-zinc-800);
     --color-bg-active:             var(--color-zinc-700);
