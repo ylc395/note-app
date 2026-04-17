@@ -6,10 +6,12 @@ import Tree from '#domain/client/shared/model/note/Tree';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import type TreeNode from '#domain/client/shared/model/note/TreeNode';
 import container from '#utils/singletonContainer';
-import type { NoteVO } from '#domain/shared/model/note';
+import type { NewNoteDTO, NoteVO } from '#domain/shared/model/note';
 import DomainEventBus from '#domain/client/app/model/note/EventBus';
 import { arrayOf, type MaybeArray } from '#utils/collection';
+import type { FileDTO } from '#domain/shared/model/file';
 
+import FileNoteUploader from '../FileNoteUploader';
 import StarEventBus from '../../star/EventBus';
 import Setting, { SortBy } from './Setting';
 import UIState from './UIState';
@@ -185,5 +187,51 @@ export default class TreeExplorer {
     }
 
     assert.fail('invalid sortBy');
+  }
+
+  @observable.ref
+  public accessor fileUploader: FileNoteUploader | undefined;
+
+  @action
+  public async uploadFiles(files: FileDTO[], params: Partial<NewNoteDTO>) {
+    const parentId = params.parentId || null;
+    const fakeNodes: TreeNode[] = [];
+
+    this.fileUploader = new FileNoteUploader({
+      params,
+      files,
+      onUpload: (files) => {
+        const node = this.tree?.get(parentId);
+
+        if (!node) {
+          return;
+        }
+
+        node.toggleExpand(true);
+        for (const { name, mimeType } of files) {
+          fakeNodes.push(node.addFakeChild({ title: name || '', mimeType }));
+        }
+      },
+      onFinish: () => {
+        this.destroyFileUploader();
+
+        for (const fakeNode of fakeNodes) {
+          fakeNode.remove(true);
+        }
+      },
+    });
+
+    const canUpload = await this.fileUploader.canUpload();
+
+    if (canUpload) {
+      await this.fileUploader.upload();
+    }
+  }
+
+  @action
+  public destroyFileUploader() {
+    assert(this.fileUploader);
+    this.fileUploader.destroy();
+    this.fileUploader = undefined;
   }
 }

@@ -7,42 +7,45 @@ import { getFakeNote, normalizeTitle, type NoteVO } from '#domain/shared/model/n
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 
+export interface NodeOptions {
+  value?: NoteVO;
+  parent?: TreeNode;
+  isFake?: boolean; // 该节点是个占位符，不代表真实 note
+  initialChildren?: NoteVO[] | ((node: TreeNode) => NoteVO[] | undefined);
+  initialExpanded?: boolean | ((node: TreeNode) => boolean);
+  sort?: (note1: NoteVO, note2: NoteVO) => number;
+  onDestroyed?: (node: TreeNode) => void;
+  onCreated?: (node: TreeNode) => void;
+  onExpandedChanged?: (node: TreeNode) => void;
+  onStateChanged?: (node: TreeNode, state: number) => void;
+}
+
 export default class TreeNode {
-  constructor({
-    value,
-    parent,
-    ...options
-  }: {
-    value?: NoteVO;
-    parent?: TreeNode;
-    isFake?: boolean; // 该节点是个占位符，不代表真实 note
-    children?: NoteVO[] | ((node: TreeNode) => NoteVO[] | undefined);
-    sort?: (note1: NoteVO, note2: NoteVO) => number;
-    onDestroyed?: (node: TreeNode) => void;
-    onCreated?: (node: TreeNode) => void;
-    onExpandedChanged?: (node: TreeNode) => void;
-    onStateChanged?: (node: TreeNode, state: number) => void;
-  }) {
+  constructor({ value, parent, ...options }: NodeOptions) {
     this.setValue(value);
     this.parent = parent;
     this.options = options;
 
-    if (this.isRoot) {
-      this.toggleExpand(true);
-    }
+    const isExpanded =
+      this.isRoot ||
+      (typeof options.initialExpanded === 'function'
+        ? options.initialExpanded(this)
+        : Boolean(options.initialExpanded));
 
+    this.toggleExpand(isExpanded);
     options.onCreated?.(this);
 
     this.childrenQuery = createQuery(
       ({ signal }) => this.remote.note.query.query({ parentId: value?.id ?? null }, { signal }),
       {
-        initialData: typeof options.children === 'function' ? options.children(this) : options.children,
+        initialData:
+          typeof options.initialChildren === 'function' ? options.initialChildren(this) : options.initialChildren,
         staleTime: 1000, // 设置一个很短的过期时间，防止即使了提供了 initialData，仍然重新请求的情况
         refetchOnWindowFocus: true,
         abortSignal: this.destroyController.signal,
         queryKey: ['notes', { parentId: value?.id ?? null }],
         options: () => ({
-          enabled: this.isExpanded,
+          enabled: this.isExpanded && !this.options.isFake,
         }),
       },
     );
@@ -51,10 +54,20 @@ export default class TreeNode {
       this.destroyController.signal.addEventListener('abort', options.onDestroyed.bind(null, this), { once: true });
     }
 
-    reaction(() => this.childrenQuery.result.data, this.setChildren.bind(this), {
-      signal: this.destroyController.signal,
-      fireImmediately: true,
-    });
+    reaction(
+      () => this.childrenQuery.data,
+      (children) => {
+        // 在 tanstack query 中，query 上的任何状态更新（例如 isStale 的更新）都会触发 mobx-tanstack-query 的 reaction
+        // 我们通过 isStale 来判断，是不是需要更新 children
+        if (!this.childrenQuery.isStale && children) {
+          this.setChildren(children);
+        }
+      },
+      {
+        signal: this.destroyController.signal,
+        fireImmediately: true,
+      },
+    );
   }
 
   private readonly options;
@@ -78,8 +91,6 @@ export default class TreeNode {
   private readonly destroyController = new AbortController();
 
   @observable.shallow public accessor children: Readonly<TreeNode[]> | undefined; // 对 children 必须采用整体替换的方式，而不能使用 push / splice 等原地更改的方式。因为 <Key> 组件检测不到这样的变动
-
-  @observable.shallow private accessor fakeChildren: Readonly<TreeNode[]> | undefined;
 
   private childrenMap?: Map<TreeNode['id'], TreeNode>;
 
@@ -125,13 +136,11 @@ export default class TreeNode {
 
   @computed
   public get sortedChildren() {
-    const children = this.children?.concat(this.fakeChildren || []);
-
     if (!this.options.sort) {
-      return children;
+      return this.children;
     }
 
-    return children?.toSorted(({ value: value1 }, { value: value2 }) => this.options.sort!(value1!, value2!));
+    return this.children?.toSorted(({ value: value1 }, { value: value2 }) => this.options.sort!(value1!, value2!));
   }
 
   @action
@@ -175,9 +184,29 @@ export default class TreeNode {
   @action
   public addChild(node: TreeNode) {
     assert(this.children && this.childrenMap);
+
     this.children = [...this.children, node];
     this.childrenMap.set(node.id, node);
     node.parent = this;
+  }
+
+  public addFakeChild(params: Pick<NoteVO, 'title' | 'mimeType'>) {
+    if (!this.children) {
+      this.children = [];
+    }
+
+    if (!this.childrenMap) {
+      this.childrenMap = new Map();
+    }
+
+    const fakeNode = new TreeNode({
+      isFake: true,
+      value: getFakeNote({ parentId: this.id, ...params }),
+    });
+
+    this.addChild(fakeNode);
+
+    return fakeNode;
   }
 
   @action
@@ -197,28 +226,7 @@ export default class TreeNode {
   }
 
   @action
-  public setFakeChildren(fakeNotes: Array<Pick<NoteVO, 'title' | 'mimeType'>>) {
-    this.fakeChildren = fakeNotes.map(
-      ({ title, mimeType }, i) =>
-        new TreeNode({
-          parent: this,
-          isFake: true,
-          value: getFakeNote({
-            id: `${this.id}-fake-child-${i}`,
-            mimeType,
-            parentId: this.id,
-            title,
-          }),
-        }),
-    );
-  }
-
-  @action
-  private setChildren = (children?: NoteVO[]) => {
-    if (!children) {
-      return;
-    }
-
+  private setChildren = (children: NoteVO[]) => {
     let newChildren: TreeNode[];
 
     if (!this.children) {

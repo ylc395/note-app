@@ -1,5 +1,4 @@
 import { compact } from 'lodash-es';
-import { autorun, observable } from 'mobx';
 
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
@@ -12,7 +11,6 @@ import Workbench from '../model/Workbench';
 import DomainEventBus from '../model/note/EventBus';
 import BaseEditor from '../model/note/editor/BaseEditor';
 import TreeExplorer from '../model/note/TreeExplorer';
-import FileNoteUploader from '../model/note/FileNoteUploader';
 
 export default class NoteService {
   constructor() {
@@ -20,8 +18,6 @@ export default class NoteService {
       DomainEventBus.eventNames.Created,
       (note) => void this.workbench.open({ noteId: note.id, mimeType: note.mimeType }),
     );
-
-    autorun(this.syncFileUploaderToTree.bind(this));
   }
 
   private readonly eventBus = container.resolve(DomainEventBus);
@@ -65,23 +61,5 @@ export default class NoteService {
     }
 
     return undefined;
-  }
-
-  @observable.ref
-  public accessor fileUploader: FileNoteUploader | undefined;
-
-  private syncFileUploaderToTree() {
-    if (!this.fileUploader) {
-      return;
-    }
-
-    const placeholders = Array.from(this.fileUploader.fileUploadingMap)
-      .filter(([_, uploading]) => uploading.isPending)
-      .map(([file]) => ({
-        title: file.name ?? '',
-        mimeType: file.mimeType,
-      }));
-
-    this.explorer.tree?.get(this.fileUploader.params.parentId || null)?.setFakeChildren(placeholders);
   }
 }

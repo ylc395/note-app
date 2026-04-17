@@ -5,13 +5,11 @@ import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/el
 import { dropTargetForExternal } from '@atlaskit/pragmatic-drag-and-drop/external/adapter';
 import { render } from 'solid-js/web';
 import { compact } from 'lodash-es';
-import { runInAction, when } from 'mobx';
 
 import container from '#utils/singletonContainer';
 import NoteService from '#domain/client/app/service/NoteService';
 import TreeViewModel, { TreeNodeStates } from '#domain/client/app/model/note/TreeExplorer';
 import type TreeNode from '#domain/client/shared/model/note/TreeNode';
-import FileNoteUploader from '#domain/client/app/model/note/FileNoteUploader';
 
 import DragPreview from './DragPreview';
 
@@ -30,8 +28,7 @@ export async function transferItemToFileDTO(item: DataTransferItem) {
 }
 
 export default function useDnd(props: { treeView: TreeViewModel; node?: TreeNode; draggable?: boolean }) {
-  const noteService = container.resolve(NoteService);
-  const { updateNote } = noteService;
+  const { updateNote, explorer } = container.resolve(NoteService);
   const [dndElementRef, setDndElementRef] = createSignal<HTMLElement>();
   const [isDropHovering, setIsDropHovering] = createSignal(false);
   const isDraggable = props.draggable ?? true;
@@ -112,14 +109,7 @@ export default function useDnd(props: { treeView: TreeViewModel; node?: TreeNode
           onDrop: async ({ source }) => {
             setIsDropHovering(false);
             const files = compact(await Promise.all(source.items.map(transferItemToFileDTO)));
-            const fileNoteUploader = new FileNoteUploader(files, { parentId });
-
-            runInAction(() => {
-              noteService.fileUploader = fileNoteUploader;
-            });
-
-            await when(() => fileNoteUploader.isReady);
-            fileNoteUploader.upload();
+            explorer.uploadFiles(files, { parentId: props.node?.id });
           },
         }),
       ]),

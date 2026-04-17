@@ -1,4 +1,5 @@
 import dayjs from 'dayjs';
+import { uniqueId } from 'lodash-es';
 import type { Entity, EntityId, EntityParentId, Icon } from './entity.js';
 import type { FileDTO, FileVO } from './file.js';
 
@@ -64,9 +65,10 @@ export function normalizeTitle(note: Note | NoteVO | Entity) {
   return note.title || `未命名笔记-${dayjs(note.createdAt).format('YYYYMMDD-HHmm')}`;
 }
 
-export function getFakeNote(note: Pick<NoteVO, 'mimeType' | 'title' | 'parentId' | 'id'>) {
+export function getFakeNote(note: Pick<NoteVO, 'mimeType' | 'title' | 'parentId'>) {
   return {
     ...note,
+    id: uniqueId('fake-note-'),
     sourceUrl: null,
     icon: null,
     createdAt: Date.now(),

@@ -3,7 +3,7 @@ import assert from 'assert';
 import { compact } from 'lodash-es';
 
 import type { NoteVO } from '#domain/shared/model/note';
-import TreeNode from './TreeNode';
+import TreeNode, { type NodeOptions } from './TreeNode';
 
 export default class Tree {
   constructor({
@@ -20,16 +20,12 @@ export default class Tree {
 
     this.nodeOptions = {
       ...options,
-      children: (node: TreeNode) => {
-        return initialMap[node.id];
-      },
+      initialChildren: (node: TreeNode) => initialMap[node.id],
+      initialExpanded: (node) => expanded.includes(node.id),
       onCreated: action((node: TreeNode) => {
         this.nodesMap.set(node.id, node);
-
-        if (expanded.includes(node.id)) {
-          node.toggleExpand(true);
-        }
       }),
+
       onDestroyed: action(({ id }: TreeNode) => {
         this.nodesMap.delete(id);
         this.expandedNodeIds.delete(id);
@@ -51,7 +47,7 @@ export default class Tree {
     this.root = new TreeNode(this.nodeOptions);
   }
 
-  private readonly nodeOptions;
+  private readonly nodeOptions: NodeOptions;
 
   @observable.shallow private accessor nodesMap = new Map<TreeNode['id'], TreeNode>();
 

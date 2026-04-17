@@ -1,6 +1,6 @@
 import { createMutation, createQuery } from 'mobx-tanstack-query/preset';
 import assert from 'assert';
-import { computed } from 'mobx';
+import { computed, when } from 'mobx';
 
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
@@ -10,16 +10,18 @@ import type { NewNoteDTO } from '#domain/shared/model/note';
 import DomainEventBus from './EventBus';
 
 export default class FileNoteUploader {
-  constructor(private readonly files: FileDTO[], public readonly params: NewNoteDTO) {
-    for (const file of files) {
+  constructor(
+    private readonly options: {
+      files: FileDTO[];
+      onUpload: (files: FileDTO[]) => void;
+      onFinish: () => void;
+      params: Partial<NewNoteDTO>;
+    },
+  ) {
+    for (const file of options.files) {
       this.fileNoteMap.set(file, this.getDuplicatedNotes(file));
       this.fileUploadingMap.set(file, this.uploadFile(file));
     }
-  }
-
-  @computed
-  public get isReady() {
-    return this.fileNoteMap.values().every(({ isSuccess }) => isSuccess);
   }
 
   private readonly destroyController = new AbortController();
@@ -32,10 +34,28 @@ export default class FileNoteUploader {
 
   public readonly fileUploadingMap = new Map<FileDTO, ReturnType<FileNoteUploader['uploadFile']>>();
 
-  public upload(files?: FileDTO[]) {
-    for (const file of files || this.files) {
-      this.fileUploadingMap.get(file)?.mutate();
-    }
+  @computed
+  private get isReady() {
+    return this.fileNoteMap.values().every(({ isSuccess }) => isSuccess);
+  }
+
+  @computed
+  public get hasDuplicated() {
+    return this.fileNoteMap.values().some(({ data }) => data?.notes.length);
+  }
+
+  public async canUpload() {
+    await when(() => this.isReady, { signal: this.destroyController.signal });
+    return !this.hasDuplicated;
+  }
+
+  public async upload(files?: FileDTO[]) {
+    assert(this.isReady);
+    files = files || this.options.files;
+
+    this.options.onUpload(files);
+    await Promise.all(files.map((file) => this.fileUploadingMap.get(file)!.mutate()));
+    this.options.onFinish();
   }
 
   private uploadFile(file: FileDTO) {
@@ -45,13 +65,14 @@ export default class FileNoteUploader {
         assert(result);
 
         return this.remote.note.create.mutate({
-          ...this.params,
+          ...this.options.params,
           ...(result.notes.length > 0 ? { fileHash: result.hash } : { file }),
+          title: file.name,
         });
       },
       {
-        onSuccess: (note) => {
-          this.domainEventBus.emit(DomainEventBus.eventNames.Created, note);
+        onSuccess: (data) => {
+          this.domainEventBus.emit(DomainEventBus.eventNames.Created, data);
         },
       },
     );
