@@ -19,9 +19,18 @@ export default class NoteService {
 
   private readonly remote = container.resolve(rpcToken);
 
-  public readonly createNote = async (note: NewNoteDTO | DuplicatedNoteDTO) => {
+  public readonly createNote = async (note: NewNoteDTO | DuplicatedNoteDTO, open?: boolean) => {
     const newNote = await this.remote.note.create.mutate(note);
     this.eventBus.emit(DomainEventBus.eventNames.Created, newNote);
+
+    if (open) {
+      const workbench = container.resolve(Workbench);
+      workbench.open({
+        entityId: newNote.id,
+        entityType: EntityTypes.Note,
+        mimeType: newNote.mimeType,
+      });
+    }
   };
 
   public readonly updateNote = async (notes: MaybeArray<NoteVO | NoteVO['id']>, patch: NotePatchDTO) => {
@@ -51,17 +60,6 @@ export default class NoteService {
   }
 
   public static boot() {
-    const eventBus = container.resolve(DomainEventBus);
-
-    eventBus.on(DomainEventBus.eventNames.Created, (note) => {
-      const workbench = container.resolve(Workbench);
-      workbench.open({
-        entityId: note.id,
-        entityType: EntityTypes.Note,
-        mimeType: note.mimeType,
-      });
-    });
-
     EditorFactory.registryFactory(EntityTypes.Note, factory);
   }
 }

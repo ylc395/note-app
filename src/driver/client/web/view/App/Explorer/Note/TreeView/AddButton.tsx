@@ -14,7 +14,7 @@ export default function AddButton(props: { iconOnly?: boolean; node?: TreeNode; 
 
   async function onClick(e: MouseEvent) {
     e.preventDefault();
-    await createNote({ parentId: node()?.value?.id });
+    await createNote({ parentId: node()?.value?.id }, true);
     node()?.toggleExpand(true);
   }
 

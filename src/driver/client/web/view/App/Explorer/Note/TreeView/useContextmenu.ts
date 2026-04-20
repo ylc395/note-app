@@ -35,7 +35,7 @@ export default function useContextmenu() {
       case 'star':
         return selectedNode.value.isStar ? unstar(selectedNode.id) : star(selectedNode.id);
       case 'duplicate':
-        return createNote({ from: selectedNode.value.id });
+        return createNote({ from: selectedNode.value.id }, true);
       case 'delete':
         return put(Array.from(selected), EntityTypes.Note);
       case 'createIcon':
