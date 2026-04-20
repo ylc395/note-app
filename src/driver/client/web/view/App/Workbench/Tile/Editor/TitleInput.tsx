@@ -1,7 +1,7 @@
 import { createEffect, createMemo, createSignal } from 'solid-js';
 import assert from 'assert';
 import NoteBaseEditor from '#domain/client/app/model/note/editor/BaseEditor';
-import { useContext } from './context';
+import { useContext } from './composables';
 
 export default function TitleInput() {
   let inputRef: HTMLInputElement | undefined;

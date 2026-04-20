@@ -27,5 +27,7 @@ export default class BodyEditor {
       })
       .optional()
       .catch(undefined),
+    scroll: z.object({ x: z.number(), y: z.number() }).optional().catch(undefined),
+    cursorPos: z.object({ anchor: z.number(), head: z.number() }).optional().catch(undefined),
   });
 }

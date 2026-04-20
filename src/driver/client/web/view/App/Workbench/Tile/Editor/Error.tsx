@@ -1,5 +1,5 @@
 import { FileXIcon } from 'lucide-solid';
-import { useContext } from './context';
+import { useContext } from './composables';
 
 export default function ErrorEditor() {
   const ctx = useContext()!;

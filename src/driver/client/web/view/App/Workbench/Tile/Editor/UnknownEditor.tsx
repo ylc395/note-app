@@ -1,4 +1,4 @@
-import { useContext } from './context';
+import { useContext } from './composables';
 
 export default function UnknownEditor() {
   const { editor } = useContext()!;

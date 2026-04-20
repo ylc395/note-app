@@ -49,7 +49,7 @@ export default class NoteService {
     }
 
     if (value instanceof BaseEditor) {
-      return value.value.result.data;
+      return value.value.data;
     }
 
     if (Array.isArray(value)) {

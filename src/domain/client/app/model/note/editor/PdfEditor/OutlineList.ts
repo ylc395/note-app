@@ -47,17 +47,17 @@ export default class OutlineList {
 
   @computed
   public get items() {
-    return this._items.result.data?.items;
+    return this._items.data?.items;
   }
 
   @computed
   public get keyToOutlineItemsMap() {
-    return this._items.result.data?.keyToOutlineItemsMap;
+    return this._items.data?.keyToOutlineItemsMap;
   }
 
   @computed
   public get pageToOutlineItemsMap() {
-    return this._items.result.data?.pageToOutlineItemsMap;
+    return this._items.data?.pageToOutlineItemsMap;
   }
 
   @observable public accessor uiState: z.infer<typeof OutlineList.schema> = {};

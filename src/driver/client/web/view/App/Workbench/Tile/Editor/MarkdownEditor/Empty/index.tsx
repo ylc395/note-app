@@ -4,7 +4,7 @@ import MarkdownEditor from '#domain/client/app/model/note/editor/MarkdownEditor'
 
 import LocalFileUploader from './LocalFileUploader';
 import RemoteFileUploader from './RemoteFileUploader';
-import { useContext } from '../../context';
+import { useContext } from '../../composables';
 
 enum Mode {
   Remote = 1,

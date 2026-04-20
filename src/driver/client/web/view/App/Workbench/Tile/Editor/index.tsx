@@ -14,7 +14,7 @@ import Breadcrumbs from './Breadcrumbs';
 import TitleInput from './TitleInput';
 import Error from './Error';
 import PreviewTip from './PreviewTip';
-import { ContextProvider } from './context';
+import { ContextProvider } from './composables';
 
 export default function Editor(props: { editor: BaseEditor }) {
   const isError = createMemo(() => props.editor.value.result.isError);

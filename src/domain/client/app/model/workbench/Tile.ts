@@ -7,9 +7,11 @@ import container from '#utils/singletonContainer';
 
 import EditorFactory, { type EditorDTO } from './EditorFactory';
 import type { EntityId } from '#domain/shared/model/entity';
+import type Workbench from './index';
 
 export default class Tile {
   constructor(
+    public readonly workbench: Workbench,
     private readonly options: {
       onDestroy: (tile: Tile) => void;
       onEditorFocus: (editor: Editor) => void;

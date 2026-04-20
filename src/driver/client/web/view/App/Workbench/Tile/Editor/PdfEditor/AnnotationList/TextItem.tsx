@@ -4,7 +4,7 @@ import assert from 'assert';
 
 import { getPage, type AnnotationVO } from '#domain/client/app/model/annotation';
 import PdfEditor from '#domain/client/app/model/note/editor/PdfEditor';
-import { useContext } from '../../context';
+import { useContext } from '../../composables';
 
 export default function TextItem(props: { value: AnnotationVO }) {
   const ctx = useContext()!;

@@ -69,7 +69,7 @@ export default class Workbench {
   }
 
   private createTile() {
-    const tile = new Tile({
+    const tile = new Tile(this, {
       onDestroy: this.removeTile.bind(this),
       onEditorFocus: this.handleEditorFocus.bind(this),
     });

@@ -5,7 +5,7 @@ import MarkdownEditor from '#domain/client/app/model/note/editor/MarkdownEditor'
 import UrlInput from './UrlInput';
 import DownloadingProgress from './DownloadingProgress';
 
-import { useContext } from '../../../context';
+import { useContext } from '../../../composables';
 
 export default function RemoteFileUploader(props: { className?: string }) {
   const editor = createMemo(() => {

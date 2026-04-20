@@ -75,12 +75,12 @@ export default abstract class NoteBaseEditor extends BaseEditor<NoteVO> {
 
   @computed
   public get title() {
-    return this.value.result.data ? normalizeTitle(this.value.result.data) : this.options.title ?? null;
+    return this.value.data ? normalizeTitle(this.value.data) : this.options.title ?? null;
   }
 
   @computed
   public get icon() {
-    return this.value.result.data ? this.value.result.data.icon : this.options.icon ?? null;
+    return this.value.data ? this.value.data.icon : this.options.icon ?? null;
   }
 
   public readonly update = (patch: Patch) => {

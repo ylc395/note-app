@@ -1,19 +1,16 @@
-import { createEffect, createMemo, createSignal, on, Show } from 'solid-js';
+import { createMemo, createSignal, Show } from 'solid-js';
 import assert from 'assert';
 import { action } from 'mobx';
 
-import Workbench from '#domain/client/app/model/Workbench';
-import container from '#utils/singletonContainer';
 import BaseMarkdownEditor from '#web/view/components/MarkdownEditor';
 import MarkdownEditor from '#domain/client/app/model/note/editor/MarkdownEditor';
 import type Editor from '#web/view/components/MarkdownEditor/Editor';
 
-import { useContext } from '../context';
+import { useContext, useEditorBody } from '../composables';
 import Empty from './Empty';
 
 export default function MarkdownEditorView() {
-  const [getCrepe, setCrepe] = createSignal<Editor>();
-  const workbench = container.resolve(Workbench);
+  const [getEditor, setEditor] = createSignal<Editor>();
   const editor = createMemo(() => {
     const { editor } = useContext()!;
     assert(editor instanceof MarkdownEditor);
@@ -21,29 +18,7 @@ export default function MarkdownEditorView() {
     return editor;
   });
 
-  // 其他编辑器改动内容时，本编辑器同步更新
-  createEffect(
-    on(
-      () => editor().value.result.data?.body,
-      (body) => {
-        const mdEditor = getCrepe();
-        if (
-          mdEditor?.isCreated &&
-          typeof body === 'string' &&
-          workbench.currentEditor &&
-          workbench.currentEditor !== editor()
-        ) {
-          mdEditor.replaceContent(body);
-        }
-      },
-    ),
-  );
-
-  function onUpdate(text: string) {
-    if (workbench.currentEditor === editor()) {
-      editor().update({ body: text });
-    }
-  }
+  const { onUpdate } = useEditorBody(getEditor);
 
   function handleScrollEnd(e: { x: number; y: number }) {
     if (editor().uiState) {
@@ -61,9 +36,9 @@ export default function MarkdownEditorView() {
     <Show when={editor().isReady}>
       <div class="min-h-0 grow overflow-hidden">
         <BaseMarkdownEditor
-          ref={setCrepe}
+          ref={setEditor}
           className="h-full overflow-auto border-16 border-bg-primary"
-          defaultValue={editor().value.result.data!.body}
+          defaultValue={editor().value.data!.body}
           initialScroll={editor().uiState!.scroll}
           initialCursorPos={editor().uiState!.cursorPos}
           readonly={editor().isUploading}
@@ -71,7 +46,7 @@ export default function MarkdownEditorView() {
           onScrollEnd={action(handleScrollEnd)}
           onSelectionUpdate={action(handleSelectionUpdate)}
         />
-        <Show when={!editor().value.result.data!.body}>
+        <Show when={!editor().value.data!.body}>
           <Empty />
         </Show>
       </div>

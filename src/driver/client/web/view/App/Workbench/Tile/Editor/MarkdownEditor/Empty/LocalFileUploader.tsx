@@ -5,7 +5,7 @@ import assert from 'assert';
 
 import MarkdownEditor from '#domain/client/app/model/note/editor/MarkdownEditor';
 import { normalizeTitle } from '#domain/shared/model/note';
-import { useContext } from '../../context';
+import { useContext } from '../../composables';
 
 export default function LocalFileUploader(props: { className?: string }) {
   const editor = createMemo(() => {

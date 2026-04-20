@@ -14,7 +14,7 @@ import PDFEditorViewer from './PDFEditorViewer';
 import OutlineList from './OutlineList';
 
 import { ContextProvider } from './context';
-import { useContext } from '../context';
+import { useContext } from '../composables';
 
 enum Panel {
   Body = 'body',

@@ -1,7 +1,7 @@
 import { For, Show } from 'solid-js';
 import { BookTextIcon, ChevronRightIcon } from 'lucide-solid';
 
-import { useContext } from './context';
+import { useContext } from './composables';
 
 export default function Breadcrumbs() {
   const itemClassName = 'text-fg-secondary flex items-center shrink-0 text-sm';

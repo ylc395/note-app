@@ -3,7 +3,7 @@ import assert from 'assert';
 
 import HtmlEditor from '#domain/client/app/model/note/editor/HtmlEditor';
 import useHtml from './useHtml';
-import { useContext } from '../context';
+import { useContext } from '../composables';
 
 export default function HtmlEditorView() {
   const { editor } = useContext()!;

@@ -3,27 +3,34 @@ import { createSignal, Show } from 'solid-js';
 import { PinOffIcon } from 'lucide-solid';
 import { action } from 'mobx';
 import { partialRight } from 'lodash-es';
+import { cx } from 'class-variance-authority';
 
 import FloatingPanel from '#web/view/components/FloatingPanel';
 import MarkdownEditor from '#web/view/components/MarkdownEditor';
+import type Editor from '#web/view/components/MarkdownEditor/Editor';
 import Resizable from '#web/view/components/Resizable';
-import { useContext } from './context';
 import Button from '#web/view/components/Button';
-import { cx } from 'class-variance-authority';
+import { useContext } from './context';
+import { useEditorBody } from '../composables';
 
 export default function BodyEditor(props: { id: string }) {
   const { viewer } = useContext()!;
   const editor = viewer.editor;
   const splitter = useSplitterContext();
+  const [getMdEditor, setMdEditor] = createSignal<Editor>();
 
   const uiState = editor.body.uiState;
   const [floatingSize, setFloatingSize] = createSignal(uiState.floatingSize || { width: 300, height: 500 });
   const [floatingPos, setFloatingPos] = createSignal(uiState.floatingPos || { x: 20, y: 20 });
 
-  function onUpdated(md: string) {
-    if (editor.isCurrent) {
-      editor.update({ body: md });
-    }
+  const { onUpdate } = useEditorBody(getMdEditor);
+
+  function handleScrollEnd(e: { x: number; y: number }) {
+    uiState.scroll = e;
+  }
+
+  function handleSelectionUpdate(pos: { anchor: number; head: number }) {
+    uiState.cursorPos = pos;
   }
 
   function handleMoveEnd(e: { x: number; y: number }) {
@@ -83,9 +90,14 @@ export default function BodyEditor(props: { id: string }) {
           <Show when={editor.value.data}>
             {(note) => (
               <MarkdownEditor
+                ref={setMdEditor}
                 className="border-r-border-primary border-r h-full grow"
-                onUpdate={onUpdated}
+                onUpdate={onUpdate}
                 defaultValue={note().body}
+                initialScroll={uiState.scroll}
+                initialCursorPos={uiState.cursorPos}
+                onScrollEnd={action(handleScrollEnd)}
+                onSelectionUpdate={action(handleSelectionUpdate)}
               />
             )}
           </Show>

@@ -107,6 +107,11 @@ export default abstract class BaseEditor<T = unknown> {
     return this.tile.currentEditor === this;
   }
 
+  @computed
+  public get isGlobalCurrent() {
+    return this.tile.workbench.currentEditor === this;
+  }
+
   @action
   public moveTo(dest: BaseEditor<unknown> | Tile, switchTo?: boolean) {
     const destTile = !(dest instanceof BaseEditor) ? dest : dest.tile;
