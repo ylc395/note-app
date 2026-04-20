@@ -8,7 +8,6 @@ import TreeView from './TreeView';
 import DropArea from './DropArea';
 import Header from '../Header';
 import SearchResult from './SearchResult';
-import CustomIconPicker from './CustomIconPickerModal';
 
 enum TabsValue {
   All = 'all',
@@ -59,7 +58,6 @@ export default function NoteExplorer(props: { className: string }) {
           <SearchResult />
         </Tabs.Content>
       </Tabs.Root>
-      <CustomIconPicker />
     </div>
   );
 }

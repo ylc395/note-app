@@ -1,7 +1,7 @@
 import { createEffect, createMemo, createSignal, Show } from 'solid-js';
 import assert from 'assert';
 import { SmilePlusIcon } from 'lucide-solid';
-import { Menu } from '@ark-ui/solid';
+import { Popover } from '@ark-ui/solid';
 
 import NoteBaseEditor from '#domain/client/app/model/note/editor/BaseEditor';
 import Button from '#web/view/components/Button';
@@ -41,18 +41,29 @@ export default function TitleInput() {
 
   return (
     <div class="flex items-center border-b border-border-secondary px-2">
-      <Menu.Root unmountOnExit lazyMount open={isIconPickerOpen()} onOpenChange={({ open }) => setIconPickerOpen(open)}>
-        <Menu.Trigger>
+      <Popover.Root
+        unmountOnExit
+        lazyMount
+        open={isIconPickerOpen()}
+        onOpenChange={({ open }) => setIconPickerOpen(open)}
+      >
+        <Popover.Trigger>
           <Button square>
             <Show when={editor().icon} fallback={<SmilePlusIcon />}>
               {(icon) => <Icon icon={icon()} />}
             </Show>
           </Button>
-        </Menu.Trigger>
-        <Menu.Positioner>
-          <IconPicker className="z-10" iconManager={editor().iconManager} onFinish={() => setIconPickerOpen(false)} />
-        </Menu.Positioner>
-      </Menu.Root>
+        </Popover.Trigger>
+        <Popover.Positioner>
+          <Popover.Content class="z-10">
+            <IconPicker
+              currentIcon={editor().icon}
+              iconManager={editor().iconManager}
+              onFinish={() => setIconPickerOpen(false)}
+            />
+          </Popover.Content>
+        </Popover.Positioner>
+      </Popover.Root>
       <input
         spellcheck={false}
         ref={inputRef}

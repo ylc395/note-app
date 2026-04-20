@@ -66,7 +66,12 @@ export default class CustomIconPicker {
   public readonly submit = async () => {
     assert(this.canSubmit);
 
-    const file = this.duplicatedIconFile.result.data ?? (await this.remote.file.upload.mutate(this.icon!));
+    let file = this.duplicatedIconFile.data;
+
+    if (!file) {
+      file = await this.remote.file.upload.mutate(this.icon!);
+    }
+
     this.options.onSubmit?.({ isNewIcon: !this.duplicatedIconFile.result.data, fileId: file.id });
   };
 

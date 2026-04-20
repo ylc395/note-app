@@ -56,15 +56,8 @@ export default function useContextmenu() {
       shouldShowIcon && {
         label: '更改图标',
         key: 'icon',
-        children: [
-          {
-            label: '选择图标',
-            key: 'icon-choose',
-            content: ({ closeMenu }) =>
-              IconPicker({ onFinish: closeMenu, className: '-mt-10', iconManager: explorer().iconPicker }),
-          },
-          { label: '新建图标', key: 'createIcon' },
-        ],
+        content: ({ closeMenu }) =>
+          IconPicker({ onFinish: closeMenu, className: '-mt-10', iconManager: explorer().iconPicker }),
       },
       ...(isSingle
         ? [

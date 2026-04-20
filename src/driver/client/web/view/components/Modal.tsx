@@ -28,7 +28,7 @@ export default function Modal(props: {
     <Dialog.Root
       lazyMount
       unmountOnExit
-      closeOnInteractOutside={props.closeOnInteractOutside}
+      closeOnInteractOutside={props.closeOnInteractOutside ?? false}
       open={props.open}
       onOpenChange={handleOpenChange}
     >

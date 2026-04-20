@@ -1,30 +1,33 @@
-import { createMemo, For, Show } from 'solid-js';
+import { For, Show } from 'solid-js';
 import { FileUpload } from '@ark-ui/solid';
 import { FileIcon, FilePlusIcon, XIcon } from 'lucide-solid';
 
 import Modal from '#web/view/components/Modal';
-import { useContext } from './context';
+import type CustomIconPicker from '#domain/client/app/model/note/IconManager/CustomIconPicker';
 
-export default function CustomIconPicker() {
-  const iconPicker = createMemo(() => useContext()!.treeExplorer.iconPicker);
-
-  const customIconPickerModel = createMemo(() => {
-    return iconPicker().customIconPicker;
-  });
-
+export default function CustomIconPickerView(props: { iconPicker: CustomIconPicker; onFinish?: () => void }) {
   async function handleFileSelected(file?: File) {
-    customIconPickerModel()?.set(file && { mimeType: file.type, data: await file.arrayBuffer() });
+    props.iconPicker.set(file && { mimeType: file.type, data: await file.arrayBuffer() });
+  }
+
+  function submit() {
+    props.iconPicker.submit();
+    props.onFinish?.();
+  }
+
+  function close() {
+    props.iconPicker.destroy();
   }
 
   return (
     <Modal
       title="新建图标"
-      open={Boolean(iconPicker().customIconPicker)}
+      open
       confirmText="创建并使用"
-      canConfirm={!customIconPickerModel()?.canSubmit}
-      onConfirm={() => customIconPickerModel()?.submit()}
-      onCancel={() => iconPicker().customIconPicker?.destroy()}
-      onClose={() => iconPicker().customIconPicker?.destroy()}
+      canConfirm={!props.iconPicker.canSubmit}
+      onConfirm={submit}
+      onCancel={close}
+      onClose={close}
     >
       <div class="mt-6 text-right space-x-4 flex justify-end">
         <FileUpload.Root
@@ -32,7 +35,7 @@ export default function CustomIconPicker() {
           onFileChange={({ acceptedFiles: [file] }) => handleFileSelected(file)}
         >
           <Show
-            when={customIconPickerModel()?.icon}
+            when={props.iconPicker.icon}
             fallback={
               <FileUpload.Dropzone class="text-sm w-full h-full flex flex-col items-center justify-center cursor-pointer">
                 <FileUpload.Trigger class="flex items-center justify-center flex-col">

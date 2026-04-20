@@ -40,7 +40,7 @@ export default class IconManager {
     });
   };
 
-  public readonly submit = async (icon: Icon) => {
+  public readonly submit = async (icon: Icon | null) => {
     const noteIds = arrayOf(typeof this.options.noteIds === 'function' ? this.options.noteIds() : this.options.noteIds);
     await this.remote.note.batchUpdate.mutate([noteIds, { icon }]);
 
