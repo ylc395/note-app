@@ -4,12 +4,13 @@ import { action, observable } from 'mobx';
 import container from '#utils/singletonContainer';
 import type { EntityId, Icon } from '#domain/shared/model/entity';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
+import { arrayOf, type MaybeArray } from '#utils/collection';
 
 import CustomIconPicker from './CustomIconPicker';
 import DomainEventBus from '../EventBus';
 
 export default class IconManager {
-  constructor(private readonly options: { noteIds: () => EntityId[] }) {}
+  constructor(private readonly options: { noteIds: MaybeArray<EntityId> | (() => MaybeArray<EntityId>) }) {}
 
   private readonly remote = container.resolve(rpcToken);
 
@@ -40,7 +41,7 @@ export default class IconManager {
   };
 
   public readonly submit = async (icon: Icon) => {
-    const noteIds = this.options.noteIds();
+    const noteIds = arrayOf(typeof this.options.noteIds === 'function' ? this.options.noteIds() : this.options.noteIds);
     await this.remote.note.batchUpdate.mutate([noteIds, { icon }]);
 
     for (const noteId of noteIds) {

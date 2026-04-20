@@ -12,6 +12,7 @@ import type Tile from '../../Workbench/Tile';
 import DomainEventBus, { type UpdatedEvent } from '../EventBus';
 import Uploader from './Uploader';
 import BaseEditor, { Options as BaseOptions } from '../../Workbench/BaseEditor';
+import IconManager from '../IconManager';
 
 export type Action = (editor: BaseEditor) => void;
 
@@ -58,6 +59,8 @@ export default abstract class NoteBaseEditor extends BaseEditor<NoteVO> {
   protected readonly remote = container.resolve(rpcToken);
 
   public override readonly entityType = EntityTypes.Note;
+
+  public readonly iconManager = new IconManager({ noteIds: this.entityId });
 
   protected override fetchValue(params: { signal: AbortSignal }) {
     return this.remote.note.queryOneById.query(this.entityId, { signal: params.signal });

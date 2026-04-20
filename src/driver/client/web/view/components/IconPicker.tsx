@@ -4,20 +4,18 @@ import { createEffect, createMemo, onCleanup } from 'solid-js';
 
 import { getAppUrl, parseAppUrl, RouteTypes } from '#domain/shared/infra/url';
 import type { Icon } from '#domain/shared/model/entity';
+import type IconManager from '#domain/client/app/model/note/IconManager';
 
-import { useContext } from '../context';
-
-export default function IconPicker(props?: { onFinish?: () => void }) {
+export default function IconPicker(props: { className?: string; onFinish?: () => void; iconManager: IconManager }) {
   let rootRef: HTMLDivElement | undefined;
-  const iconPicker = createMemo(() => useContext()!.treeExplorer.iconPicker);
 
   const allCustomIcons = createMemo(
     () =>
-      iconPicker().customIcons.result.data && [
+      props.iconManager.customIcons.data && [
         {
           id: 'custom',
           name: 'Custom',
-          emojis: iconPicker().customIcons.result.data!.map(({ code }) => ({
+          emojis: props.iconManager.customIcons.data!.map(({ code }) => ({
             id: code,
             name: '',
             keyword: [],
@@ -29,7 +27,7 @@ export default function IconPicker(props?: { onFinish?: () => void }) {
 
   async function onEmojiSelect(e: { shortcodes: string; src?: string }) {
     const icon: Icon = e.src ? { code: parseAppUrl(e.src)!.id, type: 'file' } : { code: e.shortcodes, type: 'emoji' };
-    await iconPicker().submit(icon);
+    await props.iconManager.submit(icon);
     props?.onFinish?.();
   }
 
@@ -50,7 +48,7 @@ export default function IconPicker(props?: { onFinish?: () => void }) {
       maxFrequentRows: 1,
       custom: customIcons[0]?.emojis?.length ? customIcons : undefined,
       onAddCustomEmoji: () => {
-        iconPicker().initCustomIconPicker();
+        props.iconManager.initCustomIconPicker();
         props?.onFinish?.();
       },
     }) as unknown as HTMLElement;
@@ -62,5 +60,5 @@ export default function IconPicker(props?: { onFinish?: () => void }) {
     });
   });
 
-  return <div class="-mt-10" ref={rootRef}></div>;
+  return <div class={props.className} ref={rootRef}></div>;
 }
