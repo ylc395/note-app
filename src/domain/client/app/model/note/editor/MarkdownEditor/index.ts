@@ -1,10 +1,11 @@
 import { action, autorun, computed, observable, reaction, runInAction, toJS } from 'mobx';
 import assert from 'assert';
 import { debounce } from 'lodash-es';
-
-import BaseEditor from '../BaseEditor';
-import Uploader from '../Uploader';
 import z from 'zod';
+
+import BaseEditor, { type Options } from '../BaseEditor';
+import ResourceManager from '../Uploader';
+import type { EditorDTO } from '../../../Workbench/EditorFactory';
 
 const uiStateSchema = z.object({
   scroll: z.object({ x: z.number(), y: z.number() }).optional().catch(undefined),
@@ -17,7 +18,7 @@ export default class MarkdownEditor extends BaseEditor {
 
     reaction(
       () => this.isEmptyBody,
-      debounce((isEmptyBody) => (isEmptyBody ? this.initUploader() : this.removeUploader()), 800),
+      debounce((isEmptyBody) => (isEmptyBody ? this.initUploader() : this.removeUploader(true)), 800),
       { signal: this.destroyController.signal, fireImmediately: true },
     );
 
@@ -51,49 +52,56 @@ export default class MarkdownEditor extends BaseEditor {
 
   public override mimeType = null;
 
-  private uploaderController?: AbortController;
-
   private get isEmptyBody() {
     return this.value.data?.body === '';
   }
 
   @computed
   public get isUploading() {
-    return Boolean(this.fileUploader?.file || this.fileUploader?.downloader);
+    return Boolean(this.resourceManager?.file || this.resourceManager?.downloader);
   }
 
+  private resourceManagerController?: AbortController;
+
   @action
-  private removeUploader() {
-    this.fileUploader = undefined;
-    this.uploaderController?.abort();
+  private removeUploader(destroy?: boolean) {
+    if (destroy) {
+      this.resourceManager?.destroy();
+    }
+    this.resourceManager = undefined;
+    this.resourceManagerController?.abort();
   }
 
   @action
   private initUploader() {
-    this.fileUploader = new Uploader({ noteId: this.entityId });
-    this.uploaderController = new AbortController();
-    const signal = AbortSignal.any([this.uploaderController.signal, this.destroyController.signal]);
+    this.resourceManager = new ResourceManager({ noteId: this.entityId });
+    const abortController = (this.resourceManagerController = new AbortController());
 
-    this.fileUploader.eventBus.on(Uploader.EventNames.Downloaded, this.upgrade.bind(this, true), { signal });
-    this.fileUploader.eventBus.on(Uploader.EventNames.Uploaded, this.upgrade.bind(this), { signal });
+    this.resourceManager.eventBus.on(ResourceManager.EventNames.Downloaded, this.upgrade.bind(this, true), {
+      signal: abortController.signal,
+    });
+
+    this.resourceManager.eventBus.on(ResourceManager.EventNames.Uploaded, this.upgrade.bind(this), {
+      signal: abortController.signal,
+    });
   }
 
   // 从 markdown 编辑器升级为另一种专用编辑器
   @action
-  private upgrade(isPreview = false) {
-    const { fileUploader } = this;
-    const mimeType = fileUploader?.file?.mimeType;
-    assert(fileUploader && mimeType);
+  private upgrade(isTemp = false) {
+    const resourceManager = this.resourceManager;
+    const mimeType = resourceManager?.file?.mimeType;
 
+    assert(resourceManager && mimeType);
     this.removeUploader(); // 提前移除 uploader，免得随后该编辑器 destroy 影响了 uploader
 
     this.tile.replace(this, {
       entityId: this.entityId,
       entityType: this.entityType,
-      mimeType,
+      mimeType: mimeType,
       value: this.value.data,
-      uploader: isPreview ? fileUploader : undefined,
       path: this.path.data,
-    });
+      resourceManager: isTemp ? resourceManager : undefined,
+    } satisfies Options & EditorDTO);
   }
 }

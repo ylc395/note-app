@@ -73,28 +73,22 @@ export default class Tile {
   }
 
   // 在该 Tile 下创建一个 Editor。可以指定其位置
-  // 不能创建 noteId-mimeType 均相同的两个 editor
+  // 不能创建 noteId-mimeType 均相同的两个 editor（相同 noteId 不同 mimeType 的 editor，则可能在预览过程中短暂共存）
   @action
   public createAndAddEditor(entity: EditorDTO, dest?: Editor | number) {
     const newEditor = this.editorFactory.create(this, entity);
 
     assert(
-      !this.editors.find(
-        (editor) =>
-          editor.entityId === entity.entityId &&
-          editor.mimeType === newEditor.mimeType &&
-          editor.isTemp === newEditor.isTemp,
-      ),
+      !this.editors.find((editor) => editor.entityId === entity.entityId && editor.mimeType === entity.mimeType),
       'can not create duplicated editor',
     );
-
     this.addEditor(newEditor, dest);
 
     return newEditor;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public replace(editor: Editor<any>, newEditorDTO: EditorDTO) {
+  public replace<T extends EditorDTO>(editor: Editor<any>, newEditorDTO: T) {
     const index = editor.index;
     assert(editor.tile === this);
     editor.destroy();
@@ -105,7 +99,6 @@ export default class Tile {
 
   @action
   public addEditor(editor: Editor, dest?: Editor | number) {
-    // 刚刚创建出来的 editor，其 tile 还没将其纳入其中。因此这个 if 判断是有意义的
     if (editor.tile.editors.includes(editor)) {
       editor.tile.removeEditor(editor);
     }

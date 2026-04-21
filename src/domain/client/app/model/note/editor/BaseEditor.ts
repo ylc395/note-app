@@ -10,7 +10,7 @@ import { EntityTypes } from '#domain/shared/model/entity';
 
 import type Tile from '../../Workbench/Tile';
 import DomainEventBus, { type UpdatedEvent } from '../EventBus';
-import Uploader from './Uploader';
+import ResourceManager from './Uploader';
 import BaseEditor, { Options as BaseOptions } from '../../Workbench/BaseEditor';
 import IconManager from '../IconManager';
 
@@ -21,25 +21,26 @@ export const uiStateStoreName = 'editor_UI_state';
 export const remoteIconStoreName = 'remote_icon';
 
 export interface Options extends BaseOptions<NoteVO> {
-  uploader?: Uploader;
+  resourceManager?: ResourceManager;
 }
 
 type Patch = Pick<NotePatchDTO, 'body' | 'icon' | 'title'>;
 
 export default abstract class NoteBaseEditor extends BaseEditor<NoteVO> {
-  constructor(tile: Tile, { uploader, ...options }: Options) {
+  constructor(tile: Tile, { resourceManager, ...options }: Options) {
     super(tile, options);
+    this.isTemp = Boolean(resourceManager);
 
     runInAction(() => {
-      this.fileUploader = uploader;
+      this.resourceManager = resourceManager;
     });
 
-    this.fileUploader?.eventBus.on(Uploader.EventNames.Uploaded, this.reload.bind(this, true));
+    this.resourceManager?.eventBus.on(ResourceManager.EventNames.Uploaded, this.reload.bind(this, true));
 
     this.blob = createQuery(
       ({ signal }) => this.remote.note.getBlob.query(this.entityId, { signal }) as Promise<ArrayBuffer>,
       {
-        initialData: this.fileUploader?.file?.data,
+        initialData: resourceManager?.file?.data,
         queryKey: ['note.blob', this.entityId],
         staleTime: Infinity,
         abortSignal: this.destroyController.signal,
@@ -54,7 +55,10 @@ export default abstract class NoteBaseEditor extends BaseEditor<NoteVO> {
     });
   }
 
-  @observable.ref public accessor fileUploader: Uploader | undefined;
+  // 一个临时的编辑器，用于预览文件效果
+  public readonly isTemp: boolean;
+
+  @observable.ref public accessor resourceManager: ResourceManager | undefined;
 
   protected readonly remote = container.resolve(rpcToken);
 
@@ -133,7 +137,7 @@ export default abstract class NoteBaseEditor extends BaseEditor<NoteVO> {
       this.blob.remove(); // 从缓存中移除。因为这是一个临时的 blob
     }
 
-    this.fileUploader?.destroy();
+    this.resourceManager?.destroy();
     Promise.resolve(this.upload.flush()).then(() => super.destroy());
   }
 

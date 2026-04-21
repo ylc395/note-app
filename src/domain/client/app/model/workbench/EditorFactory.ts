@@ -1,9 +1,9 @@
 import type Tile from './Tile';
-import Editor, { Options } from './BaseEditor';
+import Editor, { Options as EditorOptions } from './BaseEditor';
 import { EntityId, EntityTypes } from '#domain/shared/model/entity';
 import assert from 'assert';
 
-export interface EditorDTO<T = unknown> extends Options<T> {
+export interface EditorDTO<T = unknown> extends EditorOptions<T> {
   mimeType: string | null;
   entityType: EntityTypes;
 }

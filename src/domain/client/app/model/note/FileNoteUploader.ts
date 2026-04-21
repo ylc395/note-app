@@ -6,16 +6,17 @@ import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
 import type { FileDTO } from '#domain/shared/model/file';
 import { getHash } from '#utils/file';
-import type { NewNoteDTO } from '#domain/shared/model/note';
+import type { NewNoteDTO, NoteVO } from '#domain/shared/model/note';
 import DomainEventBus from './EventBus';
 
 export default class FileNoteUploader {
   constructor(
     private readonly options: {
       files: FileDTO[];
-      onUpload: (files: FileDTO[]) => void;
-      onFinish: () => void;
-      params: Partial<NewNoteDTO>;
+      onUpload?: (files: FileDTO[]) => void;
+      onFinish?: (error?: unknown) => void;
+      params?: Partial<NewNoteDTO>;
+      noteId?: NoteVO['id'];
     },
   ) {
     this.init();
@@ -49,10 +50,14 @@ export default class FileNoteUploader {
 
   @computed
   public get hasDuplicated() {
-    return this.fileNoteMap.values().some(({ data }) => data?.notes.length);
+    return this.duplicatedFiles.length > 0;
   }
 
   private async init() {
+    if (!this.options.noteId) {
+      assert(this.options.files.length === 1, 'only one file is acceptable when noteId is provided');
+    }
+
     await Promise.all(
       this.options.files.map(async (file) => {
         const hash = await getHash(file.data);
@@ -77,9 +82,16 @@ export default class FileNoteUploader {
     assert(this.isReady);
     files = files || this.options.files;
 
-    this.options.onUpload(files);
-    await Promise.all(files.map((file) => this.fileUploadingMap.get(file)!.mutate()));
-    this.options.onFinish();
+    this.options.onUpload?.(files);
+
+    try {
+      await Promise.all(files.map((file) => this.fileUploadingMap.get(file)!.mutate()));
+    } catch (error) {
+      this.options.onFinish?.(error);
+      return;
+    }
+
+    this.options.onFinish?.();
   }
 
   private uploadFile(file: FileDTO) {
@@ -88,15 +100,25 @@ export default class FileNoteUploader {
         const result = this.fileNoteMap.get(file)?.data;
         assert(result);
 
-        return this.remote.note.create.mutate({
-          ...this.options.params,
-          ...(result.notes.length > 0 ? { fileHash: result.hash } : { file }),
-          title: file.name,
-        });
+        return this.options.noteId
+          ? this.remote.note.setFile.mutate([this.options.noteId, file])
+          : this.remote.note.create.mutate({
+              ...this.options.params,
+              ...(result.notes.length > 0 ? { fileHash: result.hash } : { file }),
+              title: file.name,
+            });
       },
       {
         onSuccess: (data) => {
-          this.domainEventBus.emit(DomainEventBus.eventNames.Created, data);
+          if (this.options.noteId) {
+            this.domainEventBus.emit(DomainEventBus.eventNames.Updated, {
+              id: this.options.noteId,
+              source: this,
+              payload: data,
+            });
+          } else {
+            this.domainEventBus.emit(DomainEventBus.eventNames.Created, data);
+          }
         },
       },
     );

@@ -12,7 +12,6 @@ enum Mode {
 }
 
 export default function Empty() {
-  const buttonClassName = 'pointer-events-auto border-border-primary border border-dashed p-18 rounded-3xl';
   const editor = createMemo(() => {
     const { editor } = useContext()!;
     assert(editor instanceof MarkdownEditor);
@@ -21,11 +20,11 @@ export default function Empty() {
   });
 
   const mode = createMemo(() => {
-    if (editor().fileUploader?.downloader) {
+    if (editor().resourceManager?.downloader) {
       return Mode.Remote;
     }
 
-    if (editor().fileUploader?.file) {
+    if (editor().resourceManager?.file) {
       return Mode.Local;
     }
 
@@ -36,17 +35,19 @@ export default function Empty() {
     return !mode() || mode() === v;
   }
 
+  const buttonContainerClassName = 'pointer-events-auto border-border-primary border rounded-2xl size-60';
+
   return (
-    <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-40">
+    <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-fg-tertiary">
       <Show when={mode() === null}>
         <h1 class="mb-6">直接开始输入，或...</h1>
       </Show>
       <div class="flex space-x-12">
         <Show when={shouldShow(Mode.Local)}>
-          <LocalFileUploader className={buttonClassName} />
+          <LocalFileUploader className={buttonContainerClassName} />
         </Show>
         <Show when={shouldShow(Mode.Remote)}>
-          <RemoteFileUploader className={buttonClassName} />
+          <RemoteFileUploader className={buttonContainerClassName} />
         </Show>
       </div>
     </div>

@@ -20,7 +20,6 @@ export interface Options<T> {
   icon?: Icon | null;
   value?: T;
   path?: EntityPath;
-  [x: string]: unknown;
 }
 
 export default abstract class BaseEditor<T = unknown> {
@@ -50,11 +49,6 @@ export default abstract class BaseEditor<T = unknown> {
         enabled: this.isCurrent && !this.options.path,
       }),
     });
-  }
-
-  // 带初始值的编辑器我们称为“临时编辑器”
-  public get isTemp() {
-    return Boolean(this.options.value);
   }
 
   private readonly db = container.resolve(documentDbToken);

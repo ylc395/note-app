@@ -14,9 +14,9 @@ export default function PreviewTip() {
   return (
     <div>
       <p>当前正在预览</p>
-      <p>{editor().fileUploader?.file?.sourceUrl}</p>
+      <p>{editor().resourceManager?.file?.sourceUrl}</p>
       <div>
-        <button onClick={() => editor().fileUploader?.upload.mutate()}>保存</button>
+        <button onClick={() => editor().resourceManager?.upload()}>保存</button>
         <button onClick={() => editor().reload()}>返回</button>
       </div>
     </div>

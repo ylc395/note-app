@@ -5,6 +5,7 @@ import MarkdownEditor from '#domain/client/app/model/note/editor/MarkdownEditor'
 import UnknownEditor from '#domain/client/app/model/note/editor/UnknownEditor';
 import PdfEditor from '#domain/client/app/model/note/editor/PdfEditor';
 import HtmlEditor from '#domain/client/app/model/note/editor/HtmlEditor';
+import NoteBaseEditor from '#domain/client/app/model/note/editor/BaseEditor';
 
 import MarkdownEditorView from './MarkdownEditor';
 import UnknownEditorView from './UnknownEditor';
@@ -39,7 +40,7 @@ export default function Editor(props: { editor: BaseEditor }) {
               <MarkdownEditorView />
             </Match>
           </Switch>
-          <Show when={props.editor.isTemp}>
+          <Show when={props.editor instanceof NoteBaseEditor && props.editor.isTemp}>
             <PreviewTip />
           </Show>
         </Show>
