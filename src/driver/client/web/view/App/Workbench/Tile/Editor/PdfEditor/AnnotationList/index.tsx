@@ -10,7 +10,6 @@ import SvgItem from './SvgItem';
 import { useContext } from '../context';
 import FloatingPanel from '#web/view/components/FloatingPanel';
 import { action } from 'mobx';
-import Resizable from '#web/view/components/Resizable';
 import Button from '#web/view/components/Button';
 import { cx } from 'class-variance-authority';
 
@@ -22,7 +21,7 @@ export default function AnnotationList(props: { id: string }) {
 
   const uiState = editor.annotation.uiState;
   const [floatingSize, setFloatingSize] = createSignal(uiState.floatingSize || { width: 300, height: 500 });
-  const [floatingPos, setFloatingPos] = createSignal(uiState.floatingPos || { right: 20, top: 20 });
+  const [floatingPos, setFloatingPos] = createSignal(uiState.floatingPos || { x: 20, y: 20 });
 
   const items = createMemo(() => {
     const annotations = editor.annotation.items.result.data;
@@ -77,14 +76,10 @@ export default function AnnotationList(props: { id: string }) {
       onMove={action(handleMove)}
       isEnabled={Boolean(editor.annotation.uiState.isFloating)}
       onMoveEnd={action(handleMoveEnd)}
+      size={floatingSize()}
+      onResize={action(setFloatingSize)}
+      onResizeEnd={action(handleResizeEnd)}
     >
-      <Resizable
-        isEnabled={Boolean(editor.annotation.uiState.isFloating)}
-        className="absolute"
-        size={floatingSize()}
-        onResize={setFloatingSize}
-        onResizeEnd={action(handleResizeEnd)}
-      >
         <div
           class={cx(
             'w-64 p-2 border-border-primary flex flex-col overflow-auto bg-surface-raised',
@@ -126,7 +121,6 @@ export default function AnnotationList(props: { id: string }) {
             )}
           </Show>
         </div>
-      </Resizable>
     </FloatingPanel.Main>
   );
 }

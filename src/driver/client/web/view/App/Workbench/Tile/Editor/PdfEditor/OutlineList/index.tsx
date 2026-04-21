@@ -6,7 +6,6 @@ import { useSplitterContext } from '@ark-ui/solid';
 
 import FloatingPanel from '#web/view/components/FloatingPanel';
 import Item from './Item';
-import Resizable from '#web/view/components/Resizable';
 import OutlineViewModel from './Outline';
 import { useContext } from '../context';
 import Button from '#web/view/components/Button';
@@ -89,14 +88,10 @@ export default function Outline(props: { id: string }) {
       onMove={setFloatingPos}
       onMoveStart={action(partialRight(handleMove, true))}
       onMoveEnd={action(handleMoveEnd)}
+      size={floatingSize()}
+      onResize={action(setFloatingSize)}
+      onResizeEnd={action(handleResizeEnd)}
     >
-      <Resizable
-        isEnabled={Boolean(uiState.isFloating)}
-        className="absolute"
-        size={floatingSize()}
-        onResize={setFloatingSize}
-        onResizeEnd={action(handleResizeEnd)}
-      >
         <div
           class={cx(
             'overflow-auto border-border-primary pb-4 flex flex-col bg-surface-raised',
@@ -143,7 +138,6 @@ export default function Outline(props: { id: string }) {
             </div>
           </Show>
         </div>
-      </Resizable>
     </FloatingPanel.Main>
   );
 }

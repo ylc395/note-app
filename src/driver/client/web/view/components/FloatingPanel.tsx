@@ -1,250 +1,96 @@
-import { createEffect, createSignal, onCleanup, type Accessor, type JSX } from 'solid-js';
+import {
+  createContext,
+  createEffect,
+  createMemo,
+  createSignal,
+  onCleanup,
+  Show,
+  useContext,
+  type Accessor,
+  type JSX,
+  type Setter,
+} from 'solid-js';
 import { Ref } from '@solid-primitives/refs';
-import { createContextProvider } from '@solid-primitives/context';
-import { findAncestor } from '#web/utils/dom';
+import { FloatingPanel } from '@ark-ui/solid/floating-panel';
+import assert from 'assert';
 
-const containerMap = new WeakMap<HTMLElement, Set<HTMLElement>>();
-
-const [ContextProvider, useContext] = createContextProvider(
-  (props: {
-    isEnabled: boolean;
-    onMoveEnd: (e: { x: number; y: number }) => void;
-    onMoveStart: (e: { x: number; y: number }) => void;
-    onMove: (e: { x: number; y: number }) => void;
-    panelRef: Accessor<HTMLElement | undefined>;
-  }) => ({
-    isEnabled: () => props.isEnabled,
-    onMoveEnd: props.onMoveEnd,
-    onMoveStart: props.onMoveStart,
-    onMove: props.onMove,
-    panelRef: props.panelRef,
-  }),
-);
-
-function getContainer(element: HTMLElement) {
-  return findAncestor(element, (el) => getComputedStyle(el).position !== 'static');
-}
-
-function getMaxZIndex(element: HTMLElement | HTMLElement[]) {
-  let siblings: Iterable<HTMLElement> | undefined;
-
-  if (Array.isArray(element)) {
-    if (element.length === 0) {
-      return 0;
-    }
-
-    siblings = element;
-  } else {
-    const container = getContainer(element);
-
-    if (!container) {
-      return 0;
-    }
-
-    siblings = containerMap.get(container);
-  }
-
-  return siblings
-    ? Math.max(
-        ...Array.from(siblings).map((el) => {
-          const zIndex = Number(getComputedStyle(el).zIndex);
-          return Number.isNaN(zIndex) ? 0 : zIndex;
-        }),
-      )
-    : 0;
-}
-
-function Main(props: {
-  children: JSX.Element;
-  isEnabled: boolean;
-  pos: { x?: number; y?: number; left?: number; top?: number; right?: number; bottom?: number };
+const FloatingPanelContext = createContext<{
+  isEnabled: Accessor<boolean>;
+  isTempDragging: Accessor<boolean>;
+  setIsTempDragging: Setter<boolean>;
+  onMoveStart: (e: { x: number; y: number }) => void;
   onMove: (e: { x: number; y: number }) => void;
   onMoveEnd: (e: { x: number; y: number }) => void;
-  onMoveStart: (e: { x: number; y: number }) => void;
-}) {
-  const [ref, setRef] = createSignal<HTMLElement>();
+  panelRef: Accessor<HTMLElement | undefined>;
+}>();
 
-  createEffect(() => {
-    const panel = ref();
-
-    if (!props.isEnabled || !panel) {
-      return;
-    }
-
-    if (typeof props.pos.left === 'number' || typeof props.pos.x === 'number') {
-      panel.style.left = `${props.pos.left ?? props.pos.x}px`;
-    }
-
-    if (typeof props.pos.top === 'number' || typeof props.pos.y === 'number') {
-      panel.style.top = `${props.pos.top ?? props.pos.y}px`;
-    }
-
-    if (typeof props.pos.right === 'number') {
-      panel.style.right = `${props.pos.right}px`;
-    }
-
-    if (typeof props.pos.bottom === 'number') {
-      panel.style.bottom = `${props.pos.bottom}px`;
-    }
-
-    onCleanup(() => {
-      panel.style.top = '';
-      panel.style.left = '';
-      panel.style.right = '';
-      panel.style.bottom = '';
-    });
-  });
-
-  createEffect(() => {
-    const panel = ref();
-
-    if (!props.isEnabled || !panel) {
-      return;
-    }
-
-    const container = getContainer(panel);
-
-    if (!container) {
-      return;
-    }
-
-    let siblings = containerMap.get(container);
-
-    if (!siblings) {
-      siblings = new Set();
-      containerMap.set(container, siblings);
-    }
-
-    const maxIndex = getMaxZIndex(Array.from(siblings));
-
-    siblings.add(panel);
-    panel.style.position = 'absolute';
-    panel.style.zIndex = `${maxIndex + 1}`;
-    panel.dataset.floatingPanel = 'true';
-
-    onCleanup(() => {
-      panel.style.position = '';
-      panel.style.zIndex = '';
-      delete panel.dataset.floatingPanel;
-      containerMap.get(container)?.delete(panel);
-    });
-  });
-
-  return (
-    <ContextProvider {...props} panelRef={ref}>
-      <Ref ref={setRef}>{props.children}</Ref>
-    </ContextProvider>
-  );
-}
-
-function Handler(props: { children: JSX.Element }) {
+/**
+ * 非浮动状态下的拖动检测：检测 pointer 拖动超过阈值时触发 onMoveStart，
+ * 并在同一个拖动周期（isTempDragging）内继续处理 onMove 和 onMoveEnd，
+ * 这样切换到浮动模式后用户无需松开鼠标即可继续拖动。
+ */
+function DragDetector(props: { children: JSX.Element }) {
   const [handlerRef, setHandlerRef] = createSignal<HTMLElement>();
-  const { panelRef, isEnabled, onMoveEnd, onMove, onMoveStart } = useContext()!;
-  const [startPos, setStartPos] = createSignal<{
-    mouse: { x: number; y: number };
-    panel: { x: number; y: number };
-  }>();
-
-  // 开始拖动时，初始化 panel 的一些样式
-  createEffect(() => {
-    const panel = panelRef();
-    const handler = handlerRef();
-
-    if (isEnabled() && startPos() && panel && handler) {
-      const maxZIndex = getMaxZIndex(panel);
-      const zIndex = Number(getComputedStyle(panel).zIndex);
-
-      if (Number.isNaN(zIndex) || zIndex < maxZIndex) {
-        panel.style.zIndex = `${maxZIndex + 1}`;
-      }
-    }
-  });
+  const ctx = useContext(FloatingPanelContext);
+  assert(ctx);
 
   createEffect(() => {
     const handler = handlerRef();
-    const panel = panelRef();
-    const startPosValue = startPos();
 
-    if (!handler || !panel || !startPosValue) {
+    if (!handler) {
       return;
     }
 
-    const container = getContainer(panel);
-
-    if (!container) {
-      return;
-    }
-
-    const abortController = new AbortController();
-    const currentPos = { x: 0, y: 0 };
-
-    document.addEventListener(
-      'pointermove',
-      (e) => {
-        const deltaX = e.clientX - startPosValue.mouse.x;
-        const deltaY = e.clientY - startPosValue.mouse.y;
-
-        let newX = startPosValue.panel.x + deltaX;
-        let newY = startPosValue.panel.y + deltaY;
-
-        // 限制拖动范围不超过定位容器的边界
-        if (container) {
-          const containerRect = container.getBoundingClientRect();
-          const panelRect = panel.getBoundingClientRect();
-          const maxX = containerRect.width - panelRect.width;
-          const maxY = containerRect.height - panelRect.height;
-
-          newX = Math.max(0, Math.min(maxX, newX));
-          newY = Math.max(0, Math.min(maxY, newY));
-        }
-
-        currentPos.x = newX;
-        currentPos.y = newY;
-
-        if (isEnabled()) {
-          onMove({ x: currentPos.x, y: currentPos.y });
-        } else if (deltaX >= 3 || deltaY >= 3) {
-          onMoveStart({ x: currentPos.x, y: currentPos.y });
-        }
-      },
-      { signal: abortController.signal },
-    );
-
-    document.addEventListener(
-      'pointerup',
-      () => {
-        if (!panel || !startPos) {
-          return;
-        }
-
-        if (isEnabled()) {
-          onMoveEnd({ x: currentPos.x, y: currentPos.y });
-        }
-
-        setStartPos(undefined);
-        abortController.abort();
-      },
-      { signal: abortController.signal },
-    );
-  });
-
-  createEffect(() => {
-    const handler = handlerRef();
-    const panel = panelRef();
-
-    if (!handler || !panel) {
-      return;
-    }
+    handler.style.cursor = 'move';
 
     const abortController = new AbortController();
 
     handler.addEventListener(
       'pointerdown',
       (e) => {
-        setStartPos({
-          mouse: { x: e.clientX, y: e.clientY },
-          panel: { x: panel.offsetLeft, y: panel.offsetTop },
-        });
+        const startX = e.clientX;
+        const startY = e.clientY;
+        const panel = ctx.panelRef();
+        assert(panel);
+
+        const panelStartPos = {
+          x: panel.offsetLeft,
+          y: panel.offsetTop,
+        };
+
+        const moveSignal = new AbortController();
+        let panelCurrentPos: { x: number; y: number } | undefined;
+
+        document.addEventListener(
+          'pointermove',
+          (moveEvent) => {
+            const deltaX = moveEvent.clientX - startX;
+            const deltaY = moveEvent.clientY - startY;
+            panelCurrentPos = { x: panelStartPos.x + deltaX, y: panelStartPos.y + deltaY };
+
+            if (ctx.isTempDragging()) {
+              ctx.onMove(panelCurrentPos);
+            } else if (Math.abs(deltaX) >= 3 || Math.abs(deltaY) >= 3) {
+              ctx.setIsTempDragging(true);
+              ctx.onMoveStart(panelCurrentPos);
+            }
+          },
+          { signal: AbortSignal.any([abortController.signal, moveSignal.signal]) },
+        );
+
+        document.addEventListener(
+          'pointerup',
+          () => {
+            if (ctx.isTempDragging() && panelCurrentPos) {
+              ctx.onMoveEnd(panelCurrentPos);
+              ctx.setIsTempDragging(false);
+            }
+
+            moveSignal.abort();
+          },
+
+          { signal: AbortSignal.any([abortController.signal, moveSignal.signal]) },
+        );
       },
       { signal: abortController.signal },
     );
@@ -255,6 +101,92 @@ function Handler(props: { children: JSX.Element }) {
   });
 
   return <Ref ref={setHandlerRef}>{props.children}</Ref>;
+}
+
+function Main(props: {
+  children: JSX.Element;
+  isEnabled: boolean;
+  pos: { x?: number; y?: number; left?: number; top?: number; right?: number; bottom?: number };
+  size?: { width: number; height: number };
+  onMove: (e: { x: number; y: number }) => void;
+  onMoveEnd: (e: { x: number; y: number }) => void;
+  onMoveStart: (e: { x: number; y: number }) => void;
+  onResize?: (e: { width: number; height: number }) => void;
+  onResizeEnd?: (e: { width: number; height: number }) => void;
+}) {
+  const position = createMemo(() => {
+    const { x, y, left, top } = props.pos;
+    return { x: left ?? x ?? 0, y: top ?? y ?? 0 };
+  });
+
+  const [panelRef, setPanelRef] = createSignal<HTMLElement>();
+  const [isTempDragging, setIsTempDragging] = createSignal(false);
+
+  const contextValue = {
+    isEnabled: () => props.isEnabled,
+    onMoveStart: props.onMoveStart,
+    onMove: props.onMove,
+    onMoveEnd: props.onMoveEnd,
+    panelRef,
+    isTempDragging,
+    setIsTempDragging,
+  };
+
+  createEffect(() => {
+    const panel = panelRef();
+    if (isTempDragging() && panel) {
+      Object.assign(panel.style, {
+        position: 'absolute',
+        left: `${position().x}px`,
+        top: `${position().y}px`,
+        zIndex: 10,
+      });
+    }
+  });
+
+  return (
+    <FloatingPanelContext.Provider value={contextValue}>
+      <Show when={props.isEnabled && !isTempDragging()} fallback={<Ref ref={setPanelRef}>{props.children}</Ref>}>
+        <FloatingPanel.Root
+          open={true}
+          position={position()}
+          onPositionChange={(e) => props.onMove(e.position)}
+          onPositionChangeEnd={(e) => props.onMoveEnd(e.position)}
+          size={props.size}
+          onSizeChange={(e) => props.onResize?.(e.size)}
+          onSizeChangeEnd={(e) => props.onResizeEnd?.(e.size)}
+          strategy="absolute"
+          draggable
+          resizable
+        >
+          <FloatingPanel.Positioner class="z-10">
+            <FloatingPanel.Content ref={setPanelRef}>
+              {props.children}
+              <FloatingPanel.ResizeTrigger axis="n" class="absolute top-0 left-2 right-2 h-1 cursor-n-resize" />
+              <FloatingPanel.ResizeTrigger axis="e" class="absolute top-2 right-0 bottom-2 w-1 cursor-e-resize" />
+              <FloatingPanel.ResizeTrigger axis="w" class="absolute top-2 left-0 bottom-2 w-1 cursor-w-resize" />
+              <FloatingPanel.ResizeTrigger axis="s" class="absolute bottom-0 left-2 right-2 h-1 cursor-s-resize" />
+              <FloatingPanel.ResizeTrigger axis="ne" class="absolute top-0 right-0 h-2 w-2 cursor-ne-resize" />
+              <FloatingPanel.ResizeTrigger axis="se" class="absolute bottom-0 right-0 h-2 w-2 cursor-se-resize" />
+              <FloatingPanel.ResizeTrigger axis="sw" class="absolute bottom-0 left-0 h-2 w-2 cursor-sw-resize" />
+              <FloatingPanel.ResizeTrigger axis="nw" class="absolute top-0 left-0 h-2 w-2 cursor-nw-resize" />
+            </FloatingPanel.Content>
+          </FloatingPanel.Positioner>
+        </FloatingPanel.Root>
+      </Show>
+    </FloatingPanelContext.Provider>
+  );
+}
+
+function Handler(props: { children: JSX.Element }) {
+  const ctx = useContext(FloatingPanelContext);
+  assert(ctx);
+
+  return (
+    <Show when={ctx.isEnabled() && !ctx.isTempDragging()} fallback={<DragDetector>{props.children}</DragDetector>}>
+      <FloatingPanel.DragTrigger>{props.children}</FloatingPanel.DragTrigger>
+    </Show>
+  );
 }
 
 export default { Main, Handler };

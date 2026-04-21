@@ -8,7 +8,6 @@ import { cx } from 'class-variance-authority';
 import FloatingPanel from '#web/view/components/FloatingPanel';
 import MarkdownEditor from '#web/view/components/MarkdownEditor';
 import type Editor from '#web/view/components/MarkdownEditor/Editor';
-import Resizable from '#web/view/components/Resizable';
 import Button from '#web/view/components/Button';
 import { useContext } from './context';
 import { useEditorBody } from '../composables';
@@ -59,50 +58,45 @@ export default function BodyEditor(props: { id: string }) {
       onMove={setFloatingPos}
       isEnabled={Boolean(editor.body.uiState.isFloating)}
       onMoveEnd={action(handleMoveEnd)}
+      size={floatingSize()}
+      onResize={action(setFloatingSize)}
+      onResizeEnd={action(handleResizeEnd)}
     >
-      <Resizable
-        isEnabled={Boolean(editor.body.uiState.isFloating)}
-        className="absolute"
-        size={floatingSize()}
-        onResize={setFloatingSize}
-        onResizeEnd={action(handleResizeEnd)}
+      <div
+        class={cx(
+          'w-64 p-2 border-border-primary flex flex-col overflow-auto bg-surface-raised h-full',
+          uiState.isFloating ? 'border' : 'border-r',
+        )}
+        {...(!editor.body.uiState.isFloating ? splitter().getPanelProps({ id: props.id }) : null)}
       >
-        <div
-          class={cx(
-            'w-64 p-2 border-border-primary flex flex-col overflow-auto bg-surface-raised',
-            uiState.isFloating ? 'border' : 'border-r',
-          )}
-          {...(!editor.body.uiState.isFloating ? splitter().getPanelProps({ id: props.id }) : null)}
-        >
-          <FloatingPanel.Handler>
-            <div class="flex justify-between items-center">
-              <h4>笔记</h4>
-              <div>
-                <Show when={uiState.isFloating}>
-                  <Button size="small" onClick={action(cancelFloating)}>
-                    <PinOffIcon class="mr-1" />
-                    取消悬浮
-                  </Button>
-                </Show>
-              </div>
+        <FloatingPanel.Handler>
+          <div class="flex justify-between items-center">
+            <h4>笔记</h4>
+            <div>
+              <Show when={uiState.isFloating}>
+                <Button size="small" onClick={action(cancelFloating)}>
+                  <PinOffIcon class="mr-1" />
+                  取消悬浮
+                </Button>
+              </Show>
             </div>
-          </FloatingPanel.Handler>
-          <Show when={editor.value.data}>
-            {(note) => (
-              <MarkdownEditor
-                ref={setMdEditor}
-                className="border-r-border-primary border-r h-full grow"
-                onUpdate={onUpdate}
-                defaultValue={note().body}
-                initialScroll={uiState.scroll}
-                initialCursorPos={uiState.cursorPos}
-                onScrollEnd={action(handleScrollEnd)}
-                onSelectionUpdate={action(handleSelectionUpdate)}
-              />
-            )}
-          </Show>
-        </div>
-      </Resizable>
+          </div>
+        </FloatingPanel.Handler>
+        <Show when={editor.value.data}>
+          {(note) => (
+            <MarkdownEditor
+              ref={setMdEditor}
+              className="border-r-border-primary border-r h-full grow"
+              onUpdate={onUpdate}
+              defaultValue={note().body}
+              initialScroll={uiState.scroll}
+              initialCursorPos={uiState.cursorPos}
+              onScrollEnd={action(handleScrollEnd)}
+              onSelectionUpdate={action(handleSelectionUpdate)}
+            />
+          )}
+        </Show>
+      </div>
     </FloatingPanel.Main>
   );
 }
