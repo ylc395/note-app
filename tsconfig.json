@@ -1,6 +1,7 @@
 {
+  "include": ["./src"],
   "compilerOptions": {
-    "target": "ES2023", // 用了 ES Decorator，如果编译到 ESNext，各个 runtime 还不支持
+    "target": "esnext",
     "allowJs": true,
     "types": [],
     "outDir": "./dist",

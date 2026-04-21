@@ -32,6 +32,7 @@ export default async function createViteServer() {
       'import.meta.env.VITE_WEB_ROOT_ID': JSON.stringify('app'),
       'import.meta.env.VITE_WEB_PLATFORM': JSON.stringify('electron'),
       'import.meta.env.RUNTIME_ENV': JSON.stringify(RUNTIME_ENV),
+      'import.meta.env.DEV_CLEAN': JSON.stringify(process.argv.includes('--clean') ? '1' : '0'),
     },
   });
 

@@ -6,7 +6,13 @@ function addPrefix(key: string) {
   return `${APP_NAME}:${key}`;
 }
 
-const webKvlStorage: KvStorage = {
+class WebKvlStorage implements KvStorage {
+  constructor() {
+    if (IS_CLEAN_DEV) {
+      localStorage.clear();
+    }
+  }
+
   get(key: string, schema?: ZodType) {
     const json = localStorage.getItem(addPrefix(key));
 
@@ -27,21 +33,17 @@ const webKvlStorage: KvStorage = {
     }
 
     return Promise.resolve(parsed);
-  },
+  }
 
-  set(key, value) {
+  set(key: string, value: unknown) {
     localStorage.setItem(addPrefix(key), JSON.stringify(value));
     return Promise.resolve();
-  },
+  }
 
-  delete(key) {
+  delete(key: string) {
     localStorage.removeItem(addPrefix(key));
     return Promise.resolve();
-  },
-};
-
-if (IS_CLEAN_DEV) {
-  localStorage.clear();
+  }
 }
 
-export default webKvlStorage;
+export default new WebKvlStorage();
