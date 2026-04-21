@@ -9,6 +9,6 @@ export interface NoteRepository {
   findOneById: (id: Note['id'], config?: { isAvailableOnly?: boolean }) => Promise<Required<Note> | null>;
   findBlobById: (id: Note['id'], config?: { isAvailableOnly?: boolean }) => Promise<ArrayBuffer | null>;
   findFiles: (ids: Note['id'][]) => Promise<Record<Note['id'], FileVO>>;
-  findFileTextLocation: (id: Note['id'], q: { pages?: number[] }) => Promise<TextLocation[]>;
+  findFileTextLocation: (id: Note['id'], q: { page: number }) => Promise<TextLocation | null>;
   findAllCustomIcons: () => Promise<Icon[]>;
 }

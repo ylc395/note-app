@@ -158,21 +158,17 @@ export default class SqliteNoteRepository extends BaseRepository implements Note
     );
   }
 
-  public async findFileTextLocation(id: Note['id'], q: { pages?: number[] }) {
-    let s = this.db
+  public async findFileTextLocation(id: Note['id'], q: { page: number }) {
+    const s = this.db
       .selectFrom(this.tableName)
       .innerJoin(fileTextTableName, `${this.tableName}.fileId`, `${fileTextTableName}.fileId`)
       .select([`${fileTextTableName}.location`])
       .where(`${this.tableName}.id`, '=', id)
+      .where((eb) => eb(sql`location ->> 'page'`, '=', q.page))
       .where(`${this.tableName}.type`, '=', EntityTypes.Note);
 
-    if (q.pages) {
-      s = s.where((eb) => eb(sql`location ->> 'page'`, 'in', q.pages));
-    }
-
-    const rows = await s.execute();
-
-    return rows.map((row) => row.location);
+    const row = await s.executeTakeFirst();
+    return row?.location || null;
   }
 
   public async findAllCustomIcons() {

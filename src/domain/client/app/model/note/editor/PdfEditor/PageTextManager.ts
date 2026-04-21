@@ -31,15 +31,11 @@ export default class PageTextManager {
     // 前端没法判断，只好总是请求
     return createQuery(
       async ({ signal }) => {
-        const texts = await this.remote.note.queryFileTextRecord.query(
-          { id: this.options.noteId, pages: [page] },
-          { signal },
-        );
-        assert(texts.length > 0); // 利用异常来触发 retry
-        return texts;
+        const text = await this.remote.note.queryFileTextRecord.query({ id: this.options.noteId, page }, { signal });
+        assert(text); // 利用异常来触发 retry
+        return text;
       },
       {
-        select: (data) => data[0],
         abortSignal: this.destroyController.signal,
         queryKey: ['pdf-texts', { id: this.options.noteId, page }],
         retryDelay: 5000,

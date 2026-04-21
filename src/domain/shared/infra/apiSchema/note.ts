@@ -45,5 +45,5 @@ export const clientNoteQuerySchema = z.object({
 });
 export const fileTextQuerySchema = z.object({
   id: noteSchema.shape["id"],
-  pages: z.array(z.number()).optional()
+  page: z.number()
 });

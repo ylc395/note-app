@@ -58,7 +58,7 @@ export interface NoteVO extends Omit<Note, 'fileId'> {
  */
 export interface FileTextQuery {
   id: Note['id'];
-  pages?: number[];
+  page: number;
 }
 
 export function normalizeTitle(note: Note | NoteVO | Entity) {

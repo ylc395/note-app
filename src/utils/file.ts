@@ -14,7 +14,7 @@ export async function getHash(data: ArrayBuffer) {
 export function toArrayBuffer(buffer: Buffer | Uint8Array | string) {
   if (typeof buffer === 'string') {
     const encoder = new TextEncoder();
-    return encoder.encode(buffer).buffer;
+    return encoder.encode(buffer).buffer as ArrayBuffer;
   }
 
   return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength) as ArrayBuffer;
