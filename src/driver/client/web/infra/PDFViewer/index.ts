@@ -10,7 +10,7 @@ import {
   type PDFPageView,
 } from 'pdfjs-dist/web/pdf_viewer.mjs';
 import assert from 'assert';
-import { range } from 'lodash-es';
+import { debounce, range } from 'lodash-es';
 import { action, computed, observable, runInAction } from 'mobx';
 
 import shell from '../shell';
@@ -90,6 +90,11 @@ export default class PDFViewer {
   @observable.ref
   public accessor visiblePages: Readonly<number[]> = [];
 
+  @action.bound
+  private updateVisiblePages() {
+    this.visiblePages = Array.from((this.core?._getVisiblePages() as { ids: Set<number> }).ids);
+  }
+
   @observable
   public accessor isReady = false;
 
@@ -161,17 +166,18 @@ export default class PDFViewer {
 
     options.view.addEventListener('click', this.hijackClick, { signal: this.abortController.signal });
 
+    pdfViewer.pagesPromise.then(this.updateVisiblePages);
+
+    pdfViewer.eventBus.on('updateviewarea', debounce(this.updateVisiblePages, 300), {
+      signal: this.abortController.signal,
+    });
+
     pdfViewer.onePageRendered.then(() => {
-      pdfViewer.eventBus.on(
-        'updateviewarea',
-        action((e: UpdateViewAreaEvent) => {
-          options.onProgressUpdated?.(e);
-          this.visiblePages = Array.from((pdfViewer._getVisiblePages() as { ids: Set<number> }).ids);
-        }),
-        {
+      if (options.onProgressUpdated) {
+        pdfViewer.eventBus.on('updateviewarea', options.onProgressUpdated, {
           signal: this.abortController.signal,
-        },
-      );
+        });
+      }
     });
 
     runInAction(() => {
@@ -305,7 +311,8 @@ export default class PDFViewer {
 
   public getPageInfo(page: number) {
     const pageView: PDFPageView = this.core?.getPageView(page - 1);
-    const pdfPage: PDFPageProxy = pageView.pdfPage;
+    const pdfPage: PDFPageProxy | null = pageView.pdfPage;
+    assert(pdfPage);
     const [x0, y0, x1, y1] = pdfPage.view;
 
     const { div: element } = pageView;

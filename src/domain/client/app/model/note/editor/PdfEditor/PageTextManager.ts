@@ -2,6 +2,7 @@ import { action, computed, observable } from 'mobx';
 import type { PDFDocumentProxy } from 'pdfjs-dist';
 import { createQuery } from 'mobx-tanstack-query/preset';
 import { memoize } from 'lodash-es';
+import assert from 'assert';
 
 import container from '#utils/singletonContainer';
 import { token as rpcToken } from '#domain/client/shared/infra/rpc';
@@ -26,9 +27,17 @@ export default class PageTextManager {
   @observable.ref private accessor doc: PDFDocumentProxy | undefined;
 
   public readonly loadPageText = memoize((page: number) => {
+    // 或许应当判断一下 nativeText 里有没有文本。但有的 PDF 文档中，nativeText 有少量的文本，但和真正的内容关系却不大
+    // 前端没法判断，只好总是请求
     return createQuery(
-      ({ signal }) =>
-        this.remote.note.queryFileTextRecord.query({ id: this.options.noteId, pages: [page] }, { signal }),
+      async ({ signal }) => {
+        const texts = await this.remote.note.queryFileTextRecord.query(
+          { id: this.options.noteId, pages: [page] },
+          { signal },
+        );
+        assert(texts.length > 0); // 利用异常来触发 retry
+        return texts;
+      },
       {
         select: (data) => data[0],
         abortSignal: this.destroyController.signal,

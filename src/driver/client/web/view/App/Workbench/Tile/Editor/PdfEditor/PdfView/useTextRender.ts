@@ -1,5 +1,4 @@
 import { createEffect } from 'solid-js';
-import assert from 'assert';
 
 import { useContext } from '../context';
 
@@ -44,8 +43,16 @@ export default function useTextRender() {
         }
       }
 
+      if (lineDoms.length === 0) {
+        continue;
+      }
+
       const endOfContent = textLayer.querySelector('.endOfContent');
-      assert(endOfContent);
+
+      if (!endOfContent) {
+        // 理论上如果滚动太快，有时会没有 endOfContent 元素。但后来给 visiblePages 加了 debounce，应该不会有这种情况了
+        return;
+      }
 
       for (const lineEl of lineDoms) {
         textLayer.insertBefore(lineEl, endOfContent);
