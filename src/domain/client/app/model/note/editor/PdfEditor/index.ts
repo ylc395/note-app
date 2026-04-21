@@ -1,5 +1,5 @@
 import type { PDFDocumentProxy } from 'pdfjs-dist';
-import { autorun, computed, observable, runInAction, untracked, when } from 'mobx';
+import { action, autorun, computed, observable, runInAction, untracked, when } from 'mobx';
 import assert from 'assert';
 import z from 'zod';
 
@@ -39,9 +39,9 @@ export default class PdfEditor extends BaseEditor {
 
   private readonly docFactory = container.resolve(PDFDocumentFactory);
 
-  @observable.ref public accessor doc: PDFDocumentProxy | undefined; // this is view-independent
-
   public override readonly mimeType = MimeTypes.PDF;
+
+  @observable.ref public accessor doc: PDFDocumentProxy | undefined; // this is view-independent
 
   @observable public accessor progress: string | undefined;
 
@@ -49,7 +49,10 @@ export default class PdfEditor extends BaseEditor {
 
   @observable private accessor isUIStateReady = false;
 
-  public readonly texts = new PageTextManager(this.entityId);
+  public readonly texts = new PageTextManager({
+    noteId: this.entityId,
+    shouldFetch: (page: number) => this.visiblePages.includes(page),
+  });
 
   public readonly annotation = new AnnotationManager(this.entityId);
 
@@ -60,6 +63,14 @@ export default class PdfEditor extends BaseEditor {
   public readonly textFinder = new TextFinder(this.texts);
 
   public readonly svgEditor = new SvgAnnotationEditor(this.annotation);
+
+  @observable.ref
+  public accessor visiblePages: Readonly<number[]> = [];
+
+  @action
+  public updateVisiblePages(pages: Readonly<number[]>) {
+    this.visiblePages = pages;
+  }
 
   @computed
   public get isReady() {

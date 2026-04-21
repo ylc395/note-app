@@ -36,16 +36,18 @@ export enum ScaleValues {
 
 export const SCALE_STEPS = [...range(0, 11).map((i) => i / 10), ...range(12, 30, 2).map((i) => i / 10)] as const;
 
+interface UpdateViewAreaEvent {
+  location: {
+    pageNumber: number;
+    pdfOpenParams: string;
+  };
+}
+
 export interface Options {
   initialProgress?: string; // hash
   initialScale?: string;
   disableTextLayer?: boolean;
-  onProgressUpdated?: (e: {
-    location: {
-      pageNumber: number;
-      pdfOpenParams: string;
-    };
-  }) => void;
+  onProgressUpdated?: (e: UpdateViewAreaEvent) => void;
   view: HTMLDivElement;
   container: HTMLDivElement;
 }
@@ -84,6 +86,9 @@ export default class PDFViewer {
   public get viewerElement() {
     return this.core?.viewer;
   }
+
+  @observable.ref
+  public accessor visiblePages: Readonly<number[]> = [];
 
   @observable
   public accessor isReady = false;
@@ -156,13 +161,18 @@ export default class PDFViewer {
 
     options.view.addEventListener('click', this.hijackClick, { signal: this.abortController.signal });
 
-    if (options.onProgressUpdated) {
-      pdfViewer.onePageRendered.then(() => {
-        pdfViewer.eventBus.on('updateviewarea', options.onProgressUpdated!, {
+    pdfViewer.onePageRendered.then(() => {
+      pdfViewer.eventBus.on(
+        'updateviewarea',
+        action((e: UpdateViewAreaEvent) => {
+          options.onProgressUpdated?.(e);
+          this.visiblePages = Array.from((pdfViewer._getVisiblePages() as { ids: Set<number> }).ids);
+        }),
+        {
           signal: this.abortController.signal,
-        });
-      });
-    }
+        },
+      );
+    });
 
     runInAction(() => {
       this.core = pdfViewer;
@@ -292,13 +302,19 @@ export default class PDFViewer {
       e.preventDefault();
     }
   }
+
   public getPageInfo(page: number) {
     const pageView: PDFPageView = this.core?.getPageView(page - 1);
     const pdfPage: PDFPageProxy = pageView.pdfPage;
     const [x0, y0, x1, y1] = pdfPage.view;
 
     const { div: element } = pageView;
-    return { height: y1! - y0!, width: x1! - x0!, element };
+    return {
+      height: y1! - y0!,
+      width: x1! - x0!,
+      element,
+      textLayer: pageView.textLayer?.div, // 每一页总是会有 text layer，即使其中并没有文本
+    };
   }
 
   public setScale(value: number | ScaleValues | 'up' | 'down') {
@@ -314,12 +330,6 @@ export default class PDFViewer {
     } else {
       this.core.currentScaleValue = value;
     }
-  }
-
-  // 每一页总是会有 text layer，即使其中并没有文本
-  public getPageTextLayerElement(page: number) {
-    const div = (this.core?.getPageView(page - 1) as PDFPageView | undefined)?.textLayer?.div;
-    return div;
   }
 
   @action

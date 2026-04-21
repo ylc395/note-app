@@ -19,6 +19,10 @@ export default class PDFEditorViewer {
       }
     }
 
+    reaction(() => this.viewer.visiblePages, this.editor.updateVisiblePages.bind(this.editor), {
+      signal: this.abortController.signal,
+    });
+
     await this.viewer.init(this.editor.doc!, {
       ...options,
       initialProgress: this.editor.progress,
