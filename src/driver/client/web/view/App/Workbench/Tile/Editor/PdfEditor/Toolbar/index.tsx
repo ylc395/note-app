@@ -1,4 +1,4 @@
-import { ListIcon, NotepadTextIcon, PenLineIcon, TextSearchIcon } from 'lucide-solid';
+import { ListIcon, NotepadTextIcon, PenLineIcon, TextSearchIcon, TextSelectIcon } from 'lucide-solid';
 import { Switch } from '@ark-ui/solid';
 import assert from 'assert';
 import { action } from 'mobx';
@@ -7,6 +7,8 @@ import Button from '#web/view/components/Button';
 import PageSwitcher from './PageSwitcher';
 import Scale from './Scale';
 import { useContext } from '../context';
+import { Show } from 'solid-js';
+import { IS_DEV } from '#domain/shared/infra/env';
 
 export default function Toolbar() {
   const {
@@ -41,10 +43,18 @@ export default function Toolbar() {
           <TextSearchIcon class="mr-1" />
           搜索全文
         </Button>
+        <Show when={IS_DEV}>
+          <Button
+            selected={editor.texts.displayText}
+            onClick={action(() => (editor.texts.displayText = !editor.texts.displayText))}
+          >
+            <TextSelectIcon class="mr-1" />
+            渲染文本(DEV)
+          </Button>
+        </Show>
       </div>
       <div class="space-x-6 flex absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 ">
         <PageSwitcher />
-
         <Scale />
       </div>
       <div class="flex space-x-2">

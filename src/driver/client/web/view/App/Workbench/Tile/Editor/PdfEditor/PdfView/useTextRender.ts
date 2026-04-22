@@ -1,6 +1,121 @@
 import { createEffect } from 'solid-js';
 
 import { useContext } from '../context';
+import { IS_DEV } from '#domain/shared/infra/env';
+import { sum } from 'lodash-es';
+
+// 复用同一个 canvas context，避免反复创建
+const canvasCtx = document.createElement('canvas').getContext('2d')!;
+
+/**
+ * 使用 Canvas API 测量文本，返回能放入指定宽高的最大 font-size（单位：px）。
+ * 纵向以容器高度为基准估算字号，横向若溢出则按比例缩小。
+ */
+function calcFontSizePx(text: string, fontFamily: string, domW: number, domH: number): number {
+  // 以容器高度的 85% 作为初始字号（行高通常略大于字号）
+  let fontSize = domH * 0.85;
+
+  canvasCtx.font = `${fontSize}px ${fontFamily}`;
+  const textWidth = canvasCtx.measureText(text).width;
+
+  // 若文字宽度超出容器宽度，按比例缩小字号
+  if (textWidth > domW && textWidth > 0) {
+    fontSize = fontSize * (domW / textWidth);
+  }
+
+  return fontSize;
+}
+
+interface Bbox {
+  x0: number;
+  x1: number;
+  y0: number;
+  y1: number;
+}
+
+interface OcrSymbol {
+  confidence: number;
+  text: string;
+  bbox: Bbox;
+}
+
+/**
+ * 检测一行 symbol 序列中是否存在相邻 symbol 间的位置大跳跃。
+ */
+function processSymbol(symbols: OcrSymbol[], lineWidth: number) {
+  if (IS_DEV) {
+    console.debug(
+      symbols.map((s) => s.text).join(''),
+      symbols.map(({ text, bbox, confidence }, i) => ({
+        text,
+        bbox,
+        width: bbox.x1 - bbox.x0,
+        guessWidth: symbols[i + 1] ? symbols[i + 1]!.bbox.x0 - bbox.x0 : Infinity,
+        confidence,
+      })),
+      lineWidth,
+    );
+  }
+
+  const widths: number[] = [];
+  const result = symbols.map((s, i) => {
+    // 有的 symbol 的 bbox 宽度不准确，必须通过下一个 symbol 的 bbox.x0 - s.bbox.x0 计算
+    const width = Math.min(s.bbox.x1 - s.bbox.x0, symbols[i + 1] ? symbols[i + 1]!.bbox.x0 - s.bbox.x0 : Infinity);
+    widths.push(width);
+    return { ...s, bbox: { ...s.bbox, x1: s.bbox.x0 + width } };
+  });
+
+  const widthSum = sum(widths);
+  const midWidth = widths.sort((a, b) => a - b)[Math.floor(widths.length / 2)]!; // 字符宽度的中位数
+  const avgWidth = widthSum / widths.length; // 字符宽度的平均数
+
+  if (
+    (lineWidth - widthSum) / lineWidth > 0.5 || // 字符宽度之和远小于行宽
+    result.some((s) => {
+      const width = s.bbox.x1 - s.bbox.x0;
+      const result = width > avgWidth * 5 || width > midWidth * 10; // 单个字符的宽度显然过长
+      return result;
+    })
+  ) {
+    if (IS_DEV) {
+      console.log({ lineWidth, widthSum, midWidth, avgWidth });
+    }
+    return result;
+  }
+
+  return null;
+}
+
+/**
+ * 将一个文本区域的样式应用到 span 上（位置、尺寸、字体）。
+ * 所有尺寸均使用 cqh/%，随容器自适应缩放。
+ */
+function createElement(
+  text: string,
+  bbox: Bbox,
+  pageWidth: number,
+  pageHeight: number,
+  layerH: number,
+  fontFamily: string,
+  layerW: number,
+) {
+  const el = document.createElement('span');
+  el.innerText = text;
+
+  const domW = ((bbox.x1 - bbox.x0) / pageWidth) * layerW;
+  const domH = ((bbox.y1 - bbox.y0) / pageHeight) * layerH;
+  const fontSizePx = calcFontSizePx(el.innerText, fontFamily, domW, domH);
+
+  el.style.left = `${(bbox.x0 / pageWidth) * 100}%`;
+  el.style.top = `${(bbox.y0 / pageHeight) * 100}%`;
+  el.style.height = `${((bbox.y1 - bbox.y0) / pageHeight) * 100}%`;
+  el.style.width = `${((bbox.x1 - bbox.x0) / pageWidth) * 100}%`;
+  el.style.fontSize = `${(fontSizePx / layerH) * 100}cqh`;
+  el.style.lineHeight = `${((bbox.y1 - bbox.y0) / pageHeight) * 100}cqh`;
+  el.style.textAlignLast = 'justify';
+
+  return el;
+}
 
 export default function useTextRender() {
   createEffect(() => {
@@ -20,25 +135,44 @@ export default function useTextRender() {
         continue;
       }
 
+      const layerW = textLayer.clientWidth;
+      const layerH = textLayer.clientHeight;
+      const fontFamily = getComputedStyle(textLayer).fontFamily || 'sans-serif';
       const lineDoms: HTMLElement[] = [];
 
       for (const { paragraphs } of text.data.blocks || []) {
         for (const { lines } of paragraphs) {
-          for (const { bbox, text, confidence } of lines) {
-            if (confidence < 40) {
+          for (const { bbox, text, confidence, words } of lines) {
+            const trimmed = text.trim();
+
+            if (!trimmed) {
               continue;
             }
 
-            const lineDom = document.createElement('span');
+            const symbols = words.flatMap((w) => w.symbols);
+            const processedSymbol = processSymbol(symbols, bbox.x1 - bbox.x0);
 
-            lineDom.innerText = text.trim();
-            lineDom.style.left = `${(bbox.x0 / pageWidth) * 100}%`;
-            lineDom.style.top = `${(bbox.y0 / pageHeight) * 100}%`;
-            lineDom.style.height = `${((bbox.y1 - bbox.y0) / pageHeight) * 100}%`;
-            lineDom.style.width = `${((bbox.x1 - bbox.x0) / pageWidth) * 100}%`;
-            lineDom.style.textAlignLast = 'justify';
+            if (processedSymbol) {
+              for (const sym of processedSymbol) {
+                const symTrimmed = sym.text.trim();
 
-            lineDoms.push(lineDom);
+                if (!symTrimmed || sym.confidence < 40) {
+                  continue;
+                }
+
+                const symDom = createElement(symTrimmed, sym.bbox, pageWidth, pageHeight, layerH, fontFamily, layerW);
+                symDom.dataset.renderBy = 'symbol';
+                lineDoms.push(symDom);
+              }
+            } else {
+              if (confidence < 40) {
+                continue;
+              }
+              const lineDom = createElement(trimmed, bbox, pageWidth, pageHeight, layerH, fontFamily, layerW);
+              lineDom.dataset.renderBy = 'line';
+
+              lineDoms.push(lineDom);
+            }
           }
         }
       }

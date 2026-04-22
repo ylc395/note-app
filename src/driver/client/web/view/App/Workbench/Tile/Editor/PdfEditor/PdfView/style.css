@@ -4,6 +4,18 @@
   box-sizing: content-box;
 }
 
+.textLayer {
+  container-type: size;
+}
+
+.textLayer [data-render-by='line'] {
+  color: var(--render-by-line-text-color, transparent);
+}
+
+.textLayer [data-render-by='symbol'] {
+  color: var(--render-by-symbol-text-color, transparent);
+}
+
 [data-drawing-mode='draw'] .textLayer,
 [data-drawing-mode='draw'] .annotationLayer section {
   pointer-events: none;

@@ -24,6 +24,9 @@ export default class PageTextManager {
 
   private readonly destroyController = new AbortController();
 
+  @observable
+  public accessor displayText = false;
+
   @observable.ref private accessor doc: PDFDocumentProxy | undefined;
 
   public readonly loadPageText = memoize((page: number) => {
