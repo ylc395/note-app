@@ -78,7 +78,7 @@ function processSymbol(symbols: OcrSymbol[], lineWidth: number) {
     })
   ) {
     if (IS_DEV) {
-      console.log({ lineWidth, widthSum, midWidth, avgWidth });
+      console.debug({ lineWidth, widthSum, midWidth, avgWidth });
     }
     return result;
   }

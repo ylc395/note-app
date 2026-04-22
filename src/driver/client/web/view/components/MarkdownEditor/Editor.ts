@@ -159,7 +159,6 @@ export default class Editor {
 
   private readonly jump: NonNullable<CustomContext['onJump']> = ({ type, id, mimeType }) => {
     const workbench = singletonContainer.resolve(Workbench);
-    console.log(mimeType);
 
     if (type === RouteTypes.Note) {
       workbench.open({

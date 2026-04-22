@@ -86,7 +86,7 @@ export default function BodyEditor(props: { id: string }) {
           {(note) => (
             <MarkdownEditor
               ref={setMdEditor}
-              className="border-r-border-primary border-r h-full grow"
+              className="border-r-border-primary border-r h-full grow p-2"
               onUpdate={onUpdate}
               defaultValue={note().body}
               initialScroll={uiState.scroll}

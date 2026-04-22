@@ -60,9 +60,7 @@ export default function AppLinkView(props: {
     middleware: [props.mousePosition && inline(props.mousePosition)],
   });
 
-  function onLeave(e: Event) {
-    console.log(e.type, e.target);
-
+  function onLeave() {
     if (!isFixed()) {
       props.onLeave();
     }
