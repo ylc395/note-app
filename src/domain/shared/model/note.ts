@@ -61,6 +61,14 @@ export interface FileTextQuery {
   page: number;
 }
 
+/**
+ * @api
+ */
+export interface FileTextSearchQuery {
+  id: Note['id'];
+  keyword: string;
+}
+
 export function normalizeTitle(note: Note | NoteVO | Entity) {
   return note.title || `未命名笔记-${dayjs(note.createdAt).format('YYYYMMDD-HHmm')}`;
 }

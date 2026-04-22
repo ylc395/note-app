@@ -47,3 +47,7 @@ export const fileTextQuerySchema = z.object({
   id: noteSchema.shape["id"],
   page: z.number()
 });
+export const fileTextSearchQuerySchema = z.object({
+  id: noteSchema.shape["id"],
+  keyword: z.string()
+});

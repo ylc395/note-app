@@ -6,6 +6,7 @@ import {
   notePatchDTOSchema,
   noteSchema,
   fileTextQuerySchema,
+  fileTextSearchQuerySchema,
 } from '#domain/shared/infra/apiSchema/note.js';
 import { publicProcedure, router } from './trpc.js';
 import { fileDTOSchema } from '#domain/shared/infra/apiSchema/file.js';
@@ -48,6 +49,10 @@ export default router({
   queryFileTextRecord: publicProcedure
     .input(fileTextQuerySchema)
     .query(({ ctx: { noteService }, input: query }) => noteService.queryFileText(query)),
+
+  searchNoteFileContent: publicProcedure
+    .input(fileTextSearchQuerySchema)
+    .query(({ ctx: { noteService }, input: { id, ...query } }) => noteService.searchFileContent(id, query)),
 
   queryAllCustomIcons: publicProcedure.query(({ ctx: { noteService } }) => noteService.queryAllCustomIcons()),
 });

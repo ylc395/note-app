@@ -110,7 +110,9 @@ export default class SqliteSearchEngine implements SearchEngine {
 
   public async search(q: Required<SearchRequest>): Promise<SearchResult[]> {
     const descantIds =
-      q.rootId.length > 0 ? Object.values(await this.repo.entities.findDescendantIds(q.rootId)).flat() : undefined;
+      q.rootId.length > 0
+        ? [...Object.values(await this.repo.entities.findDescendantIds(q.rootId)).flat(), ...q.rootId]
+        : undefined;
 
     const rows = await this.db
       .selectFrom(notesFTSTableName)

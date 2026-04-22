@@ -60,7 +60,7 @@ export default class PdfEditor extends BaseEditor {
 
   public readonly body = new BodyEditor();
 
-  public readonly textFinder = new TextFinder(this.texts);
+  public readonly textFinder = new TextFinder(this.entityId, this.texts);
 
   public readonly svgEditor = new SvgAnnotationEditor(this.annotation);
 

@@ -8,29 +8,31 @@ import { useContext } from '../../context';
 
 export default function SearchBar() {
   const {
-    viewer: { editor, viewer },
+    viewer: {
+      editor: { textFinder },
+    },
   } = useContext()!;
 
   return (
     <div class="flex z-10 m-auto w-fit relative left-36">
       <Input />
-      <Show when={editor.textFinder.result?.total === 0}>
-        <div>没有结果</div>
+      <Show when={textFinder.result?.total === 0}>
+        <div>{textFinder.result?.isFinal ? '没有结果' : '搜索中...'}</div>
       </Show>
-      <Show when={Number(editor.textFinder.result?.total) > 0}>
+      <Show when={Number(textFinder.result?.total) > 0}>
         <div>
-          {editor.textFinder.result?.current}/{editor.textFinder.result?.total}
+          {textFinder.result?.current}/{textFinder.result?.total}
         </div>
       </Show>
       <div class="ml-6">
-        <button onClick={() => viewer.textFinder.prev()}>
+        <button onClick={textFinder.prev}>
           <ArrowUpIcon />
         </button>
-        <button onClick={() => viewer.textFinder.next()}>
+        <button onClick={textFinder.next}>
           <ArrowDownIcon />
         </button>
         <Popover.Root lazyMount unmountOnExit>
-          <Popover.Trigger disabled={!editor.textFinder.digests}>
+          <Popover.Trigger disabled={!textFinder.digests}>
             <ListIcon />
           </Popover.Trigger>
           <Popover.Positioner>

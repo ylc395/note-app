@@ -1,6 +1,5 @@
-import { For, onMount } from 'solid-js';
+import { createMemo, For, onMount } from 'solid-js';
 import assert from 'assert';
-import { sumBy } from 'lodash-es';
 
 import type { Digest } from '#domain/client/app/model/note/editor/PdfEditor/TextFinder';
 import { useContext } from '../../context';
@@ -8,7 +7,7 @@ import { useContext } from '../../context';
 function DigestView(props: { digest: Digest; index: number }) {
   let rootRef: HTMLDivElement | undefined;
   const {
-    viewer: { viewer },
+    viewer: { editor },
   } = useContext()!;
 
   function highlight() {
@@ -28,7 +27,7 @@ function DigestView(props: { digest: Digest; index: number }) {
   onMount(highlight);
 
   return (
-    <div class="border break-words" onClick={() => viewer.textFinder.jumpTo(props.index)}>
+    <div class="border break-words" onClick={() => editor.textFinder.setCurrent(props.index)}>
       <span>{props.index + 1}</span>
       <p
         ref={rootRef}
@@ -50,25 +49,34 @@ export default function ResultList() {
     viewer: { editor },
   } = useContext()!;
 
+  const digests = createMemo(() => {
+    const result: { page: number; digests: Digest[]; totalCount: number }[] = [];
+
+    for (const [i, pageDigests] of Object.entries(editor.textFinder.digests || [])) {
+      result.push({
+        ...pageDigests,
+        totalCount: (result[Number(i) - 1]?.digests.length ?? 0) + (result[Number(i) - 1]?.totalCount ?? 0),
+      });
+    }
+
+    return result;
+  });
+
   return (
     <div class="w-64 max-h-72 overflow-auto bg-bg-primary">
-      <For each={editor.textFinder.digests}>
-        {(pageResult, index) => {
-          const totalCount = sumBy(editor.textFinder.digests?.slice(0, index()), (page) => page.digests.length);
-
-          return (
-            <div>
-              <div class="flex sticky top-0 bg-bg-primary">
-                第{pageResult.page}页<span class="ml-2 border bg-bg-tertiary">{pageResult.digests.length}</span>
-              </div>
-              <div class="space-y-1">
-                <For each={pageResult.digests}>
-                  {(digest, index) => <DigestView index={totalCount - 1 + index()} digest={digest} />}
-                </For>
-              </div>
+      <For each={digests()}>
+        {(pageResult) => (
+          <div>
+            <div class="flex sticky top-0 bg-bg-primary">
+              第{pageResult.page}页<span class="ml-2 border bg-bg-tertiary">{pageResult.digests.length}</span>
             </div>
-          );
-        }}
+            <div class="space-y-1">
+              <For each={pageResult.digests}>
+                {(digest, index) => <DigestView index={pageResult.totalCount + index()} digest={digest} />}
+              </For>
+            </div>
+          </div>
+        )}
       </For>
     </div>
   );

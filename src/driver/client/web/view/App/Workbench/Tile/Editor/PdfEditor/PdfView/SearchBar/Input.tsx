@@ -8,7 +8,6 @@ export default function Input() {
   const {
     viewer: {
       editor: { textFinder },
-      viewer,
     },
   } = useContext()!;
 
@@ -18,7 +17,7 @@ export default function Input() {
 
   function handleKeyPress(e: KeyboardEvent) {
     if (e.key === 'Enter') {
-      viewer.textFinder.next();
+      textFinder.next();
     }
   }
 

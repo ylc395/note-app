@@ -1,4 +1,3 @@
-import assert from 'assert';
 import { action, observable, reaction } from 'mobx';
 import { FindState, type EventBus, type PDFFindController } from 'pdfjs-dist/web/pdf_viewer.mjs';
 
@@ -16,8 +15,8 @@ interface MatchesCount {
 }
 
 interface SearchResult extends MatchesCount {
-  pageMatches?: number[][];
-  pageMatchesLength?: number[][];
+  pageMatches?: Readonly<number[][]>;
+  pageMatchesLength?: Readonly<number[][]>;
 }
 
 const actionMap: Record<keyof PDFTextFinder['config'], Action> = {
@@ -42,6 +41,11 @@ export default class PDFTextFinder {
 
   public init() {
     for (const key of Object.keys(this.config)) {
+      // 关键字不做即时响应，而是靠调用 next / prev
+      if (key === 'query') {
+        continue;
+      }
+
       reaction(
         () => this.config[key as keyof PDFTextFinder['config']],
         () => this.search(actionMap[key as keyof PDFTextFinder['config']]),
@@ -50,9 +54,11 @@ export default class PDFTextFinder {
     }
   }
 
-  @observable public accessor result: SearchResult | undefined;
+  @observable public accessor result: Readonly<SearchResult> | undefined;
 
-  @observable public accessor status: 'pending' | 'notFound' | 'reachedTop' | 'reachedBottom' | undefined;
+  @observable public accessor state:
+    | { status: 'pending' | 'notFound' | 'reachedTop' | 'reachedBottom'; previous: boolean }
+    | undefined;
 
   @action
   private updateResult(result: { matchesCount: MatchesCount; state?: number; source: PDFFindController }) {
@@ -68,31 +74,31 @@ export default class PDFTextFinder {
   }
 
   @action
-  private updateState({
-    state,
-    previous,
-  }: {
-    state: number;
-    previous: boolean;
-    matchesCount: PDFTextFinder['result'];
-  }) {
-    switch (state) {
+  private updateState(e: { state: number; previous: boolean }) {
+    let status: NonNullable<PDFTextFinder['state']>['status'];
+
+    switch (e.state) {
       case FindState.PENDING:
-        this.status = 'pending';
+        status = 'pending';
         break;
       case FindState.NOT_FOUND:
-        this.status = 'notFound';
+        status = 'notFound';
         break;
       case FindState.WRAPPED:
-        this.status = previous ? 'reachedTop' : 'reachedBottom';
+        status = e.previous ? 'reachedTop' : 'reachedBottom';
         break;
       default:
-        this.status = undefined;
-        break;
+        this.state = undefined;
+        return;
     }
+
+    this.state = {
+      status,
+      previous: e.previous,
+    };
   }
 
-  @observable public accessor config = {
+  @observable private accessor config = {
     query: '',
     caseSensitive: false,
     entireWord: false,
@@ -109,13 +115,13 @@ export default class PDFTextFinder {
     this.config[key] = value;
   }
 
-  public next() {
+  public readonly next = () => {
     this.search('again');
-  }
+  };
 
-  public prev() {
+  public readonly prev = () => {
     this.search('again', true);
-  }
+  };
 
   private search(action: Action, findPrev = false) {
     this.eventBus.dispatch('find', {
@@ -126,10 +132,14 @@ export default class PDFTextFinder {
     });
   }
 
-  public jumpTo(index: number) {
-    assert(this.result);
+  public readonly jumpTo = (index: number) => {
+    if (!this.result) {
+      return;
+    }
+
     let offset = index - (this.result.current - 1) + 1;
 
+    // 这种跳法非常愚蠢，但这是 pdfjs 提供的唯一方法。这种方法在进行大范围跳跃时会有明显卡顿
     while (offset !== 0) {
       if (offset > 0) {
         this.next();
@@ -139,7 +149,7 @@ export default class PDFTextFinder {
         offset += 1;
       }
     }
-  }
+  };
 
   public destroy() {
     this.abortController.abort();

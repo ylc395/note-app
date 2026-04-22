@@ -25,9 +25,14 @@ export default class PageTextManager {
   private readonly destroyController = new AbortController();
 
   @observable
-  public accessor displayText = false;
+  public accessor displayText = false; // 用于 DEV 调试
 
   @observable.ref private accessor doc: PDFDocumentProxy | undefined;
+
+  public get totalPages() {
+    assert(this.doc);
+    return this.doc.numPages;
+  }
 
   public readonly loadPageText = memoize((page: number) => {
     // 或许应当判断一下 nativeText 里有没有文本。但有的 PDF 文档中，nativeText 有少量的文本，但和真正的内容关系却不大

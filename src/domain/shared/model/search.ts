@@ -18,7 +18,7 @@ export interface SearchRequest {
   keyword: string;
   entityTypes?: SearchTypes[];
   fields?: SearchFields[];
-  rootId?: EntityId[];
+  rootId?: EntityId[]; // 包含 rootId 本身
 }
 
 export interface MatchRecord {

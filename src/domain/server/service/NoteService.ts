@@ -13,6 +13,8 @@ import {
 } from '#domain/server/model/note.js';
 import { arrayOf } from '#utils/collection.js';
 import container from '#utils/singletonContainer.js';
+import { EntityTypes } from '#domain/shared/model/entity.js';
+import { SearchFields } from '#domain/shared/model/search.js';
 
 import BaseService from './BaseService.js';
 import EntityService from './EntityService.js';
@@ -181,6 +183,17 @@ export default class NoteService extends BaseService {
     await this.repo.notes.update(noteId, patch);
 
     return this.toVO(defaults({ ...patch, mimeType }, note));
+  }
+
+  public async searchFileContent(noteId: NoteVO['id'], query: { keyword: string }) {
+    const result = await this.searchEngine.search({
+      keyword: query.keyword,
+      entityTypes: [EntityTypes.Note],
+      fields: [SearchFields.File],
+      rootId: [noteId],
+    });
+
+    return result.flatMap((r) => r.matches[SearchFields.File] || []);
   }
 
   private async assertValidDto(patch: NewNoteDTO, noteIds?: Note['id'][]) {
