@@ -104,6 +104,8 @@ export default class SqliteSearchEngine implements SearchEngine {
           val('...'),
           val('64'),
         ]).as('contentResult'),
+        fn<string | null>('simple_highlight_pos', [sql.raw(fileTextsFTSTableName), val(1)]).as('contentOffsets'),
+        sql<string | null>`${sql.table(fileTextsFTSTableName)}.text`.as('contentText'),
       ])
       .execute();
   }
@@ -139,6 +141,10 @@ export default class SqliteSearchEngine implements SearchEngine {
           val('...'),
           val('64'),
         ]).as('contentResult'),
+        fn<string | null>('simple_highlight_pos', [sql.raw(notesFTSTableName), val(1)]).as('titleOffsets'),
+        fn<string | null>('simple_highlight_pos', [sql.raw(notesFTSTableName), val(2)]).as('contentOffsets'),
+        sql<string | null>`${sql.table(notesFTSTableName)}.title`.as('titleText'),
+        sql<string | null>`${sql.table(notesFTSTableName)}.body_plain_text`.as('contentText'),
       ])
       .where((eb) => {
         const titleIncluded = q.fields.includes(SearchFields.Title);
@@ -188,14 +194,18 @@ export default class SqliteSearchEngine implements SearchEngine {
       entityId: row.entityId,
       rank: row.rank,
       matches: {
-        [SearchFields.Title]: row.titleResult ? SqliteSearchEngine.parseSearchResult(row.titleResult) : undefined,
-        [SearchFields.Body]: row.contentResult ? SqliteSearchEngine.parseSearchResult(row.contentResult) : undefined,
+        [SearchFields.Title]: row.titleResult
+          ? SqliteSearchEngine.parseSearchResult(row.titleResult, row.titleOffsets, row.titleText)
+          : undefined,
+        [SearchFields.Body]: row.contentResult
+          ? SqliteSearchEngine.parseSearchResult(row.contentResult, row.contentOffsets, row.contentText)
+          : undefined,
       },
     }));
 
     const resultMap = keyBy(searchResult, ({ entityId }) => entityId);
 
-    for (const { entityId, contentResult, rank, parentId, details } of annotations) {
+    for (const { entityId, contentResult, rank, parentId, details, contentOffsets, contentText } of annotations) {
       const result = resultMap[entityId];
       const selector = annotationSchema.shape.selector.safeParse(details?.selector).data;
 
@@ -203,7 +213,7 @@ export default class SqliteSearchEngine implements SearchEngine {
         continue;
       }
 
-      const parsed = SqliteSearchEngine.parseSearchResult(contentResult);
+      const parsed = SqliteSearchEngine.parseSearchResult(contentResult, contentOffsets, contentText);
 
       if (!parsed) {
         continue;
@@ -232,10 +242,18 @@ export default class SqliteSearchEngine implements SearchEngine {
     if (q.fields.includes(SearchFields.File)) {
       const fileTextResult = await this.searchFileText({ keyword: q.keyword, entityIds: descantIds });
 
-      for (const { noteId, entityId, contentResult, rank, location } of fileTextResult) {
+      for (const {
+        noteId,
+        entityId,
+        contentResult,
+        rank,
+        location: { page, confidence },
+        contentOffsets,
+        contentText,
+      } of fileTextResult) {
         const result = (noteId && resultMap[noteId]) || (entityId && resultMap[entityId]);
         const id = noteId || entityId;
-        const parsed = SqliteSearchEngine.parseSearchResult(contentResult);
+        const parsed = SqliteSearchEngine.parseSearchResult(contentResult, contentOffsets, contentText);
 
         if (!parsed) {
           continue;
@@ -243,7 +261,7 @@ export default class SqliteSearchEngine implements SearchEngine {
 
         const fileMatchRecord: FileMatchRecord = {
           ...parsed,
-          location,
+          location: { page, confidence },
         };
 
         if (result) {
@@ -263,7 +281,7 @@ export default class SqliteSearchEngine implements SearchEngine {
     return searchResult;
   }
 
-  private static parseSearchResult(str: string) {
+  private static parseSearchResult(str: string, offsetsStr?: string | null, columnText?: string | null) {
     const highlights: { start: number; end: number }[] = [];
 
     let i = 0;
@@ -284,9 +302,56 @@ export default class SqliteSearchEngine implements SearchEngine {
       return undefined;
     }
 
+    // 解析 simple_highlight_pos 返回的偏移信息，格式为 "start,end;start,end;"
+    // 其中 start/end 是匹配在原始列文本中的字节偏移，需要转换为字符偏移
+    const offsets: { start: number; end: number }[] = [];
+
+    if (offsetsStr) {
+      const byteToCharMap = columnText ? SqliteSearchEngine.buildByteToCharMap(columnText) : undefined;
+
+      for (const pair of offsetsStr.split(';')) {
+        const trimmed = pair.trim();
+        if (!trimmed) continue;
+        const parts = trimmed.split(',');
+        if (parts.length >= 2) {
+          const byteStart = Number(parts[0]);
+          const byteEnd = Number(parts[1]);
+
+          if (byteToCharMap) {
+            const charStart = byteToCharMap[byteStart] ?? byteStart;
+            const charEnd = byteToCharMap[byteEnd] ?? byteEnd;
+            offsets.push({ start: charStart, end: charEnd });
+          } else {
+            offsets.push({ start: byteStart, end: byteEnd });
+          }
+        }
+      }
+    }
+
     return {
       text: str.replaceAll(WRAPPER_START_TEXT, '').replaceAll(WRAPPER_END_TEXT, ''),
       highlights,
+      offsets,
     };
+  }
+
+  /**
+   * 构建字节偏移到字符偏移的映射表。
+   * 对于纯 ASCII 文本，字节偏移 === 字符偏移；
+   * 对于含多字节字符（如中文）的文本，需要通过 UTF-8 编码来建立映射。
+   */
+  private static buildByteToCharMap(text: string): Record<number, number> {
+    const map: Record<number, number> = {};
+    let byteOffset = 0;
+
+    for (let charIndex = 0; charIndex < text.length; charIndex++) {
+      map[byteOffset] = charIndex;
+      byteOffset += Buffer.byteLength(text[charIndex]!, 'utf-8');
+    }
+
+    // 末尾位置也需要映射
+    map[byteOffset] = text.length;
+
+    return map;
   }
 }

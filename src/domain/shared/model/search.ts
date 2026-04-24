@@ -22,12 +22,13 @@ export interface SearchRequest {
 }
 
 export interface MatchRecord {
-  text: string;
-  highlights: { start: number; end: number }[];
+  text: string; // 搜索引擎截取出的片段
+  highlights: { start: number; end: number }[]; // 片段中高亮部分的在片段中的位置
+  offsets: { start: number; end: number }[]; // 片段中高亮部分在全文中的位置
 }
 
 export interface FileMatchRecord extends MatchRecord {
-  location: TextLocation;
+  location: Pick<TextLocation, 'page' | 'confidence'>;
 }
 
 export interface AnnotationMatchRecord extends MatchRecord {

@@ -22,6 +22,7 @@ interface SearchResult {
   pageMatchesLength?: Readonly<number[][]>;
   current: number; // 从 1 开始
   total: number;
+  shouldRender?: boolean; // 是否需要进行渲染。pdfjs 原生的搜索能力无需渲染
   isFinal?: boolean; // 本次搜索的最后一次更新。没有结果就是真没有了
 }
 
@@ -102,6 +103,7 @@ export default class TextFinder {
     }
   }
 
+  @action
   public setKeyword(value: string) {
     if (value === this.options.query) {
       return;
@@ -176,8 +178,8 @@ export default class TextFinder {
     const indexedResult = keyBy(remoteSearchResult, ({ location: { page } }) => page || '');
 
     const result = Array.from({ length: this.textManager.totalPages }).map((_, i) => ({
-      offset: indexedResult[i + 1]?.highlights.map(({ start }) => start) ?? [],
-      length: indexedResult[i + 1]?.highlights.map(({ start, end }) => end - start) ?? [],
+      offset: indexedResult[i + 1]?.offsets.map(({ start }) => start) ?? [],
+      length: indexedResult[i + 1]?.offsets.map(({ start, end }) => end - start) ?? [],
     }));
 
     const pageMatches = result.map(({ offset }) => offset);
@@ -219,6 +221,7 @@ export default class TextFinder {
         total: accumulated,
         current,
         pageMatches,
+        shouldRender: true,
         pageMatchesLength: result.map(({ length }) => length),
         isFinal: true,
       },
