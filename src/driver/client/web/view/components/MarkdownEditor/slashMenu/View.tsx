@@ -1,7 +1,6 @@
 import { editorCtx, editorViewCtx } from '@milkdown/kit/core';
 import type { Ctx } from '@milkdown/kit/ctx';
-import { createMemo } from 'solid-js';
-import { showFloating, useTooltip } from '../shared/useTooltip';
+import { createMemo, createSignal } from 'solid-js';
 import {
   wrapInHeadingCommand,
   createCodeBlockCommand,
@@ -11,11 +10,15 @@ import {
   insertHrCommand,
 } from '@milkdown/kit/preset/commonmark';
 import { callCommand } from '@milkdown/kit/utils';
+import { makeEventListener } from '@solid-primitives/event-listener';
+import { mergeRefs } from '@solid-primitives/refs';
+
 import Menu, { type MenuItem } from '#web/view/components/Menu';
 
 import { wrapInTodoListItem } from '../nodes/listItem';
 import { isInEmptyParagraph, useMilkdownEvent } from '../shared/prosemirrorUtils';
 import TopicTooltip from '../nodes/topic/Tooltip';
+import { showFloating, useTooltip } from '../shared/useTooltip';
 import LinkTooltip, { Mode } from '../nodes/link/tooltip/ExternalLinkView';
 import TableCreator from '../nodes/table/TableCreator';
 import {
@@ -30,15 +33,23 @@ import {
   LinkIcon,
   SeparatorHorizontalIcon,
 } from 'lucide-solid';
+import { SLASH_KEY } from './constants';
 
-export default function View(props: { ctx: Ctx; onClose: () => void }) {
+export default function View(props: { ctx: Ctx; onClose: (slash?: boolean) => void }) {
   const editorView = props.ctx.get(editorViewCtx);
   const isBlock = isInEmptyParagraph(editorView.state.selection.$anchor);
+  const [menuRef, setMenuRef] = createSignal<HTMLElement>();
 
   useMilkdownEvent({
     event: 'selectionUpdated',
     ctx: props.ctx,
-    fn: props.onClose,
+    fn: () => props.onClose(),
+  });
+
+  makeEventListener(document.body, 'keydown', (e) => {
+    if (e.key === SLASH_KEY && document.activeElement === menuRef()) {
+      props.onClose(true);
+    }
   });
 
   const { setTooltipEl } = useTooltip({
@@ -110,10 +121,10 @@ export default function View(props: { ctx: Ctx; onClose: () => void }) {
 
   return (
     <Menu
-      onOpenChange={props.onClose}
+      onOpenChange={() => props.onClose()}
       open
       dataForItems={undefined}
-      ref={setTooltipEl}
+      ref={mergeRefs(setMenuRef, setTooltipEl)}
       onSelect={onSelect}
       menu={menu()}
     />

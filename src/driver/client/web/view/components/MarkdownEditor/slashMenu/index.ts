@@ -1,12 +1,13 @@
 import { Plugin, type EditorState } from '@milkdown/kit/prose/state';
+import { findParent } from '@milkdown/kit/prose';
 import { $prose } from '@milkdown/kit/utils';
 import { render, createComponent } from 'solid-js/web';
 import { editorViewCtx } from '@milkdown/kit/core';
+import { inlineCodeSchema, codeBlockSchema, blockquoteSchema } from '@milkdown/kit/preset/commonmark';
 
 import shell from '#web/infra/shell';
 import View from './View';
-
-export const SLASH_KEY = '/';
+import { SLASH_KEY } from './constants';
 
 export default $prose((ctx) => {
   let dispose: (() => void) | undefined;
@@ -16,7 +17,21 @@ export default $prose((ctx) => {
     hide();
 
     menuRoot = document.createElement('div');
-    dispose = render(() => createComponent(View, { ctx, onClose: hide.bind(null, true) }), menuRoot);
+    dispose = render(
+      () =>
+        createComponent(View, {
+          ctx,
+          onClose: (slash?: boolean) => {
+            hide(true);
+
+            if (slash) {
+              const editorView = ctx.get(editorViewCtx);
+              editorView.dispatch(editorView.state.tr.insertText(SLASH_KEY));
+            }
+          },
+        }),
+      menuRoot,
+    );
     shell.appRoot.append(menuRoot);
   }
 
@@ -33,7 +48,27 @@ export default $prose((ctx) => {
   }
 
   function shouldShow(state: EditorState) {
-    return state.selection.empty;
+    if (!state.selection.empty) {
+      return false;
+    }
+
+    const $pos = state.selection.$anchor;
+
+    if ($pos.parent.type.name === codeBlockSchema.type(ctx).name) {
+      return false;
+    }
+
+    // 光标不能位于行内代码中
+    if ($pos.marks().some((mark) => mark.type.name === inlineCodeSchema.type(ctx).name)) {
+      return false;
+    }
+
+    // 光标不能位于引用块中
+    if (findParent((node) => node.type.name === blockquoteSchema.type(ctx).name)($pos)) {
+      return false;
+    }
+
+    return true;
   }
 
   return new Plugin({

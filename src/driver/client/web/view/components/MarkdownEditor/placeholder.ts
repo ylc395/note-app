@@ -3,7 +3,7 @@ import { Decoration, DecorationSet, type EditorView } from '@milkdown/kit/prose/
 import { $prose } from '@milkdown/kit/utils';
 import type { Node } from '@milkdown/kit/prose/model';
 
-import { SLASH_KEY } from './slashMenu';
+import { SLASH_KEY } from './slashMenu/constants';
 import { isInEmptyHeading, isInEmptyParagraph } from './shared/prosemirrorUtils';
 
 const nodeTypeToPlaceholder: Record<string, (node: Node) => string> = {
