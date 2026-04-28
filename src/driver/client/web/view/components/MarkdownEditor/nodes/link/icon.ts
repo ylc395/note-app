@@ -60,7 +60,7 @@ export function addIcon(linkDom: HTMLAnchorElement, localIcon?: Icon | null) {
     () => icon.isSuccess,
     () => {
       if (icon.data instanceof Blob) {
-        const blobUrl = URL.createObjectURL(icon.data);
+        blobUrl = URL.createObjectURL(icon.data);
         linkDom.style.setProperty('--icon-content', `url(${blobUrl})`);
         return;
       }
