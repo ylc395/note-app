@@ -77,7 +77,6 @@ export const listNodeView = $view(extendListItemSchemaForTask.node, (ctx): NodeV
       },
       destroy: () => {
         disposeToggler?.();
-        dom.remove();
       },
     };
   };

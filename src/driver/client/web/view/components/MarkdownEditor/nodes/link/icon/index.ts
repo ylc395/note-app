@@ -2,24 +2,35 @@ import z from 'zod';
 import { File, Lightbulb, MessageSquare, NotebookText, createElement } from 'lucide';
 import { createQuery } from 'mobx-tanstack-query/preset';
 import { when } from 'mobx';
+import { Plugin, PluginKey } from '@milkdown/kit/prose/state';
+import type { EditorView } from '@milkdown/kit/prose/view';
+import { $prose } from '@milkdown/kit/utils';
+import { linkSchema } from '@milkdown/kit/preset/commonmark';
+import type { Ctx } from '@milkdown/kit/ctx';
 
 import container from '#utils/singletonContainer';
 import { token as remoteToken } from '#domain/client/shared/infra/rpc';
 import { RouteTypes } from '#domain/shared/infra/url';
 import { token as documentDbToken } from '#domain/client/shared/infra/documentDb';
-import Icon from '#web/view/components/Icon';
 import { remoteIconStoreName } from '#domain/client/app/model/note/editor/BaseEditor';
 import type { NoteVO } from '#domain/shared/model/note';
 
-type Icon = Partial<Pick<NoteVO, 'icon' | 'mimeType'>> & { type: RouteTypes };
+import './style.css';
 
-export function addIcon(linkDom: HTMLAnchorElement, localIcon?: Icon | null) {
+type IconData = Partial<Pick<NoteVO, 'icon' | 'mimeType'>> & { type: RouteTypes };
+
+/**
+ * 为 link DOM 设置图标：设置 data-link-icon 属性、查询并渲染图标内容（CSS 变量 --icon-content）
+ */
+export function setupLinkIcon(linkDom: HTMLAnchorElement, localIcon?: IconData | null) {
+  linkDom.dataset.linkIcon = 'true';
+
   const remote = container.resolve(remoteToken);
   const db = container.resolve(documentDbToken);
   const url = linkDom.href;
   const abortController = new AbortController();
 
-  const icon = createQuery<Icon | Blob | null>(
+  const icon = createQuery<IconData | Blob | null>(
     async ({ signal }) => {
       if (localIcon) {
         return localIcon;
@@ -101,3 +112,52 @@ export function addIcon(linkDom: HTMLAnchorElement, localIcon?: Icon | null) {
     }
   };
 }
+
+const pluginKey = new PluginKey('LINK_ICON');
+
+/**
+ * 控制图标是否可见
+ * 当相邻节点拥有相同链接时隐藏重复图标
+ */
+function updateLinkIconAttrs(view: EditorView, ctx: Ctx) {
+  const linkType = linkSchema.type(ctx);
+  const doc = view.state.doc;
+  const anchors = view.dom.getElementsByTagName('a');
+
+  for (const anchor of anchors) {
+    const pos = view.posAtDOM(anchor, 0);
+    const $pos = doc.resolve(pos);
+    const nodeAfter = $pos.nodeAfter;
+    const nodeBefore = $pos.nodeBefore;
+
+    const currentLinkMark = nodeAfter?.marks.find((m) => m.type === linkType);
+    if (!currentLinkMark) continue;
+
+    const prevHasSameLink =
+      nodeBefore && nodeBefore.marks.some((m) => m.type === linkType && m.attrs.href === currentLinkMark.attrs.href);
+
+    if (prevHasSameLink) {
+      delete anchor.dataset.linkIcon;
+    } else {
+      anchor.dataset.linkIcon = 'true';
+    }
+  }
+}
+
+export const linkIconPlugin = $prose((ctx) => {
+  return new Plugin({
+    key: pluginKey,
+    view() {
+      let updated = false;
+
+      return {
+        update(view: EditorView, prevState) {
+          if (!updated || !view.state.doc.eq(prevState.doc)) {
+            updateLinkIconAttrs(view, ctx);
+            updated = true;
+          }
+        },
+      };
+    },
+  });
+});

@@ -79,10 +79,7 @@ export const multimediaNodeView = $view(multimediaNodeSchema.node, (ctx): NodeVi
         setAttrs(_node.attrs);
         return true;
       },
-      destroy: () => {
-        dispose();
-        rootNode.remove();
-      },
+      destroy: dispose,
     };
   };
 });

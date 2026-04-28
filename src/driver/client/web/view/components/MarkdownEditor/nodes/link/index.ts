@@ -1,5 +1,5 @@
 import tooltipPlugin from './tooltip';
 import { linkNodeView } from './nodeView';
-import './style.css';
+import { linkIconPlugin } from './icon';
 
-export default [linkNodeView, tooltipPlugin].flat();
+export default [linkNodeView, tooltipPlugin, linkIconPlugin].flat();

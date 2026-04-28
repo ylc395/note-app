@@ -78,10 +78,7 @@ export const multimediaBlockNodeView = $view(multimediaBlockNodeSchema.node, (ct
         setAttrs(_node.attrs);
         return true;
       },
-      destroy: () => {
-        dispose();
-        rootNode.remove();
-      },
+      destroy: dispose,
     };
   };
 });

@@ -2,89 +2,37 @@ import { $view } from '@milkdown/kit/utils';
 import { linkSchema } from '@milkdown/kit/preset/commonmark';
 import type { MarkView } from '@milkdown/kit/prose/view';
 import { sanitizeUrl } from '@braintree/sanitize-url';
-import { createQuery } from 'mobx-tanstack-query/preset';
-import { editorViewCtx } from '@milkdown/kit/core';
 import { when } from 'mobx';
 
-import { parseAppUrl, RouteTypes } from '#domain/shared/infra/url';
-import shell from '#web/infra/shell';
-import container from '#utils/singletonContainer';
-import { token as remoteToken } from '#domain/client/shared/infra/rpc';
-
-import { addIcon } from './icon';
-import { customCtx } from '../../customCtx';
+import { setupLinkIcon } from './icon';
+import { setupLinkJump } from './jump';
 
 export const linkNodeView = $view(linkSchema.mark, (ctx) => {
-  const remote = container.resolve(remoteToken);
-
   return (mark): MarkView => {
     const dom = document.createElement('a');
-    dom.dataset.linkIcon = 'true';
-    dom.href = sanitizeUrl(mark.attrs.href);
-
     const abortController = new AbortController();
-    const appUrl = parseAppUrl(dom.href);
+    const { entity, dispose: disposeJump } = setupLinkJump(dom, ctx);
 
-    const entity = createQuery(
-      async () => {
-        if (!appUrl) {
-          return null;
-        }
-
-        if (appUrl.type === RouteTypes.Note) {
-          const note = await remote.note.queryOneById.query(appUrl.id);
-
-          return {
-            type: RouteTypes.Note,
-            icon: note.icon,
-            mimeType: note.mimeType,
-          };
-        }
-
-        return { type: appUrl.type };
-      },
-      { queryKey: ['link', dom.href], abortSignal: abortController.signal },
-    );
-
-    if (!ctx.get(editorViewCtx).editable) {
-      dom.addEventListener(
-        'click',
-        (e) => {
-          e.preventDefault();
-
-          if (!appUrl) {
-            shell.openNewWindow(dom.href);
-          } else if (entity.data) {
-            ctx.get(customCtx).onJump?.({
-              ...appUrl,
-              mimeType: entity.data.mimeType,
-            });
-          }
-        },
-        { signal: abortController.signal },
-      );
-
-      if (!appUrl) {
-        dom.title = dom.href;
-      }
-    }
-
+    dom.href = sanitizeUrl(mark.attrs.href);
     let disposeIcon: (() => void) | undefined;
 
     when(
       () => entity.isSuccess,
       () => {
-        disposeIcon = addIcon(dom, entity.data);
+        disposeIcon = setupLinkIcon(dom, entity.data);
       },
       { signal: abortController.signal },
     );
 
+    abortController.signal.addEventListener('abort', () => {
+      disposeIcon?.();
+      disposeJump();
+    });
+
     return {
       dom,
       destroy: () => {
-        disposeIcon?.();
         abortController.abort();
-        dom.remove();
       },
     };
   };
