@@ -1,31 +1,31 @@
 import { Ctx } from '@milkdown/kit/ctx';
 import { BoldIcon, ItalicIcon, StrikethroughIcon, CodeIcon, LinkIcon, Link2OffIcon } from 'lucide-solid';
 import {
-  linkSchema,
   toggleEmphasisCommand,
   toggleInlineCodeCommand,
   toggleLinkCommand,
   toggleStrongCommand,
+  linkSchema,
+  inlineCodeSchema,
+  strongSchema,
+  emphasisSchema,
 } from '@milkdown/kit/preset/commonmark';
-import { toggleStrikethroughCommand } from '@milkdown/kit/preset/gfm';
+import { toggleStrikethroughCommand, strikethroughSchema } from '@milkdown/kit/preset/gfm';
 import { editorCtx, editorViewCtx } from '@milkdown/kit/core';
-import { callCommand, type $Command } from '@milkdown/kit/utils';
+import { callCommand, type $Command, type $MarkSchema } from '@milkdown/kit/utils';
 import { Portal } from 'solid-js/web';
 import { createMemo, createSignal, Show } from 'solid-js';
 import { posToDOMRect } from '@milkdown/kit/prose';
-import { useTooltip } from '../shared/useTooltip';
+import { offset } from '@floating-ui/dom';
 
 import shell from '#web/infra/shell';
 import LinkView, { Mode } from '../nodes/link/tooltip/ExternalLinkView';
+import Button from '../../Button';
+import { useTooltip } from '../shared/useTooltip';
 
 export default function View(props: { ctx: Ctx; close: () => void }) {
   const editor = createMemo(() => props.ctx.get(editorCtx));
   const editorView = createMemo(() => props.ctx.get(editorViewCtx));
-
-  const hasLink = createMemo(() => {
-    const { from, to } = editorView().state.selection;
-    return editorView().state.doc.rangeHasMark(from, to, linkSchema.type(props.ctx));
-  });
 
   const [menu, setMenu] = createSignal<'main' | 'link'>('main');
 
@@ -45,6 +45,7 @@ export default function View(props: { ctx: Ctx; close: () => void }) {
     ctx: props.ctx,
     reference: virtualElement(),
     placement: 'top',
+    middleware: [offset(16)],
   });
 
   function action<T>(command: $Command<T>, payload?: T) {
@@ -59,34 +60,44 @@ export default function View(props: { ctx: Ctx; close: () => void }) {
     editorView().focus();
   }
 
+  function rangeHasMark(schema: $MarkSchema<string>) {
+    const { from, to } = editorView().state.selection;
+    return editorView().state.doc.rangeHasMark(from, to, schema.type(props.ctx));
+  }
+
   return (
     <Portal mount={shell.appRoot}>
-      <div ref={setTooltipEl} class="absolute">
+      <div
+        ref={setTooltipEl}
+        class="absolute rounded-lg border border-border-primary bg-surface-raised px-1 py-1 shadow-md"
+      >
         <Show when={menu() === 'main'}>
-          <button onClick={action(toggleEmphasisCommand)}>
-            <ItalicIcon />
-          </button>
-          <button onClick={action(toggleStrongCommand)}>
-            <BoldIcon />
-          </button>
-          <button onClick={action(toggleStrikethroughCommand)}>
-            <StrikethroughIcon />
-          </button>
-          <button onClick={action(toggleInlineCodeCommand)}>
-            <CodeIcon />
-          </button>
-          <Show
-            when={hasLink()}
-            fallback={
-              <button onClick={() => setMenu('link')}>
-                <LinkIcon />
-              </button>
-            }
-          >
-            <button onClick={action(toggleLinkCommand)}>
-              <Link2OffIcon />
-            </button>
-          </Show>
+          <div class="flex items-center gap-0.5">
+            <Button square selected={rangeHasMark(emphasisSchema)} onClick={action(toggleEmphasisCommand)}>
+              <ItalicIcon />
+            </Button>
+            <Button square selected={rangeHasMark(strongSchema)} onClick={action(toggleStrongCommand)}>
+              <BoldIcon />
+            </Button>
+            <Button square selected={rangeHasMark(strikethroughSchema)} onClick={action(toggleStrikethroughCommand)}>
+              <StrikethroughIcon />
+            </Button>
+            <Button square selected={rangeHasMark(inlineCodeSchema)} onClick={action(toggleInlineCodeCommand)}>
+              <CodeIcon />
+            </Button>
+            <Show
+              when={rangeHasMark(linkSchema)}
+              fallback={
+                <Button square onClick={() => setMenu('link')}>
+                  <LinkIcon />
+                </Button>
+              }
+            >
+              <Button square selected onClick={action(toggleLinkCommand)}>
+                <Link2OffIcon />
+              </Button>
+            </Show>
+          </div>
         </Show>
         <Show when={menu() === 'link'}>
           <LinkView initialMode={Mode.Edit} onClose={returnToMain} ctx={props.ctx} />
