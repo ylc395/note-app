@@ -18,7 +18,7 @@ export default function MarkdownPreviewer() {
   const { entity, milkdownCtx } = useContext()!;
 
   createEffect(() => {
-    if (entity.entity.data) {
+    if (entity.entitySource?.value.data) {
       editor = MilkdownEditor.make()
         .use(without(commonmark, ...commonmarkKeymap)) // 不要引入快捷键。我们自己定制
         .use(without(gfm, ...gfmKeymap)) // 同上
@@ -29,7 +29,7 @@ export default function MarkdownPreviewer() {
         .config((ctx) => {
           ctx.inject(customCtx, { onJump: milkdownCtx.get(customCtx).onJump });
           ctx.set(rootCtx, rootRef);
-          ctx.set(defaultValueCtx, entity.entity.data!.body);
+          ctx.set(defaultValueCtx, entity.entitySource!.value.data!.body);
           ctx.set(editorViewOptionsCtx, { editable: () => false });
         });
 

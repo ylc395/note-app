@@ -9,13 +9,13 @@ export default function Breadcrumbs() {
   const ctx = useContext()!;
 
   return (
-    <Show when={ctx.editor.path.result.data && ctx.editor.value.result.data}>
+    <Show when={ctx.editor.source.path.result.data && ctx.editor.source.value.result.data}>
       <div class="flex px-4 py-2 border-b border-border-secondary overflow-auto shrink-0">
         <div class={itemClassName}>
           <BookTextIcon class={iconClassName} />
           <ChevronRightIcon class={iconClassName} />
         </div>
-        <For each={ctx.editor.path.result.data}>
+        <For each={ctx.editor.source.path.result.data}>
           {(path) => (
             <div class={itemClassName}>
               {path.title}

@@ -23,8 +23,8 @@ export default function EntityPreviewer(props: {
   return (
     <>
       <div class="relative flex items-center gap-2">
-        <Show when={entity.title()}>
-          <h2 class="text-fg-primary font-medium text-sm truncate flex-1">{entity.title()}</h2>
+        <Show when={entity.entitySource?.title}>
+          <h2 class="text-fg-primary font-medium text-sm truncate flex-1">{entity.entitySource!.title}</h2>
         </Show>
         <Button size="small" square onClick={toggleFix}>
           <Show when={isFixed()} fallback={<PinIcon class="size-4" />}>

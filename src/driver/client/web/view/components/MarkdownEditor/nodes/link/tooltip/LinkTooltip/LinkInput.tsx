@@ -1,22 +1,32 @@
 import { cx } from 'class-variance-authority';
 import { SquareArrowOutUpRightIcon } from 'lucide-solid';
-import { Show } from 'solid-js';
+import { createEffect, createSignal, on, Show } from 'solid-js';
 
 import shell from '#web/infra/shell';
 import { Mode } from './constant';
+import { useContext } from './context';
 
 export default function LinkInput(props: {
   mode: Mode;
-  url: string;
+  initialUrl: string;
   onInput: (url: string) => void;
   ref?: HTMLInputElement;
 }) {
+  const [url, setUrl] = createSignal(props.initialUrl);
+  const { entity } = useContext()!;
+
+  createEffect(on(url, props.onInput));
+
   function handleUrlClick() {
     if (props.mode !== Mode.Preview) {
       return;
     }
 
-    shell.openNewWindow(props.url);
+    if (entity.jump) {
+      entity.jump();
+    } else {
+      shell.openNewWindow(url());
+    }
   }
 
   return (
@@ -28,8 +38,8 @@ export default function LinkInput(props: {
         placeholder="URL"
         ref={props.ref}
         readOnly={props.mode === Mode.Preview}
-        onInput={(e) => props.onInput(e.target.value)}
-        value={props.url}
+        onInput={(e) => setUrl(e.target.value)}
+        value={url()}
         class={cx(
           'bg-transparent text-fg-primary placeholder:text-fg-tertiary outline-none w-full',
           props.mode === Mode.Preview && 'cursor-pointer hover:underline',

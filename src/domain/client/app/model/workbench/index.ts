@@ -1,4 +1,4 @@
-import { mapValues, pick, uniqueId } from 'lodash-es';
+import { mapValues, uniqueId } from 'lodash-es';
 import { observable, action, computed, when, runInAction, autorun } from 'mobx';
 import assert from 'assert';
 
@@ -92,15 +92,15 @@ export default class Workbench {
 
   private async handleEditorFocus(editor: Editor) {
     assert(this.root);
-    await when(() => editor.value.result.isLoadingError || editor.value.result.isSuccess); // 确保 editor 的信息（如 title / mimeType）加载好了
+    await when(() => editor.source.value.result.isLoadingError || editor.source.value.result.isSuccess); // 确保 editor 的信息（如 title / mimeType）加载好了
 
     this.historyStack.push({
       mimeType: editor.mimeType,
-      entityType: editor.entityType,
+      entityType: editor.source.type,
       key: editor.id,
       entityId: editor.entityId,
       tileId: editor.tile.id,
-      title: editor.title,
+      title: editor.source.title,
     });
   }
 
@@ -260,11 +260,13 @@ export default class Workbench {
     destTile.switchToEditor(editor);
 
     when(
-      () => editor.value.isSuccess,
+      () => editor.source.value.isSuccess,
       () => {
         this.recentManager.add({
-          ...pick(editor, ['entityId', 'entityType', 'mimeType']),
-          title: editor.title!,
+          entityId: editor.entityId,
+          mimeType: editor.mimeType,
+          entityType: editor.source.type,
+          title: editor.source.title!,
         });
       },
     );

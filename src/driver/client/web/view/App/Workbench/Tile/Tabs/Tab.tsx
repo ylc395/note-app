@@ -17,7 +17,7 @@ export default function Tab(props: { editor: BaseEditor }) {
 
   onMount(() => {
     createEffect(() => {
-      if (props.editor.value.result.isSuccess && props.editor.isCurrent && rootRef && !isFullyVisible(rootRef)) {
+      if (props.editor.source.value.result.isSuccess && props.editor.isCurrent && rootRef && !isFullyVisible(rootRef)) {
         rootRef.scrollIntoView();
       }
     });
@@ -27,7 +27,7 @@ export default function Tab(props: { editor: BaseEditor }) {
     const cleanup = combine(
       draggable({
         element: rootRef!,
-        canDrag: () => props.editor.value.result.isSuccess,
+        canDrag: () => props.editor.source.value.result.isSuccess,
         getInitialData: () => props.editor as unknown as Record<string, unknown>,
       }),
       dropTargetForElements({
@@ -49,10 +49,10 @@ export default function Tab(props: { editor: BaseEditor }) {
           classList={{ 'bg-bg-accent-subtle': props.editor.isCurrent }}
           onClick={() => props.editor.tile.switchToEditor(props.editor)}
         >
-          <Icon icon={props.editor.icon} mimeType={props.editor.mimeType} className="shrink-0 w-4 h-4 mr-1" />
+          <Icon icon={props.editor.source.icon} mimeType={props.editor.mimeType} className="shrink-0 w-4 h-4 mr-1" />
           <span class="whitespace-nowrap text-ellipsis overflow-hidden">
             {IS_DEV && `${props.editor.id}-${props.editor.entityId.slice(0.3)} `}
-            {props.editor.title}
+            {props.editor.source.title}
           </span>
           <button
             class="ml-2 group-hover:visible button button-square-md"

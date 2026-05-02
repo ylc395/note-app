@@ -16,27 +16,34 @@ export default function PDFPreviewer() {
   let viewRef: HTMLDivElement | undefined;
 
   createEffect(() => {
-    if (!entity.file.data || !containerRef || !viewRef) {
+    if (!entity.entitySource?.blob.data || !containerRef || !viewRef) {
       return;
     }
 
-    factory.create({ key: entity.entity.data!.id, blob: entity.file.data as ArrayBuffer }).then((doc) => {
-      const pdfViewer = new PDFViewer();
+    const id = entity.entitySource.value.data!.id;
 
-      pdfViewer
-        .init(doc, {
-          container: containerRef,
-          view: viewRef,
-          initialScale: ScaleValues.PageFit,
-          disableTextLayer: true,
-        })
-        .then(() => {
-          setPdfViewer(pdfViewer);
-        });
-    });
+    factory
+      .create({
+        key: id,
+        blob: entity.entitySource.blob.data,
+      })
+      .then((doc) => {
+        const pdfViewer = new PDFViewer();
+
+        pdfViewer
+          .init(doc, {
+            container: containerRef,
+            view: viewRef,
+            initialScale: ScaleValues.PageFit,
+            disableTextLayer: true,
+          })
+          .then(() => {
+            setPdfViewer(pdfViewer);
+          });
+      });
 
     onCleanup(() => {
-      factory.revoke(entity.entity.data!.id);
+      factory.revoke(id);
     });
   });
 

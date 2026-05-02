@@ -24,17 +24,22 @@ export default function TitleInput() {
   const placeholder = createMemo(() => title() || editor().title || '');
 
   createEffect(() => {
-    if (editor().value.data) {
-      setTitle(editor().value.data!.title);
+    if (editor().source.value.data) {
+      setTitle(editor().source.value.data!.title);
     }
 
-    if (!editor().hasEdited && editor().value.data && !editor().value.data!.body && !editor().value.data!.title) {
+    if (
+      !editor().hasEdited &&
+      editor().source.value.data &&
+      !editor().source.value.data!.body &&
+      !editor().source.value.data!.title
+    ) {
       inputRef?.focus();
     }
   });
 
   createEffect(() => {
-    if (editor().value.data && title() !== editor().value.data!.title) {
+    if (editor().source.value.data && title() !== editor().source.value.data!.title) {
       editor().update({ title: title() });
     }
   });
@@ -68,7 +73,7 @@ export default function TitleInput() {
         spellcheck={false}
         ref={inputRef}
         class="grow h-12 px-2 text-lg shrink-0 placeholder:text-fg-secondary"
-        disabled={!editor().value.result.data}
+        disabled={!editor().source.value.data}
         placeholder={placeholder()}
         value={title()} // solidjs 中,input 的 value 不受控。但在这里不影响程序的正确性 https://github.com/solidjs/solid/discussions/416
         onInput={(e) => setTitle(e.target.value)}

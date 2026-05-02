@@ -13,7 +13,7 @@ import Button from '#web/view/components/Button';
 import EntityPreviewer from './EntityPreviewer';
 import LinkInput from './LinkInput';
 import { Mode } from './constant';
-import useEntity from './useEntity';
+import useEntitySource from './useEntitySource';
 import { ContextProvider } from './context';
 
 export { Mode } from './constant';
@@ -61,7 +61,7 @@ export default function Tooltip(props: {
 
   let inputRef: HTMLInputElement | undefined;
 
-  const entity = useEntity({
+  const entity = useEntitySource({
     url: initialUrl,
     ctx: props.ctx,
   });
@@ -87,12 +87,11 @@ export default function Tooltip(props: {
     const { from, empty } = editorView.state.selection;
 
     if (empty) {
-      if (!text()) {
-        return;
-      }
+      const textValue = text() || url();
       const tr = editorView.state.tr;
-      tr.insertText(text(), from);
-      tr.setSelection(TextSelection.create(tr.doc, from, from + text().length));
+
+      tr.insertText(textValue, from);
+      tr.setSelection(TextSelection.create(tr.doc, from, from + textValue.length));
       editorView.dispatch(tr);
     }
 
@@ -154,10 +153,10 @@ export default function Tooltip(props: {
         onMouseLeave={props.onMouseLeave}
         onMouseEnter={props.onMouseEnter}
       >
-        <Show when={entity.isEntity && mode() === Mode.Preview}>
+        <Show when={entity.entitySource && mode() === Mode.Preview}>
           <EntityPreviewer onFixedChange={props.onFixedChange} />
         </Show>
-        <LinkInput mode={mode()} ref={inputRef} url={url()} onInput={setUrl} />
+        <LinkInput mode={mode()} ref={inputRef} initialUrl={initialUrl} onInput={setUrl} />
         <Show when={mode() === Mode.Add}>
           <input
             class="bg-transparent text-fg-primary placeholder:text-fg-tertiary outline-none border border-border-primary rounded px-2 py-1 text-sm w-full"

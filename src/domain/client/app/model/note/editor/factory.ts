@@ -11,11 +11,11 @@ import PdfEditor from './PdfEditor';
 import UnknownEditor from './UnknownEditor';
 import type { EditorDTO, Factory as EditorFactory } from '../../Workbench/EditorFactory';
 
-function isValidConfig(config: EditorDTO): config is EditorDTO<NoteVO> {
+function isValidConfig(config: EditorDTO): config is EditorDTO<Required<NoteVO>> {
   return config.entityType === EntityTypes.Note;
 }
 
-const factory: EditorFactory<NoteVO> = (config, tile) => {
+const factory: EditorFactory<Required<NoteVO>> = (config, tile) => {
   const { mimeType } = config;
   assert(isValidConfig(config));
 

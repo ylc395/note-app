@@ -28,7 +28,7 @@ export function useEditorBody(getMdEditor: () => Editor | undefined) {
   // 其他编辑器改动内容时，本编辑器同步更新
   createEffect(
     on(
-      () => editor().value.data?.body,
+      () => editor().source.value.data?.body,
       (body) => {
         const mdEditor = getMdEditor();
         if (mdEditor?.isCreated && typeof body === 'string' && workbench.currentEditor && !editor().isGlobalCurrent) {

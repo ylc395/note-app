@@ -5,12 +5,12 @@ import type { ZodType } from 'zod';
 
 import EventBus from '#domain/client/shared/infra/EventBus';
 import container from '#utils/singletonContainer';
-import type { EntityId, EntityPath, EntityTypes, Icon } from '#domain/shared/model/entity';
+import type { EntityId, EntityPath, Icon } from '#domain/shared/model/entity';
 import { token as documentDbToken } from '#domain/client/shared/infra/documentDb';
 
 import { EventNames, type Events } from './events';
 import type Tile from '../Tile';
-import { createQuery } from 'mobx-tanstack-query/preset';
+import type { EntitySource } from '../../base/entitySource';
 
 export const uiStateStoreName = 'editor_UI_state';
 
@@ -29,39 +29,15 @@ export default abstract class BaseEditor<T = unknown> {
     runInAction(() => {
       this.tile = tile;
     });
-
-    this.value = createQuery(this.fetchValue.bind(this), {
-      queryKey: ['editor.value', this.entityId],
-      refetchOnWindowFocus: true,
-      abortSignal: this.destroyController.signal,
-      initialData: this.options.value,
-      options: () => ({
-        enabled: this.isCurrent && !this.options.value,
-      }),
-    });
-
-    this.path = createQuery(this.fetchPath.bind(this), {
-      queryKey: ['editor.path', this.entityId],
-      refetchOnWindowFocus: true,
-      initialData: this.options.path,
-      abortSignal: this.destroyController.signal,
-      options: () => ({
-        enabled: this.isCurrent && !this.options.path,
-      }),
-    });
   }
+
+  public abstract readonly source: EntitySource<T>;
 
   private readonly db = container.resolve(documentDbToken);
 
   protected readonly options;
 
   public abstract readonly mimeType: string | null;
-
-  public abstract readonly entityType: EntityTypes;
-
-  protected abstract fetchValue(params: { signal: AbortSignal }): Promise<T>;
-
-  protected abstract fetchPath(params: { signal: AbortSignal }): Promise<EntityPath>;
 
   public get entityId() {
     return this.options.entityId;
@@ -81,15 +57,7 @@ export default abstract class BaseEditor<T = unknown> {
 
   protected readonly destroyController = new AbortController();
 
-  public readonly value;
-
-  public readonly path;
-
   @observable.ref public accessor tile!: Tile;
-
-  public abstract readonly title: string | null;
-
-  public abstract readonly icon: Icon | null;
 
   @computed
   public get index() {
@@ -148,10 +116,10 @@ export default abstract class BaseEditor<T = unknown> {
   public toObject() {
     return {
       entityId: this.entityId,
-      entityType: this.entityType,
+      entityType: this.source.type,
       mimeType: this.mimeType,
-      title: this.title || '',
-      icon: this.icon,
+      title: this.source.title || '',
+      icon: this.source.icon,
     };
   }
 

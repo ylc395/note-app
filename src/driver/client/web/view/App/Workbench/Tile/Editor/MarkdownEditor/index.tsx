@@ -38,7 +38,7 @@ export default function MarkdownEditorView() {
         <BaseMarkdownEditor
           ref={setEditor}
           className="h-full overflow-auto border-16 border-bg-primary"
-          defaultValue={editor().value.data!.body}
+          defaultValue={editor().source.value.data!.body}
           initialScroll={editor().uiState!.scroll}
           initialCursorPos={editor().uiState!.cursorPos}
           readonly={editor().isUploading}
@@ -46,7 +46,7 @@ export default function MarkdownEditorView() {
           onScrollEnd={action(handleScrollEnd)}
           onSelectionUpdate={action(handleSelectionUpdate)}
         />
-        <Show when={!editor().value.data!.body}>
+        <Show when={!editor().source.value.data!.body}>
           <Empty />
         </Show>
       </div>

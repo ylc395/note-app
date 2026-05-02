@@ -9,7 +9,7 @@ import { EntityTypes } from '#domain/shared/model/entity';
 
 import DomainEventBus from '../model/note/EventBus';
 import BaseEditor from '../model/note/editor/BaseEditor';
-import factory from '../model/note/editor/factory';
+import editorFactory from '../model/note/editor/factory';
 
 import Workbench from '../model/Workbench';
 import EditorFactory from '../model/Workbench/EditorFactory';
@@ -49,7 +49,7 @@ export default class NoteService {
     }
 
     if (value instanceof BaseEditor) {
-      return value.value.data;
+      return value.source.value.data;
     }
 
     if (Array.isArray(value)) {
@@ -60,6 +60,6 @@ export default class NoteService {
   }
 
   public static boot() {
-    EditorFactory.registryFactory(EntityTypes.Note, factory);
+    EditorFactory.registryFactory(EntityTypes.Note, editorFactory);
   }
 }

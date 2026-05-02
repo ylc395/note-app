@@ -18,7 +18,7 @@ import PreviewTip from './PreviewTip';
 import { ContextProvider } from './composables';
 
 export default function Editor(props: { editor: BaseEditor }) {
-  const isError = createMemo(() => props.editor.value.result.isError);
+  const isError = createMemo(() => props.editor.source.value.result.isError);
 
   return (
     <ContextProvider editor={props.editor}>

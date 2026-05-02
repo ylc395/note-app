@@ -30,7 +30,7 @@ export default class MarkdownEditor extends BaseEditor {
 
   @computed
   public get isReady() {
-    return Boolean(this.value.data && this.uiState);
+    return Boolean(this.source.value.data && this.uiState);
   }
 
   private async initUIState() {
@@ -53,7 +53,7 @@ export default class MarkdownEditor extends BaseEditor {
   public override mimeType = null;
 
   private get isEmptyBody() {
-    return this.value.data?.body === '';
+    return this.source.value.data?.body === '';
   }
 
   @computed
@@ -97,10 +97,10 @@ export default class MarkdownEditor extends BaseEditor {
 
     this.tile.replace(this, {
       entityId: this.entityId,
-      entityType: this.entityType,
+      entityType: this.source.type,
       mimeType: mimeType,
-      value: this.value.data,
-      path: this.path.data,
+      value: this.source.value.data,
+      path: this.source.path.data,
       resourceManager: isTemp ? resourceManager : undefined,
     } satisfies Options & EditorDTO);
   }

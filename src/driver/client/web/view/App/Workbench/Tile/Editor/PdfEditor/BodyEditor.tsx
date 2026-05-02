@@ -82,7 +82,7 @@ export default function BodyEditor(props: { id: string }) {
             </div>
           </div>
         </FloatingPanel.Handler>
-        <Show when={editor.value.data}>
+        <Show when={editor.source.value.data}>
           {(note) => (
             <MarkdownEditor
               ref={setMdEditor}
