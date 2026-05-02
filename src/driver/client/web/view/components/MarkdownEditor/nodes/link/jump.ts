@@ -6,13 +6,17 @@ import { parseAppUrl, RouteTypes } from '#domain/shared/infra/url';
 import shell from '#web/infra/shell';
 import container from '#utils/singletonContainer';
 import { token as remoteToken } from '#domain/client/shared/infra/rpc';
+import type { Mark } from '@milkdown/kit/prose/model';
 
 import { customCtx } from '../../customCtx';
+import { sanitizeUrl } from '@braintree/sanitize-url';
 
-export function setupLinkJump(dom: HTMLAnchorElement, ctx: Ctx) {
+export function setupLinkJump(dom: HTMLAnchorElement, ctx: Ctx, mark: Mark) {
   const remote = container.resolve(remoteToken);
   const abortController = new AbortController();
-  const appUrl = parseAppUrl(dom.href);
+  const appUrl = parseAppUrl(mark.attrs.href);
+
+  dom.href = sanitizeUrl(mark.attrs.href);
 
   const entity = createQuery(
     async () => {
@@ -32,7 +36,7 @@ export function setupLinkJump(dom: HTMLAnchorElement, ctx: Ctx) {
 
       return { type: appUrl.type };
     },
-    { queryKey: ['link', dom.href], abortSignal: abortController.signal },
+    { queryKey: ['link', mark.attrs.href], abortSignal: abortController.signal },
   );
 
   function handleClick(e: MouseEvent) {
@@ -43,7 +47,7 @@ export function setupLinkJump(dom: HTMLAnchorElement, ctx: Ctx) {
     }
 
     if (!appUrl) {
-      shell.openNewWindow(dom.href);
+      shell.openNewWindow(mark.attrs.href);
       return;
     }
 

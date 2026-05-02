@@ -19,7 +19,7 @@ import { wrapInTodoListItem } from '../nodes/listItem';
 import { isInEmptyParagraph, useMilkdownEvent } from '../shared/prosemirrorUtils';
 import TopicTooltip from '../nodes/topic/Tooltip';
 import { showFloating, useTooltip } from '../shared/useTooltip';
-import LinkTooltip, { Mode } from '../nodes/link/tooltip/ExternalLinkView';
+import LinkTooltip, { Mode } from '../nodes/link/tooltip/LinkTooltip';
 import TableCreator from '../nodes/table/TableCreator';
 import {
   CodeIcon,

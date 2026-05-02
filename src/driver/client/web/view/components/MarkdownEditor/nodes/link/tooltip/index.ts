@@ -5,18 +5,17 @@ import { render } from 'solid-js/web';
 import { createComponent } from 'solid-js';
 
 import shell from '#web/infra/shell';
-import { parseAppUrl } from '#domain/shared/infra/url';
-import ExternalLinkView from './ExternalLinkView';
-import AppLinkView from './AppLinkView';
+import LinkTooltip, { Mode } from './LinkTooltip';
 
 export default $prose((ctx) => {
   let dispose: (() => void) | undefined;
   let tooltipRoot: HTMLElement | undefined;
   let isTooltipFixed = false;
   let targetDom: HTMLAnchorElement | undefined;
+  let tooltipMode: Mode | undefined;
 
-  function hide(forced = false) {
-    if (isTooltipFixed && !forced) {
+  function hide(forced: boolean) {
+    if ((isTooltipFixed || tooltipMode === Mode.Edit || tooltipMode === Mode.Add) && !forced) {
       return false;
     }
 
@@ -26,10 +25,11 @@ export default $prose((ctx) => {
     dispose = undefined;
     targetDom = undefined;
     isTooltipFixed = false;
+    tooltipMode = undefined;
     return true;
   }
 
-  const hideDelay = debounce(hide, 600);
+  const hideDelay = debounce(hide.bind(null, false), 600);
 
   const show = (e: MouseEvent) => {
     hideDelay.cancel();
@@ -38,7 +38,7 @@ export default $prose((ctx) => {
       return;
     }
 
-    const hidden = hide();
+    const hidden = hide(false);
 
     if (!hidden) {
       return;
@@ -46,24 +46,22 @@ export default $prose((ctx) => {
 
     targetDom = e.target as HTMLAnchorElement;
     tooltipRoot = document.createElement('div');
-    const appUrl = parseAppUrl(targetDom.href);
 
-    const props = {
-      onLeave: hideDelay,
-      onClose: hide.bind(null, true),
-      onEnter: hideDelay.cancel,
-      targetDom,
-      ctx,
-      mousePosition: { x: e.clientX, y: e.clientY },
-      onFixedChange: (isFixed: boolean) => (isTooltipFixed = isFixed),
-    };
-
-    if (appUrl) {
-      dispose = render(() => createComponent(AppLinkView, { appUrl, ...props }), tooltipRoot);
-    } else {
-      dispose = render(() => createComponent(ExternalLinkView, props), tooltipRoot);
-    }
-
+    dispose = render(
+      () =>
+        createComponent(LinkTooltip, {
+          initialUrl: targetDom?.href,
+          onClose: hide.bind(null, true),
+          onMouseLeave: hideDelay,
+          onMouseEnter: hideDelay.cancel,
+          targetDom,
+          ctx,
+          mousePosition: { x: e.clientX, y: e.clientY },
+          onModeChange: (mode) => (tooltipMode = mode),
+          onFixedChange: (isFixed: boolean) => (isTooltipFixed = isFixed),
+        }),
+      tooltipRoot,
+    );
     shell.appRoot.append(tooltipRoot);
   };
 

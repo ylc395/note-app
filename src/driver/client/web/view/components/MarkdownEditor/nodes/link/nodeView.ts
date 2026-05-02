@@ -1,7 +1,6 @@
 import { $view } from '@milkdown/kit/utils';
 import { linkSchema } from '@milkdown/kit/preset/commonmark';
 import type { MarkView } from '@milkdown/kit/prose/view';
-import { sanitizeUrl } from '@braintree/sanitize-url';
 import { when } from 'mobx';
 
 import { setupLinkIcon } from './icon';
@@ -11,9 +10,8 @@ export const linkNodeView = $view(linkSchema.mark, (ctx) => {
   return (mark): MarkView => {
     const dom = document.createElement('a');
     const abortController = new AbortController();
-    const { entity, dispose: disposeJump } = setupLinkJump(dom, ctx);
+    const { entity, dispose: disposeJump } = setupLinkJump(dom, ctx, mark);
 
-    dom.href = sanitizeUrl(mark.attrs.href);
     let disposeIcon: (() => void) | undefined;
 
     when(

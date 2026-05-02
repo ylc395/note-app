@@ -19,7 +19,7 @@ import { posToDOMRect } from '@milkdown/kit/prose';
 import { offset } from '@floating-ui/dom';
 
 import shell from '#web/infra/shell';
-import LinkView, { Mode } from '../nodes/link/tooltip/ExternalLinkView';
+import LinkView, { Mode } from '../nodes/link/tooltip/LinkTooltip';
 import Button from '../../Button';
 import { useTooltip } from '../shared/useTooltip';
 

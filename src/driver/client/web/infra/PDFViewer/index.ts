@@ -184,6 +184,8 @@ export default class PDFViewer {
       this.core = pdfViewer;
     });
 
+    this.updateCurrentPage(1);
+
     await Promise.all([
       this.initPageLabels(),
       pdfViewer.firstPagePromise.then(async () => {
