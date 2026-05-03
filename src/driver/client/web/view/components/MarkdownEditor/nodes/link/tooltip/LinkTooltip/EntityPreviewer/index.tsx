@@ -23,20 +23,30 @@ export default function EntityPreviewer(props: {
   return (
     <>
       <div class="relative flex items-center gap-2">
-        <Show when={entity.entitySource?.title}>
-          <h2 class="text-fg-primary font-medium text-sm truncate flex-1">{entity.entitySource!.title}</h2>
-        </Show>
+        <h2 class="text-fg-primary font-medium text-sm truncate flex-1">
+          <Show when={entity.entitySource?.value.isLoading}>加载中...</Show>
+          <Show when={entity.entitySource?.value.isError}>无法预览</Show>
+          <Show when={entity.entitySource?.value.isSuccess}>{entity.entitySource?.title}</Show>
+        </h2>
         <Button size="small" square onClick={toggleFix}>
           <Show when={isFixed()} fallback={<PinIcon class="size-4" />}>
             <PinOffIcon class="size-4" />
           </Show>
         </Button>
       </div>
-      <Switch fallback={<MarkdownPreviewer />}>
-        <Match when={entity.mimeType() === MimeTypes.PDF}>
-          <PDFPreviewer />
-        </Match>
-      </Switch>
+      <Show when={entity.entitySource?.blob.isLoading}>
+        <div>加载中...</div>
+      </Show>
+      <Show when={entity.entitySource?.value.isError || entity.entitySource?.blob.isError}>
+        <div>URL 指向的本地资源不存在</div>
+      </Show>
+      <Show when={entity.entitySource?.blob.isSuccess}>
+        <Switch fallback={<MarkdownPreviewer />}>
+          <Match when={entity.mimeType() === MimeTypes.PDF}>
+            <PDFPreviewer />
+          </Match>
+        </Switch>
+      </Show>
     </>
   );
 }

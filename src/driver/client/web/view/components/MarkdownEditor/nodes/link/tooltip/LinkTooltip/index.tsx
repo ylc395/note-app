@@ -156,7 +156,7 @@ export default function Tooltip(props: {
         <Show when={entity.entitySource && mode() === Mode.Preview}>
           <EntityPreviewer onFixedChange={props.onFixedChange} />
         </Show>
-        <LinkInput mode={mode()} ref={inputRef} initialUrl={initialUrl} onInput={setUrl} />
+        <LinkInput mode={mode()} ref={inputRef} value={url()} onInput={setUrl} />
         <Show when={mode() === Mode.Add}>
           <input
             class="bg-transparent text-fg-primary placeholder:text-fg-tertiary outline-none border border-border-primary rounded px-2 py-1 text-sm w-full"
