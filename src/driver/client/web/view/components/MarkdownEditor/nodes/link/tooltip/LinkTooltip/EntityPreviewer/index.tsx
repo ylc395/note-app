@@ -40,8 +40,11 @@ export default function EntityPreviewer(props: {
       <Show when={entity.entitySource?.value.isError || entity.entitySource?.blob.isError}>
         <div>URL 指向的本地资源不存在</div>
       </Show>
+      <Show when={entity.entitySource?.value.isSuccess && !entity.entitySource?.value.data?.mimeType}>
+        <MarkdownPreviewer />
+      </Show>
       <Show when={entity.entitySource?.blob.isSuccess}>
-        <Switch fallback={<MarkdownPreviewer />}>
+        <Switch>
           <Match when={entity.mimeType() === MimeTypes.PDF}>
             <PDFPreviewer />
           </Match>

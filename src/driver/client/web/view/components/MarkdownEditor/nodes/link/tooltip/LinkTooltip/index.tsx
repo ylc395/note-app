@@ -83,23 +83,6 @@ export default function Tooltip(props: {
     props.onClose?.();
   }
 
-  function addTextAndLink() {
-    const { from, empty } = editorView.state.selection;
-
-    if (empty) {
-      const textValue = text() || url();
-      const tr = editorView.state.tr;
-
-      tr.insertText(textValue, from);
-      tr.setSelection(TextSelection.create(tr.doc, from, from + textValue.length));
-      editorView.dispatch(tr);
-    }
-
-    editor.action(callCommand(toggleLinkCommand.key, { href: url() }));
-    editorView.focus();
-    props.onClose?.();
-  }
-
   function cancel() {
     if (initialMode === Mode.Preview) {
       setUrl(initialUrl);
@@ -119,10 +102,30 @@ export default function Tooltip(props: {
     }
 
     if (mode() === Mode.Add) {
-      return addTextAndLink();
+      const { from, empty } = editorView.state.selection;
+
+      if (empty) {
+        const textValue = text() || url();
+        let tr = editorView.state.tr.insertText(textValue, from);
+        tr = tr.setSelection(TextSelection.create(tr.doc, from, from + textValue.length));
+
+        editorView.dispatch(tr);
+      }
     }
 
     action(initialUrl ? updateLinkCommand : toggleLinkCommand, { href: url() });
+  }
+
+  function handleSelect({ url, title }: { url: string; title: string }) {
+    setUrl(url);
+
+    if (mode() === Mode.Edit) {
+      update();
+    }
+
+    if (mode() === Mode.Add && !text()) {
+      setText(title);
+    }
   }
 
   useMilkdownEvent({
@@ -140,7 +143,7 @@ export default function Tooltip(props: {
 
     if (mode() === Mode.Edit || mode() === Mode.Add) {
       requestAnimationFrame(() => {
-        inputRef?.focus();
+        inputRef?.select();
       });
     }
   });
@@ -149,14 +152,14 @@ export default function Tooltip(props: {
     <ContextProvider entity={entity} milkdownCtx={props.ctx}>
       <div
         ref={setTooltipEl}
-        class="bg-surface-raised border border-border-primary rounded-lg shadow-lg p-3 min-w-[320px] flex flex-col gap-2"
+        class="w-64 bg-surface-raised border border-border-primary rounded-lg shadow-lg p-3 min-w-[320px] flex flex-col gap-2"
         onMouseLeave={props.onMouseLeave}
         onMouseEnter={props.onMouseEnter}
       >
         <Show when={entity.entitySource && mode() === Mode.Preview}>
           <EntityPreviewer onFixedChange={props.onFixedChange} />
         </Show>
-        <LinkInput mode={mode()} ref={inputRef} value={url()} onInput={setUrl} />
+        <LinkInput mode={mode()} ref={inputRef} initialValue={initialUrl} onInput={setUrl} onSelect={handleSelect} />
         <Show when={mode() === Mode.Add}>
           <input
             class="bg-transparent text-fg-primary placeholder:text-fg-tertiary outline-none border border-border-primary rounded px-2 py-1 text-sm w-full"

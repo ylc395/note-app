@@ -1,6 +1,7 @@
 import { compile, match } from 'path-to-regexp';
 import { mapValues } from 'lodash-es';
 import { APP_NAME } from './constants';
+import { EntityTypes } from '../model/entity';
 
 export const PROTOCOL = APP_NAME;
 
@@ -26,11 +27,21 @@ export const matcher = mapValues(routes, (v) => match(v, { decode: false }));
 
 const generator = mapValues(routes, (v) => compile(v, { encode: false }));
 
-export function getAppUrl(type: keyof typeof generator, id: string) {
-  return `${PROTOCOL}://${HOST_NAME}${generator[type]({ id })}`;
+export function getAppUrl(type: keyof typeof generator | EntityTypes, id: string) {
+  return `${PROTOCOL}://${HOST_NAME}${generator[typeof type === 'number' ? entityTypeToRouteType(type) : type]({
+    id,
+  })}`;
 }
 
 export type AppUrlParams = NonNullable<ReturnType<typeof parseAppUrl>>;
+
+function entityTypeToRouteType(type: EntityTypes) {
+  return {
+    [EntityTypes.Annotation]: RouteTypes.Annotation,
+    [EntityTypes.Memo]: RouteTypes.Memo,
+    [EntityTypes.Note]: RouteTypes.Note,
+  }[type];
+}
 
 export function parseAppUrl(url: string) {
   if (!URL.canParse(url)) {

@@ -72,7 +72,7 @@ export default function TitleInput() {
       <input
         spellcheck={false}
         ref={inputRef}
-        class="grow h-12 px-2 text-lg shrink-0 placeholder:text-fg-secondary"
+        class="grow h-12 px-2 text-lg shrink-0 placeholder:text-fg-tertiary"
         disabled={!editor().source.value.data}
         placeholder={placeholder()}
         value={title()} // solidjs 中,input 的 value 不受控。但在这里不影响程序的正确性 https://github.com/solidjs/solid/discussions/416

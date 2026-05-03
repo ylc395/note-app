@@ -43,7 +43,7 @@ export default function MarkdownPreviewer() {
 
   return (
     <div
-      class="w-64 max-h-64 overflow-auto bg-bg-tertiary rounded border border-border-secondary p-2"
+      class="size-64 m-auto overflow-auto bg-bg-tertiary rounded border border-border-secondary p-2"
       spellcheck={false}
       ref={rootRef}
     ></div>

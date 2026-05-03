@@ -34,14 +34,14 @@ export default class PDFDocumentFactory {
   }
 
   @action
-  public revoke(key: string) {
+  public async revoke(key: string) {
     const task = this.loadingTasksMap[key];
 
     assert(task);
     task.activeCount -= 1;
 
     if (task.activeCount === 0) {
-      task.task.destroy();
+      await task.task.destroy();
       delete this.loadingTasksMap[key];
     }
 

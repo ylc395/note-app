@@ -1,7 +1,8 @@
 import type { Query } from 'mobx-tanstack-query';
 import type { EntityId, EntityPath, EntityTypes, Icon } from '#domain/shared/model/entity';
 
-export interface EntitySource<T> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export interface EntitySource<T = any> {
   readonly id: EntityId;
   readonly type: EntityTypes;
   readonly value: Query<T>;
@@ -9,4 +10,5 @@ export interface EntitySource<T> {
   readonly title: string;
   readonly icon: Icon | null;
   readonly blob?: Query<ArrayBuffer>;
+  readonly mimeType: string | null;
 }

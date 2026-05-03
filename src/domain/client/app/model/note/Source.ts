@@ -5,6 +5,7 @@ import container from '#utils/singletonContainer';
 import { EntityTypes, type EntityPath } from '#domain/shared/model/entity';
 import { normalizeTitle, type NoteVO } from '#domain/shared/model/note';
 import type { EntitySource } from '../base/entitySource';
+import { computed } from 'mobx';
 
 export default class NoteSource implements EntitySource<Required<NoteVO>> {
   constructor(
@@ -58,11 +59,18 @@ export default class NoteSource implements EntitySource<Required<NoteVO>> {
 
   public readonly blob;
 
+  @computed
   public get title() {
-    return this.value.data?.title ? normalizeTitle(this.value.data) : '';
+    return this.value.data ? normalizeTitle(this.value.data) : '';
   }
 
+  @computed
   public get icon() {
     return this.value.data?.icon || null;
+  }
+
+  @computed
+  public get mimeType() {
+    return this.value.data?.mimeType || null;
   }
 }
