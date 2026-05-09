@@ -1,3 +1,7 @@
+import type { JSX } from 'solid-js';
+import { createComponent, render } from 'solid-js/web';
+import shell from '#web/infra/shell';
+
 export function isFullyVisible(dom: HTMLElement) {
   if (!dom.parentElement) {
     return false;
@@ -14,15 +18,14 @@ export function isFullyVisible(dom: HTMLElement) {
   );
 }
 
-export function findAncestor(element: HTMLElement, until: (el: HTMLElement) => boolean) {
-  let parent: HTMLElement | null = element;
+export function renderSolidApp<T>(component: (props: T) => JSX.Element, props: (params: { destroy: () => void }) => T) {
+  const container = document.createElement('div');
+  const dispose = render(() => createComponent(component, props({ destroy })), container);
 
-  // eslint-disable-next-line no-cond-assign
-  while ((parent = parent.parentElement)) {
-    if (until(parent)) {
-      return parent;
-    }
+  shell.appRoot.append(container);
+
+  function destroy() {
+    dispose();
+    container.remove();
   }
-
-  return null;
 }

@@ -12,15 +12,7 @@ import {
 import { callCommand } from '@milkdown/kit/utils';
 import { makeEventListener } from '@solid-primitives/event-listener';
 import { mergeRefs } from '@solid-primitives/refs';
-
-import Menu, { type MenuItem } from '#web/view/components/Menu';
-
-import { wrapInTodoListItem } from '../nodes/listItem';
-import { isInEmptyParagraph, useMilkdownEvent } from '../shared/prosemirrorUtils';
-import TopicTooltip from '../nodes/topic/Tooltip';
-import { showFloating, useTooltip } from '../shared/useTooltip';
-import LinkTooltip, { Mode } from '../nodes/link/tooltip/LinkTooltip';
-import TableCreator from '../nodes/table/TableCreator';
+import { flow } from 'lodash-es';
 import {
   CodeIcon,
   HeadingIcon,
@@ -33,6 +25,16 @@ import {
   LinkIcon,
   SeparatorHorizontalIcon,
 } from 'lucide-solid';
+
+import Menu, { type MenuItem } from '#web/view/components/Menu';
+import { renderSolidApp } from '#web/utils/dom';
+
+import { wrapInTodoListItem } from '../nodes/listItem';
+import { isInEmptyParagraph, useMilkdownEvent } from '../shared/prosemirrorUtils';
+import TopicTooltip from '../nodes/topic/Tooltip';
+import { useTooltip } from '../shared/useTooltip';
+import LinkTooltip, { Mode } from '../nodes/link/tooltip/LinkTooltip';
+import TableCreator from '../nodes/table/TableCreator';
 import { SLASH_KEY } from './constants';
 
 export default function View(props: { ctx: Ctx; onClose: (slash?: boolean) => void }) {
@@ -61,6 +63,10 @@ export default function View(props: { ctx: Ctx; onClose: (slash?: boolean) => vo
   function onSelect(value: string) {
     const editor = props.ctx.get(editorCtx);
 
+    const focusEditorView = () => {
+      props.ctx.get(editorViewCtx).focus();
+    };
+
     switch (value) {
       case 'heading':
         editor.action(callCommand(wrapInHeadingCommand.key));
@@ -84,14 +90,14 @@ export default function View(props: { ctx: Ctx; onClose: (slash?: boolean) => vo
         editor.action(callCommand(wrapInTodoListItem.key, { listType: 'bullet' }));
         break;
       case 'table':
-        showFloating(props.ctx, TableCreator, ({ destroy }) => ({ ctx: props.ctx, onClose: destroy }));
+        renderSolidApp(TableCreator, ({ destroy }) => ({ ctx: props.ctx, onClose: flow(destroy, focusEditorView) }));
         break;
       case 'topic':
-        showFloating(props.ctx, TopicTooltip, ({ destroy }) => ({ ctx: props.ctx, onClose: destroy }));
+        renderSolidApp(TopicTooltip, ({ destroy }) => ({ ctx: props.ctx, onClose: flow(destroy, focusEditorView) }));
         break;
       case 'link':
-        showFloating(props.ctx, LinkTooltip, ({ destroy }) => ({
-          onClose: destroy,
+        renderSolidApp(LinkTooltip, ({ destroy }) => ({
+          onClose: flow(destroy, focusEditorView),
           ctx: props.ctx,
           initialMode: Mode.Add,
         }));

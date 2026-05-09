@@ -1,4 +1,3 @@
-import shell from '#web/infra/shell';
 import {
   autoUpdate,
   computePosition,
@@ -11,8 +10,7 @@ import {
 import { editorViewCtx, rootCtx } from '@milkdown/kit/core';
 import type { Ctx } from '@milkdown/kit/ctx';
 import { posToDOMRect } from '@milkdown/kit/prose';
-import { createEffect, createSignal, onCleanup, type JSX } from 'solid-js';
-import { createComponent, render } from 'solid-js/web';
+import { createEffect, createSignal, onCleanup } from 'solid-js';
 
 export function useTooltip(options: {
   ctx: Ctx;
@@ -77,24 +75,4 @@ export function useTooltip(options: {
   });
 
   return { setTooltipEl };
-}
-
-export function showFloating<T>(
-  ctx: Ctx,
-  component: (props: T) => JSX.Element,
-  props: (params: { destroy: () => void }) => T,
-) {
-  const container = document.createElement('div');
-  container.dataset.editorTooltipContainer = 'true';
-  shell.appRoot.append(container);
-  const dispose = render(() => createComponent(component, props({ destroy })), container);
-
-  function destroy() {
-    const editorView = ctx.get(editorViewCtx);
-    dispose();
-    container.remove();
-    editorView.focus();
-  }
-
-  return true;
 }
