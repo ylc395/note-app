@@ -29,7 +29,7 @@ export default $prose((ctx) => {
     return true;
   }
 
-  const hideDelay = debounce(hide.bind(null, false), 600);
+  const hideDelay = debounce(hide.bind(null, false), 200);
 
   const show = (e: MouseEvent) => {
     hideDelay.cancel();

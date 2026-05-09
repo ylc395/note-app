@@ -28,19 +28,29 @@ export const matcher = mapValues(routes, (v) => match(v, { decode: false }));
 const generator = mapValues(routes, (v) => compile(v, { encode: false }));
 
 export function getAppUrl(type: keyof typeof generator | EntityTypes, id: string) {
-  return `${PROTOCOL}://${HOST_NAME}${generator[typeof type === 'number' ? entityTypeToRouteType(type) : type]({
+  return `${PROTOCOL}://${HOST_NAME}${generator[typeof type === 'number' ? toRouteType(type) : type]({
     id,
   })}`;
 }
 
 export type AppUrlParams = NonNullable<ReturnType<typeof parseAppUrl>>;
 
-function entityTypeToRouteType(type: EntityTypes) {
+function toRouteType(type: EntityTypes) {
   return {
     [EntityTypes.Annotation]: RouteTypes.Annotation,
     [EntityTypes.Memo]: RouteTypes.Memo,
     [EntityTypes.Note]: RouteTypes.Note,
   }[type];
+}
+
+export function toEntityType(type: RouteTypes) {
+  const map: Partial<Record<RouteTypes, EntityTypes>> = {
+    [RouteTypes.Annotation]: EntityTypes.Annotation,
+    [RouteTypes.Memo]: EntityTypes.Memo,
+    [RouteTypes.Note]: EntityTypes.Note,
+  };
+
+  return map[type];
 }
 
 export function parseAppUrl(url: string) {

@@ -1,43 +1,25 @@
-import { createQuery } from 'mobx-tanstack-query/preset';
 import type { Ctx } from '@milkdown/kit/ctx';
 import { editorViewCtx } from '@milkdown/kit/core';
-
-import { parseAppUrl, RouteTypes } from '#domain/shared/infra/url';
-import shell from '#web/infra/shell';
-import container from '#utils/singletonContainer';
-import { token as remoteToken } from '#domain/client/shared/infra/rpc';
 import type { Mark } from '@milkdown/kit/prose/model';
 
+import type { EntitySource } from '#domain/client/app/model/base/entitySource';
+import { parseAppUrl } from '#domain/shared/infra/url';
+import shell from '#web/infra/shell';
+
 import { customCtx } from '../../customCtx';
-import { sanitizeUrl } from '@braintree/sanitize-url';
 
-export function setupLinkJump(dom: HTMLAnchorElement, ctx: Ctx, mark: Mark) {
-  const remote = container.resolve(remoteToken);
+export function setupLinkJump({
+  dom,
+  ctx,
+  mark,
+  entitySource,
+}: {
+  dom: HTMLAnchorElement;
+  ctx: Ctx;
+  mark: Mark;
+  entitySource?: EntitySource | null;
+}) {
   const abortController = new AbortController();
-  const appUrl = parseAppUrl(mark.attrs.href);
-
-  dom.href = sanitizeUrl(mark.attrs.href);
-
-  const entity = createQuery(
-    async () => {
-      if (!appUrl) {
-        return null;
-      }
-
-      if (appUrl.type === RouteTypes.Note) {
-        const note = await remote.note.queryOneById.query(appUrl.id);
-
-        return {
-          type: RouteTypes.Note,
-          icon: note.icon,
-          mimeType: note.mimeType,
-        };
-      }
-
-      return { type: appUrl.type };
-    },
-    { queryKey: ['link', mark.attrs.href], abortSignal: abortController.signal },
-  );
 
   function handleClick(e: MouseEvent) {
     e.preventDefault();
@@ -46,25 +28,26 @@ export function setupLinkJump(dom: HTMLAnchorElement, ctx: Ctx, mark: Mark) {
       return;
     }
 
-    if (!appUrl) {
+    if (!entitySource) {
       shell.openNewWindow(mark.attrs.href);
       return;
     }
 
-    if (entity.data) {
-      ctx.get(customCtx).onJump?.({
-        ...appUrl,
-        mimeType: entity.data.mimeType,
-      });
+    if (entitySource.value.isSuccess) {
+      const appUrl = parseAppUrl(mark.attrs.href);
+
+      if (appUrl) {
+        ctx.get(customCtx).onJump?.({
+          ...appUrl,
+          mimeType: entitySource.mimeType,
+        });
+      }
     }
   }
 
   dom.addEventListener('click', handleClick, { signal: abortController.signal });
 
-  return {
-    entity,
-    dispose: () => {
-      abortController.abort();
-    },
+  return () => {
+    abortController.abort();
   };
 }

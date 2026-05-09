@@ -1,15 +1,17 @@
-.milkdown .editor [data-link-icon]::before {
-  content: '';
-  display: inline-block;
+.milkdown .editor .link-icon-widget {
+  display: inline-flex;
   user-select: none;
   height: 1em;
   width: 1em;
-  vertical-align: middle;
+  align-items: center;
   margin-inline-start: 0.2em;
   margin-inline-end: 0.1em;
+}
 
-  background-image: var(--icon-content);
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: contain;
+.milkdown .editor .link-icon-widget svg,
+.milkdown .editor .link-icon-widget img,
+.milkdown .editor .link-icon-widget em-emoji {
+  width: 100%;
+  height: 100%;
+  display: block;
 }

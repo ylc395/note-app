@@ -1,0 +1,3 @@
+.milkdown .editor a[data-link-state="invalid"] {
+  color: var(--color-fg-disabled);
+}

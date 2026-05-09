@@ -1,6 +1,6 @@
 import { cx } from 'class-variance-authority';
 import { SquareArrowOutUpRightIcon } from 'lucide-solid';
-import { createDeferred, createEffect, createSignal, For, onCleanup, Show } from 'solid-js';
+import { createDeferred, createEffect, createMemo, createSignal, For, onCleanup, Show } from 'solid-js';
 import { Portal } from 'solid-js/web';
 import { Combobox, useListCollection } from '@ark-ui/solid';
 import { noop, pick } from 'lodash-es';
@@ -31,6 +31,7 @@ export default function LinkInput(props: {
   const [targetSource, setTargetSource] = createSignal<EntitySource>();
   const [value, setValue] = createSignal(props.initialValue);
   const deferredValue = createDeferred(value, { timeoutMs: 800 });
+  const isUnaccessible = createMemo(() => props.mode !== Mode.Preview || entity.entitySource?.value.isError);
 
   const { collection, clear, set } = useListCollection<Item>({
     initialItems: [],
@@ -39,7 +40,7 @@ export default function LinkInput(props: {
   });
 
   function handleUrlClick() {
-    if (props.mode !== Mode.Preview) {
+    if (isUnaccessible()) {
       return;
     }
 
@@ -110,7 +111,7 @@ export default function LinkInput(props: {
   return (
     <div
       class="flex items-center gap-1 border border-border-primary rounded px-2 py-1 text-sm bg-bg-primary focus-within:border-border-accent transition-colors"
-      classList={{ 'cursor-pointer': props.mode === Mode.Preview }}
+      classList={{ 'cursor-pointer': !isUnaccessible() }}
       onClick={handleUrlClick}
     >
       <Show
@@ -135,7 +136,7 @@ export default function LinkInput(props: {
                 ref={props.ref}
                 class={cx(
                   'bg-transparent text-fg-primary placeholder:text-fg-tertiary outline-none w-full truncate',
-                  props.mode === Mode.Preview && 'cursor-pointer hover:underline',
+                  !isUnaccessible() && 'cursor-pointer hover:underline',
                 )}
               />
             </Combobox.Control>

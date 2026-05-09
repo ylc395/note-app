@@ -11,8 +11,11 @@ export default function EntityPreviewer(props: {
   isInitialFixed?: boolean;
   onFixedChange?: (isFixed: boolean) => void;
 }) {
-  const { entity } = useContext()!;
   const [isFixed, setIsFixed] = createSignal(props.isInitialFixed || false);
+
+  const {
+    entity: { entitySource },
+  } = useContext()!;
 
   createEffect(on(isFixed, (value) => props.onFixedChange?.(value)));
 
@@ -24,28 +27,30 @@ export default function EntityPreviewer(props: {
     <>
       <div class="relative flex items-center gap-2">
         <h2 class="text-fg-primary font-medium text-sm truncate flex-1">
-          <Show when={entity.entitySource?.value.isLoading}>加载中...</Show>
-          <Show when={entity.entitySource?.value.isError}>无法预览</Show>
-          <Show when={entity.entitySource?.value.isSuccess}>{entity.entitySource?.title}</Show>
+          <Show when={entitySource?.value.isLoading}>加载中...</Show>
+          <Show when={entitySource?.value.isError}>无法预览</Show>
+          <Show when={entitySource?.value.isSuccess}>{entitySource?.title}</Show>
         </h2>
-        <Button size="small" square onClick={toggleFix}>
-          <Show when={isFixed()} fallback={<PinIcon class="size-4" />}>
-            <PinOffIcon class="size-4" />
-          </Show>
-        </Button>
+        <Show when={!entitySource?.value.isError}>
+          <Button size="small" square onClick={toggleFix}>
+            <Show when={isFixed()} fallback={<PinIcon class="size-4" />}>
+              <PinOffIcon class="size-4" />
+            </Show>
+          </Button>
+        </Show>
       </div>
-      <Show when={entity.entitySource?.blob.isLoading}>
+      <Show when={entitySource?.blob.isLoading}>
         <div>加载中...</div>
       </Show>
-      <Show when={entity.entitySource?.value.isError || entity.entitySource?.blob.isError}>
+      <Show when={entitySource?.value.isError || entitySource?.blob.isError}>
         <div>URL 指向的本地资源不存在</div>
       </Show>
-      <Show when={entity.entitySource?.value.isSuccess && !entity.entitySource?.value.data?.mimeType}>
+      <Show when={entitySource?.value.isSuccess && !entitySource?.value.data?.mimeType}>
         <MarkdownPreviewer />
       </Show>
-      <Show when={entity.entitySource?.blob.isSuccess}>
+      <Show when={entitySource?.blob.isSuccess}>
         <Switch>
-          <Match when={entity.mimeType() === MimeTypes.PDF}>
+          <Match when={entitySource?.value.data?.mimeType === MimeTypes.PDF}>
             <PDFPreviewer />
           </Match>
         </Switch>
