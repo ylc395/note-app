@@ -15,14 +15,13 @@ export type { MenuItem } from './Item';
 
 const menuGroupMap = new Map<symbol, UseMenuReturn>();
 
-export default function Menu<T = void>(props: {
+export default function Menu(props: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   children?: (props: JSX.HTMLAttributes<any>) => JSX.Element;
   onOpenChange?: (e: { open: boolean }) => void;
   onSelect?: (value: string) => void;
-  topContent?: (seed?: T) => JSX.Element;
-  dataForItems: T;
-  menu?: Array<MenuItem | 'separator'> | ((data: T) => Array<MenuItem | 'separator'>);
+  topContent?: JSX.Element;
+  menu?: Array<MenuItem | 'separator'> | (() => Array<MenuItem | 'separator'>);
   contextmenu?: boolean;
   positioning?: UseMenuProps['positioning'];
   open?: boolean;
@@ -37,7 +36,7 @@ export default function Menu<T = void>(props: {
     loopFocus: true,
   });
 
-  const items = createMemo(() => (typeof props.menu === 'function' ? props.menu?.(props.dataForItems) : props.menu));
+  const items = createMemo(() => (typeof props.menu === 'function' ? props.menu?.() : props.menu));
   const contentClassName = 'min-w-28 rounded-md border border-border-primary bg-surface-raised p-1 shadow-lg';
 
   createEffect(() => {
@@ -64,7 +63,7 @@ export default function Menu<T = void>(props: {
   function renderMenuContent() {
     return (
       <ArkMenu.Content ref={props.ref} class={contentClassName}>
-        {props.topContent?.(props.dataForItems)}
+        {props.topContent}
         <For each={items()}>
           {(item) => <Item onMenuSelect={onSelect} item={item} menu={menu} contentClassName={contentClassName} />}
         </For>

@@ -77,7 +77,7 @@ export default function SettingButton() {
   }
 
   return (
-    <Menu dataForItems={null} menu={menu()} onSelect={action(handleSelect)}>
+    <Menu menu={menu()} onSelect={action(handleSelect)}>
       {(childProps) => (
         <Button {...childProps} square>
           <SettingsIcon />

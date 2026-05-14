@@ -40,7 +40,7 @@ export default function Tab(props: { editor: BaseEditor }) {
   });
 
   return (
-    <Menu contextmenu dataForItems={props.editor} menu={getContextmenu} onSelect={handleContextmenuClick}>
+    <Menu contextmenu menu={getContextmenu} onSelect={handleContextmenuClick}>
       {(childProps) => (
         <div
           {...childProps}

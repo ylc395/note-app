@@ -75,13 +75,12 @@ export default function Node(props: Props) {
         menuGroupKey={props.groupKey}
         onOpenChange={handleOpenChange}
         onSelect={props.onContextMenuClick}
-        menu={props.contextMenu}
-        dataForItems={props.node}
-        topContent={() => (
+        menu={props.contextMenu?.(props.node)}
+        topContent={
           <Show when={props.treeExplorer.treeNodeSets.selected.size > 1}>
             <div class="font-bold p-1">共选中 {props.treeExplorer.treeNodeSets.selected.size} 项</div>
           </Show>
-        )}
+        }
       >
         {(childProps) => render(childProps)}
       </Menu>

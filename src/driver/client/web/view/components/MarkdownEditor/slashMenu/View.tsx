@@ -129,7 +129,6 @@ export default function View(props: { ctx: Ctx; onClose: (slash?: boolean) => vo
     <Menu
       onOpenChange={() => props.onClose()}
       open
-      dataForItems={undefined}
       ref={mergeRefs(setMenuRef, setTooltipEl)}
       onSelect={onSelect}
       menu={menu()}
