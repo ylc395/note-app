@@ -59,7 +59,7 @@
     "zodify": "^1.1.6"
   },
   "dependencies": {
-    "@ark-ui/solid": "^5.34.1",
+    "@ark-ui/solid": "^5.36.2",
     "@atlaskit/pragmatic-drag-and-drop": "^1.7.7",
     "@braintree/sanitize-url": "^7.1.1",
     "@emoji-mart/data": "^1.2.1",

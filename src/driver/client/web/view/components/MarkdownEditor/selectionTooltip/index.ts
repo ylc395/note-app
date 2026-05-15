@@ -15,11 +15,11 @@ export default $prose(
       view: (): PluginView => {
         let dispose: undefined | (() => void);
 
-        const show = async () => {
+        const show = () => {
           const container = document.createDocumentFragment();
           shell.appRoot.append(container);
 
-          const disposeSolidApp = render(() => createComponent(View, { ctx, close: destroy }), container);
+          const disposeSolidApp = render(() => createComponent(View, { ctx, onClose: destroy }), container);
 
           dispose = () => {
             disposeSolidApp();

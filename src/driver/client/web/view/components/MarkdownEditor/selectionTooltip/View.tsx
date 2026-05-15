@@ -23,7 +23,7 @@ import LinkView, { Mode } from '../nodes/link/tooltip/LinkTooltip';
 import Button from '../../Button';
 import { useTooltip } from '../shared/useTooltip';
 
-export default function View(props: { ctx: Ctx; close: () => void }) {
+export default function View(props: { ctx: Ctx; onClose: () => void }) {
   const editor = createMemo(() => props.ctx.get(editorCtx));
   const editorView = createMemo(() => props.ctx.get(editorViewCtx));
 
@@ -46,6 +46,7 @@ export default function View(props: { ctx: Ctx; close: () => void }) {
     reference: virtualElement(),
     placement: 'top',
     middleware: [offset(16)],
+    onEscape: props.onClose,
   });
 
   function action<T>(command: $Command<T>, payload?: T) {

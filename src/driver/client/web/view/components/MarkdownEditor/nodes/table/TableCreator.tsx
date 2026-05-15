@@ -5,7 +5,6 @@ import { callCommand } from '@milkdown/kit/utils';
 import { createEffect, createSignal, For } from 'solid-js';
 
 import { useTooltip } from '../../shared/useTooltip';
-import { useMilkdownEvent } from '../../shared/prosemirrorUtils';
 
 export default function TableCreator(props: { ctx: Ctx; onClose: () => void }) {
   const [rows, setRows] = createSignal(2);
@@ -17,12 +16,7 @@ export default function TableCreator(props: { ctx: Ctx; onClose: () => void }) {
     ctx: props.ctx,
     reference: 'cursor',
     placement: 'bottom-start',
-  });
-
-  useMilkdownEvent({
-    event: 'selectionUpdated',
-    ctx: props.ctx,
-    fn: props.onClose,
+    onCursorChange: props.onClose,
   });
 
   function handleCellClick(row: number, col: number) {

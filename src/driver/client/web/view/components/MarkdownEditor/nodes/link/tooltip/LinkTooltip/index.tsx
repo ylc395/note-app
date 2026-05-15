@@ -8,7 +8,7 @@ import { createEffect, createMemo, createSignal, Show } from 'solid-js';
 import z from 'zod';
 
 import { useTooltip } from '#web/view/components/MarkdownEditor/shared/useTooltip';
-import { findMarkPosition, useMilkdownEvent } from '#web/view/components/MarkdownEditor/shared/prosemirrorUtils';
+import { findMarkPosition } from '#web/view/components/MarkdownEditor/shared/prosemirrorUtils';
 import Button from '#web/view/components/Button';
 import EntityPreviewer from './EntityPreviewer';
 import LinkInput from './LinkInput';
@@ -69,8 +69,10 @@ export default function Tooltip(props: {
   const { setTooltipEl } = useTooltip({
     reference: props.targetDom || 'cursor',
     ctx: props.ctx,
-    placement: props.placement || 'top',
+    placement: props.placement || 'bottom',
     ...(props.mousePosition && { middleware: [inline(props.mousePosition)] }),
+    onCursorChange: props.onClose,
+    onEscape: props.onClose,
   });
 
   function action<T>(command: $Command<T>, payload?: T) {
@@ -127,16 +129,6 @@ export default function Tooltip(props: {
       setText(title);
     }
   }
-
-  useMilkdownEvent({
-    event: 'selectionUpdated',
-    ctx: props.ctx,
-    fn: () => {
-      if (mode() === Mode.Preview) {
-        props.onClose?.();
-      }
-    },
-  });
 
   createEffect(() => {
     props.onModeChange?.(mode());

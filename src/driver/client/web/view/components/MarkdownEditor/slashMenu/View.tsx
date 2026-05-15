@@ -30,7 +30,7 @@ import Menu, { type MenuItem } from '#web/view/components/Menu';
 import { renderSolidApp } from '#web/utils/dom';
 
 import { wrapInTodoListItem } from '../nodes/listItem';
-import { isInEmptyParagraph, useMilkdownEvent } from '../shared/prosemirrorUtils';
+import { isInEmptyParagraph } from '../shared/prosemirrorUtils';
 import TopicTooltip from '../nodes/topic/Tooltip';
 import { useTooltip } from '../shared/useTooltip';
 import LinkTooltip, { Mode } from '../nodes/link/tooltip/LinkTooltip';
@@ -42,12 +42,6 @@ export default function View(props: { ctx: Ctx; onClose: (slash?: boolean) => vo
   const isBlock = isInEmptyParagraph(editorView.state.selection.$anchor);
   const [menuRef, setMenuRef] = createSignal<HTMLElement>();
 
-  useMilkdownEvent({
-    event: 'selectionUpdated',
-    ctx: props.ctx,
-    fn: () => props.onClose(),
-  });
-
   makeEventListener(document.body, 'keydown', (e) => {
     if (e.key === SLASH_KEY && document.activeElement === menuRef()) {
       props.onClose(true);
@@ -58,6 +52,7 @@ export default function View(props: { ctx: Ctx; onClose: (slash?: boolean) => vo
     ctx: props.ctx,
     reference: 'cursor',
     placement: 'bottom-start',
+    onCursorChange: props.onClose,
   });
 
   function onSelect(value: string) {

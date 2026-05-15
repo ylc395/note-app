@@ -10,7 +10,10 @@ import {
 import { editorViewCtx, rootCtx } from '@milkdown/kit/core';
 import type { Ctx } from '@milkdown/kit/ctx';
 import { posToDOMRect } from '@milkdown/kit/prose';
-import { createEffect, createSignal, onCleanup } from 'solid-js';
+import { createEffect, createMemo, createSignal, onCleanup } from 'solid-js';
+
+import { useMilkdownEvent } from './prosemirrorUtils';
+import { makeEventListener } from '@solid-primitives/event-listener';
 
 export function useTooltip(options: {
   ctx: Ctx;
@@ -20,9 +23,46 @@ export function useTooltip(options: {
   middleware?: (Middleware | undefined)[];
   boundary?: HTMLElement;
   hideStrategy?: 'escaped' | 'referenceHidden';
+  onCursorChange?: () => void;
+  onEscape?: () => void;
 }) {
   const [tooltipEl, setTooltipEl] = createSignal<HTMLElement>();
   const editorView = options.ctx.get(editorViewCtx);
+
+  const reference = createMemo(() => {
+    const reference = typeof options.reference === 'function' ? options.reference() : options.reference;
+
+    if (reference === 'cursor') {
+      return {
+        contextElement: editorView.dom,
+        getBoundingClientRect: () =>
+          posToDOMRect(editorView, editorView.state.selection.anchor, editorView.state.selection.anchor),
+      };
+    } else {
+      return reference;
+    }
+  });
+
+  createEffect(() => {
+    if (!options.onCursorChange || options.reference !== 'cursor') {
+      return;
+    }
+
+    useMilkdownEvent({
+      event: 'selectionUpdated',
+      ctx: options.ctx,
+      fn: options.onCursorChange,
+    });
+  });
+
+  makeEventListener(document, 'keydown', (e) => {
+    if (
+      e.key === 'Escape' &&
+      (editorView.dom.contains(document.activeElement) || tooltipEl()?.contains(document.activeElement))
+    ) {
+      options.onEscape?.();
+    }
+  });
 
   createEffect(() => {
     if (options.disabled) {
@@ -35,7 +75,6 @@ export function useTooltip(options: {
       return;
     }
 
-    const reference = typeof options.reference === 'function' ? options.reference() : options.reference;
     const boundary = options.boundary ?? (options.ctx.get(rootCtx) as HTMLElement);
 
     const middleware = [
@@ -44,20 +83,8 @@ export function useTooltip(options: {
       ...(options.middleware ?? []),
     ];
 
-    let realReference: VirtualElement | HTMLElement | undefined;
-
-    if (reference === 'cursor') {
-      realReference = {
-        contextElement: editorView.dom,
-        getBoundingClientRect: () =>
-          posToDOMRect(editorView, editorView.state.selection.anchor, editorView.state.selection.anchor),
-      };
-    } else {
-      realReference = reference;
-    }
-
-    const stopAutoUpdate = autoUpdate(realReference, rootEl, async () => {
-      const { x, y, middlewareData } = await computePosition(realReference, rootEl!, {
+    const stopAutoUpdate = autoUpdate(reference(), rootEl, async () => {
+      const { x, y, middlewareData } = await computePosition(reference(), rootEl!, {
         placement: options.placement ?? 'top',
         middleware,
       });
