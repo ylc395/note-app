@@ -1,4 +1,5 @@
-import { $nodeSchema, $remark } from '@milkdown/kit/utils';
+import { $inputRule, $nodeSchema, $remark } from '@milkdown/kit/utils';
+import { nodeRule } from '@milkdown/kit/prose';
 import { mdastExtension, tokenExtension, toMarkdownExtension } from '#domain/shared/infra/markdown/syntax/topic';
 
 export const topicNode = $nodeSchema('topic', () => ({
@@ -35,6 +36,12 @@ export const topicNode = $nodeSchema('topic', () => ({
     },
   },
 }));
+
+export const topicInputRule = $inputRule((ctx) =>
+  nodeRule(/#([^#]+)#$/, topicNode.type(ctx), {
+    getAttr: (match) => ({ value: match[1] }),
+  }),
+);
 
 export const topicRemark = $remark(
   'topicRemark',

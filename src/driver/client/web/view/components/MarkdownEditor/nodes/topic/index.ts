@@ -1,4 +1,4 @@
-import { topicNode, topicRemark } from './node';
+import { topicNode, topicInputRule, topicRemark } from './node';
 import './style.css';
 
-export default [topicNode, topicRemark].flat();
+export default [topicNode, topicRemark, topicInputRule].flat();

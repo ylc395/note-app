@@ -69,7 +69,7 @@ export default function Tooltip(props: {
   const { setTooltipEl } = useTooltip({
     reference: props.targetDom || 'cursor',
     ctx: props.ctx,
-    placement: props.placement || 'bottom',
+    placement: props.placement || 'bottom-start',
     ...(props.mousePosition && { middleware: [inline(props.mousePosition)] }),
     onCursorChange: props.onClose,
     onEscape: props.onClose,

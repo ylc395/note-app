@@ -1,4 +1,31 @@
+.milkdown .editor [data-topic] {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 4px;
+  border-radius: 4px;
+  background: var(--color-bg-accent-subtle);
+  color: var(--color-fg-accent-subtle);
+  font-size: inherit;
+  cursor: pointer;
+  vertical-align: baseline;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  margin: 0 2px;
+}
+
 .milkdown .editor [data-topic]::before,
 .milkdown .editor [data-topic]::after {
-  content: '#'
+  content: '#';
+  color: var(--color-fg-tertiary);
+  font-weight: 400;
+  transition: color 0.15s ease;
+}
+
+.milkdown .editor [data-topic]:hover {
+  background: var(--color-bg-accent);
+  color: var(--color-fg-accent);
+}
+
+.milkdown .editor [data-topic]:hover::before,
+.milkdown .editor [data-topic]:hover::after {
+  color: var(--color-fg-accent);
 }
