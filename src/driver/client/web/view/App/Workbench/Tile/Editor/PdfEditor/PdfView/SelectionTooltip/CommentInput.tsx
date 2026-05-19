@@ -16,13 +16,13 @@ export default function CommentInput(props: { selection: Selection }) {
         ref={editorRef}
         class="w-full min-h-20 resize-y rounded-md border border-border-primary bg-bg-primary px-3 py-2 text-sm text-fg-primary placeholder:text-fg-tertiary outline-none focus:border-border-accent transition-colors"
         placeholder="添加注释..."
-        onInput={(e) => props.selection.setCommentContent(e.target.value)}
+        onInput={(e) => props.selection.commentEditor.setContent(e.target.value)}
       />
       <div class="flex justify-end gap-2 mt-2">
-        <Button size="small" onClick={() => props.selection.closeCommentEditor()}>
+        <Button size="small" onClick={props.selection.cancelComment.bind(props.selection)}>
           取消
         </Button>
-        <Button size="small" intent="primary" onClick={() => props.selection.highlight()}>
+        <Button size="small" intent="primary" onClick={props.selection.highlight.bind(props.selection)}>
           提交
         </Button>
       </div>

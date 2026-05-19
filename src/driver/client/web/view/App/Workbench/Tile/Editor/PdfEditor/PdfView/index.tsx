@@ -52,7 +52,9 @@ export default function PdfEditorView(props: Record<string, unknown>) {
         >
           <div classList={{ 'select-text': !pdfViewer.editor.svgEditor.isEnabled }} ref={viewRef}></div>
         </div>
-        <SelectionTooltip />
+        <Show when={!pdfViewer.editor.svgEditor.isEnabled}>
+          <SelectionTooltip />
+        </Show>
       </div>
     </div>
   );

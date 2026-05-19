@@ -1,72 +1,62 @@
 import { action, computed, observable } from 'mobx';
 import assert from 'assert';
-import { debounce, omit, range, zip } from 'lodash-es';
+import { debounce, omit } from 'lodash-es';
 import { autoUpdate, computePosition, flip, offset } from '@floating-ui/dom';
-import Mark from 'mark.js';
 
-import {
-  default as AnnotationManager,
-  type Position,
-} from '#domain/client/app/model/note/editor/PdfEditor/AnnotationManager';
+import type { Position } from '#domain/client/app/model/note/editor/PdfEditor/AnnotationManager';
 import { IS_DEV } from '#domain/shared/infra/env';
+import CommentEditor from './CommentEditor';
 import type PDFEditorViewer from '../../../PDFEditorViewer';
 
-interface CommentEditor {
-  content: string;
-  markers?: Mark[];
+interface SelectionState {
+  text: string;
+  position: Required<Position>;
+  floating?: {
+    referenceElement: HTMLElement;
+    dispose: () => void;
+  };
 }
 
 export default class Selection {
-  constructor(private readonly pdfViewer: PDFEditorViewer) {}
+  public readonly commentEditor: CommentEditor;
+
+  constructor(private readonly pdfViewer: PDFEditorViewer) {
+    this.commentEditor = new CommentEditor(this.pdfViewer);
+  }
 
   private rootEl?: HTMLElement;
 
-  @observable private accessor _isTooltipVisible = false;
+  @observable.ref
+  private accessor current: SelectionState | undefined;
 
-  @computed public get isTooltipVisible() {
-    return this._isTooltipVisible && !this.pdfViewer.editor.svgEditor.isEnabled;
-  }
-
-  private current?: {
-    text: string;
-    position: Required<Position>;
-    referenceElement?: HTMLElement;
-    stopAutoUpdate?: () => void;
-  };
-
-  @observable.ref private accessor commentEditor: CommentEditor | undefined;
-
-  @computed public get isCommentEditorVisible() {
-    return Boolean(this.commentEditor) && !this.pdfViewer.editor.svgEditor.isEnabled;
+  @computed
+  public get isVisible() {
+    return Boolean(this.current);
   }
 
   public activate(rootEl: HTMLElement) {
     this.rootEl = rootEl;
 
-    if (this.commentEditor) {
-      this.openCommentEditor();
+    if (this.commentEditor.isOpen) {
+      this.commentEditor.start();
     }
 
     document.addEventListener('selectionchange', this.handleSelection.bind(this));
   }
 
   public deactivate() {
-    if (this.current) {
-      this.current.stopAutoUpdate?.();
-      this.current.stopAutoUpdate = undefined;
-      this.current.referenceElement = undefined;
+    if (this.current?.floating) {
+      this.current.floating.dispose?.();
+      this.current.floating = undefined;
     }
 
-    if (this.commentEditor) {
-      this.commentEditor.markers = undefined;
-    }
-
+    this.commentEditor.clearMarkers();
     this.show.cancel();
     document.removeEventListener('selectionchange', this.handleSelection);
   }
 
   private readonly handleSelection = () => {
-    if (this.commentEditor) {
+    if (this.commentEditor.isOpen) {
       return;
     }
 
@@ -98,64 +88,13 @@ export default class Selection {
     this.pdfViewer.editor.newAnnotationColor = color;
   }
 
-  @action
-  public openCommentEditor() {
-    const position = this.current?.position;
-    assert(position);
-
-    const pageRange = range(position.startPage, position.endPage + 1);
-    const currentRanges = pageRange.map((page) => AnnotationManager.positionToRange(position, page));
-
-    const markers = pageRange.map((range) => {
-      const { textLayer } = this.pdfViewer.viewer.getPageInfo(range);
-
-      assert(textLayer);
-      return new Mark(textLayer);
-    });
-
-    for (const [marker, range] of zip(markers, currentRanges)) {
-      marker!.markRanges([range!], {
-        className: `text-transparent opacity-40 ${Selection.TEMP_MARK_CLASS_NAME}`,
-        each: (el) => {
-          (el as HTMLElement).style.backgroundColor = this.color;
-        },
-      });
-    }
-
-    this._isTooltipVisible = false;
-    this.commentEditor = {
-      content: this.commentEditor?.content || '',
-      markers,
-    };
+  public startComment() {
+    assert(this.current?.position);
+    this.commentEditor.start(this.current.position);
   }
 
-  @action
-  public closeCommentEditor(clearSelection?: boolean) {
-    assert(this.commentEditor?.markers && this.current?.position);
-    this.commentEditor.markers.forEach((marker) => marker.unmark({ className: Selection.TEMP_MARK_CLASS_NAME }));
-
-    if (!clearSelection) {
-      const currentRange = this.positionToRange(this.current.position);
-      this._isTooltipVisible = true;
-
-      assert(this.current);
-      const s = window.getSelection();
-
-      if (s) {
-        // 这两行将立刻分别触发 handleSelection
-        // 因此我们把删除 commentEditor 放在最后，这样 handleSection 就会立刻 return
-        s.removeAllRanges();
-        s.addRange(currentRange);
-      }
-    }
-
-    this.commentEditor = undefined;
-  }
-
-  @action
-  public setCommentContent(value: string) {
-    assert(this.commentEditor);
-    this.commentEditor.content = value;
+  public cancelComment() {
+    this.commentEditor.cancel();
   }
 
   public async highlight() {
@@ -171,8 +110,8 @@ export default class Selection {
       },
     });
 
-    if (this.commentEditor) {
-      this.closeCommentEditor(true);
+    if (this.commentEditor.isOpen) {
+      this.commentEditor.clearMarks();
     }
 
     this.hide(true);
@@ -184,15 +123,11 @@ export default class Selection {
       return;
     }
 
-    this.current.stopAutoUpdate?.();
-    this.current.stopAutoUpdate = undefined;
-
-    this.current.referenceElement?.remove();
-    this.current.referenceElement = undefined;
+    this.current.floating?.dispose?.();
+    this.current.floating = undefined;
 
     this.show.cancel();
 
-    this._isTooltipVisible = false;
     this.current = undefined;
 
     if (removeSelection) {
@@ -203,8 +138,8 @@ export default class Selection {
   private readonly show = debounce(
     action(() => {
       if (this.current) {
-        this.current.stopAutoUpdate?.();
-        this.current.referenceElement?.remove();
+        this.current.floating?.dispose?.();
+        this.current.floating = undefined;
       }
 
       const s = window.getSelection();
@@ -235,19 +170,17 @@ export default class Selection {
 
       this.current = {
         text: range.toString(),
+        floating: this.generateFloating(range, toStart),
         position: {
           ...this.rangeToPosition(range),
           toStart,
         },
-        ...this.generateReferenceElement(range, toStart),
       };
-
-      this._isTooltipVisible = true;
     }),
     300,
   );
 
-  private generateReferenceElement(range: Range, toStart: boolean) {
+  private generateFloating(range: Range, toStart: boolean) {
     const referenceElement = document.createElement('span');
     referenceElement.style.height = '1em';
 
@@ -325,34 +258,4 @@ export default class Selection {
       endOffset: findIndex(endPage, range.endContainer, range.endOffset),
     };
   }
-
-  private positionToRange(position: Position) {
-    const range = new Range();
-    const setBoundary = (page: number, totalOffset: number, isStart?: boolean) => {
-      const { textLayer } = this.pdfViewer.viewer.getPageInfo(page);
-      assert(textLayer);
-
-      const treeWalker = document.createTreeWalker(textLayer, NodeFilter.SHOW_TEXT);
-      let offset = 0;
-
-      let currentNode = treeWalker.nextNode() as Text | null;
-
-      while (currentNode) {
-        if (currentNode.length + offset >= totalOffset) {
-          range[isStart ? 'setStart' : 'setEnd'](currentNode, totalOffset - offset);
-          break;
-        } else {
-          offset += currentNode.length;
-          currentNode = treeWalker.nextNode() as Text | null;
-        }
-      }
-    };
-
-    setBoundary(position.startPage, position.startOffset, true);
-    setBoundary(position.endPage, position.endOffset);
-
-    return range;
-  }
-
-  private static readonly TEMP_MARK_CLASS_NAME = 'temp-comment-editor-mark';
 }
