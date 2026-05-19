@@ -43,14 +43,7 @@ export default function PdfEditorView(props: Record<string, unknown>) {
       </Show>
       <div
         class={cx('relative grow overflow-hidden', !pdfViewer.viewer.isReady && 'invisible')}
-        style={
-          pdfViewer.editor.texts.displayText
-            ? {
-                '--render-by-line-text-color': 'blue',
-                '--render-by-symbol-text-color': 'red',
-              }
-            : undefined
-        }
+        data-display-text={pdfViewer.editor.texts.displayText}
         data-drawing-mode={pdfViewer.editor.svgEditor.isEnabled ? pdfViewer.editor.svgEditor.mode : ''}
       >
         <div

@@ -8,12 +8,12 @@
   container-type: size;
 }
 
-.textLayer [data-render-by='line'] {
-  color: var(--render-by-line-text-color, transparent);
+[data-display-text="true"] .textLayer [data-render-by='line'] {
+  color: blue;
 }
 
-.textLayer [data-render-by='symbol'] {
-  color: var(--render-by-symbol-text-color, transparent);
+[data-display-text="true"] .textLayer [data-render-by='symbol'] {
+  color: red;
 }
 
 [data-drawing-mode='draw'] .textLayer,
