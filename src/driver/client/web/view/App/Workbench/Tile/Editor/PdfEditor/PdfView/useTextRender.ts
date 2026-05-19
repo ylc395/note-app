@@ -1,8 +1,8 @@
 import { createEffect } from 'solid-js';
-
-import { useContext } from '../context';
-import { IS_DEV } from '#domain/shared/infra/env';
 import { sum } from 'lodash-es';
+
+import { IS_DEV } from '#domain/shared/infra/env';
+import { useContext } from '../context';
 
 // 复用同一个 canvas context，避免反复创建
 const canvasCtx = document.createElement('canvas').getContext('2d')!;
@@ -118,6 +118,9 @@ function createElement(
 }
 
 export default function useTextRender() {
+  const textLayers = new WeakSet<HTMLElement>();
+
+  // todo: 当前的算法没处理好文字 + 漂浮图片的排版。例子：代码整洁之道 P71
   createEffect(() => {
     const {
       viewer: { viewer, editor },
@@ -131,7 +134,7 @@ export default function useTextRender() {
     for (const { page, text } of pages) {
       const { width: pageWidth, height: pageHeight, textLayer } = viewer.getPageInfo(page);
 
-      if (!textLayer || textLayer.dataset.textFetched || !text.data) {
+      if (!textLayer || textLayers.has(textLayer) || !text.data) {
         continue;
       }
 
@@ -177,10 +180,6 @@ export default function useTextRender() {
         }
       }
 
-      if (lineDoms.length === 0) {
-        continue;
-      }
-
       const endOfContent = textLayer.querySelector('.endOfContent');
 
       if (!endOfContent) {
@@ -192,7 +191,7 @@ export default function useTextRender() {
         textLayer.insertBefore(lineEl, endOfContent);
       }
 
-      textLayer.dataset.textFetched = 'true';
+      textLayers.add(textLayer);
     }
   });
 }
