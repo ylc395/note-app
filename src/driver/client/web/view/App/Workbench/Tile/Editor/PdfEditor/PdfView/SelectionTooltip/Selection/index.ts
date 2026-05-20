@@ -11,17 +11,17 @@ import type PDFEditorViewer from '../../../PDFEditorViewer';
 interface SelectionState {
   text: string;
   position: Required<Position>;
-  floating?: {
-    referenceElement: HTMLElement;
-    dispose: () => void;
-  };
+  disposeFloating?: () => void;
 }
 
 export default class Selection {
   public readonly commentEditor: CommentEditor;
 
   constructor(private readonly pdfViewer: PDFEditorViewer) {
-    this.commentEditor = new CommentEditor(this.pdfViewer);
+    this.commentEditor = new CommentEditor({
+      pdfViewer: this.pdfViewer,
+      onSubmit: this.highlight.bind(this),
+    });
   }
 
   private rootEl?: HTMLElement;
@@ -34,28 +34,19 @@ export default class Selection {
     return Boolean(this.current);
   }
 
-  public activate(rootEl: HTMLElement) {
+  public init(rootEl: HTMLElement) {
     this.rootEl = rootEl;
-
-    if (this.commentEditor.isOpen) {
-      this.commentEditor.start();
-    }
-
-    document.addEventListener('selectionchange', this.handleSelection.bind(this));
+    document.addEventListener('selectionchange', this.handleSelection);
   }
 
-  public deactivate() {
-    if (this.current?.floating) {
-      this.current.floating.dispose?.();
-      this.current.floating = undefined;
-    }
-
-    this.commentEditor.clearMarks();
-    this.show.cancel();
+  public destroy() {
+    this.hide();
     document.removeEventListener('selectionchange', this.handleSelection);
   }
 
   private readonly handleSelection = () => {
+    // 1. 如果是 commentEditor 触发的（关闭时恢复原生选区），不处理
+    // 2. commentEditor 展示中，不处理
     if (this.commentEditor.isOpen) {
       return;
     }
@@ -93,10 +84,6 @@ export default class Selection {
     this.commentEditor.start(this.current.position);
   }
 
-  public cancelComment() {
-    this.commentEditor.cancel();
-  }
-
   public async highlight() {
     assert(this.current);
 
@@ -110,37 +97,27 @@ export default class Selection {
       },
     });
 
-    if (this.commentEditor.isOpen) {
-      this.commentEditor.clearMarks();
-    }
-
-    this.hide(true);
+    this.hide();
+    window.getSelection()?.removeAllRanges();
   }
 
   @action
-  private hide(removeSelection?: boolean) {
-    if (!this.current) {
-      return;
+  private hide() {
+    if (this.current) {
+      this.current.disposeFloating?.();
+      this.current = undefined;
     }
-
-    this.current.floating?.dispose?.();
-    this.current.floating = undefined;
 
     this.show.cancel();
 
-    this.current = undefined;
-
-    if (removeSelection) {
-      window.getSelection()?.removeAllRanges();
+    if (this.commentEditor.isOpen) {
+      this.commentEditor.cancel();
     }
   }
 
   private readonly show = debounce(
     action(() => {
-      if (this.current) {
-        this.current.floating?.dispose?.();
-        this.current.floating = undefined;
-      }
+      this.hide();
 
       const s = window.getSelection();
 
@@ -170,7 +147,7 @@ export default class Selection {
 
       this.current = {
         text: range.toString(),
-        floating: this.generateFloating(range, toStart),
+        disposeFloating: this.generateFloating(range, toStart),
         position: {
           ...this.rangeToPosition(range),
           toStart,
@@ -181,6 +158,9 @@ export default class Selection {
   );
 
   private generateFloating(range: Range, toStart: boolean) {
+    // 这里曾经试过用 range 来充当 virtual reference element
+    // 但是 range 是 live 的，DOM 上的变化会使得 range 非常不稳定（尤其是 DOM 高亮的时候）
+    // 最后还是选择使用临时元素充当 reference element
     const referenceElement = document.createElement('span');
     referenceElement.style.height = '1em';
 
@@ -205,7 +185,10 @@ export default class Selection {
       });
     });
 
-    return { dispose, referenceElement };
+    return () => {
+      dispose();
+      referenceElement.remove();
+    };
   }
 
   private rangeToPosition(range: Range) {

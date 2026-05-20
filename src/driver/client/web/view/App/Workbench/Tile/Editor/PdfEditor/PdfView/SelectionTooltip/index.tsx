@@ -13,11 +13,11 @@ export default function SelectionTooltip() {
   const selection = new Selection(viewer); // selection 的生命周期比组件长，和 editor 保持一致
 
   onMount(() => {
-    selection.activate(rootEl!);
+    selection.init(rootEl!);
   });
 
   onCleanup(() => {
-    selection.deactivate();
+    selection.destroy();
   });
 
   return (
@@ -34,7 +34,7 @@ export default function SelectionTooltip() {
         </div>
       </Show>
       <Show when={selection.commentEditor.isOpen}>
-        <CommentInput selection={selection} />
+        <CommentInput commentEditor={selection.commentEditor} />
       </Show>
     </div>
   );

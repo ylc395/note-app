@@ -12,20 +12,16 @@ import type PDFEditorViewer from '../../../PDFEditorViewer';
 export default class CommentEditor {
   public content = '';
 
-  @observable.ref private accessor _markers: Mark[] | undefined;
+  private markers?: Mark[];
 
-  private position?: Position;
+  @observable.ref private accessor position: Position | undefined;
 
   private static readonly TEMP_MARK_CLASS_NAME = 'temp-comment-editor-mark';
 
-  constructor(private readonly pdfViewer: PDFEditorViewer) {}
-
-  public get markers() {
-    return this._markers;
-  }
+  constructor(private readonly options: { pdfViewer: PDFEditorViewer; onSubmit: () => void }) {}
 
   @computed public get isOpen() {
-    return this._markers !== undefined;
+    return Boolean(this.position);
   }
 
   @action
@@ -37,7 +33,7 @@ export default class CommentEditor {
     const currentRanges = pageRange.map((page) => AnnotationManager.positionToRange(position, page));
 
     const markers = pageRange.map((page) => {
-      const { textLayer } = this.pdfViewer.viewer.getPageInfo(page);
+      const { textLayer } = this.options.pdfViewer.viewer.getPageInfo(page);
       assert(textLayer);
       return new Mark(textLayer);
     });
@@ -46,21 +42,20 @@ export default class CommentEditor {
       marker!.markRanges([range!], {
         className: `text-transparent opacity-40 ${CommentEditor.TEMP_MARK_CLASS_NAME}`,
         each: (el) => {
-          (el as HTMLElement).style.backgroundColor = this.pdfViewer.editor.newAnnotationColor;
+          (el as HTMLElement).style.backgroundColor = this.options.pdfViewer.editor.newAnnotationColor;
         },
       });
     }
 
-    this._markers = markers;
+    this.markers = markers;
     this.position = position;
   }
 
   @action
   public cancel() {
-    assert(this._markers && this.position);
+    assert(this.markers && this.position);
 
-    this._markers.forEach((marker) => marker.unmark({ className: CommentEditor.TEMP_MARK_CLASS_NAME }));
-    this._markers = undefined;
+    this.clearMarks();
     this.content = '';
 
     // 恢复原始文本选区
@@ -71,14 +66,17 @@ export default class CommentEditor {
       s.removeAllRanges();
       s.addRange(currentRange);
     }
+
+    // 这个记得放最后。标志着 commentEditor 不再展示
+    this.position = undefined;
   }
 
   @action
   public clearMarks() {
-    assert(this._markers);
-
-    this._markers.forEach((marker) => marker.unmark({ className: CommentEditor.TEMP_MARK_CLASS_NAME }));
-    this._markers = undefined;
+    if (this.markers) {
+      this.markers.forEach((marker) => marker.unmark({ className: CommentEditor.TEMP_MARK_CLASS_NAME }));
+      this.markers = undefined;
+    }
   }
 
   public setContent(value: string) {
@@ -86,10 +84,14 @@ export default class CommentEditor {
     this.content = value;
   }
 
+  public submit() {
+    this.options.onSubmit();
+  }
+
   private positionToRange(position: Position) {
     const range = new Range();
     const setBoundary = (page: number, totalOffset: number, isStart?: boolean) => {
-      const { textLayer } = this.pdfViewer.viewer.getPageInfo(page);
+      const { textLayer } = this.options.pdfViewer.viewer.getPageInfo(page);
       assert(textLayer);
 
       const treeWalker = document.createTreeWalker(textLayer, NodeFilter.SHOW_TEXT);

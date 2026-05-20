@@ -4,6 +4,7 @@ import type PdfEditor from '#domain/client/app/model/note/editor/PdfEditor';
 import { clone, debounce } from 'lodash-es';
 
 // 这是一个粘合 model（PDFEditor） 和 infra（PDFViewer）的类
+// 生命周期和视图层组件一致
 export default class PDFEditorViewer {
   constructor(public readonly editor: PdfEditor) {}
 
